@@ -303,6 +303,19 @@ public class SqlToRelConverterTest extends TestCase
             "        FilterRel(condition=[=($7, $cor0.DEPTNO)])" + NL +
             "          TableAccessRel(table=[[EMP]])" + NL);
     }
+
+    public void testUnnestSelect() {
+        check("select*from unnest(select multiset[deptno] from dept)",
+            "ProjectRel(EXPR$0=[$0])" + NL +
+            "  UncollectRel" + NL +
+            "    ProjectRel(EXPR$0=[$2])" + NL +
+            "      CorrelatorRel(condition=[true], joinType=[left])" + NL +
+            "        TableAccessRel(table=[[DEPT]])" + NL +
+            "        CollectRel" + NL +
+            "          UnionRel(all=[true])" + NL +
+            "            ProjectRel(DEPTNO=[$cor0.DEPTNO])" + NL +
+            "              OneRowRel" + NL);
+    }
 }
 
 // End ConverterTest.java

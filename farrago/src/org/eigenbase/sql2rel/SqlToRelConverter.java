@@ -189,7 +189,6 @@ public class SqlToRelConverter
         final SqlValidator.Scope selectScope = validator.getScope(select,
             SqlSelect.WHERE_OPERAND);
         final Blackboard bb = new Blackboard(selectScope);
-        replaceSubqueries(bb, select.getFrom());
         convertFrom(
             bb,
             select.getFrom());
@@ -931,7 +930,7 @@ public class SqlToRelConverter
                 childRel = new CollectRel(
                     cluster, convertValidatedQuery(call.operands[0]),"multiset");
             } else {
-                childRel = convertValidatedQuery(call.operands[0]);
+                childRel = convertValidatedQuery(call);
             }
 
             UncollectRel uncollectRel = new UncollectRel(cluster, childRel);
@@ -1507,10 +1506,10 @@ public class SqlToRelConverter
                     SqlValidator.CollectNamespace nss =
                         (SqlValidator.CollectNamespace) validator.getNamespace(call);
                     Blackboard usedBb;
-                    if (null == nss) {
-                        usedBb = bb;
-                    } else {
+                    if (null != nss) {
                         usedBb = new Blackboard(nss.getScope());
+                    } else {
+                        usedBb = bb;
                     }
                     input = convertQueryOrInList(usedBb,list);
                 } else {
@@ -1757,7 +1756,6 @@ public class SqlToRelConverter
                 final JoinRel join;
                 if (rel instanceof CollectRel) {
                     ArrayList correlations = new ArrayList();
-
 
                     Set correlatedVariables = RelOptUtil.getVariablesUsed(rel);
                     if (correlatedVariables.size() > 0) {

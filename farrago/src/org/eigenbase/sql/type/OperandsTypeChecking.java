@@ -46,10 +46,9 @@ public abstract class OperandsTypeChecking
      * @param node
      * @param ruleOrdinal
      *
-     * Note that <code>ruleOrdinal</code> is <i>not</i> an index in any
-     * call.operands[] array. It's rather used to specify which
+     * Note that <code>ruleOrdinal</code> is <emp>not</emp> an index in any
+     * call.operands[] array. It's used to specify which
      * signature the node should correspond too.
-     *
      * <p>For example, if we have typeStringInt, a check can be made to see
      * if a <code>node</code> is of type int by calling
      * <code>typeStringInt.check(validator,scope,node,1);</code>
@@ -150,7 +149,7 @@ public abstract class OperandsTypeChecking
                         actualType = validator.deriveType(scope, node);
                     }
 
-                    if (actualType.getSqlTypeName().equals(expectedTypeName)) {
+                    if (expectedTypeName.equals(actualType.getSqlTypeName())) {
                         return true;
                     }
                 }
@@ -1296,6 +1295,65 @@ public abstract class OperandsTypeChecking
             SqlTypeName.multisetNullableType
         });
 
+    public static final OperandsTypeChecking typeNullableRecordMultiset =
+        new OperandsTypeChecking() {
+            public boolean check(
+                SqlCall call,
+                SqlValidator validator,
+                SqlValidator.Scope scope,
+                SqlNode node,
+                int ruleOrdinal,
+                boolean throwOnFailure)
+            {
+                assert(0 == ruleOrdinal);
+                RelDataType type = validator.deriveType(scope, node);
+                boolean validationError = false;
+                if (!type.isStruct()) {
+                    validationError = true;
+                } else if (type.getFieldList().size() != 1) {
+                    validationError = true;
+                } else if (!SqlTypeName.Multiset.equals(
+                    type.getFields()[0].getType().getSqlTypeName())) {
+                    validationError = true;
+                }
+
+                if (validationError && throwOnFailure) {
+                    throw call.newValidationSignatureError(validator, scope);
+                }
+                return !validationError;
+            }
+
+            public boolean check(
+                SqlValidator validator,
+                SqlValidator.Scope scope,
+                SqlCall call,
+                boolean throwOnFailure)
+            {
+                return check(call,
+                             validator,
+                             scope,
+                             call.operands[0],
+                             0,
+                             throwOnFailure);
+            }
+
+            public int getArgCount()
+            {
+                return 1;
+            }
+
+            public String getAllowedSignatures(SqlOperator op)
+            {
+                return "UNNEST(<MULTISET>)";
+            }
+        };
+
+    public static final OperandsTypeChecking
+        typeNullableMultisetOrRecordTypeMultiset =
+        new CompositeOrOperandsTypeChecking(
+            new OperandsTypeChecking[]{
+                typeNullableMultiset,typeNullableRecordMultiset});
+
     /**
      * Parameter type-checking strategy
      * types must be
@@ -1438,7 +1496,7 @@ public abstract class OperandsTypeChecking
                     validator.typeFactory.leastRestrictive(colTypes);
                 if (type == null) {
                     if (throwOnFailure) {
-                        SqlNode field = getSelectListItem(call.operands[0], i);
+                        SqlNode field = SqlUtil.getSelectListItem(call.operands[0], i);
                         throw validator.newValidationError(
                             field,
                             EigenbaseResource.instance()
@@ -1453,41 +1511,6 @@ public abstract class OperandsTypeChecking
             }
 
             return true;
-        }
-
-        /**
-         * Returns the <code>i</code>th select-list item of a query.
-         *
-         * todo: Move this to utility class.
-         */
-        private static SqlNode getSelectListItem(SqlNode query, int i) {
-            if (query instanceof SqlSelect) {
-                SqlSelect select = (SqlSelect) query;
-                final SqlNode from = select.getFrom();
-                if (from.isA(SqlKind.Values)) {
-                    // They wrote "VALUES (x, y)", but the validator has
-                    // converted this into "SELECT * FROM VALUES (x, y)".
-                    return getSelectListItem(from, i);
-                }
-                final SqlNodeList fields = select.getSelectList();
-                // Range check the index to avoid index out of range.  This
-                // could be expanded to actually check to see if the select
-                // list is a "*"
-                if (i >= fields.size()) {
-                    i = 0;
-                }
-                return fields.get(i);
-            } else if (query.isA(SqlKind.Values)) {
-                SqlCall call = (SqlCall) query;
-                Util.permAssert(call.operands.length > 0,
-                    "VALUES must have at least one operand");
-                final SqlCall row = (SqlCall) call.operands[0];
-                Util.permAssert(row.operands.length > i, "VALUES has too few columns");
-                return row.operands[i];
-            } else {
-                // Unexpected type of query.
-                throw Util.needToImplement(query);
-            }
         }
 
         public int getArgCount() {

@@ -1,7 +1,7 @@
 /*
 // $Id$
 // Farrago is a relational database management system.
-// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2002-2005 Disruptive Tech
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -749,7 +749,7 @@ public class RexToCalcTranslator implements RexVisitor
         final int id = RelOptQuery.getCorrelOrdinal(correlNode.getName());
         CalcProgramBuilder.Register idReg = builder.newInt4Literal(id);
         CalcProgramBuilder.Register result =
-            builder.newInput(getCalcRegisterDescriptor(node));
+            builder.newLocal(getCalcRegisterDescriptor(node));
         ExtInstructionDefTable.dynamicVariable.add(
             builder,
             new CalcProgramBuilder.Register [] { result, idReg});

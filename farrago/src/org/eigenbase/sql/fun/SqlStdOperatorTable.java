@@ -756,7 +756,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
     public final SqlSpecialOperator unnestOperator =
         new SqlSpecialOperator ("UNNEST", SqlKind.Unnest,
             100, true, null, null,
-            OperandsTypeChecking.typeNullableMultiset) {
+            OperandsTypeChecking.typeNullableMultisetOrRecordTypeMultiset) {
 
             protected RelDataType getType(
                 SqlValidator validator,
@@ -764,7 +764,11 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
                 RelDataTypeFactory typeFactory,
                 CallOperands callOperands)
             {
-                MultisetSqlType t = (MultisetSqlType) callOperands.getType(0);
+                RelDataType type = callOperands.getType(0);
+                if (type.isStruct()) {
+                    type = type.getFields()[0].getType();
+                }
+                MultisetSqlType t = (MultisetSqlType) type;
                 return t.getComponentType();
             }
 

@@ -1589,11 +1589,7 @@ public class SqlValidator
             final UnnestNamespace unnestNamespace =
                 new UnnestNamespace(node, usingScope);
             registerNamespace(usingScope, alias, unnestNamespace);
-            if (call.operands[0].isA(
-                SqlKind.MultisetQueryConstructor)) {
-                final SqlCall queryCtor = (SqlCall) call.operands[0];
-                registerSubqueries(usingScope, queryCtor.operands[0]);
-            }
+            registerSubqueries(usingScope, call.operands[0]);
             break;
         case SqlKind.MultisetValueConstructorORDINAL:
         case SqlKind.MultisetQueryConstructorORDINAL:

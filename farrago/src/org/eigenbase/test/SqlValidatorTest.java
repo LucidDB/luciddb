@@ -1802,7 +1802,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkType("select*from unnest(multiset[1, 2.3, 1])","DECIMAL(2, 1)");
         checkType("select*from unnest(multiset['1','22','333'])","CHAR(3)");
         checkType("select*from unnest(multiset['1','22','333','22'])","CHAR(3)");
-        checkFails("select*from unnest(1)","(?s).*Cannot apply 'UNNEST' to arguments of type 'UNNEST.<INTEGER>.*'");
+        checkFails("select*from unnest(1)","(?s).*Cannot apply 'UNNEST' to arguments of type 'UNNEST.<INTEGER>.'.*");
 
         check("select*from unnest(multiset(select*from dept))");
     }
@@ -1812,6 +1812,8 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             "         multiset(select * from emp where deptno=dept.deptno) " +
             "               as empset" +
             "      from dept");
+
+        check("select*from unnest(select multiset[8] from dept)");
     }
 
     public void testNew() {

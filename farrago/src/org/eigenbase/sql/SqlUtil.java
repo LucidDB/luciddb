@@ -482,6 +482,39 @@ public abstract class SqlUtil
             }
         }
     }
+
+    /**
+     * Returns the <code>i</code>th select-list item of a query.
+     */
+    public static SqlNode getSelectListItem(SqlNode query, int i) {
+        if (query instanceof SqlSelect) {
+            SqlSelect select = (SqlSelect) query;
+            final SqlNode from = select.getFrom();
+            if (from.isA(SqlKind.Values)) {
+                // They wrote "VALUES (x, y)", but the validator has
+                // converted this into "SELECT * FROM VALUES (x, y)".
+                return getSelectListItem(from, i);
+            }
+            final SqlNodeList fields = select.getSelectList();
+            // Range check the index to avoid index out of range.  This
+            // could be expanded to actually check to see if the select
+            // list is a "*"
+            if (i >= fields.size()) {
+                i = 0;
+            }
+            return fields.get(i);
+        } else if (query.isA(SqlKind.Values)) {
+            SqlCall call = (SqlCall) query;
+            Util.permAssert(call.operands.length > 0,
+                "VALUES must have at least one operand");
+            final SqlCall row = (SqlCall) call.operands[0];
+            Util.permAssert(row.operands.length > i, "VALUES has too few columns");
+            return row.operands[i];
+        } else {
+            // Unexpected type of query.
+            throw Util.needToImplement(query);
+        }
+    }
     
     //~ Inner Classes ---------------------------------------------------------
 
