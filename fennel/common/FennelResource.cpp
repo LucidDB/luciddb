@@ -4,15 +4,15 @@
 /**
  * This class was generated
  * by class mondrian.resource.ResourceGen
- * from /home/jvs/open/fennel/common/FennelResource.xml
- * on Thu Nov 04 19:35:39 PST 2004.
+ * from /home/jvs/open/dev/fennel/common/FennelResource.xml
+ * on Sat Nov 27 23:31:08 PST 2004.
  * It contains a list of messages, and methods to
  * retrieve and format those messages.
  **/
 
-// begin common include specified by /home/jvs/open/fennel/common/FennelResource.xml
+// begin common include specified by /home/jvs/open/dev/fennel/common/FennelResource.xml
 #include "CommonPreamble.h"
-// end common include specified by /home/jvs/open/fennel/common/FennelResource.xml
+// end common include specified by /home/jvs/open/dev/fennel/common/FennelResource.xml
 #include "FennelResource.h"
 #include "ResourceBundle.h"
 #include "Locale.h"
