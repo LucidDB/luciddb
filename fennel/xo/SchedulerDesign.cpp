@@ -173,7 +173,10 @@ data by calling provideBufferForConsumption().  Otherwise, it produces data by
 calling getProductionStart() and getProductionEnd() to access the output memory
 area provided by the downstream consumer, and then calls produceData() to
 indicate how much of that area it filled.  In either case, the resulting state
-of the output buffer is EXECBUF_NEED_CONSUMPTION.
+of the output buffer is EXECBUF_NEED_CONSUMPTION.  Some buffer accessor
+implementations may support appending data into a buffer which is already
+non-empty.  (TODO: document additional call needed for rotating buffers in a
+cyclical buffer scheme.)
 
 <li>When the stream knows that no more data will ever be produced on a
 particular output, it should call markEOS() on the corresponding buffer
