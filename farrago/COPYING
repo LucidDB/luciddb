@@ -1,9 +1,8 @@
 This software is released under the GNU General Public License,
-which is reproduced below.  Portions are released under the GNU Lesser General
-Public License, which is reproduced in src/net/sf/farrago/COPYING.
+which is reproduced below.
 
-In addition, as a special exception, John V. Sichi and Disruptive Tech
-give permission to link the code of this program with the MDR library
+In addition, as a special exception, The Eigenbase Project
+gives permission to link the code of this program with the MDR library
 from Netbeans (or with modified versions of MDR that use the same
 license as MDR--the Sun Public License), and distribute linked
 combinations including the two.  You must obey the GNU General Public

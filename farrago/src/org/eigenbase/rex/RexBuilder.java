@@ -1,13 +1,15 @@
 /*
 // $Id$
-// Package org.eigenbase is a class library of database components.
+// Package org.eigenbase is a class library of data management components.
+// Copyright (C) 2005-2005 The Eigenbase Project
 // Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005-2005 Red Square, Inc.
+// Portions Copyright (C) 2003-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
-// (at your option) any later version.
+// (at your option) any later Eigenbase-approved version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -58,7 +60,7 @@ public class RexBuilder
 
     //~ Constructors ----------------------------------------------------------
 
-    // REVIEW jvs 22-Jan-2004: I changed this constructor from protected to
+    // REVIEW jvs 22-Jan-2005: I changed this constructor from protected to
     // public so that unit tests needn't depend on oj.  If RexBuilder
     // isn't supposed to be instantiated, then it should be declared abstrct.
     public RexBuilder(RelDataTypeFactory typeFactory)

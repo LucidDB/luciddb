@@ -1,13 +1,15 @@
 /*
 // $Id$
-// Package org.eigenbase is a class library of database components.
+// Package org.eigenbase is a class library of data management components.
+// Copyright (C) 2005-2005 The Eigenbase Project
 // Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005-2005 Red Square, Inc.
+// Portions Copyright (C) 2003-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
-// (at your option) any later version.
+// (at your option) any later Eigenbase-approved version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -868,7 +870,7 @@ public class SqlToRelConverter
             convertExpression(
                 bb,
                 call.getElseOperand());
-        return rexBuilder.makeCall(call.operator, whenThenElseRex); //REVIEW 16-March-2004 wael: is there a better way?
+        return rexBuilder.makeCall(call.operator, whenThenElseRex); //REVIEW 16-March-2005 wael: is there a better way?
     }
 
     private RexNode [] convertExpressionList(
@@ -917,7 +919,7 @@ public class SqlToRelConverter
                     new TableAccessRel(cluster, table, connection));
             }
 
-            // REVIEW jvs 22-Jan-2004: This is adding a SqlNode as a
+            // REVIEW jvs 22-Jan-2005: This is adding a SqlNode as a
             // mapScopeToRel key.  Shouldn't it be a scope instead?
             mapScopeToRel.put(from, bb.root);
             leaves.add(bb.root);
@@ -1329,7 +1331,7 @@ public class SqlToRelConverter
     public RexDynamicParam convertDynamicParam(
         final SqlDynamicParam dynamicParam)
     {
-        // REVIEW jvs 8-Jan-2004:  dynamic params may be encountered out of
+        // REVIEW jvs 8-Jan-2005:  dynamic params may be encountered out of
         // order.  Should probably cross-check with the count from the parser
         // at the end and make sure they all got filled in.  Why doesn't List
         // have a resize() method?!?  Make this a utility.
@@ -1716,7 +1718,7 @@ public class SqlToRelConverter
         }
         leaves.add(bb.root);
 
-        // REVIEW jvs 22-Jan-2004:  should I add
+        // REVIEW jvs 22-Jan-2005:  should I add
         // mapScopeToRel.put(validator.getScope(values),bb.root);
         // ?
     }

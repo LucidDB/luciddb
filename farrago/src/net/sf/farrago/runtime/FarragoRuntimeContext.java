@@ -1,21 +1,24 @@
 /*
-// Farrago is a relational database management system.
-// Copyright (C) 2003-2004 John V. Sichi.
-// Copyright (C) 2003-2004 Disruptive Tech
+// $Id$
+// Farrago is an extensible data management system.
+// Copyright (C) 2005-2005 The Eigenbase Project
+// Copyright (C) 2003-2005 Disruptive Tech
+// Copyright (C) 2005-2005 Red Square, Inc.
+// Portions Copyright (C) 2003-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later Eigenbase-approved version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307  USA
 */
 package net.sf.farrago.runtime;
 
@@ -244,7 +247,7 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
      */
     public String getContextVariable_CURRENT_ROLE()
     {
-        // TODO jvs 25-Sept-2004:  once supported
+        // TODO jvs 25-Sept-2005:  once supported
         return "";
     }
 
@@ -276,7 +279,7 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
 
     protected long getCurrentTime()
     {
-        // NOTE jvs 25-Sept-2004:  per SQL standard, the same time
+        // NOTE jvs 25-Sept-2005:  per SQL standard, the same time
         // is used for all references within the same statement.
         if (currentTime == 0) {
             currentTime = System.currentTimeMillis();
@@ -402,7 +405,7 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
                 (FarragoObjectCache.Entry) txnCodeCache.get(xmiFennelPlan);
         }
         if (cacheEntry == null) {
-            // NOTE jvs 15-July-2004:  to avoid deadlock, grab the catalog
+            // NOTE jvs 15-July-2005:  to avoid deadlock, grab the catalog
             // lock BEFORE we pin the cache entry (this matches the
             // order used by statement preparation)
             repos.beginTransientTxn();

@@ -1,13 +1,15 @@
 /*
 // $Id$
-// Package org.eigenbase is a class library of database components.
-// Copyright (C) 2002-2004 Disruptive Tech
-// Copyright (C) 2003-2004 John V. Sichi
+// Package org.eigenbase is a class library of data management components.
+// Copyright (C) 2005-2005 The Eigenbase Project
+// Copyright (C) 2002-2005 Disruptive Tech
+// Copyright (C) 2005-2005 Red Square, Inc.
+// Portions Copyright (C) 2003-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
-// (at your option) any later version.
+// (at your option) any later Eigenbase-approved version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -34,8 +36,8 @@ import org.eigenbase.rex.RexNode;
 import org.eigenbase.util.Util;
 
 
-// TODO jvs 10-May-2004:  inherit from a new CalcRelBase
-// REVIEW jvs 16-June-2004:  also, consider renaming this
+// TODO jvs 10-May-2005:  inherit from a new CalcRelBase
+// REVIEW jvs 16-June-2005:  also, consider renaming this
 // to ComputeRel, to avoid confusion with the Fennel calculator?
 
 /**

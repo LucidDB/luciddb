@@ -1,13 +1,15 @@
 /*
 // $Id$
-// Package org.eigenbase is a class library of database components.
+// Package org.eigenbase is a class library of data management components.
+// Copyright (C) 2005-2005 The Eigenbase Project
 // Copyright (C) 2004-2005 Disruptive Tech
-// Copyright (C) 2004-2005 John V. Sichi.
+// Copyright (C) 2005-2005 Red Square, Inc.
+// Portions Copyright (C) 2004-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
-// (at your option) any later version.
+// (at your option) any later Eigenbase-approved version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -233,7 +235,7 @@ public class SqlTypeAssignmentRules
         rule.add(SqlTypeName.Char);
         rule.add(SqlTypeName.Varchar);
 
-        // REVIEW jvs 13-Dec-2004:  getting the milliseconds?
+        // REVIEW jvs 13-Dec-2005:  getting the milliseconds?
         // That sounds like a physical operation, and has nothing to do
         // with enforcing the logical rules.
 
