@@ -1076,6 +1076,11 @@ require version '${required.ant.version}'."/>
     </runTests>
   </target>
 
+  <target name="generateTestSql" depends="compile">
+    <javaExec classpathref="farrago.run.classpath"
+      classname="org.eigenbase.test.SqlTestGen"/>
+  </target>
+
   <!-- create the mdrlibs distribution; -->
   <!-- only use after building netbeans -->
   <target name="distLib3p">
