@@ -204,6 +204,11 @@ then
     STLPORT_LIB=${STLPORT_LIB_BASE}_stldebug
 else
     CXXFLAGS="$CXXFLAGS -O3 -g -DNDEBUG -Wno-unused-variable"
+    if test "$target_os" = "mingw32"
+    then
+        dnl optimized mingw build encounters bogus errors for -Wuninitialized
+        CXXFLAGS="$CXXFLAGS -Wno-uninitialized"
+    fi
     BOOST_LIB_SUFFIX=gcc-mt-p-1_31
     STLPORT_LIB=$STLPORT_LIB_BASE
 fi
