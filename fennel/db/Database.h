@@ -28,6 +28,7 @@
 #include "fennel/common/TraceSource.h"
 #include "fennel/common/StatsSource.h"
 #include "fennel/common/ConfigMap.h"
+#include "fennel/common/ClosableObject.h"
 #include "fennel/db/DatabaseHeader.h"
 #include "fennel/tuple/StandardTypeDescriptor.h"
 #include "fennel/segment/SegmentMap.h"
@@ -47,6 +48,7 @@ class LinearDeviceSegmentParams;
  */
 class Database
     : public boost::noncopyable,
+        public ClosableObject,
         public TraceSource,
         public SegmentMap,
         public StatsSource,
@@ -110,6 +112,15 @@ class Database
      */
     uint nCheckpoints;
 
+    explicit Database(
+        SharedCache pCache,
+        ConfigMap const &configMap,
+        DeviceMode openMode,
+        TraceTarget *pTraceTarget);
+    
+    // implement ClosableObject
+    virtual void closeImpl();
+    
 // ----------------------------------------------------------------------
 // internal helper methods
 // ----------------------------------------------------------------------
@@ -161,8 +172,8 @@ public:
 
     static const SegmentId DEFAULT_DATA_SEGMENT_ID;
     static const SegmentId TEMP_SEGMENT_ID;
-    
-    explicit Database(
+
+    static SharedDatabase newDatabase(
         SharedCache pCache,
         ConfigMap const &configMap,
         DeviceMode openMode,

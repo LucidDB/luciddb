@@ -58,6 +58,17 @@ const SegmentId Database::TEMP_SEGMENT_ID = SegmentId(2);
 
 // NOTE:  correct sequence is critical in most Database operations
 
+SharedDatabase Database::newDatabase(
+    SharedCache pCacheInit,
+    ConfigMap const &configMapInit,
+    DeviceMode openModeInit,
+    TraceTarget *pTraceTarget)
+{
+    return SharedDatabase(
+        new Database(pCacheInit, configMapInit, openModeInit, pTraceTarget),
+        ClosableObjectDestructor());
+}
+
 Database::Database(
     SharedCache pCacheInit,
     ConfigMap const &configMapInit,
@@ -184,6 +195,10 @@ void Database::openSegments()
 }
 
 Database::~Database()
+{
+}
+
+void Database::closeImpl()
 {
     if (pCheckpointThread) {
         pCheckpointThread->close();

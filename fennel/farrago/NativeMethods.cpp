@@ -232,7 +232,6 @@ Java_net_sf_farrago_fennel_FennelStorage_tupleStreamGraphClose(
                     streamGraphHandle.pExecStreamGraph);
             }
             delete &streamGraphHandle;
-            --JniUtil::handleCount;
             break;
         default:
             permAssert(false);

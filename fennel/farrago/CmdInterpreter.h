@@ -64,6 +64,8 @@ public:
               statsTimer(statsTarget,500)
         {
         }
+
+        ~DbHandle();
     };
     
     /**
@@ -77,6 +79,8 @@ public:
 
         // DEPRECATED
         SharedTableWriterFactory pTableWriterFactory;
+
+        ~TxnHandle();
     };
 
     struct StreamGraphHandle
@@ -88,6 +92,8 @@ public:
         SharedExecStreamScheduler pScheduler;
         TxnHandle *pTxnHandle;
         jobject javaRuntimeContext;
+
+        ~StreamGraphHandle();
 
         // implement BTreeOwnerRootMap
         virtual PageId getRoot(PageOwnerId pageOwnerId);
@@ -103,6 +109,7 @@ public:
     private:
         SharedTupleStreamGraph pGraph;
     public:
+        ~TupleStreamGraphHandle();
         void setTupleStreamGraph(SharedTupleStreamGraph pGraph);
         SharedExecutionStreamGraph getGraph();
         SharedTupleStreamGraph getTupleStreamGraph();

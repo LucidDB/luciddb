@@ -117,6 +117,30 @@ void CmdInterpreter::setSvptHandle(
     resultHandle = opaqueToInt(svptId);
 }
 
+CmdInterpreter::DbHandle::~DbHandle()
+{
+    statsTimer.stop();
+    
+    // close database before trace
+    pDb->close();
+    --JniUtil::handleCount;
+}
+    
+CmdInterpreter::TxnHandle::~TxnHandle()
+{
+    --JniUtil::handleCount;
+}
+    
+CmdInterpreter::StreamGraphHandle::~StreamGraphHandle()
+{
+    --JniUtil::handleCount;
+}
+    
+CmdInterpreter::TupleStreamGraphHandle::~TupleStreamGraphHandle()
+{
+    --JniUtil::handleCount;
+}
+    
 void CmdInterpreter::visit(ProxyCmdOpenDatabase &cmd)
 {
     ConfigMap configMap;
@@ -136,15 +160,15 @@ void CmdInterpreter::visit(ProxyCmdOpenDatabase &cmd)
     
     jobject javaTrace = getObjectFromLong(cmd.getJavaTraceHandle());
 
-    DbHandle *pDbHandle = new DbHandle();
+    std::auto_ptr<DbHandle> pDbHandle(new DbHandle());
     ++JniUtil::handleCount;
     pDbHandle->pTraceTarget.reset(new JavaTraceTarget(javaTrace));
-    SharedDatabase pDb(
-        new Database(
-            pCache,
-            configMap,
-            openMode,
-            pDbHandle->pTraceTarget.get()));
+
+    SharedDatabase pDb = Database::newDatabase(
+        pCache,
+        configMap,
+        openMode,
+        pDbHandle->pTraceTarget.get());
 
     pDbHandle->pDb = pDb;
 
@@ -152,7 +176,7 @@ void CmdInterpreter::visit(ProxyCmdOpenDatabase &cmd)
     pDbHandle->statsTimer.start();
 
     if (pDb->isRecoveryRequired()) {
-        // NOTE jvs 10-Aug-2005 -- the if (false) branch below is the real
+        // NOTE jvs 10-Aug-2004 -- the if (false) branch below is the real
         // recovery code.  It's currently disabled because MDR recovery isn't
         // working yet.  So for now, once we detect a crash we fail fast.
         if (false) {
@@ -165,7 +189,6 @@ void CmdInterpreter::visit(ProxyCmdOpenDatabase &cmd)
                 scratchAccessor);
             pDb->recover(recoveryFactory);
         } else {
-            deleteDbHandle(pDbHandle);
             // NOTE jvs 10-Aug-2005 -- this message is intentionally NOT
             // internationalized because it's supposed to be temporary.
             throw FennelExcn(
@@ -173,25 +196,15 @@ void CmdInterpreter::visit(ProxyCmdOpenDatabase &cmd)
                 "To repair system, you must restore the catalog from backup.");
         }
     }
-    setDbHandle(cmd.getResultHandle(),pDbHandle);
+    setDbHandle(cmd.getResultHandle(),pDbHandle.release());
 }
     
 void CmdInterpreter::visit(ProxyCmdCloseDatabase &cmd)
 {
     DbHandle *pDbHandle = getDbHandle(cmd.getDbHandle());
-    deleteDbHandle(pDbHandle);
+    deleteAndNullify(pDbHandle);
 }
 
-void CmdInterpreter::deleteDbHandle(DbHandle *pDbHandle)
-{
-    pDbHandle->statsTimer.stop();
-    
-    // close database before trace
-    pDbHandle->pDb.reset();
-    deleteAndNullify(pDbHandle);
-    --JniUtil::handleCount;
-}
-    
 void CmdInterpreter::visit(ProxyCmdCheckpoint &cmd)
 {
     DbHandle *pDbHandle = getDbHandle(cmd.getDbHandle());
@@ -267,8 +280,8 @@ void CmdInterpreter::visit(ProxyCmdBeginTxn &cmd)
     SharedDatabase pDb = getDbHandle(cmd.getDbHandle())->pDb;
     SXMutexSharedGuard actionMutexGuard(
         pDb->getCheckpointThread()->getActionMutex());
-    
-    TxnHandle *pTxnHandle = new TxnHandle();
+
+    std::auto_ptr<TxnHandle> pTxnHandle(new TxnHandle());
     ++JniUtil::handleCount;
     pTxnHandle->pDb = pDb;
     // TODO:  CacheAccessor factory
@@ -292,7 +305,7 @@ void CmdInterpreter::visit(ProxyCmdBeginTxn &cmd)
             pDb->getCache(),
             pDb->getTypeFactory(),
             scratchAccessor));
-    setTxnHandle(cmd.getResultHandle(),pTxnHandle);
+    setTxnHandle(cmd.getResultHandle(),pTxnHandle.release());
 }
 
 void CmdInterpreter::visit(ProxyCmdSavepoint &cmd)
@@ -322,7 +335,6 @@ void CmdInterpreter::visit(ProxyCmdCommit &cmd)
     } else {
         pTxnHandle->pTxn->commit();
         deleteAndNullify(pTxnHandle);
-        --JniUtil::handleCount;
     }
 }
 
@@ -340,7 +352,6 @@ void CmdInterpreter::visit(ProxyCmdRollback &cmd)
     } else {
         pTxnHandle->pTxn->rollback();
         deleteAndNullify(pTxnHandle);
-        --JniUtil::handleCount;
     }
 }
 
@@ -352,8 +363,8 @@ void CmdInterpreter::visit(ProxyCmdCreateExecutionStreamGraph &cmd)
         SharedTupleStreamGraph pGraph =
             TupleStreamGraph::newTupleStreamGraph();
         pGraph->setTxn(pTxnHandle->pTxn);
-        TupleStreamGraphHandle *pStreamGraphHandle =
-            new TupleStreamGraphHandle();
+        std::auto_ptr<TupleStreamGraphHandle> pStreamGraphHandle(
+            new TupleStreamGraphHandle());
         ++JniUtil::handleCount;
         pStreamGraphHandle->pTxnHandle = pTxnHandle;
         pStreamGraphHandle->setTupleStreamGraph(pGraph);
@@ -361,14 +372,16 @@ void CmdInterpreter::visit(ProxyCmdCreateExecutionStreamGraph &cmd)
             new ExecutionStreamFactory(
                 pTxnHandle->pDb,
                 pTxnHandle->pTableWriterFactory,
-                pStreamGraphHandle));
-        setStreamGraphHandle(cmd.getResultHandle(),pStreamGraphHandle);
+                pStreamGraphHandle.get()));
+        setStreamGraphHandle(
+            cmd.getResultHandle(),
+            pStreamGraphHandle.release());
     } else {
         SharedExecStreamGraph pGraph =
             ExecStreamGraph::newExecStreamGraph();
         pGraph->setTxn(pTxnHandle->pTxn);
-        StreamGraphHandle *pStreamGraphHandle =
-            new StreamGraphHandle();
+        std::auto_ptr<StreamGraphHandle> pStreamGraphHandle(
+            new StreamGraphHandle());
         ++JniUtil::handleCount;
         pStreamGraphHandle->pTxnHandle = pTxnHandle;
         pStreamGraphHandle->pExecStreamGraph = pGraph;
@@ -376,8 +389,10 @@ void CmdInterpreter::visit(ProxyCmdCreateExecutionStreamGraph &cmd)
             new ExecStreamFactory(
                 pTxnHandle->pDb,
                 pTxnHandle->pFtrsTableWriterFactory,
-                pStreamGraphHandle));
-        setStreamGraphHandle(cmd.getResultHandle(),pStreamGraphHandle);
+                pStreamGraphHandle.get()));
+        setStreamGraphHandle(
+            cmd.getResultHandle(),
+            pStreamGraphHandle.release());
     }
 }
 

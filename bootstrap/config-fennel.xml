@@ -42,14 +42,16 @@
 			     targetuser="&scp_user;"
 			     targethost="&scp_host;"
 			     targetseparator="&scp_filesep;"
-			     targetdir="web/logs/fennel&configSuffix;"/>
+			     targetdir="web/logs/fennel&configSuffix;"
+                             options="&scp_options;"/>
 			
 			<scp sourcedir="logs/fennel"
 			     file="currentbuildstatus.txt"
 			     targetuser="&scp_user;"
 			     targethost="&scp_host;"
 			     targetseparator="&scp_filesep;"
-			     targetdir="web/logs/fennel&configSuffix;"/>
+			     targetdir="web/logs/fennel&configSuffix;"
+                             options="&scp_options;"/>
 			
 			<email buildresultsurl="&buildresultsbase;/fennel&configSuffix;"
 			       mailhost="&mailhost;"
