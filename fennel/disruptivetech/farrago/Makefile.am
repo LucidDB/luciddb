@@ -26,3 +26,5 @@ libfarrago_dt_la_LIBADD = \
 	-lfennel_device \
 	-lfennel_synch \
 	-lfennel_common
+
+LDADD = -Wl,--no-undefined
