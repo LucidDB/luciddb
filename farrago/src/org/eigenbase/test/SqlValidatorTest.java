@@ -855,11 +855,14 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExpType("multiset[1]","INTEGER MULTISET");
         checkExpType("multiset[1,2.3]","DECIMAL(2, 1) MULTISET");
         checkExpType("multiset[1,2.3, 4]","DECIMAL(2, 1) MULTISET");
-//        checkExpType("multiset['1','22', '333','22']","VARCHAR(3) MULTISET");
+        checkExpType("multiset['1','22', '333','22']","VARCHAR(3) MULTISET");
         checkExpFails("multiset[1, '2']", "Parameters must be of the same type", 1, 23);
         checkExpType("multiset[ROW(1,2)]","RecordType(INTEGER EXPR$0, INTEGER EXPR$1) MULTISET");
         checkExpType("multiset[ROW(1,2),ROW(2,5)]","RecordType(INTEGER EXPR$0, INTEGER EXPR$1) MULTISET");
         checkExpType("multiset[ROW(1,2),ROW(3.4,5.4)]","RecordType(DECIMAL(2, 1) EXPR$0, DECIMAL(2, 1) EXPR$1) MULTISET");
+
+        checkExpType("multiset(select*from emp)",
+                     "RecordType(INTEGER EMPNO, VARCHAR(20) ENAME, VARCHAR(10) JOB, INTEGER MGR, DATE HIREDATE, INTEGER SAL, INTEGER COMM, INTEGER DEPTNO) MULTISET");
     }
 
     public void testMultisetSetOperators() {
@@ -1756,8 +1759,10 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkType("select*from unnest(multiset[1, 2.3])","DECIMAL(2, 1)");
         checkType("select*from unnest(multiset[1, 2.3, 1])","DECIMAL(2, 1)");
         checkType("select*from unnest(multiset['1','22','333'])","VARCHAR(3)");
-//        checkType("select*from unnest(multiset['1','22','333','22'])","VARCHAR(3)");
+        checkType("select*from unnest(multiset['1','22','333','22'])","VARCHAR(3)");
         checkFails("select*from unnest(1)","(?s).*Cannot apply 'UNNEST' to arguments of type 'UNNEST.<INTEGER>.*'");
+
+        check("select*from unnest(multiset(select*from dept))");
     }
 
     public void testNew() {

@@ -246,6 +246,14 @@ public class SqlToRelConverterTest extends TestCase
             "          OneRowRel" + NL +
             "        ProjectRel(EXPR$0=[2])" + NL +
             "          OneRowRel" + NL);
+
+        check("select*from unnest(multiset(select*from dept))",
+            "ProjectRel(DEPTNO=[$0])" + NL +
+            "  UncollectRel" + NL +
+            "    CollectRel" + NL +
+            "      ProjectRel(DEPTNO=[$0], NAME=[$1])" + NL +
+            "        TableAccessRel(table=[[DEPT]])" + NL);
+
     }
 }
 

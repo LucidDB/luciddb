@@ -1621,7 +1621,7 @@ SqlNode StringLiteral(ParserPosition pos, boolean strict) :
                 return (SqlLiteral) frags.get(0); // just the head fragment
             else {
                 SqlNode[] rands = (SqlNode[]) frags.toArray(new SqlNode[nfrags]);
-                return opTab.litChainOperator.createCall(rands, pos);
+                return opTab.literalChainOperator.createCall(rands, pos);
             }
         }
 
@@ -1650,7 +1650,7 @@ SqlNode StringLiteral(ParserPosition pos, boolean strict) :
                 return (SqlLiteral) frags.get(0); // just the head fragment
             else {
                 SqlNode[] rands = (SqlNode[]) frags.toArray(new SqlNode[nfrags]);
-                return opTab.litChainOperator.createCall(rands, pos);
+                return opTab.literalChainOperator.createCall(rands, pos);
             }
         }
 
@@ -1687,7 +1687,7 @@ SqlNode StringLiteral(ParserPosition pos, boolean strict) :
                 return (SqlLiteral) frags.get(0); // just the head fragment
             else {
                 SqlNode[] rands = (SqlNode[]) frags.toArray(new SqlNode[nfrags]);
-                return opTab.litChainOperator.createCall(rands, pos);
+                return opTab.literalChainOperator.createCall(rands, pos);
             }
         }
 }
@@ -1733,6 +1733,14 @@ SqlNode MultisetConstructor() :
     SqlNode e;
 }
 {
+    LOOKAHEAD(2)
+    <MULTISET>
+    <LPAREN>
+    //by sub query "MULTISET(SELECT * FROM T)"
+    e = LeafQueryOrExpr(EXPR_ACCEPT_QUERY)
+    <RPAREN>
+    {return opTab.multisetQueryConstructor.createCall(e, getPos());}
+|
     <MULTISET>
     //by enumeration "MULTISET[e0, e1, ..., eN]"
     <LBRACKET> //todo do trigraph aswell ??( ??)
@@ -1741,8 +1749,9 @@ SqlNode MultisetConstructor() :
         <COMMA> e = Expression(EXPR_ACCEPT_NONQUERY) { args.add(e); }
     )*
     <RBRACKET>
-    {return opTab.multisetOperator.createCall(
+    {return opTab.multisetValueConstructor.createCall(
                 ParserUtil.toNodeArray(args), getPos());}
+
 }
 
 /**

@@ -707,6 +707,18 @@ public class SqlValidator
                 type = call.operator.getType(this, scope, call);
                 return type;
             }
+
+            if (call.isA(SqlKind.MultisetQueryConstructor)) {
+                SqlSelect subSelect = (SqlSelect) call.operands[0];
+                subSelect.validateExpr(this, scope);
+                Namespace ns = getNamespace(subSelect);
+                assert(null!=ns.getRowType());
+                final RelDataType ret =
+                    typeFactory.createMultisetType(ns.getRowType(),-1);
+                return typeFactory.createTypeWithNullability(
+                    ret, ns.getRowType().isNullable());
+            }
+
             final SqlSyntax syntax = call.operator.getSyntax();
             switch (syntax.ordinal) {
             case SqlSyntax.Prefix_ordinal:
@@ -715,6 +727,7 @@ public class SqlValidator
                 // TODO: use this switch statement to resolve functions instead
                 // of all of these 'if's.
             }
+
             if (call.operator instanceof SqlCaseOperator) {
                 return call.operator.getType(this, scope, call);
             }
@@ -1342,10 +1355,12 @@ public class SqlValidator
         case SqlKind.UnnestORDINAL:
             SqlCall unnestCall = (SqlCall) node;
             final UnnestNamespace unnestNamespace =
-                new UnnestNamespace(node, parentScope);
+                new UnnestNamespace(node, usingScope);
             registerNamespace(usingScope, alias, unnestNamespace);
-            if (unnestCall.operands[0].isA(SqlKind.Select)) {
-                registerSubqueries(parentScope, unnestCall.operands[0]);
+            if (unnestCall.operands[0].isA(
+                SqlKind.MultisetQueryConstructor)) {
+                final SqlCall queryCtor = (SqlCall) unnestCall.operands[0];
+                registerSubqueries(usingScope, queryCtor.operands[0]);
             }
             break;
         default:
@@ -2981,8 +2996,14 @@ public class SqlValidator
         protected RelDataType validateImpl()
         {
             RelDataType type = scope.getValidator().deriveType(scope, child);
+            String[] names;
+            if (type.isStruct()) {
+                names = SqlTypeUtil.getFieldNames(type);
+            } else {
+                names = new String[]{ deriveAlias(child, 0) };
+            }
             return typeFactory.createStructType(
-                new RelDataType[]{type}, new String[]{deriveAlias(child, 0)});
+                new RelDataType[]{type}, names);
         }
 
         public SqlNode getNode()

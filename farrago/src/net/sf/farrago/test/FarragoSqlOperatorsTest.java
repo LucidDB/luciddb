@@ -103,7 +103,7 @@ public class FarragoSqlOperatorsTest extends FarragoTestCase
                 if (op == opTab.orOperator ||
                     op == opTab.andOperator ||
                     op == opTab.isFalseOperator ||
-                    op == opTab.litChainOperator ||
+                    op == opTab.literalChainOperator ||
                     op == opTab.multiplyOperator ||
                     op == opTab.localTimeFunc ||
                     op == opTab.localTimestampFunc) {

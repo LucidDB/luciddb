@@ -287,21 +287,27 @@ public class SqlKind extends EnumeratedValues.BasicValue
     public static final int JdbcFnORDINAL = 163;
     public static final SqlKind JdbcFn = new SqlKind("JdbcFn", JdbcFnORDINAL);
 
-    /** Multiset */
-    public static final int MultisetORDINAL = 164;
-    public static final SqlKind Multiset = new SqlKind("MULTISET", MultisetORDINAL);
+    /** MultisetValueConstructor Value Constructor*/
+    public static final int MultisetValueConstructorORDINAL = 164;
+    public static final SqlKind MultisetValueConstructor =
+        new SqlKind("MultisetValueConstructor", MultisetValueConstructorORDINAL);
+
+    /** MultisetValueConstructor Query Constructor*/
+    public static final int MultisetQueryConstructorORDINAL = 165;
+    public static final SqlKind MultisetQueryConstructor =
+        new SqlKind("MultisetQueryConstructor", MultisetQueryConstructorORDINAL);
 
     /** Unnest */
-    public static final int UnnestORDINAL = 165;
+    public static final int UnnestORDINAL = 166;
     public static final SqlKind Unnest = new SqlKind("UNNEST", UnnestORDINAL);
 
 
     // internal operators (evaluated in validator) 200-299
 
-    /** LitChain operator (for composite string literals) */
-    public static final int LitChainORDINAL = 200;
-    public static final SqlKind LitChain =
-        new SqlKind("LitChain", LitChainORDINAL);
+    /** LiteralChain operator (for composite string literals) */
+    public static final int LiteralChainORDINAL = 200;
+    public static final SqlKind LiteralChain =
+        new SqlKind("LiteralChain", LiteralChainORDINAL);
 
     /** Escape operator (always part of LIKE or SIMILAR TO expression) */
     public static final int EscapeORDINAL = 201;
@@ -375,7 +381,7 @@ public class SqlKind extends EnumeratedValues.BasicValue
             // row
             Row, Cast, Trim,
             // special
-            Multiset, LitChain,
+            MultisetValueConstructor, MultisetQueryConstructor, LiteralChain,
             });
 
     //~ Constructors ----------------------------------------------------------
@@ -410,7 +416,7 @@ public class SqlKind extends EnumeratedValues.BasicValue
         case ExpressionORDINAL:
             return !((this == As) || (this == Descending) || (this == Select)
                 || (this == Join) || (this == Function) || (this == Cast)
-                || (this == Trim) || (this == LitChain) || (this == JdbcFn));
+                || (this == Trim) || (this == LiteralChain) || (this == JdbcFn));
         case FunctionORDINAL:
             return (this == Function) || (this == Row) || (this == Trim)
                 || (this == Cast) || (this == JdbcFn);

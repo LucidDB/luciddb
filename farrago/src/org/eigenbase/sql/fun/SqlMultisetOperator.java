@@ -38,12 +38,15 @@ public class SqlMultisetOperator extends SqlSpecialOperator
 {
     //~ Constructors ----------------------------------------------------------
 
-    public SqlMultisetOperator()
+    public SqlMultisetOperator(SqlKind kind)
     {
         // Precedence of 100 because nothing can pull parentheses apart.
-        super("MULTISET", SqlKind.Multiset, 100, false,
+        super("MULTISET", kind, 100, false,
             ReturnTypeInferenceImpl.useFirstArgType,
-            UnknownParamInference.useFirstKnown, null);
+            null, null);
+        assert(kind.isA(SqlKind.MultisetQueryConstructor) ||
+               kind.isA(SqlKind.MultisetValueConstructor));
+
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -110,14 +113,24 @@ public class SqlMultisetOperator extends SqlSpecialOperator
         int leftPrec,
         int rightPrec) {
 
-        writer.print("MULTISET[");
+        writer.print("MULTISET");
+        if (kind.isA(SqlKind.MultisetValueConstructor)) {
+            writer.print("[");
+        } else {
+            writer.print("(");
+        }
         for (int i = 0; i < operands.length; i++) {
             if (i>0) {
+                assert(kind.isA(SqlKind.MultisetValueConstructor));
                 writer.print(", ");
             }
             operands[i].unparse(writer, leftPrec, rightPrec);
         }
-        writer.print("]");
+        if (kind.isA(SqlKind.MultisetValueConstructor)) {
+            writer.print("]");
+        } else {
+            writer.print(")");
+        }
     }
 }
 

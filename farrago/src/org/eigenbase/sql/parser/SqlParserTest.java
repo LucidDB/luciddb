@@ -1489,6 +1489,8 @@ public class SqlParserTest extends TestCase
         checkExp("multiset[1,    '2']", "(MULTISET[1, '2'])");
         checkExp("multiset[ROW(1,2)]", "(MULTISET[(ROW(1, 2))])");
         checkExp("multiset[ROW(1,2),ROW(3,4)]", "(MULTISET[(ROW(1, 2)), (ROW(3, 4))])");
+
+        checkExp("multiset(select*from T)", "(MULTISET(SELECT *" +NL+ "FROM `T`))");
     }
 
     public void testMultisetUnion()

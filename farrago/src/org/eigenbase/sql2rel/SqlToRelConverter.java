@@ -639,8 +639,8 @@ public class SqlToRelConverter
             } else if (call.operator instanceof SqlBetweenOperator) {
                 return convertBetween(bb, call);
             } else if (call.operator.equals(
-                rexBuilder.opTab.litChainOperator)) {
-                return convertLitChain(bb, call);
+                rexBuilder.opTab.literalChainOperator)) {
+                return convertLiteralChain(bb, call);
             } else if ((call.operator instanceof SqlBinaryOperator) ||
                        (call.operator instanceof SqlMultisetOperator)) {
                 final RexNode[] exprs =
@@ -712,15 +712,15 @@ public class SqlToRelConverter
     }
 
     /**
-     * Converts a LitChain expression: that is, concatenates the operands
+     * Converts a LiteralChain expression: that is, concatenates the operands
      * immediately, to produce a single literal string.
      */
-    private RexNode convertLitChain(
+    private RexNode convertLiteralChain(
         Blackboard bb,
         SqlCall call)
     {
         Util.discard(bb);
-        // REVIEW mb: this code really belongs inside the LitChain operator
+        // REVIEW mb: this code really belongs inside the LiteralChain operator
         assert call.operands.length > 0;
         assert call.operands[0] instanceof SqlLiteral :
             call.operands[0].getClass();
@@ -872,10 +872,13 @@ public class SqlToRelConverter
         case SqlKind.UnnestORDINAL:
             SqlCall call = (SqlCall) ((SqlCall) from).operands[0];
             final RelNode childRel;
-            if (call.isA(SqlKind.Multiset)) {
+            if (call.isA(SqlKind.MultisetValueConstructor)) {
                 final SqlNodeList list = SqlUtil.toNodeList(call.operands);
                 childRel =
                     new CollectRel(cluster, convertQueryOrInList(bb,list));
+            } else if (call.isA(SqlKind.MultisetQueryConstructor)) {
+                childRel = new CollectRel(
+                    cluster, convertValidatedQuery(call.operands[0]));
             } else {
                 childRel = convertValidatedQuery(call.operands[0]);
             }

@@ -48,7 +48,7 @@ import org.eigenbase.util.NlsString;
 public class SqlLiteralChainOperator extends SqlInternalOperator {
 
     SqlLiteralChainOperator() {
-        super("$LitChain", SqlKind.LitChain, 40, true,
+        super("$LiteralChain", SqlKind.LiteralChain, 40, true,
             // precedence tighter than the * and || operators
             ReturnTypeInferenceImpl.useFirstArgType,
             UnknownParamInference.useFirstKnown, null);
@@ -114,7 +114,7 @@ public class SqlLiteralChainOperator extends SqlInternalOperator {
         RelDataType ret = callOperands.getType(0);
         SqlTypeName typeName = ret.getSqlTypeName();
         assert(typeName.allowsPrecNoScale()) :
-            "LitChain has impossible operand type " + typeName;
+            "LiteralChain has impossible operand type " + typeName;
         int size = 0;
         RelDataType[] types = callOperands.collectTypes();
         for (int i = 0; i < types.length; i++) {

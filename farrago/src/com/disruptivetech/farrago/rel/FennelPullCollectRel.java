@@ -53,6 +53,14 @@ public class FennelPullCollectRel extends FennelSingleRel
         return FENNEL_PULL_CONVENTION;
     }
 
+    protected RelDataType deriveRowType()
+    {
+        RelDataType ret =
+            cluster.typeFactory.createMultisetType(child.getRowType(),-1);
+        return cluster.typeFactory.createTypeWithNullability(
+            ret, child.getRowType().isNullable());
+    }
+
     public RelOptCost computeSelfCost(RelOptPlanner planner) {
         return planner.makeTinyCost();
     }

@@ -147,8 +147,8 @@ public class RexCall extends RexNode
             return RexKind.Like;
         case SqlKind.SimilarORDINAL:
             return RexKind.Similar;
-        case SqlKind.MultisetORDINAL:
-            return RexKind.Multiset;
+        case SqlKind.MultisetValueConstructorORDINAL:
+            return RexKind.MultisetValueConstructor;
         default:
             throw kind.unexpected();
         }

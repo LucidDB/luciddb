@@ -553,6 +553,18 @@ public abstract class SqlTypeUtil
         SqlTypeAssignmentRules rules = SqlTypeAssignmentRules.instance();
         return rules.canCastFrom(tn1, tn2, coerce);
     }
+
+    /**
+     * @return the field names of a struct type
+     */
+    public static String[] getFieldNames(RelDataType type) {
+        RelDataTypeField[] fields = type.getFields();
+        String[] ret = new String[fields.length];
+        for (int i = 0; i < fields.length; i++) {
+            ret[i] = fields[i].getName();
+        }
+        return ret;
+    }
 }
 
 

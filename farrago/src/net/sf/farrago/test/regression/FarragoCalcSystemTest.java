@@ -134,7 +134,7 @@ public class FarragoCalcSystemTest extends FarragoTestCase
         exclude.add(opTab.trimFunc);
         exclude.add(opTab.isDistinctFromOperator);
         exclude.add(opTab.descendingOperator);
-        exclude.add(opTab.litChainOperator);
+        exclude.add(opTab.literalChainOperator);
         exclude.add(opTab.escapeOperator);
         exclude.add(opTab.localTimeFunc);
         exclude.add(opTab.localTimestampFunc);

@@ -28,6 +28,7 @@ import net.sf.farrago.fem.fennel.FemCollectTupleStreamDef;
 import net.sf.farrago.fem.fennel.FemUncollectTupleStreamDef;
 import org.eigenbase.relopt.*;
 import org.eigenbase.rel.RelNode;
+import org.eigenbase.reltype.RelDataType;
 
 /**
  * FennelPullUncollectRel is the relational expression corresponding to an
@@ -51,6 +52,13 @@ public class FennelPullUncollectRel extends FennelSingleRel
 
     public CallingConvention getConvention() {
         return FENNEL_PULL_CONVENTION;
+    }
+
+    protected RelDataType deriveRowType()
+    {
+        RelDataType ret = child.getRowType().getComponentType();
+        assert(null!=ret);
+        return ret;
     }
 
     public RelOptCost computeSelfCost(RelOptPlanner planner) {

@@ -22,6 +22,7 @@ package org.eigenbase.rel;
 
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptUtil;
+import org.eigenbase.reltype.RelDataType;
 
 /**
  * A relational expression which collapses a multiply rows into one
@@ -39,5 +40,13 @@ public class CollectRel extends SingleRel {
     // override Object (public, does not throw CloneNotSupportedException)
     public Object clone() {
         return new CollectRel(cluster, RelOptUtil.clone(child));
+    }
+
+    protected RelDataType deriveRowType()
+    {
+        RelDataType ret =
+            cluster.typeFactory.createMultisetType(child.getRowType(),-1);
+        return cluster.typeFactory.createTypeWithNullability(
+            ret, child.getRowType().isNullable());
     }
 }

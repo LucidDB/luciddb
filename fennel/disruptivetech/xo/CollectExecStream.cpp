@@ -100,9 +100,9 @@ ExecStreamResult CollectExecStream::execute(ExecStreamQuantum const &quantum)
 
         // write one input tuple to the staging output buffer
         memcpy(pOutputBuffer.get() + bytesWritten, 
-               pInAccessor->getConsumptionStart(),
-               pInAccessor->getConsumptionTupleAccessor().getCurrentByteCount());
-        bytesWritten += pInAccessor->getConsumptionTupleAccessor().getCurrentByteCount();
+               pInAccessor->getConsumptionStart(), 
+               pInAccessor->getConsumptionTupleAccessor().getMaxByteCount());
+        bytesWritten += pInAccessor->getConsumptionTupleAccessor().getMaxByteCount();
         pInAccessor->consumeTuple();
     }
     return EXECRC_QUANTUM_EXPIRED;

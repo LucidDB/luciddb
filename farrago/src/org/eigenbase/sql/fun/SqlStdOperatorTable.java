@@ -735,11 +735,19 @@ public class SqlStdOperatorTable extends SqlOperatorTable
             };
 
     /**
-     * The MULTISET operator, e.g. "<code>SELECT dname, MULTISET(SELECT * FROM
+     * The MULTISET Value Constructor.
+     * e.g. "<code>MULTISET[1,2,3]</code>".
+     */
+    public final SqlMultisetOperator multisetValueConstructor =
+        new SqlMultisetOperator(SqlKind.MultisetValueConstructor);
+
+    /**
+     * The MULTISET Query Constructor.
+     * e.g. "<code>SELECT dname, MULTISET(SELECT * FROM
      * emp WHERE deptno = dept.deptno) FROM dept</code>".
      */
-    public final SqlMultisetOperator multisetOperator =
-        new SqlMultisetOperator();
+    public final SqlMultisetOperator multisetQueryConstructor =
+        new SqlMultisetOperator(SqlKind.MultisetQueryConstructor);
 
     public final SqlSpecialOperator unnestOperator =
         new SqlSpecialOperator ("UNNEST", SqlKind.Unnest,
@@ -795,7 +803,7 @@ public class SqlStdOperatorTable extends SqlOperatorTable
             }
         };
 
-    public final SqlInternalOperator litChainOperator =
+    public final SqlInternalOperator literalChainOperator =
         new SqlLiteralChainOperator();
     public final SqlBetweenOperator betweenOperator =
         new SqlBetweenOperator(

@@ -22,9 +22,11 @@ package org.eigenbase.rel;
 
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptUtil;
+import org.eigenbase.reltype.RelDataType;
 
 /**
- * A relational expression which extract collapses a multiply rows from one row
+ * A relational expression which extract "collapses"
+ * of multiply rows from one row
  *
  * @author Wael Chatila 
  * @since Dec 12, 2004
@@ -39,5 +41,12 @@ public class UncollectRel extends SingleRel {
     // override Object (public, does not throw CloneNotSupportedException)
     public Object clone() {
         return new UncollectRel(cluster, RelOptUtil.clone(child));
+    }
+
+    protected RelDataType deriveRowType()
+    {
+        RelDataType ret = child.getRowType().getComponentType();
+        assert(null!=ret);
+        return ret;
     }
 }

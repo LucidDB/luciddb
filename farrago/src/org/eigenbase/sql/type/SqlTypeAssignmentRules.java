@@ -33,7 +33,7 @@ import java.util.*;
  * REVIEW 7/05/04 Wael: We should split this up in
  * Cast rules, symmetric and asymmetric assignable rules
  *
- * @author wael
+ * @author Wael Chatila
  * @version $Id$
  */
 public class SqlTypeAssignmentRules
@@ -58,7 +58,7 @@ public class SqlTypeAssignmentRules
         rule.add(SqlTypeName.IntervalDayTime);
         rules.put(SqlTypeName.IntervalDayTime, rule);
 
-        //Multiset is assignable from...
+        // Multiset is assignable from...
         rule = new HashSet();
         rule.add(SqlTypeName.Multiset);
         rules.put(SqlTypeName.Multiset, rule);

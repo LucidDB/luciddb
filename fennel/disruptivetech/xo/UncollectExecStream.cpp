@@ -25,11 +25,22 @@
 #include "fennel/tuple/StandardTypeDescriptor.h"
 #include "fennel/tuple/TuplePrinter.h"
 
+
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 void UncollectExecStream::prepare(UncollectExecStreamParams const &params)
 {
     ConduitExecStream::prepare(params);
+
+    FENNEL_TRACE(
+        TRACE_FINER,
+        "uncollect xo input TupleDescriptor = " 
+        << pInAccessor->getTupleDesc());
+
+    FENNEL_TRACE(
+        TRACE_FINER,
+        "uncollect xo output TupleDescriptor = " 
+        << pOutAccessor->getTupleDesc());
 
     StandardTypeDescriptorOrdinal ordinal =
         StandardTypeDescriptorOrdinal(
@@ -69,8 +80,7 @@ ExecStreamResult UncollectExecStream::execute(ExecStreamQuantum const &quantum)
     tuplePrinter.print(std::cout, statusDesc, inputTupleData);
     std::cout << std::endl;
 #endif
-
-
+    
     TupleAccessor& outTa = pOutAccessor->getScratchTupleAccessor();
     while (bytesWritten < inputTupleData[0].cbData) {
         // write one item in the input array to the output buffer
@@ -78,7 +88,7 @@ ExecStreamResult UncollectExecStream::execute(ExecStreamQuantum const &quantum)
         outTa.unmarshal(outputTupleData);
 #if 0
     std::cout << "unmarshalling ouput tuple= ";
-    TupleDescriptor statusDesc = pInAccessor->getTupleDesc();
+    TupleDescriptor statusDesc = pOutAccessor->getTupleDesc();
     TuplePrinter tuplePrinter;
     tuplePrinter.print(std::cout, statusDesc, outputTupleData);
     std::cout << std::endl;
