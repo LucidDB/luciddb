@@ -54,7 +54,7 @@ done
 
 for i in $(find $ARTDIR/* -type d -maxdepth 0); do
    rm -f $i/latest
-   mostRecentDir="$(ls -td $(find $i/* -type d -maxdepth 0) | tail -1)"
+   mostRecentDir="$(ls -d $(find $i/* -type d -maxdepth 0) | tail -1)"
    ln -s $mostRecentDir $i/latest
 done
 
