@@ -1,3 +1,23 @@
+/*
+// $Id$
+// Farrago is an extensible data management system.
+// Copyright (C) 2002-2005 Disruptive Tech
+// Copyright (C) 2005-2005 The Eigenbase Project
+//
+// This program is free software; you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by the Free
+// Software Foundation; either version 2 of the License, or (at your option)
+// any later version approved by The Eigenbase Project.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
 package com.disruptivetech.farrago.rel;
 
 import org.eigenbase.relopt.*;
@@ -64,6 +84,7 @@ public class FarragoMultisetSplitterRule extends RelOptRule
         final SqlStdOperatorTable opTab = SqlStdOperatorTable.instance();
 
         multisetOperators.add(opTab.cardinalityFunc);
+        multisetOperators.add(opTab.elementFunc);
     }
 
     //~ Constructors ----------------------------------------------------------
@@ -136,7 +157,8 @@ public class FarragoMultisetSplitterRule extends RelOptRule
 
         for (int i = 0; i < calc.projectExprs.length; i++) {
             if (containsMultiset(calc.projectExprs[i], false)) {
-                assert(calc.projectExprs[i] instanceof RexCall);
+                assert(calc.projectExprs[i] instanceof RexCall ||
+                       calc.projectExprs[i] instanceof RexFieldAccess);
                 insertRels(call, calc, new Integer(i));
                 call.transformTo(calc);
                 return;
@@ -144,14 +166,22 @@ public class FarragoMultisetSplitterRule extends RelOptRule
         }
         if ((calc.conditionExpr != null)
             && containsMultiset(calc.conditionExpr, false)) {
-            assert(calc.conditionExpr instanceof RexCall);
-            // todo do rewrite here
+            assert(calc.conditionExpr instanceof RexCall ||
+                   calc.conditionExpr instanceof RexFieldAccess );
+            insertRels(call, calc, null);
+            call.transformTo(calc);
             return;
         }
 
         // If we come here, we have all non-mulisets so we are
         // (funny to say) all set, nothing to do.
-        // Let other rules take handle things from here on.
+        // Let other rules handle things from here on.
+        for (int i = 0; i < calc.projectExprs.length; i++) {
+            assert(!containsMultiset(calc.projectExprs[i], true));
+        }
+        if (calc.conditionExpr != null) {
+            assert(!containsMultiset(calc.conditionExpr, true));
+        }
         return;
     }
 
@@ -167,23 +197,47 @@ public class FarragoMultisetSplitterRule extends RelOptRule
     private void insertRels(RelOptRuleCall call, CalcRel calc, final Integer offset)
     {
         RelNode input = calc.child;
-        // newInputRel is the new input rel that will replace the child of the
+        // correlatorRel is the new input rel that will replace the child of the
         // current calc.child
-        RelNode newInputRel = null;
-        RexCall rexCall;
+        CorrelatorRel correlatorRel = null;
+
+        final RexCall rexCall;
+        final RexNode rexNode;
         if (null != offset) {
-            rexCall = (RexCall) calc.projectExprs[offset.intValue()];
+            rexNode = calc.projectExprs[offset.intValue()];
         } else {
-            rexCall = (RexCall) calc.conditionExpr;
+            rexNode = calc.conditionExpr;
         }
+
+        if (rexNode instanceof RexFieldAccess) {
+            rexCall = (RexCall) ((RexFieldAccess) rexNode).expr;
+        } else {
+            rexCall = (RexCall) rexNode;
+        }
+
         final RelOptCluster cluster = calc.getCluster();
+        final String dyn_inIdStr = cluster.query.createCorrel();
+        final int dyn_inId = cluster.query.getCorrelOrdinal(dyn_inIdStr);
+        assert(rexCall.operands[0] instanceof RexInputRef);
+        final RexInputRef rexInput = (RexInputRef) rexCall.operands[0];
+        ArrayList correlations = new ArrayList();
+        correlations.add(
+            new CorrelatorRel.Correlation(dyn_inId,rexInput.index));
+
+        final RexNode corRef =
+            cluster.rexBuilder.makeCorrel(rexInput.getType(), dyn_inIdStr);
+        ProjectRel projectRel = new ProjectRel(
+            cluster,
+            new OneRowRel(cluster),
+            new RexNode[]{corRef},
+            new String[]{"output"+corRef.toString()},
+            ProjectRel.Flags.Boxed);
+
         if (opTab.cardinalityFunc == rexCall.op) {
             // A call to
             // CalcRel=[...,CARDINALITY($in_i),...]
             //   CalcInput
-            //
             //is eq. to
-            //
             // CalcRel=[...,$in_N,...]
             //   CorrelRel=[$cor0=$in_i]
             //     CalcInput
@@ -191,56 +245,52 @@ public class FarragoMultisetSplitterRule extends RelOptRule
             //       Uncollect
             //          ProjectRel=[output=$cor0]
             //            OneRowRel
-            final String dyn_inIdStr = cluster.query.createCorrelUnresolved("wael deffered");
-            final int dyn_inId = cluster.query.getCorrelOrdinal(dyn_inIdStr);
-            assert(rexCall.operands[0] instanceof RexInputRef);
-            final RexInputRef rexInput = (RexInputRef) rexCall.operands[0];
-
-            final RexNode corRef = cluster.rexBuilder.makeCorrel(rexInput.getType(), dyn_inIdStr);
-            ProjectRel projectRel = new ProjectRel(
-                cluster,
-                new OneRowRel(cluster),
-                new RexNode[]{corRef},
-                new String[]{"output"},
-                ProjectRel.Flags.Boxed);
-
             UncollectRel uncollect = new UncollectRel(cluster, projectRel);
-
             // TODO wael 3/15/05: need to create proper count agg call def.
             AggregateRel aggregateRel = new AggregateRel(cluster, uncollect, 1, new AggregateRel.Call[]{});
+            correlatorRel = new CorrelatorRel(cluster, input, aggregateRel, correlations);
 
-            ArrayList correlations = new ArrayList();
-            correlations.add(new CorrelatorRel.Correlation(dyn_inId,rexInput.index));
-            final CorrelatorRel correlatorRel = new CorrelatorRel(cluster, input, aggregateRel, correlations);
-
-            newInputRel = correlatorRel;
-            if (null == offset) {
-                calc = new CalcRel(
-                    cluster,
-                    calc.getTraits(),
-                    calc.child,
-                    calc.getRowType(),
-                    calc.projectExprs,
-                    cluster.rexBuilder.makeInputRef(
-                        calc.conditionExpr.getType(),
-                        call.rels[1].getRowType().getFields().length+1));
-            } else {
-                calc.projectExprs[offset.intValue()] =
-                    cluster.rexBuilder.makeInputRef(
-                        calc.projectExprs[offset.intValue()].getType(),
-                        call.rels[1].getRowType().getFields().length+1);
-            }
             HashSet stoppedVariableSet = new HashSet();
             stoppedVariableSet.add(corRef);
             correlatorRel.setVariablesStopped(stoppedVariableSet);
 //            correlatorRel.registerCorrelVariable(dyn_inIdStr);
+        } else if (opTab.elementFunc == rexCall.op) {
+            // A call to
+            // CalcRel=[...,MEMBEROF($in_i),...]
+            //   CalcInput
+            //is eq. to
+            // CalcRel=[...,$in_N,...]
+            //   CorrelRel=[$cor0=$in_i]
+            //     CalcInput
+            //     Uncollect
+            //        ProjectRel=[output=$cor0]
+            //          OneRowRel
+            UncollectRel uncollect = new UncollectRel(cluster, projectRel);
+            correlatorRel = new CorrelatorRel(cluster, input, uncollect, correlations);
         }
 
         Util.permAssert(
-            null != newInputRel,
-            rexCall.op.name + " is not defined to be implemenatble");
+            null != correlatorRel,
+            rexCall.op.name + " is not defined to be implementable");
 
-        calc.replaceInput(0,newInputRel);
+        final RexNode newRexInputRef = cluster.rexBuilder.makeInputRef(
+                        rexNode.getType(),
+                        call.rels[1].getRowType().getFields().length+1);
+        if (rexNode instanceof RexFieldAccess) {
+            ((RexFieldAccess) rexNode).expr = newRexInputRef;
+        } else if (null == offset) {
+            calc = new CalcRel(
+                cluster,
+                calc.getTraits(),
+                calc.child,
+                calc.getRowType(),
+                calc.projectExprs,
+                newRexInputRef);
+        } else {
+            calc.projectExprs[offset.intValue()] = newRexInputRef;
+        }
+
+        calc.replaceInput(0, correlatorRel);
         call.transformTo(calc);
         return;
     }
@@ -286,6 +336,10 @@ public class FarragoMultisetSplitterRule extends RelOptRule
      */
     private static RexCall findFirstMultiset(final RexNode node, boolean deep)
     {
+        if (node instanceof RexFieldAccess) {
+            return findFirstMultiset(((RexFieldAccess) node).expr, deep);
+        }
+
         if (!(node instanceof RexCall)) {
             return null;
         }
