@@ -28,6 +28,7 @@ import org.eigenbase.oj.rel.JavaRelImplementor;
 import org.eigenbase.oj.stmt.OJPreparingStmt;
 import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.oj.util.OJClassMap;
+import org.eigenbase.util.property.Property;
 
 
 /**
@@ -120,6 +121,14 @@ public abstract class EigenbaseTrace
         return Logger.getLogger(OJClassMap.class.getName());
     }
 
+    /**
+     * The "ord.eigenbase.util.property.Property" tracer reports errors
+     * related to all manner of properties.
+     */
+    public static Logger getPropertyTracer()
+    {
+        return Logger.getLogger(Property.class.getName());
+    }
 }
 
 
