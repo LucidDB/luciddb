@@ -26,7 +26,6 @@ import junit.framework.TestCase;
 import junit.framework.TestResult;
 import junit.framework.TestSuite;
 import junit.textui.TestRunner;
-import net.sf.saffron.calc.CalcProgramBuilderTest;
 import net.sf.saffron.oj.xlat.SqlToOpenjavaConverter;
 import net.sf.saffron.sql2rel.SqlToRelConverter;
 import net.sf.saffron.util.Graph;
@@ -228,10 +227,8 @@ public class Main extends TestCase
         suite.addTestSuite(JdbcTest.class);
         suite.addTestSuite(Graph.GraphTest.class);
         suite.addTest(SqlToRelConverter.suite());
-        suite.addTestSuite(CalcProgramBuilderTest.class);
         suite.addTestSuite(OptionsListTest.class);
         suite.addTestSuite(SaffronSqlValidationTest.class);
-        suite.addTestSuite(Rex2CalcPlanTestCase.class);
         suite.addTestSuite(RexTransformerTest.class);
     }
 

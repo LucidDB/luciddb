@@ -21,7 +21,6 @@
 package net.sf.saffron.rex;
 
 import net.sf.saffron.core.SaffronType;
-import net.sf.saffron.calc.RexToCalcTranslator;
 
 /**
  * Row expression.

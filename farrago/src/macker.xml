@@ -8,6 +8,7 @@
     <!-- libraries -->
     <pattern name="farrago">
       <include class="net.sf.farrago.****" />
+      <include class="com.disruptivetech.farrago.****" />
     </pattern>
 
     <!-- farrago components -->
@@ -51,6 +52,10 @@
     <pattern name="test" class="net.sf.farrago.test.*" />
     <pattern name="test.regression" class="net.sf.farrago.test.regression.*" />
 
+    <pattern name="dt.calc" class="com.disruptivetech.farrago.calc.*" />
+    <pattern name="dt.rel" class="com.disruptivetech.farrago.rel.*" />
+    <pattern name="dt.test" class="com.disruptivetech.farrago.test.*" />
+
     <!-- explicit list of all farrago components above -->
     <pattern name="farrago.explicit">
       <include pattern="cwm"/>
@@ -86,6 +91,9 @@
       <include pattern="namespace.ftrs"/>
       <include pattern="test"/>
       <include pattern="test.regression"/>
+      <include pattern="dt.calc"/>
+      <include pattern="dt.rel"/>
+      <include pattern="dt.test"/>
     </pattern>
 
     <!-- Below are the actual rules. -->
@@ -351,6 +359,8 @@
     <pattern name="query.deps">
       <include pattern="dynamic.deps" />
       <include pattern="ojrex.deps" />
+      <!-- FIXME 25-Aug-2004:  eliminate dt.rel via session plugins  -->
+      <include pattern="dt.rel" />
       <include pattern="query" />
     </pattern>
 
@@ -553,6 +563,74 @@
         <to pattern="farrago" />
         <allow>
           <to pattern="namespace.mock.deps" />
+        </allow>
+      </deny>
+    </access-rule>
+
+    <pattern name="test.deps">
+      <include pattern="server.deps" />
+      <include pattern="jdbc.client.deps" />
+      <include pattern="test" />
+    </pattern>
+
+    <access-rule>
+      <message>test dependency violation</message>
+      <deny>
+        <from pattern="test" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="test.deps" />
+        </allow>
+      </deny>
+    </access-rule>
+
+    <pattern name="dt.calc.deps">
+      <include pattern="util.deps" />
+      <include pattern="dt.calc" />
+    </pattern>
+
+    <access-rule>
+      <message>dt.calc dependency violation</message>
+      <deny>
+        <from pattern="dt.calc" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="dt.calc.deps" />
+        </allow>
+      </deny>
+    </access-rule>
+
+    <pattern name="dt.rel.deps">
+      <include pattern="query.deps" />
+      <include pattern="dt.calc.deps" />
+      <include pattern="dt.rel" />
+    </pattern>
+
+    <access-rule>
+      <message>dt.rel dependency violation</message>
+      <deny>
+        <from pattern="dt.rel" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="dt.rel.deps" />
+        </allow>
+      </deny>
+    </access-rule>
+
+    <pattern name="dt.test.deps">
+      <include pattern="test.deps" />
+      <include pattern="dt.test" />
+      <include pattern="dt.calc" />
+      <include pattern="dt.rel" />
+    </pattern>
+
+    <access-rule>
+      <message>dt.test dependency violation</message>
+      <deny>
+        <from pattern="dt.test" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="dt.test.deps" />
         </allow>
       </deny>
     </access-rule>

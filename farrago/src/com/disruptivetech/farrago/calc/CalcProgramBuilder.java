@@ -18,13 +18,14 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-package net.sf.saffron.calc;
+package com.disruptivetech.farrago.calc;
 
 import net.sf.saffron.resource.SaffronResource;
 import net.sf.saffron.sql.SqlLiteral;
 import net.sf.saffron.util.EnumeratedValues;
 import net.sf.saffron.util.Util;
-import net.sf.saffron.trace.SaffronTrace;
+
+import net.sf.farrago.trace.*;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -65,7 +66,7 @@ public class CalcProgramBuilder
     protected final HashMap m_labels = new HashMap();
     private boolean m_outputComments = false;
 
-    private static final Logger tracer = SaffronTrace.getCalcTracer();
+    private static final Logger tracer = FarragoTrace.getCalcTracer();
 
 
     /**

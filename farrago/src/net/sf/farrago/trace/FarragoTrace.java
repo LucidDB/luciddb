@@ -29,6 +29,8 @@ import net.sf.farrago.ddl.*;
 import net.sf.farrago.db.*;
 import net.sf.farrago.util.*;
 
+import com.disruptivetech.farrago.calc.*;
+
 import java.util.logging.Logger;
 
 /**
@@ -173,6 +175,15 @@ public class FarragoTrace {
      */
     public static Logger getOptimizerRuleTracer() {
         return Logger.getLogger("net.sf.farrago.query.rule");
+    }
+
+    /**
+     * The "com.disruptivetech.farrago.calc.CalcProgramBuilder" tracer prints
+     * the generated program at level {@link java.util.logging.Level#FINE} or
+     * higher.
+     */
+    public static Logger getCalcTracer() {
+        return Logger.getLogger(CalcProgramBuilder.class.getName());
     }
 
     /**

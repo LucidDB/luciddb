@@ -18,9 +18,12 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-package net.sf.farrago.query;
+package com.disruptivetech.farrago.rel;
 
-import net.sf.saffron.calc.RexToCalcTranslator;
+import com.disruptivetech.farrago.calc.RexToCalcTranslator;
+
+import net.sf.farrago.query.*;
+
 import net.sf.saffron.opt.CallingConvention;
 import net.sf.saffron.opt.RuleOperand;
 import net.sf.saffron.opt.VolcanoRule;
@@ -39,7 +42,7 @@ import net.sf.saffron.rel.SaffronRel;
  * @author jhyde
  * @version $Id$
  */
-class FennelCalcRule extends VolcanoRule {
+public class FennelCalcRule extends VolcanoRule {
     /**
      * The singleton instance.
      */

@@ -22,7 +22,6 @@
 
 package net.sf.saffron.oj.rex;
 
-import net.sf.saffron.calc.*;
 import net.sf.saffron.rex.*;
 
 import openjava.ptree.*;

@@ -20,7 +20,6 @@
 */
 package net.sf.saffron.trace;
 
-import net.sf.saffron.calc.CalcProgramBuilder;
 import net.sf.saffron.oj.stmt.OJStatement;
 import net.sf.saffron.oj.xlat.OJQueryExpander;
 import net.sf.saffron.oj.rel.JavaRelImplementor;
@@ -56,14 +55,6 @@ import java.util.logging.Level;
  * @version $Id$
  **/
 public class SaffronTrace {
-    /**
-     * The "net.sf.saffron.calc.CalcProgramBuilder" tracer prints the generated
-     * program at level {@link java.util.logging.Level#FINE} or higher.
-     */
-    public static Logger getCalcTracer() {
-        return Logger.getLogger(CalcProgramBuilder.class.getName());
-    }
-
     /**
      * The "net.sf.saffron.core.SaffronPlanner" tracer prints the query
      * optimization process.

@@ -17,7 +17,7 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-package net.sf.farrago.test;
+package com.disruptivetech.farrago.test;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -47,7 +47,7 @@ import net.sf.farrago.ojrex.FarragoRexToOJTranslator;
 import net.sf.farrago.session.FarragoSession;
 import net.sf.farrago.session.FarragoSessionFactory;
 
-import net.sf.saffron.calc.CalcRexImplementorTableImpl;
+import com.disruptivetech.farrago.calc.CalcRexImplementorTableImpl;
 
 import net.sf.saffron.core.SaffronType;
 import net.sf.saffron.core.SaffronTypeFactory;

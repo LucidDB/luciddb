@@ -30,6 +30,10 @@ import net.sf.saffron.rel.convert.*;
 import net.sf.farrago.fem.config.CalcVirtualMachine;
 import net.sf.farrago.fem.config.CalcVirtualMachineEnum;
 
+// FIXME jvs 25-Aug-2004:  This is just a temporary circular dependency
+// until the required session plugin infrastructure is available.
+import com.disruptivetech.farrago.rel.*;
+
 /**
  * FarragoPlanner extends {@link VolcanoPlanner} to request Farrago-specific
  * optimizations.

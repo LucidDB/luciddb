@@ -17,11 +17,12 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-package net.sf.farrago.query;
+package com.disruptivetech.farrago.rel;
 
 import net.sf.farrago.fem.fennel.*;
+import net.sf.farrago.query.*;
 
-import net.sf.saffron.calc.RexToCalcTranslator;
+import com.disruptivetech.farrago.calc.RexToCalcTranslator;
 import net.sf.saffron.core.*;
 import net.sf.saffron.opt.*;
 import net.sf.saffron.rel.*;

@@ -19,7 +19,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-package net.sf.saffron.calc;
+package com.disruptivetech.farrago.calc;
 
 import net.sf.saffron.core.SaffronField;
 import net.sf.saffron.core.SaffronType;
@@ -60,8 +60,8 @@ public class RexToCalcTranslator implements RexVisitor
     /**
      * Maps all results from every result returnable RexNode to a register.
      *
-     * <p>Key: {@link net.sf.saffron.rex.RexNode};
-     * value: {@link net.sf.saffron.calc.CalcProgramBuilder.Register}.
+     * <p>Key: {@link RexNode};
+     * value: {@link CalcProgramBuilder.Register}.
      * See {@link #getKey} for computing the key
      **/
     private HashMap _results = new HashMap();
@@ -281,7 +281,7 @@ public class RexToCalcTranslator implements RexVisitor
 
     /**
      * Translates a RexNode contained in a FilterRel into a
-     * {@link net.sf.saffron.calc.CalcProgramBuilder} calculator program
+     * {@link CalcProgramBuilder} calculator program
      * using a depth-first recursive algorithm.
      *
      * @param inputRowType The type of the input row to the calculator.

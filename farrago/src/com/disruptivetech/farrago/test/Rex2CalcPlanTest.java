@@ -18,11 +18,13 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-package net.sf.saffron.test;
+package com.disruptivetech.farrago.test;
 
 import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
-import net.sf.saffron.calc.RexToCalcTranslator;
+
+import com.disruptivetech.farrago.calc.RexToCalcTranslator;
+
 import net.sf.saffron.core.SaffronConnection;
 import net.sf.saffron.core.SaffronTypeFactory;
 import net.sf.saffron.core.SaffronTypeFactoryImpl;
@@ -68,7 +70,7 @@ import java.sql.SQLException;
  * @since Feb 3, 2004
  * @version $Id$
  **/
-public class Rex2CalcPlanTestCase extends TestCase
+public class Rex2CalcPlanTest extends TestCase
 {
     private static final String NL = System.getProperty("line.separator");
     private static TestContext testContext;
@@ -1224,4 +1226,4 @@ public class Rex2CalcPlanTestCase extends TestCase
     }
 }
 
-// End Rex2CalcPlanTestCase.java
+// End Rex2CalcPlanTest.java
