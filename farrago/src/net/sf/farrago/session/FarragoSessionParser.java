@@ -34,7 +34,7 @@ public interface FarragoSessionParser
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * Parses an SQL statement.  If a DDL statement, implicitly
+     * Parses an SQL expression.  If a DDL statement, implicitly
      * performs uncommitted catalog updates.
      *
      * @param ddlValidator the validator to use for lookup during parsing
@@ -42,12 +42,16 @@ public interface FarragoSessionParser
      *
      * @param sql the SQL text to be parsed
      *
+     * @param expectStatement if true, expect a statement; if false, 
+     * expect a row-expression
+     *
      * @return for DDL, a FarragoSessionDdlStmt; for DML or query, top-level
      * SqlNode
      */
-    public Object parseSqlStatement(
+    public Object parseSqlText(
         FarragoSessionDdlValidator ddlValidator,
-        String sql);
+        String sql,
+        boolean expectStatement);
 
     /**
      * @return the current position, or null if done parsing

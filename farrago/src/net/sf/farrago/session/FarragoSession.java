@@ -26,6 +26,7 @@ import net.sf.farrago.util.FarragoAllocation;
 import org.eigenbase.oj.rex.OJRexImplementorTable;
 import org.eigenbase.sql.SqlOperatorTable;
 import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
 
 
 /**
@@ -207,14 +208,22 @@ public interface FarragoSession extends FarragoAllocation
     public void releaseSavepoint(FarragoSessionSavepoint savepoint);
 
     /**
-     * Analyzes the query defining a view, and returns internal information
-     * needed for creating the view.
+     * Analyzes an SQL expression, and returns information about it.  Used
+     * when an expression is not going to be executed directly, but needs
+     * to be validated as part of the definition of some containing object
+     * such as a view.
      *
-     * @param sql the query defining the view
+     * @param sql text of SQL expression
      *
-     * @return FarragoSessionViewInfo derived from the query
+     * @param paramRowType if non-null, expression is expected to be
+     * a function body with these parameters; if null, expression is
+     * expected to be a query
+     *
+     * @return FarragoSessionAnalyzedSql derived from the query
      */
-    public FarragoSessionViewInfo analyzeViewQuery(String sql);
+    public FarragoSessionAnalyzedSql analyzeSql(
+        String sql,
+        RelDataType paramRowType);
 
     /**
      * Determines the class to use for runtime context.

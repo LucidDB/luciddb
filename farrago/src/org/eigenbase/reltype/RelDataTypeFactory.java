@@ -253,11 +253,11 @@ public interface RelDataTypeFactory
      */
     public interface FieldInfo
     {
-        int getFieldCount();
+        public int getFieldCount();
 
-        String getFieldName(int index);
+        public String getFieldName(int index);
 
-        RelDataType getFieldType(int index);
+        public RelDataType getFieldType(int index);
     }
 }
 

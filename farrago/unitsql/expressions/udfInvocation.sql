@@ -17,7 +17,7 @@ returns varchar(128)
 contains sql
 return coalesce(x,y);
 
--- test that implicit cast does not occur
+-- should fail:  implicit cast not allowed
 create function bad_atoi(in x varchar(128))
 returns integer
 contains sql
@@ -85,9 +85,6 @@ values coalesce2('hello','goodbye');
 values coalesce2('hello',cast(null as varchar(128)));
 
 values coalesce2(cast(null as varchar(128)),'goodbye');
-
--- FIXME:  this should fail but doesn't yet
-values bad_atoi('451');
 
 values good_atoi('451');
 

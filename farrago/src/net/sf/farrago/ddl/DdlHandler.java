@@ -357,8 +357,8 @@ public class DdlHandler
         String sql = view.getQueryExpression().getBody();
 
         tracer.fine(sql);
-        FarragoSessionViewInfo viewInfo = session.analyzeViewQuery(sql);
-        ResultSetMetaData metaData = viewInfo.resultMetaData;
+        FarragoSessionAnalyzedSql analyzedSql = session.analyzeSql(sql, null);
+        RelDataType rowType = analyzedSql.resultType;
 
         List columnList = view.getFeature();
         boolean implicitColumnNames = true;
@@ -368,18 +368,21 @@ public class DdlHandler
 
             // number of explicitly specified columns needs to match the number
             // of columns produced by the query
-            if (metaData.getColumnCount() != columnList.size()) {
+            if (rowType.getFieldList().size() != columnList.size()) {
                 throw validator.res.newValidatorViewColumnCountMismatch();
             }
         }
 
-        if (viewInfo.parameterMetaData.getParameterCount() != 0) {
+        if (analyzedSql.hasDynamicParams) {
             throw validator.res.newValidatorInvalidViewDynamicParam();
+        }
+
+        if (analyzedSql.hasTopLevelOrderBy) {
+            throw FarragoResource.instance().newValidatorInvalidViewOrderBy();
         }
 
         // Derive column information from result set metadata
         FarragoTypeFactory typeFactory = validator.getTypeFactory();
-        RelDataType rowType = typeFactory.createResultSetType(metaData);
         RelDataTypeField [] fields = rowType.getFields();
         for (int i = 0; i < fields.length; ++i) {
             FemViewColumn column;
@@ -398,9 +401,10 @@ public class DdlHandler
             view.getFeature(),
             false);
 
-        view.getQueryExpression().setBody(viewInfo.validatedSql);
+        view.getQueryExpression().setBody(analyzedSql.canonicalString);
 
-        validator.createDependency(view, viewInfo.dependencies, "ViewUsage");
+        validator.createDependency(
+            view, analyzedSql.dependencies, "ViewUsage");
     }
 
     public void validateDefinition(CwmColumn column)
@@ -812,55 +816,63 @@ public class DdlHandler
         FemRoutineParameter returnParam)
         throws SQLException
     {
-        FarragoTypeFactory typeFactory = validator.getTypeFactory();
-        RelDataType type;
+        final FarragoTypeFactory typeFactory = validator.getTypeFactory();
+        final List params = routine.getParameter();
 
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
-        SqlDialect sqlDialect = new SqlDialect(session.getDatabaseMetaData());
-        SqlWriter sqlWriter = new SqlWriter(sqlDialect, pw);
+        RelDataType paramRowType = typeFactory.createStructType(
+            new RelDataTypeFactory.FieldInfo() 
+            {
+                public int getFieldCount()
+                {
+                    // minus one to leave out return type
+                    return params.size() - 1;
+                }
+                
+                public String getFieldName(int index)
+                {
+                    FemRoutineParameter param =
+                        (FemRoutineParameter) params.get(index);
+                    return param.getName();
+                }
 
-        // TODO jvs 28-Dec-2004:  Instead of casting here, should
-        // get the body expression's result type and verify that it
-        // is assignable to the type of returnParam without casting
-        // (unless CAST FROM is specified).
+                public RelDataType getFieldType(int index)
+                {
+                    FemRoutineParameter param =
+                        (FemRoutineParameter) params.get(index);
+                    return typeFactory.createCwmElementType(param);
+                }
+            });
+
+        tracer.fine(routine.getBody().getBody());
         
-        sqlWriter.print("SELECT CAST(");
-        sqlWriter.print(routine.getBody().getBody());
-        sqlWriter.print(" AS ");
-        type = typeFactory.createCwmElementType(returnParam);
-        SqlTypeUtil.convertTypeToSpec(type).unparse(sqlWriter, 0, 0);
-        sqlWriter.print(") FROM (SELECT ");
-        Iterator iter = routine.getParameter().iterator();
-        while (iter.hasNext()) {
-            FemRoutineParameter param = (FemRoutineParameter) iter.next();
-            if (param.getKind() == ParameterDirectionKindEnum.PDK_RETURN) {
-                break;
-            }
-            sqlWriter.print("CAST(NULL AS ");
-            type = typeFactory.createCwmElementType(param);
-            SqlTypeUtil.convertTypeToSpec(type).unparse(sqlWriter, 0, 0);
-            sqlWriter.print(") AS ");
-            sqlWriter.printIdentifier(param.getName());
-            sqlWriter.print(", ");
-        }
-        sqlWriter.print("0 FROM VALUES(0))");
-
-        pw.close();
-        String sql = sw.toString();
-        tracer.fine(sql);
-        FarragoSessionViewInfo viewInfo = session.analyzeViewQuery(sql);
-        if (viewInfo.parameterMetaData.getParameterCount() != 0) {
+        FarragoSessionAnalyzedSql analyzedSql = session.analyzeSql(
+            routine.getBody().getBody(), paramRowType);
+        
+        if (analyzedSql.hasDynamicParams) {
             // TODO jvs 29-Dec-2004:  add a test for this; currently
             // hits an earlier assertion in SqlValidator
             throw validator.res.newValidatorInvalidRoutineDynamicParam();
         }
 
+        // TODO jvs 28-Dec-2004:  CAST FROM
+        
+        RelDataType declaredReturnType =
+            typeFactory.createCwmElementType(returnParam);
+        RelDataType actualReturnType = analyzedSql.resultType;
+        if (!SqlTypeUtil.canAssignFrom(declaredReturnType, actualReturnType)) {
+            throw validator.res.newValidatorFunctionReturnType(
+                actualReturnType.toString(),
+                validator.getRepos().getLocalizedObjectName(routine, null),
+                declaredReturnType.toString());
+        }
+
         // TODO jvs 27-Dec-2004
         /*
           validator.createDependency(
-          routine, viewInfo.dependencies, "RoutineUsage");
+          routine, analyzedSql.dependencies, "RoutineUsage");
         */
+        
+        routine.getBody().setBody(analyzedSql.canonicalString);
     }
 
     protected void validateRoutineParam(FemRoutineParameter param)

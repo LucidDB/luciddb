@@ -266,6 +266,10 @@ encountered near {1}</text>
 encountered near {1}</text>
 </exception>
 
+<exception id="420490" name="ValidatorFunctionReturnType">
+    <text>Result expression type {0} from {1} does not match declared return type {2}</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Fennel resources 440,000 - 450,000 -->
 <!-- Actual resources are defined separately in Fennel -->

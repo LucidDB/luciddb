@@ -191,12 +191,6 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     }
 
     // implement FarragoSessionPreparingStmt
-    public SqlNode validate(SqlNode sqlNode)
-    {
-        return getSqlValidator().validate(sqlNode);
-    }
-
-    // implement FarragoSessionPreparingStmt
     public SqlValidator getSqlValidator()
     {
         if (sqlValidator == null) {
@@ -350,17 +344,33 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     }
 
     // implement FarragoSessionPreparingStmt
-    public void prepareViewInfo(
+    public void analyzeSql(
         SqlNode sqlNode,
-        FarragoSessionViewInfo info)
+        final FarragoSessionAnalyzedSql analyzedSql)
     {
         getSqlToRelConverter();
-        RelNode rootRel = sqlToRelConverter.convertValidatedQuery(sqlNode);
-        info.resultMetaData =
-            new FarragoResultSetMetaData(rootRel.getRowType());
-        info.parameterMetaData =
-            new FarragoParameterMetaData(getParamRowType());
-        info.dependencies = Collections.unmodifiableSet(directDependencies);
+        if (analyzedSql.paramRowType == null) {
+            // query expression
+            RelNode rootRel = sqlToRelConverter.convertValidatedQuery(sqlNode);
+            analyzedSql.resultType = rootRel.getRowType();
+            analyzedSql.paramRowType = getParamRowType();
+        } else {
+            // parameterized row expression
+            analyzedSql.resultType =
+                getSqlValidator().getValidatedNodeType(sqlNode);
+        }
+        analyzedSql.dependencies =
+            Collections.unmodifiableSet(directDependencies);
+
+        // walk the expression looking for dynamic parameters
+        SqlVisitor dynamicParamFinder = new SqlBasicVisitor() 
+            {
+                public void visit(SqlDynamicParam param)
+                {
+                    analyzedSql.hasDynamicParams = true;
+                }
+            };
+        sqlNode.accept(dynamicParamFinder);
     }
 
     private Set getReferencedObjectIds()

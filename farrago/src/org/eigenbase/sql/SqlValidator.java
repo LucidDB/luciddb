@@ -304,13 +304,18 @@ public class SqlValidator
         try {
             outermostNode = performUnconditionalRewrites(topNode);
             if (tracer.isLoggable(Level.FINER)) {
-                tracer.finer("After creating internal selects: " +
+                tracer.finer("After unconditional rewrite: " +
                     outermostNode.toString());
             }
             if (outermostNode.getKind().isA(SqlKind.TopLevel)) {
                 registerQuery(scope, null, outermostNode, null);
             }
             outermostNode.validate(this, scope);
+            if (!outermostNode.getKind().isA(SqlKind.TopLevel)) {
+                // force type derivation so that we can provide it to the
+                // caller later without needing the scope
+                deriveType(scope, outermostNode);
+            }
             if (tracer.isLoggable(Level.FINER)) {
                 tracer.finer("After validation: " + outermostNode.toString());
             }

@@ -49,16 +49,6 @@ import org.eigenbase.oj.rel.*;
 public interface FarragoSessionPreparingStmt extends FarragoAllocation
 {
     //~ Methods ---------------------------------------------------------------
-
-    /**
-     * Performs validation on an SQL statement.
-     *
-     * @param sqlNode unvalidated SQL statement
-     *
-     * @return validated SQL statement
-     */
-    public SqlNode validate(SqlNode sqlNode);
-
     /**
      * Prepares (translates and implements) a parsed query or DML statement, but
      * does not execute it.
@@ -69,13 +59,18 @@ public interface FarragoSessionPreparingStmt extends FarragoAllocation
     public FarragoSessionExecutableStmt prepare(SqlNode sqlNode);
 
     /**
-     * Partially prepares this statement for use as a view definition.
+     * Analyzes an SQL expression, and returns information about it.  Used
+     * when an expression is not going to be executed directly, but needs
+     * to be validated as part of the definition of some containing object
+     * such as a view.
      *
-     * @param info receives view info
+     * @param sqlNode SQL expression to be analyzed
+     *
+     * @param analyzedSql receives analysis result
      */
-    public void prepareViewInfo(
+    public void analyzeSql(
         SqlNode sqlNode,
-        FarragoSessionViewInfo info);
+        FarragoSessionAnalyzedSql analyzedSql);
 
     /**
      * Sets up the environment the FarragoPreparingStmt needs in order to

@@ -42,6 +42,7 @@ import org.eigenbase.oj.stmt.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
 import org.eigenbase.util.*;
 
 
@@ -361,12 +362,16 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     }
 
     // implement FarragoSession
-    public FarragoSessionViewInfo analyzeViewQuery(String sql)
+    public FarragoSessionAnalyzedSql analyzeSql(
+        String sql, RelDataType paramRowType)
     {
-        FarragoSessionViewInfo info = new FarragoSessionViewInfo();
-        FarragoSessionExecutableStmt stmt = prepare(sql, null, false, info);
+        FarragoSessionAnalyzedSql analyzedSql =
+            new FarragoSessionAnalyzedSql();
+        analyzedSql.paramRowType = paramRowType;
+        FarragoSessionExecutableStmt stmt = prepare(
+            sql, null, false, analyzedSql);
         assert (stmt == null);
-        return info;
+        return analyzedSql;
     }
 
     public FarragoDatabase getDatabase()
@@ -561,7 +566,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         String sql,
         FarragoAllocationOwner owner,
         boolean isExecDirect,
-        FarragoSessionViewInfo viewInfo)
+        FarragoSessionAnalyzedSql analyzedSql)
     {
         tracer.info(sql);
 
@@ -587,7 +592,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
             FarragoSessionExecutableStmt stmt = null;
             try {
                 stmt =
-                    prepareImpl(sql, owner, isExecDirect, viewInfo,
+                    prepareImpl(sql, owner, isExecDirect, analyzedSql,
                         stmtValidator, reposTxnContext, pRollback);
             } finally {
                 if (stmtValidator != null) {
@@ -608,7 +613,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         String sql,
         FarragoAllocationOwner owner,
         boolean isExecDirect,
-        FarragoSessionViewInfo viewInfo,
+        FarragoSessionAnalyzedSql analyzedSql,
         FarragoSessionStmtValidator stmtValidator,
         FarragoReposTxnContext reposTxnContext,
         boolean [] pRollback)
@@ -620,7 +625,14 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         FarragoSessionDdlValidator ddlValidator =
             newDdlValidator(stmtValidator);
         FarragoSessionParser parser = stmtValidator.getParser();
-        Object parsedObj = parser.parseSqlStatement(ddlValidator, sql);
+        
+        boolean expectStatement = true;
+        if ((analyzedSql != null) && (analyzedSql.paramRowType != null)) {
+            expectStatement = false;
+        }
+        Object parsedObj = parser.parseSqlText(
+            ddlValidator, sql, expectStatement);
+        
         if (parsedObj instanceof SqlNode) {
             SqlNode sqlNode = (SqlNode) parsedObj;
             pRollback[0] = false;
@@ -628,9 +640,11 @@ public class FarragoDbSession extends FarragoCompoundAllocation
             ddlValidator = null;
             validate(stmtValidator, sqlNode);
             FarragoSessionExecutableStmt stmt =
-                database.prepareStmt(stmtValidator, sqlNode, owner, viewInfo);
+                database.prepareStmt(
+                    stmtValidator, sqlNode, owner, analyzedSql);
             if (isExecDirect
-                    && (stmt.getDynamicParamRowType().getFieldList().size() > 0)) {
+                && (stmt.getDynamicParamRowType().getFieldList().size() > 0))
+            {
                 owner.closeAllocation();
                 throw FarragoResource.instance()
                     .newSessionNoExecuteImmediateParameters(sql);

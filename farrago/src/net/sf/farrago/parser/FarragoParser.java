@@ -194,9 +194,10 @@ public class FarragoParser implements FarragoSessionParser
     }
 
     // implement FarragoSessionParser
-    public Object parseSqlStatement(
+    public Object parseSqlText(
         FarragoSessionDdlValidator ddlValidator,
-        String sql)
+        String sql,
+        boolean expectStatement)
     {
         this.ddlValidator = ddlValidator;
 
@@ -204,7 +205,11 @@ public class FarragoParser implements FarragoSessionParser
         parserImpl.farragoParser = this;
 
         try {
-            return parserImpl.FarragoSqlStmtEof();
+            if (expectStatement) {
+                return parserImpl.FarragoSqlStmtEof();
+            } else {
+                return parserImpl.SqlExpressionEof();
+            }
         } catch (ParseException ex) {
             throw EigenbaseResource.instance().newParserError(
                 ex.getMessage(),

@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/expressions/values.sql#1 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/expressions/udfInvocation.sql#1 $
 0: jdbc:farrago:> -- Test queries with UDF invocations
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema udftest;
@@ -17,11 +17,12 @@
 . . . . . . . . > contains sql
 . . . . . . . . > return coalesce(x,y);
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test that implicit cast does not occur
+0: jdbc:farrago:> -- should fail:  implicit cast not allowed
 0: jdbc:farrago:> create function bad_atoi(in x varchar(128))
 . . . . . . . . > returns integer
 . . . . . . . . > contains sql
 . . . . . . . . > return x;
+Error: Result expression type VARCHAR(128) from UDFTEST.BAD_ATOI does not match declared return type INTEGER (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test that explicit cast does occur
 0: jdbc:farrago:> create function good_atoi(in x varchar(128))
@@ -123,14 +124,6 @@ Error: At line 1, column 8: Cannot apply 'CELSIUS_TO_FAHRENHEIT' to arguments of
 +----------+
 | goodbye  |
 +----------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- FIXME:  this should fail but doesn't yet
-0: jdbc:farrago:> values bad_atoi('451');
-+---------+
-| EXPR$0  |
-+---------+
-| 451     |
-+---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> values good_atoi('451');
 +---------+
