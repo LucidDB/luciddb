@@ -76,6 +76,7 @@
     <pattern name="dt.volcano" class="com.disruptivetech.farrago.volcano.*" />
     <pattern name="dt.rel" class="com.disruptivetech.farrago.rel.*" />
     <pattern name="dt.fennel" class="com.disruptivetech.farrago.fennel.*" />
+    <pattern name="dt.sql.advise" class="com.disruptivetech.farrago.sql.advise.*" />
 
     <pattern name="rs.fennel" class="com.redsquare.farrago.fennel.*" />
 
@@ -125,6 +126,7 @@
       <include pattern="dt.volcano"/>
       <include pattern="dt.rel"/>
       <include pattern="dt.fennel"/>
+      <include pattern="dt.sql.advise"/>
       <include pattern="rs.fennel"/>
       <include pattern="defimpl"/>
       <include pattern="test"/>
@@ -684,6 +686,22 @@
         </allow>
       </deny>
     </access-rule>
+    
+    <pattern name="dt.sql.advise.deps">
+      <include pattern="util" />
+      <include pattern="dt.sql.advise" />
+    </pattern>
+
+    <access-rule>
+      <message>dt.sql.advise dependency violation</message>
+      <deny>
+        <from pattern="dt.sql.advise" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="dt.sql.advise.deps" />
+        </allow>
+      </deny>
+    </access-rule>
 
     <pattern name="rs.fennel.deps">
       <include pattern="rs.fennel" />
@@ -744,6 +762,7 @@
       <include pattern="dt.calc.deps" />
       <include pattern="dt.volcano.deps" />
       <include pattern="dt.rel.deps" />
+      <include pattern="dt.sql.advise.deps" />
       <include pattern="dt.test" />
       <include pattern="defimpl.deps" />
     </pattern>
