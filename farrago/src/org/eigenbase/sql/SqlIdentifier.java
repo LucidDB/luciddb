@@ -22,6 +22,7 @@
 package org.eigenbase.sql;
 
 import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -136,6 +137,24 @@ public class SqlIdentifier extends SqlNode
         }
     }
 
+    public void validate(SqlValidator validator, SqlValidator.Scope scope)
+    {
+        validator.validateIdentifier(this, scope);
+    }
+
+    public void validateExpr(SqlValidator validator, SqlValidator.Scope scope)
+    {
+        // First check for builtin functions which don't have parentheses,
+        // like "LOCALTIME".
+        SqlCall call = validator.makeCall(this);
+        if (call != null) {
+            return;
+        }
+
+        final SqlIdentifier fqId = scope.fullyQualify(this);
+        Util.discard(fqId); // todo: store fqId in a map for future reference
+    }
+
     public SqlCollation getCollation()
     {
         return collation;
@@ -150,6 +169,23 @@ public class SqlIdentifier extends SqlNode
     {
         assert (names.length == 1);
         return names[0];
+    }
+
+    /**
+     * Returns whether this identifier is a star, such as "*" or "foo.bar.*".
+     */ 
+    public boolean isStar()
+    {
+        return names[names.length - 1].equals("*");
+    }
+
+    /**
+     * Returns whether this is a simple identifier. "FOO" is simple; "*",
+     * "FOO.*" and "FOO.BAR" are not.
+     */
+    public boolean isSimple()
+    {
+        return names.length == 1 && !names[0].equals("*");
     }
 }
 

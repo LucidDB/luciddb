@@ -146,7 +146,11 @@ public class SqlSelect extends SqlCall
         super.unparse(writer, leftPrec, rightPrec);
         writer.popQuery(this);
     }
-}
 
+    public void validate(SqlValidator validator, SqlValidator.Scope scope)
+    {
+        validator.validateQuery(this);
+    }
+}
 
 // End SqlSelect.java

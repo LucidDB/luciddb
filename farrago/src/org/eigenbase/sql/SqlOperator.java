@@ -308,17 +308,30 @@ public abstract class SqlOperator
     }
 
     /**
-     * Validate a call to this operator. Called just after the operands have
-     * been validated.
-     * 
-     * @param call the SqlCall node for the call.
-     * @param validator the active validator.
+     * Validates a call to this operator.
+     *
+     * <p>A typical implementation of this method first validates the
+     * operands, then performs some operator-specific logic.
+     * The default implementation just validates the operands.
+     *
+     * <p>This method is the default implementation of
+     * {@link SqlCall#validate}; but note that some sub-classes of
+     * {@link SqlCall} never call this method.
+     *
+     * @param call the call to this operator
+     * @param validator the active validator
+     * @param scope validator scope
      */
     public void validateCall(
         SqlCall call,
-        SqlValidator validator)
+        SqlValidator validator,
+        SqlValidator.Scope scope)
     {
-        return; // default is to do nothing
+        assert call.operator == this;
+        final SqlNode[] operands = call.getOperands();
+        for (int i = 0; i < operands.length; i++) {
+            operands[i].validateExpr(validator, scope);
+        }
     }
 
     /**
@@ -326,10 +339,10 @@ public abstract class SqlOperator
      * the arguments are already known.
      *
      * <p>Particular operators can affect the behavior of this method in two
-     * ways. If they have a {@link org.eigenbase.sql.type.ReturnTypeInference}, it is used; otherwise, they
-     * must override this method. (Operators with unusual type inference schemes
-     * should override this method; others should generally use a type-inference
-     * strategy to share code.)
+     * ways. If they have a {@link org.eigenbase.sql.type.ReturnTypeInference},
+     * it is used; otherwise, they must override this method. (Operators with
+     * unusual type inference schemes should override this method; others
+     * should generally use a type-inference strategy to share code.)
      */
     public RelDataType getType(
         RelDataTypeFactory typeFactory,

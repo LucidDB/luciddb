@@ -22,7 +22,6 @@
 package org.eigenbase.sql;
 
 import org.eigenbase.sql.parser.ParserPosition;
-import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.util.EnumeratedValues;
 
@@ -40,28 +39,6 @@ import org.eigenbase.util.EnumeratedValues;
 public class SqlJoinOperator extends SqlOperator
 {
     //~ Static fields/initializers --------------------------------------------
-
-    public static final int LEFT_OPERAND = 0;
-
-    /**
-     * Operand says whether this is a natural join. Must be constant TRUE or
-     * FALSE.
-     */
-    public static final int IS_NATURAL_OPERAND = 1;
-
-    /**
-     * Value must be a {@link SqlLiteral}, one of the integer codes for {@link
-     * JoinType}.
-     */
-    public static final int TYPE_OPERAND = 2;
-    public static final int RIGHT_OPERAND = 3;
-
-    /**
-     * Value must be a {@link SqlLiteral}, one of the integer codes for {@link
-     * ConditionType}.
-     */
-    public static final int CONDITION_TYPE_OPERAND = 4;
-    public static final int CONDITION_OPERAND = 5;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -81,15 +58,15 @@ public class SqlJoinOperator extends SqlOperator
         SqlNode [] operands,
         ParserPosition pos)
     {
-        assert (operands[IS_NATURAL_OPERAND] instanceof SqlLiteral);
-        final SqlLiteral isNatural = (SqlLiteral) operands[IS_NATURAL_OPERAND];
+        assert (operands[SqlJoin.IS_NATURAL_OPERAND] instanceof SqlLiteral);
+        final SqlLiteral isNatural = (SqlLiteral) operands[SqlJoin.IS_NATURAL_OPERAND];
         assert (isNatural.typeName == SqlTypeName.Boolean);
-        assert operands[CONDITION_TYPE_OPERAND] != null : "precondition: operands[CONDITION_TYPE_OPERAND] != null";
-        assert operands[CONDITION_TYPE_OPERAND] instanceof SqlLiteral
-            && ((SqlLiteral) operands[CONDITION_TYPE_OPERAND]).getValue() instanceof ConditionType;
-        assert operands[TYPE_OPERAND] != null : "precondition: operands[TYPE_OPERAND] != null";
-        assert operands[TYPE_OPERAND] instanceof SqlLiteral
-            && ((SqlLiteral) operands[TYPE_OPERAND]).getValue() instanceof JoinType;
+        assert operands[SqlJoin.CONDITION_TYPE_OPERAND] != null : "precondition: operands[CONDITION_TYPE_OPERAND] != null";
+        assert operands[SqlJoin.CONDITION_TYPE_OPERAND] instanceof SqlLiteral
+            && ((SqlLiteral) operands[SqlJoin.CONDITION_TYPE_OPERAND]).getValue() instanceof ConditionType;
+        assert operands[SqlJoin.TYPE_OPERAND] != null : "precondition: operands[TYPE_OPERAND] != null";
+        assert operands[SqlJoin.TYPE_OPERAND] instanceof SqlLiteral
+            && ((SqlLiteral) operands[SqlJoin.TYPE_OPERAND]).getValue() instanceof JoinType;
         return new SqlJoin(this, operands, pos);
     }
 
@@ -115,14 +92,14 @@ public class SqlJoinOperator extends SqlOperator
         int leftPrec,
         int rightPrec)
     {
-        final SqlNode left = operands[LEFT_OPERAND];
+        final SqlNode left = operands[SqlJoin.LEFT_OPERAND];
         left.unparse(writer, leftPrec, this.leftPrec);
         writer.print(' ');
-        if (SqlLiteral.booleanValue(operands[IS_NATURAL_OPERAND])) {
+        if (SqlLiteral.booleanValue(operands[SqlJoin.IS_NATURAL_OPERAND])) {
             writer.print("NATURAL ");
         }
         final SqlJoinOperator.JoinType joinType =
-            (JoinType) ((SqlLiteral) operands[TYPE_OPERAND]).getValue();
+            (JoinType) ((SqlLiteral) operands[SqlJoin.TYPE_OPERAND]).getValue();
         switch (joinType.getOrdinal()) {
         case JoinType.Comma_ORDINAL:
             writer.print(", ");
@@ -145,12 +122,12 @@ public class SqlJoinOperator extends SqlOperator
         default:
             throw joinType.unexpected();
         }
-        final SqlNode right = operands[RIGHT_OPERAND];
+        final SqlNode right = operands[SqlJoin.RIGHT_OPERAND];
         right.unparse(writer, this.rightPrec, rightPrec);
-        final SqlNode condition = operands[CONDITION_OPERAND];
+        final SqlNode condition = operands[SqlJoin.CONDITION_OPERAND];
         if (condition != null) {
             final SqlJoinOperator.ConditionType conditionType =
-                (ConditionType) ((SqlLiteral) operands[CONDITION_TYPE_OPERAND])
+                (ConditionType) ((SqlLiteral) operands[SqlJoin.CONDITION_TYPE_OPERAND])
                     .getValue();
             switch (conditionType.getOrdinal()) {
             case ConditionType.Using_ORDINAL:

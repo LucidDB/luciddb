@@ -47,6 +47,7 @@ import java.util.*;
  * objects) into a relational algebra expression (consisting of
  * {@link org.eigenbase.rel.RelNode} objects).
  *
+ * @testcase {@link net.sf.saffron.sql2rel.ConverterTest}
  * @author jhyde
  * @since Oct 10, 2003
  * @version $Id$
@@ -176,31 +177,32 @@ public class SqlToRelConverter
     /**
      * Converts a SELECT statement's parse tree into a relational expression.
      */
-    public RelNode convertSelect(SqlSelect query)
+    public RelNode convertSelect(SqlSelect select)
     {
-        final SqlValidator.SelectScope selectScope = validator.getScope(query);
+        final SqlValidator.Scope selectScope = validator.getScope(select,
+            SqlSelect.WHERE_OPERAND);
         final Blackboard bb = new Blackboard(selectScope);
         convertFrom(
             bb,
-            query.getFrom());
+            select.getFrom());
         convertWhere(
             bb,
-            query.getWhere());
+            select.getWhere());
         convertGroup(
             bb,
-            query.getGroup());
+            select.getGroup());
         convertHaving(
             bb,
-            query.getHaving());
+            select.getHaving());
         convertSelectList(
             bb,
-            query.getSelectList());
-        if (query.isDistinct()) {
+            select.getSelectList(), select);
+        if (select.isDistinct()) {
             bb.setRoot(new DistinctRel(cluster, bb.root));
         }
         convertOrder(
             bb,
-            query.getOrderList());
+            select.getOrderList());
         leaves.add(bb.root);
         mapScopeToRel.put(selectScope, bb.root);
         return bb.root;
@@ -734,14 +736,14 @@ public class SqlToRelConverter
      * Converts a FROM clause into a relational expression.
      *
      * @param bb Scope within which to resolve identifiers
-     * @param from  FROM clause of a query. Examples include:
-     *    a single table ("SALES.EMP"),
-     *    an aliased table ("EMP AS E"),
-     *    a list of tables ("EMP, DEPT"),
-     *    an ANSI Join expression ("EMP JOIN DEPT ON EMP.DEPTNO = DEPT.DEPTNO"),
-     *    a VALUES clause ("VALUES ('Fred', 20)"),
-     *    a query ("(SELECT * FROM EMP WHERE GENDER = 'F')"),
-     *    or any combination of the above.
+     * @param from  FROM clause of a query. Examples include:<ul>
+     *    <li>a single table ("SALES.EMP"),
+     *    <li>an aliased table ("EMP AS E"),
+     *    <li>a list of tables ("EMP, DEPT"),
+     *    <li>an ANSI Join expression ("EMP JOIN DEPT ON EMP.DEPTNO = DEPT.DEPTNO"),
+     *    <li>a VALUES clause ("VALUES ('Fred', 20)"),
+     *    <li>a query ("(SELECT * FROM EMP WHERE GENDER = 'F')"),
+     *    <li>or any combination of the above.</ul>
      * @post return != null
      */
     private void convertFrom(
@@ -754,8 +756,9 @@ public class SqlToRelConverter
             convertFrom(bb, operands[0]);
             return;
         case SqlKind.IdentifierORDINAL:
-            final SqlValidator.Scope fromScope = validator.getScope(from);
-            RelOptTable table = getRelOptTable(fromScope, schema);
+            final SqlValidator.Namespace fromNamespace =
+                validator.getNamespace(from);
+            RelOptTable table = getRelOptTable(fromNamespace, schema);
             bb.setRoot(table.toRel(cluster, connection));
 
             // REVIEW jvs 22-Jan-2004: This is adding a SqlNode as a
@@ -770,9 +773,9 @@ public class SqlToRelConverter
             boolean isNatural = join.isNatural();
             SqlJoinOperator.JoinType joinType = join.getJoinType();
             final Blackboard leftBlackboard =
-                new Blackboard(validator.getScope(left));
+                new Blackboard(validator.getJoinScope(left));
             final Blackboard rightBlackboard =
-                new Blackboard(validator.getScope(right));
+                new Blackboard(validator.getJoinScope(right));
             convertFrom(leftBlackboard, left);
             RelNode leftRel = leftBlackboard.root;
             convertFrom(rightBlackboard, right);
@@ -1157,8 +1160,8 @@ public class SqlToRelConverter
 
     private RelNode convertInsert(SqlInsert call)
     {
-        SqlValidator.Scope targetScope =
-            validator.getScope(call.getTargetTable());
+        SqlValidator.Namespace targetScope =
+            validator.getNamespace(call.getTargetTable());
         RelNode sourceRel = convertQueryRecursive(call.getSourceSelect());
         RelOptTable targetTable = getRelOptTable(targetScope, schema);
         RelDataType lhsRowType = targetTable.getRowType();
@@ -1211,8 +1214,8 @@ public class SqlToRelConverter
     private RelNode convertDelete(SqlDelete call)
     {
         SqlIdentifier from = call.getTargetTable();
-        SqlValidator.Scope targetScope = validator.getScope(from);
-        RelOptTable targetTable = getRelOptTable(targetScope, schema);
+        SqlValidator.Namespace targetNamespace = validator.getNamespace(from);
+        RelOptTable targetTable = getRelOptTable(targetNamespace, schema);
         RelNode sourceRel = convertSelect(call.getSourceSelect());
         return new TableModificationRel(cluster, targetTable, connection,
             sourceRel, TableModificationRel.Operation.DELETE, null);
@@ -1221,8 +1224,8 @@ public class SqlToRelConverter
     private RelNode convertUpdate(SqlUpdate call)
     {
         SqlIdentifier from = call.getTargetTable();
-        SqlValidator.Scope targetScope = validator.getScope(from);
-        RelOptTable targetTable = getRelOptTable(targetScope, schema);
+        SqlValidator.Namespace targetNamespace = validator.getNamespace(from);
+        RelOptTable targetTable = getRelOptTable(targetNamespace, schema);
 
         // convert update column list from SqlIdentifier to String
         List targetColumnNameList = new ArrayList();
@@ -1297,7 +1300,7 @@ public class SqlToRelConverter
         for (int i = 0; i < operands.length; ++i) {
             RexNode value = convertExpression(bb, operands[i]);
             selectList[i] = value;
-            fieldNames[i] = bb.scope.deriveAlias(operands[i], i);
+            fieldNames[i] = validator.deriveAlias(operands[i], i);
         }
 
         // SELECT value-list FROM onerow
@@ -1308,19 +1311,16 @@ public class SqlToRelConverter
 
     private void convertSelectList(
         Blackboard bb,
-        SqlNodeList selectList)
+        SqlNodeList selectList, SqlSelect select)
     {
-        assert bb.scope instanceof SqlValidator.SelectScope;
-        selectList =
-            validator.expandStar(selectList,
-                ((SqlValidator.SelectScope) bb.scope).select);
+        selectList = validator.expandStar(selectList, select);
         replaceSubqueries(bb, selectList);
         String [] fieldNames = new String[selectList.size()];
         RexNode [] exps = new RexNode[selectList.size()];
         for (int i = 0; i < selectList.size(); i++) {
             final SqlNode node = selectList.get(i);
             exps[i] = convertExpression(bb, node);
-            fieldNames[i] = bb.scope.deriveAlias(node, i);
+            fieldNames[i] = validator.deriveAlias(node, i);
         }
         bb.setRoot(
             new ProjectRel(cluster, bb.root, exps, fieldNames,
@@ -1378,13 +1378,13 @@ public class SqlToRelConverter
      * returns null.
      */
     public static RelOptTable getRelOptTable(
-        SqlValidator.Scope scope,
+        SqlValidator.Namespace namespace,
         RelOptSchema schema)
     {
-        if (scope instanceof SqlValidator.IdentifierScope) {
-            SqlValidator.IdentifierScope identifierScope =
-                (SqlValidator.IdentifierScope) scope;
-            final String [] names = identifierScope.id.names;
+        if (namespace instanceof SqlValidator.IdentifierNamespace) {
+            SqlValidator.IdentifierNamespace identifierNamespace =
+                (SqlValidator.IdentifierNamespace) namespace;
+            final String [] names = identifierNamespace.id.names;
             return schema.getTableForMember(names);
         } else {
             return null;
@@ -1462,11 +1462,13 @@ public class SqlToRelConverter
 
         /**
          * Creates a Blackboard
-         * @pre scope != null
+         *
+         * @param scope Name-resolution scope for expressions validated within
+         *   this query. Can be null if this Blackboard is for a leaf node,
+         *   say the "emp" identifier in "SELECT * FROM emp".
          */
         Blackboard(SqlValidator.Scope scope)
         {
-            assert scope != null : "precondition: scope != null";
             this.scope = scope;
         }
 
@@ -1525,9 +1527,9 @@ public class SqlToRelConverter
             int [] offsets = new int [] { -1 };
             final SqlValidator.Scope [] ancestorScopes =
                 new SqlValidator.Scope[1];
-            SqlValidator.Scope foundScope =
+            SqlValidator.Namespace foundNs =
                 scope.resolve(name, ancestorScopes, offsets);
-            if (foundScope == null) {
+            if (foundNs == null) {
                 return null;
             }
 
@@ -1554,7 +1556,7 @@ public class SqlToRelConverter
                     new DeferredLookup(this, offset, isParent);
                 String correlName =
                     cluster.query.createCorrelUnresolved(lookup);
-                final RelDataType rowType = foundScope.getRowType();
+                final RelDataType rowType = foundNs.getRowType();
                 result = rexBuilder.makeCorrel(rowType, correlName);
             }
             return result;

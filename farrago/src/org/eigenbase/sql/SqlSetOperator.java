@@ -64,6 +64,14 @@ public class SqlSetOperator extends SqlBinaryOperator
         super(name, kind, prec, true, typeInference, paramTypeInference, argTypes);
         this.all = all;
     }
+
+    public void validateCall(
+        SqlCall call,
+        SqlValidator validator,
+        SqlValidator.Scope scope)
+    {
+        validator.validateQuery(call);
+    }
 }
 
 

@@ -70,6 +70,11 @@ public class SqlDynamicParam extends SqlNode
     {
         writer.print("?");
     }
+
+    public void validate(SqlValidator validator, SqlValidator.Scope scope)
+    {
+        validator.validateDynamicParam(this);
+    }
 }
 
 

@@ -24,6 +24,7 @@ package org.eigenbase.sql;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Iterator;
 
 import org.eigenbase.sql.parser.ParserPosition;
 
@@ -107,6 +108,15 @@ public class SqlNodeList extends SqlNode
                 }
                 node.unparse(writer, 0, 0);
             }
+        }
+    }
+
+    public void validate(SqlValidator validator, SqlValidator.Scope scope)
+    {
+        Iterator iter = getList().iterator();
+        while (iter.hasNext()) {
+            final SqlNode child = (SqlNode) iter.next();
+            child.validate(validator, scope);
         }
     }
 

@@ -103,6 +103,18 @@ public class SqlCall extends SqlNode
     }
 
     /**
+     * Validates this call.
+     *
+     * <p>The default implementation delegates the validation to the operator's
+     * {@link SqlOperator#validateCall}. Derived classes may override (as do,
+     * for example {@link SqlSelect} and {@link SqlUpdate}).
+     */
+    public void validate(SqlValidator validator, SqlValidator.Scope scope)
+    {
+        operator.validateCall(this, validator, scope);
+    }
+
+    /**
      * Returns a string describing the actual argument types of a call, e.g.
      * "SUBSTR(VARCHAR(12), NUMBER(3,2), INTEGER)".
      */

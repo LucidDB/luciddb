@@ -21,8 +21,6 @@ package net.sf.farrago.query;
 
 import java.math.*;
 
-import net.sf.farrago.resource.*;
-
 import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
@@ -50,13 +48,6 @@ class FarragoSqlValidator extends SqlValidator
     //~ Methods ---------------------------------------------------------------
 
     // override SqlValidator
-    public RuntimeException newValidationError(String s)
-    {
-        // TODO:  need to integrate i18n with org.eigenbase.sql
-        return FarragoResource.instance().newValidatorUntranslated(s);
-    }
-
-    // override SqlValidator
     protected boolean shouldExpandIdentifiers()
     {
         // Farrago always wants to expand stars and identifiers during
@@ -73,7 +64,7 @@ class FarragoSqlValidator extends SqlValidator
     }
 
     // override SqlValidator
-    protected void validateLiteral(SqlLiteral literal)
+    public void validateLiteral(SqlLiteral literal)
     {
         // REVIEW jvs 4-Aug-2004:  This should probably be calling over to the
         // available calculator implementations to see what they support.  For

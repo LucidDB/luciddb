@@ -45,9 +45,6 @@ import openjava.ptree.StatementList;
 
 import org.eigenbase.runtime.ThreadIterator;
 import org.eigenbase.runtime.TimeoutIteratorTest;
-import org.eigenbase.runtime.TimeoutQueueIterator;
-import org.eigenbase.sql.parser.ParserPosition;
-
 
 /**
  * Miscellaneous utility functions.
@@ -637,7 +634,7 @@ public class Util extends Toolbox
     }
 
     /**
-     * @deprecated Use {@link java.util.Arrays.asList(Object[])} instead
+     * @deprecated Use {@link java.util.Arrays#asList(Object[])} instead
      * 
      * Converts the elements of an array into a {@link java.util.List}
      */
@@ -746,30 +743,20 @@ public class Util extends Toolbox
     }
 
     /**
-     * Returns the {@link java.nio.charset.Charset} object representing
+     * Returns the {@link Charset} object representing
      * the value of {@link SaffronProperties#defaultCharset}
-     * @throws java.nio.charset.IllegalCharsetNameException - If the given charset name is illegal
-     * @throws java.nio.charset.UnsupportedCharsetException - If no support for the named charset is available in this instance of the Java virtual machine
+     *
+     * @throws  java.nio.charset.IllegalCharsetNameException
+     *          If the given charset name is illegal
+     *
+     * @throws  java.nio.charset.UnsupportedCharsetException
+     *          If no support for the named charset is available
+     *          in this instance of the Java virtual machine
      */
     public static Charset getDefaultCharset()
     {
         return Charset.forName(
             SaffronProperties.instance().defaultCharset.get());
-    }
-
-    /**
-     * Simply returns a string saying "encounted at line ?, column ?" using
-     * {@link ParserPosition#getBeginLine} and {@link ParserPosition#getBeginColumn}
-     * respectively
-     */
-    public static String encountedAt(ParserPosition pos)
-    {
-        StringBuffer ret = new StringBuffer();
-        ret.append("encountered at line ");
-        ret.append(pos.getBeginLine());
-        ret.append(", column");
-        ret.append(pos.getBeginColumn());
-        return ret.toString();
     }
 
     /**
@@ -817,12 +804,41 @@ public class Util extends Toolbox
         return ae;
     }
 
+    /**
+     * Checks a pre-condition.
+     *
+     * <p>For example,
+     *
+     * <pre>
+     * /**
+     *   * @ pre x != 0
+     *   * /
+     * void foo(int x) {
+     *     Util.pre(x != 0, "x != 0");
+     * }
+     * @param b Result of evaluating the pre-condition.
+     * @param description Description of the pre-condition.
+     */
     public static void pre(boolean b, String description)
     {
         if (!b) {
             throw newInternal("pre-condition failed: " + description);
         }
     }
+
+    /**
+     * Checks an invariant.
+     *
+     * <p>This is similar to <code>assert</code> keyword, except that the
+     * condition is always evaluated even if asserts are disabled.
+     */
+    public static void permAssert(boolean b, String description)
+    {
+        if (!b) {
+            throw newInternal("invariant violated: " + description);
+        }
+    }
+
     /**
      * Returns a {@link java.lang.RuntimeException} indicating that a
      * particular feature has not been implemented, but should be.

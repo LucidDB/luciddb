@@ -310,14 +310,7 @@ CwmView ViewDefinition(CwmSchema schema) :
         // NOTE:  we accept ORDER BY on the view definition, even though
         // that's not standard SQL, and leave it up to the validator to
         // decide what to do with it
-        FarragoSession session =
-            farragoParser.getDdlValidator().getInvokingSession();
-        String unparseSql = query.toSqlString(
-            new SqlDialect(session.getDatabaseMetaData()));
-        CwmQueryExpression queryExp = getRepos().newCwmQueryExpression();
-        queryExp.setLanguage("SQL");
-        queryExp.setBody(unparseSql);
-        view.setQueryExpression(queryExp);
+        farragoParser.getDdlValidator().setViewText(view, query);
     }
     {
        return view;

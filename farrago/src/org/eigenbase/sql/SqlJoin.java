@@ -34,6 +34,24 @@ import org.eigenbase.sql.parser.ParserPosition;
  */
 public class SqlJoin extends SqlCall
 {
+    public static final int LEFT_OPERAND = 0;
+    /**
+     * Operand says whether this is a natural join. Must be constant TRUE or
+     * FALSE.
+     */
+    public static final int IS_NATURAL_OPERAND = 1;
+    /**
+     * Value must be a {@link SqlLiteral}, one of the integer codes for {@link
+     * JoinType}.
+     */
+    public static final int TYPE_OPERAND = 2;
+    public static final int RIGHT_OPERAND = 3;
+    /**
+     * Value must be a {@link SqlLiteral}, one of the integer codes for {@link
+     * ConditionType}.
+     */
+    public static final int CONDITION_TYPE_OPERAND = 4;
+    public static final int CONDITION_OPERAND = 5;
     //~ Constructors ----------------------------------------------------------
 
     public SqlJoin(
@@ -48,7 +66,7 @@ public class SqlJoin extends SqlCall
 
     public final SqlNode getCondition()
     {
-        return operands[SqlJoinOperator.CONDITION_OPERAND];
+        return operands[CONDITION_OPERAND];
     }
 
     /**
@@ -59,7 +77,7 @@ public class SqlJoin extends SqlCall
     public final SqlJoinOperator.ConditionType getConditionType()
     {
         final SqlLiteral literal =
-            (SqlLiteral) operands[SqlJoinOperator.CONDITION_TYPE_OPERAND];
+            (SqlLiteral) operands[CONDITION_TYPE_OPERAND];
         return (SqlJoinOperator.ConditionType) literal.getValue();
     }
 
@@ -71,23 +89,23 @@ public class SqlJoin extends SqlCall
     public final SqlJoinOperator.JoinType getJoinType()
     {
         final SqlLiteral literal =
-            (SqlLiteral) operands[SqlJoinOperator.TYPE_OPERAND];
+            (SqlLiteral) operands[TYPE_OPERAND];
         return (SqlJoinOperator.JoinType) literal.getValue();
     }
 
     public final SqlNode getLeft()
     {
-        return operands[SqlJoinOperator.LEFT_OPERAND];
+        return operands[LEFT_OPERAND];
     }
 
     public final boolean isNatural()
     {
-        return SqlLiteral.booleanValue(operands[SqlJoinOperator.IS_NATURAL_OPERAND]);
+        return SqlLiteral.booleanValue(operands[IS_NATURAL_OPERAND]);
     }
 
     public final SqlNode getRight()
     {
-        return operands[SqlJoinOperator.RIGHT_OPERAND];
+        return operands[RIGHT_OPERAND];
     }
 }
 

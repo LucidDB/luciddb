@@ -37,6 +37,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.logging.Logger;
+import java.util.logging.Level;
 
 
 /**
@@ -518,9 +519,13 @@ public final class ParserUtil
      */
     public static SqlNode toTree(List list)
     {
-        tracer.finer("Attempting to reduce " + list);
+        if (tracer.isLoggable(Level.FINER)) {
+            tracer.finer("Attempting to reduce " + list);
+        }
         final SqlNode node = toTreeEx(list, 0, 0, SqlKind.Other);
-        tracer.fine("Reduced " + node);
+        if (tracer.isLoggable(Level.FINE)) {
+            tracer.fine("Reduced " + node);
+        }
         return node;
     }
 
@@ -617,8 +622,9 @@ outer:
                         SqlNode rightExp = (SqlNode) list.get(i + 1);
                         final SqlCall newExp =
                             current.createCall(leftExp, rightExp, currentPos);
-                        tracer.fine("Reduced infix: " + newExp);
-
+                        if (tracer.isLoggable(Level.FINE)) {
+                            tracer.fine("Reduced infix: " + newExp);
+                        }
                         // Replace elements {i - 1, i, i + 1} with the new
                         // expression.
                         replaceSublist(list, i - 1, i + 2, newExp);
@@ -647,8 +653,9 @@ outer:
 
                         final SqlCall newExp =
                             current.createCall(leftExp, currentPos);
-                        tracer.fine("Reduced postfix: " + newExp);
-
+                        if (tracer.isLoggable(Level.FINE)) {
+                            tracer.fine("Reduced postfix: " + newExp);
+                        }
                         // Replace elements {i - 1, i} with the new expression.
                         list.remove(i);
                         list.set(i - 1, newExp);
@@ -687,7 +694,9 @@ outer:
                     }
                     if ((previousRight < left) && (right >= nextLeft)) {
                         i = specOp.reduceExpr(i, list);
-                        tracer.fine("Reduced special op: " + list.get(i));
+                        if (tracer.isLoggable(Level.FINE)) {
+                            tracer.fine("Reduced special op: " + list.get(i));
+                        }
                         break;
                     }
                     i = nextOrdinal;

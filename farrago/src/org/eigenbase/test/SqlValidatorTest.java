@@ -67,7 +67,8 @@ public class SqlValidatorTest extends SqlValidatorTestCase
 
     /**
      * Mock implmenentation of {@link SqlValidator.CatalogReader} which returns
-     * tables "EMP" and "DEPT".
+     * tables "EMP", "DEPT", "BONUS", "SALGRADE" (same as Oracle's SCOTT
+     * schema).
      */
     public class MockCatalogReader implements SqlValidator.CatalogReader
     {
@@ -80,12 +81,18 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             MockTable empTable = new MockTable("EMP");
             empTable.addColumn("EMPNO",
                 typeFactory.createSqlType(SqlTypeName.Integer));
-            empTable.addColumn("AGE",
+            empTable.addColumn("ENAME",
+                typeFactory.createSqlType(SqlTypeName.Varchar, 20));
+            empTable.addColumn("JOB",
+                typeFactory.createSqlType(SqlTypeName.Varchar, 10));
+            empTable.addColumn("MGR",
                 typeFactory.createSqlType(SqlTypeName.Integer));
+            empTable.addColumn("HIREDATE",
+                typeFactory.createSqlType(SqlTypeName.Date));
             empTable.addColumn("SAL",
                 typeFactory.createSqlType(SqlTypeName.Integer));
-            empTable.addColumn("NAME",
-                typeFactory.createSqlType(SqlTypeName.Varchar, 10));
+            empTable.addColumn("COMM",
+                typeFactory.createSqlType(SqlTypeName.Integer));
             empTable.addColumn("DEPTNO",
                 typeFactory.createSqlType(SqlTypeName.Integer));
             registerTable(empTable);
@@ -96,6 +103,26 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             deptTable.addColumn("NAME",
                 typeFactory.createSqlType(SqlTypeName.Varchar, 10));
             registerTable(deptTable);
+            // Register "BONUS" table.
+            MockTable bonusTable = new MockTable("BONUS");
+            bonusTable.addColumn("ENAME",
+                typeFactory.createSqlType(SqlTypeName.Varchar, 20));
+            bonusTable.addColumn("JOB",
+                typeFactory.createSqlType(SqlTypeName.Varchar, 10));
+            bonusTable.addColumn("SAL",
+                typeFactory.createSqlType(SqlTypeName.Integer));
+            bonusTable.addColumn("COMM",
+                typeFactory.createSqlType(SqlTypeName.Integer));
+            registerTable(bonusTable);
+            // Register "SALGRADE" table.
+            MockTable salgradeTable = new MockTable("SALGRADE");
+            salgradeTable.addColumn("GRADE",
+                typeFactory.createSqlType(SqlTypeName.Integer));
+            salgradeTable.addColumn("LOSAL",
+                typeFactory.createSqlType(SqlTypeName.Integer));
+            salgradeTable.addColumn("HISAL",
+                typeFactory.createSqlType(SqlTypeName.Integer));
+            registerTable(salgradeTable);
         }
 
         private void registerTable(MockTable table) {

@@ -762,6 +762,8 @@ public class SqlParserTest extends TestCase
     {
         check("select * from a join b using (x)",
             "SELECT *" + NL + "FROM `A` INNER JOIN `B` USING ((`X`))");
+        checkFails("select * from a join b using () where c = d",
+            "(?s).*Encountered \"[)]\" at line 1, column 31.*");
     }
 
     public void testLiteral()
@@ -1483,7 +1485,7 @@ public class SqlParserTest extends TestCase
         checkExp("a multiset INTERSECT distinct b","(`A` MULTISET INTERSECT `B`)");
     }
 
-    public void testMulisetMixed() {
+    public void testMultisetMixed() {
         checkExp("multiset[1] MULTISET union b", "((MULTISET[1]) MULTISET UNION `B`)");
         checkExp("a MULTISET union b multiset intersect c multiset except d multiset union e",
             "(((`A` MULTISET UNION (`B` MULTISET INTERSECT `C`)) MULTISET EXCEPT `D`) MULTISET UNION `E`)");

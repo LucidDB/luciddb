@@ -21,22 +21,24 @@
 
 package org.eigenbase.sql;
 
-import java.nio.charset.Charset;
-import java.util.*;
-
-import junit.framework.TestCase;
-
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.fun.SqlRowOperator;
 import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.type.ReturnTypeInference;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql.type.UnknownParamInference;
-import org.eigenbase.sql.type.ReturnTypeInference;
+import org.eigenbase.util.EnumeratedValues;
 import org.eigenbase.util.Util;
+import org.eigenbase.trace.EigenbaseTrace;
 import net.sf.farrago.util.FarragoException;
+
+import java.nio.charset.Charset;
+import java.util.*;
+import java.util.logging.Logger;
+import java.util.logging.Level;
 
 
 /**
@@ -60,9 +62,18 @@ public class SqlValidator
     public final SqlOperatorTable opTab;
     private final CatalogReader catalogReader;
 
-    /** Maps {@link SqlNode query nodes} to {@link Scope the scope created from
-     * them}. */
-    private HashMap scopes = new HashMap();
+    /**
+     * Maps {@link SqlNode query node} objects to the {@link Scope} scope
+     * created from them}.
+     */
+    private final HashMap scopes = new HashMap();
+    private final HashMap whereScopes = new HashMap();
+    private final HashMap orderScopes = new HashMap();
+    /**
+     * Maps a {@link SqlNode node} to the {@link Namespace} the namespace which
+     * describes what columns they contain.
+     */
+    private final HashMap namespaces = new HashMap();
     private SqlNode outermostNode;
     private int nextGeneratedId;
     public final RelDataTypeFactory typeFactory;
@@ -75,6 +86,7 @@ public class SqlValidator
      * instance.
      */
     private Map nodeToTypeMap = new IdentityHashMap();
+    public static final Logger tracer = EigenbaseTrace.parserTracer;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -106,11 +118,6 @@ public class SqlValidator
 
     //~ Methods ---------------------------------------------------------------
 
-    public SelectScope getScope(SqlSelect node)
-    {
-        return (SelectScope) scopes.get(node);
-    }
-
     public void check(String s)
     {
     }
@@ -140,21 +147,6 @@ public class SqlValidator
     }
 
     /**
-     * Returns whether a select item is "*" or "TABLE.*".
-     */
-    private boolean isStar(SqlNode selectItem)
-    {
-        if (selectItem instanceof SqlIdentifier) {
-            SqlIdentifier identifier = (SqlIdentifier) selectItem;
-            return ((identifier.names.length == 1)
-                && identifier.names[0].equals("*"))
-                || ((identifier.names.length == 2)
-                && identifier.names[1].equals("*"));
-        }
-        return false;
-    }
-
-    /**
      * If <code>selectItem</code> is "*" or "TABLE.*", expands it and returns
      * true; otherwise writes the unexpanded item.
      *
@@ -171,22 +163,22 @@ public class SqlValidator
         List aliases,
         List types)
     {
-        final SelectScope scope = getScope(select);
+        final Scope scope = getScope(select, SqlSelect.WHERE_OPERAND);
         if (selectItem instanceof SqlIdentifier) {
             SqlIdentifier identifier = (SqlIdentifier) selectItem;
             if ((identifier.names.length == 1)
                     && identifier.names[0].equals("*")) {
-                List tableNames = scope.childrenNames;
-                for (Iterator tableIter = tableNames.iterator();
-                        tableIter.hasNext();) {
-                    String tableName = (String) tableIter.next();
+
+                ArrayList tableNames = ((ListScope) scope).childrenNames;
+                for (int i = 0; i < tableNames.size(); i++) {
+                    String tableName = (String) tableNames.get(i);
                     final SqlNode from = getChild(select, tableName);
-                    final Scope fromScope = getScope(from);
-                    assert fromScope != null;
-                    final RelDataType rowType = fromScope.getRowType();
+                    final Namespace fromNs = getNamespace(from);
+                    assert fromNs != null;
+                    final RelDataType rowType = fromNs.getRowType();
                     final RelDataTypeField [] fields = rowType.getFields();
-                    for (int i = 0; i < fields.length; i++) {
-                        RelDataTypeField field = fields[i];
+                    for (int j = 0; j < fields.length; j++) {
+                        RelDataTypeField field = fields[j];
                         String columnName = field.getName();
 
                         //todo: do real implicit collation here
@@ -195,7 +187,8 @@ public class SqlValidator
                                     tableName, columnName
                                 },
                                 ParserPosition.ZERO);
-                        addToSelectList(selectItems, aliases, types, exp, scope);
+                        addToSelectList(selectItems, aliases, types, exp,
+                            scope);
                     }
                 }
                 return true;
@@ -203,9 +196,9 @@ public class SqlValidator
                     && identifier.names[1].equals("*")) {
                 final String tableName = identifier.names[0];
                 final SqlNode from = getChild(select, tableName);
-                final Scope fromScope = getScope(from);
-                assert fromScope != null;
-                final RelDataType rowType = fromScope.getRowType();
+                final Namespace fromNs = getNamespace(from);
+                assert fromNs != null;
+                final RelDataType rowType = fromNs.getRowType();
                 final RelDataTypeField [] fields = rowType.getFields();
                 for (int i = 0; i < fields.length; i++) {
                     RelDataTypeField field = fields[i];
@@ -232,105 +225,6 @@ public class SqlValidator
         return false;
     }
 
-    public void testDoubleNoAlias()
-    {
-        check("select * from emp join dept");
-    }
-
-    public void testDuplicateColumnAliasFails()
-    {
-        checkFails("select 1 as a, 2 as b, 3 as a from emp", "xyz");
-    }
-
-    // NOTE jvs 20-May-2003 -- this is just here as a reminder that GROUP BY
-    // validation isn't implemented yet
-    public void testInvalidGroupBy(TestCase test)
-    {
-        try {
-            check("select empno, deptno from emp group by deptno");
-        } catch (RuntimeException ex) {
-            return;
-        }
-        test.fail("Expected validation error");
-    }
-
-    public void testSingleNoAlias()
-    {
-        check("select * from emp");
-    }
-
-    public void testObscuredAliasFails()
-    {
-        // It is an error to refer to a table which has been given another
-        // alias.
-        checkFails("select * from emp as e where exists ("
-            + "  select 1 from dept where dept.deptno = emp.deptno)", "xyz");
-    }
-
-    public void testFromReferenceFails()
-    {
-        // You cannot refer to a table ('e2') in the parent scope of a query in
-        // the from clause.
-        checkFails("select * from emp as e1 where exists ("
-            + "  select * from emp as e2, "
-            + "    (select * from dept where dept.deptno = e2.deptno))", "xyz");
-    }
-
-    public void testWhereReference()
-    {
-        // You can refer to a table ('e1') in the parent scope of a query in
-        // the from clause.
-        check("select * from emp as e1 where exists ("
-            + "  select * from emp as e2, "
-            + "    (select * from dept where dept.deptno = e1.deptno))");
-    }
-
-    public void testIncompatibleUnionFails()
-    {
-        checkFails("select 1,2 from emp union select 3 from dept", "xyz");
-    }
-
-    public void testUnionOfNonQueryFails()
-    {
-        checkFails("select 1 from emp union 2", "xyz");
-    }
-
-    public void testInTooManyColumnsFails()
-    {
-        checkFails("select * from emp where deptno in (select deptno,deptno from dept)",
-            "xyz");
-    }
-
-    public void testNaturalCrossJoinFails()
-    {
-        checkFails("select * from emp natural cross join dept", "xyz");
-    }
-
-    public void testCrossJoinUsingFails()
-    {
-        checkFails("select * from emp cross join dept using (deptno)",
-            "cross join cannot have a using clause");
-    }
-
-    public void testCrossJoinOnFails()
-    {
-        checkFails("select * from emp cross join dept on emp.deptno = dept.deptno",
-            "cross join cannot have an on clause");
-    }
-
-    public void testInnerJoinWithoutUsingOrOnFails()
-    {
-        checkFails("select * from emp inner join dept "
-            + "where emp.deptno = dept.deptno",
-            "INNER, LEFT, RIGHT or FULL join requires ON or USING condition");
-    }
-
-    public void testJoinUsingInvalidColsFails()
-    {
-        checkFails("select * from emp left join dept using (gender)",
-            "dept does not have a gender column");
-    }
-
     /**
      * Validates a tree. You can call this method multiple times,
      * but not reentrantly.
@@ -346,8 +240,16 @@ public class SqlValidator
             "topNode.getKind().isA(SqlKind.TopLevel)");
         try {
             outermostNode = createInternalSelect(topNode);
-            registerQuery(null, outermostNode, null, false);
-            validateExpression(outermostNode);
+            if (tracer.isLoggable(Level.FINER)) {
+                tracer.finer("After creating internal selects: " +
+                    outermostNode.toString());
+            }
+            final Scope scope = new EmptyScope();
+            registerQuery(scope, null, outermostNode, null);
+            outermostNode.validate(this, scope);
+            if (tracer.isLoggable(Level.FINER)) {
+                tracer.finer("After validation: " + outermostNode.toString());
+            }
             SqlNode returnNode = outermostNode;
             return returnNode;
         } finally {
@@ -364,20 +266,84 @@ public class SqlValidator
      */
     public void validateQuery(SqlNode node)
     {
-        final Scope scope = getScope(node);
-        if (scope == null) {
+        final Namespace namespace = getNamespace(node);
+        if (namespace == null) {
             throw Util.newInternal("Not a query: " + node);
         }
-        scope.validate();
+        namespace.validate();
     }
 
-    public Scope getScope(SqlNode node)
+    /**
+     * Returns the scope that expressions in the WHERE and GROUP BY clause of
+     * this query should use. This scope consists of the tables in the FROM
+     * clause, and the enclosing scope.
+     */
+    public ListScope getWhereScope(SqlSelect select)
     {
+        return (ListScope) whereScopes.get(select);
+    }
+
+    /**
+     * Returns the scope that expressions in the SELECT and HAVING clause of
+     * this query should use. This scope consists of the FROM clause and the
+     * enclosing scope. If the query is aggregating, only columns in the GROUP
+     * BY clause may be used.
+     */
+    public Scope getOrderScope(SqlSelect select) {
+        return (Scope) orderScopes.get(select);
+    }
+
+    public Scope getJoinScope(SqlNode node) {
         switch (node.getKind().getOrdinal()) {
         case SqlKind.AsORDINAL:
-            return getScope(((SqlCall) node).operands[0]);
+            return getJoinScope(((SqlCall) node).operands[0]);
         default:
             return (Scope) scopes.get(node);
+        }
+    }
+
+    /**
+     * Returns the appropriate scope for validating a particular clause of
+     * a SELECT statement.
+     *
+     * <p>Consider
+     *
+     * SELECT *
+     * FROM foo
+     * WHERE EXISTS (
+     *    SELECT deptno AS x
+     *    FROM emp, dept
+     *    WHERE emp.deptno = 5
+     *    GROUP BY deptno
+     *    ORDER BY x)
+     *
+     * In FROM, you can only see 'foo'.
+     * In WHERE, GROUP BY and SELECT, you can see 'emp', 'dept', and 'foo'.
+     * In ORDER BY, you can see the column alias 'x', 'emp', 'dept', and 'foo'.
+     */
+    public Scope getScope(SqlSelect select, int operandType)
+    {
+        switch (operandType) {
+        case SqlSelect.FROM_OPERAND:
+            return (Scope) scopes.get(select);
+        case SqlSelect.WHERE_OPERAND:
+        case SqlSelect.GROUP_OPERAND:
+        case SqlSelect.HAVING_OPERAND:
+        case SqlSelect.SELECT_OPERAND:
+            return (Scope) whereScopes.get(select);
+        case SqlSelect.ORDER_OPERAND:
+            return (Scope) orderScopes.get(select);
+        default:
+            throw Util.newInternal("Unexpected operandType " + operandType);
+        }
+    }
+
+    public Namespace getNamespace(SqlNode node) {
+        switch (node.getKind().getOrdinal()) {
+        case SqlKind.AsORDINAL:
+            return getNamespace(((SqlCall) node).operands[0]);
+        default:
+            return (Namespace) namespaces.get(node);
         }
     }
 
@@ -385,8 +351,8 @@ public class SqlValidator
         SqlSelect select,
         String alias)
     {
-        SelectScope selectScope = getScope(select);
-        final Scope childScope = selectScope.getChild(alias);
+        ListScope selectScope = getWhereScope(select);
+        final Namespace childScope = selectScope.getChild(alias);
         return childScope.getNode();
     }
 
@@ -429,14 +395,14 @@ public class SqlValidator
             SqlSelect wrapperNode =
                 SqlOperatorTable.std().selectOperator.createCall(null,
                     selectList, node, null, null, null, null, null,
-                        ParserPosition.ZERO);
+                    ParserPosition.ZERO);
             return wrapperNode;
         } else if (node.isA(SqlKind.OrderBy)) {
             SqlCall orderBy = (SqlCall) node;
             SqlNode query =
                 orderBy.getOperands()[SqlOrderByOperator.QUERY_OPERAND];
-            SqlNodeList orderList =
-                (SqlNodeList) orderBy.getOperands()[SqlOrderByOperator.ORDER_OPERAND];
+            SqlNodeList orderList = (SqlNodeList)
+                orderBy.getOperands()[SqlOrderByOperator.ORDER_OPERAND];
             if (query instanceof SqlSelect) {
                 SqlSelect select = (SqlSelect) query;
 
@@ -496,11 +462,7 @@ public class SqlValidator
                 // Force unique aliases to avoid a duplicate for Y with
                 // SET X=Y
                 String alias = deriveAliasFromOrdinal(ordinal);
-                selectList.add(
-                    SqlOperatorTable.std().asOperator.createCall(
-                        exp,
-                        new SqlIdentifier(alias, null),
-                        null));
+                selectList.add(addAlias(exp, alias));
                 ++ordinal;
             }
             SqlSelect select =
@@ -547,13 +509,16 @@ public class SqlValidator
     public RelDataType getValidatedNodeType(SqlNode node)
     {
         final RelDataType type = (RelDataType) nodeToTypeMap.get(node);
-        if (type == null) {
-            throw Util.needToImplement("Type derivation for " + node);
+        if (type != null) {
+            return type;
         }
-        return type;
+        final Namespace ns = getNamespace(node);
+        if (ns != null) {
+            return ns.getRowType();
+        }
+        throw Util.needToImplement("Type derivation for " + node);
     }
 
-    //REVIEW wael 07/27/04: changed from private to public access
     public void setValidatedNodeType(
         SqlNode node,
         RelDataType type)
@@ -588,20 +553,43 @@ public class SqlValidator
         }
     }
 
+    /**
+     * Derives the type of a node in a given scope. If the type has already
+     * been inferred, returns the previous type.
+     *
+     * @param scope  Syntactic scope
+     * @param operand Parse tree node
+     * @return Type; todo: when does this method return null, if ever?
+     */
     public RelDataType deriveType(
         Scope scope,
         SqlNode operand)
     {
+        Util.pre(scope != null, "scope != null");
+        Util.pre(operand != null, "operand != null");
+
         // if we already know the type, no need to re-derive
         RelDataType type = (RelDataType) nodeToTypeMap.get(operand);
-        if (type != null) {
-            return type;
+        if (type == null) {
+            type = deriveTypeImpl(scope, operand);
+            Util.permAssert(type != null,
+                "SqlValidator.deriveTypeInternal returned null");
+            setValidatedNodeType(operand, type);
         }
+        return type;
+    }
+
+    /**
+     * Derives the type of a node.
+     *
+     * @post return != null
+     */
+    private RelDataType deriveTypeImpl(
+        Scope scope,
+        SqlNode operand)
+    {
+        RelDataType type;
         if (operand instanceof SqlIdentifier) {
-            // REVIEW klo 1-Jan-2004:
-            // We should have assert scope != null here. The idea is we should
-            // figure out the right scope for the SqlIdentifier before we call
-            // this method. Therefore, scope can't be null.
             SqlIdentifier id = (SqlIdentifier) operand;
 
             // First check for builtin functions which don't have parentheses,
@@ -611,19 +599,20 @@ public class SqlValidator
                 return call.operator.getType(this, scope, call);
             }
 
+            type = null;
             for (int i = 0; i < id.names.length; i++) {
                 String name = id.names[i];
                 if (i == 0) {
                     // REVIEW jvs 23-Dec-2003:  what if a table and column have
                     // the same name?
-                    final Scope resolvedScope =
+                    final Namespace resolvedNs =
                         scope.resolve(name, null, null);
-                    if (resolvedScope != null) {
+                    if (resolvedNs != null) {
                         // There's a table with the name we seek.
-                        type = resolvedScope.getRowType();
-                    } else if (scope instanceof SelectScope
+                        type = resolvedNs.getRowType();
+                    } else if (scope instanceof ListScope
                             && ((type =
-                                ((SelectScope) scope).resolveColumn(name)) != null)) {
+                                ((ListScope) scope).resolveColumn(name, id)) != null)) {
                         // There's a column with the name we seek in precisely
                         // one of the tables.
                         ;
@@ -866,11 +855,11 @@ public class SqlValidator
         Scope scope,
         SqlNode node)
     {
-        if ((node instanceof SqlDynamicParam)
-                || SqlUtil.isNullLiteral(node, false)) {
+        if (node instanceof SqlDynamicParam
+            || SqlUtil.isNullLiteral(node, false)) {
             if (inferredType.equals(unknownType)) {
-                // TODO: scrape up some positional context information
-                throw EigenbaseResource.instance().newNullIllegal();
+                throw newValidationError(node,
+                    EigenbaseResource.instance().newNullIllegal());
             }
 
             // REVIEW:  should dynamic parameter types always be nullable?
@@ -959,14 +948,17 @@ public class SqlValidator
 
     private void checkForIllegalNull(SqlCall call)
     {
-        if (!(call.isA(SqlKind.Case) || call.isA(SqlKind.Cast)
-                || call.isA(SqlKind.Row) || call.isA(SqlKind.Select))) {
-            for (int i = 0; i < call.operands.length; i++) {
-                //todo use pp when not null
-                if (SqlUtil.isNullLiteral(call.operands[i], false)) {
-                    //                    assert(null==node.getParserPosition()) : "todo use pp";
-                    throw EigenbaseResource.instance().newNullIllegal();
-                }
+        if (call.isA(SqlKind.Case)
+            || call.isA(SqlKind.Cast)
+            || call.isA(SqlKind.Row)
+            || call.isA(SqlKind.Select)) {
+            return;
+        }
+        for (int i = 0; i < call.operands.length; i++) {
+            final SqlNode operand = call.operands[i];
+            if (SqlUtil.isNullLiteral(operand, false)) {
+                throw newValidationError(operand,
+                    EigenbaseResource.instance().newNullIllegal());
             }
         }
     }
@@ -991,10 +983,7 @@ public class SqlValidator
             for (int j = 0;; j++) {
                 alias = aliasBase + j;
                 if (!aliases.contains(alias)) {
-                    exp = SqlOperatorTable.std().asOperator.createCall(
-                            exp,
-                            new SqlIdentifier(alias, null),
-                            null);
+                    exp = addAlias(exp, alias);
                     break;
                 }
             }
@@ -1002,6 +991,18 @@ public class SqlValidator
         aliases.add(alias);
         types.add(deriveType(scope, exp));
         list.add(exp);
+    }
+
+    /**
+     * Converts an expression "expr" into "expr AS alias".
+     */
+    private static SqlNode addAlias(
+        SqlNode expr,
+        String alias)
+    {
+        final SqlIdentifier id = new SqlIdentifier(alias, ParserPosition.ZERO);
+        return SqlOperatorTable.std().asOperator.createCall(expr, id,
+            ParserPosition.ZERO);
     }
 
     /**
@@ -1050,122 +1051,188 @@ public class SqlValidator
     }
 
     /**
-     * Registers a new scope. We assume that its parent pointer has already
-     * been set.
-     * @param scope Scope to register
-     * @param inFrom Whether the scope is in the FROM list of its parent. Only
-     *   scopes in the FROM list can be returned when resolving identifiers.
+     * Registers a new namespace, and adds it as a child of its parent scope.
+     *
+     * @param usingScope Parent scope (which will want to look for things in
+     *   this namespace)
+     * @param alias Alias by which parent will refer to this namespace
+     * @param ns Namespace
      */
-    private void register(
-        Scope scope,
-        boolean inFrom)
+    private void registerNamespace(
+        Scope usingScope,
+        String alias,
+        Namespace ns)
     {
-        scopes.put(
-            scope.getNode(),
-            scope);
-        if (inFrom) {
-            assert scope.parent instanceof SelectScope;
-            if (!(scope instanceof JoinScope)) {
-                SelectScope parentScope = (SelectScope) scope.parent;
-                parentScope.children.add(scope);
-                parentScope.childrenNames.add(scope.alias);
-            }
+        namespaces.put(ns.getNode(), ns);
+        if (usingScope != null) {
+            usingScope.addChild(ns, alias);
         }
     }
 
-    private void registerFrom(
-        Scope scope,
+    private SqlNode registerFrom(
+        Scope parentScope,
+        Scope usingScope,
         SqlNode node,
         String alias)
     {
+        SqlNode newNode;
         switch (node.getKind().getOrdinal()) {
         case SqlKind.AsORDINAL:
+            final SqlCall sqlCall = (SqlCall) node;
             if (alias == null) {
-                alias = ((SqlCall) node).operands[1].toString();
+                alias = sqlCall.operands[1].toString();
             }
-            registerFrom(scope, ((SqlCall) node).operands[0], alias);
-            return;
+            final SqlNode expr = sqlCall.operands[0];
+            final SqlNode newExpr = registerFrom(parentScope, usingScope, expr, alias);
+            if (newExpr != expr) {
+                sqlCall.setOperand(0, newExpr);
+            }
+            return node;
+
         case SqlKind.JoinORDINAL:
             final SqlJoin join = (SqlJoin) node;
+            final JoinScope joinScope = new JoinScope(parentScope, usingScope, join);
+            scopes.put(join, joinScope);
             final SqlNode left = join.getLeft();
-            registerFrom(scope, left, null);
+            final SqlNode newLeft = registerFrom(parentScope, joinScope, left,
+                null);
+            if (newLeft != left) {
+                join.setOperand(SqlJoin.LEFT_OPERAND, newLeft);
+            }
             final SqlNode right = join.getRight();
-            registerFrom(scope, right, null);
-            final JoinScope joinScope = new JoinScope(scope, join);
-            register(joinScope, true);
-            return;
+            final SqlNode newRight = registerFrom(parentScope, joinScope,
+                right, null);
+            if (newRight != right) {
+                join.setOperand(SqlJoin.RIGHT_OPERAND, newRight);
+            }
+            final JoinNamespace joinNamespace = new JoinNamespace(join);
+            registerNamespace(null, null, joinNamespace);
+            return join;
+
         case SqlKind.IdentifierORDINAL:
+            newNode = node;
             if (alias == null) {
                 alias = deriveAlias(node, -1);
+                if (shouldExpandIdentifiers()) {
+                    newNode = addAlias(node, alias);
+                }
             }
-            final IdentifierScope newScope =
-                new IdentifierScope(scope, (SqlIdentifier) node, alias);
-            register(newScope, true);
-            return;
+            final SqlIdentifier id = (SqlIdentifier) node;
+            final IdentifierNamespace newNs = new IdentifierNamespace(id);
+            registerNamespace(usingScope, alias, newNs);
+            return newNode;
+
         case SqlKind.SelectORDINAL:
         case SqlKind.UnionORDINAL:
         case SqlKind.IntersectORDINAL:
         case SqlKind.ExceptORDINAL:
         case SqlKind.ValuesORDINAL:
+            newNode = node;
             if (alias == null) {
                 // give this anonymous construct a name since later
                 // query processing stages rely on it
                 alias = deriveAlias(node, nextGeneratedId++);
+                if (shouldExpandIdentifiers()) {
+                    // Since we're expanding identifiers, we should make the
+                    // aliases explicit too, otherwise the expanded query
+                    // will not be consistent if we convert back to SQL, e.g.
+                    // "select EXPR$1.EXPR$2 from values (1)".
+                    newNode = addAlias(node, alias);
+                }
             }
-            registerQuery(scope, node, alias, true);
-            return;
+            registerQuery(parentScope, usingScope, node, alias);
+            return newNode;
+
         default:
             throw node.getKind().unexpected();
         }
     }
 
+    /**
+     * Registers a query in a parent scope.
+     *
+     * @param parentScope Parent scope which this scope turns to in order to
+     *   resolve objects
+     * @param usingScope Scope whose child list this scope should add itself to
+     * @param node
+     * @param alias Name of this query within its parent. Must be specified
+     *   if usingScope != null
+     * @pre usingScope == null || alias != null
+     */
     private void registerQuery(
-        Scope scope,
+        Scope parentScope,
+        Scope usingScope,
         SqlNode node,
-        String alias,
-        boolean inFrom)
+        String alias)
     {
-        SqlCall call;
+        Util.pre(usingScope == null || alias != null,
+            "usingScope == null || alias != null");
 
+        SqlCall call;
         switch (node.getKind().getOrdinal()) {
         case SqlKind.SelectORDINAL:
             final SqlSelect select = (SqlSelect) node;
             final SelectScope newSelectScope =
-                new SelectScope(scope, select, alias);
-            register(newSelectScope, inFrom);
-            registerFrom(
-                newSelectScope,
-                select.getFrom(),
+                new SelectScope(parentScope, select);
+            final SelectNamespace selectNs = new SelectNamespace(select);
+            scopes.put(select, newSelectScope);
+            registerNamespace(usingScope, alias, selectNs);
+            // Register the subqueries in the FROM clause first.
+            final SqlNode from = select.getFrom();
+            final FromScope fromScope =
+                new FromScope(newSelectScope, from);
+            whereScopes.put(select, fromScope);
+            registerSubqueries(
+                fromScope,
+                usingScope, select.getWhere());
+            // Register FROM with the inherited scope 'parentScope', not
+            // 'newSelectScope', otherwise tables in the FROM clause would be
+            // able to see each other.
+            final SqlNode newFrom = registerFrom(
+                parentScope,
+                fromScope,
+                from,
                 null);
+            if (newFrom != from) {
+                select.setOperand(SqlSelect.FROM_OPERAND, newFrom);
+            }
+            Scope groupScope = fromScope;
+            if (isAggregate(select)) {
+                groupScope = fromScope; // todo: GroupScope class
+            }
             registerSubqueries(
-                newSelectScope,
-                select.getSelectList());
+                groupScope,
+                usingScope, select.getGroup());
             registerSubqueries(
-                newSelectScope,
-                select.getWhere());
+                groupScope,
+                usingScope, select.getHaving());
             registerSubqueries(
-                newSelectScope,
-                select.getGroup());
-            registerSubqueries(
-                newSelectScope,
-                select.getHaving());
+                groupScope,
+                usingScope, select.getSelectList());
+            final SqlNodeList orderList = select.getOrderList();
+            if (orderList != null) {
+                Scope orderByScope =
+                    new OrderByScope(groupScope, orderList, select);
+                orderScopes.put(select, orderByScope);
+                registerSubqueries(orderByScope, usingScope, orderList);
+            }
             break;
+
         case SqlKind.IntersectORDINAL:
         case SqlKind.ExceptORDINAL:
         case SqlKind.UnionORDINAL:
-            final Scope newScope =
-                new SetopScope(scope, (SqlCall) node, alias);
-            register(newScope, inFrom);
+            final SetopNamespace setopNamespace =
+                new SetopNamespace((SqlCall) node);
+            registerNamespace(usingScope, alias, setopNamespace);
             call = (SqlCall) node;
-            registerQuery(newScope, call.operands[0], null, false);
-            registerQuery(newScope, call.operands[1], null, false);
+            registerQuery(parentScope, null, call.operands[0], null);
+            registerQuery(parentScope, null, call.operands[1], null);
             break;
+
         case SqlKind.ValuesORDINAL:
-            assert (inFrom);
-            assert (scope instanceof SelectScope);
-            final TableConstructorScope tableConstructorScope =
-                new TableConstructorScope(scope, node, alias);
-            register(tableConstructorScope, true);
+            final TableConstructorNamespace tableConstructorNamespace =
+                new TableConstructorNamespace(node, parentScope);
+            registerNamespace(usingScope, alias, tableConstructorNamespace);
             call = (SqlCall) node;
             SqlNode [] operands = call.getOperands();
             for (int i = 0; i < operands.length; ++i) {
@@ -1174,237 +1241,337 @@ public class SqlValidator
                 // FIXME jvs 9-Feb-2004:  Correlation should
                 // be illegal in these subqueries.  Same goes for
                 // any SELECT in the FROM list.
-                registerSubqueries(tableConstructorScope, operands[i]);
+                registerSubqueries(parentScope, usingScope, operands[i]);
             }
             break;
+
         case SqlKind.InsertORDINAL:
-            assert (!inFrom);
             SqlInsert insertCall = (SqlInsert) node;
-            Scope insertScope =
-                new IdentifierScope(scope,
-                    insertCall.getTargetTable(), alias);
-            register(insertScope, false);
+            IdentifierNamespace insertScope =
+                new IdentifierNamespace(
+                    insertCall.getTargetTable());
+            registerNamespace(usingScope, null, insertScope);
             registerQuery(
-                scope,
+                parentScope,
+                usingScope,
                 insertCall.getSourceSelect(),
-                null,
-                false);
+                null);
             break;
         case SqlKind.DeleteORDINAL:
-            assert (!inFrom);
             SqlDelete deleteCall = (SqlDelete) node;
             registerQuery(
-                scope,
+                parentScope,
+                usingScope,
                 deleteCall.getSourceSelect(),
-                null,
-                false);
+                null);
             break;
         case SqlKind.UpdateORDINAL:
-            assert (!inFrom);
             SqlUpdate updateCall = (SqlUpdate) node;
             registerQuery(
-                scope,
-                updateCall.getSourceSelect(),
-                null,
-                false);
+                parentScope,
+                usingScope, updateCall.getSourceSelect(),
+                null);
             break;
         default:
             throw node.getKind().unexpected();
         }
     }
 
+    /**
+     * Returns whether a SELECT statement is an aggregation. Criteria are:
+     * (1) contains GROUP BY, or
+     * (2) contains HAVING, or
+     * (3) SELECT or ORDER BY clause contains aggregate functions.
+     */
+    private boolean isAggregate(SqlSelect select) {
+        return select.getGroup() != null ||
+            select.getHaving() != null;
+    }
+
     private void registerSubqueries(
-        Scope scope,
+        Scope parentScope,
+        Scope usingScope,
         SqlNode node)
     {
         if (node == null) {
             return;
         } else if (node.isA(SqlKind.Query)) {
-            registerQuery(scope, node, null, false);
+            registerQuery(parentScope, usingScope, node, null);
         } else if (node instanceof SqlCall) {
             SqlCall call = (SqlCall) node;
             final SqlNode [] operands = call.getOperands();
             for (int i = 0; i < operands.length; i++) {
                 SqlNode operand = operands[i];
-                registerSubqueries(scope, operand);
+                registerSubqueries(parentScope, usingScope, operand);
             }
         } else if (node instanceof SqlNodeList) {
             SqlNodeList list = (SqlNodeList) node;
             for (int i = 0, count = list.size(); i < count; i++) {
-                registerSubqueries(
-                    scope,
-                    list.get(i));
+                registerSubqueries(parentScope, usingScope, list.get(i));
             }
         } else {
             ; // atomic node -- can be ignored
         }
     }
 
-    private void validateExpression(SqlNode node)
+    /**
+     * Resolves an identifier to a fully-qualified name.
+     * @param id
+     */
+    public void validateIdentifier(SqlIdentifier id, Scope scope)
     {
-        if (node == null) {
-            return;
-        }
-        switch (node.getKind().getOrdinal()) {
-        case SqlKind.UnionORDINAL:
-        case SqlKind.ExceptORDINAL:
-        case SqlKind.IntersectORDINAL:
-        case SqlKind.SelectORDINAL:
-            validateQuery(node);
-            break;
-        case SqlKind.InsertORDINAL:
-            validateInsert((SqlInsert) node);
-            break;
-        case SqlKind.DeleteORDINAL:
-            validateDelete((SqlDelete) node);
-            break;
-        case SqlKind.UpdateORDINAL:
-            validateUpdate((SqlUpdate) node);
-            break;
-        case SqlKind.LiteralORDINAL:
-            validateLiteral((SqlLiteral) node);
-            break;
-        default:
-            if (node instanceof SqlCall) {
-                SqlCall call = (SqlCall) node;
-                final SqlNode [] operands = call.getOperands();
-                for (int i = 0; i < operands.length; i++) {
-                    validateExpression(operands[i]);
-                }
-                call.operator.validateCall(call, this);
-            } else if (node instanceof SqlNodeList) {
-                SqlNodeList nodeList = (SqlNodeList) node;
-                Iterator iter = nodeList.getList().iterator();
-                while (iter.hasNext()) {
-                    validateExpression((SqlNode) iter.next());
-                }
-            }
-        }
+        final SqlIdentifier fqId = scope.fullyQualify(id);
+        Util.discard(fqId);
     }
 
-    protected void validateLiteral(SqlLiteral literal)
+    /**
+     * Validates a literal.
+     */
+    public void validateLiteral(SqlLiteral literal)
     {
         // default is to do nothing
     }
 
     private void validateFrom(
         SqlNode node,
-        RelDataType targetRowType)
+        RelDataType targetRowType,
+        Scope scope)
     {
         switch (node.getKind().getOrdinal()) {
         case SqlKind.AsORDINAL:
-            validateFrom(((SqlCall) node).getOperands()[0], targetRowType);
+            validateFrom(((SqlCall) node).getOperands()[0], targetRowType, scope);
             return; // don't break -- AS doesn't have a scope to validate
         case SqlKind.ValuesORDINAL:
-            validateValues((SqlCall) node, targetRowType);
+            validateValues((SqlCall) node, targetRowType, scope);
+            return;
+        case SqlKind.JoinORDINAL:
+            validateJoin((SqlJoin) node, scope);
             return;
         default:
-            final Scope scope = getScope(node);
-            assert scope != null : node;
-            scope.validate();
+            final Namespace namespace2 = getNamespace(node);
+            assert namespace2 != null : node;
+            namespace2.validate();
         }
+    }
+
+    protected void validateJoin(SqlJoin join, Scope scope)
+    {
+        SqlNode left = join.getLeft();
+        SqlNode right = join.getRight();
+//        Namespace leftNs = getNamespace(left);
+//        final RelDataType leftRowType = leftNs.getRowType();
+//        Namespace rightNs = getNamespace(right);
+//        final RelDataType rightRowType = rightNs.getRowType();
+        SqlNode condition = join.getCondition();
+        boolean natural = join.isNatural();
+        SqlJoinOperator.JoinType joinType = join.getJoinType();
+        SqlJoinOperator.ConditionType conditionType =
+            join.getConditionType();
+        validateFrom(left, unknownType, scope);
+        validateFrom(right, unknownType, scope);
+
+        // Validate condition.
+        final Scope joinScope = (Scope) scopes.get(join);
+        switch (conditionType.ordinal) {
+        case SqlJoinOperator.ConditionType.None_ORDINAL:
+            Util.permAssert(condition == null, "condition == null");
+            break;
+        case SqlJoinOperator.ConditionType.On_ORDINAL:
+            Util.permAssert(condition != null, "condition != null");
+            condition.validate(this, joinScope);
+            break;
+        case SqlJoinOperator.ConditionType.Using_ORDINAL:
+            SqlNodeList list = (SqlNodeList) condition;
+            // Parser ensures that using clause is not empty.
+            Util.permAssert(list.size() > 0, "Empty USING clause");
+            for (int i = 0; i < list.size(); i++) {
+                SqlIdentifier id = (SqlIdentifier) list.get(i);
+                validateUsingCol(id, left);
+                validateUsingCol(id, right);
+            }
+            break;
+        default:
+            throw conditionType.unexpected();
+        }
+        // Validate NATURAL.
+        if (natural && condition != null) {
+            throw newValidationError(condition,
+                EigenbaseResource.instance().
+                newNaturalDisallowsOnOrUsing());
+        }
+        // Which join types require/allow a ON/USING condition, or allow
+        // a NATURAL keyword?
+        switch (joinType.ordinal) {
+        case SqlJoinOperator.JoinType.Inner_ORDINAL:
+        case SqlJoinOperator.JoinType.Left_ORDINAL:
+        case SqlJoinOperator.JoinType.Right_ORDINAL:
+        case SqlJoinOperator.JoinType.Full_ORDINAL:
+            if (condition == null && !natural) {
+                throw newValidationError(join,
+                    EigenbaseResource.instance()
+                    .newJoinRequiresCondition());
+            }
+            break;
+        case SqlJoinOperator.JoinType.Comma_ORDINAL:
+        case SqlJoinOperator.JoinType.Cross_ORDINAL:
+            if (condition != null) {
+                throw newValidationError(condition,
+                    EigenbaseResource.instance()
+                    .newCrossJoinDisallowsCondition());
+            }
+            if (natural) {
+                throw newValidationError(join,
+                    EigenbaseResource.instance()
+                    .newCrossJoinDisallowsCondition());
+            }
+            break;
+        default:
+            throw joinType.unexpected();
+        }
+    }
+
+    private void validateUsingCol(SqlIdentifier id, SqlNode leftOrRight) {
+        if (id.names.length == 1) {
+            String name = id.names[0];
+            final Namespace namespace = getNamespace(leftOrRight);
+            boolean exists = namespace.fieldExists(name);
+            if (exists) {
+                return;
+            }
+        }
+        throw newValidationError(id,
+            EigenbaseResource.instance().newColumnNotFound(
+                id.toString()));
     }
 
     private void validateSelect(
         SqlSelect select,
         RelDataType targetRowType)
     {
-        final SelectScope scope = getScope(select);
-        assert scope.rowType == null;
+        final SelectNamespace ns = (SelectNamespace) getNamespace(select);
+        assert ns.rowType == null;
 
         final SqlNodeList selectItems = select.getSelectList();
-
         RelDataType fromType = unknownType;
-        if ((selectItems.size() == 1) && isStar(selectItems.get(0))) {
-            SqlIdentifier id = (SqlIdentifier) selectItems.get(0);
-            if (id.names.length == 1) {
-                // Special case: for INSERT ... VALUES(?,?), the SQL standard
-                // says we're supposed to propagate the target types down.  So
-                // iff the select list is an unqualified star (as it will be
-                // after an INSERT ... VALUES has been expanded), then
-                // propagate.
-                fromType = targetRowType;
+        if (selectItems.size() == 1) {
+            final SqlNode selectItem = selectItems.get(0);
+            if (selectItem instanceof SqlIdentifier) {
+                SqlIdentifier id = (SqlIdentifier) selectItem;
+                if (id.isStar() && id.names.length == 1) {
+                    // Special case: for INSERT ... VALUES(?,?), the SQL standard
+                    // says we're supposed to propagate the target types down.  So
+                    // iff the select list is an unqualified star (as it will be
+                    // after an INSERT ... VALUES has been expanded), then
+                    // propagate.
+                    fromType = targetRowType;
+                }
             }
         }
-        validateFrom(
-            select.getFrom(),
-            fromType);
+        final Scope fromScope = getScope(select, SqlSelect.FROM_OPERAND);
+        validateFrom(select.getFrom(), fromType, fromScope);
 
-        validateWhereClause(select, scope);
-        validateGroupClause(select, scope);
-        validateOrderList(select);
+        validateWhereClause(select);
+        validateGroupClause(select);
+        validateHavingClause(select);
         validateWindowClause(select);
 
-        // validate the select list at the end because the select item might depends on the group by list, or
-        // the window function might reference window name in the window clause etc.
-        validateSelectList(selectItems, select, targetRowType, scope);
+        // Validate the SELECT clause late, because a select item might
+        // depend on the GROUP BY list, or the window function might reference
+        // window name in the WINDOW clause etc.
+        ns.rowType = validateSelectList(selectItems, select, targetRowType);
 
+        // Validate ORDER BY after we have set ns.rowType because in some
+        // dialects you can refer to columns of the select list, e.g.
+        // "SELECT empno AS x FROM emp ORDER BY x"
+        validateOrderList(select);
     }
 
     private void validateWindowClause(SqlSelect select)
     {
         final SqlNodeList windowList = select.getWindowList();
-        if(windowList != null) {
-            // todo: validate window clause
-            // validateExpression(windowList);
+        if (windowList == null) {
+            return;
         }
+        // todo: validate window clause
+        // validateExpression(windowList);
     }
 
     private void validateOrderList(SqlSelect select)
     {
+        // ORDER BY is validated in a scope where aliases in the SELECT clause
+        // are visible. For example, "SELECT empno AS x FROM emp ORDER BY x"
+        // is valid.
         SqlNodeList orderList = select.getOrderList();
-        if (orderList != null) {
-            if (!shouldAllowIntermediateOrderBy()) {
-                if (select != outermostNode) {
-                    throw newValidationError(select,
-                        EigenbaseResource.instance().newInvalidOrderByPos());
-                }
-            }
-            validateExpression(orderList);
+        if (orderList == null) {
+            return;
         }
+        if (!shouldAllowIntermediateOrderBy()) {
+            if (select != outermostNode) {
+                throw newValidationError(select,
+                    EigenbaseResource.instance().newInvalidOrderByPos());
+            }
+        }
+        final Scope orderScope = getScope(select, SqlSelect.ORDER_OPERAND);
+        Util.permAssert(orderScope != null, "orderScope != null");
+        orderList.validate(this, orderScope);
     }
 
-    private void validateGroupClause(SqlSelect select, final SelectScope scope)
+    private void validateGroupClause(SqlSelect select)
     {
         SqlNodeList group = select.getGroup();
-        if (group != null) {
-            // TODO jvs 20-May-2003 -- I enabled this for testing Fennel
-            // DISTINCT, but there's specific GROUP BY
-            // validation that needs to be added, which is why jhyde had a
-            // throw here before.
-            validateExpression(group);
-            inferUnknownTypes(unknownType, scope, group);
+        if (group == null) {
+            return;
         }
+        final Scope groupScope = getScope(select, SqlSelect.GROUP_OPERAND);
+        group.validate(this, groupScope);
+        inferUnknownTypes(unknownType, groupScope, group);
     }
 
-    private void validateWhereClause(SqlSelect select, final SelectScope scope)
+    private void validateWhereClause(SqlSelect select)
     {
         // validate WHERE clause
         final SqlNode where = select.getWhere();
-        if (where != null) {
-            validateExpression(where);
-            inferUnknownTypes(
-                typeFactory.createSqlType(SqlTypeName.Boolean),
-                scope,
-                where);
-            deriveType(scope, where);
+        if (where == null) {
+            return;
         }
+        final Scope whereScope = getScope(select, SqlSelect.WHERE_OPERAND);
+        where.validate(this, whereScope);
+        inferUnknownTypes(
+            typeFactory.createSqlType(SqlTypeName.Boolean),
+            whereScope,
+            where);
+        deriveType(whereScope, where);
     }
 
-    private void validateSelectList(final SqlNodeList selectItems, SqlSelect select, RelDataType targetRowType, final SelectScope scope)
+    private void validateHavingClause(SqlSelect select) {
+        // HAVING is validated in the scope after groups have been created.
+        // For example, in "SELECT empno FROM emp WHERE empno = 10 GROUP BY
+        // deptno HAVING empno = 10", the reference to 'empno' in the HAVING
+        // clause is illegal.
+        final SqlNode having = select.getHaving();
+        if (having == null) {
+            return;
+        }
+        final Scope havingScope = getScope(select, SqlSelect.HAVING_OPERAND);
+        having.validate(this, havingScope);
+    }
+
+    private RelDataType validateSelectList(final SqlNodeList selectItems,
+        SqlSelect select, RelDataType targetRowType)
     {
         // First pass, ensure that aliases are unique. "*" and "TABLE.*" items
         // are ignored.
-        final ArrayList aliases = new ArrayList();
 
         // Validate SELECT list. Expand terms of the form "*" or "TABLE.*".
+        final Scope selectScope = getScope(select, SqlSelect.SELECT_OPERAND);
         final ArrayList expandedSelectItems = new ArrayList();
-        final ArrayList types = new ArrayList();
+        final ArrayList aliasList = new ArrayList();
+        final ArrayList typeList = new ArrayList();
         for (int i = 0; i < selectItems.size(); i++) {
             SqlNode selectItem = selectItems.get(i);
-            validateExpression(selectItem);
-            expandSelectItem(selectItem, select, expandedSelectItems, aliases,
-                types);
+            selectItem.validateExpr(this, selectScope);
+            expandSelectItem(selectItem, select, expandedSelectItems,
+                aliasList, typeList);
         }
 
         SqlNodeList newSelectList =
@@ -1415,13 +1582,15 @@ public class SqlValidator
 
         // TODO: when SELECT appears as a value subquery, should be using
         // something other than unknownType for targetRowType
-        inferUnknownTypes(targetRowType, scope, newSelectList);
+        inferUnknownTypes(targetRowType, selectScope, newSelectList);
 
-        assert types.size() == aliases.size();
-        scope.rowType =
-            typeFactory.createProjectType((RelDataType []) types.toArray(
-                    emptyTypes), (String []) aliases.toArray(emptyStrings));
+        assert typeList.size() == aliasList.size();
+        final RelDataType [] types =
+            (RelDataType []) typeList.toArray(emptyTypes);
+        final String [] aliases = (String []) aliasList.toArray(emptyStrings);
+        return typeFactory.createProjectType(types, aliases);
     }
+
 
     private RelDataType createTargetRowType(
         RelDataType baseRowType,
@@ -1459,12 +1628,15 @@ public class SqlValidator
         return typeFactory.createProjectType(types, fieldNames);
     }
 
-    private void validateInsert(SqlInsert call)
+    /**
+     * Validates an INSERT statement.
+     */
+    public void validateInsert(SqlInsert call)
     {
-        IdentifierScope targetScope =
-            (IdentifierScope) getScope(call.getTargetTable());
-        targetScope.validate();
-        Table table = targetScope.getTable();
+        IdentifierNamespace targetNamespace =
+            (IdentifierNamespace) getNamespace(call.getTargetTable());
+        targetNamespace.validate();
+        Table table = targetNamespace.getTable();
 
         RelDataType targetRowType = table.getRowType();
         if (call.getTargetColumnList() != null) {
@@ -1477,18 +1649,21 @@ public class SqlValidator
 
         SqlSelect sqlSelect = call.getSourceSelect();
         validateSelect(sqlSelect, targetRowType);
-        RelDataType sourceRowType = getScope(sqlSelect).getRowType();
+        RelDataType sourceRowType = getNamespace(sqlSelect).getRowType();
 
         if (targetRowType.getFieldCount() != sourceRowType.getFieldCount()) {
-            throw EigenbaseResource.instance().newUnmatchInsertColumn(""
-                + targetRowType.getFieldCount(),
-                "" + sourceRowType.getFieldCount());
+            throw EigenbaseResource.instance().newUnmatchInsertColumn(
+                new Integer(targetRowType.getFieldCount()),
+                new Integer(sourceRowType.getFieldCount()));
         }
 
         // TODO:  validate updatability, type compatibility, etc.
     }
 
-    private void validateDelete(SqlDelete call)
+    /**
+     * Validates a DELETE statement.
+     */
+    public void validateDelete(SqlDelete call)
     {
         SqlSelect sqlSelect = call.getSourceSelect();
         validateSelect(sqlSelect, unknownType);
@@ -1496,16 +1671,20 @@ public class SqlValidator
         // TODO:  validate updatability, etc.
     }
 
-    private void validateUpdate(SqlUpdate call)
+    /**
+     * Validates an UPDATE statement.
+     */
+    public void validateUpdate(SqlUpdate call)
     {
-        SqlSelect sqlSelect = call.getSourceSelect();
+        SqlSelect select = call.getSourceSelect();
 
         SqlIdentifier id = call.getTargetTable();
-        IdentifierScope targetScope =
-            (IdentifierScope) getScope(sqlSelect).getChild(id.names[id.names.length
-                - 1]);
-        targetScope.validate();
-        Table table = targetScope.getTable();
+        final String name = id.names[id.names.length - 1];
+        final ListScope fromScope = (ListScope) getScope(select, SqlSelect.WHERE_OPERAND);
+        IdentifierNamespace targetNamespace =
+            (IdentifierNamespace) fromScope.getChild(name);
+        targetNamespace.validate();
+        Table table = targetNamespace.getTable();
 
         RelDataType targetRowType =
             createTargetRowType(
@@ -1513,7 +1692,7 @@ public class SqlValidator
                 call.getTargetColumnList(),
                 true);
 
-        validateSelect(sqlSelect, targetRowType);
+        validateSelect(select, targetRowType);
 
         // TODO:  validate updatability, type compatibility
     }
@@ -1523,14 +1702,15 @@ public class SqlValidator
      */
     private void validateValues(
         SqlCall node,
-        RelDataType targetRowType)
+        RelDataType targetRowType,
+        Scope scope)
     {
         assert node.isA(SqlKind.Values);
 
         final SqlNode [] operands = node.getOperands();
         for (int i = 0; i < operands.length; i++) {
             SqlNode operand = operands[i];
-            validateExpression(operand);
+            operand.validate(this, scope);
         }
         for (int i = 0; i < operands.length; i++) {
             if (!operands[i].isA(SqlKind.Row)) {
@@ -1546,7 +1726,7 @@ public class SqlValidator
 
             inferUnknownTypes(
                 targetRowType,
-                getScope(node),
+                scope,
                 rowConstructor);
         }
 
@@ -1574,10 +1754,8 @@ public class SqlValidator
                 RelDataType [] types = new RelDataType[numOfRows];
                 for (int row = 0; row < numOfRows; row++) {
                     SqlCall thisRow = (SqlCall) operands[row];
-                    types[row] =
-                        deriveType(
-                            getScope(node),
-                            thisRow.operands[col]);
+                    final SqlNode operand = thisRow.operands[col];
+                    types[row] = deriveType(scope, operand);
                 }
 
                 final RelDataType type =
@@ -1630,6 +1808,20 @@ public class SqlValidator
     }
 
     /**
+     * Validates a data type expression.
+     */
+    public void validateDataType(SqlDataType dataType)
+    {
+    }
+
+    /**
+     * Validates a dynamic parameter.
+     */
+    public void validateDynamicParam(SqlDynamicParam dynamicParam)
+    {
+    }
+
+    /**
      * Adds "line x, column y" context to a validator exception.
      *
      * <p>Note that the input exception is checked (it derives from
@@ -1654,6 +1846,23 @@ public class SqlValidator
             new Integer(pos.getBeginColumn()),
             e);
     }
+
+    /**
+     * Derives an alias for a node. If it cannot derive an alias, returns null.
+     *
+     * <p>This method doesn't try very hard. It doesn't invent mangled aliases,
+     * and doesn't even recognize an AS clause. There are other methods for
+     * that. It just takes the last part of an identifier.
+     */
+    public static String getAlias(SqlNode node) {
+        if (node instanceof SqlIdentifier) {
+            String[] names = ((SqlIdentifier) node).names;
+            return names[names.length - 1];
+        } else {
+            return null;
+        }
+    }
+
 
     //~ Inner Interfaces ------------------------------------------------------
 
@@ -1684,91 +1893,162 @@ public class SqlValidator
     //~ Inner Classes ---------------------------------------------------------
 
     /**
-     * Name-resolution scope. Represents any position in a parse tree than an
-     * expression can be, or anything in the parse tree which has columns.
+     * Validation status.
      */
-    public abstract class Scope
-    {
-        public final Scope parent;
-        private final String alias;
+    public static class Status extends EnumeratedValues.BasicValue {
+        public static final int Unvalidated_ordinal = 0;
+        public static final int InProgress_ordinal = 1;
+        public static final int Valid_ordinal = 2;
 
-        Scope(
-            Scope parent,
-            String alias)
-        {
-            this.parent = parent;
-            this.alias = alias;
-        }
-
-        public String getAlias()
-        {
-            return alias;
-        }
-
-        public Scope getScopeFromNode(SqlNode node)
-        {
-            return getScope(node);
-        }
-
-        // REVIEW jvs 10-Sept-2003:  I put this in to make sure generated names
-        // for constructed columns were consistent, but it doesn't really
-        // belong on Scope.
-        public String deriveAlias(
-            SqlNode node,
-            int ordinal)
-        {
-            return SqlValidator.this.deriveAlias(node, ordinal);
+        private Status(String name, int ordinal) {
+            super(name, ordinal, null);
         }
 
         /**
-         * Converts an identifier into a fully-qualified identifier. For
-         * example, the "empno" in "select empno from emp natural join dept"
-         * becomes "emp.empno".
+         * Validation has not started for this scope.
          */
-        public SqlIdentifier fullyQualify(SqlIdentifier identifier)
-        {
-            switch (identifier.names.length) {
-            case 1: {
-                final String columnName = identifier.names[0];
-                final String tableName = findQualifyingTableName(columnName);
+        public static final Status Unvalidated =
+            new Status("Unvalidated", Unvalidated_ordinal);
+        /**
+         * Validation is in progress for this scope.
+         */
+        public static final Status InProgress =
+            new Status("InProgress", InProgress_ordinal);
+        /**
+         * Validation has completed (perhaps unsuccessfully).
+         */
+        public static final Status Valid =
+            new Status("Valid", Valid_ordinal);
+    }
 
-                //todo: do implicit collation here
-                return new SqlIdentifier(
-                    new String [] { tableName, columnName },
-                    ParserPosition.ZERO);
-            }
-            case 2: {
-                final String tableName = identifier.names[0];
-                final Scope fromScope = resolve(tableName, null, null);
-                if (fromScope == null) {
-                    throw newValidationError(identifier,
-                        EigenbaseResource.instance().newTableNameNotFound(
-                            tableName));
+    /**
+     * Namespace in which to search for identifiers.
+     */
+    public interface Namespace {
+        /**
+         * Returns the underlying table, or null if there is none.
+         */
+        Table getTable();
+
+        /**
+         * Returns a list of names of output columns. If the scope's type has
+         * not yet been derived, derives it.
+         */
+        RelDataType getRowType();
+
+        /**
+         * Validates this scope.
+         *
+         * <p>If the scope has already been validated, does nothing.</p>
+         */
+        void validate();
+
+        SqlNode getNode();
+
+        Namespace lookupChild(String name, Scope [] ancestorOut, int [] offsetOut);
+
+        boolean fieldExists(String name);
+    }
+
+    private abstract class AbstractNamespace implements Namespace {
+        /**
+         * Whether this scope is currently being validated. Used to check for
+         * cycles.
+         */
+        private Status status = Status.Unvalidated;
+        /**
+         * Type of the output row, which comprises the name and type of each
+         * output column. Set on validate.
+         */
+        protected RelDataType rowType;
+        /**
+         * Creates an AbstractNamespace.
+         */
+        AbstractNamespace() {
+        }
+        /**
+         * Validates this scope.
+         *
+         * <p>If the scope has already been validated, does nothing.</p>
+         */
+        public void validate() {
+            switch (status.ordinal) {
+            case Status.Unvalidated_ordinal:
+                try {
+                    status = Status.InProgress;
+                    Util.permAssert(rowType == null,
+                        "Namespace.rowType must be null before validate has been called");
+                    rowType = validateImpl();
+                    Util.permAssert(rowType != null,
+                        "validateImpl() returned null");
+                } finally {
+                    status = Status.Valid;
                 }
-                final String columnName = identifier.names[1];
-                if (lookupField(
-                            fromScope.getRowType(),
-                            columnName) != null) {
-                    return identifier; // it was fine already
-                } else {
-                    throw EigenbaseResource.instance()
-                        .newColumnNotFoundInTable(columnName, tableName);
-                }
-            }
+                break;
+            case Status.InProgress_ordinal:
+                throw Util
+                    .newInternal("todo: Cycle detected during type-checking");
+            case Status.Valid_ordinal:
+                break;
             default:
-
-                // NOTE jvs 26-May-2004:  lengths greater than 2 are possible
-                // for row and structured types
-                assert identifier.names.length > 0;
-                return identifier;
+                throw status.unexpected();
             }
         }
 
-        public void validate()
-        {
+        /**
+         * Validates this scope and returns the type of the records it returns.
+         * External users should call {@link #validate}, which uses the
+         * {@link #status} field to protect against cycles.
+         *
+         * @return record data type, never null
+         * @post return != null
+         */
+        protected abstract RelDataType validateImpl();
+
+        /**
+         * Returns a list of names of output columns. If the scope's type has
+         * not yet been derived, derives it.
+         */
+        public RelDataType getRowType() {
+            if (rowType == null) {
+                validate();
+                Util.permAssert(rowType != null, "validate must set rowType");
+            }
+            return rowType;
         }
 
-        abstract SqlNode getNode();
+        public Table getTable() {
+            return null;
+        }
+
+        public Namespace lookupChild(
+            String name,
+            Scope[] ancestorOut,
+            int[] offsetOut)
+        {
+            return lookupFieldNamespace(getRowType(), name, ancestorOut,
+                offsetOut);
+        }
+
+        public boolean fieldExists(String name) {
+            final RelDataType rowType = getRowType();
+            final RelDataType dataType = lookupField(rowType, name);
+            return dataType != null;
+        }
+    }
+
+    /**
+     * Name-resolution scope. Represents any position in a parse tree than an
+     * expression can be, or anything in the parse tree which has columns.
+     *
+     * <p>When validating an expression, say "foo"."bar", you first use the
+     * {@link #resolve} method of the scope where the expression is defined
+     * to locate "foo". If successful, this returns a new scope
+     */
+    public interface Scope {
+        SqlValidator getValidator();
+
+        SqlNode getNode();
 
         /**
          * Looks up a node with a given name. Returns null if none is found.
@@ -1778,128 +2058,139 @@ public class SqlValidator
          * @param offsetOut If not null, writes the offset within the ancestor
          *   here
          */
-        public Scope resolve(
+        Namespace resolve(
             String name,
-            Scope [] ancestorOut,
-            int [] offsetOut)
-        {
-            return null;
-        }
+            Scope[] ancestorOut,
+            int[] offsetOut);
 
         /**
-         * Returns the underlying table, or null if there is none.
+         * Finds the table alias which is implicitly qualifying an
+         * unqualified column name. Throws an error if there is not exactly
+         * one table.
+         *
+         * <p>This method is only implemented in scopes (such as
+         * {@link SelectScope}) which can be the context for name-resolution.
+         * In scopes such as {@link IdentifierNamespace}, it throws
+         * {@link UnsupportedOperationException}.</p>
+         *
+         * @param columnName
+         * @param ctx Validation context, to appear in any error thrown
+         * @return Table alias
          */
-        public Table getTable()
-        {
-            return null;
-        }
-
-        protected String findQualifyingTableName(String columnName)
-        {
-            throw new UnsupportedOperationException();
-        }
+        String findQualifyingTableName(String columnName, SqlNode ctx);
 
         /**
-         * Returns a list of names of output columns.
+         * Converts an identifier into a fully-qualified identifier. For
+         * example, the "empno" in "select empno from emp natural join dept"
+         * becomes "emp.empno".
          */
-        public abstract RelDataType getRowType();
+        SqlIdentifier fullyQualify(SqlIdentifier identifier);
+
+        void addChild(Namespace ns, String alias);
     }
 
     /**
-     * The name-resolution scope of a SELECT clause. The objects visible are
-     * those in the FROM clause, and objects inherited from the parent scope.
+     * Dummy implementation of {@link Scope} for the top of the scope stack.
      */
-    public class SelectScope extends Scope
+    private class EmptyScope extends AbstractScope
     {
-        private int validateCount = 0;
-        public final SqlSelect select;
-
-        /** List of {@link SqlValidator.Scope child scopes}, set on validate. */
-        private final ArrayList children = new ArrayList();
-
-        /** Aliases of the {@link SqlValidator.Scope child scopes}, set on
-         * validate. */
-        private final ArrayList childrenNames = new ArrayList();
-
-        /** Type of the output row, which comprises the name and type of each
-         * output column. Set on validate. */
-        private RelDataType rowType = null;
-
-        SelectScope(
-            Scope parent,
-            SqlSelect select,
-            String alias)
-        {
-            super(parent, alias);
-            this.select = select;
+        EmptyScope() {
         }
 
-        protected String findQualifyingTableName(final String columnName)
-        {
-            int count = 0;
-            String tableName = null;
-            for (int i = 0; i < children.size(); i++) {
-                Scope scope = (Scope) children.get(i);
-                if (lookupField(
-                            scope.getRowType(),
-                            columnName) != null) {
-                    tableName = scope.alias;
-                    count++;
-                }
-            }
-            switch (count) {
-            case 0:
-                if (parent == null) {
-                    throw EigenbaseResource.instance().newColNotFound(columnName);
-                }
-                return parent.findQualifyingTableName(columnName);
-            case 1:
-                return tableName;
-            default:
-                throw EigenbaseResource.instance().newColumnAmbiguous(columnName);
-            }
+        public SqlNode getNode() {
+            throw new UnsupportedOperationException();
         }
 
-        public RelDataType getRowType()
+        public Namespace resolve(
+            String name,
+            Scope[] ancestorOut,
+            int[] offsetOut)
         {
-            return rowType;
+            return null;
         }
 
-        public void validate()
+        public String findQualifyingTableName(String columnName,
+            SqlNode ctx)
         {
-            assert validateCount++ == 0 : validateCount;
-            validateSelect(select, unknownType);
+            throw newValidationError(ctx,
+                EigenbaseResource.instance().newColumnNotFound(
+                    columnName));
         }
 
-        SqlNode getNode()
-        {
-            return select;
+        public void addChild(Namespace ns, String alias) {
+            // cannot add to the empty scope
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    /**
+     * Scope defined by a list of child namespaces.
+     */
+    abstract class ListScope extends SqlValidator.DelegatingScope {
+        /** List of child {@link SqlValidator.Namespace} objects. */
+        protected final ArrayList children = new ArrayList();
+
+        /** Aliases of the {@link SqlValidator.Namespace} objects. */
+        protected final ArrayList childrenNames = new ArrayList();
+
+        public ListScope(SqlValidator.Scope parent) {
+            super(parent);
         }
 
-        private Scope getChild(String alias)
-        {
+        public void addChild(SqlValidator.Namespace ns, String alias) {
+            Util.pre(alias != null, "alias != null");
+            children.add(ns);
+            childrenNames.add(alias);
+        }
+
+        protected SqlValidator.Namespace getChild(String alias) {
             if (alias == null) {
                 if (children.size() != 1) {
                     throw Util.newInternal(
                         "no alias specified, but more than one table in from list");
                 }
-                return (Scope) children.get(0);
+                return (SqlValidator.Namespace) children.get(0);
             } else {
                 for (int i = 0; i < children.size(); i++) {
-                    final Scope child = (Scope) children.get(i);
-                    if (child.alias.equals(alias)) {
-                        return child;
+                    if (childrenNames.get(i).equals(alias)) {
+                        return (SqlValidator.Namespace) children.get(i);
                     }
                 }
                 return null;
             }
         }
 
-        public Scope resolve(
+        public String findQualifyingTableName(final String columnName,
+            SqlNode ctx) {
+            int count = 0;
+            String tableName = null;
+            for (int i = 0; i < children.size(); i++) {
+                SqlValidator.Namespace ns = (SqlValidator.Namespace) children.get(i);
+                final RelDataType rowType = ns.getRowType();
+                if (lookupField(rowType, columnName) != null) {
+                    tableName = (String) childrenNames.get(i);
+                    count++;
+                }
+            }
+            switch (count) {
+            case 0:
+                return parent.findQualifyingTableName(columnName,
+                    ctx);
+            case 1:
+                return tableName;
+            default:
+                throw newValidationError(ctx,
+                    EigenbaseResource.instance().newColumnAmbiguous(
+                        columnName));
+            }
+        }
+
+        public SqlValidator.Namespace resolve(
             String name,
-            Scope [] ancestorOut,
-            int [] offsetOut)
+            SqlValidator.Scope[] ancestorOut,
+            int[] offsetOut)
         {
+            // First resolve by looking through the child namespaces.
             final int i = childrenNames.indexOf(name);
             if (i >= 0) {
                 if (ancestorOut != null) {
@@ -1908,24 +2199,20 @@ public class SqlValidator
                 if (offsetOut != null) {
                     offsetOut[0] = i;
                 }
-                return (Scope) children.get(i);
+                return (SqlValidator.Namespace) children.get(i);
             }
-            if (parent != null) {
-                return parent.resolve(name, ancestorOut, offsetOut);
-            }
-            return null;
+            // Then call the base class method, which will delegate to the
+            // parent scope.
+            return parent.resolve(name, ancestorOut, offsetOut);
         }
 
-        public RelDataType resolveColumn(String name)
-        {
+        public RelDataType resolveColumn(String columnName, SqlNode ctx) {
             int found = 0;
             RelDataType theType = null;
             for (int i = 0; i < children.size(); i++) {
-                Scope childScope = (Scope) children.get(i);
-                final RelDataType type =
-                    lookupField(
-                        childScope.getRowType(),
-                        name);
+                SqlValidator.Namespace childNs = (SqlValidator.Namespace) children.get(i);
+                final RelDataType childRowType = childNs.getRowType();
+                final RelDataType type = lookupField(childRowType, columnName);
                 if (type != null) {
                     found++;
                     theType = type;
@@ -1934,36 +2221,188 @@ public class SqlValidator
             if (found == 0) {
                 return null;
             } else if (found > 1) {
-                throw Util.newInternal("More than one column '" + name
-                    + "' in scope");
+                throw newValidationError(ctx,
+                    EigenbaseResource.instance().newColumnAmbiguous(
+                        columnName));
             } else {
                 return theType;
             }
         }
     }
 
-    public class IdentifierScope extends Scope
+    /**
+     * The name-resolution scope of a SELECT clause. The objects visible are
+     * those in the FROM clause, and objects inherited from the parent scope.
+     *
+     * <p>This object is both a {@link Scope} and a {@link Namespace}. In the
+     * query
+     *
+     * <blockquote>
+     * <pre>SELECT name FROM (
+     *     SELECT *
+     *     FROM emp
+     *     WHERE gender = 'F')</code></blockquote>
+     *
+     * <p>we need to use the {@link SelectScope} as a  {@link Namespace} when
+     * resolving 'name', and
+     * as a {@link Scope} when resolving 'gender'.</p>
+     *
+     * <h3>Scopes</h3>
+     *
+     * <p>In the query
+     *
+     * <blockquote>
+     * <pre>
+     * SELECT expr1
+     * FROM t1,
+     *     t2,
+     *     (SELECT expr2 FROM t3) AS q3
+     * WHERE c1 IN (SELECT expr3 FROM t4)
+     * ORDER BY expr4</pre></blockquote>
+     *
+     * The scopes available at various points of the query are as follows:<ul>
+     * <li>expr1 can see t1, t2, q3</li>
+     * <li>expr2 can see t3</li>
+     * <li>expr3 can see t4, t1, t2</li>
+     * <li>expr4 can see t1, t2, q3, plus (depending upon the dialect) any
+     *     aliases defined in the SELECT clause</li>
+     * </ul>
+     *
+     * <h3>Namespaces</h3>
+     *
+     * <p>In the above query, there are 4 namespaces:<ul>
+     * <li>t1</li>
+     * <li>t2</li>
+     * <li>(SELECT expr2 FROM t3) AS q3</li>
+     * <li>(SELECT expr3 FROM t4)</li>
+     * </ul>
+     */
+    public class SelectScope extends ListScope {
+        public final SqlSelect select;
+
+        /**
+         * Creates a scope corresponding to a SELECT clause.
+         *
+         * @param parent Parent scope, or null
+         * @param select
+         */
+        SelectScope(
+            Scope parent,
+            SqlSelect select)
+        {
+            super(parent);
+            this.select = select;
+        }
+
+        public Table getTable()
+        {
+            return null;
+        }
+
+        public SqlValidator getValidator() {
+            return SqlValidator.this;
+        }
+
+        public SqlIdentifier fullyQualify(SqlIdentifier identifier) {
+            return null;
+        }
+
+        public SqlNode getNode()
+        {
+            return select;
+        }
+
+    }
+
+    public class SelectNamespace extends AbstractNamespace
+    {
+        private final SqlSelect select;
+        private int validateCount = 0; // sanity check
+
+        SelectNamespace(SqlSelect select)
+        {
+            this.select = select;
+        }
+
+        public SqlNode getNode()
+        {
+            return select;
+        }
+
+        public RelDataType validateImpl() {
+            assert validateCount++ == 0 : validateCount;
+            validateSelect(select, unknownType);
+            return rowType;
+        }
+
+    }
+
+    /**
+     * Scope created by a FROM clause. For example, in the query
+     * <code>SELECT * FROM t1, t2 WHERE expr1</code>, expr1 is resolved in the
+     * FromScope consisting of {t1, t2}.
+     */
+    public class FromScope extends ListScope
+    {
+        private final SqlNode from;
+
+        FromScope(Scope parent, SqlNode from) {
+            super(parent);
+            this.from = from;
+        }
+
+        public SqlNode getNode() {
+            return from;
+        }
+    }
+
+    Namespace lookupFieldNamespace(RelDataType rowType, String name,
+        Scope[] ancestorOut, int[] offsetOut)
+    {
+        final RelDataType dataType = lookupField(rowType, name);
+        return new Namespace() {
+            public Table getTable() {
+                return null;
+            }
+
+            public RelDataType getRowType() {
+                return dataType;
+            }
+
+            public void validate() {
+            }
+
+            public SqlNode getNode() {
+                return null;
+            }
+
+            public Namespace lookupChild(String name, Scope[] ancestorOut, int[] offsetOut) {
+                return null;
+            }
+
+            public boolean fieldExists(String name) {
+                return false;
+            }
+        };
+    }
+
+    /**
+     * Namespace whose contents are defined by the type of an
+     * {@link SqlIdentifier identifier}.
+     */
+    public class IdentifierNamespace extends AbstractNamespace
     {
         public final SqlIdentifier id;
 
         /** The underlying table. Set on validate. */
         private Table table;
 
-        IdentifierScope(
-            Scope parent,
-            SqlIdentifier id,
-            String alias)
+        IdentifierNamespace(SqlIdentifier id)
         {
-            super(parent, alias);
             this.id = id;
         }
 
-        public RelDataType getRowType()
-        {
-            return table.getRowType();
-        }
-
-        public void validate()
+        public RelDataType validateImpl()
         {
             table = catalogReader.getTable(id.names);
             if (table == null) {
@@ -1978,9 +2417,10 @@ public class SqlValidator
                     id.names = qualifiedNames;
                 }
             }
+            return table.getRowType();
         }
 
-        SqlNode getNode()
+        public SqlNode getNode()
         {
             return id;
         }
@@ -1989,33 +2429,40 @@ public class SqlValidator
         {
             return table;
         }
+
+        public Namespace resolve(
+            String name,
+            Scope[] ancestorOut,
+            int[] offsetOut)
+        {
+            return null;
+        }
+
+        public Namespace lookupChild(String name, Scope[] ancestorOut,
+            int[] offsetOut)
+        {
+            return null;
+        }
     }
 
-    class SetopScope extends Scope
+    /**
+     * Namespace based upon a set operation (UNION, INTERSECT, EXCEPT).
+     */
+    class SetopNamespace extends AbstractNamespace
     {
         private final SqlCall call;
 
-        SetopScope(
-            Scope parent,
-            SqlCall call,
-            String alias)
+        SetopNamespace(SqlCall call)
         {
-            super(parent, alias);
             this.call = call;
         }
 
-        SqlNode getNode()
+        public SqlNode getNode()
         {
             return call;
         }
 
-        public RelDataType getRowType()
-        {
-            final Scope childScope = getScope(call.operands[0]);
-            return childScope.getRowType();
-        }
-
-        public void validate()
+        public RelDataType validateImpl()
         {
             switch (call.getKind().getOrdinal()) {
             case SqlKind.UnionORDINAL:
@@ -2030,171 +2477,256 @@ public class SqlValidator
                     }
                     validateQuery(operand);
                 }
-                break;
+                final Namespace childNs = getNamespace(call.operands[0]);
+                return childNs.getRowType();
             default:
                 throw Util.newInternal("Not a query: " + call.getKind());
             }
         }
     }
 
-    class TableConstructorScope extends Scope
+    /**
+     * Namespace for a table constructor <code>VALUES (expr, expr, ...)</code>.
+     */
+    class TableConstructorNamespace extends AbstractNamespace
     {
-        private RelDataType rowType;
-        private SqlNode values;
+        private final SqlNode values;
+        private final Scope scope;
 
-        TableConstructorScope(
-            Scope parent,
-            SqlNode values,
-            String alias)
+        TableConstructorNamespace(SqlNode values, Scope scope)
         {
-            super(parent, alias);
             this.values = values;
+            this.scope = scope;
         }
 
-        public RelDataType getRowType()
+        protected RelDataType validateImpl()
         {
-            if (rowType == null) {
-                rowType = getTableConstructorRowType((SqlCall) values, this);
-            }
-            return rowType;
+            return getTableConstructorRowType((SqlCall) values, scope);
         }
 
-        SqlNode getNode()
+        public SqlNode getNode()
         {
             return values;
         }
     }
 
     /**
-     * The name-resolution scope of a JOIN operator. The objects visible are
-     * the joined table expressions, and those inherited from the parent scope.
+     * The name-resolution context for expression inside a JOIN clause.
+     * The objects visible are the joined table expressions, and those
+     * inherited from the parent scope.
      *
      * <p>Consider "SELECT * FROM (A JOIN B ON {exp1}) JOIN C ON {exp2}".
      * {exp1} is resolved in the join scope for "A JOIN B", which contains A
      * and B but not C.</p>
      */
-    class JoinScope extends Scope
+    class JoinScope extends ListScope
     {
+        private final Scope usingScope;
         private final SqlJoin join;
 
-        JoinScope(
-            Scope parent,
-            SqlJoin join)
+        JoinScope(Scope parent, Scope usingScope, SqlJoin join)
         {
-            super(parent, null);
+            super(parent);
+            this.usingScope = usingScope;
             this.join = join;
         }
 
-        SqlNode getNode()
+        public SqlNode getNode()
         {
             return join;
         }
 
-        public RelDataType getRowType()
-        {
-            Scope leftScope = getScope(join.getLeft());
-            final RelDataTypeField [] leftFields =
-                leftScope.getRowType().getFields();
-            Scope rightScope = getScope(join.getRight());
-            final RelDataTypeField [] rightFields =
-                rightScope.getRowType().getFields();
-            final RelDataTypeFactory.FieldInfo fieldInfo =
-                new RelDataTypeFactory.FieldInfo() {
-                    public int getFieldCount()
-                    {
-                        return leftFields.length + rightFields.length;
-                    }
+        public void addChild(Namespace ns, String alias) {
+            super.addChild(ns, alias);
+            if (usingScope != null && usingScope != parent) {
+                // We're looking at a join within a join. Recursively add this
+                // child to its parent scope too. Example:
+                //
+                //   select *
+                //   from (a join b on expr1)
+                //   join c on expr2
+                //   where expr3
+                //
+                // 'a' is a child namespace of 'a join b' and also of
+                // 'a join b join c'.
+                usingScope.addChild(ns, alias);
+            }
+        }
+    }
 
-                    private RelDataTypeField getField(int index)
-                    {
-                        if (index < leftFields.length) {
-                            return leftFields[index];
-                        } else {
-                            return rightFields[index - leftFields.length];
-                        }
-                    }
+    class JoinNamespace extends AbstractNamespace {
+        private final SqlJoin join;
 
-                    public String getFieldName(int index)
-                    {
-                        return getField(index).getName();
-                    }
-
-                    public RelDataType getFieldType(int index)
-                    {
-                        RelDataType type = getField(index).getType();
-                        boolean makeNullable = false;
-                        switch (join.getJoinType().getOrdinal()) {
-                        case SqlJoinOperator.JoinType.Full_ORDINAL:
-                            makeNullable = true;
-                            break;
-                        case SqlJoinOperator.JoinType.Left_ORDINAL:
-                            makeNullable = (index >= leftFields.length);
-                            break;
-                        case SqlJoinOperator.JoinType.Right_ORDINAL:
-                            makeNullable = (index < leftFields.length);
-                            break;
-                        }
-                        if (makeNullable) {
-                            type =
-                                typeFactory.createTypeWithNullability(type,
-                                    true);
-                        }
-                        return type;
-                    }
-                };
-            return typeFactory.createProjectType(fieldInfo);
+        JoinNamespace(SqlJoin join) {
+            this.join = join;
         }
 
-        public Scope resolve(
-            String name,
-            Scope [] ancestorOut,
-            int [] offsetOut)
-        {
-            Scope leftScope = getScope(join.getLeft());
-            if ((leftScope.alias != null) && leftScope.alias.equals(name)) {
-                if (ancestorOut != null) {
-                    ancestorOut[0] = this;
-                }
-                if (offsetOut != null) {
-                    offsetOut[0] = 0;
-                }
-                return leftScope;
-            }
-            Scope scope = leftScope.resolve(name, ancestorOut, offsetOut);
-            if (scope != null) {
-                return scope;
-            }
-            Scope rightScope = getScope(join.getRight());
-            if ((rightScope.alias != null) && rightScope.alias.equals(name)) {
-                if (ancestorOut != null) {
-                    ancestorOut[0] = this;
-                }
-                if (offsetOut != null) {
-                    offsetOut[0] = 0;
-                }
-                return rightScope;
-            }
-            scope = rightScope.resolve(name, ancestorOut, offsetOut);
-            if (scope != null) {
-                return scope;
-            }
-            if (parent != null) {
-                return parent.resolve(name, ancestorOut, offsetOut);
-            }
+        protected RelDataType validateImpl() {
+            final RelDataType leftType = getNamespace(join.getLeft()).getRowType();
+            final RelDataType rightType = getNamespace(join.getRight()).getRowType();
+            final RelDataType[] types = {leftType, rightType};
+            return typeFactory.createJoinType(types);
+        }
+
+        public SqlNode getNode() {
+            return join;
+        }
+    }
+
+    private abstract class AbstractScope implements Scope {
+        public SqlValidator getValidator() {
+            return SqlValidator.this;
+        }
+
+        public SqlIdentifier fullyQualify(SqlIdentifier identifier) {
             return null;
         }
 
-        public void validate()
+    }
+    /**
+     * A scope which delegates all requests to its parent scope.
+     * Use this as a base class for defining nested scopes.
+     */
+    abstract class DelegatingScope implements Scope {
+        /**
+         * Parent scope. This is where to look next to resolve an identifier;
+         * it is not always the parent object in the parse tree.
+         *
+         * <p>This is never null: at the top of the tree, it is an
+         * {@link EmptyScope}.
+         */
+        protected final Scope parent;
+
+        DelegatingScope(Scope parent)
         {
-            SqlNode left = join.getLeft();
-            SqlNode right = join.getRight();
-            SqlNode condition = join.getCondition();
-            boolean isNatural = join.isNatural();
-            SqlJoinOperator.JoinType joinType = join.getJoinType();
-            SqlJoinOperator.ConditionType conditionType =
-                join.getConditionType();
-            validateFrom(left, unknownType);
-            validateFrom(right, unknownType);
+            super();
+            Util.pre(parent != null, "parent != null");
+            this.parent = parent;
+        }
+
+        /**
+         * Registers a relation in this scope.
+         * @param ns Namespace representing the result-columns of the relation
+         * @param alias Alias with which to reference the relation, must not
+         *   be null
+         */
+        public void addChild(Namespace ns, String alias)
+        {
+            // By default, you cannot add to a scope. Derived classes can
+            // override.
+            throw new UnsupportedOperationException();
+        }
+
+        public Namespace resolve(
+            String name,
+            Scope[] ancestorOut,
+            int[] offsetOut)
+        {
+            return parent.resolve(name, ancestorOut, offsetOut);
+        }
+
+        public String findQualifyingTableName(String columnName, SqlNode ctx)
+        {
+            return parent.findQualifyingTableName(columnName, ctx);
+        }
+
+        public SqlValidator getValidator() {
+            return SqlValidator.this;
+        }
+
+        /**
+         * Converts an identifier into a fully-qualified identifier. For
+         * example, the "empno" in "select empno from emp natural join dept"
+         * becomes "emp.empno".
+         */
+        public SqlIdentifier fullyQualify(SqlIdentifier identifier) {
+            if (identifier.isStar()) {
+                return identifier;
+            }
+            switch (identifier.names.length) {
+            case 1:
+                {
+                    final String columnName = identifier.names[0];
+                    final String tableName =
+                        findQualifyingTableName(columnName, identifier);
+
+                    //todo: do implicit collation here
+                    return new SqlIdentifier(
+                        new String[]{tableName, columnName},
+                        ParserPosition.ZERO);
+                }
+
+            case 2:
+                {
+                    final String tableName = identifier.names[0];
+                    final Namespace fromNs = resolve(tableName, null, null);
+                    if (fromNs == null) {
+                        throw newValidationError(identifier,
+                            EigenbaseResource.instance().newTableNameNotFound(
+                                tableName));
+                    }
+                    final String columnName = identifier.names[1];
+                    final RelDataType fromRowType = fromNs.getRowType();
+                    if (lookupField(fromRowType, columnName) != null) {
+                        return identifier; // it was fine already
+                    } else {
+                        throw EigenbaseResource.instance()
+                            .newColumnNotFoundInTable(columnName, tableName);
+                    }
+                }
+
+            default:
+                // NOTE jvs 26-May-2004:  lengths greater than 2 are possible
+                // for row and structured types
+                assert identifier.names.length > 0;
+                return identifier;
+            }
+        }
+    }
+
+    /**
+     * Represents the name-resolution context for expressions in an ORDER BY
+     * clause.
+     *
+     * <p>In some dialects of SQL, the ORDER BY clause can reference column
+     * aliases in the SELECT clause. For example, the query
+     *
+     * <blockquote><code>SELECT empno AS x<br/>
+     * FROM emp<br/>
+     * ORDER BY x</code></blockquote>
+     *
+     * is valid.
+     */
+    class OrderByScope extends DelegatingScope {
+        private final SqlNodeList orderList;
+        private final SqlSelect select;
+
+        OrderByScope(Scope parent, SqlNodeList orderList, SqlSelect select)
+        {
+            super(parent);
+            this.orderList = orderList;
+            this.select = select;
+        }
+
+        protected RelDataType validateInternal() {
+            throw new UnsupportedOperationException();
+        }
+
+        public SqlNode getNode() {
+            return orderList;
+        }
+
+        public SqlIdentifier fullyQualify(SqlIdentifier identifier) {
+            if (identifier.isSimple()) {
+                String name = identifier.names[0];
+                final Namespace selectNs = getNamespace(select);
+                final RelDataType rowType = selectNs.getRowType();
+                final RelDataType dataType = lookupField(rowType, name);
+                if (dataType != null) {
+                    return identifier;
+                }
+            }
+            return super.fullyQualify(identifier);
         }
     }
 }

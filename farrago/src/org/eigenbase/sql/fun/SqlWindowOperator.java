@@ -167,10 +167,29 @@ public class SqlWindowOperator extends SqlOperator {
         writer.print(")");
     }
 
+    public void validateCall(
+        SqlCall call,
+        SqlValidator validator,
+        SqlValidator.Scope scope)
+    {
+        assert call.operator == this;
+        final SqlNode[] operands = call.getOperands();
+        for (int i = 0; i < operands.length; i++) {
+            final SqlNode operand = operands[i];
+            if (operand != null) {
+                operand.validateExpr(validator, scope);
+            }
+        }
+    }
+
     public void test(SqlTester tester) {
         SqlOperatorTests.testWindow(tester);
     }
 
+    /**
+     * An enumeration of types of bounds in a window: <code>CURRENT ROW</code>, 
+     * <code>UNBOUNDED PRECEDING</code>, and <code>UNBOUNDED FOLLOWING</code>.
+     */
     static class Bound extends EnumeratedValues.BasicValue {
         private Bound(String name, int ordinal) {
             super(name, ordinal, null);

@@ -21,11 +21,6 @@
 
 package org.eigenbase.sql;
 
-import java.math.BigDecimal;
-import java.util.List;
-import java.math.BigDecimal;
-import java.util.Calendar;
-
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.sql.parser.ParserPosition;
@@ -35,6 +30,9 @@ import org.eigenbase.util.BitString;
 import org.eigenbase.util.EnumeratedValues;
 import org.eigenbase.util.NlsString;
 import org.eigenbase.util.Util;
+
+import java.math.BigDecimal;
+import java.util.Calendar;
 
 /**
  * A <code>SqlLiteral</code> is a constant. It is, appropriately, immutable.
@@ -288,6 +286,11 @@ public class SqlLiteral extends SqlNode
         }
     }
 
+    public void validate(SqlValidator validator, SqlValidator.Scope scope)
+    {
+        validator.validateLiteral(this);
+    }
+
     /**
      * Creates a NULL literal.
      */
@@ -463,6 +466,7 @@ public class SqlLiteral extends SqlNode
                     string.getCharset(),
                     string.getCollation());
             return type;
+
         case SqlTypeName.IntervalYearMonth_ordinal:
         case SqlTypeName.IntervalDayTime_ordinal:
             SqlIntervalLiteral.IntervalValue intervalValue =
@@ -470,14 +474,10 @@ public class SqlLiteral extends SqlNode
             RelDataType t = typeFactory.createIntervalType(
                 intervalValue.getIntervalQualifier());
             return typeFactory.createTypeWithNullability(t, false);
-        case SqlTypeName.Symbol_ordinal:
 
-            // Existing code expects symbols to have a null type.
-            if (true) {
-                return null;
-            }
-            throw Util.newInternal("symbol does not have a SQL type: "
-                + value);
+        case SqlTypeName.Symbol_ordinal:
+            return typeFactory.createSqlType(SqlTypeName.Symbol);
+
         case SqlTypeName.Integer_ordinal: // handled in derived class
         case SqlTypeName.Time_ordinal: // handled in derived class
         case SqlTypeName.Varchar_ordinal: // should never happen

@@ -22,7 +22,6 @@
 package org.eigenbase.sql;
 
 import org.eigenbase.sql.parser.ParserPosition;
-import org.eigenbase.util.Util;
 
 
 /**
@@ -114,6 +113,11 @@ public class SqlInsert extends SqlCall
         }
         writer.println();
         getSource().unparse(writer, operator.leftPrec, operator.rightPrec);
+    }
+
+    public void validate(SqlValidator validator, SqlValidator.Scope scope)
+    {
+        validator.validateInsert(this);
     }
 }
 

@@ -738,6 +738,19 @@ public class DdlValidator extends FarragoCompoundAllocation
         stmtValidator.getSharedDataWrapperCache().discard(wrapper.refMofId());
     }
 
+    public void setViewText(
+        CwmView view,
+        SqlNode query)
+    {
+        FarragoSession session = getInvokingSession();
+        String unparseSql = query.toSqlString(
+            new SqlDialect(session.getDatabaseMetaData()));
+        CwmQueryExpression queryExp = getRepos().newCwmQueryExpression();
+        queryExp.setLanguage("SQL");
+        queryExp.setBody(unparseSql);
+        view.setQueryExpression(queryExp);
+    }
+
     /**
      * Add a new DropRule.
      *

@@ -97,16 +97,23 @@ public class SqlToOpenjavaConverter
         final SqlNodeList orderList = query.getOrderList();
         final SqlNodeList selectList = query.getSelectList();
         final SqlNode where = query.getWhere();
-        final SqlValidator.SelectScope selectScope = validator.getScope(query);
+        final SqlValidator.Scope selectScope = validator.getScope(query,
+            SqlSelect.SELECT_OPERAND);
         final ExpressionList convertedSelectList =
-            convertSelectList(selectScope, selectList);
+            convertSelectList(selectScope, selectList, query);
+        final SqlValidator.Scope groupScope = validator.getScope(query,
+            SqlSelect.GROUP_OPERAND);
         final ExpressionList convertedGroup =
-            convertGroup(selectScope, groupList);
-        final Expression convertedFrom = convertFrom(selectScope, from);
+            convertGroup(groupScope, groupList);
+        final SqlValidator.Scope fromScope = validator.getScope(query,
+            SqlSelect.FROM_OPERAND);
+        final Expression convertedFrom = convertFrom(fromScope, from, false);
         final Expression convertedWhere =
             (where == null) ? null : convertExpression(selectScope, where);
+        final SqlValidator.Scope orderScope = validator.getScope(query,
+            SqlSelect.ORDER_OPERAND);
         final ExpressionList convertedOrder =
-            convertOrder(selectScope, orderList);
+            convertOrder(orderScope, orderList);
         QueryExpression queryExpression =
             new QueryExpression(convertedSelectList, true, convertedGroup,
                 convertedFrom, convertedWhere, convertedOrder);
@@ -180,13 +187,14 @@ public class SqlToOpenjavaConverter
 
     private Expression convertFrom(
         SqlValidator.Scope scope,
-        SqlNode from)
+        SqlNode from,
+        boolean inAs)
     {
         switch (from.getKind().getOrdinal()) {
         case SqlKind.AsORDINAL:
             final SqlNode [] operands = ((SqlCall) from).getOperands();
             return new AliasedExpression(
-                convertFrom(scope, operands[0]),
+                convertFrom(scope, operands[0], true),
                 operands[1].toString());
         case SqlKind.IdentifierORDINAL:
             Expression e = new Variable(OJStatement.connectionVariable);
@@ -211,8 +219,8 @@ public class SqlToOpenjavaConverter
             SqlJoinOperator.JoinType joinType = join.getJoinType();
             SqlJoinOperator.ConditionType conditionType =
                 join.getConditionType();
-            Expression leftExp = convertFrom(scope, left);
-            Expression rightExp = convertFrom(scope, right);
+            Expression leftExp = convertFrom(scope, left, false);
+            Expression rightExp = convertFrom(scope, right, false);
             Expression conditionExp = null;
             int convertedJoinType = convertJoinType(joinType);
             if (isNatural) {
@@ -259,7 +267,7 @@ public class SqlToOpenjavaConverter
         case SqlKind.UnionORDINAL:
             return convertQueryRecursive(from);
         case SqlKind.ValuesORDINAL:
-            return convertValues(scope, (SqlCall) from);
+            return convertValues(scope, (SqlCall) from, inAs);
         default:
             throw Util.newInternal("not a join operator " + from);
         }
@@ -405,33 +413,6 @@ public class SqlToOpenjavaConverter
             name);
     }
 
-    private static HashMap createPrefixMap()
-    {
-        HashMap map = new HashMap();
-        map.put(
-            "NOT",
-            new Integer(UnaryExpression.NOT));
-        map.put(
-            "-",
-            new Integer(UnaryExpression.MINUS));
-        map.put(
-            "+",
-            new Integer(UnaryExpression.PLUS));
-        return map;
-    }
-
-    private static HashMap createPostfixMap()
-    {
-        HashMap map = new HashMap();
-        return map;
-    }
-
-    private static HashMap createFunctionMap()
-    {
-        HashMap map = new HashMap();
-        return map;
-    }
-
     /**
      * Converts an identifier into an expression in a given scope. For
      * example, the "empno" in "select empno from emp join dept" becomes
@@ -461,7 +442,7 @@ public class SqlToOpenjavaConverter
             Expression value = convertExpression(scope, operands[i]);
             Expression alias =
                 new AliasedExpression(value,
-                    scope.deriveAlias(operands[i], i));
+                    validator.deriveAlias(operands[i], i));
             selectList.add(alias);
         }
 
@@ -470,11 +451,11 @@ public class SqlToOpenjavaConverter
     }
 
     private ExpressionList convertSelectList(
-        SqlValidator.SelectScope scope,
-        SqlNodeList selectList)
+        SqlValidator.Scope scope,
+        SqlNodeList selectList, SqlSelect select)
     {
         ExpressionList list = new ExpressionList();
-        selectList = validator.expandStar(selectList, scope.select);
+        selectList = validator.expandStar(selectList, select);
         for (int i = 0; i < selectList.size(); i++) {
             final SqlNode node = selectList.get(i);
             Expression expression = convertExpression(scope, node);
@@ -485,7 +466,8 @@ public class SqlToOpenjavaConverter
 
     private Expression convertValues(
         SqlValidator.Scope scope,
-        SqlCall values)
+        SqlCall values,
+        boolean inAs)
     {
         SqlNodeList rowConstructorList =
             (SqlNodeList) (values.getOperands()[0]);
@@ -513,12 +495,12 @@ public class SqlToOpenjavaConverter
             }
         }
 
-        SqlValidator.Scope valuesScope = scope.getScopeFromNode(values);
-
-        // TODO:  don't do this if query already supplied a non-generated alias
-        return new AliasedExpression(
-            expr,
-            valuesScope.getAlias());
+        // Only provide an alias we're not below an AS operator.
+        if (!inAs) {
+            String alias = "foo"; // todo: generate something unique
+            expr = new AliasedExpression(expr, alias);
+        }
+        return expr;
     }
 
     /**

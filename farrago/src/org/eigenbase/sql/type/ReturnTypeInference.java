@@ -23,14 +23,11 @@ package org.eigenbase.sql.type;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.reltype.RelDataTypeFactoryImpl;
-import org.eigenbase.sql.SqlValidator;
+import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.SqlCall;
 import org.eigenbase.sql.SqlCollation;
+import org.eigenbase.sql.SqlValidator;
 import org.eigenbase.util.Util;
-import org.eigenbase.resource.EigenbaseResource;
-
-import java.util.List;
-import java.util.ArrayList;
 
 /**
  * Strategy to infer the type of an operator call from the type of the
@@ -635,8 +632,8 @@ public abstract class ReturnTypeInference
 
     /**
      * Type-inference strategy where the expression is assumed to be registered
-     * as a {@link SqlValidator.Scope}, and therefore the result type of the
-     * call is the type of that scope.
+     * as a {@link SqlValidator.Namespace}, and therefore the result type of
+     * the call is the type of that namespace.
      */
     public static final ReturnTypeInference useScope =
         new ReturnTypeInference() {
@@ -645,7 +642,7 @@ public abstract class ReturnTypeInference
                 SqlValidator.Scope scope,
                 SqlCall call)
             {
-                return validator.getScope(call).getRowType();
+                return validator.getNamespace(call).getRowType();
             }
 
             public RelDataType getType(

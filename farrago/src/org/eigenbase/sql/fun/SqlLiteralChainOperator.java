@@ -124,7 +124,8 @@ public class SqlLiteralChainOperator extends SqlInternalOperator {
 
     public void validateCall(
         SqlCall call,
-        SqlValidator validator)
+        SqlValidator validator,
+        SqlValidator.Scope scope)
     {
         // per the SQL std, each string fragment must be on a different line
         for (int i = 1; i < call.operands.length; i++) {

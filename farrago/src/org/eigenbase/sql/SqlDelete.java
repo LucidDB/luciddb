@@ -101,6 +101,11 @@ public class SqlDelete extends SqlCall
                 operator.rightPrec);
         }
     }
+
+    public void validate(SqlValidator validator, SqlValidator.Scope scope)
+    {
+        validator.validateDelete(this);
+    }
 }
 
 

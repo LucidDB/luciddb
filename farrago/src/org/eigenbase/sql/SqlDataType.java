@@ -33,13 +33,24 @@ import java.nio.charset.Charset;
 
 
 /**
- * This should really be a subtype of SqlCall ...
+ * Represents a SQL data type in a parse tree.
  *
- * In its full glory, we will have to support complex type expressions like
- * ROW(    NUMBER(5,2) NOT NULL AS foo,
- *   ROW(        BOOLEAN AS b,         MyUDT NOT NULL AS i) AS rec)
- * Currently it only supports simple datatypes, like char,varchar, double, with
- * optional precision and scale.
+ * <p>todo: This should really be a subtype of {@link SqlCall}.
+ *
+ * <p>In its full glory, we will have to support complex type expressions like
+ *
+ * <blockquote><code>
+ * ROW(
+ *     NUMBER(5,2) NOT NULL AS foo,
+ *     ROW(
+ *         BOOLEAN AS b,
+ *         MyUDT NOT NULL AS i
+ *     ) AS rec
+ * )</code></blockquote>
+ *
+ * <p>Currently it only supports simple datatypes, like char,varchar, double,
+ * with optional precision and scale.
+ *
  * @author Lee Schumacher
  * @since Jun 4, 2004
  * @version $Id$
@@ -145,6 +156,11 @@ public class SqlDataType extends SqlNode
             // else we have a user defined type
             typeName.unparse(writer, leftPrec, rightPrec);
         }
+    }
+
+    public void validate(SqlValidator validator, SqlValidator.Scope scope)
+    {
+        validator.validateDataType(this);
     }
 
     public Object clone()

@@ -21,10 +21,9 @@
 
 package org.eigenbase.sql;
 
-import java.util.*;
-
 import org.eigenbase.sql.parser.ParserPosition;
-import org.eigenbase.util.Util;
+
+import java.util.Iterator;
 
 
 /**
@@ -149,6 +148,11 @@ public class SqlUpdate extends SqlCall
             getCondition().unparse(writer, operator.leftPrec,
                 operator.rightPrec);
         }
+    }
+
+    public void validate(SqlValidator validator, SqlValidator.Scope scope)
+    {
+        validator.validateUpdate(this);
     }
 }
 

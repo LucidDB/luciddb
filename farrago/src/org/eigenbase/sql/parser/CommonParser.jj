@@ -688,7 +688,7 @@ SqlNode FromClause() :
                 e = opTab.joinOperator.createCall(e,
                         SqlLiteral.createBoolean(isNatural, naturalPos),
                         SqlLiteral.createFlag(joinType, joinTypePos), e2,
-                        SqlLiteral.createFlag(SqlJoinOperator.ConditionType.On, joinTypePos),
+                        SqlLiteral.createFlag(SqlJoinOperator.ConditionType.None, joinTypePos),
                         null, joinTypePos);
             }
         )
@@ -704,7 +704,7 @@ SqlNode FromClause() :
                     SqlLiteral.createBoolean(false, pos),
                     SqlLiteral.createFlag(SqlJoinOperator.JoinType.Comma, null),
                     e2,
-                    SqlLiteral.createFlag(SqlJoinOperator.ConditionType.On, null),
+                    SqlLiteral.createFlag(SqlJoinOperator.ConditionType.None, null),
                     null,
                     pos);
         }
@@ -1937,7 +1937,7 @@ SqlNode FunctionCall() :
     ParserPosition namePos;
     ParserPosition overPos = null;
     SqlDataType dt;
-    boolean windowFunc = false;
+    boolean over = false;
     SqlCall function = null;
 }
 {
@@ -2097,7 +2097,7 @@ SqlNode FunctionCall() :
               //definition. 
             {
                 overPos = getPos();
-                windowFunc = true;
+                over = true;
             }
              ( 
                 id = SimpleIdentifier()
@@ -2108,7 +2108,7 @@ SqlNode FunctionCall() :
             [ <OVER> 
                 {
                     overPos = getPos();
-                    windowFunc = true;
+                    over = true;
                 }
              ( 
                 id = SimpleIdentifier()
@@ -2119,12 +2119,12 @@ SqlNode FunctionCall() :
 
         {
             function = opTab.createCall(name, ParserUtil.toNodeArray(args), pos);
-            if (windowFunc) {
+            if (over) {
                 if (id != null) {
-                    return opTab.windowFuncOp.createCall(
+                    return opTab.overOp.createCall(
                             new SqlNode[] {function, id}, overPos);
                 } else {
-                    return opTab.windowFuncOp.createCall(
+                    return opTab.overOp.createCall(
                         new SqlNode[] { function, e },overPos);
                 }
             } else {

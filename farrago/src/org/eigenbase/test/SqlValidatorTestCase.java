@@ -26,14 +26,15 @@ import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.ParseException;
 import org.eigenbase.sql.parser.SqlParser;
+import org.eigenbase.util.EnumeratedValues;
 
 import java.nio.charset.Charset;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
-
 /**
- * An abstract base class for implementing tests against {@link org.eigenbase.sql.SqlValidator} and derived classes.
+ * An abstract base class for implementing tests against
+ * {@link org.eigenbase.sql.SqlValidator} and derived classes.
  *
  * @author Wael Chatila
  * @since Jan 12, 2004
@@ -72,6 +73,9 @@ public abstract class SqlValidatorTestCase extends TestCase
         assertExceptionIsThrown(sql, expected, -1, -1);
     }
 
+    /**
+     * Asserts that a query throws an exception matching a given pattern.
+     */
     public void checkFails(
         String sql,
         String expected,
@@ -176,9 +180,15 @@ public abstract class SqlValidatorTestCase extends TestCase
             return null;
         }
         SqlNode n = validator.validate(sqlNode);
-        RelDataType actualType =
-            validator.getValidatedNodeType(
+
+        RelDataType actualType;
+        if (false) {
+            actualType = validator.getValidatedNodeType(
                 ((SqlNodeList) ((SqlCall) n).getOperands()[1]).get(0));
+        } else {
+            final RelDataType rowType = validator.getValidatedNodeType(n);
+            actualType = rowType.getFields()[0].getType();
+        }
         return actualType;
     }
 
@@ -192,9 +202,10 @@ public abstract class SqlValidatorTestCase extends TestCase
     /**
      * Asserts either if a sql query is valid or not.
      * @param sql
-     * @param expectedMsgPattern If this parameter is null the query must be valid for the test to pass<br>
-     * If this parameter is not null the query must be malformed and the msg pattern must
-     * match the the error raised for the test to pass.
+     * @param expectedMsgPattern If this parameter is null the query must be
+     *   valid for the test to pass;
+     *   If this parameter is not null the query must be malformed and the msg
+     *   pattern must match the the error raised for the test to pass.
      */
     protected void assertExceptionIsThrown(
         String sql,
@@ -227,8 +238,9 @@ public abstract class SqlValidatorTestCase extends TestCase
         try {
             validator.validate(sqlNode);
         } catch (Throwable ex) {
-            final Matcher matcher = lineColPattern.matcher(ex.getMessage());
-            if (matcher.matches()) {
+            final String message = ex.getMessage();
+            final Matcher matcher = lineColPattern.matcher(message);
+            if (message != null && matcher.matches()) {
                 actualException = ex.getCause();
                 actualLine = Integer.parseInt(matcher.group(1));
                 actualColumn = Integer.parseInt(matcher.group(2));
@@ -1299,9 +1311,383 @@ public abstract class SqlValidatorTestCase extends TestCase
     public void testOneWinFunc()
     {
         checkWinFuncExp("abs(2) over (partition by sal)");
-
     }
 
+    public void testNameResolutionInValuesClause()
+    {
+        final String emps = "(select 1 as empno, 'x' as name, 10 as deptno, 'M' as gender, 'San Francisco' as city, 30 as empid, 25 as age from values (1))";
+        final String depts = "(select 10 as deptno, 'Sales' as name from values (1))";
+
+        checkFails("select * from " + emps + " join " + depts + NL +
+            " on emps.deptno = deptno",
+            "Table 'EMPS' not found", 2, 5);
+        // this is ok
+        check("select * from " + emps + " as e" + NL +
+            " join " + depts + " as d" + NL +
+            " on e.deptno = d.deptno");
+        // fail: ambiguous column in WHERE
+        checkFails("select * from " + emps + " as emps," + NL +
+            " " + depts + NL +
+            "where deptno > 5",
+            "Column 'DEPTNO' is ambiguous", 3, 7);
+        // fail: ambiguous column reference in ON clause
+        checkFails("select * from " + emps + " as e" + NL +
+            " join " + depts + " as d" + NL +
+            " on e.deptno = deptno",
+            "Column 'DEPTNO' is ambiguous", 3, 16);
+        // ok: column 'age' is unambiguous
+        check("select * from " + emps + " as e" + NL +
+            " join " + depts + " as d" + NL +
+            " on e.deptno = age");
+        // ok: reference to derived column
+        check("select * from " + depts + NL +
+            " join (select mod(age, 30) as agemod from " + emps + ") " + NL +
+            "on deptno = agemod");
+        // fail: deptno is ambiguous
+        checkFails("select name from " + depts + " " + NL +
+            "join (select mod(age, 30) as agemod, deptno from " + emps + ") " + NL +
+            "on deptno = agemod",
+            "Column 'DEPTNO' is ambiguous", 3, 4);
+        // fail: lateral reference
+        checkFails("select * from " + emps + " as e," + NL +
+            " (select 1, e.deptno from values (true)) as d",
+            "Table 'E' not found", 2, 13);
+    }
+
+    public void testNestedFrom()
+    {
+        checkType("values (true)", "BOOLEAN");
+        checkType("select * from values (true)", "BOOLEAN");
+        checkType("select * from (select * from values (true))", "BOOLEAN");
+        checkType("select * from (select * from (select * from values (true)))", "BOOLEAN");
+        checkType(
+            "select * from (" +
+            "  select * from (" +
+            "    select * from values (true)" +
+            "    union" +
+            "    select * from values (false))" +
+            "  except" +
+            "  select * from values (true))", "BOOLEAN");
+    }
+
+    public void testAmbiguousColumn()
+    {
+        checkFails("select * from emp join dept" + NL +
+            " on emp.deptno = deptno",
+            "Column 'DEPTNO' is ambiguous", 2, 18);
+        // this is ok
+        check("select * from emp as e" + NL +
+            " join dept as d" + NL +
+            " on e.deptno = d.deptno");
+        // fail: ambiguous column in WHERE
+        checkFails("select * from emp as emps, dept" + NL +
+            "where deptno > 5",
+            "Column 'DEPTNO' is ambiguous", 2, 7);
+        // fail: alias 'd' obscures original table name 'dept'
+        checkFails("select * from emp as emps, dept as d" + NL +
+            "where dept.deptno > 5",
+            "Table 'DEPT' not found", 2, 7);
+        // fail: ambiguous column reference in ON clause
+        checkFails("select * from emp as e" + NL +
+            " join dept as d" + NL +
+            " on e.deptno = deptno",
+            "Column 'DEPTNO' is ambiguous", 3, 16);
+        // ok: column 'comm' is unambiguous
+        check("select * from emp as e" + NL +
+            " join dept as d" + NL +
+            " on e.deptno = comm");
+        // ok: reference to derived column
+        check("select * from dept" + NL +
+            " join (select mod(comm, 30) as commmod from emp) " + NL +
+            "on deptno = commmod");
+        // fail: deptno is ambiguous
+        checkFails("select name from dept " + NL +
+            "join (select mod(comm, 30) as commmod, deptno from emp) " + NL +
+            "on deptno = commmod",
+            "Column 'DEPTNO' is ambiguous", 3, 4);
+        // fail: lateral reference
+        checkFails("select * from emp as e," + NL +
+            " (select 1, e.deptno from values (true)) as d",
+            "Table 'E' not found", 2, 13);
+    }
+
+    // todo: implement IN
+    public void _testAmbiguousColumnInIn()
+    {
+        // ok: cyclic reference
+        check("select * from emp as e" + NL +
+            "where e.deptno in (" + NL +
+            "  select 1 from values (true) where e.empno > 10)");
+        // ok: cyclic reference
+        check("select * from emp as e" + NL +
+            "where e.deptno in (" + NL +
+            "  select e.deptno from values (true))");
+    }
+
+    public void testDoubleNoAlias() {
+        check("select * from emp join dept on true");
+        check("select * from emp, dept");
+        check("select * from emp cross join dept");
+    }
+
+    // TODO: is this legal? check that standard
+    public void _testDuplicateColumnAliasFails() {
+        checkFails("select 1 as a, 2 as b, 3 as a from emp", "xyz");
+    }
+
+    // NOTE jvs 20-May-2003 -- this is just here as a reminder that GROUP BY
+    // validation isn't implemented yet
+    public void testInvalidGroupBy(TestCase test) {
+        try {
+            check("select empno, deptno from emp group by deptno");
+        } catch (RuntimeException ex) {
+            return;
+        }
+        test.fail("Expected validation error");
+    }
+
+    public void testSingleNoAlias() {
+        check("select * from emp");
+    }
+
+    public void testObscuredAliasFails() {
+        // It is an error to refer to a table which has been given another
+        // alias.
+        checkFails("select * from emp as e where exists ("
+            + "  select 1 from dept where dept.deptno = emp.deptno)",
+            "Table 'EMP' not found", 1, 79);
+    }
+
+    public void testFromReferenceFails() {
+        // You cannot refer to a table ('e2') in the parent scope of a query in
+        // the from clause.
+        checkFails("select * from emp as e1 where exists (" + NL
+            + "  select * from emp as e2, " + NL
+            + "    (select * from dept where dept.deptno = e2.deptno))",
+            "Table 'E2' not found", 3, 45);
+    }
+
+    public void testWhereReference() {
+        // You can refer to a table ('e1') in the parent scope of a query in
+        // the from clause.
+		//
+		// Note: Oracle10g does not allow this query.
+        check("select * from emp as e1 where exists (" + NL
+            + "  select * from emp as e2, " + NL
+            + "    (select * from dept where dept.deptno = e1.deptno))");
+    }
+
+    public void testUnionNameResolution() {
+        checkFails(
+            "select * from emp as e1 where exists (" + NL +
+            "  select * from emp as e2, " + NL +
+            "  (select deptno from dept as d" + NL +
+            "   union" + NL +
+            "   select deptno from emp as e3 where deptno = e2.deptno))",
+            "Table 'E2' not found", 5, 48);
+
+        checkFails("select * from emp" + NL +
+            "union" + NL +
+            "select * from dept where empno < 10",
+            "Column 'EMPNO' not found in any table", 3, 26);
+    }
+
+    // TODO: implement UNION
+    public void _testIncompatibleUnionFails() {
+        checkFails("select 1,2 from emp union select 3 from dept", "xyz");
+    }
+
+    // TODO: implement UNION
+    public void _testUnionOfNonQueryFails() {
+        checkFails("select 1 from emp union 2", "xyz");
+    }
+
+    public void _testInTooManyColumnsFails() {
+        checkFails("select * from emp where deptno in (select deptno,deptno from dept)",
+            "xyz");
+    }
+
+    public void testNaturalCrossJoinFails() {
+        checkFails("select * from emp natural cross join dept",
+            "Cannot specify condition \\(NATURAL keyword, or ON or USING clause\\) following CROSS JOIN", 1, 33);
+    }
+
+    public void testCrossJoinUsingFails() {
+        checkFails("select * from emp cross join dept using (deptno)",
+            "Cannot specify condition \\(NATURAL keyword, or ON or USING clause\\) following CROSS JOIN", 1, 48);
+    }
+
+    public void testJoinUsing() {
+        check("select * from emp join dept using (deptno)");
+        // fail: comm exists on one side not the other
+        // todo: The error message could be improved.
+        checkFails("select * from emp join dept using (deptno, comm)",
+            "Column 'COMM' not found in any table", 1, 44);
+        // ok to repeat (ok in Oracle10g too)
+        check("select * from emp join dept using (deptno, deptno)");
+        // inherited column, not found in either side of the join, in the
+        // USING clause
+        checkFails("select * from dept where exists (" + NL +
+            "select 1 from emp join bonus using (dname))",
+            "Column 'DNAME' not found in any table", 2, 37);
+        // inherited column, found in only one side of the join, in the
+        // USING clause
+        checkFails("select * from dept where exists (" + NL +
+            "select 1 from emp join bonus using (deptno))",
+            "Column 'DEPTNO' not found in any table", 2, 37);
+    }
+
+    public void testCrossJoinOnFails() {
+        checkFails("select * from emp cross join dept" + NL +
+            " on emp.deptno = dept.deptno",
+            "Cannot specify condition \\(NATURAL keyword, or ON or USING clause\\) following CROSS JOIN", 2, 23);
+    }
+
+    public void testInnerJoinWithoutUsingOrOnFails() {
+        checkFails("select * from emp inner join dept "
+            + "where emp.deptno = dept.deptno",
+            "INNER, LEFT, RIGHT or FULL join requires a condition \\(NATURAL keyword or ON or USING clause\\)", 1, 25);
+    }
+
+    public void testJoinUsingInvalidColsFails() {
+        // todo: Improve error msg
+        checkFails("select * from emp left join dept using (gender)",
+            "Column 'GENDER' not found in any table", 1, 41);
+    }
+
+    // todo: Cannot handle '(a join b)' yet -- we see the '(' and expect to
+    // see 'select'.
+    public void _testJoinUsing() {
+        check("select * from (emp join bonus using (job))" + NL +
+            "join dept using (deptno)");
+        // cannot alias a JOIN (actually this is a parser error, but who's
+        // counting?)
+        checkFails("select * from (emp join bonus using (job)) as x" + NL +
+            "join dept using (deptno)",
+            "as wrong here");
+        checkFails("select * from (emp join bonus using (job))" + NL +
+            "join dept using (dname)",
+            "dname not found in lhs", 1, 41);
+        checkFails("select * from (emp join bonus using (job))" + NL +
+            "join (select 1 as job from (true)) using (job)",
+            "ambig", 1, 1);
+    }
+
+    /**
+     * Describes the valid SQL compatiblity modes.
+     */
+    public static class Compatible extends EnumeratedValues.BasicValue {
+        private Compatible(String name, int ordinal) {
+            super(name, ordinal, null);
+        }
+
+        public static final int Default_ordinal = 0;
+        public static final int Strict92_ordinal = 1;
+        public static final int Strict99_ordinal = 2;
+        public static final int Pragmatic99_ordinal = 3;
+        public static final int Oracle10g_ordinal = 4;
+        public static final int Sql2003_ordinal = 5;
+
+        public static final Compatible Strict92 =
+            new Compatible("Strict92", Strict92_ordinal);
+        public static final Compatible Strict99 =
+            new Compatible("Strict99", Strict99_ordinal);
+        public static final Compatible Pragmatic99 =
+            new Compatible("Pragmatic99", Pragmatic99_ordinal);
+        public static final Compatible Oracle10g =
+            new Compatible("Oracle10g", Oracle10g_ordinal);
+        public static final Compatible Sql2003 =
+            new Compatible("Sql2003", Sql2003_ordinal);
+        public static final Compatible Default =
+            new Compatible("Default", Default_ordinal);
+    }
+
+    protected Compatible getCompatible() {
+        return Compatible.Default;
+    }
+
+	public void testOrder() {
+        final Compatible compatible = getCompatible();
+        final boolean sortByOrdinal =
+            compatible == Compatible.Oracle10g ||
+            compatible == Compatible.Strict92 ||
+            compatible == Compatible.Pragmatic99;
+        final boolean sortByAlias =
+            compatible == Compatible.Default ||
+            compatible == Compatible.Oracle10g ||
+            compatible == Compatible.Strict92;
+        final boolean sortByAliasObscures =
+            compatible == Compatible.Strict92;
+
+        check("select empno as x from emp order by empno");
+
+        // In sql92, empno is obscured by the alias.
+        // Otherwise valid.
+        // Checked Oracle10G -- is it valid.
+        checkFails("select empno as x from emp order by empno",
+            // in sql92, empno is obscured by the alias
+            sortByAliasObscures ? "unknown column empno" :
+            // otherwise valid
+            null);
+        checkFails("select empno as x from emp order by x",
+            // valid in oracle and pre-99 sql
+            sortByAlias ? null :
+            // invalid in sql:2003
+            "column 'x' not found");
+
+        checkFails("select empno as x from emp order by 10",
+            // invalid in oracle and pre-99
+            sortByOrdinal ? "offset out of range" :
+            // valid from sql:99 onwards (but sorting by constant achieves
+            // nothing!)
+            null);
+
+        // Has different meanings in different dialects (which makes it very
+        // confusing!) but is always valid.
+        check("select empno + 1 as empno from emp order by empno");
+
+        // Always fails
+        checkFails("select empno as x from emp, dept order by deptno",
+            "Column 'DEPTNO' is ambiguous", 1, 43);
+
+        checkFails("select empno as deptno from emp, dept order by deptno",
+            // Alias 'deptno' is closer in scope than 'emp.deptno'
+            // and 'dept.deptno', and is therefore not ambiguous.
+            // Checked Oracle10G -- it is valid.
+            sortByAlias ? null :
+            // Ambiguous in SQL:2003
+            "col ambig");
+
+        checkFails(
+            "select deptno from dept" + NL +
+            "union" + NL +
+            "select empno from emp" + NL +
+            "order by empno",
+            "Column 'EMPNO' not found in any table", 4, 10);
+
+        checkFails(
+            "select deptno from dept" + NL +
+            "union" + NL +
+            "select empno from emp" + NL +
+            "order by 10",
+            // invalid in oracle and pre-99
+            sortByOrdinal ? "offset out of range" :
+            null);
+
+        // Sort by scalar subquery
+        check(
+            "select * from emp " + NL +
+            "order by (select name from dept where deptno = emp.deptno)");
+        checkFails(
+            "select * from emp " + NL +
+            "order by (select name from dept where deptno = emp.foo)",
+            "Column 'FOO' not found in table EMP");
+    }
+
+    public void testNew() {
+        // Oracle allows this.
+        check("select 1 from emp order by sum(sal)");
+    }
 }
 
 

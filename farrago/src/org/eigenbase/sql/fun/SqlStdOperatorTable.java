@@ -170,39 +170,44 @@ public class SqlStdOperatorTable extends SqlOperatorTable
     public final SqlSetOperator intersectAllOperator =
         new SqlSetOperator("INTERSECT ALL", SqlKind.Intersect, 9, true);
 
-    public final SqlSetOperator multisetUnionOperator =
-        new SqlSetOperator("MULTISET UNION", SqlKind.Other, 7, false,
-            ReturnTypeInference.useNullableMultiset,
-            UnknownParamInference.useFirstKnown,
-            OperandsTypeChecking.typeNullableMultisetMultiset);
-    public final SqlSetOperator multisetUnionAllOperator =
-        new SqlSetOperator("MULTISET UNION ALL", SqlKind.Other, 7, true,
-            ReturnTypeInference.useNullableMultiset,
-            UnknownParamInference.useFirstKnown,
-            OperandsTypeChecking.typeNullableMultisetMultiset);
-    public final SqlSetOperator multisetExceptOperator =
-        new SqlSetOperator("MULTISET EXCEPT", SqlKind.Other, 7, false,
-            ReturnTypeInference.useNullableMultiset,
-            UnknownParamInference.useFirstKnown,
-            OperandsTypeChecking.typeNullableMultisetMultiset);
-    public final SqlSetOperator multisetExceptAllOperator =
-        new SqlSetOperator("MULTISET EXCEPT ALL", SqlKind.Other, 7, true,
-            ReturnTypeInference.useNullableMultiset,
-            UnknownParamInference.useFirstKnown,
-            OperandsTypeChecking.typeNullableMultisetMultiset);
-    public final SqlSetOperator multisetIntersectOperator =
-        new SqlSetOperator("MULTISET INTERSECT", SqlKind.Other, 9, false,
-            ReturnTypeInference.useNullableMultiset,
-            UnknownParamInference.useFirstKnown,
-            OperandsTypeChecking.typeNullableMultisetMultiset);
-    public final SqlSetOperator multisetIntersectAllOperator =
-        new SqlSetOperator("MULTISET INTERSECT ALL", SqlKind.Other, 9, true,
-            ReturnTypeInference.useNullableMultiset,
-            UnknownParamInference.useFirstKnown,
-            OperandsTypeChecking.typeNullableMultisetMultiset);
+    /** The "MULTISET UNION" operator. */
+    public final SqlMultisetSetOperator multisetUnionOperator =
+        new SqlMultisetSetOperator("MULTISET UNION", 7, false);
+    /** The "MULTISET UNION ALL" operator. */
+    public final SqlMultisetSetOperator multisetUnionAllOperator =
+        new SqlMultisetSetOperator("MULTISET UNION ALL", 7, true);
+    /** The "MULTISET EXCEPT" operator. */
+    public final SqlMultisetSetOperator multisetExceptOperator =
+        new SqlMultisetSetOperator("MULTISET EXCEPT", 7, false);
+    /** The "MULTISET EXCEPT ALL" operator. */
+    public final SqlMultisetSetOperator multisetExceptAllOperator =
+        new SqlMultisetSetOperator("MULTISET EXCEPT ALL", 7, true);
+    /** The "MULTISET INTERSECT" operator. */
+    public final SqlMultisetSetOperator multisetIntersectOperator =
+        new SqlMultisetSetOperator("MULTISET INTERSECT", 9, false);
+    /** The "MULTISET INTERSECT ALL" operator. */
+    public final SqlMultisetSetOperator multisetIntersectAllOperator =
+        new SqlMultisetSetOperator("MULTISET INTERSECT ALL", 9, true);
 
+    /**
+     * An operator which performs set operations on multisets, such as
+     * "MULTISET UNION ALL". Not to be confused with {@link SqlMultisetOperator}.
+     *
+     * <p>todo: Represent the ALL keyword to MULTISET UNION ALL etc. as a
+     * hidden operand. Then we can obsolete this class.
+     */
+    private static class SqlMultisetSetOperator extends SqlBinaryOperator {
+        private final boolean all;
 
-
+        public SqlMultisetSetOperator(String name, int prec, boolean all)
+        {
+            super(name, SqlKind.Other, prec, true,
+                ReturnTypeInference.useNullableMultiset,
+                UnknownParamInference.useFirstKnown,
+                OperandsTypeChecking.typeNullableMultisetMultiset);
+            this.all = all;
+        }
+    }
 
     //-------------------------------------------------------------
     //                   BINARY OPERATORS
@@ -219,8 +224,29 @@ public class SqlStdOperatorTable extends SqlOperatorTable
         };
 
     public final SqlBinaryOperator asOperator =
-        new SqlBinaryOperator("AS", SqlKind.As, 10, true, ReturnTypeInference.useFirstArgType,
-            UnknownParamInference.useReturnType, OperandsTypeChecking.typeAnyAny) {
+        new SqlBinaryOperator("AS", SqlKind.As, 10, true,
+            ReturnTypeInference.useFirstArgType,
+            UnknownParamInference.useReturnType,
+            OperandsTypeChecking.typeAnyAny)
+        {
+            public void validateCall(
+                SqlCall call,
+                SqlValidator validator,
+                SqlValidator.Scope scope)
+            {
+                // The base method validates all operands. We override because
+                // we don't want to validate the identifier.
+                final SqlNode [] operands = call.operands;
+                assert operands.length == 2;
+                assert operands[1] instanceof SqlIdentifier;
+                operands[0].validate(validator, scope);
+                SqlIdentifier id = (SqlIdentifier) operands[1];
+                if (!id.isSimple()) {
+                    throw validator.newValidationError(id,
+                        EigenbaseResource.instance()
+                        .newAliasMustBeSimpleIdentifier());
+                }
+            }
         };
 
     public final SqlBinaryOperator overOperator =
@@ -591,6 +617,10 @@ public class SqlStdOperatorTable extends SqlOperatorTable
     //-------------------------------------------------------------
     public final SqlRowOperator rowConstructor = new SqlRowOperator();
 
+    /**
+     * The MULTISET operator, e.g. "<code>SELECT dname, MULTISET(SELECT * FROM
+     * emp WHERE deptno = dept.deptno) FROM dept</code>".
+     */
     public final SqlMultisetOperator multisetOperator =
         new SqlMultisetOperator();
 
@@ -697,8 +727,14 @@ public class SqlStdOperatorTable extends SqlOperatorTable
     public final SqlSpecialOperator explainOperator =
         new SqlSpecialOperator("EXPLAIN", SqlKind.Explain);
     public final SqlOrderByOperator orderByOperator = new SqlOrderByOperator();
+    /**
+     * Defines the WINDOW clause of a SELECT statment.
+     */
     public final SqlWindowOperator windowOperator = new SqlWindowOperator();
-    public final SqlOverOperator windowFuncOp = new SqlOverOperator();
+    /**
+     * The OVER operator constructs aggregates over windows of data.
+     */
+    public final SqlOverOperator overOp = new SqlOverOperator();
 
 
     //-------------------------------------------------------------

@@ -105,14 +105,14 @@
 </exception>
 
 <exception id="120070" name="UnmatchInsertColumn">
-    <text>Number of INSERT target column ({0}) does not equal number of source items ({1})</text>
+    <text>Number of INSERT target columns ({0,number}) does not equal number of source items ({1,number})</text>
 </exception>
 
 <exception id="120080" name="TableNameNotFound" className="org.eigenbase.sql.SqlValidatorException">
     <text>Table ''{0}'' not found</text>
 </exception>
 
-<exception id="120085" name="ColNotFound">
+<exception id="120085" name="ColumnNotFound" className="org.eigenbase.sql.SqlValidatorException">
     <text>Column ''{0}'' not found in any table</text>
 </exception>
 
@@ -120,7 +120,7 @@
     <text>Column ''{0}'' not found in table {1}</text>
 </exception>
 
-<exception id="120100" name="ColumnAmbiguous">
+<exception id="120100" name="ColumnAmbiguous" className="org.eigenbase.sql.SqlValidatorException">
     <text>Column ''{0}'' is ambiguous</text>
 </exception>
 
@@ -186,12 +186,28 @@
     <text>Types {0} not comparable to each other</text>
 </exception>
 
-<exception id="120255" name="NumberLiteralOutOfRange" className="org.eigenbase.sql.SqlValidatorException">
+<exception id="120260" name="NumberLiteralOutOfRange" className="org.eigenbase.sql.SqlValidatorException">
     <text>Numeric literal ''{0}'' out of range</text>
 </exception>
 
-<exception id="120257" name="StringFragsOnSameLine" className="org.eigenbase.sql.SqlValidatorException">
+<exception id="120270" name="StringFragsOnSameLine" className="org.eigenbase.sql.SqlValidatorException">
     <text>String literal continued on same line</text>
+</exception>
+
+<exception id="120280" name="AliasMustBeSimpleIdentifier" className="org.eigenbase.sql.SqlValidatorException">
+    <text>Table or column alias must be a simple identifier</text>
+</exception>
+
+<exception id="120290" name="JoinRequiresCondition" className="org.eigenbase.sql.SqlValidatorException">
+    <text>INNER, LEFT, RIGHT or FULL join requires a condition (NATURAL keyword or ON or USING clause)</text>
+</exception>
+
+<exception id="120300" name="CrossJoinDisallowsCondition" className="org.eigenbase.sql.SqlValidatorException">
+    <text>Cannot specify condition (NATURAL keyword, or ON or USING clause) following CROSS JOIN</text>
+</exception>
+
+<exception id="120310" name="NaturalDisallowsOnOrUsing" className="org.eigenbase.sql.SqlValidatorException">
+    <text>Cannot specify NATURAL keyword with ON or USING clause</text>
 </exception>
 
 <!-- ====================================================================== -->
@@ -225,7 +241,7 @@
     <text>Argument to function ''{0}'' must not be NULL</text>
 </exception>
 
-<exception id="130070" name="NullIllegal">
+<exception id="130070" name="NullIllegal" className="org.eigenbase.sql.SqlValidatorException">
     <text>Illegal use of ''NULL''</text>
 </exception>
 

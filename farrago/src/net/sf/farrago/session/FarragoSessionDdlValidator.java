@@ -224,6 +224,16 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
      * @param wrapper definition of wrapper to discard
      */
     public void discardDataWrapper(CwmModelElement wrapper);
+
+    /**
+     * Sets the SQL statement of a view from a given SQL parse tree.
+
+     * @param view   View to modify
+     * @param query  SQL parse tree
+     */
+    public void setViewText(
+        CwmView view,
+        SqlNode query);
 }
 
 
