@@ -34,7 +34,7 @@ FENNEL_BEGIN_NAMESPACE
 
 /**
  * ExecStream defines an abstract base for all execution objects which
- * process streams of data.  For more information, see SchedulerDesign.
+ * process streams of data.  For more information, see ExecStreamDesign.
  *
  * @author John V. Sichi
  * @version $Id$

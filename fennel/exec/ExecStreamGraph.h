@@ -39,7 +39,7 @@ class ExecStreamScheduler;
 
 /**
  * An ExecStreamGraph is a directed graph representing dataflow
- * among ExecStreams.
+ * among ExecStreams.  For more information, see ExecStreamDesign.
  *
  * <p>
  *
