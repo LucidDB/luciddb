@@ -70,6 +70,10 @@ public class RexToCalcTranslator implements RexVisitor
      **/
     private HashMap results = new HashMap();
     protected final RexBuilder rexBuilder;
+    /**
+     * Tells the code generator to short circuit logical operators.<br>
+     * The default valude is <emp>false</emp>.
+     */
     protected boolean generateShortCircuit = false;
     protected int labelOrdinal = 0;
 
@@ -753,6 +757,11 @@ public class RexToCalcTranslator implements RexVisitor
     }
 
 
+    /**
+     * @param generateShortCircuit If true, tells the code generator
+     * to short circuit logical operators<br>
+     * The default valude is <emp>false</emp>
+     */
     public void setGenerateShortCircuit(boolean generateShortCircuit)
     {
         this.generateShortCircuit = generateShortCircuit;

@@ -799,7 +799,7 @@ public class SqlValidator
      *
      * @param scope  Syntactic scope
      * @param operand Parse tree node
-     * @return Type; todo: when does this method return null, if ever?
+     * @return Type of the SqlNode. Should never return <code>NULL</code>
      */
     public RelDataType deriveType(
         Scope scope,
@@ -831,10 +831,6 @@ public class SqlValidator
         // REVIEW jvs 2-Dec-2004:  this method has outgrown its pants
 
         RelDataType type;
-        if (operand instanceof SqlSelect) {
-            return getValidatedNodeType(operand);
-        }
-
         if (operand instanceof SqlIdentifier) {
             SqlIdentifier id = (SqlIdentifier) operand;
 
@@ -1090,10 +1086,7 @@ public class SqlValidator
                 checkCharsetAndCollateConsistentIfCharType(type);
                 return type;
             } else {
-                // TODO: if function can take record type (select statement) as
-                // parameter, we need to derive type of SqlSelectOperator,
-                // SqlJoinOperator etc here.
-                return unknownType;
+                return getValidatedNodeType(operand);
             }
         }
         // Operand is of a type that we can't derive a type for.
@@ -3528,7 +3521,9 @@ public class SqlValidator
     }
 
     /**
-     *todo
+     * The name-resolution context for expression inside a multiset call.
+     * The objects visible are multiset expressions, and those
+     * inherited from the parent scope.
      */
     class CollectScope extends ListScope
     {

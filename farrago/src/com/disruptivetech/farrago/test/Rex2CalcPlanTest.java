@@ -117,8 +117,8 @@ public class Rex2CalcPlanTest extends FarragoTestCase
      * @param nullSemantics If true, adds logic to ensure that a
      *   <code>WHERE</code> clause which evalutes to <code>NULL</code> will
      *   filter out rows (as if it had evaluated to <code>FALSE</code>).
-     * @param shortCircuit Generate short-circuit logic if a clause of an
-     *   <code>AND</code> condition evaluates to <code>FALSE</code>.
+     * @param shortCircuit Generate short-circuit logic to optimize logical
+     *   operations such as <code>AND</code> and <code>OR</OR> conditions.
      */
     private void check(
         String sql,
@@ -427,7 +427,7 @@ public class Rex2CalcPlanTest extends FarragoTestCase
             "trim('a' from 'a')," +
             "overlay('a' placing 'a' from 1)," +
             "substring('a' from 1)," +
-//                "substring(cast('a' as char(2)) from 1)," + todo uncomment this once cast char to varchar works
+            "substring(cast('a' as char(2)) from 1)," +
             "substring('a' from 1 for 10)," +
             "substring('a' from 'a' for '\\' )," +
             "'a'||'a'||'b'" +
