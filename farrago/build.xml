@@ -597,6 +597,13 @@ require version '${required.ant.version}'."/>
         <include name="SqlParseImpConstants.java"/>
         <include name="ASCII_UCodeESC_CharStream.java"/>
       </fileset>
+      <fileset dir="${dist.plugin.dir}">
+        <include name="*.jar"/>
+      </fileset>
+      <fileset dir="${dist.dir}">
+        <include name="*.jar"/>
+        <include name="*.tar.bz2"/>
+      </fileset>
     </delete>
   </target>
 
