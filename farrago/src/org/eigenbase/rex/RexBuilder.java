@@ -246,13 +246,16 @@ public class RexBuilder
     /**
      * Creates a call to a windowed agg.
      */
-    public RexNode makeOver(
-        RelDataType type,
-        SqlCall aggCall,
+    public RexNode makeOver(RelDataType type,
+        SqlOperator operator,
         RexNode[] exprs,
-        SqlWindow window)
+        SqlWindow window,
+        SqlNode lowerBound,
+        SqlNode upperBound,
+        boolean physical)
     {
-        return new RexOver(type, aggCall.operator, exprs, window);
+        return new RexOver(type, operator, exprs, window, lowerBound,
+            upperBound, physical);
     }
 
     /**

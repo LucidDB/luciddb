@@ -669,7 +669,8 @@ public class SqlToRelConverter
         final RexNode[] exprs =
             convertExpressionList(bb, aggCall.operands);
         final RelDataType type = validator.getValidatedNodeType(aggCall);
-        return rexBuilder.makeOver(type, aggCall, exprs, window);
+        return rexBuilder.makeOver(type, aggCall.operator, exprs, window,
+            window.getLowerBound(), window.getUpperBound(), window.isRows());
     }
 
     /**

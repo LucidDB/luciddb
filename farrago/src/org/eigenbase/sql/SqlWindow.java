@@ -94,23 +94,23 @@ public class SqlWindow extends SqlCall
         operands[DeclName_OPERAND] = name;
     }
 
-    SqlNode getLowerBound() {
+    public SqlNode getLowerBound() {
         return operands[LowerBound_OPERAND];
     }
 
-    SqlNode getUpperBound() {
+    public SqlNode getUpperBound() {
         return operands[UpperBound_OPERAND];
     }
 
-    boolean isRows() {
+    public boolean isRows() {
         return SqlLiteral.booleanValue(operands[IsRows_OPERAND]);
     }
 
-    SqlNodeList getOrderList() {
+    public SqlNodeList getOrderList() {
         return (SqlNodeList) operands[OrderList_OPERAND];
     }
 
-    SqlNodeList getPartitionList() {
+    public SqlNodeList getPartitionList() {
         return (SqlNodeList) operands[PartitionList_OPERAND];
     }
 
@@ -150,7 +150,12 @@ public class SqlWindow extends SqlCall
             ParserPosition.ZERO);
     }
 
-    private static void setOperand(final SqlNode[] destOperands, SqlNode[] srcOperands, int i, SqlValidator validator) {
+    private static void setOperand(
+        final SqlNode[] destOperands,
+        SqlNode[] srcOperands,
+        int i,
+        SqlValidator validator)
+    {
         SqlNode thatOperand = srcOperands[i];
         if (thatOperand != null) {
             final SqlNode clonedOperand = destOperands[i];

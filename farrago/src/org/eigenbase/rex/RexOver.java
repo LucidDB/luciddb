@@ -21,17 +21,24 @@
 package org.eigenbase.rex;
 
 import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.sql.SqlNode;
 import org.eigenbase.sql.SqlOperator;
 import org.eigenbase.sql.SqlWindow;
 import org.eigenbase.util.Util;
 
 /**
  * Call to an aggregate function over a window.
+ *
+ * @author jhyde
+ * @version $Id$
+ * @since Dec 6, 2004
  */
-public class RexOver extends RexCall {
-    private final RexNode[] operands;
-    private final SqlWindow window;
-    private RelDataType type;
+public class RexOver extends RexCall
+{
+    public final SqlWindow window;
+    private final SqlNode lowerBound;
+    private final SqlNode upperBound;
+    public final boolean physical;
 
     /**
      * Creates a RexOver.
@@ -48,24 +55,30 @@ public class RexOver extends RexCall {
      * @param operands Operands list
      * @param window Fully-resolved window specification
      *
+     * @param lowerBound
+     * @param upperBound
+     * @param physical
      * @pre op.isAggregator()
      * @pre window != null
      * @pre window.getRefName() == null
      */
-    RexOver(
-        RelDataType type,
+    RexOver(RelDataType type,
         SqlOperator op,
         RexNode[] operands,
-        SqlWindow window)
+        SqlWindow window,
+        SqlNode lowerBound,
+        SqlNode upperBound,
+        boolean physical)
     {
         super(type, op, operands);
+        this.lowerBound = lowerBound;
+        this.upperBound = upperBound;
+        this.physical = physical;
         assert op.isAggregator() : "precondition: op.isAggregator()";
         assert window != null : "precondition: window != null";
         // window specification must be fully-resolved
         assert window.getRefName() == null : "window.getRefName() == null";
-        this.operands = operands;
         this.window = window;
-        this.type = type;
         this.digest = computeDigest(true);
     }
 
@@ -73,15 +86,14 @@ public class RexOver extends RexCall {
         return super.computeDigest(withType) + " OVER " + window;
     }
 
-    public RelDataType getType() {
-        return type;
-    }
-
     public Object clone() {
-        return new RexOver(type, op, operands, window);
+        return new RexOver(getType(), op, operands, window, lowerBound, 
+            upperBound, physical);
     }
 
     public void accept(RexVisitor visitor) {
         throw Util.needToImplement(this); // TODO: add RexVisitor.visitOver
     }
 }
+
+// End RexOver.java
