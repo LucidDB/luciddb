@@ -62,6 +62,7 @@ cp csvjdbc/license.txt $LIB_DIR/csvjdbc.license.txt
 cp sqlline.jar $LIB_DIR
 cp sqlline/LICENSE $LIB_DIR/sqlline.license
 cp jline.jar $LIB_DIR
+cp hsqldb/lib/hsqldb.jar $LIB_DIR
 cp -d stlport/lib/lib*.so* $LIB_DIR/fennel
 cp -d boost/lib/lib*.so* $LIB_DIR/fennel
 cp -d icu/lib/lib*.so* $LIB_DIR/fennel
@@ -86,7 +87,7 @@ cp dist/plugin/*.jar $LIB_DIR/plugin
 
 # copy other farrago artifacts
 cp dist/install/* $INSTALL_DIR
-cp catalog/FarragoCatalog.bt? $CATALOG_DIR
+cp catalog/FarragoCatalog.* $CATALOG_DIR
 cp catalog/*.dat $CATALOG_DIR
 cp dist/bin/* $BIN_DIR
 
