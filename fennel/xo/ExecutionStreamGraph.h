@@ -78,7 +78,7 @@ public:
     virtual void removeStream(
         SharedExecutionStream pStream) 
     {
-        assert(false);
+        permAssert(false);
     }
         
     /**

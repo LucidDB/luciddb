@@ -134,8 +134,7 @@ char const *PagingTestBase::getOpName(OpType opType)
     case OP_WRITE_NOWAIT:
         return "write no-wait";
     default:
-        assert(false);
-        return NULL;
+        permAssert(false);
     }
 }
 
@@ -157,8 +156,7 @@ LockMode PagingTestBase::getLockMode(OpType opType)
     case OP_WRITE_NOWAIT:
         return LOCKMODE_X_NOWAIT;
     default:
-        assert(false);
-        return LOCKMODE_S;
+        permAssert(false);
     }
 }
 
@@ -258,12 +256,12 @@ void PagingTestBase::testRandomWrite()
 
 void PagingTestBase::testAllocate()
 {
-    assert(false);
+    permAssert(false);
 }
     
 void PagingTestBase::testDeallocate()
 {
-    assert(false);
+    permAssert(false);
 }
 
 void PagingTestBase::testCheckpoint()
@@ -397,8 +395,7 @@ bool PagingTestBase::testThreadedOp(int iOp)
         testCacheResize();
         return false;
     default:
-        assert(false);
-        return false;
+        permAssert(false);
     }
     return true;
 }

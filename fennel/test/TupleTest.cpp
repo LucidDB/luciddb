@@ -275,7 +275,7 @@ void TupleTest::writeMinData(TupleDatum &datum,uint typeOrdinal)
         datum.cbData = 0;
         break;
     default:
-        assert(false);
+        permAssert(false);
     }
 }
 
@@ -341,7 +341,7 @@ void TupleTest::writeMaxData(TupleDatum &datum,uint typeOrdinal)
         memset(pData,0xFF,datum.cbData);
         break;
     default:
-        assert(false);
+        permAssert(false);
     }
 }
 

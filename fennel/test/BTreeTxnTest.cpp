@@ -382,8 +382,7 @@ bool BTreeTxnTest::testThreadedOp(int iOp)
         testCheckpoint();
         break;
     default:
-        assert(false);
-        return false;
+        permAssert(false);
     }
     return true;
 }

@@ -43,7 +43,7 @@ ByteArrayOutputStream::ByteArrayOutputStream(
 
 void ByteArrayOutputStream::flushBuffer(uint)
 {
-    assert(false);
+    permAssert(false);
 }
 
 void ByteArrayOutputStream::closeImpl()

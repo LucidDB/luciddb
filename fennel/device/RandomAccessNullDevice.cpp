@@ -39,12 +39,12 @@ void RandomAccessNullDevice::setSizeInBytes(FileSize cbNew)
     
 void RandomAccessNullDevice::transfer(RandomAccessRequest const &)
 {
-    assert(false);
+    permAssert(false);
 }
     
 void RandomAccessNullDevice::prepareTransfer(RandomAccessRequest &)
 {
-    assert(false);
+    permAssert(false);
 }
     
 void RandomAccessNullDevice::flush()

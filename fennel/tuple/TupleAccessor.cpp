@@ -226,7 +226,7 @@ void TupleAccessor::compute(
                 aligned8.push_back(iAttr);
                 break;
             default:
-                assert(false);
+                permAssert(false);
             }
         }
         if (bNullable) {

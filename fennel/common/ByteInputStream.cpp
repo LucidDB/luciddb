@@ -62,7 +62,7 @@ uint ByteInputStream::readBytes(
 
 void ByteInputStream::readPrevBuffer()
 {
-    assert(false);
+    permAssert(false);
 }
 
 void ByteInputStream::seekBackward(uint cb)

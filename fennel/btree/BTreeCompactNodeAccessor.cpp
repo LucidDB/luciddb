@@ -100,7 +100,7 @@ void BTreeCompactNodeAccessor::compactNode(BTreeNode &,BTreeNode &)
 {
     // Since we never return CAN_FIT_WITH_COMPACTION, no one should ever ask us
     // to do this.
-    assert(false);
+    permAssert(false);
 }
 
 FENNEL_END_CPPFILE("$Id$");

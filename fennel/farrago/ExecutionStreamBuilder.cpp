@@ -174,8 +174,7 @@ void ExecutionStreamBuilder::addAdapterFor(
         // we can accept anything, so no adapter required
         break;
     default:
-        assert(false);
-        break;
+        permAssert(false);
     }
 }
 

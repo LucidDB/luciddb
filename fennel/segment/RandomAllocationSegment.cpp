@@ -293,8 +293,7 @@ PageId RandomAllocationSegment::allocateFromLockedExtent(
         }
     }
 
-    assert(false);
-    return NULL_PAGE_ID;
+    permAssert(false);
 }
 
 void RandomAllocationSegment::deallocatePageRange(

@@ -53,12 +53,10 @@ void ExternalSortStreamImpl::prepare(ExternalSortStreamParams const &params)
         break;
     case DUP_DISCARD:
         // TODO
-        assert(false);
-        break;
+        permAssert(false);
     case DUP_FAIL:
         // TODO
-        assert(false);
-        break;
+        permAssert(false);
     }
 
     TupleDescriptor const &srcRecDef = pInputStream->getOutputDesc();
@@ -166,7 +164,7 @@ bool ExternalSortStreamImpl::writeResultToConsumerBuffer(
             // we're done
             return false;
         default:
-            assert(false);
+            permAssert(false);
         }
 
         resultsReady = false;
@@ -241,8 +239,7 @@ ExternalSortRC ExternalSortStreamImpl::computeFirstResult()
 
         default:
             {
-                assert(false);
-                break;
+                permAssert(false);
             }
         }
     }

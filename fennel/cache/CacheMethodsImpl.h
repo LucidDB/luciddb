@@ -566,7 +566,7 @@ void CacheImpl<PageT,VictimPolicyT>
     case CachePage::DATA_READ:
         break;
     default:
-        assert(0);
+        permAssert(false);
         break;
     }
     if (bSuccess) {

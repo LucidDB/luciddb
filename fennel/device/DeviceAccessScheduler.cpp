@@ -60,8 +60,7 @@ DeviceAccessScheduler::newScheduler(
 #endif
         
     default:
-        assert(false);
-        return NULL;
+        permAssert(false);
     }
 }
 

@@ -104,7 +104,7 @@ void LogicalRecoveryLog::recover(
         case LogicalTxnEventMemento::EVENT_CHECKPOINT:
             break;
         default:
-            assert(false);
+            permAssert(false);
         }
     }
     for (TxnMapIter pTxnEntry = checkpointTxnMap.begin();

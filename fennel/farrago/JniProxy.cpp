@@ -46,8 +46,7 @@ JniProxyVisitor::~JniProxyVisitor()
     
 void JniProxyVisitor::unhandledVisit()
 {
-    assert(false);
-    throw;
+    permAssert(false);
 }
 
 FENNEL_END_CPPFILE("$Id$");

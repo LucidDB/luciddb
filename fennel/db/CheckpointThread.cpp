@@ -81,7 +81,7 @@ void CheckpointThread::requestCheckpoint(CheckpointType request)
         }
         break;
     default:
-        assert(false);
+        permAssert(false);
     }
     condition.notify_all();
 }

@@ -86,8 +86,7 @@ public:
                     j = 1;
                     break;
                 default:
-                    assert(false);
-                    break;
+                    permAssert(false);
                 }
             }
             if (j < 0) {

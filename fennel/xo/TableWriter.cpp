@@ -135,7 +135,7 @@ inline void TableWriter::insertIntoIndex(
             indexWriter.pWriter->endSearch();
         } else {
             // REVIEW:  can this happen?  If so, should we insert?
-            assert(false);
+            permAssert(false);
         }
     }
     indexWriter.pWriter->insertTupleData(
@@ -173,8 +173,7 @@ inline void TableWriter::modifySomeIndexes(
         }
         break;
     default:
-        assert(false);
-        break;
+        permAssert(false);
     }
 }
 
@@ -194,7 +193,7 @@ inline void TableWriter::modifyAllIndexes(LogicalActionType actionType)
         } catch (...) {
             // If this rollback fails, don't allow exception to hide original
             // exception.  But TODO:  trace.
-            assert(false);
+            permAssert(false);
         }
         throw;
     }
@@ -253,7 +252,7 @@ void TableWriter::executeUpdate(bool reverse)
         } catch (...) {
             // If this rollback fails, don't allow exception to hide original
             // exception.  But TODO:  trace.
-            assert(false);
+            permAssert(false);
         }
         throw;
     }
@@ -273,8 +272,7 @@ inline void TableWriter::executeTuple(LogicalActionType actionType)
         executeUpdate(true);
         break;
     default:
-        assert(false);
-        break;
+        permAssert(false);
     }
 }
 
@@ -397,8 +395,7 @@ void TableWriter::undoLogicalAction(
         redoLogicalAction(ACTION_REVERSE_UPDATE,logStream);
         break;
     default:
-        assert(false);
-        break;
+        permAssert(false);
     }
 }
 

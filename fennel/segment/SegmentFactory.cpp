@@ -203,8 +203,7 @@ DeviceId SegmentFactory::allocateTempDeviceId()
             return firstTempDeviceId + i;
         }
     }
-    assert(false);
-    return DeviceId(MAXU);
+    permAssert(false);
 }
 
 void SegmentFactory::deallocateTempDeviceId(DeviceId deviceId)

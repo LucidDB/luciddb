@@ -75,7 +75,7 @@ void SegmentTestBase::prefetchPage(uint iPage)
 
 void SegmentTestBase::prefetchBatch(uint,uint)
 {
-    assert(false);
+    permAssert(false);
 }
 
 void SegmentTestBase::testAllocate()

@@ -210,7 +210,7 @@ void BTreeWriter::splitNode(
     // invalid, so don't use them.
     if (!attemptInsertWithoutSplit(
             *pLockForNewTuple,pTupleBuffer,cbTuple,iNewTuple)) {
-        assert(false);
+        permAssert(false);
     }
 
     // TODO:  parent update
@@ -327,8 +327,7 @@ bool BTreeWriter::updateCurrent(TupleData const &tupleData)
     case BTreeNodeAccessor::CAN_NOT_FIT:
         return false;
     default:
-        assert(false);
-        break;
+        permAssert(false);
     }
 
     pTupleBuf = nodeAccessor.allocateEntry(*pNode,iTupleOnLeaf,cbTuple);
@@ -408,8 +407,7 @@ void BTreeWriter::undoLogicalAction(
         insertLogged(logStream);
         break;
     default:
-        assert(false);
-        break;
+        permAssert(false);
     }
 }
 
@@ -425,8 +423,7 @@ void BTreeWriter::redoLogicalAction(
         deleteLogged(logStream);
         break;
     default:
-        assert(false);
-        break;
+        permAssert(false);
     }
 }
 

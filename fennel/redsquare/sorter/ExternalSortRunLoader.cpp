@@ -94,11 +94,11 @@ void ExternalSortRunLoader::startRun()
     pIndexBuffer = NULL;
 
     if (!allocateDataBuffer()) {
-        assert(false);
+        permAssert(false);
     }
 
     if (!allocateIndexBuffer()) {
-        assert(false);
+        permAssert(false);
     }
 
     nTuplesLoaded = nTuplesFetched = 0;

@@ -51,8 +51,7 @@ SharedCache CacheTestBase::newCache()
     case victimLRU:
         return Cache::newCache(cacheParams);
     default:
-        assert(false);
-        return SharedCache();
+        permAssert(false);
     }
 }
 

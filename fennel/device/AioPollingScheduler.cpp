@@ -106,7 +106,7 @@ void AioPollingScheduler::run()
                     continue;
                 default:
                     std::cerr << rc << std::endl;
-                    assert(false);
+                    permAssert(false);
                 }
             }
         } while (false);
