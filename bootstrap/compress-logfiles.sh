@@ -27,6 +27,13 @@ fi
 
 debug=false
 
+# Find all files more than 30 days old and delete them
+find $LOGDIR -maxdepth 2 -daystart -mtime +30 \
+ -not -name currentbuildstatus.txt \
+ -not -name latest.xml \
+ -type f \
+ -exec rm {} ";" 
+
 # Find all files more than 13 days old and compress them.
 find $LOGDIR -maxdepth 2 -daystart -mtime +13 \
  -not -name "*.bz2" \
