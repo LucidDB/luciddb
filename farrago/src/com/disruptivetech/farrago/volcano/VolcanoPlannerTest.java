@@ -193,13 +193,13 @@ public class VolcanoPlannerTest extends TestCase
         assertTrue(result instanceof PhysToIteratorConverter);
     }
 
-    // NOTE:  this fails due to a problem with RemoveTrivialProjectRule
-    public void _testWithRemoveTrivialProject()
+    // NOTE:  this used to fail but now works
+    public void testWithRemoveTrivialProject()
     {
         removeTrivialProject(true);
     }
 
-    // NOTE:  this succeeds; it's here as constrast to
+    // NOTE:  this always worked; it's here as constrast to
     // testWithRemoveTrivialProject()
     public void testWithoutRemoveTrivialProject()
     {

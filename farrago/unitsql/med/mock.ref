@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/med/mock.sql#2 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/med/mock.sql#3 $
 0: jdbc:farrago:> -- Test mock namespace plugin
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create foreign data wrapper mock_foreign_wrapper
@@ -60,29 +60,26 @@
 +-----+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for select * from mock_fennel_table;
-+--------------------------------------------------------------------------+
-|                                 column0                                  |
-+--------------------------------------------------------------------------+
-| IterCalcRel(ID=[$0])                                                     |
-|   FennelToIteratorConverter                                              |
-|     MedMockFennelRel(table=[[LOCALDB, MOCK_SCHEMA, MOCK_FENNEL_TABLE]])  |
-+--------------------------------------------------------------------------+
++------------------------------------------------------------------------+
+|                                column0                                 |
++------------------------------------------------------------------------+
+| FennelToIteratorConverter                                              |
+|   MedMockFennelRel(table=[[LOCALDB, MOCK_SCHEMA, MOCK_FENNEL_TABLE]])  |
++------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for select * from mock_java_table;
-+--------------------------------------------------------------------+
-|                              column0                               |
-+--------------------------------------------------------------------+
-| IterCalcRel(ID=[$0])                                               |
-|   MedMockIterRel(table=[[LOCALDB, MOCK_SCHEMA, MOCK_JAVA_TABLE]])  |
-+--------------------------------------------------------------------+
++------------------------------------------------------------------+
+|                             column0                              |
++------------------------------------------------------------------+
+| MedMockIterRel(table=[[LOCALDB, MOCK_SCHEMA, MOCK_JAVA_TABLE]])  |
++------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for select * from mock_empty_table;
-+---------------------------------------------------------------------+
-|                               column0                               |
-+---------------------------------------------------------------------+
-| IterCalcRel(ID=[$0])                                                |
-|   MedMockIterRel(table=[[LOCALDB, MOCK_SCHEMA, MOCK_EMPTY_TABLE]])  |
-+---------------------------------------------------------------------+
++-------------------------------------------------------------------+
+|                              column0                              |
++-------------------------------------------------------------------+
+| MedMockIterRel(table=[[LOCALDB, MOCK_SCHEMA, MOCK_EMPTY_TABLE]])  |
++-------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for insert into mock_empty_table values (5);
 +-------------------------------------------------------------------+

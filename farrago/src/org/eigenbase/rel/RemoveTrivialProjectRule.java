@@ -63,7 +63,7 @@ public class RemoveTrivialProjectRule extends RelOptRule
         }
         if (!isIdentity(
                     project.exps,
-                    project.getFieldNames(),
+                    project.getRowType(),
                     childRowType)) {
             return;
         }
@@ -78,9 +78,10 @@ public class RemoveTrivialProjectRule extends RelOptRule
 
     private static boolean isIdentity(
         RexNode [] exps,
-        String [] fieldNames,
+        RelDataType rowType,
         RelDataType childRowType)
     {
+        RelDataTypeField [] fields = rowType.getFields();
         RelDataTypeField [] childFields = childRowType.getFields();
         int fieldCount = childFields.length;
         if (exps.length != fieldCount) {
@@ -93,10 +94,8 @@ public class RemoveTrivialProjectRule extends RelOptRule
                 if (var.index != i) {
                     return false;
                 }
-                if (fieldNames[i] != null) {
-                    if (!fieldNames[i].equals(childFields[i].getName())) {
-                        return false;
-                    }
+                if (!fields[i].getName().equals(childFields[i].getName())) {
+                    return false;
                 }
             } else {
                 return false;

@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/udt.sql#5 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/udt.sql#6 $
 0: jdbc:farrago:> -- Test DDL for user-defined types
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema udttest;
@@ -283,8 +283,9 @@ Error: DDL validation error near line 1, column 35: Reference to unknown datatyp
 . . . . . . . . > select v.pair_id, v.coord1.x, v.coord1.y, v.y as y2 
 . . . . . . . . > from viewed_coord_list v;
 'column0'
-'IterCalcRel(PAIR_ID=[$4], X=[$0], Y=[$1], Y2=[$3])'
-'  FennelToIteratorConverter'
-'    FtrsIndexScanRel(table=[[LOCALDB, UDTTEST, STORED_COORD_LIST]], projection=[*], index=[SYS$CONSTRAINT_INDEX$STORED_COORD_LIST$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'FennelToIteratorConverter'
+'  FennelRenameRel(fieldNames=[[PAIR_ID, X, Y, Y2]])'
+'    FennelRenameRel(fieldNames=[[PAIR_ID, $f1, $f2, Y]])'
+'      FtrsIndexScanRel(table=[[LOCALDB, UDTTEST, STORED_COORD_LIST]], projection=[[4, 0, 1, 3]], index=[SYS$CONSTRAINT_INDEX$STORED_COORD_LIST$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

@@ -94,6 +94,7 @@ public class FarragoDefaultPlanner extends VolcanoPlanner
         addRule(new CoerceInputsRule(UnionRel.class));
         addRule(new CoerceInputsRule(TableModificationRel.class));
         addRule(new SwapJoinRule());
+        addRule(new RemoveTrivialProjectRule());
 
         addRule(new IterRules.HomogeneousUnionToIteratorRule());
         addRule(new IterRules.OneRowToIteratorRule());
