@@ -35,6 +35,9 @@ Eigenbase:
 Disruptive:
 	//depot/aspen/...	[work]/aspen
 
+After defining the client, do a manual sync and run 'make ant_ext' in
+thirdparty to unpack ant.
+
 The shell script startcc-chumley.sh starts Cruise Control and enables
 a JMX service on port 8080.  This port should be firewalled from
 access by outside users -- the JMX service has no protection against
