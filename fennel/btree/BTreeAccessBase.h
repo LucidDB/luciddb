@@ -72,6 +72,11 @@ protected:
      */
     boost::scoped_ptr<BTreeNodeAccessor> pLeafNodeAccessor;
 
+    /**
+     * Maximum size for a leaf-level tuple.
+     */
+    uint cbTupleMax;
+    
     // ----------------------------------------------------------------------
     // protected inlines below are defined in BTreeAccessBaseImpl.h
     // ----------------------------------------------------------------------
@@ -210,6 +215,16 @@ public:
      * @return TupleProjection from getTupleDescriptor() to getKeyDescriptor()
      */
     inline TupleProjection const &getKeyProjection() const;
+
+    /**
+     * Validates that a particular tuple can fit in this BTree,
+     * throwing a TupleOverflowExcn if not.
+     *
+     * @param tupleAccessor TupleAccessor referencing tuple to be
+     * inserted
+     */
+    void validateTupleSize(
+        TupleAccessor const &tupleAccessor);
 };
 
 inline SharedSegment BTreeAccessBase::getSegment() const

@@ -25,6 +25,7 @@
 #include "fennel/btree/BTreeKeyedNodeAccessor.h"
 #include "fennel/cache/CacheAccessor.h"
 #include "fennel/tuple/StandardTypeDescriptor.h"
+#include "fennel/tuple/TupleOverflowExcn.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
@@ -109,6 +110,10 @@ BTreeAccessBase::BTreeAccessBase(BTreeDescriptor const &treeDescriptorInit)
     leafKeyAccessor.bind(
         pLeafNodeAccessor->tupleAccessor,
         getKeyProjection());
+
+    cbTupleMax =
+        ((getSegment()->getUsablePageSize() - sizeof(BTreeNode)) / 2)
+        - pLeafNodeAccessor->getEntryByteCount(0);
 }
 
 BTreeAccessBase::~BTreeAccessBase()
@@ -133,6 +138,20 @@ PageId BTreeAccessBase::getFirstChild(PageId parentPageId)
 void BTreeAccessBase::setRootPageId(PageId rootPageId) 
 {
     treeDescriptor.rootPageId = rootPageId;
+}
+
+void BTreeAccessBase::validateTupleSize(TupleAccessor const &tupleAccessor)
+{
+    uint cbTuple = tupleAccessor.getCurrentByteCount();
+    if (cbTuple > cbTupleMax) {
+        TupleData tupleData(getTupleDescriptor());
+        tupleAccessor.unmarshal(tupleData);
+        throw TupleOverflowExcn(
+            getTupleDescriptor(),
+            tupleData,
+            cbTuple,
+            cbTupleMax);
+    }
 }
 
 FENNEL_END_CPPFILE("$Id$");

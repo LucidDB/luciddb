@@ -70,6 +70,8 @@ void BTreeBuildLevel::processInput(ByteInputStream &sortedInputStream)
         uint cbTuple = nodeAccessor.tupleAccessor.getCurrentByteCount();
         assert(cbActual >= cbTuple);
 
+        builder.validateTupleSize(nodeAccessor.tupleAccessor);
+
         // Make sure we have enough room.
         if (isNodeFull(*pNode,cbTuple)) {
             indexLastKey(false);

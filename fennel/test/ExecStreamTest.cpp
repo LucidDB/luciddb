@@ -70,28 +70,7 @@ public:
 void ExecStreamTest::verifyZeroedOutput(
     ExecStream &stream,uint nBytesExpected)
 {
-    pGraph->open();
-    pScheduler->start();
-    uint nBytesTotal = 0;
-    for (;;) {
-        ExecStreamBufAccessor &bufAccessor =
-            pScheduler->readStream(stream);
-        if (bufAccessor.getState() == EXECBUF_EOS) {
-            break;
-        }
-        BOOST_CHECK_EQUAL(EXECBUF_NEED_CONSUMPTION,bufAccessor.getState());
-        uint nBytes = bufAccessor.getConsumptionAvailable();
-        nBytesTotal += nBytes;
-        for (uint i = 0; i < nBytes; ++i) {
-            uint c = bufAccessor.getConsumptionStart()[i];
-            if (c) {
-                BOOST_CHECK_EQUAL(0,c);
-                break;
-            }
-        }
-        bufAccessor.consumeData(bufAccessor.getConsumptionEnd());
-    }
-    BOOST_CHECK_EQUAL(nBytesExpected,nBytesTotal);
+    verifyConstantOutput(stream,nBytesExpected,0);
 }
 
 void ExecStreamTest::testScratchBufferStream()

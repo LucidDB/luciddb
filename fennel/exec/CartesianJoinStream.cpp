@@ -35,53 +35,27 @@ void CartesianJoinStream::prepare(CartesianJoinStreamParams const &params)
     assert(pRightBufAccessor);
     TupleDescriptor const &leftDesc = pLeftBufAccessor->getTupleDesc();
     TupleDescriptor const &rightDesc = pRightBufAccessor->getTupleDesc();
-    leftAccessor.compute(leftDesc);
-    rightAccessor.compute(rightDesc);
     TupleDescriptor outputDesc;
     outputDesc.insert(outputDesc.end(),leftDesc.begin(),leftDesc.end());
     outputDesc.insert(outputDesc.end(),rightDesc.begin(),rightDesc.end());
-    outputAccessor.compute(outputDesc);
     outputData.compute(outputDesc);
     pOutAccessor->setTupleShape(outputDesc);
-}
 
-void CartesianJoinStream::open(bool restart)
-{
-    ConfluenceExecStream::open(restart);
-    // these are used as state variables during fetch
-    leftAccessor.resetCurrentTupleBuf();
-    rightAccessor.resetCurrentTupleBuf();
+    nLeftAttributes = leftDesc.size();
 }
 
 ExecStreamResult CartesianJoinStream::execute(ExecStreamQuantum const &quantum)
 {
-    switch(pOutAccessor->getState()) {
-    case EXECBUF_NEED_CONSUMPTION:
-        return EXECRC_NEED_OUTPUTBUF;
-    case EXECBUF_NEED_PRODUCTION:
-    case EXECBUF_IDLE:
-        break;
-    case EXECBUF_EOS:
-        assert(pLeftBufAccessor->getState() == EXECBUF_EOS);
-        assert(pRightBufAccessor->getState() == EXECBUF_EOS);
-        return EXECRC_EOS;
-    }
-    
-    PBuffer pBuffer = pOutAccessor->getProductionStart();
-    PBuffer pBufferEnd = pOutAccessor->getProductionEnd();
-    PBuffer pNextTuple = pBuffer;
-
     // TODO:  lots of small optimizations possible here
+
+    uint nTuplesProduced = 0;
     
     for (;;) {
-        if (!leftAccessor.getCurrentTupleBuf()) {
+        if (!pLeftBufAccessor->isTupleUnmarshalled()) {
             if (pLeftBufAccessor->getState() == EXECBUF_NEED_CONSUMPTION) {
-                leftAccessor.setCurrentTupleBuf(
-                    pLeftBufAccessor->getConsumptionStart());
-                leftAccessor.unmarshal(outputData);
+                pLeftBufAccessor->unmarshalTuple(outputData);
             } else {
-                if (pNextTuple > pBuffer) {
-                    pOutAccessor->produceData(pNextTuple);
+                if (nTuplesProduced) {
                     return EXECRC_OUTPUT;
                 }
                 switch(pLeftBufAccessor->getState()) {
@@ -99,12 +73,9 @@ ExecStreamResult CartesianJoinStream::execute(ExecStreamQuantum const &quantum)
             }
         }
         for (;;) {
-            if (!rightAccessor.getCurrentTupleBuf()) {
+            if (!pRightBufAccessor->isTupleUnmarshalled()) {
                 if (pRightBufAccessor->getState() == EXECBUF_EOS) {
-                    pLeftBufAccessor->consumeData(
-                        pLeftBufAccessor->getConsumptionStart()
-                        + leftAccessor.getCurrentByteCount());
-                    leftAccessor.resetCurrentTupleBuf();
+                    pLeftBufAccessor->consumeUnmarshalledTuple();
                     // restart right input stream
                     pGraph->getStreamInput(getStreamId(),1)->open(true);
                     // NOTE: break out of the inner for loop, which will take
@@ -113,36 +84,38 @@ ExecStreamResult CartesianJoinStream::execute(ExecStreamQuantum const &quantum)
                 }
                 switch(pRightBufAccessor->getState()) {
                 case EXECBUF_NEED_CONSUMPTION:
-                    rightAccessor.setCurrentTupleBuf(
-                        pRightBufAccessor->getConsumptionStart());
-                    rightAccessor.unmarshal(outputData,leftAccessor.size());
+                    pRightBufAccessor->unmarshalTuple(
+                        outputData, nLeftAttributes);
                     break;
                 case EXECBUF_IDLE:
                     pRightBufAccessor->requestProduction();
                     // NOTE:  fall through
                 case EXECBUF_NEED_PRODUCTION:
-                    if (pNextTuple > pBuffer) {
-                        pOutAccessor->produceData(pNextTuple);
+                    if (nTuplesProduced) {
                         return EXECRC_OUTPUT;
+                    } else {
+                        return EXECRC_NEED_INPUT;
                     }
-                    return EXECRC_NEED_INPUT;
                 default:
                     permAssert(false);
                 }
             }
-            if (!outputAccessor.isBufferSufficient(
-                    outputData,pBufferEnd - pNextTuple))
-            {
-                assert(pNextTuple > pBuffer);
-                pOutAccessor->produceData(pNextTuple);
+            
+            if (pOutAccessor->produceTuple(outputData)) {
+                ++nTuplesProduced;
+            } else {
+                if (nTuplesProduced) {
+                    return EXECRC_OUTPUT;
+                } else {
+                    return EXECRC_NEED_OUTPUTBUF;
+                }
+            }
+            
+            pRightBufAccessor->consumeUnmarshalledTuple();
+            
+            if (nTuplesProduced >= quantum.nTuplesMax) {
                 return EXECRC_OUTPUT;
             }
-            outputAccessor.marshal(outputData,pNextTuple);
-            pNextTuple += outputAccessor.getCurrentByteCount();
-            pRightBufAccessor->consumeData(
-                pRightBufAccessor->getConsumptionStart()
-                + rightAccessor.getCurrentByteCount());
-            rightAccessor.resetCurrentTupleBuf();
         }
     }
 }

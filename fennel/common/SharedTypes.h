@@ -133,6 +133,9 @@ typedef boost::shared_ptr<ExecutionStreamFactory> SharedExecutionStreamFactory;
 class ExecStream;
 typedef boost::shared_ptr<ExecStream> SharedExecStream;
 
+class ExecStreamEmbryo;
+typedef boost::shared_ptr<ExecStreamEmbryo> SharedExecStreamEmbryo;
+
 class ExecStreamBufAccessor;
 typedef boost::shared_ptr<ExecStreamBufAccessor> SharedExecStreamBufAccessor;
 

@@ -39,15 +39,47 @@ protected:
     SharedExecStreamGraph pGraph;
 
     /**
-     * Defines and prepares a graph consisting of two streams.
+     * Defines and prepares a graph consisting of two streams without
+     * any intermediate buffering.
      *
-     * @param pStream1 source stream
+     * @param pSourceStream source stream which produces tuples
      *
-     * @param pStream2 output stream
+     * @param pOutputStream output stream which processes tuples produced
+     * by pSourceStream
      */
     void prepareGraphTwoStreams(
-        SharedExecStream pStream1,
-        SharedExecStream pStream2);
+        SharedExecStream pSourceStream,
+        SharedExecStream pOutputStream);
+
+    /**
+     * Defines and prepares a graph consisting of one source stream
+     * and one transform stream, introducing the required buffer streams.
+     *
+     * @param sourceStreamEmbryo embryonic source stream which produces tuples
+     *
+     * @param transformStreamEmbryo embryonic transform stream which processes
+     * tuples produced by pSourceStream
+     *
+     * @return output buffer stream
+     */
+    SharedExecStream prepareGraphTwoBufferedStreams(
+        ExecStreamEmbryo &sourceStreamEmbryo,
+        ExecStreamEmbryo &transformStreamEmbryo);
+
+    /**
+     * Executes the prepared stream graph and verifies that its output
+     * is an expected-size run of constant bytes.
+     *
+     * @param stream output stream from which to read
+     *
+     * @param nBytesExpected number of bytes which stream should produce
+     *
+     * @param byteExpected constant value expected for each byte
+     */
+    void verifyConstantOutput(
+        ExecStream &stream,
+        uint nBytesExpected,
+        uint byteExpected);
     
 public:
     // override TestBase

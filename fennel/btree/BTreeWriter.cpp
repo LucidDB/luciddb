@@ -64,6 +64,9 @@ uint BTreeWriter::insertTupleFromBuffer(
 {
     BTreeNodeAccessor &nodeAccessor = *pLeafNodeAccessor;
     nodeAccessor.tupleAccessor.setCurrentTupleBuf(pTupleBuffer);
+
+    validateTupleSize(nodeAccessor.tupleAccessor);
+    
     uint cbTuple = nodeAccessor.tupleAccessor.getCurrentByteCount();
 
     nodeAccessor.unmarshalKey(searchKeyData);
@@ -119,7 +122,6 @@ bool BTreeWriter::attemptInsertWithoutSplit(
 {
     BTreeNode *pNode = &(targetPageLock.getNodeForWrite());
     BTreeNodeAccessor &nodeAccessor = getNodeAccessor(*pNode);
-    // TODO:  assertion on maximum tuple size (like half of page or whatever)
     switch(nodeAccessor.calculateCapacity(*pNode,cbTuple)) {
     case BTreeNodeAccessor::CAN_FIT:
         break;

@@ -12,6 +12,7 @@ CalcAssemblerTest \
 CalcInstFactoryTest \
 CalcCastTest \
 CalcMiscTest \
+CalcExecStreamTest \
 CalcExtRegExpTest \
 CalcExtStringTest \
 CalcExtContextTest \
@@ -32,6 +33,8 @@ CalcInstFactoryTest_SOURCES=CalcInstFactoryTest.cpp
 CalcCastTest_SOURCES=CalcCastTest.cpp
 
 CalcMiscTest_SOURCES=CalcMiscTest.cpp
+
+CalcExecStreamTest_SOURCES=CalcExecStreamTest.cpp
 
 CalcExtRegExpTest_SOURCES=CalcExtRegExpTest.cpp
 

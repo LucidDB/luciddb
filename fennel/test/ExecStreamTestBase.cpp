@@ -22,22 +22,75 @@
 #include "fennel/test/ExecStreamTestBase.h"
 #include "fennel/exec/ExecStreamGraphImpl.h"
 #include "fennel/exec/ExecStream.h"
+#include "fennel/exec/ScratchBufferStream.h"
+#include "fennel/exec/ExecStreamEmbryo.h"
+#include "fennel/exec/ExecStreamBufAccessor.h"
 #include "fennel/exec/DfsTreeExecStreamScheduler.h"
+
+#include <boost/test/test_tools.hpp>
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 void ExecStreamTestBase::prepareGraphTwoStreams(
-    SharedExecStream pStream1,
-    SharedExecStream pStream2)
+    SharedExecStream pSourceStream,
+    SharedExecStream pOutputStream)
 {
-    pGraph->addStream(pStream1);
-    pGraph->addStream(pStream2);
+    pGraph->addStream(pSourceStream);
+    pGraph->addStream(pOutputStream);
     pGraph->addDataflow(
-        pStream1->getStreamId(),
-        pStream2->getStreamId());
+        pSourceStream->getStreamId(),
+        pOutputStream->getStreamId());
     pGraph->addOutputDataflow(
-        pStream2->getStreamId());
+        pOutputStream->getStreamId());
     pGraph->prepare(*pScheduler);
+}
+
+SharedExecStream ExecStreamTestBase::prepareGraphTwoBufferedStreams(
+    ExecStreamEmbryo &sourceStreamEmbryo,
+    ExecStreamEmbryo &transformStreamEmbryo)
+{
+    SharedExecStream pSourceStream = sourceStreamEmbryo.getStream();
+    SharedExecStream pTransformStream = transformStreamEmbryo.getStream();
+    
+    ScratchBufferStream *pBufStreamImpl1 = new ScratchBufferStream();
+    SharedExecStream pBufStream1(pBufStreamImpl1);
+    pBufStream1->setName("ScratchBufferStream1");
+
+    ScratchBufferStream *pBufStreamImpl2 = new ScratchBufferStream();
+    SharedExecStream pBufStream2(pBufStreamImpl2);
+    pBufStream2->setName("ScratchBufferStream2");
+    
+    ExecStreamParams paramsScratch;
+    paramsScratch.scratchAccessor =
+        pSegmentFactory->newScratchSegment(pCache,2);
+    paramsScratch.enforceQuotas = false;
+    
+    pGraph->addStream(pSourceStream);
+    pGraph->addStream(pBufStream1);
+    pGraph->addStream(pTransformStream);
+    pGraph->addStream(pBufStream2);
+
+    pGraph->addDataflow(
+        pSourceStream->getStreamId(),
+        pBufStream1->getStreamId());
+    pGraph->addDataflow(
+        pBufStream1->getStreamId(),
+        pTransformStream->getStreamId());
+    pGraph->addDataflow(
+        pTransformStream->getStreamId(),
+        pBufStream2->getStreamId());
+    pGraph->addOutputDataflow(
+        pBufStream2->getStreamId());
+    pGraph->prepare(*pScheduler);
+
+    sourceStreamEmbryo.prepareStream();
+    pBufStreamImpl1->prepare(paramsScratch);
+    transformStreamEmbryo.prepareStream();
+    pBufStreamImpl2->prepare(paramsScratch);
+    
+    pGraph->setScratchSegment(paramsScratch.scratchAccessor.pSegment);
+
+    return pBufStream2;
 }
 
 void ExecStreamTestBase::testCaseSetUp()
@@ -56,6 +109,35 @@ void ExecStreamTestBase::testCaseTearDown()
     pGraph.reset();
     pScheduler.reset();
     SegStorageTestBase::testCaseTearDown();
+}
+
+void ExecStreamTestBase::verifyConstantOutput(
+    ExecStream &stream,
+    uint nBytesExpected,
+    uint byteExpected)
+{
+    pGraph->open();
+    pScheduler->start();
+    uint nBytesTotal = 0;
+    for (;;) {
+        ExecStreamBufAccessor &bufAccessor =
+            pScheduler->readStream(stream);
+        if (bufAccessor.getState() == EXECBUF_EOS) {
+            break;
+        }
+        BOOST_CHECK_EQUAL(EXECBUF_NEED_CONSUMPTION,bufAccessor.getState());
+        uint nBytes = bufAccessor.getConsumptionAvailable();
+        nBytesTotal += nBytes;
+        for (uint i = 0; i < nBytes; ++i) {
+            uint c = bufAccessor.getConsumptionStart()[i];
+            if (c != byteExpected) {
+                BOOST_CHECK_EQUAL(byteExpected,c);
+                break;
+            }
+        }
+        bufAccessor.consumeData(bufAccessor.getConsumptionEnd());
+    }
+    BOOST_CHECK_EQUAL(nBytesExpected,nBytesTotal);
 }
 
 FENNEL_END_CPPFILE("$Id$");

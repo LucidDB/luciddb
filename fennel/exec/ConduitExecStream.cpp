@@ -59,6 +59,7 @@ void ConduitExecStream::open(bool restart)
     ExecStream::open(restart);
     if (restart) {
         // restart input
+        pInAccessor->clear();
         pGraph->getStreamInput(getStreamId(),0)->open(true);
     }
 }

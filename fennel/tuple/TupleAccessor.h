@@ -131,7 +131,7 @@ public:
 
     /**
      * Precomputes access for a particular tuple format.  Must be called
-     * before any other method, and may only be called once.
+     * before any other method.
      *
      * @param tuple the tuple to be accessed
      *

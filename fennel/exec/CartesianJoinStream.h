@@ -50,17 +50,14 @@ struct CartesianJoinStreamParams : public ExecStreamParams
  */
 class CartesianJoinStream : public ConfluenceExecStream
 {
-    TupleAccessor leftAccessor;
-    TupleAccessor rightAccessor;
-    TupleAccessor outputAccessor;
     TupleData outputData;
     SharedExecStreamBufAccessor pLeftBufAccessor;
     SharedExecStreamBufAccessor pRightBufAccessor;
+    uint nLeftAttributes;
 
 public:
     // implement ExecStream
     virtual void prepare(CartesianJoinStreamParams const &params);
-    virtual void open(bool restart);
     virtual ExecStreamResult execute(ExecStreamQuantum const &quantum);
 };
 

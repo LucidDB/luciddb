@@ -5,7 +5,7 @@
  * This class was generated
  * by class mondrian.resource.ResourceGen
  * from /home/jvs/open/fennel/common/FennelResource.xml
- * on Wed Oct 27 23:01:55 PDT 2004.
+ * on Thu Nov 04 19:35:39 PST 2004.
  * It contains a list of messages, and methods to
  * retrieve and format those messages.
  **/
@@ -54,11 +54,15 @@ class FennelResource : ResourceBundle
 	/** <code>executionAborted</code> is 'Execution aborted'	 */
     std::string executionAborted() const;
 
+	/** <code>rowTooLong</code> is 'Row size ({0,number,#} bytes) exceeds maximum ({1,number,#} bytes); row data:  {2}'	 */
+    std::string rowTooLong(int p0, int p1, const std::string &p2) const;
+
     private:
     ResourceDefinition _sysCallFailed;
     ResourceDefinition _duplicateKeyDetected;
     ResourceDefinition _internalError;
     ResourceDefinition _executionAborted;
+    ResourceDefinition _rowTooLong;
 
     template<class _GRB, class _BC, class _BC_ITER>
         friend _GRB *makeInstance(_BC &bundleCache, const Locale &locale);

@@ -7,6 +7,7 @@ StandardTypeDescriptor.cpp \
 TupleAccessor.cpp \
 TupleData.cpp \
 TupleDescriptor.cpp \
+TupleOverflowExcn.cpp \
 TuplePrinter.cpp \
 TupleProjectionAccessor.cpp \
 TupleDataWithBuffer.cpp

@@ -29,11 +29,13 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 void MockProducerStream::prepare(MockProducerStreamParams const &params)
 {
     SourceExecStream::prepare(params);
-    assert(params.outputTupleDesc.size() == 1);
-    assert(!params.outputTupleDesc[0].isNullable);
-    assert(StandardTypeDescriptor::isIntegralNative(
-               StandardTypeDescriptorOrdinal(
-                   params.outputTupleDesc[0].pTypeDescriptor->getOrdinal())));
+    for (uint i = 0; i < params.outputTupleDesc.size(); i++) {
+        assert(!params.outputTupleDesc[i].isNullable);
+        StandardTypeDescriptorOrdinal ordinal =
+            StandardTypeDescriptorOrdinal(
+                params.outputTupleDesc[i].pTypeDescriptor->getOrdinal());
+        assert(StandardTypeDescriptor::isIntegralNative(ordinal));
+    }
     nRowsMax = params.nRows;
     TupleAccessor tupleAccessor;
     tupleAccessor.compute(params.outputTupleDesc);
@@ -47,6 +49,10 @@ void MockProducerStream::open(bool restart)
     nRowsProduced = 0;
 }
 
+// NOTE: MockProducerStream's implementation is kept lean and mean
+// intentionally so that it can be used to drive other streams with minimal
+// overhead during profiling
+
 ExecStreamResult MockProducerStream::execute(ExecStreamQuantum const &)
 {
     uint cbBatch = 0;
@@ -58,6 +64,7 @@ ExecStreamResult MockProducerStream::execute(ExecStreamQuantum const &)
         ++nRowsProduced;
     }
     memset(pBuffer,0,cbBatch);
+    // TODO:  pOutAccessor->validateTupleSize(?);
     if (cbBatch) {
         pOutAccessor->produceData(pBuffer + cbBatch);
         return EXECRC_OUTPUT;

@@ -24,6 +24,8 @@
 #include "fennel/exec/ExecStreamDefs.h"
 #include "fennel/tuple/TupleDescriptor.h"
 #include "fennel/tuple/TupleFormat.h"
+#include "fennel/tuple/TupleAccessor.h"
+#include "fennel/tuple/TupleOverflowExcn.h"
 
 #include <boost/utility.hpp>
 
@@ -53,6 +55,12 @@ class ExecStreamBufAccessor : public boost::noncopyable
     TupleDescriptor tupleDesc;
     
     TupleFormat tupleFormat;
+
+    TupleAccessor tupleProductionAccessor;
+
+    TupleAccessor tupleConsumptionAccessor;
+
+    uint cbBuffer;
     
 public:
     inline explicit ExecStreamBufAccessor();
@@ -232,6 +240,46 @@ public:
      * @return TupleFormat
      */
     inline TupleFormat getTupleFormat();
+
+    /**
+     * Validates the size of a tuple, throwing a TupleOverflowExcn
+     * if it is bigger than the maximum buffer size.
+     *
+     * @param tupleData tuple to be produced
+     */
+    inline void validateTupleSize(TupleData const &tupleData);
+
+    /**
+     * Attempts to marshal a tuple into the production buffer, 
+     * placing the first byte at getProductionStart().
+     *
+     * @return true if tuple was successfully marshalled
+     * (in which case produceData is called as a side-effect);
+     * false if tuple could not fit into remaining buffer
+     */
+    inline bool produceTuple(TupleData const &tupleData);
+
+    /**
+     * Unmarshals a tuple from getConsumptionStart() but does
+     * not consume it.  Once this is called,  it may not be called
+     * again until consumeUnmarshalledTuple has been called.
+     *
+     * @param tupleData receives unmarshalled data
+     *
+     * @param iFirstDatum see TupleAccessor::unmarshal
+     */
+    inline void unmarshalTuple(TupleData &tupleData, uint iFirstDatum = 0);
+
+    /**
+     * Consumes last tuple unmarshalled via unmarshalTuple().
+     */
+    inline void consumeUnmarshalledTuple();
+
+    /**
+     * @return whether unmarshalTuple has been called without a
+     * corresponding call to consumeUnmarshalledTuple
+     */
+    inline bool isTupleUnmarshalled() const;
 };
 
 inline ExecStreamBufAccessor::ExecStreamBufAccessor()
@@ -240,6 +288,7 @@ inline ExecStreamBufAccessor::ExecStreamBufAccessor()
     provision = BUFPROV_NONE;
     state = EXECBUF_EOS;
     tupleFormat = TUPLE_FORMAT_STANDARD;
+    cbBuffer = 0;
 }
 
 inline void ExecStreamBufAccessor::setProvision(
@@ -253,9 +302,10 @@ inline void ExecStreamBufAccessor::setTupleShape(
     TupleDescriptor const &tupleDescInit,
     TupleFormat tupleFormatInit)
 {
-    assert(tupleDesc.empty());
     tupleDesc = tupleDescInit;
     tupleFormat = tupleFormatInit;
+    tupleProductionAccessor.compute(tupleDesc, tupleFormat);
+    tupleConsumptionAccessor.compute(tupleDesc, tupleFormat);
 }
 
 inline void ExecStreamBufAccessor::clear()
@@ -264,7 +314,10 @@ inline void ExecStreamBufAccessor::clear()
     pBufEnd = NULL;
     pProducer = NULL;
     pConsumer = NULL;
+    cbBuffer = 0;
     state = EXECBUF_IDLE;
+    tupleProductionAccessor.resetCurrentTupleBuf();
+    tupleConsumptionAccessor.resetCurrentTupleBuf();
 }
 
 inline void ExecStreamBufAccessor::provideBufferForProduction(
@@ -278,6 +331,7 @@ inline void ExecStreamBufAccessor::provideBufferForProduction(
     pBufEnd = pEnd;
     pProducer = pStart;
     pConsumer = pStart;
+    cbBuffer = pEnd - pStart;
     state = EXECBUF_NEED_PRODUCTION;
 
     if (!reusable) {
@@ -314,11 +368,8 @@ inline void ExecStreamBufAccessor::markEOS()
 {
     assert(state != EXECBUF_NEED_CONSUMPTION);
     assert(pProducer == pConsumer);
+    clear();
     state = EXECBUF_EOS;
-    pBufStart = NULL;
-    pBufEnd = NULL;
-    pProducer = NULL;
-    pConsumer = NULL;
 }
 
 inline PConstBuffer ExecStreamBufAccessor::getConsumptionStart()
@@ -388,6 +439,61 @@ inline void ExecStreamBufAccessor::consumeData(PConstBuffer pEnd)
     pConsumer = const_cast<PBuffer>(pEnd);
     if (pConsumer == getConsumptionEnd()) {
         state = EXECBUF_IDLE;
+    }
+}
+
+inline void ExecStreamBufAccessor::validateTupleSize(
+    TupleData const &tupleData)
+{
+    if (!tupleProductionAccessor.isBufferSufficient(tupleData,  cbBuffer)) {
+        uint cbTuple = tupleProductionAccessor.getByteCount(tupleData);
+        throw TupleOverflowExcn(tupleDesc, tupleData, cbTuple, cbBuffer);
+    }
+}
+
+inline bool ExecStreamBufAccessor::produceTuple(TupleData const &tupleData)
+{
+    assert(state != EXECBUF_EOS);
+
+    if (tupleProductionAccessor.isBufferSufficient(
+            tupleData, getProductionAvailable()))
+    {
+        tupleProductionAccessor.marshal(tupleData, getProductionStart());
+        produceData(
+            getProductionStart()
+            + tupleProductionAccessor.getCurrentByteCount());
+        return true;
+    } else {
+        validateTupleSize(tupleData);
+        return false;
+    }
+}
+
+inline void ExecStreamBufAccessor::unmarshalTuple(
+    TupleData &tupleData, uint iFirstDatum)
+{
+    assert(state == EXECBUF_NEED_CONSUMPTION);
+    assert(!tupleConsumptionAccessor.getCurrentTupleBuf());
+    
+    tupleConsumptionAccessor.setCurrentTupleBuf(getConsumptionStart());
+    tupleConsumptionAccessor.unmarshal(tupleData, iFirstDatum);
+}
+
+inline void ExecStreamBufAccessor::consumeUnmarshalledTuple()
+{
+    assert(tupleConsumptionAccessor.getCurrentTupleBuf());
+    
+    consumeData(
+        getConsumptionStart() + tupleConsumptionAccessor.getCurrentByteCount());
+    tupleConsumptionAccessor.resetCurrentTupleBuf();
+}
+
+inline bool ExecStreamBufAccessor::isTupleUnmarshalled() const
+{
+    if (tupleConsumptionAccessor.getCurrentTupleBuf()) {
+        return true;
+    } else {
+        return false;
     }
 }
 
