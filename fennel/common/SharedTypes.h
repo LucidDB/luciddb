@@ -127,6 +127,27 @@ typedef boost::shared_ptr<ExecutionStreamParams> SharedExecutionStreamParams;
 class ExecutionStreamGraph;
 typedef boost::shared_ptr<ExecutionStreamGraph> SharedExecutionStreamGraph;
 
+class ExecutionStreamFactory;
+typedef boost::shared_ptr<ExecutionStreamFactory> SharedExecutionStreamFactory;
+
+class ExecStream;
+typedef boost::shared_ptr<ExecStream> SharedExecStream;
+
+class ExecStreamBufAccessor;
+typedef boost::shared_ptr<ExecStreamBufAccessor> SharedExecStreamBufAccessor;
+
+class ExecStreamScheduler;
+typedef boost::shared_ptr<ExecStreamScheduler> SharedExecStreamScheduler;
+
+class ExecStreamParams;
+typedef boost::shared_ptr<ExecStreamParams> SharedExecStreamParams;
+
+class ExecStreamGraph;
+typedef boost::shared_ptr<ExecStreamGraph> SharedExecStreamGraph;
+
+class ExecStreamFactory;
+typedef boost::shared_ptr<ExecStreamFactory> SharedExecStreamFactory;
+
 class TupleStream;
 typedef boost::shared_ptr<TupleStream> SharedTupleStream;
 
@@ -138,9 +159,6 @@ typedef boost::shared_ptr<TableWriter> SharedTableWriter;
 
 class TableWriterFactory;
 typedef boost::shared_ptr<TableWriterFactory> SharedTableWriterFactory;
-
-class ExecutionStreamFactory;
-typedef boost::shared_ptr<ExecutionStreamFactory> SharedExecutionStreamFactory;
 
 class Calculator;
 typedef boost::shared_ptr<Calculator> SharedCalculator;

@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/farrago/regressionsql/literalTests/date.sql#4 $ 
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/literalTests/date.sql#1 $ 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test date literal
 0: jdbc:farrago:> 
@@ -373,7 +373,7 @@ Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '2003-13-10' a
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- negative test
 0: jdbc:farrago:> insert into t_date values('string value',null);
-Error: Storage manager internal error:  bad lexical cast: source type value could not be interpreted as target (state=,code=0)
+Error: Internal error:  bad lexical cast: source type value could not be interpreted as target (state=,code=0)
 0: jdbc:farrago:> insert into t_date values(true,null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'BOOLEAN' to 'DATE' (state=,code=0)
 0: jdbc:farrago:> insert into t_date values(1234,null);

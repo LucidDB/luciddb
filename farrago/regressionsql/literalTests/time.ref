@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/farrago/regressionsql/literalTests/time.sql#5 $ 
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/literalTests/time.sql#1 $ 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test time literal
 0: jdbc:farrago:>  select TIME '12:01:01' as T1 from values('TRUE');
@@ -74,7 +74,7 @@ Error: net.sf.farrago.parser.ParseException: Illegal TIME literal '23.54.43.1,00
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- negative test
 0: jdbc:farrago:> insert into t_time values('string value',null);
-Error: Storage manager internal error:  bad lexical cast: source type value could not be interpreted as target (state=,code=0)
+Error: Internal error:  bad lexical cast: source type value could not be interpreted as target (state=,code=0)
 0: jdbc:farrago:> insert into t_time values(true,null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'BOOLEAN' to 'TIME(0)' (state=,code=0)
 0: jdbc:farrago:> insert into t_time values(1234,null);

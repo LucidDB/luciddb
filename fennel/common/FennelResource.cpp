@@ -4,15 +4,15 @@
 /**
  * This class was generated
  * by class mondrian.resource.ResourceGen
- * from /home/angel/dt/fennel/common/FennelResource.xml
- * on Sun Aug 01 12:43:01 PDT 2004.
+ * from /home/jvs/open/fennel/common/FennelResource.xml
+ * on Wed Oct 27 23:01:55 PDT 2004.
  * It contains a list of messages, and methods to
  * retrieve and format those messages.
  **/
 
-// begin common include specified by /home/angel/dt/fennel/common/FennelResource.xml
+// begin common include specified by /home/jvs/open/fennel/common/FennelResource.xml
 #include "CommonPreamble.h"
-// end common include specified by /home/angel/dt/fennel/common/FennelResource.xml
+// end common include specified by /home/jvs/open/fennel/common/FennelResource.xml
 #include "FennelResource.h"
 #include "ResourceBundle.h"
 #include "Locale.h"
@@ -48,7 +48,8 @@ FennelResource::FennelResource(Locale locale)
     : ResourceBundle(BASENAME, locale, bundleLocation),
       _sysCallFailed(this, "sysCallFailed"),
       _duplicateKeyDetected(this, "duplicateKeyDetected"),
-      _internalError(this, "internalError")
+      _internalError(this, "internalError"),
+      _executionAborted(this, "executionAborted")
 { }
 
 string FennelResource::sysCallFailed(const std::string &p0) const
@@ -62,6 +63,10 @@ string FennelResource::duplicateKeyDetected(const std::string &p0) const
 string FennelResource::internalError(const std::string &p0) const
 {
     return _internalError.format(p0);
+}
+string FennelResource::executionAborted() const
+{
+    return _executionAborted.format();
 }
 
 } // end namespace fennel

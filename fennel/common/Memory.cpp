@@ -22,9 +22,19 @@
 
 #include <ctype.h>
 #include <algorithm>
+
 #include <boost/io/ios_state.hpp>
+#include <boost/format.hpp>
 
 FENNEL_BEGIN_CPPFILE("$Id$");
+
+std::logic_error constructAssertion(
+    char const *pFilename,int lineNum,char const *condExpr)
+{
+    boost::format fmt("Assertion `%1%' failed at line %2% in file %3%");
+    return std::logic_error(
+        (fmt % condExpr % lineNum % pFilename).str());
+}
 
 void hexDump(std::ostream &o,void const *v,uint cb,uint cbDone)
 {

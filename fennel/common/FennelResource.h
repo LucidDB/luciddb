@@ -4,8 +4,8 @@
 /**
  * This class was generated
  * by class mondrian.resource.ResourceGen
- * from /home/angel/dt/fennel/common/FennelResource.xml
- * on Sun Aug 01 12:43:01 PDT 2004.
+ * from /home/jvs/open/fennel/common/FennelResource.xml
+ * on Wed Oct 27 23:01:55 PDT 2004.
  * It contains a list of messages, and methods to
  * retrieve and format those messages.
  **/
@@ -20,8 +20,8 @@
 #include "ResourceDefinition.h"
 #include "ResourceBundle.h"
 
-// begin includes specified by /home/angel/dt/fennel/common/FennelResource.xml
-// end includes specified by /home/angel/dt/fennel/common/FennelResource.xml
+// begin includes specified by /home/jvs/open/fennel/common/FennelResource.xml
+// end includes specified by /home/jvs/open/fennel/common/FennelResource.xml
 
 namespace fennel {
 
@@ -48,13 +48,17 @@ class FennelResource : ResourceBundle
 	/** <code>duplicateKeyDetected</code> is 'Duplicate key detected:  {0}'	 */
     std::string duplicateKeyDetected(const std::string &p0) const;
 
-	/** <code>internalError</code> is 'Storage manager internal error:  {0}'	 */
+	/** <code>internalError</code> is 'Internal error:  {0}'	 */
     std::string internalError(const std::string &p0) const;
+
+	/** <code>executionAborted</code> is 'Execution aborted'	 */
+    std::string executionAborted() const;
 
     private:
     ResourceDefinition _sysCallFailed;
     ResourceDefinition _duplicateKeyDetected;
     ResourceDefinition _internalError;
+    ResourceDefinition _executionAborted;
 
     template<class _GRB, class _BC, class _BC_ITER>
         friend _GRB *makeInstance(_BC &bundleCache, const Locale &locale);

@@ -240,8 +240,9 @@ AC_SUBST(DIST_DIR)
 AC_CONFIG_FILES([fennelenv.sh build/defineVariables.sh \
 Makefile common/Makefile synch/Makefile \
 device/Makefile cache/Makefile segment/Makefile \
-txn/Makefile tuple/Makefile btree/Makefile \
-db/Makefile xo/Makefile libfennel/Makefile test/Makefile farrago/Makefile \
+txn/Makefile tuple/Makefile exec/Makefile btree/Makefile \
+db/Makefile xo/Makefile \
+libfennel/Makefile test/Makefile farrago/Makefile \
 disruptivetech/Makefile \
 disruptivetech/calc/Makefile \
 disruptivetech/xo/Makefile \

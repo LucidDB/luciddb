@@ -237,6 +237,20 @@ inline Numeric sqr(Numeric n)
     return n*n;
 }
 
+extern std::logic_error constructAssertion(
+    char const *pFilename,int lineNum,char const *condExpr);
+
+// Use permAssert to create an assertion which should be compiled even in
+// non-debug builds.  This is only appropriate for performance-insensitive
+// code.
+#define permAssert(cond) \
+do { \
+    if (!(cond)) { \
+        throw constructAssertion(__FILE__,__LINE__,#cond); \
+    } \
+} while (0)
+
+
 FENNEL_END_NAMESPACE
 
 #endif

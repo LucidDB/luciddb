@@ -24,6 +24,7 @@ ResourceTest \
 LocalConditionTest \
 TupleTest \
 StandardTypeTest \
+SchedulerTest \
 DatabaseTest \
 LogicalTxnTest \
 SegStreamTest \
@@ -41,6 +42,8 @@ TESTS = $(noinst_PROGRAMS)
 ResourceTest_SOURCES=ResourceTest.cpp
 
 LocalConditionTest_SOURCES=LocalConditionTest.cpp
+
+SchedulerTest_SOURCES=SchedulerTest.cpp
 
 RandomAccessFileDeviceTest_SOURCES=RandomAccessFileDeviceTest.cpp
 
@@ -83,6 +86,7 @@ LDADD = -L$(top_builddir)/test -l$(TEST_LIB) \
 	-lfennel_btree \
 	-lfennel_tuple \
 	-lfennel_txn \
+	-lfennel_exec \
 	-lfennel_segment \
 	-lfennel_cache \
 	-lfennel_device \
