@@ -608,15 +608,6 @@ require version '${required.ant.version}'."/>
     </copy>
   </target>
 
-  <!-- NOTE:  doesn't work yet -->
-  <target name="importCatalog" depends="mdr_taskdef">
-    <mdr>
-      <readXMI
-        file="${farrago.xmi.dir}/FarragoCatalogInit.xml"
-        extent="FarragoCatalog"/>
-    </mdr>
-  </target>
-
   <!-- delete the catalog and everything generated for it -->
   <target name="cleanCatalog" depends="clean,cleanCatalogData">
     <delete file="${FarragoExtMetamodel.xmi}"/>

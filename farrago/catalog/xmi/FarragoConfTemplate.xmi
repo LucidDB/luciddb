@@ -20,7 +20,7 @@
       javaCompilerClassName='org.eigenbase.javac.JaninoCompiler'
       externalReposProps=''
       >
-      <FEMConfig:FarragoConfig.fennelConfig>
+      <FEMConfig:FarragoConfig.FennelConfig>
         <FEMConfig:FennelConfig
           databaseInitSize='1000'
           databaseIncrementSize='1'
@@ -33,7 +33,7 @@
           cachePageSize='4096'
           resourceDir='@resourceDir@'
           />
-      </FEMConfig:FarragoConfig.fennelConfig>
+      </FEMConfig:FarragoConfig.FennelConfig>
     </FEMConfig:FarragoConfig>
   </XMI.content>
 </XMI>

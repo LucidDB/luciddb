@@ -71,6 +71,12 @@ public class FarragoModelLoader
         String extentName,
         boolean userRepos)
     {
+        initStorage(userRepos);
+        return (FarragoPackage) mdrRepos.getExtent(extentName);
+    }
+
+    public void initStorage(boolean userRepos)
+    {
         if (userRepos) {
             setUserReposProperties();
         } else {
@@ -83,7 +89,6 @@ public class FarragoModelLoader
         }
         mdrRepos =
             MdrUtil.loadRepository(storageFactoryClassName, storageProps);
-        return (FarragoPackage) mdrRepos.getExtent(extentName);
     }
 
     public File getSystemReposFile()

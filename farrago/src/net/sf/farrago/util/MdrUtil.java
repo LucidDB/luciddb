@@ -30,6 +30,8 @@ import org.openide.ErrorManager;
 import org.openide.util.Lookup;
 import org.openide.util.lookup.*;
 
+import javax.jmi.reflect.*;
+
 // NOTE:  This class gets compiled independently of everything else since
 // it is used by build-time utilities such as ProxyGen.  That means it must
 // have no dependencies on other Farrago code.
@@ -224,9 +226,27 @@ public abstract class MdrUtil
             String message, String localizedMessage,
             Throwable stackTrace, java.util.Date date)
         {
+            Level level = convertSeverity(severity);
+            if (!tracer.isLoggable(level)) {
+                return t;
+            }
             tracer.throwing(
-                "MdrUtil.TracingErrorManager", "annotate", stackTrace);
-            tracer.log(convertSeverity(severity), message);
+                "MdrUtil.TracingErrorManager", "annotate", t);
+            tracer.log(level, message, t);
+            if (t instanceof JmiException) {
+                JmiException ex = (JmiException) t;
+                tracer.log(
+                    level, "JmiException.ELEMENT:  " + ex.getElementInError());
+                tracer.log(
+                    level, "JmiException.OBJECT:  " + ex.getObjectInError());
+            }
+            if (t instanceof TypeMismatchException) {
+                TypeMismatchException ex = (TypeMismatchException) t;
+                tracer.log(
+                    level,
+                    "TypeMismatchException.EXPECTED:  "
+                    + ex.getExpectedType());
+            }
             return t;
         }
         
@@ -235,7 +255,7 @@ public abstract class MdrUtil
         {
             tracer.throwing("MdrUtil.TracingErrorManager", "notify", t);
         }
-        
+
         // implement ErrorManager
         public void log(int severity, String s)
         {
