@@ -919,7 +919,7 @@ SqlNode HavingOpt() :
 SqlNodeList WindowOpt() :
 {
     SqlIdentifier id;
-    SqlNode e;
+    SqlWindow e;
     List list;
     ParserPosition pos;
 }
@@ -927,14 +927,18 @@ SqlNodeList WindowOpt() :
     <WINDOW> id = SimpleIdentifier() <AS> e = WindowSpecification()
         {
             pos = getPos();
+            e.setDeclName(id);
             list = startList(e);
         }
     (
         // NOTE jhyde 22-Oct-2004:  See comments at top of file for why
         // hint is necessary here.
         LOOKAHEAD(2)
-        <COMMA> SimpleIdentifier() <AS> e = WindowSpecification()
-        { list.add(e); }
+        <COMMA> id = SimpleIdentifier() <AS> e = WindowSpecification()
+        {
+            e.setDeclName(id);
+            list.add(e);
+        }
     )*
     { return new SqlNodeList(list, pos); }
 |
@@ -944,7 +948,7 @@ SqlNodeList WindowOpt() :
 /**
  * Parses a window specification.
  */
-SqlNode WindowSpecification() :
+SqlWindow WindowSpecification() :
 {
     SqlIdentifier id;
     List list;
@@ -988,7 +992,7 @@ SqlNode WindowSpecification() :
     <RPAREN> {
         pos = getPos();
         return opTab.windowOperator.createCall(
-                id, partitionList, orderList,
+                null, id, partitionList, orderList,
                 isRows, lowerBound, upperBound, pos);
     }
 }
@@ -1482,15 +1486,15 @@ SqlLiteral NumericLiteral(ParserPosition pos) :
 }
 {
     <UNSIGNED_INTEGER_LITERAL> {
-        return SqlLiteral.Numeric.createExact(token.image, pos);
+        return SqlLiteral.createExactNumeric(token.image, pos);
     }
 |
     <DECIMAL_NUMERIC_LITERAL> {
-        return SqlLiteral.Numeric.createExact(token.image, pos);
+        return SqlLiteral.createExactNumeric(token.image, pos);
     }
 |
     <APPROX_NUMERIC_LITERAL> {
-        return SqlLiteral.Numeric.createApprox(token.image, pos);
+        return SqlLiteral.createApproxNumeric(token.image, pos);
     }
 }
 
@@ -1565,7 +1569,7 @@ SqlNode StringLiteral(ParserPosition pos, boolean strict) :
 |
     <BINARY_STRING_LITERAL> {
         p = ParserUtil.trim(token.image, "xX'");
-        frags = startList(SqlLiteral.BinaryStringLiteral.create(p, pos));
+        frags = startList(SqlLiteral.createBinaryString(p, pos));
         nfrags++;
     }
     (
@@ -1573,7 +1577,7 @@ SqlNode StringLiteral(ParserPosition pos, boolean strict) :
        {
            try {
                p = ParserUtil.trim(token.image, "'"); // no embedded quotes
-               frags.add(SqlLiteral.BinaryStringLiteral.create(p, getPos()));
+               frags.add(SqlLiteral.createBinaryString(p, getPos()));
                nfrags++;
            } catch (NumberFormatException ex) {
                 throw new ParseException(
@@ -1601,21 +1605,21 @@ SqlNode StringLiteral(ParserPosition pos, boolean strict) :
     )
         {
             p = ParserUtil.parseString(token.image);
-            frags = startList(SqlLiteral.CharString.create(p, charSet, pos));
+            frags = startList(SqlLiteral.createCharString(p, charSet, pos));
             nfrags++;
         }
     (
         <QUOTED_STRING>
         {
             p = ParserUtil.parseString(token.image);
-            frags.add(SqlLiteral.CharString.create(p, charSet, getPos()));
+            frags.add(SqlLiteral.createCharString(p, charSet, getPos()));
             nfrags++;
         }
     )*
     [ collation = CollateClause()
         {
             // set the collation of the head fragment: validator will propagate it
-            ((SqlLiteral.CharString) frags.get(0)).setCollation(collation);
+            ((SqlCharStringLiteral) frags.get(0)).setCollation(collation);
         }
     ]
         {
@@ -2244,7 +2248,7 @@ SqlBinaryOperator BinaryRowOperator() :
 | <IS> <DISTINCT> <FROM> { return opTab.isDistinctFromOperator; }
 // <IN> is handled as a special case
 | <MEMBER> <OF> { return opTab.memberOfOperator; }
-| <SUBMULTISET> <OF> { return opTab.subMultisetOfOperator; }
+| <SUBMULTISET> <OF> { return opTab.submultisetOfOperator; }
 | { SqlBinaryOperator op;} op = BinaryMultisetOperator() { return op; }
 }
 

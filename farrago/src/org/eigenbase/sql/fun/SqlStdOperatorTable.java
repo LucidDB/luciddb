@@ -127,7 +127,8 @@ public class SqlStdOperatorTable extends SqlOperatorTable
     private static abstract class SqlAbstractUserFunction extends SqlFunction {
         public SqlAbstractUserFunction(String name) {
             super(name, SqlKind.Function, ReturnTypeInference.useVarchar30,
-                null, OperandsTypeChecking.typeEmpty, SqlFunction.SqlFuncTypeName.System);
+                null, OperandsTypeChecking.typeEmpty,
+                SqlFunction.SqlFuncTypeName.System);
         }
 
         public OperandsCountDescriptor getOperandsCountDescriptor()
@@ -212,6 +213,10 @@ public class SqlStdOperatorTable extends SqlOperatorTable
     //-------------------------------------------------------------
     //                   BINARY OPERATORS
     //-------------------------------------------------------------
+
+    /**
+     * Logical <code>AND</code> operator.
+     */
     public final SqlBinaryOperator andOperator =
         new SqlBinaryOperator("AND", SqlKind.And, 14, true,
             ReturnTypeInference.useNullableBoolean,
@@ -223,6 +228,10 @@ public class SqlStdOperatorTable extends SqlOperatorTable
             }
         };
 
+    /**
+     * <code>AS</code> operator associates an expression in the SELECT
+     * clause with an alias.
+     */
     public final SqlBinaryOperator asOperator =
         new SqlBinaryOperator("AS", SqlKind.As, 10, true,
             ReturnTypeInference.useFirstArgType,
@@ -249,10 +258,17 @@ public class SqlStdOperatorTable extends SqlOperatorTable
             }
         };
 
+    /**
+     * The <code>OVER</code> operator, which applies an aggregate functions to
+     * a {@link SqlWindow window}.
+     */
     public final SqlBinaryOperator overOperator =
         new SqlBinaryOperator("OVER", SqlKind.Over, 10, true,
             ReturnTypeInference.useFirstArgType, null, null);
 
+    /**
+     * String concatenation operator, '<code>||</code>'.
+     */
     public final SqlBinaryOperator concatOperator =
         new SqlBinaryOperator("||", SqlKind.Other, 30, true,
             ReturnTypeInference.useNullableVaryingDyadicStringSumPrecision, null,
@@ -263,6 +279,9 @@ public class SqlStdOperatorTable extends SqlOperatorTable
             }
         };
 
+    /**
+     * Arithmetic division operator, '<code>/</code>'.
+     */
     public final SqlBinaryOperator divideOperator =
         new SqlBinaryOperator("/", SqlKind.Divide, 30, true,
             ReturnTypeInference.useNullableBiggest, UnknownParamInference.useFirstKnown, OperandsTypeChecking.typeNumericNumeric) {
@@ -272,10 +291,16 @@ public class SqlStdOperatorTable extends SqlOperatorTable
             }
         };
 
+    /**
+     * Dot operator, '<code>.</code>', used for referencing fields of records.
+     */
     public final SqlBinaryOperator dotOperator =
         new SqlBinaryOperator(".", SqlKind.Dot, 40, true, null, null,
             OperandsTypeChecking.typeAnyAny);
 
+    /**
+     * Logical equals operator, '<code>=</code>'.
+     */
     public final SqlBinaryOperator equalsOperator =
         new SqlBinaryOperator("=", SqlKind.Equals, 15, true,
             ReturnTypeInference.useNullableBoolean, UnknownParamInference.useFirstKnown,
@@ -286,6 +311,9 @@ public class SqlStdOperatorTable extends SqlOperatorTable
             }
         };
 
+    /**
+     * Logical greater-than operator, '<code>&gt;</code>'.
+     */
     public final SqlBinaryOperator greaterThanOperator =
         new SqlBinaryOperator(">", SqlKind.GreaterThan, 15, true,
             ReturnTypeInference.useNullableBoolean, UnknownParamInference.useFirstKnown,
@@ -296,6 +324,9 @@ public class SqlStdOperatorTable extends SqlOperatorTable
             }
         };
 
+    /**
+     * <code>IS DISTINCT FROM</code> operator.
+     */
     public final SqlBinaryOperator isDistinctFromOperator =
         new SqlBinaryOperator("IS DISTINCT FROM", SqlKind.Other, 15, true,
             ReturnTypeInference.useNullableBoolean, UnknownParamInference.useFirstKnown, OperandsTypeChecking.typeAnyAny) {
@@ -305,6 +336,9 @@ public class SqlStdOperatorTable extends SqlOperatorTable
             }
         };
 
+    /**
+     * Logical greater-than-or-equal operator, '<code>&gt;=</code>'.
+     */
     public final SqlBinaryOperator greaterThanOrEqualOperator =
         new SqlBinaryOperator(">=", SqlKind.GreaterThanOrEqual, 15, true,
             ReturnTypeInference.useNullableBoolean, UnknownParamInference.useFirstKnown,
@@ -315,6 +349,10 @@ public class SqlStdOperatorTable extends SqlOperatorTable
             }
         };
 
+    /**
+     * <code>IN</code> operator tests for a value's membership in a subquery
+     * or a list of values.
+     */
     public final SqlBinaryOperator inOperator =
         new SqlBinaryOperator("IN", SqlKind.In, 15, true, ReturnTypeInference.useNullableBoolean,
             UnknownParamInference.useFirstKnown, null) {
@@ -324,6 +362,9 @@ public class SqlStdOperatorTable extends SqlOperatorTable
             }
         };
 
+    /**
+     * <code>OVERLAPS</code> operator tests whether two time intervals overlap.
+     */
     public final SqlBinaryOperator overlapsOperator =
         new SqlBinaryOperator("OVERLAPS", SqlKind.Overlaps, 15, true,
             ReturnTypeInference.useNullableBoolean, UnknownParamInference.useFirstKnown,
@@ -334,6 +375,9 @@ public class SqlStdOperatorTable extends SqlOperatorTable
             }
         };
 
+    /**
+     * Logical less-than operator, '<code>&lt;</code>'.
+     */
     public final SqlBinaryOperator lessThanOperator =
         new SqlBinaryOperator("<", SqlKind.LessThan, 15, true,
             ReturnTypeInference.useNullableBoolean, UnknownParamInference.useFirstKnown,
@@ -344,6 +388,9 @@ public class SqlStdOperatorTable extends SqlOperatorTable
             }
         };
 
+    /**
+     * Logical less-than-or-equal operator, '<code>&lt;=</code>'.
+     */
     public final SqlBinaryOperator lessThanOrEqualOperator =
         new SqlBinaryOperator("<=", SqlKind.LessThanOrEqual, 15, true,
             ReturnTypeInference.useNullableBoolean, UnknownParamInference.useFirstKnown,
@@ -354,6 +401,9 @@ public class SqlStdOperatorTable extends SqlOperatorTable
             }
         };
 
+    /**
+     * Arithmetic minus operator, '<code>-</code>'.
+     */
     public final SqlBinaryOperator minusOperator =
         new SqlBinaryOperator("-", SqlKind.Minus, 20, true,
             ReturnTypeInference.useNullableBiggest,
@@ -365,6 +415,9 @@ public class SqlStdOperatorTable extends SqlOperatorTable
             }
         };
 
+    /**
+     * Arithmetic multiplication operator, '<code>*</code>'.
+     */
     public final SqlBinaryOperator multiplyOperator =
         new SqlBinaryOperator("*", SqlKind.Times, 30, true,
             ReturnTypeInference.useNullableBiggest, UnknownParamInference.useFirstKnown, OperandsTypeChecking.typeNullableNumericNumeric) {
@@ -374,6 +427,9 @@ public class SqlStdOperatorTable extends SqlOperatorTable
             }
         };
 
+    /**
+     * Logical not-equals operator, '<code>&lt;&gt;</code>'.
+     */
     public final SqlBinaryOperator notEqualsOperator =
         new SqlBinaryOperator("<>", SqlKind.NotEquals, 15, true,
             ReturnTypeInference.useNullableBoolean, UnknownParamInference.useFirstKnown,
@@ -384,6 +440,9 @@ public class SqlStdOperatorTable extends SqlOperatorTable
             }
         };
 
+    /**
+     * Logical <code>OR</code> operator.
+     */
     public final SqlBinaryOperator orOperator =
         new SqlBinaryOperator("OR", SqlKind.Or, 13, true,
             ReturnTypeInference.useNullableBoolean,
@@ -448,7 +507,7 @@ public class SqlStdOperatorTable extends SqlOperatorTable
 
             };
 
-    public final SqlBinaryOperator subMultisetOfOperator =
+    public final SqlBinaryOperator submultisetOfOperator =
             //TODO check if precedence is correct
             new SqlBinaryOperator("SUBMULTISET OF", SqlKind.Other, 15, true,
                 ReturnTypeInference.useNullableBoolean,
@@ -611,6 +670,15 @@ public class SqlStdOperatorTable extends SqlOperatorTable
         };
 
 
+    // ------------------------------------------------------------------------
+    // AGGREGATE OPERATORS
+    //
+    /**
+     * <code>SUM</code> aggregate function.
+     */
+    public final SqlFunction sumOperator = new SqlFunction("SUM",
+        SqlKind.Function, ReturnTypeInference.useFirstArgType, null,
+        OperandsTypeChecking.typeNumeric, SqlFunction.SqlFuncTypeName.Numeric);
 
     //-------------------------------------------------------------
     //                   SPECIAL OPERATORS

@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Iterator;
 
 import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.util.SqlVisitor;
 
 
 /**
@@ -118,6 +119,30 @@ public class SqlNodeList extends SqlNode
             final SqlNode child = (SqlNode) iter.next();
             child.validate(validator, scope);
         }
+    }
+
+    public void accept(SqlVisitor visitor)
+    {
+        visitor.visit(this);
+    }
+
+    public boolean equalsDeep(SqlNode node)
+    {
+        if (!(node instanceof SqlNodeList)) {
+            return false;
+        }
+        SqlNodeList that = (SqlNodeList) node;
+        if (this.size() != that.size()) {
+            return false;
+        }
+        for (int i = 0; i < list.size(); i++) {
+            SqlNode thisChild = (SqlNode) list.get(i);
+            final SqlNode thatChild = that.get(i);
+            if (!thisChild.equalsDeep(thatChild)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public SqlNode [] toArray()

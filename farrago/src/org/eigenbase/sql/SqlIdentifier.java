@@ -22,6 +22,7 @@
 package org.eigenbase.sql;
 
 import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.util.SqlVisitor;
 import org.eigenbase.util.Util;
 
 
@@ -155,6 +156,28 @@ public class SqlIdentifier extends SqlNode
         Util.discard(fqId); // todo: store fqId in a map for future reference
     }
 
+    public boolean equalsDeep(SqlNode node)
+    {
+        if (!(node instanceof SqlIdentifier)) {
+            return false;
+        }
+        SqlIdentifier that = (SqlIdentifier) node;
+        if (this.names.length != that.names.length) {
+            return false;
+        }
+        for (int i = 0; i < names.length; i++) {
+            if (!this.names[i].equals(that.names[i])) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public void accept(SqlVisitor visitor)
+    {
+        visitor.visit(this);
+    }
+    
     public SqlCollation getCollation()
     {
         return collation;

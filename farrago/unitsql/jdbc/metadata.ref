@@ -201,7 +201,7 @@ getMaxStatements                                  0
 getMaxTableNameLength                             128
 getMaxTablesInSelect                              0
 getMaxUserNameLength                              128
-getNumericFunctions                               POSITION,CHAR_LENGTH,CHARACTER_LENGTH,POW,MOD,LN,LOG,ABS
+getNumericFunctions                               SUM,POSITION,CHAR_LENGTH,CHARACTER_LENGTH,POW,MOD,LN,LOG,ABS
 getProcedureTerm                                  
 getSchemaTerm                                     schema
 getSearchStringEscape                             \

@@ -39,7 +39,7 @@ import org.eigenbase.util.NlsString;
  * type, collected as the operands of an {@link SqlCall} using this operator.
  * After validation, the fragments will be concatenated into a single literal.
  *
- * <p>For a chain of {@link SqlLiteral.CharString} objects, a
+ * <p>For a chain of {@link org.eigenbase.sql.SqlCharStringLiteral} objects, a
  * {@link SqlCollation} object is attached only to the head of the chain.
  *
  * @author Marc Berkowitz
@@ -151,9 +151,9 @@ public class SqlLiteralChainOperator extends SqlInternalOperator {
                 writer.print(" ");
             }
             SqlLiteral rand = (SqlLiteral) rands[i];
-            if (rand instanceof SqlLiteral.CharString) {
+            if (rand instanceof SqlCharStringLiteral) {
                 NlsString nls =
-                    ((SqlLiteral.CharString) rand).getNlsString();
+                    ((SqlCharStringLiteral) rand).getNlsString();
                 if (i == 0) {
                     collation = nls.getCollation();
                     writer.print(nls.asSql(true, false)); // print with prefix

@@ -27,6 +27,7 @@ import org.eigenbase.reltype.RelDataTypeFactoryImpl;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.sql.util.SqlVisitor;
 import org.eigenbase.util.Util;
 
 import java.nio.charset.Charset;
@@ -171,6 +172,23 @@ public class SqlDataType extends SqlNode
             scale,
             charSetName,
             getParserPosition());
+    }
+
+    public void accept(SqlVisitor visitor)
+    {
+        visitor.visit(this);
+    }
+
+    public boolean equalsDeep(SqlNode node)
+    {
+        if (node instanceof SqlDataType) {
+            SqlDataType that = (SqlDataType) node;
+            return this.typeName.equalsDeep(that.typeName) &&
+                this.precision == that.precision &&
+                this.scale == that.scale &&
+                Util.equal(this.charSetName, that.charSetName);
+        }
+        return false;
     }
 
     /**

@@ -42,6 +42,13 @@ import java.nio.charset.Charset;
  **/
 public class SqlValidatorTest extends SqlValidatorTestCase
 {
+    /**
+     * @deprecated Deprecated so that usages of this constant will show up in
+     * yellow in Intellij and maybe someone will fix them.
+     */
+    private static final boolean todo = false;
+    private static final boolean bug269fixed = false;
+
     //~ Methods ---------------------------------------------------------------
 
     public void testMultipleSameAsPass() {
@@ -108,8 +115,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         assertExceptionIsThrown("select true OR 1.0e4 from values(true)",
             "(?s).*");
 
-        if (false) {
-            //        todo
+        if (todo) {
             assertExceptionIsThrown("select TRUE OR (TIME '12:00' AT LOCAL) from values(true)",
                 "some error msg with line + col");
         }
@@ -561,8 +567,8 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExp("trim(trailing 'mustache' FROM 'beard')");
         checkExpType("trim('mustache' FROM 'beard')", "VARCHAR(5)");
 
-        if (false) {
-            final SqlCollation.Coercibility expectedCoercibility = null; // todo
+        if (todo) {
+            final SqlCollation.Coercibility expectedCoercibility = null;
             checkCollation("trim('mustache' FROM 'beard')", "VARCHAR(5)", expectedCoercibility);
         }
 
@@ -590,8 +596,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExpType("overlay('ABCdef' placing 'abc' from 1 for 3)",
             "VARCHAR(9)");
 
-        if (false) {
-            //todo
+        if (todo) {
             checkCollation("overlay('ABCdef' placing 'abc' collate latin1$sv from 1 for 3)",
                 "ISO-8859-1$sv", SqlCollation.Coercibility.Explicit);
         }
@@ -838,7 +843,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         check("values (1,'1'),(2,'2')");
         checkFails("values ('1'),(2)",
             "Values passed to VALUES operator must have compatible types", 1, 1);
-        if (false) {
+        if (todo) {
             checkType("values (1),(2.0),(3)", "ROWTYPE(DOUBLE)");
         }
     }
@@ -863,8 +868,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
 
         checkExpFails("multiset[1, '2'] multiset union multiset[1]", "Parameters must be of the same type", 1, 23);
         checkExp("multiset[ROW(1,2)] multiset intersect multiset[row(3,4)]");
-        if (false) {
-            //TODO
+        if (todo) {
             checkExpFails("multiset[ROW(1,'2')] multiset union multiset[ROW(1,2)]", "Parameters must be of the same type", 1, 23);
         }
     }
@@ -1042,7 +1046,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         // fail: lateral reference
         checkFails("select * from " + emps + " as e," + NL +
             " (select 1, e.deptno from values (true)) as d",
-            "Table 'E' not found", 2, 13);
+            "Unknown identifier 'E'", 2, 13);
     }
 
     public void testNestedFrom() {
@@ -1097,7 +1101,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         // fail: lateral reference
         checkFails("select * from emp as e," + NL +
             " (select 1, e.deptno from values (true)) as d",
-            "Table 'E' not found", 2, 13);
+            "Unknown identifier 'E'", 2, 13);
     }
 
     // todo: implement IN
@@ -1340,6 +1344,137 @@ public class SqlValidatorTest extends SqlValidatorTestCase
 
         // Sort by aggregate. Oracle allows this.
         check("select 1 from emp order by sum(sal)");
+    }
+
+    public void testGroup() {
+        checkFails("select empno from emp where sum(sal) > 50",
+            "Aggregate expression is illegal in WHERE clause", 1, 29);
+
+        checkFails("select empno from emp group by deptno",
+            "Expression 'EMPNO' is not being grouped", 1, 8);
+
+        checkFails("select * from emp group by deptno",
+            "Expression '\\*' is not being grouped", 1, 8);
+
+        // This query tries to reference an agg expression from within a
+        // subquery as a correlating expression, but the SQL syntax rules say
+        // that the agg function SUM always applies to the current scope.
+        // As it happens, the query is valid.
+        check("select deptno " + NL +
+            "from emp " + NL +
+            "group by deptno " + NL +
+            "having exists (select sum(emp.sal) > 10 from values (true))");
+
+        // if you reference a column from a subquery, it must be a group col
+        check("select deptno " +
+            "from emp " +
+            "group by deptno " +
+            "having exists (select 1 from values (true) where emp.deptno = 10)");
+        if (todo) {
+            checkFails("select deptno " +
+                "from emp " +
+                "group by deptno " +
+                "having exists (select 1 from values (true) where emp.empno = 10)",
+                "xx", 1, 1);
+        }
+        // constant expressions
+        check("select cast(1 as integer) + 2 from emp group by deptno");
+        check("select localtime, deptno + 3 from emp group by deptno");
+    }
+
+    public void testGroupExpressionEquivalence() {
+        // operator equivalence
+        check("select empno + 1 from emp group by empno + 1");
+        checkFails("select 1 + empno from emp group by empno + 1",
+            "Expression 'EMPNO' is not being grouped", 1, 12);
+        // datatype equivalence
+        check("select cast(empno as VARCHAR(10)) from emp group by cast(empno as VARCHAR(10))");
+        checkFails("select cast(empno as VARCHAR(11)) from emp group by cast(empno as VARCHAR(10))",
+            "Expression 'EMPNO' is not being grouped", 1, 13);
+    }
+
+    public void testGroupExpressionEquivalenceId() {
+        // identifier equivalence
+        check("select case empno when 10 then deptno else null end from emp " +
+            "group by case empno when 10 then deptno else null end");
+        // matches even when one column is qualified (checked on Oracle10.1)
+        if (todo)
+            check("select case empno when 10 then deptno else null end from emp " +
+                "group by case empno when 10 then emp.deptno else null end");
+        // note that expression appears unchanged in error msg
+        checkFails("select case emp.empno when 10 then deptno else null end from emp " +
+            "group by case emp.empno when 10 then emp.deptno else null end",
+            "Expression 'EMP.EMPNO' is not being grouped", 1, 13);
+        checkFails("select case empno when 10 then deptno else null end from emp " +
+            "group by case emp.empno when 10 then emp.deptno else null end",
+            "Expression 'EMPNO' is not being grouped", 1, 13);
+
+    }
+
+    // todo: enable when correlating variables work
+    public void _testGroupExpressionEquivalenceCorrelated() {
+        // dname comes from dept, so it is constant within the subquery, and
+        // is so is a valid expr in a group-by query
+        check("select * from dept where exists (" +
+            "select dname from emp group by empno)");
+        check("select * from dept where exists (" +
+            "select dname + empno + 1 from emp group by empno, dept.deptno)");
+    }
+
+    // todo: enable when params are implemented
+    public void _testGroupExpressionEquivalenceParams() {
+        check("select cast(? as integer) from emp group by cast(? as integer)");
+    }
+
+    public void testGroupExpressionEquivalenceLiteral() {
+        // The purpose of this test is to see whether the validator
+        // regards a pair of constants as equivalent. If we just used the raw
+        // constants the validator wouldn't care ('SELECT 1 FROM emp GROUP BY
+        // 2' is legal), so we combine a column and a constant into the same
+        // CASE expression.
+
+        // literal equivalence
+        check("select case empno when 10 then date '1969-04-29' else null end from emp " +
+            "group by case empno when 10 then date '1969-04-29' else null end");
+        // this query succeeds in oracle 10.1 because 1 and 1.0 have the same type
+        checkFails("select case empno when 10 then 1 else null end from emp " +
+            "group by case empno when 10 then 1.0 else null end",
+            "Expression 'EMPNO' is not being grouped", 1, 13);
+        // 3.1415 and 3.14150 are different literals (I don't care either way)
+        checkFails("select case empno when 10 then 3.1415 else null end from emp " +
+            "group by case empno when 10 then 3.14150 else null end",
+            "Expression 'EMPNO' is not being grouped", 1, 13);
+        // 3 and 03 are the same literal (I don't care either way)
+        check("select case empno when 10 then 03 else null end from emp " +
+            "group by case empno when 10 then 3 else null end");
+        checkFails("select case empno when 10 then 1 else null end from emp " +
+            "group by case empno when 10 then 2 else null end",
+            "Expression 'EMPNO' is not being grouped", 1, 13);
+        check("select case empno when 10 then timestamp '1969-04-29 12:34:56.0' else null end from emp " +
+            "group by case empno when 10 then timestamp '1969-04-29 12:34:56' else null end");
+        if (bug269fixed) {
+            check("select case empno when 10 then 'foo bar' else null end from emp " +
+                "group by case empno when 10 then 'foo bar' else null end");
+        }
+        check("select case empno when 10 then _iso-8859-1'foo bar' collate latin1$en$1 else null end from emp " +
+            "group by case empno when 10 then _iso-8859-1'foo bar' collate latin1$en$1 else null end");
+        checkFails("select case empno when 10 then _iso-8859-1'foo bar' else null end from emp " +
+            "group by case empno when 10 then _iso-8859-2'foo bar' else null end",
+            "Expression 'EMPNO' is not being grouped", 1, 13);
+        checkFails("select case empno when 10 then 'foo bar' collate latin1$en$1 else null end from emp " +
+            "group by case empno when 10 then 'foo bar' collate latin1$fr$1 else null end",
+            "Expression 'EMPNO' is not being grouped", 1, 13);
+    }
+
+    public void testCorrelatingVariables() {
+        if (todo) {
+            // reference to unqualified correlating column
+            check("select * from emp where exists (" + NL +
+                "select * from dept where deptno = sal)");
+        }
+        // reference to qualified correlating column
+        check("select * from emp where exists (" + NL +
+            "select * from dept where deptno = emp.sal)");
     }
 
     public void testNew() {

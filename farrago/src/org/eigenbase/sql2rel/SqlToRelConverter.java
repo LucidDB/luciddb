@@ -664,20 +664,21 @@ public class SqlToRelConverter
     }
 
     /**
-     * converts a LitChain expression: that is, concatenates the operands immediately,
-     * to produce a single literal string.
+     * Converts a LitChain expression: that is, concatenates the operands
+     * immediately, to produce a single literal string.
      */
     private RexNode convertLitChain(
         Blackboard bb,
         SqlCall call)
     {
         // REVIEW mb: this code really belongs inside the LitChain operator
-        assert (call.operands.length > 0);
-        assert (call.operands[0] instanceof SqlLiteral.StringLiteral);
-        SqlLiteral.StringLiteral [] fragments =
-            (SqlLiteral.StringLiteral []) Arrays.asList(call.operands).toArray(
-                new SqlLiteral.StringLiteral[0]);
-        SqlLiteral sum = SqlLiteral.StringLiteral.concat(fragments);
+        assert call.operands.length > 0;
+        assert call.operands[0] instanceof SqlLiteral :
+            call.operands[0].getClass();
+        SqlLiteral [] fragments =
+            (SqlLiteral []) Arrays.asList(call.operands).toArray(
+                new SqlLiteral[call.operands.length]);
+        SqlLiteral sum = SqlUtil.concatenateLiterals(fragments);
         return convertNonNullLiteral(sum);
     }
 

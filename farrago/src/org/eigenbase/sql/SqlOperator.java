@@ -329,6 +329,33 @@ public abstract class SqlOperator
     {
         assert call.operator == this;
         final SqlNode[] operands = call.getOperands();
+        if (scope instanceof SqlValidator.AggregatingScope) {
+            SqlValidator.AggregatingScope aggScope =
+                (SqlValidator.AggregatingScope) scope;
+            if (isAggregator()) {
+                // If we're the 'SUM' node in 'select a + sum(b + c) from t
+                // group by a', then we should validate our arguments in
+                // the non-aggregating scope, where 'b' and 'c' are valid
+                // column references.
+                scope = aggScope.getScopeAboveAggregation();
+            } else {
+                // Check whether expression is constant within the group.
+                //
+                // If not, throws. Example, 'empno' in
+                //    SELECT empno FROM emp GROUP BY deptno
+                //
+                // If it perfectly matches an expression in the GROUP BY
+                // clause, we validate its arguments in the non-aggregating
+                // scope. Example, 'empno + 1' in
+                //
+                //   SELET empno + 1 FROM emp GROUP BY empno + 1
+
+                final boolean matches = aggScope.checkAggregateExpr(call);
+                if (matches) {
+                    scope = aggScope.getScopeAboveAggregation();
+                }
+            }
+        }
         for (int i = 0; i < operands.length; i++) {
             operands[i].validateExpr(validator, scope);
         }
@@ -554,6 +581,11 @@ public abstract class SqlOperator
     public UnknownParamInference getParamTypeInference()
     {
         return paramTypeInference;
+    }
+
+    public boolean isAggregator()
+    {
+        return name.equals("SUM") || name.equals("COUNT");
     }
 
     //~ Inner Classes ---------------------------------------------------------

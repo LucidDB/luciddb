@@ -26,6 +26,7 @@ import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.sql.parser.ParserUtil;
 import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.sql.util.SqlVisitor;
 import org.eigenbase.util.BitString;
 import org.eigenbase.util.EnumeratedValues;
 import org.eigenbase.util.NlsString;
@@ -291,6 +292,20 @@ public class SqlLiteral extends SqlNode
         validator.validateLiteral(this);
     }
 
+    public void accept(SqlVisitor visitor)
+    {
+        visitor.visit(this);
+    }
+
+    public boolean equalsDeep(SqlNode node)
+    {
+        if (node instanceof SqlLiteral) {
+            SqlLiteral that = (SqlLiteral) node;
+            return this.equals(that);
+        }
+        return false;
+    }
+
     /**
      * Creates a NULL literal.
      */
@@ -354,8 +369,11 @@ public class SqlLiteral extends SqlNode
 
     public boolean equals(Object obj)
     {
-        return (obj instanceof SqlLiteral)
-            && equals(((SqlLiteral) obj).value, value);
+        if (!(obj instanceof SqlLiteral)) {
+            return false;
+        }
+        SqlLiteral that = (SqlLiteral) obj;
+        return Util.equal(value, that.value);
     }
 
     public int hashCode()
@@ -412,13 +430,6 @@ public class SqlLiteral extends SqlNode
         default:
             writer.print(value.toString());
         }
-    }
-
-    private static boolean equals(
-        Object o1,
-        Object o2)
-    {
-        return (o1 == null) ? (o2 == null) : o1.equals(o2);
     }
 
     public RelDataType createSqlType(RelDataTypeFactory typeFactory)
@@ -528,257 +539,100 @@ public class SqlLiteral extends SqlNode
             typeName, pos);
     }
 
+    public static SqlNumericLiteral createExactNumeric(
+        String s,
+        ParserPosition pos)
+    {
+        BigDecimal value;
+        int prec;
+        int scale;
+
+        int i = s.indexOf('.');
+        if ((i >= 0) && ((s.length() - 1) != i)) {
+            value = ParserUtil.parseDecimal(s);
+            scale = s.length() - i - 1;
+            assert scale == value.scale() : s;
+            prec = s.length() - 1;
+        } else if ((i >= 0) && ((s.length() - 1) == i)) {
+            value = ParserUtil.parseInteger(s.substring(0, i));
+            scale = 0;
+            prec = s.length() - 1;
+        } else {
+            value = ParserUtil.parseInteger(s);
+            scale = 0;
+            prec = s.length();
+        }
+        return new SqlNumericLiteral(
+            value,
+            new Integer(prec),
+            new Integer(scale),
+            true,
+            pos);
+    }
+
+    public static SqlNumericLiteral createApproxNumeric(
+        String s,
+        ParserPosition pos)
+    {
+        BigDecimal value = ParserUtil.parseDecimal(s);
+        return new SqlNumericLiteral(value, null, null, false, pos);
+    }
+
+    /**
+     * Creates a literal like X'ABAB'. Although it matters when we derive a
+     * type for this beastie, we don't care at this point whether the number of
+     * hexits is odd or even.
+     */
+    public static SqlBinaryStringLiteral createBinaryString(
+        String s,
+        ParserPosition pos)
+    {
+        BitString bits = BitString.createFromHexString(s);
+        return new SqlBinaryStringLiteral(bits, pos);
+    }
+
+    /**
+     * Creates a string literal in the system character set.
+     * @param s a string (without the sql single quotes)
+     */
+    public static SqlCharStringLiteral createCharString(
+        String s,
+        ParserPosition pos)
+    {
+        return createCharString(s, null, pos);
+    }
+
+    /**
+     * Creates a string literal, with optional character-set.
+     * @param s a string (without the sql single quotes)
+     * @param charSet character set name, null means take system default
+     * @return A string literal
+     */
+    public static SqlCharStringLiteral createCharString(
+        String s,
+        String charSet,
+        ParserPosition pos)
+    {
+        NlsString slit = new NlsString(s, charSet, null);
+        return new SqlCharStringLiteral(slit, pos);
+    }
+
     //~ Inner Classes ---------------------------------------------------------
 
     // NOTE jvs 26-Jan-2004:  There's no singleton constant for a NULL literal.
     // Instead, nulls must be instantiated via createNull(), because
     // different instances have different context-dependent types.
 
-    public static class Numeric extends SqlLiteral
-    {
-        private Integer prec;
-        private Integer scale;
-        private boolean isExact;
-
-        protected Numeric(
-            BigDecimal value,
-            Integer prec,
-            Integer scale,
-            boolean isExact,
-            ParserPosition pos)
-        {
-            super(value, isExact ? SqlTypeName.Decimal : SqlTypeName.Double,
-                pos);
-            this.prec = prec;
-            this.scale = scale;
-            this.isExact = isExact;
-        }
-
-        public Integer getPrec()
-        {
-            return prec;
-        }
-
-        public Integer getScale()
-        {
-            return scale;
-        }
-
-        public static Numeric createExact(
-            String s,
-            ParserPosition pos)
-        {
-            BigDecimal value;
-            int prec;
-            int scale;
-
-            int i = s.indexOf('.');
-            if ((i >= 0) && ((s.length() - 1) != i)) {
-                value = ParserUtil.parseDecimal(s);
-                scale = s.length() - i - 1;
-                assert scale == value.scale() : s;
-                prec = s.length() - 1;
-            } else if ((i >= 0) && ((s.length() - 1) == i)) {
-                value = ParserUtil.parseInteger(s.substring(0, i));
-                scale = 0;
-                prec = s.length() - 1;
-            } else {
-                value = ParserUtil.parseInteger(s);
-                scale = 0;
-                prec = s.length();
-            }
-            return new Numeric(
-                value,
-                new Integer(prec),
-                new Integer(scale),
-                true,
-                pos);
-        }
-
-        public static Numeric createApprox(
-            String s,
-            ParserPosition pos)
-        {
-            BigDecimal value = ParserUtil.parseDecimal(s);
-            return new Numeric(value, null, null, false, pos);
-        }
-
-        public boolean isExact()
-        {
-            return isExact;
-        }
-
-        public void unparse(
-            SqlWriter writer,
-            int leftPrec,
-            int rightPrec)
-        {
-            writer.print(toValue());
-        }
-
-        public String toValue()
-        {
-            BigDecimal bd = (BigDecimal) value;
-            if (isExact) {
-                return value.toString();
-            }
-            return Util.toScientificNotation(bd);
-        }
-
-        public RelDataType createSqlType(RelDataTypeFactory typeFactory)
-        {
-            if (isExact) {
-                int scaleValue = scale.intValue();
-                if (0 == scaleValue) {
-                    BigDecimal bd = (BigDecimal) value;
-                    SqlTypeName result;
-                    long l = bd.longValue();
-                    if ((l >= Integer.MIN_VALUE) && (l <= Integer.MAX_VALUE)) {
-                        result = SqlTypeName.Integer;
-                    } else {
-                        result = SqlTypeName.Bigint;
-                    }
-                    return typeFactory.createSqlType(result);
-                }
-
-                //else we have a decimal
-                return typeFactory.createSqlType(
-                    SqlTypeName.Decimal,
-                    prec.intValue(),
-                    scaleValue);
-            }
-
-            // else we have a a float, real or double.  make them all double for now.
-            return typeFactory.createSqlType(SqlTypeName.Double);
-        }
-    }
-
-    /** abstract base for char, bit, and binary (hex) strings */
-    public static abstract class StringLiteral extends SqlLiteral
-    {
-        protected StringLiteral(
-            Object value,
-            SqlTypeName typeName,
-            ParserPosition pos)
-        {
-            super(value, typeName, pos);
-        }
-
-        /** Concatenate string literals. A static method, to concatenate all at once,
-         * since pairwise concatenation means too much string copying.
-         * @param lits a StringLiteral[], not empty, homogeneous to subtype.
-         * @return a new StringLiteral, of that same subtype, whose value is the
-         * string concatenation of the values of the lits.
-         * @throws ClassCastException if the lits are not homogeneous.
-         * @throws ArrayIndexOutOfBoundsException if lits is an empty array.
-         */
-        public static StringLiteral concat(StringLiteral [] lits)
-        {
-            if (lits.length == 1) {
-                return lits[0]; // nothing to do
-            }
-            return lits[0].concat1(lits);
-        }
-
-        /**
-         * Helper routine for {@link #concat}.
-         * @param lits homogeneous StringLiteral[] args.
-         * @return StringLiteral with concatenated value.
-         * this == lits[0], used only for method dispatch.
-         */
-        protected abstract StringLiteral concat1(StringLiteral [] lits);
-    }
-
-    /**
-     * A character string literal. {@link #value} is an {@link NlsString} and
-     * {@link #typeName} is {@link SqlTypeName#Char}.
-     */
-    public static class CharString extends StringLiteral
-    {
-        protected CharString(
-            NlsString val,
-            ParserPosition pos)
-        {
-            super(val, SqlTypeName.Char, pos);
-        }
-
-        /** @return the underlying NlsString */
-        public NlsString getNlsString()
-        {
-            return (NlsString) value;
-        }
-
-        /** @return the collation */
-        public SqlCollation getCollation()
-        {
-            return getNlsString().getCollation();
-        }
-
-        /** Sets the collation.
-         * (Convenient for the sql parser to do this after construction)
-         */
-        public void setCollation(SqlCollation collation)
-        {
-            getNlsString().setCollation(collation);
-        }
-
-        /**
-         * Creates a string literal in the system character set.
-         * @param s a string (without the sql single quotes)
-         */
-        public static CharString create(
-            String s,
-            ParserPosition pos)
-        {
-            return create(s, null, pos);
-        }
-
-        /**
-         * Creates a string literal, with optional character-set.
-         * @param s a string (without the sql single quotes)
-         * @param charSet character set name, null means take system default
-         * @return A string literal
-         */
-        public static CharString create(
-            String s,
-            String charSet,
-            ParserPosition pos)
-        {
-            NlsString slit = new NlsString(s, charSet, null);
-            return new CharString(slit, pos);
-        }
-
-        public void unparse(
-            SqlWriter writer,
-            int leftPrec,
-            int rightPrec)
-        {
-            if (false) {
-                String stringValue = ((NlsString) value).getValue();
-                writer.print(writer.dialect.quoteStringLiteral(stringValue));
-            }
-            assert value instanceof NlsString;
-            writer.print(value.toString());
-        }
-
-        protected StringLiteral concat1(StringLiteral [] lits)
-        {
-            NlsString [] args = new NlsString[lits.length];
-            for (int i = 0; i < lits.length; i++) {
-                args[i] = ((CharString) lits[i]).getNlsString();
-            }
-            return new CharString(
-                NlsString.concat(args),
-                lits[0].getParserPosition());
-        }
-    }
-
     /**
      * A bit string literal.
+     *
      * {@link #value} is a {@link BitString} and {@link #typeName} is
      * {@link SqlTypeName#Bit}.
+     *
+     * @deprecated Bit strings are no longer in the SQL standard, and this
+     *    class will be removed shortly
      */
-    public static class BitStringLiteral extends StringLiteral
+    public static class BitStringLiteral extends SqlAbstractStringLiteral
     {
         protected BitStringLiteral(
             BitString val,
@@ -813,68 +667,13 @@ public class SqlLiteral extends SqlNode
             writer.print("'");
         }
 
-        protected StringLiteral concat1(StringLiteral [] lits)
+        protected SqlAbstractStringLiteral concat1(SqlLiteral [] lits)
         {
             BitString [] args = new BitString[lits.length];
             for (int i = 0; i < lits.length; i++) {
                 args[i] = ((BitStringLiteral) lits[i]).getBitString();
             }
             return new BitStringLiteral(
-                BitString.concat(args),
-                lits[0].getParserPosition());
-        }
-    }
-
-    /**
-     * A binary (or hex) string literal.
-     * {@link #value} is again a {@link BitString} and
-     * {@link #typeName} is {@link SqlTypeName#Binary}.
-     */
-    public static class BinaryStringLiteral extends StringLiteral
-    {
-        protected BinaryStringLiteral(
-            BitString val,
-            ParserPosition pos)
-        {
-            super(val, SqlTypeName.Binary, pos);
-        }
-
-        /** @return the underlying BitString */
-        public BitString getBitString()
-        {
-            return (BitString) value;
-        }
-
-        /* Creates a literal like X'ABAB'. Although it matters when we derive a
-         * type for this beastie, we don't care at this point whether the number of
-         * hexits is odd or even.
-         */
-        public static BinaryStringLiteral create(
-            String s,
-            ParserPosition pos)
-        {
-            BitString bits = BitString.createFromHexString(s);
-            return new BinaryStringLiteral(bits, pos);
-        }
-
-        public void unparse(
-            SqlWriter writer,
-            int leftPrec,
-            int rightPrec)
-        {
-            assert value instanceof BitString;
-            writer.print("X'");
-            writer.print(((BitString) value).toHexString());
-            writer.print("'");
-        }
-
-        protected StringLiteral concat1(StringLiteral [] lits)
-        {
-            BitString [] args = new BitString[lits.length];
-            for (int i = 0; i < lits.length; i++) {
-                args[i] = ((BinaryStringLiteral) lits[i]).getBitString();
-            }
-            return new BinaryStringLiteral(
                 BitString.concat(args),
                 lits[0].getParserPosition());
         }

@@ -83,6 +83,30 @@ public class NlsString
 
     //~ Methods ---------------------------------------------------------------
 
+    public Object clone() 
+    {
+        return new NlsString(value, charSetName, collation);
+    }
+
+    public int hashCode()
+    {
+        int h = value.hashCode();
+        h = Util.hash(h, charSetName);
+        h = Util.hash(h, this.collation);
+        return h;
+    }
+
+    public boolean equals(Object obj)
+    {
+        if (!(obj instanceof NlsString)) {
+            return false;
+        }
+        NlsString that = (NlsString) obj;
+        return Util.equal(value, that.value) &&
+            Util.equal(charSetName, that.charSetName) &&
+            Util.equal(collation, that.collation);
+    }
+
     public String getCharsetName()
     {
         return charSetName;
@@ -153,11 +177,13 @@ public class NlsString
         charSetName = this.charset.name();
     }
 
-    /** Concatenates some NlsStrings.
+    /**
+     * Concatenates some {@link NlsString} objects.
      * The result has the charset and collation of the first element.
      * The other elements must have matching (or null) charset and collation.
      * Concatenates all at once, not pairwise, to avoid string copies.
-     * @param args an NlString{}
+     *
+     * @param args array of {@link NlsString} to be concatenated
      */
     static public NlsString concat(NlsString [] args)
     {

@@ -22,6 +22,7 @@ package org.eigenbase.sql;
 
 import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.sql.fun.SqlWindowOperator;
+import org.eigenbase.util.Util;
 
 /**
  * SQL window specifcation.
@@ -38,22 +39,58 @@ import org.eigenbase.sql.fun.SqlWindowOperator;
  */
 public class SqlWindow extends SqlCall
 {
-    public static final int RefName_OPERAND = 0;
-    public static final int PartitionList_OPERAND = 1;
-    public static final int OrderList_OPERAND = 2;
-    public static final int IsRows_OPERAND = 3;
-    public static final int LowerBound_OPERAND = 4;
-    public static final int UpperBound_OPERAND = 5;
+    /**
+     * Ordinal of the operand which holds the name of the window being
+     * declared.
+     */
+    public static final int DeclName_OPERAND = 0;
+    /**
+     * Ordinal of operand which holds the name of the window being referenced,
+     * or null.
+     */
+    public static final int RefName_OPERAND = 1;
+    /**
+     * Ordinal of the operand which holds the list of partitioning columns.
+     */
+    public static final int PartitionList_OPERAND = 2;
+    /**
+     * Ordinal of the operand which holds the list of ordering columns.
+     */
+    public static final int OrderList_OPERAND = 3;
+    /**
+     * Ordinal of the operand which declares whether it is a physical (rows)
+     * or logical (values) range.
+     */
+    public static final int IsRows_OPERAND = 4;
+    /**
+     * Ordinal of the operand which holds the lower bound of the window.
+     */
+    public static final int LowerBound_OPERAND = 5;
+    /**
+     * Ordinal of the operand which holds the upper bound of the window.
+     */
+    public static final int UpperBound_OPERAND = 6;
 
     public SqlWindow(SqlWindowOperator operator, SqlNode[] operands,
             ParserPosition pos)
     {
         super(operator,operands,pos);
+        final SqlIdentifier declId = (SqlIdentifier) operands[DeclName_OPERAND];
+        Util.pre(declId == null || declId.isSimple(), "declId.isSimple()");
     }
 
     public void unparse(SqlWriter writer, int leftPrec, int rightPrec) {
         // Override, so we don't print extra parentheses. 
         operator.unparse(writer, operands, 0, 0);
+    }
+
+    public SqlIdentifier getDeclName() {
+        return (SqlIdentifier) operands[DeclName_OPERAND];
+    }
+
+    public void setDeclName(SqlIdentifier name) {
+        Util.pre(name.isSimple(), "name.isSimple()");
+        operands[DeclName_OPERAND] = name;
     }
 
     SqlNode getLowerBound() {
@@ -79,6 +116,7 @@ public class SqlWindow extends SqlCall
     SqlIdentifier getRefName() {
         return (SqlIdentifier) operands[RefName_OPERAND];
     }
+
 
 }
 

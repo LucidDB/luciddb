@@ -214,6 +214,19 @@
     <text>Cannot specify NATURAL keyword with ON or USING clause</text>
 </exception>
 
+<exception id="120320" name="WindowNotFound" className="org.eigenbase.sql.SqlValidatorException">
+    <text>Window ''{0}'' not found</text>
+</exception>
+
+<exception id="120330" name="NotGroupExpr" className="org.eigenbase.sql.SqlValidatorException">
+    <text>Expression ''{0}'' is not being grouped</text>
+</exception>
+
+<exception id="120340" name="AggregateIllegalInWhere" className="org.eigenbase.sql.SqlValidatorException">
+    <text>Aggregate expression is illegal in WHERE clause</text>
+</exception>
+
+
 <!-- ====================================================================== -->
 <!-- Eigenbase Generic resources 130,000 - 140,000 -->
 <!-- ====================================================================== -->

@@ -30,6 +30,7 @@ import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.sql.type.ReturnTypeInference;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql.type.UnknownParamInference;
+import org.eigenbase.sql.util.SqlBasicVisitor;
 import org.eigenbase.util.EnumeratedValues;
 import org.eigenbase.util.Util;
 import org.eigenbase.trace.EigenbaseTrace;
@@ -56,6 +57,8 @@ public class SqlValidator
 
     public static final RelDataType [] emptyTypes = new RelDataType[0];
     public static final String [] emptyStrings = new String[0];
+    public static final SqlNodeList emptySqlNodeList =
+        new SqlNodeList(ParserPosition.ZERO);
 
     //~ Instance fields -------------------------------------------------------
 
@@ -67,7 +70,19 @@ public class SqlValidator
      * created from them}.
      */
     private final HashMap scopes = new HashMap();
+    /**
+     * Maps a {@link SqlSelect} node to the scope used by its WHERE and
+     * HAVING clauses.
+     */
     private final HashMap whereScopes = new HashMap();
+    /**
+     * Maps a {@link SqlSelect} node to the scope used by its SELECT and
+     * HAVING clauses.
+     */
+    private final HashMap selectScopes = new HashMap();
+    /**
+     * Maps a {@link SqlSelect} node to the scope used by its ORDER BY clause.
+     */
     private final HashMap orderScopes = new HashMap();
     /**
      * Maps a {@link SqlNode node} to the {@link Namespace} the namespace which
@@ -87,6 +102,7 @@ public class SqlValidator
      */
     private Map nodeToTypeMap = new IdentityHashMap();
     public static final Logger tracer = EigenbaseTrace.parserTracer;
+    private final AggFinder aggFinder = new AggFinder();
 
     //~ Constructors ----------------------------------------------------------
 
@@ -328,9 +344,10 @@ public class SqlValidator
             return (Scope) scopes.get(select);
         case SqlSelect.WHERE_OPERAND:
         case SqlSelect.GROUP_OPERAND:
+            return (Scope) whereScopes.get(select);
         case SqlSelect.HAVING_OPERAND:
         case SqlSelect.SELECT_OPERAND:
-            return (Scope) whereScopes.get(select);
+            return (Scope) selectScopes.get(select);
         case SqlSelect.ORDER_OPERAND:
             return (Scope) orderScopes.get(select);
         default:
@@ -1143,9 +1160,27 @@ public class SqlValidator
             registerQuery(parentScope, usingScope, node, alias);
             return newNode;
 
+        case SqlKind.OverORDINAL:
+            if (!shouldAllowOverRelation()) {
+                throw node.getKind().unexpected();
+            }
+            SqlCall call = (SqlCall) node;
+            final SqlNode operand = call.operands[0];
+            final SqlNode newOperand =
+                registerFrom(parentScope, usingScope, operand, alias);
+            if (newOperand != operand) {
+                call.setOperand(0, newOperand);
+            }
+            return call;
+
         default:
             throw node.getKind().unexpected();
         }
+    }
+
+    protected boolean shouldAllowOverRelation()
+    {
+        return false;
     }
 
     /**
@@ -1172,49 +1207,52 @@ public class SqlValidator
         switch (node.getKind().getOrdinal()) {
         case SqlKind.SelectORDINAL:
             final SqlSelect select = (SqlSelect) node;
-            final SelectScope newSelectScope =
-                new SelectScope(parentScope, select);
             final SelectNamespace selectNs = new SelectNamespace(select);
-            scopes.put(select, newSelectScope);
             registerNamespace(usingScope, alias, selectNs);
+            SelectScope selectScope = new SelectScope(parentScope, select);
+            scopes.put(select, selectScope);
             // Register the subqueries in the FROM clause first.
             final SqlNode from = select.getFrom();
-            final FromScope fromScope =
-                new FromScope(newSelectScope, from);
-            whereScopes.put(select, fromScope);
+            whereScopes.put(select, selectScope);
             registerSubqueries(
-                fromScope,
-                usingScope, select.getWhere());
+                selectScope,
+                select.getWhere());
             // Register FROM with the inherited scope 'parentScope', not
-            // 'newSelectScope', otherwise tables in the FROM clause would be
+            // 'selectScope', otherwise tables in the FROM clause would be
             // able to see each other.
             final SqlNode newFrom = registerFrom(
                 parentScope,
-                fromScope,
+                selectScope,
                 from,
                 null);
             if (newFrom != from) {
                 select.setOperand(SqlSelect.FROM_OPERAND, newFrom);
             }
-            Scope groupScope = fromScope;
+            // If this is an aggregating query, the SELECT list and HAVING
+            // clause use a different scope, where you can only reference
+            // columns which are in the GROUP BY clause.
+            Scope aggScope = selectScope;
             if (isAggregate(select)) {
-                groupScope = fromScope; // todo: GroupScope class
+                aggScope = new AggregatingSelectScope(selectScope, select);
+                selectScopes.put(select, aggScope);
+            } else {
+                selectScopes.put(select, selectScope);
             }
             registerSubqueries(
-                groupScope,
-                usingScope, select.getGroup());
+                selectScope,
+                select.getGroup());
             registerSubqueries(
-                groupScope,
-                usingScope, select.getHaving());
+                aggScope,
+                select.getHaving());
             registerSubqueries(
-                groupScope,
-                usingScope, select.getSelectList());
+                aggScope,
+                select.getSelectList());
             final SqlNodeList orderList = select.getOrderList();
             if (orderList != null) {
                 Scope orderByScope =
-                    new OrderByScope(groupScope, orderList, select);
+                    new OrderByScope(aggScope, orderList, select);
                 orderScopes.put(select, orderByScope);
-                registerSubqueries(orderByScope, usingScope, orderList);
+                registerSubqueries(orderByScope, orderList);
             }
             break;
 
@@ -1241,7 +1279,7 @@ public class SqlValidator
                 // FIXME jvs 9-Feb-2004:  Correlation should
                 // be illegal in these subqueries.  Same goes for
                 // any SELECT in the FROM list.
-                registerSubqueries(parentScope, usingScope, operands[i]);
+                registerSubqueries(parentScope, operands[i]);
             }
             break;
 
@@ -1285,29 +1323,29 @@ public class SqlValidator
      */
     private boolean isAggregate(SqlSelect select) {
         return select.getGroup() != null ||
-            select.getHaving() != null;
+            select.getHaving() != null ||
+            aggFinder.findAgg(select.getSelectList()) != null;
     }
 
     private void registerSubqueries(
         Scope parentScope,
-        Scope usingScope,
         SqlNode node)
     {
         if (node == null) {
             return;
         } else if (node.isA(SqlKind.Query)) {
-            registerQuery(parentScope, usingScope, node, null);
+            registerQuery(parentScope, null, node, null);
         } else if (node instanceof SqlCall) {
             SqlCall call = (SqlCall) node;
             final SqlNode [] operands = call.getOperands();
             for (int i = 0; i < operands.length; i++) {
                 SqlNode operand = operands[i];
-                registerSubqueries(parentScope, usingScope, operand);
+                registerSubqueries(parentScope, operand);
             }
         } else if (node instanceof SqlNodeList) {
             SqlNodeList list = (SqlNodeList) node;
             for (int i = 0, count = list.size(); i < count; i++) {
-                registerSubqueries(parentScope, usingScope, list.get(i));
+                registerSubqueries(parentScope, list.get(i));
             }
         } else {
             ; // atomic node -- can be ignored
@@ -1347,11 +1385,19 @@ public class SqlValidator
         case SqlKind.JoinORDINAL:
             validateJoin((SqlJoin) node, scope);
             return;
+        case SqlKind.OverORDINAL:
+            validateOver((SqlCall) node, scope);
+            return;
         default:
             final Namespace namespace2 = getNamespace(node);
             assert namespace2 != null : node;
             namespace2.validate();
         }
+    }
+
+    protected void validateOver(SqlCall call, Scope scope)
+    {
+        throw Util.newInternal("OVER unexpected in this context");
     }
 
     protected void validateJoin(SqlJoin join, Scope scope)
@@ -1493,6 +1539,11 @@ public class SqlValidator
             return;
         }
         // todo: validate window clause
+        // 1. ensure window names are simple
+        // 2. ensure they are unique within this scope
+        // 3. validate window specifications
+        //   3a. a window can refer to a window in an outer scope, or a
+        //       previous window in this scope
         // validateExpression(windowList);
     }
 
@@ -1535,6 +1586,11 @@ public class SqlValidator
             return;
         }
         final Scope whereScope = getScope(select, SqlSelect.WHERE_OPERAND);
+        final SqlNode agg = aggFinder.findAgg(where);
+        if (agg != null) {
+            throw newValidationError(agg,
+                EigenbaseResource.instance().newAggregateIllegalInWhere());
+        }
         where.validate(this, whereScope);
         inferUnknownTypes(
             typeFactory.createSqlType(SqlTypeName.Boolean),
@@ -1569,7 +1625,12 @@ public class SqlValidator
         final ArrayList typeList = new ArrayList();
         for (int i = 0; i < selectItems.size(); i++) {
             SqlNode selectItem = selectItems.get(i);
-            selectItem.validateExpr(this, selectScope);
+            if (selectScope instanceof SqlValidator.AggregatingScope) {
+                SqlValidator.AggregatingScope aggScope =
+                    (SqlValidator.AggregatingScope) selectScope;
+                boolean matches = aggScope.checkAggregateExpr(selectItem);
+                Util.discard(matches);
+            }
             expandSelectItem(selectItem, select, expandedSelectItems,
                 aliasList, typeList);
         }
@@ -1583,6 +1644,11 @@ public class SqlValidator
         // TODO: when SELECT appears as a value subquery, should be using
         // something other than unknownType for targetRowType
         inferUnknownTypes(targetRowType, selectScope, newSelectList);
+
+        for (int i = 0; i < selectItems.size(); i++) {
+            SqlNode selectItem = selectItems.get(i);
+            selectItem.validateExpr(this, selectScope);
+        }
 
         assert typeList.size() == aliasList.size();
         final RelDataType [] types =
@@ -1863,6 +1929,30 @@ public class SqlValidator
         }
     }
 
+    private SqlNodeList deepCopy(SqlNodeList list) {
+        SqlNodeList copy = new SqlNodeList(list.getParserPosition());
+        for (int i = 0; i < list.size(); i++) {
+            SqlNode node = list.get(i);
+            copy.add(deepCopy(node));
+        }
+        return copy;
+    }
+
+    private SqlNode deepCopy(SqlNode node) {
+        if (node instanceof SqlCall) {
+            return deepCopy((SqlCall) node);
+        } else {
+            return (SqlNode) node.clone();
+        }
+    }
+
+    private SqlCall deepCopy(SqlCall call) {
+        SqlCall copy = (SqlCall) call.clone();
+        for (int i = 0; i < copy.operands.length; i++) {
+            copy.operands[i] = deepCopy(copy.operands[i]);
+        }
+        return copy;
+    }
 
     //~ Inner Interfaces ------------------------------------------------------
 
@@ -2087,10 +2177,61 @@ public class SqlValidator
         SqlIdentifier fullyQualify(SqlIdentifier identifier);
 
         void addChild(Namespace ns, String alias);
+
+        /**
+         * Finds a window with a given name. Returns null if not found.
+         */
+        SqlWindow lookupWindow(String name);
+
     }
 
     /**
-     * Dummy implementation of {@link Scope} for the top of the scope stack.
+     * A {@link Scope} implements this interface if and only if it is
+     * aggregating. Such a scope will return the same set of identifiers as
+     * its parent scope, but some of those identifiers may not be accessible
+     * because they are not in the GROUP BY clause.
+     */
+    public interface AggregatingScope extends Scope {
+
+        /**
+         * If this scope is aggregating, return the non-aggregating parent
+         * scope. Otherwise throws.
+         */
+        Scope getScopeAboveAggregation();
+
+        /**
+         * Checks whether an expression is constant within the GROUP BY clause.
+         * If the expression completely matches an expression in the GROUP BY
+         * clause, returns true.
+         * If the expression is constant within the group, but does not exactly
+         * match, returns false.
+         * If the expression is not constant, throws an exception.
+         *
+         * Examples:<ul>
+         *
+         * <li>If we are 'f(b, c)' in 'SELECT a + f(b, c) FROM t GROUP BY
+         * a', then the whole expression matches a group column. Return true.
+         *
+         * <li>Just an ordinary expression in a GROUP BY query, such as
+         * 'f(SUM(a), 1, b)' in 'SELECT f(SUM(a), 1, b) FROM t GROUP BY
+         * b'. Returns false.
+         *
+         * <li>Illegal expression, such as 'f(5, a, b)' in 'SELECT f(a, b) FROM
+         * t GROUP BY a'. Throws when it enounters the 'b' operand, because
+         * it is not in the group clause.
+         *
+         * </ul>
+         */
+        boolean checkAggregateExpr(SqlNode expr);
+
+    }
+
+    /**
+     * Deviant implementation of {@link Scope} for the top of the scope stack.
+     *
+     * <p>It is convenient, because we never need to check whether a scope's
+     * parent is null. (This scope knows not ask about its parents, just like
+     * Adam.)
      */
     private class EmptyScope extends AbstractScope
     {
@@ -2121,12 +2262,17 @@ public class SqlValidator
             // cannot add to the empty scope
             throw new UnsupportedOperationException();
         }
+
+        public SqlWindow lookupWindow(String name) {
+            // No windows defined in this scope.
+            return null;
+        }
     }
 
     /**
      * Scope defined by a list of child namespaces.
      */
-    abstract class ListScope extends SqlValidator.DelegatingScope {
+    abstract class ListScope extends DelegatingScope {
         /** List of child {@link SqlValidator.Namespace} objects. */
         protected final ArrayList children = new ArrayList();
 
@@ -2161,11 +2307,13 @@ public class SqlValidator
         }
 
         public String findQualifyingTableName(final String columnName,
-            SqlNode ctx) {
+            SqlNode ctx)
+        {
             int count = 0;
             String tableName = null;
             for (int i = 0; i < children.size(); i++) {
-                SqlValidator.Namespace ns = (SqlValidator.Namespace) children.get(i);
+                SqlValidator.Namespace ns =
+                    (SqlValidator.Namespace) children.get(i);
                 final RelDataType rowType = ns.getRowType();
                 if (lookupField(rowType, columnName) != null) {
                     tableName = (String) childrenNames.get(i);
@@ -2174,8 +2322,7 @@ public class SqlValidator
             }
             switch (count) {
             case 0:
-                return parent.findQualifyingTableName(columnName,
-                    ctx);
+                return parent.findQualifyingTableName(columnName, ctx);
             case 1:
                 return tableName;
             default:
@@ -2210,7 +2357,8 @@ public class SqlValidator
             int found = 0;
             RelDataType theType = null;
             for (int i = 0; i < children.size(); i++) {
-                SqlValidator.Namespace childNs = (SqlValidator.Namespace) children.get(i);
+                SqlValidator.Namespace childNs = (SqlValidator.Namespace)
+                    children.get(i);
                 final RelDataType childRowType = childNs.getRowType();
                 final RelDataType type = lookupField(childRowType, columnName);
                 if (type != null) {
@@ -2303,21 +2451,31 @@ public class SqlValidator
             return SqlValidator.this;
         }
 
-        public SqlIdentifier fullyQualify(SqlIdentifier identifier) {
-            return null;
-        }
-
         public SqlNode getNode()
         {
             return select;
         }
 
+        public SqlWindow lookupWindow(String name) {
+            final SqlNodeList windowList = select.getWindowList();
+            for (int i = 0; i < windowList.size(); i++) {
+                SqlWindow window = (SqlWindow) windowList.get(i);
+                final SqlIdentifier declId = window.getDeclName();
+                assert declId.isSimple();
+                if (declId.names[0].equals(name)) {
+                    return window;
+                }
+            }
+            return super.lookupWindow(name);
+        }
     }
 
+    /**
+     * Namespace offered by a subquery.
+     */
     public class SelectNamespace extends AbstractNamespace
     {
         private final SqlSelect select;
-        private int validateCount = 0; // sanity check
 
         SelectNamespace(SqlSelect select)
         {
@@ -2330,29 +2488,49 @@ public class SqlValidator
         }
 
         public RelDataType validateImpl() {
-            assert validateCount++ == 0 : validateCount;
             validateSelect(select, unknownType);
             return rowType;
         }
-
     }
 
     /**
-     * Scope created by a FROM clause. For example, in the query
-     * <code>SELECT * FROM t1, t2 WHERE expr1</code>, expr1 is resolved in the
-     * FromScope consisting of {t1, t2}.
+     * Scope for resolving identifers within a SELECT statement which has a
+     * GROUP BY clause.
+     *
+     * <p>The same set of identifiers are in scope, but it won't allow
+     * access to identifiers or expressions which are not group-expressions.
      */
-    public class FromScope extends ListScope
+    class AggregatingSelectScope
+        extends SelectScope
+        implements AggregatingScope
     {
-        private final SqlNode from;
+        private final AggChecker aggChecker;
 
-        FromScope(Scope parent, SqlNode from) {
-            super(parent);
-            this.from = from;
+        AggregatingSelectScope(
+            Scope parent,
+            SqlSelect select)
+        {
+            super(parent, select);
+            SqlNodeList groupExprs = select.getGroup();
+            if (groupExprs == null) {
+                groupExprs = emptySqlNodeList;
+            }
+            // We deep-copy the group-list in case subsequent validation
+            // modifies it and makes it no longer equivalent.
+            groupExprs = deepCopy(groupExprs);
+            aggChecker = new AggChecker(
+                this,
+                groupExprs);
         }
 
-        public SqlNode getNode() {
-            return from;
+        public Scope getScopeAboveAggregation() {
+            return parent;
+        }
+
+        public boolean checkAggregateExpr(SqlNode expr) {
+            // Make sure expression is valid, throws if not.
+            expr.accept(aggChecker);
+            return aggChecker.isGroupExpr(expr);
         }
     }
 
@@ -2385,6 +2563,46 @@ public class SqlValidator
             }
         };
     }
+
+    /**
+     * Validates the right-hand side of an OVER expression. It might be
+     * either an {@link SqlIdentifier identifier} referencing a window, or
+     * an {@link SqlWindow inline window specification}.
+     */
+    protected void validateWindow(SqlNode windowOrId, Scope scope) {
+        switch (windowOrId.getKind().ordinal) {
+        case SqlKind.IdentifierORDINAL:
+            SqlIdentifier id = (SqlIdentifier) windowOrId;
+            final SqlWindow window;
+            if (id.isSimple()) {
+                final String name = id.names[0];
+                window = scope.lookupWindow(name);
+            } else {
+                window = null;
+            }
+            if (window == null) {
+                throw newValidationError(
+                    id,
+                    EigenbaseResource.instance().newWindowNotFound(
+                        id.toString()));
+            }
+            break;
+        case SqlKind.WindowORDINAL:
+            windowOrId.validate(this, scope);
+            break;
+        default:
+            throw windowOrId.getKind().unexpected();
+        }
+    }
+
+    /**
+     * Validates a call to an operator.
+     */
+    public void validateCall(SqlCall call, Scope scope)
+    {
+        // Delegate valiation to the operator.
+        call.operator.validateCall(call, this, scope);
+   }
 
     /**
      * Namespace whose contents are defined by the type of an
@@ -2583,6 +2801,7 @@ public class SqlValidator
         }
 
     }
+
     /**
      * A scope which delegates all requests to its parent scope.
      * Use this as a base class for defining nested scopes.
@@ -2638,6 +2857,8 @@ public class SqlValidator
          * Converts an identifier into a fully-qualified identifier. For
          * example, the "empno" in "select empno from emp natural join dept"
          * becomes "emp.empno".
+         *
+         * If the identifier cannot be resolved, throws. Never returns null.
          */
         public SqlIdentifier fullyQualify(SqlIdentifier identifier) {
             if (identifier.isStar()) {
@@ -2681,6 +2902,10 @@ public class SqlValidator
                 assert identifier.names.length > 0;
                 return identifier;
             }
+        }
+
+        public SqlWindow lookupWindow(String name) {
+            return parent.lookupWindow(name);
         }
     }
 
@@ -2729,6 +2954,123 @@ public class SqlValidator
             return super.fullyQualify(identifier);
         }
     }
+
+    /**
+     * Finds an aggregate function.
+     *
+     * TODO: use aggs registered in the fun table; we currently look for
+     *   SUM and COUNT
+     */
+    static class AggFinder extends SqlBasicVisitor {
+        AggFinder() {}
+
+        public SqlNode findAgg(SqlNode node) {
+            try {
+                node.accept(this);
+                return null;
+            } catch (FoundOne e) {
+                Util.swallow(e, null);
+                return e.node;
+            }
+        }
+
+        public void visit(SqlCall call) {
+            if (call.operator.isAggregator()) {
+                throw new SqlValidator.AggFinder.FoundOne(call);
+            }
+            if (call.isA(SqlKind.Query)) {
+                // don't traverse into queries
+                return;
+            }
+            if (call.isA(SqlKind.Over)) {
+                // an aggregate function over a window is not an aggregate!
+                return;
+            }
+            super.visit(call);
+        }
+
+        /**
+         * Exception used to interrupt a tree walk.
+         */
+        static class FoundOne extends RuntimeException {
+            private final SqlNode node;
+
+            FoundOne(SqlNode node){
+                this.node = node;
+            }
+        }
+    }
+
+    /**
+     * Visitor which throws an exception if any component of the expression is
+     * not a group expression.
+     */
+    class AggChecker extends SqlBasicVisitor
+    {
+        private final AggregatingScope scope;
+        private final SqlNodeList groupExprs;
+
+        /**
+         * Creates an AggChecker
+         */
+        AggChecker(AggregatingScope scope, SqlNodeList groupExprs) {
+            this.groupExprs = groupExprs;
+            this.scope = scope;
+        }
+
+        boolean isGroupExpr(SqlNode expr) {
+            for (int i = 0; i < groupExprs.size(); i++) {
+                SqlNode groupExpr = groupExprs.get(i);
+                if (groupExpr.equalsDeep(expr)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public void visit(SqlIdentifier id) {
+            if (isGroupExpr(id)) {
+                return;
+            }
+            // Is it a call to a parentheses-free function?
+            SqlCall call = makeCall(id);
+            if (call != null) {
+                call.accept(this);
+                return;
+            }
+            // Didn't find the identifer in the group-by list as is, now find
+            // it fully-qualified.
+            // TODO: It would be better if we always compared fully-qualified
+            // to fully-qualified.
+            final SqlIdentifier fqId = scope.fullyQualify(id);
+            if (isGroupExpr(fqId)) {
+                return;
+            }
+            final String exprString = id.toString();
+            throw scope.getValidator().newValidationError(id,
+                EigenbaseResource.instance().newNotGroupExpr(exprString));
+        }
+
+        public void visit(SqlCall call) {
+            if (call.operator.isAggregator()) {
+                // For example, 'sum(sal)' in 'SELECT sum(sal) FROM emp GROUP
+                // BY deptno'
+                return;
+            }
+            if (isGroupExpr(call)) {
+                // This call matches an expression in the GROUP BY clause.
+                return;
+            }
+            if (call.isA(SqlKind.Query)) {
+                // Allow queries for now, even though they may contain
+                // references to forbidden columns.
+                return;
+            }
+            // Visit the operands.
+            super.visit(call);
+        }
+    }
+
 }
 
 

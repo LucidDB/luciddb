@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.util.SqlVisitor;
 
 
 /**
@@ -111,7 +112,34 @@ public class SqlCall extends SqlNode
      */
     public void validate(SqlValidator validator, SqlValidator.Scope scope)
     {
-        operator.validateCall(this, validator, scope);
+        validator.validateCall(this, scope);
+    }
+
+    public void accept(SqlVisitor visitor)
+    {
+        visitor.visit(this);
+    }
+
+    public boolean equalsDeep(SqlNode node)
+    {
+        if (!(node instanceof SqlCall)) {
+            return false;
+        }
+        SqlCall that = (SqlCall) node;
+        // Compare operators by name, not identity, because they may not
+        // have been resolved yet.
+        if (!this.operator.name.equals(that.operator.name)) {
+            return false;
+        }
+        if (this.operands.length != that.operands.length) {
+            return false;
+        }
+        for (int i = 0; i < this.operands.length; i++) {
+            if (!this.operands[i].equalsDeep(that.operands[i])) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**

@@ -21,9 +21,8 @@
 package org.eigenbase.test;
 
 import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.sql.SqlValidator;
 import org.eigenbase.sql.SqlCollation;
-import org.eigenbase.sql.parser.SqlParser;
+import org.eigenbase.sql.SqlValidator;
 import org.eigenbase.util.Util;
 
 import java.io.File;
@@ -33,8 +32,8 @@ import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 
 /**
  * Utility to generate SQL a script from validator test.
@@ -122,10 +121,6 @@ public class SqlTestGen {
         public SqlValidatorTestCase.Tester getTester() {
             return new TesterImpl() {
                 public SqlValidator getValidator() {
-                    throw new UnsupportedOperationException();
-                }
-
-                public SqlParser getParser(String sql) {
                     throw new UnsupportedOperationException();
                 }
 

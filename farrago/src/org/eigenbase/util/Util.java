@@ -125,11 +125,11 @@ public class Util extends Toolbox
     }
 
     /**
-     * Returns whether two strings are equal or are both null.
+     * Returns whether two objects are equal or are both null.
      */
     public static final boolean equal(
-        String s0,
-        String s1)
+        Object s0,
+        Object s1)
     {
         if (s0 == null) {
             return s1 == null;
@@ -764,22 +764,6 @@ public class Util extends Toolbox
     {
         return Charset.forName(
             SaffronProperties.instance().defaultCharset.get());
-    }
-
-    /**
-     * Returns whether two objects are equal. Either may be null.
-     */
-    public static boolean equals(
-        Object o0,
-        Object o1)
-    {
-        if (o0 == o1) {
-            return true;
-        }
-        if ((o0 == null) || (o1 == null)) {
-            return false;
-        }
-        return o0.equals(o1);
     }
 
     public static Error newInternal()

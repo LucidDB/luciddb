@@ -94,7 +94,7 @@ public class SqlTrimFunction extends SqlFunction
         }
 
         if (null == operands[1]) {
-            operands[1] = SqlLiteral.CharString.create(" ", pos);
+            operands[1] = SqlLiteral.createCharString(" ", pos);
         }
         return super.createCall(operands, pos);
     }

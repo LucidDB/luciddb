@@ -234,6 +234,27 @@ public abstract class SqlUtil
             new DatabaseMetaDataInvocationHandler());
     }
 
+    /**
+     * Concatenates string literals.
+     *
+     * <p>This method takes an array of arguments,
+     * since pairwise concatenation means too much string copying.
+     *
+     * @param lits an array of {@link SqlLiteral}, not empty, all of the same
+     *     class
+     * @return a new {@link SqlLiteral}, of that same class, whose value is the
+     *     string concatenation of the values of the literals
+     * @throws ClassCastException if the lits are not homogeneous.
+     * @throws ArrayIndexOutOfBoundsException if lits is an empty array.
+     */
+    public static SqlLiteral concatenateLiterals(SqlLiteral [] lits)
+    {
+        if (lits.length == 1) {
+            return lits[0]; // nothing to do
+        }
+        return ((SqlAbstractStringLiteral) lits[0]).concat1(lits);
+    }
+
     //~ Inner Classes ---------------------------------------------------------
 
     /**

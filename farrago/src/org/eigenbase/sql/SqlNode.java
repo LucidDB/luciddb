@@ -22,6 +22,7 @@
 package org.eigenbase.sql;
 
 import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.util.SqlVisitor;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -178,6 +179,25 @@ public abstract class SqlNode
     {
         validate(validator, scope);
     }
+
+    /**
+     * Accepts a generic visitor. Implementations of this method in subtypes
+     * simply call the appropriate <code>visit</code> method on the
+     * {@link org.eigenbase.sql.util.SqlVisitor visitor object}.
+     */
+    public abstract void accept(SqlVisitor visitor);
+
+    /**
+     * Returns whether this node is structurally equivalent to another node.
+     * Some examples:<ul>
+     *
+     * <li>1 + 2 is structurally equivalent to 1 + 2</li>
+     * <li>1 + 2 + 3 is structurally equivalent to (1 + 2) + 3, but not to
+     *     1 + (2 + 3), because the '+' operator is left-associative</li>
+     * </ul>
+     */
+    public abstract boolean equalsDeep(SqlNode node);
+
 }
 
 

@@ -69,8 +69,8 @@ public class SqlValidatorTestCase extends TestCase
      * tables, which can run without having to start up Farrago.
      */
     public interface Tester {
+        SqlNode parseQuery(String sql) throws Exception;
         SqlValidator getValidator();
-        SqlParser getParser(String sql);
         /**
          * Asserts either if a sql query is valid or not.
          * @param sql
@@ -219,55 +219,46 @@ public class SqlValidatorTestCase extends TestCase
 
         public MockCatalogReader(RelDataTypeFactory typeFactory) {
             this.typeFactory = typeFactory;
+            final RelDataType intType =
+                typeFactory.createSqlType(SqlTypeName.Integer);
+            final RelDataType varchar10Type =
+                typeFactory.createSqlType(SqlTypeName.Varchar, 10);
+            final RelDataType varchar20Type =
+                typeFactory.createSqlType(SqlTypeName.Varchar, 20);
+            final RelDataType dateType =
+                typeFactory.createSqlType(SqlTypeName.Date);
             // Register "EMP" table.
-            SqlValidatorTest.MockTable empTable = new SqlValidatorTest.MockTable("EMP");
-            empTable.addColumn("EMPNO",
-                typeFactory.createSqlType(SqlTypeName.Integer));
-            empTable.addColumn("ENAME",
-                typeFactory.createSqlType(SqlTypeName.Varchar, 20));
-            empTable.addColumn("JOB",
-                typeFactory.createSqlType(SqlTypeName.Varchar, 10));
-            empTable.addColumn("MGR",
-                typeFactory.createSqlType(SqlTypeName.Integer));
-            empTable.addColumn("HIREDATE",
-                typeFactory.createSqlType(SqlTypeName.Date));
-            empTable.addColumn("SAL",
-                typeFactory.createSqlType(SqlTypeName.Integer));
-            empTable.addColumn("COMM",
-                typeFactory.createSqlType(SqlTypeName.Integer));
-            empTable.addColumn("DEPTNO",
-                typeFactory.createSqlType(SqlTypeName.Integer));
+            MockTable empTable = new MockTable("EMP");
+            empTable.addColumn("EMPNO", intType);
+            empTable.addColumn("ENAME", varchar20Type);
+            empTable.addColumn("JOB", varchar10Type);
+            empTable.addColumn("MGR", intType);
+            empTable.addColumn("HIREDATE", dateType);
+            empTable.addColumn("SAL", intType);
+            empTable.addColumn("COMM", intType);
+            empTable.addColumn("DEPTNO", intType);
             registerTable(empTable);
             // Register "DEPT" table.
-            SqlValidatorTest.MockTable deptTable = new SqlValidatorTest.MockTable("DEPT");
-            deptTable.addColumn("DEPTNO",
-                typeFactory.createSqlType(SqlTypeName.Integer));
-            deptTable.addColumn("NAME",
-                typeFactory.createSqlType(SqlTypeName.Varchar, 10));
+            MockTable deptTable = new MockTable("DEPT");
+            deptTable.addColumn("DEPTNO", intType);
+            deptTable.addColumn("NAME", varchar10Type);
             registerTable(deptTable);
             // Register "BONUS" table.
-            SqlValidatorTest.MockTable bonusTable = new SqlValidatorTest.MockTable("BONUS");
-            bonusTable.addColumn("ENAME",
-                typeFactory.createSqlType(SqlTypeName.Varchar, 20));
-            bonusTable.addColumn("JOB",
-                typeFactory.createSqlType(SqlTypeName.Varchar, 10));
-            bonusTable.addColumn("SAL",
-                typeFactory.createSqlType(SqlTypeName.Integer));
-            bonusTable.addColumn("COMM",
-                typeFactory.createSqlType(SqlTypeName.Integer));
+            MockTable bonusTable = new MockTable("BONUS");
+            bonusTable.addColumn("ENAME", varchar20Type);
+            bonusTable.addColumn("JOB", varchar10Type);
+            bonusTable.addColumn("SAL", intType);
+            bonusTable.addColumn("COMM", intType);
             registerTable(bonusTable);
             // Register "SALGRADE" table.
-            SqlValidatorTest.MockTable salgradeTable = new SqlValidatorTest.MockTable("SALGRADE");
-            salgradeTable.addColumn("GRADE",
-                typeFactory.createSqlType(SqlTypeName.Integer));
-            salgradeTable.addColumn("LOSAL",
-                typeFactory.createSqlType(SqlTypeName.Integer));
-            salgradeTable.addColumn("HISAL",
-                typeFactory.createSqlType(SqlTypeName.Integer));
+            MockTable salgradeTable = new MockTable("SALGRADE");
+            salgradeTable.addColumn("GRADE", intType);
+            salgradeTable.addColumn("LOSAL", intType);
+            salgradeTable.addColumn("HISAL", intType);
             registerTable(salgradeTable);
         }
 
-        private void registerTable(SqlValidatorTest.MockTable table) {
+        protected void registerTable(SqlValidatorTest.MockTable table) {
             table.onRegister(typeFactory);
             tables.put(table.names[0], table);
         }
@@ -331,10 +322,6 @@ public class SqlValidatorTestCase extends TestCase
                 typeFactory);
         }
 
-        public SqlParser getParser(String sql) {
-            return new SqlParser(sql);
-        }
-
         /**
          * Asserts either if a sql query is valid or not.
          * @param sql
@@ -349,12 +336,10 @@ public class SqlValidatorTestCase extends TestCase
             int expectedLine,
             int expectedColumn)
         {
-            SqlParser parser;
             SqlValidator validator;
             SqlNode sqlNode;
             try {
-                parser = getParser(sql);
-                sqlNode = parser.parseQuery();
+                sqlNode = parseQuery(sql);
                 validator = getValidator();
             } catch (ParseException ex) {
                 ex.printStackTrace();
@@ -425,12 +410,10 @@ public class SqlValidatorTestCase extends TestCase
         }
 
         public RelDataType getResultType(String sql) {
-            SqlParser parser;
             SqlValidator validator;
             SqlNode sqlNode;
             try {
-                parser = getParser(sql);
-                sqlNode = parser.parseQuery();
+                sqlNode = parseQuery(sql);
                 validator = getValidator();
             } catch (ParseException ex) {
                 ex.printStackTrace();
@@ -454,6 +437,12 @@ public class SqlValidatorTestCase extends TestCase
                 actualType = rowType.getFields()[0].getType();
             }
             return actualType;
+        }
+
+        public SqlNode parseQuery(String sql) throws Exception {
+            SqlParser parser = new SqlParser(sql);
+            SqlNode sqlNode = parser.parseQuery();
+            return sqlNode;
         }
 
         public void checkType(

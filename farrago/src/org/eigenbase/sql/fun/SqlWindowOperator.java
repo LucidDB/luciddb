@@ -82,26 +82,29 @@ public class SqlWindowOperator extends SqlOperator {
     }
 
     public SqlCall createCall(
-            SqlNode[] operands,
-            ParserPosition pos) {
+        SqlNode[] operands,
+        ParserPosition pos)
+    {
         return new SqlWindow(this, operands, pos);
     }
 
     public SqlWindow createCall(
-            SqlIdentifier refName,
-            SqlNodeList partitionList,
-            SqlNodeList orderList,
-            boolean isRows,
-            SqlNode lowerBound,
-            SqlNode upperBound,
-            ParserPosition pos) {
+        SqlIdentifier declName,
+        SqlIdentifier refName,
+        SqlNodeList partitionList,
+        SqlNodeList orderList,
+        boolean isRows,
+        SqlNode lowerBound,
+        SqlNode upperBound,
+        ParserPosition pos)
+    {
         return (SqlWindow) createCall(
-                new SqlNode[] {
-                    refName, partitionList, orderList,
-                    SqlLiteral.createBoolean(isRows, pos),
-                    lowerBound, upperBound
-                },
-                pos);
+            new SqlNode[] {
+                declName, refName, partitionList, orderList,
+                SqlLiteral.createBoolean(isRows, pos),
+                lowerBound, upperBound
+            },
+            pos);
     }
 
     public void unparse(
