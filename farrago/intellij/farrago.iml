@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module version="4" relativePaths="true" type="JAVA_MODULE">
+  <component name="ModuleRootManager" />
+  <component name="NewModuleRootManager">
+    <output url="file://$MODULE_DIR$/../classes" />
+    <exclude-output />
+    <exclude-exploded />
+    <content url="file://$MODULE_DIR$/..">
+      <sourceFolder url="file://$MODULE_DIR$/../src" isTestSource="false" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module" module-name="farragoCatalog" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../../thirdparty/OpenJava/openjava.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="library" name="ant" level="project" />
+    <orderEntry type="library" name="janino" level="project" />
+    <orderEntry type="library" name="javamail" level="project" />
+    <orderEntry type="library" name="misc" level="project" />
+    <orderEntry type="library" name="isql" level="project" />
+    <orderEntry type="library" name="servlet" level="project" />
+    <orderEntry type="library" name="rmiJdbc" level="project" />
+    <orderEntry type="library" name="mondrian-utils" level="project" />
+    <orderEntry type="library" name="mdr" level="project" />
+    <orderEntry type="library" name="jaxb" level="project" />
+    <orderEntry type="library" name="hsqldb" level="project" />
+    <orderEntry type="library" name="jakarta-oro" level="project" />
+    <orderEntry type="library" name="jfreechart" level="project" />
+    <orderEntry type="library" name="junit" level="project" />
+    <orderEntryProperties />
+  </component>
+</module>
+
