@@ -1649,6 +1649,10 @@ public class SqlParserTest extends TestCase
         checkExp("cast(x as interval minute to second)", "CAST(`X` AS MINUTE TO SECOND)");
     }
 
+    public void testUnnest() {
+        checkExp("unnest(x)","UNNEST(`X`)");
+    }
+
 }
 
 

@@ -1748,6 +1748,12 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         check("select 1 from emp having sum(sal) < ?");
     }
 
+    public void testUnnest() {
+        checkExpType("unnest(multiset[1])","INTEGER");
+        checkExpType("unnest(multiset['1','22','333'])","VARCHAR(3)");
+        checkExpFails("unnest(1)","(?s).*Cannot apply 'UNNEST' to arguments of type 'UNNEST.<INTEGER>.*'");
+    }
+
     public void testNew() {
         // (To debug invidual statements, paste them into this method.)
     }

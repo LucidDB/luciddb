@@ -729,132 +729,32 @@ public class SqlStdOperatorTable extends SqlOperatorTable
     public final SqlMultisetOperator multisetOperator =
         new SqlMultisetOperator();
 
-    public final SqlSpecialOperator overlapsOperator =
-            new SqlSpecialOperator("OVERLAPS", SqlKind.Overlaps, 15, true,
-                ReturnTypeInference.useNullableBoolean,
-                UnknownParamInference.useFirstKnown, null) {
-                public void test(SqlTester tester)
-                {
-                    SqlOperatorTests.testOverlapsOperator(tester);
-                }
+    public final SqlFunction unnestOperator =
+        new SqlFunction ("UNNEST", SqlKind.Other,
+            null, null,
+            OperandsTypeChecking.typeNullableMultiset,
+            SqlFunction.SqlFuncTypeName.System) {
 
-                public void unparse(
-                    SqlWriter writer,
-                    SqlNode[] operands,
-                    int leftPrec,
-                    int rightPrec) {
-                    writer.print("(");
-                    operands[0].unparse(writer, leftPrec, rightPrec);
-                    writer.print(", ");
-                    operands[1].unparse(writer, leftPrec, rightPrec);
-                    writer.print(") ");
-                    writer.print(name);
-                    writer.print(" (");
-                    operands[2].unparse(writer, leftPrec, rightPrec);
-                    writer.print(", ");
-                    operands[3].unparse(writer, leftPrec, rightPrec);
-                    writer.print(")");
-                }
+            public RelDataType getType(
+                RelDataTypeFactory typeFactory,
+                RelDataType[] argTypes) {
+                RelDataTypeFactoryImpl.MultisetSqlType t =
+                    (RelDataTypeFactoryImpl.MultisetSqlType) argTypes[0];
+                return t.getComponentType();
+            }
 
-                public OperandsCountDescriptor getOperandsCountDescriptor() {
-                    return OperandsCountDescriptor.Four;
-                }
+            protected RelDataType inferType(
+                SqlValidator validator,
+                SqlValidator.Scope scope,
+                SqlCall call) {
+                return getType(validator.typeFactory,
+                               SqlTypeUtil.collectTypes(
+                                        validator, scope, call.operands));
+            }
+        };
 
-                protected String getSignatureTemplate(int operandsCount) {
-                    if (4 == operandsCount) {
-                        return "({1}, {2}) {0} ({3}, {4})";
-                    }
-                    assert(false);
-                    return null;
-                }
-
-                public String getAllowedSignatures(String name)
-                {
-                    final String d = "DATETIME";
-                    final String i = "INTERVAL";
-                    String[] typeNames = {
-                         d, d
-                        ,d, i
-                        ,i, d
-                        ,i, i
-                    };
-
-                    StringBuffer ret = new StringBuffer();
-                    for (int y = 0; y < typeNames.length; y+=2) {
-                        if (y > 0) {
-                            ret.append(NL);
-                        }
-                        ArrayList list = new ArrayList();
-                        list.add(d);
-                        list.add(typeNames[y]);
-                        list.add(d);
-                        list.add(typeNames[y+1]);
-                        ret.append(this.getAnonymousSignature(list));
-                    }
-                    return replaceAnonymous(ret.toString(), name);
-                }
-
-                protected boolean checkArgTypes(
-                    SqlCall call,
-                    SqlValidator validator,
-                    SqlValidator.Scope scope,
-                    boolean throwOnFailure) {
-                    if (!OperandsTypeChecking.typeNullableDatetime.check(
-                        call, validator, scope, call.operands[0], 0, throwOnFailure)) {
-                        return false;
-                    }
-                    if (!OperandsTypeChecking.typeNullableDatetime.check(
-                        call, validator, scope, call.operands[2], 0, throwOnFailure)) {
-                        return false;
-                    }
-
-                    RelDataType t0 = validator.deriveType(scope, call.operands[0]);
-                    RelDataType t1 = validator.deriveType(scope, call.operands[1]);
-                    RelDataType t2 = validator.deriveType(scope, call.operands[2]);
-                    RelDataType t3 = validator.deriveType(scope, call.operands[3]);
-
-                    // t0 must be comparable with t2
-                    if (!SqlTypeUtil.sameNamedType(t0, t2)) {
-                        if (throwOnFailure) {
-                            throw call.newValidationSignatureError(validator, scope);
-                        }
-                        return false;
-                    }
-
-                    if (SqlTypeUtil.isDatetime(t1)) {
-                        // if t1 is of DATETIME,
-                        // then t1 must be comparable with t0
-                        if (!SqlTypeUtil.sameNamedType(t0, t1)) {
-                            if (throwOnFailure) {
-                                throw call.newValidationSignatureError(validator, scope);
-                            }
-                            return false;
-                        }
-                    } else if (!SqlTypeUtil.isInterval(t1)) {
-                        if (throwOnFailure) {
-                            throw call.newValidationSignatureError(validator, scope);
-                        }
-                        return false;
-                    }
-
-                    if (SqlTypeUtil.isDatetime(t3)) {
-                        // if t3 is of DATETIME,
-                        // then t3 must be comparable with t2
-                        if (!SqlTypeUtil.sameNamedType(t2, t3)) {
-                            if (throwOnFailure) {
-                                throw call.newValidationSignatureError(validator, scope);
-                            }
-                            return false;
-                        }
-                    } else if (!SqlTypeUtil.isInterval(t3)) {
-                        if (throwOnFailure) {
-                            throw call.newValidationSignatureError(validator, scope);
-                        }
-                        return false;
-                    }
-                    return true;
-                }
-            };
+    public final SqlOverlapsOperator overlapsOperator =
+        new SqlOverlapsOperator();
 
     public final SqlSpecialOperator valuesOperator =
         new SqlSpecialOperator("VALUES", SqlKind.Values) {
