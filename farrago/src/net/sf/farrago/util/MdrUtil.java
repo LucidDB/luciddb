@@ -209,7 +209,7 @@ public abstract class MdrUtil
         public Throwable attachAnnotations(
             Throwable t, Annotation[] arr)
         {
-            return null;
+            return t;
         }
         
         // implement ErrorManager

@@ -295,7 +295,7 @@ public class DdlRelationalHandler extends DdlHandler
                 column = (FemViewColumn) columnList.get(i);
             }
             convertFieldToCwmColumn(fields[i], column);
-            validateColumnImpl(column);
+            validateAttribute(column);
         }
 
         validator.validateUniqueNames(
@@ -319,7 +319,7 @@ public class DdlRelationalHandler extends DdlHandler
     
     public void validateLocalTableColumn(FemStoredColumn column)
     {
-        validateColumnImpl(column);
+        validateAttribute(column);
 
         String defaultExpression = column.getInitialValue().getBody();
         if (!defaultExpression.equalsIgnoreCase("NULL")) {

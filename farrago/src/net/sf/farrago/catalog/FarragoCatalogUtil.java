@@ -32,6 +32,7 @@ import org.eigenbase.util.*;
 
 import javax.jmi.reflect.*;
 import java.util.*;
+import java.lang.reflect.*;
 
 /**
  * Static utilities for accessing the Farrago catalog.
@@ -325,7 +326,7 @@ public abstract class FarragoCatalogUtil
      * which is part of a primary key or clustered index may not contain
      * nulls even when its definition says it can.
      *
-     * @param repos repos storing column
+     * @param repos repos storing column definition
      *
      * @param column the column of interest
      *
@@ -384,6 +385,48 @@ public abstract class FarragoCatalogUtil
         Collections.reverse(names);
         String [] nameArray = (String []) names.toArray(Util.emptyStringArray);
         return new SqlIdentifier(nameArray, null);
+    }
+
+    /**
+     * Casts a {@link FemAbstractTypedElement} to the {@link
+     * FemSqltypedElement} interface via a proxy.
+     *
+     * @param element element to cast
+     *
+     * @return cast result (a proxy)
+     */
+    public static FemSqltypedElement toFemSqltypedElement(
+        final FemAbstractTypedElement element)
+    {
+        Class [] interfaces = element.getClass().getInterfaces();
+        Class [] newInterfaces = new Class[interfaces.length + 1];
+        System.arraycopy(interfaces, 0, newInterfaces, 1, interfaces.length);
+        newInterfaces[0] = FemSqltypedElement.class;
+
+        return (FemSqltypedElement) Proxy.newProxyInstance(
+            FarragoCatalogUtil.class.getClassLoader(),
+            newInterfaces,
+            new InvocationHandler()
+            {
+                // implement InvocationHandler
+                public Object invoke(
+                    Object proxy,
+                    Method method,
+                    Object [] args)
+                    throws Throwable
+                {
+                    if (method.getName().equals("getImpl")) {
+                        return element;
+                    }
+                    
+                    // delegate by name
+                    Method delegateMethod =
+                        element.getClass().getMethod(
+                            method.getName(),
+                            method.getParameterTypes());
+                    return delegateMethod.invoke(element, args);
+                }
+            });
     }
 }
 

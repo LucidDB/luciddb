@@ -41,6 +41,9 @@
   <!-- runtime assertion control -->
   <property name="assertions.jvmarg" value="-ea -esa"/>
 
+  <!-- forked ant verbosity control -->
+  <property name="farrago.forkVerbosity" value="-e"/>
+
   <!-- Java installation root -->
   <property name="javahome.dir" location="${env.JAVA_HOME}"/>
 
@@ -239,6 +242,7 @@
       <java classname="org.apache.tools.ant.Main" fork="true" failonerror="true"
         classpathref="@{classpathref}">
         <jvmargs/>
+        <arg value="${farrago.forkVerbosity}"/>
         <arg value="@{target}"/>
       </java>
     </sequential>

@@ -18,12 +18,15 @@
   <xsl:template match="Model:Package[@name='FemRef']">
   </xsl:template>
 
+  <!-- Filter out the PrimitiveTypesRef subpackage.  -->
   <xsl:template match="Model:Package[@name='PrimitiveTypesRef']">
   </xsl:template>
 
+  <!-- Filter out the PrimitiveTypesRef subpackage import.  -->
   <xsl:template match="Model:Import[@name='PrimitiveTypesRef']">
   </xsl:template>
 
+  <!-- Merge FEME into FEM.  -->
   <xsl:template match="Model:Package[@name='FEME']">
       <xsl:apply-templates select="Model:Namespace.contents/*" />
   </xsl:template>
@@ -43,6 +46,10 @@
       name="refPrimitive" 
       select=
       "//Model:Package[@name='PrimitiveTypesRef']//Model:PrimitiveType[@xmi.id=current()]" />
+    <xsl:variable 
+      name="refFemePackage" 
+      select=
+      "//Model:Package[@name='FEME'][@xmi.id=current()]" />
     <xsl:choose>
       <xsl:when test="$refCwmClass">
         <xsl:variable 
@@ -78,6 +85,14 @@
           "//Model:Package[@name='PrimitiveTypes']//Model:PrimitiveType[@name=$refPrimitiveName]"/>
         <xsl:attribute name="xmi.idref">
           <xsl:value-of select="$realPrimitiveType/@xmi.id"/>
+        </xsl:attribute>
+      </xsl:when>
+      <xsl:when test="$refFemePackage">
+        <xsl:variable 
+          name="refFemPackage" 
+          select="//Model:Package[@name='FEM']/@xmi.id"/>
+        <xsl:attribute name="xmi.idref">
+          <xsl:value-of select="$refFemPackage"/>
         </xsl:attribute>
       </xsl:when>
       <xsl:otherwise>

@@ -97,8 +97,12 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     }
 
     // implement FarragoTypeFactory
-    public RelDataType createCwmElementType(FemSqltypedElement element)
+    public RelDataType createCwmElementType(
+        FemAbstractTypedElement abstractElement)
     {
+        FemSqltypedElement element = FarragoCatalogUtil.toFemSqltypedElement(
+            abstractElement);
+        
         CwmClassifier classifier = element.getType();
         RelDataType type = null;
 
@@ -144,8 +148,10 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         } else if (classifier instanceof FemSqlcollectionType) {
             FemSqlcollectionType collectionType =
                 (FemSqlcollectionType) classifier;
+            FemSqltypeAttribute femComponentType = (FemSqltypeAttribute)
+                collectionType.getFeature().get(0);
             RelDataType componentType =
-                createCwmElementType(collectionType.getComponentType());
+                createCwmElementType(femComponentType);
             assert(collectionType instanceof FemSqlmultisetType) :
                    "todo array type creation not yet implemented";
             type = createMultisetType(componentType, -1);
@@ -153,11 +159,13 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             Util.permAssert(false,"TODO jvs 15-Dec-2004:  UDT's, intervals");
         }
 
+        boolean isNullable = true;
+        if (abstractElement instanceof CwmColumn) {
+            isNullable = FarragoCatalogUtil.isColumnNullable(
+                getRepos(), (CwmColumn) abstractElement);
+        }
 
-        type = createTypeWithNullability(
-            type, 
-            FarragoCatalogUtil.isColumnNullable(getRepos(), element));
-
+        type = createTypeWithNullability(type, isNullable);
         return type;
     }
     
@@ -184,8 +192,8 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
 
                 public RelDataType getFieldType(int index)
                 {
-                    final FemSqltypedElement element =
-                        (FemSqltypedElement) featureList.get(index);
+                    final FemAbstractTypedElement element =
+                        (FemAbstractTypedElement) featureList.get(index);
                     return createCwmElementType(element);
                 }
             });

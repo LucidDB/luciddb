@@ -2,21 +2,22 @@
  * Convenience Functions                 *
  *****************************************/
 
-JAVACODE void SqlDataTypeSpecToCwmColumnType(SqlDataTypeSpec dataType,
-                                             CwmColumn column)
+JAVACODE void convertSqlDataTypeSpecToCwmType(
+    SqlDataTypeSpec dataType,
+    FemSqltypedElement element)
 {
     CwmSqldataType type =
         farragoParser.getStmtValidator().findSqldataType(
             dataType.getTypeName().getSimple());
-    column.setType(type);
+    element.setType(type);
     if (dataType.getPrecision() > 0) {
-        column.setPrecision(new Integer(dataType.getPrecision()));
+        element.setPrecision(new Integer(dataType.getPrecision()));
     }
     if (dataType.getScale() > 0) {
-        column.setScale(new Integer(dataType.getScale()));
+        element.setScale(new Integer(dataType.getScale()));
     }
     if (dataType.getCharSetName() != null) {
-        column.setCharacterSetName(dataType.getCharSetName());
+        element.setCharacterSetName(dataType.getCharSetName());
     }
 }
 
@@ -656,7 +657,7 @@ CwmModelElement TableElement(CwmTable table) :
         }
 }
 
-void BasicColumnDefinition(CwmNamedColumnSet table,CwmColumn column) :
+void BasicColumnDefinition(CwmNamedColumnSet table,FemAbstractColumn column) :
 {
     SqlIdentifier columnName;
 }
@@ -669,9 +670,11 @@ void BasicColumnDefinition(CwmNamedColumnSet table,CwmColumn column) :
     TypedElement(column)
 }
 
-void TypedElement(CwmColumn column) :
+void TypedElement(FemAbstractTypedElement element) :
 {
     SqlDataTypeSpec dataType;
+    FemSqltypedElement typedElement = FarragoCatalogUtil.toFemSqltypedElement(
+        element);
 }
 {
     dataType = DataType()
@@ -681,16 +684,20 @@ void TypedElement(CwmColumn column) :
             FemSqlmultisetType colType = getRepos().newFemSqlmultisetType();
             colType.setName("MULTISET");
             FemSqltypeAttribute componentType =
-                                            getRepos().newFemSqltypeAttribute();
+                getRepos().newFemSqltypeAttribute();
             componentType.setName("COMPONENT");
-            colType.setComponentType(componentType);
-            SqlDataTypeSpecToCwmColumnType(dataType, componentType);
-            column.setType(colType);
+            colType.getFeature().add(componentType);
+            convertSqlDataTypeSpecToCwmType(
+                dataType,
+                FarragoCatalogUtil.toFemSqltypedElement(componentType));
+            typedElement.setType(colType);
             return;
         }
     ]
     {
-        SqlDataTypeSpecToCwmColumnType(dataType, column);
+        convertSqlDataTypeSpecToCwmType(
+            dataType,
+            typedElement);
     }
 }
 

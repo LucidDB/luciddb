@@ -487,6 +487,10 @@ require version '${required.ant.version}'."/>
   <!-- NOTE:  don't use mapClass below; we want to make sure all generated
   .java files can actually be compiled the old-fashioned way -->
 
+  <target name="importMetamodel">
+    <farrago.mdrFork target="forked_importMetamodel"/>
+  </target>
+
   <target name="forked_importMetamodel" depends="mdr_taskdef">
     <mdr>
       <instantiate name="FarragoMetamodel"/>
@@ -639,7 +643,11 @@ require version '${required.ant.version}'."/>
     </delete>
   </target>
 
-  <target name="exportCatalog" depends="mdr_taskdef">
+  <target name="exportCatalog">
+    <farrago.mdrFork target="forked_exportCatalog"/>
+  </target>
+
+  <target name="forked_exportCatalog" depends="mdr_taskdef">
     <mdr>
       <writeXMI
         file="${farrago.xmi.dir}/FarragoCatalogExport.xmi"

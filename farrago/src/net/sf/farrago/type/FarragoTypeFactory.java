@@ -58,7 +58,7 @@ public interface FarragoTypeFactory extends OJTypeFactory
      * @return generated type
      */
     public RelDataType createCwmElementType(
-        FemSqltypedElement element);
+        FemAbstractTypedElement element);
 
     /**
      * Creates a type which represents the row datatype of a CWM

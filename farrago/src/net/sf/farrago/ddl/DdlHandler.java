@@ -84,7 +84,7 @@ public abstract class DdlHandler
         Iterator iter = columnSet.getFeature().iterator();
         while (iter.hasNext()) {
             FemStoredColumn column = (FemStoredColumn) iter.next();
-            validateColumnImpl(column);
+            validateAttribute(column);
         }
 
         // REVIEW jvs 21-Jan-2005:  something fishy here...
@@ -103,29 +103,32 @@ public abstract class DdlHandler
         }
     }
 
-    public void validateColumnImpl(FemAbstractColumn column)
+    public void validateAttribute(FemAbstractAttribute attribute)
     {
-        int ordinal = column.getOwner().getFeature().indexOf(column);
+        int ordinal = attribute.getOwner().getFeature().indexOf(attribute);
         assert (ordinal != -1);
-        column.setOrdinal(ordinal);
+        attribute.setOrdinal(ordinal);
 
-        validateTypedElement(column);
-    }
-    
-    public void validateTypedElement(FemSqltypedElement element)
-    {
-        if (element.getInitialValue() == null) {
+        if (attribute.getInitialValue() == null) {
             CwmExpression nullExpression = repos.newCwmExpression();
             nullExpression.setLanguage("SQL");
             nullExpression.setBody("NULL");
-            element.setInitialValue(nullExpression);
+            attribute.setInitialValue(nullExpression);
         }
 
         // if NOT NULL not specified, default to nullable
-        if (element.getIsNullable() == null) {
-            element.setIsNullable(NullableTypeEnum.COLUMN_NULLABLE);
+        if (attribute.getIsNullable() == null) {
+            attribute.setIsNullable(NullableTypeEnum.COLUMN_NULLABLE);
         }
-
+        
+        validateTypedElement(attribute);
+    }
+    
+    public void validateTypedElement(FemAbstractTypedElement abstractElement)
+    {
+        FemSqltypedElement element = FarragoCatalogUtil.toFemSqltypedElement(
+            abstractElement);
+        
         SqlTypeName typeName = SqlTypeName.get(
             element.getType().getName());
 
@@ -147,18 +150,18 @@ public abstract class DdlHandler
             }
             if ((precision == null) && !typeName.allowsNoPrecNoScale()) {
                 throw validator.newPositionalError(
-                    element,
+                    abstractElement,
                     validator.res.newValidatorPrecRequired(
                         repos.getLocalizedObjectName(element.getType()),
-                        repos.getLocalizedObjectName(element)));
+                        repos.getLocalizedObjectName(abstractElement)));
             }
         } else {
             if (precision != null) {
                 throw validator.newPositionalError(
-                    element,
+                    abstractElement,
                     validator.res.newValidatorPrecUnexpected(
                         repos.getLocalizedObjectName(element.getType()),
-                        repos.getLocalizedObjectName(element)));
+                        repos.getLocalizedObjectName(abstractElement)));
             }
         }
         if ((typeName != null) && typeName.allowsScale()) {
@@ -166,10 +169,10 @@ public abstract class DdlHandler
         } else {
             if (element.getScale() != null) {
                 throw validator.newPositionalError(
-                    element,
+                    abstractElement,
                     validator.res.newValidatorScaleUnexpected(
                         repos.getLocalizedObjectName(element.getType()),
-                        repos.getLocalizedObjectName(element)));
+                        repos.getLocalizedObjectName(abstractElement)));
             }
         }
         SqlTypeFamily typeFamily = null;
@@ -196,10 +199,10 @@ public abstract class DdlHandler
             } else {
                 if (!Charset.isSupported(element.getCharacterSetName())) {
                     throw validator.newPositionalError(
-                        element,
+                        abstractElement,
                         validator.res.newValidatorCharsetUnsupported(
                             element.getCharacterSetName(),
-                            repos.getLocalizedObjectName(element)));
+                            repos.getLocalizedObjectName(abstractElement)));
                 }
             }
             Charset charSet = Charset.forName(element.getCharacterSetName());
@@ -210,10 +213,10 @@ public abstract class DdlHandler
         } else {
             if (!JmiUtil.isBlank(element.getCharacterSetName())) {
                 throw validator.newPositionalError(
-                    element,
+                    abstractElement,
                     validator.res.newValidatorCharsetUnexpected(
                         repos.getLocalizedObjectName(element.getType()),
-                        repos.getLocalizedObjectName(element)));
+                        repos.getLocalizedObjectName(abstractElement)));
             }
         }
 
@@ -229,11 +232,11 @@ public abstract class DdlHandler
                 assert (maximum != null);
                 if (element.getLength().intValue() > maximum.intValue()) {
                     throw validator.newPositionalError(
-                        element,
+                        abstractElement,
                         validator.res.newValidatorLengthExceeded(
                             element.getLength(),
                             maximum,
-                            repos.getLocalizedObjectName(element)));
+                            repos.getLocalizedObjectName(abstractElement)));
                 }
             }
             if (element.getPrecision() != null) {
@@ -244,11 +247,11 @@ public abstract class DdlHandler
                 assert (maximum != null);
                 if (element.getPrecision().intValue() > maximum.intValue()) {
                     throw validator.newPositionalError(
-                        element,
+                        abstractElement,
                         validator.res.newValidatorPrecisionExceeded(
                             element.getPrecision(),
                             maximum,
-                            repos.getLocalizedObjectName(element)));
+                            repos.getLocalizedObjectName(abstractElement)));
                 }
             }
             if (element.getScale() != null) {
@@ -256,19 +259,19 @@ public abstract class DdlHandler
                 assert (maximum != null);
                 if (element.getScale().intValue() > maximum.intValue()) {
                     throw validator.newPositionalError(
-                        element,
+                        abstractElement,
                         validator.res.newValidatorScaleExceeded(
                             element.getScale(),
                             maximum,
-                            repos.getLocalizedObjectName(element)));
+                            repos.getLocalizedObjectName(abstractElement)));
                 }
             }
         } else if (cwmType instanceof FemSqlcollectionType) {
             FemSqlcollectionType collectionType =
                 (FemSqlcollectionType) element.getType();
-            FemSqltypedElement componentType =
-                collectionType.getComponentType();
-            validateTypedElement(componentType);
+            FemSqltypeAttribute componentType = (FemSqltypeAttribute)
+                collectionType.getFeature().get(0);
+            validateAttribute(componentType);
         } else {
             Util.permAssert(false,
                 "only simple and collection types are supported");
