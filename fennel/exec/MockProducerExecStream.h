@@ -106,6 +106,8 @@ public:
     virtual void prepare(MockProducerExecStreamParams const &params);
     virtual void open(bool restart);
     virtual ExecStreamResult execute(ExecStreamQuantum const &quantum);
+    
+    std::vector<std::string>& getRowVector() { return savedTuples; }
 };
 
 FENNEL_END_NAMESPACE
