@@ -43,6 +43,42 @@ set -v
 
 SAVE_PWD="$PWD"
 
+# Check automake/libtool/autoconf versions
+AUTOMAKE_VERSION=$(automake --version | awk '{print $4; exit}')
+case $AUTOMAKE_VERSION in
+1.8*) ;;
+*)
+    echo "Invalid automake version '$AUTOMAKE_VERSION'."
+    echo "To fix, please run 'make automake' under thirdparty,"
+    echo "then as root, 'make install' under thirdparty/automake."
+    exit -1
+    ;;
+esac
+
+LIBTOOL_VERSION=$(libtool --version | awk '{print $4; exit}')
+case $LIBTOOL_VERSION in
+1.5*) ;;
+*)
+    echo "Invalid libtool version '$LIBTOOL_VERSION'."
+    echo "To fix, please run 'make libtool' under thirdparty,"
+    echo "then as root, 'make install' under thirdparty/libtool."
+    exit -1
+    ;;
+esac
+
+AUTOCONF_VERSION=$(autoconf --version | awk '{print $4; exit}')
+case $AUTOCONF_VERSION in
+2.57*) ;;
+2.58*) ;;
+2.59*) ;;
+*)
+    echo "Invalid autoconf version '$AUTOCONF_VERSION'."
+    echo "To fix, please run 'make autoconf' under thirdparty,"
+    echo "then as root, 'make install' under thirdparty/autoconf."
+    exit -1
+    ;;
+esac
+
 # Unpack thirdparty components
 cd ../thirdparty
 make fennel
