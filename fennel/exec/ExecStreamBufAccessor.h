@@ -253,6 +253,12 @@ public:
     inline ExecStreamBufState getState() const;
 
     /**
+     * Retrieves the pending-end-of-stream flag.
+     * @return bool (true when EOS pending after remaining data consumed).
+     */
+    inline bool hasPendingEOS() const;
+
+    /**
      * Retrieves the buffer provision mode of this accessor.
      *
      * @return ExecStreamBufProvision
@@ -340,7 +346,7 @@ inline ExecStreamBufAccessor::ExecStreamBufAccessor()
 {
     clear();
     provision = BUFPROV_NONE;
-    state = EXECBUF_EOS; // ??
+    state = EXECBUF_EOS;
     tupleFormat = TUPLE_FORMAT_STANDARD;
     cbBuffer = 0;
 }
@@ -423,7 +429,7 @@ inline void ExecStreamBufAccessor::provideBufferForConsumption(
 
 inline void ExecStreamBufAccessor::requestProduction()
 {
-    assert(state == EXECBUF_EMPTY);     // ??laxer?
+    assert((state == EXECBUF_UNDERFLOW) || (state == EXECBUF_EMPTY));
     state = EXECBUF_UNDERFLOW;
     pProducer = pBufStart;
     pConsumer = pBufStart;
@@ -431,7 +437,7 @@ inline void ExecStreamBufAccessor::requestProduction()
 
 inline void ExecStreamBufAccessor::requestConsumption()
 {
-    assert(state == EXECBUF_NONEMPTY);  // laxer??
+    assert((state == EXECBUF_OVERFLOW) || (state == EXECBUF_NONEMPTY));
     state = EXECBUF_OVERFLOW;
     pBufEnd = pProducer;
 }
@@ -485,6 +491,11 @@ inline uint ExecStreamBufAccessor::getProductionAvailable() const
 inline ExecStreamBufState ExecStreamBufAccessor::getState() const
 {
     return state;
+}
+
+inline bool  ExecStreamBufAccessor::hasPendingEOS() const
+{
+    return pendingEOS;
 }
 
 inline ExecStreamBufProvision ExecStreamBufAccessor::getProvision() const

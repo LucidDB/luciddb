@@ -114,21 +114,18 @@ ExecStreamResult MockProducerExecStream::execute(
     uint cb = pOutAccessor->getProductionAvailable();
     uint nRows = std::min<uint64_t>(nRowsMax - nRowsProduced, cb / cbTuple);
     uint cbBatch = nRows * cbTuple;
-    cb -= cbBatch;
-    nRowsProduced += nRows;
     
     // TODO:  pOutAccessor->validateTupleSize(?);
     if (cbBatch) {
+        cb -= cbBatch;
+        nRowsProduced += nRows;
         PBuffer pBuffer = pOutAccessor->getProductionStart();
         memset(pBuffer,0,cbBatch);
         pOutAccessor->produceData(pBuffer + cbBatch);
         pOutAccessor->requestConsumption();
-    } else {
-        if (nRowsProduced == nRowsMax) {
-            pOutAccessor->markEOS();
-        }
-    }
+    } 
     if (nRowsProduced == nRowsMax) {
+        pOutAccessor->markEOS();
         return EXECRC_EOS;
     } else {
         return EXECRC_BUF_OVERFLOW;
