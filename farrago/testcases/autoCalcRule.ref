@@ -1,4 +1,4 @@
-0: jdbc:farragotest:> -- $Id: $
+0: jdbc:farragotest:> -- $Id: //open/dt/dev/farrago/testcases/autoCalcRule.sql#1 $
 0: jdbc:farragotest:> 
 0: jdbc:farragotest:> explain plan for select jplus(1, 1) from values(true);
 +------------------------------------+
@@ -14,8 +14,7 @@
 +--------------------------------------------+
 | FennelToIteratorConverter                  |
 |   FennelPullCalcRel(EXPR$0=[CPLUS(1, 1)])  |
-|     IteratorToFennelConverter              |
-|       IterOneRowRel                        |
+|     FennelPullOneRowRel                    |
 +--------------------------------------------+
 0: jdbc:farragotest:> 
 0: jdbc:farragotest:> explain plan for select cplus(1, 1), jplus(2, 2) from values(true);
@@ -36,8 +35,7 @@
 | IterCalcRel(EXPR$0=[JPLUS(2, 2)], EXPR$1=[$0])  |
 |   FennelToIteratorConverter                     |
 |     FennelPullCalcRel($0=[CPLUS(1, 1)])         |
-|       IteratorToFennelConverter                 |
-|         IterOneRowRel                           |
+|       FennelPullOneRowRel                       |
 +-------------------------------------------------+
 0: jdbc:farragotest:> 
 0: jdbc:farragotest:> explain plan for select cplus(jplus(1, 1), 2) from values(true);
@@ -58,8 +56,7 @@
 | IterCalcRel(EXPR$0=[JPLUS($0, 2)])       |
 |   FennelToIteratorConverter              |
 |     FennelPullCalcRel($0=[CPLUS(1, 1)])  |
-|       IteratorToFennelConverter          |
-|         IterOneRowRel                    |
+|       FennelPullOneRowRel                |
 +------------------------------------------+
 0: jdbc:farragotest:> 
 0: jdbc:farragotest:> explain plan for select empno, cplus(jplus(deptno, empid), age), jplus(cplus(deptno, empid), age), age from sales.emps;

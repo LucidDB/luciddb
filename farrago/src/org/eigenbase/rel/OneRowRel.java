@@ -64,8 +64,13 @@ public class OneRowRel extends AbstractRelNode
 
     protected RelDataType deriveRowType()
     {
-        return cluster.typeFactory.createStructType(
-            new RelDataType [] { cluster.typeFactory.createSqlType(
+        return deriveOneRowType(cluster.typeFactory);
+    }
+
+    public static RelDataType deriveOneRowType(RelDataTypeFactory typeFactory)
+    {
+        return typeFactory.createStructType(
+            new RelDataType [] { typeFactory.createSqlType(
                     SqlTypeName.Integer) },
             new String [] { "ZERO" });
     }

@@ -59,6 +59,9 @@ public class UnionEliminatorRule extends RelOptRule
         if (1 != union.inputs.length) {
             return;
         }
+        if (union.isDistinct()) {
+            return;
+        }
         RelNode child = call.rels[1];
         call.transformTo(RelOptUtil.clone(child));
     }

@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/multiset.sql#2 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/multiset.sql#3 $
 0: jdbc:farrago:> -- Multiset related regression tests
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select*from unnest(multiset[1,2,3]);
@@ -6,20 +6,27 @@
 | EXPR$0  |
 +---------+
 | 1       |
+| 2       |
+| 3       |
 +---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select*from unnest(multiset[1+2,3-4,5*6,7/8,9+10*11*log(13)]);
-+---------+
-| EXPR$0  |
-+---------+
-| 3.0     |
-+---------+
++---------------------+
+|       EXPR$0        |
++---------------------+
+| 3.0                 |
+| -1.0                |
+| 30.0                |
+| 0.0                 |
+| 131.53376875375204  |
++---------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select*from unnest(multiset['a','b'||'c']);
 +---------+
 | EXPR$0  |
 +---------+
 | a       |
+| bc      |
 +---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select*from unnest(multiset[row(1,2,3,4), row(11,22,33,44)]);
@@ -27,6 +34,7 @@
 | EXPR$0  | EXPR$1  | EXPR$2  | EXPR$3  |
 +---------+---------+---------+---------+
 | 1       | 2       | 3       | 4       |
+| 11      | 22      | 33      | 44      |
 +---------+---------+---------+---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select*from unnest(multiset(select*from sales.depts));

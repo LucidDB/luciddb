@@ -32,6 +32,7 @@ import org.eigenbase.rel.OneRowRel;
 import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeFactory;
 
 
 /**
@@ -63,9 +64,14 @@ public class IterOneRowRel extends OneRowRel implements JavaRel
     // implement RelNode
     public ParseTree implement(JavaRelImplementor implementor)
     {
-        final RelDataType outputRowType = getRowType();
+        return implementOneRow(implementor.getTypeFactory(), getRowType());
+    }
+
+    public static ParseTree implementOneRow(RelDataTypeFactory typeFactory,
+        RelDataType outputRowType)
+    {
         OJClass outputRowClass = OJUtil.typeToOJClass(
-            outputRowType, implementor.getTypeFactory());
+            outputRowType, typeFactory);
 
         Expression newRowExp =
             new AllocationExpression(
