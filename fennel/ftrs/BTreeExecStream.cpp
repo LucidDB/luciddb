@@ -99,7 +99,7 @@ BTreeExecStreamParams::BTreeExecStreamParams()
     pRootMap = NULL;
 }
 
-BTreeRootMap::~BTreeRootMap()
+BTreeOwnerRootMap::~BTreeOwnerRootMap()
 {
 }
 

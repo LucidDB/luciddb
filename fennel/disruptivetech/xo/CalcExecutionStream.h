@@ -29,6 +29,8 @@
 
 FENNEL_BEGIN_NAMESPACE
 
+// DEPRECATED
+    
 /**
  * CalcExecutionStreamParams defines parameters for instantiating a
  * CalcExecutionStream.

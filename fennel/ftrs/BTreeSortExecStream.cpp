@@ -31,7 +31,6 @@ void BTreeSortExecStream::prepare(BTreeSortExecStreamParams const &params)
 {
     assert(params.rootPageId == NULL_PAGE_ID);
     assert(!params.pRootMap);
-    assert(params.tupleDesc.empty());
     
     BTreeInsertExecStream::prepare(params);
 }
@@ -56,6 +55,10 @@ ExecStreamResult BTreeSortExecStream::execute(
     if (!sorted) {
         if (pInAccessor->getState() == EXECBUF_EOS) {
             sorted = true;
+            bool found = pWriter->searchFirst();
+            if (!found) {
+                pWriter->endSearch();
+            }
         } else {
             return BTreeInsertExecStream::execute(quantum);
         }

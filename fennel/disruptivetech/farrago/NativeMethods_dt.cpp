@@ -19,6 +19,11 @@
 */
 
 #include "fennel/common/CommonPreamble.h"
+#include "fennel/farrago/ExecStreamFactory.h"
+#include "fennel/disruptivetech/xo/CalcExecStream.h"
+#include "fennel/exec/ExecStreamEmbryo.h"
+
+// DEPRECATED
 #include "fennel/farrago/ExecutionStreamFactory.h"
 #include "fennel/disruptivetech/xo/CalcTupleStream.h"
 
@@ -28,24 +33,39 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-class ExecutionStreamSubFactory_dt
-    : public ExecutionStreamSubFactory, virtual public FemVisitor
+class ExecStreamSubFactory_dt
+    : public ExecutionStreamSubFactory, // DEPRECATED
+        public ExecStreamSubFactory,
+        virtual public FemVisitor
 {
-    ExecutionStreamFactory *pFactory;
-    ExecutionStreamParts *pParts;
+    ExecStreamFactory *pExecStreamFactory;
+    ExecStreamEmbryo *pEmbryo;
     bool created;
+
+    // DEPRECATED
+    ExecutionStreamFactory *pStreamFactory;
+    ExecutionStreamParts *pParts;
     
     // implement FemVisitor
     virtual void visit(ProxyCalcTupleStreamDef &streamDef)
     {
-        CalcTupleStream *pStream = new CalcTupleStream();
-
-        CalcTupleStreamParams *pParams = new CalcTupleStreamParams();
-        pFactory->readTupleStreamParams(*pParams,streamDef);
-        pParams->program = streamDef.getProgram();
-        pParams->isFilter = streamDef.isFilter();
-
-        pParts->setParts(pStream,pParams);
+        if (pStreamFactory) {
+            // DEPRECATED
+            CalcTupleStream *pStream = new CalcTupleStream();
+            CalcTupleStreamParams *pParams = new CalcTupleStreamParams();
+            pStreamFactory->readTupleStreamParams(*pParams,streamDef);
+            pParams->program = streamDef.getProgram();
+            pParams->isFilter = streamDef.isFilter();
+            pParts->setParts(pStream,pParams);
+        } else {
+            CalcExecStreamParams params;
+            pExecStreamFactory->readTupleStreamParams(params, streamDef);
+            params.program = streamDef.getProgram();
+            params.isFilter = streamDef.isFilter();
+            pEmbryo->init(
+                new CalcExecStream(),
+                params);
+        }
     }
 
     // implement JniProxyVisitor
@@ -67,18 +87,41 @@ class ExecutionStreamSubFactory_dt
         return "FemVisitor";
     }
     
+    // DEPRECATED
     // implement ExecutionStreamSubFactory
     virtual bool createStream(
         ExecutionStreamFactory &factory,
         ProxyExecutionStreamDef &streamDef,
         ExecutionStreamParts &parts)
     {
-        pFactory = &factory;
+        pStreamFactory = &factory;
+        pExecStreamFactory = NULL;
         pParts = &parts;
+        pEmbryo = NULL;
         created = true;
         
         // dispatch based on polymorphic stream type
         FemVisitor::visitTbl.accept(*this,streamDef);
+        
+        return created;
+    }
+    
+    // implement ExecStreamSubFactory
+    virtual bool createStream(
+        ExecStreamFactory &factory,
+        ProxyExecutionStreamDef &streamDef,
+        ExecStreamEmbryo &embryo)
+    {
+        pExecStreamFactory = &factory;
+        pEmbryo = &embryo;
+        created = true;
+        
+        // DEPRECATED
+        pStreamFactory = NULL;
+        pParts = NULL;
+        
+        // dispatch based on polymorphic stream type
+        FemVisitor::visitTbl.accept(*this, streamDef);
         
         return created;
     }
@@ -110,9 +153,17 @@ Java_com_disruptivetech_farrago_fennel_DisruptiveTechJni_registerStreamFactory(
     try {
         CmdInterpreter::StreamGraphHandle &streamGraphHandle =
             CmdInterpreter::getStreamGraphHandleFromLong(hStreamGraph);
-        streamGraphHandle.pStreamFactory->addSubFactory(
-            SharedExecutionStreamSubFactory(
-                new ExecutionStreamSubFactory_dt()));
+        if (streamGraphHandle.pStreamFactory) {
+            // DEPRECATED
+            streamGraphHandle.pStreamFactory->addSubFactory(
+                SharedExecutionStreamSubFactory(
+                    new ExecStreamSubFactory_dt()));
+        }
+        if (streamGraphHandle.pExecStreamFactory) {
+            streamGraphHandle.pExecStreamFactory->addSubFactory(
+                SharedExecStreamSubFactory(
+                    new ExecStreamSubFactory_dt()));
+        }
     } catch (std::exception &ex) {
         pEnv.handleExcn(ex);
     }

@@ -44,6 +44,7 @@ void SingleOutputExecStream::setOutputBufAccessors(
 
 void SingleOutputExecStream::prepare(SingleOutputExecStreamParams const &params)
 {
+    ExecStream::prepare(params);
     assert(pOutAccessor);
     assert(pOutAccessor->getProvision() == getOutputBufProvision());
     if (pOutAccessor->getTupleDesc().empty()) {

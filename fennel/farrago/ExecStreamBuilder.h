@@ -19,22 +19,20 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-#ifndef Fennel_ExecutionStreamBuilder_Included
-#define Fennel_ExecutionStreamBuilder_Included
+#ifndef Fennel_ExecStreamBuilder_Included
+#define Fennel_ExecStreamBuilder_Included
 
 #include "fennel/common/ClosableObject.h"
-#include "fennel/farrago/ExecutionStreamFactory.h"
+#include "fennel/farrago/ExecStreamFactory.h"
 #include "fennel/farrago/Fem.h"
-#include "fennel/xo/ExecutionStream.h"
+#include "fennel/exec/ExecStream.h"
 
 #include <boost/utility.hpp>
 
 FENNEL_BEGIN_NAMESPACE
 
-// DEPRECATED
-    
 /**
- * ExecutionStreamBuilder builds a prepared ExecutionStreamGraph from its 
+ * ExecStreamBuilder builds a prepared ExecStreamGraph from its 
  * Java representation.  It builds a graph in three phases:
  *
  * <ul>
@@ -45,20 +43,13 @@ FENNEL_BEGIN_NAMESPACE
  *
  * <p><b>Cache.</b>
  * A new scratch segment is allocated by the builder and is shared between 
- * the graph and the its streams.
+ * the graph and its streams.
  *
  * <p><b>Tracing.</b>
- * <ul>
- *   <li>All streams are TraceSource objects, and are assigned a trace 
+ *   All streams are assigned a trace 
  *     name of: <code>xo.<i>streamName</i></code>  Depending on a the 
  *     TraceTarget, this typically corresponds to a trace property like 
  *     <code>org.eigenbase.fennel.xo.<i>streamName</i></code>
- *   <li>If tracing is turned on for a stream, a tracing stream is 
- *     appended to the stream, to monitor its output.  Tracing streams are
- *     appended during the stream building phase.  They are named: 
- *     <code><i>streamName</i>.tracer</code>
- *   <li>Certain types of streams may not support tracing.
- * </ul>
  *
  * <p><b>Buffer Provisioning.</b>
  * Provisioning adapters are special streams interposed between two other 
@@ -67,48 +58,52 @@ FENNEL_BEGIN_NAMESPACE
  * phase.  They are named: <code><i>producerName</i>.provisioner</code>
  *
  * <p><b>Interposition.</b>
- * When tracers or provisioning adapters are appended to a stream, they 
+ * When provisioning adapters are appended to a stream, they 
  * consume the original stream's output and produce a new output.  To make 
  * the appended streams work transparently, the chain of streams is 
  * treated as a single unit.  Subsequent access to the stream's output is 
  * available through the graph by finding the "last" stream registered 
  * under the original stream's name.
  */
-class ExecutionStreamBuilder : public boost::noncopyable
+class ExecStreamBuilder : public boost::noncopyable
 {
     /**
-     * Database to be accessed by stream.
+     * Database to be accessed by streams.
      */
     SharedDatabase pDatabase;
 
     /**
-     * Factory for creating ExecutionStream objects.
+     * Scheduler which will execute streams.
      */
-    ExecutionStreamFactory &streamFactory;
+    SharedExecStreamScheduler pScheduler;
+
+    /**
+     * Factory for creating ExecStream objects.
+     */
+    ExecStreamFactory &streamFactory;
     
     /**
      * Graph of stream nodes being built up.
      */
-    SharedExecutionStreamGraph pGraph;
+    SharedExecStreamGraph pGraph;
 
-    typedef std::map<std::string,ExecutionStreamParts> StreamMap;
+    typedef std::map<std::string,ExecStreamEmbryo> StreamMap;
     typedef StreamMap::const_iterator StreamMapConstIter;
 
     /**
      * Streams to be linked and prepared, mapped by name
      */
-    StreamMap allStreamParts;
+    StreamMap allStreamEmbryos;
 
     /**
-     * Allocate a stream based on stream definition, add the stream to a 
-     * graph and remember how to prepare the stream. Interposes tracing
-     * stream, if applicable, as xo.<i>stream</i>.
+     * Allocates a stream based on stream definition, adds the stream to a 
+     * graph and records how to prepare the stream.
      */
     void buildStream(
         ProxyExecutionStreamDef &);
 
     /**
-     * Add dataflows between a stream and its inputs. Interposes
+     * Adds dataflows between a stream and its inputs. Interposes
      * provisioning adapters as required.
      *
      * @param streamDef corresponding Java stream definition being converted
@@ -117,16 +112,7 @@ class ExecutionStreamBuilder : public boost::noncopyable
         ProxyExecutionStreamDef &streamDef);
 
     /**
-     * If tracing is supported for stream, appends a tracing stream. Also 
-     * sets up dataflows and inserts a provisioning adapter if necessary.
-     *
-     * @param name name of stream to add tracing for
-     */
-    void addTracingStream(
-        const std::string &name);
-
-    /**
-     * Get the name of the trace source to use based on a stream name.
+     * Gets the name of the trace source to use based on a stream name.
      *
      * @param streamName name of stream being traced
      *
@@ -148,34 +134,36 @@ class ExecutionStreamBuilder : public boost::noncopyable
      * @param name name of original stream
      *
      * @param requiredDataFlow buffer provisioning requirement
+     *
+     * @return adapted stream
      */
-    void addAdapterFor(
+    SharedExecStream addAdapterFor(
         const std::string &name,
-        ExecutionStream::BufferProvision requiredDataFlow);
+        ExecStreamBufProvision requiredDataFlow);
 
     /**
      * Registers a newly created, unprepared stream with the builder and 
      * adds it to the graph.
      */
-    void saveStreamParts(
-        ExecutionStreamParts &);
+    void saveStreamEmbryo(
+        ExecStreamEmbryo &);
     
     /**
-     * Lookup a registered stream. The stream *must* be registered.
+     * Looks up a registered stream. The stream *must* already be registered.
      */
-    ExecutionStreamParts getStreamParts(
+    ExecStreamEmbryo getStreamEmbryo(
         const std::string &name);
     
     /**
-     * Append an add-on stream, such as a tracing stream or adapter stream,
-     * which masks the output of the original stream.
+     * Appends an add-on stream, such as a tracing stream or adapter stream,
+     * which postprocesses the output of the original stream.
      */
     void interposeStream(
         const std::string &name,
-        ExecutionStreamId interposedId);
+        ExecStreamId interposedId);
 
     /**
-     * Add dataflow to graph, from one stream's output, after add-ons, to
+     * Adds dataflow to graph, from one stream's output, after add-ons, to
      * another stream.
      *
      * @param source name of source stream
@@ -188,18 +176,23 @@ class ExecutionStreamBuilder : public boost::noncopyable
     
 public:
     /**
-     * Create a new ExecutionStreamBuilder.
+     * Creates a new ExecStreamBuilder.
      *
      * @param pDatabase database to be accessed by streams
      *
-     * @param pTableWriterFactory factory for creating TableWriters
+     * @param pScheduler scheduler which will execute streams
+     *
+     * @param streamFactory factory for creating streams
      *
      * @param pGraph graph to be built up with stream implementations
      */
-    explicit ExecutionStreamBuilder(
+    explicit ExecStreamBuilder(
         SharedDatabase pDatabase,
-        ExecutionStreamFactory &streamFactory,
-        SharedExecutionStreamGraph pGraph);
+        SharedExecStreamScheduler pScheduler, 
+        ExecStreamFactory &streamFactory,
+        SharedExecStreamGraph pGraph);
+
+    virtual ~ExecStreamBuilder();
 
     /**
      * Main builder entry point.
@@ -214,4 +207,4 @@ FENNEL_END_NAMESPACE
 
 #endif
 
-// End ExecutionStreamBuilder.h
+// End ExecStreamBuilder.h

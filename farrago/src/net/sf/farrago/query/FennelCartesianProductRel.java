@@ -117,6 +117,10 @@ class FennelCartesianProductRel extends FennelPullDoubleRel
                 getRepos().newFemBufferingTupleStreamDef();
             buffer.setInMemory(false);
             buffer.setMultipass(true);
+            buffer.setOutputDesc(
+                FennelRelUtil.createTupleDescriptorFromRowType(
+                    getRepos(),
+                    right.getRowType()));
 
             buffer.getInput().add(rightInput);
 

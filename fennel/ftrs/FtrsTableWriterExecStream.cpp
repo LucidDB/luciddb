@@ -73,19 +73,18 @@ void FtrsTableWriterExecStream::open(bool restart)
     pGraph->getTxn()->addParticipant(pTableWriter);
     nTuples = 0;
     pTableWriter->openIndexWriters();
-
-    createSavepoint();
+    isDone = false;
 }
 
 ExecStreamResult FtrsTableWriterExecStream::execute(
     ExecStreamQuantum const &quantum)
 {
-    if (svptId == NULL_SVPT_ID) {
-        // already returned some result
+    if (isDone) {
+        // already returned final result
         pOutAccessor->markEOS();
         return EXECRC_EOS;
     }
-
+    
     if (pInAccessor->getState() == EXECBUF_EOS) {
         // we've processed all input,  so commit what we've written
         // and return row count as our output
@@ -97,12 +96,17 @@ ExecStreamResult FtrsTableWriterExecStream::execute(
         pOutAccessor->provideBufferForConsumption(
             reinterpret_cast<PConstBuffer>(&nTuples), 
             reinterpret_cast<PConstBuffer>((&nTuples) + 1));
+        isDone = true;
         return EXECRC_BUF_OVERFLOW;
     }
 
     ExecStreamResult rc = precheckConduitBuffers();
     if (rc != EXECRC_YIELD) {
         return rc;
+    }
+
+    if (svptId == NULL_SVPT_ID) {
+        createSavepoint();
     }
 
     try {

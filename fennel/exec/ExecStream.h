@@ -56,7 +56,9 @@ protected:
     bool isOpen;
 
     /**
-     * Dataflow graph containing this stream.
+     * Dataflow graph containing this stream.  Note that we don't use
+     * a weak_ptr for this because it needs to be accessed frequently during
+     * execution, and the extra locking overhead would be frivolous.
      */
     ExecStreamGraph *pGraph;
     
@@ -231,6 +233,7 @@ inline ExecStreamId ExecStream::getStreamId() const
 
 inline ExecStreamGraph &ExecStream::getGraph() const
 {
+    assert(pGraph);
     return *pGraph;
 }
 

@@ -55,9 +55,33 @@ class ExecStreamGraph
     : public boost::noncopyable,
         public ClosableObject
 {
+    friend class ExecStreamScheduler;
+    
+protected:
+    /**
+     * Scheduler responsible for executing streams in this graph.  Note that we
+     * don't use a weak_ptr for this because it needs to be accessed frequently
+     * during execution, and the extra locking overhead would be frivolous.
+     */
+    ExecStreamScheduler *pScheduler;
+    
+    explicit ExecStreamGraph();
+    
 public:
+    /**
+     * Constructs a new ExecStreamGraph.
+     *
+     * @return new graph
+     */
+    static SharedExecStreamGraph newExecStreamGraph();
+    
     virtual ~ExecStreamGraph();
 
+    /**
+     * @return reference to executing scheduler
+     */
+    inline ExecStreamScheduler &getScheduler() const;
+    
     /**
      * Sets the transaction within which this graph should execute.
      * The transaction is reset whenever the graph is closed.
@@ -233,6 +257,12 @@ public:
      */
     virtual ExecStreamGraphImpl &getImpl() = 0;
 };
+
+inline ExecStreamScheduler &ExecStreamGraph::getScheduler() const
+{
+    assert(pScheduler);
+    return *pScheduler;
+}
 
 FENNEL_END_NAMESPACE
 

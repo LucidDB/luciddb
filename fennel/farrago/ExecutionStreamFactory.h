@@ -44,6 +44,8 @@ class TupleDescriptor;
 class TupleProjection;
 class StoredTypeDescriptorFactory;
 
+// DEPRECATED
+    
 /**
  * ExecutionStreamParts represents components required to construct and
  * prepare an ExecutionStream. It is designated as the "owner" of stream
@@ -282,34 +284,6 @@ public:
     void readTupleStreamParams(
         TupleStreamParams &,
         ProxyTupleStreamDef &);
-    
-    // Some static utilities which are also used in non-stream contexts.  TODO:
-    // move somewhere more appropriate.
-
-    /**
-     * Reads the Java representation of a TupleDescriptor.
-     *
-     * @param tupleDesc target TupleDescriptor
-     *
-     * @param javaTupleDesc Java proxy representation
-     *
-     * @param typeFactory factory for resolving type ordinals
-     */
-    static void readTupleDescriptor(
-        TupleDescriptor &tupleDesc,
-        ProxyTupleDescriptor &javaTupleDesc,
-        StoredTypeDescriptorFactory const &typeFactory);
-
-    /**
-     * Reads the Java representation of a TupleProjection
-     *
-     * @param tupleProj target TupleProjection
-     *
-     * @param pJavaTupleProj Java representation
-     */
-    static void readTupleProjection(
-        TupleProjection &tupleProj,
-        SharedProxyTupleProjection pJavaTupleProj);
 };
 
 class ExecutionStreamSubFactory : public boost::noncopyable

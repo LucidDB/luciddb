@@ -64,10 +64,22 @@ class FtrsTableWriterExecStream
      * Normally used to block checkpoints.
      */
     SXMutex *pActionMutex;
-    
+
+    /**
+     * Object which does the real update work.
+     */
     SharedFtrsTableWriter pTableWriter;
 
+    /**
+     * Id of savepoint marking start of subtransaction, or NULL_SVPT_ID
+     * if no subtransaction in progress.
+     */
     SavepointId svptId;
+
+    /**
+     * Whether row count has been produced.
+     */
+    bool isDone;
 
     void createSavepoint();
     void commitSavepoint();

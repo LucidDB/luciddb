@@ -20,7 +20,7 @@
 
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/test/ExecStreamTestBase.h"
-#include "fennel/exec/ExecStreamGraphImpl.h"
+#include "fennel/exec/ExecStreamGraph.h"
 #include "fennel/exec/ExecStream.h"
 #include "fennel/exec/ScratchBufferExecStream.h"
 #include "fennel/exec/ExecStreamEmbryo.h"
@@ -100,7 +100,7 @@ void ExecStreamTestBase::testCaseSetUp()
 {
     SegStorageTestBase::testCaseSetUp();
     openStorage(DeviceMode::createNew);
-    pGraph.reset(new ExecStreamGraphImpl(),ClosableObjectDestructor());
+    pGraph = ExecStreamGraph::newExecStreamGraph();
     pScheduler.reset(
         new DfsTreeExecStreamScheduler(
             this,

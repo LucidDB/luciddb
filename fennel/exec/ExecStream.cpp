@@ -90,7 +90,7 @@ void ExecStream::open(bool restart)
     } else {
         // NOTE: this assertion is bad because in case of multiple
         // inheritance, open can be called twice.  So we rely on the
-        // corresponding assertion in TupleStreamGraph instead, unless
+        // corresponding assertion in ExecStreamGraph instead, unless
         // someone can come up with something better.
 #if 0
         assert(!isOpen);

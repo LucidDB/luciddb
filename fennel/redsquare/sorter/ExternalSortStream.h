@@ -28,6 +28,8 @@
 
 FENNEL_BEGIN_NAMESPACE
 
+// DEPRECATED
+    
 /**
  * ExternalSortStreamParams defines parameters for instantiating a
  * ExternalSortStream. Note that when distinctness is DUP_DISCARD, the key

@@ -31,6 +31,8 @@
 
 FENNEL_BEGIN_NAMESPACE
 
+// DEPRECATED
+    
 /**
  * JavaTupleStreamParams defines parameters for instantiating a JavaTupleStream.
  */

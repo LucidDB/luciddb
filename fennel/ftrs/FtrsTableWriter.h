@@ -65,7 +65,7 @@ struct FtrsTableIndexWriter
     TupleProjection inputProj;
     TupleProjection inputKeyProj;
     TupleData tupleData;
-    BTreeRootMap *pRootMap;
+    BTreeOwnerRootMap *pRootMap;
     bool updateInPlace;
 };
 

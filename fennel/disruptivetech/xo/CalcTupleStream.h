@@ -30,6 +30,8 @@
 
 FENNEL_BEGIN_NAMESPACE
 
+// DEPRECATED
+    
 /**
  * CalcTupleStreamParams defines parameters for instantiating a
  * CalcTupleStream.

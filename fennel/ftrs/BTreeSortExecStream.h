@@ -30,7 +30,7 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * BTreeSortExecStreamParams defines parameters for instantiating a
  * BTreeSortExecStream.  The rootPageId attribute should always be
- * NULL_PAGE_ID, and tupleDesc should be empty.  Note that when distinctness is
+ * NULL_PAGE_ID.  Note that when distinctness is
  * DUP_DISCARD, the key should normally be the whole tuple to avoid
  * non-determinism with regards to which tuples are discarded.
  */

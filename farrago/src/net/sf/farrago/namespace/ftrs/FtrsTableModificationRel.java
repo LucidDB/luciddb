@@ -291,6 +291,10 @@ class FtrsTableModificationRel extends TableModificationRel
                 repos.newFemBufferingTupleStreamDef();
             buffer.setInMemory(false);
             buffer.setMultipass(false);
+            buffer.setOutputDesc(
+                FennelRelUtil.createTupleDescriptorFromRowType(
+                    repos,
+                    child.getRowType()));
 
             buffer.getInput().add(input);
 

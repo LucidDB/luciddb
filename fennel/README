@@ -37,9 +37,9 @@ btree:  B-plus tree implementation
 
 db:  database implementation (top-level container)
 
-xo:  tuple stream implementation (deprecated)
+xo:  tuple stream implementation (DEPRECATED, replaced by exec+ftrs)
 
-ftrs:  Fennel Transactional Row Store, a table implementation built on
+ftrs:  Fennel Transactional Row Store, a table storage implementation built on
 top of the btree library
 
 test:  unit tests

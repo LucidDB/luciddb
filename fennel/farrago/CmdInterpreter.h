@@ -25,6 +25,9 @@
 #include "fennel/farrago/Fem.h"
 #include "fennel/synch/StatsTimer.h"
 #include "fennel/common/FileStatsTarget.h"
+#include "fennel/ftrs/BTreeExecStream.h"
+
+// DEPRECATED
 #include "fennel/xo/BTreeTupleStream.h"
 
 #include <boost/utility.hpp>
@@ -67,18 +70,31 @@ public:
     {
         SharedDatabase pDb;
         SharedLogicalTxn pTxn;
+        SharedFtrsTableWriterFactory pFtrsTableWriterFactory;
+
+        // DEPRECATED
         SharedTableWriterFactory pTableWriterFactory;
     };
 
-    struct StreamGraphHandle : public BTreeRootMap
+    struct StreamGraphHandle
+        : public BTreeRootMap,  // DEPRECATED
+            public BTreeOwnerRootMap
     {
-        SharedExecutionStreamFactory pStreamFactory;
+        SharedExecStreamFactory pExecStreamFactory;
+        SharedExecStreamGraph pExecStreamGraph;
+        SharedExecStreamScheduler pScheduler;
         TxnHandle *pTxnHandle;
         jobject javaRuntimeContext;
+
+        // implement BTreeOwnerRootMap
         virtual PageId getRoot(PageOwnerId pageOwnerId);
-        virtual SharedExecutionStreamGraph getGraph() = 0;
+        
+        // DEPRECATED
+        SharedExecutionStreamFactory pStreamFactory;
+        virtual SharedExecutionStreamGraph getGraph();
     };
 
+    // DEPRECATED
     struct TupleStreamGraphHandle : public StreamGraphHandle
     {
     private:
@@ -108,10 +124,13 @@ protected:
     void setDbHandle(SharedProxyDbHandle,DbHandle *);
     void setTxnHandle(SharedProxyTxnHandle,TxnHandle *);
     void setStreamGraphHandle(SharedProxyStreamGraphHandle,StreamGraphHandle *);
-    void setStreamHandle(SharedProxyStreamHandle,ExecutionStream *);
+    void setExecStreamHandle(SharedProxyStreamHandle,ExecStream *);
     void setSvptHandle(
         SharedProxySvptHandle,SavepointId);
 
+    // DEPRECATED
+    void setStreamHandle(SharedProxyStreamHandle,ExecutionStream *);
+    
     void getBTreeForIndexCmd(ProxyIndexCmd &,PageId,BTreeDescriptor &);
 
     // Per-command overrides for FemVisitor; add new commands here
@@ -140,10 +159,38 @@ public:
     virtual int64_t executeCommand(ProxyCmd &cmd);
 
     static inline StreamGraphHandle &getStreamGraphHandleFromLong(jlong);
-    static inline ExecutionStream &getStreamFromLong(jlong);
+    static inline ExecStream &getExecStreamFromLong(jlong);
     static inline TxnHandle &getTxnHandleFromLong(jlong);
     static inline jobject getObjectFromLong(jlong jHandle);
 
+    // DEPRECATED
+    static inline ExecutionStream &getStreamFromLong(jlong);
+    
+    /**
+     * Reads the Java representation of a TupleDescriptor.
+     *
+     * @param tupleDesc target TupleDescriptor
+     *
+     * @param javaTupleDesc Java proxy representation
+     *
+     * @param typeFactory factory for resolving type ordinals
+     */
+    static void readTupleDescriptor(
+        TupleDescriptor &tupleDesc,
+        ProxyTupleDescriptor &javaTupleDesc,
+        StoredTypeDescriptorFactory const &typeFactory);
+
+    /**
+     * Reads the Java representation of a TupleProjection
+     *
+     * @param tupleProj target TupleProjection
+     *
+     * @param pJavaTupleProj Java representation
+     */
+    static void readTupleProjection(
+        TupleProjection &tupleProj,
+        SharedProxyTupleProjection pJavaTupleProj);
+    
     // override JniProxyVisitor
     void *getLeafPtr();
     const char *getLeafTypeName();
@@ -161,9 +208,15 @@ CmdInterpreter::getStreamGraphHandleFromLong(jlong jHandle)
     return *reinterpret_cast<StreamGraphHandle *>(jHandle);
 }
 
+// DEPRECATED
 inline ExecutionStream &CmdInterpreter::getStreamFromLong(jlong jHandle)
 {
     return *reinterpret_cast<ExecutionStream *>(jHandle);
+}
+
+inline ExecStream &CmdInterpreter::getExecStreamFromLong(jlong jHandle)
+{
+    return *reinterpret_cast<ExecStream *>(jHandle);
 }
 
 inline CmdInterpreter::TxnHandle &CmdInterpreter::getTxnHandleFromLong(

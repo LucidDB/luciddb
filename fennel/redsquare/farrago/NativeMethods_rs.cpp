@@ -20,10 +20,15 @@
 */
 
 #include "fennel/common/CommonPreamble.h"
-#include "fennel/farrago/ExecutionStreamFactory.h"
-#include "fennel/redsquare/sorter/ExternalSortStream.h"
+#include "fennel/farrago/ExecStreamFactory.h"
+#include "fennel/redsquare/sorter/ExternalSortExecStream.h"
 #include "fennel/db/Database.h"
 #include "fennel/segment/SegmentFactory.h"
+#include "fennel/exec/ExecStreamEmbryo.h"
+
+// DEPRECATED
+#include "fennel/redsquare/sorter/ExternalSortStream.h"
+#include "fennel/farrago/ExecutionStreamFactory.h"
 
 #ifdef __MINGW32__
 #include <windows.h>
@@ -31,12 +36,19 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-class ExecutionStreamSubFactory_rs
-    : public ExecutionStreamSubFactory, virtual public FemVisitor
+class ExecStreamSubFactory_rs
+    : public ExecutionStreamSubFactory, // DEPRECATED
+        public ExecStreamSubFactory,
+        virtual public FemVisitor
 {
-    ExecutionStreamFactory *pFactory;
-    ExecutionStreamParts *pParts;
+    ExecStreamFactory *pExecStreamFactory;
+    ExecStreamEmbryo *pEmbryo;
+    
     bool created;
+    
+    // DEPRECATED
+    ExecutionStreamFactory *pStreamFactory;
+    ExecutionStreamParts *pParts;
     
     // implement FemVisitor
     virtual void visit(ProxySortingStreamDef &streamDef)
@@ -47,26 +59,51 @@ class ExecutionStreamSubFactory_rs
             return;
         }
 
-        SharedDatabase pDatabase = pFactory->getDatabase();
+        if (pStreamFactory) {
+            // DEPRECATED
+            SharedDatabase pDatabase = pStreamFactory->getDatabase();
         
-        ExternalSortStream *pStream =
-            &(ExternalSortStream::newExternalSortStream());
+            ExternalSortStream *pStream =
+                &(ExternalSortStream::newExternalSortStream());
 
-        ExternalSortStreamParams *pParams = new ExternalSortStreamParams();
+            ExternalSortStreamParams *pParams = new ExternalSortStreamParams();
 
-        // ExternalSortStream requires a private ScratchSegment
-        pParams->scratchAccessor =
-            pDatabase->getSegmentFactory()->newScratchSegment(
-                pDatabase->getCache());
+            // ExternalSortStream requires a private ScratchSegment
+            pParams->scratchAccessor =
+                pDatabase->getSegmentFactory()->newScratchSegment(
+                    pDatabase->getCache());
         
-        pFactory->readTupleStreamParams(*pParams,streamDef);
-        pParams->distinctness = streamDef.getDistinctness();
-        pParams->pTempSegment = pDatabase->getTempSegment();
-        pParams->storeFinalRun = false;
-        ExecutionStreamFactory::readTupleProjection(
-            pParams->keyProj,
-            streamDef.getKeyProj());
-        pParts->setParts(pStream,pParams);
+            pStreamFactory->readTupleStreamParams(*pParams,streamDef);
+            pParams->distinctness = streamDef.getDistinctness();
+            pParams->pTempSegment = pDatabase->getTempSegment();
+            pParams->storeFinalRun = false;
+            CmdInterpreter::readTupleProjection(
+                pParams->keyProj,
+                streamDef.getKeyProj());
+            pParts->setParts(pStream,pParams);
+        }
+
+        if (pExecStreamFactory) {
+            SharedDatabase pDatabase = pExecStreamFactory->getDatabase();
+        
+            ExternalSortExecStreamParams params;
+
+            // ExternalSortStream requires a private ScratchSegment
+            params.scratchAccessor =
+                pDatabase->getSegmentFactory()->newScratchSegment(
+                    pDatabase->getCache());
+        
+            pExecStreamFactory->readTupleStreamParams(params, streamDef);
+            params.distinctness = streamDef.getDistinctness();
+            params.pTempSegment = pDatabase->getTempSegment();
+            params.storeFinalRun = false;
+            CmdInterpreter::readTupleProjection(
+                params.keyProj,
+                streamDef.getKeyProj());
+            pEmbryo->init(
+                ExternalSortExecStream::newExternalSortExecStream(),
+                params);
+        }
     }
 
     // implement JniProxyVisitor
@@ -88,18 +125,41 @@ class ExecutionStreamSubFactory_rs
         return "FemVisitor";
     }
     
+    // DEPRECATED
     // implement ExecutionStreamSubFactory
     virtual bool createStream(
         ExecutionStreamFactory &factory,
         ProxyExecutionStreamDef &streamDef,
         ExecutionStreamParts &parts)
     {
-        pFactory = &factory;
+        pStreamFactory = &factory;
+        pExecStreamFactory = NULL;
         pParts = &parts;
+        pEmbryo = NULL;
         created = true;
         
         // dispatch based on polymorphic stream type
         FemVisitor::visitTbl.accept(*this,streamDef);
+        
+        return created;
+    }
+    
+    // implement ExecStreamSubFactory
+    virtual bool createStream(
+        ExecStreamFactory &factory,
+        ProxyExecutionStreamDef &streamDef,
+        ExecStreamEmbryo &embryo)
+    {
+        pExecStreamFactory = &factory;
+        pEmbryo = &embryo;
+        created = true;
+        
+        // DEPRECATED
+        pStreamFactory = NULL;
+        pParts = NULL;
+        
+        // dispatch based on polymorphic stream type
+        FemVisitor::visitTbl.accept(*this, streamDef);
         
         return created;
     }
@@ -131,9 +191,17 @@ Java_com_redsquare_farrago_fennel_RedSquareJni_registerStreamFactory(
     try {
         CmdInterpreter::StreamGraphHandle &streamGraphHandle =
             CmdInterpreter::getStreamGraphHandleFromLong(hStreamGraph);
-        streamGraphHandle.pStreamFactory->addSubFactory(
-            SharedExecutionStreamSubFactory(
-                new ExecutionStreamSubFactory_rs()));
+        if (streamGraphHandle.pStreamFactory) {
+            // DEPRECATED
+            streamGraphHandle.pStreamFactory->addSubFactory(
+                SharedExecutionStreamSubFactory(
+                    new ExecStreamSubFactory_rs()));
+        }
+        if (streamGraphHandle.pExecStreamFactory) {
+            streamGraphHandle.pExecStreamFactory->addSubFactory(
+                SharedExecStreamSubFactory(
+                    new ExecStreamSubFactory_rs()));
+        }
     } catch (std::exception &ex) {
         pEnv.handleExcn(ex);
     }

@@ -46,6 +46,9 @@ SharedExecStreamBufAccessor ExecStreamScheduler::newBufAccessor()
 
 void ExecStreamScheduler::addGraph(SharedExecStreamGraph pGraph)
 {
+    assert(!pGraph->pScheduler);
+    pGraph->pScheduler = this;
+    
     // if any of the streams in the new graph require tracing, then
     // disable our tracing short-circuit
     std::vector<SharedExecStream> streams = pGraph->getSortedStreams();
@@ -57,8 +60,10 @@ void ExecStreamScheduler::addGraph(SharedExecStreamGraph pGraph)
     }
 }
 
-void ExecStreamScheduler::removeGraph(SharedExecStreamGraph)
+void ExecStreamScheduler::removeGraph(SharedExecStreamGraph pGraph)
 {
+    assert(pGraph->pScheduler == this);
+    pGraph->pScheduler = NULL;
 }
 
 // Summary of per-stream trace levels:

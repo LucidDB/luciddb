@@ -136,6 +136,8 @@ public class FarragoRelImplementor extends JavaRelImplementor
         streamDef.setName(streamName);
         streamDefSet.add(streamDef);
 
+        // REVIEW jvs 15-Nov-2004:  This is dangerous because rowType
+        // may not be correct all the way down.
         if (streamDef.getOutputDesc() == null) {
             streamDef.setOutputDesc(
                 FennelRelUtil.createTupleDescriptorFromRowType(

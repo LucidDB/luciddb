@@ -108,6 +108,8 @@ public:
 class JniUtil 
 {
     friend class JniEnvAutoRef;
+
+    static bool usingOldScheduler;
     
     /**
      * Loaded JavaVM instance.  For now we can only deal with one at a time.
@@ -250,6 +252,10 @@ public:
      * Counter for all handles opened by Farrago.
      */
     static AtomicCounter handleCount;
+
+    // DEPRECATED
+    static void requestOldScheduler();
+    static bool isUsingOldScheduler();
 };
 
 // NOTE jvs 16-Oct-2004:  This crazy kludge is for problems arising on Linux

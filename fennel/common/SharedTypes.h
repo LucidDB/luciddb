@@ -118,18 +118,6 @@ typedef boost::shared_ptr<Database> SharedDatabase;
 class CheckpointThread;
 typedef boost::shared_ptr<CheckpointThread> SharedCheckpointThread;
 
-class ExecutionStream;
-typedef boost::shared_ptr<ExecutionStream> SharedExecutionStream;
-
-class ExecutionStreamParams;
-typedef boost::shared_ptr<ExecutionStreamParams> SharedExecutionStreamParams;
-
-class ExecutionStreamGraph;
-typedef boost::shared_ptr<ExecutionStreamGraph> SharedExecutionStreamGraph;
-
-class ExecutionStreamFactory;
-typedef boost::shared_ptr<ExecutionStreamFactory> SharedExecutionStreamFactory;
-
 class ExecStream;
 typedef boost::shared_ptr<ExecStream> SharedExecStream;
 
@@ -151,17 +139,8 @@ typedef boost::shared_ptr<ExecStreamGraph> SharedExecStreamGraph;
 class ExecStreamFactory;
 typedef boost::shared_ptr<ExecStreamFactory> SharedExecStreamFactory;
 
-class TupleStream;
-typedef boost::shared_ptr<TupleStream> SharedTupleStream;
-
-class TupleStreamGraph;
-typedef boost::shared_ptr<TupleStreamGraph> SharedTupleStreamGraph;
-
-class TableWriter;
-typedef boost::shared_ptr<TableWriter> SharedTableWriter;
-
-class TableWriterFactory;
-typedef boost::shared_ptr<TableWriterFactory> SharedTableWriterFactory;
+class ExecStreamSubFactory;
+typedef boost::shared_ptr<ExecStreamSubFactory> SharedExecStreamSubFactory;
 
 class FtrsTableWriter;
 typedef boost::shared_ptr<FtrsTableWriter> SharedFtrsTableWriter;
@@ -171,6 +150,24 @@ typedef boost::shared_ptr<FtrsTableWriterFactory> SharedFtrsTableWriterFactory;
 
 class Calculator;
 typedef boost::shared_ptr<Calculator> SharedCalculator;
+
+// DEPRECATED
+class TupleStream;
+typedef boost::shared_ptr<TupleStream> SharedTupleStream;
+class TupleStreamGraph;
+typedef boost::shared_ptr<TupleStreamGraph> SharedTupleStreamGraph;
+class TableWriter;
+typedef boost::shared_ptr<TableWriter> SharedTableWriter;
+class TableWriterFactory;
+typedef boost::shared_ptr<TableWriterFactory> SharedTableWriterFactory;
+class ExecutionStream;
+typedef boost::shared_ptr<ExecutionStream> SharedExecutionStream;
+class ExecutionStreamParams;
+typedef boost::shared_ptr<ExecutionStreamParams> SharedExecutionStreamParams;
+class ExecutionStreamGraph;
+typedef boost::shared_ptr<ExecutionStreamGraph> SharedExecutionStreamGraph;
+class ExecutionStreamFactory;
+typedef boost::shared_ptr<ExecutionStreamFactory> SharedExecutionStreamFactory;
 
 FENNEL_END_NAMESPACE
 

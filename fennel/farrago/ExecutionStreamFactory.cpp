@@ -191,12 +191,12 @@ void ExecutionStreamFactory::visit(ProxyIndexSearchDef &streamDef)
     readBTreeReadTupleStreamParams(*pParams,streamDef);
     pParams->outerJoin = streamDef.isOuterJoin();
     if (streamDef.getInputKeyProj()) {
-        readTupleProjection(
+        CmdInterpreter::readTupleProjection(
             pParams->inputKeyProj,
             streamDef.getInputKeyProj());
     }
     if (streamDef.getInputJoinProj()) {
-        readTupleProjection(
+        CmdInterpreter::readTupleProjection(
             pParams->inputJoinProj,
             streamDef.getInputJoinProj());
     }
@@ -246,7 +246,7 @@ void ExecutionStreamFactory::visit(ProxyTableUpdaterDef &streamDef)
     pParams->actionType = TableWriter::ACTION_UPDATE;
     SharedProxyTupleProjection pUpdateProj =
         streamDef.getUpdateProj();
-    readTupleProjection(
+    CmdInterpreter::readTupleProjection(
         pParams->updateProj,
         pUpdateProj);
     readTableWriterStreamParams(*pParams,streamDef);
@@ -265,7 +265,7 @@ void ExecutionStreamFactory::visit(ProxySortingStreamDef &streamDef)
     pParams->segmentId = Database::TEMP_SEGMENT_ID;
     pParams->pageOwnerId = ANON_PAGE_OWNER_ID;
     pParams->pRootMap = NULL;
-    readTupleProjection(
+    CmdInterpreter::readTupleProjection(
         pParams->keyProj,
         streamDef.getKeyProj());
     parts.setParts(pStream,pParams);
@@ -324,7 +324,7 @@ void ExecutionStreamFactory::readExecutionStreamParams(
     ProxyExecutionStreamDef &streamDef)
 {
     assert(streamDef.getOutputDesc());
-    readTupleDescriptor(
+    CmdInterpreter::readTupleDescriptor(
         params.outputTupleDesc,
         *(streamDef.getOutputDesc()),
         pDatabase->getTypeFactory());
@@ -387,7 +387,7 @@ void ExecutionStreamFactory::readTableWriterStreamParams(
         SharedProxyTupleProjection pInputProj =
             pIndexWriterDef->getInputProj();
         if (pInputProj) {
-            readTupleProjection(
+            CmdInterpreter::readTupleProjection(
                 indexParams.inputProj,
                 pInputProj);
         } else {
@@ -409,12 +409,12 @@ void ExecutionStreamFactory::readBTreeStreamParams(
     params.pageOwnerId = PageOwnerId(streamDef.getIndexId());
     params.pSegment = pDatabase->getSegmentById(params.segmentId);
     
-    readTupleDescriptor(
+    CmdInterpreter::readTupleDescriptor(
         params.tupleDesc,
         *(streamDef.getTupleDesc()),
         pDatabase->getTypeFactory());
     
-    readTupleProjection(
+    CmdInterpreter::readTupleProjection(
         params.keyProj,
         streamDef.getKeyProj());
 
@@ -433,7 +433,7 @@ void ExecutionStreamFactory::readBTreeReadTupleStreamParams(
 {
     readTupleStreamParams(params,streamDef);
     readBTreeStreamParams(params,streamDef);
-    readTupleProjection(
+    CmdInterpreter::readTupleProjection(
         params.outputProj,
         streamDef.getOutputProj());
 }
@@ -445,33 +445,6 @@ void ExecutionStreamFactory::readIndexWriterParams(
     readBTreeStreamParams(params,indexWriterDef);
     params.distinctness = indexWriterDef.getDistinctness();
     params.updateInPlace = indexWriterDef.isUpdateInPlace();
-}
-
-void ExecutionStreamFactory::readTupleDescriptor(
-    TupleDescriptor &tupleDesc,
-    ProxyTupleDescriptor &javaTupleDesc,
-    StoredTypeDescriptorFactory const &typeFactory)
-{
-    tupleDesc.clear();
-    SharedProxyTupleAttrDescriptor pAttr = javaTupleDesc.getAttrDescriptor();
-    for (; pAttr; ++pAttr) {
-        StoredTypeDescriptor const &typeDescriptor = 
-            typeFactory.newDataType(pAttr->getTypeOrdinal());
-        tupleDesc.push_back(
-            TupleAttributeDescriptor(
-                typeDescriptor,pAttr->isNullable(),pAttr->getByteLength()));
-    }
-}
-
-void ExecutionStreamFactory::readTupleProjection(
-    TupleProjection &tupleProj,
-    SharedProxyTupleProjection pJavaTupleProj)
-{
-    tupleProj.clear();
-    SharedProxyTupleAttrProjection pAttr = pJavaTupleProj->getAttrProjection();
-    for (; pAttr; ++pAttr) {
-        tupleProj.push_back(pAttr->getAttributeIndex());
-    }
 }
 
 bool ExecutionStreamFactory::shouldEnforceCacheQuotas()

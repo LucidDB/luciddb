@@ -30,6 +30,18 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
+SharedExecStreamGraph ExecStreamGraph::newExecStreamGraph()
+{
+    return SharedExecStreamGraph(
+        new ExecStreamGraphImpl(),
+        ClosableObjectDestructor());
+}
+
+ExecStreamGraph::ExecStreamGraph()
+{
+    pScheduler = NULL;
+}
+
 ExecStreamGraph::~ExecStreamGraph()
 {
 }

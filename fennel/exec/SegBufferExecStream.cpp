@@ -120,13 +120,13 @@ ExecStreamResult SegBufferExecStream::execute(ExecStreamQuantum const &)
                 bufferSegmentAccessor);
         }
         switch(pInAccessor->getState()) {
+        case EXECBUF_NONEMPTY:
         case EXECBUF_OVERFLOW:
             pByteOutputStream->consumeWritePointer(
                 pInAccessor->getConsumptionAvailable());
             pByteOutputStream->hardPageBreak();
             pInAccessor->consumeData(pInAccessor->getConsumptionEnd());
             return EXECRC_BUF_UNDERFLOW;
-        case EXECBUF_NONEMPTY:
         case EXECBUF_UNDERFLOW:
             return EXECRC_BUF_UNDERFLOW;
         case EXECBUF_EMPTY:

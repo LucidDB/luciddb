@@ -27,7 +27,7 @@
 
 FENNEL_BEGIN_NAMESPACE
 
-class BTreeRootMap;
+class BTreeOwnerRootMap;
 
 /**
  * BTreeExecStreamParams defines parameters common to implementations of
@@ -68,15 +68,15 @@ struct BTreeExecStreamParams : virtual public SingleOutputExecStreamParams
     /**
      * Map for looking up variable index roots, or NULL for permanent root.
      */
-    BTreeRootMap *pRootMap;
+    BTreeOwnerRootMap *pRootMap;
 
     explicit BTreeExecStreamParams();
 };
 
-class BTreeRootMap
+class BTreeOwnerRootMap
 {
 public:
-    virtual ~BTreeRootMap();
+    virtual ~BTreeOwnerRootMap();
     virtual PageId getRoot(PageOwnerId pageOwnerId) = 0;
 };
 
@@ -94,7 +94,7 @@ class BTreeExecStream : virtual public SingleOutputExecStream
 protected:
     BTreeDescriptor treeDescriptor;
     SegmentAccessor scratchAccessor;
-    BTreeRootMap *pRootMap;
+    BTreeOwnerRootMap *pRootMap;
     SharedBTreeAccessBase pBTreeAccessBase;
     
     SharedBTreeReader newReader();

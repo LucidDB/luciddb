@@ -37,6 +37,8 @@
 
 FENNEL_BEGIN_NAMESPACE
 
+// DEPRECATED
+    
 class ExternalSortRunLoader;
 typedef boost::shared_ptr<ExternalSortRunLoader>
 SharedExternalSortRunLoader;
