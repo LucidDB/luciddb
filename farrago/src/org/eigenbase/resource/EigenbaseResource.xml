@@ -250,6 +250,14 @@
     <text>Cannot override window attribute</text>
 </exception>
 
+<exception id="120390" name="ColumnCountMismatchInSetop" className="org.eigenbase.sql.SqlValidatorException">
+    <text>Column count mismatch in {0}</text>
+</exception>
+
+<exception id="120400" name="ColumnTypeMismatchInSetop" className="org.eigenbase.sql.SqlValidatorException">
+    <text>Type mismatch in column {0,number} of {1}</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Eigenbase Generic resources 130,000 - 140,000 -->
 <!-- ====================================================================== -->

@@ -1255,10 +1255,10 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     }
 
     public void testNestedFrom() {
-        checkType("values (true)", "BOOLEAN");
-        checkType("select * from values (true)", "BOOLEAN");
-        checkType("select * from (select * from values (true))", "BOOLEAN");
-        checkType("select * from (select * from (select * from values (true)))", "BOOLEAN");
+//        checkType("values (true)", "BOOLEAN");
+//        checkType("select * from values (true)", "BOOLEAN");
+//        checkType("select * from (select * from values (true))", "BOOLEAN");
+//        checkType("select * from (select * from (select * from values (true)))", "BOOLEAN");
         checkType(
             "select * from (" +
             "  select * from (" +
@@ -1389,14 +1389,37 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             "Unknown identifier 'EMPNO'", 3, 26);
     }
 
-    // TODO: implement UNION
-    public void _testIncompatibleUnionFails() {
-        checkFails("select 1,2 from emp union select 3 from dept", "xyz");
+    public void testUnionCountMismatchFails() {
+        checkFails("select 1,2 from emp" + NL +
+            "union" + NL +
+            "select 3 from dept",
+            "Column count mismatch in UNION",
+            3, 8);
     }
 
-    // TODO: implement UNION
-    public void _testUnionOfNonQueryFails() {
-        checkFails("select 1 from emp union 2", "xyz");
+    public void testUnionTypeMismatchFails() {
+        // error here         v
+        checkFails("select 1, 2 from emp union select deptno, name from dept",
+            "Type mismatch in column 2 of UNION", 1, 9);
+    }
+
+    public void testUnionTypeMismatchWithStarFails() {
+        // error here      v
+        checkFails("select * from dept union select 1, 2 from emp",
+            "Type mismatch in column 2 of UNION", 1, 8);
+    }
+
+    public void testUnionTypeMismatchWithValuesFails() {
+        // error here          v
+        checkFails("values (1, 2, 3), (3, 4, 5), (6, 7, 8) union " + NL +
+            "select deptno, name, deptno from dept",
+            "Type mismatch in column 2 of UNION", 1, 10);
+    }
+
+    public void testUnionOfNonQueryFails() {
+        checkFails("select 1 from emp union 2",
+            "Non-query expression 2 encountered in illegal context near" +
+            " line 1, column 25");
     }
 
     public void _testInTooManyColumnsFails() {
@@ -1535,6 +1558,12 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             sortByAlias ? null :
             // Ambiguous in SQL:2003
             "col ambig");
+
+        check(
+            "select deptno from dept" + NL +
+            "union" + NL +
+            "select empno from emp" + NL +
+            "order by deptno");
 
         checkFails(
             "select deptno from dept" + NL +

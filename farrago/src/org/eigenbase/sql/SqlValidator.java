@@ -256,7 +256,7 @@ public class SqlValidator
         Scope scope = new EmptyScope();
         return validateScopedExpression(topNode, scope);
     }
-    
+
     /**
      * Look up completion hints for a syntatically correct SQL that has been
      * parsed into an expression tree
@@ -394,18 +394,18 @@ public class SqlValidator
                 {
                     final RelDataType type =
                         (RelDataType) nameToTypeMap.get(name);
-                    return new AbstractNamespace() 
+                    return new AbstractNamespace()
                         {
                             public SqlNode getNode()
                             {
                                 return null;
                             }
-                            
+
                             public RelDataType validateImpl()
                             {
                                 return type;
                             }
-                            
+
                             public RelDataType getRowType()
                             {
                                 return type;
@@ -415,7 +415,7 @@ public class SqlValidator
             };
         return validateScopedExpression(topNode, scope);
     }
-    
+
     private SqlNode validateScopedExpression(SqlNode topNode, Scope scope)
     {
         Util.pre(outermostNode == null, "outermostNode == null");
@@ -812,6 +812,10 @@ public class SqlValidator
         // REVIEW jvs 2-Dec-2004:  this method has outgrown its pants
 
         RelDataType type;
+        if (operand instanceof SqlSelect) {
+            return getValidatedNodeType(operand);
+        }
+        
         if (operand instanceof SqlIdentifier) {
             SqlIdentifier id = (SqlIdentifier) operand;
 
@@ -956,7 +960,7 @@ public class SqlValidator
                 {
                     SqlFunction unresolvedFunction =
                         (SqlFunction) call.operator;
-                    
+
                     SqlFunction function;
                     if (operands.length == 0 &&
                         syntax == SqlSyntax.FunctionId) {
@@ -1033,9 +1037,10 @@ public class SqlValidator
                                     resultCol);
                         }
                     }
-                }
-                //determine coercibility and resulting collation name of unary operator if needed
-                else if (SqlTypeUtil.inCharFamily(type)) {
+
+                } else if (SqlTypeUtil.inCharFamily(type)) {
+                    // Determine coercibility and resulting collation name of
+                    // unary operator if needed.
                     RelDataType operandType =
                         getValidatedNodeType(call.operands[0]);
                     if (null == operandType) {
@@ -1531,6 +1536,8 @@ public class SqlValidator
                 new SetopNamespace((SqlCall) node);
             registerNamespace(usingScope, alias, setopNamespace);
             call = (SqlCall) node;
+            // A setop is in the same scope as its parent.
+            scopes.put(call, parentScope);
             registerQuery(parentScope, null, call.operands[0], null);
             registerQuery(parentScope, null, call.operands[1], null);
             break;
@@ -3258,8 +3265,8 @@ public class SqlValidator
                     }
                     validateQuery(operand);
                 }
-                final Namespace childNs = getNamespace(call.operands[0]);
-                return childNs.getRowType();
+                final Scope scope = (Scope) scopes.get(call);
+                return call.operator.getType(SqlValidator.this, scope, call);
             default:
                 throw Util.newInternal("Not a query: " + call.getKind());
             }

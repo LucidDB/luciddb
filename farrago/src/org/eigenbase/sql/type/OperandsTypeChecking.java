@@ -20,13 +20,12 @@
 */
 package org.eigenbase.sql.type;
 
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.sql.*;
-import org.eigenbase.util.Util;
-import org.eigenbase.util.EnumeratedValues;
 import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactoryImpl;
+import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.resource.EigenbaseResource;
+import org.eigenbase.sql.*;
+import org.eigenbase.util.EnumeratedValues;
+import org.eigenbase.util.Util;
 
 import java.util.ArrayList;
 
@@ -847,7 +846,7 @@ public abstract class OperandsTypeChecking
                     ret.append(op.getSignature(list));
 
                     if ((i + 1) < types[0].length) {
-                        ret.append(op.NL);
+                        ret.append(SqlOperator.NL);
                     }
                 }
                 return ret.toString();
@@ -902,7 +901,7 @@ public abstract class OperandsTypeChecking
                     ret.append(op.getSignature(list));
 
                     if ((i + 1) < types[0].length) {
-                        ret.append(op.NL);
+                        ret.append(SqlOperator.NL);
                     }
                 }
                 return ret.toString();
@@ -1362,6 +1361,143 @@ public abstract class OperandsTypeChecking
             }
         };
 
+    /**
+     * Parameter type-checking strategy for a set operator (UNION, INTERSECT,
+     * EXCEPT).
+     */
+    public static final OperandsTypeChecking typeSetop =
+        new SetopTypeChecking();
+
+    /**
+     * Parameter type-checking strategy for a set operator (UNION, INTERSECT,
+     * EXCEPT).
+     *
+     * <p>Both arguments must be records with the same number
+     * of fields, and the fields must be union-compatible.
+     */
+    private static class SetopTypeChecking extends OperandsTypeChecking {
+        // todo: Since not many OperandsTypeChecking objects have multiple
+        // rules, provide implementation of this method in base class.
+        public boolean check(
+            SqlCall call,
+            SqlValidator validator,
+            SqlValidator.Scope scope,
+            SqlNode node,
+            int ruleOrdinal,
+            boolean throwOnFailure)
+        {
+            assert ruleOrdinal == 0;
+            return check(validator, scope, call, throwOnFailure);
+        }
+
+        public boolean check(
+            SqlValidator validator,
+            SqlValidator.Scope scope,
+            SqlCall call,
+            boolean throwOnFailure)
+        {
+            assert call.operands.length == 2 : "setops are binary (for now)";
+            RelDataType[] argTypes = new RelDataType[call.operands.length];
+            int colCount = -1;
+            for (int i = 0; i < argTypes.length; i++) {
+                final SqlNode operand = call.operands[i];
+                final RelDataType argType =
+                    argTypes[i] =
+                    validator.getValidatedNodeType(operand);
+                Util.permAssert(argType.isStruct(),
+                    "setop arg must be a struct");
+                if (i == 0) {
+                    colCount = argTypes[0].getFieldList().size();
+                    continue;
+                }
+                // Each operand must have the same number of columns.
+                final RelDataTypeField[] fields = argType.getFields();
+                if (fields.length != colCount) {
+                    if (throwOnFailure) {
+                        throw validator.newValidationError(
+                            operand,
+                            EigenbaseResource.instance()
+                            .newColumnCountMismatchInSetop(
+                                call.operator.name));
+                    } else {
+                        return false;
+                    }
+                }
+            }
+
+            // The columns must be pairwise union compatible. For each column
+            // ordinal, form a 'slice' containing the types of the ordinal'th
+            // column j.
+            RelDataType[] colTypes = new RelDataType[call.operands.length];
+            for (int i = 0; i < colCount; i++) {
+                for (int j = 0; j < argTypes.length; j++) {
+                    final RelDataTypeField field = argTypes[j].getFields()[i];
+                    colTypes[j] = field.getType();
+                }
+                final RelDataType type =
+                    validator.typeFactory.leastRestrictive(colTypes);
+                if (type == null) {
+                    if (throwOnFailure) {
+                        SqlNode field = getSelectListItem(call.operands[0], i);
+                        throw validator.newValidationError(
+                            field,
+                            EigenbaseResource.instance()
+                            .newColumnTypeMismatchInSetop(
+                                new Integer(i + 1), // 1-based
+                                call.operator.name));
+                    } else {
+                        return false;
+                    }
+                }
+
+            }
+
+            return true;
+        }
+
+        /**
+         * Returns the <code>i</code>th select-list item of a query.
+         *
+         * todo: Move this to utility class.
+         */
+        private static SqlNode getSelectListItem(SqlNode query, int i) {
+            if (query instanceof SqlSelect) {
+                SqlSelect select = (SqlSelect) query;
+                final SqlNode from = select.getFrom();
+                if (from.isA(SqlKind.Values)) {
+                    // They wrote "VALUES (x, y)", but the validator has
+                    // converted this into "SELECT * FROM VALUES (x, y)".
+                    return getSelectListItem(from, i);
+                }
+                final SqlNodeList fields = select.getSelectList();
+                // Range check the index to avoid index out of range.  This
+                // could be expanded to actually check to see if the select
+                // list is a "*"
+                if (i >= fields.size()) {
+                    i = 0;
+                }
+                return fields.get(i);
+            } else if (query.isA(SqlKind.Values)) {
+                SqlCall call = (SqlCall) query;
+                Util.permAssert(call.operands.length > 0,
+                    "VALUES must have at least one operand");
+                final SqlCall row = (SqlCall) call.operands[0];
+                Util.permAssert(row.operands.length > i, "VALUES has too few columns");
+                return row.operands[i];
+            } else {
+                // Unexpected type of query.
+                throw Util.needToImplement(query);
+            }
+        }
+
+        public int getArgCount() {
+            return 2;
+        }
+
+        public String getAllowedSignatures(SqlOperator op) {
+            return "<UNION>"; // todo: Wael, please review.
+        }
+    }
 }
 
 // End OperandsTypeChecking.java

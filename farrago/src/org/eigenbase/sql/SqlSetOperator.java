@@ -24,6 +24,7 @@ package org.eigenbase.sql;
 import org.eigenbase.sql.type.ReturnTypeInference;
 import org.eigenbase.sql.type.UnknownParamInference;
 import org.eigenbase.sql.type.OperandsTypeChecking;
+import org.eigenbase.sql.type.ReturnTypeInferenceImpl;
 
 /**
  * SqlSetOperator represents a relational set theory operator
@@ -48,7 +49,10 @@ public class SqlSetOperator extends SqlBinaryOperator
         int prec,
         boolean all)
     {
-        super(name, kind, prec, true, null, null, null);
+        super(name, kind, prec, true,
+            ReturnTypeInferenceImpl.useLeastRestrictive,
+            null,
+            OperandsTypeChecking.typeSetop);
         this.all = all;
     }
 
