@@ -140,7 +140,7 @@ public class FarragoResultSetMetaData extends FarragoJdbcMetaDataImpl
     public int getColumnType(int column)
         throws SQLException
     {
-        return getFieldType(column);
+        return getFieldJdbcType(column);
     }
 
     // implement ResultSetMetaData

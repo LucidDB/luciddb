@@ -447,20 +447,18 @@ public class DdlHandler
         }
 
         // SQL standard is very picky about what can go in a DEFAULT clause
-        FarragoAtomicType sourceType =
-            (FarragoAtomicType) rowType.getFields()[0].getType();
-        SqlTypeFamily sourceTypeFamily = sourceType.getSqlFamily();
+        RelDataType sourceType = rowType.getFields()[0].getType();
+        RelDataTypeFamily sourceTypeFamily = sourceType.getFamily();
 
-        FarragoType targetType =
+        RelDataType targetType =
             validator.getTypeFactory().createColumnType(column, true);
-        FarragoAtomicType atomicType = (FarragoAtomicType) targetType;
-        SqlTypeFamily targetTypeFamily = atomicType.getSqlFamily();
+        RelDataTypeFamily targetTypeFamily = targetType.getFamily();
 
         if (sourceTypeFamily != targetTypeFamily) {
             throw validator.res.newValidatorBadDefaultType(
                 column.getName(),
-                targetTypeFamily.getName(),
-                sourceTypeFamily.getName(),
+                targetTypeFamily.toString(),
+                sourceTypeFamily.toString(),
                 validator.getParserPosString(column));
         }
 
@@ -493,7 +491,7 @@ public class DdlHandler
             column.setIsNullable(NullableTypeEnum.COLUMN_NULLABLE);
         }
 
-        FarragoAtomicType type = (FarragoAtomicType)
+        RelDataType type = 
             validator.getTypeFactory().createColumnType(column,false);
 
         // NOTE: parser only generates precision, but CWM discriminates
@@ -505,9 +503,13 @@ public class DdlHandler
 
         // TODO:  break this method up
         // first, validate presence of modifiers
-        if (type.takesPrecision()) {
+        SqlTypeName typeName = type.getSqlTypeName();
+        if ((typeName != null) && typeName.allowsPrecScale(true, false)) {
             if (precision == null) {
-                precision = type.getDefaultPrecision();
+                int p = typeName.getDefaultPrecision();
+                if (p != -1) {
+                    precision = new Integer(p);
+                }
             }
             if (precision == null) {
                 throw validator.res.newValidatorPrecRequired(
@@ -523,7 +525,7 @@ public class DdlHandler
                     validator.getParserPosString(column));
             }
         }
-        if (type.takesScale()) {
+        if ((typeName != null) && typeName.allowsPrecScale(true, true)) {
             // assume scale is always optional
         } else {
             if (column.getScale() != null) {
@@ -533,14 +535,14 @@ public class DdlHandler
                     validator.getParserPosString(column));
             }
         }
-        if (type.isString()) {
+        if (SqlTypeUtil.inCharOrBinaryFamilies(type)) {
             // convert precision to length
             if (column.getLength() == null) {
                 column.setLength(column.getPrecision());
                 column.setPrecision(null);
             }
         }
-        if (type.getSqlFamily() == SqlTypeFamily.Character) {
+        if (type.getFamily() == SqlTypeFamily.Character) {
             // TODO jvs 18-April-2004:  Should be inheriting these defaults
             // from schema/catalog.
             if (JmiUtil.isBlank(column.getCharacterSetName())) {
@@ -571,7 +573,8 @@ public class DdlHandler
         }
 
         // now, enforce type-defined limits
-        CwmSqlsimpleType simpleType = type.getSimpleType();
+        CwmSqlsimpleType simpleType =
+            validator.getTypeFactory().getCwmSimpleType(type);
         if (column.getLength() != null) {
             Integer maximum = simpleType.getCharacterMaximumLength();
             assert (maximum != null);

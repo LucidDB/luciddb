@@ -26,6 +26,7 @@ import openjava.ptree.*;
 
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.reltype.*;
 import org.eigenbase.sql.type.*;
 
 
@@ -110,16 +111,14 @@ public class FarragoOJRexBinaryExpressionImplementor
         Expression [] operands)
     {
         // REVIEW:  heterogeneous operands?
-        assert (call.operands[0].getType() instanceof FarragoAtomicType);
-        FarragoAtomicType type =
-            (FarragoAtomicType) call.operands[0].getType();
+        RelDataType type = call.operands[0].getType();
 
-        if (type.hasClassForPrimitive()) {
+        FarragoTypeFactory factory = (FarragoTypeFactory) (type.getFactory());
+        if (factory.getClassForPrimitive(type) != null) {
             return new BinaryExpression(operands[0],
                 ojBinaryExpressionOrdinal, operands[1]);
         }
         Expression comparisonResultExp;
-        assert (type instanceof FarragoPrecisionType);
         if (SqlTypeUtil.inCharFamily(type)) {
             // TODO:  collation sequences, operators other than
             // comparison, etc.

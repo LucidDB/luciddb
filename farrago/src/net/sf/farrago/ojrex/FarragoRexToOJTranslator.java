@@ -32,6 +32,7 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
 
 
@@ -143,16 +144,21 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
     {
         super.visitLiteral(literal);
         RelDataType type = literal.getType();
-        if (type instanceof FarragoPrecisionType) {
-            // TODO jvs 22-May-2004:  Initialize once and only once.
-            setTranslation(
-                castImplementor.convertCastToAssignableValue(
-                    this,
-                    type,
-                    type,
-                    null,
-                    getTranslation()));
+        if (SqlTypeUtil.isJavaPrimitive(type)) {
+            return;
         }
+        if (type.getSqlTypeName() == SqlTypeName.Null) {
+            return;
+        }
+        
+        // TODO jvs 22-May-2004:  Initialize once and only once.
+        setTranslation(
+            castImplementor.convertCastToAssignableValue(
+                this,
+                type,
+                type,
+                null,
+                getTranslation()));
     }
 
     public Variable createScratchVariable(
@@ -235,13 +241,10 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
         Expression expr,
         RexNode op)
     {
-        assert (op.getType() instanceof FarragoAtomicType);
-        FarragoAtomicType type = (FarragoAtomicType) op.getType();
-        if (type.requiresValueAccess()) {
-            return new FieldAccess(expr, NullablePrimitive.VALUE_FIELD_NAME);
-        } else {
-            return expr;
-        }
+        RelDataType type = op.getType();
+        FarragoTypeFactory factory =
+            (FarragoTypeFactory) type.getFactory();
+        return factory.getValueAccessExpression(type, expr);
     }
 
     public Expression convertCastOrAssignment(

@@ -274,6 +274,82 @@ public abstract class SqlTypeUtil
     }
 
     /**
+     * @return true if type family is either character or binary
+     */
+    public static boolean inCharOrBinaryFamilies(RelDataType type)
+    {
+        return type.getFamily() == SqlTypeFamily.Character
+            || type.getFamily() == SqlTypeFamily.Binary;
+    }
+
+    /**
+     * @return true if type is a LOB of some kind
+     */
+    public static boolean isLob(RelDataType type)
+    {
+        // TODO jvs 9-Dec-2004:  once we support LOB types
+        return false;
+    }
+
+    /**
+     * @return true if type is variable width with bounded precision
+     */
+    public static boolean isBoundedVariableWidth(RelDataType type)
+    {
+        SqlTypeName typeName = type.getSqlTypeName();
+        if (typeName == null) {
+            return false;
+        }
+        switch (typeName.getOrdinal()) {
+        case SqlTypeName.Varchar_ordinal:
+        case SqlTypeName.Varbinary_ordinal:
+            return true;
+        default:
+            return false;
+        }
+    }
+
+    /**
+     * @return true if type is numeric with exact precision
+     */
+    public static boolean isExactNumeric(RelDataType type)
+    {
+        SqlTypeName typeName = type.getSqlTypeName();
+        if (typeName == null) {
+            return false;
+        }
+        switch (typeName.getOrdinal()) {
+        case SqlTypeName.Tinyint_ordinal:
+        case SqlTypeName.Smallint_ordinal:
+        case SqlTypeName.Integer_ordinal:
+        case SqlTypeName.Bigint_ordinal:
+        case SqlTypeName.Decimal_ordinal:
+            return true;
+        default:
+            return false;
+        }
+    }
+
+    /**
+     * @return true if type is numeric with approximate precision
+     */
+    public static boolean isApproximateNumeric(RelDataType type)
+    {
+        SqlTypeName typeName = type.getSqlTypeName();
+        if (typeName == null) {
+            return false;
+        }
+        switch (typeName.getOrdinal()) {
+        case SqlTypeName.Float_ordinal:
+        case SqlTypeName.Real_ordinal:
+        case SqlTypeName.Double_ordinal:
+            return true;
+        default:
+            return false;
+        }
+    }
+
+    /**
      * Tests whether two types have the same name and structure, possibly
      * with differing modifiers.  For example, VARCHAR(1) and VARCHAR(10)
      * are considered the same, while VARCHAR(1) and CHAR(1) are
@@ -312,6 +388,73 @@ public abstract class SqlTypeUtil
             }
         }
         return t1.getSqlTypeName() == t2.getSqlTypeName();
+    }
+    
+    /**
+     * Computes the maximum number of bytes required to represent a value of a
+     * type having user-defined precision.  This computation assumes no
+     * overhead such as length indicators and NUL-terminators.  Complex types
+     * for which multiple representations are possible (e.g. DECIMAL or
+     * TIMESTAMP) return 0.
+     *
+     * @param type type for which to compute storage
+     *
+     * @return maximum bytes, or 0 for a fixed-width type or type
+     * with unknown maximum
+     */
+    public static int getMaxByteSize(RelDataType type)
+    {
+        SqlTypeName typeName = type.getSqlTypeName();
+
+        if (typeName == null) {
+            return 0;
+        }
+        
+        switch (typeName.getOrdinal()) {
+        case SqlTypeName.Bit_ordinal:
+        case SqlTypeName.Varbit_ordinal:
+            // 8 bits per byte
+            return (type.getPrecision() + 7) / 8;
+            
+        case SqlTypeName.Char_ordinal:
+        case SqlTypeName.Varchar_ordinal:
+            return (int) Math.ceil(
+                (((double) type.getPrecision())
+                    * type.getCharset().newEncoder().maxBytesPerChar()));
+            
+        case SqlTypeName.Binary_ordinal:
+        case SqlTypeName.Varbinary_ordinal:
+            return type.getPrecision();
+            
+        default:
+            return 0;
+        }
+    }
+
+    /**
+     * @return true if type has a representation as a Java primitive
+     * (ignoring nullability)
+     */
+    public static boolean isJavaPrimitive(RelDataType type)
+    {
+        SqlTypeName typeName = type.getSqlTypeName();
+        if (typeName == null) {
+            return false;
+        }
+
+        switch (typeName.getOrdinal()) {
+        case SqlTypeName.Boolean_ordinal:
+        case SqlTypeName.Tinyint_ordinal:
+        case SqlTypeName.Smallint_ordinal:
+        case SqlTypeName.Integer_ordinal:
+        case SqlTypeName.Bigint_ordinal:
+        case SqlTypeName.Float_ordinal:
+        case SqlTypeName.Real_ordinal:
+        case SqlTypeName.Double_ordinal:
+            return true;
+        default:
+            return false;
+        }
     }
 }
 

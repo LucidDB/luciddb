@@ -29,6 +29,7 @@ import org.eigenbase.oj.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.reltype.*;
 
+import openjava.ptree.*;
 
 /**
  * FarragoTypeFactory is a Farrago-specific refinement of the
@@ -49,7 +50,7 @@ public interface FarragoTypeFactory extends OJTypeFactory
     public FarragoRepos getRepos();
 
     /**
-     * Creates a FarragoType which represents the datatype of a CWM column.
+     * Creates a type which represents the datatype of a CWM column.
      *
      * @param column CWM column
      *
@@ -58,9 +59,9 @@ public interface FarragoTypeFactory extends OJTypeFactory
      * returned type will have only enough information needed for
      * column DDL validation
      *
-     * @return generated FarragoType
+     * @return generated type
      */
-    public FarragoType createColumnType(
+    public RelDataType createColumnType(
         CwmColumn column,
         boolean validated);
 
@@ -85,20 +86,20 @@ public interface FarragoTypeFactory extends OJTypeFactory
     public RelDataType createResultSetType(ResultSetMetaData metaData);
 
     /**
-     * Creates a FarragoType which represents a MOF feature.
+     * Creates a type which represents a MOF feature.
      *
      * @param feature MOF feature
      *
-     * @return generated FarragoType
+     * @return generated type
      */
-    public FarragoType createMofType(StructuralFeature feature);
+    public RelDataType createMofType(StructuralFeature feature);
 
     /**
      * Initializes a CwmColumn definition based on a RelDataTypeField.
      * If the column has no name, the name is initialized from the field
      * name; otherwise, the existing name is left unmodified.
      *
-     * @param field input field (must have a FarragoType)
+     * @param field input field
      *
      * @param column on input, contains unintialized CwmColumn instance;
      * on return, this has been initialized (but not validated)
@@ -106,6 +107,42 @@ public interface FarragoTypeFactory extends OJTypeFactory
     public void convertFieldToCwmColumn(
         RelDataTypeField field,
         CwmColumn column);
+
+    /**
+     * Looks up the CWM simple type descriptor corresponding to a
+     * RelDataType.
+     *
+     * @param type type to look up
+     *
+     * @return type descriptor, or null if type is not simple
+     */
+    public CwmSqlsimpleType getCwmSimpleType(RelDataType type);
+
+    /**
+     * Constructs an OpenJava expression to access a value of an
+     * atomic type.
+     *
+     * @param type atomic type
+     *
+     * @param expr expression representing site to be accessed
+     *
+     * @return expression for accessing value
+     */
+    public Expression getValueAccessExpression(
+        RelDataType type,
+        Expression expr);
+
+    /**
+     * Looks up the java.lang.Class representing a primitive used to
+     * hold a value of the given type.
+     *
+     * @param type value type
+     *
+     * @return primitive Class, or null if a non-primitive Object is used
+     * at runtime to represent values of the given type
+     */
+    public Class getClassForPrimitive(
+        RelDataType type);
 }
 
 

@@ -121,18 +121,18 @@ class ResultSetToFarragoIteratorConverter extends ConverterRel
         RelDataTypeField [] fields = rowType.getFields();
         for (int i = 0; i < fields.length; ++i) {
             RelDataTypeField field = fields[i];
-            FarragoAtomicType type = (FarragoAtomicType) field.getType();
+            RelDataType type = field.getType();
             ExpressionList colPosExpList =
                 new ExpressionList(Literal.makeLiteral(i + 1));
             Expression rhsExp;
-            if ((type instanceof FarragoPrimitiveType) && !type.isNullable()) {
-                FarragoPrimitiveType primType = (FarragoPrimitiveType) type;
-
+            FarragoTypeFactory factory =
+                (FarragoTypeFactory) type.getFactory();
+            if ((SqlTypeUtil.isJavaPrimitive(type)) && !type.isNullable()) {
                 // TODO:  make this official:  java.sql and java.nio
                 // use the same accessor names, happily
                 String methodName =
                     ReflectUtil.getByteBufferReadMethod(
-                        primType.getClassForPrimitive()).getName();
+                        factory.getClassForPrimitive(type)).getName();
                 rhsExp =
                     new MethodCall(castResultSet, methodName, colPosExpList);
             } else if (SqlTypeUtil.inCharFamily(type)) {

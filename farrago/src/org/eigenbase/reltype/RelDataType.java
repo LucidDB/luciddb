@@ -123,15 +123,14 @@ public interface RelDataType
         throws RuntimeException;
 
     /**
-     * Returns the maximum number of bytes storage required to store a value
-     * of this type. If the type is fixed-length, returns -1.
-     */
-    int getMaxBytesStorage();
-
-    /**
      * @return number of digits or characters of precision
      */
     public int getPrecision();
+
+    /**
+     * @return number of digits of scale
+     */
+    public int getScale();
 
     /**
      * @return the SqlTypeName for this RelDataType, or null if

@@ -40,7 +40,7 @@ import org.eigenbase.util.Util;
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class FarragoAtomicType extends FarragoType
+abstract class FarragoAtomicType extends FarragoType
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -156,19 +156,12 @@ public abstract class FarragoAtomicType extends FarragoType
         }
     }
 
-    public void format(
-        Object value,
-        PrintWriter pw)
-    {
-        pw.print(value);
-    }
-
     /**
      * .
      *
      * @return the CwmSqlsimpletype from which this atomic type derives
      */
-    public CwmSqlsimpleType getSimpleType()
+    protected CwmSqlsimpleType getSimpleType()
     {
         return simpleType;
     }
@@ -179,21 +172,11 @@ public abstract class FarragoAtomicType extends FarragoType
         return isNullable;
     }
 
-    /**
-     * .
-     *
-     * @return the family for this type
-     */
-    public SqlTypeFamily getSqlFamily()
-    {
-        return SqlTypeFamily.getFamilyForJdbcType(
-            simpleType.getTypeNumber().intValue());
-    }
-
     // implement RelDataType
     public RelDataTypeFamily getFamily()
     {
-        return getSqlFamily();
+        return SqlTypeFamily.getFamilyForJdbcType(
+            simpleType.getTypeNumber().intValue());
     }
 
     /**
@@ -201,44 +184,9 @@ public abstract class FarragoAtomicType extends FarragoType
      *
      * @return true if this type takes a precision
      */
-    public boolean takesPrecision()
+    protected boolean takesPrecision()
     {
-        switch (simpleType.getTypeNumber().intValue()) {
-        case Types.NUMERIC:
-        case Types.DECIMAL:
-        case Types.TIME:
-        case Types.TIMESTAMP:
-        case Types.VARBINARY:
-        case Types.VARCHAR:
-        case Types.BIT:
-        case Types.BINARY:
-        case Types.CHAR:
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * @return default precision for this type if supported, otherwise
-     * null if precision is either unsupported or must be
-     * specified explicitly
-     */
-    public Integer getDefaultPrecision()
-    {
-        switch (simpleType.getTypeNumber().intValue()) {
-        case Types.CHAR:
-        case Types.BIT:
-            return new Integer(1);
-        case Types.TIME:
-            return new Integer(0);
-        case Types.TIMESTAMP:
-
-            // TODO jvs 26-July-2004:  should be 6 for microseconds,
-            // but we can't support that yet
-            return new Integer(0);
-        default:
-            return null;
-        }
+        return getSqlTypeName().allowsPrecScale(true, false);
     }
 
     /**
@@ -246,118 +194,25 @@ public abstract class FarragoAtomicType extends FarragoType
      *
      * @return true if this type takes a scale
      */
-    public boolean takesScale()
+    protected boolean takesScale()
     {
-        switch (simpleType.getTypeNumber().intValue()) {
-        case Types.NUMERIC:
-        case Types.DECIMAL:
-            return true;
-        }
-        return false;
+        return getSqlTypeName().allowsPrecScale(true, true);
     }
 
-    /**
-     * .
-     *
-     * @return true if this type is a large object
-     */
-    public boolean isLob()
-    {
-        switch (simpleType.getTypeNumber().intValue()) {
-        case Types.BLOB:
-        case Types.CLOB:
-        case Types.LONGVARCHAR:
-        case Types.LONGVARBINARY:
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * .
-     *
-     * @return true if this type is a character or binary string
-     */
-    public boolean isString()
-    {
-        SqlTypeFamily family = getSqlFamily();
-        return (family == SqlTypeFamily.Character)
-            || (family == SqlTypeFamily.Binary);
-    }
-
-    /** implement RelDataType */
+    // implement RelDataType
     public Charset getCharset()
     {
         throw Util.newInternal(digest + " is not defined to carry a charset");
     }
 
-    /** implement RelDataType */
-    public void setCharset(Charset charset)
-    {
-        throw Util.newInternal(digest + " is not defined to carry a charset");
-    }
-
-    /** implement RelDataType */
+    // implement RelDataType
     public SqlCollation getCollation()
         throws RuntimeException
     {
         throw Util.newInternal(digest + " is not defined to carry a collation");
     }
 
-    /** implement RelDataType */
-    public void setCollation(SqlCollation collation)
-        throws RuntimeException
-    {
-        throw Util.newInternal(digest + " is not defined to carry a collation");
-    }
-
-    /**
-     * .
-     *
-     * @return true if this type is variable width with bounded precision
-     */
-    public boolean isBoundedVariableWidth()
-    {
-        // REVIEW:  include NUMERIC/TIME/TIMESTAMP?
-        switch (simpleType.getTypeNumber().intValue()) {
-        case Types.VARCHAR:
-        case Types.VARBINARY:
-            return true;
-        }
-        return false;
-    }
-
-    public boolean isExactNumeric()
-    {
-        switch (simpleType.getTypeNumber().intValue()) {
-        case Types.BIT:
-        case Types.TINYINT:
-        case Types.SMALLINT:
-        case Types.INTEGER:
-        case Types.BIGINT:
-        case Types.NUMERIC:
-        case Types.DECIMAL:
-            return true;
-        }
-        return false;
-    }
-
-    public boolean isApproximateNumeric()
-    {
-        switch (simpleType.getTypeNumber().intValue()) {
-        case Types.FLOAT:
-        case Types.REAL:
-        case Types.DOUBLE:
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * .
-     *
-     * @return number of digits or characters of precision
-     */
+    // implement RelDataType
     public int getPrecision()
     {
         switch (simpleType.getTypeNumber().intValue()) {
@@ -376,11 +231,7 @@ public abstract class FarragoAtomicType extends FarragoType
         throw new AssertionError();
     }
 
-    /**
-     * .
-     *
-     * @return number of digits of scale
-     */
+    // implement RelDataType
     public int getScale()
     {
         throw new AssertionError();
@@ -389,12 +240,12 @@ public abstract class FarragoAtomicType extends FarragoType
     /**
      * @return true when value field access is required at runtime
      */
-    public abstract boolean requiresValueAccess();
+    protected abstract boolean requiresValueAccess();
 
     /**
      *  To be overriden by classes with a Primitive rep.
      */
-    public boolean hasClassForPrimitive()
+    protected boolean hasClassForPrimitive()
     {
         return false;
     }
@@ -403,13 +254,14 @@ public abstract class FarragoAtomicType extends FarragoType
      *
      * @return class for primitive rep.
      */
-    public Class getClassForPrimitive()
+    protected Class getClassForPrimitive()
     {
         assert (hasClassForPrimitive())
             : "Atomic Type does not have primitive representation";
         return null;
     }
 
+    // implement RelDataType
     public SqlTypeName getSqlTypeName()
     {
         return SqlTypeName.get(this.simpleType.getName());

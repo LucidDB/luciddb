@@ -35,7 +35,7 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public final class FarragoPrimitiveType extends FarragoAtomicType
+final class FarragoPrimitiveType extends FarragoAtomicType
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -87,7 +87,7 @@ public final class FarragoPrimitiveType extends FarragoAtomicType
      * override FarragoAtomicType
      * @return class representing corresponding Java primitive
      */
-    public Class getClassForPrimitive()
+    protected Class getClassForPrimitive()
     {
         return classForPrimitive;
     }
@@ -98,7 +98,7 @@ public final class FarragoPrimitiveType extends FarragoAtomicType
      * @return class used to hold value at runtime (same as
      * getClassForPrimitive() for NOT NULL types)
      */
-    public Class getClassForValue()
+    protected Class getClassForValue()
     {
         return classForValue;
     }
@@ -109,14 +109,13 @@ public final class FarragoPrimitiveType extends FarragoAtomicType
         return OJClass.forClass(classForValue);
     }
 
-    // implement FarragoAtomicType
-    public boolean hasClassForPrimitive()
+    protected boolean hasClassForPrimitive()
     {
         return true;
     }
 
     // implement FarragoAtomicType
-    public boolean requiresValueAccess()
+    protected boolean requiresValueAccess()
     {
         return isNullable();
     }

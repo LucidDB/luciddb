@@ -440,19 +440,6 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
     }
 
     /**
-     * Returns the maximum number of bytes storage required by each character
-     * in a given character set. Currently always returns 1.
-     *
-     * @param charsetName Name of the character set
-     * @return
-     */
-    public static int getMaxBytesPerChar(String charsetName)
-    {
-        assert charsetName.equals("ISO-8859-1") : charsetName;
-        return 1;
-    }
-
-    /**
      * @pre to!=null && from !=null
      * @param to
      * @param from
@@ -602,12 +589,12 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
             throw Util.needToImplement("need to implement");
         }
 
-        public int getMaxBytesStorage()
+        public int getPrecision()
         {
-            return -1;
+            throw Util.needToImplement("need to implement");
         }
 
-        public int getPrecision()
+        public int getScale()
         {
             throw Util.needToImplement("need to implement");
         }
@@ -1131,36 +1118,6 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
             }
             return this.collation;
         }
-
-        public int getMaxBytesStorage()
-        {
-            switch (typeName.getOrdinal()) {
-            case SqlTypeName.Char_ordinal:
-            case SqlTypeName.Varchar_ordinal:
-
-                // FIXME (jhyde, 2004/5/26): Assumes UCS-2 encoding, 2 bytes
-                // per character.
-                return precision * 2;
-            case SqlTypeName.Binary_ordinal:
-            case SqlTypeName.Varbinary_ordinal:
-                return precision;
-            case SqlTypeName.Bit_ordinal:
-
-                // One byte for each 8 bits.
-                return (precision + 7) / 8;
-            case SqlTypeName.Null_ordinal:
-
-                // Null is tricky. By the time null values are used in actual
-                // programs they have generally been converted to another type,
-                // with an implicit cast. So CAST(NULL AS VARCHAR(3)) should
-                // have a type VARCHAR(0) and require 0 bytes; but
-                // CAST(NULL AS INTEGER) should require -1 bytes, because
-                // INTEGER is a fixed-size type.
-                return 0;
-            default:
-                return -1;
-            }
-        }
     }
 
 
@@ -1268,10 +1225,6 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
             throw new RuntimeException();
         }
 
-        public int getMaxBytesStorage() {
-            return 0;
-        }
-
         public int getPrecision() {
             return intervalQualifier.getStartPrecision();
         }
@@ -1321,10 +1274,6 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
         }
 
         public SqlCollation getCollation() throws RuntimeException {
-            throw new UnsupportedOperationException();
-        }
-
-        public int getMaxBytesStorage() {
             throw new UnsupportedOperationException();
         }
 

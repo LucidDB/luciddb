@@ -75,8 +75,7 @@ public abstract class FennelRelUtil
     }
 
     /**
-     * Create a FemTupleDescriptor for a RelDataType which is a row of
-     * FarragoTypes.
+     * Create a FemTupleDescriptor for a RelDataType which is a row.
      *
      * @param repos repos storing object definitions
      * @param rowType row of FarragoTypes
@@ -90,9 +89,7 @@ public abstract class FennelRelUtil
         FemTupleDescriptor tupleDesc = repos.newFemTupleDescriptor();
         RelDataTypeField [] fields = rowType.getFields();
         for (int i = 0; i < fields.length; ++i) {
-            assert (fields[i].getType() instanceof FarragoType);
-            addTupleAttrDescriptor(repos, tupleDesc,
-                (FarragoType) fields[i].getType());
+            addTupleAttrDescriptor(repos, tupleDesc, fields[i].getType());
         }
         return tupleDesc;
     }
@@ -160,17 +157,16 @@ public abstract class FennelRelUtil
     public static void addTupleAttrDescriptor(
         FarragoRepos repos,
         FemTupleDescriptor tupleDesc,
-        FarragoType type)
+        RelDataType type)
     {
-        assert (type instanceof FarragoAtomicType);
-        FarragoAtomicType atomicType = (FarragoAtomicType) type;
         FemTupleAttrDescriptor attrDesc = repos.newFemTupleAttrDescriptor();
         tupleDesc.getAttrDescriptor().add(attrDesc);
         attrDesc.setTypeOrdinal(
             convertSqlTypeNumberToFennelTypeOrdinal(
-                atomicType.getSimpleType().getTypeNumber().intValue()));
-        attrDesc.setByteLength(getByteLength(atomicType));
-        attrDesc.setNullable(atomicType.isNullable());
+                type.getSqlTypeName().getJdbcOrdinal()));
+        int byteLength = SqlTypeUtil.getMaxByteSize(type);
+        attrDesc.setByteLength(byteLength);
+        attrDesc.setNullable(type.isNullable());
     }
 
     public static FemTupleProjection createTupleProjectionFromColumnList(
@@ -188,35 +184,6 @@ public abstract class FennelRelUtil
             attrProj.setAttributeIndex(column.getOrdinal());
         }
         return tupleProj;
-    }
-
-    private static int getByteLength(FarragoAtomicType type)
-    {
-        if (type instanceof FarragoPrimitiveType
-                || type instanceof FarragoDateTimeType) {
-            // for primitives, length is implied by datatype
-            return 0;
-        }
-        assert (type instanceof FarragoPrecisionType);
-        FarragoPrecisionType precisionType = (FarragoPrecisionType) type;
-
-        // TODO:  numeric, date, etc.
-        try {
-            if (!SqlTypeUtil.inCharFamily(precisionType)) {
-                if (precisionType.getSqlTypeName().equals(SqlTypeName.Bit)) {
-                    return (precisionType.getPrecision() + 7) / 8;
-                }
-                return precisionType.getPrecision();
-            } else {
-                assert (null != precisionType.getCharsetName());
-                Charset charset = precisionType.getCharset();
-                return (int) charset.newEncoder().maxBytesPerChar() * precisionType
-                    .getPrecision();
-            }
-        } catch (Exception ex) {
-            throw Util.newInternal(ex,
-                "Unsupported charset " + precisionType.getCharsetName());
-        }
     }
 
     private static int convertSqlTypeNumberToFennelTypeOrdinal(int sqlType)

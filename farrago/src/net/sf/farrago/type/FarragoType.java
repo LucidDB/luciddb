@@ -33,7 +33,7 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class FarragoType implements RelDataType
+abstract class FarragoType implements RelDataType
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -73,12 +73,6 @@ public abstract class FarragoType implements RelDataType
         return digest.hashCode();
     }
 
-    public int getMaxBytesStorage()
-    {
-        // by default, assume type requires fixed storage
-        return -1;
-    }
-
     /**
      * Get the OJClass representing this FarragoType.
      *
@@ -94,26 +88,12 @@ public abstract class FarragoType implements RelDataType
      */
     protected abstract void computeDigest();
 
-    /**
-     * Forget original factory so that it can be garbage collected.
-     */
-    public void forgetFactory()
-    {
-        factory = null;
-        digest = null;
-    }
-
     protected FarragoTypeFactoryImpl getFactoryImpl()
     {
         return (FarragoTypeFactoryImpl) factory;
     }
 
-    /**
-     *
-     * @param t
-     * @param coerce - true when using cast rules, rather than implicit
-     * @return
-     */
+    // implement RelDataType
     public boolean isAssignableFrom(
         RelDataType t,
         boolean coerce)

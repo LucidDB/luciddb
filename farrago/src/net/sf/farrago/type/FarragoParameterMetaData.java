@@ -72,7 +72,7 @@ public class FarragoParameterMetaData extends FarragoJdbcMetaDataImpl
     public int getParameterType(int param)
         throws SQLException
     {
-        return getFieldType(param);
+        return getFieldJdbcType(param);
     }
 
     // implement ParameterMetaData

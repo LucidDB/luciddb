@@ -47,7 +47,7 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoPrecisionType extends FarragoAtomicType
+class FarragoPrecisionType extends FarragoAtomicType
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -91,22 +91,7 @@ public class FarragoPrecisionType extends FarragoAtomicType
 
     //~ Methods ---------------------------------------------------------------
 
-    /**
-     * .
-     *
-     * @return name of character set used for stored encoding,
-     * or null for binary data
-     */
-    public String getCharsetName()
-    {
-        if (!SqlTypeUtil.inCharFamily(this)) {
-            throw Util.newInternal(digest
-                + " is not defined to carry a charset");
-        }
-        return charsetName;
-    }
-
-    /** implement RelDataType */
+    // implement RelDataType
     public Charset getCharset()
         throws RuntimeException
     {
@@ -120,7 +105,7 @@ public class FarragoPrecisionType extends FarragoAtomicType
         return Charset.forName(this.charsetName);
     }
 
-    /** implement RelDataType */
+    // implement RelDataType
     public SqlCollation getCollation()
         throws RuntimeException
     {
@@ -132,7 +117,7 @@ public class FarragoPrecisionType extends FarragoAtomicType
     }
 
     // implement FarragoAtomicType
-    public boolean requiresValueAccess()
+    protected boolean requiresValueAccess()
     {
         return false;
     }
@@ -147,44 +132,6 @@ public class FarragoPrecisionType extends FarragoAtomicType
     public int getScale()
     {
         return scale;
-    }
-
-    public int getOctetLength()
-    {
-        switch (getSimpleType().getTypeNumber().intValue()) {
-        case Types.BIT:
-
-            // 8 bits per byte.
-            return (precision + 7) / 8;
-        case Types.CHAR:
-        case Types.VARCHAR:
-            return precision * RelDataTypeFactoryImpl.getMaxBytesPerChar(charsetName);
-        default:
-            return precision;
-        }
-    }
-
-    public int getMaxBytesStorage()
-    {
-        switch (getSimpleType().getTypeNumber().intValue()) {
-        case Types.BIT:
-        case Types.CHAR:
-        case Types.BINARY:
-        case Types.VARBINARY:
-        case Types.VARCHAR:
-            return getOctetLength();
-        case Types.CLOB:
-        case Types.BLOB:
-        case Types.LONGVARBINARY:
-        case Types.LONGVARCHAR:
-
-            // Long types are not implemented yet.
-            throw Util.needToImplement(this);
-        default:
-
-            // This is a fixed-width type.
-            return -1;
-        }
     }
 
     // implement FarragoType
@@ -265,13 +212,6 @@ public class FarragoPrecisionType extends FarragoAtomicType
             sb.append(collation.getCollationName());
             sb.append("\"");
         }
-    }
-
-    // override FarragoType
-    public void forgetFactory()
-    {
-        super.forgetFactory();
-        ojClass = null;
     }
 }
 

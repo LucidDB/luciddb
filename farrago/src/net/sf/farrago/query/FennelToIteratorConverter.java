@@ -43,6 +43,7 @@ import org.eigenbase.rel.convert.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.util.*;
+import org.eigenbase.sql.type.*;
 
 
 /**
@@ -176,9 +177,11 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
                 continue;
             }
             RelDataTypeField field = fields[i];
-            FarragoAtomicType type = (FarragoAtomicType) field.getType();
-            if (type.hasClassForPrimitive()) {
-                Class primitiveClass = type.getClassForPrimitive();
+            RelDataType type = field.getType();
+            FarragoTypeFactory factory =
+                fennelRel.getPreparingStmt().getFarragoTypeFactory();
+            Class primitiveClass = factory.getClassForPrimitive(type);
+            if (primitiveClass != null) {
                 Method method =
                     ReflectUtil.getByteBufferReadMethod(primitiveClass);
                 String byteBufferAccessorName = method.getName();
@@ -190,11 +193,7 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
                         Util.toJavaId(
                             field.getName(),
                             i));
-                if (type.requiresValueAccess()) {
-                    // extra dereference for NullablePrimitives
-                    lhs = new FieldAccess(lhs,
-                            NullablePrimitive.VALUE_FIELD_NAME);
-                }
+                lhs = factory.getValueAccessExpression(type, lhs);
                 methodBody.add(
                     new ExpressionStatement(
                         new AssignmentExpression(
@@ -206,7 +205,7 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
                                 new ExpressionList(
                                     Literal.makeLiteral(
                                         attrAccessor.getFixedOffset()))))));
-            } else if (type.isBoundedVariableWidth()) {
+            } else if (SqlTypeUtil.isBoundedVariableWidth(type)) {
                 // Variable-length fields are trickier.  The first one starts
                 // at a fixed offset.  To determine the end, dereference the
                 // indirect offset located at a fixed offset relative to the
@@ -259,8 +258,6 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
                 varPrevEndOffset = varEndOffset;
             } else {
                 // fixed-width CHARACTER or BINARY
-                FarragoPrecisionType precisionType =
-                    (FarragoPrecisionType) type;
                 Expression expStartOffset =
                     new BinaryExpression(varTupleStartOffset,
                         BinaryExpression.PLUS,
@@ -269,7 +266,7 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
                     new BinaryExpression(varTupleStartOffset,
                         BinaryExpression.PLUS,
                         Literal.makeLiteral(attrAccessor.getFixedOffset()
-                            + precisionType.getOctetLength()));
+                            + SqlTypeUtil.getMaxByteSize(type)));
                 methodBody.add(
                     new ExpressionStatement(
                         new MethodCall(

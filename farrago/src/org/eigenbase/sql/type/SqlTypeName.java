@@ -23,6 +23,8 @@ package org.eigenbase.sql.type;
 
 import org.eigenbase.util.EnumeratedValues;
 
+import java.sql.*;
+
 /**
  * Enumeration of the type names which can be used to construct a SQL type.
  *
@@ -291,6 +293,57 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
         return false;
     }
 
+    /**
+     * @return the ordinal from {@link java.sql.Types} corresponding
+     * to this SqlTypeName
+     */
+    public int getJdbcOrdinal()
+    {
+        switch (ordinal) {
+        case Boolean_ordinal:
+            return Types.BOOLEAN;
+        case Tinyint_ordinal:
+            return Types.TINYINT;
+        case Smallint_ordinal:
+            return Types.SMALLINT;
+        case Integer_ordinal:
+            return Types.INTEGER;
+        case Bigint_ordinal:
+            return Types.BIGINT;
+        case Decimal_ordinal:
+            return Types.DECIMAL;
+        case Float_ordinal:
+            return Types.FLOAT;
+        case Real_ordinal:
+            return Types.REAL;
+        case Double_ordinal:
+            return Types.DOUBLE;
+        case Date_ordinal:
+            return Types.DATE;
+        case Time_ordinal:
+            return Types.TIME;
+        case Timestamp_ordinal:
+            return Types.TIMESTAMP;
+        case Bit_ordinal:
+        case Varbit_ordinal:
+            return Types.BIT;
+        case Char_ordinal:
+            return Types.CHAR;
+        case Varchar_ordinal:
+            return Types.VARCHAR;
+        case Binary_ordinal:
+            return Types.BINARY;
+        case Varbinary_ordinal:
+            return Types.VARBINARY;
+        case Null_ordinal:
+            return Types.NULL;
+        case Multiset_ordinal:
+            return Types.ARRAY;
+        default:
+            return Types.OTHER;
+        }
+    }
+
     private static SqlTypeName[] makeNullable(SqlTypeName[] array) {
         return combine(new SqlTypeName[]{SqlTypeName.Null},array);
     }
@@ -301,6 +354,29 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
         System.arraycopy(array0,0,ret,0,array0.length);
         System.arraycopy(array1,0,ret,array0.length,array1.length);
         return ret;
+    }
+
+    /**
+     * @return default precision for this type if supported, otherwise
+     * -1 if precision is either unsupported or must be
+     * specified explicitly
+     */
+    public int getDefaultPrecision()
+    {
+        switch (ordinal) {
+        case Char_ordinal:
+        case Binary_ordinal:
+        case Bit_ordinal:
+            return 1;
+        case Time_ordinal:
+            return 0;
+        case Timestamp_ordinal:
+            // TODO jvs 26-July-2004:  should be 6 for microseconds,
+            // but we can't support that yet
+            return 0;
+        default:
+            return -1;
+        }
     }
 }
 

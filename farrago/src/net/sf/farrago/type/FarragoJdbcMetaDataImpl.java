@@ -21,6 +21,7 @@ package net.sf.farrago.type;
 import java.sql.*;
 
 import org.eigenbase.reltype.*;
+import org.eigenbase.sql.type.*;
 
 
 /**
@@ -45,10 +46,9 @@ public class FarragoJdbcMetaDataImpl
 
     //~ Methods ---------------------------------------------------------------
 
-    protected FarragoAtomicType getFarragoType(int fieldOrdinal)
+    protected RelDataType getFieldType(int fieldOrdinal)
     {
-        return (FarragoAtomicType) rowType.getFields()[fieldOrdinal - 1]
-            .getType();
+        return rowType.getFields()[fieldOrdinal - 1].getType();
     }
 
     public String getFieldName(int fieldOrdinal)
@@ -68,30 +68,41 @@ public class FarragoJdbcMetaDataImpl
         return "";
     }
 
-    protected int getFieldType(int fieldOrdinal)
+    protected int getFieldJdbcType(int fieldOrdinal)
     {
-        FarragoAtomicType type = getFarragoType(fieldOrdinal);
-        return type.getSimpleType().getTypeNumber().intValue();
+        RelDataType type = getFieldType(fieldOrdinal);
+        SqlTypeName typeName = type.getSqlTypeName();
+        if (typeName == null) {
+            return Types.OTHER;
+        }
+        return typeName.getJdbcOrdinal();
     }
 
     protected String getFieldTypeName(int fieldOrdinal)
     {
-        FarragoAtomicType type = getFarragoType(fieldOrdinal);
-        return type.getSimpleType().getName();
+        RelDataType type = getFieldType(fieldOrdinal);
+        SqlTypeName typeName = type.getSqlTypeName();
+        if (typeName == null) {
+            return type.toString();
+        }
+        return typeName.getName();
     }
 
     protected int getFieldPrecision(int fieldOrdinal)
     {
-        FarragoAtomicType type = getFarragoType(fieldOrdinal);
+        RelDataType type = getFieldType(fieldOrdinal);
         return type.getPrecision();
     }
 
     protected int getFieldScale(int fieldOrdinal)
     {
-        FarragoAtomicType type = getFarragoType(fieldOrdinal);
-        if (type instanceof FarragoPrecisionType) {
-            FarragoPrecisionType precisionType = (FarragoPrecisionType) type;
-            return precisionType.getScale();
+        RelDataType type = getFieldType(fieldOrdinal);
+        SqlTypeName typeName = type.getSqlTypeName();
+        if (typeName == null) {
+            return 0;
+        }
+        if (typeName.allowsPrecScale(true, true)) {
+            return type.getScale();
         } else {
             return 0;
         }
@@ -99,7 +110,7 @@ public class FarragoJdbcMetaDataImpl
 
     protected int isFieldNullable(int fieldOrdinal)
     {
-        FarragoAtomicType type = getFarragoType(fieldOrdinal);
+        RelDataType type = getFieldType(fieldOrdinal);
         return type.isNullable() ? ResultSetMetaData.columnNullable
         : ResultSetMetaData.columnNoNulls;
     }

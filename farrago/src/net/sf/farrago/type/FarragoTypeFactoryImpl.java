@@ -38,6 +38,7 @@ import net.sf.farrago.type.runtime.*;
 import net.sf.farrago.util.*;
 
 import openjava.mop.*;
+import openjava.ptree.*;
 
 import org.eigenbase.oj.*;
 import org.eigenbase.oj.util.*;
@@ -47,6 +48,7 @@ import org.eigenbase.sql.SqlCollation;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
 
+import java.util.List;
 
 // REVIEW:  should FarragoTypeFactoryImpl even have to subclass
 // OJTypeFactoryImpl?
@@ -345,7 +347,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     }
 
     // implement FarragoTypeFactory
-    public FarragoType createColumnType(
+    public RelDataType createColumnType(
         CwmColumn column,
         boolean validated)
     {
@@ -521,7 +523,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     }
 
     // implement FarragoTypeFactory
-    public FarragoType createMofType(StructuralFeature feature)
+    public RelDataType createMofType(StructuralFeature feature)
     {
         boolean isNullable = true;
 
@@ -576,7 +578,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             FarragoPrecisionType precisionType;
             precisionType = (FarragoPrecisionType) type;
             if (SqlTypeUtil.inCharFamily(type)) {
-                charsetName = precisionType.getCharsetName();
+                charsetName = precisionType.getCharset().name();
                 collation = precisionType.getCollation();
             } else {
                 charsetName = null;
@@ -604,15 +606,13 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         RelDataType type,
         boolean nullable)
     {
+        RelDataType copy;
         if (type instanceof FarragoAtomicType) {
-            if (type.isNullable() == nullable) {
-                return type;
-            } else {
-                return copyFarragoAtomicType((FarragoAtomicType) type, nullable);
-            }
+            copy = copyFarragoAtomicType((FarragoAtomicType) type, nullable);
         } else {
-            return super.createTypeWithNullability(type, nullable);
+            copy = super.createTypeWithNullability(type, nullable);
         }
+        return canonize(copy);
     }
 
     // override RelDataTypeFactoryImpl
@@ -782,18 +782,18 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
                 return super.leastRestrictive(types);
             }
 
-            SqlTypeFamily resultFamily = resultType.getSqlFamily();
+            RelDataTypeFamily resultFamily = resultType.getFamily();
             FarragoAtomicType type = (FarragoAtomicType) types[i];
-            SqlTypeFamily family = type.getSqlFamily();
+            RelDataTypeFamily family = type.getFamily();
 
             if (type.isNullable()) {
                 anyNullable = true;
             }
 
-            if (family.equals(SqlTypeFamily.Character)
-                    || (family.equals(SqlTypeFamily.Binary))) {
+            if ((family == SqlTypeFamily.Character)
+                    || (family == SqlTypeFamily.Binary)) {
                 // TODO:  character set, collation
-                if (!resultFamily.equals(family)) {
+                if (resultFamily != family) {
                     return null;
                 }
                 FarragoPrecisionType type1 = (FarragoPrecisionType) resultType;
@@ -807,11 +807,11 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
                 // Otherwise, if either is variable width, result is variable
                 // width.  Otherwise, result is fixed width.
                 RelDataType relDataType;
-                if (type1.isLob()) {
+                if (SqlTypeUtil.isLob(type1)) {
                     relDataType = createSqlType(getSqlTypeName(type1));
-                } else if (type2.isLob()) {
+                } else if (SqlTypeUtil.isLob(type2)) {
                     relDataType = createSqlType(getSqlTypeName(type2));
-                } else if (type1.isBoundedVariableWidth()) {
+                } else if (SqlTypeUtil.isBoundedVariableWidth(type1)) {
                     relDataType =
                         createSqlType(
                             getSqlTypeName(type1),
@@ -824,8 +824,8 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
                             precision);
                 }
                 resultType = (FarragoAtomicType) relDataType;
-            } else if (type.isExactNumeric()) {
-                if (resultType.isExactNumeric()) {
+            } else if (SqlTypeUtil.isExactNumeric(type)) {
+                if (SqlTypeUtil.isExactNumeric(resultType)) {
                     if (!type.equals(resultType)) {
                         if (!type.takesPrecision() && !type.takesScale()
                                 && !resultType.takesPrecision()
@@ -839,19 +839,19 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
                             resultType = createDoublePrecisionType();
                         }
                     }
-                } else if (resultType.isApproximateNumeric()) {
+                } else if (SqlTypeUtil.isApproximateNumeric(resultType)) {
                     // already approximate; promote to double just in case
                     // TODO:  only promote when required
                     resultType = createDoublePrecisionType();
                 } else {
                     return null;
                 }
-            } else if (type.isApproximateNumeric()) {
+            } else if (SqlTypeUtil.isApproximateNumeric(type)) {
                 if (!(type.equals(resultType))) {
                     resultType = createDoublePrecisionType();
                 }
             } else {
-                if (!family.equals(resultFamily)) {
+                if (family != resultFamily) {
                     return null;
                 }
 
@@ -888,6 +888,15 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         }
     }
 
+    // implement FarragoTypeFactory
+    public CwmSqlsimpleType getCwmSimpleType(RelDataType type)
+    {
+        if (!(type instanceof FarragoAtomicType)) {
+            return null;
+        }
+        return ((FarragoAtomicType) type).getSimpleType();
+    }
+    
     private SqlTypeName getSqlTypeName(FarragoAtomicType type)
     {
         return SqlTypeName.get(type.getSimpleType().getName());
@@ -998,6 +1007,29 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         return relDataType;
     }
 
+    // implement FarragoTypeFactory
+    public Expression getValueAccessExpression(
+        RelDataType type,
+        Expression expr)
+    {
+        if (((FarragoAtomicType) type).requiresValueAccess()) {
+            return new FieldAccess(expr, NullablePrimitive.VALUE_FIELD_NAME);
+        } else {
+            return expr;
+        }
+    }
+    
+    // implement FarragoTypeFactory
+    public Class getClassForPrimitive(
+        RelDataType type)
+    {
+        FarragoAtomicType atomicType = (FarragoAtomicType) type;
+        if (!atomicType.hasClassForPrimitive()) {
+            return null;
+        }
+        return atomicType.getClassForPrimitive();
+    }
+    
     //~ Inner Classes ---------------------------------------------------------
 
     /**

@@ -252,19 +252,19 @@ public class RexToCalcTranslator implements RexVisitor
             throw Util.newInternal("unknown type " + relDataType);
         }
 
-        int bytes = relDataType.getMaxBytesStorage();
-        if (bytes < 0) {
-            // Adjust for types which map to char or binary,  but which
-            // don't know their maximum length. The java string relDataType is an
-            // example of this.
-            switch (calcType.getOrdinal()) {
-            case CalcProgramBuilder.OpType.Binary_ordinal:
-            case CalcProgramBuilder.OpType.Char_ordinal:
-            case CalcProgramBuilder.OpType.Varbinary_ordinal:
-            case CalcProgramBuilder.OpType.Varchar_ordinal:
+        int bytes;
+        switch (calcType.getOrdinal()) {
+        case CalcProgramBuilder.OpType.Binary_ordinal:
+        case CalcProgramBuilder.OpType.Char_ordinal:
+        case CalcProgramBuilder.OpType.Varbinary_ordinal:
+        case CalcProgramBuilder.OpType.Varchar_ordinal:
+            bytes = SqlTypeUtil.getMaxByteSize(relDataType);
+            if (bytes < 0) {
                 bytes = 0;
-                break;
             }
+            break;
+        default:
+            bytes = -1;
         }
 
         return new CalcProgramBuilder.RegisterDescriptor(calcType, bytes);

@@ -40,7 +40,7 @@ import org.eigenbase.util.Util;
  * @since May 1, 2004
  * @version $Id$
  **/
-public class FarragoDateTimeType extends FarragoPrecisionType
+class FarragoDateTimeType extends FarragoPrecisionType
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -79,7 +79,7 @@ public class FarragoDateTimeType extends FarragoPrecisionType
         throw new AssertionError("Unsupported type:" + simpleType.getName());
     }
 
-    public boolean hasTimeZone()
+    protected boolean hasTimeZone()
     {
         return hasTimeZone;
     }
@@ -96,11 +96,6 @@ public class FarragoDateTimeType extends FarragoPrecisionType
         if (hasTimeZone) {
             sb.append(" WITH TIME ZONE");
         }
-    }
-
-    public int getOctetLength()
-    {
-        return 8; // sizeof long.
     }
 
     protected OJClass getOjClass(OJClass declarer)
@@ -163,18 +158,18 @@ public class FarragoDateTimeType extends FarragoPrecisionType
         return ojClass;
     }
 
-    public boolean hasClassForPrimitive()
+    protected boolean hasClassForPrimitive()
     {
         return true;
     }
 
-    public Class getClassForPrimitive()
+    protected Class getClassForPrimitive()
     {
         return SqlDateTimeWithoutTZ.getPrimitiveClass();
     }
 
     // implement FarragoAtomicType
-    public boolean requiresValueAccess()
+    protected boolean requiresValueAccess()
     {
         return true;
     }

@@ -83,38 +83,12 @@ abstract class FarragoExecutableStmtImpl extends FarragoCompoundAllocation
         // ResultSetMetaData.  This would (a) guarantee no references; (b) allow
         // for an accurate memory usage computation and (c) allow for
         // persistent caching.  Use RmiJdbc serialization support?
-        RelDataTypeFactory newTypeFactory = new RelDataTypeFactoryImpl();
-
-        final RelDataTypeField [] fields = rowType.getFields();
-
-        for (int i = 0; i < fields.length; ++i) {
-            // FIXME:  get rid of this once all types are guaranteed to be
-            // FarragoTypes
-            if (!(fields[i].getType() instanceof FarragoType)) {
-                continue;
-            }
-
-            FarragoType farragoType = (FarragoType) fields[i].getType();
-            farragoType.forgetFactory();
-        }
-
-        return newTypeFactory.createStructType(
-            new RelDataTypeFactory.FieldInfo() {
-                public int getFieldCount()
-                {
-                    return fields.length;
-                }
-
-                public String getFieldName(int index)
-                {
-                    return fields[index].getName();
-                }
-
-                public RelDataType getFieldType(int index)
-                {
-                    return fields[index].getType();
-                }
-            });
+        FarragoTypeFactory oldFactory =
+            (FarragoTypeFactory) rowType.getFactory();
+        FarragoTypeFactory newFactory =
+            new FarragoTypeFactoryImpl(oldFactory.getRepos());
+        // TODO jvs 9-Dec-2004:  disown factory
+        return newFactory.copyType(rowType);
     }
 }
 
