@@ -552,6 +552,7 @@ Finally, execution continues around the outer for loop unless the quantum has
 expired:
 
 <pre><code>
+    }
     return EXECRC_QUANTUM_EXPIRED;
 </code></pre>
 

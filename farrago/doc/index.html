@@ -8,6 +8,94 @@
 
 <body>
 
+<img src="jackalope.jpg">
+
+<h1>Welcome To The Farrago Project</h1>
+
+Farrago is an extensible open-source platform for constructing
+enterprise-class RDBMS services.  SQL has become the
+"intergalactic dataspeak" of the computer world, and Farrago provides
+a fast track to creating systems with advanced SQL capabilities.  
+
+<p>
+
+By itself, Farrago is not an end-user product like MySQL or
+PostgreSQL; instead, it provides a standards-based pluggable
+architecture, component library, and toolset for developers of other
+projects which specialize it.  The architecture involves an innovative
+hybrid of Java, C++, and UML frameworks.  For more information on how
+Farrago is being developed, see the <a href="roadmap.html">Project
+Roadmap</a>.
+<hr>
+
+<h2>License</h2>
+
+Farrago is open-source software licensed under the <a
+href="http://www.gnu.org/licenses/gpl.html">GNU GPL</a>.
+
+<hr>
+
+<h2>Status</h2>
+
+A reference implementation providing very basic transactional and
+SQL/MED distributed query capabilities is now available.  Check the <a
+href="status.html">current status page</a> for details.  Here's a <a
+href="screenshotIsqlMdr.jpg">screenshot</a> of a metadata query using
+the iSQL-Viewer tool.
+<hr>
+
+<h2>Documentation</h2>
+
+<ul>
+
+<li><a href="developerJumpStart.html">Getting started</a>
+
+<li><a href="architecture.html">Architecture overview</a>
+
+<li><a href="design/index.html">Design docs</a>
+
+<li><a href="howto/index.html">HOWTO guides</a>
+
+<li><a href="api/index.html">Javadoc for all Java components</a>
+
+<li><a
+href="http://fennel.sourceforge.net/doxygen/html/annotated.html">Doxygen
+for C++ components</a>
+
+<li><a href="faqProject.html">Project FAQ</a> 
+
+<li><a href="faqTech.html">Developer FAQ</a>
+
+</ul>
+
+<hr>
+
+<h2>Downloads and Contributions</h2>
+
+Packaged binary and source releases will be available via Sourceforge
+soon.  For now, please access the source control system directly as
+explained in the getting started docs link above.
+
+<hr>
+
+<h2>Acknowledgements</h2>
+
+The project is hosted at <a
+href="http://sourceforge.net/projects/farrago">SourceForge</a> under
+the auspices of <a href="http://www.eigenbase.org">The Eigenbase
+Project</a>.
+
+<p>
+
+The source code is hosted in
+<a href="http://p4web.eigenbase.org/open/">the Eigenbase Perforce
+server</a>. A big thanks to 
+<a href="http://www.perforce.com">Perforce</a> for providing us with a
+<a href="http://www.perforce.com/perforce/opensource-faq.html">
+free-as-in-beer license</a>.
+
+<hr>
+
 Powered by 
 <a href="http://sourceforge.net">
 <img
@@ -21,133 +109,6 @@ and
 <a href="http://www.perforce.com">
 <img src="http://www.perforce.com/images/logo.gif" align="abscenter">
 </a>
-
-<hr>
-
-<h1>Farrago</h1>
-
-<a href="http://www.jackalope.org">
-<img src="jackalope.jpg">
-</a>
-
-<hr>
-
-Farrago is an attempt to build an enterprise-class open-source RDBMS
-with a modern architecture.  Why does the world need another
-open-source RDBMS when there are so many already?  Please see the <a
-href="faq.html">Project FAQ</a>.  A major goal is to do as little work
-as possible.  Sometimes being lazy is good, and in this case many of
-the required components are already available as open-source, and just
-waiting to be put together.  For the parts that need custom coding,
-some of the ideas from <a href="http://www.omg.org/mda">model-driven
-architecture</a> can save a lot of gruntwork.  Currently, just a
-skeleton of the full system exists.  The <a
-href="roadmap.html">project roadmap</a> defines how to get to a fully
-functional system.
-
-<p>
-
-The project is hosted at <a
-href="http://sourceforge.net/projects/farrago">SourceForge</a> under
-the auspices of <a href="http://www.eigenbase.org">The Eigenbase
-Project</a>.
-
-<p>
-
-The source code is hosted in
-<a href="http://p4web.eigenbase.org/open/">the Eigenbase Perforce
-server</a>. A big thanks to 
-<a href="http://www.perforce.com">Perforce</a> for letting us use p4d for
-<a href="http://www.perforce.com/perforce/opensource-faq.html">
-free-as-in-beer</a>.
-
-<p>
-
-<hr>
-
-<h2>Status</h2>
-
-The system is beginning to show signs of life.  Check the
-<a href="status.html">current status page</a> for details.
-Here's a  <a href="screenshotIsqlMdr.jpg">screenshot</a> of a
-metadata query using the iSQL-Viewer tool.
-<hr>
-
-<h2>Documentation</h2>
-
-Some good starting points are the 
-<a href="architecture.html">architecture overview</a> and the 
-<a href="faq.html">FAQ</a>.  Also available are 
-<a href="api/index.html">
-Javadoc for all Java components</a> and 
-<a href="http://fennel.sourceforge.net/doxygen/html/annotated.html">Doxygen
-for C++ components</a>.
-
-<p>
-
-There are even some <a href="design/index.html">design docs</a> and <a
-href="howto/index.html">HOWTO guides</a> available, and the <a
-href="faqTech.html">Developer FAQ</a> is starting to grow.
-
-<hr>
-
-<h2>Contributing</h2>
-
-No matter what background you're coming from, Farrago Wants You!
-
-<ul>
-
-<li>
-Do you like bits, bytes, bus errors, and memory barriers?  There's
-some code waiting for you somewhere in Fennel (if you're a
-hardcore kernel hacker, aren't you tired of reinventing the linked
-list yet?).
-
-<li>
-Application developer?  Creating a table isn't much different from
-creating a new customer account, and the design patterns employed in
-Farrago and Fennel should make you feel right at home.  Or if you're
-into generic Java server technology, work on integrating Farrago into
-your favorite app server.
-
-<li>
-Client side?  Work on JDBC or ODBC drivers, or make Farrago show up in
-one of the many management platforms out there.
-
-<li>
-Script-junkie?  You name it, we probably need it.
-
-<li>
-Do the prison cell aesthetics of this website offend you?  That's
-intentional.  Help do something about it!
-
-<li>
-...
-
-</ul>
-
-If you're interested, read through the <a
-href="developerJumpStart.html">getting started docs</a> and 
-send mail to perfecthash-AT-users.sf.net to get brainwashed into
-contributing.
-
-<hr>
-
-<h2>Downloads</h2>
-
-For now, just get the source as explained in the getting started docs
-link above.
-
-<hr>
-
-<b>
-  <table border="1" width="100%" class="clsStd">
-    <tr>
-      <td>End <i>$Id$</i></td>
-    </tr>
-  </table>
-  <p>&nbsp;</p>
-</b>
 
 </body>
 

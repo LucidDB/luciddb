@@ -11,16 +11,18 @@
 <h1>Overview</h1> 
 
 This document describes how logical Farrago table definitions are
-mapped to physical implementations (currently always BTrees) when
-stored using Fennel.
+mapped to the default BTree-based reference implementation known as
+FTRS (Fennel Transactional Row Store).  It is possible to plug in
+other mappings such as column-based storage using the CREATE LOCAL
+DATA WRAPPER command.
 
 <h2>Limitations</h2>
 
-Currently every table must have a primary key and exactly one
-clustered index (which need not be unique, and need not include the
-primary key).  When a clustered index definition is omitted, the
-primary key is used.  A table may have any number of unclustered
-indexes, both unique and non-unique.
+Every FTRS table must have a primary key and exactly one clustered
+index (which need not be unique, and need not include the primary
+key).  When a clustered index definition is omitted, the primary key
+is used.  A table may have any number of unclustered indexes, both
+unique and non-unique.
 
 <p>
 

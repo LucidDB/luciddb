@@ -1,0 +1,158 @@
+<html>
+<!--
+  -->
+
+<head>
+<title>Farrago Project FAQ</title>
+<link rel="stylesheet" href="stylesheet.css" type="text/css" />
+<style>
+<!--
+.small { font-family: verdana,arial,helvetica,sans-serif; font-size: x-small; }
+-->
+</style>
+</head>
+
+<body>
+<h1>Farrago Project FAQ</h1>
+
+<hr>
+
+<h2>We already have MySQL, PostgreSQL, Derby, etc.  Why does the
+world need another open-source DBMS?</h2>
+
+Farrago is not an end-user product like these databases, which are
+focused on specific domains such as transaction processing, where they
+can already meet the needs of many users.  Instead, Farrago provides a
+generic framework which can be specialized for a variety of DBMS
+domains such as federated query processing, data warehousing,
+multimedia, or replication.  While it is possible to adapt a project
+like PostgreSQL for novel uses, this requires permanently forking the
+codebase, because the architecture wasn't designed for it.  By
+contrast, Farrago has been designed to accept plugins for just about
+any part of the system, so the specialization process involves adding
+new components and behavior instead of replacing existing components
+with incompatible versions.  The Farrago project model is very similar
+to <a href="http://www.eclipse.org">Eclipse</a> in this respect.
+
+<hr>
+
+<h2>Why would I be interested in Farrago?</h2>
+
+If you are a developer interested in creating a product with DBMS
+capabilities of some kind, using Farrago as a starting point can save
+you a lot of time.  The Farrago architecture spans all of the layers
+required for a full DBMS, including: API's such as JDBC; SQL query
+parsing, validation, and optimization; query execution; storage and
+transaction managment; distributed data; and metadata management.  And
+the implementation is fully component-based, with careful attention
+paid to dependencies, so that if you only want to reuse a
+self-contained subset such as storage management or SQL parsing, it's
+possible to do this without dragging in unrelated layers.
+
+<p>
+
+If you are an end user, you're more likely to be interested in a
+prepackaged distribution customized for a specific use such as
+<a href="howto/medmdr.html">metadata federation</a>.
+
+<hr>
+
+<h2>I would like to use Farrago to develop commercial software,
+but the GPL is a dead end for me.  Do you offer dual licensing?</h2>
+
+Farrago is being developed under the stewardship of <a
+href="http://www.eigenbase.org">The Eigenbase Project</a>, a
+California non-profit.  We strongly support <a
+href="http://www.opensource.org/docs/definition.php">open-source
+principles</a>, and we believe that the GPL is the best vehicle for
+creating and protecting strong communities of software developers and
+users.  So we encourage you to distribute your software under the GPL
+as well.  However, if your organization prohibits development of GPL
+software, Eigenbase offers commercial licensing in exchange for
+significant contributions of code or other resources; <a
+href="mailto:info@eigenbase.org">contact us</a> for more information.
+
+<hr>
+
+<h2>Why does Farrago require Java?</h2>
+
+Farrago's hybrid Java/C++ architecture opens up a number of opportunities
+not available to traditional DBMS implementations (or much more difficult):
+
+<ul>
+
+<li>
+Tight integration with Java-based application servers.  For example,
+rather than reinventing cluster management, a clustered service based
+on Farrago could be managed through generic J2EE facilities such as
+JMX.  There are similar opportunities for features such as distributed
+transactions, resource pooling, software update distribution, hot
+upgrades, etc.
+
+<li>
+Better extensibility environment.  Writing a UDF in Java (with garbage
+collection) means the UDF can run in-process without having to worry
+about memory corruption and leaks affecting the server.
+
+<li>
+Seamless implementation for SQL standard Java stored procedures and
+object-oriented user-defined types.
+
+<li>
+JIT compilation of SQL expression and procedure code.  Farrago is
+already able to implement many SQL scalar expressions and some
+relational expressions by generating Java code on the fly.  (The same
+technique will be used for stored procedures.)  This can be
+automatically compiled further into native code by JIT.  This is
+a big win for commonly re-executed transactional statements as well
+as long-running complex queries.
+
+<li>
+Less security risk.  Java is not perfect in this respect, but it
+reduces the chance of common exploits such as buffer overruns in
+non-performance-critical code.  And the C++ portions use modern memory
+management techniques (string, vector, shared_ptr, etc), with STLport
+bounds-checking turned on for all debug builds.
+
+</ul>
+
+<hr>
+
+<h2>Isn't Java slow?  Doesn't that mean Farrago can't possibly compete
+with systems implemented entirely in C/C++?</h2>
+
+Careful attention has been paid to keep Java out of the most important
+data processing paths.  Where Java is used (metadata management,
+parsing, validation, and optimization, plus a targeted role in
+executing generated code), its performance is acceptable.
+
+<hr>
+
+<h2>What version of the SQL standard does Farrago implement?</h2>
+
+We are developing towards SQL99, with some extensions from SQL2003.
+
+<hr>
+
+<h2>What's with the name?</h2> 
+
+See the <a
+href="http://dictionary.reference.com/search?q=farrago">dictionary</a>.
+But that's not the <a
+href="http://www.quinion.com/words/topicalwords/tw-far1.htm">whole
+story</a>.
+
+<hr>
+
+<h2>Why a jackalope for the mascot?</h2>
+
+The wily jackalope combines the speed of a jackrabbit with the fluid
+grace and complex headgear of an antelope, which seems appropriate for
+a hybrid Java/C++ system.  In addition, the jackalope symbolizes a
+vision of elegance beyond our mundane reality (and is also reputed to be
+surprisingly savage when cornered).
+
+<hr>
+
+</body>
+</html>

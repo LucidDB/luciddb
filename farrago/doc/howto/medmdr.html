@@ -10,14 +10,15 @@
 
 <h1>HOWTO:  Use Farrago SQL to Access Metadata Managed by MDR</h1>
 
-If you are using MDR as a persistent repository, chances are good that at some
-point you'll want to expose your repository data as SQL views.  This makes
-it possible to use an off-the-shelf query/reporting tool to browse your
+If you are using <a href="http://mdr.netbeans.org">MDR</a> as a
+persistent repository, chances are good that at some point you'll want
+to expose your repository data as SQL views.  This makes it possible
+to use an off-the-shelf query/reporting tool to browse your
 repository, generate reports, or just about anything else.
 
 <p>
 
-The Farrago DBMS makes all of this possible via its <a
+The Farrago DBMS platform makes all of this possible via its <a
 href="../design/sqlmed.html">SQL/MED extensibility feature</a>.  This
 document describes how to make use of the MDR plugin.
 
@@ -860,9 +861,8 @@ more than one process at a time to open the btree files.  This means
 Farrago and your application have to take turns accessing the data,
 which is probably impractical.  MDR's JDBC storage may provide a
 better solution, although it needs improvements in
-performance/concurrency control.  And Farrago is not yet
-client/server.  So for now, usage of Farrago for MDR querying is
-probably limited to proof-of-concept.
+performance/concurrency control.  So for now, usage of Farrago for MDR
+querying is probably limited to proof-of-concept.
 </ul>
 
 <a href="mailto:farrago-developers@lists.sf.net">Let us know</a> how

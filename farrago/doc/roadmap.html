@@ -13,116 +13,180 @@
 
 <hr>
 
-This document sketches the medium-term release plan for the Farrago
-project.  It's light on details, which will be filled in once there
-are owners for tasks.  Some of the Farrago-level tasks may require
-one or more subtasks at the level of the Fennel kernel.  The current
-task list can be viewed from
+Farrago has been under incubation since early in 2003.  We have mainly
+focused on getting core functionality working and tested, and have
+already exposed the most important extensibility points.  Some basic
+features (such as GROUP BY processing) are still under development,
+and some (such as the fixed-point NUMERIC datatype) remain missing
+entirely.  However, the project is now fleshed out and stable enough
+to start encouraging contributions from a wider audience as well as
+specializations for various domains.
 
-<a href="http://sourceforge.net/pm/task.php?group_project_id=30032&group_id=80183&func=browse">
-Sourceforge's Task Manager
-</a>.
+<p>
 
-The intention of defining a roadmap is to have some basis for task
-definition, prioritization, and sense of progress.
-
-<hr>
-
-<h2>Developer-only Releases</h2>
-
-Currently, the project is in "developer only" mode where it makes no
-sense for anyone other than a developer to even look at it.  However,
-during this time, we'll still do regular releases just to have some
-consistent code snapshots out there for prospective developers to play with.
+The purpose of this roadmap is to sketch out the release plan for 2005
+so that we can track progress and prioritize incoming requirements.
 
 <hr>
 
-<h2>TPC-W Release</h2>
+<h2>First GPL-only Release</h2>
 
-The first non-developer release should contain just enough to demonstrate
-a working, integrated system that can execute a reasonable subset of
-SQL via JDBC.  In order to have clear exit criteria for this release,
-the 
-<a href="http://www.tpc.org/tpcw">TPC-W benchmark</a>
-has been selected as an integration test because it
+So far, no full Sourceforge releases have been made, and the code has
+been developed under a combination of GPL and LGPL licensing due to
+the existence of multiple copyright holders.  Once ownership issues
+are resolved, The Eigenbase Project will release all code as GPL.
+This first official release is targeted to occur by the end of
+January, and will make it easier for potential users and contributors
+to play with Farrago (without the hassle of using the source control
+system).
+
+<p>
+
+TODO: 
 
 <ul>
 
-<li>has a <a href="http://www.ece.wisc.edu/~pharm/tpcw.shtml"> Java
-implementation</a> available which matches our target architecture
-well (in particular, it's servlet-based, so it does not require a
-remote JDBC driver)
+<li>update binary packaging release scripts
 
-<li>uses fairly simple SQL
+<li>write README and related documents for usage of binary package
 
-<li>as a benchmark, can be used to drive an initial tuning effort
+<li>create a source packaging script
 
-<li>as a standard, is something we'll want to get around to eventually anyway
+<li>update getting started docs for working from source distribution
+without source control
 
 </ul>
 
-Note that the intention is to use TPC-W as a sample application, not
-to get any meaningful performance numbers (if the initial numbers
-aren't terrible, it means something isn't actually working yet!).  If
-something (e.g. a subquery) is the only thing that doesn't work, we'll
-just disable it and declare victory.
-
 <hr>
 
-<h2>SQL92 Functionality and Performance Releases</h2>
+<h2>Refactoring</h2>
 
-Once the basics are dealt with, we can move on to the tricky stuff.
-The goal here is to move towards competitiveness and compatibility
-with existing systems.  These will most likely be split up into
-multiple releases (possibly in parallel):
+As part of preparing the Farrago platform for use by other projects, we
+plan to engage in a comprehensive review process and take stock of the
+state of various layers.  This process has several outputs:
 
 <ul>
 
-<li>
-view definition and rewrite
+<li>refactoring tasks for components which need it
 
-<li>Information Schema views into catalog
+<li>documentation on which components and interfaces are safe to
+reuse or extend in their current form, which should remain internal to the
+framework, and which need to be refactored before being declared
+ready for reuse or extension
 
-<li>JDBC metadata support
+<li>design documents
 
-<li>advanced datatype support
+<li>incremental releases as refactoring and documentation tasks are completed
 
-<li>access control
+</ul>
+
+Important areas known to need work include:
+
+<ul>
+
+<li>validator
+
+<li>dependency tangle within org.eigenbase packages
+
+<li>session interfaces and plugin mechanism
+
+<li>utility classes
+
+<li>catalog extensibility mechanism
+
+<li>parser extensibility mechanism
+
+<li>Java runtime type system
+
+<li>storage management
+
+<li>scheduler resource allocation
+
+</ul>
+
+A possibly realistic goal is to complete the comprehensive review
+process by June (including publication of the state of all components)
+and complete most of the resulting refactoring tasks by the end of the
+year.
+
+<hr>
+
+<h2>Standardization</h2>
+
+In parallel with refactoring, we will be completing our support for
+SQL and related standards.  Two startup contributors (codenamed Disruptive
+Tech and Red Square) are already at work in this area.  Here are some
+of the important missing items:
+
+<ul>
+
+<li>access control (currently owned by the Red Square team)
+
+<li>user-defined functions (currently owned by the Disruptive Tech team)
+
+<li>user-defined types (currently owned by the Disruptive Tech team)
+
+<li>user-defined relational transformations (currently owned by the
+Red Square team)
 
 <li>referential integrity
 
-<li>advanced SQL expression support (with commonly used expressions in
-kernel rather than Java)
+<li>Information Schema views into catalog
 
-<li>ODBC driver and optimized JDBC client driver, both of which may
-bypass Java altogether on the server side for result set retrieval
+<li>complete JDBC metadata support
 
-<li>performance tuning
+<li>GROUP BY support (currently owned by the Disruptive Tech)
 
-<li>hash join (acquire if possible)
+<li>MULTISET, ROW, and datetime interval datatypes (currently owned by
+the Disruptive Tech team)
 
-<li>merge sort (to replace btree-insertion sort above; acquire if possible)
+<li>fixed-point NUMERIC datatype
 
-<li>storage management, backup/restore, etc.
-
-<li>blobs
+<li>ARRAY and LOB datatypes
 
 <li>distributed transaction support
 
+<li>storage management, backup/restore
+
 <li>Fennel persistence for MDR
-
-<li>resource balancing
-
-<li>heterogeneous queries
 
 </ul>
 
-<h2>Diversification Releases</h2> 
+<hr>
 
-If the project survives through to
-this point, then many paths (e.g. federation, clustering, analytics,
-hardware acceleration, etc.) open up.  However, it's a bad idea to
-start on any of these before the basics are in place.
+<h2>Specialization Projects</h2>
+
+Some of the candidate areas for applying the Farrago platform include:
+
+<ul>
+
+<li>federated metadata query server
+
+<li>federated data query server
+
+<li>distributed or replicated DBMS
+
+<li>data warehousing (a Red Square project is currently underway in this area)
+
+<li>pure-Java DBMS (but this space is already very crowded with
+open-source projects such as HSQLDB, Derby, and Mckoi)
+
+<li>transaction processing (this space is also very crowded, but
+Fennel really just needs a decent concurrency control mechanism to go
+here)
+
+<li>active and realtime databases
+
+<li>object/relational (with full SQL-2003 object support)
+
+<li>multimedia, spatial, full-text, temporal
+
+<li>XML
+
+</ul>
+
+As the platform matures, parties interested in spearheading these
+efforts can get moving on their own release schedules.
 
 <hr>
 
