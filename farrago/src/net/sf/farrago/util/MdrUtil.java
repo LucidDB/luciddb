@@ -44,10 +44,11 @@ public abstract class MdrUtil
      * Loads an MDRepository instance.
      *
      * @param storageFactoryClassName fully qualified name of the class
-     * used to implement repository storage
+     * used to implement repository storage (if null, this
+     * defaults to BtreeFactory if not specified as an entry in storageProps)
      *
      * @param storageProps storage-specific properties
-     * (without the MDRStorageProperty prefix)
+     * (with or without the MDRStorageProperty prefix)
      *
      * @return loaded repository
      */
@@ -64,6 +65,12 @@ public abstract class MdrUtil
         String storagePrefix = "MDRStorageProperty.";
 
         if (storageFactoryClassName == null) {
+            // may be specified as a property
+            storageFactoryClassName = storageProps.getProperty(classNameProp);
+        }
+        
+        if (storageFactoryClassName == null) {
+            // use default
             storageFactoryClassName = BtreeFactory.class.getName();
         }
 
@@ -79,7 +86,8 @@ public abstract class MdrUtil
         iter = storageProps.entrySet().iterator();
         while (iter.hasNext()) {
             Map.Entry entry = (Map.Entry) iter.next();
-            String propName = storagePrefix + entry.getKey();
+            String propName = applyPrefix(
+                storagePrefix, entry.getKey().toString());
             savedProps.put(
                 propName,
                 sysProps.get(propName));
@@ -92,7 +100,7 @@ public abstract class MdrUtil
             while (iter.hasNext()) {
                 Map.Entry entry = (Map.Entry) iter.next();
                 sysProps.put(
-                    storagePrefix + entry.getKey(),
+                    applyPrefix(storagePrefix, entry.getKey().toString()),
                     entry.getValue());
             }
 
@@ -112,6 +120,14 @@ public abstract class MdrUtil
                 }
             }
         }
+    }
+
+    private static String applyPrefix(String storagePrefix, String propName)
+    {
+        if (propName.startsWith(storagePrefix)) {
+            return propName;
+        }
+        return storagePrefix + propName;
     }
 }
 

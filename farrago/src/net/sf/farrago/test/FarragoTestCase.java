@@ -34,6 +34,7 @@ import net.sf.farrago.fem.med.*;
 import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
+import net.sf.farrago.db.*;
 
 import org.eigenbase.test.*;
 import org.eigenbase.util.SaffronProperties;
@@ -322,7 +323,8 @@ public abstract class FarragoTestCase extends DiffTestCase
             staticSetUp();
         }
 
-        tracer.info("Entering test case " + getName());
+        tracer.info("Entering test case "
+            + getClass().getName() + "." + getName());
         super.setUp();
         stmt = connection.createStatement();
 
@@ -359,9 +361,12 @@ public abstract class FarragoTestCase extends DiffTestCase
                 stmt.close();
                 stmt = null;
             }
-            connection.rollback();
+            if (connection != null) {
+                connection.rollback();
+            }
         } finally {
-            tracer.info("Leaving test case " + getName());
+            tracer.info("Leaving test case "
+                + getClass().getName() + "." + getName());
             if (tracer.isLoggable(Level.FINE)) {
                 Runtime rt = Runtime.getRuntime();
                 rt.gc();

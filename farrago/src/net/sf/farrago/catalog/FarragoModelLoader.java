@@ -24,6 +24,7 @@ import java.util.*;
 import net.sf.farrago.FarragoPackage;
 import net.sf.farrago.util.FarragoProperties;
 import net.sf.farrago.util.MdrUtil;
+import net.sf.farrago.resource.FarragoResource;
 
 import org.netbeans.api.mdr.*;
 import org.netbeans.mdr.*;
@@ -55,6 +56,7 @@ public class FarragoModelLoader
     public void close()
     {
         if (mdrRepos != null) {
+            org.netbeans.jmiimpl.mof.model.NamespaceImpl.clearContains();
             mdrRepos.shutdown();
             mdrRepos = null;
         }
@@ -72,33 +74,45 @@ public class FarragoModelLoader
         if (userRepos) {
             setUserReposProperties();
         } else {
-            setSystemReposProperties();
+            try {
+                setSystemReposProperties();
+            } catch (IOException ex) {
+                throw FarragoResource.instance().newCatalogPropsAccessFailed(
+                    getSystemReposFile().getAbsolutePath(), ex);
+            }
         }
         mdrRepos =
             MdrUtil.loadRepository(storageFactoryClassName, storageProps);
         return (FarragoPackage) mdrRepos.getExtent(extentName);
     }
 
-    private File getSystemReposFileSansExt()
-    {
-        File catalogDir = FarragoProperties.instance().getCatalogDir();
-        return new File(catalogDir, "FarragoCatalog");
-    }
-
     public File getSystemReposFile()
     {
-        return new File(getSystemReposFileSansExt().toString() + ".btd");
+        File catalogDir = FarragoProperties.instance().getCatalogDir();
+        return new File(catalogDir, "ReposStorage.properties");
     }
 
-    private void setSystemReposProperties()
+    private void setSystemReposProperties() throws IOException
     {
-        File reposFile = getSystemReposFileSansExt();
+        File reposFile = getSystemReposFile();
+        InputStream propsStream = new FileInputStream(reposFile);
+        Properties props = new Properties();
+        try {
+            props.load(propsStream);
+        } finally {
+            propsStream.close();
+        }
 
-        storageFactoryClassName = BtreeFactory.class.getName();
-
-        setStorageProperty(
-            "org.netbeans.mdr.persistence.Dir",
-            reposFile.toString());
+        FarragoProperties farragoProps = FarragoProperties.instance();
+        
+        Iterator iter = props.entrySet().iterator();
+        while (iter.hasNext()) {
+            Map.Entry entry = (Map.Entry) iter.next();
+            setStorageProperty(
+                entry.getKey().toString(),
+                farragoProps.expandProperties(
+                    entry.getValue().toString()));
+        }
     }
 
     private void setUserReposProperties()

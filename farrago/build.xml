@@ -23,6 +23,9 @@
   <!-- Farrago project root  -->
   <property name="farrago.dir" location="."/>
 
+  <!-- Alias for farrago.dir to match runtime properties convention -->
+  <property name="FARRAGO_HOME" location="${farrago.dir}"/>
+
   <!-- import the fennel.disabled setting; this takes highest precedence -->
   <property file="initBuild.properties"/>
 
@@ -63,6 +66,9 @@
 
   <!-- directory in which catalog data is stored -->
   <property name="catalog.dir" location="${farrago.dir}/catalog"/>
+
+  <!-- Alias for catalog.dir to match runtime properties convention -->
+  <property name="FARRAGO_CATALOG_DIR" location="${catalog.dir}"/>
 
   <!-- directory for initialization scripts -->
   <property name="initsql.dir" location="${farrago.dir}/initsql"/>
@@ -140,6 +146,10 @@
 require version '${required.ant.version}'."/>
 
   <!-- Files -->
+
+  <!-- file controlling repository storage -->
+  <property name="ReposStorage.properties" 
+    location="${catalog.dir}/ReposStorage.properties"/>
 
   <!-- XMI file containing CWM defintion  -->
   <property name="CwmMetamodel.xmi" location="${xmi.dir}/cwm-1.1.xml"/>
@@ -334,6 +344,8 @@ require version '${required.ant.version}'."/>
     <pathelement location="${csvjdbc.dir}/csvjdbc.jar"/>
     <pathelement location="${janino.dir}/lib/janino.jar"/>
     <pathelement location="${openjava.dir}/openjava.jar"/>
+    <pathelement location="${hsqldb.dir}/lib/hsqldb.jar"/>
+    <pathelement path="${farrago.custom.classpath}"/>
   </path>
   <property name="farrago.3p.classpath" refid="farrago.3p.classpath"/>
 
@@ -363,18 +375,22 @@ require version '${required.ant.version}'."/>
     <pathelement location="${classes.dir}"/>
     <pathelement location="${catalog.src.dir}"/>
     <pathelement location="${src.dir}"/>
-    <pathelement location="${hsqldb.dir}/lib/hsqldb.jar"/>
   </path>
   <property name="farrago.run.classpath" refid="farrago.run.classpath"/>
 
   <!-- sourcepath for debugging -->
   <path id="farrago.sourcepath">
-    <pathelement location="${janino.dir}/src"/>
     <pathelement location="${catalog.src.dir}"/>
     <pathelement location="${src.dir}"/>
+    <pathelement location="${isql.dir}/src"/>
+    <pathelement location="${sqlline.dir}/src"/>
+    <pathelement location="${junit.dir}/src.jar"/>
+    <pathelement location="${rmijdbc.dir}/src"/>
+    <pathelement location="${open.dir}/thirdparty/netbeans/mdr/src"/>
+    <pathelement 
+      location="${open.dir}/thirdparty/netbeans/mdr/extras/jdbcstorage/src"/>
   </path>
   <property name="farrago.sourcepath" refid="farrago.sourcepath"/>
-
 
   <!-- classpath for running from sqlline -->
   <path id="sqlline.classpath">
@@ -409,41 +425,6 @@ require version '${required.ant.version}'."/>
   </path>
   <property name="createUserRepository.classpath"
     refid="createUserRepository.classpath"/>
-
-  <!-- sourcepath for debugging iSQL -->
-  <path id="jswat.isql.sourcepath">
-    <pathelement location="${isql.dir}/src"/>
-    <pathelement path="${farrago.sourcepath}"/>
-  </path>
-  <property name="jswat.isql.sourcepath" refid="jswat.isql.sourcepath"/>
-
-  <!-- sourcepath for debugging sqlline -->
-  <path id="jswat.sqlline.sourcepath">
-    <pathelement location="${sqlline.dir}/src"/>
-    <pathelement path="${farrago.sourcepath}"/>
-  </path>
-  <property name="jswat.sqlline.sourcepath" refid="jswat.sqlline.sourcepath"/>
-
-  <!-- sourcepath for debugging via JUnit -->
-  <path id="jswat.junit.sourcepath">
-    <pathelement location="${junit.dir}/src.jar"/>
-    <pathelement path="${jswat.sqlline.sourcepath}"/>
-  </path>
-  <property name="jswat.junit.sourcepath" refid="jswat.junit.sourcepath"/>
-
-  <!-- sourcepath for debugging MDR -->
-  <path id="mdr.sourcepath">
-    <pathelement location="${open.dir}/netbeans/mdr/src"/>
-    <pathelement path="${farrago.sourcepath}"/>
-  </path>
-  <property name="mdr.sourcepath" refid="mdr.sourcepath"/>
-
-  <!-- sourcepath for debugging server -->
-  <path id="server.sourcepath">
-    <pathelement location="${rmijdbc.dir}/src"/>
-    <pathelement path="${farrago.sourcepath}"/>
-  </path>
-  <property name="farrago.sourcepath" refid="farrago.sourcepath"/>
 
 
   <!-- Macro Definitions -->
@@ -518,6 +499,8 @@ require version '${required.ant.version}'."/>
   <!-- create classes directory -->
   <target name="mkdir.classes">
     <mkdir dir="${classes.dir}"/>
+    <mkdir dir="${plugin.dir}"/>
+    <mkdir dir="${plugin.classes.dir}"/>
   </target>
 
   <!-- test only packages needed by Saffron -->
@@ -626,10 +609,7 @@ require version '${required.ant.version}'."/>
   </target>
 
   <!-- creates catalog and populates with initial metadata -->
-  <target name="createCatalog" depends ="mkdir.classes">
-    <mkdir dir="${classes.dir}"/>
-    <mkdir dir="${plugin.dir}"/>
-    <mkdir dir="${plugin.classes.dir}"/>
+  <target name="createCatalog" depends ="mkdir.classes,configureReposStorage">
     <antcall target="createClasspathFile"/>
     <antcall target="compileCatalog"/>
     <antcall target="createMdrTestData"/>
@@ -641,6 +621,21 @@ require version '${required.ant.version}'."/>
     <antcall target="backupCatalog"/>
   </target>
 
+  <!-- sets property ReposStorage.configured if ReposStorage.properties
+       already exists-->
+  <target name="checkReposStorage">
+    <available property="ReposStorage.configured" 
+      file="${ReposStorage.properties}"/>
+  </target>
+
+  <!-- creates ReposStorage.properties from a default template unless
+       it already exists -->
+  <target name="configureReposStorage" depends="checkReposStorage"
+    unless="ReposStorage.configured">
+    <copy file="${catalog.dir}/templates/HsqldbRepos.properties" 
+      tofile="${ReposStorage.properties}"/>
+  </target>
+
   <target name="compileCatalog"
     depends="cleanCatalog,createRepository"/>
 
@@ -649,7 +644,7 @@ require version '${required.ant.version}'."/>
     <mkdir dir="${catalog.dir}"/>
     <mkdir dir="${catalog.src.dir}"/>
     <antcall target="transformMetamodel"/>
-    <antFork target="forked_importMetamodel"/>
+    <mdrFork target="forked_importMetamodel"/>
     <javaCompile
       srcdir="${catalog.src.dir}"
       destdir="${catalog.src.dir}"
@@ -657,19 +652,19 @@ require version '${required.ant.version}'."/>
       <include name="**/*.java"/>
     </javaCompile>
     <antcall target="backupCatalog"/>
-    <antFork target="forked_createTempCatalogRepository"/>
+    <mdrFork target="forked_createTempCatalogRepository"/>
     <antcall target="compile.saffron.deps"/>
     <antcall target="generateMetadataFactory"/>
     <antcall target="restoreCatalog"/>
     <antcall target="all"/>
-    <antFork target="forked_createCatalogRepository"/>
+    <mdrFork target="forked_createCatalogRepository"/>
   </target>
 
   <!-- NOTE:  don't use mapClass below to make sure all generated
   .java files can actually be compiled -->
 
   <target name="forked_importMetamodel" depends="mdr_taskdef">
-    <mdr storageFile="${catalog.mdrStorage}">
+    <mdr>
       <instantiate name="FarragoMetamodel"/>
       <readXMI
         file="${FarragoMetamodel.xmi}"
@@ -681,7 +676,7 @@ require version '${required.ant.version}'."/>
   </target>
 
   <target name="forked_createCatalogRepository" depends="mdr_taskdef">
-    <mdr storageFile="${catalog.mdrStorage}">
+    <mdr>
       <instantiate
         name="FarragoCatalog"
         extent="FarragoMetamodel"
@@ -693,7 +688,7 @@ require version '${required.ant.version}'."/>
   </target>
 
   <target name="forked_createTempCatalogRepository" depends="mdr_taskdef">
-    <mdr storageFile="${catalog.mdrStorage}">
+    <mdr>
       <instantiate
         name="FarragoTempCatalog"
         extent="FarragoMetamodel"
@@ -704,11 +699,11 @@ require version '${required.ant.version}'."/>
   <!-- combine transformed CWM with FarragoExt to create final XMI for
   Farrago metamodel -->
   <target name="transformMetamodel">
-	 <xslt style="${xmi.dir}/transformFEM.xsl"
-		in="${FarragoExtMetamodel.xmi}"
-		out="${FarragoExtMetamodelTransformed.xmi}" />
-	 <replace file="${FarragoExtMetamodelTransformed.xmi}"
-		token="org.omg.xmi.namespace.Model" value="omg.org/mof.Model/1.3" />
+    <xslt style="${xmi.dir}/transformFEM.xsl"
+      in="${FarragoExtMetamodel.xmi}"
+      out="${FarragoExtMetamodelTransformed.xmi}" />
+    <replace file="${FarragoExtMetamodelTransformed.xmi}"
+      token="org.omg.xmi.namespace.Model" value="omg.org/mof.Model/1.3" />
     <antcall target="transformExtModel"/>
     <xslt style="${xmi.dir}/transformCWM.xsl"
       in="${CwmMetamodel.xmi}"
@@ -724,20 +719,20 @@ require version '${required.ant.version}'."/>
   </target>
 
   <target name="transformExtModel"  if="ext.model.file">
-	 <xslt style="${xmi.dir}/transformFEME.xsl"
-		in="${ExtModel.xmi}"
-		out="${ExtModelTransformed.xmi}" >
+    <xslt style="${xmi.dir}/transformFEME.xsl"
+      in="${ExtModel.xmi}"
+      out="${ExtModelTransformed.xmi}" >
      <param name="modelPrefix"
         expression="${ext.model.prefix}"/>
      </xslt>
-	 <replace file="${ExtModelTransformed.xmi}"
-		token="org.omg.xmi.namespace.Model" value="omg.org/mof.Model/1.3" />
+    <replace file="${ExtModelTransformed.xmi}"
+      token="org.omg.xmi.namespace.Model" value="omg.org/mof.Model/1.3" />
   </target>
 
   <target name="combineExtModel"  if="ext.model.file">
-	 <xslt style="${xmi.dir}/combineExtModel.xsl"
-		in="${FarragoMetamodelCWM.xmi}"
-		out="${FarragoMetamodelExt.xmi}">
+    <xslt style="${xmi.dir}/combineExtModel.xsl"
+      in="${FarragoMetamodelCWM.xmi}"
+      out="${FarragoMetamodelExt.xmi}">
       <param name="extXmiFilename"
         expression="${ExtModelTransformed.xmi}"/>
       <param name="pkgName"
@@ -762,7 +757,7 @@ require version '${required.ant.version}'."/>
       <replacefilter token="@fennel.disabled@" value="${fennel.disabled}"/>
       <replacefilter token="@resourceDir@" value="$${FARRAGO_HOME}/catalog/fennel"/>
     </replace>
-    <antFork target="forked_importConfig"/>
+    <mdrFork target="forked_importConfig"/>
   </target>
 
   <!-- set up the default trace configuration file -->
@@ -783,7 +778,7 @@ require version '${required.ant.version}'."/>
   </target>
 
   <target name="forked_importConfig" depends="mdr_taskdef">
-    <mdr storageFile="${catalog.mdrStorage}">
+    <mdr>
       <readXMI
         file="${FarragoConf.xmi}"
         extent="FarragoCatalog"/>
@@ -829,8 +824,7 @@ require version '${required.ant.version}'."/>
     </delete>
     <mkdir dir="${catalog.backup.dir}"/>
     <copy todir="${catalog.backup.dir}">
-      <fileset dir="${catalog.dir}" includes="FarragoCatalog.bt?"/>
-      <fileset dir="${catalog.dir}" includes="FarragoExternalCatalog.*"/>
+      <fileset dir="${catalog.dir}" includes="FarragoCatalog.*"/>
       <fileset dir="${catalog.dir}" includes="db.dat"/>
     </copy>
   </target>
@@ -844,7 +838,7 @@ require version '${required.ant.version}'."/>
 
   <!-- NOTE:  doesn't work yet -->
   <target name="importCatalog" depends="mdr_taskdef">
-    <mdr storageFile="${catalog.mdrStorage}">
+    <mdr>
       <readXMI
         file="${xmi.dir}/FarragoCatalogInit.xml"
         extent="FarragoCatalog"/>
@@ -876,13 +870,12 @@ require version '${required.ant.version}'."/>
   <target name="cleanCatalogData">
     <delete>
       <fileset dir="${catalog.dir}" includes="*.dat"/>
-      <fileset dir="${catalog.dir}" includes="FarragoExternalCatalog.*"/>
-      <fileset dir="${catalog.dir}" includes="FarragoCatalog.bt?"/>
+      <fileset dir="${catalog.dir}" includes="FarragoCatalog.*"/>
     </delete>
   </target>
 
   <target name="exportCatalog" depends="mdr_taskdef">
-    <mdr storageFile="${catalog.mdrStorage}">
+    <mdr>
       <writeXMI
         file="${xmi.dir}/FarragoCatalogExport.xmi"
         extent="FarragoCatalog"
@@ -891,7 +884,7 @@ require version '${required.ant.version}'."/>
   </target>
 
   <target name="exportMetamodel" depends="mdr_taskdef">
-    <mdr storageFile="${catalog.mdrStorage}">
+    <mdr>
       <writeXMI
         file="${xmi.dir}/FarragoMetamodelExport.xmi"
         extent="FarragoMetamodel"
@@ -1137,7 +1130,7 @@ require version '${required.ant.version}'."/>
     <fail message="property junit.class not defined" unless="junit.class"/>
     <jswatDebug
       classpath="${sqlline.classpath}"
-      sourcepath="${jswat.junit.sourcepath}"
+      sourcepath="${farrago.sourcepath}"
       classname="junit.textui.TestRunner">
       <jvmargs>
         <arg value="-Dnet.sf.farrago.fileset.unitsql=${fileset.unitsql}"/>
@@ -1192,7 +1185,7 @@ require version '${required.ant.version}'."/>
 
   <!-- Debugging target for listing repository extents -->
   <target name="printRepositoryExtents" depends="mdr_taskdef">
-    <mdr storageFile="${catalog.mdrStorage}">
+    <mdr>
       <printExtentNames/>
     </mdr>
   </target>
@@ -1327,7 +1320,7 @@ require version '${required.ant.version}'."/>
   <target name="jswat.isql" depends="all">
     <jswatDebug
       classpath="${isql.run.classpath}"
-      sourcepath="${jswat.isql.sourcepath}"
+      sourcepath="${farrago.sourcepath}"
       classname="org.isqlviewer.core.Launcher">
       <jvmargs>
         <arg value="-Disql.home=${farrago.dir}/isql"/>
@@ -1340,7 +1333,7 @@ require version '${required.ant.version}'."/>
   <target name="jswat.sqlline" depends="all">
     <jswatDebug
       classpath="${sqlline.classpath}"
-      sourcepath="${jswat.sqlline.sourcepath}"
+      sourcepath="${farrago.sourcepath}"
       classname="sqlline.SqlLine">
       <jvmargs>
         <arg value="-Djava.ext.dirs=${sqlline.dir}"/>
@@ -1390,12 +1383,36 @@ require version '${required.ant.version}'."/>
   <target name="jswat.server" depends="all">
     <jswatDebug
       classpath="${farrago.run.classpath}"
-      sourcepath="${server.sourcepath}"
+      sourcepath="${farrago.sourcepath}"
       classname="net.sf.farrago.server.FarragoServer">
       <jvmargs>
         <arg line="&FarragoProps;"/>
       </jvmargs>
     </jswatDebug>
+  </target>
+
+  <!-- verify that ReposStorage.properties is correctly configured 
+       for storage via JDBC -->
+  <target name="verifyReposSqlStorage" depends="configureReposStorage">
+    <loadproperties srcFile="${ReposStorage.properties}">
+      <filterchain>
+        <tokenfilter>
+          <replacestring 
+            from="MDRStorageProperty.org.netbeans.mdr.persistence."
+            to=""/>
+        </tokenfilter>
+      </filterchain>
+    </loadproperties>
+    <sql 
+      driver="${jdbcimpl.driverClassName}"
+      url="${jdbcimpl.url}"
+      userid="${jdbcimpl.userName}"
+      password="${jdbcimpl.password}"
+      classpath="${farrago.3p.classpath}"
+      rdbms="nonexistentSQL">
+      <![CDATA[bogus]]>
+    </sql>
+    <echo message="Successfully connected to ${jdbcimpl.url}"/>
   </target>
 
   <!-- Below is all experimental stuff for the user repository -->
@@ -1434,7 +1451,7 @@ require version '${required.ant.version}'."/>
   <target name="jswat.createUserRepository" depends="all">
     <jswatDebug
       classpath="${createUserRepository.classpath}"
-      sourcepath="${mdr.sourcepath}"
+      sourcepath="${farrago.sourcepath}"
       classname="org.apache.tools.ant.Main">
       <jvmargs>
         <arg value="-Dorg.netbeans.mdr.storagemodel.StorageFactoryClassName=org.netbeans.mdr.persistence.jdbcimpl.JdbcStorageFactory"/>
@@ -1469,7 +1486,6 @@ require version '${required.ant.version}'."/>
         extent="FarragoCatalog"/>
     </mdr>
   </target>
-
 
   <target name="jar">
     <jar destfile="${dist.jar.file}" update="true" compress="true">

@@ -27,10 +27,10 @@
   </path>
   <property name="isql.classpath" refid="isql.classpath"/>
 
-  <!-- NOTE: there's an ant bug preventing the use of mixed case names
+  <!-- NOTE: there used to be an ant bug preventing the use of mixed case names
   for macro elements -->
 
-  <!-- Macro for forking ant (and squelching bogus mdr messages) -->
+  <!-- Macro for forking ant -->
   <macrodef name="antFork">
     <attribute name="target" default="unspecifiedTarget"/>
     <attribute name="classpathref" default="ant.classpath"/>
@@ -39,9 +39,25 @@
       <java classname="org.apache.tools.ant.Main" fork="true" failonerror="true"
         classpathref="@{classpathref}">
         <jvmargs/>
-        <sysproperty key="org.netbeans.mdr.Logger" value="256"/>
         <arg value="@{target}"/>
       </java>
+    </sequential>
+  </macrodef>
+
+  <!-- Macro for forking ant to run an MDR task -->
+  <macrodef name="mdrFork">
+    <attribute name="target" default="unspecifiedTarget"/>
+    <sequential>
+      <loadproperties srcFile="${ReposStorage.properties}"/>
+      <antFork target="@{target}">
+        <jvmargs>
+          <sysproperty key="org.netbeans.mdr.Logger" value="256"/>
+          <syspropertyset>
+            <propertyref prefix="org.netbeans.mdr"/>
+            <propertyref prefix="MDRStorageProperty"/>
+          </syspropertyset>
+        </jvmargs>
+      </antFork>
     </sequential>
   </macrodef>
 

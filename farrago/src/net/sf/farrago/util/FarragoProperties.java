@@ -34,7 +34,7 @@ import org.eigenbase.util.property.*;
  * (before the catalog becomes available) or internals which don't belong as
  * parameters (e.g. tweaks for controlling test behavior).  As a gentle hint to
  * keep properties to a minimum, we intentionally make it difficult to set
- * them.  How?  By not defining a Farrago .properties file anywhere.  Instead,
+ * them.  How?  By not defining a master Farrago .properties file.  Instead,
  * runtime and build scripts set just the properties they need on the
  * command line.
  *
@@ -159,9 +159,14 @@ public class FarragoProperties extends Properties
      * properties are not modified (e.g., the expansion of
      * <code>"${UNKNOWN}"</code> is <code>"${UNKNOWN}"</code>).
      *
-     * <p>Currently, the only supported property is
-     * <code>${FARRAGO_HOME}</code>, which is replaced with the value
+     * <p>Currently, the only supported properties are
+     *
+     *<ul>
+     *<li><code>${FARRAGO_HOME}</code>:  replaced with the value
      * of {@link #homeDir}.
+     *<li><code>${FARRAGO_CATALOG_DIR}</code>:  replaced with the value
+     * of {@link #getCatalogDir()}.
+     *</ul>
      *
      * @param value a value that may or may not contain property names
      *              to be expanded.
@@ -183,16 +188,20 @@ public class FarragoProperties extends Properties
 
             String propertyName = value.substring(start + 2, end - 1);
 
+            String replacement = null;
             if (propertyName.equals("FARRAGO_HOME")) {
+                replacement = homeDir.get();
+            } else if (propertyName.equals("FARRAGO_CATALOG_DIR")) {
+                replacement = getCatalogDir().getAbsolutePath();
+            }
+            
+            if (replacement != null) {
                 if (result == null) {
                     result = new StringBuffer(value);
                 }
 
-                String homeDirValue = homeDir.get();
-
-                result.replace(start + offset, end + offset, homeDirValue);
-
-                offset += (homeDirValue.length() - (end - start));
+                result.replace(start + offset, end + offset, replacement);
+                offset += (replacement.length() - (end - start));
             }
         }
 

@@ -43,7 +43,7 @@ been successfully tested on some of them)
 
 <h2>Important Windows Note</h2>
 
-If you are using Windows, please read the <a
+If you are using Windows, please read and follow the <a
 href="cygwinSetup.html">Cygwin setup instructions</a> before going any
 further.  
 
@@ -87,11 +87,11 @@ machines as needed).
 Once you've got Perforce set up, run <code>p4 client</code>
 (or edit your default clientspec from P4WIN).  
 You need to map the following views:
+
 <pre><code>
 //open/dev/thirdparty/...
 //open/dev/fennel/...
 //open/dev/farrago/...
-//open/dev/saffron/...
 
 </code></pre>
 
@@ -104,8 +104,8 @@ and other developer docs).
 
 While editing your client, you should also set the
 <code>LineEnd</code> attribute to <code>share</code>, especially if
-you are developing on Windows.  This prevents DOS CRLF's from getting
-checked in.
+you are developing on Windows or using Samba.  This prevents DOS
+CRLF's from getting checked in.
 
 <p>
 
@@ -122,14 +122,22 @@ If you will be building Fennel, now is the time to make sure you have
 the correct versions of the required build tools such as autoconf.
 The file <code>dev/fennel/INSTALL</code> (and
 <code>dev/fennel/INSTALL.mingw</code> for Windows) has more
-information.  You can ignore the instructions for building STLport,
+information.  If your autotools are out of date, you can either
+install updated packages for your Linux or Cygwin distribution, or
+build them from source by running <code>make autotools</code> in
+directory <code>dev/thirdparty</code> and then following the
+installation instructions.
+
+<p>
+
+You can ignore the Fennel instructions for building STLport,
 Boost, and Fennel manually, since the next step is going to take care
 of all of that automatically.
 
 <h2>Initial Build</h2>
 
 For the first build in a new sandbox, there's a lot of
-one-time setup that needs to be done, possibly including building some
+one-time setup that needs to be done, including building some
 of the third-party components from source.  This process is automated
 by the script <code>dev/farrago/initBuild.sh</code>.  Change to the
 <code>dev/farrago</code> directory and run the initial build as follows:
@@ -187,22 +195,16 @@ rest of the steps unconditionally).
 
 <li>
 If anything under <code>dev/thirdparty/...</code> has changed, cd to
-that directory and run make.  New thirdparty components and upgrades
-to new versions are fairly rare.
+that directory and run <code>make all</code>.  New
+thirdparty components and upgrades to new versions are fairly rare.
+Upgrades to C++ components usually require you to repeat the original
+initBuild.sh process.
 
 <li>
 If anything under <code>dev/fennel/...</code> has changed (and you're
 building with Fennel support), cd to that directory and run make.  In
-very rare cases, you may need to make clean first, but that should be
-a last resort.  Upgrades to thirdparty components relied on by Fennel
-may require further action such as running configure again and
-rebuilding them; if you subscribe to the developer mailing list, there
-should be instructions posted whenever this is required.
-
-<li>
-If anything under <code>dev/saffron/...</code> has changed, cd to that
-directory and run <code>ant</code>.  This build is very quick, so an
-<code>ant clean</code> first never hurts.
+very rare cases, you may need to make clean first (or even rerun
+initBuild.sh), but that should be a last resort.
 
 <li>
 cd to <code>dev/farrago</code> and run "ant test" to make sure you'll
@@ -236,11 +238,10 @@ execution.
 
 The <code>ant createCatalog</code> task (invoked automatically as part
 of <code>ant test</code>) creates a backup of the initial catalog (and
-database if Fennel is enabled).  If your catalog gets corrupted (which
-will be a possibility on crash until we get Fennel to store the
-catalog), you can recover with <code>ant restoreCatalog</code>.  This
-is a lot faster than <code>ant createCatalog</code> (which is another
-way to get back to a good state).
+database if Fennel is enabled).  If your catalog gets corrupted, you
+can recover with <code>ant restoreCatalog</code>.  This is a lot
+faster than <code>ant createCatalog</code> (which is another way to
+get back to a good state).
 
 <h2>Interactive SQL</h2>
 
@@ -272,9 +273,7 @@ generated when the catalog is created.  You can make modifications to
 this file; they won't be overwritten during regeneration.  However,
 comments cannot be preserved during regeneration, so don't bother.
 Normally, trace output is written to
-<code>dev/farrago/trace/FarragoTrace.log</code>, but you can override
-this in the properties file.  The default trace level for all loggers
-is CONFIG.
+<code>dev/farrago/trace/FarragoTrace.log</code>.
 
 <p>
 
@@ -313,9 +312,9 @@ to trace just the commands sent to the Fennel API (not their
 implementation)
 
 <li>add <code>net.sf.fennel.xo.level=FINE</code> to trace
-tuples processed by TupleStreams
+tuples processed by execution streams
 
-<li>add <code>net.sf.saffron.core.SaffronPlanner.level=FINE</code> to trace
+<li>add <code>org.eigenbase.relopt.RelOptPlanner.level=FINE</code> to trace
 query optimization
 
 <li>some Fennel classes provide further tracing discrimination (TBD)

@@ -1,0 +1,379 @@
+<html>
+
+<head>
+<title>HOWTO:  Configure Farrago Repository Storage</title>
+<link rel="stylesheet" type="text/css" href="../stylesheet.css" />
+
+</head>
+
+<body>
+
+<h1>HOWTO:  Configure Farrago Repository Storage</h1>
+
+The metadata in Farrago's system catalog is stored in an instance of
+an <a href="http://mdr.netbeans.org">MDR</a> repository.  MDR supports
+a storage plugin system for extensibility; by default, Farrago uses a
+JDBC connection to an in-process <a
+href="http://hsqldb.org">HSQLDB</a> engine.
+
+<p>
+
+This document describes how to configure other kinds of repository
+storage.  You might well ask why Farrago relies on external storage
+for its metadata instead of providing the storage itself.  Indeed,
+self-storage is the eventual goal, but at the moment Farrago still
+lacks some of the necessary SQL support.  (Also, the bootstrapping
+challenge is non-trivial.)  Even once self-storage is available,
+external storage is still a useful capability in cases
+such as those listed below.
+
+<hr>
+
+<h2>Motivation</h2>
+
+When might you want to configure custom repository storage?
+
+<ul>
+
+<li>One case would be when you want to reduce the number of stored
+databases requiring maintenance.  For example, you might be using
+Farrago as a middleware server for heterogeneous <a
+href="../design/sqlmed.html">SQL/MED</a> queries or <a
+href="medmdr.html">metadata federation</a>.  In such a configuration,
+a good idea is to tell Farrago to store its repository in one of your
+existing DBMS servers so that you have one less server to back up.  Or
+your organization may require that all metadata be stored on a particular
+server.
+
+<li>Another scenario is shared access to the MDR repository
+from clients besides the Farrago server.  This allows live
+catalog metadata to be browsed or queried from multiple MDR applications.
+Some caution is required since concurrency conflicts could interfere
+with the Farrago server.
+
+</ul>
+
+<hr>
+
+<h2>Storage Properties</h2>
+
+The Farrago build script configures repository storage by reading the
+file <code>dev/farrago/catalog/ReposStorage.properties</code>, which
+is in Java properties file format.  If this file does not exist
+when the build starts, a default version is copied from
+<code>dev/farrago/catalog/templates/HsqldbRepos.properties</code>.  The 
+<code>ReposStorage.properties</code> file is also used at runtime to access
+the repository.  Let's take a look at the default:
+
+<pre><code>
+# /home/jvs/open/farrago/catalog/ReposStorage.properties
+# Repository storage properties for hsqldb
+
+# Class name of MDR storage plugin factory
+org.netbeans.mdr.storagemodel.StorageFactoryClassName=\
+org.netbeans.mdr.persistence.jdbcimpl.JdbcStorageFactory
+
+# JDBC driver for hsqldb
+MDRStorageProperty.org.netbeans.mdr.persistence.jdbcimpl.driverClassName=\
+org.hsqldb.jdbcDriver
+
+# URL for database storage
+MDRStorageProperty.org.netbeans.mdr.persistence.jdbcimpl.url=\
+jdbc:hsqldb:${FARRAGO_CATALOG_DIR}/FarragoCatalog
+
+# user name
+MDRStorageProperty.org.netbeans.mdr.persistence.jdbcimpl.userName=SA
+
+# password
+MDRStorageProperty.org.netbeans.mdr.persistence.jdbcimpl.password=
+
+# schema name (used as a table prefix)
+MDRStorageProperty.org.netbeans.mdr.persistence.jdbcimpl.schemaName=MDR
+</code></pre>
+
+What do these properties mean?
+
+<ul>
+
+<li>The <code>StorageFactoryClassName</code> property tells MDR what 
+storage plugin to use.  Normally this will be JDBC, but MDR also
+supports a Java BTree implementation (see the 
+<code>BTreeRepos.properties</code> file in the templates directory).
+The rest of the property names have a prefix which indicates that
+they are specific to this plugin.
+
+<li>The <code>driverClassName</code> property selects a JDBC driver (HSQLDB).
+
+<li>The <code>url</code> tells HSQLDB where to store the repository in
+the file system.  The embedded <code>${FARRAGO_CATALOG_DIR}</code> property
+reference is expanded by the Farrago build and runtime systems
+automatically.
+
+<li>The <code>userName</code>, <code>password</code> and
+<code>schemaName</code> properties provide additional control over
+HSQLDB access.
+
+</ul>
+
+<hr>
+
+<h2>Build Configuration</h2>
+
+Now, let's suppose you want to customize Farrago to store its catalog
+in a PostgreSQL server.  Before starting, make sure that
+you can access your PostgreSQL server via JDBC, and record
+information such as the URL, username, and password.  Here is an example
+using sqlline:
+
+<pre><code>
+jvs@jackalope:~/open/test$ java -cp \
+/home/jvs/open/thirdparty/sqlline.jar:\
+/home/jvs/open/thirdparty/jline.jar:\
+/home/jvs/postgresql-7.4.6/src/interfaces/jdbc/jars/postgresql.jar \
+-Djava.ext.dirs=../thirdparty/sqlline \
+sqlline.SqlLine \
+-u jdbc:postgresql://localhost/test \
+-d org.postgresql.Driver \
+-n postgres \
+--isolation=TRANSACTION_SERIALIZABLE
+Connecting to jdbc:postgresql:test
+Connected to: PostgreSQL (version 7.4.6)
+Driver: PostgreSQL Native Driver (version PostgreSQL 7.4.6 JDBC3 with SSL (build 215))
+Autocommit status: true
+Transaction isolation: TRANSACTION_SERIALIZABLE
+sqlline version 1.0.0-jvs-1 by Marc Prud'hommeaux
+0: jdbc:postgresql:test&gt; select * from information_schema.schemata;
++---------------+---------------------+---------------+------------------------+
+| catalog_name  |     schema_name     | schema_owner  | default_character_set_ |
++---------------+---------------------+---------------+------------------------+
+| test          | pg_toast            | postgres      |                        |
+| test          | pg_temp_1           | postgres      |                        |
+| test          | pg_catalog          | postgres      |                        |
+| test          | public              | postgres      |                        |
+| test          | information_schema  | postgres      |                        |
++---------------+---------------------+---------------+------------------------+
+5 rows selected (0.068 seconds)
+</code></pre>
+
+<p>
+
+The next step is to check the <code>dev/farrago/catalog/templates</code>
+directory for a suitable template.  Not surprisingly, there's already
+one defined for PostgreSQL, and it just happens to match the connection
+information above.  Copy it into the parent directory 
+(<code>dev/farrago/catalog</code>) and rename it to 
+<code>ReposStorage.properties</code>.  If a file with that name already exists 
+because you previously built Farrago with the default HSQLDB storage, you
+can overwrite it (it was copied verbatim from the templates directory by the
+build).
+
+<p>
+
+Now, edit <code>ReposStorage.properties</code> to match your configuration.
+At this point, it's a good idea to verify your settings.  The Farrago
+build script provides an ant target named <code>verifyReposSqlStorage</code>
+for just this purpose.  Let's try it now:
+
+<pre><code>
+jvs@jackalope:~/open/farrago$ ant verifyReposSqlStorage
+Buildfile: build.xml
+
+verifyReposSqlStorage:
+
+BUILD FAILED
+/home/jvs/open/farrago/build.xml:1411: Class Not Found: JDBC driver org.postgresql.Driver could not be loaded
+
+Total time: 3 seconds
+</code></pre>
+
+Ooops!  We forgot to tell the system the location of the jar
+containing the driver, and it's not one of the default thirdparty
+components.  So how do we do this?  The Farrago build system supports
+custom properties via an optional file 
+<code>dev/farrago/customBuild.properties</code>.  And the specific
+property we need to set is named <code>farrago.custom.classpath</code>.  So,
+create that file now, with contents like:
+
+<pre><code>
+# /home/jvs/open/farrago/customBuild.properties
+
+# Tell Farrago where to find the PostgreSQL JDBC driver
+farrago.custom.classpath=\
+/home/jvs/postgresql-7.4.6/src/interfaces/jdbc/jars/postgresql.jar
+</code></pre>
+
+Now try again:
+
+<pre><code>
+jvs@jackalope:~/open/farrago$ ant verifyReposSqlStorage
+Buildfile: build.xml
+
+checkReposStorage:
+
+configureReposStorage:
+
+verifyReposSqlStorage:
+     [echo] Successfully connected to jdbc:postgresql://localhost/test
+
+BUILD SUCCESSFUL
+Total time: 3 seconds
+</code></pre>
+
+Passing this test does not guarantee a good configuration, because it
+just connects without trying to execute any SQL statements.  However, it
+can save time in eliminating basic connectivity problems.
+
+<p>
+
+Now, run the command <code>ant createCatalog</code>.  This should
+rebuild the Farrago catalog, storing it in PostgreSQL as requested.
+If you get a build error, it probably means you have a deeper
+configuration problem; see the <a
+href="#DebuggingCatalogCreation">debugging section below</a> for help.
+Otherwise, you're good to go.  Runtime scripts such as
+<code>farragoServer</code> should work automatically, because
+<code>ant createCatalog</code> emits the customized classpath into
+<code>dev/farrago/classpath.gen</code> for use by these scripts.
+
+<p>
+
+Let's take a look at what happened behind the scenes.  Returning
+to sqlline:
+
+<pre><code>
+0: jdbc:postgresql://localhost/test&gt; select * from information_schema.schemata;
++---------------+---------------------+---------------+------------------------+
+| catalog_name  |     schema_name     | schema_owner  | default_character_set_ |
++---------------+---------------------+---------------+------------------------+
+| test          | pg_toast            | postgres      |                        |
+| test          | pg_temp_1           | postgres      |                        |
+| test          | pg_catalog          | postgres      |                        |
+| test          | public              | postgres      |                        |
+| test          | information_schema  | postgres      |                        |
+| test          | FarragoCatalog      | postgres      |                        |
++---------------+---------------------+---------------+------------------------+
+6 rows selected (0.013 seconds)
+</code></pre>
+
+Aha, there's our FarragoCatalog schema.  What's inside?
+
+<pre><code>
+0: jdbc:postgresql://localhost/test&gt; select * from information_schema.tables where table_schema='FarragoCatalog';
++----------------+-----------------+-------------------+-------------+---------+
+| table_catalog  |  table_schema   |    table_name     | table_type  | self_re |
++----------------+-----------------+-------------------+-------------+---------+
+| test           | FarragoCatalog  | MOFID_SEQ         | BASE TABLE  |         |
+| test           | FarragoCatalog  | PRIMARY_INDEX     | BASE TABLE  |         |
+| test           | FarragoCatalog  | Contexts26        | BASE TABLE  |         |
+| test           | FarragoCatalog  | ObjectsByClasses  | BASE TABLE  |         |
+| test           | FarragoCatalog  | Properties        | BASE TABLE  |         |
+| test           | FarragoCatalog  | aibn_1057         | BASE TABLE  |         |
+| test           | FarragoCatalog  | aicp_1057         | BASE TABLE  |         |
+| test           | FarragoCatalog  | ae_1057_1086_1    | BASE TABLE  |         |
+| test           | FarragoCatalog  | ae_1057_1086_2    | BASE TABLE  |         |
+| test           | FarragoCatalog  | ae_1057_1087_1    | BASE TABLE  |         |
+| test           | FarragoCatalog  | ae_1057_1087_2    | BASE TABLE  |         |
+...
+</code></pre>
+
+Blech.  If you were hoping to be able to query this schema directly for
+metadata, forget about it.  The MDR model-to-table mapping is very low level
+as you'll find out if you try querying some of those tables.  For
+SQL access to metadata, use Farrago.
+
+<hr>
+
+<h2>
+<a name="DebuggingCatalogCreation">
+Debugging Catalog Creation
+</a>
+</h2>
+
+
+When catalog creation fails, MDR usually suppresses the real error
+information and gives back a generic unhelpful message such as "Failed
+accessing storage factory."  To dig out the real error message,
+add the following line to your <code>ReposStorage.properties</code> file:
+
+<pre><code>
+MDRStorageProperty.org.netbeans.mdr.persistence.jdbcimpl.debugPrint=true
+</code></pre>
+
+Then retry the failed catalog creation.  Buried in the output should
+be some useful details, e.g.
+
+<pre><code>
+...
+     [java]       [mdr] org.postgresql.util.PSQLException: Backend start-up failed: org.postgresql.util.PSQLException: FATAL: user "digres" does not exist
+
+     [java]       [mdr]         at org.postgresql.jdbc1.AbstractJdbc1Connection.openConnectionV3(AbstractJdbc1Connection.java:460)
+     [java]       [mdr]         at org.postgresql.jdbc1.AbstractJdbc1Connection.openConnection(AbstractJdbc1Connection.java:214)
+     [java]       [mdr]         at org.postgresql.Driver.connect(Driver.java:139)
+     [java]       [mdr]         at java.sql.DriverManager.getConnection(DriverManager.java:512)
+     [java]       [mdr]         at java.sql.DriverManager.getConnection(DriverManager.java:171)
+     [java]       [mdr]         at org.netbeans.mdr.persistence.jdbcimpl.JdbcStorage.&lt;init&gt;(JdbcStorage.java:125)
+     [java]       [mdr]         at org.netbeans.mdr.persistence.jdbcimpl.JdbcStorageFactory.createStorage(JdbcStorageFactory.java:108)
+     [java]       [mdr]         at org.netbeans.mdr.storagemodel.MdrStorage.&lt;init&gt;(MdrStorage.java:288)
+     [java]       [mdr]         at org.netbeans.mdr.NBMDRepositoryImpl.initCheck(NBMDRepositoryImpl.java:726)
+     [java]       [mdr]         at org.netbeans.mdr.NBMDRepositoryImpl.beginTrans(NBMDRepositoryImpl.java:223)
+     [java]       [mdr]         at org.netbeans.mdrant.MdrTask.execute(MdrTask.j
+...
+</code></pre>
+
+Once you have fixed the problem, delete the debug setting to avoid spurious
+printing on standard error at runtime.
+
+<hr>
+
+<h2>Maintenance</h2>
+
+As a developer convenience, the Farrago build system provides the ant
+targets <code>backupCatalog</code> and <code>restoreCatalog</code> to
+perform offline backup of the catalog and database.  However, it only
+works on files stored in the <code>dev/farrago/catalog</code>
+directory, which is where the btree and HSQLDB files are stored.  So
+if your repository is stored off in another database, these commands won't
+work.  Instead, you need to use the backup/restore facilities of your
+DBMS.
+
+<p>
+
+If you try to re-run <code>ant createCatalog</code> again after a
+successful installation, you will probably get an error such as
+"Package extent named 'FarragoMetamodel' already exists".  Normally,
+<code>ant createCatalog</code> avoids this by blowing away the repository
+storage in the catalog directory first, but since the repository is
+now stored elsewhere, this doesn't work.  You have to do it manually:
+
+<pre><code>
+0: jdbc:postgresql://localhost/test&gt; drop schema "FarragoCatalog" cascade;
+1 row affected (1.221 seconds)
+</code></pre>
+
+<hr>
+
+<h2>Packaging</h2>
+
+So far, this document has assumed the context of a Farrago developer
+build.  How does all of this get packaged up and delivered to an end
+user?  At the moment, there's no easy path.  A manual process would be
+to perform a database export from the external server after a complete
+build and packaging the export file together with
+<code>ReposStorage.properties</code>.  Then an installation program
+would import the repository database and tweak
+<code>ReposStorage.properties</code> with site-specifics.
+
+<p>
+
+What's missing is a way to recapitulate the build process as part of
+Farrago installation, so that nothing storage-specific needs to be
+prepackaged.  This should be fairly trivial, since the ant tasks used
+by the build are just thin wrappers around MDR API calls.  This should
+be taken into consideration when developing the currently non-existent
+Farrago installer.
+
+<hr>
+
+</body>
+
+</html>

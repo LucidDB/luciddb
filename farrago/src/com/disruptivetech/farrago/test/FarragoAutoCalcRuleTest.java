@@ -121,6 +121,9 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
     public static String staticAutoCalcSetUp()
         throws Exception
     {
+        // close any previous connection and create a special one
+        FarragoTestCase.forceShutdown();
+        
         opTab = new SqlStdOperatorTable();
         opTab.init();
         testOjRexImplementor = new TestOJRexImplementorTable(opTab);
@@ -146,15 +149,7 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
             cppFunc,
             cImplTab.get(opTab.plusOperator));
 
-        FarragoJdbcEngineDriver driver = newJdbcEngineDriver();
-        connection =
-            DriverManager.getConnection(driver.getUrlPrefix());
-        repos = 
-            ((FarragoJdbcEngineConnection)connection).getSession().getRepos();
-        connection.setAutoCommit(false);
-
-        FarragoTestCase.saveParameters();
-        FarragoTestCase.runCleanup();
+        FarragoTestCase.staticSetUp();
         
         return originalDriverClass;
     }
@@ -162,7 +157,9 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
     public static void staticAutoCalcTearDown(String originalDriverClass)
         throws Exception
     {
+        // close our very special connection
         FarragoTestCase.staticTearDown();
+        FarragoTestCase.forceShutdown();
 
         if (originalDriverClass != null) {
             FarragoProperties.instance().testJdbcDriverClass.set(

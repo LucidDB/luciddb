@@ -157,14 +157,14 @@
 | 101     |
 +---------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> select empno+1, empno/2 from sales.emps;
+0: jdbc:farrago:> select empno+1, empno/2 from sales.emps order by 1;
 +---------+---------+
 | EXPR$0  | EXPR$1  |
 +---------+---------+
 | 101     | 50      |
 | 111     | 55      |
-| 121     | 60      |
 | 111     | 55      |
+| 121     | 60      |
 +---------+---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from sales.emps where name = 'Wilma';
@@ -178,14 +178,14 @@
 | EMPNO  | NAME  | DEPTNO  | GENDER  | CITY  | EMPID  | AGE  | PUBLIC_KEY  | SLACKER  | MANAGER  |
 +--------+-------+---------+---------+-------+--------+------+-------------+----------+----------+
 +--------+-------+---------+---------+-------+--------+------+-------------+----------+----------+
-0: jdbc:farrago:> select empno, empno from sales.emps;
+0: jdbc:farrago:> select empno, empno from sales.emps order by 1;
 +--------+--------+
 | EMPNO  | EMPNO  |
 +--------+--------+
-| 120    | 120    |
-| 110    | 110    |
-| 110    | 110    |
 | 100    | 100    |
+| 110    | 110    |
+| 110    | 110    |
+| 120    | 120    |
 +--------+--------+
 0: jdbc:farrago:> --select empno,*,empno from sales.emps;
 0: jdbc:farrago:> select 1 as apa, age as apa, 3 as APA, 4 as "APA" from sales.emps order by 2;

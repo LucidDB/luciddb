@@ -17,9 +17,7 @@ CREATE TABLE), it isn't available yet.  Everything is supposed to work
 according to the SQL standard, so if something doesn't, that's either
 a bug or an incomplete feature.  Which standard?  Normal procedure is
 to consult the draft SQL200n standard and cross-check it with SQL-92
-or SQL-99 to see if there are any incompatibilities.  There's
-a very nice <a href="http://developer.mimer.se/validator">online parser</a>
-which distinguishes the three versions of the standard.
+or SQL-99 to see if there are any incompatibilities.
 
 <h2>DDL</h2>
 
@@ -83,7 +81,8 @@ create clustered index t_x on t(j);
 create index t_y on t(k);
 <code></pre>
 If not specified, the primary key is used implicitly for clustering.
-Every table has exactly one clustered index.
+<a href="design/TableIndexing.html">
+Every table has exactly one clustered index</a>.
 
 <li>CREATE [UNIQUE] INDEX: unclustered indexes can be created either
 at the end of the table definition or in separate statements.  Indexes
@@ -276,9 +275,6 @@ actually index those rows.
 <li>You can specify a CHARACTER SET name on CHAR/VARCHAR columns from
 only the single-byte character sets known to Java.
 
-<li>The current sorter implementation is just for show.  If you
-try to sort any significant amount of data, don't hold your breath.
-
 <li>BTree height increase is not yet implemented, so inserting lots of
 data will lead to a long linear chain of pages.  Bulk load for
 multi-level trees is implemented internally, but not yet exposed via SQL.
@@ -291,18 +287,10 @@ uniqueness violations result for a statement like update t set pk=pk+1
 (where pk is a primary key).  This probably won't be fixed until
 triggers are implemented.
 
-<li>Maximum row length is not enforced yet, so you can get strange internal
-BTree errors as a result for very long rows.
-
 <li>INSERT/UPDATE do not support the explicit DEFAULT keyword.
 
 <li>The amount of performance tuning which has been done so far is
 exactly zero.
-
-<li>Fennel crash recovery should be working, but system tables are
-still stored in MDR's Java BTree implementation, which isn't
-crash-proof.  This will be addressed once Farrago can store the system
-tables itself (development in progress).
 
 <li>The SET SCHEMA command cannot be used to set a schema in a
 virtual catalog based on a SQL/MED server (including the predefined

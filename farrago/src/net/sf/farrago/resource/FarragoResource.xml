@@ -34,6 +34,10 @@
     <text>Failed to initialize external repository</text>
 </exception>
 
+<exception id="400060" name="CatalogPropsAccessFailed">
+    <text>Failed to access repository storage properties file {0}</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- JDBC resources 410,000 - 420,000 -->
 <!-- ====================================================================== -->

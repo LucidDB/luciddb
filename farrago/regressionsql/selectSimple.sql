@@ -30,11 +30,11 @@ select empno+1 from sales.emps where empno>=110 order by 1;
 select empno+1 from sales.emps where empno>110;
 select empno+1 from sales.emps where empno<110;
 
-select empno+1, empno/2 from sales.emps;
+select empno+1, empno/2 from sales.emps order by 1;
 
 select * from sales.emps where name = 'Wilma';
 select * from sales.emps where name = 'wilma';
-select empno, empno from sales.emps;
+select empno, empno from sales.emps order by 1;
 --select empno,*,empno from sales.emps;
 select 1 as apa, age as apa, 3 as APA, 4 as "APA" from sales.emps order by 2;
 select 1+2 as empno, empno as empno, age as empno, 1+2 as empno from sales.emps order by 3;
