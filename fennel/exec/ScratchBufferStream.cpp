@@ -86,7 +86,7 @@ ExecStreamResult ScratchBufferStream::execute(ExecStreamQuantum const &)
             pInAccessor->getConsumptionEnd());
         // REVIEW jvs 27-Oct-2004:  This will break if we implement
         // double-buffering in ExecStreamBufAccessor.  It's not safe
-        // to consume the data until our own consumer is dones with it.
+        // to consume the data until our own consumer is done with it.
         pInAccessor->consumeData(pInAccessor->getConsumptionEnd());
         return EXECRC_OUTPUT;
     case EXECBUF_NEED_PRODUCTION:

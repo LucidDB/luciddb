@@ -43,6 +43,7 @@ void ExecStreamTestBase::prepareGraphTwoStreams(
     pGraph->addOutputDataflow(
         pOutputStream->getStreamId());
     pGraph->prepare(*pScheduler);
+    decorateGraph();
 }
 
 SharedExecStream ExecStreamTestBase::prepareGraphTwoBufferedStreams(
@@ -82,6 +83,7 @@ SharedExecStream ExecStreamTestBase::prepareGraphTwoBufferedStreams(
     pGraph->addOutputDataflow(
         pBufStream2->getStreamId());
     pGraph->prepare(*pScheduler);
+    decorateGraph();
 
     sourceStreamEmbryo.prepareStream();
     pBufStreamImpl1->prepare(paramsScratch);
@@ -98,7 +100,11 @@ void ExecStreamTestBase::testCaseSetUp()
     SegStorageTestBase::testCaseSetUp();
     openStorage(DeviceMode::createNew);
     pGraph.reset(new ExecStreamGraphImpl(),ClosableObjectDestructor());
-    pScheduler.reset(new DfsTreeExecStreamScheduler(pGraph));
+    pScheduler.reset(
+        new DfsTreeExecStreamScheduler(
+            this,
+            "DfsTreeExecStreamScheduler",
+            pGraph));
 }
 
 void ExecStreamTestBase::testCaseTearDown()
@@ -109,6 +115,14 @@ void ExecStreamTestBase::testCaseTearDown()
     pGraph.reset();
     pScheduler.reset();
     SegStorageTestBase::testCaseTearDown();
+}
+
+void ExecStreamTestBase::decorateGraph()
+{
+    std::vector<SharedExecStream> streams = pGraph->getSortedStreams();
+    for (uint i = 0; i < streams.size(); ++i) {
+        streams[i]->initTraceSource(this, streams[i]->getName());
+    }
 }
 
 void ExecStreamTestBase::verifyConstantOutput(

@@ -21,7 +21,8 @@
 #ifndef Fennel_ExecStreamScheduler_Included
 #define Fennel_ExecStreamScheduler_Included
 
-#include "fennel/exec/ExecStreamDefs.h"
+#include "fennel/exec/ExecStream.h"
+#include "fennel/common/TraceSource.h"
 
 #include <boost/utility.hpp>
 
@@ -35,8 +36,89 @@ FENNEL_BEGIN_NAMESPACE
  * @author John V. Sichi
  * @version $Id$
  */
-class ExecStreamScheduler : public boost::noncopyable
+class ExecStreamScheduler
+    : public boost::noncopyable,
+        public TraceSource
 {
+protected:
+    /**
+     * Constructs a new ExecStreamScheduler.
+     *
+     * @param pTraceTarget the TraceTarget to which messages will be sent,
+     * or NULL to disable tracing entirely
+     *
+     * @param name the name to use for tracing this scheduler
+     */
+    explicit ExecStreamScheduler(
+        TraceTarget *pTraceTarget,
+        std::string name);
+    
+    /**
+     * Executes one stream, performing tracing if enabled.
+     *
+     * @param stream stream to execute
+     *
+     * @param quantum quantum controlling stream execution
+     *
+     * @return result of executing stream
+     */
+    inline ExecStreamResult executeStream(
+        ExecStream &stream,
+        ExecStreamQuantum const &quantum);
+
+    /**
+     * Traces before execution of a stream.
+     *
+     * @param stream stream about to be executed
+     *
+     * @param quantum quantum controlling stream execution
+     */
+    virtual void tracePreExecution(
+        ExecStream &stream,
+        ExecStreamQuantum const &quantum);
+    
+    /**
+     * Traces after execution of a stream.
+     *
+     * @param stream stream which was just executed
+     *
+     * @param rc result code returned by stream
+     */
+    virtual void tracePostExecution(
+        ExecStream &stream,
+        ExecStreamResult rc);
+
+    /**
+     * Traces the states of the input and output buffers adjacent
+     * to a stream.
+     *
+     * @param stream stream whose buffers are to be traced
+     *
+     * @param inputTupleTraceLevel trace level at which tuple contents
+     * of input buffers are to be traced
+     *
+     * @param outputTupleTraceLevel trace level at which tuple contents
+     * of output buffers are to be traced
+     */
+    virtual void traceStreamBuffers(
+        ExecStream &stream,
+        TraceLevel inputTupleTraceLevel,
+        TraceLevel outputTupleTraceLevel);
+    
+    /**
+     * Traces the contents of a stream buffer.
+     *
+     * @param stream stream whose buffer is being traced
+     *
+     * @param bufAccessor accessor for stream buffer
+     *
+     * @param traceLevel level at which contents should be traced
+     */
+    virtual void traceStreamBufferContents(
+        ExecStream &stream,
+        ExecStreamBufAccessor &bufAccessor, 
+        TraceLevel traceLevel);
+    
 public:
     virtual ~ExecStreamScheduler();
 
@@ -84,6 +166,20 @@ public:
     virtual ExecStreamBufAccessor &readStream(
         ExecStream &stream) = 0;
 };
+
+inline ExecStreamResult ExecStreamScheduler::executeStream(
+    ExecStream &stream,
+    ExecStreamQuantum const &quantum)
+{
+    if (isTracingLevel(TRACE_FINE)) {
+        tracePreExecution(stream, quantum);
+        ExecStreamResult rc = stream.execute(quantum);
+        tracePostExecution(stream, rc);
+        return rc;
+    } else {
+        return stream.execute(quantum);
+    }
+}
 
 FENNEL_END_NAMESPACE
 

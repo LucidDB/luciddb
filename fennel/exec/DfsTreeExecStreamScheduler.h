@@ -44,9 +44,17 @@ public:
     /**
      * Constructs a new scheduler.
      *
+     * @param pTraceTarget the TraceTarget to which messages will be sent,
+     * or NULL to disable tracing entirely
+     *
+     * @param name the name to use for tracing this scheduler
+     *
      * @param pGraph the graph whose streams are to be scheduled
      */
-    explicit DfsTreeExecStreamScheduler(SharedExecStreamGraph pGraph);
+    explicit DfsTreeExecStreamScheduler(
+        TraceTarget *pTraceTarget,
+        std::string name,
+        SharedExecStreamGraph pGraph);
     
     virtual ~DfsTreeExecStreamScheduler();
 

@@ -39,16 +39,6 @@ class TraceSource
     TraceLevel minimumLevel;
 
 protected:
-    
-    /**
-     * Records a trace message.  Normally only called via FENNEL_TRACE.
-     *
-     * @param level severity level of event being trace
-     *
-     * @param message the text of the message
-     */
-    void trace(TraceLevel level,std::string message) const;
-
     /**
      * Constructs a new uninitialized TraceSource.
      */
@@ -80,11 +70,32 @@ public:
     void initTraceSource(TraceTarget *pTraceTarget,std::string name);
     
     /**
+     * Records a trace message.  Normally only called via FENNEL_TRACE.
+     *
+     * @param level severity level of event being trace
+     *
+     * @param message the text of the message
+     */
+    void trace(TraceLevel level,std::string message) const;
+
+    /**
      * @return true iff tracing is enabled for this source
      */
     bool isTracing() const
     {
         return pTraceTarget ? true : false;
+    }
+    
+    /**
+     * Determines whether a particular level is being traced.
+     *
+     * @param level trace level to test
+     * 
+     * @return true iff tracing is enabled for the given level
+     */
+    bool isTracingLevel(TraceLevel level) const
+    {
+        return level >= minimumLevel;
     }
 
     /**
@@ -110,7 +121,7 @@ public:
  */
 #define FENNEL_TRACE(level,msg) \
 do { \
-    if (level >= getMinimumTraceLevel()) { \
+    if (isTracingLevel(level)) { \
         std::ostringstream oss; \
         oss << msg; \
         trace(level,oss.str()); \

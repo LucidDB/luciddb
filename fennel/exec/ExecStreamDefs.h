@@ -55,6 +55,21 @@ enum ExecStreamResult
     EXECRC_NO_OUTPUT,
     EXECRC_OUTPUT
 };
+
+static std::string ExecStreamResult_names[] = {
+    "EXECRC_NEED_INPUT",
+    "EXECRC_NEED_OUTPUTBUF",
+    "EXECRC_EOS",
+    "EXECRC_NO_OUTPUT",
+    "EXECRC_OUTPUT"
+};
+    
+static std::string ExecStreamBufState_names[] = {
+    "EXECBUF_IDLE",
+    "EXECBUF_NEED_PRODUCTION",
+    "EXECBUF_NEED_CONSUMPTION",
+    "EXECBUF_EOS"
+};
     
 /**
  * ExecStreamQuantum defines the quantum for scheduling of an ExecStream.  The

@@ -280,6 +280,11 @@ public:
      * corresponding call to consumeUnmarshalledTuple
      */
     inline bool isTupleUnmarshalled() const;
+
+    /**
+     * @return a TupleAccessor suitable for use in tracing buffer contents
+     */
+    inline TupleAccessor &getTraceTupleAccessor();
 };
 
 inline ExecStreamBufAccessor::ExecStreamBufAccessor()
@@ -495,6 +500,13 @@ inline bool ExecStreamBufAccessor::isTupleUnmarshalled() const
     } else {
         return false;
     }
+}
+
+inline TupleAccessor &ExecStreamBufAccessor::getTraceTupleAccessor()
+{
+    // this can be used for tracing since we don't need its state
+    // across calls to produceTuple
+    return tupleProductionAccessor;
 }
 
 FENNEL_END_NAMESPACE

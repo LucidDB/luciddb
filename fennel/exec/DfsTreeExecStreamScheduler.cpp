@@ -27,12 +27,11 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-ExecStreamScheduler::~ExecStreamScheduler()
-{
-}
-    
 DfsTreeExecStreamScheduler::DfsTreeExecStreamScheduler(
+    TraceTarget *pTraceTargetInit,
+    std::string nameInit,
     SharedExecStreamGraph pGraphInit)
+    : ExecStreamScheduler(pTraceTargetInit, nameInit)
 {
     pGraph = pGraphInit;
     assert(pGraph);
@@ -44,6 +43,8 @@ DfsTreeExecStreamScheduler::~DfsTreeExecStreamScheduler()
 
 void DfsTreeExecStreamScheduler::start()
 {
+    FENNEL_TRACE(TRACE_FINE,"start");
+    
     ExecStreamGraphImpl &graphImpl = pGraph->getImpl();
     ExecStreamGraphImpl::GraphRep graphRep = graphImpl.getGraphRep();
 
@@ -64,11 +65,15 @@ void DfsTreeExecStreamScheduler::makeRunnable(ExecStream &)
 
 void DfsTreeExecStreamScheduler::abort()
 {
+    FENNEL_TRACE(TRACE_FINE,"abort requested");
+    
     aborted = true;
 }
 
 void DfsTreeExecStreamScheduler::stop()
 {
+    FENNEL_TRACE(TRACE_FINE,"stop");
+    
     // nothing to do
     aborted = false;
 }
@@ -81,6 +86,10 @@ SharedExecStreamBufAccessor DfsTreeExecStreamScheduler::newBufAccessor()
 ExecStreamBufAccessor &DfsTreeExecStreamScheduler::readStream(
     ExecStream &stream)
 {
+    FENNEL_TRACE(
+        TRACE_FINE,
+        "entering readStream " << stream.getName());
+    
     ExecStreamId current = stream.getStreamId();
     ExecStreamQuantum quantum;
 
@@ -115,9 +124,10 @@ ExecStreamBufAccessor &DfsTreeExecStreamScheduler::readStream(
         }
 
         SharedExecStream pStream = graphImpl.getStreamFromVertex(current);
-        ExecStreamResult rc = pStream->execute(quantum);
+        ExecStreamResult rc = executeStream(*pStream, quantum);
 
         if (aborted) {
+            FENNEL_TRACE(TRACE_FINE,"abort detected");
             throw AbortExcn();
         }
 
@@ -131,8 +141,11 @@ ExecStreamBufAccessor &DfsTreeExecStreamScheduler::readStream(
                     *(boost::out_edges(current,graphRep).first);
                 current = boost::target(edge,graphRep);
                 if (boost::out_degree(current,graphRep) == 0) {
-                    // hit the output sentinel
+                    // we've hit the output sentinel
                     assert(!graphImpl.getStreamFromVertex(current));
+                    FENNEL_TRACE(
+                        TRACE_FINE,
+                        "leaving readStream " << stream.getName());
                     return graphImpl.getBufAccessorFromEdge(edge);
                 }
             }

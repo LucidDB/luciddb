@@ -55,7 +55,6 @@ protected:
      */
     bool isOpen;
 
-    // REVIEW:  make this a weak_ptr?
     /**
      * Dataflow graph containing this stream.
      */
@@ -103,6 +102,16 @@ protected:
     virtual void closeImpl();
     
 public:
+    /**
+     * @return reference to containing graph
+     */
+    inline ExecStreamGraph &getGraph() const;
+    
+    /**
+     * @return the identifier for this stream within containing graph
+     */
+    inline ExecStreamId getStreamId() const;
+    
     /**
      * Initializes the buffer accessors for inputs to this stream.  This
      * method is only ever called once, before prepare.
@@ -168,11 +177,6 @@ public:
     virtual void open(bool restart);
     
     /**
-     * @return the identifier for this stream within its graph
-     */
-    virtual ExecStreamId getStreamId() const;
-    
-    /**
      * Sets unique name of this stream.
      */
     virtual void setName(std::string const &);
@@ -217,6 +221,16 @@ public:
      */
     virtual ExecStreamBufProvision getInputBufProvision() const;
 };
+
+inline ExecStreamId ExecStream::getStreamId() const
+{
+    return id;
+}
+
+inline ExecStreamGraph &ExecStream::getGraph() const
+{
+    return *pGraph;
+}
 
 FENNEL_END_NAMESPACE
 

@@ -51,7 +51,9 @@ class ExecStreamScheduler;
  * In addition, streams are required to have unique names when they are added
  * to the graph.  These names are used later to find the streams.
  */
-class ExecStreamGraph : public boost::noncopyable, public ClosableObject
+class ExecStreamGraph
+    : public boost::noncopyable,
+        public ClosableObject
 {
 public:
     virtual ~ExecStreamGraph();

@@ -193,6 +193,7 @@ void ExecStreamTest::testCartesianJoinStream(
     pGraph->addOutputDataflow(
         pStream6->getStreamId());
     pGraph->prepare(*pScheduler);
+    decorateGraph();
     
     StandardTypeDescriptorFactory stdTypeFactory;
     TupleAttributeDescriptor attrDesc(
@@ -213,11 +214,11 @@ void ExecStreamTest::testCartesianJoinStream(
     paramsScratch.enforceQuotas = false;
     pStreamImpl3->prepare(paramsScratch);
     pStreamImpl4->prepare(paramsScratch);
-    pStreamImpl6->prepare(paramsScratch);
 
     CartesianJoinStreamParams paramsJoin;
     paramsJoin.enforceQuotas = false;
     pStreamImpl5->prepare(paramsJoin);
+    pStreamImpl6->prepare(paramsScratch);
 
     pGraph->setScratchSegment(paramsScratch.scratchAccessor.pSegment);
     

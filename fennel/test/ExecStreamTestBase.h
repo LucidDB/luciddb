@@ -67,6 +67,13 @@ protected:
         ExecStreamEmbryo &transformStreamEmbryo);
 
     /**
+     * Decorates stream graph with additions such as tracing and
+     * provision adapters.  Should be called once all streams and dataflows
+     * have been added to graph but before any streams have been prepared.
+     */
+    void decorateGraph();
+
+    /**
      * Executes the prepared stream graph and verifies that its output
      * is an expected-size run of constant bytes.
      *

@@ -8,6 +8,7 @@ ConfluenceExecStream.cpp \
 DfsTreeExecStreamScheduler.cpp \
 ExecStream.cpp \
 ExecStreamGraph.cpp \
+ExecStreamScheduler.cpp \
 MockProducerStream.cpp \
 ScratchBufferStream.cpp \
 SegBufferStream.cpp \
