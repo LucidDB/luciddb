@@ -24,6 +24,9 @@ BJAM_OPTS="--stagedir=${BOOST_DIR}"
 BJAM_OPTS="${BJAM_OPTS} --without-filesystem"
 BJAM_OPTS="${BJAM_OPTS} --without-test"
 BJAM_OPTS="${BJAM_OPTS} --without-signals"
+BJAM_OPTS="${BJAM_OPTS} --without-python"
+BJAM_OPTS="${BJAM_OPTS} --without-program_options"
+BJAM_OPTS="${BJAM_OPTS} --without-serialization"
 
 # export variables to control bjam
 export BUILD="${BUILD_OPTS}"
