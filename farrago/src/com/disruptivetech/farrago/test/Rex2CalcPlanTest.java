@@ -51,8 +51,8 @@ import java.io.Writer;
 
 
 /**
- * Validates that rex expressions get correctly translated to a correct
- * calculator program
+ * Validates that rex expressions get translated to the correct
+ * calculator program.
  *
  * @author Wael Chatila
  * @since Feb 3, 2004
@@ -85,8 +85,8 @@ public class Rex2CalcPlanTest extends FarragoTestCase
         TestContext testContext = getTestContext();
         testContext.stmtValidator =
             farragoConn.getSession().newStmtValidator();
-        testContext.stmt =
-            (FarragoPreparingStmt) farragoConn.getSession().newPreparingStmt(testContext.stmtValidator);
+        testContext.stmt = (FarragoPreparingStmt) farragoConn.getSession()
+            .newPreparingStmt(testContext.stmtValidator);
     }
 
     protected void tearDown()
@@ -107,9 +107,22 @@ public class Rex2CalcPlanTest extends FarragoTestCase
     }
 
     //--- Helper Functions ------------------------------------------------
+
+    /**
+     * Compiles a SQL statement, and compares the generated calc program with
+     * the contents of a reference file with the same name as the current test.
+     *
+     * @param sql SQL statement. Must be of the form "<code>SELECT ... FROM ...
+     *   WHERE</code>".
+     * @param nullSemantics If true, adds logic to ensure that a
+     *   <code>WHERE</code> clause which evalutes to <code>NULL</code> will
+     *   filter out rows (as if it had evaluated to <code>FALSE</code>).
+     * @param shortCircuit Generate short-circuit logic if a clause of an
+     *   <code>AND</code> condition evaluates to <code>FALSE</code>.
+     */
     private void check(
         String sql,
-        boolean nullSemanics,
+        boolean nullSemantics,
         boolean shortCircuit)
     {
         boolean doComments = true;
@@ -139,7 +152,7 @@ public class Rex2CalcPlanTest extends FarragoTestCase
         ProjectRel project = (ProjectRel) rootRel;
         FilterRel filter = (FilterRel) project.getInput(0);
         RexNode condition = filter.condition;
-        if (nullSemanics) {
+        if (nullSemantics) {
             condition =
                 rexBuilder.makeCall(
                     SqlStdOperatorTable.instance().isTrueOperator,
@@ -288,7 +301,7 @@ public class Rex2CalcPlanTest extends FarragoTestCase
         check(sql, false,false);
     }
 
-    public void testBinaryString() {
+    public void testHexBitBinaryString() {
         String sql = "SELECT X'0001'=x'FFeeDD' FROM emps WHERE empno > 10";
         check(sql, false,false);
     }
