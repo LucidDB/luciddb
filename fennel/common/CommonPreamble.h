@@ -46,6 +46,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <string.h>
 #include <time.h>
@@ -244,7 +245,7 @@ do { \
 
 #define permFail(msg) \
 do { \
-    ostringstream oss; \
+    std::ostringstream oss; \
     oss << msg; \
     throw fennel::constructAssertion(__FILE__,__LINE__, oss.str().c_str()); \
 } while (0)
