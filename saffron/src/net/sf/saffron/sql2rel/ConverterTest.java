@@ -19,24 +19,14 @@
 
 package net.sf.saffron.sql2rel;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.util.regex.Pattern;
-
 import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
-
 import net.sf.saffron.jdbc.SaffronJdbcConnection;
 import net.sf.saffron.oj.OJPlannerFactory;
-
 import openjava.mop.*;
 import openjava.ptree.ClassDeclaration;
 import openjava.ptree.MemberDeclarationList;
 import openjava.ptree.ModifierList;
-
 import org.eigenbase.oj.OJTypeFactoryImpl;
 import org.eigenbase.oj.util.JavaRexBuilder;
 import org.eigenbase.oj.util.OJUtil;
@@ -45,15 +35,21 @@ import org.eigenbase.relopt.RelOptConnection;
 import org.eigenbase.relopt.RelOptPlanWriter;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.reltype.RelDataTypeFactoryImpl;
-import org.eigenbase.runtime.SyntheticObject;
 import org.eigenbase.sql.SqlNode;
 import org.eigenbase.sql.SqlOperatorTable;
 import org.eigenbase.sql.SqlValidator;
 import org.eigenbase.sql.parser.ParseException;
 import org.eigenbase.sql.parser.SqlParser;
-import org.eigenbase.sql2rel.*;
+import org.eigenbase.sql2rel.SqlToRelConverter;
 import org.eigenbase.util.SaffronProperties;
 import org.eigenbase.util.Util;
+
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.regex.Pattern;
 
 
 /**
@@ -166,10 +162,8 @@ public class ConverterTest extends TestCase
         check("select 1 from \"emps\" full join \"depts\" on \"emps\".\"deptno\" = \"depts\".\"deptno\"",
             "ProjectRel(EXPR$0=[1])" + NL
             + "  JoinRel(condition=[=($2, $6)], joinType=[full])" + NL
-            + "    ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])"
-            + NL
-            + "    ExpressionReaderRel(expression=[Java((sales.Dept[]) {sales}.depts)])"
-            + NL);
+            + "    ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])" + NL
+            + "    ExpressionReaderRel(expression=[Java((sales.Dept[]) {sales}.depts)])" + NL);
     }
 
     public void testFromJoin3()
@@ -179,17 +173,12 @@ public class ConverterTest extends TestCase
             + "join (select * from \"emps\" where \"gender\" = 'F') as \"femaleEmps\" on \"femaleEmps\".\"empno\" = \"emps\".\"empno\"",
             "ProjectRel(EXPR$0=[1])" + NL
             + "  JoinRel(condition=[=($8, $0)], joinType=[inner])" + NL
-            + "    JoinRel(condition=[=($2, $2)], joinType=[inner])" + NL
-            + "      ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])"
-            + NL
-            + "      ExpressionReaderRel(expression=[Java((sales.Dept[]) {sales}.depts)])"
-            + NL
-            + "    ProjectRel(empno=[$0], name=[$1], deptno=[$2], gender=[$3], city=[$4], slacker=[$5])"
-            + NL
-            + "      FilterRel(condition=[=($3, _ISO-8859-1'F' COLLATE ISO-8859-1$en_US$primary)])"
-            + NL
-            + "        ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])"
-            + NL);
+            + "    JoinRel(condition=[=($2, $6)], joinType=[inner])" + NL
+            + "      ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])" + NL
+            + "      ExpressionReaderRel(expression=[Java((sales.Dept[]) {sales}.depts)])" + NL
+            + "    ProjectRel(empno=[$0], name=[$1], deptno=[$2], gender=[$3], city=[$4], slacker=[$5])" + NL
+            + "      FilterRel(condition=[=($3, _ISO-8859-1'F' COLLATE ISO-8859-1$en_US$primary)])" + NL
+            + "        ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])" + NL);
     }
 
     // todo: Enable when validator can handle NATURAL JOIN
