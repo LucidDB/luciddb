@@ -26,6 +26,7 @@ import junit.framework.TestCase;
 import junit.framework.AssertionFailedError;
 
 import org.eigenbase.sql.SqlNode;
+import org.eigenbase.sql.parser.impl.*;
 import org.eigenbase.util.Util;
 
 
@@ -61,7 +62,7 @@ public class SqlParserTest extends TestCase
         final SqlNode sqlNode;
         try {
             sqlNode = parseStmt(sql);
-        } catch (ParseException e) {
+        } catch (SqlParseException e) {
             String message = "Received error while parsing SQL '" + sql +
                     "'; error is:" + NL + e.toString();
             throw new AssertionFailedError(message);
@@ -70,7 +71,7 @@ public class SqlParserTest extends TestCase
         assertEqualsUnabridged(expected, actual);
     }
 
-    protected SqlNode parseStmt(String sql) throws ParseException {
+    protected SqlNode parseStmt(String sql) throws SqlParseException {
         return new SqlParser(sql).parseStmt();
     }
 
@@ -81,7 +82,7 @@ public class SqlParserTest extends TestCase
         final SqlNode sqlNode;
         try {
             sqlNode = parseExpression(sql);
-        } catch (ParseException e) {
+        } catch (SqlParseException e) {
             String message = "Received error while parsing SQL '" + sql +
                     "'; error is:" + NL + e.toString();
             throw new AssertionFailedError(message);
@@ -90,7 +91,7 @@ public class SqlParserTest extends TestCase
         assertEqualsUnabridged(expected, actual);
     }
 
-    protected SqlNode parseExpression(String sql) throws ParseException {
+    protected SqlNode parseExpression(String sql) throws SqlParseException {
         return new SqlParser(sql).parseExpression();
     }
 
@@ -1236,7 +1237,7 @@ public class SqlParserTest extends TestCase
         checkFails("select _latin1 \n'newline'",
             "(?s).*Encountered.*newline.* at line 2, column ...*");
         checkFails("select _unknown-charset'' from values(true)",
-            "(?s).*UnsupportedCharsetException.*.*UNKNOWN-CHARSET.*");
+            "(?s).*UNKNOWN-CHARSET.*");
 
         // checkFails("select N'1' '2' from t", "?"); a validator error
     }

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- $Id$ -->
-<!-- Farrago examples ant build script -->
+<!-- Farrago RNG example ant build script -->
 
 <project name="farragoExampleRNG" basedir="." default="all">
 
@@ -8,8 +8,25 @@
   <import file="../../buildMacros.xml"/>
 
   <property name="xmi.dir" location="catalog/xmi"/>
+  <property name="catalog.src.dir" location="catalog/java"/>
+  <property name="catalog.basename" location="catalog/mdr"/>
+  <property name="src.dir" location="src"/>
+  <property name="classes.dir" location="classes"/>
+  <property name="parserimpl.dir" 
+    location="${src.dir}/net/sf/farrago/rng/parserimpl"/>
 
-  <target name="all" depends="clean">
+  <fileset id="parser.jj" dir="${src.dir}/net/sf/farrago/rng"
+    includes="RngParser.jj"/>
+
+  <path id="rng.classpath">
+    <pathelement path="${farrago.run.classpath}"/>
+    <pathelement location="${catalog.src.dir}"/>
+  </path>
+  <property name="rng.classpath" refid="rng.classpath"/>
+
+  <target name="all" depends="clean,mdr_taskdef">
+    <mkdir dir="${catalog.src.dir}"/>
+    <mkdir dir="${classes.dir}"/>
     <farrago.extractPoseidonModel 
       zumlFile="${xmi.dir}/RandomNumberGeneratorModel.zuml"
       umlBasename="RandomNumberGeneratorModel"
@@ -22,12 +39,55 @@
     <farrago.synthesizeMetamodel
       extMofBasename="RandomNumberGeneratorMof"
       xmiDir="${xmi.dir}"/>
+    <mdr storageFile="${catalog.basename}">
+      <instantiate name="FarragoMetamodel"/>
+      <readXMI
+        file="${xmi.dir}/FarragoMetamodel.xmi"
+        extent="FarragoMetamodel"/>
+      <mapJava
+        dir="${catalog.src.dir}"
+        extent="FarragoMetamodel"/>
+    </mdr>
+    <delete includeEmptyDirs="true" quiet="true">
+      <fileset dir="${catalog.src.dir}" excludes="net/sf/farrago/rngmodel/**"/>
+    </delete>
+    <farrago.javaCompile
+      srcdir="${catalog.src.dir}"
+      destdir="${catalog.src.dir}"
+      classpathref="rng.classpath">
+      <include name="**/*.java"/>
+    </farrago.javaCompile>
+    <farrago.generateParser 
+      combined="${parserimpl.dir}/CombinedParser.jj">
+      <components>
+        <fileset refid="parser.jj"/>
+        <fileset refid="farrago.parser.common.ddl"/>
+        <fileset refid="farrago.parser.common.sql"/>
+      </components>
+    </farrago.generateParser>
+    <farrago.javaCompile
+      deprecation="off"
+      srcdir="${src.dir}"
+      destdir="${classes.dir}"
+      classpathref="rng.classpath">
+      <include name="**/*.java" />
+    </farrago.javaCompile>
+  </target>
+
+  <target name="tmp">
   </target>
 
   <target name="clean">
     <delete quiet="true">
       <fileset dir="${xmi.dir}" includes="*.xmi"/>
+      <fileset dir="catalog" includes="mdr.*"/>
+      <fileset dir="${parserimpl.dir}" includes="*.java,*.jj"/>
     </delete>
+  </target>
+
+  <target name="mdr_taskdef">
+    <taskdef name="mdr" classname="org.netbeans.mdrant.MdrTask"
+      classpathref="farrago.3p.classpath"/>
   </target>
 
 </project>

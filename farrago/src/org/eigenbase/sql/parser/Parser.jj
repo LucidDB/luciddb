@@ -17,11 +17,12 @@ options {
 }
 
 
-PARSER_BEGIN(Parser)
+PARSER_BEGIN(SqlParserImpl)
 
-package org.eigenbase.sql.parser;
+package org.eigenbase.sql.parser.impl;
 
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.trace.EigenbaseTrace;
 import org.eigenbase.util.BitString;
@@ -45,11 +46,11 @@ import java.util.logging.Level;
  * @since Mar 18, 2003
  * @version $Id$
  */
-class Parser extends CommonParserBase {
+public class SqlParserImpl extends SqlAbstractParserImpl {
     private static final Logger tracer = EigenbaseTrace.getParserTracer();
 }
 
-PARSER_END(Parser)
+PARSER_END(SqlParserImpl)
 
 
 /*****************************************

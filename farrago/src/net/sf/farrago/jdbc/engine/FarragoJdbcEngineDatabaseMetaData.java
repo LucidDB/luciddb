@@ -23,8 +23,9 @@ import java.sql.*;
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
-import net.sf.farrago.parser.FarragoParser;
+import net.sf.farrago.session.*;
 
+import org.eigenbase.sql.*;
 
 /**
  * FarragoJdbcEngineDatabaseMetaData implements the {@link
@@ -35,27 +36,12 @@ import net.sf.farrago.parser.FarragoParser;
  */
 public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
 {
-    //~ Static fields/initializers --------------------------------------------
-
-    static String sqlKeywords = null;
-    static String numericFunctions = null;
-    static String stringFunctions = null;
-    static String timeDateFunctions = null;
-    static String systemFunctions = null;
-
-    static {
-        FarragoParser parser = new FarragoParser();
-        sqlKeywords = parser.getSQLKeywords();
-        numericFunctions = parser.getNumericFunctions();
-        stringFunctions = parser.getStringFunctions();
-        systemFunctions = parser.getSystemFunctions();
-        timeDateFunctions = parser.getTimeDateFunctions();
-    }
-
     //~ Instance fields -------------------------------------------------------
 
     private FarragoJdbcEngineConnection connection;
     private FarragoRepos repos;
+    private String jdbcKeywords;
+
 
     //~ Constructors ----------------------------------------------------------
 
@@ -252,35 +238,40 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
     public String getSQLKeywords()
         throws SQLException
     {
-        return sqlKeywords;
+        if (jdbcKeywords == null) {
+            FarragoSessionParser parser = connection.getSession().newParser();
+            jdbcKeywords = parser.getJdbcKeywords();
+        }
+        return jdbcKeywords;
     }
+    
 
     // implement DatabaseMetaData
     public String getNumericFunctions()
         throws SQLException
     {
-        return numericFunctions;
+        return SqlJdbcFunctionCall.getNumericFunctions();
     }
 
     // implement DatabaseMetaData
     public String getStringFunctions()
         throws SQLException
     {
-        return stringFunctions;
+        return SqlJdbcFunctionCall.getStringFunctions();
     }
 
     // implement DatabaseMetaData
     public String getSystemFunctions()
         throws SQLException
     {
-        return systemFunctions;
+        return SqlJdbcFunctionCall.getSystemFunctions();
     }
 
     // implement DatabaseMetaData
     public String getTimeDateFunctions()
         throws SQLException
     {
-        return timeDateFunctions;
+        return SqlJdbcFunctionCall.getTimeDateFunctions();
     }
 
     // implement DatabaseMetaData

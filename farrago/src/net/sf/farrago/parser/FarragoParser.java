@@ -29,6 +29,7 @@ import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.util.*;
+import net.sf.farrago.parser.impl.*;
 
 import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
@@ -41,34 +42,19 @@ import org.eigenbase.sql.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoParser implements FarragoSessionParser
+public class FarragoParser extends FarragoAbstractParser
 {
     //~ Static fields/initializers --------------------------------------------
 
-    private static final String STR_FUNC_NAMES;
-    private static final String NUMERIC_FUNC_NAMES;
-    private static final String TIME_DATE_FUNC_NAMES;
-    private static final String SYS_FUNC_NAMES;
+    private static final String jdbcKeywords;
 
-    static {
+    static
+    {
         FarragoParserImpl parser = new FarragoParserImpl(new StringReader(""));
-
-        STR_FUNC_NAMES = constructFuncList(parser.getStringFunctionNames());
-        NUMERIC_FUNC_NAMES =
-            constructFuncList(parser.getNumericFunctionNames());
-        TIME_DATE_FUNC_NAMES =
-            constructFuncList(parser.getTimeDateFunctionNames());
-        SYS_FUNC_NAMES = constructFuncList(parser.getSystemFunctionNames());
+        jdbcKeywords = constructReservedKeywordList(
+            FarragoParserImplConstants.tokenImage,
+            parser);
     }
-
-    //~ Instance fields -------------------------------------------------------
-
-    /** Validator to use for validating DDL statements as they are parsed. */
-    FarragoSessionDdlValidator ddlValidator;
-
-    /** Underlying parser implementation which does the work. */
-    private FarragoParserImpl parserImpl;
-    private boolean doneParsing;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -81,157 +67,16 @@ public class FarragoParser implements FarragoSessionParser
 
     //~ Methods ---------------------------------------------------------------
 
-    private static String constructFuncList(List functionNames)
-    {
-        StringBuffer sb = new StringBuffer();
-        boolean first = true;
-        for (Iterator iterator = functionNames.iterator(); iterator.hasNext();) {
-            String funcName = (String) iterator.next();
-            if (first) {
-                first = false;
-            } else {
-                sb.append(",");
-            }
-            sb.append(funcName);
-        }
-        return sb.toString();
-    }
-
     // implement FarragoSessionParser
-    public FarragoSessionParserPosition getCurrentPosition()
+    public String getJdbcKeywords()
     {
-        if (doneParsing) {
-            return null;
-        } else {
-            return parserImpl.getCurrentPosition();
-        }
-    }
-
-    // implement FarragoSessionParser
-    public FarragoException newPositionalError(
-        SqlValidatorException ex)
-    {
-        if (doneParsing) {
-            return FarragoResource.instance().newValidatorNoPositionContext(ex);
-        } else {
-            String msg = getCurrentPosition().toString();
-            return FarragoResource.instance().newValidatorPositionContext(
-                msg, ex);
-        }
+        return jdbcKeywords;
     }
     
-    // implement FarragoSessionParser
-    public String getSQLKeywords()
+    // implement FarragoAbstractParser
+    protected FarragoAbstractParserImpl newParserImpl(Reader reader)
     {
-        String [] tokens = FarragoParserImplConstants.tokenImage;
-        StringBuffer sb = new StringBuffer();
-        boolean withComma = false;
-        for (int i = 0, size = tokens.length; i < size; i++) {
-            String tokenVal = getTokenVal(tokens[i]);
-            if ((tokenVal != null)
-                    && !FarragoParserImpl.SQL92ReservedWords.contains(tokenVal)
-                    && !isNonReserved(tokenVal)) {
-                if (withComma) {
-                    sb.append(",");
-                } else {
-                    withComma = true;
-                }
-                sb.append(tokenVal);
-            }
-        }
-        return sb.toString();
-    }
-
-    // implement FarragoSessionParser
-    public String getStringFunctions()
-    {
-        return FarragoParser.STR_FUNC_NAMES;
-    }
-
-    // implement FarragoSessionParser
-    public String getNumericFunctions()
-    {
-        return FarragoParser.NUMERIC_FUNC_NAMES;
-    }
-
-    // implement FarragoSessionParser
-    public String getTimeDateFunctions()
-    {
-        return FarragoParser.TIME_DATE_FUNC_NAMES;
-    }
-
-    // implement FarragoSessionParser
-    public String getSystemFunctions()
-    {
-        return FarragoParser.SYS_FUNC_NAMES;
-    }
-
-    // implement FarragoSessionWrapper
-    public FarragoSessionDdlValidator getDdlValidator()
-    {
-        return ddlValidator;
-    }
-
-    // implement FarragoSessionParser
-    public FarragoSessionStmtValidator getStmtValidator()
-    {
-        return ddlValidator.getStmtValidator();
-    }
-
-    private String getTokenVal(String token)
-    {
-        // We don't care about the token which are not string
-        if (!token.startsWith("\"")) {
-            return null;
-        }
-
-        // Remove the quote from the token
-        int startIndex = token.indexOf("\"");
-        int endIndex = token.lastIndexOf("\"");
-        String tokenVal = token.substring(startIndex + 1, endIndex);
-        char c = tokenVal.charAt(0);
-        if (Character.isLetter(c)) {
-            return tokenVal;
-        }
-        return null;
-    }
-
-    private boolean isNonReserved(String keyword)
-    {
-        FarragoParserImpl parserImpl =
-            new FarragoParserImpl(new StringReader(keyword));
-        try {
-            parserImpl.NonReservedKeyWord();
-            return true;
-        } catch (ParseException e) {
-            return false;
-        }
-    }
-
-    // implement FarragoSessionParser
-    public Object parseSqlText(
-        FarragoSessionDdlValidator ddlValidator,
-        String sql,
-        boolean expectStatement)
-    {
-        this.ddlValidator = ddlValidator;
-
-        parserImpl = new FarragoParserImpl(new StringReader(sql));
-        parserImpl.farragoParser = this;
-
-        try {
-            if (expectStatement) {
-                return parserImpl.FarragoSqlStmtEof();
-            } else {
-                return parserImpl.SqlExpressionEof();
-            }
-        } catch (ParseException ex) {
-            throw EigenbaseResource.instance().newParserError(
-                ex.getMessage(),
-                ex);
-        } finally {
-            doneParsing = true;
-        }
+        return new FarragoParserImpl(reader);
     }
 }
 

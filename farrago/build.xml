@@ -49,9 +49,6 @@
   <!-- directory for regression test SQL scripts -->
   <property name="regressionsql.dir" location="${farrago.dir}/regressionsql"/>
 
-  <!-- directory in which catalog sources are generated -->
-  <property name="catalog.src.dir" location="${farrago.catalog.dir}/java"/>
-
   <!-- directory in which trace files are configured and generated -->
   <property name="trace.dir" location="${farrago.dir}/trace"/>
 
@@ -190,7 +187,7 @@ require version '${required.ant.version}'."/>
   <!-- classpath for main build (after catalog codegen) -->
   <path id="farrago.build.classpath">
     <pathelement path="${farrago.3p.classpath}"/>
-    <pathelement location="${catalog.src.dir}"/>
+    <pathelement location="${farrago.catalog.src.dir}"/>
     <pathelement location="${sqlline.lib.dir}/sqlline.jar"/>
     <pathelement location="${sqlline.lib.dir}/jline.jar"/>
   </path>
@@ -203,22 +200,9 @@ require version '${required.ant.version}'."/>
   </path>
   <property name="plugin.build.classpath" refid="plugin.build.classpath"/>
 
-  <!-- classpath for execution.  It's very important for farrago.classes.dir
-       to come BEFORE catalog.src.dir so that MDR will make our Impl
-       classes override their generated counterparts.  The reason
-       farrago.src.dir is here is so that resource .xml files can be found at
-       runtime without copying.  -->
-  <path id="farrago.run.classpath">
-    <pathelement path="${farrago.3p.classpath}"/>
-    <pathelement location="${farrago.classes.dir}"/>
-    <pathelement location="${catalog.src.dir}"/>
-    <pathelement location="${farrago.src.dir}"/>
-  </path>
-  <property name="farrago.run.classpath" refid="farrago.run.classpath"/>
-
   <!-- sourcepath for debugging -->
   <path id="farrago.sourcepath">
-    <pathelement location="${catalog.src.dir}"/>
+    <pathelement location="${farrago.catalog.src.dir}"/>
     <pathelement location="${farrago.src.dir}"/>
     <pathelement location="${isql.dir}/src"/>
     <pathelement location="${sqlline.dir}/src"/>
@@ -377,7 +361,7 @@ require version '${required.ant.version}'."/>
     </uptodate>
   </target>
 
-  <!-- cleans for non-generated code only; does not touch catalog -->
+  <!-- cleans for non-catalog-generated code -->
   <target name="clean" depends="cleanTestLogs">
     <delete includeEmptyDirs="true" quiet="true">
       <fileset dir="${farrago.classes.dir}" includes="**/*.class"/>
@@ -397,6 +381,9 @@ require version '${required.ant.version}'."/>
         <include name="EigenbaseResource_en_US.properties"/>
         <include name="EigenbaseResource.properties"/>
       </fileset>
+      <fileset dir="${farrago.parser.ddl.dir}/impl" includes="*.java,*.jj"/>
+      <fileset dir="${farrago.parser.sql.dir}/impl" includes="*.java,*.jj"/>
+      <!-- TODO jvs 25-Jan-2005:  delete these after a while -->
       <fileset dir="${farrago.parser.ddl.dir}">
         <include name="CombinedParser.jj"/>
         <include name="FarragoParserImpl.java"/>
@@ -410,11 +397,12 @@ require version '${required.ant.version}'."/>
       <fileset dir="${farrago.parser.sql.dir}">
         <include name="CombinedParser.jj"/>
         <include name="Parser.java"/>
+        <include name="ParserConstants.java"/>
+        <include name="ParserTokenManager.java"/>
         <include name="TokenMgrError.java"/>
         <include name="ParseException.java"/>
         <include name="JavaCharStream.java"/>
         <include name="Token.java"/>
-        <include name="SqlParseImpConstants.java"/>
         <include name="ASCII_UCodeESC_CharStream.java"/>
       </fileset>
       <fileset dir="${dist.plugin.dir}">
@@ -479,14 +467,14 @@ require version '${required.ant.version}'."/>
   <target name="createRepository" 
     depends="configureTrace, convertExtMetamodel, convertExtModel">
     <mkdir dir="${farrago.catalog.dir}"/>
-    <mkdir dir="${catalog.src.dir}"/>
+    <mkdir dir="${farrago.catalog.src.dir}"/>
     <farrago.synthesizeMetamodel
       extMofBasename="ExtModel"
       xmiDir="${farrago.xmi.dir}"/>
     <farrago.mdrFork target="forked_importMetamodel"/>
     <farrago.javaCompile
-      srcdir="${catalog.src.dir}"
-      destdir="${catalog.src.dir}"
+      srcdir="${farrago.catalog.src.dir}"
+      destdir="${farrago.catalog.src.dir}"
       classpathref="farrago.3p.classpath">
       <include name="**/*.java"/>
     </farrago.javaCompile>
@@ -506,7 +494,7 @@ require version '${required.ant.version}'."/>
         file="${FarragoMetamodel.xmi}"
         extent="FarragoMetamodel"/>
       <mapJava
-        dir="${catalog.src.dir}"
+        dir="${farrago.catalog.src.dir}"
         extent="FarragoMetamodel"/>
     </mdr>
   </target>
@@ -640,7 +628,7 @@ require version '${required.ant.version}'."/>
     <delete file="${ExtModelUMLSansDiagrams.xmi}"/>
     <delete
       file="${farrago.src.dir}/net/sf/farrago/FarragoMetadataFactory.java"/>
-    <delete dir="${catalog.src.dir}"/>
+    <delete dir="${farrago.catalog.src.dir}"/>
   </target>
 
   <!-- delete catalog data only -->
@@ -730,14 +718,14 @@ require version '${required.ant.version}'."/>
 
   <target name="checkParserUptodate">
     <uptodate property="sqlParser.uptodate"
-      targetfile="${farrago.parser.sql.dir}/Parser.java">
+      targetfile="${farrago.parser.sql.dir}/impl/SqlParserImpl.java">
       <srcfiles dir="${farrago.parser.sql.dir}">
         <include name="Parser.jj"/>
         <include name="CommonParser.jj"/>
       </srcfiles>
     </uptodate>
     <uptodate property="parser.uptodate"
-      targetfile="${farrago.parser.ddl.dir}/FarragoParserImpl.java">
+      targetfile="${farrago.parser.ddl.dir}/impl/FarragoParserImpl.java">
       <srcfiles refid="farrago.parser.ddl"/>
       <srcfiles refid="farrago.parser.common.ddl"/>
       <srcfiles refid="farrago.parser.common.sql"/>
@@ -761,7 +749,7 @@ require version '${required.ant.version}'."/>
   <target name="ddlParser" depends="checkParserUptodate"
     unless="parser.uptodate">
     <farrago.generateParser 
-      combined="${farrago.parser.ddl.dir}/CombinedParser.jj">
+      combined="${farrago.parser.ddl.dir}/impl/CombinedParser.jj">
       <components>
         <fileset refid="farrago.parser.ddl"/>
         <fileset refid="farrago.parser.common.ddl"/>
@@ -776,7 +764,7 @@ require version '${required.ant.version}'."/>
   <target name="sqlParser" depends="checkParserUptodate"
     unless="sqlParser.uptodate">
     <farrago.generateParser 
-      combined="${farrago.parser.sql.dir}/CombinedParser.jj">
+      combined="${farrago.parser.sql.dir}/impl/CombinedParser.jj">
       <components>
         <filelist dir="${farrago.parser.sql.dir}" files="Parser.jj"/>
         <fileset refid="farrago.parser.common.sql"/>
@@ -1022,7 +1010,7 @@ require version '${required.ant.version}'."/>
       source="1.4"
       classpathref="farrago.run.classpath">
       <tag dir="src" includes="customJavadocTags.txt"/>
-      <packageset dir="${catalog.src.dir}">
+      <packageset dir="${farrago.catalog.src.dir}">
         <include name="**"/>
       </packageset>
       <packageset dir="${farrago.src.dir}">
@@ -1243,7 +1231,7 @@ require version '${required.ant.version}'."/>
       <fileset dir="${farrago.src.dir}">
         <include name="**/*.properties"/>
       </fileset>
-      <fileset dir="${catalog.src.dir}">
+      <fileset dir="${farrago.catalog.src.dir}">
         <include name="**/*.class"/>
       </fileset>
     </jar>

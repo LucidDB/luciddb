@@ -63,33 +63,9 @@ public interface FarragoSessionParser
 
     /**
      * @return a comma-separated list of all a database's SQL keywords that are
-     * NOT also SQL92 keywords.
+     * NOT also SQL92 keywords (as defined by JDBC getSQLKeywords)
      */
-    public String getSQLKeywords();
-
-    /**
-     * @return a comma-separated list of string functions available with this
-     * database
-     */
-    public String getStringFunctions();
-
-    /**
-     * @return a comma-separated list of math functions available with this
-     * database
-     */
-    public String getNumericFunctions();
-
-    /**
-     * @return a comma-separated list of the time and date functions available
-     * with this database
-     */
-    public String getTimeDateFunctions();
-
-    /**
-     * @return a comma-separated list of system functions available with this
-     * database
-     */
-    public String getSystemFunctions();
+    public String getJdbcKeywords();
 
     /**
      * @return validator to use for validating DDL statements as they are

@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/udf.sql#5 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/udf.sql#6 $
 0: jdbc:farrago:> -- Test DDL for user-defined functions
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema udftest;
@@ -207,11 +207,11 @@ Error: At line 1, column 1: Reference to unknown function 'ADD_INTEGERS' (state=
 . . . . . . . . > contains sql
 . . . . . . . . > external name 'class java.lang.System.getProperty'
 . . . . . . . . > return 'undefined';
-Error: net.sf.farrago.parser.ParseException: Encountered "return" at line 1, column 142.
+Error: net.sf.farrago.parser.impl.ParseException: Encountered "return" at line 1, column 142.
 Was expecting one of:
     <EOF> 
-    "external" ...
-    "parameter" ... (state=,code=0)
+    "EXTERNAL" ...
+    "PARAMETER" ... (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  cannot specify language SQL with external name
 0: jdbc:farrago:> create function get_java_property(in name varchar(128))

@@ -43,7 +43,7 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
-import org.eigenbase.sql.parser.ParseException;
+import org.eigenbase.sql.parser.SqlParseException;
 import org.eigenbase.sql.parser.SqlParser;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.util.NlsString;
@@ -526,7 +526,7 @@ public class SqlToOpenjavaConverter
             final SqlNode sqlQuery;
             try {
                 sqlQuery = new SqlParser(s).parseQuery();
-            } catch (ParseException e) {
+            } catch (SqlParseException e) {
                 throw new AssertionFailedError(e.toString());
             }
             final SqlValidator validator =

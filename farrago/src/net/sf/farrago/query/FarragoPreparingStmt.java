@@ -496,7 +496,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         final SqlNode sqlQuery;
         try {
             sqlQuery = parser.parseStmt();
-        } catch (ParseException e) {
+        } catch (SqlParseException e) {
             throw Util.newInternal(e,
                 "Error while parsing view definition:  " + queryString);
         }
@@ -514,7 +514,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         SqlNode sqlExpr;
         try {
             sqlExpr = parser.parseExpression();
-        } catch (ParseException e) {
+        } catch (SqlParseException e) {
             throw Util.newInternal(e,
                 "Error while parsing routine definition:  " + bodyString);
         }
@@ -948,7 +948,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             SqlNode sqlNode;
             try {
                 sqlNode = sqlParser.parseExpression();
-            } catch (ParseException ex) {
+            } catch (SqlParseException ex) {
                 // parsing of expressions already stored in the catalog should
                 // always succeed
                 throw Util.newInternal(ex);

@@ -25,6 +25,7 @@ import java.io.Reader;
 import java.io.StringReader;
 
 import org.eigenbase.sql.SqlNode;
+import org.eigenbase.sql.parser.impl.*;
 
 
 /**
@@ -39,7 +40,7 @@ public class SqlParser
 {
     //~ Instance fields -------------------------------------------------------
 
-    private final Parser parser;
+    private final SqlParserImpl parser;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -48,7 +49,7 @@ public class SqlParser
      */
     public SqlParser(String s)
     {
-        parser = new Parser(new StringReader(s));
+        parser = new SqlParserImpl(new StringReader(s));
     }
 
     /**
@@ -56,7 +57,7 @@ public class SqlParser
      */
     public SqlParser(Reader reader)
     {
-        parser = new Parser(reader);
+        parser = new SqlParserImpl(reader);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -64,12 +65,16 @@ public class SqlParser
     /**
      * Parses a SQL expression.
      *
-     * @throws ParseException if there is a parse error
+     * @throws SqlParseException if there is a parse error
      */
     public SqlNode parseExpression()
-        throws ParseException
+        throws SqlParseException
     {
-        return parser.SqlExpressionEof();
+        try {
+            return parser.SqlExpressionEof();
+        } catch (ParseException ex) {
+            throw convertException(ex);
+        }
     }
 
     /**
@@ -81,12 +86,16 @@ public class SqlParser
      *         <code>UNION</code>, <code>INTERSECT</code>, or
      *         <code>EXCEPT</code>.
      *
-     * @throws ParseException if there is a parse error
+     * @throws SqlParseException if there is a parse error
      */
     public SqlNode parseQuery()
-        throws ParseException
+        throws SqlParseException
     {
-        return parser.SqlQueryEof();
+        try {
+            return parser.SqlQueryEof();
+        } catch (ParseException ex) {
+            throw convertException(ex);
+        }
     }
 
     /**
@@ -94,12 +103,25 @@ public class SqlParser
      *
      * @return top-level SqlNode representing stmt
      *
-     * @throws ParseException if there is a parse error
+     * @throws SqlParseException if there is a parse error
      */
     public SqlNode parseStmt()
-        throws ParseException
+        throws SqlParseException
     {
-        return parser.SqlStmtEof();
+        try {
+            return parser.SqlStmtEof();
+        } catch (ParseException ex) {
+            throw convertException(ex);
+        }
+    }
+
+    private SqlParseException convertException(ParseException ex)
+    {
+        if (ex.getMessage().length() == 0) {
+            return new SqlParseException(ex);
+        } else {
+            return new SqlParseException(ex.getMessage());
+        }
     }
 }
 

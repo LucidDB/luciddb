@@ -53,7 +53,7 @@ import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.SqlNode;
 import org.eigenbase.sql.SqlOperatorTable;
 import org.eigenbase.sql.SqlValidator;
-import org.eigenbase.sql.parser.ParseException;
+import org.eigenbase.sql.parser.SqlParseException;
 import org.eigenbase.sql.parser.SqlParser;
 import org.eigenbase.sql2rel.SqlToRelConverter;
 import org.eigenbase.util.SaffronProperties;
@@ -127,7 +127,7 @@ public class Rex2CalcPlanTest extends FarragoTestCase
         final SqlNode sqlQuery;
         try {
             sqlQuery = new SqlParser(sql).parseQuery();
-        } catch (ParseException e) {
+        } catch (SqlParseException e) {
             throw new AssertionFailedError(e.toString());
         }
         RelDataTypeFactory typeFactory =

@@ -2,7 +2,7 @@
  * Convenience Functions                 *
  *****************************************/
 
- JAVACODE void SqlDataTypeSpecToCwmColumnType(SqlDataTypeSpec dataType,
+JAVACODE void SqlDataTypeSpecToCwmColumnType(SqlDataTypeSpec dataType,
                                              CwmColumn column)
 {
     CwmSqldataType type =
@@ -79,11 +79,11 @@ DdlStmt DdlStmtEof() :
             modelElement = SchemaDefinition()
             |
             LOOKAHEAD(2)
+            modelElement = DataWrapperDefinition()
+            |
             modelElement = SchemaObjectDefinition()
             |
             modelElement = IndexDefinition(null)
-            |
-            modelElement = DataWrapperDefinition()
             |
             modelElement = DataServerDefinition()
             |
@@ -102,8 +102,7 @@ DdlStmt DdlStmtEof() :
           (
               modelElement = SchemaDrop()
               |
-              LOOKAHEAD(2)
-              modelElement = NamedColumnSetDrop()
+              modelElement = TableDrop()
               |
               modelElement = IndexDrop()
               |
@@ -113,10 +112,13 @@ DdlStmt DdlStmtEof() :
               |
               modelElement = JarDrop()
               |
+              modelElement = DataServerDrop()
+              |
               LOOKAHEAD(2)
               modelElement = DataWrapperDrop()
               |
-              modelElement = DataServerDrop()
+              LOOKAHEAD(2)
+              modelElement = ForeignTableDrop()
               |
               modelElement = ExtensionModelDrop()
           )
@@ -230,6 +232,32 @@ FemLocalSchema SchemaDefinition() :
         // TODO: character set, all that jazz
         return schema;
     }
+}
+
+CwmModelElement SchemaObjectDefinition() :
+{
+    CwmModelElement modelElement;
+}
+{
+    (
+        modelElement = TableDefinition()
+        |
+        modelElement = ViewDefinition()
+        |
+        LOOKAHEAD(2)
+        modelElement = ForeignTableDefinition()
+        |
+        modelElement = FunctionDefinition()
+        |
+        modelElement = ProcedureDefinition()
+        |
+        modelElement = JarDefinition()
+        |
+        modelElement = ExtensionModelSchemaObjDefinition()
+    )
+        {
+            return modelElement;
+        }
 }
 
 void SchemaPath(FemLocalSchema schema) :
@@ -1632,73 +1660,73 @@ CwmModelElement ForeignTableDrop() :
 
 TOKEN :
 {
-  < ALTER: "alter" >
-| < AUTHORIZATION: "authorization" >
-| < CALLED: "called" >
-| < CASCADE: "cascade" >
-| < CATALOG: "catalog" >
-| < CHECKPOINT: "checkpoint" >
-| < CLUSTERED: "clustered" >
-| < COMMIT: "commit" >
-| < CONSTRAINT: "constraint" >
-| < CONTAINS: "contains" >
-| < CREATE: "create" >
-| < DATA: "data" >
-| < DEFAULT_KW: "default" >
-| < DEFINED: "defined" >
-| < DEFINER: "definer" >
-| < DETERMINISTIC: "deterministic" >
-| < DISPATCH: "dispatch" >
-| < DROP: "drop" >
-| < EXTERNAL: "external" >
-| < FOREIGN: "foreign" >
-| < FUNCTION: "function" >
-| < GENERAL: "general" >
-| < GLOBAL: "global" >
-| < INDEX: "index" >
-| < INOUT: "inout" >
-| < INPUT: "input" >
-| < INVOKER: "invoker" >
-| < JAR: "jar" >
-| < JAVA: "java" >
-| < MAX: "max" >
-| < MIN: "min" >
-| < KEY: "key" >
-| < LANGUAGE: "language" >
-| < LIBRARY: "library" >
-| < LOCAL: "local" >
-| < MODIFIES: "modifies" >
-| < OPTIONS: "options" >
-| < NAME: "name" >
-| < NO: "no" >
-| < OUT: "out" >
-| < PARAMETER: "parameter" >
-| < PATH: "path" >
-| < PRESERVE: "preserve" >
-| < PRIMARY: "primary" >
-| < PROCEDURE: "procedure" >
-| < READS: "reads" >
-| < RELEASE: "release" >
-| < RESTRICT: "restrict" >
-| < RETURN: "return" >
-| < RETURNS: "returns" >
-| < ROLLBACK: "rollback" >
-| < ROUTINE: "routine" >
-| < SAVEPOINT: "savepoint" >
-| < SCHEMA: "schema" >
-| < SECURITY: "security" >
-| < SERVER: "server" >
-| < SPECIFIC: "specific" >
-| < SQL: "sql" >
-| < STATIC: "static" >
-| < STYLE: "style" >
-| < SYSTEM: "system" >
-| < TEMPORARY: "temporary" >
-| < TRUNCATE: "truncate" >
-| < TYPE: "type" >
-| < VERSION: "version" >
-| < VIEW: "view" >
-| < WRAPPER: "wrapper" >
+  < ALTER: "ALTER" >
+| < AUTHORIZATION: "AUTHORIZATION" >
+| < CALLED: "CALLED" >
+| < CASCADE: "CASCADE" >
+| < CATALOG: "CATALOG" >
+| < CHECKPOINT: "CHECKPOINT" >
+| < CLUSTERED: "CLUSTERED" >
+| < COMMIT: "COMMIT" >
+| < CONSTRAINT: "CONSTRAINT" >
+| < CONTAINS: "CONTAINS" >
+| < CREATE: "CREATE" >
+| < DATA: "DATA" >
+| < DEFAULT_KW: "DEFAULT" >
+| < DEFINED: "DEFINED" >
+| < DEFINER: "DEFINER" >
+| < DETERMINISTIC: "DETERMINISTIC" >
+| < DISPATCH: "DISPATCH" >
+| < DROP: "DROP" >
+| < EXTERNAL: "EXTERNAL" >
+| < FOREIGN: "FOREIGN" >
+| < FUNCTION: "FUNCTION" >
+| < GENERAL: "GENERAL" >
+| < GLOBAL: "GLOBAL" >
+| < INDEX: "INDEX" >
+| < INOUT: "INOUT" >
+| < INPUT: "INPUT" >
+| < INVOKER: "INVOKER" >
+| < JAR: "JAR" >
+| < JAVA: "JAVA" >
+| < MAX: "MAX" >
+| < MIN: "MIN" >
+| < KEY: "KEY" >
+| < LANGUAGE: "LANGUAGE" >
+| < LIBRARY: "LIBRARY" >
+| < LOCAL: "LOCAL" >
+| < MODIFIES: "MODIFIES" >
+| < OPTIONS: "OPTIONS" >
+| < NAME: "NAME" >
+| < NO: "NO" >
+| < OUT: "OUT" >
+| < PARAMETER: "PARAMETER" >
+| < PATH: "PATH" >
+| < PRESERVE: "PRESERVE" >
+| < PRIMARY: "PRIMARY" >
+| < PROCEDURE: "PROCEDURE" >
+| < READS: "READS" >
+| < RELEASE: "RELEASE" >
+| < RESTRICT: "RESTRICT" >
+| < RETURN: "RETURN" >
+| < RETURNS: "RETURNS" >
+| < ROLLBACK: "ROLLBACK" >
+| < ROUTINE: "ROUTINE" >
+| < SAVEPOINT: "SAVEPOINT" >
+| < SCHEMA: "SCHEMA" >
+| < SECURITY: "SECURITY" >
+| < SERVER: "SERVER" >
+| < SPECIFIC: "SPECIFIC" >
+| < SQL: "SQL" >
+| < STATIC: "STATIC" >
+| < STYLE: "STYLE" >
+| < SYSTEM: "SYSTEM" >
+| < TEMPORARY: "TEMPORARY" >
+| < TRUNCATE: "TRUNCATE" >
+| < TYPE: "TYPE" >
+| < VERSION: "VERSION" >
+| < VIEW: "VIEW" >
+| < WRAPPER: "WRAPPER" >
 }
 
 /**

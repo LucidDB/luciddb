@@ -34,10 +34,11 @@ import org.eigenbase.util.Util;
 
 import java.util.HashMap;
 
+import java.sql.*;
 
 /**
  * A <code>SqlJdbcFunctionCall</code> is a node of a parse tree which
- * represents a JDBC function call. A JDBC call is on the form
+ * represents a JDBC function call. A JDBC call is of the form
  * <code>{fn NAME(arg0, arg1, ...)}</code>.
  *
  * <p>See <a href="http://java.sun.com/products/jdbc/driverdevs.html">Sun's
@@ -257,6 +258,47 @@ import java.util.HashMap;
  **/
 public class SqlJdbcFunctionCall extends SqlFunction
 {
+    private static final String numericFunctions;
+    private static final String stringFunctions;
+    private static final String timeDateFunctions;
+    private static final String systemFunctions;
+
+    /**
+     * List of all numeric function names defined by JDBC.
+     */
+    private static final String [] allNumericFunctions = {
+        "ABS", "ACOS", "ASIN", "ATAN", "ATAN2", "CEILING", "COS", "COT",
+        "DEGREES", "EXP", "FLOOR", "LOG", "LOG10", "MOD", "PI",
+        "POWER", "RADIANS", "RAND", "ROUND", "SIGN", "SIN", "SQRT",
+        "TAN", "TRUNCATE"
+    };
+
+    /**
+     * List of all string function names defined by JDBC.
+     */
+    private static final String [] allStringFunctions = {
+        "ASCII", "CHAR", "CONCAT", "DIFFERENCE", "INSERT", "LCASE",
+        "LEFT", "LENGTH", "LOCATE", "LTRIM", "REPEAT", "REPLACE",
+        "RIGHT", "RTRIM", "SOUNDEX", "SPACE", "SUBSTRING", "UCASE"
+    };
+
+    /**
+     * List of all time/date function names defined by JDBC.
+     */
+    private static final String [] allTimeDateFunctions = {
+        "CURDATE", "CURTIME", "DAYNAME", "DAYOFMONTH", "DAYOFWEEK",
+        "DAYOFYEAR", "HOUR", "MINUTE", "MONTH", "MONTHNAME", "NOW",
+        "QUARTER", "SECOND", "TIMESTAMPADD", "TIMESTAMPDIFF",
+        "WEEK", "YEAR"
+    };
+
+    /**
+     * List of all system function names defined by JDBC.
+     */
+    private static final String [] allSystemFunctions = {
+        "DATABASE", "IFNULL", "USER"
+    };
+
     //~ Instance fields -------------------------------------------------------
 
     String jdbcName;
@@ -265,6 +307,33 @@ public class SqlJdbcFunctionCall extends SqlFunction
 
     //    private SqlCall thisCall;
     SqlNode [] thisOperands;
+
+    static 
+    {
+        numericFunctions = constructFuncList(allNumericFunctions);
+        stringFunctions = constructFuncList(allStringFunctions);
+        timeDateFunctions = constructFuncList(allTimeDateFunctions);
+        systemFunctions = constructFuncList(allSystemFunctions);
+    }
+    
+    private static String constructFuncList(String [] functionNames)
+    {
+        StringBuffer sb = new StringBuffer();
+        boolean first = true;
+        for (int i = 0; i < functionNames.length; ++i) {
+            String funcName = functionNames[i];
+            if (JdbcToInternalLookupTable.instance.lookup(funcName) == null) {
+                continue;
+            }
+            if (first) {
+                first = false;
+            } else {
+                sb.append(",");
+            }
+            sb.append(funcName);
+        }
+        return sb.toString();
+    }
 
     //~ Constructors ----------------------------------------------------------
 
@@ -386,6 +455,38 @@ public class SqlJdbcFunctionCall extends SqlFunction
             operands[i].unparse(writer, leftPrec, rightPrec);
         }
         writer.print(") }");
+    }
+
+    /**
+     * @see DatabaseMetaData#getNumericFunctions
+     */
+    public static String getNumericFunctions()
+    {
+        return numericFunctions;
+    }
+
+    /**
+     * @see DatabaseMetaData#getStringFunctions
+     */
+    public static String getStringFunctions()
+    {
+        return stringFunctions;
+    }
+    
+    /**
+     * @see DatabaseMetaData#getTimeDateFunctions
+     */
+    public static String getTimeDateFunctions()
+    {
+        return timeDateFunctions;
+    }
+
+    /**
+     * @see DatabaseMetaData#getSystemFunctions
+     */
+    public static String getSystemFunctions()
+    {
+        return systemFunctions;
     }
 
     //~ Inner Classes ---------------------------------------------------------
@@ -515,7 +616,7 @@ public class SqlJdbcFunctionCall extends SqlFunction
             SqlStdOperatorTable opTab = SqlStdOperatorTable.instance();
             // A table of all functions can be found at
             // http://java.sun.com/products/jdbc/driverdevs.html
-            // which is also provided at the end of this file.
+            // which is also provided in the javadoc for this class.
             map.put(
                 "ABS",
                 new MakeCall(opTab.absFunc, 1));

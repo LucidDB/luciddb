@@ -42,7 +42,6 @@ public abstract class ReflectiveSqlOperatorTable implements SqlOperatorTable
 
     private final MultiMap operators = new MultiMap();
     private final HashMap mapNameToOp = new HashMap();
-    private final MultiMap categoryToFuncNames = new MultiMap();
 
     //~ Constructors ----------------------------------------------------------
 
@@ -151,7 +150,6 @@ public abstract class ReflectiveSqlOperatorTable implements SqlOperatorTable
         SqlFunction.SqlFuncTypeName funcType = function.getFunctionType();
         assert (funcType != null) : "Function type for " + function.name
         + " not set";
-        categoryToFuncNames.putMulti(funcType, function.name);
     }
 
     // implement SqlOperatorTable
@@ -166,19 +164,6 @@ public abstract class ReflectiveSqlOperatorTable implements SqlOperatorTable
         }
 
         return list;
-    }
-    
-    /**
-     * Retrieves a list of functions in a particular category.
-     *
-     * @param category category of functions to retrieve
-     *
-     * @return list of String function names
-     */
-    public List getFunctionNamesByCategory(
-        SqlFunction.SqlFuncTypeName category)
-    {
-        return categoryToFuncNames.getMulti(category);
     }
 }
 

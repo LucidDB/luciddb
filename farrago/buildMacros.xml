@@ -81,6 +81,10 @@
   <!-- Alias for farrago.catalog.dir to match runtime properties convention -->
   <property name="FARRAGO_CATALOG_DIR" location="${farrago.catalog.dir}"/>
 
+  <!-- directory in which catalog sources are generated -->
+  <property name="farrago.catalog.src.dir" 
+    location="${farrago.catalog.dir}/java"/>
+
   <!-- directory in which SQL parser source code is stored -->
   <property name="farrago.parser.sql.dir"
     location="${farrago.src.dir}/org/eigenbase/sql/parser"/>
@@ -190,6 +194,17 @@
     <pathelement path="${farrago.custom.classpath}"/>
   </path>
   <property name="farrago.3p.classpath" refid="farrago.3p.classpath"/>
+
+  <!-- classpath for execution.  The reason
+       farrago.src.dir is here is so that resource .xml files can be found at
+       runtime without copying.  -->
+  <path id="farrago.run.classpath">
+    <pathelement path="${farrago.3p.classpath}"/>
+    <pathelement location="${farrago.classes.dir}"/>
+    <pathelement location="${farrago.catalog.src.dir}"/>
+    <pathelement location="${farrago.src.dir}"/>
+  </path>
+  <property name="farrago.run.classpath" refid="farrago.run.classpath"/>
 
   <!-- classpath for running from iSQL -->
   <path id="isql.classpath">

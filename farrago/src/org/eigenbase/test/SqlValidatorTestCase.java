@@ -30,7 +30,7 @@ import org.eigenbase.sql.SqlCollation;
 import org.eigenbase.sql.SqlNode;
 import org.eigenbase.sql.SqlOperatorTable;
 import org.eigenbase.sql.SqlValidator;
-import org.eigenbase.sql.parser.ParseException;
+import org.eigenbase.sql.parser.SqlParseException;
 import org.eigenbase.sql.parser.SqlParser;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.type.*;
@@ -245,7 +245,7 @@ public class SqlValidatorTestCase extends TestCase
             try {
                 sqlNode = parseQuery(sql);
                 validator = getValidator();
-            } catch (ParseException ex) {
+            } catch (SqlParseException ex) {
                 ex.printStackTrace();
                 fail("SqlValidationTest: Parse Error while parsing query=" + sql
                     + "\n" + ex.getMessage());
@@ -328,7 +328,7 @@ public class SqlValidatorTestCase extends TestCase
             SqlNode sqlNode;
             try {
                 sqlNode = parseQuery(sql);
-            } catch (ParseException ex) {
+            } catch (SqlParseException ex) {
                 ex.printStackTrace();
                 throw new AssertionFailedError("SqlValidationTest: " +
                     "Parse Error while parsing query=" + sql

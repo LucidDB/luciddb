@@ -50,7 +50,6 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.rex.RexBuilder;
 import org.eigenbase.runtime.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.parser.ParseException;
 import org.eigenbase.sql.parser.SqlParser;
 import org.eigenbase.sql2rel.SqlToRelConverter;
 import org.eigenbase.trace.EigenbaseTrace;

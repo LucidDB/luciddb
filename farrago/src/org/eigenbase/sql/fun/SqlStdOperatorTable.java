@@ -35,13 +35,6 @@ import org.eigenbase.util.*;
 
 import java.util.ArrayList;
 
-// REVIEW jvs 1-Jan-2005:  the categorization of functions in this table
-// is used to implement the JDBC DatabaseMetaData calls (such as
-// getSystemFunctions) in a way which I believe is incorrect.  Please
-// see http://java.sun.com/products/jdbc/driverdevs.html, section A.1.4.
-// The metadata calls are only supposed to return entries
-// from predefined lists.  So we need to refine the categorizations.
-
 /**
  * Implementation of {@link org.eigenbase.sql.SqlOperatorTable} containing the
  * standard operators and functions.

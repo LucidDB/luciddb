@@ -40,7 +40,7 @@
     <pattern name="ojrex" class="net.sf.farrago.ojrex.*" />
     <pattern name="query" class="net.sf.farrago.query.*" />
     <pattern name="ddl" class="net.sf.farrago.ddl.*" />
-    <pattern name="parser" class="net.sf.farrago.parser.*" />
+    <pattern name="parser" class="net.sf.farrago.parser.**" />
     <pattern name="db" class="net.sf.farrago.db.*" />
     <pattern name="jdbc" class="net.sf.farrago.jdbc.*" />
     <pattern name="jdbc.engine" class="net.sf.farrago.jdbc.engine.*" />

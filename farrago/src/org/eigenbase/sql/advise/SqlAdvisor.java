@@ -25,7 +25,7 @@ import org.eigenbase.sql.SqlValidator;
 import org.eigenbase.sql.SqlNode;
 import org.eigenbase.sql.parser.SqlParser;
 import org.eigenbase.sql.parser.ParserPosition;
-import org.eigenbase.sql.parser.ParseException;
+import org.eigenbase.sql.parser.SqlParseException;
 
 /**
  * An assistant which offers hints and corrections to a partially-formed SQL
@@ -76,7 +76,7 @@ public class SqlAdvisor
      *
      */
     public String[] getCompletionHints(String sql, ParserPosition pp)
-        throws ParseException
+        throws SqlParseException
     {
         SqlParser parser = new SqlParser(sql);
         SqlNode sqlNode = parser.parseQuery();

@@ -25,7 +25,7 @@ import junit.framework.TestCase;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.sql.SqlValidator;
 import org.eigenbase.sql.parser.ParserPosition;
-import org.eigenbase.sql.parser.ParseException;
+import org.eigenbase.sql.parser.SqlParseException;
 import org.eigenbase.sql.advise.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.fun.*;
@@ -254,7 +254,7 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
             for (int i = 0; i < results.length; i++) {
                 uniqueResults.put(results[i], results[i]);
             }
-        } catch (ParseException ex) {
+        } catch (SqlParseException ex) {
             ex.printStackTrace();
             fail("SqlAdvisorTest: Parse Error while parsing query=" + sql
                + "\n" + ex.getMessage());

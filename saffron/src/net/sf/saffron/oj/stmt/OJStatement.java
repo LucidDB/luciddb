@@ -58,7 +58,7 @@ import org.eigenbase.rex.RexBuilder;
 import org.eigenbase.runtime.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
-import org.eigenbase.sql.parser.ParseException;
+import org.eigenbase.sql.parser.SqlParseException;
 import org.eigenbase.sql.parser.SqlParser;
 import org.eigenbase.sql2rel.SqlToRelConverter;
 import org.eigenbase.util.SaffronProperties;
@@ -231,7 +231,7 @@ public class OJStatement extends OJPreparingStmt
         final SqlNode sqlQuery;
         try {
             sqlQuery = parser.parseStmt();
-        } catch (ParseException e) {
+        } catch (SqlParseException e) {
             throw Util.newInternal(e,
                 "Error while parsing SQL '" + queryString + "'");
         }
