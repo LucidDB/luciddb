@@ -390,7 +390,7 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         // where
         sql = "select a.empno, b.deptno from sales.emp a, sales.dept b "
             + "where ^";
-        expected = "select a.empno , b.deptno from sales.emp a, sales.dept b "
+        expected = "select a.empno , b.deptno from sales.emp a , sales.dept b "
             + "where _suggest_";
         assertSimplify(sql, expected);
 
@@ -409,7 +409,7 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         assertSimplify(sql, expected);
 
         sql = "select ^from (select 1 as x, 2 as y from sales.emp), (select 2 as y from (select m from n where)) as t where t.dummy=1";
-        expected = "select _suggest_ from (select 1 as x , 2 as y from sales.emp), (select 2 as y from (select m from n)) as t where t.dummy=1";
+        expected = "select _suggest_ from (select 1 as x , 2 as y from sales.emp) , (select 2 as y from (select m from n)) as t where t.dummy=1";
         assertSimplify(sql, expected);
 
         sql = "select t.x from (select 1 as x, 2 as y from sales.^";
@@ -418,7 +418,7 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
 
 
         sql = "select a.empno, b.deptno from dummy a, sales.^";
-        expected = "select a.empno , b.deptno from dummy a, sales._suggest_";
+        expected = "select a.empno , b.deptno from dummy a , sales._suggest_";
         assertSimplify(sql, expected);
 
         // function

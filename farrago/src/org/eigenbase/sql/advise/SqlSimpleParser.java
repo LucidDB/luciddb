@@ -339,7 +339,9 @@ public class SqlSimpleParser
         if (keyword.equals("on")) {
             return new SqlKwOn(entries);
         } else if (keyword.equals("select")) {
-            return new SqlKwSelect(entries);
+            return new SqlKwList(entries);
+        } else if (keyword.equals("from")) {
+            return new SqlKwList(entries);
         } else {
             return new SqlKw(entries);
         }
@@ -407,9 +409,9 @@ public class SqlSimpleParser
         }
     }
     
-    class SqlKwSelect extends SqlKw {
+    class SqlKwList extends SqlKw {
         
-        SqlKwSelect(List entries) {
+        SqlKwList(List entries) {
             super(entries);
         }
 
