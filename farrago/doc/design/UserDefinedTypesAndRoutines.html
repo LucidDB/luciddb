@@ -530,7 +530,7 @@ precompiler to translate any embedded SQL statements).
 
 <pre><code>
 class MathFuncs {
-    public static void sqr(double d)
+    public static double sqr(double d)
     {
         return d*d;
     }
@@ -552,6 +552,7 @@ referencing the routine's Java implementation in the installed JAR.
 
 <pre><code>
 CREATE FUNCTION sqr(d DOUBLE)
+RETURNS DOUBLE
 NO SQL
 EXTERNAL NAME 'MathFuncsLib:MathFuncs.sqr'
 LANGUAGE JAVA
@@ -566,6 +567,7 @@ extension for this, e.g.
 
 <pre><code>
 CREATE FUNCTION sqr(d DOUBLE)
+RETURNS DOUBLE
 NO SQL
 INLINE
 LANGUAGE JAVA
