@@ -1,86 +1,87 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/optimizer/multiset.sql#2 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/optimizer/multiset.sql#3 $
 0: jdbc:farrago:> -- Test multiset related queries
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set schema 'sales';
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- force usage of Fennel calculator
-0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
+0: jdbc:farrago:> --alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for select*from unnest(multiset[1,2]);
-+--------------------------------------------+
-|                  column0                   |
-+--------------------------------------------+
-| FennelToIteratorConverter                  |
-|   FennelPullUncollectRel                   |
-|     FennelPullCollectRel                   |
-|       IteratorToFennelConverter            |
-|         IterConcatenateRel(all=[true])     |
-|           FennelToIteratorConverter        |
-|             FennelPullCalcRel(EXPR$0=[1])  |
-|               FennelPullOneRowRel          |
-|           FennelToIteratorConverter        |
-|             FennelPullCalcRel(EXPR$0=[2])  |
-|               FennelPullOneRowRel          |
-+--------------------------------------------+
++-----------------------------------------+
+|                 column0                 |
++-----------------------------------------+
+| FennelToIteratorConverter               |
+|   FennelPullUncollectRel                |
+|     FennelPullCollectRel                |
+|       IteratorToFennelConverter         |
+|         IterConcatenateRel(all=[true])  |
+|           IterCalcRel(EXPR$0=[1])       |
+|             IterOneRowRel               |
+|           IterCalcRel(EXPR$0=[2])       |
+|             IterOneRowRel               |
++-----------------------------------------+
 0: jdbc:farrago:> explain plan for select*from unnest(multiset[1+2,3*4/5]);
-+--------------------------------------------------------+
-|                        column0                         |
-+--------------------------------------------------------+
-| FennelToIteratorConverter                              |
-|   FennelPullUncollectRel                               |
-|     FennelPullCollectRel                               |
-|       IteratorToFennelConverter                        |
-|         IterConcatenateRel(all=[true])                 |
-|           FennelToIteratorConverter                    |
-|             FennelPullCalcRel(EXPR$0=[+(1, 2)])        |
-|               FennelPullOneRowRel                      |
-|           FennelToIteratorConverter                    |
-|             FennelPullCalcRel(EXPR$0=[/(*(3, 4), 5)])  |
-|               FennelPullOneRowRel                      |
-+--------------------------------------------------------+
++------------------------------------------------+
+|                    column0                     |
++------------------------------------------------+
+| FennelToIteratorConverter                      |
+|   FennelPullUncollectRel                       |
+|     FennelPullCollectRel                       |
+|       IteratorToFennelConverter                |
+|         IterConcatenateRel(all=[true])         |
+|           IterCalcRel(EXPR$0=[+(1, 2)])        |
+|             IterOneRowRel                      |
+|           IterCalcRel(EXPR$0=[/(*(3, 4), 5)])  |
+|             IterOneRowRel                      |
++------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- NOTE: at the time of adding this, aggregation was not fully supported
 0: jdbc:farrago:> -- so this test will break once we get that support.
 0: jdbc:farrago:> explain plan for select * from sales.emps where cardinality(multiset['abc'])=3;
-+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                                  column0                                                                                   |
-+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                                                                  |
-|   FennelPullCalcRel(EMPNO=[$0], NAME=[$1], DEPTNO=[$2], GENDER=[$3], CITY=[$4], EMPID=[$5], AGE=[$6], PUBLIC_KEY=[$7], SLACKER=[$8], MANAGER=[$9], condition=[=($10, 3)])  |
-|     FennelPullCalcRel($0=[$0], $1=[$1], $2=[$2], $3=[$3], $4=[$4], $5=[$5], $6=[$6], $7=[$7], $8=[$8], $9=[$9], $10=[$12])                                                 |
-|       FennelPullCorrelatorRel                                                                                                                                              |
-|         FennelCartesianProductRel(leftouterjoin=[true])                                                                                                                    |
-|           FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])                       |
-|           FennelPullCollectRel                                                                                                                                             |
-|             FennelPullCalcRel(EXPR$0=[_ISO-8859-1'abc'])                                                                                                                   |
-|               FennelPullOneRowRel                                                                                                                                          |
-|         FennelSortRel(key=[[0]], discardDuplicates=[true])                                                                                                                 |
-|           FennelPullUncollectRel                                                                                                                                           |
-|             FennelPullCalcRel(output$cor0=[$cor0])                                                                                                                         |
-|               FennelPullOneRowRel                                                                                                                                          |
-+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                              column0                                                                               |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| IterCalcRel(EMPNO=[$0], NAME=[$1], DEPTNO=[$2], GENDER=[$3], CITY=[$4], EMPID=[$5], AGE=[$6], PUBLIC_KEY=[$7], SLACKER=[$8], MANAGER=[$9], condition=[=($10, 3)])  |
+|   IterCalcRel($0=[$0], $1=[$1], $2=[$2], $3=[$3], $4=[$4], $5=[$5], $6=[$6], $7=[$7], $8=[$8], $9=[$9], $10=[$12])                                                 |
+|     FennelToIteratorConverter                                                                                                                                      |
+|       FennelPullCorrelatorRel                                                                                                                                      |
+|         FennelCartesianProductRel(leftouterjoin=[true])                                                                                                            |
+|           FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])               |
+|           FennelPullCollectRel                                                                                                                                     |
+|             FennelPullCalcRel(EXPR$0=[_ISO-8859-1'abc'])                                                                                                           |
+|               FennelPullOneRowRel                                                                                                                                  |
+|         FennelSortRel(key=[[0]], discardDuplicates=[true])                                                                                                         |
+|           FennelPullUncollectRel                                                                                                                                   |
+|             FennelPullCalcRel(output$cor0=[$cor0])                                                                                                                 |
+|               FennelPullOneRowRel                                                                                                                                  |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for values element(multiset[5]);
-+-------------------------------------------------+
-|                     column0                     |
-+-------------------------------------------------+
-| FennelToIteratorConverter                       |
-|   FennelPullCalcRel($f0=[$2.EXPR$0])            |
-|     FennelPullCorrelatorRel                     |
-|       FennelPullCollectRel                      |
-|         FennelPullCalcRel(EXPR$0=[5])           |
-|           FennelPullOneRowRel                   |
-|       FennelPullUncollectRel                    |
-|         FennelPullCalcRel(output$cor0=[$cor0])  |
-|           FennelPullOneRowRel                   |
-+-------------------------------------------------+
++------------------------------------------------------------------------------------------------+
+|                                            column0                                             |
++------------------------------------------------------------------------------------------------+
+| IterCalcRel($f0=[$2.EXPR$0])                                                                   |
+|   FennelToIteratorConverter                                                                    |
+|     FennelPullCorrelatorRel                                                                    |
+|       FennelPullCollectRel                                                                     |
+|         FennelPullCalcRel(EXPR$0=[5])                                                          |
+|           FennelPullOneRowRel                                                                  |
+|       IteratorToFennelConverter                                                                |
+|         IterCalcRel(rangeref=[null])                                                           |
+|           FennelToIteratorConverter                                                            |
+|             FennelPullCalcRel(EXPR$0=[$0], condition=[CASE(=($0, 1), true, $throw('21000'))])  |
+|               FennelSortRel(key=[[0]], discardDuplicates=[true])                               |
+|                 FennelPullUncollectRel                                                         |
+|                   FennelPullCalcRel(output$cor0=[$cor0])                                       |
+|                     FennelPullOneRowRel                                                        |
++------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for values multiset[1] multiset union multiset[2];
 +-------------------------------------------------------------+
 |                           column0                           |
 +-------------------------------------------------------------+
-| FennelToIteratorConverter                                   |
-|   FennelPullCalcRel(EXPR$0=[$3])                            |
+| IterCalcRel(EXPR$0=[$3])                                    |
+|   FennelToIteratorConverter                                 |
 |     FennelPullCorrelatorRel                                 |
 |       FennelCartesianProductRel(leftouterjoin=[true])       |
 |         FennelPullCollectRel                                |
@@ -106,8 +107,8 @@
 +---------------------------------------------------------+
 |                         column0                         |
 +---------------------------------------------------------+
-| FennelToIteratorConverter                               |
-|   FennelPullCalcRel(EXPR$0=[$3])                        |
+| IterCalcRel(EXPR$0=[$3])                                |
+|   FennelToIteratorConverter                             |
 |     FennelPullCorrelatorRel                             |
 |       FennelCartesianProductRel(leftouterjoin=[true])   |
 |         FennelPullCollectRel                            |
@@ -132,8 +133,8 @@
 +-------------------------------------------------------------+
 |                           column0                           |
 +-------------------------------------------------------------+
-| FennelToIteratorConverter                                   |
-|   FennelPullCalcRel(EXPR$0=[$3])                            |
+| IterCalcRel(EXPR$0=[$3])                                    |
+|   FennelToIteratorConverter                                 |
 |     FennelPullCorrelatorRel                                 |
 |       FennelCartesianProductRel(leftouterjoin=[true])       |
 |         FennelPullCollectRel                                |

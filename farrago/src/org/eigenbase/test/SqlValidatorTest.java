@@ -1844,11 +1844,17 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     public void testCollect() {
         check("select collect(deptno) from emp");
         check("select collect(multiset[3]) from emp");
+        // todo. COLLECT is an aggregate function. test that validator only
+        // can take set operators in its select list once aggregation support is
+        // complete
     }
 
     public void testFusion() {
         checkFails("select fusion(deptno) from emp","(?s).*Cannot apply 'FUSION' to arguments of type 'FUSION.<INTEGER>.'.*");
         check("select fusion(multiset[3]) from emp");
+        // todo. FUSION is an aggregate function. test that validator only
+        // can take set operators in its select list once aggregation support is
+        // complete
     }
 
     public void testNew() {

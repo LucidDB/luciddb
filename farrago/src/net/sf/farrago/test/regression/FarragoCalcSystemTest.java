@@ -144,6 +144,7 @@ public class FarragoCalcSystemTest extends FarragoTestCase
         exclude.add(opTab.currentTimestampFunc);
         exclude.add(opTab.currentTimeFunc);
         exclude.add(opTab.minusDateOperator);
+        exclude.add(opTab.throwOperator);
 
         // Eventually need to include these when cast is working
         exclude.add(opTab.overlapsOperator);

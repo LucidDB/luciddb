@@ -214,7 +214,7 @@ public class CalcProgramBuilder
         new IntegralNativeInstructionDef(orInstruction, 3);
     public static final InstructionDef nativeNeg =
         new NativeInstructionDef("NEG", 2);
-    public static final InstructionDef Raise =
+    public static final InstructionDef raise =
         new InstructionDef("RAISE", 1) {
             void add(
                 CalcProgramBuilder builder,
@@ -227,7 +227,7 @@ public class CalcProgramBuilder
         };
 
     /** Rounds approximate types to nearest integer but remains same type */
-    public static final InstructionDef Round =
+    public static final InstructionDef round =
         new NativeInstructionDef("ROUND", 2);
     public static final InstructionDef integralNativeShiftLeft =
         new IntegralNativeShift("SHFL");

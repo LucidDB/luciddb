@@ -388,9 +388,10 @@ public class RexToCalcTranslator implements RexVisitor
                 CalcProgramBuilder.boolNativeIsNull.add(builder, isNullRes,
                     res);
                 builder.addLabelJumpFalse(wasNotNull, isNullRes);
-                CalcProgramBuilder.Raise.add(
+                CalcProgramBuilder.raise.add(
                     builder,
-                    builder.newVarcharLiteral("22004", 5));
+                    builder.newVarcharLiteral(
+                        SqlStateCodes.NullValueNotAllowed.getState(), 5));
                 builder.addReturn();
                 builder.addLabel(wasNotNull);
             }

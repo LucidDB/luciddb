@@ -2,7 +2,7 @@
 // $Id$
 // Package org.eigenbase is a class library of data management components.
 // Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
+// Copyright (C) 2004-2005 Disruptive Tech
 // Copyright (C) 2005-2005 Red Square, Inc.
 // Portions Copyright (C) 2003-2005 John V. Sichi
 //
@@ -36,7 +36,7 @@ import org.eigenbase.sql.validate.SqlValidator;
 /**
  * Definition of the "TRIM" builtin SQL function.
  *
- * @author jhyde
+ * @author Wael Chatila, Julian Hyde
  * @since May 28, 2004
  * @version $Id$
  **/

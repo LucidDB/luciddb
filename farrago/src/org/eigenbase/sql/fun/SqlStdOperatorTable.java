@@ -922,6 +922,8 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
 
     public final SqlInternalOperator literalChainOperator =
         new SqlLiteralChainOperator();
+    public final SqlInternalOperator throwOperator =
+        new SqlThrowOperator();
     public final SqlBetweenOperator betweenOperator =
         new SqlBetweenOperator(
             SqlBetweenOperator.Flag.createAsymmetric(SqlParserPos.ZERO),

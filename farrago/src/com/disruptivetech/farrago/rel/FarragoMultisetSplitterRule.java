@@ -25,12 +25,15 @@ import org.eigenbase.rel.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.SqlOperator;
+import org.eigenbase.sql.SqlStateCodes;
+import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.util.Util;
 
 import java.util.Set;
 import java.util.Iterator;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.math.BigDecimal;
 
 /**
  * FarragoMultisetSplitterRule works in three ways.
@@ -91,8 +94,6 @@ public class FarragoMultisetSplitterRule extends RelOptRule
         multisetOperators.add(opTab.multisetIntersectOperator);
         multisetOperators.add(opTab.multisetUnionAllOperator);
         multisetOperators.add(opTab.multisetUnionOperator);
-        multisetOperators.add(opTab.collectFunc);
-        multisetOperators.add(opTab.fusionFunc);
     }
 
     //~ Constructors ----------------------------------------------------------
@@ -255,15 +256,16 @@ public class FarragoMultisetSplitterRule extends RelOptRule
             //            OneRowRel
             UncollectRel uncollect = new UncollectRel(cluster, projectRel);
             // TODO wael 3/15/05: need to create proper count agg call def.
-            AggregateRel aggregateRel = new AggregateRel(cluster, uncollect, 1, new AggregateRel.Call[]{});
-            correlatorRel = new CorrelatorRel(cluster, input, aggregateRel, correlations);
-
+            AggregateRel aggregateRel =
+                new AggregateRel(
+                    cluster, uncollect, 1, new AggregateRel.Call[]{});
+            correlatorRel =
+                new CorrelatorRel(cluster, input, aggregateRel, correlations);
             HashSet stoppedVariableSet = new HashSet();
             stoppedVariableSet.add(corRef);
             correlatorRel.setVariablesStopped(stoppedVariableSet);
 //            correlatorRel.registerCorrelVariable(dyn_inIdStr);
         } else if (opTab.elementFunc == rexCall.op) {
-            //todo need to limit uncollect to one row
             // A call to
             // CalcRel=[...,ELEMENT($in_i),...]
             //   CalcInput
@@ -271,12 +273,51 @@ public class FarragoMultisetSplitterRule extends RelOptRule
             // CalcRel=[...,$in_N,...]
             //   CorrelRel=[$cor0=$in_i]
             //     CalcInput
-            //     Uncollect
-            //        ProjectRel=[output=$cor0]
-            //          OneRowRel
+            //     LimitRel(max=1)
+            //       Uncollect
+            //         ProjectRel=[output=$cor0]
+            //           OneRowRel
+            //
+            // LimitRel (which doesnt exists) is further expanded to
+            //
+            // ProjectRel($0)
+            //   FilterRel[condition=CASE WHEN $0==1 THEN true ELSE throw("21000") END]
+            //      AggregateRel[count(*), $0]
+            //
+            // 21000 is the standard CARDINALITY VIOLATION error code
             UncollectRel uncollect = new UncollectRel(cluster, projectRel);
+            // TODO wael 3/29/05: need to create proper count agg call def.
+            AggregateRel aggregateRel =
+                new AggregateRel(
+                    cluster, uncollect, 1, new AggregateRel.Call[]{});
+            RexNode[] whenThenElse = new RexNode[] {
+                // when
+                cluster.rexBuilder.makeCall(opTab.equalsOperator
+                    ,cluster.rexBuilder.makeInputRef(
+                        cluster.typeFactory.createSqlType(
+                            SqlTypeName.Integer), 0)
+                    ,cluster.rexBuilder.makeExactLiteral(new BigDecimal(1)))
+                // then
+                ,cluster.rexBuilder.makeLiteral(true)
+                // else
+                ,cluster.rexBuilder.makeCall(opTab.throwOperator,
+                    cluster.rexBuilder.makeLiteral(
+                        SqlStateCodes.CardinalityViolation.getState()))};
+            RexNode condition =
+                cluster.rexBuilder.makeCall(opTab.caseOperator, whenThenElse);
+            FilterRel filterRel =
+                new FilterRel(cluster, aggregateRel, condition);
+            ProjectRel limitRel =
+                new ProjectRel(
+                    cluster,
+                    filterRel,
+                    new RexNode[]{
+                        cluster.rexBuilder.makeRangeReference(
+                            uncollect.getRowType(), 1)},
+                    new String[]{"rangeref"},
+                    ProjectRel.Flags.Boxed);
             correlatorRel =
-                new CorrelatorRel(cluster, input, uncollect, correlations);
+                new CorrelatorRel(cluster, input, limitRel, correlations);
         } else if (rexCall.op instanceof
             SqlStdOperatorTable.SqlMultisetSetOperator) {
              // A call to
@@ -341,46 +382,6 @@ public class FarragoMultisetSplitterRule extends RelOptRule
                 new CollectRel(cluster, setRel, "multiset");
             correlatorRel =
                 new CorrelatorRel(cluster, input, collectRel, correlations);
-        } else if (opTab.collectFunc == rexCall.op) {
-            // must fix, this is not a correct plan
-            // A call to
-            // CalcRel=[...,COLLECT($in),...]
-            //   CalcInput
-            //is eq. to
-            // CalcRel=[...,$in_N,...]
-            //   CorrelRel=[$cor0=$in]
-            //     CalcInput
-            //     CollectRel
-            //       ProjectRel=[output=$cor0]
-            //         OneRowRel
-            correlatorRel =
-                new CorrelatorRel(
-                    cluster,
-                    input,
-                    new CollectRel(cluster, projectRel, "multiset"),
-                    correlations);
-        } else if (opTab.fusionFunc == rexCall.op) {
-            // must fix, this is not a correct plan
-            // A call to
-            // CalcRel=[...,FUSION($in),...]
-            //   CalcInput
-            //is eq. to
-            // CalcRel=[...,$in_N,...]
-            //   CorrelRel=[$cor0=$in]
-            //     CalcInput
-            //     CollectRel
-            //       Uncollect
-            //         ProjectRel=[output=$cor0]
-            //           OneRowRel
-            correlatorRel =
-                new CorrelatorRel(
-                    cluster,
-                    input,
-                    new CollectRel(
-                        cluster,
-                        new UncollectRel(cluster, projectRel),
-                        "multiset"),
-                    correlations);
         }
 
         Util.permAssert(
