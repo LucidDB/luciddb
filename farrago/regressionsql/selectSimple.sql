@@ -76,13 +76,4 @@ select x'0a'<=x'10' from values(1);
 select x'20'<=x'10' from values(1);
 select x'0001'>=x'100000' from values(1);
 
-select x'f'=x'f' from values(1);
-select X'2'<>x'f' from values(1);
---select x'1'>x'01' from values(1);
-select x'1'<x'a' from values(1);
-select x'a'<=x'a' from values(1);
-select x'a'<=x'1' from values(1);
-select x'0'<=x'1' from values(1);
-select x'001'>=x'10000' from values(1);
-
 -- end selectSimple.sql

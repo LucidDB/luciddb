@@ -157,7 +157,6 @@ insert into t_date values(1e400,null);
 insert into t_date values(-1.2345678901234e-200,null);
 insert into t_date values(-1234.03,null);
 insert into t_date values(x'ff',null);
-insert into t_date values(b'10',null);
 insert into t_date values(time '12:01:01',null);
 insert into t_date values(timestamp '2004-12-01 12:01:01',null);
 

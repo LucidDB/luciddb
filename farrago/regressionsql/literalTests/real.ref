@@ -142,8 +142,6 @@ Error: Numerical result out of range (at line:col 5:9 to 5:14, characters 47 to 
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'BOOLEAN' to 'REAL' (state=,code=0)
 0: jdbc:farrago:> insert into t_real values(x'ff',null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'VARBINARY(1)' to 'REAL' (state=,code=0)
-0: jdbc:farrago:> insert into t_real values(b'10',null);
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'BIT(2)' to 'REAL' (state=,code=0)
 0: jdbc:farrago:> insert into t_real values(date '1999-01-08',null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'DATE' to 'REAL' (state=,code=0)
 0: jdbc:farrago:> insert into t_real values(time '12:01:01',null);

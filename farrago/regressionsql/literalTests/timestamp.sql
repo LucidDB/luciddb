@@ -98,7 +98,6 @@ insert into t_timestamp values(1e400,null);
 insert into t_timestamp values(-1.2345678901234e-200,null);
 insert into t_timestamp values(-1234.03,null);
 insert into t_timestamp values(x'ff',null);
-insert into t_timestamp values(b'10',null);
 insert into t_timestamp values(time '12:01:01',null);
 insert into t_timestamp values(date '1999-01-08',null);
 

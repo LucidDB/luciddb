@@ -111,8 +111,6 @@ Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast fro
 Error: At line 1, column 25: Numeric literal '1E400' out of range (state=,code=0)
 0: jdbc:farrago:> insert into t_int values(x'ff',null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'VARBINARY(1)' to 'INTEGER' (state=,code=0)
-0: jdbc:farrago:> insert into t_int values(b'10',null);
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'BIT(2)' to 'INTEGER' (state=,code=0)
 0: jdbc:farrago:> insert into t_int values(date '1999-01-08',null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'DATE' to 'INTEGER' (state=,code=0)
 0: jdbc:farrago:> insert into t_int values(time '12:01:01',null);

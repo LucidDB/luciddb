@@ -21,7 +21,6 @@ insert into t_boolean values(-1234.03,null);
 insert into t_boolean values(1e400,null);
 insert into t_boolean values(-1.2345678901234e-200,null);
 insert into t_boolean values(x'ff',null);
-insert into t_boolean values(b'10',null);
 insert into t_boolean values(date '1999-01-08',null);
 insert into t_boolean values(time '12:01:01',null);
 insert into t_boolean values(timestamp '2004-12-01 12:01:01',null);

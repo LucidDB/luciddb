@@ -251,12 +251,6 @@ Error: Cast function cannot convert value of type INTEGER to type VARBINARY(1) (
 +---------+
 | true    |
 +---------+
-0: jdbc:farrago:> select x'f'=x'f' from values(1);
-+---------+
-| EXPR$0  |
-+---------+
-| true    |
-+---------+
 0: jdbc:farrago:> --select x'ff'=cast(255 as varbinary(1)) from values(1);
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 

@@ -143,8 +143,6 @@ Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast fro
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'DOUBLE' to 'TIMESTAMP' (state=,code=0)
 0: jdbc:farrago:> insert into t_timestamp values(x'ff',null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'VARBINARY(1)' to 'TIMESTAMP' (state=,code=0)
-0: jdbc:farrago:> insert into t_timestamp values(b'10',null);
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'BIT(2)' to 'TIMESTAMP' (state=,code=0)
 0: jdbc:farrago:> insert into t_timestamp values(time '12:01:01',null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'TIME(0)' to 'TIMESTAMP' (state=,code=0)
 0: jdbc:farrago:> insert into t_timestamp values(date '1999-01-08',null);

@@ -50,8 +50,6 @@ Error: At line 1, column 29: Numeric literal '1E400' out of range (state=,code=0
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'DOUBLE' to 'BOOLEAN' (state=,code=0)
 0: jdbc:farrago:> insert into t_boolean values(x'ff',null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'VARBINARY(1)' to 'BOOLEAN' (state=,code=0)
-0: jdbc:farrago:> insert into t_boolean values(b'10',null);
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'BIT(2)' to 'BOOLEAN' (state=,code=0)
 0: jdbc:farrago:> insert into t_boolean values(date '1999-01-08',null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'DATE' to 'BOOLEAN' (state=,code=0)
 0: jdbc:farrago:> insert into t_boolean values(time '12:01:01',null);

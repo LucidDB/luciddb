@@ -36,7 +36,6 @@ create table t_real(real_col real not null primary key,
 --insert into t_real values('true',null);
 insert into t_real values(TRUE,null);
 insert into t_real values(x'ff',null);
-insert into t_real values(b'10',null);
 insert into t_real values(date '1999-01-08',null);
 insert into t_real values(time '12:01:01',null);
 insert into t_real values(timestamp '2004-12-01 12:01:01',null);

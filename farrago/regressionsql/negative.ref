@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/negative.sql#2 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/negative.sql#3 $
 0: jdbc:farrago:> -- Full vertical negative system testing
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel
@@ -250,7 +250,7 @@ Error: At line 1, column 14: Cannot apply '=' to arguments of type '<BOOLEAN> = 
 '<INTERVALYEARMONTH> = <INTERVALYEARMONTH>'
 '<ANY> = <ANY>' (state=,code=0)
 0: jdbc:farrago:> values x'101f'=0.001;
-Error: At line 1, column 15: Cannot apply '=' to arguments of type '<BINARY(2)> = <DECIMAL(4, 3)>'. Supported form(s): '<ANY> = <ANY>'
+Error: At line 1, column 16: Cannot apply '=' to arguments of type '<BINARY(2)> = <DECIMAL(4, 3)>'. Supported form(s): '<ANY> = <ANY>'
 '<TINYINT> = <TINYINT>'
 '<TINYINT> = <SMALLINT>'
 '<TINYINT> = <INTEGER>'

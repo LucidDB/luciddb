@@ -14,7 +14,6 @@ insert into t_char values(1e400,null);
 insert into t_char values(-1.2345678901234e-200,null);
 insert into t_char values(-1234.03,null);
 insert into t_char values(x'ff',null);
-insert into t_char values(b'10',null);
 -- char(1) too short to hold these - will give error
 insert into t_char values(time '12:01:01',null);
 insert into t_char values(date '1999-01-08',null);
@@ -52,7 +51,6 @@ insert into t_varchar values(true,null);
 insert into t_varchar values(false,null);
 insert into t_varchar values(1e400,null);
 insert into t_varchar values(x'ff',null);
-insert into t_varchar values(b'10',null);
 select * from t_varchar;
 
 -- warning tests

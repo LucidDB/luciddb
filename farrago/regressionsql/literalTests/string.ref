@@ -34,8 +34,6 @@ Messages:
 [0]:PC=1 Code=22001 (state=,code=0)
 0: jdbc:farrago:> insert into t_char values(x'ff',null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'VARBINARY(1)' to 'CHAR(1)' (state=,code=0)
-0: jdbc:farrago:> insert into t_char values(b'10',null);
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'BIT(2)' to 'CHAR(1)' (state=,code=0)
 0: jdbc:farrago:> -- char(1) too short to hold these - will give error
 0: jdbc:farrago:> insert into t_char values(time '12:01:01',null);
 Error: could not calculate results for the following row:
@@ -106,8 +104,6 @@ Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast fro
 Error: At line 1, column 29: Numeric literal '1E400' out of range (state=,code=0)
 0: jdbc:farrago:> insert into t_varchar values(x'ff',null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'VARBINARY(1)' to 'VARCHAR(30)' (state=,code=0)
-0: jdbc:farrago:> insert into t_varchar values(b'10',null);
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'BIT(2)' to 'VARCHAR(30)' (state=,code=0)
 0: jdbc:farrago:> select * from t_varchar;
 +--------------+---------------+
 | VARCHAR_COL  | VARCHAR_COL2  |
