@@ -5,11 +5,12 @@
     <output url="file://$MODULE_DIR$/../catalog/java" />
     <exclude-output />
     <exclude-exploded />
-    <content url="file://$MODULE_DIR$/../intellij../catalog">
+    <content url="file://$MODULE_DIR$/../catalog">
       <sourceFolder url="file://$MODULE_DIR$/../catalog/java" isTestSource="false" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="mdr" level="project" />
     <orderEntryProperties />
   </component>
 </module>
