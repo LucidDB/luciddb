@@ -80,11 +80,14 @@ class ExecStreamGraphEmbryo : public boost::noncopyable
      *
      * @param streamName name of stream being adapted
      *
+     * @param iOutput ordinal of the output within the stream being adapted
+     *
      * @param adapterName name of adapter stream
      */
     void initializeAdapter(
         ExecStreamEmbryo &embryo,
         std::string const &streamName,
+        uint iOutput,
         std::string const &adapterName);
     
 public:
@@ -122,9 +125,12 @@ public:
      * <p>The "producer" may be a single stream or may be a chain of 
      * streams. In either case, the adapter is appended to the end of the 
      * group under the name of the original stream. It is named according
-     * to the last stream: <code><i>lastName</i>.provisioner</code>
+     * to the last stream:
+     * <code><i>lastName</i>#<i>iOutput</i>.provisioner</code>
      *
      * @param name name of original stream
+     *
+     * @param iOutput ordinal of the output within the producer
      *
      * @param requiredDataFlow buffer provisioning requirement
      *
@@ -132,6 +138,7 @@ public:
      */
     SharedExecStream addAdapterFor(
         const std::string &name,
+        uint iOutput,
         ExecStreamBufProvision requiredDataFlow);
 
     /**

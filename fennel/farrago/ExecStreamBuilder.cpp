@@ -61,7 +61,7 @@ void ExecStreamBuilder::buildStreamGraph(
             // are expected to support producer provisioned results.
             std::string name = pStreamDef->getName();
             SharedExecStream pAdaptedStream =
-                graphEmbryo.addAdapterFor(name, BUFPROV_PRODUCER);
+                graphEmbryo.addAdapterFor(name, 0, BUFPROV_PRODUCER);
             graphEmbryo.getGraph().addOutputDataflow(
                 pAdaptedStream->getStreamId());
         }

@@ -80,6 +80,7 @@ protected:
     
     typedef std::map<std::string,ExecStreamId> StreamMap;
     typedef StreamMap::const_iterator StreamMapConstIter;
+    typedef std::map<std::pair<std::string, uint>,ExecStreamId> EdgeMap;
 
     /**
      * Map of name to stream
@@ -87,9 +88,9 @@ protected:
     StreamMap streamMap;
     
     /**
-     * Map of name to stream output, after add-ons
+     * Map of name and output arc to stream output, after add-ons
      */
-    StreamMap streamOutMap;
+    EdgeMap streamOutMap;
 
     /**
      * Result of topologically sorting graph (producers before consumers).
@@ -154,11 +155,13 @@ public:
     virtual void addInputDataflow(
         ExecStreamId consumerId);
     virtual SharedExecStream findStream(
-            std::string name);
+        std::string name);
     virtual SharedExecStream findLastStream(
-            std::string name);
+        std::string name,
+        uint iOutput);
     virtual void interposeStream(
         std::string name,
+        uint iOutput,
         ExecStreamId interposedId);
     virtual uint getInputCount(
         ExecStreamId streamId);

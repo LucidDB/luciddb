@@ -79,7 +79,6 @@ void ExecStreamGraphImpl::addStream(
     pStream->pGraph = this;
     boost::put(boost::vertex_data,graphRep,streamVertex,pStream);
     streamMap[pStream->getName()] = pStream->getStreamId();
-    streamOutMap[pStream->getName()] = pStream->getStreamId();
 }
 
 void ExecStreamGraphImpl::addDataflow(
@@ -116,12 +115,13 @@ SharedExecStream ExecStreamGraphImpl::findStream(
 }
 
 SharedExecStream ExecStreamGraphImpl::findLastStream(
-    std::string name)
+    std::string name,
+    uint iOutput)
 {
-    StreamMapConstIter pPair = streamOutMap.find(name);
+    EdgeMap::const_iterator pPair =
+        streamOutMap.find(std::make_pair(name, iOutput));
     if (pPair == streamOutMap.end()) {
-        SharedExecStream nullStream;
-        return nullStream;
+        return findStream(name);
     } else {
         return getStreamFromVertex(pPair->second);
     }
@@ -129,11 +129,12 @@ SharedExecStream ExecStreamGraphImpl::findLastStream(
 
 void ExecStreamGraphImpl::interposeStream(
     std::string name,
+    uint iOutput,
     ExecStreamId interposedId)
 {
-    SharedExecStream pLastStream = findLastStream(name);
+    SharedExecStream pLastStream = findLastStream(name, iOutput);
     assert(pLastStream.get());
-    streamOutMap[name] = interposedId;
+    streamOutMap[std::make_pair(name, iOutput)] = interposedId;
     addDataflow(
         pLastStream->getStreamId(),
         interposedId);
@@ -145,7 +146,7 @@ void ExecStreamGraphImpl::sortStreams()
     boost::topological_sort(
         graphRep,std::back_inserter(sortedVertices));
     sortedStreams.resize(sortedVertices.size());
-    
+
     // boost::topological_sort produces an ordering from consumers to
     // producers, but we want the oppposite ordering, hence
     // sortedStreams.rbegin() below
@@ -166,7 +167,7 @@ void ExecStreamGraphImpl::prepare(ExecStreamScheduler &scheduler)
 {
     isPrepared = true;
     sortStreams();
-    
+
     // create buffer accessors for all dataflow edges
     EdgeIterPair edges = boost::edges(graphRep);
     for (; edges.first != edges.second; edges.first++) {
@@ -185,7 +186,7 @@ void ExecStreamGraphImpl::prepare(ExecStreamScheduler &scheduler)
 void ExecStreamGraphImpl::bindStreamBufAccessors(SharedExecStream pStream)
 {
     std::vector<SharedExecStreamBufAccessor> bufAccessors;
-    
+
     // bind the input buffers
     InEdgeIterPair inEdges = boost::in_edges(
         pStream->getStreamId(),graphRep);
@@ -214,7 +215,7 @@ void ExecStreamGraphImpl::open()
     assert(!isOpen);
     isOpen = true;
     needsClose = true;
-    
+
     // clear all buffer accessors
     EdgeIterPair edges = boost::edges(graphRep);
     for (; edges.first != edges.second; edges.first++) {
@@ -222,7 +223,7 @@ void ExecStreamGraphImpl::open()
             getBufAccessorFromEdge(*(edges.first));
         bufAccessor.clear();
     }
-    
+
     // open streams in dataflow order (from producers to consumers)
     std::for_each(
         sortedStreams.begin(),

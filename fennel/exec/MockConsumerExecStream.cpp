@@ -42,15 +42,12 @@ ExecStreamResult MockConsumerExecStream::execute(
     case EXECBUF_OVERFLOW:
         break;
     default:
-        permAssert(false);
+        permFail("Bad state " << inAccessor.getState());
     }
 
     assert(inAccessor.isConsumptionPossible());
-    const uint nCol = inAccessor.getConsumptionTupleAccessor().size();
-    assert(nCol == inAccessor.getTupleDesc().size());
-    assert(nCol >= 1);
     TupleData inputTuple;
-    inputTuple.compute(inAccessor.getTupleDesc());
+    inputTuple.compute(inAccessor.getTupleDesc()); // todo: do compute at open() time
     TuplePrinter tuplePrinter;
 
     // Read rows from the input buffer until we exceed the quantum or read all
@@ -73,9 +70,9 @@ ExecStreamResult MockConsumerExecStream::execute(
         tuplePrinter.print(oss, inAccessor.getTupleDesc(), inputTuple);
         const string &s = oss.str();
         rowStrings.push_back(s);
-        
+        inAccessor.consumeTuple();        
     }
-    return EXECRC_YIELD; // quantum exceeded
+    return EXECRC_QUANTUM_EXPIRED;
 }
 
 void MockConsumerExecStream::prepare(

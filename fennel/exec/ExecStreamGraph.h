@@ -166,10 +166,13 @@ public:
      *
      * @param name name of stream to find
      *
+     * @param iOutput ordinal of output arc
+     *
      * @return stream found
      */
     virtual SharedExecStream findLastStream(
-        std::string name) = 0;
+        std::string name,
+        uint iOutput) = 0;
     
     /**
      * Interposes an adapter stream. In the process, creates a dataflow 
@@ -177,11 +180,14 @@ public:
      *
      * @param name name of stream to adapt
      *
+     * @param iOutput ordinal of output of stream
+     *
      * @param ID of adapter stream within this graph
      *
      */
     virtual void interposeStream(
         std::string name,
+        uint iOutput,
         ExecStreamId interposedId) = 0;
 
     /**

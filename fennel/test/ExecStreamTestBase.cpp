@@ -64,7 +64,7 @@ SharedExecStream ExecStreamTestBase::prepareTransformGraph(
     }
 
     SharedExecStream pAdaptedStream =
-        pGraphEmbryo->addAdapterFor(previousStream.getStream()->getName(),
+        pGraphEmbryo->addAdapterFor(previousStream.getStream()->getName(), 0,
                                     BUFPROV_PRODUCER);
     pGraph->addOutputDataflow(pAdaptedStream->getStreamId());
 
@@ -91,7 +91,7 @@ SharedExecStream ExecStreamTestBase::prepareConfluenceGraph(
 
     SharedExecStream pAdaptedStream =
         pGraphEmbryo->addAdapterFor(
-            confluenceStreamEmbryo.getStream()->getName(),
+            confluenceStreamEmbryo.getStream()->getName(), 0, 
             BUFPROV_PRODUCER);
     pGraph->addOutputDataflow(
         pAdaptedStream->getStreamId());

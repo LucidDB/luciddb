@@ -23,13 +23,20 @@
 #include "fennel/exec/ExecStreamGraph.h"
 #include "fennel/exec/ExecStream.h"
 #include "fennel/exec/ExecStreamEmbryo.h"
+#include "fennel/exec/ExecStreamBufAccessor.h"
 #include "fennel/exec/ExecStreamScheduler.h"
 #include "fennel/cache/QuotaCacheAccessor.h"
 #include "fennel/segment/SegmentAccessor.h"
 #include "fennel/segment/SegmentFactory.h"
 #include "fennel/cache/Cache.h"
+#include <iostream>
 
 FENNEL_BEGIN_CPPFILE("$Id$");
+
+inline std::string toStr(std::ostream const &ostr) 
+{
+    return static_cast<std::ostringstream const &>(ostr).str();
+}
 
 ExecStreamGraphEmbryo::ExecStreamGraphEmbryo(
     SharedExecStreamGraph pGraphInit, 
@@ -54,6 +61,7 @@ ExecStreamGraphEmbryo::~ExecStreamGraphEmbryo()
 
 SharedExecStream ExecStreamGraphEmbryo::addAdapterFor(
     const std::string &name,
+    uint iOutput,
     ExecStreamBufProvision requiredDataflow)
 {
     // REVIEW jvs 18-Nov-2004:  in the case of multiple outputs from one
@@ -61,19 +69,26 @@ SharedExecStream ExecStreamGraphEmbryo::addAdapterFor(
     // could result in chains of adapters, which would be less than optimal
     
     // Get available dataflow from last stream of group
-    SharedExecStream pLastStream = pGraph->findLastStream(name);
+    SharedExecStream pLastStream = pGraph->findLastStream(name, iOutput);
     ExecStreamBufProvision availableDataflow =
         pLastStream->getOutputBufProvision();
     assert(availableDataflow != BUFPROV_NONE);
 
+    // Generate a name.
+    std::ostringstream oss;
+    oss << pLastStream->getName()
+        << "#"
+        << (pGraph->getOutputCount(pLastStream->getStreamId()) - 1)
+        << ".provisioner";
+    std::string adapterName = oss.str();
+
     // If necessary, create an adapter based on the last stream
-    std::string adapterName = pLastStream->getName() + ".provisioner";
     switch (requiredDataflow) {
     case BUFPROV_CONSUMER:
         if (availableDataflow == BUFPROV_PRODUCER) {
             ExecStreamEmbryo embryo;
             pScheduler->createCopyProvisionAdapter(embryo);
-            initializeAdapter(embryo, name, adapterName);
+            initializeAdapter(embryo, name, iOutput, adapterName);
             return embryo.getStream();
         }
         break;
@@ -81,7 +96,7 @@ SharedExecStream ExecStreamGraphEmbryo::addAdapterFor(
         if (availableDataflow == BUFPROV_CONSUMER) {
             ExecStreamEmbryo embryo;
             pScheduler->createBufferProvisionAdapter(embryo);
-            initializeAdapter(embryo, name, adapterName);
+            initializeAdapter(embryo, name, iOutput, adapterName);
             return embryo.getStream();
         }
         break;
@@ -94,12 +109,14 @@ SharedExecStream ExecStreamGraphEmbryo::addAdapterFor(
 void ExecStreamGraphEmbryo::initializeAdapter(
     ExecStreamEmbryo &embryo,
     std::string const &streamName,
+    uint iOutput,
     std::string const &adapterName)
 {
     initStreamParams(*(embryo.getParams()));
     embryo.getStream()->setName(adapterName);
     saveStreamEmbryo(embryo);
-    pGraph->interposeStream(streamName, embryo.getStream()->getStreamId());
+    pGraph->interposeStream(
+        streamName, iOutput, embryo.getStream()->getStreamId());
 }
 
 void ExecStreamGraphEmbryo::saveStreamEmbryo(ExecStreamEmbryo &embryo)
@@ -120,16 +137,19 @@ void ExecStreamGraphEmbryo::addDataflow(
     const std::string &source,
     const std::string &target)
 {
-    SharedExecStream pStream = 
+    SharedExecStream pSourceStream = 
+        pGraph->findStream(source);
+    SharedExecStream pTargetStream = 
         pGraph->findStream(target);
     ExecStreamBufProvision requiredDataflow =
-        pStream->getInputBufProvision();
-    addAdapterFor(source, requiredDataflow);
+        pTargetStream->getInputBufProvision();
+    uint iOutput = pGraph->getOutputCount(pSourceStream->getStreamId());
+    addAdapterFor(source, iOutput, requiredDataflow);
     SharedExecStream pInput = 
-        pGraph->findLastStream(source);
+        pGraph->findLastStream(source, iOutput);
     pGraph->addDataflow(
         pInput->getStreamId(),
-        pStream->getStreamId());
+        pTargetStream->getStreamId());
 }
 
 void ExecStreamGraphEmbryo::initStreamParams(ExecStreamParams &params)
@@ -185,10 +205,22 @@ void ExecStreamGraphEmbryo::prepareGraph(
         // Give streams a source name with an XO prefix so that users can 
         // choose to trace XOs as a group
         std::string traceName = tracePrefix + name;
+        ExecStreamId streamId = embryo.getStream()->getStreamId();
         embryo.getStream()->initTraceSource(
             pTraceTarget,
             traceName);
         embryo.prepareStream();
+
+        // Check that stream remembered to initialize its outputs.
+        uint outputCount = pGraph->getOutputCount(streamId);
+        for (uint i = 0; i < outputCount; ++i) {
+            SharedExecStreamBufAccessor outAccessor = 
+                pGraph->getStreamOutputAccessor(streamId, i);
+            if (outAccessor->getTupleDesc().empty()) {
+                permFail("Forgot to initialize output #" << i << "of stream '"
+                         << traceName << "'");
+            }
+        }
     }
 
     pScheduler->addGraph(pGraph);
