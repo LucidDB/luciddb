@@ -527,34 +527,6 @@ public class FarragoRepos extends FarragoMetadataFactory
         mdrRepository.endTrans(rollback);
     }
 
-    public ArrayList getAllNamesOfType(
-        Collection collection,
-        Class type)
-    {
-        Iterator iter = collection.iterator();
-        ArrayList a = new ArrayList();
-        while (iter.hasNext()) {
-            CwmModelElement element = (CwmModelElement) iter.next();
-            if (type.isInstance(element)) {
-                a.add(element.getName());
-            }
-        }
-        return a;
-    }
-            
-
-    public ArrayList getAllSchemas(
-        CwmCatalog catalog)
-    {
-        return getAllNamesOfType(catalog.getOwnedElement(), CwmSchema.class);
-    }
-
-    public ArrayList getAllTables(
-        CwmNamespace schema)
-    {
-        return getAllNamesOfType(schema.getOwnedElement(), CwmTable.class);
-    }
-    
     private void initCatalog()
     {
         createSystemCatalogs();

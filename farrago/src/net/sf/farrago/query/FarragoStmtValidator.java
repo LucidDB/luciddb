@@ -423,51 +423,6 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
             parser.getCurrentPosition().toString());
     }
 
-    public ArrayList getAllSchemas() {
-        return getAllSchemas(sessionVariables.catalogName);
-    }
-
-    public ArrayList getAllSchemas(String catalogName) {
-        CwmCatalog catalog = repos.getCatalog(catalogName);
-        if (catalog == null) {
-            // TODO:  throw ValidatorUnknownObject for catalog
-            return null;
-        }
-        else {
-            return repos.getAllSchemas(catalog);
-        }
-    }
-
-    public ArrayList getAllTables() {
-        if (sessionVariables.schemaName == null) {
-            return null;
-        }
-        return getAllTables(sessionVariables.catalogName, 
-            sessionVariables.schemaName);
-    }
-
-    public ArrayList getAllTables(String schemaName) {
-        return getAllTables(sessionVariables.catalogName, schemaName);
-    }
-
-    public ArrayList getAllTables(String catalogName, String schemaName) {
-        CwmCatalog catalog = repos.getCatalog(catalogName);
-        if (catalog == null) {
-            // TODO:  throw ValidatorUnknownObject for catalog
-            return null;
-        }
-        //CwmSchema schema = repos.getSchema(catalog, schemaName);
-        CwmSchema schema = FarragoCatalogUtil.getSchemaByName(
-            catalog, schemaName);
-        if (schema == null) {
-            // TODO:  throw ValidatorUnknownObject for schema
-            return null;
-        }
-        else {
-            return repos.getAllTables(schema);
-        }
-    }
-
     // implement FarragoSessionStmtValidator
     public FarragoSessionResolvedObject resolveSchemaObjectName(
         String [] names)

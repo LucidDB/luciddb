@@ -59,11 +59,6 @@ public class SqlValidator
     //~ Instance fields -------------------------------------------------------
 
     public final SqlOperatorTable opTab;
-
-    public HashMap selectItemChoices = new HashMap();
-
-    private final String dummyToken = "DUMMY";
-
     private final CatalogReader catalogReader;
 
     /**
@@ -249,36 +244,7 @@ public class SqlValidator
         Scope scope = new EmptyScope();
         return validateScopedExpression(topNode, scope);
     }
-   
-    public ArrayList lookupHints(SqlNode topNode, ParserPosition pp)
-    {
-        Scope scope = new EmptyScope();
-        Util.pre(outermostNode == null, "outermostNode == null");
-        try {
-            outermostNode = performUnconditionalRewrites(topNode);
-            if (tracer.isLoggable(Level.FINER)) {
-                tracer.finer("After unconditional rewrite: " +
-                    outermostNode.toString());
-            }
-            if (outermostNode.getKind().isA(SqlKind.TopLevel)) {
-                registerQuery(scope, null, outermostNode, null);
-            }
-            lookupQueryHints(outermostNode);
-            if (!outermostNode.getKind().isA(SqlKind.TopLevel)) {
-                // force type derivation so that we can provide it to the
-                // caller later without needing the scope
-                deriveType(scope, outermostNode);
-            }
-            if (tracer.isLoggable(Level.FINER)) {
-                tracer.finer("After validation: " + outermostNode.toString());
-            }
-            ArrayList result = (ArrayList) selectItemChoices.get(pp.toString());
-            return result;
-        } finally {
-            outermostNode = null;
-        }
-    }
-
+    
     /**
      * Validates an expression tree. You can call this method multiple times,
      * but not reentrantly.
@@ -382,15 +348,6 @@ public class SqlValidator
     protected void validateNamespace(final Namespace namespace)
     {
         namespace.validate();
-    }
-
-    public void lookupQueryHints(SqlNode node)
-    {
-        final Namespace namespace = getNamespace(node);
-        if (namespace == null) {
-            throw Util.newInternal("Not a query: " + node);
-        }
-        namespace.lookupHints();
     }
 
     /**
@@ -1580,98 +1537,6 @@ public class SqlValidator
         }
     }
 
-    private void lookupFromHints(
-        SqlNode node,
-        RelDataType targetRowType,
-        Scope scope)
-    {
-        switch (node.getKind().getOrdinal()) {
-        case SqlKind.AsORDINAL:
-            lookupFromHints(((SqlCall) node).getOperands()[0], targetRowType, scope);
-            return;
-        case SqlKind.ValuesORDINAL:
-            // no-op : not supporting completion hints for value clause yet
-            return;
-        case SqlKind.JoinORDINAL:
-            lookupJoinHints((SqlJoin) node, scope);
-            return;
-        default:
-            final Namespace namespace2 = getNamespace(node);
-            assert namespace2 != null : node;
-
-            HashMap fromChoices = namespace2.findCatalogOptions();
-            if (fromChoices != null)
-                selectItemChoices.putAll(fromChoices);
-            namespace2.lookupHints();
-        }
-    }
-    
-    protected void lookupJoinHints(SqlJoin join, Scope scope)
-    {
-        SqlNode left = join.getLeft();
-        SqlNode right = join.getRight();
-        SqlNode condition = join.getCondition();
-        boolean natural = join.isNatural();
-        SqlJoinOperator.JoinType joinType = join.getJoinType();
-        SqlJoinOperator.ConditionType conditionType =
-            join.getConditionType();
-        lookupFromHints(left, unknownType, scope);
-        lookupFromHints(right, unknownType, scope);
-
-        // Validate condition.
-        final Scope joinScope = (Scope) scopes.get(join);
-        switch (conditionType.ordinal) {
-        case SqlJoinOperator.ConditionType.None_ORDINAL:
-            Util.permAssert(condition == null, "condition == null");
-            break;
-        case SqlJoinOperator.ConditionType.On_ORDINAL:
-            Util.permAssert(condition != null, "condition != null");
-            HashMap joinItemChoices = condition.lookupHints(this, joinScope);
-            if (joinItemChoices != null)
-                selectItemChoices.putAll(joinItemChoices);
-            break;
-        case SqlJoinOperator.ConditionType.Using_ORDINAL:
-            SqlNodeList list = (SqlNodeList) condition;
-            // Parser ensures that using clause is not empty.
-            Util.permAssert(list.size() > 0, "Empty USING clause");
-            // no-op. not supporting hints lookup at using clause yet
-            break;
-        default:
-            throw conditionType.unexpected();
-        }
-    }
-
-    public void lookupSelectHints(SqlSelect select,
-        RelDataType targetRowType)
-    {
-        final SelectNamespace ns = (SelectNamespace) getNamespace(select);
-        assert ns.rowType == null;
-
-        final SqlNodeList selectItems = select.getSelectList();
-        RelDataType fromType = unknownType;
-        if (selectItems.size() == 1) {
-            final SqlNode selectItem = selectItems.get(0);
-            if (selectItem instanceof SqlIdentifier) {
-                SqlIdentifier id = (SqlIdentifier) selectItem;
-                if (id.isStar() && id.names.length == 1) {
-                    // Special case: for INSERT ... VALUES(?,?), the SQL standard
-                    // says we're supposed to propagate the target types down.  So
-                    // iff the select list is an unqualified star (as it will be
-                    // after an INSERT ... VALUES has been expanded), then
-                    // propagate.
-                    fromType = targetRowType;
-                }
-            }
-        }
-        final Scope fromScope = getScope(select, SqlSelect.FROM_OPERAND);
-        lookupFromHints(select.getFrom(), fromType, fromScope);
-        lookupWhereHints(select);
-        lookupGroupHints(select);
-        lookupHavingHints(select);
-        lookupSelectListHints(selectItems, select, targetRowType);
-        lookupOrderHints(select);
-    }
-
     protected void validateOver(SqlCall call, Scope scope)
     {
         throw Util.newInternal("OVER unexpected in this context");
@@ -1802,20 +1667,6 @@ public class SqlValidator
         final Scope fromScope = getScope(select, SqlSelect.FROM_OPERAND);
         validateFrom(select.getFrom(), fromType, fromScope);
 
-        Iterator i = namespaces.values().iterator();
-        while (i.hasNext()) {
-            Namespace nspace = (Namespace)i.next();
-            Table table = nspace.getTable();
-            if (table != null) {
-                //System.out.println("Table names:");
-                String [] qnames = table.getQualifiedName();
-                if (qnames != null) {
-//                    for (int j = 0; j < qnames.length; j++)
-                 //       System.out.println(qnames[j]);
-                }
-            }
-        }
-
         validateWhereClause(select);
         validateGroupClause(select);
         validateHavingClause(select);
@@ -1847,22 +1698,6 @@ public class SqlValidator
         // validateExpression(windowList);
     }
 
-    private void lookupOrderHints(SqlSelect select)
-    {
-        SqlNodeList orderList = select.getOrderList();
-        if (orderList == null) {
-            return;
-        }
-        final Scope orderScope = getScope(select, SqlSelect.ORDER_OPERAND);
-        Util.permAssert(orderScope != null, "orderScope != null");
-
-        Iterator iter = orderList.getList().iterator();
-        while (iter.hasNext()) {
-            final SqlNode child = (SqlNode) iter.next();
-            findIdentifierOptions(child, orderScope, selectItemChoices);
-        }
-    }
-
     private void validateOrderList(SqlSelect select)
     {
         // ORDER BY is validated in a scope where aliases in the SELECT clause
@@ -1883,21 +1718,6 @@ public class SqlValidator
         orderList.validate(this, orderScope);
     }
 
-    private void lookupGroupHints(SqlSelect select)
-    {
-        SqlNodeList group = select.getGroup();
-        if (group == null) {
-            return;
-        }
-        final Scope groupScope = getScope(select, SqlSelect.GROUP_OPERAND);
-        
-        Iterator iter = group.getList().iterator();
-        while (iter.hasNext()) {
-            final SqlNode child = (SqlNode) iter.next();
-            findIdentifierOptions(child, groupScope, selectItemChoices);
-        }
-    }
-
     /**
      * Validates the GROUP BY clause of a SELECT statement. This method is
      * called even if no GROUP BY clause is present.
@@ -1911,18 +1731,6 @@ public class SqlValidator
         final Scope groupScope = getScope(select, SqlSelect.GROUP_OPERAND);
         inferUnknownTypes(unknownType, groupScope, group);
         group.validate(this, groupScope);
-    }
-
-    private void lookupWhereHints(SqlSelect select)
-    {
-        final SqlNode where = select.getWhere();
-        if (where == null) {
-            return;
-        }
-        final Scope whereScope = getScope(select, SqlSelect.WHERE_OPERAND);
-        HashMap whereItemChoices = where.lookupHints(this, whereScope);
-        if (whereItemChoices != null)
-            selectItemChoices.putAll(whereItemChoices);
     }
 
     private void validateWhereClause(SqlSelect select)
@@ -1949,17 +1757,6 @@ public class SqlValidator
                 EigenbaseResource.instance().newWhereMustBeBoolean());
         }
     }
-    
-    private void lookupHavingHints(SqlSelect select) {
-        final SqlNode having = select.getHaving();
-        if (having == null) {
-            return;
-        }
-        final Scope havingScope = getScope(select, SqlSelect.HAVING_OPERAND);
-        HashMap havingItemChoices = having.lookupHints(this, havingScope);
-        if (havingItemChoices != null)
-            selectItemChoices.putAll(havingItemChoices);
-    }
 
     private void validateHavingClause(SqlSelect select) {
         // HAVING is validated in the scope after groups have been created.
@@ -1983,66 +1780,6 @@ public class SqlValidator
         }
     }
 
-    public void findIdentifierOptions(SqlNode node, Scope scope, 
-        HashMap itemChoices) {
-        if (node instanceof SqlIdentifier) {
-        /*
-            System.out.println("At query line: " + 
-                node.getParserPosition().getBeginLine() + 
-                ", position: " + node.getParserPosition().getBeginColumn());
-                */
-            String [] itemNames = ((SqlIdentifier)node).names;
-            switch (itemNames.length) {
-            case 1:
-            {
-                if (!itemChoices.containsKey(null)) {
-                    ArrayList a = 
-                        ((SqlIdentifier)node).getItemChoices(this, scope);
-                    if (itemNames[0].equals(dummyToken)) {
-                        System.out.println("select list has dummy");
-                        System.out.println(a);
-                        ArrayList b = 
-                            scope.findAllTableNames(itemNames, node);
-                        System.out.println("but it can also be a table ref of the following choices:");
-                        System.out.println(b);
-                        a.addAll(b);
-                    }
-                    itemChoices.put(node.getParserPosition().toString(), a);
-                }
-                break;
-            }
-            case 2:
-            {
-                if (!itemChoices.containsKey(itemNames[0])) {
-                    ArrayList a =
-                        ((SqlIdentifier)node).getItemChoices(
-                            this, scope);
-                    if (itemNames[1].equals(dummyToken)) {
-                        System.out.println("select list has " + 
-                            itemNames[0] + ".dummy");
-                        System.out.println(a);
-                    }
-                    int len = itemNames[0].length();
-                    itemChoices.put(new ParserPosition(
-                        node.getParserPosition().getBeginLine(),
-                        node.getParserPosition().getBeginColumn()
-                            + len + 1).toString(), a);
-                }
-                break;
-            }
-            }
-        }
-    }
-
-    private void lookupSelectListHints(final SqlNodeList selectItems,
-        SqlSelect select, RelDataType targetRowType)
-    {
-        final Scope selectScope = getScope(select, SqlSelect.SELECT_OPERAND);
-        for (int i = 0; i < selectItems.size(); i++) {
-            SqlNode selectItem = selectItems.get(i);
-            findIdentifierOptions(selectItem, selectScope, selectItemChoices);
-        }
-    }
     private RelDataType validateSelectList(final SqlNodeList selectItems,
         SqlSelect select, RelDataType targetRowType)
     {
@@ -2447,11 +2184,6 @@ public class SqlValidator
          * found.
          */
         Table getTable(String [] names);
-        ArrayList getAllSchemaNames();
-        ArrayList getAllSchemaNames(String catalogName);
-        ArrayList getAllTableNames(String schemaName);
-        ArrayList getAllTableNames(String catalogName, String schemaName);
-        ArrayList getAllTables();
     }
 
     /**
@@ -2514,11 +2246,6 @@ public class SqlValidator
         RelDataType getRowType();
 
         /**
-         * determine if this namespace is even valid (it may be dummy)
-         */
-        boolean isValid();
-
-        /**
          * Validates this scope.
          *
          * <p>If the scope has already been validated, does nothing.</p>
@@ -2527,10 +2254,6 @@ public class SqlValidator
          * calling this method directly.</p>
          */
         void validate();
-
-        void lookupHints();
-    
-        HashMap findCatalogOptions();
 
         SqlNode getNode();
 
@@ -2576,10 +2299,6 @@ public class SqlValidator
         AbstractNamespace() {
         }
 
-        public HashMap findCatalogOptions() { return null;}
-
-        public void lookupHints() {}
-
         public void validate() {
             switch (status.ordinal) {
             case Status.Unvalidated_ordinal:
@@ -2613,7 +2332,6 @@ public class SqlValidator
          * @post return != null
          */
         protected abstract RelDataType validateImpl();
-        protected boolean isValidImpl() { return true; }
 
         public RelDataType getRowType() {
             if (rowType == null) {
@@ -2621,13 +2339,6 @@ public class SqlValidator
                 Util.permAssert(rowType != null, "validate must set rowType");
             }
             return rowType;
-        }
-
-        public boolean isValid() {
-            if (rowType == null) {
-                return isValidImpl();
-            }
-            return true;
         }
 
         public Table getTable() {
@@ -2706,15 +2417,6 @@ public class SqlValidator
          * @return Table alias
          */
         String findQualifyingTableName(String columnName, SqlNode ctx);
-
-        /**
-         * find all valid columns for a given table
-         */
-        ArrayList findAllColumnNames(final String [] names);
-        /**
-         * find all valid tables for a given schema
-         */
-        ArrayList findAllTableNames(final String [] names, SqlNode ctx);
 
         /**
          * Converts an identifier into a fully-qualified identifier. For
@@ -2811,17 +2513,6 @@ public class SqlValidator
             return null;
         }
 
-        public ArrayList findAllColumnNames(final String [] names)
-        {
-            return null;
-        }
-
-        public ArrayList findAllTableNames(final String [] names,
-            SqlNode ctx)
-        {
-            return null;
-        }
-
         public String findQualifyingTableName(String columnName,
             SqlNode ctx)
         {
@@ -2883,71 +2574,6 @@ public class SqlValidator
                 }
                 return null;
             }
-        }
-
-        // findAllTableNamesInScope
-        public ArrayList findAllTableNames(final String [] names, 
-            SqlNode ctx) {
-            
-            ArrayList tableNames = new ArrayList();
-            switch (names.length) {
-            case 1:
-                {
-                    for (int i = 0; i < children.size(); i++) {
-                        SqlValidator.Namespace ns = 
-                            (SqlValidator.Namespace) children.get(i);
-                        String tableName = getTableName(ns);
-                        if (tableName != null)
-                            tableNames.add(tableName);
-                    }
-                    ArrayList parentResult = 
-                        parent.findAllTableNames(names,ctx);
-                    if (parentResult != null) {
-                        tableNames.addAll(parentResult);
-                    }
-                    break;
-                }
-            case 2:
-                {
-                    System.out.println("looking for table name in scope when table has been specified is not valid");
-                    break;
-                }
-            default:
-            }
-            return tableNames;
-        }
-            
-
-        // findAllColumnNamesInScope
-        public ArrayList findAllColumnNames(final String [] names) {
-
-            ArrayList colNames = new ArrayList();
-            switch (names.length) {
-            case 1:
-                {
-                    for (int i = 0; i < children.size(); i++) {
-                        SqlValidator.Namespace ns = 
-                            (SqlValidator.Namespace) children.get(i);
-                        addColumnNames(ns, colNames);
-                    }
-                    ArrayList parentResult = parent.findAllColumnNames(names);
-                    if (parentResult != null) {
-                        colNames.addAll(parentResult);
-                    }
-                    break;
-                }
-            case 2:
-                {
-                    final Namespace fromNs = 
-                        resolve(names[0], null, null);
-                    if (fromNs != null) {
-                        addColumnNames(fromNs, colNames);
-                    }
-                    break;
-                }
-            default:
-            }
-            return colNames;
         }
 
         public String findQualifyingTableName(final String columnName,
@@ -3146,17 +2772,6 @@ public class SqlValidator
             validateSelect(select, unknownType);
             return rowType;
         }
-
-        public boolean isValid() {
-            if (rowType == null) {
-                return false;
-            }
-            return true;
-        }
-
-        public void lookupHints() {
-            lookupSelectHints(select, unknownType);
-        }
     }
 
     /**
@@ -3216,16 +2831,6 @@ public class SqlValidator
             public void validate() {
             }
 
-            public void lookupHints() {
-            }
-
-            public HashMap findCatalogOptions() {
-                return null;
-            }
-
-            public boolean isValid() {
-                return true;
-            }
             public SqlNode getNode() {
                 return null;
             }
@@ -3343,56 +2948,6 @@ public class SqlValidator
             this.id = id;
         }
 
-        public HashMap findCatalogOptions() 
-        {
-            HashMap hmap = new HashMap();
-            System.out.println("At query line: " + 
-                id.getParserPosition().getBeginLine() + 
-                ", position: " + id.getParserPosition().getBeginColumn());
-            if (id.names.length == 2) {
-               if (id.names[0].equals(dummyToken)) {
-                   System.out.println("dummy schema name");
-                   ArrayList result = catalogReader.getAllSchemaNames();
-                   if (result != null) {
-                       System.out.println(result);
-                       hmap.put(id.getParserPosition().toString(), result);
-                   }
-               }
-               else {
-                   if (id.names[1].equals(dummyToken)) {
-                       System.out.println("dummy table name");
-                       ArrayList result = catalogReader.getAllTableNames(id.names[0]);
-                       if (result != null) {
-                           System.out.println(result);
-                           hmap.put(new ParserPosition(
-                               id.getParserPosition().getBeginLine(),
-                               id.getParserPosition().getBeginColumn()
-                               + id.names[0].length() + 1).toString(), result);
-                       }
-                   }
-               }
-            }
-            if (id.names.length == 1) {
-               if (id.names[0].equals(dummyToken)) {
-                   System.out.println("dummy schema name");
-                   ArrayList schemaResult = catalogReader.getAllSchemaNames();
-                   System.out.println(schemaResult);
-                   System.out.println("dummy table name w/o schema");
-                   ArrayList tableResult = catalogReader.getAllTables();
-                   System.out.println(tableResult);
-                   ArrayList result = new ArrayList();
-                   if (schemaResult != null) {
-                       result.addAll(schemaResult);
-                   }
-                   if (tableResult != null) {
-                       result.addAll(tableResult);
-                   }
-                   hmap.put(id.getParserPosition().toString(), result);
-               }
-            }
-            return hmap;
-        }
-
         public RelDataType validateImpl()
         {
             table = catalogReader.getTable(id.names);
@@ -3409,17 +2964,6 @@ public class SqlValidator
                 }
             }
             return table.getRowType();
-        }
-
-        protected boolean isValidImpl()
-        {
-            table = catalogReader.getTable(id.names);
-            if (table == null) {
-                return false;
-            }
-            else {
-                return true;
-            }
         }
 
         public SqlNode getNode()
@@ -3652,54 +3196,6 @@ public class SqlValidator
             return parent.resolve(name, ancestorOut, offsetOut);
         }
 
-        protected String getTableName(SqlValidator.Namespace ns) {
-            if (!ns.isValid()) return null;
-            String [] qnames = ns.getTable().getQualifiedName();
-            String fullname = "";
-            if (qnames != null) {
-                for (int j = 0; j < qnames.length; j++) {
-                    fullname += qnames[j];
-                    if (j < qnames.length-1)
-                        fullname += ".";
-                }
-            }
-            return fullname;
-        }
-
-        protected void addColumnNames(SqlValidator.Namespace ns,
-                                    ArrayList colNames) {
-            // we cannot have this first statement if 
-            // select t.dummy from (select 1 as x, 2 as y from sales.emps) as t where t.x=1" 
-            // is going to work.
-            // because we still have to get x,y from the subquery namespace
-            // even though it's not validated yet
-            // but there's another case this wont' work: that is when 
-            // "select dummy from sales.dummy a".  when trying to resolve the 
-            // first dummy, it'll try to validate the from clause 
-            // but we won't be able to because it's not valid and 
-            // ns.getRowType() will fail.
-            // so the difference between the 2 cases are whether the from clause
-            // has been validated or whether it is valid at all
-            if (!ns.isValid()) return;
-            final RelDataType rowType = ns.getRowType();
-            final RelDataTypeField [] fields = rowType.getFields();
-            for (int i = 0; i < fields.length; i++) {
-                RelDataTypeField field = fields[i];
-                colNames.add(field.getName());
-            }
-        }
-
-        public ArrayList findAllColumnNames(final String [] names)
-        {
-            return parent.findAllColumnNames(names);
-        }
-
-        public ArrayList findAllTableNames(final String [] names, 
-                                            SqlNode ctx)
-        {
-            return parent.findAllTableNames(names, ctx);
-        }
-
         public String findQualifyingTableName(String columnName, SqlNode ctx)
         {
             return parent.findQualifyingTableName(columnName, ctx);
@@ -3799,17 +3295,6 @@ public class SqlValidator
 
         public SqlNode getNode() {
             return orderList;
-        }
-
-        public ArrayList findAllColumnNames(final String [] names) {
-            final Namespace selectNs = getNamespace(select);
-            ArrayList colNames = new ArrayList();
-            addColumnNames(selectNs, colNames);
-            ArrayList parentResult = super.findAllColumnNames(names);
-            if (parentResult != null) {
-                colNames.addAll(parentResult);
-            }
-            return colNames;
         }
 
         public SqlIdentifier fullyQualify(SqlIdentifier identifier) {

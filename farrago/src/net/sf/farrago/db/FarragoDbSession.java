@@ -40,7 +40,6 @@ import net.sf.farrago.util.*;
 import org.eigenbase.oj.rex.*;
 import org.eigenbase.oj.stmt.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
@@ -568,34 +567,6 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         // default:  no extensions
     }
     
-    public ArrayList getCompletionHints(
-        String sql, ParserPosition pp)
-    {
-        FarragoSessionStmtValidator stmtValidator = newStmtValidator();
-        FarragoSessionDdlValidator ddlValidator =
-            newDdlValidator(stmtValidator);
-        FarragoSessionParser parser = stmtValidator.getParser();
-        Object parsedObj = parser.parseSqlText(ddlValidator, sql, true);
-        ArrayList result = null;
-
-        try {
-            if (parsedObj instanceof SqlNode) {
-                SqlValidator validator = new SqlValidator(
-                    getSqlOperatorTable(),
-                    new MyCatalogReader(stmtValidator),
-                    stmtValidator.getTypeFactory());
-                SqlNode sqlNode = (SqlNode) parsedObj;
-                result = validator.lookupHints(sqlNode, pp);
-            }
-        }
-        finally {
-            if (stmtValidator != null) {
-                stmtValidator.closeAllocation();
-            }
-        }
-        return result;
-    }
-
     FarragoSessionExecutableStmt prepare(
         String sql,
         FarragoAllocationOwner owner,
@@ -813,112 +784,6 @@ public class FarragoDbSession extends FarragoCompoundAllocation
             database.requestCheckpoint(false, false);
         }
     }
-
-    private class MyCatalogReader implements SqlValidator.CatalogReader
-    {
-        FarragoSessionStmtValidator stmtValidator;
-        
-        public MyCatalogReader(FarragoSessionStmtValidator stmtValidator) {
-            this.stmtValidator = stmtValidator;
-        }
-
-        public ArrayList getAllSchemaNames() 
-        {
-            return stmtValidator.getAllSchemas();
-        } 
-
-        public ArrayList getAllSchemaNames(String catalogName) 
-        {
-            return stmtValidator.getAllSchemas(catalogName);
-        } 
-
-        public ArrayList getAllTables()
-        {
-            return stmtValidator.getAllTables();
-        }
-
-        public ArrayList getAllTableNames(String schemaName) 
-        {
-            return stmtValidator.getAllTables(schemaName);
-        }
-
-        public ArrayList getAllTableNames(String catalogName, String schemaName) 
-        {
-            return stmtValidator.getAllTables(catalogName, schemaName);
-        }
-
-        public SqlValidator.Table getTable(final String [] names)
-        {
-            FarragoSessionResolvedObject resolved =
-                stmtValidator.resolveSchemaObjectName(names);
-
-            if (resolved == null) {
-                return null;
-            }
-
-            if (resolved.object == null) {
-            //     return getForeignTableFromNamespace(resolved);
-                return null;
-            }
-
-            if (!(resolved.object instanceof CwmNamedColumnSet)) {
-                // TODO:  give a more helpful error
-                // in case a non-relational object is referenced
-                return null;
-            }
-
-            CwmNamedColumnSet table = (CwmNamedColumnSet) resolved.object;
-
-            if (table.getVisibility() == null) {
-            // Oops, we're processing a compound CREATE SCHEMA statement, and
-            // this referenced table hasn't been validated yet.  Throw a
-            // special exception to terminate processing of the current
-            // dependent view definition, and we'll try again later once the
-            // table has been validated.
-            //throw new FarragoUnvalidatedDependencyException();
-                return null;
-            }
-
-            RelDataType rowType =
-                stmtValidator.getTypeFactory().createColumnSetType(table);
-            return new ValidatorTable(
-                resolved.getQualifiedName(),
-                rowType);
-        }
-    }
-    
-    /**
-     * Private implementation for SqlValidator.Table.
-     */
-    private static class ValidatorTable implements SqlValidator.Table
-    {
-        private final String [] qualifiedName;
-        private final RelDataType rowType;
-
-        /**
-         * Creates a new ValidatorTable object.
-         */
-        ValidatorTable(
-            String [] qualifiedName,
-            RelDataType rowType)
-        {
-            this.qualifiedName = qualifiedName;
-            this.rowType = rowType;
-        }
-
-        // implement SqlValidator.Table
-        public String [] getQualifiedName()
-        {
-            return qualifiedName;
-        }
-
-        // implement SqlValidator.Table
-        public RelDataType getRowType()
-        {
-            return rowType;
-        }
-    }
-
 }
 
 

@@ -19,14 +19,12 @@
 package net.sf.farrago.session;
 
 import java.sql.DatabaseMetaData;
-import java.util.ArrayList;
 
 import net.sf.farrago.catalog.FarragoRepos;
 import net.sf.farrago.util.FarragoAllocation;
 
 import org.eigenbase.oj.rex.OJRexImplementorTable;
 import org.eigenbase.sql.SqlOperatorTable;
-import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 
@@ -256,8 +254,6 @@ public interface FarragoSession extends FarragoAllocation
      * @param hStreamGraph native handle to unprepared stream graph
      */
     public void registerStreamFactories(long hStreamGraph);
-
-    public ArrayList getCompletionHints(String sql, ParserPosition pp);
 }
 
 

@@ -26,12 +26,9 @@ import org.objectweb.rmijdbc.RJConnection;
 import org.objectweb.rmijdbc.RJConnectionInterface;
 import org.objectweb.rmijdbc.RJDriverInterface;
 
-import org.eigenbase.sql.parser.ParserPosition;
-
 import java.rmi.RemoteException;
 import java.sql.SQLException;
 import java.util.Properties;
-import java.util.ArrayList;
 
 /**
  * JDBC connection to Farrago across an RMI transport.
@@ -70,10 +67,6 @@ class FarragoRJConnection extends RJConnection
             throw new SQLException(e.getMessage());
         }
     }
-
-    public ArrayList getCompletionHints(String sql, ParserPosition pp)
-        throws SQLException
-    { throw new SQLException("Unsupported Operation"); }
 
     public FarragoMedDataWrapperInfo getWrapper(
         String mofId,
