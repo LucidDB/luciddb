@@ -127,6 +127,11 @@ class ResultSetToFarragoIteratorConverter extends ConverterRel
                     castResultSet,
                     methodName,
                     colPosExpList);
+            } else if (type.isCharType()) {
+                rhsExp = new MethodCall(
+                    castResultSet,
+                    "getString",
+                    colPosExpList);
             } else {
                 rhsExp = new MethodCall(
                     castResultSet,

@@ -304,6 +304,7 @@ require version '${required.ant.version}'."/>
     <pathelement location="${ant.dir}/lib/xercesImpl.jar"/>
     <pathelement location="${javahome.dir}/lib/tools.jar"/>
     <pathelement location="${rmijdbc.dir}/dist/lib/RmiJdbc.jar"/>
+    <pathelement location="${csvjdbc.dir}/csvjdbc.jar"/>
   </path>
   <property name="farrago.3p.classpath" refid="farrago.3p.classpath"/>
 

@@ -1,0 +1,18 @@
+-- $Id$
+-- Setup SQL/MED data access to CSV files generated in this directory
+
+-- create a private wrapper for jdbc (don't use the standard jdbc wrapper)
+create foreign data wrapper test_jdbc
+library 'plugin/FarragoMedJdbc.jar'
+language java;
+
+-- create a server for this directory
+create server csv_server
+foreign data wrapper test_jdbc
+options(
+    driver_class 'org.relique.jdbc.csv.CsvDriver',
+    url 'jdbc:relique:csv:testgen/FarragoSorterTest/data',
+    schema_name 'TESTDATA');
+
+-- create the schema which will hold foreign table definitions
+create schema sortertest;

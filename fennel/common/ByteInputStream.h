@@ -44,7 +44,7 @@ class ByteInputStream : virtual public ByteStream
      * End of buffer (one past last byte of data in buffer).
      */
     PConstBuffer pEndByte;
-    
+
 protected:
     explicit ByteInputStream();
 
@@ -161,6 +161,20 @@ public:
      * @param cb number of bytes backward to seek
      */
     void seekBackward(uint cb);
+
+    /**
+     * Create a marker which can later be used to reset this steam to its
+     * current position.
+     *
+     * How long this marker remains valid depends upon the implementation of
+     * the ByteInputStream.
+     */
+    inline ByteStreamMarker mark();
+
+    /**
+     * Reset stream to the position it was at when the marker was created.
+     */
+    inline void reset(ByteStreamMarker &marker);
 };
 
 inline uint ByteInputStream::getBytesAvailable() const
@@ -217,6 +231,23 @@ inline void ByteInputStream::setBuffer(
 inline void ByteInputStream::nullifyBuffer()
 {
     setBuffer(NULL,0);
+}
+
+inline ByteStreamMarker ByteInputStream::mark()
+{
+    return ByteStreamMarker(cbOffset);
+}
+
+inline void ByteInputStream::reset(ByteStreamMarker &marker)
+{
+    // you can only use a marker to move backwards
+    assert(marker.cbOffset <= cbOffset);
+    uint cb = cbOffset - marker.cbOffset;
+    if (cb == 0) {
+        // expedite common case where stream has not moved since marker
+        return;
+    }
+    seekBackward(cb);
 }
 
 FENNEL_END_NAMESPACE

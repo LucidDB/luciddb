@@ -520,7 +520,7 @@ void BasicColumnDefinition(CwmNamedColumnSet table,CwmColumn column) :
 
 CwmColumn ColumnDefinition(CwmTable table) :
 {
-    CwmColumn column;
+    FemStoredColumn column;
     SqlNode defaultClause;
 }
 {
@@ -543,6 +543,9 @@ CwmColumn ColumnDefinition(CwmTable table) :
         {
         }
     ( ColumnConstraint(table,column) )*
+        {
+        }
+    OptionalStorageOptions(column)
         {
         }
     {
@@ -1029,30 +1032,11 @@ void ForeignTableElementList(FemForeignTable table) :
 {
 }
 {
-    ForeignColumnDefinition(table)
+    ColumnDefinition(table)
     (
         <COMMA>
-        ForeignColumnDefinition(table)
+        ColumnDefinition(table)
     )*
-}
-
-FemStoredColumn ForeignColumnDefinition(FemForeignTable table) :
-{
-    FemStoredColumn column;
-}
-{
-    {
-        column = getCatalog().newFemStoredColumn();
-    }
-    BasicColumnDefinition(table,column)
-        {
-        }
-    OptionalStorageOptions(column)
-        {
-        }
-    {
-        return column;
-    }
 }
 
 void OptionalStorageOptions(FemElementWithStorageOptions element) :

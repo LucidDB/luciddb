@@ -62,6 +62,8 @@ class MedJdbcQueryRel extends JdbcQuery
         Variable connectionVariable =
             new Variable(OJStatement.connectionVariable);
 
+        String sql = columnSet.directory.normalizeQueryString(queryString);
+
         Expression allocExpression =
             new CastExpression(
                 OJClass.forClass(FarragoStatementAllocation.class),
@@ -71,7 +73,7 @@ class MedJdbcQueryRel extends JdbcQuery
                     new ExpressionList(
                         Literal.makeLiteral(
                             columnSet.directory.server.getServerMofId()),
-                        Literal.makeLiteral(queryString))));
+                        Literal.makeLiteral(sql))));
         return new MethodCall(
             allocExpression,
             "getResultSet",

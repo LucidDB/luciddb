@@ -91,9 +91,15 @@ public class ResultSetIterator implements Iterator
     private void moveToNext()
     {
         try {
+            if (resultSet == null) {
+                return;
+            }
             if (resultSet.next()) {
                 row = makeRow();
             } else {
+                // nullify resultSet since some ResultSet implementations don't
+                // like extra calls to next() after it returns false
+                resultSet = null;
                 row = null;
             }
         } catch (SQLException e) {

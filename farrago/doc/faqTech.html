@@ -42,12 +42,20 @@ which you are going to run Java.  When the Fennel JNI layer is loaded,
 you should see a message like "Waiting for debugger; pid=18454".
 Start gdb and tell it to attach to the process with the given pid.
 The process should be sleeping in method <code>JNI_OnLoad</code>; set
-whatever breakpoints you want and then issue the gdb continue command.
-Unfortunately, gdb receives many spurious signals when attached to the
-Java Virtual Machine (at least on Linux, even SIGSEGV!)  The only
-choices are to tell gdb to ignore them (e.g. with the command
-<code>handle SIGSEGV ignore</code>), or to manually continue past them
-each time (like if you want to track down a <b>real</b> segfault).
+whatever breakpoints you want and then issue the gdb continue command
+(see below).  Unfortunately, gdb receives many spurious signals when
+attached to the Java Virtual Machine (at least on Linux, even
+SIGSEGV!)  The only choices are to tell gdb to ignore them (e.g. with
+the command <code>handle SIGSEGV ignore</code>), or to manually
+continue past them each time (like if you want to track down a
+<b>real</b> segfault).
+
+<p>On some systems (e.g., Fedora Core 2, but it probably depends on
+the version of gdb), the gdb continue command will not cause the call
+to <code>sleep()</code> to end prematurely.  In this case, set
+<code>FENNEL_JNI_DEBUG=2</code> and use the gdb command <code>signal
+SIGHUP</code> or <code>signal 1</code> to end the call to
+<code>pause()</code> in <code>JNI_OnLoad</code>.
 
 <hr>
 

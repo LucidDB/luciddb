@@ -1,0 +1,27 @@
+<html>
+<head>
+<title>Package net.sf.farrago.test.regression</title>
+</head>
+<body>
+
+Contains Farrago regression tests.
+
+<hr>
+
+<h2>Farrago Regression Testing</h2>
+
+Whereas the Farrago <a
+href="../package-summary.html#package_description">unit test
+framework</a> is focused on low-level testing of specific components,
+regression tests provide more exhaustive coverage at the feature
+level.  However, the two frameworks share quite a bit of
+infrastructure.  Regression tests may be either SQL-based or
+Java-based; scripts for SQL-based tests should be created with their
+reference logs under the <code>//open/dev/farrago/regressionsql</code>
+directory.  {@link
+net.sf.farrago.test.regression.FarragoSqlRegressionTest} takes care of
+running these SQL scripts multiple times with various combinations of
+system parameter settings for coverage.
+
+</body>
+</html>

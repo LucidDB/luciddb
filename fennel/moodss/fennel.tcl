@@ -11,7 +11,7 @@ namespace eval fennel {
         indexColumns {0}
         switches { --file 1 }
     }
-    set file [open fennel.htm]
+    set file [open fennel.html]
     set data(helpText) [read $file]
     close $file
 

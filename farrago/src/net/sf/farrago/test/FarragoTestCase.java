@@ -226,6 +226,7 @@ public abstract class FarragoTestCase extends DiffTestCase
                 stmt.close();
                 stmt = null;
             }
+            connection.rollback();
         } finally {
             tracer.info("Leaving test case " + getName());
             super.tearDown();

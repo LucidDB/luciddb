@@ -26,6 +26,7 @@ import net.sf.farrago.type.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.resource.*;
 
+import net.sf.saffron.sql.*;
 import net.sf.saffron.core.*;
 import net.sf.saffron.util.*;
 import net.sf.saffron.rel.*;
@@ -35,6 +36,7 @@ import net.sf.saffron.rel.jdbc.*;
 
 import java.sql.*;
 import java.util.*;
+import java.lang.reflect.*;
 
 import javax.sql.*;
 
@@ -94,7 +96,30 @@ class MedJdbcDataServer extends MedAbstractDataServer
         } else {
             connection = DriverManager.getConnection(url,userName,password);
         }
-        databaseMetaData = connection.getMetaData();
+        try {
+            databaseMetaData = connection.getMetaData();
+        } catch (Exception ex) {
+            // driver can't even support getMetaData(); treat it
+            // as brain-damaged
+            databaseMetaData = (DatabaseMetaData) Proxy.newProxyInstance(
+                null,
+                new Class [] {DatabaseMetaData.class},
+                new StupidDatabaseMetaData());
+        }
+    }
+
+    public static class StupidDatabaseMetaData
+        extends SqlNode.DatabaseMetaDataInvocationHandler
+    {
+        public String getDatabaseProductName() throws SQLException
+        {
+            return "UNKNOWN";
+        }
+
+        public String getIdentifierQuoteString() throws SQLException
+        {
+            return "";
+        }
     }
 
     // implement FarragoMedDataServer

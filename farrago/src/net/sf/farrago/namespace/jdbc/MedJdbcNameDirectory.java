@@ -71,6 +71,8 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
         SqlStdOperatorTable opTab = SqlOperatorTable.std();
         if (server.schemaName != null) {
             assert(foreignName.length == 2);
+            // TODO jvs 11-June-2004: this should be a real error, not an
+            // assert
             assert(foreignName[0].equals(server.schemaName));
             foreignName = new String [] 
                 {
@@ -90,20 +92,33 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
 
         if (rowType == null) {
             String sql = select.toSqlString(dialect);
+            sql = normalizeQueryString(sql);
         
-            PreparedStatement ps =
-                server.connection.prepareStatement(sql);
+            PreparedStatement ps = null;
+            try {
+                ps = server.connection.prepareStatement(sql);
+            } catch (Exception ex) {
+                // Some drivers don't support prepareStatement
+            }
+            Statement stmt = null;
             ResultSet rs = null;
             try {
                 ResultSetMetaData md = null;
                 try {
-                    md = ps.getMetaData();
+                    if (ps != null) {
+                        md = ps.getMetaData();
+                    }
                 } catch (SQLException ex) {
                     // Some drivers can't return metadata before execution.
                     // Fall through to recovery below.
                 }
                 if (md == null) {
-                    rs = ps.executeQuery();
+                    if (ps != null) {
+                        rs = ps.executeQuery();
+                    } else {
+                        stmt = server.connection.createStatement();
+                        rs = stmt.executeQuery(sql);
+                    }
                     md = rs.getMetaData();
                 }
                 rowType = typeFactory.createResultSetType(md);
@@ -111,7 +126,12 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
                 if (rs != null) {
                     rs.close();
                 }
-                ps.close();
+                if (stmt != null) {
+                    stmt.close();
+                }
+                if (ps != null) {
+                    ps.close();
+                }
             }
         } else {
             // REVIEW:  should we at least check to see if the inferred
@@ -125,6 +145,13 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
             select,
             dialect,
             rowType);
+    }
+
+    String normalizeQueryString(String sql)
+    {
+        // some drivers don't like multi-line SQL, so convert all
+        // whitespace into plain spaces
+        return sql.replaceAll("\\s"," ");
     }
     
     // TODO:  lookupSubdirectory, getContentsAsCwm

@@ -45,9 +45,33 @@ public:
     FileSize getOffset() const;
 };
 
+/**
+ * ByteStreamMarker is a position within a ByteStream.
+ * It is created by ByteInputStream.mark
+ * and consumed by ByteInputStream.reset.
+ * To other classes it is opaque.
+ */
+class ByteStreamMarker
+{
+    friend class ByteInputStream;
+    /**
+     * Byte position in stream.
+     */
+    FileSize cbOffset;
+    /**
+     * Create a ByteStreamMarker (called by ByteInputStream.mark).
+     */
+    explicit inline ByteStreamMarker(FileSize cbOffset);            
+};
+
 inline FileSize ByteStream::getOffset() const
 {
     return cbOffset;
+}
+
+inline ByteStreamMarker::ByteStreamMarker(FileSize cbOffset)
+{
+    this->cbOffset = cbOffset;
 }
 
 FENNEL_END_NAMESPACE
