@@ -1008,6 +1008,7 @@ require version '${required.ant.version}'."/>
         </syspropertyset>
       </jvmargs>
     </antFork>
+    <delete file="${FarragoTrace.log}.lck"/>
   </target>
 
   <target name="forked_junit" depends="all,cleanTestLogs">
@@ -1050,6 +1051,7 @@ require version '${required.ant.version}'."/>
         </syspropertyset>
       </jvmargs>
     </antFork>
+    <delete file="${FarragoTrace.log}.lck"/>
   </target>
 
   <target name="forked_regressionWithoutBuild">

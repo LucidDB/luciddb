@@ -174,7 +174,6 @@
         <test todir="${testlog.dir}" if="junit.class"
           name="${junit.class}" />
       </junit>
-      <delete file="${FarragoTrace.log}.lck"/>
       <fail message="Test failure(s)" if="junit.failure"/>
     </sequential>
   </macrodef>
