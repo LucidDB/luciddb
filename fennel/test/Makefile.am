@@ -85,9 +85,9 @@ LDADD = -L$(top_builddir)/test -l$(TEST_LIB) \
 	-lfennel_xo \
 	-lfennel_db \
 	-lfennel_btree \
+	-lfennel_exec \
 	-lfennel_tuple \
 	-lfennel_txn \
-	-lfennel_exec \
 	-lfennel_segment \
 	-lfennel_cache \
 	-lfennel_device \

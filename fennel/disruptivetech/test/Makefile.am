@@ -62,6 +62,7 @@ LDADD = \
 	-lfennel_xo \
 	-lfennel_db \
 	-lfennel_btree \
+	-lfennel_exec \
 	-lfennel_tuple \
 	-lfennel_txn \
 	-lfennel_segment \
