@@ -88,9 +88,9 @@ void ExecStreamScheduler::removeGraph(SharedExecStreamGraph pGraph)
 }
 
 // Summary of per-stream trace levels:
-// TRACE_FINE: only output of each execution
-// TRACE_FINER: input before each execution and output afterwards
-// TRACE_FINEST: input and output before and after each execution
+// TRACE_FINE: output after execution
+// TRACE_FINER: input before, output after
+// TRACE_FINEST: both input and output before and after each execution
 
 void ExecStreamScheduler::tracePreExecution(
     ExecStream &stream,
@@ -98,14 +98,14 @@ void ExecStreamScheduler::tracePreExecution(
 {
     FENNEL_TRACE(
         TRACE_FINE,
-        "executing " << stream.getName());
+        "executing " << stream.getStreamId() << ' ' << stream.getName());
     if (!isMAXU(quantum.nTuplesMax)) {
         FENNEL_TRACE(
             TRACE_FINE,
             "nTuplesMax = " << quantum.nTuplesMax);
     }
 
-    traceStreamBuffers(stream, TRACE_FINER, TRACE_FINEST);
+    traceStreamBuffers(stream, TRACE_FINEST, TRACE_FINEST);
 }
     
 void ExecStreamScheduler::tracePostExecution(
@@ -114,7 +114,7 @@ void ExecStreamScheduler::tracePostExecution(
 {
     FENNEL_TRACE(
         TRACE_FINE,
-        "executed " << stream.getName()
+        "executed " << stream.getStreamId() << ' ' << stream.getName()
         << " with result " << ExecStreamResult_names[rc]);
 
     traceStreamBuffers(stream, TRACE_FINEST, TRACE_FINE);
@@ -141,6 +141,7 @@ void ExecStreamScheduler::traceStreamBuffers(
             TRACE_FINER,
             "input buffer " << i << ":  "
             << ExecStreamBufState_names[bufAccessor.getState()]
+            << (bufAccessor.hasPendingEOS()? ", EOS pending" : "")
             << ",  consumption available = "
             << bufAccessor.getConsumptionAvailable());
         if (stream.isTracingLevel(inputTupleTraceLevel)) {
@@ -160,6 +161,7 @@ void ExecStreamScheduler::traceStreamBuffers(
             TRACE_FINER,
             "output buffer " << i << ":  "
             << ExecStreamBufState_names[bufAccessor.getState()]
+            << (bufAccessor.hasPendingEOS()? ", EOS pending" : "")
             << ",  consumption available = "
             << bufAccessor.getConsumptionAvailable()
             << ",  production available = "
