@@ -397,7 +397,8 @@ ExecStreamResult UniqExecStream::execute(ExecStreamQuantum const &quantum)
             memcpy(
                 pLastTupleSaved.get(),
                 pInAccessor->getConsumptionStart(),
-                tupleAccessor.getCurrentByteCount());
+                pInAccessor->getConsumptionTupleAccessor().getCurrentByteCount());
+            tupleAccessor.setCurrentTupleBuf(pLastTupleSaved.get());
             tupleAccessor.unmarshal(lastTuple);
         }
         
@@ -504,7 +505,8 @@ of the new values in currentTuple as lastTuple:
             memcpy(
                 pLastTupleSaved.get(),
                 pInAccessor->getConsumptionStart(),
-                tupleAccessor.getCurrentByteCount());
+                pInAccessor->getConsumptionTupleAccessor().getCurrentByteCount());
+            tupleAccessor.setCurrentTupleBuf(pLastTupleSaved.get());
             tupleAccessor.unmarshal(lastTuple);
 </code></pre>
 
