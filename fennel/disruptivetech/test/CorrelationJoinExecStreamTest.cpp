@@ -69,7 +69,7 @@ void CorrelationJoinExecStreamTest::testCorrelationJoin()
     leftStreamEmbryo.init(new MockProducerExecStream(),paramsMockLeft);
     leftStreamEmbryo.getStream()->setName("LeftProducerExecStream");
 
-    std::string dynamicParamId("dynamicParamId numero uno");
+    uint dynamicParamId(1);
     MockProducerExecStreamParams paramsMockRight(paramsMockLeft);
     paramsMockRight.pGenerator.reset(new DynamicParamExecStreamGenerator(
                                             dynamicParamId, 

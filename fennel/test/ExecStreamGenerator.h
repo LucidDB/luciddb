@@ -109,11 +109,11 @@ public:
  */
 class DynamicParamExecStreamGenerator :  public MockProducerExecStreamGenerator
 {
-    std::string dynamicParamId;
+    uint dynamicParamId;
     DynamicParamManager &paramManager;
 
 public:
-    DynamicParamExecStreamGenerator(std::string &dynamicParamId_, 
+    DynamicParamExecStreamGenerator(uint dynamicParamId_, 
                                     DynamicParamManager &paramManager_) :
         dynamicParamId(dynamicParamId_),
         paramManager(paramManager_)

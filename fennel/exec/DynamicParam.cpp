@@ -36,7 +36,7 @@ DynamicParam::DynamicParam(uint bufferSize)
 }
 
 void DynamicParamManager::createParam(
-      const std::string &dynamicParamId, 
+      const uint dynamicParamId, 
       const TupleAttributeDescriptor &attrDesc)
 {
     assert(paramMap.find(dynamicParamId) == paramMap.end());
@@ -44,14 +44,14 @@ void DynamicParamManager::createParam(
     paramMap.insert(ParamMap::value_type(dynamicParamId, param));
 }
 
-void DynamicParamManager::removeParam(const std::string &dynamicParamId)
+void DynamicParamManager::removeParam(const uint dynamicParamId)
 {
     assert(paramMap.find(dynamicParamId) != paramMap.end());
     paramMap.erase(dynamicParamId);
     assert(paramMap.find(dynamicParamId) == paramMap.end());
 }
 
-void DynamicParamManager::setParam(const std::string &dynamicParamId, const TupleDatum &src)
+void DynamicParamManager::setParam(const uint dynamicParamId, const TupleDatum &src)
 {
     DynamicParam &param = getParam(dynamicParamId);
     assert(param.getDatum().cbData = src.cbData);
@@ -60,7 +60,7 @@ void DynamicParamManager::setParam(const std::string &dynamicParamId, const Tupl
     memcpy(param.pBuffer.get(), src.pData, src.cbData);
 }
 
-DynamicParam &DynamicParamManager::getParam(const std::string &dynamicParamId)
+DynamicParam &DynamicParamManager::getParam(const uint dynamicParamId)
 {
     assert(paramMap.find(dynamicParamId) != paramMap.end());
     return *paramMap.find(dynamicParamId)->second.get();

@@ -35,7 +35,7 @@ FENNEL_BEGIN_NAMESPACE
 struct CorrelationJoinExecStreamParams : public ConfluenceExecStreamParams
 {
     uint leftAttributeOrdinal;
-    std::string dynamicParamId;
+    uint dynamicParamId;
 };
 
 /**
@@ -52,7 +52,7 @@ class CorrelationJoinExecStream : public ConfluenceExecStream
     SharedExecStreamBufAccessor pRightBufAccessor;
     uint nLeftAttributes;
     uint leftAttributeOrdinal;
-    std::string dynamicParamId;
+    uint dynamicParamId;
 
 public:
     // implement ExecStream

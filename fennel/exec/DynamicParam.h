@@ -54,20 +54,20 @@ typedef boost::shared_ptr<DynamicParam> SharedDynamicParam;
 class DynamicParamManager
 {
 private:
-    typedef std::map<std::string, SharedDynamicParam> ParamMap;
+    typedef std::map<uint, SharedDynamicParam> ParamMap;
     typedef ParamMap::const_iterator ParamMapConstIter;
 
     ParamMap paramMap;
     
 public:
-    void createParam(const std::string &dynamicParamId, 
+    void createParam(const uint dynamicParamId, 
                      const TupleAttributeDescriptor &attrDesc);
 
-    void removeParam(const std::string &dynamicParamId);
+    void removeParam(const uint dynamicParamId);
 
-    void setParam(const std::string &dynamicParamId, const TupleDatum &src);
+    void setParam(const uint dynamicParamId, const TupleDatum &src);
 
-    DynamicParam &getParam(const std::string &dynamicParamId);
+    DynamicParam &getParam(const uint dynamicParamId);
 
 };
 
