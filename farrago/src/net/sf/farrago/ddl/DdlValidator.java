@@ -37,8 +37,8 @@ import net.sf.farrago.session.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.util.*;
 
-import net.sf.saffron.sql.*;
-import net.sf.saffron.util.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.util.*;
 
 import org.netbeans.api.mdr.events.*;
 

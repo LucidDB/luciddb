@@ -22,18 +22,18 @@ package net.sf.farrago.test;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import net.sf.farrago.test.regression.FarragoCalcSystemTest;
-import net.sf.saffron.sql.SqlOperator;
-import net.sf.saffron.sql.SqlSyntax;
-import net.sf.saffron.sql.test.SaffronSqlTester;
-import net.sf.saffron.sql.test.SqlOperatorIterator;
-import net.sf.saffron.sql.type.SqlTypeName;
+import org.eigenbase.sql.SqlOperator;
+import org.eigenbase.sql.SqlSyntax;
+import org.eigenbase.sql.test.AbstractSqlTester;
+import org.eigenbase.sql.test.SqlOperatorIterator;
+import org.eigenbase.sql.type.SqlTypeName;
 
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
 /**
- * FarragoSqlOperatorsTest contains an implementation of {@link SaffronSqlTester}.
+ * FarragoSqlOperatorsTest contains an implementation of {@link AbstractSqlTester}.
  * It uses the visitor pattern to vist all SqlOperators for unit test purposes.
  *
  * @author Wael Chatila
@@ -54,10 +54,10 @@ public class FarragoSqlOperatorsTest extends FarragoTestCase {
     }
 
     /**
-     * Implementation of {@link SaffronSqlTester}, leveraging connection setup
+     * Implementation of {@link AbstractSqlTester}, leveraging connection setup
      * and result set comparing from the class {@link FarragoTestCase}
      */
-    private class FarragoSqlTester extends SaffronSqlTester
+    private class FarragoSqlTester extends AbstractSqlTester
     {
         /** The name of the operator which should be the same as its syntax */
         SqlOperator operator;

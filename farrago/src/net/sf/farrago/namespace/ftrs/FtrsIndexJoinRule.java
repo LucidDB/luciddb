@@ -26,12 +26,12 @@ import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 import net.sf.farrago.query.*;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.rel.convert.*;
-import net.sf.saffron.util.*;
-import net.sf.saffron.rex.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.rel.convert.*;
+import org.eigenbase.util.*;
+import org.eigenbase.rex.*;
 
 import java.util.*;
 
@@ -42,34 +42,34 @@ import java.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class FtrsIndexJoinRule extends VolcanoRule
+class FtrsIndexJoinRule extends RelOptRule
 {
     public FtrsIndexJoinRule()
     {
         super(
-            new RuleOperand(
+            new RelOptRuleOperand(
                 JoinRel.class,
-                new RuleOperand [] {
-                    new RuleOperand(
-                        SaffronRel.class,
+                new RelOptRuleOperand [] {
+                    new RelOptRuleOperand(
+                        RelNode.class,
                         null),
-                    new RuleOperand(
+                    new RelOptRuleOperand(
                         FtrsIndexScanRel.class,
                         null)
                 }));
     }
 
-    // implement VolcanoRule
+    // implement RelOptRule
     public CallingConvention getOutConvention()
     {
         return FennelPullRel.FENNEL_PULL_CONVENTION;
     }
 
-    // implement VolcanoRule
-    public void onMatch(VolcanoRuleCall call)
+    // implement RelOptRule
+    public void onMatch(RelOptRuleCall call)
     {
         JoinRel joinRel = (JoinRel) call.rels[0];
-        SaffronRel leftRel = call.rels[1];
+        RelNode leftRel = call.rels[1];
         FtrsIndexScanRel scanRel = (FtrsIndexScanRel) call.rels[2];
 
         if (!joinRel.getVariablesStopped().isEmpty()) {
@@ -94,7 +94,7 @@ class FtrsIndexJoinRule extends VolcanoRule
 
         FarragoCatalog catalog = scanRel.getPreparingStmt().getCatalog();
         int [] joinFieldOrdinals = new int[2];
-        if (!OptUtil.analyzeSimpleEquiJoin(joinRel,joinFieldOrdinals)) {
+        if (!RelOptUtil.analyzeSimpleEquiJoin(joinRel,joinFieldOrdinals)) {
             return;
         }
         int leftOrdinal = joinFieldOrdinals[0];
@@ -127,8 +127,8 @@ class FtrsIndexJoinRule extends VolcanoRule
         CwmColumn indexColumn,
         int leftOrdinal,
         int rightOrdinal,
-        SaffronRel leftRel,
-        VolcanoRuleCall call)
+        RelNode leftRel,
+        RelOptRuleCall call)
     {
         FarragoCatalog catalog = scanRel.getPreparingStmt().getCatalog();
 
@@ -149,13 +149,13 @@ class FtrsIndexJoinRule extends VolcanoRule
                 new Integer(leftOrdinal)
             };
 
-        SaffronField [] leftFields = leftRel.getRowType().getFields();
-        SaffronType leftType = leftFields[leftOrdinal].getType();
-        SaffronType rightType =
+        RelDataTypeField [] leftFields = leftRel.getRowType().getFields();
+        RelDataType leftType = leftFields[leftOrdinal].getType();
+        RelDataType rightType =
             scanRel.getRowType().getFields()[rightOrdinal].getType();
 
         // decide what to do with nulls
-        SaffronRel nullFilterRel;
+        RelNode nullFilterRel;
         if (isOuter) {
             // can't filter out nulls when isOuter; instead, let Fennel
             // handle the null semantics
@@ -164,20 +164,20 @@ class FtrsIndexJoinRule extends VolcanoRule
                 rightType,leftType.isNullable());
         } else {
             // filter out null search keys, since they never match
-            nullFilterRel = OptUtil.createNullFilter(
+            nullFilterRel = RelOptUtil.createNullFilter(
                 leftRel,inputKeyProj);
         }
 
         // cast the search keys from the left to the type of the search column
         // on the right
-        SaffronRel castRel;
+        RelNode castRel;
         int leftFieldCount = leftRel.getRowType().getFieldCount();
         if (leftType.equals(rightType)) {
             // no cast required
             castRel = nullFilterRel;
         } else {
-            SaffronType castRowType = leftType.getFactory().createJoinType(
-                new SaffronType[] {
+            RelDataType castRowType = leftType.getFactory().createJoinType(
+                new RelDataType[] {
                     leftRel.getRowType(),
                     rightType
                 });
@@ -204,7 +204,7 @@ class FtrsIndexJoinRule extends VolcanoRule
                 };
         }
 
-        SaffronRel fennelInput = convert(
+        RelNode fennelInput = convert(
             castRel,FennelPullRel.FENNEL_PULL_CONVENTION);
 
         // tell the index search to propagate everything from its input as join

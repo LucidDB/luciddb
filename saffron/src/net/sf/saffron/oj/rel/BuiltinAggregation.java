@@ -22,12 +22,13 @@
 
 package net.sf.saffron.oj.rel;
 
-import net.sf.saffron.core.SaffronType;
-import net.sf.saffron.core.SaffronTypeFactory;
-import net.sf.saffron.oj.util.OJUtil;
-import net.sf.saffron.rel.Aggregation;
-import net.sf.saffron.rel.SaffronRel;
-import net.sf.saffron.util.Util;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.oj.util.OJUtil;
+import org.eigenbase.oj.rel.*;
+import org.eigenbase.rel.Aggregation;
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.util.Util;
 import openjava.mop.*;
 import openjava.ptree.*;
 
@@ -87,10 +88,10 @@ public abstract class BuiltinAggregation implements Aggregation
     }
 
     // implement Aggregation
-    public SaffronType [] getParameterTypes(SaffronTypeFactory typeFactory)
+    public RelDataType [] getParameterTypes(RelDataTypeFactory typeFactory)
     {
         OJClass [] classes = getParameterTypes();
-        SaffronType [] types = new SaffronType[classes.length];
+        RelDataType [] types = new RelDataType[classes.length];
         for (int i = 0; i < classes.length; ++i) {
             types[i] = OJUtil.ojToType(typeFactory,classes[i]);
         }
@@ -98,7 +99,7 @@ public abstract class BuiltinAggregation implements Aggregation
     }
 
     // implement Aggregation
-    public SaffronType getReturnType(SaffronTypeFactory typeFactory)
+    public RelDataType getReturnType(RelDataTypeFactory typeFactory)
     {
         return OJUtil.ojToType(typeFactory,getReturnType());
     }
@@ -112,7 +113,7 @@ public abstract class BuiltinAggregation implements Aggregation
     // implement Aggregation
     public void implementMerge(
         JavaRelImplementor implementor,
-        SaffronRel rel,
+        RelNode rel,
         Expression accumulator,
         Expression otherAccumulator)
     {

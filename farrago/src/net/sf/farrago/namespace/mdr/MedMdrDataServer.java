@@ -27,9 +27,10 @@ import net.sf.farrago.type.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.query.*;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.util.*;
-import net.sf.saffron.oj.stmt.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.util.*;
+import org.eigenbase.oj.stmt.*;
 
 import org.netbeans.api.mdr.*;
 
@@ -197,7 +198,7 @@ class MedMdrDataServer extends MedAbstractDataServer
         String [] localName,
         Properties tableProps,
         FarragoTypeFactory typeFactory,
-        SaffronType rowType,
+        RelDataType rowType,
         Map columnPropMap)
         throws SQLException
     {
@@ -224,7 +225,7 @@ class MedMdrDataServer extends MedAbstractDataServer
     }
     
     // implement FarragoMedDataServer
-    public void registerRules(SaffronPlanner planner)
+    public void registerRules(RelOptPlanner planner)
     {
         super.registerRules(planner);
         planner.addRule(new MedMdrJoinRule());

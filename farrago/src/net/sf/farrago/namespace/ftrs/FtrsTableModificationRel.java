@@ -26,10 +26,9 @@ import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 import net.sf.farrago.query.*;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.util.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.util.*;
 
 import java.util.*;
 
@@ -53,17 +52,17 @@ class FtrsTableModificationRel extends TableModificationRel
     /**
      * Creates a new FtrsTableModificationRel object.
      *
-     * @param cluster VolcanoCluster for this rel
+     * @param cluster RelOptCluster for this rel
      * @param ftrsTable target table
      * @param connection connection expression
      * @param child child producing rows to be inserted
      * @param operation modification operation to perform
      */
     public FtrsTableModificationRel(
-        VolcanoCluster cluster,
+        RelOptCluster cluster,
         FtrsTable ftrsTable,
-        SaffronConnection connection,
-        SaffronRel child,
+        RelOptConnection connection,
+        RelNode child,
         Operation operation,
         List updateColumnList)
     {
@@ -74,12 +73,12 @@ class FtrsTableModificationRel extends TableModificationRel
     //~ Methods ---------------------------------------------------------------
 
     // implement FennelRel
-    public SaffronConnection getConnection()
+    public RelOptConnection getConnection()
     {
         return connection;
     }
 
-    // implement SaffronRel
+    // implement RelNode
     public CallingConvention getConvention()
     {
         return FennelPullRel.FENNEL_PULL_CONVENTION;
@@ -104,13 +103,13 @@ class FtrsTableModificationRel extends TableModificationRel
             cluster,
             ftrsTable,
             getConnection(),
-            OptUtil.clone(child),
+            RelOptUtil.clone(child),
             getOperation(),
             getUpdateColumnList());
     }
 
-    // implement SaffronRel
-    public PlanCost computeSelfCost(SaffronPlanner planner)
+    // implement RelNode
+    public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
         // TODO:  the real thing
         return planner.makeTinyCost();

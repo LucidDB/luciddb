@@ -25,10 +25,10 @@ import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.query.*;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.rex.RexNode;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.rex.RexNode;
 
 import java.util.*;
 
@@ -72,7 +72,7 @@ class FtrsIndexSearchRel extends FennelPullSingleRel
      */
     public FtrsIndexSearchRel(
         FtrsIndexScanRel scanRel,
-        SaffronRel child,
+        RelNode child,
         boolean isUniqueKey,
         boolean isOuter,
         Integer [] inputKeyProj,
@@ -106,28 +106,28 @@ class FtrsIndexSearchRel extends FennelPullSingleRel
     {
         return new FtrsIndexSearchRel(
             scanRel,
-            OptUtil.clone(child),
+            RelOptUtil.clone(child),
             isUniqueKey,
             isOuter,
             inputKeyProj,
             inputJoinProj);
     }
 
-    // implement SaffronRel
-    public PlanCost computeSelfCost(SaffronPlanner planner)
+    // implement RelNode
+    public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
         // TODO:  refined costing
         return scanRel.computeCost(planner,getRows());
     }
 
-    // implement SaffronRel
-    public SaffronType deriveRowType()
+    // implement RelNode
+    public RelDataType deriveRowType()
     {
         if (inputJoinProj != null) {
             // We're implementing a join, so make up an appropriate join type.
-            final SaffronField [] childFields = child.getRowType().getFields();
-            SaffronType leftType = getCluster().typeFactory.createProjectType(
-                new SaffronTypeFactory.FieldInfo()
+            final RelDataTypeField [] childFields = child.getRowType().getFields();
+            RelDataType leftType = getCluster().typeFactory.createProjectType(
+                new RelDataTypeFactory.FieldInfo()
                 {
                     public int getFieldCount()
                     {
@@ -140,14 +140,14 @@ class FtrsIndexSearchRel extends FennelPullSingleRel
                         return childFields[i].getName();
                     }
 
-                    public SaffronType getFieldType(int index)
+                    public RelDataType getFieldType(int index)
                     {
                         int i = inputJoinProj[index].intValue();
                         return childFields[i].getType();
                     }
                 });
 
-            SaffronType rightType = scanRel.getRowType();
+            RelDataType rightType = scanRel.getRowType();
 
             // for outer join, have to make left side nullable
             if (isOuter) {
@@ -156,15 +156,15 @@ class FtrsIndexSearchRel extends FennelPullSingleRel
             }
 
             return getCluster().typeFactory.createJoinType(
-                new SaffronType[] { leftType, rightType });
+                new RelDataType[] { leftType, rightType });
         } else {
             assert(!isOuter);
             return scanRel.getRowType();
         }
     }
 
-    // implement SaffronRel
-    public void explain(PlanWriter pw)
+    // implement RelNode
+    public void explain(RelOptPlanWriter pw)
     {
         Object projection,inputKeyProjObj,inputJoinProjObj;
 
@@ -228,7 +228,7 @@ class FtrsIndexSearchRel extends FennelPullSingleRel
     }
 
     // override Rel
-    public SaffronTable getTable()
+    public RelOptTable getTable()
     {
         return scanRel.getTable();
     }

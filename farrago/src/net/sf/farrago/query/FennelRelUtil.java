@@ -27,13 +27,13 @@ import net.sf.farrago.fennel.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.util.*;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rex.RexNode;
-import net.sf.saffron.rex.RexBuilder;
-import net.sf.saffron.sql.type.SqlTypeName;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.util.*;
+import org.eigenbase.rex.RexNode;
+import org.eigenbase.rex.RexBuilder;
+import org.eigenbase.sql.type.SqlTypeName;
 
 import java.nio.charset.*;
 
@@ -76,7 +76,7 @@ public abstract class FennelRelUtil
     }
 
     /**
-     * Create a FemTupleDescriptor for a SaffronType which is a row of
+     * Create a FemTupleDescriptor for a RelDataType which is a row of
      * FarragoTypes.
      *
      * @param catalog catalog storing object definitions
@@ -86,11 +86,11 @@ public abstract class FennelRelUtil
      */
     public static FemTupleDescriptor createTupleDescriptorFromRowType(
         FarragoCatalog catalog,
-        SaffronType rowType)
+        RelDataType rowType)
     {
         FemTupleDescriptor tupleDesc =
             catalog.newFemTupleDescriptor();
-        SaffronField [] fields = rowType.getFields();
+        RelDataTypeField [] fields = rowType.getFields();
         for (int i = 0; i < fields.length; ++i) {
             assert (fields[i].getType() instanceof FarragoType);
             addTupleAttrDescriptor(

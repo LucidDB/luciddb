@@ -31,8 +31,8 @@ import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.config.*;
 
-import net.sf.saffron.test.*;
-import net.sf.saffron.util.SaffronProperties;
+import org.eigenbase.test.*;
+import org.eigenbase.util.SaffronProperties;
 
 import java.io.*;
 
@@ -234,7 +234,7 @@ public abstract class FarragoTestCase extends DiffTestCase
             final String testNamePattern = saffronProps.testName.get();
             if (testNamePattern != null) {
                 Pattern testPattern = Pattern.compile(testNamePattern);
-                suite = SaffronTestCase.copySuite(suite, testPattern);
+                suite = EigenbaseTestCase.copySuite(suite, testPattern);
             }
         }
 

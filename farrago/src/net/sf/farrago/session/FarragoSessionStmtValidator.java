@@ -30,7 +30,7 @@ import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.datatypes.*;
 import net.sf.farrago.fem.med.*;
 
-import net.sf.saffron.sql.*;
+import org.eigenbase.sql.*;
 
 import javax.jmi.reflect.*;
 

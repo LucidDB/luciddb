@@ -24,12 +24,12 @@ import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.util.*;
 import net.sf.farrago.query.*;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.util.*;
-import net.sf.saffron.rex.RexNode;
-import net.sf.saffron.rex.RexInputRef;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.util.*;
+import org.eigenbase.rex.RexNode;
+import org.eigenbase.rex.RexInputRef;
 
 import java.util.*;
 
@@ -41,7 +41,7 @@ import java.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class FtrsTableProjectionRule extends VolcanoRule
+class FtrsTableProjectionRule extends RelOptRule
 {
     //~ Constructors ----------------------------------------------------------
 
@@ -51,23 +51,23 @@ class FtrsTableProjectionRule extends VolcanoRule
     public FtrsTableProjectionRule()
     {
         super(
-            new RuleOperand(
+            new RelOptRuleOperand(
                 ProjectRel.class,
-                new RuleOperand [] {
-                    new RuleOperand(FtrsIndexScanRel.class,null)
+                new RelOptRuleOperand [] {
+                    new RelOptRuleOperand(FtrsIndexScanRel.class,null)
                 }));
     }
 
     //~ Methods ---------------------------------------------------------------
 
-    // implement VolcanoRule
+    // implement RelOptRule
     public CallingConvention getOutConvention()
     {
         return FennelPullRel.FENNEL_PULL_CONVENTION;
     }
 
-    // implement VolcanoRule
-    public void onMatch(VolcanoRuleCall call)
+    // implement RelOptRule
+    public void onMatch(RelOptRuleCall call)
     {
         ProjectRel origProject = (ProjectRel) call.rels[0];
         if (!origProject.isBoxed()) {
@@ -87,9 +87,9 @@ class FtrsTableProjectionRule extends VolcanoRule
         
         int n = origProject.getChildExps().length;
         Integer [] projectedColumns = new Integer[n];
-        SaffronType rowType = origScan.ftrsTable.getRowType();
-        SaffronType projType = origProject.getRowType();
-        SaffronField [] projFields = projType.getFields();
+        RelDataType rowType = origScan.ftrsTable.getRowType();
+        RelDataType projType = origProject.getRowType();
+        RelDataTypeField [] projFields = projType.getFields();
         String [] fieldNames = new String[n];
         boolean needRename = false;
         for (int i = 0; i < n; ++i) {
@@ -128,7 +128,7 @@ class FtrsTableProjectionRule extends VolcanoRule
             }
 
             // REVIEW:  should cluster be from origProject or origScan?
-            SaffronRel projectedScan =
+            RelNode projectedScan =
                 new FtrsIndexScanRel(
                     origProject.getCluster(),
                     origScan.ftrsTable,

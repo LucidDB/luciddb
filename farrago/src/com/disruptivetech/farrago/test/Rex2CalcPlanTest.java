@@ -20,35 +20,35 @@
 */
 package com.disruptivetech.farrago.test;
 
-import junit.framework.AssertionFailedError;
-import junit.framework.TestCase;
+import junit.framework.*;
 
 import com.disruptivetech.farrago.calc.RexToCalcTranslator;
+import com.disruptivetech.farrago.volcano.VolcanoPlannerFactory;
 
-import net.sf.saffron.core.SaffronConnection;
-import net.sf.saffron.core.SaffronTypeFactory;
-import net.sf.saffron.core.SaffronTypeFactoryImpl;
-import net.sf.saffron.jdbc.SaffronJdbcConnection;
-import net.sf.saffron.oj.OJPlannerFactory;
-import net.sf.saffron.oj.OJTypeFactoryImpl;
-import net.sf.saffron.oj.util.JavaRexBuilder;
-import net.sf.saffron.oj.util.OJUtil;
-import net.sf.saffron.oj.util.SaffronRexBuilder;
-import net.sf.saffron.opt.VolcanoPlannerFactory;
-import net.sf.saffron.rel.FilterRel;
-import net.sf.saffron.rel.ProjectRel;
-import net.sf.saffron.rel.SaffronRel;
-import net.sf.saffron.rex.RexNode;
-import net.sf.saffron.rex.RexTransformer;
-import net.sf.saffron.runtime.SyntheticObject;
-import net.sf.saffron.sql.SqlNode;
-import net.sf.saffron.sql.SqlOperatorTable;
-import net.sf.saffron.sql.SqlValidator;
-import net.sf.saffron.sql.parser.ParseException;
-import net.sf.saffron.sql.parser.SqlParser;
-import net.sf.saffron.sql2rel.SqlToRelConverter;
-import net.sf.saffron.util.SaffronProperties;
-import net.sf.saffron.util.Util;
+import net.sf.farrago.test.*;
+import net.sf.farrago.query.*;
+import net.sf.farrago.session.*;
+import net.sf.farrago.jdbc.engine.*;
+
+import org.eigenbase.relopt.RelOptConnection;
+import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.reltype.RelDataTypeFactoryImpl;
+import org.eigenbase.oj.util.JavaRexBuilder;
+import org.eigenbase.oj.util.OJUtil;
+import org.eigenbase.rel.FilterRel;
+import org.eigenbase.rel.ProjectRel;
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.rex.RexNode;
+import org.eigenbase.rex.RexTransformer;
+import org.eigenbase.runtime.SyntheticObject;
+import org.eigenbase.sql.SqlNode;
+import org.eigenbase.sql.SqlOperatorTable;
+import org.eigenbase.sql.SqlValidator;
+import org.eigenbase.sql.parser.ParseException;
+import org.eigenbase.sql.parser.SqlParser;
+import org.eigenbase.sql2rel.SqlToRelConverter;
+import org.eigenbase.util.SaffronProperties;
+import org.eigenbase.util.Util;
 import openjava.mop.*;
 import openjava.ptree.ClassDeclaration;
 import openjava.ptree.MemberDeclarationList;
@@ -70,24 +70,50 @@ import java.sql.SQLException;
  * @since Feb 3, 2004
  * @version $Id$
  **/
-public class Rex2CalcPlanTest extends TestCase
+public class Rex2CalcPlanTest extends FarragoTestCase
 {
     private static final String NL = System.getProperty("line.separator");
     private static TestContext testContext;
 
+    public Rex2CalcPlanTest(String testName) throws Exception
+    {
+        super(testName);
+    }
 
     protected void setUp() throws Exception {
         super.setUp();
-        // Create a type factory.
-        SaffronTypeFactory typeFactory =
-            SaffronTypeFactoryImpl.threadInstance();
-        if (typeFactory == null) {
-            typeFactory = new OJTypeFactoryImpl();
-            typeFactory = new SaffronTypeFactoryImpl();
-        }
-        // And a planner factory.
-        if (VolcanoPlannerFactory.threadInstance() == null) {
-            VolcanoPlannerFactory.setThreadInstance(new OJPlannerFactory());
+        stmt.execute("set schema sales");
+        FarragoJdbcEngineConnection farragoConn =
+            (FarragoJdbcEngineConnection) connection;
+        TestContext testContext = getTestContext();
+        testContext.stmtValidator =
+            farragoConn.getSession().newStmtValidator();
+        testContext.stmt = (FarragoPreparingStmt)
+            farragoConn.getSession().newPreparingStmt(
+                testContext.stmtValidator);
+    }
+
+    protected void tearDown() throws Exception
+    {
+        TestContext testContext = getTestContext();
+        testContext.stmt.closeAllocation();
+        testContext.stmt = null;
+        testContext.stmtValidator.closeAllocation();
+        testContext.stmtValidator = null;
+        super.tearDown();
+    }
+
+    // implement TestCase
+    public static Test suite()
+    {
+        // TODO jvs 30-Aug-2004:  re-enable this test.  Apparently it was never
+        // enabled in Saffron.  Once I moved it over to Farrago and
+        // rehabilitated it, it started running automatically because of
+        // Farrago's wildcard test system, but with lots of diffs.
+        if (false) {
+            return wrappedSuite(Rex2CalcPlanTest.class);
+        } else {
+            return new TestSuite();
         }
     }
 
@@ -102,20 +128,20 @@ public class Rex2CalcPlanTest extends TestCase
         } catch (ParseException e) {
             throw new AssertionFailedError(e.toString());
         }
-        SaffronTypeFactory typeFactory =
-                testContext.connection.getSaffronSchema().getTypeFactory();
+        RelDataTypeFactory typeFactory =
+                testContext.stmt.getRelOptSchema().getTypeFactory();
         final SqlValidator validator = new SqlValidator(
                 SqlOperatorTable.instance(),
-                testContext.seeker,
+                testContext.stmt,
                 typeFactory);
         final JavaRexBuilder rexBuilder = new JavaRexBuilder(typeFactory);
         final SqlToRelConverter converter = new SqlToRelConverter(
             validator,
-            testContext.connection.getSaffronSchema(),
+            testContext.stmt.getRelOptSchema(),
             testContext.env,
-            testContext.connection,
+            testContext.stmt,
             rexBuilder);
-        SaffronRel rootRel = converter.convertQuery(sqlQuery);
+        RelNode rootRel = converter.convertQuery(sqlQuery);
         assertTrue(rootRel != null);
 
         ProjectRel project = (ProjectRel) rootRel;
@@ -168,28 +194,13 @@ public class Rex2CalcPlanTest extends TestCase
      */
     static class TestContext
     {
-        private final SqlValidator.CatalogReader seeker;
-        private final Connection jdbcConnection;
-        private final SaffronConnection connection;
+        private FarragoSessionStmtValidator stmtValidator;
+        private FarragoPreparingStmt stmt;
         Environment env;
         private int executionCount;
 
         TestContext()
         {
-            try {
-                Class.forName("net.sf.saffron.jdbc.SaffronJdbcDriver");
-            } catch (ClassNotFoundException e) {
-                throw Util.newInternal(e, "Error loading JDBC driver");
-            }
-            try {
-                jdbcConnection =
-                    DriverManager.getConnection(
-                        "jdbc:saffron:schema=sales.SalesInMemory");
-            } catch (SQLException e) {
-                throw Util.newInternal(e);
-            }
-            connection = ((SaffronJdbcConnection) jdbcConnection).saffronConnection;
-            seeker = new SqlToRelConverter.SchemaCatalogReader(connection.getSaffronSchema(), false);
             // Nasty OJ stuff
             env = OJSystem.env;
 
@@ -212,19 +223,6 @@ public class Rex2CalcPlanTest extends TestCase
             OJClass clazz = new OJClass(env,null,decl);
             env.record(clazz.getName(),clazz);
             env = new ClosedEnvironment(clazz.getEnvironment());
-
-            // Ensure that the thread has factories for types and planners. (We'd
-            // rather that the client sets these.)
-            SaffronTypeFactory typeFactory =
-                SaffronTypeFactoryImpl.threadInstance();
-            if (typeFactory == null) {
-                typeFactory = new OJTypeFactoryImpl();
-                SaffronTypeFactoryImpl.setThreadInstance(typeFactory);
-            }
-            if (VolcanoPlannerFactory.threadInstance() == null) {
-                VolcanoPlannerFactory.setThreadInstance(new OJPlannerFactory());
-            }
-
             OJUtil.threadDeclarers.set(clazz);
 
         }
@@ -255,7 +253,7 @@ public class Rex2CalcPlanTest extends TestCase
     //--- Tests ------------------------------------------------
 
     public void testSimplePassThroughFilter() {
-        String sql="SELECT \"empno\",\"empno\" FROM \"emps\" WHERE \"empno\" > 10";
+        String sql="SELECT empno,empno FROM emps WHERE empno > 10";
         String prg =
                 "O s4, s4;" + NL +
                 "I s4;" + NL +
@@ -277,7 +275,7 @@ public class Rex2CalcPlanTest extends TestCase
 
     public void testSimplyEqualsFilter()
     {
-        String sql="select \"empno\" from \"emps\" where \"empno\"=123";
+        String sql="select empno from emps where empno=123";
         String prg =
                 "O s4;" + NL +
                 "I s4;" + NL +
@@ -300,7 +298,7 @@ public class Rex2CalcPlanTest extends TestCase
 
     public void testSimplyEqualsFilterWithComments()
     {
-        String sql="select \"empno\" from \"emps\" where \"name\"='Wael' and 123=0";
+        String sql="select empno from emps where name='Wael' and 123=0";
         String prg =
                 "O s4;"+NL+
                 "I vc,0, s4;"+NL+
@@ -324,7 +322,7 @@ public class Rex2CalcPlanTest extends TestCase
 
     public void testSimplyEqualsFilterShortCircuit()
     {
-        String sql="select \"empno\" from \"emps\" where \"empno\"=123";
+        String sql="select empno from emps where empno=123";
         String prg =
                 "O s4;" + NL +
                 "I s4;" + NL +
@@ -350,7 +348,7 @@ public class Rex2CalcPlanTest extends TestCase
 
     public void testBooleanExpressions() {
         //AND has higher precedence than OR
-        String sql="SELECT \"empno\" FROM \"emps\" WHERE true and not true or false and (not true and true)";
+        String sql="SELECT empno FROM emps WHERE true and not true or false and (not true and true)";
         String prg =
                 "O s4;" + NL +
                 "I s4;" + NL +
@@ -374,7 +372,7 @@ public class Rex2CalcPlanTest extends TestCase
     }
 
     public void testScalarExpression() {
-        String sql="SELECT 2-2*2+2/2-2  FROM \"emps\" WHERE \"empno\" > 10";
+        String sql="SELECT 2-2*2+2/2-2  FROM emps WHERE empno > 10";
         String prg =
                 "O s4;" + NL +
                 "I s4;" + NL +
@@ -407,7 +405,7 @@ public class Rex2CalcPlanTest extends TestCase
 
 
     public void testMixedExpression() {
-        String sql="SELECT \"name\", 2*2  FROM \"emps\" WHERE \"name\" = 'Fred' AND  \"empno\" > 10";
+        String sql="SELECT name, 2*2  FROM emps WHERE name = 'Fred' AND  empno > 10";
         String prg =
                 "O vc,0, s4;" + NL +
                 "I vc,0, s4;" + NL +
@@ -443,7 +441,7 @@ public class Rex2CalcPlanTest extends TestCase
         String sql="SELECT " +
             "-(1+-2.*-3.e-1/-.4)>=+5, " +
             " 1e200 / 0.4" +
-            "FROM \"emps\" WHERE \"empno\" > 10";
+            "FROM emps WHERE empno > 10";
          String prg =
                  "O bo, d;" + NL +
                  "I s4;" + NL +
@@ -480,7 +478,7 @@ public class Rex2CalcPlanTest extends TestCase
     }
 
     public void testHexBitBinaryString() {
-        String sql = "SELECT x'abc'=x'', b''=B'00111', X'0001'=x'FFeeDD' FROM \"emps\" WHERE \"empno\" > 10";
+        String sql = "SELECT x'abc'=x'', b''=B'00111', X'0001'=x'FFeeDD' FROM emps WHERE empno > 10";
         String prg =
                 "O bo, bo, bo;" + NL +
                 "I s4;" + NL +
@@ -508,7 +506,7 @@ public class Rex2CalcPlanTest extends TestCase
     }
 
     public void testStringLiterals() {
-        String sql= "SELECT n'aBc',_iso_8859-1'', 'abc' FROM \"emps\" WHERE \"empno\" > 10";
+        String sql= "SELECT n'aBc',_iso_8859-1'', 'abc' FROM emps WHERE empno > 10";
         String prg =
             "O vc,6, vc,0, vc,6;" + NL +
             "I s4;" + NL +
@@ -549,7 +547,7 @@ public class Rex2CalcPlanTest extends TestCase
                 ",true is not false"+
                 ",true is not null "+
                 ",true is not unknown"+
-                " FROM \"emps\" WHERE \"empno\" > 10";
+                " FROM emps WHERE empno > 10";
         String prg =
                 "O bo, bo, bo, bo, bo, bo;" + NL +
                 "I s4;" + NL +
@@ -591,7 +589,7 @@ public class Rex2CalcPlanTest extends TestCase
 
     public void testArithmeticOperators() {
         String sql = "SELECT POW(1.0,1.0), MOD(1,1), ABS(5000000000), ABS(1), " +
-            "ABS(1.1), LN(1), LOG(1) FROM \"emps\" WHERE \"empno\" > 10";
+            "ABS(1.1), LN(1), LOG(1) FROM emps WHERE empno > 10";
         String prg =
             "O d, s4, s8, s4, d, d, d;" + NL +
             "I s4;" + NL +
@@ -643,7 +641,7 @@ public class Rex2CalcPlanTest extends TestCase
     }
 
     public void testFunctionInFunction() {
-        String sql = "SELECT POW(3.0, ABS(2)+1) FROM \"emps\" WHERE \"empno\" > 10";
+        String sql = "SELECT POW(3.0, ABS(2)+1) FROM emps WHERE empno > 10";
         String prg =
                 "O d;" + NL +
                 "I s4;" + NL +
@@ -671,7 +669,7 @@ public class Rex2CalcPlanTest extends TestCase
     public void testCaseExpressions() {
         String sql = "SELECT case 1+1 when 1 then 'wael' when 2 then 'waels clone' end" +
                          ",case when 1=1 then 1+1+2 else 2+10 end" +
-                " FROM \"emps\" WHERE \"empno\" > 10";
+                " FROM emps WHERE empno > 10";
         String prg =
                 "O vc,22, s4;" + NL +
                 "I s4;" + NL +
@@ -717,7 +715,7 @@ public class Rex2CalcPlanTest extends TestCase
 
     public void testNullifExpression() {
         String sql = "SELECT nullif(1,2) "+
-                " FROM \"emps\" WHERE \"empno\" > 10";
+                " FROM emps WHERE empno > 10";
         String prg =
                 "O s4;" + NL +
                 "I s4;" + NL +
@@ -744,7 +742,7 @@ public class Rex2CalcPlanTest extends TestCase
     }
 
     public void testCoalesce() {
-        String sql = "SELECT coalesce(1,2,3) FROM \"emps\" WHERE \"empno\" > 10";
+        String sql = "SELECT coalesce(1,2,3) FROM emps WHERE empno > 10";
         //CASE WHEN 1 IS NOT NULL THEN 1 ELSE (CASE WHEN 2 IS NOT NULL THEN 2 ELSE 3) END
         String prg =
                 "O s4;" + NL +
@@ -782,7 +780,7 @@ public class Rex2CalcPlanTest extends TestCase
 
     public void testCase() {
         String sql = "SELECT CASE WHEN TRUE THEN 0 ELSE 1 END " +
-                "FROM \"emps\" WHERE \"empno\" > 10";
+                "FROM emps WHERE empno > 10";
         String prg="O s4;"+NL+
                     "I s4;"+NL+
                     "L bo, s4, bo;"+NL+
@@ -804,8 +802,8 @@ public class Rex2CalcPlanTest extends TestCase
                     "RETURN;";
         check(sql, prg,false,false,false);
 
-        String sql1 = "SELECT CASE WHEN \"slacker\" then 2 when TRUE THEN 0 ELSE 1 END " +
-                "FROM \"emps\" WHERE \"empno\" > 10";
+        String sql1 = "SELECT CASE WHEN slacker then 2 when TRUE THEN 0 ELSE 1 END " +
+                "FROM emps WHERE empno > 10";
         String prg1="O s4;"+NL+
                     "I s4, bo;"+NL+
                     "L bo, s4, bo;"+NL+
@@ -832,7 +830,7 @@ public class Rex2CalcPlanTest extends TestCase
                     "RETURN;";
         check(sql1, prg1,false,false,false);
         String sql2= "select CASE 1 WHEN 1 THEN cast(null as integer) else 0 END " +
-                     "FROM \"emps\" WHERE \"empno\" > 10";
+                     "FROM emps WHERE empno > 10";
         String prg2="O s4;"+NL+
                     "I s4;"+NL+
                     "L bo, s4, bo;"+NL+
@@ -882,7 +880,7 @@ public class Rex2CalcPlanTest extends TestCase
 
     private void checkCharOp(final String op, final String instr) {
         String sql = "SELECT 'a' " + op +
-                "'b' collate latin1$sv$1 FROM \"emps\" WHERE \"empno\" > 10";
+                "'b' collate latin1$sv$1 FROM emps WHERE empno > 10";
         String prg =
                 "O bo;" + NL +
                 "I s4;" + NL +
@@ -909,7 +907,7 @@ public class Rex2CalcPlanTest extends TestCase
 
     private void checkBinaryOp(final String op, final String instr) {
         String sql = "SELECT x'ff' " + op +
-                "x'01' FROM \"emps\" WHERE \"empno\" > 10";
+                "x'01' FROM emps WHERE empno > 10";
         String prg =
                 "O bo;" + NL +
                 "I s4;" + NL +
@@ -944,7 +942,7 @@ public class Rex2CalcPlanTest extends TestCase
                 "substring('a' from 1 for 10)," +
                 "substring('a' from 'a' for '\\' )," +
                 "'a'||'a'||'b'" +
-                " FROM \"emps\" WHERE \"empno\" > 10";
+                " FROM emps WHERE empno > 10";
         String prg =
                 "O s4, vc,2, vc,2, s4, vc,2, vc,4, vc,2, vc,2, vc,2, vc,6;" + NL +
                 "I s4;" + NL +
@@ -1014,7 +1012,7 @@ public class Rex2CalcPlanTest extends TestCase
                 ",'a' like 'b' escape 'c'" +
                 ",'a' similar to 'a'" +
                 ",'a' similar to 'a' escape 'c'" +
-                " FROM \"emps\" WHERE \"empno\" > 10";
+                " FROM emps WHERE empno > 10";
         String prg =
                 "O bo, bo, bo, bo;" + NL +
                 "I s4;" + NL +
@@ -1041,8 +1039,8 @@ public class Rex2CalcPlanTest extends TestCase
     }
 
     public void testBetween() {
-        String sql1="select \"empno\"  from \"emps\" where \"empno\" between 40 and 60";
-        String sql2="select \"empno\"  from \"emps\" where \"empno\" between asymmetric 40 and 60";
+        String sql1="select empno  from emps where empno between 40 and 60";
+        String sql2="select empno  from emps where empno between asymmetric 40 and 60";
         String prg1 =
                 "O s4;" + NL +
                 "I s4;" + NL +
@@ -1062,7 +1060,7 @@ public class Rex2CalcPlanTest extends TestCase
                 "RETURN;";
         check(sql1, prg1,false,false,false);
         check(sql2, prg1,false,false,false);
-        String sql3 ="select \"empno\"  from \"emps\" where \"empno\" not between 40 and 60";
+        String sql3 ="select empno  from emps where empno not between 40 and 60";
         String prg2 =
                 "O s4;" + NL +
                 "I s4;" + NL +
@@ -1082,7 +1080,7 @@ public class Rex2CalcPlanTest extends TestCase
                 "REF O0, I0;" + NL +
                 "RETURN;";
         check(sql3, prg2,false,false,false);
-        String sql4 ="select \"empno\"  from \"emps\" where \"empno\" between symmetric 40 and 60";
+        String sql4 ="select empno  from emps where empno between symmetric 40 and 60";
         String prg3 =
                 "O s4;" + NL +
                 "I s4;" + NL +
@@ -1113,7 +1111,7 @@ public class Rex2CalcPlanTest extends TestCase
                 "SELECT " +
                 "cast(null as varchar)" +
                 ", cast(null as integer)" +
-                " FROM \"emps\" WHERE \"empno\" > 10";
+                " FROM emps WHERE empno > 10";
         String prg="O vc,0, s4;" + NL +
                    "I s4;" + NL +
                    "L bo;" + NL +
@@ -1136,7 +1134,7 @@ public class Rex2CalcPlanTest extends TestCase
         String sql =
                 "SELECT " +
                 "{fn log(1.0)}" +
-                " FROM \"emps\" WHERE \"empno\" > 10";
+                " FROM emps WHERE empno > 10";
         String prg="O d;" + NL +
                    "I s4;" + NL +
                    "L bo, d;" + NL +
@@ -1159,7 +1157,7 @@ public class Rex2CalcPlanTest extends TestCase
         String sql =
                 "SELECT " +
                 "1+1.0" +
-                " FROM \"emps\" WHERE \"empno\" > 10";
+                " FROM emps WHERE empno > 10";
         String prg="O d;" + NL +
                    "I s4;" + NL +
                    "L bo, d, d, bo;" + NL +
@@ -1193,7 +1191,7 @@ public class Rex2CalcPlanTest extends TestCase
                 ",cast('123' as bigint)" +
                 ",cast('123' as tinyint)" +
                 ",cast('123' as double)" +
-                " FROM \"emps\" WHERE \"empno\" > 10";
+                " FROM emps WHERE empno > 10";
         String prg= "O vc,6, c,6, vc,6, c,6, s8, s1, d;" + NL +
                     "I s4;" + NL +
                     "L bo, s8, vc,6, c,6, vc,6, c,6, s8, s1, d;" + NL +

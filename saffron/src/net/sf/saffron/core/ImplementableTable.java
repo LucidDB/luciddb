@@ -22,12 +22,13 @@
 
 package net.sf.saffron.core;
 
-import net.sf.saffron.oj.rel.JavaRelImplementor;
-import net.sf.saffron.rel.SaffronRel;
+import org.eigenbase.oj.rel.JavaRelImplementor;
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.relopt.RelOptTable;
 
 
 /**
- * An <code>ImplementableTable</code> is a {@link SaffronTable} which can be
+ * An <code>ImplementableTable</code> is a {@link RelOptTable} which can be
  * scanned without any filters. For example, the tables of all
  * <code>int</code>s or all Java classes cannot, but any {@link
  * net.sf.saffron.ext.JdbcTable} can (using <code>select &#42; from
@@ -38,11 +39,11 @@ import net.sf.saffron.rel.SaffronRel;
  *
  * @since 8 February, 2002
  */
-public interface ImplementableTable extends SaffronTable
+public interface ImplementableTable extends RelOptTable
 {
     //~ Methods ---------------------------------------------------------------
 
-    void implement(SaffronRel rel,JavaRelImplementor implementor);
+    void implement(RelNode rel,JavaRelImplementor implementor);
 }
 
 

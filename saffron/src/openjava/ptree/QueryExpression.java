@@ -12,11 +12,11 @@ import openjava.mop.OJClass;
 import openjava.mop.QueryEnvironment;
 import openjava.mop.Toolbox;
 import openjava.ptree.util.ParseTreeVisitor;
-import net.sf.saffron.core.SaffronType;
-import net.sf.saffron.core.SaffronTypeFactory;
-import net.sf.saffron.core.SaffronTypeFactoryImpl;
-import net.sf.saffron.util.Util;
-import net.sf.saffron.oj.util.*;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.reltype.RelDataTypeFactoryImpl;
+import org.eigenbase.util.Util;
+import org.eigenbase.oj.util.*;
 
 /**
  * <code>QueryExpression</code> is a Saffron extension to Java syntax
@@ -105,9 +105,9 @@ public class QueryExpression extends SetExpression {
             Expression select = selectList.get(0);
             return Toolbox.getType(queryEnv, select);
         }
-        final SaffronTypeFactory typeFactory = SaffronTypeFactoryImpl.threadInstance();
-        final SaffronType projectType = typeFactory.createProjectType(
-                new SaffronTypeFactory.FieldInfo() {
+        final RelDataTypeFactory typeFactory = RelDataTypeFactoryImpl.threadInstance();
+        final RelDataType projectType = typeFactory.createProjectType(
+                new RelDataTypeFactory.FieldInfo() {
                     public int getFieldCount() {
                         return selectList.size();
                     }
@@ -117,7 +117,7 @@ public class QueryExpression extends SetExpression {
                         return Toolbox.getAlias(expression);
                     }
 
-                    public SaffronType getFieldType(int index) {
+                    public RelDataType getFieldType(int index) {
                         final Expression expression = selectList.get(index);
                         final OJClass ojClass = Toolbox.getType(queryEnv,
                                 expression);

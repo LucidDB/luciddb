@@ -22,8 +22,8 @@
 package sales;
 
 import net.sf.saffron.oj.stmt.OJStatement;
-import net.sf.saffron.core.SaffronConnection;
-import net.sf.saffron.core.SaffronSchema;
+import org.eigenbase.relopt.RelOptConnection;
+import org.eigenbase.relopt.RelOptSchema;
 import net.sf.saffron.ext.ClassSchema;
 
 
@@ -40,8 +40,8 @@ public class InMemorySalesTestCase extends SalesTestCase
 {
     private final SalesInMemory salesInMemory = new SalesInMemory();
     private final ClassSchema classSchema = new ClassSchema(salesInMemory.getClass(),false);
-    private final SaffronConnection saffronConnection = new SaffronConnection() {
-        public SaffronSchema getSaffronSchema() {
+    private final RelOptConnection saffronConnection = new RelOptConnection() {
+        public RelOptSchema getRelOptSchema() {
             return classSchema;
         }
 
@@ -62,7 +62,7 @@ public class InMemorySalesTestCase extends SalesTestCase
 
     //~ Methods ---------------------------------------------------------------
 
-    public SaffronConnection getConnection() {
+    public RelOptConnection getConnection() {
         return saffronConnection;
     }
 }

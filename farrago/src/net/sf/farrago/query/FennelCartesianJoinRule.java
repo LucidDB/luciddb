@@ -23,11 +23,10 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.rel.convert.*;
-import net.sf.saffron.util.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.rel.convert.*;
+import org.eigenbase.util.*;
 
 /**
  * FennelCartesianJoinRule is a rule for converting an INNER JoinRel with no
@@ -36,35 +35,35 @@ import net.sf.saffron.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class FennelCartesianJoinRule extends VolcanoRule
+class FennelCartesianJoinRule extends RelOptRule
 {
     public FennelCartesianJoinRule()
     {
         super(
-            new RuleOperand(
+            new RelOptRuleOperand(
                 JoinRel.class,
-                new RuleOperand [] {
-                    new RuleOperand(
-                        SaffronRel.class,
+                new RelOptRuleOperand [] {
+                    new RelOptRuleOperand(
+                        RelNode.class,
                         null),
-                    new RuleOperand(
-                        SaffronRel.class,
+                    new RelOptRuleOperand(
+                        RelNode.class,
                         null)
                 }));
     }
 
-    // implement VolcanoRule
+    // implement RelOptRule
     public CallingConvention getOutConvention()
     {
         return FennelPullRel.FENNEL_PULL_CONVENTION;
     }
 
-    // implement VolcanoRule
-    public void onMatch(VolcanoRuleCall call)
+    // implement RelOptRule
+    public void onMatch(RelOptRuleCall call)
     {
         JoinRel joinRel = (JoinRel) call.rels[0];
-        SaffronRel leftRel = call.rels[1];
-        SaffronRel rightRel = call.rels[2];
+        RelNode leftRel = call.rels[1];
+        RelNode rightRel = call.rels[2];
 
         if (joinRel.getJoinType() != JoinRel.JoinType.INNER) {
             return;
@@ -82,13 +81,13 @@ class FennelCartesianJoinRule extends VolcanoRule
             return;
         }
 
-        SaffronRel fennelLeft =
+        RelNode fennelLeft =
             convert(leftRel,FennelPullRel.FENNEL_PULL_CONVENTION);
         if (fennelLeft == null) {
             return;
         }
         
-        SaffronRel fennelRight =
+        RelNode fennelRight =
             convert(rightRel,FennelPullRel.FENNEL_PULL_CONVENTION);
         if (fennelRight == null) {
             return;

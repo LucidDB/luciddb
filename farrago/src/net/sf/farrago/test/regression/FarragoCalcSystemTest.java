@@ -20,11 +20,11 @@
 
 package net.sf.farrago.test.regression;
 
-import net.sf.saffron.sql.*;
-import net.sf.saffron.sql.type.SqlTypeName;
-import net.sf.saffron.sql.fun.SqlStdOperatorTable;
-import net.sf.saffron.sql.test.SqlOperatorIterator;
-import net.sf.saffron.util.Util;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.sql.fun.SqlStdOperatorTable;
+import org.eigenbase.sql.test.SqlOperatorIterator;
+import org.eigenbase.util.Util;
 import net.sf.farrago.test.FarragoTestCase;
 import junit.framework.Test;
 import junit.framework.TestSuite;

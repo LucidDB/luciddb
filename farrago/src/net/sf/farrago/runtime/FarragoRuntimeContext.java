@@ -20,7 +20,7 @@
 
 package net.sf.farrago.runtime;
 
-import net.sf.saffron.core.*;
+import org.eigenbase.relopt.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
@@ -34,7 +34,7 @@ import net.sf.farrago.session.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.util.*;
 
-import net.sf.saffron.util.*;
+import org.eigenbase.util.*;
 
 import java.util.*;
 import javax.jmi.reflect.*;
@@ -49,7 +49,7 @@ import javax.jmi.reflect.*;
 public class FarragoRuntimeContext
     extends FarragoCompoundAllocation
     implements FarragoSessionRuntimeContext,
-        SaffronConnection,
+        RelOptConnection,
         FennelJavaStreamMap
 {
     private FarragoCatalog catalog;
@@ -99,8 +99,8 @@ public class FarragoRuntimeContext
         streamOwner = new StreamOwner();
     }
 
-    // implement SaffronConnection
-    public SaffronSchema getSaffronSchema()
+    // implement RelOptConnection
+    public RelOptSchema getRelOptSchema()
     {
         throw new AssertionError();
     }
@@ -113,7 +113,7 @@ public class FarragoRuntimeContext
         super.closeAllocation();
     }
     
-    // implement SaffronConnection
+    // implement RelOptConnection
     public Object contentsAsArray(String qualifier,String tableName)
     {
         throw new AssertionError();

@@ -21,14 +21,13 @@ package net.sf.farrago.query;
 
 import net.sf.farrago.cwm.relational.*;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.ext.*;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.util.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.util.*;
 
 /**
- * An implementation of SaffronTable for accessing a view managed by Farrago.
+ * An implementation of RelOptTable for accessing a view managed by Farrago.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -43,7 +42,7 @@ class FarragoView extends FarragoQueryNamedColumnSet
      */
     FarragoView(
         CwmNamedColumnSet cwmView,
-        SaffronType rowType)
+        RelDataType rowType)
     {
         super(cwmView,rowType);
     }
@@ -53,13 +52,13 @@ class FarragoView extends FarragoQueryNamedColumnSet
         return (CwmView) getCwmColumnSet();
     }
     
-    // implement SaffronTable
-    public SaffronRel toRel(VolcanoCluster cluster,SaffronConnection connection)
+    // implement RelOptTable
+    public RelNode toRel(RelOptCluster cluster,RelOptConnection connection)
     {
         // REVIEW:  cache view definition?
-        SaffronRel rel = getPreparingStmt().expandView(
+        RelNode rel = getPreparingStmt().expandView(
             getCwmView().getQueryExpression().getBody());
-        return OptUtil.createRenameRel(
+        return RelOptUtil.createRenameRel(
             getRowType(),
             rel);
     }

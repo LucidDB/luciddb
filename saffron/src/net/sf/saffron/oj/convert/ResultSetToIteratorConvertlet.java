@@ -20,13 +20,13 @@
 */
 package net.sf.saffron.oj.convert;
 
-import net.sf.saffron.opt.CallingConvention;
-import net.sf.saffron.oj.rel.JavaRelImplementor;
-import net.sf.saffron.oj.rel.JavaRel;
-import net.sf.saffron.oj.util.OJUtil;
-import net.sf.saffron.runtime.ResultSetIterator;
-import net.sf.saffron.util.Util;
-import net.sf.saffron.rel.convert.ConverterRel;
+import org.eigenbase.relopt.CallingConvention;
+import org.eigenbase.oj.rel.JavaRelImplementor;
+import org.eigenbase.oj.rel.JavaRel;
+import org.eigenbase.oj.util.OJUtil;
+import org.eigenbase.runtime.ResultSetIterator;
+import org.eigenbase.util.Util;
+import org.eigenbase.rel.convert.ConverterRel;
 import openjava.ptree.*;
 import openjava.mop.OJClass;
 import openjava.mop.OJField;

@@ -22,12 +22,13 @@
 
 package net.sf.saffron.oj.rel;
 
+import org.eigenbase.oj.rel.*;
 import net.sf.saffron.core.ImplementableTable;
-import net.sf.saffron.core.SaffronConnection;
-import net.sf.saffron.opt.CallingConvention;
-import net.sf.saffron.opt.VolcanoCluster;
-import net.sf.saffron.rel.TableAccessRel;
-import net.sf.saffron.util.Util;
+import org.eigenbase.relopt.RelOptConnection;
+import org.eigenbase.relopt.CallingConvention;
+import org.eigenbase.relopt.RelOptCluster;
+import org.eigenbase.rel.TableAccessRel;
+import org.eigenbase.util.Util;
 import openjava.ptree.ParseTree;
 
 /**
@@ -38,9 +39,9 @@ public class JavaTableAccessRel extends TableAccessRel implements JavaLoopRel
     //~ Constructors ----------------------------------------------------------
 
     public JavaTableAccessRel(
-        VolcanoCluster cluster,
+        RelOptCluster cluster,
         ImplementableTable table,
-        SaffronConnection connection)
+        RelOptConnection connection)
     {
         super(cluster,table,connection);
     }
@@ -57,7 +58,7 @@ public class JavaTableAccessRel extends TableAccessRel implements JavaLoopRel
         return this;
     }
 
-    // implement SaffronRel
+    // implement RelNode
     public ParseTree implement(JavaRelImplementor implementor)
     {
         ImplementableTable implementableTable = (ImplementableTable) table;

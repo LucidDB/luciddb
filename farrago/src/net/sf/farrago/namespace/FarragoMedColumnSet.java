@@ -19,9 +19,8 @@
 
 package net.sf.farrago.namespace;
 
-import net.sf.saffron.ext.*;
-import net.sf.saffron.core.*;
-import net.sf.saffron.sql.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.sql.*;
 
 /**
  * FarragoMedColumnSet defines an interface for all relation-like objects
@@ -33,7 +32,7 @@ import net.sf.saffron.sql.*;
  * @version $Id$
  */
 public interface FarragoMedColumnSet
-    extends SaffronTable, SqlValidator.Table
+    extends RelOptTable, SqlValidator.Table
 {
 }
 

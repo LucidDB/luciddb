@@ -20,7 +20,7 @@
 */
 package com.disruptivetech.farrago.calc;
 
-import net.sf.saffron.sql.SqlOperator;
+import org.eigenbase.sql.SqlOperator;
 
 /**
  * Contains, for each operator, an implementor which can convert a call

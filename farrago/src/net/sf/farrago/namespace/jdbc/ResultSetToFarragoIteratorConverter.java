@@ -24,17 +24,17 @@ import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 import net.sf.farrago.query.*;
 
-import net.sf.saffron.runtime.*;
-import net.sf.saffron.core.*;
-import net.sf.saffron.oj.util.*;
-import net.sf.saffron.oj.rel.JavaRelImplementor;
-import net.sf.saffron.oj.rel.ResultSetRel;
-import net.sf.saffron.oj.rel.JavaRel;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.rel.convert.*;
-import net.sf.saffron.rex.*;
-import net.sf.saffron.util.*;
+import org.eigenbase.runtime.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*; 
+import org.eigenbase.oj.util.*;
+import org.eigenbase.oj.rel.JavaRelImplementor;
+import org.eigenbase.oj.rel.ResultSetRel;
+import org.eigenbase.oj.rel.JavaRel;
+import org.eigenbase.rel.*;
+import org.eigenbase.rel.convert.*;
+import org.eigenbase.rex.*;
+import org.eigenbase.util.*;
 
 import openjava.mop.*;
 import openjava.ptree.*;
@@ -57,29 +57,29 @@ class ResultSetToFarragoIteratorConverter extends ConverterRel
     /**
      * Creates a new ResultSetToFarragoIteratorConverter object.
      *
-     * @param cluster VolcanoCluster for this rel
+     * @param cluster RelOptCluster for this rel
      * @param child input rel producing rows in ResultSet
      * representation
      */
     public ResultSetToFarragoIteratorConverter(
-        VolcanoCluster cluster,SaffronRel child)
+        RelOptCluster cluster,RelNode child)
     {
         super(cluster,child);
     }
 
-    // implement SaffronRel
+    // implement RelNode
     public CallingConvention getConvention()
     {
         return CallingConvention.ITERATOR;
     }
 
-    // implement SaffronRel
+    // implement RelNode
     public Object clone()
     {
         return new ResultSetToFarragoIteratorConverter(cluster,child);
     }
 
-    // implement SaffronRel
+    // implement RelNode
     public ParseTree implement(JavaRelImplementor implementor)
     {
         FarragoRelImplementor farragoImplementor =
@@ -102,7 +102,7 @@ class ResultSetToFarragoIteratorConverter extends ConverterRel
         Expression castResultSet = new CastExpression(
             TypeName.forOJClass(Util.clazzResultSet),varResultSet);
 
-        SaffronType rowType = getRowType();
+        RelDataType rowType = getRowType();
         OJClass rowClass = OJUtil.typeToOJClass(rowType);
 
         JavaRexBuilder javaRexBuilder =
@@ -110,9 +110,9 @@ class ResultSetToFarragoIteratorConverter extends ConverterRel
 
         MemberDeclarationList memberList = new MemberDeclarationList();
 
-        SaffronField [] fields = rowType.getFields();
+        RelDataTypeField [] fields = rowType.getFields();
         for (int i = 0; i < fields.length; ++i) {
-            SaffronField field = fields[i];
+            RelDataTypeField field = fields[i];
             FarragoAtomicType type = (FarragoAtomicType) field.getType();
             ExpressionList colPosExpList = new ExpressionList(
                 Literal.makeLiteral(i + 1));

@@ -22,18 +22,20 @@
 
 package net.sf.saffron.ext;
 
-import net.sf.saffron.core.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
 import net.sf.saffron.oj.OJConnectionRegistry;
-import net.sf.saffron.oj.rel.JavaRelImplementor;
-import net.sf.saffron.oj.util.OJUtil;
-import net.sf.saffron.opt.VolcanoCluster;
-import net.sf.saffron.rel.SaffronRel;
-import net.sf.saffron.rel.TableAccessRel;
+import net.sf.saffron.core.*;
+import org.eigenbase.oj.rel.JavaRelImplementor;
+import org.eigenbase.oj.util.OJUtil;
+import org.eigenbase.relopt.RelOptCluster;
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.TableAccessRel;
 import openjava.ptree.*;
 
 
 /**
- * A <code>JdbcTable</code> implements {@link SaffronTable} by connecting to a
+ * A <code>JdbcTable</code> implements {@link RelOptTable} by connecting to a
  * JDBC database.
  *
  * @author jhyde
@@ -41,7 +43,7 @@ import openjava.ptree.*;
  *
  * @since 10 November, 2001
  */
-public class JdbcTable extends AbstractTable implements ImplementableTable
+public class JdbcTable extends RelOptAbstractTable implements ImplementableTable
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -50,16 +52,16 @@ public class JdbcTable extends AbstractTable implements ImplementableTable
     //~ Constructors ----------------------------------------------------------
 
     public JdbcTable(
-        SaffronSchema schema,
+        RelOptSchema schema,
         String name,
-        SaffronType rowType,
+        RelDataType rowType,
         JdbcColumn [] columns)
     {
         super(schema,name,rowType);
         this.columns = columns;
     }
 
-    public JdbcTable(SaffronSchema schema,String name,SaffronType rowType)
+    public JdbcTable(RelOptSchema schema,String name,RelDataType rowType)
     {
         super(schema,name,rowType);
     }
@@ -85,7 +87,7 @@ public class JdbcTable extends AbstractTable implements ImplementableTable
     }
 
     // implement ImplementableTable
-    public void implement(SaffronRel rel,JavaRelImplementor implementor)
+    public void implement(RelNode rel,JavaRelImplementor implementor)
     {
         // Generate
         //
@@ -150,7 +152,7 @@ public class JdbcTable extends AbstractTable implements ImplementableTable
                         Literal.constantNull()));
 
         String queryString = "select * from " + getName();
-        final SaffronConnection connection =
+        final RelOptConnection connection =
                 ((TableAccessRel) rel).getConnection();
         final OJConnectionRegistry.ConnectionInfo connectionInfo =
                 OJConnectionRegistry.instance.get(connection);
@@ -264,7 +266,7 @@ public class JdbcTable extends AbstractTable implements ImplementableTable
                                                                         new StatementList()))))))));
     }
 
-    public SaffronRel toRel(VolcanoCluster cluster,SaffronConnection connection)
+    public RelNode toRel(RelOptCluster cluster,RelOptConnection connection)
     {
         return new TableAccessRel(cluster,this,connection);
     }

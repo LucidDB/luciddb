@@ -22,19 +22,19 @@
 
 package net.sf.saffron.oj.xlat;
 
-import net.sf.saffron.core.SaffronType;
-import net.sf.saffron.core.SaffronTypeFactory;
-import net.sf.saffron.core.SaffronTypeFactoryImpl;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.reltype.RelDataTypeFactoryImpl;
 import net.sf.saffron.trace.SaffronTrace;
 import net.sf.saffron.oj.rel.ExpressionReaderRel;
-import net.sf.saffron.oj.util.JavaRexBuilder;
-import net.sf.saffron.oj.util.OJUtil;
-import net.sf.saffron.opt.OptUtil;
-import net.sf.saffron.opt.VolcanoCluster;
-import net.sf.saffron.opt.VolcanoQuery;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.rex.RexNode;
-import net.sf.saffron.util.Util;
+import org.eigenbase.oj.util.JavaRexBuilder;
+import org.eigenbase.oj.util.OJUtil;
+import org.eigenbase.relopt.RelOptUtil;
+import org.eigenbase.relopt.RelOptCluster;
+import org.eigenbase.relopt.RelOptQuery;
+import org.eigenbase.rel.*;
+import org.eigenbase.rex.RexNode;
+import org.eigenbase.util.Util;
 import openjava.mop.Environment;
 import openjava.mop.OJClass;
 import openjava.mop.QueryEnvironment;
@@ -52,13 +52,13 @@ import java.util.logging.Logger;
 /**
  * A <code>QueryInfo</code> holds all the information about a {@link
  * QueryExpression} while it is being translated into a collection of {@link
- * net.sf.saffron.rel.SaffronRel}s.
+ * org.eigenbase.rel.RelNode}s.
  *
  * <p>
- * Those <code>SaffronRel</code>s will all belong to the same {@link
- * VolcanoCluster}, but <code>VolcanoCluster</code> is much simpler.  Please
+ * Those <code>RelNode</code>s will all belong to the same {@link
+ * RelOptCluster}, but <code>RelOptCluster</code> is much simpler.  Please
  * put the stuff which is only needed at translation time into
- * <code>QueryInfo</code>, and keep <code>VolcanoCluster</code> simple.
+ * <code>QueryInfo</code>, and keep <code>RelOptCluster</code> simple.
  * </p>
  */
 class QueryInfo
@@ -69,8 +69,8 @@ class QueryInfo
     Environment env;
     OJQueryExpander expander;
     QueryInfo parent;
-    VolcanoCluster cluster;
-    private SaffronRel root;
+    RelOptCluster cluster;
+    private RelNode root;
     final JavaRexBuilder rexBuilder;
 
     private static final Logger tracer = SaffronTrace.getQueryExpanderTracer();
@@ -111,12 +111,12 @@ class QueryInfo
      */
     public RexNode convertExpToInternal(Expression exp)
     {
-        return convertExpToInternal(exp,new SaffronRel [] { getRoot() });
+        return convertExpToInternal(exp,new RelNode [] { getRoot() });
     }
 
     public RexNode convertExpToInternal(
         Expression exp,
-        SaffronRel [] inputs)
+        RelNode [] inputs)
     {
         InternalTranslator translator = new InternalTranslator(this,inputs,rexBuilder);
         return translator.go(exp);
@@ -133,7 +133,7 @@ class QueryInfo
      *        added to this list if an aggregate needs one and it is not
      *        present
      * @param aggCallVector calls to aggregates; {@link
-     *        net.sf.saffron.rel.AggregateRel.Call}s are added to this list if they
+     *        org.eigenbase.rel.AggregateRel.Call}s are added to this list if they
      *        are needed but are not present
      */
     public RexNode convertGroupExpToInternal(
@@ -145,7 +145,7 @@ class QueryInfo
         AggInternalTranslator translator =
             new AggInternalTranslator(
                 this,
-                new SaffronRel [] { getRoot() },
+                new RelNode [] { getRoot() },
                 groups,
                 aggInputList,
                 aggCallVector, rexBuilder);
@@ -159,28 +159,28 @@ class QueryInfo
         return translator.unpickle(translated);
     }
 
-    static VolcanoCluster createCluster(QueryInfo queryInfo,Environment env)
+    static RelOptCluster createCluster(QueryInfo queryInfo,Environment env)
     {
-        VolcanoQuery query;
+        RelOptQuery query;
         if (queryInfo == null) {
-            query = new VolcanoQuery();
+            query = new RelOptQuery();
         } else {
             query = queryInfo.cluster.query;
         }
-        final SaffronTypeFactory typeFactory =
-            SaffronTypeFactoryImpl.threadInstance();
+        final RelDataTypeFactory typeFactory =
+            RelDataTypeFactoryImpl.threadInstance();
         return query.createCluster(
             env,
             typeFactory,
             new JavaRexBuilder(typeFactory));
     }
 
-    void setRoot(SaffronRel root)
+    void setRoot(RelNode root)
     {
         this.root = root;
     }
 
-    SaffronRel getRoot()
+    RelNode getRoot()
     {
         return root;
     }
@@ -194,10 +194,10 @@ class QueryInfo
      *
      * @return the equivalent relational expression
      */
-    SaffronRel convertFromExpToRel(Expression exp)
+    RelNode convertFromExpToRel(Expression exp)
     {
         if (exp == null) {
-            SaffronRel rel = new OneRowRel(cluster);
+            RelNode rel = new OneRowRel(cluster);
             leaves.add(rel);
             return rel;
         } else if (exp instanceof JoinExpression) {
@@ -207,8 +207,8 @@ class QueryInfo
             Expression conditionExp = joinExp.getCondition();
             int saffronJoinType = joinExp.getJoinType();
             int joinType = convertJoinType(saffronJoinType);
-            SaffronRel left = convertFromExpToRel(leftExp);
-            SaffronRel right = convertFromExpToRel(rightExp);
+            RelNode left = convertFromExpToRel(leftExp);
+            RelNode right = convertFromExpToRel(rightExp);
 
             // Deal with any forward-references.
             if (!cluster.query.mapDeferredToCorrel.isEmpty()) {
@@ -222,7 +222,7 @@ class QueryInfo
                     // as a side-effect, this associates correlName with rel
                     LookupResult lookupResult =
                         lookup.lookup(
-                            new SaffronRel [] { left,right },
+                            new RelNode [] { left,right },
                             correlName);
                     assert(lookupResult != null);
                 }
@@ -233,9 +233,9 @@ class QueryInfo
             // coming from right. We'll swap them before we create a
             // JavaNestedLoopJoin.
             String [] variablesL2R =
-                OptUtil.getVariablesSetAndUsed(right,left);
+                RelOptUtil.getVariablesSetAndUsed(right,left);
             String [] variablesR2L =
-                OptUtil.getVariablesSetAndUsed(left,right);
+                RelOptUtil.getVariablesSetAndUsed(left,right);
             if ((variablesL2R.length > 0) && (variablesR2L.length > 0)) {
                 throw Util.newInternal(
                     "joined expressions must not be mutually dependent: "
@@ -251,7 +251,7 @@ class QueryInfo
             RexNode conditionExp1 =
                 convertExpToInternal(
                     conditionExp,
-                    new SaffronRel [] { left,right });
+                    new RelNode [] { left,right });
             return new JoinRel(
                 cluster,
                 left,
@@ -266,7 +266,7 @@ class QueryInfo
             QueryExpression queryExp = (QueryExpression) exp;
             QueryEnvironment qenv = new QueryEnvironment(env,queryExp);
             QueryInfo newQueryInfo = new QueryInfo(this,qenv,expander,exp);
-            SaffronRel rel = newQueryInfo.convertQueryToRel(queryExp);
+            RelNode rel = newQueryInfo.convertQueryToRel(queryExp);
             leaves.add(rel);
             return rel;
         } else {
@@ -293,7 +293,7 @@ class QueryInfo
     }
 
     /**
-     * Converts a {@link QueryExpression} into a {@link SaffronRel}. Capture
+     * Converts a {@link QueryExpression} into a {@link RelNode}. Capture
      * occurs when a query is converted into relational expressions. The
      * scalar expressions in the query reference (a) rows from their own
      * query, (b) rows from an enclosing query, (c) variables from the
@@ -302,7 +302,7 @@ class QueryInfo
      * references to rows in this query now.  References to queries inside or
      * outside this query will happen in due course.
      */
-    SaffronRel convertQueryToRel(QueryExpression queryExp)
+    RelNode convertQueryToRel(QueryExpression queryExp)
     {
         tracer.log(Level.FINE,
             "convertQueryToRel: queryExp=[" + queryExp + "] recurse [");
@@ -388,9 +388,9 @@ class QueryInfo
             if ((sorts != null) && (sorts.length > 0)) {
                 throw Toolbox.newInternal("sort not implemented");
             }
-            SaffronType relRowType = getRoot().getRowType();
+            RelDataType relRowType = getRoot().getRowType();
             OJClass queryRowClass = queryExp.getRowType(env);
-            final SaffronType queryRowType =
+            final RelDataType queryRowType =
                 OJUtil.ojToType(relRowType.getFactory(),queryRowClass);
             tracer.log(Level.FINE,
                 "] return [" + getRoot() + "] rowType=[" + relRowType + "]");
@@ -435,10 +435,10 @@ class QueryInfo
             //              }
             //              rel = new Sort(env, rel, sorts, parameter);
         }
-        SaffronType relRowType = getRoot().getRowType();
+        RelDataType relRowType = getRoot().getRowType();
         tracer.log(Level.FINE,
             "] return [" + getRoot() + "] rowType=[" + relRowType + "]");
-        SaffronType fieldType = relRowType;
+        RelDataType fieldType = relRowType;
         /*
         if (relRowType.getFieldCount() == 1) {
             fieldType = relRowType.getFields()[0].getType();
@@ -451,7 +451,7 @@ class QueryInfo
         }
         */
         final OJClass queryRowClass = queryExp.getRowType(env);
-        SaffronType queryRowType =
+        RelDataType queryRowType =
             OJUtil.ojToType(relRowType.getFactory(),queryRowClass);
         if (fieldType != queryRowType) {
             throw Util.newInternal(
@@ -465,7 +465,7 @@ class QueryInfo
     /**
      * Returns the number of columns in this input.
      */
-    int countColumns(SaffronRel rel)
+    int countColumns(RelNode rel)
     {
         return rel.getRowType().getFieldCount();
     }
@@ -476,7 +476,7 @@ class QueryInfo
      */
     LookupResult lookup(
         int offset,
-        SaffronRel [] inputs,
+        RelNode [] inputs,
         boolean isParent,
         String varName)
     {
@@ -486,10 +486,10 @@ class QueryInfo
         }
         int fieldOffset = 0;
         for (int i = 0; i < offset; i++) {
-            final SaffronRel rel = (SaffronRel) relList.get(i);
+            final RelNode rel = (RelNode) relList.get(i);
             fieldOffset += rel.getRowType().getFieldCount();
         }
-        SaffronRel rel = (SaffronRel) relList.get(offset);
+        RelNode rel = (RelNode) relList.get(offset);
         if (isParent) {
             if (varName == null) {
                 varName = rel.getOrCreateCorrelVariable();
@@ -566,7 +566,7 @@ class QueryInfo
     Expression removeSubqueries(Expression exp)
     {
         while (true) {
-            SaffronRel oldFrom = getRoot();
+            RelNode oldFrom = getRoot();
             SubqueryFinder subqueryFinder = new SubqueryFinder(this,env);
             Expression oldExp = exp;
             exp = Util.go(subqueryFinder,oldExp);
@@ -577,15 +577,15 @@ class QueryInfo
     }
 
 
-    private ArrayList flatten(SaffronRel[] rels) {
+    private ArrayList flatten(RelNode[] rels) {
         ArrayList list = new ArrayList();
         flatten(rels, list);
         return list;
     }
 
-    private void flatten(SaffronRel[] rels, ArrayList list) {
+    private void flatten(RelNode[] rels, ArrayList list) {
         for (int i = 0; i < rels.length; i++) {
-            SaffronRel rel = rels[i];
+            RelNode rel = rels[i];
             if (leaves.contains(rel)) {
                 list.add(rel);
             } else {
@@ -602,9 +602,9 @@ class QueryInfo
          * the first field in the relation we were seeking. */
         final int offset;
         /** The record type of the relation we were seeking. */
-        final SaffronType rowType;
+        final RelDataType rowType;
 
-        LocalLookupResult(int offset, SaffronType rowType) {
+        LocalLookupResult(int offset, RelDataType rowType) {
             this.offset = offset;
             this.rowType = rowType;
         }
@@ -623,7 +623,7 @@ class QueryInfo
 
 /**
  * Contains the information necessary to repeat a call to {@link
- * QueryInfo#lookup(int,SaffronRel[],boolean,String)}.
+ * QueryInfo#lookup(int,RelNode[],boolean,String)}.
  */
 class DeferredLookup
 {
@@ -644,7 +644,7 @@ class DeferredLookup
 
     //~ Methods ---------------------------------------------------------------
 
-    QueryInfo.LookupResult lookup(SaffronRel [] inputs,String varName)
+    QueryInfo.LookupResult lookup(RelNode [] inputs,String varName)
     {
         return queryInfo.lookup(offset,inputs,isParent,varName);
     }

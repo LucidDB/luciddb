@@ -22,10 +22,10 @@
 package sales;
 
 import net.sf.saffron.oj.stmt.OJStatement;
-import net.sf.saffron.runtime.Iterable;
-import net.sf.saffron.runtime.SyntheticObject;
+import org.eigenbase.runtime.Iterable;
+import org.eigenbase.runtime.SyntheticObject;
 import net.sf.saffron.test.SaffronTestCase;
-import net.sf.saffron.util.Util;
+import org.eigenbase.util.Util;
 
 import java.util.*;
 

@@ -22,15 +22,15 @@
 
 package net.sf.saffron.ext;
 
-import net.sf.saffron.core.*;
+import org.eigenbase.reltype.*;
 import net.sf.saffron.oj.OJConnectionRegistry;
 import net.sf.saffron.oj.rel.ExpressionReaderRel;
-import net.sf.saffron.oj.util.JavaRexBuilder;
-import net.sf.saffron.opt.VolcanoCluster;
-import net.sf.saffron.rel.ProjectRel;
-import net.sf.saffron.rel.SaffronRel;
-import net.sf.saffron.rex.RexNode;
-import net.sf.saffron.util.Util;
+import org.eigenbase.oj.util.JavaRexBuilder;
+import org.eigenbase.relopt.*;
+import org.eigenbase.rel.ProjectRel;
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.rex.RexNode;
+import org.eigenbase.util.Util;
 import openjava.ptree.Expression;
 import openjava.ptree.FieldAccess;
 
@@ -41,7 +41,7 @@ import java.lang.reflect.Field;
  * A <code>ClassSchema</code> is a schema whose tables are reflections of the
  * the public fields of a given class.
  */
-public class ClassSchema implements SaffronSchema
+public class ClassSchema implements RelOptSchema
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -58,7 +58,7 @@ public class ClassSchema implements SaffronSchema
 
     //~ Methods ---------------------------------------------------------------
 
-    public SaffronTable getTableForMember(String [] names)
+    public RelOptTable getTableForMember(String [] names)
     {
         assert(names.length == 1);
         String name = names[0];
@@ -67,11 +67,11 @@ public class ClassSchema implements SaffronSchema
             return null;
         }
         final Class rowType = Util.guessRowType(field.getType());
-        SaffronType type = getTypeFactory().createJavaType(rowType);
-        return new AbstractTable(this,name,type) {
-                public SaffronRel toRel(
-                    VolcanoCluster cluster,
-                    SaffronConnection connection)
+        RelDataType type = getTypeFactory().createJavaType(rowType);
+        return new RelOptAbstractTable(this,name,type) {
+                public RelNode toRel(
+                    RelOptCluster cluster,
+                    RelOptConnection connection)
                 {
                     Util.pre(cluster != null, "cluster != null");
                     Util.pre(connection != null, "connection != null");
@@ -89,11 +89,11 @@ public class ClassSchema implements SaffronSchema
                     if (true) {
                         return exprReader; // todo: cleanup
                     }
-                    final SaffronField [] exprReaderFields = exprReader.getRowType().getFields();
+                    final RelDataTypeField [] exprReaderFields = exprReader.getRowType().getFields();
                     assert exprReaderFields.length == 1;
                     // Create a project "$f0.name, $f0.empno, $f0.gender".
                     RexNode fieldAccess = cluster.rexBuilder.makeInputRef(exprReaderFields[0].getType(), 0);
-                    final SaffronField [] fields = fieldAccess.getType().getFields();
+                    final RelDataTypeField [] fields = fieldAccess.getType().getFields();
                     final String [] fieldNames = new String[fields.length];
                     final RexNode [] exps = new RexNode[fields.length];
                     for (int i = 0; i < exps.length; i++) {
@@ -108,12 +108,12 @@ public class ClassSchema implements SaffronSchema
             };
     }
 
-    public SaffronTypeFactory getTypeFactory()
+    public RelDataTypeFactory getTypeFactory()
     {
-        return SaffronTypeFactoryImpl.threadInstance();
+        return RelDataTypeFactoryImpl.threadInstance();
     }
 
-    public void registerRules(SaffronPlanner planner) throws Exception
+    public void registerRules(RelOptPlanner planner) throws Exception
     {
     }
 

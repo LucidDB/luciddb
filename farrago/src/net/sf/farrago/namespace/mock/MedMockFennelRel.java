@@ -24,15 +24,14 @@ import net.sf.farrago.query.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
 
-import net.sf.saffron.opt.*;
-import net.sf.saffron.core.*;
-import net.sf.saffron.sql.*;
-import net.sf.saffron.util.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.rel.jdbc.*;
-import net.sf.saffron.oj.stmt.*;
-import net.sf.saffron.oj.rel.*;
-import net.sf.saffron.oj.util.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.util.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.rel.jdbc.*;
+import org.eigenbase.oj.stmt.*;
+import org.eigenbase.oj.rel.*;
+import org.eigenbase.oj.util.*;
 
 import openjava.ptree.*;
 import openjava.mop.*;
@@ -52,14 +51,14 @@ class MedMockFennelRel extends TableAccessRel implements FennelPullRel
     
     MedMockFennelRel(
         MedMockColumnSet columnSet,
-        VolcanoCluster cluster,
-        SaffronConnection connection)
+        RelOptCluster cluster,
+        RelOptConnection connection)
     {
         super(cluster,columnSet,connection);
         this.columnSet = columnSet;
     }
 
-    // implement SaffronRel
+    // implement RelNode
     public CallingConvention getConvention()
     {
         return FennelPullRel.FENNEL_PULL_CONVENTION;

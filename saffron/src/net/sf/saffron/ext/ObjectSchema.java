@@ -24,11 +24,11 @@ package net.sf.saffron.ext;
 
 import junit.framework.TestSuite;
 
-import net.sf.saffron.core.SaffronSchema;
+import org.eigenbase.relopt.RelOptSchema;
 
 
 /**
- * <code>ObjectSchema</code> implements {@link SaffronSchema} by calling Java
+ * <code>ObjectSchema</code> implements {@link RelOptSchema} by calling Java
  * methods.
  *
  * @author jhyde
@@ -36,7 +36,7 @@ import net.sf.saffron.core.SaffronSchema;
  *
  * @since 8 February, 2002
  */
-public abstract class ObjectSchema implements SaffronSchema
+public abstract class ObjectSchema implements RelOptSchema
 {
     //~ Constructors ----------------------------------------------------------
 
@@ -47,11 +47,11 @@ public abstract class ObjectSchema implements SaffronSchema
     //~ Methods ---------------------------------------------------------------
 
     // for Connection
-    public static SaffronSchema getSaffronSchemaStatic()
+    public static RelOptSchema getRelOptSchemaStatic()
     {
         throw new UnsupportedOperationException(
             "Derived class must implement "
-            + "public static Schema getSaffronSchemaStatic()");
+            + "public static Schema getRelOptSchemaStatic()");
     }
 
     // implement Connection

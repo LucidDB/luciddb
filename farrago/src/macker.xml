@@ -53,6 +53,7 @@
     <pattern name="test.regression" class="net.sf.farrago.test.regression.*" />
 
     <pattern name="dt.calc" class="com.disruptivetech.farrago.calc.*" />
+    <pattern name="dt.volcano" class="com.disruptivetech.farrago.volcano.*" />
     <pattern name="dt.rel" class="com.disruptivetech.farrago.rel.*" />
     <pattern name="dt.test" class="com.disruptivetech.farrago.test.*" />
 
@@ -92,6 +93,7 @@
       <include pattern="test"/>
       <include pattern="test.regression"/>
       <include pattern="dt.calc"/>
+      <include pattern="dt.volcano"/>
       <include pattern="dt.rel"/>
       <include pattern="dt.test"/>
     </pattern>
@@ -359,8 +361,9 @@
     <pattern name="query.deps">
       <include pattern="dynamic.deps" />
       <include pattern="ojrex.deps" />
-      <!-- FIXME 25-Aug-2004:  eliminate dt.rel via session plugins  -->
+      <!-- FIXME 25-Aug-2004:  eliminate dt.* via session plugins  -->
       <include pattern="dt.rel" />
+      <include pattern="dt.volcano" />
       <include pattern="query" />
     </pattern>
 
@@ -585,7 +588,7 @@
     </access-rule>
 
     <pattern name="dt.calc.deps">
-      <include pattern="util.deps" />
+      <include pattern="resource.deps" />
       <include pattern="dt.calc" />
     </pattern>
 
@@ -596,6 +599,22 @@
         <to pattern="farrago" />
         <allow>
           <to pattern="dt.calc.deps" />
+        </allow>
+      </deny>
+    </access-rule>
+
+    <pattern name="dt.volcano.deps">
+      <include pattern="resource.deps" />
+      <include pattern="dt.volcano" />
+    </pattern>
+
+    <access-rule>
+      <message>dt.volcano dependency violation</message>
+      <deny>
+        <from pattern="dt.volcano" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="dt.volcano.deps" />
         </allow>
       </deny>
     </access-rule>
@@ -621,6 +640,7 @@
       <include pattern="test.deps" />
       <include pattern="dt.test" />
       <include pattern="dt.calc" />
+      <include pattern="dt.volcano" />
       <include pattern="dt.rel" />
     </pattern>
 

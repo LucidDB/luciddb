@@ -19,8 +19,8 @@
 
 package net.sf.farrago.ojrex;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.rex.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.rex.*;
 
 import openjava.ptree.*;
 
@@ -37,11 +37,11 @@ public class FarragoOJRexRowImplementor extends FarragoOJRexImplementor
     public Expression implementFarrago(
         FarragoRexToOJTranslator translator,RexCall call,Expression [] operands)
     {
-        SaffronType rowType = call.getType();
+        RelDataType rowType = call.getType();
         Variable variable = translator.createScratchVariable(rowType);
-        SaffronField [] fields = rowType.getFields();
+        RelDataTypeField [] fields = rowType.getFields();
         for (int i = 0; i < operands.length; ++i) {
-            final SaffronField field = fields[i];
+            final RelDataTypeField field = fields[i];
             translator.convertCastOrAssignment(
                 fields[i].getType(),
                 call.operands[i].getType(),

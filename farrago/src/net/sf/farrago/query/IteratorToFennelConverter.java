@@ -27,14 +27,14 @@ import net.sf.farrago.type.*;
 import net.sf.farrago.type.runtime.*;
 import net.sf.farrago.util.*;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.oj.util.*;
-import net.sf.saffron.oj.rel.JavaRelImplementor;
-import net.sf.saffron.oj.rel.JavaRel;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.rel.convert.*;
-import net.sf.saffron.util.Util;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.oj.util.*;
+import org.eigenbase.oj.rel.JavaRelImplementor;
+import org.eigenbase.oj.rel.JavaRel;
+import org.eigenbase.rel.*;
+import org.eigenbase.rel.convert.*;
+import org.eigenbase.util.Util;
 
 import openjava.mop.*;
 import openjava.ptree.*;
@@ -66,14 +66,14 @@ public class IteratorToFennelConverter
      * Creates a new IteratorToFennelConverter object.
      *
      * @param stmt statement to use for catalog access
-     * @param cluster VolcanoCluster for this rel
+     * @param cluster RelOptCluster for this rel
      * @param child input rel producing rows to be converted to Fennel
      * TupleStream representation
      */
     public IteratorToFennelConverter(
         FarragoPreparingStmt stmt,
-        VolcanoCluster cluster,
-        SaffronRel child)
+        RelOptCluster cluster,
+        RelNode child)
     {
         super(cluster,child);
         this.stmt = stmt;
@@ -81,7 +81,7 @@ public class IteratorToFennelConverter
 
     //~ Methods ---------------------------------------------------------------
 
-    // implement SaffronRel
+    // implement RelNode
     public CallingConvention getConvention()
     {
         return FennelPullRel.FENNEL_PULL_CONVENTION;
@@ -93,7 +93,7 @@ public class IteratorToFennelConverter
         return stmt;
     }
 
-    // implement SaffronRel
+    // implement RelNode
     public Object clone()
     {
         return new IteratorToFennelConverter(stmt,cluster,child);
@@ -102,7 +102,7 @@ public class IteratorToFennelConverter
     public static Expression generateTupleWriter(
         FarragoPreparingStmt stmt,
         JavaRelImplementor implementor,
-        SaffronType rowType)
+        RelDataType rowType)
     {
         OJClass ojClass = OJUtil.typeToOJClass(rowType);
 
@@ -144,7 +144,7 @@ public class IteratorToFennelConverter
 
         // for each field in synthetic object, generate the type-appropriate
         // code with help from the tuple accessor
-        SaffronField [] fields = rowType.getFields();
+        RelDataTypeField [] fields = rowType.getFields();
         assert (fields.length == tupleAccessor.getAttrAccessor().size());
         Iterator attrIter = tupleAccessor.getAttrAccessor().iterator();
         boolean variableWidth = false;
@@ -155,7 +155,7 @@ public class IteratorToFennelConverter
                 // bit fields are already handled
                 continue;
             }
-            SaffronField field = fields[i];
+            RelDataTypeField field = fields[i];
             FarragoAtomicType type = (FarragoAtomicType) field.getType();
             Expression fieldExp = new FieldAccess(varTuple,
                 Util.toJavaId(field.getName(),i));
@@ -294,7 +294,7 @@ public class IteratorToFennelConverter
             return Literal.constantNull();
         }
 
-        SaffronType rowType = child.getRowType();
+        RelDataType rowType = child.getRowType();
 
         // Cheeky! We happen to know it's a FarragoRelImplementor (for now).
         JavaRelImplementor javaRelImplementor = (JavaRelImplementor) implementor;
@@ -342,7 +342,7 @@ public class IteratorToFennelConverter
 
     /**
      * Registers this relational expression and rule(s) with the planner, as
-     * per {@link SaffronBaseRel#register}.
+     * per {@link AbstractRelNode#register}.
      *
      * @param planner Planner
      * @param farragoPreparingStmt Context for the preparation process
@@ -351,12 +351,12 @@ public class IteratorToFennelConverter
             final FarragoPreparingStmt farragoPreparingStmt) {
         planner.addRule(
             new ConverterRule(
-                SaffronRel.class,
+                RelNode.class,
                 CallingConvention.ITERATOR,
                 FennelPullRel.FENNEL_PULL_CONVENTION,
                 "IteratorToFennelPullRule")
             {
-                public SaffronRel convert(SaffronRel rel)
+                public RelNode convert(RelNode rel)
                 {
                     return new IteratorToFennelConverter(
                         farragoPreparingStmt,

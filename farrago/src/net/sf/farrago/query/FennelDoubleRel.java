@@ -23,10 +23,10 @@ package net.sf.farrago.query;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.type.*;
 
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.core.*;
-import net.sf.saffron.util.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.util.*;
 
 import openjava.ptree.*;
 
@@ -36,36 +36,36 @@ import openjava.ptree.*;
  * @author John V. Sichi
  * @version $Id$
  */
-abstract class FennelDoubleRel extends SaffronBaseRel implements FennelRel
+abstract class FennelDoubleRel extends AbstractRelNode implements FennelRel
 {
-    SaffronRel left;
-    SaffronRel right;
+    RelNode left;
+    RelNode right;
 
     /**
      * Creates a new FennelDoubleRel object.
      *
-     * @param cluster VolcanoCluster for this rel
+     * @param cluster RelOptCluster for this rel
      * @param left left input
      * @param right right input
      */
     protected FennelDoubleRel(
-        VolcanoCluster cluster,
-        SaffronRel left,
-        SaffronRel right)
+        RelOptCluster cluster,
+        RelNode left,
+        RelNode right)
     {
         super(cluster);
         this.left = left;
         this.right = right;
     }
 
-    // implement SaffronRel
-    public SaffronRel [] getInputs()
+    // implement RelNode
+    public RelNode [] getInputs()
     {
-        return new SaffronRel [] { left,right };
+        return new RelNode [] { left,right };
     }
 
-    // implement SaffronRel
-    public void replaceInput(int ordinalInParent,SaffronRel p)
+    // implement RelNode
+    public void replaceInput(int ordinalInParent,RelNode p)
     {
         switch (ordinalInParent) {
         case 0:
@@ -91,7 +91,7 @@ abstract class FennelDoubleRel extends SaffronBaseRel implements FennelRel
         return (FarragoTypeFactory) cluster.typeFactory;
     }
 
-    // implement SaffronRel
+    // implement RelNode
     public Object implementFennelChild(FennelRelImplementor implementor)
     {
         Expression expr1 = (Expression)
@@ -104,13 +104,13 @@ abstract class FennelDoubleRel extends SaffronBaseRel implements FennelRel
             new ExpressionList(expr1,expr2));
     }
 
-    // implement SaffronRel
-    protected SaffronType deriveRowType()
+    // implement RelNode
+    protected RelDataType deriveRowType()
     {
-        SaffronType leftType = left.getRowType();
-        SaffronType rightType = right.getRowType();
+        RelDataType leftType = left.getRowType();
+        RelDataType rightType = right.getRowType();
         return cluster.typeFactory.createJoinType(
-            new SaffronType [] { leftType,rightType });
+            new RelDataType [] { leftType,rightType });
     }
 
     /**

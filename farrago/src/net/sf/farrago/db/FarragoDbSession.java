@@ -34,10 +34,10 @@ import net.sf.farrago.trace.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.runtime.*;
 
-import net.sf.saffron.sql.*;
-import net.sf.saffron.util.*;
-import net.sf.saffron.oj.stmt.*;
-import net.sf.saffron.oj.rex.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.util.*;
+import org.eigenbase.oj.stmt.*;
+import org.eigenbase.oj.rex.*;
 
 import java.util.*;
 import java.util.logging.*;
@@ -535,20 +535,12 @@ public class FarragoDbSession
     }
 
 
-    /**
-     * Makes a new preparing statement tied to this session and its underlying
-     * database.  Used to construct and implement an internal query plan.
-     *
-     * @param stmtValidator generic stmt validator
-     *
-     * @return a new {@link net.sf.farrago.query.FarragoPreparingStmt}.
-     */
-    public FarragoPreparingStmt newPreparingStmt(
+    // implement FarragoSession
+    public FarragoSessionPreparingStmt newPreparingStmt(
         FarragoSessionStmtValidator stmtValidator)
     {
         return new FarragoPreparingStmt(stmtValidator);
     }
-
 
     FarragoSessionExecutableStmt prepare(
         String sql,
@@ -652,8 +644,9 @@ public class FarragoDbSession
     }
 
     /**
-    * Does some custom sql validations which can't be perform by Saffron
-    */
+     * Does some custom sql validations which can't be performed by
+     * the vanilla validator.
+     */
     public void validate(SqlNode sqlNode)
     {
     }

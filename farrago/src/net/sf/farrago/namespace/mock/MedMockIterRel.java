@@ -21,15 +21,15 @@ package net.sf.farrago.namespace.mock;
 
 import net.sf.farrago.util.*;
 
-import net.sf.saffron.opt.*;
-import net.sf.saffron.core.*;
-import net.sf.saffron.sql.*;
-import net.sf.saffron.util.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.rel.jdbc.*;
-import net.sf.saffron.oj.stmt.*;
-import net.sf.saffron.oj.rel.*;
-import net.sf.saffron.oj.util.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.util.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.rel.jdbc.*;
+import org.eigenbase.oj.stmt.*;
+import org.eigenbase.oj.rel.*;
+import org.eigenbase.oj.util.*;
 
 import openjava.ptree.*;
 import openjava.mop.*;
@@ -49,8 +49,8 @@ class MedMockIterRel extends TableAccessRel implements JavaRel
     
     MedMockIterRel(
         MedMockColumnSet columnSet,
-        VolcanoCluster cluster,
-        SaffronConnection connection)
+        RelOptCluster cluster,
+        RelOptConnection connection)
     {
         super(cluster,columnSet,connection);
         this.columnSet = columnSet;
@@ -63,7 +63,7 @@ class MedMockIterRel extends TableAccessRel implements JavaRel
 
     public ParseTree implement(JavaRelImplementor implementor)
     {
-        final SaffronType outputRowType = getRowType();
+        final RelDataType outputRowType = getRowType();
         OJClass outputRowClass = OJUtil.typeToOJClass(outputRowType);
 
         Expression newRowExp = new AllocationExpression(

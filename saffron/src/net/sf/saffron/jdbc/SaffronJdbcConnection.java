@@ -22,11 +22,11 @@
 
 package net.sf.saffron.jdbc;
 
-import net.sf.saffron.core.SaffronSchema;
-import net.sf.saffron.core.SaffronConnection;
+import org.eigenbase.relopt.RelOptSchema;
+import org.eigenbase.relopt.RelOptConnection;
 import net.sf.saffron.ext.ClassSchema;
-import net.sf.saffron.util.EnumeratedValues;
-import net.sf.saffron.util.Util;
+import org.eigenbase.util.EnumeratedValues;
+import org.eigenbase.util.Util;
 
 import openjava.mop.OJClass;
 
@@ -54,14 +54,14 @@ public class SaffronJdbcConnection implements Connection
 {
     //~ Instance fields -------------------------------------------------------
 
-    public SaffronConnection saffronConnection;
+    public RelOptConnection saffronConnection;
 
     //~ Constructors ----------------------------------------------------------
 
     public SaffronJdbcConnection(String url,Properties info)
     {
         this();
-        initSaffronConnection(url,info);
+        initRelOptConnection(url,info);
     }
 
     protected SaffronJdbcConnection()
@@ -284,7 +284,7 @@ public class SaffronJdbcConnection implements Connection
         return SaffronJdbcDriver.getUrlPrefixStatic();
     }
 
-    protected void initSaffronConnection(String url,Properties info)
+    protected void initRelOptConnection(String url,Properties info)
     {
         Properties properties = parseURL(url,info);
         final String schemaName = properties.getProperty(Property.Schema);
@@ -296,10 +296,10 @@ public class SaffronJdbcConnection implements Connection
         try {
             final Class clazz = Class.forName(schemaName);
             Object o = clazz.newInstance();
-            if (o instanceof SaffronConnection) {
-                saffronConnection = (SaffronConnection) o;
-            } else if (o instanceof SaffronSchema) {
-                saffronConnection = new MyConnection(o,(SaffronSchema) o);
+            if (o instanceof RelOptConnection) {
+                saffronConnection = (RelOptConnection) o;
+            } else if (o instanceof RelOptSchema) {
+                saffronConnection = new MyConnection(o,(RelOptSchema) o);
             } else {
                 final ClassSchema schema =
                     new ClassSchema(clazz,false) {
@@ -348,18 +348,18 @@ public class SaffronJdbcConnection implements Connection
 
     //~ Inner Classes ---------------------------------------------------------
 
-    public static class MyConnection implements SaffronConnection
+    public static class MyConnection implements RelOptConnection
     {
         public final Object target;
-        private final SaffronSchema schema;
+        private final RelOptSchema schema;
 
-        public MyConnection(Object target,SaffronSchema schema)
+        public MyConnection(Object target,RelOptSchema schema)
         {
             this.target = target;
             this.schema = schema;
         }
 
-        public SaffronSchema getSaffronSchema()
+        public RelOptSchema getRelOptSchema()
         {
             return schema;
         }
@@ -379,8 +379,8 @@ public class SaffronJdbcConnection implements Connection
          * 
          * <p>
          * The class must have a zero-argument constructor. If it the class
-         * implements {@link SaffronSchema}, the fields are deduced using
-         * {@link SaffronSchema#getTableForMember}; otherwise, the fields are
+         * implements {@link RelOptSchema}, the fields are deduced using
+         * {@link RelOptSchema#getTableForMember}; otherwise, the fields are
          * deduced using reflection.
          * </p>
          */

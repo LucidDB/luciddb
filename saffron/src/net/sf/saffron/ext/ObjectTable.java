@@ -22,11 +22,9 @@
 
 package net.sf.saffron.ext;
 
-import net.sf.saffron.core.SaffronConnection;
-import net.sf.saffron.core.SaffronSchema;
-import net.sf.saffron.core.SaffronType;
-import net.sf.saffron.opt.VolcanoCluster;
-import net.sf.saffron.rel.SaffronRel;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.rel.RelNode;
 
 
 /**
@@ -37,11 +35,11 @@ import net.sf.saffron.rel.SaffronRel;
  *
  * @since 8 February, 2002
  */
-public class ObjectTable extends AbstractTable
+public class ObjectTable extends RelOptAbstractTable
 {
     //~ Constructors ----------------------------------------------------------
 
-    public ObjectTable(SaffronSchema schema,SaffronType rowType)
+    public ObjectTable(RelOptSchema schema,RelDataType rowType)
     {
         super(schema,null,rowType);
     }
@@ -62,7 +60,7 @@ public class ObjectTable extends AbstractTable
     {
     }
 
-    public SaffronRel toRel(VolcanoCluster cluster,SaffronConnection connection)
+    public RelNode toRel(RelOptCluster cluster,RelOptConnection connection)
     {
         throw new UnsupportedOperationException();
     }

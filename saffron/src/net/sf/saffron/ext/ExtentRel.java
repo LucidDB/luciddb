@@ -22,11 +22,11 @@
 
 package net.sf.saffron.ext;
 
-import net.sf.saffron.core.PlanWriter;
-import net.sf.saffron.core.SaffronTable;
-import net.sf.saffron.core.SaffronType;
-import net.sf.saffron.opt.VolcanoCluster;
-import net.sf.saffron.rel.SaffronBaseRel;
+import org.eigenbase.relopt.RelOptPlanWriter;
+import org.eigenbase.relopt.RelOptTable;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.relopt.RelOptCluster;
+import org.eigenbase.rel.AbstractRelNode;
 
 
 /**
@@ -54,11 +54,11 @@ import net.sf.saffron.rel.SaffronBaseRel;
  *
  * @see ExtentTable
  */
-public class ExtentRel extends SaffronBaseRel
+public class ExtentRel extends AbstractRelNode
 {
     //~ Instance fields -------------------------------------------------------
 
-    private SaffronTable table;
+    private RelOptTable table;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -69,16 +69,16 @@ public class ExtentRel extends SaffronBaseRel
      * @pre table != null
      */
     public ExtentRel(
-        VolcanoCluster cluster,
-        SaffronType rowType,
-        SaffronTable table)
+        RelOptCluster cluster,
+        RelDataType rowType,
+        RelOptTable table)
     {
         super(cluster);
         assert(rowType != null);
         assert(table != null);
         this.rowType = rowType;
         this.table = table;
-        cluster.getPlanner().registerSchema(table.getSaffronSchema());
+        cluster.getPlanner().registerSchema(table.getRelOptSchema());
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -93,7 +93,7 @@ public class ExtentRel extends SaffronBaseRel
         return this;
     }
 
-    public void explain(PlanWriter pw)
+    public void explain(RelOptPlanWriter pw)
     {
         pw.explain(
             this,
@@ -101,7 +101,7 @@ public class ExtentRel extends SaffronBaseRel
             new Object [] { getRowType() });
     }
 
-    public SaffronTable getTable()
+    public RelOptTable getTable()
     {
         return table;
     }

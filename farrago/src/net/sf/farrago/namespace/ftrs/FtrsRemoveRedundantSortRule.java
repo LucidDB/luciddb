@@ -22,10 +22,9 @@ package net.sf.farrago.namespace.ftrs;
 import net.sf.farrago.util.*;
 import net.sf.farrago.query.*;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.util.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.util.*;
 
 import java.util.*;
 
@@ -37,25 +36,25 @@ import java.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class FtrsRemoveRedundantSortRule extends VolcanoRule
+class FtrsRemoveRedundantSortRule extends RelOptRule
 {
     public FtrsRemoveRedundantSortRule()
     {
         super(
-            new RuleOperand(
+            new RelOptRuleOperand(
                 FennelSortRel.class,
-                new RuleOperand [] {
-                    new RuleOperand(FtrsIndexScanRel.class,null) }));
+                new RelOptRuleOperand [] {
+                    new RelOptRuleOperand(FtrsIndexScanRel.class,null) }));
     }
 
-    // implement VolcanoRule
+    // implement RelOptRule
     public CallingConvention getOutConvention()
     {
         return FennelPullRel.FENNEL_PULL_CONVENTION;
     }
 
-    // implement VolcanoRule
-    public void onMatch(VolcanoRuleCall call)
+    // implement RelOptRule
+    public void onMatch(RelOptRuleCall call)
     {
         FennelSortRel sortRel = (FennelSortRel) call.rels[0];
         FtrsIndexScanRel scanRel = (FtrsIndexScanRel) call.rels[1];

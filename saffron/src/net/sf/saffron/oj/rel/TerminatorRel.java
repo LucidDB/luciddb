@@ -22,11 +22,13 @@
 
 package net.sf.saffron.oj.rel;
 
+import org.eigenbase.oj.rel.*;
+
 /**
  * A <code>TerminatorRel</code> is a relational expression which cannot be
  * fetched from, but which is the root node in the tree of {@link
- * net.sf.saffron.rel.SaffronRel}s implemented by an {@link
- * net.sf.saffron.oj.rel.JavaRelImplementor}.
+ * org.eigenbase.rel.RelNode}s implemented by an {@link
+ * org.eigenbase.oj.rel.JavaRelImplementor}.
  *
  * @author jhyde
  * @version $Id$

@@ -27,10 +27,11 @@ import junit.framework.TestResult;
 import junit.framework.TestSuite;
 import junit.textui.TestRunner;
 import net.sf.saffron.oj.xlat.SqlToOpenjavaConverter;
-import net.sf.saffron.sql2rel.SqlToRelConverter;
-import net.sf.saffron.util.Graph;
-import net.sf.saffron.util.OptionsListTest;
-import net.sf.saffron.util.SaffronProperties;
+import net.sf.saffron.sql2rel.ConverterTest;
+import org.eigenbase.sql2rel.SqlToRelConverter;
+import org.eigenbase.util.Graph;
+import org.eigenbase.util.OptionsListTest;
+import org.eigenbase.util.SaffronProperties;
 import sales.InMemorySalesTestCase;
 import sales.JdbcSalesTestCase;
 import sales.SalesInMemorySchemaTestCase;
@@ -206,7 +207,7 @@ public class Main extends TestCase
     }
 
     private static void addAllTests(TestSuite suite) throws Exception {
-        suite.addTest(net.sf.saffron.util.Util.suite());
+        suite.addTest(org.eigenbase.util.Util.suite());
         if (false) {
             suite.addTestSuite(JdbcSalesTestCase.class);
             // TODO: enable
@@ -214,22 +215,13 @@ public class Main extends TestCase
             // TODO: enable
             suite.addTestSuite(SalesInMemorySchemaTestCase.class);
         }
-        suite.addTestSuite(
-            net.sf.saffron.runtime.BufferedIterator.Test.class);
-        suite.addTestSuite(
-            net.sf.saffron.runtime.ThreadIterator.Test.class);
         if (false) {
             // TODO: enable
             suite.addTest(net.sf.saffron.ext.ObjectSchema.suite());
         }
-        suite.addTestSuite(net.sf.saffron.sql.parser.SqlParserTest.class);
         suite.addTest(SqlToOpenjavaConverter.suite());
         suite.addTestSuite(JdbcTest.class);
-        suite.addTestSuite(Graph.GraphTest.class);
-        suite.addTest(SqlToRelConverter.suite());
-        suite.addTestSuite(OptionsListTest.class);
-        suite.addTestSuite(SaffronSqlValidationTest.class);
-        suite.addTestSuite(RexTransformerTest.class);
+        suite.addTestSuite(ConverterTest.class);
     }
 
     /**

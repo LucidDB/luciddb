@@ -21,8 +21,8 @@
 
 package net.sf.saffron.walden;
 
-import net.sf.saffron.runtime.VarDecl;
-import net.sf.saffron.util.Util;
+import org.eigenbase.runtime.VarDecl;
+import org.eigenbase.util.Util;
 
 import openjava.mop.OJClass;
 

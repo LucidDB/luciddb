@@ -22,10 +22,10 @@
 package sales;
 
 import net.sf.saffron.oj.stmt.*;
-import net.sf.saffron.runtime.Row;
-import net.sf.saffron.util.DelegatingInvocationHandler;
-import net.sf.saffron.util.Util;
-import net.sf.saffron.core.SaffronConnection;
+import org.eigenbase.runtime.Row;
+import org.eigenbase.util.DelegatingInvocationHandler;
+import org.eigenbase.util.Util;
+import org.eigenbase.relopt.RelOptConnection;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -63,7 +63,7 @@ public class JdbcSalesTestCase extends SalesTestCase
     }
 
     //~ Methods ---------------------------------------------------------------
-    public SaffronConnection getConnection() {
+    public RelOptConnection getConnection() {
         return getSales();
     }
 

@@ -19,7 +19,7 @@
 
 package net.sf.farrago.util;
 
-import net.sf.saffron.util.*;
+import org.eigenbase.util.*;
 
 import java.io.*;
 import java.sql.*;
@@ -88,7 +88,7 @@ public abstract class FarragoUtil
         tracer.throwing("FarragoUtil","newSqlException",ex);
         
         SQLException sqlExcn;
-        if (ex instanceof FarragoException || ex instanceof SaffronException) {
+        if (ex instanceof FarragoException) {
             // TODO:  map for SQLState
             sqlExcn = new SQLException(ex.getMessage());
         } else if (ex instanceof SQLException) {

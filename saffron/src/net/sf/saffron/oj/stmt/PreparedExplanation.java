@@ -22,10 +22,11 @@
 
 package net.sf.saffron.oj.stmt;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.runtime.*;
-import net.sf.saffron.util.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.runtime.*;
+import org.eigenbase.util.*;
 
 import java.io.*;
 
@@ -45,11 +46,11 @@ public class PreparedExplanation implements PreparedResult
 {
     //~ Instance fields -------------------------------------------------------
 
-    private final SaffronRel rel;
+    private final RelNode rel;
 
     //~ Constructors ----------------------------------------------------------
 
-    PreparedExplanation(SaffronRel rel)
+    PreparedExplanation(RelNode rel)
     {
         this.rel = rel;
     }
@@ -60,7 +61,7 @@ public class PreparedExplanation implements PreparedResult
     {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
-        PlanWriter planWriter = new PlanWriter(pw);
+        RelOptPlanWriter planWriter = new RelOptPlanWriter(pw);
         planWriter.withIdPrefix = false;
         rel.explain(planWriter);
         pw.flush();
@@ -72,7 +73,7 @@ public class PreparedExplanation implements PreparedResult
         return false;
     }
 
-    public SaffronRel getRel()
+    public RelNode getRel()
     {
         return rel;
     }

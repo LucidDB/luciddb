@@ -24,7 +24,7 @@ import net.sf.farrago.trace.*;
 import java.util.*;
 import java.util.logging.*;
 
-import net.sf.saffron.util.*;
+import org.eigenbase.util.*;
 
 /**
  * FarragoObjectCache implements generic object caching.  It doesn't use

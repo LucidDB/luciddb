@@ -20,9 +20,9 @@
 package net.sf.farrago.namespace.mdr;
 
 import net.sf.farrago.util.JmiUtil;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.JoinRel;
-import net.sf.saffron.rel.SaffronRel;
+import org.eigenbase.relopt.*;
+import org.eigenbase.rel.JoinRel;
+import org.eigenbase.rel.RelNode;
 
 import javax.jmi.model.Reference;
 import javax.jmi.model.StructuralFeature;
@@ -35,37 +35,37 @@ import java.util.List;
  * @author John V. Sichi
  * @version $Id$
  */
-class MedMdrJoinRule extends VolcanoRule
+class MedMdrJoinRule extends RelOptRule
 {
     MedMdrJoinRule()
     {
         // TODO:  allow join to work on inputs other
         // than MedMdrClassExtentRel (e.g. filters, projects, other joins)
         super(
-            new RuleOperand(
+            new RelOptRuleOperand(
                 JoinRel.class,
-                new RuleOperand [] {
-                    new RuleOperand(
-                        SaffronRel.class,
+                new RelOptRuleOperand [] {
+                    new RelOptRuleOperand(
+                        RelNode.class,
                         null),
-                    new RuleOperand(
+                    new RelOptRuleOperand(
                         MedMdrClassExtentRel.class,
                         null)
                 }));
     }
 
-    // implement VolcanoRule
+    // implement RelOptRule
     public CallingConvention getOutConvention()
     {
         return CallingConvention.ITERATOR;
     }
     
-    // implement VolcanoRule
-    public void onMatch(VolcanoRuleCall call)
+    // implement RelOptRule
+    public void onMatch(RelOptRuleCall call)
     {
         JoinRel joinRel = (JoinRel) call.rels[0];
 
-        SaffronRel leftRel = call.rels[1];
+        RelNode leftRel = call.rels[1];
         MedMdrClassExtentRel rightRel = (MedMdrClassExtentRel) call.rels[2];
 
         if (!joinRel.getVariablesStopped().isEmpty()) {
@@ -79,7 +79,7 @@ class MedMdrJoinRule extends VolcanoRule
         }
 
         int [] joinFieldOrdinals = new int[2];
-        if (!OptUtil.analyzeSimpleEquiJoin(joinRel,joinFieldOrdinals)) {
+        if (!RelOptUtil.analyzeSimpleEquiJoin(joinRel,joinFieldOrdinals)) {
             return;
         }
         int leftOrdinal = joinFieldOrdinals[0];
@@ -120,12 +120,12 @@ class MedMdrJoinRule extends VolcanoRule
         }
         */
 
-        SaffronRel iterLeft = convert(leftRel,CallingConvention.ITERATOR);
+        RelNode iterLeft = convert(leftRel,CallingConvention.ITERATOR);
         if (iterLeft == null) {
             return;
         }
         
-        SaffronRel iterRight = convert(rightRel,CallingConvention.ITERATOR);
+        RelNode iterRight = convert(rightRel,CallingConvention.ITERATOR);
         if (iterRight == null) {
             return;
         }

@@ -21,11 +21,11 @@
 
 package net.sf.saffron.walden;
 
-import net.sf.saffron.core.SaffronConnection;
+import org.eigenbase.relopt.RelOptConnection;
 import net.sf.saffron.oj.stmt.OJStatement;
 import net.sf.saffron.oj.xlat.OJQueryExpander;
-import net.sf.saffron.runtime.VarDecl;
-import net.sf.saffron.util.Util;
+import org.eigenbase.runtime.VarDecl;
+import org.eigenbase.util.Util;
 import openjava.mop.Environment;
 import openjava.mop.OJClass;
 import openjava.ptree.ClassDeclaration;
@@ -59,7 +59,7 @@ public class Interpreter
     //~ Instance fields -------------------------------------------------------
 
     ArrayList argumentList;
-    private final SaffronConnection connection;
+    private final RelOptConnection connection;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -74,7 +74,7 @@ public class Interpreter
                     "Could not create interpreter's default connection");
         }
         try {
-            connection = (SaffronConnection) clazz.newInstance();
+            connection = (RelOptConnection) clazz.newInstance();
         } catch (InstantiationException e) {
             throw Util.newInternal(e,
                     "Could not create interpreter's default connection");

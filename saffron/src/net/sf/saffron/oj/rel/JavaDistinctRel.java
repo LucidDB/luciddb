@@ -22,14 +22,15 @@
 
 package net.sf.saffron.oj.rel;
 
-import net.sf.saffron.core.SaffronPlanner;
-import net.sf.saffron.oj.util.OJUtil;
-import net.sf.saffron.opt.CallingConvention;
-import net.sf.saffron.opt.PlanCost;
-import net.sf.saffron.opt.VolcanoCluster;
-import net.sf.saffron.rel.DistinctRel;
-import net.sf.saffron.rel.SaffronRel;
-import net.sf.saffron.util.Util;
+import org.eigenbase.oj.rel.*;
+import org.eigenbase.relopt.RelOptPlanner;
+import org.eigenbase.oj.util.OJUtil;
+import org.eigenbase.relopt.CallingConvention;
+import org.eigenbase.relopt.RelOptCost;
+import org.eigenbase.relopt.RelOptCluster;
+import org.eigenbase.rel.DistinctRel;
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.util.Util;
 import openjava.mop.Toolbox;
 import openjava.ptree.*;
 
@@ -46,7 +47,7 @@ public class JavaDistinctRel extends DistinctRel implements JavaLoopRel
 
     //~ Constructors ----------------------------------------------------------
 
-    public JavaDistinctRel(VolcanoCluster cluster,SaffronRel child)
+    public JavaDistinctRel(RelOptCluster cluster,RelNode child)
     {
         super(cluster,child);
     }
@@ -58,13 +59,13 @@ public class JavaDistinctRel extends DistinctRel implements JavaLoopRel
         return CallingConvention.JAVA;
     }
 
-    // implement SaffronRel
+    // implement RelNode
     public Object clone()
     {
         return new JavaDistinctRel(cluster,child);
     }
 
-    public PlanCost computeSelfCost(SaffronPlanner planner)
+    public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
         double dRows = child.getRows();
         double dCpu = Util.nLogN(dRows);

@@ -27,10 +27,10 @@ import net.sf.farrago.type.runtime.*;
 import net.sf.farrago.util.*;
 import net.sf.farrago.catalog.*;
 
-import net.sf.saffron.rel.*;
-import net.sf.saffron.util.*;
-import net.sf.saffron.sql.SqlCollation;
-import net.sf.saffron.core.SaffronTypeFactoryImpl;
+import org.eigenbase.rel.*;
+import org.eigenbase.util.*;
+import org.eigenbase.sql.SqlCollation;
+import org.eigenbase.reltype.RelDataTypeFactoryImpl;
 
 import openjava.mop.*;
 
@@ -109,7 +109,7 @@ public class FarragoPrecisionType extends FarragoAtomicType
         return charsetName;
     }
 
-    /** implement SaffronType */
+    /** implement RelDataType */
     public Charset getCharset() throws RuntimeException {
         if (!isCharType()) {
             throw Util.newInternal(digest+" is not defined to carry a charset");
@@ -120,7 +120,7 @@ public class FarragoPrecisionType extends FarragoAtomicType
         return Charset.forName(this.charsetName);
     }
 
-    /** implement SaffronType */
+    /** implement RelDataType */
     public SqlCollation getCollation() throws RuntimeException {
         if (!isCharType()) {
             throw Util.newInternal(digest+" is not defined to carry a collation");
@@ -154,7 +154,7 @@ public class FarragoPrecisionType extends FarragoAtomicType
         case Types.CHAR:
         case Types.VARCHAR:
             return precision *
-                    SaffronTypeFactoryImpl.getMaxBytesPerChar(charsetName);
+                    RelDataTypeFactoryImpl.getMaxBytesPerChar(charsetName);
         default:
             return precision;
         }

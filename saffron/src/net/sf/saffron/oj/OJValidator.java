@@ -22,8 +22,8 @@
 
 package net.sf.saffron.oj;
 
-import net.sf.saffron.core.SaffronTable;
-import net.sf.saffron.util.Util;
+import org.eigenbase.relopt.RelOptTable;
+import org.eigenbase.util.Util;
 
 import openjava.mop.*;
 
@@ -116,7 +116,7 @@ public class OJValidator extends VariableBinder
 
     private boolean fieldExists(ParseTree expr,String name,Environment env)
     {
-        SaffronTable table = Util.getTable(env,expr,null,name);
+        RelOptTable table = Util.getTable(env,expr,null,name);
         if (table != null) {
             return true;
         }

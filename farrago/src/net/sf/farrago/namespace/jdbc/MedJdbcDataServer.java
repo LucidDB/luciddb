@@ -26,13 +26,13 @@ import net.sf.farrago.type.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.resource.*;
 
-import net.sf.saffron.sql.*;
-import net.sf.saffron.core.*;
-import net.sf.saffron.util.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.convert.*;
-import net.sf.saffron.rel.jdbc.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.util.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.rel.convert.*;
+import org.eigenbase.rel.jdbc.*;
 
 import java.sql.*;
 import java.util.*;
@@ -139,7 +139,7 @@ class MedJdbcDataServer extends MedAbstractDataServer
         String [] localName,
         Properties tableProps,
         FarragoTypeFactory typeFactory,
-        SaffronType rowType,
+        RelDataType rowType,
         Map columnPropMap)
         throws SQLException
     {
@@ -183,7 +183,7 @@ class MedJdbcDataServer extends MedAbstractDataServer
     }
 
     // implement FarragoMedDataServer
-    public void registerRules(SaffronPlanner planner)
+    public void registerRules(RelOptPlanner planner)
     {
         super.registerRules(planner);
         JdbcQuery.register(planner);
@@ -191,12 +191,12 @@ class MedJdbcDataServer extends MedAbstractDataServer
         // tell optimizer how to convert data from JDBC into Farrago
         planner.addRule(
             new ConverterRule(
-                SaffronRel.class,
+                RelNode.class,
                 CallingConvention.RESULT_SET,
                 CallingConvention.ITERATOR,
                 "ResultSetToFarragoIteratorRule")
             {
-                public SaffronRel convert(SaffronRel rel)
+                public RelNode convert(RelNode rel)
                 {
                     return new ResultSetToFarragoIteratorConverter(
                         rel.getCluster(),

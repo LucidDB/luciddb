@@ -22,8 +22,8 @@ package net.sf.farrago.ojrex;
 import net.sf.farrago.type.*;
 import net.sf.farrago.type.runtime.*;
 
-import net.sf.saffron.sql.*;
-import net.sf.saffron.rex.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.rex.*;
 
 import openjava.mop.*;
 import openjava.ptree.*;

@@ -23,15 +23,14 @@ import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.query.*;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.ext.*;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.rel.*;
 
 import java.util.*;
 
 /**
- * An implementation of SaffronTable for accessing data stored in FTRS.
+ * An implementation of RelOptTable for accessing data stored in FTRS.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -42,7 +41,7 @@ class FtrsTable extends MedAbstractColumnSet
 
     FtrsTable(
         String [] localName,
-        SaffronType rowType,
+        RelDataType rowType,
         Properties tableProps,
         Map columnPropMap)
     {
@@ -51,8 +50,8 @@ class FtrsTable extends MedAbstractColumnSet
 
     //~ Methods ---------------------------------------------------------------
 
-    // implement SaffronTable
-    public SaffronRel toRel(VolcanoCluster cluster,SaffronConnection connection)
+    // implement RelOptTable
+    public RelNode toRel(RelOptCluster cluster,RelOptConnection connection)
     {
         return new FtrsIndexScanRel(
             cluster,

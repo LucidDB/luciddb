@@ -22,7 +22,8 @@ package net.sf.farrago.namespace;
 import net.sf.farrago.util.*;
 import net.sf.farrago.type.*;
 
-import net.sf.saffron.core.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
 
 import java.sql.*;
 import java.util.*;
@@ -64,7 +65,7 @@ public interface FarragoMedDataServer extends FarragoAllocation
      * @param localName the qualified name to assign to the column set
      * within Farrago; this should NOT be used for finding the actual data,
      * since it can be set arbitrarily by the caller; instead, it
-     * should be used to implement the SaffronTable.getQualifiedName() method,
+     * should be used to implement the RelOptTable.getQualifiedName() method,
      * and can be useful for correlation during debugging
      *
      * @param tableProps properties to use for data location and access
@@ -90,7 +91,7 @@ public interface FarragoMedDataServer extends FarragoAllocation
         String [] localName,
         Properties tableProps,
         FarragoTypeFactory typeFactory,
-        SaffronType rowType,
+        RelDataType rowType,
         Map columnPropMap)
         throws SQLException;
 
@@ -115,7 +116,7 @@ public interface FarragoMedDataServer extends FarragoAllocation
      * @param planner the planner in which the rules should
      * be registered
      */
-    public void registerRules(SaffronPlanner planner);
+    public void registerRules(RelOptPlanner planner);
 }
 
 // End FarragoMedDataServer.java

@@ -19,7 +19,7 @@
 
 package net.sf.farrago.util;
 
-import net.sf.saffron.util.*;
+import org.eigenbase.util.*;
 
 import org.apache.xerces.jaxp.*;
 

@@ -22,19 +22,20 @@
 
 package net.sf.saffron.oj.rel;
 
-import net.sf.saffron.core.PlanWriter;
-import net.sf.saffron.core.SaffronPlanner;
-import net.sf.saffron.core.SaffronType;
-import net.sf.saffron.oj.OJTypeFactory;
-import net.sf.saffron.oj.util.JavaRowExpression;
-import net.sf.saffron.oj.util.OJUtil;
-import net.sf.saffron.opt.CallingConvention;
-import net.sf.saffron.opt.PlanCost;
-import net.sf.saffron.opt.VolcanoCluster;
-import net.sf.saffron.rel.SaffronBaseRel;
-import net.sf.saffron.rex.RexNode;
-import net.sf.saffron.rex.RexUtil;
-import net.sf.saffron.util.Util;
+import org.eigenbase.relopt.RelOptPlanWriter;
+import org.eigenbase.relopt.RelOptPlanner;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.oj.OJTypeFactory;
+import org.eigenbase.oj.util.JavaRowExpression;
+import org.eigenbase.oj.util.OJUtil;
+import org.eigenbase.oj.rel.*;
+import org.eigenbase.relopt.CallingConvention;
+import org.eigenbase.relopt.RelOptCost;
+import org.eigenbase.relopt.RelOptCluster;
+import org.eigenbase.rel.AbstractRelNode;
+import org.eigenbase.rex.RexNode;
+import org.eigenbase.rex.RexUtil;
+import org.eigenbase.util.Util;
 import openjava.mop.OJClass;
 import openjava.ptree.*;
 
@@ -106,7 +107,7 @@ import java.util.HashSet;
  *
  * @since 8 December, 2001
  */
-public class ExpressionReaderRel extends SaffronBaseRel implements JavaRel
+public class ExpressionReaderRel extends AbstractRelNode implements JavaRel
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -121,7 +122,7 @@ public class ExpressionReaderRel extends SaffronBaseRel implements JavaRel
     /**
      * Creates an <code>ExpressionReaderRel</code>.
      *
-     * @param cluster {@link VolcanoCluster} this relational expression
+     * @param cluster {@link RelOptCluster} this relational expression
      *        belongs to
      * @param exp expression to evaluate
      * @param rowType row type of the expression; if null, the row type is
@@ -133,7 +134,7 @@ public class ExpressionReaderRel extends SaffronBaseRel implements JavaRel
      *        the row type is "java.lang.String" then the row type will be
      *        "Record{$f0:String}".
      */
-    public ExpressionReaderRel(VolcanoCluster cluster, RexNode exp, SaffronType rowType)
+    public ExpressionReaderRel(RelOptCluster cluster, RexNode exp, RelDataType rowType)
     {
         super(cluster);
         if (rowType != null) {
@@ -172,7 +173,7 @@ public class ExpressionReaderRel extends SaffronBaseRel implements JavaRel
         return new ExpressionReaderRel(cluster,RexUtil.clone(exp), rowType);
     }
 
-    public PlanCost computeSelfCost(SaffronPlanner planner)
+    public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
         int arrayLength = 50; // a guess
         double dRows = arrayLength;
@@ -181,7 +182,7 @@ public class ExpressionReaderRel extends SaffronBaseRel implements JavaRel
         return planner.makeCost(dRows,dCpu,dIo);
     }
 
-    public void explain(PlanWriter pw)
+    public void explain(RelOptPlanWriter pw)
     {
         pw.explain(this,new String [] { "expression" });
     }
@@ -191,10 +192,10 @@ public class ExpressionReaderRel extends SaffronBaseRel implements JavaRel
         return implementor.translate(this,exp);
     }
 
-    protected SaffronType deriveRowType()
+    protected RelDataType deriveRowType()
     {
-        final SaffronType type = exp.getType();
-        final SaffronType componentType = type.getComponentType();
+        final RelDataType type = exp.getType();
+        final RelDataType componentType = type.getComponentType();
         if (componentType == null) {
             throw Util.newInternal(
                 "expression " + exp + " is not relational "
@@ -203,14 +204,14 @@ public class ExpressionReaderRel extends SaffronBaseRel implements JavaRel
         distinct = isDistinct(exp);
         if (false) {
             return cluster.typeFactory.createProjectType(
-                    new SaffronType[] {componentType}, new String[] {"$f0"});
+                    new RelDataType[] {componentType}, new String[] {"$f0"});
         } else {
             return componentType;
         }
     }
 
     private boolean isDistinct(RexNode exp) {
-        final SaffronType type = exp.getType();
+        final RelDataType type = exp.getType();
         final OJClass ojClass = ((OJTypeFactory) cluster.typeFactory).toOJClass(null,type);
         if (Util.clazzSet.isAssignableFrom(ojClass)) {
             return true;
@@ -251,7 +252,7 @@ public class ExpressionReaderRel extends SaffronBaseRel implements JavaRel
 
     private CallingConvention chooseConvention(RexNode exp)
     {
-        final SaffronType saffronType = exp.getType();
+        final RelDataType saffronType = exp.getType();
         OJClass clazz = OJUtil.typeToOJClass(saffronType);
         if (clazz.getComponentType() != null) {
             return CallingConvention.ARRAY;

@@ -22,7 +22,7 @@
 
 package net.sf.saffron.jdbc;
 
-import net.sf.saffron.util.Util;
+import org.eigenbase.util.Util;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;

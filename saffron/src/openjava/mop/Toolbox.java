@@ -15,12 +15,12 @@ package openjava.mop;
 import openjava.ptree.*;
 import openjava.ptree.util.ParseTreeVisitor;
 import net.sf.saffron.core.AggregationExtender;
-import net.sf.saffron.core.SaffronSchema;
-import net.sf.saffron.core.SaffronTable;
-import net.sf.saffron.core.SaffronConnection;
+import org.eigenbase.relopt.RelOptSchema;
+import org.eigenbase.relopt.RelOptTable;
+import org.eigenbase.relopt.RelOptConnection;
 import net.sf.saffron.runtime.AggAndAcc;
 import net.sf.saffron.runtime.SaffronUtil;
-import net.sf.saffron.runtime.SyntheticObject;
+import org.eigenbase.runtime.SyntheticObject;
 import net.sf.saffron.runtime.SaffronError;
 import net.sf.saffron.oj.OJConnectionRegistry;
 
@@ -51,7 +51,7 @@ public abstract class Toolbox {
             clazzObject);
 
     public static final OJClass clazzConnection = OJClass.forClass(
-            SaffronConnection.class);
+            RelOptConnection.class);
 
     public static final OJClass clazzCollection = OJClass.forClass(
             java.util.Collection.class);
@@ -72,7 +72,7 @@ public abstract class Toolbox {
             java.util.Iterator.class);
 
     public static final OJClass clazzIterable = OJClass.forClass(
-            net.sf.saffron.runtime.Iterable.class);
+            org.eigenbase.runtime.Iterable.class);
 
     public static final OJClass clazzVector = OJClass.forClass(
             java.util.Vector.class);
@@ -1370,9 +1370,9 @@ public abstract class Toolbox {
     /**
      * Converts a field access into a table.
      **/
-    public static SaffronTable getTable(
+    public static RelOptTable getTable(
         Environment env, ParseTree expr, String qualifier, String name) {
-        SaffronSchema schema = getSaffronSchema(expr, env);
+        RelOptSchema schema = getRelOptSchema(expr, env);
         if (schema == null) {
             return null;
         }
@@ -1381,30 +1381,30 @@ public abstract class Toolbox {
         return schema.getTableForMember(names);
     }
 
-    private static SaffronSchema getSaffronSchema(ParseTree expr, Environment env) {
+    private static RelOptSchema getRelOptSchema(ParseTree expr, Environment env) {
         if (expr instanceof Variable) {
             final Environment.VariableInfo info = env.lookupBind(expr.toString());
-            SaffronSchema schema = info.getSaffronSchema();
+            RelOptSchema schema = info.getRelOptSchema();
             if (schema != null) {
                 return schema;
             }
         }
-        final SaffronConnection saffronConnection = OJConnectionRegistry.instance.get(expr);
+        final RelOptConnection saffronConnection = OJConnectionRegistry.instance.get(expr);
         if (saffronConnection != null) {
-            return saffronConnection.getSaffronSchema();
+            return saffronConnection.getRelOptSchema();
         }
         OJClass exprType = getType(env, expr);
         if (clazzConnection.isAssignableFrom(exprType)) {
-            // Call the "getSaffronSchemaStatic()" method, if it exists.
+            // Call the "getRelOptSchemaStatic()" method, if it exists.
             OJMethod method;
             try {
-                method = exprType.getMethod("getSaffronSchemaStatic", null);
+                method = exprType.getMethod("getRelOptSchemaStatic", null);
                 try {
                     Object o = method.invoke(null, new Object[0]);
-                    if (!(o instanceof SaffronSchema)) {
-                        throw newInternal(method + " must return a SaffronSchema");
+                    if (!(o instanceof RelOptSchema)) {
+                        throw newInternal(method + " must return a RelOptSchema");
                     }
-                    return (SaffronSchema) o;
+                    return (RelOptSchema) o;
                 } catch (IllegalAccessException e) {
                 } catch (InvocationTargetException e) {
                 } catch (CannotExecuteException e) {

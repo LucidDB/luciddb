@@ -24,8 +24,9 @@ import net.sf.farrago.trace.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.type.runtime.*;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.runtime.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.runtime.*;
 
 import java.sql.*;
 
@@ -33,7 +34,7 @@ import java.util.*;
 import java.util.logging.*;
 
 /**
- * FarragoIteratorResultSet is a refinement of Saffron's IteratorResultSet
+ * FarragoIteratorResultSet is a refinement of IteratorResultSet
  * which exposes Farrago datatype semantics.
  *
  * @author John V. Sichi
@@ -50,7 +51,7 @@ public class FarragoIteratorResultSet extends IteratorResultSet
     //~ Instance fields -------------------------------------------------------
 
     private FarragoAllocation allocation;
-    private SaffronType rowType;
+    private RelDataType rowType;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -65,7 +66,7 @@ public class FarragoIteratorResultSet extends IteratorResultSet
     public FarragoIteratorResultSet(
         Iterator iterator,
         Class clazz,
-        SaffronType rowType,
+        RelDataType rowType,
         FarragoAllocation allocation)
     {
         super(iterator,new SyntheticColumnGetter(clazz));

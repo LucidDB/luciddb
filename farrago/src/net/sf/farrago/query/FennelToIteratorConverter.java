@@ -28,14 +28,14 @@ import net.sf.farrago.type.*;
 import net.sf.farrago.type.runtime.*;
 import net.sf.farrago.util.*;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.oj.util.*;
-import net.sf.saffron.oj.rel.JavaRelImplementor;
-import net.sf.saffron.oj.rel.JavaRel;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.rel.convert.*;
-import net.sf.saffron.util.Util;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.oj.util.*;
+import org.eigenbase.oj.rel.JavaRelImplementor;
+import org.eigenbase.oj.rel.JavaRel;
+import org.eigenbase.rel.*;
+import org.eigenbase.rel.convert.*;
+import org.eigenbase.util.Util;
 
 import openjava.mop.*;
 
@@ -65,30 +65,30 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
     /**
      * Creates a new FennelToIteratorConverter object.
      *
-     * @param cluster VolcanoCluster for this rel
+     * @param cluster RelOptCluster for this rel
      * @param child input rel producing rows in Fennel TupleStream
      * representation
      */
-    public FennelToIteratorConverter(VolcanoCluster cluster,SaffronRel child)
+    public FennelToIteratorConverter(RelOptCluster cluster,RelNode child)
     {
         super(cluster,child);
     }
 
     //~ Methods ---------------------------------------------------------------
 
-    // implement SaffronRel
+    // implement RelNode
     public CallingConvention getConvention()
     {
         return CallingConvention.ITERATOR;
     }
 
-    // implement SaffronRel
+    // implement RelNode
     public Object clone()
     {
         return new FennelToIteratorConverter(cluster,child);
     }
 
-    // implement SaffronRel
+    // implement RelNode
     public ParseTree implement(JavaRelImplementor implementor)
     {
         assert (child.getConvention().equals(
@@ -103,7 +103,7 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
         FennelRel fennelRel = (FennelRel) child;
         FarragoCatalog catalog = fennelRel.getPreparingStmt().getCatalog();
 
-        final SaffronType rowType = getRowType();
+        final RelDataType rowType = getRowType();
         OJClass rowClass = OJUtil.typeToOJClass(rowType);
 
         if (!catalog.isFennelEnabled()) {
@@ -183,7 +183,7 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
         // TODO:  reordering
         // for each field in synthetic object, generate the type-appropriate
         // code with help from the tuple accessor
-        SaffronField [] fields = rowType.getFields();
+        RelDataTypeField [] fields = rowType.getFields();
         Variable varPrevEndOffset = null;
         assert (fields.length == tupleAccessor.getAttrAccessor().size());
         Iterator attrIter = tupleAccessor.getAttrAccessor().iterator();
@@ -194,7 +194,7 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
                 // bit fields are already handled
                 continue;
             }
-            SaffronField field = fields[i];
+            RelDataTypeField field = fields[i];
             FarragoAtomicType type = (FarragoAtomicType) field.getType();
             if (type.hasClassForPrimitive()) {
                 Class primitiveClass =
@@ -389,18 +389,18 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
 
     /**
      * Registers this relational expression and rule(s) with the planner, as
-     * per {@link SaffronBaseRel#register}.
+     * per {@link AbstractRelNode#register}.
      * @param planner Planner
      */
     public static void register(FarragoPlanner planner) {
         planner.addRule(
             new ConverterRule(
-                SaffronRel.class,
+                RelNode.class,
                 FennelPullRel.FENNEL_PULL_CONVENTION,
                 CallingConvention.ITERATOR,
                 "FennelToIteratorRule")
             {
-                public SaffronRel convert(SaffronRel rel)
+                public RelNode convert(RelNode rel)
                 {
                     return new FennelToIteratorConverter(rel.getCluster(),rel);
                 }

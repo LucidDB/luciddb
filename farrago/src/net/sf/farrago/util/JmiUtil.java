@@ -19,7 +19,7 @@
 
 package net.sf.farrago.util;
 
-import net.sf.saffron.util.*;
+import org.eigenbase.util.*;
 
 import org.netbeans.api.xmi.*;
 import org.netbeans.lib.jmi.util.*;

@@ -21,8 +21,10 @@
 package net.sf.farrago.type.runtime;
 
 import net.sf.farrago.resource.FarragoResource;
-import net.sf.saffron.sql.parser.ParserUtil;
-import net.sf.saffron.resource.SaffronResource;
+import net.sf.farrago.resource.FarragoResource;
+
+import org.eigenbase.sql.parser.ParserUtil;
+import org.eigenbase.resource.*;
 
 import java.util.Calendar;
 import java.util.TimeZone;
@@ -246,7 +248,7 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
                 assignFrom(parsedDate);
             }
             else {
-                String reason = SaffronResource.instance().
+                String reason = EigenbaseResource.instance().
                     getBadFormat(DateFormatStr);
 
                 throw FarragoResource.instance().
@@ -296,7 +298,7 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
                 assignFrom(parsedDate);
             }
             else {
-                String reason = SaffronResource.instance().
+                String reason = EigenbaseResource.instance().
                     getBadFormat(TimeFormatStr);
 
                 throw FarragoResource.instance().
@@ -348,7 +350,7 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
                 assignFrom(parsedDate);
             }
             else {
-                String reason = SaffronResource.instance().
+                String reason = EigenbaseResource.instance().
                     getBadFormat(TimestampFormatStr);
 
                 throw FarragoResource.instance().

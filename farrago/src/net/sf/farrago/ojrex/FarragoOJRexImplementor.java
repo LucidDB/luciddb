@@ -19,8 +19,8 @@
 
 package net.sf.farrago.ojrex;
 
-import net.sf.saffron.rex.*;
-import net.sf.saffron.oj.rex.*;
+import org.eigenbase.rex.*;
+import org.eigenbase.oj.rex.*;
 
 import openjava.ptree.*;
 

@@ -22,9 +22,9 @@ package com.disruptivetech.farrago.calc;
 
 import net.sf.farrago.resource.*;
 
-import net.sf.saffron.sql.SqlLiteral;
-import net.sf.saffron.util.EnumeratedValues;
-import net.sf.saffron.util.Util;
+import org.eigenbase.sql.SqlLiteral;
+import org.eigenbase.util.EnumeratedValues;
+import org.eigenbase.util.Util;
 
 import net.sf.farrago.trace.*;
 

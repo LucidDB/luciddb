@@ -22,10 +22,10 @@ package net.sf.farrago.ojrex;
 import net.sf.farrago.type.*;
 import net.sf.farrago.type.runtime.*;
 
-import net.sf.saffron.sql.*;
-import net.sf.saffron.rex.*;
-import net.sf.saffron.core.*;
-import net.sf.saffron.oj.util.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.rex.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.oj.util.*;
 
 import openjava.ptree.*;
 import openjava.mop.*;
@@ -43,8 +43,8 @@ public class FarragoOJRexCastImplementor extends FarragoOJRexImplementor
     public Expression implementFarrago(
         FarragoRexToOJTranslator translator,RexCall call,Expression [] operands)
     {
-        SaffronType lhsType = call.getType();
-        SaffronType rhsType = call.operands[0].getType();
+        RelDataType lhsType = call.getType();
+        RelDataType rhsType = call.operands[0].getType();
         Expression rhsExp = operands[0];
         return convertCastOrAssignment(
             translator,lhsType,rhsType,null,rhsExp);
@@ -52,8 +52,8 @@ public class FarragoOJRexCastImplementor extends FarragoOJRexImplementor
 
     private Expression convertCastNull(
         FarragoRexToOJTranslator translator,
-        SaffronType lhsType,
-        SaffronType rhsType,
+        RelDataType lhsType,
+        RelDataType rhsType,
         Expression lhsExp,
         Expression rhsExp)
     {
@@ -76,8 +76,8 @@ public class FarragoOJRexCastImplementor extends FarragoOJRexImplementor
 
     private Expression convertCastPrimitiveToNullablePrimitive(
         FarragoRexToOJTranslator translator,
-        SaffronType lhsType,
-        SaffronType rhsType,
+        RelDataType lhsType,
+        RelDataType rhsType,
         Expression lhsExp,
         Expression rhsExp)
     {
@@ -119,8 +119,8 @@ public class FarragoOJRexCastImplementor extends FarragoOJRexImplementor
 
     Expression convertCastToNotNullPrimitive(
         FarragoRexToOJTranslator translator,
-        SaffronType lhsType,
-        SaffronType rhsType,
+        RelDataType lhsType,
+        RelDataType rhsType,
         Expression lhsExp,
         Expression rhsExp)
     {
@@ -153,8 +153,8 @@ public class FarragoOJRexCastImplementor extends FarragoOJRexImplementor
 
     Expression convertCastToAssignableValue(
         FarragoRexToOJTranslator translator,
-        SaffronType lhsType,
-        SaffronType rhsType,
+        RelDataType lhsType,
+        RelDataType rhsType,
         Expression lhsExp,
         Expression rhsExp)
     {
@@ -238,8 +238,8 @@ public class FarragoOJRexCastImplementor extends FarragoOJRexImplementor
 
     Expression convertCastOrAssignment(
         FarragoRexToOJTranslator translator,
-        SaffronType lhsType,
-        SaffronType rhsType,
+        RelDataType lhsType,
+        RelDataType rhsType,
         Expression lhsExp,
         Expression rhsExp)
     {
@@ -249,7 +249,7 @@ public class FarragoOJRexCastImplementor extends FarragoOJRexImplementor
             // generate code which will throw an exception whenever an attempt
             // is made to cast a null value to a NOT NULL type
 
-            if (SaffronTypeFactoryImpl.isJavaType(rhsType)) {
+            if (RelDataTypeFactoryImpl.isJavaType(rhsType)) {
                 translator.addStatement(
                     new ExpressionStatement(
                         new MethodCall(
@@ -318,8 +318,8 @@ public class FarragoOJRexCastImplementor extends FarragoOJRexImplementor
     // implement OJRexImplementor
     public boolean canImplement(RexCall call)
     {
-        SaffronType lhsType = (FarragoAtomicType) call.getType();
-        SaffronType rhsType = call.operands[0].getType();
+        RelDataType lhsType = (FarragoAtomicType) call.getType();
+        RelDataType rhsType = call.operands[0].getType();
         if ((lhsType instanceof FarragoAtomicType)
             && (rhsType instanceof FarragoAtomicType))
         {

@@ -22,9 +22,10 @@
 
 package net.sf.saffron.oj.stmt;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.util.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.util.*;
 
 import openjava.ptree.*;
 
@@ -44,7 +45,7 @@ public class PreparedExecution implements PreparedResult
     //~ Instance fields -------------------------------------------------------
 
     private final ParseTree parseTree;
-    private final SaffronType rowType;
+    private final RelDataType rowType;
     private final boolean isDml;
     private final BoundMethod boundMethod;
 
@@ -52,7 +53,7 @@ public class PreparedExecution implements PreparedResult
 
     PreparedExecution(
         ParseTree parseTree,
-        SaffronType rowType,
+        RelDataType rowType,
         boolean isDml,
         BoundMethod boundMethod)
     {
@@ -74,7 +75,7 @@ public class PreparedExecution implements PreparedResult
         return isDml;
     }
 
-    public SaffronType getRowType()
+    public RelDataType getRowType()
     {
         return rowType;
     }

@@ -27,21 +27,24 @@ import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.util.*;
 import net.sf.farrago.catalog.*;
 
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.rex.*;
-import net.sf.saffron.sql.*;
-import net.sf.saffron.sql2rel.*;
-import net.sf.saffron.sql.parser.*;
-import net.sf.saffron.oj.*;
-import net.sf.saffron.oj.rel.*;
-import net.sf.saffron.oj.stmt.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.rex.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql2rel.*;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.oj.*;
+import org.eigenbase.oj.rel.*;
+import org.eigenbase.oj.stmt.*;
 
 import openjava.ptree.*;
 
 import junit.framework.*;
 
 import java.io.*;
+
+// FIXME jvs 29-Aug-2004
+import com.disruptivetech.farrago.volcano.AbstractConverter;
 
 /**
  * FarragoRexToOJTranslatorTest contains unit tests for the translation code in
@@ -144,7 +147,7 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
 
             // dig out the top-level relational expression, which
             // we just KNOW will be an IterCalcRel
-            SaffronRel topRel = explanation.getRel();
+            RelNode topRel = explanation.getRel();
             assert(topRel instanceof IterCalcRel) : topRel.getClass().getName();
             IterCalcRel calcRel = (IterCalcRel) topRel;
 
@@ -199,7 +202,7 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
         planner.addCallingConvention(FennelPullRel.FENNEL_PULL_CONVENTION);
         planner.registerAbstractRels();
         planner.addRule(new AbstractConverter.ExpandConversionRule());
-        planner.addRule(OJPlannerFactory.IterCalcRule.instance);
+        planner.addRule(IterRules.IterCalcRule.instance);
         FennelToIteratorConverter.register(planner);
         stmt.setPlanner(planner);
     }

@@ -22,17 +22,17 @@ package com.disruptivetech.farrago.rel;
 
 import net.sf.farrago.query.*;
 
-import net.sf.saffron.core.PlanWriter;
-import net.sf.saffron.core.SaffronPlanner;
-import net.sf.saffron.core.SaffronType;
-import net.sf.saffron.opt.PlanCost;
-import net.sf.saffron.opt.VolcanoCluster;
-import net.sf.saffron.opt.RelImplementor;
-import net.sf.saffron.rel.CalcRel;
-import net.sf.saffron.rel.RelFieldCollation;
-import net.sf.saffron.rel.SaffronRel;
-import net.sf.saffron.rex.RexNode;
-import net.sf.saffron.util.Util;
+import org.eigenbase.relopt.RelOptPlanWriter;
+import org.eigenbase.relopt.RelOptPlanner;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.relopt.RelOptCost;
+import org.eigenbase.relopt.RelOptCluster;
+import org.eigenbase.relopt.RelImplementor;
+import org.eigenbase.rel.CalcRel;
+import org.eigenbase.rel.RelFieldCollation;
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.rex.RexNode;
+import org.eigenbase.util.Util;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -43,7 +43,7 @@ import java.util.Arrays;
  *
  * <p>Rules:<ul>
  * <li>{@link FennelCalcRule} creates this from a
- *     {@link net.sf.saffron.rel.CalcRel}</li>
+ *     {@link org.eigenbase.rel.CalcRel}</li>
  * </ul></p>
  *
  * @author jhyde
@@ -60,16 +60,16 @@ public abstract class FennelCalcRel extends FennelSingleRel {
     /**
      * Creates a new FennelCalcRel object.
      *
-     * @param cluster VolcanoCluster for this rel
+     * @param cluster RelOptCluster for this rel
      * @param child rel producing rows to be Calced
      * @param rowType Row type
      * @param projectExprs Expressions returned by the calculator
      * @param conditionExpr Filter condition, may be null
      */
     protected FennelCalcRel(
-            VolcanoCluster cluster,
-            SaffronRel child,
-            SaffronType rowType, RexNode[] projectExprs,
+            RelOptCluster cluster,
+            RelNode child,
+            RelDataType rowType, RexNode[] projectExprs,
             RexNode conditionExpr) {
         super(cluster, child);
         Util.pre(rowType != null, "rowType != null");
@@ -103,12 +103,12 @@ public abstract class FennelCalcRel extends FennelSingleRel {
         return (RexNode[]) list.toArray(new RexNode[list.size()]);
     }
 
-    public void explain(PlanWriter pw) {
+    public void explain(RelOptPlanWriter pw) {
         CalcRel.explainCalc(this, pw, _conditionExpr, _projectExprs);
     }
 
-    // implement SaffronRel
-    public PlanCost computeSelfCost(SaffronPlanner planner) {
+    // implement RelNode
+    public RelOptCost computeSelfCost(RelOptPlanner planner) {
         // TODO:  the real thing
         double rowCount = getRows();
 

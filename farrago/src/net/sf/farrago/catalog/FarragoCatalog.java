@@ -36,7 +36,7 @@ import net.sf.farrago.fennel.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.util.*;
 import net.sf.farrago.trace.*;
-import net.sf.saffron.util.SaffronProperties;
+import org.eigenbase.util.SaffronProperties;
 
 import org.netbeans.api.mdr.*;
 import org.netbeans.mdr.*;

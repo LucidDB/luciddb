@@ -22,15 +22,16 @@
 
 package net.sf.saffron.oj.rel;
 
-import net.sf.saffron.oj.util.OJUtil;
-import net.sf.saffron.opt.CallingConvention;
-import net.sf.saffron.opt.OptUtil;
-import net.sf.saffron.opt.VolcanoCluster;
-import net.sf.saffron.rel.ProjectRel;
-import net.sf.saffron.rel.SaffronRel;
-import net.sf.saffron.rex.RexNode;
-import net.sf.saffron.rex.RexUtil;
-import net.sf.saffron.util.Util;
+import org.eigenbase.oj.rel.*;
+import org.eigenbase.oj.util.OJUtil;
+import org.eigenbase.relopt.CallingConvention;
+import org.eigenbase.relopt.RelOptUtil;
+import org.eigenbase.relopt.RelOptCluster;
+import org.eigenbase.rel.ProjectRel;
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.rex.RexNode;
+import org.eigenbase.rex.RexUtil;
+import org.eigenbase.util.Util;
 import openjava.ptree.AllocationExpression;
 import openjava.ptree.Expression;
 import openjava.ptree.ExpressionList;
@@ -47,8 +48,8 @@ public class JavaProjectRel extends ProjectRel
     //~ Constructors ----------------------------------------------------------
 
     public JavaProjectRel(
-        VolcanoCluster cluster,
-        SaffronRel child,
+        RelOptCluster cluster,
+        RelNode child,
         RexNode [] exps,
         String [] fieldNames,
         int flags)
@@ -59,7 +60,7 @@ public class JavaProjectRel extends ProjectRel
 
     //~ Methods ---------------------------------------------------------------
 
-    // implement SaffronRel
+    // implement RelNode
     public CallingConvention getConvention()
     {
         return CallingConvention.JAVA;
@@ -69,13 +70,13 @@ public class JavaProjectRel extends ProjectRel
     {
         return new JavaProjectRel(
             cluster,
-            OptUtil.clone(child),
+            RelOptUtil.clone(child),
             RexUtil.clone(exps),
             Util.clone(fieldNames),
             getFlags());
     }
 
-    // implement SaffronRel
+    // implement RelNode
     public ParseTree implement(JavaRelImplementor implementor)
     {
         return implementor.visitJavaChild(this, 0, (JavaRel) child);

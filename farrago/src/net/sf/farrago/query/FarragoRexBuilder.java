@@ -21,8 +21,8 @@ package net.sf.farrago.query;
 
 import net.sf.farrago.type.*;
 
-import net.sf.saffron.rex.*;
-import net.sf.saffron.oj.util.*;
+import org.eigenbase.rex.*;
+import org.eigenbase.oj.util.*;
 
 /**
  * FarragoRexBuilder refines JavaRexBuilder with Farrago-specific details.

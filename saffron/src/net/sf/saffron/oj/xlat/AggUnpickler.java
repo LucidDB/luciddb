@@ -22,9 +22,9 @@
 
 package net.sf.saffron.oj.xlat;
 
-import net.sf.saffron.core.SaffronType;
-import net.sf.saffron.rex.*;
-import net.sf.saffron.util.Util;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.rex.*;
+import org.eigenbase.util.Util;
 
 
 /**

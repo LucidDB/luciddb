@@ -25,7 +25,7 @@ import junit.framework.Assert;
 import java.sql.SQLException;
 
 /**
- * <code>FarragoTypeTest</code> tests the type converstion of Saffron
+ * <code>FarragoTypeTest</code> tests type conversion
  *
  * @author kinkoi
  * @since Dec 29, 2003

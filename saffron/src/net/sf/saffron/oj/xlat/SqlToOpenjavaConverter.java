@@ -26,16 +26,17 @@ import junit.framework.AssertionFailedError;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-import net.sf.saffron.core.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.relopt.*;
 import net.sf.saffron.jdbc.SaffronJdbcConnection;
 import net.sf.saffron.oj.stmt.OJStatement;
-import net.sf.saffron.rel.JoinRel;
-import net.sf.saffron.sql.*;
-import net.sf.saffron.sql.parser.ParseException;
-import net.sf.saffron.sql.parser.SqlParser;
-import net.sf.saffron.sql.type.SqlTypeName;
-import net.sf.saffron.util.NlsString;
-import net.sf.saffron.util.Util;
+import org.eigenbase.rel.JoinRel;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.ParseException;
+import org.eigenbase.sql.parser.SqlParser;
+import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.util.NlsString;
+import org.eigenbase.util.Util;
 import openjava.ptree.*;
 
 import java.math.BigDecimal;
@@ -554,15 +555,15 @@ public class SqlToOpenjavaConverter
 
     /**
      * A <code>SchemaCatalogReader</code> looks up catalog information from a
-     * {@link SaffronSchema saffron schema object}.
+     * {@link RelOptSchema saffron schema object}.
      */
     public static class SchemaCatalogReader
         implements SqlValidator.CatalogReader
     {
-        private final SaffronSchema schema;
+        private final RelOptSchema schema;
         private final boolean upperCase;
 
-        public SchemaCatalogReader(SaffronSchema schema,boolean upperCase)
+        public SchemaCatalogReader(RelOptSchema schema,boolean upperCase)
         {
             this.schema = schema;
             this.upperCase = upperCase;
@@ -573,11 +574,11 @@ public class SqlToOpenjavaConverter
             if (names.length != 1) {
                 return null;
             }
-            final SaffronTable table =
+            final RelOptTable table =
                 schema.getTableForMember(new String[]{maybeUpper(names[0])});
             if (table != null) {
                 return new SqlValidator.Table() {
-                    public SaffronType getRowType() {
+                    public RelDataType getRowType() {
                         return table.getRowType();
                     }
                     public String [] getQualifiedName() {
@@ -586,11 +587,11 @@ public class SqlToOpenjavaConverter
 
                         public List getColumnNames()
                         {
-                            final SaffronType rowType = table.getRowType();
-                            final SaffronField [] fields = rowType.getFields();
+                            final RelDataType rowType = table.getRowType();
+                            final RelDataTypeField [] fields = rowType.getFields();
                             ArrayList list = new ArrayList();
                             for (int i = 0; i < fields.length; i++) {
-                                SaffronField field = fields[i];
+                                RelDataTypeField field = fields[i];
                                 list.add(maybeUpper(field.getName()));
                             }
                             return list;
@@ -610,8 +611,8 @@ public class SqlToOpenjavaConverter
     {
         private final SqlValidator.CatalogReader seeker;
         private final Connection jdbcConnection;
-        private final SaffronConnection connection;
-        private final SaffronSchema schema;
+        private final RelOptConnection connection;
+        private final RelOptSchema schema;
         private static TestContext instance;
 
         TestContext()
@@ -629,7 +630,7 @@ public class SqlToOpenjavaConverter
                 throw Util.newInternal(e);
             }
             connection = ((SaffronJdbcConnection) jdbcConnection).saffronConnection;
-            schema = connection.getSaffronSchema();
+            schema = connection.getRelOptSchema();
             seeker = new SchemaCatalogReader(schema,false);
             OJStatement.setupFactories();
         }

@@ -21,13 +21,13 @@ package net.sf.farrago.namespace.jdbc;
 
 import net.sf.farrago.util.*;
 
-import net.sf.saffron.opt.*;
-import net.sf.saffron.core.*;
-import net.sf.saffron.sql.*;
-import net.sf.saffron.util.*;
-import net.sf.saffron.rel.jdbc.*;
-import net.sf.saffron.oj.stmt.*;
-import net.sf.saffron.oj.rel.JavaRelImplementor;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.util.*;
+import org.eigenbase.rel.jdbc.*;
+import org.eigenbase.oj.stmt.*;
+import org.eigenbase.oj.rel.JavaRelImplementor;
 
 import openjava.ptree.*;
 import openjava.mop.*;
@@ -46,9 +46,9 @@ class MedJdbcQueryRel extends JdbcQuery
     
     MedJdbcQueryRel(
         MedJdbcColumnSet columnSet,
-        VolcanoCluster cluster,
-        SaffronType rowType,
-        SaffronConnection connection,
+        RelOptCluster cluster,
+        RelDataType rowType,
+        RelOptConnection connection,
         SqlDialect dialect,
         SqlSelect sql)
     {

@@ -20,12 +20,12 @@
 
 package net.sf.farrago.query;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.util.*;
-import net.sf.saffron.rex.RexNode;
-import net.sf.saffron.rex.RexInputRef;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.util.*;
+import org.eigenbase.rex.RexNode;
+import org.eigenbase.rex.RexInputRef;
 
 import java.util.*;
 import java.util.List;
@@ -38,7 +38,7 @@ import java.util.List;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FennelRenameRule extends VolcanoRule
+public class FennelRenameRule extends RelOptRule
 {
     private CallingConvention convention;
     
@@ -50,39 +50,39 @@ public class FennelRenameRule extends VolcanoRule
     public FennelRenameRule(CallingConvention convention,String description)
     {
         super(
-            new RuleOperand(
+            new RelOptRuleOperand(
                 ProjectRel.class,
-                new RuleOperand [] { new RuleOperand(SaffronRel.class,null) }));
+                new RelOptRuleOperand [] { new RelOptRuleOperand(RelNode.class,null) }));
         this.convention = convention;
         this.description = description;
     }
 
     //~ Methods ---------------------------------------------------------------
 
-    // implement VolcanoRule
+    // implement RelOptRule
     public CallingConvention getOutConvention()
     {
         return convention;
     }
 
-    // implement VolcanoRule
-    public void onMatch(VolcanoRuleCall call)
+    // implement RelOptRule
+    public void onMatch(RelOptRuleCall call)
     {
         ProjectRel project = (ProjectRel) call.rels[0];
         if (!project.isBoxed()) {
             return;
         }
 
-        SaffronRel inputRel = call.rels[1];
+        RelNode inputRel = call.rels[1];
 
         int n = project.getChildExps().length;
-        SaffronType inputType = inputRel.getRowType();
+        RelDataType inputType = inputRel.getRowType();
         if (inputType.getFieldCount() != n) {
             return;
         }
-        SaffronType projType = project.getRowType();
-        SaffronField [] projFields = projType.getFields();
-        SaffronField [] inputFields = inputType.getFields();
+        RelDataType projType = project.getRowType();
+        RelDataTypeField [] projFields = projType.getFields();
+        RelDataTypeField [] inputFields = inputType.getFields();
         String [] fieldNames = new String[n];
         boolean needRename = false;
         for (int i = 0; i < n; ++i) {
@@ -103,7 +103,7 @@ public class FennelRenameRule extends VolcanoRule
             fieldNames[i] = projFieldName;
         }
 
-        SaffronRel fennelInput = convert(inputRel,convention);
+        RelNode fennelInput = convert(inputRel,convention);
         if (fennelInput == null) {
             return;
         }

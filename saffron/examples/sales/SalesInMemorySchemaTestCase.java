@@ -22,7 +22,7 @@
 package sales;
 
 import net.sf.saffron.oj.stmt.OJStatement;
-import net.sf.saffron.core.SaffronConnection;
+import org.eigenbase.relopt.RelOptConnection;
 
 
 /**
@@ -58,7 +58,7 @@ public class SalesInMemorySchemaTestCase extends SalesTestCase
 
     //~ Methods ---------------------------------------------------------------
 
-    public SaffronConnection getConnection() {
+    public RelOptConnection getConnection() {
         return connection;
     }
 }

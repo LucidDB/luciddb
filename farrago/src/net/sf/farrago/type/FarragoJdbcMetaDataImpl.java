@@ -19,7 +19,7 @@
 
 package net.sf.farrago.type;
 
-import net.sf.saffron.core.*;
+import org.eigenbase.reltype.*;
 
 import java.sql.*;
 
@@ -32,9 +32,9 @@ import java.sql.*;
 public class FarragoJdbcMetaDataImpl
 {
     /** Type info to return. */
-    protected final SaffronType rowType;
+    protected final RelDataType rowType;
 
-    protected FarragoJdbcMetaDataImpl(SaffronType rowType)
+    protected FarragoJdbcMetaDataImpl(RelDataType rowType)
     {
         this.rowType = rowType;
     }

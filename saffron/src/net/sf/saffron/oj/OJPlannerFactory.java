@@ -23,17 +23,19 @@
 package net.sf.saffron.oj;
 
 import net.sf.saffron.core.ImplementableTable;
-import net.sf.saffron.core.SaffronPlanner;
-import net.sf.saffron.core.SaffronType;
+import org.eigenbase.relopt.RelOptPlanner;
+import org.eigenbase.reltype.RelDataType;
 import net.sf.saffron.oj.convert.*;
 import net.sf.saffron.oj.rel.*;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.rel.convert.ConverterRule;
-import net.sf.saffron.rel.convert.FactoryConverterRule;
-import net.sf.saffron.rel.jdbc.JdbcQuery;
-import net.sf.saffron.rex.RexNode;
-import net.sf.saffron.rex.RexUtil;
+import org.eigenbase.relopt.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.oj.rel.*;
+import org.eigenbase.rel.convert.ConverterRule;
+import org.eigenbase.rel.convert.FactoryConverterRule;
+import org.eigenbase.rel.jdbc.JdbcQuery;
+import org.eigenbase.rex.RexNode;
+import org.eigenbase.rex.RexUtil;
+import com.disruptivetech.farrago.volcano.*;
 
 /**
  * OJPlannerFactory implements VolcanoPlannerFactory by constructing planners
@@ -131,15 +133,15 @@ public class OJPlannerFactory extends VolcanoPlannerFactory
 
     public static void registerIterRels(VolcanoPlanner planner)
     {
-        planner.addRule(new UnionToIteratorRule());
-        planner.addRule(new OneRowToIteratorRule());
+        planner.addRule(new IterRules.UnionToIteratorRule());
+        planner.addRule(new IterRules.OneRowToIteratorRule());
     }
 
     /**
      * Wraps a convertlet in a {@link ConverterRule}, then registers it with a
      * planner.
      */
-    private static void add(SaffronPlanner planner,
+    private static void add(RelOptPlanner planner,
             JavaConvertlet convertlet) {
         planner.addRule(new FactoryConverterRule(convertlet));
     }
@@ -157,10 +159,10 @@ public class OJPlannerFactory extends VolcanoPlannerFactory
                 "AggregateToJavaRule");
         }
 
-        public SaffronRel convert(SaffronRel rel)
+        public RelNode convert(RelNode rel)
         {
             final AggregateRel aggregate = (AggregateRel) rel;
-            final SaffronRel javaChild =
+            final RelNode javaChild =
                 convert(aggregate.child,CallingConvention.JAVA);
             if (javaChild == null) {
                 return null;
@@ -178,17 +180,17 @@ public class OJPlannerFactory extends VolcanoPlannerFactory
      * {@link net.sf.saffron.oj.rel.JavaExistsRel}, provided that the select
      * list contains zero columns.
      */
-    public static class DistinctToExistsRule extends VolcanoRule
+    public static class DistinctToExistsRule extends RelOptRule
     {
         public DistinctToExistsRule()
         {
-            super(new RuleOperand(JavaDistinctRel.class,null));
+            super(new RelOptRuleOperand(JavaDistinctRel.class,null));
         }
 
-        public void onMatch(VolcanoRuleCall call)
+        public void onMatch(RelOptRuleCall call)
         {
             JavaDistinctRel distinct = (JavaDistinctRel) call.rels[0];
-            SaffronType rowType = distinct.child.getRowType();
+            RelDataType rowType = distinct.child.getRowType();
             if (rowType.getFieldCount() == 0) {
                 call.transformTo(
                     new JavaExistsRel(distinct.getCluster(),distinct.child));
@@ -207,10 +209,10 @@ public class OJPlannerFactory extends VolcanoPlannerFactory
                 "DistinctToJavaRule");
         }
 
-        public SaffronRel convert(SaffronRel rel)
+        public RelNode convert(RelNode rel)
         {
             final DistinctRel distinct = (DistinctRel) rel;
-            final SaffronRel javaChild =
+            final RelNode javaChild =
                 convert(distinct.child,CallingConvention.JAVA);
             if (javaChild == null) {
                 return null;
@@ -230,10 +232,10 @@ public class OJPlannerFactory extends VolcanoPlannerFactory
                 "FilterToJavaRule");
         }
 
-        public SaffronRel convert(SaffronRel rel)
+        public RelNode convert(RelNode rel)
         {
             final FilterRel filter = (FilterRel) rel;
-            final SaffronRel javaChild =
+            final RelNode javaChild =
                 convert(filter.child,CallingConvention.JAVA);
             if (javaChild == null) {
                 return null;
@@ -256,24 +258,24 @@ public class OJPlannerFactory extends VolcanoPlannerFactory
                 "JoinToJavaRule");
         }
 
-        public SaffronRel convert(SaffronRel rel)
+        public RelNode convert(RelNode rel)
         {
             final JoinRel join = (JoinRel) rel;
             CallingConvention convention = CallingConvention.JAVA;
             String [] variables =
-                OptUtil.getVariablesSetAndUsed(join.getRight(),join.getLeft());
+                RelOptUtil.getVariablesSetAndUsed(join.getRight(),join.getLeft());
             if (variables.length > 0) {
                 // Can't implement if left is dependent upon right (don't worry,
                 // we'll be called with left and right swapped, if that's
                 // possible)
                 return null;
             }
-            final SaffronRel convertedLeft =
+            final RelNode convertedLeft =
                 convert(join.getLeft(),convention);
             if (convertedLeft == null) {
                 return null;
             }
-            final SaffronRel convertedRight =
+            final RelNode convertedRight =
                 convert(join.getRight(),convention);
             if (convertedRight == null) {
                 return null;
@@ -303,28 +305,10 @@ public class OJPlannerFactory extends VolcanoPlannerFactory
                 "OneRowToJavaRule");
         }
 
-        public SaffronRel convert(SaffronRel rel)
+        public RelNode convert(RelNode rel)
         {
             final OneRowRel oneRow = (OneRowRel) rel;
             return new JavaOneRowRel(oneRow.getCluster());
-        }
-    }
-
-    public static class OneRowToIteratorRule extends ConverterRule
-    {
-        public OneRowToIteratorRule()
-        {
-            super(
-                OneRowRel.class,
-                CallingConvention.NONE,
-                CallingConvention.ITERATOR,
-                "OneRowToIteratorRule");
-        }
-        
-        public SaffronRel convert(SaffronRel rel)
-        {
-            final OneRowRel oneRow = (OneRowRel) rel;
-            return new IterOneRowRel(oneRow.getCluster());
         }
     }
 
@@ -343,13 +327,13 @@ public class OJPlannerFactory extends VolcanoPlannerFactory
                 "ProjectToJavaRule");
         }
 
-        public SaffronRel convert(SaffronRel rel)
+        public RelNode convert(RelNode rel)
         {
             final ProjectRel project = (ProjectRel) rel;
             if (project instanceof JavaProjectRel) {
                 return null;
             }
-            final SaffronRel javaChild =
+            final RelNode javaChild =
                 convert(project.child,CallingConvention.JAVA);
             if (javaChild == null) {
                 return null;
@@ -360,152 +344,6 @@ public class OJPlannerFactory extends VolcanoPlannerFactory
                 project.getChildExps(),
                 project.getFieldNames(),
                 project.getFlags());
-        }
-    }
-
-    /**
-     * Rule to convert a {@link ProjectRel} to an {@link IterCalcRel}.
-     */
-    public static class ProjectToIteratorRule extends ConverterRule
-    {
-        private ProjectToIteratorRule() {
-            super(
-                    ProjectRel.class,
-                    CallingConvention.NONE,
-                    CallingConvention.ITERATOR,
-                    "ProjectToIteratorRule");
-        }
-        public static ProjectToIteratorRule instance =
-                new ProjectToIteratorRule();
-
-        public SaffronRel convert(SaffronRel rel)
-        {
-            final ProjectRel project = (ProjectRel) rel;
-            SaffronRel inputRel = project.child;
-            final SaffronRel iterChild =
-                convert(inputRel,CallingConvention.ITERATOR);
-            if (iterChild == null) {
-                return null;
-            }
-            final RexNode [] exps = project.getChildExps();
-            final RexNode condition = null;
-
-            // REVIEW: want to move canTranslate into RelImplementor
-            // and implement it for Java & C++ calcs.
-            final JavaRelImplementor relImplementor =
-                project.getCluster().getPlanner().getJavaRelImplementor(project);
-            if (!relImplementor.canTranslate(iterChild, condition, exps)) {
-                // Some of the expressions cannot be translated into Java
-                return null;
-            }
-
-            return new IterCalcRel(
-                project.getCluster(),
-                iterChild,
-                exps,
-                condition,
-                project.getFieldNames(),
-                project.getFlags());
-        }
-    }
-
-    /**
-     * Rule to convert a {@link ProjectRel} on top of a {@link FilterRel} to an
-     * {@link IterCalcRel}.
-     */
-    public static class ProjectedFilterToIteratorRule extends VolcanoRule
-    {
-        private ProjectedFilterToIteratorRule()
-        {
-            super(
-                new RuleOperand(
-                    ProjectRel.class,
-                    new RuleOperand [] { new RuleOperand(FilterRel.class,null) }
-                    ));
-        }
-        public static final ProjectedFilterToIteratorRule instance =
-                new ProjectedFilterToIteratorRule();
-
-        // implement VolcanoRule
-        public CallingConvention getOutConvention()
-        {
-            return CallingConvention.ITERATOR;
-        }
-
-        public void onMatch(VolcanoRuleCall call)
-        {
-            ProjectRel project = (ProjectRel) call.rels[0];
-            FilterRel filterRel = (FilterRel) call.rels[1];
-
-            SaffronRel inputRel = filterRel.child;
-            RexNode condition = filterRel.condition;
-            
-            SaffronRel iterChild = convert(
-                    inputRel,CallingConvention.ITERATOR);
-            
-            if (iterChild == null) {
-                return;
-            }
-            
-            final RexNode[] exps = project.getChildExps();
-
-            // REVIEW: want to move canTranslate into RelImplementor
-            // and implement it for Java & C++ calcs.
-            final JavaRelImplementor relImplementor =
-                call.planner.getJavaRelImplementor(project);
-            if (!relImplementor.canTranslate(iterChild, condition, exps)) {
-                // some of the expressions cannot be translated into Java
-                return;
-            }
-            IterCalcRel calcRel = new IterCalcRel(
-                project.getCluster(),
-                iterChild,
-                exps,
-                condition,
-                project.getFieldNames(),
-                project.getFlags());
-
-            call.transformTo(calcRel);
-        }
-    }
-    
-    /**
-     * Rule to convert a {@link CalcRel} to an {@link IterCalcRel}.
-     */
-    public static class IterCalcRule extends ConverterRule
-    {
-        private IterCalcRule() {
-            super(CalcRel.class, CallingConvention.NONE,
-                    CallingConvention.ITERATOR, "IterCalcRule");
-        }
-        public static final IterCalcRule instance = new IterCalcRule();
-
-        public SaffronRel convert(SaffronRel rel) {
-            final CalcRel calc = (CalcRel) rel;
-            final SaffronRel convertedChild =
-                convert(calc.child,CallingConvention.ITERATOR);
-            if (convertedChild == null) {
-                // We can't convert the child, so we can't convert rel.
-                return null;
-            }
-
-            // REVIEW: want to move canTranslate into RelImplementor
-            // and implement it for Java & C++ calcs.
-            final JavaRelImplementor relImplementor =
-                rel.getCluster().getPlanner().getJavaRelImplementor(rel);
-            if (!relImplementor.canTranslate(convertedChild,
-                                             calc._conditionExpr,
-                                             calc._projectExprs)) {
-                // Some of the expressions cannot be translated into Java
-                return null;
-            }
-            
-            return new IterCalcRel(rel.getCluster(),
-                                   convertedChild,
-                                   calc._projectExprs,
-                                   calc._conditionExpr,
-                                   OptUtil.getFieldNames(calc.getRowType()),
-                                   IterCalcRel.Flags.Boxed);
         }
     }
 
@@ -524,7 +362,7 @@ public class OJPlannerFactory extends VolcanoPlannerFactory
                 "TableAccessToJavaRule");
         }
 
-        public SaffronRel convert(SaffronRel rel)
+        public RelNode convert(RelNode rel)
         {
             final TableAccessRel tableAccess = (TableAccessRel) rel;
             if (!(tableAccess.getTable() instanceof ImplementableTable)) {
@@ -534,71 +372,6 @@ public class OJPlannerFactory extends VolcanoPlannerFactory
                 tableAccess.getCluster(),
                 (ImplementableTable) tableAccess.getTable(),
                 tableAccess.getConnection());
-        }
-    }
-
-    /**
-     * Rule to converts a {@link UnionRel} to {@link
-     * CallingConvention#ITERATOR iterator calling convention}.
-     */
-    public static class UnionToIteratorRule extends ConverterRule
-    {
-        public UnionToIteratorRule()
-        {
-            this("UnionToIteratorRule");
-        }
-        
-        protected UnionToIteratorRule(String description)
-        {
-            super(
-                UnionRel.class,
-                CallingConvention.NONE,
-                CallingConvention.ITERATOR,
-                description);
-        }
-
-        public SaffronRel convert(SaffronRel rel)
-        {
-            final UnionRel union = (UnionRel) rel;
-            if (union.getClass() != UnionRel.class) {
-                return null; // require precise class, otherwise we loop
-            }
-            if (union.isDistinct()) {
-                return null; // can only convert non-distinct Union
-            }
-            SaffronRel [] newInputs = new SaffronRel[union.getInputs().length];
-            for (int i = 0; i < newInputs.length; i++) {
-                // Stubborn, because inputs don't appear as operands.
-                newInputs[i] =
-                    convert(union.getInputs()[i],CallingConvention.ITERATOR);
-                if (newInputs[i] == null) {
-                    return null; // cannot convert this input
-                }
-            }
-            return new IterConcatenateRel(union.getCluster(),newInputs);
-        }
-    }
-
-    public static class HomogeneousUnionToIteratorRule
-        extends OJPlannerFactory.UnionToIteratorRule
-    {
-        public HomogeneousUnionToIteratorRule()
-        {
-            super("HomogeneousUnionToIteratorRule");
-        }
-        
-        public SaffronRel convert(SaffronRel rel)
-        {
-            final UnionRel unionRel = (UnionRel) rel;
-            SaffronType unionType = unionRel.getRowType();
-            SaffronRel [] inputs = unionRel.getInputs();
-            for (int i = 0; i < inputs.length; ++i) {
-                SaffronType inputType = inputs[i].getRowType();
-                if (!OptUtil.areRowTypesEqual(inputType,unionType)) {
-                    return null;
-                }
-            }
-            return super.convert(rel);
         }
     }
 
@@ -617,7 +390,7 @@ public class OJPlannerFactory extends VolcanoPlannerFactory
                 "UnionToJavaRule");
         }
 
-        public SaffronRel convert(SaffronRel rel)
+        public RelNode convert(RelNode rel)
         {
             final UnionRel union = (UnionRel) rel;
             if (union.getClass() != UnionRel.class) {
@@ -626,7 +399,7 @@ public class OJPlannerFactory extends VolcanoPlannerFactory
             if (union.isDistinct()) {
                 return null; // can only convert non-distinct Union
             }
-            SaffronRel [] newInputs = new SaffronRel[union.getInputs().length];
+            RelNode [] newInputs = new RelNode[union.getInputs().length];
             for (int i = 0; i < newInputs.length; i++) {
                 newInputs[i] =
                     convert(union.getInputs()[i],CallingConvention.JAVA);

@@ -35,18 +35,21 @@ import net.sf.farrago.session.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.util.*;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.oj.stmt.*;
-import net.sf.saffron.oj.util.*;
-import net.sf.saffron.oj.rel.JavaRelImplementor;
-import net.sf.saffron.sql.parser.*;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rex.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.sql.*;
-import net.sf.saffron.sql2rel.*;
-import net.sf.saffron.util.*;
-import net.sf.saffron.rex.RexNode;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.oj.stmt.*;
+import org.eigenbase.oj.util.*;
+import org.eigenbase.oj.rel.JavaRelImplementor;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.rex.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql2rel.*;
+import org.eigenbase.util.*;
+import org.eigenbase.rex.RexNode;
+
+// FIXME jvs 29-Aug-2004
+import com.disruptivetech.farrago.volcano.*;
 
 import openjava.mop.*;
 import openjava.ptree.*;
@@ -71,8 +74,8 @@ import javax.jmi.reflect.*;
 public class FarragoPreparingStmt extends OJStatement
     implements
         FarragoSessionPreparingStmt,
-        SaffronConnection,
-        SaffronSchema,
+        RelOptConnection,
+        RelOptSchema,
         SqlValidator.CatalogReader
 {
     // NOTE jvs 8-June-2004: this tracer is special in that it controls
@@ -90,7 +93,7 @@ public class FarragoPreparingStmt extends OJStatement
     
     private SqlToRelConverter sqlToRelConverter;
 
-    private SaffronTypeFactory savedTypeFactory;
+    private RelDataTypeFactory savedTypeFactory;
 
     private VolcanoPlannerFactory savedPlannerFactory;
 
@@ -162,12 +165,12 @@ public class FarragoPreparingStmt extends OJStatement
 
         // Save some global state for reentrancy
         needRestore = true;
-        savedTypeFactory = SaffronTypeFactoryImpl.threadInstance();
+        savedTypeFactory = RelDataTypeFactoryImpl.threadInstance();
         savedPlannerFactory = VolcanoPlannerFactory.threadInstance();
         savedClassMap = ClassMap.instance();
         savedDeclarer = OJUtil.threadDeclarers.get();
 
-        SaffronTypeFactoryImpl.setThreadInstance(getFarragoTypeFactory());
+        RelDataTypeFactoryImpl.setThreadInstance(getFarragoTypeFactory());
         ClassMap.setInstance(new ClassMap(FarragoSyntheticObject.class));
         VolcanoPlannerFactory.setThreadInstance(
             new VolcanoPlannerFactory() {
@@ -247,7 +250,7 @@ public class FarragoPreparingStmt extends OJStatement
 
     // implement FarragoSessionPreparingStmt
     public FarragoSessionExecutableStmt implement(
-        SaffronRel rootRel, SqlKind sqlKind, boolean logical)
+        RelNode rootRel, SqlKind sqlKind, boolean logical)
     {
         PreparedResult preparedResult =
             super.prepareSql(rootRel, sqlKind, logical,
@@ -291,7 +294,7 @@ public class FarragoPreparingStmt extends OJStatement
         if (preparedResult instanceof PreparedExecution) {
             PreparedExecution preparedExecution =
                 (PreparedExecution) preparedResult;
-            SaffronType rowType =
+            RelDataType rowType =
                 preparedExecution.getRowType();
             OJClass ojRowClass = OJUtil.typeToOJClass(rowType);
             Class rowClass;
@@ -307,7 +310,7 @@ public class FarragoPreparingStmt extends OJStatement
                 throw Util.newInternal(ex);
             }
 
-            SaffronType dynamicParamRowType = getParamRowType();
+            RelDataType dynamicParamRowType = getParamRowType();
 
             String xmiFennelPlan = null;
             Set streamDefSet = relImplementor.getStreamDefSet();
@@ -335,7 +338,7 @@ public class FarragoPreparingStmt extends OJStatement
             assert(preparedResult instanceof PreparedExplanation);
             executableStmt = new FarragoExecutableExplainStmt(
                 getFarragoTypeFactory().createProjectType(
-                    new SaffronType[0],
+                    new RelDataType[0],
                     new String[0]),
                 preparedResult.getCode());
         }
@@ -353,7 +356,7 @@ public class FarragoPreparingStmt extends OJStatement
     public void prepareViewInfo(SqlNode sqlNode,FarragoSessionViewInfo info)
     {
         getSqlToRelConverter();
-        SaffronRel rootRel = sqlToRelConverter.convertValidatedQuery(sqlNode);
+        RelNode rootRel = sqlToRelConverter.convertValidatedQuery(sqlNode);
         info.resultMetaData = new FarragoResultSetMetaData(
             rootRel.getRowType());
         info.parameterMetaData = new FarragoParameterMetaData(
@@ -379,15 +382,15 @@ public class FarragoPreparingStmt extends OJStatement
     }
 
     // implement FarragoSessionPreparingStmt
-    public VolcanoCluster getVolcanoCluster()
+    public RelOptCluster getRelOptCluster()
     {
         return getSqlToRelConverter().getCluster();
     }
 
-    private SaffronType getParamRowType()
+    private RelDataType getParamRowType()
     {
         return getFarragoTypeFactory().createProjectType(
-            new SaffronTypeFactory.FieldInfo()
+            new RelDataTypeFactory.FieldInfo()
             {
                 public int getFieldCount()
                 {
@@ -399,7 +402,7 @@ public class FarragoPreparingStmt extends OJStatement
                     return "?" + index;
                 }
 
-                public SaffronType getFieldType(int index)
+                public RelDataType getFieldType(int index)
                 {
                     return sqlToRelConverter.getDynamicParamType(
                         index);
@@ -414,7 +417,7 @@ public class FarragoPreparingStmt extends OJStatement
             // already closed or else never opened
             return;
         }
-        SaffronTypeFactoryImpl.setThreadInstance(savedTypeFactory);
+        RelDataTypeFactoryImpl.setThreadInstance(savedTypeFactory);
         VolcanoPlannerFactory.setThreadInstance(savedPlannerFactory);
         ClassMap.setInstance(savedClassMap);
         OJUtil.threadDeclarers.set(savedDeclarer);
@@ -427,7 +430,7 @@ public class FarragoPreparingStmt extends OJStatement
         needRestore = false;
     }
 
-    SaffronRel expandView(String queryString)
+    RelNode expandView(String queryString)
     {
         // once we start expanding views, all objects we encounter
         // should be treated as indirect dependencies
@@ -447,14 +450,14 @@ public class FarragoPreparingStmt extends OJStatement
 
     protected SqlToRelConverter getSqlToRelConverter(
         SqlValidator validator,
-        SaffronConnection connection)
+        RelOptConnection connection)
     {
         // REVIEW:  recycling may be dangerous since SqlToRelConverter is
         // stateful
         if (sqlToRelConverter == null) {
             sqlToRelConverter = new SqlToRelConverter(
                 validator,
-                connection.getSaffronSchema(),
+                connection.getRelOptSchema(),
                 getEnvironment(),
                 connection,
                 new FarragoRexBuilder(getFarragoTypeFactory()));
@@ -502,21 +505,21 @@ public class FarragoPreparingStmt extends OJStatement
         return stmtValidator.getSession();
     }
 
-    // implement SaffronConnection
-    public SaffronSchema getSaffronSchema()
+    // implement RelOptConnection
+    public RelOptSchema getRelOptSchema()
     {
         return this;
     }
 
-    // implement SaffronConnection
+    // implement RelOptConnection
     public Object contentsAsArray(String qualifier,String tableName)
     {
         throw new UnsupportedOperationException(
             "FarragoPreparingStmt.contentsAsArray() should have been replaced");
     }
 
-    // implement SaffronSchema
-    public SaffronTable getTableForMember(String [] names)
+    // implement RelOptSchema
+    public RelOptTable getTableForMember(String [] names)
     {
         FarragoCatalog.ResolvedSchemaObject resolved =
             getCatalog().resolveSchemaObjectName(
@@ -539,39 +542,39 @@ public class FarragoPreparingStmt extends OJStatement
             }
         }
 
-        SaffronTable saffronTable;
+        RelOptTable relOptTable;
         if (columnSet instanceof FemBaseColumnSet) {
             FemBaseColumnSet table = (FemBaseColumnSet) columnSet;
             FemDataServerImpl femServer = (FemDataServerImpl)
                 table.getServer();
             loadDataServerFromCache(femServer);
-            saffronTable = femServer.loadColumnSetFromCache(
+            relOptTable = femServer.loadColumnSetFromCache(
                 stmtValidator.getDataWrapperCache(),
                 getCatalog(),
                 getFarragoTypeFactory(),
                 table);
         } else if (columnSet instanceof CwmView) {
-            SaffronType rowType =
+            RelDataType rowType =
                 getFarragoTypeFactory().createColumnSetType(columnSet);
-            saffronTable = new FarragoView(columnSet,rowType);
+            relOptTable = new FarragoView(columnSet,rowType);
         } else {
             throw Util.needToImplement(columnSet);
         }
-        initializeQueryColumnSet(saffronTable,columnSet);
-        return saffronTable;
+        initializeQueryColumnSet(relOptTable,columnSet);
+        return relOptTable;
     }
 
     private void initializeQueryColumnSet(
-        SaffronTable saffronTable,CwmNamedColumnSet cwmColumnSet)
+        RelOptTable relOptTable,CwmNamedColumnSet cwmColumnSet)
     {
-        if (saffronTable == null) {
+        if (relOptTable == null) {
             return;
         }
-        if (!(saffronTable instanceof FarragoQueryColumnSet)) {
+        if (!(relOptTable instanceof FarragoQueryColumnSet)) {
             return;
         }
         FarragoQueryColumnSet queryColumnSet =
-            (FarragoQueryColumnSet) saffronTable;
+            (FarragoQueryColumnSet) relOptTable;
         queryColumnSet.setPreparingStmt(this);
         queryColumnSet.setCwmColumnSet(cwmColumnSet);
     }
@@ -634,20 +637,20 @@ public class FarragoPreparingStmt extends OJStatement
         return server;
     }
 
-    // implement SaffronSchema
-    public SaffronTable getTableForMethodCall(MethodCall call)
+    // implement RelOptSchema
+    public RelOptTable getTableForMethodCall(MethodCall call)
     {
         return null;
     }
 
-    // implement SaffronSchema
-    public SaffronTypeFactory getTypeFactory()
+    // implement RelOptSchema
+    public RelDataTypeFactory getTypeFactory()
     {
-        return SaffronTypeFactoryImpl.threadInstance();
+        return RelDataTypeFactoryImpl.threadInstance();
     }
 
-    // implement SaffronSchema
-    public void registerRules(SaffronPlanner planner)
+    // implement RelOptSchema
+    public void registerRules(RelOptPlanner planner)
     {
         // nothing to do; FarragoPlanner does it for us
     }
@@ -686,7 +689,7 @@ public class FarragoPreparingStmt extends OJStatement
             throw new FarragoUnvalidatedDependencyException();
         }
 
-        SaffronType rowType =
+        RelDataType rowType =
             getFarragoTypeFactory().createColumnSetType(table);
         return new ValidatorTable(resolved.getQualifiedName(),rowType);
     }
@@ -772,12 +775,12 @@ public class FarragoPreparingStmt extends OJStatement
     {
         private final String [] qualifiedName;
 
-        private final SaffronType rowType;
+        private final RelDataType rowType;
 
         /**
          * Creates a new ValidatorTable object.
          */
-        ValidatorTable(String [] qualifiedName,SaffronType rowType)
+        ValidatorTable(String [] qualifiedName,RelDataType rowType)
         {
             this.qualifiedName = qualifiedName;
             this.rowType = rowType;
@@ -790,7 +793,7 @@ public class FarragoPreparingStmt extends OJStatement
         }
 
         // implement SqlValidator.Table
-        public SaffronType getRowType()
+        public RelDataType getRowType()
         {
             return rowType;
         }
@@ -807,7 +810,7 @@ public class FarragoPreparingStmt extends OJStatement
     {
         // implement DefaultValueFactory
         public RexNode newDefaultValue(
-            SaffronTable table,
+            RelOptTable table,
             int iColumn)
         {
             if (!(table instanceof FarragoQueryColumnSet)) {

@@ -19,9 +19,10 @@
 
 package net.sf.farrago.session;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.rel.SaffronRel;
-import net.sf.saffron.sql.SqlKind;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.sql.SqlKind;
 
 import net.sf.farrago.util.*;
 import net.sf.farrago.query.FarragoPreparingStmt;
@@ -84,7 +85,7 @@ public interface FarragoSessionStmtContext extends FarragoAllocation
      * As with {@link #prepare(String,boolean)}, the statement can be executed
      * by {@link #execute()}.
      *
-     * @param plan a query plan (ie a Saffron relational expression).
+     * @param plan a query plan (ie a relational expression).
      * @param kind SqlKind value that characterized the statement.
      * @param logical true when the query plan is logical (needs to be
      *  optimized), false when it is physical (already optimized).
@@ -92,7 +93,7 @@ public interface FarragoSessionStmtContext extends FarragoAllocation
      * query plan.
      */
     public void prepare(
-        SaffronRel plan,
+        RelNode plan,
         SqlKind kind,
         boolean logical,
         FarragoSessionPreparingStmt prep);
@@ -100,13 +101,13 @@ public interface FarragoSessionStmtContext extends FarragoAllocation
     /**
      * @return the output row type for the currently prepared statement
      */
-    public SaffronType getPreparedRowType();
+    public RelDataType getPreparedRowType();
 
     /**
      * @return the input parameter row type for the currently prepared
      * statement
      */
-    public SaffronType getPreparedParamType();
+    public RelDataType getPreparedParamType();
 
     /**
      * Sets an input parameter.

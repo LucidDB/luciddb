@@ -28,8 +28,9 @@ import net.sf.farrago.resource.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.util.*;
 
-import net.sf.saffron.util.*;
-import net.sf.saffron.core.*;
+import org.eigenbase.util.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
 
 import org.netbeans.mdr.handlers.*;
 import org.netbeans.mdr.storagemodel.*;
@@ -165,7 +166,7 @@ public abstract class FemDataServerImpl extends InstanceHandler
 
         Map columnPropMap = new HashMap();
 
-        SaffronType rowType = typeFactory.createColumnSetType(baseColumnSet);
+        RelDataType rowType = typeFactory.createColumnSetType(baseColumnSet);
             
         Iterator iter = baseColumnSet.getFeature().iterator();
         while (iter.hasNext()) {

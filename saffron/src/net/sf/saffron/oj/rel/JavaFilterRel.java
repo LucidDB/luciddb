@@ -22,14 +22,15 @@
 
 package net.sf.saffron.oj.rel;
 
-import net.sf.saffron.opt.CallingConvention;
-import net.sf.saffron.opt.OptUtil;
-import net.sf.saffron.opt.VolcanoCluster;
-import net.sf.saffron.rel.FilterRel;
-import net.sf.saffron.rel.SaffronRel;
-import net.sf.saffron.rex.RexNode;
-import net.sf.saffron.rex.RexUtil;
-import net.sf.saffron.util.Util;
+import org.eigenbase.oj.rel.*;
+import org.eigenbase.relopt.CallingConvention;
+import org.eigenbase.relopt.RelOptUtil;
+import org.eigenbase.relopt.RelOptCluster;
+import org.eigenbase.rel.FilterRel;
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.rex.RexNode;
+import org.eigenbase.rex.RexUtil;
+import org.eigenbase.util.Util;
 import openjava.ptree.Expression;
 import openjava.ptree.IfStatement;
 import openjava.ptree.ParseTree;
@@ -44,8 +45,8 @@ public class JavaFilterRel extends FilterRel implements JavaLoopRel
     //~ Constructors ----------------------------------------------------------
 
     public JavaFilterRel(
-        VolcanoCluster cluster,
-        SaffronRel child,
+        RelOptCluster cluster,
+        RelNode child,
         RexNode condition)
     {
         super(cluster,child,condition);
@@ -62,11 +63,11 @@ public class JavaFilterRel extends FilterRel implements JavaLoopRel
     {
         return new JavaFilterRel(
             cluster,
-            OptUtil.clone(child),
+            RelOptUtil.clone(child),
             RexUtil.clone(condition));
     }
 
-    // implement SaffronRel
+    // implement RelNode
     public ParseTree implement(JavaRelImplementor implementor)
     {
         return implementor.visitJavaChild(this, 0, (JavaRel) child);

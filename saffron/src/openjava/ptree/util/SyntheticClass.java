@@ -9,7 +9,7 @@ package openjava.ptree.util;
 
 import openjava.mop.*;
 import openjava.ptree.*;
-import net.sf.saffron.util.Util;
+import org.eigenbase.util.Util;
 
 import java.util.Enumeration;
 

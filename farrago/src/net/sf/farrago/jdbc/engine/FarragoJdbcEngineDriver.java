@@ -25,7 +25,6 @@ import net.sf.farrago.trace.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.db.*;
 import net.sf.farrago.resource.*;
-import net.sf.saffron.util.SaffronException;
 
 import java.sql.*;
 

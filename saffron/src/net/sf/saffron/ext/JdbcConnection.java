@@ -22,17 +22,17 @@
 
 package net.sf.saffron.ext;
 
-import net.sf.saffron.core.SaffronConnection;
-import net.sf.saffron.core.SaffronSchema;
+import org.eigenbase.relopt.RelOptConnection;
+import org.eigenbase.relopt.RelOptSchema;
 
 
 /**
  * A <code>JdbcConnection</code> is an implementation of {@link
- * SaffronConnection} which gets its data from a JDBC database.
+ * RelOptConnection} which gets its data from a JDBC database.
  * 
  * <p>
- * Derived classes must implement {@link #getSaffronSchema} and {@link
- * #getSaffronSchemaStatic}.
+ * Derived classes must implement {@link #getRelOptSchema} and {@link
+ * #getRelOptSchemaStatic}.
  * </p>
  *
  * @author jhyde
@@ -40,7 +40,7 @@ import net.sf.saffron.core.SaffronSchema;
  *
  * @since 10 November, 2001
  */
-public abstract class JdbcConnection implements SaffronConnection
+public abstract class JdbcConnection implements RelOptConnection
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -66,11 +66,11 @@ public abstract class JdbcConnection implements SaffronConnection
     }
 
     // for Connection
-    public static SaffronSchema getSaffronSchemaStatic()
+    public static RelOptSchema getRelOptSchemaStatic()
     {
         throw new UnsupportedOperationException(
             "Derived class must implement "
-            + "public static Schema getSaffronSchemaStatic()");
+            + "public static Schema getRelOptSchemaStatic()");
     }
 
     // implement Connection

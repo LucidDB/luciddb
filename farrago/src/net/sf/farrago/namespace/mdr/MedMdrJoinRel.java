@@ -19,16 +19,15 @@
 
 package net.sf.farrago.namespace.mdr;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.rex.*;
-import net.sf.saffron.util.*;
-import net.sf.saffron.runtime.*;
-import net.sf.saffron.oj.rel.*;
-import net.sf.saffron.oj.util.*;
-import net.sf.saffron.oj.*;
-import net.sf.saffron.oj.stmt.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.rex.*;
+import org.eigenbase.util.*;
+import org.eigenbase.runtime.*;
+import org.eigenbase.oj.rel.*;
+import org.eigenbase.oj.util.*;
+import org.eigenbase.oj.*;
+import org.eigenbase.oj.stmt.*;
 
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
@@ -58,9 +57,9 @@ class MedMdrJoinRel extends JoinRel implements JavaRel
     private Reference rightReference;
     
     MedMdrJoinRel(
-        VolcanoCluster cluster,
-        SaffronRel left,
-        SaffronRel right,
+        RelOptCluster cluster,
+        RelNode left,
+        RelNode right,
         RexNode condition,
         int joinType,
         int leftOrdinal,
@@ -87,22 +86,22 @@ class MedMdrJoinRel extends JoinRel implements JavaRel
     {
         return new MedMdrJoinRel(
             cluster,
-            OptUtil.clone(left),
-            OptUtil.clone(right),
+            RelOptUtil.clone(left),
+            RelOptUtil.clone(right),
             RexUtil.clone(condition),
             joinType,
             leftOrdinal,
             rightReference);
     }
 
-    // implement SaffronRel
+    // implement RelNode
     public CallingConvention getConvention()
     {
         return CallingConvention.ITERATOR;
     }
     
-    // implement SaffronRel
-    public PlanCost computeSelfCost(SaffronPlanner planner)
+    // implement RelNode
+    public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
         // TODO:  refine
         double rowCount = getRows();
@@ -112,14 +111,14 @@ class MedMdrJoinRel extends JoinRel implements JavaRel
             rowCount*getRowType().getFieldCount());
     }
 
-    // implement SaffronRel
+    // implement RelNode
     public double getRows()
     {
         // REVIEW:  this assumes a one-to-many join
         return right.getRows();
     }
 
-    // implement SaffronRel
+    // implement RelNode
     public ParseTree implement(JavaRelImplementor implementor)
     {
         MedMdrJoinRelImplementor joinImplementor =

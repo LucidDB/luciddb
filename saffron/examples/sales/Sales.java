@@ -21,17 +21,17 @@
 
 package sales;
 
-import net.sf.saffron.core.SaffronConnection;
-import net.sf.saffron.core.SaffronSchema;
-import net.sf.saffron.core.SaffronTable;
-import net.sf.saffron.core.SaffronTypeFactory;
+import org.eigenbase.relopt.RelOptConnection;
+import org.eigenbase.relopt.RelOptSchema;
+import org.eigenbase.relopt.RelOptTable;
+import org.eigenbase.reltype.RelDataTypeFactory;
 import net.sf.saffron.ext.JdbcSchema;
 import net.sf.saffron.ext.JdbcTable;
 import net.sf.saffron.ext.ReflectSchema;
-import net.sf.saffron.sql.SqlDialect;
-import net.sf.saffron.util.JdbcDataSource;
-import net.sf.saffron.util.SaffronProperties;
-import net.sf.saffron.util.Util;
+import org.eigenbase.sql.SqlDialect;
+import org.eigenbase.util.JdbcDataSource;
+import org.eigenbase.util.SaffronProperties;
+import org.eigenbase.util.Util;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -57,14 +57,14 @@ public class Sales extends net.sf.saffron.ext.JdbcConnection
 
     //~ Methods ---------------------------------------------------------------
 
-    // for SaffronConnection
-    public static SaffronSchema getSaffronSchemaStatic()
+    // for RelOptConnection
+    public static RelOptSchema getRelOptSchemaStatic()
     {
         return schema;
     }
 
     // implement Connection
-    public SaffronSchema getSaffronSchema()
+    public RelOptSchema getRelOptSchema()
     {
         return schema;
     }
@@ -174,9 +174,9 @@ public class Sales extends net.sf.saffron.ext.JdbcConnection
     public static class SalesSchema extends ReflectSchema implements JdbcSchema
     {
         public final DataSource dataSource;
-        public final SaffronTable depts;
-        public final SaffronTable emps;
-        public final SaffronTable products;
+        public final RelOptTable depts;
+        public final RelOptTable emps;
+        public final RelOptTable products;
         private SqlDialect dialect;
 
         public SalesSchema(DataSource dataSource)
@@ -186,7 +186,7 @@ public class Sales extends net.sf.saffron.ext.JdbcConnection
             try {
                 connection = dataSource.getConnection();
                 this.dialect = new SqlDialect(connection.getMetaData());
-                SaffronTypeFactory typeFactory = null;
+                RelDataTypeFactory typeFactory = null;
                 this.emps =
                     new JdbcTable(
                         this,
@@ -214,7 +214,7 @@ public class Sales extends net.sf.saffron.ext.JdbcConnection
             }
         }
 
-        public DataSource getDataSource(SaffronConnection connection) {
+        public DataSource getDataSource(RelOptConnection connection) {
             return dataSource;
         }
 

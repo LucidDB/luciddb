@@ -19,15 +19,15 @@
 
 package net.sf.farrago.namespace.mdr;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.rex.*;
-import net.sf.saffron.util.*;
-import net.sf.saffron.oj.rel.*;
-import net.sf.saffron.oj.util.*;
-import net.sf.saffron.oj.*;
-import net.sf.saffron.oj.stmt.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.rex.*;
+import org.eigenbase.util.*;
+import org.eigenbase.oj.rel.*;
+import org.eigenbase.oj.util.*;
+import org.eigenbase.oj.*;
+import org.eigenbase.oj.stmt.*;
 
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
@@ -64,9 +64,9 @@ class MedMdrClassExtentRel extends TableAccessRel implements JavaRel
     boolean useReflection;
 
     public MedMdrClassExtentRel(
-        VolcanoCluster cluster,
+        RelOptCluster cluster,
         MedMdrClassExtent mdrClassExtent,
-        SaffronConnection connection)
+        RelOptConnection connection)
     {
         super(cluster,mdrClassExtent,connection);
         this.mdrClassExtent = mdrClassExtent;
@@ -75,7 +75,7 @@ class MedMdrClassExtentRel extends TableAccessRel implements JavaRel
         useReflection = (rowClass == RefObject.class);
     }
 
-    // implement SaffronRel
+    // implement RelNode
     public CallingConvention getConvention()
     {
         return CallingConvention.ITERATOR;
@@ -158,16 +158,16 @@ class MedMdrClassExtentRel extends TableAccessRel implements JavaRel
         return iterExpression;
     }
 
-    // implement SaffronRel
+    // implement RelNode
     public ParseTree implement(JavaRelImplementor implementor)
     {
         Expression iterExpression = getIteratorExpression();
 
         Variable varInputRow = implementor.newVariable();
 
-        SaffronType inputRowType = getCluster().typeFactory.createJavaType(
+        RelDataType inputRowType = getCluster().typeFactory.createJavaType(
             rowClass);
-        SaffronType outputRowType = getRowType();
+        RelDataType outputRowType = getRowType();
 
         RexNode [] rexExps = implementProjection(varInputRow);
 
@@ -193,12 +193,12 @@ class MedMdrClassExtentRel extends TableAccessRel implements JavaRel
         Expression castInputRow = new CastExpression(
             OJClass.forClass(rowClass),inputRow);
 
-        SaffronType outputRowType = getRowType();
+        RelDataType outputRowType = getRowType();
         List features = JmiUtil.getFeatures(
             mdrClassExtent.refClass,StructuralFeature.class,false);
         int n = features.size();
         Expression [] accessorExps = new Expression[n + 2];
-        SaffronField [] outputFields = outputRowType.getFields();
+        RelDataTypeField [] outputFields = outputRowType.getFields();
 
         for (int i = 0; i < n; ++i) {
             StructuralFeature feature = (StructuralFeature) features.get(i);

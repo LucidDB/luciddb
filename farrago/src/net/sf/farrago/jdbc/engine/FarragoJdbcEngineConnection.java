@@ -23,7 +23,7 @@ import net.sf.farrago.util.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
 
-import net.sf.saffron.util.*;
+import org.eigenbase.util.*;
 
 import java.sql.*;
 

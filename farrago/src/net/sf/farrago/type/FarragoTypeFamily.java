@@ -19,7 +19,7 @@
 
 package net.sf.farrago.type;
 
-import net.sf.saffron.util.*;
+import org.eigenbase.util.*;
 import java.sql.*;
 
 // TODO:  i18n

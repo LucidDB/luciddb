@@ -22,29 +22,29 @@
 
 package net.sf.saffron.ext;
 
-import net.sf.saffron.core.SaffronConnection;
-import net.sf.saffron.core.SaffronSchema;
-import net.sf.saffron.core.SaffronType;
-import net.sf.saffron.opt.VolcanoCluster;
-import net.sf.saffron.rel.SaffronRel;
+import org.eigenbase.relopt.RelOptConnection;
+import org.eigenbase.relopt.RelOptSchema;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.relopt.*;
+import org.eigenbase.rel.RelNode;
 
 
 /**
  * <code>ExtentTable</code> is a relational expression formed by all of the
  * instances of a given class. It is transformed into an {@link ExtentRel}.
  */
-public class ExtentTable extends AbstractTable
+public class ExtentTable extends RelOptAbstractTable
 {
     //~ Constructors ----------------------------------------------------------
 
-    public ExtentTable(SaffronSchema schema,String name,SaffronType rowType)
+    public ExtentTable(RelOptSchema schema,String name,RelDataType rowType)
     {
         super(schema,name,rowType);
     }
 
     //~ Methods ---------------------------------------------------------------
 
-    public SaffronRel toRel(VolcanoCluster cluster,SaffronConnection schemaExp)
+    public RelNode toRel(RelOptCluster cluster,RelOptConnection schemaExp)
     {
         // ignore schemaExp -- we give the same results, regardless of
         // which 'connection' we have

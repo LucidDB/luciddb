@@ -24,14 +24,13 @@ import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
-import net.sf.saffron.ext.*;
-import net.sf.saffron.sql.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.rel.jdbc.*;
-import net.sf.saffron.rel.convert.*;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.core.*;
-import net.sf.saffron.util.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.rel.jdbc.*;
+import org.eigenbase.rel.convert.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.util.*;
 
 import java.sql.*;
 import java.util.*;
@@ -51,7 +50,7 @@ class MedMockColumnSet extends MedAbstractColumnSet
     
     MedMockColumnSet(
         String [] localName,
-        SaffronType rowType,
+        RelDataType rowType,
         long nRows,
         String executorImpl)
     {
@@ -65,16 +64,16 @@ class MedMockColumnSet extends MedAbstractColumnSet
         this.executorImpl = executorImpl;
     }
     
-    // implement SaffronTable
+    // implement RelOptTable
     public double getRowCount()
     {
         return nRows;
     }
     
-    // implement SaffronTable
-    public SaffronRel toRel(
-        VolcanoCluster cluster,
-        SaffronConnection connection)
+    // implement RelOptTable
+    public RelNode toRel(
+        RelOptCluster cluster,
+        RelOptConnection connection)
     {
         if (executorImpl.equals(MedMockDataServer.PROPVAL_JAVA)) {
             return new MedMockIterRel(

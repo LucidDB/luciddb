@@ -19,8 +19,9 @@
 
 package net.sf.farrago.namespace.mdr;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.util.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.util.*;
 
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
@@ -137,7 +138,7 @@ class MedMdrNameDirectory extends MedAbstractNameDirectory
         FarragoTypeFactory typeFactory,
         String [] foreignName,
         String [] localName,
-        SaffronType rowType)
+        RelDataType rowType)
         throws SQLException
     {
         RefClass refClass = lookupRefClass(foreignName);
@@ -158,14 +159,14 @@ class MedMdrNameDirectory extends MedAbstractNameDirectory
             rowType);
     }
 
-    private SaffronType computeRowType(
+    private RelDataType computeRowType(
         FarragoTypeFactory typeFactory,
         RefClass refClass)
     {
         List features = JmiUtil.getFeatures(
             refClass,StructuralFeature.class,false);
         int n = features.size();
-        SaffronType [] types = new SaffronType[n + 2];
+        RelDataType [] types = new RelDataType[n + 2];
         String [] fieldNames = new String[n + 2];
         for (int i = 0; i < n; ++i) {
             StructuralFeature feature = (StructuralFeature) features.get(i);

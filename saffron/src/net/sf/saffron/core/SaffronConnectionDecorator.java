@@ -20,29 +20,31 @@
 */
 package net.sf.saffron.core;
 
+import org.eigenbase.relopt.*;
+
 /**
- * Base for a class which wraps a {@link SaffronConnection} and extends its
+ * Base for a class which wraps a {@link RelOptConnection} and extends its
  * functionality.
  *
- * <p>See {@link net.sf.saffron.util.Glossary#DecoratorPattern the Decorator
+ * <p>See {@link org.eigenbase.util.Glossary#DecoratorPattern the Decorator
  * Pattern}.
  *
  * @author jhyde
  * @since Dec 9, 2003
  * @version $Id$
  **/
-public abstract class SaffronConnectionDecorator implements SaffronConnection {
+public abstract class SaffronConnectionDecorator implements RelOptConnection {
     /**
-     * The underlying {@link SaffronConnection}.
+     * The underlying {@link RelOptConnection}.
      */
-    protected final SaffronConnection connection;
+    protected final RelOptConnection connection;
 
-    protected SaffronConnectionDecorator(SaffronConnection connection) {
+    protected SaffronConnectionDecorator(RelOptConnection connection) {
         this.connection = connection;
     }
 
-    public SaffronSchema getSaffronSchema() {
-        return connection.getSaffronSchema();
+    public RelOptSchema getRelOptSchema() {
+        return connection.getRelOptSchema();
     }
 
     public Object contentsAsArray(String qualifier, String tableName) {

@@ -22,19 +22,20 @@
 
 package net.sf.saffron.oj.rel;
 
-import net.sf.saffron.core.SaffronField;
-import net.sf.saffron.core.SaffronPlanner;
-import net.sf.saffron.core.SaffronType;
-import net.sf.saffron.oj.util.OJUtil;
-import net.sf.saffron.opt.CallingConvention;
-import net.sf.saffron.opt.OptUtil;
-import net.sf.saffron.opt.PlanCost;
-import net.sf.saffron.opt.VolcanoCluster;
-import net.sf.saffron.rel.JoinRel;
-import net.sf.saffron.rel.SaffronRel;
-import net.sf.saffron.rex.RexNode;
-import net.sf.saffron.rex.RexUtil;
-import net.sf.saffron.util.Util;
+import org.eigenbase.oj.rel.*;
+import org.eigenbase.reltype.RelDataTypeField;
+import org.eigenbase.relopt.RelOptPlanner;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.oj.util.OJUtil;
+import org.eigenbase.relopt.CallingConvention;
+import org.eigenbase.relopt.RelOptUtil;
+import org.eigenbase.relopt.RelOptCost;
+import org.eigenbase.relopt.RelOptCluster;
+import org.eigenbase.rel.JoinRel;
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.rex.RexNode;
+import org.eigenbase.rex.RexUtil;
+import org.eigenbase.util.Util;
 import openjava.ptree.*;
 
 import java.util.Set;
@@ -50,9 +51,9 @@ public class JavaNestedLoopJoinRel extends JoinRel
     //~ Constructors ----------------------------------------------------------
 
     public JavaNestedLoopJoinRel(
-        VolcanoCluster cluster,
-        SaffronRel left,
-        SaffronRel right,
+        RelOptCluster cluster,
+        RelNode left,
+        RelNode right,
         RexNode condition,
         int joinType,
         Set variablesStopped)
@@ -71,14 +72,14 @@ public class JavaNestedLoopJoinRel extends JoinRel
     {
         return new JavaNestedLoopJoinRel(
             cluster,
-            OptUtil.clone(left),
-            OptUtil.clone(right),
+            RelOptUtil.clone(left),
+            RelOptUtil.clone(right),
             RexUtil.clone(condition),
             joinType,
             variablesStopped);
     }
 
-    public PlanCost computeSelfCost(SaffronPlanner planner)
+    public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
         double dRows =
             left.getRows() * right.getRows() * RexUtil.getSelectivity(condition);
@@ -100,12 +101,12 @@ public class JavaNestedLoopJoinRel extends JoinRel
         switch (ordinal) {
         case 0: // called from left
             // Which variables are set by left and used by right
-            String [] variables = OptUtil.getVariablesSetAndUsed(left,right);
+            String [] variables = RelOptUtil.getVariablesSetAndUsed(left,right);
             for (int i = 0; i < variables.length; i++) {
                 String variable = variables[i]; // e.g. "$cor2"
                 Variable variableCorrel = implementor.newVariable();
-                SaffronRel rel = getQuery().lookupCorrel(variable);
-                SaffronType rowType = rel.getRowType();
+                RelNode rel = getQuery().lookupCorrel(variable);
+                RelDataType rowType = rel.getRowType();
                 Expression exp = implementor.makeReference(variable,this);
                 stmtList.add(
                     new VariableDeclaration(
@@ -139,9 +140,9 @@ public class JavaNestedLoopJoinRel extends JoinRel
     public Expression implementSelf(JavaRelImplementor implementor)
     {
         ExpressionList args = new ExpressionList();
-        final SaffronField [] fields = rowType.getFields();
+        final RelDataTypeField [] fields = rowType.getFields();
         for (int i = 0; i < fields.length; i++) {
-            SaffronField field = fields[i];
+            RelDataTypeField field = fields[i];
             args.add(implementor.translate(this,
                     cluster.rexBuilder.makeInputRef(field.getType(), i)));
         }

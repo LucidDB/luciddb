@@ -22,9 +22,10 @@
 
 package net.sf.saffron.oj.xlat;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.oj.util.*;
-import net.sf.saffron.util.Util;
+import org.eigenbase.reltype.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.oj.util.*;
+import org.eigenbase.util.Util;
 
 import openjava.mop.Environment;
 import openjava.mop.OJClass;
@@ -35,19 +36,19 @@ import openjava.ptree.util.VariableBinder;
 
 
 /**
- * Replaces references to the virtual members of {@link SaffronSchema}
+ * Replaces references to the virtual members of {@link RelOptSchema}
  * expressions.
  * 
  * <p>
  * Suppose that the variable <code>schema</code> implements {@link
- * SaffronSchema}. Then field accesses of the form <code>schema.field</code>,
+ * RelOptSchema}. Then field accesses of the form <code>schema.field</code>,
  * and method calls of the form <code>schema.method(arg0,...)</code>, become
  * Java fragments like <code>(Sales.Emp[])
  * schema.contentsAsArray("emps")</code>.
  * </p>
  * 
  * <p>
- * See {@link SaffronConnection#contentsAsArray} for how these fragments are
+ * See {@link RelOptConnection#contentsAsArray} for how these fragments are
  * converted into efficient code.
  * </p>
  *
@@ -78,7 +79,7 @@ public class OJSchemaExpander extends VariableBinder
             if (p instanceof TableReference) {
                 qualifier = ((TableReference) p).getQualifier();
             }
-            SaffronTable table = Util.getTable(env,refexpr,qualifier,name);
+            RelOptTable table = Util.getTable(env,refexpr,qualifier,name);
             if (table != null) {
                 // (Emp[]) sales.contentsAsArray("emp")
                 return new AliasedExpression(

@@ -22,8 +22,8 @@ package net.sf.farrago.session;
 import net.sf.farrago.catalog.FarragoCatalog;
 import net.sf.farrago.catalog.FarragoConnectionDefaults;
 import net.sf.farrago.util.FarragoAllocation;
-import net.sf.saffron.sql.SqlOperatorTable;
-import net.sf.saffron.oj.rex.OJRexImplementorTable;
+import org.eigenbase.sql.SqlOperatorTable;
+import org.eigenbase.oj.rex.OJRexImplementorTable;
 
 import java.sql.DatabaseMetaData;
 
@@ -108,6 +108,17 @@ public interface FarragoSession extends FarragoAllocation
      */
     public FarragoSessionParser newParser();
 
+    /**
+     * Creates a new preparing statement tied to this session and its underlying
+     * database.  Used to construct and implement an internal query plan.
+     *
+     * @param stmtValidator generic stmt validator
+     *
+     * @return a new {@link FarragoSessionPreparingStmt}.
+     */
+    public FarragoSessionPreparingStmt newPreparingStmt(
+        FarragoSessionStmtValidator stmtValidator);
+    
     /**
      * Creates a new SQL statement validator.
      *

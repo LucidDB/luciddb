@@ -21,17 +21,17 @@
 */
 package com.disruptivetech.farrago.calc;
 
-import net.sf.saffron.core.SaffronField;
-import net.sf.saffron.core.SaffronType;
-import net.sf.saffron.core.SaffronTypeFactory;
-import net.sf.saffron.core.SaffronTypeFactoryImpl;
+import org.eigenbase.reltype.RelDataTypeField;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.reltype.RelDataTypeFactoryImpl;
 import net.sf.farrago.resource.*;
-import net.sf.saffron.rex.*;
-import net.sf.saffron.sql.*;
-import net.sf.saffron.sql.fun.SqlStdOperatorTable;
-import net.sf.saffron.sql.type.SqlTypeName;
-import net.sf.saffron.util.Util;
-import net.sf.saffron.util.SaffronProperties;
+import org.eigenbase.rex.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.fun.SqlStdOperatorTable;
+import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.util.Util;
+import org.eigenbase.util.SaffronProperties;
 
 import java.util.HashMap;
 import java.math.BigDecimal;
@@ -80,11 +80,11 @@ public class RexToCalcTranslator implements RexVisitor
     }
 
     private static class TypePair {
-        private final SaffronType _saffronType;
+        private final RelDataType _relDataType;
         private final CalcProgramBuilder.OpType _opType;
 
-        TypePair(SaffronType saffron, CalcProgramBuilder.OpType op) {
-            _saffronType = saffron;
+        TypePair(RelDataType saffron, CalcProgramBuilder.OpType op) {
+            _relDataType = saffron;
             _opType = op;
         }
     }
@@ -98,7 +98,7 @@ public class RexToCalcTranslator implements RexVisitor
 
         setGenerateComments(SaffronProperties.instance().
                 generateCalcProgramComments.get());
-        SaffronTypeFactory fac = _rexBuilder.getTypeFactory();
+        RelDataTypeFactory fac = _rexBuilder.getTypeFactory();
         _knownTypes = new TypePair[] {
             new TypePair(fac.createSqlType(SqlTypeName.Tinyint),
                     CalcProgramBuilder.OpType.Int1),
@@ -186,10 +186,10 @@ public class RexToCalcTranslator implements RexVisitor
     }
 
     CalcProgramBuilder.RegisterDescriptor
-            getCalcRegisterDescriptor(SaffronType saffronType) {
-        String typeDigest = saffronType.toString();
+            getCalcRegisterDescriptor(RelDataType relDataType) {
+        String typeDigest = relDataType.toString();
         // Special case for Char and Binary, because have the same
-        // respective saffronType families as Varchar and Varbinary, but the
+        // respective relDataType families as Varchar and Varbinary, but the
         // calc needs to treat them differently.
         CalcProgramBuilder.OpType calcType = null;
         if (typeDigest.startsWith("CHAR")) {
@@ -198,27 +198,27 @@ public class RexToCalcTranslator implements RexVisitor
         if (typeDigest.startsWith("BINARY")) {
             calcType = CalcProgramBuilder.OpType.Binary;
         }
-        SaffronType lookupThis = getSimilarSqlType(saffronType);
+        RelDataType lookupThis = getSimilarSqlType(relDataType);
         for (int i = 0; i < _knownTypes.length; i++) {
             TypePair knownType = _knownTypes[i];
-            if (saffronType.isSameType(knownType._saffronType)) {
+            if (relDataType.isSameType(knownType._relDataType)) {
                 calcType = knownType._opType;
             }
 
             if (lookupThis != null &&
-                    lookupThis.isSameType(knownType._saffronType)) {
+                    lookupThis.isSameType(knownType._relDataType)) {
                 calcType = knownType._opType;
             }
         }
 
         if (null == calcType) {
-            throw Util.newInternal("unknown type " + saffronType);
+            throw Util.newInternal("unknown type " + relDataType);
         }
 
-        int bytes = saffronType.getMaxBytesStorage();
+        int bytes = relDataType.getMaxBytesStorage();
         if (bytes < 0) {
             // Adjust for types which map to char or binary,  but which
-            // don't know their maximum length. The java string saffronType is an
+            // don't know their maximum length. The java string relDataType is an
             // example of this.
             switch (calcType.getOrdinal()) {
             case CalcProgramBuilder.OpType.Binary_ordinal:
@@ -237,13 +237,13 @@ public class RexToCalcTranslator implements RexVisitor
      * If type is a SQL type, returns a broader SQL type, otherwise returns
      * null.
      */
-    private SaffronType getSimilarSqlType(SaffronType type) {
-        if (!SaffronTypeFactoryImpl.isJavaType(type)) {
+    private RelDataType getSimilarSqlType(RelDataType type) {
+        if (!RelDataTypeFactoryImpl.isJavaType(type)) {
             return null;
         }
-        SqlTypeName typeName = SaffronTypeFactoryImpl
+        SqlTypeName typeName = RelDataTypeFactoryImpl
                 .JavaToSqlTypeConversionRules.instance().lookup(type);
-        return SaffronTypeFactoryImpl.createSqlTypeIgnorePrecOrScale(
+        return RelDataTypeFactoryImpl.createSqlTypeIgnorePrecOrScale(
                         _rexBuilder.getTypeFactory(), typeName);
     }
 
@@ -289,13 +289,13 @@ public class RexToCalcTranslator implements RexVisitor
      *   an input register for every field in the input row type; otherwise
      *   it contains inputs for only those fields used.
      */
-    public String getProgram(SaffronType inputRowType)
+    public String getProgram(RelDataType inputRowType)
     {
         // Step 0. Create input fields.
         // Create an calculator input for each field in the input relation,
         // regardless of whether the calcualtor program uses them.
         if (inputRowType != null) {
-            final SaffronField[] fields = inputRowType.getFields();
+            final RelDataTypeField[] fields = inputRowType.getFields();
             for (int i = 0; i < fields.length; i++) {
                 RexInputRef rexInputRef =
                         new RexInputRef(i, fields[i].getType());
@@ -583,7 +583,7 @@ public class RexToCalcTranslator implements RexVisitor
                 "Unknown operator "+op);
     }
 
-    protected boolean lhsTypeIsNullableRHSType(SaffronType returnType, SaffronType argType) {
+    protected boolean lhsTypeIsNullableRHSType(RelDataType returnType, RelDataType argType) {
         return returnType.isSameType(argType) ||
                (returnType.isNullable() && !argType.isNullable() &&
                 returnType.getSqlTypeName().equals(argType.getSqlTypeName()));
@@ -598,8 +598,8 @@ public class RexToCalcTranslator implements RexVisitor
             op.kind.isA(SqlKind.GreaterThanOrEqual) ||
             op.kind.isA(SqlKind.LessThanOrEqual))
         {
-            SaffronType t0 = call.operands[0].getType();
-            SaffronType t1 = call.operands[1].getType();
+            RelDataType t0 = call.operands[0].getType();
+            RelDataType t1 = call.operands[1].getType();
 
             return ( t0.isCharType() && t1.isCharType() ) ||
                    ( isOctetString(t0) && isOctetString(t1) );
@@ -607,7 +607,7 @@ public class RexToCalcTranslator implements RexVisitor
         return false;
     }
 
-    private static boolean isOctetString(SaffronType t) {
+    private static boolean isOctetString(RelDataType t) {
         switch (t.getSqlTypeName().ordinal_) {
         case SqlTypeName.Bit_ordinal:
         case SqlTypeName.Varbinary_ordinal:

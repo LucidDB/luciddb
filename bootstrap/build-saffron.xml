@@ -49,7 +49,7 @@
 	</target>
 
 	<target name="integration-build"
-	        depends="integration-copy,integration-thirdparty">
+	        depends="integration-copy,integration-thirdparty,integration-farrago">
 		<antcall target="do-build">
 			<param name="build.home" location="${integration.build.home}"/>
 		</antcall>
@@ -78,6 +78,19 @@
 		<antcall target="do-thirdparty">
 			<param name="build.target" value="integration-build"/>
 		</antcall>
+	</target>
+
+	<target name="integration-farrago">
+		<!-- just set up a clean farrago: we'll build it ourselves -->
+		<ant antfile="build-farrago.xml" target="integration-copy" inheritAll="false">
+		    <propertyset>
+		        <propertyref prefix="open_"/>
+		    </propertyset>
+		</ant>
+		<!-- build just what is needed by Saffron -->
+		<property name="build.home" location="${default.build.home}"/>
+		<ant dir="${build.home}/farrago" target="compile.saffron.deps" 
+             inheritAll="false"/>
 	</target>
 
 

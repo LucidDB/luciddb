@@ -22,9 +22,9 @@
 package sales;
 
 import junit.framework.TestCase;
-import net.sf.saffron.core.SaffronConnection;
+import org.eigenbase.relopt.RelOptConnection;
 import net.sf.saffron.oj.stmt.OJStatement;
-import net.sf.saffron.util.Util;
+import org.eigenbase.util.Util;
 import openjava.tools.DebugOut;
 
 import java.io.PrintWriter;
@@ -387,7 +387,7 @@ public class Test extends TestCase
     Test(String [] args) throws SQLException
     {
         super("sales test");
-        SaffronConnection connection = new SalesInMemoryConnection();
+        RelOptConnection connection = new SalesInMemoryConnection();
         this.pw = init(3);
         try {
             switch (2) {
@@ -476,7 +476,7 @@ public class Test extends TestCase
                 statements);
     }
 
-    void run3(SaffronConnection connection) throws java.sql.SQLException
+    void run3(RelOptConnection connection) throws java.sql.SQLException
     {
         FakeSalesPlus sales = new FakeSalesPlus();
         runList(
@@ -486,7 +486,7 @@ public class Test extends TestCase
             plusStatements);
     }
 
-    void runList(SaffronConnection connection, OJStatement.Argument [] args,
+    void runList(RelOptConnection connection, OJStatement.Argument [] args,
             String [] statements) throws SQLException
     {
         boolean autoFlush = true;
@@ -509,7 +509,7 @@ public class Test extends TestCase
     }
 
     void runOne(
-        SaffronConnection connection,
+        RelOptConnection connection,
         PrintWriter pw,
         String s,
         String desc,

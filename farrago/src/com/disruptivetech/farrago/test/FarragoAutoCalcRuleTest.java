@@ -49,20 +49,20 @@ import net.sf.farrago.session.FarragoSessionFactory;
 
 import com.disruptivetech.farrago.calc.CalcRexImplementorTableImpl;
 
-import net.sf.saffron.core.SaffronType;
-import net.sf.saffron.core.SaffronTypeFactory;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeFactory;
 
-import net.sf.saffron.oj.rex.OJRexImplementor;
-import net.sf.saffron.oj.rex.OJRexImplementorTable;
+import org.eigenbase.oj.rex.OJRexImplementor;
+import org.eigenbase.oj.rex.OJRexImplementorTable;
 
-import net.sf.saffron.rex.RexNode;
-import net.sf.saffron.rex.RexCall;
+import org.eigenbase.rex.RexNode;
+import org.eigenbase.rex.RexCall;
 
-import net.sf.saffron.sql.*;
+import org.eigenbase.sql.*;
 
-import net.sf.saffron.sql.fun.SqlStdOperatorTable;
+import org.eigenbase.sql.fun.SqlStdOperatorTable;
 
-import net.sf.saffron.sql.test.SqlTester;
+import org.eigenbase.sql.test.SqlTester;
 
 import openjava.ptree.*;
 
@@ -380,12 +380,12 @@ public class FarragoAutoCalcRuleTest
                     public void test(SqlTester tester) {
                     }
 
-                    public SaffronType getType(SaffronTypeFactory typeFactory,
+                    public RelDataType getType(RelDataTypeFactory typeFactory,
                                                RexNode[] args)
                     {
                         assert(args.length == 2);
 
-                        SaffronType[] types = new SaffronType[] {
+                        RelDataType[] types = new RelDataType[] {
                             args[0].getType(),
                             args[1].getType()
                         };
@@ -394,13 +394,13 @@ public class FarragoAutoCalcRuleTest
                         return typeFactory.createProjectType(types, names);
                     }
 
-                    public SaffronType inferType(SqlValidator validator,
+                    public RelDataType inferType(SqlValidator validator,
                                                  SqlValidator.Scope scope,
                                                  SqlCall call)
                     {
                         assert(call.getOperands().length == 2);
 
-                        SaffronType[] types = new SaffronType[] {
+                        RelDataType[] types = new RelDataType[] {
                             validator.getValidatedNodeType(
                                 call.getOperands()[0]),
                             validator.getValidatedNodeType(
@@ -424,7 +424,7 @@ public class FarragoAutoCalcRuleTest
                     {
                         // NOTE: this is untested and is probably
                         // never called during this test case.
-                        SaffronType rowType = call.getType();
+                        RelDataType rowType = call.getType();
 
                         Variable rowVar = trans.createScratchVariable(rowType);
 

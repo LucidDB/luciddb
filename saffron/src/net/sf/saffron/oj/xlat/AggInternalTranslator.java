@@ -23,14 +23,14 @@
 package net.sf.saffron.oj.xlat;
 
 import net.sf.saffron.core.AggregationExtender;
-import net.sf.saffron.core.SaffronType;
+import org.eigenbase.reltype.RelDataType;
 import net.sf.saffron.oj.rel.BuiltinAggregation;
-import net.sf.saffron.oj.util.JavaRexBuilder;
-import net.sf.saffron.rel.AggregateRel;
-import net.sf.saffron.rel.Aggregation;
-import net.sf.saffron.rel.SaffronRel;
-import net.sf.saffron.rex.*;
-import net.sf.saffron.util.Util;
+import org.eigenbase.oj.util.JavaRexBuilder;
+import org.eigenbase.rel.AggregateRel;
+import org.eigenbase.rel.Aggregation;
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.rex.*;
+import org.eigenbase.util.Util;
 import openjava.mop.OJClass;
 import openjava.mop.OJMethod;
 import openjava.mop.Toolbox;
@@ -70,7 +70,7 @@ class AggInternalTranslator extends InternalTranslator
 
     AggInternalTranslator(
         QueryInfo queryInfo,
-        SaffronRel [] inputs,
+        RelNode [] inputs,
         Expression [] groups,
         ArrayList aggInputList,
         ArrayList aggCallVector, JavaRexBuilder javaRexBuilder)
@@ -244,7 +244,7 @@ outer:
             }
             return rex;
         } else if (rex instanceof RexVariable) {
-            final SaffronType rowType = inputs[0].getRowType();
+            final RelDataType rowType = inputs[0].getRowType();
             final RexNode ref = rexBuilder.makeRangeReference(rowType);
             if (rex instanceof RexGroupVariable) {
                 final RexGroupVariable groupVar = (RexGroupVariable) rex;

@@ -18,8 +18,8 @@ import java.util.HashSet;
  *
  * <p>The non-abstract derived class {@link
  * net.sf.saffron.oj.xlat.OJQueryExpander} does this by converting the
- * expression to a tree of {@link net.sf.saffron.rel.SaffronRel} nodes, and
- * using an optimizer ({@link net.sf.saffron.core.SaffronPlanner}) to choose
+ * expression to a tree of {@link org.eigenbase.rel.RelNode} nodes, and
+ * using an optimizer ({@link org.eigenbase.relopt.RelOptPlanner}) to choose
  * the optimal java implementation.</p>
  **/
 public abstract class QueryExpander extends ScopeHandler {
@@ -59,7 +59,7 @@ public abstract class QueryExpander extends ScopeHandler {
 	    }
 	} else if (p instanceof MethodCall) {
 	    // A call to the method
-        // SaffronConnection.contentsAsArray(String,String)
+        // RelOptConnection.contentsAsArray(String,String)
 	    // is relational.
 	    MethodCall methodCall = (MethodCall) p;
 	    String name = methodCall.getName();

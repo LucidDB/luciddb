@@ -22,13 +22,14 @@
 
 package net.sf.saffron.oj.rel;
 
-import net.sf.saffron.core.SaffronPlanner;
-import net.sf.saffron.opt.CallingConvention;
-import net.sf.saffron.opt.PlanCost;
-import net.sf.saffron.opt.VolcanoCluster;
-import net.sf.saffron.rel.SaffronRel;
-import net.sf.saffron.rel.UnionRel;
-import net.sf.saffron.util.Util;
+import org.eigenbase.oj.rel.*;
+import org.eigenbase.relopt.RelOptPlanner;
+import org.eigenbase.relopt.CallingConvention;
+import org.eigenbase.relopt.RelOptCost;
+import org.eigenbase.relopt.RelOptCluster;
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.UnionRel;
+import org.eigenbase.util.Util;
 import openjava.ptree.ParseTree;
 import openjava.ptree.StatementList;
 import openjava.ptree.Expression;
@@ -42,7 +43,7 @@ public class JavaUnionAllRel extends UnionRel implements JavaLoopRel
 {
     //~ Constructors ----------------------------------------------------------
 
-    public JavaUnionAllRel(VolcanoCluster cluster,SaffronRel[] inputs)
+    public JavaUnionAllRel(RelOptCluster cluster,RelNode[] inputs)
     {
         super(cluster,inputs,true);
     }
@@ -54,13 +55,13 @@ public class JavaUnionAllRel extends UnionRel implements JavaLoopRel
         return CallingConvention.JAVA;
     }
 
-    // implement SaffronRel
+    // implement RelNode
     public Object clone()
     {
         return new JavaUnionAllRel(cluster,inputs);
     }
 
-    public PlanCost computeSelfCost(SaffronPlanner planner)
+    public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
         double dRows = getRows();
         double dCpu = 0;

@@ -19,7 +19,7 @@
 
 package net.sf.farrago.type;
 
-import net.sf.saffron.core.*;
+import org.eigenbase.reltype.*;
 
 import java.sql.*;
 
@@ -40,7 +40,7 @@ public class FarragoParameterMetaData extends FarragoJdbcMetaDataImpl
      *
      * @param rowType type info to return
      */
-    public FarragoParameterMetaData(SaffronType rowType)
+    public FarragoParameterMetaData(RelDataType rowType)
     {
         super(rowType);
     }

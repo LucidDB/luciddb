@@ -20,19 +20,19 @@
 */
 package net.sf.saffron.oj.convert;
 
-import net.sf.saffron.rel.convert.ConverterFactory;
-import net.sf.saffron.rel.convert.ConverterRel;
-import net.sf.saffron.rel.SaffronRel;
-import net.sf.saffron.opt.CallingConvention;
-import net.sf.saffron.oj.rel.JavaRelImplementor;
-import net.sf.saffron.util.Util;
+import org.eigenbase.rel.convert.ConverterFactory;
+import org.eigenbase.rel.convert.ConverterRel;
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.relopt.CallingConvention;
+import org.eigenbase.oj.rel.JavaRelImplementor;
+import org.eigenbase.util.Util;
 import openjava.ptree.ParseTree;
 
 /**
  * Abstract class to convert from one {@link CallingConvention} to another. A
  * convertlet can be embedded in a {@link JavaConverterRel} to produce a
  * relational expression which can convert between arbitrary calling
- * conventions; JavaConverterRel provides the {@link SaffronRel} behavior, and
+ * conventions; JavaConverterRel provides the {@link RelNode} behavior, and
  * the convertlet provides the conversion logic.
  *
  * <p>The concrete derived class ('converlet') must specify the source and
@@ -57,7 +57,7 @@ public abstract class JavaConvertlet implements ConverterFactory {
         return _inConvention;
     }
 
-    public ConverterRel convert(SaffronRel rel)
+    public ConverterRel convert(RelNode rel)
     {
         return new JavaConverterRel(rel.getCluster(),rel,this);
     }

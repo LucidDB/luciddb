@@ -19,8 +19,8 @@
 
 package net.sf.farrago.util;
 
-import net.sf.saffron.util.*;
-import net.sf.saffron.util.property.*;
+import org.eigenbase.util.*;
+import org.eigenbase.util.property.*;
 
 import java.io.*;
 import java.util.*;
@@ -94,7 +94,7 @@ public class FarragoProperties extends Properties
         this,"net.sf.farrago.fileset.regressionsql",null);
 
     /**
-     * @return the {@link net.sf.saffron.util.Glossary#SingletonPattern
+     * @return the {@link org.eigenbase.util.Glossary#SingletonPattern
      * singleton} properties object, constructed from {@link
      * System#getProperties}.
      */

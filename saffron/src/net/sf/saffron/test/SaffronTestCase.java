@@ -27,9 +27,9 @@ import junit.framework.TestSuite;
 import junit.framework.Test;
 
 import net.sf.saffron.oj.stmt.OJStatement;
-import net.sf.saffron.runtime.SyntheticObject;
-import net.sf.saffron.core.SaffronConnection;
-import net.sf.saffron.util.Util;
+import org.eigenbase.runtime.SyntheticObject;
+import org.eigenbase.relopt.RelOptConnection;
+import org.eigenbase.util.Util;
 
 import java.lang.reflect.Field;
 
@@ -187,7 +187,7 @@ public abstract class SaffronTestCase extends TestCase
         return Arrays.asList(a).iterator();
     }
 
-    public SaffronConnection getConnection() {
+    public RelOptConnection getConnection() {
         throw new UnsupportedOperationException();
     }
 

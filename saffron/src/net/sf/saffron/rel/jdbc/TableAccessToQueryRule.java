@@ -20,16 +20,16 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-package net.sf.saffron.rel.jdbc;
+package org.eigenbase.rel.jdbc;
 
-import net.sf.saffron.core.SaffronConnection;
+import org.eigenbase.relopt.RelOptConnection;
 import net.sf.saffron.ext.JdbcSchema;
 import net.sf.saffron.ext.JdbcTable;
 import net.sf.saffron.oj.rel.JavaTableAccessRel;
-import net.sf.saffron.opt.RuleOperand;
-import net.sf.saffron.opt.VolcanoRule;
-import net.sf.saffron.opt.VolcanoRuleCall;
-import net.sf.saffron.sql.SqlIdentifier;
+import org.eigenbase.relopt.RelOptRuleOperand;
+import org.eigenbase.relopt.RelOptRule;
+import org.eigenbase.relopt.RelOptRuleCall;
+import org.eigenbase.sql.SqlIdentifier;
 
 
 /**
@@ -43,26 +43,26 @@ import net.sf.saffron.sql.SqlIdentifier;
  * it by grafting on filters to the WHERE clause, projections in the SELECT
  * list, and so forth.
  */
-class TableAccessToQueryRule extends VolcanoRule
+class TableAccessToQueryRule extends RelOptRule
 {
     //~ Constructors ----------------------------------------------------------
 
     TableAccessToQueryRule()
     {
-        super(new RuleOperand(JavaTableAccessRel.class,null));
+        super(new RelOptRuleOperand(JavaTableAccessRel.class,null));
     }
 
     //~ Methods ---------------------------------------------------------------
 
-    public void onMatch(VolcanoRuleCall call)
+    public void onMatch(RelOptRuleCall call)
     {
         JavaTableAccessRel javaTableAccess = (JavaTableAccessRel) call.rels[0];
         if (!(javaTableAccess.getTable() instanceof JdbcTable)) {
             return;
         }
         JdbcTable table = (JdbcTable) javaTableAccess.getTable();
-        JdbcSchema schema = (JdbcSchema) table.getSaffronSchema();
-        final SaffronConnection connection = javaTableAccess.getConnection();
+        JdbcSchema schema = (JdbcSchema) table.getRelOptSchema();
+        final RelOptConnection connection = javaTableAccess.getConnection();
         JdbcQuery query = new JdbcQuery(
                 javaTableAccess.getCluster(),
                 javaTableAccess.getRowType(),

@@ -43,9 +43,9 @@ import junit.framework.TestCase;
 
 import net.sf.farrago.trace.FarragoTrace;
 
-import net.sf.saffron.runtime.IteratorResultSet;
+import org.eigenbase.runtime.IteratorResultSet;
 
-import net.sf.saffron.util.Util;
+import org.eigenbase.util.Util;
 
 /**
  * FarragoTestCommandGenerator creates instances of {@link FarragoTestCommand}

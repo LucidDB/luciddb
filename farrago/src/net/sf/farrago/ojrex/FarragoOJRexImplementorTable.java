@@ -19,9 +19,9 @@
 
 package net.sf.farrago.ojrex;
 
-import net.sf.saffron.oj.rex.*;
-import net.sf.saffron.sql.*;
-import net.sf.saffron.sql.fun.*;
+import org.eigenbase.oj.rex.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.fun.*;
 
 import openjava.ptree.*;
 
@@ -45,7 +45,7 @@ public class FarragoOJRexImplementorTable extends OJRexImplementorTableImpl
     // override OJRexImplementorTableImpl
     protected void initStandard(final SqlStdOperatorTable opTab)
     {
-        // use Saffron OpenJava implementation as a base
+        // use org.eigenbase.oj.rex implementation as a base
         super.initStandard(opTab);
 
         // NOTE jvs 22-June-2004: when you add implementations for new

@@ -19,10 +19,11 @@
 
 package net.sf.farrago.namespace.jdbc;
 
-import net.sf.saffron.sql.*;
-import net.sf.saffron.sql.fun.SqlStdOperatorTable;
-import net.sf.saffron.core.*;
-import net.sf.saffron.util.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.fun.SqlStdOperatorTable;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.util.*;
 
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
@@ -64,7 +65,7 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
         FarragoTypeFactory typeFactory,
         String [] foreignName,
         String [] localName,
-        SaffronType rowType)
+        RelDataType rowType)
         throws SQLException
     {
         SqlDialect dialect = new SqlDialect(server.databaseMetaData);

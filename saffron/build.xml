@@ -20,7 +20,11 @@
 
 <project name="saffron" default="compile">
   <property environment="env"/>
+
+  <!-- assume common parent of farrago and saffron  -->
+  <property name="open.dir" location=".."/>
   <property name="project.location" location="."/>
+  <property name="farrago.dir" location="${open.dir}/farrago"/>
   <property name="lib.location" location="${project.location}/lib"/>
   <property file="${project.location}/build.properties"/>
   <property name="project.build.debug" value="on"/>
@@ -78,8 +82,6 @@
   <property name="tomcat.home" value="${env.TOMCAT_HOME}"/>
   <property name="weblogic.home" value="${env.WEBLOGIC_HOME}"/>
   <property name="parser.jj.file.abs" location="${java.dir}/${parser.jj.file}"/>
-  <property name="CombinedParser.jj" 
-    location="${java.dir}/net/sf/saffron/sql/parser/CombinedParser.jj"/>
   <property name="test.log.dir" location="testlog"/>
 
   <!-- tracing properties -->
@@ -104,14 +106,17 @@
   <property name="saffron.3p.classpath" refid="saffron.3p.classpath"/>
 
   <!-- classpath for execution. -->
+  <!-- NOTE jvs 30-Aug-2004:  It's important for Saffron to override Farrago -->
   <path id="saffron.run.classpath">
     <pathelement path="${saffron.3p.classpath}"/>
     <pathelement location="${classes.dir}"/>
+    <pathelement location="${farrago.dir}/classes"/>
   </path>
 
   <path id="saffron.build.classpath">
     <pathelement path="${saffron.3p.classpath}"/>
     <pathelement location="${classes.dir}"/>
+    <pathelement location="${farrago.dir}/classes"/>
     <pathelement location="${boot.jar.file}"/>
     <pathelement location="${junit.dir}/junit.jar"/>
     <pathelement location="${tomcat.home}/common/lib/servlet.jar"/>
@@ -205,40 +210,6 @@
     <fail if="junit.failure"/>
   </target>
 
-  <target name="test.sql" depends="compile,setup.trace"
-      description="Runs only SQL-related tests.">
-    <junit printsummary="yes" fork="yes" haltonfailure="true">
-      <classpath refid="saffron.build.classpath"/>
-      <jvmarg value="-Dsaffron.class.dir=${classes.dir}"/>
-      <jvmarg line="&EnableAssertions;"/>
-      <jvmarg line="&SaffronProps;"/>
-      <formatter type="plain" usefile="false" />
-      <batchtest>
-        <fileset dir="${classes.dir}">
-          <include name="**/DiffSanityTest.class"/>
-          <include name="**/SqlParserTest.class"/>
-        </fileset>
-      </batchtest>
-    </junit>
-    <delete file="${SaffronTrace.log}.lck"/>
-  </target>
-
-  <target name="test.opt" depends="compile,setup.trace"
-      description="Runs only the optimizer tests.">
-    <junit printsummary="yes" fork="yes" haltonfailure="true">
-      <classpath refid="saffron.build.classpath"/>
-      <jvmarg line="&EnableAssertions;"/>
-      <jvmarg line="&SaffronProps;"/>
-      <formatter type="plain" usefile="false" />
-      <batchtest>
-        <fileset dir="${classes.dir}">
-          <include name="**/VolcanoPlannerTest.class"/>
-        </fileset>
-      </batchtest>
-    </junit>
-    <delete file="${SaffronTrace.log}.lck"/>
-  </target>
-
   <target name="clean" depends="clean.examples,clean.test.logs">
     <delete includeEmptyDirs="true" quiet="true">
       <fileset dir="${classes.dir}">
@@ -259,6 +230,11 @@
         <include name="openjava/tools/parser/Token.java"/>
         <include name="openjava/tools/parser/ParserConstants.java"/>
         <include name="openjava/tools/parser/ASCII_UCodeESC_CharStream.java"/>
+        <!-- files generated from SaffronResource.xml -->
+        <include name="net/sf/saffron/resource/SaffronResource.java"/>
+        <include name="net/sf/saffron/resource/SaffronResource_en_US.java"/>
+
+        <!-- TODO jvs 30-Aug-2004:  eliminate these in a while -->
         <include name="net/sf/saffron/sql/parser/CombinedParser.jj"/>
         <include name="net/sf/saffron/sql/parser/Parser.java"/>
         <include name="net/sf/saffron/sql/parser/TokenMgrError.java"/>
@@ -267,10 +243,6 @@
         <include name="net/sf/saffron/sql/parser/Token.java"/>
         <include name="net/sf/saffron/sql/parser/SqlParseImpConstants.java"/>
         <include name="net/sf/saffron/sql/parser/ASCII_UCodeESC_CharStream.java"/>
-        <!-- files generated from SaffronResource.xml -->
-        <include name="net/sf/saffron/resource/SaffronResource.java"/>
-        <include name="net/sf/saffron/resource/SaffronResource_en_US.java"/>
-
         <!-- failed test logs -->
         <include name="net/sf/saffron/**/*.log"/>
       </fileset>
@@ -307,7 +279,7 @@
   </target>
 
   <target name="compile"
-      depends="generateResources,parser,sqlParser,
+      depends="generateResources,parser,
                compile.jsp.maybe,compile.java,compile.test"/>
 
   <target name="compile.java" depends="sniff,mkClassesDir">
@@ -412,13 +384,6 @@
     <uptodate property="parser.uptodate"
       srcfile="${parser.jj.file.abs}"
       targetfile="${java.dir}/openjava/tools/parser/Parser.java"/>
-    <uptodate property="sqlParser.uptodate"
-      targetfile="${java.dir}/net/sf/saffron/sql/parser/Parser.java">
-      <srcfiles dir="${java.dir}/net/sf/saffron/sql/parser">
-        <include name="Parser.jj"/>
-        <include name="CommonParser.jj"/>
-      </srcfiles>
-    </uptodate>
   </target>
 
   <!-- Generates the enhanced Java parser. Generated files are:
@@ -431,24 +396,6 @@
       javacchome="${javacc.dir}"
       outputdirectory="${java.dir}/openjava/tools/parser"
       buildtokenmanager="false"/>
-  </target>
-
-  <!-- Generate the SQL parser. Generated files are:
-       TokenMgrError.java, ParseException.java,
-       JavaCharStream.java, Token.java, ASCII_UCodeESC_CharStream.java -->
-  <target name="sqlParser" depends="checkParsersUptodate"
-    unless="sqlParser.uptodate">
-    <delete file="${CombinedParser.jj}" quiet="true"/>
-    <concat
-      destfile="${CombinedParser.jj}"
-      append="false">
-      <filelist dir="${java.dir}/net/sf/saffron/sql/parser"
-          files="Parser.jj,CommonParser.jj"/>
-    </concat>
-    <chmod file="${CombinedParser.jj}" perm="a-w"/>
-    <javacc
-      target="${CombinedParser.jj}"
-      javacchome="${javacc.dir}"/>
   </target>
 
   <target name="macker">
@@ -496,14 +443,6 @@
         <!-- NOTE: don't apply jalopy to the openjava code; this makes
              diffing against the original code easier -->
         <include name="net/sf/saffron/**/*.java"/>
-        <!-- TODO:  single-source the following set of generated files -->
-        <exclude name="net/sf/saffron/sql/parser/Parser.java"/>
-        <exclude name="net/sf/saffron/sql/parser/TokenMgrError.java"/>
-        <exclude name="net/sf/saffron/sql/parser/ParseException.java"/>
-        <exclude name="net/sf/saffron/sql/parser/JavaCharStream.java"/>
-        <exclude name="net/sf/saffron/sql/parser/Token.java"/>
-        <exclude name="net/sf/saffron/sql/parser/SqlParseImpConstants.java"/>
-        <exclude name="net/sf/saffron/sql/parser/ASCII_UCodeESC_CharStream.java"/>
       </fileset>
       <fileset dir="${examples.dir}">
         <include name="**/*.java"/>

@@ -20,13 +20,13 @@
 
 package net.sf.farrago.query;
 
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.rex.*;
-import net.sf.saffron.core.*;
-import net.sf.saffron.oj.util.*;
-import net.sf.saffron.oj.rel.*;
-import net.sf.saffron.oj.rex.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.rex.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.oj.util.*;
+import org.eigenbase.oj.rel.*;
+import org.eigenbase.oj.rex.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.ojrex.*;
 import net.sf.farrago.runtime.*;
@@ -84,7 +84,7 @@ public class FarragoRelImplementor extends JavaRelImplementor
      * from a {@link FennelRel} via our {@link FennelRelImplementor}
      * interface.
      */ 
-    public Object visitChildInternal(SaffronRel child)
+    public Object visitChildInternal(RelNode child)
     {
         if (child instanceof FennelRel) {
             return ((FennelRel) child).implementFennelChild(this);
@@ -105,8 +105,8 @@ public class FarragoRelImplementor extends JavaRelImplementor
     // implement FennelRelImplementor
     public void registerRelStreamDef(
         FemExecutionStreamDef streamDef,
-        SaffronRel rel,
-        SaffronType rowType)
+        RelNode rel,
+        RelDataType rowType)
     {
         if (rowType == null) {
             rowType = rel.getRowType();
@@ -116,8 +116,8 @@ public class FarragoRelImplementor extends JavaRelImplementor
 
     private void registerStreamDef(
         FemExecutionStreamDef streamDef,
-        SaffronRel rel,
-        SaffronType rowType)
+        RelNode rel,
+        RelDataType rowType)
     {
         if (streamDef.getName() != null) {
             // already registered
@@ -157,7 +157,7 @@ public class FarragoRelImplementor extends JavaRelImplementor
      */
     public String getStreamGlobalName(
         FemExecutionStreamDef streamDef,
-        SaffronRel rel)
+        RelNode rel)
     {
         String streamName;
         if (rel != null) {
@@ -180,7 +180,7 @@ public class FarragoRelImplementor extends JavaRelImplementor
     }
     
     // override JavaRelImplementor
-    protected RexToOJTranslator newTranslator(SaffronRel rel)
+    protected RexToOJTranslator newTranslator(RelNode rel)
     {
         // NOTE jvs 14-June-2004:  since we aren't given stmtList/memberList,
         // this translator is not usable for actual code generation, but
@@ -205,7 +205,7 @@ public class FarragoRelImplementor extends JavaRelImplementor
     // override JavaRelImplementor
     public void translateAssignment(
         JavaRel rel,
-        SaffronType lhsType,
+        RelDataType lhsType,
         Expression lhsExp,
         RexNode rhs,
         StatementList stmtList,

@@ -27,13 +27,14 @@ import net.sf.farrago.runtime.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.resource.FarragoResource;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.util.*;
-import net.sf.saffron.oj.stmt.*;
-import net.sf.saffron.rel.SaffronRel;
-import net.sf.saffron.sql.SqlKind;
-import net.sf.saffron.sql.type.SqlTypeName;
-import net.sf.saffron.runtime.IteratorResultSet;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.util.*;
+import org.eigenbase.oj.stmt.*;
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.sql.SqlKind;
+import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.runtime.IteratorResultSet;
 
 import java.util.*;
 import java.util.logging.*;
@@ -144,15 +145,15 @@ public class FarragoDbStmtContext
     private void postprepare()
     {
         if (isPrepared()) {
-            final SaffronType dynamicParamRowType =
+            final RelDataType dynamicParamRowType =
                     executableStmt.getDynamicParamRowType();
-            final SaffronField[] fields = dynamicParamRowType.getFields();
+            final RelDataTypeField[] fields = dynamicParamRowType.getFields();
             // Allocate an array to hold parameter values.
             dynamicParamValues = new Object[fields.length];
             // Allocate an array of validators, one for each parameter.
             dynamicParamDefs = new ParamDef[fields.length];
             for (int i = 0; i < fields.length; i++) {
-                final SaffronField field = fields[i];
+                final RelDataTypeField field = fields[i];
                 dynamicParamDefs[i] = ParamDef.create(field.getName(),
                         field.getType());
             }
@@ -164,7 +165,7 @@ public class FarragoDbStmtContext
 
     // implement FarragoSessionStmtContext
     public void prepare(
-        SaffronRel plan,
+        RelNode plan,
         SqlKind kind,
         boolean logical,
         FarragoSessionPreparingStmt prep)
@@ -183,14 +184,14 @@ public class FarragoDbStmtContext
 
 
     // implement FarragoSessionStmtContext
-    public SaffronType getPreparedRowType()
+    public RelDataType getPreparedRowType()
     {
         assert(isPrepared());
         return executableStmt.getRowType();
     }
 
     // implement FarragoSessionStmtContext
-    public SaffronType getPreparedParamType()
+    public RelDataType getPreparedParamType()
     {
         assert(isPrepared());
         return executableStmt.getDynamicParamRowType();
@@ -374,13 +375,13 @@ public class FarragoDbStmtContext
      * <p>TODO: Actually enfore these constraints.
      */
     private static class ParamDef {
-        final SaffronType type;
+        final RelDataType type;
         final String paramName;
 
         static final TimeZone defaultZone = TimeZone.getDefault();
         static final TimeZone gmtZone = TimeZone.getTimeZone("GMT");
 
-        public ParamDef(String paramName, SaffronType type) {
+        public ParamDef(String paramName, RelDataType type) {
             this.type = type;
             this.paramName = paramName;
         }
@@ -390,7 +391,7 @@ public class FarragoDbStmtContext
          *
          * @post return != null
          */
-        static ParamDef create(String paramName, SaffronType type) {
+        static ParamDef create(String paramName, RelDataType type) {
             final SqlTypeName sqlTypeName = type.getSqlTypeName();
             switch (sqlTypeName.ordinal_) {
             case SqlTypeName.Char_ordinal:
@@ -437,7 +438,7 @@ public class FarragoDbStmtContext
      * (the JVM's timezone) into system time.
      */
     private static class TimestampParamDef extends ParamDef {
-        public TimestampParamDef(String paramName, SaffronType type) {
+        public TimestampParamDef(String paramName, RelDataType type) {
             super(paramName, type);
         }
 
@@ -460,7 +461,7 @@ public class FarragoDbStmtContext
      * (the JVM's timezone) into system time.
      */
     private static class DateParamDef extends ParamDef {
-        public DateParamDef(String paramName, SaffronType type) {
+        public DateParamDef(String paramName, RelDataType type) {
             super(paramName, type);
         }
 
@@ -499,7 +500,7 @@ public class FarragoDbStmtContext
      * (the JVM's timezone) into system time.
      */
     private static class TimeParamDef extends ParamDef {
-        public TimeParamDef(String paramName, SaffronType type) {
+        public TimeParamDef(String paramName, RelDataType type) {
             super(paramName, type);
         }
 
@@ -538,7 +539,7 @@ public class FarragoDbStmtContext
     private static class StringParamDef extends ParamDef {
         private final int maxCharCount;
 
-        public StringParamDef(String paramName, SaffronType type) {
+        public StringParamDef(String paramName, RelDataType type) {
             super(paramName, type);
             maxCharCount = type.getPrecision();
         }
@@ -566,7 +567,7 @@ public class FarragoDbStmtContext
     private static class BinaryParamDef extends ParamDef {
         private final int maxByteCount;
 
-        public BinaryParamDef(String paramName, SaffronType type) {
+        public BinaryParamDef(String paramName, RelDataType type) {
             super(paramName, type);
             maxByteCount = type.getPrecision();
         }

@@ -20,19 +20,19 @@
 */
 package com.disruptivetech.farrago.calc;
 
-import net.sf.saffron.sql.fun.SqlStdOperatorTable;
-import net.sf.saffron.sql.fun.SqlTrimFunction;
-import net.sf.saffron.sql.*;
-import net.sf.saffron.sql.type.SqlTypeName;
-import net.sf.saffron.rex.RexCall;
-import net.sf.saffron.rex.RexNode;
-import net.sf.saffron.rex.RexLiteral;
-import net.sf.saffron.rex.RexKind;
-import net.sf.saffron.util.Util;
-import net.sf.saffron.util.MultiMap;
-import net.sf.saffron.util.DoubleKeyMap;
-import net.sf.saffron.core.SaffronType;
-import net.sf.saffron.core.SaffronTypeFactory;
+import org.eigenbase.sql.fun.SqlStdOperatorTable;
+import org.eigenbase.sql.fun.SqlTrimFunction;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.rex.RexCall;
+import org.eigenbase.rex.RexNode;
+import org.eigenbase.rex.RexLiteral;
+import org.eigenbase.rex.RexKind;
+import org.eigenbase.util.Util;
+import org.eigenbase.util.MultiMap;
+import org.eigenbase.util.DoubleKeyMap;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeFactory;
 
 import java.util.HashMap;
 import java.util.ArrayList;
@@ -430,11 +430,11 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
         if (rd.getType().isExact() &&
             !rd.getType().equals(CalcProgramBuilder.OpType.Int8)) {
 
-            SaffronType oldType = typeNode.getType();
-            SaffronTypeFactory fac =
+            RelDataType oldType = typeNode.getType();
+            RelDataTypeFactory fac =
                 translator._rexBuilder.getTypeFactory();
             //todo do a reverse lookup on OpType.Int8 instead
-            SaffronType int8 = fac.createSqlType(SqlTypeName.Bigint);
+            RelDataType int8 = fac.createSqlType(SqlTypeName.Bigint);
             RexNode castCall1 =
                 translator._rexBuilder.makeCast(int8, call.operands[i]);
 
@@ -476,11 +476,11 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
         if (rd.getType().isApprox() &&
             !rd.getType().equals(CalcProgramBuilder.OpType.Double)) {
 
-            SaffronType oldType = typeNode.getType();
-            SaffronTypeFactory fac =
+            RelDataType oldType = typeNode.getType();
+            RelDataTypeFactory fac =
                 translator._rexBuilder.getTypeFactory();
             //todo do a reverse lookup on OpType.Double instead
-            SaffronType db = fac.createSqlType(SqlTypeName.Double);
+            RelDataType db = fac.createSqlType(SqlTypeName.Double);
             RexNode castCall1 =
                 translator._rexBuilder.makeCast(db, call.operands[i]);
 
@@ -526,11 +526,11 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
             for (int i = 0; i < call.operands.length; i++) {
                 RexNode operand = call.operands[i];
                 if (!operand.getType().getSqlTypeName().equals(SqlTypeName.Double)) {
-                    SaffronType oldType = operand.getType();
-                    SaffronTypeFactory fac =
+                    RelDataType oldType = operand.getType();
+                    RelDataTypeFactory fac =
                         translator._rexBuilder.getTypeFactory();
                     //todo do a reverse lookup on OpType.Double instead
-                    SaffronType doubleType = fac.createSqlType(SqlTypeName.Double);
+                    RelDataType doubleType = fac.createSqlType(SqlTypeName.Double);
                     doubleType = fac.createTypeWithNullability(
                         doubleType, oldType.isNullable());
                     RexNode castCall =
@@ -689,9 +689,9 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
             }
 
             // Figure out the source and destination types.
-            SaffronType fromType = call.operands[0].getType();
+            RelDataType fromType = call.operands[0].getType();
             SqlTypeName fromTypeName = fromType.getSqlTypeName();
-            SaffronType toType = call.getType();
+            RelDataType toType = call.getType();
             SqlTypeName toTypeName = toType.getSqlTypeName();
 
             CalcRexImplementor implentor =

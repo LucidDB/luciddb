@@ -23,8 +23,9 @@ import net.sf.farrago.runtime.*;
 import net.sf.farrago.util.*;
 import net.sf.farrago.session.*;
 
-import net.sf.saffron.oj.stmt.*;
-import net.sf.saffron.core.*;
+import org.eigenbase.oj.stmt.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
 
 import java.sql.*;
 import java.util.*;
@@ -46,7 +47,7 @@ class FarragoExecutableExplainStmt extends FarragoExecutableStmtImpl
     private final String explanation;
 
     FarragoExecutableExplainStmt(
-        SaffronType dynamicParamRowType,
+        RelDataType dynamicParamRowType,
         String explanation)
     {
         super(dynamicParamRowType,false);
@@ -55,7 +56,7 @@ class FarragoExecutableExplainStmt extends FarragoExecutableStmtImpl
     }
 
     // implement FarragoSessionExecutableStmt
-    public SaffronType getRowType()
+    public RelDataType getRowType()
     {
         // TODO:  make a proper type descriptor (and use it for execute also)
         throw new UnsupportedOperationException();

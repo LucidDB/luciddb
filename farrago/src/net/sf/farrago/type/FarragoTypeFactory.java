@@ -22,17 +22,17 @@ package net.sf.farrago.type;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
 
-import net.sf.saffron.oj.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.core.*;
+import org.eigenbase.oj.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.reltype.*;
 
 import java.sql.*;
 
 import javax.jmi.model.*;
 
 /**
- * FarragoTypeFactory is a Farrago-specific refinement of the Saffron
- * TypeFactory interface.
+ * FarragoTypeFactory is a Farrago-specific refinement of the
+ * RelDataTypeFactory interface.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -71,7 +71,7 @@ public interface FarragoTypeFactory extends OJTypeFactory
      *
      * @return generated type, or null if columnSet had no columns defined yet
      */
-    public SaffronType createColumnSetType(CwmColumnSet columnSet);
+    public RelDataType createColumnSetType(CwmColumnSet columnSet);
 
     /**
      * Creates a type which represents the row datatype of a JDBC
@@ -81,7 +81,7 @@ public interface FarragoTypeFactory extends OJTypeFactory
      *
      * @return generated type
      */
-    public SaffronType createResultSetType(ResultSetMetaData metaData);
+    public RelDataType createResultSetType(ResultSetMetaData metaData);
     
     /**
      * Creates a FarragoType which represents a MOF feature.
@@ -93,7 +93,7 @@ public interface FarragoTypeFactory extends OJTypeFactory
     public FarragoType createMofType(StructuralFeature feature);
 
     /**
-     * Initializes a CwmColumn definition based on a SaffronField.
+     * Initializes a CwmColumn definition based on a RelDataTypeField.
      * If the column has no name, the name is initialized from the field
      * name; otherwise, the existing name is left unmodified.
      *
@@ -103,7 +103,7 @@ public interface FarragoTypeFactory extends OJTypeFactory
      * on return, this has been initialized (but not validated)
      */
     public void convertFieldToCwmColumn(
-        SaffronField field,
+        RelDataTypeField field,
         CwmColumn column);
 }
 

@@ -23,7 +23,7 @@ package net.sf.farrago.type;
 import net.sf.farrago.cwm.relational.CwmSqlsimpleType;
 import net.sf.farrago.type.runtime.SqlDateTimeWithoutTZ;
 import net.sf.farrago.type.runtime.NullableValue;
-import net.sf.saffron.util.Util;
+import org.eigenbase.util.Util;
 
 import java.sql.Types;
 

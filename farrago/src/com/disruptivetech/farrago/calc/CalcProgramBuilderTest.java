@@ -26,7 +26,7 @@ import java.lang.reflect.Method;
 import java.util.Iterator;
 import java.util.ArrayList;
 
-import net.sf.saffron.util.Util;
+import org.eigenbase.util.Util;
 
 /**
  * Unit test for {@link CalcProgramBuilder}.

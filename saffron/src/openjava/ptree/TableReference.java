@@ -7,8 +7,9 @@ package openjava.ptree;
 import openjava.ptree.util.*;
 import openjava.mop.*;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.oj.util.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.oj.util.*;
 
 // TODO jvs 12-Aug-2003:  add to visitor interfaces?
 
@@ -47,7 +48,7 @@ public class TableReference extends FieldAccess
         throws Exception
     {
         if (getQualifier() != null) {
-            SaffronTable table = Toolbox.getTable(
+            RelOptTable table = Toolbox.getTable(
                 env,getReferenceExpr(),getQualifier(),getName());
             return OJClass.arrayOf(OJUtil.typeToOJClass(table.getRowType()));
         } else {

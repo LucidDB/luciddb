@@ -24,13 +24,13 @@ import com.disruptivetech.farrago.calc.RexToCalcTranslator;
 
 import net.sf.farrago.query.*;
 
-import net.sf.saffron.opt.CallingConvention;
-import net.sf.saffron.opt.RuleOperand;
-import net.sf.saffron.opt.VolcanoRule;
-import net.sf.saffron.opt.VolcanoRuleCall;
-import net.sf.saffron.rel.CalcRel;
-import net.sf.saffron.rel.SaffronRel;
-import net.sf.saffron.rel.SaffronRel;
+import org.eigenbase.relopt.CallingConvention;
+import org.eigenbase.relopt.RelOptRuleOperand;
+import org.eigenbase.relopt.RelOptRule;
+import org.eigenbase.relopt.RelOptRuleCall;
+import org.eigenbase.rel.CalcRel;
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.RelNode;
 
 // REVIEW jvs 11-May-2004:  shouldn't FennelCalcRule extend ConverterRule
 // (just like IterCalcRule)?
@@ -42,7 +42,7 @@ import net.sf.saffron.rel.SaffronRel;
  * @author jhyde
  * @version $Id$
  */
-public class FennelCalcRule extends VolcanoRule {
+public class FennelCalcRule extends RelOptRule {
     /**
      * The singleton instance.
      */
@@ -54,24 +54,24 @@ public class FennelCalcRule extends VolcanoRule {
      */
     private FennelCalcRule() {
         super(
-            new RuleOperand(
+            new RelOptRuleOperand(
                 CalcRel.class,
-                new RuleOperand[] {
-                    new RuleOperand(SaffronRel.class, null)}));
+                new RelOptRuleOperand[] {
+                    new RelOptRuleOperand(RelNode.class, null)}));
     }
 
     //~ Methods ---------------------------------------------------------------
 
-    // implement VolcanoRule
+    // implement RelOptRule
     public CallingConvention getOutConvention() {
         return FennelPullRel.FENNEL_PULL_CONVENTION;
     }
 
-    // implement VolcanoRule
-    public void onMatch(VolcanoRuleCall call) {
+    // implement RelOptRule
+    public void onMatch(RelOptRuleCall call) {
         CalcRel calc = (CalcRel) call.rels[0];
-        SaffronRel relInput = call.rels[1];
-        SaffronRel fennelInput = convert(relInput,
+        RelNode relInput = call.rels[1];
+        RelNode fennelInput = convert(relInput,
                 FennelPullRel.FENNEL_PULL_CONVENTION);
         if (fennelInput == null) {
             return;

@@ -22,14 +22,15 @@
 
 package net.sf.saffron.oj.rel;
 
-import net.sf.saffron.core.SaffronPlanner;
-import net.sf.saffron.oj.util.OJUtil;
-import net.sf.saffron.opt.CallingConvention;
-import net.sf.saffron.opt.PlanCost;
-import net.sf.saffron.opt.VolcanoCluster;
-import net.sf.saffron.rel.AggregateRel;
-import net.sf.saffron.rel.SaffronRel;
-import net.sf.saffron.util.Util;
+import org.eigenbase.oj.rel.*;
+import org.eigenbase.relopt.RelOptPlanner;
+import org.eigenbase.oj.util.OJUtil;
+import org.eigenbase.relopt.CallingConvention;
+import org.eigenbase.relopt.RelOptCost;
+import org.eigenbase.relopt.RelOptCluster;
+import org.eigenbase.rel.AggregateRel;
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.util.Util;
 import openjava.mop.OJClass;
 import openjava.mop.OJField;
 import openjava.mop.Toolbox;
@@ -97,8 +98,8 @@ public class JavaAggregateRel extends AggregateRel implements JavaLoopRel
     //~ Constructors ----------------------------------------------------------
 
     public JavaAggregateRel(
-        VolcanoCluster cluster,
-        SaffronRel child,
+        RelOptCluster cluster,
+        RelNode child,
         int groupCount,
         Call [] aggCalls)
     {
@@ -112,13 +113,13 @@ public class JavaAggregateRel extends AggregateRel implements JavaLoopRel
         return CallingConvention.JAVA;
     }
 
-    // implement SaffronRel
+    // implement RelNode
     public Object clone()
     {
         return new JavaAggregateRel(cluster,child,groupCount,aggCalls);
     }
 
-    public PlanCost computeSelfCost(SaffronPlanner planner)
+    public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
         double dRows = child.getRows();
         double

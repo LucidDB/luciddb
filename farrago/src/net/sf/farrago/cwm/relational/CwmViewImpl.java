@@ -29,7 +29,7 @@ import net.sf.farrago.session.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.cwm.core.*;
 
-import net.sf.saffron.core.*;
+import org.eigenbase.reltype.*;
 
 import org.netbeans.mdr.handlers.*;
 import org.netbeans.mdr.storagemodel.*;
@@ -118,9 +118,9 @@ public abstract class CwmViewImpl
 
         // Derive column information from result set metadata
         FarragoTypeFactory typeFactory = validator.getTypeFactory();
-        SaffronType rowType = typeFactory.createResultSetType(metaData);
+        RelDataType rowType = typeFactory.createResultSetType(metaData);
         int n = rowType.getFieldCount();
-        SaffronField [] fields = rowType.getFields();
+        RelDataTypeField [] fields = rowType.getFields();
         for (int i = 0; i < n; ++i) {
             CwmColumn column;
             if (implicitColumnNames) {

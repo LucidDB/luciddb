@@ -19,12 +19,11 @@
 
 package net.sf.farrago.namespace.mdr;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.rel.convert.*;
-import net.sf.saffron.util.*;
-import net.sf.saffron.ext.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.rel.convert.*;
+import org.eigenbase.util.*;
 
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
@@ -56,7 +55,7 @@ class MedMdrClassExtent extends MedAbstractColumnSet
         RefClass refClass,
         String [] foreignName,
         String [] localName,
-        SaffronType rowType)
+        RelDataType rowType)
     {
         super(
             localName,
@@ -68,7 +67,7 @@ class MedMdrClassExtent extends MedAbstractColumnSet
         this.refClass = refClass;
     }
 
-    // implement SaffronTable
+    // implement RelOptTable
     public double getRowCount()
     {
         // REVIEW:  find out how expensive this is!  Once we start applying
@@ -76,10 +75,10 @@ class MedMdrClassExtent extends MedAbstractColumnSet
         return refClass.refAllOfType().size();
     }
 
-    // implement SaffronTable
-    public SaffronRel toRel(
-        VolcanoCluster cluster,
-        SaffronConnection connection)
+    // implement RelOptTable
+    public RelNode toRel(
+        RelOptCluster cluster,
+        RelOptConnection connection)
     {
         return new MedMdrClassExtentRel(cluster,this,connection);
     }

@@ -19,7 +19,7 @@
 
 package net.sf.farrago.namespace;
 
-import net.sf.saffron.core.*;
+import org.eigenbase.relopt.*;
 
 import net.sf.farrago.plugin.*;
 import net.sf.farrago.catalog.*;

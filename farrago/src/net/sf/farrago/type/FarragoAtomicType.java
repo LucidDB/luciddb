@@ -24,10 +24,10 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.resource.*;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.util.Util;
-import net.sf.saffron.sql.SqlCollation;
-import net.sf.saffron.sql.type.SqlTypeName;
+import org.eigenbase.reltype.*;
+import org.eigenbase.util.Util;
+import org.eigenbase.sql.SqlCollation;
+import org.eigenbase.sql.type.SqlTypeName;
 
 import java.sql.*;
 import java.io.PrintWriter;
@@ -50,7 +50,7 @@ public abstract class FarragoAtomicType extends FarragoType
     private final boolean isNullable;
 
     /** One-element array containing the "this" field. */
-    private SaffronField [] fields = new SaffronField[1];
+    private RelDataTypeField [] fields = new RelDataTypeField[1];
 
     //~ Constructors ----------------------------------------------------------
 
@@ -75,7 +75,7 @@ public abstract class FarragoAtomicType extends FarragoType
     //~ Methods ---------------------------------------------------------------
 
     // implement Type
-    public SaffronField getField(String fieldName)
+    public RelDataTypeField getField(String fieldName)
     {
         if (getFieldOrdinal(fieldName) == 0) {
             return fields[0];
@@ -101,17 +101,17 @@ public abstract class FarragoAtomicType extends FarragoType
     }
 
     // implement Type
-    public SaffronField [] getFields()
+    public RelDataTypeField [] getFields()
     {
         return fields;
     }
 
-    public SaffronType getArrayType()
+    public RelDataType getArrayType()
     {
         throw Util.needToImplement(this);
     }
 
-    public SaffronType getComponentType()
+    public RelDataType getComponentType()
     {
         return null; // this is not an array type
     }
@@ -159,7 +159,7 @@ public abstract class FarragoAtomicType extends FarragoType
         pw.print(value);
     }
 
-    public boolean equalsSansNullability(SaffronType type)
+    public boolean equalsSansNullability(RelDataType type)
     {
         throw Util.needToImplement(this);
     }
@@ -174,7 +174,7 @@ public abstract class FarragoAtomicType extends FarragoType
         return simpleType;
     }
 
-    // implement SaffronType
+    // implement RelDataType
     public boolean isNullable()
     {
         return isNullable;
@@ -279,28 +279,28 @@ public abstract class FarragoAtomicType extends FarragoType
             || (family == FarragoTypeFamily.BINARY);
     }
 
-    /** implement SaffronType */
+    /** implement RelDataType */
     public boolean isCharType() {
         FarragoTypeFamily family = getFamily();
         return (family == FarragoTypeFamily.CHARACTER);
     }
 
-    /** implement SaffronType */
+    /** implement RelDataType */
     public Charset getCharset() {
         throw Util.newInternal(digest+" is not defined to carry a charset");
     }
 
-    /** implement SaffronType */
+    /** implement RelDataType */
     public void setCharset(Charset charset) {
         throw Util.newInternal(digest+" is not defined to carry a charset");
     }
 
-    /** implement SaffronType */
+    /** implement RelDataType */
     public SqlCollation getCollation() throws RuntimeException {
         throw Util.newInternal(digest+" is not defined to carry a collation");
     }
 
-    /** implement SaffronType */
+    /** implement RelDataType */
     public void setCollation(SqlCollation collation) throws RuntimeException {
         throw Util.newInternal(digest+" is not defined to carry a collation");
     }
@@ -347,8 +347,8 @@ public abstract class FarragoAtomicType extends FarragoType
         return false;
     }
 
-    // implement SaffronType
-    public boolean isSameType(SaffronType other)
+    // implement RelDataType
+    public boolean isSameType(RelDataType other)
     {
         if (!(other instanceof FarragoAtomicType)) {
             return false;
@@ -358,8 +358,8 @@ public abstract class FarragoAtomicType extends FarragoType
                 that.simpleType.getTypeNumber().intValue();
     }
 
-    // implement SaffronType
-    public boolean isSameTypeFamily(SaffronType other)
+    // implement RelDataType
+    public boolean isSameTypeFamily(RelDataType other)
     {
         if (!(other instanceof FarragoAtomicType)) {
             return false;

@@ -19,12 +19,12 @@
 
 package net.sf.farrago.query;
 
-import net.sf.saffron.opt.CallingConvention;
-import net.sf.saffron.opt.RuleOperand;
-import net.sf.saffron.opt.VolcanoRule;
-import net.sf.saffron.opt.VolcanoRuleCall;
-import net.sf.saffron.rel.RelFieldCollation;
-import net.sf.saffron.rel.SaffronRel;
+import org.eigenbase.relopt.CallingConvention;
+import org.eigenbase.relopt.RelOptRuleOperand;
+import org.eigenbase.relopt.RelOptRule;
+import org.eigenbase.relopt.RelOptRuleCall;
+import org.eigenbase.rel.RelFieldCollation;
+import org.eigenbase.rel.RelNode;
 
 import java.util.Arrays;
 import java.util.List;
@@ -37,25 +37,25 @@ import java.util.List;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FennelRemoveRedundantSortRule extends VolcanoRule
+public class FennelRemoveRedundantSortRule extends RelOptRule
 {
     public FennelRemoveRedundantSortRule()
     {
         super(
-            new RuleOperand(
+            new RelOptRuleOperand(
                 FennelSortRel.class,
-                new RuleOperand [] {
-                    new RuleOperand(FennelPullRel.class,null) }));
+                new RelOptRuleOperand [] {
+                    new RelOptRuleOperand(FennelPullRel.class,null) }));
     }
 
-    // implement VolcanoRule
+    // implement RelOptRule
     public CallingConvention getOutConvention()
     {
         return FennelPullRel.FENNEL_PULL_CONVENTION;
     }
 
-    // implement VolcanoRule
-    public void onMatch(VolcanoRuleCall call)
+    // implement RelOptRule
+    public void onMatch(RelOptRuleCall call)
     {
         FennelSortRel sortRel = (FennelSortRel) call.rels[0];
         FennelRel inputRel = (FennelRel) call.rels[1];
@@ -65,7 +65,7 @@ public class FennelRemoveRedundantSortRule extends VolcanoRule
         }
 
         if (inputRel instanceof FennelSortRel) {
-            SaffronRel newRel =
+            RelNode newRel =
                 convert(inputRel,FennelPullRel.FENNEL_PULL_CONVENTION);
             if (newRel == null) {
                 return;
@@ -81,7 +81,7 @@ public class FennelRemoveRedundantSortRule extends VolcanoRule
         FennelSortRel sortRel,FennelRel inputRel)
     {
         if (sortRel.discardDuplicates) {
-            // TODO:  once we can obtain the key for a SaffronRel, check
+            // TODO:  once we can obtain the key for a RelNode, check
             // that
             return false;
         }

@@ -24,25 +24,25 @@ import net.sf.farrago.query.*;
 import net.sf.farrago.trace.FarragoTrace;
 
 import com.disruptivetech.farrago.calc.RexToCalcTranslator;
-import net.sf.saffron.core.SaffronType;
-import net.sf.saffron.core.SaffronTypeFactory;
-import net.sf.saffron.core.SaffronTypeFactoryImpl;
-import net.sf.saffron.oj.rel.JavaRelImplementor;
-import net.sf.saffron.opt.CallingConvention;
-import net.sf.saffron.opt.RuleOperand;
-import net.sf.saffron.opt.VolcanoRule;
-import net.sf.saffron.opt.VolcanoRuleCall;
-import net.sf.saffron.rel.CalcRel;
-import net.sf.saffron.rel.SaffronRel;
-import net.sf.saffron.rel.SaffronRel;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.reltype.RelDataTypeFactoryImpl;
+import org.eigenbase.oj.rel.JavaRelImplementor;
+import org.eigenbase.relopt.CallingConvention;
+import org.eigenbase.relopt.RelOptRuleOperand;
+import org.eigenbase.relopt.RelOptRule;
+import org.eigenbase.relopt.RelOptRuleCall;
+import org.eigenbase.rel.CalcRel;
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.RelNode;
 
-import net.sf.saffron.rex.RexCall;
-import net.sf.saffron.rex.RexDynamicParam;
-import net.sf.saffron.rex.RexFieldAccess;
-import net.sf.saffron.rex.RexInputRef;
-import net.sf.saffron.rex.RexNode;
+import org.eigenbase.rex.RexCall;
+import org.eigenbase.rex.RexDynamicParam;
+import org.eigenbase.rex.RexFieldAccess;
+import org.eigenbase.rex.RexInputRef;
+import org.eigenbase.rex.RexNode;
 
-import net.sf.saffron.util.Util;
+import org.eigenbase.util.Util;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -58,10 +58,10 @@ import java.io.PrintWriter;
 /**
  * FarragoAutoCalcRule is a rule for implementing {@link CalcRel} via
  * a combination of the Fennel Calculator ({@link FennelCalcRel}) and
- * the Java Calculator ({@link net.sf.saffron.oj.rel.IterCalcRel}).
+ * the Java Calculator ({@link org.eigenbase.oj.rel.IterCalcRel}).
  * 
  * <p>This rule does not attempt to transform the matching
- * {@link net.sf.saffron.opt.VolcanoRuleCall} if the entire CalcRel
+ * {@link org.eigenbase.relopt.RelOptRuleCall} if the entire CalcRel
  * can be implemented entirely via one calculator or the other.  A
  * future optimization might be to use a costing mechanism to
  * determine where expressions that can be implemented by both
@@ -126,7 +126,7 @@ import java.io.PrintWriter;
  * would not reach the Fennel calculator.
  */
 public class FarragoAutoCalcRule
-    extends VolcanoRule
+    extends RelOptRule
 {
     private static final Logger ruleTracer =
     	FarragoTrace.getOptimizerRuleTracer();
@@ -142,9 +142,9 @@ public class FarragoAutoCalcRule
      */
     private FarragoAutoCalcRule()
     {
-        super(new RuleOperand(CalcRel.class,
-                              new RuleOperand[] {
-                                  new RuleOperand(SaffronRel.class, null)
+        super(new RelOptRuleOperand(CalcRel.class,
+                              new RelOptRuleOperand[] {
+                                  new RelOptRuleOperand(RelNode.class, null)
                               }));
     }
 
@@ -160,13 +160,13 @@ public class FarragoAutoCalcRule
      * CalcRel into a stack of CalcRels that can each individually be
      * implemented in the Fennel or Java calcs.
      */
-    public void onMatch(VolcanoRuleCall call)
+    public void onMatch(RelOptRuleCall call)
     {
         CalcRel calc = (CalcRel) call.rels[0];
-        SaffronRel relInput = call.rels[1];
+        RelNode relInput = call.rels[1];
 
         // Test if we can translate the CalcRel to a fennel calc program
-        SaffronRel fennelInput = convert(relInput,
+        RelNode fennelInput = convert(relInput,
                                          FennelPullRel.FENNEL_PULL_CONVENTION);
 
         final RexToCalcTranslator translator = new RexToCalcTranslator(
@@ -194,7 +194,7 @@ public class FarragoAutoCalcRule
         }
 
         // Test if we can translate the CalcRel to a java calc program
-        final SaffronRel convertedChild =
+        final RelNode convertedChild =
             convert(calc.child, CallingConvention.ITERATOR);
 
         final JavaRelImplementor relImplementor =
@@ -226,7 +226,7 @@ public class FarragoAutoCalcRule
      */
     private void transform(JavaRelImplementor javaRelImplementor,
                            RexToCalcTranslator calcTranslator,
-                           VolcanoRuleCall ruleCall,
+                           RelOptRuleCall ruleCall,
                            CalcRel calc)
     {
         ArrayList relDataList = buildRelDataTree(calc);
@@ -301,10 +301,6 @@ public class FarragoAutoCalcRule
                 // type?), rather than testing each RexCall
                 // repeatedly.
                 if (!isJavaRel && !isFennelRel) {
-                    // REVIEW: SZ: 8/4/2004: This probably wants to be
-                    // more Farrago specific, rather than a
-                    // SaffronError.  Create an "internal error" in
-                    // FarragoResource.xml?
                     throw Util.newInternal("Implementation of "
                                            + call.getOperator().name
                                            + " not found");
@@ -418,7 +414,7 @@ public class FarragoAutoCalcRule
      * insert a RexInputRef at the current level to refer to the
      * RexCall at the lower level.
      */
-    private void transform(VolcanoRuleCall ruleCall,
+    private void transform(RelOptRuleCall ruleCall,
                            CalcRel calc,
                            final int maxRelDepth,
                            List relDataList)
@@ -553,7 +549,7 @@ public class FarragoAutoCalcRule
                     RelData childRelData = ((RelData)relData.children.get(0));
                     int index = childRelData.position;
 
-                    SaffronType type = (node == null
+                    RelDataType type = (node == null
                                         ? childRelData.node.getType()
                                         : node.getType());
 
@@ -613,17 +609,17 @@ public class FarragoAutoCalcRule
 
         // Generate the actual CalcRel objects that represent the
         // decomposition of the original CalcRel.
-        SaffronTypeFactory typeFactory =
-            SaffronTypeFactoryImpl.threadInstance();
+        RelDataTypeFactory typeFactory =
+            RelDataTypeFactoryImpl.threadInstance();
 
-        SaffronRel resultCalcRel = calc.child;
+        RelNode resultCalcRel = calc.child;
         for(int i = levelExpressions.size() - 1; i >= 0; i--) {
             ArrayList expressions = (ArrayList)levelExpressions.get(i);
 
             if (i > 0) {
                 int numNodes = expressions.size();
                 RexNode[] nodes = new RexNode[numNodes];
-                SaffronType[] types = new SaffronType[numNodes];
+                RelDataType[] types = new RelDataType[numNodes];
                 String[] names = new String[numNodes];
                 for(int j = 0; j < numNodes; j++) {
                     nodes[j] = (RexNode)expressions.get(j);
@@ -631,7 +627,7 @@ public class FarragoAutoCalcRule
                     names[j] = "$" + j;
                 }
 
-                SaffronType rowType = typeFactory.createProjectType(types,
+                RelDataType rowType = typeFactory.createProjectType(types,
                                                                     names);
 
                 resultCalcRel = new CalcRel(calc.getCluster(),

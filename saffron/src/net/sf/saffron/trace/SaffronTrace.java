@@ -22,54 +22,23 @@ package net.sf.saffron.trace;
 
 import net.sf.saffron.oj.stmt.OJStatement;
 import net.sf.saffron.oj.xlat.OJQueryExpander;
-import net.sf.saffron.oj.rel.JavaRelImplementor;
 import net.sf.saffron.util.SaffronException;
-import net.sf.saffron.core.SaffronPlanner;
 
 import java.util.logging.Logger;
 import java.util.logging.Level;
 
 /**
  * Contains all of the {@link java.util.logging.Logger tracers} used within
- * saffron.
+ * Saffron.
  *
- * <h3>Note to developers</h3>
- *
- * <p>Please ensure that every tracer used in Saffron is
- * added to this class as a <em>public static final</em> member called
- * <code><i>component</i>Tracer</code>. For example,
- * {@link #getPlannerTracer} is the tracer used by all classes which take part
- * in the query planning process.
- *
- * <p>The javadoc in this file is the primary source of information on what
- * tracers are available, so the javadoc against each tracer member must be
- * an up-to-date description of what that tracer does. Be sure to describe what
- * {@link Level tracing level} is required to obtain each category of tracing.
- *
- * <p>In the class where the tracer is used, create a <em>private</em> (or
- * perhaps <em>protected</em>) <em>static final</em> member called
- * <code>tracer</code>.
+ * <p>This class is similar to {@link org.eigenbase.trace.EigenbaseTrace}; see
+ * there for a description of how to define tracers.
  *
  * @author jhyde
  * @since May 24, 2004
  * @version $Id$
  **/
 public class SaffronTrace {
-    /**
-     * The "net.sf.saffron.core.SaffronPlanner" tracer prints the query
-     * optimization process.
-     *
-     * <p>Levels:<ul>
-     * <li>{@link Level#FINE} prints rules as they fire;
-     * <li>{@link Level#FINER} prints and validates the whole expression pool
-     *     and rule queue as each rule fires;
-     * <li>{@link Level#FINEST} prints finer details like rule importances.
-     * </ul>
-     */
-    public static Logger getPlannerTracer() {
-        return Logger.getLogger(SaffronPlanner.class.getName());
-    }
-
     /**
      * The "net.sf.saffron.oj.OJStatement" tracer prints the generated
      * program at level {@link java.util.logging.Level#FINE} or higher.
@@ -91,14 +60,6 @@ public class SaffronTrace {
     }
 
     /**
-     * The "net.sf.saffron.oj.rel.JavaRelImplementor" tracer reports
-     * when expressions are bound to variables ({@link Level#FINE})
-     */
-    public static Logger getRelImplementorTracer() {
-        return Logger.getLogger(JavaRelImplementor.class.getName());
-    }
-
-    /**
      * The "net.sf.saffron.util.SaffronException" tracer reports when a
      * {@link SaffronException} is created
      * (at level {@link Level#FINE} or higher).
@@ -109,18 +70,6 @@ public class SaffronTrace {
      */
     public static Logger getExceptionTracer() {
         return SaffronException.tracer;
-    }
-
-    /**
-     * The "net.sf.saffron.sql.parser" tracer reports parser events in
-     * {@link net.sf.saffron.sql.parser.SqlParser} and
-     * other classes (at level {@link Level#FINE} or higher).
-     */
-    public static final Logger parserTracer =
-            getParserTracer();
-
-    public static Logger getParserTracer() {
-        return Logger.getLogger("net.sf.saffron.sql.parser");
     }
 }
 

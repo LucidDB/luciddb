@@ -24,10 +24,10 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.fennel.*;
 
-import net.sf.saffron.rel.*;
-import net.sf.saffron.sql.*;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.sql2rel.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql2rel.*;
 
 /**
  * FarragoSessionPreparingStmt represents the process of Farrago-specific
@@ -86,7 +86,7 @@ public interface FarragoSessionPreparingStmt extends FarragoAllocation
      * You must call {@link #preImplement()} first, in fact before constructing
      * the query plan.
      *
-     * @param rootRel root of query plan (saffron relational expression)
+     * @param rootRel root of query plan (relational expression)
      * @param sqlKind SqlKind for the relational expression: only
      *   SqlKind.Explain and SqlKind.Dml are special cases.
      * @param logical true for a logical query plan (still needs to be
@@ -94,7 +94,7 @@ public interface FarragoSessionPreparingStmt extends FarragoAllocation
      * @return prepared FarragoSessionExecutableStmt
      */
     public FarragoSessionExecutableStmt implement(
-        SaffronRel rootRel, SqlKind sqlKind, boolean logical);
+        RelNode rootRel, SqlKind sqlKind, boolean logical);
     
     /**
      * @return generic stmt validator
@@ -120,10 +120,10 @@ public interface FarragoSessionPreparingStmt extends FarragoAllocation
     public SqlToRelConverter getSqlToRelConverter();
     
     /**
-     * @return the VolcanoCluster used by this stmt (possibly creating the
+     * @return the RelOptCluster used by this stmt (possibly creating the
      * SqlToRelConverter as a side effect if it does not yet exist).
      */
-    public VolcanoCluster getVolcanoCluster();
+    public RelOptCluster getRelOptCluster();
     
     /**
      * @return catalog for this stmt

@@ -20,11 +20,11 @@
 */
 package net.sf.saffron.oj.convert;
 
-import net.sf.saffron.opt.CallingConvention;
-import net.sf.saffron.oj.rel.JavaRelImplementor;
-import net.sf.saffron.oj.rel.JavaRel;
-import net.sf.saffron.runtime.BufferedIterator;
-import net.sf.saffron.rel.convert.ConverterRel;
+import org.eigenbase.relopt.CallingConvention;
+import org.eigenbase.oj.rel.JavaRelImplementor;
+import org.eigenbase.oj.rel.JavaRel;
+import org.eigenbase.runtime.BufferedIterator;
+import org.eigenbase.rel.convert.ConverterRel;
 import openjava.ptree.Expression;
 import openjava.ptree.AllocationExpression;
 import openjava.ptree.ExpressionList;

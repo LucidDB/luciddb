@@ -28,11 +28,11 @@ import net.sf.farrago.resource.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.util.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.convert.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.util.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.rel.convert.*;
 
 import java.sql.*;
 import java.util.*;
@@ -72,7 +72,7 @@ class FtrsDataServer extends MedAbstractLocalDataServer
         String [] localName,
         Properties tableProps,
         FarragoTypeFactory typeFactory,
-        SaffronType rowType,
+        RelDataType rowType,
         Map columnPropMap)
         throws SQLException
     {
@@ -86,7 +86,7 @@ class FtrsDataServer extends MedAbstractLocalDataServer
     }
 
     // implement FarragoMedDataServer
-    public void registerRules(SaffronPlanner planner)
+    public void registerRules(RelOptPlanner planner)
     {
         super.registerRules(planner);
         planner.addRule(new FtrsTableProjectionRule());

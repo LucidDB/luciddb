@@ -23,25 +23,26 @@ package net.sf.saffron.sql2rel;
 
 import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
-import net.sf.saffron.core.PlanWriter;
-import net.sf.saffron.core.SaffronConnection;
-import net.sf.saffron.core.SaffronTypeFactory;
-import net.sf.saffron.core.SaffronTypeFactoryImpl;
+import org.eigenbase.sql2rel.*;
+import org.eigenbase.relopt.RelOptPlanWriter;
+import org.eigenbase.relopt.RelOptConnection;
+import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.reltype.RelDataTypeFactoryImpl;
 import net.sf.saffron.jdbc.SaffronJdbcConnection;
 import net.sf.saffron.oj.OJPlannerFactory;
-import net.sf.saffron.oj.OJTypeFactoryImpl;
-import net.sf.saffron.oj.util.JavaRexBuilder;
-import net.sf.saffron.oj.util.OJUtil;
-import net.sf.saffron.opt.VolcanoPlannerFactory;
-import net.sf.saffron.rel.SaffronRel;
-import net.sf.saffron.runtime.SyntheticObject;
-import net.sf.saffron.sql.SqlNode;
-import net.sf.saffron.sql.SqlOperatorTable;
-import net.sf.saffron.sql.SqlValidator;
-import net.sf.saffron.sql.parser.ParseException;
-import net.sf.saffron.sql.parser.SqlParser;
-import net.sf.saffron.util.SaffronProperties;
-import net.sf.saffron.util.Util;
+import org.eigenbase.oj.OJTypeFactoryImpl;
+import org.eigenbase.oj.util.JavaRexBuilder;
+import org.eigenbase.oj.util.OJUtil;
+import com.disruptivetech.farrago.volcano.VolcanoPlannerFactory;
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.runtime.SyntheticObject;
+import org.eigenbase.sql.SqlNode;
+import org.eigenbase.sql.SqlOperatorTable;
+import org.eigenbase.sql.SqlValidator;
+import org.eigenbase.sql.parser.ParseException;
+import org.eigenbase.sql.parser.SqlParser;
+import org.eigenbase.util.SaffronProperties;
+import org.eigenbase.util.Util;
 import openjava.mop.*;
 import openjava.ptree.ClassDeclaration;
 import openjava.ptree.MemberDeclarationList;
@@ -57,11 +58,6 @@ import java.util.regex.Pattern;
 
 /**
  * Unit test for {@link SqlToRelConverter}.
- *
- *<p>
- *
- * TODO 15-Nov-2003:  pull diff-based-testing infrastructure up from Farrago
- * and use external files instead of inlining expected results here.
  */
 public class ConverterTest extends TestCase
 {
@@ -73,11 +69,11 @@ public class ConverterTest extends TestCase
     protected void setUp() throws Exception {
         super.setUp();
         // Create a type factory.
-        SaffronTypeFactory typeFactory =
-            SaffronTypeFactoryImpl.threadInstance();
+        RelDataTypeFactory typeFactory =
+            RelDataTypeFactoryImpl.threadInstance();
         if (typeFactory == null) {
             typeFactory = new OJTypeFactoryImpl();
-            SaffronTypeFactoryImpl.setThreadInstance(typeFactory);
+            RelDataTypeFactoryImpl.setThreadInstance(typeFactory);
         }
         // And a planner factory.
         if (VolcanoPlannerFactory.threadInstance() == null) {
@@ -370,18 +366,18 @@ public class ConverterTest extends TestCase
         final SqlValidator validator = new SqlValidator(
                 SqlOperatorTable.instance(),
                 testContext.seeker,
-                testContext.connection.getSaffronSchema().getTypeFactory());
+                testContext.connection.getRelOptSchema().getTypeFactory());
         final SqlToRelConverter converter = new SqlToRelConverter(
             validator,
-            testContext.connection.getSaffronSchema(),
+            testContext.connection.getRelOptSchema(),
             testContext.env,
             testContext.connection,
             new JavaRexBuilder(
-                testContext.connection.getSaffronSchema().getTypeFactory()));
-        final SaffronRel rel = converter.convertQuery(sqlQuery);
+                testContext.connection.getRelOptSchema().getTypeFactory()));
+        final RelNode rel = converter.convertQuery(sqlQuery);
         assertTrue(rel != null);
         final StringWriter sw = new StringWriter();
-        final PlanWriter planWriter = new PlanWriter(new PrintWriter(sw));
+        final RelOptPlanWriter planWriter = new RelOptPlanWriter(new PrintWriter(sw));
         planWriter.withIdPrefix = false;
         rel.explain(planWriter);
         planWriter.flush();
@@ -409,7 +405,7 @@ public class ConverterTest extends TestCase
     {
         private final SqlValidator.CatalogReader seeker;
         private final Connection jdbcConnection;
-        private final SaffronConnection connection;
+        private final RelOptConnection connection;
         Environment env;
         private int executionCount;
 
@@ -428,7 +424,7 @@ public class ConverterTest extends TestCase
                 throw Util.newInternal(e);
             }
             connection = ((SaffronJdbcConnection) jdbcConnection).saffronConnection;
-            seeker = new SqlToRelConverter.SchemaCatalogReader(connection.getSaffronSchema(), false);
+            seeker = new SqlToRelConverter.SchemaCatalogReader(connection.getRelOptSchema(), false);
             // Nasty OJ stuff
             env = OJSystem.env;
 
@@ -454,11 +450,11 @@ public class ConverterTest extends TestCase
 
             // Ensure that the thread has factories for types and planners. (We'd
             // rather that the client sets these.)
-            SaffronTypeFactory typeFactory =
-                SaffronTypeFactoryImpl.threadInstance();
+            RelDataTypeFactory typeFactory =
+                RelDataTypeFactoryImpl.threadInstance();
             if (typeFactory == null) {
                 typeFactory = new OJTypeFactoryImpl();
-                SaffronTypeFactoryImpl.setThreadInstance(typeFactory);
+                RelDataTypeFactoryImpl.setThreadInstance(typeFactory);
             }
             if (VolcanoPlannerFactory.threadInstance() == null) {
                 VolcanoPlannerFactory.setThreadInstance(new OJPlannerFactory());

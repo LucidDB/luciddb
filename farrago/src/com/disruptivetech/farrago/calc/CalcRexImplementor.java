@@ -20,7 +20,7 @@
 */
 package com.disruptivetech.farrago.calc;
 
-import net.sf.saffron.rex.RexCall;
+import org.eigenbase.rex.RexCall;
 
 /**
  * Translates a call to a particular operator to calculator assembly language.

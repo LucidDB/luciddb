@@ -21,8 +21,8 @@
 
 package sales;
 
-import net.sf.saffron.core.SaffronConnection;
-import net.sf.saffron.core.SaffronSchema;
+import org.eigenbase.relopt.RelOptConnection;
+import org.eigenbase.relopt.RelOptSchema;
 import net.sf.saffron.ext.ClassSchema;
 import openjava.ptree.Expression;
 import openjava.ptree.FieldAccess;
@@ -31,10 +31,10 @@ import openjava.ptree.FieldAccess;
 /**
  * <code>SalesInMemoryConnection</code> is a Saffron connection to a Java
  * {@link Sales} object. The effect is the same as using a {@link Sales}
- * object directly, but the optimizer uses Saffron's {@link SaffronSchema}
+ * object directly, but the optimizer uses Saffron's {@link RelOptSchema}
  * mechanism to declare tables.
  */
-public class SalesInMemoryConnection implements SaffronConnection
+public class SalesInMemoryConnection implements RelOptConnection
 {
     //~ Static fields/initializers --------------------------------------------
 
@@ -53,14 +53,14 @@ public class SalesInMemoryConnection implements SaffronConnection
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * As required by the {@link SaffronConnection} contract.
+     * As required by the {@link RelOptConnection} contract.
      */
-    public static SaffronSchema getSaffronSchemaStatic()
+    public static RelOptSchema getRelOptSchemaStatic()
     {
         return schema;
     }
 
-    public SaffronSchema getSaffronSchema()
+    public RelOptSchema getRelOptSchema()
     {
         return schema;
     }

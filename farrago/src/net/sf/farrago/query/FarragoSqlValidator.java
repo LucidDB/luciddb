@@ -20,10 +20,11 @@
 
 package net.sf.farrago.query;
 
-import net.sf.saffron.sql.*;
-import net.sf.saffron.util.*;
-import net.sf.saffron.resource.*;
-import net.sf.saffron.sql.type.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.util.*;
+import org.eigenbase.resource.*;
+import net.sf.farrago.resource.*;
+import org.eigenbase.sql.type.*;
 
 import net.sf.farrago.resource.*;
 
@@ -48,7 +49,7 @@ class FarragoSqlValidator extends SqlValidator
     // override SqlValidator
     public RuntimeException newValidationError(String s)
     {
-        // TODO:  need to integrate i18n with Saffron
+        // TODO:  need to integrate i18n with org.eigenbase.sql
         return FarragoResource.instance().newValidatorUntranslated(s);
     }
 
@@ -83,7 +84,7 @@ class FarragoSqlValidator extends SqlValidator
                 long longValue = bd.longValue();
                 if (!BigDecimal.valueOf(longValue).equals(bd)) {
                     // overflow
-                    throw SaffronResource.instance().newNumberLiteralOutOfRange(
+                    throw EigenbaseResource.instance().newNumberLiteralOutOfRange(
                         bd.toString(),
                         literal.getParserPosition().toString());
                 }
@@ -111,7 +112,7 @@ class FarragoSqlValidator extends SqlValidator
         double d = bd.doubleValue();
         if (Double.isInfinite(d) || Double.isNaN(d)) {
             // overflow
-            throw SaffronResource.instance().newNumberLiteralOutOfRange(
+            throw EigenbaseResource.instance().newNumberLiteralOutOfRange(
                 Util.toScientificNotation(bd),
                 literal.getParserPosition().toString());
         }

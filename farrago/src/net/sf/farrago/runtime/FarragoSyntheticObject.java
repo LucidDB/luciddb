@@ -21,8 +21,8 @@ package net.sf.farrago.runtime;
 
 import net.sf.farrago.type.runtime.*;
 
-import net.sf.saffron.runtime.*;
-import net.sf.saffron.util.*;
+import org.eigenbase.runtime.*;
+import org.eigenbase.util.*;
 
 import java.lang.reflect.*;
 
@@ -32,7 +32,7 @@ import java.util.*;
 
 
 /**
- * FarragoSyntheticObject refines Saffron's SyntheticObject with
+ * FarragoSyntheticObject refines SyntheticObject with
  * Farrago-specific runtime information such as null values.
  *
  * @author John V. Sichi

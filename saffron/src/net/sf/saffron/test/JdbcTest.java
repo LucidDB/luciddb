@@ -24,7 +24,7 @@ package net.sf.saffron.test;
 
 import junit.framework.TestCase;
 
-import net.sf.saffron.util.Util;
+import org.eigenbase.util.Util;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;

@@ -22,21 +22,22 @@
 
 package net.sf.saffron.oj.rel;
 
-import net.sf.saffron.core.SaffronPlanner;
-import net.sf.saffron.core.SaffronType;
-import net.sf.saffron.oj.util.OJUtil;
-import net.sf.saffron.opt.CallingConvention;
-import net.sf.saffron.opt.OptUtil;
-import net.sf.saffron.opt.PlanCost;
-import net.sf.saffron.opt.VolcanoCluster;
-import net.sf.saffron.rel.SaffronRel;
-import net.sf.saffron.rel.SingleRel;
-import net.sf.saffron.util.Util;
+import org.eigenbase.oj.rel.*;
+import org.eigenbase.relopt.RelOptPlanner;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.oj.util.OJUtil;
+import org.eigenbase.relopt.CallingConvention;
+import org.eigenbase.relopt.RelOptUtil;
+import org.eigenbase.relopt.RelOptCost;
+import org.eigenbase.relopt.RelOptCluster;
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.SingleRel;
+import org.eigenbase.util.Util;
 import openjava.ptree.*;
 
 
 /**
- * Converts a {@link SaffronRel} of
+ * Converts a {@link RelNode} of
  * {@link CallingConvention#JAVA java calling-convention}
  * into a Java <code>for</code>-loop.
  */
@@ -52,8 +53,8 @@ public class ForTerminatorRel extends SingleRel
     //~ Constructors ----------------------------------------------------------
 
     public ForTerminatorRel(
-        VolcanoCluster cluster,
-        SaffronRel child,
+        RelOptCluster cluster,
+        RelNode child,
         Variable variable,
         StatementList body,
         String label)
@@ -67,12 +68,12 @@ public class ForTerminatorRel extends SingleRel
 
     //~ Methods ---------------------------------------------------------------
 
-    // implement SaffronRel
+    // implement RelNode
     public Object clone()
     {
         return new ForTerminatorRel(
             cluster,
-            OptUtil.clone(child),
+            RelOptUtil.clone(child),
             (Variable) Util.clone(variable),
             Util.clone(body),
             label);
@@ -83,7 +84,7 @@ public class ForTerminatorRel extends SingleRel
         return CallingConvention.JAVA;
     }
 
-    public PlanCost computeSelfCost(SaffronPlanner planner)
+    public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
         return planner.makeTinyCost();
     }

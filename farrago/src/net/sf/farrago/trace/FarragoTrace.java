@@ -37,14 +37,14 @@ import java.util.logging.Logger;
  * Contains all of the {@link java.util.logging.Logger tracers} used within
  * Farrago.
  *
- * <p>This class is similar to {@link net.sf.saffron.trace.SaffronTrace}; see
+ * <p>This class is similar to {@link org.eigenbase.trace.EigenbaseTrace}; see
  * there for a description of how to define tracers.
  *
  * @author jhyde
  * @since May 24, 2004
  * @version $Id$
  **/
-public class FarragoTrace {
+public abstract class FarragoTrace {
     /**
      * The tracer "net.sf.farrago.catalog.FarragoCatalog"
      * traces {@link FarragoCatalog}.

@@ -20,6 +20,7 @@
 package net.sf.farrago.session;
 
 import net.sf.farrago.resource.*;
+import org.eigenbase.resource.*;
 
 /**
  * FarragoSessionParserPosition represents the position of a parsed
@@ -62,7 +63,7 @@ public class FarragoSessionParserPosition
     // implement Object
     public String toString()
     {
-        return FarragoResource.instance().getParserContext(
+        return EigenbaseResource.instance().getParserContext(
             new Integer(beginLine),
             new Integer(beginColumn));
     }

@@ -21,18 +21,18 @@
 package net.sf.farrago.query;
 
 import net.sf.farrago.fem.fennel.FemExecutionStreamDef;
-import net.sf.saffron.rel.RelFieldCollation;
-import net.sf.saffron.rel.SaffronRel;
+import org.eigenbase.rel.RelFieldCollation;
+import org.eigenbase.rel.RelNode;
 
 /**
  * FennelRel defines the interface which must be implemented by any
- * {@link SaffronRel} corresponding to a C++ physical implementation conforming
+ * {@link RelNode} corresponding to a C++ physical implementation conforming
  * to the fennel::ExecutionStream interface.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public interface FennelRel extends SaffronRel
+public interface FennelRel extends RelNode
 {
     //~ Methods ---------------------------------------------------------------
 

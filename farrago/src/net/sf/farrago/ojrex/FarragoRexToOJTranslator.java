@@ -22,14 +22,15 @@ package net.sf.farrago.ojrex;
 import net.sf.farrago.type.*;
 import net.sf.farrago.type.runtime.*;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.sql.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.rex.*;
-import net.sf.saffron.util.*;
-import net.sf.saffron.oj.rel.*;
-import net.sf.saffron.oj.rex.*;
-import net.sf.saffron.oj.util.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.rex.*;
+import org.eigenbase.util.*;
+import org.eigenbase.oj.rel.*;
+import org.eigenbase.oj.rex.*;
+import org.eigenbase.oj.util.*;
 
 import openjava.ptree.*;
 import openjava.mop.*;
@@ -80,7 +81,7 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
      */
     public FarragoRexToOJTranslator(
         JavaRelImplementor relImplementor,
-        SaffronRel contextRel,
+        RelNode contextRel,
         OJRexImplementorTable implementorTable,
         StatementList stmtList,
         MemberDeclarationList memberList)
@@ -157,7 +158,7 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
     public void visitLiteral(RexLiteral literal)
     {
         super.visitLiteral(literal);
-        SaffronType type = literal.getType();
+        RelDataType type = literal.getType();
         if (type instanceof FarragoDateTimeType) {
             // TODO jvs 22-May-2004: Need to do something similar for anything
             // which requires a holder class at runtime (e.g. VARCHAR),
@@ -188,7 +189,7 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
         return variable;
     }
 
-    public Variable createScratchVariable(SaffronType type)
+    public Variable createScratchVariable(RelDataType type)
     {
         OJClass ojClass = OJUtil.typeToOJClass(type);
         return createScratchVariable(ojClass, null, null);
@@ -228,13 +229,13 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
         return nullTest;
     }
 
-    public boolean isNullablePrimitive(SaffronType type)
+    public boolean isNullablePrimitive(RelDataType type)
     {
         OJClass ojClass = OJUtil.typeToOJClass(type);
         return ojNullablePrimitive.isAssignableFrom(ojClass);
     }
 
-    public FieldAccess convertFieldAccess(Variable variable, SaffronField field)
+    public FieldAccess convertFieldAccess(Variable variable, RelDataTypeField field)
     {
         final String javaFieldName =
                 Util.toJavaId(field.getName(), field.getIndex());
@@ -255,8 +256,8 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
     }
     
     public Expression convertCastOrAssignment(
-        SaffronType lhsType,
-        SaffronType rhsType,
+        RelDataType lhsType,
+        RelDataType rhsType,
         Expression lhsExp,
         Expression rhsExp)
     {

@@ -32,8 +32,8 @@ import net.sf.farrago.util.*;
 import org.netbeans.mdr.handlers.*;
 import org.netbeans.mdr.storagemodel.*;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.util.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.util.*;
 
 import java.sql.*;
 import java.nio.charset.*;
@@ -107,7 +107,7 @@ public abstract class CwmColumnImpl extends InstanceHandler
         String sql = "VALUES(" + defaultExpression + ")";
         FarragoSessionStmtContext stmtContext = session.newStmtContext();
         stmtContext.prepare(sql,false);
-        SaffronType rowType = stmtContext.getPreparedRowType();
+        RelDataType rowType = stmtContext.getPreparedRowType();
         assert(rowType.getFieldCount() == 1);
 
         if (stmtContext.getPreparedParamType().getFieldCount() > 0) {

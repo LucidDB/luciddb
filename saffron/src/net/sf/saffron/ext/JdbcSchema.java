@@ -22,9 +22,9 @@
 
 package net.sf.saffron.ext;
 
-import net.sf.saffron.core.SaffronSchema;
-import net.sf.saffron.core.SaffronConnection;
-import net.sf.saffron.sql.SqlDialect;
+import org.eigenbase.relopt.RelOptSchema;
+import org.eigenbase.relopt.RelOptConnection;
+import org.eigenbase.sql.SqlDialect;
 
 import javax.sql.DataSource;
 
@@ -33,7 +33,7 @@ import javax.sql.DataSource;
  * A <code>JdbcSchema</code> is a schema against a JDBC database and for
  * which, therefore, we will need to generate SQL.
  */
-public interface JdbcSchema extends SaffronSchema
+public interface JdbcSchema extends RelOptSchema
 {
     //~ Methods ---------------------------------------------------------------
 
@@ -45,5 +45,5 @@ public interface JdbcSchema extends SaffronSchema
     /**
      * Returns the JDBC data source contained within a Saffron connection.
      */
-    DataSource getDataSource(SaffronConnection connection);
+    DataSource getDataSource(RelOptConnection connection);
 }

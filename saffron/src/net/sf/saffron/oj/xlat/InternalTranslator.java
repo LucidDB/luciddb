@@ -22,17 +22,17 @@
 
 package net.sf.saffron.oj.xlat;
 
-import net.sf.saffron.core.SaffronType;
-import net.sf.saffron.oj.OJTypeFactory;
-import net.sf.saffron.oj.util.JavaRexBuilder;
-import net.sf.saffron.oj.util.OJUtil;
-import net.sf.saffron.rel.SaffronRel;
-import net.sf.saffron.rex.RexKind;
-import net.sf.saffron.rex.RexNode;
-import net.sf.saffron.rex.RexVisitor;
-import net.sf.saffron.sql.SqlOperator;
-import net.sf.saffron.sql.SqlSyntax;
-import net.sf.saffron.util.Util;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.oj.OJTypeFactory;
+import org.eigenbase.oj.util.JavaRexBuilder;
+import org.eigenbase.oj.util.OJUtil;
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.rex.RexKind;
+import org.eigenbase.rex.RexNode;
+import org.eigenbase.rex.RexVisitor;
+import org.eigenbase.sql.SqlOperator;
+import org.eigenbase.sql.SqlSyntax;
+import org.eigenbase.util.Util;
 import openjava.mop.OJClass;
 import openjava.mop.QueryEnvironment;
 import openjava.ptree.*;
@@ -63,7 +63,7 @@ class InternalTranslator
     //~ Instance fields -------------------------------------------------------
 
     QueryInfo queryInfo;
-    SaffronRel [] inputs;
+    RelNode [] inputs;
     protected final JavaRexBuilder rexBuilder;
     protected final QueryEnvironment qenv;
     private static final HashMap mapUnaryOpToRex = createUnaryMap();
@@ -114,7 +114,7 @@ class InternalTranslator
 
     //~ Constructors ----------------------------------------------------------
 
-    InternalTranslator(QueryInfo queryInfo,SaffronRel [] inputs,
+    InternalTranslator(QueryInfo queryInfo,RelNode [] inputs,
             JavaRexBuilder rexBuilder) {
         this.queryInfo = queryInfo;
         this.qenv = (QueryEnvironment) queryInfo.env;
@@ -182,7 +182,7 @@ class InternalTranslator
         }
         // Cast the expression, so that the row-type is precisely what is
         // expected.
-        final SaffronType type =
+        final RelDataType type =
                 ((OJTypeFactory) rexBuilder.getTypeFactory()).toType(ojClass);
         if (type != rex.getType()) {
             rex = rexBuilder.makeCast(type, rex);
@@ -333,7 +333,7 @@ class InternalTranslator
                 continue;
             }
             int offset = offsets[0];
-            SaffronRel input = qi.getRoot();
+            RelNode input = qi.getRoot();
             if (input == null) {
                 // We're referencing a relational expression which has not
                 // been translated yet. This occurs when from items are
@@ -347,7 +347,7 @@ class InternalTranslator
                 String correlName = qi.cluster.query.createCorrelUnresolved(lookup);
                 return new QueryInfo.CorrelLookupResult(correlName);
             } else {
-                return qi.lookup(offset,new SaffronRel [] { input },true,null);
+                return qi.lookup(offset,new RelNode [] { input },true,null);
             }
         }
 
@@ -365,7 +365,7 @@ class InternalTranslator
             this.queryExpression = queryExpression;
         }
 
-        public SaffronType getType() {
+        public RelDataType getType() {
             throw new UnsupportedOperationException();
         }
 

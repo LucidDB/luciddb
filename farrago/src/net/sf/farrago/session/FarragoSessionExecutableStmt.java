@@ -21,7 +21,7 @@ package net.sf.farrago.session;
 
 import net.sf.farrago.util.*;
 
-import net.sf.saffron.core.*;
+import org.eigenbase.reltype.*;
 
 import java.util.*;
 import java.sql.*;
@@ -59,13 +59,13 @@ public interface FarragoSessionExecutableStmt
     /**
      * @return type descriptor for rows produced by this stmt
      */
-    public SaffronType getRowType();
+    public RelDataType getRowType();
 
     /**
      * @return type descriptor for row of dynamic parameters expected
      * by this stmt
      */
-    public SaffronType getDynamicParamRowType();
+    public RelDataType getDynamicParamRowType();
     
     /**
      * @return true if this statement is DML; false if a query

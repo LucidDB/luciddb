@@ -20,18 +20,18 @@
 
 package net.sf.farrago.query;
 
-import net.sf.saffron.util.*;
-import net.sf.saffron.oj.*;
-import net.sf.saffron.oj.rel.*;
-import net.sf.saffron.oj.convert.*;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.rel.convert.*;
+import org.eigenbase.util.*;
+import org.eigenbase.oj.*;
+import org.eigenbase.oj.rel.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.rel.convert.*;
 import net.sf.farrago.fem.config.CalcVirtualMachine;
 import net.sf.farrago.fem.config.CalcVirtualMachineEnum;
 
 // FIXME jvs 25-Aug-2004:  This is just a temporary circular dependency
 // until the required session plugin infrastructure is available.
+import com.disruptivetech.farrago.volcano.*;
 import com.disruptivetech.farrago.rel.*;
 
 /**
@@ -93,8 +93,8 @@ public class FarragoPlanner extends VolcanoPlanner
         addRule(new CoerceInputsRule(TableModificationRel.class));
         addRule(new SwapJoinRule());
 
-        addRule(new OJPlannerFactory.HomogeneousUnionToIteratorRule());
-        addRule(new OJPlannerFactory.OneRowToIteratorRule());
+        addRule(new IterRules.HomogeneousUnionToIteratorRule());
+        addRule(new IterRules.OneRowToIteratorRule());
 
         addRule(new FennelSortRule());
         addRule(new FennelDistinctSortRule());
@@ -118,12 +118,12 @@ public class FarragoPlanner extends VolcanoPlanner
             calcVM.equals(CalcVirtualMachineEnum.CALCVM_AUTO))
         {
             // use Java code generation for calculating expressions
-            addRule(OJPlannerFactory.IterCalcRule.instance);
+            addRule(IterRules.IterCalcRule.instance);
             
             // TODO jvs 6-May-2004:  these should be redundant now, but when
             // I remove them, some queries fail.  Find out why.
-            addRule(OJPlannerFactory.ProjectToIteratorRule.instance);
-            addRule(OJPlannerFactory.ProjectedFilterToIteratorRule.instance);
+            addRule(IterRules.ProjectToIteratorRule.instance);
+            addRule(IterRules.ProjectedFilterToIteratorRule.instance);
         }
 
         if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_AUTO)
@@ -149,7 +149,7 @@ public class FarragoPlanner extends VolcanoPlanner
     }
 
     // override VolcanoPlanner
-    public JavaRelImplementor getJavaRelImplementor(SaffronRel rel)
+    public JavaRelImplementor getJavaRelImplementor(RelNode rel)
     {
         return stmt.getRelImplementor(rel.getCluster().rexBuilder);
     }

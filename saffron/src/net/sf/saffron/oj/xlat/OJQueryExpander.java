@@ -22,19 +22,19 @@
 
 package net.sf.saffron.oj.xlat;
 
-import net.sf.saffron.core.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.relopt.*;
 import net.sf.saffron.trace.*;
 import net.sf.saffron.oj.rel.ExpressionReaderRel;
 import net.sf.saffron.oj.rel.ForTerminatorRel;
-import net.sf.saffron.oj.util.JavaRexBuilder;
-import net.sf.saffron.oj.util.OJUtil;
-import net.sf.saffron.opt.CallingConvention;
-import net.sf.saffron.oj.rel.JavaRelImplementor;
-import net.sf.saffron.oj.rel.JavaRel;
-import net.sf.saffron.opt.VolcanoCluster;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.rex.RexNode;
-import net.sf.saffron.util.Util;
+import org.eigenbase.oj.util.JavaRexBuilder;
+import org.eigenbase.oj.util.OJUtil;
+import org.eigenbase.relopt.CallingConvention;
+import org.eigenbase.oj.rel.JavaRelImplementor;
+import org.eigenbase.oj.rel.JavaRel;
+import org.eigenbase.rel.*;
+import org.eigenbase.rex.RexNode;
+import org.eigenbase.util.Util;
 import openjava.mop.Environment;
 import openjava.mop.OJClass;
 import openjava.mop.QueryEnvironment;
@@ -62,12 +62,12 @@ public class OJQueryExpander extends QueryExpander
 
     //~ Instance fields -------------------------------------------------------
 
-    private SaffronType rootRowType;
-    private final SaffronConnection connection;
+    private RelDataType rootRowType;
+    private final RelOptConnection connection;
 
     //~ Constructors ----------------------------------------------------------
 
-    public OJQueryExpander(Environment env, SaffronConnection connection)
+    public OJQueryExpander(Environment env, RelOptConnection connection)
     {
         super(env);
         this.connection = connection;
@@ -79,7 +79,7 @@ public class OJQueryExpander extends QueryExpander
      * @return the row Type for the root relational expression encountered
      *         during last expansion, or null if none
      */
-    public SaffronType getRootRowType()
+    public RelDataType getRootRowType()
     {
         return rootRowType;
     }
@@ -92,7 +92,7 @@ public class OJQueryExpander extends QueryExpander
      * @param eager whether to try to convert expressions which might not be
      *        relational, for example arrays
      * @param convention calling convention (see {@link
-     *        net.sf.saffron.opt.CallingConvention})
+     *        org.eigenbase.relopt.CallingConvention})
      * @param variable iterator variable (for <code>for</code>-loop)
      * @param body statement list to add code to
      *
@@ -105,13 +105,13 @@ public class OJQueryExpander extends QueryExpander
         Variable variable,
         StatementList body)
     {
-        SaffronRel rel = convertExpToUnoptimizedRel(exp,eager,null,null);
+        RelNode rel = convertExpToUnoptimizedRel(exp,eager,null,null);
         if (rel == null) {
             return null;
         }
         // Project out the one and only field.
         if (rel.getRowType().getFieldCount() == 1) {
-            final SaffronField field0 = rel.getRowType().getFields()[0];
+            final RelDataTypeField field0 = rel.getRowType().getFields()[0];
             rel = new ProjectRel(rel.getCluster(),
                     rel,
                     new RexNode[] {rel.getCluster().rexBuilder.makeInputRef(
@@ -121,10 +121,10 @@ public class OJQueryExpander extends QueryExpander
         } else {
             //assert false;
         }
-        SaffronPlanner planner = rel.getCluster().getPlanner();
+        RelOptPlanner planner = rel.getCluster().getPlanner();
         planner.setRoot(rel);
         if (rel.getConvention() != convention) {
-            SaffronRel previous = rel;
+            RelNode previous = rel;
             try {
                 rel = planner.changeConvention(rel,convention);
                 assert(rel != null);
@@ -152,7 +152,7 @@ public class OJQueryExpander extends QueryExpander
             assert(rel.getConvention() == convention);
         }
         planner = planner.chooseDelegate();
-        SaffronRel bestExp = planner.findBestExp();
+        RelNode bestExp = planner.findBestExp();
         assert(bestExp != null) : "could not implement exp";
         return (JavaRel) bestExp;
     }
@@ -210,7 +210,7 @@ public class OJQueryExpander extends QueryExpander
      * @return a relational expression, or null if the expression was not
      *         relational
      */
-    public SaffronRel convertExpToUnoptimizedRel(
+    public RelNode convertExpToUnoptimizedRel(
         Expression exp,
         boolean eager,
         QueryInfo queryInfo,
@@ -240,11 +240,11 @@ public class OJQueryExpander extends QueryExpander
                     queryInfo =
                         new QueryInfo(queryInfo,getEnvironment(),this,exp);
                 }
-                SaffronRel left = convertExpToUnoptimizedRel(
+                RelNode left = convertExpToUnoptimizedRel(
                     leftExp,true,queryInfo,null);
-                SaffronRel right = convertExpToUnoptimizedRel(
+                RelNode right = convertExpToUnoptimizedRel(
                     rightExp,true,queryInfo,null);
-                VolcanoCluster cluster =
+                RelOptCluster cluster =
                     QueryInfo.createCluster(queryInfo,getEnvironment());
                 cluster.originalExpression = ((JavaRexBuilder)
                         cluster.rexBuilder).makeJava(cluster.env, exp);
@@ -252,7 +252,7 @@ public class OJQueryExpander extends QueryExpander
                 case BinaryExpression.UNION:
                     return new UnionRel(
                         cluster,
-                        new SaffronRel [] { left,right },
+                        new RelNode [] { left,right },
                         false);
                 case BinaryExpression.EXCEPT:
                     return new MinusRel(cluster,left,right);
@@ -310,12 +310,12 @@ tryit:
             }
             String tableName = Literal.stripString(literal.toString());
             final Environment env = getEnvironment();
-            SaffronTable table =
+            RelOptTable table =
                 Toolbox.getTable(env,refexpr,schemaName,tableName);
             if (table == null) {
                 break tryit;
             }
-            SaffronRel rel = table.toRel(queryInfo.cluster, connection);
+            RelNode rel = table.toRel(queryInfo.cluster, connection);
             if (rel == null) {
                 return null;
             }
@@ -340,12 +340,12 @@ tryit:
         }
 
         if (isRelational(clazz)) {
-            VolcanoCluster cluster;
+            RelOptCluster cluster;
             RexNode rexExp = null;
             if (queryInfo != null) {
                 rexExp = queryInfo.convertExpToInternal(
                         exp,
-                        new SaffronRel [] {  });
+                        new RelNode [] {  });
                 cluster = queryInfo.cluster;
             } else {
                 // there's no query current, but we still need a cluster
@@ -354,9 +354,9 @@ tryit:
                         getEnvironment(), exp);
                 cluster.originalExpression = rexExp;
             }
-            final SaffronType rowType =
+            final RelDataType rowType =
                     OJUtil.ojToType(cluster.typeFactory,desiredRowType);
-            SaffronRel rel = new ExpressionReaderRel(cluster,rexExp,rowType);
+            RelNode rel = new ExpressionReaderRel(cluster,rexExp,rowType);
             if (queryInfo != null) {
                 queryInfo.leaves.add(rel);
             }
@@ -482,8 +482,8 @@ tryit:
         if (rel != null) {
             if (tracer.isLoggable(Level.FINE)) {
                 final StringWriter sw = new StringWriter();
-                final PlanWriter pw =
-                    new PlanWriter(new PrintWriter(sw));
+                final RelOptPlanWriter pw =
+                    new RelOptPlanWriter(new PrintWriter(sw));
                 rel.explain(pw);
                 pw.flush();
                 tracer.log(Level.FINE,

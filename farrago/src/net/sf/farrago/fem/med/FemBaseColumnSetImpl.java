@@ -27,8 +27,8 @@ import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.type.FarragoTypeFactory;
 import net.sf.farrago.namespace.FarragoMedColumnSet;
-import net.sf.saffron.core.SaffronType;
-import net.sf.saffron.core.SaffronField;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeField;
 
 import org.netbeans.mdr.handlers.*;
 import org.netbeans.mdr.storagemodel.*;
@@ -86,9 +86,9 @@ public abstract class FemBaseColumnSetImpl extends InstanceHandler
             List columnList = getFeature();
             if (columnList.isEmpty()) {
                 // derive column information
-                SaffronType rowType = columnSet.getRowType();
+                RelDataType rowType = columnSet.getRowType();
                 int n = rowType.getFieldCount();
-                SaffronField[] fields = rowType.getFields();
+                RelDataTypeField[] fields = rowType.getFields();
                 for (int i = 0; i < n; ++i) {
                     CwmColumn column = catalog.newFemStoredColumn();
                     columnList.add(column);

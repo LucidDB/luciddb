@@ -26,13 +26,13 @@ import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 import net.sf.farrago.query.*;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.rel.convert.*;
-import net.sf.saffron.oj.util.*;
-import net.sf.saffron.util.*;
-import net.sf.saffron.rex.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.rel.convert.*;
+import org.eigenbase.oj.util.*;
+import org.eigenbase.util.*;
+import org.eigenbase.rex.*;
 
 import java.util.*;
 import java.util.List;
@@ -45,7 +45,7 @@ import java.util.List;
  * @author John V. Sichi
  * @version $Id$
  */
-class FtrsScanToSearchRule extends VolcanoRule
+class FtrsScanToSearchRule extends RelOptRule
 {
     //~ Constructors ----------------------------------------------------------
 
@@ -55,23 +55,23 @@ class FtrsScanToSearchRule extends VolcanoRule
     public FtrsScanToSearchRule()
     {
         super(
-            new RuleOperand(
+            new RelOptRuleOperand(
                 FilterRel.class,
-                new RuleOperand [] {
-                    new RuleOperand(FtrsIndexScanRel.class,null)
+                new RelOptRuleOperand [] {
+                    new RelOptRuleOperand(FtrsIndexScanRel.class,null)
                 }));
     }
 
     //~ Methods ---------------------------------------------------------------
 
-    // implement VolcanoRule
+    // implement RelOptRule
     public CallingConvention getOutConvention()
     {
         return null;
     }
 
-    // implement VolcanoRule
-    public void onMatch(VolcanoRuleCall call)
+    // implement RelOptRule
+    public void onMatch(RelOptRuleCall call)
     {
         FilterRel filter = (FilterRel) call.rels[0];
         FtrsIndexScanRel scan = (FtrsIndexScanRel) call.rels[1];
@@ -79,7 +79,7 @@ class FtrsScanToSearchRule extends VolcanoRule
         FarragoCatalog catalog = scan.getPreparingStmt().getCatalog();
 
         // TODO: General framework for converting filters into ranges.  Build
-        // on Saffron's expression pattern-matching framework?  Or maybe ANTLR
+        // on the rex expression pattern-matching framework?  Or maybe ANTLR
         // tree matching?  Need canonical form, compound keys, inequalities.
         RexNode filterExp = filter.condition;
 
@@ -145,7 +145,7 @@ class FtrsScanToSearchRule extends VolcanoRule
         FtrsIndexScanRel origScan,
         CwmColumn filterColumn,
         RexNode searchValue,
-        VolcanoRuleCall call,
+        RelOptRuleCall call,
         RexNode extraFilter)
     {
         FarragoCatalog catalog = origScan.getPreparingStmt().getCatalog();
@@ -172,16 +172,16 @@ class FtrsScanToSearchRule extends VolcanoRule
 
         // Add a filter to remove nulls, since they can never match the
         // equals condition.
-        SaffronRel nullFilterRel = OptUtil.createNullFilter(keyRel,null);
+        RelNode nullFilterRel = RelOptUtil.createNullFilter(keyRel,null);
 
         // Generate code to cast the literal to the index column type.
         FarragoTypeFactory typeFactory =
             origScan.getPreparingStmt().getFarragoTypeFactory();
-        SaffronType lhsRowType =
+        RelDataType lhsRowType =
             typeFactory.createColumnType(filterColumn,true);
-        SaffronRel castRel = OptUtil.createCastRel(nullFilterRel,lhsRowType);
+        RelNode castRel = RelOptUtil.createCastRel(nullFilterRel,lhsRowType);
 
-        SaffronRel keyInput = convert(
+        RelNode keyInput = convert(
             castRel,FennelPullRel.FENNEL_PULL_CONVENTION);
         assert (keyInput != null);
 
@@ -228,7 +228,7 @@ class FtrsScanToSearchRule extends VolcanoRule
     }
 
     private void transformCall(
-        VolcanoRuleCall call,SaffronRel searchRel,RexNode extraFilter)
+        RelOptRuleCall call,RelNode searchRel,RexNode extraFilter)
     {
         if (extraFilter != null) {
             searchRel = new FilterRel(

@@ -23,10 +23,9 @@ import net.sf.farrago.namespace.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.cwm.relational.*;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.ext.*;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.rel.*;
 
 import java.util.*;
 
@@ -38,7 +37,7 @@ import java.util.*;
  * @version $Id$
  */
 public abstract class MedAbstractColumnSet
-    extends AbstractTable
+    extends RelOptAbstractTable
     implements FarragoQueryColumnSet
 {
     private final String [] localName;
@@ -68,7 +67,7 @@ public abstract class MedAbstractColumnSet
     protected MedAbstractColumnSet(
         String [] localName,
         String [] foreignName,
-        SaffronType rowType,
+        RelDataType rowType,
         Properties tableProps,
         Map columnPropMap)
     {
@@ -82,7 +81,7 @@ public abstract class MedAbstractColumnSet
         this.columnPropMap = columnPropMap;
     }
 
-    // implement SaffronTable
+    // implement RelOptTable
     public String [] getQualifiedName()
     {
         return localName;

@@ -22,31 +22,32 @@
 
 package net.sf.saffron.oj.stmt;
 
-import net.sf.saffron.core.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.relopt.*;
 import net.sf.saffron.oj.OJConnectionRegistry;
 import net.sf.saffron.oj.OJPlannerFactory;
-import net.sf.saffron.oj.OJTypeFactoryImpl;
+import org.eigenbase.oj.OJTypeFactoryImpl;
 import net.sf.saffron.oj.OJValidator;
-import net.sf.saffron.oj.rel.JavaRel;
-import net.sf.saffron.oj.rel.JavaRelImplementor;
-import net.sf.saffron.oj.util.ClassCollector;
-import net.sf.saffron.oj.util.JavaRexBuilder;
-import net.sf.saffron.oj.util.OJUtil;
+import org.eigenbase.oj.rel.JavaRel;
+import org.eigenbase.oj.rel.JavaRelImplementor;
+import org.eigenbase.oj.util.ClassCollector;
+import org.eigenbase.oj.util.JavaRexBuilder;
+import org.eigenbase.oj.util.OJUtil;
 import net.sf.saffron.oj.xlat.OJQueryExpander;
 import net.sf.saffron.oj.xlat.OJSchemaExpander;
 import net.sf.saffron.oj.xlat.SqlToOpenjavaConverter;
-import net.sf.saffron.opt.CallingConvention;
-import net.sf.saffron.opt.VolcanoPlannerFactory;
-import net.sf.saffron.rel.SaffronRel;
-import net.sf.saffron.rex.RexBuilder;
-import net.sf.saffron.runtime.*;
-import net.sf.saffron.sql.*;
-import net.sf.saffron.sql.parser.ParseException;
-import net.sf.saffron.sql.parser.SqlParser;
-import net.sf.saffron.sql2rel.SqlToRelConverter;
+import org.eigenbase.relopt.CallingConvention;
+import com.disruptivetech.farrago.volcano.VolcanoPlannerFactory;
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.rex.RexBuilder;
+import org.eigenbase.runtime.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.ParseException;
+import org.eigenbase.sql.parser.SqlParser;
+import org.eigenbase.sql2rel.SqlToRelConverter;
 import net.sf.saffron.trace.SaffronTrace;
-import net.sf.saffron.util.SaffronProperties;
-import net.sf.saffron.util.Util;
+import org.eigenbase.util.SaffronProperties;
+import org.eigenbase.util.Util;
 import openjava.mop.*;
 import openjava.ojc.JavaCompiler;
 import openjava.ojc.JavaCompilerArgs;
@@ -97,7 +98,7 @@ public class OJStatement
      */
     protected JavaCompiler javaCompiler;
 
-    private final SaffronConnection connection;
+    private final RelOptConnection connection;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -105,18 +106,18 @@ public class OJStatement
      * Creates a statement
      *
      * @param connection Connection statement belongs to; may be null, but only
-     *   if this statement implements {@link SaffronConnection}
+     *   if this statement implements {@link RelOptConnection}
      *
-     * @pre connection != null || this instanceof SaffronConnection
+     * @pre connection != null || this instanceof RelOptConnection
      */
-    public OJStatement(SaffronConnection connection)
+    public OJStatement(RelOptConnection connection)
     {
         this.connection = connection == null &&
-                this instanceof SaffronConnection ?
-                (SaffronConnection) this :
+                this instanceof RelOptConnection ?
+                (RelOptConnection) this :
                 connection;
         Util.pre(this.connection != null,
-                "connection != null || this instanceof SaffronConnection");
+                "connection != null || this instanceof RelOptConnection");
         this.resultCallingConvention = CallingConvention.RESULT_SET;
     }
 
@@ -281,7 +282,7 @@ public class OJStatement
                         new BufferedIterator((Iterator) argument.value);
                     argument.clazz = argument.value.getClass();
                 }
-                if (SaffronConnection.class.isInstance(argument.value)) {
+                if (RelOptConnection.class.isInstance(argument.value)) {
                     // Don't fix up the type of connections. (The mapping to
                     // schema is made via static typing, so changing the type
                     // destroys the mapping.)
@@ -299,11 +300,11 @@ public class OJStatement
     }
 
     public static void setupFactories() {
-        SaffronTypeFactory typeFactory =
-            SaffronTypeFactoryImpl.threadInstance();
+        RelDataTypeFactory typeFactory =
+            RelDataTypeFactoryImpl.threadInstance();
         if (typeFactory == null) {
             typeFactory = new OJTypeFactoryImpl();
-            SaffronTypeFactoryImpl.setThreadInstance(typeFactory);
+            RelDataTypeFactoryImpl.setThreadInstance(typeFactory);
         }
         if (VolcanoPlannerFactory.threadInstance() == null) {
             VolcanoPlannerFactory.setThreadInstance(new OJPlannerFactory());
@@ -334,7 +335,7 @@ public class OJStatement
                 e,
                 "Error while parsing SQL '" + queryString + "'");
         }
-        SaffronSchema schema = connection.getSaffronSchema();
+        RelOptSchema schema = connection.getRelOptSchema();
         SqlValidator.CatalogReader catalogReader;
         if (schema instanceof SqlValidator.CatalogReader) {
             catalogReader = (SqlValidator.CatalogReader) schema;
@@ -391,7 +392,7 @@ public class OJStatement
 
         SqlToRelConverter sqlToRelConverter =
             getSqlToRelConverter(validator,connection);
-        SaffronRel rootRel;
+        RelNode rootRel;
         if (needValidation) {
             rootRel = sqlToRelConverter.convertQuery(sqlQuery);
         } else {
@@ -414,9 +415,9 @@ public class OJStatement
      * @param rootRel root of a relational expression
      * @return an equivalent optimized relational expression
      */
-    private SaffronRel optimize(SaffronRel rootRel)
+    private RelNode optimize(RelNode rootRel)
     {
-        SaffronPlanner planner = rootRel.getCluster().getPlanner();
+        RelOptPlanner planner = rootRel.getCluster().getPlanner();
         planner.setRoot(rootRel);
         rootRel = planner.changeConvention(rootRel,resultCallingConvention);
         assert(rootRel != null);
@@ -436,7 +437,7 @@ public class OJStatement
      * @return an executable plan, a {@link PreparedExecution}.
      */
     private PreparedExecution implement(
-        SaffronRel rootRel, SqlKind sqlKind,
+        RelNode rootRel, SqlKind sqlKind,
         ClassDeclaration decl, Argument[] args)
     {
         JavaRelImplementor relImplementor =
@@ -468,7 +469,7 @@ public class OJStatement
      * @param args openjava argument list for the generated code.
      */
     public PreparedResult prepareSql(
-        SaffronRel rootRel, SqlKind sqlKind, boolean needOpt,
+        RelNode rootRel, SqlKind sqlKind, boolean needOpt,
         ClassDeclaration decl, Argument[] args)
     {
         if (needOpt)
@@ -483,15 +484,15 @@ public class OJStatement
      */
     protected SqlToRelConverter getSqlToRelConverter(
         SqlValidator validator,
-        final SaffronConnection connection)
+        final RelOptConnection connection)
     {
         return new SqlToRelConverter(
             validator,
-            connection.getSaffronSchema(),
+            connection.getRelOptSchema(),
             env,
             connection,
             new JavaRexBuilder(
-                connection.getSaffronSchema().getTypeFactory()));
+                connection.getRelOptSchema().getTypeFactory()));
     }
 
     /**
@@ -921,14 +922,14 @@ public class OJStatement
             this(name,java.lang.Integer.TYPE,new Integer(value));
         }
 
-        public SaffronSchema getSaffronSchema()
+        public RelOptSchema getRelOptSchema()
         {
             if (value == null) {
                 return null;
-            } else if (value instanceof SaffronSchema) {
-                return (SaffronSchema) value;
-            } else if (value instanceof SaffronConnection) {
-                return ((SaffronConnection) value).getSaffronSchema();
+            } else if (value instanceof RelOptSchema) {
+                return (RelOptSchema) value;
+            } else if (value instanceof RelOptConnection) {
+                return ((RelOptConnection) value).getRelOptSchema();
             } else {
                 return null;
             }

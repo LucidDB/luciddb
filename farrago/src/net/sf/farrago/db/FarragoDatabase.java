@@ -34,10 +34,10 @@ import net.sf.farrago.ddl.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.ojrex.*;
 
-import net.sf.saffron.sql.*;
-import net.sf.saffron.util.*;
-import net.sf.saffron.oj.rex.*;
-import net.sf.saffron.rel.SaffronRel;
+import org.eigenbase.sql.*;
+import org.eigenbase.util.*;
+import org.eigenbase.oj.rex.*;
+import org.eigenbase.rel.RelNode;
 
 import openjava.tools.DebugOut;
 
@@ -513,7 +513,7 @@ public class FarragoDatabase
     /**
      * Implement a logical or physical query plan but do not execute it.
      * @param prep the FarragoSessionPreparingStmt that is managing the query.
-     * @param rootRel root of query plan (saffron relational expression)
+     * @param rootRel root of query plan (relational expression)
      * @param sqlKind SqlKind for the relational expression: only
      *   SqlKind.Explain and SqlKind.Dml are special cases.
      * @param logical true for a logical query plan (still needs to be
@@ -524,7 +524,7 @@ public class FarragoDatabase
      */
     public FarragoSessionExecutableStmt implementStmt(
         FarragoSessionPreparingStmt prep,
-        SaffronRel rootRel, SqlKind sqlKind, boolean logical,
+        RelNode rootRel, SqlKind sqlKind, boolean logical,
         FarragoAllocationOwner owner)
     {
         try {

@@ -24,10 +24,9 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.util.*;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.util.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.util.*;
 
 import java.util.*;
 
@@ -56,14 +55,14 @@ public class FennelSortRel extends FennelPullSingleRel
     /**
      * Creates a new FennelSortRel object.
      *
-     * @param cluster VolcanoCluster for this rel
+     * @param cluster RelOptCluster for this rel
      * @param child rel producing rows to be sorted
      * @param keyProjection 0-based ordinals of fields making up sort key
      * @param discardDuplicates whether to discard duplicates based on key
      */
     public FennelSortRel(
-        VolcanoCluster cluster,
-        SaffronRel child,
+        RelOptCluster cluster,
+        RelNode child,
         Integer [] keyProjection,
         boolean discardDuplicates)
     {
@@ -90,13 +89,13 @@ public class FennelSortRel extends FennelPullSingleRel
     {
         return new FennelSortRel(
             cluster,
-            OptUtil.clone(child),
+            RelOptUtil.clone(child),
             keyProjection,
             discardDuplicates);
     }
 
-    // implement SaffronRel
-    public PlanCost computeSelfCost(SaffronPlanner planner)
+    // implement RelNode
+    public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
         // TODO:  the real thing
         double rowCount = getRows();
@@ -107,8 +106,8 @@ public class FennelSortRel extends FennelPullSingleRel
             rowCount * bytesPerRow);
     }
 
-    // override SaffronRel
-    public void explain(PlanWriter pw)
+    // override RelNode
+    public void explain(RelOptPlanWriter pw)
     {
         pw.explain(
             this,

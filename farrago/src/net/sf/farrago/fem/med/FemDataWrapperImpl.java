@@ -27,7 +27,7 @@ import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.util.*;
 import net.sf.farrago.util.FarragoProperties;
 
-import net.sf.saffron.util.*;
+import org.eigenbase.util.*;
 
 import org.netbeans.mdr.handlers.*;
 import org.netbeans.mdr.storagemodel.*;

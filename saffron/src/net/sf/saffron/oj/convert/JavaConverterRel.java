@@ -22,18 +22,18 @@
 
 package net.sf.saffron.oj.convert;
 
-import net.sf.saffron.core.SaffronPlanner;
-import net.sf.saffron.core.PlanWriter;
-import net.sf.saffron.oj.rel.JavaRel;
-import net.sf.saffron.oj.rel.JavaRelImplementor;
-import net.sf.saffron.oj.rel.JavaLoopRel;
-import net.sf.saffron.opt.CallingConvention;
-import net.sf.saffron.opt.VolcanoCluster;
-import net.sf.saffron.rel.SaffronRel;
-import net.sf.saffron.rel.convert.ConverterRel;
-import net.sf.saffron.rel.convert.ConverterRule;
-import net.sf.saffron.rel.convert.FactoryConverterRule;
-import net.sf.saffron.util.Util;
+import org.eigenbase.relopt.RelOptPlanner;
+import org.eigenbase.relopt.RelOptPlanWriter;
+import org.eigenbase.oj.rel.JavaRel;
+import org.eigenbase.oj.rel.JavaRelImplementor;
+import org.eigenbase.oj.rel.JavaLoopRel;
+import org.eigenbase.relopt.CallingConvention;
+import org.eigenbase.relopt.RelOptCluster;
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.convert.ConverterRel;
+import org.eigenbase.rel.convert.ConverterRule;
+import org.eigenbase.rel.convert.FactoryConverterRule;
+import org.eigenbase.util.Util;
 import openjava.ptree.ParseTree;
 import openjava.ptree.Variable;
 
@@ -41,7 +41,7 @@ import openjava.ptree.Variable;
 /**
  * An <code>JavaConverterRel</code> converts a plan from
  * <code>inConvention</code> to {@link
- * net.sf.saffron.opt.CallingConvention#ARRAY}.
+ * org.eigenbase.relopt.CallingConvention#ARRAY}.
  */
 public class JavaConverterRel extends ConverterRel
         implements JavaRel, JavaLoopRel
@@ -60,7 +60,7 @@ public class JavaConverterRel extends ConverterRel
 
     //~ Constructors ----------------------------------------------------------
 
-    JavaConverterRel(VolcanoCluster cluster,SaffronRel child,
+    JavaConverterRel(RelOptCluster cluster,RelNode child,
             JavaConvertlet convertlet)
     {
         super(cluster,child);
@@ -71,7 +71,7 @@ public class JavaConverterRel extends ConverterRel
 
     private static final String[] terms = {"child", "convention"};
 
-    public void explain(PlanWriter pw) {
+    public void explain(RelOptPlanWriter pw) {
         pw.explain(this, terms, new Object[] {getConvention().getName()});
     }
 
@@ -80,7 +80,7 @@ public class JavaConverterRel extends ConverterRel
         return _convertlet.getConvention();
     }
 
-    // implement SaffronRel
+    // implement RelNode
     public Object clone()
     {
         return new JavaConverterRel(cluster,child,_convertlet);

@@ -21,20 +21,20 @@
 
 package net.sf.saffron.test;
 
-import net.sf.saffron.core.*;
+import org.eigenbase.reltype.*;
 import net.sf.saffron.ext.ExtentRel;
 import net.sf.saffron.ext.ExtentTable;
 import net.sf.saffron.ext.ReflectSchema;
 import net.sf.saffron.oj.rel.ExpressionReaderRel;
 import net.sf.saffron.oj.stmt.OJStatement;
-import net.sf.saffron.oj.util.JavaRexBuilder;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.FilterRel;
-import net.sf.saffron.rel.JoinRel;
-import net.sf.saffron.rel.ProjectRel;
-import net.sf.saffron.rel.SaffronRel;
-import net.sf.saffron.rex.*;
-import net.sf.saffron.util.Util;
+import org.eigenbase.oj.util.JavaRexBuilder;
+import org.eigenbase.relopt.*;
+import org.eigenbase.rel.FilterRel;
+import org.eigenbase.rel.JoinRel;
+import org.eigenbase.rel.ProjectRel;
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.rex.*;
+import org.eigenbase.util.Util;
 import openjava.ptree.FieldAccess;
 import openjava.ptree.MethodCall;
 
@@ -67,7 +67,7 @@ public class ObjectSchemaTest extends SaffronTestCase
 
     //~ Methods ---------------------------------------------------------------
 
-    public SaffronConnection getConnection() {
+    public RelOptConnection getConnection() {
         return reflect;
     }
 
@@ -191,23 +191,23 @@ public class ObjectSchemaTest extends SaffronTestCase
      * AllInstancesOf(int.class) as i on e.deptno = i</code> translates
      * to <code>select e.*, e.deptno from emps as e</code>.</p>
      */
-    public static class ExtentJoinRule extends VolcanoRule
+    public static class ExtentJoinRule extends RelOptRule
     {
         public ExtentJoinRule()
         {
             super(
-                new RuleOperand(
+                new RelOptRuleOperand(
                     JoinRel.class,
-                    new RuleOperand [] {
-                        new RuleOperand(SaffronRel.class,null),
-                        new RuleOperand(ExtentRel.class,null)
+                    new RelOptRuleOperand [] {
+                        new RelOptRuleOperand(RelNode.class,null),
+                        new RelOptRuleOperand(ExtentRel.class,null)
                     }));
         }
 
-        public void onMatch(final VolcanoRuleCall call)
+        public void onMatch(final RelOptRuleCall call)
         {
             JoinRel join = (JoinRel) call.rels[0];
-            final SaffronRel rel = call.rels[1];
+            final RelNode rel = call.rels[1];
             ExtentRel extent = (ExtentRel) call.rels[2];
             Util.discard(extent);
             final RexBuilder rexBuilder = join.getCluster().rexBuilder;
@@ -250,17 +250,17 @@ public class ObjectSchemaTest extends SaffronTestCase
      * <code>JavaReflectConnection</code> is a connection to the virtual
      * database formed by the Java reflect API.
      */
-    public static class JavaReflectConnection implements SaffronConnection
+    public static class JavaReflectConnection implements RelOptConnection
     {
         private static JavaReflectSchema schema = new JavaReflectSchema(null);
 
-        public SaffronSchema getSaffronSchema()
+        public RelOptSchema getRelOptSchema()
         {
-            return getSaffronSchemaStatic();
+            return getRelOptSchemaStatic();
         }
 
         // for Connection
-        public static SaffronSchema getSaffronSchemaStatic()
+        public static RelOptSchema getRelOptSchemaStatic()
         {
             return schema;
         }
@@ -277,14 +277,14 @@ public class ObjectSchemaTest extends SaffronTestCase
      */
     public static class JavaReflectSchema extends ReflectSchema
     {
-        public final SaffronTypeFactory typeFactory =
-            new SaffronTypeFactoryImpl();
-        public SaffronTable classes =
+        public final RelDataTypeFactory typeFactory =
+            new RelDataTypeFactoryImpl();
+        public RelOptTable classes =
             new ExtentTable(
                 this,
                 "classes",
                 typeFactory.createJavaType(Class.class));
-        public SaffronTable fields =
+        public RelOptTable fields =
             new ExtentTable(
                 this,
                 "fields",
@@ -296,7 +296,7 @@ public class ObjectSchemaTest extends SaffronTestCase
             this.rexBuilder = rexBuilder;
         }
 
-        public void registerRules(SaffronPlanner planner)
+        public void registerRules(RelOptPlanner planner)
             throws Exception
         {
             planner.addRule(new ExtentJoinRule());
@@ -343,9 +343,9 @@ public class ObjectSchemaTest extends SaffronTestCase
         }
 
         private void addLink(
-            SaffronPlanner planner,
-            SaffronTable fromTable,
-            SaffronTable toTable,
+            RelOptPlanner planner,
+            RelOptTable fromTable,
+            RelOptTable toTable,
             String fieldName,
             final String replaceFieldName,
             final boolean many) throws Exception
@@ -353,8 +353,8 @@ public class ObjectSchemaTest extends SaffronTestCase
             if (fieldName == null) {
                 return;
             }
-            final SaffronType fromClass = fromTable.getRowType();
-            final SaffronType toClass = toTable.getRowType();
+            final RelDataType fromClass = fromTable.getRowType();
+            final RelDataType toClass = toTable.getRowType();
             Util.discard(toClass);
             RexNode seek = makeFieldOrMethodCall(
                     rexBuilder.makeRangeReference(rexBuilder.constantNull().getType(), 0
@@ -408,8 +408,8 @@ public class ObjectSchemaTest extends SaffronTestCase
                     {
                         RexNode replaceExpr;
                         final JoinRel oldJoin = (JoinRel) call.rels[0];
-                        final SaffronRel manyRel = call.rels[1]; // e.g. "fields"
-                        final SaffronRel oneRel = call.rels[2]; // e.g. "classes"
+                        final RelNode manyRel = call.rels[1]; // e.g. "fields"
+                        final RelNode oneRel = call.rels[2]; // e.g. "classes"
                         String correl = oneRel.getOrCreateCorrelVariable();
                         RexNode correlVar = rexBuilder.makeCorrel(null, correl);
                         replaceExpr =
@@ -417,9 +417,9 @@ public class ObjectSchemaTest extends SaffronTestCase
                         if (many) {
                             throw Util.newInternal("todo:");
                         } else {
-                            final VolcanoCluster cluster =
+                            final RelOptCluster cluster =
                                 oldJoin.getCluster();
-                            final SaffronType rowType = manyRel.getRowType();
+                            final RelDataType rowType = manyRel.getRowType();
                             final ExpressionReaderRel expressionReader =
                                 new ExpressionReaderRel(cluster, replaceExpr, rowType);
                             final JoinRel newJoin =
@@ -461,9 +461,9 @@ public class ObjectSchemaTest extends SaffronTestCase
         }
 
         private void addRelationship(
-            SaffronPlanner planner,
-            SaffronTable fromTable,
-            SaffronTable toTable,
+            RelOptPlanner planner,
+            RelOptTable fromTable,
+            RelOptTable toTable,
             String fromField,
             String toField) throws Exception
         {
@@ -502,29 +502,29 @@ public class ObjectSchemaTest extends SaffronTestCase
      * pattern matches, fires the {@link #onMatch(RexNode[])} method (which
      * is abstract in this class).
      */
-    static abstract class FilterRule extends VolcanoRule
+    static abstract class FilterRule extends RelOptRule
         implements RexAction
     {
         RexPattern pattern;
-        SaffronTable table;
-        VolcanoRuleCall call;
+        RelOptTable table;
+        RelOptRuleCall call;
 
-        public FilterRule(SaffronTable table,RexPattern pattern)
+        public FilterRule(RelOptTable table,RexPattern pattern)
         {
             super(
-                new RuleOperand(
+                new RelOptRuleOperand(
                     FilterRel.class, // todo: constructor which takes a table
-                    new RuleOperand [] { new RuleOperand(
-                            SaffronRel.class,
+                    new RelOptRuleOperand [] { new RelOptRuleOperand(
+                            RelNode.class,
                             null) }));
             this.table = table;
             this.pattern = pattern;
         }
 
-        public void onMatch(VolcanoRuleCall call)
+        public void onMatch(RelOptRuleCall call)
         {
             FilterRel filter = (FilterRel) call.rels[0];
-            SaffronRel rel = call.rels[1];
+            RelNode rel = call.rels[1];
             if (!rel.isAccessTo(table)) {
                 return;
             }
@@ -540,36 +540,36 @@ public class ObjectSchemaTest extends SaffronTestCase
      * pattern matches, fires the {@link #onMatch(RexNode[])} method (which
      * is abstract in this class).
      */
-    static abstract class JoinRule extends VolcanoRule
+    static abstract class JoinRule extends RelOptRule
         implements RexAction
     {
         RexPattern pattern;
-        SaffronTable fromTable;
-        SaffronTable toTable;
-        VolcanoRuleCall call;
+        RelOptTable fromTable;
+        RelOptTable toTable;
+        RelOptRuleCall call;
 
         public JoinRule(
-            SaffronTable fromTable,
-            SaffronTable toTable,
+            RelOptTable fromTable,
+            RelOptTable toTable,
             RexPattern pattern)
         {
             super(
-                new RuleOperand(
+                new RelOptRuleOperand(
                     JoinRel.class, // todo: constructor which takes a table
-                    new RuleOperand [] {
-                        new RuleOperand(SaffronRel.class,null),
-                        new RuleOperand(SaffronRel.class,null)
+                    new RelOptRuleOperand [] {
+                        new RelOptRuleOperand(RelNode.class,null),
+                        new RelOptRuleOperand(RelNode.class,null)
                     }));
             this.fromTable = fromTable;
             this.toTable = toTable;
             this.pattern = pattern;
         }
 
-        public void onMatch(VolcanoRuleCall call)
+        public void onMatch(RelOptRuleCall call)
         {
             JoinRel join = (JoinRel) call.rels[0];
-            SaffronRel left = call.rels[1];
-            SaffronRel right = call.rels[2];
+            RelNode left = call.rels[1];
+            RelNode right = call.rels[2];
             if (left.isAccessTo(fromTable) && right.isAccessTo(toTable)) {
                 ;
             } else {

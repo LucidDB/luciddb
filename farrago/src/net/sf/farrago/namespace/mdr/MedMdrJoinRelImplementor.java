@@ -19,16 +19,16 @@
 
 package net.sf.farrago.namespace.mdr;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.rex.*;
-import net.sf.saffron.util.*;
-import net.sf.saffron.runtime.*;
-import net.sf.saffron.oj.rel.*;
-import net.sf.saffron.oj.util.*;
-import net.sf.saffron.oj.*;
-import net.sf.saffron.oj.stmt.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.rex.*;
+import org.eigenbase.util.*;
+import org.eigenbase.runtime.*;
+import org.eigenbase.oj.rel.*;
+import org.eigenbase.oj.util.*;
+import org.eigenbase.oj.*;
+import org.eigenbase.oj.stmt.*;
 
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
@@ -57,13 +57,13 @@ class MedMdrJoinRelImplementor
     
     private MedMdrJoinRel joinRel;
 
-    private SaffronRel leftRel;
+    private RelNode leftRel;
     
     private MedMdrClassExtentRel rightRel;
     
     private Expression leftChildExp;
     
-    private SaffronType outputRowType;
+    private RelDataType outputRowType;
     
     private OJClass outputRowClass;
     
@@ -71,9 +71,9 @@ class MedMdrJoinRelImplementor
     
     private Variable varOutputRow;
     
-    private SaffronType leftRowType;
+    private RelDataType leftRowType;
     
-    private SaffronField [] leftFields;
+    private RelDataTypeField [] leftFields;
 
     private OJClass leftRowClass;
     
@@ -339,7 +339,7 @@ class MedMdrJoinRelImplementor
     
     private void generateRowCalc(RexNode [] rightExps)
     {
-        SaffronField [] fields = outputRowType.getFields();
+        RelDataTypeField [] fields = outputRowType.getFields();
         int nLeft = leftRowType.getFieldCount();
         int n = outputRowType.getFieldCount();
         for (int i = 0; i < n; i++) {

@@ -19,8 +19,8 @@
 
 package net.sf.farrago.query;
 
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
 
 /**
  * FennelPullSingleRel is a {@link FennelSingleRel} which is also a
@@ -36,15 +36,15 @@ public abstract class FennelPullSingleRel
     /**
      * Creates a new FennelPullSingleRel object.
      *
-     * @param cluster VolcanoCluster for this rel
+     * @param cluster RelOptCluster for this rel
      * @param child input rel
      */
-    protected FennelPullSingleRel(VolcanoCluster cluster,SaffronRel child)
+    protected FennelPullSingleRel(RelOptCluster cluster,RelNode child)
     {
         super(cluster,child);
     }
     
-    // implement SaffronRel
+    // implement RelNode
     public CallingConvention getConvention()
     {
         return FennelPullRel.FENNEL_PULL_CONVENTION;

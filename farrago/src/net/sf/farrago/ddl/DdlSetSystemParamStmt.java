@@ -25,7 +25,7 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.resource.*;
 
-import net.sf.saffron.sql.*;
+import org.eigenbase.sql.*;
 
 import java.lang.reflect.*;
 import javax.jmi.reflect.*;

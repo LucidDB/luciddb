@@ -21,7 +21,7 @@ package net.sf.farrago.namespace.impl;
 
 import net.sf.farrago.namespace.*;
 
-import net.sf.saffron.core.*;
+import org.eigenbase.relopt.*;
 
 import java.util.*;
 import java.sql.*;
@@ -66,7 +66,7 @@ public abstract class MedAbstractDataServer
     }
     
     // implement FarragoMedDataServer
-    public void registerRules(SaffronPlanner planner)
+    public void registerRules(RelOptPlanner planner)
     {
     }
 

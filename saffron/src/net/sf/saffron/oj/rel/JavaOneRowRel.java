@@ -22,11 +22,12 @@
 
 package net.sf.saffron.oj.rel;
 
-import net.sf.saffron.oj.util.*;
-import net.sf.saffron.opt.CallingConvention;
-import net.sf.saffron.opt.VolcanoCluster;
-import net.sf.saffron.rel.OneRowRel;
-import net.sf.saffron.util.Util;
+import org.eigenbase.oj.rel.*;
+import org.eigenbase.oj.util.*;
+import org.eigenbase.relopt.CallingConvention;
+import org.eigenbase.relopt.RelOptCluster;
+import org.eigenbase.rel.OneRowRel;
+import org.eigenbase.util.Util;
 
 import openjava.ptree.*;
 
@@ -39,7 +40,7 @@ public class JavaOneRowRel extends OneRowRel
 {
     //~ Constructors ----------------------------------------------------------
 
-    public JavaOneRowRel(VolcanoCluster cluster)
+    public JavaOneRowRel(RelOptCluster cluster)
     {
         super(cluster);
     }
@@ -51,7 +52,7 @@ public class JavaOneRowRel extends OneRowRel
         return CallingConvention.JAVA;
     }
 
-    // implement SaffronRel
+    // implement RelNode
     public Object clone()
     {
         return new JavaOneRowRel(cluster);

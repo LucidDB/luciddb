@@ -77,11 +77,6 @@ else
     . fennelenv.sh `pwd`
 fi
 
-# Build Saffron
-cd ../saffron
-ant clean
-ant
-
 # Build Farrago catalog and everything else, then run tests
 cd ../farrago
 ant clean

@@ -24,8 +24,9 @@ import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 import net.sf.farrago.session.*;
 
-import net.sf.saffron.util.*;
-import net.sf.saffron.core.*;
+import org.eigenbase.util.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
 
 import java.io.*;
 import java.sql.*;
@@ -58,7 +59,7 @@ class FarragoExecutableJavaStmt extends FarragoExecutableStmtImpl
     // will keep cache memory usage down.
     private final Class rowClass;
     
-    private final SaffronType rowType;
+    private final RelDataType rowType;
 
     private final Method method;
 
@@ -69,8 +70,8 @@ class FarragoExecutableJavaStmt extends FarragoExecutableStmtImpl
     FarragoExecutableJavaStmt(
         File packageDir,
         Class rowClass,
-        SaffronType preparedRowType,
-        SaffronType dynamicParamRowType,
+        RelDataType preparedRowType,
+        RelDataType dynamicParamRowType,
         Method method,
         String xmiFennelPlan,
         boolean isDml,
@@ -88,7 +89,7 @@ class FarragoExecutableJavaStmt extends FarragoExecutableStmtImpl
     }
 
     // implement FarragoSessionExecutableStmt
-    public SaffronType getRowType()
+    public RelDataType getRowType()
     {
         return rowType;
     }

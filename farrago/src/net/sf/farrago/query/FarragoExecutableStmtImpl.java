@@ -23,7 +23,8 @@ import net.sf.farrago.util.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.session.*;
 
-import net.sf.saffron.core.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
 
 import java.util.*;
 
@@ -40,10 +41,10 @@ abstract class FarragoExecutableStmtImpl
 {
     private final boolean isDml;
 
-    private SaffronType dynamicParamRowType;
+    private RelDataType dynamicParamRowType;
 
     protected FarragoExecutableStmtImpl(
-        SaffronType dynamicParamRowType,
+        RelDataType dynamicParamRowType,
         boolean isDml)
     {
         this.isDml = isDml;
@@ -57,7 +58,7 @@ abstract class FarragoExecutableStmtImpl
     }
 
     // implement FarragoSessionExecutableStmt
-    public SaffronType getDynamicParamRowType()
+    public RelDataType getDynamicParamRowType()
     {
         return dynamicParamRowType;
     }
@@ -68,8 +69,8 @@ abstract class FarragoExecutableStmtImpl
         return Collections.EMPTY_SET;
     }
     
-    protected static SaffronType forgetTypeFactory(
-        SaffronType rowType)
+    protected static RelDataType forgetTypeFactory(
+        RelDataType rowType)
     {
         // Need to forget about the type factory that was used during stmt
         // preparation so that it can be garbage collected.  So, create a
@@ -81,9 +82,9 @@ abstract class FarragoExecutableStmtImpl
         // for an accurate memory usage computation and (c) allow for
         // persistent caching.  Use RmiJdbc serialization support?
         
-        SaffronTypeFactory newTypeFactory = new SaffronTypeFactoryImpl();
+        RelDataTypeFactory newTypeFactory = new RelDataTypeFactoryImpl();
 
-        final SaffronField [] fields = rowType.getFields();
+        final RelDataTypeField [] fields = rowType.getFields();
 
         for (int i = 0; i < fields.length; ++i) {
             // FIXME:  get rid of this once all types are guaranteed to be
@@ -97,7 +98,7 @@ abstract class FarragoExecutableStmtImpl
         }
         
         return newTypeFactory.createProjectType(
-            new SaffronTypeFactory.FieldInfo() 
+            new RelDataTypeFactory.FieldInfo() 
             {
                 public int getFieldCount()
                 {
@@ -109,7 +110,7 @@ abstract class FarragoExecutableStmtImpl
                     return fields[index].getName();
                 }
 
-                public SaffronType getFieldType(int index)
+                public RelDataType getFieldType(int index)
                 {
                     return fields[index].getType();
                 }

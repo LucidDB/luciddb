@@ -27,10 +27,10 @@ import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 import net.sf.farrago.query.*;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.util.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.util.*;
 
 import java.util.*;
 import java.util.List;
@@ -69,7 +69,7 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
     /**
      * Creates a new FtrsIndexScanRel object.
      *
-     * @param cluster VolcanoCluster for this rel
+     * @param cluster RelOptCluster for this rel
      * @param ftrsTable table being scanned
      * @param index index to use for table access
      * @param connection connection
@@ -79,10 +79,10 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
      * if false, rows can be returned out of order
      */
     public FtrsIndexScanRel(
-        VolcanoCluster cluster,
+        RelOptCluster cluster,
         FtrsTable ftrsTable,
         CwmSqlindex index,
-        SaffronConnection connection,
+        RelOptConnection connection,
         Integer [] projectedColumns,
         boolean isOrderPreserving)
     {
@@ -112,7 +112,7 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
             columnOrdinal);
     }
 
-    // implement SaffronRel
+    // implement RelNode
     public CallingConvention getConvention()
     {
         return FennelPullRel.FENNEL_PULL_CONVENTION;
@@ -124,21 +124,21 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
         return ftrsTable.getPreparingStmt();
     }
 
-    // implement SaffronRel
-    public PlanCost computeSelfCost(SaffronPlanner planner)
+    // implement RelNode
+    public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
         return computeCost(planner,getRows());
     }
 
-    // implement SaffronRel
-    public SaffronType deriveRowType()
+    // implement RelNode
+    public RelDataType deriveRowType()
     {
         if (projectedColumns == null) {
             return super.deriveRowType();
         } else {
-            final SaffronField [] fields = table.getRowType().getFields();
+            final RelDataTypeField [] fields = table.getRowType().getFields();
             return cluster.typeFactory.createProjectType(
-                new SaffronTypeFactory.FieldInfo() {
+                new RelDataTypeFactory.FieldInfo() {
                     public int getFieldCount()
                     {
                         return projectedColumns.length;
@@ -150,7 +150,7 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
                         return fields[i].getName();
                     }
 
-                    public SaffronType getFieldType(int index)
+                    public RelDataType getFieldType(int index)
                     {
                         final int i = projectedColumns[index].intValue();
                         return fields[i].getType();
@@ -160,7 +160,7 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
     }
 
     // override TableAccess
-    public void explain(PlanWriter pw)
+    public void explain(RelOptPlanWriter pw)
     {
         Object projection;
         if (projectedColumns == null) {
@@ -197,8 +197,8 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
         return scanStream;
     }
 
-    // implement SaffronRel
-    PlanCost computeCost(SaffronPlanner planner,double dRows)
+    // implement RelNode
+    RelOptCost computeCost(RelOptPlanner planner,double dRows)
     {
         // TODO:  compute page-based I/O cost
         // CPU cost is proportional to number of columns projected

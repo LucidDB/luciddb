@@ -26,7 +26,7 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.plugin.*;
 
-import net.sf.saffron.util.*;
+import org.eigenbase.util.*;
 
 import java.util.*;
 

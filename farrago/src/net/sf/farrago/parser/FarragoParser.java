@@ -20,6 +20,8 @@
 
 package net.sf.farrago.parser;
 
+import org.eigenbase.resource.*;
+
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.resource.*;
@@ -195,7 +197,7 @@ public class FarragoParser implements FarragoSessionParser
         try {
             return parserImpl.FarragoSqlStmtEof();
         } catch (ParseException ex) {
-            throw FarragoResource.instance().newParserError(
+            throw EigenbaseResource.instance().newParserError(
                 ex.getMessage(),
                 ex);
         } finally {

@@ -13,20 +13,20 @@ import openjava.mop.Environment;
 import net.sf.saffron.oj.xlat.OJSchemaExpander;
 import net.sf.saffron.oj.xlat.OJQueryExpander;
 import net.sf.saffron.core.EmptySaffronConnection;
-import net.sf.saffron.core.SaffronSchema;
-import net.sf.saffron.core.SaffronConnection;
+import org.eigenbase.relopt.RelOptSchema;
+import org.eigenbase.relopt.RelOptConnection;
 
 /**
  * <code>SaffronExpansionApplier</code> performs the same expansions as its
  * base class {@link ExpansionApplier}, plus it expands references to objects
- * of type {@link SaffronSchema} and converts queries into regular Java code.
+ * of type {@link RelOptSchema} and converts queries into regular Java code.
  *
  * @author jhyde
  * @since 15 February, 2002
  * @version $Id$
  **/
 public class SaffronExpansionApplier extends ExpansionApplier {
-    private SaffronConnection connection = new EmptySaffronConnection();
+    private RelOptConnection connection = new EmptySaffronConnection();
 
     public SaffronExpansionApplier( Environment env ) {
         super( env );

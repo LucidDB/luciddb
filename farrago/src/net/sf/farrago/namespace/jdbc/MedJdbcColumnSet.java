@@ -24,14 +24,13 @@ import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
-import net.sf.saffron.ext.*;
-import net.sf.saffron.sql.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.rel.jdbc.*;
-import net.sf.saffron.rel.convert.*;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.core.*;
-import net.sf.saffron.util.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.rel.jdbc.*;
+import org.eigenbase.rel.convert.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.util.*;
 
 import java.sql.*;
 import java.util.*;
@@ -58,7 +57,7 @@ class MedJdbcColumnSet extends MedAbstractColumnSet
         String [] localName,
         SqlSelect select,
         SqlDialect dialect,
-        SaffronType rowType)
+        RelDataType rowType)
     {
         super(
             localName,
@@ -71,17 +70,17 @@ class MedJdbcColumnSet extends MedAbstractColumnSet
         this.dialect = dialect;
     }
     
-    // implement SaffronTable
+    // implement RelOptTable
     public double getRowCount()
     {
         // TODO:  use getStatistics?
         return super.getRowCount();
     }
     
-    // implement SaffronTable
-    public SaffronRel toRel(
-        VolcanoCluster cluster,
-        SaffronConnection connection)
+    // implement RelOptTable
+    public RelNode toRel(
+        RelOptCluster cluster,
+        RelOptConnection connection)
     {
         return new MedJdbcQueryRel(
             this,

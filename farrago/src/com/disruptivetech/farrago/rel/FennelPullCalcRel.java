@@ -23,10 +23,11 @@ import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.query.*;
 
 import com.disruptivetech.farrago.calc.RexToCalcTranslator;
-import net.sf.saffron.core.*;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.rex.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import com.disruptivetech.farrago.volcano.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.rex.*;
 
 /**
  * FennelPullCalcRel is a pull-mode implementation of {@link FennelCalcRel}.
@@ -41,32 +42,32 @@ public class FennelPullCalcRel
     /**
      * Creates a new FennelPullCalcRel object.
      *
-     * @param cluster VolcanoCluster for this rel
+     * @param cluster RelOptCluster for this rel
      * @param child rel producing rows to be Calced
      * @param rowType Row type
      * @param projectExprs Expressions returned by the calculator
      * @param conditionExpr Filter condition, may be null
      */
     public FennelPullCalcRel(
-        VolcanoCluster cluster,
-        SaffronRel child,
-        SaffronType rowType,
+        RelOptCluster cluster,
+        RelNode child,
+        RelDataType rowType,
         RexNode[] projectExprs,
         RexNode conditionExpr)
     {
         super(cluster,child,rowType,projectExprs,conditionExpr);
     }
     
-    // implement SaffronRel
+    // implement RelNode
     public Object clone()
     {
         return new FennelPullCalcRel(
-            cluster, OptUtil.clone(child), rowType,
+            cluster, RelOptUtil.clone(child), rowType,
             RexUtil.clone(getProjectExprs()),
             RexUtil.clone(getConditionExpr()));
     }
 
-    // implement SaffronRel
+    // implement RelNode
     public CallingConvention getConvention()
     {
         return FennelPullRel.FENNEL_PULL_CONVENTION;

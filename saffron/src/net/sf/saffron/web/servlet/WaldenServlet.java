@@ -21,8 +21,8 @@
 
 package net.sf.saffron.web.servlet;
 
-import net.sf.saffron.util.SaffronProperties;
-import net.sf.saffron.util.Util;
+import org.eigenbase.util.SaffronProperties;
+import org.eigenbase.util.Util;
 import net.sf.saffron.walden.Handler;
 import net.sf.saffron.walden.Interpreter;
 import net.sf.saffron.walden.PrintHandler;

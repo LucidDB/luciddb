@@ -10,11 +10,11 @@ package openjava.ptree;
 import openjava.mop.Environment;
 import openjava.mop.OJClass;
 import openjava.tools.parser.ParserConstants;
-import net.sf.saffron.core.SaffronType;
-import net.sf.saffron.core.SaffronTypeFactory;
-import net.sf.saffron.core.SaffronTypeFactoryImpl;
-import net.sf.saffron.util.Util;
-import net.sf.saffron.oj.util.*;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.reltype.RelDataTypeFactoryImpl;
+import org.eigenbase.util.Util;
+import org.eigenbase.oj.util.*;
 
 /**
  * JoinExpression is a pair of joined relational expressions appearing in the
@@ -96,13 +96,13 @@ public class JoinExpression extends SetExpression {
 
 	public OJClass deriveRowType(Environment env) throws Exception {
 		Expression[] expressions = flatten(this);
-        final SaffronTypeFactory typeFactory = SaffronTypeFactoryImpl.threadInstance();
-        SaffronType[] types = new SaffronType[expressions.length];
+        final RelDataTypeFactory typeFactory = RelDataTypeFactoryImpl.threadInstance();
+        RelDataType[] types = new RelDataType[expressions.length];
 		for (int i = 0; i < expressions.length; i++) {
             final OJClass ojClass = expressions[i].getRowType(env);
             types[i] = OJUtil.ojToType(typeFactory, ojClass);
 		}
-        final SaffronType joinType = typeFactory.createJoinType(types);
+        final RelDataType joinType = typeFactory.createJoinType(types);
         return OJUtil.typeToOJClass(joinType);
 	}
 }

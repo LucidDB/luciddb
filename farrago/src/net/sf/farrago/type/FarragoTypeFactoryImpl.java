@@ -30,12 +30,12 @@ import net.sf.farrago.type.runtime.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.util.*;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.oj.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.util.*;
-import net.sf.saffron.sql.type.*;
-import net.sf.saffron.sql.SqlCollation;
+import org.eigenbase.reltype.*;
+import org.eigenbase.oj.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.util.*;
+import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.SqlCollation;
 
 import openjava.mop.*;
 
@@ -53,7 +53,7 @@ import javax.jmi.reflect.*;
 
 /**
  * FarragoTypeFactoryImpl is the Farrago-specific implementation of the
- * Saffron TypeFactory interface.
+ * RelDataTypeFactory interface.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -203,15 +203,15 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         return catalog;
     }
 
-    // override SaffronTypeFactoryImpl
-    public SaffronType createJoinType(SaffronType [] types)
+    // override RelDataTypeFactoryImpl
+    public RelDataType createJoinType(RelDataType [] types)
     {
         assert(types.length == 2);
         return JoinRel.createJoinType(this,types[0],types[1]);
     }
 
-    // override SaffronTypeFactoryImpl
-    public SaffronType createSqlType(SqlTypeName typeName)
+    // override RelDataTypeFactoryImpl
+    public RelDataType createSqlType(SqlTypeName typeName)
     {
         if (typeName.isSpecial())
             {
@@ -238,17 +238,17 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         return prototype;
     }
 
-    // override SaffronTypeFactoryImpl
-    public SaffronType createSqlType(SqlTypeName typeName, int length)
+    // override RelDataTypeFactoryImpl
+    public RelDataType createSqlType(SqlTypeName typeName, int length)
     {
         return createSqlType(typeName, length, 0);
     }
 
-    // override SaffronTypeFactoryImpl
-    public SaffronType createSqlType(
+    // override RelDataTypeFactoryImpl
+    public RelDataType createSqlType(
         SqlTypeName typeName, int length, int scale)
     {
-        SaffronType type = createSqlType(typeName);
+        RelDataType type = createSqlType(typeName);
         assert(type instanceof FarragoPrecisionType);
         FarragoPrecisionType precisionType =
             (FarragoPrecisionType) type;
@@ -336,14 +336,14 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     }
 
     // implement FarragoTypeFactory
-    public SaffronType createColumnSetType(CwmColumnSet columnSet)
+    public RelDataType createColumnSetType(CwmColumnSet columnSet)
     {
         final List featureList = columnSet.getFeature();
         if (featureList.isEmpty()) {
             return null;
         }
         return createProjectType(
-            new SaffronTypeFactory.FieldInfo() {
+            new RelDataTypeFactory.FieldInfo() {
                 public int getFieldCount()
                 {
                     return featureList.size();
@@ -356,7 +356,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
                     return column.getName();
                 }
 
-                public SaffronType getFieldType(int index)
+                public RelDataType getFieldType(int index)
                 {
                     final CwmColumn column =
                         (CwmColumn) featureList.get(index);
@@ -366,11 +366,11 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     }
 
     // implement FarragoTypeFactory
-    public SaffronType createResultSetType(final ResultSetMetaData metaData)
+    public RelDataType createResultSetType(final ResultSetMetaData metaData)
     {
         final FarragoTypeFactoryImpl factory = this;
         return createProjectType(
-            new SaffronTypeFactory.FieldInfo() {
+            new RelDataTypeFactory.FieldInfo() {
                 public int getFieldCount()
                 {
                     try {
@@ -390,7 +390,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
                     }
                 }
 
-                public SaffronType getFieldType(int index)
+                public RelDataType getFieldType(int index)
                 {
                     int iOneBased = index + 1;
                     try {
@@ -477,7 +477,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     }
 
     // copy a FarragoAtomicType, setting nullability
-    private SaffronType copyFarragoAtomicType(
+    private RelDataType copyFarragoAtomicType(
         FarragoAtomicType type, boolean nullable)
     {
         if (type instanceof FarragoDateTimeType) {
@@ -516,8 +516,8 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         }
     }
 
-    // override SaffronTypeFactoryImpl
-    public SaffronType createTypeWithNullability(SaffronType type,boolean nullable)
+    // override RelDataTypeFactoryImpl
+    public RelDataType createTypeWithNullability(RelDataType type,boolean nullable)
     {
         if (type instanceof FarragoAtomicType) {
             if (type.isNullable() == nullable)
@@ -529,8 +529,8 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         }
     }
 
-    // override SaffronTypeFactoryImpl
-    public SaffronType copyType(SaffronType type)
+    // override RelDataTypeFactoryImpl
+    public RelDataType copyType(RelDataType type)
     {
         if (type instanceof FarragoAtomicType) {
             return copyFarragoAtomicType((FarragoAtomicType) type, type.isNullable());
@@ -539,7 +539,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         }
     }
 
-    public SaffronType createTypeWithCharsetAndCollation(SaffronType type,
+    public RelDataType createTypeWithCharsetAndCollation(RelDataType type,
                                                          Charset charset, SqlCollation collation) {
         assert(type.isCharType()) : "type.isCharType()==true";
         if (!(type instanceof FarragoAtomicType)) {
@@ -594,7 +594,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     }
 
     // override OJTypeFactoryImpl
-    public OJClass toOJClass(OJClass declarer,SaffronType type)
+    public OJClass toOJClass(OJClass declarer,RelDataType type)
     {
         if (type instanceof FarragoType) {
             FarragoType farragoType = (FarragoType) type;
@@ -609,13 +609,13 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     }
 
     // override OJTypeFactoryImpl
-    public SaffronType toType(final OJClass ojClass)
+    public RelDataType toType(final OJClass ojClass)
     {
         if (ojClass instanceof OJTypedClass) {
             return ((OJTypedClass) ojClass).type;
         } else {
-            SaffronType type =
-                (SaffronType) ojPrimitiveToFarragoType.get(ojClass);
+            RelDataType type =
+                (RelDataType) ojPrimitiveToFarragoType.get(ojClass);
             if (type != null) {
                 return type;
             }
@@ -633,10 +633,10 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     {
         List fieldList = new ArrayList();
         if (flattenFields(recordType.getFields(),fieldList)) {
-            SaffronType [] types = new SaffronType[fieldList.size()];
+            RelDataType [] types = new RelDataType[fieldList.size()];
             String [] fieldNames = new String[types.length];
             for (int i = 0; i < types.length; ++i) {
-                SaffronField field = (SaffronField) fieldList.get(i);
+                RelDataTypeField field = (RelDataTypeField) fieldList.get(i);
                 types[i] = field.getType();
                 // FIXME jvs 27-May-2004:  uniquify
                 fieldNames[i] = field.getName();
@@ -646,7 +646,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         return super.createOJClassForRecordType(declarer,recordType);
     }
 
-    private boolean flattenFields(SaffronField [] fields,List list)
+    private boolean flattenFields(RelDataTypeField [] fields,List list)
     {
         boolean nested = false;
         for (int i = 0; i < fields.length; ++i) {
@@ -660,8 +660,8 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         return nested;
     }
 
-    // override SaffronTypeFactoryImpl
-    public SaffronType leastRestrictive(SaffronType [] types)
+    // override RelDataTypeFactoryImpl
+    public RelDataType leastRestrictive(RelDataType [] types)
     {
         assert(types.length > 0);
         if (types[0].isProject()) {
@@ -703,20 +703,20 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
                     // If either type is LOB, then result is LOB with no precision.
                     // Otherwise, if either is variable width, result is variable
                     // width.  Otherwise, result is fixed width.
-                    SaffronType saffronType;
+                    RelDataType relDataType;
                     if (type1.isLob()) {
-                        saffronType = createSqlType(getSqlTypeName(type1));
+                        relDataType = createSqlType(getSqlTypeName(type1));
                     } else if (type2.isLob()) {
-                        saffronType = createSqlType(getSqlTypeName(type2));
+                        relDataType = createSqlType(getSqlTypeName(type2));
                     } else if (type1.isBoundedVariableWidth()) {
-                        saffronType = createSqlType(
+                        relDataType = createSqlType(
                             getSqlTypeName(type1),precision);
                     } else {
                         // this catch-all case covers type2 variable, and both fixed
-                        saffronType = createSqlType(
+                        relDataType = createSqlType(
                             getSqlTypeName(type2),precision);
                     }
-                    resultType = (FarragoAtomicType) saffronType;
+                    resultType = (FarragoAtomicType) relDataType;
                 } else if (type.isExactNumeric()) {
                     if (resultType.isExactNumeric()) {
                         if (!type.equals(resultType)) {
@@ -761,7 +761,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
 
     // implement FarragoTypeFactory
     public void convertFieldToCwmColumn(
-        SaffronField field,
+        RelDataTypeField field,
         CwmColumn column)
     {
         FarragoAtomicType type = (FarragoAtomicType) field.getType();
@@ -884,7 +884,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
          * @param name .
          * @param type .
          */
-        ExposedFieldImpl(String name, int index, SaffronType type)
+        ExposedFieldImpl(String name, int index, RelDataType type)
         {
             super(name,index,type);
         }
@@ -895,12 +895,12 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
      * registered.
      * Protect against bogus factory values.
      */
-    protected synchronized SaffronType canonize(SaffronType type) {
-        SaffronType saffronType = super.canonize(type);
-        if (saffronType instanceof FarragoType) {
-            assert ((FarragoType)saffronType).factory == this;
+    protected synchronized RelDataType canonize(RelDataType type) {
+        RelDataType relDataType = super.canonize(type);
+        if (relDataType instanceof FarragoType) {
+            assert ((FarragoType)relDataType).factory == this;
         }
-        return saffronType;
+        return relDataType;
     }
 }
 

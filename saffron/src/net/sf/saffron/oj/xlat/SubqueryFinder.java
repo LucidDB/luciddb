@@ -22,12 +22,12 @@
 
 package net.sf.saffron.oj.xlat;
 
-import net.sf.saffron.opt.OptUtil;
-import net.sf.saffron.rel.DistinctRel;
-import net.sf.saffron.rel.JoinRel;
-import net.sf.saffron.rel.ProjectRel;
-import net.sf.saffron.rel.SaffronRel;
-import net.sf.saffron.rex.RexNode;
+import org.eigenbase.relopt.RelOptUtil;
+import org.eigenbase.rel.DistinctRel;
+import org.eigenbase.rel.JoinRel;
+import org.eigenbase.rel.ProjectRel;
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.rex.RexNode;
 import net.sf.saffron.trace.SaffronTrace;
 import openjava.mop.Environment;
 import openjava.mop.OJClass;
@@ -73,10 +73,10 @@ class SubqueryFinder extends ScopeHandler
             tracer.log(Level.FINE,
                 "SubqueryFinder: found IN: left=[" + left + "], right=["
                 + right + "]");
-            SaffronRel oldFrom = queryInfo.getRoot();
+            RelNode oldFrom = queryInfo.getRoot();
             RexNode rexLeft = queryInfo.convertExpToInternal(left);
             left = new RexExpression(rexLeft);
-            SaffronRel rightRel = queryInfo.convertFromExpToRel(right);
+            RelNode rightRel = queryInfo.convertFromExpToRel(right);
             OJClass rightRowType = Toolbox.getRowType(queryInfo.env,right);
             boolean wrap = rightRowType.isPrimitive();
             if (wrap) {
@@ -87,7 +87,7 @@ class SubqueryFinder extends ScopeHandler
                         new RexNode [] {
                             queryInfo.rexBuilder.makeJava(
                                     getEnvironment(),
-                                    Toolbox.box(rightRowType,OptUtil.makeReference(0)))
+                                    Toolbox.box(rightRowType,RelOptUtil.makeReference(0)))
                         },
                         new String [] { null },
                         ProjectRel.Flags.None);
@@ -97,10 +97,10 @@ class SubqueryFinder extends ScopeHandler
             Expression v; // variable with which to refer to the value
             Expression condition;
             if (!isNullable) {
-                v = OptUtil.makeReference(1);
+                v = RelOptUtil.makeReference(1);
                 condition =
                     new BinaryExpression(
-                        OptUtil.makeReference(0),
+                        RelOptUtil.makeReference(0),
                         BinaryExpression.NOTEQUAL,
                         Literal.constantNull());
             } else {
@@ -116,13 +116,13 @@ class SubqueryFinder extends ScopeHandler
                         },
                         new String [] { "v","b" },
                         ProjectRel.Flags.Boxed);
-                v = OptUtil.makeFieldAccess(1,0);
+                v = RelOptUtil.makeFieldAccess(1,0);
                 condition =
                     new FieldAccess(
-                        OptUtil.makeFieldAccess(0,1),
+                        RelOptUtil.makeFieldAccess(0,1),
                         SyntheticClass.makeField(1));
             }
-            SaffronRel rightDistinct =
+            RelNode rightDistinct =
                 new DistinctRel(queryInfo.cluster,rightRel);
             queryInfo.leaves.add(rightDistinct);
 
@@ -178,16 +178,16 @@ class SubqueryFinder extends ScopeHandler
             Expression right = p.getExpression();
             tracer.log(Level.FINE,
                 "SubqueryFinder: found EXISTS: expr=[" + right + "]");
-            SaffronRel oldFrom = queryInfo.getRoot();
-            SaffronRel rightRel = queryInfo.convertFromExpToRel(right);
-            SaffronRel rightProject =
+            RelNode oldFrom = queryInfo.getRoot();
+            RelNode rightRel = queryInfo.convertFromExpToRel(right);
+            RelNode rightProject =
                 new ProjectRel(
                     queryInfo.cluster,
                     rightRel,
                     new RexNode[] { queryInfo.rexBuilder.makeLiteral(true) },
                     null,
                     ProjectRel.Flags.None);
-            SaffronRel rightDistinct =
+            RelNode rightDistinct =
                 new DistinctRel(queryInfo.cluster,rightProject);
             queryInfo.leaves.add(rightDistinct);
             JoinRel join =
@@ -202,7 +202,7 @@ class SubqueryFinder extends ScopeHandler
 
             // Replace the 'exists' with a test as to whether the single
             // boolean column of the indicator relation is true.
-            Expression condition = OptUtil.makeFieldAccess(0,1);
+            Expression condition = RelOptUtil.makeFieldAccess(0,1);
             p.replace(condition);
 
             // signal that we want to stop iteration (not really an error)

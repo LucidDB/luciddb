@@ -22,13 +22,14 @@
 
 package net.sf.saffron.oj.rel;
 
-import net.sf.saffron.core.SaffronPlanner;
-import net.sf.saffron.opt.CallingConvention;
-import net.sf.saffron.opt.PlanCost;
-import net.sf.saffron.opt.VolcanoCluster;
-import net.sf.saffron.rel.DistinctRel;
-import net.sf.saffron.rel.SaffronRel;
-import net.sf.saffron.util.Util;
+import org.eigenbase.oj.rel.*;
+import org.eigenbase.relopt.RelOptPlanner;
+import org.eigenbase.relopt.CallingConvention;
+import org.eigenbase.relopt.RelOptCost;
+import org.eigenbase.relopt.RelOptCluster;
+import org.eigenbase.rel.DistinctRel;
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.util.Util;
 import openjava.ptree.ParseTree;
 import openjava.ptree.StatementList;
 
@@ -41,7 +42,7 @@ public class JavaExistsRel extends DistinctRel implements JavaLoopRel
 {
     //~ Constructors ----------------------------------------------------------
 
-    public JavaExistsRel(VolcanoCluster cluster,SaffronRel child)
+    public JavaExistsRel(RelOptCluster cluster,RelNode child)
     {
         super(cluster,child);
         assert child.getRowType().getFieldCount() == 0;
@@ -54,13 +55,13 @@ public class JavaExistsRel extends DistinctRel implements JavaLoopRel
         return CallingConvention.JAVA;
     }
 
-    // implement SaffronRel
+    // implement RelNode
     public Object clone()
     {
         return new JavaExistsRel(cluster,child);
     }
 
-    public PlanCost computeSelfCost(SaffronPlanner planner)
+    public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
         // cheaper than JavaDistinct
         double dRows = 1;

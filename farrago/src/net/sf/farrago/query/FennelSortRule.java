@@ -21,10 +21,9 @@ package net.sf.farrago.query;
 
 import net.sf.farrago.util.*;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.util.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.util.*;
 
 import openjava.ptree.*;
 
@@ -38,7 +37,7 @@ import java.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class FennelSortRule extends VolcanoRule
+class FennelSortRule extends RelOptRule
 {
     //~ Constructors ----------------------------------------------------------
 
@@ -48,25 +47,25 @@ class FennelSortRule extends VolcanoRule
     public FennelSortRule()
     {
         super(
-            new RuleOperand(
+            new RelOptRuleOperand(
                 SortRel.class,
-                new RuleOperand [] { new RuleOperand(SaffronRel.class,null) }));
+                new RelOptRuleOperand [] { new RelOptRuleOperand(RelNode.class,null) }));
     }
 
     //~ Methods ---------------------------------------------------------------
 
-    // implement VolcanoRule
+    // implement RelOptRule
     public CallingConvention getOutConvention()
     {
         return FennelPullRel.FENNEL_PULL_CONVENTION;
     }
 
-    // implement VolcanoRule
-    public void onMatch(VolcanoRuleCall call)
+    // implement RelOptRule
+    public void onMatch(RelOptRuleCall call)
     {
         SortRel sortRel = (SortRel) call.rels[0];
-        SaffronRel relInput = call.rels[1];
-        SaffronRel fennelInput =
+        RelNode relInput = call.rels[1];
+        RelNode fennelInput =
             convert(relInput,FennelPullRel.FENNEL_PULL_CONVENTION);
         if (fennelInput == null) {
             return;
