@@ -483,8 +483,15 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
                         if (precision == 0) {
                             // REVIEW jvs 4-Mar-2004:  Need a good way to
                             // handle drivers like hsqldb which return 0
-                            // to indicated unlimited precision.
+                            // to indicate unlimited precision.
                             precision = 2048;
+                        }
+                        String charsetName = null;
+                        SqlCollation collation = null;
+                        if (prototype.isCharType()) {
+                            charsetName = repos.getDefaultCharsetName();
+                            collation = new SqlCollation(
+                                SqlCollation.Coercibility.Coercible);
                         }
                         FarragoType specializedType =
                             new FarragoPrecisionType(
@@ -492,8 +499,8 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
                                 isNullable,
                                 precision,
                                 metaData.getScale(iOneBased),
-                                null,
-                                null);
+                                charsetName,
+                                collation);
                         specializedType.factory = factory;
                         return (FarragoType) canonize(specializedType);
                     } catch (SQLException ex) {

@@ -10,10 +10,10 @@
 
 <h1>Farrago SQL/MED Support</h1>
 
-This document describes current plans for supporting SQL/MED
-(Management of External Data), which is the post-SQL99 standard for
-providing uniform relational access to foreign data (both relational
-and non-relational) in other servers.
+This document describes Farrago support for SQL/MED
+(Management of External Data), the portion of the SQL99 standard which
+governs access to foreign data (both relational
+and non-relational) hosted in other servers.
 
 <h2>Overview</h2>
 
@@ -35,22 +35,23 @@ flat-file driver wants to deal with).
 
 </ul>
 
-The current plan is to support the standard DDL interface but not (or
-at least not initially) the standard foreign data wrapper service
-provider interface.  Instead, Farrago defines a somewhat simpler
-non-standard service provider interface together with some prepackaged
-implementations:
+Farrago supports the standard DDL interface but not (currently) the
+standard foreign data wrapper service provider interface.  Instead,
+Farrago defines a somewhat simpler non-standard service provider
+interface together with some prepackaged implementations:
 
 <ul>
 
-<li>FennelRowStore: for access to data stored by Fennel in
+<li>FTRS: for access to data stored by Fennel in
 transactional row format.  This is not really foreign data, but is
 represented as such for architectural uniformity.  A normal CREATE
-TABLE statement uses this implicitly.  Eventually the CREATE TABLE
-statement will be extended to allow creation of other types of table
-storage (e.g. FennelColumnStore for column-store format).
+TABLE statement uses this implicitly.  The CREATE TABLE
+statement has been extended to allow creation of other types of table
+storage (e.g. FCS for Fennel column-store format).
 
-<li>JDBC:  for access to data stored in foreign SQL databases.
+<li>
+<a href="medjdbc.html">JDBC</a>: for access to data stored in foreign
+SQL databases.
 
 <li>MDR:  for access to metadata stored in an MDR repository
 (including Farrago's own system catalog).
@@ -77,7 +78,7 @@ LANGUAGE language-name
 
 Initially, Farrago requires the LANGUAGE to be JAVA.  The LIBRARY name
 specifies the path to a JAR containing the wrapper implementation.
-Here's an example for a foreign data wrapper capable of fetching XML
+Here's a fictitious example for a foreign data wrapper capable of fetching XML
 files via TCP/IP:
 
 <pre><code>
@@ -222,7 +223,7 @@ AND table_name = 'REVIEWERS'
 <h2>Foreign Schema Import</h2>
 
 In order to import metadata for a large number of tables at once, SQL/MED
-provides the IMPORT FOREIGN SCHEMA statement:
+provides the IMPORT FOREIGN SCHEMA statement (not yet supported by Farrago):
 
 <pre><code>
 IMPORT FOREIGN SCHEMA foreign-schema-name
@@ -247,7 +248,7 @@ already exist before the IMPORT statement is executed.
 SQL/MED defines statements such as DROP/ALTER for foreign data
 wrappers, servers, and tables.  It also defines additional DDL for
 controlling mapping of users and routines.  For the details, consult
-the standard.
+the standard.  Currently, Farrago only supports CREATE/DROP.
 
 <h2>Java Interfaces</h2>
 
@@ -255,23 +256,25 @@ The interfaces which must be implemented in order to write a new
 foreign data wrapper are defined in 
 <a 
 href="../api/net/sf/farrago/namespace/package-summary.html#package_description">
-package net.sf.farrago.namespace</a>.  The FarragoNamedColumnSet
-interface is the most challenging--it's really just an import of
-Saffron's table interface, meaning the implementor must understand
-some of Saffron optimization, code generation, etc.  Over time a
-package of abstract bases will be built up which will ease the
-construction of wrappers for simple-minded data.
+package net.sf.farrago.namespace</a>.  Abstract bases in <a
+href="../api/net/sf/farrago/namespace/impl/package-summary.html#package_description">package
+net.sf.farrago.namespace.impl</a> ease the construction of new
+wrappers.  It is currently a fairly difficult task to develop a new
+wrapper; eventually a stripped down service provider interface may be
+defined to make it easier to wrap simple data.  Another option for
+some types of data is to acquire a JDBC driver and use 
+<a href="medjdbc.html">Farrago's JDBC wrapper</a>.
 
 <h2>Repository Model</h2>
 
 Since CWM does not cover any SQL/MED metadata, the repository model
-for foreign data will be in the Farrago extension model (FEM).  Each
-foreign CwmTable will have an association with a corresponding foreign
+for foreign data is defined in the Farrago extension model (FEM).  Each
+foreign table has an association with a corresponding foreign
 server, together with options specified when it was created.  Catalog
-initialization will also create a representation for the local server,
-to which CwmTables stored locally by Fennel will be attached.  Catalog
-initialization will also create virtual catalogs for the local MDR
-repository metadata (using FarragoMdrForeignDataWrapper).  Below is a
+initialization also creates a representation for the local server,
+to which tables stored locally are attached.  Catalog
+initialization creates virtual catalogs for the local MDR
+repository metadata (using MedMdrForeignDataWrapper).  Below is a
 UML structure diagram for the SQL/MED model:
 
 <hr>

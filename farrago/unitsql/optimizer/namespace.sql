@@ -115,6 +115,11 @@ where
 order by
     param_name,exception_name;
 
+-- filter which can be pushed down to foreign DBMS
+-- (but we don't support that yet)
+select dname 
+from hsqldb_demo.sales.dept
+where deptno=20;
     
 -- now explain plans for above queries
 !set outputformat csv
@@ -215,3 +220,8 @@ where
     p."name"='name'
 order by 
     param_name,exception_name;
+
+explain plan for 
+select dname 
+from hsqldb_demo.sales.dept
+where deptno=20;

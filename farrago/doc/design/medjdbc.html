@@ -1,0 +1,262 @@
+<html>
+
+<head>
+<title>Farrago SQL/MED Plugin for JDBC</title>
+<link rel="stylesheet" type="text/css" href="../stylesheet.css" />
+
+</head>
+
+<body>
+
+<h1>Farrago SQL/MED Plugin for JDBC</h1>
+
+Farrago provides a plugin implementing <a href="sqlmed.html">SQL/MED access</a>
+to any foreign DBMS for which a JDBC driver is available.  
+
+<h2>JDBC Foreign Data Wrapper Definition</h2>
+
+Because this plugin is included as part of the standard Farrago
+distribution, a corresponding foreign data wrapper instance named
+<code>SYS_JDBC</code> is predefined by Farrago's initialization
+scripts.  Normally, there is no need to define additional instances.
+
+<h2>JDBC Foreign Server Definition</h2>
+
+In order to access a particular JDBC data source, a corresponding
+foreign server must be defined.  The following server-level options
+can be specified:
+
+<p>
+<table border="1">
+<tr>
+<td>Name</td>
+<td>Description</td>
+</tr>
+<tr>
+<td>DRIVER_CLASS</td>
+<td>Fully qualified name of the JDBC driver class to load</td>
+</tr>
+<tr>
+<td>URL</td>
+<td>JDBC URL specifying the data source to access</td>
+</tr>
+<tr>
+<td>USER_NAME</td>
+<td>User name for login to foreign server</td>
+</tr>
+<tr>
+<td>PASSWORD</td>
+<td>Password for login to foreign server</td>
+</tr>
+<tr>
+<td>SCHEMA_NAME</td> 
+<td>Default schema name to use for qualifying
+tables (optional)
+</td>
+</tr>
+</table>
+<p>
+
+For example:
+
+<pre><code>
+create server ora_sales_server
+foreign data wrapper sys_jdbc
+options(
+    driver_class 'oracle.jdbc.driver.OracleDriver',
+    url 'jdbc:oracle:thin:@localhost:1521:ora1',
+    user_name 'scott',
+    password 'tiger');
+</code></pre>
+
+The following JDBC API calls are made in order to validate a foreign server
+definition:
+
+<ul>
+<li>DriverManager.getConnection
+<li>Connection.getMetaData (if supported)
+<li>DatabaseMetaData.XXX (various calls to test for supported features)
+</ul>
+
+<h2>JDBC Foreign Table Definition</h2>
+
+The only option required when defining a JDBC foreign
+table is <code>TABLE_NAME</code>:
+
+<pre><code>
+create schema ora_sales;
+
+create foreign table ora_sales.dept
+server ora_sales_server
+options(table_name 'DEPT');
+</code></pre>
+
+The following JDBC API calls are made in order to validate a foreign table
+definition:
+
+<ul>
+<li>Connection.getMetaData
+<li>Connection.prepareStatement (if supported)
+<li>PreparedStatement.getMetaData (if supported)
+<li>PreparedStatement.executeQuery (if supported)
+<li>Connection.createStatement (only if PreparedStatement not supported)
+<li>Statement.executeQuery (only if PreparedStatement not supported)
+<li>ResultSet.getMetaData (only if PreparedStatement not supported)
+<li>ResultSetMetaData.getColumnCount
+<li>ResultSetMetaData.getColumnName
+<li>ResultSetMetaData.getColumnType
+<li>ResultSetMetaData.getPrecision
+<li>ResultSetMetaData.getScale
+<li>ResultSetMetaData.isNullable
+</ul>
+
+<h2>Querying JDBC Foreign Tables</h2>
+
+Once defined, JDBC foreign tables may be queried just like local
+tables.  The following two queries are equivalent (the first one
+references the virtual catalog, while the second one references the
+local metadata copy):
+
+<pre><code>
+select * from ora_sales_server.scott.dept;
+
+select * from ora_sales.dept;
+</code></pre>
+
+Currently, relational operators such as filters, projections,
+aggregations, and joins are not pushed down into the SQL query used to
+access the foreign server.  For example, to implement the following
+query, all <code>dept</code> rows are fetched from Oracle, and then
+the filter is applied locally inside of Farrago:
+
+<pre><code>
+select * from ora_sales.dept
+where deptno=10;
+</code></pre>
+
+True distributed query optimization will be implemented in a future
+Farrago release.
+
+<p>
+
+The following JDBC API calls are made in order to execute a query against
+a foreign table:
+
+<ul>
+<li>Connection.createStatement
+<li>Statement.executeQuery
+<li>ResultSet.getXXX (where XXX depends on datatype of column queried)
+</ul>
+
+By default, connections to JDBC data sources are in autocommit mode,
+meaning that each foreign query runs in its own read-only transaction
+which ends automatically when the top-level Farrago query is closed.
+(If a single Farrago query accesses multiple foreign tables, then
+multiple foreign queries may be issued, even if all of the foreign
+tables are from the same data source.)  The default isolation level is
+DBMS-dependent, and so the effect of SQL/MED queries on foreign
+concurrency control (e.g. read locks) also varies by DBMS.
+
+<h2>Updating JDBC Foreign Tables</h2>
+
+<em>NOTE</em>: update functionality is not yet implemented; this
+section describes the planned support.
+
+The Farrago SQL/MED plugin for JDBC will support the standard
+INSERT/UPDATE/DELETE DML statements with a foreign table as the target,
+e.g.
+
+<pre><code>
+insert into ora_sales.dept 
+select * from sales.depts;
+
+delete from ora_sales.dept
+where deptno=10;
+</code></pre>
+
+Each row to be modified by the query corresponds to an individual
+execution of a prepared statement.  The existence of a primary key is
+required for DELETE or UPDATE.
+
+<p>
+
+New SQL/MED options govern the transactional characteristics of the DML:
+
+<p>
+<table border="1">
+<tr>
+<td>Name</td>
+<td>Scope</td>
+<td>Description</td>
+</tr>
+<tr>
+<td>DISTRIBUTED_TRANSACTIONS</td> 
+<td>server</td> 
+<td>
+A setting of 0 (the default) means that when a non-autocommit Farrago 
+transaction accessing this server spans multiple DML statements, all of 
+those statements must target the same server.  
+A setting of 1 requests that non-autocommit Farrago transactions 
+which access this  server should be implemented as distributed transactions 
+(this requires all foreign servers involved to support the 
+javax.sql.XAConnection interface).
+</td>
+</tr>
+<tr>
+<td>READ_ONLY</td> 
+<td>server</td> 
+<td>0 to request DML support.  1 for read-only connection (the default).
+</td>
+</tr>
+<tr>
+<td>ISOLATION_LEVEL</td> 
+<td>server</td> 
+<td>Isolation level to use for all access to this server.  If unspecified,
+default is DBMS-dependent.  This setting is ignored for distributed transactions
+(for which the isolation level is based on the Farrago session).
+</td>
+</tr>
+<tr>
+<td>TRANSACTION_ROW_LIMIT</td> 
+<td>server or table (table overrides server)</td> 
+<td>
+Number of rows to modify before committing transaction and starting a
+new one.  Default is 1 (autocommit each row).  A setting of 0 means
+only commit once all rows have been processed.  This option is ignored
+when autocommit is disabled in the Farrago session.
+</td>
+</tr>
+<tr>
+<td>BATCH_ROW_LIMIT</td> 
+<td>server or table (table overrides server)</td> 
+<td>
+Number of rows to send to foreign server per batch.  Default is 1.
+</td>
+</tr>
+</table>
+
+<p>
+
+The following JDBC API calls are made in order to execute DML against
+a foreign table:
+
+<ul>
+<li>Connection.prepareStatement
+<li>PreparedStatement.setXXX (where XXX depends on datatype of column updated)
+<li>PreparedStatement.executeUpdate
+<li>PreparedStatement.addBatch (if BATCH_ROW_LIMIT specified)
+<li>Statement.executeBatch (if BATCH_ROW_LIMIT specified)
+<li>Connection.setReadOnly (if supported)
+<li>Connection.setTransactionIsolation 
+    (if <code>ISOLATION_LEVEL</code> specified)
+<li>Connection.setAutoCommit
+    (if <code>TRANSACTION_ROW_LIMIT</code> specified)
+<li>Connection.commit
+    (if <code>TRANSACTION_ROW_LIMIT</code> specified)
+<li>Connection.rollback
+    (if <code>TRANSACTION_ROW_LIMIT</code> specified)
+<li>DatabaseMetaData.getPrimaryKeys (for UPDATE/DELETE)
+</ul>
+
+</body>
+</html>
