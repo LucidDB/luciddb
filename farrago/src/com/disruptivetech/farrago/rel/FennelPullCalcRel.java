@@ -66,12 +66,17 @@ public class FennelPullCalcRel extends FennelCalcRel implements FennelPullRel
     // implement RelNode
     public Object clone()
     {
+        RexNode clonedConditionExpr =
+            getConditionExpr() != null
+            ? RexUtil.clone(getConditionExpr())
+            : null;
+
         return new FennelPullCalcRel(
             cluster,
             RelOptUtil.clone(child),
             rowType,
             RexUtil.clone(getProjectExprs()),
-            RexUtil.clone(getConditionExpr()));
+            clonedConditionExpr);
     }
 
     // implement RelNode
