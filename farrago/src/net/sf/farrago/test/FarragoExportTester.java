@@ -45,6 +45,8 @@ import junit.framework.*;
 public class FarragoExportTester extends FarragoTestCase
 {
     private ExportFixture exportFixture;
+
+    private static boolean cleaned;
     
     public FarragoExportTester(String testName)
         throws Exception
@@ -65,8 +67,69 @@ public class FarragoExportTester extends FarragoTestCase
         super.setUp();
 
         exportFixture = new ExportFixture();
+        if (!cleaned) {
+            // clean out generated data from previous runs
+            FarragoFileAllocation dirAlloc =
+                new FarragoFileAllocation(exportFixture.testdataDir);
+            dirAlloc.closeAllocation();
+            exportFixture.testdataDir.mkdirs();
+            cleaned = true;
+        }
     }
 
+    /**
+     * Tests export of a single object (the SALES.DEPTS table).
+     */
+    public void testObjectExport()
+        throws Exception
+    {
+        XMIWriter xmiWriter = XMIWriterFactory.getDefault().createXMIWriter();
+        FileOutputStream outStream = new FileOutputStream(
+            new File(exportFixture.testdataDir, "depts.xmi"));
+        RefObject depts = 
+            FarragoCatalogUtil.getModelElementByName(
+                FarragoCatalogUtil.getSchemaByName(
+                    repos, 
+                    repos.getSelfAsCatalog(),
+                    "SALES").getOwnedElement(),
+                "DEPTS");
+        try {
+            xmiWriter.getConfiguration().setReferenceProvider(
+                new XRP(depts));
+            xmiWriter.write(
+                outStream,
+                "DEPTS",
+                repos.getMdrRepos().getExtent("FarragoCatalog"),
+                "1.2");
+        } finally {
+            outStream.close();
+        }
+    }
+
+    private class XRP implements XMIReferenceProvider 
+    {
+        private final RefObject root;
+        
+        XRP(RefObject root)
+        {
+            this.root = root;
+        }
+        
+        public XMIReferenceProvider.XMIReference getReference(RefObject obj)
+        {
+            RefObject parent = obj;
+            do {
+                if (parent == root) {
+                    return new XMIReferenceProvider.XMIReference(
+                        "DEPTS", obj.refMofId());
+                }
+                parent = (RefObject) parent.refImmediateComposite();
+            } while (parent != null);
+            return new XMIReferenceProvider.XMIReference(
+                "REPOS", obj.refMofId());
+        }
+    }
+    
     /**
      * Tests the sequence export+drop.
      */
@@ -78,17 +141,11 @@ public class FarragoExportTester extends FarragoTestCase
     }
     
     /**
-     * Tests XMI export.
+     * Tests full-catalog XMI export.
      */
     private void runExport()
         throws Exception
     {
-        // clean out generated data
-        FarragoFileAllocation dirAlloc =
-            new FarragoFileAllocation(exportFixture.testdataDir);
-        dirAlloc.closeAllocation();
-        exportFixture.testdataDir.mkdirs();
-
         // perform exports
         exportXmi(
             repos.getMdrRepos(),
