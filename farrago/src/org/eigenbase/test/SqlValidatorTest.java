@@ -22,14 +22,23 @@
 package org.eigenbase.test;
 
 import org.eigenbase.reltype.RelDataTypeFactoryImpl;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.sql.SqlOperatorTable;
 import org.eigenbase.sql.SqlValidator;
+import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql.parser.ParseException;
 import org.eigenbase.sql.parser.SqlParser;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 
 
 /**
  * Concrete child class of {@link SqlValidatorTestCase}.
+ *
+ * <p>It contains a mock schema with <code>EMP</code> and <code>DEPT</code>
+ * tables, which can run without having to start up Farrago.
  *
  * @author Wael Chatila
  * @since Jan 14, 2004
@@ -47,20 +56,93 @@ public class SqlValidatorTest extends SqlValidatorTestCase
 
     public SqlValidator getValidator()
     {
+        final RelDataTypeFactory typeFactory = new RelDataTypeFactoryImpl();
         return new SqlValidator(
             SqlOperatorTable.instance(),
-            new TestCatalogReader(),
-            new RelDataTypeFactoryImpl());
+            new MockCatalogReader(typeFactory),
+            typeFactory);
     }
 
     //~ Inner Classes ---------------------------------------------------------
 
-    //inner classes
-    public class TestCatalogReader implements SqlValidator.CatalogReader
+    /**
+     * Mock implmenentation of {@link SqlValidator.CatalogReader} which returns
+     * tables "EMP" and "DEPT".
+     */
+    public class MockCatalogReader implements SqlValidator.CatalogReader
     {
-        public SqlValidator.Table getTable(String [] names)
+        private final RelDataTypeFactory typeFactory;
+        private final HashMap tables = new HashMap();
+
+        public MockCatalogReader(RelDataTypeFactory typeFactory) {
+            this.typeFactory = typeFactory;
+            // Register "EMP" table.
+            MockTable empTable = new MockTable("EMP");
+            empTable.addColumn("EMPNO",
+                typeFactory.createSqlType(SqlTypeName.Integer));
+            empTable.addColumn("AGE",
+                typeFactory.createSqlType(SqlTypeName.Integer));
+            empTable.addColumn("SAL",
+                typeFactory.createSqlType(SqlTypeName.Integer));
+            empTable.addColumn("NAME",
+                typeFactory.createSqlType(SqlTypeName.Varchar, 10));
+            empTable.addColumn("DEPTNO",
+                typeFactory.createSqlType(SqlTypeName.Integer));
+            registerTable(empTable);
+            // Register "DEPT" table.
+            MockTable deptTable = new MockTable("DEPT");
+            deptTable.addColumn("DEPTNO",
+                typeFactory.createSqlType(SqlTypeName.Integer));
+            deptTable.addColumn("NAME",
+                typeFactory.createSqlType(SqlTypeName.Varchar, 10));
+            registerTable(deptTable);
+        }
+
+        private void registerTable(MockTable table) {
+            table.onRegister(typeFactory);
+            tables.put(table.names[0], table);
+        }
+
+        public SqlValidator.Table getTable(final String [] names)
         {
+            if (names.length == 1) {
+                return (SqlValidator.Table) tables.get(names[0]);
+            }
             return null;
+        }
+    }
+
+    /**
+     * Mock implementation of {@link SqlValidator.Table}.
+     */
+    private static class MockTable implements SqlValidator.Table
+    {
+        private final ArrayList columnNames = new ArrayList();
+        private final ArrayList columnTypes = new ArrayList();
+        private RelDataType rowType;
+        private final String[] names;
+
+        public MockTable(String name) {
+            this.names = new String[] {name};
+        }
+
+        public RelDataType getRowType() {
+            return rowType;
+        }
+
+        public void onRegister(RelDataTypeFactory typeFactory) {
+            rowType = typeFactory.createProjectType(
+                (RelDataType []) columnTypes.toArray(new RelDataType[0]),
+                (String []) columnNames.toArray(new String[0]));
+        }
+
+        public String[] getQualifiedName() {
+            return names;
+        }
+
+        public void addColumn(String name, RelDataType type) {
+            columnNames.add(name);
+            columnTypes.add(type);
         }
     }
 }
