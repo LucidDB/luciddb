@@ -29,6 +29,12 @@
 #include <boost/io/ios_state.hpp>
 #include <boost/format.hpp>
 
+#ifdef __MINGW32__
+# include <windows.h>
+#else
+# include <pthread.h>
+#endif
+
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 std::logic_error constructAssertion(
@@ -37,6 +43,15 @@ std::logic_error constructAssertion(
     boost::format fmt("Assertion `%1%' failed at line %2% in file %3%");
     return std::logic_error(
         (fmt % condExpr % lineNum % pFilename).str());
+}
+
+int getCurrentThreadId()
+{
+#ifdef __MINGW32__
+    return static_cast<int>(GetCurrentThreadId());
+#else
+    return static_cast<int>(pthread_self());
+#endif
 }
 
 void hexDump(std::ostream &o,void const *v,uint cb,uint cbDone)

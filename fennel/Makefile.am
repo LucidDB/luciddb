@@ -12,9 +12,9 @@ libtool: $(LIBTOOL_DEPS)
 # that all include paths (internal and external) can be prefixed with
 # fennel.
 dist-hook:
-	mkdir $(top_distdir)/fennel
-	mv $(distdir)/* $(top_distdir)/fennel
-	mv $(top_distdir)/fennel $(distdir)
+	mkdir $(top_distdir)/../fennelStage
+	mv $(distdir)/* $(top_distdir)/../fennelStage
+	mv $(top_distdir)/../fennelStage $(distdir)/fennel
 
 # Verify that all source files have the required headers
 checkPreambles:

@@ -211,6 +211,9 @@ inline Numeric sqr(Numeric n)
     return n*n;
 }
 
+// NOTE jvs 18-Mar-2005:  neither boost nor stlport exposes this
+extern int getCurrentThreadId();
+
 extern std::logic_error constructAssertion(
     char const *pFilename,int lineNum,char const *condExpr);
 
