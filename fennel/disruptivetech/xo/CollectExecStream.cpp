@@ -20,7 +20,7 @@
 */
 
 #include "fennel/common/CommonPreamble.h"
-#include "fennel/disruptivetech/xo/CollectExecutionStream.h"
+#include "fennel/disruptivetech/xo/CollectExecStream.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
 #include "fennel/tuple/TuplePrinter.h"
 #include "fennel/tuple/StandardTypeDescriptor.h"
@@ -29,7 +29,7 @@ using namespace std;
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-void CollectExecutionStream::prepare(CollectExecutionStreamParams const &params)
+void CollectExecStream::prepare(CollectExecStreamParams const &params)
 {
     ConduitExecStream::prepare(params);
     FENNEL_TRACE(
@@ -49,7 +49,7 @@ void CollectExecutionStream::prepare(CollectExecutionStreamParams const &params)
     assert(1 == pOutAccessor->getTupleDesc().size());
 }
 
-void CollectExecutionStream::open(bool restart) 
+void CollectExecStream::open(bool restart) 
 {
     ConduitExecStream::open(restart);
     outputTupleData.compute(pOutAccessor->getTupleDesc());    
@@ -61,13 +61,13 @@ void CollectExecutionStream::open(bool restart)
     alreadyWrittenToOutput = false;
 }
 
-void CollectExecutionStream::close()
+void CollectExecStream::close()
 {
     pOutputBuffer.reset();
     ConduitExecStream::closeImpl();
 }
 
-ExecStreamResult CollectExecutionStream::execute(ExecStreamQuantum const &quantum)
+ExecStreamResult CollectExecStream::execute(ExecStreamQuantum const &quantum)
 {
     if (!alreadyWrittenToOutput && (EXECBUF_EOS == pInAccessor->getState())) {
         outputTupleData[0].pData = pOutputBuffer.get();
@@ -111,6 +111,6 @@ ExecStreamResult CollectExecutionStream::execute(ExecStreamQuantum const &quantu
     return EXECRC_QUANTUM_EXPIRED;
 }
 
-FENNEL_END_CPPFILE("$Id: //open/dt/dev/fennel/disruptivetech/xo/CollectExecStream.cpp#1 $");
+FENNEL_END_CPPFILE("$Id: //open/dt/dev/fennel/disruptivetech/xo/CollectExecStream.cpp#2 $");
 
-// End CollectExecutionStream.cpp
+// End CollectExecStream.cpp

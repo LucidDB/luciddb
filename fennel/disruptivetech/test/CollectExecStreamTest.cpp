@@ -21,7 +21,7 @@
 
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/test/ExecStreamTestBase.h"
-#include "fennel/disruptivetech/xo/CollectExecutionStream.h"
+#include "fennel/disruptivetech/xo/CollectExecStream.h"
 #include "fennel/tuple/StandardTypeDescriptor.h"
 #include "fennel/tuple/TupleOverflowExcn.h"
 #include "fennel/exec/MockProducerExecStream.h"
@@ -80,7 +80,7 @@ void CollectExecStreamTest::testCollectInts()
     mockParams.nRows = rows;
     mockParams.pGenerator.reset(new RampExecStreamGenerator(1));
 
-    CollectExecutionStreamParams collectParams;
+    CollectExecStreamParams collectParams;
     collectParams.outputTupleDesc = descVarbinary500;
 
     ExecStreamEmbryo mockStreamEmbryo;
@@ -88,7 +88,7 @@ void CollectExecStreamTest::testCollectInts()
     mockStreamEmbryo.getStream()->setName("MockProducerExecStream");
 
     ExecStreamEmbryo collectStreamEmbryo;
-    collectStreamEmbryo.init(new CollectExecutionStream(), collectParams);
+    collectStreamEmbryo.init(new CollectExecStream(), collectParams);
     collectStreamEmbryo.getStream()->setName("CollectExecStream"); 
 
 
