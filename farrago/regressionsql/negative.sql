@@ -95,8 +95,12 @@ select nullif('',1) from values(1);
 values nullif('',1);
 select coalesce('a','b',1) from values(1);
 
-values localtime(1);
-values localtimestamp(1);
+values localtime();
+values localtime(1,2);
+values localtime(-1);
+values localtimestamp();
+values localtimestamp(1,2);
+values localtimestamp(-3);
 values current_time(2,3);
 values current_timestamp(-1);
 values current_time(-20);

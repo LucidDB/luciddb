@@ -100,13 +100,6 @@ public class FarragoSqlOperatorsTest extends FarragoTestCase
             if (!vm.canImplement(op)) {
                 continue;
             }
-            if (!bug260fixed) {
-                if (
-                    op == opTab.localTimeFunc ||
-                    op == opTab.localTimestampFunc) {
-                    continue;
-                }
-            }
             suite.addTest(
                 new FarragoSqlOperatorsTest(vm,
                     op, testName + vm.name));

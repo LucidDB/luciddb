@@ -142,25 +142,39 @@ void CastDateTimeToInt64(
         result->toNull();
     } else {
         result->value(dtime->value());
-    }
-
-    
+    }    
 }
 
 void CurrentTime(RegisterRef<int64_t>* result)
 {
     assert (result->type() == STANDARD_TYPE_INT_64);
-    
-    result->value(CurrentTime());
-    
+    result->value(CurrentTime());    
 }
 
 void CurrentTimestamp(RegisterRef<int64_t>* result)
 {
     assert (result->type() == STANDARD_TYPE_INT_64);
+    result->value(CurrentTimestamp());    
+}
+
+void CurrentTime(RegisterRef<int64_t>* result,
+                 RegisterRef<int32_t>* precision)
+{
+    assert (result->type() == STANDARD_TYPE_INT_64);
+    assert (precision->type() == STANDARD_TYPE_INT_32);
+
+    // precision is ignored for now   
+    result->value(CurrentTime());
+}
+
+void CurrentTimestamp(RegisterRef<int64_t>* result, 
+                      RegisterRef<int32_t>* precision)
+{
+    assert (result->type() == STANDARD_TYPE_INT_64);
+    assert (precision->type() == STANDARD_TYPE_INT_32);
     
-    result->value(CurrentTimestamp());
-    
+    // precision is ignored for now
+    result->value(CurrentTimestamp());    
 }
 
 
@@ -191,6 +205,10 @@ ExtDateTimeRegister(ExtendedInstructionTable* eit)
 
     vector<StandardTypeDescriptorOrdinal> params_I64;
     params_I64.push_back(STANDARD_TYPE_INT_64); 
+
+    vector<StandardTypeDescriptorOrdinal> params_I64_I32;
+    params_I64_I32.push_back(STANDARD_TYPE_INT_64);
+    params_I64_I32.push_back(STANDARD_TYPE_INT_32);
 
     // date -> str
     eit->add("CastDateToStrA", params_V_I64,
@@ -247,14 +265,21 @@ ExtDateTimeRegister(ExtendedInstructionTable* eit)
              (ExtendedInstruction2<int64_t, int64_t>*) NULL,
              &CastDateTimeToInt64);
 
-    eit->add("LocalTime", params_I64,
+    eit->add("LocalTime1", params_I64,
              (ExtendedInstruction1<int64_t>*) NULL,
              &CurrentTime);
 
-    eit->add("LocalTimestamp", params_I64,
+    eit->add("LocalTimestamp1", params_I64,
              (ExtendedInstruction1<int64_t>*) NULL,
              &CurrentTimestamp);
 
+    eit->add("LocalTime2", params_I64_I32,
+             (ExtendedInstruction2<int64_t, int32_t>*) NULL,
+             &CurrentTime);
+
+    eit->add("LocalTimestamp2", params_I64_I32,
+             (ExtendedInstruction2<int64_t, int32_t>*) NULL,
+             &CurrentTimestamp);
 
 }
 

@@ -3222,10 +3222,18 @@ Error: At line 1, column 8: Cannot apply '=' to arguments of type '<VARCHAR(0)> 
 0: jdbc:farrago:> select coalesce('a','b',1) from values(1);
 Error: At line 1, column 8: Illegal mixing of types in CASE or COALESCE statement (state=,code=0)
 0: jdbc:farrago:> 
-0: jdbc:farrago:> values localtime(1);
-Error: java.lang.AssertionError: Wrong number of params for instruction LocalTime; expected=1 but was=2 (state=,code=0)
-0: jdbc:farrago:> values localtimestamp(1);
-Error: java.lang.AssertionError: Wrong number of params for instruction LocalTimestamp; expected=1 but was=2 (state=,code=0)
+0: jdbc:farrago:> values localtime();
+Error: At line 1, column 8: Invalid number of arguments to function 'LOCALTIME'. Was expecting 0 arguments (state=,code=0)
+0: jdbc:farrago:> values localtime(1,2);
+Error: At line 1, column 8: Invalid number of arguments to function 'LOCALTIME'. Was expecting 0 arguments (state=,code=0)
+0: jdbc:farrago:> values localtime(-1);
+Error: Argument to function 'LOCALTIME' must be a positive integer literal (state=,code=0)
+0: jdbc:farrago:> values localtimestamp();
+Error: At line 1, column 8: Invalid number of arguments to function 'LOCALTIMESTAMP'. Was expecting 0 arguments (state=,code=0)
+0: jdbc:farrago:> values localtimestamp(1,2);
+Error: At line 1, column 8: Invalid number of arguments to function 'LOCALTIMESTAMP'. Was expecting 0 arguments (state=,code=0)
+0: jdbc:farrago:> values localtimestamp(-3);
+Error: Argument to function 'LOCALTIMESTAMP' must be a positive integer literal (state=,code=0)
 0: jdbc:farrago:> values current_time(2,3);
 Error: At line 1, column 8: Invalid number of arguments to function 'CURRENT_TIME'. Was expecting 0 arguments (state=,code=0)
 0: jdbc:farrago:> values current_timestamp(-1);

@@ -56,9 +56,9 @@ public class ExtInstructionDefTable
     public static final CalcProgramBuilder.ExtInstrDef like =
         new CalcProgramBuilder.ExtInstrSizeDef("strLikeA");
     public static final CalcProgramBuilder.ExtInstrDef localTime =
-        new CalcProgramBuilder.ExtInstrDef("LocalTime", 1);
+        new CalcProgramBuilder.ExtInstrSizeDef("LocalTime");
     public static final CalcProgramBuilder.ExtInstrDef localTimestamp =
-        new CalcProgramBuilder.ExtInstrDef("LocalTimestamp", 1);
+        new CalcProgramBuilder.ExtInstrSizeDef("LocalTimestamp");
     public static final CalcProgramBuilder.ExtInstrDef log =
         new CalcProgramBuilder.ExtInstrDef("LN", 2);
     public static final CalcProgramBuilder.ExtInstrDef log10 =
