@@ -887,6 +887,12 @@ public class JavaRelImplementor implements RelImplementor
                 for (int i = 0; i < operands.length; i++) {
                     go(operands[i]);
                 }
+            } else if (rex instanceof RexFieldAccess) {
+                if (!deep) {
+                    return;
+                }
+
+                go(((RexFieldAccess)rex).getReferenceExpr());
             }
         }
     }

@@ -51,13 +51,13 @@ import net.sf.saffron.core.SaffronType;
  * @version $Id$
  **/
 public class RexFieldAccess extends RexNode {
-    private final RexNode expr;
+    public RexNode expr;
     private final SaffronField field;
 
     RexFieldAccess(RexNode expr,SaffronField field) {
         this.expr = expr;
         this.field = field;
-        this.digest = expr + "." + field.getName();
+        computeDigest();
     }
 
     public SaffronField getField() {
@@ -92,6 +92,14 @@ public class RexFieldAccess extends RexNode {
      */
     public String getName() {
         return field.getName();
+    }
+
+    public String toString() {
+        return computeDigest();
+    }
+
+    private String computeDigest() {
+        return (this.digest = expr + "." + field.getName());
     }
 }
 

@@ -37,6 +37,7 @@ import net.sf.saffron.rel.SaffronRel;
 
 import net.sf.saffron.rex.RexCall;
 import net.sf.saffron.rex.RexDynamicParam;
+import net.sf.saffron.rex.RexFieldAccess;
 import net.sf.saffron.rex.RexInputRef;
 import net.sf.saffron.rex.RexNode;
 
@@ -316,6 +317,13 @@ class FarragoAutoCalcRule
             } else if (node instanceof RexDynamicParam) {
                 // handle RexDynamicParam -- implementable in Java only
                 adjustDepth(relData, relDepth, tdata, true, false);
+            } else if (node instanceof RexFieldAccess) {
+                // handle RexFieldAccess -- implementable in Java only
+                adjustDepth(relData, relDepth, tdata, true, false);
+
+                if (relData.children != null) {
+                    relDataQueue.addAll(relData.children);
+                }
             } else {
                 if (relData.parent != null) {
                     relData.relDepth = relData.parent.relDepth;
@@ -421,10 +429,10 @@ class FarragoAutoCalcRule
         int expectedRelDepth = 0;
 
         // Assign positions and copy RexInputRefs down to the deepest
-        // levels.  Also makes sure that RexDynamicParams that cannot
-        // be implemented with their parents have a RexInputRef insert
-        // between the parent and RexDynamicRef (see
-        // processCallChildren).
+        // levels.  Also makes sure that RexDynamicParams and
+        // RexFieldAccesses that cannot be implemented with their
+        // parents have a RexInputRef inserted between the parent and
+        // RexDynamicRef/RexFieldAccess (see processCallChildren).
         while(!relDataQueue.isEmpty()) {
             Object relDataItem = relDataQueue.remove(0);
             if (relDataItem == DEPTH_MARKER) {
@@ -456,7 +464,8 @@ class FarragoAutoCalcRule
 
                     children = relData.children;
                 }
-            } else if (node instanceof RexCall) {
+            } else if (node instanceof RexCall ||
+                       node instanceof RexFieldAccess) {
                 assert(relData.relDepth >= expectedRelDepth);
 
                 if (relData.relDepth > expectedRelDepth) {
@@ -555,15 +564,13 @@ class FarragoAutoCalcRule
                 } else {
                     expressions.add(node.clone());
                 }
-            } else if (node instanceof RexCall) {
+            } else if (node instanceof RexCall ||
+                       node instanceof RexFieldAccess) {
                 children = new ArrayList();
 
-                RexCall clonedCall = (RexCall)relData.node.clone();
-
-                transformCallChildren(relData,
-                                      clonedCall,
-                                      children,
-                                      maxRelDepth);
+                RexNode clonedCall = transformCallChildren(relData,
+                                                           children,
+                                                           maxRelDepth);
 
                 expressions.add(clonedCall);
             } else {
@@ -661,10 +668,11 @@ class FarragoAutoCalcRule
 
 
     /**
-     * Iterate over a RexCall's children, copying RexInputRefs to the
-     * next level down (if necessary), inserting RexInputRefs between
-     * a child RexDynamicParam and the RexCall (if necessary), and
-     * recursively processing child RexCalls at the same depth.
+     * Iterate over a RexCall's (or RexFieldAccess's) children,
+     * copying RexInputRefs to the next level down (if necessary),
+     * inserting RexInputRefs between a child RexDynamicParam and the
+     * RexCall (if necessary), and recursively processing child
+     * RexCalls and RexFieldAccesses at the same depth.
      */
     private void processCallChildren(List children,
                                      RelData relData,
@@ -697,7 +705,8 @@ class FarragoAutoCalcRule
 
                     children.add(child);
                 }
-            } else if (child.node instanceof RexCall) {
+            } else if (child.node instanceof RexCall ||
+                       child.node instanceof RexFieldAccess) {
                 if (child.relDepth == expectedRelDepth) {
                     processCallChildren(children,
                                         child,
@@ -712,16 +721,23 @@ class FarragoAutoCalcRule
 
 
     /**
-     * Traverse a RexCall's children and create new RexInputRef
-     * objects with the correct data.  Essentially implements the
-     * hierarchy created in
+     * Traverse a RexCall's or RexFieldAccess's children and create
+     * new RexInputRef objects with the correct data.  Essentially
+     * implements the hierarchy created in
      * {@link #processCallChildren(List, FarragoAutoCalcRule.RelData, int, int)}.
+     *
+     * @return the RexNode that should replace relData.node in the
+     *         expression.
      */
-    private void transformCallChildren(RelData relData,
-                                       RexCall clonedCall,
-                                       List children,
-                                       int maxRelDepth)
+    private RexNode transformCallChildren(RelData relData,
+                                          List children,
+                                          int maxRelDepth)
     {
+        assert(relData.node instanceof RexCall || 
+               relData.node instanceof RexFieldAccess);
+
+        RexNode clonedCall = (RexNode)relData.node.clone();
+
         for(int i = 0; i < relData.children.size(); i++) {
             RelData child = (RelData)relData.children.get(i);
 
@@ -735,29 +751,42 @@ class FarragoAutoCalcRule
                     RexInputRef inputRef =
                         new RexInputRef(position, grandChild.node.getType());
 
-                    clonedCall.operands[i] = inputRef;
+                    if (relData.node instanceof RexCall) {
+                        ((RexCall)clonedCall).operands[i] = inputRef;
+                    } else {
+                        ((RexFieldAccess)clonedCall).expr = inputRef;
+                    }
 
                     children.add(grandChild);
                 }
-            } else if (child.node instanceof RexCall) {
+            } else if (child.node instanceof RexCall ||
+                       child.node instanceof RexFieldAccess) {
                 if (child.relDepth == relData.relDepth) {
-                    RexCall clonedChildCall = (RexCall)child.node.clone();
+                    RexNode clonedChildCall = 
+                        transformCallChildren(child, children, maxRelDepth);
 
-                    clonedCall.operands[i] = clonedChildCall;
 
-                    transformCallChildren(child,
-                                          clonedChildCall,
-                                          children,
-                                          maxRelDepth);
+                    if (relData.node instanceof RexCall) {
+                        ((RexCall)clonedCall).operands[i] = clonedChildCall;
+                    } else {
+                        ((RexFieldAccess)clonedCall).expr = clonedChildCall;
+                    }
                 } else {
                     RexInputRef inputRef =
                         new RexInputRef(child.position, child.node.getType());
-                    clonedCall.operands[i] = inputRef;
+
+                    if (relData.node instanceof RexCall) {
+                        ((RexCall)clonedCall).operands[i] = inputRef;
+                    } else {
+                        ((RexFieldAccess)clonedCall).expr = inputRef;
+                    }
 
                     children.add(child);
                 }
             }
         }
+
+        return clonedCall;
     }
 
     private boolean canImplementInJava(CalcRel calc,
@@ -832,6 +861,18 @@ class FarragoAutoCalcRule
 
                 buildRelDataTree(relData.children,
                                  Arrays.asList(call.operands));
+            } else if (node instanceof RexFieldAccess) {
+                RelData relData = (RelData)relDataItem;
+                RexFieldAccess fieldAccess = (RexFieldAccess)node;
+
+                relData.children = new ArrayList(1);
+
+                relData.children.add(new RelData(fieldAccess.expr,
+                                                 relData.isConditional,
+                                                 relData));
+
+                buildRelDataTree(relData.children,
+                                 Collections.singletonList(fieldAccess.expr));
             }
         }
     }

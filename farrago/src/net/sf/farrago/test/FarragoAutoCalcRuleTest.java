@@ -40,20 +40,31 @@ import net.sf.farrago.db.FarragoDbSessionFactory;
 import net.sf.farrago.jdbc.engine.FarragoJdbcEngineConnection;
 import net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver;
 
+import net.sf.farrago.ojrex.FarragoOJRexImplementor;
 import net.sf.farrago.ojrex.FarragoOJRexImplementorTable;
+import net.sf.farrago.ojrex.FarragoRexToOJTranslator;
 
 import net.sf.farrago.session.FarragoSession;
 import net.sf.farrago.session.FarragoSessionFactory;
 
 import net.sf.saffron.calc.CalcRexImplementorTableImpl;
 
+import net.sf.saffron.core.SaffronType;
+import net.sf.saffron.core.SaffronTypeFactory;
+
+import net.sf.saffron.oj.rex.OJRexImplementor;
 import net.sf.saffron.oj.rex.OJRexImplementorTable;
 
-import net.sf.saffron.sql.SqlFunction;
-import net.sf.saffron.sql.SqlKind;
-import net.sf.saffron.sql.SqlOperatorTable;
+import net.sf.saffron.rex.RexNode;
+import net.sf.saffron.rex.RexCall;
+
+import net.sf.saffron.sql.*;
+
 import net.sf.saffron.sql.fun.SqlStdOperatorTable;
+
 import net.sf.saffron.sql.test.SqlTester;
+
+import openjava.ptree.*;
 
 /**
  * FarragoAutoCalcRuleTest tests FarragoAutoCalcRule.  This class
@@ -113,7 +124,7 @@ public class FarragoAutoCalcRuleTest
         SqlStdOperatorTable opTab = SqlOperatorTable.std();
         testOjRexImplementor = new TestOJRexImplementorTable(opTab);
 
-		SqlFunction cppFunc = 
+		SqlFunction cppFunc =
             new SqlFunction("CPLUS",
                             SqlKind.Function,
                             SqlStdOperatorTable.useNullableBiggest,
@@ -282,6 +293,25 @@ public class FarragoAutoCalcRuleTest
         }
     }
 
+    
+    public void testFieldAccess()
+        throws SQLException
+    {
+        // Equivalent to dtbug 210
+        testExplain(
+            "select cplus(t.r.\"second\", 1) from (select jrow(deptno, empno) as r from sales.emps) as t");
+    }
+
+
+    public void testFieldAccess2()
+        throws SQLException
+    {
+        // Found a bug related to this expression while debugging dtbug 210.
+        testExplain(
+            "select t.r.\"second\" from (select jrow(deptno, cplus(empno, 1)) as r from sales.emps) as t");
+    }
+
+
     // REVIEW: SZ: 7/14/2004: We should probably compare the results
     // to expected values, rather than just assuming that no
     // exceptions means it worked.  One idea would be to use the
@@ -320,11 +350,11 @@ public class FarragoAutoCalcRuleTest
         {
             super(opTab);
         }
-    
+
         protected void initStandard(final SqlStdOperatorTable opTab)
         {
             super.initStandard(opTab);
-            
+
             SqlFunction jplusFunc =
                 new SqlFunction("JPLUS",
                                 SqlKind.Function,
@@ -338,6 +368,91 @@ public class FarragoAutoCalcRuleTest
             opTab.register(jplusFunc);
 
             registerOperator(jplusFunc, get(opTab.plusOperator));
+
+            SqlFunction jrowFunc =
+                new SqlFunction("JROW",
+                                SqlKind.Function,
+                                null,
+                                SqlOperatorTable.useFirstKnownParam,
+                                SqlStdOperatorTable.typeNullableNumericNumeric,
+                                SqlFunction.SqlFuncTypeName.Numeric)
+                {
+                    public void test(SqlTester tester) {
+                    }
+
+                    public SaffronType getType(SaffronTypeFactory typeFactory,
+                                               RexNode[] args)
+                    {
+                        assert(args.length == 2);
+
+                        SaffronType[] types = new SaffronType[] {
+                            args[0].getType(),
+                            args[1].getType()
+                        };
+                        String[] names = new String[] { "first", "second" };
+
+                        return typeFactory.createProjectType(types, names);
+                    }
+
+                    public SaffronType inferType(SqlValidator validator,
+                                                 SqlValidator.Scope scope,
+                                                 SqlCall call)
+                    {
+                        assert(call.getOperands().length == 2);
+
+                        SaffronType[] types = new SaffronType[] {
+                            validator.getValidatedNodeType(
+                                call.getOperands()[0]),
+                            validator.getValidatedNodeType(
+                                call.getOperands()[1])
+                        };
+                        String[] names = new String[] { "first", "second" };
+
+                        return validator.typeFactory.createProjectType(types,
+                                                                       names);
+                    }
+
+                };
+            opTab.register(jrowFunc);
+
+            OJRexImplementor jrowFuncImpl = new FarragoOJRexImplementor()
+                {
+                    public
+                    Expression implementFarrago(FarragoRexToOJTranslator trans,
+                                                RexCall call,
+                                                Expression[] operands)
+                    {
+                        // NOTE: this is untested and is probably
+                        // never called during this test case.
+                        SaffronType rowType = call.getType();
+
+                        Variable rowVar = trans.createScratchVariable(rowType);
+
+                        trans.addStatement(
+                            new ExpressionStatement(
+                                new AssignmentExpression(
+                                    new ArrayAccess(rowVar,
+                                                    new Literal(
+                                                        Literal.INTEGER,
+                                                        "0")),
+                                    AssignmentExpression.EQUALS,
+                                    operands[0])));
+
+                        trans.addStatement(
+                            new ExpressionStatement(
+                                new AssignmentExpression(
+                                    new ArrayAccess(rowVar,
+                                                    new Literal(
+                                                        Literal.INTEGER,
+                                                        "1")),
+                                    AssignmentExpression.EQUALS,
+                                    operands[1])));
+
+                        return rowVar;
+                    }
+                };
+
+                registerOperator(jrowFunc, jrowFuncImpl);
         }
     }
 
@@ -415,5 +530,4 @@ public class FarragoAutoCalcRuleTest
             new TestJdbcEngineDriver().register();
         }
     }
-
 }
