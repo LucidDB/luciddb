@@ -64,6 +64,8 @@ DdlStmt DdlStmtEof() :
             modelElement = DataWrapperDefinition()
             |
             modelElement = DataServerDefinition()
+            |
+            modelElement = ExtensionModelDefinition()
            )
         {
             ddlStmt = new DdlCreateStmt(modelElement);
@@ -89,6 +91,8 @@ DdlStmt DdlStmtEof() :
               modelElement = DataWrapperDrop()
               |
               modelElement = DataServerDrop()
+              |
+              modelElement = ExtensionModelDrop()
           )
         {
             ddlStmt = new DdlDropStmt(modelElement,dropRestrict);
@@ -115,9 +119,11 @@ DdlStmt DdlStmtEof() :
         }
         )
         |
-        ( <ALTER> <SYSTEM> <SET>
+        ( <ALTER> 
           (
-              ddlStmt = SystemParamAssignment()
+              <SYSTEM> <SET> ddlStmt = SystemParamAssignment()
+              |
+              ddlStmt = ExtensionModelAlter()
           )
         {
         }
@@ -1147,26 +1153,11 @@ TOKEN :
 | < WRAPPER: "wrapper" >
 }
 
-String NonReservedKeyWord() :
-{
-    String kw;
-}
-{
-    (
-        kw = CommonNonReservedKeyWord()
-        {
-            return kw;
-        }
-        |
-        kw = DdlNonReservedKeyWord()
-        {
-            return kw;
-        }
-    )
-}
-
 /**
- * Parses a non-reserved DDL keyword for use as an identifier.
+ * Parses a non-reserved DDL keyword for use as an identifier.  Parser
+ * implementations based on CommonDdlParser.jj should include this as
+ * well as CommonParser.jj's CommonNonReservedKeyWord() in their
+ * implementation of the NonReservedKeyWord() production.
  */
 String DdlNonReservedKeyWord() :
 {

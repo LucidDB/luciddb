@@ -40,6 +40,11 @@ public class DdlVisitor
     }
 
     // visitor dispatch
+    public void visit(DdlAlterStmt stmt)
+    {
+    }
+
+    // visitor dispatch
     public void visit(DdlTruncateStmt stmt)
     {
     }

@@ -136,4 +136,58 @@ void SqlSelectKeywords(List keywords) :
     E()
 }
 
+String NonReservedKeyWord() :
+{
+    String kw;
+}
+{
+    (
+        kw = CommonNonReservedKeyWord()
+        {
+            return kw;
+        }
+        |
+        kw = DdlNonReservedKeyWord()
+        {
+            return kw;
+        }
+    )
+}
+
+CwmModelElement ExtensionModelDefinition() :
+{
+}
+{
+    (
+        E()
+    )
+        {
+            return null;
+        }
+}
+
+CwmModelElement ExtensionModelDrop() :
+{
+}
+{
+    (
+        E()
+    )
+        {
+            return null;
+        }
+}
+
+DdlStmt ExtensionModelAlter() :
+{
+}
+{
+    (
+        E()
+    )
+        {
+            return null;
+        }
+}
+
 // End DdlParser.jj

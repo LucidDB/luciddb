@@ -2465,6 +2465,16 @@ TOKEN :
 | < ZONE: "zone" >
 }
 
+/*
+ * Abstract production:
+ *
+ *   String NonReservedKeyWord()
+ *
+ * Parses non-reserved keywords (e.g. keywords that may be used as
+ * identifiers).  Should use CommonNonReservedKeyWord as a base, but
+ * may add other key words.
+ */
+
 /**
  * Parses a non-reserved keyword for use as an identifier.  Specializations
  * of this parser can use this as a base for implementing the
