@@ -651,7 +651,7 @@ public abstract class OperandsTypeChecking
                 if (type1.equals(nullType) || type2.equals(nullType)) {
                     return true; //null is ok;
                 }
-                if (!(type1.isSameType(type2) || type2.isSameType(type1))) {
+                if (!SqlTypeUtil.sameNamedType(type1, type2)) {
                     if (throwOnFailure) {
                         throw validator.newValidationError(call,
                             EigenbaseResource.instance()
@@ -690,12 +690,21 @@ public abstract class OperandsTypeChecking
 
                 //null is ok;
                 if (!(
-                    (type1.equals(nullType) || type2.equals(nullType) ||
-                    type1.isSameType(type2) || type2.isSameType(type1)) &&
-                    (type1.equals(nullType) || type3.equals(nullType) ||
-                    type1.isSameType(type3) || type3.isSameType(type1)) &&
-                    (type2.equals(nullType) || type3.equals(nullType) ||
-                    type2.isSameType(type3) || type3.isSameType(type2)))) {
+                    (
+                        type1.equals(nullType)
+                        || type2.equals(nullType)
+                        || SqlTypeUtil.sameNamedType(type1, type2))
+                    &&
+                    (
+                        type1.equals(nullType)
+                        || type3.equals(nullType)
+                        || SqlTypeUtil.sameNamedType(type1, type3))
+                    &&
+                    (
+                        type2.equals(nullType)
+                        || type3.equals(nullType)
+                        || SqlTypeUtil.sameNamedType(type2, type3))))
+                {
 
                     if (throwOnFailure) {
                         throw validator.newValidationError(call,
@@ -857,7 +866,7 @@ public abstract class OperandsTypeChecking
                     validator.typeFactory.createSqlType(SqlTypeName.Null);
                 if (!nullType.isAssignableFrom(t0, false)
                     && !nullType.isAssignableFrom(t1, false)) {
-                    if (!t0.isSameTypeFamily(t1)) {
+                    if (!SqlTypeUtil.inSameFamily(t0, t1)) {
                         if (throwOnFailure) {
                             //parser postition retrieved in
                             //newValidationSignatureError()
@@ -930,7 +939,9 @@ public abstract class OperandsTypeChecking
                 if (!nullType.isAssignableFrom(t0, false)
                     && !nullType.isAssignableFrom(t1, false)
                     && !nullType.isAssignableFrom(t2, false)) {
-                    if (!t0.isSameTypeFamily(t1) || !t1.isSameTypeFamily(t2)) {
+                    if (!SqlTypeUtil.inSameFamily(t0, t1)
+                        || !SqlTypeUtil.inSameFamily(t1, t2))
+                    {
                         if (throwOnFailure) {
                             throw call.newValidationSignatureError(validator, scope);
                         }

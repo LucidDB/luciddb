@@ -36,6 +36,7 @@ import org.eigenbase.oj.util.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.reltype.RelDataTypeFactoryImpl;
 import org.eigenbase.sql.SqlCollation;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
 
 
@@ -79,7 +80,7 @@ public class FarragoPrecisionType extends FarragoAtomicType
         super(simpleType, isNullable);
         this.precision = precision;
         this.scale = scale;
-        if (!isCharType()) {
+        if (!SqlTypeUtil.inCharFamily(this)) {
             assert (null == charsetName);
             assert (null == collation);
         }
@@ -98,7 +99,7 @@ public class FarragoPrecisionType extends FarragoAtomicType
      */
     public String getCharsetName()
     {
-        if (!isCharType()) {
+        if (!SqlTypeUtil.inCharFamily(this)) {
             throw Util.newInternal(digest
                 + " is not defined to carry a charset");
         }
@@ -109,7 +110,7 @@ public class FarragoPrecisionType extends FarragoAtomicType
     public Charset getCharset()
         throws RuntimeException
     {
-        if (!isCharType()) {
+        if (!SqlTypeUtil.inCharFamily(this)) {
             throw Util.newInternal(digest
                 + " is not defined to carry a charset");
         }
@@ -123,7 +124,7 @@ public class FarragoPrecisionType extends FarragoAtomicType
     public SqlCollation getCollation()
         throws RuntimeException
     {
-        if (!isCharType()) {
+        if (!SqlTypeUtil.inCharFamily(this)) {
             throw Util.newInternal(digest
                 + " is not defined to carry a collation");
         }

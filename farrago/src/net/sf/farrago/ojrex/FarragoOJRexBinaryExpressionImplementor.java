@@ -26,6 +26,7 @@ import openjava.ptree.*;
 
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.type.*;
 
 
 /**
@@ -119,7 +120,7 @@ public class FarragoOJRexBinaryExpressionImplementor
         }
         Expression comparisonResultExp;
         assert (type instanceof FarragoPrecisionType);
-        if (type.isCharType()) {
+        if (SqlTypeUtil.inCharFamily(type)) {
             // TODO:  collation sequences, operators other than
             // comparison, etc.
             comparisonResultExp =

@@ -63,7 +63,7 @@ public class OneRowRel extends AbstractRelNode
 
     protected RelDataType deriveRowType()
     {
-        return cluster.typeFactory.createProjectType(
+        return cluster.typeFactory.createStructType(
             new RelDataType [] { cluster.typeFactory.createJavaType(
                     Integer.TYPE) },
             new String [] { "ZERO" });

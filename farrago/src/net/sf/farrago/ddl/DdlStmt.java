@@ -64,6 +64,18 @@ public abstract class DdlStmt implements FarragoSessionDdlStmt
     }
 
     // implement FarragoSessionDdlStmt
+    public void preExecute()
+    {
+        // caller does the work
+    }
+
+    // implement FarragoSessionDdlStmt
+    public void postExecute()
+    {
+        // caller does the work
+    }
+
+    // implement FarragoSessionDdlStmt
     public boolean requiresCommit()
     {
         return true;

@@ -26,7 +26,7 @@ import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.reltype.RelDataTypeFactoryImpl;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.parser.ParserPosition;
-import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.util.SqlVisitor;
 import org.eigenbase.util.Util;
 
@@ -210,11 +210,13 @@ public class SqlDataType extends SqlNode
                     sqlTypeName);
         }
 
-        if (type.isCharType()) {
-            //Applying Syntax rule 10 from SQL:99 spec section 6.22
-            //"If TD is a fixed-length, variable-length or large object character string, then the collating sequence
-            //of the result of the <cast specification> is the default collating sequence for the character
-            //repertoire of TD and the result of the <cast specification> has the Coercible coercibility characteristic."
+        if (SqlTypeUtil.inCharFamily(type)) {
+            // Applying Syntax rule 10 from SQL:99 spec section 6.22 "If TD is a
+            // fixed-length, variable-length or large object character string,
+            // then the collating sequence of the result of the <cast
+            // specification> is the default collating sequence for the
+            // character repertoire of TD and the result of the <cast
+            // specification> has the Coercible coercibility characteristic."
             SqlCollation collation =
                 new SqlCollation(SqlCollation.Coercibility.Coercible);
 

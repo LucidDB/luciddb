@@ -30,7 +30,7 @@ import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.type.OperandsTypeChecking;
 import org.eigenbase.sql.type.ReturnTypeInference;
 import org.eigenbase.sql.type.UnknownParamInference;
-import org.eigenbase.sql.type.TypeUtil;
+import org.eigenbase.sql.type.SqlTypeUtil;
 import org.eigenbase.util.Util;
 
 import java.text.MessageFormat;
@@ -60,8 +60,14 @@ public abstract class SqlOperator
      * there could be a potential problem. To avoid this, all types are outputted
      * WITH CAPITAL letters, and this string must therefore consist
      * of at least one lowercase letter.
+     *
+     *<p>
+     *
+     * REVIEW jvs 2-Dec-2004:  what about user-defined types with quoted
+     * names?  They could be all-lowercase.  Do we really have to use such
+     * a hokey mechanism?
      */
-    private static final String ANONYMOUS_REPLACE = "anystringwilldothatisntthesameasatype";
+    private static final String ANONYMOUS_REPLACE = "xyzzy";
 
     //~ Instance fields -------------------------------------------------------
 
@@ -375,7 +381,7 @@ public abstract class SqlOperator
     {
         return getType(
             typeFactory,
-            TypeUtil.collectTypes(exprs));
+            SqlTypeUtil.collectTypes(exprs));
     }
 
     /**

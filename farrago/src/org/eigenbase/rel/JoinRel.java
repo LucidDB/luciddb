@@ -218,7 +218,7 @@ public class JoinRel extends AbstractRelNode
         RelDataType [] types =
             (RelDataType []) typeList.toArray(
                 new RelDataType[typeList.size()]);
-        return typeFactory.createProjectType(types, fieldNames);
+        return typeFactory.createStructType(types, fieldNames);
     }
 
     private static void addFields(

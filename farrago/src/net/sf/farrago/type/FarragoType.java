@@ -52,20 +52,7 @@ public abstract class FarragoType implements RelDataType
     }
 
     // implement RelDataType
-    public boolean isJoin()
-    {
-        return false;
-    }
-
-    // implement RelDataType
-    public RelDataType [] getJoinTypes()
-    {
-        assert (isJoin());
-        throw Util.newInternal("not reached");
-    }
-
-    // implement RelDataType
-    public boolean isProject()
+    public boolean isStruct()
     {
         return false;
     }
@@ -131,7 +118,6 @@ public abstract class FarragoType implements RelDataType
         RelDataType t,
         boolean coerce)
     {
-        // TODO jvs 22-Jan-2004:  implement real SQL rules
         return this.getFactory().assignableFrom(
             this.getSqlTypeName(),
             t.getSqlTypeName(),

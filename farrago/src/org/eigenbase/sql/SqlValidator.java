@@ -27,9 +27,7 @@ import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.fun.SqlRowOperator;
 import org.eigenbase.sql.parser.ParserPosition;
-import org.eigenbase.sql.type.ReturnTypeInference;
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.sql.type.UnknownParamInference;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.util.SqlBasicVisitor;
 import org.eigenbase.util.EnumeratedValues;
 import org.eigenbase.util.Util;
@@ -521,7 +519,7 @@ public class SqlValidator
             final RelDataType type = deriveType(scope, operands[i]);
             types.add(type);
         }
-        return typeFactory.createProjectType((RelDataType []) types.toArray(
+        return typeFactory.createStructType((RelDataType []) types.toArray(
                 emptyTypes), (String []) aliases.toArray(emptyStrings));
     }
 
@@ -561,7 +559,7 @@ public class SqlValidator
         RelDataType type)
     {
         //(every charset must have a default collation)
-        if (type.isCharType()) {
+        if (SqlTypeUtil.inCharFamily(type)) {
             Charset strCharset = type.getCharset();
             Charset colCharset = type.getCollation().getCharset();
             assert (null != strCharset);
@@ -614,6 +612,8 @@ public class SqlValidator
         Scope scope,
         SqlNode operand)
     {
+        // REVIEW jvs 2-Dec-2004:  this method has outgrown its pants
+        
         RelDataType type;
         if (operand instanceof SqlIdentifier) {
             SqlIdentifier id = (SqlIdentifier) operand;
@@ -656,7 +656,7 @@ public class SqlValidator
                     type = fieldType;
                 }
             }
-            if (type.isCharType()) {
+            if (SqlTypeUtil.inCharFamily(type)) {
                 Charset charset =
                     (type.getCharset() == null) ? Util.getDefaultCharset()
                     : type.getCharset();
@@ -796,7 +796,9 @@ public class SqlValidator
                         getValidatedNodeType(call.operands[0]);
                     RelDataType operandType2 =
                         getValidatedNodeType(call.operands[1]);
-                    if (operandType1.isCharType() && operandType2.isCharType()) {
+                    if (SqlTypeUtil.inCharFamily(operandType1)
+                        && SqlTypeUtil.inCharFamily(operandType2))
+                    {
                         Charset cs1 = operandType1.getCharset();
                         Charset cs2 = operandType2.getCharset();
                         assert ((null != cs1) && (null != cs2)) :
@@ -819,7 +821,7 @@ public class SqlValidator
                             SqlCollation.getCoercibilityDyadicOperator(col1,
                                 col2);
 
-                        if (type.isCharType()) {
+                        if (SqlTypeUtil.inCharFamily(type)) {
                             type =
                                 typeFactory.createTypeWithCharsetAndCollation(
                                     type,
@@ -829,14 +831,14 @@ public class SqlValidator
                     }
                 }
                 //determine coercibility and resulting collation name of unary operator if needed
-                else if (type.isCharType()) {
+                else if (SqlTypeUtil.inCharFamily(type)) {
                     RelDataType operandType =
                         getValidatedNodeType(call.operands[0]);
                     if (null == operandType) {
                         throw Util.newInternal(
                             "operand's type should have been derived");
                     }
-                    if (operandType.isCharType()) {
+                    if (SqlTypeUtil.inCharFamily(operandType)) {
                         SqlCollation collation = operandType.getCollation();
                         assert (null != collation) : "An implicit or explicit collation should have been set";
                         type =
@@ -908,7 +910,7 @@ public class SqlValidator
             // REVIEW:  should dynamic parameter types always be nullable?
             RelDataType newInferredType =
                 typeFactory.createTypeWithNullability(inferredType, true);
-            if (inferredType.isCharType()) {
+            if (SqlTypeUtil.inCharFamily(inferredType)) {
                 newInferredType =
                     typeFactory.createTypeWithCharsetAndCollation(
                         newInferredType,
@@ -918,7 +920,7 @@ public class SqlValidator
             setValidatedNodeType(node, newInferredType);
         } else if (node instanceof SqlNodeList) {
             SqlNodeList nodeList = (SqlNodeList) node;
-            if (inferredType.isProject()) {
+            if (inferredType.isStruct()) {
                 if (inferredType.getFieldCount() != nodeList.size()) {
                     // this can happen when we're validating an INSERT
                     // where the source and target degrees are different;
@@ -931,7 +933,7 @@ public class SqlValidator
             while (iter.hasNext()) {
                 SqlNode child = (SqlNode) iter.next();
                 RelDataType type;
-                if (inferredType.isProject()) {
+                if (inferredType.isStruct()) {
                     type = inferredType.getFields()[i].getType();
                     ++i;
                 } else {
@@ -1643,7 +1645,7 @@ public class SqlValidator
             where);
         where.validate(this, whereScope);
         final RelDataType type = deriveType(whereScope, where);
-        if (!type.equalsSansNullability(booleanType)) {
+        if (!SqlTypeUtil.inBooleanFamily(type)) {
             throw newValidationError(where,
                 EigenbaseResource.instance().newWhereMustBeBoolean());
         }
@@ -1665,7 +1667,7 @@ public class SqlValidator
             havingScope,
             having);
         final RelDataType type = deriveType(havingScope, having);
-        if (!type.equalsSansNullability(booleanType)) {
+        if (!SqlTypeUtil.inBooleanFamily(type)) {
             throw newValidationError(having,
                 EigenbaseResource.instance().newHavingMustBeBoolean());
         }
@@ -1713,7 +1715,7 @@ public class SqlValidator
         final RelDataType [] types =
             (RelDataType []) typeList.toArray(emptyTypes);
         final String [] aliases = (String []) aliasList.toArray(emptyStrings);
-        return typeFactory.createProjectType(types, aliases);
+        return typeFactory.createStructType(types, aliases);
     }
 
 
@@ -1750,7 +1752,7 @@ public class SqlValidator
             types[iTarget] = targetFields[iColumn].getType();
             ++iTarget;
         }
-        return typeFactory.createProjectType(types, fieldNames);
+        return typeFactory.createStructType(types, fieldNames);
     }
 
     /**
@@ -1843,7 +1845,7 @@ public class SqlValidator
                     "Values function where operands are scalars");
             }
             SqlCall rowConstructor = (SqlCall) operands[i];
-            if (targetRowType.isProject() &&
+            if (targetRowType.isStruct() &&
                 rowConstructor.getOperands().length !=
                 targetRowType.getFieldCount()) {
                 return;

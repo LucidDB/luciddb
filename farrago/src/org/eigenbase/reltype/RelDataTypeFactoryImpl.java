@@ -35,10 +35,9 @@ import java.util.HashSet;
 
 import org.eigenbase.sql.SqlCollation;
 import org.eigenbase.sql.SqlIntervalQualifier;
-import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.util.Util;
 import org.eigenbase.oj.util.*;
-
 
 /**
  * Skeletal implementation of {@link RelDataTypeFactory}.
@@ -50,10 +49,6 @@ import org.eigenbase.oj.util.*;
  */
 public class RelDataTypeFactoryImpl implements RelDataTypeFactory
 {
-    //~ Static fields/initializers --------------------------------------------
-
-    private static ThreadLocal threadInstances = new ThreadLocal();
-
     //~ Instance fields -------------------------------------------------------
 
     private HashMap map = new HashMap();
@@ -66,11 +61,6 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
 
     //~ Methods ---------------------------------------------------------------
 
-    public static void setThreadInstance(RelDataTypeFactory typeFactory)
-    {
-        threadInstances.set(typeFactory);
-    }
-
     public RelDataType createJavaType(Class clazz)
     {
         return canonize(new JavaType(clazz));
@@ -82,7 +72,7 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
         return canonize(new CrossType(flattenedTypes));
     }
 
-    public RelDataType createProjectType(
+    public RelDataType createStructType(
         RelDataType [] types,
         String [] fieldNames)
     {
@@ -93,7 +83,7 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
         return canonize(new RecordType(fields));
     }
 
-    public RelDataType createProjectType(
+    public RelDataType createStructType(
         RelDataTypeFactory.FieldInfo fieldInfo)
     {
         final int fieldCount = fieldInfo.getFieldCount();
@@ -118,7 +108,7 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
         assert (types != null);
         assert (types.length >= 1);
         RelDataType type0 = types[0];
-        if (type0.isProject()) {
+        if (type0.isStruct()) {
             // recursively compute column-wise least restrictive
             int nFields = type0.getFieldCount();
             RelDataType [] inputTypes = new RelDataType[types.length];
@@ -133,7 +123,7 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
                 }
                 outputTypes[j] = leastRestrictive(inputTypes);
             }
-            return createProjectType(outputTypes, fieldNames);
+            return createStructType(outputTypes, fieldNames);
         } else {
             // REVIEW jvs 1-Mar-2004: I adapted this from
             // SqlOperatorTable.useNullableBiggest to keep tests happy.  But at
@@ -169,7 +159,7 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
 
     private RelDataType copyIntervalType(RelDataType type, boolean nullable) {
         IntervalSqlType it = (IntervalSqlType) type;
-        return new IntervalSqlType(it.getIntervalQualifer(), nullable);
+        return new IntervalSqlType(it.getIntervalQualifier(), nullable);
     }
 
     // copy a non-record type, setting nullability
@@ -177,12 +167,12 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
         RelDataType type,
         boolean nullable)
     {
-        if (type instanceof SqlType) {
-            SqlType sqlType = (SqlType) type;
+        if (type instanceof UnitlessSqlType) {
+            UnitlessSqlType sqlType = (UnitlessSqlType) type;
             return sqlType.createWithNullability(nullable);
         } else if (type instanceof JavaType) {
             JavaType javaType = (JavaType) type;
-            if (javaType.isCharType()) {
+            if (SqlTypeUtil.inCharFamily(javaType)) {
                 return new JavaType(javaType.clazz, nullable,
                     javaType.charset, javaType.collation);
             } else {
@@ -195,37 +185,13 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
         }
     }
 
-    // Recursively copy a record type.
-    // This is distinct from copyRecordTypeWithNullability() below simply
-    // because the recurrence is different.
-    private RelDataType copyRecordType(final RecordType type)
-    {
-        return createProjectType(
-            new FieldInfo() {
-                public int getFieldCount()
-                {
-                    return type.getFieldCount();
-                }
-
-                public String getFieldName(int index)
-                {
-                    return type.getFields()[index].getName();
-                }
-
-                public RelDataType getFieldType(int index)
-                {
-                    RelDataType fieldType = type.getFields()[index].getType();
-                    return copyType(fieldType); // recur
-                }
-            });
-    }
-
-    // recursively copy a record type, setting nullability
-    private RelDataType copyRecordTypeWithNullability(
+    // recursively copy a record type
+    private RelDataType copyRecordType(
         final RecordType type,
+        final boolean ignoreNullable, 
         final boolean nullable)
     {
-        return createProjectType(
+        return createStructType(
             new FieldInfo() {
                 public int getFieldCount()
                 {
@@ -240,41 +206,41 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
                 public RelDataType getFieldType(int index)
                 {
                     RelDataType fieldType = type.getFields()[index].getType();
-                    return createTypeWithNullability(fieldType, nullable); // recur
+                    if (ignoreNullable) {
+                        return copyType(fieldType);
+                    } else {
+                        return createTypeWithNullability(fieldType, nullable);
+                    }
                 }
             });
     }
 
-    // implement RelDataType
+    // implement RelDataTypeFactory
+    public RelDataType copyType(RelDataType type)
+    {
+        if (type instanceof RecordType) {
+            return copyRecordType((RecordType) type, true, false);
+        } else {
+            return createTypeWithNullability(type, type.isNullable());
+        }
+    }
+    
+    // implement RelDataTypeFactory
     public RelDataType createTypeWithNullability(
         final RelDataType type,
         final boolean nullable)
     {
+        RelDataType newType;
         if (type instanceof RecordType) {
-            return copyRecordTypeWithNullability((RecordType) type, nullable);
+            newType = copyRecordType((RecordType) type, false, nullable);
         } else if (type instanceof MultisetSqlType) {
-            return copyMultisetType(type, nullable);
+            newType = copyMultisetType(type, nullable);
         } else if (type instanceof IntervalSqlType) {
-            return copyIntervalType(type, nullable);
+            newType = copyIntervalType(type, nullable);
         } else {
-            return copySimpleType(type, nullable);
+            newType = copySimpleType(type, nullable);
         }
-    }
-
-    // implement RelDataType
-    public RelDataType copyType(RelDataType type)
-    {
-        if (type instanceof RecordType) {
-            return copyRecordType((RecordType) type);
-        } else if (type instanceof MultisetSqlType) {
-            return copyMultisetType(type, type.isNullable());
-        } else if (type instanceof IntervalSqlType) {
-            return copyIntervalType(type, type.isNullable());
-        } else {
-            return copySimpleType(
-                type,
-                type.isNullable());
-        }
+        return canonizeOnceDigestFixed(newType);
     }
 
     public RelDataType createTypeWithCharsetAndCollation(
@@ -282,26 +248,24 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
         Charset charset,
         SqlCollation collation)
     {
-        Util.pre(type.isCharType() == true, "Not a chartype");
+        Util.pre(SqlTypeUtil.inCharFamily(type), "Not a chartype");
         Util.pre(charset != null, "charset!=null");
         Util.pre(collation != null, "collation!=null");
-        if (type instanceof SqlType) {
-            SqlType sqlType = (SqlType) type;
-            return sqlType.createWithCharsetAndCollation(charset, collation);
+        RelDataType newType;
+        if (type instanceof UnitlessSqlType) {
+            UnitlessSqlType sqlType = (UnitlessSqlType) type;
+            newType = sqlType.createWithCharsetAndCollation(charset, collation);
         } else if (type instanceof JavaType) {
             JavaType javaType = (JavaType) type;
-            return new JavaType(
+            newType = new JavaType(
                 javaType.clazz,
                 javaType.isNullable(),
                 charset,
                 collation);
+        } else {
+            throw Util.needToImplement("need to implement " + type);
         }
-        throw Util.needToImplement("need to implement " + type);
-    }
-
-    public static RelDataTypeFactory threadInstance()
-    {
-        return (RelDataTypeFactory) threadInstances.get();
+        return canonizeOnceDigestFixed(newType);
     }
 
     /**
@@ -384,11 +348,6 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
         return t instanceof JavaType;
     }
 
-    public static boolean isSqlType(RelDataType t)
-    {
-        return t instanceof SqlType;
-    }
-
     public static RelDataType createSqlTypeIgnorePrecOrScale(
         RelDataTypeFactory fac,
         SqlTypeName typeName)
@@ -423,23 +382,39 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
             new RelDataTypeField[list.size()]);
     }
 
+    private void assertUnitless(SqlTypeName typeName)
+    {
+        assert(typeName != null);
+        assert(typeName != SqlTypeName.Multiset) :
+            "use createMultisetType() instead";
+        assert(typeName != SqlTypeName.IntervalDayTime) :
+            "use createIntervalType() instead";
+        assert(typeName != SqlTypeName.IntervalYearMonth) :
+            "use createIntervalType() instead";
+    }
+
+    // TODO jvs 2-Dec-2004:  fix digest generation for all types,
+    // and then replace this with canonize
+    private RelDataType canonizeOnceDigestFixed(RelDataType type)
+    {
+        return type;
+    }
+    
     public RelDataType createSqlType(SqlTypeName typeName)
     {
-        Util.pre(typeName != null, "typeName != null");
-        assert(!SqlTypeName.Multiset.equals(typeName)) :
-            "use createMultisetType() instead";
-        return new SqlType(typeName);
+        assertUnitless(typeName);
+        RelDataType newType = new UnitlessSqlType(typeName);
+        return canonizeOnceDigestFixed(newType);
     }
 
     public RelDataType createSqlType(
         SqlTypeName typeName,
         int length)
     {
-        Util.pre(typeName != null, "typeName != null");
+        assertUnitless(typeName);
         Util.pre(length >= 0, "length >= 0");
-        assert(!SqlTypeName.Multiset.equals(typeName)) :
-            "use createMultisetType() instead";
-        return new SqlType(typeName, length);
+        RelDataType newType = new UnitlessSqlType(typeName, length);
+        return canonizeOnceDigestFixed(newType);
     }
 
     public RelDataType createSqlType(
@@ -447,20 +422,21 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
         int length,
         int scale)
     {
-        Util.pre(typeName != null, "typeName != null");
+        assertUnitless(typeName);
         Util.pre(length >= 0, "length >= 0");
-        assert(!SqlTypeName.Multiset.equals(typeName)) :
-            "use createMultisetType() instead";
-        return new SqlType(typeName, length, scale);
+        RelDataType newType = new UnitlessSqlType(typeName, length, scale);
+        return canonizeOnceDigestFixed(newType);
     }
 
     public RelDataType createMultisetType(RelDataType type) {
-        return new MultisetSqlType(type, true);
+        RelDataType newType = new MultisetSqlType(type, true);
+        return canonizeOnceDigestFixed(newType);
     }
 
     public RelDataType createIntervalType(
         SqlIntervalQualifier intervalQualifier) {
-        return new IntervalSqlType(intervalQualifier, true);
+        RelDataType newType = new IntervalSqlType(intervalQualifier, true);
+        return canonizeOnceDigestFixed(newType);
     }
 
     /**
@@ -505,7 +481,7 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
      * class should set during construction.
      * </p>
      */
-    protected abstract class TypeImpl implements RelDataType
+    protected abstract class TypeImpl implements RelDataType, RelDataTypeFamily
     {
         protected final RelDataTypeField [] fields;
         protected String digest;
@@ -563,20 +539,7 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
             throw Util.needToImplement(this);
         }
 
-        public boolean isJoin()
-        {
-            throw Util.newInternal("todo: remove isJoin");
-
-            //return false;
-        }
-
-        public RelDataType [] getJoinTypes()
-        {
-            assert (isJoin());
-            throw Util.newInternal("not reached");
-        }
-
-        public boolean isProject()
+        public boolean isStruct()
         {
             return false;
         }
@@ -605,13 +568,6 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
             return digest;
         }
 
-        protected abstract String computeDigest();
-
-        public boolean equalsSansNullability(RelDataType type)
-        {
-            return equals(type);
-        }
-
         public boolean isNullable()
         {
             return false;
@@ -635,16 +591,6 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
             return false;
         }
 
-        public boolean isSameType(RelDataType t)
-        {
-            throw Util.needToImplement("need to implement");
-        }
-
-        public boolean isSameTypeFamily(RelDataType t)
-        {
-            return false;
-        }
-
         public Charset getCharset()
         {
             throw Util.needToImplement("need to implement");
@@ -654,11 +600,6 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
             throws RuntimeException
         {
             throw Util.needToImplement("need to implement");
-        }
-
-        public boolean isCharType()
-        {
-            return false;
         }
 
         public int getMaxBytesStorage()
@@ -673,7 +614,13 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
 
         public SqlTypeName getSqlTypeName()
         {
-            throw Util.needToImplement("need to implement");
+            return null;
+        }
+
+        public RelDataTypeFamily getFamily()
+        {
+            // by default, put each type into its own family
+            return this;
         }
     }
 
@@ -735,18 +682,6 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
         {
             throw new UnsupportedOperationException(
                 "not applicable to a join type");
-        }
-
-        public boolean isJoin()
-        {
-            //return true;
-            throw Util.newInternal("todo: remove isJoin");
-        }
-
-        public RelDataType [] getJoinTypes()
-        {
-            assert (isJoin());
-            return types;
         }
 
         protected String computeDigest()
@@ -833,7 +768,7 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
             this.digest = computeDigest();
         }
 
-        public boolean isProject()
+        public boolean isStruct()
         {
             return true;
         }
@@ -864,27 +799,6 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
             }
             sb.append(")");
             return sb.toString();
-        }
-
-        public boolean isSameType(RelDataType t) {
-            if (t instanceof RecordType) {
-                RecordType that = (RecordType) t;
-                if (that.fields.length!=this.fields.length) {
-                    return false;
-                }
-
-                boolean ret = true;
-                for (int i = 0; i < this.fields.length; i++) {
-                    ret = ret && this.fields[i].getType().isSameType(
-                        that.fields[i].getType());
-                }
-                return ret;
-            }
-            return false;
-        }
-
-        public boolean isSameTypeFamily(RelDataType t) {
-            return isSameType(t);
         }
     }
 
@@ -935,7 +849,7 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
         {
             this(clazz);
             Util.pre(
-                isCharType(),
+                SqlTypeUtil.inCharFamily(this), 
                 "Need to be a chartype");
             this.isNullable = nullable;
             this.charset = charset;
@@ -951,7 +865,7 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
             RelDataType t,
             boolean coerce)
         {
-            if (!(t instanceof JavaType) && !(t instanceof SqlType)) {
+            if (!(t instanceof JavaType) && !(t instanceof UnitlessSqlType)) {
                 return false;
             }
             SqlTypeName thisSqlTypeName = getSqlTypeName();
@@ -960,8 +874,8 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
             }
             SqlTypeName thatSqlTypeName;
 
-            if (t instanceof SqlType) {
-                thatSqlTypeName = ((SqlType) t).getTypeName();
+            if (t instanceof UnitlessSqlType) {
+                thatSqlTypeName = t.getSqlTypeName();
             } else {
                 thatSqlTypeName =
                     JavaToSqlTypeConversionRules.instance().lookup(t);
@@ -976,17 +890,6 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
             RelDataType thatType =
                 createSqlTypeIgnorePrecOrScale(fac, thatSqlTypeName);
             return thisType.isAssignableFrom(thatType, coerce);
-        }
-
-        public boolean isSameType(RelDataType t)
-        {
-            return t instanceof JavaType && clazz.equals(((JavaType) t).clazz);
-        }
-
-        public boolean isSameTypeFamily(RelDataType t)
-        {
-            //TODO implement real rules
-            return isSameType(t);
         }
 
         protected String computeDigest()
@@ -1026,7 +929,7 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
         public Charset getCharset()
             throws RuntimeException
         {
-            if (!isCharType()) {
+            if (!SqlTypeUtil.inCharFamily(this)) {
                 throw Util.newInternal(computeDigest()
                     + " is not defined to carry a charset");
             }
@@ -1036,7 +939,7 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
         public SqlCollation getCollation()
             throws RuntimeException
         {
-            if (!isCharType()) {
+            if (!SqlTypeUtil.inCharFamily(this)) {
                 throw Util.newInternal(computeDigest()
                     + " is not defined to carry a collation");
             }
@@ -1047,27 +950,46 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
         {
             return JavaToSqlTypeConversionRules.instance().lookup(this);
         }
+    }
 
-        public boolean isCharType()
+    public abstract class AbstractSqlType
+        extends TypeImpl implements Cloneable
+    {
+        protected final SqlTypeName typeName;
+        protected boolean isNullable;
+        
+        protected AbstractSqlType(SqlTypeName typeName, boolean isNullable)
         {
-            return clazz.equals(String.class) || clazz.equals(char.class);
+            super(null);
+            this.typeName = typeName;
+            this.isNullable = isNullable;
+        }
+        
+        public SqlTypeName getSqlTypeName()
+        {
+            return typeName;
+        }
+
+        public boolean isNullable()
+        {
+            return isNullable;
+        }
+        
+        public RelDataTypeFamily getFamily()
+        {
+            return SqlTypeFamily.getFamilyForSqlType(typeName);
         }
     }
 
     /**
-     * SQL scalar type.
-     *
-     * <p>TODO: Make protected. (jhyde, 2004/5/26)
+     * SQL unitless scalar type (unitless implies no intervals).
      */
-    public class SqlType implements RelDataType, Cloneable
+    protected class UnitlessSqlType extends AbstractSqlType
     {
         public static final int SCALE_NOT_SPECIFIED = Integer.MIN_VALUE;
         public static final int PRECISION_NOT_SPECIFIED = -1;
-        private final SqlTypeName typeName;
-        private boolean isNullable = true;
         private final int precision;
         private final int scale;
-        private final String digest;
         private SqlCollation collation;
         private Charset charset;
 
@@ -1076,13 +998,13 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
          * @param typeName Type name
          * @pre typeName.allowsNoPrecNoScale(false,false)
          */
-        SqlType(SqlTypeName typeName)
+        UnitlessSqlType(SqlTypeName typeName)
         {
+            super(typeName, true);
             Util.pre(
                 typeName.allowsPrecScale(false, false),
                 "typeName.allowsPrecScale(false,false), typeName="
                 + typeName.name);
-            this.typeName = typeName;
             this.precision = PRECISION_NOT_SPECIFIED;
             this.scale = SCALE_NOT_SPECIFIED;
             this.digest = typeName.name;
@@ -1093,14 +1015,14 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
          * @param typeName Type name
          * @pre typeName.allowsPrecNoScale(true,false)
          */
-        SqlType(
+        UnitlessSqlType(
             SqlTypeName typeName,
             int precision)
         {
+            super(typeName, true);
             Util.pre(
                 typeName.allowsPrecScale(true, false),
                 "typeName.allowsPrecScale(true,false)");
-            this.typeName = typeName;
             this.precision = precision;
             this.scale = SCALE_NOT_SPECIFIED;
             this.digest = typeName.name + "(" + precision + ")";
@@ -1111,15 +1033,15 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
          * @param typeName Type name
          * @pre typeName.allowsPrecScale(true,true)
          */
-        SqlType(
+        UnitlessSqlType(
             SqlTypeName typeName,
             int precision,
             int scale)
         {
+            super(typeName, true);
             Util.pre(
                 typeName.allowsPrecScale(true, true),
                 "typeName.allowsPrecScale(true,true)");
-            this.typeName = typeName;
             this.precision = precision;
             this.scale = scale;
             this.digest =
@@ -1129,11 +1051,11 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
         /**
          * Constructs a type with nullablity
          */
-        public SqlType createWithNullability(boolean nullable)
+        public UnitlessSqlType createWithNullability(boolean nullable)
         {
-            SqlType ret = null;
+            UnitlessSqlType ret = null;
             try {
-                ret = (SqlType) this.clone();
+                ret = (UnitlessSqlType) this.clone();
             } catch (CloneNotSupportedException e) {
                 throw Util.newInternal(e);
             }
@@ -1142,17 +1064,17 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
         }
 
         /**
-         * Constructs a typ charset and collation
-         * @pre isCharType == true
+         * Constructs a type with charset and collation
+         * @pre SqlTypeUtil.inCharFamily(this)
          */
-        public SqlType createWithCharsetAndCollation(
+        UnitlessSqlType createWithCharsetAndCollation(
             Charset charset,
             SqlCollation collation)
         {
-            Util.pre(this.isCharType() == true, "Not an chartype");
-            SqlType ret;
+            Util.pre(SqlTypeUtil.inCharFamily(this) == true, "Not an chartype");
+            UnitlessSqlType ret;
             try {
-                ret = (SqlType) this.clone();
+                ret = (UnitlessSqlType) this.clone();
             } catch (CloneNotSupportedException e) {
                 throw Util.newInternal(e);
             }
@@ -1165,113 +1087,6 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
         public int getPrecision()
         {
             return precision;
-        }
-
-        public SqlTypeName getTypeName()
-        {
-            return typeName;
-        }
-
-        public String toString()
-        {
-            return digest;
-        }
-
-        public String getFullTypeString()
-        {
-            return digest;
-        }
-
-        public int hashCode()
-        {
-            return digest.hashCode();
-        }
-
-        public boolean equals(Object obj)
-        {
-            return obj instanceof SqlType
-                && ((SqlType) obj).digest.equals(digest);
-        }
-
-        public boolean isSameType(RelDataType t)
-        {
-            if (t instanceof JavaType) {
-                SqlTypeName thatSqlTypeName =
-                    JavaToSqlTypeConversionRules.instance().lookup(t);
-                if (null == thatSqlTypeName) {
-                    return false;
-                }
-                return this.getSqlTypeName().equals(thatSqlTypeName);
-            }
-            return t instanceof SqlType
-                && (((SqlType) t).typeName.getOrdinal() ==
-                    this.typeName.getOrdinal());
-        }
-
-        public boolean isSameTypeFamily(RelDataType t)
-        {
-            //TODO Implement real rules
-            return isSameType(t);
-        }
-
-        public RelDataTypeFactory getFactory()
-        {
-            return RelDataTypeFactoryImpl.this;
-        }
-
-        public RelDataTypeField getField(String fieldName)
-        {
-            throw new UnsupportedOperationException();
-        }
-
-        public int getFieldCount()
-        {
-            throw new UnsupportedOperationException();
-        }
-
-        public int getFieldOrdinal(String fieldName)
-        {
-            throw new UnsupportedOperationException();
-        }
-
-        public RelDataTypeField [] getFields()
-        {
-            throw new UnsupportedOperationException();
-        }
-
-        public RelDataType getComponentType()
-        {
-            return null;
-        }
-
-        public RelDataType getArrayType()
-        {
-            throw Util.needToImplement(this);
-        }
-
-        public boolean isJoin()
-        {
-            return false;
-        }
-
-        public RelDataType [] getJoinTypes()
-        {
-            throw new UnsupportedOperationException();
-        }
-
-        public boolean isProject()
-        {
-            return false;
-        }
-
-        public boolean equalsSansNullability(RelDataType type)
-        {
-            return equals(type);
-        }
-
-        public boolean isNullable()
-        {
-            return isNullable;
         }
 
         public boolean isAssignableFrom(
@@ -1291,16 +1106,16 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
                 return assignableFromRules.isAssignableFrom(this.typeName,
                     thatSqlTypeName, coerce);
             } else {
-                return t instanceof SqlType
+                return t instanceof UnitlessSqlType
                     && assignableFromRules.isAssignableFrom(this.typeName,
-                        ((SqlType) t).typeName, coerce);
+                        ((UnitlessSqlType) t).typeName, coerce);
             }
         }
 
         public Charset getCharset()
             throws RuntimeException
         {
-            if (!isCharType()) {
+            if (!SqlTypeUtil.inCharFamily(this)) {
                 throw Util.newInternal(typeName.toString()
                     + " is not defined to carry a charset");
             }
@@ -1310,22 +1125,11 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
         public SqlCollation getCollation()
             throws RuntimeException
         {
-            if (!isCharType()) {
+            if (!SqlTypeUtil.inCharFamily(this)) {
                 throw Util.newInternal(typeName.toString()
                     + " is not defined to carry a collation");
             }
             return this.collation;
-        }
-
-        public boolean isCharType()
-        {
-            switch (typeName.getOrdinal()) {
-            case SqlTypeName.Char_ordinal:
-            case SqlTypeName.Varchar_ordinal:
-                return true;
-            default:
-                return false;
-            }
         }
 
         public int getMaxBytesStorage()
@@ -1357,44 +1161,36 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
                 return -1;
             }
         }
-
-        /**
-         * get the SqlTypeName for this RelDataType.
-         */
-        public SqlTypeName getSqlTypeName()
-        {
-            return this.typeName;
-        }
     }
 
 
     /**
-     * IntervalSqlType represents SQL builtin type of INTERVAL
+     * IntervalSqlType represents SQL builtin type of INTERVAL.
      */
-    public class IntervalSqlType implements RelDataType, Cloneable
+    public class IntervalSqlType extends AbstractSqlType
     {
-        private SqlIntervalQualifier intervalQualifer;
-        private boolean isNullable;
-        private String digest;
-        private SqlTypeName typeName;
+        private SqlIntervalQualifier intervalQualifier;
 
         public IntervalSqlType(
-            SqlIntervalQualifier intervalQualifer,
-            boolean isNullable) {
-            this.isNullable = isNullable;
-            this.intervalQualifer = intervalQualifer;
-            typeName = intervalQualifer.isYearMonth() ?
-                SqlTypeName.IntervalYearMonth :
-                SqlTypeName.IntervalDayTime;
-            digest = "INTERVAL "+intervalQualifer.toString();
+            SqlIntervalQualifier intervalQualifier,
+            boolean isNullable)
+        {
+            super(
+                intervalQualifier.isYearMonth()
+                ? SqlTypeName.IntervalYearMonth
+                : SqlTypeName.IntervalDayTime,
+                isNullable);
+            this.intervalQualifier = intervalQualifier;
+            digest = computeDigest();
         }
 
-        public SqlIntervalQualifier getIntervalQualifer() {
-            return intervalQualifer;
+        protected String computeDigest()
+        {
+            return "INTERVAL "+intervalQualifier.toString();
         }
-
-        public String toString() {
-            return getFullTypeString();
+        
+        public SqlIntervalQualifier getIntervalQualifier() {
+            return intervalQualifier;
         }
 
         /**
@@ -1406,34 +1202,34 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
          * <code>INTERVAL DAY TO SECOND</code>
          */
         public IntervalSqlType combine(IntervalSqlType that) {
-            assert(this.intervalQualifer.isYearMonth()==
-                   that.intervalQualifer.isYearMonth());
+            assert(this.intervalQualifier.isYearMonth()==
+                   that.intervalQualifier.isYearMonth());
             boolean  nullable = isNullable || that.isNullable;
             SqlIntervalQualifier.TimeUnit thisStart =
-                                     this.intervalQualifer.getStartUnit();
+                                     this.intervalQualifier.getStartUnit();
             SqlIntervalQualifier.TimeUnit thisEnd =
-                                     this.intervalQualifer.getEndUnit();
+                                     this.intervalQualifier.getEndUnit();
             SqlIntervalQualifier.TimeUnit thatStart =
-                                     that.intervalQualifer.getStartUnit();
+                                     that.intervalQualifier.getStartUnit();
             SqlIntervalQualifier.TimeUnit thatEnd =
-                                     that.intervalQualifer.getEndUnit();
+                                     that.intervalQualifier.getEndUnit();
 
             assert(null!=thisStart);
             assert(null!=thatStart);
 
-            int secondPrec = intervalQualifer.getStartPrecision();
+            int secondPrec = intervalQualifier.getStartPrecision();
             int fracPrec = Math.max(
-                this.intervalQualifer.getFractionalSecondPrecision(),
-                that.intervalQualifer.getFractionalSecondPrecision());
+                this.intervalQualifier.getFractionalSecondPrecision(),
+                that.intervalQualifier.getFractionalSecondPrecision());
 
             if (thisStart.getOrdinal() > thatStart.
                 getOrdinal()) {
                 thisEnd = thisStart;
                 thisStart = thatStart;
-                secondPrec = that.intervalQualifer.getStartPrecision();
+                secondPrec = that.intervalQualifier.getStartPrecision();
             } else if (thisStart.getOrdinal() == thatStart.getOrdinal()) {
                 secondPrec = Math.max(secondPrec,
-                    that.intervalQualifer.getStartPrecision());
+                    that.intervalQualifier.getStartPrecision());
             } else  if ((null == thisEnd) || (thisEnd.getOrdinal() < thatStart.
                 getOrdinal())) {
                 thisEnd = thatStart;
@@ -1451,71 +1247,16 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
                     thisStart, secondPrec, thisEnd, fracPrec, null), nullable);
         }
 
-        public RelDataTypeFactory getFactory() {
-            return RelDataTypeFactoryImpl.this;
-        }
-
-        public RelDataTypeField getField(String fieldName) {
-            return null;
-        }
-
-        public int getFieldCount() {
-            return 0;
-        }
-
-        public int getFieldOrdinal(String fieldName) {
-            return 0;
-        }
-
-        public RelDataTypeField[] getFields() {
-            return new RelDataTypeField[0];
-        }
-
-        public boolean isJoin() {
-            return false;
-        }
-
-        public RelDataType[] getJoinTypes() {
-            return new RelDataType[0];
-        }
-
-        public boolean isProject() {
-            return false;
-        }
-
-        public boolean equalsSansNullability(RelDataType type) {
-            return isSameType(type);
-        }
-
         public boolean isNullable() {
             return isNullable;
         }
 
-        public RelDataType getComponentType() {
-            return null;
-        }
-
-        public RelDataType getArrayType() {
-            return null;
-        }
-
         public boolean isAssignableFrom(
             RelDataType t,
-            boolean coerce) {
+            boolean coerce)
+        {
             Util.discard(coerce);
-            return isSameType(t);
-        }
-
-        public boolean isSameType(RelDataType t) {
-            return getSqlTypeName().equals(t.getSqlTypeName());
-        }
-
-        public boolean isSameTypeFamily(RelDataType t) {
-            return isSameType(t);
-        }
-
-        public boolean isCharType() {
-            return false;
+            return SqlTypeUtil.sameNamedType(this, t);
         }
 
         public Charset getCharset() {
@@ -1523,7 +1264,7 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
         }
 
         public SqlCollation getCollation()
-            throws RuntimeException {
+        {
             throw new RuntimeException();
         }
 
@@ -1532,125 +1273,39 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
         }
 
         public int getPrecision() {
-            return intervalQualifer.getStartPrecision();
+            return intervalQualifier.getStartPrecision();
         }
-
-        public SqlTypeName getSqlTypeName() {
-            return typeName;
-        }
-
-        public String getFullTypeString() {
-            return digest;
-        }
-
     }
+    
     /**
      * MultisetSqlType is used to reperesent the type of the SQL builtin
      * MULTISET construct.
      */
-    public class MultisetSqlType implements RelDataType, Cloneable {
-
+    public class MultisetSqlType extends AbstractSqlType
+    {
         private RelDataType elementType;
-        private boolean isNullable;
-        private String digest;
 
         /**
          * @pre null!=elementType
          */
         public MultisetSqlType(RelDataType elementType, boolean isNullable) {
+            super(SqlTypeName.Multiset, isNullable);
             Util.pre(null!=elementType,"null!=elementType");
             this.elementType = elementType;
-            this.isNullable = isNullable;
-            digest = elementType.toString() + " MULTISET";
+            digest = computeDigest();
         }
 
-        public RelDataTypeFactory getFactory() {
-            return RelDataTypeFactoryImpl.this;
+        protected String computeDigest()
+        {
+            return elementType.getFullTypeString() + " MULTISET";
         }
-
+        
         public String toString() {
-            return getFullTypeString();
-        }
-
-        public String getFullTypeString() {
-            return digest;
-        }
-
-        public int hashCode()
-        {
-            return digest.hashCode();
-        }
-
-        public boolean equals(Object obj)
-        {
-            // if obj is a multiset then elementType!=null for sure since its
-            //enforced in ctor.
-            return (obj instanceof MultisetSqlType) &&
-               ((MultisetSqlType) obj).elementType.isSameType(this.elementType);
-        }
-
-        public boolean isSameType(RelDataType t)
-        {
-            return equals(t);
-        }
-
-        public boolean isSameTypeFamily(RelDataType t)
-        {
-            return isSameType(t);
-        }
-
-        public RelDataTypeField getField(String fieldName)
-        {
-            throw new UnsupportedOperationException();
-        }
-
-        public int getFieldCount()
-        {
-            throw new UnsupportedOperationException();
-        }
-
-        public int getFieldOrdinal(String fieldName)
-        {
-            throw new UnsupportedOperationException();
-        }
-
-        public RelDataTypeField [] getFields()
-        {
-            throw new UnsupportedOperationException();
+            return elementType.toString() + " MULTISET";
         }
 
         public RelDataType getComponentType() {
             return elementType;
-        }
-
-        public boolean isJoin()
-        {
-            return false;
-        }
-
-        public RelDataType [] getJoinTypes()
-        {
-            throw new UnsupportedOperationException();
-        }
-
-        public RelDataType getArrayType()
-        {
-            throw Util.needToImplement(this);
-        }
-
-        public boolean isProject()
-        {
-            return elementType.isProject();
-        }
-
-        public boolean equalsSansNullability(RelDataType type)
-        {
-            return equals(type);
-        }
-
-        public boolean isNullable()
-        {
-            return isNullable;
         }
 
         public boolean isAssignableFrom(
@@ -1659,10 +1314,6 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
             return (t instanceof MultisetSqlType) &&
                 ((MultisetSqlType) t).elementType.isAssignableFrom(
                     elementType, coerce);
-        }
-
-        public boolean isCharType() {
-            return false;
         }
 
         public Charset getCharset() {
@@ -1677,18 +1328,25 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
             throw new UnsupportedOperationException();
         }
 
-        public SqlTypeName getSqlTypeName() {
-            return SqlTypeName.Multiset;
-        }
-
         public int getPrecision() {
             throw new UnsupportedOperationException();
         }
 
+        public RelDataTypeFamily getFamily()
+        {
+            // TODO jvs 2-Dec-2004:  This gives each multiset type its
+            // own family.  But that's not quite correct; the family should
+            // be based on the element type for proper comparability
+            // semantics (per 4.10.4 of SQL/2003).  So either this should
+            // make up canonical families dynamically, or the
+            // comparison type-checking should not rely on this.  I
+            // think the same goes for ROW types.
+            return this;
+        }
     }
 
     /**
-     * Class to hold conversion rules from JavaType to SqlType
+     * Class to hold conversion rules from JavaType to SqlTypeName
      */
     public static class JavaToSqlTypeConversionRules
     {
@@ -1702,6 +1360,8 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
             rules.put(int.class, SqlTypeName.Integer);
             rules.put(Long.class, SqlTypeName.Bigint);
             rules.put(long.class, SqlTypeName.Bigint);
+            rules.put(Short.class, SqlTypeName.Smallint);
+            rules.put(short.class, SqlTypeName.Smallint);
             rules.put(byte.class, SqlTypeName.Tinyint);
             rules.put(Byte.class, SqlTypeName.Tinyint);
 
@@ -1713,6 +1373,9 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
             rules.put(boolean.class, SqlTypeName.Boolean);
             rules.put(byte [].class, SqlTypeName.Varbinary);
             rules.put(String.class, SqlTypeName.Varchar);
+            rules.put(char [].class, SqlTypeName.Varchar);
+            rules.put(Character.class, SqlTypeName.Char);
+            rules.put(char.class, SqlTypeName.Char);
 
             rules.put(Date.class, SqlTypeName.Date);
             rules.put(Timestamp.class, SqlTypeName.Timestamp);
@@ -1744,7 +1407,7 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
      * REVIEW 7/05/04 Wael: We should split this up in
      * Cast rules, symmetric and asymmetric assignable rules
      *
-     * Class to hold rules to determine if a type is assignalbe from another
+     * Class to hold rules to determine if a type is assignable from another
      * type.
      */
     public static class AssignableFromRules

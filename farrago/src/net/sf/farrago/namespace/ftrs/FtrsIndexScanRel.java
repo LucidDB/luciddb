@@ -136,7 +136,7 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
             return super.deriveRowType();
         } else {
             final RelDataTypeField [] fields = table.getRowType().getFields();
-            return cluster.typeFactory.createProjectType(
+            return cluster.typeFactory.createStructType(
                 new RelDataTypeFactory.FieldInfo() {
                     public int getFieldCount()
                     {

@@ -196,7 +196,7 @@ class MedMdrNameDirectory extends MedAbstractNameDirectory
         types[n] = typeFactory.createMofType(null);
         fieldNames[n + 1] = "mofClassName";
         types[n + 1] = typeFactory.createMofType(null);
-        return typeFactory.createProjectType(types, fieldNames);
+        return typeFactory.createStructType(types, fieldNames);
     }
 
     // implement FarragoMedNameDirectory

@@ -171,7 +171,7 @@ public class OJTypeFactoryImpl extends RelDataTypeFactoryImpl
      * {@link #createJavaType} instead.
      * </li>
      * <li>
-     * If the {@link OJClass} is synthetic, call {@link #createProjectType} or
+     * If the {@link OJClass} is synthetic, call {@link #createStructType} or
      * {@link #createJoinType} instead.
      * </li>
      * </ul>

@@ -323,7 +323,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         default:
             String charsetName;
             SqlCollation collation;
-            if (precisionType.isCharType()) {
+            if (SqlTypeUtil.inCharFamily(precisionType)) {
                 charsetName = repos.getDefaultCharsetName();
                 collation =
                     new SqlCollation(SqlCollation.Coercibility.Coercible);
@@ -405,7 +405,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         if (featureList.isEmpty()) {
             return null;
         }
-        return createProjectType(
+        return createStructType(
             new RelDataTypeFactory.FieldInfo() {
                 public int getFieldCount()
                 {
@@ -432,7 +432,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     public RelDataType createResultSetType(final ResultSetMetaData metaData)
     {
         final FarragoTypeFactoryImpl factory = this;
-        return createProjectType(
+        return createStructType(
             new RelDataTypeFactory.FieldInfo() {
                 public int getFieldCount()
                 {
@@ -488,7 +488,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
                         }
                         String charsetName = null;
                         SqlCollation collation = null;
-                        if (prototype.isCharType()) {
+                        if (SqlTypeUtil.inCharFamily(prototype)) {
                             charsetName = repos.getDefaultCharsetName();
                             collation = new SqlCollation(
                                 SqlCollation.Coercibility.Coercible);
@@ -575,7 +575,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             SqlCollation collation;
             FarragoPrecisionType precisionType;
             precisionType = (FarragoPrecisionType) type;
-            if (type.isCharType()) {
+            if (SqlTypeUtil.inCharFamily(type)) {
                 charsetName = precisionType.getCharsetName();
                 collation = precisionType.getCollation();
             } else {
@@ -632,7 +632,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         Charset charset,
         SqlCollation collation)
     {
-        assert (type.isCharType()) : "type.isCharType()==true";
+        assert (SqlTypeUtil.inCharFamily(type));
         if (!(type instanceof FarragoAtomicType)) {
             return super.createTypeWithCharsetAndCollation(type, charset,
                 collation);
@@ -696,9 +696,9 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         if (type instanceof FarragoType) {
             FarragoType farragoType = (FarragoType) type;
             return farragoType.getOjClass(declarer);
-        } else if (type instanceof SqlType) {
-            SqlType sqlType = (SqlType) type;
-            assert (sqlType.getTypeName().equals(SqlTypeName.Null));
+        } else if (type instanceof UnitlessSqlType) {
+            UnitlessSqlType sqlType = (UnitlessSqlType) type;
+            assert (sqlType.getSqlTypeName().equals(SqlTypeName.Null));
             return OJSystem.NULLTYPE;
         } else {
             return super.toOJClass(declarer, type);
@@ -741,7 +741,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
                 // FIXME jvs 27-May-2004:  uniquify
                 fieldNames[i] = field.getName();
             }
-            recordType = (RecordType) createProjectType(types, fieldNames);
+            recordType = (RecordType) createStructType(types, fieldNames);
         }
         return super.createOJClassForRecordType(declarer, recordType);
     }
@@ -752,7 +752,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     {
         boolean nested = false;
         for (int i = 0; i < fields.length; ++i) {
-            if (fields[i].getType().isProject()) {
+            if (fields[i].getType().isStruct()) {
                 nested = true;
                 flattenFields(
                     fields[i].getType().getFields(),
@@ -768,7 +768,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     public RelDataType leastRestrictive(RelDataType [] types)
     {
         assert (types.length > 0);
-        if (types[0].isProject()) {
+        if (types[0].isStruct()) {
             return super.leastRestrictive(types);
         }
         if (!(types[0] instanceof FarragoAtomicType)) {
@@ -782,16 +782,16 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
                 return super.leastRestrictive(types);
             }
 
-            FarragoTypeFamily resultFamily = resultType.getFamily();
+            SqlTypeFamily resultFamily = resultType.getSqlFamily();
             FarragoAtomicType type = (FarragoAtomicType) types[i];
-            FarragoTypeFamily family = type.getFamily();
+            SqlTypeFamily family = type.getSqlFamily();
 
             if (type.isNullable()) {
                 anyNullable = true;
             }
 
-            if (family.equals(FarragoTypeFamily.CHARACTER)
-                    || (family.equals(FarragoTypeFamily.BINARY))) {
+            if (family.equals(SqlTypeFamily.Character)
+                    || (family.equals(SqlTypeFamily.Binary))) {
                 // TODO:  character set, collation
                 if (!resultFamily.equals(family)) {
                     return null;

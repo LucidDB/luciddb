@@ -127,7 +127,7 @@ class FtrsIndexSearchRel extends FennelPullSingleRel
             final RelDataTypeField [] childFields =
                 child.getRowType().getFields();
             RelDataType leftType =
-                getCluster().typeFactory.createProjectType(
+                getCluster().typeFactory.createStructType(
                     new RelDataTypeFactory.FieldInfo() {
                         public int getFieldCount()
                         {

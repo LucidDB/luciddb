@@ -28,6 +28,7 @@ import org.eigenbase.oj.util.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.type.*;
 
 
 /**
@@ -210,7 +211,7 @@ public class FarragoOJRexCastImplementor extends FarragoOJRexImplementor
 
             // pad character is 0 for binary, space for character
             Expression padByteExp;
-            if (!lhsPrecisionType.isCharType()) {
+            if (!SqlTypeUtil.inCharFamily(lhsPrecisionType)) {
                 padByteExp =
                     new CastExpression(
                         OJSystem.BYTE,
@@ -295,8 +296,8 @@ public class FarragoOJRexCastImplementor extends FarragoOJRexImplementor
         } else if (lhsType instanceof FarragoPrimitiveType) {
             return convertCastToNotNullPrimitive(translator, lhsType, rhsType,
                 lhsExp, rhsExp);
-        } else if (lhsType.isProject()) {
-            assert (rhsType.isProject());
+        } else if (lhsType.isStruct()) {
+            assert (rhsType.isStruct());
 
             // TODO jvs 27-May-2004:  relax this assert and deal with
             // conversions, null checks, etc.
@@ -316,19 +317,19 @@ public class FarragoOJRexCastImplementor extends FarragoOJRexImplementor
         RelDataType rhsType = call.operands[0].getType();
         if ((lhsType instanceof FarragoAtomicType)
                 && (rhsType instanceof FarragoAtomicType)) {
-            FarragoTypeFamily lhsTypeFamily =
-                ((FarragoAtomicType) lhsType).getFamily();
-            FarragoTypeFamily rhsTypeFamily =
-                ((FarragoAtomicType) rhsType).getFamily();
+            SqlTypeFamily lhsTypeFamily =
+                ((FarragoAtomicType) lhsType).getSqlFamily();
+            SqlTypeFamily rhsTypeFamily =
+                ((FarragoAtomicType) rhsType).getSqlFamily();
 
             // casting between numeric and non-numeric types is
             // not yet implemented
-            if (lhsTypeFamily.equals(FarragoTypeFamily.NUMERIC)
-                    && !rhsTypeFamily.equals(FarragoTypeFamily.NUMERIC)) {
+            if (lhsTypeFamily.equals(SqlTypeFamily.Numeric)
+                    && !rhsTypeFamily.equals(SqlTypeFamily.Numeric)) {
                 return false;
             }
-            if (rhsTypeFamily.equals(FarragoTypeFamily.NUMERIC)
-                    && !lhsTypeFamily.equals(FarragoTypeFamily.NUMERIC)) {
+            if (rhsTypeFamily.equals(SqlTypeFamily.Numeric)
+                    && !lhsTypeFamily.equals(SqlTypeFamily.Numeric)) {
                 return false;
             }
         }

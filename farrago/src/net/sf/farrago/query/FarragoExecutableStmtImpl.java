@@ -98,7 +98,7 @@ abstract class FarragoExecutableStmtImpl extends FarragoCompoundAllocation
             farragoType.forgetFactory();
         }
 
-        return newTypeFactory.createProjectType(
+        return newTypeFactory.createStructType(
             new RelDataTypeFactory.FieldInfo() {
                 public int getFieldCount()
                 {

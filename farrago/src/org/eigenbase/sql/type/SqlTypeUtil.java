@@ -20,8 +20,7 @@
 */
 package org.eigenbase.sql.type;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.reltype.*;
 import org.eigenbase.util.Util;
 import org.eigenbase.sql.SqlValidator;
 import org.eigenbase.sql.SqlNode;
@@ -31,13 +30,13 @@ import org.eigenbase.rex.RexNode;
 import org.eigenbase.resource.EigenbaseResource;
 
 /**
- * Contains utility methods used during validation or type derivation
+ * Contains utility methods used during SQL validation or type derivation.
  *
  * @author Wael Chatila
  * @since Sep 3, 2004
  * @version $Id$
  */
-public class TypeUtil
+public abstract class SqlTypeUtil
 {
     /**
      * Checks if two types or more are char comparable.
@@ -56,7 +55,7 @@ public class TypeUtil
             RelDataType t0 = argTypes[j];
             RelDataType t1 = argTypes[j + 1];
 
-            if (!t0.isCharType() || !t1.isCharType()) {
+            if (!inCharFamily(t0) || !inCharFamily(t1)) {
                 return false;
             }
 
@@ -237,17 +236,82 @@ public class TypeUtil
     }
 
     /**
-     * @return Returns true if of type DATETIME
+     * @return true if type is DATE, TIME, or TIMESTAMP
      */
     public static boolean isDatetime(RelDataType type) {
         return isOfSameTypeName(SqlTypeName.datetimeTypes, type);
     }
 
     /**
-     * @return Returns true if of type INTERVAL
+     * @return true if type is some kind of INTERVAL
      */
     public static boolean isInterval(RelDataType type) {
         return isOfSameTypeName(SqlTypeName.timeIntervalTypes, type);
+    }
+
+    /**
+     * @return true if type is in SqlTypeFamily.Character
+     */
+    public static boolean inCharFamily(RelDataType type)
+    {
+        return type.getFamily() == SqlTypeFamily.Character;
+    }
+
+    /**
+     * @return true if type is in SqlTypeFamily.Boolean
+     */
+    public static boolean inBooleanFamily(RelDataType type)
+    {
+        return type.getFamily() == SqlTypeFamily.Boolean;
+    }
+
+    /**
+     * @return true if two types are in same type family
+     */
+    public static boolean inSameFamily(RelDataType t1, RelDataType t2)
+    {
+        return t1.getFamily() == t2.getFamily();
+    }
+
+    /**
+     * Tests whether two types have the same name and structure, possibly
+     * with differing modifiers.  For example, VARCHAR(1) and VARCHAR(10)
+     * are considered the same, while VARCHAR(1) and CHAR(1) are
+     * considered different.  Likewise, VARCHAR(1) MULTISET and
+     * VARCHAR(10) MULTISET are considered the same.
+     *
+     * @return true if types have same name and structure
+     */
+    public static boolean sameNamedType(RelDataType t1, RelDataType t2)
+    {
+        if (t1.isStruct() || t2.isStruct()) {
+            if (!t1.isStruct() || !t2.isStruct()) {
+                return false;
+            }
+            if (t1.getFieldCount() != t2.getFieldCount()) {
+                return false;
+            }
+            RelDataTypeField [] fields1 = t1.getFields();
+            RelDataTypeField [] fields2 = t2.getFields();
+            for (int i = 0; i < t1.getFieldCount(); ++i) {
+                if (!sameNamedType(fields1[i].getType(), fields2[i].getType()))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+        RelDataType comp1 = t1.getComponentType();
+        RelDataType comp2 = t2.getComponentType();
+        if ((comp1 != null) || (comp2 != null)) {
+            if ((comp1 == null) || (comp2 == null)) {
+                return false;
+            }
+            if (!sameNamedType(comp1, comp2)) {
+                return false;
+            }
+        }
+        return t1.getSqlTypeName() == t2.getSqlTypeName();
     }
 }
 

@@ -28,7 +28,7 @@ import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.type.OperandsTypeChecking;
 import org.eigenbase.sql.type.ReturnTypeInference;
 import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.sql.type.TypeUtil;
+import org.eigenbase.sql.type.SqlTypeUtil;
 
 import java.util.ArrayList;
 
@@ -102,7 +102,7 @@ public class SqlSubstringFunction extends SqlFunction {
             RelDataType t2 =
                 validator.deriveType(scope, call.operands[2]);
 
-            if (t1.isCharType()) {
+            if (SqlTypeUtil.inCharFamily(t1)) {
                 if (!OperandsTypeChecking.typeNullableString.check(call, validator,
                     scope, call.operands[1], 0, throwOnFailure)) {
                     return false;
@@ -112,7 +112,7 @@ public class SqlSubstringFunction extends SqlFunction {
                     return false;
                 }
 
-                if (!TypeUtil.isCharTypeComparable(
+                if (!SqlTypeUtil.isCharTypeComparable(
                     validator, scope, call.operands, throwOnFailure)) {
                     return false;
                 }
@@ -127,7 +127,7 @@ public class SqlSubstringFunction extends SqlFunction {
                 }
             }
 
-            if (!t1.isSameTypeFamily(t2)) {
+            if (!SqlTypeUtil.inSameFamily(t1, t2)) {
                 if (throwOnFailure) {
                     throw call.newValidationSignatureError(validator, scope);
                 }

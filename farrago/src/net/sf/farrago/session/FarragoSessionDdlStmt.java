@@ -50,6 +50,16 @@ public interface FarragoSessionDdlStmt
     public void preValidate(FarragoSessionDdlValidator ddlValidator);
 
     /**
+     * Called before generic execution.
+     */
+    public void preExecute();
+
+    /**
+     * Called after generic execution.
+     */
+    public void postExecute();
+
+    /**
      * @return true if this statement implies an auto-commit before and after
      */
     public boolean requiresCommit();

@@ -27,7 +27,7 @@ import openjava.mop.*;
 import openjava.ptree.ClassDeclaration;
 import openjava.ptree.MemberDeclarationList;
 import openjava.ptree.ModifierList;
-import org.eigenbase.oj.OJTypeFactoryImpl;
+import org.eigenbase.oj.*;
 import org.eigenbase.oj.util.JavaRexBuilder;
 import org.eigenbase.oj.util.OJUtil;
 import org.eigenbase.rel.RelNode;
@@ -72,11 +72,11 @@ public class ConverterTest extends TestCase
         super.setUp();
 
         // Create a type factory.
-        RelDataTypeFactory typeFactory =
-            RelDataTypeFactoryImpl.threadInstance();
+        OJTypeFactory typeFactory =
+            OJUtil.threadTypeFactory();
         if (typeFactory == null) {
             typeFactory = new OJTypeFactoryImpl();
-            RelDataTypeFactoryImpl.setThreadInstance(typeFactory);
+            OJUtil.setThreadTypeFactory(typeFactory);
         }
 
         // And a planner factory.
@@ -501,11 +501,11 @@ public class ConverterTest extends TestCase
 
             // Ensure that the thread has factories for types and planners. (We'd
             // rather that the client sets these.)
-            RelDataTypeFactory typeFactory =
-                RelDataTypeFactoryImpl.threadInstance();
+            OJTypeFactory typeFactory =
+                OJUtil.threadTypeFactory();
             if (typeFactory == null) {
                 typeFactory = new OJTypeFactoryImpl();
-                RelDataTypeFactoryImpl.setThreadInstance(typeFactory);
+                OJUtil.setThreadTypeFactory(typeFactory);
             }
             if (OJPlannerFactory.threadInstance() == null) {
                 OJPlannerFactory.setThreadInstance(

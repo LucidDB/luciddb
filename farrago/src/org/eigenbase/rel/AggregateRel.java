@@ -126,7 +126,7 @@ public class AggregateRel extends SingleRel
                 aggCalls[i].aggregation.getReturnType(cluster.typeFactory);
             types[groupCount + i] = returnType;
         }
-        return cluster.typeFactory.createProjectType(
+        return cluster.typeFactory.createStructType(
             new RelDataTypeFactory.FieldInfo() {
                 public int getFieldCount()
                 {

@@ -276,7 +276,7 @@ public abstract class RelOptUtil
         final RelDataType type,
         final List columnNameList)
     {
-        return type.getFactory().createProjectType(
+        return type.getFactory().createStructType(
             new RelDataTypeFactory.FieldInfo() {
                 public int getFieldCount()
                 {

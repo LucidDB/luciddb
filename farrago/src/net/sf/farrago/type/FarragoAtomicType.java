@@ -29,7 +29,7 @@ import net.sf.farrago.resource.*;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.SqlCollation;
-import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.util.Util;
 
 
@@ -72,7 +72,7 @@ public abstract class FarragoAtomicType extends FarragoType
 
     //~ Methods ---------------------------------------------------------------
 
-    // implement Type
+    // implement RelDataType
     public RelDataTypeField getField(String fieldName)
     {
         if (getFieldOrdinal(fieldName) == 0) {
@@ -82,13 +82,13 @@ public abstract class FarragoAtomicType extends FarragoType
         }
     }
 
-    // implement Type
+    // implement RelDataType
     public int getFieldCount()
     {
         return 1;
     }
 
-    // implement Type
+    // implement RelDataType
     public int getFieldOrdinal(String fieldName)
     {
         if (fieldName.equals(fields[0].getName())) {
@@ -98,17 +98,19 @@ public abstract class FarragoAtomicType extends FarragoType
         }
     }
 
-    // implement Type
+    // implement RelDataType
     public RelDataTypeField [] getFields()
     {
         return fields;
     }
 
+    // implement RelDataType
     public RelDataType getArrayType()
     {
         throw Util.needToImplement(this);
     }
 
+    // implement RelDataType
     public RelDataType getComponentType()
     {
         return null; // this is not an array type
@@ -132,7 +134,7 @@ public abstract class FarragoAtomicType extends FarragoType
         return sb.toString();
     }
 
-    // implement FarragoType
+    // implement RelDataType
     public String getFullTypeString()
     {
         return digest;
@@ -161,19 +163,10 @@ public abstract class FarragoAtomicType extends FarragoType
         pw.print(value);
     }
 
-    public boolean equalsSansNullability(RelDataType type)
-    {
-        if (type instanceof FarragoAtomicType) {
-            FarragoAtomicType that = (FarragoAtomicType) type;
-            return this.simpleType.equals(that.simpleType);
-        }
-        return false;
-    }
-
     /**
      * .
      *
-     * @return the Sqlsimpletype from which this atomic type derives
+     * @return the CwmSqlsimpletype from which this atomic type derives
      */
     public CwmSqlsimpleType getSimpleType()
     {
@@ -191,10 +184,16 @@ public abstract class FarragoAtomicType extends FarragoType
      *
      * @return the family for this type
      */
-    public FarragoTypeFamily getFamily()
+    public SqlTypeFamily getSqlFamily()
     {
-        return FarragoTypeFamily.getFamilyForJdbcType(
+        return SqlTypeFamily.getFamilyForJdbcType(
             simpleType.getTypeNumber().intValue());
+    }
+
+    // implement RelDataType
+    public RelDataTypeFamily getFamily()
+    {
+        return getSqlFamily();
     }
 
     /**
@@ -281,16 +280,9 @@ public abstract class FarragoAtomicType extends FarragoType
      */
     public boolean isString()
     {
-        FarragoTypeFamily family = getFamily();
-        return (family == FarragoTypeFamily.CHARACTER)
-            || (family == FarragoTypeFamily.BINARY);
-    }
-
-    /** implement RelDataType */
-    public boolean isCharType()
-    {
-        FarragoTypeFamily family = getFamily();
-        return (family == FarragoTypeFamily.CHARACTER);
+        SqlTypeFamily family = getSqlFamily();
+        return (family == SqlTypeFamily.Character)
+            || (family == SqlTypeFamily.Binary);
     }
 
     /** implement RelDataType */
@@ -361,27 +353,6 @@ public abstract class FarragoAtomicType extends FarragoType
         return false;
     }
 
-    // implement RelDataType
-    public boolean isSameType(RelDataType other)
-    {
-        if (!(other instanceof FarragoAtomicType)) {
-            return false;
-        }
-        FarragoAtomicType that = (FarragoAtomicType) other;
-        return this.simpleType.getTypeNumber().intValue() == that.simpleType.getTypeNumber()
-            .intValue();
-    }
-
-    // implement RelDataType
-    public boolean isSameTypeFamily(RelDataType other)
-    {
-        if (!(other instanceof FarragoAtomicType)) {
-            return false;
-        }
-        FarragoAtomicType farragoOther = (FarragoAtomicType) other;
-        return getFamily().equals(farragoOther.getFamily());
-    }
-
     /**
      * .
      *
@@ -434,7 +405,8 @@ public abstract class FarragoAtomicType extends FarragoType
      */
     public Class getClassForPrimitive()
     {
-        assert (hasClassForPrimitive()) : "Atomic Type does not have primitive representation";
+        assert (hasClassForPrimitive())
+            : "Atomic Type does not have primitive representation";
         return null;
     }
 

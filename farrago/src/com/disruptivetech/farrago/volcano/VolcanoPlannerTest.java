@@ -254,7 +254,7 @@ public class VolcanoPlannerTest extends TestCase
         // implement RelNode
         protected RelDataType deriveRowType()
         {
-            return cluster.typeFactory.createProjectType(
+            return cluster.typeFactory.createStructType(
                 new RelDataType [] {
                     cluster.typeFactory.createJavaType(Void.TYPE)
                 },

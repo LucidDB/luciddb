@@ -31,6 +31,12 @@ import org.eigenbase.sql.type.SqlTypeName;
  * The type of a scalar expression or a row returned from a relational
  * expression.
  *
+ *<p>
+ *
+ * This is a "fat" interface which unions the attributes of many different type
+ * classes into one.  Inelegant, but since it was defined before the advent of
+ * Java generics, it avoided a lot of typecasting.
+ *
  * @author jhyde
  * @version $Id$
  *
@@ -45,38 +51,26 @@ public interface RelDataType
     RelDataTypeField getField(String fieldName);
 
     /**
-     * Returns the number of columns.
+     * @return true if this type has fields; examples include rows and
+     * user-defined structured types in SQL, and classes in Java
+     */
+    boolean isStruct();
+
+    /**
+     * @return the number of fields in a struct type; result is
+     * undefined for a non-struct type
      */
     int getFieldCount();
 
     int getFieldOrdinal(String fieldName);
 
     /**
-     * Returns the columns.
+     * @return the fields in a struct type; result is undefined
+     * for a non-struct type
      *
      * @post return != null
      */
     RelDataTypeField [] getFields();
-
-    /**
-     * Whether the type represents a cartesian product of regular types.
-     */
-    boolean isJoin();
-
-    /**
-     * Returns the component types of a join type.
-     *
-     * @pre isJoin()
-     */
-    RelDataType [] getJoinTypes();
-
-    boolean isProject();
-
-    /**
-     * Whether this type is identical to another, save for differences in
-     * nullability.
-     */
-    boolean equalsSansNullability(RelDataType type);
 
     /**
      * @return whether this type allows null values.
@@ -109,34 +103,14 @@ public interface RelDataType
         boolean coerce);
 
     /**
-     * Returns whether two values are of the same type. E.g.
-     *  varchar(5) and varchar(0), are of the same type
-     *  double and float, aren't
-     */
-    boolean isSameType(RelDataType t);
-
-    /**
-     * Returns whether two values are of the same type family. E.g.
-     *  varchar(5) and varchar(0), are of the same type family
-     *  double, float, int, bigint, are of the same type family
-     *  varchar(x) and int are NOT of the same type family
-     */
-    boolean isSameTypeFamily(RelDataType t);
-
-    /**
-     * If type represent a char, varchar or any other type that can carry a collation
-     * this function must return true, otherwise returns false. <BR>
-     */
-    boolean isCharType();
-
-    /**
      * Returns this type's character set, or null if this type can carry a
      * character set but no character set is defined.
      *
      * @throws RuntimeException if this type is not of a kind (char,
      *   varchar, and so forth) that can carry a character set.
      */
-    Charset getCharset();
+    Charset getCharset()
+        throws RuntimeException;
 
     /**
      * Returns this type's collation, or null if this type can carry a
@@ -160,7 +134,8 @@ public interface RelDataType
     public int getPrecision();
 
     /**
-     * get the SqlTypeName for this RelDataType.
+     * @return the SqlTypeName for this RelDataType, or null if
+     * it is not an SQL type
      */
     public SqlTypeName getSqlTypeName();
 
@@ -179,6 +154,11 @@ public interface RelDataType
      * @return the full type string
      */
     public String getFullTypeString();
+
+    /**
+     * @return a canonical object representing the family of this type
+     */
+    public RelDataTypeFamily getFamily();
 }
 
 

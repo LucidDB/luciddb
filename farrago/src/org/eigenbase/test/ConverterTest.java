@@ -100,7 +100,6 @@ public class ConverterTest extends TestCase
         }
         final RelDataTypeFactory typeFactory =
             new RelDataTypeFactoryImpl();
-        RelDataTypeFactoryImpl.setThreadInstance(typeFactory);
 
         final SqlValidator.CatalogReader catalogReader =
             createCatalogReader(typeFactory);

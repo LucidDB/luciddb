@@ -36,7 +36,7 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.RexBuilder;
 import org.eigenbase.rex.RexNode;
-import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
 
 
@@ -202,7 +202,7 @@ public abstract class FennelRelUtil
 
         // TODO:  numeric, date, etc.
         try {
-            if (!precisionType.isCharType()) {
+            if (!SqlTypeUtil.inCharFamily(precisionType)) {
                 if (precisionType.getSqlTypeName().equals(SqlTypeName.Bit)) {
                     return (precisionType.getPrecision() + 7) / 8;
                 }

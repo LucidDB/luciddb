@@ -28,9 +28,7 @@ import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.test.SqlTester;
-import org.eigenbase.sql.type.ReturnTypeInference;
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.sql.type.UnknownParamInference;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.util.Util;
 
 import java.util.ArrayList;
@@ -161,14 +159,12 @@ public class SqlCaseOperator extends SqlOperator
         assert (whenList.size() == thenList.size());
 
         //checking that search conditions are ok...
-        RelDataType boolType =
-            validator.typeFactory.createSqlType(SqlTypeName.Boolean);
         for (int i = 0; i < whenList.size(); i++) {
             SqlNode node = whenList.get(i);
 
             //should throw validation error if something wrong...
             RelDataType type = validator.deriveType(scope, node);
-            if (!boolType.isSameType(type)) {
+            if (!SqlTypeUtil.inBooleanFamily(type)) {
                 if (throwOnFailure) {
                     throw validator.newValidationError(node,
                         EigenbaseResource.instance().newExpectedBoolean());

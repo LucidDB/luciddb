@@ -88,7 +88,6 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     private final FarragoSessionStmtValidator stmtValidator;
     private boolean needRestore;
     private SqlToRelConverter sqlToRelConverter;
-    private RelDataTypeFactory savedTypeFactory;
     private Object savedDeclarer;
     private FarragoAllocation javaCodeDir;
     private FarragoSqlValidator sqlValidator;
@@ -145,10 +144,8 @@ public class FarragoPreparingStmt extends OJPreparingStmt
 
         // Save some global state for reentrancy
         needRestore = true;
-        savedTypeFactory = RelDataTypeFactoryImpl.threadInstance();
         savedDeclarer = OJUtil.threadDeclarers.get();
 
-        RelDataTypeFactoryImpl.setThreadInstance(getFarragoTypeFactory());
         planner = getSession().newPlanner(this,true);
     }
 
@@ -319,7 +316,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             assert (preparedResult instanceof PreparedExplanation);
             executableStmt =
                 new FarragoExecutableExplainStmt(
-                    getFarragoTypeFactory().createProjectType(
+                    getFarragoTypeFactory().createStructType(
                         new RelDataType[0],
                         new String[0]),
                     preparedResult.getCode());
@@ -373,7 +370,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
 
     private RelDataType getParamRowType()
     {
-        return getFarragoTypeFactory().createProjectType(
+        return getFarragoTypeFactory().createStructType(
             new RelDataTypeFactory.FieldInfo() {
                 public int getFieldCount()
                 {
@@ -399,7 +396,6 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             // already closed or else never opened
             return;
         }
-        RelDataTypeFactoryImpl.setThreadInstance(savedTypeFactory);
         OJUtil.threadDeclarers.set(savedDeclarer);
 
         // TODO:  obtain locks to ensure that objects we intend to operate
@@ -631,7 +627,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     // implement RelOptSchema
     public RelDataTypeFactory getTypeFactory()
     {
-        return RelDataTypeFactoryImpl.threadInstance();
+        return getFarragoTypeFactory();
     }
 
     // implement RelOptSchema

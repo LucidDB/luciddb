@@ -204,7 +204,7 @@ public class ExpressionReaderRel extends AbstractRelNode implements JavaRel
         }
         distinct = isDistinct(exp);
         if (false) {
-            return cluster.typeFactory.createProjectType(
+            return cluster.typeFactory.createStructType(
                 new RelDataType [] { componentType },
                 new String [] { "$f0" });
         } else {

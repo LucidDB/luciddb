@@ -16,6 +16,7 @@ import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.reltype.RelDataTypeFactoryImpl;
 import org.eigenbase.util.Util;
+import org.eigenbase.oj.*;
 import org.eigenbase.oj.util.*;
 
 /**
@@ -105,8 +106,8 @@ public class QueryExpression extends SetExpression {
             Expression select = selectList.get(0);
             return Toolbox.getType(queryEnv, select);
         }
-        final RelDataTypeFactory typeFactory = RelDataTypeFactoryImpl.threadInstance();
-        final RelDataType projectType = typeFactory.createProjectType(
+        final RelDataTypeFactory typeFactory = OJUtil.threadTypeFactory();
+        final RelDataType projectType = typeFactory.createStructType(
                 new RelDataTypeFactory.FieldInfo() {
                     public int getFieldCount() {
                         return selectList.size();

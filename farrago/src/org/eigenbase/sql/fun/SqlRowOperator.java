@@ -84,7 +84,7 @@ public class SqlRowOperator extends SqlSpecialOperator
         for (int i = 0; i < fieldNames.length; i++) {
             fieldNames[i] = SqlValidator.deriveAliasFromOrdinal(i);
         }
-        return typeFactory.createProjectType(argTypes, fieldNames);
+        return typeFactory.createStructType(argTypes, fieldNames);
     }
 
     // implement SqlOperator

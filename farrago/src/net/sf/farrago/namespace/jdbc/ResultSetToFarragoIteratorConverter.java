@@ -40,6 +40,7 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.runtime.*;
 import org.eigenbase.util.*;
+import org.eigenbase.sql.type.*;
 
 
 /**
@@ -134,7 +135,7 @@ class ResultSetToFarragoIteratorConverter extends ConverterRel
                         primType.getClassForPrimitive()).getName();
                 rhsExp =
                     new MethodCall(castResultSet, methodName, colPosExpList);
-            } else if (type.isCharType()) {
+            } else if (SqlTypeUtil.inCharFamily(type)) {
                 rhsExp =
                     new MethodCall(castResultSet, "getString", colPosExpList);
             } else {

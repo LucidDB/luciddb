@@ -814,39 +814,39 @@ public class SqlStdOperatorTable extends SqlOperatorTable
                     RelDataType t3 = validator.deriveType(scope, call.operands[3]);
 
                     // t0 must be comparable with t2
-                    if (!t0.isSameType(t2)) {
+                    if (!SqlTypeUtil.sameNamedType(t0, t2)) {
                         if (throwOnFailure) {
                             throw call.newValidationSignatureError(validator, scope);
                         }
                         return false;
                     }
 
-                    if (TypeUtil.isDatetime(t1)) {
+                    if (SqlTypeUtil.isDatetime(t1)) {
                         // if t1 is of DATETIME,
                         // then t1 must be comparable with t0
-                        if (!t0.isSameType(t1)) {
+                        if (!SqlTypeUtil.sameNamedType(t0, t1)) {
                             if (throwOnFailure) {
                                 throw call.newValidationSignatureError(validator, scope);
                             }
                             return false;
                         }
-                    } else if (!TypeUtil.isInterval(t1)) {
+                    } else if (!SqlTypeUtil.isInterval(t1)) {
                         if (throwOnFailure) {
                             throw call.newValidationSignatureError(validator, scope);
                         }
                         return false;
                     }
 
-                    if (TypeUtil.isDatetime(t3)) {
+                    if (SqlTypeUtil.isDatetime(t3)) {
                         // if t3 is of DATETIME,
                         // then t3 must be comparable with t2
-                        if (!t2.isSameType(t3)) {
+                        if (!SqlTypeUtil.sameNamedType(t2, t3)) {
                             if (throwOnFailure) {
                                 throw call.newValidationSignatureError(validator, scope);
                             }
                             return false;
                         }
-                    } else if (!TypeUtil.isInterval(t3)) {
+                    } else if (!SqlTypeUtil.isInterval(t3)) {
                         if (throwOnFailure) {
                             throw call.newValidationSignatureError(validator, scope);
                         }
@@ -1194,8 +1194,7 @@ public class SqlStdOperatorTable extends SqlOperatorTable
                     validator.getValidatedNodeType(call.operands[0]);
                 RelDataType type1 =
                     validator.getValidatedNodeType(call.operands[1]);
-                if (!type0.isSameTypeFamily(type1)
-                        && !type1.isSameTypeFamily(type0)) {
+                if (!SqlTypeUtil.inSameFamily(type0, type1)) {
                     if (throwOnFailure) {
                         throw call.newValidationSignatureError(validator, scope);
                     }

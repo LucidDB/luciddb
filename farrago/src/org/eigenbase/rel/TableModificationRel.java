@@ -114,7 +114,7 @@ public class TableModificationRel extends SingleRel
         String [] fieldNames = new String[1];
         types[0] = cluster.typeFactory.createJavaType(Long.TYPE);
         fieldNames[0] = "ROWCOUNT";
-        return cluster.typeFactory.createProjectType(types, fieldNames);
+        return cluster.typeFactory.createStructType(types, fieldNames);
     }
 
     // override RelNode

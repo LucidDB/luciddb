@@ -30,7 +30,7 @@ import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
-import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.util.BitString;
 import org.eigenbase.util.NlsString;
 import org.eigenbase.util.Util;
@@ -318,7 +318,7 @@ public class RexBuilder
         RelDataType type,
         int i)
     {
-        if (type.isCharType()) {
+        if (SqlTypeUtil.inCharFamily(type)) {
             Charset charset =
                 (type.getCharset() == null) ? Util.getDefaultCharset()
                 : type.getCharset();

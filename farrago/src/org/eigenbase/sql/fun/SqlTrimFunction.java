@@ -28,7 +28,7 @@ import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.type.OperandsTypeChecking;
-import org.eigenbase.sql.type.TypeUtil;
+import org.eigenbase.sql.type.SqlTypeUtil;
 import org.eigenbase.sql.type.ReturnTypeInference;
 
 /**
@@ -126,7 +126,9 @@ public class SqlTrimFunction extends SqlFunction
             ops[i - 1] = call.operands[i];
         }
 
-        if (!TypeUtil.isCharTypeComparable(validator, scope, ops, throwOnFailure)) {
+        if (!SqlTypeUtil.isCharTypeComparable(
+                validator, scope, ops, throwOnFailure))
+        {
             return false;
         }
         return true;

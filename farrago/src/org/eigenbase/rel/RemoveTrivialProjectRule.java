@@ -55,7 +55,7 @@ public class RemoveTrivialProjectRule extends RelOptRule
         ProjectRel project = (ProjectRel) call.rels[0];
         RelNode child = project.child;
         final RelDataType childRowType = child.getRowType();
-        if (!childRowType.isProject()) {
+        if (!childRowType.isStruct()) {
             return;
         }
         if (!project.isBoxed()) {

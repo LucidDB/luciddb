@@ -1477,8 +1477,7 @@ public class SqlToRelConverter
         } else {
             query = cluster.query;
         }
-        final RelDataTypeFactory typeFactory =
-            RelDataTypeFactoryImpl.threadInstance();
+        final RelDataTypeFactory typeFactory = rexBuilder.getTypeFactory();
         return query.createCluster(env, typeFactory, rexBuilder);
     }
 

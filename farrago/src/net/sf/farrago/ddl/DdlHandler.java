@@ -22,6 +22,7 @@ package net.sf.farrago.ddl;
 import org.eigenbase.util.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
+import org.eigenbase.sql.type.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.resource.*;
@@ -448,12 +449,12 @@ public class DdlHandler
         // SQL standard is very picky about what can go in a DEFAULT clause
         FarragoAtomicType sourceType =
             (FarragoAtomicType) rowType.getFields()[0].getType();
-        FarragoTypeFamily sourceTypeFamily = sourceType.getFamily();
+        SqlTypeFamily sourceTypeFamily = sourceType.getSqlFamily();
 
         FarragoType targetType =
             validator.getTypeFactory().createColumnType(column, true);
         FarragoAtomicType atomicType = (FarragoAtomicType) targetType;
-        FarragoTypeFamily targetTypeFamily = atomicType.getFamily();
+        SqlTypeFamily targetTypeFamily = atomicType.getSqlFamily();
 
         if (sourceTypeFamily != targetTypeFamily) {
             throw validator.res.newValidatorBadDefaultType(
@@ -539,7 +540,7 @@ public class DdlHandler
                 column.setPrecision(null);
             }
         }
-        if (type.getFamily() == FarragoTypeFamily.CHARACTER) {
+        if (type.getSqlFamily() == SqlTypeFamily.Character) {
             // TODO jvs 18-April-2004:  Should be inheriting these defaults
             // from schema/catalog.
             if (JmiUtil.isBlank(column.getCharacterSetName())) {

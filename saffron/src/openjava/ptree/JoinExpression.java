@@ -14,6 +14,7 @@ import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.reltype.RelDataTypeFactoryImpl;
 import org.eigenbase.util.Util;
+import org.eigenbase.oj.*;
 import org.eigenbase.oj.util.*;
 
 /**
@@ -96,7 +97,7 @@ public class JoinExpression extends SetExpression {
 
 	public OJClass deriveRowType(Environment env) throws Exception {
 		Expression[] expressions = flatten(this);
-        final RelDataTypeFactory typeFactory = RelDataTypeFactoryImpl.threadInstance();
+        final RelDataTypeFactory typeFactory = OJUtil.threadTypeFactory();
         RelDataType[] types = new RelDataType[expressions.length];
 		for (int i = 0; i < expressions.length; i++) {
             final OJClass ojClass = expressions[i].getRowType(env);

@@ -43,7 +43,7 @@ import openjava.ptree.util.*;
 import openjava.tools.*;
 
 import org.eigenbase.javac.*;
-import org.eigenbase.oj.OJTypeFactoryImpl;
+import org.eigenbase.oj.*;
 import org.eigenbase.oj.rel.JavaRel;
 import org.eigenbase.oj.rel.JavaRelImplementor;
 import org.eigenbase.oj.stmt.*;
@@ -201,11 +201,10 @@ public class OJStatement extends OJPreparingStmt
 
     public static void setupFactories()
     {
-        RelDataTypeFactory typeFactory =
-            RelDataTypeFactoryImpl.threadInstance();
+        OJTypeFactory typeFactory = OJUtil.threadTypeFactory();
         if (typeFactory == null) {
             typeFactory = new OJTypeFactoryImpl();
-            RelDataTypeFactoryImpl.setThreadInstance(typeFactory);
+            OJUtil.setThreadTypeFactory(typeFactory);
         }
         if (OJPlannerFactory.threadInstance() == null) {
             OJPlannerFactory.setThreadInstance(new OJPlannerFactory());

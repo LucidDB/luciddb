@@ -25,9 +25,7 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.test.SqlTester;
-import org.eigenbase.sql.type.ReturnTypeInference;
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.sql.type.UnknownParamInference;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.util.BitString;
 import org.eigenbase.util.NlsString;
 
@@ -76,7 +74,7 @@ public class SqlLiteralChainOperator extends SqlInternalOperator {
             operand = call.operands[i];
             RelDataType otherType =
                 validator.deriveType(scope, operand);
-            if (!firstType.isSameType(otherType)) {
+            if (!SqlTypeUtil.sameNamedType(firstType, otherType)) {
                 return false;
             }
         }

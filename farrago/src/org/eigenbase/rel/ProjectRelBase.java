@@ -160,7 +160,7 @@ public abstract class ProjectRelBase extends SingleRel
         if (((flags & Flags.AnonFields) == Flags.AnonFields) && false) {
             return cluster.typeFactory.createJoinType(types);
         } else {
-            return cluster.typeFactory.createProjectType(
+            return cluster.typeFactory.createStructType(
                 new RelDataTypeFactory.FieldInfo() {
                     public int getFieldCount()
                     {

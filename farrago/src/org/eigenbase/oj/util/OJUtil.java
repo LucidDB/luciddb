@@ -109,7 +109,19 @@ public abstract class OJUtil
      */
     public static final ThreadLocal threadDeclarers = new ThreadLocal();
 
+    private static ThreadLocal threadTypeFactories = new ThreadLocal();
+
     //~ Methods ---------------------------------------------------------------
+
+    public static void setThreadTypeFactory(OJTypeFactory typeFactory)
+    {
+        threadTypeFactories.set(typeFactory);
+    }
+
+    public static OJTypeFactory threadTypeFactory()
+    {
+        return (OJTypeFactory) threadTypeFactories.get();
+    }
 
     public static RelDataType ojToType(
         RelDataTypeFactory typeFactory,

@@ -33,7 +33,7 @@ import org.eigenbase.rex.RexNode;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.fun.SqlTrimFunction;
-import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.util.DoubleKeyMap;
 import org.eigenbase.util.MultiMap;
 import org.eigenbase.util.Util;
@@ -723,15 +723,15 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
         }
 
         /**
-         * @pre call.operands[operand].getType().isCharType()
+         * @pre SqlTypeUtil.inCharFamily(call.operands[operand].getType())
          */
         protected ArrayList makeRegList(
             RexToCalcTranslator translator,
             RexCall call)
         {
             Util.pre(
-                call.operands[operand].getType().isCharType(),
-                "call.operands[operand].getType().isCharType()");
+                SqlTypeUtil.inCharFamily(call.operands[operand].getType()), 
+                "SqlTypeUtil.inCharFamily(call.operands[operand].getType()");
 
             ArrayList regList = super.makeRegList(translator, call);
             CalcProgramBuilder.Register charSetName =
@@ -1008,7 +1008,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                 return implentor.implement(call, translator);
             }
 
-            if (translator.lhsTypeIsNullableRHSType(toType, fromType)) {
+            if (SqlTypeUtil.sameNamedType(toType, fromType)) {
                 RexNode op = call.operands[0];
                 return translator.implementNode(op);
             }

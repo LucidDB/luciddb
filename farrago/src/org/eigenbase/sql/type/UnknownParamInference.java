@@ -99,7 +99,7 @@ public interface UnknownParamInference
                 RelDataType [] operandTypes)
             {
                 for (int i = 0; i < operandTypes.length; ++i) {
-                    if (returnType.isProject()) {
+                    if (returnType.isStruct()) {
                         operandTypes[i] = returnType.getFields()[i].getType();
                     } else {
                         operandTypes[i] = returnType;

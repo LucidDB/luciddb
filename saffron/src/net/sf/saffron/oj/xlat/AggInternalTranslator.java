@@ -29,6 +29,7 @@ import openjava.mop.OJMethod;
 import openjava.mop.Toolbox;
 import openjava.ptree.*;
 
+import org.eigenbase.oj.*;
 import org.eigenbase.oj.util.JavaRexBuilder;
 import org.eigenbase.oj.util.OJUtil;
 import org.eigenbase.rel.AggregateRel;
@@ -153,7 +154,7 @@ class AggInternalTranslator extends InternalTranslator
         }
         RelDataType[] argTypes2 = new RelDataType[argTypes.length];
         final RelDataTypeFactory relDataTypeFactory =
-            RelDataTypeFactoryImpl.threadInstance();
+            OJUtil.threadTypeFactory();
         for (int i = 0; i < argTypes.length; i++) {
             argTypes2[i] = OJUtil.ojToType(relDataTypeFactory, argTypes[i]);
         }

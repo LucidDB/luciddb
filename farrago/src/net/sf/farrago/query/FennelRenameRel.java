@@ -99,7 +99,7 @@ public class FennelRenameRel extends FennelSingleRel
     public RelDataType deriveRowType()
     {
         final RelDataTypeField [] fields = child.getRowType().getFields();
-        return cluster.typeFactory.createProjectType(
+        return cluster.typeFactory.createStructType(
             new RelDataTypeFactory.FieldInfo() {
                 public int getFieldCount()
                 {

@@ -68,7 +68,7 @@ public abstract class ReturnTypeInference
     {
         return getType(
             validator.typeFactory,
-            TypeUtil.collectTypes(validator, scope, call.operands));
+            SqlTypeUtil.collectTypes(validator, scope, call.operands));
     }
 
     //~ INNER CLASSES --------------------------------------------
@@ -275,7 +275,7 @@ public abstract class ReturnTypeInference
             RelDataType[] argTypes) {
             for (int i = start; i < argTypes.length; i++) {
                 RelDataType argType = argTypes[i];
-                if (TypeUtil.isOfSameTypeName(typeNames, argType)) {
+                if (SqlTypeUtil.isOfSameTypeName(typeNames, argType)) {
                     return argType;
                 }
             }
@@ -384,7 +384,9 @@ public abstract class ReturnTypeInference
                 RelDataType [] argTypes,
                 RelDataType typeToTransform)
             {
-                return TypeUtil.makeNullableIfOperandsAre(typeFactory, argTypes,
+                return SqlTypeUtil.makeNullableIfOperandsAre(
+                    typeFactory,
+                    argTypes,
                     typeToTransform);
             }
         };
@@ -445,7 +447,7 @@ public abstract class ReturnTypeInference
                     fac.createSqlType(
                         retTypeName,
                         type.getPrecision());
-                if (type.isCharType()) {
+                if (SqlTypeUtil.inCharFamily(type)) {
                     ret = fac.createTypeWithCharsetAndCollation(
                             ret,
                             type.getCharset(),
@@ -659,20 +661,23 @@ public abstract class ReturnTypeInference
     public static final ReturnTypeInference useDyadicStringSumPrecision =
         new ReturnTypeInference() {
             /**
-             * @pre argTypes[0].isSameType(argTypes[1])
+             * @pre SqlTypeUtil.sameNamedType(argTypes[0], (argTypes[1]))
              */
             public RelDataType getType(
                 RelDataTypeFactory typeFactory,
                 RelDataType [] argTypes)
             {
-                if (!(argTypes[0].isCharType() && argTypes[1].isCharType())) {
+                if (!(SqlTypeUtil.inCharFamily(argTypes[0])
+                        && SqlTypeUtil.inCharFamily(argTypes[1])))
+                {
                     Util.pre(
-                        argTypes[0].isSameType(argTypes[1]),
-                        "argTypes[0].isSameType(argTypes[1])");
+                        SqlTypeUtil.sameNamedType(
+                            argTypes[0], argTypes[1]),
+                        "SqlTypeUtil.sameNamedType(argTypes[0], argTypes[1])");
                 }
                 SqlCollation pickedCollation = null;
-                if (argTypes[0].isCharType()) {
-                    if (!TypeUtil.isCharTypeComparable(argTypes, 0, 1)) {
+                if (SqlTypeUtil.inCharFamily(argTypes[0])) {
+                    if (!SqlTypeUtil.isCharTypeComparable(argTypes, 0, 1)) {
                         throw EigenbaseResource.instance()
                             .newTypeNotComparable(
                                 argTypes[0].toString(),

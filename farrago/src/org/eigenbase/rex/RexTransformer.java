@@ -27,7 +27,7 @@ import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.SqlOperatorTable;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
-import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.sql.type.*;
 
 
 /**
@@ -79,7 +79,7 @@ public class RexTransformer
     private boolean isBoolean(RexNode node)
     {
         RelDataType type = node.getType();
-        return boolType.isSameType(type);
+        return SqlTypeUtil.inBooleanFamily(type);
     }
 
     private boolean isNullable(RexNode node)

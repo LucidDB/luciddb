@@ -676,10 +676,11 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         // TODO: Some statements aren't real DDL, and should be traced
         // differently.
         // handle some special cases here
+        ddlStmt.preExecute();
         if (ddlStmt instanceof DdlStmt) {
-            // REVIEW jvs 22-Mar-2004:  can we make this truly extensible?
             ((DdlStmt) ddlStmt).visit(new DdlExecutionVisitor());
         }
+        ddlStmt.postExecute();
 
         tracer.fine("committing DDL");
         reposTxnContext.commit();

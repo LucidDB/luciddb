@@ -75,7 +75,7 @@ public interface RelDataTypeFactory
      * @pre types.length == fieldNames.length
      * @post return != null
      */
-    RelDataType createProjectType(
+    RelDataType createStructType(
         RelDataType [] types,
         String [] fieldNames);
 
@@ -83,10 +83,13 @@ public interface RelDataTypeFactory
      * Creates a type which represents a projection of a set fields, getting
      * the field informatation from a callback.
      */
-    RelDataType createProjectType(FieldInfo fieldInfo);
+    RelDataType createStructType(FieldInfo fieldInfo);
 
     /**
-     * Duplicates a type; makes a deep copy of a record type.
+     * Duplicates a type, making a deep copy.  Normally, this is a
+     * no-op, since canonical type objects are returned.  However,
+     * it is useful when copying a type from one factory to another.
+     *
      * @param type input type
      * @return output type, a new object equivalent to input type.
      */
@@ -94,9 +97,9 @@ public interface RelDataTypeFactory
 
     /**
      * Creates a Type which is the same as another type but with possibily
-     * different nullability. The output type may be identical to the input type.
-     * For type systems without a concept of
-     * nullability, the return value is always the same as the input.
+     * different nullability. The output type may be identical to the input
+     * type.  For type systems without a concept of nullability, the return
+     * value is always the same as the input.
      *
      * @param type input type
      *
@@ -113,7 +116,7 @@ public interface RelDataTypeFactory
      * Creates a Type which is the same as another type but with possibily
      * different charset or collation. For types without a concept of
      * charset or collation this function must throw an error
-     * @pre type.isCharType()==true
+     * @pre SqlTypeUtil.inCharFamily(type)
      * @param type input type
      * @return output type, same as input type except with specified charset
      * and collation
@@ -131,13 +134,6 @@ public interface RelDataTypeFactory
      * @pre types.length >= 1
      */
     RelDataType leastRestrictive(RelDataType [] types);
-
-    // NOTE jvs 18-Dec-2003: I changed the createSqlType methods to return a
-    // RelDataType instead of a RelDataTypeFactoryImpl.SqlType.  I know that
-    // SqlType is going to move out sometime soon, but I needed to be able to
-    // override these methods to return FarragoAtomicTypes instead.  Once a
-    // proper SqlType interface is defined, FarragoType should be changed to
-    // implement it, and then these methods can return SqlType again.
 
     /**
      * Creates a SQL type with no precision or scale.

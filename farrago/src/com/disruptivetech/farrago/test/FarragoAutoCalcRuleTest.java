@@ -278,7 +278,7 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
                             };
                         String [] names = new String [] { "first", "second" };
 
-                        return typeFactory.createProjectType(types, names);
+                        return typeFactory.createStructType(types, names);
                     }
 
                     public RelDataType inferType(
@@ -297,7 +297,7 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
                             };
                         String [] names = new String [] { "first", "second" };
 
-                        return validator.typeFactory.createProjectType(types,
+                        return validator.typeFactory.createStructType(types,
                             names);
                     }
                 };

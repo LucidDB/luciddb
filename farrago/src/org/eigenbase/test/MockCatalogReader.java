@@ -115,7 +115,7 @@ public class MockCatalogReader implements SqlValidator.CatalogReader
         }
 
         public void onRegister(RelDataTypeFactory typeFactory) {
-            rowType = typeFactory.createProjectType(
+            rowType = typeFactory.createStructType(
                 (RelDataType []) columnTypes.toArray(new RelDataType[0]),
                 (String []) columnNames.toArray(new String[0]));
         }

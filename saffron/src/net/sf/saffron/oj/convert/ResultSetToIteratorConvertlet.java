@@ -56,7 +56,7 @@ public class ResultSetToIteratorConvertlet extends JavaConvertlet
         StatementList methodBody = new StatementList();
         Variable varResultSet = new Variable("resultSet");
         OJClass rowClass = OJUtil.typeToOJClass(converter.rowType);
-        if (converter.rowType.isProject()) {
+        if (converter.rowType.isStruct()) {
             Variable varRow = implementor.newVariable();
             methodBody.add(
                 new VariableDeclaration(

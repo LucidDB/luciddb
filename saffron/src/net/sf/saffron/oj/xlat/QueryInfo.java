@@ -25,7 +25,7 @@ import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import net.sf.saffron.oj.OJPlannerFactory;
+import net.sf.saffron.oj.*;
 import net.sf.saffron.oj.rel.ExpressionReaderRel;
 import net.sf.saffron.trace.SaffronTrace;
 
@@ -36,6 +36,7 @@ import openjava.mop.Toolbox;
 import openjava.ptree.*;
 import openjava.tools.parser.ParserConstants;
 
+import org.eigenbase.oj.*;
 import org.eigenbase.oj.util.JavaRexBuilder;
 import org.eigenbase.oj.util.OJUtil;
 import org.eigenbase.rel.*;
@@ -164,7 +165,7 @@ class QueryInfo
             query = queryInfo.cluster.query;
         }
         final RelDataTypeFactory typeFactory =
-            RelDataTypeFactoryImpl.threadInstance();
+            OJUtil.threadTypeFactory();
         return query.createCluster(
             env,
             typeFactory,
