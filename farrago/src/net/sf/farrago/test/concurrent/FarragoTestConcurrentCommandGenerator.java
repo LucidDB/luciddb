@@ -61,7 +61,7 @@ import org.eigenbase.util.Util;
  * given an execution order.  Execution order values are positive
  * integers, must be unique within a thread, and may be a sparse set
  * See
- * {@link FarragoConcurrencyTestCase#executeTest(FarragoTestConcurrentCommandGenerator,
+ * {@link FarragoTestConcurrentTestCase#executeTest(FarragoTestConcurrentCommandGenerator,
  *                                               boolean)}
  * for other considerations.
  *
@@ -134,8 +134,8 @@ public class FarragoTestConcurrentCommandGenerator
      *
      * @param threadId the thread that should execute this command
      * @param order the execution order
-     * @param timeout the length of time to sleep in milliseconds
-     *                (must not be negative)
+     * @param millis the length of time to sleep in milliseconds
+     *               (must not be negative)
      * @return the newly-added command
      */
     public FarragoTestConcurrentCommand addSleepCommand(
@@ -500,7 +500,7 @@ public class FarragoTestConcurrentCommandGenerator
 
     /**
      * Custom error handling occurs here if
-     * {@link #requiredCustomErrorHandling()} returns true.  Default
+     * {@link #requiresCustomErrorHandling()} returns true.  Default
      * implementation does nothing.
      */
     public void customErrorHandler(

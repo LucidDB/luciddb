@@ -72,6 +72,10 @@ public abstract class FarragoTestConcurrentScriptedTestCase
         FarragoTestConcurrentScriptedCommandGenerator cmdGen = 
             newScriptedCommandGenerator(mtsqlFile);
 
+        if (cmdGen.isDisabled()) {
+            return;
+        }
+
         cmdGen.executeSetup(newJdbcEngineDriver().getUrlPrefix());
 
         executeTest(cmdGen, cmdGen.useLockstep());

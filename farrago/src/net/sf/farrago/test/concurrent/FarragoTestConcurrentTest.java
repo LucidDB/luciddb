@@ -18,10 +18,16 @@
 */
 package net.sf.farrago.test.concurrent;
 
+import java.io.LineNumberReader;
+import java.io.StringReader;
 import java.util.regex.Pattern;
 
 import junit.framework.Test;
+import junit.framework.TestSuite;
 
+import net.sf.farrago.test.FarragoSqlTest;
+import net.sf.farrago.test.FarragoTestCase;
+import net.sf.farrago.util.FarragoProperties;
 
 /**
  * FarragoTestConcurrentTest executes a variety of SQL DML and DDL
@@ -31,13 +37,9 @@ import junit.framework.Test;
  * @author Stephan Zuercher
  * @version $Id$
  */
-public class FarragoTestConcurrentTest extends FarragoTestConcurrentTestCase
+public class FarragoTestConcurrentTest
+    extends FarragoTestConcurrentScriptedTestCase
 {
-    //~ Instance fields -------------------------------------------------------
-
-    // bug 200: set to 5 to reproduce
-    private final int TIMEOUT = 0;
-
     //~ Constructors ----------------------------------------------------------
 
     public FarragoTestConcurrentTest(String name)
@@ -45,240 +47,58 @@ public class FarragoTestConcurrentTest extends FarragoTestConcurrentTestCase
     {
         super(name);
     }
+    
 
     //~ Methods ---------------------------------------------------------------
 
     public static Test suite()
-    {
-        return wrappedSuite(FarragoTestConcurrentTest.class);
-    }
-
-    /**
-     * Test concurrent "explain plan" for a simple select statement.
-     */
-    public void testConcurrentExplain()
         throws Exception
     {
-        FarragoTestConcurrentCommandGenerator cmdGen = newCommandGenerator();
+        return gatherSuite(
+            FarragoProperties.instance().testFilesetConcurrent.get(true),
+            new FarragoConcurrentSqlTestFactory() {
+                public FarragoTestConcurrentTestCase createSqlTest(
+                    String testName) throws Exception
+                {
+                    return new FarragoTestConcurrentTest(testName);
+                }
+            });
+    }
 
-        String sql = "explain plan for select * from sales.depts";
-
-        // Repeat a few times to improve odds of getting concurrent
-        // planning.
-        for (int i = 1; i <= 10; i++) {
-            cmdGen.addExplainCommand(1, i, sql);
-            cmdGen.addExplainCommand(2, i, sql);
+    // REVIEW: SZ: 10/21/2004: Copied this from FarragoSqlTest.  If
+    // that method moved into FarragoTestCase, we could reuse it.
+    protected static Test gatherSuite(
+        String fileSet,
+        FarragoConcurrentSqlTestFactory fac)
+        throws Exception
+    {
+        StringReader stringReader = new StringReader(fileSet);
+        LineNumberReader lineReader = new LineNumberReader(stringReader);
+        TestSuite suite = new TestSuite();
+        for (;;) {
+            String file = lineReader.readLine();
+            if (file == null) {
+                break;
+            }
+            suite.addTest(fac.createSqlTest(file));
         }
-
-        executeTest(cmdGen, true);
+        return wrappedSuite(suite);
     }
 
-    /**
-     * Test concurrent "explain plan" for a simple select statement.
-     */
-    public void testConcurrentExplainNoLockstep()
+    protected void runTest()
         throws Exception
     {
-        FarragoTestConcurrentTimedCommandGenerator cmdGen =
-            new FarragoTestConcurrentTimedCommandGenerator(30);
+        // mask out source control Id
+        addDiffMask("\\$Id.*\\$");
 
-        String sql = "explain plan for select * from sales.depts";
-
-        cmdGen.addExplainCommand(1, 1, sql);
-        cmdGen.addExplainCommand(2, 1, sql);
-
-        executeTest(cmdGen, false);
+        runScript(getName());
     }
 
-    /** Test the negative test mechanism */
-    public void testBadCommand()
-        throws Exception
+    //~ Inner Interfaces ------------------------------------------------------
+
+    public interface FarragoConcurrentSqlTestFactory
     {
-        FarragoTestConcurrentCommandGenerator cmdGen = newCommandGenerator();
-        int step = 1;
-
-        // expect parse error: java.sql.SQLException: net.sf.farrago.parser.ParseException
-        cmdGen.addPrepareCommand(1, step++,
-            "select * frooom sales.depts order by deptno").markToFail("expected a parse error",
-            "ParseException");
-
-        // expect validator error: "Unknown identifier"
-        cmdGen.addPrepareCommand(1, step++, "select bean from sales.depts")
-            .markToFail("expected validator error",
-                "Unknown identifier 'BEAN' near: line 1, column 8");
-        executeTest(cmdGen, true);
-    }
-
-    /**
-     * Test concurrent <code>select * from sales.depts</code> statements.
-     */
-    public void testConcurrentSelect()
-        throws Exception
-    {
-        FarragoTestConcurrentCommandGenerator cmdGen = newCommandGenerator();
-
-        String sql = "select * from sales.depts order by deptno";
-        String expected =
-            "{ 10, 'Sales' }, { 20, 'Marketing' }, { 30, 'Accounts' }";
-
-        // Repeat a few times to improve odds of getting concurrent
-        // execution.
-        for (int i = 0; i < 10; i++) {
-            int tick = (i * 3) + 2;
-
-            cmdGen.addPrepareCommand(1, tick, sql);
-            cmdGen.addFetchAndCompareCommand(1, tick + 1, TIMEOUT, expected);
-            cmdGen.addCloseCommand(1, tick + 2);
-
-            cmdGen.addPrepareCommand(2, tick, sql);
-            cmdGen.addFetchAndCompareCommand(2, tick + 1, TIMEOUT, expected);
-            cmdGen.addCloseCommand(2, tick + 2);
-
-            cmdGen.addPrepareCommand(3, tick, sql);
-            cmdGen.addFetchAndCompareCommand(3, tick + 1, TIMEOUT, expected);
-            cmdGen.addCloseCommand(3, tick + 2);
-        }
-
-        executeTest(cmdGen, true);
-    }
-
-    /**
-     * Test concurrent <code>select * from sales.depts</code> statements.
-     * Known to fail as of 6/17/2004.
-     */
-    public void testConcurrentSelectNoLockStep()
-        throws Exception
-    {
-        FarragoTestConcurrentTimedCommandGenerator cmdGen =
-            new FarragoTestConcurrentTimedCommandGenerator(30);
-
-        String sql = "select * from sales.depts order by deptno";
-        String expected =
-            "{ 10, 'Sales' }, { 20, 'Marketing' }, { 30, 'Accounts' }";
-
-        cmdGen.addPrepareCommand(1, 1, sql);
-        cmdGen.addFetchAndCompareCommand(1, 2, TIMEOUT, expected);
-        cmdGen.addCloseCommand(1, 3);
-
-        cmdGen.addPrepareCommand(2, 1, sql);
-        cmdGen.addFetchAndCompareCommand(2, 2, TIMEOUT, expected);
-        cmdGen.addCloseCommand(2, 3);
-
-        cmdGen.addPrepareCommand(3, 1, sql);
-        cmdGen.addFetchAndCompareCommand(3, 2, TIMEOUT, expected);
-        cmdGen.addCloseCommand(3, 3);
-
-        executeTest(cmdGen, false);
-    }
-
-    /**
-     * Test concurrent select statements with a join.
-     */
-    public void testConcurrentJoin()
-        throws Exception
-    {
-        FarragoTestConcurrentCommandGenerator cmdGen = newCommandGenerator();
-
-        String sql =
-            "select emps.empno, emps.name, emps.gender, depts.* from sales.depts, sales.emps where emps.deptno = depts.deptno";
-
-        String expected =
-            "{ 100, 'Fred',  null, 10, 'Sales' }, "
-            + "{ 110, 'Eric',  'M',  20, 'Marketing' }, "
-            + "{ 120, 'Wilma', 'F',  20, 'Marketing' }";
-
-        // Repeat a few times to improve odds of getting concurrent
-        // execution.
-        for (int i = 0; i < 10; i++) {
-            int tick = (i * 3) + 2;
-
-            cmdGen.addPrepareCommand(1, tick, sql);
-            cmdGen.addFetchAndCompareCommand(1, tick + 1, TIMEOUT, expected);
-            cmdGen.addCloseCommand(1, tick + 2);
-
-            cmdGen.addPrepareCommand(2, tick, sql);
-            cmdGen.addFetchAndCompareCommand(2, tick + 1, TIMEOUT, expected);
-            cmdGen.addCloseCommand(2, tick + 2);
-        }
-
-        executeTest(cmdGen, true);
-    }
-
-    /**
-     * Test concurrent select statements with a join.
-     */
-
-    // REVIEW: SZ: 8/3/2004: disable pending resolution of dtbug 103
-    public void _testConcurrentJoinNoLockStep()
-        throws Exception
-    {
-        FarragoTestConcurrentTimedCommandGenerator cmdGen =
-            new FarragoTestConcurrentTimedCommandGenerator(30);
-
-        String sql =
-            "select emps.empno, emps.name, emps.gender, depts.* from sales.depts, sales.emps where emps.deptno = depts.deptno";
-
-        String expected =
-            "{ 100, 'Fred',  null, 10, 'Sales' }, "
-            + "{ 110, 'Eric',  'M',  20, 'Marketing' }, "
-            + "{ 120, 'Wilma', 'F',  20, 'Marketing' }";
-
-        cmdGen.addPrepareCommand(1, 1, sql);
-        cmdGen.addFetchAndCompareCommand(1, 2, TIMEOUT, expected);
-        cmdGen.addCloseCommand(1, 3);
-
-        cmdGen.addPrepareCommand(2, 1, sql);
-        cmdGen.addFetchAndCompareCommand(2, 2, TIMEOUT, expected);
-        cmdGen.addCloseCommand(2, 3);
-
-        executeTest(cmdGen, false);
-    }
-
-    /**
-     * Test conccurent insert statements.
-     */
-    public void _testConcurrentInsert()
-        throws Exception
-    {
-        // REVIEW: SZ 6/18/2004: Fennel storage currently has no
-        // table-level concurrency-control, so this test should fail.
-        FarragoTestConcurrentCommandGenerator cmdGen = newCommandGenerator();
-
-        String createSchema = "create schema concurrency";
-
-        String createTable =
-            "create table concurrency.test (message_id integer not null primary key, message varchar(128) not null)";
-
-        String baseSql =
-            "insert into concurrency.test (message_id, message) values (@MESSAGE_ID@, @MESSAGE@)";
-
-        cmdGen.addDdlCommand(1, 1, createSchema);
-        cmdGen.addDdlCommand(1, 2, createTable);
-
-        // Repeat a few times to improve odds of getting concurrent
-        // execution.
-        for (int i = 0; i < 10; i++) {
-            int tick = (i * 2) + 3;
-
-            String tickBaseSql =
-                baseSql.replaceAll("@MESSAGE@", "'clock tick " + tick + "'");
-
-            String sql1 =
-                tickBaseSql.replaceAll(
-                    "@MESSAGE_ID@",
-                    String.valueOf((i * 2) + 1));
-            String sql2 =
-                tickBaseSql.replaceAll(
-                    "@MESSAGE_ID@",
-                    String.valueOf((i * 2) + 2));
-
-            cmdGen.addInsertCommand(1, tick, 5, sql1);
-            cmdGen.addCommitCommand(1, tick + 1);
-
-            cmdGen.addInsertCommand(2, tick, 5, sql2);
-            cmdGen.addCommitCommand(2, tick + 1);
-        }
-
-        executeTest(cmdGen, true);
+        public FarragoTestConcurrentTestCase createSqlTest(String testName)
+            throws Exception;
     }
 }

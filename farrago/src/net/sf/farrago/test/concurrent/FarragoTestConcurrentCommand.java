@@ -22,7 +22,7 @@ package net.sf.farrago.test.concurrent;
 /**
  * FarragoTestConcurrentCommand represents a command, sequentially executed by
  * {@link FarragoTestConcurrentCommandExecutor}, during a concurrency test
- * ({@link FarragoConcurrentTestCase}.
+ * ({@link FarragoTestConcurrentTestCase}.
  *
  * <p>FarragoTestConcurrentCommand instances are normally instantiated by the
  * {@link FarragoTestConcurrentCommandGenerator} class.
@@ -49,13 +49,14 @@ public interface FarragoTestConcurrentCommand
         throws Exception;
 
     /**
-     * Mark a command to show that it is expected to fail, and indicate how.
-     * Used for negative tests.  Normally when a command fails the embracing
-     * test fails ({@see FarragoTestConcurrentTestCase#executeTest}).
-     * But when a marked command fails, the error is caught and
-     * inspected: if it matches the expected error, the test
-     * continues.  However if it does not match, if another kind of
-     * exception is thrown, or if no exception is caught, then the
+     * Mark a command to show that it is expected to fail, and
+     * indicate how.  Used for negative tests.  Normally when a
+     * command fails the embracing test fails (see {@link
+     * FarragoTestConcurrentTestCase#executeTest(FarragoTestConcurrentCommandGenerator,
+     * boolean)}).  But when a marked command fails, the error is
+     * caught and inspected: if it matches the expected error, the
+     * test continues.  However if it does not match, if another kind
+     * of exception is thrown, or if no exception is caught, then the
      * test fails.
      *
      * Assumes the error is indicated by a java.sql.SQLException.

@@ -1,0 +1,8 @@
+@nolockstep
+
+@thread t1,t2,t3
+	@repeat 10
+		-- add @timeout 5000 to the start of the next line for bug 103
+		select * From sales.depts order by deptno;
+	@end
+@end

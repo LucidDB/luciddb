@@ -1,0 +1,7 @@
+@lockstep
+
+@thread t1,t2
+	@repeat 10
+		explain plan for select * from sales.depts;
+	@end
+@end

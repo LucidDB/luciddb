@@ -68,7 +68,7 @@ import org.eigenbase.util.Util;
  * given an execution order.  Execution order values are positive
  * integers, must be unique within a thread, and may be a sparse set
  * See
- * {@link FarragoConcurrencyTestCase#executeTest(FarragoTestConcurrentCommandGenerator,
+ * {@link FarragoTestConcurrentTestCase#executeTest(FarragoTestConcurrentCommandGenerator,
  *                                               boolean)}
  * for other considerations.
  *
@@ -91,6 +91,8 @@ public class FarragoTestConcurrentScriptedCommandGenerator
 
     private static final String LOCKSTEP = "@lockstep";
     private static final String NOLOCKSTEP = "@nolockstep";
+    private static final String ENABLED = "@enabled";
+    private static final String DISABLED = "@disabled";
     private static final String SETUP = "@setup";
     private static final String END = "@end";
     private static final String THREAD = "@thread";
@@ -108,6 +110,8 @@ public class FarragoTestConcurrentScriptedCommandGenerator
     private static final Object[][] STATE_TABLE = {
         { PRE_SETUP_STATE,   new Object[][] { { LOCKSTEP,   PRE_SETUP_STATE },
                                               { NOLOCKSTEP, PRE_SETUP_STATE },
+                                              { ENABLED,    PRE_SETUP_STATE },
+                                              { DISABLED,   PRE_SETUP_STATE },
                                               { SETUP,      SETUP_STATE },
                                               { THREAD,     THREAD_STATE } } },
 
@@ -169,6 +173,8 @@ public class FarragoTestConcurrentScriptedCommandGenerator
 
     private Boolean lockstep;
     
+    private Boolean disabled;
+
     private List setupCommands = new ArrayList();
 
     private Map threadBufferedWriters = new HashMap();
@@ -211,6 +217,15 @@ public class FarragoTestConcurrentScriptedCommandGenerator
         return lockstep.booleanValue();
     }
 
+
+    boolean isDisabled()
+    {
+        if (disabled == null) {
+            return false;
+        }
+
+        return disabled.booleanValue();
+    }
 
     void executeSetup(String jdbcUrl)
         throws Exception
@@ -312,7 +327,8 @@ public class FarragoTestConcurrentScriptedCommandGenerator
                     }
                     
                     command = EOF;
-                } else if (trimmedLine.equals("")) {
+                } else if (trimmedLine.equals("") ||
+                           trimmedLine.startsWith("--")) {
                     continue;
                 } else {
                     if (!commandStateMap.containsKey(SQL)) {
@@ -330,7 +346,8 @@ public class FarragoTestConcurrentScriptedCommandGenerator
 
                     if (SETUP_STATE.equals(state)) {
                         setupCommands.add(sql.toString().trim());
-                    } else if (THREAD_STATE.equals(state)) {
+                    } else if (THREAD_STATE.equals(state) || 
+                               REPEAT_STATE.equals(state)) {
                         boolean isSelect = isSelect(sql);
 
                         for(int i = threadId; i < nextThreadId; i++) {
@@ -342,18 +359,31 @@ public class FarragoTestConcurrentScriptedCommandGenerator
                                  : (AbstractCommand)new SqlCommand(sql)));
                         }
                         order++;
-                    } else if (REPEAT_STATE.equals(state)) {
                     } else {
                         assert(false);
                     }
                 } else {
                     // commands are handled here
                     if (LOCKSTEP.equals(command)) {
-                        assert(lockstep == null);
+                        assert(lockstep == null): 
+                            LOCKSTEP + " and " + NOLOCKSTEP
+                            + " may only appear once";
                         lockstep = Boolean.TRUE;
                     } else if (NOLOCKSTEP.equals(command)) {
-                        assert(lockstep == null);
+                        assert(lockstep == null): 
+                            LOCKSTEP + " and " + NOLOCKSTEP
+                            + " may only appear once";
                         lockstep = Boolean.FALSE;
+                    } else if (DISABLED.equals(command)) {
+                        assert(disabled == null): 
+                            DISABLED + " and " + ENABLED 
+                            + " may only appear once";
+                        disabled = Boolean.TRUE;
+                    } else if (ENABLED.equals(command)) {
+                        assert(disabled == null): 
+                            DISABLED + " and " + ENABLED 
+                            + " may only appear once";
+                        disabled = Boolean.FALSE;
                     } else if (SETUP.equals(command)) {
                         //  nothing to do
                     } else if (THREAD.equals(command)) {
@@ -380,17 +410,20 @@ public class FarragoTestConcurrentScriptedCommandGenerator
                         } else if (THREAD_STATE.equals(state)) {
                             threadId = nextThreadId;
                         } else if (REPEAT_STATE.equals(state)) {
-                            try {
-                                in.reset();
-                            } catch(IOException e) {
-                                throw new IllegalStateException(
-                                    "Unable to reset reader -- repeat "
-                                     + "contents must be less than "
-                                     + REPEAT_READ_AHEAD_LIMIT + " bytes");
-                            }
+                            repeatCount--;
+                            if (repeatCount > 0) {
+                                try {
+                                    in.reset();
+                                } catch(IOException e) {
+                                    throw new IllegalStateException(
+                                        "Unable to reset reader -- repeat "
+                                        + "contents must be less than "
+                                        + REPEAT_READ_AHEAD_LIMIT + " bytes");
+                                }
 
-                            // don't let the state change
-                            continue;
+                                // don't let the state change
+                                continue;
+                            }
                         } else {
                             assert(false);
                         }
@@ -517,7 +550,7 @@ public class FarragoTestConcurrentScriptedCommandGenerator
      */
     private String skipFirstWord(String trimmedLine)
     {
-        return trimmedLine.replaceFirst("^\\S\\s+", "");
+        return trimmedLine.replaceFirst("^\\S+\\s+", "");
     }
 
     /**
@@ -559,7 +592,7 @@ public class FarragoTestConcurrentScriptedCommandGenerator
                     continue;
                 }
                 
-                if (line.startsWith("select")) {
+                if (line.startsWith("select") || line.startsWith("explain")) {
                     return true;
                 } else {
                     return false;

@@ -1,0 +1,74 @@
+@lockstep
+@disabled
+
+@setup
+	create schema concurrency;
+
+	create table concurrency.test (
+		message_id integer not null primary key,
+		message varchar(128) not null);
+@end
+
+@thread t1
+	insert into concurrency.test (message_id, message)
+	values (1, 'message number 1');
+
+	insert into concurrency.test (message_id, message)
+	values (3, 'message number 3');
+
+	insert into concurrency.test (message_id, message)
+	values (5, 'message number 5');
+
+	insert into concurrency.test (message_id, message)
+	values (7, 'message number 7');
+
+	insert into concurrency.test (message_id, message)
+	values (9, 'message number 9');
+
+	insert into concurrency.test (message_id, message)
+	values (11, 'message number 11');
+
+	insert into concurrency.test (message_id, message)
+	values (13, 'message number 13');
+
+	insert into concurrency.test (message_id, message)
+	values (15, 'message number 15');
+
+	insert into concurrency.test (message_id, message)
+	values (17, 'message number 17');
+
+	insert into concurrency.test (message_id, message)
+	values (19, 'message number 19');
+@end
+
+@thread t2
+	insert into concurrency.test (message_id, message)
+	values (2, 'message number 2');
+
+	insert into concurrency.test (message_id, message)
+	values (4, 'message number 4');
+
+	insert into concurrency.test (message_id, message)
+	values (6, 'message number 6');
+
+	insert into concurrency.test (message_id, message)
+	values (8, 'message number 8');
+
+	insert into concurrency.test (message_id, message)
+	values (10, 'message number 10');
+
+	insert into concurrency.test (message_id, message)
+	values (12, 'message number 12');
+
+	insert into concurrency.test (message_id, message)
+	values (14, 'message number 14');
+
+	insert into concurrency.test (message_id, message)
+	values (16, 'message number 16');
+
+	insert into concurrency.test (message_id, message)
+	values (18, 'message number 18');
+
+	insert into concurrency.test (message_id, message)
+	values (20, 'message number 20');
+@end

@@ -301,6 +301,13 @@ require version '${required.ant.version}'."/>
     <os family="windows"/>
   </condition>
 
+  <!-- a fileset of all SQL concurrency tests -->
+  <fileset dir="${unitsql.dir}" id="fileset.concurrentsql">
+    <include name="**/*.mtsql"/>
+  </fileset>
+  <pathconvert property="fileset.concurrentsql" refid="fileset.concurrentsql"
+    pathsep="${line.separator}" dirsep="${file.separator}" />
+
   <!-- name for a temp file used during tags generation -->
   <property name="file.taggable.tmp"
     location="${farrago.dir}/taggedfiles"/>
@@ -1016,6 +1023,7 @@ require version '${required.ant.version}'."/>
       <testfileset>
         <fileset dir="${classes.dir}">
           <exclude name="**/test/regression/*Test.class"/>
+          <exclude name="**/test/concurrent/*Test.class"/>
           <include name="**/*Test.class"/>
         </fileset>
       </testfileset>
@@ -1059,11 +1067,14 @@ require version '${required.ant.version}'."/>
       <testfileset>
         <fileset dir="${classes.dir}">
           <include name="**/regression/*Test.class"/>
+          <include name="**/concurrent/*Test.class"/>
         </fileset>
       </testfileset>
       <junitargs>
         <sysproperty key="net.sf.farrago.fileset.regressionsql"
           value="${fileset.regressionsql}"/>
+        <sysproperty key="net.sf.farrago.fileset.concurrentsql"
+          value="${fileset.concurrentsql}"/>
       </junitargs>
     </runTests>
   </target>

@@ -43,6 +43,16 @@ if [ -e "$test" ]; then
 	target=regressionWithoutBuild
 	junit_class=net.sf.farrago.test.regression.FarragoSqlRegressionTest
 	fileset=fileset.regressionsql
+    elif [ ${test:0-6} == ".mtsql" ]; then
+	if [ "$target" == "jswat.junit" ]; then
+	    # REVIEW: it needs a jswat.junit.regressionsql target that sets
+	    # the necessary system properties for regressionsql tests.
+	    echo "build.xml does not support jswat on regressionsql"
+	    exit 1;
+	fi
+	target=regressionWithoutBuild
+	junit_class=net.sf.farrago.test.concurrent.FarragoTestConcurrentTest
+	fileset=fileset.concurrentsql
     fi
 
     command="ant -Djunit.class=$junit_class -D$fileset=$test $target"

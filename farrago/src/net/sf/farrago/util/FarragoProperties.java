@@ -99,6 +99,13 @@ public class FarragoProperties extends Properties
     public final StringProperty testFilesetRegression =
         new StringProperty(this, "net.sf.farrago.fileset.regressionsql", null);
 
+    /**
+     * The string property "net.sf.farrago.fileset.concurrentsql" specifies a
+     * newline-separated list of concurrency test SQL script files to run.
+     */
+    public final StringProperty testFilesetConcurrent =
+        new StringProperty(this, "net.sf.farrago.fileset.concurrentsql", null);
+
     //~ Constructors ----------------------------------------------------------
 
     private FarragoProperties()
