@@ -66,6 +66,8 @@
 
     <pattern name="dt.test" class="com.disruptivetech.farrago.test.*" />
 
+    <pattern name="plannerviz" class="net.sf.farrago.plannerviz.**" />
+
     <!-- explicit list of all farrago components above -->
     <pattern name="farrago.explicit">
       <include pattern="cwm"/>
@@ -108,6 +110,7 @@
       <include pattern="defimpl"/>
       <include pattern="test"/>
       <include pattern="dt.test"/>
+      <include pattern="plannerviz"/>
     </pattern>
 
     <!-- Below are the actual rules. -->

@@ -124,6 +124,8 @@ require version '${required.ant.version}'."/>
   <fileset dir="${open.dir}" id="fileset.taggable">
     <include name="farrago/catalog/java/**/*.java"/>
     <include name="farrago/src/**/*.java"/>
+    <include name="farrago/examples/**/*.java"/>
+    <include name="farrago/examples/**/package.java"/>
     <include name="farrago/src/**/package.html"/>
     <exclude name="**/Dummy*.java"/>
   </fileset>
@@ -804,6 +806,7 @@ require version '${required.ant.version}'."/>
 
   <target name="test">
     <antcall target="createCatalog"/>
+    <antcall target="buildExamples"/>
     <antcall target="junit"/>
     <antcall target="regressionWithoutBuild"/>
     <antcall target="macker"/>
@@ -1144,6 +1147,10 @@ require version '${required.ant.version}'."/>
       <![CDATA[bogus]]>
     </sql>
     <echo message="Successfully connected to ${jdbcimpl.url}"/>
+  </target>
+
+  <target name="buildExamples" depends="compile">
+    <ant antfile="examples/plannerviz/build.xml" inheritAll="false"/>
   </target>
 
   <!-- Below is all experimental stuff for the user repository -->

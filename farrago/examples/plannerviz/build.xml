@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- $Id$ -->
+<!-- Farrago plannerviz ant build script -->
+
+<project name="farragoPlannerviz" basedir="." default="all">
+
+
+  <!-- Definitions for Farrago build properties and macros -->
+  <import file="../../buildMacros.xml"/>
+
+  <property name="src.dir" location="src"/>
+  
+  <path id="plannerviz.classpath">
+    <pathelement path="${farrago.run.classpath}"/>
+  </path>
+  <property name="plannerviz.classpath" refid="plannerviz.classpath"/>
+
+  <target name="all" depends="compile">
+  </target>
+
+  <target name="compile">
+    <farrago.javaCompile
+      deprecation="off"
+      srcdir="${src.dir}"
+      destdir="${farrago.classes.dir}"
+      classpathref="plannerviz.classpath">
+      <include name="**/*.java" />
+    </farrago.javaCompile>
+  </target>
+
+</project>

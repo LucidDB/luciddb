@@ -180,6 +180,30 @@ public abstract class FarragoTrace
     }
 
     /**
+     * The tracer "net.sf.farrago.plannerviz"
+     * enables JGraph visualization of planner activity.  This
+     * should not be enabled unless Farrago is running from a
+     * single-session interactive console.  Settings:
+     *
+     * <ol>
+     *
+     * <li>{@link java.util.logging.Level#FINE}:  render only logical
+     * equivalence classes
+     *
+     * <li>{@link java.util.logging.Level#FINER}:  render only physical
+     * equivalence classes
+     *
+     * <li>{@link java.util.logging.Level#FINEST}:  render both logical
+     * and physical equivalence classes
+     *
+     * </ol>
+     */
+    public static Logger getPlannerVizTracer()
+    {
+        return Logger.getLogger("net.sf.farrago.plannerviz");
+    }
+
+    /**
      * The tracer "net.sf.farrago.query.rule" traces Farrago's custom
      * optimizer rules.
      */
