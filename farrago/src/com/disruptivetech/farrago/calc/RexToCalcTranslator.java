@@ -678,7 +678,7 @@ public class RexToCalcTranslator implements RexVisitor
      * inserts a call to the calculator convert function and silently
      * updates the result register of the operands as needed
      */
-    private void implementConversionIfNeeded(
+    void implementConversionIfNeeded(
         SqlOperator op,
         RexNode op1,
         RexNode op2,

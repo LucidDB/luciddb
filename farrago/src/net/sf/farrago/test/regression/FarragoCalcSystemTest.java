@@ -134,25 +134,18 @@ public class FarragoCalcSystemTest extends FarragoTestCase
         exclude.add(opTab.descendingOperator);
         exclude.add(opTab.litChainOperator);
         exclude.add(opTab.escapeOperator);
-
-        // Eventutally need to include these when cast is working
-        exclude.add(opTab.overlapsOperator);
-        exclude.add(opTab.initcapFunc);
-        exclude.add(opTab.lnFunc);
-        exclude.add(opTab.powFunc);
-        exclude.add(opTab.logFunc);
-        exclude.add(opTab.absFunc);
         exclude.add(opTab.localTimeFunc);
         exclude.add(opTab.localTimestampFunc);
         exclude.add(opTab.currentTimestampFunc);
         exclude.add(opTab.currentTimeFunc);
+
+        // Eventutally need to include these when cast is working
+        exclude.add(opTab.overlapsOperator);
+        exclude.add(opTab.initcapFunc);
         exclude.add(opTab.currentDateFunc);
         exclude.add(opTab.convertFunc);
         exclude.add(opTab.translateFunc);
-        exclude.add(opTab.concatOperator);
 
-        exclude.add(opTab.greaterThanOrEqualOperator);
-        exclude.add(opTab.lessThanOrEqualOperator);
 
         // --- NOTE ---
         // Do not add a function to this exclude list unless you first add a

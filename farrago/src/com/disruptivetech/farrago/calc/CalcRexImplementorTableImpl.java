@@ -21,6 +21,7 @@ package com.disruptivetech.farrago.calc;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
@@ -279,7 +280,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
         CalcProgramBuilder.RegisterDescriptor rd =
             translator.getCalcRegisterDescriptor(typeNode);
         if (rd.getType().isExact()
-                && !rd.getType().equals(CalcProgramBuilder.OpType.Int8)) {
+            && !rd.getType().equals(CalcProgramBuilder.OpType.Int8)) {
             RelDataType oldType = typeNode.getType();
             RelDataTypeFactory fac = translator.rexBuilder.getTypeFactory();
 
@@ -328,7 +329,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
         CalcProgramBuilder.RegisterDescriptor rd =
             translator.getCalcRegisterDescriptor(typeNode);
         if (rd.getType().isApprox()
-                && !rd.getType().equals(CalcProgramBuilder.OpType.Double)) {
+            && !rd.getType().equals(CalcProgramBuilder.OpType.Double)) {
             RelDataType oldType = typeNode.getType();
             RelDataTypeFactory fac = translator.rexBuilder.getTypeFactory();
 
@@ -663,12 +664,12 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                         operand,
                         translator.rexBuilder.makeLiteral(boolType));
                 res = translator.rexBuilder.makeCall(opTab.andOperator,
-                        notNullCall, eqCall);
+                    notNullCall, eqCall);
             } else {
                 res = translator.rexBuilder.makeCall(
-                        opTab.equalsOperator,
-                        operand,
-                        translator.rexBuilder.makeLiteral(boolType));
+                    opTab.equalsOperator,
+                    operand,
+                    translator.rexBuilder.makeLiteral(boolType));
             }
             return translator.implementNode(res);
         }
@@ -1244,18 +1245,41 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
             CalcProgramBuilder.Register resultRegister)
         {
             assert (2 == call.operands.length);
-            ArrayList regList = new ArrayList();
+            List regList = new ArrayList();
             regList.add(resultRegister);
+
             if ((!(call.operands[0] instanceof RexCall)
-                    || !((RexCall) call.operands[0]).op.equals(
-                        opTab.concatOperator))) {
+                || !((RexCall) call.operands[0]).op.equals(
+                    opTab.concatOperator))) {
                 regList.add(translator.implementNode(call.operands[0]));
             } else {
+                //recursively calling this method again
                 implement((RexCall) call.operands[0], translator,
                     resultRegister);
             }
 
             regList.add(translator.implementNode(call.operands[1]));
+            assert(regList.size()>1);
+            assert(CalcProgramBuilder.OpType.Varchar.equals(
+                resultRegister.getOpType()));
+            for (int i = 1; i < regList.size(); i++) {
+                CalcProgramBuilder.Register reg=
+                    (CalcProgramBuilder.Register) regList.get(i);
+
+                if (!reg.getOpType().equals(
+                    CalcProgramBuilder.OpType.Varchar)) {
+                    // cast to varchar call must be of type varchar.
+                    CalcProgramBuilder.Register newReg =
+                        translator.builder.newLocal(
+                        translator.getCalcRegisterDescriptor(call));
+
+                    ExtInstructionDefTable.castA.add(
+                        translator.builder,
+                        new CalcProgramBuilder.Register [] { newReg, reg });
+                    regList.set(i, newReg);
+                }
+            }
+
             ExtInstructionDefTable.concat.add(translator.builder, regList);
             return resultRegister;
         }
