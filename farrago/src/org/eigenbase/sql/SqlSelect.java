@@ -48,9 +48,9 @@ public class SqlSelect extends SqlCall
     SqlSelect(
         SqlSelectOperator operator,
         SqlNode [] operands,
-        ParserPosition parserPosition)
+        ParserPosition pos)
     {
-        super(operator, operands, parserPosition);
+        super(operator, operands, pos);
     }
 
     //~ Methods ---------------------------------------------------------------

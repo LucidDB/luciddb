@@ -39,9 +39,9 @@ Object FarragoSqlStmtEof() :
 {
     (
         obj = DdlStmtEof()
-	|
+    |
         obj = SqlStmtEof()
-	)
+    )
         { return obj; }
 }
 
@@ -82,13 +82,13 @@ DdlStmt DdlStmtEof() :
               modelElement = NamedColumnSetDrop()
               |
               modelElement = IndexDrop()
-			  |
-			  modelElement = ViewDrop()
-			  |
+              |
+              modelElement = ViewDrop()
+              |
               LOOKAHEAD(2)
-			  modelElement = DataWrapperDrop()
-			  |
-			  modelElement = DataServerDrop()
+              modelElement = DataWrapperDrop()
+              |
+              modelElement = DataServerDrop()
           )
         {
             ddlStmt = new DdlDropStmt(modelElement,dropRestrict);
@@ -277,14 +277,14 @@ FemLocalTable ScopedTableDefinition(CwmSchema schema) :
 
 CwmView ViewDefinition(CwmSchema schema) :
 {
-	CwmView view;
-	SqlIdentifier qualifiedViewName;
-	SqlNode query;
+    CwmView view;
+    SqlIdentifier qualifiedViewName;
+    SqlNode query;
     List columnNameList;
 }
 {
-	<VIEW>
-		{
+    <VIEW>
+        {
            view = getRepos().newCwmView();
         }
     qualifiedViewName = CompoundIdentifier2()
@@ -293,17 +293,17 @@ CwmView ViewDefinition(CwmSchema schema) :
                 schema,view,qualifiedViewName);
         }
     [<LPAREN> columnNameList = SimpleIdentifierCommaList() 
-		{
+        {
             Iterator columnNameIter = columnNameList.iterator();
-			while (columnNameIter.hasNext()) {
-				String columnName = 
-					((SqlIdentifier) columnNameIter.next()).getSimple();
+            while (columnNameIter.hasNext()) {
+                String columnName = 
+                    ((SqlIdentifier) columnNameIter.next()).getSimple();
                 CwmColumn column = getRepos().newFemViewColumn();
                 column.setName(columnName);
                 view.getFeature().add(column);
-			}
-		}
-	 <RPAREN>]
+            }
+        }
+     <RPAREN>]
 
     <AS> query = OrderedQueryOrExpr(EXPR_ACCEPT_QUERY)
     {
@@ -314,12 +314,12 @@ CwmView ViewDefinition(CwmSchema schema) :
             farragoParser.getDdlValidator().getInvokingSession();
         String unparseSql = query.toSqlString(
             new SqlDialect(session.getDatabaseMetaData()));
-		CwmQueryExpression queryExp = getRepos().newCwmQueryExpression();
-		queryExp.setLanguage("SQL");
+        CwmQueryExpression queryExp = getRepos().newCwmQueryExpression();
+        queryExp.setLanguage("SQL");
         queryExp.setBody(unparseSql);
-		view.setQueryExpression(queryExp);
-	}
-	{
+        view.setQueryExpression(queryExp);
+    }
+    {
        return view;
     }
 }
@@ -781,7 +781,7 @@ DdlStmt SystemParamAssignment() :
 SqlLiteral SystemParamValue() :
 {
     SqlLiteral paramValue;
-	ParserPosition parserPosition = null;	
+    ParserPosition pos = null;  
 }
 {
     (
@@ -792,13 +792,13 @@ SqlLiteral SystemParamValue() :
         {
             // TODO jvs 22-May-2004:  for MIN and MAX here, use metadata
             // to determine the correct min and max values
-            parserPosition = getCurrentParserPosition();
-            paramValue = SqlLiteral.Numeric.createExact("-1", parserPosition);
+            pos = getCurrentParserPosition();
+            paramValue = SqlLiteral.Numeric.createExact("-1", pos);
         }
         | <MIN>
         {
-            parserPosition = getCurrentParserPosition();
-            paramValue = SqlLiteral.Numeric.createExact("0", parserPosition);
+            pos = getCurrentParserPosition();
+            paramValue = SqlLiteral.Numeric.createExact("0", pos);
         }
     )
         {

@@ -49,18 +49,18 @@ public class SqlIdentifier extends SqlNode
     public SqlIdentifier(
         String [] names,
         SqlCollation collation,
-        ParserPosition parserPosition)
+        ParserPosition pos)
     {
-        super(parserPosition);
+        super(pos);
         this.names = names;
         this.collation = collation;
     }
 
     public SqlIdentifier(
         String [] names,
-        ParserPosition parserPosition)
+        ParserPosition pos)
     {
-        super(parserPosition);
+        super(pos);
         this.names = names;
         this.collation = null;
     }
@@ -71,9 +71,9 @@ public class SqlIdentifier extends SqlNode
     public SqlIdentifier(
         String name,
         SqlCollation collation,
-        ParserPosition parserPosition)
+        ParserPosition pos)
     {
-        this(new String [] { name }, collation, parserPosition);
+        this(new String [] { name }, collation, pos);
     }
 
     /**
@@ -81,9 +81,9 @@ public class SqlIdentifier extends SqlNode
      */
     public SqlIdentifier(
         String name,
-        ParserPosition parserPosition)
+        ParserPosition pos)
     {
-        this(new String [] { name }, null, parserPosition);
+        this(new String [] { name }, null, pos);
     }
 
     //~ Methods ---------------------------------------------------------------

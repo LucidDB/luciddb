@@ -44,8 +44,8 @@ public class SqlJoinOperator extends SqlOperator
     public static final int LEFT_OPERAND = 0;
 
     /**
-     * One of the following: {@link SqlLiteral#True}, {@link
-     * SqlLiteral#False}.
+     * Operand says whether this is a natural join. Must be constant TRUE or
+     * FALSE.
      */
     public static final int IS_NATURAL_OPERAND = 1;
 
@@ -79,7 +79,7 @@ public class SqlJoinOperator extends SqlOperator
 
     public SqlCall createCall(
         SqlNode [] operands,
-        ParserPosition parserPosition)
+        ParserPosition pos)
     {
         assert (operands[IS_NATURAL_OPERAND] instanceof SqlLiteral);
         final SqlLiteral isNatural = (SqlLiteral) operands[IS_NATURAL_OPERAND];
@@ -90,7 +90,7 @@ public class SqlJoinOperator extends SqlOperator
         assert operands[TYPE_OPERAND] != null : "precondition: operands[TYPE_OPERAND] != null";
         assert operands[TYPE_OPERAND] instanceof SqlLiteral
             && ((SqlLiteral) operands[TYPE_OPERAND]).getValue() instanceof JoinType;
-        return new SqlJoin(this, operands, parserPosition);
+        return new SqlJoin(this, operands, pos);
     }
 
     public void test(SqlTester tester)
@@ -105,13 +105,13 @@ public class SqlJoinOperator extends SqlOperator
         SqlNode right,
         SqlLiteral conditionType,
         SqlNode condition,
-        ParserPosition parserPosition)
+        ParserPosition pos)
     {
         return createCall(
             new SqlNode [] {
                 left, isNatural, joinType, right, conditionType, condition
             },
-            parserPosition);
+            pos);
     }
 
     public void unparse(

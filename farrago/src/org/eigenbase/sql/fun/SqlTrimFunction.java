@@ -86,17 +86,17 @@ public class SqlTrimFunction extends SqlFunction
 
     public SqlCall createCall(
         SqlNode [] operands,
-        ParserPosition parserPosition)
+        ParserPosition pos)
     {
         assert (3 == operands.length);
         if (null == operands[0]) {
-            operands[0] = Flag.createBoth(parserPosition);
+            operands[0] = Flag.createBoth(pos);
         }
 
         if (null == operands[1]) {
-            operands[1] = SqlLiteral.CharString.create(" ", parserPosition);
+            operands[1] = SqlLiteral.CharString.create(" ", pos);
         }
-        return super.createCall(operands, parserPosition);
+        return super.createCall(operands, pos);
     }
 
     protected void checkArgTypes(
@@ -163,29 +163,29 @@ public class SqlTrimFunction extends SqlFunction
             String name,
             int left,
             int right,
-            ParserPosition parserPosition)
+            ParserPosition pos)
         {
-            super(name, parserPosition);
+            super(name, pos);
             this.left = left;
             this.right = right;
         }
 
         public static final SqlSymbol createBoth(
-            ParserPosition parserPosition)
+            ParserPosition pos)
         {
-            return new Flag("Both", 1, 1, parserPosition);
+            return new Flag("Both", 1, 1, pos);
         }
 
         public static final SqlSymbol createLeading(
-            ParserPosition parserPosition)
+            ParserPosition pos)
         {
-            return new Flag("Leading", 1, 0, parserPosition);
+            return new Flag("Leading", 1, 0, pos);
         }
 
         public static final SqlSymbol createTrailing(
-            ParserPosition parserPosition)
+            ParserPosition pos)
         {
-            return new Flag("Trailing", 0, 1, parserPosition);
+            return new Flag("Trailing", 0, 1, pos);
         }
     }
 }

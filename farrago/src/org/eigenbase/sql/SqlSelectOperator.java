@@ -77,9 +77,9 @@ public class SqlSelectOperator extends SqlOperator
 
     public SqlCall createCall(
         SqlNode [] operands,
-        ParserPosition parserPosition)
+        ParserPosition pos)
     {
-        return new SqlSelect(this, operands, parserPosition);
+        return new SqlSelect(this, operands, pos);
     }
 
     public SqlSelect createCall(
@@ -90,14 +90,14 @@ public class SqlSelectOperator extends SqlOperator
         SqlNode groupBy,
         SqlNode having,
         SqlNode orderBy,
-        ParserPosition parserPosition)
+        ParserPosition pos)
     {
         return (SqlSelect) createCall(
             new SqlNode [] {
-                SqlLiteral.createBoolean(isDistinct, parserPosition),
+                SqlLiteral.createBoolean(isDistinct, pos),
                 selectList, fromClause, whereClause, groupBy, having, orderBy
             },
-            parserPosition);
+            pos);
     }
 
     public void unparse(

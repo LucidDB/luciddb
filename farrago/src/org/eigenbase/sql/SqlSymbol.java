@@ -57,9 +57,9 @@ public class SqlSymbol extends SqlLiteral
 
     public SqlSymbol(
         String name,
-        ParserPosition parserPosition)
+        ParserPosition pos)
     {
-        super(name, SqlTypeName.Symbol, parserPosition);
+        super(name, SqlTypeName.Symbol, pos);
         this.name = name;
     }
 

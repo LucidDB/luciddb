@@ -51,19 +51,24 @@ public class SqlCase extends SqlCall
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * @param operator
-     * @param operands Must be an array of SqlNodes where
-     * operands[0] is a SqlNodeList of all when expressions
-     * operands[1] is a SqlNodeList of all then expressions
-     * operands[2] is a SqlNode representing the implicit or explicit ELSE expression
-     * see {@link #WHEN_OPERANDS}, {@link #THEN_OPERANDS}, {@link #ELSE_OPERAND}
+     * Creates a SqlCase expression.
+     *
+     * <p>The operands are an array of SqlNodes where<ul>
+     * <li>operands[0] is a SqlNodeList of all WHEN expressions
+     * <li>operands[1] is a SqlNodeList of all THEN expressions
+     * <li>operands[2] is a SqlNode representing the implicit or explicit
+     *     ELSE expression
+     * </ul>
+     * 
+     * <p>See {@link #WHEN_OPERANDS}, {@link #THEN_OPERANDS},
+     * {@link #ELSE_OPERAND}.
      */
     SqlCase(
         SqlCaseOperator operator,
         SqlNode [] operands,
-        ParserPosition parserPosition)
+        ParserPosition pos)
     {
-        super(operator, operands, parserPosition);
+        super(operator, operands, pos);
     }
 
     //~ Methods ---------------------------------------------------------------

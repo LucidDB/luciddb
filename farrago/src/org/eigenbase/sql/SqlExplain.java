@@ -44,9 +44,9 @@ public class SqlExplain extends SqlCall
         SqlSpecialOperator operator,
         SqlNode explicandum,
         SqlLiteral withImplementation,
-        ParserPosition parerPosition)
+        ParserPosition pos)
     {
-        super(operator, new SqlNode[OPERAND_COUNT], parerPosition);
+        super(operator, new SqlNode[OPERAND_COUNT], pos);
         operands[EXPLICANDUM_OPERAND] = explicandum;
         operands[WITH_IMPLEMENTATION_OPERAND] = withImplementation;
     }

@@ -47,9 +47,9 @@ public class SqlInsert extends SqlCall
         SqlIdentifier targetTable,
         SqlNode source,
         SqlNodeList columnList,
-        ParserPosition parserPosition)
+        ParserPosition pos)
     {
-        super(operator, new SqlNode[OPERAND_COUNT], parserPosition);
+        super(operator, new SqlNode[OPERAND_COUNT], pos);
         operands[TARGET_TABLE_OPERAND] = targetTable;
         operands[SOURCE_OPERAND] = source;
         operands[TARGET_COLUMN_LIST_OPERAND] = columnList;

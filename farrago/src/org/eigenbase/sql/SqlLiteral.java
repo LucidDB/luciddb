@@ -167,9 +167,9 @@ public class SqlLiteral extends SqlNode
     protected SqlLiteral(
         Object value,
         SqlTypeName typeName,
-        ParserPosition parserPosition)
+        ParserPosition pos)
     {
-        super(parserPosition);
+        super(pos);
         this.value = value;
         this.typeName = typeName;
         Util.pre(typeName != null, "typeName != null");
@@ -283,9 +283,9 @@ public class SqlLiteral extends SqlNode
     /**
      * Creates a NULL literal.
      */
-    public static SqlLiteral createNull(ParserPosition parserPosition)
+    public static SqlLiteral createNull(ParserPosition pos)
     {
-        return new SqlLiteral(null, SqlTypeName.Null, parserPosition);
+        return new SqlLiteral(null, SqlTypeName.Null, pos);
     }
 
     /**
@@ -293,38 +293,38 @@ public class SqlLiteral extends SqlNode
      */
     public static SqlLiteral createBoolean(
         boolean b,
-        ParserPosition parserPosition)
+        ParserPosition pos)
     {
         return b
-        ? new SqlLiteral(Boolean.TRUE, SqlTypeName.Boolean, parserPosition)
-        : new SqlLiteral(Boolean.FALSE, SqlTypeName.Boolean, parserPosition);
+        ? new SqlLiteral(Boolean.TRUE, SqlTypeName.Boolean, pos)
+        : new SqlLiteral(Boolean.FALSE, SqlTypeName.Boolean, pos);
     }
 
-    public static SqlLiteral createUnknown(ParserPosition parserPosition)
+    public static SqlLiteral createUnknown(ParserPosition pos)
     {
-        return new SqlLiteral(null, SqlTypeName.Boolean, parserPosition);
+        return new SqlLiteral(null, SqlTypeName.Boolean, pos);
     }
 
     public static SqlLiteral create(
         int i,
-        ParserPosition parserPosition)
+        ParserPosition pos)
     {
         switch (i) {
         case 0:
             return new SqlLiteral(
                 new BigDecimal(0),
                 SqlTypeName.Decimal,
-                parserPosition);
+                pos);
         case 1:
             return new SqlLiteral(
                 new BigDecimal(1),
                 SqlTypeName.Decimal,
-                parserPosition);
+                pos);
         default:
             return new SqlLiteral(
                 new BigDecimal(i),
                 SqlTypeName.Decimal,
-                parserPosition);
+                pos);
         }
     }
 
@@ -336,9 +336,9 @@ public class SqlLiteral extends SqlNode
      */
     public static SqlLiteral createFlag(
         EnumeratedValues.Value o,
-        ParserPosition parserPosition)
+        ParserPosition pos)
     {
-        return new SqlLiteral(o, SqlTypeName.Symbol, parserPosition);
+        return new SqlLiteral(o, SqlTypeName.Symbol, pos);
     }
 
     public boolean equals(Object obj)
@@ -475,25 +475,25 @@ public class SqlLiteral extends SqlNode
 
     public static DateLiteral createDate(
         Calendar calendar,
-        ParserPosition parserPosition)
+        ParserPosition pos)
     {
-        return new DateLiteral(calendar, parserPosition);
+        return new DateLiteral(calendar, pos);
     }
 
     public static TimestampLiteral createTimestamp(
         Calendar calendar,
         int precision,
-        ParserPosition parserPosition)
+        ParserPosition pos)
     {
-        return new TimestampLiteral(calendar, precision, parserPosition);
+        return new TimestampLiteral(calendar, precision, pos);
     }
 
     public static TimeLiteral createTime(
         Calendar calendar,
         int precision,
-        ParserPosition parserPosition)
+        ParserPosition pos)
     {
-        return new TimeLiteral(calendar, precision, parserPosition);
+        return new TimeLiteral(calendar, precision, pos);
     }
 
     //~ Inner Classes ---------------------------------------------------------
@@ -514,26 +514,26 @@ public class SqlLiteral extends SqlNode
 
         public DateLiteral(
             Calendar d,
-            ParserPosition parserPosition)
+            ParserPosition pos)
         {
-            this(d, false, SqlTypeName.Date, parserPosition);
+            this(d, false, SqlTypeName.Date, pos);
         }
 
         public DateLiteral(
             Calendar d,
             boolean tz,
-            ParserPosition parserPosition)
+            ParserPosition pos)
         {
-            this(d, tz, SqlTypeName.Date, parserPosition);
+            this(d, tz, SqlTypeName.Date, pos);
         }
 
         protected DateLiteral(
             Calendar d,
             boolean tz,
             SqlTypeName typeName,
-            ParserPosition parserPosition)
+            ParserPosition pos)
         {
-            super(d, typeName, parserPosition);
+            super(d, typeName, pos);
             hasTimeZone = tz;
         }
 
@@ -607,9 +607,9 @@ public class SqlLiteral extends SqlNode
             int p,
             boolean hasTZ,
             SqlTypeName typeName,
-            ParserPosition parserPosition)
+            ParserPosition pos)
         {
-            super(t, hasTZ, typeName, parserPosition);
+            super(t, hasTZ, typeName, pos);
             precision = p;
             formatString = ParserUtil.TimeFormatStr;
         }
@@ -620,9 +620,9 @@ public class SqlLiteral extends SqlNode
         private TimeLiteral(
             Calendar t,
             int p,
-            ParserPosition parserPosition)
+            ParserPosition pos)
         {
-            this(t, p, false, SqlTypeName.Time, parserPosition);
+            this(t, p, false, SqlTypeName.Time, pos);
         }
 
         private Time getTime()
@@ -678,18 +678,18 @@ public class SqlLiteral extends SqlNode
             Calendar cal,
             int p,
             boolean hasTZ,
-            ParserPosition parserPosition)
+            ParserPosition pos)
         {
-            super(cal, p, hasTZ, SqlTypeName.Timestamp, parserPosition);
+            super(cal, p, hasTZ, SqlTypeName.Timestamp, pos);
             formatString = ParserUtil.TimestampFormatStr;
         }
 
         public TimestampLiteral(
             Calendar cal,
             int p,
-            ParserPosition parserPosition)
+            ParserPosition pos)
         {
-            this(cal, p, false, parserPosition);
+            this(cal, p, false, pos);
         }
 
         public Timestamp getTimestamp()
@@ -714,10 +714,10 @@ public class SqlLiteral extends SqlNode
             Integer prec,
             Integer scale,
             boolean isExact,
-            ParserPosition parserPosition)
+            ParserPosition pos)
         {
             super(value, isExact ? SqlTypeName.Decimal : SqlTypeName.Double,
-                parserPosition);
+                pos);
             this.prec = prec;
             this.scale = scale;
             this.isExact = isExact;
@@ -735,7 +735,7 @@ public class SqlLiteral extends SqlNode
 
         public static Numeric createExact(
             String s,
-            ParserPosition parserPosition)
+            ParserPosition pos)
         {
             BigDecimal value;
             int prec;
@@ -761,15 +761,15 @@ public class SqlLiteral extends SqlNode
                 new Integer(prec),
                 new Integer(scale),
                 true,
-                parserPosition);
+                pos);
         }
 
         public static Numeric createApprox(
             String s,
-            ParserPosition parserPosition)
+            ParserPosition pos)
         {
             BigDecimal value = ParserUtil.parseDecimal(s);
-            return new Numeric(value, null, null, false, parserPosition);
+            return new Numeric(value, null, null, false, pos);
         }
 
         public boolean isExact()

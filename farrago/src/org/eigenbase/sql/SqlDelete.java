@@ -44,9 +44,9 @@ public class SqlDelete extends SqlCall
         SqlSpecialOperator operator,
         SqlIdentifier targetTable,
         SqlNode condition,
-        ParserPosition parserPosition)
+        ParserPosition pos)
     {
-        super(operator, new SqlNode[OPERAND_COUNT], parserPosition);
+        super(operator, new SqlNode[OPERAND_COUNT], pos);
         operands[TARGET_TABLE_OPERAND] = targetTable;
         operands[CONDITION_OPERAND] = condition;
     }

@@ -46,9 +46,9 @@ public class SqlCall extends SqlNode
     SqlCall(
         SqlOperator operator,
         SqlNode [] operands,
-        ParserPosition parserPosition)
+        ParserPosition pos)
     {
-        super(parserPosition);
+        super(pos);
         this.operator = operator;
         this.operands = operands;
     }

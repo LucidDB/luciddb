@@ -39,9 +39,9 @@ public class SqlJoin extends SqlCall
     public SqlJoin(
         SqlJoinOperator operator,
         SqlNode [] operands,
-        ParserPosition parserPosition)
+        ParserPosition pos)
     {
-        super(operator, operands, parserPosition);
+        super(operator, operands, pos);
     }
 
     //~ Methods ---------------------------------------------------------------

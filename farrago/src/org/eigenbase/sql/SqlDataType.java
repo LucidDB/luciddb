@@ -62,9 +62,9 @@ public class SqlDataType extends SqlNode
         int precision,
         int scale,
         String charSetName,
-        ParserPosition parserPosition)
+        ParserPosition pos)
     {
-        super(parserPosition);
+        super(pos);
         this.typeName = typeName;
         this.scale = scale;
         this.precision = precision;

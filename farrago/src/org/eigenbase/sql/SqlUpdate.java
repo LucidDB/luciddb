@@ -51,9 +51,9 @@ public class SqlUpdate extends SqlCall
         SqlNodeList targetColumnList,
         SqlNodeList sourceExpressionList,
         SqlNode condition,
-        ParserPosition parserPosition)
+        ParserPosition pos)
     {
-        super(operator, new SqlNode[OPERAND_COUNT], parserPosition);
+        super(operator, new SqlNode[OPERAND_COUNT], pos);
         operands[TARGET_TABLE_OPERAND] = targetTable;
         operands[SOURCE_EXPRESSION_LIST_OPERAND] = sourceExpressionList;
         operands[TARGET_COLUMN_LIST_OPERAND] = targetColumnList;

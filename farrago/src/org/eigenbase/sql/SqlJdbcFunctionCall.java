@@ -66,10 +66,10 @@ public class SqlJdbcFunctionCall extends SqlFunction
 
     public SqlCall createCall(
         SqlNode [] operands,
-        ParserPosition parserPosition)
+        ParserPosition pos)
     {
         thisOperands = operands;
-        return super.createCall(operands, parserPosition);
+        return super.createCall(operands, pos);
     }
 
     public void test(SqlTester tester)
@@ -254,14 +254,14 @@ public class SqlJdbcFunctionCall extends SqlFunction
          */
         SqlCall createCall(
             SqlNode [] operands,
-            ParserPosition parserPosition)
+            ParserPosition pos)
         {
             if (null == order) {
-                return operator.createCall(operands, parserPosition);
+                return operator.createCall(operands, pos);
             }
             return operator.createCall(
                 reorder(operands),
-                parserPosition);
+                pos);
         }
 
         /**

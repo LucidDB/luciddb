@@ -43,9 +43,9 @@ public class SqlDynamicParam extends SqlNode
 
     public SqlDynamicParam(
         int index,
-        ParserPosition parserPosition)
+        ParserPosition pos)
     {
-        super(parserPosition);
+        super(pos);
         this.index = index;
     }
 

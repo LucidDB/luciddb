@@ -43,9 +43,9 @@ public class SqlNodeList extends SqlNode
     /**
      * Creates an empty <code>SqlNodeList</code>.
      */
-    public SqlNodeList(ParserPosition parserPosition)
+    public SqlNodeList(ParserPosition pos)
     {
-        super(parserPosition);
+        super(pos);
         list = new ArrayList();
     }
 
@@ -55,9 +55,9 @@ public class SqlNodeList extends SqlNode
      */
     public SqlNodeList(
         Collection collection,
-        ParserPosition parserPosition)
+        ParserPosition pos)
     {
-        super(parserPosition);
+        super(pos);
         list = new ArrayList(collection);
     }
 

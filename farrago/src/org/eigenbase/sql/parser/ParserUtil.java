@@ -605,10 +605,10 @@ outer:
 
         public ToTreeListItem(
             SqlOperator op,
-            ParserPosition pp)
+            ParserPosition pos)
         {
             this.op = op;
-            this.pos = pp;
+            this.pos = pos;
         }
     }
 }

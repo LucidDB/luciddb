@@ -21,19 +21,18 @@
 
 package org.eigenbase.sql;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.resource.EigenbaseResource;
-import org.eigenbase.sql.fun.SqlCastFunction;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.type.ReturnTypeInference;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql.type.UnknownParamInference;
-import org.eigenbase.sql.type.ReturnTypeInference;
 import org.eigenbase.util.Util;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -240,9 +239,9 @@ public abstract class SqlCaseOperator extends SqlOperator
 
     public SqlCall createCall(
         SqlNode [] operands,
-        ParserPosition parserPosition)
+        ParserPosition pos)
     {
-        return new SqlCase(this, operands, parserPosition);
+        return new SqlCase(this, operands, pos);
     }
 
     public SqlCase createCall(
@@ -250,7 +249,7 @@ public abstract class SqlCaseOperator extends SqlOperator
         SqlNodeList whenList,
         SqlNodeList thenList,
         SqlNode elseClause,
-        ParserPosition parserPosition)
+        ParserPosition pos)
     {
         SqlStdOperatorTable stdOps = SqlOperatorTable.std();
         if (null != caseIdentifier) {
@@ -260,17 +259,17 @@ public abstract class SqlCaseOperator extends SqlOperator
                 list.set(
                     i,
                     stdOps.equalsOperator.createCall(caseIdentifier, e,
-                        parserPosition));
+                        pos));
             }
         }
 
         if (null == elseClause) {
-            elseClause = SqlLiteral.createNull(parserPosition);
+            elseClause = SqlLiteral.createNull(pos);
         }
 
         return (SqlCase) createCall(
             new SqlNode [] { whenList, thenList, elseClause },
-            parserPosition);
+            pos);
     }
 
     public void unparse(
