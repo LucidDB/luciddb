@@ -188,7 +188,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
             return "SYS_MOCK_DATA_SERVER";
         }
     }
-    
+
     // implement FarragoSession
     public SqlOperatorTable getSqlOperatorTable()
     {
@@ -247,7 +247,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     {
         throw new AssertionError("no default implementation available");
     }
-    
+
     // implement FarragoSession
     public FarragoSession cloneSession(
         FarragoSessionVariables inheritedVariables)
@@ -463,6 +463,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         params.indexMap = getSessionIndexMap();
         params.sessionVariables = getSessionVariables().cloneVariables();
         params.sharedDataWrapperCache = getDatabase().getDataWrapperCache();
+        params.streamFactoryProvider = this;
         return params;
     }
 
@@ -566,7 +567,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     {
         // default:  no extensions
     }
-    
+
     FarragoSessionExecutableStmt prepare(
         String sql,
         FarragoAllocationOwner owner,
@@ -630,14 +631,14 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         FarragoSessionDdlValidator ddlValidator =
             newDdlValidator(stmtValidator);
         FarragoSessionParser parser = stmtValidator.getParser();
-        
+
         boolean expectStatement = true;
         if ((analyzedSql != null) && (analyzedSql.paramRowType != null)) {
             expectStatement = false;
         }
         Object parsedObj = parser.parseSqlText(
             ddlValidator, sql, expectStatement);
-        
+
         if (parsedObj instanceof SqlNode) {
             SqlNode sqlNode = (SqlNode) parsedObj;
             pRollback[0] = false;
@@ -752,7 +753,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
             SqlIdentifier id = stmt.getCatalogName();
             sessionVariables.catalogName = id.getSimple();
         }
-        
+
         // implement DdlVisitor
         public void visit(DdlSetSchemaStmt stmt)
         {
@@ -764,14 +765,14 @@ public class FarragoDbSession extends FarragoCompoundAllocation
                 sessionVariables.schemaName = id.names[1];
             }
         }
-        
+
         // implement DdlVisitor
         public void visit(DdlSetPathStmt stmt)
         {
             sessionVariables.schemaSearchPath =
                 Collections.unmodifiableList(stmt.getSchemaList());
         }
-        
+
         // implement DdlVisitor
         public void visit(DdlSetSystemParamStmt stmt)
         {
