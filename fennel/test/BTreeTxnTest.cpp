@@ -226,10 +226,7 @@ void BTreeTxnTest::threadInit()
 
 void BTreeTxnTest::threadTerminate()
 {
-    // NOTE:  see corresponding code in PagingTestBase for why this is
-    // commented out.
-    
-    // pTestThreadData.reset();
+    pTestThreadData.reset();
     ThreadedTestBase::threadTerminate();
 }
     

@@ -42,11 +42,7 @@ void PagingTestBase::threadInit()
 
 void PagingTestBase::threadTerminate()
 {
-    // TODO:  this should be OK, but on mingw it causes a double-delete,
-    // because the reset seems to forget to remove the corresponding cleanup.
-    // Bug #783308 submitted to boost threads.
-    
-    // g_pRNG.reset();
+    g_pRNG.reset();
     ThreadedTestBase::threadTerminate();
 }
     
