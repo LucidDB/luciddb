@@ -819,6 +819,10 @@ public class Util extends Toolbox
         final String lineBreak = "\" + NL + " + lineSeparator + "\"";
         s = Pattern.compile("\r\n|\r|\n").matcher(s).replaceAll(lineBreak);
         s = "\"" + s + "\"";
+        final String spurious = " + " + lineSeparator + "\"\"";
+        if (s.endsWith(spurious)) {
+            s = s.substring(0, s.length() - spurious.length());
+        }
         String message =
             "Expected:" + lineSeparator + expected + lineSeparator
             + "Actual: " + lineSeparator + actual + lineSeparator

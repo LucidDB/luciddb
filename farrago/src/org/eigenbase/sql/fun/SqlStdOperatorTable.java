@@ -23,7 +23,6 @@ package org.eigenbase.sql.fun;
 
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.reltype.RelDataTypeFactoryImpl;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.util.*;
@@ -264,6 +263,11 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
                         EigenbaseResource.instance()
                         .newAliasMustBeSimpleIdentifier());
                 }
+            }
+
+            public void acceptCall(SqlVisitor visitor, SqlCall call) {
+                // Do not visit operands[1] -- it is not an expression.
+                visitor.visitChild(call, 0, call.operands[0]);
             }
         };
 
@@ -1269,7 +1273,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
             {
                 SqlNode [] operands = call.getOperands();
                 SqlParserPos pos = call.getParserPosition();
-                
+
                 if (2 != operands.length) {
                     //todo put this in the validator
                     throw EigenbaseResource.instance().newValidatorContext(
@@ -1279,7 +1283,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
                             name,
                             new Integer(2)));
                 }
-                
+
                 SqlNodeList whenList = new SqlNodeList(pos);
                 SqlNodeList thenList = new SqlNodeList(pos);
                 whenList.add(operands[1]);
@@ -1287,7 +1291,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
                 return caseOperator.createCall(operands[0], whenList,
                     thenList, operands[0], pos);
             }
-            
+
             public SqlOperator.OperandsCountDescriptor getOperandsCountDescriptor()
             {
                 return new OperandsCountDescriptor(2);
@@ -1311,7 +1315,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
             {
                 SqlNode [] operands = call.getOperands();
                 SqlParserPos pos = call.getParserPosition();
-                
+
                 SqlNodeList whenList = new SqlNodeList(pos);
                 SqlNodeList thenList = new SqlNodeList(pos);
 

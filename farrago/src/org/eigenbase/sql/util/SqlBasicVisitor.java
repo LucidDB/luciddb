@@ -19,7 +19,6 @@
 */
 package org.eigenbase.sql.util;
 
-import org.eigenbase.sql.util.SqlVisitor;
 import org.eigenbase.sql.*;
 
 /**
@@ -40,7 +39,7 @@ public class SqlBasicVisitor implements SqlVisitor
      * A value of null mean no parent.
      * NOTE: In case of extending SqlBasicVisitor, remember that
      * parent value might not be set depending on if and how
-     * visit(SqlCall) and visit(SqlNodeList) is implemented. 
+     * visit(SqlCall) and visit(SqlNodeList) is implemented.
      */
     public SqlNode currentParent = null;
     /**
@@ -55,15 +54,7 @@ public class SqlBasicVisitor implements SqlVisitor
 
     public void visit(SqlCall call)
     {
-        for (int i = 0; i < call.operands.length; i++) {
-            currentParent = call;
-            currentOffset = new Integer(i);
-            SqlNode operand = call.operands[i];
-            if (operand != null) {
-                operand.accept(this);
-            }
-        }
-        currentParent = null;
+        call.operator.acceptCall(this, call);
     }
 
     public void visit(SqlNodeList nodeList)
@@ -91,6 +82,14 @@ public class SqlBasicVisitor implements SqlVisitor
 
     public void visit(SqlIntervalQualifier intervalQualifier)
     {
+    }
+
+    public void visitChild(SqlNode parent, int ordinal, SqlNode child)
+    {
+        currentParent = parent;
+        currentOffset = new Integer(ordinal);
+        child.accept(this);
+        currentParent = null;
     }
 }
 

@@ -34,7 +34,6 @@ import org.eigenbase.sql.fun.SqlRowOperator;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.fun.SqlMultisetOperator;
 import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.parser.SqlParserUtil;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.util.BitString;
 import org.eigenbase.util.NlsString;
@@ -754,7 +753,7 @@ public class SqlToRelConverter
 
         return rexBuilder.makeNewInvocation(type, defaultCasts);
     }
-    
+
     private RexNode convertOver(Blackboard bb, SqlNode node) {
         SqlCall call = (SqlCall) node;
         SqlCall aggCall = (SqlCall) call.operands[0];
@@ -1116,7 +1115,7 @@ public class SqlToRelConverter
         SqlNodeList selectList)
     {
         assert bb.root != null : "precondition: child != null";
-            final AggConverter aggConverter = new AggConverter(bb);
+        final AggConverter aggConverter = new AggConverter(bb);
 
         // If group-by clause is missing, pretend that it has zero elements.
         if (groupList == null) {
@@ -1129,6 +1128,7 @@ public class SqlToRelConverter
         }
 
         RexNode[] selectExprs = new RexNode[selectList.size()];
+        String[] selectNames = new String[selectList.size()];
         RexNode havingExpr = null;
         try {
             Util.permAssert(bb.agg == null, "already in agg mode");
@@ -1138,6 +1138,7 @@ public class SqlToRelConverter
             for (int i = 0; i < selectList.size(); i++) {
                 SqlNode expr = selectList.get(i);
                 selectExprs[i] = convertExpression(bb, expr);
+                selectNames[i] = validator.deriveAlias(expr, i);
             }
 
             if (having != null) {
@@ -1172,7 +1173,7 @@ public class SqlToRelConverter
                 cluster,
                 bb.root,
                 selectExprs,
-                null,
+                selectNames,
                 ProjectRel.Flags.Boxed));
 
         // implement HAVING
@@ -1749,7 +1750,7 @@ public class SqlToRelConverter
         {
             return null;
         }
-        
+
         public String [] getAllSchemaObjectNames(String [] names)
         {
             throw new UnsupportedOperationException();
@@ -2060,7 +2061,7 @@ public class SqlToRelConverter
         {
             return rexBuilder.constantNull();
         }
-        
+
         public RexNode newAttributeDefaultValue(
             RelDataType type,
             int iAttribute)

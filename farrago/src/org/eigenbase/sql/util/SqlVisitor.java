@@ -25,7 +25,9 @@ import org.eigenbase.sql.*;
  * Visitor class, follows the
  * {@link org.eigenbase.util.Glossary#VisitorPattern visitor pattern}.
  *
- * @see org.eigenbase.sql.util.SqlBasicVisitor
+ * @see SqlBasicVisitor
+ * @see SqlNode#accept(SqlVisitor)
+ * @see SqlOperator#acceptCall(SqlVisitor, org.eigenbase.sql.SqlCall)
  *
  * @author jhyde
  * @version $Id$
@@ -38,6 +40,19 @@ public interface SqlVisitor {
     void visit(SqlDataTypeSpec type);
     void visit(SqlDynamicParam param);
     void visit(SqlIntervalQualifier intervalQualifier);
+    /**
+     * Recurses to a particular child of a node.
+     *
+     * <p>This method is principally used by
+     * implementations of the {@link SqlNodeList#accept(SqlVisitor)} and
+     * {@link SqlOperator#acceptCall(SqlVisitor, org.eigenbase.sql.SqlCall)}
+     * methods.
+     *
+     * @param parent Parent node
+     * @param ordinal Ordinal of child in parent
+     * @param child Child node
+     */
+    void visitChild(SqlNode parent, int ordinal, SqlNode child);
 }
 
 // End SqlVisitor.java

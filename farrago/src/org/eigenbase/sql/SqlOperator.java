@@ -28,6 +28,7 @@ import org.eigenbase.rex.RexNode;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.util.SqlVisitor;
 import org.eigenbase.util.Util;
 
 import java.text.MessageFormat;
@@ -553,6 +554,22 @@ public abstract class SqlOperator
     public boolean isAggregator()
     {
         return "SUM".equals(name) || "COUNT".equals(name);
+    }
+
+    /**
+     * Accepts a {@link SqlVisitor}, and tells it to visit each child.
+     *
+     * @param visitor Visitor.
+     */
+    public void acceptCall(SqlVisitor visitor, SqlCall call)
+    {
+        for (int i = 0; i < call.operands.length; i++) {
+            SqlNode operand = call.operands[i];
+            if (operand == null) {
+                continue;
+            }
+            visitor.visitChild(call, i, operand);
+        }
     }
 
     //~ Inner Classes ---------------------------------------------------------

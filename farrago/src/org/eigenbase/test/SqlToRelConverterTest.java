@@ -29,9 +29,7 @@ import org.eigenbase.rel.TableAccessRel;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.reltype.RelDataTypeFactoryImpl;
 import org.eigenbase.sql.SqlNode;
-import org.eigenbase.sql.SqlOperatorTable;
 import org.eigenbase.sql.SqlValidator;
 import org.eigenbase.sql.parser.SqlParser;
 import org.eigenbase.sql.fun.*;
@@ -208,21 +206,21 @@ public class SqlToRelConverterTest extends TestCase
     public void testGroup()
     {
         check("select deptno from emp group by deptno",
-            "ProjectRel(field#0=[$0])" + NL +
+            "ProjectRel(DEPTNO=[$0])" + NL +
             "  AggregateRel(groupCount=[1])" + NL +
             "    ProjectRel(field#0=[$7])" + NL +
             "      TableAccessRel(table=[[EMP]])" + NL);
 
         // just one agg
         check("select deptno, sum(sal) from emp group by deptno",
-            "ProjectRel(field#0=[$0], field#1=[$0])" + NL +
+            "ProjectRel(DEPTNO=[$0], EXPR$1=[$0])" + NL +
             "  AggregateRel(groupCount=[1], agg#0=[SUM(1)])" + NL +
             "    ProjectRel(field#0=[$7], field#1=[$5])" + NL +
             "      TableAccessRel(table=[[EMP]])" + NL);
 
         // expressions inside and outside aggs
         check("select deptno + 4, sum(sal), sum(3 + sal), 2 * sum(sal) from emp group by deptno",
-            "ProjectRel(field#0=[+($0, 4)], field#1=[$0], field#2=[$1], field#3=[*(2, $2)])" + NL +
+            "ProjectRel(EXPR$0=[+($0, 4)], EXPR$1=[$0], EXPR$2=[$1], EXPR$3=[*(2, $2)])" + NL +
             "  AggregateRel(groupCount=[1], agg#0=[SUM(1)], agg#1=[SUM(2)], agg#2=[SUM(3)])" + NL +
             "    ProjectRel(field#0=[$7], field#1=[$5], field#2=[+(3, $5)], field#3=[$5])" + NL +
             "      TableAccessRel(table=[[EMP]])" + NL);
@@ -230,12 +228,34 @@ public class SqlToRelConverterTest extends TestCase
         // empty group-by clause, having
         check("select sum(sal + sal) from emp having sum(sal) > 10",
             "FilterRel(condition=[>($1, 10)])" + NL +
-            "  ProjectRel(field#0=[$0])" + NL +
+            "  ProjectRel(EXPR$0=[$0])" + NL +
             "    AggregateRel(groupCount=[0], agg#0=[SUM(0)], agg#1=[SUM(1)])" + NL +
             "      ProjectRel(field#0=[+($5, $5)], field#1=[$5])" + NL +
             "        TableAccessRel(table=[[EMP]])" + NL);
     }
 
+    public void testGroupBug281() {
+        // Dtbug 281 gives:
+        //   Internal error:
+        //   Type 'RecordType(VARCHAR(128) $f0)' has no field 'NAME'
+        if(false) check("select name from (select name from dept group by name)",
+            "ProjectRel(NAME=[$0])" + NL +
+            "  ProjectRel(NAME=[$0])" + NL +
+            "    AggregateRel(groupCount=[1])" + NL +
+            "      ProjectRel(field#0=[$1])" + NL +
+            "        TableAccessRel(table=[[DEPT]])" + NL);
+
+        // Try to confuse it with spurious columns.
+        check("select name, foo from (" +
+            "select deptno, name, count(deptno) as foo " +
+            "from dept " +
+            "group by name, deptno, name)",
+            "ProjectRel(NAME=[$1], FOO=[$2])" + NL +
+            "  ProjectRel(DEPTNO=[$1], NAME=[$0], FOO=[$0])" + NL +
+            "    AggregateRel(groupCount=[3], agg#0=[COUNT(3)])" + NL +
+            "      ProjectRel(field#0=[$1], field#1=[$0], field#2=[$1], field#3=[$0])" + NL +
+            "        TableAccessRel(table=[[DEPT]])" + NL);
+    }
 
     public void testUnnest() {
         check("select*from unnest(multiset[1,2])",
@@ -250,7 +270,7 @@ public class SqlToRelConverterTest extends TestCase
 
         check("select*from unnest(multiset(select*from dept))",
             "ProjectRel(DEPTNO=[$0], NAME=[$1])" + NL +
-            "  UncollectRel" + NL + 
+            "  UncollectRel" + NL +
             "    CollectRel" + NL +
             "      ProjectRel(DEPTNO=[$0], NAME=[$1])" + NL +
             "        TableAccessRel(table=[[DEPT]])" + NL);
@@ -294,7 +314,7 @@ public class SqlToRelConverterTest extends TestCase
             "         multiset(select * from emp where deptno=dept.deptno) " +
             "               as empset" +
             "      from dept",
-            
+
             "ProjectRel(DEPTNO=[$0], NAME=[$1], EMPSET=[$2])" + NL +
             "  CorrelatorRel(condition=[true], joinType=[left])" + NL +
             "    TableAccessRel(table=[[DEPT]])" + NL +
