@@ -295,6 +295,20 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
         testTranslation("name < city");
     }
 
+    public void testBooleanOr()
+        throws Exception
+    {
+        // NOTE:  choose one nullable and one not null
+        testTranslation("slacker or manager");
+    }
+
+    public void testBooleanOrNullable()
+        throws Exception
+    {
+        // NOTE:  choose both nullable
+        testTranslation("(empno < age) or (name = city)");
+    }
+
     public void testBooleanAnd()
         throws Exception
     {
@@ -305,7 +319,7 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
     public void testBooleanConjunction()
         throws Exception
     {
-        // NOTE:  choose one nullable and one not null
+        // NOTE:  choose both nullable
         testTranslation("(empno < age) and (name = city)");
     }
 

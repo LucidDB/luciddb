@@ -100,10 +100,7 @@ public class FarragoSqlOperatorsTest extends FarragoTestCase
                 continue;
             }
             if (!bug260fixed) {
-                if (op == opTab.orOperator ||
-                    op == opTab.andOperator ||
-                    op == opTab.isFalseOperator ||
-                    op == opTab.literalChainOperator ||
+                if (
                     op == opTab.multiplyOperator ||
                     op == opTab.localTimeFunc ||
                     op == opTab.localTimestampFunc) {

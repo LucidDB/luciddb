@@ -29,10 +29,9 @@ import org.eigenbase.sql.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.type.*;
 
-
 /**
  * FarragoOJRexBinaryExpressionImplementor implements Farrago specifics of
- * {@link OJRexImplementor} for row expressions which can be translated to
+ * {@link org.eigenbase.oj.rex.OJRexImplementor} for row expressions which can be translated to
  * instances of OpenJava {@link BinaryExpression}.
  *
  * @author John V. Sichi
@@ -75,6 +74,13 @@ public class FarragoOJRexBinaryExpressionImplementor
             return implementNotNull(translator, call, valueOperands);
         }
 
+        if (ojBinaryExpressionOrdinal == BinaryExpression.LOGICAL_AND)
+            return implementNullableAnd(translator, call,
+                operands, valueOperands);
+        else if (ojBinaryExpressionOrdinal == BinaryExpression.LOGICAL_OR)
+            return implementNullableOr(translator, call,
+                operands, valueOperands);
+
         Variable varResult = translator.createScratchVariable(call.getType());
 
         Expression nullTest = null;
@@ -104,6 +110,205 @@ public class FarragoOJRexBinaryExpressionImplementor
         translator.addStatement(ifStatement);
 
         return varResult;
+    }
+
+    private Expression implementNullableAnd(
+        FarragoRexToOJTranslator translator,
+        RexCall call,
+        Expression [] operands,
+        Expression [] valueOperands)
+    {
+        // Generator code for AND so that
+        // null AND false = false
+        // null AND true = null
+
+        Variable varResult = translator.createScratchVariable(call.getType());
+        Expression varValue = new FieldAccess(varResult,
+                                            NullablePrimitive.VALUE_FIELD_NAME);
+
+        Expression nullTest[] = new Expression[2];
+        nullTest[0] =
+            translator.createNullTest(call.operands[0], operands[0], null);
+        nullTest[1] =
+            translator.createNullTest(call.operands[1], operands[1], null);
+
+        Statement setVarNullStmt =
+            translator.createSetNullStatement(varResult, true);
+        Statement setVarNotNullStmt =
+            translator.createSetNullStatement(varResult, false);
+
+        Statement assignmentFalseStmt =
+            new ExpressionStatement(new AssignmentExpression(
+                varValue,AssignmentExpression.EQUALS,
+                Literal.makeLiteral(false)));
+
+        Statement assignmentStmt =
+            new ExpressionStatement(new AssignmentExpression(
+                    varValue,
+                    AssignmentExpression.EQUALS,
+                    implementNotNull(translator, call, valueOperands)));
+
+        if (nullTest[0] == null) {
+            assert(nullTest[1] != null);
+
+            Statement ifNullStatement =
+                new IfStatement(valueOperands[0],
+                    new StatementList(setVarNullStmt),
+                    new StatementList(setVarNotNullStmt, assignmentFalseStmt));
+
+            Statement ifStatement =
+                new IfStatement(nullTest[1],
+                    new StatementList(ifNullStatement),
+                   new StatementList(setVarNotNullStmt, assignmentStmt));
+
+            translator.addStatement(ifStatement);
+        }
+        else if (nullTest[1] == null) {
+            assert(nullTest[0] != null);
+            Statement ifNullStatement =
+                new IfStatement(valueOperands[1],
+                    new StatementList(setVarNullStmt),
+                    new StatementList(setVarNotNullStmt, assignmentFalseStmt));
+
+            Statement ifStatement =
+                new IfStatement(nullTest[0],
+                    new StatementList(ifNullStatement),
+                   new StatementList(setVarNotNullStmt, assignmentStmt));
+
+            translator.addStatement(ifStatement);
+        }
+        else {
+            assert(nullTest[0] != null);
+            assert(nullTest[1] != null);
+
+            Statement ifNullStatement =
+                new IfStatement(
+                    new BinaryExpression(nullTest[1],
+                                         BinaryExpression.LOGICAL_OR,
+                                         valueOperands[1]),
+                    new StatementList(setVarNullStmt),
+                    new StatementList(setVarNotNullStmt, assignmentFalseStmt));
+
+            Statement ifNotNullStatement =
+                new IfStatement(nullTest[1],
+                    new StatementList(
+                        new IfStatement(valueOperands[0],
+                            new StatementList(setVarNullStmt),
+                            new StatementList(setVarNotNullStmt,
+                                assignmentFalseStmt))),
+                    new StatementList(setVarNotNullStmt, assignmentStmt));
+
+            Statement ifStatement =
+                new IfStatement(nullTest[0],
+                    new StatementList(ifNullStatement),
+                    new StatementList(ifNotNullStatement));
+
+            translator.addStatement(ifStatement);
+        }
+
+        return varResult;
+
+    }
+
+    private Expression implementNullableOr(
+        FarragoRexToOJTranslator translator,
+        RexCall call,
+        Expression [] operands,
+        Expression [] valueOperands)
+    {
+        // Generator code for OR so that
+        // null OR false = null
+        // null OR true = true
+
+        Variable varResult = translator.createScratchVariable(call.getType());
+        Expression varValue = new FieldAccess(varResult,
+                                            NullablePrimitive.VALUE_FIELD_NAME);
+
+        Expression nullTest[] = new Expression[2];
+        nullTest[0] =
+            translator.createNullTest(call.operands[0], operands[0], null);
+        nullTest[1] =
+            translator.createNullTest(call.operands[1], operands[1], null);
+
+        Statement setVarNullStmt =
+            translator.createSetNullStatement(varResult, true);
+        Statement setVarNotNullStmt =
+            translator.createSetNullStatement(varResult, false);
+
+        Statement assignmentTrueStmt =
+            new ExpressionStatement(new AssignmentExpression(
+                varValue,AssignmentExpression.EQUALS,
+                Literal.makeLiteral(true)));
+
+        Statement assignmentStmt =
+            new ExpressionStatement(new AssignmentExpression(
+                    varValue,
+                    AssignmentExpression.EQUALS,
+                    implementNotNull(translator, call, valueOperands)));
+
+        if (nullTest[0] == null) {
+            assert(nullTest[1] != null);
+
+            Statement ifNullStatement =
+                new IfStatement(valueOperands[0],
+                    new StatementList(setVarNotNullStmt, assignmentTrueStmt),
+                    new StatementList(setVarNullStmt));
+
+            Statement ifStatement =
+                new IfStatement(nullTest[1],
+                    new StatementList(ifNullStatement),
+                    new StatementList(setVarNotNullStmt, assignmentStmt));
+
+            translator.addStatement(ifStatement);
+        }
+        else if (nullTest[1] == null) {
+            assert(nullTest[0] != null);
+            Statement ifNullStatement =
+                new IfStatement(valueOperands[1],
+                    new StatementList(setVarNotNullStmt, assignmentTrueStmt),
+                    new StatementList(setVarNullStmt));
+
+            Statement ifStatement =
+                new IfStatement(nullTest[0],
+                    new StatementList(ifNullStatement),
+                   new StatementList(setVarNotNullStmt, assignmentStmt));
+
+            translator.addStatement(ifStatement);
+        }
+        else {
+            assert(nullTest[0] != null);
+            assert(nullTest[1] != null);
+
+            Statement ifNullStatement =
+                new IfStatement(
+                    new BinaryExpression(nullTest[1],
+                                         BinaryExpression.LOGICAL_OR,
+                                         new UnaryExpression(
+                                             UnaryExpression.NOT,
+                                             valueOperands[1])),
+                    new StatementList(setVarNullStmt),
+                    new StatementList(setVarNotNullStmt, assignmentTrueStmt));
+
+            Statement ifNotNullStatement =
+                new IfStatement(
+                    nullTest[1],
+                    new StatementList(
+                        new IfStatement(valueOperands[0],
+                            new StatementList(setVarNotNullStmt,
+                                assignmentTrueStmt),
+                            new StatementList(setVarNullStmt))),
+                    new StatementList(setVarNotNullStmt, assignmentStmt));
+
+            Statement ifStatement =
+                new IfStatement(nullTest[0],
+                    new StatementList(ifNullStatement),
+                    new StatementList(ifNotNullStatement));
+
+            translator.addStatement(ifStatement);
+        }
+
+        return varResult;
+
     }
 
     private Expression implementNotNull(
