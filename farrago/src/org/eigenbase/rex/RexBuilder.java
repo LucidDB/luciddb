@@ -54,7 +54,7 @@ public class RexBuilder
     private final RexLiteral booleanFalse;
     private final RexLiteral varcharEmpty;
     private final RexLiteral constantNull;
-    public final SqlStdOperatorTable opTab = SqlOperatorTable.std();
+    public final SqlStdOperatorTable opTab = SqlStdOperatorTable.instance();
 
     //~ Constructors ----------------------------------------------------------
 
@@ -234,7 +234,8 @@ public class RexBuilder
         RexNode [] args)
     {
         SqlFunction function =
-            opTab.lookupFunction(
+            SqlUtil.lookupFunction(
+                opTab,
                 kind.getName(),
                 getTypes(args));
         if (function == null) {

@@ -25,7 +25,7 @@ import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.resource.EigenbaseResource;
-import org.eigenbase.sql.fun.SqlRowOperator;
+import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.util.SqlBasicVisitor;
@@ -132,16 +132,6 @@ public class SqlValidator
 
     //~ Methods ---------------------------------------------------------------
 
-    public void check(String s)
-    {
-    }
-
-    public void checkFails(
-        String s,
-        String message)
-    {
-    }
-
     /**
      * Returns a list of expressions, with every occurrence of "&#42;" or
      * "TABLE.&#42;" expanded.
@@ -240,26 +230,86 @@ public class SqlValidator
     }
 
     /**
-     * Validates a tree. You can call this method multiple times,
+     * Validates an expression tree. You can call this method multiple times,
      * but not reentrantly.
      *
+     * @param topNode top of expression tree to be validated
+     *
+     * @return validated tree (possibly rewritten)
+     *
      * @pre outermostNode == null
-     * @pre topNode.getKind().isA(SqlKind.TopLevel)
      */
     public SqlNode validate(SqlNode topNode)
     {
+        Scope scope = new EmptyScope();
+        return validateScopedExpression(topNode, scope);
+    }
+    
+    /**
+     * Validates an expression tree. You can call this method multiple times,
+     * but not reentrantly.
+     *
+     * @param topNode top of expression tree to be validated
+     *
+     * @param nameToTypeMap map of simple name (String) to RelDataType;
+     * used to resolve SqlIdentifier references
+     *
+     * @return validated tree (possibly rewritten)
+     *
+     * @pre outermostNode == null
+     */
+    public SqlNode validateParameterizedExpression(
+        SqlNode topNode,
+        final Map nameToTypeMap)
+    {
+        Scope scope = new EmptyScope()
+            {
+                public SqlIdentifier fullyQualify(SqlIdentifier identifier)
+                {
+                    return identifier;
+                }
+
+                public Namespace resolve(
+                    String name,
+                    Scope[] ancestorOut,
+                    int[] offsetOut)
+                {
+                    final RelDataType type =
+                        (RelDataType) nameToTypeMap.get(name);
+                    return new AbstractNamespace() 
+                        {
+                            public SqlNode getNode()
+                            {
+                                return null;
+                            }
+                            
+                            public RelDataType validateImpl()
+                            {
+                                return type;
+                            }
+                            
+                            public RelDataType getRowType()
+                            {
+                                return type;
+                            }
+                        };
+                }
+            };
+        return validateScopedExpression(topNode, scope);
+    }
+    
+    private SqlNode validateScopedExpression(SqlNode topNode, Scope scope)
+    {
         Util.pre(outermostNode == null, "outermostNode == null");
-        Util.pre(
-            topNode.getKind().isA(SqlKind.TopLevel),
-            "topNode.getKind().isA(SqlKind.TopLevel)");
         try {
-            outermostNode = createInternalSelect(topNode);
+            outermostNode = performUnconditionalRewrites(topNode);
             if (tracer.isLoggable(Level.FINER)) {
                 tracer.finer("After creating internal selects: " +
                     outermostNode.toString());
             }
-            final Scope scope = new EmptyScope();
-            registerQuery(scope, null, outermostNode, null);
+            if (outermostNode.getKind().isA(SqlKind.TopLevel)) {
+                registerQuery(scope, null, outermostNode, null);
+            }
             outermostNode.validate(this, scope);
             if (tracer.isLoggable(Level.FINER)) {
                 tracer.finer("After validation: " + outermostNode.toString());
@@ -380,31 +430,55 @@ public class SqlValidator
         return childScope.getNode();
     }
 
-    // REVIEW jvs 2-Feb-2004: any reason not to introduce the visitor
-    // pattern for createInternalSelect, subquery registration, expression
-    // validation, etc?
-    private SqlNode createInternalSelect(SqlNode node)
+    /**
+     * Performs expression rewrites which are always used unconditionally.
+     * These rewrites massage the expression tree into a standard form so that
+     * the rest of the validation logic can be similar.
+     *
+     * @param node expression to be rewritten
+     *
+     * @return rewritten expression
+     */
+    private SqlNode performUnconditionalRewrites(SqlNode node)
     {
         if (node == null) {
             return node;
         }
 
-        // first transform operands
+        // first transform operands and invoke generic call rewrite
         if (node instanceof SqlCall) {
             SqlCall call = (SqlCall) node;
             final SqlNode [] operands = call.getOperands();
             for (int i = 0; i < operands.length; i++) {
                 SqlNode operand = operands[i];
-                SqlNode newOperand = createInternalSelect(operand);
+                SqlNode newOperand = performUnconditionalRewrites(operand);
                 if (newOperand != null) {
                     call.setOperand(i, newOperand);
                 }
             }
+
+            if (call.operator instanceof SqlFunction) {
+                SqlFunction function = (SqlFunction) call.operator;
+                if (function.getFunctionType() == null) {
+                    // This function hasn't been resolved yet.  Perform
+                    // a half-hearted resolution now in case it's a
+                    // builtin function requiring special casing.  If it's
+                    // not, we'll handle it later during overload
+                    // resolution.
+                    List overloads = opTab.lookupOperatorOverloads(
+                        function.name,
+                        SqlSyntax.Function);
+                    if (overloads.size() == 1) {
+                        call.operator = (SqlOperator) overloads.get(0);
+                    }
+                }
+            }
+            node = call.operator.rewriteCall(call);
         } else if (node instanceof SqlNodeList) {
             SqlNodeList list = (SqlNodeList) node;
             for (int i = 0, count = list.size(); i < count; i++) {
                 SqlNode operand = list.get(i);
-                SqlNode newOperand = createInternalSelect(operand);
+                SqlNode newOperand = performUnconditionalRewrites(operand);
                 if (newOperand != null) {
                     list.getList().set(i, newOperand);
                 }
@@ -417,7 +491,7 @@ public class SqlValidator
                 new SqlNodeList(ParserPosition.ZERO);
             selectList.add(new SqlIdentifier("*", ParserPosition.ZERO));
             SqlSelect wrapperNode =
-                SqlOperatorTable.std().selectOperator.createCall(null,
+                SqlStdOperatorTable.instance().selectOperator.createCall(null,
                     selectList, node, null, null, null, null, null,
                     ParserPosition.ZERO);
             return wrapperNode;
@@ -442,7 +516,7 @@ public class SqlValidator
                 new SqlNodeList(ParserPosition.ZERO);
             selectList.add(new SqlIdentifier("*", null));
             SqlSelect wrapperNode =
-                SqlOperatorTable.std().selectOperator.createCall(null,
+                SqlStdOperatorTable.instance().selectOperator.createCall(null,
                     selectList, query, null, null, null, null, orderList,
                         ParserPosition.ZERO);
             return wrapperNode;
@@ -453,7 +527,7 @@ public class SqlValidator
                 new SqlNodeList(ParserPosition.ZERO);
             selectList.add(new SqlIdentifier("*", null));
             SqlSelect wrapperNode =
-                SqlOperatorTable.std().selectOperator.createCall(null,
+                SqlStdOperatorTable.instance().selectOperator.createCall(null,
                     selectList, call.getOperands()[0], null, null, null, null,
                     null, ParserPosition.ZERO);
             return wrapperNode;
@@ -468,7 +542,7 @@ public class SqlValidator
                 new SqlNodeList(ParserPosition.ZERO);
             selectList.add(new SqlIdentifier("*", null));
             SqlSelect select =
-                SqlOperatorTable.std().selectOperator.createCall(null,
+                SqlStdOperatorTable.instance().selectOperator.createCall(null,
                     selectList, call.getTargetTable(), call.getCondition(),
                     null, null, null, null, ParserPosition.ZERO);
             call.setOperand(SqlDelete.SOURCE_SELECT_OPERAND, select);
@@ -490,7 +564,7 @@ public class SqlValidator
                 ++ordinal;
             }
             SqlSelect select =
-                SqlOperatorTable.std().selectOperator.createCall(null,
+                SqlStdOperatorTable.instance().selectOperator.createCall(null,
                     selectList, call.getTargetTable(), call.getCondition(),
                     null, null, null, null, ParserPosition.ZERO);
             call.setOperand(SqlUpdate.SOURCE_SELECT_OPERAND, select);
@@ -764,15 +838,18 @@ public class SqlValidator
                         // SqlIdentifier.)
                         function = null;
                     } else {
-                        function = opTab.lookupFunction(call.operator.name,
-                                argTypes);
+                        function = SqlUtil.lookupFunction(
+                            opTab,
+                            call.operator.name,
+                            argTypes);
                     }
                     if (function == null) {
                         // todo: localize "Function"
                         List overloads =
-                            opTab.lookupFunctionsByName(call.operator.name);
-                        if ((null == overloads)
-                                || (Collections.EMPTY_LIST == overloads)) {
+                            opTab.lookupOperatorOverloads(
+                                call.operator.name,
+                                SqlSyntax.Function);
+                        if (overloads.isEmpty()) {
                             throw newValidationError(call,
                                 EigenbaseResource.instance()
                                 .newValidatorUnknownFunction(
@@ -887,7 +964,7 @@ public class SqlValidator
     public SqlCall makeCall(SqlIdentifier id) {
         if (id.names.length == 1) {
             String name = id.names[0];
-            List list = opTab.lookupFunctionsByName(name);
+            List list = opTab.lookupOperatorOverloads(name, SqlSyntax.Function);
             for (int i = 0; i < list.size(); i++) {
                 SqlOperator operator = (SqlOperator) list.get(i);
                 if (operator.getSyntax() == SqlSyntax.FunctionId) {
@@ -1059,7 +1136,7 @@ public class SqlValidator
         String alias)
     {
         final SqlIdentifier id = new SqlIdentifier(alias, ParserPosition.ZERO);
-        return SqlOperatorTable.std().asOperator.createCall(expr, id,
+        return SqlStdOperatorTable.instance().asOperator.createCall(expr, id,
             ParserPosition.ZERO);
     }
 
@@ -1320,7 +1397,7 @@ public class SqlValidator
 
                 // FIXME jvs 9-Feb-2004:  Correlation should
                 // be illegal in these subqueries.  Same goes for
-                // any SELECT in the FROM list.
+                // any non-lateral SELECT in the FROM list.
                 registerSubqueries(parentScope, operands[i]);
             }
             break;
@@ -2403,7 +2480,7 @@ public class SqlValidator
      * Deviant implementation of {@link Scope} for the top of the scope stack.
      *
      * <p>It is convenient, because we never need to check whether a scope's
-     * parent is null. (This scope knows not ask about its parents, just like
+     * parent is null. (This scope knows not to ask about its parents, just like
      * Adam.)
      */
     private class EmptyScope implements Scope

@@ -1,0 +1,177 @@
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/expressions/values.sql#1 $
+0: jdbc:farrago:> -- Test queries with UDF invocations
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create schema udftest;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> set schema udftest;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test basic function
+0: jdbc:farrago:> create function celsius_to_fahrenheit(in c double)
+. . . . . . . . > returns double
+. . . . . . . . > contains sql
+. . . . . . . . > return c*1.8 + 32;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test usage of rewritten builtin
+0: jdbc:farrago:> create function coalesce2(in x varchar(128),in y varchar(128))
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > contains sql
+. . . . . . . . > return coalesce(x,y);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test that implicit cast does not occur
+0: jdbc:farrago:> create function bad_atoi(in x varchar(128))
+. . . . . . . . > returns integer
+. . . . . . . . > contains sql
+. . . . . . . . > return x;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test that explicit cast does occur
+0: jdbc:farrago:> create function good_atoi(in x varchar(128))
+. . . . . . . . > returns integer
+. . . . . . . . > contains sql
+. . . . . . . . > return cast(x as integer);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test something mildly complicated
+0: jdbc:farrago:> create function stirfry(in x varchar(128))
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > contains sql
+. . . . . . . . > return case when x like 'A%' then upper(x)||'gator' else lower(x) end;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test a function that uses another function
+0: jdbc:farrago:> create function celsius_to_rankine(in c double)
+. . . . . . . . > returns double
+. . . . . . . . > contains sql
+. . . . . . . . > return celsius_to_fahrenheit(c) + 459.67;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  we don't allow recursion
+0: jdbc:farrago:> create function factorial(in x integer)
+. . . . . . . . > returns integer
+. . . . . . . . > contains sql
+. . . . . . . . > return case when x = 1 then x else x*factorial(x-1) end;
+Error: Object definition contains recursive cycle (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  we don't allow mutual recursion either
+0: jdbc:farrago:> create schema crypto
+. . . . . . . . > create function alice(in x double)
+. . . . . . . . > returns double
+. . . . . . . . > contains sql
+. . . . . . . . > return bob(x*13)
+. . . . . . . . > create function bob(in x double)
+. . . . . . . . > returns double
+. . . . . . . . > contains sql
+. . . . . . . . > return alice(x/17);
+Error: Object definition contains recursive cycle (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test forward reference
+0: jdbc:farrago:> create schema crypto2
+. . . . . . . . > create function alice(in x double)
+. . . . . . . . > returns double
+. . . . . . . . > contains sql
+. . . . . . . . > return bob(x*13)
+. . . . . . . . > create function bob(in x double)
+. . . . . . . . > returns double
+. . . . . . . . > contains sql
+. . . . . . . . > return x/17;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values celsius_to_fahrenheit(0);
++---------+
+| EXPR$0  |
++---------+
+| 32.0    |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values celsius_to_fahrenheit(100);
++---------+
+| EXPR$0  |
++---------+
+| 212.0   |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail due to datatype mismatch
+0: jdbc:farrago:> values celsius_to_fahrenheit('freezing');
+Error: At line 1, column 8: Cannot apply 'CELSIUS_TO_FAHRENHEIT' to arguments of type 'CELSIUS_TO_FAHRENHEIT(<VARCHAR(8)>)'. Supported form(s): CELSIUS_TO_FAHRENHEIT(<NUMERIC>) (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values celsius_to_rankine(0);
++---------+
+| EXPR$0  |
++---------+
+| 491.67  |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values celsius_to_rankine(-273);
++---------------------+
+|       EXPR$0        |
++---------------------+
+| 0.2699999999999818  |
++---------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values coalesce2('hello','goodbye');
++---------+
+| EXPR$0  |
++---------+
+| hello   |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values coalesce2('hello',cast(null as varchar(128)));
++---------+
+| EXPR$0  |
++---------+
+| hello   |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values coalesce2(cast(null as varchar(128)),'goodbye');
++----------+
+|  EXPR$0  |
++----------+
+| goodbye  |
++----------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- FIXME:  this should fail but doesn't yet
+0: jdbc:farrago:> values bad_atoi('451');
++---------+
+| EXPR$0  |
++---------+
+| 451     |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values good_atoi('451');
++---------+
+| EXPR$0  |
++---------+
+| 451     |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- this should fail
+0: jdbc:farrago:> values good_atoi('nineoneone');
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=1 Code=22018 (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values alice(12);
++--------------------+
+|       EXPR$0       |
++--------------------+
+| 9.176470588235293  |
++--------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values bob(19);
++---------------------+
+|       EXPR$0        |
++---------------------+
+| 1.1176470588235294  |
++---------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values stirfry('Alley');
++-------------+
+|   EXPR$0    |
++-------------+
+| ALLEYgator  |
++-------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values stirfry('LaRa');
++---------+
+| EXPR$0  |
++---------+
+| lara    |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !quit

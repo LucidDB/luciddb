@@ -54,7 +54,7 @@ public class RexToCalcTranslator implements RexVisitor
     final CalcProgramBuilder builder = new CalcProgramBuilder();
     final CalcProgramBuilder.Register trueReg = builder.newBoolLiteral(true);
     final CalcProgramBuilder.Register falseReg = builder.newBoolLiteral(false);
-    final SqlStdOperatorTable opTab = SqlOperatorTable.std();
+    final SqlStdOperatorTable opTab = SqlStdOperatorTable.instance();
     final CalcRexImplementorTable implementorTable =
         CalcRexImplementorTableImpl.threadInstance();
 

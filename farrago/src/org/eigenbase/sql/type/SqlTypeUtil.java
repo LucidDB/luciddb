@@ -501,6 +501,24 @@ public abstract class SqlTypeUtil
     }
 
     /**
+     * Tests assignability of a value to a site.
+     *
+     * @param toType type of the target site
+     *
+     * @param fromType type of the source value
+     *
+     * @return true iff assignable 
+     */
+    public static boolean canAssignFrom(
+        RelDataType toType,
+        RelDataType fromType)
+    {
+        // TODO jvs 2-Jan-2005:  handle all the other cases like
+        // rows, collections, UDT's
+        return toType.getFamily() == fromType.getFamily();
+    }
+
+    /**
      * Compares two types and returns true if fromType can
      * be cast to toType.
      *
@@ -524,6 +542,8 @@ public abstract class SqlTypeUtil
      * @param coerce if true, the SQL rules for CAST are used; if
      * false, the rules are similar to Java (e.g. you can't assign
      * short x = (int) y, and you can't assign int x = (String) z.
+     *
+     * @return true iff cast is legal
      */
     public static boolean canCastFrom(
         RelDataType toType,

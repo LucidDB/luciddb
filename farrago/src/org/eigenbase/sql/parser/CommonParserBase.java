@@ -21,10 +21,9 @@
 
 package org.eigenbase.sql.parser;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
-import org.eigenbase.sql.SqlOperatorTable;
+import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 
 
@@ -300,12 +299,8 @@ public abstract class CommonParserBase
     /**
      * Operator table containing the standard SQL operators and functions.
      */
-    public final SqlStdOperatorTable opTab = SqlOperatorTable.std();
+    public final SqlStdOperatorTable opTab = SqlStdOperatorTable.instance();
 
-    /**
-     * Operator table containing any session-specific operators and functions.
-     */
-    public SqlOperatorTable extOpTab;
     protected int nDynamicParams;
 
     //~ Methods ---------------------------------------------------------------
@@ -314,36 +309,53 @@ public abstract class CommonParserBase
      *
      * @return a set of string function name
      */
-    public Set getStringFunctionNames()
+    public List getStringFunctionNames()
     {
-        return opTab.stringFuncNames;
+        return opTab.getFunctionNamesByCategory(
+            SqlFunction.SqlFuncTypeName.String);
     }
 
     /**
      *
      * @return  a set of numberic function name
      */
-    public Set getNumericFunctionNames()
+    public List getNumericFunctionNames()
     {
-        return opTab.numericFuncNames;
+        return opTab.getFunctionNamesByCategory(
+            SqlFunction.SqlFuncTypeName.Numeric);
     }
 
     /**
      *
      * @return a set of time and date function name
      */
-    public Set getTimeDateFunctionNames()
+    public List getTimeDateFunctionNames()
     {
-        return opTab.timeDateFuncNames;
+        return opTab.getFunctionNamesByCategory(
+            SqlFunction.SqlFuncTypeName.TimeDate);
     }
 
     /**
      *
      * @return  a set of system function name
      */
-    public Set getSystemFunctionNames()
+    public List getSystemFunctionNames()
     {
-        return opTab.systemFuncNames;
+        return opTab.getFunctionNamesByCategory(
+            SqlFunction.SqlFuncTypeName.System);
+    }
+
+    protected SqlCall createCall(
+        String funName,
+        SqlNode [] operands,
+        ParserPosition pos)
+    {
+        // NOTE jvs 1-Jan-2004:  Here we just create a placeholder function.
+        // Later, during validation, it will be resolved into a real function
+        // reference.
+        SqlFunction fun = new SqlFunction(
+            funName, SqlKind.Function, null, null, null, null);
+        return fun.createCall(operands, pos);
     }
 
     //~ Inner Classes ---------------------------------------------------------

@@ -82,7 +82,7 @@ public class OJRexImplementorTableImpl implements OJRexImplementorTable
     {
         if (instance == null) {
             instance = new OJRexImplementorTableImpl();
-            instance.initStandard(SqlOperatorTable.std());
+            instance.initStandard(SqlStdOperatorTable.instance());
         }
         return instance;
     }

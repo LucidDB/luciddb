@@ -75,7 +75,7 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
         throws SQLException
     {
         SqlDialect dialect = new SqlDialect(server.databaseMetaData);
-        SqlStdOperatorTable opTab = SqlOperatorTable.std();
+        SqlStdOperatorTable opTab = SqlStdOperatorTable.instance();
         if (server.schemaName != null) {
             assert (foreignName.length == 2);
 

@@ -57,6 +57,7 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.rex.RexBuilder;
 import org.eigenbase.runtime.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.parser.ParseException;
 import org.eigenbase.sql.parser.SqlParser;
 import org.eigenbase.sql2rel.SqlToRelConverter;
@@ -245,7 +246,7 @@ public class OJStatement extends OJPreparingStmt
         setupFactories();
         final SqlValidator validator =
             new SqlValidator(
-                SqlOperatorTable.instance(),
+                SqlStdOperatorTable.instance(),
                 catalogReader,
                 schema.getTypeFactory());
         return prepareSql(sqlQuery, null, validator, true);

@@ -52,7 +52,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
     //~ Static fields/initializers --------------------------------------------
 
     protected static final SqlStdOperatorTable opTab =
-        SqlStdOperatorTable.std();
+        SqlStdOperatorTable.instance();
     private static final CalcRexImplementorTableImpl std =
         new CalcRexImplementorTableImpl(null).initStandard();
 

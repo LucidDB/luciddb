@@ -26,23 +26,31 @@ import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.reltype.RelDataTypeFactoryImpl;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.util.*;
 import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.type.*;
-import org.eigenbase.util.Util;
+import org.eigenbase.util.*;
 
 import java.util.ArrayList;
 
+// REVIEW jvs 1-Jan-2005:  the categorization of functions in this table
+// is used to implement the JDBC DatabaseMetaData calls (such as
+// getSystemFunctions) in a way which I believe is incorrect.  Please
+// see http://java.sun.com/products/jdbc/driverdevs.html, section A.1.4.
+// The metadata calls are only supposed to return entries
+// from predefined lists.  So we need to refine the categorizations.
+
 /**
- * Extension to {@link org.eigenbase.sql.SqlOperatorTable} containing the
+ * Implementation of {@link org.eigenbase.sql.SqlOperatorTable} containing the
  * standard operators and functions.
  *
  * @author jhyde
  * @since May 28, 2004
  * @version $Id$
  **/
-public class SqlStdOperatorTable extends SqlOperatorTable
+public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
 {
     //~ Instance fields -------------------------------------------
     /**
@@ -55,7 +63,8 @@ public class SqlStdOperatorTable extends SqlOperatorTable
     /**
      * Returns the standard operator table, creating it if necessary.
      */
-    public static synchronized SqlStdOperatorTable std() {
+    public static synchronized SqlStdOperatorTable instance()
+    {
         if (instance == null) {
             // Creates and initializes the standard operator table.
             // Uses two-phase construction, because we can't intialize the
@@ -1249,11 +1258,14 @@ public class SqlStdOperatorTable extends SqlOperatorTable
 
     public final SqlFunction nullIfFunc =
         new SqlFunction("NULLIF", SqlKind.Function, null, null, null,
-            SqlFunction.SqlFuncTypeName.System) {
-            public SqlCall createCall(
-                SqlNode [] operands,
-                ParserPosition pos)
+            SqlFunction.SqlFuncTypeName.System)
+        {
+            // override SqlOperator
+            public SqlCall rewriteCall(SqlCall call)
             {
+                SqlNode [] operands = call.getOperands();
+                ParserPosition pos = call.getParserPosition();
+                
                 if (2 != operands.length) {
                     //todo put this in the validator
                     throw EigenbaseResource.instance().newValidatorContext(
@@ -1263,6 +1275,7 @@ public class SqlStdOperatorTable extends SqlOperatorTable
                             name,
                             new Integer(2)));
                 }
+                
                 SqlNodeList whenList = new SqlNodeList(pos);
                 SqlNodeList thenList = new SqlNodeList(pos);
                 whenList.add(operands[1]);
@@ -1270,7 +1283,7 @@ public class SqlStdOperatorTable extends SqlOperatorTable
                 return caseOperator.createCall(operands[0], whenList,
                     thenList, operands[0], pos);
             }
-
+            
             public SqlOperator.OperandsCountDescriptor getOperandsCountDescriptor()
             {
                 return new OperandsCountDescriptor(2);
@@ -1287,39 +1300,31 @@ public class SqlStdOperatorTable extends SqlOperatorTable
      */
     public final SqlFunction coalesceFunc =
         new SqlFunction("COALESCE", SqlKind.Function, null, null, null,
-            SqlFunction.SqlFuncTypeName.System) {
-            public SqlCall createCall(
-                SqlNode [] operands,
-                ParserPosition pos)
+            SqlFunction.SqlFuncTypeName.System)
+        {
+            // override SqlOperator
+            public SqlCall rewriteCall(SqlCall call)
             {
-                Util.pre(operands.length >= 2, "operands.length>=2");
-                return createCall(operands, 0, pos);
-            }
-
-            private SqlCall createCall(
-                SqlNode [] operands,
-                int start,
-                ParserPosition pos)
-            {
+                SqlNode [] operands = call.getOperands();
+                ParserPosition pos = call.getParserPosition();
+                
                 SqlNodeList whenList = new SqlNodeList(pos);
                 SqlNodeList thenList = new SqlNodeList(pos);
 
                 //todo optimize when know operand is not null.
-                whenList.add(
-                    isNotNullOperator.createCall(operands[start], pos));
-                thenList.add(operands[start]);
-                if (2 == (operands.length - start)) {
-                    return caseOperator.createCall(null, whenList, thenList,
-                        operands[start + 1], pos);
+
+                int i;
+                for (i = 0; ((i + 1) < operands.length); ++i) {
+                    whenList.add(
+                        isNotNullOperator.createCall(operands[i], pos));
+                    thenList.add(operands[i]);
                 }
-                return caseOperator.createCall(
-                    null,
-                    whenList,
-                    thenList,
-                    this.createCall(operands, start + 1, pos),
-                    pos);
+                return caseOperator.createCall(null, whenList, thenList,
+                    operands[i], pos);
             }
 
+            // REVIEW jvs 1-Jan-2004:  should this be here?  It's
+            // not entirely accurate,
             public SqlOperator.OperandsCountDescriptor getOperandsCountDescriptor()
             {
                 return new OperandsCountDescriptor(2);

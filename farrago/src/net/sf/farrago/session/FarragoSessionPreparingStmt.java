@@ -111,7 +111,8 @@ public interface FarragoSessionPreparingStmt extends FarragoAllocation
 
     /**
      * @return the SqlOperatorTable used for operator lookup during this stmt's
-     * preparation
+     * preparation; this includes both system-defined and user-defined
+     * functions
      */
     public SqlOperatorTable getSqlOperatorTable();
 

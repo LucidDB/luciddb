@@ -21,6 +21,7 @@
 
 package org.eigenbase.sql;
 
+import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.util.BarfingInvocationHandler;
@@ -30,12 +31,12 @@ import org.eigenbase.rex.RexNode;
 import org.eigenbase.rex.RexLiteral;
 import org.eigenbase.rex.RexKind;
 import org.eigenbase.rex.RexCall;
+import org.eigenbase.reltype.*;
 
 import java.lang.reflect.Proxy;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.*;
 
 
 /**
@@ -77,8 +78,8 @@ public abstract class SqlUtil
         } else {
             list.add(node2);
         }
-        return SqlOperatorTable.std().andOperator.createCall((SqlNode []) list
-                .toArray(new SqlNode[list.size()]), null);
+        return SqlStdOperatorTable.instance().andOperator.createCall(
+            (SqlNode []) list.toArray(new SqlNode[list.size()]), null);
     }
 
     static ArrayList flatten(SqlNode node)
@@ -285,6 +286,91 @@ public abstract class SqlUtil
             return lits[0]; // nothing to do
         }
         return ((SqlAbstractStringLiteral) lits[0]).concat1(lits);
+    }
+
+    /**
+     * Looks up a (possibly overloaded) function based on name
+     * and argument types.
+     *
+     * @param opTab operator table to search
+     *
+     * @param funcName name of function being invoked
+     *
+     * @param argTypes argument types
+     */
+    public static SqlFunction lookupFunction(
+        SqlOperatorTable opTab, 
+        String funcName,
+        RelDataType [] argTypes)
+    {
+        // The number of defined parameters need to match the invocation
+        SqlFunction [] functions =
+            lookupFunctionOverloadsByArgCount(opTab, funcName, argTypes.length);
+        if ((null == functions) || (0 == functions.length)) {
+            return null;
+        } else if (functions.length == 1) {
+            return functions[0];
+        }
+
+        // TODO jvs 30-Dec-2004:  implement overload resolution
+
+        ArrayList candidates = new ArrayList();
+        for (int i = 0; i < functions.length; i++) {
+            SqlFunction function = functions[i];
+            if (function.isMatchParamType(argTypes)) {
+                candidates.add(function);
+            }
+        }
+
+        if (candidates.size() == 0) {
+            return null;
+        } else if (candidates.size() == 1) {
+            return (SqlFunction) candidates.get(1);
+        }
+
+        // Next, consider each argument of the function invocation, from left
+        // to right. For each argument, eliminate all functions that are not
+        // the best match for that argument. The best match for a given
+        // argument is the first data type appearing in the precedence list
+        // corresponding to the argument data type in Table 3 for which there
+        // exists a function with a parameter of that data type. Lengths,
+        // precisions, scales and the "FOR BIT DATA" attribute are not
+        // considered in this comparison.  For example, a DECIMAL(9,1) argument
+        // is considered an exact match for a DECIMAL(6,5) parameter, and a
+        // VARCHAR(19) argument is an exact match for a VARCHAR(6) parameter.
+        // Reference:
+        // http://www.pdc.kth.se/doc/SP/manuals/db2-5.0/html/db2s0/db2s067.htm#HDRUDFSEL
+        //
+        for (int i = 0; i < argTypes.length; i++) {
+            throw Util.needToImplement("Function resolution with different "
+                + "types is not implemented yet.");
+        }
+        return null;
+    }
+
+    private static SqlFunction [] lookupFunctionOverloadsByArgCount(
+        SqlOperatorTable opTab, 
+        String name,
+        int numberOfParams)
+    {
+        List funcList = opTab.lookupOperatorOverloads(name, SqlSyntax.Function);
+        if (funcList.isEmpty()) {
+            return null;
+        }
+
+        List candidateList = new LinkedList();
+        for (int i = 0; i < funcList.size(); i++) {
+            SqlFunction function = (SqlFunction) funcList.get(i);
+            SqlOperator.OperandsCountDescriptor od =
+                function.getOperandsCountDescriptor();
+            if (od.isVariadic()
+                    || od.getPossibleNumOfOperands().contains(
+                        new Integer(numberOfParams))) {
+                candidateList.add(function);
+            }
+        }
+        return (SqlFunction []) candidateList.toArray(
+            new SqlFunction[candidateList.size()]);
     }
 
     //~ Inner Classes ---------------------------------------------------------

@@ -21,6 +21,7 @@
 
 package org.eigenbase.sql;
 
+import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.test.SqlTester;
@@ -156,8 +157,8 @@ public class SqlSelectOperator extends SqlOperator
         // sure that an unjoined nested select will be properly
         // parenthesized
         fromClause.unparse(writer,
-            SqlOperatorTable.std().joinOperator.leftPrec - 1,
-            SqlOperatorTable.std().joinOperator.rightPrec - 1);
+            SqlStdOperatorTable.instance().joinOperator.leftPrec - 1,
+            SqlStdOperatorTable.instance().joinOperator.rightPrec - 1);
         SqlNode whereClause = operands[SqlSelect.WHERE_OPERAND];
         if (whereClause != null) {
             writer.println();

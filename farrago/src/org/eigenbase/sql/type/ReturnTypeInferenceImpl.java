@@ -266,14 +266,24 @@ public class ReturnTypeInferenceImpl
     /**
      * A {@link ReturnTypeInference} which always returns the same SQL type.
      */
-    private static class FixedReturnTypeInference implements ReturnTypeInference
+    public static class FixedReturnTypeInference implements ReturnTypeInference
     {
         private final int argCount;
         private final SqlTypeName typeName;
         private final int length;
         private final int scale;
+        private RelDataType type;
 
-        FixedReturnTypeInference(SqlTypeName typeName)
+        public FixedReturnTypeInference(RelDataType type)
+        {
+            this.type = type;
+            this.typeName = null;
+            this.length = -1;
+            this.scale = -1;
+            this.argCount = 0;
+        }
+
+        public FixedReturnTypeInference(SqlTypeName typeName)
         {
             this.argCount = 1;
             this.typeName = typeName;
@@ -281,7 +291,7 @@ public class ReturnTypeInferenceImpl
             this.scale = -1;
         }
 
-        FixedReturnTypeInference(SqlTypeName typeName, int length)
+        public FixedReturnTypeInference(SqlTypeName typeName, int length)
         {
             this.argCount = 2;
             this.typeName = typeName;
@@ -289,7 +299,8 @@ public class ReturnTypeInferenceImpl
             this.scale = -1;
         }
 
-        FixedReturnTypeInference(SqlTypeName typeName, int length, int scale)
+        public FixedReturnTypeInference(
+            SqlTypeName typeName, int length, int scale)
         {
             this.argCount = 3;
             this.typeName = typeName;
@@ -303,7 +314,10 @@ public class ReturnTypeInferenceImpl
             RelDataTypeFactory typeFactory,
             CallOperands callOperands)
         {
-            return createType(typeFactory);
+            if (type == null) {
+                type = createType(typeFactory);
+            }
+            return type;
         }
 
         private RelDataType createType(RelDataTypeFactory typeFactory) {

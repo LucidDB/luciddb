@@ -21,6 +21,7 @@
 
 package org.eigenbase.sql;
 
+import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.util.Util;
 
@@ -123,8 +124,8 @@ public class SqlSelect extends SqlCall
             fromClause = tableId;
         } else {
             fromClause =
-                SqlOperatorTable.std().joinOperator.createCall(fromClause,
-                    tableId, null);
+                SqlStdOperatorTable.instance().joinOperator.createCall(
+                    fromClause,tableId, null);
         }
         operands[FROM_OPERAND] = fromClause;
     }

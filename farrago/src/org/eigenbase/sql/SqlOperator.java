@@ -276,6 +276,25 @@ public abstract class SqlOperator
     }
 
     /**
+     * Rewrites a call to this operator.  Some operators are implemented as
+     * trivial rewrites (e.g. NULLIF becomes CASE).  However, we don't do this
+     * at createCall time because we want to preserve the original SQL syntax
+     * as much as possible; instead, we do this before the call is validated
+     * (so the trivial operator doesn't need its own implementation of type
+     * derivation methods).  The default implementation is to just return the
+     * original call without any rewrite.
+     *
+     * @param call to be rewritten
+     *
+     * @return rewritten call
+     */
+    public SqlCall rewriteCall(
+        SqlCall call)
+    {
+        return call;
+    }
+
+    /**
      * Writes a SQL representation of a call to this operator to a writer,
      * including parentheses if the operators on either side are of greater
      * precedence.

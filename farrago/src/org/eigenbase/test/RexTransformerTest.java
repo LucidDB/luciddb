@@ -48,7 +48,7 @@ public class RexTransformerTest extends TestCase
     //~ Instance fields -------------------------------------------------------
 
     RexBuilder rexBuilder = null;
-    SqlStdOperatorTable opTab = SqlOperatorTable.std();
+    SqlStdOperatorTable opTab = SqlStdOperatorTable.instance();
     RexNode x;
     RexNode y;
     RexNode z;

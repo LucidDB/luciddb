@@ -42,6 +42,7 @@ import org.eigenbase.rel.JoinRel;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.parser.ParseException;
 import org.eigenbase.sql.parser.SqlParser;
 import org.eigenbase.sql.type.SqlTypeName;
@@ -530,7 +531,7 @@ public class SqlToOpenjavaConverter
             }
             final SqlValidator validator =
                 new SqlValidator(
-                    SqlOperatorTable.instance(),
+                    SqlStdOperatorTable.instance(),
                     testContext.seeker,
                     testContext.schema.getTypeFactory());
             final SqlToOpenjavaConverter converter =

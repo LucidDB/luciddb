@@ -75,7 +75,7 @@ public class SqlToRelConverter
     private DefaultValueFactory defaultValueFactory;
     final ArrayList leaves = new ArrayList();
     private List dynamicParamSqlNodes;
-    private final SqlStdOperatorTable opTab = SqlOperatorTable.std();
+    private final SqlStdOperatorTable opTab = SqlStdOperatorTable.instance();
 
     //~ Constructors ----------------------------------------------------------
 
@@ -524,6 +524,40 @@ public class SqlToRelConverter
         SqlNode node)
     {
         Blackboard bb = new Blackboard(null);
+        return convertExpression(bb, node);
+    }
+
+    /**
+     * Converts an expression from {@link SqlNode} to {@link RexNode} format,
+     * mapping identifier references to predefined expressions.
+     *
+     * @param node Expression to translate
+     *
+     * @param nameToNodeMap map from String to RexNode; when an SqlIdentifier
+     * is encountered, it is used as a key and translated to the corresponding
+     * value from this map
+     *
+     * @return Converted expression
+     */
+    public RexNode convertExpression(
+        SqlNode node,
+        final Map nameToNodeMap)
+    {
+        // REVIEW jvs 2-Jan-2005: should perhaps create a proper scope as well
+        Blackboard bb = new Blackboard(null) 
+            {
+                RexNode lookupExp(String name)
+                {
+                    RexNode node = (RexNode) nameToNodeMap.get(name);
+                    if (node == null) {
+                        throw Util.newInternal(
+                            "Unknown identifier '" + name
+                            + "' encountered while expanding expression"
+                            + node);
+                    }
+                    return node;
+                }
+            };
         return convertExpression(bb, node);
     }
 
@@ -1384,7 +1418,9 @@ public class SqlToRelConverter
                 "' is not a group expr");
         }
 
-        identifier = bb.scope.fullyQualify(identifier);
+        if (bb.scope != null) {
+            identifier = bb.scope.fullyQualify(identifier);
+        }
         RexNode e = bb.lookupExp(identifier.names[0]);
         for (int i = 1; i < identifier.names.length; i++) {
             String name = identifier.names[i];

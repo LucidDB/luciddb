@@ -46,7 +46,7 @@ public class RexTransformer
     private RexNode root;
     private final RexBuilder rexBuilder;
     private int isParentsCount;
-    private final SqlStdOperatorTable opTab = SqlOperatorTable.std();
+    private final SqlStdOperatorTable opTab = SqlStdOperatorTable.instance();
     private final HashSet transformableOperators = new HashSet();
 
     //~ Constructors ----------------------------------------------------------

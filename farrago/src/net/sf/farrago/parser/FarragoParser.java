@@ -79,7 +79,7 @@ public class FarragoParser implements FarragoSessionParser
 
     //~ Methods ---------------------------------------------------------------
 
-    private static String constructFuncList(Set functionNames)
+    private static String constructFuncList(List functionNames)
     {
         StringBuffer sb = new StringBuffer();
         boolean first = true;

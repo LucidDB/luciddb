@@ -287,7 +287,7 @@ public class SqlCaseOperator extends SqlOperator
         SqlNode elseClause,
         ParserPosition pos)
     {
-        SqlStdOperatorTable stdOps = SqlOperatorTable.std();
+        SqlStdOperatorTable stdOps = SqlStdOperatorTable.instance();
         if (null != caseIdentifier) {
             List list = whenList.getList();
             for (int i = 0; i < list.size(); i++) {

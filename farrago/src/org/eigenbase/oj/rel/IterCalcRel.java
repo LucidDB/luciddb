@@ -34,7 +34,7 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.rex.RexUtil;
 import org.eigenbase.runtime.CalcIterator;
-import org.eigenbase.sql.SqlOperatorTable;
+import org.eigenbase.sql.fun.*;
 import org.eigenbase.util.Util;
 
 
@@ -163,7 +163,7 @@ public class IterCalcRel extends ProjectRelBase implements JavaRel
             condBody = new StatementList();
             RexNode rexIsTrue =
                 rel.getCluster().rexBuilder.makeCall(
-                    SqlOperatorTable.std().isTrueOperator,
+                    SqlStdOperatorTable.instance().isTrueOperator,
                     new RexNode [] { condition });
             Expression conditionExp =
                 implementor.translateViaStatements(rel, rexIsTrue, whileBody,

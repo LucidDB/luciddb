@@ -21,9 +21,9 @@
 
 package org.eigenbase.sql.test;
 
-import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.*;
 
+import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.SqlOperatorTable;
 
 
@@ -39,8 +39,8 @@ public class SqlOperatorIterator implements Iterator
 {
     //~ Instance fields -------------------------------------------------------
 
-    private ArrayList allSqlOperators =
-        SqlOperatorTable.instance().getOperatorList();
+    private List allSqlOperators =
+        SqlStdOperatorTable.instance().getOperatorList();
     private Iterator allSqlOperatorsIt;
 
     //~ Constructors ----------------------------------------------------------

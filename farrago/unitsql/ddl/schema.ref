@@ -90,7 +90,7 @@ encountered near line 1, column 14 (state=,code=0)
 . . . . . . . . >     create view v1 as select * from v2
 . . . . . . . . >     create view v2 as select * from v1
 . . . . . . . . > ;
-Error: Schema definition contains view cycle (state=,code=0)
+Error: Object definition contains recursive cycle (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test usage of a non-reserved keyword (DATA) as an identifier
 0: jdbc:farrago:> create table nice.strange(data int not null primary key);

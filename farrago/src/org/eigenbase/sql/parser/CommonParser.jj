@@ -179,7 +179,6 @@ SqlNode OrderedQueryOrExpr(ExprContext exprContext) :
 }
 {
     (
-
         e = QueryOrExpr(exprContext)
     )
     (
@@ -2219,7 +2218,7 @@ SqlNode FunctionCall() :
         )
 
         {
-            function = opTab.createCall(name, ParserUtil.toNodeArray(args), pos);
+            function = createCall(name, ParserUtil.toNodeArray(args), pos);
             if (over) {
                 if (id != null) {
                     return opTab.overOperator.createCall(

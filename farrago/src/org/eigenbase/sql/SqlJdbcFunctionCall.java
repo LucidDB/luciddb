@@ -512,7 +512,7 @@ public class SqlJdbcFunctionCall extends SqlFunction
 
         private JdbcToInternalLookupTable()
         {
-            SqlStdOperatorTable opTab = SqlOperatorTable.std();
+            SqlStdOperatorTable opTab = SqlStdOperatorTable.instance();
             // A table of all functions can be found at
             // http://java.sun.com/products/jdbc/driverdevs.html
             // which is also provided at the end of this file.

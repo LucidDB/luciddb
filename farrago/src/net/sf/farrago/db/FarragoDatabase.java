@@ -43,6 +43,7 @@ import net.sf.farrago.util.*;
 import org.eigenbase.oj.rex.*;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.fun.*;
 import org.eigenbase.util.*;
 
 
@@ -165,8 +166,8 @@ public class FarragoDatabase extends FarragoCompoundAllocation
             // TODO:  parameter for cache size limit
             dataWrapperCache = new FarragoObjectCache(this, Long.MAX_VALUE);
 
-            ojRexImplementorTable =
-                new FarragoOJRexImplementorTable(SqlOperatorTable.std());
+            ojRexImplementorTable = new FarragoOJRexImplementorTable(
+                SqlStdOperatorTable.instance());
 
             // REVIEW:  sequencing from this point on
             if (currentConfig.isUserCatalogEnabled()) {

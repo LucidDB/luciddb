@@ -40,6 +40,7 @@ import net.sf.farrago.util.*;
 import org.eigenbase.oj.rex.*;
 import org.eigenbase.oj.stmt.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.fun.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.util.*;
 
@@ -189,7 +190,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     // implement FarragoSession
     public SqlOperatorTable getSqlOperatorTable()
     {
-        return SqlOperatorTable.instance();
+        return SqlStdOperatorTable.instance();
     }
 
     // implement FarragoSession

@@ -18,13 +18,16 @@
 */
 package net.sf.farrago.session;
 
+import java.util.*;
 import javax.jmi.reflect.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.datatypes.*;
 import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.namespace.util.*;
 import net.sf.farrago.type.*;
@@ -184,6 +187,23 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
         CwmSchema schema,
         SqlIdentifier qualifiedName,
         RefClass refClass);
+
+    /**
+     * Looks up all matching routine overloads by invocation name.
+     *
+     * @param schema containing schema or null if none
+     *
+     * @param invocationName invocation name of routine to look up
+     *
+     * @param routineType type of routine to look up, or null
+     * for any type
+     *
+     * @return list of matching FemRoutine objects (empty if no matches)
+     */
+    public List findRoutineOverloads(
+        CwmSchema schema,
+        String invocationName,
+        ProcedureType routineType);
 
     /**
      * Looks up a SQL datatype by name, throwing an exception if not found.

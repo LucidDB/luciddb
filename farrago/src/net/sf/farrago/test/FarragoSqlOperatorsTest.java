@@ -48,7 +48,8 @@ import java.util.regex.Pattern;
  */
 public class FarragoSqlOperatorsTest extends FarragoTestCase
 {
-    private static final SqlStdOperatorTable opTab = SqlOperatorTable.std();
+    private static final SqlStdOperatorTable opTab =
+        SqlStdOperatorTable.instance();
     private static final boolean bug260fixed = false;
 
     //~ Instance fields -------------------------------------------------------

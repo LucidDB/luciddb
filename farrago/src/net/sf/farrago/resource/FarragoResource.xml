@@ -195,7 +195,7 @@ encountered near {1}</text>
 </exception>
 
 <exception id="420340" name="ValidatorSchemaDependencyCycle">
-    <text>Schema definition contains view cycle</text>
+    <text>Object definition contains recursive cycle</text>
 </exception>
 
 <exception id="420350" name="ValidatorInvalidViewOrderBy">

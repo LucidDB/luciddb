@@ -41,7 +41,8 @@ public interface FarragoSession extends FarragoAllocation
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * @return table of known SQL operators and functions to use for validation
+     * @return table of builtin SQL operators and functions to use for
+     * validation; user-defined functions are not included here
      */
     public SqlOperatorTable getSqlOperatorTable();
 

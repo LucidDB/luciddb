@@ -40,6 +40,7 @@ import org.eigenbase.sql.SqlOperatorTable;
 import org.eigenbase.sql.SqlValidator;
 import org.eigenbase.sql.parser.ParseException;
 import org.eigenbase.sql.parser.SqlParser;
+import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql2rel.SqlToRelConverter;
 import org.eigenbase.util.SaffronProperties;
 import org.eigenbase.util.Util;
@@ -98,7 +99,7 @@ public class ConverterTest extends TestCase
         }
         final SqlValidator validator =
             new SqlValidator(
-                SqlOperatorTable.instance(),
+                SqlStdOperatorTable.instance(),
                 testContext.seeker,
                 testContext.connection.getRelOptSchema().getTypeFactory());
         final SqlToRelConverter converter =

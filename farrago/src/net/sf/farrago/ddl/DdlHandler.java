@@ -803,8 +803,10 @@ public class DdlHandler
         SqlDialect sqlDialect = new SqlDialect(session.getDatabaseMetaData());
         SqlWriter sqlWriter = new SqlWriter(sqlDialect, pw);
 
-        // REVIEW jvs 28-Dec-2004:  Here we treat the RETURNS clause as
-        // an implicit cast.  Is this correct?
+        // TODO jvs 28-Dec-2004:  Instead of casting here, should
+        // get the body expression's result type and verify that it
+        // is assignable to the type of returnParam without casting
+        // (unless CAST FROM is specified).
         
         sqlWriter.print("SELECT CAST(");
         sqlWriter.print(routine.getBody().getBody());

@@ -56,10 +56,12 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.util.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql2rel.*;
 import org.eigenbase.util.*;
 
+import java.util.List;
 
 /**
  * FarragoPreparingStmt subclasses OJPreparingStmt to implement the
@@ -93,6 +95,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     private FarragoSqlValidator sqlValidator;
     private Set directDependencies;
     private Set allDependencies;
+    private SqlOperatorTable sqlOperatorTable;
 
     /**
      * Name of Java package containing code generated for this statement.
@@ -170,7 +173,21 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     // implement FarragoSessionPreparingStmt
     public SqlOperatorTable getSqlOperatorTable()
     {
-        return getSession().getSqlOperatorTable();
+        if (sqlOperatorTable != null) {
+            return sqlOperatorTable;
+        }
+        
+        SqlOperatorTable systemOperators = getSession().getSqlOperatorTable();
+        SqlOperatorTable userOperators =
+            new FarragoUserDefinedRoutineLookup(stmtValidator);
+        
+        // REVIEW jvs 1-Jan-2004:  precedence of UDF's vs. builtins?
+        ChainedSqlOperatorTable table = new ChainedSqlOperatorTable();
+        table.add(systemOperators);
+        table.add(userOperators);
+
+        sqlOperatorTable = table;
+        return sqlOperatorTable;
     }
 
     // implement FarragoSessionPreparingStmt
@@ -410,9 +427,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
 
     RelNode expandView(String queryString)
     {
-        // once we start expanding views, all objects we encounter
-        // should be treated as indirect dependencies
-        processingDirectDependencies = false;
+        stopCollectingDirectDependencies();
 
         SqlParser parser = new SqlParser(queryString);
         final SqlNode sqlQuery;
@@ -423,6 +438,44 @@ public class FarragoPreparingStmt extends OJPreparingStmt
                 "Error while parsing view definition:  " + queryString);
         }
         return sqlToRelConverter.convertQuery(sqlQuery);
+    }
+
+    RexNode expandFunction(
+        String bodyString,
+        Map paramNameToArgMap, 
+        final Map paramNameToTypeMap)
+    {
+        stopCollectingDirectDependencies();
+        
+        SqlParser parser = new SqlParser(bodyString);
+        SqlNode sqlExpr;
+        try {
+            sqlExpr = parser.parseExpression();
+        } catch (ParseException e) {
+            throw Util.newInternal(e,
+                "Error while parsing routine definition:  " + bodyString);
+        }
+
+        // NOTE jvs 2-Jan-2005: We already validated the expression during DDL,
+        // but we stored the original pre-validation expression, and validation
+        // may have involved rewrites relied on by sqlToRelConverter.  So
+        // we must recapitulate here.
+        sqlExpr = getSqlValidator().validateParameterizedExpression(
+            sqlExpr,
+            paramNameToTypeMap);
+
+        // TODO jvs 1-Jan-2005: support a RexVariableBinding (like "let" in
+        // Lisp), and avoid expansion of parameters which are referenced more
+        // than once
+        
+        return sqlToRelConverter.convertExpression(sqlExpr, paramNameToArgMap);
+    }
+
+    private void stopCollectingDirectDependencies()
+    {
+        // once we start expanding views and functions, all objects we
+        // encounter should be treated as indirect dependencies
+        processingDirectDependencies = false;
     }
 
     protected SqlToRelConverter getSqlToRelConverter(
@@ -439,7 +492,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
                     getEnvironment(),
                     planner,
                     connection,
-                    new FarragoRexBuilder(getFarragoTypeFactory()));
+                    new FarragoRexBuilder(this));
             sqlToRelConverter.setDefaultValueFactory(
                 new ReposDefaultValueFactory());
         }

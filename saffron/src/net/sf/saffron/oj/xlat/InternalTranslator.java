@@ -20,7 +20,7 @@
 package net.sf.saffron.oj.xlat;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
+import java.util.*;
 
 import openjava.mop.OJClass;
 import openjava.mop.QueryEnvironment;
@@ -38,6 +38,7 @@ import org.eigenbase.sql.SqlOperator;
 import org.eigenbase.sql.SqlSyntax;
 import org.eigenbase.util.Util;
 
+import java.util.List;
 
 /**
  * Converts an {@link ParseTree Openjava expression} into a
@@ -262,7 +263,13 @@ class InternalTranslator
         if (sqlName == null) {
             return null;
         }
-        return rexBuilder.opTab.lookup(sqlName, SqlSyntax.Binary);
+        List list = rexBuilder.opTab.lookupOperatorOverloads(
+            sqlName.toUpperCase(), SqlSyntax.Binary);
+        if (list.isEmpty()) {
+            return null;
+        }
+        assert(list.size() == 1);
+        return (SqlOperator) list.get(0);
     }
 
     public RexNode evaluateDown(BinaryExpression p)

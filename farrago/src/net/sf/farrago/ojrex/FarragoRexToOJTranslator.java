@@ -32,6 +32,7 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
 
@@ -96,7 +97,7 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
         // is needed for implementing assignments also
         castImplementor = (FarragoOJRexCastImplementor)
             getImplementorTable().get(
-                SqlOperatorTable.std().castFunc);
+                SqlStdOperatorTable.instance().castFunc);
 
         ojNullablePrimitive = OJClass.forClass(NullablePrimitive.class);
     }

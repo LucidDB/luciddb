@@ -26,6 +26,7 @@ import net.sf.saffron.ext.JdbcTable;
 import net.sf.saffron.oj.rel.JavaTableAccessRel;
 
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.relopt.*;
 
@@ -57,18 +58,19 @@ class TableAccessToQueryRule extends RelOptRule
         JdbcTable table = (JdbcTable) javaTableAccess.getTable();
         JdbcSchema schema = (JdbcSchema) table.getRelOptSchema();
         final RelOptConnection connection = javaTableAccess.getConnection();
-        SqlSelect sql = SqlOperatorTable.std().selectOperator.createCall(
-            null,
-            null,
-            new SqlIdentifier(
-                new String [] { table.getName() },
-                null),
-            null,
-            null,
-            null,
-            null,
-            null,
-            ParserPosition.ZERO);
+        SqlSelect sql =
+            SqlStdOperatorTable.instance().selectOperator.createCall(
+                null,
+                null,
+                new SqlIdentifier(
+                    new String [] { table.getName() },
+                    null),
+                null,
+                null,
+                null,
+                null,
+                null,
+                ParserPosition.ZERO);
         JdbcQuery query =
             new JdbcQuery(
                 javaTableAccess.getCluster(),

@@ -26,7 +26,9 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.datatypes.*;
 import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.namespace.util.*;
 import net.sf.farrago.resource.*;
@@ -327,6 +329,41 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
         return element;
     }
 
+    // implement FarragoSessionStmtValidator
+    public List findRoutineOverloads(
+        CwmSchema schema,
+        String invocationName,
+        ProcedureType routineType)
+    {
+        FarragoSessionVariables sessionVariables = getSessionVariables();
+        Collection routines;
+        if (schema != null) {
+            routines = schema.getOwnedElement();
+        } else {
+            // TODO jvs 1-Jan-2005: filter to only schemas on
+            // SQL-path
+            routines =
+                getRepos().getSql2003Package().getFemRoutine().refAllOfType();
+        }
+        List overloads = new ArrayList();
+        Iterator iter = routines.iterator();
+        while (iter.hasNext()) {
+            Object obj = iter.next();
+            if (!(obj instanceof FemRoutine)) {
+                continue;
+            }
+            FemRoutine routine = (FemRoutine) obj;
+            if ((routineType != null) && (routine.getType() != routineType)) {
+                continue;
+            }
+            if (!routine.getInvocationName().equals(invocationName)) {
+                continue;
+            }
+            overloads.add(routine);
+        }
+        return overloads;
+    }
+    
     // implement FarragoSessionStmtValidator
     public CwmSqldataType findSqldataType(String typeName)
     {

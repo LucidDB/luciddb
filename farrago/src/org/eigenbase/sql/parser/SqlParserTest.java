@@ -1269,18 +1269,16 @@ public class SqlParserTest extends TestCase
     public void testNullIf()
     {
         checkExp("nullif(v1,v2)",
-            "(CASE WHEN (`V1` = `V2`) THEN NULL ELSE `V1` END)");
+            "NULLIF(`V1`, `V2`)");
         checkExpFails("nullif(1,2,3)", "(?s).*");
     }
 
     public void testCoalesce()
     {
         checkExp("coalesce(v1,v2)",
-            "(CASE WHEN (`V1` IS NOT NULL) THEN `V1` ELSE `V2` END)");
+            "COALESCE(`V1`, `V2`)");
         checkExp("coalesce(v1,v2,v3)",
-            "(CASE WHEN (`V1` IS NOT NULL) THEN `V1` ELSE "
-            + "(CASE WHEN (`V2` IS NOT NULL) THEN `V2` ELSE `V3` END) "
-            + "END)");
+            "COALESCE(`V1`, `V2`, `V3`)");
     }
 
     public void testLiteralCollate()

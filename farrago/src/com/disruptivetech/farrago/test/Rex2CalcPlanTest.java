@@ -49,6 +49,7 @@ import org.eigenbase.reltype.RelDataTypeFactoryImpl;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.rex.RexTransformer;
 import org.eigenbase.runtime.SyntheticObject;
+import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.SqlNode;
 import org.eigenbase.sql.SqlOperatorTable;
 import org.eigenbase.sql.SqlValidator;
@@ -133,7 +134,7 @@ public class Rex2CalcPlanTest extends FarragoTestCase
             testContext.stmt.getRelOptSchema().getTypeFactory();
         final SqlValidator validator =
             new SqlValidator(
-                SqlOperatorTable.instance(),
+                SqlStdOperatorTable.instance(),
                 testContext.stmt,
                 typeFactory);
         final JavaRexBuilder rexBuilder = new JavaRexBuilder(typeFactory);
@@ -150,7 +151,8 @@ public class Rex2CalcPlanTest extends FarragoTestCase
         RexNode condition = filter.condition;
         if (nullSemanics) {
             condition =
-                rexBuilder.makeCall(SqlOperatorTable.std().isTrueOperator,
+                rexBuilder.makeCall(
+                    SqlStdOperatorTable.instance().isTrueOperator,
                     condition);
             condition =
                 new RexTransformer(condition, rexBuilder)

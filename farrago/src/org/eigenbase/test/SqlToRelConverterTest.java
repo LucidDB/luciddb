@@ -34,6 +34,7 @@ import org.eigenbase.sql.SqlNode;
 import org.eigenbase.sql.SqlOperatorTable;
 import org.eigenbase.sql.SqlValidator;
 import org.eigenbase.sql.parser.SqlParser;
+import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.sql2rel.SqlToRelConverter;
 import org.eigenbase.util.Util;
@@ -118,7 +119,7 @@ public class SqlToRelConverterTest extends TestCase
         RelDataTypeFactory typeFactory)
     {
         return new SqlValidator(
-            SqlOperatorTable.instance(),
+            SqlStdOperatorTable.instance(),
             new MockCatalogReader(typeFactory),
             typeFactory);
     }

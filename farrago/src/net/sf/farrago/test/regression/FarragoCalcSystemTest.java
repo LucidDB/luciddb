@@ -52,7 +52,8 @@ public class FarragoCalcSystemTest extends FarragoTestCase
 {
     //~ Static fields/initializers --------------------------------------------
 
-    private static final SqlStdOperatorTable opTab = SqlOperatorTable.std();
+    private static final SqlStdOperatorTable opTab =
+        SqlStdOperatorTable.instance();
     private static FarragoOJRexImplementorTable javaTab =
         new FarragoOJRexImplementorTable(opTab);
     private static CalcRexImplementorTable fennelTab =

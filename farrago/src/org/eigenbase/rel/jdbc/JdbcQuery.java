@@ -36,6 +36,7 @@ import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.util.JdbcDataSource;
 import org.eigenbase.util.Util;
@@ -103,7 +104,7 @@ public class JdbcQuery extends AbstractRelNode implements ResultSetRel
         this.connection = connection;
         this.dialect = dialect;
         if (sql == null) {
-            sql = SqlOperatorTable.std().selectOperator.createCall(null,
+            sql = SqlStdOperatorTable.instance().selectOperator.createCall(null,
                 null, null, null, null, null, null, null,
                 ParserPosition.ZERO);
         } else {

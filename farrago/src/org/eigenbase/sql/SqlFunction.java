@@ -121,22 +121,31 @@ public class SqlFunction extends SqlOperator
         /** String function type **/
         public static final SqlFuncTypeName String =
             new SqlFuncTypeName("STRING", String_ordinal, "String function");
+        
         public static final int Numeric_ordinal = 1;
 
         /** Numeric function type **/
         public static final SqlFuncTypeName Numeric =
             new SqlFuncTypeName("NUMERIC", Numeric_ordinal, "Numeric function");
+        
         public static final int TimeDate_ordinal = 2;
 
         /** Time and date function type **/
         public static final SqlFuncTypeName TimeDate =
             new SqlFuncTypeName("TIMEDATE", TimeDate_ordinal,
                 "Time and date function");
+        
         public static final int System_ordinal = 3;
 
         /** System function type **/
         public static final SqlFuncTypeName System =
             new SqlFuncTypeName("SYSTEM", System_ordinal, "System function");
+
+        public static final int User_ordinal = 4;
+        
+        /** User-defined function type **/
+        public static final SqlFuncTypeName User =
+            new SqlFuncTypeName("USER", User_ordinal, "User-defined function");
 
         private SqlFuncTypeName(
             String name,
