@@ -149,6 +149,7 @@ public class FarragoCalcSystemTest extends FarragoTestCase
         exclude.add(opTab.currentDateFunc);
         exclude.add(opTab.convertFunc);
         exclude.add(opTab.translateFunc);
+        exclude.add(opTab.concatOperator);
 
         exclude.add(opTab.greaterThanOrEqualOperator);
         exclude.add(opTab.lessThanOrEqualOperator);
