@@ -200,7 +200,6 @@ public abstract class FennelRelUtil
             return 7; // STANDARD_TYPE_INT_64
         case SqlTypeName.Varchar_ordinal:
             return 13; // STANDARD_TYPE_VARCHAR
-        case SqlTypeName.Bit_ordinal:
         case SqlTypeName.Varbinary_ordinal:
         case SqlTypeName.Multiset_ordinal:
             return 15; // STANDARD_TYPE_VARBINARY

@@ -247,6 +247,7 @@ public class SqlValidatorTestCase extends TestCase
             } catch (SqlParseException ex) {
                 String errMessage = ex.getMessage();
                 if (null == errMessage ||
+                    expectedMsgPattern == null ||
                     !errMessage.matches(expectedMsgPattern)) {
                     ex.printStackTrace();
                     fail("SqlValidationTest: Parse Error while parsing query="

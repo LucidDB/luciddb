@@ -7,7 +7,7 @@
 <!--
 // $Id$
 // Package org.eigenbase is a class library of database components.
-// Copyright (C) 2004-2004 Disruptive Tech
+// Copyright (C) 2004-2005 Disruptive Tech
 // You must accept the terms in LICENSE.html to use this software.
 //
 // This program is free software; you can redistribute it and/or
@@ -40,10 +40,6 @@
 
 <message id="100010" name="IllegalLiteral">
     <text>Illegal {0} literal {1} at {2}: {3}</text>
-</message>
-
-<message id="100020" name="InvalidBitLiteral">
-    <text>Invalid bit string {0} near {1}</text>
 </message>
 
 <message id="100030" name="BadFormat">
@@ -260,6 +256,10 @@
 
 <exception id="120400" name="ColumnTypeMismatchInSetop" className="org.eigenbase.sql.SqlValidatorException">
     <text>Type mismatch in column {0,number} of {1}</text>
+</exception>
+
+<exception id="120410" name="BinaryLiteralOdd" className="org.eigenbase.sql.SqlValidatorException">
+    <text>Binary literal string must contain an even number of hexits</text>
 </exception>
 
 <!-- ====================================================================== -->

@@ -121,15 +121,12 @@ public class RexToCalcTranslator implements RexVisitor
                     fac.createSqlType(SqlTypeName.Varbinary, 0),
                     CalcProgramBuilder.OpType.Varbinary),
                 new TypePair(
-                    fac.createSqlType(SqlTypeName.Bit, 0),
-                    CalcProgramBuilder.OpType.Varbinary),
-                new TypePair(
                     fac.createSqlType(SqlTypeName.Varchar, 0),
                     CalcProgramBuilder.OpType.Varchar),
                 new TypePair(
                     fac.createSqlType(SqlTypeName.Boolean),
                     CalcProgramBuilder.OpType.Bool),
-                
+
 
                 // FIXME: not right for T/w TZ.
                 new TypePair(
@@ -141,7 +138,7 @@ public class RexToCalcTranslator implements RexVisitor
                 new TypePair(
                     fac.createSqlType(SqlTypeName.Timestamp),
                     CalcProgramBuilder.OpType.Int8),
-                
+
                 new TypePair(
                     fac.createJavaType(Byte.class),
                     CalcProgramBuilder.OpType.Int1),
@@ -645,7 +642,6 @@ public class RexToCalcTranslator implements RexVisitor
     private static boolean isOctetString(RelDataType t)
     {
         switch (t.getSqlTypeName().ordinal) {
-        case SqlTypeName.Bit_ordinal:
         case SqlTypeName.Varbinary_ordinal:
         case SqlTypeName.Binary_ordinal:
             return true;

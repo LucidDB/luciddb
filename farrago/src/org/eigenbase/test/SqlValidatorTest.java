@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of database components.
-// Copyright (C) 2002-2004 Disruptive Tech
-// Copyright (C) 2003-2004 John V. Sichi
+// Copyright (C) 2002-2005 Disruptive Tech
+// Copyright (C) 2003-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -66,7 +66,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     public void testTypeOfAs() {
         checkExpType("1 as c1", "INTEGER");
         checkExpType("'hej' as c1", "CHAR(3)");
-        checkExpType("b'111' as c1", "BIT(3)");
+        checkExpType("x'deadbeef' as c1", "BINARY(4)");
     }
 
     public void testTypesLiterals() {
@@ -79,16 +79,12 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExpType("n'ab '" + NL + "' cd'", "CHAR(6)");
         checkExpType("_iso_8859-2'ab '" + NL + "' cd'", "CHAR(6)");
 
-        checkExpType("x'abc'", "BIT(12)");
+        checkExpFails("x'abc'",
+            "Binary literal string must contain an even number of hexits");
         checkExpType("x'abcd'", "BINARY(2)");
         checkExpType("x'abcd'" + NL + "'ff001122aabb'", "BINARY(8)");
         checkExpType("x'aaaa'" + NL + "'bbbb'" + NL + "'0000'" + NL + "'1111'",
             "BINARY(8)");
-
-        checkExpType("b'1001'", "BIT(4)");
-        checkExpType("b'1001'" + NL + "'0110'", "BIT(8)");
-        checkExpType("B'0000'" + NL + "'0001'" + NL + "'0000'" + NL + "'1111'",
-            "BIT(16)");
 
         checkExpType("1234567890", "INTEGER");
         checkExpType("123456.7890", "DECIMAL(10, 4)");
@@ -266,34 +262,30 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             "(?s).*Cannot apply '<>' to arguments of type '<BOOLEAN> <> <DOUBLE>'.*");
         checkExpFails("false=''",
             "(?s).*Cannot apply '=' to arguments of type '<BOOLEAN> = <CHAR.0.>'.*");
-        checkExpFails("b'1'=0.01",
-            "(?s).*Cannot apply '=' to arguments of type '<BIT.1.> = <DECIMAL.3, 2.>'.*");
-        checkExpFails("b'1'=1",
-            "(?s).*Cannot apply '=' to arguments of type '<BIT.1.> = <INTEGER>'.*");
-        checkExpFails("b'1'<>0.01",
-            "(?s).*Cannot apply '<>' to arguments of type '<BIT.1.> <> <DECIMAL.3, 2.>'.*");
-        checkExpFails("b'1'<>1",
-            "(?s).*Cannot apply '<>' to arguments of type '<BIT.1.> <> <INTEGER>'.*");
+        checkExpFails("x'a4'=0.01",
+            "(?s).*Cannot apply '=' to arguments of type '<BINARY.1.> = <DECIMAL.3, 2.>'.*");
+        checkExpFails("x'a4'=1",
+            "(?s).*Cannot apply '=' to arguments of type '<BINARY.1.> = <INTEGER>'.*");
+        checkExpFails("x'13'<>0.01",
+            "(?s).*Cannot apply '<>' to arguments of type '<BINARY.1.> <> <DECIMAL.3, 2.>'.*");
+        checkExpFails("x'abcd'<>1",
+            "(?s).*Cannot apply '<>' to arguments of type '<BINARY.2.> <> <INTEGER>'.*");
     }
 
-    public void testHexBitBinaryString() {
-        check("select x'f'=x'abc' from values(true)");
-        check("select x'f'=X'' from values(true)");
+    public void testBinaryString() {
+        check("select x'face'=X'' from values(true)");
         check("select x'ff'=X'' from values(true)");
-        check("select x'ff'=X'f' from values(true)");
-        check("select x'ff'=b'10' from values(true)");
-        check("select b'000'=X'f' from values(true)");
     }
 
-    public void testHexBitBinaryStringFails() {
-        assertExceptionIsThrown("select x'f'='abc' from values(true)",
-            "(?s).*Cannot apply '=' to arguments of type '<BIT.4.> = <CHAR.3.>'.*");
+    public void testBinaryStringFails() {
+        assertExceptionIsThrown("select x'ffee'='abc' from values(true)",
+            "(?s).*Cannot apply '=' to arguments of type '<BINARY.2.> = <CHAR.3.>'.*");
         assertExceptionIsThrown("select x'ff'=88 from values(true)",
             "(?s).*Cannot apply '=' to arguments of type '<BINARY.1.> = <INTEGER>'.*");
         assertExceptionIsThrown("select x''<>1.1e-1 from values(true)",
             "(?s).*Cannot apply '<>' to arguments of type '<BINARY.0.> <> <DOUBLE>'.*");
-        assertExceptionIsThrown("select b''<>1.1 from values(true)",
-            "(?s).*Cannot apply '<>' to arguments of type '<BIT.0.> <> <DECIMAL.2, 1.>'.*");
+        assertExceptionIsThrown("select x''<>1.1 from values(true)",
+            "(?s).*Cannot apply '<>' to arguments of type '<BINARY.0.> <> <DECIMAL.2, 1.>'.*");
     }
 
     public void testStringLiteral() {
@@ -334,16 +326,16 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             "(?s).*Cannot apply 'POW' to arguments of type 'POW.<INTEGER>, <CHAR.3.>.*");
         checkExpFails("pow(true,1)",
             "(?s).*Cannot apply 'POW' to arguments of type 'POW.<BOOLEAN>, <INTEGER>.*");
-        checkExpFails("mod(b'11001',1)",
-            "(?s).*Cannot apply 'MOD' to arguments of type 'MOD.<BIT.5.>, <INTEGER>.*");
-        checkExpFails("mod(1, b'11001')",
-            "(?s).*Cannot apply 'MOD' to arguments of type 'MOD.<INTEGER>, <BIT.5.>.*");
+        checkExpFails("mod(x'1100',1)",
+            "(?s).*Cannot apply 'MOD' to arguments of type 'MOD.<BINARY.2.>, <INTEGER>.*");
+        checkExpFails("mod(1, x'1100')",
+            "(?s).*Cannot apply 'MOD' to arguments of type 'MOD.<INTEGER>, <BINARY.2.>.*");
         checkExpFails("abs(x'')",
             "(?s).*Cannot apply 'ABS' to arguments of type 'ABS.<BINARY.0.>.*");
-        checkExpFails("ln(x'f')",
-            "(?s).*Cannot apply 'LN' to arguments of type 'LN.<BIT.4.>.*");
-        checkExpFails("log(x'f')",
-            "(?s).*Cannot apply 'LOG' to arguments of type 'LOG.<BIT.4.>.*");
+        checkExpFails("ln(x'face12')",
+            "(?s).*Cannot apply 'LN' to arguments of type 'LN.<BINARY.3.>.*");
+        checkExpFails("log(x'fa')",
+            "(?s).*Cannot apply 'LOG' to arguments of type 'LOG.<BINARY.1.>.*");
     }
 
     public void testCaseExpression() {
@@ -387,8 +379,8 @@ public class SqlValidatorTest extends SqlValidatorTestCase
 
     public void testCaseExpressionFails() {
         //varchar not comparable with bit string
-        checkExpFails("case 'string' when b'01' then 'zero one' else 'something' end",
-            "(?s).*Cannot apply '=' to arguments of type '<CHAR.6.> = <BIT.2.>'.*");
+        checkExpFails("case 'string' when x'01' then 'zero one' else 'something' end",
+            "(?s).*Cannot apply '=' to arguments of type '<CHAR.6.> = <BINARY.1.>'.*");
 
         //all thens and else return null
         checkExpFails("case 1 when 1 then null else null end",
@@ -448,8 +440,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
 
     public void testConcat() {
         checkExp("'a'||'b'");
-        checkExp("b'1'||b'1'");
-        checkExp("x'1'||x'1'");
+        checkExp("x'12'||x'34'");
         checkExpType("'a'||'b'", "VARCHAR(2)");
         checkExpType("cast('a' as char(1))||cast('b' as char(2))", "VARCHAR(3)");
         checkExpType("'a'||'b'||'c'", "VARCHAR(3)");
@@ -468,7 +459,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             "(?s).*Cannot apply '\\|\\|' to arguments of type '<CHAR.1.> \\|\\| <BINARY.1.>'"
             + ".*Supported form.s.: '<CHAR> \\|\\| <CHAR>'"
             + ".*'<VARCHAR> \\|\\| <VARCHAR>'"
-            + ".*'<BIT> \\|\\| <BIT>'" + ".*'<BINARY> \\|\\| <BINARY>'"
+            + ".*'<BINARY> \\|\\| <BINARY>'"
             + ".*'<VARBINARY> \\|\\| <VARBINARY>'.*");
     }
 
@@ -555,15 +546,11 @@ public class SqlValidatorTest extends SqlValidatorTestCase
 
     public void testPosition() {
         checkExp("position('mouse' in 'house')");
-        checkExp("position(b'1' in b'1010')");
-        checkExp("position(x'1' in x'110')");
+        checkExp("position(x'11' in x'100110')");
+        checkExp("position(x'abcd' in x'')");
         checkExpType("position('mouse' in 'house')", "INTEGER");
-
-        //review wael 29 March 2004: is x'1' (hexstring) and x'1010' (bytestring) a type mismatch?
-        checkExpFails("position(x'1' in x'1010')",
-            "(?s).*Cannot apply 'POSITION' to arguments of type 'POSITION.<BIT.4.> IN <BINARY.2.>.'.*");
-        checkExpFails("position(x'1' in '110')",
-            "(?s).*Cannot apply 'POSITION' to arguments of type 'POSITION.<BIT.4.> IN <CHAR.3.>.'.*");
+        checkExpFails("position(x'1234' in '110')",
+            "(?s).*Cannot apply 'POSITION' to arguments of type 'POSITION.<BINARY.2.> IN <CHAR.3.>.'.*");
     }
 
     public void testTrim() {
@@ -598,7 +585,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExp("overlay('ABCdef' placing 'abc' from 1)");
         checkExp("overlay('ABCdef' placing 'abc' from 1 for 3)");
         checkExpFails("overlay('ABCdef' placing 'abc' from '1' for 3)",
-            "(?s).*OVERLAY.<BIT> PLACING <BIT> FROM <INTEGER>..*");
+            "(?s).*OVERLAY\\(<CHAR> PLACING <CHAR> FROM <INTEGER>\\).*");
         checkExpType("overlay('ABCdef' placing 'abc' from 1 for 3)",
             "CHAR(9)");
 
@@ -612,16 +599,13 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExp("substring('a' FROM 1)");
         checkExp("substring('a' FROM 1 FOR 3)");
         checkExp("substring('a' FROM 'reg' FOR '\\')");
-        checkExp("substring(b'0' FROM 1  FOR 2)"); //bit string
-        checkExp("substring(x'f' FROM 1  FOR 2)"); //hexstring
         checkExp("substring(x'ff' FROM 1  FOR 2)"); //binary string
 
         checkExpType("substring('10' FROM 1  FOR 2)", "VARCHAR(2)");
         checkExpType("substring('1000' FROM '1'  FOR 'w')", "VARCHAR(4)");
         checkExpType("substring(cast(' 100 ' as CHAR(99)) FROM '1'  FOR 'w')",
             "VARCHAR(99)");
-        checkExpType("substring(b'10' FROM 1  FOR 2)", "VARBIT(2)");
-        checkExpType("substring(x'10' FROM 1  FOR 2)", "VARBINARY(1)");
+        checkExpType("substring(x'10456b' FROM 1  FOR 2)", "VARBINARY(3)");
 
         checkCharset(
             "substring('10' FROM 1  FOR 2)",
@@ -673,7 +657,6 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExpType("cast(null as float)", "FLOAT");
         checkExpType("cast(null as real)", "REAL");
         checkExpType("cast(null as double)", "DOUBLE");
-        checkExpType("cast(null as bit(1))", "BIT(1)");
         checkExpType("cast(null as boolean)", "BOOLEAN");
         checkExpType("cast(null as varchar(1))", "VARCHAR(1)");
         checkExpType("cast(null as char(1))", "CHAR(1)");

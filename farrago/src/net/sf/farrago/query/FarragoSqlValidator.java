@@ -1,7 +1,7 @@
 /*
 // Farrago is a relational database management system.
-// Copyright (C) 2003-2004 John V. Sichi.
-// Copyright (C) 2003-2004 Disruptive Tech
+// Copyright (C) 2003-2005 John V. Sichi.
+// Copyright (C) 2003-2005 Disruptive Tech
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
@@ -66,6 +66,8 @@ class FarragoSqlValidator extends SqlValidator
     // override SqlValidator
     public void validateLiteral(SqlLiteral literal)
     {
+        super.validateLiteral(literal);
+        
         // REVIEW jvs 4-Aug-2004:  This should probably be calling over to the
         // available calculator implementations to see what they support.  For
         // now use ESP instead.

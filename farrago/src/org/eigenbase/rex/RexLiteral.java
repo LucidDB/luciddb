@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of database components.
-// Copyright (C) 2002-2004 Disruptive Tech
-// Copyright (C) 2003-2004 John V. Sichi
+// Copyright (C) 2002-2005 Disruptive Tech
+// Copyright (C) 2003-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -105,15 +105,6 @@ import org.eigenbase.util.Util;
  *       <code>_ISO-8859-1'It''s superman!' COLLATE SHIFT_JIS$ja_JP$2</code>.
  *       These are always CHAR, never VARCHAR.</td>
  *   <td>{@link NlsString}</td>
- * </tr>
- * <tr>
- *   <td>{@link SqlTypeName#Bit}</td>
- *   <td>Bit string, for example <code>B'101011'</code>,
- *       or a hex string of odd length, for example <code>X'ABC'</code>.
- *       <b>Note that this differs from {@link org.eigenbase.sql.SqlLiteral},
- *       where a hex string of odd length is stored as a
- *       {@link SqlTypeName#Binary}.</b></td>
- *   <td>{@link BitString}</td>
  * </tr>
  * <tr>
  *   <td>{@link SqlTypeName#Binary}</td>
@@ -219,8 +210,6 @@ public class RexLiteral extends RexNode
             return value instanceof Calendar;
         case SqlTypeName.Binary_ordinal:
             return value instanceof byte [];
-        case SqlTypeName.Bit_ordinal:
-            return value instanceof BitString;
         case SqlTypeName.Char_ordinal:
             return value instanceof NlsString;
         case SqlTypeName.Symbol_ordinal:
@@ -304,10 +293,6 @@ public class RexLiteral extends RexNode
             assert value instanceof byte [];
             pw.print(Util.toStringFromByteArray((byte []) value, 16));
             break;
-        case SqlTypeName.Bit_ordinal:
-            assert value instanceof BitString;
-            pw.print(value.toString());
-            break;
         case SqlTypeName.Null_ordinal:
             assert value == null;
             pw.print("null");
@@ -360,8 +345,6 @@ public class RexLiteral extends RexNode
     public Object getValue2()
     {
         switch (typeName.ordinal) {
-        case SqlTypeName.Bit_ordinal:
-            return ((BitString) value).getAsByteArray();
         case SqlTypeName.Char_ordinal:
             return ((NlsString) value).getValue();
         case SqlTypeName.Date_ordinal:

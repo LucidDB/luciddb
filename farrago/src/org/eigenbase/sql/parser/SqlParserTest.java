@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of database components.
-// Copyright (C) 2002-2004 Disruptive Tech
-// Copyright (C) 2003-2004 John V. Sichi
+// Copyright (C) 2002-2005 Disruptive Tech
+// Copyright (C) 2003-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -26,7 +26,6 @@ import junit.framework.TestCase;
 import junit.framework.AssertionFailedError;
 
 import org.eigenbase.sql.SqlNode;
-import org.eigenbase.sql.parser.impl.*;
 import org.eigenbase.util.Util;
 
 
@@ -44,6 +43,8 @@ public class SqlParserTest extends TestCase
     //~ Static fields/initializers --------------------------------------------
 
     protected static final String NL = System.getProperty("line.separator");
+    /** @deprecated */
+    private static final boolean todo = false;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -428,9 +429,6 @@ public class SqlParserTest extends TestCase
         checkExp("cast(x as bigint)", "CAST(`X` AS BIGINT)");
         checkExp("cast(x as real)", "CAST(`X` AS REAL)");
         checkExp("cast(x as double)", "CAST(`X` AS DOUBLE)");
-        checkExp("cast(x as bit(1))", "CAST(`X` AS BIT(1))");
-
-        checkExp("cast(x as bit(123))", "CAST(`X` AS BIT(123))");
         checkExp("cast(x as decimal(1,2))", "CAST(`X` AS DECIMAL(1, 2))");
 
         checkExp("cast('foo' as bar)", "CAST('foo' AS `BAR`)");
@@ -822,11 +820,7 @@ public class SqlParserTest extends TestCase
         checkExp("_iso-8859-1'yabba'\n'dabba'\n'doo'",
             "_ISO-8859-1'yabba' 'dabba' 'doo'");
 
-        checkExp("B'0001'\n'0001'", "B'0001' '0001'");
         checkExp("x'01aa'\n'03ff'", "X'01AA' '03FF'");
-
-        // a bad bitstring
-        checkFails("B'0001'\n'3333'", ".*Invalid bit string '3333'.*");
 
         // a bad hexstring
         checkFails("x'01aa'\n'vvvv'", ".*Invalid binary string 'vvvv'.*");
@@ -1165,23 +1159,11 @@ public class SqlParserTest extends TestCase
             "DELETE FROM `EMPS`" + NL + "WHERE (`EMPNO` = 12)");
     }
 
-    public void testBitString()
+    public void testBitStringNotImplemented()
     {
-        checkExp("b''=B'1001'", "(B'' = B'1001')");
-        checkExp("b'1111111111'=B'1111111'", "(B'1111111111' = B'1111111')");
-        checkExp("b'0101'\n'0110'", "B'0101' '0110'");
-    }
-
-    public void testBitStringFails()
-    {
-        checkFails("select b''=B'10FF' from t",
-            "(?s).*Encountered .*FF.* at line 1, column ...*");
-        checkFails("select B'3' from t",
-            "(?s).*Encountered .*3.* at line 1, column ...*");
-        checkFails("select b'1' B'0' from t",
-            "(?s).*Encountered .B.*0.* at line 1, column 13.*");
-
-        // checkFails("select b'1' '0' from t", "?"); validator error
+        // Bit-string is longer part of the SQL standard. We do not support it.
+        checkFails("select B'1011' || 'foobar' from values (true)",
+            "(?s).*Encountered \"\\\\'1011\\\\'\" at line 1, column 9.*");
     }
 
     public void testHexAndBinaryString()
@@ -1196,10 +1178,7 @@ public class SqlParserTest extends TestCase
         checkExp("x'1234567890abcdef'=X'fFeEdDcCbBaA'",
             "(X'1234567890ABCDEF' = X'FFEEDDCCBBAA')");
         checkExp("x'001'=X'000102'", "(X'001' = X'000102')"); //check so inital zeros dont get trimmed somehow
-        if (false) {
-            checkFails("select b'1a00' from t", "blah");
-        }
-        if (false) {
+        if (todo) {
             checkFails("select x'FeedGoats' from t", "blah");
         }
     }
@@ -1663,7 +1642,7 @@ public class SqlParserTest extends TestCase
 
     }
 
-    public void testProcedureCall() 
+    public void testProcedureCall()
     {
         check("call blubber(5)", "(CALL `BLUBBER`(5))");
         check("call \"blubber\"(5)", "(CALL `blubber`(5))");

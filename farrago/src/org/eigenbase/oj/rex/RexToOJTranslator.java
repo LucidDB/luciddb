@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of database components.
-// Copyright (C) 2002-2004 Disruptive Tech
-// Copyright (C) 2003-2004 John V. Sichi
+// Copyright (C) 2002-2005 Disruptive Tech
+// Copyright (C) 2003-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -172,10 +172,6 @@ public class RexToOJTranslator implements RexVisitor
             break;
         case SqlTypeName.Binary_ordinal:
             setTranslation(convertByteArrayLiteral((byte []) value));
-            break;
-        case SqlTypeName.Bit_ordinal:
-            byte [] bytes = ((BitString) value).getAsByteArray();
-            setTranslation(convertByteArrayLiteral(bytes));
             break;
         case SqlTypeName.Date_ordinal:
         case SqlTypeName.Time_ordinal:
@@ -369,9 +365,9 @@ public class RexToOJTranslator implements RexVisitor
     //~ Inner Classes ---------------------------------------------------------
 
     /**
-     * Result of call to {@link #whichInput}, contains the input relational
-     * expression, its index, and the index of the field within that
-     * relational expression.
+     * Result of call to {@link RexToOJTranslator#whichInput}, contains the
+     * input relational expression, its index, and the index of the field
+     * within that relational expression.
      */
     private static class WhichInputResult
     {

@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of database components.
-// Copyright (C) 2002-2004 Disruptive Tech
-// Copyright (C) 2003-2004 John V. Sichi
+// Copyright (C) 2002-2005 Disruptive Tech
+// Copyright (C) 2003-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -50,7 +50,7 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
     //~ Static fields/initializers --------------------------------------------
 
     public static final SqlTypeName [] EMPTY_ARRAY = new SqlTypeName[0];
-    
+
     // Flags indicating precision/scale combinations
     private static final int PrecNoScaleNo = 1;
     private static final int PrecYesScaleNo = 2;
@@ -59,7 +59,7 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
     private static SqlTypeName [] jdbcTypeToName;
     public static final int MIN_JDBC_TYPE = Types.BIT;
     public static final int MAX_JDBC_TYPE = Types.REF;
-    
+
     // SQL Type Definitions ------------------
     public static final int Boolean_ordinal = 0;
     public static final SqlTypeName Boolean =
@@ -113,28 +113,22 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
     public static final int Varchar_ordinal = 15;
     public static final SqlTypeName Varchar =
         new SqlTypeName("VARCHAR", Varchar_ordinal, PrecYesScaleNo);
-    public static final int Bit_ordinal = 16;
-    public static final SqlTypeName Bit =
-        new SqlTypeName("BIT", Bit_ordinal, PrecYesScaleNo);
-    public static final int Varbit_ordinal = 17;
-    public static final SqlTypeName Varbit =
-        new SqlTypeName("VARBIT", Varbit_ordinal, PrecYesScaleNo);
-    public static final int Binary_ordinal = 18;
+    public static final int Binary_ordinal = 16;
     public static final SqlTypeName Binary =
         new SqlTypeName("BINARY", Binary_ordinal, PrecYesScaleNo);
-    public static final int Varbinary_ordinal = 19;
+    public static final int Varbinary_ordinal = 17;
     public static final SqlTypeName Varbinary =
         new SqlTypeName("VARBINARY", Varbinary_ordinal, PrecYesScaleNo);
-    public static final int Null_ordinal = 20;
+    public static final int Null_ordinal = 18;
     public static final SqlTypeName Null =
         new SqlTypeName("NULL", Null_ordinal, PrecNoScaleNo);
-    public static final int Any_ordinal = 21;
+    public static final int Any_ordinal = 19;
     public static final SqlTypeName Any =
         new SqlTypeName("ANY", Any_ordinal, PrecNoScaleNo);
-    public static final int Symbol_ordinal = 22;
+    public static final int Symbol_ordinal = 20;
     public static final SqlTypeName Symbol =
         new SqlTypeName("SYMBOL", Symbol_ordinal, PrecNoScaleNo);
-    public static final int Multiset_ordinal = 23;
+    public static final int Multiset_ordinal = 21;
     public static final SqlTypeName Multiset =
         new SqlTypeName("MULTISET", Multiset_ordinal, PrecNoScaleNo);
 
@@ -145,17 +139,16 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
         new EnumeratedValues(new SqlTypeName [] {
             Boolean, Integer, Varchar, Date, Time, Timestamp, Null, Decimal,
             Any, Char, Binary, Varbinary, Tinyint, Smallint, Bigint, Real,
-            Double, Bit, Symbol, IntervalYearMonth, IntervalDayTime,
+            Double, Symbol, IntervalYearMonth, IntervalDayTime,
             Float, Multiset
         });
 
-    static 
+    static
     {
         // This squanders some memory since MAX_JDBC_TYPE == 2006!
         jdbcTypeToName =
             new SqlTypeName[(1 + MAX_JDBC_TYPE) - MIN_JDBC_TYPE];
 
-        setNameForJdbcType(Types.BIT, Bit);
         setNameForJdbcType(Types.TINYINT, Tinyint);
         setNameForJdbcType(Types.SMALLINT, Smallint);
         setNameForJdbcType(Types.BIGINT, Bigint);
@@ -184,7 +177,7 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
         setNameForJdbcType(Types.TIMESTAMP, Timestamp);
         setNameForJdbcType(Types.BOOLEAN, Boolean);
     }
-    
+
     //~ Instance fields -------------------------------------------------------
 
     /**
@@ -198,7 +191,7 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
             makeNullable(booleanTypes);
 
     public static final SqlTypeName [] binaryTypes =
-        { Bit, Binary, Varbinary };
+        { Binary, Varbinary };
     public static final SqlTypeName [] binaryNullableTypes =
         makeNullable(binaryTypes);
 
@@ -312,7 +305,7 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
     {
         return allowsPrecScale(true, true);
     }
-    
+
     /**
      * Returns whether this type can be specified with a given combination
      * of precision and scale.
@@ -394,9 +387,6 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
             return Types.TIME;
         case Timestamp_ordinal:
             return Types.TIMESTAMP;
-        case Bit_ordinal:
-        case Varbit_ordinal:
-            return Types.BIT;
         case Char_ordinal:
             return Types.CHAR;
         case Varchar_ordinal:
@@ -436,7 +426,6 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
         switch (ordinal) {
         case Char_ordinal:
         case Binary_ordinal:
-        case Bit_ordinal:
             return 1;
         case Time_ordinal:
             return 0;
@@ -448,7 +437,7 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
             return -1;
         }
     }
-    
+
     /**
      * Gets the SqlTypeFamily containing this SqlTypeName.
      *
@@ -458,7 +447,7 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
     {
         return SqlTypeFamily.getFamilyForSqlType(this);
     }
-    
+
     /**
      * Gets the SqlTypeName corresponding to a JDBC type.
      *

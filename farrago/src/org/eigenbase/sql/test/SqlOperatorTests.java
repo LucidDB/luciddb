@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of database components.
-// Copyright (C) 2002-2004 Disruptive Tech
-// Copyright (C) 2003-2004 John V. Sichi
+// Copyright (C) 2002-2005 Disruptive Tech
+// Copyright (C) 2003-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -95,7 +95,7 @@ public class SqlOperatorTests
     public static void testCase(SqlTester tester)
     {
         tester.checkScalarExact("case when 'a'='a' then 1 end", "1");
-        
+
         // FIXME jvs 26-Jan-2005:  disabled because of calculator
         // assertion after I changed the type of string literals from
         // VARCHAR to CHAR (see dtbug 278)
@@ -125,8 +125,9 @@ public class SqlOperatorTests
             "corned beef on rye");
         tester.checkString("_latin1'Spaghetti'\n' all''Amatriciana'",
             "Spaghetti all'Amatriciana");
-        tester.checkBoolean("B'0101'\n'0011' = B'01010011'", Boolean.TRUE);
         tester.checkBoolean("x'1234'\n'abcd' = x'1234abcd'", Boolean.TRUE);
+        tester.checkBoolean("x'1234'\n'' = x'1234'", Boolean.TRUE);
+        tester.checkBoolean("x''\n'ab' = x'ab'", Boolean.TRUE);
     }
 
     public static void testRow()
@@ -151,8 +152,6 @@ public class SqlOperatorTests
         if (false) {
             // not yet implemented
             tester.checkString(" x'f'||x'f' ", "X'FF");
-            tester.checkString(" b'1'||b'0' ", "B'10'");
-            tester.checkString(" b'1'||b'' ", "B'1'");
             tester.checkNull("x'ff' || cast(null as varbinary)");
         }
     }
@@ -478,9 +477,10 @@ public class SqlOperatorTests
         tester.checkNull(
             "overlay(cast(null as varchar(1)) placing 'abc' from 1)");
 
-        //hex and bit strings not yet implemented in calc
-        //                    tester.checkNull("overlay(x'abc' placing x'abc' from cast(null as integer))");
-        //                    tester.checkNull("overlay(b'1' placing cast(null as bit(1)) from 1)");
+        if (false) {
+            // hex strings not yet implemented in calc
+            tester.checkNull("overlay(x'abc' placing x'abc' from cast(null as integer))");
+        }
     }
 
     public static void testPositionFunc(SqlTester tester)
@@ -488,8 +488,6 @@ public class SqlOperatorTests
         tester.checkScalarExact("position('b' in 'abc')", "2");
         tester.checkScalarExact("position('' in 'abc')", "1");
 
-        //bit not yet implemented
-        //                    tester.checkScalarExact("position(b'10' in b'0010')", "3");
         tester.checkNull("position(cast(null as varchar(1)) in '0010')");
         tester.checkNull("position('a' in cast(null as varchar(1)))");
     }
@@ -701,3 +699,4 @@ public class SqlOperatorTests
     }
 }
 
+// End SqlOperatorTests.java

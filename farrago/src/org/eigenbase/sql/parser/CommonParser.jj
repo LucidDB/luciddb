@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Farrago preprocessor and data engine
-// (C) Copyright 2002-2004 Disruptive Tech
-// (C) Copyright 2002-2004 John V. Sichi
+// (C) Copyright 2002-2005 Disruptive Tech
+// (C) Copyright 2002-2005 John V. Sichi
 // You must accept the terms in LICENSE.html to use this software.
 //
 // This file contains the heart of a parser for SQL SELECT statements.
@@ -1663,38 +1663,6 @@ SqlNode StringLiteral(SqlParserPos pos, boolean strict) :
     // or comments may not occur between the prefix and the first quote, the
     // head fragment, with any prefix, is one token.
 
-    <BIT_STRING_LITERAL>
-        {
-            p = SqlParserUtil.trim(token.image, "bB'");
-            frags = startList(SqlLiteral.BitStringLiteral.create(p, pos));
-            nfrags++;
-        }
-    (
-        <QUOTED_STRING>
-        {
-            try {
-                p = SqlParserUtil.trim(token.image, "'"); // no embedded quotes
-                frags.add(SqlLiteral.BitStringLiteral.create(p, getPos()));
-                nfrags++;
-            } catch (NumberFormatException ex) {
-                throw new ParseException(
-                    EigenbaseResource.instance().getInvalidBitLiteral(
-                        token.image,
-                        getPositionString()));
-            }
-        }
-    )*
-        {
-            assert (nfrags > 0);
-            if (nfrags == 1)
-                return (SqlLiteral) frags.get(0); // just the head fragment
-            else {
-                SqlNode[] rands = (SqlNode[]) frags.toArray(new SqlNode[nfrags]);
-                return opTab.literalChainOperator.createCall(rands, pos);
-            }
-        }
-
-|
     <BINARY_STRING_LITERAL> {
         p = SqlParserUtil.trim(token.image, "xX'");
         frags = startList(SqlLiteral.createBinaryString(p, pos));
@@ -2080,7 +2048,6 @@ SqlIdentifier TypeName() :
     |   <REAL> { typeName = new SqlIdentifier(SqlTypeName.Real.name,pos); }
     |   <DOUBLE> [ <PRECISION> ] { typeName = new SqlIdentifier(SqlTypeName.Double.name,pos); }
     |   <FLOAT> { typeName = new SqlIdentifier(SqlTypeName.Float.name,pos); }
-    |   <BIT> { typeName = new SqlIdentifier(SqlTypeName.Bit.name,pos); }
     |   <MULTISET> { typeName = new SqlIdentifier(SqlTypeName.Multiset.name,pos); }
 
     |   typeName = CompoundIdentifier()
@@ -3381,8 +3348,6 @@ TOKEN :
     < #WHITESPACE:
         [ " ","\t","\n","\r","\f" ]
     >
-|
-    < BIT_STRING_LITERAL: ["b","B"] <QUOTE> (["0","1"])* <QUOTE> >
 |
     < BINARY_STRING_LITERAL: ["x","X"] <QUOTE> (<HEXDIGIT>)* <QUOTE> >
 |

@@ -85,12 +85,4 @@ select x'a'<=x'1' from values(1);
 select x'0'<=x'1' from values(1);
 select x'001'>=x'10000' from values(1);
 
---select b'10'=b'010' from values(1);
-select b'1001'=b'1001' from values(1);
---select b'1'<>b'001' from values(1);
---select b'111'>b'01' from values(1);
-select b'11'<b'11' from values(1);
-select b'01'<=b'01' from values(1);
-select b'01'<=b'10' from values(1);
-select b'10'<=b'100' from values(1);
-select B'0001'>=b'100000' from values(1);
+-- end selectSimple.sql

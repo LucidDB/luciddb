@@ -1,7 +1,7 @@
 /*
 // $Id$
 // Farrago is a relational database management system.
-// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2002-2005 Disruptive Tech
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -20,44 +20,34 @@
 package com.disruptivetech.farrago.test;
 
 import com.disruptivetech.farrago.calc.RexToCalcTranslator;
-
-import java.io.*;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-
-import junit.framework.*;
-
-import net.sf.farrago.jdbc.engine.*;
-import net.sf.farrago.query.*;
-import net.sf.farrago.session.*;
-import net.sf.farrago.test.*;
-
+import junit.framework.AssertionFailedError;
+import junit.framework.Test;
+import net.sf.farrago.jdbc.engine.FarragoJdbcEngineConnection;
+import net.sf.farrago.query.FarragoPreparingStmt;
+import net.sf.farrago.session.FarragoSessionStmtValidator;
+import net.sf.farrago.test.FarragoTestCase;
 import openjava.mop.*;
 import openjava.ptree.ClassDeclaration;
 import openjava.ptree.MemberDeclarationList;
 import openjava.ptree.ModifierList;
-
 import org.eigenbase.oj.util.JavaRexBuilder;
 import org.eigenbase.oj.util.OJUtil;
 import org.eigenbase.rel.FilterRel;
 import org.eigenbase.rel.ProjectRel;
 import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.RelOptConnection;
 import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.reltype.RelDataTypeFactoryImpl;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.rex.RexTransformer;
-import org.eigenbase.runtime.SyntheticObject;
-import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.SqlNode;
-import org.eigenbase.sql.SqlOperatorTable;
 import org.eigenbase.sql.SqlValidator;
+import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.parser.SqlParseException;
 import org.eigenbase.sql.parser.SqlParser;
 import org.eigenbase.sql2rel.SqlToRelConverter;
 import org.eigenbase.util.SaffronProperties;
-import org.eigenbase.util.Util;
+
+import java.io.PrintWriter;
+import java.io.Writer;
 
 
 /**
@@ -298,8 +288,8 @@ public class Rex2CalcPlanTest extends FarragoTestCase
         check(sql, false,false);
     }
 
-    public void testHexBitBinaryString() {
-        String sql = "SELECT x'abc'=x'', b''=B'00111', X'0001'=x'FFeeDD' FROM emps WHERE empno > 10";
+    public void testBinaryString() {
+        String sql = "SELECT X'0001'=x'FFeeDD' FROM emps WHERE empno > 10";
         check(sql, false,false);
     }
 
@@ -521,8 +511,6 @@ public class Rex2CalcPlanTest extends FarragoTestCase
         check(sql, false,false);
     }
 
-
 }
-
 
 // End Rex2CalcPlanTest.java

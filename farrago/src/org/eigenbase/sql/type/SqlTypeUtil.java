@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of database components.
-// Copyright (C) 2002-2004 Disruptive Tech
-// Copyright (C) 2003-2004 John V. Sichi
+// Copyright (C) 2002-2005 Disruptive Tech
+// Copyright (C) 2003-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -451,11 +451,6 @@ public abstract class SqlTypeUtil
         }
 
         switch (typeName.getOrdinal()) {
-        case SqlTypeName.Bit_ordinal:
-        case SqlTypeName.Varbit_ordinal:
-            // 8 bits per byte
-            return (type.getPrecision() + 7) / 8;
-
         case SqlTypeName.Char_ordinal:
         case SqlTypeName.Varchar_ordinal:
             return (int) Math.ceil(
@@ -525,7 +520,7 @@ public abstract class SqlTypeUtil
      *
      * @param fromType type of the source value
      *
-     * @return true iff assignable 
+     * @return true iff assignable
      */
     public static boolean canAssignFrom(
         RelDataType toType,
@@ -723,7 +718,7 @@ public abstract class SqlTypeUtil
 
         // REVIEW jvs 28-Dec-2004:  discriminate between precision/scale
         // zero and unspecified?
-        
+
         if (typeName.allowsScale()) {
             return new SqlDataTypeSpec(
                 typeIdentifier,

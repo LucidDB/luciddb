@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of database components.
-// Copyright (C) 2002-2004 Disruptive Tech
-// Copyright (C) 2003-2004 John V. Sichi
+// Copyright (C) 2002-2005 Disruptive Tech
+// Copyright (C) 2003-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -31,6 +31,7 @@ import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.util.SqlBasicVisitor;
 import org.eigenbase.util.EnumeratedValues;
 import org.eigenbase.util.Util;
+import org.eigenbase.util.BitString;
 import org.eigenbase.trace.EigenbaseTrace;
 import net.sf.farrago.util.FarragoException;
 
@@ -897,6 +898,7 @@ public class SqlValidator
 
         if (operand instanceof SqlLiteral) {
             SqlLiteral literal = (SqlLiteral) operand;
+            validateLiteral(literal);
             return literal.createSqlType(typeFactory);
         }
 
@@ -1728,7 +1730,17 @@ public class SqlValidator
      */
     public void validateLiteral(SqlLiteral literal)
     {
-        // default is to do nothing
+        switch (literal.getTypeName().getOrdinal()) {
+        case SqlTypeName.Binary_ordinal:
+            final BitString bitString = (BitString) literal.getValue();
+            if (bitString.getBitCount() % 8 != 0) {
+                throw newValidationError(literal,
+                    EigenbaseResource.instance().newBinaryLiteralOdd());
+            }
+            break;
+        default:
+            // default is to do nothing
+        }
     }
 
     /**

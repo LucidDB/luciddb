@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of database components.
-// Copyright (C) 2004-2004 Disruptive Tech
-// Copyright (C) 2004-2004 John V. Sichi.
+// Copyright (C) 2004-2005 Disruptive Tech
+// Copyright (C) 2004-2005 John V. Sichi.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -43,7 +43,7 @@ public class SqlTypeExplicitPrecedenceList implements RelDataTypePrecedenceList
 
     private final List typeNames;
 
-    static 
+    static
     {
         // NOTE jvs 25-Jan-2005:  the null entries delimit equivalence
         // classes
@@ -52,11 +52,11 @@ public class SqlTypeExplicitPrecedenceList implements RelDataTypePrecedenceList
                 SqlTypeName.Tinyint,
                 null,
                 SqlTypeName.Smallint,
-                null, 
+                null,
                 SqlTypeName.Integer,
-                null, 
+                null,
                 SqlTypeName.Bigint,
-                null, 
+                null,
                 SqlTypeName.Decimal,
                 null,
                 SqlTypeName.Real,
@@ -93,37 +93,31 @@ public class SqlTypeExplicitPrecedenceList implements RelDataTypePrecedenceList
             SqlTypeName.Double,
             numericList);
         addList(
-            SqlTypeName.Bit, 
-            new SqlTypeName [] { SqlTypeName.Bit, SqlTypeName.Varbit });
-        addList(
-            SqlTypeName.Varbit, 
-            new SqlTypeName [] { SqlTypeName.Varbit });
-        addList(
-            SqlTypeName.Char, 
+            SqlTypeName.Char,
             new SqlTypeName [] { SqlTypeName.Char, SqlTypeName.Varchar });
         addList(
-            SqlTypeName.Varchar, 
+            SqlTypeName.Varchar,
             new SqlTypeName [] { SqlTypeName.Varchar });
         addList(
-            SqlTypeName.Binary, 
+            SqlTypeName.Binary,
             new SqlTypeName [] { SqlTypeName.Binary, SqlTypeName.Varbinary });
         addList(
-            SqlTypeName.Varbinary, 
+            SqlTypeName.Varbinary,
             new SqlTypeName [] { SqlTypeName.Varbinary });
         addList(
-            SqlTypeName.Date, 
+            SqlTypeName.Date,
             new SqlTypeName [] { SqlTypeName.Date });
         addList(
-            SqlTypeName.Time, 
+            SqlTypeName.Time,
             new SqlTypeName [] { SqlTypeName.Time });
         addList(
-            SqlTypeName.Timestamp, 
+            SqlTypeName.Timestamp,
             new SqlTypeName [] { SqlTypeName.Timestamp });
         addList(
-            SqlTypeName.IntervalYearMonth, 
+            SqlTypeName.IntervalYearMonth,
             new SqlTypeName [] { SqlTypeName.IntervalYearMonth });
         addList(
-            SqlTypeName.IntervalDayTime, 
+            SqlTypeName.IntervalDayTime,
             new SqlTypeName [] { SqlTypeName.IntervalDayTime });
     }
 
@@ -144,7 +138,7 @@ public class SqlTypeExplicitPrecedenceList implements RelDataTypePrecedenceList
                 SqlTypeName.EMPTY_ARRAY);
         addList(typeName, array);
     }
-    
+
     public SqlTypeExplicitPrecedenceList(SqlTypeName [] typeNames)
     {
         this.typeNames = Arrays.asList(typeNames);
@@ -159,13 +153,13 @@ public class SqlTypeExplicitPrecedenceList implements RelDataTypePrecedenceList
         }
         return typeNames.contains(typeName);
     }
-    
+
     // implement RelDataTypePrecedenceList
     public int compareTypePrecedence(RelDataType type1, RelDataType type2)
     {
         assert(containsType(type1));
         assert(containsType(type2));
-        
+
         int p1 = getListPosition(type1.getSqlTypeName(), typeNames);
         int p2 = getListPosition(type2.getSqlTypeName(), typeNames);
         return p2 - p1;

@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of database components.
-// Copyright (C) 2002-2004 Disruptive Tech
-// Copyright (C) 2003-2004 John V. Sichi
+// Copyright (C) 2002-2005 Disruptive Tech
+// Copyright (C) 2003-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -1247,20 +1247,12 @@ public class SqlToRelConverter
             return rexBuilder.makeLiteral(((Boolean) value).booleanValue());
         case SqlTypeName.Binary_ordinal:
             bitString = (BitString) value;
-            if ((bitString.getBitCount() % 8) == 0) {
-                // An even number of hexits (e.g. X'ABCD') makes whole number
-                // of bytes.
-                byte [] bytes = bitString.getAsByteArray();
-                return rexBuilder.makeBinaryLiteral(bytes);
-            } else {
-                // An odd number of hexits (e.g. X'ABC') leaves an unfinished
-                // byte, so the whole thing is treated as a bit string.
-                // (Yes, this is really what the standard asks for.)
-                return rexBuilder.makeBitLiteral(bitString);
-            }
-        case SqlTypeName.Bit_ordinal:
-            bitString = (BitString) value;
-            return rexBuilder.makeBitLiteral(bitString);
+            Util.permAssert((bitString.getBitCount() % 8) == 0,
+                "incomplete octet");
+            // An even number of hexits (e.g. X'ABCD') makes whole number
+            // of bytes.
+            byte [] bytes = bitString.getAsByteArray();
+            return rexBuilder.makeBinaryLiteral(bytes);
         case SqlTypeName.Symbol_ordinal:
             return rexBuilder.makeSymbolLiteral((SqlSymbol) value);
         case SqlTypeName.Timestamp_ordinal:

@@ -406,7 +406,6 @@ public class ReturnTypeInferenceImpl
                 switch (typeToTransform.getSqlTypeName().ordinal) {
                 case SqlTypeName.Varchar_ordinal:
                 case SqlTypeName.Varbinary_ordinal:
-                case SqlTypeName.Varbit_ordinal:
                     return typeToTransform;
                 }
 
@@ -435,8 +434,6 @@ public class ReturnTypeInferenceImpl
                     return SqlTypeName.Varchar;
                 case SqlTypeName.Binary_ordinal:
                     return SqlTypeName.Varbinary;
-                case SqlTypeName.Bit_ordinal:
-                    return SqlTypeName.Varbit;
                 default:
                     throw sqlTypeName.unexpected();
                 }
@@ -576,7 +573,7 @@ public class ReturnTypeInferenceImpl
 
     /**
      * Type-inference strategy whereby the result type of a call is using its
-     * operands biggest type, using the SQL:1999 rules described in 
+     * operands biggest type, using the SQL:1999 rules described in
      * "Data types of results of aggregations".
      * These rules are used in union, except, intercept, case and other places.
      *

@@ -70,9 +70,6 @@ select cast(1 as varbinary(1))+x'ff' from values(1);
 select x'ff'=x'ff' from values(1);
 select x'f'=x'f' from values(1);
 --select x'ff'=cast(255 as varbinary(1)) from values(1);
-select b'1010'=X'A' from values(1);
--- not equal
---select b'01010'<>b'1010' from values(1);
 
 
 --select * from sales.emps group by empno order by 1;
