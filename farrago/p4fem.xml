@@ -9,5 +9,6 @@
     <p4edit view="//open/fennel/farrago/NativeMethods.h"/>
     <p4edit view="//open/fennel/farrago/FemGeneratedClasses.h"/>
     <p4edit view="//open/fennel/farrago/FemGeneratedMethods.h"/>
+    <p4edit view="//open/fennel/common/FemGeneratedEnums.h"/>
   </target>
 </project>

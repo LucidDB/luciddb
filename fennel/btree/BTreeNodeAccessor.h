@@ -25,7 +25,6 @@
 #include "fennel/tuple/TupleAccessor.h"
 #include "fennel/tuple/TupleData.h"
 #include "fennel/btree/BTreeNode.h"
-#include "fennel/common/Distinctness.h"
 
 FENNEL_BEGIN_NAMESPACE
 

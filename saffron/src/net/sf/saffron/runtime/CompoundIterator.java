@@ -42,13 +42,15 @@ public class CompoundIterator implements Iterator
     {
         this.iterators = iterators;
         this.i = 0;
-        nextIterator();
     }
 
     //~ Methods ---------------------------------------------------------------
 
     public boolean hasNext()
     {
+        if (iterator == null) {
+            nextIterator();
+        }
         return iterator.hasNext();
     }
 

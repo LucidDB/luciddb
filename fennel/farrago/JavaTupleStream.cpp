@@ -33,7 +33,7 @@ void JavaTupleStream::prepare(JavaTupleStreamParams const &params)
 {
     TupleStream::prepare(params);
     assert(!pGraph->getInputCount(getStreamId()));
-    pStreamHandle = params.pStreamHandle;
+    pStreamGraphHandle = params.pStreamGraphHandle;
     javaTupleStreamId = params.javaTupleStreamId;
     outputTupleDesc = params.tupleDesc;
     scratchAccessor = params.scratchAccessor;
@@ -57,7 +57,7 @@ void JavaTupleStream::open(bool restart)
     bufferLock.allocatePage();
     JniEnvAutoRef pEnv;
     jlong hJavaTupleStream = pEnv->CallLongMethod(
-        pStreamHandle->javaRuntimeContext,JniUtil::methGetJavaStreamHandle,
+        pStreamGraphHandle->javaRuntimeContext,JniUtil::methGetJavaStreamHandle,
         javaTupleStreamId);
     javaTupleStream = CmdInterpreter::getObjectFromHandle(hJavaTupleStream);
     assert(javaTupleStream);

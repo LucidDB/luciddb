@@ -23,7 +23,6 @@
 
 #include "fennel/farrago/Fem.h"
 #include "fennel/common/ClosableObject.h"
-#include "fennel/common/Distinctness.h"
 #include "fennel/xo/ExecutionStream.h"
 #include "fennel/farrago/CmdInterpreter.h"
 
@@ -137,9 +136,9 @@ class ExecutionStreamFactory : public boost::noncopyable, public FemVisitor
     SharedTableWriterFactory pTableWriterFactory;
 
     /**
-     * Handle to the stream being built.
+     * Handle to the stream graph being built.
      */
-    CmdInterpreter::StreamHandle *pStreamHandle;
+    CmdInterpreter::StreamGraphHandle *pStreamGraphHandle;
 
     /**
      * Accessor for ScratchSegment available to all streams.
@@ -186,8 +185,6 @@ class ExecutionStreamFactory : public boost::noncopyable, public FemVisitor
         TableWriterStreamParams &,
         ProxyTableWriterDef &);
 
-    static Distinctness parseDistinctness(std::string s);
-
     /**
      * Decide whether cache quotas should actually be enforced.  By default
      * they are only for a DEBUG build, but this can be overridden by setting
@@ -199,7 +196,7 @@ public:
     ExecutionStreamFactory(
         SharedDatabase pDatabase,
         SharedTableWriterFactory pTableWriterFactory,
-        CmdInterpreter::StreamHandle *pStreamHandle);
+        CmdInterpreter::StreamGraphHandle *pStreamGraphHandle);
 
     void setScratchAccessor(SegmentAccessor &scratchAccessor);
 

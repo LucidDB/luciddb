@@ -149,6 +149,8 @@ public class FarragoPreparingStmt extends OJStatement
 
     private FarragoPlanner planner;
 
+    private FarragoRelImplementor relImplementor;
+
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -212,7 +214,7 @@ public class FarragoPreparingStmt extends OJStatement
             });
         planner = new FarragoPlanner(this);
         planner.init();
-        
+
         // FIXME:  should be beginTrans(false) for read-only, but that prevents
         // creation of transient objects for communication with Fennel
         catalog.getRepository().beginTrans(true);
@@ -300,6 +302,18 @@ public class FarragoPreparingStmt extends OJStatement
             }
 
             SaffronType dynamicParamRowType = getParamRowType();
+
+            String xmiFennelPlan = null;
+            Set streamDefSet = relImplementor.getStreamDefSet();
+            if (!streamDefSet.isEmpty()) {
+                FemCmdPrepareExecutionStreamGraph cmdPrepareStream =
+                    catalog.newFemCmdPrepareExecutionStreamGraph();
+                Collection streamDefs = cmdPrepareStream.getStreamDefs();
+                streamDefs.addAll(streamDefSet);
+                xmiFennelPlan = 
+                    JmiUtil.exportToXmiString(
+                        Collections.singleton(cmdPrepareStream));
+            }
                 
             executableStmt = new FarragoExecutableJavaStmt(
                 packageDir,
@@ -307,6 +321,7 @@ public class FarragoPreparingStmt extends OJStatement
                 rowType,
                 dynamicParamRowType,
                 preparedExecution.getMethod(),
+                xmiFennelPlan,
                 preparedResult.isDml());
         } else {
             assert(preparedResult instanceof PreparedExplanation);
@@ -429,7 +444,10 @@ public class FarragoPreparingStmt extends OJStatement
 
     protected RelImplementor getRelImplementor(RexBuilder rexBuilder)
     {
-        return new FarragoRelImplementor(this,rexBuilder);
+        if (relImplementor == null) {
+            relImplementor = new FarragoRelImplementor(this,rexBuilder);
+        }
+        return relImplementor;
     }
 
     /**

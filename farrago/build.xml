@@ -952,6 +952,7 @@ require version '${required.ant.version}'."/>
       classpathref="farrago.run.classpath">
       <arg value="${fennel.dir}/farrago/FemGeneratedClasses.h"/>
       <arg value="${fennel.dir}/farrago/FemGeneratedMethods.h"/>
+      <arg value="${fennel.dir}/common/FemGeneratedEnums.h"/>
       <arg value="FEM.Fennel"/>
       <arg value="Fem"/>
     </javaExec>

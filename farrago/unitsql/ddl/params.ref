@@ -1,0 +1,29 @@
+0: jdbc:farrago:> -- $Id: //open/farrago/unitsql/ddl/schema.sql#5 $
+0: jdbc:farrago:> -- Test system parameters
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should work
+0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  bad enum value
+0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'turing';
+Error: Type mismatch in value 'turing' for system parameter calcVirtualMachine (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should work
+0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  immutable
+0: jdbc:farrago:> alter system set "fennelDisabled" = true;
+Error: Cannot change immutable system parameter fennelDisabled (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should work
+0: jdbc:farrago:> alter system set "cachePagesMax" = 1001;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  type mismatch
+0: jdbc:farrago:> alter system set "cachePagesMax" = 'a bunch';
+Error: Type mismatch in value 'a bunch' for system parameter cachePagesMax (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  unknown parameter
+0: jdbc:farrago:> alter system set "charlie" = 'horse';
+Error: Reference to unknown system parameter charlie (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !quit

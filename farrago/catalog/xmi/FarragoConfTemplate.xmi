@@ -16,6 +16,7 @@
       checkpointInterval='300'
       serverRmiRegistryPort='5433'
       serverSingleListenerPort='-1'
+      calcVirtualMachine='CALCVM_JAVA'
       >
       <FEMConfig:FarragoConfig.fennelConfig>
         <FEMConfig:FennelConfig

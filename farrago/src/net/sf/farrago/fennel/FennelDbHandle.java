@@ -113,8 +113,7 @@ public class FennelDbHandle implements FarragoAllocation
             Iterator endIter = assoc.getContents().iterator();
             while (endIter.hasNext()) {
                 AssociationEnd assocEnd = (AssociationEnd) endIter.next();
-                String typeName = assocEnd.getType().getName();
-                if (typeName.endsWith("Handle")) {
+                if (assocEnd.getName().endsWith("Handle")) {
                     handleAssociations.add(refAssoc);
                     handleAssociations.add(assocEnd.otherEnd());
                     break;

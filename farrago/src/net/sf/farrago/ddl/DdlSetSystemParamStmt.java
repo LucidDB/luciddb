@@ -94,18 +94,35 @@ public class DdlSetSystemParamStmt extends DdlStmt
             }
         }
 
-        Object newValue = paramValue.getValue();
-        
+        Object newValue;
+        String newValueAsString;
+        // REVIEW jvs 29-April-2004:  ugh, SqlLiteral needs a cleanup!
+        if (paramValue.getValue() instanceof SqlLiteral.StringLiteral) {
+            newValueAsString =
+                ((SqlLiteral.StringLiteral) paramValue.getValue()).getValue();
+        } else {
+            newValueAsString = paramValue.getValue().toString();
+        }
+
         // TODO:  use a generic type conversion facility.  Also, this assumes
         // parameters are never optional.
         try {
-            Constructor constructor = oldValue.getClass().getConstructor(
-                new Class [] { String.class });
-            newValue = constructor.newInstance(
-                new Object [] { newValue.toString() });
+            if (oldValue instanceof RefEnum) {
+                Method method = oldValue.getClass().getMethod(
+                    "forName",
+                    new Class [] { String.class});
+                newValue = method.invoke(
+                    null,
+                    new Object [] { newValueAsString });
+            } else {
+                Constructor constructor = oldValue.getClass().getConstructor(
+                    new Class [] { String.class });
+                newValue = constructor.newInstance(
+                    new Object [] { newValueAsString });
+            }
         } catch (Exception ex) {
             throw FarragoResource.instance().newValidatorSysParamTypeMismatch(
-                paramValue.toString(),paramName);
+                paramValue.toString(),paramName,ex);
         }
         
         try {

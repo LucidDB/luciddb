@@ -33,6 +33,7 @@ jmethodID JniUtil::methIterator = 0;
 jmethodID JniUtil::methFillBuffer = 0;
 jmethodID JniUtil::methGetJavaStreamHandle = 0;
 jmethodID JniUtil::methGetIndexRoot = 0;
+jmethodID JniUtil::methToString = 0;
 
 AtomicCounter JniUtil::handleCount;
 
@@ -41,6 +42,7 @@ jint JniUtil::init(JavaVM *pVmInit)
     pVm = pVmInit;
     JniEnvAutoRef pEnv;
     jclass classClass = pEnv->FindClass("java/lang/Class");
+    jclass classObject = pEnv->FindClass("java/lang/Object");
     jclass classCollection = pEnv->FindClass("java/util/Collection");
     jclass classIterator = pEnv->FindClass("java/util/Iterator");
     jclass classJavaTupleStream = pEnv->FindClass(
@@ -63,6 +65,8 @@ jint JniUtil::init(JavaVM *pVmInit)
     methGetIndexRoot = pEnv->GetMethodID(
         classFennelJavaStreamMap,"getIndexRoot",
         "(J)J");
+    methToString = pEnv->GetMethodID(
+        classObject,"toString","()Ljava/lang/String;");
     return jniVersion;
 }
 
@@ -92,6 +96,22 @@ std::string JniUtil::toStdString(JniEnvRef pEnv,jstring jString)
     std::string str(pChars,pEnv->GetStringUTFLength(jString));
     pEnv->ReleaseStringUTFChars(jString,pChars);
     return str;
+}
+
+jstring JniUtil::toString(JniEnvRef pEnv,jobject jObject)
+{
+    return reinterpret_cast<jstring>(
+        pEnv->CallObjectMethod(jObject,methToString));
+}
+
+uint JniUtil::lookUpEnum(std::string *pSymbols,std::string const &symbol)
+{
+    for (uint i = 0; ; ++i) {
+        assert(pSymbols[i].size());
+        if (pSymbols[i] == symbol) {
+            return i;
+        }
+    }
 }
 
 jobject JniUtil::getIter(JniEnvRef pEnv,jobject jCollection)

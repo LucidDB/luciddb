@@ -23,6 +23,7 @@
 
 #include "fennel/btree/BTreeReader.h"
 #include "fennel/txn/LogicalTxnParticipant.h"
+#include "fennel/common/FemEnums.h"
 
 #include <boost/scoped_array.hpp>
 

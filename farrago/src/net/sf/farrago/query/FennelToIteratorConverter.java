@@ -105,38 +105,23 @@ public class FennelToIteratorConverter extends ConverterRel
         if (!catalog.isFennelEnabled()) {
             // use dummies to insert a reference to our row class, just so
             // that it will get generated
+            ExpressionList argList = new ExpressionList();
+            argList.add(Literal.constantNull());
+            argList.add(Literal.constantNull());
+            argList.add(
+                new AllocationExpression(rowClass,new ExpressionList()));
             return new MethodCall(
                 fennelRel.getPreparingStmt().getConnectionVariable(),
                 "newFennelIterator",
-                new ExpressionList(
-                    Literal.constantNull(),
-                    Literal.constantNull(),
-                    new AllocationExpression(rowClass,new ExpressionList())));
+                argList);
         }
-
-        FemCmdPrepareExecutionStreamGraph cmdPrepareStream =
-            catalog.newFemCmdPrepareExecutionStreamGraph();
-
-        // NOTE: serialize string with NULL stream handle since
-        // we're not actually executing preparation yet
-        cmdPrepareStream.setStreamHandle(null);
 
         FarragoRelImplementor farragoRelImplementor =
             (FarragoRelImplementor) implementor;
-        farragoRelImplementor.pushStreamDefSet();
         FemExecutionStreamDef rootStream =
             farragoRelImplementor.implementFennelRel(child);
-        Set streamDefSet = farragoRelImplementor.popStreamDefSet();
+        String rootStreamName = rootStream.getName();
 
-        // TODO jvs 12-Feb-2004:  This is temporary.  For now,
-        // Fennel requires the sink stream to come first.  Soon,
-        // it should be changed to take the streams in any order
-        // (and cease requiring a unique sink).
-        Collection streamDefs = cmdPrepareStream.getStreamDefs();
-        streamDefSet.remove(rootStream);
-        streamDefs.add(rootStream);
-        streamDefs.addAll(streamDefSet);
-        
         FemTupleDescriptor tupleDesc =
             FennelRelUtil.createTupleDescriptorFromRowType(catalog,rowType);
         FemTupleAccessor tupleAccessor =
@@ -145,13 +130,9 @@ public class FennelToIteratorConverter extends ConverterRel
                 fennelRel.getPreparingStmt().getFennelDbHandle(),
                 tupleDesc);
 
-        String xmiString =
-            JmiUtil.exportToXmiString(Collections.singleton(cmdPrepareStream));
-
         // Generate
         //   connection.newFennelIterator(
         //       new FennelTupleReader(){...},
-        //       "<XMI>...</XMI>",
         //       << childrens' code >>);
         // The first ... requires some explanation.  Using the information
         // returned by tupleStreamDescribe, we're going to generate code to
@@ -388,13 +369,14 @@ public class FennelToIteratorConverter extends ConverterRel
         // and pass this to FarragoRuntimeContext.newFennelIterator to produce a
         // FennelIterator, which will invoke our generated FennelTupleReader to
         // unmarshal
+        ExpressionList argList = new ExpressionList();
+        argList.add(newTupleReaderExp);
+        argList.add(Literal.makeLiteral(rootStreamName));
+        argList.add(childrenExp);
         return new MethodCall(
             fennelRel.getPreparingStmt().getConnectionVariable(),
             "newFennelIterator",
-            new ExpressionList(
-                newTupleReaderExp,
-                Literal.makeLiteral(xmiString),
-                childrenExp));
+            argList);
     }
 }
 

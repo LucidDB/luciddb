@@ -49,9 +49,7 @@ public class FarragoRelImplementor extends RelImplementor
     OJClass ojBytePointer;
     OJClass ojNullablePrimitive;
 
-    // TODO jvs 12-Feb-2004:  get rid of stack once we're capable of building
-    // up an entire disconnected graph
-    private List streamDefSetStack;
+    private Set streamDefSet;
     
     public FarragoRelImplementor(
         FarragoPreparingStmt preparingStmt,
@@ -64,24 +62,7 @@ public class FarragoRelImplementor extends RelImplementor
         ojBytePointer = OJClass.forClass(BytePointer.class);
         ojNullablePrimitive = OJClass.forClass(NullablePrimitive.class);
 
-        streamDefSetStack = new ArrayList();
-    }
-
-    void pushStreamDefSet()
-    {
-        streamDefSetStack.add(new HashSet());
-    }
-
-    Set popStreamDefSet()
-    {
-        return (Set)
-            (streamDefSetStack.remove(streamDefSetStack.size() - 1));
-    }
-
-    private Set getStreamDefSet()
-    {
-        return (Set)
-            streamDefSetStack.get(streamDefSetStack.size() - 1);
+        streamDefSet = new HashSet();
     }
 
     public FemExecutionStreamDef implementFennelRel(SaffronRel rel)
@@ -92,6 +73,11 @@ public class FarragoRelImplementor extends RelImplementor
         return streamDef;
     }
 
+    public Set getStreamDefSet()
+    {
+        return streamDefSet;
+    }
+
     private void registerStreamDef(
         FemExecutionStreamDef streamDef,
         SaffronRel rel)
@@ -100,23 +86,20 @@ public class FarragoRelImplementor extends RelImplementor
             // already registered
             return;
         }
+        String streamName;
         if (rel != null) {
-            // TODO jvs 27-April-2004:  need a UUID suffix for these names,
-            // since global query optimization could cause private
-            // plans to get merged (possibly spanning multiple nodes)
-            
             // correlate stream name with rel which produced it
-            streamDef.setName(rel.getRelTypeName() + "#" + rel.getId());
+            streamName =
+                rel.getRelTypeName() + "#" + rel.getId();
         } else {
-            // TODO jvs 12-Feb-2004:  need a better UUID for
-            // anonymous stream names too
-            
             // anonymous stream
-            streamDef.setName(
-                ReflectUtil.getUnqualifiedClassName(streamDef.getClass())
-                + "#" + System.identityHashCode(streamDef));
+            streamName = 
+                ReflectUtil.getUnqualifiedClassName(streamDef.getClass());
         }
-        getStreamDefSet().add(streamDef);
+        // make sure stream names are globally unique
+        streamName = streamName + ":" + JmiUtil.getObjectId(streamDef);
+        streamDef.setName(streamName);
+        streamDefSet.add(streamDef);
 
         // recursively ensure all inputs have also been registered
         Iterator iter = streamDef.getInput().iterator();

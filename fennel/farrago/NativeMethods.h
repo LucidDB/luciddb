@@ -57,10 +57,10 @@ JNIEXPORT jlong JNICALL Java_net_sf_farrago_fennel_FennelStorage_executeJavaCmd
 
 /*
  * Class:     net_sf_farrago_fennel_FennelStorage
- * Method:    tupleStreamOpen
- * Signature: (Lnet/sf/farrago/fem/fennel/FemStreamHandle;Lnet/sf/farrago/fem/fennel/FemTxnHandle;Lnet/sf/farrago/fennel/FennelJavaStreamMap;)V
+ * Method:    tupleStreamGraphOpen
+ * Signature: (Lnet/sf/farrago/fem/fennel/FemStreamGraphHandle;Lnet/sf/farrago/fem/fennel/FemTxnHandle;Lnet/sf/farrago/fennel/FennelJavaStreamMap;)V
  */
-JNIEXPORT void JNICALL Java_net_sf_farrago_fennel_FennelStorage_tupleStreamOpen
+JNIEXPORT void JNICALL Java_net_sf_farrago_fennel_FennelStorage_tupleStreamGraphOpen
   (JNIEnv *, jclass, jobject, jobject, jobject);
 
 /*
@@ -73,10 +73,10 @@ JNIEXPORT jint JNICALL Java_net_sf_farrago_fennel_FennelStorage_tupleStreamFetch
 
 /*
  * Class:     net_sf_farrago_fennel_FennelStorage
- * Method:    tupleStreamClose
- * Signature: (Lnet/sf/farrago/fem/fennel/FemStreamHandle;Z)V
+ * Method:    tupleStreamGraphClose
+ * Signature: (Lnet/sf/farrago/fem/fennel/FemStreamGraphHandle;Z)V
  */
-JNIEXPORT void JNICALL Java_net_sf_farrago_fennel_FennelStorage_tupleStreamClose
+JNIEXPORT void JNICALL Java_net_sf_farrago_fennel_FennelStorage_tupleStreamGraphClose
   (JNIEnv *, jclass, jobject, jboolean);
 
 #ifdef __cplusplus

@@ -21,6 +21,7 @@ package net.sf.farrago.query;
 
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.type.*;
+import net.sf.farrago.util.*;
 
 import net.sf.saffron.util.*;
 import net.sf.saffron.core.*;
@@ -57,12 +58,15 @@ class FarragoExecutableJavaStmt extends FarragoExecutableStmtImpl
 
     private final Method method;
 
+    private final String xmiFennelPlan;
+
     FarragoExecutableJavaStmt(
         File packageDir,
         Class rowClass,
         SaffronType preparedRowType,
         SaffronType dynamicParamRowType,
         Method method,
+        String xmiFennelPlan,
         boolean isDml)
     {
         super(dynamicParamRowType,isDml);
@@ -70,6 +74,7 @@ class FarragoExecutableJavaStmt extends FarragoExecutableStmtImpl
         this.packageDir = packageDir;
         this.rowClass = rowClass;
         this.method = method;
+        this.xmiFennelPlan = xmiFennelPlan;
 
         rowType = forgetTypeFactory(preparedRowType);
     }
@@ -85,6 +90,19 @@ class FarragoExecutableJavaStmt extends FarragoExecutableStmtImpl
         FarragoRuntimeContext runtimeContext)
     {
         try {
+            if (xmiFennelPlan != null) {
+                runtimeContext.loadFennelPlan(xmiFennelPlan);
+            }
+
+            // NOTE jvs 1-May-2004: This sequence is subtle.  We can't open all
+            // Fennel tuple streams yet, since some may take Java streams as
+            // input, and the Java streams are created by method.invoke below
+            // (which calls the generated execute method to obtain an
+            // iterator).  This means that the generated execute must NOT try
+            // to prefetch any data, since the Fennel streams aren't open yet.
+            // This implies that Java iterator implementations must not
+            // do prefetch in the constructor (always wait for hasNext/next).
+            
             Iterator iter = (Iterator) method.invoke(
                 null,
                 new Object [] 
@@ -96,6 +114,12 @@ class FarragoExecutableJavaStmt extends FarragoExecutableStmtImpl
                 rowClass,
                 rowType,
                 runtimeContext);
+            
+            if (xmiFennelPlan != null) {
+                // Finally, it's safe to open Fennel streams.
+                runtimeContext.openFennelStreams();
+            }
+            
             runtimeContext = null;
             return resultSet;
         } catch (IllegalAccessException e) {
@@ -127,6 +151,11 @@ class FarragoExecutableJavaStmt extends FarragoExecutableStmtImpl
             }
             nBytes += files[i].length();
         }
+
+        if (xmiFennelPlan != null) {
+            nBytes += FarragoUtil.getStringMemoryUsage(xmiFennelPlan);
+        }
+        
         return nBytes;
     }
 }

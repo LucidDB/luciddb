@@ -36,7 +36,7 @@ FENNEL_BEGIN_NAMESPACE
  */
 struct JavaTupleStreamParams : public TupleStreamParams
 {
-    CmdInterpreter::StreamHandle *pStreamHandle;
+    CmdInterpreter::StreamGraphHandle *pStreamGraphHandle;
     
     int javaTupleStreamId;
 
@@ -51,7 +51,7 @@ class JavaTupleStream : public TupleStream, private ByteInputStream
 {
     TupleDescriptor outputTupleDesc;
 
-    CmdInterpreter::StreamHandle *pStreamHandle;
+    CmdInterpreter::StreamGraphHandle *pStreamGraphHandle;
     
     int javaTupleStreamId;
     

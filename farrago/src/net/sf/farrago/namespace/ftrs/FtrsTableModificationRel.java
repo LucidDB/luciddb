@@ -252,8 +252,9 @@ class FtrsTableModificationRel extends TableModificationRel
             indexWriter.setUpdateInPlace(updateInPlace);
 
             indexWriter.setDistinctness(
-                index.isUnique() ? DistinctnessEnum.DUP_FAIL.toString()
-                                 : DistinctnessEnum.DUP_ALLOW.toString());
+                index.isUnique()
+                ? DistinctnessEnum.DUP_FAIL
+                : DistinctnessEnum.DUP_ALLOW);
             if (index != clusteredIndex) {
                 indexWriter.setInputProj(
                     FtrsUtil.getCoverageProjection(catalog,index));

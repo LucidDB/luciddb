@@ -97,5 +97,19 @@ CwmModelElement SchemaObjectDefinition(CwmSchema schema) :
 }
 
 
+CwmModelElement NamedColumnSetDrop():
+{
+    CwmModelElement modelElement;
+}
+{
+	(
+	    modelElement = TableDrop()
+        |
+		modelElement = ForeignTableDrop()		
+	)
+		{
+			return modelElement;
+		}
+}
 
 // End DdlParser.jj

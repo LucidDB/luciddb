@@ -163,25 +163,25 @@ public class FennelTxnContext
 
     /**
      * Wrapper for executeCmd in the case where cmd is a
-     * FemCmdCreateTupleStream.  This ensures that some object owns the
-     * returned tuple stream.
+     * FemCmdCreateExecutionStreamGraph.  This ensures that some object owns
+     * the returned stream graph.
      *
-     * @param owner the object which will be made responsible for the stream's
-     * allocation as a result of this call
+     * @param owner the object which will be made responsible for the stream
+     * graph's allocation as a result of this call
      *
-     * @return opened FennelStreamHandle
+     * @return opened FennelStreamGraph
      */
-    public FennelStreamHandle newTupleStream(
+    public FennelStreamGraph newStreamGraph(
         FarragoAllocationOwner owner)
     {
         FemCmdCreateExecutionStreamGraph cmdCreate =
             metadataFactory.newFemCmdCreateExecutionStreamGraph();
         cmdCreate.setTxnHandle(getTxnHandle());
         fennelDbHandle.executeCmd(cmdCreate);
-        FennelStreamHandle hStream =
-            new FennelStreamHandle(fennelDbHandle,cmdCreate.getResultHandle());
-        owner.addAllocation(hStream);
-        return hStream;
+        FennelStreamGraph streamGraph =
+            new FennelStreamGraph(fennelDbHandle,cmdCreate.getResultHandle());
+        owner.addAllocation(streamGraph);
+        return streamGraph;
     }
 }
 

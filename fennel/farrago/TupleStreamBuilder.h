@@ -23,7 +23,6 @@
 
 #include "fennel/farrago/Fem.h"
 #include "fennel/common/ClosableObject.h"
-#include "fennel/common/Distinctness.h"
 #include "fennel/xo/TupleStream.h"
 #include "fennel/farrago/CmdInterpreter.h"
 #include "fennel/farrago/ExecutionStreamFactory.h"
@@ -172,8 +171,6 @@ public:
      * @param pTableWriterFactory factory for creating TableWriters
      *
      * @param pGraph graph to be built up with stream implementations
-     *
-     * @param pStreamHandle handle to the stream being built
      */
     explicit TupleStreamBuilder(
         SharedDatabase pDatabase,

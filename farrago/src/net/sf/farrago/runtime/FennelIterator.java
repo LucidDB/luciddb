@@ -41,7 +41,8 @@ public class FennelIterator implements Iterator
     //~ Instance fields -------------------------------------------------------
 
     private ByteBuffer byteBuffer;
-    private FennelStreamHandle hStream;
+    private FennelStreamGraph streamGraph;
+    private FemStreamHandle streamHandle;
     private FennelTupleReader tupleReader;
     private Object target;
     private byte [] bufferAsArray;
@@ -52,16 +53,19 @@ public class FennelIterator implements Iterator
      * Creates a new FennelIterator object.
      *
      * @param tupleReader FennelTupleReader to use to interpret Fennel data
-     * @param hStream handle to underlying Fennel TupleStream
+     * @param streamGraph underlying FennelStreamGraph
+     * @param streamHandle handle to underlying Fennel TupleStream
      * @param bufferSize number of bytes in buffer used for fetching from Fennel
      */
     public FennelIterator(
         FennelTupleReader tupleReader,
-        FennelStreamHandle hStream,
+        FennelStreamGraph streamGraph,
+        FemStreamHandle streamHandle,
         int bufferSize)
     {
         this.tupleReader = tupleReader;
-        this.hStream = hStream;
+        this.streamGraph = streamGraph;
+        this.streamHandle = streamHandle;
 
         bufferAsArray = new byte[bufferSize];
         byteBuffer = ByteBuffer.wrap(bufferAsArray);
@@ -82,8 +86,8 @@ public class FennelIterator implements Iterator
             return true;
         }
         byteBuffer.clear();
-        int cb = hStream.fetch(
-            bufferAsArray);
+        int cb = streamGraph.fetch(
+            streamHandle,bufferAsArray);
         if (cb == 0) {
             byteBuffer = null;
             bufferAsArray = null;

@@ -106,14 +106,14 @@ public class FennelStorage
     static native long executeJavaCmd(FemCmd cmd) throws SQLException;
 
     /**
-     * Open a tuple stream.
+     * Open a tuple stream graph.
      *
      * @param hStream handle to tuple stream
      * @param hTxn handle to txn in which stream is being reopened
      * @param javaStreamMap optional FennelJavaStreamMap
      */
-    static native void tupleStreamOpen(
-        FemStreamHandle hStream,
+    static native void tupleStreamGraphOpen(
+        FemStreamGraphHandle hStreamGraph,
         FemTxnHandle hTxn,
         FennelJavaStreamMap javaStreamMap) throws SQLException;
     
@@ -132,13 +132,13 @@ public class FennelStorage
         byte [] byteArray) throws SQLException;
     
     /**
-     * Close a tuple stream.
+     * Close a tuple stream graph.
      *
      * @param hStream handle to tuple stream
      * @param deallocate if true, close and deallocate; if false, just close
      */
-    static native void tupleStreamClose(
-        FemStreamHandle hStream,
+    static native void tupleStreamGraphClose(
+        FemStreamGraphHandle hStreamGraph,
         boolean deallocate) throws SQLException;
 }
 

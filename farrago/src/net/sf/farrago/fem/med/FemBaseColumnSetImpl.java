@@ -24,6 +24,10 @@ import net.sf.farrago.ddl.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.resource.*;
+import net.sf.farrago.type.FarragoTypeFactory;
+import net.sf.farrago.namespace.FarragoMedColumnSet;
+import net.sf.saffron.core.SaffronType;
+import net.sf.saffron.core.SaffronField;
 
 import org.netbeans.mdr.handlers.*;
 import org.netbeans.mdr.storagemodel.*;
@@ -54,16 +58,70 @@ public abstract class FemBaseColumnSetImpl extends InstanceHandler
     //~ Methods ---------------------------------------------------------------
 
     // implement DdlValidatedElement
-    public void validateDefinition(DdlValidator validator,boolean creation)
+    public void validateDefinition(DdlValidator validator, boolean creation) 
     {
-        // need to validate columns first
-        Iterator columnIter = getFeature().iterator();
-        while (columnIter.hasNext()) {
-            CwmColumnImpl column = (CwmColumnImpl) columnIter.next();
-            column.validateDefinitionImpl(validator);
+        if (getServer().getWrapper().isForeign()) {
+            // It is a foreign table
+            if (!creation) {
+                return;
+            }
+
+            FarragoCatalog catalog = validator.getCatalog();
+            FarragoTypeFactory typeFactory = validator.getTypeFactory();
+
+            FemDataServerImpl dataServer = (FemDataServerImpl) getServer();
+            FemDataWrapper dataWrapper = dataServer.getWrapper();
+            if (!dataWrapper.isForeign()) {
+                throw validator.res.newValidatorForeignTableButLocalWrapper(
+                        catalog.getLocalizedObjectName(this, null),
+                        catalog.getLocalizedObjectName(dataWrapper, null));
+            }
+
+            validator.validateUniqueNames(this, getFeature(), false);
+
+            if (!getFeature().isEmpty()) {
+                // columns were specified; we are to validate them
+                Iterator iter = getFeature().iterator();
+                while (iter.hasNext()) {
+                    FemStoredColumn column = (FemStoredColumn) iter.next();
+                    CwmColumnImpl.validateCommon(validator, column);
+                }
+            }
+
+            FarragoMedColumnSet columnSet =
+                    dataServer.validateColumnSet(validator, this);
+
+            List columnList = getFeature();
+            if (columnList.isEmpty()) {
+                // derive column information
+                SaffronType rowType = columnSet.getRowType();
+                int n = rowType.getFieldCount();
+                SaffronField[] fields = rowType.getFields();
+                for (int i = 0; i < n; ++i) {
+                    CwmColumn column = catalog.newFemStoredColumn();
+                    columnList.add(column);
+                    typeFactory.convertFieldToCwmColumn(fields[i], column);
+                    CwmColumnImpl.validateCommon(validator, column);
+                }
+            }
+
+        } else {
+            // Local table
+            // need to validate columns first
+            Iterator columnIter = getFeature().iterator();
+            while (columnIter.hasNext()) {
+                CwmColumnImpl column = (CwmColumnImpl) columnIter.next();
+                column.validateDefinitionImpl(validator);
+            }
+
         }
-        
     }
+
+    // implement DdlValidatedElement
+    public void validateDeletion(DdlValidator validator,boolean truncation)
+    {
+    }
+
 }
 // FemBaseColumnSetImp.java
 

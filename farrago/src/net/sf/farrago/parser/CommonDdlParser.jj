@@ -99,7 +99,8 @@ DdlStmt DdlStmtEof() :
           (
               modelElement = SchemaDrop()
               |
-              modelElement = TableDrop()
+              LOOKAHEAD(2)
+              modelElement = NamedColumnSetDrop()
               |
               modelElement = IndexDrop()
 			  |
@@ -109,8 +110,6 @@ DdlStmt DdlStmtEof() :
 			  modelElement = DataWrapperDrop()
 			  |
 			  modelElement = DataServerDrop()
-			  |
-			  modelElement = ForeignTableDrop()
           )
         {
             ddlStmt = new DdlDropStmt(modelElement,dropRestrict);

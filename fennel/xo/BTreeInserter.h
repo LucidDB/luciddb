@@ -25,7 +25,7 @@
 #include "fennel/xo/SingleInputTupleStream.h"
 #include "fennel/tuple/TupleData.h"
 #include "fennel/tuple/TupleAccessor.h"
-#include "fennel/common/Distinctness.h"
+#include "fennel/common/FemEnums.h"
 
 FENNEL_BEGIN_NAMESPACE
 

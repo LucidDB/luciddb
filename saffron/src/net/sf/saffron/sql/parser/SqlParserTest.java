@@ -1067,9 +1067,10 @@ public class SqlParserTest extends TestCase
         checkExp("TIMESTAMP '2004-12-01 12:01:01'", "2004-12-01 12:01:01.0");
 
         // Failures.
-        checkFails("DATE '12/21/99'", ".*\n.*Was expecting:\n.*<QUOTED_DATE_STRING>.*\n.*");
-        checkFails("TIME '1230:33'",".*\n.*Was expecting:\n.*<QUOTED_TIME_STRING>.*\n.*");
-        checkFails("TIMESTAMP '12-21-99, 12:30:00",".*\n.*Was expecting:\n.*<QUOTED_TIMESTAMP_STRING>.*\n.*");
+        checkFails("DATE '12/21/99'", ".*" + NL + ".*Was expecting:" + NL +
+                ".*<QUOTED_DATE_STRING>.*" + NL + ".*");
+        checkFails("TIME '1230:33'",".*" + NL + ".*Was expecting:" + NL + ".*<QUOTED_TIME_STRING>.*" + NL + ".*");
+        checkFails("TIMESTAMP '12-21-99, 12:30:00",".*" + NL + ".*Was expecting:" + NL + ".*<QUOTED_TIMESTAMP_STRING>.*" + NL + ".*");
 
 	}
     public void testTrim() {

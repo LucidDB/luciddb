@@ -59,10 +59,10 @@ CmdInterpreter::TxnHandle *CmdInterpreter::getTxnHandle(
     return reinterpret_cast<TxnHandle *>(pHandle->getLongHandle());
 }
 
-CmdInterpreter::StreamHandle *CmdInterpreter::getStreamHandle(
-    SharedProxyStreamHandle pHandle)
+CmdInterpreter::StreamGraphHandle *CmdInterpreter::getStreamGraphHandle(
+    SharedProxyStreamGraphHandle pHandle)
 {
-    return reinterpret_cast<StreamHandle *>(pHandle->getLongHandle());
+    return reinterpret_cast<StreamGraphHandle *>(pHandle->getLongHandle());
 }
 
 SavepointId CmdInterpreter::getSavepointId(SharedProxySvptHandle pHandle)
@@ -82,10 +82,16 @@ void CmdInterpreter::setTxnHandle(
     resultHandle = reinterpret_cast<int64_t>(pHandle);
 }
 
-void CmdInterpreter::setStreamHandle(
-    SharedProxyStreamHandle,StreamHandle *pHandle)
+void CmdInterpreter::setStreamGraphHandle(
+    SharedProxyStreamGraphHandle,StreamGraphHandle *pHandle)
 {
     resultHandle = reinterpret_cast<int64_t>(pHandle);
+}
+
+void CmdInterpreter::setStreamHandle(
+    SharedProxyStreamHandle,ExecutionStream *pStream)
+{
+    resultHandle = reinterpret_cast<int64_t>(pStream);
 }
 
 void CmdInterpreter::setSvptHandle(
@@ -94,12 +100,22 @@ void CmdInterpreter::setSvptHandle(
     resultHandle = opaqueToInt(svptId);
 }
 
-CmdInterpreter::StreamHandle &CmdInterpreter::getStreamHandleFromObj(
+CmdInterpreter::StreamGraphHandle &CmdInterpreter::getStreamGraphHandleFromObj(
+    JniEnvRef pEnv,jobject jHandle)
+{
+    ProxyStreamGraphHandle streamGraphHandle;
+    streamGraphHandle.init(pEnv,jHandle);
+    return *reinterpret_cast<StreamGraphHandle *>(
+        streamGraphHandle.getLongHandle());
+}
+
+ExecutionStream &CmdInterpreter::getStreamFromObj(
     JniEnvRef pEnv,jobject jHandle)
 {
     ProxyStreamHandle streamHandle;
     streamHandle.init(pEnv,jHandle);
-    return *reinterpret_cast<StreamHandle *>(streamHandle.getLongHandle());
+    return *reinterpret_cast<ExecutionStream *>(
+        streamHandle.getLongHandle());
 }
 
 CmdInterpreter::TxnHandle &CmdInterpreter::getTxnHandleFromObj(
@@ -319,30 +335,43 @@ void CmdInterpreter::visit(ProxyCmdCreateExecutionStreamGraph &cmd)
     SharedTupleStreamGraph pGraph =
         TupleStreamGraph::newTupleStreamGraph();
     pGraph->setTxn(pTxnHandle->pTxn);
-    StreamHandle *pStreamHandle = new StreamHandle();
+    StreamGraphHandle *pStreamGraphHandle = new StreamGraphHandle();
     ++JniUtil::handleCount;
-    pStreamHandle->pTxnHandle = pTxnHandle;
-    pStreamHandle->pTupleStreamGraph = pGraph;
-    setStreamHandle(cmd.getResultHandle(),pStreamHandle);
+    pStreamGraphHandle->pTxnHandle = pTxnHandle;
+    pStreamGraphHandle->pTupleStreamGraph = pGraph;
+    setStreamGraphHandle(cmd.getResultHandle(),pStreamGraphHandle);
 }
 
 void CmdInterpreter::visit(ProxyCmdPrepareExecutionStreamGraph &cmd)
 {
-    StreamHandle *pStreamHandle = getStreamHandle(cmd.getStreamHandle());
-    TxnHandle *pTxnHandle = pStreamHandle->pTxnHandle;
+    StreamGraphHandle *pStreamGraphHandle = getStreamGraphHandle(
+        cmd.getStreamGraphHandle());
+    TxnHandle *pTxnHandle = pStreamGraphHandle->pTxnHandle;
     // TODO: Perhaps stream factory should be singleton
     ExecutionStreamFactory streamFactory(
         pTxnHandle->pDb,
         pTxnHandle->pTableWriterFactory,
-        pStreamHandle);
+        pStreamGraphHandle);
     TupleStreamBuilder streamBuilder(
         pTxnHandle->pDb,
         streamFactory,
-        pStreamHandle->pTupleStreamGraph);
+        pStreamGraphHandle->pTupleStreamGraph);
     streamBuilder.buildStreamGraph(cmd);
 }
 
-PageId CmdInterpreter::StreamHandle::getRoot(PageOwnerId pageOwnerId)
+void CmdInterpreter::visit(ProxyCmdCreateStreamHandle &cmd)
+{
+    StreamGraphHandle *pStreamGraphHandle = getStreamGraphHandle(
+        cmd.getStreamGraphHandle());
+    SharedExecutionStream pStream =
+        pStreamGraphHandle->pTupleStreamGraph->findLastStream(
+            cmd.getStreamName());
+    setStreamHandle(
+        cmd.getResultHandle(),
+        pStream.get());
+}
+
+PageId CmdInterpreter::StreamGraphHandle::getRoot(PageOwnerId pageOwnerId)
 {
     JniEnvAutoRef pEnv;
     jlong x = opaqueToInt(pageOwnerId);

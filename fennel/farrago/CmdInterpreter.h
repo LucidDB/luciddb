@@ -70,7 +70,7 @@ public:
         SharedTableWriterFactory pTableWriterFactory;
     };
 
-    struct StreamHandle : public BTreeRootMap
+    struct StreamGraphHandle : public BTreeRootMap
     {
         TxnHandle *pTxnHandle;
         SharedTupleStreamGraph pTupleStreamGraph;
@@ -88,12 +88,14 @@ private:
 
     static DbHandle *getDbHandle(SharedProxyDbHandle);
     static TxnHandle *getTxnHandle(SharedProxyTxnHandle);
-    static StreamHandle *getStreamHandle(SharedProxyStreamHandle);
+    static StreamGraphHandle *getStreamGraphHandle(
+        SharedProxyStreamGraphHandle);
     static SavepointId getSavepointId(SharedProxySvptHandle);
 
     void setDbHandle(SharedProxyDbHandle,DbHandle *);
     void setTxnHandle(SharedProxyTxnHandle,TxnHandle *);
-    void setStreamHandle(SharedProxyStreamHandle,StreamHandle *);
+    void setStreamGraphHandle(SharedProxyStreamGraphHandle,StreamGraphHandle *);
+    void setStreamHandle(SharedProxyStreamHandle,ExecutionStream *);
     void setSvptHandle(
         SharedProxySvptHandle,SavepointId);
 
@@ -102,6 +104,7 @@ private:
     // Per-command overrides for FemVisitor; add new commands here
     virtual void visit(ProxyCmdCreateExecutionStreamGraph &);
     virtual void visit(ProxyCmdPrepareExecutionStreamGraph &);
+    virtual void visit(ProxyCmdCreateStreamHandle &);
     virtual void visit(ProxyCmdCreateIndex &);
     virtual void visit(ProxyCmdTruncateIndex &);
     virtual void visit(ProxyCmdDropIndex &);
@@ -123,7 +126,8 @@ public:
      */
     virtual int64_t executeCommand(ProxyCmd &cmd);
 
-    static StreamHandle &getStreamHandleFromObj(JniEnvRef,jobject);
+    static StreamGraphHandle &getStreamGraphHandleFromObj(JniEnvRef,jobject);
+    static ExecutionStream &getStreamFromObj(JniEnvRef,jobject);
 
     static TxnHandle &getTxnHandleFromObj(JniEnvRef,jobject);
 

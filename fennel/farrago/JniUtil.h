@@ -139,6 +139,11 @@ class JniUtil
     static jmethodID methNext;
 
     /**
+     * java.lang.Object.toString()
+     */
+    static jmethodID methToString;
+
+    /**
      * Get the JNIEnv for the current thread.  This can be used in contexts
      * where the JNIEnv hasn't been passed down from the native entry point.
      *
@@ -190,6 +195,17 @@ public:
     static std::string toStdString(JniEnvRef pEnv,jstring jString);
 
     /**
+     * Call toString() on a Java object.
+     *
+     * @param pEnv the current thread's JniEnvRef
+     *
+     * @param jObject object on which to call toString()
+     *
+     * @return result of toString()
+     */
+    static jstring toString(JniEnvRef pEnv,jobject jObject);
+
+    /**
      * Call java.util.Collection.iterator().
      *
      * @param pEnv the JniEnvRef for the current thread
@@ -210,6 +226,17 @@ public:
      * @return next object from iterator, or NULL if !hasNext()
      */
     static jobject getNextFromIter(JniEnvRef pEnv,jobject jIter);
+
+    /**
+     * Look up an enum value.
+     *
+     * @param pSymbols array of enum symbols, terminated by empty string
+     *
+     * @param symbol symbol to look up
+     *
+     * @return position in array (assert if not found)
+     */
+    static uint lookUpEnum(std::string *pSymbols,std::string const &symbol);
 
     /**
      * Counter for all handles opened by Farrago.

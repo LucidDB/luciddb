@@ -132,8 +132,9 @@ public class FennelSortRel extends FennelPullSingleRel
         sortingStream.setCachePageMax(Integer.MAX_VALUE);
 
         sortingStream.setDistinctness(
-            discardDuplicates ? DistinctnessEnum.DUP_DISCARD.toString()
-                              : DistinctnessEnum.DUP_ALLOW.toString());
+            discardDuplicates
+            ? DistinctnessEnum.DUP_DISCARD
+            : DistinctnessEnum.DUP_ALLOW);
         sortingStream.setKeyProj(
             FennelRelUtil.createTupleProjection(getCatalog(),keyProjection));
         sortingStream.getInput().add(

@@ -155,6 +155,28 @@ enum CheckpointType
 };
 
 /**
+ * Options for how to deal with detection of a duplicate key while
+ * searching.
+ */
+enum DuplicateSeek
+{
+    /**
+     * Position to an arbitrary match for the duplicate key.
+     */
+    DUP_SEEK_ANY,
+
+    /**
+     * Position to the first match for a duplicate key.
+     */
+    DUP_SEEK_BEGIN,
+
+    /**
+     * Position to one past the last match for a duplicate key.
+     */
+    DUP_SEEK_END
+};
+
+/**
  * ParamName can be used to declare static string symbolic constants
  * serving as typo-safe parameter names.
  */

@@ -64,11 +64,11 @@ void ExecutionStreamFactors::prepareStream()
 ExecutionStreamFactory::ExecutionStreamFactory(
     SharedDatabase pDatabaseInit,
     SharedTableWriterFactory pTableWriterFactoryInit,
-    CmdInterpreter::StreamHandle *pStreamHandleInit)
+    CmdInterpreter::StreamGraphHandle *pStreamGraphHandleInit)
 {
     pDatabase = pDatabaseInit;
     pTableWriterFactory = pTableWriterFactoryInit;
-    pStreamHandle = pStreamHandleInit;
+    pStreamGraphHandle = pStreamGraphHandleInit;
 }
 
 void ExecutionStreamFactory::setScratchAccessor(
@@ -179,7 +179,7 @@ void ExecutionStreamFactory::visit(ProxyJavaTupleStreamDef &streamDef)
     
     JavaTupleStreamParams *pParams = new JavaTupleStreamParams();
     readTupleStreamParams(*pParams,streamDef);
-    pParams->pStreamHandle = pStreamHandle;
+    pParams->pStreamGraphHandle = pStreamGraphHandle;
     pParams->javaTupleStreamId = streamDef.getStreamId();
     readTupleDescriptor(
         pParams->tupleDesc,
@@ -233,7 +233,7 @@ void ExecutionStreamFactory::visit(ProxySortingStreamDef &streamDef)
 
     SortingStreamParams *pParams = new SortingStreamParams();
     readTupleStreamParams(*pParams,streamDef);
-    pParams->distinctness = parseDistinctness(streamDef.getDistinctness());
+    pParams->distinctness = streamDef.getDistinctness();
     pParams->pSegment = pDatabase->getTempSegment();
     pParams->rootPageId = NULL_PAGE_ID;
     pParams->segmentId = Database::TEMP_SEGMENT_ID;
@@ -252,7 +252,7 @@ void ExecutionStreamFactory::visit(ProxyIndexLoaderDef &streamDef)
 
     BTreeLoaderParams *pParams = new BTreeLoaderParams();
     readBTreeStreamParams(*pParams,streamDef);
-    pParams->distinctness = parseDistinctness(streamDef.getDistinctness());
+    pParams->distinctness = streamDef.getDistinctness();
     pParams->pTempSegment = pDatabase->getTempSegment();
 
     factors.setFactors(pStream,pParams);
@@ -381,7 +381,7 @@ void ExecutionStreamFactory::readBTreeStreamParams(
         params.pRootMap = NULL;
     } else {
         params.rootPageId = NULL_PAGE_ID;
-        params.pRootMap = pStreamHandle;
+        params.pRootMap = pStreamGraphHandle;
     }
 }
 
@@ -401,8 +401,7 @@ void ExecutionStreamFactory::readIndexWriterParams(
     ProxyIndexWriterDef &indexWriterDef)
 {
     readBTreeStreamParams(params,indexWriterDef);
-    params.distinctness = parseDistinctness(
-        indexWriterDef.getDistinctness());
+    params.distinctness = indexWriterDef.getDistinctness();
     params.updateInPlace = indexWriterDef.isUpdateInPlace();
 }
 
@@ -431,20 +430,6 @@ void ExecutionStreamFactory::readTupleProjection(
     for (; pAttr; ++pAttr) {
         tupleProj.push_back(pAttr->getAttributeIndex());
     }
-}
-
-// TODO:  support enumerations in ProxyGen so this isn't required
-Distinctness ExecutionStreamFactory::parseDistinctness(std::string s)
-{
-    if (s == "DUP_ALLOW") {
-        return DUP_ALLOW;
-    } else if (s == "DUP_DISCARD") {
-        return DUP_DISCARD;
-    } else if (s == "DUP_FAIL") {
-        return DUP_FAIL;
-    }
-    assert(false);
-    throw;
 }
 
 bool ExecutionStreamFactory::shouldEnforceCacheQuotas()

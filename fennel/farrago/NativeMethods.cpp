@@ -58,7 +58,7 @@ extern "C" JNIEXPORT BOOL APIENTRY DllMain(
 extern "C" JNIEXPORT jint JNICALL
 JNI_OnLoad(JavaVM *vm,void *reserved)
 {
-    char *pDebug = getenv("JNI_DEBUG");
+    char *pDebug = getenv("FENNEL_JNI_DEBUG");
     if (pDebug && (atoi(pDebug) == 1)) {
         std::cout << "Waiting for debugger; pid=" << getpid() << std::endl;
         // At least on Linux, a "cont" in gdb will wake this sleep up
@@ -97,12 +97,10 @@ Java_net_sf_farrago_fennel_FennelStorage_tupleStreamFetch(
 {
     JniEnvRef pEnv(pEnvInit);
     try {
-        SharedTupleStreamGraph pGraph =
-            CmdInterpreter::getStreamHandleFromObj(
-                pEnv,hStream).pTupleStreamGraph;
+        ExecutionStream &stream = CmdInterpreter::getStreamFromObj(
+            pEnv,hStream);
         uint cbActual;
-        SharedExecutionStream pStream = pGraph->getSinkStream();
-        ByteInputStream &inputResultStream = pStream->getProducerResultStream();
+        ByteInputStream &inputResultStream = stream.getProducerResultStream();
         PConstBuffer pBuffer = inputResultStream.getReadPointer(
             1,&cbActual);
         if (pBuffer) {
@@ -121,40 +119,40 @@ Java_net_sf_farrago_fennel_FennelStorage_tupleStreamFetch(
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_net_sf_farrago_fennel_FennelStorage_tupleStreamOpen(
-    JNIEnv *pEnvInit, jclass, jobject hStream, jobject hTxn,
+Java_net_sf_farrago_fennel_FennelStorage_tupleStreamGraphOpen(
+    JNIEnv *pEnvInit, jclass, jobject hStreamGraph, jobject hTxn,
     jobject hJavaStreamMap)
 {
     JniEnvRef pEnv(pEnvInit);
     try {
-        CmdInterpreter::StreamHandle &streamHandle =
-            CmdInterpreter::getStreamHandleFromObj(pEnv,hStream);
+        CmdInterpreter::StreamGraphHandle &streamGraphHandle =
+            CmdInterpreter::getStreamGraphHandleFromObj(pEnv,hStreamGraph);
         CmdInterpreter::TxnHandle &txnHandle =
             CmdInterpreter::getTxnHandleFromObj(pEnv,hTxn);
-        streamHandle.javaRuntimeContext = hJavaStreamMap;
-        streamHandle.pTupleStreamGraph->setTxn(txnHandle.pTxn);
-        streamHandle.pTupleStreamGraph->open();
+        streamGraphHandle.javaRuntimeContext = hJavaStreamMap;
+        streamGraphHandle.pTupleStreamGraph->setTxn(txnHandle.pTxn);
+        streamGraphHandle.pTupleStreamGraph->open();
         // TODO:  finally?
-        streamHandle.javaRuntimeContext = NULL;
+        streamGraphHandle.javaRuntimeContext = NULL;
     } catch (std::exception &ex) {
         pEnv.handleExcn(ex);
     }
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_net_sf_farrago_fennel_FennelStorage_tupleStreamClose(
-    JNIEnv *pEnvInit, jclass, jobject hStream, jboolean deallocate)
+Java_net_sf_farrago_fennel_FennelStorage_tupleStreamGraphClose(
+    JNIEnv *pEnvInit, jclass, jobject hStreamGraph, jboolean deallocate)
 {
     JniEnvRef pEnv(pEnvInit);
     try {
-        CmdInterpreter::StreamHandle &streamHandle =
-            CmdInterpreter::getStreamHandleFromObj(pEnv,hStream);
+        CmdInterpreter::StreamGraphHandle &streamGraphHandle =
+            CmdInterpreter::getStreamGraphHandleFromObj(pEnv,hStreamGraph);
         if (deallocate) {
-            delete &streamHandle;
+            delete &streamGraphHandle;
             --JniUtil::handleCount;
         } else {
-            if (streamHandle.pTupleStreamGraph) {
-                streamHandle.pTupleStreamGraph->close();
+            if (streamGraphHandle.pTupleStreamGraph) {
+                streamGraphHandle.pTupleStreamGraph->close();
             }
         }
     } catch (std::exception &ex) {

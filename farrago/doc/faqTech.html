@@ -37,7 +37,7 @@ the exception and look at the tail of file
 At the moment, there's no nice automated stack trace like in Java (besides
 a standard core dump).  However, it is possible to use gdb to debug
 Fennel.  Before starting the Java virtual machine, set environment
-variable <code>JNI_DEBUG=1</code> in the shell from which you are
+variable <code>FENNEL_JNI_DEBUG=1</code> in the shell from which you are
 going to run Java.  When the Fennel JNI layer is loaded, you should see
 a message like "Waiting for debugger; pid=18454".  Start gdb and tell it
 to attach to the process with the given pid.  The process should be
