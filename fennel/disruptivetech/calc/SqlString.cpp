@@ -35,7 +35,7 @@ SqlStrCat(char* dest,
           int strLenBytes)
 {
     if (destLenBytes + strLenBytes > destStorageBytes) {
-        // SQL99 22.1 22-001 "String Data Right truncation"
+        // SQL99 Part 2 Section 22.1 22-001 "String Data Right truncation"
         throw "22001";
     }
 
@@ -53,7 +53,8 @@ SqlStrCat(char* dest,
           int str2LenBytes)
 {
     if (str1LenBytes + str2LenBytes > destStorageBytes) {
-        // SQL99 22.1 22-001 "String Data Right truncation"
+        // SQL99 Part 2 Section 22.1 22-001
+        // "String Data Right truncation"
         throw "22001";
     }
 
@@ -69,7 +70,8 @@ SqlStrCpy_Var(char* dest,
               int strLenBytes)
 {
     if (strLenBytes > destStorageBytes) {
-        // SQL99 22.1 22-001 "String Data Right truncation"
+        // SQL99 Part 2 Section 22.1 22-001
+        // "String Data Right truncation"
         throw "22001";
     }
     memcpy(dest, str, strLenBytes);

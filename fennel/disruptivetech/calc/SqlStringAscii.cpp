@@ -35,7 +35,7 @@ SqlStrCat_Ascii(char* dest,
                 int strLenBytes)
 {
     if (destLenBytes + strLenBytes > destStorageBytes) {
-        // SQL99 22.1 22-001 "String Data Right truncation"
+        // SQL99 Part 2 Section 22.1 22-001 "String Data Right truncation"
         throw "22001";
     }
 
@@ -53,7 +53,7 @@ SqlStrCat_Ascii(char* dest,
                 int str2LenBytes)
 {
     if (str1LenBytes + str2LenBytes > destStorageBytes) {
-        // SQL99 22.1 22-001 "String Data Right truncation"
+        // SQL99 Part 2 Section 22.1 22-001 "String Data Right truncation"
         throw "22001";
     }
 
@@ -183,9 +183,9 @@ SqlStrOverlay_Ascii(char* dest,
         // Overlay is defined in terms of substring. These conditions
         // would, I believe, generate a substring error. Also
         // another "reference" sql database gets angry under these 
-        // conditions. Therefore:
-        // Per SQL99 Part 2 Section 6.18 General Rule 3.d generate a
-        // "data exception substring error". SQL99 Part 2 Section 22.1 22-011
+        // conditions. Therefore, per:
+        // SQL99 Part 2 Section 6.18 General Rule 3.d generate a
+        // SQL99 Part 2 Section 22.1 22-011 "data exception substring error". 
         throw "22011";
     }
     
@@ -201,7 +201,7 @@ SqlStrOverlay_Ascii(char* dest,
     assert(rightP >= str);
     
     if (leftLenBytes + rightLenBytes + overLenBytes > destStorageBytes) {
-        // SQL99 22.1 22-001 "String Data Right truncation"
+        // SQL99 Part 2 Section 22.1 22-001 "String Data Right truncation"
         throw "22001";
     }
 
@@ -289,12 +289,12 @@ SqlStrSubStr_Ascii(char const ** dest,
 
 
     if (l1 > destStorageBytes) {
-        // SQL99 22.1 22-001 "String Data Right truncation"
+        // SQL99 Part 2 Section 22.1 22-001 "String Data Right truncation"
         throw "22001";
     }
     if (l1 < 0) {
         // Expected behavior not clear. 
-        // "data exception substring error". SQL99 22.1 22-011
+        // SQL99 Part 2 Section 22.1 22-011 "data exception substring error".
         throw "22011";
     }
     
@@ -314,7 +314,7 @@ SqlStrToLower_Ascii(char* dest,
     char* e = dest + srcLenBytes;
 
     if (srcLenBytes > destStorageBytes) {
-        // SQL99 22.1 22-001 "String Data Right truncation"
+        // SQL99 Part 2 Section 22.1 22-001 "String Data Right truncation"
         throw "22001";
     }
 
@@ -335,7 +335,7 @@ SqlStrToUpper_Ascii(char* dest,
     char* e = dest + srcLenBytes;
 
     if (srcLenBytes > destStorageBytes) {
-        // SQL99 22.1 22-001 "String Data Right truncation"
+        // SQL99 Part 2 Section 22.1 22-001 "String Data Right truncation"
         throw "22001";
     }
 
@@ -370,7 +370,7 @@ SqlStrTrim_Ascii(char* dest,
     newLenBytes = end - start;
 
     if (newLenBytes > destStorageBytes) {
-        // SQL99 22.1 22-001 "String Data Right truncation"
+        // SQL99 Part 2 Section 22.1 22-001 "String Data Right truncation"
         throw "22001";
     }
     memcpy(dest, start, newLenBytes);

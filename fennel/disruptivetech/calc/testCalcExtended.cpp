@@ -131,7 +131,7 @@ void convertExactNumberToString(RegisterRef<char *>* regOut,
         // TODO: Must check right space padding to see what, if anything valid is
         // TODO: truncated before going all wild and throwing exception
         assert(0);        // TODO: Must have a valid pc here!
-        // SQL99 22.1 SQLState data exception class 22, string data, right truncation 001
+        // SQL99 Part 2 Section 22.1 22-001 "string data, right truncation"
         memcpy(regOut->pointer(), nullTermStr, dstL);
         regOut->putS(dstL);
         throw CalcMessage("22001", 0); // TODO: PC is bogus

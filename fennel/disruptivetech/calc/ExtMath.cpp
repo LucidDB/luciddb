@@ -39,7 +39,7 @@ mathLn(RegisterRef<double>* result,
         result->toNull();        
     } else if (x->value() <= 0.0) {
         result->toNull();
-	// SQL99 22.1 SQLState dataexception class 22, invalid parameter value subclass 023
+        // SQL99 Part 2 Section 22.1 22-023 "invalid parameter value"
         throw "22023";
     }else {
         result->value(log(x->value())); //using the c math library log
@@ -56,7 +56,7 @@ mathLn(RegisterRef<double>* result,
         result->toNull();        
     } else if (x->value() <= 0) {
         result->toNull();
-	// SQL99 22.1 SQLState dataexception class 22, invalid parameter value subclass 023
+        // SQL99 Part 2 Section 22.1 22-023 "invalid parameter value"
         throw "22023";
     }else {
         result->value(log(x->value())); //using the c math library log
@@ -73,7 +73,7 @@ mathLog10(RegisterRef<double>* result,
         result->toNull();        
     } else if (x->value() <= 0.0) {
         result->toNull();
-	// SQL99 22.1 SQLState dataexception class 22, invalid parameter value subclass 023
+        // SQL99 Part 2 Section 22.1 22-023 "invalid parameter value"
         throw "22023";
     } else {
         result->value(log10(x->value()));
@@ -90,7 +90,7 @@ mathLog10(RegisterRef<double>* result,
         result->toNull();        
     } else if (x->value() <= 0) {
         result->toNull();
-	// SQL99 22.1 SQLState dataexception class 22, invalid parameter value subclass 023
+        // SQL99 Part 2 Section 22.1 22-023 "invalid parameter value"
         throw "22023";
     } else {
         result->value(log10(x->value()));
@@ -146,7 +146,7 @@ mathPow(RegisterRef<double>* result,
 	    //x<0 AND y is an non integer. If this is the case then the result is NaN
 	    
 	    result->toNull();
-	    // SQL99 22.1 SQLState dataexception class 22, invalid parameter value subclass 023
+        // SQL99 Part 2 Section 22.1 22-023 "invalid parameter value"
 	    throw "22023";
 
 	} else {
