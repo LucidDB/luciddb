@@ -29,7 +29,7 @@ import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.type.OperandsTypeChecking;
 import org.eigenbase.sql.type.ReturnTypeInference;
-import org.eigenbase.sql.validation.ValidationUtil;
+import org.eigenbase.sql.type.TypeUtil;
 import org.eigenbase.util.Util;
 
 import java.util.List;
@@ -90,7 +90,7 @@ public class SqlBetweenOperator extends SqlInfixOperator
         SqlCall call)
     {
         RelDataType [] argTypes =
-            ValidationUtil.collectTypes(validator, scope, call.operands);
+            TypeUtil.collectTypes(validator, scope, call.operands);
         RelDataType [] newArgTypes =
             new RelDataType [] { argTypes[0], argTypes[2], argTypes[3] };
         return newArgTypes;

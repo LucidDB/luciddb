@@ -30,7 +30,7 @@ import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.type.OperandsTypeChecking;
 import org.eigenbase.sql.type.ReturnTypeInference;
 import org.eigenbase.sql.type.UnknownParamInference;
-import org.eigenbase.sql.validation.ValidationUtil;
+import org.eigenbase.sql.type.TypeUtil;
 import org.eigenbase.util.Util;
 
 import java.text.MessageFormat;
@@ -205,7 +205,7 @@ public abstract class SqlOperator
      * <p>The default implementation does nothing.
      *
      * <p>An example test function for the sin operator:
-     * 
+     *
      * <blockqoute><pre><code>void test(SqlTester tester) {
      *     tester.checkScalar("sin(0)", "0");
      *     tester.checkScalar("sin(1.5707)", "1");
@@ -357,7 +357,7 @@ public abstract class SqlOperator
     {
         return getType(
             typeFactory,
-            ValidationUtil.collectTypes(exprs));
+            TypeUtil.collectTypes(exprs));
     }
 
     /**

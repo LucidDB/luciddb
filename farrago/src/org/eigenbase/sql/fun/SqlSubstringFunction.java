@@ -28,7 +28,7 @@ import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.type.OperandsTypeChecking;
 import org.eigenbase.sql.type.ReturnTypeInference;
 import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.sql.validation.ValidationUtil;
+import org.eigenbase.sql.type.TypeUtil;
 
 import java.util.ArrayList;
 
@@ -104,7 +104,7 @@ public class SqlSubstringFunction extends SqlFunction {
                 OperandsTypeChecking.typeNullableString.check(call, validator,
                     scope, call.operands[2], 0, true);
 
-                ValidationUtil.isCharTypeComparableThrows(validator, scope,
+                TypeUtil.isCharTypeComparableThrows(validator, scope,
                     call.operands);
             } else {
                 OperandsTypeChecking.typeNullableNumeric.check(call, validator,

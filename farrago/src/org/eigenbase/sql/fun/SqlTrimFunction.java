@@ -28,7 +28,7 @@ import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.type.OperandsTypeChecking;
-import org.eigenbase.sql.validation.ValidationUtil;
+import org.eigenbase.sql.type.TypeUtil;
 
 /**
  * Definition of the "TRIM" builtin SQL function.
@@ -117,7 +117,7 @@ public class SqlTrimFunction extends SqlFunction
         RelDataType [] argTypes)
     {
         assert (3 == argTypes.length);
-        return ValidationUtil.makeNullableIfOperandsAre(typeFactory,
+        return TypeUtil.makeNullableIfOperandsAre(typeFactory,
             argTypes, argTypes[2]);
     }
 
@@ -133,9 +133,9 @@ public class SqlTrimFunction extends SqlFunction
             ops[i - 1] = call.operands[i];
         }
 
-        ValidationUtil.isCharTypeComparableThrows(validator, scope, ops);
+        TypeUtil.isCharTypeComparableThrows(validator, scope, ops);
         RelDataType type = validator.deriveType(scope, call.operands[2]);
-        return ValidationUtil.makeNullableIfOperandsAre(validator, scope,
+        return TypeUtil.makeNullableIfOperandsAre(validator, scope,
             call, type);
     }
 

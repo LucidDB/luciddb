@@ -27,7 +27,7 @@ import org.eigenbase.sql.parser.ParserUtil;
 import org.eigenbase.sql.type.OperandsTypeChecking;
 import org.eigenbase.sql.type.ReturnTypeInference;
 import org.eigenbase.sql.type.UnknownParamInference;
-import org.eigenbase.sql.validation.ValidationUtil;
+import org.eigenbase.sql.type.TypeUtil;
 import org.eigenbase.util.Util;
 
 import java.util.List;
@@ -104,7 +104,7 @@ public class SqlLikeOperator extends SqlSpecialOperator
             throw Util.newInternal("unexpected number of args to " + call);
         }
 
-        ValidationUtil.isCharTypeComparableThrows(validator, scope, call.operands);
+        TypeUtil.isCharTypeComparableThrows(validator, scope, call.operands);
     }
 
     public void unparse(

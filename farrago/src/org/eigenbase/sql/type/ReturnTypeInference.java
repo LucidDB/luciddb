@@ -22,7 +22,6 @@ package org.eigenbase.sql.type;
 
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.sql.validation.ValidationUtil;
 import org.eigenbase.sql.SqlValidator;
 import org.eigenbase.sql.SqlCall;
 import org.eigenbase.sql.SqlCollation;
@@ -67,7 +66,7 @@ public abstract class ReturnTypeInference
     {
         return getType(
             validator.typeFactory,
-            ValidationUtil.collectTypes(validator, scope, call.operands));
+            TypeUtil.collectTypes(validator, scope, call.operands));
     }
 
 
@@ -86,7 +85,7 @@ public abstract class ReturnTypeInference
                 RelDataType [] argTypes,
                 RelDataType typeToTransform)
             {
-                return ValidationUtil.makeNullableIfOperandsAre(typeFactory, argTypes,
+                return TypeUtil.makeNullableIfOperandsAre(typeFactory, argTypes,
                     typeToTransform);
             }
         };
@@ -350,7 +349,7 @@ public abstract class ReturnTypeInference
                 }
                 SqlCollation pickedCollation = null;
                 if (argTypes[0].isCharType()) {
-                    if (!ValidationUtil.isCharTypeComparable(argTypes, 0, 1)) {
+                    if (!TypeUtil.isCharTypeComparable(argTypes, 0, 1)) {
                         throw EigenbaseResource.instance()
                             .newTypeNotComparable(
                                 argTypes[0].toString(),
