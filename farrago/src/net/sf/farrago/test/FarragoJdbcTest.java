@@ -24,17 +24,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.sql.*;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.regex.Pattern;
-import net.sf.farrago.jdbc.FarragoConnection;
-import org.eigenbase.sql.parser.ParserPosition;
 
 import junit.framework.Assert;
 import junit.framework.Test;
 
+import java.sql.Date;
 
 /**
  * FarragoJdbcTest tests specifics of the Farrago implementation of the JDBC
@@ -49,6 +45,7 @@ import junit.framework.Test;
  *    5a. small enough
  *    5b out of range (not 0 or 1)
  *
+ * @author Tim Leung
  * @author John V. Sichi
  * @version $Id$
  */
@@ -132,14 +129,14 @@ public class FarragoJdbcTest extends FarragoTestCase
     private static final int TIMESTAMP = 16;
     private static boolean schemaExists = false;
     private static final String [] columnNames =
-        new String[SqlType.all.length];
+        new String[TestSqlType.all.length];
     private static String columnTypeStr = "";
     private static String columnStr = "";
     private static String paramStr = "";
 
     static {
-        for (int i = 0; i < SqlType.all.length; i++) {
-            final SqlType sqlType = SqlType.all[i];
+        for (int i = 0; i < TestSqlType.all.length; i++) {
+            final TestSqlType sqlType = TestSqlType.all[i];
             assert sqlType.ordinal == (i + 2);
             columnNames[i] =
                 "\"Column " + (i + 1) + ": " + sqlType.string + "\"";
@@ -210,31 +207,72 @@ public class FarragoJdbcTest extends FarragoTestCase
         return cal;
     }
 
-    public void testTimSql()
+    public void testSynchronousCancel()
         throws Exception
     {
-        System.out.println("begin tim test");
-        //String sql = "select dummy from sales.emps";
-        //String sql = "select a.name, a.deptno, a.dummy from sales.emps a, sales.dummy b where a.dummy = b.deptno";
-        //String sql = "select a.name, a.deptno, dummy from emps a, dummy b where a.dummy = b.deptno";
-        String sql = "select a.name, a.deptno, gender from sales.emps a join sales.dummy b on a.dummy = b.deptno";
-        //String sql = "select a.name, a.deptno from emps a, depts b where a.deptno = b.deptno";
-        //String sql = "select sales.dummy from sales";
-        //String sql = "select t.dummy from (select 1 as x, 2 as y from sales.emps) as t where t.dummy=1";
-        //String sql = "select * from sales.emps as e where exists (select 1 from sales.depts where e.gender='M')";
-        //String sql = "select emps.empid from sales.emps where dummy='abc' order by dummy";
-        //String sql = "select distinct deptno from sales.depts a group by dummy having a.dummy=10";
-        //String sql = "select dummy from sales.depts a group by deptno having a.deptno=10";
-        //String sql = "select dummy from sales.dummy a";// join sales.emps b on a.deptno = b.deptno";
-        //String sql = "select a.dummy, a.deptno, dummy from sales.emps a where a.deptno = (select deptno from sales.depts where  deptno = '10')";
-        //String sql = "select xxx, foo(yyy) as h from bar";
-        //Statement stmt = connection.createStatement();
-        //stmt.execute("set schema sales");
-        ParserPosition pp = new ParserPosition(1, 62);
-        System.out.println(((FarragoConnection)connection).getCompletionHints(sql, pp));
-        //preparedStmt = connection.prepareStatement(sql);
-        //ResultSet resultSet = preparedStmt.executeQuery();
-        System.out.println("end tim test");
+        testCancel(true);
+    }
+    
+    public void testAsynchronousCancel()
+        throws Exception
+    {
+        testCancel(false);
+    }
+    
+    private void testCancel(boolean synchronous)
+        throws Exception
+    {
+        // cleanup
+        String sql = "drop schema cancel_test cascade";
+        try {
+            stmt.execute(sql);
+        } catch (SQLException ex) {
+            // ignore
+        }
+        
+        sql = "create schema cancel_test";
+        stmt.execute(sql);
+        sql = "create foreign table cancel_test.m(id int not null) "
+            + "server sys_mock_foreign_data_server "
+            + "options(executor_impl 'FENNEL', row_count '1000000000')";
+        stmt.execute(sql);
+        sql = "select * from cancel_test.m";
+        resultSet = stmt.executeQuery(sql);
+        boolean found;
+        found = resultSet.next();
+        assertTrue(found);
+        found = resultSet.next();
+        assertTrue(found);
+        if (synchronous) {
+            // cancel immediately
+            stmt.cancel();
+        } else {
+            Timer timer = new Timer(true);
+            // cancel after 2 seconds
+            TimerTask task = new TimerTask() 
+                {
+                    public void run()
+                    {
+                        try {
+                            stmt.cancel();
+                        } catch (SQLException ex) {
+                            Assert.fail(
+                                "Cancel request failed:  " 
+                                + ex.getMessage());
+                        }
+                    }
+                };
+            timer.schedule(task, 2000);
+        }
+        try {
+            while (resultSet.next()) {
+            }
+        } catch (SQLException ex) {
+            // expected
+            Assert.assertTrue(ex.getMessage().indexOf("abort") > -1);
+            return;
+        }
+        Assert.fail("Expected failure due to cancel request");
     }
 
     // NOTE jvs 26-July-2004:  some of the tests in this class modify fixture
@@ -246,7 +284,7 @@ public class FarragoJdbcTest extends FarragoTestCase
         String query =
             "insert into datatypes_schema.dataTypes_table values " + paramStr;
         preparedStmt = connection.prepareStatement(query);
-        values = new Object[2 + SqlType.all.length];
+        values = new Object[2 + TestSqlType.all.length];
         preparedStmt.setInt(1, 100);
         checkSetString();
         checkSetByteMin();
@@ -324,198 +362,199 @@ public class FarragoJdbcTest extends FarragoTestCase
         values[TIME] = time;
         preparedStmt.setObject(TIMESTAMP, timestamp);
         values[TIMESTAMP] = timestamp;
-        checkResults(JavaType.Object);
+        checkResults(TestJavaType.Object);
     }
 
     private void checkSetTimestamp()
         throws Exception
     {
-        checkSet(JavaType.Timestamp, SqlType.Char, timestamp);
-        checkSet(JavaType.Timestamp, SqlType.Varchar, timestamp);
-        checkSet(JavaType.Timestamp, SqlType.Date, timestamp);
-        checkSet(JavaType.Timestamp, SqlType.Time, timestamp);
-        checkSet(JavaType.Timestamp, SqlType.Timestamp, timestamp);
-        checkResults(JavaType.Timestamp);
+        checkSet(TestJavaType.Timestamp, TestSqlType.Char, timestamp);
+        checkSet(TestJavaType.Timestamp, TestSqlType.Varchar, timestamp);
+        checkSet(TestJavaType.Timestamp, TestSqlType.Date, timestamp);
+        checkSet(TestJavaType.Timestamp, TestSqlType.Time, timestamp);
+        checkSet(TestJavaType.Timestamp, TestSqlType.Timestamp, timestamp);
+        checkResults(TestJavaType.Timestamp);
     }
 
     private void checkSetTime()
         throws Exception
     {
-        checkSet(JavaType.Time, SqlType.Char, time);
-        checkSet(JavaType.Time, SqlType.Varchar, time);
-        checkSet(JavaType.Time, SqlType.Time, time);
-        checkSet(JavaType.Time, SqlType.Timestamp, time);
-        checkResults(JavaType.Time);
+        checkSet(TestJavaType.Time, TestSqlType.Char, time);
+        checkSet(TestJavaType.Time, TestSqlType.Varchar, time);
+        checkSet(TestJavaType.Time, TestSqlType.Time, time);
+        checkSet(TestJavaType.Time, TestSqlType.Timestamp, time);
+        checkResults(TestJavaType.Time);
     }
 
     private void checkSetDate()
         throws Exception
     {
-        checkSet(JavaType.Date, SqlType.Char, date);
-        checkSet(JavaType.Date, SqlType.Varchar, date);
-        checkSet(JavaType.Date, SqlType.Date, date);
-        checkSet(JavaType.Date, SqlType.Timestamp, date);
-        checkResults(JavaType.Date);
+        checkSet(TestJavaType.Date, TestSqlType.Char, date);
+        checkSet(TestJavaType.Date, TestSqlType.Varchar, date);
+        checkSet(TestJavaType.Date, TestSqlType.Date, date);
+        checkSet(TestJavaType.Date, TestSqlType.Timestamp, date);
+        checkResults(TestJavaType.Date);
     }
 
     private void checkSetBytes()
         throws Exception
     {
-        checkSet(JavaType.Bytes, SqlType.typesBinary, bytes);
-        checkResults(JavaType.Bytes);
+        checkSet(TestJavaType.Bytes, TestSqlType.typesBinary, bytes);
+        checkResults(TestJavaType.Bytes);
     }
 
     private void checkSetBigDecimal()
         throws Exception
     {
-        checkSet(JavaType.BigDecimal, SqlType.typesNumericAndChars,
+        checkSet(TestJavaType.BigDecimal, TestSqlType.typesNumericAndChars,
             bigDecimalValue);
-        checkResults(JavaType.BigDecimal);
+        checkResults(TestJavaType.BigDecimal);
     }
 
     private void checkSetBooleanFalse()
         throws Exception
     {
-        checkSet(JavaType.Boolean, SqlType.typesNumericAndChars, boolObj);
-        checkResults(JavaType.Boolean);
+        checkSet(
+            TestJavaType.Boolean, TestSqlType.typesNumericAndChars, boolObj);
+        checkResults(TestJavaType.Boolean);
     }
 
     private void checkSetDoubleMax()
         throws Exception
     {
         checkSet(
-            JavaType.Double,
-            SqlType.typesNumericAndChars,
+            TestJavaType.Double,
+            TestSqlType.typesNumericAndChars,
             new Double(maxDouble));
-        checkResults(JavaType.Double);
+        checkResults(TestJavaType.Double);
     }
 
     private void checkSetDoubleMin()
         throws Exception
     {
         checkSet(
-            JavaType.Double,
-            SqlType.typesNumericAndChars,
+            TestJavaType.Double,
+            TestSqlType.typesNumericAndChars,
             new Double(minDouble));
-        checkResults(JavaType.Double);
+        checkResults(TestJavaType.Double);
     }
 
     private void checkSetFloatMax()
         throws Exception
     {
         checkSet(
-            JavaType.Float,
-            SqlType.typesNumericAndChars,
+            TestJavaType.Float,
+            TestSqlType.typesNumericAndChars,
             new Float(maxFloat));
-        checkResults(JavaType.Float);
+        checkResults(TestJavaType.Float);
     }
 
     private void checkSetFloatMin()
         throws Exception
     {
         checkSet(
-            JavaType.Float,
-            SqlType.typesNumericAndChars,
+            TestJavaType.Float,
+            TestSqlType.typesNumericAndChars,
             new Float(minFloat));
-        checkResults(JavaType.Float);
+        checkResults(TestJavaType.Float);
     }
 
     private void checkSetLongMax()
         throws Exception
     {
         checkSet(
-            JavaType.Long,
-            SqlType.typesNumericAndChars,
+            TestJavaType.Long,
+            TestSqlType.typesNumericAndChars,
             new Long(maxLong));
-        checkResults(JavaType.Long);
+        checkResults(TestJavaType.Long);
     }
 
     private void checkSetLongMin()
         throws Exception
     {
         checkSet(
-            JavaType.Long,
-            SqlType.typesNumericAndChars,
+            TestJavaType.Long,
+            TestSqlType.typesNumericAndChars,
             new Long(minLong));
-        checkResults(JavaType.Long);
+        checkResults(TestJavaType.Long);
     }
 
     private void checkSetIntMax()
         throws Exception
     {
         checkSet(
-            JavaType.Int,
-            SqlType.typesNumericAndChars,
+            TestJavaType.Int,
+            TestSqlType.typesNumericAndChars,
             new Integer(maxInt));
-        checkResults(JavaType.Int);
+        checkResults(TestJavaType.Int);
     }
 
     private void checkSetIntMin()
         throws Exception
     {
         checkSet(
-            JavaType.Int,
-            SqlType.typesNumericAndChars,
+            TestJavaType.Int,
+            TestSqlType.typesNumericAndChars,
             new Integer(minInt));
-        checkResults(JavaType.Int);
+        checkResults(TestJavaType.Int);
     }
 
     private void checkSetShortMax()
         throws Exception
     {
         checkSet(
-            JavaType.Short,
-            SqlType.typesNumericAndChars,
+            TestJavaType.Short,
+            TestSqlType.typesNumericAndChars,
             new Short(maxShort));
-        checkResults(JavaType.Short);
+        checkResults(TestJavaType.Short);
     }
 
     private void checkSetShortMin()
         throws Exception
     {
         checkSet(
-            JavaType.Short,
-            SqlType.typesNumericAndChars,
+            TestJavaType.Short,
+            TestSqlType.typesNumericAndChars,
             new Short(minShort));
-        checkResults(JavaType.Short);
+        checkResults(TestJavaType.Short);
     }
 
     private void checkSetByteMax()
         throws Exception
     {
         checkSet(
-            JavaType.Byte,
-            SqlType.typesNumericAndChars,
+            TestJavaType.Byte,
+            TestSqlType.typesNumericAndChars,
             new Byte(maxByte));
-        checkResults(JavaType.Byte);
+        checkResults(TestJavaType.Byte);
     }
 
     private void checkSetByteMin()
         throws Exception
     {
         checkSet(
-            JavaType.Byte,
-            SqlType.typesNumericAndChars,
+            TestJavaType.Byte,
+            TestSqlType.typesNumericAndChars,
             new Byte(minByte));
-        checkResults(JavaType.Byte);
+        checkResults(TestJavaType.Byte);
     }
 
     private void checkSetString()
         throws Exception
     {
         // Skipped: dtbug220
-        // for (int j=2; j<=javaSqlTypes.length; j++)
-        checkSet(JavaType.String, SqlType.Char, stringValue);
-        checkSet(JavaType.String, SqlType.Varchar, stringValue);
+        // for (int j=2; j<=TestSqlType.length; j++)
+        checkSet(TestJavaType.String, TestSqlType.Char, stringValue);
+        checkSet(TestJavaType.String, TestSqlType.Varchar, stringValue);
         if (true) {
             //todo: setString on VARBINARY column should fail
-            checkSet(JavaType.String, SqlType.Binary, stringValue);
-            checkSet(JavaType.String, SqlType.Varbinary, stringValue);
+            checkSet(TestJavaType.String, TestSqlType.Binary, stringValue);
+            checkSet(TestJavaType.String, TestSqlType.Varbinary, stringValue);
         }
-        checkResults(JavaType.String);
+        checkResults(TestJavaType.String);
     }
 
-    private void checkResults(JavaType javaType)
+    private void checkResults(TestJavaType javaType)
         throws SQLException
     {
         int res = preparedStmt.executeUpdate();
@@ -527,11 +566,11 @@ public class FarragoJdbcTest extends FarragoTestCase
         final ResultSet resultSet =
             stmt.executeQuery("select * from datatypes_schema.dataTypes_table");
         final int columnCount = resultSet.getMetaData().getColumnCount();
-        assert columnCount == (SqlType.all.length + 1);
+        assert columnCount == (TestSqlType.all.length + 1);
         while (resultSet.next()) {
-            for (int k = 0; k < SqlType.all.length; k++) {
-                // SqlType#2 (Tinyint) is held in column #2 (1-based).
-                final SqlType sqlType = SqlType.all[k];
+            for (int k = 0; k < TestSqlType.all.length; k++) {
+                // TestSqlType#2 (Tinyint) is held in column #2 (1-based).
+                final TestSqlType sqlType = TestSqlType.all[k];
                 final Object actual = resultSet.getObject(sqlType.ordinal);
                 Object value = values[sqlType.ordinal];
                 if (value == null) {
@@ -593,20 +632,20 @@ public class FarragoJdbcTest extends FarragoTestCase
     }
 
     private void checkSet(
-        JavaType javaType,
-        SqlType [] types,
+        TestJavaType javaType,
+        TestSqlType [] types,
         Object value)
         throws Exception
     {
         for (int i = 0; i < types.length; i++) {
-            SqlType type = types[i];
+            TestSqlType type = types[i];
             checkSet(javaType, type, value);
         }
     }
 
     private void checkSet(
-        JavaType javaType,
-        SqlType sqlType,
+        TestJavaType javaType,
+        TestSqlType sqlType,
         Object value)
         throws Exception
     {
@@ -614,7 +653,7 @@ public class FarragoJdbcTest extends FarragoTestCase
         int validity = sqlType.checkIsValid(value);
         Throwable throwable;
         tracer.fine("Call PreparedStmt.set" + javaType.name + "(" + column
-            + ", " + value + "), value is " + SqlType.validityName[validity]);
+            + ", " + value + "), value is " + TestSqlType.validityName[validity]);
         try {
             javaType.setMethod.invoke(
                 preparedStmt,
@@ -628,7 +667,7 @@ public class FarragoJdbcTest extends FarragoTestCase
             throwable = e.getCause();
         }
         switch (validity) {
-        case SqlType.VALID:
+        case TestSqlType.VALID:
             if (throwable != null) {
                 fail("Error received when none expected, javaType="
                     + javaType.name + ", sqlType=" + sqlType.string
@@ -636,7 +675,7 @@ public class FarragoJdbcTest extends FarragoTestCase
             }
             this.values[column] = value;
             break;
-        case SqlType.INVALID:
+        case TestSqlType.INVALID:
             if (throwable instanceof SQLException) {
                 String errorString = throwable.toString();
                 if (errorString.matches(
@@ -647,7 +686,7 @@ public class FarragoJdbcTest extends FarragoTestCase
             fail("Was expecting error, javaType=" + javaType.name
                 + ", sqlType=" + sqlType.string + ", value=" + value);
             break;
-        case SqlType.OUTOFRANGE:
+        case TestSqlType.OUTOFRANGE:
             Pattern outOfRangePattern = Pattern.compile("out of range");
             if (throwable instanceof SQLException) {
                 String errorString = throwable.toString();
@@ -1966,11 +2005,11 @@ public class FarragoJdbcTest extends FarragoTestCase
      * Defines a SQL type, and a corresponding column in the datatypes table,
      * and some operations particular to each type.
      */
-    private static class SqlType
+    private static class TestSqlType
     {
         /** Definition of the <code>TINYINT</code> SQL type. */
-        private static final SqlType Tinyint =
-            new SqlType(TINYINT, "tinyint") {
+        private static final TestSqlType Tinyint =
+            new TestSqlType(TINYINT, "tinyint") {
                 public Object getExpected(Object value)
                 {
                     if (value instanceof Number) {
@@ -1985,8 +2024,8 @@ public class FarragoJdbcTest extends FarragoTestCase
             };
 
         /** Definition of the <code>SMALLINT</code> SQL type. */
-        private static final SqlType Smallint =
-            new SqlType(SMALLINT, "smallint") {
+        private static final TestSqlType Smallint =
+            new TestSqlType(SMALLINT, "smallint") {
                 public Object getExpected(Object value)
                 {
                     if (value instanceof Number) {
@@ -2001,8 +2040,8 @@ public class FarragoJdbcTest extends FarragoTestCase
             };
 
         /** Definition of the <code>INTEGER</code> SQL type. */
-        private static final SqlType Integer =
-            new SqlType(INTEGER, "integer") {
+        private static final TestSqlType Integer =
+            new TestSqlType(INTEGER, "integer") {
                 public Object getExpected(Object value)
                 {
                     if (value instanceof Number) {
@@ -2017,8 +2056,8 @@ public class FarragoJdbcTest extends FarragoTestCase
             };
 
         /** Definition of the <code>BIGINT</code> SQL type. */
-        private static final SqlType Bigint =
-            new SqlType(BIGINT, "bigint") {
+        private static final TestSqlType Bigint =
+            new TestSqlType(BIGINT, "bigint") {
                 public Object getExpected(Object value)
                 {
                     if (value instanceof Number) {
@@ -2032,8 +2071,8 @@ public class FarragoJdbcTest extends FarragoTestCase
             };
 
         /** Definition of the <code>REAL</code> SQL type. */
-        private static final SqlType Real =
-            new SqlType(REAL, "real") {
+        private static final TestSqlType Real =
+            new TestSqlType(REAL, "real") {
                 public Object getExpected(Object value)
                 {
                     if (value instanceof Number) {
@@ -2048,8 +2087,8 @@ public class FarragoJdbcTest extends FarragoTestCase
             };
 
         /** Definition of the <code>FLOAT</code> SQL type. */
-        private static final SqlType Float =
-            new SqlType(FLOAT, "float") {
+        private static final TestSqlType Float =
+            new TestSqlType(FLOAT, "float") {
                 public Object getExpected(Object value)
                 {
                     if (value instanceof Number) {
@@ -2065,8 +2104,8 @@ public class FarragoJdbcTest extends FarragoTestCase
             };
 
         /** Definition of the <code>DOUBLE</code> SQL type. */
-        private static final SqlType Double =
-            new SqlType(DOUBLE, "double") {
+        private static final TestSqlType Double =
+            new TestSqlType(DOUBLE, "double") {
                 public Object getExpected(Object value)
                 {
                     if (value instanceof Number) {
@@ -2082,8 +2121,8 @@ public class FarragoJdbcTest extends FarragoTestCase
             };
 
         /** Definition of the <code>BOOLEAN</code> SQL type. */
-        private static final SqlType Boolean =
-            new SqlType(BOOLEAN, "boolean") {
+        private static final TestSqlType Boolean =
+            new TestSqlType(BOOLEAN, "boolean") {
                 public int checkIsValid(Object value)
                 {
                     if ((value == null) || value instanceof Boolean) {
@@ -2114,8 +2153,8 @@ public class FarragoJdbcTest extends FarragoTestCase
         */
 
         /** Definition of the <code>CHAR(100)</code> SQL type. */
-        private static final SqlType Char =
-            new SqlType(CHAR, "char(100)") {
+        private static final TestSqlType Char =
+            new TestSqlType(CHAR, "char(100)") {
                 public Object getExpected(Object value)
                 {
                     String s = String.valueOf(value);
@@ -2132,8 +2171,8 @@ public class FarragoJdbcTest extends FarragoTestCase
             };
 
         /** Definition of the <code>VARCHAR(200)</code> SQL type. */
-        private static final SqlType Varchar =
-            new SqlType(VARCHAR, "varchar(200)") {
+        private static final TestSqlType Varchar =
+            new TestSqlType(VARCHAR, "varchar(200)") {
                 public Object getExpected(Object value)
                 {
                     return String.valueOf(value);
@@ -2141,8 +2180,8 @@ public class FarragoJdbcTest extends FarragoTestCase
             };
 
         /** Definition of the <code>BINARY(10)</code> SQL type. */
-        private static final SqlType Binary =
-            new SqlType(BINARY, "binary(10)") {
+        private static final TestSqlType Binary =
+            new TestSqlType(BINARY, "binary(10)") {
                 public int checkIsValid(Object value)
                 {
                     if (value == null) {
@@ -2183,8 +2222,8 @@ public class FarragoJdbcTest extends FarragoTestCase
             };
 
         /** Definition of the <code>VARBINARY(20)</code> SQL type. */
-        private static final SqlType Varbinary =
-            new SqlType(VARBINARY, "varbinary(20)") {
+        private static final TestSqlType Varbinary =
+            new TestSqlType(VARBINARY, "varbinary(20)") {
                 public int checkIsValid(Object value)
                 {
                     if (value == null) {
@@ -2203,8 +2242,8 @@ public class FarragoJdbcTest extends FarragoTestCase
             };
 
         /** Definition of the <code>TIME(0)</code> SQL type. */
-        private static final SqlType Time =
-            new SqlType(TIME, "Time(0)") {
+        private static final TestSqlType Time =
+            new TestSqlType(TIME, "Time(0)") {
                 public Object getExpected(Object value)
                 {
                     if (value instanceof java.util.Date) {
@@ -2222,8 +2261,8 @@ public class FarragoJdbcTest extends FarragoTestCase
             };
 
         /** Definition of the <code>DATE</code> SQL type. */
-        private static final SqlType Date =
-            new SqlType(DATE, "Date") {
+        private static final TestSqlType Date =
+            new TestSqlType(DATE, "Date") {
                 public Object getExpected(Object value)
                 {
                     if (value instanceof java.util.Date) {
@@ -2242,8 +2281,8 @@ public class FarragoJdbcTest extends FarragoTestCase
             };
 
         /** Definition of the <code>TIMESTAMP</code> SQL type. */
-        private static final SqlType Timestamp =
-            new SqlType(TIMESTAMP, "timestamp(0)") {
+        private static final TestSqlType Timestamp =
+            new TestSqlType(TIMESTAMP, "timestamp(0)") {
                 public Object getExpected(Object value)
                 {
                     if (value instanceof Timestamp) {
@@ -2255,17 +2294,17 @@ public class FarragoJdbcTest extends FarragoTestCase
                     return super.getExpected(value);
                 }
             };
-        private static final SqlType [] all =
+        private static final TestSqlType [] all =
         {
             Tinyint, Smallint, Integer, Bigint, Real, Float, Double, Boolean,
             Char, Varchar, Binary, Varbinary, Time, Date, Timestamp,
         };
-        private static final SqlType [] typesNumericAndChars =
+        private static final TestSqlType [] typesNumericAndChars =
         {
             Tinyint, Smallint, Integer, Bigint, Real, Float, Double, Char,
             Varchar,
         };
-        private static final SqlType [] typesBinary = { Binary, Varbinary, };
+        private static final TestSqlType [] typesBinary = { Binary, Varbinary, };
         public static final int VALID = 0;
         public static final int INVALID = 1;
         public static final int OUTOFRANGE = 2;
@@ -2274,7 +2313,7 @@ public class FarragoJdbcTest extends FarragoTestCase
         private final int ordinal;
         private final String string;
 
-        SqlType(
+        TestSqlType(
             int ordinal,
             String example)
         {
@@ -2309,76 +2348,76 @@ public class FarragoJdbcTest extends FarragoTestCase
      * "Boolean" has {@link ResultSet#getBoolean(int)} and
      * {@link PreparedStatement#setBoolean(int,boolean)}.
      */
-    private static class JavaType
+    private static class TestJavaType
     {
-        private static final JavaType Boolean =
-            new JavaType("Boolean", boolean.class, true);
-        private static final JavaType Byte =
-            new JavaType("Byte", byte.class, true);
-        private static final JavaType Short =
-            new JavaType("Short", short.class, true);
-        private static final JavaType Int =
-            new JavaType("Int", int.class, true);
-        private static final JavaType Long =
-            new JavaType("Long", long.class, true);
-        private static final JavaType Float =
-            new JavaType("Float", float.class, true);
-        private static final JavaType Double =
-            new JavaType("Double", double.class, true);
-        private static final JavaType BigDecimal =
-            new JavaType("BigDecimal", BigDecimal.class, true);
-        private static final JavaType String =
-            new JavaType("String", String.class, true);
-        private static final JavaType Bytes =
-            new JavaType("Bytes", byte [].class, true);
+        private static final TestJavaType Boolean =
+            new TestJavaType("Boolean", boolean.class, true);
+        private static final TestJavaType Byte =
+            new TestJavaType("Byte", byte.class, true);
+        private static final TestJavaType Short =
+            new TestJavaType("Short", short.class, true);
+        private static final TestJavaType Int =
+            new TestJavaType("Int", int.class, true);
+        private static final TestJavaType Long =
+            new TestJavaType("Long", long.class, true);
+        private static final TestJavaType Float =
+            new TestJavaType("Float", float.class, true);
+        private static final TestJavaType Double =
+            new TestJavaType("Double", double.class, true);
+        private static final TestJavaType BigDecimal =
+            new TestJavaType("BigDecimal", BigDecimal.class, true);
+        private static final TestJavaType String =
+            new TestJavaType("String", String.class, true);
+        private static final TestJavaType Bytes =
+            new TestJavaType("Bytes", byte [].class, true);
 
         // Date, Time, Timestamp each have an additional set method, e.g.
         //   setXxx(int,Date,Calendar)
         // TODO: test this
-        private static final JavaType Date =
-            new JavaType("Date", Date.class, true);
-        private static final JavaType Time =
-            new JavaType("Time", Time.class, true);
-        private static final JavaType Timestamp =
-            new JavaType("Timestamp", Timestamp.class, true);
+        private static final TestJavaType Date =
+            new TestJavaType("Date", Date.class, true);
+        private static final TestJavaType Time =
+            new TestJavaType("Time", Time.class, true);
+        private static final TestJavaType Timestamp =
+            new TestJavaType("Timestamp", Timestamp.class, true);
 
         // Object has 2 extra 'setObject' methods:
-        //   setObject(int,Object,int targetSqlType)
-        //   setObject(int,Object,int targetSqlType,int scale)
+        //   setObject(int,Object,int targetTestSqlType)
+        //   setObject(int,Object,int targetTestSqlType,int scale)
         // TODO: test this
-        private static final JavaType Object =
-            new JavaType("Object", Object.class, true);
+        private static final TestJavaType Object =
+            new TestJavaType("Object", Object.class, true);
 
         // next 4 are not regular, because their 'set' method has an extra
         // parmaeter, e.g. setAsciiStream(int,InputStream,int length)
-        private static final JavaType AsciiStream =
-            new JavaType("AsciiStream", InputStream.class, false);
-        private static final JavaType UnicodeStream =
-            new JavaType("UnicodeStream", InputStream.class, false);
-        private static final JavaType BinaryStream =
-            new JavaType("BinaryStream", InputStream.class, false);
-        private static final JavaType CharacterStream =
-            new JavaType("CharacterStream", Reader.class, false);
-        private static final JavaType Ref =
-            new JavaType("Ref", Ref.class, true);
-        private static final JavaType Blob =
-            new JavaType("Blob", Blob.class, true);
-        private static final JavaType Clob =
-            new JavaType("Clob", Clob.class, true);
-        private static final JavaType Array =
-            new JavaType("Array", Array.class, true);
+        private static final TestJavaType AsciiStream =
+            new TestJavaType("AsciiStream", InputStream.class, false);
+        private static final TestJavaType UnicodeStream =
+            new TestJavaType("UnicodeStream", InputStream.class, false);
+        private static final TestJavaType BinaryStream =
+            new TestJavaType("BinaryStream", InputStream.class, false);
+        private static final TestJavaType CharacterStream =
+            new TestJavaType("CharacterStream", Reader.class, false);
+        private static final TestJavaType Ref =
+            new TestJavaType("Ref", Ref.class, true);
+        private static final TestJavaType Blob =
+            new TestJavaType("Blob", Blob.class, true);
+        private static final TestJavaType Clob =
+            new TestJavaType("Clob", Clob.class, true);
+        private static final TestJavaType Array =
+            new TestJavaType("Array", Array.class, true);
         private final String name;
         private final Class clazz;
         private final boolean regular;
         private final Method setMethod;
-        JavaType [] all =
+        TestJavaType [] all =
         {
             Boolean, Byte, Short, Int, Long, Float, Double, BigDecimal, String,
             Bytes, Date, Time, Timestamp, Object, AsciiStream, UnicodeStream,
             BinaryStream, CharacterStream, Ref, Blob, Clob, Array,
         };
 
-        private JavaType(
+        private TestJavaType(
             String name,
             Class clazz,
             boolean regular)
