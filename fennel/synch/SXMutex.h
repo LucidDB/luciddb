@@ -26,6 +26,14 @@
 
 FENNEL_BEGIN_NAMESPACE
 
+// NOTE jvs 24-Nov-2004:  It would be nice to replace SXMutex with
+// boost::read_write_mutex.  However, it is a lot of work to
+// get this right, because the boost design is intended for short-duration
+// locks, whereas Fennel uses long-duration locks for cache pages.
+// Also, the boost implementation does not yet take advantage
+// of OS support for these primitives, so this custom implementation is
+// at least as efficient.
+    
 /**
  * An SXMutex implements a standard readers/writers exclusion scheme: any
  * number of shared-lock threads may hold the lock at one time, during which
@@ -80,7 +88,9 @@ public:
 private:
     SchedulingPolicy schedulingPolicy;
     uint nShared,nExclusive,nExclusivePending;
-    ThreadData *pExclusiveHolder;
+    int exclusiveHolderId;
+
+    int getCurrentThreadId();
 };
 
 /**

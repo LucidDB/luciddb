@@ -83,37 +83,7 @@ struct hash< fennel::OpaqueInteger<T,Dummy> >
  
 } // namespace std
 
-FENNEL_BEGIN_NAMESPACE
-
-// Thread-local storage
-
-/**
- * ThreadData defines the thread-specific data associated with each
- * thread which enters the record manager.  Currently there is none, but we
- * still use this as a form of thread identifier in locking.
- */
-struct ThreadData
-{
-    explicit ThreadData()
-    {
-    }
-};
-
-extern boost::thread_specific_ptr<ThreadData> g_threadData;
-
-inline ThreadData *getThreadData()
-{
-    ThreadData *pData = g_threadData.get();
-    if (!pData) {
-        pData = new ThreadData();
-        g_threadData.reset(pData);
-    }
-    return pData;
-}
-
 // Memory management
-
-FENNEL_END_NAMESPACE
 
 // "placement new" definitions
 inline void *operator new(size_t,fennel::PBuffer pBuffer)

@@ -66,10 +66,6 @@ typedef boost::try_mutex StrictMutex;
 
 #endif
 
-// TODO:  Once Boost takes advantage of latest
-// Win32 API TryEnterCriticalSection, don't need to distinguish
-// between try or not.
-
 typedef boost::recursive_try_mutex::scoped_lock RecursiveMutexGuard;
 typedef boost::try_mutex::scoped_lock StrictMutexGuard;
 typedef boost::recursive_try_mutex::scoped_try_lock RecursiveMutexTryGuard;

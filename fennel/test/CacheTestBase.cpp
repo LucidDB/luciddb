@@ -23,7 +23,6 @@
 #include "fennel/common/FileSystem.h"
 #include "fennel/device/RandomAccessFileDevice.h"
 #include "fennel/synch/Thread.h"
-#include "fennel/synch/Barrier.h"
 #include "fennel/cache/CachePage.h"
 #include "fennel/cache/CacheImpl.h"
 #include "fennel/cache/RandomVictimPolicy.h"

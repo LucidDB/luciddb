@@ -74,8 +74,6 @@ void Thread::afterRun()
     bRunning = false;
 }
 
-boost::thread_specific_ptr<ThreadData> g_threadData;
-
 FENNEL_END_CPPFILE("$Id$");
 
 // End Thread.cpp

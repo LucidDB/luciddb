@@ -20,7 +20,6 @@
 
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/test/ThreadedTestBase.h"
-#include "fennel/synch/Barrier.h"
 #include "fennel/synch/ThreadPool.h"
 
 #include <boost/test/test_tools.hpp>
@@ -56,7 +55,7 @@ void ThreadedTestBase::runThreadedTestCase()
         0);
 
     // initialize a barrier to make sure they all start at once
-    startBarrier.reset(nThreads);
+    pStartBarrier.reset(new boost::barrier(nThreads));
     
     // fire 'em up
     ThreadPool<ThreadedTestBaseTask> threadPool;
@@ -96,7 +95,7 @@ ThreadedTestBaseTask::ThreadedTestBaseTask(
 void ThreadedTestBaseTask::execute()
 {
     test.threadInit();
-    test.startBarrier.waitFor();
+    test.pStartBarrier->wait();
     try {
         while (!test.bDone) {
             if (!test.testThreadedOp(iOp)) {

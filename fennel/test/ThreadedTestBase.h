@@ -22,9 +22,11 @@
 #define Fennel_ThreadedTestBase_Included
 
 #include "fennel/test/TestBase.h"
-#include "fennel/synch/Barrier.h"
 
 #include <vector>
+
+#include <boost/thread/barrier.hpp>
+#include <boost/scoped_ptr.hpp>
 
 FENNEL_BEGIN_NAMESPACE
 
@@ -39,7 +41,7 @@ private:
     /**
      * Barrier used to synchronize start of multi-threaded test.
      */
-    Barrier startBarrier;
+    boost::scoped_ptr<boost::barrier> pStartBarrier;
 
     /**
      * Flag indicating that threads should quit because time is up.

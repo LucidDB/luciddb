@@ -28,7 +28,7 @@ SXMutex::SXMutex()
     nShared = 0;
     nExclusive = 0;
     nExclusivePending = 0;
-    pExclusiveHolder = NULL;
+    exclusiveHolderId = -1;
     schedulingPolicy = SCHEDULE_DEFAULT;
 }
 
@@ -37,7 +37,7 @@ SXMutex::~SXMutex()
     assert(!nShared);
     assert(!nExclusive);
     assert(!nExclusivePending);
-    assert(!pExclusiveHolder);
+    assert(exclusiveHolderId == -1);
 }
 
 void SXMutex::setSchedulingPolicy(SchedulingPolicy schedulingPolicyInit)
@@ -54,7 +54,7 @@ bool SXMutex::waitFor(LockMode lockMode,uint iTimeout)
         convertTimeout(iTimeout,atv);
     }
     StrictMutexGuard mutexGuard(mutex);
-    ThreadData *pCurrThreadData = getThreadData();
+    int currentThreadId = getCurrentThreadId();
     bool bExclusive = (lockMode == LOCKMODE_X || lockMode == LOCKMODE_X_NOWAIT);
     bool bExclusivePending = (lockMode == LOCKMODE_X)
         && (schedulingPolicy == SCHEDULE_FAVOR_EXCLUSIVE);
@@ -62,7 +62,7 @@ bool SXMutex::waitFor(LockMode lockMode,uint iTimeout)
         ++nExclusivePending;
     }
     for (;;) {
-        if (pExclusiveHolder == pCurrThreadData) {
+        if (exclusiveHolderId == currentThreadId) {
             break;
         }
         if (bExclusive) {
@@ -93,7 +93,7 @@ bool SXMutex::waitFor(LockMode lockMode,uint iTimeout)
     }
     if (bExclusive) {
         ++nExclusive;
-        pExclusiveHolder = pCurrThreadData;
+        exclusiveHolderId = currentThreadId;
         if (bExclusivePending) {
             assert(nExclusivePending > 0);
             --nExclusivePending;
@@ -111,7 +111,7 @@ void SXMutex::release(LockMode lockMode)
         assert(nExclusive);
         --nExclusive;
         if (!nExclusive) {
-            pExclusiveHolder = NULL;
+            exclusiveHolderId = -1;
             condition.notify_all();
         }
     } else {
@@ -146,8 +146,19 @@ bool SXMutex::tryUpgrade()
     // nExclusivePending
     nShared = 0;
     nExclusive = 1;
-    pExclusiveHolder = getThreadData();
+    exclusiveHolderId = getCurrentThreadId();
     return true;
+}
+
+int SXMutex::getCurrentThreadId()
+{
+    // NOTE jvs 24-Nov-2004:  it would be nice if boost threads would
+    // abstract out the notion of thread ID!
+#ifdef __MINGW32__
+    return static_cast<int>(GetCurrentThreadId());
+#else
+    return static_cast<int>(pthread_self());
+#endif
 }
 
 FENNEL_END_CPPFILE("$Id$");
