@@ -21,4 +21,4 @@ fi
 # can't specify this in config.xml...
 export P4PASSWD=$CRUISE_P4PASSWD
 
-nice cruisecontrol.sh -port 8080
+nice cruisecontrol.sh -configfile config-chumley.xml -port 8080

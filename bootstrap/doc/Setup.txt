@@ -10,7 +10,7 @@ Installing Cruise Control
 
 I do not recommend running Cruise Control as root.  I've created a
 user on my system to execute Cruise Control and until now I've been
-manually starting it up with startcc.sh (see below).
+manually starting it up with startcc-chumley.sh (see below).
 
 Assuming CC_HOME points to the main cruisecontrol directory, add
 $CC_HOME/main/bin to your path.
@@ -35,10 +35,12 @@ Eigenbase:
 Disruptive:
 	//depot/aspen/...	[work]/aspen
 
-The shell script startcc.sh starts Cruise Control and enables a JMX
-service on port 8080.  This port should be firewalled from access by
-outside users -- the JMX service has no protection against malicious
-users.
+The shell script startcc-chumley.sh starts Cruise Control and enables
+a JMX service on port 8080.  This port should be firewalled from
+access by outside users -- the JMX service has no protection against
+malicious users.  You'll need a corresponding startcc-yourmachine.sh
+(which we'll refer to as startcc.sh) and config-yourmachine.xml (which
+we'll refer to as config.xml).
 
 The ant build scripts assume the presence of a file called
 disruptive.perforce.properties configures Ant's p4 tasks to connect to
@@ -52,7 +54,7 @@ Julian."
 startcc.sh will create some directories that Cruise Control will use,
 if they don't exist.
 
-The default config.xml attempts to move build results to another
+config.xml attempts to move build results to another
 server.  You'll need to configure ssh for automatic login to that
 server in for the copy to actually succeed.  This means creating an
 RSA public/private keypair and placing them in ~/.ssh/id_rsa and
