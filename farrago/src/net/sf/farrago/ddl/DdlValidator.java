@@ -842,14 +842,15 @@ public class DdlValidator extends FarragoCompoundAllocation
     }
 
     // implement FarragoSessionDdlValidator
-    public FarragoException newPositionalError(
+    public EigenbaseException newPositionalError(
         RefObject refObj,
         SqlValidatorException ex)
     {
         SqlParserPos parserContext = getParserPos(refObj);
         assert(parserContext != null);
         String msg = parserContext.toString();
-        FarragoException contextExcn = res.newValidatorPositionContext(msg, ex);
+        EigenbaseException contextExcn =
+            res.newValidatorPositionContext(msg, ex);
         contextExcn.setPosition(
             parserContext.getLineNum(),
             parserContext.getColumnNum());
@@ -917,7 +918,7 @@ public class DdlValidator extends FarragoCompoundAllocation
         final String mofId = droppedEnd.refMofId();
         enqueueValidationExcn(
             new DeferredException() {
-                FarragoException getException()
+                EigenbaseException getException()
                 {
                     CwmModelElement droppedElement =
                         (CwmModelElement) getRepos().getMdrRepos().getByMofId(mofId);
@@ -1087,7 +1088,7 @@ public class DdlValidator extends FarragoCompoundAllocation
      */
     private static abstract class DeferredException
     {
-        abstract FarragoException getException();
+        abstract EigenbaseException getException();
     }
 }
 

@@ -326,7 +326,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             });
     }
 
-    private FarragoException newSqlTypeException(SQLException ex)
+    private EigenbaseException newSqlTypeException(SQLException ex)
     {
         return FarragoResource.instance().newJdbcDriverTypeInfoFailed(ex);
     }

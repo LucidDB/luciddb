@@ -388,8 +388,8 @@ public abstract class DdlHandler
         CwmModelElement modelElement,
         Throwable ex)
     {
-        if (ex instanceof FarragoException) {
-            FarragoException contextExcn = (FarragoException) ex;
+        if (ex instanceof EigenbaseException) {
+            EigenbaseException contextExcn = (EigenbaseException) ex;
             if (contextExcn.getPosLine() != 0) {
                 // We have context information for the query, and
                 // need to adjust the position to match the original

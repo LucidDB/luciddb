@@ -21,13 +21,13 @@
 
 package com.disruptivetech.farrago.sql.advise;
 
+import org.eigenbase.util.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.validate.SqlValidatorCatalogReader;
 import org.eigenbase.sql.validate.SqlValidatorImpl;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
-import net.sf.farrago.util.FarragoException;
 
 /**
  * <code>SqlAdvisorValidator</code> is used by SqlAdvisor to traverse the parse
@@ -92,7 +92,7 @@ public class SqlAdvisorValidator extends SqlValidatorImpl
         // called in super.deriveType can do a Util.permAssert that throws Error
         try {
             return super.deriveType(scope, operand);
-        } catch (FarragoException e) {
+        } catch (EigenbaseException e) {
             return unknownType;
         } catch (UnsupportedOperationException e) {
             return unknownType;
@@ -118,7 +118,7 @@ public class SqlAdvisorValidator extends SqlValidatorImpl
     {
         try {
             super.validateWhereClause(select);
-        } catch (FarragoException e) {
+        } catch (EigenbaseException e) {
         }
     }
 
@@ -129,7 +129,7 @@ public class SqlAdvisorValidator extends SqlValidatorImpl
     {
         try {
             super.validateHavingClause(select);
-        } catch (FarragoException e) {
+        } catch (EigenbaseException e) {
         }
     }
 }

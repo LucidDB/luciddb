@@ -23,6 +23,7 @@
 
 package org.eigenbase.relopt;
 
+import java.util.*;
 import java.util.logging.Logger;
 
 import org.eigenbase.oj.rel.JavaRelImplementor;
@@ -42,13 +43,13 @@ public interface RelOptPlanner
 {
     //~ Static fields/initializers --------------------------------------------
 
-    static final Logger tracer = EigenbaseTrace.getPlannerTracer();
+    public static final Logger tracer = EigenbaseTrace.getPlannerTracer();
 
     //~ Methods ---------------------------------------------------------------
 
-    void setRoot(RelNode rel);
+    public void setRoot(RelNode rel);
 
-    RelNode getRoot();
+    public RelNode getRoot();
 
     /**
      * Registers a rel trait definition. If the {@link RelTraitDef} has already
@@ -57,7 +58,7 @@ public interface RelOptPlanner
      * @return whether the RelTraitDef was added, as per
      *   {@link java.util.Collection#add}
      */
-    boolean addRelTraitDef(RelTraitDef relTraitDef);
+    public boolean addRelTraitDef(RelTraitDef relTraitDef);
 
     /**
      * Registers a rule. If the rule has already been registered, does nothing.
@@ -69,7 +70,7 @@ public interface RelOptPlanner
      * @return whether the rule was added, as per
      *   {@link java.util.Collection#add}
      */
-    boolean addRule(RelOptRule rule);
+    public boolean addRule(RelOptRule rule);
 
     /**
      * Changes a relational expression to an equivalent one with a different
@@ -78,24 +79,24 @@ public interface RelOptPlanner
      * @pre rel.getTraits() != toTraits
      * @post return != null
      */
-    RelNode changeTraits(RelNode rel, RelTraitSet toTraits);
+    public RelNode changeTraits(RelNode rel, RelTraitSet toTraits);
 
     /**
      * Negotiates an appropriate planner to deal with distributed queries.
      * The idea is that the schemas decide among themselves which has the
      * most knowledge.  Right now, the local planner retains control.
      */
-    RelOptPlanner chooseDelegate();
+    public RelOptPlanner chooseDelegate();
 
     /**
      * Find the most efficient expression to implement this query.
      */
-    RelNode findBestExp();
+    public RelNode findBestExp();
 
     /**
      * Create a cost object.
      */
-    RelOptCost makeCost(
+    public RelOptCost makeCost(
         double dRows,
         double dCpu,
         double dIo);
@@ -103,27 +104,27 @@ public interface RelOptPlanner
     /**
      * Create a cost object representing an enormous non-infinite cost.
      */
-    RelOptCost makeHugeCost();
+    public RelOptCost makeHugeCost();
 
     /**
      * Create a cost object representing infinite cost.
      */
-    RelOptCost makeInfiniteCost();
+    public RelOptCost makeInfiniteCost();
 
     /**
      * Create a cost object representing a small positive cost.
      */
-    RelOptCost makeTinyCost();
+    public RelOptCost makeTinyCost();
 
     /**
      * Create a cost object representing zero cost.
      */
-    RelOptCost makeZeroCost();
+    public RelOptCost makeZeroCost();
 
     /**
      * Compute the cost of a RelNode.
      */
-    RelOptCost getCost(RelNode rel);
+    public RelOptCost getCost(RelNode rel);
 
     /**
      * Registers a relational expression in the expression bank. After it has
@@ -134,7 +135,7 @@ public interface RelOptPlanner
      *
      * @return the same expression, or an equivalent existing expression
      */
-    RelNode register(
+    public RelNode register(
         RelNode rel,
         RelNode equivRel);
 
@@ -145,26 +146,26 @@ public interface RelOptPlanner
      *
      * @return whether rel has been registered
      */
-    boolean isRegistered(RelNode rel);
+    public boolean isRegistered(RelNode rel);
 
     /**
      * Tells this planner that a schema exists. This is the schema's chance to
      * tell the planner about all of the special transformation rules.
      */
-    void registerSchema(RelOptSchema schema);
+    public void registerSchema(RelOptSchema schema);
 
     /**
      * Retrieve an implementor appropriate for the context in which
      * this planner was created.
      */
-    JavaRelImplementor getJavaRelImplementor(RelNode rel);
+    public JavaRelImplementor getJavaRelImplementor(RelNode rel);
 
     /**
      * Adds a listener to this planner.  
      *
      * @param newListener new listener to be notified of events
      */
-    void addListener(RelOptListener newListener);
+    public void addListener(RelOptListener newListener);
 }
 
 

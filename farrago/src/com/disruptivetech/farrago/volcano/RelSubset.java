@@ -87,15 +87,21 @@ public class RelSubset extends AbstractRelNode
 
     //~ Methods ---------------------------------------------------------------
 
+    // REVIEW jvs 15-Mar-2005: I disabled this exception because there is
+    // actually code which walks over trees containing RelSubsets (in
+    // RelOptUtil), and that code was special casing traversal of RelSubset,
+    // which isn't right.
     /**
      * There are no children, as such.  We throw an exception because you
      * probably don't want to be walking over trees which contain
-     * <code>RelSet</code>s.
+     * <code>RelSubset</code>s.
      */
+    /*
     public RelNode [] getInputs()
     {
         throw new UnsupportedOperationException();
     }
+    */
 
     public Set getVariablesSet()
     {
@@ -251,6 +257,16 @@ public class RelSubset extends AbstractRelNode
             }
             planner.checkForSatisfiedConverters(set, rel);
         }
+    }
+
+    public void collectVariablesUsed(Set variableSet)
+    {
+        variableSet.addAll(getVariablesUsed());
+    }
+    
+    public void collectVariablesSet(Set variableSet)
+    {
+        variableSet.addAll(getVariablesSet());
     }
 
     //~ Inner Classes ---------------------------------------------------------

@@ -24,9 +24,6 @@
 package org.eigenbase.relopt;
 
 
-// TODO jvs 29-Aug-2004:  factor out references
-import com.disruptivetech.farrago.volcano.RelSubset;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -149,12 +146,8 @@ public abstract class RelOptUtil
                     int ordinal,
                     RelNode parent)
                 {
-                    if (p instanceof RelSubset) {
-                        RelSubset subset = (RelSubset) p;
-                        vuv.variables.addAll(subset.getVariablesUsed());
-                    } else {
-                        super.visit(p, ordinal, parent);
-                    }
+                    p.collectVariablesUsed(vuv.variables);
+                    super.visit(p, ordinal, parent);
 
                     // Important! Remove stopped variables AFTER we visit children.
                     // (which what super.visit() does)
@@ -596,16 +589,8 @@ public abstract class RelOptUtil
             int ordinal,
             RelNode parent)
         {
-            if (p instanceof RelSubset) {
-                RelSubset subset = (RelSubset) p;
-                variables.addAll(subset.getVariablesSet());
-            } else {
-                super.visit(p, ordinal, parent);
-                String variable = p.getCorrelVariable();
-                if (variable != null) {
-                    variables.add(variable);
-                }
-            }
+            super.visit(p, ordinal, parent);
+            p.collectVariablesUsed(variables);
 
             // Important! Remove stopped variables AFTER we visit children
             // (which what super.visit() does)

@@ -22,7 +22,6 @@
 */
 package org.eigenbase.test;
 
-import com.disruptivetech.farrago.volcano.VolcanoPlanner;
 import junit.framework.TestCase;
 import openjava.mop.OJSystem;
 import org.eigenbase.oj.util.JavaRexBuilder;
@@ -90,7 +89,7 @@ public class SqlToRelConverterTest extends TestCase
                 validator,
                 relOptSchema,
                 OJSystem.env,
-                new VolcanoPlanner(),
+                new MockRelOptPlanner(),
                 relOptConnection,
                 new JavaRexBuilder(typeFactory));
         final RelNode rel = converter.convertQuery(sqlQuery);

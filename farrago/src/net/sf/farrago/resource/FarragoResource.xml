@@ -27,7 +27,7 @@
 <resourceBundle
   static="false"
   locale="en_US"
-  exceptionClassName="net.sf.farrago.util.FarragoException">
+  exceptionClassName="org.eigenbase.util.EigenbaseException">
 
 <!-- ====================================================================== -->
  General Notes:

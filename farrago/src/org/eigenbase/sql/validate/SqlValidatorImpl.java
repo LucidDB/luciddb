@@ -23,7 +23,6 @@
 
 package org.eigenbase.sql.validate;
 
-import net.sf.farrago.util.FarragoException;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.reltype.RelDataTypeField;
@@ -34,9 +33,7 @@ import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.trace.EigenbaseTrace;
-import org.eigenbase.util.BitString;
-import org.eigenbase.util.EnumeratedValues;
-import org.eigenbase.util.Util;
+import org.eigenbase.util.*;
 
 import java.nio.charset.Charset;
 import java.util.*;
@@ -2175,13 +2172,13 @@ public class SqlValidatorImpl implements SqlValidator
     {
     }
 
-    public FarragoException newValidationError(
+    public EigenbaseException newValidationError(
         SqlNode node,
         SqlValidatorException e)
     {
         Util.pre(node != null, "node != null");
         final SqlParserPos pos = node.getParserPosition();
-        FarragoException contextExcn =
+        EigenbaseException contextExcn =
             EigenbaseResource.instance().newValidatorContext(
                 new Integer(pos.getLineNum()),
                 new Integer(pos.getColumnNum()),

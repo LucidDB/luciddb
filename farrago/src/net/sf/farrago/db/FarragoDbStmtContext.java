@@ -452,7 +452,7 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
          * Returns an error that the value is not valid for the desired SQL
          * type.
          */
-        protected FarragoException newInvalidType(Object x)
+        protected EigenbaseException newInvalidType(Object x)
         {
             return FarragoResource.instance().newParameterValueIncompatible(
                 x.getClass().getName(),

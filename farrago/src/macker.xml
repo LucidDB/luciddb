@@ -794,11 +794,7 @@
       <message>org.eigenbase dependency violation</message>
       <deny>
         <from pattern="eigenbase"/>
-        <to pattern="farrago">
-          <!-- TODO jvs 21-Sept-2004:  eliminate these exceptions -->
-          <exclude pattern="dt.volcano"/>
-          <exclude pattern="util"/>
-        </to>
+        <to pattern="farrago"/>
       </deny>
     </access-rule>
 

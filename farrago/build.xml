@@ -722,7 +722,7 @@ require version '${required.ant.version}'."/>
       srcdir="${farrago.src.dir}"
       destdir="${farrago.classes.dir}"
       classpathref="farrago.3p.classpath">
-      <include name="**/FarragoException.java" />
+      <include name="**/EigenbaseException.java" />
       <include name="**/SqlValidatorException.java" />
     </farrago.javaCompile>
     <taskdef name="resgen" classname="mondrian.resource.ResourceGenTask">

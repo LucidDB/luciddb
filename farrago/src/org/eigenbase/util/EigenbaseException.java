@@ -1,6 +1,6 @@
 /*
 // $Id$
-// Farrago is an extensible data management system.
+// Package org.eigenbase is a class library of data management components.
 // Copyright (C) 2005-2005 The Eigenbase Project
 // Copyright (C) 2005-2005 Disruptive Tech
 // Copyright (C) 2005-2005 Red Square, Inc.
@@ -20,12 +20,12 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-package net.sf.farrago.util;
+package org.eigenbase.util;
 
 
 // NOTE:  This class gets compiled independently of everything else so that
 // resource generation can use reflection.  That means it must have no
-// dependencies on other Farrago code.
+// dependencies on other Eigenbase code.
 import java.util.logging.*;
 
 
@@ -35,12 +35,12 @@ import java.util.logging.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoException extends RuntimeException
+public class EigenbaseException extends RuntimeException
 {
     //~ Static fields/initializers --------------------------------------------
 
     private static Logger tracer =
-        Logger.getLogger(FarragoException.class.getName());
+        Logger.getLogger(EigenbaseException.class.getName());
 
     private int posLine;
 
@@ -49,12 +49,12 @@ public class FarragoException extends RuntimeException
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Creates a new FarragoException object.
+     * Creates a new EigenbaseException object.
      *
      * @param message error message
      * @param cause underlying cause
      */
-    public FarragoException(
+    public EigenbaseException(
         String message,
         Throwable cause)
     {
@@ -62,7 +62,7 @@ public class FarragoException extends RuntimeException
 
         // TODO: Force the caller to pass in a Logger as a trace argument for
         // better context.  Need to extend MonRG for this.
-        tracer.throwing("FarragoException", "constructor", this);
+        tracer.throwing("EigenbaseException", "constructor", this);
         tracer.severe(toString());
     }
 
@@ -97,4 +97,4 @@ public class FarragoException extends RuntimeException
 }
 
 
-// End FarragoException.java
+// End EigenbaseException.java

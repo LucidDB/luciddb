@@ -23,9 +23,6 @@
 package net.sf.farrago.test;
 
 
-// FIXME jvs 29-Aug-2004
-import com.disruptivetech.farrago.volcano.AbstractConverter;
-
 import java.io.*;
 
 import junit.framework.*;
@@ -206,9 +203,6 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
         // mess with system parameters.
         FarragoSessionPlanner planner =
             stmt.getSession().newPlanner(stmt,false);
-        planner.addRelTraitDef(CallingConventionTraitDef.instance);
-        RelOptUtil.registerAbstractRels(planner);
-        planner.addRule(new AbstractConverter.ExpandConversionRule());
         planner.addRule(IterRules.IterCalcRule.instance);
         FennelToIteratorConverter.register(planner);
         stmt.setPlanner(planner);
