@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <?xml-stylesheet type="text/xsl"
  href="http://perforce.eigenbase.org:8080/open/mondrian/resource/Resource.xsl" ?>
-<!-- 
+<!--
  !DOCTYPE resourceBundle SYSTEM "Resource.dtd"
   -->
 <!--
@@ -127,11 +127,11 @@
 </exception>
 
 <exception id="120140" name="ExpectedBoolean">
-    <text>Expected a boolean type near : {0}</text>
+    <text>Expected a boolean type near: {0}</text>
 </exception>
 
 <exception id="120145" name="ExpectedMultiset">
-    <text>Expected MULTISET type near : {0}</text>
+    <text>Expected MULTISET type near: {0}</text>
 </exception>
 
 <exception id="120150" name="MustNotNullInElse">
@@ -139,14 +139,14 @@
 </exception>
 
 <exception id="120160" name="FunctionUndefined">
-    <text>Function {0} is not defined : {1}</text>
+    <text>Function {0} is not defined near: {1}</text>
 </exception>
 
 <exception id="120170" name="WrongNumberOfParam">
     <text>Encountered {0} with {1} parameter(s), was expecting {2} near: {3}</text>
 </exception>
 
-<exception id="120180" name="IllegalMixingOfTypes"> 
+<exception id="120180" name="IllegalMixingOfTypes">
     <text>Illegal mixing of types found in statement starting near: {0}</text>
 </exception>
 

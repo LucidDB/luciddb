@@ -1694,7 +1694,7 @@ SqlIntervalLiteral.TimeUnit TimeUnit() :
 |
     <MONTH> { return SqlIntervalLiteral.TimeUnit.Month; }
 |
-    <DAY> { return SqlIntervalLiteral.TimeUnit.Day.Day; }
+    <DAY> { return SqlIntervalLiteral.TimeUnit.Day; }
 |
     <HOUR> { return SqlIntervalLiteral.TimeUnit.Hour; }
 |
@@ -2112,19 +2112,19 @@ SqlBinaryOperator BinaryMultisetOperator() :
     (
     <MULTISET>
         (
-        <UNION> { op = opTab.multiSetUnionOperator; }
-            [   <ALL> { op = opTab.multiSetUnionAllOperator; } |
-                <DISTINCT> { op = opTab.multiSetUnionOperator; }
+        <UNION> { op = opTab.multisetUnionOperator; }
+            [   <ALL> { op = opTab.multisetUnionAllOperator; } |
+                <DISTINCT> { op = opTab.multisetUnionOperator; }
             ]
         |
-        <INTERSECT> { op = opTab.multiSetIntersectOperator; }
-            [   <ALL> { op = opTab.multiSetIntersectAllOperator; } |
-                <DISTINCT> { op = opTab.multiSetIntersectOperator; }
+        <INTERSECT> { op = opTab.multisetIntersectOperator; }
+            [   <ALL> { op = opTab.multisetIntersectAllOperator; } |
+                <DISTINCT> { op = opTab.multisetIntersectOperator; }
             ]
         |
-        <EXCEPT> { op = opTab.multiSetExceptOperator; }
-            [   <ALL> { op = opTab.multiSetExceptAllOperator; }
-             |  <DISTINCT> { op = opTab.multiSetExceptOperator; }
+        <EXCEPT> { op = opTab.multisetExceptOperator; }
+            [   <ALL> { op = opTab.multisetExceptAllOperator; }
+             |  <DISTINCT> { op = opTab.multisetExceptOperator; }
             ]
         )
     )

@@ -170,32 +170,32 @@ public class SqlStdOperatorTable extends SqlOperatorTable
     public final SqlSetOperator intersectAllOperator =
         new SqlSetOperator("INTERSECT ALL", SqlKind.Intersect, 9, true);
 
-    public final SqlSetOperator multiSetUnionOperator =
+    public final SqlSetOperator multisetUnionOperator =
         new SqlSetOperator("MULTISET UNION", SqlKind.Other, 7, false,
             ReturnTypeInference.useNullableMultiset,
             UnknownParamInference.useFirstKnown,
             OperandsTypeChecking.typeNullableMultisetMultiset);
-    public final SqlSetOperator multiSetUnionAllOperator =
+    public final SqlSetOperator multisetUnionAllOperator =
         new SqlSetOperator("MULTISET UNION ALL", SqlKind.Other, 7, true,
             ReturnTypeInference.useNullableMultiset,
             UnknownParamInference.useFirstKnown,
             OperandsTypeChecking.typeNullableMultisetMultiset);
-    public final SqlSetOperator multiSetExceptOperator =
+    public final SqlSetOperator multisetExceptOperator =
         new SqlSetOperator("MULTISET EXCEPT", SqlKind.Other, 7, false,
             ReturnTypeInference.useNullableMultiset,
             UnknownParamInference.useFirstKnown,
             OperandsTypeChecking.typeNullableMultisetMultiset);
-    public final SqlSetOperator multiSetExceptAllOperator =
+    public final SqlSetOperator multisetExceptAllOperator =
         new SqlSetOperator("MULTISET EXCEPT ALL", SqlKind.Other, 7, true,
             ReturnTypeInference.useNullableMultiset,
             UnknownParamInference.useFirstKnown,
             OperandsTypeChecking.typeNullableMultisetMultiset);
-    public final SqlSetOperator multiSetIntersectOperator =
+    public final SqlSetOperator multisetIntersectOperator =
         new SqlSetOperator("MULTISET INTERSECT", SqlKind.Other, 9, false,
             ReturnTypeInference.useNullableMultiset,
             UnknownParamInference.useFirstKnown,
             OperandsTypeChecking.typeNullableMultisetMultiset);
-    public final SqlSetOperator multiSetIntersectAllOperator =
+    public final SqlSetOperator multisetIntersectAllOperator =
         new SqlSetOperator("MULTISET INTERSECT ALL", SqlKind.Other, 9, true,
             ReturnTypeInference.useNullableMultiset,
             UnknownParamInference.useFirstKnown,

@@ -675,7 +675,7 @@ public abstract class SqlValidatorTestCase extends TestCase
         checkExpFails("'a'||x'ff'",
             "(?s).*Can not apply '\\|\\|' to arguments of type '<VARCHAR.1.> \\|\\| <VARBINARY.1.>'"
             + ".*Supported form.s.: '<CHAR> \\|\\| <CHAR>'"
-            + ".*'<VARCHAR> \\|\\| <VARCHAR>'"            
+            + ".*'<VARCHAR> \\|\\| <VARCHAR>'"
             + ".*'<BIT> \\|\\| <BIT>'" + ".*'<BINARY> \\|\\| <BINARY>'"
             + ".*'<VARBINARY> \\|\\| <VARBINARY>'.*");
     }
@@ -1116,13 +1116,13 @@ public abstract class SqlValidatorTestCase extends TestCase
     public void testIsASet() {
         checkExp("multiset[1] is a set");
         checkExp("multiset['1'] is a set");
-        checkExpFails("'a' is a set","Expected MULTISET type near : line 1, column 1");
+        checkExpFails("'a' is a set","Expected MULTISET type near: line 1, column 1");
     }
 
     public void testCardinality() {
         checkExpType("cardinality(multiset[1])","INTEGER");
         checkExpType("cardinality(multiset['1'])","INTEGER");
-        checkExpFails("cardinality('a')","Expected MULTISET type near : line 1, column 19");
+        checkExpFails("cardinality('a')","Expected MULTISET type near: line 1, column 19");
     }
 }
 
