@@ -252,30 +252,6 @@ public class FennelDbHandle implements FarragoAllocation
     }
 
     /**
-     * Wrapper for executeCmd in the case where cmd is a
-     * FemCmdPrepareTupleStream.  This ensures that some object owns the
-     * returned tuple stream.
-     *
-     * @param owner the object which will be made responsible for the stream's
-     * allocation as a result of this call
-     *
-     * @param cmd instance of FemCmdPrepareExecutionStreamGraph with all
-     * parameters set
-     *
-     * @return opened FennelStreamHandle
-     */
-    public FennelStreamHandle prepareTupleStream(
-        FarragoAllocationOwner owner,
-        FemCmdPrepareExecutionStreamGraph cmd)
-    {
-        executeCmd(cmd);
-        FennelStreamHandle hStream =
-            new FennelStreamHandle(this,cmd.getResultHandle());
-        owner.addAllocation(hStream);
-        return hStream;
-    }
-
-    /**
      * Create a native handle for a Java object for reference by XML commands.
      * After this, the Java object cannot be garbage collected until
      * its owner explicitly calls closeAllocation.

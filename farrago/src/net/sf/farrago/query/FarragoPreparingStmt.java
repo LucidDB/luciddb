@@ -182,7 +182,7 @@ public class FarragoPreparingStmt extends OJStatement
         allocations = new FarragoCompoundAllocation();
         farragoTypeFactory = new FarragoTypeFactoryImpl(catalog);
         this.dataWrapperCache = new FarragoDataWrapperCache(
-            allocations,dataWrapperCache,catalog);
+            allocations,dataWrapperCache,catalog,fennelDbHandle);
         loadedServerClassNameSet = new HashSet();
             
         super.setResultCallingConvention(CallingConvention.ITERATOR);

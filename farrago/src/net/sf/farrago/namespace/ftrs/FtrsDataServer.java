@@ -25,6 +25,8 @@ import net.sf.farrago.util.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.resource.*;
+import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.fem.fennel.*;
 
 import net.sf.saffron.core.*;
 import net.sf.saffron.util.*;
@@ -42,13 +44,20 @@ import java.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class FtrsDataServer extends MedAbstractDataServer
+class FtrsDataServer extends MedAbstractLocalDataServer
 {
+    private FarragoCatalog catalog;
+    
+    private FarragoTypeFactory indexTypeFactory;
+    
     FtrsDataServer(
         String serverMofId,
-        Properties props)
+        Properties props,
+        FarragoCatalog catalog)
     {
         super(serverMofId,props);
+        this.catalog = catalog;
+        indexTypeFactory = new FarragoTypeFactoryImpl(catalog);
     }
 
     // implement FarragoMedDataServer
@@ -85,6 +94,72 @@ class FtrsDataServer extends MedAbstractDataServer
         planner.addRule(new FtrsScanToSearchRule());
         planner.addRule(new FtrsIndexJoinRule());
         planner.addRule(new FtrsRemoveRedundantSortRule());
+    }
+
+    // implement FarragoMedLocalDataServer
+    public long createIndex(
+        CwmSqlindex index)
+    {
+        FemCmdCreateIndex cmd = catalog.newFemCmdCreateIndex();
+        if (!catalog.isFennelEnabled()) {
+            return 0;
+        }
+        
+        initIndexCmd(cmd,index);
+        return getFennelDbHandle().executeCmd(cmd);
+    }
+
+    // implement FarragoMedLocalDataServer
+    public void dropIndex(
+        CwmSqlindex index,
+        long rootPageId,
+        boolean truncate)
+    {
+        FemCmdDropIndex cmd;
+        if (truncate) {
+            cmd = catalog.newFemCmdTruncateIndex();
+        } else {
+            cmd = catalog.newFemCmdDropIndex();
+        }
+        if (!catalog.isFennelEnabled()) {
+            return;
+        }
+        initIndexCmd(cmd,index);
+        cmd.setRootPageId(rootPageId);
+        getFennelDbHandle().executeCmd(cmd);
+    }
+    
+    private void initIndexCmd(
+        FemIndexCmd cmd,CwmSqlindex index)
+    {
+        cmd.setDbHandle(getFennelDbHandle().getFemDbHandle(catalog));
+        cmd.setTupleDesc(
+            FtrsUtil.getCoverageTupleDescriptor(
+                indexTypeFactory,
+                index));
+        cmd.setKeyProj(
+            FtrsUtil.getDistinctKeyProjection(catalog,index));
+        cmd.setSegmentId(getIndexSegmentId(index));
+        cmd.setIndexId(JmiUtil.getObjectId(index));
+    }
+
+    /**
+     * Get the SegmentId of the segment storing an index.
+     *
+     * @param index the index of interest
+     *
+     * @return containing SegmentId
+     */
+    static long getIndexSegmentId(
+        CwmSqlindex index)
+    {
+        // TODO:  share symbolic enum with Fennel rather than hard-coding
+        // values here
+        if (FarragoCatalog.isTemporary(index)) {
+            return 2;
+        } else {
+            return 1;
+        }
     }
 }
 

@@ -24,6 +24,7 @@ import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.runtime.*;
+import net.sf.farrago.type.runtime.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.util.*;
 
@@ -171,12 +172,41 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         addPrecisionPrototype(
             new FarragoPrecisionType(
                 getSimpleType("DECIMAL"),false,0,0,null));
+
         // Date types
-        // addPrototype(new FarragoPrimitiveType(getSimpleType("DATE"), false, Date.class));
-        addPrecisionPrototype(new FarragoPrecisionType(getSimpleType("DATE"), false, 0, 0, null));
-        addPrecisionPrototype(new FarragoPrecisionType(getSimpleType("TIME"), false, 0, 0, null));
-        addPrecisionPrototype(new FarragoPrecisionType(getSimpleType("TIMESTAMP"), false, 0, 0, null));
+        addPrimitivePrototype(
+                new FarragoPrimitiveType(
+                        getSimpleType("DATE"),
+                        true,
+                        NullablePrimitive.NullableDate.class));
+        addPrimitivePrototype(
+                new FarragoPrimitiveType(
+                        getSimpleType("DATE"),
+                        false,
+                        NullablePrimitive.NullableDate.class));
+        addPrimitivePrototype(
+                new FarragoPrimitiveType(
+                        getSimpleType("TIME"),
+                        true,
+                        NullablePrimitive.NullableTime.class));
+        addPrimitivePrototype(
+                new FarragoPrimitiveType(
+                        getSimpleType("TIME"),
+                        false,
+                        NullablePrimitive.NullableTime.class));
+        addPrimitivePrototype(
+                new FarragoPrimitiveType(
+                        getSimpleType("TIMESTAMP"),
+                        true,
+                        NullablePrimitive.NullableTimestamp.class));
+        addPrimitivePrototype(
+                new FarragoPrimitiveType(
+                        getSimpleType("TIMESTAMP"),
+                        false,
+                        NullablePrimitive.NullableTimestamp.class));
     }
+
+
 
     //~ Methods ---------------------------------------------------------------
 
@@ -212,7 +242,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         assert(prototype != null);
         return prototype;
     }
-    
+
     // override SaffronTypeFactoryImpl
     public SaffronType createSqlType(SqlTypeName typeName, int length)
     {
@@ -229,7 +259,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         precisionType.factory = this;
         return canonize(precisionType);
     }
-    
+
     // override SaffronTypeFactoryImpl
     public SaffronType createSqlType(
         SqlTypeName typeName, int length, int scale)
@@ -247,7 +277,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         precisionType.factory = this;
         return canonize(precisionType);
     }
-    
+
     // implement FarragoTypeFactory
     public FarragoType createColumnType(CwmColumn column,boolean validated)
     {
@@ -270,7 +300,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         if (charsetName.equals("")) {
             charsetName = null;
         }
-        FarragoType specializedType = 
+        FarragoType specializedType =
             new FarragoPrecisionType(
                 prototype.getSimpleType(),
                 getCatalog().isNullable(column),
@@ -310,7 +340,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
                 }
             });
     }
-    
+
     // implement FarragoTypeFactory
     public SaffronType createResultSetType(final ResultSetMetaData metaData)
     {
@@ -360,7 +390,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
                             // to indicated unlimited precision.
                             precision = 2048;
                         }
-                        FarragoType specializedType = 
+                        FarragoType specializedType =
                             new FarragoPrecisionType(
                                 prototype.getSimpleType(),
                                 isNullable,
@@ -396,7 +426,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             // just a hack to allow for generated mofId field
             prototype = null;
         }
-        
+
         if (prototype == null) {
             // TODO:  cleanup
             prototype = new FarragoPrecisionType(
@@ -434,14 +464,14 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
                 atomicType.getSimpleType(),nullable);
         }
     }
-    
+
     private FarragoType createTypeForPrimitive(
         Class boxingClass,boolean isNullable)
     {
         return createTypeForPrimitiveByName(
             ReflectUtil.getUnqualifiedClassName(boxingClass),isNullable);
     }
-    
+
     private FarragoType createTypeForPrimitiveByName(
         String boxingClassName,boolean isNullable)
     {
@@ -505,13 +535,13 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         }
         FarragoAtomicType resultType = (FarragoAtomicType) types[0];
         boolean anyNullable = resultType.isNullable();
-        
+
         for (int i = 1; i < types.length; ++i) {
-            
+
             if (!(types[i] instanceof FarragoAtomicType)) {
                 return super.leastRestrictive(types);
             }
-            
+
             FarragoTypeFamily resultFamily = resultType.getFamily();
             FarragoAtomicType type = (FarragoAtomicType) types[i];
             FarragoTypeFamily family = type.getFamily();
@@ -519,7 +549,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             if (type.isNullable()) {
                 anyNullable = true;
             }
-            
+
             if (family.equals(FarragoTypeFamily.CHARACTER)
                 || (family.equals(FarragoTypeFamily.BINARY)))
             {
@@ -561,7 +591,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
                             if (type.getPrecision() > resultType.getPrecision())
                             {
                                 resultType = type;
-                            }   
+                            }
                         } else {
                             // TODO:  the real thing for numerics
                             resultType = createDoublePrecisionType();
@@ -614,7 +644,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             column.setIsNullable(NullableTypeEnum.COLUMN_NO_NULLS);
         }
     }
-    
+
     private SqlTypeName getSqlTypeName(FarragoAtomicType type)
     {
         return SqlTypeName.get(type.getSimpleType().getName());
@@ -625,7 +655,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         return (FarragoAtomicType) createTypeForPrimitive(
             Double.class,false);
     }
-    
+
     private FarragoAtomicType getPrototype(CwmColumn column)
     {
         CwmClassifier classifier = column.getType();
@@ -697,7 +727,12 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
                     prototype.getClassForPrimitive())),
             prototype.getSimpleType());
     }
-
+/*
+    private void addDateTimePrototype(CwmSqlsimpleType simpleType) {
+        FarragoDatetimeType prototype = new FarragoDatetimeType (simpleType);
+        addAtomicPrototype(prototype, false);
+    }
+*/
     private void addPrototype(FarragoType prototype)
     {
         prototype.factory = this;

@@ -17,28 +17,38 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-package net.sf.farrago.runtime;
+package net.sf.farrago.query;
+
+import net.sf.saffron.opt.*;
+import net.sf.saffron.rel.*;
 
 /**
- * BitReference represents a bit which can be accessed by marshalling
- * and unmarshalling.  Could be a null indicator, could be a real bit value.
+ * FennelPullSingleRel is a {@link FennelSingleRel} which is also a
+ * {@link FennelPullRel}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public interface BitReference
+public abstract class FennelPullSingleRel
+    extends FennelSingleRel
+    implements FennelPullRel
 {
     /**
-     * Set the bit value referenced by this.
+     * Creates a new FennelPullSingleRel object.
      *
-     * @param bit new value
+     * @param cluster VolcanoCluster for this rel
+     * @param child input rel
      */
-    public void setBit(boolean bit);
-
-    /**
-     * Get the bit value referenced by this.
-     */
-    public boolean getBit();
+    protected FennelPullSingleRel(VolcanoCluster cluster,SaffronRel child)
+    {
+        super(cluster,child);
+    }
+    
+    // implement SaffronRel
+    public CallingConvention getConvention()
+    {
+        return FennelPullRel.FENNEL_PULL_CONVENTION;
+    }
 }
 
-// End BitReference.java
+// End FennelPullSingleRel.java

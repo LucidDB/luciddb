@@ -199,7 +199,7 @@ public class DdlValidator extends FarragoCompoundAllocation
         typeFactory = new FarragoTypeFactoryImpl(catalog);
 
         dataWrapperCache = new FarragoDataWrapperCache(
-            this,sharedDataWrapperCache,catalog);
+            this,sharedDataWrapperCache,catalog,fennelDbHandle);
 
         // NOTE jvs 25-Jan-2004:  Use LinkedHashXXX everywhere, since order
         // matters in some cases.

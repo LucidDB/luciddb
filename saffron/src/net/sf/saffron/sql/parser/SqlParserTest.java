@@ -1030,7 +1030,7 @@ public class SqlParserTest extends TestCase
     }
 	// check date/time functions.
 	public void testTimeDate() {
-        
+
         // CURRENT_TIME - returns time w/ timezone
 		checkExp("CURRENT_TIME(3)", "CURRENT_TIME(3)");
 		// checkFails("SELECT CURRENT_TIME() FROM foo", "SELECT CURRENT_TIME() FROM `FOO`");
@@ -1060,6 +1060,17 @@ public class SqlParserTest extends TestCase
 		// checkFails("SELECT CURRENT_TIMESTAMP() FROM foo", "SELECT CURRENT_TIMESTAMP() FROM `FOO`");
 		checkExp("CURRENT_TIMESTAMP", "`CURRENT_TIMESTAMP`");
 		checkExp("CURRENT_TIMESTAMP(x+y)", "CURRENT_TIMESTAMP((`X` + `Y`))");
+
+        // Date literals
+        checkExp("DATE '2004-12-01'", "2004-12-01");
+        checkExp("TIME '12:01:01'", "12:01:01");
+        checkExp("TIMESTAMP '2004-12-01 12:01:01'", "2004-12-01 12:01:01.0");
+
+        // Failures.
+        checkFails("DATE '12/21/99'", ".*\n.*Was expecting:\n.*<QUOTED_DATE_STRING>.*\n.*");
+        checkFails("TIME '1230:33'",".*\n.*Was expecting:\n.*<QUOTED_TIME_STRING>.*\n.*");
+        checkFails("TIMESTAMP '12-21-99, 12:30:00",".*\n.*Was expecting:\n.*<QUOTED_TIMESTAMP_STRING>.*\n.*");
+
 	}
     public void testTrim() {
         checkExp("trim('mustache' FROM 'beard')","TRIM(BOTH 'mustache' FROM 'beard')");

@@ -43,7 +43,7 @@ import java.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class FtrsIndexSearchRel extends FennelSingleRel
+class FtrsIndexSearchRel extends FennelPullSingleRel
 {
     //~ Instance fields -------------------------------------------------------
 

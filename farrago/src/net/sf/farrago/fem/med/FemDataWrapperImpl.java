@@ -59,6 +59,7 @@ public abstract class FemDataWrapperImpl extends InstanceHandler
         FarragoCatalog catalog = validator.getCatalog();
         Properties props = getStorageOptionsAsProperties(this);
 
+        FarragoMedDataWrapper wrapper;
         try {
             if (!getLibraryFile().startsWith(
                     FarragoDataWrapperCache.LIBRARY_CLASS_PREFIX))
@@ -69,11 +70,23 @@ public abstract class FemDataWrapperImpl extends InstanceHandler
             }
             
             // validate that we can successfully initialize the wrapper
-            loadFromCache(validator.getDataWrapperCache());
+            wrapper = loadFromCache(validator.getDataWrapperCache());
         } catch (Throwable ex) {
             throw validator.res.newValidatorDataWrapperInvalid(
                 catalog.getLocalizedObjectName(this,null),
                 ex);
+        }
+
+        if (isForeign()) {
+            if (!wrapper.isForeign()) {
+                throw validator.res.newValidatorForeignWrapperHasLocalImpl(
+                    catalog.getLocalizedObjectName(this,null));
+            }
+        } else {
+            if (wrapper.isForeign()) {
+                throw validator.res.newValidatorLocalWrapperHasForeignImpl(
+                    catalog.getLocalizedObjectName(this,null));
+            }
         }
     }
 

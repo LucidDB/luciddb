@@ -17,13 +17,14 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 //
-// InstructionCommon.h
-// External users should Include this file if they intend to manipulate
-// instructions directly, otherwise only include CalcCommon.h
-//
 */
 #ifndef Fennel_InstructionCommon_Included
 #define Fennel_InstructionCommon_Included
+
+//! \file InstructionCommon.h
+//! External users should include this file if they intend to manipulate
+//! instructions directly, otherwise only include CalcCommon.h
+
 
 #include "fennel/calc/RegisterReference.h"
 #include "fennel/tuple/StandardTypeDescriptor.h"
@@ -44,6 +45,7 @@
 #include "fennel/calc/ExtendedInstruction.h"
 #include "fennel/calc/ExtendedInstructionTable.h"
 #include "fennel/calc/ExtString.h"
+#include "fennel/calc/ExtMath.h"
 
 #endif
 

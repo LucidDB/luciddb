@@ -34,7 +34,7 @@ import net.sf.saffron.rel.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class FennelCartesianProductRel extends FennelDoubleRel
+class FennelCartesianProductRel extends FennelPullDoubleRel
 {
     /**
      * Creates a new FennelCartesianProductRel object.

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?> <!-- -*- sgml-indent-step: 2 -*- -->
 
 <!-- $Id$ -->
-<!-- Tags generator for mdr -->
+<!-- Tags generator for MDR -->
 
 <project name="mdr-tags" basedir="." default="etags">
 

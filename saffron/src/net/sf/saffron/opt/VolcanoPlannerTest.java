@@ -193,12 +193,12 @@ public class VolcanoPlannerTest extends TestCase
 
         public void record(String name,OJClass clazz)
         {
-            assert(false);
+            throw new AssertionError();
         }
 
         public void bindVariable(String name,VariableInfo info)
         {
-            assert(false);
+            throw new AssertionError();
         }
     }
 

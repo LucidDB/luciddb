@@ -23,6 +23,7 @@ import net.sf.farrago.namespace.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.util.*;
 import net.sf.farrago.catalog.*;
+import net.sf.farrago.fennel.*;
 
 import net.sf.saffron.util.*;
 
@@ -53,6 +54,8 @@ public class FarragoDataWrapperCache extends FarragoCompoundAllocation
     private Map mapMofIdToWrapper;
 
     private FarragoCatalog catalog;
+
+    private FennelDbHandle fennelDbHandle;
     
     /**
      * Creates an empty cache.
@@ -63,15 +66,19 @@ public class FarragoDataWrapperCache extends FarragoCompoundAllocation
      * @param sharedCache underlying shared cache
      *
      * @param catalog FarragoCatalog for wrapper initialization
+     *
+     * @param fennelDbHandle FennelDbHandle for wrapper initialization
      */
     public FarragoDataWrapperCache(
         FarragoAllocationOwner owner,
         FarragoObjectCache sharedCache,
-        FarragoCatalog catalog)
+        FarragoCatalog catalog,
+        FennelDbHandle fennelDbHandle)
     {
         owner.addAllocation(this);
         this.sharedCache = sharedCache;
         this.catalog = catalog;
+        this.fennelDbHandle = fennelDbHandle;
         mapMofIdToWrapper = new HashMap();
     }
 
@@ -267,6 +274,12 @@ public class FarragoDataWrapperCache extends FarragoCompoundAllocation
                     options);
             } catch (Throwable ex) {
                 throw FarragoResource.instance().newDataServerInitFailed(ex);
+            }
+
+            if (!dataWrapper.isForeign()) {
+                FarragoMedLocalDataServer localServer =
+                    (FarragoMedLocalDataServer) server;
+                localServer.setFennelDbHandle(fennelDbHandle);
             }
             
             // TODO:  some kind of resource usage estimations for wrappers

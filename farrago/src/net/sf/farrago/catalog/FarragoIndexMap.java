@@ -25,11 +25,6 @@ import net.sf.farrago.cwm.relational.*;
  * FarragoIndexMap defines a means for mapping CWM index definitions to
  * corresponding physical storage.
  *
- *<p>
- *
- * REVIEW: does this belong somewhere else?  Maybe it wants to grow up to be a
- * full storage virtualization interface.
- *
  * @author John V. Sichi
  * @version $Id$
  */
@@ -52,16 +47,6 @@ public interface FarragoIndexMap
      * @return root PageId as a long
      */
     public long getIndexRoot(
-        CwmSqlindex index);
-
-    /**
-     * Get the SegmentId of the segment storing an index.
-     *
-     * @param index the index of interest
-     *
-     * @return containing SegmentId
-     */
-    public long getIndexSegmentId(
         CwmSqlindex index);
 
     /**
@@ -92,15 +77,6 @@ public interface FarragoIndexMap
     public void dropIndexStorage(
         CwmSqlindex index,
         boolean truncate);
-
-    /**
-     * Determine whether an index is temporary or permanent.
-     * 
-     * @param index the index to test
-     *
-     * @return true iff index is temporary
-     */
-    public boolean isTemporary(CwmSqlindex index);
 }
 
 // End FarragoIndexMap.java

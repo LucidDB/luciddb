@@ -26,6 +26,7 @@ import net.sf.saffron.core.*;
 import net.sf.saffron.oj.util.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.runtime.*;
+import net.sf.farrago.type.runtime.*;
 import net.sf.farrago.util.*;
 import net.sf.farrago.fem.fennel.*;
 import openjava.mop.*;
@@ -100,11 +101,15 @@ public class FarragoRelImplementor extends RelImplementor
             return;
         }
         if (rel != null) {
+            // TODO jvs 27-April-2004:  need a UUID suffix for these names,
+            // since global query optimization could cause private
+            // plans to get merged (possibly spanning multiple nodes)
+            
             // correlate stream name with rel which produced it
             streamDef.setName(rel.getRelTypeName() + "#" + rel.getId());
         } else {
             // TODO jvs 12-Feb-2004:  need a better UUID for
-            // anonymous stream names
+            // anonymous stream names too
             
             // anonymous stream
             streamDef.setName(

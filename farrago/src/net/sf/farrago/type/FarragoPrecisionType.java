@@ -22,6 +22,7 @@ package net.sf.farrago.type;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.runtime.*;
+import net.sf.farrago.type.runtime.*;
 import net.sf.farrago.util.*;
 
 import net.sf.saffron.rel.*;

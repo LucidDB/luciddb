@@ -217,7 +217,18 @@ public class FarragoDatabase
             if (init) {
                 systemCatalog.createSystemObjects();
             }
-            
+
+            // REVIEW:  system/user configuration
+            FemFarragoConfig currentConfig = systemCatalog.getCurrentConfig();
+
+            tracer.config(
+                "java.class.path = "
+                + System.getProperty("java.class.path"));
+
+            tracer.config(
+                "java.library.path = "
+                + System.getProperty("java.library.path"));
+
             if (systemCatalog.isFennelEnabled()) {
                 loadFennel(cmdExecutor,init);
             } else {
@@ -225,9 +236,6 @@ public class FarragoDatabase
             }
             
             integrateSaffronTracing();
-
-            // REVIEW:  system/user configuration
-            FemFarragoConfig currentConfig = systemCatalog.getCurrentConfig();
 
             long codeCacheMaxBytes = currentConfig.getCodeCacheMaxBytes();
             if (codeCacheMaxBytes == -1) {

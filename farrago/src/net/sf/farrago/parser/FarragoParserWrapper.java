@@ -1,6 +1,6 @@
 /*
 // Farrago is a relational database management system.
-// Copyright (C) 2004-2004 John V. Sichi.
+// Copyright (C) 2003-2004 John V. Sichi.
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
@@ -16,22 +16,33 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
+
 package net.sf.farrago.parser;
+
 
 import net.sf.farrago.session.FarragoSessionDdlValidator;
 
 /**
- * A <code>FarragoParserWrapper</code> is... a hack inferred from build
- * errors.
+ * FarragoParserWraper is the public wrapper interface for the JavaCC-generated
+ * Parser
  *
- * @author jhyde
- * @since Apr 20, 2004
+ * @author Kinkoi Lo
  * @version $Id$
- **/
-public interface FarragoParserWrapper {
-    FarragoSessionDdlValidator getDdlValidator();
+ */
+public interface FarragoParserWrapper
+{
 
-    void startReposWriteTxn();
+	/**
+	 * @return the validator to use for validating DDL statements as they are parsed.
+	 */
+	public FarragoSessionDdlValidator getDdlValidator();
+
+    /**
+     * Start a repository write transaction.  This is called by parserImpl when
+     * it's sure the statement is DDL and before it starts making any catalog
+     * updates.
+     */
+    public void startReposWriteTxn();
+
+
 }
-
-// End FarragoParserWrapper.java

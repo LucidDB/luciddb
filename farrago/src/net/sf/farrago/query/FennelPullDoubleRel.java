@@ -17,28 +17,42 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-package net.sf.farrago.runtime;
+package net.sf.farrago.query;
+
+import net.sf.saffron.opt.*;
+import net.sf.saffron.rel.*;
 
 /**
- * The AssignableValue interface represents a writable SQL value
- * of non-primitive type at runtime.
+ * FennelPullDoubleRel is a {@link FennelDoubleRel} which is also a
+ * {@link FennelPullRel}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public interface AssignableValue
+public abstract class FennelPullDoubleRel
+    extends FennelDoubleRel
+    implements FennelPullRel
 {
     /**
-     * Name of method implementing assignment operator.
-     */
-    public static final String ASSIGNMENT_METHOD_NAME = "assignFrom";
-
-    /**
-     * Assign value from an Object.
+     * Creates a new FennelPullDoubleRel object.
      *
-     * @param obj value to assign, or null to set null
+     * @param cluster VolcanoCluster for this rel
+     * @param left left input
+     * @param right right input
      */
-    public void assignFrom(Object number);
+    protected FennelPullDoubleRel(
+        VolcanoCluster cluster,
+        SaffronRel left,
+        SaffronRel right)
+    {
+        super(cluster,left,right);
+    }
+    
+    // implement SaffronRel
+    public CallingConvention getConvention()
+    {
+        return FennelPullRel.FENNEL_PULL_CONVENTION;
+    }
 }
 
-// End AssignableValue.java
+// End FennelPullDoubleRel.java

@@ -20,6 +20,7 @@
 package net.sf.farrago.fennel;
 
 import net.sf.farrago.*;
+import net.sf.farrago.util.*;
 import net.sf.farrago.fem.fennel.*;
 
 
@@ -158,6 +159,29 @@ public class FennelTxnContext
         cmd.setTxnHandle(hTxn);
         cmd.setSvptHandle(femSvptHandle);
         fennelDbHandle.executeCmd(cmd);
+    }
+
+    /**
+     * Wrapper for executeCmd in the case where cmd is a
+     * FemCmdCreateTupleStream.  This ensures that some object owns the
+     * returned tuple stream.
+     *
+     * @param owner the object which will be made responsible for the stream's
+     * allocation as a result of this call
+     *
+     * @return opened FennelStreamHandle
+     */
+    public FennelStreamHandle newTupleStream(
+        FarragoAllocationOwner owner)
+    {
+        FemCmdCreateExecutionStreamGraph cmdCreate =
+            metadataFactory.newFemCmdCreateExecutionStreamGraph();
+        cmdCreate.setTxnHandle(getTxnHandle());
+        fennelDbHandle.executeCmd(cmdCreate);
+        FennelStreamHandle hStream =
+            new FennelStreamHandle(fennelDbHandle,cmdCreate.getResultHandle());
+        owner.addAllocation(hStream);
+        return hStream;
     }
 }
 

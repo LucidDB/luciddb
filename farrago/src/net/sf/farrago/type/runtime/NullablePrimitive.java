@@ -17,9 +17,12 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-package net.sf.farrago.runtime;
+package net.sf.farrago.type.runtime;
 
 import net.sf.saffron.util.*;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 
 /**
@@ -38,12 +41,12 @@ public abstract class NullablePrimitive
      * Name of field storing value.
      */
     public static final String VALUE_FIELD_NAME = "value";
-    
+
     /**
      * Name of field storing null indicator.
      */
     public static final String NULL_IND_FIELD_NAME = NULL_IND_ACCESSOR_NAME;
-    
+
     private static final Integer INT_ONE = new Integer(1);
     private static final Integer INT_ZERO = new Integer(0);
 
@@ -104,7 +107,16 @@ public abstract class NullablePrimitive
      * @param number a new non-null value to be assigned
      */
     protected abstract void setNumber(Number number);
-    
+
+    /**
+     *
+     * @param Class
+     */
+    public static Class getPrimitiveClass(Class np) throws NoSuchFieldException
+    {
+        assert NullablePrimitive.class.isAssignableFrom(np) : "parameter to static getPrimitiveClass must be assignable to NullablePrimitive: " + np.toString();
+        return np.getField(VALUE_FIELD_NAME).getType();
+    }
     //~ Inner Classes ---------------------------------------------------------
 
     /**
@@ -128,7 +140,7 @@ public abstract class NullablePrimitive
         {
             value = bit;
         }
-        
+
         // implement BitReference
         public boolean getBit()
         {
@@ -143,7 +155,7 @@ public abstract class NullablePrimitive
     {
         /** Wrapped primitive */
         public byte value;
-        
+
         // implement NullablePrimitive
         protected void setNumber(Number number)
         {
@@ -158,7 +170,7 @@ public abstract class NullablePrimitive
     {
         /** Wrapped primitive */
         public double value;
-        
+
         // implement NullablePrimitive
         protected void setNumber(Number number)
         {
@@ -173,7 +185,7 @@ public abstract class NullablePrimitive
     {
         /** Wrapped primitive */
         public float value;
-        
+
         // implement NullablePrimitive
         protected void setNumber(Number number)
         {
@@ -199,8 +211,15 @@ public abstract class NullablePrimitive
     /**
      * Nullable wrapper for long.
      */
-    public static final class NullableLong extends NullablePrimitive
+    public static class NullableLong extends NullablePrimitive
     {
+        // overriden for date subtypes.
+ /*       public static Class getPrimitiveClassMethod(Class np)
+        {
+            Util.discard(np);
+            return Long.TYPE;
+        }
+*/
         /** Wrapped primitive */
         public long value;
 
@@ -211,6 +230,35 @@ public abstract class NullablePrimitive
         }
     }
 
+    public static final class NullableDate extends NullableLong
+    {
+
+        public Object getNullableData()
+        {
+            return new java.sql.Date(value);
+        }
+
+    }
+
+    public static final class NullableTime extends NullableLong
+    {
+
+        public Object getNullableData()
+        {
+            return new java.sql.Time(value);
+        }
+
+    }
+
+    public static final class NullableTimestamp extends NullableLong
+    {
+
+        public Object getNullableData()
+        {
+            return new java.sql.Timestamp(value);
+        }
+
+    }
     /**
      * Nullable wrapper for short.
      */

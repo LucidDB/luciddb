@@ -21,6 +21,7 @@ package net.sf.farrago.runtime;
 
 import net.sf.farrago.util.*;
 import net.sf.farrago.type.*;
+import net.sf.farrago.type.runtime.*;
 
 import net.sf.saffron.core.*;
 import net.sf.saffron.runtime.*;

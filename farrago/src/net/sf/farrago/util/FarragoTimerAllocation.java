@@ -69,7 +69,7 @@ public class FarragoTimerAllocation implements FarragoAllocation
                 try {
                     shutdownSynch.wait();
                 } catch (InterruptedException ex) {
-                    assert(false);
+                    throw new AssertionError();
                 }
             }
         }

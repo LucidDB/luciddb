@@ -133,8 +133,13 @@ public:
 
 
 /**
- * Base class for all extended instructions. Derived classes are typically
- * (though not necessarily) templates such as ExtendedInstruction1.
+ * Base class for all extended instructions. ExtendedInstructions
+ * allow a programmer to extend Calculator with greater ease than
+ * adding regular instructions. See ExtendedInstructionHowTo for
+ * details.
+ * 
+ * Derived classes are typically (though not necessarily) templates
+ * such as ExtendedInstruction1.
  */
 class ExtendedInstruction : public Instruction
 {

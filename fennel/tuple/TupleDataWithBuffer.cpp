@@ -27,8 +27,8 @@ TupleDataWithBuffer::TupleDataWithBuffer(TupleDescriptor const& tupleDesc)
 {
     TupleAccessor tupleAccessor;
     tupleAccessor.compute(tupleDesc, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
-    mArray.reset(new FixedBuffer[tupleAccessor.getMaxByteCount()]);
-    tupleAccessor.setCurrentTupleBuf(mArray.get());
+    array.reset(new FixedBuffer[tupleAccessor.getMaxByteCount()]);
+    tupleAccessor.setCurrentTupleBuf(array.get());
     this->compute(tupleDesc);
     tupleAccessor.unmarshal(*this);
 }

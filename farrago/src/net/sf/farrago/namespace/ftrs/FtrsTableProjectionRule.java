@@ -63,7 +63,7 @@ class FtrsTableProjectionRule extends VolcanoRule
     // implement VolcanoRule
     public CallingConvention getOutConvention()
     {
-        return FennelRel.FENNEL_CALLING_CONVENTION;
+        return FennelPullRel.FENNEL_PULL_CONVENTION;
     }
 
     // implement VolcanoRule
@@ -142,7 +142,8 @@ class FtrsTableProjectionRule extends VolcanoRule
                     new FennelRenameRel(
                         origProject.getCluster(),
                         projectedScan,
-                        fieldNames);
+                        fieldNames,
+                        FennelPullRel.FENNEL_PULL_CONVENTION);
             }
 
             call.transformTo(projectedScan);
@@ -159,7 +160,7 @@ class FtrsTableProjectionRule extends VolcanoRule
             return true;
         }
         Integer [] indexProjection =
-            FennelRelUtil.getUnclusteredCoverageArray(catalog,index);
+            FtrsUtil.getUnclusteredCoverageArray(catalog,index);
         return Arrays.asList(indexProjection).containsAll(
             Arrays.asList(projection));
     }

@@ -584,9 +584,10 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
                 for (int j = 0; j < i; j++) {
                     SaffronField field2 = fields[j];
                     if (field.getName().equals(field2.getName())) {
-                        assert(false) :
+                        throw new AssertionError(
                             "i != j implies "
-                            + "!fields[i].getName().equals(fields[j].getName())";
+                            + "!fields[i].getName()."
+                            + "equals(fields[j].getName())");
                     }
                 }
             }

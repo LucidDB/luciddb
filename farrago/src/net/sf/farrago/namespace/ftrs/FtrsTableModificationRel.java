@@ -43,7 +43,7 @@ import java.util.*;
  * @version $Id$
  */
 class FtrsTableModificationRel extends TableModificationRel
-    implements FennelRel
+    implements FennelPullRel
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -84,7 +84,7 @@ class FtrsTableModificationRel extends TableModificationRel
     // implement SaffronRel
     public CallingConvention getConvention()
     {
-        return FennelRel.FENNEL_CALLING_CONVENTION;
+        return FennelPullRel.FENNEL_PULL_CONVENTION;
     }
 
     // implement FennelRel
@@ -214,7 +214,7 @@ class FtrsTableModificationRel extends TableModificationRel
             if (updateCwmColumnList != null) {
                 if (index != clusteredIndex) {
                     List coverageList =
-                        FennelRelUtil.getUnclusteredCoverageColList(
+                        FtrsUtil.getUnclusteredCoverageColList(
                             catalog,index);
                     if (!coverageList.removeAll(updateCwmColumnList)) {
                         // no intersection between update list and index
@@ -223,7 +223,7 @@ class FtrsTableModificationRel extends TableModificationRel
                     }
                 }
 
-                List distinctKeyList = FennelRelUtil.getDistinctKeyColList(
+                List distinctKeyList = FtrsUtil.getDistinctKeyColList(
                     catalog,index);
                 if (!distinctKeyList.removeAll(updateCwmColumnList)) {
                     // distinct key is not being changed, so it's safe to
@@ -235,20 +235,20 @@ class FtrsTableModificationRel extends TableModificationRel
             FemIndexWriterDef indexWriter =
                 catalog.fennelPackage.getFemIndexWriterDef()
                                          .createFemIndexWriterDef();
-            if (!getPreparingStmt().getIndexMap().isTemporary(index)) {
+            if (!catalog.isTemporary(index)) {
                 indexWriter.setRootPageId(
                     getPreparingStmt().getIndexMap().getIndexRoot(index));
             } else {
                 indexWriter.setRootPageId(-1);
             }
             indexWriter.setSegmentId(
-                getPreparingStmt().getIndexMap().getIndexSegmentId(index));
+                FtrsDataServer.getIndexSegmentId(index));
             indexWriter.setIndexId(
                 JmiUtil.getObjectId(index));
             indexWriter.setTupleDesc(
-                FennelRelUtil.getCoverageTupleDescriptor(typeFactory,index));
+                FtrsUtil.getCoverageTupleDescriptor(typeFactory,index));
             indexWriter.setKeyProj(
-                FennelRelUtil.getDistinctKeyProjection(catalog,index));
+                FtrsUtil.getDistinctKeyProjection(catalog,index));
             indexWriter.setUpdateInPlace(updateInPlace);
 
             indexWriter.setDistinctness(
@@ -256,7 +256,7 @@ class FtrsTableModificationRel extends TableModificationRel
                                  : DistinctnessEnum.DUP_ALLOW.toString());
             if (index != clusteredIndex) {
                 indexWriter.setInputProj(
-                    FennelRelUtil.getCoverageProjection(catalog,index));
+                    FtrsUtil.getCoverageProjection(catalog,index));
             }
 
             boolean prepend = false;

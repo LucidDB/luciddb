@@ -489,7 +489,7 @@ CwmModelElement TableElement(CwmTable table) :
         }
 }
 
-void BasicColumnDefinition(CwmTable table,CwmColumn column) :
+void BasicColumnDefinition(CwmNamedColumnSet table,CwmColumn column) :
 {
     SqlIdentifier columnName;
     SqlIdentifier typeName;

@@ -55,6 +55,19 @@ public interface FarragoSessionFactory
     public FennelCmdExecutor newFennelCmdExecutor();
 
     /**
+     * Creates a new Fennel transaction context.
+     *
+     * @param catalog catalog for transaction metadata access
+     *
+     * @param fennelDbHandle handle for database to access
+     *
+     * @return new context
+     */
+    public FennelTxnContext newFennelTxnContext(
+        FarragoCatalog catalog,
+        FennelDbHandle fennelDbHandle);
+
+    /**
      * Gives this factory a chance to clean up after a session has been closed.
      */
     public void cleanupSessions();

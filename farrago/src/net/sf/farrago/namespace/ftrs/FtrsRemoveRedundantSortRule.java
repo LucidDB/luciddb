@@ -51,7 +51,7 @@ class FtrsRemoveRedundantSortRule extends VolcanoRule
     // implement VolcanoRule
     public CallingConvention getOutConvention()
     {
-        return FennelRel.FENNEL_CALLING_CONVENTION;
+        return FennelPullRel.FENNEL_PULL_CONVENTION;
     }
 
     // implement VolcanoRule

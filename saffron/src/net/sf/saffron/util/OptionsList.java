@@ -185,7 +185,7 @@ public class OptionsList
         for (int i = 0; i < options.length; i++) {
             Option option = options[i];
             if (option.required_) {
-                assert(false) : "!options[i].required_";
+                throw new AssertionError("!options[i].required_");
             }
         }
         optionGroups_.add(new Group(minCount,maxCount,options));

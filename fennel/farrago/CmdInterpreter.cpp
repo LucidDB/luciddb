@@ -313,15 +313,23 @@ void CmdInterpreter::visit(ProxyCmdRollback &cmd)
     }
 }
 
-void CmdInterpreter::visit(ProxyCmdPrepareExecutionStreamGraph &cmd)
+void CmdInterpreter::visit(ProxyCmdCreateExecutionStreamGraph &cmd)
 {
     TxnHandle *pTxnHandle = getTxnHandle(cmd.getTxnHandle());
     SharedTupleStreamGraph pGraph =
         TupleStreamGraph::newTupleStreamGraph();
     pGraph->setTxn(pTxnHandle->pTxn);
-    // TODO:  fix leak if excn thrown
     StreamHandle *pStreamHandle = new StreamHandle();
     ++JniUtil::handleCount;
+    pStreamHandle->pTxnHandle = pTxnHandle;
+    pStreamHandle->pTupleStreamGraph = pGraph;
+    setStreamHandle(cmd.getResultHandle(),pStreamHandle);
+}
+
+void CmdInterpreter::visit(ProxyCmdPrepareExecutionStreamGraph &cmd)
+{
+    StreamHandle *pStreamHandle = getStreamHandle(cmd.getStreamHandle());
+    TxnHandle *pTxnHandle = pStreamHandle->pTxnHandle;
     // TODO: Perhaps stream factory should be singleton
     ExecutionStreamFactory streamFactory(
         pTxnHandle->pDb,
@@ -330,10 +338,8 @@ void CmdInterpreter::visit(ProxyCmdPrepareExecutionStreamGraph &cmd)
     TupleStreamBuilder streamBuilder(
         pTxnHandle->pDb,
         streamFactory,
-        pGraph);
+        pStreamHandle->pTupleStreamGraph);
     streamBuilder.buildStreamGraph(cmd);
-    pStreamHandle->pTupleStreamGraph = pGraph;
-    setStreamHandle(cmd.getResultHandle(),pStreamHandle);
 }
 
 PageId CmdInterpreter::StreamHandle::getRoot(PageOwnerId pageOwnerId)

@@ -182,7 +182,7 @@ class FtrsScanToSearchRule extends VolcanoRule
         SaffronRel castRel = OptUtil.createCastRel(nullFilterRel,lhsRowType);
 
         SaffronRel keyInput = convert(
-            planner,castRel,FennelRel.FENNEL_CALLING_CONVENTION);
+            planner,castRel,FennelPullRel.FENNEL_PULL_CONVENTION);
         assert (keyInput != null);
 
         if (!catalog.isClustered(index)
@@ -200,7 +200,7 @@ class FtrsScanToSearchRule extends VolcanoRule
             }
             
             Integer [] clusteredKeyColumns =
-                FennelRelUtil.getClusteredDistinctKeyArray(
+                FtrsUtil.getClusteredDistinctKeyArray(
                     catalog,
                     origScan.index);
             FtrsIndexScanRel unclusteredScan =

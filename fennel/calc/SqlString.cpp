@@ -22,6 +22,7 @@
 // An ascii string library that adheres to the SQL99 standard definitions
 */
 
+#include "fennel/common/CommonPreamble.h"
 #include "fennel/calc/SqlString.h"
 
 FENNEL_BEGIN_NAMESPACE

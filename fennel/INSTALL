@@ -1,7 +1,7 @@
-So far, Fennel development has been targeted to Linux x86, Cygwin, and
-Mingw, so the code is unlikely to build or run without modification on
-any other platform.  If you are building for Mingw, read INSTALL.mingw
-also before attempting the instructions below.
+So far, Fennel development has been targeted to Linux x86 and
+Cygwin+Mingw, so the code is unlikely to build or run without
+modification on any other platform.  If you are building for Mingw,
+read INSTALL.mingw also before attempting the instructions below.
 
 ======================================================================
 SIMPLE CONFIGURATION
@@ -51,6 +51,12 @@ You must supply the source locations for these two libraries via
 how to build these libraries for use by Fennel.  (This is only
 required for the first build; after that the third-party libraries
 never change until an upgrade is required.)
+
+If at some point you run into configuration/build problems and need to
+retry after upgrading required tools, beware of cached information
+left behind by a failed run.  The safest thing to do is to delete
+everything and restart from a clean source tree; at the very least, rm
+-rf the autom4te.cache directory.
 
 ======================================================================
 THIRD-PARTY LIBS

@@ -56,7 +56,7 @@ class FennelCartesianJoinRule extends VolcanoRule
     // implement VolcanoRule
     public CallingConvention getOutConvention()
     {
-        return FennelRel.FENNEL_CALLING_CONVENTION;
+        return FennelPullRel.FENNEL_PULL_CONVENTION;
     }
 
     // implement VolcanoRule
@@ -83,13 +83,13 @@ class FennelCartesianJoinRule extends VolcanoRule
         }
 
         SaffronRel fennelLeft =
-            convert(planner,leftRel,FennelRel.FENNEL_CALLING_CONVENTION);
+            convert(planner,leftRel,FennelPullRel.FENNEL_PULL_CONVENTION);
         if (fennelLeft == null) {
             return;
         }
         
         SaffronRel fennelRight =
-            convert(planner,rightRel,FennelRel.FENNEL_CALLING_CONVENTION);
+            convert(planner,rightRel,FennelPullRel.FENNEL_PULL_CONVENTION);
         if (fennelRight == null) {
             return;
         }

@@ -24,10 +24,14 @@ import net.sf.farrago.util.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.fem.fennel.*;
+import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fennel.*;
+import net.sf.farrago.resource.*;
+import net.sf.farrago.namespace.*;
+import net.sf.farrago.namespace.util.*;
 
 import java.util.*;
+import java.sql.*;
 
 /**
  * SessionIndexMap implements FarragoIndexMap, resolving indexes for both
@@ -36,7 +40,9 @@ import java.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class SessionIndexMap implements FarragoIndexMap, FarragoAllocation
+class SessionIndexMap
+    extends FarragoCompoundAllocation
+    implements FarragoIndexMap
 {
     private FarragoDatabase database;
     
@@ -46,19 +52,19 @@ class SessionIndexMap implements FarragoIndexMap, FarragoAllocation
     private Map tempIndexRootMap;
     
     /**
-     * Map from index ID to index for temporary tables.
+     * Map from index ID to index for all tables.
      */
-    private Map tempIndexIdMap;
+    private Map indexIdMap;
     
-    /**
-     * Private type factory.  REVIEW:  use a sharable one instead?
-     */
-    private FarragoTypeFactory typeFactory;
-
     /**
      * Catalog for this session.
      */
     private FarragoCatalog catalog;
+
+    /**
+     * Cache for local data wrappers used to manage indexes.
+     */
+    private FarragoDataWrapperCache dataWrapperCache;
 
     /**
      * Create a new SessionIndexMap.
@@ -78,16 +84,21 @@ class SessionIndexMap implements FarragoIndexMap, FarragoAllocation
         this.database = database;
         this.catalog = catalog;
         tempIndexRootMap = new HashMap();
-        tempIndexIdMap = new HashMap();
-        typeFactory = new FarragoTypeFactoryImpl(catalog);
+        indexIdMap = new HashMap();
         owner.addAllocation(this);
+
+        dataWrapperCache = new FarragoDataWrapperCache(
+            this,
+            database.getDataWrapperCache(),
+            catalog,
+            database.getFennelDbHandle());
     }
     
     // implement FarragoIndexMap
     public long getIndexRoot(
         CwmSqlindex index)
     {
-        if (isTemporary(index)) {
+        if (catalog.isTemporary(index)) {
             Long root = (Long) tempIndexRootMap.get(index);
             assert(root != null);
             return root.longValue();
@@ -100,7 +111,7 @@ class SessionIndexMap implements FarragoIndexMap, FarragoAllocation
     private void setIndexRoot(
         CwmSqlindex index,long root)
     {
-        if (isTemporary(index)) {
+        if (catalog.isTemporary(index)) {
             Object old = tempIndexRootMap.put(index,new Long(root));
             assert(old == null);
         } else {
@@ -141,6 +152,10 @@ class SessionIndexMap implements FarragoIndexMap, FarragoAllocation
             dropIndexStorage(index,false);
         }
         // TODO:  make Fennel drop temporary indexes on recovery also
+
+        // NOTE:  do this last, so that we don't release data wrappers
+        // until we're done using them for drops above
+        super.closeAllocation();
     }
 
     /**
@@ -161,51 +176,20 @@ class SessionIndexMap implements FarragoIndexMap, FarragoAllocation
 
     // REVIEW:  rollback issues
 
-    public boolean isTemporary(CwmSqlindex index)
-    {
-        return ((CwmTable) index.getSpannedClass()).isTemporary();
-    }
-
-    private void initIndexCmd(
-        FemIndexCmd cmd,CwmSqlindex index)
-    {
-        cmd.setDbHandle(database.getFennelDbHandle().getFemDbHandle(catalog));
-        cmd.setTupleDesc(
-            FennelRelUtil.getCoverageTupleDescriptor(
-                typeFactory,
-                index));
-        cmd.setKeyProj(
-            FennelRelUtil.getDistinctKeyProjection(catalog,index));
-        cmd.setSegmentId(getIndexSegmentId(index));
-        cmd.setIndexId(JmiUtil.getObjectId(index));
-    }
-
-    // implement FarragoIndexMap
-    public long getIndexSegmentId(
-        CwmSqlindex index)
-    {
-        // TODO:  share symbolic enum with Fennel rather than hard-coding
-        // values here
-        if (isTemporary(index)) {
-            return 2;
-        } else {
-            return 1;
-        }
-    }
-    
     // implement FarragoIndexMap
     public void createIndexStorage(
         CwmSqlindex index)
     {
-        FemCmdCreateIndex cmd = catalog.newFemCmdCreateIndex();
-        if (!catalog.isFennelEnabled()) {
-            return;
+        FarragoMedLocalDataServer server = getIndexDataServer(index);
+        long indexRoot;
+        try {
+            indexRoot = server.createIndex(index);
+        } catch (SQLException ex) {
+            throw FarragoResource.instance().newDataServerIndexCreateFailed(
+                catalog.getLocalizedObjectName(index,null),ex);
         }
-        
-        initIndexCmd(cmd,index);
-        long indexRoot = database.getFennelDbHandle().executeCmd(cmd);
         setIndexRoot(index,indexRoot);
-        tempIndexIdMap.put(
+        indexIdMap.put(
             new Long(JmiUtil.getObjectId(index)),
             index);
     }
@@ -214,27 +198,23 @@ class SessionIndexMap implements FarragoIndexMap, FarragoAllocation
     public void dropIndexStorage(
         CwmSqlindex index,boolean truncate)
     {
-        if (isTemporary(index)) {
+        if (catalog.isTemporary(index)) {
             if (!tempIndexRootMap.containsKey(index)) {
                 // index was never created, so nothing to do
                 return;
             }
         }
+
+        FarragoMedLocalDataServer server = getIndexDataServer(index);
+        try {
+            server.dropIndex(index,getIndexRoot(index),truncate);
+        } catch (SQLException ex) {
+            throw FarragoResource.instance().newDataServerIndexDropFailed(
+                catalog.getLocalizedObjectName(index,null),ex);
+        }
         
-        FemCmdDropIndex cmd;
-        if (truncate) {
-            cmd = catalog.newFemCmdTruncateIndex();
-        } else {
-            cmd = catalog.newFemCmdDropIndex();
-        }
-        if (!catalog.isFennelEnabled()) {
-            return;
-        }
-        initIndexCmd(cmd,index);
-        cmd.setRootPageId(getIndexRoot(index));
-        database.getFennelDbHandle().executeCmd(cmd);
         if (!truncate) {
-            tempIndexIdMap.remove(new Long(JmiUtil.getObjectId(index)));
+            indexIdMap.remove(new Long(JmiUtil.getObjectId(index)));
             tempIndexRootMap.remove(index);
         }
     }
@@ -242,7 +222,16 @@ class SessionIndexMap implements FarragoIndexMap, FarragoAllocation
     // implement FarragoIndexMap
     public CwmSqlindex getIndexById(long id)
     {
-        return (CwmSqlindex) tempIndexIdMap.get(new Long(id));
+        return (CwmSqlindex) indexIdMap.get(new Long(id));
+    }
+
+    private FarragoMedLocalDataServer getIndexDataServer(CwmSqlindex index)
+    {
+        FemLocalTable localTable = (FemLocalTable) index.getSpannedClass();
+        FemDataServerImpl femServer = (FemDataServerImpl)
+            localTable.getServer();
+        return (FarragoMedLocalDataServer)
+            femServer.loadFromCache(dataWrapperCache);
     }
 }
 

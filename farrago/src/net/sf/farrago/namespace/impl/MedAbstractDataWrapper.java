@@ -112,6 +112,12 @@ public abstract class MedAbstractDataWrapper
     public void closeAllocation()
     {
     }
+    
+    // implement FarragoMedDataWrapper
+    public boolean isForeign()
+    {
+        return true;
+    }
 }
 
 // End MedAbstractDataWrapper.java

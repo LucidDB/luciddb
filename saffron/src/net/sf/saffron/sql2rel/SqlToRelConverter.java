@@ -800,6 +800,12 @@ public class SqlToRelConverter {
             return rexBuilder.makeLiteral((SqlLiteral.StringLiteral) value);
         } else if (value instanceof SqlFunctionTable.FunctionFlagType) {
             return rexBuilder.makeLiteral((SqlFunctionTable.FunctionFlagType) value);
+        } else if (value instanceof java.sql.Date) {
+            return rexBuilder.makeLiteral((java.sql.Date) value);
+        } else if (value instanceof java.sql.Time) {
+            return rexBuilder.makeLiteral((java.sql.Time) value);
+        } else if (value instanceof java.sql.Timestamp) {
+            return rexBuilder.makeLiteral((java.sql.Timestamp) value);
         } else {
             throw Util.needToImplement(literal);
         }
@@ -1396,8 +1402,7 @@ public class SqlToRelConverter {
                 }
                 fieldOffset -= rowType.getFieldCount();
             }
-            assert(false);
-            return null;
+            throw new AssertionError();
         }
 
         private ArrayList flatten(SaffronRel[] rels) {

@@ -53,7 +53,7 @@ class FtrsTableModificationRule extends VolcanoRule
     // implement VolcanoRule
     public CallingConvention getOutConvention()
     {
-        return FennelRel.FENNEL_CALLING_CONVENTION;
+        return FennelPullRel.FENNEL_PULL_CONVENTION;
     }
 
     // implement VolcanoRule
@@ -78,7 +78,7 @@ class FtrsTableModificationRule extends VolcanoRule
         }
         
         SaffronRel fennelInput =
-            convert(planner,inputRel,FennelRel.FENNEL_CALLING_CONVENTION);
+            convert(planner,inputRel,FennelPullRel.FENNEL_PULL_CONVENTION);
         if (fennelInput == null) {
             return;
         }

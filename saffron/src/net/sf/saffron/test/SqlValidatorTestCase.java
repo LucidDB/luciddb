@@ -696,7 +696,12 @@ public abstract class SqlValidatorTestCase extends TestCase {
   //      checkExpFails("CURRENT_TIMESTAMP('foo')","Validation Error: Can not apply 'CURRENT_TIMESTAMP' to arguments of type 'CURRENT_TIMESTAMP(<VARCHAR(3)>)'. " +
  //               "Supported form(s): 'CURRENT_TIMESTAMP(<INTEGER>)'");
 
+       // Date literals
+        checkExp("DATE '2004-12-01'");
+        checkExp("TIME '12:01:01'");
+        checkExp("TIMESTAMP '2004-12-01 12:01:01'");
 
+        // REVIEW: Can't think of any date/time/ts literals that will parse, but not validate.
 
     }
 

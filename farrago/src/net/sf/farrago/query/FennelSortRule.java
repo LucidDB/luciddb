@@ -58,7 +58,7 @@ class FennelSortRule extends VolcanoRule
     // implement VolcanoRule
     public CallingConvention getOutConvention()
     {
-        return FennelRel.FENNEL_CALLING_CONVENTION;
+        return FennelPullRel.FENNEL_PULL_CONVENTION;
     }
 
     // implement VolcanoRule
@@ -67,7 +67,7 @@ class FennelSortRule extends VolcanoRule
         SortRel sortRel = (SortRel) call.rels[0];
         SaffronRel relInput = call.rels[1];
         SaffronRel fennelInput =
-            convert(planner,relInput,FennelRel.FENNEL_CALLING_CONVENTION);
+            convert(planner,relInput,FennelPullRel.FENNEL_PULL_CONVENTION);
         if (fennelInput == null) {
             return;
         }

@@ -30,7 +30,7 @@ import net.sf.saffron.util.*;
 import openjava.ptree.*;
 
 /**
- * FennelDoubleRel is a FennelRel which takes two FennelRels as inputs.
+ * FennelDoubleRel is a {@link FennelRel} which takes two FennelRels as inputs.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -61,12 +61,6 @@ abstract class FennelDoubleRel extends SaffronRel implements FennelRel
     public SaffronConnection getConnection()
     {
         return getFennelLeftInput().getConnection();
-    }
-    
-    // implement SaffronRel
-    public CallingConvention getConvention()
-    {
-        return FennelRel.FENNEL_CALLING_CONVENTION;
     }
     
     // implement SaffronRel

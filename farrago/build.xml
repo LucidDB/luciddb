@@ -189,7 +189,7 @@ require version '${required.ant.version}'."/>
     location="${xmi.dir}/ExtModelTransformed.xmi"/>
 
   <!-- Extension model file name without path -->
-  <basename property="ExtModelFileName" file="${extmodel.file}" suffix=".zuml"/>
+  <basename property="ExtModelFileName" file="${ext.model.file}" suffix=".zuml"/>
 
   <!-- XMI file containing UML representation of Farrago extension model -->
   <property name="ExtModelUML.xmi"
@@ -602,7 +602,7 @@ require version '${required.ant.version}'."/>
       out="${FarragoMetamodel.xmi}"/>
   </target>
   
-  <target name="transformExtModel"  if="extmodel.file">
+  <target name="transformExtModel"  if="ext.model.file">
 	 <xslt style="${xmi.dir}/transformFEME.xsl"
 		in="${ExtModel.xmi}"
 		out="${ExtModelTransformed.xmi}" >
@@ -613,7 +613,7 @@ require version '${required.ant.version}'."/>
 		token="org.omg.xmi.namespace.Model" value="omg.org/mof.Model/1.3" />
   </target>    
 
-  <target name="combineExtModel"  if="extmodel.file">
+  <target name="combineExtModel"  if="ext.model.file">
 	 <xslt style="${xmi.dir}/combineExtModel.xsl"
 		in="${FarragoMetamodelCWM.xmi}"
 		out="${FarragoMetamodelExt.xmi}">
@@ -772,8 +772,8 @@ require version '${required.ant.version}'."/>
   </target>
 
   <!-- unzip farrago extension model -->
-  <target name="unzipExtModel" if="extmodel.file">
-    <unzip src="${extmodel.file}" dest="${xmi.dir}">
+  <target name="unzipExtModel" if="ext.model.file">
+    <unzip src="${ext.model.file}" dest="${xmi.dir}">
       <patternset>
         <include name="${ExtModelFileName}.xmi"/>
       </patternset>
@@ -787,7 +787,7 @@ require version '${required.ant.version}'."/>
 	  umlsansdiagrams="${FarragoExtMetamodelUMLSansDiagrams.xmi}"/>
   </target>
 
-  <target name="convertExtModel" depends="unzipExtModel"  if="extmodel.file">
+  <target name="convertExtModel" depends="unzipExtModel"  if="ext.model.file">
     <uml2mof umlmodelname="${ExtModelUML.xmi}"
 	  outputfilename="${ExtModel.xmi}"
 	  umlsansdiagrams="${ExtModelUMLSansDiagrams.xmi}"/>

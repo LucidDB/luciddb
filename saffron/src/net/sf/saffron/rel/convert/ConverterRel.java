@@ -30,6 +30,9 @@ import net.sf.saffron.rel.SaffronRel;
 import net.sf.saffron.rel.SingleRel;
 import net.sf.saffron.util.Util;
 
+// REVIEW jvs 23-April-2004:  This should really be an interface
+// (with a companion abstract class), providing more flexibility in
+// multiple inheritance situations.
 
 /**
  * Converts a relational expression from one {@link CallingConvention calling

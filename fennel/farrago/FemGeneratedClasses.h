@@ -15,14 +15,17 @@ typedef JniProxyIter<ProxyIndexLoaderDef> SharedProxyIndexLoaderDef;
 class ProxyCmdCreateIndex;
 typedef JniProxyIter<ProxyCmdCreateIndex> SharedProxyCmdCreateIndex;
 
-class ProxyCmdCheckpoint;
-typedef JniProxyIter<ProxyCmdCheckpoint> SharedProxyCmdCheckpoint;
+class ProxyTupleStreamCmd;
+typedef JniProxyIter<ProxyTupleStreamCmd> SharedProxyTupleStreamCmd;
+
+class ProxyTableWriterDef;
+typedef JniProxyIter<ProxyTableWriterDef> SharedProxyTableWriterDef;
 
 class ProxyJavaTupleStreamDef;
 typedef JniProxyIter<ProxyJavaTupleStreamDef> SharedProxyJavaTupleStreamDef;
 
-class ProxyTableWriterDef;
-typedef JniProxyIter<ProxyTableWriterDef> SharedProxyTableWriterDef;
+class ProxyKeyAccessorDef;
+typedef JniProxyIter<ProxyKeyAccessorDef> SharedProxyKeyAccessorDef;
 
 class ProxySortingStreamDef;
 typedef JniProxyIter<ProxySortingStreamDef> SharedProxySortingStreamDef;
@@ -36,8 +39,8 @@ typedef JniProxyIter<ProxyCmdTruncateIndex> SharedProxyCmdTruncateIndex;
 class ProxyCmdBeginTxn;
 typedef JniProxyIter<ProxyCmdBeginTxn> SharedProxyCmdBeginTxn;
 
-class ProxyDatabaseParam;
-typedef JniProxyIter<ProxyDatabaseParam> SharedProxyDatabaseParam;
+class ProxyCmdCheckpoint;
+typedef JniProxyIter<ProxyCmdCheckpoint> SharedProxyCmdCheckpoint;
 
 class ProxyHandle;
 typedef JniProxyIter<ProxyHandle> SharedProxyHandle;
@@ -57,8 +60,11 @@ typedef JniProxyIter<ProxyExecutionStreamDef> SharedProxyExecutionStreamDef;
 class ProxyTableDeleterDef;
 typedef JniProxyIter<ProxyTableDeleterDef> SharedProxyTableDeleterDef;
 
-class ProxyTupleStreamCmd;
-typedef JniProxyIter<ProxyTupleStreamCmd> SharedProxyTupleStreamCmd;
+class ProxyTupleAttrAccessor;
+typedef JniProxyIter<ProxyTupleAttrAccessor> SharedProxyTupleAttrAccessor;
+
+class ProxyDatabaseParam;
+typedef JniProxyIter<ProxyDatabaseParam> SharedProxyDatabaseParam;
 
 class ProxyCmdPrepareExecutionStreamGraph;
 typedef JniProxyIter<ProxyCmdPrepareExecutionStreamGraph> SharedProxyCmdPrepareExecutionStreamGraph;
@@ -75,17 +81,14 @@ typedef JniProxyIter<ProxyIndexStreamDef> SharedProxyIndexStreamDef;
 class ProxyTupleProjection;
 typedef JniProxyIter<ProxyTupleProjection> SharedProxyTupleProjection;
 
-class ProxyKeyAccessorDef;
-typedef JniProxyIter<ProxyKeyAccessorDef> SharedProxyKeyAccessorDef;
-
 class ProxyTxnHandle;
 typedef JniProxyIter<ProxyTxnHandle> SharedProxyTxnHandle;
 
 class ProxyDbHandle;
 typedef JniProxyIter<ProxyDbHandle> SharedProxyDbHandle;
 
-class ProxyTupleAccessor;
-typedef JniProxyIter<ProxyTupleAccessor> SharedProxyTupleAccessor;
+class ProxyCmdCreateExecutionStreamGraph;
+typedef JniProxyIter<ProxyCmdCreateExecutionStreamGraph> SharedProxyCmdCreateExecutionStreamGraph;
 
 class ProxyTableInserterDef;
 typedef JniProxyIter<ProxyTableInserterDef> SharedProxyTableInserterDef;
@@ -93,11 +96,11 @@ typedef JniProxyIter<ProxyTableInserterDef> SharedProxyTableInserterDef;
 class ProxyEndTxnCmd;
 typedef JniProxyIter<ProxyEndTxnCmd> SharedProxyEndTxnCmd;
 
+class ProxyTxnCmd;
+typedef JniProxyIter<ProxyTxnCmd> SharedProxyTxnCmd;
+
 class ProxyTupleAttrDescriptor;
 typedef JniProxyIter<ProxyTupleAttrDescriptor> SharedProxyTupleAttrDescriptor;
-
-class ProxyTupleAttrAccessor;
-typedef JniProxyIter<ProxyTupleAttrAccessor> SharedProxyTupleAttrAccessor;
 
 class ProxyTupleDescriptor;
 typedef JniProxyIter<ProxyTupleDescriptor> SharedProxyTupleDescriptor;
@@ -114,6 +117,9 @@ typedef JniProxyIter<ProxyCalcTupleStreamDef> SharedProxyCalcTupleStreamDef;
 class ProxyIndexWriterDef;
 typedef JniProxyIter<ProxyIndexWriterDef> SharedProxyIndexWriterDef;
 
+class ProxyTupleAccessor;
+typedef JniProxyIter<ProxyTupleAccessor> SharedProxyTupleAccessor;
+
 class ProxyDatabaseCmd;
 typedef JniProxyIter<ProxyDatabaseCmd> SharedProxyDatabaseCmd;
 
@@ -122,9 +128,6 @@ typedef JniProxyIter<ProxyCmd> SharedProxyCmd;
 
 class ProxyCmdSavepoint;
 typedef JniProxyIter<ProxyCmdSavepoint> SharedProxyCmdSavepoint;
-
-class ProxyTxnCmd;
-typedef JniProxyIter<ProxyTxnCmd> SharedProxyTxnCmd;
 
 class ProxyIndexCmd;
 typedef JniProxyIter<ProxyIndexCmd> SharedProxyIndexCmd;
@@ -253,14 +256,20 @@ class ProxyCmdCreateIndex
 public:
 };
 
-class ProxyCmdCheckpoint
-: virtual public JniProxy, virtual public ProxyDatabaseCmd
+class ProxyTupleStreamCmd
+: virtual public JniProxy, virtual public ProxyCmd
 {
 public:
-bool isFuzzy();
-static jmethodID meth_isFuzzy;
-bool isAsync();
-static jmethodID meth_isAsync;
+SharedProxyStreamHandle getStreamHandle();
+static jmethodID meth_getStreamHandle;
+};
+
+class ProxyTableWriterDef
+: virtual public JniProxy, virtual public ProxyTupleStreamDef
+{
+public:
+SharedProxyIndexWriterDef getIndexWriter();
+static jmethodID meth_getIndexWriter;
 };
 
 class ProxyJavaTupleStreamDef
@@ -271,14 +280,6 @@ int32_t getStreamId();
 static jmethodID meth_getStreamId;
 SharedProxyTupleDescriptor getTupleDesc();
 static jmethodID meth_getTupleDesc;
-};
-
-class ProxyTableWriterDef
-: virtual public JniProxy, virtual public ProxyTupleStreamDef
-{
-public:
-SharedProxyIndexWriterDef getIndexWriter();
-static jmethodID meth_getIndexWriter;
 };
 
 class ProxySortingStreamDef
@@ -309,14 +310,14 @@ SharedProxyTxnHandle getResultHandle();
 static jmethodID meth_getResultHandle;
 };
 
-class ProxyDatabaseParam
-: virtual public JniProxy
+class ProxyCmdCheckpoint
+: virtual public JniProxy, virtual public ProxyDatabaseCmd
 {
 public:
-std::string getName();
-static jmethodID meth_getName;
-std::string getValue();
-static jmethodID meth_getValue;
+bool isFuzzy();
+static jmethodID meth_isFuzzy;
+bool isAsync();
+static jmethodID meth_isAsync;
 };
 
 class ProxyHandle
@@ -347,12 +348,36 @@ class ProxyTableDeleterDef
 public:
 };
 
-class ProxyTupleStreamCmd
-: virtual public JniProxy, virtual public ProxyCmd
+class ProxyTupleAttrAccessor
+: virtual public JniProxy
 {
 public:
-SharedProxyStreamHandle getStreamHandle();
-static jmethodID meth_getStreamHandle;
+int32_t getNullBitIndex();
+static jmethodID meth_getNullBitIndex;
+int32_t getFixedOffset();
+static jmethodID meth_getFixedOffset;
+int32_t getEndIndirectOffset();
+static jmethodID meth_getEndIndirectOffset;
+int32_t getBitValueIndex();
+static jmethodID meth_getBitValueIndex;
+};
+
+class ProxyDatabaseParam
+: virtual public JniProxy
+{
+public:
+std::string getName();
+static jmethodID meth_getName;
+std::string getValue();
+static jmethodID meth_getValue;
+};
+
+class ProxyCmdPrepareExecutionStreamGraph
+: virtual public JniProxy, virtual public ProxyTupleStreamCmd
+{
+public:
+SharedProxyExecutionStreamDef getStreamDefs();
+static jmethodID meth_getStreamDefs;
 };
 
 class ProxyTxnCmd
@@ -361,16 +386,6 @@ class ProxyTxnCmd
 public:
 SharedProxyTxnHandle getTxnHandle();
 static jmethodID meth_getTxnHandle;
-};
-
-class ProxyCmdPrepareExecutionStreamGraph
-: virtual public JniProxy, virtual public ProxyTxnCmd
-{
-public:
-SharedProxyStreamHandle getResultHandle();
-static jmethodID meth_getResultHandle;
-SharedProxyExecutionStreamDef getStreamDefs();
-static jmethodID meth_getStreamDefs;
 };
 
 class ProxyEndTxnCmd
@@ -415,16 +430,12 @@ class ProxyDbHandle
 public:
 };
 
-class ProxyTupleAccessor
-: virtual public JniProxy
+class ProxyCmdCreateExecutionStreamGraph
+: virtual public JniProxy, virtual public ProxyTxnCmd
 {
 public:
-int32_t getMinByteLength();
-static jmethodID meth_getMinByteLength;
-int32_t getBitFieldOffset();
-static jmethodID meth_getBitFieldOffset;
-SharedProxyTupleAttrAccessor getAttrAccessor();
-static jmethodID meth_getAttrAccessor;
+SharedProxyStreamHandle getResultHandle();
+static jmethodID meth_getResultHandle;
 };
 
 class ProxyTableInserterDef
@@ -443,20 +454,6 @@ bool isNullable();
 static jmethodID meth_isNullable;
 int32_t getByteLength();
 static jmethodID meth_getByteLength;
-};
-
-class ProxyTupleAttrAccessor
-: virtual public JniProxy
-{
-public:
-int32_t getNullBitIndex();
-static jmethodID meth_getNullBitIndex;
-int32_t getFixedOffset();
-static jmethodID meth_getFixedOffset;
-int32_t getEndIndirectOffset();
-static jmethodID meth_getEndIndirectOffset;
-int32_t getBitValueIndex();
-static jmethodID meth_getBitValueIndex;
 };
 
 class ProxyTupleDescriptor
@@ -499,6 +496,18 @@ std::string getDistinctness();
 static jmethodID meth_getDistinctness;
 bool isUpdateInPlace();
 static jmethodID meth_isUpdateInPlace;
+};
+
+class ProxyTupleAccessor
+: virtual public JniProxy
+{
+public:
+int32_t getMinByteLength();
+static jmethodID meth_getMinByteLength;
+int32_t getBitFieldOffset();
+static jmethodID meth_getBitFieldOffset;
+SharedProxyTupleAttrAccessor getAttrAccessor();
+static jmethodID meth_getAttrAccessor;
 };
 
 class ProxyCmdSavepoint
@@ -565,11 +574,13 @@ virtual void visit(ProxyIndexLoaderDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyCmdCreateIndex &)
 { unhandledVisit(); }
-virtual void visit(ProxyCmdCheckpoint &)
+virtual void visit(ProxyTupleStreamCmd &)
+{ unhandledVisit(); }
+virtual void visit(ProxyTableWriterDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyJavaTupleStreamDef &)
 { unhandledVisit(); }
-virtual void visit(ProxyTableWriterDef &)
+virtual void visit(ProxyKeyAccessorDef &)
 { unhandledVisit(); }
 virtual void visit(ProxySortingStreamDef &)
 { unhandledVisit(); }
@@ -579,7 +590,7 @@ virtual void visit(ProxyCmdTruncateIndex &)
 { unhandledVisit(); }
 virtual void visit(ProxyCmdBeginTxn &)
 { unhandledVisit(); }
-virtual void visit(ProxyDatabaseParam &)
+virtual void visit(ProxyCmdCheckpoint &)
 { unhandledVisit(); }
 virtual void visit(ProxyHandle &)
 { unhandledVisit(); }
@@ -593,7 +604,9 @@ virtual void visit(ProxyExecutionStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyTableDeleterDef &)
 { unhandledVisit(); }
-virtual void visit(ProxyTupleStreamCmd &)
+virtual void visit(ProxyTupleAttrAccessor &)
+{ unhandledVisit(); }
+virtual void visit(ProxyDatabaseParam &)
 { unhandledVisit(); }
 virtual void visit(ProxyCmdPrepareExecutionStreamGraph &)
 { unhandledVisit(); }
@@ -605,21 +618,19 @@ virtual void visit(ProxyIndexStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyTupleProjection &)
 { unhandledVisit(); }
-virtual void visit(ProxyKeyAccessorDef &)
-{ unhandledVisit(); }
 virtual void visit(ProxyTxnHandle &)
 { unhandledVisit(); }
 virtual void visit(ProxyDbHandle &)
 { unhandledVisit(); }
-virtual void visit(ProxyTupleAccessor &)
+virtual void visit(ProxyCmdCreateExecutionStreamGraph &)
 { unhandledVisit(); }
 virtual void visit(ProxyTableInserterDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyEndTxnCmd &)
 { unhandledVisit(); }
-virtual void visit(ProxyTupleAttrDescriptor &)
+virtual void visit(ProxyTxnCmd &)
 { unhandledVisit(); }
-virtual void visit(ProxyTupleAttrAccessor &)
+virtual void visit(ProxyTupleAttrDescriptor &)
 { unhandledVisit(); }
 virtual void visit(ProxyTupleDescriptor &)
 { unhandledVisit(); }
@@ -631,13 +642,13 @@ virtual void visit(ProxyCalcTupleStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyIndexWriterDef &)
 { unhandledVisit(); }
+virtual void visit(ProxyTupleAccessor &)
+{ unhandledVisit(); }
 virtual void visit(ProxyDatabaseCmd &)
 { unhandledVisit(); }
 virtual void visit(ProxyCmd &)
 { unhandledVisit(); }
 virtual void visit(ProxyCmdSavepoint &)
-{ unhandledVisit(); }
-virtual void visit(ProxyTxnCmd &)
 { unhandledVisit(); }
 virtual void visit(ProxyIndexCmd &)
 { unhandledVisit(); }

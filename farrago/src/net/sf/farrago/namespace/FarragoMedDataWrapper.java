@@ -29,20 +29,20 @@ import java.sql.*;
 import java.util.*;
 
 /**
- * FarragoMedDataWrapper defines an interface for accessing external data.  It
- * is a non-standard replacement for the standard SQL/MED internal interface.
- * Some JDBC infrastructure is borrowed ({@link java.sql.SQLException} and
- * {@link java.sql.DriverPropertyInfo}).  The property info calls are designed
- * to work in the same iterative fashion as {@link
- * java.sql.Driver#getPropertyInfo}.
+ * FarragoMedDataWrapper defines an interface for accessing foreign or local
+ * data.  It is a non-standard replacement for the standard SQL/MED internal
+ * interface.  Some JDBC infrastructure is borrowed ({@link
+ * java.sql.SQLException} and {@link java.sql.DriverPropertyInfo}).  The
+ * property info calls are designed to work in the same iterative fashion as
+ * {@link java.sql.Driver#getPropertyInfo}.
  *
  *<p>
  *
- * Implementations of FarragoMedDataWrapper must provide a public
- * default constructor in order to be loaded via the CREATE FOREIGN DATA
- * WRAPPER statement.  FarragoMedDataWrapper extends FarragoAllocation;
- * when closeAllocation is called, all resources (such as connections)
- * used to access the external data should be released.
+ * Implementations of FarragoMedDataWrapper must provide a public default
+ * constructor in order to be loaded via the CREATE {FOREIGN|LOCAL} DATA
+ * WRAPPER statement.  FarragoMedDataWrapper extends FarragoAllocation; when
+ * closeAllocation is called, all resources (such as connections) used to
+ * access the data should be released.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -153,12 +153,10 @@ public interface FarragoMedDataWrapper extends FarragoAllocation
         Properties columnProps);
 
     /**
-     * Initializes this wrapper with a given set of properties.  This
-     * supports the SQL/MED CREATE FOREIGN DATA WRAPPER statement,
-     * and is called after an uninitialized instance has been created
-     * via Class.forName.  As much validation as possible should
-     * be performed, including establishing connections
-     * if appropriate.
+     * Initializes this wrapper with a given set of properties.  This is called
+     * after an uninitialized instance has been created via Class.forName.  As
+     * much validation as possible should be performed, including establishing
+     * connections if appropriate.
      *
      * @param catalog FarragoCatalog which can be used for metadata access
      *
@@ -179,6 +177,12 @@ public interface FarragoMedDataWrapper extends FarragoAllocation
      * be performed, including establishing connections
      * if appropriate.
      *
+     *<p>
+     *
+     * If this wrapper returns false from the isForeign method, then
+     * returned server instances must implement the FarragoMedLocalDataServer
+     * interface.
+     *
      * @param serverMofId MOFID of server definition in repository;
      * this can be used for accessing the server definition from
      * generated code
@@ -193,6 +197,14 @@ public interface FarragoMedDataWrapper extends FarragoAllocation
         String serverMofId,
         Properties props)
         throws SQLException;
+
+    /**
+     * Determines whether this data wrapper accesses foreign data, or
+     * manages local data.
+     *
+     * @return true for foreign data; false for local data
+     */
+    public boolean isForeign();
 }
 
 // End FarragoMedDataWrapper.java

@@ -17,29 +17,45 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-package net.sf.farrago.runtime;
+package net.sf.farrago.type.runtime;
 
 import java.util.*;
 
 /**
- * A comparator for two BytePointer objects interpreted as VARBINARY.
+ * A very slow, generic comparator for two objects with valid toString()
+ * methods.  It implements SQL character comparison semantics (rtrim before
+ * compare).
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class VarbinaryComparator implements Comparator
+public class CharStringComparator implements Comparator
 {
-    public static final int compareVarbinary(Object o1,Object o2)
+    public static final int compareCharStrings(Object o1,Object o2)
     {
-        BytePointer bp1 = (BytePointer) o1;
-        BytePointer bp2 = (BytePointer) o2;
-        return bp1.compareBytes(bp2);
+        String s1 = rtrim(o1.toString());
+        String s2 = rtrim(o2.toString());
+        return s1.compareTo(s2);
     }
     
     public int compare(Object o1,Object o2)
     {
-        return compareVarbinary(o1,o2);
+        return compareCharStrings(o1,o2);
+    }
+
+    private static String rtrim(String s)
+    {
+        int n = s.length() - 1;
+        if (s.charAt(n) != ' ') {
+            return s;
+        }
+        for (--n; n >= 0; --n) {
+            if (s.charAt(n) != ' ') {
+                return s.substring(0,n+1);
+            }
+        }
+        return "";
     }
 }
 
-// End VarbinaryComparator.java
+// End CharStringComparator.java

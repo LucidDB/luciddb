@@ -26,6 +26,7 @@ import net.sf.farrago.fem.med.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.type.*;
+import net.sf.farrago.type.runtime.*;
 import net.sf.farrago.util.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.namespace.*;
@@ -66,7 +67,7 @@ public class FarragoRuntimeContext
     private FarragoConnectionDefaults connectionDefaults;
 
     private FarragoDataWrapperCache dataWrapperCache;
-    
+
     /**
      * Create a new FarragoRuntimeContext.
      *
@@ -110,7 +111,8 @@ public class FarragoRuntimeContext
         dataWrapperCache = new FarragoDataWrapperCache(
             this,
             sharedDataWrapperCache,
-            catalog);
+            catalog,
+            fennelTxnContext.getFennelDbHandle());
 
         streamOwner = new StreamOwner();
     }
@@ -118,8 +120,7 @@ public class FarragoRuntimeContext
     // implement SaffronConnection
     public SaffronSchema getSaffronSchema()
     {
-        assert(false);
-        return null;
+        throw new AssertionError();
     }
 
     // override FarragoCompoundAllocation
@@ -133,8 +134,7 @@ public class FarragoRuntimeContext
     // implement SaffronConnection
     public Object contentsAsArray(String qualifier,String tableName)
     {
-        assert(false);
-        return null;
+        throw new AssertionError();
     }
     
     /**
@@ -365,12 +365,14 @@ public class FarragoRuntimeContext
             while (streamIter.hasNext()) {
                 setCacheQuotas((FemTupleStreamDef) streamIter.next());
             }
-            cmd.setTxnHandle(fennelTxnContext.getTxnHandle());
             // REVIEW:  here's a potential window for leaks;
             // if an excn is thrown before this stream gets cached,
             // the stream will be closed but not deallocated
-            return getFennelDbHandle().prepareTupleStream(
-                streamOwner,cmd);
+            FennelStreamHandle streamHandle = fennelTxnContext.newTupleStream(
+                streamOwner);
+            cmd.setStreamHandle(streamHandle.getStreamHandle());
+            fennelTxnContext.getFennelDbHandle().executeCmd(cmd);
+            return streamHandle;
         } finally {
             catalog.getRepository().endTrans();
         }

@@ -64,7 +64,33 @@ public class RexLiteral extends RexNode
      */
     RexLiteral(Object value,SaffronType type)
     {
-        assert value instanceof String ||
+        assert supportedType(value) :
+                value;
+        assert type != null;
+        this.value = value;
+        this.type = type;
+        this.digest = format(value, type);
+    }
+
+    /**
+     * Returns true if this literal is a supported type.
+     *
+     * @post return true if value is
+     *   instanceof String ||
+     *    instanceof BigInteger ||
+     *    instanceof Boolean ||
+     *    value instanceof Double ||
+     *    value instanceof byte[] ||
+     *    value instanceof SqlLiteral.BitString ||
+     *    value instanceof SqlLiteral.StringLiteral ||
+     *    value instanceof SqlFunctionTable.FunctionFlagType ||
+     *    value instanceof java.sql.Date ||
+     *    value instanceof java.sql.Time ||
+     *    value instanceof java.sql.Timestamp ||
+     *    value == null
+     */
+    private boolean supportedType(Object value) {
+        return value instanceof String ||
                 value instanceof BigInteger ||
                 value instanceof Boolean ||
                 value instanceof Double ||
@@ -72,12 +98,10 @@ public class RexLiteral extends RexNode
                 value instanceof SqlLiteral.BitString ||
                 value instanceof SqlLiteral.StringLiteral ||
                 value instanceof SqlFunctionTable.FunctionFlagType ||
-                value == null :
-                value;
-        assert type != null;
-        this.value = value;
-        this.type = type;
-        this.digest = format(value, type);
+                value instanceof java.sql.Date ||
+                value instanceof java.sql.Time ||
+                value instanceof java.sql.Timestamp ||
+                value == null;
     }
 
     private static String format(Object value,SaffronType type) {
@@ -99,7 +123,7 @@ public class RexLiteral extends RexNode
     }
 
     /**
-     * Returns the value of this literal.
+     * Returns the value of this literal if its a supported type.
      *
      * @post return instanceof String ||
      *   return instanceof BigInteger ||
@@ -109,20 +133,12 @@ public class RexLiteral extends RexNode
      *   return value instanceof SqlLiteral.BitString ||
      *   return value instanceof SqlLiteral.StringLiteral ||
      *   return value instanceof SqlFunctionTable.FunctionFlagType ||
+     *   return value instance
      *   return == null
      */
     public Object getValue()
     {
-        assert value instanceof String ||
-                value instanceof BigInteger ||
-                value instanceof Boolean ||
-                value instanceof Double ||
-                value instanceof byte[] ||
-                value instanceof SqlLiteral.BitString ||
-                value instanceof SqlLiteral.StringLiteral ||
-                value instanceof SqlFunctionTable.FunctionFlagType ||
-                value == null :
-                value;
+        assert supportedType(value) : value;
         return value;
     }
 

@@ -33,6 +33,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
 
+
 /**
  * Utility methods relating to parsing SQL.
  *
@@ -44,6 +45,13 @@ public final class ParserUtil {
     public static final String[] emptyStringArray = new String[0];
     public static final SqlNode[] emptySqlNodeArray = new SqlNode[0];
     public static final List emptyList = Collections.EMPTY_LIST;
+
+    public static final String DateFormatStr = "yyyy-MM-dd";
+    public static final String TimeFormatStr = "HH:mm:ss";
+    public static final String PrecisionTimeFormatStr = TimeFormatStr + ".SSSSSS";
+    public static final String TimestampFormatStr = DateFormatStr + " " + TimeFormatStr;
+    public static final String PrecisionTimestampFormatStr = TimestampFormatStr + ".SSSSSS";
+
 
     private ParserUtil() {}
 
@@ -70,6 +78,8 @@ public final class ParserUtil {
     public static java.sql.Timestamp parseTimestamp(String s) {
         return java.sql.Timestamp.valueOf(s);
     }
+
+
 
     /**
      * Parses a Binary string. SQL:99 defines a binary string as a hexstring with EVEN nbr of hex digits.

@@ -88,6 +88,42 @@ JAVACODE void checkNonQueryExpression(ExprContext exprContext)
     }
 }
 
+// everytime, just to be sure.  These 3 utilities have to live here,
+// instead of in the ParserUtil class because ParseException is
+// ambigous, and CommonParser lives in multiple packages.
+JAVACODE java.sql.Date parseDateLiteral(String s) throws ParseException {
+    return new java.sql.Date(parseDateTime(s, ParserUtil.DateFormatStr));
+}
+
+// this is a bit hokey - i could probably be smarter in the parsing code, but it works.
+JAVACODE java.sql.Time parseTimeLiteral(String s) throws ParseException {
+    if (s.indexOf('.') >= 0) {
+        return new java.sql.Time(parseDateTime(s, ParserUtil.PrecisionTimeFormatStr));
+    } else {
+        return new java.sql.Time(parseDateTime(s, ParserUtil.TimeFormatStr));        
+    }
+}
+
+JAVACODE java.sql.Timestamp parseTimestampLiteral(String s) throws ParseException {
+    if (s.indexOf('.') >= 0) {
+        return new java.sql.Timestamp(parseDateTime(s, ParserUtil.PrecisionTimestampFormatStr));
+    } else {
+        return new java.sql.Timestamp(parseDateTime(s, ParserUtil.TimestampFormatStr));
+    }
+
+
+}
+
+JAVACODE long parseDateTime(String s, String dfString) throws ParseException {
+    // note that SimpleDateFormat is not thread safe, so we cons a new one
+    java.text.SimpleDateFormat df = new java.text.SimpleDateFormat(dfString);
+    try {
+        return df.parse(s).getTime();
+    } catch (java.text.ParseException e) {
+        throw new ParseException(e.getMessage());
+    }
+}
+
 /*****************************************
  * Syntactical Descriptions              *
  *****************************************/
@@ -1150,19 +1186,31 @@ SqlLiteral Literal() :
 |
     <NULL> { return SqlLiteral.createNull(); }
 |
-    <LBRACE_D> <STRING_LITERAL> { p = getToken(0).image; } <RBRACE> {
+    <LBRACE_D> <QUOTED_DATE_STRING> { p = getToken(0).image; } <RBRACE> {
         return SqlLiteral.create(
             ParserUtil.parseDate(ParserUtil.strip(p, "'")));
     }
 |
-    <LBRACE_T> <STRING_LITERAL> { p = getToken(0).image; } <RBRACE> {
+    <LBRACE_T> <QUOTED_TIME_STRING> { p = getToken(0).image; } <RBRACE> {
         return SqlLiteral.create(
             ParserUtil.parseTime(ParserUtil.strip(p, "'")));
     }
 |
-    <LBRACE_TS> <STRING_LITERAL> { p = getToken(0).image; } <RBRACE> {
+    <LBRACE_TS> <QUOTED_TIMESTAMP_STRING> { p = getToken(0).image; } <RBRACE> {
         return SqlLiteral.create(
             ParserUtil.parseTimestamp(ParserUtil.strip(p, "'")));
+    }
+|
+    <DATE> <QUOTED_DATE_STRING> {
+        return SqlLiteral.create(parseDateLiteral(ParserUtil.strip(getToken(0).image,"'")));                
+    }
+|
+    <TIME> <QUOTED_TIME_STRING> {
+        return SqlLiteral.create(parseTimeLiteral(ParserUtil.strip(getToken(0).image,"'")));                
+    }
+|
+    <TIMESTAMP> <QUOTED_TIMESTAMP_STRING> {
+        return SqlLiteral.create(parseTimestampLiteral(ParserUtil.strip(getToken(0).image,"'")));                
     }
 }
 
@@ -1451,6 +1499,7 @@ TOKEN :
 | < CASE: "case" >
 | < COLLATE: "collate" >
 | < CROSS: "cross" >
+| < DATE: "date" >
 | < DELETE: "delete" >
 | < DESC: "desc" >
 | < DESCENDING: "descending" >
@@ -1467,6 +1516,7 @@ TOKEN :
 | < FULL: "full" >
 | < GROUP: "group" >
 | < HAVING: "having" >
+| < HOUR: "hour" >
 | < IMPLEMENTATION: "implementation" >
 | < IN: "in" >
 | < INNER: "inner" >
@@ -1478,6 +1528,7 @@ TOKEN :
 | < LEADING: "leading" >
 | < LEFT: "left" >
 | < LIKE: "like" >
+| < MINUTE: "minute" >
 | < NATURAL: "natural" >
 | < OR: "or" >
 | < ORDER: "order" >
@@ -1487,11 +1538,16 @@ TOKEN :
 | < PLAN: "plan" >
 | < RIGHT: "right" >
 | < ROW: "row" >
+| < SECOND: "second" >
 | < SELECT: "select" >
 | < SET: "set" >
 | < SIMILAR: "similar" >
 | < TABLE: "table" >
 | < THEN: "then" >
+| < TIME: "time" >
+| < TIMESTAMP: "timestamp" >
+| < TIMEZONE_HOUR: "timezone_hour" >
+| < TIMEZONE_MINUTE: "timezone_minute" >
 | < TRAILING: "trailing" >
 | < TRUE: "true" >
 | < UNION: "union" >
@@ -1503,7 +1559,8 @@ TOKEN :
 | < WHERE: "where" >
 | < WITH: "with" >
 | < WITHOUT: "without" >
-
+| < YEAR: "year" >
+| < ZONE: "zone" >
 }
 
 /**
@@ -1544,16 +1601,48 @@ TOKEN :
 |
     < #HEXDIGIT: ["0"-"9","a"-"f","A"-"F"] >
 |
+    < #WHITESPACE:
+        [ " ","\t","\n","\r","\f" ]    
+    >
+|
     < BIT_STRING_LITERAL: ["b","B"] <QUOTE> (["0","1"])* <QUOTE> >
 |
     < BINARY_STRING_LITERAL:
         ["x","X"] <QUOTE> (<HEXDIGIT><HEXDIGIT>)* <QUOTE>
-        (([" ","\t","\n","\r","\f"])* <QUOTE>  (<HEXDIGIT><HEXDIGIT>)* <QUOTE>)*
+        ((<WHITESPACE>)* <QUOTE>  (<HEXDIGIT><HEXDIGIT>)* <QUOTE>)*
     >
 |
     < HEX_STRING_LITERAL:
         ["x","X"] <QUOTE> (<HEXDIGIT>)* <QUOTE>
-        (([" ","\t","\n","\r","\f"])* <QUOTE>  (<HEXDIGIT>)* <QUOTE>)*
+        ((<WHITESPACE>)* <QUOTE>  (<HEXDIGIT>)* <QUOTE>)*
+    >
+|
+    < #CHARSETNAME: (["a"-"z","A"-"Z","0"-"9"])
+                    (["a"-"z","A"-"Z","0"-"9",":",".","-","_"])*
+    >
+|
+    < QUOTED_DATE_STRING:
+        <QUOTE> <UNQUOTED_DATE_STRING> <QUOTE>
+    >
+|
+    < UNQUOTED_DATE_STRING:
+        (<UNSIGNED_INTEGER_LITERAL>)+ ["-"] (<UNSIGNED_INTEGER_LITERAL>)+ ["-"] (<UNSIGNED_INTEGER_LITERAL>)+
+    >
+|
+    < QUOTED_TIME_STRING:
+        <QUOTE> <UNQUOTED_TIME_STRING> <QUOTE>
+    >
+|
+    < UNQUOTED_TIME_STRING:
+        (<UNSIGNED_INTEGER_LITERAL>)+ [":"] (<UNSIGNED_INTEGER_LITERAL>)+ [":"] (<UNSIGNED_INTEGER_LITERAL>)+ (["."] <UNSIGNED_INTEGER_LITERAL>)?
+    >
+|
+    < QUOTED_TIMESTAMP_STRING:
+        <QUOTE> <UNQUOTED_TIMESTAMP_STRING> <QUOTE>
+    >
+|
+    < UNQUOTED_TIMESTAMP_STRING:
+        <UNQUOTED_DATE_STRING> [" "] <UNQUOTED_TIME_STRING>
     >
 |
     < STRING_LITERAL:
@@ -1564,11 +1653,6 @@ TOKEN :
       )*
       "'"
     >
-|
-    < #CHARSETNAME: (["a"-"z","A"-"Z","0"-"9"])
-                    (["a"-"z","A"-"Z","0"-"9",":",".","-","_"])*
-    >
-
 }
 
 
@@ -1624,7 +1708,7 @@ SKIP :
 | "\t"
 | "\n"
 | "\r"
-| "\f"
+| "\f" 
 }
 
 /* COMMENTS */

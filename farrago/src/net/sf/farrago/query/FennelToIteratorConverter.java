@@ -24,6 +24,7 @@ import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.type.*;
+import net.sf.farrago.type.runtime.*;
 import net.sf.farrago.util.*;
 
 import net.sf.saffron.core.*;
@@ -46,13 +47,13 @@ import java.util.*;
 
 
 /**
- * FennelToIteratorConverter is a Converter from the FENNEL CallingConvention
- * to the ITERATOR CallingConvention.
+ * FennelToIteratorConverter is a Converter from the FENNEL_PULL
+ * CallingConvention to the ITERATOR CallingConvention.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-class FennelToIteratorConverter extends ConverterRel
+public class FennelToIteratorConverter extends ConverterRel
 {
     //~ Constructors ----------------------------------------------------------
 
@@ -86,7 +87,9 @@ class FennelToIteratorConverter extends ConverterRel
     public Object implement(RelImplementor implementor,int ordinal)
     {
         assert (ordinal == -1);
-        assert (child instanceof FennelRel) : child.getClass().getName();
+        assert (child.getConvention().equals(
+                    FennelPullRel.FENNEL_PULL_CONVENTION))
+            : child.getClass().getName();
 
         // Give children a chance to generate code.  Most FennelRels don't
         // require this, but IteratorToFennelConverter does.
@@ -114,9 +117,9 @@ class FennelToIteratorConverter extends ConverterRel
         FemCmdPrepareExecutionStreamGraph cmdPrepareStream =
             catalog.newFemCmdPrepareExecutionStreamGraph();
 
-        // NOTE: serialize string with NULL txn handle since it may be reused
-        // in a later txn
-        cmdPrepareStream.setTxnHandle(null);
+        // NOTE: serialize string with NULL stream handle since
+        // we're not actually executing preparation yet
+        cmdPrepareStream.setStreamHandle(null);
 
         FarragoRelImplementor farragoRelImplementor =
             (FarragoRelImplementor) implementor;

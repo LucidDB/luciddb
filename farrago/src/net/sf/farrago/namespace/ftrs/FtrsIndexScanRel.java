@@ -45,7 +45,7 @@ import java.util.List;
  * @author John V. Sichi
  * @version $Id$
  */
-class FtrsIndexScanRel extends TableAccessRel implements FennelRel
+class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -115,7 +115,7 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelRel
     // implement SaffronRel
     public CallingConvention getConvention()
     {
-        return FennelRel.FENNEL_CALLING_CONVENTION;
+        return FennelPullRel.FENNEL_PULL_CONVENTION;
     }
 
     // implement FennelRel
@@ -218,7 +218,7 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelRel
         int nIndexCols =
             catalog.isClustered(index)
             ? ftrsTable.getCwmColumnSet().getFeature().size()
-            : FennelRelUtil.getUnclusteredCoverageColList(catalog,index).size();
+            : FtrsUtil.getUnclusteredCoverageColList(catalog,index).size();
 
         double dIo = dRows * nIndexCols;
 
@@ -240,7 +240,7 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelRel
         // TODO:  use this to govern prefetch and come up with a good formula
         scanStream.setCachePageMax(2);
 
-        if (!getPreparingStmt().getIndexMap().isTemporary(index)) {
+        if (!catalog.isTemporary(index)) {
             scanStream.setRootPageId(
                 getPreparingStmt().getIndexMap().getIndexRoot(index));
         } else {
@@ -250,17 +250,17 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelRel
             scanStream.setRootPageId(-1);
         }
         scanStream.setSegmentId(
-            getPreparingStmt().getIndexMap().getIndexSegmentId(index));
+            FtrsDataServer.getIndexSegmentId(index));
         scanStream.setIndexId(
             JmiUtil.getObjectId(index));
 
         scanStream.setTupleDesc(
-            FennelRelUtil.getCoverageTupleDescriptor(
+            FtrsUtil.getCoverageTupleDescriptor(
                 (FarragoTypeFactory) cluster.typeFactory,
                 index));
 
         scanStream.setKeyProj(
-            FennelRelUtil.getDistinctKeyProjection(catalog,index));
+            FtrsUtil.getDistinctKeyProjection(catalog,index));
 
         Integer [] projection = computeProjectedColumns();
         Integer [] indexProjection;
@@ -272,7 +272,7 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelRel
             indexProjection = new Integer[projection.length];
             List indexTableColList =
                 Arrays.asList(
-                    FennelRelUtil.getUnclusteredCoverageArray(catalog,index));
+                    FtrsUtil.getUnclusteredCoverageArray(catalog,index));
             for (int i = 0; i < projection.length; ++i) {
                 Integer iTableCol = projection[i];
                 int iIndexCol = indexTableColList.indexOf(iTableCol);
@@ -297,7 +297,7 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelRel
     // implement FennelRel
     public RelFieldCollation [] getCollations()
     {
-        Integer [] indexedCols = FennelRelUtil.getCollationKeyArray(
+        Integer [] indexedCols = FtrsUtil.getCollationKeyArray(
             getPreparingStmt().getCatalog(),
             index);
         List collationList = new ArrayList();

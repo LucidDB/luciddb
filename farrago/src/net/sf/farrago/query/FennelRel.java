@@ -24,31 +24,21 @@ import net.sf.farrago.fem.fennel.*;
 
 import net.sf.saffron.opt.*;
 import net.sf.saffron.rel.*;
-import net.sf.saffron.core.SaffronConnection;
+import net.sf.saffron.core.*;
 
 import openjava.ptree.*;
 
 
 /**
  * FennelRel defines the interface which must be implemented by any SaffronRel
- * subclass with FENNEL_CALLING_CONVENTION.
+ * corresponding to a C++ physical implementation conforming to
+ * the fennel::ExecutionStream interface.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public interface FennelRel
 {
-    //~ Static fields/initializers --------------------------------------------
-
-    /**
-     * Calling convention for Fennel representation of data produced by
-     * TupleStreams.
-     */
-    public static final CallingConvention FENNEL_CALLING_CONVENTION =
-        new CallingConvention(
-            "FENNEL",
-            CallingConvention.enumeration.getMax() + 1);
-
     //~ Methods ---------------------------------------------------------------
 
     /**

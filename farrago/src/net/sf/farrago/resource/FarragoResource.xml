@@ -210,6 +210,14 @@ encountered near {1}</text>
     <text>Cannot create local table {0} using foreign data wrapper {1}</text>
 </exception>
 
+<exception id="420400" name="ValidatorForeignWrapperHasLocalImpl">
+    <text>Cannot create foreign data wrapper {0} because its library implements local storage</text>
+</exception>
+
+<exception id="420410" name="ValidatorLocalWrapperHasForeignImpl">
+    <text>Cannot create local data wrapper {0} because its library implements foreign storage</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Parser resources 430,000 - 440,000 -->
 <!-- ====================================================================== -->
@@ -274,6 +282,14 @@ encountered near {1}</text>
 
 <exception id="460070" name="DataWrapperInvalidIntProp">
     <text>Invalid value {0} for integer property {1}</text>
+</exception>
+
+<exception id="460080" name="DataServerIndexCreateFailed">
+    <text>Failed to create storage for index {0}</text>
+</exception>
+
+<exception id="460090" name="DataServerIndexDropFailed">
+    <text>Failed to drop storage for index {0}</text>
 </exception>
 
 <!-- ====================================================================== -->

@@ -70,7 +70,7 @@ public class FarragoPlanner extends VolcanoPlanner
         addCallingConvention(CallingConvention.NONE);
         addCallingConvention(CallingConvention.ITERATOR);
         addCallingConvention(CallingConvention.RESULT_SET);
-        addCallingConvention(FennelRel.FENNEL_CALLING_CONVENTION);
+        addCallingConvention(FennelPullRel.FENNEL_PULL_CONVENTION);
 
         // NOTE: don't call IterConverterRel.init and friends; their presence
         // just confuses the optimizer, and we explicitly supply all the
@@ -95,15 +95,18 @@ public class FarragoPlanner extends VolcanoPlanner
 
         addRule(new FennelSortRule());
         addRule(new FennelDistinctSortRule());
-        addRule(new FennelRenameRule());
+        addRule(
+            new FennelRenameRule(
+                FennelPullRel.FENNEL_PULL_CONVENTION,
+                "FennelPullRenameRule"));
         addRule(new FennelCartesianJoinRule());
 
         addRule(
             new ConverterRule(
                 SaffronRel.class,
-                FennelRel.FENNEL_CALLING_CONVENTION,
+                FennelPullRel.FENNEL_PULL_CONVENTION,
                 CallingConvention.ITERATOR,
-                "FennelToIteratorRule")
+                "FennelPullToIteratorRule")
             {
                 public SaffronRel convert(SaffronRel rel)
                 {
@@ -115,8 +118,8 @@ public class FarragoPlanner extends VolcanoPlanner
             new ConverterRule(
                 SaffronRel.class,
                 CallingConvention.ITERATOR,
-                FennelRel.FENNEL_CALLING_CONVENTION,
-                "IteratorToFennelRule")
+                FennelPullRel.FENNEL_PULL_CONVENTION,
+                "IteratorToFennelPullRule")
             {
                 public SaffronRel convert(SaffronRel rel)
                 {

@@ -17,15 +17,17 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 //
-//
-// External users of the Calculator object should include this file
-//
-// They may also include InstructionCommon.h if they must also manipulate
-// Instruction objects directly.
-//
 */
+
 #ifndef Fennel_CalcCommon_Included
 #define Fennel_CalcCommon_Included
+
+//! \file CalcCommon.h
+//! External users of the Calculator object should include this, and
+//! only this, file.
+//!
+//! External users may also include InstructionCommon.h if they must
+//! also manipulate Instruction objects directly.
 
 #include "fennel/calc/Calculator.h"
 #include "fennel/calc/CalcInit.h"

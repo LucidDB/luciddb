@@ -31,7 +31,7 @@ import java.util.*;
 /**
  * FennelRemoveRedundantSortRule removes instances of SortRel which are
  * already satisfied by the physical ordering produced by an underlying
- * FennelRel.
+ * FennelPullRel.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -44,13 +44,13 @@ public class FennelRemoveRedundantSortRule extends VolcanoRule
             new RuleOperand(
                 FennelSortRel.class,
                 new RuleOperand [] {
-                    new RuleOperand(FennelRel.class,null) }));
+                    new RuleOperand(FennelPullRel.class,null) }));
     }
 
     // implement VolcanoRule
     public CallingConvention getOutConvention()
     {
-        return FennelRel.FENNEL_CALLING_CONVENTION;
+        return FennelPullRel.FENNEL_PULL_CONVENTION;
     }
 
     // implement VolcanoRule
@@ -66,7 +66,7 @@ public class FennelRemoveRedundantSortRule extends VolcanoRule
         if (inputRel instanceof FennelSortRel) {
             SaffronRel newRel =
                 convert(planner,(SaffronRel) inputRel,
-                        FennelRel.FENNEL_CALLING_CONVENTION);
+                        FennelPullRel.FENNEL_PULL_CONVENTION);
             if (newRel == null) {
                 return;
             }

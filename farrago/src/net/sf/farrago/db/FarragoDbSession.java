@@ -145,7 +145,7 @@ public class FarragoDbSession
             catalog = database.getUserCatalog();
         }
 
-        fennelTxnContext = new FennelTxnContext(
+        fennelTxnContext = sessionFactory.newFennelTxnContext(
             catalog,
             database.getFennelDbHandle());
 
@@ -466,7 +466,7 @@ public class FarragoDbSession
     private void releaseSavepoint(int iSavepoint)
     {
         // TODO:  need Fennel support
-        assert(false);
+        throw Util.needToImplement(null);
     }
 
     private void rollbackToSavepoint(int iSavepoint)

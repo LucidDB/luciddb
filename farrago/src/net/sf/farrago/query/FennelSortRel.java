@@ -41,7 +41,7 @@ import java.util.List;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FennelSortRel extends FennelSingleRel
+public class FennelSortRel extends FennelPullSingleRel
 {
     //~ Instance fields -------------------------------------------------------
 

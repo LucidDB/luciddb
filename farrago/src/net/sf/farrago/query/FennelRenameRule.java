@@ -37,19 +37,23 @@ import java.util.List;
  * @author John V. Sichi
  * @version $Id$
  */
-class FennelRenameRule extends VolcanoRule
+public class FennelRenameRule extends VolcanoRule
 {
+    private CallingConvention convention;
+    
     //~ Constructors ----------------------------------------------------------
 
     /**
      * Creates a new FennelRenameRule object.
      */
-    public FennelRenameRule()
+    public FennelRenameRule(CallingConvention convention,String description)
     {
         super(
             new RuleOperand(
                 ProjectRel.class,
                 new RuleOperand [] { new RuleOperand(SaffronRel.class,null) }));
+        this.convention = convention;
+        this.description = description;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -57,7 +61,7 @@ class FennelRenameRule extends VolcanoRule
     // implement VolcanoRule
     public CallingConvention getOutConvention()
     {
-        return FennelRel.FENNEL_CALLING_CONVENTION;
+        return convention;
     }
 
     // implement VolcanoRule
@@ -69,6 +73,7 @@ class FennelRenameRule extends VolcanoRule
         }
 
         SaffronRel inputRel = call.rels[1];
+
         int n = project.getChildExps().length;
         SaffronType inputType = inputRel.getRowType();
         if (inputType.getFieldCount() != n) {
@@ -98,14 +103,14 @@ class FennelRenameRule extends VolcanoRule
         }
 
         SaffronRel fennelInput =
-            convert(planner,inputRel,FennelRel.FENNEL_CALLING_CONVENTION);
+            convert(planner,inputRel,convention);
         if (fennelInput == null) {
             return;
         }
 
         if (needRename) {
             FennelRenameRel rename = new FennelRenameRel(
-                project.getCluster(),fennelInput,fieldNames);
+                project.getCluster(),fennelInput,fieldNames,convention);
             call.transformTo(rename);
         } else {
             // REVIEW:  Probably shouldn't do this.  Instead, make generic

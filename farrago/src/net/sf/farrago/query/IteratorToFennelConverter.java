@@ -24,6 +24,7 @@ import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.type.*;
+import net.sf.farrago.type.runtime.*;
 import net.sf.farrago.util.*;
 
 import net.sf.saffron.core.*;
@@ -42,12 +43,14 @@ import java.lang.reflect.*;
 
 /**
  * IteratorToFennelConverter is a Converter from the ITERATOR
- * CallingConvention to the FENNEL CallingConvention.
+ * CallingConvention to the FENNEL_PULL CallingConvention.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-class IteratorToFennelConverter extends ConverterRel implements FennelRel
+public class IteratorToFennelConverter
+    extends ConverterRel
+    implements FennelPullRel
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -83,7 +86,7 @@ class IteratorToFennelConverter extends ConverterRel implements FennelRel
     // implement SaffronRel
     public CallingConvention getConvention()
     {
-        return FennelRel.FENNEL_CALLING_CONVENTION;
+        return FennelPullRel.FENNEL_PULL_CONVENTION;
     }
 
     // implement FennelRel

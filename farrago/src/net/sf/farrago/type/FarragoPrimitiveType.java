@@ -21,6 +21,7 @@ package net.sf.farrago.type;
 
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.runtime.*;
+import net.sf.farrago.type.runtime.*;
 
 import net.sf.saffron.util.*;
 
@@ -63,10 +64,14 @@ public final class FarragoPrimitiveType extends FarragoAtomicType
     {
         super(simpleType,isNullable);
         this.classForValue = classForValue;
-        if (isNullable) {
+        // REVIEW: I'd like to have a 'getPrimitiveClass' interface to
+        // implement, rather than relying on the supertype being a
+        // NullablePrimitive, but its a bit of a pain to do it that way, due to
+        // the desire to make it a static method ..
+        if (NullablePrimitive.class.isAssignableFrom(classForValue)) {
             try {
-                classForPrimitive = classForValue.getField(
-                    NullablePrimitive.VALUE_FIELD_NAME).getType();
+                classForPrimitive = NullablePrimitive.getPrimitiveClass(
+                    classForValue);
             } catch (Exception ex) {
                 throw Util.newInternal(ex);
             }
@@ -87,7 +92,7 @@ public final class FarragoPrimitiveType extends FarragoAtomicType
     {
         return classForPrimitive;
     }
-    
+
     /**
      * .
      *
@@ -98,7 +103,7 @@ public final class FarragoPrimitiveType extends FarragoAtomicType
     {
         return classForValue;
     }
-    
+
     // implement FarragoType
     protected OJClass getOjClass(OJClass declarer)
     {

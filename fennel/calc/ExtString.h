@@ -24,7 +24,6 @@
 #ifndef Fennel_ExtString_Included
 #define Fennel_ExtString_Included
 
-#include "fennel/common/CommonPreamble.h"
 #include "fennel/calc/RegisterReference.h"
 #include "fennel/calc/ExtendedInstruction.h"
 

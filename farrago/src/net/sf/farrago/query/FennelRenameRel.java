@@ -31,8 +31,9 @@ import java.util.*;
 
 
 /**
- * FennelRenameRel is the Fennel implementation of the rename aspect of the
- * relational Project operator.
+ * FennelRenameRel is the Fennel implementation of a rename-only
+ * relational Project operator (which is a no-op).  It can work with
+ * any Fennel calling convention.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -42,6 +43,8 @@ public class FennelRenameRel extends FennelSingleRel
     //~ Instance fields -------------------------------------------------------
 
     private String [] fieldNames;
+
+    private CallingConvention convention;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -55,14 +58,22 @@ public class FennelRenameRel extends FennelSingleRel
     public FennelRenameRel(
         VolcanoCluster cluster,
         SaffronRel child,
-        String [] fieldNames)
+        String [] fieldNames,
+        CallingConvention convention)
     {
         super(cluster,child);
         this.fieldNames = fieldNames;
+        this.convention = convention;
     }
 
     //~ Methods ---------------------------------------------------------------
 
+    // implement SaffronRel
+    public CallingConvention getConvention()
+    {
+        return convention;
+    }
+    
     // implement SaffronRel
     public boolean isDistinct()
     {
@@ -72,7 +83,8 @@ public class FennelRenameRel extends FennelSingleRel
     // implement Cloneable
     public Object clone()
     {
-        return new FennelRenameRel(cluster,OptUtil.clone(child),fieldNames);
+        return new FennelRenameRel(
+            cluster,OptUtil.clone(child),fieldNames,convention);
     }
 
     // implement SaffronRel

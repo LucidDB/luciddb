@@ -1,28 +1,35 @@
 This document supplies additional instructions for a Fennel Mingw build
-from a Cygwin environment.  Read through the main INSTALL document first.
+from a Cygwin environment.  Read through the main INSTALL document
+first, and also read these recommendations on how to set up your
+Cygwin directories:
+
+http://farrago.sourceforge.net/cygwinSetup.html
+
+In particular, make sure that all text files use the Unix line-end
+convention; the DOS line-end convention confuses tools such as
+autoconf.  Put binmode in your CYGWIN environment variable setting,
+and if you're using Perforce, define your client to have 
+
+LineEnd:      share
 
 ======================================================================
 CONFIGURE
 
-The Mingw build requires some environment variables to be set while
+On Cygwin, it can be tricky to get the right version of the
+autotools.  Typically, after installing Cygwin, you'll end up with
+both a stable version and a development version of autoconf, automake,
+and libtool.  The stable version is generally old and won't work,
+while the development version is what you want.  But the stable
+version will be used by default, leading to configuration and build
+errors.  The easiest way to fix this is to explicitly uninstall the
+stable versions, while leaving the development versions installed.
+
+The Mingw build requires some extra environment variables to be set while
 configure is run.  However, these environment variables should NOT
 remain set after configure, since they interfere with other parts of
-the build.  So, the easiest way to deal with this is to create a
-wrapper script for configure (example here is for bash; syntax for
-your shell may differ):
-
-#!/bin/bash 
-# Begin Fennel/Mingw configuration script
-export CC="gcc -mno-cygwin"
-export CXX="gcc -mno-cygwin"
-./configure --with-boost=$BOOST_DIR \
-    --with-stlport=$STLPORT_DIR [--with-farrago] --target=mingw32
-# End Fennel/Mingw configuration script
-
-Note the extra --target=mingw32 option above.  When you create this
-script, substitute the correct values for the other options.  Execute
-the script in its own shell so that it won't leave the environment
-variables set.
+the build.  This is all taken care of automatically in initBuild.sh.
+If you want to perform manual configuration, study initBuild.sh to see
+how it works first.
 
 ======================================================================
 THIRD-PARTY LIBS

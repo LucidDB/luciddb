@@ -148,8 +148,8 @@ then
     lib_path_var=PATH
     BOOST_TOOLSET=gcc-nocygwin
     AC_CONFIG_COMMANDS(
-        [calc/FlexLexer.h],
-        [(cd calc && rm -f FlexLexer.h && \
+        [/usr/include/mingw/FlexLexer.h],
+        [(cd /usr/include/mingw && rm -f FlexLexer.h && \
              ln -s /usr/include/FlexLexer.h FlexLexer.h)])
 fi
 

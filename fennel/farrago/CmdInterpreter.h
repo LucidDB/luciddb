@@ -72,6 +72,7 @@ public:
 
     struct StreamHandle : public BTreeRootMap
     {
+        TxnHandle *pTxnHandle;
         SharedTupleStreamGraph pTupleStreamGraph;
         jobject javaRuntimeContext;
         virtual PageId getRoot(PageOwnerId pageOwnerId);
@@ -99,6 +100,7 @@ private:
     void getBTreeForIndexCmd(ProxyIndexCmd &,PageId,BTreeDescriptor &);
 
     // Per-command overrides for FemVisitor; add new commands here
+    virtual void visit(ProxyCmdCreateExecutionStreamGraph &);
     virtual void visit(ProxyCmdPrepareExecutionStreamGraph &);
     virtual void visit(ProxyCmdCreateIndex &);
     virtual void visit(ProxyCmdTruncateIndex &);

@@ -47,6 +47,14 @@ public class FennelStreamHandle implements FarragoAllocation
         this.streamHandle = streamHandle;
     }
 
+    /**
+     * @return the underlying FemStreamHandle
+     */
+    public FemStreamHandle getStreamHandle()
+    {
+        return streamHandle;
+    }
+
     private void traceHandle(String operation)
     {
         if (tracer.isLoggable(Level.FINE)) {

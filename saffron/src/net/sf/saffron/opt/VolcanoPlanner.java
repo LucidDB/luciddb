@@ -176,9 +176,9 @@ public class VolcanoPlanner implements SaffronPlanner
             (VolcanoRule) mapDescToRule.put(description,rule);
         if (existingRule != null) {
             if (existingRule == rule) {
-                assert(false) : "Rule not already registered";
+                throw new AssertionError("Rule not already registered");
             } else {
-                assert(false) : "Rule's description is unique";
+                throw new AssertionError("Rule's description is unique");
             }
         }
 

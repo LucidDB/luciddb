@@ -38,6 +38,7 @@ BTreeTest \
 CalcStatusRegTest \
 CalcExtStringTest \
 CalcExtContextTest \
+CalcExtMathTest \
 SqlStringTest \
 SqlStringAsciiTest
 
@@ -76,6 +77,8 @@ CalcStatusRegTest_SOURCES=CalcStatusRegTest.cpp
 CalcExtStringTest_SOURCES=CalcExtStringTest.cpp
 
 CalcExtContextTest_SOURCES=CalcExtContextTest.cpp
+
+CalcExtMathTest_SOURCES=CalcExtMathTest.cpp
 
 SqlStringTest_SOURCES=SqlStringBuffer.cpp SqlStringTest.cpp 
 

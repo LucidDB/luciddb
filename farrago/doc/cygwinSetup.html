@@ -69,8 +69,9 @@ e.g. export P4CONFIG=$(cygpath -w "/home/jvs/.p4config")
 <li>
 When you create a Perforce client definition, make sure the client
 root is under the home directory, without a drive letter
-(e.g. /home/jvs).  And be sure to set the LineEnd attribute to
-<code>share</code> to avoid problems with CRLF.
+(e.g. /home/jvs).  Set the LineEnd attribute to <code>share</code> to
+avoid problems with CRLF, and also set your <code>CYGWIN</code>
+environment variable to contain the <code>binmode</code> attribute.
 
 <li>
 Sync the code and you should be ready to follow the rest of the build

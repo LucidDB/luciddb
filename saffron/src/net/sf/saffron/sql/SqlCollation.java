@@ -159,7 +159,7 @@ public class SqlCollation
             case Coercibility.Implicit_ordinal: return new SqlCollation(col2.m_collationName, Coercibility.Implicit);
             case Coercibility.None_ordinal: return null;
             case Coercibility.Explicit_ordinal: return new SqlCollation(col2.m_collationName, Coercibility.Explicit);
-            default:  assert(false):"Should never come here";
+            default: throw new AssertionError("Should never come here");
 
             }
         }
@@ -174,7 +174,7 @@ public class SqlCollation
                 return null;
             case Coercibility.None_ordinal: return null;
             case Coercibility.Explicit_ordinal: return new SqlCollation(col2.m_collationName, Coercibility.Explicit);
-            default:  assert(false):"Should never come here";
+            default:  throw new AssertionError("Should never come here");
             }
         }
 
@@ -186,7 +186,7 @@ public class SqlCollation
             case Coercibility.Explicit_ordinal:
                     return new SqlCollation(col2.m_collationName,
                                             Coercibility.Explicit);
-            default:  assert(false):"Should never come here";
+            default:  throw new AssertionError("Should never come here");
 
             }
         }

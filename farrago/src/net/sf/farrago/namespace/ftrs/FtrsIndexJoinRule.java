@@ -62,7 +62,7 @@ class FtrsIndexJoinRule extends VolcanoRule
     // implement VolcanoRule
     public CallingConvention getOutConvention()
     {
-        return FennelRel.FENNEL_CALLING_CONVENTION;
+        return FennelPullRel.FENNEL_PULL_CONVENTION;
     }
 
     // implement VolcanoRule
@@ -205,7 +205,7 @@ class FtrsIndexJoinRule extends VolcanoRule
         }
         
         SaffronRel fennelInput = convert(
-            planner,castRel,FennelRel.FENNEL_CALLING_CONVENTION);
+            planner,castRel,FennelPullRel.FENNEL_PULL_CONVENTION);
 
         // tell the index search to propagate everything from its input as join
         // fields
@@ -214,7 +214,7 @@ class FtrsIndexJoinRule extends VolcanoRule
 
         if (!catalog.isClustered(index) && catalog.isClustered(scanRel.index)) {
             Integer [] clusteredKeyColumns =
-                FennelRelUtil.getClusteredDistinctKeyArray(
+                FtrsUtil.getClusteredDistinctKeyArray(
                     catalog,
                     scanRel.index);
 

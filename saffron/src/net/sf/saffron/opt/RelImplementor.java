@@ -872,6 +872,12 @@ public class RelImplementor
                 }
             } else if (value instanceof byte []) {
                 return convertByteArrayLiteral((byte []) value);
+            } else if (value instanceof java.sql.Date) {
+                return Literal.makeLiteral((java.sql.Date)value);
+            } else if (value instanceof java.sql.Time) {
+                return Literal.makeLiteral((java.sql.Time)value);
+            } else if (value instanceof java.sql.Timestamp) {
+                return Literal.makeLiteral((java.sql.Timestamp)value);
             } else {
                 throw Util.newInternal(
                     "Bad literal value " + value +

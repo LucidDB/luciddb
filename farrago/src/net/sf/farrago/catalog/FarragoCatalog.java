@@ -233,6 +233,18 @@ public class FarragoCatalog
     }
 
     /**
+     * Determine whether an index is temporary
+     *
+     * @param index the index in question
+     *
+     * @return true if temporary
+     */
+    public static boolean isTemporary(CwmSqlindex index)
+    {
+        return ((CwmTable) index.getSpannedClass()).isTemporary();
+    }
+
+    /**
      * Find the clustered index storing a table's data.
      *
      * @param table the table to access

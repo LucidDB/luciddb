@@ -65,7 +65,7 @@ public class FarragoFileLockAllocation implements FarragoAllocation
                 // on operating systems with non-advisory lock semantics
                 // such as Windows.  Don't use Long.MAX_VALUE because
                 // that breaks on any OS without large file support.
-                lock = channel.tryLock(Integer.MAX_VALUE-1,1,false);
+                lock = channel.tryLock(0x7FFFFFFE-1,1,false);
                 if (lock == null) {
                     throw new IOException();
                 }

@@ -27,6 +27,7 @@ import net.sf.saffron.oj.*;
 import net.sf.saffron.oj.util.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.runtime.*;
+import net.sf.farrago.type.runtime.*;
 import openjava.mop.*;
 import openjava.ptree.*;
 

@@ -240,8 +240,9 @@ public class CalcRelImplementor extends RelImplementor {
         {
             assert(call.operands.length == 2) : "not a binary operator";
             if (containsResult(call)) {
-                assert(false) : "Shouldn't call this function directly, use implementNode(RexNode) instead";
-                return;//avoid reimplementing node
+                throw new AssertionError(
+                    "Shouldn't call this function directly;"
+                    + " use implementNode(RexNode) instead");
             }
             SqlOperator op = call.op;
 
@@ -289,8 +290,9 @@ public class CalcRelImplementor extends RelImplementor {
         private void implementNode(RexCall call)
         {
             if (containsResult(call)) {
-                assert(false) : "Shouldn't call this function directly, use implementNode(RexNode) instead";
-                return;//avoid reimplementing node
+                throw new AssertionError(
+                    "Shouldn't call this function directly;"
+                    + " use implementNode(RexNode) instead");
             }
 
             SqlOperator op = call.op;
@@ -621,8 +623,9 @@ public class CalcRelImplementor extends RelImplementor {
         private void implementNode(RexLiteral node)
         {
            if (containsResult(node)) {
-               assert(false) : "Shouldn't call this function directly, use implementNode(RexNode) instead";
-               return;//avoid reimplementing node
+               throw new AssertionError(
+                   "Shouldn't call this function directly;"
+                   + " use implementNode(RexNode) instead");
            }
 
            Object value = node.getValue();
@@ -638,8 +641,9 @@ public class CalcRelImplementor extends RelImplementor {
         private void implementNode(RexInputRef node)
         {
            if (containsResult(node)) {
-               assert(false) : "Shouldn't call this function directly, use implementNode(RexNode) instead";
-               return;//avoid reimplementing node
+               throw new AssertionError(
+                   "Shouldn't call this function directly;"
+                   + " use implementNode(RexNode) instead");
            }
            setResult(node, m_builder.newInput(getCalcType(node)));
         }

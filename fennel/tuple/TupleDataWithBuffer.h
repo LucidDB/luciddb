@@ -21,17 +21,23 @@
 #ifndef Fennel_TupleDataWithBuffer_Included
 #define Fennel_tupleDataWithBuffer_Included
 
-#include "fennel/common/CommonPreamble.h"
 #include "fennel/tuple/TupleData.h"
 #include "fennel/tuple/TupleAccessor.h"
 
 #include <boost/scoped_array.hpp>
 
-using namespace fennel;
-using namespace std;
-
 FENNEL_BEGIN_NAMESPACE
 
+/**
+ * TupleDataWithBuffer is a convienence that creates a TupleData, and
+ * a supporting buffer from a TupleDescriptor.
+ *
+ * A common use is to create an input and output tuple for Calculator
+ * given the TupleDescriptor obtained from
+ * Calculator::getOutputRegisterDescriptor and from
+ * Calculator::getInputRegisterDescriptor()
+ * 
+ */
 class TupleDataWithBuffer : public TupleData
 {
 public:
@@ -39,7 +45,7 @@ public:
     TupleDataWithBuffer(TupleDescriptor const& tupleDesc);
     ~TupleDataWithBuffer();
 private:
-    boost::scoped_array<FixedBuffer> mArray;
+    boost::scoped_array<FixedBuffer> array;
 };
 
 FENNEL_END_NAMESPACE

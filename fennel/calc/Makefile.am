@@ -18,7 +18,8 @@ CalcInit.cpp \
 SqlString.cpp \
 SqlStringAscii.cpp \
 ExtString.cpp \
-StringToHex.cpp
+StringToHex.cpp \
+ExtMath.cpp
 
 # noinst_PROGRAMS =    \
 # testCalc tuple testCalcAssembler testCalcExtString

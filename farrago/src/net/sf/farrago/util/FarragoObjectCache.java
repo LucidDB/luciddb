@@ -172,7 +172,7 @@ public class FarragoObjectCache implements FarragoAllocation
                     try {
                         entry.wait();
                     } catch (InterruptedException ex) {
-                        assert(false);
+                        throw new AssertionError();
                     }
                 }
                 

@@ -22,6 +22,7 @@
     <pattern name="catalog.codegen" class="net.sf.farrago.catalog.codegen.*" />
     <pattern name="catalog" class="net.sf.farrago.catalog.*" />
     <pattern name="type" class="net.sf.farrago.type.*" />
+    <pattern name="type.runtime" class="net.sf.farrago.type.runtime.*" />
     <pattern name="namespace" class="net.sf.farrago.namespace.*" />
     <pattern name="namespace.util" class="net.sf.farrago.namespace.util.*" />
     <pattern name="fennel" class="net.sf.farrago.fennel.*" />
@@ -55,6 +56,7 @@
       <include pattern="catalog.codegen"/>
       <include pattern="catalog"/>
       <include pattern="type"/>
+      <include pattern="type.runtime"/>
       <include pattern="namespace"/>
       <include pattern="namespace.util"/>
       <include pattern="fennel"/>
@@ -166,8 +168,25 @@
       </deny>
     </access-rule>
 
+    <pattern name="type.runtime.deps">
+      <include pattern="util.deps" />
+      <include pattern="type.runtime" />
+    </pattern>
+
+    <access-rule>
+      <message>type.runtime dependency violation</message>
+      <deny>
+        <from pattern="type.runtime" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="type.runtime.deps" />
+        </allow>
+      </deny>
+    </access-rule>
+
     <pattern name="type.deps">
       <include pattern="catalog.deps" />
+      <include pattern="type.runtime.deps" />
       <include pattern="type" />
     </pattern>
 
@@ -182,8 +201,26 @@
       </deny>
     </access-rule>
 
+    <pattern name="fennel.deps">
+      <include pattern="resource.deps" />
+      <include pattern="FarragoPackage.deps" />
+      <include pattern="fennel" />
+    </pattern>
+
+    <access-rule>
+      <message>fennel dependency violation</message>
+      <deny>
+        <from pattern="fennel" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="fennel.deps" />
+        </allow>
+      </deny>
+    </access-rule>
+
     <pattern name="namespace.deps">
       <include pattern="type.deps" />
+      <include pattern="fennel.deps" />
       <include pattern="namespace" />
     </pattern>
 
@@ -210,23 +247,6 @@
         <to pattern="farrago" />
         <allow>
           <to pattern="namespace.util.deps" />
-        </allow>
-      </deny>
-    </access-rule>
-
-    <pattern name="fennel.deps">
-      <include pattern="resource.deps" />
-      <include pattern="FarragoPackage.deps" />
-      <include pattern="fennel" />
-    </pattern>
-
-    <access-rule>
-      <message>fennel dependency violation</message>
-      <deny>
-        <from pattern="fennel" />
-        <to pattern="farrago" />
-        <allow>
-          <to pattern="fennel.deps" />
         </allow>
       </deny>
     </access-rule>

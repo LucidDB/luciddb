@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/farrago/unitsql/expressions/datatypes.sql#1 $
+0: jdbc:farrago:> -- $Id: //open/farrago/unitsql/expressions/datatypes.sql#2 $
 0: jdbc:farrago:> -- Test expressions with different datatypes
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- VARCHAR comparison
@@ -19,5 +19,17 @@
 'I','C','V'
 '1','goober    ','goober'
 '2','endoplasmi','endoplasmi'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- Date/time/timestamp literals
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select DATE '2004-12-01' as D1 from values('TRUE');
+'D1'
+'2004-12-01'
+0: jdbc:farrago:> select TIME '12:01:01' as T1 from values('TRUE');
+'T1'
+'12:01:01'
+0: jdbc:farrago:> select TIMESTAMP '2004-12-01 12:01:01' as TS1 from values('TRUE');
+'TS1'
+'2004-12-01 12:01:01.0'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

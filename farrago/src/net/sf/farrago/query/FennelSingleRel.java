@@ -28,8 +28,8 @@ import net.sf.saffron.core.SaffronConnection;
 
 
 /**
- * FennelSingleRel is a FennelRel corresponding to SingleRel, and which only
- * takes a FennelRel as input.
+ * FennelSingleRel is a {@link FennelRel} corresponding to {@link SingleRel},
+ * and which only takes a FennelRel as input.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -55,12 +55,6 @@ public abstract class FennelSingleRel extends SingleRel implements FennelRel
     public SaffronConnection getConnection()
     {
         return getFennelInput().getConnection();
-    }
-
-    // implement SaffronRel
-    public CallingConvention getConvention()
-    {
-        return FennelRel.FENNEL_CALLING_CONVENTION;
     }
 
     // implement FennelRel

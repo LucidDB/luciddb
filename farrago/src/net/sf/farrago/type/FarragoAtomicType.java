@@ -319,8 +319,7 @@ public abstract class FarragoAtomicType extends FarragoType
         case Types.BIGINT:
             return 20;
         }
-        assert(false);
-        return 0;
+        throw new AssertionError();
     }
 
     /**
@@ -330,8 +329,7 @@ public abstract class FarragoAtomicType extends FarragoType
      */
     public int getScale()
     {
-        assert(false);
-        return 0;
+        throw new AssertionError();
     }
 }
 

@@ -49,6 +49,14 @@ public class FarragoDbSessionFactory implements FarragoSessionFactory
     }
     
     // implement FarragoSessionFactory
+    public FennelTxnContext newFennelTxnContext(
+        FarragoCatalog catalog,
+        FennelDbHandle fennelDbHandle)
+    {
+        return new FennelTxnContext(catalog,fennelDbHandle);
+    }
+    
+    // implement FarragoSessionFactory
     public void cleanupSessions()
     {
         FarragoDatabase.shutdownConditional(0);

@@ -21,7 +21,7 @@
 // creating programs, running them, and checking the register set values.
 */
 
-#include "fennel/calc/ExtString.h"
+#include "fennel/common/CommonPreamble.h"
 #include "fennel/calc/SqlStringAscii.h"
 #include "fennel/calc/ExtendedInstructionTable.h"
 

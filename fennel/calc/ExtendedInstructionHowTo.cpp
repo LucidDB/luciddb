@@ -238,6 +238,16 @@ Ext-something-Register, for example ExtStringRegister in ExtString.cpp
 This routine is called once by the singleton CalcInit::instance at the
 start of the Fennel library.
 </p>
+<p>
+You will have to edit:
+<ul>
+<li>
+CalcInit.cpp, to add registration to CalcInit
+<li>
+InstructionCommon.h, to include your Ext-something-.h file.
+<li>
+calc/Makefile.am, for obvious reasons.
+</ul>
 
 <h3>Function Definitions</h3>
 <a name="ExtendedInstructionDef"></a>

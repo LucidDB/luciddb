@@ -24,8 +24,6 @@
 #ifndef Fennel_SqlStringAscii_Included
 #define Fennel_SqlStringAscii_Included
 
-#include "fennel/common/CommonPreamble.h"
-
 FENNEL_BEGIN_NAMESPACE
 
 //! Strcat. Ascii. SQL VARCHAR & CHAR. dest = dest || str. Returns new length in bytes.

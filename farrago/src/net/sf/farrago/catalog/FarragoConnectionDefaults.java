@@ -68,8 +68,7 @@ public class FarragoConnectionDefaults implements Cloneable
         try {
             return (FarragoConnectionDefaults) clone();
         } catch (CloneNotSupportedException ex) {
-            assert(false);
-            return null;
+            throw new AssertionError();
         }
     }
 }
