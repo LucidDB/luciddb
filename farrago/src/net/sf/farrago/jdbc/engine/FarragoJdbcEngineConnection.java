@@ -28,6 +28,8 @@ import net.sf.farrago.jdbc.FarragoMedDataWrapperInfo;
 import net.sf.farrago.namespace.util.FarragoDataWrapperCache;
 import net.sf.farrago.namespace.FarragoMedDataWrapper;
 import net.sf.farrago.db.FarragoDbSession;
+import net.sf.farrago.db.FarragoDatabase;
+import net.sf.farrago.util.FarragoObjectCache;
 import net.sf.farrago.fem.med.FemDataWrapper;
 
 import org.eigenbase.sql.SqlIdentifier;
@@ -490,8 +492,14 @@ public class FarragoJdbcEngineConnection implements FarragoConnection
 
         private FarragoMedDataWrapper getWrapper()
         {
-            final FarragoDataWrapperCache dataWrapperCache =
-                getSession().newStmtValidator().getDataWrapperCache();
+            final FarragoDbSession session = (FarragoDbSession)getSession();
+            final FarragoDatabase db = session.getDatabase();
+            final FarragoObjectCache sharedCache = db.getDataWrapperCache();
+
+            final FarragoDataWrapperCache dataWrapperCache = 
+                new FarragoDataWrapperCache(session, sharedCache, 
+                    session.getRepos(), db.getFennelDbHandle());
+
             final FarragoMedDataWrapper dataWrapper =
                 dataWrapperCache.loadWrapper(mofId, libraryName, options);
             return dataWrapper;
