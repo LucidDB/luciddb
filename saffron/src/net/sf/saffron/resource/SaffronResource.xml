@@ -34,18 +34,6 @@
     <text>Internal error: {0}</text>
 </exception>
 
-<exception id="2" name="ProgramCompilationError">
-    <text>Compilation Error: {0}</text>
-</exception>
-
-<exception id="3" name="ProgramImplementationError">
-    <text>Implementation Error: {0}</text>
-</exception>
-
-<exception id="4" name="CompilationAssertionError">
-    <text>Assertion Error: {0}</text>
-</exception>
-
 <exception id="5" name="FunctionNotFound">
     <text>Function ''{0}'' does not exist</text>
 </exception>

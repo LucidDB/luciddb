@@ -392,6 +392,23 @@ encountered near {1}</text>
     <text>Failed to initialize plugin {0}</text>
 </exception>
 
+<!-- ====================================================================== -->
+<!-- com.disruptivetech.farrago.calc resources 500,000 - 510,000 -->
+<!-- REVIEW jvs 28-Aug-2004:  these are all assertions, so why i18n? -->
+<!-- ====================================================================== -->
+
+<exception id="500000" name="ProgramCompilationError">
+    <text>Calculator program compilation error: {0}</text>
+</exception>
+
+<exception id="500010" name="ProgramImplementationError">
+    <text>Calculator program implementation error: {0}</text>
+</exception>
+
+<exception id="500020" name="CompilationAssertionError">
+    <text>Calculator program compilation assertion error: {0}</text>
+</exception>
+
 <!-- End of last error section ============================================ -->
 
 </resourceBundle>

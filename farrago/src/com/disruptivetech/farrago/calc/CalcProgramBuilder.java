@@ -20,7 +20,8 @@
 */
 package com.disruptivetech.farrago.calc;
 
-import net.sf.saffron.resource.SaffronResource;
+import net.sf.farrago.resource.*;
+
 import net.sf.saffron.sql.SqlLiteral;
 import net.sf.saffron.util.EnumeratedValues;
 import net.sf.saffron.util.Util;
@@ -924,7 +925,7 @@ public class CalcProgramBuilder
             !separator.equals(SEPARATOR_SEMICOLON) &&
             !separator.equals(SEPARATOR_SEMICOLON_NEWLINE))
         {
-            throw SaffronResource.instance().newProgramCompilationError("Separator must be ';'[\\n] or '\\n'");
+            throw FarragoResource.instance().newProgramCompilationError("Separator must be ';'[\\n] or '\\n'");
         }
         this.m_separator = separator;
     }
@@ -935,7 +936,7 @@ public class CalcProgramBuilder
 
     protected void compilationAssert(boolean cond, String msg) {
         if (!cond) {
-            throw SaffronResource.instance().newCompilationAssertionError(msg);
+            throw FarragoResource.instance().newCompilationAssertionError(msg);
         }
     }
 
@@ -1003,7 +1004,7 @@ public class CalcProgramBuilder
                         java.lang.Integer lineNbrFromLabel = (java.lang.Integer) m_labels.get(line.getLabel());
                         if (null == lineNbrFromLabel)
                         {
-                            throw SaffronResource.instance().newProgramCompilationError(
+                            throw FarragoResource.instance().newProgramCompilationError(
                                     "Label '"+line.getLabel()+"' not defined");
                         }
                         line.setLine(lineNbrFromLabel.intValue());
@@ -1149,7 +1150,7 @@ public class CalcProgramBuilder
                 if (op.startsWith(jumpInstruction)) {
                     Line line = (Line) inst.getOperands()[0];
                     if (line.getLine().intValue()>=m_instructions.size()) {
-                        throw SaffronResource.instance().newProgramCompilationError(
+                        throw FarragoResource.instance().newProgramCompilationError(
                                 "Line "+line.getLine()+" doesn't exist");
                     }
                 }
@@ -1158,7 +1159,7 @@ public class CalcProgramBuilder
                 if (op.startsWith(jumpInstruction)) {
                     Line line = (Line) inst.getOperands()[0];
                     if (line.getLine().intValue()==i) {
-                        throw SaffronResource.instance().newProgramCompilationError(
+                        throw FarragoResource.instance().newProgramCompilationError(
                                 "Can not jump to the same line as the instruction");
                     }
                 }
@@ -1167,7 +1168,7 @@ public class CalcProgramBuilder
                 if (op.startsWith(jumpInstruction)) {
                     Line line = (Line) inst.getOperands()[0];
                     if (line.getLine().intValue()<i) {
-                        throw SaffronResource.instance().newProgramCompilationError(
+                        throw FarragoResource.instance().newProgramCompilationError(
                                 "Loops are forbidden. Can not jump to a previous line");
                     }
                 }
@@ -1183,7 +1184,7 @@ public class CalcProgramBuilder
             catch(Throwable e) {
                 StringWriter log = new StringWriter();
                 inst.print(new PrintWriter(log));
-                throw SaffronResource.instance().newProgramCompilationError(log.toString()
+                throw FarragoResource.instance().newProgramCompilationError(log.toString()
                                                                       +NL
                                                                       +e.getMessage(),e);
             }

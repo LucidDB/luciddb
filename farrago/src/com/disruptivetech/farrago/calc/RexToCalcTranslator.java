@@ -25,7 +25,7 @@ import net.sf.saffron.core.SaffronField;
 import net.sf.saffron.core.SaffronType;
 import net.sf.saffron.core.SaffronTypeFactory;
 import net.sf.saffron.core.SaffronTypeFactoryImpl;
-import net.sf.saffron.resource.SaffronResource;
+import net.sf.farrago.resource.*;
 import net.sf.saffron.rex.*;
 import net.sf.saffron.sql.*;
 import net.sf.saffron.sql.fun.SqlStdOperatorTable;
@@ -408,17 +408,17 @@ public class RexToCalcTranslator implements RexVisitor
     }
 
     public void visitCorrelVariable(RexCorrelVariable correlVariable) {
-        throw SaffronResource.instance().newProgramImplementationError(
+        throw FarragoResource.instance().newProgramImplementationError(
                 "Don't know how to implement rex node=" + correlVariable);
     }
 
     public void visitDynamicParam(RexDynamicParam dynamicParam) {
-        throw SaffronResource.instance().newProgramImplementationError(
+        throw FarragoResource.instance().newProgramImplementationError(
                 "Don't know how to implement rex node=" + dynamicParam);
     }
 
     public void visitRangeRef(RexRangeRef rangeRef) {
-        throw SaffronResource.instance().newProgramImplementationError(
+        throw FarragoResource.instance().newProgramImplementationError(
                 "Don't know how to implement rex node=" + rangeRef);
     }
 
@@ -427,7 +427,7 @@ public class RexToCalcTranslator implements RexVisitor
     }
 
     public void visitFieldAccess(RexFieldAccess fieldAccess) {
-        throw SaffronResource.instance().newProgramImplementationError(
+        throw FarragoResource.instance().newProgramImplementationError(
                 "Don't know how to implement rex node=" + fieldAccess);
     }
 
@@ -479,7 +479,7 @@ public class RexToCalcTranslator implements RexVisitor
             _builder.addLabel(restOfInstructions);
         }
         else{
-            throw SaffronResource.instance().newProgramImplementationError(op.toString());
+            throw FarragoResource.instance().newProgramImplementationError(op.toString());
         }
     }
 
@@ -579,7 +579,7 @@ public class RexToCalcTranslator implements RexVisitor
         }
 
 
-        throw SaffronResource.instance().newProgramImplementationError(
+        throw FarragoResource.instance().newProgramImplementationError(
                 "Unknown operator "+op);
     }
 
@@ -691,7 +691,7 @@ public class RexToCalcTranslator implements RexVisitor
                     + " use implementNode(RexNode) instead");
         }
 
-        throw SaffronResource.instance().newProgramImplementationError(
+        throw FarragoResource.instance().newProgramImplementationError(
                     "Don't know how to implement rex node=" + node);
     }
 
