@@ -617,7 +617,7 @@ require version '${required.ant.version}'."/>
   </target>
 
   <!-- creates catalog and populates with initial metadata -->
-  <target name="createCatalog" depends ="mkdir.classes,configureReposStorage">
+  <target name="createCatalog" depends="mkdir.classes,configureReposStorage">
     <antcall target="createClasspathFile"/>
     <antcall target="compileCatalog"/>
     <antcall target="createMdrTestData"/>
@@ -627,6 +627,11 @@ require version '${required.ant.version}'."/>
     <!-- NOTE:  redundant backup is an intentional checkpoint; in case
     populateTestData fails, it can be debugged from restored empty catalog -->
     <antcall target="backupCatalog"/>
+  </target>
+
+  <target name="createCatalogIfNotUptodate" depends="checkCatalogUptodate"
+      unless="catalog.uptodate">
+    <antcall target="createCatalog"/>
   </target>
 
   <!-- sets property ReposStorage.configured if ReposStorage.properties
@@ -972,6 +977,17 @@ require version '${required.ant.version}'."/>
       <srcfiles refid="fileset.parser.farrago.ddl"/>
       <srcfiles refid="fileset.parser.farrago.ddl.common"/>
       <srcfiles refid="fileset.parser.common.sql"/>
+    </uptodate>
+  </target>
+
+  <target name="checkCatalogUptodate">
+    <uptodate property="catalog.uptodate"
+      targetfile="${farrago.dir}/catalog/java/net/sf/farrago/FarragoPackage.java">
+      <srcfiles dir="${farrago.dir}/catalog/xmi">
+        <include name="FarragoExtMetamodelUML.zuml"/>
+        <include name="${ext.model.file}"/>
+        <include name="*.xsl"/>
+      </srcfiles>
     </uptodate>
   </target>
 
