@@ -61,8 +61,6 @@ public class RuntimeTest extends TestCase
         }
         return buf.toString();
     }
-
-    public void test
 }
 
 // End RuntimeTest.java
