@@ -92,7 +92,10 @@ public class RelTraitSet
     }
 
     /**
-     * Replace an existing RelTrait in the set.
+     * Replace an existing RelTrait in the set.  This method <b>must
+     * not</b> be used to modify the traits of a 
+     * {@link org.eigenbase.rel.RelNode} that has already been
+     * registered with a {@link RelOptPlanner}.
      *
      * @param index 0-based index into ordered RelTraitSet
      * @param trait the new RelTrait
@@ -111,7 +114,10 @@ public class RelTraitSet
     }
 
     /**
-     * Replace an existing RelTrait in the set.
+     * Replace an existing RelTrait in the set.  This method <b>must
+     * not</b> be used to modify the traits of a 
+     * {@link org.eigenbase.rel.RelNode} that has already been
+     * registered with a {@link RelOptPlanner}.
      *
      * @param traitDef the type of RelTrait to replace
      * @return trait the new RelTrait
@@ -128,7 +134,10 @@ public class RelTraitSet
     }
 
     /**
-     * Add a new RelTrait to the set.
+     * Add a new RelTrait to the set.  This method <b>must
+     * not</b> be used to modify the traits of a 
+     * {@link org.eigenbase.rel.RelNode} that has already been
+     * registered with a {@link RelOptPlanner}.
      *
      * @param trait the new RelTrait
      */
@@ -167,6 +176,7 @@ public class RelTraitSet
 
     /**
      * Compare two RelTraitSet objects for equality.
+     *
      * @param obj another RelTraitSet
      * @return true if traits are equal and in the same order, false otherwise
      * @throws ClassCastException if <code>obj</code> is not a RelTraitSet.

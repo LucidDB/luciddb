@@ -36,26 +36,28 @@ import java.lang.ref.WeakReference;
  *   <li>
  *     if the set of all possible associated RelTraits is finite and fixed
  *     (e.g. all RelTraits for this RelTraitDef are known at compile time).
- *     For example, the CallingConvention rel trait meets this requirement.
+ *     For example, the CallingConvention trait meets this requirement, 
+ *     because CallingConvention is effectively an enumeration.
  *   </li>
  *   <li>
+ *     Either
  *     <ul>
  *       <li>
- *         if {@link #canConvert(RelOptPlanner, RelTrait, RelTrait)} and
+ *         {@link #canConvert(RelOptPlanner, RelTrait, RelTrait)} and
  *         {@link #convert(RelOptPlanner, RelNode, RelTrait, int, boolean)}
  *         do not require planner-instance-specific information, <b>or</b>
  *       </li>
  *       <li>
  *         the RelTraitDef manages separate sets of conversion data
- *         internally (see {@link CallingConventionTraitDef} for an example
+ *         internally. See {@link CallingConventionTraitDef} for an example
  *         of this.
  *       </li>
  *     </ul>
  *   </li>
  * </ol>
  *
- * <p>Otherwise, a new instance of RelTraitDef must be constructed for each
- * planner.
+ * <p>Otherwise, a new instance of RelTraitDef must be constructed and
+ * registered with each new planner instantiated.</p>
  *
  * @author Stephan Zuercher
  * @version $Id$
@@ -83,13 +85,13 @@ public abstract class RelTraitDef
     /**
      * Take an arbitrary RelTrait and return the canonical representation
      * of that RelTrait.  Canonized RelTrait objects may always be
-     * compared using the equality operator (<code>==</code).
+     * compared using the equality operator (<code>==</code>).
      *
      * <p>If an equal RelTrait has already been canonized and is still
      * in use, it will be returned.  Otherwise, the given RelTrait is made
      * canonical and returned.
      *
-     * @param trait a possible non-canonical RelTrait
+     * @param trait a possibly non-canonical RelTrait
      * @return a canonical RelTrait.
      */
     public final RelTrait canonize(RelTrait trait)

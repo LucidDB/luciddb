@@ -24,9 +24,10 @@
 package org.eigenbase.relopt;
 
 /**
- * RelTrait represents a particular trait of a rel within a trait definition.
- * For example, a {@link CallingConvention#JAVA} is a trait of the
- * {@link CallingConvention} trait definition.
+ * RelTrait represents the manifestation of a relational expression
+ * trait within a trait definition.  For example, a 
+ * {@link CallingConvention#JAVA} is a trait of the
+ * {@link CallingConventionTraitDef} trait definition.
  *
  * <p>
  * <a name="EqualsHashCodeNote"><u>Note about equals() and hashCode()</u></a>
@@ -35,8 +36,8 @@ package org.eigenbase.relopt;
  * you need not override {@link #hashCode()} and {@link #equals(Object)}.
  * If, however, new RelTrait instances are generated at runtime (e.g. based
  * on state external to the planner), you must implement {@link #hashCode()}
- * and {@link #equals(Object)} for proper canonization of your RelTrait
- * objects.
+ * and {@link #equals(Object)} for proper 
+ * {@link RelTraitDef#canonize canonization} of your RelTrait objects.
  *
  * @author Stephan Zuercher
  * @version $Id$

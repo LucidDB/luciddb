@@ -41,16 +41,19 @@ import org.eigenbase.rex.RexNode;
  * A <code>RelNode</code> is a relational expression.  It is NOT an
  * {@link openjava.ptree.Expression}.
  *
- * <p>
- * If this type of relational expression has some particular rules, it should
- * implement the <em>public static</em> method {@link AbstractRelNode#register}.
- * </p>
+ * <p>If this type of relational expression has some particular rules, it
+ * should implement the <em>public static</em> method {@link
+ * AbstractRelNode#register}.</p>
  *
  * <p>When a relational expression comes to be implemented, the system
  * allocates a {@link org.eigenbase.relopt.RelImplementor} to manage the
- * process. Every implementable relational expression has a
- * {@link CallingConvention} describing how it passes data to its consuming
- * relational expression.</p>
+ * process. Every implementable relational expression has a {@link RelTraitSet}
+ * describing its physical attributes.  The RelTraitSet always contains a
+ * {@link CallingConvention} describing how the expression passes data to its
+ * consuming relational expression, but may contain other traits, including
+ * some applied externally.  Because traits can be applied externally,
+ * implementaitons of RelNode should never assume the size or contents of
+ * their trait set (beyond those traits configured by the RelNode itself).</p>
  *
  * <p>For each calling-convention, there is a corresponding sub-interface of
  * RelNode. For example, {@link org.eigenbase.oj.rel.JavaRel} has
@@ -97,12 +100,23 @@ public interface RelNode
     RelOptCluster getCluster();
 
     /**
-     * Returns a value from {@link CallingConvention}.
+     * Return the CallingConvention trait from this RelNode's 
+     * {@link #getTraits() trait set}.
+     *
+     * @return this RelNode's CallingConvention
      */
     CallingConvention getConvention();
 
     /**
-     * Returns a set of RelTraits representing the traits of this RelNode
+     * Retrieves this RelNode's traits.  Note that although the
+     * RelTraitSet returned is modifiable, it <b>must not</b> be
+     * modified during optimization.  It is legal to modify the traits
+     * of a RelNode before or after optimization, although doing so
+     * could render a tree of RelNodes unimplementable.  If a
+     * RelNode's traits need to be modified during optimization, clone
+     * the RelNode and change the clone's traits.
+     *
+     * @return this RelNode's trait set
      */
     RelTraitSet getTraits();
 
