@@ -39,8 +39,7 @@ import org.eigenbase.sql.parser.SqlParseException;
 import org.eigenbase.sql.parser.SqlParser;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql2rel.SqlToRelConverter;
-import org.eigenbase.util.SaffronProperties;
-import org.eigenbase.util.Util;
+import org.eigenbase.util.*;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -117,7 +116,7 @@ public class ConverterTest extends TestCase
         String actual = sw.toString();
         String actual2 = pattern.matcher(actual).replaceAll("{con}");
         String actual3 = pattern2.matcher(actual2).replaceAll("{sales}");
-        Util.assertEqualsVerbose(plan, actual3);
+        TestUtil.assertEqualsVerbose(plan, actual3);
     }
 
     static TestContext getTestContext()

@@ -6,4 +6,4 @@ BIN_DIR=$(cd `dirname $0`; pwd)
 
 source $BIN_DIR/defineFarragoRuntime.sh
 
-java ${JAVA_ARGS} net.sf.farrago.server.FarragoServer
+${JAVA_EXEC} ${JAVA_ARGS} net.sf.farrago.server.FarragoServer

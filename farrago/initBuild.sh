@@ -23,7 +23,7 @@
 # Script to set up a new Farrago build environment
 
 usage() {
-    echo "Usage:  initBuild.sh --with[out]-fennel [--append-init-properties] [--with[out]-optimization] [--skip-thirdparty]"
+    echo "Usage:  initBuild.sh --with[out]-fennel [--append-init-properties] [--with[out]-optimization] [--with[out]-debug] [--skip-thirdparty]"
 }
 
 if [ "$1" == "--with-fennel" ] ; then
@@ -48,9 +48,11 @@ fi
 if [ "$1" == "--with-optimization" -o "$1" == "--without-optimization" ] ; then
     OPT_FLAG="$1"
     shift
-else
-    # default to unoptimized build
-    OPT_FLAG="--without-optimization"
+fi
+
+if [ "$1" == "--with-debug" -o "$1" == "--without-debug" ] ; then
+    DEBUG_FLAG="$1"
+    shift
 fi
 
 if [ "$1" == "--skip-thirdparty" ] ; then
@@ -90,7 +92,7 @@ if $fennel_disabled ; then
     echo Skipping Fennel build
 else
     cd ../fennel
-    ./initBuild.sh --with-farrago $OPT_FLAG $THIRDPARTY_FLAG
+    ./initBuild.sh --with-farrago $OPT_FLAG $DEBUG_FLAG $THIRDPARTY_FLAG
 
     # Set up Fennel runtime environment
     . fennelenv.sh `pwd`

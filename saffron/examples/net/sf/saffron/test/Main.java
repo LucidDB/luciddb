@@ -212,7 +212,7 @@ public class Main extends TestCase
     private static void addAllTests(TestSuite suite)
         throws Exception
     {
-        suite.addTest(org.eigenbase.util.Util.suite());
+        suite.addTest(org.eigenbase.util.UtilTest.suite());
         if (false) {
             suite.addTestSuite(JdbcSalesTestCase.class);
 

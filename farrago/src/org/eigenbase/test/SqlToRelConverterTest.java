@@ -37,7 +37,7 @@ import org.eigenbase.sql.parser.SqlParser;
 import org.eigenbase.sql.type.SqlTypeFactoryImpl;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.sql2rel.SqlToRelConverter;
-import org.eigenbase.util.Util;
+import org.eigenbase.util.*;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -102,7 +102,7 @@ public class SqlToRelConverterTest extends TestCase
         rel.explain(planWriter);
         planWriter.flush();
         String actual = sw.toString();
-        Util.assertEqualsVerbose(plan, actual);
+        TestUtil.assertEqualsVerbose(plan, actual);
     }
 
     protected SqlNode parseQuery(String sql) throws Exception {

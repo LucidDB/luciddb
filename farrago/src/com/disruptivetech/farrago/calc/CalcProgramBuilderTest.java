@@ -26,7 +26,7 @@ import java.util.Iterator;
 
 import junit.framework.TestCase;
 
-import org.eigenbase.util.Util;
+import org.eigenbase.util.*;
 
 
 /**
@@ -80,7 +80,7 @@ public class CalcProgramBuilderTest extends TestCase
         final String program = builder.getProgram();
         final String expected =
             "O s4;" + "C s4;" + "V 100;" + "T;" + "MOVE O0, C0;";
-        Util.assertEqualsVerbose(expected, program);
+        TestUtil.assertEqualsVerbose(expected, program);
     }
 
     public void testComments()
@@ -103,7 +103,7 @@ public class CalcProgramBuilderTest extends TestCase
             "O s4;" + "C s4, vc,2;" + "V 100, 0x41 /* A */;" + "T;"
             + "MOVE O0, C0 /* 0: hej */;" + "MOVE O0, C0 /* 1: ab c */;"
             + "MOVE O0, C0 /* 2: */;" + "MOVE O0, C0 /* 3: \\*d*\\ */;";
-        Util.assertEqualsVerbose(expected, program);
+        TestUtil.assertEqualsVerbose(expected, program);
     }
 
     public void testRef()
@@ -116,7 +116,7 @@ public class CalcProgramBuilderTest extends TestCase
         final String program = builder.getProgram();
         final String expected =
             "O s4;" + "C s4;" + "V 100;" + "T;" + "REF O0, C0;";
-        Util.assertEqualsVerbose(expected, program);
+        TestUtil.assertEqualsVerbose(expected, program);
     }
 
     public void testRefFails()
@@ -165,7 +165,7 @@ public class CalcProgramBuilderTest extends TestCase
             "O s4;" + "C s4, vc,22, vc,24;"
             + "V 100, 0x48656C6C6F20776F726C64, 0x48656C6C6F20776F726C6473;"
             + "T;" + "MOVE O0, C0;";
-        Util.assertEqualsVerbose(expected, program);
+        TestUtil.assertEqualsVerbose(expected, program);
     }
 
     public void testInconstentTypes()
@@ -190,7 +190,7 @@ public class CalcProgramBuilderTest extends TestCase
             "O vc,10;" + "C vc,22, s4, s4;"
             + "V 0x48656C6C6F20776F726C64, 3, 5;" + "T;"
             + "CALL 'SUBSTR(O0, C0, C1, C2);";
-        Util.assertEqualsVerbose(expected, program);
+        TestUtil.assertEqualsVerbose(expected, program);
     }
 
     public void testJmpToNoWhere()
@@ -251,7 +251,7 @@ public class CalcProgramBuilderTest extends TestCase
             "O bo;" + "C bo, bo;" + "V 1, 0;" + "T;" + "AND O0, C0, C1;"
             + "JMP @4;" + "JMPT @4, O0;" + "JMPF @6, O0;" + "JMPN @6, O0;"
             + "JMPNN @6, O0;" + "AND O0, C0, C1;";
-        Util.assertEqualsVerbose(expected, program);
+        TestUtil.assertEqualsVerbose(expected, program);
     }
 
     public void testLabelJumpFails()

@@ -25,7 +25,7 @@ import java.sql.*;
 
 import junit.framework.TestCase;
 
-import org.eigenbase.util.Util;
+import org.eigenbase.util.*;
 
 
 /**
@@ -130,7 +130,7 @@ public class JdbcTest extends TestCase
         final ResultSet resultSet =
             getConnection().createStatement().executeQuery(query);
         String actual = toString(resultSet);
-        Util.assertEqualsVerbose(expected, actual);
+        TestUtil.assertEqualsVerbose(expected, actual);
     }
 
     private String toString(final ResultSet resultSet)

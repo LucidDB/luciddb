@@ -459,6 +459,7 @@
     </access-rule>
 
     <pattern name="jdbc.deps">
+      <include pattern="util.deps" />
       <include pattern="jdbc" />
     </pattern>
 

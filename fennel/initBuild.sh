@@ -1,7 +1,7 @@
 #!/bin/bash
 # $Id$
 
-usagemsg="Usage:  initBuild.sh [--with[out]-farrago] [--with[out]-icu] [--with[out]-optimization] [--skip-thirdparty]";
+usagemsg="Usage:  initBuild.sh [--with[out]-farrago] [--with[out]-icu] [--with[out]-optimization] [--with[out]-debug] [--skip-thirdparty]";
 
 if [ "$1" == "--with-farrago" -o "$1" == "--without-farrago" ] ; then
     FARRAGO_FLAG=$1
@@ -23,6 +23,18 @@ if [ "$1" == "--with-optimization" -o "$1" == "--without-optimization" ] ; then
 else
     # default to unoptimized build
     OPT_FLAG="--without-optimization"
+fi
+
+if [ "$1" == "--with-debug" -o "$1" == "--without-debug" ] ; then
+    DEBUG_FLAG=$1
+    shift
+else
+    # By default, debug is opposite of optimization
+    if [ $OPT_FLAG == "--with-optimization" ]; then
+        DEBUG_FLAG="--without-debug"
+    else
+        DEBUG_FLAG="--with-debug"
+    fi
 fi
 
 if [ "$1" == "--skip-thirdparty" ] ; then
@@ -121,7 +133,7 @@ rm -rf autom4te.cache
 autoreconf --force --install
 ./configure --with-boost=`pwd`/../thirdparty/boost \
     --with-stlport=`pwd`/../thirdparty/stlport \
-    $FARRAGO_FLAG $ICU_CONF $MINGW32_TARGET $OPT_FLAG
+    $FARRAGO_FLAG $ICU_CONF $MINGW32_TARGET $OPT_FLAG $DEBUG_FLAG
 
 if $cygwin ; then
     unset CC

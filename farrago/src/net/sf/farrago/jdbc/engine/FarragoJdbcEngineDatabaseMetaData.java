@@ -25,6 +25,7 @@ package net.sf.farrago.jdbc.engine;
 import java.sql.*;
 import java.util.*;
 
+import net.sf.farrago.util.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.session.*;
 
@@ -124,40 +125,54 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
     public String getDatabaseProductName()
         throws SQLException
     {
-        return "Farrago";
+        FarragoReleaseProperties props = FarragoReleaseProperties.instance();
+        return props.productName.get();
     }
 
     // implement DatabaseMetaData
     public String getDatabaseProductVersion()
         throws SQLException
     {
-        return "0.1";
+        FarragoReleaseProperties props = FarragoReleaseProperties.instance();
+        return
+            ""
+            + props.productVersionMajor.get()
+            + "."
+            + props.productVersionMinor.get();
     }
 
     // implement DatabaseMetaData
     public String getDriverName()
         throws SQLException
     {
-        return "FarragoJdbcDriver";
+        FarragoReleaseProperties props = FarragoReleaseProperties.instance();
+        return props.jdbcDriverName.get();
     }
 
     // implement DatabaseMetaData
     public String getDriverVersion()
         throws SQLException
     {
-        return "0.1";
+        FarragoReleaseProperties props = FarragoReleaseProperties.instance();
+        return
+            ""
+            + props.jdbcDriverVersionMajor.get()
+            + "."
+            + props.jdbcDriverVersionMinor.get();
     }
 
     // implement DatabaseMetaData
     public int getDriverMajorVersion()
     {
-        return 0;
+        FarragoReleaseProperties props = FarragoReleaseProperties.instance();
+        return props.jdbcDriverVersionMajor.get();
     }
 
     // implement DatabaseMetaData
     public int getDriverMinorVersion()
     {
-        return 1;
+        FarragoReleaseProperties props = FarragoReleaseProperties.instance();
+        return props.jdbcDriverVersionMinor.get();
     }
 
     // implement DatabaseMetaData

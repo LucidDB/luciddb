@@ -26,7 +26,7 @@ import java.sql.*;
 import java.util.*;
 
 import net.sf.farrago.jdbc.*;
-
+import net.sf.farrago.util.*;
 
 /**
  * FarragoJdbcClientDriver implements the Farrago client side of
@@ -85,9 +85,10 @@ public class FarragoJdbcClientDriver extends FarragoAbstractJdbcDriver
         String urlRmi = url.substring(getUrlPrefix().length());
         String [] split = urlRmi.split(":");
         if (split.length == 1) {
-            // no port number, so append default; TODO: define this as symbolic
-            // constant somewhere
-            urlRmi = urlRmi + ":5433";
+            // no port number, so append default
+            FarragoReleaseProperties props =
+                FarragoReleaseProperties.instance();
+            urlRmi = urlRmi + ":" + props.jdbcUrlPortDefault.get();
         }
         urlRmi = "jdbc:rmi://" + urlRmi + "/" + getClientUrl();
 

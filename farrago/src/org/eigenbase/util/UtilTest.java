@@ -29,7 +29,11 @@ import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 
 import junit.framework.TestCase;
+import junit.framework.Test;
+import junit.framework.TestSuite;
+import junit.textui.TestRunner;
 
+import org.eigenbase.runtime.*;
 
 /**
  * Unit test for {@link Util} and other classes in this package.
@@ -48,6 +52,17 @@ public class UtilTest extends TestCase
     }
 
     //~ Methods ---------------------------------------------------------------
+
+    public static Test suite()
+        throws Exception
+    {
+        TestSuite suite = new TestSuite();
+        suite.addTestSuite(UtilTest.class);
+        suite.addTestSuite(BinaryHeap.BinaryHeapTestCase.class);
+        suite.addTestSuite(ThreadIterator.Test.class);
+        suite.addTestSuite(TimeoutIteratorTest.class);
+        return suite;
+    }
 
     public void testPrintEquals()
     {
@@ -79,49 +94,49 @@ public class UtilTest extends TestCase
         BigDecimal bd;
 
         bd = new BigDecimal("0.001234");
-        Util.assertEqualsVerbose(
+        TestUtil.assertEqualsVerbose(
             "1.234E-3",
             Util.toScientificNotation(bd));
         bd = new BigDecimal("0.001");
-        Util.assertEqualsVerbose(
+        TestUtil.assertEqualsVerbose(
             "1E-3",
             Util.toScientificNotation(bd));
         bd = new BigDecimal("-0.001");
-        Util.assertEqualsVerbose(
+        TestUtil.assertEqualsVerbose(
             "-1E-3",
             Util.toScientificNotation(bd));
         bd = new BigDecimal("1");
-        Util.assertEqualsVerbose(
+        TestUtil.assertEqualsVerbose(
             "1E0",
             Util.toScientificNotation(bd));
         bd = new BigDecimal("-1");
-        Util.assertEqualsVerbose(
+        TestUtil.assertEqualsVerbose(
             "-1E0",
             Util.toScientificNotation(bd));
         bd = new BigDecimal("1.0");
-        Util.assertEqualsVerbose(
+        TestUtil.assertEqualsVerbose(
             "1.0E0",
             Util.toScientificNotation(bd));
         bd = new BigDecimal("12345");
-        Util.assertEqualsVerbose(
+        TestUtil.assertEqualsVerbose(
             "1.2345E4",
             Util.toScientificNotation(bd));
         bd = new BigDecimal("12345.00");
-        Util.assertEqualsVerbose(
+        TestUtil.assertEqualsVerbose(
             "1.234500E4",
             Util.toScientificNotation(bd));
         bd = new BigDecimal("12345.001");
-        Util.assertEqualsVerbose(
+        TestUtil.assertEqualsVerbose(
             "1.2345001E4",
             Util.toScientificNotation(bd));
 
         //test truncate
         bd = new BigDecimal("1.23456789012345678901");
-        Util.assertEqualsVerbose(
+        TestUtil.assertEqualsVerbose(
             "1.2345678901234567890E0",
             Util.toScientificNotation(bd));
         bd = new BigDecimal("-1.23456789012345678901");
-        Util.assertEqualsVerbose(
+        TestUtil.assertEqualsVerbose(
             "-1.2345678901234567890E0",
             Util.toScientificNotation(bd));
     }
@@ -307,6 +322,15 @@ public class UtilTest extends TestCase
             buf.append((b < 16) ? ("0" + s) : s);
         }
         return buf.toString();
+    }
+    
+    /**
+     * Runs the test suite.
+     */
+    public static void main(String [] args)
+        throws Exception
+    {
+        TestRunner.run(suite());
     }
 }
 

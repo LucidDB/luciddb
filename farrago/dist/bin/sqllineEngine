@@ -7,7 +7,7 @@ BIN_DIR=$(cd `dirname $0`; pwd)
 
 source $BIN_DIR/defineFarragoRuntime.sh
 
-if java ${JAVA_ARGS} ${SQLLINE_JAVA_ARGS} \
+if ${JAVA_EXEC} ${JAVA_ARGS} ${SQLLINE_JAVA_ARGS} \
     -u jdbc:farrago: -d net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver \
     -n guest $*;
 then

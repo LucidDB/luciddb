@@ -1,15 +1,27 @@
 This software is released under the GNU General Public License,
 which is reproduced below.
 
-In addition, as a special exception, The Eigenbase Project
-gives permission to link the code of this program with the MDR library
-from Netbeans (or with modified versions of MDR that use the same
-license as MDR--the Sun Public License), and distribute linked
-combinations including the two.  You must obey the GNU General Public
-License in all respects for all of the code used other than MDR.  If
-you modify this program, you may extend this exception to your version
-of the program, but you are not obligated to do so.  If you do not
-wish to do so, delete this exception statement from your version.
+In addition, as a special exception, The Eigenbase Project gives
+permission to link the code of this program with the following 
+GPL-incompatible libraries, and distribute linked combinations
+including all of these:
+
+- MDR library from Netbeans (or modified versions of MDR that use
+  the same license as MDR--the Sun Public License), including JMI
+  interfaces from Sun Microsystems
+
+- All standard Java runtime libraries distributed by Sun Microsystems
+  as part of any release of J2SE and J2EE
+
+- MOF, UML, and CWM model definitions from Object Management Group
+
+You must obey the GNU General Public License in all respects for all
+of the code used other than the libraries listed above.  If you modify
+this program, you may extend this exception to your version of the
+program, but you are not obligated to do so.  If you do not wish to do
+so, delete this exception statement from your version.
+
+Any trademarks used above are property of their respective owners.
 
 ======================================================================
 

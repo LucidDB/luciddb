@@ -10,7 +10,7 @@ AC_CANONICAL_TARGET
 AC_CONFIG_HEADERS(config.h)
 AC_CONFIG_SRCDIR([common/CommonPreamble.h])
 
-AM_INIT_AUTOMAKE(fennel, 0.3)
+AM_INIT_AUTOMAKE(fennel, 0.5)
 
 dnl Define CXXFLAGS before AC_PROG_CXX to suppress the default autoconf
 dnl compiler options
@@ -190,20 +190,17 @@ then
 fi
 
 dnl Optimization setting
-dnl Note:  even --with-optimization, we still include -g for profiling;
-dnl binaries can be stripped post-build for real release
 AC_ARG_WITH([optimization],
     AC_HELP_STRING([--with-optimization],[build optimized executables]),
     [with_optimization=$withval],
     [with_optimization=no])
 if test "$with_optimization" = "no"
 then
-    CXXFLAGS="$CXXFLAGS -g -DDEBUG"
     CXXFLAGS="$CXXFLAGS -D_STLP_DEBUG=1 -D_STLP_DEBUG_UNINITIALIZED=1"
     BOOST_LIB_SUFFIX=gcc-mt-gdp-1_32
     STLPORT_LIB=${STLPORT_LIB_BASE}_stldebug
 else
-    CXXFLAGS="$CXXFLAGS -O3 -g -DNDEBUG -Wno-unused-variable"
+    CXXFLAGS="$CXXFLAGS -O3 -Wno-unused-variable"
     if test "$target_os" = "mingw32"
     then
         dnl optimized mingw build encounters bogus errors for -Wuninitialized
@@ -211,6 +208,18 @@ else
     fi
     BOOST_LIB_SUFFIX=gcc-mt-p-1_32
     STLPORT_LIB=$STLPORT_LIB_BASE
+fi
+
+dnl Debug setting
+AC_ARG_WITH([debug],
+    AC_HELP_STRING([--with-debug],[build executables with debug info]),
+    [with_debug=$withval],
+    [with_debug=yes])
+if test "$with_debug" = "yes"
+then
+    CXXFLAGS="$CXXFLAGS -g -DDEBUG"
+else
+    CXXFLAGS="$CXXFLAGS -DNDEBUG"
 fi
 
 BOOST_THREADLIB=boost_thread-$BOOST_LIB_SUFFIX

@@ -28,6 +28,9 @@ import org.objectweb.rmijdbc.RJConnectionInterface;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+// TODO jvs 13-Mar-2005:  give this class a more specific name.  Also, I don't
+// think it needs to be public, right?
+
 /**
  * FarragoDriver extends the Driver implementation in RmiJdbc package
  *

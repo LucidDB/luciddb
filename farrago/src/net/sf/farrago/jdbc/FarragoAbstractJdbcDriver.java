@@ -22,6 +22,8 @@
 */
 package net.sf.farrago.jdbc;
 
+import net.sf.farrago.util.*;
+
 import java.sql.*;
 import java.util.*;
 
@@ -55,7 +57,8 @@ public abstract class FarragoAbstractJdbcDriver implements Driver
      */
     public String getBaseUrl()
     {
-        return "jdbc:farrago:";
+        FarragoReleaseProperties props = FarragoReleaseProperties.instance();
+        return props.jdbcUrlBase.get();
     }
 
     /**
@@ -75,15 +78,15 @@ public abstract class FarragoAbstractJdbcDriver implements Driver
     // implement Driver
     public int getMajorVersion()
     {
-        // TODO
-        return 0;
+        FarragoReleaseProperties props = FarragoReleaseProperties.instance();
+        return props.jdbcDriverVersionMajor.get();
     }
 
     // implement Driver
     public int getMinorVersion()
     {
-        // TODO
-        return 0;
+        FarragoReleaseProperties props = FarragoReleaseProperties.instance();
+        return props.jdbcDriverVersionMinor.get();
     }
 
     // implement Driver

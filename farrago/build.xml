@@ -7,10 +7,10 @@
 // Copyright (C) 2005-2005 Red Square, Inc.
 // Portions Copyright (C) 2003-2005 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
-// of the License, or (at your option) any later Eigenbase-approved version.
+// This program is free software; you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by the Free
+// Software Foundation; either version 2 of the License, or (at your option)
+// any later version approved by The Eigenbase Project.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,10 +19,10 @@
 //  
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307  USA
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 -->
 
-<!-- Farrago ant build script -->
+<!-- Farrago ant script for developer builds -->
 
 <!-- These XML ENTITY "macros" help avoid redundancy in property -->
 <!-- settings. They can be used with <jvmarg> or <arg> as the line -->
@@ -39,7 +39,7 @@
 
 <project name="farrago" basedir="." default="all">
 
-  <!-- import the fennel.disabled setting; this takes highest precedence -->
+  <!-- import settings defined by initBuild.sh with highest precedence -->
   <property file="initBuild.properties"/>
 
   <!-- import local property overrides; these take precedence over
@@ -48,7 +48,6 @@
 
   <!-- Definitions for Farrago build properties and macros -->
   <import file="buildMacros.xml"/>
-
 
 
   <!-- Directories -->
@@ -123,12 +122,6 @@ require version '${required.ant.version}'."/>
   <!-- file prefix for catalog storage -->
   <property name="catalog.mdrStorage"
     location="${farrago.catalog.dir}/FarragoCatalog"/>
-
-  <!-- Directories and filenames for distribution jar file. -->
-  <property name="dist.dir" location="${farrago.dir}/dist"/>
-  <property name="dist.plugin.dir" location="${farrago.dir}/dist/plugin"/>
-
-  <property name="dist.jar.file" location="${dist.dir}/farrago.jar"/>
 
   <property name="FarragoTrace.properties"
     location="${trace.dir}/FarragoTrace.properties"/>
@@ -428,13 +421,6 @@ require version '${required.ant.version}'."/>
         <include name="Token.java"/>
         <include name="ASCII_UCodeESC_CharStream.java"/>
       </fileset>
-      <fileset dir="${dist.plugin.dir}">
-        <include name="*.jar"/>
-      </fileset>
-      <fileset dir="${dist.dir}">
-        <include name="*.jar"/>
-        <include name="*.tar.bz2"/>
-      </fileset>
     </delete>
   </target>
 
@@ -716,6 +702,7 @@ require version '${required.ant.version}'."/>
   </target>
 
   <target name="checkResourceUptodate">
+    <touch file="classes/FarragoRelease.properties"/>
     <condition property="resource.uptodate">
       <and>
         <uptodate
@@ -1266,30 +1253,4 @@ require version '${required.ant.version}'."/>
     </mdr>
   </target>
 
-  <target name="jar">
-    <jar destfile="${dist.jar.file}" update="true" compress="true">
-      <fileset dir="${farrago.dir}">
-        <include name="README"/>
-        <include name="COPYING"/>
-      </fileset>
-      <fileset dir="${farrago.classes.dir}">
-        <include name="**/*.class"/>
-      </fileset>
-      <fileset dir="${farrago.src.dir}">
-        <include name="**/*.properties"/>
-      </fileset>
-      <fileset dir="${farrago.catalog.src.dir}">
-        <include name="**/*.class"/>
-      </fileset>
-    </jar>
-
-    <copy file="${farrago.plugin.dir}/FarragoMedJdbc.jar" 
-      todir="${dist.plugin.dir}"/>
-    <jar destfile="${dist.plugin.dir}/FarragoMedJdbc.jar" update="true">
-      <fileset dir="${farrago.dir}">
-        <include name="README"/>
-        <include name="COPYING"/>
-      </fileset>
-    </jar>
-  </target>
 </project>

@@ -36,11 +36,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-import junit.framework.ComparisonFailure;
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import junit.textui.TestRunner;
-
 import openjava.mop.Toolbox;
 import openjava.ptree.Expression;
 import openjava.ptree.StatementList;
@@ -272,15 +267,6 @@ public class Util extends Toolbox
             h = hash(h, a[i]);
         }
         return h;
-    }
-
-    /**
-     * Runs the test suite.
-     */
-    public static void main(String [] args)
-        throws Exception
-    {
-        TestRunner.run(suite());
     }
 
     /**
@@ -700,17 +686,6 @@ public class Util extends Toolbox
         return buf.toString();
     }
 
-    public static Test suite()
-        throws Exception
-    {
-        TestSuite suite = new TestSuite();
-        suite.addTestSuite(UtilTest.class);
-        suite.addTestSuite(BinaryHeap.BinaryHeapTestCase.class);
-        suite.addTestSuite(ThreadIterator.Test.class);
-        suite.addTestSuite(TimeoutIteratorTest.class);
-        return suite;
-    }
-
     /**
      * @deprecated Use {@link java.util.Arrays#asList(Object[])} instead
      *
@@ -796,39 +771,6 @@ public class Util extends Toolbox
             }
         }
         driversLoaded = true;
-    }
-
-    public static void assertEqualsVerbose(
-        String expected,
-        String actual)
-    {
-        if ((expected == null) && (actual == null)) {
-            return;
-        }
-        if ((expected != null) && expected.equals(actual)) {
-            return;
-        }
-        String s = actual;
-
-        // Convert [string with "quotes" split
-        // across lines]
-        // into ["string with \"quotes\" split" + NL +
-        // "across lines
-        //
-        //
-        s = replace(s, "\"", "\\\"");
-        final String lineBreak = "\" + NL + " + lineSeparator + "\"";
-        s = Pattern.compile("\r\n|\r|\n").matcher(s).replaceAll(lineBreak);
-        s = "\"" + s + "\"";
-        final String spurious = " + " + lineSeparator + "\"\"";
-        if (s.endsWith(spurious)) {
-            s = s.substring(0, s.length() - spurious.length());
-        }
-        String message =
-            "Expected:" + lineSeparator + expected + lineSeparator
-            + "Actual: " + lineSeparator + actual + lineSeparator
-            + "Actual java: " + lineSeparator + s + lineSeparator;
-        throw new ComparisonFailure(message, expected, actual);
     }
 
     /**
