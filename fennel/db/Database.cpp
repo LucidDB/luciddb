@@ -35,7 +35,6 @@
 #include "fennel/txn/LogicalRecoveryLog.h"
 #include "fennel/common/StatsTarget.h"
 #include "fennel/common/FennelResource.h"
-#include "fennel/calc/CalcInit.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
@@ -117,9 +116,6 @@ Database::Database(
         FileSystem::remove(tempDeviceName.c_str());
     }
     
-    // Force instantiation of the calculator's instruction tables.
-    (void) CalcInit::instance();
-
     if (!openMode.create) {
         // TODO:  real excn
         assert(FileSystem::doesFileExist(dataDeviceName.c_str()));

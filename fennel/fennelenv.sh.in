@@ -7,6 +7,7 @@ fi
 
 
 export @lib_path_var@=$FENNEL_HOME/libfennel/.libs:$@lib_path_var@
+export @lib_path_var@=$FENNEL_HOME/libfennel_dt/.libs:$@lib_path_var@
 export @lib_path_var@=$FENNEL_HOME/test/.libs:$@lib_path_var@
 export @lib_path_var@=$FENNEL_HOME/farrago/.libs:$@lib_path_var@
 export @lib_path_var@=@boost_location@/lib:$@lib_path_var@

@@ -238,10 +238,14 @@ AC_SUBST(EXTRA_LDFLAGS)
 AC_SUBST(DIST_DIR)
 
 AC_CONFIG_FILES([fennelenv.sh build/defineVariables.sh \
-Makefile common/Makefile \
-synch/Makefile device/Makefile cache/Makefile segment/Makefile \
+Makefile common/Makefile synch/Makefile \
+device/Makefile cache/Makefile segment/Makefile \
 txn/Makefile tuple/Makefile btree/Makefile \
 db/Makefile xo/Makefile libfennel/Makefile test/Makefile farrago/Makefile \
-calc/Makefile])
+disruptivetech/Makefile \
+disruptivetech/calc/Makefile \
+disruptivetech/xo/Makefile \
+disruptivetech/libfennel_dt/Makefile \
+disruptivetech/test/Makefile])
 
 AC_OUTPUT

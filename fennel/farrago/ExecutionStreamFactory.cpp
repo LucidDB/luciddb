@@ -36,7 +36,7 @@
 #include "fennel/xo/ConsumerToProducerProvisionAdapter.h"
 #include "fennel/xo/TableWriterFactory.h"
 #include "fennel/xo/CartesianProductStream.h"
-#include "fennel/xo/CalcTupleStream.h"
+#include "fennel/disruptivetech/xo/CalcTupleStream.h"
 #include "fennel/xo/MockTupleStream.h"
 #include "fennel/db/Database.h"
 #include "fennel/db/CheckpointThread.h"

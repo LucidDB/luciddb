@@ -10,8 +10,7 @@ libfennel_txn.la \
 libfennel_tuple.la \
 libfennel_btree.la \
 libfennel_db.la \
-libfennel_xo.la \
-libfennel_calc.la
+libfennel_xo.la
 
 SYNCH_DEPS = libfennel_common.la
 
@@ -25,9 +24,7 @@ TXN_DEPS = libfennel_segment.la $(SEGMENT_DEPS)
 
 TUPLE_DEPS = libfennel_common.la
 
-CALC_DEPS = libfennel_tuple.la $(TUPLE_DEPS)
-
-BTREE_DEPS = libfennel_txn.la $(TXN_DEPS) libfennel_calc.la $(CALC_DEPS)
+BTREE_DEPS = libfennel_txn.la $(TXN_DEPS) libfennel_tuple.la $(TUPLE_DEPS)
 
 DB_DEPS = libfennel_btree.la $(BTREE_DEPS)
 
@@ -60,10 +57,6 @@ libfennel_txn_la_LIBADD=\
 libfennel_tuple_la_SOURCES=
 libfennel_tuple_la_LIBADD=\
 	$(top_builddir)/tuple/libtuple.la $(TUPLE_DEPS)
-
-libfennel_calc_la_SOURCES=
-libfennel_calc_la_LIBADD=\
-	$(top_builddir)/calc/libcalc.la $(CALC_DEPS)
 
 libfennel_btree_la_SOURCES=
 libfennel_btree_la_LIBADD=\

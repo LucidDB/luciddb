@@ -24,15 +24,6 @@ ResourceTest \
 LocalConditionTest \
 TupleTest \
 StandardTypeTest \
-CalcInstFactoryTest \
-CalcCastTest \
-CalcMiscTest \
-CalcExtRegExpTest \
-CalcExtStringTest \
-CalcExtContextTest \
-CalcExtDateTimeTest \
-CalcExtMathTest \
-CalcExtCastTest \
 DatabaseTest \
 LogicalTxnTest \
 SegStreamTest \
@@ -43,11 +34,7 @@ LinearDeviceSegmentTest \
 LinearViewSegmentTest \
 VersionedSegmentTest \
 BTreeTxnTest \
-BTreeTest \
-SqlDateTest \
-SqlRegExpTest \
-SqlStringTest \
-SqlStringAsciiTest
+BTreeTest
 
 TESTS = $(noinst_PROGRAMS)
 
@@ -79,32 +66,6 @@ TupleTest_SOURCES=TupleTest.cpp
 
 StandardTypeTest_SOURCES=StandardTypeTest.cpp
 
-CalcInstFactoryTest_SOURCES=CalcInstFactoryTest.cpp
-
-CalcCastTest_SOURCES=CalcCastTest.cpp
-
-CalcMiscTest_SOURCES=CalcMiscTest.cpp
-
-CalcExtRegExpTest_SOURCES=CalcExtRegExpTest.cpp
-
-CalcExtStringTest_SOURCES=CalcExtStringTest.cpp
-
-CalcExtContextTest_SOURCES=CalcExtContextTest.cpp
-
-CalcExtDateTimeTest_SOURCES=CalcExtDateTimeTest.cpp
-
-CalcExtMathTest_SOURCES=CalcExtMathTest.cpp
-
-CalcExtCastTest_SOURCES=CalcExtCastTest.cpp
-
-SqlRegExpTest_SOURCES=SqlStringBuffer.cpp SqlRegExpTest.cpp 
-
-SqlStringTest_SOURCES=SqlStringBuffer.cpp SqlStringTest.cpp 
-
-SqlDateTest_SOURCES=SqlStringBuffer.cpp SqlDateTest.cpp 
-
-SqlStringAsciiTest_SOURCES=SqlStringBuffer.cpp SqlStringAsciiTest.cpp 
-
 DatabaseTest_SOURCES=DatabaseTest.cpp
 
 if !STATIC_TEST_LIBRARY
@@ -117,7 +78,6 @@ endif
 
 LDADD = -L$(top_builddir)/test -l$(TEST_LIB) \
     -L$(top_builddir)/libfennel \
-	-lfennel_calc \
 	-lfennel_xo \
 	-lfennel_db \
 	-lfennel_btree \
