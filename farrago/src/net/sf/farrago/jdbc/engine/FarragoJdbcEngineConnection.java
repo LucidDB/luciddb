@@ -27,6 +27,10 @@ import net.sf.farrago.jdbc.FarragoConnection;
 import net.sf.farrago.jdbc.FarragoMedDataWrapperInfo;
 import net.sf.farrago.namespace.util.FarragoDataWrapperCache;
 import net.sf.farrago.namespace.FarragoMedDataWrapper;
+import net.sf.farrago.db.FarragoDbSession;
+import net.sf.farrago.fem.med.FemDataWrapper;
+
+import org.eigenbase.sql.SqlIdentifier;
 
 /**
  * FarragoJdbcEngineConnection implements the {@link java.sql.Connection}
@@ -427,18 +431,30 @@ public class FarragoJdbcEngineConnection implements FarragoConnection
         throw new UnsupportedOperationException();
     }
 
-    public String getWrapper()
-        throws SQLException
-    {
-        // TODO:
-        throw new UnsupportedOperationException();
-    }
-
     public String findMofId(String wrapperName)
         throws SQLException
     {
-        // TODO:
-        throw new UnsupportedOperationException();
+        FarragoDbSession session = (FarragoDbSession)getSession();
+        SqlIdentifier wrapperSqlIdent = new SqlIdentifier(wrapperName, null);
+        
+        FemDataWrapper wrapper = 
+            (FemDataWrapper) session.getRepos().getModelElement(
+            session.getRepos().medPackage.getFemDataWrapper().refAllOfType(),
+            wrapperSqlIdent.getSimple()
+            );
+         
+        if (wrapper != null) {
+            if (!wrapper.isForeign()) {
+                wrapper = null;
+            }
+        }
+
+        if (wrapper != null) {
+            return wrapper.refMofId();
+        }
+        else {
+            return null;
+        }
     }
 
     public FarragoMedDataWrapperInfo getWrapper(

@@ -18,28 +18,25 @@
 */
 package net.sf.farrago.jdbc;
 
-import java.sql.SQLException;
-import java.util.Properties;
+import java.sql.DriverPropertyInfo;
+import org.objectweb.rmijdbc.RJDriverPropertyInfo;
 
 /**
- * JDBC connection to Farrago.
+ * Serializble DriverPropertyInfo passed through RMI.
  *
- * <p>This interface extends the usual {@link java.sql.Connection} interface
- * to include methods for interrogating SQL/MED wrappers and data servers.
+ * <p>This class extends RmiJdbc's RJDriverPropertyInfo
+ * which implements {@link java.io.Serializable} interface
+ * to pass the DriverPropertyInfo class from server to client via RMI
  *
- * @author jhyde
+ * @author Tim Leung
  * @version $Id$
  **/
-public interface FarragoConnection extends java.sql.Connection
-{
-    String findMofId(String wrapperName)
-        throws SQLException;
+public class FarragoRJDriverPropertyInfo extends RJDriverPropertyInfo
+    implements java.io.Serializable {
 
-    FarragoMedDataWrapperInfo getWrapper(
-        String mofId,
-        String libraryName,
-        Properties options)
-        throws SQLException;
-}
+    public FarragoRJDriverPropertyInfo(DriverPropertyInfo dpi) {
+        super(dpi);
+    }
+};
 
-// End FarragoConnection.java
+// End FarragoRJDriverPropertyInfo.java

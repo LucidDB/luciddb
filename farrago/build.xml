@@ -479,7 +479,17 @@ require version '${required.ant.version}'."/>
 
   <!-- default target:  assumes catalog has already been created -->
   <target name="all"
-    depends="compile, buildJdbcPlugin"/>
+    depends="compile, rmi, buildJdbcPlugin"/>
+
+  <!-- create rmi stubs and skeletons -->
+  <target name="rmi" depends="compile">
+    <rmic base="${classes.dir}"
+      classpathref="farrago.build.classpath">
+      <include name="**/server/FarragoRJConnectionServer.class" />
+      <include name="**/server/FarragoRJMedDataWrapperServer.class" />
+      <include name="**/server/FarragoRJDriverServer.class" />
+    </rmic>
+  </target>
 
   <target name="compile" depends="generateResources,sqlParser,ddlParser">
     <javaCompile

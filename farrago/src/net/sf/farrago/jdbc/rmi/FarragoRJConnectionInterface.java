@@ -36,11 +36,6 @@ public interface FarragoRJConnectionInterface extends RJConnectionInterface
     /**
      * @see net.sf.farrago.jdbc.FarragoConnection#getWrapper
      */
-    String getWrapper() throws RemoteException, SQLException;
-
-    /**
-     * @see net.sf.farrago.jdbc.FarragoConnection#getWrapper
-     */
     String findMofId(String wrapperName) throws RemoteException, SQLException;
 
     /**

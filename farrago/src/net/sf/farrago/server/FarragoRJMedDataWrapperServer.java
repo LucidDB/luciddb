@@ -18,6 +18,7 @@
 */
 package net.sf.farrago.server;
 
+import net.sf.farrago.jdbc.FarragoRJDriverPropertyInfo;
 import net.sf.farrago.jdbc.FarragoConnection;
 import net.sf.farrago.jdbc.FarragoMedDataWrapperInfo;
 import net.sf.farrago.jdbc.rmi.FarragoRJMedDataWrapperInterface;
@@ -72,28 +73,50 @@ class FarragoRJMedDataWrapperServer
         //cache_.unloadWrapper(mofId_, libraryName_, options_);
     }
 
-    public DriverPropertyInfo [] getServerPropertyInfo(
+    public FarragoRJDriverPropertyInfo [] getServerPropertyInfo(
         Locale locale,
         Properties wrapperProps,
         Properties serverProps)
         throws RemoteException
     {
-        return getWrapper().getServerPropertyInfo(locale, wrapperProps,
-            serverProps);
+        DriverPropertyInfo infos[] = 
+            getWrapper().getServerPropertyInfo(
+                locale, wrapperProps, serverProps);
+        if (infos == null) return null;
+        
+        FarragoRJDriverPropertyInfo dpis[] = 
+            new FarragoRJDriverPropertyInfo[infos.length];
+        
+        for (int i = 0; i < infos.length; i++) {
+            if (infos[i] == null) dpis[i] = null;
+            dpis[i] = new FarragoRJDriverPropertyInfo(infos[i]);
+        }
+        return dpis;
     }
 
-    public DriverPropertyInfo [] getColumnSetPropertyInfo(
+    public FarragoRJDriverPropertyInfo [] getColumnSetPropertyInfo(
         Locale locale,
         Properties wrapperProps,
         Properties serverProps,
         Properties tableProps)
         throws RemoteException
     {
-        return getWrapper().getColumnSetPropertyInfo(locale, wrapperProps,
-            serverProps, tableProps);
+        DriverPropertyInfo infos[] =  
+            getWrapper().getColumnSetPropertyInfo(
+                locale, wrapperProps, serverProps, tableProps); 
+        if (infos == null) return null;
+                
+        FarragoRJDriverPropertyInfo dpis[] = 
+            new FarragoRJDriverPropertyInfo[infos.length];
+        
+        for (int i = 0; i < infos.length; i++) {
+            if (infos[i] == null) dpis[i] = null;
+            dpis[i] = new FarragoRJDriverPropertyInfo(infos[i]);
+        }
+        return dpis;
     }
 
-    public DriverPropertyInfo [] getColumnPropertyInfo(
+    public FarragoRJDriverPropertyInfo [] getColumnPropertyInfo(
         Locale locale,
         Properties wrapperProps,
         Properties serverProps,
@@ -101,8 +124,19 @@ class FarragoRJMedDataWrapperServer
         Properties columnProps)
         throws RemoteException
     {
-        return getWrapper().getColumnPropertyInfo(locale, wrapperProps,
-            serverProps, tableProps, columnProps);
+        DriverPropertyInfo infos[] =  
+            getWrapper().getColumnPropertyInfo(
+                locale, wrapperProps, serverProps, tableProps, columnProps); 
+        if (infos == null) return null;
+        
+        FarragoRJDriverPropertyInfo dpis[] = 
+            new FarragoRJDriverPropertyInfo[infos.length];
+        
+        for (int i = 0; i < infos.length; i++) {
+            if (infos[i] == null) dpis[i] = null;
+            dpis[i] = new FarragoRJDriverPropertyInfo(infos[i]);
+        }
+        return dpis;
     }
 
     public boolean isForeign() throws RemoteException

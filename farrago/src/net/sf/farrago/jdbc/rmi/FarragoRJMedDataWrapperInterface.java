@@ -18,6 +18,7 @@
 */
 package net.sf.farrago.jdbc.rmi;
 
+import net.sf.farrago.jdbc.FarragoRJDriverPropertyInfo;
 import java.rmi.RemoteException;
 import java.rmi.Remote;
 import java.sql.DriverPropertyInfo;
@@ -35,7 +36,7 @@ public interface FarragoRJMedDataWrapperInterface extends Remote {
     /**
      * @see net.sf.farrago.jdbc.FarragoMedDataWrapperInfo#getServerPropertyInfo
      */
-    DriverPropertyInfo [] getServerPropertyInfo(
+    FarragoRJDriverPropertyInfo [] getServerPropertyInfo(
         Locale locale,
         Properties wrapperProps,
         Properties serverProps)
@@ -44,7 +45,7 @@ public interface FarragoRJMedDataWrapperInterface extends Remote {
     /**
      * @see net.sf.farrago.jdbc.FarragoMedDataWrapperInfo#getColumnSetPropertyInfo
      */
-    DriverPropertyInfo [] getColumnSetPropertyInfo(
+    FarragoRJDriverPropertyInfo [] getColumnSetPropertyInfo(
         Locale locale,
         Properties wrapperProps,
         Properties serverProps,
@@ -54,7 +55,7 @@ public interface FarragoRJMedDataWrapperInterface extends Remote {
     /**
      * @see net.sf.farrago.jdbc.FarragoMedDataWrapperInfo#getColumnPropertyInfo
      */
-    DriverPropertyInfo [] getColumnPropertyInfo(
+    FarragoRJDriverPropertyInfo [] getColumnPropertyInfo(
         Locale locale,
         Properties wrapperProps,
         Properties serverProps,

@@ -18,6 +18,7 @@
 */
 package net.sf.farrago.jdbc.client;
 
+import net.sf.farrago.jdbc.FarragoRJDriverPropertyInfo;
 import net.sf.farrago.jdbc.FarragoMedDataWrapperInfo;
 import net.sf.farrago.jdbc.rmi.FarragoRJMedDataWrapperInterface;
 
@@ -50,8 +51,18 @@ class FarragoRJMedDataWrapper
         Properties serverProps)
     {
         try {
-            return rmiDataWrapper_.getServerPropertyInfo(
-                locale, wrapperProps, serverProps);
+            FarragoRJDriverPropertyInfo infos[] = 
+                rmiDataWrapper_.getServerPropertyInfo(
+                    locale, wrapperProps, serverProps);
+                
+            if (infos == null) return null;
+
+            DriverPropertyInfo dpis[] = new DriverPropertyInfo[infos.length];
+            for (int i = 0; i < infos.length; i++) {
+                if (infos[i] == null) dpis[i] = null;
+                dpis[i] = infos[i].getPropertyInfo();
+            }
+            return dpis;
         } catch (RemoteException e) {
             throw new RuntimeException(e.getMessage());
             // TODO: add 'throws SQLException' to interface, and throw new SQLException(e.getMessage());
@@ -65,8 +76,18 @@ class FarragoRJMedDataWrapper
         Properties tableProps)
     {
         try {
-            return rmiDataWrapper_.getColumnSetPropertyInfo(
-                locale, wrapperProps, serverProps, tableProps);
+            FarragoRJDriverPropertyInfo infos[] = 
+                rmiDataWrapper_.getColumnSetPropertyInfo(
+                    locale, wrapperProps, serverProps, tableProps);
+
+            if (infos == null) return null;
+
+            DriverPropertyInfo dpis[] = new DriverPropertyInfo[infos.length];
+            for (int i = 0; i < infos.length; i++) {
+                if (infos[i] == null) dpis[i] = null;
+                dpis[i] = infos[i].getPropertyInfo();
+            }
+            return dpis;
         } catch (RemoteException e) {
             throw new RuntimeException(e.getMessage());
             // TODO: add 'throws SQLException' to interface, and throw new SQLException(e.getMessage());
@@ -81,8 +102,18 @@ class FarragoRJMedDataWrapper
         Properties columnProps)
     {
         try {
-            return rmiDataWrapper_.getColumnPropertyInfo(
-                locale, wrapperProps, serverProps, tableProps, columnProps);
+            FarragoRJDriverPropertyInfo infos[] = 
+                rmiDataWrapper_.getColumnPropertyInfo(
+                    locale, wrapperProps, serverProps, tableProps, columnProps);
+
+            if (infos == null) return null;
+
+            DriverPropertyInfo dpis[] = new DriverPropertyInfo[infos.length];
+            for (int i = 0; i < infos.length; i++) {
+                if (infos[i] == null) dpis[i] = null;
+                dpis[i] = infos[i].getPropertyInfo();
+            }
+            return dpis;
         } catch (RemoteException e) {
             throw new RuntimeException(e.getMessage());
             // TODO: add 'throws SQLException' to interface, and throw new SQLException(e.getMessage());

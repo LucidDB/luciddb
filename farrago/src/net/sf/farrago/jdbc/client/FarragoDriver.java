@@ -1,6 +1,6 @@
 /*
 // Farrago is a relational database management system.
-// Copyright (C) 2004-2004 John V. Sichi.
+// Copyright (C) 2003-2004 John V. Sichi.
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
@@ -16,30 +16,27 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-package net.sf.farrago.jdbc;
 
+package net.sf.farrago.jdbc.client;
+
+import org.objectweb.rmijdbc.Driver;
+import org.objectweb.rmijdbc.RJConnectionInterface;
+import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Properties;
 
 /**
- * JDBC connection to Farrago.
+ * FarragoDriver extends the Driver implementation in RmiJdbc package
  *
- * <p>This interface extends the usual {@link java.sql.Connection} interface
- * to include methods for interrogating SQL/MED wrappers and data servers.
- *
- * @author jhyde
+ * @author Tim Leung
  * @version $Id$
- **/
-public interface FarragoConnection extends java.sql.Connection
+ */
+public class FarragoDriver extends org.objectweb.rmijdbc.Driver 
+    implements java.sql.Driver, java.io.Serializable 
 {
-    String findMofId(String wrapperName)
-        throws SQLException;
+    public FarragoDriver() throws Exception { super(); }
 
-    FarragoMedDataWrapperInfo getWrapper(
-        String mofId,
-        String libraryName,
-        Properties options)
-        throws SQLException;
-}
-
-// End FarragoConnection.java
+    public java.sql.Connection buildConnection(RJConnectionInterface c)
+    throws SQLException {
+        return new FarragoRJConnection(c);
+    }
+};

@@ -51,10 +51,6 @@ class FarragoRJConnectionServer extends RJConnectionServer
         this.farragoConnection = c;
     }
 
-    public String getWrapper() throws RemoteException, SQLException {
-        return farragoConnection.getWrapper();
-    }
-
     public String findMofId(String wrapperName)
         throws RemoteException, SQLException {
         return farragoConnection.findMofId(wrapperName);

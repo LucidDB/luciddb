@@ -33,7 +33,7 @@ class FarragoRJJdbcServer extends RJJdbcServer
 {
     public static void main(String[] args) {
         try {
-            Class.forName("org.objectweb.rmijdbc.RJDriverServer_Stub");
+            Class.forName("net.sf.farrago.server.FarragoRJDriverServer_Stub");
         } catch (ClassNotFoundException cnfe) {
             System.out.println("Can't find stub!");
             System.exit(0);
@@ -45,7 +45,7 @@ class FarragoRJJdbcServer extends RJJdbcServer
         processArgs(args);
 
         printMsg("Starting RmiJdbc Server !");
-        initServer(new RJJdbcServer());
+        initServer(new FarragoRJJdbcServer());
 
     }
 

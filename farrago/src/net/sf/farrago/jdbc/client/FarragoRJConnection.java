@@ -54,15 +54,6 @@ class FarragoRJConnection extends RJConnection
         super(drv,url,info);
     }
 
-    public String getWrapper() throws SQLException
-    {
-        try {
-            return getFarragoRmiCon().getWrapper();
-        } catch (RemoteException e) {
-            throw new SQLException(e.getMessage());
-        }
-    }
-
     private FarragoRJConnectionInterface getFarragoRmiCon() {
         return (FarragoRJConnectionInterface) rmiConnection_;
     }

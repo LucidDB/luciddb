@@ -21,6 +21,7 @@ package net.sf.farrago.server;
 import net.sf.farrago.jdbc.FarragoConnection;
 import org.objectweb.rmijdbc.RJConnectionInterface;
 import org.objectweb.rmijdbc.RJDriverServer;
+import org.objectweb.rmijdbc.RJDriverInterface;
 
 import java.rmi.RemoteException;
 import java.sql.Connection;
@@ -32,6 +33,7 @@ import java.sql.Connection;
  * @version $Id$
  */
 class FarragoRJDriverServer extends RJDriverServer
+    implements RJDriverInterface
 {
     public FarragoRJDriverServer(String admpasswd) throws RemoteException
     {
