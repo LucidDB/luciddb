@@ -50,7 +50,6 @@ case $AUTOMAKE_VERSION in
 1.7.8*) ;;
 1.7.9*) ;;
 1.8*) ;;
-1.9*) ;;
 *)
     echo "Invalid automake version '$AUTOMAKE_VERSION'."
     echo "To fix, please run 'make automake' under thirdparty,"
