@@ -54,9 +54,6 @@ typedef JniProxyIter<ProxyCmdTruncateIndex> SharedProxyCmdTruncateIndex;
 class ProxyCollectTupleStreamDef;
 typedef JniProxyIter<ProxyCollectTupleStreamDef> SharedProxyCollectTupleStreamDef;
 
-class ProxyConcatenateStreamDef;
-typedef JniProxyIter<ProxyConcatenateStreamDef> SharedProxyConcatenateStreamDef;
-
 class ProxyDatabaseCmd;
 typedef JniProxyIter<ProxyDatabaseCmd> SharedProxyDatabaseCmd;
 
@@ -101,6 +98,9 @@ typedef JniProxyIter<ProxyJavaTupleStreamDef> SharedProxyJavaTupleStreamDef;
 
 class ProxyKeyAccessorDef;
 typedef JniProxyIter<ProxyKeyAccessorDef> SharedProxyKeyAccessorDef;
+
+class ProxyMergeStreamDef;
+typedef JniProxyIter<ProxyMergeStreamDef> SharedProxyMergeStreamDef;
 
 class ProxyMockTupleStreamDef;
 typedef JniProxyIter<ProxyMockTupleStreamDef> SharedProxyMockTupleStreamDef;
@@ -379,12 +379,6 @@ class ProxyCollectTupleStreamDef
 public:
 };
 
-class ProxyConcatenateStreamDef
-: virtual public JniProxy, virtual public ProxyTupleStreamDef
-{
-public:
-};
-
 class ProxyDatabaseParam
 : virtual public JniProxy
 {
@@ -487,6 +481,14 @@ class ProxyJavaTupleStreamDef
 public:
 int32_t getStreamId();
 static jmethodID meth_getStreamId;
+};
+
+class ProxyMergeStreamDef
+: virtual public JniProxy, virtual public ProxyTupleStreamDef
+{
+public:
+bool isSequential();
+static jmethodID meth_isSequential;
 };
 
 class ProxyMockTupleStreamDef
@@ -635,10 +637,10 @@ bool isPhysical();
 static jmethodID meth_isPhysical;
 std::string getRange();
 static jmethodID meth_getRange;
-SharedProxyWindowPartitionDef getPartition();
-static jmethodID meth_getPartition;
 SharedProxyWindowStreamDef getWindowStream();
 static jmethodID meth_getWindowStream;
+SharedProxyWindowPartitionDef getPartition();
+static jmethodID meth_getPartition;
 };
 
 class ProxyWindowPartitionDef
@@ -713,8 +715,6 @@ virtual void visit(ProxyCmdTruncateIndex &)
 { unhandledVisit(); }
 virtual void visit(ProxyCollectTupleStreamDef &)
 { unhandledVisit(); }
-virtual void visit(ProxyConcatenateStreamDef &)
-{ unhandledVisit(); }
 virtual void visit(ProxyDatabaseCmd &)
 { unhandledVisit(); }
 virtual void visit(ProxyDatabaseParam &)
@@ -744,6 +744,8 @@ virtual void visit(ProxyIndexWriterDef &)
 virtual void visit(ProxyJavaTupleStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyKeyAccessorDef &)
+{ unhandledVisit(); }
+virtual void visit(ProxyMergeStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyMockTupleStreamDef &)
 { unhandledVisit(); }
