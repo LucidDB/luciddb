@@ -76,8 +76,14 @@ FROM genome_sequences
 ORDER BY sequence_id;
 </code></pre>
 
-Notice that array offsets are 1-based.  Attempting to access an
-out-of-bound offset results in an exception.  <p>
+Notice that array offsets are 1-based.  Attempting to read an
+out-of-bound offset (or to write an offset past the maximum
+cardinality) results in an exception.  Any element of an array may be
+null, and there is no straightforward means of declaring them NOT
+NULL.  Updating an element past the current cardinality automatically
+extends the array and sets any new elements thus created to null.
+
+<p>
 
 Arrays can be concatenated with the usual notation:
 
@@ -120,21 +126,7 @@ WHERE s1.codons = s2.codons;
 No other inequality operator is supported, and usage of arrays in just
 about any other context (including GROUP BY) is illegal.
 
-<h2>SQL2003 Array Type</h2>
-
-SQL2003 extends array semantics in a number of ways.  Arrays can be
-declared without a maximum cardinality, in which case the maximum is
-vendor-defined (possibly unbounded like a LOB).  Array nesting is
-unrestricted.  A new constructor is added for converting a query into
-an array:
-
-<pre><code>
-INSERT INTO listbox_choices VALUES(
-    'Department Names',ARRAY(SELECT name FROM sales.depts ORDER BY 1));
-</pre></code>
-
-In the other direction, the UNNEST operator converts an array into a
-query expression:
+The UNNEST operator converts an array into a query expression:
 
 <pre><code>
 -- convert a particular sequence into a table
@@ -149,9 +141,8 @@ The WITH ORDINALITY clause specifies that the array ordering should be
 used to derive the offset column.  Without this clause, the codons
 would be returned without any ordering information.
 
-What if we wanted to convert all of the sequences together?  I think
-that's what the new LATERAL subquery feature is for, although I'm a little
-fuzzy on this part:
+What if we wanted to convert all of the sequences together?
+That's what the new LATERAL derived table feature is for:
 
 <pre><code>
 SELECT 
@@ -174,7 +165,25 @@ relative offset of the codon within the sequence.  The last column is
 the absolute offset of the codon within the chromosome.  Returned rows are
 ordered by absolute position.
 
-</ul>
+<p>
+
+Note that the new LATERAL keyword is normally required in order to
+reference a table expression defined earlier in the FROM list
+(<code>g</code> in this example).  However, when UNNEST is specified,
+LATERAL is implicit.
+
+<h2>SQL2003 Array Type</h2>
+
+SQL2003 extends array semantics in a number of ways.  Arrays can be
+declared without a maximum cardinality, in which case the maximum is
+vendor-defined (possibly unbounded like a LOB).  Array nesting is
+unrestricted.  And a new constructor is added for converting a query
+into an array:
+
+<pre><code>
+INSERT INTO listbox_choices VALUES(
+    'Department Names',ARRAY(SELECT name FROM sales.depts ORDER BY 1));
+</pre></code>
 
 <h2>SQL2003 Multiset Type</h2>
 
@@ -185,7 +194,7 @@ don't mix (e.g. you can't INSERT a multiset into an array column).
 
 <p>
 
-Unlike arays, multisets never have a declared maximum cardinality:
+Unlike arrays, multisets never have a declared maximum cardinality:
 
 <pre><code>
 CREATE TABLE logins(
@@ -195,7 +204,7 @@ CREATE TABLE logins(
     attempts ROW(VARCHAR(128),VARCHAR(128) MULTISET);
 </code></pre>
 
-Multisets constructors are similar to array constructors:
+Multiset constructors are similar to array constructors:
 
 <pre><code>
 
@@ -293,21 +302,149 @@ username/password combinations used for that uid.  The
 username/password combinations which were tried for all logins of that
 uid.
 
+<h2>Implementation</h2>
+
+Many existing system components will be involved in the
+implementation of collection types.  It might be possible to use a
+rewrite approach to keep collection types out of the optimizer and
+executor via hidden joins and locators, but this would make it very
+difficult to preserve good locality of reference for small-to-medium
+sized collections.
+
+<p>
+
+Instead, a more straightforward approach is to treat collections as
+opaque variable-length byte arrays in parts of the system which don't
+need to understand them.  This implies that collection size will be
+bounded by implementation details such as page size.  (Eventually,
+once Farrago has LOB support, it should be used to remove size limits
+on collections.)
+
+<p>
+
+A natural internal structure for these byte arrays is the same format
+we use for passing tuple data between XO's: a contiguous sequence of
+marshalled tuples.  (For collections of non-row type, these would be
+1-tuples; for collections of row type, we need an indicator for the
+entire row being null--maybe a hidden boolean attribute.) A fixed-size
+header containing information such as cardinality might also be
+necessary.
+
+<p>
+
+Given this representation, it's also natural to implement collection
+operations via standard XO's.  For example, multiset UNION can be
+implemented in the same way as a normal query UNION.  The collection
+byte array can be referenced directly as input to these XO's.  To
+accomplish this, several components must collaborate:
+
+<ol>
+
+<li>The optimizer must identify subtrees of row expressions where all
+the nodes are collection operations, transform these into
+corresponding relational expressions, and generate a
+<em>subplan</em> implementation for them.  The ExecutionStreamDefs
+thus generated will be disconnected from the rest of the query tree.
+(Note that the optimizer already supports disconnected graphs, and the
+process of identifying collection expression subtrees is similar to
+some of the existing FarragoAutoCalcRule code.)
+
+<li>A new calculator instruction is required for invoking a subplan.
+The instruction is responsible for accessing the byte-array registers
+corresponding to collection-valued inputs, binding them to the input
+XO's in the subplan, executing the subplan, and then copying the
+subplan's output into a byte-array result register.  (Alternatively,
+a specialized XO could be used instead of the caluclator.)
+
+<li>The optimizer must work together with the calculator code
+generator to bind the subplan to the generated instruction.
+
+</ol>
+
+In fact, much of this is similar to what's needed in order to execute
+correlated subqueries when they are not rewritten as joins, so this
+work is useful for more than just collection type implementation.
+
+<p>
+
+Based on the above approach, here are the components affected and estimates
+for the amount of work needed to implement multisets (but not arrays,
+which can be tackled as a follow-on project):
+
+<ul>
+
+<li>Parser (including SqlNode/SqlOperator representation).  [4 days]
+This covers:
+
+<ul>
+
+<li>multiset constructor from values
+
+<li>multiset constructor from query
+
+<li>multiset table constructor from query
+
+<li>multiset UNION/INTERSECT/EXCEPT
+
+<li>ELEMENT operator
+
+<li>MEMBER OF operator
+
+<li>IS A SET operator
+
+<li>SUBMULTISET OF operator
+
+<li>COLLECT operator
+
+<li>FUSION operator
+
+<li>INTERSECTION operator
+
+<li>UNNEST/LATERAL operator
+
+<li>CARDINALITY function
+
+<li>multiset type declaration in DDL parser
+
+</ul>
+
+<li>Validator: validation for operators, functions, and DDL (see
+parser list).  [5 days]
+
+<li>Sql2RelConverter: convert LATERAL query WHERE clause to extra join
+condition, UNNEST to UnnestRel, and various other operators (see
+parser list).  Initial implementation will be very restrictive in
+terms of what is supported inside of a LATERAL query.  [4 days]
+
+<li>Type system:  add collection types.  [2 days]
+
+<li>Optimizer: UnnestRel representation; generate subplans for
+multiset operators.  [7 days]
+
+<li>Executor: XO's for converting from TupleStream to single multiset
+value and vice versa.  REVIEW: anything special needed in aggregate
+XO's for implementing COLLECT/FUSION/INTERSECTION?  [3 days]
+
+<li>Calculator: new instruction for executing subplan (includes
+code generation work).  [6 days]
+
+<li>JDBC driver: java.sql.Array implementation (have to use this for
+multisets since nothing else exists).  This requires extra support for
+executing a special kind of subplan to produce the ResultSet
+representation of the collection.  This feature is optional (UNNEST is
+much more powerful and can be used to accomplish most of the same
+functionaliy.)  [8 days]
+
+</ul>
+
 <h2>Notes</h2>
 
 <ul>
 
 <li>
-From my reading of the standard, I haven't yet been able to figure out
-whether individual elements of a collection can be set to NULL (and if
-so, whether it is possible to declare them as NOT NULL).  If anyone
-has a definitive answer on this, please <a
-href="mailto:perfecthash@users.sf.net">let me know</a>.
-
-<li>
 For contrast, see
 <a href="http://developer.postgresql.org/docs/postgres/arrays.html">
-the PostgreSQL docs</a>, which supports both standard and non-standard
+the PostgreSQL docs</a>, which covers both standard and non-standard
 syntax and semantics.
 
 <li>
@@ -316,20 +453,14 @@ See also
 the official SQL:2003 announcement</a>.
 
 <li>
-I based my understanding of LATERAL on
-<a href="http://www.midrangeserver.com/fhg/fhg071404-story01.html">
-a random article</a>; I didn't actually try to decode that part of the
-standard.
-
-<li>
 This document does not cover non-SQL language bindings.  For JDBC, see
 <a href="http://java.sun.com/j2se/1.4.2/docs/api/java/sql/Array.html">
 the Javadoc</a>.
 
 <li>
 The examples in this document should not be taken as recommendations
-for good schema design.  (Many critics have suggested that adding
-collection types to SQL is a step backwards.)
+for good schema design.  (Many critics have suggested that the addition
+of collection types to SQL is a step backwards.)
 
 </ul>
 
