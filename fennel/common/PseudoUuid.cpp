@@ -26,7 +26,24 @@
 #include <rpcdce.h>
 #endif
 
+#ifndef FENNEL_UUID_REAL
+#include <iomanip>
+#include <sstream>
+#endif
+
+using namespace std;
+
 FENNEL_BEGIN_CPPFILE("$Id$");
+
+PseudoUuid::PseudoUuid()
+{
+    memset(data, 0, sizeof(data));
+}
+
+PseudoUuid::PseudoUuid(string uuid)
+{
+    parse(uuid);
+}
 
 void PseudoUuid::generate()
 {
@@ -68,6 +85,78 @@ unsigned char PseudoUuid::getByte(int index) const
     assert(index < sizeof(data));
 
     return data[index];
+}
+
+int PseudoUuid::hashCode() const {
+    return
+        ((int)(data[0] ^ data[4] ^ data[8] ^ data[12]) & 0xFF) << 24 |
+        ((int)(data[1] ^ data[5] ^ data[9] ^ data[13]) & 0xFF) << 16 |
+        ((int)(data[2] ^ data[6] ^ data[10] ^ data[14]) & 0xFF) << 8 |
+        ((int)(data[3] ^ data[7] ^ data[11] ^ data[15]) & 0xFF);
+}
+
+string PseudoUuid::toString() const
+{
+#ifdef FENNEL_UUID_REAL
+    char uuidstr[40];
+    uuid_unparse(data, uuidstr);
+    return string(uuidstr);
+#else
+    ostringstream ostr;
+    
+    for(int i = 0; i < sizeof(data); i++) {
+        if (i == 4 || i == 6 || i == 8 || i == 10) {
+            ostr << "-";
+        }
+        
+        ostr << hex << setw(2) << setfill('0') << (int) data[i];;
+    }
+    
+    return ostr.str();
+#endif
+}
+
+void PseudoUuid::parse(string uuid) throw (FennelExcn)
+{
+#ifdef FENNEL_UUID_REAL    
+    int rv = uuid_parse(uuid.c_str(), data);
+    if (rv == -1) {
+       throw FennelExcn("Invalid UUID format");
+    }    
+#else
+    unsigned char id[UUID_LENGTH];
+    if (uuid.length() != 36) {
+        ostringstream errstr;
+        errstr << "Invalid UUID format: length " << uuid.length() 
+               << ", expected 36";
+        throw FennelExcn(errstr.str());
+    }
+    
+    istringstream istr(uuid);
+    char hexchars[3];
+    char *endptr;
+    int value;
+    memset(hexchars, 0, sizeof(hexchars));
+    istr >> noskipws;
+    for(int i = 0; i < sizeof(id); i++) {
+        if (i == 4 || i == 6 || i == 8 || i == 10) {
+            char ch;
+            istr >> ch;
+            if (ch != '-') {
+                throw FennelExcn("Invalid UUID format: '-' expected");
+            }
+        }
+        istr >> hexchars[0];
+        istr >> hexchars[1];
+        value = strtol(hexchars, &endptr, 16);
+        // Make sure both characters were correctly converted
+        if (endptr != hexchars+2) {
+            throw FennelExcn("Invalid UUID format: hex digits expected");
+        }
+        id[i] = (uint8_t) value;
+    }
+    memcpy(data, id, sizeof(data));
+#endif
 }
 
 FENNEL_END_CPPFILE("$Id$");

@@ -21,6 +21,8 @@
 #ifndef Fennel_PseudoUuid_Included
 #define Fennel_PseudoUuid_Included
 
+#include "fennel/common/FennelExcn.h"
+
 #if defined(HAVE_UUID_UUID_H) && defined(HAVE_LIBUUID)
 #include <uuid/uuid.h>
 #define FENNEL_UUID_REAL
@@ -38,13 +40,29 @@ FENNEL_BEGIN_NAMESPACE
  */
 class PseudoUuid
 {
+protected:
+    static const int UUID_LENGTH = 16;
+
 #ifdef FENNEL_UUID_REAL
     uuid_t data;
 #else
-    unsigned char data[16];
+    unsigned char data[UUID_LENGTH];
 #endif
 
+private:
+    /**
+     * Convert  an  input UUID string of the form 
+     * 1b4e28ba-2fa1-11d2-883f-b9a761bde3fb
+     * into the internal representation.
+     *
+     * @throws FennelExcn if the String is not in the correct format.
+     */
+    void parse(std::string uuid) throw(FennelExcn);
+    
 public:
+    PseudoUuid();
+    PseudoUuid(std::string uuid);
+
     /**
      * Generates a new UUID.
      */
@@ -54,7 +72,18 @@ public:
      * Generates a bogus constant UUID.
      */
     void generateInvalid();
-    
+
+    /**
+     * Converts the UUID into a string of the form
+     * 1b4e28ba-2fa1-11d2-883f-b9a76
+     */
+    std::string toString() const;
+
+    /**
+     * Returns the hash code for the UUID
+     */
+    int hashCode() const;
+
     bool operator == (PseudoUuid const &) const;
     
     bool operator != (PseudoUuid const &other) const
@@ -64,6 +93,12 @@ public:
 
     unsigned char getByte(int) const;
 };
+
+inline std::ostream &operator<<(std::ostream &str, PseudoUuid const &uuid)
+{
+    str << uuid.toString();
+    return str;
+}
 
 FENNEL_END_NAMESPACE
 
