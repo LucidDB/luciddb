@@ -2,6 +2,7 @@
 // $Id$
 // Package org.eigenbase is a class library of database components.
 // Copyright (C) 2004-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,33 +19,18 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-package org.eigenbase.sql;
+package org.eigenbase.oj.rex;
 
-import org.eigenbase.sql.parser.ParserPosition;
-import org.eigenbase.sql.fun.SqlOverOperator;
+import org.eigenbase.rel.AggregateRel;
+
 
 /**
- * Sees {@link SqlWindow} for detail
+ * Converts aggregate expressions in logical format ({@link AggregateRel.Call})
+ * into OpenJava code.
  *
- * @author klo
- * @since Nov 5, 2004
+ * @author jhyde
  * @version $Id$
- **/
-public class SqlOver extends SqlCall
+ */
+public class AggToOJTranslator
 {
-    public static final int WINDOW_FUNCITON_OPERAND = 0;
-    public static final int WINDOW_SPEC_OPERARND = 1;
-
-    public SqlOver(SqlOverOperator op, SqlNode[] operands, ParserPosition pos)
-    {
-        super(op, operands, pos);
-    }
-
-    public void unparse(SqlWriter writer, int leftPrec, int rightPrec) {
-        // Override, so we don't print extra parentheses.
-        operator.unparse(writer, operands, 0, 0);
-    }
-
 }
-
-// End SqlOver.java

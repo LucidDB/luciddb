@@ -23,6 +23,7 @@ package org.eigenbase.sql;
 import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.sql.fun.SqlWindowOperator;
 import org.eigenbase.util.Util;
+import org.eigenbase.resource.EigenbaseResource;
 
 /**
  * SQL window specifcation.
@@ -113,11 +114,54 @@ public class SqlWindow extends SqlCall
         return (SqlNodeList) operands[PartitionList_OPERAND];
     }
 
-    SqlIdentifier getRefName() {
+    public SqlIdentifier getRefName() {
         return (SqlIdentifier) operands[RefName_OPERAND];
     }
 
 
+    /**
+     * Creates a new window by combining this one with another.
+     *
+     * <p>For example,
+     *
+     * <pre>WINDOW (w PARTITION BY x ORDER BY y)
+     *   overlay
+     *   WINDOW w AS (PARTITION BY z)</pre>
+     *
+     * yields
+     *
+     * <pre>WINDOW (PARTITION BY z ORDER BY y)</pre>
+     *
+     * <p>Does not alter this or the other window.
+     *
+     * @return A new window
+     */
+    public SqlWindow overlay(SqlWindow that, SqlValidator validator) {
+        final SqlNode[] newOperands = (SqlNode[]) operands.clone();
+        // Clear the reference window, because the reference is now resolved.
+        // The overlaying window may have its own reference, of course.
+        newOperands[RefName_OPERAND] = null;
+        // Overlay other parameters.
+        setOperand(newOperands, that.operands, PartitionList_OPERAND, validator);
+        setOperand(newOperands, that.operands, OrderList_OPERAND, validator);
+        setOperand(newOperands, that.operands, LowerBound_OPERAND, validator);
+        setOperand(newOperands, that.operands, UpperBound_OPERAND, validator);
+        return new SqlWindow((SqlWindowOperator) operator, newOperands,
+            ParserPosition.ZERO);
+    }
+
+    private static void setOperand(final SqlNode[] destOperands, SqlNode[] srcOperands, int i, SqlValidator validator) {
+        SqlNode thatOperand = srcOperands[i];
+        if (thatOperand != null) {
+            final SqlNode clonedOperand = destOperands[i];
+            if (clonedOperand != null) {
+                throw validator.newValidationError(clonedOperand,
+                    EigenbaseResource.instance()
+                    .newCannotOverrideWindowAttribute());
+            }
+            destOperands[i] = thatOperand;
+        }
+    }
 }
 
 // End SqlWindow.java

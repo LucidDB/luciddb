@@ -21,8 +21,6 @@
 
 package org.eigenbase.sql;
 
-import java.util.List;
-
 import org.eigenbase.sql.parser.ParserPosition;
 
 
@@ -73,19 +71,19 @@ public class SqlCase extends SqlCall
 
     //~ Methods ---------------------------------------------------------------
 
-    public List getWhenOperands()
+    public SqlNodeList getWhenOperands()
     {
-        return ((SqlNodeList) operands[WHEN_OPERANDS]).getList();
+        return (SqlNodeList) operands[WHEN_OPERANDS];
     }
 
-    public List getThenOperands()
+    public SqlNodeList getThenOperands()
     {
-        return ((SqlNodeList) operands[THEN_OPERANDS]).getList();
+        return (SqlNodeList) operands[THEN_OPERANDS];
     }
 
     public SqlNode getElseOperand()
     {
-        return (SqlNode) operands[ELSE_OPERAND];
+        return operands[ELSE_OPERAND];
     }
 
     public void unparse(
@@ -94,15 +92,15 @@ public class SqlCase extends SqlCall
         int rightPrec)
     {
         writer.print("(CASE");
-        List whenList = getWhenOperands();
-        List thenList = getThenOperands();
+        SqlNodeList whenList = getWhenOperands();
+        SqlNodeList thenList = getThenOperands();
         assert (whenList.size() == thenList.size());
         for (int i = 0; i < whenList.size(); i++) {
             writer.print(" WHEN ");
-            SqlNode e = (SqlNode) whenList.get(i);
+            SqlNode e = whenList.get(i);
             e.unparse(writer, leftPrec, rightPrec);
             writer.print(" THEN ");
-            e = (SqlNode) thenList.get(i);
+            e = thenList.get(i);
             e.unparse(writer, leftPrec, rightPrec);
         }
 

@@ -21,9 +21,7 @@
 
 package org.eigenbase.oj.rel;
 
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -32,15 +30,12 @@ import openjava.ptree.*;
 
 import org.eigenbase.oj.rex.*;
 import org.eigenbase.oj.util.OJUtil;
-import org.eigenbase.rel.JoinRel;
-import org.eigenbase.rel.ProjectRelBase;
-import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.*;
 import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.relopt.RelImplementor;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.rex.*;
-import org.eigenbase.sql.*;
 import org.eigenbase.trace.EigenbaseTrace;
 import org.eigenbase.util.SaffronProperties;
 import org.eigenbase.util.Util;
@@ -92,6 +87,7 @@ public class JavaRelImplementor implements RelImplementor
     Statement exitStatement;
     private final RexBuilder rexBuilder;
     private int nextVariableId;
+    protected final OJRexImplementorTable implementorTable = null; // TODO:
 
     //~ Constructors ----------------------------------------------------------
 
@@ -725,6 +721,48 @@ public class JavaRelImplementor implements RelImplementor
         }
     }
 
+    public Expression implementStart(
+        AggregateRel.Call call,
+        JavaRel rel)
+    {
+        OJAggImplementor aggImplementor =
+            implementorTable.get(call.aggregation);
+        return aggImplementor.implementStart(this, rel, call);
+    }
+
+    public Expression implementStartAndNext(
+        AggregateRel.Call call,
+        JavaRel rel)
+    {
+        OJAggImplementor aggImplementor =
+            implementorTable.get(call.aggregation);
+        return aggImplementor.implementStartAndNext(this, rel, call);
+    }
+
+    public void implementNext(
+        AggregateRel.Call call,
+        JavaRel rel,
+        Expression accumulator)
+    {
+        OJAggImplementor aggImplementor =
+            implementorTable.get(call.aggregation);
+        aggImplementor.implementNext(this, rel, accumulator, call);
+    }
+
+
+    /**
+     * Generates the expression to retrieve the result of this
+     * aggregation.
+     */
+    public Expression implementResult(
+        AggregateRel.Call call,
+        Expression accumulator)
+    {
+        OJAggImplementor aggImplementor =
+            implementorTable.get(call.aggregation);
+        return aggImplementor.implementResult(accumulator, call);
+    }
+
     //~ Inner Interfaces ------------------------------------------------------
 
     /**
@@ -906,8 +944,8 @@ public class JavaRelImplementor implements RelImplementor
     }
 
     /**
-     * Similar to {@link org.eigenbase.oj.rel.RexToJavaTranslator}, but instead of translating, merely tests
-     * whether an expression can be translated.
+     * Similar to {@link RexToOJTranslator}, but instead of translating, merely
+     * tests whether an expression can be translated.
      */
     public static class TranslationTester
     {

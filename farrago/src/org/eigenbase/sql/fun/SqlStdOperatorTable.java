@@ -27,14 +27,12 @@ import org.eigenbase.reltype.RelDataTypeFactoryImpl;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.ParserPosition;
-import org.eigenbase.sql.parser.ParserUtil;
-import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.test.SqlOperatorTests;
+import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.Util;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Extension to {@link org.eigenbase.sql.SqlOperatorTable} containing the
@@ -114,7 +112,7 @@ public class SqlStdOperatorTable extends SqlOperatorTable
         {
             int precision = 0;
             if (call.operands.length == 1) {
-                precision = validator.getOperandAsPositiveInteger(call, 0);
+                precision = SqlValidator.getOperandAsPositiveInteger(call, 0);
             }
             return validator.typeFactory.createSqlType(typeName, precision);
         }
@@ -233,7 +231,8 @@ public class SqlStdOperatorTable extends SqlOperatorTable
             public void validateCall(
                 SqlCall call,
                 SqlValidator validator,
-                SqlValidator.Scope scope)
+                SqlValidator.Scope scope,
+                SqlValidator.Scope operandScope)
             {
                 // The base method validates all operands. We override because
                 // we don't want to validate the identifier.
@@ -249,14 +248,6 @@ public class SqlStdOperatorTable extends SqlOperatorTable
                 }
             }
         };
-
-    /**
-     * The <code>OVER</code> operator, which applies an aggregate functions to
-     * a {@link SqlWindow window}.
-     */
-    public final SqlBinaryOperator overOperator =
-        new SqlBinaryOperator("OVER", SqlKind.Over, 10, true,
-            ReturnTypeInference.useFirstArgType, null, null);
 
     /**
      * String concatenation operator, '<code>||</code>'.
@@ -673,9 +664,23 @@ public class SqlStdOperatorTable extends SqlOperatorTable
     /**
      * <code>SUM</code> aggregate function.
      */
-    public final SqlFunction sumOperator = new SqlFunction("SUM",
-        SqlKind.Function, ReturnTypeInference.useFirstArgType, null,
-        OperandsTypeChecking.typeNumeric, SqlFunction.SqlFuncTypeName.Numeric);
+    public final SqlAggFunction sumOperator = new SqlSumAggFunction(null);
+    /**
+     * <code>COUNT</code> aggregate function.
+     */
+    public final SqlAggFunction countOperator = new SqlCountAggFunction();
+    /**
+     * <code>SUM</code> aggregate function.
+     */
+    public final SqlAggFunction minOperator =
+        new SqlMinMaxAggFunction(new RelDataType[0], true,
+            SqlMinMaxAggFunction.MINMAX_COMPARABLE);
+    /**
+     * <code>SUM</code> aggregate function.
+     */
+    public final SqlAggFunction maxOperator =
+        new SqlMinMaxAggFunction(new RelDataType[0], false,
+            SqlMinMaxAggFunction.MINMAX_COMPARABLE);
 
     //-------------------------------------------------------------
     //                   SPECIAL OPERATORS
@@ -954,14 +959,25 @@ public class SqlStdOperatorTable extends SqlOperatorTable
     public final SqlSpecialOperator explainOperator =
         new SqlSpecialOperator("EXPLAIN", SqlKind.Explain);
     public final SqlOrderByOperator orderByOperator = new SqlOrderByOperator();
+
     /**
-     * Defines the WINDOW clause of a SELECT statment.
+     * The WINDOW clause of a SELECT statment.
+     *
+     * @see #overOperator
      */
     public final SqlWindowOperator windowOperator = new SqlWindowOperator();
+
     /**
-     * The OVER operator constructs aggregates over windows of data.
+     * The <code>OVER</code> operator, which applies an aggregate functions to
+     * a {@link SqlWindow window}.
+     *
+     * <p>Operands are as follows:<ol>
+     * <li>name of window function ({@link org.eigenbase.sql.SqlCall})</li>
+     * <li>window name ({@link org.eigenbase.sql.SqlLiteral})
+     *     or window in-line specification (@link SqlWindowOperator})</li>
+     * </ul>
      */
-    public final SqlOverOperator overOp = new SqlOverOperator();
+    public final SqlBinaryOperator overOperator = new SqlOverOperator();
 
 
     //-------------------------------------------------------------

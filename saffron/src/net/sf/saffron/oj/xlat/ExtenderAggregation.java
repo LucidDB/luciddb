@@ -30,8 +30,8 @@ import openjava.ptree.*;
 import org.eigenbase.oj.rel.JavaRel;
 import org.eigenbase.oj.rel.JavaRelImplementor;
 import org.eigenbase.oj.util.*;
+import org.eigenbase.oj.rex.OJAggImplementor;
 import org.eigenbase.rel.*;
-import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.util.Util;
 
@@ -51,9 +51,9 @@ import org.eigenbase.util.Util;
  *
  * <p>
  * Second, we pass real expressions as the values of the dummy arguments to
- * {@link #implementStart} and {@link #implementResult}. This is inefficient,
- * but moreover, it is conceivable that the expressions will not be valid in
- * the scope where start and result are executed.
+ * {@link #implementStart} and {@link OJAggImplementor#implementResult}. This
+ * is inefficient, but moreover, it is conceivable that the expressions will
+ * not be valid in the scope where start and result are executed.
  * </p>
  *
  * @author jhyde
@@ -61,7 +61,7 @@ import org.eigenbase.util.Util;
  *
  * @since 3 February, 2002
  */
-class ExtenderAggregation implements Aggregation
+class ExtenderAggregation implements Aggregation, OJAggImplementor
 {
     Expression aggExp;
     OJClass aggClazz;
@@ -104,6 +104,11 @@ class ExtenderAggregation implements Aggregation
                 1,
                 this.aggregateMethod.getReturnType(),
                 true);
+    }
+
+    public String getName()
+    {
+        return aggClazz.getName();
     }
 
     // implement Aggregation
@@ -187,12 +192,12 @@ class ExtenderAggregation implements Aggregation
                         exprList))));
     }
 
-    // implement Aggregation
+    // implement OJAggImplementor
     public void implementNext(
         JavaRelImplementor implementor,
         JavaRel rel,
         Expression accumulator,
-        int [] args)
+        AggregateRel.Call call)
     {
         // saffron.runtime.AggAndAcc a = (saffron.runtime.AggAndAcc) acc;
         // "a.total = a.agg.next(arg..., a.total);"
@@ -206,6 +211,7 @@ class ExtenderAggregation implements Aggregation
                     TypeName.forOJClass(Toolbox.clazzAggAndAcc),
                     accumulator)));
         ExpressionList exprList = new ExpressionList();
+        final int [] args = call.args;
         for (int i = 0; i < args.length; i++) {
             exprList.add(implementor.translateInputField(rel, 0, args[i]));
         }
@@ -224,7 +230,9 @@ class ExtenderAggregation implements Aggregation
     }
 
     // implement Aggregation
-    public Expression implementResult(Expression accumulator)
+    public Expression implementResult(
+        Expression accumulator,
+        AggregateRel.Call call)
     {
         // "((T) ((AggAndAcc) acc).agg).result(
         //     (T0) 0, (T1) null..., ((AggAndAcc) acc).total)"
@@ -254,7 +262,7 @@ class ExtenderAggregation implements Aggregation
     public Expression implementStart(
         JavaRelImplementor implementor,
         JavaRel rel,
-        int [] args)
+        AggregateRel.Call call)
     {
         Variable var = implementor.newVariable();
         StatementList stmtList = implementor.getStatementList();
@@ -288,7 +296,7 @@ class ExtenderAggregation implements Aggregation
     public Expression implementStartAndNext(
         JavaRelImplementor implementor,
         JavaRel rel,
-        int [] args)
+        AggregateRel.Call call)
     {
         Variable var_agg = implementor.newVariable();
         StatementList stmtList = implementor.getStatementList();
@@ -315,7 +323,7 @@ class ExtenderAggregation implements Aggregation
                     TypeName.forOJClass(argTypes[i]),
                     argTypes[i].isPrimitive() ? Literal.constantZero()
                     : Literal.constantNull()));
-            nextList.add(implementor.translateInputField(rel, 0, args[i]));
+            nextList.add(implementor.translateInputField(rel, 0, call.args[i]));
         }
         nextList.add(
             new MethodCall(var_agg, AggregationExtender.METHOD_START, startList));

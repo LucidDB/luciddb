@@ -21,21 +21,22 @@
 
 package org.eigenbase.test;
 
+import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.reltype.RelDataTypeFactoryImpl;
-import org.eigenbase.sql.*;
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.sql.parser.SqlParser;
+import org.eigenbase.sql.SqlCollation;
+import org.eigenbase.sql.SqlNode;
+import org.eigenbase.sql.SqlOperatorTable;
+import org.eigenbase.sql.SqlValidator;
 import org.eigenbase.sql.parser.ParseException;
+import org.eigenbase.sql.parser.SqlParser;
 import org.eigenbase.util.EnumeratedValues;
 
 import java.nio.charset.Charset;
-import java.util.HashMap;
-import java.util.ArrayList;
-import java.util.regex.Pattern;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * An abstract base class for implementing tests against
@@ -208,105 +209,6 @@ public class SqlValidatorTestCase extends TestCase
     }
 
     /**
-     * Mock implmenentation of {@link org.eigenbase.sql.SqlValidator.CatalogReader} which returns
-     * tables "EMP", "DEPT", "BONUS", "SALGRADE" (same as Oracle's SCOTT
-     * schema).
-     */
-    public class MockCatalogReader implements SqlValidator.CatalogReader
-    {
-        private final RelDataTypeFactory typeFactory;
-        private final HashMap tables = new HashMap();
-
-        public MockCatalogReader(RelDataTypeFactory typeFactory) {
-            this.typeFactory = typeFactory;
-            final RelDataType intType =
-                typeFactory.createSqlType(SqlTypeName.Integer);
-            final RelDataType varchar10Type =
-                typeFactory.createSqlType(SqlTypeName.Varchar, 10);
-            final RelDataType varchar20Type =
-                typeFactory.createSqlType(SqlTypeName.Varchar, 20);
-            final RelDataType dateType =
-                typeFactory.createSqlType(SqlTypeName.Date);
-            // Register "EMP" table.
-            MockTable empTable = new MockTable("EMP");
-            empTable.addColumn("EMPNO", intType);
-            empTable.addColumn("ENAME", varchar20Type);
-            empTable.addColumn("JOB", varchar10Type);
-            empTable.addColumn("MGR", intType);
-            empTable.addColumn("HIREDATE", dateType);
-            empTable.addColumn("SAL", intType);
-            empTable.addColumn("COMM", intType);
-            empTable.addColumn("DEPTNO", intType);
-            registerTable(empTable);
-            // Register "DEPT" table.
-            MockTable deptTable = new MockTable("DEPT");
-            deptTable.addColumn("DEPTNO", intType);
-            deptTable.addColumn("NAME", varchar10Type);
-            registerTable(deptTable);
-            // Register "BONUS" table.
-            MockTable bonusTable = new MockTable("BONUS");
-            bonusTable.addColumn("ENAME", varchar20Type);
-            bonusTable.addColumn("JOB", varchar10Type);
-            bonusTable.addColumn("SAL", intType);
-            bonusTable.addColumn("COMM", intType);
-            registerTable(bonusTable);
-            // Register "SALGRADE" table.
-            MockTable salgradeTable = new MockTable("SALGRADE");
-            salgradeTable.addColumn("GRADE", intType);
-            salgradeTable.addColumn("LOSAL", intType);
-            salgradeTable.addColumn("HISAL", intType);
-            registerTable(salgradeTable);
-        }
-
-        protected void registerTable(SqlValidatorTest.MockTable table) {
-            table.onRegister(typeFactory);
-            tables.put(table.names[0], table);
-        }
-
-        public SqlValidator.Table getTable(final String [] names)
-        {
-            if (names.length == 1) {
-                return (SqlValidator.Table) tables.get(names[0]);
-            }
-            return null;
-        }
-    }
-
-    /**
-     * Mock implementation of {@link org.eigenbase.sql.SqlValidator.Table}.
-     */
-    public static class MockTable implements SqlValidator.Table
-    {
-        private final ArrayList columnNames = new ArrayList();
-        private final ArrayList columnTypes = new ArrayList();
-        private RelDataType rowType;
-        private final String[] names;
-
-        public MockTable(String name) {
-            this.names = new String[] {name};
-        }
-
-        public RelDataType getRowType() {
-            return rowType;
-        }
-
-        public void onRegister(RelDataTypeFactory typeFactory) {
-            rowType = typeFactory.createProjectType(
-                (RelDataType []) columnTypes.toArray(new RelDataType[0]),
-                (String []) columnNames.toArray(new String[0]));
-        }
-
-        public String[] getQualifiedName() {
-            return names;
-        }
-
-        public void addColumn(String name, RelDataType type) {
-            columnNames.add(name);
-            columnTypes.add(type);
-        }
-    }
-
-    /**
      * Implementation of {@link org.eigenbase.test.SqlValidatorTestCase.Tester}
      * which talks to a mock catalog.
      */
@@ -409,37 +311,37 @@ public class SqlValidatorTestCase extends TestCase
             }
         }
 
-        public RelDataType getResultType(String sql) {
-            SqlValidator validator;
-            SqlNode sqlNode;
-            try {
-                sqlNode = parseQuery(sql);
-                validator = getValidator();
-            } catch (ParseException ex) {
-                ex.printStackTrace();
-                fail("SqlValidationTest: Parse Error while parsing query=" + sql
-                    + "\n" + ex.getMessage());
-                return null;
-            } catch (Throwable e) {
-                e.printStackTrace(System.err);
-                fail(
-                    "SqlValidationTest: Failed while trying to connect or get statement");
-                return null;
-            }
-            SqlNode n = validator.validate(sqlNode);
+        public RelDataType getResultType(String sql)
+        {
+            SqlValidator validator = getValidator();
+            SqlNode n = parseAndValidate(validator, sql);
 
-            RelDataType actualType;
-            if (false) {
-                actualType = validator.getValidatedNodeType(
-                    ((SqlNodeList) ((SqlCall) n).getOperands()[1]).get(0));
-            } else {
-                final RelDataType rowType = validator.getValidatedNodeType(n);
-                actualType = rowType.getFields()[0].getType();
-            }
+            RelDataType rowType = validator.getValidatedNodeType(n);
+            RelDataType actualType = rowType.getFields()[0].getType();
             return actualType;
         }
 
-        public SqlNode parseQuery(String sql) throws Exception {
+        protected SqlNode parseAndValidate(SqlValidator validator, String sql)
+        {
+            SqlNode sqlNode;
+            try {
+                sqlNode = parseQuery(sql);
+            } catch (ParseException ex) {
+                ex.printStackTrace();
+                throw new AssertionFailedError("SqlValidationTest: " +
+                    "Parse Error while parsing query=" + sql
+                    + "\n" + ex.getMessage());
+            } catch (Throwable e) {
+                e.printStackTrace(System.err);
+                throw new AssertionFailedError("SqlValidationTest: " +
+                    "Failed while trying to connect or get statement");
+            }
+            SqlNode n = validator.validate(sqlNode);
+            return n;
+        }
+
+        public SqlNode parseQuery(String sql) throws Exception
+        {
             SqlParser parser = new SqlParser(sql);
             SqlNode sqlNode = parser.parseQuery();
             return sqlNode;

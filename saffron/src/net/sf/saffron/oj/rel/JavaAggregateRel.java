@@ -230,7 +230,7 @@ public class JavaAggregateRel extends AggregateRel implements JavaLoopRel
                             var_row,
                             field.getName()),
                         AssignmentExpression.EQUALS,
-                        aggCalls[i].implementResult(var_aggs))));
+                        implementor.implementResult(aggCalls[i], var_aggs))));
         } else {
             //       Object[] aggs = (Object[]) h.get(groups);
             //       row.c2 = <<agg result code {aggs[0]}>>
@@ -255,7 +255,8 @@ public class JavaAggregateRel extends AggregateRel implements JavaLoopRel
                                 var_row,
                                 field.getName()),
                             AssignmentExpression.EQUALS,
-                            aggCalls[i].implementResult(
+                            implementor.implementResult(
+                                aggCalls[i],
                                 new ArrayAccess(
                                     var_aggs,
                                     Literal.makeLiteral(i))))));
@@ -351,7 +352,7 @@ public class JavaAggregateRel extends AggregateRel implements JavaLoopRel
                     new AssignmentExpression(
                         var_aggs,
                         AssignmentExpression.EQUALS,
-                        aggCalls[i].implementStartAndNext(implementor, this))));
+                        implementor.implementStartAndNext(aggCalls[i], this))));
         } else {
             //     aggs = new Object[] {
             //       <<aggs[0] start code>>,
@@ -359,7 +360,7 @@ public class JavaAggregateRel extends AggregateRel implements JavaLoopRel
             ExpressionList startList = new ExpressionList();
             for (int i = 0; i < aggCalls.length; i++) {
                 startList.add(
-                    aggCalls[i].implementStartAndNext(implementor, this));
+                    implementor.implementStartAndNext(aggCalls[i], this));
             }
             ifBlock.add(
                 new ExpressionStatement(
@@ -386,9 +387,12 @@ public class JavaAggregateRel extends AggregateRel implements JavaLoopRel
         implementor.pushStatementList(elseBlock);
         for (int i = 0; i < aggCalls.length; i++) {
             assert (aggCalls[i].getArgs().length == 1);
-            aggCalls[i].implementNext(implementor, this,
-                (aggCalls.length == 1) ? (Expression) var_aggs
-                : (Expression) new ArrayAccess(
+            implementor.implementNext(
+                aggCalls[i],
+                this,
+                (aggCalls.length == 1) ?
+                (Expression) var_aggs :
+                (Expression) new ArrayAccess(
                     var_aggs,
                     Literal.makeLiteral(i)));
         }

@@ -187,6 +187,7 @@ public abstract class SqlNode implements Cloneable
     public void validateExpr(SqlValidator validator, SqlValidator.Scope scope)
     {
         validate(validator, scope);
+        Util.discard(validator.deriveType(scope, this));
     }
 
     /**

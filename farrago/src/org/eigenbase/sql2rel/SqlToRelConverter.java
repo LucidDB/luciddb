@@ -33,6 +33,7 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.SqlLikeOperator;
 import org.eigenbase.sql.fun.SqlRowOperator;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
+import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.util.BitString;
 import org.eigenbase.util.NlsString;
@@ -46,6 +47,11 @@ import java.util.*;
  * Converts a SQL parse tree (consisting of {@link org.eigenbase.sql.SqlNode}
  * objects) into a relational algebra expression (consisting of
  * {@link org.eigenbase.rel.RelNode} objects).
+ *
+ * <p>The public entry points are:
+ * {@link #convertQuery},
+ * {@link #convertValidatedQuery},
+ * {@link #convertExpression(SqlNode)}.
  *
  * @testcase {@link net.sf.saffron.sql2rel.ConverterTest}
  * @author jhyde
@@ -121,7 +127,7 @@ public class SqlToRelConverter
 
     /**
      * Returns the number of dynamic parameters encountered during translation;
-     * this must only be called after convertQuery.
+     * this must only be called after {@link #convertQuery}.
      *
      * @return number of dynamic parameters
      */
@@ -135,7 +141,7 @@ public class SqlToRelConverter
      *
      * @param index 0-based index of dynamic parameter
      *
-     * @return inferred type
+     * @return inferred type, never null
      */
     public RelDataType getDynamicParamType(int index)
     {
@@ -188,15 +194,18 @@ public class SqlToRelConverter
         convertWhere(
             bb,
             select.getWhere());
-        convertGroup(
-            bb,
-            select.getGroup());
-        convertHaving(
-            bb,
-            select.getHaving());
-        convertSelectList(
-            bb,
-            select.getSelectList(), select);
+        if (validator.isAggregate(select)) {
+            convertAgg(
+                bb,
+                select.getGroup(),
+                select.getHaving(),
+                select.getSelectList());
+        } else {
+            convertSelectList(
+                bb,
+                select.getSelectList(),
+                select);
+        }
         if (select.isDistinct()) {
             bb.setRoot(new DistinctRel(cluster, bb.root));
         }
@@ -208,16 +217,12 @@ public class SqlToRelConverter
         return bb.root;
     }
 
-    private void convertHaving(
-        final Blackboard bb,
-        SqlNode having)
-    {
-        if (having == null) {
-            return;
-        }
-        throw Util.needToImplement("HAVING"); // todo:
-    }
-
+    /**
+     * Converts a WHERE clause.
+     *
+     * @param bb
+     * @param where WHERE clause, may be null
+     */
     private void convertWhere(
         final Blackboard bb,
         final SqlNode where)
@@ -492,7 +497,9 @@ public class SqlToRelConverter
                 final SqlNode [] operands = ((SqlCall) node).getOperands();
                 for (int i = 0; i < operands.length; i++) {
                     SqlNode operand = operands[i];
-                    findSubqueries(bb, operand);
+                    if (operand != null) {
+                        findSubqueries(bb, operand);
+                    }
                 }
             } else if (node instanceof SqlNodeList) {
                 final SqlNodeList nodes = (SqlNodeList) node;
@@ -506,14 +513,37 @@ public class SqlToRelConverter
 
     /**
      * Converts an expression from {@link SqlNode} to {@link RexNode} format.
-     * @param bb Workspace
+     *
      * @param node Expression to translate
      * @return Converted expression
      */
     public RexNode convertExpression(
+        SqlNode node)
+    {
+        Blackboard bb = new Blackboard(null);
+        return convertExpression(bb, node);
+    }
+
+    /**
+     * Converts an expression from {@link SqlNode} to {@link RexNode} format.
+     *
+     * @param bb Workspace
+     * @param node Expression to translate
+     * @return Converted expression
+     *
+     * @pre bb != null
+     */
+    RexNode convertExpression(
         Blackboard bb,
         SqlNode node)
     {
+        assert bb != null : "precondition: bb != null";
+        if (bb.agg != null) {
+            RexNode rex = bb.agg.lookupGroupExpr(node);
+            if (rex != null) {
+                return rex;
+            }
+        }
         final SqlNode [] operands;
         switch (node.getKind().getOrdinal()) {
         case SqlKind.AsORDINAL:
@@ -534,91 +564,112 @@ public class SqlToRelConverter
             // The indicator column is the last field of the subquery.
             final int fieldCount = expr.getType().getFieldCount();
             return rexBuilder.makeFieldAccess(expr, fieldCount - 1);
+
+        case SqlKind.OverORDINAL:
+            return convertOver(bb, node);
+
         default:
+            // fall through
+        }
 
-            // REVIEW jhyde 2004/8/11: replace all of this code with a method
-            //   SqlOperator.convertToRex or something similar.
-            if (node instanceof SqlCall) {
-                SqlCall call = (SqlCall) node;
+        // REVIEW jhyde 2004/8/11: replace all of this code with a method
+        //   SqlOperator.convertToRex or something similar.
+        if (node instanceof SqlCall) {
+            SqlCall call = (SqlCall) node;
 
-                // aliases:
-                // TODO: handle aliases in a more elegant way
-                if (call.operator.equals(opTab.characterLengthFunc)) {
-                    call.operator = opTab.charLengthFunc;
-                } else if (call.operator.equals(opTab.isUnknownOperator)) {
-                    call.operator = opTab.isNullOperator;
-                } else if (call.operator.equals(opTab.isNotUnknownOperator)) {
-                    call.operator = opTab.isNotNullOperator;
-                }
+            // aliases:
+            // TODO: handle aliases in a more elegant way
+            if (call.operator.equals(opTab.characterLengthFunc)) {
+                call.operator = opTab.charLengthFunc;
+            } else if (call.operator.equals(opTab.isUnknownOperator)) {
+                call.operator = opTab.isNullOperator;
+            } else if (call.operator.equals(opTab.isNotUnknownOperator)) {
+                call.operator = opTab.isNotNullOperator;
+            }
 
-                operands = call.getOperands();
-                if (call.operator instanceof SqlBinaryOperator) {
-                    final SqlBinaryOperator op =
-                        (SqlBinaryOperator) call.operator;
+            if (call.operator.isAggregator()) {
+                Util.permAssert(bb.agg != null,
+                    "aggregate fun must occur in aggregation mode");
+                return bb.agg.convertCall(call);
+            }
+            operands = call.getOperands();
+            if (call.operator instanceof SqlBinaryOperator) {
+                final SqlBinaryOperator op =
+                    (SqlBinaryOperator) call.operator;
 
-                    // final RexKind opCode = (RexKind) binaryMap.get(op.name);
-                    // if (opCode == null) {
-                    //     assert !call.isA(SqlNode.Kind.In) :
-                    //             "IN should have been handled already";
-                    //     throw Util.needToImplement(
-                    //         "binary operator " + op.name);
-                    // }
-                    return rexBuilder.makeCall(
-                        op,
-                        convertExpression(bb, operands[0]),
-                        convertExpression(bb, operands[1]));
-                } else if (call.operator instanceof SqlJdbcFunctionCall) {
-                    SqlJdbcFunctionCall jdbcCall =
-                        (SqlJdbcFunctionCall) call.operator;
-                    return convertExpression(
-                        bb,
-                        jdbcCall.getLookupCall());
-                } else if (call.operator.equals(opTab.castFunc)) {
-                    return convertCast(bb, call);
-                } else if (call.operator instanceof SqlFunction
-                        || call.operator instanceof SqlRowOperator) {
-                    final RexNode [] exprs =
-                        convertExpressionList(bb, operands);
-                    return rexBuilder.makeCall(call.operator, exprs);
-                } else if (call.operator instanceof SqlLikeOperator) {
-                    final RexNode [] exprs =
-                        convertExpressionList(bb, operands);
-                    RexNode rexCall;
-                    if (((SqlLikeOperator) call.operator).negated) {
-                        rexCall =
-                            rexBuilder.makeCall(opTab.likeOperator, exprs);
-                        rexCall =
-                            rexBuilder.makeCall(opTab.notOperator, rexCall);
-                    } else {
-                        rexCall = rexBuilder.makeCall(call.operator, exprs);
-                    }
-                    return rexCall;
-                } else if (call.operator instanceof SqlPrefixOperator
-                        || call.operator instanceof SqlPostfixOperator) {
-                    final RexNode exp = convertExpression(bb, operands[0]);
-                    SqlOperator op = call.operator;
-                    if (op.equals(rexBuilder.opTab.prefixPlusOperator)) {
-                        // Unary "+" has no effect. There is no
-                        // corresponding Rex operator.
-                        return exp;
-                    }
-                    return rexBuilder.makeCall(
-                        op,
-                        new RexNode [] { exp });
-                } else if (call.operator instanceof SqlCaseOperator) {
-                    return convertCase(bb, (SqlCase) call);
-                } else if (call.operator instanceof SqlBetweenOperator) {
-                    return convertBetween(bb, call);
-                } else if (call.operator.equals(
-                            rexBuilder.opTab.litChainOperator)) {
-                    return convertLitChain(bb, call);
+                // final RexKind opCode = (RexKind) binaryMap.get(op.name);
+                // if (opCode == null) {
+                //     assert !call.isA(SqlNode.Kind.In) :
+                //             "IN should have been handled already";
+                //     throw Util.needToImplement(
+                //         "binary operator " + op.name);
+                // }
+                final RexNode[] exprs =
+                    convertExpressionList(bb, operands);
+                return rexBuilder.makeCall(op, exprs);
+            } else if (call.operator instanceof SqlJdbcFunctionCall) {
+                SqlJdbcFunctionCall jdbcCall =
+                    (SqlJdbcFunctionCall) call.operator;
+                return convertExpression(
+                    bb,
+                    jdbcCall.getLookupCall());
+            } else if (call.operator.equals(opTab.castFunc)) {
+                return convertCast(bb, call);
+            } else if (call.operator instanceof SqlFunction
+                || call.operator instanceof SqlRowOperator) {
+                final RexNode [] exprs =
+                    convertExpressionList(bb, operands);
+                return rexBuilder.makeCall(call.operator, exprs);
+            } else if (call.operator instanceof SqlLikeOperator) {
+                final RexNode [] exprs =
+                    convertExpressionList(bb, operands);
+                RexNode rexCall;
+                if (((SqlLikeOperator) call.operator).negated) {
+                    rexCall =
+                        rexBuilder.makeCall(opTab.likeOperator, exprs);
+                    rexCall =
+                        rexBuilder.makeCall(opTab.notOperator, rexCall);
                 } else {
-                    throw Util.needToImplement(node);
+                    rexCall = rexBuilder.makeCall(call.operator, exprs);
                 }
+                return rexCall;
+            } else if (call.operator instanceof SqlPrefixOperator
+                || call.operator instanceof SqlPostfixOperator) {
+                final RexNode exp = convertExpression(bb, operands[0]);
+                SqlOperator op = call.operator;
+                if (op.equals(rexBuilder.opTab.prefixPlusOperator)) {
+                    // Unary "+" has no effect. There is no
+                    // corresponding Rex operator.
+                    return exp;
+                }
+                return rexBuilder.makeCall(
+                    op,
+                    new RexNode [] { exp });
+            } else if (call.operator instanceof SqlCaseOperator) {
+                return convertCase(bb, (SqlCase) call);
+            } else if (call.operator instanceof SqlBetweenOperator) {
+                return convertBetween(bb, call);
+            } else if (call.operator.equals(
+                rexBuilder.opTab.litChainOperator)) {
+                return convertLitChain(bb, call);
             } else {
                 throw Util.needToImplement(node);
             }
+        } else {
+            throw Util.needToImplement(node);
         }
+    }
+
+    private RexNode convertOver(Blackboard bb, SqlNode node) {
+        SqlCall call = (SqlCall) node;
+        SqlCall aggCall = (SqlCall) call.operands[0];
+        assert aggCall.operator.isAggregator();
+        SqlNode windowOrRef = call.operands[1];
+        SqlWindow window = validator.resolveWindow(windowOrRef, bb.scope);
+        final RexNode[] exprs =
+            convertExpressionList(bb, aggCall.operands);
+        final RelDataType type = validator.getValidatedNodeType(aggCall);
+        return rexBuilder.makeOver(type, aggCall, exprs, window);
     }
 
     /**
@@ -707,16 +758,16 @@ public class SqlToRelConverter
         Blackboard bb,
         SqlCase call)
     {
-        List whenList = call.getWhenOperands();
-        List thenList = call.getThenOperands();
+        SqlNodeList whenList = call.getWhenOperands();
+        SqlNodeList thenList = call.getThenOperands();
         RexNode [] whenThenElseRex = new RexNode[(whenList.size() * 2) + 1];
         assert (whenList.size() == thenList.size());
 
         for (int i = 0; i < whenList.size(); i++) {
             whenThenElseRex[i * 2] =
-                convertExpression(bb, (SqlNode) whenList.get(i));
+                convertExpression(bb, whenList.get(i));
             whenThenElseRex[(i * 2) + 1] =
-                convertExpression(bb, (SqlNode) thenList.get(i));
+                convertExpression(bb, thenList.get(i));
         }
         whenThenElseRex[whenThenElseRex.length - 1] =
             convertExpression(
@@ -933,37 +984,86 @@ public class SqlToRelConverter
     }
 
     /**
-     * Converts a GROUP BY clause.
-     *
-     * @param bb       Scope within which to resolve identifiers
-     * @param groupList GROUP BY clause, or null
-     * @pre child != null
-     * @post return != null
+     * Converts the SELECT, GROUP BY and HAVING clauses of an aggregate query.
+     * @param bb         Scope within which to resolve identifiers
+     * @param groupList  GROUP BY clause, or null
+     * @param having     HAVING clause
+     * @param selectList SELECT list
      */
-    private void convertGroup(
+    private void convertAgg(
         Blackboard bb,
-        SqlNodeList groupList)
+        SqlNodeList groupList,
+        SqlNode having,
+        SqlNodeList selectList)
     {
         assert bb.root != null : "precondition: child != null";
+            final AggConverter aggConverter = new AggConverter(bb);
+
+        // If group-by clause is missing, pretend that it has zero elements.
         if (groupList == null) {
-            return;
-        }
-        ArrayList list = new ArrayList();
-        for (int i = 0; i < groupList.size(); i++) {
-            RexNode expression = convertExpression(
-                    bb,
-                    groupList.get(i));
-            list.add(expression);
+            groupList = SqlNodeList.Empty;
         }
 
-        // FIXME
-        final AggregateRel.Call [] aggCalls = null;
+        // register the group exprs
+        for (int i = 0; i < groupList.size(); i++) {
+            aggConverter.addGroupExpr(groupList.get(i));
+        }
+
+        RexNode[] selectExprs = new RexNode[selectList.size()];
+        RexNode havingExpr = null;
+        try {
+            Util.permAssert(bb.agg == null, "already in agg mode");
+            bb.agg = aggConverter;
+            // convert the the select and having expressions, so that the
+            // agg converter knows which aggregations are required
+            for (int i = 0; i < selectList.size(); i++) {
+                SqlNode expr = selectList.get(i);
+                selectExprs[i] = convertExpression(bb, expr);
+            }
+
+            if (having != null) {
+                havingExpr = convertExpression(bb, having);
+            }
+        } finally {
+            bb.agg = null;
+        }
+
+        // compute inputs to the aggregator
+        RexNode[] preExprs = aggConverter.getPreExprs();
+        bb.setRoot(
+            new ProjectRel(
+                cluster,
+                bb.root,
+                preExprs,
+                null,
+                ProjectRel.Flags.Boxed));
+
+        // add the aggregator
+        final AggregateRel.Call [] aggCalls = aggConverter.getAggCalls();
         bb.setRoot(
             new AggregateRel(
                 cluster,
                 bb.root,
                 groupList.size(),
                 aggCalls));
+
+        // implement the SELECT list
+        bb.setRoot(
+            new ProjectRel(
+                cluster,
+                bb.root,
+                selectExprs,
+                null,
+                ProjectRel.Flags.Boxed));
+
+        // implement HAVING
+        if (having != null) {
+            bb.setRoot(
+                new FilterRel(
+                    cluster,
+                    bb.root,
+                    havingExpr));
+        }
     }
 
     /**
@@ -1264,6 +1364,11 @@ public class SqlToRelConverter
             return convertExpression(bb, call);
         }
 
+        if (bb.agg != null) {
+            throw Util.newInternal("Identifier '" + identifier +
+                "' is not a group expr");
+        }
+
         identifier = bb.scope.fullyQualify(identifier);
         RexNode e = bb.lookupExp(identifier.names[0]);
         for (int i = 1; i < identifier.names.length; i++) {
@@ -1400,7 +1505,7 @@ public class SqlToRelConverter
 
     /**
      * A <code>SchemaCatalogReader</code> looks up catalog information from a
-     * {@link org.eigenbase.relopt.RelOptSchema saffron schema object}.
+     * {@link org.eigenbase.relopt.RelOptSchema schema object}.
      */
     public static class SchemaCatalogReader
         implements SqlValidator.CatalogReader
@@ -1464,6 +1569,10 @@ public class SqlToRelConverter
         /** Maps IN and EXISTS {@link SqlSelect sub-queries} to the expressions
          * which will be used to access them. */
         private final HashMap mapSubqueryToExpr = new HashMap();
+        /**
+         * Workspace for building aggregates.
+         */
+        public AggConverter agg;
 
         /**
          * Creates a Blackboard
@@ -1694,6 +1803,132 @@ public class SqlToRelConverter
             return rexBuilder.constantNull();
         }
     }
+
+    /**
+     * Converts expressions to aggregates.
+     *
+     * <p>Consider the expression
+     *
+     * SELECT deptno, SUM(2 * sal)
+     * FROM emp
+     * GROUP BY deptno
+     *
+     * Then<ul>
+     * <li>groupExprs = {SqlIdentifier(deptno)}</li>
+     * <li>convertedInputExprs = {RexInputRef(deptno),
+     *                            2 * RefInputRef(sal)}</li>
+     * <li>inputRefs = {RefInputRef(#0),
+     *                  RexInputRef(#1)}</li>
+     * <li>aggCalls = {AggCall(SUM, {1})}</li>
+     * </ul>
+     */
+    class AggConverter
+    {
+        private final Blackboard bb;
+        /**
+         * The group-by expressions, in {@link SqlNode} format.
+         */
+        private final SqlNodeList groupExprs =
+            new SqlNodeList(ParserPosition.ZERO);
+        /**
+         * Input expressions for the group columns and aggregates, in
+         * {@link RexNode} format. The first elements of the list correspond
+         * to the elements in {@link #groupExprs}; the remaining elements are
+         * for aggregates.
+         */
+        private final ArrayList convertedInputExprs = new ArrayList();
+        private final ArrayList inputRefs = new ArrayList();
+        private final ArrayList aggCalls = new ArrayList();
+
+        /**
+         * Input expressions required by aggregates,
+         * @param bb
+         */
+
+        public AggConverter(Blackboard bb)
+        {
+            this.bb = bb;
+        }
+
+        public void addGroupExpr(SqlNode expr)
+        {
+            RexNode convExpr = convertExpression(bb, expr);
+            final int index = groupExprs.size();
+            groupExprs.add(expr);
+            convertedInputExprs.add(convExpr);
+            inputRefs.add(rexBuilder.makeInputRef(convExpr.getType(), index));
+        }
+
+        public RexNode convertCall(SqlCall call)
+        {
+            assert call.operator.isAggregator();
+            assert bb.agg == this;
+            int[] args = new int[call.operands.length];
+            try {
+                // switch out of agg mode
+                bb.agg = null;
+                for (int i = 0; i < call.operands.length; i++) {
+                    SqlNode operand = call.operands[i];
+                    final RexNode convertedExpr = convertExpression(bb, operand);
+                    args[i] = lookupOrCreateGroupExpr(convertedExpr);
+                }
+            } finally {
+                // switch back into agg mode
+                bb.agg = this;
+            }
+            final Aggregation aggregation = (Aggregation) call.operator;
+            RelDataType type = validator.getValidatedNodeType(call);
+            final AggregateRel.Call aggCall =
+                new AggregateRel.Call(aggregation, args, type);
+            int index = aggCalls.size();
+            aggCalls.add(aggCall);
+            final RexNode rex = rexBuilder.makeInputRef(type, index);
+            return rex;
+        }
+
+        private int lookupOrCreateGroupExpr(RexNode expr)
+        {
+            for (int i = 0; i < convertedInputExprs.size(); i++) {
+                RexNode convertedInputExpr = (RexNode) convertedInputExprs.get(i);
+                if (expr.equals(convertedInputExpr)) {
+                    return i;
+                }
+            }
+            // not found -- add it
+            int index = convertedInputExprs.size();
+            convertedInputExprs.add(expr);
+            return index;
+        }
+
+        /**
+         * If an expression is structurally identical to one of the group-by
+         * expressions, returns a reference to the expression, otherwise
+         * returns null.
+         */
+        public RexNode lookupGroupExpr(SqlNode expr)
+        {
+            for (int i = 0; i < groupExprs.size(); i++) {
+                SqlNode groupExpr = groupExprs.get(i);
+                if (expr.equalsDeep(groupExpr)) {
+                    return (RexNode) inputRefs.get(i);
+                }
+            }
+            return null;
+        }
+
+        public RexNode[] getPreExprs()
+        {
+            return (RexNode[]) convertedInputExprs.toArray(
+                new RexNode[convertedInputExprs.size()]);
+        }
+
+        public AggregateRel.Call[] getAggCalls()
+        {
+            return (AggregateRel.Call[])
+                aggCalls.toArray(new AggregateRel.Call[aggCalls.size()]);
+        }
+    }
+
 }
 
 

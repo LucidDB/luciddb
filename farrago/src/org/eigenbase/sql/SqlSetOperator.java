@@ -68,7 +68,8 @@ public class SqlSetOperator extends SqlBinaryOperator
     public void validateCall(
         SqlCall call,
         SqlValidator validator,
-        SqlValidator.Scope scope)
+        SqlValidator.Scope scope,
+        SqlValidator.Scope operandScope)
     {
         validator.validateQuery(call);
     }

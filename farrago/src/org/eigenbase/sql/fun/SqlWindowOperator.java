@@ -173,16 +173,28 @@ public class SqlWindowOperator extends SqlOperator {
     public void validateCall(
         SqlCall call,
         SqlValidator validator,
-        SqlValidator.Scope scope)
+        SqlValidator.Scope scope,
+        SqlValidator.Scope operandScope)
     {
+        // TODO: validate
         assert call.operator == this;
-        final SqlNode[] operands = call.getOperands();
-        for (int i = 0; i < operands.length; i++) {
-            final SqlNode operand = operands[i];
-            if (operand != null) {
-                operand.validateExpr(validator, scope);
+        final SqlNode [] operands = call.operands;
+        SqlIdentifier refName =
+                (SqlIdentifier) operands[SqlWindow.RefName_OPERAND];
+        SqlNodeList partitionList =
+                (SqlNodeList) operands[SqlWindow.PartitionList_OPERAND];
+        SqlNodeList orderList =
+                (SqlNodeList) operands[SqlWindow.OrderList_OPERAND];
+        if (orderList != null) {
+            for (int i = 0; i < orderList.size(); i++) {
+                SqlNode orderItem = orderList.get(i);
+                orderItem.validate(validator, scope);
             }
         }
+        boolean isRows =
+                SqlLiteral.booleanValue(operands[SqlWindow.IsRows_OPERAND]);
+        SqlNode lowerBound = operands[SqlWindow.LowerBound_OPERAND],
+                upperBound = operands[SqlWindow.UpperBound_OPERAND];
     }
 
     public void test(SqlTester tester) {

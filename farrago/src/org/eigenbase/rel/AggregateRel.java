@@ -21,18 +21,13 @@
 
 package org.eigenbase.rel;
 
-import java.util.Arrays;
-
-import openjava.ptree.Expression;
-
-import org.eigenbase.oj.rel.JavaRel;
-import org.eigenbase.oj.rel.JavaRelImplementor;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelOptCost;
-import org.eigenbase.relopt.RelOptPlanner;
-import org.eigenbase.relopt.RelOptUtil;
+import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.util.Util;
+
+import java.util.Arrays;
+import java.util.ArrayList;
 
 
 /**
@@ -53,6 +48,17 @@ public class AggregateRel extends SingleRel
 
     //~ Constructors ----------------------------------------------------------
 
+    /**
+     * Creates an AggregateRel.
+     *
+     * @param cluster {@link RelOptCluster} this relational expression
+     *        belongs to
+     * @param child input relational expression
+     * @param groupCount Number of columns to group on
+     * @param aggCalls Array of aggregates to compute
+     *
+     * @pre aggCalls != null
+     */
     public AggregateRel(
         RelOptCluster cluster,
         RelNode child,
@@ -60,6 +66,7 @@ public class AggregateRel extends SingleRel
         Call [] aggCalls)
     {
         super(cluster, child);
+        Util.pre(aggCalls != null, "aggCalls != null");
         this.groupCount = groupCount;
         this.aggCalls = aggCalls;
     }
@@ -83,6 +90,23 @@ public class AggregateRel extends SingleRel
             RelOptUtil.clone(child),
             groupCount,
             aggCalls);
+    }
+
+    public void explain(RelOptPlanWriter pw)
+    {
+        ArrayList names = new ArrayList(),
+            values = new ArrayList();
+        names.add("child");
+        names.add("groupCount");
+        values.add(new Integer(groupCount));
+        for (int i = 0; i < aggCalls.length; i++) {
+            names.add("agg#" + i);
+            values.add(aggCalls[i]);
+        }
+        pw.explain(
+            this,
+            (String []) names.toArray(new String[names.size()]),
+            values.toArray(new Object[values.size()]));
     }
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)
@@ -134,15 +158,18 @@ public class AggregateRel extends SingleRel
 
     public static class Call
     {
-        Aggregation aggregation;
-        int [] args;
+        public final Aggregation aggregation;
+        public final int [] args;
+        public final RelDataType type;
 
         public Call(
             Aggregation aggregation,
-            int [] args)
+            int [] args,
+            RelDataType type)
         {
             this.aggregation = aggregation;
             this.args = args;
+            this.type = type;
         }
 
         public Aggregation getAggregation()
@@ -153,6 +180,20 @@ public class AggregateRel extends SingleRel
         public int [] getArgs()
         {
             return args;
+        }
+
+        public String toString()
+        {
+            StringBuffer buf = new StringBuffer(aggregation.getName());
+            buf.append("(");
+            for (int i = 0; i < args.length; i++) {
+                if (i > 0) {
+                    buf.append(", ");
+                }
+                buf.append(args[i]);
+            }
+            buf.append(")");
+            return buf.toString();
         }
 
         // override Object
@@ -166,35 +207,9 @@ public class AggregateRel extends SingleRel
                 && Arrays.equals(args, other.args);
         }
 
-        public void implementNext(
-            JavaRelImplementor implementor,
-            JavaRel rel,
-            Expression accumulator)
+        public RelDataType getType()
         {
-            aggregation.implementNext(implementor, rel, accumulator, args);
-        }
-
-        /**
-         * Generates the expression to retrieve the result of this
-         * aggregation.
-         */
-        public Expression implementResult(Expression accumulator)
-        {
-            return aggregation.implementResult(accumulator);
-        }
-
-        public Expression implementStart(
-            JavaRelImplementor implementor,
-            JavaRel rel)
-        {
-            return aggregation.implementStart(implementor, rel, args);
-        }
-
-        public Expression implementStartAndNext(
-            JavaRelImplementor implementor,
-            JavaRel rel)
-        {
-            return aggregation.implementStartAndNext(implementor, rel, args);
+            return type;
         }
     }
 }

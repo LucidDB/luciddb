@@ -321,43 +321,20 @@ public abstract class SqlOperator
      * @param call the call to this operator
      * @param validator the active validator
      * @param scope validator scope
+     * @param operandScope validator scope in which to validate operands to
+     *    this call. Usually equal to scope, but may be different if the
+     *    operator is an aggregate function.
      */
     public void validateCall(
         SqlCall call,
         SqlValidator validator,
-        SqlValidator.Scope scope)
+        SqlValidator.Scope scope,
+        SqlValidator.Scope operandScope)
     {
         assert call.operator == this;
         final SqlNode[] operands = call.getOperands();
-        if (scope instanceof SqlValidator.AggregatingScope) {
-            SqlValidator.AggregatingScope aggScope =
-                (SqlValidator.AggregatingScope) scope;
-            if (isAggregator()) {
-                // If we're the 'SUM' node in 'select a + sum(b + c) from t
-                // group by a', then we should validate our arguments in
-                // the non-aggregating scope, where 'b' and 'c' are valid
-                // column references.
-                scope = aggScope.getScopeAboveAggregation();
-            } else {
-                // Check whether expression is constant within the group.
-                //
-                // If not, throws. Example, 'empno' in
-                //    SELECT empno FROM emp GROUP BY deptno
-                //
-                // If it perfectly matches an expression in the GROUP BY
-                // clause, we validate its arguments in the non-aggregating
-                // scope. Example, 'empno + 1' in
-                //
-                //   SELET empno + 1 FROM emp GROUP BY empno + 1
-
-                final boolean matches = aggScope.checkAggregateExpr(call);
-                if (matches) {
-                    scope = aggScope.getScopeAboveAggregation();
-                }
-            }
-        }
         for (int i = 0; i < operands.length; i++) {
-            operands[i].validateExpr(validator, scope);
+            operands[i].validateExpr(validator, operandScope);
         }
     }
 

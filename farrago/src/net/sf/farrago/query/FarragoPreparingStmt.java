@@ -834,7 +834,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
                 // always succeed
                 throw Util.newInternal(ex);
             }
-            RexNode exp = sqlToRelConverter.convertExpression(null, sqlNode);
+            RexNode exp = sqlToRelConverter.convertExpression(sqlNode);
 
             // TODO:  better memory usage estimate
             entry.initialize(exp,

@@ -40,6 +40,16 @@ public class SqlNodeList extends SqlNode
 
     private ArrayList list;
 
+    /**
+     * An immutable, empty SqlNodeList.
+     */
+    public static final SqlNodeList Empty =
+        new SqlNodeList(ParserPosition.ZERO) {
+            public void add(SqlNode node) {
+                throw new UnsupportedOperationException();
+            }
+        };
+
     //~ Constructors ----------------------------------------------------------
 
     /**

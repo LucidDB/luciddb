@@ -21,7 +21,8 @@
 
 package org.eigenbase.oj.rex;
 
-import org.eigenbase.sql.*;
+import org.eigenbase.rel.Aggregation;
+import org.eigenbase.sql.SqlOperator;
 
 
 /**
@@ -40,6 +41,12 @@ public interface OJRexImplementorTable
      * implementor registered.
      */
     public OJRexImplementor get(SqlOperator op);
+
+    /**
+     * Retrieves the implementor of an aggregate, or null if there is no
+     * implementor registered.
+     */
+    public OJAggImplementor get(Aggregation aggregation);
 }
 
 

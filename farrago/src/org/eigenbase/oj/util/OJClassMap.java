@@ -23,9 +23,7 @@ package org.eigenbase.oj.util;
 
 import openjava.mop.Environment;
 import openjava.mop.OJClass;
-import openjava.mop.Toolbox;
 import openjava.ptree.*;
-import openjava.ptree.util.*;
 
 import java.util.Hashtable;
 import java.util.Vector;

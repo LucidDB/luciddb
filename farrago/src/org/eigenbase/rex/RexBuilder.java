@@ -244,6 +244,18 @@ public class RexBuilder
     }
 
     /**
+     * Creates a call to a windowed agg.
+     */
+    public RexNode makeOver(
+        RelDataType type,
+        SqlCall aggCall,
+        RexNode[] exprs,
+        SqlWindow window)
+    {
+        return new RexOver(type, aggCall.operator, exprs, window);
+    }
+
+    /**
      * Creates a constant for the SQL <code>NULL</code> value.
      */
     public RexLiteral constantNull()

@@ -30,10 +30,13 @@ import openjava.mop.Toolbox;
 import openjava.ptree.*;
 
 import org.eigenbase.oj.util.JavaRexBuilder;
+import org.eigenbase.oj.util.OJUtil;
 import org.eigenbase.rel.AggregateRel;
 import org.eigenbase.rel.Aggregation;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeFactoryImpl;
+import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.rex.*;
 import org.eigenbase.util.Util;
 
@@ -60,7 +63,7 @@ class AggInternalTranslator extends InternalTranslator
 {
     ArrayList aggInputList;
     InternalTranslator nonAggTranslator;
-    ArrayList aggCallVector;
+    ArrayList aggCallList;
     Expression [] groups;
 
     AggInternalTranslator(
@@ -68,13 +71,13 @@ class AggInternalTranslator extends InternalTranslator
         RelNode [] inputs,
         Expression [] groups,
         ArrayList aggInputList,
-        ArrayList aggCallVector,
+        ArrayList aggCallList,
         JavaRexBuilder javaRexBuilder)
     {
         super(queryInfo, inputs, javaRexBuilder);
         this.groups = groups;
         this.aggInputList = aggInputList;
-        this.aggCallVector = aggCallVector;
+        this.aggCallList = aggCallList;
         this.nonAggTranslator =
             new InternalTranslator(queryInfo, inputs, javaRexBuilder);
     }
@@ -148,9 +151,15 @@ class AggInternalTranslator extends InternalTranslator
         if (method == null) {
             return null;
         }
+        RelDataType[] argTypes2 = new RelDataType[argTypes.length];
+        final RelDataTypeFactory relDataTypeFactory =
+            RelDataTypeFactoryImpl.threadInstance();
+        for (int i = 0; i < argTypes.length; i++) {
+            argTypes2[i] = OJUtil.ojToType(relDataTypeFactory, argTypes[i]);
+        }
         return BuiltinAggregation.create(
             method.getName(),
-            argTypes);
+            argTypes2);
     }
 
     /**
@@ -208,15 +217,16 @@ outer:
             argIndexes[i] = aggInputList.size();
             aggInputList.add(arg);
         }
+        final RelDataType type = null; // todo:
         AggregateRel.Call aggCall =
-            new AggregateRel.Call(aggregation, argIndexes);
+            new AggregateRel.Call(aggregation, argIndexes, type);
 
         // create a new aggregate call, if there isn't already an
         // identical one
-        int k = aggCallVector.indexOf(aggCall);
+        int k = aggCallList.indexOf(aggCall);
         if (k < 0) {
-            k = aggCallVector.size();
-            aggCallVector.add(aggCall);
+            k = aggCallList.size();
+            aggCallList.add(aggCall);
         }
         return new RexAggVariable(k);
     }

@@ -163,7 +163,11 @@ public abstract class FarragoAtomicType extends FarragoType
 
     public boolean equalsSansNullability(RelDataType type)
     {
-        throw Util.needToImplement(this);
+        if (type instanceof FarragoAtomicType) {
+            FarragoAtomicType that = (FarragoAtomicType) type;
+            return this.simpleType.equals(that.simpleType);
+        }
+        return false;
     }
 
     /**

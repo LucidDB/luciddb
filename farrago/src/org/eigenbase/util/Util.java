@@ -109,6 +109,18 @@ public class Util extends Toolbox
     }
 
     /**
+     * Does nothing with its argument. Call this method when you have a value
+     * you are not interested in, but you don't want the compiler to warn
+     * that you are not using it.
+     */
+    public static final void discard(double d)
+    {
+        if (false) {
+            discard(d);
+        }
+    }
+
+    /**
      * Records that an exception has been caught but will not be re-thrown.
      * If the tracer is not null, logs the exception to the tracer.
      *
@@ -646,7 +658,7 @@ public class Util extends Toolbox
 
     /**
      * @deprecated Use {@link java.util.Arrays#asList(Object[])} instead
-     * 
+     *
      * Converts the elements of an array into a {@link java.util.List}
      */
     public static List toList(final Object [] array)

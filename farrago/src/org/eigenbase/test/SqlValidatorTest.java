@@ -46,8 +46,9 @@ public class SqlValidatorTest extends SqlValidatorTestCase
      * @deprecated Deprecated so that usages of this constant will show up in
      * yellow in Intellij and maybe someone will fix them.
      */
-    private static final boolean todo = false;
+    protected static final boolean todo = false;
     private static final boolean bug269fixed = false;
+    public static final boolean todoTypeInference = false;
 
     //~ Methods ---------------------------------------------------------------
 
@@ -1019,7 +1020,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     }
 
     public void testOneWinFunc() {
-        checkWinFuncExp("abs(2) over (partition by sal)");
+        checkWinFuncExp("sum(2) over (partition by sal)");
     }
 
     public void testNameResolutionInValuesClause() {
@@ -1092,7 +1093,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         // fail: alias 'd' obscures original table name 'dept'
         checkFails("select * from emp as emps, dept as d" + NL +
             "where dept.deptno > 5",
-            "Table 'DEPT' not found", 2, 7);
+            "Unknown identifier 'DEPT'", 2, 7);
         // fail: ambiguous column reference in ON clause
         checkFails("select * from emp as e" + NL +
             " join dept as d" + NL +
@@ -1194,7 +1195,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkFails("select * from emp" + NL +
             "union" + NL +
             "select * from dept where empno < 10",
-            "Column 'EMPNO' not found in any table", 3, 26);
+            "Unknown identifier 'EMPNO'", 3, 26);
     }
 
     // TODO: implement UNION
@@ -1276,6 +1277,20 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkFails("select * from (emp join bonus using (job))" + NL +
             "join (select 1 as job from (true)) using (job)",
             "ambig", 1, 1);
+    }
+
+    public void testWhere() {
+        checkFails("select * from emp where sal",
+            "WHERE clause must be a condition", 1, 25);
+    }
+
+    public void testHaving() {
+        checkFails("select * from emp having sum(sal)",
+            "HAVING clause must be a condition", 1, 26);
+        checkFails("select * from emp having sum(sal) > 10",
+            "Expression '\\*' is not being grouped", 1, 8);
+        // agg in select and having, no group by
+        check("select sum(sal + sal) from emp having sum(sal) > 10");
     }
 
     public void testOrder() {
@@ -1543,10 +1558,21 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExpFails("(CURRENT_DATE - LOCALTIME) YEAR TO MONTH", "(?s).*Parameters must be of the same type.*");
     }
 
+    public void testBind() {
+        check("select * from emp where deptno = ?");
+        check("select * from emp where deptno = ? and sal < 100000");
+        if (todoTypeInference)
+        check("select case when deptno = ? then 1 else 2 end from emp");
+        if (todoTypeInference)
+        check("select deptno from emp group by substring(name from ? for ?)");
+        if (todoTypeInference)
+        check("select deptno from emp group by case when deptno = ? then 1 else 2 end");
+        check("select 1 from emp having sum(sal) < ?");
+    }
+
     public void testNew() {
         // (To debug invidual statements, paste them into this method.)
     }
-
 }
 
 

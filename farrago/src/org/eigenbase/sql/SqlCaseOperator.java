@@ -126,6 +126,29 @@ public class SqlCaseOperator extends SqlOperator
 
     //~ Methods ---------------------------------------------------------------
 
+    public void validateCall(
+        SqlCall call,
+        SqlValidator validator,
+        SqlValidator.Scope scope,
+        SqlValidator.Scope operandScope)
+    {
+        final SqlCase sqlCase = (SqlCase) call;
+        final SqlNodeList whenOperands = sqlCase.getWhenOperands();
+        final SqlNodeList thenOperands = sqlCase.getThenOperands();
+        final SqlNode elseOperand = sqlCase.getElseOperand();
+        for (int i = 0; i < whenOperands.size(); i++) {
+            SqlNode operand = whenOperands.get(i);
+            operand.validateExpr(validator, operandScope);
+        }
+        for (int i = 0; i < thenOperands.size(); i++) {
+            SqlNode operand = thenOperands.get(i);
+            operand.validateExpr(validator, operandScope);
+        }
+        if (elseOperand != null) {
+            elseOperand.validateExpr(validator, operandScope);
+        }
+    }
+
     protected boolean checkArgTypes(
         SqlCall call,
         SqlValidator validator,
@@ -133,15 +156,15 @@ public class SqlCaseOperator extends SqlOperator
         boolean throwOnFailure)
     {
         SqlCase caseCall = (SqlCase) call;
-        List whenList = caseCall.getWhenOperands();
-        List thenList = caseCall.getThenOperands();
+        SqlNodeList whenList = caseCall.getWhenOperands();
+        SqlNodeList thenList = caseCall.getThenOperands();
         assert (whenList.size() == thenList.size());
 
         //checking that search conditions are ok...
         RelDataType boolType =
             validator.typeFactory.createSqlType(SqlTypeName.Boolean);
         for (int i = 0; i < whenList.size(); i++) {
-            SqlNode node = (SqlNode) whenList.get(i);
+            SqlNode node = whenList.get(i);
 
             //should throw validation error if something wrong...
             RelDataType type = validator.deriveType(scope, node);
@@ -156,7 +179,7 @@ public class SqlCaseOperator extends SqlOperator
 
         boolean foundNotNull = false;
         for (int i = 0; i < thenList.size(); i++) {
-            SqlNode node = (SqlNode) thenList.get(i);
+            SqlNode node = thenList.get(i);
             if (!SqlUtil.isNullLiteral(node, false)) {
                 foundNotNull = true;
             }
@@ -183,11 +206,11 @@ public class SqlCaseOperator extends SqlOperator
         SqlCall call)
     {
         SqlCase caseCall = (SqlCase) call;
-        List thenList = caseCall.getThenOperands();
+        SqlNodeList thenList = caseCall.getThenOperands();
         ArrayList nullList = new ArrayList();
         RelDataType [] argTypes = new RelDataType[thenList.size() + 1];
         for (int i = 0; i < thenList.size(); i++) {
-            SqlNode node = (SqlNode) thenList.get(i);
+            SqlNode node = thenList.get(i);
             argTypes[i] = validator.deriveType(scope, node);
             if (SqlUtil.isNullLiteral(node, false)) {
                 nullList.add(node);
@@ -218,13 +241,13 @@ public class SqlCaseOperator extends SqlOperator
     public RelDataType getType(SqlValidator validator,
             SqlValidator.Scope scope, SqlCall call) {
         SqlCase caseCall = (SqlCase) call;
-        List whenList = caseCall.getWhenOperands();
-        List thenList = caseCall.getThenOperands();
+        SqlNodeList whenList = caseCall.getWhenOperands();
+        SqlNodeList thenList = caseCall.getThenOperands();
         for(int i = 0; i < whenList.size(); i++) {
-            final SqlNode when = (SqlNode)whenList.get(i);
+            final SqlNode when = whenList.get(i);
             RelDataType nodeType = validator.deriveType(scope, when);
             validator.setValidatedNodeType(when, nodeType);
-            final SqlNode then = (SqlNode)thenList.get(i);
+            final SqlNode then = thenList.get(i);
             nodeType = validator.deriveType(scope, then);
             validator.setValidatedNodeType(then, nodeType);
         }

@@ -20,64 +20,52 @@
 
 package org.eigenbase.sql.fun;
 
-import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.type.OperandsTypeChecking;
+import org.eigenbase.sql.type.ReturnTypeInference;
 
 /**
  * An operator describing a window function specification.
  *
- * <p>
- * Operands are as follows:
+ * <p>Operands are as follows:<ul>
+ * <li>0: name of window function ({@link org.eigenbase.sql.SqlCall})</li>
  *
- * <ul>
- * <li>
- * 0: name of window function ({@link org.eigenbase.sql.SqlCall})
- * </li>
- * <li>
- * 1: window name ({@link org.eigenbase.sql.SqlLiteral}) or window in-line specification (@link SqlWindowOperator})
- * </li>
- * <li>
- * </p>
+ * <li>1: window name ({@link org.eigenbase.sql.SqlLiteral})
+ * or window in-line specification ({@link SqlWindowOperator})</li>
+ *
+ * </ul></p>
  *
  * @author klo
  * @since Nov 4, 2004
  * @version $Id$
  **/
-public class SqlOverOperator extends SqlOperator
+public class SqlOverOperator extends SqlBinaryOperator
 {
-
     public SqlOverOperator()
     {
-        super("over", SqlKind.WindowFun, 1, true, null, null, null);
+        super("OVER", SqlKind.Over, 10, true,
+            ReturnTypeInference.useFirstArgType, null,
+            OperandsTypeChecking.typeAnyAny);
     }
 
-    public SqlSyntax getSyntax()
+    public void validateCall(
+        SqlCall call,
+        SqlValidator validator,
+        SqlValidator.Scope scope,
+        SqlValidator.Scope operandScope)
     {
-        return SqlSyntax.Special;
+        assert call.operator == this;
+        final SqlNode[] operands = call.getOperands();
+        assert operands.length == 2;
+        SqlCall aggCall = (SqlCall) operands[0];
+        if (!aggCall.operator.isAggregator()) {
+            throw validator.newValidationError(aggCall,
+                EigenbaseResource.instance().newOverNonAggregate());
+        }
+        final SqlNode windowOrRef = operands[1];
+        validator.validateWindow(windowOrRef, scope);
     }
-
-
-    public SqlCall createCall(
-            SqlNode[] operands,
-            ParserPosition pos)
-    {
-        return new SqlOver(this, operands, pos);
-    }
-
-    public void unparse(
-            SqlWriter writer,
-            SqlNode[] operands,
-            int leftPrec,
-            int rightPrec)
-    {
-        SqlCall windowFunction = (SqlCall) operands[SqlOver.WINDOW_FUNCITON_OPERAND];
-        windowFunction.unparse(writer, 0, 0);
-
-        writer.print(" OVER ");
-        SqlNode windowSpecification = operands[SqlOver.WINDOW_SPEC_OPERARND];
-        windowSpecification.unparse(writer, 0, 0);
-    }
-
 }
 
 // End SqlOverOperator.java

@@ -6,8 +6,8 @@
   -->
 <!--
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2004-2004 Disruptive Tech
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2004-2004 Disruptive Tech
 // You must accept the terms in LICENSE.html to use this software.
 //
 // This program is free software; you can redistribute it and/or
@@ -234,6 +234,21 @@
     <text>Aggregate expression is illegal in WHERE clause</text>
 </exception>
 
+<exception id="120350" name="WhereMustBeBoolean" className="org.eigenbase.sql.SqlValidatorException">
+    <text>WHERE clause must be a condition</text>
+</exception>
+
+<exception id="120360" name="HavingMustBeBoolean" className="org.eigenbase.sql.SqlValidatorException">
+    <text>HAVING clause must be a condition</text>
+</exception>
+
+<exception id="120370" name="OverNonAggregate" className="org.eigenbase.sql.SqlValidatorException">
+    <text>OVER must be applied to aggregate function</text>
+</exception>
+
+<exception id="120380" name="CannotOverrideWindowAttribute" className="org.eigenbase.sql.SqlValidatorException">
+    <text>Cannot override window attribute</text>
+</exception>
 
 <!-- ====================================================================== -->
 <!-- Eigenbase Generic resources 130,000 - 140,000 -->
