@@ -57,9 +57,7 @@ for i in $(find $LOGDIR/* -type d -maxdepth 0); do
    rm -f $i/latest.xml
    # redirect stderr if file doesn't exist.
    mostRecentXml="$(ls $i/*.xml 2>/dev/null | tail -1)" 
-	echo "before if " $mostRecentXml;
    if [ "$mostRecentXml" != "" ]; then
-	echo "in if " $mostRecentXml;
        ln -s $mostRecentXml $i/latest.xml
    fi
 
