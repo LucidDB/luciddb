@@ -22,7 +22,8 @@
 
 package org.eigenbase.javac;
 
-import net.janino.*;
+import org.codehaus.janino.*;
+
 import org.eigenbase.util.*;
 
 import java.io.*;
