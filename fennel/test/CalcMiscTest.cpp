@@ -42,6 +42,8 @@ class CalcMiscTest : virtual public TestBase, public TraceSource
 {
     void testCalcStatusReg();
     void testCalcRefInst();
+    void testCalcReturn();
+    void testCalcRaise();
     
 public:
     explicit CalcMiscTest()
@@ -51,6 +53,8 @@ public:
         CalcInit::instance();
         FENNEL_UNIT_TEST_CASE(CalcMiscTest, testCalcStatusReg);
         FENNEL_UNIT_TEST_CASE(CalcMiscTest, testCalcRefInst);
+        FENNEL_UNIT_TEST_CASE(CalcMiscTest, testCalcReturn);
+        FENNEL_UNIT_TEST_CASE(CalcMiscTest, testCalcRaise);
         
     }
     
@@ -224,6 +228,108 @@ CalcMiscTest::testCalcRefInst()
     }
 }
 
+void
+CalcMiscTest::testCalcReturn()
+{
+    ostringstream pg("");
+
+    pg << "S u4;" << endl;
+    pg << "C u4, u4, u4;" << endl;
+    pg << "V 4, 5, 6;" << endl;
+    pg << "T;" << endl;
+    pg << "MOVE S 0, C 0;" << endl;
+    pg << "RETURN;" << endl;
+    pg << "MOVE S 0, C 1;" << endl;
+
+    // BOOST_MESSAGE(pg.str());
+
+    Calculator calc;
+    
+    try {
+        calc.assemble(pg.str().c_str());
+    }
+    catch (FennelExcn& ex) {
+        BOOST_MESSAGE("Assemble exception " << ex.getMessage());
+        BOOST_REQUIRE(0);
+    }
+
+    TupleDataWithBuffer outTuple(calc.getOutputRegisterDescriptor());
+    TupleDataWithBuffer inTuple(calc.getInputRegisterDescriptor());
+
+    calc.bind(&inTuple, &outTuple);
+    calc.exec();
+
+    TupleData const * const statusTuple = calc.getStatusRegister();
+#if 0
+    TupleDescriptor statusDesc = calc.getStatusRegisterDescriptor();
+    TuplePrinter tuplePrinter;
+    tuplePrinter.print(cout, statusDesc, *statusTuple);
+    cout << endl;
+#endif
+
+    BOOST_CHECK_EQUAL(*(reinterpret_cast<uint32_t *>
+                        (const_cast<PBuffer>((*statusTuple)[0].pData))),
+                      4);
+}
+
+
+void
+CalcMiscTest::testCalcRaise()
+{
+    ostringstream pg("");
+
+    pg << "I u4;" << endl;
+    pg << "S u4;" << endl;
+    pg << "C u4, u4, vc,5, vc,5;" << endl;
+    pg << "V 4, 5, 0x" << stringToHex("12345") << ",;" << endl;
+    pg << "T;" << endl;
+    pg << "MOVE S0, C0;" << endl;
+    pg << "RAISE C2;" << endl;
+    pg << "RAISE C3;" << endl; // null should induce no-op mode;
+    pg << "MOVE S0, C1;" << endl;
+    pg << "RETURN;" << endl;
+
+    //    BOOST_MESSAGE(pg.str());
+
+    Calculator calc;
+    
+    try {
+        calc.assemble(pg.str().c_str());
+    }
+    catch (FennelExcn& ex) {
+        BOOST_MESSAGE("Assemble exception " << ex.getMessage());
+        BOOST_REQUIRE(0);
+    }
+
+    TupleDataWithBuffer outTuple(calc.getOutputRegisterDescriptor());
+    TupleDataWithBuffer inTuple(calc.getInputRegisterDescriptor());
+
+    calc.bind(&inTuple, &outTuple);
+    calc.exec();
+
+    TupleData const * const statusTuple = calc.getStatusRegister();
+#if 0
+    TupleDescriptor statusDesc = calc.getStatusRegisterDescriptor();
+    TuplePrinter tuplePrinter;
+    tuplePrinter.print(cout, statusDesc, *statusTuple);
+    cout << endl;
+#endif
+
+    BOOST_CHECK_EQUAL(*(reinterpret_cast<uint32_t *>
+                        (const_cast<PBuffer>((*statusTuple)[0].pData))),
+                      5);
+
+    deque<CalcMessage>::iterator iter = calc.mWarnings.begin();
+    deque<CalcMessage>::iterator end = calc.mWarnings.end();
+
+    //BOOST_MESSAGE("warnings: |" << calc.warnings() << "|");
+
+    BOOST_CHECK(iter != end);
+    BOOST_CHECK_EQUAL(iter->pc, 1);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, "12345"));
+    iter++;
+    BOOST_CHECK(iter == end);
+}
 
 FENNEL_UNIT_TEST_SUITE(CalcMiscTest);
 

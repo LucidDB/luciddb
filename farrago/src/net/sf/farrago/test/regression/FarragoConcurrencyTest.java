@@ -200,7 +200,8 @@ public class FarragoConcurrencyTest
     /**
      * Test concurrent select statements with a join.
      */
-    public void testConcurrentJoinNoLockStep()
+    // REVIEW: SZ: 8/3/2004: disable pending resolution of dtbug 103
+    public void _testConcurrentJoinNoLockStep()
         throws Exception
     {
         FarragoTestTimedCommandGenerator cmdGen =

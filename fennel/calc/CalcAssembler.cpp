@@ -62,7 +62,7 @@ void CalcAssembler::init()
 
 int CalcAssembler::assemble(const char* program)
 {
-    int res;
+    int res = 0;
     istringstream istr(program);
     mLexer.switch_streams(&istr, 0);
     try {
@@ -79,7 +79,7 @@ int CalcAssembler::assemble(const char* program)
 
 int CalcAssembler::assemble()
 {
-    int res;
+    int res = 0;
     try {
         mCalc->mIsAssembling = true;
         res = CalcYYparse((void*) this);

@@ -22,6 +22,8 @@
 
 package net.sf.saffron.sql;
 
+import net.sf.saffron.util.Util;
+
 /**
  * A postfix unary operator.
  */
@@ -45,7 +47,8 @@ public abstract class SqlPostfixOperator extends SqlOperator
         return SqlSyntax.Postfix;
     }
 
-    protected String getSignatureTemplate() {
+    protected String getSignatureTemplate(final int operandsCount) {
+        Util.discard(operandsCount);
         return "{1} {0}";
     }
 

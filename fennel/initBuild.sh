@@ -1,23 +1,39 @@
 #!/bin/bash
 # $Id$
 
-usagemsg="Usage:  initBuild.sh [--with-farrago|--without-farrago]
-                     {--with-icu|--without-icu}";
+usagemsg="Usage:  initBuild.sh [--with[out]-farrago] [--with[out]-icu] [--with[out]-optimization] [--skip-thirdparty]";
 
 if [ "$1" == "--with-farrago" -o "$1" == "--without-farrago" ] ; then
     FARRAGO_FLAG=$1
-else
-    echo $usagemsg;
-    exit -1;
+    shift
 fi
 
-if [ "$2" == "--with-icu" -o "$2" == "--without-icu" ] ; then
+if [ "$1" == "--with-icu" -o "$1" == "--without-icu" ] ; then
     # override default
-    ICU_FLAG=$2
-elif [ "$2" == "" ] ; then
+    ICU_FLAG=$1
+    shift
+else
     # use default
     ICU_FLAG=
+fi
+
+if [ "$1" == "--with-optimization" -o "$1" == "--without-optimization" ] ; then
+    OPT_FLAG=$1
+    shift
 else
+    # default to unoptimized build
+    OPT_FLAG="--without-optimization"
+fi
+
+if [ "$1" == "--skip-thirdparty" ] ; then
+    build_thirdparty=false
+    shift
+else
+    build_thirdparty=true
+    shift
+fi
+
+if [ -n "$1" ] ; then
     echo $usagemsg;
     exit -1;
 fi
@@ -67,7 +83,7 @@ rm -rf autom4te.cache
 autoreconf --force --install
 ./configure --with-boost=`pwd`/../thirdparty/boost \
     --with-stlport=`pwd`/../thirdparty/stlport \
-    $FARRAGO_FLAG $ICU_CONF $MINGW32_TARGET
+    $FARRAGO_FLAG $ICU_CONF $MINGW32_TARGET $OPT_FLAG
 
 if $cygwin ; then
     unset CC
@@ -75,14 +91,16 @@ if $cygwin ; then
 fi
 
 # Build thirdparty libaries required by Fennel
-cd build
-./buildStlportLibs.sh
-./buildBoostLibs.sh
-if [ $ICU_FLAG == "--with-icu" ] ; then
-    ./buildICULibs.sh
+if $build_thirdparty ; then
+    cd build
+    ./buildStlportLibs.sh
+    ./buildBoostLibs.sh
+    if [ $ICU_FLAG == "--with-icu" ] ; then
+        ./buildICULibs.sh
+    fi
+    cd ..
 fi
 
 # Build Fennel itself
-cd ..
 make clean
 make

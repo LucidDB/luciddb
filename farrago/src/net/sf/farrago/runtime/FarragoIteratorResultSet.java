@@ -126,6 +126,10 @@ public class FarragoIteratorResultSet extends IteratorResultSet
             BytePointer bytePointer = (BytePointer) obj;
             obj = bytePointer.getNullableData();
             wasNull = false;
+        } else if (obj instanceof SqlDateTimeWithoutTZ) {
+            SqlDateTimeWithoutTZ datetime = (SqlDateTimeWithoutTZ) obj;
+            obj = datetime.getNullableData();
+            wasNull = false;
         } else {
             wasNull = false;
         }

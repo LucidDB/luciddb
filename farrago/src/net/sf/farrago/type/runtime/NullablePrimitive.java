@@ -19,7 +19,11 @@
 
 package net.sf.farrago.type.runtime;
 
+import net.sf.farrago.resource.*;
+
 import net.sf.saffron.util.*;
+
+import java.math.*;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -83,21 +87,31 @@ public abstract class NullablePrimitive
     }
 
     // implement AssignableValue
-    public void assignFrom(Object number)
+    public void assignFrom(Object obj)
     {
-        if (number == null) {
+        if (obj == null) {
             setNull(true);
-        } else if (number instanceof Number) {
+        } else if (obj instanceof Number) {
             setNull(false);
-            setNumber((Number) number);
-        } else if (number instanceof NullablePrimitive) {
-            NullablePrimitive nullable = (NullablePrimitive) number;
+            setNumber((Number) obj);
+        } else if (obj instanceof NullablePrimitive) {
+            NullablePrimitive nullable = (NullablePrimitive) obj;
             assignFrom(nullable.getNullableData());
-        } else {
-            assert(number instanceof Boolean) : number.getClass().getName();
+        } else if (obj instanceof Boolean) {
             setNull(false);
-            Boolean b = (Boolean) number;
+            Boolean b = (Boolean) obj;
             setNumber(b.booleanValue() ? INT_ONE : INT_ZERO);
+        } else {
+            assert(obj instanceof String) : obj.getClass().getName();
+            String s = (String) obj;
+            Number n;
+            try {
+                n = new BigDecimal(s);
+            } catch (NumberFormatException ex) {
+                throw FarragoResource.instance().
+                    newAssignFromFailed(s, "NUMERIC", ex.toString());
+            }
+            setNumber(n);
         }
     }
 

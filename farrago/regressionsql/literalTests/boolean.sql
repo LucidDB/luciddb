@@ -29,11 +29,11 @@ insert into t_boolean values(timestamp '2004-12-01 12:01:01',null);
 -- insert the right value
 insert into t_boolean values(true,null);
 insert into t_boolean values(TRUE,null);
-insert into t_boolean values(false,null);
+insert into t_boolean values(false,unknown);
 insert into t_boolean values(FALSE,null);
 
--- null value test
---insert into t_boolean values(null, null); 
+-- null value test, should fail with error state 22, code 004
+insert into t_boolean values(null, null); 
 
 select * from t_boolean;
 

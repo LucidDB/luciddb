@@ -78,7 +78,7 @@ public:
 void
 SqlRegExpTest::testSqlRegExpLikeAsciiTrue()
 {
-    bool result;
+    bool result = false;
     int i;
 
     char* test[][2] = { 
@@ -172,7 +172,7 @@ SqlRegExpTest::testSqlRegExpLikeAsciiTrue()
 void
 SqlRegExpTest::testSqlRegExpLikeAsciiFalse()
 {
-    bool result;
+    bool result = false;
     int i;
     char* test[][2] = { 
         // pattern,    matchValue
@@ -264,7 +264,7 @@ SqlRegExpTest::testSqlRegExpLikeAsciiFalse()
 void
 SqlRegExpTest::testSqlRegExpLikeAsciiEscapeTrue()
 {
-    bool result;
+    bool result = false;
     int i;
 
     char* test[][3] = { 
@@ -362,7 +362,7 @@ SqlRegExpTest::testSqlRegExpLikeAsciiEscapeTrue()
 void
 SqlRegExpTest::testSqlRegExpLikeAsciiEscapeFalse()
 {
-    bool result;
+    bool result = false;
     int i;
 
     char* test[][3] = { 
@@ -457,8 +457,8 @@ SqlRegExpTest::testSqlRegExpLikeAsciiEscapeFalse()
 void
 SqlRegExpTest::testSqlRegExpLikeAsciiException()
 {
-    bool caught;
-    bool result;
+    bool caught = false;
+    bool result = false;
     int i;
 
     char* test[][4] = { 
@@ -501,7 +501,7 @@ SqlRegExpTest::testSqlRegExpLikeAsciiException()
 void
 SqlRegExpTest::testSqlRegExpSimilarAscii()
 {
-    bool result;
+    bool result = false;
     int i;
 
     char* test[][3] = { 
@@ -1088,7 +1088,7 @@ SqlRegExpTest::testSqlRegExpSimilarAscii()
 void
 SqlRegExpTest::testSqlRegExpSimilarAsciiEscape()
 {
-    bool result;
+    bool result = false;
     int i;
 
     char* test[][4] = { 
@@ -1237,8 +1237,8 @@ SqlRegExpTest::testSqlRegExpSimilarAsciiEscape()
 void
 SqlRegExpTest::testSqlRegExpSimilarAsciiException()
 {
-    bool caught;
-    bool result;
+    bool caught = false;
+    bool result = false;
     int i;
 
     char* test[][4] = { 

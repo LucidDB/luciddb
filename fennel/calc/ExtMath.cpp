@@ -26,6 +26,7 @@
 #include "fennel/calc/ExtMath.h"
 #include "fennel/calc/ExtendedInstructionTable.h"
 #include "fennel/tuple/StandardTypeDescriptor.h"
+#include <cstdlib>   // for std::abs()
 #include <math.h>
 
 FENNEL_BEGIN_NAMESPACE
@@ -114,14 +115,17 @@ mathAbs(RegisterRef<double>* result,
 
 void
 mathAbs(RegisterRef<long long>* result,
-	RegisterRef<long long>* x)
+        RegisterRef<long long>* x)
 {
-    assert(StandardTypeDescriptor::isExact(x->type()));
+    assert(x->type() == STANDARD_TYPE_INT_64);
 
     if (x->isNull()) {
         result->toNull();        
     } else {
-        result->value(labs(x->value()));
+        // Due to various include problems with gcc, it's easy to get
+        // abs doubly defined. Just arbitrarily using std::abs to
+        // avoid problems with gcc3.x built-ins.
+        result->value(std::abs(x->value()));
     }
 }
 

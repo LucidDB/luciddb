@@ -78,7 +78,9 @@ template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint, SqlDateTimeType dateT
 int
 SqlDateToStr(char *dest,
              int destStorageBytes,
-             int64_t const d )
+             int64_t const d,
+             bool fixed = false,  // e.g. char, else variable (varchar)
+             int padchar = ' ')
 {
     using namespace boost::posix_time; 
     using namespace boost::gregorian;
@@ -94,7 +96,7 @@ SqlDateToStr(char *dest,
             // we could use the millisecond() duration constructor,
             // instead of time_duration(...), but the time_duration was
             // the only way i could find didn't use an explicit long
-            // paramter, instead of the type parameter, since 
+            // parameter, instead of the type parameter, since 
             // int64_t == (long long) on (fc1) linux.
             boost::posix_time::ptime t = epoc + time_duration(0,0,0,d);
 
@@ -132,7 +134,13 @@ SqlDateToStr(char *dest,
                 throw std::logic_error("bad dateTimeType" + dateTimeType);
             }
 
-            return len;
+            if (fixed) {
+                memset(dest + len, padchar, destStorageBytes - len);
+                return destStorageBytes;
+            }
+            else {
+                return len;
+            }
         } else if (CodeUnitBytes == 2) {
             // TODO: Add UCS2 here
             throw std::logic_error("no UCS2");

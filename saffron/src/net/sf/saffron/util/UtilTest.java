@@ -25,6 +25,7 @@ import junit.framework.TestCase;
 import java.io.UnsupportedEncodingException;
 import java.io.StringWriter;
 import java.io.PrintWriter;
+import java.math.BigDecimal;
 
 /**
  * Unit test for {@link Util} and other classes in this package.
@@ -65,29 +66,57 @@ public class UtilTest extends TestCase
         assertPrintEquals("\"\\\\\\\"\\r\\n\"","\\\"\r\n",true);
     }
 
-        public void testToJavaId() throws UnsupportedEncodingException
-        {
-            assertEquals("ID$0$foo", Util.toJavaId("foo",0));
-            assertEquals("ID$0$foo_20_bar", Util.toJavaId("foo bar",0));
-            assertEquals("ID$0$foo__bar", Util.toJavaId("foo_bar",0));
-            assertEquals("ID$100$_30_bar", Util.toJavaId("0bar",100));
-            assertEquals("ID$0$foo0bar", Util.toJavaId("foo0bar",0));
-            assertEquals(
-                    "ID$0$it_27_s_20_a_20_bird_2c__20_it_27_s_20_a_20_plane_21_",
-                    Util.toJavaId("it's a bird, it's a plane!",0));
+    public void testScientificNotation() {
+        BigDecimal bd;
 
-            // Try some funny non-ASCII charsets
-            assertEquals("ID$0$_f6__cb__c4__ca__ae__c1__f9__cb_",
-                Util.toJavaId("\u00f6\u00cb\u00c4\u00ca\u00ae\u00c1\u00f9\u00cb",0));
-            assertEquals("ID$0$_f6cb__c4ca__aec1__f9cb_",
-                Util.toJavaId("\uf6cb\uc4ca\uaec1\uf9cb",0));
-            byte[] bytes1 = {  3, 12, 54, 23, 33, 23, 45, 21, 127, -34, -92, -113 };
-            assertEquals("ID$0$_3__c_6_17__21__17__2d__15__7f__6cd9__fffd_",
-                    Util.toJavaId(new String(bytes1, "EUC-JP"),0));
-            byte[] bytes2 = {  64, 32, 43, -45, -23, 0, 43, 54, 119, -32, -56, -34 };
-            assertEquals("ID$0$_30c__3617__2117__2d15__7fde__a48f_",
-                    Util.toJavaId(new String(bytes1, "UTF-16"),0));
-        }
+        bd = new BigDecimal("0.001234");
+        Util.assertEqualsVerbose("1.234E-3", Util.toScientificNotation(bd));
+        bd = new BigDecimal("0.001");
+        Util.assertEqualsVerbose("1E-3", Util.toScientificNotation(bd));
+        bd = new BigDecimal("-0.001");
+        Util.assertEqualsVerbose("-1E-3", Util.toScientificNotation(bd));
+        bd = new BigDecimal("1");
+        Util.assertEqualsVerbose("1E0", Util.toScientificNotation(bd));
+        bd = new BigDecimal("-1");
+        Util.assertEqualsVerbose("-1E0", Util.toScientificNotation(bd));
+        bd = new BigDecimal("1.0");
+        Util.assertEqualsVerbose("1.0E0", Util.toScientificNotation(bd));
+        bd = new BigDecimal("12345");
+        Util.assertEqualsVerbose("1.2345E4", Util.toScientificNotation(bd));
+        bd = new BigDecimal("12345.00");
+        Util.assertEqualsVerbose("1.234500E4", Util.toScientificNotation(bd));
+        bd = new BigDecimal("12345.001");
+        Util.assertEqualsVerbose("1.2345001E4", Util.toScientificNotation(bd));
+        //test truncate
+        bd = new BigDecimal("1.23456789012345678901");
+        Util.assertEqualsVerbose("1.2345678901234567890E0", Util.toScientificNotation(bd));
+        bd = new BigDecimal("-1.23456789012345678901");
+        Util.assertEqualsVerbose("-1.2345678901234567890E0", Util.toScientificNotation(bd));
+    }
+
+    public void testToJavaId() throws UnsupportedEncodingException
+    {
+        assertEquals("ID$0$foo", Util.toJavaId("foo",0));
+        assertEquals("ID$0$foo_20_bar", Util.toJavaId("foo bar",0));
+        assertEquals("ID$0$foo__bar", Util.toJavaId("foo_bar",0));
+        assertEquals("ID$100$_30_bar", Util.toJavaId("0bar",100));
+        assertEquals("ID$0$foo0bar", Util.toJavaId("foo0bar",0));
+        assertEquals(
+            "ID$0$it_27_s_20_a_20_bird_2c__20_it_27_s_20_a_20_plane_21_",
+            Util.toJavaId("it's a bird, it's a plane!",0));
+
+        // Try some funny non-ASCII charsets
+        assertEquals("ID$0$_f6__cb__c4__ca__ae__c1__f9__cb_",
+            Util.toJavaId("\u00f6\u00cb\u00c4\u00ca\u00ae\u00c1\u00f9\u00cb",0));
+        assertEquals("ID$0$_f6cb__c4ca__aec1__f9cb_",
+            Util.toJavaId("\uf6cb\uc4ca\uaec1\uf9cb",0));
+        byte[] bytes1 = {  3, 12, 54, 23, 33, 23, 45, 21, 127, -34, -92, -113 };
+        assertEquals("ID$0$_3__c_6_17__21__17__2d__15__7f__6cd9__fffd_",
+            Util.toJavaId(new String(bytes1, "EUC-JP"),0));
+        byte[] bytes2 = {  64, 32, 43, -45, -23, 0, 43, 54, 119, -32, -56, -34 };
+        assertEquals("ID$0$_30c__3617__2117__2d15__7fde__a48f_",
+            Util.toJavaId(new String(bytes1, "UTF-16"),0));
+    }
 
     private void assertPrintEquals(
         String expect,

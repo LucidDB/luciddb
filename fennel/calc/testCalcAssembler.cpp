@@ -1698,6 +1698,16 @@ void CalcAssemblerTest::testLiteralBinding()
     testCase2.expectAssemblerError("Invalid value");
     testCase2.assemble();
 
+    // Test binding a float with exponentials
+    CalcAssemblerTestCase testCase2b(__LINE__, "EXP", 
+                                    "O r, r; C r, r;\nV 24.0e-4, 54.0E6;\n"
+                                    "T;\nMOVE O0, C0; MOVE O1, C1;");
+    if (testCase2b.assemble()) {
+        testCase2b.setExpectedOutput<float>(0, 0.0024);
+        testCase2b.setExpectedOutput<float>(1, 54000000.0);
+        testCase2b.test();
+    }
+
     // Test binding a negative number to a u4
     CalcAssemblerTestCase testCase3(__LINE__, "NEGVALUE U4", 
                                     "O u4; C u4; V -513; T; ADD O0, C0, C0;");
@@ -1770,6 +1780,18 @@ void CalcAssemblerTest::testLiteralBinding()
     CalcAssemblerTestCase testCase12(__LINE__, "STRING (BINARY) TOO SHORT", teststr12.c_str());
     testCase12.expectAssemblerError("not equal");
     testCase12.assemble();
+
+    // Test bind a binary string (binary) of length 1
+    string teststr13;
+    teststr13 = "O b,1, vb,1; C b,1, vb,1; V 0xFF,0xFF;";
+    teststr13 += "T; MOVE O0, C0; MOVE O1, C1;";
+    CalcAssemblerTestCase testCase13(__LINE__, "STRING (BINARY) 1", teststr13.c_str());
+    if (testCase13.assemble()) {
+        uint8_t tmp = 0xFF;
+        testCase13.setExpectedOutput<uint8_t>(0, &tmp, 1);
+        testCase13.setExpectedOutput<uint8_t>(1, &tmp, 1);
+        testCase13.test();
+    }
 }
 
 void CalcAssemblerTest::testAdd()

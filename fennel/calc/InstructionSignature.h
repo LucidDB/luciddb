@@ -90,6 +90,10 @@ typedef Instruction*(*InstructionCreateFunction)
 // TODO: Consider merging the regular & extended tables.
 typedef std::map< string, InstructionCreateFunction > StringToCreateFn;
 
+//! StringCreateFnIterator is a STL iterator on the StringToCreateFn table.
+typedef 
+std::map< string, InstructionCreateFunction >::iterator StringToCreateFnIter;
+
 
 FENNEL_END_NAMESPACE
 

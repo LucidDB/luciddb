@@ -26,6 +26,7 @@ import net.sf.saffron.sql.*;
 import net.sf.saffron.sql.parser.ParserPosition;
 import net.sf.saffron.sql.test.SqlTester;
 import net.sf.saffron.util.EnumeratedValues;
+import net.sf.saffron.util.Util;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -67,14 +68,23 @@ public class SqlTrimFunction extends SqlFunction {
         writer.print(")");
     }
 
+    protected String getSignatureTemplate(final int operandsCount) {
+        switch (operandsCount) {
+        case 2: return "{0}({1} FROM {2})";
+        case 3: return "{0}({1} {2} FROM {3})";
+        }
+        assert(false);
+        return null;
+    }
+
     public SqlCall createCall(SqlNode[] operands, ParserPosition parserPosition) {
-        assert(3 == operands.length);
+        assert(3==operands.length);
         if (null == operands[0]) {
             operands[0] = Flag.createBoth(parserPosition);
         }
 
         if (null == operands[1]) {
-            operands[1] = SqlLiteral.createString("' '", null, parserPosition);
+            operands[1] = SqlLiteral.createString(" ", parserPosition);
         }
         return super.createCall(operands, parserPosition);
     }

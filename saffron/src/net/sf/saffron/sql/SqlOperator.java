@@ -170,8 +170,11 @@ public abstract class SqlOperator
      * {0} is the operator, subsequent nbrs are operands.
      * If null is returned, the default template will be used which
      * is opname(operand0, operand1, ...)
+     *
+     * {@param operandsCount} can is used with functions that can take a variable
+     * number of operands.
      */
-    protected String getSignatureTemplate() {
+    protected String getSignatureTemplate(final int operandsCount) {
         return null;
     }
 
@@ -423,7 +426,7 @@ public abstract class SqlOperator
      */
     protected String getAnonymousSignature(final ArrayList list){
         StringBuffer ret = new StringBuffer();
-        String template = getSignatureTemplate();
+        String template = getSignatureTemplate(list.size());
         if (null == template) {
             ret.append("'");
             ret.append(AnonymousReplaceString);
@@ -863,7 +866,10 @@ public abstract class SqlOperator
         /**
          * Helper function to {@link #getAllowedSignatures(SqlOperator)}
          */
-        protected void getAllowedSignatures(int depth, ArrayList list,StringBuffer buf,SqlOperator op) {
+        protected void getAllowedSignatures(int depth,
+                                            ArrayList list,
+                                            StringBuffer buf,
+                                            SqlOperator op) {
             assert(null!=m_types[depth]);
             assert(m_types[depth].length>0);
 

@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/farrago/regressionsql/str.sql#10 $
+0: jdbc:farrago:> -- $Id: //open/farrago/regressionsql/str.sql#11 $
 0: jdbc:farrago:> -- Full vertical system testing of non function statements
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel
@@ -259,6 +259,24 @@
 | false   |
 | true    |
 +---------+
+0: jdbc:farrago:> select name, name similar to 'Fr(ed|ank)+' from sales.emps order by 1;
++--------+---------+
+|  NAME  | EXPR$1  |
++--------+---------+
+| Eric   | false   |
+| Fred   | true    |
+| John   | false   |
+| Wilma  | false   |
++--------+---------+
+0: jdbc:farrago:> select city, city similar to '(%an)+cr*isco' from sales.emps order by 1;
++----------------+---------+
+|      CITY      | EXPR$1  |
++----------------+---------+
+|                |         |
+|                |         |
+| San Francisco  | true    |
+| Vancouver      | false   |
++----------------+---------+
 0: jdbc:farrago:> values '_a%' like 'a_aaa%' escape 'a';
 +---------+
 | EXPR$0  |

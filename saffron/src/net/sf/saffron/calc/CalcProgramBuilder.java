@@ -33,6 +33,7 @@ import java.nio.charset.Charset;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.math.BigDecimal;
 
 /**
  * Constructs a calculator assembly language program based upon a series
@@ -231,6 +232,15 @@ public class CalcProgramBuilder
     //~ PREFIX MINUS --------
     public static final InstructionDef
             nativeNeg = new NativeInstructionDef("NEG",2);
+    //~ RAISE ---------------
+    public static final InstructionDef Raise =
+        new InstructionDef("RAISE", 1) {
+                void add(CalcProgramBuilder builder, Register[] regs) {
+                    builder.assertRegisterLiteral(regs[0]);
+                    builder.assertIsVarchar(regs[0]);
+                    super.add(builder, regs);
+                }
+            };
     //~ ROUND ---------------
     /** Rounds approximate types to nearest integer but remains same type */
     public static final InstructionDef Round = new NativeInstructionDef("ROUND",2);
@@ -351,6 +361,12 @@ public class CalcProgramBuilder
                 writer.print(((Boolean) m_value).booleanValue() ? "1" : "0");
             } else if (m_value instanceof SqlLiteral) {
                 writer.print(((SqlLiteral)m_value).toValue());
+            } else if (m_value instanceof BigDecimal) {
+                if (m_opType.isExact()) {
+                    writer.print(m_value.toString());
+                } else {
+                    writer.print(Util.toScientificNotation((BigDecimal)m_value));
+                }
             } else {
                 writer.print(m_value.toString());
             }
@@ -454,6 +470,10 @@ public class CalcProgramBuilder
                 return true;
             }
             return false;
+        }
+
+        public boolean isNumeric() {
+            return isExact() || isApprox();
         }
 
         public static final int Bool_ordinal = 0;
@@ -687,6 +707,10 @@ public class CalcProgramBuilder
         final void add(CalcProgramBuilder builder, List registers) {
             add(builder, (Register[])
                     registers.toArray(new Register[registers.size()]));
+        }
+
+        final void add(CalcProgramBuilder builder, Register reg0) {
+            add(builder, new Register[]{reg0});
         }
 
         final void add(CalcProgramBuilder builder, Register reg0, Register reg1) {
@@ -1208,7 +1232,7 @@ public class CalcProgramBuilder
      * @param value Value
      * @return
      */
-    public Register newLiteral(OpType type, Object value, int storageBytes)
+    private Register newLiteral(OpType type, Object value, int storageBytes)
     {
         /**
          * A key-value pair class to hold<br>
@@ -1288,7 +1312,7 @@ public class CalcProgramBuilder
         return newLiteral(OpType.Int4, new java.lang.Integer(i), -1);
     }
 
-    public Register newInt8Literal(int i)
+    public Register newInt8Literal(int i) //REVIEW shouldnt this be a long type?
     {
         return newLiteral(OpType.Int8, new java.lang.Integer(i), -1);
     }
@@ -1299,7 +1323,7 @@ public class CalcProgramBuilder
         return newLiteral(OpType.Uint4, new java.lang.Integer(i), -1);
     }
 
-    public Register newUint8Literal(int i)
+    public Register newUint8Literal(int i) //REVIEW shouldnt this be a long type?
     {
         compilationAssert(i>=0,"Unsigned value was found to be negative. Value="+i);
         return newLiteral(OpType.Uint8, new java.lang.Integer(i), -1);
@@ -1327,6 +1351,21 @@ public class CalcProgramBuilder
     public Register newVarcharLiteral(String s)
     {
         return newLiteral(OpType.Varchar, s, stringByteCount(s));
+    }
+
+    /**
+     * Generates a reference to a string literal. The actual value will be
+     * a pointer to an array of bytes.
+     * This methods is just here temporary until newVarcharLiteral(string) can
+     * distinguise between ascii and non-ascii strings and should not be used
+     * in places of general code. Only very specific code where you know for a
+     * dead fact the string is the right length.
+     */
+    public Register newVarcharLiteral(String s, int length)
+    {
+        //TODO this methods is just here temporary until newVarcharLiteral(string)
+        //can distinguise between ascii and non-ascii strings
+        return newLiteral(OpType.Varchar, s, length);
     }
 
     /**
@@ -1466,6 +1505,17 @@ public class CalcProgramBuilder
     }
 
     /**
+     * Asserts that the register is declared as {@link RegisterSetType#Literal}
+     * @param result
+     */
+    protected void assertRegisterLiteral(Register result)
+    {
+        compilationAssert( result.getRegisterType().getOrdinal()==
+                           RegisterSetType.LiteralORDINAL,
+                           "Expected a Literal register.");
+    }
+
+    /**
      * Asserts that the register is not declared as {@link RegisterSetType#Literal}
      * @param result
      */
@@ -1548,6 +1598,16 @@ public class CalcProgramBuilder
                 register.getOpType().getOrdinal()==OpType.Double_ordinal
 
                 ,"Register is not of native OpType");
+    }
+
+    /**
+     * Asserts input is of type {@link OpType#Varchar}
+     * @param register
+     */
+    protected void assertIsVarchar(Register register) {
+        compilationAssert(
+                register.getOpType().getOrdinal()==OpType.Varchar_ordinal
+                ,"Register is not of type Varchar");
     }
 
     /**
@@ -1637,7 +1697,8 @@ public class CalcProgramBuilder
         addJumpBooleanWithCondition(jumpNotNullInstruction, line, reg);
     }
 
-    public void addReturn() {
+    public void
+        addReturn() {
         addInstruction(returnInstruction);
     }
 
@@ -1654,11 +1715,13 @@ public class CalcProgramBuilder
     }
 
     public void addLabelJumpNull(String label, Register reg) {
-        addJumpBooleanWithCondition(jumpNullInstruction, new Line(label), reg);
+        assertRegisterNotLiteral(reg);
+        addInstruction(jumpNullInstruction, new Line(label), reg);
     }
 
     public void addLabelJumpNotNull(String label, Register reg) {
-        addJumpBooleanWithCondition(jumpNotNullInstruction, new Line(label), reg);
+        assertRegisterNotLiteral(reg);
+        addInstruction(jumpNotNullInstruction, new Line(label), reg);
     }
 
     public void addLabel(String label) {

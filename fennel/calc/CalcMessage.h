@@ -25,18 +25,29 @@
 FENNEL_BEGIN_NAMESPACE
 
 /**
- * Object for passing warning and error messages from the Compiler
+ * An object for passing warning and error messages from execution.
+ *
+ * Values are copied, as they may refer to program state that could
+ * change before execution terminates, or change before a Calculator
+ * XO can read the message.
  */
 class CalcMessage 
 {
 public:
+    /**
+     * strA is a 5 character long string, per SQL99 22.1.
+     * strA can be either null terminated or simply 5 characters long.
+     */
     explicit
-    CalcMessage(const char* str, TProgramCounter pc) 
-        : mStr(str), mPc(pc)
-    { }
+    CalcMessage(const char* strA, TProgramCounter pcA) 
+        : pc(pcA)
+    {
+        memcpy(str, strA, 5);
+        str[5] = 0; // insure null termination
+    }
 
-    const char* mStr;
-    TProgramCounter mPc;
+    char str[6];
+    TProgramCounter pc;
 };
 
 FENNEL_END_NAMESPACE

@@ -25,6 +25,7 @@ import net.sf.saffron.sql.parser.ParserPosition;
 import net.sf.saffron.core.SaffronType;
 import net.sf.saffron.core.SaffronTypeFactory;
 import net.sf.saffron.util.EnumeratedValues;
+import net.sf.saffron.util.Util;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -61,7 +62,8 @@ public abstract class SqlBetweenOperator extends SqlSpecialOperator {
                 validator.typeFactory, getTypeArray(validator, scope, call));
     }
 
-    protected String getSignatureTemplate() {
+    protected String getSignatureTemplate(final int operandsCount) {
+        Util.discard(operandsCount);
         return "{1} {0} {2} AND {3}";
     }
 

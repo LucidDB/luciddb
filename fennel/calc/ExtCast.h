@@ -33,7 +33,7 @@ FENNEL_BEGIN_NAMESPACE
 //! 
 //! Cast an exact numeric to an Ascii string.
 //!
-//! May throw "XXXXXX"
+//! May throw "22001" data exception - string data, right truncation
 void
 castExactToStrA(RegisterRef<char*>* result,
                 RegisterRef<int64_t>* src);
@@ -42,7 +42,7 @@ castExactToStrA(RegisterRef<char*>* result,
 //! 
 //! Cast an approximate numeric to an Ascii string.
 //!
-//! May throw "XXXXXX"
+//! May throw "22001" data exception - string data, right truncation
 void
 castApproxToStrA(RegisterRef<char*>* result,
                  RegisterRef<double>* src);
@@ -51,7 +51,7 @@ castApproxToStrA(RegisterRef<char*>* result,
 //! 
 //! Cast a string to an exact numeric.
 //!
-//! May throw "XXXXXX"
+//! May throw "22018" data exception - invalid character value for cast
 void
 castStrtoExactA(RegisterRef<int64_t>* result,
                 RegisterRef<char*>* src);
@@ -60,7 +60,7 @@ castStrtoExactA(RegisterRef<int64_t>* result,
 //! 
 //! Cast a string to an approximate numeric.
 //!
-//! May throw "XXXXXX"
+//! May throw "22018" data exception - invalid character value for cast
 void
 castStrToApproxA(RegisterRef<double>* result,
                  RegisterRef<char*>* src);

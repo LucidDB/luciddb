@@ -455,6 +455,11 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
             return digest;
         }
 
+        public String getFullTypeString()
+        {
+            return digest;
+        }
+
         protected abstract String computeDigest();
 
         public boolean equalsSansNullability(SaffronType type) {
@@ -593,7 +598,7 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
                     sb.append(", ");
                 }
                 SaffronType type = types[i];
-                sb.append(type);
+                sb.append(type.getFullTypeString());
             }
             sb.append(")");
             return sb.toString();
@@ -689,7 +694,8 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
                     sb.append(", ");
                 }
                 SaffronField field = fields[i];
-                sb.append(field.getType() + " " + field.getName());
+                sb.append(
+                    field.getType().getFullTypeString() + " " + field.getName());
             }
             sb.append(")");
             return sb.toString();
@@ -775,7 +781,7 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
             }
             SqlTypeName thisSqlTypeName = getSqlTypeName();
             if (null==thisSqlTypeName) {
-                return false;
+                return false; //REVIEW wael 8/05/2004: shouldnt we assert instead?
             }
             SqlTypeName thatSqlTypeName;
 
@@ -791,7 +797,7 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
             SaffronTypeFactory  fac = getFactory();
             SaffronType thisType = createSqlTypeIgnorePrecOrScale(fac, thisSqlTypeName);
             SaffronType thatType = createSqlTypeIgnorePrecOrScale(fac, thatSqlTypeName);
-            return thisType.isAssignableFrom(thatType, false);
+            return thisType.isAssignableFrom(thatType, coerce);
         }
 
 
@@ -1015,6 +1021,10 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
         }
 
         public String toString() {
+            return digest;
+        }
+
+        public String getFullTypeString() {
             return digest;
         }
 
@@ -1341,7 +1351,8 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
             // we use coerceRules when we're casting
             coerceRules = (HashMap) rules.clone();
 
-            // Make numbers symmetrical
+            // Make numbers symmetrical and
+            // make varchar/char castable to/from numbers
             rule = new HashSet();
             rule.add(SqlTypeName.Tinyint);
             rule.add(SqlTypeName.Smallint);
@@ -1351,6 +1362,10 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
             rule.add(SqlTypeName.Float);
             rule.add(SqlTypeName.Real);
             rule.add(SqlTypeName.Double);
+
+            rule.add(SqlTypeName.Char);
+            rule.add(SqlTypeName.Varchar);
+
             coerceRules.put(SqlTypeName.Tinyint, rule);
             coerceRules.put(SqlTypeName.Smallint, rule);
             coerceRules.put(SqlTypeName.Integer, rule);
@@ -1359,21 +1374,27 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
             coerceRules.put(SqlTypeName.Real, rule);
             coerceRules.put(SqlTypeName.Decimal, rule);
             coerceRules.put(SqlTypeName.Double, rule);
+            coerceRules.put(SqlTypeName.Char, rule);
+            coerceRules.put(SqlTypeName.Varchar, rule);
 
             // binary is castable from varbinary
             rule = (HashSet) coerceRules.get(SqlTypeName.Binary);
             rule.add(SqlTypeName.Varbinary);
 
-            // char is castable from varchar
-            rule = (HashSet) coerceRules.get(SqlTypeName.Char);
-            rule.add(SqlTypeName.Varchar);
-
-            // varchar is castable from Date, time and timestamp
+            // varchar is castable from Date, time and timestamp and numbers
             rule = (HashSet) coerceRules.get(SqlTypeName.Varchar);
             rule.add(SqlTypeName.Date);
             rule.add(SqlTypeName.Time);
             rule.add(SqlTypeName.Timestamp);
 
+            // char is castable from Date, time and timestamp and numbers
+            rule = (HashSet) coerceRules.get(SqlTypeName.Char);
+            rule.add(SqlTypeName.Date);
+            rule.add(SqlTypeName.Time);
+            rule.add(SqlTypeName.Timestamp);
+
+            // Date, time, and timestamp are castable from
+            // char and varchar
             rule = (HashSet) coerceRules.get(SqlTypeName.Date);
             rule.add(SqlTypeName.Char);
             rule.add(SqlTypeName.Varchar);
@@ -1391,8 +1412,6 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
             rule.add(SqlTypeName.Date);
             rule.add(SqlTypeName.Time);
             rule.add(SqlTypeName.Timestamp);
-
-
         }
 
         public synchronized static AssignableFromRules instance() {

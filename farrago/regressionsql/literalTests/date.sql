@@ -135,6 +135,15 @@ SELECT date '01 08 1999' as D1 from values ('true');
 SELECT date '99 08 01' as D1 from values ('true');
 SELECT date '1999 08 01' as D1 from values ('true');
 
+-- more ISO format tests that should work
+select date '1969-0004-0026' from values ('true');
+select date '2005-4-3' from values ('true');
+select date '2004-2-30' from values ('true');
+select date '20005-4-3' from values ('true');
+-- these should fail (bad month or date)
+select date '2003-10-32' from values ('true');
+select date '2003-13-10' from values ('true');
+
 -- test datatype
 create schema test;
 set schema test;

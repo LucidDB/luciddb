@@ -197,7 +197,7 @@
     </access-rule>
 
     <pattern name="type.runtime.deps">
-      <include pattern="util.deps" />
+      <include pattern="resource.deps" />
       <include pattern="type.runtime" />
     </pattern>
 

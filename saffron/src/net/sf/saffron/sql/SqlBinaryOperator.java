@@ -22,6 +22,8 @@
 
 package net.sf.saffron.sql;
 
+import net.sf.saffron.util.Util;
+
 /**
  * <code>SqlBinaryOperator</code> is a binary operator.
  */
@@ -52,7 +54,8 @@ public abstract class SqlBinaryOperator extends SqlOperator
         return SqlSyntax.Binary;
     }
 
-    protected String getSignatureTemplate() {
+    protected String getSignatureTemplate(final int operandsCount) {
+        Util.discard(operandsCount);
         //op0 opname op1
         return "{1} {0} {2}";
     }

@@ -159,6 +159,22 @@ public interface SaffronType
      * get the SqlTypeName for this SaffronType.
      */
     public SqlTypeName getSqlTypeName();
+
+    /**
+     * @return this type as a string without detail
+     * such as character set and nullability
+     */
+    public String toString();
+
+    /**
+     * Compute a string from this type with full detail such as character set
+     * and nullability.  This string must serve as a "digest" for the type,
+     * meaning two types can be considered identical iff their digests are
+     * equal.
+     *
+     * @return the full type string
+     */
+    public String getFullTypeString();
 }
 
 

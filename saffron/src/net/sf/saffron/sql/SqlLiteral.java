@@ -358,8 +358,15 @@ public class SqlLiteral extends SqlNode
         }
 
         public void unparse(SqlWriter writer, int leftPrec, int rightPrec) {
+            writer.print(toValue());
+        }
+
+        public String toValue() {
             BigDecimal bd = (BigDecimal) _value;
-            writer.print(_value.toString());
+            if (m_isExact) {
+                return _value.toString();
+            }
+            return Util.toScientificNotation(bd);
         }
 
         public SaffronType createSqlType(SaffronTypeFactory typeFactory) {
@@ -392,7 +399,7 @@ public class SqlLiteral extends SqlNode
 
     /**
      * The type with which this literal was declared. This type is very
-     * approximate: the literal may have a differnt type once validated. For
+     * approximate: the literal may have a different type once validated. For
      * example, all numeric literals have a type name of
      * {@link SqlTypeName#Decimal}, but on validation may become
      * {@link SqlTypeName#Integer}.
@@ -420,6 +427,14 @@ public class SqlLiteral extends SqlNode
         Util.pre(typeName != null, "typeName != null");
         Util.pre(valueMatchesType(value, typeName),
                 "valueMatchesType(value,typeName)");
+    }
+
+    /**
+     * @return value of {@link #_typeName}
+     */
+    public SqlTypeName getTypeName()
+    {
+        return _typeName;
     }
 
     /**
@@ -726,39 +741,25 @@ public class SqlLiteral extends SqlNode
     }
 
     /**
-     * Creates a string literal, with optional collation.
-     *
-     * REVIEW (jhyde, 2004/5/28): There is parsing stuff going on in here --
-     *   need to move that stuff into ParserUtil.
-     *
-     * @param s  String
+     * Creates a string literal in the system character set.
+     * @param s a string (without the sql single quotes)
+     */
+    public static SqlLiteral createString(String s, ParserPosition parserPosition) {
+        return createString(s, null, null, parserPosition);
+    }
+
+    /**
+     * Creates a string literal, with optional character-set and  collation.
+     * @param s a string (without the sql single quotes)
+     * @param charSet character set name, null means take system default
      * @param collation Collation, may be null
      * @return A string literal
      */
-    public static SqlLiteral createString(String s, SqlCollation collation, ParserPosition parserPosition) {
-
-        if (s.charAt(0) == '\'') {
-            //we have a "regular" string
-            s = ParserUtil.strip(s, "'");
-            s = ParserUtil.parseString(s);
-            NlsString slit = new NlsString(s, null, collation);
-            return new SqlLiteral(slit, SqlTypeName.Char, parserPosition);
-        }
-
-        //else we have a National string or a string with a charset
-        String charSet;
-        if (Character.toUpperCase(s.charAt(0)) == 'N') {
-            s = s.substring(1);
-            charSet = SaffronProperties.instance().defaultNationalCharset.get();
-        } else {
-            int i = s.indexOf("'");
-            charSet = s.substring(1,i);
-            s = s.substring(i);
-        }
-        s = ParserUtil.strip(s, "'");
-        s = ParserUtil.parseString(s);
-        NlsString nlsStr = new NlsString(s, charSet, collation);
-        return new SqlLiteral(nlsStr, SqlTypeName.Char, parserPosition);
+    public static SqlLiteral createString(String s, String charSet,
+                                          SqlCollation collation,
+                                          ParserPosition parserPosition) {
+        NlsString slit = new NlsString(s, charSet, collation);
+        return new SqlLiteral(slit, SqlTypeName.Char, parserPosition);
     }
 }
 

@@ -40,11 +40,11 @@ insert into t_real values(b'10',null);
 insert into t_real values(date '1999-01-08',null);
 insert into t_real values(time '12:01:01',null);
 insert into t_real values(timestamp '2004-12-01 12:01:01',null);
+insert into t_real values(10e400,null);
 
 -- insert the right value
 insert into t_real values(1234.999,null);
 insert into t_real values(-4567890123456789.9,null);
-insert into t_real values(10e400,null);
 insert into t_real values(-1.2345678901234e-200,null);
 
 -- null value test

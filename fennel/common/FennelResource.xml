@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<!-- $Id: //open/dev/fennel/common/FennelResource.xml#1 $ -->
+<!-- $Id: //open/dev/fennel/common/FennelResource.xml#2 $ -->
 
 <resourceBundle
   static="false"
@@ -46,7 +46,7 @@
   </message>
 
   <message id="440030" name="internalError">
-    <text>Storage manager internal errror:  {0}</text>
+    <text>Storage manager internal error:  {0}</text>
   </message>
 
 </resourceBundle>

@@ -833,7 +833,15 @@ public class SqlToRelConverter {
     private RexNode convertLiteral(final SqlLiteral literal)
     {
         if (literal.getValue() == null) {
-            SaffronType type = validator.getValidatedNodeType(literal);
+            SaffronType type;
+            //Since there is no eq. RexLiteral of SqlLiteral.Unknown we
+            //treat it as a cast(null as boolean)
+            if (literal._typeName==SqlTypeName.Boolean) {
+                type = validator.typeFactory.createSqlType(SqlTypeName.Boolean);
+                type = validator.typeFactory.createTypeWithNullability(type, true);
+            } else {
+                type = validator.getValidatedNodeType(literal);
+            }
             return rexBuilder.makeCast(type,rexBuilder.constantNull());
         } else {
             return convertNonNullLiteral(literal);

@@ -231,14 +231,14 @@ CalcExtStringTest::testCalcExtStringCatA2()
     // varchar null case
     BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[2]));
     // varchar right truncation
-    BOOST_CHECK_EQUAL(iter->mPc, 6);
-    BOOST_CHECK_EQUAL(0, strcmp(iter->mStr, truncErr));
+    BOOST_CHECK_EQUAL(iter->pc, 6);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, truncErr));
     iter++;
     // char null case
     BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[3]));
     // char right truncation
-    BOOST_CHECK_EQUAL(iter->mPc, 8);
-    BOOST_CHECK_EQUAL(0, strcmp(iter->mStr, truncErr));
+    BOOST_CHECK_EQUAL(iter->pc, 8);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, truncErr));
     iter++;
     BOOST_CHECK(iter == calc.mWarnings.end());
 }
@@ -315,8 +315,8 @@ CalcExtStringTest::testCalcExtStringCatA3()
     BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[2]));
     BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[3]));
     // varchar right truncation
-    BOOST_CHECK_EQUAL(iter->mPc, 4);
-    BOOST_CHECK_EQUAL(0, strcmp(iter->mStr, truncErr));
+    BOOST_CHECK_EQUAL(iter->pc, 4);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, truncErr));
     iter++;
     // char common case
     BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[4], "GHIJK"));
@@ -324,8 +324,8 @@ CalcExtStringTest::testCalcExtStringCatA3()
     BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[5]));
     BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[6]));
     // char right truncation
-    BOOST_CHECK_EQUAL(iter->mPc, 8);
-    BOOST_CHECK_EQUAL(0, strcmp(iter->mStr, truncErr));
+    BOOST_CHECK_EQUAL(iter->pc, 8);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, truncErr));
     iter++;
     BOOST_CHECK(iter == calc.mWarnings.end());
 }
@@ -745,12 +745,12 @@ CalcExtStringTest::testCalcExtStringOverlayA4()
         BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[i]));
     }
     // varchar substr errors
-    BOOST_CHECK_EQUAL(iter->mPc, 4);
-    BOOST_CHECK_EQUAL(0, strcmp(iter->mStr, substrErr));
+    BOOST_CHECK_EQUAL(iter->pc, 4);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, substrErr));
     iter++;
     // varchar right truncation
-    BOOST_CHECK_EQUAL(iter->mPc, 5);
-    BOOST_CHECK_EQUAL(0, strcmp(iter->mStr, truncErr));
+    BOOST_CHECK_EQUAL(iter->pc, 5);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, truncErr));
     iter++;
     // char common case
     BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[5], "GKLJ "));
@@ -759,12 +759,12 @@ CalcExtStringTest::testCalcExtStringOverlayA4()
         BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[i]));
     }
     // char substr errors
-    BOOST_CHECK_EQUAL(iter->mPc, 10);
-    BOOST_CHECK_EQUAL(0, strcmp(iter->mStr, substrErr));
+    BOOST_CHECK_EQUAL(iter->pc, 10);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, substrErr));
     iter++;
     // varchar right truncation
-    BOOST_CHECK_EQUAL(iter->mPc, 11);
-    BOOST_CHECK_EQUAL(0, strcmp(iter->mStr, truncErr));
+    BOOST_CHECK_EQUAL(iter->pc, 11);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, truncErr));
     iter++;
     BOOST_CHECK(iter == calc.mWarnings.end());
 }
@@ -845,15 +845,15 @@ CalcExtStringTest::testCalcExtStringOverlayA5()
         BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[i]));
     }
     // varchar substr errors
-    BOOST_CHECK_EQUAL(iter->mPc, 5);
-    BOOST_CHECK_EQUAL(0, strcmp(iter->mStr, substrErr));
+    BOOST_CHECK_EQUAL(iter->pc, 5);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, substrErr));
     iter++;
-    BOOST_CHECK_EQUAL(iter->mPc, 6);
-    BOOST_CHECK_EQUAL(0, strcmp(iter->mStr, substrErr));
+    BOOST_CHECK_EQUAL(iter->pc, 6);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, substrErr));
     iter++;
     // varchar right truncation
-    BOOST_CHECK_EQUAL(iter->mPc, 7);
-    BOOST_CHECK_EQUAL(0, strcmp(iter->mStr, truncErr));
+    BOOST_CHECK_EQUAL(iter->pc, 7);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, truncErr));
     iter++;
     // char common case
     BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[7], "KLIJ "));
@@ -862,15 +862,15 @@ CalcExtStringTest::testCalcExtStringOverlayA5()
         BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[i]));
     }
     // char substr errors
-    BOOST_CHECK_EQUAL(iter->mPc, 13);
-    BOOST_CHECK_EQUAL(0, strcmp(iter->mStr, substrErr));
+    BOOST_CHECK_EQUAL(iter->pc, 13);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, substrErr));
     iter++;
-    BOOST_CHECK_EQUAL(iter->mPc, 14);
-    BOOST_CHECK_EQUAL(0, strcmp(iter->mStr, substrErr));
+    BOOST_CHECK_EQUAL(iter->pc, 14);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, substrErr));
     iter++;
     // char right truncation
-    BOOST_CHECK_EQUAL(iter->mPc, 15);
-    BOOST_CHECK_EQUAL(0, strcmp(iter->mStr, truncErr));
+    BOOST_CHECK_EQUAL(iter->pc, 15);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, truncErr));
     iter++;
     BOOST_CHECK(iter == calc.mWarnings.end());
 }
@@ -1007,8 +1007,8 @@ CalcExtStringTest::testCalcExtStringSubStringA3()
     BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[1]));
     BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[2]));
     // varchar right truncation
-    BOOST_CHECK_EQUAL(iter->mPc, 3);
-    BOOST_CHECK_EQUAL(0, strcmp(iter->mStr, truncErr));
+    BOOST_CHECK_EQUAL(iter->pc, 3);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, truncErr));
     iter++;
     // char common case
     BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[3], "HIJ "));
@@ -1016,8 +1016,8 @@ CalcExtStringTest::testCalcExtStringSubStringA3()
     BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[4]));
     BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[5]));
     // varchar right truncation
-    BOOST_CHECK_EQUAL(iter->mPc, 7);
-    BOOST_CHECK_EQUAL(0, strcmp(iter->mStr, truncErr));
+    BOOST_CHECK_EQUAL(iter->pc, 7);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, truncErr));
     iter++;
     BOOST_CHECK(iter == calc.mWarnings.end());
 }
@@ -1094,12 +1094,12 @@ CalcExtStringTest::testCalcExtStringSubStringA4()
     BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[3]));
     BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[4]));
     // varchar substring error
-    BOOST_CHECK_EQUAL(iter->mPc, 5);
-    BOOST_CHECK_EQUAL(0, strcmp(iter->mStr, substrErr));
+    BOOST_CHECK_EQUAL(iter->pc, 5);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, substrErr));
     iter++;
     // varchar right truncation
-    BOOST_CHECK_EQUAL(iter->mPc, 6);
-    BOOST_CHECK_EQUAL(0, strcmp(iter->mStr, truncErr));
+    BOOST_CHECK_EQUAL(iter->pc, 6);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, truncErr));
     iter++;
     // char common case
     BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[6], "H"));
@@ -1109,12 +1109,12 @@ CalcExtStringTest::testCalcExtStringSubStringA4()
     BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[9]));
     BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[10]));
     // char substring error
-    BOOST_CHECK_EQUAL(iter->mPc, 12);
-    BOOST_CHECK_EQUAL(0, strcmp(iter->mStr, substrErr));
+    BOOST_CHECK_EQUAL(iter->pc, 12);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, substrErr));
     iter++;
     // char right truncation
-    BOOST_CHECK_EQUAL(iter->mPc, 13);
-    BOOST_CHECK_EQUAL(0, strcmp(iter->mStr, truncErr));
+    BOOST_CHECK_EQUAL(iter->pc, 13);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, truncErr));
     iter++;
     BOOST_CHECK(iter == calc.mWarnings.end());
 }
@@ -1260,8 +1260,8 @@ CalcExtStringTest::testCalcExtStringToLower()
     // varchar null case
     BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[1]));
     // varchar right truncation
-    BOOST_CHECK_EQUAL(iter->mPc, 2);
-    BOOST_CHECK_EQUAL(0, strcmp(iter->mStr, truncErr));
+    BOOST_CHECK_EQUAL(iter->pc, 2);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, truncErr));
     iter++;
     BOOST_CHECK(iter == calc.mWarnings.end());
     // char common case
@@ -1331,8 +1331,8 @@ CalcExtStringTest::testCalcExtStringToUpper()
     // varchar null case
     BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[1]));
     // varchar right truncation
-    BOOST_CHECK_EQUAL(iter->mPc, 2);
-    BOOST_CHECK_EQUAL(0, strcmp(iter->mStr, truncErr));
+    BOOST_CHECK_EQUAL(iter->pc, 2);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, truncErr));
     iter++;
     BOOST_CHECK(iter == calc.mWarnings.end());
     // char common case
@@ -1476,11 +1476,11 @@ CalcExtStringTest::testCalcExtStringTrim()
     deque<CalcMessage>::iterator end = calc.mWarnings.end();
 
     BOOST_CHECK(iter != end);
-    BOOST_CHECK_EQUAL(iter->mPc, 24);
-    BOOST_CHECK_EQUAL(0, strcmp(iter->mStr, "22027"));
+    BOOST_CHECK_EQUAL(iter->pc, 24);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, "22027"));
     iter++;
-    BOOST_CHECK_EQUAL(iter->mPc, 25);
-    BOOST_CHECK_EQUAL(0, strcmp(iter->mStr, "22027"));
+    BOOST_CHECK_EQUAL(iter->pc, 25);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, "22027"));
     iter++;
     BOOST_CHECK(iter == end);
 

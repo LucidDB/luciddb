@@ -58,6 +58,13 @@ public:
                       string const & function,
                       vector<RegisterReference*> & operands); // add const?
 
+    // debugging & tracing
+    static string
+    signatures();
+
+    static string
+    extendedSignatures();
+
     // Start-of-world setup
     static void
     registerInstructions();

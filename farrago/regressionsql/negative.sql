@@ -73,7 +73,7 @@ values x'' between x'' and 1;
 values b'' not between '' and 3;
 values '' between '' and 1.0;
 --all then's and else return null forbidden in SQL99
-select CASE 1 WHEN 1 THEN cast(null as integer) WHEN 2 THEN cast(null as integer) END from values(1);
+select CASE 1 WHEN 1 THEN NULL WHEN 2 THEN NULL END from values(1);
 
 --according to the standard any trim character value that is not of length 1 should return a runtime error
 values trim('ab' from 'ab');
@@ -101,4 +101,4 @@ values current_time(2,3);
 values current_timestamp(-1);
 values current_time(-20);
 values current_date(2);
-
+values log(1,2,3);

@@ -380,7 +380,7 @@ public class SqlParserTest extends TestCase
     public void testArthimeticOperators() {
         checkExp("1-2+3*4/5/6-7","(((1 - 2) + (((3 * 4) / 5) / 6)) - 7)");
         checkExp("pow(2,3)","POW(2, 3)");
-        checkExp("aBs(-2.3e-2)","ABS((- 0.023))");
+        checkExp("aBs(-2.3e-2)","ABS((- 2.3E-2))");
         checkExp("MOD(5             ,\t\f\r\n2)","MOD(5, 2)");
         checkExp("ln(5.43  )","LN(5.43)");
         checkExp("log(- -.2  )","LOG((- (- 0.2)))");
@@ -697,26 +697,26 @@ public class SqlParserTest extends TestCase
         checkExp("2500000000","2500000000");
         checkExp("5000000000","5000000000");
         //Approxs
-        checkExp("1e1","10");
-        checkExp("+1e1","(+ 10)");
-        checkExp("1.1e1","11");
-        checkExp("1.1e+1","11");
-        checkExp("1.1e-1","0.11");
-        checkExp("+1.1e-1","(+ 0.11)");
-        checkExp("1.E3","1000");
-        checkExp("1.e-3","0.001");
-        checkExp("1.e+3","1000");
-        checkExp(".5E3","500");
-        checkExp("+.5e3","(+ 500)");
-        checkExp("-.5E3","(- 500)");
-        checkExp(".5e-32","0.000000000000000000000000000000005");
+        checkExp("1e1","1.0E1");
+        checkExp("+1e1","(+ 1.0E1)");
+        checkExp("1.1e1","1.1E1");
+        checkExp("1.1e+1","1.1E1");
+        checkExp("1.1e-1","1.1E-1");
+        checkExp("+1.1e-1","(+ 1.1E-1)");
+        checkExp("1.E3","1.000E3");
+        checkExp("1.e-3","1E-3");
+        checkExp("1.e+3","1.000E3");
+        checkExp(".5E3","5.00E2");
+        checkExp("+.5e3","(+ 5.00E2)");
+        checkExp("-.5E3","(- 5.00E2)");
+        checkExp(".5e-32","5E-33");
         //Mix integer/decimals/approx
         checkExp("3. + 2","(3 + 2)");
         checkExp("1++2+3","((1 + (+ 2)) + 3)");
         checkExp("1- -2","(1 - (- 2))");
-        checkExp("1++2.3e-4++.5e-6++.7++8","((((1 + (+ 0.00023)) + (+ 0.0000005)) + (+ 0.7)) + (+ 8))");
-        checkExp("1- -2.3e-4 - -.5e-6  -"+NL+"-.7++8","((((1 - (- 0.00023)) - (- 0.0000005)) - (- 0.7)) + (+ 8))");
-        checkExp("1+-2.*-3.e-1/-4","(1 + (((- 2) * (- 0.3)) / (- 4)))");
+        checkExp("1++2.3e-4++.5e-6++.7++8","((((1 + (+ 2.3E-4)) + (+ 5E-7)) + (+ 0.7)) + (+ 8))");
+        checkExp("1- -2.3e-4 - -.5e-6  -"+NL+"-.7++8","((((1 - (- 2.3E-4)) - (- 5E-7)) - (- 0.7)) + (+ 8))");
+        checkExp("1+-2.*-3.e-1/-4","(1 + (((- 2) * (- 3E-1)) / (- 4)))");
 
     }
 
@@ -1174,6 +1174,5 @@ public class SqlParserTest extends TestCase
         checkExp("{fn insert()}","{fn INSERT() }");
     }
 }
-
 
 // End SqlParserTest.java

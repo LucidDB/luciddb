@@ -20,12 +20,13 @@
 */
 package net.sf.farrago.type.runtime;
 
-import net.sf.farrago.util.FarragoException;
+import net.sf.farrago.resource.FarragoResource;
+import net.sf.saffron.sql.parser.ParserUtil;
+import net.sf.saffron.resource.SaffronResource;
 
 import java.util.Calendar;
 import java.util.TimeZone;
 import java.text.SimpleDateFormat;
-import java.text.ParseException;
 
 
 /**
@@ -39,18 +40,21 @@ import java.text.ParseException;
  * @since May 5, 2004
  * @version $Id$
  **/
-public abstract class SqlDateTimeWithoutTZ extends NullablePrimitive
-    implements NullableValue, AssignableValue
+public abstract class SqlDateTimeWithoutTZ implements AssignableValue
 {
-    public static final String ISODateFormat = "yyyy-MM-dd";
-    public static final String ISOTimeFormat = "HH:mm:ss";
-    public static final String ISOTimestampFormat = ISODateFormat + " " + ISOTimeFormat;
+    // Use same format as supported by parser (should be ISO format)
+    public static final String DateFormatStr = ParserUtil.DateFormatStr;
+    public static final String TimeFormatStr = ParserUtil.TimeFormatStr;
+    public static final String TimestampFormatStr = ParserUtil.TimestampFormatStr;
 
     private Calendar cal =  Calendar.getInstance();
     private static final TimeZone gmtZone = TimeZone.getTimeZone("GMT+0");
 
     public long value = 0; // time as GMT since epoch.
     public int timeZoneOffset = 0; // timezone offset in Millis.
+
+    /** Whether this value is null. */
+    public boolean isNull;
 
     /**
      * Create a runtime object with timezone offset set from localtime.
@@ -118,7 +122,7 @@ public abstract class SqlDateTimeWithoutTZ extends NullablePrimitive
             value = ((Long)date).longValue()  ;
             return;
         } else if (date instanceof java.util.Date) {
-            value = ((java.util.Date) date).getTime() + timeZoneOffset; // set tzOffset?
+            value = ((java.util.Date) date).getTime();// + timeZoneOffset; // set tzOffset?
             return;
         } else if (date instanceof SqlDateTimeWithoutTZ) {
             SqlDateTimeWithoutTZ  sqlDate = (SqlDateTimeWithoutTZ) date;
@@ -207,23 +211,26 @@ public abstract class SqlDateTimeWithoutTZ extends NullablePrimitive
                 return;
             }
 
-            // Only support ISO format for now
-            SimpleDateFormat dateFormat = new SimpleDateFormat(ISODateFormat);
-            try {
-                java.util.Date parsedDate = dateFormat.parse(date);
+            Calendar cal = ParserUtil.parseDateFormat(date, DateFormatStr);
+            if (cal != null) {
+                java.util.Date parsedDate = cal.getTime();
                 assignFrom(parsedDate);
             }
-            catch (ParseException exp) {
-                throw new FarragoException("Error converting String to Date", exp);
+            else {
+                String reason = SaffronResource.instance().
+                    getBadFormat(DateFormatStr);
+
+                throw FarragoResource.instance().
+                    newAssignFromFailed(date, "DATE", reason);
             }
         }
 
         /**
-         * Returns a string in ISO format representing the date
+         * Returns a string in default format representing the date
          */
         public String toString()
         {
-            return toString(ISODateFormat);
+            return toString(DateFormatStr);
         }
 
         /**
@@ -252,23 +259,27 @@ public abstract class SqlDateTimeWithoutTZ extends NullablePrimitive
                 return;
             }
 
-            // Only support ISO format for now
-            SimpleDateFormat dateFormat = new SimpleDateFormat(ISOTimeFormat);
-            try {
-                java.util.Date parsedDate = dateFormat.parse(date);
+            ParserUtil.PrecisionTime pt =
+                ParserUtil.parsePrecisionDateTimeLiteral(date, TimeFormatStr);
+            if (pt != null) {
+                java.util.Date parsedDate = pt.cal.getTime();
                 assignFrom(parsedDate);
             }
-            catch (ParseException exp) {
-                throw new FarragoException("Error converting String to Time", exp);
+            else {
+                String reason = SaffronResource.instance().
+                    getBadFormat(TimeFormatStr);
+
+                throw FarragoResource.instance().
+                    newAssignFromFailed(date, "TIME", reason);
             }
         }
 
         /**
-         * Returns a string in ISO format representing the time
+         * Returns a string in default format representing the time
          */
         public String toString()
         {
-            return toString(ISOTimeFormat);
+            return toString(TimeFormatStr);
         }
 
         /**
@@ -299,23 +310,27 @@ public abstract class SqlDateTimeWithoutTZ extends NullablePrimitive
                 return;
             }
 
-            // Only support ISO format for now
-            SimpleDateFormat dateFormat = new SimpleDateFormat(ISOTimestampFormat);
-            try {
-                java.util.Date parsedDate = dateFormat.parse(date);
+            ParserUtil.PrecisionTime pt =
+                ParserUtil.parsePrecisionDateTimeLiteral(date, TimestampFormatStr);
+            if (pt != null) {
+                java.util.Date parsedDate = pt.cal.getTime();
                 assignFrom(parsedDate);
             }
-            catch (ParseException exp) {
-                throw new FarragoException("Error converting String to Timestamp", exp);
+            else {
+                String reason = SaffronResource.instance().
+                    getBadFormat(TimestampFormatStr);
+
+                throw FarragoResource.instance().
+                    newAssignFromFailed(date, "TIMESTAMP", reason);
             }
         }
 
         /**
-         * Returns a string in ISO format representing the timestamp
+         * Returns a string in default format representing the timestamp
          */
         public String toString()
         {
-            return toString(ISOTimestampFormat);
+            return toString(TimestampFormatStr);
         }
 
         /**

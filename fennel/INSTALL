@@ -11,22 +11,24 @@ are automake v1.7.6 and above; autoconf v2.57 and above; libtool v1.5
 and above; and make v3.79.1 and above.
 
 Fennel itself relies on the Boost library from http://www.boost.org
-(at least v1.30), and STLport from http://www.stlport.com (at least
-v4.5.3).
+(at least v1.31), and STLport from http://www.stlport.com (at least
+v4.6.2).  Optionally, Fennel can use the ICU library from
+http://oss.software.ibm.com/icu for i18n support (this doesn't work
+with mingw yet).
 
 The simplest way to configure and build Fennel is to run:
 
 ./initBuild.sh [--with-farrago|--without-farrago]
 
 This script will execute all of the steps laid out below, but assumes
-the presence of the dev/thirdparty directory from the Perforce
-source control sever that Fennel resides on (see README).  Map
-//open/dev/thirdparty to a directory called thirdparty with the same parent
-directory as Fennel.  The initBuild.sh script will change to
-../thirdparty, extract the copies of Boost and STLport archived there
-and build both Boost and STLport.
+the presence of the dev/thirdparty directory from the Perforce source
+control sever that Fennel resides on (see README).  Map
+//open/dev/thirdparty to a directory called thirdparty with the same
+parent directory as Fennel.  The initBuild.sh script will change to
+../thirdparty, extract the copies of Boost, STLport, and ICU archived
+there and build them.
 
-If you wish to obtain your own copies of Boost and STLport, or don't
+If you wish to obtain your own copies of thirdparty components, or don't
 want to maintain the required directory structure, the following are
 step-by-step instructions for configuring and building Fennel without
 using initBuild.sh.
@@ -36,21 +38,23 @@ CONFIGURE
 
 To configure, run:
 
-autoreconf --install (not needed if building from a tarball)
-./configure --with-boost=$BOOST_DIR \
-    --with-stlport=$STLPORT_DIR [--with-farrago]
+autoreconf --force --install (not needed if building from a tarball)
+./configure --with-boost=$BOOST_DIR --with-stlport=$STLPORT_DIR \
+    [--with-icu=$ICU_DIR] \
+    [--with-farrago] [--with-optimization]
 
 (If you are building with support for the companion project Farrago,
 you must have JAVA_HOME defined.  See http://farrago.sourceforge.net
 if you don't know what Farrago is.)
 
-Fennel relies on the Boost library from http://www.boost.org (at least
-v1.30), and STLport from http://www.stlport.com (at least v4.5.3).
-You must supply the source locations for these two libraries via
---with-boost and --with-stlport.  Instructions are provided below on
-how to build these libraries for use by Fennel.  (This is only
-required for the first build; after that the third-party libraries
-never change until an upgrade is required.)
+You must supply the source locations for external libraries via
+--with-boost and --with-stlport (and optionally --with-icu).
+Instructions are provided below on how to build these libraries for
+use by Fennel.  (This is only required for the first build; after that
+the third-party libraries never change until an upgrade is required.)
+
+The default is a debug build; for a release build, specify
+--with-optimization.  
 
 If at some point you run into configuration/build problems and need to
 retry after upgrading required tools, beware of cached information
@@ -69,6 +73,8 @@ top of the script to resolve the problem):
 cd build
 buildStlportLibs.sh
 buildBoostLibs.sh
+# optional
+buildICULibs.sh
 
 ======================================================================
 MAIN BUILD
@@ -77,9 +83,6 @@ Once those scripts complete, you can build fennel itself:
 
 cd ..
 make
-
-The default is a debug build; for a release build, specify
---without-debug.  
 
 ======================================================================
 RUN TESTS

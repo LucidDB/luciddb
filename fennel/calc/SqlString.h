@@ -837,6 +837,11 @@ SqlStrCastToExact(char const * const str,
         if (CodeUnitBytes == 1) {
             // ASCII
 
+            // TOOD: Must add throw "22018" data exception - invalid
+            // character value for cast
+            // SQL99 6.22 General Rule 6, case b), case i) data
+            // exception -- invalid character value for cast
+
             // TODO: Replace with a real implementation
             // TODO: Following assumes any reasonable number fits in
             // TODO: First 1020 bytes of a string and can be parsed by
@@ -864,6 +869,10 @@ SqlStrCastToExact(char const * const str,
 //! SqlStrCastToApprox. Char & VarChar. Ascii only.
 //!
 //! This routine may not be compliant with the SQL99 standard.
+//!
+//! See SQL99 5.3 Format <approximate numeric literal> for
+//! details on the format of an approximate numeric.
+//! Basically nnn.mmmExxx.
 template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
 double
 SqlStrCastToApprox(char const * const str,
@@ -873,6 +882,12 @@ SqlStrCastToApprox(char const * const str,
     if (MaxCodeUnitsPerCodePoint == 1) {
         if (CodeUnitBytes == 1) {
             // ASCII
+
+            // TOOD: Must add throw "22018" data exception - invalid
+            // character value for cast
+            // SQL99 6.22 General Rule 7, case b), case i) "22018"
+            // data exception -- invalid character value for cast
+
 
             // TODO: Replace with a real implementation
             // TODO: Following assumes any reasonable number fits in
@@ -918,6 +933,16 @@ SqlStrCastFromExact(char* dest,
         if (CodeUnitBytes == 1) {
             // ASCII
 
+            // TODO: Need to throw "22001" data exception - string
+            // data, right truncation
+            // SQL99 6.22 General Rule 8 (fixed length), case a), case
+            // iv) "22001" data exception -- string data, right
+            // truncation
+            // SQL99 6.22 General Rule 9 (variable length), case a), case
+            // iii) "22001" data exception -- string data, right
+            // truncation
+
+
             // TODO: This bad, hackish, incorrect implementation
             // TODO: 'wastes' the last byte of dest.
             // TODO:  If the output takes, say, 6 bytes, and
@@ -957,6 +982,10 @@ SqlStrCastFromExact(char* dest,
 //!
 //! Pad character code points that require more than one code unit are
 //! currently unsupported.
+//!
+//! See SQL99 5.3 Format <approximate numeric literal> for
+//! details on the format of an approximate numeric.
+//! Basically nnn.mmmExxx.
 template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
 int
 SqlStrCastFromApprox(char* dest,
@@ -970,6 +999,14 @@ SqlStrCastFromApprox(char* dest,
     if (MaxCodeUnitsPerCodePoint == 1) {
         if (CodeUnitBytes == 1) {
             // ASCII
+
+            // TODO: Need to throw "22001" data exception - string
+            // data, right truncation
+            // SQL99 6.22 General Rule 8 (fixed length), case b), case
+            // iii) case 4) "22001" data exception - string
+            // SQL99 6.22 General Rule 9 (variable length), case b), case
+            // iii) case 3) "22001" data exception -- string data, right
+            // truncation
 
             // TODO: This bad, hackish, incorrect implementation
             // TODO: 'wastes' the last byte of dest.

@@ -4,8 +4,8 @@
 /**
  * This class was generated
  * by class mondrian.resource.ResourceGen
- * from /home/stephan/disruptive/fennel/common/FennelResource.xml
- * on Thu Feb 19 15:00:59 PST 2004.
+ * from /home/angel/dt/fennel/common/FennelResource.xml
+ * on Sun Aug 01 12:43:01 PDT 2004.
  * It contains a list of messages, and methods to
  * retrieve and format those messages.
  **/
@@ -20,8 +20,8 @@
 #include "ResourceDefinition.h"
 #include "ResourceBundle.h"
 
-// begin includes specified by /home/stephan/disruptive/fennel/common/FennelResource.xml
-// end includes specified by /home/stephan/disruptive/fennel/common/FennelResource.xml
+// begin includes specified by /home/angel/dt/fennel/common/FennelResource.xml
+// end includes specified by /home/angel/dt/fennel/common/FennelResource.xml
 
 namespace fennel {
 
@@ -48,7 +48,7 @@ class FennelResource : ResourceBundle
 	/** <code>duplicateKeyDetected</code> is 'Duplicate key detected:  {0}'	 */
     std::string duplicateKeyDetected(const std::string &p0) const;
 
-	/** <code>internalError</code> is 'Storage manager internal errror:  {0}'	 */
+	/** <code>internalError</code> is 'Storage manager internal error:  {0}'	 */
     std::string internalError(const std::string &p0) const;
 
     private:

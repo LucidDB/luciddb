@@ -34,6 +34,7 @@ import net.sf.saffron.util.Util;
 import net.sf.saffron.util.SaffronProperties;
 
 import java.util.HashMap;
+import java.math.BigDecimal;
 
 /**
  * Converts expressions in logical format ({@link RexNode}) into calculator
@@ -330,13 +331,33 @@ public class RexToCalcTranslator implements RexVisitor
             // implement.
             implementNode(node);
         }
-        // outputs calculated, now assign results to outputs by reference
+
+        // all outputs calculated, now assign results to outputs by reference
+        CalcProgramBuilder.Register isNullRes = null;
         for (int i = 0; i < _projectExps.length; i++) {
             RexNode node = _projectExps[i];
             CalcProgramBuilder.RegisterDescriptor desc =
                     getCalcRegisterDescriptor(node);
+            CalcProgramBuilder.Register res = getResult(node);
+
+            // check and assert that if type was declared as NOT NULLABLE, value
+            // is not null
+            if (!node.getType().isNullable()) {
+                String wasNotNull = newLabel();
+                if (isNullRes==null) {
+                    isNullRes = _builder.newLocal(CalcProgramBuilder.OpType.Bool, -1);
+                }
+                CalcProgramBuilder.boolNativeIsNull.add(_builder, isNullRes, res);
+                _builder.addLabelJumpFalse(wasNotNull, isNullRes);
+                CalcProgramBuilder.Raise.add(
+                    _builder, _builder.newVarcharLiteral("22004", 5));
+                _builder.addReturn();
+                _builder.addLabel(wasNotNull);
+            }
+
+            //if ok, assign result to output by reference
             CalcProgramBuilder.Register outReg = _builder.newOutput(desc);
-            _builder.addRef(outReg, getResult(node));
+            _builder.addRef(outReg, res);
         }
 
         _builder.addReturn();
@@ -503,10 +524,8 @@ public class RexToCalcTranslator implements RexVisitor
                         SqlCollation.getCoercibilityDyadicComparison(
                                 call.operands[0].getType().getCollation(),
                                 call.operands[1].getType().getCollation());
-                CalcProgramBuilder.Register colReg = _builder.newLiteral(
-                        CalcProgramBuilder.OpType.Varchar,
-                        collationToUse,
-                        CalcProgramBuilder.stringByteCount(collationToUse));
+                CalcProgramBuilder.Register colReg =
+                    _builder.newVarcharLiteral(collationToUse);
                 //TODO this is only for ascci cmp. Need to pump in colReg when a
                 //fennel function that can take it is born
                 ExtInstructionDefTable.strCmpA.add(_builder,

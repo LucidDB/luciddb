@@ -102,10 +102,10 @@ public class FarragoSqlOperatorsTest extends FarragoTestCase {
         while(operatorsIt.hasNext()) {
             SqlOperator op = (SqlOperator) operatorsIt.next();
             String testName="SQL-TESTER-"+op.name+"-";
-//            suite.addTest(new FarragoSqlOperatorsTest(
-//                    FarragoCalcSystemTest.vmFennel,
-//                    op,
-//                    testName+"FENNEL"));
+            suite.addTest(new FarragoSqlOperatorsTest(
+                    FarragoCalcSystemTest.vmFennel,
+                    op,
+                    testName+"FENNEL"));
 //            suite.addTest(new FarragoSqlOperatorsTest(
 //                    FarragoCalcSystemTest.vmJava,
 //                    op,

@@ -74,6 +74,9 @@
     <text>Illegal use of ''NULL''</text>
 </exception>
 
+<exception id="12" name="NumberLiteralOutOfRange">
+    <text>Number literal ''{0}'' out of range near: {1}</text>
+</exception>
 
 <!-- ====================================================================== -->
 <!-- Parser resources 100,000 - 110,000 -->
@@ -82,11 +85,20 @@
     <text>line {0,number,#}, column {1,number,#}</text>
 </message>
 
+<message id="100010" name="IllegalLiteral">
+    <text>Illegal {0} literal {1} at {2}: {3}</text>
+</message>
+
+<message id="100011" name="BadFormat">
+    <text>not in format ''{0}''</text>
+</message>
+
+
 <!-- ====================================================================== -->
 <!-- Validator resources 120,000 - 130,000 -->
 <!-- ====================================================================== -->
 <exception id="120000" name="ValidatorUnknownFunction">
-    <text>Reference to unknown function {0}; encountered near {1}</text>
+    <text>Reference to unknown function ''{0}''; encountered near {1}</text>
 </exception>
 
 <exception id="120001" name="InvalidArgument">
@@ -94,7 +106,7 @@
 </exception>
 
 <exception id="120002" name="InvalidNbrOfArgument">
-    <text>Invalid number of arguments to function ''{0}''. Was expecting {1,number,#} arguments</text>
+    <text>Invalid number of arguments to function ''{0}''; encountered near {1}. Was expecting {2,number,#} arguments</text>
 </exception>
 
 <exception id="120010" name="CannotCastValue">

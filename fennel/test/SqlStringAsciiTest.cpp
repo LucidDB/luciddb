@@ -202,7 +202,7 @@ SqlStringAsciiTest::testSqlStringCat_Ascii_Fix()
     int src1_storage, src2_storage, src3_storage, dst_storage;
     int src1_len, src2_len, src3_len;
     bool caught;
-    int newlen;
+    int newlen = 0;
     
     for (dst_storage = 0; dst_storage < MAXLEN; dst_storage++) {
         for (src1_storage = 0; src1_storage < MAXLEN; src1_storage++) {
@@ -298,7 +298,7 @@ void
 SqlStringAsciiTest::testSqlStringCat_Ascii_Var2()
 {
     int src1_storage, src2_storage, dst_storage, src1_len, src2_len;
-    int newlen;
+    int newlen = 0;
     bool caught;
     
     for (dst_storage = 0; dst_storage < MAXLEN; dst_storage++) {
@@ -359,7 +359,7 @@ void
 SqlStringAsciiTest::testSqlStringCat_Ascii_Var()
 {
     int src_storage, dst_storage, src_len, dst_len;
-    int newlen;
+    int newlen = 0;
     bool caught;
     
     for (dst_storage = 0; dst_storage < MAXLEN; dst_storage++) {
@@ -643,7 +643,7 @@ void
 SqlStringAsciiTest::testSqlStringLenBit_Ascii()
 {
     int src_storage, src_len;
-    int newlen;
+    int newlen = 0;
     
     src_storage = MAXLEN;
     for (src_storage = 0; src_storage <= MAXLEN; src_storage++) {
@@ -670,7 +670,7 @@ void
 SqlStringAsciiTest::testSqlStringLenChar_Ascii()
 {
     int src_storage, src_len;
-    int newlen;
+    int newlen = 0;
     
     src_storage = MAXLEN;
     for (src_storage = 0; src_storage <= MAXLEN; src_storage++) {
@@ -697,7 +697,7 @@ void
 SqlStringAsciiTest::testSqlStringLenOct_Ascii()
 {
     int src_storage, src_len;
-    int newlen;
+    int newlen = 0;
     
     src_storage = MAXLEN;
     for (src_storage = 0; src_storage <= MAXLEN; src_storage++) {
@@ -729,7 +729,7 @@ SqlStringAsciiTest::testSqlStringOverlay_Ascii()
     char *exLeftP, *exMidP, *exRightP;
     bool lenSpecified;
     bool caught;
-    int newlen;
+    int newlen = 0;
 
     for (dst_storage = 0; dst_storage < MAXLEN; dst_storage++) {
         for (src_storage = 0; src_storage < MAXLEN; src_storage++) {
@@ -895,7 +895,7 @@ SqlStringAsciiTest::testSqlStringPos_Ascii()
 void
 SqlStringAsciiTest::testSqlStringSubStr_Ascii()
 {
-    int src_storage, src_len, dst_storage, newlen;
+    int src_storage, src_len, dst_storage, newlen = 0;
     int sub_start, sub_len;
     bool caught;
     char const * resultP;
@@ -1017,7 +1017,7 @@ void
 SqlStringAsciiTest::testSqlStringToLower_Ascii()
 {
     int dest_storage, dest_len, src_storage, src_len, randX;
-    int newlen;
+    int newlen = 0;
     bool caught;
     
     for (dest_storage = 0; dest_storage < MAXLEN; dest_storage++) {
@@ -1080,7 +1080,7 @@ void
 SqlStringAsciiTest::testSqlStringToUpper_Ascii()
 {
     int dest_storage, dest_len, src_storage, src_len, randX;
-    int newlen;
+    int newlen = 0;
     bool caught;
     
 
@@ -1170,7 +1170,7 @@ SqlStringAsciiTest::testSqlStringTrim_Ascii()
                                                 0, 0,
                                                 textchar, padchar);
                             
-                            int lefttrim, righttrim;
+                            int lefttrim = false, righttrim = false;
                             switch(i) {
                             case 0:
                                 lefttrim = true;

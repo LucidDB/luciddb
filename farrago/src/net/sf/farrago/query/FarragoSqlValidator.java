@@ -21,8 +21,13 @@
 package net.sf.farrago.query;
 
 import net.sf.saffron.sql.*;
+import net.sf.saffron.util.*;
+import net.sf.saffron.resource.*;
+import net.sf.saffron.sql.type.*;
 
 import net.sf.farrago.resource.*;
+
+import java.math.*;
 
 /**
  * FarragoSqlValidator refines SqlValidator with some Farrago-specifics.
@@ -61,6 +66,56 @@ class FarragoSqlValidator extends SqlValidator
     {
         // Farrago follows the SQL standard on this.
         return false;
+    }
+
+    // override SqlValidator
+    protected void validateLiteral(SqlLiteral literal)
+    {
+        // REVIEW jvs 4-Aug-2004:  This should probably be calling over to the
+        // available calculator implementations to see what they support.  For
+        // now use ESP instead.
+        
+        switch (literal.getTypeName().getOrdinal()) {
+        case SqlTypeName.Decimal_ordinal:
+            BigDecimal bd = (BigDecimal) literal.getValue();
+            if (bd.scale() == 0) {
+                // Value must fit into a long.
+                long longValue = bd.longValue();
+                if (!BigDecimal.valueOf(longValue).equals(bd)) {
+                    // overflow
+                    throw SaffronResource.instance().newNumberLiteralOutOfRange(
+                        bd.toString(),
+                        literal.getParserPosition().toString());
+                }
+            } else {
+                // fall through for scaled case
+            }
+            
+            // TODO jvs 4-Aug-2004:  support exact numerics,
+            // which may also be able to handle overflow case above
+            // if our maximum precision is bigger than that of a long
+            validateLiteralAsDouble(literal);
+            break;
+        case SqlTypeName.Double_ordinal:
+            validateLiteralAsDouble(literal);
+            break;
+        default:
+            // no validation needed
+            return;
+        }
+    }
+
+    private void validateLiteralAsDouble(SqlLiteral literal)
+    {
+        BigDecimal bd = (BigDecimal) literal.getValue();
+        double d = bd.doubleValue();
+        if (Double.isInfinite(d) || Double.isNaN(d)) {
+            // overflow
+            throw SaffronResource.instance().newNumberLiteralOutOfRange(
+                Util.toScientificNotation(bd),
+                literal.getParserPosition().toString());
+        }
+        // REVIEW jvs 4-Aug-2004:  what about underflow?
     }
 }
 

@@ -18,6 +18,7 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
+
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/test/TestBase.h"
 #include "fennel/common/TraceSource.h"
@@ -201,16 +202,27 @@ CalcExtMathTest::testCalcExtMathAbs()
 {
     ostringstream pg("");
     
-    pg << "O d, s8;" << endl;
-    pg << "L d, s8;" << endl;
-    pg << "C d, s8;" << endl;
-    pg << "V -10.0, -10;" << endl;
+    pg << "O d, d, d, s8, s8, s8;" << endl;
+    pg << "L d, d, d, s8, s8, s8;" << endl;
+    pg << "C d, d, d, s8, s8, s8;" << endl;
+    // Pick a precision that fits in a double, but wouldn't fit in a float
+    pg << "V 0.0, -1234567890123.0,  1234567890123.0,";;
+    pg <<   "0, 9223372036854775807, -9223372036854775807;" << endl;
     pg << "T;" << endl;
     pg << "CALL 'ABS(L0, C0);" << endl;
     pg << "CALL 'ABS(L1, C1);" << endl;
+    pg << "CALL 'ABS(L2, C2);" << endl;
+    pg << "CALL 'ABS(L3, C3);" << endl;
+    pg << "CALL 'ABS(L4, C4);" << endl;
+    pg << "CALL 'ABS(L5, C5);" << endl;
     pg << "REF O0, L0;" << endl;
     pg << "REF O1, L1;" << endl;
-    // BOOST_MESSAGE(pg.str());
+    pg << "REF O2, L2;" << endl;
+    pg << "REF O3, L3;" << endl;
+    pg << "REF O4, L4;" << endl;
+    pg << "REF O5, L5;" << endl;
+
+    //BOOST_MESSAGE(pg.str());
 
     Calculator calc;
     
@@ -229,11 +241,29 @@ CalcExtMathTest::testCalcExtMathAbs()
     printOutput(outTuple, calc);
 
 
+    double epsilon = 0.000001;
+
     BOOST_CHECK(fabs(*(reinterpret_cast<double*>
-                       (const_cast<PBuffer>(outTuple[0].pData)))-10)<0.0001);
+                       (const_cast<PBuffer>(outTuple[0].pData))) -
+                     0) < epsilon);
     
-    BOOST_CHECK_EQUAL(*(reinterpret_cast<int*>
-                        (const_cast<PBuffer>(outTuple[1].pData))),10);
+    BOOST_CHECK(fabs(*(reinterpret_cast<double*>
+                       (const_cast<PBuffer>(outTuple[1].pData))) -
+                     1234567890123.0) < epsilon);
+
+    BOOST_CHECK(fabs(*(reinterpret_cast<double*>
+                       (const_cast<PBuffer>(outTuple[2].pData))) -
+                     1234567890123.0) < epsilon);
+    
+    BOOST_CHECK_EQUAL(*(reinterpret_cast<uint64_t*>
+                        (const_cast<PBuffer>(outTuple[3].pData))),0);
+
+    BOOST_CHECK_EQUAL(*(reinterpret_cast<uint64_t*>
+                        (const_cast<PBuffer>(outTuple[4].pData))),
+                      9223372036854775807LL);
+    BOOST_CHECK_EQUAL(*(reinterpret_cast<uint64_t*>
+                        (const_cast<PBuffer>(outTuple[5].pData))),
+                      9223372036854775807LL);
 }
 
 void

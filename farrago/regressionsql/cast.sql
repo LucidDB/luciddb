@@ -28,6 +28,7 @@ values cast(1.8 as integer);
 values cast(-1.8 as tinyint);
 values cast(-1.1 as smallint);
 values cast(1e-4 as integer);
+values cast(1e2 as integer);
 
 values cast(1 as double);
 values cast(cast(1 as real) as double);

@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/farrago/regressionsql/literalTests/timestamp.sql#4 $ 
+0: jdbc:farrago:> -- $Id: //open/farrago/regressionsql/literalTests/timestamp.sql#5 $ 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test timestamp literal
 0: jdbc:farrago:> -- we don'tsupport time w/ timezone in this release.
@@ -82,6 +82,47 @@
 0: jdbc:farrago:> --select timestamp 'Feb 16 17:32:01 -0097' as t1 from values ('true');
 0: jdbc:farrago:> --select timestamp 'Feb 16 17:32:01 5097 BC' as t1 from values ('true');
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- more ISO format tests that should work
+0: jdbc:farrago:> select timestamp '1930-003-005 8:4:9' from values ('true');
++------------------------+
+|         EXPR$0         |
++------------------------+
+| 1930-03-05 08:04:09.0  |
++------------------------+
+0: jdbc:farrago:> select timestamp '2005-12-6 0006:0008:0022' from values ('true');
++------------------------+
+|         EXPR$0         |
++------------------------+
+| 2005-12-06 06:08:22.0  |
++------------------------+
+0: jdbc:farrago:> -- with precision
+0: jdbc:farrago:> select timestamp '1966-03-4 12:00:45.009' from values ('true');
++--------------------------+
+|          EXPR$0          |
++--------------------------+
+| 1966-03-04 12:00:45.009  |
++--------------------------+
+0: jdbc:farrago:> select timestamp '1945-4-3 0001:00:01.1000' from values ('true');
++------------------------+
+|         EXPR$0         |
++------------------------+
+| 1945-04-03 01:00:01.1  |
++------------------------+
+0: jdbc:farrago:> select timestamp '2003-12-31 0004:00:34.999' from values ('true');
++--------------------------+
+|          EXPR$0          |
++--------------------------+
+| 2003-12-31 04:00:34.999  |
++--------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- these should fail
+0: jdbc:farrago:> select timestamp '2004-13-4 05:06:07' from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal TIMESTAMP literal '2004-13-4 05:06:07' at line 1, column 18: not in format 'yyyy-MM-dd HH:mm:ss' (state=,code=0)
+0: jdbc:farrago:> select timestamp '2004-04-6 05:06:67' from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal TIMESTAMP literal '2004-04-6 05:06:67' at line 1, column 18: not in format 'yyyy-MM-dd HH:mm:ss' (state=,code=0)
+0: jdbc:farrago:> select timestamp '2004-10-8 23.54.43.' from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal TIMESTAMP literal '2004-10-8 23.54.43.' at line 1, column 18: not in format 'yyyy-MM-dd HH:mm:ss' (state=,code=0)
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test datatype
 0: jdbc:farrago:> create schema test;
 0: jdbc:farrago:> set schema test;
@@ -89,25 +130,25 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- negative test
 0: jdbc:farrago:> insert into t_timestamp values('string value',null);
-Error: Storage manager internal errror:  bad lexical cast: source type value could not be interpreted as target (state=,code=0)
+Error: Storage manager internal error:  bad lexical cast: source type value could not be interpreted as target (state=,code=0)
 0: jdbc:farrago:> insert into t_timestamp values(true,null);
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'BOOLEAN' to 'TIMESTAMP_0' (state=,code=0)
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'BOOLEAN' to 'TIMESTAMP(0)' (state=,code=0)
 0: jdbc:farrago:> insert into t_timestamp values(1234,null);
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'INTEGER' to 'TIMESTAMP_0' (state=,code=0)
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'INTEGER' to 'TIMESTAMP(0)' (state=,code=0)
 0: jdbc:farrago:> insert into t_timestamp values(10e400,null);
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'DOUBLE' to 'TIMESTAMP_0' (state=,code=0)
+Error: Number literal '1.0000000000000000000E401' out of range near: line 1, column 31 (state=,code=0)
 0: jdbc:farrago:> insert into t_timestamp values(-1.2345678901234e-200,null);
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'DOUBLE' to 'TIMESTAMP_0' (state=,code=0)
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'DOUBLE' to 'TIMESTAMP(0)' (state=,code=0)
 0: jdbc:farrago:> insert into t_timestamp values(-1234.03,null);
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'DOUBLE' to 'TIMESTAMP_0' (state=,code=0)
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'DOUBLE' to 'TIMESTAMP(0)' (state=,code=0)
 0: jdbc:farrago:> insert into t_timestamp values(x'ff',null);
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'VARBINARY_1' to 'TIMESTAMP_0' (state=,code=0)
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'VARBINARY(1)' to 'TIMESTAMP(0)' (state=,code=0)
 0: jdbc:farrago:> insert into t_timestamp values(b'10',null);
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'BIT_2' to 'TIMESTAMP_0' (state=,code=0)
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'BIT(2)' to 'TIMESTAMP(0)' (state=,code=0)
 0: jdbc:farrago:> insert into t_timestamp values(time '12:01:01',null);
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'TIME_0' to 'TIMESTAMP_0' (state=,code=0)
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'TIME(0)' to 'TIMESTAMP(0)' (state=,code=0)
 0: jdbc:farrago:> insert into t_timestamp values(date '1999-01-08',null);
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'DATE_0' to 'TIMESTAMP_0' (state=,code=0)
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'DATE' to 'TIMESTAMP(0)' (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- insert the right values
 0: jdbc:farrago:> insert into t_timestamp values(TIMESTAMP '2004-12-01 12:01:01',null);
@@ -116,11 +157,11 @@ Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast fro
 0: jdbc:farrago:> --insert into t_timestamp values(null, null); 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from t_timestamp;
-+----------------+------------------------+
-| TIMESTAMP_COL  |     TIMESTAMP_COL2     |
-+----------------+------------------------+
-|                | 1970-01-01 00:00:00.0  |
-+----------------+------------------------+
++------------------------+-----------------+
+|     TIMESTAMP_COL      | TIMESTAMP_COL2  |
++------------------------+-----------------+
+| 2004-12-01 12:01:01.0  |                 |
++------------------------+-----------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> drop table t_timestamp;
 0: jdbc:farrago:> 

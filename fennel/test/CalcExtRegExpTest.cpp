@@ -178,19 +178,19 @@ CalcExtRegExpTest::likeHelper(TupleDataWithBuffer const & outTuple,
         BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[i]));
     }
     BOOST_CHECK(iter != end);
-    BOOST_CHECK_EQUAL(iter->mPc, nulloutputs);
-    BOOST_CHECK_EQUAL(0, strcmp(iter->mStr, "22019"));
+    BOOST_CHECK_EQUAL(iter->pc, nulloutputs);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, "22019"));
     iter++;
     BOOST_CHECK(iter != end);
 
     BOOST_CHECK(iter != end);
-    BOOST_CHECK_EQUAL(iter->mPc, nulloutputs + 1);
-    BOOST_CHECK_EQUAL(0, strcmp(iter->mStr, "22019"));
+    BOOST_CHECK_EQUAL(iter->pc, nulloutputs + 1);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, "22019"));
     iter++;
     BOOST_CHECK(iter != end);
 
-    BOOST_CHECK_EQUAL(iter->mPc, nulloutputs + 2);
-    BOOST_CHECK_EQUAL(0, strcmp(iter->mStr, "22025"));
+    BOOST_CHECK_EQUAL(iter->pc, nulloutputs + 2);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, "22025"));
     iter++;
     BOOST_CHECK(iter == end);
                       
@@ -412,32 +412,32 @@ CalcExtRegExpTest::similarHelper(TupleDataWithBuffer const & outTuple,
     int exceptionPc = nulloutputs;
 
     BOOST_CHECK(iter != end);
-    BOOST_CHECK_EQUAL(iter->mPc, exceptionPc++);
-    BOOST_CHECK_EQUAL(0, strcmp(iter->mStr, "2200B"));
+    BOOST_CHECK_EQUAL(iter->pc, exceptionPc++);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, "2200B"));
     iter++;
     BOOST_CHECK(iter != end);
 
-    BOOST_CHECK_EQUAL(iter->mPc, exceptionPc++);
-    BOOST_CHECK_EQUAL(0, strcmp(iter->mStr, "22019"));
+    BOOST_CHECK_EQUAL(iter->pc, exceptionPc++);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, "22019"));
     iter++;
     BOOST_CHECK(iter != end);
 
-    BOOST_CHECK_EQUAL(iter->mPc, exceptionPc++);
-    BOOST_CHECK_EQUAL(0, strcmp(iter->mStr, "22019"));
+    BOOST_CHECK_EQUAL(iter->pc, exceptionPc++);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, "22019"));
     iter++;
     BOOST_CHECK(iter != end);
 
-    BOOST_CHECK_EQUAL(iter->mPc, exceptionPc++);
-    BOOST_CHECK_EQUAL(0, strcmp(iter->mStr, "2201B"));
+    BOOST_CHECK_EQUAL(iter->pc, exceptionPc++);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, "2201B"));
     iter++;
     BOOST_CHECK(iter != end);
 
-    BOOST_CHECK_EQUAL(iter->mPc, exceptionPc++);
-    BOOST_CHECK_EQUAL(0, strcmp(iter->mStr, "2200C"));
+    BOOST_CHECK_EQUAL(iter->pc, exceptionPc++);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, "2200C"));
     iter++;
 
-    BOOST_CHECK_EQUAL(iter->mPc, exceptionPc++);
-    BOOST_CHECK_EQUAL(0, strcmp(iter->mStr, "2201B"));
+    BOOST_CHECK_EQUAL(iter->pc, exceptionPc++);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->str, "2201B"));
     iter++;
     BOOST_CHECK(iter == end);
 }

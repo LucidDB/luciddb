@@ -39,7 +39,6 @@ public class FarragoJdbcTest extends FarragoTestCase
 {
     private static final boolean dtbug220_fixed = false;
     private static final boolean dtbug110_199_fixed = false;
-    private static final boolean dtbug117_fixed = false;
     private static final boolean dtbug119_fixed = false;
     private static final boolean dtbug199_fixed = false;
 
@@ -329,11 +328,9 @@ public class FarragoJdbcTest extends FarragoTestCase
                 assertEquals(minByte, resultSet.getByte(REAL));
                 assertEquals(minByte, resultSet.getByte(FLOAT));
                 assertEquals(minByte, resultSet.getByte(DOUBLE));
-                if (dtbug117_fixed) {
-                    assertEquals(minByte, resultSet.getByte(BOOLEAN));
-                    assertEquals(minByte, resultSet.getByte(CHAR));
-                    assertEquals(minByte, resultSet.getByte(VARCHAR));
-                }
+                assertEquals(1, resultSet.getByte(BOOLEAN));
+                assertEquals(minByte, resultSet.getByte(CHAR));
+                assertEquals(minByte, resultSet.getByte(VARCHAR));
                 break;
 
             case 102:
@@ -344,11 +341,9 @@ public class FarragoJdbcTest extends FarragoTestCase
                 assertEquals(maxByte, resultSet.getByte(REAL));
                 assertEquals(maxByte, resultSet.getByte(FLOAT));
                 assertEquals(maxByte, resultSet.getByte(DOUBLE));
-                if (dtbug117_fixed) {
-                    assertEquals(maxByte, resultSet.getByte(BOOLEAN));
-                    assertEquals(maxByte, resultSet.getByte(CHAR));
-                    assertEquals(maxByte, resultSet.getByte(VARCHAR));
-                }
+                assertEquals(1, resultSet.getByte(BOOLEAN));
+                assertEquals(maxByte, resultSet.getByte(CHAR));
+                assertEquals(maxByte, resultSet.getByte(VARCHAR));
                 break;
 
             case 103:
@@ -359,11 +354,9 @@ public class FarragoJdbcTest extends FarragoTestCase
                 assertEquals(minShort, resultSet.getShort(REAL));
                 assertEquals(minShort, resultSet.getShort(FLOAT));
                 assertEquals(minShort, resultSet.getShort(DOUBLE));
-                if (dtbug117_fixed) {
-                    assertEquals(minShort, resultSet.getShort(BOOLEAN));
-                    assertEquals(minShort, resultSet.getShort(CHAR));
-                    assertEquals(minShort, resultSet.getShort(VARCHAR));
-                }
+                assertEquals(1, resultSet.getShort(BOOLEAN));
+                assertEquals(minShort, resultSet.getShort(CHAR));
+                assertEquals(minShort, resultSet.getShort(VARCHAR));
                 break;
 
             case 104:
@@ -374,11 +367,9 @@ public class FarragoJdbcTest extends FarragoTestCase
                 assertEquals(maxShort, resultSet.getShort(REAL));
                 assertEquals(maxShort, resultSet.getShort(FLOAT));
                 assertEquals(maxShort, resultSet.getShort(DOUBLE));
-                if (dtbug117_fixed) {
-                    assertEquals(maxShort, resultSet.getShort(BOOLEAN));
-                    assertEquals(maxShort, resultSet.getShort(CHAR));
-                    assertEquals(maxShort, resultSet.getShort(VARCHAR));
-                }
+                assertEquals(1, resultSet.getShort(BOOLEAN));
+                assertEquals(maxShort, resultSet.getShort(CHAR));
+                assertEquals(maxShort, resultSet.getShort(VARCHAR));
                 break;
 
             case 105:
@@ -389,11 +380,9 @@ public class FarragoJdbcTest extends FarragoTestCase
                 assertEquals(minInt, resultSet.getInt(REAL));
                 assertEquals(minInt, resultSet.getInt(FLOAT));
                 assertEquals(minInt, resultSet.getInt(DOUBLE));
-                if (dtbug117_fixed) {
-                    assertEquals(minInt, resultSet.getInt(BOOLEAN));
-                    assertEquals(minInt, resultSet.getInt(CHAR));
-                    assertEquals(minInt, resultSet.getInt(VARCHAR));
-                }
+                assertEquals(1, resultSet.getInt(BOOLEAN));
+                assertEquals(minInt, resultSet.getInt(CHAR));
+                assertEquals(minInt, resultSet.getInt(VARCHAR));
                 break;
 
             case 106:
@@ -404,11 +393,9 @@ public class FarragoJdbcTest extends FarragoTestCase
                 assertEquals(-2147483648, resultSet.getInt(REAL));
                 assertEquals(maxInt, resultSet.getInt(FLOAT));
                 assertEquals(maxInt, resultSet.getInt(DOUBLE));
-                if (dtbug117_fixed) {
-                    assertEquals(maxInt, resultSet.getInt(BOOLEAN));
-                    assertEquals(maxInt, resultSet.getInt(CHAR));
-                    assertEquals(maxInt, resultSet.getInt(VARCHAR));
-                }
+                assertEquals(1, resultSet.getInt(BOOLEAN));
+                assertEquals(maxInt, resultSet.getInt(CHAR));
+                assertEquals(maxInt, resultSet.getInt(VARCHAR));
                 break;
 
             case 107:
@@ -419,11 +406,9 @@ public class FarragoJdbcTest extends FarragoTestCase
                 assertEquals(minLong, resultSet.getLong(REAL));
                 assertEquals(minLong, resultSet.getLong(FLOAT));
                 assertEquals(minLong, resultSet.getLong(DOUBLE));
-                if (dtbug117_fixed) {
-                    assertEquals(minLong, resultSet.getLong(BOOLEAN));
-                    assertEquals(minLong, resultSet.getLong(CHAR));
-                    assertEquals(minLong, resultSet.getLong(VARCHAR));
-                }
+                assertEquals(1, resultSet.getLong(BOOLEAN));
+                assertEquals(minLong, resultSet.getLong(CHAR));
+                assertEquals(minLong, resultSet.getLong(VARCHAR));
                 break;
 
             case 108:
@@ -434,11 +419,9 @@ public class FarragoJdbcTest extends FarragoTestCase
                 assertEquals(maxLong, resultSet.getLong(REAL));
                 assertEquals(maxLong, resultSet.getLong(FLOAT));
                 assertEquals(maxLong, resultSet.getLong(DOUBLE));
-                if (dtbug117_fixed) {
-                    assertEquals(maxLong, resultSet.getLong(BOOLEAN));
-                    assertEquals(maxLong, resultSet.getLong(CHAR));
-                    assertEquals(maxLong, resultSet.getLong(VARCHAR));
-                }
+                assertEquals(1, resultSet.getLong(BOOLEAN));
+                assertEquals(maxLong, resultSet.getLong(CHAR));
+                assertEquals(maxLong, resultSet.getLong(VARCHAR));
                 break;
 
             case 109:
@@ -449,11 +432,9 @@ public class FarragoJdbcTest extends FarragoTestCase
                 assertEquals(minFloat, resultSet.getFloat(REAL), 0);
                 assertEquals(minFloat, resultSet.getFloat(FLOAT), 0);
                 assertEquals(minFloat, resultSet.getFloat(DOUBLE), 0);
-                if (dtbug117_fixed) {
-                    assertEquals(minFloat, resultSet.getFloat(BOOLEAN), 0);
-                    assertEquals(minFloat, resultSet.getFloat(CHAR), 0);
-                    assertEquals(minFloat, resultSet.getFloat(VARCHAR), 0);
-                }
+                assertEquals(1, resultSet.getFloat(BOOLEAN),1);
+                assertEquals(minFloat, resultSet.getFloat(CHAR), 0);
+                assertEquals(minFloat, resultSet.getFloat(VARCHAR), 0);
                 break;
 
             case 110:
@@ -464,11 +445,9 @@ public class FarragoJdbcTest extends FarragoTestCase
                 assertEquals(maxFloat, resultSet.getFloat(REAL), 0);
                 assertEquals(maxFloat, resultSet.getFloat(FLOAT), 0);
                 assertEquals(maxFloat, resultSet.getFloat(DOUBLE), 0);
-                if (dtbug117_fixed) {
-                    assertEquals(maxFloat, resultSet.getFloat(BOOLEAN), 0);
-                    assertEquals(maxFloat, resultSet.getFloat(CHAR), 0);
-                    assertEquals(maxFloat, resultSet.getFloat(VARCHAR), 0);
-                }
+                assertEquals(1, resultSet.getFloat(BOOLEAN),1);
+                assertEquals(maxFloat, resultSet.getFloat(CHAR), 0);
+                assertEquals(maxFloat, resultSet.getFloat(VARCHAR), 0);
                 break;
 
             case 111:
@@ -479,11 +458,9 @@ public class FarragoJdbcTest extends FarragoTestCase
                 assertEquals(0, resultSet.getDouble(REAL), 0);
                 assertEquals(minDouble, resultSet.getDouble(FLOAT), 0);
                 assertEquals(minDouble, resultSet.getDouble(DOUBLE), 0);
-                if (dtbug117_fixed) {
-                    assertEquals(minDouble, resultSet.getDouble(BOOLEAN), 0);
-                    assertEquals(minDouble, resultSet.getDouble(CHAR), 0);
-                    assertEquals(minDouble, resultSet.getDouble(VARCHAR), 0);
-                }
+                assertEquals(1, resultSet.getDouble(BOOLEAN),1);
+                assertEquals(minDouble, resultSet.getDouble(CHAR), 0);
+                assertEquals(minDouble, resultSet.getDouble(VARCHAR), 0);
                 break;
 
             case 112:
@@ -494,28 +471,23 @@ public class FarragoJdbcTest extends FarragoTestCase
                 assertEquals(Float.POSITIVE_INFINITY, resultSet.getDouble(REAL), 0);
                 assertEquals(maxDouble, resultSet.getDouble(FLOAT), 0);
                 assertEquals(maxDouble, resultSet.getDouble(DOUBLE), 0);
-                if (dtbug117_fixed) {
-                    assertEquals(maxDouble, resultSet.getDouble(BOOLEAN), 0);
-                    assertEquals(maxDouble, resultSet.getDouble(CHAR), 0);
-                    assertEquals(maxDouble, resultSet.getDouble(VARCHAR), 0);
-                }
+                assertEquals(1, resultSet.getDouble(BOOLEAN),1);
+                assertEquals(maxDouble, resultSet.getDouble(CHAR), 0);
+                assertEquals(maxDouble, resultSet.getDouble(VARCHAR), 0);
                 break;
 
             case 113:
-                if (dtbug117_fixed) {
-                    assertEquals(boolValue, resultSet.getBoolean(TINYINT));
-                    assertEquals(boolValue, resultSet.getBoolean(SMALLINT));
-                    assertEquals(boolValue, resultSet.getBoolean(INTEGER));
-                    assertEquals(boolValue, resultSet.getBoolean(BIGINT));
-                    assertEquals(boolValue, resultSet.getBoolean(REAL));
-                    assertEquals(boolValue, resultSet.getBoolean(FLOAT));
-                    assertEquals(boolValue, resultSet.getBoolean(DOUBLE));
-                }
+                assertEquals(boolValue, resultSet.getBoolean(TINYINT));
+                assertEquals(boolValue, resultSet.getBoolean(SMALLINT));
+                assertEquals(boolValue, resultSet.getBoolean(INTEGER));
+                assertEquals(boolValue, resultSet.getBoolean(BIGINT));
+                assertEquals(boolValue, resultSet.getBoolean(REAL));
+                assertEquals(boolValue, resultSet.getBoolean(FLOAT));
+                assertEquals(boolValue, resultSet.getBoolean(DOUBLE));
                 assertEquals(boolValue, resultSet.getBoolean(BOOLEAN));
-                if (dtbug117_fixed) {
-                    assertEquals(boolValue, resultSet.getBoolean(CHAR));
-                    assertEquals(boolValue, resultSet.getBoolean(VARCHAR));
-                }
+                    //assertEquals(boolValue, resultSet.getBoolean(CHAR));
+        		    //can not convert String (true) to long exception
+                    //assertEquals(boolValue, resultSet.getBoolean(VARCHAR));
                 break;
 
             case 114:
@@ -659,7 +631,7 @@ public class FarragoJdbcTest extends FarragoTestCase
         while (resultSet.next()) {
             Calendar cal = Calendar.getInstance() ;
             cal.setTimeZone(TimeZone.getTimeZone("GMT-6"));
-            //  not supported by IteratorResultSet yet. 
+            //  not supported by IteratorResultSet yet.
             Date date = resultSet.getDate(1, cal);
             Timestamp tstamp = resultSet.getTimestamp(3, cal);
 
@@ -723,7 +695,7 @@ public class FarragoJdbcTest extends FarragoTestCase
             compareResultSet(Collections.singleton("3"));
         }
     }
-        
+
 
     /**
      * Test char and varchar Data Type in JDBC
@@ -754,7 +726,7 @@ public class FarragoJdbcTest extends FarragoTestCase
         Object genderx = new Character('M');
         // alternative:
         //Object genderx = new Integer(1);
-        Object cityx = new StringBuffer("New York");	
+        Object cityx = new StringBuffer("New York");
 
         String name = "JDBC Test Char";
 
@@ -818,8 +790,8 @@ public class FarragoJdbcTest extends FarragoTestCase
             assertEquals(1, res);
         }
 
-        // this query won't find everything we insert above because of bugs in 
-        // executeUpdate when there's a setFloat/setDouble called on a varchar 
+        // this query won't find everything we insert above because of bugs in
+        // executeUpdate when there's a setFloat/setDouble called on a varchar
         // column.  See comments in bug#117
         //query = "select gender, city, empid from sales.emps where name like '";
         //query += name + "%'";
@@ -905,7 +877,7 @@ public class FarragoJdbcTest extends FarragoTestCase
         float empno2 = 666.6F;
         double deptno2 = 10.0;
         BigDecimal empid2 = new BigDecimal(88.20334342);
-        boolean age2 = true; 
+        boolean age2 = true;
 
         String empno3 = "777";
         Object deptno3 = new Integer(10);
@@ -935,11 +907,8 @@ public class FarragoJdbcTest extends FarragoTestCase
         preparedStmt.setBoolean(5, age2);
         res = preparedStmt.executeUpdate();
         assertEquals(1, res);
-       
-        // ERROR: Bug#120 setstring on integer column errors out later on executeUpdate() call
-        //preparedStmt.setString(1, empno3);
-        // this folllowing line temporarily replaces the one above to workaround bug#120
-        preparedStmt.setInt(1, 777);
+
+        preparedStmt.setString(1, empno3);
         preparedStmt.setString(2, name3);
         preparedStmt.setObject(3, deptno3);
         preparedStmt.setInt(4, 28);
@@ -950,7 +919,7 @@ public class FarragoJdbcTest extends FarragoTestCase
         query = "select empno, deptno, empid, age from sales.emps where name = ?";
         preparedStmt = connection.prepareStatement(query);
         preparedStmt.setString(1, name);
-        
+
         resultSet = preparedStmt.executeQuery();
         while (resultSet.next())
         {
@@ -975,7 +944,7 @@ public class FarragoJdbcTest extends FarragoTestCase
         }
 
         resultSet.close();
- 
+
         preparedStmt.setString(1, name3);
         resultSet = preparedStmt.executeQuery();
         while (resultSet.next())

@@ -153,7 +153,7 @@ NAME        [a-zA-Z_][a-zA-Z_0-9]*
                 return NEGATIVE_INTEGER;
             }
 
--?{DIGIT}+"."{DIGIT}*("e"[+-]{DIGIT}+)?   {
+-?{DIGIT}+"."?{DIGIT}*([eE][+-]?{DIGIT}+)?   {
                 errno = 0;
                 yylval.u.v_double = strtod(yytext, NULL);
                 if (errno != 0)

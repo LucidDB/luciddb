@@ -52,6 +52,7 @@ public abstract class SqlValidatorTestCase extends TestCase {
 
     private static final String NL = System.getProperty("line.separator");
     private final String UNKNOWN_FUNC = "(?s).*Reference to unknown function.*encountered near line 1, column 8.*";
+    private final String INVALID_NBR_OF_ARGS = "(?s).*Invalid number of arguments to function '.*'; encountered near line 1, column 8. Was expecting . arguments.*";
 
     public void check(String sql)
     {
@@ -414,6 +415,9 @@ public abstract class SqlValidatorTestCase extends TestCase {
         checkExp("MOD(5             ,\t\f\r\n2)");
         checkExp("ln(5.43  )");
         checkExp("log(- -.2  )");
+
+        checkExpFails("mod(5.1, 3)","(?s).*Can not apply.*");
+        checkExpFails("mod(2,5.1)","(?s).*Can not apply.*");
     }
 
     public void testArthimeticOperatorsTypes() {
@@ -442,6 +446,10 @@ public abstract class SqlValidatorTestCase extends TestCase {
         checkExp("case 1 when 1 then 'one' when 2 then null else 'more' end");
         checkExp("case when TRUE then 'true' else 'false' end");
         check("values case when TRUE then 'true' else 'false' end");
+        checkExp("CASE 1 WHEN 1 THEN cast(null as integer) WHEN 2 THEN null END");
+        checkExp("CASE 1 WHEN 1 THEN cast(null as integer) WHEN 2 THEN cast(null as integer) END");
+        checkExp("CASE 1 WHEN 1 THEN null WHEN 2 THEN cast(null as integer) END");
+        checkExp("CASE 1 WHEN 1 THEN cast(null as integer) WHEN 2 THEN cast(cast(null as tinyint) as integer) END");
 
     }
 
@@ -452,6 +460,10 @@ public abstract class SqlValidatorTestCase extends TestCase {
         checkType("case 'one' when 'two' then 2 when 'one' then 1.00 else 3 end","DECIMAL(3, 2)");
         checkType("case 1 when 1 then 'one' when 2 then null else 'more' end","VARCHAR(4)");
         checkType("case when TRUE then 'true' else 'false' end", "VARCHAR(5)");
+        checkType("CASE 1 WHEN 1 THEN cast(null as integer) END", "INTEGER");
+        checkType("CASE 1 WHEN 1 THEN NULL WHEN 2 THEN cast(cast(null as tinyint) as integer) END", "INTEGER");
+        checkType("CASE 1 WHEN 1 THEN cast(null as integer) WHEN 2 THEN cast(null as integer) END", "INTEGER");
+        checkType("CASE 1 WHEN 1 THEN cast(null as integer) WHEN 2 THEN cast(cast(null as tinyint) as integer) END", "INTEGER");;
     }
 
     public void testCaseExpressionFails(){
@@ -464,8 +476,6 @@ public abstract class SqlValidatorTestCase extends TestCase {
         //all thens and else return null
         checkExpFails("case 1 when 1 then null end",
                       "(?s).*ELSE clause or at least one THEN clause must be non-NULL.*");
-        checkExpFails("CASE 1 WHEN 1 THEN cast(null as integer) WHEN 2 THEN cast(null as integer) END","(?s).*at least one THEN clause must be non-NULL.*");
-        checkExpFails("CASE 1 WHEN 1 THEN cast(null as integer) WHEN 2 THEN cast(cast(null as tinyint) as integer) END","(?s).*at least one THEN clause must be non-NULL.*");
     }
 
     public void testNullIf(){
@@ -610,9 +620,9 @@ public abstract class SqlValidatorTestCase extends TestCase {
         checkType("position('mouse' in 'house')","INTEGER");
         //review wael 29 March 2004: is x'1' (hexstring) and x'1010' (bytestring) a type mismatch?
         checkExpFails("position(x'1' in x'1010')",
-                      "(?s).*Can not apply 'POSITION' to arguments of type 'POSITION.<BIT.4.>, <VARBINARY.2.>.'.*");
+                      "(?s).*Can not apply 'POSITION' to arguments of type 'POSITION.<BIT.4.> IN <VARBINARY.2.>.'.*");
         checkExpFails("position(x'1' in '110')",
-                      "(?s).*Can not apply 'POSITION' to arguments of type 'POSITION.<BIT.4.>, <VARCHAR.3.>.'.*");
+                      "(?s).*Can not apply 'POSITION' to arguments of type 'POSITION.<BIT.4.> IN <VARCHAR.3.>.'.*");
     }
 
     public void testTrim() {
@@ -639,7 +649,7 @@ public abstract class SqlValidatorTestCase extends TestCase {
         checkExp("overlay('ABCdef' placing 'abc' from 1)");
         checkExp("overlay('ABCdef' placing 'abc' from 1 for 3)");
         checkExpFails("overlay('ABCdef' placing 'abc' from '1' for 3)",
-                "(?s).*OVERLAY.<BIT>, <BIT>, <INTEGER>..*");
+                "(?s).*OVERLAY.<BIT> PLACING <BIT> FROM <INTEGER>..*");
         checkType("overlay('ABCdef' placing 'abc' from 1 for 3)","VARCHAR(9)");
         //todo checkCollation("overlay('ABCdef' placing 'abc' collate latin1$sv from 1 for 3)",
         //               "ISO-8859-1$sv", SqlCollation.COERCIBILITY_EXPLICIT);
@@ -711,6 +721,11 @@ public abstract class SqlValidatorTestCase extends TestCase {
     }
 
     public void testCastTypeToType() {
+        checkType("cast(123 as varchar(3))","VARCHAR(3)");
+        checkType("cast(123 as char(3))","CHAR(3)");
+        checkType("cast('123' as integer)","INTEGER");
+        checkType("cast('123' as double)","DOUBLE");
+        checkType("cast('1.0' as real)","REAL");
         checkType("cast(1.0 as tinyint)","TINYINT");
         checkType("cast(1 as tinyint)","TINYINT");
         checkType("cast(1.0 as smallint)","SMALLINT");
@@ -739,7 +754,7 @@ public abstract class SqlValidatorTestCase extends TestCase {
         checkExp("LOCALTIME(3)");
         checkExp("LOCALTIME");                     //    fix sqlcontext later.
         checkExpFails("LOCALTIME(1+2)","Argument to function 'LOCALTIME' must be a literal") ;
-        checkExpFails("LOCALTIME()",UNKNOWN_FUNC);
+        checkExpFails("LOCALTIME()",INVALID_NBR_OF_ARGS);
         checkType("LOCALTIME","TIME"); //  NOT NULL, with TZ ?
         checkExpFails("LOCALTIME(-1)", "Argument to function 'LOCALTIME' must be a literal"); // i guess -s1 is an expression?
         checkExpFails("LOCALTIME('foo')","(?s).*Can not apply .LOCALTIME. to arguments of type .LOCALTIME.<VARCHAR.3.>.*");
@@ -748,26 +763,26 @@ public abstract class SqlValidatorTestCase extends TestCase {
         checkExp("LOCALTIMESTAMP(3)");
         checkExp("LOCALTIMESTAMP");                     //    fix sqlcontext later.
         checkExpFails("LOCALTIMESTAMP(1+2)","Argument to function 'LOCALTIMESTAMP' must be a literal") ;
-        checkExpFails("LOCALTIMESTAMP()",UNKNOWN_FUNC);
+        checkExpFails("LOCALTIMESTAMP()",INVALID_NBR_OF_ARGS);
         checkType("LOCALTIMESTAMP","TIMESTAMP"); //  NOT NULL, with TZ ?
         checkExpFails("LOCALTIMESTAMP(-1)", "Argument to function 'LOCALTIMESTAMP' must be a literal"); // i guess -s1 is an expression?
         checkExpFails("LOCALTIMESTAMP('foo')","(?s).*Can not apply .LOCALTIMESTAMP. to arguments of type .LOCALTIMESTAMP.<VARCHAR.3.>... " +
                 "Supported form.s.: .LOCALTIMESTAMP.<INTEGER>.*");
 
         // CURRENT_DATE
-        checkExpFails("CURRENT_DATE(3)",UNKNOWN_FUNC);
+        checkExpFails("CURRENT_DATE(3)",INVALID_NBR_OF_ARGS);
         checkExp("CURRENT_DATE");                     //    fix sqlcontext later.
-        checkExpFails("CURRENT_DATE(1+2)",UNKNOWN_FUNC) ;
+        checkExpFails("CURRENT_DATE(1+2)",INVALID_NBR_OF_ARGS);
         checkExp("CURRENT_DATE()"); // FIXME: works, but shouldn't
         checkType("CURRENT_DATE","DATE"); //  NOT NULL, with TZ?
-        checkExpFails("CURRENT_DATE(-1)", UNKNOWN_FUNC); // i guess -s1 is an expression?
-        checkExpFails("CURRENT_DATE('foo')","(?s).*Reference to unknown function CURRENT_DATE.*");
+        checkExpFails("CURRENT_DATE(-1)",INVALID_NBR_OF_ARGS); // i guess -s1 is an expression?
+        checkExpFails("CURRENT_DATE('foo')","(?s).*");
 
         // current_time
         checkExp("current_time(3)");
         checkExp("current_time");                     //    fix sqlcontext later.
         checkExpFails("current_time(1+2)","Argument to function 'CURRENT_TIME' must be a literal") ;
-        checkExpFails("current_time()", UNKNOWN_FUNC);
+        checkExpFails("current_time()", INVALID_NBR_OF_ARGS);
         checkType("current_time","TIME"); //  NOT NULL, with TZ ?
         checkExpFails("current_time(-1)", "Argument to function 'CURRENT_TIME' must be a literal"); // i guess -s1 is an expression?
         checkExpFails("current_time('foo')","(?s).*Can not apply .CURRENT_TIME. to arguments of type 'CURRENT_TIME.<VARCHAR.3.>.'.*");
@@ -776,7 +791,7 @@ public abstract class SqlValidatorTestCase extends TestCase {
         checkExp("CURRENT_TIMESTAMP(3)");
         checkExp("CURRENT_TIMESTAMP");                     //    fix sqlcontext later.
         checkExpFails("CURRENT_TIMESTAMP(1+2)","Argument to function 'CURRENT_TIMESTAMP' must be a literal") ;
-        checkExpFails("CURRENT_TIMESTAMP()",UNKNOWN_FUNC);
+        checkExpFails("CURRENT_TIMESTAMP()",INVALID_NBR_OF_ARGS);
         checkType("CURRENT_TIMESTAMP","TIMESTAMP"); //  NOT NULL, with TZ ?
         checkExpFails("CURRENT_TIMESTAMP(-1)", "Argument to function 'CURRENT_TIMESTAMP' must be a literal"); // i guess -s1 is an expression?
         checkExpFails("CURRENT_TIMESTAMP('foo')","(?s).*Can not apply 'CURRENT_TIMESTAMP' to arguments of type 'CURRENT_TIMESTAMP.<VARCHAR.3.>.'.*");
@@ -808,6 +823,7 @@ public abstract class SqlValidatorTestCase extends TestCase {
     }
     public void testInvalidFunction() {
         checkExpFails("foo()", UNKNOWN_FUNC);
+        checkExpFails("mod(123)", "(?s).*Invalid number of arguments to function .MOD.. encountered near line 1, column 8. Was expecting 2 arguments.*");
     }
 
     public void testJdbcFunctionCall() {
@@ -821,6 +837,17 @@ public abstract class SqlValidatorTestCase extends TestCase {
         checkExpFails("{fn log(1,1)}","(?s).*Encountered .fn LOG. with 2 parameter.s., was expecting 1 parameter.s.*");
         checkExpFails("{fn fn(1)}","(?s).*Function .fn FN. is not defined.*");
         checkExpFails("{fn hahaha(1)}","(?s).*Function .fn HAHAHA. is not defined.*");
+    }
+
+    public void testQuotedFunction() {
+        checkExp("\"CAST\"(1 as double)");
+        checkExp("\"POSITION\"('b' in 'alphabet')");
+        //convert and translate not yet implemented
+//        checkExp("\"CONVERT\"('b' using converstion)");
+//        checkExp("\"TRANSLATE\"('b' using translation)");
+        checkExp("\"OVERLAY\"('a' PLAcing 'b' from 1)");
+        checkExp("\"SUBSTRING\"('a' from 1)");
+        checkExp("\"TRIM\"('b')");
     }
 }
 

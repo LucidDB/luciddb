@@ -52,7 +52,7 @@ public class FarragoDateTimeType extends FarragoPrecisionType {
         super(simpleType,isNullable,precision,0,null,null);
         assertSupportedType(simpleType, precision);
         hasTimeZone = hasTZ;
-        computeDateTimeDigest();
+        computeDigest();
         this.factory = typeFactory;
     }
 
@@ -72,13 +72,18 @@ public class FarragoDateTimeType extends FarragoPrecisionType {
         return hasTimeZone;
     }
 
-    protected void computeDateTimeDigest() {
-
+    // override FarragoAtomicType
+    protected void generateTypeString(StringBuffer sb,boolean withDetail)
+    {
+        super.generateTypeString(sb,withDetail);
+        if (!withDetail) {
+            return;
+        }
         if (hasTimeZone) {
-            digest = digest + "_WITH_TZ";
+            sb.append(" WITH TIME ZONE");
         }
     }
-
+    
     public int getOctetLength() {
         return 8; // sizeof long.
     }
@@ -118,7 +123,7 @@ public class FarragoDateTimeType extends FarragoPrecisionType {
         ClassDeclaration decl =
             new ClassDeclaration(
                 new ModifierList(ModifierList.PUBLIC | ModifierList.STATIC),
-                "Oj_" + digest,
+                "Oj_inner_" + getFactoryImpl().generateClassId(),
                 superDecl,
                 interfaceDecls,
                 memberDecls);

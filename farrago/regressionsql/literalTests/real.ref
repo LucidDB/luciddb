@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/farrago/regressionsql/literalTests/real.sql#4 $ 
+0: jdbc:farrago:> -- $Id: //open/farrago/regressionsql/literalTests/real.sql#5 $ 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test real literal
 0: jdbc:farrago:>  select 0.0 as t1 from values ('true');
@@ -32,7 +32,11 @@
 | -34.84  |
 +---------+
 0: jdbc:farrago:>  select 1.2345678901234e+20 as t1 from values ('true');
-Error: Numerical result out of range (at line:col 4:9 to 4:29, characters 32 to 52) (state=,code=0)
++---------------------+
+|         T1          |
++---------------------+
+| 1.2345678901234E20  |
++---------------------+
 0: jdbc:farrago:>  select 1.2345678901234e-20 as t1 from values ('true');
 +----------------------+
 |          T1          |
@@ -40,9 +44,17 @@ Error: Numerical result out of range (at line:col 4:9 to 4:29, characters 32 to 
 | 1.2345678901234E-20  |
 +----------------------+
 0: jdbc:farrago:>  select 10e40 as t1 from values ('true');
-Error: Numerical result out of range (at line:col 4:9 to 4:50, characters 32 to 73) (state=,code=0)
++---------+
+|   T1    |
++---------+
+| 1.0E41  |
++---------+
 0: jdbc:farrago:>  select -10e40 as t1 from values ('true');
-Error: Numerical result out of range (at line:col 5:9 to 5:50, characters 37 to 78) (state=,code=0)
++----------+
+|    T1    |
++----------+
+| -1.0E41  |
++----------+
 0: jdbc:farrago:>  select 10e-40 as t1 from values ('true');
 +----------+
 |    T1    |
@@ -74,7 +86,11 @@ Error: Numerical result out of range (at line:col 5:9 to 5:50, characters 37 to 
 | -34.84  |
 +---------+
 0: jdbc:farrago:>  select 1.2345678901234e+200 as t1 from values ('true');
-Error: Numerical result out of range (at line:col 4:9 to 4:209, characters 32 to 232) (state=,code=0)
++----------------------+
+|          T1          |
++----------------------+
+| 1.2345678901234E200  |
++----------------------+
 0: jdbc:farrago:>  select 1.2345678901234e-200 as t1 from values ('true');
 +-----------------------+
 |          T1           |
@@ -82,13 +98,13 @@ Error: Numerical result out of range (at line:col 4:9 to 4:209, characters 32 to
 | 1.2345678901234E-200  |
 +-----------------------+
 0: jdbc:farrago:>  select 10e400 as t1 from values ('true');
-Error: Numerical result out of range (at line:col 4:9 to 4:410, characters 32 to 433) (state=,code=0)
+Error: Number literal '1.0000000000000000000E401' out of range near: line 1, column 1 (state=,code=0)
 0: jdbc:farrago:>  select -10e400 as t1 from values ('true');
-Error: Numerical result out of range (at line:col 5:9 to 5:410, characters 37 to 438) (state=,code=0)
+Error: Number literal '1.0000000000000000000E401' out of range near: line 1, column 8 (state=,code=0)
 0: jdbc:farrago:>  select 10e-400 as t1 from values ('true');
-Error: Numerical result out of range (at line:col 4:9 to 4:410, characters 32 to 433) (state=,code=0)
+Error: Numerical result out of range (at line:col 5:9 to 5:16, characters 44 to 51) (state=,code=0)
 0: jdbc:farrago:>  select -10e-400 as t1 from values ('true');
-Error: Numerical result out of range (at line:col 5:9 to 5:410, characters 37 to 438) (state=,code=0)
+Error: Numerical result out of range (at line:col 5:9 to 5:16, characters 47 to 54) (state=,code=0)
 0: jdbc:farrago:>  select -34.84 as t1 from values ('true');
 +---------+
 |   T1    |
@@ -102,7 +118,11 @@ Error: Numerical result out of range (at line:col 5:9 to 5:410, characters 37 to
 | -1004.3  |
 +----------+
 0: jdbc:farrago:>  select -1.2345678901234e+200 as t1 from values ('true');
-Error: Numerical result out of range (at line:col 5:9 to 5:209, characters 37 to 237) (state=,code=0)
++-----------------------+
+|          T1           |
++-----------------------+
+| -1.2345678901234E200  |
++-----------------------+
 0: jdbc:farrago:>  select -1.2345678901234e-200 as t1 from values ('true');
 +------------------------+
 |           T1           |
@@ -118,25 +138,28 @@ Error: Numerical result out of range (at line:col 5:9 to 5:209, characters 37 to
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- negative test
 0: jdbc:farrago:> insert into t_real values('true',null);
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'VARCHAR_4_ISO_8859_1_ISO_8859_1_en_US_primary' to 'REAL' (state=,code=0)
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=1 Code=22003 (state=,code=0)
 0: jdbc:farrago:> insert into t_real values(TRUE,null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'BOOLEAN' to 'REAL' (state=,code=0)
 0: jdbc:farrago:> insert into t_real values(x'ff',null);
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'VARBINARY_1' to 'REAL' (state=,code=0)
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'VARBINARY(1)' to 'REAL' (state=,code=0)
 0: jdbc:farrago:> insert into t_real values(b'10',null);
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'BIT_2' to 'REAL' (state=,code=0)
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'BIT(2)' to 'REAL' (state=,code=0)
 0: jdbc:farrago:> insert into t_real values(date '1999-01-08',null);
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'DATE_0' to 'REAL' (state=,code=0)
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'DATE' to 'REAL' (state=,code=0)
 0: jdbc:farrago:> insert into t_real values(time '12:01:01',null);
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'TIME_0' to 'REAL' (state=,code=0)
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'TIME(0)' to 'REAL' (state=,code=0)
 0: jdbc:farrago:> insert into t_real values(timestamp '2004-12-01 12:01:01',null);
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'TIMESTAMP_0' to 'REAL' (state=,code=0)
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'TIMESTAMP(0)' to 'REAL' (state=,code=0)
+0: jdbc:farrago:> insert into t_real values(10e400,null);
+Error: Number literal '1.0000000000000000000E401' out of range near: line 1, column 26 (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- insert the right value
 0: jdbc:farrago:> insert into t_real values(1234.999,null);
 0: jdbc:farrago:> insert into t_real values(-4567890123456789.9,null);
-0: jdbc:farrago:> insert into t_real values(10e400,null);
-Error: Numerical result out of range (at line:col 5:9 to 5:410, characters 45 to 446) (state=,code=0)
 0: jdbc:farrago:> insert into t_real values(-1.2345678901234e-200,null);
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- null value test

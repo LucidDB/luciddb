@@ -1,0 +1,632 @@
+<html>
+
+<head>
+<title>SQL Standard User Defined Types and Routines</title>
+<link rel="stylesheet" type="text/css" href="../stylesheet.css" />
+
+</head>
+
+<body>
+
+<h1>SQL Standard User Defined Types and Routines</h1>
+
+This document describes standard support for user-defined types and
+routines in SQL99.  The specifications are informal; for details, see
+the relevant portions of the standard.  None of this is implemented in
+Farrago yet.
+
+
+<h2>User-Defined Types</h2>
+
+In SQL99, it's possible to extend the type system in a number of ways:
+
+<ul>
+
+<li>The traditional concept of a <em>domain</em> is preserved from
+SQL92.  A domain is not actually a user-defined type; it's really just
+an alias for a combination of a builtin type with a default value and
+a set of constraints.  A column based on a domain can be assigned and
+compared with values of the underlying builtin type directly; there's
+no need (or even mechanism) to convert between the domain and the
+builtin type.  Domains cannot be used to declare anything but columns;
+e.g. you can't declare a parameter to an SQL routine as a domain.
+
+<li>The simplest kind of user-defined type is a <em>distinct
+type</em>.  Like a domain, a distinct type is defined in terms of a
+single builtin type.  Unlike a domain, a distinct type is not directly
+assignable or comparable with the underlying builtin type or other
+distinct types based on it.  Instead, explicit conversions are
+required.  The canonical example for why distinct types are a good
+idea is the Mars Climate Orbiter, which crashed due to an error from
+mixing imperial and metric units without conversion.  Here's a simple
+example of distinct type definition:
+
+<pre><code>
+CREATE TYPE metric_meter AS DOUBLE;
+CREATE TYPE imperial_foot AS DOUBLE;
+</code></pre>
+
+<li>More generally, a <em>structured type</em> is defined much like a
+class in an object-oriented programming language such as C++ or Java.
+A structured type is defined with an arbitrary number of attributes of
+any type (including user-defined types), and may optionally inherit
+from another structured type (single-inheritance only).  Types may be
+FINAL or NOT FINAL (as with the Java <code>final</code> modifier) and
+INSTANTIABLE or NOT INSTANTIABLE (as with the Java
+<code>abstract</code> modifier).  Here's the classic OO example:
+
+<pre><code>
+
+CREATE TYPE Shape2D
+NOT INSTANTIABLE
+NOT FINAL;
+
+CREATE TYPE Circle UNDER Shape2D
+AS(
+    radius DOUBLE DEFAULT 1
+)
+INSTANTIABLE
+FINAL;
+
+CREATE TYPE Rectangle UNDER Shape2D
+NOT INSTANTIABLE
+NOT FINAL;
+
+CREATE TYPE Square UNDER Rectangle
+AS(
+    side_length DOUBLE DEFAULT 1
+)
+INSTANTIABLE
+FINAL;
+
+CREATE TYPE Oblong UNDER Rectangle
+AS(
+    width DOUBLE DEFAULT 1,
+    length DOUBLE DEFAULT 2
+)
+INSTANTIABLE
+NOT FINAL;
+</code></pre>
+
+Attributes can have default values, but not constraints (meaning you
+can't even declare an attribute as NOT NULL).  It's not even possible
+to use domains to work around this, since domains can only be based on
+builtin types.  However, it is possible to use column-level
+constraints or validation code in a constructor instead.
+
+<pre><code>
+
+CREATE TABLE PolkaDots(
+    dot_id INT NOT NULL PRIMARY KEY,
+    Circle dot NOT NULL CHECK ((dot.radius > 0) IS TRUE),
+    center_x DOUBLE NOT NULL,
+    center_y DOUBLE NOT NULL);
+</code></pre>
+
+Note that the NOT NULL constraint on dot applies to the Circle object
+as a whole (not to its radius attribute, which is validated by the
+CHECK clause).  Attempting to reference an attribute of a null type
+instance results in NULL (not an exception as you might expect).
+
+<li>Finally, an entire <em>Java class</em> can be used as the
+implementation of a user-defined type, as specified in SQL/JRT, also
+known as SQLJ Part 2.  Java user-defined types differ significantly
+from non-Java structured types, so they aren't currently covered by
+this document.
+
+</ul>
+
+
+<h2>Typed Tables</h2>
+
+SQL99 allows structured types to be used in two different modes:
+
+<ul>
+
+<li>In the same fashion as a builtin type.  For example, one might
+replace the three columns first_name/middle_name/last_name in a table
+with a single column of structured type full_name, and similarly for
+the parameters of user-defined routines which operate on names.
+
+<li>As the underlying definition of a <em>typed table</em>.  A typed
+table is similar to the concept of an <em>extent</em> in an
+object-oriented database; it provides <em>persistence</em> and
+<em>object identity</em> for values of a user-defined type, and
+automatically maps the attributes of the structured-type onto the
+columns of the typed table.  It also maps type inheritance onto extent
+inheritance (allowing, for example, a query against a shape table to
+implicitly union all circles with rectangles).
+
+</ul>
+
+This document does not cover typed tables any further, nor does it
+cover locators and references; instead, the focus is on the semantics
+of structured types and their instances.
+
+
+<h2>Routines</h2>
+
+SQL behavior can be extended by defining various kinds of
+<em>SQL-invoked routines</em>.  SQL-invoked routines may be
+implemented in the SQL standard stored procedure language, SQL/PSM (in
+which case they are called <em>SQL routines</em>), or in another
+language such as Java (in which case they are called <em>external
+routines</em>, defined in SQL/OLB, also known as SQLJ Part 1).  The
+choice of implementation language is orthogonal to the contexts in
+which routines may be invoked, as listed here:
+
+<ul>
+
+<li><em>Procedures</em> are routines invoked explicitly via the SQL
+<code>CALL</code> statement.  Procedures are not associated with a
+particular type, and cannot be used in SQL row expressions.  An SQL-invoked
+procedure is similar to a C++ free function with void return type.
+
+<pre><code>
+CREATE PROCEDURE raise_annual_salary(IN raise_percentage DOUBLE)
+LANGUAGE SQL
+MODIFIES SQL DATA
+BEGIN
+    UPDATE emps SET salary = salary + salary*raise_percentage;
+END;
+
+CALL raise_annual_salary(0.10);
+
+</code></pre>
+
+<li><em>Functions</em> are routines which are invoked from SQL row
+expressions.  Functions are not associated with a particular type.  An
+SQL-invoked function is similar to a C++ free function with non-void return
+type.
+
+<pre><code>
+CREATE FUNCTION sqr(x DOUBLE) 
+RETURNS DOUBLE
+LANGUAGE SQL
+RETURN(x*x);
+
+SELECT sum(3.1415926*sqr(d.dot.radius)) as total_area FROM PolkaDots d;
+
+</code></pre>
+
+<li><em>Methods</em> are routines which invoked from SQL row
+expressions and which are associated with a particular type.  An
+SQL-invoked method is similar to a method in C++ or Java, and may be
+either static (type-level) or non-static (instance-level).  Methods
+are declared as part of the type definition, but defined separately.
+Methods are normally invoked with a parenthesized argument list, but
+for niladic methods the parentheses can be dropped:
+
+<pre><code>
+CREATE TYPE Shape2D
+NOT INSTANTIABLE
+NOT FINAL
+INSTANCE METHOD area() RETURNS DOUBLE;
+
+CREATE TYPE Circle UNDER Shape2D
+AS(
+    radius DOUBLE DEFAULT 1
+)
+INSTANTIABLE
+FINAL
+OVERRIDING INSTANCE METHOD area() RETURNS DOUBLE;
+
+CREATE TYPE Rectangle UNDER Shape2D
+NOT INSTANTIABLE
+NOT FINAL
+OVERRIDING INSTANCE METHOD area() RETURNS DOUBLE
+INSTANCE METHOD rect_width() RETURNS DOUBLE
+INSTANCE METHOD rect_length() RETURNS DOUBLE;
+
+CREATE TYPE Square UNDER Rectangle
+AS(
+    side_length DOUBLE DEFAULT 1
+)
+INSTANTIABLE
+FINAL
+OVERRIDING INSTANCE METHOD rect_width() RETURNS DOUBLE;
+OVERRIDING INSTANCE METHOD rect_length() RETURNS DOUBLE;
+
+CREATE TYPE Oblong UNDER Rectangle
+AS(
+    width DOUBLE DEFAULT 1,
+    length DOUBLE DEFAULT 2
+)
+INSTANTIABLE
+NOT FINAL
+OVERRIDING INSTANCE METHOD rect_width() RETURNS DOUBLE
+OVERRIDING INSTANCE METHOD rect_length() RETURNS DOUBLE;
+
+CREATE INSTANCE METHOD area()
+RETURNS DOUBLE
+FOR Circle
+RETURN 3.1415926*sqr(radius);
+
+CREATE INSTANCE METHOD area()
+RETURNS DOUBLE
+FOR Rectangle
+RETURN rect_width*rect_length;
+
+CREATE INSTANCE METHOD rect_width()
+RETURNS DOUBLE
+FOR Oblong
+RETURN width;
+
+CREATE INSTANCE METHOD rect_length()
+RETURNS DOUBLE
+FOR Oblong
+RETURN length;
+
+CREATE INSTANCE METHOD rect_width()
+RETURNS DOUBLE
+FOR Square
+RETURN side_length;
+
+CREATE INSTANCE METHOD rect_length()
+RETURNS DOUBLE
+FOR Square
+RETURN side_length;
+
+SELECT d.dot.area FROM PolkaDots d;
+
+SELECT d.dot.area() FROM PolkaDots d;
+</code></pre>
+
+<li><em>Constructor functions</em> are special niladic functions which
+create new instances of types.  By default, the system defines a
+constructor function for each type which sets all attributes to the
+default value; this definition cannot be overridden.  Constructor
+functions may not be invoked except via the NEW expression:
+
+<pre><code>
+INSERT INTO PolkaDots VALUES(1,NEW CIRCLE(),0,0);
+</code></pre>
+
+<li><em>Constructor methods</em> are special methods which initialize
+a new instance of a type.  Constructor methods are also invoked via
+the <code>NEW</code> expression, which (when given arguments) combines
+the system-defined constructor function with the appropriate
+user-defined constructor method:
+
+<pre><code>
+CREATE TYPE Circle UNDER Shape2D
+AS(
+    radius DOUBLE DEFAULT 1
+)
+INSTANTIABLE
+FINAL
+CONSTRUCTOR METHOD Circle(radius DOUBLE) RETURNS Circle;
+
+CREATE CONSTRUCTOR METHOD Circle(radius DOUBLE)
+FOR Circle
+RETURNS Circle
+BEGIN
+    SET SELF.radius = radius;
+    RETURN SELF;
+END;
+
+INSERT INTO PolkaDots VALUES(2,NEW CIRCLE(20.5),10,100);
+</code></pre>
+
+(Note that the SQL <code>SELF</code> keyword serves the same purpose
+as the <code>this</code> keyword in Java.)
+
+<li><em>Observers</em> are special niladic methods which read an
+attribute of a type (where the name of the attribute is the same as
+the name of the observer method).  The system defines observers for
+all attributes automatically, and they cannot be overridden.
+
+<pre><code>
+SELECT d.dot.radius() FROM PolkaDots d;
+
+SELECT d.dot.radius FROM PolkaDots d;
+</code></pre>
+
+<li><em>Mutators</em> are special monadic methods which instantiate a
+copy of an existing structured type instance and modify one of the
+copy's attributes (where the name of the attribute is the same as the
+name of the mutator method).  As for observers, the system defines
+mutators for all attributes automatically, and they cannot be
+overridden.  Mutator semantics are certainly confusing.  The example
+below returns a result set of Circle objects equivalent to the dots in
+the PolkaDots table with doubled radii.  Despite appearances, it
+does not directly return the radii themselves:
+
+<pre><code>
+SELECT d.dot.radius(d.dot.radius*2) FROM PolkaDots d;
+</code></pre>
+
+Traditional attribute lvalue semantics are also supported for updates:
+
+<pre><code>
+UPDATE PolkaDots SET dot.radius = dot.radius*2;
+</code></pre>
+
+This is equivalent to:
+
+<pre><code>
+UPDATE PolkaDots SET dot = dot.radius(dot.radius*2);
+</code></pre>
+
+</ul>
+
+
+<h2>Routine Modifiers</h2>
+
+A number of modifiers can be applied to routines when they are defined:
+
+<ul>
+
+<li><code>LANGUAGE</code>: this specifies the implementation language.
+The examples above all used <code>SQL</code>, but later we'll see some
+examples which specify <code>JAVA</code> instead.
+
+<li><code>PARAMETER STYLE</code>: this can be one of <code>{SQL |
+GENERAL | JAVA}</code> and controls how routine parameter lists are
+mapped into other languages for external routines.
+
+<li><code>SPECIFIC <em>name</em></code>: an additional name by which
+an overloaded routine is known in the catalog.  This allows a routine
+to be referenced by specific name without having to include its full
+signature.
+
+<li><code>[NOT] DETERMINISTIC</code>: specifies whether the routine
+always produces the same result given the same inputs and persistent state.
+
+<li><code>{NO SQL | CONTAINS SQL | READS SQL DATA | MODIFIES SQL DATA
+}</code>: constraints the usage of SQL within the implementation of
+the routine.
+
+<li><code>DYNAMIC RESULT SETS</code>: for procedures, whether result
+sets are returned when the procedure is invoked.  Procedural result
+sets are not covered in this document.
+
+<li><code>[ RETURNS NULL | CALLED ] ON NULL INPUT</code>: for functions,
+whether the routine is actually called if one of its arguments is
+NULL.  <code>RETURNS NULL</code> forces the executor to short-circuit
+the function invocation, supplying NULL for its result.
+
+</ul>
+
+
+<h2>Routine Parameters</h2>
+
+Most routine parameters are input-only.  However, procedures allow
+parameters to be specified as one of <code>{ IN | OUT | INOUT
+}</code>.  Parameter names are optional (but still recommended) when
+an external routine is specified, since external routine lookup is by
+type signature.  Parameters do not take default values.
+
+
+<h2>Casting Around a Type Hierarchy</h2>
+
+The equivalent of the Java <code>instanceof</code> keyword is the
+<code>IS [NOT] OF</code> syntax:
+
+<pre><code>
+SELECT p.name
+FROM ParkingLots p
+WHERE p.geometry IS OF (Square,Circle);
+</code></pre>
+
+Casting is sometimes required to get the right version of a method due
+to overloading or overriding.  The normal SQL <code>CAST</code>
+keyword is not used for this purpose.  Instead, the syntax for
+downcasting uses the <code>TREAT</code> keyword:
+
+<pre><code>
+SELECT TREAT(p.geometry AS Square).side_length
+FROM ParkingLots p
+WHERE p.geometry IS OF (Square);
+</code></pre>
+
+For upcasting, the TREAT keyword is omitted:
+
+<pre><code>
+SELECT generate_label(d.dot AS Shape)
+FROM PolkaDots p;
+</code></pre>
+
+If the <code>generate_label</code> function were overloaded with
+different versions for Circles and for generic Shapes, then the query
+above will invoke the generic Shape version.  For the gory details on
+routine resolution, consult the standard.
+
+<p>
+
+Besides explicit type hierarchy casting, SQL99 also provides for
+
+<ul>
+
+<li>User-defined casts via the <code>CREATE CAST</code> statement.
+These are relevant for structured types; for distinct types, cast
+functions to and from builtin types can be referenced as part of the
+type definition.
+
+<li>User-defined comparisons via the <code>CREATE ORDERING</code>
+statement.
+
+<li>User-defined transformation to and from representations which can
+be used in non-SQL programming languages. These are defined via the
+<code>CREATE TRANSFORM</code> statement, which is unnecessary for
+Java; JDBC already defines the <a href="">SQLData interface</a> for
+this purpose.
+
+<li>Implicit casting on the return value of functions via the
+<code>CAST FROM</code> clause (mostly useful with external routines
+where the routine wasn't defined with SQL in mind).
+
+<li>Type-preserving functions via the <code>RESULT</code> clause; I
+haven't decoded this part of the standard yet.
+
+</ul>
+
+
+<h2>Bookkeeping</h2>
+
+After a type has been defined, it can be maintained with the
+<code>ALTER TYPE</code> statement, which allows for 
+
+<ul>
+
+<li>add attribute
+
+<li>add method
+
+<li>drop attribute
+
+<li>drop method
+
+</ul>
+
+Types can be dropped, but only with <code>RESTRICT</code> semantics
+(no <code>CASCADE</code>).
+
+<p>
+
+Procedures, functions, and types may be defined in any schema, but
+methods must be defined in the same schema as the associated type.
+
+<p>
+
+SQL99 introduces the notion of a <em>SQL-path</em>, which is used to
+resolve unqualified references to procedures, functions, and types
+(similar to the way the <code>PATH</code> environment variable is used
+to resolve executable names).  Each schema has a SQL-path associated
+with it; objects defined within that schema use that path implicitly.
+Sessions also have their own SQL-paths used for dynamic SQL.  
+
+<p>
+
+As with table references in views, unqualified routine references are
+"frozen" at the time the invoking code is validated so that subsequent
+path changes do not affect them.  However, the situation is a little
+more complicated in the case of late binding; instead of freezing on a
+single routine, the system freezes a candidate set with final matching
+performed at execution time.  In the examples above, an invocation of
+<code>shape.area()</code> does not know until execution whether a
+particular shape is a Rectangle or a Circle.
+
+
+<h2>External Routines</h2>
+
+So far all of the examples have defined SQL routines (using SQL/PSM
+for the procedure implementation language).  For Farrago, we are also
+interested in using Java as a routine implementation language.
+SQL/OLB provides this, including the capability to embed SQL in Java.
+However, it does NOT allow methods to be defined in Java for normal
+structured types, only procedures and functions.  In order to define
+methods in Java, you have to go all the way and use Java structured
+types (SQL/JRT, not covered here).
+
+<p>
+
+Defining a routine with a Java implementation is a multi-step process:
+
+<ol>
+
+<li>Write the routine and compile it as a Java class (possibly using a SQLJ
+precompiler to translate any embedded SQL statements).
+
+<pre><code>
+class MathFuncs {
+    public static void sqr(double d)
+    {
+        return d*d;
+    }
+}
+</code></pre>
+
+<li>Package the compiled Java class into a JAR file.
+
+<li>From SQL, <code>CALL</code> the system-defined
+<code>SQLJ.INSTALL_JAR</code> routine to install the JAR into the
+DBMS.
+
+<pre><code>
+CALL SQLJ.INSTALL_JAR('file:/home/jvs/MathFuncs.jar','MathFuncsJavaLib');
+</code></pre>
+
+<li>Issue a <code>CREATE {FUNCTION|PROCEDURE}</code> statement
+referencing the routine's Java implementation in the installed JAR.
+
+<pre><code>
+CREATE FUNCTION sqr(d DOUBLE)
+NO SQL
+EXTERNAL NAME 'MathFuncsLib:MathFuncs.sqr'
+LANGUAGE JAVA
+PARAMETER STYLE JAVA;
+</code></pre>
+
+</ol>
+
+Unfortunately, there's no way to combine all of this into a single DDL
+statement with the routine body inline.  We may want to consider an
+extension for this, e.g.
+
+<pre><code>
+CREATE FUNCTION sqr(d DOUBLE)
+NO SQL
+INLINE
+LANGUAGE JAVA
+PARAMETER STYLE JAVA
+    {
+        return d*d;
+    }
+;
+</code></pre>
+
+The schema named <code>SQLJ</code> is a special schema maintained by
+the system (just like <code>INFORMATION_SCHEMA</code>).  It contains
+other procedures for JAR maintenance (<code>REPLACE_JAR, REMOVE_JAR,
+ ALTER_JAVA_PATH</code>).  Besides Java classes, JAR files can also
+contain deployment descriptors such as the DDL for creating the SQL
+routines and granting access to them.  In a way this is the inverse
+of the inline routine definition mentioned above: instead of defining
+everything in SQL, define everything in the JAR, and then issue a
+single <code>CALL</code> from SQL to deploy it.
+
+
+<h2>Access Control</h2>
+
+SQL99 types have no concept of access control such as the
+<code>public/private/protected</code> of Java and C++.  However, the
+standard (and more powerful) GRANT/REVOKE mechanism can be used at the
+method level instead.
+
+<p>
+
+When external routines execute SQL statements, the authorization with
+which they run can be controlled via the <code>EXTERNAL
+SECURITY</code> clause on the routine definition:
+
+<ul>
+
+<li><code>EXTERNAL SECURITY DEFINER</code>: the routine executes with
+the privileges of the user who created the routine.
+
+<li><code>EXTERNAL SECURITY INVOKER</code>: the routine executes with
+the privileges of the user who invoked the routine.
+
+<li><code>EXTERNAL SECURITY IMPLEMENTATION DEFINED</code>: the system
+decides (may be any user at all!).
+
+</ul>
+
+SQL routines always run with INVOKER privileges.
+
+
+<h2>User Defined Aggregates</h2>
+
+SQL99 does not provide a mechanism for user-defined aggregates.  See
+the 
+<a href="http://www.cise.ufl.edu/help/database/oracle-docs/server.920/a96524/c14ordb.htm#437280">Oracle</a>,
+<a href="http://www-106.ibm.com/developerworks/db2/library/techarticle/0309stolze/0309stolze.html">DB2</a>,
+and 
+<a href="http://www.postgresql.org/docs/current/interactive/xaggr.html">
+PostgreSQL</a> docs for various vendor-defined extensions in this area.
+
+<hr>
+
+</body>
+</html>

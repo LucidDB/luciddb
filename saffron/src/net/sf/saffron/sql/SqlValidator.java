@@ -711,9 +711,20 @@ public class SqlValidator
                         call.operator.name, argTypes);
                     if (function == null) {
                         // todo: localize "Function"
-                        throw SaffronResource.instance().newValidatorUnknownFunction(
+                        List overloads =
+                            opTab.lookupFunctionsByName(call.operator.name);
+                        if (null == overloads ||
+                            Collections.EMPTY_LIST == overloads)
+                        {
+                            throw SaffronResource.instance().newValidatorUnknownFunction(
                                 call.operator.name,
-                            call.getParserPosition().toString());
+                                call.getParserPosition().toString());
+                        }
+                        SqlFunction fun = (SqlFunction) overloads.get(0);
+                        throw SaffronResource.instance().newInvalidNbrOfArgument(
+                                call.operator.name,
+                                call.getParserPosition().toString(),
+                                (Integer) fun.getPossibleNumOfOperands().get(0));
                     }
                     call.operator = function;
                 }
@@ -1170,6 +1181,9 @@ public class SqlValidator
         case SqlKind.UpdateORDINAL:
             validateUpdate((SqlUpdate) node);
             break;
+        case SqlKind.LiteralORDINAL:
+            validateLiteral((SqlLiteral) node);
+            break;
         default:
             if (node instanceof SqlCall) {
                 SqlCall call = (SqlCall) node;
@@ -1185,7 +1199,11 @@ public class SqlValidator
                 }
             }
         }
+    }
 
+    protected void validateLiteral(SqlLiteral literal)
+    {
+        // default is to do nothing
     }
 
     private void validateFrom(SqlNode node,SaffronType targetRowType)
@@ -1755,11 +1773,11 @@ public class SqlValidator
             switch (call.getKind().getOrdinal()) {
             case SqlKind.UnionORDINAL:
             case SqlKind.IntersectORDINAL:
-            case SqlKind.MinusORDINAL:
+            case SqlKind.ExceptORDINAL:
                 for (int i = 0; i < call.operands.length; i++) {
                     SqlNode operand = call.operands[i];
                     if (!operand.getKind().isA(SqlKind.Query)) {
-                        throw newValidationError("Operand of UNION/INTERSECT/MINUS must be a query: " + operand);
+                        throw newValidationError("Operand of UNION/INTERSECT/EXCEPT must be a query: " + operand);
                     }
                     validateQuery(operand);
                 }

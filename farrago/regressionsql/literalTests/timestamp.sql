@@ -72,6 +72,19 @@ select TIMESTAMP '2004-12-01 12:01:01' as t1 from values('TRUE');
 --select timestamp 'Feb 16 17:32:01 -0097' as t1 from values ('true');
 --select timestamp 'Feb 16 17:32:01 5097 BC' as t1 from values ('true');
 
+-- more ISO format tests that should work
+select timestamp '1930-003-005 8:4:9' from values ('true');
+select timestamp '2005-12-6 0006:0008:0022' from values ('true');
+-- with precision
+select timestamp '1966-03-4 12:00:45.009' from values ('true');
+select timestamp '1945-4-3 0001:00:01.1000' from values ('true');
+select timestamp '2003-12-31 0004:00:34.999' from values ('true');
+
+-- these should fail
+select timestamp '2004-13-4 05:06:07' from values ('true');
+select timestamp '2004-04-6 05:06:67' from values ('true');
+select timestamp '2004-10-8 23.54.43.' from values ('true');
+
 -- test datatype
 create schema test;
 set schema test;

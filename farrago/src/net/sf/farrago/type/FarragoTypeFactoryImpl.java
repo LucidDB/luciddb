@@ -82,6 +82,8 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
      */
     private Map classifierNameToSqlType = new HashMap();
 
+    private int nextGeneratedClassId;
+
     //~ Constructors ----------------------------------------------------------
 
     // TODO: avoid reinitializing static information for each new factory
@@ -439,6 +441,11 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     private FarragoException newSqlTypeException(SQLException ex)
     {
         return FarragoResource.instance().newJdbcDriverTypeInfoFailed(ex);
+    }
+
+    int generateClassId()
+    {
+        return nextGeneratedClassId++;
     }
 
     // implement FarragoTypeFactory

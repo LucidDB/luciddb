@@ -148,12 +148,12 @@ public abstract class SqlCaseOperator extends SqlOperator
         boolean foundNotNull = false;
         for (int i = 0; i < thenList.size(); i++) {
             SqlNode node = (SqlNode) thenList.get(i);
-            if (!isNullNode(node)) {
+            if (!SqlUtil.isNullLiteral(node, false)) {
                 foundNotNull = true;
             }
         }
 
-        if (!isNullNode(caseCall.getElseOperand())) {
+        if (!SqlUtil.isNullLiteral(caseCall.getElseOperand(), false)) {
             foundNotNull=true;
         }
 
@@ -175,14 +175,14 @@ public abstract class SqlCaseOperator extends SqlOperator
             SqlNode node = (SqlNode) thenList.get(i);
             argTypes[i] =
                     validator.deriveType(scope,node);
-            if (isNullNode(node)) {
+            if (SqlUtil.isNullLiteral(node, false)) {
                 nullList.add(node);
             }
         }
         SqlNode elseOp = caseCall.getElseOperand();
         argTypes[argTypes.length-1] =
                 validator.deriveType(scope, caseCall.getElseOperand());
-        if (isNullNode(elseOp)) {
+        if (SqlUtil.isNullLiteral(elseOp, false)) {
                 nullList.add(elseOp);
         }
         SaffronType ret = SqlOperatorTable.useNullableBiggest.getType(
@@ -197,16 +197,6 @@ public abstract class SqlCaseOperator extends SqlOperator
             validator.setValidatedNodeType(node, ret);
         }
         return ret;
-    }
-
-    private boolean isNullNode(SqlNode node) {
-        if (node instanceof SqlCall) {
-            SqlCall call = (SqlCall) node;
-            if (call.operator instanceof SqlCastFunction) {
-                return isNullNode(call.operands[0]);
-            }
-        }
-        return SqlUtil.isNullLiteral(node, false);
     }
 
     public SaffronType getType(SaffronTypeFactory typeFactory,
@@ -260,9 +250,7 @@ public abstract class SqlCaseOperator extends SqlOperator
         }
 
         return (SqlCase) createCall(
-            new SqlNode [] {
-                whenList,thenList,elseClause
-            }, parserPosition);
+            new SqlNode [] {whenList,thenList,elseClause}, parserPosition);
     }
 
     public void unparse(

@@ -29,6 +29,19 @@
 
 FENNEL_BEGIN_NAMESPACE
 
-// TODO: Deprecate this file
+string
+ExtendedInstructionTable::signatures()
+{
+    ostringstream s("");
+
+    map<string, ExtendedInstructionDef *>::iterator i = _defsByName.begin();
+    map<string, ExtendedInstructionDef *>::iterator end = _defsByName.end();
+
+    while (i != end) {
+        s << (*i).first << endl;
+        i++;
+    }
+    return s.str();
+}
 
 FENNEL_END_NAMESPACE

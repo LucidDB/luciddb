@@ -376,10 +376,10 @@ public class Rex2CalcPlanTestCase extends TestCase
         String prg =
                 "O s4;" + NL +
                 "I s4;" + NL +
-                "L bo, bo, bo, s4, s4, s4, s4, s4;" + NL +
+                "L bo, bo, bo, s4, s4, s4, s4, s4, bo;" + NL +
                 "S bo;" + NL +
-                "C bo, bo, s4, s4;" + NL +
-                "V 1, 0, 10, 2;" + NL +
+                "C bo, bo, s4, s4, vc,5;" + NL +
+                "V 1, 0, 10, 2, 0x3232303034;" + NL +
                 "T;" + NL +
                 "ISNOTNULL L0, I0;" + NL +
                 "GT L1, I0, C2;" + NL +
@@ -393,6 +393,10 @@ public class Rex2CalcPlanTestCase extends TestCase
                 "DIV L5, C3, C3;" + NL +
                 "ADD L6, L4, L5;" + NL +
                 "SUB L7, L6, C3;" + NL +
+                "ISNULL L8, L7;" + NL +
+                "JMPF @16, L8;" + NL +
+                "RAISE C4;" + NL +
+                "RETURN;" + NL +
                 "REF O0, L7;" + NL +
                 "RETURN;" + NL;
         check(sql, prg,true,false,false);
@@ -405,10 +409,10 @@ public class Rex2CalcPlanTestCase extends TestCase
         String prg =
                 "O vc,0, s4;" + NL +
                 "I vc,0, s4;" + NL +
-                "L bo, bo, s4, bo, bo, bo, bo, bo, s4;" + NL +
+                "L bo, bo, s4, bo, bo, bo, bo, bo, s4, bo;" + NL +
                 "S bo;" + NL +
-                "C bo, bo, vc,8, vc,48, s4, s4, s4;" + NL +
-                "V 1, 0, 0x46726564, 0x49534F2D383835392D3124656E5F5553247072696D617279, 0, 10, 2;" + NL +
+                "C bo, bo, vc,8, vc,48, s4, s4, s4, vc,5;" + NL +
+                "V 1, 0, 0x46726564, 0x49534F2D383835392D3124656E5F5553247072696D617279, 0, 10, 2, 0x3232303034;" + NL +
                 "T;" + NL +
                 "ISNOTNULL L0, I0;" + NL +
                 "CALL 'strCmpA(L2, I0, C2);" + NL +
@@ -424,20 +428,27 @@ public class Rex2CalcPlanTestCase extends TestCase
                 "MOVE S0, C1;" + NL +
                 "MUL L8, C6, C6;" + NL +
                 "REF O0, I0;" + NL +
+                "ISNULL L9, L8;" + NL +
+                "JMPF @18, L9;" + NL +
+                "RAISE C7;" + NL +
+                "RETURN;" + NL +
                 "REF O1, L8;" + NL +
                 "RETURN;" + NL;
         check(sql, prg,true,false,false);
     }
 
      public void testNumbers() {
-        String sql="SELECT -(1+-2.*-3.e-1/-.4)>=+5 FROM \"emps\" WHERE \"empno\" > 10";
+        String sql="SELECT " +
+            "-(1+-2.*-3.e-1/-.4)>=+5, " +
+            " 1e200 / 0.4" +
+            "FROM \"emps\" WHERE \"empno\" > 10";
          String prg =
-                 "O bo;" + NL +
+                 "O bo, d;" + NL +
                  "I s4;" + NL +
-                 "L bo, s4, d, d, d, d, d, d, d, d, bo;" + NL +
+                 "L bo, s4, d, d, d, d, d, d, d, d, d, bo, d, bo;" + NL +
                  "S bo;" + NL +
-                 "C bo, bo, s4, s4, s4, d, d, s4;" + NL +
-                 "V 1, 0, 10, 1, 2, 0.3, 0.4, 5;" + NL +
+                 "C bo, bo, s4, s4, s4, d, d, s4, d, vc,5;" + NL +
+                 "V 1, 0, 10, 1, 2, 3E-1, 4E-1, 5, 1.0000000000000000000E200, 0x3232303034;" + NL +
                  "T;" + NL +
                  "GT L0, I0, C2;" + NL +         // empno > 10
                  "JMPT @4, L0;" + NL +
@@ -453,8 +464,15 @@ public class Rex2CalcPlanTestCase extends TestCase
                  "CAST L7, C3;" + NL +           // convert 1 to 1.0
                  "ADD L8, L7, L6;" + NL +        // 1.0 + ((-2 * -0.3) / -0.4)
                  "NEG L9, L8;" + NL +
-                 "GE L10, L9, C7;" + NL +         // x >= 5
-                 "REF O0, L10;" + NL +
+                 "CAST L10, C7;" + NL +
+                 "GE L11, L9, L10;" + NL +         // x >= 5
+                 "DIV L12, C8, C6;" + NL +         // 1e2 / 0.4
+                 "REF O0, L11;" + NL +
+                 "ISNULL L13, L12;" + NL +
+                 "JMPF @22, L13;" + NL +
+                 "RAISE C9;" + NL +
+                 "RETURN;" + NL +
+                 "REF O1, L12;" + NL +
                  "RETURN;" + NL;
         check(sql, prg,false,false,false);
     }
@@ -490,22 +508,34 @@ public class Rex2CalcPlanTestCase extends TestCase
     public void testStringLiterals() {
         String sql= "SELECT n'aBc',_iso_8859-1'', 'abc' FROM \"emps\" WHERE \"empno\" > 10";
         String prg =
-                "O vc,6, vc,0, vc,6;" + NL +
-                "I s4;" + NL +
-                "L bo;" + NL +
-                "S bo;" + NL +
-                "C bo, bo, s4, vc,6, vc,0, vc,6;" + NL +
-                "V 1, 0, 10, 0x614263, 0x, 0x616263;" + NL +
-                "T;" + NL +
-                "GT L0, I0, C2;" + NL +         // empno > 10
-                "JMPT @4, L0;" + NL +
-                "MOVE S0, C0;" + NL +
-                "RETURN;" + NL +
-                "MOVE S0, C1;" + NL +
-                "REF O0, C3;" + NL +
-                "REF O1, C4;" + NL +
-                "REF O2, C5;" + NL +
-                "RETURN;" + NL;
+            "O vc,6, vc,0, vc,6;" + NL +
+            "I s4;" + NL +
+            "L bo, bo;" + NL +
+            "S bo;" + NL +
+            "C bo, bo, s4, vc,6, vc,0, vc,6, vc,5;" + NL +
+            "V 1, 0, 10, 0x614263, 0x, 0x616263, 0x3232303034;" + NL +
+            "T;" + NL +
+            "GT L0, I0, C2;" + NL +
+            "JMPT @4, L0;" + NL +
+            "MOVE S0, C0;" + NL +
+            "RETURN;" + NL +
+            "MOVE S0, C1;" + NL +
+            "ISNULL L1, C3;" + NL +
+            "JMPF @9, L1;" + NL +
+            "RAISE C6;" + NL +
+            "RETURN;" + NL +
+            "REF O0, C3;" + NL +
+            "ISNULL L1, C4;" + NL +
+            "JMPF @14, L1;" + NL +
+            "RAISE C6;" + NL +
+            "RETURN;" + NL +
+            "REF O1, C4;" + NL +
+            "ISNULL L1, C5;" + NL +
+            "JMPF @19, L1;" + NL +
+            "RAISE C6;" + NL +
+            "RETURN;" + NL +
+            "REF O2, C5;" + NL +
+            "RETURN;";
         check(sql, prg,false,false,false);
     }
 
@@ -563,10 +593,10 @@ public class Rex2CalcPlanTestCase extends TestCase
         String prg =
             "O d, s4, s8, s4, d, d, d;" + NL +
             "I s4;" + NL +
-            "L bo, d, s4, s8, s8, s8, s4, d, d, d, d;" + NL +
+            "L bo, d, s4, s8, s8, s8, s4, d, d, d, d, bo;" + NL +
             "S bo;" + NL +
-            "C bo, bo, s4, d, s4, s8, d;" + NL +
-            "V 1, 0, 10, 1.0, 1, 5000000000, 1.1;" + NL +
+            "C bo, bo, s4, d, s4, s8, d, vc,5;" + NL +
+            "V 1, 0, 10, 1.0E0, 1, 5000000000, 1.1E0, 0x3232303034;" + NL +
             "T;" + NL +
             "GT L0, I0, C2;" + NL +
             "JMPT @4, L0;" + NL +
@@ -584,9 +614,25 @@ public class Rex2CalcPlanTestCase extends TestCase
             "CALL 'LN(L9, L8);" + NL +
             "CALL 'LOG10(L10, L8);" + NL +
             "REF O0, L1;" + NL +
+            "ISNULL L11, L2;" + NL +
+            "JMPF @20, L11;" + NL +
+            "RAISE C7;" + NL +
+            "RETURN;" + NL +
             "REF O1, L2;" + NL +
+            "ISNULL L11, L3;" + NL +
+            "JMPF @25, L11;" + NL +
+            "RAISE C7;" + NL +
+            "RETURN;" + NL +
             "REF O2, L3;" + NL +
+            "ISNULL L11, L6;" + NL +
+            "JMPF @30, L11;" + NL +
+            "RAISE C7;" + NL +
+            "RETURN;" + NL +
             "REF O3, L6;" + NL +
+            "ISNULL L11, L7;" + NL +
+            "JMPF @35, L11;" + NL +
+            "RAISE C7;" + NL +
+            "RETURN;" + NL +
             "REF O4, L7;" + NL +
             "REF O5, L9;" + NL +
             "REF O6, L10;" + NL +
@@ -602,7 +648,7 @@ public class Rex2CalcPlanTestCase extends TestCase
                 "L bo, s8, s8, s4, s4, d, d;" + NL +
                 "S bo;" + NL +
                 "C bo, bo, s4, d, s4, s4;" + NL +
-                "V 1, 0, 10, 3.0, 2, 1;" + NL +
+                "V 1, 0, 10, 3.0E0, 2, 1;" + NL +
                 "T;" + NL +
                 "GT L0, I0, C2;" + NL +
                 "JMPT @4, L0;" + NL +
@@ -627,10 +673,10 @@ public class Rex2CalcPlanTestCase extends TestCase
         String prg =
                 "O vc,22, s4;" + NL +
                 "I s4;" + NL +
-                "L bo, vc,22, s4, bo, bo, s4, bo, s4, s4;" + NL +
+                "L bo, vc,22, s4, bo, bo, s4, bo, s4, s4, bo;" + NL +
                 "S bo;" + NL +
-                "C bo, bo, s4, s4, vc,8, s4, vc,22, vc,0;" + NL +
-                "V 1, 0, 10, 1, 0x7761656C, 2, 0x7761656C7320636C6F6E65, ;" + NL +
+                "C bo, bo, s4, s4, vc,8, s4, vc,22, vc,0, vc,5;" + NL +
+                "V 1, 0, 10, 1, 0x7761656C, 2, 0x7761656C7320636C6F6E65, , 0x3232303034;" + NL +
                 "T;" + NL +
                 "GT L0, I0, C2;" + NL +         // empno > 10
                 "JMPT @4, L0;" + NL +
@@ -658,6 +704,10 @@ public class Rex2CalcPlanTestCase extends TestCase
                 "ADD L8, C5, C2;" + NL +        // ELSE 2 + 10
                 "MOVE L5, L8;" + NL +
                 "REF O0, L1;" + NL +
+                "ISNULL L9, L5;" + NL +
+                "JMPF @30, L9;" + NL +
+                "RAISE C8;" + NL +
+                "RETURN;" + NL +
                 "REF O1, L5;" + NL +
                 "RETURN;" + NL;
         check(sql, prg,false,false,false);
@@ -697,10 +747,10 @@ public class Rex2CalcPlanTestCase extends TestCase
         String prg =
                 "O s4;" + NL +
                 "I s4;" + NL +
-                "L bo, s4, bo, s4, bo;" + NL +
+                "L bo, s4, bo, s4, bo, bo;" + NL +
                 "S bo;" + NL +
-                "C bo, bo, s4, s4, s4, s4;" + NL +
-                "V 1, 0, 10, 1, 2, 3;" + NL +
+                "C bo, bo, s4, s4, s4, s4, vc,5;" + NL +
+                "V 1, 0, 10, 1, 2, 3, 0x3232303034;" + NL +
                 "T;" + NL +
                 "GT L0, I0, C2;" + NL +
                 "JMPT @4, L0;" + NL +
@@ -719,6 +769,10 @@ public class Rex2CalcPlanTestCase extends TestCase
                 "JMP @16;" + NL +
                 "MOVE L3, C5;" + NL +
                 "MOVE L1, L3;" + NL +
+                "ISNULL L5, L1;" + NL +
+                "JMPF @21, L5;" + NL +
+                "RAISE C6;" + NL +
+                "RETURN;" + NL +
                 "REF O0, L1;" + NL +
                 "RETURN;" + NL;
         check(sql, prg,false,false,false);
@@ -729,10 +783,10 @@ public class Rex2CalcPlanTestCase extends TestCase
                 "FROM \"emps\" WHERE \"empno\" > 10";
         String prg="O s4;"+NL+
                     "I s4;"+NL+
-                    "L bo, s4;"+NL+
+                    "L bo, s4, bo;"+NL+
                     "S bo;"+NL+
-                    "C bo, bo, s4, s4;"+NL+
-                    "V 1, 0, 10, 0;"+NL+
+                    "C bo, bo, s4, s4, vc,5;"+NL+
+                    "V 1, 0, 10, 0, 0x3232303034;"+NL+
                     "T;"+NL+
                     "GT L0, I0, C2;"+NL+
                     "JMPT @4, L0;"+NL+
@@ -740,6 +794,10 @@ public class Rex2CalcPlanTestCase extends TestCase
                     "RETURN;"+NL+
                     "MOVE S0, C1;"+NL+
                     "MOVE L1, C3;"+NL+
+                    "ISNULL L2, L1;"+NL+
+                    "JMPF @10, L2;"+NL+
+                    "RAISE C4;"+NL+
+                    "RETURN;"+NL+
                     "REF O0, L1;"+NL+
                     "RETURN;";
         check(sql, prg,false,false,false);
@@ -748,10 +806,10 @@ public class Rex2CalcPlanTestCase extends TestCase
                 "FROM \"emps\" WHERE \"empno\" > 10";
         String prg1="O s4;"+NL+
                     "I s4, bo;"+NL+
-                    "L bo, s4;"+NL+
+                    "L bo, s4, bo;"+NL+
                     "S bo;"+NL+
-                    "C bo, bo, s4, s4, s4;"+NL+
-                    "V 1, 0, 10, 2, 0;"+NL+
+                    "C bo, bo, s4, s4, s4, vc,5;"+NL+
+                    "V 1, 0, 10, 2, 0, 0x3232303034;"+NL+
                     "T;"+NL+
                     "GT L0, I0, C2;"+NL+
                     "JMPT @4, L0;"+NL+
@@ -764,6 +822,10 @@ public class Rex2CalcPlanTestCase extends TestCase
                     "JMP @11;"+NL+
                     "MOVE L1, C4;"+NL+
                     "JMP @11;"+NL+
+                    "ISNULL L2, L1;"+NL+
+                    "JMPF @15, L2;"+NL+
+                    "RAISE C5;"+NL+
+                    "RETURN;"+NL+
                     "REF O0, L1;"+NL+
                     "RETURN;";
         check(sql1, prg1,false,false,false);
@@ -884,10 +946,10 @@ public class Rex2CalcPlanTestCase extends TestCase
         String prg =
                 "O s4, vc,2, vc,2, s4, vc,2, vc,4, vc,2, vc,2, vc,2, vc,6;" + NL +
                 "I s4;" + NL +
-                "L bo, s4, vc,2, vc,2, s4, vc,2, vc,4, vc,2, vc,2, vc,2, vc,6;" + NL +
+                "L bo, s4, vc,2, vc,2, s4, vc,2, vc,4, vc,2, vc,2, vc,2, vc,6, bo;" + NL +
                 "S bo;" + NL +
-                "C bo, bo, s4, vc,2, s4, s4, vc,2, vc,2;" + NL +
-                "V 1, 0, 10, 0x61, 1, 1, 0x5C, 0x62;" + NL +
+                "C bo, bo, s4, vc,2, s4, s4, vc,2, vc,2, vc,5;" + NL +
+                "V 1, 0, 10, 0x61, 1, 1, 0x5C, 0x62, 0x3232303034;" + NL +
                 "T;" + NL +
                 "GT L0, I0, C2;" + NL +
                 "JMPT @4, L0;" + NL +
@@ -906,13 +968,37 @@ public class Rex2CalcPlanTestCase extends TestCase
                 "CALL 'strCatA3(L10, C3, C3);" + NL +
                 "CALL 'strCatA2(L10, C7);" + NL +
                 "REF O0, L1;" + NL +
+                "ISNULL L11, L2;" + NL +
+                "JMPF @21, L11;" + NL +
+                "RAISE C8;" + NL +
+                "RETURN;" + NL +
                 "REF O1, L2;" + NL +
+                "ISNULL L11, L3;" + NL +
+                "JMPF @26, L11;" + NL +
+                "RAISE C8;" + NL +
+                "RETURN;" + NL +
                 "REF O2, L3;" + NL +
                 "REF O3, L4;" + NL +
+                "ISNULL L11, L5;" + NL +
+                "JMPF @32, L11;" + NL +
+                "RAISE C8;" + NL +
+                "RETURN;" + NL +
                 "REF O4, L5;" + NL +
                 "REF O5, L6;" + NL +
+                "ISNULL L11, L7;" + NL +
+                "JMPF @38, L11;" + NL +
+                "RAISE C8;" + NL +
+                "RETURN;" + NL +
                 "REF O6, L7;" + NL +
+                "ISNULL L11, L8;" + NL +
+                "JMPF @43, L11;" + NL +
+                "RAISE C8;" + NL +
+                "RETURN;" + NL +
                 "REF O7, L8;" + NL +
+                "ISNULL L11, L9;" + NL +
+                "JMPF @48, L11;" + NL +
+                "RAISE C8;" + NL +
+                "RETURN;" + NL +
                 "REF O8, L9;" + NL +
                 "REF O9, L10;" + NL +
                 "RETURN;" + NL;
@@ -1054,7 +1140,7 @@ public class Rex2CalcPlanTestCase extends TestCase
                    "L bo, d;" + NL +
                    "S bo;" + NL +
                    "C bo, bo, s4, d;" + NL +
-                   "V 1, 0, 10, 1.0;" + NL +
+                   "V 1, 0, 10, 1.0E0;" + NL +
                    "T;" + NL +
                    "GT L0, I0, C2;" + NL +
                    "JMPT @4, L0;" + NL +
@@ -1074,10 +1160,10 @@ public class Rex2CalcPlanTestCase extends TestCase
                 " FROM \"emps\" WHERE \"empno\" > 10";
         String prg="O d;" + NL +
                    "I s4;" + NL +
-                   "L bo, d, d;" + NL +
+                   "L bo, d, d, bo;" + NL +
                    "S bo;" + NL +
-                   "C bo, bo, s4, s4, d;" + NL +
-                   "V 1, 0, 10, 1, 1.0;" + NL +
+                   "C bo, bo, s4, s4, d, vc,5;" + NL +
+                   "V 1, 0, 10, 1, 1.0E0, 0x3232303034;" + NL +
                    "T;" + NL +
                    "GT L0, I0, C2;" + NL +
                    "JMPT @4, L0;" + NL +
@@ -1086,8 +1172,54 @@ public class Rex2CalcPlanTestCase extends TestCase
                    "MOVE S0, C1;" + NL +
                    "CAST L1, C3;" + NL +
                    "ADD L2, L1, C4;" + NL +
+                   "ISNULL L3, L2;" + NL +
+                   "JMPF @11, L3;" + NL +
+                   "RAISE C5;" + NL +
+                   "RETURN;" + NL +
                    "REF O0, L2;" + NL +
                    "RETURN;";
+        check(sql, prg,false,false,false);
+    }
+
+    public void testCastCharTypesToNumbersAndBack() {
+        String sql =
+                "SELECT " +
+                "cast(123 as varchar(3))" +
+                ",cast(123 as char(3))" +
+                ",cast(12.3 as varchar(3))" +
+                ",cast(12.3 as char(3))" +
+                ",cast('123' as bigint)" +
+                ",cast('123' as tinyint)" +
+                ",cast('123' as double)" +
+                " FROM \"emps\" WHERE \"empno\" > 10";
+        String prg= "O vc,6, c,6, vc,6, c,6, s8, s1, d;" + NL +
+                    "I s4;" + NL +
+                    "L bo, s8, vc,6, c,6, vc,6, c,6, s8, s1, d;" + NL +
+                    "S bo;" + NL +
+                    "C bo, bo, s4, s4, d, vc,6;" + NL +
+                    "V 1, 0, 10, 123, 1.23E1, 0x313233;" + NL +
+                    "T;" + NL +
+                    "GT L0, I0, C2;" + NL +
+                    "JMPT @4, L0;" + NL +
+                    "MOVE S0, C0;" + NL +
+                    "RETURN;" + NL +
+                    "MOVE S0, C1;" + NL +
+                    "CAST L1, C3;" + NL +
+                    "CALL 'castA(L2, L1);" + NL +
+                    "CALL 'castA(L3, L1);" + NL +
+                    "CALL 'castA(L4, C4);" + NL +
+                    "CALL 'castA(L5, C4);" + NL +
+                    "CALL 'castA(L6, C5);" + NL +
+                    "CAST L7, L6;" + NL +
+                    "CALL 'castA(L8, C5);" + NL +
+                    "REF O0, L2;" + NL +
+                    "REF O1, L3;" + NL +
+                    "REF O2, L4;" + NL +
+                    "REF O3, L5;" + NL +
+                    "REF O4, L6;" + NL +
+                    "REF O5, L7;" + NL +
+                    "REF O6, L8;" + NL +
+                    "RETURN;";
         check(sql, prg,false,false,false);
     }
 }

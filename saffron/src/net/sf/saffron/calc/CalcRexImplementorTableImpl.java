@@ -410,6 +410,98 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
         return regs[0];
     }
 
+    /**
+     * Converts a binary call (two regs as operands) by converting the first
+     * operand to type {@link CalcProgramBuilder.OpType#Int8} if needed and
+     * then back again. Logically it will do something like<br>
+     * t0 = type of first operand<br>
+     * CAST(CALL(CAST(op0 as INT8), op1) as t0)<br>
+     * If t0 already is INT8, the CALL is simply returned as is.
+     */
+    private static RexCall implementFirstOperandWithInt8(
+                                RexCall call,
+                                RexToCalcTranslator translator,
+                                RexNode typeNode,
+                                int i,
+                                boolean castBack) {
+
+        CalcProgramBuilder.RegisterDescriptor rd =
+            translator.getCalcRegisterDescriptor(typeNode);
+        if (rd.getType().isExact() &&
+            !rd.getType().equals(CalcProgramBuilder.OpType.Int8)) {
+
+            SaffronType oldType = typeNode.getType();
+            SaffronTypeFactory fac =
+                translator._rexBuilder.getTypeFactory();
+            //todo do a reverse lookup on OpType.Int8 instead
+            SaffronType int8 = fac.createSqlType(SqlTypeName.Bigint);
+            RexNode castCall1 =
+                translator._rexBuilder.makeCast(int8, call.operands[i]);
+
+            RexNode newCall;
+            if (opTab.castFunc.equals(call.op)) {
+                newCall = translator._rexBuilder.makeCast(call.getType(), castCall1);
+            } else {
+                RexNode[] args = new RexNode[call.operands.length];
+                System.arraycopy(call.operands, 0, args, 0, call.operands.length);
+                args[i] = castCall1;
+                newCall = translator._rexBuilder.makeCall(call.op,args);
+            }
+
+            if (castBack) {
+                newCall = translator._rexBuilder.makeCast(oldType, newCall);
+            }
+            return (RexCall) newCall;
+        }
+        return call;
+    }
+
+    /**
+     * Same as {@link #implementFirstOperandWithInt8} but with
+     * {@link CalcProgramBuilder.OpType#Double} instead
+     * TODO need to abstract and merge functionality with
+     * {@link #implementFirstOperandWithInt8} since they both contain nearly the
+     * same code
+     */
+    private static RexCall implementFirstOperandWithDouble(
+                                RexCall call,
+                                RexToCalcTranslator translator,
+                                RexNode typeNode,
+                                int i,
+                                boolean castBack) {
+
+        //TODO this method needs cleanup, it contains redundant code
+        CalcProgramBuilder.RegisterDescriptor rd =
+            translator.getCalcRegisterDescriptor(typeNode);
+        if (rd.getType().isApprox() &&
+            !rd.getType().equals(CalcProgramBuilder.OpType.Double)) {
+
+            SaffronType oldType = typeNode.getType();
+            SaffronTypeFactory fac =
+                translator._rexBuilder.getTypeFactory();
+            //todo do a reverse lookup on OpType.Double instead
+            SaffronType db = fac.createSqlType(SqlTypeName.Double);
+            RexNode castCall1 =
+                translator._rexBuilder.makeCast(db, call.operands[i]);
+
+            RexNode newCall;
+            if (opTab.castFunc.equals(call.op)) {
+                newCall = translator._rexBuilder.makeCast(call.getType(), castCall1);
+            } else {
+                RexNode[] args = new RexNode[call.operands.length];
+                System.arraycopy(call.operands, 0, args, 0, call.operands.length);
+                args[i] = castCall1;
+                newCall = translator._rexBuilder.makeCall(call.op,args);
+            }
+
+            if (castBack) {
+                newCall = translator._rexBuilder.makeCast(oldType, newCall);
+            }
+            return (RexCall) newCall;
+        }
+        return call;
+    }
+
     public static CalcRexImplementorTable threadInstance() {
         return (CalcRexImplementorTable) threadLocal.get();
     }
@@ -473,12 +565,41 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                                    SqlTypeName.Timestamp};
             Object[] charTypes = { SqlTypeName.Char,
                                    SqlTypeName.Varchar};
+            //~ Exact To ... -------------------
             dm.put(exactTypes, exactTypes,
-                new UsingInstrImplementor(CalcProgramBuilder.Cast));
-            dm.put(approxTypes, approxTypes,
                 new UsingInstrImplementor(CalcProgramBuilder.Cast));
             dm.put(exactTypes, approxTypes,
                 new UsingInstrImplementor(CalcProgramBuilder.Cast));
+            dm.put(timeTypes, SqlTypeName.Bigint,
+                new UsingInstrImplementor(ExtInstructionDefTable.castDateToMillis));
+            dm.put(exactTypes, charTypes,
+                new UsingInstrImplementor(ExtInstructionDefTable.castA) {
+                    public CalcProgramBuilder.Register implement(RexCall call,
+                        RexToCalcTranslator translator) {
+                        RexCall newCall = implementFirstOperandWithInt8(call, translator,call.operands[0],0,false);
+                        if (newCall.equals(call)) {
+                            return super.implement(call, translator);
+                        }
+                        return translator.implementNode(newCall);
+
+                    }
+                });
+
+            //~ Approx To ... -------------------
+            dm.put(approxTypes, approxTypes,
+                new UsingInstrImplementor(CalcProgramBuilder.Cast));
+            dm.put(approxTypes, charTypes,
+                new UsingInstrImplementor(ExtInstructionDefTable.castA) {
+                    public CalcProgramBuilder.Register implement(RexCall call,
+                        RexToCalcTranslator translator) {
+                        RexCall newCall = implementFirstOperandWithDouble(call, translator,call.operands[0],0,false);
+                        if (newCall.equals(call)) {
+                           return super.implement(call, translator);
+                        }
+                        return translator.implementNode(newCall);
+
+                    }
+                });
             dm.put(approxTypes, exactTypes,
                 new AbstractCalcRexImplementor() {
                 public CalcProgramBuilder.Register implement(RexCall call,
@@ -499,21 +620,50 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                     return res;
                 }
             });
-            dm.put(timeTypes, SqlTypeName.Bigint,
-                new UsingInstrImplementor(ExtInstructionDefTable.castDateToMillis));
 
+            //~ Date To ... -------------------
             dm.put(charTypes, SqlTypeName.Date,
                 new UsingInstrImplementor(ExtInstructionDefTable.castStrAToDate));
-            dm.put(charTypes, SqlTypeName.Time,
-                new UsingInstrImplementor(ExtInstructionDefTable.castStrAToTime));
-            dm.put(charTypes, SqlTypeName.Timestamp,
-                new UsingInstrImplementor(ExtInstructionDefTable.castStrAToTimestamp));
             dm.put(SqlTypeName.Date, charTypes,
                 new UsingInstrImplementor(ExtInstructionDefTable.castDateToStr));
+
+            //~ Time To ... -------------------
+            dm.put(charTypes, SqlTypeName.Time,
+                new UsingInstrImplementor(ExtInstructionDefTable.castStrAToTime));
             dm.put(SqlTypeName.Time, charTypes,
                 new UsingInstrImplementor(ExtInstructionDefTable.castTimeToStr));
+
+            //~ TimeStamp To ... -------------------
+            dm.put(charTypes, SqlTypeName.Timestamp,
+                new UsingInstrImplementor(ExtInstructionDefTable.castStrAToTimestamp));
             dm.put(SqlTypeName.Timestamp, charTypes,
                 new UsingInstrImplementor(ExtInstructionDefTable.castTimestampToStr));
+
+            //~ CharTypes To ... -------------------
+            dm.put(charTypes, exactTypes,
+                new UsingInstrImplementor(ExtInstructionDefTable.castA) {
+                    public CalcProgramBuilder.Register implement(RexCall call,
+                        RexToCalcTranslator translator) {
+                        RexCall newCall = implementFirstOperandWithInt8(call, translator,call,0,false);
+                        if (newCall.equals(call)) {
+                           return super.implement(call, translator);
+                        }
+                        return translator.implementNode(newCall);
+
+                    }
+                });
+            dm.put(charTypes, approxTypes,
+                new UsingInstrImplementor(ExtInstructionDefTable.castA) {
+                    public CalcProgramBuilder.Register implement(RexCall call,
+                        RexToCalcTranslator translator) {
+                        RexCall newCall = implementFirstOperandWithDouble(call, translator,call,0,false);
+                        if (newCall.equals(call)) {
+                           return super.implement(call, translator);
+                        }
+                        return translator.implementNode(newCall);
+
+                    }
+                });
 
             dm.put(charTypes, charTypes, new AbstractCalcRexImplementor(){
                 //REVIEW wael: Kinkoi is working on a char<->char cast instr in the calculator
@@ -596,7 +746,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
      * Makes all types the same before calling a given
      * {@link CalcProgramBuilder.InstructionDef instruction}. The way to make the
      * types the same is by inserting appropiate call to various cast functions
-     * depending on the types. The type "biggest" (least restrictive) type will
+     * depending on the types. The "biggest" (least restrictive) type will
      * always win and other types will be conveted into that bigger type.
      * For example.
      * In the expression <code>1.0+2</code> the '+' instruction is potentially called
@@ -604,6 +754,8 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
      * Therefore the expression's implementation will logically end looking something like
      * <code>1.0 + CAST(2 AS DOUBLE)</code>
      * LIMITATION: For now only Binary operators are suppored with numeric types
+     * If any operand is of any other type than a numeric one, the base class
+     * {@link InstrDefImplementor#implement implementation} will be called
      */
     private static class BinaryNumericMakeSametypeImplementor extends InstrDefImplementor {
 
@@ -639,8 +791,9 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
             CalcProgramBuilder.RegisterDescriptor rd1 =
                 translator.getCalcRegisterDescriptor(call.operands[1]);
 
-            assert(!call.operands[0].getType().isCharType()) : "need to implement for chars";
-            assert(!call.operands[1].getType().isCharType()) : "need to implement for chars";
+            if (!rd0.getType().isNumeric() || !rd1.getType().isNumeric()) {
+                return super.implement(call, translator);
+            }
 
             int d = getRestrictiveness(rd0) - getRestrictiveness(rd1);
             if (d != 0) {
@@ -755,7 +908,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
         protected ArrayList makeRegList(RexToCalcTranslator translator,
                 RexCall call) {
             ArrayList regList = new ArrayList();
-            
+
             CalcProgramBuilder.Register resultOfCall =
                     createResultRegister(translator, call);
             assert call.operands[0] instanceof RexLiteral :
@@ -763,12 +916,12 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
             final RexLiteral literal = (RexLiteral)call.operands[0];
             SqlTrimFunction.Flag flag = (SqlTrimFunction.Flag)
                     literal.getValue();
-            
+
             regList.add(resultOfCall);
             regList.add(translator.implementNode(call.operands[2])); //str to trim from
             regList.add(translator.implementNode(call.operands[1])); //trim char
             regList.add(translator._builder.newInt4Literal(flag._left));
-            regList.add(translator._builder.newInt4Literal(flag._right)); 
+            regList.add(translator._builder.newInt4Literal(flag._right));
 
             return regList;
         }
@@ -815,25 +968,13 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
 
             public CalcProgramBuilder.Register implement(RexCall call,
                 RexToCalcTranslator translator) {
-                CalcProgramBuilder.RegisterDescriptor rd =
-                    translator.getCalcRegisterDescriptor(call);
-                if (rd.getType().isExact() &&
-                    !rd.getType().equals(CalcProgramBuilder.OpType.Int8)) {
 
-                    SaffronType oldType = call.operands[0].getType();
-                    SaffronTypeFactory fac =
-                        translator._rexBuilder.getTypeFactory();
-                    //todo do a reverse lookup on OpType.Int8 instead
-                    SaffronType int8 = fac.createSqlType(SqlTypeName.Bigint);
-                    RexNode castCall1 =
-                        translator._rexBuilder.makeCast(int8, call.operands[0]);
-                    RexNode absCall  = translator._rexBuilder.makeCall(
-                        SqlOperatorTable.std().absFunc,castCall1);
-                    return translator.implementNode(
-                        translator._rexBuilder.makeCast(oldType, absCall));
+                RexCall newCall =
+                    implementFirstOperandWithInt8(call, translator, call.operands[0],0,true);
+                if (newCall.equals(call)) {
+                    return super.implement(call, translator);
                 }
-                //else
-                return super.implement(call, translator);
+                return translator.implementNode(newCall);
             }
         });
         //~ ADD ---------------
@@ -866,13 +1007,17 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
         //~ CONCAT ---------------
         register(opTab.concatOperator, new ConcatImplementor());
         //~ EQUAL ---------------
-        registerInstr(opTab.equalsOperator, CalcProgramBuilder.boolNativeEqual);
+        register(opTab.equalsOperator,
+            new BinaryNumericMakeSametypeImplementor(
+                CalcProgramBuilder.boolNativeEqual));
         //~ GREATER THAN ---------------
-        registerInstr(opTab.greaterThanOperator,
-                CalcProgramBuilder.boolNativeGreaterThan);
+        register(opTab.greaterThanOperator,
+            new BinaryNumericMakeSametypeImplementor(
+                CalcProgramBuilder.boolNativeGreaterThan));
         //~ GREATER THAN OR EQUAL ---------------
-        registerInstr(opTab.greaterThanOrEqualOperator,
-                CalcProgramBuilder.boolNativeGreaterOrEqualThan);
+        register(opTab.greaterThanOrEqualOperator,
+            new BinaryNumericMakeSametypeImplementor(
+                CalcProgramBuilder.boolNativeGreaterOrEqualThan));
         //~ IS NULL---------------
         registerInstr(opTab.isNullOperator, CalcProgramBuilder.boolNativeIsNull);
         //~ IS NOT NULL---------------
@@ -886,28 +1031,40 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
         //~ IS NOT FALSE ---------------
         register(opTab.isNotFalseOperator, new IsNotBoolImplementor(false));
         //~ LESS THAN ---------------
-        registerInstr(opTab.lessThanOperator, CalcProgramBuilder.boolNativeLessThan);
+        register(opTab.lessThanOperator,
+            new BinaryNumericMakeSametypeImplementor(
+                CalcProgramBuilder.boolNativeLessThan));
         //~ LESS THAN OR EQUAL ---------------
-        registerInstr(opTab.lessThanOrEqualOperator,
-                CalcProgramBuilder.boolNativeLessOrEqualThan);
+        register(opTab.lessThanOrEqualOperator,
+            new BinaryNumericMakeSametypeImplementor(
+                CalcProgramBuilder.boolNativeLessOrEqualThan));
         //~ LIKE ---------------
         registerInstr(opTab.likeOperator, ExtInstructionDefTable.like);
         //~ LOG ---------------
-        register(opTab.lnFunc, new MakeOperandsDoubleImplementor(ExtInstructionDefTable.log));
-        register(opTab.logFunc, new MakeOperandsDoubleImplementor(ExtInstructionDefTable.log10));
+        register(opTab.lnFunc,
+            new MakeOperandsDoubleImplementor(ExtInstructionDefTable.log));
+        register(opTab.logFunc,
+            new MakeOperandsDoubleImplementor(ExtInstructionDefTable.log10));
         //~ UPPER ---------
         // TODO: need to know charset aswell. When ready,
         // use same construct as with CHAR_LENGTH above
         registerInstr(opTab.lowerFunc, ExtInstructionDefTable.lower);
         //~ MINUS ---------------
-        register(opTab.minusOperator, new BinaryNumericMakeSametypeImplementor(CalcProgramBuilder.nativeMinus));
+        register(opTab.minusOperator,
+            new BinaryNumericMakeSametypeImplementor(
+                CalcProgramBuilder.nativeMinus));
         //~ MOD maps directly to a built in instruction---------------
-        registerInstr(opTab.modFunc, CalcProgramBuilder.integralNativeMod);
+        register(opTab.modFunc,
+            new BinaryNumericMakeSametypeImplementor(
+                CalcProgramBuilder.integralNativeMod));
         //~ MUL ---------------
         register(opTab.multiplyOperator,
-            new BinaryNumericMakeSametypeImplementor(CalcProgramBuilder.integralNativeMul));
+            new BinaryNumericMakeSametypeImplementor(
+                CalcProgramBuilder.integralNativeMul));
         //~ NOT EQUAL ---------------
-        registerInstr(opTab.notEqualsOperator, CalcProgramBuilder.boolNativeNotEqual);
+        register(opTab.notEqualsOperator,
+            new BinaryNumericMakeSametypeImplementor(
+                CalcProgramBuilder.boolNativeNotEqual));
         //~ NOT  ---------------
         registerInstr(opTab.notOperator, CalcProgramBuilder.boolNot);
         // todo: optimization. If using not in front of IS NULL,
@@ -919,7 +1076,8 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
         //~ POSITION ---------------
         registerInstr(opTab.positionFunc, ExtInstructionDefTable.position);
         //~ POWER ---------------
-        register(opTab.powFunc, new MakeOperandsDoubleImplementor(ExtInstructionDefTable.pow));
+        register(opTab.powFunc,
+            new MakeOperandsDoubleImplementor(ExtInstructionDefTable.pow));
         //~ PREFIX MINUS ---------------
         registerInstr(opTab.prefixMinusOperator, CalcProgramBuilder.nativeNeg);
         //~ PREFIX PLUS---------------

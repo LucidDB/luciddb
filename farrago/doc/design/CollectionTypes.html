@@ -45,6 +45,8 @@ nor can you declare
     illegal_column2 ROW(INT,DOUBLE ARRAY[7]) ARRAY[4]
 </code></pre>
 
+(This restriction is removed by SQL2003.)
+
 <p>
 
 Array values are created with the ARRAY constructor:
@@ -120,10 +122,11 @@ about any other context (including GROUP BY) is illegal.
 
 <h2>SQL2003 Array Type</h2>
 
-SQL2003 extends array semantics in a number of ways.
-Arrays can be declared without a maximum cardinality, in which case the
-maximum is vendor-defined (possibly unbounded like a LOB).
-A new constructor is added for converting a query into an array:
+SQL2003 extends array semantics in a number of ways.  Arrays can be
+declared without a maximum cardinality, in which case the maximum is
+vendor-defined (possibly unbounded like a LOB).  Array nesting is
+unrestricted.  A new constructor is added for converting a query into
+an array:
 
 <pre><code>
 INSERT INTO listbox_choices VALUES(

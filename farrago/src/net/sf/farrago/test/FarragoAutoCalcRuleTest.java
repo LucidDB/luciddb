@@ -21,6 +21,7 @@ package net.sf.farrago.test;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.ResultSet;
@@ -259,6 +260,27 @@ public class FarragoAutoCalcRuleTest
             "select deptno + jplus(cplus(deptno, 1), 2), empno from sales.emps");
     }
 
+
+    public void testDynamicParameterInConditional()
+        throws SQLException
+    {
+        PreparedStatement stmt = farragoConnection.prepareStatement(
+            "select name, cplus(1, jplus(2, cplus(3, 4))) from sales.emps where name like ?");
+        try {
+            stmt.setString(1, "F%");
+
+            ResultSet rset = stmt.executeQuery();
+            try {
+                assertTrue(rset.next());
+                assertEquals("Fred", rset.getString(1));
+                assertFalse(rset.next());
+            } finally {
+                rset.close();
+            }
+        } finally {
+            stmt.close();
+        }
+    }
 
     // REVIEW: SZ: 7/14/2004: We should probably compare the results
     // to expected values, rather than just assuming that no

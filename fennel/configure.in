@@ -189,21 +189,21 @@ then
              ln -s /usr/include/FlexLexer.h FlexLexer.h)])
 fi
 
-dnl Debug setting
-dnl Note:  even without-debug, we still include -g for profiling;
+dnl Optimization setting
+dnl Note:  even --with-optimization, we still include -g for profiling;
 dnl binaries can be stripped post-build for real release
-AC_ARG_WITH([debug],
-    AC_HELP_STRING([--without-debug],[build a production version]),
+AC_ARG_WITH([optimization],
+    AC_HELP_STRING([--with-optimization],[build optimized executables]),
     [with_debug=$withval],
-    [with_debug=yes])
-if test "$with_debug" = "yes"
+    [with_optimization=no])
+if test "$with_optimization" = "no"
 then
     CXXFLAGS="$CXXFLAGS -g -DDEBUG"
     CXXFLAGS="$CXXFLAGS -D_STLP_DEBUG=1 -D_STLP_DEBUG_UNINITIALIZED=1"
     BOOST_LIB_SUFFIX=gcc-mt-gdp-1_31
     STLPORT_LIB=${STLPORT_LIB_BASE}_stldebug
 else
-    CXXFLAGS="$CXXFLAGS -O3 -g -DNDEBUG"
+    CXXFLAGS="$CXXFLAGS -O3 -g -DNDEBUG -Wno-unused-variable"
     BOOST_LIB_SUFFIX=gcc-mt-p-1_31
     STLPORT_LIB=$STLPORT_LIB_BASE
 fi

@@ -57,8 +57,11 @@ Calculator::init(int codeSize, int literalSize, int inputSize,
     mRegisterRef[RegisterReference::EStatus].reserve(statusSize);
 
     int i;
-    for (i = RegisterReference::EFirstSet; i < RegisterReference::ELastSet; i++) {
-        // explicitly clear registers. allows detection of rebinding local & literal
+    for (i = RegisterReference::EFirstSet;
+         i < RegisterReference::ELastSet; 
+         i++) {
+        // explicitly clear registers. allows detection of rebinding
+        // local & literal
         mRegisterTuple[i] = NULL;
         // explicitly clear descriptors. allows cleaner destructor
         mRegisterSetDescriptor[i] = NULL;
@@ -70,7 +73,9 @@ Calculator::init(int codeSize, int literalSize, int inputSize,
 Calculator::~Calculator()
 {
     uint i;
-    for (i = RegisterReference::EFirstSet; i < RegisterReference::ELastSet; i++) {
+    for (i = RegisterReference::EFirstSet;
+         i < RegisterReference::ELastSet;
+         i++) {
         if (mRegisterSetDescriptor[i]) {
             delete mRegisterSetDescriptor[i];
             mRegisterSetDescriptor[i] = NULL;
@@ -79,7 +84,9 @@ Calculator::~Calculator()
 
     if (mIsUsingAssembler) {
         // Assembler created all these register references, let's delete them
-        for (i = RegisterReference::EFirstSet; i < RegisterReference::ELastSet; i++) {
+        for (i = RegisterReference::EFirstSet;
+             i < RegisterReference::ELastSet; 
+             i++) {
             for (uint reg=0; reg < mRegisterRef[i].size(); reg++) {
                 if (mRegisterRef[i][reg])
                     delete mRegisterRef[i][reg];
@@ -88,13 +95,15 @@ Calculator::~Calculator()
             mRegisterReset.clear();
         }
 
-        // Assembler created all these instructions so it's up to us to delete them
+        // Assembler created all these instructions so it's up to us
+        // to delete them
         for (i = 0; i < mCode.size(); i++) {
             delete mCode[i];
         }
         mCode.clear();
 
-        // Assembler also created TupleData for status, literal, and local registers
+        // Assembler also created TupleData for status, literal, and
+        // local registers
 
         if (mRegisterTuple[RegisterReference::ELiteral]) {
             delete mRegisterTuple[RegisterReference::ELiteral];
@@ -126,10 +135,17 @@ void
 Calculator::assemble(const char *program)
 {
     assert(mIsUsingAssembler);
-    FENNEL_TRACE(
-        TRACE_FINE,
-        "Calculator assembly = |" << endl
-        << program << "|" << endl);
+
+    FENNEL_TRACE(TRACE_FINER,
+                 "Calculator instructions:" << endl <<
+                 InstructionFactory::signatures());
+    FENNEL_TRACE(TRACE_FINER,
+                 "Calculator extended instructions:" << endl <<
+                 InstructionFactory::extendedSignatures());
+    FENNEL_TRACE(TRACE_FINE,
+                 "Calculator assembly = |" << endl
+                 << program << "|" << endl);
+
     mIsAssembling = true;
     CalcAssembler assembler(this);
     assembler.assemble(program);
@@ -282,8 +298,8 @@ Calculator::warnings()
     int i = 0;
 
     while(iter != end) {
-        ret += boost::io::str( format("[%d]:PC=%ld Code=") % i % iter->mPc);
-        ret += iter->mStr;
+        ret += boost::io::str( format("[%d]:PC=%ld Code=") % i % iter->pc);
+        ret += iter->str;
         ret += " ";
         iter++;
         i++;

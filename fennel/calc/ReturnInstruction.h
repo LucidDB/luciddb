@@ -64,6 +64,53 @@ public:
     }
 };
 
+//! Add a warning/exception to the message queue.
+//! 
+//! Code is expected to be a valid SQL99 error code, eg, 22011, or a
+//! valid extension thereof. When code is NULL, an exception is not
+//! raised- becomes a no-op. Note: instruction does not 
+//! terminate execution.
+class RaiseInstruction : public Instruction
+{
+public:
+    explicit
+    RaiseInstruction(RegisterRef<char*>* code) :
+        mCode(code)
+    { }
+    virtual
+    ~RaiseInstruction() { }
+
+    virtual void exec(TProgramCounter& pc) const {
+        pc++; 
+        if (!mCode->isNull()) {
+            throw CalcMessage(mCode->pointer(), pc - 1);
+        }
+    }
+
+    static const char * longName() { return "Raise"; }
+    static const char * shortName() { return "RAISE"; }
+    static int numArgs() { return 1; }
+    void describe(string& out, bool values) const {
+        out = longName();
+    }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        return InstructionSignature(shortName(), v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        return new 
+            RaiseInstruction(static_cast<RegisterRef<char*>*> (sig[0]));
+    }
+private:
+    RegisterRef<char*>* mCode;
+};
+
 class ReturnInstructionRegister : InstructionRegister {
 public:
     static void
@@ -73,6 +120,11 @@ public:
         StringToCreateFn* instMap = InstructionFactory::getInstructionTable();
         (*instMap)[ReturnInstruction::signature().compute()] =
             &ReturnInstruction::create;
+
+        // Again, shortcut for RAISE, which has simple needs
+        InstructionRegister::registerInstance
+            < char*, fennel::RaiseInstruction >
+            (STANDARD_TYPE_VARCHAR);
     }
 };
 

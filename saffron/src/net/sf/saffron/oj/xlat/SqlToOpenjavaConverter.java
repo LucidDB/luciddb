@@ -373,7 +373,7 @@ public class SqlToOpenjavaConverter
                 op = BinaryExpression.INTERSECT;
                 break;
             case SqlKind.ExceptORDINAL:
-                op = BinaryExpression.REL_MINUS;
+                op = BinaryExpression.EXCEPT;
                 break;
             default:
                 throw kind.unexpected();

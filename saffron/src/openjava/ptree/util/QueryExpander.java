@@ -30,7 +30,7 @@ public abstract class QueryExpander extends ScopeHandler {
     }
 
     public Expression evaluateDown( QueryExpression p )
-	throws ParseTreeException 
+	throws ParseTreeException
     {
 	super.evaluateDown(p);
 	return expandExpression(p);
@@ -45,7 +45,7 @@ public abstract class QueryExpander extends ScopeHandler {
 	    case BinaryExpression.IN:
 	    case BinaryExpression.UNION:
 	    case BinaryExpression.INTERSECT:
-	    case BinaryExpression.REL_MINUS:
+	    case BinaryExpression.EXCEPT:
 		return true;
 	    default:
 		return false;
@@ -95,7 +95,7 @@ public abstract class QueryExpander extends ScopeHandler {
      * Expand 'for (<<variable>> in <<query>>) ...'.
      */
     public Statement evaluateDown(ForStatement p)
-	throws ParseTreeException 
+	throws ParseTreeException
     {
 	if (p.getQuery() == null) {
 	    return super.evaluateDown(p);
@@ -111,13 +111,13 @@ public abstract class QueryExpander extends ScopeHandler {
      * <code>intersect</code>.
      **/
     public Expression evaluateDown(BinaryExpression p)
-	throws ParseTreeException 
+	throws ParseTreeException
     {
 	switch (p.getOperator()) {
 	case BinaryExpression.IN:
 	case BinaryExpression.UNION:
 	case BinaryExpression.INTERSECT:
-	case BinaryExpression.REL_MINUS:
+	case BinaryExpression.EXCEPT:
 	    return expandExpression(p);
 	default:
 	    return super.evaluateDown(p);
@@ -128,7 +128,7 @@ public abstract class QueryExpander extends ScopeHandler {
      * Expands <code>exists</code>.
      **/
     public Expression evaluateDown(UnaryExpression p)
-	throws ParseTreeException 
+	throws ParseTreeException
     {
 	switch (p.getOperator()) {
 	case UnaryExpression.EXISTS:
@@ -162,7 +162,7 @@ public abstract class QueryExpander extends ScopeHandler {
 	    switch (p.getOperator()) {
 	    case BinaryExpression.IN:
 	    case BinaryExpression.UNION:
-	    case BinaryExpression.REL_MINUS:
+	    case BinaryExpression.EXCEPT:
 	    case BinaryExpression.INTERSECT:
 		return true;
 	    default:

@@ -192,11 +192,8 @@ void TupleStreamBuilder::registerStream(ExecutionStreamFactors &factors)
 ExecutionStreamFactors TupleStreamBuilder::lookupStream(std::string &name)
 {
     StreamMapConstIter pPair = streams.find(name);
-    if (pPair == streams.end()) {
-        assert(false);
-    } else {
-        return pPair->second;
-    }
+    assert(pPair != streams.end());
+    return pPair->second;
 }
 
 void TupleStreamBuilder::addDataflow(

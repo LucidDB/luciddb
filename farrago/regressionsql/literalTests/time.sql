@@ -11,6 +11,20 @@
  select TIME '23:59' as t1 from values ('true');
  select TIME '11:59:59.99 PM' as t1 from values ('true');
 
+-- more ISO format tests that should work
+select time '3:4:5' from values ('true');
+select time '0003:0005:0002' from values ('true');
+-- with precision
+select time '10:00:00.5' from values ('true');
+select time '10:00:00.35' from values ('true');
+select time '10:00:00.3523' from values ('true');
+
+-- these should fail
+select time '1003:1005:1002' from values ('true');
+select time '23.54.43..' from values ('true');
+select time '23.54.43.' from values ('true');
+select time '23.54.43.1,000' from values ('true');
+
 -- test datatype
 create schema test;
 set schema test;

@@ -111,12 +111,12 @@ ExtCastRegister(ExtendedInstructionTable* eit)
     params_1I_1V.push_back(STANDARD_TYPE_VARCHAR);
 
     vector<StandardTypeDescriptorOrdinal> params_1D_1C;
-    params_1I_1C.push_back(STANDARD_TYPE_DOUBLE);
-    params_1I_1C.push_back(STANDARD_TYPE_CHAR);
+    params_1D_1C.push_back(STANDARD_TYPE_DOUBLE);
+    params_1D_1C.push_back(STANDARD_TYPE_CHAR);
 
     vector<StandardTypeDescriptorOrdinal> params_1D_1V;
-    params_1I_1V.push_back(STANDARD_TYPE_DOUBLE);
-    params_1I_1V.push_back(STANDARD_TYPE_VARCHAR);
+    params_1D_1V.push_back(STANDARD_TYPE_DOUBLE);
+    params_1D_1V.push_back(STANDARD_TYPE_VARCHAR);
 
     vector<StandardTypeDescriptorOrdinal> params_1C_1I;
     params_1C_1I.push_back(STANDARD_TYPE_CHAR);
@@ -127,12 +127,12 @@ ExtCastRegister(ExtendedInstructionTable* eit)
     params_1V_1I.push_back(STANDARD_TYPE_INT_64);
 
     vector<StandardTypeDescriptorOrdinal> params_1C_1D;
-    params_1C_1I.push_back(STANDARD_TYPE_CHAR);
-    params_1C_1I.push_back(STANDARD_TYPE_DOUBLE);
+    params_1C_1D.push_back(STANDARD_TYPE_CHAR);
+    params_1C_1D.push_back(STANDARD_TYPE_DOUBLE);
 
     vector<StandardTypeDescriptorOrdinal> params_1V_1D;
-    params_1V_1I.push_back(STANDARD_TYPE_VARCHAR);
-    params_1V_1I.push_back(STANDARD_TYPE_DOUBLE);
+    params_1V_1D.push_back(STANDARD_TYPE_VARCHAR);
+    params_1V_1D.push_back(STANDARD_TYPE_DOUBLE);
 
     eit->add("castA", params_1I_1C,
              (ExtendedInstruction2<int64_t, char*>*) NULL,

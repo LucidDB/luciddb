@@ -1,5 +1,5 @@
 
-ExecutableStmt.Oj_VARCHAR_10_ISO_8859_1_ISO_8859_1_en_US_primary oj_var0 = new ExecutableStmt.Oj_VARCHAR_10_ISO_8859_1_ISO_8859_1_en_US_primary();
+ExecutableStmt.Oj_inner_1 oj_var0 = new ExecutableStmt.Oj_inner_1();
 
 oj_var0.assignFrom( "boo" );
 

@@ -41,12 +41,16 @@ select abs((-empno)*2.0) as res from sales.emps;
 
 values 1+1.0;
 values 1.0-1;
---values 10<=10.0;
---values 10<10.001;
---values 10>9.999;
---values 10.0>=10;
---values 5000000000<>1e10;
---values 5000000000<-1.3;
+values 10<=10.0;
+values 10<10.001;
+values 10>9.999;
+values 10.0>=10;
+values 5000000000<>1e1;
+values 5000000000<-1.3;
+values 1e-2=1;
+values 1.0=0.1;
+values 1=1.0;
+values 1.0=1;
 
 
 values trim(' ' from '  abc');

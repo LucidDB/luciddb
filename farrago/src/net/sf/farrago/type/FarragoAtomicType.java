@@ -116,6 +116,44 @@ public abstract class FarragoAtomicType extends FarragoType
         return null; // this is not an array type
     }
 
+    protected void computeDigest()
+    {
+        StringBuffer sb = new StringBuffer();
+        generateTypeString(sb,true);
+        if (!isNullable) {
+            sb.append(" NOT NULL");
+        }
+        digest = sb.toString();
+    }
+
+    // implement Object
+    public String toString()
+    {
+        StringBuffer sb = new StringBuffer();
+        generateTypeString(sb,false);
+        return sb.toString();
+    }
+
+    // implement FarragoType
+    public String getFullTypeString()
+    {
+        return digest;
+    }
+
+    protected void generateTypeString(StringBuffer sb,boolean withDetail)
+    {
+        sb.append(simpleType.getName());
+        if (takesPrecision()) {
+            sb.append('(');
+            sb.append(getPrecision());
+            if (takesScale() && (getScale() != 0)) {
+                sb.append(',');
+                sb.append(getScale());
+            }
+            sb.append(')');
+        }
+    }
+
     public void format(Object value, PrintWriter pw)
     {
         pw.print(value);
@@ -167,6 +205,7 @@ public abstract class FarragoAtomicType extends FarragoType
         case Types.TIMESTAMP:
         case Types.VARBINARY:
         case Types.VARCHAR:
+        case Types.BIT:
         case Types.BINARY:
         case Types.CHAR:
             return true;
@@ -182,6 +221,9 @@ public abstract class FarragoAtomicType extends FarragoType
     public Integer getDefaultPrecision()
     {
         switch (simpleType.getTypeNumber().intValue()) {
+        case Types.CHAR:
+        case Types.BIT:
+            return new Integer(1);
         case Types.TIME:
             return new Integer(0);
         case Types.TIMESTAMP:

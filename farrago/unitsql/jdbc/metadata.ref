@@ -203,7 +203,7 @@ getMaxUserNameLength                              128
 getNumericFunctions                               POSITION,CHAR_LENGTH,CHARACTER_LENGTH,POW,MOD,LN,LOG,ABS
 getProcedureTerm                                  
 getSchemaTerm                                     schema
-getSearchStringEscape                             null
+getSearchStringEscape                             \
 getSQLKeywords                                    checkpoint,clustered,release,savepoint,system,truncate,type,CAST,POSITION,CONVERT,TRANSLATE,OVERLAY,SUBSTRING,TRIM,asymmetric,bigint,binary,boolean,descending,explain,placing,row,similar,symmetric,tinyint,varbinary,without
 getStringFunctions                                SUBSTRING,CONVERT,TRANSLATE,OVERLAY,TRIM,UPPER,LOWER,INITCAP
 getSystemFunctions                                NULLIF,COALESCE,CAST
@@ -248,7 +248,7 @@ supportsGroupBy                                   true
 supportsGroupByBeyondSelect                       false
 supportsGroupByUnrelated                          false
 supportsIntegrityEnhancementFacility              false
-supportsLikeEscapeClause                          false
+supportsLikeEscapeClause                          true
 supportsLimitedOuterJoins                         true
 supportsMinimumSQLGrammar                         false
 supportsMixedCaseIdentifiers                      false

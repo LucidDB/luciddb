@@ -65,8 +65,10 @@ ExecutionStream::~ExecutionStream()
 
 void ExecutionStream::prepare(ExecutionStreamParams const &params)
 {
-    pQuotaAccessor = params.pCacheAccessor;
-    pScratchQuotaAccessor = params.scratchAccessor.pCacheAccessor;
+    if (params.enforceQuotas) {
+        pQuotaAccessor = params.pCacheAccessor;
+        pScratchQuotaAccessor = params.scratchAccessor.pCacheAccessor;
+    }
 }
     
 void ExecutionStream::getResourceRequirements(
@@ -153,6 +155,6 @@ void *ExecutionStream::getImpl()
     return NULL;
 }
 
-FENNEL_END_CPPFILE("$Id: //open/dev/fennel/xo/ExecutionStream.cpp#4 $");
+FENNEL_END_CPPFILE("$Id$");
 
 // End ExecutionStream.h

@@ -253,8 +253,7 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
     // implement DatabaseMetaData
     public String getSearchStringEscape() throws SQLException
     {
-        // REVIEW
-        return null;
+        return "\\";
     }
 
     // implement DatabaseMetaData
@@ -346,7 +345,7 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
     // implement DatabaseMetaData
     public boolean supportsLikeEscapeClause() throws SQLException
     {
-        return false;
+        return true;
     }
 
     // implement DatabaseMetaData
@@ -1226,7 +1225,7 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
                 // TODO jvs 5-April-2005:  turn this on once LIKE is working
                 addConjunction();
                 sql.append(colName);
-                sql.append(" like ?");
+                sql.append(" like ? escape '\\'");
                 values.add(value);
             }
         }

@@ -76,6 +76,26 @@ InstructionFactory::createInstruction(string const & name,
     return instDef->createInstruction(operands);
 }
 
+string
+InstructionFactory::signatures()
+{
+    ostringstream s("");
+
+    StringToCreateFnIter i = instructionTable.begin();
+    StringToCreateFnIter end = instructionTable.end();
+
+    while (i != end) {
+        s << (*i).first << endl;
+        i++;
+    }
+    return s.str();
+}
+
+string
+InstructionFactory::extendedSignatures()
+{
+    return extendedTable.signatures();
+}
 
 void
 InstructionFactory::registerInstructions()

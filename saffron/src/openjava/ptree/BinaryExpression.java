@@ -70,16 +70,16 @@ public class BinaryExpression extends NonLeaf
     public static final int LOGICAL_OR = 19;
     public static final int IN = 20;
     public static final int UNION = 21;
-    public static final int REL_MINUS = 22;
+    public static final int EXCEPT = 22;
     public static final int INTERSECT = 23;
 
     static final String[] opr_string = {
       "*", "/", "%", "+", "-", "<<", ">>", ">>>",
       "<", ">", "<=", ">=", "instanceof",
       "==", "!=", "&", "^", "|", "&&", "||",
-      "in", "union", "minus", "intersect",
+      "in", "union", "except", "intersect",
     };
-    
+
     /** the operator */
     private int opr = -1;
 
@@ -121,14 +121,14 @@ public class BinaryExpression extends NonLeaf
       result.opr = this.opr;
       return result;
     }
-  
+
     public ParseTree makeCopy() {
       BinaryExpression result
           = (BinaryExpression) super.makeCopy();
       result.opr = this.opr;
       return result;
     }
-    
+
     public void writeCode() {
 	writeDebugL();
 
@@ -140,9 +140,9 @@ public class BinaryExpression extends NonLeaf
 	} else {
 	    lexpr.writeCode();
 	}
-    
+
 	out.print( " " + operatorString() + " " );
-    
+
 	Expression rexpr = getRight();
 	if (needsRightPar( rexpr )) {
 	    out.print( "(" );
@@ -160,41 +160,41 @@ public class BinaryExpression extends NonLeaf
          || leftexpr instanceof ConditionalExpression){
         return true;
       }
-  
+
       int op = strength( getOperator() );
-  
+
       if(leftexpr instanceof InstanceofExpression){
         if(op > strength( INSTANCEOF ))  return true;
         return false;
       }
-  
+
       if(! (leftexpr instanceof BinaryExpression))  return false;
-  
+
       BinaryExpression lbexpr = (BinaryExpression) leftexpr;
       if(op > strength( lbexpr.getOperator() ))  return true;
       return false;
     }
-  
+
     private final boolean needsRightPar( Expression rightexpr ) {
       if(rightexpr instanceof AssignmentExpression
          || rightexpr instanceof ConditionalExpression){
         return true;
       }
-  
+
       int op = strength( getOperator() );
-  
+
       if(rightexpr instanceof InstanceofExpression){
         if(op >= strength( INSTANCEOF ))  return true;
         return false;
       }
-  
+
       if(! (rightexpr instanceof BinaryExpression))  return false;
-  
+
       BinaryExpression lbexpr = (BinaryExpression) rightexpr;
       if(op >= strength( lbexpr.getOperator() ))  return true;
       return false;
     }
-  
+
     /**
      * Returns the strength of the union of the operator.
      *
@@ -237,7 +237,7 @@ public class BinaryExpression extends NonLeaf
       }
       return 100;
     }
-  
+
     /**
      * Gets the expression of the left operand.
      *
@@ -246,7 +246,7 @@ public class BinaryExpression extends NonLeaf
     public Expression getLeft() {
       return (Expression) elementAt( 0 );
     }
-  
+
     /**
      * Sets the expression of the left operand.
      *
@@ -255,7 +255,7 @@ public class BinaryExpression extends NonLeaf
     public void setLeft( Expression lexpr ) {
       setElementAt( lexpr, 0 );
     }
-    
+
     /**
      * Gets the expression of the right operand.
      *
@@ -264,7 +264,7 @@ public class BinaryExpression extends NonLeaf
     public Expression getRight() {
       return (Expression) elementAt( 1 );
     }
-  
+
     /**
      * Sets the expression of the right operand.
      *
@@ -273,7 +273,7 @@ public class BinaryExpression extends NonLeaf
     public void setRight( Expression rexpr ) {
       setElementAt( rexpr, 1 );
     }
-    
+
     /**
      * Gets the id number of the operator.
      *
@@ -303,7 +303,7 @@ public class BinaryExpression extends NonLeaf
     public int getOperator() {
       return this.opr;
     }
-  
+
     /**
      * Sets the id number of the operator.
      *
@@ -337,7 +337,7 @@ public class BinaryExpression extends NonLeaf
     public String operatorString() {
 	return opr_string[getOperator()];
     }
-    
+
     public void accept( ParseTreeVisitor v ) throws ParseTreeException {
         v.visit( this );
     }

@@ -129,8 +129,8 @@ use the cached implementation, skipping most of preparation (and your
 breakpoints) entirely.  As usual, this is good for performance but
 makes debugging more difficult.  You can minimize implementation
 caching by executing the SQL statement <code>alter system set
-"codeCacheMaxBytes"=0</code>.  When done, use <code>alter system set
-"codeCacheMaxBytes"=-1</code> to remove the limit (otherwise normal
+"codeCacheMaxBytes"=min</code>.  When done, use <code>alter system set
+"codeCacheMaxBytes"=max</code> to remove the limit (otherwise normal
 operation will be much slower).
 
 <hr>

@@ -57,6 +57,11 @@ struct ExecutionStreamParams
      * Descriptor for tuples in this stream's output.
      */
     TupleDescriptor outputTupleDesc;
+
+    /**
+     * Whether ExecutionStream should enforce resource quotas.
+     */
+    bool enforceQuotas;
 };
 
 /**

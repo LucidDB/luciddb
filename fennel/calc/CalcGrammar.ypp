@@ -151,7 +151,7 @@ instruction:  OPCODE result COMMA operand COMMA operand TERM
               $$ = ((CalcAssembler*) parm)->createInstruction($1, $2, $4, @$);
             }
             |
-              OPCODE result TERM 
+              OPCODE operand TERM 
             {
               $$ = ((CalcAssembler*) parm)->createInstruction($1, $2, @$);
             }

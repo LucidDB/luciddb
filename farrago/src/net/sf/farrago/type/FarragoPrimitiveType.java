@@ -109,17 +109,6 @@ public final class FarragoPrimitiveType extends FarragoAtomicType
         return OJClass.forClass(classForValue);
     }
 
-    // implement FarragoType
-    protected void computeDigest()
-    {
-        // for a primitive type, the only information that needs to be digested
-        // is the type name and nullability, since everything else is implied
-        digest = getSimpleType().getName();
-        if (isNullable()) {
-            digest = digest + "_NULLABLE";
-        }
-    }
-
     // implement FarragoAtomicType
     public boolean hasClassForPrimitive()
     {

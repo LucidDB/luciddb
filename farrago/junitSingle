@@ -1,24 +1,68 @@
 #!/bin/bash
 # $Id$
-# Run a single Junit test case from the default test package
+# Run a single Junit test case from the default test package.
+# usage: junitSingle [-repeat] TEST [TARGET],
+#  where TEST is the fully-qualified name of a test class
+#  and TARGET is a target in build.xml.
+#  The -repeat option repeats the test until it fails.
+
+once=true
+if [ "$1" == "-repeat" ]; then
+    once=false;
+    shift;
+fi
 
 if [ ! "$1" ]; then 
-   echo "Error: specify a .sql filename or an unqualified test class name"; 
-   exit; 
+    echo "Error: specify a .sql filename or an unqualified test class name"; 
+    exit; 
 fi
+test=$1
 
 if [ ! "$2" ]; then
-   target=junit
+    target=junit
 else
-   target="$2"
+    target="$2"
 fi
 
-if [ -e "$1" ]; then
-   # Interpret the argument as the name of an .sql script to run
-   ant -Djunit.class=net.sf.farrago.test.FarragoSqlTest \
-       -Dfileset.unitsql=$1 $target
+if [ -e "$test" ]; then
+    # Interpret the argument as the name of an .sql script to run
+
+    # Assume unitsql tests
+    junit_class=net.sf.farrago.test.FarragoSqlTest
+    fileset=fileset.unitsql
+
+    # if we're running regressionsql tests, use the right class and ant target
+    if [ $(basename $(dirname $test)) == "regressionsql" ]; then
+	if [ "$target" == "jswat.junit" ]; then
+	    # REVIEW: it needs a jswat.junit.regressionsql target that sets
+	    # the necessary system properties for regressionsql tests.
+	    echo "build.xml does not support jswat on regressionsql"
+	    exit 1;
+	fi
+	target=regressionWithoutBuild
+	junit_class=net.sf.farrago.test.regression.FarragoSqlRegressionTest
+	fileset=fileset.regressionsql
+    fi
+
+    command="ant -Djunit.class=$junit_class -D$fileset=$test $target"
 else
-   # Interpret the argument as the name of a test case
-   ant -Djunit.class=net.sf.farrago.test.$1 -Dfileset.unitsql='' $target
+    # Interpret the argument as the name of a test case
+    command="ant -Djunit.class=net.sf.farrago.test.$test -Dfileset.unitsql='' $target"
 fi
+
+if $once; then
+    $command;
+else
+    count=1
+    echo Execution $count started at `date`
+
+    while $command; do
+	let count++;
+	echo Execution $count started at `date`
+    done
+
+    echo Failed on execution $count
+    exit 1;
+fi
+
 

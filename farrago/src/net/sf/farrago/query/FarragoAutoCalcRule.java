@@ -36,14 +36,18 @@ import net.sf.saffron.rel.SaffronRel;
 import net.sf.saffron.rel.SaffronRel;
 
 import net.sf.saffron.rex.RexCall;
+import net.sf.saffron.rex.RexDynamicParam;
 import net.sf.saffron.rex.RexInputRef;
 import net.sf.saffron.rex.RexNode;
+
+import net.sf.saffron.util.Util;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 
 import java.util.logging.*;
 import java.io.StringWriter;
@@ -162,10 +166,12 @@ class FarragoAutoCalcRule
         relDataQueue.addAll(relDataList);
         relDataQueue.add(DEPTH_MARKER);
 
-        int maxRelDepth = -1;
         int relDepth = 0;
-        Integer relType = REL_TYPE_EITHER;
-        boolean usedRelDepth = false;
+
+        TransformData tdata = new TransformData();
+        tdata.maxRelDepth = -1;
+        tdata.relType = REL_TYPE_EITHER;
+        tdata.usedRelDepth = false;
 
         while(!relDataQueue.isEmpty()) {
             // remove first node
@@ -176,22 +182,22 @@ class FarragoAutoCalcRule
                     break;
                 }
 
-                if (relType == REL_TYPE_EITHER) {
+                if (tdata.relType == REL_TYPE_EITHER) {
                     // Top-most level can be implemented as either
                     // Java or Fennel.  Arbitrarily pick one.
-                    relType = REL_TYPE_JAVA;
+                    tdata.relType = REL_TYPE_JAVA;
                 }
 
-                if (usedRelDepth) {
+                if (tdata.usedRelDepth) {
                     // Alternate rel types after the first level.
-                    if (relType == REL_TYPE_JAVA) {
-                        relType = REL_TYPE_FENNEL;
+                    if (tdata.relType == REL_TYPE_JAVA) {
+                        tdata.relType = REL_TYPE_FENNEL;
                     } else {
-                        relType = REL_TYPE_JAVA;
+                        tdata.relType = REL_TYPE_JAVA;
                     }
                     relDepth++;
 
-                    usedRelDepth = false;
+                    tdata.usedRelDepth = false;
                 }
 
                 relDataQueue.add(DEPTH_MARKER);
@@ -211,52 +217,36 @@ class FarragoAutoCalcRule
                 boolean isFennelRel = canImplementInFennel(calcTranslator,
                                                            call);
 
-                assert(isJavaRel || isFennelRel);
-
-                if (relType == REL_TYPE_EITHER) {
-                    assert(relDepth == 0);
-
-                    if (!isJavaRel) {
-                        relType = REL_TYPE_FENNEL;
-                    } else if (!isFennelRel) {
-                        relType = REL_TYPE_JAVA;
-                    }
-
-                    relData.relDepth = relDepth;
-                    maxRelDepth = relDepth;
-                    usedRelDepth = true;
-                } else if ((relType == REL_TYPE_JAVA && !isJavaRel) ||
-                           (relType == REL_TYPE_FENNEL && !isFennelRel)) {
-                    // Node is mismatched for the rel we'll be using.
-                    if (relData.parent != null &&
-                        relData.parent.relDepth < relDepth) {
-                        // Pull this node up to previous depth.
-                        relData.relDepth = relDepth - 1;
-                    } else {
-                        // Push this node down into the next rel depth.
-                        relData.relDepth = relDepth + 1;
-                        maxRelDepth = Math.max(maxRelDepth, relDepth + 1);
-                    }
-                } else {
-                    if (relDepth > 0 && isJavaRel && isFennelRel) {
-                        // Pull this node up to the previous depth.
-                        relData.relDepth = relDepth - 1;
-                    } else if (relData.parent != null &&
-                               sameRelType(relDepth,
-                                           relData.parent.relDepth)) {
-                        // Pull this node up to the parent's depth
-                        // (regardless of how far up that is).
-                        relData.relDepth = relData.parent.relDepth;
-                    } else {
-                        relData.relDepth = relDepth;
-                        maxRelDepth = Math.max(maxRelDepth, relDepth);
-                        usedRelDepth = true;
-                    }
+                // REVIEW: SZ: 8/4/2004: Ideally, this test would be
+                // performed much earlier and this rule would not
+                // perform any work for an unimplementable CalcRel.
+                // Doing so requires traversing all the RexNodes in
+                // the CalcRel and performing this test for each
+                // RexCall.  The common case is that the test passes
+                // and the rule continues, at which point we end up
+                // here and perform the test again for each RexCall.
+                // If we add the initial test, we should probably
+                // cache the results (Map of SqlOperator to rel
+                // type?), rather than testing each RexCall
+                // repeatedly.
+                if (!isJavaRel && !isFennelRel) {
+                    // REVIEW: SZ: 8/4/2004: This probably wants to be
+                    // more Farrago specific, rather than a
+                    // SaffronError.  Create an "internal error" in
+                    // FarragoResource.xml?
+                    throw Util.newInternal("Implementation of "
+                                           + call.getOperator().name
+                                           + " not found");
                 }
+
+                adjustDepth(relData, relDepth, tdata, isJavaRel, isFennelRel);
 
                 if (relData.children != null) {
                     relDataQueue.addAll(relData.children);
                 }
+            } else if (node instanceof RexDynamicParam) {
+                // handle RexDynamicParam -- implementable in Java only
+                adjustDepth(relData, relDepth, tdata, true, false);
             } else {
                 if (relData.parent != null) {
                     relData.relDepth = relData.parent.relDepth;
@@ -266,15 +256,90 @@ class FarragoAutoCalcRule
             }
         }
 
-        transform(ruleCall, calc, maxRelDepth, relDataList);
+        transform(ruleCall, calc, tdata.maxRelDepth, relDataList);
     }
 
 
+    /**
+     * Given that rel type alternates with increasing depth, two
+     * depths have the same rel type if they are both odd or both
+     * even.
+     */
     private boolean sameRelType(int relDepthA, int relDepthB)
     {
         return (relDepthA & 0x1) == (relDepthB & 0x1);
     }
 
+    /**
+     * Internal method that handles adjust the depth at which a
+     * particular expression will be implemented.
+     *
+     * <p>One of <code>isJavaRel</code> or <code>isFennelRel</code>
+     * must be true.
+     *
+     * @param relData data about a particular RexNode
+     * @param relDepth the current rel depth
+     * @param tdata modifiable data about the transformation in process
+     * @param isJavaRel if this node can be implemented in Java
+     * @param isFennelRel if this node can be implemented in the Fennel Calc
+     */
+    private void adjustDepth(RelData relData,
+                             int relDepth,
+                             TransformData tdata,
+                             boolean isJavaRel,
+                             boolean isFennelRel)
+    {
+        if (tdata.relType == REL_TYPE_EITHER) {
+            assert(relDepth == 0);
+
+            if (!isJavaRel) {
+                tdata.relType = REL_TYPE_FENNEL;
+            } else if (!isFennelRel) {
+                tdata.relType = REL_TYPE_JAVA;
+            }
+            
+            relData.relDepth = relDepth;
+            tdata.maxRelDepth = relDepth;
+            tdata.usedRelDepth = true;
+        } else if ((tdata.relType == REL_TYPE_JAVA && !isJavaRel) ||
+                   (tdata.relType == REL_TYPE_FENNEL && !isFennelRel)) {
+            // Node is mismatched for the rel we'll be using.
+            if (relData.parent != null &&
+                relData.parent.relDepth < relDepth) {
+                // Pull this node up to previous depth.
+                relData.relDepth = relDepth - 1;
+            } else {
+                // Push this node down into the next rel depth.
+                relData.relDepth = relDepth + 1;
+                tdata.maxRelDepth = Math.max(tdata.maxRelDepth, relDepth + 1);
+            }
+        } else {
+            if (relDepth > 0 && isJavaRel && isFennelRel) {
+                // Pull this node up to the previous depth.
+                relData.relDepth = relDepth - 1;
+            } else if (relData.parent != null &&
+                       sameRelType(relDepth, relData.parent.relDepth)) {
+                // Pull this node up to the parent's depth
+                // (regardless of how far up that is).
+                relData.relDepth = relData.parent.relDepth;
+            } else {
+                relData.relDepth = relDepth;
+                tdata.maxRelDepth = Math.max(tdata.maxRelDepth, relDepth);
+                tdata.usedRelDepth = true;
+            }
+        }
+    }
+
+
+    /**
+     * Traverse the forest of expressions, creating new RexInputRefs
+     * to pass data between levels.  When RexInputRefs are encountered
+     * that are higher than the lowest level, we insert another
+     * RexInputRef as a child at the next level down.  For RexCall
+     * nodes, if the node's depth is lower than the current depth, we
+     * insert a RexInputRef at the current level to refer to the
+     * RexCall at the lower level.
+     */
     private void transform(VolcanoRuleCall ruleCall,
                            CalcRel calc,
                            final int maxRelDepth,
@@ -286,7 +351,11 @@ class FarragoAutoCalcRule
         int position = 0;
         int expectedRelDepth = 0;
 
-        // Assign positions and copy RexInputRefs down to the deepest levels.
+        // Assign positions and copy RexInputRefs down to the deepest
+        // levels.  Also makes sure that RexDynamicParams that cannot
+        // be implemented with their parents have a RexInputRef insert
+        // between the parent and RexDynamicRef (see
+        // processCallChildren).
         while(!relDataQueue.isEmpty()) {
             Object relDataItem = relDataQueue.remove(0);
             if (relDataItem == DEPTH_MARKER) {
@@ -307,6 +376,7 @@ class FarragoAutoCalcRule
 
             if (node instanceof RexInputRef) {
                 if (relData.relDepth < maxRelDepth) {
+                    // Copy RexInputRefs down to the lowest level.
                     RelData childRelData = new RelData(node,
                                                        relData.isConditional,
                                                        relData);
@@ -324,7 +394,7 @@ class FarragoAutoCalcRule
                     // insert an input reference
                     RelData inputRefData = new RelData(null,
                                                        relData.isConditional,
-                                                       relData);
+                                                       relData.parent);
                     inputRefData.children = new ArrayList();
                     inputRefData.children.add(relData);
 
@@ -344,10 +414,10 @@ class FarragoAutoCalcRule
                     // pull children up into this RelData, if necessary
                     children = new ArrayList();
 
-                    processInputRefs(children,
-                                     relData,
-                                     expectedRelDepth,
-                                     maxRelDepth);
+                    processCallChildren(children,
+                                        relData,
+                                        expectedRelDepth,
+                                        maxRelDepth);
                 }
             }
 
@@ -459,6 +529,8 @@ class FarragoAutoCalcRule
         }
 
 
+        // Generate the actual CalcRel objects that represent the
+        // decomposition of the original CalcRel.
         SaffronTypeFactory typeFactory =
             SaffronTypeFactoryImpl.threadInstance();
 
@@ -514,12 +586,18 @@ class FarragoAutoCalcRule
     }
 
 
-    private void processInputRefs(List children,
-                                  RelData relData,
-                                  int expectedRelDepth,
-                                  int maxRelDepth)
+    /**
+     * Iterate over a RexCall's children, copying RexInputRefs to the
+     * next level down (if necessary), inserting RexInputRefs between
+     * a child RexDynamicParam and the RexCall (if necessary), and
+     * recursively processing child RexCalls at the same depth.
+     */
+    private void processCallChildren(List children,
+                                     RelData relData,
+                                     int expectedRelDepth,
+                                     int maxRelDepth)
     {
-        for(Iterator i = relData.children.iterator(); i.hasNext(); ) {
+        for(ListIterator i = relData.children.listIterator(); i.hasNext(); ) {
             RelData child = (RelData)i.next();
 
             if (child.node instanceof RexInputRef) {
@@ -534,12 +612,23 @@ class FarragoAutoCalcRule
 
                     children.add(childRelData);
                 }
+            } else if (child.node instanceof RexDynamicParam) {
+                if (child.relDepth > expectedRelDepth) {
+                    RelData inputRefData = new RelData(null,
+                                                       relData.isConditional,
+                                                       relData);
+                    inputRefData.children = new ArrayList();
+                    inputRefData.children.add(child);
+                    i.set(inputRefData);
+
+                    children.add(child);
+                }
             } else if (child.node instanceof RexCall) {
                 if (child.relDepth == expectedRelDepth) {
-                    processInputRefs(children,
-                                     child,
-                                     expectedRelDepth,
-                                     maxRelDepth);
+                    processCallChildren(children,
+                                        child,
+                                        expectedRelDepth,
+                                        maxRelDepth);
                 } else {
                     children.add(child);
                 }
@@ -548,7 +637,12 @@ class FarragoAutoCalcRule
     }
 
 
-
+    /**
+     * Traverse a RexCall's children and create new RexInputRef
+     * objects with the correct data.  Essentially implements the
+     * hierarchy created in
+     * {@link #processCallChildren(List, RelData, int, int)}.
+     */
     private void transformCallChildren(RelData relData,
                                        RexCall clonedCall,
                                        List children,
@@ -557,7 +651,7 @@ class FarragoAutoCalcRule
         for(int i = 0; i < relData.children.size(); i++) {
             RelData child = (RelData)relData.children.get(i);
 
-            if (child.node instanceof RexInputRef) {
+            if (child.node == null || child.node instanceof RexInputRef) {
                 if (child.relDepth < maxRelDepth) {
                     assert(child.children.size() == 1);
                     RelData grandChild = ((RelData)child.children.get(0));
@@ -606,6 +700,10 @@ class FarragoAutoCalcRule
     }
 
 
+    /**
+     * Creates a forest of trees based on the project and conditional
+     * expressions of the given CalcRel.
+     */
     private ArrayList buildRelDataTree(CalcRel calc)
     {
         ArrayList baseNodes = new ArrayList();
@@ -661,6 +759,9 @@ class FarragoAutoCalcRule
         }
     }
 
+    // REVIEW: SZ: 8/4/2004: In retrospect, RelData is a bad name for
+    // this class.  Should probably be renamed to NodeData or
+    // something.
     /**
      * RelData represents information concerning the final location of
      * RexNodes in a series of <code>CalcRel</code>s.
@@ -699,6 +800,13 @@ class FarragoAutoCalcRule
 
     private static class Marker
     {
+    }
+
+    private static class TransformData
+    {
+        int maxRelDepth;
+        Integer relType;
+        boolean usedRelDepth;
     }
 
     private static final Marker DEPTH_MARKER = new Marker();

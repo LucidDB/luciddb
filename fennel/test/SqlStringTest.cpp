@@ -1138,8 +1138,8 @@ SqlStringTest::testSqlStringOverlay()
     int exLeftLen, exMidLen, exRightLen;
     char *exLeftP, *exMidP, *exRightP;
     bool lenSpecified;
-    bool caught;
-    int newlen;
+    bool caught = false;
+    int newlen = 0;
 
     for (dst_storage = 0; dst_storage < MAXLEN; dst_storage++) {
         for (src_storage = 0; src_storage < MAXLEN; src_storage++) {
@@ -1305,7 +1305,7 @@ SqlStringTest::testSqlStringPos()
 void
 SqlStringTest::testSqlStringSubStr()
 {
-    int src_storage, src_len, dst_storage, newlen;
+    int src_storage, src_len, dst_storage, newlen = 0;
     int sub_start, sub_len;
     bool caught;
     char const * resultP;
@@ -1432,7 +1432,7 @@ SqlStringTest::testSqlStringAlterCase_Ascii(int dst_storage,
                                             const string& expect, 
                                             SqlStrAlterCaseAction action)
 {
-    int newlen;
+    int newlen = 0;
     bool caught = false;
 
     try {
@@ -1660,7 +1660,8 @@ SqlStringTest::testSqlStringTrim_Helper(int dst_storage,
 {
     int expectsize, expectsizeU2;
     string expect, expectU2;
-    int lefttrim, righttrim;
+    // REVIEW jvs 7-Aug-2004:  are these booleans or ints?
+    int lefttrim = false, righttrim = false;
     char padchar = ' ';
     char textchar = 's';
     bool caught;

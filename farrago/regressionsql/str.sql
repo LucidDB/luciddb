@@ -42,6 +42,8 @@ select name like '___ma' from sales.emps order by 1;
 select name like '' from sales.emps;
 select city like 'san%' from sales.emps order by 1;
 select city like 'San%' from sales.emps order by 1;
+select name, name similar to 'Fr(ed|ank)+' from sales.emps order by 1;
+select city, city similar to '(%an)+cr*isco' from sales.emps order by 1;
 values '_a%' like 'a_aaa%' escape 'a';
 values '_a%' similar to 'a_aaa%' escape 'a';
 

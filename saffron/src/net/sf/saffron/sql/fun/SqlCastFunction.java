@@ -67,6 +67,14 @@ public class SqlCastFunction extends SqlFunction {
         return 2;
     }
 
+    protected String getSignatureTemplate(final int operandsCount) {
+        switch (operandsCount) {
+        case 2: return "{0}({1} AS {2})";
+        }
+        assert(false);
+        return null;
+    }
+
     public List getPossibleNumOfOperands() {
         List ret = new ArrayList(1);
         ret.add(new Integer(2));

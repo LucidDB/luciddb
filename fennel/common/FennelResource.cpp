@@ -4,15 +4,15 @@
 /**
  * This class was generated
  * by class mondrian.resource.ResourceGen
- * from /home/stephan/disruptive/fennel/common/FennelResource.xml
- * on Thu Feb 19 15:00:59 PST 2004.
+ * from /home/angel/dt/fennel/common/FennelResource.xml
+ * on Sun Aug 01 12:43:01 PDT 2004.
  * It contains a list of messages, and methods to
  * retrieve and format those messages.
  **/
 
-// begin common include specified by /home/stephan/disruptive/fennel/common/FennelResource.xml
+// begin common include specified by /home/angel/dt/fennel/common/FennelResource.xml
 #include "CommonPreamble.h"
-// end common include specified by /home/stephan/disruptive/fennel/common/FennelResource.xml
+// end common include specified by /home/angel/dt/fennel/common/FennelResource.xml
 #include "FennelResource.h"
 #include "ResourceBundle.h"
 #include "Locale.h"

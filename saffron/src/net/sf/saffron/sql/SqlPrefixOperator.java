@@ -22,6 +22,8 @@
 
 package net.sf.saffron.sql;
 
+import net.sf.saffron.util.Util;
+
 /**
  * A unary operator.
  */
@@ -45,7 +47,8 @@ public abstract class SqlPrefixOperator extends SqlOperator
         return SqlSyntax.Prefix;
     }
 
-    protected String getSignatureTemplate() {
+    protected String getSignatureTemplate(final int operandsCount) {
+        Util.discard(operandsCount);
         return "{0}{1}";
     }
 

@@ -33,7 +33,7 @@ CastDateToStrA(
         RegisterRef<int64_t>* date)
 {
     assert(date->type() == STANDARD_TYPE_INT_64);
-    assert(result->type() == STANDARD_TYPE_VARCHAR);
+    assert(StandardTypeDescriptor::isTextArray(result->type()));
 
     if (date->isNull()) {
         result->toNull();
@@ -41,7 +41,9 @@ CastDateToStrA(
     } else {
         // Produce a result like "2004-05-12"
         int64_t v = date->value() * 1000;
-        int len = SqlDateToStr<1,1,SQLDATE>(result->pointer(), result->storage(),v);
+        int len = SqlDateToStr<1,1,SQLDATE>(
+            result->pointer(), result->storage(), v,
+            (result->type() == STANDARD_TYPE_CHAR ? true : false));
         result->length(len);
     }
 }
@@ -52,14 +54,16 @@ CastTimeToStrA(
         RegisterRef<int64_t>* time)
 {
     assert(time->type() == STANDARD_TYPE_INT_64);
-    assert(result->type() == STANDARD_TYPE_VARCHAR);
+    assert(StandardTypeDescriptor::isTextArray(result->type()));
 
     if (time->isNull()) {
         result->toNull();
         result->length(0);
     } else {
         int64_t v = time->value() * 1000;
-        int len = SqlDateToStr<1,1,SQLTIME>(result->pointer(), result->storage(),v);
+        int len = SqlDateToStr<1,1,SQLTIME>(
+            result->pointer(), result->storage(), v,
+            (result->type() == STANDARD_TYPE_CHAR ? true : false));
         result->length(len);
     }
 }
@@ -70,14 +74,16 @@ CastTimestampToStrA(
         RegisterRef<int64_t>* tstamp)
 {
     assert(tstamp->type() == STANDARD_TYPE_INT_64);
-    assert(result->type() == STANDARD_TYPE_VARCHAR);
+    assert(StandardTypeDescriptor::isTextArray(result->type()));
 
     if (tstamp->isNull()) {
         result->toNull();
         result->length(0);
     } else {
         int64_t v = tstamp->value() * 1000;
-        int len = SqlDateToStr<1,1,SQLTIMESTAMP>(result->pointer(), result->storage(),v);
+        int len = SqlDateToStr<1,1,SQLTIMESTAMP>(
+            result->pointer(), result->storage(), v,
+            (result->type() == STANDARD_TYPE_CHAR ? true : false));
         result->length(len);
     }
 }
@@ -88,7 +94,7 @@ CastStrAToDate(
         RegisterRef<char*>* dateStr)
 {
     assert(result->type() == STANDARD_TYPE_INT_64);
-    assert(dateStr->type() == STANDARD_TYPE_VARCHAR);
+    assert(StandardTypeDescriptor::isTextArray(dateStr->type()));
 
     if (dateStr->isNull()) {
         result->toNull();
@@ -103,7 +109,7 @@ CastStrAToTime(
         RegisterRef<char*>* timeStr)
 {
     assert(result->type() == STANDARD_TYPE_INT_64);
-    assert(timeStr->type() == STANDARD_TYPE_VARCHAR);
+    assert(StandardTypeDescriptor::isTextArray(timeStr->type()));
 
     if (timeStr->isNull()) {
         result->toNull();
@@ -118,7 +124,7 @@ CastStrAToTimestamp(
         RegisterRef<char*>* timestampStr)
 {
     assert(result->type() == STANDARD_TYPE_INT_64);
-    assert(timestampStr->type() == STANDARD_TYPE_VARCHAR);
+    assert(StandardTypeDescriptor::isTextArray(timestampStr->type()));
 
     if (timestampStr->isNull()) {
         result->toNull();
@@ -170,10 +176,17 @@ ExtDateTimeRegister(ExtendedInstructionTable* eit)
     params_V_I64.push_back(STANDARD_TYPE_VARCHAR);
     params_V_I64.push_back(STANDARD_TYPE_INT_64);
 
+    vector<StandardTypeDescriptorOrdinal> params_C_I64;
+    params_C_I64.push_back(STANDARD_TYPE_CHAR);
+    params_C_I64.push_back(STANDARD_TYPE_INT_64);
+
     vector<StandardTypeDescriptorOrdinal> params_I64_V;
     params_I64_V.push_back(STANDARD_TYPE_INT_64);
     params_I64_V.push_back(STANDARD_TYPE_VARCHAR);
 
+    vector<StandardTypeDescriptorOrdinal> params_I64_C;
+    params_I64_C.push_back(STANDARD_TYPE_INT_64);
+    params_I64_C.push_back(STANDARD_TYPE_CHAR);
 
     vector<StandardTypeDescriptorOrdinal> params_I64_I64;
     params_I64_I64.push_back(STANDARD_TYPE_INT_64);
@@ -187,11 +200,23 @@ ExtDateTimeRegister(ExtendedInstructionTable* eit)
              (ExtendedInstruction2<char*, int64_t>*) NULL,
              &CastDateToStrA);
 
+    eit->add("CastDateToStrA", params_C_I64,
+             (ExtendedInstruction2<char*, int64_t>*) NULL,
+             &CastDateToStrA);
+
     eit->add("CastTimeToStrA", params_V_I64,
              (ExtendedInstruction2<char*, int64_t>*) NULL,
              &CastTimeToStrA);
 
+    eit->add("CastTimeToStrA", params_C_I64,
+             (ExtendedInstruction2<char*, int64_t>*) NULL,
+             &CastTimeToStrA);
+
     eit->add("CastTimestampToStrA", params_V_I64,
+             (ExtendedInstruction2<char*, int64_t>*) NULL,
+             &CastTimestampToStrA);
+
+    eit->add("CastTimestampToStrA", params_C_I64,
              (ExtendedInstruction2<char*, int64_t>*) NULL,
              &CastTimestampToStrA);
 
@@ -200,7 +225,15 @@ ExtDateTimeRegister(ExtendedInstructionTable* eit)
              (ExtendedInstruction2<int64_t, char*>*) NULL,
              &CastStrAToDate);
 
+    eit->add("CastStrAToDate", params_I64_C,
+             (ExtendedInstruction2<int64_t, char*>*) NULL,
+             &CastStrAToDate);
+
     eit->add("CastStrAToTime", params_I64_V,
+             (ExtendedInstruction2<int64_t, char*>*) NULL,
+             &CastStrAToTime);
+
+    eit->add("CastStrAToTime", params_I64_C,
              (ExtendedInstruction2<int64_t, char*>*) NULL,
              &CastStrAToTime);
 
@@ -208,6 +241,11 @@ ExtDateTimeRegister(ExtendedInstructionTable* eit)
              (ExtendedInstruction2<int64_t, char*>*) NULL,
              &CastStrAToTimestamp);
 
+    eit->add("CastStrAToTimestamp", params_I64_C,
+             (ExtendedInstruction2<int64_t, char*>*) NULL,
+             &CastStrAToTimestamp);
+
+    // others
     eit->add("CastDateTimeToInt64", params_I64_I64,
              (ExtendedInstruction2<int64_t, int64_t>*) NULL,
              &CastDateTimeToInt64);

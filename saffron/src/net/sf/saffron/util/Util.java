@@ -45,6 +45,7 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import java.math.BigDecimal;
 
 /**
  * Miscellaneous utility functions.
@@ -220,8 +221,9 @@ public class Util extends Toolbox
     }
 
     /**
-     * Computes <code>nlogn(n)</code> (or <code>n</code> if <code>n</code> is
-     * small, so the result is never negative.
+     * Computes <code>nlogn(n)</code> using the natural logarithm
+     * (or <code>n</code> if <code>n<{@link Math#E}</code>,
+     * so the result is never negative.
      */
     public static double nLogN(double d)
     {
@@ -391,6 +393,45 @@ public class Util extends Toolbox
         }
 
         return ret.toString().toUpperCase();
+    }
+
+    /**
+     * Formats a {@link BigDecimal} value to a string in scientific notation
+     * For example<br>
+     * <ul>
+     * <li>A value of 0.00001234 would be formated as <code>1.234E-5</code></li>
+     * <li>A value of 100000.00 would be formated as <code>1.00E5</code></li>
+     * <li>A value of 100 (scale zero) would be formated as <code>1E2</code></li>
+     * <br>
+     * If {@param bd} has a precision higher than 20, this method will truncate
+     * the output string to have a precision of 20
+     * (no rounding will be done, just a truncate).
+     */
+    public static String toScientificNotation(BigDecimal bd) {
+        final int truncateAt = 20;
+        String unscaled = bd.unscaledValue().toString();
+        if (bd.signum() < 0) {
+            unscaled = unscaled.substring(1);
+        }
+        int len = unscaled.length();
+        int scale = bd.scale();
+        int e = len - scale - 1;
+
+        StringBuffer ret = new StringBuffer();
+        if (bd.signum() < 0) {
+            ret.append('-');
+        }
+        //do truncation
+        unscaled = unscaled.substring(0, Math.min(truncateAt, len));
+        ret.append(unscaled.charAt(0));
+        if (unscaled.length()>1) {
+            ret.append(".");
+            ret.append(unscaled.substring(1));
+        }
+
+        ret.append("E");
+        ret.append(e);
+        return ret.toString();
     }
 
     /**

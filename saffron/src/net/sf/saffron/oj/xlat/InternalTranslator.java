@@ -44,7 +44,7 @@ import java.math.BigDecimal;
 /**
  * Converts an {@link ParseTree Openjava expression} into a
  * {@link RexNode row-expression}.
- * 
+ *
  * <p>
  * For example, the filter expression <code>emp.sal &gt; 50</code> from
  * <code>select &#42; from emp where emp.sal &gt; 50</code> becomes
@@ -107,7 +107,7 @@ class InternalTranslator
         map.put(new Integer(BinaryExpression.LOGICAL_OR),RexKind.Or);
         //map.put(new Integer(BinaryExpression.IN),RexKind.Other);
         //map.put(new Integer(BinaryExpression.UNION),RexKind.Other);
-        //map.put(new Integer(BinaryExpression.REL_MINUS),RexKind.Other);
+        //map.put(new Integer(BinaryExpression.EXCEPT),RexKind.Other);
         //map.put(new Integer(BinaryExpression.INTERSECT),RexKind.Other);
         return map;
     }

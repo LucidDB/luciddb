@@ -232,7 +232,7 @@ public class OJQueryExpander extends QueryExpander
             BinaryExpression binaryExp = (BinaryExpression) exp;
             switch (binaryExp.getOperator()) {
             case BinaryExpression.UNION:
-            case BinaryExpression.REL_MINUS:
+            case BinaryExpression.EXCEPT:
             case BinaryExpression.INTERSECT:
                 Expression leftExp = binaryExp.getLeft();
                 Expression rightExp = binaryExp.getRight();
@@ -254,7 +254,7 @@ public class OJQueryExpander extends QueryExpander
                         cluster,
                         new SaffronRel [] { left,right },
                         false);
-                case BinaryExpression.REL_MINUS:
+                case BinaryExpression.EXCEPT:
                     return new MinusRel(cluster,left,right);
                 case BinaryExpression.INTERSECT:
                     return new IntersectRel(cluster,left,right);

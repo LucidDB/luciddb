@@ -57,7 +57,9 @@ public:
     ExtendedInstructionDef* operator[] (string const &signature) {
         return _defsByName[signature];
     }
-    
+
+    string signatures();
+
 private:
     map<string, ExtendedInstructionDef *> _defsByName;
 };

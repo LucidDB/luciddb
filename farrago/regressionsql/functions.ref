@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/farrago/regressionsql/functions.sql#12 $
+0: jdbc:farrago:> -- $Id: //open/farrago/regressionsql/functions.sql#14 $
 0: jdbc:farrago:> -- Full vertical system testing of non function statements
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel
@@ -273,12 +273,66 @@
 +---------+
 | 0.0     |
 +---------+
-0: jdbc:farrago:> --values 10<=10.0;
-0: jdbc:farrago:> --values 10<10.001;
-0: jdbc:farrago:> --values 10>9.999;
-0: jdbc:farrago:> --values 10.0>=10;
-0: jdbc:farrago:> --values 5000000000<>1e10;
-0: jdbc:farrago:> --values 5000000000<-1.3;
+0: jdbc:farrago:> values 10<=10.0;
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> values 10<10.001;
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> values 10>9.999;
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> values 10.0>=10;
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> values 5000000000<>1e1;
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> values 5000000000<-1.3;
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:farrago:> values 1e-2=1;
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:farrago:> values 1.0=0.1;
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:farrago:> values 1=1.0;
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> values 1.0=1;
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> values trim(' ' from '  abc');

@@ -816,10 +816,14 @@ public class FarragoTestCommandGenerator
                     }
 
                     String stringValue = value.toString().trim();
-                    if (stringValue.matches("^[0-9]+$")) {
+                    if (stringValue.matches("^-?[0-9]+$")) {
                         row.add(new BigInteger(stringValue));
-                    } else if (stringValue.matches("^[0-9]*\\.[0-9]+$")) {
+                    } else if (stringValue.matches("^-?[0-9]*\\.[0-9]+$")) {
                         row.add(new BigDecimal(stringValue));
+                    } else if (stringValue.equals("true")) {
+                        row.add(Boolean.TRUE);
+                    } else if (stringValue.equals("false")) {
+                        row.add(Boolean.FALSE);
                     } else if (stringValue.equals("null")) {
                         row.add(null);
                     } else {
@@ -921,19 +925,21 @@ public class FarragoTestCommandGenerator
                 Object expectedValue = expectedIter.next();
                 Object resultValue = resultIter.next();
 
-                if (expectedValue == null || expectedValue instanceof String) {
+                if (expectedValue == null ||
+                    expectedValue instanceof String ||
+                    expectedValue instanceof Boolean) {
                     test(expectedValue, resultValue, rowNum, colNum);
                 } else if (expectedValue instanceof BigInteger) {
                     BigInteger expectedInt = (BigInteger)expectedValue;
 
                     if (expectedInt.bitLength() <= 31) {
                         test(expectedInt.intValue(),
-                             ((Integer)resultValue).intValue(),
+                             ((Number)resultValue).intValue(),
                              rowNum,
                              colNum);
                     } else if (expectedInt.bitLength() <= 63) {
                         test(expectedInt.longValue(),
-                             ((Long)resultValue).longValue(),
+                             ((Number)resultValue).longValue(),
                              rowNum,
                              colNum);
                     } else {
@@ -950,13 +956,13 @@ public class FarragoTestCommandGenerator
                     if (asFloat != Float.POSITIVE_INFINITY &&
                         asFloat != Float.NEGATIVE_INFINITY) {
                         test(asFloat,
-                             ((Float)resultValue).floatValue(),
+                             ((Number)resultValue).floatValue(),
                              rowNum,
                              colNum);
                     } else if (asDouble != Double.POSITIVE_INFINITY &&
                                asDouble != Double.NEGATIVE_INFINITY) {
                         test(asDouble,
-                             ((Double)resultValue).doubleValue(),
+                             ((Number)resultValue).doubleValue(),
                              rowNum,
                              colNum);
                     } else {
@@ -1069,8 +1075,8 @@ public class FarragoTestCommandGenerator
                     resultRowIter = resultRow.iterator();
                 }
 
-                while(expectedRowIter != null && expectedRowIter.hasNext() &&
-                      resultRowIter != null && resultRowIter.hasNext()) {
+                while((expectedRowIter != null && expectedRowIter.hasNext()) ||
+                      (resultRowIter != null && resultRowIter.hasNext())) {
                     Object expectedObject = (expectedRowIter != null 
                                              ? expectedRowIter.next()
                                              : "");
@@ -1107,11 +1113,8 @@ public class FarragoTestCommandGenerator
                     }
                 }
 
-                if (expectedRowIter == null) {
+                if (expectedRowIter == null && resultRowIter == null) {
                     expectedOut.append('|');
-                }
-
-                if (resultRowIter == null) {
                     resultOut.append('|');
                 }
 

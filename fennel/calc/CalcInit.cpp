@@ -48,6 +48,8 @@ CalcInit::instance()
     ExtMathRegister(InstructionFactory::getExtendedInstructionTable());
     ExtDateTimeRegister(InstructionFactory::getExtendedInstructionTable());
     ExtRegExpRegister(InstructionFactory::getExtendedInstructionTable());
+    ExtCastRegister(InstructionFactory::getExtendedInstructionTable());
+
 
     // Add new init calls here
 

@@ -150,13 +150,13 @@ public class IteratorResultSet implements ResultSet
 
     public BigDecimal getBigDecimal(int columnIndex) throws SQLException
     {
-        throw new UnsupportedOperationException();
+       	return BigDecimal.valueOf(toLong(getRaw(columnIndex))); 
     }
 
     public BigDecimal getBigDecimal(String columnName)
         throws SQLException
     {
-        throw new UnsupportedOperationException();
+       	return BigDecimal.valueOf(toLong(getRaw(columnName))); 
     }
 
     public InputStream getBinaryStream(int columnIndex)
@@ -886,7 +886,12 @@ public class IteratorResultSet implements ResultSet
         if (o instanceof Boolean) {
             return ((Boolean) o).booleanValue();
         } else {
-            throw newConversionError(o,boolean.class);
+            long value = toLong(o);
+            if (value > 0) {
+                return true;
+            }
+            return false;
+            //throw newConversionError(o,boolean.class);
         }
     }
 
@@ -934,6 +939,12 @@ public class IteratorResultSet implements ResultSet
             return ((Double) o).doubleValue();
         } else if (o instanceof Float) {
             return ((Float) o).doubleValue();
+        } else if (o instanceof String) {
+            try {
+                return Double.parseDouble(((String) o).trim());
+            } catch (NumberFormatException e) {
+                throw new SQLException("Fail to convert to internal representation");
+            }
         } else {
             return (double) toLong_(o);
         }
@@ -951,6 +962,12 @@ public class IteratorResultSet implements ResultSet
             return ((Float) o).floatValue();
         } else if (o instanceof Double) {
             return ((Double) o).floatValue();
+        } else if (o instanceof String) {
+            try {
+                return Float.parseFloat(((String) o).trim());
+            } catch (NumberFormatException e) {
+                throw new SQLException("Fail to convert to internal representation");
+            }
         } else {
             return (float) toLong_(o);
         }
@@ -998,8 +1015,20 @@ public class IteratorResultSet implements ResultSet
             return ((Double) o).longValue();
         } else if (o instanceof Float) {
             return ((Float) o).longValue();
+        } else if (o instanceof Boolean) {
+            if (((Boolean) o).booleanValue()) {
+                return 1;
+            } else {
+                return 0;
+            }
+        } else if (o instanceof String) {
+            try {
+                return Long.parseLong(((String) o).trim());
+            } catch (NumberFormatException e) {
+            	throw newConversionError(o, long.class);
+            }
         } else {
-            throw newConversionError(o,long.class);
+            throw newConversionError(o, long.class);
         }
     }
 

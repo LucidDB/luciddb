@@ -250,6 +250,7 @@ public class RexBuilder {
         type = _typeFactory.createTypeWithNullability(type, o == null);
         return new RexLiteral(o, type, typeName);
     }
+
     /**
      * Creates a boolean literal.
      */

@@ -25,6 +25,7 @@ import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.type.runtime.*;
 import net.sf.farrago.util.*;
+import net.sf.farrago.catalog.*;
 
 import net.sf.saffron.rel.*;
 import net.sf.saffron.util.*;
@@ -215,7 +216,7 @@ public class FarragoPrecisionType extends FarragoAtomicType
         ClassDeclaration decl =
             new ClassDeclaration(
                 new ModifierList(ModifierList.PUBLIC | ModifierList.STATIC),
-                "Oj_" + digest,
+                "Oj_inner_" + getFactoryImpl().generateClassId(),
                 superDecl,
                 interfaceDecls,
                 memberDecls);
@@ -231,31 +232,23 @@ public class FarragoPrecisionType extends FarragoAtomicType
         return ojClass;
     }
 
-    // implement FarragoType
-    protected void computeDigest()
+    // override FarragoAtomicType
+    protected void generateTypeString(StringBuffer sb,boolean withDetail)
     {
-        // NOTE:  this has to come out to a legal Java identifier
-        StringBuffer sb = new StringBuffer();
-        sb.append(getSimpleType().getName());
-        sb.append('_');
-        sb.append(precision);
-        if (scale != 0) {
-            sb.append('_');
-            sb.append(scale);
+        super.generateTypeString(sb,withDetail);
+        if (!withDetail) {
+            return;
         }
         if (charsetName != null) {
-            sb.append('_');
-            sb.append(charsetName.replace('-','_'));
+            sb.append(" CHARACTER SET \"");
+            sb.append(charsetName);
+            sb.append("\"");
         }
         if (collation != null) {
-            sb.append('_');
-            sb.append(collation.getCollationName().
-                    replace('-','_').replace('$','_'));
+            sb.append(" COLLATE \"");
+            sb.append(collation.getCollationName());
+            sb.append("\"");
         }
-        if (isNullable()) {
-            sb.append("_NULLABLE");
-        }
-        digest = sb.toString();
     }
 
     // override FarragoType

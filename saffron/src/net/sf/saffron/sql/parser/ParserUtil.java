@@ -22,7 +22,6 @@ package net.sf.saffron.sql.parser;
 
 import net.sf.saffron.resource.SaffronResource;
 import net.sf.saffron.sql.SqlNode;
-import net.sf.saffron.sql.SqlLiteral;
 import net.sf.saffron.util.SaffronProperties;
 import net.sf.saffron.util.Util;
 
@@ -30,6 +29,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.util.*;
+import java.text.NumberFormat;
 
 
 /**
@@ -51,7 +51,7 @@ public final class ParserUtil {
     public static final String PrecisionTimestampFormatStr = TimestampFormatStr + ".S";
 
     /**
-     * Helper class for {@link #parsePrecisionDateTimeLiteral}
+     * Helper class for {@link ParserUtil#parsePrecisionDateTimeLiteral}
      */
     public static class PrecisionTime {
         public Calendar cal;
@@ -60,8 +60,22 @@ public final class ParserUtil {
 
     private ParserUtil() {}
 
+    /** @return the character-set prefix of an sql string literal;
+     * returns null if there is none */
+    public static String getCharacterSet(String s) {
+        if (s.charAt(0) == '\'')
+            return null;
+        if (Character.toUpperCase(s.charAt(0)) == 'N') 
+            return SaffronProperties.instance().defaultNationalCharset.get();
+        int i = s.indexOf("'");
+        return s.substring(1,i); // skip prefixed '_'
+    }
+        
+    /** converts the contents of an sql quoted string literal into a java string */
     public static String parseString(String s) {
-        return s.replaceAll("''", "'");
+        int i = s.indexOf("'"); // start of body
+        if (i > 0) s = s.substring(i);
+        return strip(s, "'");
     }
 
     public static BigDecimal parseDecimal(String s) {
@@ -95,14 +109,14 @@ public final class ParserUtil {
      * @return Null if parsing failed.
      * @pre pattern!=null
      */
-    public static Calendar parseDateFormat(
+    private static Calendar parseDateFormat(
             String s, String pattern, java.text.ParsePosition pp) {
         Util.pre(null!=pattern,"null!=pattern");
         java.text.SimpleDateFormat df = new java.text.SimpleDateFormat(pattern);
-        df.setLenient(false);
         java.util.TimeZone tz = new java.util.SimpleTimeZone(0, "GMT+00:00");
         Calendar ret = Calendar.getInstance(tz);
         df.setCalendar(ret);
+        df.setLenient(false);
 
         java.util.Date d = df.parse(s, pp);
         if (null==d) {
@@ -112,44 +126,59 @@ public final class ParserUtil {
         return ret;
     }
 
-
+    /**
+     * Parses a string using {@link java.text.SimpleDateFormat} and a given pattern
+     * @param s string to be parsed
+     * @param pattern {@link java.text.SimpleDateFormat} pattern
+     * @return Null if parsing failed.
+     * @pre pattern!=null
+     */
+    public static Calendar parseDateFormat(String s, String pattern) {
+        java.text.ParsePosition pp = new java.text.ParsePosition(0);
+        Calendar ret = parseDateFormat(s, pattern, pp);
+        if (pp.getIndex() != s.length()) {
+            // Didn't consume entire string - not good
+            return null;
+        }
+        return ret;
+    }
 
     public static PrecisionTime parsePrecisionDateTimeLiteral(String s,
                         String pattern) {
-        s = strip(s,"'");
         java.text.ParsePosition pp = new java.text.ParsePosition(0);
-        Calendar cal = parseDateFormat(s, pattern+".S", pp);
-        int p=0;
-        if (null!=cal) {
-            if (pp.getIndex()!=s.length()) {
-                return null;
-            } else {
-                //seconds fraction has to be parsed by us since .S means milliseconds
-                pp.setIndex(0);
-                //todo make this faster if too slow since we are
-                //extracting the first part again to avoid having milliseconds
-                //spill onto min.
-                cal = parseDateFormat(s, pattern+".", pp);
-                p =  Math.min(3,s.length() - pp.getIndex()); //only support precision 3 or lower
+        Calendar cal = parseDateFormat(s, pattern, pp);
+        if (cal == null) return null; // Invalid date/time format
+
+        int p = 0;
+        if (pp.getIndex() < s.length()) {
+            // Check to see if rest is decimal portion
+            if (s.charAt(pp.getIndex()) != '.') return null;
+            // Skip decimal sign
+            pp.setIndex(pp.getIndex() + 1);
+
+            // Parse decimal portion
+            if (pp.getIndex() < s.length()) {
                 String secFraction = s.substring(pp.getIndex());
-                int ms = (int)Math.round(Float.parseFloat(secFraction) *
+                if (!secFraction.matches("\\d+")) return null;
+                NumberFormat nf = NumberFormat.getIntegerInstance();
+                Number num = nf.parse(s, pp);
+                if ((num == null) || (pp.getIndex() != s.length())) {
+                    // Invalid decimal portion
+                    return null;
+                }
+
+                // Determine precision - only support prec 3 or lower (milliseconds)
+                // Higher precisions are quietly rounded away
+                p =  Math.min(3, secFraction.length());
+
+                // Calculate milliseconds
+                int ms = (int) Math.round(num.longValue() *
                     Math.pow(10,3 - secFraction.length()));
                 cal.add(Calendar.MILLISECOND, ms);
             }
-        } else {
-            cal = parseDateFormat(s, pattern, pp);
-            if (null==cal) {
-                return null;
-            } else if (pp.getIndex()!=s.length()) {
-                if (s.length()-pp.getIndex()>2) {
-                    return null;
-                } else if (s.charAt(pp.getIndex())!='.') {
-                    return null;
-                }
-            }
         }
 
-        assert(null!=cal);
+        assert(pp.getIndex() == s.length());
         PrecisionTime ret = new PrecisionTime();
         ret.cal = cal;
         ret.precision = p;

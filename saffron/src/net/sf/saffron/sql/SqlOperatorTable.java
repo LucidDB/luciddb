@@ -64,9 +64,11 @@ public class SqlOperatorTable
     public static final SqlTypeName[] binaryNullableTypes =
             {SqlTypeName.Null,SqlTypeName.Bit,SqlTypeName.Varbinary};
     public static final SqlTypeName[] intTypes =
-            {SqlTypeName.Integer,SqlTypeName.Bigint};
+            {SqlTypeName.Tinyint,SqlTypeName.Smallint,
+             SqlTypeName.Integer,SqlTypeName.Bigint};
     public static final SqlTypeName[] intNullableTypes =
-            {SqlTypeName.Null,SqlTypeName.Integer,SqlTypeName.Bigint};
+            {SqlTypeName.Null,SqlTypeName.Tinyint,SqlTypeName.Smallint,
+             SqlTypeName.Integer,SqlTypeName.Bigint};
     public static final SqlTypeName[] charTypes =
             {SqlTypeName.Char, SqlTypeName.Varchar};
     public static final SqlTypeName[] charNullableTypes =
@@ -520,9 +522,7 @@ public class SqlOperatorTable
      * type must be a numeric literal.
      */
     public static final SqlOperator.AllowedArgInference typeNumericLiteral =
-        new SqlOperator.AllowedArgInference
-                (new SqlTypeName[][]{{SqlTypeName.Integer,SqlTypeName.Bigint,SqlTypeName.Decimal,
-                                        SqlTypeName.Real,SqlTypeName.Double}}) {
+        new SqlOperator.AllowedArgInference(new SqlTypeName[][]{numericTypes}) {
             public boolean check(SqlCall call, SqlValidator validator,
                                  SqlValidator.Scope scope,
                                  SqlNode node, int operandNbr)
@@ -578,14 +578,29 @@ public class SqlOperatorTable
             }
         };
 
-        /**
-         * Parameter type-checking strategy
-         * type must be numeric, numeric.
-         */
-        public static final SqlOperator.AllowedArgInference typeNumericNumeric =
-            new SqlOperator.AllowedArgInference
-                    (new SqlTypeName[][]{numericTypes,numericTypes});
+    /**
+     * Parameter type-checking strategy
+     * type must be numeric, numeric.
+     */
+    public static final SqlOperator.AllowedArgInference typeNumericNumeric =
+        new SqlOperator.AllowedArgInference
+            (new SqlTypeName[][]{numericTypes,numericTypes});
 
+    /**
+     * Parameter type-checking strategy
+     * type must be integer, integer. (exact types)
+     */
+    public static final SqlOperator.AllowedArgInference typeIntegerInteger =
+        new SqlOperator.AllowedArgInference
+            (new SqlTypeName[][]{intTypes,intTypes});
+
+    /**
+     * Parameter type-checking strategy
+     * type must be nullable integer, nullable integer. (exact types)
+     */
+    public static final SqlOperator.AllowedArgInference typeNullableIntegerInteger =
+        new SqlOperator.AllowedArgInference
+            (new SqlTypeName[][]{intNullableTypes,intNullableTypes});
 
     /**
      * Parameter type-checking strategy

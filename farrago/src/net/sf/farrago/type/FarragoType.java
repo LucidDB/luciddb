@@ -87,12 +87,6 @@ public abstract class FarragoType implements SaffronType
         return digest.hashCode();
     }
 
-    // implement SaffronType
-    public String toString()
-    {
-        return digest;
-    }
-
     public int getMaxBytesStorage()
     {
         // by default, assume type requires fixed storage
@@ -123,12 +117,17 @@ public abstract class FarragoType implements SaffronType
         digest = null;
     }
 
-         /**
-      *
-      * @param t
-      * @param coerce - true when using cast rules, rather than implicit
-      * @return
-      */
+    protected FarragoTypeFactoryImpl getFactoryImpl()
+    {
+        return (FarragoTypeFactoryImpl) factory;
+    }
+
+    /**
+     *
+     * @param t
+     * @param coerce - true when using cast rules, rather than implicit
+     * @return
+     */
     public boolean isAssignableFrom(SaffronType t, boolean coerce)
     {
         // TODO jvs 22-Jan-2004:  implement real SQL rules

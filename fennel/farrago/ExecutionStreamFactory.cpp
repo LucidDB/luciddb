@@ -324,6 +324,7 @@ void ExecutionStreamFactory::createQuotaAccessors(TupleStreamParams &params)
     params.pCacheAccessor = pDatabase->getCache();
     params.scratchAccessor = scratchAccessor;
     if (shouldEnforceCacheQuotas()) {
+        params.enforceQuotas = true;
         // All cache access should be wrapped by quota checks.  Actual
         // quotas will be set per-execution.
         uint quota = 0;
@@ -341,6 +342,8 @@ void ExecutionStreamFactory::createQuotaAccessors(TupleStreamParams &params)
                 pQuotaAccessor,
                 params.scratchAccessor.pCacheAccessor,
                 quota));
+    } else {
+        params.enforceQuotas = false;
     }
 }
 

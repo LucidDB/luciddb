@@ -360,8 +360,8 @@ CalcCastTest::checkWarnings(deque<CalcMessage>& warnings,
     idx = 0;
     while(idx < expectedWarnings.size()) {
         BOOST_CHECK(iter != end);
-        BOOST_CHECK_EQUAL(iter->mPc, expectedWarnings[idx]);
-        BOOST_CHECK_EQUAL(0, strcmp(iter->mStr, "22003"));
+        BOOST_CHECK_EQUAL(iter->pc, expectedWarnings[idx]);
+        BOOST_CHECK_EQUAL(0, strcmp(iter->str, "22003"));
         iter++;
         idx++;
     }

@@ -261,7 +261,7 @@ public class SqlJdbcFunctionCall extends SqlFunction
                     assert(1==operands.length);
                     SqlNode[] newOperands = new SqlNode[3];
                     newOperands[0] = SqlTrimFunction.Flag.createLeading(null);
-                    newOperands[1] = SqlLiteral.createString("'\\t\\r\\n\\f '", null, null);
+                    newOperands[1] = SqlLiteral.createString(" ", null);
                     newOperands[2] = operands[0];
 
                     return super.createCall(newOperands, null);
@@ -273,7 +273,7 @@ public class SqlJdbcFunctionCall extends SqlFunction
                     assert(1==operands.length);
                     SqlNode[] newOperands = new SqlNode[3];
                     newOperands[0] = SqlTrimFunction.Flag.createTrailing(null);
-                    newOperands[1] = SqlLiteral.createString("'\\t\\r\\n\\f '", null,null);
+                    newOperands[1] = SqlLiteral.createString("\\t\\r\\n\\f ", null);
                     newOperands[2] = operands[0];
 
                     return super.createCall(newOperands,null);
