@@ -49,9 +49,7 @@ public class RemoveDistinctRule extends RelOptRule
         DistinctRel distinct = (DistinctRel) call.rels[0];
         Util.discard(distinct);
         RelNode child = call.rels[1];
-        if (child.isDistinct()) {
-            call.transformTo(child);
-        } else {
+        if (!child.isDistinct()) {
             call.transformTo(
                 new AggregateRel(
                     child.getCluster(),
