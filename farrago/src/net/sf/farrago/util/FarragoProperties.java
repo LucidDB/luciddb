@@ -68,12 +68,13 @@ public class FarragoProperties extends Properties
         this,"net.sf.farrago.test.jdbcDriverClass",null);
 
     /**
-     * The boolean property "net.sf.farrago.test.diff" controls whether
-     * diffing is actually performed during diff-based testing.  The
-     * default is true.
+     * The boolean property "net.sf.farrago.test.diff" forces
+     * diffing to be performed during diff-based testing.  The
+     * default is false; this property is only used when Fennel
+     * is disabled.
      */
     public final BooleanProperty testDiff = new BooleanProperty(
-        this,"net.sf.farrago.test.diff",true);
+        this,"net.sf.farrago.test.diff",false);
 
     /**
      * The string property "net.sf.farrago.fileset.unitsql" specifies a

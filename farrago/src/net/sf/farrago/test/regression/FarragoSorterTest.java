@@ -142,6 +142,11 @@ public class FarragoSorterTest extends FarragoTestCase
 
     private void testDistribution(DistributionGenerator gen) throws Exception
     {
+        if (!catalog.isFennelEnabled()) {
+            // need Fennel sorter
+            return;
+        }
+        
         // create a file to contain the generated data
         File dataFile = new File(testdataDir,getName() + ".csv");
         FileWriter fileWriter = new FileWriter(dataFile);
