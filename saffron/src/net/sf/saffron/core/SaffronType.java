@@ -109,7 +109,7 @@ public interface SaffronType
     /**
      * Returns whether two values are of the same type family. E.g.
      *  varchar(5) and varchar(0), belong to the same type family
-     *  double and float, doesn't
+     *  double and float, don't
      */
     boolean isSameTypeFamily(SaffronType t);
 }

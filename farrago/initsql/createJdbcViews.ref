@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/farrago/initsql/createJdbcViews.sql#3 $
+0: jdbc:farrago:> -- $Id: //open/farrago/initsql/createJdbcViews.sql#4 $
 0: jdbc:farrago:> -- This script creates a view schema used by JDBC metadata calls
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !set verbose true
@@ -23,7 +23,6 @@
 . . . . . . . . > ;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- TODO:  replace t."type" with cast(null as varchar(128))
-0: jdbc:farrago:> -- TODO:  eliminate explicit projection once optimizer can do it
 0: jdbc:farrago:> -- FIXME:  need UPPER(t."mofClassName")
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create view tables_view_internal as
@@ -41,8 +40,7 @@
 . . . . . . . . >         t."mofId"
 . . . . . . . . >     from
 . . . . . . . . >         schemas_view_internal s,
-. . . . . . . . >         (select "name","mofClassName","type","namespace","mofId"
-. . . . . . . . >             from sys_cwm."Relational"."NamedColumnSet") t
+. . . . . . . . >         sys_cwm."Relational"."NamedColumnSet" t
 . . . . . . . . >     where 
 . . . . . . . . >         t."namespace" = s."mofId"
 . . . . . . . . > ;

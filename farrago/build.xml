@@ -55,8 +55,14 @@
   <!-- directory for non-generated source code -->
   <property name="src.dir" location="${farrago.dir}/src"/>
 
-  <!-- directory for Farrago compiled class files -->
+  <!-- directory for Farrago compiled class files (other than plugins) -->
   <property name="classes.dir" location="${farrago.dir}/classes"/>
+
+  <!-- directory for Farrago compiled plugin .jars -->
+  <property name="plugin.dir" location="${farrago.dir}/plugin"/>
+
+  <!-- directory for Farrago compiled classes which go into plugin .jars -->
+  <property name="plugin.classes.dir" location="${plugin.dir}/classes"/>
 
   <!-- directory for JUnit run output -->
   <property name="testlog.dir" location="${farrago.dir}/testlog"/>
@@ -119,6 +125,16 @@
   <fail unless="sqlline.dir"/>
   <fail unless="sqlline.lib.dir"/>
   <fail unless="mdrlibs.dir"/>
+
+  <!-- The version of ANT we require. -->
+  <property name="required.ant.version" value="1.6.0"/>
+
+  <condition property="is.correct.ant.version">
+    <contains string="${ant.version}" substring="${required.ant.version}"/>
+  </condition>
+  <fail unless="is.correct.ant.version"
+      message="Incorrect ant version '${ant.version}';
+require version '${required.ant.version}'."/>
 
   <!-- Files -->
 
@@ -275,6 +291,13 @@
   </path>
   <property name="farrago.build.classpath" refid="farrago.build.classpath"/>
 
+  <!-- classpath for plugin build) -->
+  <path id="plugin.build.classpath">
+    <pathelement path="${farrago.build.classpath}"/>
+    <pathelement location="${classes.dir}"/>
+  </path>
+  <property name="plugin.build.classpath" refid="plugin.build.classpath"/>
+
   <!-- classpath for execution.  It's very important for classes.dir
        to come BEFORE catalog.src.dir so that MDR will make our Impl
        classes override their generated counterparts.  The reason
@@ -392,7 +415,7 @@
   </target>
 
   <!-- default target:  assumes catalog has already been created -->
-  <target name="all" depends="compile"/>
+  <target name="all" depends="compile, buildJdbcPlugin, buildMdrPlugin"/>
 
   <target name="compile" depends="generateResources,ddlParser">
     <javaCompile
@@ -400,7 +423,65 @@
       destdir="${classes.dir}"
       classpathref="farrago.build.classpath">
       <include name="**/*.java" />
+      <exclude name="**/namespace/jdbc/**/*.java" />
+      <exclude name="**/namespace/mdr/**/*.java" />
     </javaCompile>
+  </target>
+
+  <target name="buildJdbcPlugin" 
+    depends="checkJdbcPluginUptodate" unless="plugin.jdbc.uptodate">
+    <javaCompile
+      srcdir="${src.dir}"
+      destdir="${plugin.classes.dir}"
+      classpathref="plugin.build.classpath">
+      <include name="**/namespace/jdbc/**/*.java" />
+    </javaCompile>
+    <jar jarfile="${plugin.dir}/FarragoMedJdbc.jar">
+      <fileset dir="${plugin.classes.dir}">
+        <include name="**/namespace/jdbc/**/*.class" />
+      </fileset>
+      <manifest>
+        <attribute 
+          name="DataWrapperClassName" 
+          value="net.sf.farrago.namespace.jdbc.MedJdbcForeignDataWrapper" />
+      </manifest>
+    </jar>
+  </target>
+
+  <target name="buildMdrPlugin" 
+    depends="checkMdrPluginUptodate" unless="plugin.mdr.uptodate">
+    <javaCompile
+      srcdir="${src.dir}"
+      destdir="${plugin.classes.dir}"
+      classpathref="plugin.build.classpath">
+      <include name="**/namespace/mdr/**/*.java" />
+    </javaCompile>
+    <jar jarfile="${plugin.dir}/FarragoMedMdr.jar">
+      <fileset dir="${plugin.classes.dir}">
+        <include name="**/namespace/mdr/**/*.class" />
+      </fileset>
+      <manifest>
+        <attribute 
+          name="DataWrapperClassName" 
+          value="net.sf.farrago.namespace.mdr.MedMdrForeignDataWrapper" />
+      </manifest>
+    </jar>
+  </target>
+
+  <target name="checkJdbcPluginUptodate">
+    <uptodate property="plugin.jdbc.uptodate" 
+      targetfile="${plugin.dir}/FarragoMedJdbc.jar">
+      <srcfiles dir="${src.dir}" 
+        includes="**/namespace/jdbc/**/*.java"/>
+    </uptodate>
+  </target>
+
+  <target name="checkMdrPluginUptodate">
+    <uptodate property="plugin.mdr.uptodate" 
+      targetfile="${plugin.dir}/FarragoMedMdr.jar">
+      <srcfiles dir="${src.dir}" 
+        includes="**/namespace/mdr/**/*.java"/>
+    </uptodate>
   </target>
 
   <!-- cleans for non-generated code only; does not touch catalog -->
@@ -408,6 +489,8 @@
   <target name="clean" depends="cleanTestLogs">
     <delete includeEmptyDirs="true" quiet="true">
       <fileset dir="${classes.dir}" includes="**/*.class"/>
+      <fileset dir="${plugin.classes.dir}" includes="**/*.class"/>
+      <fileset dir="${plugin.dir}" includes="**/*.jar"/>
       <fileset dir="${classes.dir}"
         includes="net/sf/saffron/runtime/**"/>
       <fileset dir="${classes.dir}"
@@ -450,6 +533,8 @@
   <!-- creates catalog and populates with initial metadata -->
   <target name="createCatalog">
     <mkdir dir="${classes.dir}"/>
+    <mkdir dir="${plugin.dir}"/>
+    <mkdir dir="${plugin.classes.dir}"/>
     <antcall target="createClasspathFile"/>
     <antcall target="compileCatalog"/>
     <antcall target="createMdrTestData"/>

@@ -25,22 +25,54 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
+void ProducerToConsumerProvisionAdapter::prepare(
+    TupleStreamParams const &params)
+{
+    SingleInputTupleStream::prepare(params);
+    tupleAccessor.compute(getOutputDesc());
+}
+
 bool ProducerToConsumerProvisionAdapter::writeResultToConsumerBuffer(
     ByteOutputStream &outputStream)
 {
-    // TODO:  Deal with impedance mismatch (producer may have a larger buffer
-    // size than consumer).  In that case, have to fall back to copying
-    // individual tuples.
     ByteInputStream &inputStream = pInputStream->getProducerResultStream();
-    uint cb;
-    PConstBuffer pSrc = inputStream.getReadPointer(1,&cb);
+    uint cbAvailableIn,cbAvailableOut;
+    PConstBuffer pSrc = inputStream.getReadPointer(1,&cbAvailableIn);
     if (!pSrc) {
         return false;
     }
-    PBuffer pDst = outputStream.getWritePointer(cb);
-    memcpy(pDst,pSrc,cb);
-    inputStream.consumeReadPointer(cb);
-    outputStream.consumeWritePointer(cb);
+    PBuffer pDst = outputStream.getWritePointer(1,&cbAvailableOut);
+    
+    if (cbAvailableOut < cbAvailableIn) {
+        // oops, impedance mismatch:  have to figure out how many
+        // complete tuples we can safely copy without overflow
+        PConstBuffer pTuple = pSrc;
+        PConstBuffer pTupleSafe = pTuple;
+        PConstBuffer pEnd = pSrc + cbAvailableOut;
+        for (;;) {
+            // TODO:  this could be optimized a little if we had
+            // a tuple accessor method which could tell us the
+            // length without even messing with the null indicators
+            tupleAccessor.setCurrentTupleBuf(pTuple);
+            uint cbTuple = tupleAccessor.getCurrentByteCount();
+            pTuple += cbTuple;
+            if (pTuple > pEnd) {
+                // this tuple would put us over the limit
+                break;
+            }
+            // this tuple will fit
+            pTupleSafe = pTuple;
+        }
+        cbAvailableIn = pTupleSafe - pSrc;
+        assert(cbAvailableIn);
+    }
+    
+    memcpy(pDst,pSrc,cbAvailableIn);
+    inputStream.consumeReadPointer(cbAvailableIn);
+    outputStream.consumeWritePointer(cbAvailableIn);
+    // we can't use whatever's left in output buffer, so tell consumer
+    // to give us a fresh one next time
+    outputStream.hardPageBreak();
     return true;
 }
 

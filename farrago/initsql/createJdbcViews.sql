@@ -23,7 +23,6 @@ create view schemas_view_internal as
 ;
 
 -- TODO:  replace t."type" with cast(null as varchar(128))
--- TODO:  eliminate explicit projection once optimizer can do it
 -- FIXME:  need UPPER(t."mofClassName")
 
 create view tables_view_internal as
@@ -41,8 +40,7 @@ create view tables_view_internal as
         t."mofId"
     from
         schemas_view_internal s,
-        (select "name","mofClassName","type","namespace","mofId"
-            from sys_cwm."Relational"."NamedColumnSet") t
+        sys_cwm."Relational"."NamedColumnSet" t
     where 
         t."namespace" = s."mofId"
 ;

@@ -24,7 +24,9 @@ using namespace fennel;
 
 DIGIT       [0-9]
 HEX         [A-Za-z0-9]
+NAME        [a-zA-Z_][a-zA-Z_0-9]*
 %s          expect_hex
+%s          expect_name
 
 %%
 
@@ -32,6 +34,8 @@ HEX         [A-Za-z0-9]
 ";"         return TERM;
 "T"         return CODE_START;
 "@"         return AT;
+"("         return LPAREN;
+")"         return RPAREN;
 
 "L"         { yylval.u.v_regset = RegisterReference::ELocal;   return REG_LOCAL;   }
 "S"         { yylval.u.v_regset = RegisterReference::EStatus;  return REG_STATUS;  }
@@ -89,9 +93,19 @@ HEX         [A-Za-z0-9]
                 return REAL;
             }
 
+"'"         BEGIN(expect_name);
+   
+<expect_name>{NAME}      { 
+                yylval.v_string = yytext;
+                BEGIN(INITIAL);
+                return NAME; 
+            }
+
 [ \t\r]+    /* eat up whitespace */
 [\n]+       {
                /* eat up new lines.  Reset column to 1. */
+               /* Don't need to worry about row number 
+                  (that's taken care of automatically) */
                yycolno=1;
             }
 

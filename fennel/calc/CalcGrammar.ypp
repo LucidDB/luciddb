@@ -5,6 +5,7 @@
 %pure_parser           /* Re-entrant parser */
 %start program         /* Explicitly define start symbol to program */
                        /* By default, the first nonterminal is used as start */
+
 %{
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/calc/InstructionCommon.h"
@@ -19,6 +20,15 @@ FENNEL_BEGIN_CPPFILE("$Id")
 #define YYSTYPE       CalcTokenValue
 #define YYERROR_VERBOSE
 #define YYLTYPE       CalcYYLocType
+
+/* Define our own macro for updating the location so that
+   the character position is also updated */
+# define YYLLOC_DEFAULT(Current, Rhs, N)       	\
+{                                               \
+   Current.last_line   = Rhs[N].last_line;	    \
+   Current.last_column = Rhs[N].last_column;    \
+   Current.last_pos    = Rhs[N].last_pos;       \
+}
 
 int  CalcYYlex(YYSTYPE*, YYLTYPE*, void*);
 void CalcYYerror(char*);
@@ -35,6 +45,8 @@ void CalcYYerror(char*);
 %token COMMA
 %token TERM
 %token CODE_START
+%token LPAREN
+%token RPAREN
 
 %token WS
 %token AT
@@ -50,6 +62,7 @@ void CalcYYerror(char*);
 %token <u.v_type>   TYPE_VARIABLE
 
 %token <v_opcode>   OPCODE
+%token <v_string>   NAME
 
 %type <u.v_uint64> index
 
@@ -65,6 +78,8 @@ void CalcYYerror(char*);
 %type <u.p_regref> local_reg
 
 %type <u.p_inst>   instruction
+
+%type <v_register_list> operand_list
 
 /* Grammar follows */
 %%
@@ -126,7 +141,7 @@ instructions: instruction { ((CalcAssembler*) parm)->addInstruction($1); }
 ;
 
 /* TODO: Flesh out support for instructions */
-instruction: OPCODE result COMMA operand COMMA operand TERM 
+instruction:  OPCODE result COMMA operand COMMA operand TERM 
             {
               $$ = ((CalcAssembler*) parm)->createInstruction($1, $2, $4, $6, @$);
             }
@@ -137,7 +152,7 @@ instruction: OPCODE result COMMA operand COMMA operand TERM
             }
             |
               OPCODE result TERM 
-            { 
+            {
               $$ = ((CalcAssembler*) parm)->createInstruction($1, $2, @$);
             }
             |
@@ -148,6 +163,11 @@ instruction: OPCODE result COMMA operand COMMA operand TERM
             |
               OPCODE location COMMA operand TERM 
             { 
+              $$ = ((CalcAssembler*) parm)->createInstruction($1, $2, $4, @$);
+            }
+            |       
+              OPCODE NAME LPAREN operand_list RPAREN TERM
+            {
               $$ = ((CalcAssembler*) parm)->createInstruction($1, $2, $4, @$);
             }
             | { throw CalcAssemblerException("Invalid instruction", @$); }
@@ -164,6 +184,10 @@ result: output_reg | local_reg | status_reg
 
 operand: output_reg | local_reg | input_reg | status_reg | literal_reg
 ;
+
+operand_list:   operand { $$.push_back($1); } 
+              | operand_list COMMA operand { $$ = $1; $$.push_back($3); }
+; 
 
 output_reg:  REG_OUTPUT  index { $$ = ((CalcAssembler*) parm)->getRegister($1, $2); };
 input_reg:   REG_INPUT   index { $$ = ((CalcAssembler*) parm)->getRegister($1, $2); };

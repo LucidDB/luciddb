@@ -23,6 +23,7 @@
 
 #include "fennel/xo/SingleInputTupleStream.h"
 #include "fennel/common/ByteInputStream.h"
+#include "fennel/tuple/TupleAccessor.h"
 
 FENNEL_BEGIN_NAMESPACE
 
@@ -34,8 +35,11 @@ FENNEL_BEGIN_NAMESPACE
  */
 class ProducerToConsumerProvisionAdapter : public SingleInputTupleStream
 {
+    TupleAccessor tupleAccessor;
+    
 public:
     // implement TupleStream
+    virtual void prepare(TupleStreamParams const &params);
     virtual bool writeResultToConsumerBuffer(
         ByteOutputStream &resultOutputStream);
     virtual BufferProvision getResultBufferProvision() const;

@@ -73,6 +73,7 @@ typedef struct
     //! This is not part of the union because strings cannot be part of a union.
     std::string    v_opcode;
     std::string    v_string;
+    std::vector<RegisterReference*> v_register_list;
 } CalcTokenValue;
 
 /**

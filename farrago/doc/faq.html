@@ -41,40 +41,86 @@ achieving world peace).  Novelty is a non-goal.
 
 <hr>
 
+<h2>If novelty is a non-goal, why should I even be interested?  Why
+not just use MySQL or PostgreSQL?  Or Oracle if I can afford it?</h2>
+
+Farrago's hybrid Java/C++ architecture opens up a number of opportunities
+not available to traditional DBMS implementations (or much more difficult):
+
+<ul>
+
+<li>
+Tight integration with Java-based application servers.  For example,
+rather than reinventing cluster management, a future clustered version
+of Farrago could be managed through generic application server
+facilities.  There are similar opportunities for features such as
+distributed transactions, resource pooling, software update
+distribution, hot upgrades, etc.
+
+<li>
+Better extensibility environment.  Writing a UDF in Java (with garbage
+collection) means the UDF can run in-process without having to worry
+about memory corruption and leaks affecting the server.
+
+<li>
+Seamless implementation for SQL standard Java stored procedures and
+object-oriented user-defined types.
+
+<li>
+JIT compilation of SQL expression and procedure code.  Farrago is
+already able to implement many SQL scalar expressions and some
+relational expressions by generating Java code on the fly.  (The same
+technique will be used for stored procedures).  This can be
+automatically compiled further into native code by JIT.  This should
+be a big win for commonly re-executed transactional statements as well
+as long-running complex queries.
+
+</ul>
+
+<hr>
+
 <h2>Isn't Java slow?  Doesn't that mean Farrago can't possibly compete
 with systems implemented entirely in C/C++?</h2>
 
 Careful attention has been paid to keep Java out of the most important
-data processing paths.  Where Java is used (mostly at the metadata and
-optimization level, with an auxiliary role in execution), its
-performance is acceptable.
+data processing paths.  Where Java is used (metadata management,
+parsing, validation, and optimization, plus a targeted role in
+executing generated code), its performance is acceptable.
 
 <hr>
 
 <h2>Under what license is Farrago distributed?</h2>
 
-The Farrago code which puts everything together is licensed under the
-<a href="http://www.gnu.org/copyleft/lesser.html">GNU LGPL</a> 
-(GPL would be preferable, but is incompatible with usage of Java).  
-MDR components are licensed under the
+<em>Current status:</em> The Saffron, Farrago, and Fennel code has
+more than one copyright owner, and is licensed under the <a
+href="http://www.gnu.org/copyleft/lesser.html">GNU LGPL</a>.  MDR
+components are licensed under the
 <a href="http://www.opensource.org/licenses/sunpublic.php">
-Sun Public License</a>.  MonRG is under the
+Sun Public License</a>.  MonRG (used for string resource management)
+is under the
 <a href="http://www.opensource.org/licenses/cpl.php">
-Common Public License</a>.  JavaCC is under the
-<a href="http://www.opensource.org/licenses/bsd-license.html">BSD License</a>.
+Common Public License</a>.
+
+<p>
+
+<em>Near future:</em> We are currently in the process of incorporating
+a non-profit organization whose mission will be to promote further
+development of Farrago and other open-source DBMS projects.  The
+current copyright holders will assign joint copyright to this
+non-profit, and all future contributors will be asked to sign a joint
+copyright agreement as well.  In addition, the license will change
+from LGPL to <a href="http://www.gnu.org/copyleft/gpl.html">GPL</a>
+(with appropriate special permissions for using MDR and the Java
+runtime libraries, since the Sun licenses are GPL-incompatible in the
+absence of the special permission).  Dual licensing will be available
+for closed-source commercial use in exchange for significant
+contributions to the project.
 
 <hr>
 
-<h2>Some older Saffron documentation describes many
-deviations from standard SQL (e.g. null semantics, Java type system
-dependencies, aggregation).  Does this mean Farrago SQL is
-non-standard also?</h2>
+<h2>What version of the SQL standard does Farrago implement?</h2>
 
-No.  The core of Saffron is an extensible optimizer which is agnostic
-about these issues.  Farrago supplies its own SQL-conformant
-optimization rules when it instantiates the optimizer.  The other
-parts of Saffron (such as the Java precompiler) aren't used for SQL
-processing.
+We are developing towards SQL99, with parts of SQL200n where relevant.
 
 <hr>
 
@@ -109,10 +155,10 @@ should still make it a useful platform for this kind of effort.
 <h2>Why a jackalope for the mascot?</h2>
 
 The wily jackalope combines the speed of a jackrabbit with the fluid
-grace and complex headgear of an antelope, which seems appropriate
-for a hybrid Java/C++ system.  In addition, the jackalope symbolizes
-a vision beyond the mundane reality seen by others (and is also
-reputed to be surprisingly savage when cornered).
+grace and complex headgear of an antelope, which seems appropriate for
+a hybrid Java/C++ system.  In addition, the jackalope symbolizes a
+vision beyond our mundane reality (and is also reputed to be
+surprisingly savage when cornered).
 
 <hr>
 

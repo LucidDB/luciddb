@@ -675,6 +675,38 @@ protected:
     typedef TInstFactory<int8_t*,  STANDARD_TYPE_VARBINARY> TIFactoryVARBINARY;
 };
 
+
+class ExtendedInstructionFactoryMap
+{
+public:
+    typedef boost::shared_ptr<ExtendedInstructionTable> TablePtr;
+    explicit
+    ExtendedInstructionFactoryMap() {};
+    ~ExtendedInstructionFactoryMap() {};
+
+    TablePtr getInstructionTable(const string& name)
+    {
+        return factoryMap[name];
+    }
+
+    TablePtr registerInstructionTable(const string name)
+    {
+        if (factoryMap[name] == NULL)
+            factoryMap[name] = TablePtr(new ExtendedInstructionTable());
+        return factoryMap[name];
+    }
+
+    ExtendedInstructionDef* lookupBySignature(const string& name, const string& signature)
+    {
+        TablePtr table = getInstructionTable(name);
+        if (table == NULL) return NULL;
+        return table->lookupBySignature(signature);
+    }
+ 
+protected:
+    map<string, TablePtr> factoryMap;    
+};
+
 // Class that people actually use
 // Super-smart class that knows how to create instructions given the
 // instruction name and reference registers.
@@ -814,6 +846,33 @@ public:
         else return factory->createInstruction(pc, operand);
     }
 
+    static string computeSignature(string& function,
+                                   vector<RegisterReference*>& operands)
+    {
+        ostringstream ostr;
+        ostr << function << "(";
+        for (uint i = 0; i < operands.size(); i++)
+        {
+            assert(operands[i] != NULL);
+            if (i > 0) { ostr << ","; }
+            ostr << StandardTypeDescriptor::toString(operands[i]->type());
+        }
+        ostr << ")";
+        return ostr.str();
+    }
+
+    static Instruction* createInstruction(Calculator* pCalc,
+                                          string& name,
+                                          string& function,
+                                          vector<RegisterReference*>& operands)
+    {
+        string signature = computeSignature(function, operands);
+        ExtendedInstructionDef* instDef = extendedInstructionMap.lookupBySignature(name, signature);
+        if (instDef == NULL)
+            return NULL;
+        return instDef->createInstruction(pCalc, operands);
+    }
+
     template < template <typename T, StandardTypeDescriptorOrdinal typeOrdinal> class TInstFactory >
     static FactoryMapPtr registerInstruction(StringFactoryMap& factoryMap, string& name)
     {
@@ -947,6 +1006,16 @@ public:
         pSIFMap->template registerPointerOperands<TInstruction, args>();
     }
 
+    static ExtendedInstructionTable* registerExtendedInstructionTable()
+    {
+        return extendedInstructionMap.registerInstructionTable("CALL").get();
+    }
+
+    static ExtendedInstructionTable* getExtendedInstructionTable()
+    {
+        return extendedInstructionMap.getInstructionTable("CALL").get();
+    }
+
     // TODO: Move registration of functions into individual Instruction
     static void registerInstructions()
     {
@@ -1014,6 +1083,9 @@ public:
         jumpInstructionMap.registerInstruction<JumpNotNull,2>("JMPNN");
 
         // TODO: Register return instruction
+
+        // Register Extended instruction table
+        registerExtendedInstructionTable();
     }
 
 protected:
@@ -1021,6 +1093,7 @@ protected:
     static StringFactoryMap boolInstructionMap;
     static StringFactoryMap pointerInstructionMap;
     static JumpInstructionFactoryMap jumpInstructionMap;
+    static ExtendedInstructionFactoryMap extendedInstructionMap;
 };
 
 FENNEL_END_NAMESPACE

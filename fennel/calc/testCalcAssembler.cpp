@@ -141,6 +141,7 @@ public:
                 string errorStr = "Error assembling program: ";
                 errorStr += ex.getMessage();
                 fail(errorStr.c_str());
+
                 if (verbose) {
                     // Dump out program
                     cout << "Program Code: " << endl;
@@ -481,6 +482,49 @@ void testJump()
     }    
 }
 
+void convertFloatToInt(Calculator *pCalc,
+                       RegisterRef<int>* regOut,
+                       RegisterRef<float>* regIn)
+{
+    regOut->putV((int)regIn->getV());
+}
+
+void testExtended()
+{
+    // Test valid function
+    ExtendedInstructionTable* table = InstructionFactory::getExtendedInstructionTable();
+    assert(table != NULL);
+    
+    vector<StandardTypeDescriptorOrdinal> parameterTypes;
+
+    // define a function
+    parameterTypes.resize(2);
+    parameterTypes[0] = STANDARD_TYPE_UINT_32;
+    parameterTypes[1] = STANDARD_TYPE_REAL;
+    table->add("convert", 
+               parameterTypes, 
+               (ExtendedInstruction2<int32_t, float>*) NULL,
+               &convertFloatToInt);
+
+    // define test case
+    CalcAssemblerTestCase testCase1(__LINE__, "CONVERT FLOAT TO INT",
+                                    "I r; O u4;\n"
+                                    "T;\n"
+                                    "CALL 'convert(O0, I0);\n");
+    if (testCase1.assemble()) {
+        testCase1.setInput<float>(0, 53.34);
+        testCase1.setExpectedOutput<uint32_t>(0, 53);
+        testCase1.test();
+    }    
+
+    CalcAssemblerTestCase testCase2(__LINE__, "CONVERT INT TO FLOAT (NOT REGISTERED)",
+                                    "I u4; O r;\n"
+                                    "T;\n"
+                                    "CALL 'convert(O0, I0);\n");
+    testCase2.expectAssemblerError("not registered");
+    testCase2.assemble();
+}
+
 void testInvalidPrograms()
 {
     CalcAssemblerTestCase testCase1(__LINE__, "JUNK", "Junk");
@@ -528,6 +572,7 @@ void testAssembler()
     testBool();
     testPointer();
     testJump();
+    testExtended();
 }
 
 int main (int argc, char **argv)

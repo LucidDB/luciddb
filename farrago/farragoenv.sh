@@ -9,10 +9,10 @@ then
     return
 fi
 
-if [ ! -d "$1/ant" ]
+if [ ! -e "$1/build.properties" ]
 then
     echo "Usage:  . farragoenv.sh /path/to/open/thirdparty"
-    echo "ant not found in $1"
+    echo "build.properties not found in $1"
 fi
 
 if [ -z "$JAVA_HOME" ]

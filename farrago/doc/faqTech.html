@@ -25,10 +25,10 @@ command, a stack trace is reported with every subsequent error.
 
 For other cases, you can often make use of the fact that all
 exceptions propagated through the Farrago JDBC driver are traced.  In
-file <code>farrago/trace/FarragoTrace.properties</code>, set
+file <code>dev/farrago/trace/FarragoTrace.properties</code>, set
 <code>net.sf.farrago.jdbc.level=FINER</code>, then do whatever causes
 the exception and look at the tail of file 
-<code>farrago/trace/FarragoTrace.log</code>.
+<code>dev/farrago/trace/FarragoTrace.log</code>.
 
 <hr>
 
@@ -54,7 +54,7 @@ question.  In file <code>FarragoTrace.properties</code>, set
 <code>net.sf.farrago.dynamic.level=FINE</code> before executing the
 SQL statement.  This will guarantee that the generated .java file will
 be preserved under directory
-farrago/classes/net/sf/farrago/dynamic/stmtXYZ (where XYZ is a random
+dev/farrago/classes/net/sf/farrago/dynamic/stmtXYZ (where XYZ is a random
 unique suffix which you may be able to see in the error message).  If
 the problem is that the generated code isn't even legal Java, it may
 be very difficult to find what's going wrong if DynamicJava is being

@@ -2,7 +2,7 @@
 
 <head>
 <title>Farrago SQL/MED Support</title>
-<link rel="stylesheet" type="text/css" href="stylesheet.css" />
+<link rel="stylesheet" type="text/css" href="../stylesheet.css" />
 
 </head>
 
@@ -75,11 +75,10 @@ LANGUAGE language-name
 [ OPTIONS ( opt-name1 'opt-value1' [, opt-name2 'opt-value2' ... ] ) ]
 </code></pre>
 
-Initially, Farrago requires the LANGUAGE to be JAVA.  The LIBRARY
-name can specify either a path to a JAR or 'class X.Y.Z' where X.Y.Z
-is the fully qualified name of a class already available in the
-server's classpath.  Here's an example for a foreign data wrapper
-capable of fetching XML files via TCP/IP:
+Initially, Farrago requires the LANGUAGE to be JAVA.  The LIBRARY name
+specifies the path to a JAR containing the wrapper implementation.
+Here's an example for a foreign data wrapper capable of fetching XML
+files via TCP/IP:
 
 <pre><code>
 CREATE FOREIGN DATA WRAPPER xml_tcpip

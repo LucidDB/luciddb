@@ -228,12 +228,8 @@ encountered near {1}</text>
 <!-- Data wrapper resources 460,000 - 470,000 -->
 <!-- ====================================================================== -->
 
-<exception id="460000" name="DataWrapperUnknownClass">
-    <text>Unknown data wrapper class {0}</text>
-</exception>
-
 <exception id="460010" name="DataWrapperInitFailed">
-    <text>Failed to initialize data wrapper class {0}</text>
+    <text>Failed to initialize data wrapper {0}</text>
 </exception>
 
 <exception id="460020" name="DataServerInitFailed">
@@ -254,6 +250,10 @@ encountered near {1}</text>
 
 <exception id="460060" name="DataServerRuntimeFailed">
     <text>Failed to access data server for execution</text>
+</exception>
+
+<exception id="460060" name="DataWrapperJarLoadFailed">
+    <text>Failed to load data wrapper jar {0}</text>
 </exception>
 
 <!-- ====================================================================== -->

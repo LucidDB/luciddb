@@ -19,9 +19,9 @@ The simplest way to configure and build Fennel is to run:
 ./initBuild.sh [--with-farrago|--without-farrago]
 
 This script will execute all of the steps laid out below, but assumes
-the presence of the //open/thirdparty directory from the Perforce
+the presence of the dev/thirdparty directory from the Perforce
 source control sever that Fennel resides on (see README).  Map
-//open/thirdparty to a directory called thirdparty with the same root
+//open/dev/thirdparty to a directory called thirdparty with the same parent
 directory as Fennel.  The initBuild.sh script will change to
 ../thirdparty, extract the copies of Boost and STLport archived there
 and build both Boost and STLport.

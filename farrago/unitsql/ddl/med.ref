@@ -1,14 +1,14 @@
-0: jdbc:farrago:> -- $Id: //open/farrago/unitsql/ddl/med.sql#1 $
+0: jdbc:farrago:> -- $Id: //open/farrago/unitsql/ddl/med.sql#2 $
 0: jdbc:farrago:> -- Test SQL/MED DDL
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- create a private wrapper for mdr (don't use the standard mdr wrapper)
 0: jdbc:farrago:> create foreign data wrapper test_mdr
-. . . . . . . . > library 'class net.sf.farrago.namespace.mdr.MedMdrForeignDataWrapper'
+. . . . . . . . > library 'plugin/FarragoMedMdr.jar'
 . . . . . . . . > language java;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test name uniqueness:  should fail
 0: jdbc:farrago:> create foreign data wrapper test_mdr
-. . . . . . . . > library 'class net.sf.farrago.namespace.mdr.MedMdrForeignDataWrapper'
+. . . . . . . . > library 'plugin/FarragoMedMdr.jar'
 . . . . . . . . > language java;
 Error: DataWrapper TEST_MDR already exists within Catalog SYS_BOOT;
 duplicate name encountered near line 1, column 29 (state=,code=0)

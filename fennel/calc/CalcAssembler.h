@@ -173,6 +173,7 @@ public:
                                           CalcYYLocType& location)
     {
         Instruction* inst = NULL;
+
         try {
             inst = InstructionFactory::createInstruction(name, pc, operand);
         }
@@ -186,6 +187,33 @@ public:
         if (inst == NULL) {
             stringstream errorStr("Error instantiating instruction: ");
             errorStr << name << " " << pc << ", " << operand->toString();
+            throw CalcAssemblerException(errorStr.str(), location);
+        }
+
+        return inst;
+    }
+
+    Instruction* createInstruction(string& name,
+                                   string& function,
+                                   vector<RegisterReference*>& operands,
+                                   CalcYYLocType& location)
+    {
+        Instruction* inst = NULL;
+
+        try {
+            inst = InstructionFactory::createInstruction(mCalc, name, function, operands);
+        }
+        catch (FennelExcn& ex) {
+            throw CalcAssemblerException(ex.getMessage(), location);
+        }   
+        catch (std::exception& ex) {
+            throw CalcAssemblerException(ex.what(), location);
+        }   
+
+        if (inst == NULL) {
+            stringstream errorStr("Error instantiating instruction: ");
+            errorStr << name << " " << InstructionFactory::computeSignature(function, operands)
+                     << " not registered ";
             throw CalcAssemblerException(errorStr.str(), location);
         }
 

@@ -25,7 +25,9 @@ import net.sf.farrago.catalog.*;
 
 import net.sf.saffron.util.*;
 
+import java.net.*;
 import java.util.*;
+import java.util.jar.*;
 
 // TODO:  generic plugin support
 
@@ -164,6 +166,23 @@ public class FarragoDataWrapperCache extends FarragoCompoundAllocation
         return server;
     }
 
+    private Class loadPluginClass(String libraryName)
+    {
+        try {
+            JarFile jar = new JarFile(libraryName);
+            Manifest manifest = jar.getManifest();
+            String className =
+                manifest.getMainAttributes().getValue("DataWrapperClassName");
+            URLClassLoader classLoader = new URLClassLoader(
+                new URL [] {new URL("file:" + libraryName)});
+            return classLoader.loadClass(className);
+        } catch (Throwable ex) {
+            throw FarragoResource.instance().newDataWrapperJarLoadFailed(
+                libraryName,
+                ex);
+        }
+    }
+    
     private class WrapperFactory
         implements FarragoObjectCache.CachedObjectFactory 
     {
@@ -187,21 +206,8 @@ public class FarragoDataWrapperCache extends FarragoCompoundAllocation
         {
             assert(mofId == key);
 
-            String CLASS_PREFIX = "class ";
-            if (!libraryName.startsWith(CLASS_PREFIX)) {
-                // TODO:  jar support
-                throw Util.needToImplement(libraryName);
-            }
-            // strip off prefix
-            String className = libraryName.substring(CLASS_PREFIX.length());
-            Class pluginClass;
-            try {
-                pluginClass = Class.forName(className);
-            } catch (Throwable ex) {
-                throw FarragoResource.instance().newDataWrapperUnknownClass(
-                    className,
-                    ex);
-            }
+            Class pluginClass = loadPluginClass(libraryName);
+            
             FarragoForeignDataWrapper wrapper;
             try {
                 wrapper = (FarragoForeignDataWrapper)
@@ -209,7 +215,7 @@ public class FarragoDataWrapperCache extends FarragoCompoundAllocation
                 wrapper.initialize(catalog,options);
             } catch (Throwable ex) {
                 throw FarragoResource.instance().newDataWrapperInitFailed(
-                    className,
+                    libraryName,
                     ex);
             }
             

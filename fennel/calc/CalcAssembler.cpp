@@ -33,6 +33,7 @@ InstructionFactory::StringFactoryMap InstructionFactory::nativeInstructionMap;
 InstructionFactory::StringFactoryMap InstructionFactory::boolInstructionMap;
 InstructionFactory::StringFactoryMap InstructionFactory::pointerInstructionMap;
 JumpInstructionFactoryMap InstructionFactory::jumpInstructionMap;
+ExtendedInstructionFactoryMap InstructionFactory::extendedInstructionMap;
 
 void CalcAssembler::init()
 {
@@ -452,6 +453,6 @@ void CalcAssembler::addInstruction(Instruction* inst)
     mCalc->appendInstruction(inst);
 }
 
-FENNEL_END_CPPFILE("$Id$");
+FENNEL_END_CPPFILE("$Id: //open/dev/fennel/calc/CalcAssembler.cpp#2 $");
 
 // End CalcAssembler.cpp

@@ -6,7 +6,7 @@
 
 -- create wrapper for access to MDR repositories
 create foreign data wrapper sys_mdr
-library 'class net.sf.farrago.namespace.mdr.MedMdrForeignDataWrapper'
+library 'plugin/FarragoMedMdr.jar'
 language java;
 
 
@@ -23,7 +23,7 @@ options(root_package_name 'FEM');
 
 -- create wrapper for access to JDBC data
 create foreign data wrapper sys_jdbc
-library 'class net.sf.farrago.namespace.jdbc.MedJdbcForeignDataWrapper'
+library 'plugin/FarragoMedJdbc.jar'
 language java;
 
 commit;
