@@ -345,14 +345,6 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
         testTranslation("(empno = empid) and (empno = deptno)");
     }
 
-    public void testRowConstructorWithLiterals()
-        throws Exception
-    {
-        testTranslation("row(5,'a las cinco de la tarde',x'58797A',"
-            + "date '2004-10-05',time '17:00:00',"
-            + "timestamp '2004-10-05 17:00:00')");
-    }
-
     public void testNullableIsTrue()
         throws Exception
     {

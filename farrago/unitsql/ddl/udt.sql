@@ -116,22 +116,27 @@ create type line_segment as (
 );
 
 
--- test tables which contain typed columns
+-- test tables which store typed columns
+-- (put udt columns first to test offset flattening)
 set path 'udttest';
 
--- create a mock table without any storage
-create table mock_vertex_list(
-    vertex_id int not null primary key,
-    coord rectilinear_coord0
-)
-server sys_mock_data_server
-options (executor_impl 'JAVA', row_count '1');
-
-select v.vertex_id, v.coord.x, v.coord.y
-from mock_vertex_list v;
-
--- create a real stored table
-create table stored_vertex_list(
-    vertex_id int not null primary key,
-    coord rectilinear_coord0
+create table stored_coord_list(
+    coord1 rectilinear_coord0,
+    coord2 rectilinear_coord0,
+    pair_id int not null primary key
 );
+
+-- test views which access typed columns
+create view viewed_coord_list as
+select scl.pair_id, scl.coord1, scl.coord2.y
+from stored_coord_list scl;
+
+!set outputformat csv
+
+explain plan for
+select scl.pair_id, scl.coord1.y, scl.coord2.x
+from stored_coord_list scl;
+
+explain plan for
+select v.pair_id, v.coord1.x, v.coord1.y, v.y as y2 
+from viewed_coord_list v;

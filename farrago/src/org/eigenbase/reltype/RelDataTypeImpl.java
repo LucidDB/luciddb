@@ -174,6 +174,16 @@ public abstract class RelDataTypeImpl
     }
 
     // implement RelDataType
+    public SqlIdentifier getSqlIdentifier()
+    {
+        SqlTypeName typeName = getSqlTypeName();
+        if (typeName == null) {
+            return null;
+        }
+        return new SqlIdentifier(typeName.getName(), null);
+    }
+
+    // implement RelDataType
     public RelDataTypeFamily getFamily()
     {
         // by default, put each type into its own family

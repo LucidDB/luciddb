@@ -74,6 +74,7 @@ public class SqlToRelConverter
     final ArrayList leaves = new ArrayList();
     private List dynamicParamSqlNodes;
     private final SqlStdOperatorTable opTab = SqlStdOperatorTable.instance();
+    private boolean shouldConvertTableAccess;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -106,6 +107,7 @@ public class SqlToRelConverter
         this.cluster = createCluster(env);
 
         dynamicParamSqlNodes = new ArrayList();
+        shouldConvertTableAccess = true;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -162,6 +164,22 @@ public class SqlToRelConverter
     public void setDefaultValueFactory(DefaultValueFactory factory)
     {
         defaultValueFactory = factory;
+    }
+
+    /**
+     * Controls whether table access references are converted to physical
+     * rels immediately.  The optimizer doesn't like leaf rels to have
+     * {@link CallingConvention#NONE}.  However, if we are doing further
+     * conversion passes (e.g. RelStructuredTypeFlattener), then
+     * we may need to defer conversion.  To have any effect, this must be called
+     * before any convert method.
+     *
+     * @param enabled true for immediate conversion (the default); false to
+     * generate logical TableAccessRel instances
+     */
+    public void enableTableAccessConversion(boolean enabled)
+    {
+        shouldConvertTableAccess = enabled;
     }
 
     /**
@@ -863,7 +881,12 @@ public class SqlToRelConverter
             final SqlValidator.Namespace fromNamespace =
                 validator.getNamespace(from);
             RelOptTable table = getRelOptTable(fromNamespace, schema);
-            bb.setRoot(table.toRel(cluster, connection));
+            if (shouldConvertTableAccess) {
+                bb.setRoot(table.toRel(cluster, connection));
+            } else {
+                bb.setRoot(
+                    new TableAccessRel(cluster, table, connection));
+            }
 
             // REVIEW jvs 22-Jan-2004: This is adding a SqlNode as a
             // mapScopeToRel key.  Shouldn't it be a scope instead?
@@ -1782,7 +1805,7 @@ public class SqlToRelConverter
                                             correlNode.getType());
                                     if (pos != -1) {
                                         correlations.add(new
-                                            CorrelatorRel.Correleation(
+                                            CorrelatorRel.Correlation(
                                                 RelOptQuery.getCorrelOrdinal(
                                                     correlName),pos));
                                     }

@@ -20,6 +20,7 @@
 */
 package org.eigenbase.sql.type;
 
+import org.eigenbase.sql.*;
 import org.eigenbase.reltype.*;
 
 /**
@@ -34,9 +35,12 @@ public abstract class AbstractSqlType
     protected final SqlTypeName typeName;
     protected boolean isNullable;
         
-    protected AbstractSqlType(SqlTypeName typeName, boolean isNullable)
+    protected AbstractSqlType(
+        SqlTypeName typeName,
+        boolean isNullable,
+        RelDataTypeField [] fields)
     {
-        super(null);
+        super(fields);
         this.typeName = typeName;
         this.isNullable = isNullable;
     }

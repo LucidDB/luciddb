@@ -449,6 +449,22 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         return getSqlToRelConverter().getCluster();
     }
 
+    // override OJPreparingStmt
+    protected RelNode optimize(RelNode rootRel)
+    {
+        rootRel = flattenTypes(rootRel);
+        return super.optimize(rootRel);
+    }
+
+    RelNode flattenTypes(RelNode rootRel)
+    {
+        RelStructuredTypeFlattener typeFlattener =
+            new RelStructuredTypeFlattener(
+                sqlToRelConverter.getRexBuilder());
+        rootRel = typeFlattener.rewrite(rootRel);
+        return rootRel;
+    }
+
     private RelDataType getParamRowType()
     {
         return getFarragoTypeFactory().createStructType(
@@ -574,6 +590,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
                     new FarragoRexBuilder(this));
             sqlToRelConverter.setDefaultValueFactory(
                 new ReposDefaultValueFactory());
+            sqlToRelConverter.enableTableAccessConversion(false);
         }
         return sqlToRelConverter;
     }

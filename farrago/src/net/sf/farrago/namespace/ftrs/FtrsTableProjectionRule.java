@@ -84,7 +84,7 @@ class FtrsTableProjectionRule extends RelOptRule
         // pushed down and parts that can't
         int n = origProject.getChildExps().length;
         Integer [] projectedColumns = new Integer[n];
-        RelDataType rowType = origScan.ftrsTable.getRowType();
+        RelDataType rowType = origScan.getRowType();
         RelDataType projType = origProject.getRowType();
         RelDataTypeField [] projFields = projType.getFields();
         String [] fieldNames = new String[n];

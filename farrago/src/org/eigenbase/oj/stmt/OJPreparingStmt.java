@@ -51,7 +51,7 @@ import org.eigenbase.rex.RexBuilder;
 import org.eigenbase.runtime.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.SqlParser;
-import org.eigenbase.sql2rel.SqlToRelConverter;
+import org.eigenbase.sql2rel.*;
 import org.eigenbase.trace.EigenbaseTrace;
 import org.eigenbase.util.SaffronProperties;
 import org.eigenbase.util.Util;
@@ -262,7 +262,7 @@ public abstract class OJPreparingStmt
      * @param rootRel root of a relational expression
      * @return an equivalent optimized relational expression
      */
-    private RelNode optimize(RelNode rootRel)
+    protected RelNode optimize(RelNode rootRel)
     {
         RelOptPlanner planner = rootRel.getCluster().getPlanner();
         planner.setRoot(rootRel);

@@ -65,9 +65,11 @@ class FarragoView extends FarragoQueryNamedColumnSet
         RelNode rel =
             getPreparingStmt().expandView(
                 getCwmView().getQueryExpression().getBody());
-        return RelOptUtil.createRenameRel(
+        rel = RelOptUtil.createRenameRel(
             getRowType(),
             rel);
+        rel = getPreparingStmt().flattenTypes(rel);
+        return rel;
     }
 }
 

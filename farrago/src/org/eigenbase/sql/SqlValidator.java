@@ -851,8 +851,9 @@ public class SqlValidator
                 } else {
                     RelDataType fieldType = lookupField(type, name);
                     if (fieldType == null) {
-                        throw Util.newInternal("Could not find field '" + name
-                            + "' in '" + type + "'");
+                        throw newValidationError(
+                            id,
+                            EigenbaseResource.instance().newUnknownField(name));
                     }
                     type = fieldType;
                 }

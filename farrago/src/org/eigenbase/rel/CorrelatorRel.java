@@ -57,11 +57,11 @@ public class CorrelatorRel extends JoinRel
      * Describes the neccessary parameters for an implementation in order
      * to identify and set dynamic variables
      */
-    public static class Correleation implements Cloneable {
+    public static class Correlation implements Cloneable {
         public final int id;
         public final int offset;
 
-        public Correleation(int id, int offset)
+        public Correlation(int id, int offset)
         {
             this.id = id;
             this.offset = offset;

@@ -45,7 +45,8 @@ public class IntervalSqlType extends AbstractSqlType
             intervalQualifier.isYearMonth()
             ? SqlTypeName.IntervalYearMonth
             : SqlTypeName.IntervalDayTime,
-            isNullable);
+            isNullable,
+            null);
         this.intervalQualifier = intervalQualifier;
         computeDigest();
     }

@@ -163,6 +163,8 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
             newType = copyMultisetType(type, nullable);
         } else if (type instanceof IntervalSqlType) {
             newType = copyIntervalType(type, nullable);
+        } else if (type instanceof ObjectSqlType) {
+            newType = copyObjectType(type, nullable);
         } else {
             return super.createTypeWithNullability(type, nullable);
         }
@@ -286,6 +288,14 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
     private RelDataType copyIntervalType(RelDataType type, boolean nullable)
     {
         return new IntervalSqlType(type.getIntervalQualifier(), nullable);
+    }
+
+    private RelDataType copyObjectType(RelDataType type, boolean nullable)
+    {
+        return new ObjectSqlType(
+            type.getSqlIdentifier(),
+            nullable,
+            type.getFields());
     }
 }
 

@@ -112,6 +112,10 @@
     <text>Unknown identifier ''{0}''</text>
 </exception>
 
+<exception id="120055" name="UnknownField" className="org.eigenbase.sql.SqlValidatorException">
+    <text>Unknown field ''{0}''</text>
+</exception>
+
 <exception id="120060" name="UnknownTargetColumn" className="org.eigenbase.sql.SqlValidatorException">
     <text>Unknown target column ''{0}''</text>
 </exception>

@@ -41,7 +41,7 @@ import org.eigenbase.oj.*;
 import org.eigenbase.oj.util.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.reltype.*;
-import org.eigenbase.sql.SqlCollation;
+import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
 
@@ -160,7 +160,14 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         } else if (classifier instanceof FemSqlobjectType) {
             FemSqlobjectType objectType =
                 (FemSqlobjectType) classifier;
-            return createStructTypeFromFeatureList(objectType.getFeature());
+            // first, create an anonymous row type
+            RelDataType structType = createStructTypeFromFeatureList(
+                objectType.getFeature());
+            // then, christen it
+            SqlIdentifier id = FarragoCatalogUtil.getQualifiedName(objectType);
+            return canonize(
+                new ObjectSqlType(
+                    id, false, structType.getFields()));
         } else {
             Util.permAssert(false,"TODO jvs 15-Dec-2004:  intervals");
         }

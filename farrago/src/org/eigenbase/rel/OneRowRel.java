@@ -54,7 +54,7 @@ public class OneRowRel extends AbstractRelNode
 
     public Object clone()
     {
-        return new OneRowRel(cluster);
+        return this;
     }
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)

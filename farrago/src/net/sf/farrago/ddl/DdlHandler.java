@@ -356,18 +356,11 @@ public abstract class DdlHandler
         if (column.getName() == null) {
             column.setName(field.getName());
         }
-        SqlTypeName typeName = type.getSqlTypeName();
-        String lookupName;
-        if (typeName == null) {
-            // TODO jvs 15-Dec-2005:  UDT etc
-            lookupName = type.toString();
-        } else {
-            lookupName = typeName.getName();
-        }
         CwmSqldataType cwmType = 
             validator.getStmtValidator().findSqldataType(
-                new SqlIdentifier(lookupName, null));
+                type.getSqlIdentifier());
         column.setType(cwmType);
+        SqlTypeName typeName = type.getSqlTypeName();
         if (typeName != null) {
             if (typeName.allowsPrec()) {
                 column.setPrecision(new Integer(type.getPrecision()));

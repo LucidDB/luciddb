@@ -40,7 +40,7 @@ public class MultisetSqlType extends AbstractSqlType
      */
     public MultisetSqlType(RelDataType elementType, boolean isNullable)
     {
-        super(SqlTypeName.Multiset, isNullable);
+        super(SqlTypeName.Multiset, isNullable, null);
         Util.pre(null!=elementType,"null!=elementType");
         this.elementType = elementType;
         computeDigest();

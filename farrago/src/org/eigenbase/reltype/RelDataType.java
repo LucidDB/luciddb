@@ -166,9 +166,19 @@ public interface RelDataType
      * Gets the {@link SqlTypeName} of this type.
      *
      * @return SqlTypeName, or null if
-     * this is not an SQL type
+     * this is not an SQL predefined type
      */
     public SqlTypeName getSqlTypeName();
+
+    /**
+     * Gets the {@link SqlIdentifier} associated with this type.  For
+     * a predefined type, this is a simple identifier based on
+     * {@link #getSqlTypeName}.  For a user-defined type, this is
+     * a compound identifier which uniquely names the type.
+     *
+     * @return SqlIdentifier, or null if this is not an SQL type
+     */
+    public SqlIdentifier getSqlIdentifier();
 
     /**
      * Gets a string representation of this type without detail
