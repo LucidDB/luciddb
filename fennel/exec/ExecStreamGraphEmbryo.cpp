@@ -75,12 +75,13 @@ SharedExecStream ExecStreamGraphEmbryo::addAdapterFor(
     assert(availableDataflow != BUFPROV_NONE);
 
     // Generate a name.
-    std::ostringstream oss;
-    oss << pLastStream->getName()
-        << "#"
-        << (pGraph->getOutputCount(pLastStream->getStreamId()) - 1)
-        << ".provisioner";
-    std::string adapterName = oss.str();
+    std::string adapterName;
+    {
+        int id = pGraph->getOutputCount(pLastStream->getStreamId());
+        std::ostringstream oss;
+        oss << pLastStream->getName() << "#" << id << ".provisioner";
+        adapterName = oss.str();
+    }
 
     // If necessary, create an adapter based on the last stream
     switch (requiredDataflow) {
