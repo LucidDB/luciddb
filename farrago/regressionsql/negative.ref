@@ -2385,11 +2385,11 @@ Error: java.lang.AssertionError: Wrong number of params for instruction LocalTim
 0: jdbc:farrago:> values localtimestamp(1);
 Error: java.lang.AssertionError: Wrong number of params for instruction LocalTimestamp; expected=1 but was=2 (state=,code=0)
 0: jdbc:farrago:> values current_time(2,3);
-Error: Invalid number of arguments to function 'CURRENT_TIME'; encountered near line 1, column 8. Was expecting 1 arguments (state=,code=0)
+Error: Invalid number of arguments to function 'CURRENT_TIME'; encountered near line 1, column 8. Was expecting 0 arguments (state=,code=0)
 0: jdbc:farrago:> values current_timestamp(-1);
-Error: Argument to function 'CURRENT_TIMESTAMP' must be a literal (state=,code=0)
+Error: Argument to function 'CURRENT_TIMESTAMP' must be a positive integer literal (state=,code=0)
 0: jdbc:farrago:> values current_time(-20);
-Error: Argument to function 'CURRENT_TIME' must be a literal (state=,code=0)
+Error: Argument to function 'CURRENT_TIME' must be a positive integer literal (state=,code=0)
 0: jdbc:farrago:> values current_date(2);
 Error: Invalid number of arguments to function 'CURRENT_DATE'; encountered near line 1, column 8. Was expecting 0 arguments (state=,code=0)
 0: jdbc:farrago:> values log(1,2,3);
