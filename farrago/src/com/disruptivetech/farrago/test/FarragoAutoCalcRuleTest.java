@@ -137,7 +137,7 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
                 ReturnTypeInferenceImpl.useNullableBiggest,
                 UnknownParamInference.useFirstKnown,
                 OperandsTypeChecking.typeNullableNumericNumeric,
-                SqlFunction.SqlFuncTypeName.Numeric);
+                SqlFunctionCategory.Numeric);
         opTab.register(cppFunc);
 
         CalcRexImplementorTableImpl cImplTab =
@@ -251,7 +251,7 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
                     ReturnTypeInferenceImpl.useNullableBiggest,
                     UnknownParamInference.useFirstKnown,
                     OperandsTypeChecking.typeNullableNumericNumeric,
-                    SqlFunction.SqlFuncTypeName.Numeric);
+                    SqlFunctionCategory.Numeric);
             opTab.register(jplusFunc);
 
             registerOperator(
@@ -262,7 +262,7 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
                 new SqlFunction("JROW", SqlKind.Function, null,
                     UnknownParamInference.useFirstKnown,
                     OperandsTypeChecking.typeNullableNumericNumeric,
-                    SqlFunction.SqlFuncTypeName.Numeric)
+                    SqlFunctionCategory.Numeric)
                 {
                     protected RelDataType getType(
                         SqlValidator validator,

@@ -469,7 +469,7 @@ SqlNode SqlProcedureCall() :
             callPos = getPos();
         }
     routineCall =
-        NamedRoutineCall(SqlFunction.SqlFuncTypeName.UserDefinedProcedure)
+        NamedRoutineCall(SqlFunctionCategory.UserDefinedProcedure)
         {
         }
     {
@@ -477,7 +477,7 @@ SqlNode SqlProcedureCall() :
     }
 }
 
-SqlNode NamedRoutineCall(SqlFunction.SqlFuncTypeName routineType) :
+SqlNode NamedRoutineCall(SqlFunctionCategory routineType) :
 {
     SqlIdentifier name;
     List args;
@@ -1554,7 +1554,7 @@ SqlNode AtomicRowExpression() :
         // NOTE jvs 18-Jan-2005:  use syntactic lookahead to discriminate
         // compound identifiers from function calls in which the function
         // name is a compound identifier
-    LOOKAHEAD(FunctionName() <LPAREN>)
+    LOOKAHEAD( [<SPECIFIC>] FunctionName() <LPAREN>)
     e = NamedFunctionCall() { return e; }
 |
     e = ContextVariable() { return e; }
@@ -1984,7 +1984,7 @@ SqlNode NewSpecification() :
             callPos = getPos();
         }
     routineCall =
-        NamedRoutineCall(SqlFunction.SqlFuncTypeName.UserDefinedConstructor)
+        NamedRoutineCall(SqlFunctionCategory.UserDefinedConstructor)
         {
         }
     {
@@ -2264,6 +2264,21 @@ SqlNode BuiltinFunctionCall() :
 /**
  * Parses a call to a named function (could be a builtin with regular
  * syntax, or else a UDF).
+ *
+ *<p>
+ *
+ * NOTE: every UDF has two names: an <em>invocation name</em> and a
+ * <em>specific name</em>.  Normally, function calls are resolved via overload
+ * resolution and invocation names.  The SPECIFIC prefix allows overload
+ * resolution to be bypassed.  Note that usage of the SPECIFIC prefix in
+ * queries is non-standard; it is used internally by Farrago, e.g. in stored
+ * view definitions to permanently bind references to a particular function
+ * after the overload resolution performed by view creation.
+ *
+ *<p>
+ *
+ * TODO jvs 25-Mar-2005:  Once we have SQL-Flagger support, flag SPECIFIC
+ * as non-standard.
  */
 SqlNode NamedFunctionCall() :
 {
@@ -2275,9 +2290,15 @@ SqlNode NamedFunctionCall() :
     SqlParserPos overPos = null;
     boolean over = false;
     SqlCall function = null;
+    SqlFunctionCategory funcType =
+        SqlFunctionCategory.UserDefinedFunction;
     SqlNode e = null;
 }
 {
+    [ <SPECIFIC> { funcType =
+                       SqlFunctionCategory.UserDefinedSpecificFunction; } ]
+        {
+        }
     (
         qualifiedName = FunctionName()
         {
@@ -2316,7 +2337,7 @@ SqlNode NamedFunctionCall() :
         {
             function = createCall(
                 qualifiedName, SqlParserUtil.toNodeArray(args), pos,
-                SqlFunction.SqlFuncTypeName.UserDefinedFunction);
+                funcType);
             if (over) {
                 if (id != null) {
                     return opTab.overOperator.createCall(

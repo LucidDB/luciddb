@@ -266,7 +266,8 @@ class InternalTranslator
             return null;
         }
         List list = rexBuilder.opTab.lookupOperatorOverloads(
-            new SqlIdentifier(sqlName.toUpperCase(), null), 
+            new SqlIdentifier(sqlName.toUpperCase(), null),
+            null,
             SqlSyntax.Binary);
         if (list.isEmpty()) {
             return null;

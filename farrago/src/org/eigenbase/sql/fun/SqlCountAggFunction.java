@@ -27,6 +27,7 @@ import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.sql.SqlAggFunction;
 import org.eigenbase.sql.SqlFunction;
+import org.eigenbase.sql.SqlFunctionCategory;
 import org.eigenbase.sql.SqlKind;
 import org.eigenbase.sql.type.OperandsTypeChecking;
 import org.eigenbase.sql.type.ReturnTypeInference;
@@ -47,7 +48,7 @@ public class SqlCountAggFunction extends SqlAggFunction
         super(
             "COUNT", SqlKind.Function, ReturnTypeInferenceImpl.useFirstArgType,
             null, OperandsTypeChecking.typeNumeric,
-            SqlFunction.SqlFuncTypeName.Numeric);
+            SqlFunctionCategory.Numeric);
     }
 
     public RelDataType[] getParameterTypes(RelDataTypeFactory typeFactory)

@@ -79,7 +79,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
 
         public SqlAbstractTimeFunction(String name, SqlTypeName typeName) {
             super(name, SqlKind.Function, null, null, null,
-                    SqlFunction.SqlFuncTypeName.TimeDate);
+                    SqlFunctionCategory.TimeDate);
             this.typeName = typeName;
         }
         // no argTypeInference, so must override these methods.
@@ -151,7 +151,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
             super(
                 name, SqlKind.Function, ReturnTypeInferenceImpl.useVarchar2000,
                 null, OperandsTypeChecking.typeEmpty,
-                SqlFunction.SqlFuncTypeName.System);
+                SqlFunctionCategory.System);
         }
 
         public OperandsCountDescriptor getOperandsCountDescriptor()
@@ -1020,7 +1020,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
 
     public final SqlFunction convertFunc =
         new SqlFunction("CONVERT", SqlKind.Function, null, null, null,
-            SqlFunction.SqlFuncTypeName.String) {
+            SqlFunctionCategory.String) {
             public void unparse(
                 SqlWriter writer,
                 SqlNode [] operands,
@@ -1053,7 +1053,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
 
     public final SqlFunction translateFunc =
         new SqlFunction("TRANSLATE", SqlKind.Function, null, null, null,
-            SqlFunction.SqlFuncTypeName.String) {
+            SqlFunctionCategory.String) {
             public void unparse(
                 SqlWriter writer,
                 SqlNode [] operands,
@@ -1087,7 +1087,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
     public final SqlFunction overlayFunc =
         new SqlFunction("OVERLAY", SqlKind.Function,
             ReturnTypeInferenceImpl.useNullableDyadicStringSumPrecision, null, null,
-            SqlFunction.SqlFuncTypeName.String) {
+            SqlFunctionCategory.String) {
             public OperandsCountDescriptor getOperandsCountDescriptor()
             {
                 return new OperandsCountDescriptor(3, 4);
@@ -1183,7 +1183,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         new SqlFunction("POSITION", SqlKind.Function,
             ReturnTypeInferenceImpl.useNullableInteger, null,
             OperandsTypeChecking.typeNullableStringString,
-            SqlFunction.SqlFuncTypeName.Numeric) {
+            SqlFunctionCategory.Numeric) {
             public void unparse(
                 SqlWriter writer,
                 SqlNode [] operands,
@@ -1239,7 +1239,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         new SqlFunction("CHAR_LENGTH", SqlKind.Function,
             ReturnTypeInferenceImpl.useNullableInteger, null,
             OperandsTypeChecking.typeNullableVarchar,
-            SqlFunction.SqlFuncTypeName.Numeric) {
+            SqlFunctionCategory.Numeric) {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testCharLengthFunc(tester);
@@ -1250,7 +1250,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         new SqlFunction("CHARACTER_LENGTH", SqlKind.Function,
             ReturnTypeInferenceImpl.useNullableInteger, null,
             OperandsTypeChecking.typeNullableVarchar,
-            SqlFunction.SqlFuncTypeName.Numeric) {
+            SqlFunctionCategory.Numeric) {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testCharacterLengthFunc(tester);
@@ -1261,7 +1261,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         new SqlFunction("UPPER", SqlKind.Function,
             ReturnTypeInferenceImpl.useNullableFirstArgType, null,
             OperandsTypeChecking.typeNullableVarchar,
-            SqlFunction.SqlFuncTypeName.String) {
+            SqlFunctionCategory.String) {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testUpperFunc(tester);
@@ -1272,7 +1272,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         new SqlFunction("LOWER", SqlKind.Function,
             ReturnTypeInferenceImpl.useNullableFirstArgType, null,
             OperandsTypeChecking.typeNullableVarchar,
-            SqlFunction.SqlFuncTypeName.String) {
+            SqlFunctionCategory.String) {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testLowerFunc(tester);
@@ -1283,7 +1283,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         new SqlFunction("INITCAP", SqlKind.Function,
             ReturnTypeInferenceImpl.useNullableFirstArgType, null,
             OperandsTypeChecking.typeNullableVarchar,
-            SqlFunction.SqlFuncTypeName.String) {
+            SqlFunctionCategory.String) {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testInitcapFunc(tester);
@@ -1300,7 +1300,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         new SqlFunction("POW", SqlKind.Function,
             ReturnTypeInferenceImpl.useNullableDouble, null,
             OperandsTypeChecking.typeNumericNumeric,
-            SqlFunction.SqlFuncTypeName.Numeric) {
+            SqlFunctionCategory.Numeric) {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testPowFunc(tester);
@@ -1311,7 +1311,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         new SqlFunction("MOD", SqlKind.Function,
             ReturnTypeInferenceImpl.useNullableBiggest, null,
             OperandsTypeChecking.typeNullableIntegerInteger,
-            SqlFunction.SqlFuncTypeName.Numeric) {
+            SqlFunctionCategory.Numeric) {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testModFunc(tester);
@@ -1321,7 +1321,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
     public final SqlFunction lnFunc =
         new SqlFunction("LN", SqlKind.Function,
             ReturnTypeInferenceImpl.useNullableDouble, null,
-            OperandsTypeChecking.typeNumeric, SqlFunction.SqlFuncTypeName.Numeric) {
+            OperandsTypeChecking.typeNumeric, SqlFunctionCategory.Numeric) {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testLnFunc(tester);
@@ -1331,7 +1331,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
     public final SqlFunction logFunc =
         new SqlFunction("LOG", SqlKind.Function,
             ReturnTypeInferenceImpl.useNullableDouble, null,
-            OperandsTypeChecking.typeNumeric, SqlFunction.SqlFuncTypeName.Numeric) {
+            OperandsTypeChecking.typeNumeric, SqlFunctionCategory.Numeric) {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testLogFunc(tester);
@@ -1342,7 +1342,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         new SqlFunction("ABS", SqlKind.Function,
             ReturnTypeInferenceImpl.useFirstArgType, null,
             OperandsTypeChecking.typeNullableNumericOrInterval,
-            SqlFunction.SqlFuncTypeName.Numeric) {
+            SqlFunctionCategory.Numeric) {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testAbsFunc(tester);
@@ -1351,7 +1351,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
 
     public final SqlFunction nullIfFunc =
         new SqlFunction("NULLIF", SqlKind.Function, null, null, null,
-            SqlFunction.SqlFuncTypeName.System)
+            SqlFunctionCategory.System)
         {
             // override SqlOperator
             public SqlNode rewriteCall(SqlCall call)
@@ -1393,7 +1393,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      */
     public final SqlFunction coalesceFunc =
         new SqlFunction("COALESCE", SqlKind.Function, null, null, null,
-            SqlFunction.SqlFuncTypeName.System)
+            SqlFunctionCategory.System)
         {
             // override SqlOperator
             public SqlNode rewriteCall(SqlCall call)
@@ -1434,7 +1434,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         new SqlFunction("FLOOR", SqlKind.Function,
             ReturnTypeInferenceImpl.useFirstArgType, null,
             OperandsTypeChecking.typeNullableNumericOrInterval,
-            SqlFunction.SqlFuncTypeName.Numeric) {
+            SqlFunctionCategory.Numeric) {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testFloorFunc(tester);
@@ -1452,7 +1452,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         new SqlFunction("CEIL", SqlKind.Function,
             ReturnTypeInferenceImpl.useFirstArgType, null,
             OperandsTypeChecking.typeNullableNumericOrInterval,
-            SqlFunction.SqlFuncTypeName.Numeric) {
+            SqlFunctionCategory.Numeric) {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testCeilFunc(tester);
@@ -1556,7 +1556,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
     /** The <code>CURRENT_DATE</code> function. */
     public final SqlFunction currentDateFunc = new SqlFunction("CURRENT_DATE",
             SqlKind.Function, ReturnTypeInferenceImpl.useDate, null, null,
-            SqlFunction.SqlFuncTypeName.TimeDate) {
+            SqlFunctionCategory.TimeDate) {
         public void test(SqlTester tester)
         {
             SqlOperatorTests.testCurrentDateFunc(tester);
@@ -1608,7 +1608,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         new SqlFunction("EXTRACT", SqlKind.Function,
             ReturnTypeInferenceImpl.useNullableDouble, null,
             OperandsTypeChecking.typeNullableIntervalInterval,
-            SqlFunction.SqlFuncTypeName.System) {
+            SqlFunctionCategory.System) {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testExtractFunc(tester);
@@ -1644,7 +1644,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         new SqlFunction("ELEMENT", SqlKind.Function,
             ReturnTypeInferenceImpl.useNullableMultisetElementType, null,
             OperandsTypeChecking.typeNullableMultiset,
-            SqlFunction.SqlFuncTypeName.System) {
+            SqlFunctionCategory.System) {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testElementFunc(tester);
@@ -1658,7 +1658,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      public final SqlFunction cardinalityFunc =
         new SqlFunction("CARDINALITY", SqlKind.Function,
             ReturnTypeInferenceImpl.useNullableInteger, null,
-            OperandsTypeChecking.typeNullableMultiset, SqlFunction.SqlFuncTypeName.System) {
+            OperandsTypeChecking.typeNullableMultiset, SqlFunctionCategory.System) {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testCardinalityFunc(tester);

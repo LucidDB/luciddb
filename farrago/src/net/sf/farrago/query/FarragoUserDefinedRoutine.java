@@ -85,10 +85,10 @@ public class FarragoUserDefinedRoutine
             new AssignableOperandsTypeChecking(paramTypes),
             paramTypes,
             routine.getType() == ProcedureTypeEnum.PROCEDURE
-            ? SqlFuncTypeName.UserDefinedProcedure
+            ? SqlFunctionCategory.UserDefinedProcedure
             : ((routine.getSpecification() == null) ?
-                SqlFuncTypeName.UserDefinedFunction
-                : SqlFuncTypeName.UserDefinedConstructor));
+                SqlFunctionCategory.UserDefinedSpecificFunction
+                : SqlFunctionCategory.UserDefinedConstructor));
         this.stmtValidator = stmtValidator;
         this.preparingStmt = preparingStmt;
         this.routine = routine;

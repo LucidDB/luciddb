@@ -44,6 +44,9 @@ public interface SqlOperatorTable
      *
      * @param opName name of operator
      *
+     * @param category function category to look up, or null for
+     * any matching operator
+     *
      * @param syntax syntax type of operator
      *
      * @return mutable list of SqlOperator objects
@@ -51,6 +54,7 @@ public interface SqlOperatorTable
      */
     public List lookupOperatorOverloads(
         SqlIdentifier opName,
+        SqlFunctionCategory category,
         SqlSyntax syntax);
 
     /**

@@ -683,7 +683,7 @@ public class SqlToRelConverter
                 if ((call.operator instanceof SqlFunction)) {
                     SqlFunction function = (SqlFunction) call.operator;
                     if (function.getFunctionType() ==
-                        SqlFunction.SqlFuncTypeName.UserDefinedConstructor)
+                        SqlFunctionCategory.UserDefinedConstructor)
                     {
                         return makeConstructorCall(function, exprs);
                     }

@@ -808,12 +808,6 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     }
 
     // implement RelOptSchema
-    public RelOptTable getTableForMethodCall(MethodCall call)
-    {
-        return null;
-    }
-
-    // implement RelOptSchema
     public RelDataTypeFactory getTypeFactory()
     {
         return getFarragoTypeFactory();

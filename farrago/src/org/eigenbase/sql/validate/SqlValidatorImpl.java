@@ -548,6 +548,7 @@ public class SqlValidatorImpl implements SqlValidator
                     // resolution.
                     List overloads = opTab.lookupOperatorOverloads(
                         function.getNameAsId(),
+                        null,
                         SqlSyntax.Function);
                     if (overloads.size() == 1) {
                         call.operator = (SqlOperator) overloads.get(0);
@@ -879,7 +880,10 @@ public class SqlValidatorImpl implements SqlValidator
             }
             if ((call.operator instanceof SqlFunction)
                     || (call.operator instanceof SqlSpecialOperator)
-                    || (call.operator instanceof SqlRowOperator)) {
+                    || (call.operator instanceof SqlRowOperator))
+            {
+                SqlOperator operator = call.operator;
+                
                 RelDataType[] argTypes = new RelDataType[operands.length];
                 for (int i = 0; i < operands.length; ++i) {
                     // We can't derive a type for some operands.
@@ -891,11 +895,10 @@ public class SqlValidatorImpl implements SqlValidator
                     argTypes[i] = nodeType;
                 }
 
-                if (!(call.operator instanceof SqlJdbcFunctionCall)
-                        && call.operator instanceof SqlFunction)
+                if (!(operator instanceof SqlJdbcFunctionCall)
+                        && operator instanceof SqlFunction)
                 {
-                    SqlFunction unresolvedFunction =
-                        (SqlFunction) call.operator;
+                    SqlFunction unresolvedFunction = (SqlFunction) operator;
 
                     SqlFunction function;
                     if (operands.length == 0 &&
@@ -909,10 +912,9 @@ public class SqlValidatorImpl implements SqlValidator
                             opTab,
                             unresolvedFunction.getNameAsId(),
                             argTypes,
-                            unresolvedFunction.getFunctionType() ==
-                            SqlFunction.SqlFuncTypeName.UserDefinedProcedure);
+                            unresolvedFunction.getFunctionType());
                         if (unresolvedFunction.getFunctionType() ==
-                            SqlFunction.SqlFuncTypeName.UserDefinedConstructor)
+                            SqlFunctionCategory.UserDefinedConstructor)
                         {
                             return deriveConstructorType(
                                 scope, 
@@ -928,9 +930,14 @@ public class SqlValidatorImpl implements SqlValidator
                             unresolvedFunction,
                             argTypes);
                     }
+                    // REVIEW jvs 25-Mar-2005:  This is, in a sense, expanding
+                    // identifiers, but we ignore shouldExpandIdentifiers()
+                    // because otherwise later validation code will
+                    // choke on the unresolved function.
                     call.operator = function;
+                    operator = function;
                 }
-                return call.operator.getType(this, scope, call);
+                return operator.getType(this, scope, call);
             }
             if (call.operator instanceof SqlBinaryOperator ||
                call.operator instanceof SqlPostfixOperator ||
@@ -1066,7 +1073,7 @@ public class SqlValidatorImpl implements SqlValidator
                     null,
                     null,
                     null,
-                    SqlFunction.SqlFuncTypeName.UserDefinedConstructor);
+                    SqlFunctionCategory.UserDefinedConstructor);
             }
         }
         return type;
@@ -1080,6 +1087,7 @@ public class SqlValidatorImpl implements SqlValidator
         // For builtins, we can give a better error message
         List overloads = opTab.lookupOperatorOverloads(
             unresolvedFunction.getNameAsId(),
+            null, 
             SqlSyntax.Function);
         if (overloads.size() == 1) {
             SqlFunction fun = (SqlFunction) overloads.get(0);

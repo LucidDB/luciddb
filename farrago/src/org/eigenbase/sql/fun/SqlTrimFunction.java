@@ -53,7 +53,7 @@ public class SqlTrimFunction extends SqlFunction
             ),
             null,
             OperandsTypeChecking.typeNullableStringStringOfSameType,
-            SqlFunction.SqlFuncTypeName.String);
+            SqlFunctionCategory.String);
     }
 
     //~ Methods ---------------------------------------------------------------

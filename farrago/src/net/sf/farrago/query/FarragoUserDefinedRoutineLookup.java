@@ -64,24 +64,30 @@ public class FarragoUserDefinedRoutineLookup implements SqlOperatorTable
     }
 
     // implement SqlOperatorTable
-    public List lookupOperatorOverloads(SqlIdentifier opName, SqlSyntax syntax)
+    public List lookupOperatorOverloads(
+        SqlIdentifier opName,
+        SqlFunctionCategory category,
+        SqlSyntax syntax)
     {
-        // TODO jvs 27-Jan-2005:  need to discriminate function vs. procedure
-        
         if ((preparingStmt != null) && preparingStmt.isExpandingDefinition()) {
-            // While expanding view and function bodies, the lookup rules are
-            // different.  An unqualified name is assumed to be a builtin;
-            // anything else is assumed to be the fully-qualified specific name
-            // (NOT invocation name) of a routine.
+            // While expanding view and function bodies, an unqualified name is
+            // assumed to be a builtin, because we explicitly qualify
+            // everything else when the definition is stored.  We could
+            // qualify the builtins with INFORMATION_SCHEMA, but we
+            // currently don't.
             if (opName.names.length == 1) {
-                // assume builtin
                 return Collections.EMPTY_LIST;
             }
+        }
+        if (category == SqlFunctionCategory.UserDefinedSpecificFunction) {
+            // Look up by specific name instead of invocation name.
             FemRoutine femRoutine = (FemRoutine) stmtValidator.findSchemaObject(
                 opName,
                 stmtValidator.getRepos().getSql2003Package().getFemRoutine());
             List overloads = new ArrayList();
-            overloads.add(convertRoutine(femRoutine));
+            if (femRoutine.getType() == ProcedureTypeEnum.FUNCTION) {
+                overloads.add(convertRoutine(femRoutine));
+            }
             return overloads;
         }
         
@@ -96,6 +102,15 @@ public class FarragoUserDefinedRoutineLookup implements SqlOperatorTable
         Iterator iter = list.iterator();
         while (iter.hasNext()) {
             FemRoutine femRoutine = (FemRoutine) iter.next();
+            if (category == SqlFunctionCategory.UserDefinedFunction) {
+                if (femRoutine.getType() != ProcedureTypeEnum.FUNCTION) {
+                    continue;
+                }
+            } else if (category == SqlFunctionCategory.UserDefinedProcedure) {
+                if (femRoutine.getType() != ProcedureTypeEnum.PROCEDURE) {
+                    continue;
+                }
+            }
             if (femRoutine.getVisibility() == null) {
                 // Oops, the referenced routine hasn't been validated yet.  If
                 // requested, throw a special exception and someone up

@@ -131,7 +131,9 @@ public class DdlRoutineHandler extends DdlHandler
             lookup,
             invocationName,
             prototype.getParamTypes(),
-            routine.getType().equals(ProcedureTypeEnum.PROCEDURE));
+            routine.getType().equals(ProcedureTypeEnum.PROCEDURE)
+            ? SqlFunctionCategory.UserDefinedProcedure
+            : SqlFunctionCategory.UserDefinedFunction);
 
         // should find at least this routine!
         assert(!list.isEmpty());
