@@ -126,7 +126,7 @@ public class OJQueryExpander extends QueryExpander
         if (rel.getConvention() != convention) {
             RelNode previous = rel;
             try {
-                rel = planner.changeConvention(rel, convention);
+                rel = planner.changeTraits(rel, new RelTraitSet(convention));
                 assert (rel != null);
                 planner.setRoot(rel);
             } catch (Throwable e) {
