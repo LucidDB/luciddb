@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/multiset.sql#1 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/multiset.sql#2 $
 0: jdbc:farrago:> -- Multiset related regression tests
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select*from unnest(multiset[1,2,3]);
@@ -22,14 +22,20 @@
 | a       |
 +---------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- this returns the wrong nbr of cols for some reason.
+0: jdbc:farrago:> select*from unnest(multiset[row(1,2,3,4), row(11,22,33,44)]);
++---------+---------+---------+---------+
+| EXPR$0  | EXPR$1  | EXPR$2  | EXPR$3  |
++---------+---------+---------+---------+
+| 1       | 2       | 3       | 4       |
++---------+---------+---------+---------+
+0: jdbc:farrago:> 
 0: jdbc:farrago:> select*from unnest(multiset(select*from sales.depts));
-+---------+
-| DEPTNO  |
-+---------+
-| 10      |
-| 20      |
-| 30      |
-+---------+
++---------+------------+
+| DEPTNO  |    NAME    |
++---------+------------+
+| 10      | Sales      |
+| 20      | Marketing  |
+| 30      | Accounts   |
++---------+------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

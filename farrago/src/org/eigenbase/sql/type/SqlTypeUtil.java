@@ -565,6 +565,18 @@ public abstract class SqlTypeUtil
         }
         return ret;
     }
+
+    /**
+     * @return the field types of a struct type
+     */
+    public static RelDataType[] getFieldTypes(RelDataType type) {
+        RelDataTypeField[] fields = type.getFields();
+        RelDataType[] ret = new RelDataType[fields.length];
+        for (int i = 0; i < fields.length; i++) {
+            ret[i] = fields[i].getType();
+        }
+        return ret;
+    }
 }
 
 

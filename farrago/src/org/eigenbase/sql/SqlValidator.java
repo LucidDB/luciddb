@@ -2996,14 +2996,11 @@ public class SqlValidator
         protected RelDataType validateImpl()
         {
             RelDataType type = scope.getValidator().deriveType(scope, child);
-            String[] names;
             if (type.isStruct()) {
-                names = SqlTypeUtil.getFieldNames(type);
-            } else {
-                names = new String[]{ deriveAlias(child, 0) };
+                return type;
             }
             return typeFactory.createStructType(
-                new RelDataType[]{type}, names);
+                new RelDataType[]{type}, new String[]{ deriveAlias(child, 0) });
         }
 
         public SqlNode getNode()
