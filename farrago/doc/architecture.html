@@ -36,6 +36,81 @@ more specialized SQL engines.
 
 <hr>
 
+<h2>Plugin Architecture</h2>
+
+In line with these goals, the Farrago architecture defines a
+multi-language pluggable framework with extensibility in a variety of
+directions:
+
+<br><br>
+<img src="plugin/PluginArchitecture.gif">
+<br><br>
+
+The frameworks span a number of programming, scripting, and modeling languages:
+
+<ul>
+
+<li>UML is used for defining all metadata models and driving the
+model-driven code generation build process.  Farrago uses the standard
+<a href="http://www.omg.org/cwm">CWM</a> metamodel from <a
+href="http://www.omg.org">OMG</a> as a base, and defines its own
+extension model (FEM) as well.  Projects which want to customize the
+Farrago metadata can define their own model extensions.  All
+definitions which are shared across multiple programming languages are
+defined in UML.
+
+<li>C++ is used in the server framework for components in which a
+native code implementation is required for performance, API access, or
+low-level system access.  The C++ portion of the framework (known as
+Fennel) is not directly pluggable.  Instead, extension C++ modules can
+be defined together with wrapper Java plugins as companions
+(interfacing via JNI).  We use the term <em>module</em> 
+to describe a component which is designed to fit into a predefined
+interface, while the term <em>plugin</em> is reserved for modules
+which can be dynamically installed into a running server via DDL
+commands.  The C++ portion of the framework is optional; it is
+possible to build a pure-Java DBMS by extending the Farrago framework,
+although not all of the necessary components are currently provided.
+
+<li>Java is the preferred environment for extensibility in the server
+framework since as a managed code environment it is much safer than
+C++ and provides access to a large number of important API's.  Java
+plugins may be pure-Java, or may include C++ modules called via JNI.
+
+<li>Beyond plugins defining the server's behavior, another layer of
+extensibility exists in support for user-defined types and routines
+(including stored procedures and SQL scripts).
+
+<li>Finally, access to the server from as many client environments as
+possible is another important direction for extensibility.
+
+</ul>
+
+<hr>
+
+<h2>Component Stack</h2>
+
+The diagram below illustrates at a coarse granularity the various layers
+involved in the component stack of the Farrago platform:
+
+<br><br>
+<img src="FarragoArchEngine.gif">
+<br><br>
+
+The Java VM can be a top-level container for a standalone server (with
+RMI from client JDBC drivers), or Farrago can be hosted by other
+containers such as J2EE application servers in a multi-tier
+configuration.  The Farrago framework maintains SQL-specific state per
+connected session.  Parsing, validation, and optimization work against
+the catalog, which combines a local MDR repository with an extensible
+namespace system.  User-defined SQL/MED namespace plugins can be used
+to "mount" foreign data sources, causing them to appear as additional
+top-level catalogs.  Query execution plans are implemented as a
+combination of C++ access paths and generated Java code, with access
+to both local storage and foreign data (via namespace support).
+
+<hr>
+
 <h2>Technology</h2>
 
 Today's best application server technology is Java-based, and Java
@@ -54,6 +129,9 @@ Farrago incorporates the following independent open-source projects
 
 <li><a
 href="http://sf.net/projects/fennel">Fennel</a> for the C++ kernel.
+
+<li><a href="http://www.boost.org">Boost</a> and <a
+href="http://www.stlport.org">STLport</a> for portable C++ class libraries.
 
 <li><a href="http://mdr.netbeans.org">Netbeans MDR</a> for all
 metadata management (system catalog object model and persistence, XMI
@@ -87,86 +165,15 @@ Farrago-specific extensions.
 
 <p>
 
-In addition, Farrago defines adapters for embedding in various
-application servers.  For a lightweight configuration, it can be
-deployed as a servlet in a server such as <a
+In addition, our intention is to define adapters for embedding Farrago
+in various application servers.  For a lightweight configuration, it
+will be deployable as a servlet in a server such as <a
 href="http://jakarta.apache.org">Tomcat</a>.  For a heavyweight
 configuration (e.g. with distributed transaction support and JMX
-monitoring), it can be deployed in a full-fledged application server
-such as <a href="http://www.jboss.org">JBoss</a>.
-
-<hr>
-
-<h2>Component Stack</h2>
-
-The diagram below illustrates at a coarse granularity the various layers
-involved in the component stack of the Farrago platform:
-
-<br>
-<img src="FarragoArchEngine.gif">
-<br>
-
-The Java VM can be a top-level container for a standalone server (with
-RMI from client JDBC drivers), or Farrago can be hosted by other
-containers such as J2EE application servers in a multi-tier
-configuration.  The Farrago framework maintains SQL-specific state per
-connected session.  Parsing, validation, and optimization work against
-the catalog, which combines a local MDR repository with an extensible
-namespace system.  User-defined SQL/MED namespace extenders can be
-used to "mount" foreign data, causing it to appear as additional
-top-level catalogs.  Query execution plans are implemented as a
-combination of C++ access paths and generated Java code, with access
-to both local storage and foreign data (via namespace support).
-
-<hr>
-
-<h2>Plugin Architecture</h2>
-
-The Farrago architecture defines a pluggable framework with
-extensibility in a variety of directions:
-
-<br>
-<img src="plugin/PluginArchitecture.gif">
-<br>
-
-The framework spans a number of programming, scripting, and modeling languages:
-
-<ul>
-
-<li>UML is used for defining all metadata models and driving the
-model-driven code generation build process.  Farrago uses the standard
-<a href="http://www.omg.org/cwm">CWM</a> metamodel from <a
-href="http://www.omg.org">OMG</a> as a base, and defines its own
-extension model (FEM) as well.  Projects which want to customize the
-Farrago metadata can define their own model extensions.  All
-definitions which are shared across multiple programming languages are
-defined in UML.
-
-<li>C++ is used in the server framework for components in which a
-native code implementation is required for performance, API access, or
-low-level system access.  The C++ portion of the framework (known as
-Fennel) is not directly pluggable.  Instead, extension C++ modules can
-be defined together with wrapper Java plugins as companions
-(interfacing via JNI).  In this document, the term <em>module</em> is
-used to describe a component which is designed to fit into predefined
-interfaces, while the term <em>plugin</em> is reserved for modules
-which can be dynamically installed into a running server via DDL
-commands.  The C++ portion of the framework is optional; it is
-possible to build a pure-Java DBMS by extending the Farrago framework,
-although not all of the necessary components are currently provided.
-
-<li>Java is the preferred environment for extensibility in the server
-framework since as a managed code environment it is much safer than
-C++ and provides access to a large number of important API's.  Java
-plugins may be pure-Java, or may include C++ modules called via JNI.
-
-<li>Beyond plugins defining the server's behavior, another layer of
-extensibility exists in support for stored procedures and SQL scripts.
-
-<li>Finally, access to the server from as many client environments as
-possible is another important direction for extensibility.
-
-</ul>
+xmonitoring), it will be deployable in a full-fledged application
+server such as <a href="http://www.jboss.org">JBoss</a>.  Currently
+supported containers are a standalone RMI server and direct embedding
+as a serverless JDBC engine.
 
 <hr>
 
