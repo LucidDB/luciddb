@@ -157,7 +157,8 @@ public class FarragoAutoCalcRule extends RelOptRule
 
         // Test if we can translate the CalcRel to a fennel calc program
         RelNode fennelInput =
-            convert(relInput, FennelPullRel.FENNEL_PULL_CONVENTION);
+            mergeTraitsAndConvert(
+                calc.getTraits(), FennelPullRel.FENNEL_PULL_CONVENTION, relInput);
 
         final RexToCalcTranslator translator =
             new RexToCalcTranslator(calc.getCluster().rexBuilder,
@@ -184,7 +185,8 @@ public class FarragoAutoCalcRule extends RelOptRule
 
         // Test if we can translate the CalcRel to a java calc program
         final RelNode convertedChild =
-            convert(calc.child, CallingConvention.ITERATOR);
+            mergeTraitsAndConvert(
+                calc.getTraits(), CallingConvention.ITERATOR, calc.child);
 
         final JavaRelImplementor relImplementor =
             calc.getCluster().getPlanner().getJavaRelImplementor(calc);

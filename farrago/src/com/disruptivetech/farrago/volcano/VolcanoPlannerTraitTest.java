@@ -121,6 +121,86 @@ public class VolcanoPlannerTraitTest
 
         planner.setRoot(convertedRel);
         RelNode result = planner.chooseDelegate().findBestExp();
+
+        assertTrue(result instanceof IterSingleRel);
+        assertEquals(
+            CallingConvention.ITERATOR,
+            result.getTraits().getTrait(CallingConventionTraitDef.instance));
+        assertEquals(ALT_TRAIT2, result.getTraits().getTrait(ALT_TRAIT_DEF));
+
+        RelNode child = result.getInput(0);
+        assertTrue(
+            child instanceof AltTraitConverter ||
+            child instanceof PhysToIteratorConverter);
+
+        child = child.getInput(0);
+        assertTrue(
+            child instanceof AltTraitConverter ||
+            child instanceof PhysToIteratorConverter);
+
+        child = child.getInput(0);
+        assertTrue(child instanceof PhysLeafRel);
+    }
+
+
+    public void testTraitPropagation()
+    {
+        VolcanoPlanner planner = new VolcanoPlanner();
+
+        planner.addRelTraitDef(CallingConventionTraitDef.instance);
+        planner.addRelTraitDef(ALT_TRAIT_DEF);
+
+        planner.addRule(new PhysToIteratorConverterRule());
+        planner.addRule(
+            new AltTraitConverterRule(
+                ALT_TRAIT, ALT_TRAIT2, "AltToAlt2ConverterRule"
+            ));
+        planner.addRule(new PhysLeafRule());
+        planner.addRule(new IterSingleRule2());
+
+        RelOptCluster cluster = VolcanoPlannerTest.newCluster(planner);
+
+        NoneLeafRel noneLeafRel = new NoneLeafRel(cluster, "noneLeafRel");
+        noneLeafRel.getTraits().addTrait(ALT_TRAIT);
+
+        NoneSingleRel noneRel = new NoneSingleRel(cluster, noneLeafRel);
+        noneRel.getTraits().addTrait(ALT_TRAIT2);
+
+        RelNode convertedRel =
+            planner.changeTraits(
+                noneRel,
+                new RelTraitSet(
+                    new RelTrait[] {
+                        CallingConvention.ITERATOR, ALT_TRAIT2 }));
+
+        planner.setRoot(convertedRel);
+        RelNode result = planner.chooseDelegate().findBestExp();
+
+        assertTrue(result instanceof IterSingleRel);
+        assertEquals(
+            CallingConvention.ITERATOR,
+            result.getTraits().getTrait(CallingConventionTraitDef.instance));
+        assertEquals(ALT_TRAIT2, result.getTraits().getTrait(ALT_TRAIT_DEF));
+
+        RelNode child = result.getInput(0);
+        assertTrue(child instanceof IterSingleRel);
+        assertEquals(
+            CallingConvention.ITERATOR,
+            child.getTraits().getTrait(CallingConventionTraitDef.instance));
+        assertEquals(ALT_TRAIT2, child.getTraits().getTrait(ALT_TRAIT_DEF));
+
+        child = child.getInput(0);
+        assertTrue(
+            child instanceof AltTraitConverter ||
+            child instanceof PhysToIteratorConverter);
+
+        child = child.getInput(0);
+        assertTrue(
+            child instanceof AltTraitConverter ||
+            child instanceof PhysToIteratorConverter);
+
+        child = child.getInput(0);
+        assertTrue(child instanceof PhysLeafRel);
     }
 
 
@@ -431,12 +511,47 @@ public class VolcanoPlannerTraitTest
         {
             NoneSingleRel rel = (NoneSingleRel) call.rels[0];
 
-            RelNode converted = convert(rel.getInput(0), getOutTraits()); 
+            RelNode converted =
+                mergeTraitsAndConvert(
+                    rel.getTraits(), getOutTraits(), rel.getInput(0));
 
             call.transformTo(
                 new IterSingleRel(
                     rel.getCluster(),
                     converted));
+        }
+    }
+
+
+    private static class IterSingleRule2 extends RelOptRule
+    {
+        IterSingleRule2()
+        {
+            super(new RelOptRuleOperand(NoneSingleRel.class, null));
+        }
+
+        // implement RelOptRule
+        public CallingConvention getOutConvention()
+        {
+            return CallingConvention.ITERATOR;
+        }
+
+        // implement RelOptRule
+        public void onMatch(RelOptRuleCall call)
+        {
+            NoneSingleRel rel = (NoneSingleRel) call.rels[0];
+
+            RelNode converted =
+                mergeTraitsAndConvert(
+                    rel.getTraits(), getOutTraits(), rel.getInput(0));
+
+            IterSingleRel child =
+                new IterSingleRel(rel.getCluster(), converted);
+
+            call.transformTo(
+                new IterSingleRel(
+                    rel.getCluster(),
+                    child));
         }
     }
 

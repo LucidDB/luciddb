@@ -183,6 +183,23 @@ public abstract class RelOptUtil
         return (RelTraitSet)traits.clone();
     }
 
+    public static RelTraitSet mergeTraits(
+        RelTraitSet baseTraits, RelTraitSet additionalTraits)
+    {
+        RelTraitSet result = clone(baseTraits);
+        for(int i = 0; i < additionalTraits.size(); i++) {
+            RelTrait additionalTrait = additionalTraits.getTrait(i);
+
+            if (i >= result.size()) {
+                result.addTrait(additionalTrait);
+            } else  {
+                result.setTrait(i, additionalTrait);
+            }
+        }
+
+        return result;
+    }
+
     /**
      * Sets a {@link RelVisitor} going on a given relational expression, and
      * returns the result.
@@ -422,6 +439,7 @@ public abstract class RelOptUtil
             // no filtering required
             return rel;
         }
+
         return new FilterRel(
             rel.getCluster(),
             rel,

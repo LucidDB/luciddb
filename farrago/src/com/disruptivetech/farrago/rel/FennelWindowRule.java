@@ -78,7 +78,9 @@ public class FennelWindowRule extends RelOptRule
         CalcRel calc = (CalcRel) call.rels[0];
         RelNode relInput = call.rels[1];
         RelNode fennelInput =
-            convert(relInput, FennelPullRel.FENNEL_PULL_CONVENTION);
+            mergeTraitsAndConvert(
+                calc.getTraits(), FennelPullRel.FENNEL_PULL_CONVENTION,
+                relInput);
         if (fennelInput == null) {
             return;
         }

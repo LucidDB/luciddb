@@ -79,7 +79,9 @@ public class FennelDistinctSortRule extends RelOptRule
         }
 
         RelNode fennelInput =
-            convert(relInput, FennelPullRel.FENNEL_PULL_CONVENTION);
+            mergeTraitsAndConvert(
+                agg.getTraits(), FennelPullRel.FENNEL_PULL_CONVENTION,
+                relInput);
         if (fennelInput == null) {
             return;
         }

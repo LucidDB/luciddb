@@ -70,7 +70,9 @@ public class FennelSortRule extends RelOptRule
         SortRel sortRel = (SortRel) call.rels[0];
         RelNode relInput = call.rels[1];
         RelNode fennelInput =
-            convert(relInput, FennelPullRel.FENNEL_PULL_CONVENTION);
+            mergeTraitsAndConvert(
+                sortRel.getTraits(), FennelPullRel.FENNEL_PULL_CONVENTION,
+                relInput);
         if (fennelInput == null) {
             return;
         }

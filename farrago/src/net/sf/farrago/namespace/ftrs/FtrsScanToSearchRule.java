@@ -195,7 +195,9 @@ class FtrsScanToSearchRule extends RelOptRule
         RelNode castRel = RelOptUtil.createCastRel(nullFilterRel, lhsRowType);
 
         RelNode keyInput =
-            convert(castRel, FennelPullRel.FENNEL_PULL_CONVENTION);
+            mergeTraitsAndConvert(
+                call.rels[0].getTraits(), FennelPullRel.FENNEL_PULL_CONVENTION,
+                castRel);
         assert (keyInput != null);
 
         if (!index.isClustered() && origScan.index.isClustered()) {

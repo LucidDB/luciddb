@@ -996,6 +996,10 @@ loop:
                 + " but does not implement the required interface '"
                 + convention.interfaze + "' of that convention");
         }
+        if (traits.size() != traitDefs.size()) {
+            throw Util.newInternal("Relational expression " + rel
+                + " does not have the correct number of traits");
+        }
 
         // Ensure that its sub-expressions are registered.
         rel.onRegister(this);

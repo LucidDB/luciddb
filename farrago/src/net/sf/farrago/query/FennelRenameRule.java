@@ -115,7 +115,8 @@ public class FennelRenameRule extends RelOptRule
             return;
         }
 
-        RelNode fennelInput = convert(inputRel, convention);
+        RelNode fennelInput =
+            mergeTraitsAndConvert(project.getTraits(), convention, inputRel);
         if (fennelInput == null) {
             return;
         }

@@ -85,13 +85,17 @@ public class FennelCartesianJoinRule extends RelOptRule
         }
 
         RelNode fennelLeft =
-            convert(leftRel, FennelPullRel.FENNEL_PULL_CONVENTION);
+            mergeTraitsAndConvert(
+                joinRel.getTraits(), FennelPullRel.FENNEL_PULL_CONVENTION,
+                leftRel);
         if (fennelLeft == null) {
             return;
         }
 
         RelNode fennelRight =
-            convert(rightRel, FennelPullRel.FENNEL_PULL_CONVENTION);
+            mergeTraitsAndConvert(
+                joinRel.getTraits(), FennelPullRel.FENNEL_PULL_CONVENTION,
+                rightRel);
         if (fennelRight == null) {
             return;
         }

@@ -53,10 +53,13 @@ public class FennelUncollectRule extends RelOptRule
     }
 
     public void onMatch(RelOptRuleCall call) {
-        UncollectRel  uncollectRel = (UncollectRel) call.rels[0];
+        UncollectRel uncollectRel = (UncollectRel) call.rels[0];
         RelNode relInput = call.rels[1];
         RelNode fennelInput =
-            convert(relInput, FennelPullRel.FENNEL_PULL_CONVENTION);
+            mergeTraitsAndConvert(
+                uncollectRel.getTraits(),
+                FennelPullRel.FENNEL_PULL_CONVENTION,
+                relInput);
         if (fennelInput == null) {
             return;
         }

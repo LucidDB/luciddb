@@ -545,7 +545,9 @@ public class VolcanoPlannerTest extends TestCase
         {
             NoneSingleRel singleRel = (NoneSingleRel) call.rels[0];
             RelNode childRel = call.rels[1];
-            RelNode physInput = convert(childRel, PHYS_CALLING_CONVENTION);
+            RelNode physInput =
+                mergeTraitsAndConvert(
+                    singleRel.getTraits(), PHYS_CALLING_CONVENTION, childRel);
             call.transformTo(
                 new PhysSingleRel(
                     singleRel.getCluster(),
@@ -578,7 +580,9 @@ public class VolcanoPlannerTest extends TestCase
         {
             NoneSingleRel singleRel = (NoneSingleRel) call.rels[0];
             RelNode childRel = call.rels[1];
-            RelNode physInput = convert(childRel, PHYS_CALLING_CONVENTION);
+            RelNode physInput =
+                mergeTraitsAndConvert(
+                    singleRel.getTraits(), PHYS_CALLING_CONVENTION, childRel);                
             call.transformTo(
                 new PhysSingleRel(
                     singleRel.getCluster(),

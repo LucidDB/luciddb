@@ -72,7 +72,7 @@ public class RemoveTrivialProjectRule extends RelOptRule
         child = call.planner.register(child, project);
         child = convert(
                 child,
-                project.getConvention());
+                project.getTraits());
         if (child != null) {
             call.transformTo(child);
         }

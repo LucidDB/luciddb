@@ -85,7 +85,9 @@ class FtrsTableModificationRule extends RelOptRule
         }
 
         RelNode fennelInput =
-            convert(inputRel, FennelPullRel.FENNEL_PULL_CONVENTION);
+            mergeTraitsAndConvert(
+                call.rels[0].getTraits(), FennelPullRel.FENNEL_PULL_CONVENTION,
+                inputRel);
         if (fennelInput == null) {
             return;
         }

@@ -70,7 +70,9 @@ public abstract class IterRules
             for (int i = 0; i < newInputs.length; i++) {
                 // Stubborn, because inputs don't appear as operands.
                 newInputs[i] =
-                    convert(union.getInputs()[i], CallingConvention.ITERATOR);
+                    mergeTraitsAndConvert(
+                        union.getTraits(), CallingConvention.ITERATOR,
+                        union.getInput(i));
                 if (newInputs[i] == null) {
                     return null; // cannot convert this input
                 }
@@ -136,7 +138,8 @@ public abstract class IterRules
         {
             final CalcRel calc = (CalcRel) rel;
             final RelNode convertedChild =
-                convert(calc.child, CallingConvention.ITERATOR);
+                mergeTraitsAndConvert(
+                    calc.getTraits(), CallingConvention.ITERATOR, calc.child);
             if (convertedChild == null) {
                 // We can't convert the child, so we can't convert rel.
                 return null;
@@ -181,7 +184,8 @@ public abstract class IterRules
             final ProjectRel project = (ProjectRel) rel;
             RelNode inputRel = project.child;
             final RelNode iterChild =
-                convert(inputRel, CallingConvention.ITERATOR);
+                mergeTraitsAndConvert(
+                    project.getTraits(), CallingConvention.ITERATOR, inputRel);
             if (iterChild == null) {
                 return null;
             }
@@ -239,7 +243,9 @@ public abstract class IterRules
             RelNode inputRel = filterRel.child;
             RexNode condition = filterRel.condition;
 
-            RelNode iterChild = convert(inputRel, CallingConvention.ITERATOR);
+            RelNode iterChild =
+                mergeTraitsAndConvert(
+                    project.getTraits(), CallingConvention.ITERATOR, inputRel);
 
             if (iterChild == null) {
                 return;

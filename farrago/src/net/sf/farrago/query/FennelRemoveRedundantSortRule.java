@@ -74,7 +74,9 @@ public class FennelRemoveRedundantSortRule extends RelOptRule
 
         if (inputRel instanceof FennelSortRel) {
             RelNode newRel =
-                convert(inputRel, FennelPullRel.FENNEL_PULL_CONVENTION);
+                mergeTraitsAndConvert(
+                    sortRel.getTraits(), FennelPullRel.FENNEL_PULL_CONVENTION,
+                    inputRel);
             if (newRel == null) {
                 return;
             }

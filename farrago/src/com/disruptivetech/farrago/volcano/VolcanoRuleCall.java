@@ -27,6 +27,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.RelVisitor;
 import org.eigenbase.relopt.*;
 import org.eigenbase.trace.EigenbaseTrace;
 import org.eigenbase.util.Util;
@@ -71,25 +72,16 @@ public class VolcanoRuleCall extends RelOptRuleCall
                 return;
             }
 
-            // Make sure traits that the new rel doesn't know about are
-            // propagated.
-            RelTraitSet relTraits = rel.getTraits();
-            RelTraitSet rels0Traits = rels[0].getTraits();
-            for(int i = 0; i < rels0Traits.size(); i++) {
-                if (i >= relTraits.size()) {
-                    // Copy traits that the new rel doesn't know about.
-                    relTraits.addTrait(rels0Traits.getTrait(i));
-                } else {
-                    // Verify that the traits are from the same RelTraitDef
-                    assert(
-                        relTraits.getTrait(i).getTraitDef() ==
-                        rels0Traits.getTrait(i).getTraitDef());
-                }
-            }
-
             if (rel instanceof RelSubset || planner.isRegistered(rel)) {
                 return;
             }
+
+            // Make sure traits that the new rel doesn't know about are
+            // propagated.
+            RelTraitSet rels0Traits = rels[0].getTraits();
+
+            RelOptUtil.go(
+                new TraitPropagationVisitor(planner, rels0Traits), rel);
 
             if (tracer.isLoggable(Level.FINEST)) {
                 tracer.finest("Rule " + rule + " arguments "
@@ -236,6 +228,50 @@ public class VolcanoRuleCall extends RelOptRuleCall
                 rels[operandOrdinal] = rel;
                 matchRecurse(solve + 1);
             }
+        }
+    }
+
+    private static class TraitPropagationVisitor
+        extends RelVisitor
+    {
+        private final RelTraitSet baseTraits;
+        private final RelOptPlanner planner;
+
+        private TraitPropagationVisitor(
+            RelOptPlanner planner, RelTraitSet baseTraits)
+        {
+            this.planner = planner;
+            this.baseTraits = baseTraits;
+        }
+
+        public void visit(RelNode rel, int ordinal, RelNode parent)
+        {
+            if (parent != null) {
+                if (rel instanceof RelSubset) {
+                    return;
+                }
+
+                if (planner.isRegistered(rel)) {
+                    return;
+                }
+
+                RelTraitSet relTraits = rel.getTraits();
+                for(int i = 0; i < baseTraits.size(); i++) {
+                    if (i >= relTraits.size()) {
+                        // Copy traits that the new rel doesn't know about.
+                        relTraits.addTrait(baseTraits.getTrait(i));
+                    } else {
+                        // Verify that the traits are from the same RelTraitDef
+                        assert(
+                            relTraits.getTrait(i).getTraitDef() ==
+                            baseTraits.getTrait(i).getTraitDef());
+                    }
+                }
+
+
+            }
+
+            rel.childrenAccept(this);
         }
     }
 }

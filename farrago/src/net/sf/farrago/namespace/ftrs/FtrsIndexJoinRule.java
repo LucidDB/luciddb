@@ -211,7 +211,9 @@ class FtrsIndexJoinRule extends RelOptRule
         }
 
         RelNode fennelInput =
-            convert(castRel, FennelPullRel.FENNEL_PULL_CONVENTION);
+            mergeTraitsAndConvert(
+                joinRel.getTraits(), FennelPullRel.FENNEL_PULL_CONVENTION,
+                castRel);
 
         // tell the index search to propagate everything from its input as join
         // fields

@@ -56,17 +56,23 @@ public class FennelCorrelatorRule extends RelOptRule {
     }
 
     public void onMatch(RelOptRuleCall call) {
-        CorrelatorRel  correlatorRel = (CorrelatorRel) call.rels[0];
+        CorrelatorRel correlatorRel = (CorrelatorRel) call.rels[0];
         RelNode relLeftInput = call.rels[1];
         RelNode fennelLeftInput =
-            convert(relLeftInput, FennelPullRel.FENNEL_PULL_CONVENTION);
+            mergeTraitsAndConvert(
+                correlatorRel.getTraits(),
+                FennelPullRel.FENNEL_PULL_CONVENTION,
+                relLeftInput);
         if (fennelLeftInput == null) {
             return;
         }
 
         RelNode relRightInput = call.rels[2];
         RelNode fennelRightInput =
-            convert(relRightInput, FennelPullRel.FENNEL_PULL_CONVENTION);
+            mergeTraitsAndConvert(
+                correlatorRel.getTraits(),
+                FennelPullRel.FENNEL_PULL_CONVENTION,
+                relRightInput);
         if (fennelRightInput == null) {
             return;
         }
