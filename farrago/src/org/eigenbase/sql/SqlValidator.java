@@ -965,30 +965,18 @@ public class SqlValidator
                         // SqlIdentifier.)
                         function = null;
                     } else {
-                        function = SqlUtil.lookupFunction(
+                        function = SqlUtil.lookupRoutine(
                             opTab,
                             unresolvedFunction.getNameAsId(),
-                            argTypes);
+                            argTypes,
+                            unresolvedFunction.getFunctionType() ==
+                            SqlFunction.SqlFuncTypeName.UserDefinedProcedure);
                     }
                     if (function == null) {
-                        List overloads =
-                            opTab.lookupOperatorOverloads(
-                                unresolvedFunction.getNameAsId(),
-                                SqlSyntax.Function);
-                        if (overloads.isEmpty()) {
-                            throw newValidationError(call,
-                                EigenbaseResource.instance()
-                                .newValidatorUnknownFunction(
-                                    call.operator.name));
-                        }
-                        SqlFunction fun = (SqlFunction) overloads.get(0);
-                        final Integer expectedArgCount = (Integer)
-                            fun.getOperandsCountDescriptor()
-                            .getPossibleNumOfOperands().get(0);
-                        throw newValidationError(call,
-                            EigenbaseResource.instance().newInvalidArgCount(
-                                call.operator.name,
-                                expectedArgCount));
+                        handleUnresolvedFunction(
+                            call,
+                            unresolvedFunction,
+                            argTypes);
                     }
                     call.operator = function;
                 }
@@ -1082,6 +1070,40 @@ public class SqlValidator
         throw Util.needToImplement(operand);
     }
 
+    private void handleUnresolvedFunction(
+        SqlCall call,
+        SqlFunction unresolvedFunction,
+        RelDataType [] argTypes)
+    {
+        // For builtins, we can give a better error message
+        List overloads = opTab.lookupOperatorOverloads(
+            unresolvedFunction.getNameAsId(),
+            SqlSyntax.Function);
+        if (overloads.size() == 1) {
+            SqlFunction fun = (SqlFunction) overloads.get(0);
+            if ((fun.getSqlIdentifier() == null)
+                && (fun.getSyntax() != SqlSyntax.FunctionId))
+            {
+                final Integer expectedArgCount = (Integer)
+                    fun.getOperandsCountDescriptor()
+                    .getPossibleNumOfOperands().get(0);
+                throw newValidationError(call,
+                    EigenbaseResource.instance().newInvalidArgCount(
+                        call.operator.name,
+                        expectedArgCount));
+            }
+        }
+        
+        AssignableOperandsTypeChecking typeChecking =
+            new AssignableOperandsTypeChecking(argTypes);
+        String signature =
+            typeChecking.getAllowedSignatures(unresolvedFunction);
+        throw newValidationError(
+            call,
+            EigenbaseResource.instance().newValidatorUnknownFunction(
+                signature));
+    }
+    
     /**
      * If an identifier is a legitimate call to a function which has no
      * arguments and requires no parentheses (for example "CURRENT_USER"),

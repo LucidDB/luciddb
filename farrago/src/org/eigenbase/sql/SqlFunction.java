@@ -50,6 +50,8 @@ public class SqlFunction extends SqlOperator
 
     private final SqlIdentifier sqlIdentifier;
 
+    private final RelDataType [] paramTypes;
+
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -80,14 +82,15 @@ public class SqlFunction extends SqlOperator
         this.functionType = funcType;
 
         // NOTE jvs 18-Jan-2005:  we leave sqlIdentifier as null to indicate
-        // that this is a builtin.
+        // that this is a builtin.  Same for paramTypes.
         this.sqlIdentifier = null;
+        this.paramTypes = null;
     }
 
     /**
-     * Creates a new SqlFunction for a call to a function with
-     * a possibly qualified name.  This name must be resolved
-     * into either a builtin function or a user-defined function.
+     * Creates a placeholder SqlFunction for an invocation of a function with a
+     * possibly qualified name.  This name must be resolved into either a
+     * builtin function or a user-defined function.
      *
      * @param sqlIdentifier possibly qualified identifier for function
      *
@@ -95,13 +98,19 @@ public class SqlFunction extends SqlOperator
      *
      * @param paramTypeInference strategy to use for parameter type inference
      *
-     * @param paramTypes strategy to use for parameter type checking
+     * @param paramTypeChecking strategy to use for parameter type checking
+     *
+     * @param paramTypes array of parameter types
+     *
+     * @param funcType function category
      */
     public SqlFunction(
         SqlIdentifier sqlIdentifier, 
         ReturnTypeInference typeInference,
         UnknownParamInference paramTypeInference,
-        OperandsTypeChecking paramTypes)
+        OperandsTypeChecking paramTypeChecking,
+        RelDataType [] paramTypes, 
+        SqlFuncTypeName funcType)
     {
         super(
             sqlIdentifier.names[sqlIdentifier.names.length - 1],
@@ -110,9 +119,10 @@ public class SqlFunction extends SqlOperator
             100, 
             typeInference,
             paramTypeInference,
-            paramTypes);
+            paramTypeChecking);
         this.sqlIdentifier = sqlIdentifier;
-        this.functionType = SqlFunction.SqlFuncTypeName.User;
+        this.functionType = funcType;
+        this.paramTypes = paramTypes;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -142,6 +152,14 @@ public class SqlFunction extends SqlOperator
         return new SqlIdentifier(name, null);
     }
 
+    /**
+     * @return array of parameter types, or null for builtin function
+     */
+    public RelDataType [] getParamTypes()
+    {
+        return paramTypes;
+    }
+
     public void unparse(
         SqlWriter writer,
         SqlNode [] operands,
@@ -158,12 +176,6 @@ public class SqlFunction extends SqlOperator
     public SqlFuncTypeName getFunctionType()
     {
         return this.functionType;
-    }
-
-    public boolean isMatchParamType(RelDataType [] paramTypes)
-    {
-        throw Util.needToImplement(
-            "Need to implement isMatchParamType method.");
     }
 
     /**
@@ -214,11 +226,19 @@ public class SqlFunction extends SqlOperator
         public static final SqlFuncTypeName System =
             new SqlFuncTypeName("SYSTEM", System_ordinal, "System function");
 
-        public static final int User_ordinal = 4;
+        public static final int UserDefinedFunction_ordinal = 4;
         
         /** User-defined function type **/
-        public static final SqlFuncTypeName User =
-            new SqlFuncTypeName("USER", User_ordinal, "User-defined function");
+        public static final SqlFuncTypeName UserDefinedFunction =
+            new SqlFuncTypeName(
+                "UDF", UserDefinedFunction_ordinal, "User-defined function");
+
+        public static final int UserDefinedProcedure_ordinal = 5;
+        
+        /** User-defined function type **/
+        public static final SqlFuncTypeName UserDefinedProcedure =
+            new SqlFuncTypeName(
+                "UDP", UserDefinedProcedure_ordinal, "User-defined procedure");
 
         private SqlFuncTypeName(
             String name,

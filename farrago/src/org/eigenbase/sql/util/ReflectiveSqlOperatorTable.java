@@ -89,10 +89,19 @@ public abstract class ReflectiveSqlOperatorTable implements SqlOperatorTable
         SqlSyntax syntax)
     {
         List overloads = new ArrayList();
-        if (!opName.isSimple()) {
-            return overloads;
+        String simpleName;
+        if (opName.names.length > 1) {
+            if (opName.names[opName.names.length - 2].equals(
+                    "INFORMATION_SCHEMA"))
+            {
+                // per SQL99 Part 2 Section 10.4 Syntax Rule 7.b.ii.1
+                simpleName = opName.names[opName.names.length - 1];
+            } else {
+                return overloads;
+            }
+        } else {
+            simpleName = opName.getSimple();
         }
-        String simpleName = opName.getSimple();
         final List list = operators.getMulti(simpleName);
         for (int i = 0, n = list.size(); i < n; i++) {
             SqlOperator op = (SqlOperator) list.get(i);

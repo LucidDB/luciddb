@@ -463,7 +463,8 @@ SqlNode SqlProcedureCall() :
         }
     {
         SqlNode function = createCall(
-            name, ParserUtil.toNodeArray(args), funcPos);
+            name, ParserUtil.toNodeArray(args), funcPos,
+            SqlFunction.SqlFuncTypeName.UserDefinedProcedure);
         return opTab.procedureCallOperator.createCall(function, callPos);
     }
 }
@@ -2274,7 +2275,8 @@ SqlNode NamedFunctionCall() :
 
         {
             function = createCall(
-                qualifiedName, ParserUtil.toNodeArray(args), pos);
+                qualifiedName, ParserUtil.toNodeArray(args), pos,
+                SqlFunction.SqlFuncTypeName.UserDefinedFunction);
             if (over) {
                 if (id != null) {
                     return opTab.overOperator.createCall(

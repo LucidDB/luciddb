@@ -411,12 +411,10 @@ public class SqlLiteral extends SqlNode
             ret = typeFactory.createTypeWithNullability(ret, null == value);
             return ret;
         case SqlTypeName.Binary_ordinal:
-
-            // REVIEW: should this be Binary, not Varbinary?
             bitString = (BitString) value;
             int bitCount = bitString.getBitCount();
             if ((bitCount % 8) == 0) {
-                return typeFactory.createSqlType(SqlTypeName.Varbinary,
+                return typeFactory.createSqlType(SqlTypeName.Binary,
                     bitCount / 8);
             } else {
                 return typeFactory.createSqlType(SqlTypeName.Bit, bitCount);
@@ -438,7 +436,7 @@ public class SqlLiteral extends SqlNode
             }
             RelDataType type =
                 typeFactory.createSqlType(
-                    SqlTypeName.Varchar,
+                    SqlTypeName.Char,
                     string.getValue().length());
             type =
                 typeFactory.createTypeWithCharsetAndCollation(

@@ -24,7 +24,8 @@ select slacker or false from sales.emps order by 1;
 select slacker or unknown from sales.emps order by 1;
 
 select coalesce(age,-1) from sales.emps order by 1;
-select case slacker when true then 'yes' when false then 'no' end from sales.emps order by 1;
+-- FIXME jvs 26-Jan-2005:  see dtbug 278
+-- select case slacker when true then 'yes' when false then 'no' end from sales.emps order by 1;
 select case slacker when true then 'yes' when false then 'no' else 'null' end from sales.emps order by 1;
 values CASE WHEN TRUE THEN 9 ELSE 1 END;
 select nullif(name,'Wilma') from sales.emps order by 1;

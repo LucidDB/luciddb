@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/expressions/udfInvocation.sql#5 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/expressions/udfInvocation.sql#6 $
 0: jdbc:farrago:> -- Test queries with UDF invocations
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema udftest;
@@ -173,7 +173,7 @@ Error: Object definition contains recursive cycle (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail due to datatype mismatch
 0: jdbc:farrago:> values celsius_to_fahrenheit('freezing');
-Error: At line 1, column 8: Cannot apply 'CELSIUS_TO_FAHRENHEIT' to arguments of type 'CELSIUS_TO_FAHRENHEIT(<VARCHAR(8)>)'. Supported form(s): CELSIUS_TO_FAHRENHEIT(<NUMERIC>) (state=,code=0)
+Error: At line 1, column 8: No match found for function signature CELSIUS_TO_FAHRENHEIT(<CHARACTER>) (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> values celsius_to_rankine(0);
 +---------+
@@ -415,13 +415,34 @@ Error: java.lang.NullPointerException: null (state=,code=0)
 | 1.1176470588235294  |
 +---------------------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- verify path selection
+0: jdbc:farrago:> -- verify path selection and overloading
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema v1
 . . . . . . . . > create function important_constant()
 . . . . . . . . > returns integer
 . . . . . . . . > contains sql
-. . . . . . . . > return 5;
+. . . . . . . . > return 5
+. . . . . . . . > create function confusing(in x integer)
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > specific confusing_integer
+. . . . . . . . > contains sql
+. . . . . . . . > return 'INTEGER:  '||cast(x as varchar(128))
+. . . . . . . . > create function confusing(in x smallint)
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > specific confusing_smallint
+. . . . . . . . > contains sql
+. . . . . . . . > return 'SMALLINT:  '||cast(x as varchar(128))
+. . . . . . . . > create function confusing(in x varchar(128))
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > specific confusing_varchar
+. . . . . . . . > contains sql
+. . . . . . . . > return 'VARCHAR:  '||x
+. . . . . . . . > create function confusing(in x char(20))
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > specific confusing_char
+. . . . . . . . > contains sql
+. . . . . . . . > return 'CHAR:  '||x
+. . . . . . . . > ;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema v2
 . . . . . . . . > create function important_constant()
@@ -459,11 +480,60 @@ Error: java.lang.NullPointerException: null (state=,code=0)
 | 5       |
 +---------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- TODO:  test with set path 'v1,v2';
+0: jdbc:farrago:> set path 'v1,v2';
+0: jdbc:farrago:> values important_constant();
++---------+
+| EXPR$0  |
++---------+
+| 5       |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> set path 'v2,v1';
+0: jdbc:farrago:> values important_constant();
++---------+
+| EXPR$0  |
++---------+
+| 17      |
++---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set path 'udftest';
 0: jdbc:farrago:> -- should fail
 0: jdbc:farrago:> values important_constant();
-Error: At line 1, column 8: Reference to unknown function 'IMPORTANT_CONSTANT' (state=,code=0)
+Error: At line 1, column 8: No match found for function signature IMPORTANT_CONSTANT() (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> set path 'v1';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values confusing(5);
++--------------+
+|    EXPR$0    |
++--------------+
+| INTEGER:  5  |
++--------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values confusing(cast(5 as tinyint));
++---------------+
+|    EXPR$0     |
++---------------+
+| SMALLINT:  5  |
++---------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values confusing('hello');
++------------------------------+
+|            EXPR$0            |
++------------------------------+
+| CHAR:  hello                 |
++------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values confusing(cast('hello' as varchar(5)));
++------------------+
+|      EXPR$0      |
++------------------+
+| VARCHAR:  hello  |
++------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail
+0: jdbc:farrago:> values confusing(true);
+Error: At line 1, column 8: No match found for function signature CONFUSING(<BOOLEAN>) (state=,code=0)
+0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

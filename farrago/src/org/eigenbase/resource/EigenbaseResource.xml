@@ -71,7 +71,7 @@
 <!-- Eigenbase Validator resources 121,000 - 130,000 -->
 <!-- ====================================================================== -->
 <exception id="120000" name="ValidatorUnknownFunction" className="org.eigenbase.sql.SqlValidatorException">
-    <text>Reference to unknown function ''{0}''</text>
+    <text>No match found for function signature {0}</text>
 </exception>
 
 <!-- 

@@ -75,6 +75,8 @@ public class MultisetSqlType extends AbstractSqlType
         // think the same goes for ROW types.
         return this;
     }
+
+    // TODO jvs 25-Jan-2005:  same goes for getPrecedenceList()
 }
 
 // End MultisetSqlType.java

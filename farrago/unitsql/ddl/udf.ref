@@ -189,7 +189,7 @@ Error: Dropping routine "UDFTEST"."TO_UPPER2" requires CASCADE because other obj
 . . . . . . . . > returns int
 . . . . . . . . > contains sql
 . . . . . . . . > return add_integers(i,i);
-Error: At line 1, column 1: Reference to unknown function 'ADD_INTEGERS' (state=,code=0)
+Error: At line 1, column 1: No match found for function signature ADD_INTEGERS(<NUMERIC>, <NUMERIC>) (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should succeed
 0: jdbc:farrago:> create schema goodpath

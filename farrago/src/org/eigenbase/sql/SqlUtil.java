@@ -299,7 +299,7 @@ public abstract class SqlUtil
     }
 
     /**
-     * Looks up a (possibly overloaded) function based on name
+     * Looks up a (possibly overloaded) routine based on name
      * and argument types.
      *
      * @param opTab operator table to search
@@ -307,82 +307,160 @@ public abstract class SqlUtil
      * @param funcName name of function being invoked
      *
      * @param argTypes argument types
+     *
+     * @param isProcedure true if a procedure is being invoked, in
+     * which case the overload rules are simpler
+     *
+     * @return matching function, or null if none found
+     *
+     * @sql.99 Part 2 Section 10.4
      */
-    public static SqlFunction lookupFunction(
+    public static SqlFunction lookupRoutine(
         SqlOperatorTable opTab, 
         SqlIdentifier funcName,
+        RelDataType [] argTypes,
+        boolean isProcedure)
+    {
+        // start with all routines matching by name
+        List routines = opTab.lookupOperatorOverloads(
+            funcName, SqlSyntax.Function);
+        
+        // first pass:  eliminate routines which don't accept the given
+        // number of arguments
+        filterRoutinesByParameterCount(routines, argTypes);
+        
+        // NOTE: according to SQL99, procedures are NOT overloaded on type,
+        // only on number of arguments.
+        if (isProcedure) {
+            if (routines.isEmpty()) {
+                return null;
+            } else {
+                return (SqlFunction) routines.get(0);
+            }
+        }
+
+        // second pass:  eliminate routines which don't accept the given
+        // argument types
+        filterRoutinesByParameterType(routines, argTypes);
+
+        // see if we can stop now; this is necessary for the case
+        // of builtin functions where we don't have param type info
+        if (routines.isEmpty()) {
+            return null;
+        } else if (routines.size() == 1) {
+            return (SqlFunction) routines.get(0);
+        }
+        
+        // third pass:  for each parameter from left to right, eliminate
+        // all routines except those with the best precedence match for
+        // the given arguments
+        filterRoutinesByTypePrecedence(routines, argTypes);
+
+        // return first on schema path (if anyone is left standing)
+        if (routines.isEmpty()) {
+            return null;
+        } else {
+            return (SqlFunction) routines.get(0);
+        }
+    }
+
+    private static void filterRoutinesByParameterCount(
+        List routines,
         RelDataType [] argTypes)
     {
-        // The number of defined parameters need to match the invocation
-        SqlFunction [] functions =
-            lookupFunctionOverloadsByArgCount(opTab, funcName, argTypes.length);
-        if ((null == functions) || (0 == functions.length)) {
-            return null;
-        } else if (functions.length == 1) {
-            return functions[0];
-        }
-
-        // TODO jvs 30-Dec-2004:  implement overload resolution
-
-        ArrayList candidates = new ArrayList();
-        for (int i = 0; i < functions.length; i++) {
-            SqlFunction function = functions[i];
-            if (function.isMatchParamType(argTypes)) {
-                candidates.add(function);
-            }
-        }
-
-        if (candidates.size() == 0) {
-            return null;
-        } else if (candidates.size() == 1) {
-            return (SqlFunction) candidates.get(1);
-        }
-
-        // Next, consider each argument of the function invocation, from left
-        // to right. For each argument, eliminate all functions that are not
-        // the best match for that argument. The best match for a given
-        // argument is the first data type appearing in the precedence list
-        // corresponding to the argument data type in Table 3 for which there
-        // exists a function with a parameter of that data type. Lengths,
-        // precisions, scales and the "FOR BIT DATA" attribute are not
-        // considered in this comparison.  For example, a DECIMAL(9,1) argument
-        // is considered an exact match for a DECIMAL(6,5) parameter, and a
-        // VARCHAR(19) argument is an exact match for a VARCHAR(6) parameter.
-        // Reference:
-        // http://www.pdc.kth.se/doc/SP/manuals/db2-5.0/html/db2s0/db2s067.htm#HDRUDFSEL
-        //
-        for (int i = 0; i < argTypes.length; i++) {
-            throw Util.needToImplement("Function resolution with different "
-                + "types is not implemented yet.");
-        }
-        return null;
-    }
-
-    private static SqlFunction [] lookupFunctionOverloadsByArgCount(
-        SqlOperatorTable opTab, 
-        SqlIdentifier name,
-        int numberOfParams)
-    {
-        List funcList = opTab.lookupOperatorOverloads(name, SqlSyntax.Function);
-        if (funcList.isEmpty()) {
-            return null;
-        }
-
-        List candidateList = new LinkedList();
-        for (int i = 0; i < funcList.size(); i++) {
-            SqlFunction function = (SqlFunction) funcList.get(i);
+        Iterator iter = routines.iterator();
+        while (iter.hasNext()) {
+            SqlFunction function = (SqlFunction) iter.next();
             SqlOperator.OperandsCountDescriptor od =
                 function.getOperandsCountDescriptor();
-            if (od.isVariadic()
-                    || od.getPossibleNumOfOperands().contains(
-                        new Integer(numberOfParams))) {
-                candidateList.add(function);
+            if (!od.isVariadic()
+                && !od.getPossibleNumOfOperands().contains(
+                    new Integer(argTypes.length)))
+            {
+                iter.remove();
             }
         }
-        return (SqlFunction []) candidateList.toArray(
-            new SqlFunction[candidateList.size()]);
     }
 
+    /**
+     * @sql.99 Part 2 Section 10.4 Syntax Rule 6.b.iii.2.B
+     */
+    private static void filterRoutinesByParameterType(
+        List routines,
+        RelDataType [] argTypes)
+    {
+        Iterator iter = routines.iterator();
+        while (iter.hasNext()) {
+            SqlFunction function = (SqlFunction) iter.next();
+            RelDataType [] paramTypes = function.getParamTypes();
+            if (paramTypes == null) {
+                // no parameter information for builtins; keep for now
+                continue;
+            }
+            assert(paramTypes.length == argTypes.length);
+            boolean keep = true;
+            for (int i = 0; i < paramTypes.length; ++i) {
+                RelDataTypePrecedenceList precList =
+                    argTypes[i].getPrecedenceList();
+                if (!precList.containsType(paramTypes[i])) {
+                    keep = false;
+                    break;
+                }
+            }
+            if (!keep) {
+                iter.remove();
+            }
+        }
+    }
+
+    /**
+     * @sql.99 Part 2 Section 9.4
+     */
+    private static void filterRoutinesByTypePrecedence(
+        List routines,
+        RelDataType [] argTypes)
+    {
+        for (int i = 0; i < argTypes.length; ++i) {
+            RelDataTypePrecedenceList precList =
+                argTypes[i].getPrecedenceList();
+            RelDataType bestMatch = null;
+            Iterator iter = routines.iterator();
+            while (iter.hasNext()) {
+                SqlFunction function = (SqlFunction) iter.next();
+                RelDataType [] paramTypes = function.getParamTypes();
+                if (paramTypes == null) {
+                    continue;
+                }
+                if (bestMatch == null) {
+                    bestMatch = paramTypes[i];
+                } else {
+                    int c = precList.compareTypePrecedence(
+                        bestMatch, paramTypes[i]);
+                    if (c < 0) {
+                        bestMatch = paramTypes[i];
+                    }
+                }
+            }
+            if (bestMatch != null) {
+                iter = routines.iterator();
+                while (iter.hasNext()) {
+                    SqlFunction function = (SqlFunction) iter.next();
+                    RelDataType [] paramTypes = function.getParamTypes();
+                    int c;
+                    if (paramTypes == null) {
+                        c = -1;
+                    } else {
+                        c = precList.compareTypePrecedence(
+                            paramTypes[i], bestMatch);
+                    }
+                    if (c < 0) {
+                        iter.remove();
+                    }
+                }
+            }
+        }
+    }
+    
     //~ Inner Classes ---------------------------------------------------------
 
     /**

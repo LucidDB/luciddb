@@ -49,6 +49,8 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
 {
     //~ Static fields/initializers --------------------------------------------
 
+    public static final SqlTypeName [] EMPTY_ARRAY = new SqlTypeName[0];
+    
     // Flags indicating precision/scale combinations
     private static final int PrecNoScaleNo = 1;
     private static final int PrecYesScaleNo = 2;

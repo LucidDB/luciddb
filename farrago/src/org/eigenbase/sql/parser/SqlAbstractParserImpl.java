@@ -318,7 +318,8 @@ public abstract class SqlAbstractParserImpl
     protected SqlCall createCall(
         SqlIdentifier funName,
         SqlNode [] operands,
-        ParserPosition pos)
+        ParserPosition pos,
+        SqlFunction.SqlFuncTypeName funcType)
     {
         SqlOperator fun = null;
 
@@ -338,7 +339,7 @@ public abstract class SqlAbstractParserImpl
         // Otherwise, just create a placeholder function.  Later, during
         // validation, it will be resolved into a real function reference.
         if (fun == null) {
-            fun = new SqlFunction(funName, null, null, null);
+            fun = new SqlFunction(funName, null, null, null, null, funcType);
         }
         
         return fun.createCall(operands, pos);

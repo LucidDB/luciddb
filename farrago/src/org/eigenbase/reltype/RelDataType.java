@@ -196,6 +196,11 @@ public interface RelDataType
      * @return canonical object representing type family
      */
     public RelDataTypeFamily getFamily();
+
+    /**
+     * @return precedence list for this type
+     */
+    public RelDataTypePrecedenceList getPrecedenceList();
 }
 
 

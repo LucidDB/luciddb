@@ -38,13 +38,13 @@ public interface SqlOperatorTable
     /**
      * Retrieves a list of operators with a given name and syntax.  For
      * example, by passing SqlSyntax.Function, the returned list is
-     * narrowed only matching SqlFunction objects.
+     * narrowed to only matching SqlFunction objects.
      *
      * @param opName name of operator
      *
      * @param syntax syntax type of operator
      *
-     * @return list of SqlOperator objects (empty if no matches)
+     * @return mutable list of SqlOperator objects (empty if no matches)
      */
     public List lookupOperatorOverloads(
         SqlIdentifier opName,

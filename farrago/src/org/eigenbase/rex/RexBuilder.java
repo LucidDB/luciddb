@@ -235,10 +235,11 @@ public class RexBuilder
         RexNode [] args)
     {
         SqlFunction function =
-            SqlUtil.lookupFunction(
+            SqlUtil.lookupRoutine(
                 opTab,
                 new SqlIdentifier(kind.getName(), null),
-                getTypes(args));
+                getTypes(args),
+                false);
         if (function == null) {
             throw Util.newInternal("No operator for " + kind);
         }

@@ -143,6 +143,7 @@ public class SqlTypeAssignmentRules
         rule = new HashSet();
         rule.add(SqlTypeName.Bit);
         rule.add(SqlTypeName.Varbinary);
+        rule.add(SqlTypeName.Binary);
         rules.put(SqlTypeName.Varbinary, rule);
 
         // Char is assignable from...
@@ -164,6 +165,7 @@ public class SqlTypeAssignmentRules
         // Binary is assignable from...
         rule = new HashSet();
         rule.add(SqlTypeName.Binary);
+        rule.add(SqlTypeName.Varbinary);
         rules.put(SqlTypeName.Binary, rule);
 
         // Date is assignable from ...
@@ -211,10 +213,6 @@ public class SqlTypeAssignmentRules
         coerceRules.put(SqlTypeName.Double, rule);
         coerceRules.put(SqlTypeName.Char, rule);
         coerceRules.put(SqlTypeName.Varchar, rule);
-
-        // binary is castable from varbinary
-        rule = (HashSet) coerceRules.get(SqlTypeName.Binary);
-        rule.add(SqlTypeName.Varbinary);
 
         // varchar is castable from Date, time and timestamp and numbers
         rule = (HashSet) coerceRules.get(SqlTypeName.Varchar);

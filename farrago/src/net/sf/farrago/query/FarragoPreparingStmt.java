@@ -184,10 +184,9 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         SqlOperatorTable userOperators =
             new FarragoUserDefinedRoutineLookup(stmtValidator, this);
         
-        // REVIEW jvs 1-Jan-2004:  precedence of UDF's vs. builtins?
         ChainedSqlOperatorTable table = new ChainedSqlOperatorTable();
-        table.add(systemOperators);
         table.add(userOperators);
+        table.add(systemOperators);
 
         sqlOperatorTable = table;
         return sqlOperatorTable;

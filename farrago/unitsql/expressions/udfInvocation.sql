@@ -246,13 +246,34 @@ values alice(12);
 
 values bob(19);
 
--- verify path selection
+-- verify path selection and overloading
 
 create schema v1
 create function important_constant()
 returns integer
 contains sql
-return 5;
+return 5
+create function confusing(in x integer)
+returns varchar(128)
+specific confusing_integer
+contains sql
+return 'INTEGER:  '||cast(x as varchar(128))
+create function confusing(in x smallint)
+returns varchar(128)
+specific confusing_smallint
+contains sql
+return 'SMALLINT:  '||cast(x as varchar(128))
+create function confusing(in x varchar(128))
+returns varchar(128)
+specific confusing_varchar
+contains sql
+return 'VARCHAR:  '||x
+create function confusing(in x char(20))
+returns varchar(128)
+specific confusing_char
+contains sql
+return 'CHAR:  '||x
+;
 
 create schema v2
 create function important_constant()
@@ -270,8 +291,26 @@ values important_constant();
 
 values v1.important_constant();
 
--- TODO:  test with set path 'v1,v2';
+set path 'v1,v2';
+values important_constant();
+
+set path 'v2,v1';
+values important_constant();
 
 set path 'udftest';
 -- should fail
 values important_constant();
+
+set path 'v1';
+
+values confusing(5);
+
+values confusing(cast(5 as tinyint));
+
+values confusing('hello');
+
+values confusing(cast('hello' as varchar(5)));
+
+-- should fail
+values confusing(true);
+

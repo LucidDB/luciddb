@@ -58,6 +58,17 @@ public abstract class AbstractSqlType
     {
         return SqlTypeFamily.getFamilyForSqlType(typeName);
     }
+
+    // implement RelDataType
+    public RelDataTypePrecedenceList getPrecedenceList()
+    {
+        RelDataTypePrecedenceList list = 
+            SqlTypeExplicitPrecedenceList.getListForType(this);
+        if (list != null) {
+            return list;
+        }
+        return super.getPrecedenceList();
+    }
 }
 
 // End AbstractSqlType.java

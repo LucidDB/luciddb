@@ -215,6 +215,28 @@ public abstract class RelDataTypeImpl
         generateTypeString(sb, false);
         return sb.toString();
     }
+    
+    // implement RelDataType
+    public RelDataTypePrecedenceList getPrecedenceList()
+    {
+        // by default, make each type have a precedence list containing
+        // only itself
+        return new RelDataTypePrecedenceList() 
+            {
+                public boolean containsType(RelDataType type)
+                {
+                    return RelDataTypeImpl.this == type;
+                }
+                
+                public int compareTypePrecedence(
+                    RelDataType type1, RelDataType type2)
+                {
+                    assert(containsType(type1));
+                    assert(containsType(type2));
+                    return 0;
+                }
+            };
+    }
 }
 
 // End RelDataTypeImpl.java
