@@ -103,26 +103,16 @@ void CalcExecStream::prepare(CalcExecStreamParams const &params)
 
 ExecStreamResult CalcExecStream::execute(ExecStreamQuantum const &quantum)
 {
-    switch (pInAccessor->getState()) {
-    case EXECBUF_IDLE:
-        pInAccessor->requestProduction();
-        // NOTE:  fall through
-    case EXECBUF_NEED_PRODUCTION:
-        return EXECRC_NEED_INPUT;
-    case EXECBUF_EOS:
-        pOutAccessor->markEOS();
-        return EXECRC_EOS;
-    case EXECBUF_NEED_CONSUMPTION:
-        break;
-    default:
-        permAssert(false);
+    ExecStreamResult rc = precheckConduitInput();
+    if (rc != EXECRC_OUTPUT) {
+        return rc;
     }
     
     bool output = false;
     uint nTuplesProcessed = 0;
 
     for (;;) {
-        while (!pInAccessor->isTupleUnmarshalled()) {
+        while (!pInAccessor->isTupleConsumptionPending()) {
             if (pInAccessor->getState() != EXECBUF_NEED_CONSUMPTION) {
                 if (output) {
                     return EXECRC_OUTPUT;
@@ -157,7 +147,7 @@ ExecStreamResult CalcExecStream::execute(ExecStreamQuantum const &quantum)
                 bool filterDiscard = *reinterpret_cast<bool const *>(
                     pFilterDatum->pData);
                 if (filterDiscard) {
-                    pInAccessor->consumeUnmarshalledTuple();
+                    pInAccessor->consumeTuple();
                 }
             }
         }
@@ -172,7 +162,7 @@ ExecStreamResult CalcExecStream::execute(ExecStreamQuantum const &quantum)
             }
         }
 
-        pInAccessor->consumeUnmarshalledTuple();
+        pInAccessor->consumeTuple();
     }
 }
 

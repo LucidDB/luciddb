@@ -21,14 +21,14 @@
 #ifndef Fennel_MockProducerStream_Included
 #define Fennel_MockProducerStream_Included
 
-#include "fennel/exec/SourceExecStream.h"
+#include "fennel/exec/SingleOutputExecStream.h"
 
 FENNEL_BEGIN_NAMESPACE
 
 /**
  * MockProducerStreamParams defines parameters for MockProducerStream.
  */
-struct MockProducerStreamParams : public SourceExecStreamParams
+struct MockProducerStreamParams : public SingleOutputExecStreamParams
 {
     /**
      * Number of rows to generate.
@@ -42,7 +42,7 @@ struct MockProducerStreamParams : public SourceExecStreamParams
  * @author John V. Sichi
  * @version $Id$
  */
-class MockProducerStream : public SourceExecStream
+class MockProducerStream : public SingleOutputExecStream
 {
     uint cbTuple;
     uint64_t nRowsMax;

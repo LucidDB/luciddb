@@ -248,6 +248,11 @@ static const BlockId NULL_BLOCK_ID = BlockId(0xFFFFFFFFFFFFFFFFLL);
  */
 static const PageOwnerId ANON_PAGE_OWNER_ID = PageOwnerId(0xFFFFFFFFFFFFFFFFLL);
 
+/**
+ * Sentinel value for an invalid SavepointId.
+ */
+static const SavepointId NULL_SVPT_ID = SavepointId(MAXU);
+
 // The types below are called "Num" rather than "Id" because they are
 // used to represent either a count or an offset.  We use plain
 // typedef rather than DEFINE_OPAQUE_INTEGER because a lot of arithmetic

@@ -41,6 +41,8 @@ class ExecStreamScheduler
         public TraceSource
 {
 protected:
+    bool tracingFine;
+        
     /**
      * Constructs a new ExecStreamScheduler.
      *
@@ -123,6 +125,24 @@ public:
     virtual ~ExecStreamScheduler();
 
     /**
+     * Adds a graph to be scheduled.  Some implementations may require all
+     * graphs to be added before scheduler is started; others may allow graphs
+     * to be added at any time.
+     *
+     * @param pGraph the graph to be scheduled
+     */
+    virtual void addGraph(SharedExecStreamGraph pGraph);
+
+    /**
+     * Removes a graph currently being scheduled.  Some implementations may
+     * disallow graph removal except when scheduler is stopped; others
+     * may disallow graph removal altogether.
+     *
+     * @param pGraph the graph currently being scheduled
+     */
+    virtual void removeGraph(SharedExecStreamGraph pGraph);
+
+    /**
      * Starts this scheduler, preparing it to execute streams.
      */
     virtual void start() = 0;
@@ -153,7 +173,7 @@ public:
      *
      * @return new buffer accessor
      */
-    virtual SharedExecStreamBufAccessor newBufAccessor() = 0;
+    virtual SharedExecStreamBufAccessor newBufAccessor();
 
     /**
      * Reads data from a stream, first performing any scheduling necessary
@@ -171,7 +191,7 @@ inline ExecStreamResult ExecStreamScheduler::executeStream(
     ExecStream &stream,
     ExecStreamQuantum const &quantum)
 {
-    if (isTracingLevel(TRACE_FINE)) {
+    if (tracingFine) {
         tracePreExecution(stream, quantum);
         ExecStreamResult rc = stream.execute(quantum);
         tracePostExecution(stream, rc);

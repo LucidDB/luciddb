@@ -20,6 +20,7 @@ ExecutionStreamBuilder.cpp
 
 libfarrago_la_LIBADD = \
 	-L$(top_builddir)/libfennel \
+	-lfennel_ftrs \
 	-lfennel_xo \
 	-lfennel_db \
 	-lfennel_btree \

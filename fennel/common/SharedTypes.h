@@ -163,6 +163,12 @@ typedef boost::shared_ptr<TableWriter> SharedTableWriter;
 class TableWriterFactory;
 typedef boost::shared_ptr<TableWriterFactory> SharedTableWriterFactory;
 
+class FtrsTableWriter;
+typedef boost::shared_ptr<FtrsTableWriter> SharedFtrsTableWriter;
+
+class FtrsTableWriterFactory;
+typedef boost::shared_ptr<FtrsTableWriterFactory> SharedFtrsTableWriterFactory;
+
 class Calculator;
 typedef boost::shared_ptr<Calculator> SharedCalculator;
 

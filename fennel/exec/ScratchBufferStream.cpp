@@ -24,7 +24,7 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-void ScratchBufferStream::prepare(ExecStreamParams const &params)
+void ScratchBufferStream::prepare(ScratchBufferStreamParams const &params)
 {
     ConduitExecStream::prepare(params);
     scratchAccessor = params.scratchAccessor;
@@ -65,6 +65,8 @@ void ScratchBufferStream::open(bool restart)
         bufferLock.getPage().getWritableData()
         + bufferLock.getPage().getCache().getPageSize(),
         true);
+
+    pLastConsumptionEnd = NULL;
 }
 
 ExecStreamResult ScratchBufferStream::execute(ExecStreamQuantum const &)
@@ -74,6 +76,14 @@ ExecStreamResult ScratchBufferStream::execute(ExecStreamQuantum const &)
         return EXECRC_NEED_OUTPUTBUF;
     case EXECBUF_NEED_PRODUCTION:
     case EXECBUF_IDLE:
+        if (pLastConsumptionEnd) {
+            // Since our output buf is empty, the downstream consumer
+            // must have consumed everything up to the last byte we
+            // told it was available; pass that information on to our
+            // upstream producer.
+            pInAccessor->consumeData(pLastConsumptionEnd);
+            pLastConsumptionEnd = NULL;
+        }
         break;
     case EXECBUF_EOS:
         assert(pInAccessor->getState() == EXECBUF_EOS);
@@ -81,13 +91,10 @@ ExecStreamResult ScratchBufferStream::execute(ExecStreamQuantum const &)
     }
     switch(pInAccessor->getState()) {
     case EXECBUF_NEED_CONSUMPTION:
+        pLastConsumptionEnd = pInAccessor->getConsumptionEnd();
         pOutAccessor->provideBufferForConsumption(
             pInAccessor->getConsumptionStart(),
-            pInAccessor->getConsumptionEnd());
-        // REVIEW jvs 27-Oct-2004:  This will break if we implement
-        // double-buffering in ExecStreamBufAccessor.  It's not safe
-        // to consume the data until our own consumer is done with it.
-        pInAccessor->consumeData(pInAccessor->getConsumptionEnd());
+            pLastConsumptionEnd);
         return EXECRC_OUTPUT;
     case EXECBUF_NEED_PRODUCTION:
         return EXECRC_NEED_INPUT;

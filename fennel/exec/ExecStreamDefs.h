@@ -85,17 +85,11 @@ struct ExecStreamQuantum
     uint nTuplesMax;
 
     /**
-     * Maximum number of bytes to process per quantum.
-     */
-    uint nBytesMax;
-
-    /**
      * Creates a new quantum, initially unlimited.
      */
     explicit ExecStreamQuantum()
     {
         nTuplesMax = MAXU;
-        nBytesMax = MAXU;
     }
 };
     

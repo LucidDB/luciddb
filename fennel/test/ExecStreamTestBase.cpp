@@ -61,7 +61,7 @@ SharedExecStream ExecStreamTestBase::prepareGraphTwoBufferedStreams(
     SharedExecStream pBufStream2(pBufStreamImpl2);
     pBufStream2->setName("ScratchBufferStream2");
     
-    ExecStreamParams paramsScratch;
+    ScratchBufferStreamParams paramsScratch;
     paramsScratch.scratchAccessor =
         pSegmentFactory->newScratchSegment(pCache,2);
     paramsScratch.enforceQuotas = false;
@@ -103,8 +103,7 @@ void ExecStreamTestBase::testCaseSetUp()
     pScheduler.reset(
         new DfsTreeExecStreamScheduler(
             this,
-            "DfsTreeExecStreamScheduler",
-            pGraph));
+            "DfsTreeExecStreamScheduler"));
 }
 
 void ExecStreamTestBase::testCaseTearDown()
@@ -123,6 +122,7 @@ void ExecStreamTestBase::decorateGraph()
     for (uint i = 0; i < streams.size(); ++i) {
         streams[i]->initTraceSource(this, streams[i]->getName());
     }
+    pScheduler->addGraph(pGraph);
 }
 
 void ExecStreamTestBase::verifyConstantOutput(

@@ -33,10 +33,8 @@ FENNEL_BEGIN_NAMESPACE
  * CalcExecStreamParams defines parameters for instantiating a
  * CalcExecStream.
  */
-struct CalcExecStreamParams : public ExecStreamParams
+struct CalcExecStreamParams : public ConduitExecStreamParams
 {
-    TupleDescriptor outputTupleDesc;
-    
     std::string program;
 
     bool isFilter;

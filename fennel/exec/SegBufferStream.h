@@ -34,7 +34,7 @@ FENNEL_BEGIN_NAMESPACE
  *
  * TODO:  support usage of a SpillOutputStream.
  */
-struct SegBufferStreamParams : public ExecStreamParams
+struct SegBufferStreamParams : public ConduitExecStreamParams
 {
     /**
      * If true, buffer contents are preserved rather than deleted as they are

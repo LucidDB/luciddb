@@ -19,41 +19,46 @@
 */
 
 #include "fennel/common/CommonPreamble.h"
-#include "fennel/exec/SourceExecStream.h"
+#include "fennel/exec/SingleOutputExecStream.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-void SourceExecStream::setInputBufAccessors(
+SingleOutputExecStreamParams::SingleOutputExecStreamParams()
+{
+    outputTupleFormat = TUPLE_FORMAT_STANDARD;
+}
+
+void SingleOutputExecStream::setInputBufAccessors(
     std::vector<SharedExecStreamBufAccessor> const &inAccessors)
 {
     assert(inAccessors.size() == 0);
 }
 
-void SourceExecStream::setOutputBufAccessors(
+void SingleOutputExecStream::setOutputBufAccessors(
     std::vector<SharedExecStreamBufAccessor> const &outAccessors)
 {
     assert(outAccessors.size() == 1);
     pOutAccessor = outAccessors[0];
 }
 
-void SourceExecStream::prepare(SourceExecStreamParams const &params)
+void SingleOutputExecStream::prepare(SingleOutputExecStreamParams const &params)
 {
     assert(pOutAccessor);
     assert(pOutAccessor->getProvision() == getOutputBufProvision());
-    pOutAccessor->setTupleShape(params.outputTupleDesc);
+    if (pOutAccessor->getTupleDesc().empty()) {
+        assert(!params.outputTupleDesc.empty());
+        pOutAccessor->setTupleShape(
+            params.outputTupleDesc,
+            params.outputTupleFormat);
+    }
 }
 
-void SourceExecStream::open(bool restart)
-{
-    ExecStream::open(restart);
-}
-
-ExecStreamBufProvision SourceExecStream::getOutputBufProvision() const
+ExecStreamBufProvision SingleOutputExecStream::getOutputBufProvision() const
 {
     return BUFPROV_CONSUMER;
 }
 
 FENNEL_END_CPPFILE("$Id$");
 
-// End SourceExecStream.cpp
+// End SingleOutputExecStream.cpp

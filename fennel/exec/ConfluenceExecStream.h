@@ -21,32 +21,35 @@
 #ifndef Fennel_ConfluenceExecStream_Included
 #define Fennel_ConfluenceExecStream_Included
 
-#include "fennel/exec/ExecStream.h"
+#include "fennel/exec/SingleOutputExecStream.h"
 
 FENNEL_BEGIN_NAMESPACE
 
 /**
+ * ConfluenceExecStreamParams defines parameters for ConfluenceExecStream.
+ */
+struct ConfluenceExecStreamParams : virtual public SingleOutputExecStreamParams
+{
+};
+    
+/**
  * ConfluenceExecStream is an abstract base for an ExecStream with
- * multiple inputs and one output.
+ * multiple inputs and exactly one output.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-class ConfluenceExecStream : public ExecStream
+class ConfluenceExecStream : virtual public SingleOutputExecStream
 {
 protected:
     std::vector<SharedExecStreamBufAccessor> inAccessors;
-    SharedExecStreamBufAccessor pOutAccessor;
 
 public:
     // implement ExecStream
-    virtual void prepare(ExecStreamParams const &params);
+    virtual void prepare(ConfluenceExecStreamParams const &params);
     virtual void setInputBufAccessors(
         std::vector<SharedExecStreamBufAccessor> const &inAccessors);
-    virtual void setOutputBufAccessors(
-        std::vector<SharedExecStreamBufAccessor> const &outAccessors);
     virtual void open(bool restart);
-    virtual ExecStreamBufProvision getOutputBufProvision() const;
     virtual ExecStreamBufProvision getInputBufProvision() const;
 };
 

@@ -18,52 +18,49 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-#ifndef Fennel_ConduitExecStream_Included
-#define Fennel_ConduitExecStream_Included
+#ifndef Fennel_SingleOutputExecStream_Included
+#define Fennel_SingleOutputExecStream_Included
 
-#include "fennel/exec/SingleOutputExecStream.h"
+#include "fennel/exec/ExecStream.h"
 
 FENNEL_BEGIN_NAMESPACE
 
 /**
- * ConduitExecStreamParams defines parameters for ConduitExecStream.
+ * SingleOutputExecStreamParams defines parameters for SingleOutputExecStream.
  */
-struct ConduitExecStreamParams : virtual public SingleOutputExecStreamParams
+struct SingleOutputExecStreamParams : virtual public ExecStreamParams
 {
+    TupleDescriptor outputTupleDesc;
+
+    TupleFormat outputTupleFormat;
+
+    explicit SingleOutputExecStreamParams();
 };
     
 /**
- * ConduitExecStream is an abstract base for an ExecStream with exactly
- * one input and one output.
+ * SingleOutputExecStream is an abstract base for all implementations
+ * of ExecStream which have exactly one output.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-class ConduitExecStream : virtual public SingleOutputExecStream
+class SingleOutputExecStream : virtual public ExecStream
 {
 protected:
-    SharedExecStreamBufAccessor pInAccessor;
-
-    /**
-     * Checks the state of the input buffer.  If empty, requests production.
-     * If EOS,  propagates that to output buffer.
-     *
-     * @return result of precheck; anything but EXECRC_OUTPUT indicates
-     * that execution should terminate immediately with returned code
-     */
-    ExecStreamResult precheckConduitInput();
+    SharedExecStreamBufAccessor pOutAccessor;
     
 public:
     // implement ExecStream
-    virtual void prepare(ConduitExecStreamParams const &params);
     virtual void setInputBufAccessors(
         std::vector<SharedExecStreamBufAccessor> const &inAccessors);
-    virtual void open(bool restart);
-    virtual ExecStreamBufProvision getInputBufProvision() const;
+    virtual void setOutputBufAccessors(
+        std::vector<SharedExecStreamBufAccessor> const &outAccessors);
+    virtual void prepare(SingleOutputExecStreamParams const &params);
+    virtual ExecStreamBufProvision getOutputBufProvision() const;
 };
 
 FENNEL_END_NAMESPACE
 
 #endif
 
-// End ConduitExecStream.h
+// End SingleOutputExecStream.h

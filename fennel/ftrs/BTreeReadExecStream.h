@@ -18,52 +18,54 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-#ifndef Fennel_ScratchBufferStream_Included
-#define Fennel_ScratchBufferStream_Included
+#ifndef Fennel_BTreeReadExecStream_Included
+#define Fennel_BTreeReadExecStream_Included
 
-#include "fennel/exec/ConduitExecStream.h"
-#include "fennel/segment/SegPageLock.h"
+#include "fennel/ftrs/BTreeExecStream.h"
+#include "fennel/tuple/TupleData.h"
+#include "fennel/tuple/TupleAccessor.h"
+#include "fennel/tuple/TupleProjectionAccessor.h"
 
 FENNEL_BEGIN_NAMESPACE
 
 /**
- * ScratchBufferStreamParams defines parameters for ScratchBufferStream.
+ * BTreeReadExecStreamParams defines parameters for instantiating a
+ * BTreeReadExecStream.
  */
-struct ScratchBufferStreamParams : public ConduitExecStreamParams
+struct BTreeReadExecStreamParams : public BTreeExecStreamParams
 {
+    /**
+     * Projection of attributes to be retrieved from BTree (relative to
+     * tupleDesc).
+     */
+    TupleProjection outputProj;
 };
-    
+
 /**
- * ScratchBufferStream is an adapter for converting the output of an upstream
- * BUFPROV_CONSUMER producer for use by a downstream BUFPROV_PRODUCER consumer.
- * The implementation works by allocating a scratch buffer; the
- * upstream producer writes its results into this buffer, and the
- * downstream consumer reads input from this buffer.
+ * BTreeReadExecStream is an abstract base class for ExecStream
+ * implementations which project a stream of tuples via a BTreeReader.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-class ScratchBufferStream : public ConduitExecStream
+class BTreeReadExecStream : public BTreeExecStream
 {
-    SegmentAccessor scratchAccessor;
-    SegPageLock bufferLock;
-    PConstBuffer pLastConsumptionEnd;
+protected:
+    SharedBTreeReader pReader;
+    TupleProjectionAccessor projAccessor;
+    TupleData tupleData;
     
 public:
     // implement ExecStream
-    virtual void prepare(ScratchBufferStreamParams const &params);
+    virtual void prepare(BTreeReadExecStreamParams const &params);
     virtual void getResourceRequirements(
         ExecStreamResourceQuantity &minQuantity,
         ExecStreamResourceQuantity &optQuantity);
-    virtual void open(bool restart);
-    virtual ExecStreamResult execute(ExecStreamQuantum const &quantum);
     virtual void closeImpl();
-    virtual ExecStreamBufProvision getOutputBufProvision() const;
-    virtual ExecStreamBufProvision getInputBufProvision() const;
 };
 
 FENNEL_END_NAMESPACE
 
 #endif
 
-// End ScratchBufferStream.h
+// End BTreeReadExecStream.h

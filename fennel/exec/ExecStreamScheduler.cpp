@@ -32,9 +32,32 @@ ExecStreamScheduler::ExecStreamScheduler(
     std::string nameInit)
     : TraceSource(pTraceTargetInit, nameInit)
 {
+    tracingFine = isTracingLevel(TRACE_FINE);
 }
 
 ExecStreamScheduler::~ExecStreamScheduler()
+{
+}
+
+SharedExecStreamBufAccessor ExecStreamScheduler::newBufAccessor()
+{
+    return SharedExecStreamBufAccessor(new ExecStreamBufAccessor());
+}
+
+void ExecStreamScheduler::addGraph(SharedExecStreamGraph pGraph)
+{
+    // if any of the streams in the new graph require tracing, then
+    // disable our tracing short-circuit
+    std::vector<SharedExecStream> streams = pGraph->getSortedStreams();
+    for (uint i = 0; i < streams.size(); ++i) {
+        if (streams[i]->isTracingLevel(TRACE_FINE)) {
+            tracingFine = true;
+            return;
+        }
+    }
+}
+
+void ExecStreamScheduler::removeGraph(SharedExecStreamGraph)
 {
 }
 
@@ -54,11 +77,6 @@ void ExecStreamScheduler::tracePreExecution(
         FENNEL_TRACE(
             TRACE_FINE,
             "nTuplesMax = " << quantum.nTuplesMax);
-    }
-    if (!isMAXU(quantum.nBytesMax)) {
-        FENNEL_TRACE(
-            TRACE_FINE,
-            "nBytesMax = " << quantum.nBytesMax);
     }
 
     traceStreamBuffers(stream, TRACE_FINER, TRACE_FINEST);

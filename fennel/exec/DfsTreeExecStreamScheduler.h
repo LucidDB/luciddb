@@ -38,6 +38,7 @@ class ExecStreamGraphImpl;
 class DfsTreeExecStreamScheduler : public ExecStreamScheduler
 {
     volatile bool aborted;
+    
     SharedExecStreamGraph pGraph;
 
 public:
@@ -48,22 +49,20 @@ public:
      * or NULL to disable tracing entirely
      *
      * @param name the name to use for tracing this scheduler
-     *
-     * @param pGraph the graph whose streams are to be scheduled
      */
     explicit DfsTreeExecStreamScheduler(
         TraceTarget *pTraceTarget,
-        std::string name,
-        SharedExecStreamGraph pGraph);
+        std::string name);
     
     virtual ~DfsTreeExecStreamScheduler();
 
     // implement the ExecStreamScheduler interface
+    virtual void addGraph(SharedExecStreamGraph pGraph);
+    virtual void removeGraph(SharedExecStreamGraph pGraph);
     virtual void start();
     virtual void makeRunnable(ExecStream &stream);
     virtual void abort();
     virtual void stop();
-    virtual SharedExecStreamBufAccessor newBufAccessor();
     virtual ExecStreamBufAccessor &readStream(ExecStream &stream);
 };
 

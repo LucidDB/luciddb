@@ -28,7 +28,7 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 
 void MockProducerStream::prepare(MockProducerStreamParams const &params)
 {
-    SourceExecStream::prepare(params);
+    SingleOutputExecStream::prepare(params);
     for (uint i = 0; i < params.outputTupleDesc.size(); i++) {
         assert(!params.outputTupleDesc[i].isNullable);
         StandardTypeDescriptorOrdinal ordinal =
@@ -37,15 +37,14 @@ void MockProducerStream::prepare(MockProducerStreamParams const &params)
         assert(StandardTypeDescriptor::isIntegralNative(ordinal));
     }
     nRowsMax = params.nRows;
-    TupleAccessor tupleAccessor;
-    tupleAccessor.compute(params.outputTupleDesc);
+    TupleAccessor &tupleAccessor = pOutAccessor->getTraceTupleAccessor();
     assert(tupleAccessor.isFixedWidth());
     cbTuple = tupleAccessor.getMaxByteCount();
 }
 
 void MockProducerStream::open(bool restart)
 {
-    SourceExecStream::open(restart);
+    SingleOutputExecStream::open(restart);
     nRowsProduced = 0;
 }
 

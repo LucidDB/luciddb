@@ -29,16 +29,29 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 
 DfsTreeExecStreamScheduler::DfsTreeExecStreamScheduler(
     TraceTarget *pTraceTargetInit,
-    std::string nameInit,
-    SharedExecStreamGraph pGraphInit)
+    std::string nameInit)
     : ExecStreamScheduler(pTraceTargetInit, nameInit)
 {
-    pGraph = pGraphInit;
-    assert(pGraph);
 }
     
 DfsTreeExecStreamScheduler::~DfsTreeExecStreamScheduler()
 {
+}
+
+void DfsTreeExecStreamScheduler::addGraph(SharedExecStreamGraph pGraphInit)
+{
+    assert(!pGraph);
+    
+    ExecStreamScheduler::addGraph(pGraphInit);
+    pGraph = pGraphInit;
+}
+
+void DfsTreeExecStreamScheduler::removeGraph(SharedExecStreamGraph pGraphInit)
+{
+    assert(pGraph == pGraphInit);
+    
+    pGraph.reset();
+    ExecStreamScheduler::removeGraph(pGraphInit);
 }
 
 void DfsTreeExecStreamScheduler::start()
@@ -48,7 +61,7 @@ void DfsTreeExecStreamScheduler::start()
     ExecStreamGraphImpl &graphImpl = pGraph->getImpl();
     ExecStreamGraphImpl::GraphRep graphRep = graphImpl.getGraphRep();
 
-    // assert that graph is a tree (or forest)
+    // assert that graph is a tree (or forest of trees)
     ExecStreamGraphImpl::VertexIterPair p = boost::vertices(graphRep);
     for (; p.first != p.second; ++(p.first)) {
         assert(boost::out_degree(*(p.first),graphRep) < 2);
@@ -76,11 +89,6 @@ void DfsTreeExecStreamScheduler::stop()
     
     // nothing to do
     aborted = false;
-}
-
-SharedExecStreamBufAccessor DfsTreeExecStreamScheduler::newBufAccessor()
-{
-    return SharedExecStreamBufAccessor(new ExecStreamBufAccessor());
 }
 
 ExecStreamBufAccessor &DfsTreeExecStreamScheduler::readStream(

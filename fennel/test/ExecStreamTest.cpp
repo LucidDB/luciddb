@@ -95,7 +95,7 @@ void ExecStreamTest::testScratchBufferStream()
     params1.enforceQuotas = false;
     pStreamImpl1->prepare(params1);
     
-    ExecStreamParams params2;
+    ScratchBufferStreamParams params2;
     params2.scratchAccessor =
         pSegmentFactory->newScratchSegment(pCache,1);
     params2.enforceQuotas = false;
@@ -208,7 +208,7 @@ void ExecStreamTest::testCartesianJoinStream(
     paramsMock.nRows = nRowsInner;
     pStreamImpl2->prepare(paramsMock);
     
-    ExecStreamParams paramsScratch;
+    ScratchBufferStreamParams paramsScratch;
     paramsScratch.scratchAccessor =
         pSegmentFactory->newScratchSegment(pCache,3);
     paramsScratch.enforceQuotas = false;

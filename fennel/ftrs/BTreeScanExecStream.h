@@ -18,46 +18,41 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-#ifndef Fennel_SourceExecStream_Included
-#define Fennel_SourceExecStream_Included
+#ifndef Fennel_BTreeScanExecStream_Included
+#define Fennel_BTreeScanExecStream_Included
 
-#include "fennel/exec/ExecStream.h"
+#include "fennel/ftrs/BTreeReadExecStream.h"
+#include "fennel/tuple/TupleData.h"
+#include "fennel/tuple/TupleAccessor.h"
+#include "fennel/tuple/TupleProjectionAccessor.h"
 
 FENNEL_BEGIN_NAMESPACE
 
 /**
- * SourceExecStreamParams defines parameters for SourceExecStream.
+ * BTreeScanExecStreamParams defines parameters for instantiating a
+ * BTreeScanExecStream.
  */
-struct SourceExecStreamParams : public ExecStreamParams
+struct BTreeScanExecStreamParams : public BTreeReadExecStreamParams
 {
-    TupleDescriptor outputTupleDesc;
 };
-    
+
 /**
- * SourceExecStream is an abstract base for an ExecStream with
- * no input and one output.
+ * BTreeScanExecStream reads all data from a BTree.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-class SourceExecStream : public ExecStream
+class BTreeScanExecStream : public BTreeReadExecStream
 {
-protected:
-    SharedExecStreamBufAccessor pOutAccessor;
-    
 public:
     // implement ExecStream
-    virtual void setInputBufAccessors(
-        std::vector<SharedExecStreamBufAccessor> const &inAccessors);
-    virtual void setOutputBufAccessors(
-        std::vector<SharedExecStreamBufAccessor> const &outAccessors);
-    virtual void prepare(SourceExecStreamParams const &params);
+    virtual void prepare(BTreeScanExecStreamParams const &params);
     virtual void open(bool restart);
-    virtual ExecStreamBufProvision getOutputBufProvision() const;
+    virtual ExecStreamResult execute(ExecStreamQuantum const &quantum);
 };
 
 FENNEL_END_NAMESPACE
 
 #endif
 
-// End SourceExecStream.h
+// End BTreeScanExecStream.h

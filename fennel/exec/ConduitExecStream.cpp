@@ -32,31 +32,23 @@ void ConduitExecStream::setInputBufAccessors(
     pInAccessor = inAccessors[0];
 }
 
-void ConduitExecStream::setOutputBufAccessors(
-    std::vector<SharedExecStreamBufAccessor> const &outAccessors)
+void ConduitExecStream::prepare(ConduitExecStreamParams const &params)
 {
-    assert(outAccessors.size() == 1);
-    pOutAccessor = outAccessors[0];
-}
-
-void ConduitExecStream::prepare(ExecStreamParams const &params)
-{
-    ExecStream::prepare(params);
-    
     assert(pInAccessor);
-    assert(pOutAccessor);
-
     assert(pInAccessor->getProvision() == getInputBufProvision());
-    assert(pOutAccessor->getProvision() == getOutputBufProvision());
 
-    pOutAccessor->setTupleShape(
-        pInAccessor->getTupleDesc(),
-        pInAccessor->getTupleFormat());
+    if (params.outputTupleDesc.empty()) {
+        pOutAccessor->setTupleShape(
+            pInAccessor->getTupleDesc(),
+            pInAccessor->getTupleFormat());
+    }
+    
+    SingleOutputExecStream::prepare(params);
 }
 
 void ConduitExecStream::open(bool restart)
 {
-    ExecStream::open(restart);
+    SingleOutputExecStream::open(restart);
     if (restart) {
         // restart input
         pInAccessor->clear();
@@ -64,14 +56,27 @@ void ConduitExecStream::open(bool restart)
     }
 }
 
-ExecStreamBufProvision ConduitExecStream::getOutputBufProvision() const
-{
-    return BUFPROV_CONSUMER;
-}
-
 ExecStreamBufProvision ConduitExecStream::getInputBufProvision() const
 {
     return BUFPROV_PRODUCER;
+}
+
+ExecStreamResult ConduitExecStream::precheckConduitInput()
+{
+    switch (pInAccessor->getState()) {
+    case EXECBUF_IDLE:
+        pInAccessor->requestProduction();
+        // NOTE:  fall through
+    case EXECBUF_NEED_PRODUCTION:
+        return EXECRC_NEED_INPUT;
+    case EXECBUF_EOS:
+        pOutAccessor->markEOS();
+        return EXECRC_EOS;
+    case EXECBUF_NEED_CONSUMPTION:
+        return EXECRC_OUTPUT;
+    default:
+        permAssert(false);
+    }
 }
 
 FENNEL_END_CPPFILE("$Id$");

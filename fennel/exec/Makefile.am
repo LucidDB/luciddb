@@ -12,7 +12,7 @@ ExecStreamScheduler.cpp \
 MockProducerStream.cpp \
 ScratchBufferStream.cpp \
 SegBufferStream.cpp \
-SourceExecStream.cpp
+SingleOutputExecStream.cpp
 
 DESIGN_DOC=SchedulerDesign.cpp
 EXTRA_DIST=$(DESIGN_DOC)

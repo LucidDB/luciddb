@@ -31,11 +31,16 @@ txn:  transaction logging and recovery
 
 tuple:  tuple representation
 
+exec:  execution stream framework
+
 btree:  B-plus tree implementation
 
 db:  database implementation (top-level container)
 
-xo:  tuple stream implementation
+xo:  tuple stream implementation (deprecated)
+
+ftrs:  Fennel Transactional Row Store, a table implementation built on
+top of the btree library
 
 test:  unit tests
 

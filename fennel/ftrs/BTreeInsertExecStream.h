@@ -18,52 +18,54 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-#ifndef Fennel_ScratchBufferStream_Included
-#define Fennel_ScratchBufferStream_Included
+#ifndef Fennel_BTreeInsertExecStream_Included
+#define Fennel_BTreeInsertExecStream_Included
 
+#include "fennel/ftrs/BTreeExecStream.h"
 #include "fennel/exec/ConduitExecStream.h"
-#include "fennel/segment/SegPageLock.h"
+#include "fennel/tuple/TupleData.h"
+#include "fennel/tuple/TupleAccessor.h"
+#include "fennel/common/FemEnums.h"
 
 FENNEL_BEGIN_NAMESPACE
 
 /**
- * ScratchBufferStreamParams defines parameters for ScratchBufferStream.
+ * BTreeInserterParams defines parameters for instantiating a BTreeInserter.
  */
-struct ScratchBufferStreamParams : public ConduitExecStreamParams
+struct BTreeInsertExecStreamParams
+    : public BTreeExecStreamParams, public ConduitExecStreamParams
 {
+    Distinctness distinctness;
 };
-    
+
 /**
- * ScratchBufferStream is an adapter for converting the output of an upstream
- * BUFPROV_CONSUMER producer for use by a downstream BUFPROV_PRODUCER consumer.
- * The implementation works by allocating a scratch buffer; the
- * upstream producer writes its results into this buffer, and the
- * downstream consumer reads input from this buffer.
+ * BTreeInsertExecStream inserts tuples into a BTree, reading them from an
+ * upstream stream producer.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-class ScratchBufferStream : public ConduitExecStream
+class BTreeInsertExecStream : public BTreeExecStream, public ConduitExecStream
 {
-    SegmentAccessor scratchAccessor;
-    SegPageLock bufferLock;
-    PConstBuffer pLastConsumptionEnd;
+    Distinctness distinctness;
+    
+protected:
+    SharedBTreeWriter pWriter;
+    
+    virtual void closeImpl();
     
 public:
     // implement ExecStream
-    virtual void prepare(ScratchBufferStreamParams const &params);
+    virtual void prepare(BTreeInsertExecStreamParams const &params);
     virtual void getResourceRequirements(
         ExecStreamResourceQuantity &minQuantity,
         ExecStreamResourceQuantity &optQuantity);
     virtual void open(bool restart);
     virtual ExecStreamResult execute(ExecStreamQuantum const &quantum);
-    virtual void closeImpl();
-    virtual ExecStreamBufProvision getOutputBufProvision() const;
-    virtual ExecStreamBufProvision getInputBufProvision() const;
 };
 
 FENNEL_END_NAMESPACE
 
 #endif
 
-// End ScratchBufferStream.h
+// End BTreeInsertExecStream.h

@@ -27,14 +27,17 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 
 void CartesianJoinStream::prepare(CartesianJoinStreamParams const &params)
 {
-    ConfluenceExecStream::prepare(params);
     assert(inAccessors.size() == 2);
+    
     pLeftBufAccessor = inAccessors[0];
     assert(pLeftBufAccessor);
+    
     pRightBufAccessor = inAccessors[1];
     assert(pRightBufAccessor);
+    
     TupleDescriptor const &leftDesc = pLeftBufAccessor->getTupleDesc();
     TupleDescriptor const &rightDesc = pRightBufAccessor->getTupleDesc();
+    
     TupleDescriptor outputDesc;
     outputDesc.insert(outputDesc.end(),leftDesc.begin(),leftDesc.end());
     outputDesc.insert(outputDesc.end(),rightDesc.begin(),rightDesc.end());
@@ -42,6 +45,8 @@ void CartesianJoinStream::prepare(CartesianJoinStreamParams const &params)
     pOutAccessor->setTupleShape(outputDesc);
 
     nLeftAttributes = leftDesc.size();
+    
+    ConfluenceExecStream::prepare(params);
 }
 
 ExecStreamResult CartesianJoinStream::execute(ExecStreamQuantum const &quantum)
@@ -58,7 +63,7 @@ ExecStreamResult CartesianJoinStream::execute(ExecStreamQuantum const &quantum)
     uint nTuplesProduced = 0;
     
     for (;;) {
-        if (!pLeftBufAccessor->isTupleUnmarshalled()) {
+        if (!pLeftBufAccessor->isTupleConsumptionPending()) {
             if (pLeftBufAccessor->getState() == EXECBUF_NEED_CONSUMPTION) {
                 pLeftBufAccessor->unmarshalTuple(outputData);
             } else {
@@ -80,9 +85,9 @@ ExecStreamResult CartesianJoinStream::execute(ExecStreamQuantum const &quantum)
             }
         }
         for (;;) {
-            if (!pRightBufAccessor->isTupleUnmarshalled()) {
+            if (!pRightBufAccessor->isTupleConsumptionPending()) {
                 if (pRightBufAccessor->getState() == EXECBUF_EOS) {
-                    pLeftBufAccessor->consumeUnmarshalledTuple();
+                    pLeftBufAccessor->consumeTuple();
                     // restart right input stream
                     pGraph->getStreamInput(getStreamId(),1)->open(true);
                     // NOTE: break out of the inner for loop, which will take
@@ -118,7 +123,7 @@ ExecStreamResult CartesianJoinStream::execute(ExecStreamQuantum const &quantum)
                 }
             }
             
-            pRightBufAccessor->consumeUnmarshalledTuple();
+            pRightBufAccessor->consumeTuple();
             
             if (nTuplesProduced >= quantum.nTuplesMax) {
                 return EXECRC_OUTPUT;

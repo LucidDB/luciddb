@@ -260,9 +260,18 @@ public:
     inline bool produceTuple(TupleData const &tupleData);
 
     /**
+     * Accesses a tuple from getConsumptionStart() but does not unmarshal it or
+     * consumer it.  Once this is called, it may not be called again until
+     * consumeTuple has been called.
+     *
+     * @return same as getConsumptionTupleAccessor()
+     */
+    inline TupleAccessor &accessConsumptionTuple();
+
+    /**
      * Unmarshals a tuple from getConsumptionStart() but does
      * not consume it.  Once this is called,  it may not be called
-     * again until consumeUnmarshalledTuple has been called.
+     * again until consumeTuple has been called.
      *
      * @param tupleData receives unmarshalled data
      *
@@ -271,15 +280,21 @@ public:
     inline void unmarshalTuple(TupleData &tupleData, uint iFirstDatum = 0);
 
     /**
-     * Consumes last tuple unmarshalled via unmarshalTuple().
+     * Consumes last tuple accessed via accessConsumptionTuple() or
+     * unmarshalTuple().
      */
-    inline void consumeUnmarshalledTuple();
+    inline void consumeTuple();
 
     /**
-     * @return whether unmarshalTuple has been called without a
-     * corresponding call to consumeUnmarshalledTuple
+     * @return whether accessConsumptionTuple() or unmarshalTuple() has been
+     * called without a corresponding call to consumeTuple()
      */
-    inline bool isTupleUnmarshalled() const;
+    inline bool isTupleConsumptionPending() const;
+
+    /**
+     * @return a TupleAccessor suitable for use in consumption
+     */
+    inline TupleAccessor &getConsumptionTupleAccessor();
 
     /**
      * @return a TupleAccessor suitable for use in tracing buffer contents
@@ -474,17 +489,23 @@ inline bool ExecStreamBufAccessor::produceTuple(TupleData const &tupleData)
     }
 }
 
-inline void ExecStreamBufAccessor::unmarshalTuple(
-    TupleData &tupleData, uint iFirstDatum)
+inline TupleAccessor &ExecStreamBufAccessor::accessConsumptionTuple()
 {
     assert(state == EXECBUF_NEED_CONSUMPTION);
     assert(!tupleConsumptionAccessor.getCurrentTupleBuf());
     
     tupleConsumptionAccessor.setCurrentTupleBuf(getConsumptionStart());
+    return tupleConsumptionAccessor;
+}
+
+inline void ExecStreamBufAccessor::unmarshalTuple(
+    TupleData &tupleData, uint iFirstDatum)
+{
+    accessConsumptionTuple();
     tupleConsumptionAccessor.unmarshal(tupleData, iFirstDatum);
 }
 
-inline void ExecStreamBufAccessor::consumeUnmarshalledTuple()
+inline void ExecStreamBufAccessor::consumeTuple()
 {
     assert(tupleConsumptionAccessor.getCurrentTupleBuf());
     
@@ -493,13 +514,18 @@ inline void ExecStreamBufAccessor::consumeUnmarshalledTuple()
     tupleConsumptionAccessor.resetCurrentTupleBuf();
 }
 
-inline bool ExecStreamBufAccessor::isTupleUnmarshalled() const
+inline bool ExecStreamBufAccessor::isTupleConsumptionPending() const
 {
     if (tupleConsumptionAccessor.getCurrentTupleBuf()) {
         return true;
     } else {
         return false;
     }
+}
+
+inline TupleAccessor &ExecStreamBufAccessor::getConsumptionTupleAccessor()
+{
+    return tupleConsumptionAccessor;
 }
 
 inline TupleAccessor &ExecStreamBufAccessor::getTraceTupleAccessor()

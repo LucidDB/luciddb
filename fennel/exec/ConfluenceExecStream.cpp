@@ -31,29 +31,18 @@ void ConfluenceExecStream::setInputBufAccessors(
     inAccessors = inAccessorsInit;
 }
 
-void ConfluenceExecStream::setOutputBufAccessors(
-    std::vector<SharedExecStreamBufAccessor> const &outAccessors)
+void ConfluenceExecStream::prepare(ConfluenceExecStreamParams const &params)
 {
-    assert(outAccessors.size() == 1);
-    pOutAccessor = outAccessors[0];
-}
-
-void ConfluenceExecStream::prepare(ExecStreamParams const &params)
-{
-    ExecStream::prepare(params);
+    SingleOutputExecStream::prepare(params);
     
-    assert(pOutAccessor);
-
     for (uint i = 0; i < inAccessors.size(); ++i) {
         assert(inAccessors[i]->getProvision() == getInputBufProvision());
     }
-
-    assert(pOutAccessor->getProvision() == getOutputBufProvision());
 }
 
 void ConfluenceExecStream::open(bool restart)
 {
-    ExecStream::open(restart);
+    SingleOutputExecStream::open(restart);
     if (restart) {
         // restart inputs
         for (uint i = 0; i < inAccessors.size(); ++i) {
@@ -61,11 +50,6 @@ void ConfluenceExecStream::open(bool restart)
             pGraph->getStreamInput(getStreamId(),i)->open(true);
         }
     }
-}
-
-ExecStreamBufProvision ConfluenceExecStream::getOutputBufProvision() const
-{
-    return BUFPROV_CONSUMER;
 }
 
 ExecStreamBufProvision ConfluenceExecStream::getInputBufProvision() const
