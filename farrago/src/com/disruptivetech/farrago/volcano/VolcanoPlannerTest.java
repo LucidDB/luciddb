@@ -30,6 +30,7 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.type.*;
 
+import java.util.*;
 
 /**
  * A <code>VolcanoPlannerTest</code> is a unit-test for {@link VolcanoPlanner
@@ -75,6 +76,7 @@ public class VolcanoPlannerTest extends TestCase
     public void testTransformLeaf()
     {
         VolcanoPlanner planner = new VolcanoPlanner();
+
         planner.addCallingConvention(CallingConvention.NONE);
         planner.addCallingConvention(PHYS_CALLING_CONVENTION);
 
@@ -204,6 +206,119 @@ public class VolcanoPlannerTest extends TestCase
     public void testWithoutRemoveTrivialProject()
     {
         removeTrivialProject(false);
+    }
+
+    /**
+     * Test whether planner correctly notifies listeners of events.
+     */
+    public void testListener()
+    {
+        TestListener listener = new TestListener();
+
+        VolcanoPlanner planner = new VolcanoPlanner();
+        planner.addListener(listener);
+
+        planner.addCallingConvention(CallingConvention.NONE);
+        planner.addCallingConvention(PHYS_CALLING_CONVENTION);
+
+        planner.addRule(new PhysLeafRule());
+
+        NoneLeafRel leafRel = new NoneLeafRel(
+                newCluster(planner),
+                "a");
+        RelNode convertedRel =
+            planner.changeConvention(leafRel, PHYS_CALLING_CONVENTION);
+        planner.setRoot(convertedRel);
+        RelNode result = planner.chooseDelegate().findBestExp();
+        assertTrue(result instanceof PhysLeafRel);
+        
+        List eventList = listener.getEventList();
+
+        // add node
+        checkEvent(
+            eventList, 0, 
+            RelOptListener.RelEquivalenceEvent.class,
+            leafRel,
+            null);
+        
+        // internal subset
+        checkEvent(
+            eventList, 1, 
+            RelOptListener.RelEquivalenceEvent.class,
+            null,
+            null);
+
+        // before rule
+        checkEvent(
+            eventList, 2, 
+            RelOptListener.RuleAttemptedEvent.class,
+            leafRel,
+            PhysLeafRule.class);
+
+        // before rule
+        checkEvent(
+            eventList, 3, 
+            RelOptListener.RuleProductionEvent.class,
+            result,
+            PhysLeafRule.class);
+
+        // result of rule
+        checkEvent(
+            eventList, 4, 
+            RelOptListener.RelEquivalenceEvent.class,
+            result,
+            null);
+        
+        // after rule
+        checkEvent(
+            eventList, 5, 
+            RelOptListener.RuleProductionEvent.class,
+            result,
+            PhysLeafRule.class);
+
+        // after rule
+        checkEvent(
+            eventList, 6, 
+            RelOptListener.RuleAttemptedEvent.class,
+            leafRel,
+            PhysLeafRule.class);
+
+        // choose plan
+        checkEvent(
+            eventList, 7,
+            RelOptListener.RelChosenEvent.class,
+            result,
+            null);
+
+        // finish choosing plan
+        checkEvent(
+            eventList, 8,
+            RelOptListener.RelChosenEvent.class,
+            null,
+            null);
+    }
+
+    private void checkEvent(
+        List eventList,
+        int iEvent,
+        Class expectedEventClass,
+        RelNode expectedRel,
+        Class expectedRuleClass)
+    {
+        assertTrue(iEvent < eventList.size());
+        RelOptListener.RelEvent event = (RelOptListener.RelEvent)
+            eventList.get(iEvent);
+        assertSame(expectedEventClass, event.getClass());
+        if (expectedRel != null) {
+            assertSame(expectedRel, event.getRel());
+        }
+        if (expectedRuleClass != null) {
+            RelOptListener.RuleEvent ruleEvent =
+                (RelOptListener.RuleEvent) event;
+            assertSame(
+                expectedRuleClass,
+                ruleEvent.getRuleCall().rule.getClass());
+        }
     }
 
     //~ Inner Classes ---------------------------------------------------------
@@ -502,6 +617,53 @@ public class VolcanoPlannerTest extends TestCase
             call.transformTo(new PhysLeafRel(
                     childRel.getCluster(),
                     "b"));
+        }
+    }
+
+    private static class TestListener implements RelOptListener
+    {
+        private List eventList;
+
+        TestListener()
+        {
+            eventList = new ArrayList();
+        }
+
+        List getEventList()
+        {
+            return eventList;
+        }
+
+        private void recordEvent(RelEvent event)
+        {
+            eventList.add(event);
+        }
+        
+        // implement RelOptListener
+        public void relChosen(RelChosenEvent event)
+        {
+            recordEvent(event);
+        }
+        
+        // implement RelOptListener
+        public void relEquivalenceFound(RelEquivalenceEvent event)
+        {
+            if (!event.isPhysical()) {
+                return;
+            }
+            recordEvent(event);
+        }
+        
+        // implement RelOptListener
+        public void ruleAttempted(RuleAttemptedEvent event)
+        {
+            recordEvent(event);
+        }
+        
+        // implement RelOptListener
+        public void ruleProductionSucceeded(RuleProductionEvent event)
+        {
+            recordEvent(event);
         }
     }
 }

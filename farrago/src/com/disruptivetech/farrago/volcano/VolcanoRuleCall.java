@@ -78,7 +78,28 @@ public class VolcanoRuleCall extends RelOptRuleCall
                     + RelOptUtil.toString(rels) + " created " + rel);
             }
 
+            if (volcanoPlanner.listener != null) {
+                RelOptListener.RuleProductionEvent event =
+                    new RelOptListener.RuleProductionEvent(
+                        volcanoPlanner,
+                        rel,
+                        this,
+                        true);
+                volcanoPlanner.listener.ruleProductionSucceeded(event);
+            }
+            
             Util.discard(planner.register(rel, rels[0]));
+            
+            if (volcanoPlanner.listener != null) {
+                RelOptListener.RuleProductionEvent event =
+                    new RelOptListener.RuleProductionEvent(
+                        volcanoPlanner,
+                        rel,
+                        this,
+                        false);
+                volcanoPlanner.listener.ruleProductionSucceeded(event);
+            }
+            
         } catch (Throwable e) {
             throw Util.newInternal(e,
                 "Error occurred while applying rule " + rule);
@@ -95,7 +116,29 @@ public class VolcanoRuleCall extends RelOptRuleCall
                 tracer.finest("Apply rule [" + rule + "] to ["
                     + RelOptUtil.toString(rels) + "]");
             }
+            
+            if (volcanoPlanner.listener != null) {
+                RelOptListener.RuleAttemptedEvent event =
+                    new RelOptListener.RuleAttemptedEvent(
+                        volcanoPlanner,
+                        rels[0],
+                        this,
+                        true);
+                volcanoPlanner.listener.ruleAttempted(event);
+            }
+            
             rule.onMatch(this);
+            
+            if (volcanoPlanner.listener != null) {
+                RelOptListener.RuleAttemptedEvent event =
+                    new RelOptListener.RuleAttemptedEvent(
+                        volcanoPlanner,
+                        rels[0],
+                        this,
+                        false);
+                volcanoPlanner.listener.ruleAttempted(event);
+            }
+            
         } catch (Throwable e) {
             throw Util.newInternal(e, "Error while applying rule " + rule);
         }

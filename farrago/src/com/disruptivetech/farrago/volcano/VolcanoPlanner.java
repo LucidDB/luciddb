@@ -112,6 +112,11 @@ public class VolcanoPlanner implements RelOptPlanner
      */
     private int registerCount;
 
+    /**
+     * Listener for this planner, or null if none set.
+     */
+    RelOptListener listener;
+
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -1106,6 +1111,17 @@ loop:
         return subset;
     }
 
+    // implement RelOptPlanner
+    public void addListener(RelOptListener newListener)
+    {
+        if (listener != null) {
+            // TODO jvs 17-Feb-2005:  define a MulticastListener to handle
+            // this for us
+            throw Util.needToImplement("multiple VolcanoPlanner listeners");
+        }
+        listener = newListener;
+    }
+    
     //~ Inner Classes ---------------------------------------------------------
 
     /**

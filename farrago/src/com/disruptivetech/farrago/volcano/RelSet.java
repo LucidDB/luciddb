@@ -141,8 +141,24 @@ class RelSet
         if (subset == null) {
             subset = new RelSubset(cluster, this, convention);
             subsets.add(subset);
+
+            VolcanoPlanner planner = (VolcanoPlanner) cluster.planner;
+            if (planner.listener != null) {
+                postEquivalenceEvent(planner, subset);
+            }
         }
         return subset;
+    }
+
+    private void postEquivalenceEvent(VolcanoPlanner planner, RelNode rel)
+    {
+        RelOptListener.RelEquivalenceEvent event =
+            new RelOptListener.RelEquivalenceEvent(
+                planner,
+                rel,
+                "equivalence class " + id,
+                false);
+        planner.listener.relEquivalenceFound(event);
     }
 
     /**
@@ -154,6 +170,11 @@ class RelSet
     {
         if (!rels.contains(rel)) {
             rels.add(rel);
+
+            VolcanoPlanner planner = (VolcanoPlanner) rel.getCluster().planner;
+            if (planner.listener != null) {
+                postEquivalenceEvent(planner, rel);
+            }
         }
         if (this.rel == null) {
             this.rel = rel;
@@ -213,7 +234,7 @@ class RelSet
             planner.rename((RelNode) parentRels.next());
         }
 
-        // Make sure the cost changes as a result of merging are propogated.
+        // Make sure the cost changes as a result of merging are propagated.
         for (Iterator relSubsets = subsets.iterator();
                 relSubsets.hasNext(); ) {
             RelSubset relSubset = (RelSubset)relSubsets.next();

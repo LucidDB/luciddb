@@ -175,6 +175,18 @@ public class RelSubset extends AbstractRelNode
         if (rels.contains(rel)) {
             return;
         }
+
+        VolcanoPlanner planner = (VolcanoPlanner) rel.getCluster().planner;
+        if (planner.listener != null) {
+            RelOptListener.RelEquivalenceEvent event =
+                new RelOptListener.RelEquivalenceEvent(
+                    planner,
+                    rel,
+                    this,
+                    true);
+            planner.listener.relEquivalenceFound(event);
+        }
+        
         rels.add(rel);
         set.addInternal(rel);
         Set variablesSet = RelOptUtil.getVariablesSet(rel);
@@ -194,6 +206,15 @@ public class RelSubset extends AbstractRelNode
     {
         CheapestPlanReplacer replacer = new CheapestPlanReplacer(planner);
         RelNode cheapest = RelOptUtil.go(replacer, this);
+        
+        if (planner.listener != null) {
+            RelOptListener.RelChosenEvent event =
+                new RelOptListener.RelChosenEvent(
+                    planner,
+                    null);
+            planner.listener.relChosen(event);
+        }
+        
         return cheapest;
     }
 
@@ -273,6 +294,17 @@ public class RelSubset extends AbstractRelNode
                 parent.replaceInput(ordinal, cheapest);
                 p = cheapest;
             }
+            
+            if (ordinal != -1) {
+                if (planner.listener != null) {
+                    RelOptListener.RelChosenEvent event =
+                        new RelOptListener.RelChosenEvent(
+                            planner,
+                            p);
+                    planner.listener.relChosen(event);
+                }
+            }
+            
             p.childrenAccept(this);
         }
     }

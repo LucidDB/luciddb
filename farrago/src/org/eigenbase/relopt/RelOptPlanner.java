@@ -150,6 +150,13 @@ public interface RelOptPlanner
      * this planner was created.
      */
     JavaRelImplementor getJavaRelImplementor(RelNode rel);
+
+    /**
+     * Adds a listener to this planner.  
+     *
+     * @param newListener new listener to be notified of events
+     */
+    void addListener(RelOptListener newListener);
 }
 
 
