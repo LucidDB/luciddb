@@ -1,7 +1,7 @@
 /*
 // Farrago is a relational database management system.
-// Copyright (C) 2003-2004 John V. Sichi.
-// Copyright (C) 2003-2004 Disruptive Tech
+// Copyright (C) 2003-2005 John V. Sichi.
+// Copyright (C) 2003-2005 Disruptive Tech
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
@@ -19,7 +19,6 @@
 */
 package net.sf.farrago.query;
 
-import java.nio.charset.*;
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
@@ -27,22 +26,22 @@ import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.fennel.*;
-import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
+import net.sf.farrago.session.FarragoSessionPlanner;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
-import org.eigenbase.rex.RexBuilder;
-import org.eigenbase.rex.RexNode;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
 
 
 /**
- * Static utilities for FennelRel implementations.  Examples in the comments
+ * Static utilities for FennelRel implementations.
+ *
+ * <p>Examples in the comments
  * refer to the test tables EMPS and DEPTS defined in
- * {@link net.sf.farrago.test.PopulateTestData}.  For an overview and
+ * <code>farrago/initsql/createSalesSchema.sql</code>.  For an overview and
  * terminology, please see
  * <a href="http://farrago.sf.net/design/TableIndexing.html">
  * the design docs</a>.
@@ -197,7 +196,7 @@ public abstract class FennelRelUtil
         // TODO:  return values correspond to enum
         // StandardTypeDescriptorOrdinal in Fennel; should be single-sourced
         // somehow
-        // NOTE: Any changes must be copied into 
+        // NOTE: Any changes must be copied into
         // 1) enum StandardTypeDescriptorOrdinal
         // 2) this method
         // 3) StandardTypeDescriptor class
@@ -234,6 +233,25 @@ public abstract class FennelRelUtil
         default:
             throw Util.newInternal("unimplemented SQL type number");
         }
+    }
+
+    /**
+     * Returns the repository that a relational expression belongs to.
+     */
+    public static FarragoPreparingStmt getPreparingStmt(FennelRel rel)
+    {
+        RelOptCluster cluster = rel.getCluster();
+        FarragoSessionPlanner farragoPlanner =
+            (FarragoSessionPlanner) cluster.getPlanner();
+        return (FarragoPreparingStmt)farragoPlanner.getPreparingStmt();
+    }
+
+    /**
+     * Returns the repository that a relational expression belongs to.
+     */
+    public static FarragoRepos getRepos(FennelRel rel)
+    {
+        return getPreparingStmt(rel).getRepos();
     }
 }
 

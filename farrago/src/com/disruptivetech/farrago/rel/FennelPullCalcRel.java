@@ -1,7 +1,7 @@
 /*
 // $Id$
 // Farrago is a relational database management system.
-// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2002-2005 Disruptive Tech
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@ import com.disruptivetech.farrago.volcano.*;
 
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.query.*;
+import net.sf.farrago.catalog.FarragoRepos;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
@@ -89,7 +90,7 @@ public class FennelPullCalcRel extends FennelCalcRel implements FennelPullRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
         FemCalcTupleStreamDef calcStream =
-            getRepos().newFemCalcTupleStreamDef();
+            FennelRelUtil.getRepos(this).newFemCalcTupleStreamDef();
 
         calcStream.getInput().add(
             implementor.visitFennelChild((FennelRel) child));

@@ -1,7 +1,7 @@
 /*
 // $Id$
 // Farrago is a relational database management system.
-// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2002-2005 Disruptive Tech
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -39,7 +39,7 @@ import org.eigenbase.sql.type.SqlTypeName;
  * operator {@link org.eigenbase.sql.fun.SqlMultisetOperator}</li>
  * </ul></p>
  *
- * @author Wael Chatila 
+ * @author Wael Chatila
  * @since Dec 11, 2004
  * @version $Id$
  */
@@ -68,16 +68,17 @@ public class FennelPullCollectRel extends FennelSingleRel
     }
 
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor) {
+        final FarragoRepos repos = FennelRelUtil.getRepos(this);
         FemCollectTupleStreamDef collectStreamDef =
-            getRepos().newFemCollectTupleStreamDef();
+            repos.newFemCollectTupleStreamDef();
 
         collectStreamDef.getInput().add(
             implementor.visitFennelChild((FennelRel) child));
-        FemTupleDescriptor outTupleDesc = getRepos().newFemTupleDescriptor();
+        FemTupleDescriptor outTupleDesc = repos.newFemTupleDescriptor();
         RelDataType type=
             cluster.typeFactory.createSqlType(SqlTypeName.Varbinary, 4096);
         type = cluster.typeFactory.createTypeWithNullability(type, true);
-        FennelRelUtil.addTupleAttrDescriptor(getRepos(), outTupleDesc, type);
+        FennelRelUtil.addTupleAttrDescriptor(repos, outTupleDesc, type);
         collectStreamDef.setOutputDesc(outTupleDesc);
         return collectStreamDef;
     }

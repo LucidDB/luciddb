@@ -1,7 +1,7 @@
 /*
 // Farrago is a relational database management system.
-// Copyright (C) 2003-2004 John V. Sichi.
-// Copyright (C) 2003-2004 Disruptive Tech
+// Copyright (C) 2003-2005 John V. Sichi.
+// Copyright (C) 2003-2005 Disruptive Tech
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
@@ -98,14 +98,14 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
             (Expression) implementor.visitChild(this, 0, child);
 
         FennelRel fennelRel = (FennelRel) child;
-        FarragoRepos repos = fennelRel.getPreparingStmt().getRepos();
+        FarragoRepos repos = FennelRelUtil.getRepos(fennelRel);
 
-        FarragoTypeFactory factory =
-            fennelRel.getPreparingStmt().getFarragoTypeFactory();
-        
+        final FarragoPreparingStmt stmt =
+            FennelRelUtil.getPreparingStmt(fennelRel);
+        FarragoTypeFactory factory = stmt.getFarragoTypeFactory();
+
         final RelDataType rowType = getRowType();
-        OJClass rowClass = OJUtil.typeToOJClass(
-            rowType, factory);
+        OJClass rowClass = OJUtil.typeToOJClass(rowType, factory);
 
         FennelRelImplementor farragoRelImplementor =
             (FennelRelImplementor) implementor;
@@ -118,7 +118,7 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
         FemTupleAccessor tupleAccessor =
             FennelRelUtil.getAccessorForTupleDescriptor(
                 repos,
-                fennelRel.getPreparingStmt().getFennelDbHandle(),
+                stmt.getFennelDbHandle(),
                 tupleDesc);
 
         // Generate
@@ -363,7 +363,7 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
         argList.add(Literal.makeLiteral(rootStreamName));
         argList.add(childrenExp);
         return new MethodCall(
-            fennelRel.getPreparingStmt().getConnectionVariable(),
+            stmt.getConnectionVariable(),
             "newFennelIterator",
             argList);
     }

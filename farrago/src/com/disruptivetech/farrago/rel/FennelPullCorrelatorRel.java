@@ -2,6 +2,7 @@ package com.disruptivetech.farrago.rel;
 
 import net.sf.farrago.query.*;
 import net.sf.farrago.fem.fennel.*;
+import net.sf.farrago.catalog.FarragoRepos;
 import org.eigenbase.relopt.*;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.CollectRel;
@@ -91,14 +92,14 @@ public class FennelPullCorrelatorRel extends FennelPullDoubleRel
     // implement FennelRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
+        FarragoRepos repos = FennelRelUtil.getRepos(this);
         FemCorrelationJoinStreamDef streamDef =
-            getRepos().newFemCorrelationJoinStreamDef();
+            repos.newFemCorrelationJoinStreamDef();
 
         for (int i = 0; i < correlations.size(); i++) {
             CorrelatorRel.Correleation correlation =
                 (CorrelatorRel.Correleation) correlations.get(i);
-            FemCorrelation newFemCorrelation =
-                getRepos().newFemCorrelation();
+            FemCorrelation newFemCorrelation = repos.newFemCorrelation();
             newFemCorrelation.setId(correlation.id);
             newFemCorrelation.setOffset(correlation.offset);
             streamDef.getCorrelations().add(newFemCorrelation);

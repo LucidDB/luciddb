@@ -29,18 +29,15 @@ import java.util.Collections;
  */
 public class FennelPullOneRowRel extends AbstractRelNode implements FennelPullRel
 {
-    final private FarragoPreparingStmt stmt;
-
-    public FennelPullOneRowRel(RelOptCluster cluster, FarragoPreparingStmt stmt)
+    public FennelPullOneRowRel(RelOptCluster cluster)
     {
         super(cluster);
-        this.stmt = stmt;
     }
 
     // override Object (public, does not throw CloneNotSupportedException)
     public Object clone()
     {
-        return new FennelPullOneRowRel(cluster, stmt);
+        return new FennelPullOneRowRel(cluster);
     }
 
     protected RelDataType deriveRowType()
@@ -53,11 +50,6 @@ public class FennelPullOneRowRel extends AbstractRelNode implements FennelPullRe
         return FENNEL_PULL_CONVENTION;
     }
 
-    public FarragoPreparingStmt getPreparingStmt()
-    {
-        return stmt;
-    }
-
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
         return planner.makeTinyCost();
@@ -65,23 +57,19 @@ public class FennelPullOneRowRel extends AbstractRelNode implements FennelPullRe
 
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
+        FarragoRepos repos = FennelRelUtil.getRepos(this);
         FemMockTupleStreamDef streamDef =
-            getRepos().newFemMockTupleStreamDef();
+            repos.newFemMockTupleStreamDef();
 
         streamDef.setRowCount(1);
         return streamDef;
-    }
-
-    private FarragoRepos getRepos()
-    {
-        return getPreparingStmt().getRepos();
     }
 
     public Object implementFennelChild(FennelRelImplementor implementor)
     {
         return Literal.constantNull();
     }
-    
+
     public RelFieldCollation[] getCollations()
     {
         return RelFieldCollation.emptyCollationArray;

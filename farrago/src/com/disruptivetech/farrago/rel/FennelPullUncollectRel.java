@@ -1,7 +1,7 @@
 /*
 // $Id$
 // Farrago is a relational database management system.
-// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2002-2005 Disruptive Tech
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@ import net.sf.farrago.fem.fennel.FemExecutionStreamDef;
 import net.sf.farrago.fem.fennel.FemCollectTupleStreamDef;
 import net.sf.farrago.fem.fennel.FemUncollectTupleStreamDef;
 import net.sf.farrago.fem.fennel.FemTupleDescriptor;
+import net.sf.farrago.catalog.FarragoRepos;
 import org.eigenbase.relopt.*;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.UncollectRel;
@@ -39,7 +40,7 @@ import org.eigenbase.sql.type.SqlTypeName;
  * operator {@link org.eigenbase.sql.fun.SqlStdOperatorTable#unnestOperator}</li>
  * </ul></p>
  *
- * @author Wael Chatila 
+ * @author Wael Chatila
  * @since Dec 12, 2004
  * @version $Id$
  */
@@ -64,8 +65,9 @@ public class FennelPullUncollectRel extends FennelSingleRel
     }
 
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor) {
+        final FarragoRepos repos = FennelRelUtil.getRepos(this);
         FemUncollectTupleStreamDef uncollectStream =
-            getRepos().newFemUncollectTupleStreamDef();
+            repos.newFemUncollectTupleStreamDef();
 
         uncollectStream.getInput().add(
             implementor.visitFennelChild((FennelRel) child));

@@ -1,7 +1,7 @@
 /*
 // Farrago is a relational database management system.
-// Copyright (C) 2003-2004 John V. Sichi.
-// Copyright (C) 2003-2004 Disruptive Tech
+// Copyright (C) 2003-2005 John V. Sichi.
+// Copyright (C) 2003-2005 Disruptive Tech
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
@@ -88,12 +88,6 @@ abstract class FennelDoubleRel extends AbstractRelNode implements FennelRel
     }
 
     // implement FennelRel
-    public FarragoPreparingStmt getPreparingStmt()
-    {
-        return getFennelLeftInput().getPreparingStmt();
-    }
-
-    // implement FennelRel
     public FarragoTypeFactory getFarragoTypeFactory()
     {
         return (FarragoTypeFactory) cluster.typeFactory;
@@ -104,8 +98,9 @@ abstract class FennelDoubleRel extends AbstractRelNode implements FennelRel
     {
         Expression expr1 = (Expression) implementor.visitChild(this, 0, left);
         Expression expr2 = (Expression) implementor.visitChild(this, 1, right);
+        FarragoPreparingStmt stmt = FennelRelUtil.getPreparingStmt(this);
         return new MethodCall(
-            getPreparingStmt().getConnectionVariable(),
+            stmt.getConnectionVariable(),
             "dummyPair",
             new ExpressionList(expr1, expr2));
     }
@@ -117,16 +112,6 @@ abstract class FennelDoubleRel extends AbstractRelNode implements FennelRel
         RelDataType rightType = right.getRowType();
         return cluster.typeFactory.createJoinType(
             new RelDataType [] { leftType, rightType });
-    }
-
-    /**
-     * .
-     *
-     * @return repos for object definitions
-     */
-    protected FarragoRepos getRepos()
-    {
-        return getPreparingStmt().getRepos();
     }
 
     /**

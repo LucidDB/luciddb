@@ -1,6 +1,6 @@
 /*
 // Farrago is a relational database management system.
-// Copyright (C) 2003-2004 John V. Sichi.
+// Copyright (C) 2003-2005 John V. Sichi.
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
@@ -91,7 +91,7 @@ class FtrsIndexJoinRule extends RelOptRule
             return;
         }
 
-        FarragoRepos repos = scanRel.getPreparingStmt().getRepos();
+        FarragoRepos repos = FennelRelUtil.getRepos(scanRel);
         int [] joinFieldOrdinals = new int[2];
         if (!RelOptUtil.analyzeSimpleEquiJoin(joinRel, joinFieldOrdinals)) {
             return;
@@ -128,8 +128,6 @@ class FtrsIndexJoinRule extends RelOptRule
         RelNode leftRel,
         RelOptRuleCall call)
     {
-        FarragoRepos repos = scanRel.getPreparingStmt().getRepos();
-
         // TODO:  support compound keys
         boolean isUnique =
             index.isUnique() && (index.getIndexedFeature().size() == 1);
@@ -148,8 +146,8 @@ class FtrsIndexJoinRule extends RelOptRule
         RelDataType rightType =
             scanRel.getRowType().getFields()[rightOrdinal].getType();
 
-        FarragoTypeFactory typeFactory =
-            scanRel.getPreparingStmt().getFarragoTypeFactory();
+        FarragoPreparingStmt stmt = FennelRelUtil.getPreparingStmt(scanRel);
+        FarragoTypeFactory typeFactory = stmt.getFarragoTypeFactory();
 
         // decide what to do with nulls
         RelNode nullFilterRel;
@@ -178,7 +176,7 @@ class FtrsIndexJoinRule extends RelOptRule
                 typeFactory.createStructType(
                     new RelDataType [] { rightType },
                     new String [] { "rightColumn" });
-            
+
             RelDataType castRowType =
                 typeFactory.createJoinType(
                     new RelDataType [] {

@@ -1,6 +1,6 @@
 /*
 // Farrago is a relational database management system.
-// Copyright (C) 2003-2004 John V. Sichi.
+// Copyright (C) 2003-2005 John V. Sichi.
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
@@ -76,7 +76,7 @@ class FtrsScanToSearchRule extends RelOptRule
         FilterRel filter = (FilterRel) call.rels[0];
         FtrsIndexScanRel scan = (FtrsIndexScanRel) call.rels[1];
 
-        FarragoRepos repos = scan.getPreparingStmt().getRepos();
+        FarragoRepos repos = FennelRelUtil.getRepos(scan);
 
         // TODO: General framework for converting filters into ranges.  Build
         // on the rex expression pattern-matching framework?  Or maybe ANTLR
@@ -151,8 +151,6 @@ class FtrsScanToSearchRule extends RelOptRule
         RelOptRuleCall call,
         RexNode extraFilter)
     {
-        FarragoRepos repos = origScan.getPreparingStmt().getRepos();
-
         // TODO:  support compound keys
         if (!testIndexColumn(index, filterColumn)) {
             return;
@@ -178,11 +176,11 @@ class FtrsScanToSearchRule extends RelOptRule
         RelNode nullFilterRel = RelOptUtil.createNullFilter(keyRel, null);
 
         // Generate code to cast the literal to the index column type.
-        FarragoTypeFactory typeFactory =
-            origScan.getPreparingStmt().getFarragoTypeFactory();
+        FarragoPreparingStmt stmt = FennelRelUtil.getPreparingStmt(origScan);
+        FarragoTypeFactory typeFactory = stmt.getFarragoTypeFactory();
         RelDataType lhsRowType =
             typeFactory.createStructType(
-                new RelDataType [] { 
+                new RelDataType [] {
                     typeFactory.createCwmElementType(filterColumn)
                 },
                 new String [] { "filterColumn" });

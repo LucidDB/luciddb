@@ -1,7 +1,7 @@
 /*
 // Farrago is a relational database management system.
-// Copyright (C) 2003-2004 John V. Sichi.
-// Copyright (C) 2003-2004 Disruptive Tech
+// Copyright (C) 2003-2005 John V. Sichi.
+// Copyright (C) 2003-2005 Disruptive Tech
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
@@ -57,25 +57,18 @@ public class IteratorToFennelConverter extends ConverterRel
 {
     //~ Instance fields -------------------------------------------------------
 
-    private FarragoPreparingStmt stmt;
-
     //~ Constructors ----------------------------------------------------------
 
     /**
      * Creates a new IteratorToFennelConverter object.
      *
-     * @param stmt statement to use for catalog access
      * @param cluster RelOptCluster for this rel
      * @param child input rel producing rows to be converted to Fennel
-     * TupleStream representation
      */
-    public IteratorToFennelConverter(
-        FarragoPreparingStmt stmt,
-        RelOptCluster cluster,
+    public IteratorToFennelConverter(RelOptCluster cluster,
         RelNode child)
     {
         super(cluster, child);
-        this.stmt = stmt;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -86,16 +79,10 @@ public class IteratorToFennelConverter extends ConverterRel
         return FennelPullRel.FENNEL_PULL_CONVENTION;
     }
 
-    // implement FennelRel
-    public FarragoPreparingStmt getPreparingStmt()
-    {
-        return stmt;
-    }
-
     // implement RelNode
     public Object clone()
     {
-        return new IteratorToFennelConverter(stmt, cluster, child);
+        return new IteratorToFennelConverter(cluster, child);
     }
 
     public static Expression generateTupleWriter(
@@ -104,7 +91,7 @@ public class IteratorToFennelConverter extends ConverterRel
         RelDataType rowType)
     {
         FarragoTypeFactory factory = stmt.getFarragoTypeFactory();
-        
+
         OJClass ojClass = OJUtil.typeToOJClass(rowType, factory);
 
         FemTupleDescriptor tupleDesc =
@@ -297,6 +284,7 @@ public class IteratorToFennelConverter extends ConverterRel
         Expression childExp =
             javaRelImplementor.visitJavaChild(this, 0, (JavaRel) child);
 
+        FarragoPreparingStmt stmt = FennelRelUtil.getPreparingStmt(this);
         Expression newTupleWriterExp =
             generateTupleWriter(stmt, javaRelImplementor, rowType);
 
@@ -308,7 +296,7 @@ public class IteratorToFennelConverter extends ConverterRel
         exprList.add(newTupleWriterExp);
         exprList.add(childExp);
         return new MethodCall(
-            getPreparingStmt().getConnectionVariable(),
+            stmt.getConnectionVariable(),
             "newJavaTupleStream",
             exprList);
     }
@@ -316,7 +304,7 @@ public class IteratorToFennelConverter extends ConverterRel
     // implement FennelRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
-        FarragoRepos repos = getPreparingStmt().getRepos();
+        FarragoRepos repos = FennelRelUtil.getRepos(this);
 
         FemJavaTupleStreamDef streamDef = repos.newFemJavaTupleStreamDef();
         streamDef.setStreamId(getId());
@@ -336,11 +324,8 @@ public class IteratorToFennelConverter extends ConverterRel
      * per {@link AbstractRelNode#register}.
      *
      * @param planner Planner
-     * @param farragoPreparingStmt Context for the preparation process
      */
-    public static void register(
-        RelOptPlanner planner,
-        final FarragoPreparingStmt farragoPreparingStmt)
+    public static void register(RelOptPlanner planner)
     {
         planner.addRule(
             new ConverterRule(RelNode.class, CallingConvention.ITERATOR,
@@ -348,9 +333,7 @@ public class IteratorToFennelConverter extends ConverterRel
                 "IteratorToFennelPullRule") {
                 public RelNode convert(RelNode rel)
                 {
-                    return new IteratorToFennelConverter(
-                        farragoPreparingStmt,
-                        rel.getCluster(),
+                    return new IteratorToFennelConverter(rel.getCluster(),
                         rel);
                 }
             });

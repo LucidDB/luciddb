@@ -1,7 +1,7 @@
 /*
 // $Id$
 // Farrago is a relational database management system.
-// Copyright (C) 2004-2004 Disruptive Tech
+// Copyright (C) 2004-2005 Disruptive Tech
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -95,7 +95,7 @@ public class FennelWindowRel extends FennelSingleRel
         }
 
         // Create a plan object.
-        final FarragoRepos repos = getRepos();
+        final FarragoRepos repos = FennelRelUtil.getRepos(this);
         final FemWindowStreamDef windowStreamDef =
             repos.newFemWindowStreamDef();
         windowStreamDef.getInput().add(

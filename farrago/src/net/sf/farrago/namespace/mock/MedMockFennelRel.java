@@ -1,6 +1,6 @@
 /*
 // Farrago is a relational database management system.
-// Copyright (C) 2003-2004 John V. Sichi.
+// Copyright (C) 2003-2005 John V. Sichi.
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
@@ -71,12 +71,6 @@ class MedMockFennelRel extends TableAccessRel implements FennelPullRel
     }
 
     // implement FennelRel
-    public FarragoPreparingStmt getPreparingStmt()
-    {
-        return columnSet.getPreparingStmt();
-    }
-
-    // implement FennelRel
     public Object implementFennelChild(FennelRelImplementor implementor)
     {
         return Literal.constantNull();
@@ -85,7 +79,7 @@ class MedMockFennelRel extends TableAccessRel implements FennelPullRel
     // implement FennelRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
-        FarragoRepos repos = getPreparingStmt().getRepos();
+        final FarragoRepos repos = FennelRelUtil.getRepos(this);
 
         FemMockTupleStreamDef streamDef = repos.newFemMockTupleStreamDef();
         streamDef.setRowCount(columnSet.nRows);

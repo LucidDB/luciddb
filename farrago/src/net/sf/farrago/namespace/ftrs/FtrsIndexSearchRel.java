@@ -1,6 +1,6 @@
 /*
 // Farrago is a relational database management system.
-// Copyright (C) 2003-2004 John V. Sichi.
+// Copyright (C) 2003-2005 John V. Sichi.
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
@@ -205,7 +205,7 @@ class FtrsIndexSearchRel extends FennelPullSingleRel
     // implement FennelRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
-        FarragoRepos repos = getPreparingStmt().getRepos();
+        FarragoRepos repos = FennelRelUtil.getRepos(this);
 
         FemIndexSearchDef searchStream = repos.newFemIndexSearchDef();
 

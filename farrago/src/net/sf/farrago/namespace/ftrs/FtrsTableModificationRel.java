@@ -1,6 +1,6 @@
 /*
 // Farrago is a relational database management system.
-// Copyright (C) 2003-2004 John V. Sichi.
+// Copyright (C) 2003-2005 John V. Sichi.
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
@@ -70,6 +70,8 @@ class FtrsTableModificationRel extends TableModificationRel
         super(cluster, ftrsTable, connection, child, operation,
             updateColumnList);
         this.ftrsTable = ftrsTable;
+        assert ftrsTable.getPreparingStmt() ==
+            FennelRelUtil.getPreparingStmt(this);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -84,12 +86,6 @@ class FtrsTableModificationRel extends TableModificationRel
     public CallingConvention getConvention()
     {
         return FennelPullRel.FENNEL_PULL_CONVENTION;
-    }
-
-    // implement FennelRel
-    public FarragoPreparingStmt getPreparingStmt()
-    {
-        return ftrsTable.getPreparingStmt();
     }
 
     // implement FennelRel
@@ -149,7 +145,7 @@ class FtrsTableModificationRel extends TableModificationRel
             throw Util.needToImplement(ftrsTable.getCwmColumnSet());
         }
         CwmTable table = (CwmTable) ftrsTable.getCwmColumnSet();
-        FarragoRepos repos = getRepos();
+        FarragoRepos repos = FennelRelUtil.getRepos(this);
 
         List updateCwmColumnList = null;
 
@@ -227,8 +223,10 @@ class FtrsTableModificationRel extends TableModificationRel
                 repos.getFennelPackage().getFemIndexWriterDef()
                     .createFemIndexWriterDef();
             if (!FarragoCatalogUtil.isIndexTemporary(index)) {
+                final FarragoPreparingStmt stmt =
+                    FennelRelUtil.getPreparingStmt(this);
                 indexWriter.setRootPageId(
-                    getPreparingStmt().getIndexMap().getIndexRoot(index));
+                    stmt.getIndexMap().getIndexRoot(index));
             } else {
                 indexWriter.setRootPageId(-1);
             }
@@ -311,16 +309,6 @@ class FtrsTableModificationRel extends TableModificationRel
         }
 
         return tableWriterDef;
-    }
-
-    /**
-     * .
-     *
-     * @return repos for object definitions
-     */
-    FarragoRepos getRepos()
-    {
-        return getPreparingStmt().getRepos();
     }
 
     // implement FennelRel

@@ -1,6 +1,6 @@
 /*
 // Farrago is a relational database management system.
-// Copyright (C) 2003-2004 John V. Sichi.
+// Copyright (C) 2003-2005 John V. Sichi.
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
@@ -90,8 +90,9 @@ class FennelCartesianProductRel extends FennelPullDoubleRel
     // implement FennelRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
+        FarragoRepos repos = FennelRelUtil.getRepos(this);
         FemCartesianProductStreamDef streamDef =
-            getRepos().newFemCartesianProductStreamDef();
+            repos.newFemCartesianProductStreamDef();
 
         FemExecutionStreamDef leftInput =
             implementor.visitFennelChild((FennelRel) left);
@@ -114,12 +115,12 @@ class FennelCartesianProductRel extends FennelPullDoubleRel
 
         if (needBuffer) {
             FemBufferingTupleStreamDef buffer =
-                getRepos().newFemBufferingTupleStreamDef();
+                repos.newFemBufferingTupleStreamDef();
             buffer.setInMemory(false);
             buffer.setMultipass(true);
             buffer.setOutputDesc(
                 FennelRelUtil.createTupleDescriptorFromRowType(
-                    getRepos(),
+                    repos,
                     right.getRowType()));
 
             buffer.getInput().add(rightInput);

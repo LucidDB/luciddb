@@ -1,7 +1,7 @@
 /*
 // Farrago is a relational database management system.
-// Copyright (C) 2003-2004 John V. Sichi.
-// Copyright (C) 2003-2004 Disruptive Tech
+// Copyright (C) 2003-2005 John V. Sichi.
+// Copyright (C) 2003-2005 Disruptive Tech
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
@@ -53,25 +53,9 @@ public abstract class FennelSingleRel extends SingleRel implements FennelRel
     //~ Methods ---------------------------------------------------------------
 
     // implement FennelRel
-    public FarragoPreparingStmt getPreparingStmt()
-    {
-        return getFennelInput().getPreparingStmt();
-    }
-
-    // implement FennelRel
     public FarragoTypeFactory getFarragoTypeFactory()
     {
         return (FarragoTypeFactory) cluster.typeFactory;
-    }
-
-    /**
-     * .
-     *
-     * @return repos for object definitions
-     */
-    public FarragoRepos getRepos()
-    {
-        return getPreparingStmt().getRepos();
     }
 
     /**

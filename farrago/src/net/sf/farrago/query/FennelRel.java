@@ -1,7 +1,7 @@
 /*
 // Farrago is a relational database management system.
-// Copyright (C) 2003-2004 John V. Sichi.
-// Copyright (C) 2003-2004 Disruptive Tech
+// Copyright (C) 2003-2005 John V. Sichi.
+// Copyright (C) 2003-2005 Disruptive Tech
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
@@ -39,13 +39,6 @@ public interface FennelRel extends RelNode
 
     // TODO jvs 8-May-2004:  get rid of method getPreparingStmt();
     // instead, add a utility method for getting it from the cluster
-
-    /**
-     * .
-     *
-     * @return the FarragoPreparingStmt producing this relation
-     */
-    public FarragoPreparingStmt getPreparingStmt();
 
     /**
      * Converts this relational expression to {@link FemExecutionStreamDef}

@@ -1,7 +1,7 @@
 /*
 // Farrago is a relational database management system.
-// Copyright (C) 2003-2004 John V. Sichi.
-// Copyright (C) 2003-2004 Disruptive Tech
+// Copyright (C) 2003-2005 John V. Sichi.
+// Copyright (C) 2003-2005 Disruptive Tech
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
@@ -121,14 +121,15 @@ public class FennelSortRel extends FennelPullSingleRel
     // implement FennelRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
+        final FarragoRepos repos = FennelRelUtil.getRepos(this);
         FemSortingStreamDef sortingStream =
-            getRepos().newFemSortingStreamDef();
+            repos.newFemSortingStreamDef();
 
         sortingStream.setDistinctness(discardDuplicates
             ? DistinctnessEnum.DUP_DISCARD : DistinctnessEnum.DUP_ALLOW);
         sortingStream.setKeyProj(
             FennelRelUtil.createTupleProjection(
-                getRepos(),
+                repos,
                 keyProjection));
         sortingStream.getInput().add(
             implementor.visitFennelChild((FennelRel) child));

@@ -10,17 +10,14 @@ import org.eigenbase.rel.OneRowRel;
  * FennelOneRowRule generates an XO who simple outputs a single one row with the
  * value 0
  *
- * @author Wael Chatila 
+ * @author Wael Chatila
  * @since Feb 4, 2005
  * @version $Id$
  */
 public class FennelOneRowRule extends RelOptRule {
 
-    private FarragoPreparingStmt stmt;
-
-    public FennelOneRowRule(FarragoPreparingStmt stmt) {
+    public FennelOneRowRule() {
         super(new RelOptRuleOperand(OneRowRel.class, null));
-        this.stmt = stmt;
     }
 
     // implement RelOptRule
@@ -36,7 +33,7 @@ public class FennelOneRowRule extends RelOptRule {
         }
 
         FennelPullOneRowRel fennelOneRowRel =
-            new FennelPullOneRowRel(oneRowRel.getCluster(), stmt);
+            new FennelPullOneRowRel(oneRowRel.getCluster());
         call.transformTo(fennelOneRowRel);
     }
 }

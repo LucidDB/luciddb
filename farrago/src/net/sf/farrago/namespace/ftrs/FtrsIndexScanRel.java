@@ -1,6 +1,6 @@
 /*
 // Farrago is a relational database management system.
-// Copyright (C) 2003-2004 John V. Sichi.
+// Copyright (C) 2003-2005 John V. Sichi.
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
@@ -91,6 +91,8 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
         this.index = index;
         this.projectedColumns = projectedColumns;
         this.isOrderPreserving = isOrderPreserving;
+        assert ftrsTable.getPreparingStmt() ==
+            FennelRelUtil.getPreparingStmt(this);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -115,12 +117,6 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
     public CallingConvention getConvention()
     {
         return FennelPullRel.FENNEL_PULL_CONVENTION;
-    }
-
-    // implement FennelRel
-    public FarragoPreparingStmt getPreparingStmt()
-    {
-        return ftrsTable.getPreparingStmt();
     }
 
     // implement RelNode
@@ -188,7 +184,7 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
     // implement FennelRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
-        FarragoRepos repos = getPreparingStmt().getRepos();
+        FarragoRepos repos = FennelRelUtil.getRepos(this);
 
         FemIndexScanDef scanStream = repos.newFemIndexScanDef();
 
@@ -207,7 +203,6 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
         // I/O cost is proportional to pages of index scanned
         double dCpu = dRows * getRowType().getFieldList().size();
 
-        FarragoRepos repos = getPreparingStmt().getRepos();
         FtrsIndexGuide indexGuide = ftrsTable.getIndexGuide();
         int nIndexCols =
             index.isClustered()
@@ -227,11 +222,12 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
      */
     void defineScanStream(FemIndexScanDef scanStream)
     {
-        FarragoRepos repos = getPreparingStmt().getRepos();
+        FarragoRepos repos = FennelRelUtil.getRepos(this);
+        FarragoPreparingStmt stmt = FennelRelUtil.getPreparingStmt(this);
 
         if (!FarragoCatalogUtil.isIndexTemporary(index)) {
             scanStream.setRootPageId(
-                getPreparingStmt().getIndexMap().getIndexRoot(index));
+                stmt.getIndexMap().getIndexRoot(index));
         } else {
             // For a temporary index, each execution needs to bind to
             // a session-private root.  So don't burn anything into
