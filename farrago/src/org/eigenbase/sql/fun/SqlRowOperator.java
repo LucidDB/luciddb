@@ -27,6 +27,7 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.type.UnknownParamInference;
+import org.eigenbase.sql.type.CallOperands;
 import org.eigenbase.util.Util;
 
 
@@ -65,21 +66,16 @@ public class SqlRowOperator extends SqlSpecialOperator
         return OperandsCountDescriptor.variadicCountDescriptor;
     }
 
-    // implement SqlOperator
-    public RelDataType getType(
+    protected RelDataType getType(
+        SqlValidator validator,
+        SqlValidator.Scope scope,
         RelDataTypeFactory typeFactory,
-        RelDataType [] argTypes)
-    {
-        return getTypeInternal(typeFactory, argTypes);
-    }
-
-    private static RelDataType getTypeInternal(
-        RelDataTypeFactory typeFactory,
-        RelDataType[] argTypes)
+        CallOperands callOperands)
     {
         // The type of a ROW(e1,e2) expression is a record with the types
         // {e1type,e2type}.  According to the standard, field names are
         // implementation-defined.
+        RelDataType[] argTypes = callOperands.collectTypes();
         final String [] fieldNames = new String[argTypes.length];
         for (int i = 0; i < fieldNames.length; i++) {
             fieldNames[i] = SqlValidator.deriveAliasFromOrdinal(i);
@@ -87,19 +83,6 @@ public class SqlRowOperator extends SqlSpecialOperator
         return typeFactory.createStructType(argTypes, fieldNames);
     }
 
-    // implement SqlOperator
-    protected RelDataType inferType(
-        SqlValidator validator,
-        SqlValidator.Scope scope,
-        SqlCall call)
-    {
-        final RelDataType [] types = new RelDataType[call.operands.length];
-        for (int i = 0; i < call.operands.length; i++) {
-            SqlNode operand = call.operands[i];
-            types[i] = validator.deriveType(scope, operand);
-        }
-        return getTypeInternal(validator.typeFactory, types);
-    }
 
     protected boolean checkArgTypes(
         SqlCall call,

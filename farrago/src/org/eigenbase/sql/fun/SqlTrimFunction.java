@@ -30,6 +30,7 @@ import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.type.OperandsTypeChecking;
 import org.eigenbase.sql.type.SqlTypeUtil;
 import org.eigenbase.sql.type.ReturnTypeInference;
+import org.eigenbase.sql.type.ReturnTypeInferenceImpl;
 
 /**
  * Definition of the "TRIM" builtin SQL function.
@@ -45,9 +46,9 @@ public class SqlTrimFunction extends SqlFunction
     public SqlTrimFunction()
     {
         super("TRIM", SqlKind.Trim,
-            new ReturnTypeInference.TransformCascade(
-                ReturnTypeInference.useThirdArgType,
-                ReturnTypeInference.toNullable
+            new ReturnTypeInferenceImpl.TransformCascade(
+                ReturnTypeInferenceImpl.useThirdArgType,
+                ReturnTypeInferenceImpl.toNullable
             ),
             null,
             OperandsTypeChecking.typeNullableStringStringOfSameType,

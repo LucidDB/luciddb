@@ -22,14 +22,13 @@
 package org.eigenbase.sql;
 
 import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.sql.parser.ParserUtil;
 import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.test.SqlTester;
-import org.eigenbase.sql.type.OperandsTypeChecking;
-import org.eigenbase.sql.type.ReturnTypeInference;
-import org.eigenbase.sql.type.SqlTypeUtil;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.util.Util;
 
 import java.util.List;
@@ -108,14 +107,20 @@ public class SqlBetweenOperator extends SqlInfixOperator
         return newArgTypes;
     }
 
-    protected RelDataType inferType(
+    protected RelDataType getType(
         SqlValidator validator,
         SqlValidator.Scope scope,
-        SqlCall call)
+        RelDataTypeFactory typeFactory,
+        CallOperands callOperands)
     {
-        return ReturnTypeInference.useNullableBoolean.getType(
-            validator.typeFactory,
-            getTypeArray(validator, scope, call));
+        CallOperands.RelDataTypesCallOperands newCallOperands =
+            new CallOperands.RelDataTypesCallOperands(
+                getTypeArray(validator,
+                             scope,
+                             (SqlCall) callOperands.getUnderlyingObject()));
+        return ReturnTypeInferenceImpl.useNullableBoolean.getType(
+            validator, scope, typeFactory,
+            newCallOperands);
     }
 
     protected String getSignatureTemplate(final int operandsCount)

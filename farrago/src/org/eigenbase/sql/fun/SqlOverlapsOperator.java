@@ -23,10 +23,7 @@ package org.eigenbase.sql.fun;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.test.SqlOperatorTests;
-import org.eigenbase.sql.type.ReturnTypeInference;
-import org.eigenbase.sql.type.UnknownParamInference;
-import org.eigenbase.sql.type.OperandsTypeChecking;
-import org.eigenbase.sql.type.SqlTypeUtil;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.reltype.RelDataType;
 
 import java.util.ArrayList;
@@ -42,7 +39,7 @@ public class SqlOverlapsOperator extends SqlSpecialOperator {
 
     public SqlOverlapsOperator() {
         super("OVERLAPS", SqlKind.Overlaps, 15, true,
-            ReturnTypeInference.useNullableBoolean,
+            ReturnTypeInferenceImpl.useNullableBoolean,
             UnknownParamInference.useFirstKnown, null);
     }
 

@@ -24,6 +24,7 @@ import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.OperandsTypeChecking;
 import org.eigenbase.sql.type.ReturnTypeInference;
+import org.eigenbase.sql.type.ReturnTypeInferenceImpl;
 
 /**
  * An operator describing a window function specification.
@@ -45,7 +46,7 @@ public class SqlOverOperator extends SqlBinaryOperator
     public SqlOverOperator()
     {
         super("OVER", SqlKind.Over, 10, true,
-            ReturnTypeInference.useFirstArgType, null,
+            ReturnTypeInferenceImpl.useFirstArgType, null,
             OperandsTypeChecking.typeAnyAny);
     }
 

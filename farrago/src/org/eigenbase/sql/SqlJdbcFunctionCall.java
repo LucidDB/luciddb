@@ -29,6 +29,7 @@ import org.eigenbase.sql.fun.SqlTrimFunction;
 import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.test.SqlTester;
+import org.eigenbase.sql.type.CallOperands;
 import org.eigenbase.util.Util;
 
 import java.util.HashMap;
@@ -290,6 +291,15 @@ public class SqlJdbcFunctionCall extends SqlFunction
         SqlOperatorTests.testJdbcFn(tester);
     }
 
+    protected boolean checkArgTypes(
+        SqlCall call,
+        SqlValidator validator,
+        SqlValidator.Scope scope, boolean throwOnFailure)
+    {
+        // no op, arg checking is done in getType
+        return true;
+    }
+
     public SqlCall getLookupCall()
     {
         if (null == lookupCall) {
@@ -308,19 +318,24 @@ public class SqlJdbcFunctionCall extends SqlFunction
         return OperandsCountDescriptor.variadicCountDescriptor;
     }
 
-    public RelDataType getType(
+    protected RelDataType getType(
         SqlValidator validator,
         SqlValidator.Scope scope,
-        SqlCall call)
+        RelDataTypeFactory typeFactory,
+        CallOperands callOperands)
     {
         if (null == lookupMakeCallObj) {
-            throw validator.newValidationError(call,
-                EigenbaseResource.instance().newFunctionUndefined(name));
+            // only expected to come here if validator called this method
+            throw validator.newValidationError(
+                (SqlCall) callOperands.getUnderlyingObject(),
+                    EigenbaseResource.instance().newFunctionUndefined(name));
         }
 
-        if (!lookupMakeCallObj.checkNumberOfArg(call.operands.length)) {
-            throw validator.newValidationError(call,
-                EigenbaseResource.instance().newWrongNumberOfParam(
+        if (!lookupMakeCallObj.checkNumberOfArg(callOperands.size())) {
+            // only expected to come here if validator called this method
+            throw validator.newValidationError(
+                (SqlCall) callOperands.getUnderlyingObject(),
+                    EigenbaseResource.instance().newWrongNumberOfParam(
                     name,
                     new Integer(thisOperands.length),
                     getArgCountMismatchMsg()));
@@ -331,19 +346,14 @@ public class SqlJdbcFunctionCall extends SqlFunction
                     validator,
                     scope,
                     false)) {
+            // only expected to come here if validator called this method
+            SqlCall call = (SqlCall) callOperands.getUnderlyingObject();
             throw call.newValidationSignatureError(validator, scope);
         }
         return lookupMakeCallObj.operator.getType(
             validator,
             scope,
             getLookupCall());
-    }
-
-    public RelDataType getType(
-        RelDataTypeFactory typeFactory,
-        RelDataType [] argTypes)
-    {
-        return lookupMakeCallObj.operator.getType(typeFactory, argTypes);
     }
 
     private String getArgCountMismatchMsg()

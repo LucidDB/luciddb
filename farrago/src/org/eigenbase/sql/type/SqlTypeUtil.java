@@ -258,6 +258,15 @@ public abstract class SqlTypeUtil
     }
 
     /**
+     * @return true if type is in SqlTypeFamily.Character
+     */
+    public static boolean inCharFamily(SqlTypeName typeName)
+    {
+        return SqlTypeFamily.getFamilyForSqlType(typeName) ==
+               SqlTypeFamily.Character;
+    }
+
+    /**
      * @return true if type is in SqlTypeFamily.Boolean
      */
     public static boolean inBooleanFamily(RelDataType type)
@@ -349,6 +358,14 @@ public abstract class SqlTypeUtil
         }
     }
 
+
+    /**
+     * @return true if type is numeric
+     */
+    public static boolean isNumeric(RelDataType type) {
+        return isExactNumeric(type) || isApproximateNumeric(type);
+    }
+
     /**
      * Tests whether two types have the same name and structure, possibly
      * with differing modifiers.  For example, VARCHAR(1) and VARCHAR(10)
@@ -389,7 +406,7 @@ public abstract class SqlTypeUtil
         }
         return t1.getSqlTypeName() == t2.getSqlTypeName();
     }
-    
+
     /**
      * Computes the maximum number of bytes required to represent a value of a
      * type having user-defined precision.  This computation assumes no
@@ -409,23 +426,23 @@ public abstract class SqlTypeUtil
         if (typeName == null) {
             return 0;
         }
-        
+
         switch (typeName.getOrdinal()) {
         case SqlTypeName.Bit_ordinal:
         case SqlTypeName.Varbit_ordinal:
             // 8 bits per byte
             return (type.getPrecision() + 7) / 8;
-            
+
         case SqlTypeName.Char_ordinal:
         case SqlTypeName.Varchar_ordinal:
             return (int) Math.ceil(
                 (((double) type.getPrecision())
                     * type.getCharset().newEncoder().maxBytesPerChar()));
-            
+
         case SqlTypeName.Binary_ordinal:
         case SqlTypeName.Varbinary_ordinal:
             return type.getPrecision();
-            
+
         default:
             return 0;
         }
@@ -455,6 +472,19 @@ public abstract class SqlTypeUtil
         default:
             return false;
         }
+    }
+
+    /**
+     * Calls {@link ReturnTypeInferenceImpl#useNullableBiggest} by wrapping
+     * the argTypes parameter in a {@link CallOperands.RelDataTypesCallOperands}
+     * object
+     */
+    public static RelDataType getNullableBiggest(RelDataTypeFactory typeFactory,
+        RelDataType[] argTypes) {
+        CallOperands.RelDataTypesCallOperands types =
+            new CallOperands.RelDataTypesCallOperands(argTypes);
+        return ReturnTypeInferenceImpl.useNullableBiggest.getType(
+                 null, null, typeFactory, types);
     }
 }
 

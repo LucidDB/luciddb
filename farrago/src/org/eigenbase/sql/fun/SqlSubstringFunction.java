@@ -25,10 +25,7 @@ import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.test.SqlTester;
-import org.eigenbase.sql.type.OperandsTypeChecking;
-import org.eigenbase.sql.type.ReturnTypeInference;
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.sql.type.SqlTypeUtil;
+import org.eigenbase.sql.type.*;
 
 import java.util.ArrayList;
 
@@ -43,7 +40,7 @@ public class SqlSubstringFunction extends SqlFunction {
 
     SqlSubstringFunction() {
         super("SUBSTRING", SqlKind.Function,
-            ReturnTypeInference.useNullableVaryingFirstArgType, null, null,
+            ReturnTypeInferenceImpl.useNullableVaryingFirstArgType, null, null,
             SqlFunction.SqlFuncTypeName.String);
     }
 

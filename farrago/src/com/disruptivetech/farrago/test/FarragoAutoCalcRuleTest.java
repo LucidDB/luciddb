@@ -52,9 +52,7 @@ import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.rex.RexCall;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.type.UnknownParamInference;
-import org.eigenbase.sql.type.ReturnTypeInference;
-import org.eigenbase.sql.type.OperandsTypeChecking;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 
 /**
@@ -136,7 +134,7 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
 
         SqlFunction cppFunc =
             new SqlFunction("CPLUS", SqlKind.Function,
-                ReturnTypeInference.useNullableBiggest,
+                ReturnTypeInferenceImpl.useNullableBiggest,
                 UnknownParamInference.useFirstKnown,
                 OperandsTypeChecking.typeNullableNumericNumeric,
                 SqlFunction.SqlFuncTypeName.Numeric);
@@ -250,7 +248,7 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
 
             SqlFunction jplusFunc =
                 new SqlFunction("JPLUS", SqlKind.Function,
-                    ReturnTypeInference.useNullableBiggest,
+                    ReturnTypeInferenceImpl.useNullableBiggest,
                     UnknownParamInference.useFirstKnown,
                     OperandsTypeChecking.typeNullableNumericNumeric,
                     SqlFunction.SqlFuncTypeName.Numeric);
@@ -266,39 +264,16 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
                     OperandsTypeChecking.typeNullableNumericNumeric,
                     SqlFunction.SqlFuncTypeName.Numeric)
                 {
-                    public RelDataType getType(
-                        RelDataTypeFactory typeFactory,
-                        RexNode [] args)
-                    {
-                        assert (args.length == 2);
-
-                        RelDataType [] types =
-                            new RelDataType [] {
-                                args[0].getType(), args[1].getType()
-                            };
-                        String [] names = new String [] { "first", "second" };
-
-                        return typeFactory.createStructType(types, names);
-                    }
-
-                    public RelDataType inferType(
+                    protected RelDataType getType(
                         SqlValidator validator,
                         SqlValidator.Scope scope,
-                        SqlCall call)
+                        RelDataTypeFactory typeFactory,
+                        CallOperands callOperands)
                     {
-                        assert (call.getOperands().length == 2);
-
-                        RelDataType [] types =
-                            new RelDataType [] {
-                                validator.getValidatedNodeType(call
-                                        .getOperands()[0]),
-                                validator.getValidatedNodeType(call
-                                        .getOperands()[1])
-                            };
+                        assert (callOperands.size() == 2);
                         String [] names = new String [] { "first", "second" };
-
-                        return validator.typeFactory.createStructType(types,
-                            names);
+                        return typeFactory.createStructType(
+                            callOperands.collectTypes(), names);
                     }
                 };
             opTab.register(jrowFunc);

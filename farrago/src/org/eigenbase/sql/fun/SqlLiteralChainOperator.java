@@ -20,6 +20,7 @@
 package org.eigenbase.sql.fun;
 
 import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.ParserPosition;
@@ -49,7 +50,8 @@ public class SqlLiteralChainOperator extends SqlInternalOperator {
     SqlLiteralChainOperator() {
         super("$LitChain", SqlKind.LitChain, 40, true,
             // precedence tighter than the * and || operators
-            ReturnTypeInference.useFirstArgType, UnknownParamInference.useFirstKnown, null);
+            ReturnTypeInferenceImpl.useFirstArgType,
+            UnknownParamInference.useFirstKnown, null);
     }
 
     // REVIEW mb 8/8/04: Can't use SqlOperator.OperandsTypeChecking here;
@@ -96,28 +98,31 @@ public class SqlLiteralChainOperator extends SqlInternalOperator {
         return true;
     }
 
+
     // Result type is the same as all the args, but its size is the
     // total size.
     // REVIEW mb 8/8/04: Possibly this can be achieved by combining
     // the strategy useFirstArgType with a new transformer.
-    protected RelDataType inferType(
+    protected RelDataType getType(
         SqlValidator validator,
         SqlValidator.Scope scope,
-        SqlCall call)
+        RelDataTypeFactory typeFactory,
+        CallOperands callOperands)
     {
         // Here we know all the operands have the same type,
         // which has a size (precision), but not a scale.
-        RelDataType rt =
-            validator.getValidatedNodeType(call.operands[0]);
-        SqlTypeName tname = rt.getSqlTypeName();
-        assert tname.allowsPrecNoScale() :
-            "LitChain has impossible operand type " + tname;
-        int size = rt.getPrecision();
-        for (int i = 1; i < call.operands.length; i++) {
-            rt = validator.getValidatedNodeType(call.operands[i]);
-            size += rt.getPrecision();
+        RelDataType ret = callOperands.getType(0);
+        SqlTypeName typeName = ret.getSqlTypeName();
+        assert(typeName.allowsPrecNoScale()) :
+            "LitChain has impossible operand type " + typeName;
+        int size = 0;
+        RelDataType[] types = callOperands.collectTypes();
+        for (int i = 0; i < types.length; i++) {
+            RelDataType type = types[i];
+            size += type.getPrecision();
+            assert(type.getSqlTypeName().equals(typeName));
         }
-        return validator.typeFactory.createSqlType(tname, size);
+        return typeFactory.createSqlType(typeName, size);
     }
 
     public String getAllowedSignatures(String opName)

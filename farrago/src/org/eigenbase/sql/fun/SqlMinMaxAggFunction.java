@@ -26,6 +26,7 @@ import org.eigenbase.sql.SqlFunction;
 import org.eigenbase.sql.SqlKind;
 import org.eigenbase.sql.type.OperandsTypeChecking;
 import org.eigenbase.sql.type.ReturnTypeInference;
+import org.eigenbase.sql.type.ReturnTypeInferenceImpl;
 import org.eigenbase.util.Util;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
@@ -82,7 +83,7 @@ public class SqlMinMaxAggFunction extends SqlAggFunction
         super(
             isMin ? "MIN" : "MAX",
             SqlKind.Function,
-            ReturnTypeInference.useFirstArgType,
+            ReturnTypeInferenceImpl.useFirstArgType,
             null,
             OperandsTypeChecking.typeNumeric,
             SqlFunction.SqlFuncTypeName.Numeric);

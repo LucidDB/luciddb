@@ -1206,7 +1206,7 @@ public abstract class OperandsTypeChecking
     public static final OperandsTypeChecking typeNullableIntervalNumeric =
         new SimpleOperandsTypeChecking(new SqlTypeName [][] {
             SqlTypeName.timeIntervalNullableTypes,
-            SqlTypeName.numericNullableTypes            
+            SqlTypeName.numericNullableTypes
         });
 
     public static final OperandsTypeChecking typeNullableDatetimeInterval =
@@ -1349,8 +1349,8 @@ public abstract class OperandsTypeChecking
                 argTypes[1] = validator.deriveType(scope, op1).getComponentType();
                 //TODO this wont work if element types are of ROW types and there is a
                 //mismatch.
-                RelDataType biggest = ReturnTypeInference.useBiggest.
-                    getType(validator.typeFactory, argTypes);
+                RelDataType biggest = SqlTypeUtil.getNullableBiggest(
+                    validator.typeFactory, argTypes);
                 if (null==biggest) {
                     if (throwOnFailure) {
                         throw EigenbaseResource.instance().newTypeNotComparable(

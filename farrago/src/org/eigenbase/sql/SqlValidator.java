@@ -613,7 +613,7 @@ public class SqlValidator
         SqlNode operand)
     {
         // REVIEW jvs 2-Dec-2004:  this method has outgrown its pants
-        
+
         RelDataType type;
         if (operand instanceof SqlIdentifier) {
             SqlIdentifier id = (SqlIdentifier) operand;
@@ -972,7 +972,7 @@ public class SqlValidator
         } else if (node instanceof SqlCall) {
             SqlCall call = (SqlCall) node;
             UnknownParamInference paramTypeInference =
-                call.operator.getParamTypeInference();
+                call.operator.getUnknownParamTypeInference();
             SqlNode [] operands = call.getOperands();
             RelDataType [] operandTypes = new RelDataType[operands.length];
             if (paramTypeInference == null) {
@@ -1411,7 +1411,7 @@ public class SqlValidator
     }
 
     /**
-     * Validates a {@link SqlIntervalQualifier} 
+     * Validates a {@link SqlIntervalQualifier}
      */
     public void validateIntervalQualifier(SqlIntervalQualifier qualifier) {
         // default is to do nothing
@@ -1896,8 +1896,7 @@ public class SqlValidator
                 }
 
                 final RelDataType type =
-                    ReturnTypeInference.useNullableBiggest.getType(typeFactory,
-                        types);
+                    SqlTypeUtil.getNullableBiggest(typeFactory, types);
 
                 if (null == type) {
                     throw newValidationError(node,
@@ -1944,28 +1943,6 @@ public class SqlValidator
         }
         Util.permAssert(namespace != null, "post: namespace != null");
         return namespace;
-    }
-
-    /**
-     * Converts the <code>ordinal</code>th argument of a call to a positive
-     * integer, otherwise throws.
-     */
-    public static int getOperandAsPositiveInteger(SqlCall call, int ordinal) {
-        if (call.operands.length >= ordinal) {
-            SqlNode exp = call.operands[ordinal];
-            if (exp instanceof SqlLiteral) {
-                SqlLiteral literal = (SqlLiteral) exp;
-                switch (literal.typeName.ordinal) {
-                case SqlTypeName.Decimal_ordinal:
-                    int precision = literal.intValue();
-                    if (precision >= 0) {
-                        return precision;
-                    }
-                }
-            }
-        }
-        throw EigenbaseResource.instance().newArgumentMustBePositiveInteger(
-                call.operator.name);
     }
 
     /**

@@ -25,6 +25,7 @@ import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.type.ReturnTypeInference;
+import org.eigenbase.sql.type.ReturnTypeInferenceImpl;
 
 
 /**
@@ -67,8 +68,8 @@ public class SqlSelectOperator extends SqlOperator
 
     public SqlSelectOperator()
     {
-        super("SELECT", SqlKind.Select, 1, true, ReturnTypeInference.useScope,
-            null, null);
+        super("SELECT", SqlKind.Select, 1, true,
+            ReturnTypeInferenceImpl.useScope, null, null);
     }
 
     //~ Methods ---------------------------------------------------------------

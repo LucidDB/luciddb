@@ -196,12 +196,24 @@ public class SqlCaseOperator extends SqlOperator
         return true;
     }
 
-    protected RelDataType inferType(
+    protected RelDataType getType(
         SqlValidator validator,
         SqlValidator.Scope scope,
-        SqlCall call)
+        RelDataTypeFactory typeFactory,
+        CallOperands callOperands)
     {
-        SqlCase caseCall = (SqlCase) call;
+        if (null==validator) {
+            return getTypeFromRexs(typeFactory, callOperands.collectTypes());
+        }
+        return getTypeFromValidator(callOperands, validator, scope, typeFactory);
+    }
+
+    private RelDataType getTypeFromValidator(CallOperands callOperands,
+        SqlValidator validator,
+        SqlValidator.Scope scope,
+        RelDataTypeFactory typeFactory)
+    {
+        SqlCase caseCall = (SqlCase) callOperands.getUnderlyingObject();
         SqlNodeList thenList = caseCall.getThenOperands();
         ArrayList nullList = new ArrayList();
         RelDataType [] argTypes = new RelDataType[thenList.size() + 1];
@@ -220,12 +232,11 @@ public class SqlCaseOperator extends SqlOperator
         if (SqlUtil.isNullLiteral(elseOp, false)) {
             nullList.add(elseOp);
         }
-        RelDataType ret =
-            ReturnTypeInference.useNullableBiggest.getType(validator.typeFactory,
-                argTypes);
+
+        RelDataType ret = SqlTypeUtil.getNullableBiggest(typeFactory, argTypes);
         if (null == ret) {
-            throw validator.newValidationError(call,
-                EigenbaseResource.instance().newIllegalMixingOfTypes());
+            throw validator.newValidationError(caseCall,
+                    EigenbaseResource.instance().newIllegalMixingOfTypes());
         }
         for (int i = 0; i < nullList.size(); i++) {
             SqlNode node = (SqlNode) nullList.get(i);
@@ -234,34 +245,7 @@ public class SqlCaseOperator extends SqlOperator
         return ret;
     }
 
-    public RelDataType getType(SqlValidator validator,
-            SqlValidator.Scope scope, SqlCall call) {
-        SqlCase caseCall = (SqlCase) call;
-        SqlNodeList whenList = caseCall.getWhenOperands();
-        SqlNodeList thenList = caseCall.getThenOperands();
-        for(int i = 0; i < whenList.size(); i++) {
-            final SqlNode when = whenList.get(i);
-            RelDataType nodeType = validator.deriveType(scope, when);
-            validator.setValidatedNodeType(when, nodeType);
-            final SqlNode then = thenList.get(i);
-            nodeType = validator.deriveType(scope, then);
-            validator.setValidatedNodeType(then, nodeType);
-        }
-        final SqlNode elsE = caseCall.getElseOperand();
-        RelDataType nodeType = validator.deriveType(scope, elsE);
-        validator.setValidatedNodeType(elsE, nodeType);
-
-        boolean sadButTrue = true;
-        if (sadButTrue) {
-            // We've already validated the operands -- we shouldn't have to do
-            // it again. But we get a different error message.
-            return super.getType(validator, scope, call);
-        } else {
-            return inferType(validator, scope, caseCall);
-        }
-    }
-
-    public RelDataType getType(
+    private RelDataType getTypeFromRexs(
         RelDataTypeFactory typeFactory,
         RelDataType [] argTypes)
     {
@@ -275,10 +259,9 @@ public class SqlCaseOperator extends SqlOperator
         }
 
         thenTypes[thenTypes.length - 1] = argTypes[argTypes.length - 1];
-        RelDataType ret =
-            ReturnTypeInference.useNullableBiggest.getType(typeFactory, thenTypes);
-        return ret;
+        return SqlTypeUtil.getNullableBiggest(typeFactory, thenTypes);
     }
+
 
     public SqlOperator.OperandsCountDescriptor getOperandsCountDescriptor()
     {

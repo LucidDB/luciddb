@@ -25,6 +25,11 @@ import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.util.BarfingInvocationHandler;
 import org.eigenbase.util.Util;
+import org.eigenbase.resource.EigenbaseResource;
+import org.eigenbase.rex.RexNode;
+import org.eigenbase.rex.RexLiteral;
+import org.eigenbase.rex.RexKind;
+import org.eigenbase.rex.RexCall;
 
 import java.lang.reflect.Proxy;
 import java.sql.DatabaseMetaData;
@@ -165,6 +170,20 @@ public abstract class SqlUtil
             }
         }
         return false;
+    }
+
+    /**
+     * Returns whether a node represents the NULL value or a series of nested
+     * CAST(NULL as <TYPE>) calls
+     * <br>
+     * For Example:<br>
+     * isNull(CAST(CAST(NULL as INTEGER) AS VARCHAR(1))) returns true
+     */
+    public static boolean isNull(SqlNode node)
+    {
+        return isNullLiteral(node, false)
+            || ((node.getKind() == SqlKind.Cast)
+            && isNull(((SqlCall) node).operands[0]));
     }
 
     /**
