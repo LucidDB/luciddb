@@ -130,7 +130,7 @@
   <fail unless="rmijdbc.dir"/>
 
   <!-- The version of ANT we require. -->
-  <property name="required.ant.version" value="1.6.0"/>
+  <property name="required.ant.version" value="1.6.2"/>
 
   <condition property="is.correct.ant.version">
     <contains string="${ant.version}" substring="${required.ant.version}"/>
