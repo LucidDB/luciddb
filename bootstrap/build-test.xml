@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Delegating build script used by Cruise Control to build aspen. -->
+<project name="build-test" default="test">
+  <target name="test">
+    <tstamp/>
+
+    <echo message="blahblahblah" file="test/test/${TSTAMP}.log"/>
+  </target>
+</project>

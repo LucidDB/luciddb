@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Delegating build script used by Cruise Control to build saffron. -->
+<project name="build-saffron" default="build">
+	<property environment="env"/>
+
+	<!-- perforce properties -->
+	<property file="${open_propfile}"/>
+	<property name="p4.client" value="${env.USER}.${env.HOSTNAME}"/>
+
+
+	<!-- regular vs. integration build locations -->
+	<property name="default.build.home" location="."/>
+	<property name="integration.build.home" location="./build"/>
+
+
+	<!-- perforce synchronization target -->
+	<target name="sync" description="Synchronize the Saffron project" unless="no-sync">
+		<p4sync view="${open_root}/saffron/..." failonerror="true"/>
+	</target>
+
+	<!-- basic build targets -->
+	<target name="test"
+	        depends="build"
+	        description="Build and test the Saffron project and its dependencies in situ -- not compatible with integration builds">
+		<antcall target="do-test"/>
+	</target>
+
+	<target name="build"
+	        depends="thirdparty"
+	        description="Build the Saffron project and its dependencies in situ -- not compatible with integration builds">
+		<antcall target="do-build"/>
+	</target>
+
+	<target name="thirdparty">
+		<antcall target="do-thirdparty"/>
+	</target>
+
+
+	<!-- continuous intregration targets -->
+	<target name="integration-build-and-test"
+	        depends="integration-test"
+	        description="Build and test the Saffron project and its dependencies in a clean tree"/>
+
+	<target name="integration-test" depends="integration-build">
+		<antcall target="do-test">
+			<param name="build.home" location="${integration.build.home}"/>
+			<param name="build.type" value="integration.build"/>
+		</antcall>
+	</target>
+
+	<target name="integration-build"
+	        depends="integration-copy,integration-thirdparty">
+		<antcall target="do-build">
+			<param name="build.home" location="${integration.build.home}"/>
+		</antcall>
+	</target>
+
+	<target name="integration-build-no-thirdparty" depends="integration-copy">
+		<antcall target="do-build">
+			<param name="build.home" location="${integration.build.home}"/>
+		</antcall>
+	</target>
+
+	<target name="integration-copy" depends="sync">
+		<delete dir="${integration.build.home}/saffron"/>
+		<mkdir dir="${integration.build.home}/saffron"/>
+
+		<!-- ant's copy task doesn't preserve permissions -->
+		<echo message="Copying ./saffron to ${integration.build.home}/"/>
+		<exec dir="${default.build.home}" executable="cp" failonerror="true">
+			<arg value="-pr"/>
+			<arg value="./saffron/"/>
+			<arg value="${integration.build.home}/"/>
+		</exec>
+	</target>
+
+	<target name="integration-thirdparty">
+		<antcall target="do-thirdparty">
+			<param name="build.target" value="integration-build"/>
+		</antcall>
+	</target>
+
+
+	<!-- helper targets -->
+	<target name="do-test">
+		<property name="build.home" location="${default.build.home}"/>
+		<property name="build.type" value="normal.build"/>
+		<ant dir="${build.home}/saffron" target="test" inheritAll="false">
+			<property name="${build.type}" value="yes"/>
+		</ant>
+	</target>
+
+	<target name="do-build">
+		<property name="build.home" location="${default.build.home}"/>
+		<ant dir="${build.home}/saffron" inheritAll="false"/>
+	</target>
+
+	<target name="do-thirdparty">
+		<property name="build.target" value="build"/>
+		<ant antfile="build-thirdparty.xml"
+		     target="${build.target}"
+		     inheritAll="false">
+		    <propertyset>
+		        <propertyref prefix="open_"/>
+		    </propertyset>
+		</ant>
+	</target>
+</project>

@@ -1,0 +1,83 @@
+Building Cruise Control
+-----------------------
+
+Extract cruisecontrol-2.1.5.tar.gz, change to its main subdirectory and
+run build.sh or build.bat.  Cruisecontrol should build and run its
+unit tests.
+
+Installing Cruise Control
+-------------------------
+
+I do not recommend running Cruise Control as root.  I've created a
+user on my system to execute Cruise Control and until now I've been
+manually starting it up with startcc.sh (see below).
+
+Assuming CC_HOME points to the main cruisecontrol directory, add
+$CC_HOME/main/bin to your path.
+
+Create a subdirectory in your mapped //open/bootstrap call ant and
+install the version of Ant provided in //open/thirdparty there.  The
+script doant.sh will be used by Cruisecontrol to execute Ant (the
+version of Ant shipped with Cruisecontrol is too old for our
+purposes).
+
+The ant build scripts expect that a Perforce client has been created
+with then name "$USER.$HOSTNAME" on both Perforce servers and that the
+following paths are mapped.  Assume [work] refers to Cruisecontrol's
+working directory.
+
+Eigenbase:
+	//open/farrago/...	[work]/farrago
+	//open/fennel/...	[work]/fennel
+	//open/saffron/...	[work]/saffron
+	//open/thirdparty/...	[work]/thirdparty
+
+Disruptive:
+	//depot/aspen/...	[work]/aspen
+
+The shell script startcc.sh starts Cruise Control and enables a JMX
+service on port 8080.  This port should be firewalled from access by
+outside users -- the JMX service has no protection against malicious
+users.
+
+The ant build scripts assume the presence of a file called
+disruptive.perforce.properties configures Ant's p4 tasks to connect to
+the Disruptive Perforce server.
+
+Before executing startcc.sh, set the environment variable
+CRUISE_P4PASSWD to the Disruptive Perforce server's guest password.
+If you're allowed to have it, you'll know what I mean when I say, "ask
+Julian."
+
+startcc.sh will create some directories that Cruise Control will use,
+if they don't exist.
+
+The default config.xml attempts to move build results to another
+server.  You'll need to configure ssh for automatic login to that
+server in for the copy to actually succeed.  This means creating an
+RSA public/private keypair and placing them in ~/.ssh/id_rsa and
+~/.ssh/id_rsa_pub and modifiying ~/.ssh/authorized_keys on the server
+to contain a copy of the public key.  "man ssh" for more info.  Note
+that having two build servers copy data to the same place probably
+isn't a good idea!
+
+
+
+Notes from JVS 8-Aug-2004
+-------------------------
+
+To build cruisecontrol.war, I had to create a file
+$CC_HOME/reporting/jsp/override.properties with the following settings
+(you may need to use somethng different depending on your Tomcat setup):
+user.log.dir=/home/cruise/web/logs
+user.build.status.file=currentbuildstatus.txt
+cruise.build.artifacts.dir=/home/cruise/web/artifacts
+
+I also had to create the saffron, fennel, and farrago directories
+manually under /home/cruise/web/logs, otherwise scp failed when it
+tried to copy into non-existent locations.
+
+To eliminate some errors from Tomcat while trying to view the build
+result pages, I had to copy xalan.jar from $CC_HOME/reporting/jsp/lib
+to $TOMCAT_HOME/common/endorsed.  I figured this out by reading
+http://wiki.apache.org/cocoon/EndorsedLibsProblem.

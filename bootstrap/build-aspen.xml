@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Delegating build script used by Cruise Control to build aspen. -->
+<project name="build-aspen" default="build">
+	<property environment="env"/>
+
+	<!-- perforce properties -->
+	<property file="disruptive.perforce.properties"/>
+	<property name="p4.client" value="${env.USER}.${env.HOSTNAME}"/>
+
+
+	<!-- regular vs. integration build locations -->
+	<property name="default.build.home" location="."/>
+	<property name="integration.build.home" location="./build"/>
+
+	<!-- perforce synchronization target -->
+	<target name="sync" description="Synchronize the Aspen project" unless="no-sync">
+		<p4sync view="//depot/aspen/..." failonerror="true"/>
+	</target>
+
+	<!-- basic build targets -->
+	<target name="test"
+	        depends="build"
+	        description="Build and test the Aspen project and its dependencies in situ -- not compatible with integration builds">
+		<antcall target="do-test"/>
+	</target>
+
+	<target name="build"
+	        depends="thirdparty"
+	        description="Build the Aspen project and its dependencies in situ -- not compatible with integration builds">
+		<antcall target="do-build"/>
+	</target>
+
+	<target name="cleanbuild"
+	        depends="thirdparty"
+	        description="Configure and build the Aspen project and its dependencies in situ -- not compatible with integration builds">
+		<antcall target="do-cleanbuild"/>
+	</target>
+
+	<target name="thirdparty">
+		<antcall target="do-thirdparty"/>
+	</target>
+
+
+	<!-- continuous intregration targets -->
+	<target name="integration-build-and-test"
+	        depends="integration-test"
+	        description="Build and test the Aspen project and its dependencies in a clean tree"/>
+
+	<target name="integration-test" depends="integration-build">
+		<!-- clean build runs tests automagically -->
+	</target>
+
+	<target name="integration-build"
+	        depends="integration-copy,integration-farrago,integration-fennel,integration-saffron,integration-thirdparty">
+		<antcall target="integration-configure-tests"/>
+		<antcall target="do-cleanbuild">
+			<param name="build.home" location="${integration.build.home}"/>
+		</antcall>
+	</target>
+
+	<target name="integration-configure-tests">
+		<chmod file="${integration.build.home}/aspen/aspen.properties" perm="u+w"/>
+		<replace file="${integration.build.home}/aspen/aspen.properties"
+                         token="#aspen.test.scott.jdbc.url="
+		         value="aspen.test.scott.jdbc.url=jdbc:hsqldb:${integration.build.home}/saffron/demo/hsqldb/scott"/>
+		
+		<pathconvert property="internal.classpath" dirsep="${file.separator}" pathsep="${path.separator}">
+			<path>
+				<pathelement path="${integration.build.home}/saffron/classes"/>
+				<pathelement path="${integration.build.home}/aspen/classes"/>
+			</path>
+		</pathconvert>
+
+		<echo file="${integration.build.home}/aspen/saffron.properties">
+saffron.package.name=net.sf.saffron.runtime
+saffron.java.dir=${integration.build.home}/saffron/src
+saffron.class.dir=${integration.build.home}/saffron/classes
+saffron.java.compiler.args=-classpath ${internal.classpath} -d ${integration.build.home}/saffron/classes -verbose
+saffron.Statement.printBeforeCompile=false
+saffron.opt.allowInfiniteCostConverters=true
+#saffron.debug.level=4
+</echo>
+	</target>
+
+	<target name="integration-copy" depends="sync">
+		<delete dir="${integration.build.home}/aspen"/>
+		<mkdir dir="${integration.build.home}/aspen"/>
+
+		<!-- ant's copy task doesn't preserve permissions -->
+		<echo message="Copying ./aspen to ${integration.build.home}/"/>
+		<exec dir="${default.build.home}" executable="cp" failonerror="true">
+			<arg value="-pr"/>
+			<arg value="./aspen/"/>
+			<arg value="${integration.build.home}/"/>
+		</exec>
+	</target>
+
+	<target name="integration-farrago">
+		<!-- just set up a clean farrago: we'll build it ourselves -->
+		<ant antfile="build-farrago.xml" target="integration-copy" inheritAll="false">
+		    <propertyset>
+		        <propertyref prefix="open_"/>
+		    </propertyset>
+		</ant>
+	</target>
+
+	<target name="integration-saffron">
+		<!-- just set up a clean saffron: we'll build it ourselves -->
+		<ant antfile="build-saffron.xml" target="integration-copy" inheritAll="false">
+		    <propertyset>
+		        <propertyref prefix="open_"/>
+		    </propertyset>
+		</ant>
+	</target>
+
+	<target name="integration-fennel">
+		<!-- just set up a clean fennel: we'll build it ourselves -->
+		<ant antfile="build-fennel.xml" target="integration-copy" inheritAll="false">
+		    <propertyset>
+		        <propertyref prefix="open_"/>
+		    </propertyset>
+		</ant>
+	</target>
+
+	<target name="integration-thirdparty">
+		<!-- just set up a clean thirdparty: we'll build it ourselves -->
+		<ant antfile="build-thirdparty.xml" target="integration-copy" inheritAll="false">
+		    <propertyset>
+		        <propertyref prefix="open_"/>
+		    </propertyset>
+		</ant>
+	</target>
+
+	<!-- helper targets -->
+
+	<target name="do-test">
+		<property name="build.home" location="${default.build.home}"/>
+		<property name="build.type" value="normal.build"/>
+
+		<ant dir="${build.home}/aspen" target="createClasspathFile" inheritAll="false"/>
+
+		<loadproperties srcfile="${build.home}/aspen/classpath.gen">
+			<filterchain>
+				<prefixlines prefix="generated.classpath="/>
+			</filterchain>
+		</loadproperties>
+
+		<ant dir="${build.home}/aspen" target="test" inheritAll="false">
+			<property name="java.class.path" value="${generated.classpath}"/>
+			<property name="${build.type}" value="yes"/>
+		</ant>
+
+		<exec dir="${build.home}/aspen/cpp/aspen" executable="make" failonerror="true">
+			<arg value="check"/>
+			<env key="LD_LIBRARY_PATH" path="${build.home}/thirdparty/icu/lib:${build.home}/fennel/.libs:${build.home}/fennel/test/.libs:${build.home}/fennel/farrago/.libs:${build.home}/thirdparty/boost/lib:${build.home}/thirdparty/stlport/lib:${env.LD_LIBRARY_PATH}"/>
+		</exec>
+	</target>
+
+	<target name="do-build">
+		<property name="build.home" location="${default.build.home}"/>
+		<ant dir="${build.home}/aspen" inheritAll="false"/>
+
+		<exec dir="${build.home}/aspen/cpp/aspen" executable="make" failonerror="true"/>
+	</target>
+
+	<target name="do-cleanbuild">
+		<exec dir="${build.home}/aspen" executable="${build.home}/aspen/initBuild.sh" failonerror="true">
+			<arg value="${build.home}/farrago"/>
+			<env key="ANT_HOME" file="${build.home}/thirdparty/ant"/>
+			<env key="PATH" path="${env.PATH}:${build.home}/thirdparty/ant/bin/ant"/>
+		</exec>
+	</target>
+
+	<target name="do-thirdparty">
+		<property name="build.target" value="build"/>
+		<ant antfile="build-thirdparty.xml"
+		     target="${build.target}"
+		     inheritAll="false">
+		    <propertyset>
+		        <propertyref prefix="open_"/>
+		    </propertyset>
+  		</ant>
+	</target>
+</project>

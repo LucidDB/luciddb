@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE cruisecontrol [
+
+<!ENTITY open_p4port     "192.168.1.2:1666">
+<!ENTITY open_p4client   "cruise.apoptosis">
+<!ENTITY open_p4user     "guest">
+<!ENTITY open_root       "//open/dev">
+<!ENTITY open_propfile   "apoptosis.perforce.properties">
+
+<!ENTITY buildresultsbase "http://apoptosis:8080/cruisecontrol/buildresults">
+<!ENTITY mailhost         "mail.coastside.net">
+<!ENTITY reportsuccess    "always">
+<!ENTITY returnname       "Build Monkey">
+<!ENTITY returnaddress    "buildmonkey@eigenbase.org">
+<!ENTITY skipusers        "true">
+<!ENTITY spamwhilebroken  "true">
+<!ENTITY subjectprefix    "Eigenbase Continuous Integration: ">
+<!ENTITY failureaddress   "perfecthash@users.sf.net">
+<!ENTITY reportwhenfixed  "true">
+
+<!ENTITY scp_user        "cruise">
+<!ENTITY scp_host        "apoptosis">
+<!ENTITY rsync_cmd        "rsync -az -e ssh --delete-after">
+<!ENTITY rsync_dest       "cruise@apoptosis:web/artifacts">
+
+<!ENTITY ant              "./doant.sh">
+
+<!ENTITY saffronProject SYSTEM "config-saffron.xml">
+<!ENTITY fennelProject SYSTEM "config-fennel.xml">
+<!ENTITY farragoProject SYSTEM "config-farrago.xml">
+
+]>
+
+<cruisecontrol>
+	&saffronProject;
+	&fennelProject;
+	&farragoProject;
+</cruisecontrol>

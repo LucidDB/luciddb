@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Delegating build script used by Cruise Control to build thirdparty. -->
+<project name="build-thirdparty" default="build">
+	<property environment="env"/>
+
+	<!-- perforce properties -->
+	<property file="${open_propfile}"/>
+	<property name="p4.client" value="${env.USER}.${env.HOSTNAME}"/>
+
+
+	<!-- regular vs. integration build locations -->
+	<property name="default.build.home" location="."/>
+	<property name="integration.build.home" location="./build"/>
+
+
+	<!-- perforce synchronization target -->
+	<target name="sync" unless="no-sync">
+		<p4sync view="${open_root}/thirdparty/..." failonerror="true"/>
+	</target>
+
+
+	<!-- basic build targets -->
+	<target name="build">
+		<property name="build.home" location="${default.build.home}"/>
+		<exec dir="${build.home}/thirdparty" executable="make" failonerror="true"/>
+	</target>
+
+
+	<!-- continuous integration targets -->
+	<target name="integration-build-and-test" depends="integration-build"/>
+
+	<target name="integration-build" depends="integration-copy">
+		<antcall target="build">
+			<param name="build.home" location="${integration.build.home}"/>
+		</antcall>
+	</target>
+
+	<target name="integration-copy" depends="sync">
+		<!-- ant's delete task doesn't deal with symbolic links
+		     created during STLport compilation -->
+		<echo message="Removing ${integration.build.home}/thirdparty"/>
+		<exec executable="rm">
+			<arg value="-rf"/>
+			<arg value="${integration.build.home}/thirdparty"/>
+		</exec>
+		<mkdir dir="${integration.build.home}/thirdparty"/>
+
+		<!-- ant's copy task doesn't preserve permissions -->
+		<echo message="Copying ./thirdparty to ${integration.build.home}/"/>
+		<exec dir="${default.build.home}" executable="cp" failonerror="true">
+			<arg value="-pr"/>
+			<arg value="./thirdparty/"/>
+			<arg value="${integration.build.home}/"/>
+		</exec>
+	</target>
+
+</project>

@@ -1,0 +1,76 @@
+<!-- This file is an XML fragment with the -->
+<!-- CruiseControl config for Aspen -->
+
+	<project name="aspen">
+		<labelincrementer defaultLabel="aspen.1"/>
+
+		<!-- Bootstrappers are run with every build before mod checks -->
+		<bootstrappers>
+			<currentbuildstatusbootstrapper file="logs/aspen/currentbuildstatus.txt"/>
+			<p4bootstrapper p4port="&open_p4port;" p4client="&open_p4client;" p4user="&open_p4user;" path="&open_root;/bootstrap/..."/>
+		</bootstrappers>
+
+
+		<!-- Defines where cruise looks for changes, to decide whether to run the build -->
+		<modificationset quietperiod="300">
+			<p4 port="&aspen_p4port;" client="&aspen_p4client;" user="&aspen_p4user;" view="//depot/aspen/..."/>
+			<p4 port="&open_p4port;" client="&open_p4client;" user="&open_p4user;" view="&open_root;/farrago/..."/>
+			<p4 port="&open_p4port;" client="&open_p4client;" user="&open_p4user;" view="&open_root;/saffron/..."/>
+			<p4 port="&open_p4port;" client="&open_p4client;" user="&open_p4user;" view="&open_root;/fennel/..."/>
+		</modificationset>
+
+
+		<!-- Configures the actual build loop, how often and which build file/target -->
+		<schedule interval="3600">
+			<ant buildfile="build-aspen.xml" uselogger="true" usedebug="false" antscript="&ant;" target="integration-build-and-test">
+			    <property name="open_propfile" value="&open_propfile;"/>
+			    <property name="open_root" value="&open_root;"/>
+			</ant>
+		</schedule>
+
+		<!-- directory to write build logs to -->
+		<log dir="logs/aspen">
+			<merge dir="build/aspen/testlog"/>
+		</log>
+
+		<!-- Publishers are run *after* a build completes -->
+		<publishers>
+			<currentbuildstatuspublisher file="logs/aspen/currentbuildstatus.txt"/>
+
+			<artifactspublisher dir="build/farrago/trace" dest="artifacts/aspen" subdirectory="farrago_trace"/>
+			<artifactspublisher dir="build/farrago/unitsql" dest="artifacts/aspen" subdirectory="farrago_unitsql"/>
+			<artifactspublisher dir="build/farrago/initsql" dest="artifacts/aspen" subdirectory="farrago_initsql"/>
+			<artifactspublisher dir="build/farrago/regressionsql" dest="artifacts/aspen" subdirectory="farrago_regressionsql"/>
+			<artifactspublisher dir="build/farrago/testlog" dest="artifacts/aspen" subdirectory="farrago_testlog"/>
+			<artifactspublisher dir="build/aspen/initsql" dest="artifacts/aspen" subdirectory="initsql"/>
+			<artifactspublisher dir="build/aspen/unitsql" dest="artifacts/aspen" subdirectory="unitsql"/>
+			<artifactspublisher dir="build/aspen/trace" dest="artifacts/aspen" subdirectory="trace"/>
+			<artifactspublisher dir="build/aspen/testcases" dest="artifacts/aspen" subdirectory="testcases"/>
+
+			<!-- sync up artifacts on jsp machine: CC's scp would copy everything -->
+			<execute command="&rsync_cmd; artifacts/aspen &rsync_dest;"/>
+
+			<scp sourcedir="logs/aspen"
+			     targetuser="&scp_user;"
+			     targethost="&scp_host;"
+			     targetdir="web/logs/aspen"/>
+			
+			<scp sourcedir="logs/aspen"
+			     file="currentbuildstatus.txt"
+			     targetuser="&scp_user;"
+			     targethost="&scp_host;"
+			     targetdir="web/logs/aspen"/>
+			
+			<email buildresultsurl="&buildresultsbase;/aspen"
+			       mailhost="&mailhost;"
+			       reportsuccess="&reportsuccess;"
+			       returnname="&returnname;"
+			       returnaddress="&returnaddress;"
+			       skipusers="&skipusers;"
+			       spamwhilebroken="&spamwhilebroken;"
+			       subjectprefix="&subjectprefix;">
+				<failure address="&failureaddress;"
+				         reportWhenFixed="&reportwhenfixed;"/>
+			</email>
+		</publishers>
+	</project>

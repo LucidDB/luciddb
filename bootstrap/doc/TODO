@@ -1,0 +1,28 @@
+In no particular order:
+
+- should builds depend on each other?  E.g. saffron would trigger
+  farrago and aspen, fennel would trigger farrago and aspen, farrago
+  would trigger aspen.  It should be possible to piggy back the
+  triggered builds onto the success child builds, reducing build
+  time.  Means that farrago/initBuild.sh would need to take a param
+  that prevents it from rebuilding fennel and saffron.
+
+- figure out C++ unit test reporting
+
+- is there a way to publish currentbuildstatus.txt when build is
+  skipped due to no changes in perforce?  without this you get "next
+  build: 17:30:22" long after that time
+
+- mechanism for embedding P4 password into config.xml?  how about Ant?
+  Right now the startcc.sh script sets $P4PASSWD and this only works
+  because perforce.eigenbase.org's guest account has no password (it accepts
+  anything).  Means we're sending the Disruptive perforce guest
+  password to perforce.eigenbase.org.  Needs more thought: maybe we can specify the
+  password in a properties file and tell CC where the file is.  File
+  wouldn't be checked in Perforce.
+
+- modify P4.java to use counters instead of hokey time-based
+  changelist updates -- see Julian's e-mail
+
+- HTML-ize installation docs and provide them as an alternative to the
+  current build docs (once this thing can bootstrap itself)

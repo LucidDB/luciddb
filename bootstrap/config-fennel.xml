@@ -1,0 +1,65 @@
+<!-- This file is an XML fragment with the -->
+<!-- CruiseControl config for Fennel -->
+
+	<project name="fennel">
+		<labelincrementer defaultLabel="fennel.1"/>
+
+		<!-- Bootstrappers are run with every build before mod checks -->
+		<bootstrappers>
+			<currentbuildstatusbootstrapper file="logs/fennel/currentbuildstatus.txt"/>
+			<p4bootstrapper p4port="&open_p4port;" p4client="&open_p4client;" p4user="&open_p4user;" path="&open_root;/bootstrap/..."/>
+		</bootstrappers>
+
+
+		<!-- Defines where cruise looks for changes, to decide whether to run the build -->
+		<modificationset quietperiod="300">
+			<p4 port="&open_p4port;" client="&open_p4client;" user="&open_p4user;" view="&open_root;/fennel/..."/>
+		</modificationset>
+
+
+		<!-- Configures the actual build loop, how often and which build file/target -->
+		<schedule interval="3600">
+			<ant buildfile="build-fennel.xml" uselogger="true" usedebug="false" antscript="&ant;" target="integration-build-and-test">
+			    <property name="open_propfile" value="&open_propfile;"/>
+			    <property name="open_root" value="&open_root;"/>
+			</ant>
+		</schedule>
+
+		<!-- directory to write build logs to -->
+		<log dir="logs/fennel"/>
+
+		<!-- Publishers are run *after* a build completes -->
+		<publishers>
+			<currentbuildstatuspublisher file="logs/fennel/currentbuildstatus.txt"/>
+
+			<artifactspublisher dir="build/fennel/test/.testlog" dest="artifacts/fennel"/>
+
+			<!-- sync up artifacts on jsp machine: CC's scp would copy everything -->
+			<execute command="&rsync_cmd; artifacts/fennel &rsync_dest;"/>
+
+			<scp sourcedir="logs/fennel"
+			     targetuser="&scp_user;"
+			     targethost="&scp_host;"
+			     targetdir="web/logs/fennel"/>
+			
+			<scp sourcedir="logs/fennel"
+			     file="currentbuildstatus.txt"
+			     targetuser="&scp_user;"
+			     targethost="&scp_host;"
+			     targetdir="web/logs/fennel"/>
+			
+			<email buildresultsurl="&buildresultsbase;/fennel"
+			       mailhost="&mailhost;"
+			       reportsuccess="&reportsuccess;"
+			       returnname="&returnname;"
+			       returnaddress="&returnaddress;"
+			       skipusers="&skipusers;"
+			       spamwhilebroken="&spamwhilebroken;"
+			       subjectprefix="&subjectprefix;">
+				<failure address="&failureaddress;"
+				         reportWhenFixed="&reportwhenfixed;"/>
+			</email>
+		</publishers>
+	</project>
+
+
