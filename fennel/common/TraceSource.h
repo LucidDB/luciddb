@@ -25,9 +25,6 @@
 #define Fennel_TraceSource_Included
 
 #include <sstream>
-#ifndef __MINGW32__
-# include <pthread.h>
-#endif
 #include "fennel/common/TraceTarget.h"
 
 FENNEL_BEGIN_NAMESPACE
@@ -145,18 +142,8 @@ do { \
     } \
 } while (false)
 
-inline int getCurrentThreadId()
-{
-    // NOTE jvs 24-Nov-2005:  it would be nice if boost threads would
-    // abstract out the notion of thread ID!
-
-    // NOTE jhyde 24-Jan-2005: Code copied from SXMutex. todo: cleanup.
-#ifdef __MINGW32__
-    return static_cast<int>(GetCurrentThreadId());
-#else
-    return static_cast<int>(pthread_self());
-#endif
-}
+// REVIEW jvs 18-Mar-2005:  Why can't we just pass getCurrentThreadId()
+// to operator <<?
 
 // return a string id for the current thread
 inline char *get_tid(char *tidstr, int cb) 

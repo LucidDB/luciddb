@@ -92,8 +92,6 @@ private:
     SchedulingPolicy schedulingPolicy;
     uint nShared,nExclusive,nExclusivePending;
     int exclusiveHolderId;
-
-    int getCurrentThreadId();
 };
 
 /**
