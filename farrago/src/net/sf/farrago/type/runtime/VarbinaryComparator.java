@@ -35,6 +35,8 @@ public class VarbinaryComparator implements Comparator
         Object o1,
         Object o2)
     {
+        assert(o1 instanceof BytePointer) : o1.getClass();
+        assert(o2 instanceof BytePointer) : o2.getClass();
         BytePointer bp1 = (BytePointer) o1;
         BytePointer bp2 = (BytePointer) o2;
         return bp1.compareBytes(bp2);

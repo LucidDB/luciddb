@@ -1,7 +1,11 @@
 
-ExecutableStmt.Oj_inner_1 oj_var0 = new ExecutableStmt.Oj_inner_1();
+ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
+
+
+ExecutableStmt.Oj_inner_1 oj_var1 = new ExecutableStmt.Oj_inner_1();
 
 oj_var0.assignFrom( new byte[]{ 0, 17, 34, 51, 68, 85, 102, 119, -120, -103, -86, -69 } );
-oj_var0.enforceBytePrecision( 10, false, (byte) 0 );
+oj_var1.assignFrom( oj_var0 );
+oj_var1.enforceBytePrecision( 10, false, (byte) 0 );
 
-return oj_var0;
+return oj_var1;

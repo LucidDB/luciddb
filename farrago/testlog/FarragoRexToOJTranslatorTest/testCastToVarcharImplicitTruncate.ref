@@ -1,7 +1,11 @@
 
-ExecutableStmt.Oj_inner_1 oj_var0 = new ExecutableStmt.Oj_inner_1();
+ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
+
+
+ExecutableStmt.Oj_inner_1 oj_var1 = new ExecutableStmt.Oj_inner_1();
 
 oj_var0.assignFrom( "supercalifragilistiexpialodocious" );
-oj_var0.enforceBytePrecision( 10, false, (byte) ' ' );
+oj_var1.assignFrom( oj_var0 );
+oj_var1.enforceBytePrecision( 10, false, (byte) ' ' );
 
-return oj_var0;
+return oj_var1;

@@ -143,11 +143,8 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
     {
         super.visitLiteral(literal);
         RelDataType type = literal.getType();
-        if (type instanceof FarragoDateTimeType) {
-            // TODO jvs 22-May-2004: Need to do something similar for anything
-            // which requires a holder class at runtime (e.g. VARCHAR),
-            // using a more general test than instanceof FarragoDateTimeType.
-            // Also, initialize once and only once.
+        if (type instanceof FarragoPrecisionType) {
+            // TODO jvs 22-May-2004:  Initialize once and only once.
             setTranslation(
                 castImplementor.convertCastToAssignableValue(
                     this,
