@@ -30,6 +30,9 @@ FENNEL_BEGIN_NAMESPACE
  */
 class SysCallExcn : public FennelExcn
 {
+private:
+    int errCode;
+
 public:
     /**
      * Constructs a new SysCallExcn.  This should be called immediately after
@@ -40,6 +43,11 @@ public:
      * view; SysCallExcn will append additional information from the OS
      */
     explicit SysCallExcn(std::string msgInit);
+
+    /**
+     * Returns the error code that caused this SysCallExcn.
+     */
+    int getErrorCode();
 };
 
 FENNEL_END_NAMESPACE

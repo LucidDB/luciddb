@@ -42,6 +42,7 @@ SysCallExcn::SysCallExcn(std::string msgInit)
 #ifdef __MINGW32__
     oss << "GetLastError() = ";
     oss << dwErr;
+    errCode = dwErr;
 #else
     char *pMsg = strerror(errno);
     if (pMsg) {
@@ -50,9 +51,15 @@ SysCallExcn::SysCallExcn(std::string msgInit)
         oss << "errno = ";
         oss << errno;
     }
+    errCode = errno;
 #endif
     msg = oss.str();
     msg = FennelResource::instance().sysCallFailed(msg);
+}
+
+int SysCallExcn::getErrorCode()
+{
+    return errCode;
 }
 
 FENNEL_END_CPPFILE("$Id$");
