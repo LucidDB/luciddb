@@ -22,8 +22,11 @@
 package org.eigenbase.sql.fun;
 
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.validation.ValidationUtil;
 import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.sql.type.ReturnTypeInference;
+import org.eigenbase.sql.type.OperandsTypeChecking;
 import org.eigenbase.reltype.RelDataType;
 
 import java.util.ArrayList;
@@ -39,7 +42,7 @@ public class SqlSubstringFunction extends SqlFunction {
 
     SqlSubstringFunction() {
         super("SUBSTRING", SqlKind.Function,
-            SqlOperatorTable.useNullableVaryingFirstArgType, null, null,
+            ReturnTypeInference.useNullableVaryingFirstArgType, null, null,
             SqlFunction.SqlFuncTypeName.String);
     }
 
@@ -58,13 +61,13 @@ public class SqlSubstringFunction extends SqlFunction {
     public String getAllowedSignatures(String name)
     {
         StringBuffer ret = new StringBuffer();
-        for (int i = 0; i < SqlOperatorTable.stringTypes.length;
+        for (int i = 0; i < SqlTypeName.stringTypes.length;
              i++) {
             if (i > 0) {
                 ret.append(NL);
             }
             ArrayList list = new ArrayList();
-            list.add(SqlOperatorTable.stringTypes[i]);
+            list.add(SqlTypeName.stringTypes[i]);
             list.add(SqlTypeName.Integer);
             ret.append(this.getAnonymousSignature(list));
             ret.append(NL);
@@ -83,10 +86,10 @@ public class SqlSubstringFunction extends SqlFunction {
     {
         int n = call.operands.length;
         assert ((3 == n) || (2 == n));
-        SqlOperatorTable.typeNullableString.checkThrows(validator,
+        OperandsTypeChecking.typeNullableString.checkThrows(validator,
             scope, call, call.operands[0], 0);
         if (2 == n) {
-            SqlOperatorTable.typeNullableNumeric.checkThrows(validator,
+            OperandsTypeChecking.typeNullableNumeric.checkThrows(validator,
                 scope, call, call.operands[1], 0);
         } else {
             RelDataType t1 =
@@ -95,17 +98,17 @@ public class SqlSubstringFunction extends SqlFunction {
                 validator.deriveType(scope, call.operands[2]);
 
             if (t1.isCharType()) {
-                SqlOperatorTable.typeNullableString.checkThrows(validator,
+                OperandsTypeChecking.typeNullableString.checkThrows(validator,
                     scope, call, call.operands[1], 0);
-                SqlOperatorTable.typeNullableString.checkThrows(validator,
+                OperandsTypeChecking.typeNullableString.checkThrows(validator,
                     scope, call, call.operands[2], 0);
 
-                isCharTypeComparableThrows(validator, scope,
+                ValidationUtil.isCharTypeComparableThrows(validator, scope,
                     call.operands);
             } else {
-                SqlOperatorTable.typeNullableNumeric.checkThrows(validator,
+                OperandsTypeChecking.typeNullableNumeric.checkThrows(validator,
                     scope, call, call.operands[1], 0);
-                SqlOperatorTable.typeNullableNumeric.checkThrows(validator,
+                OperandsTypeChecking.typeNullableNumeric.checkThrows(validator,
                     scope, call, call.operands[2], 0);
             }
 

@@ -4,6 +4,8 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.sql.type.UnknownParamInference;
+import org.eigenbase.sql.type.ReturnTypeInference;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.util.NlsString;
@@ -26,10 +28,10 @@ public class SqlLiteralChainOperator extends SqlInternalOperator {
     SqlLiteralChainOperator() {
         super("$LitChain", SqlKind.LitChain, 40, true,
             // precedence tighter than the * and || operators
-            SqlOperatorTable.useFirstArgType, SqlOperatorTable.useFirstKnownParam, null);
+            ReturnTypeInference.useFirstArgType, UnknownParamInference.useFirstKnown, null);
     }
 
-    // REVIEW mb 8/8/04: Can't use SqlOperator.AllowedArgInference here;
+    // REVIEW mb 8/8/04: Can't use SqlOperator.OperandsTypeChecking here;
     // it doesn't handle variadicCountDescriptor operators well.
     public OperandsCountDescriptor getOperandsCountDescriptor()
     {

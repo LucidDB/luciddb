@@ -53,6 +53,9 @@ import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.rex.RexCall;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.type.UnknownParamInference;
+import org.eigenbase.sql.type.ReturnTypeInference;
+import org.eigenbase.sql.type.OperandsTypeChecking;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.test.SqlTester;
 
@@ -123,9 +126,9 @@ public class FarragoAutoCalcRuleTest extends TestCase
 
         SqlFunction cppFunc =
             new SqlFunction("CPLUS", SqlKind.Function,
-                SqlStdOperatorTable.useNullableBiggest,
-                SqlStdOperatorTable.useFirstKnownParam,
-                SqlStdOperatorTable.typeNullableNumericNumeric,
+                ReturnTypeInference.useNullableBiggest,
+                UnknownParamInference.useFirstKnown,
+                OperandsTypeChecking.typeNullableNumericNumeric,
                 SqlFunction.SqlFuncTypeName.Numeric) {
                 public void test(SqlTester tester)
                 {
@@ -343,9 +346,9 @@ public class FarragoAutoCalcRuleTest extends TestCase
 
             SqlFunction jplusFunc =
                 new SqlFunction("JPLUS", SqlKind.Function,
-                    SqlStdOperatorTable.useNullableBiggest,
-                    SqlStdOperatorTable.useFirstKnownParam,
-                    SqlStdOperatorTable.typeNullableNumericNumeric,
+                    ReturnTypeInference.useNullableBiggest,
+                    UnknownParamInference.useFirstKnown,
+                    OperandsTypeChecking.typeNullableNumericNumeric,
                     SqlFunction.SqlFuncTypeName.Numeric) {
                     public void test(SqlTester tester)
                     {
@@ -359,8 +362,8 @@ public class FarragoAutoCalcRuleTest extends TestCase
 
             SqlFunction jrowFunc =
                 new SqlFunction("JROW", SqlKind.Function, null,
-                    SqlOperatorTable.useFirstKnownParam,
-                    SqlStdOperatorTable.typeNullableNumericNumeric,
+                    UnknownParamInference.useFirstKnown,
+                    OperandsTypeChecking.typeNullableNumericNumeric,
                     SqlFunction.SqlFuncTypeName.Numeric) {
                     public void test(SqlTester tester)
                     {

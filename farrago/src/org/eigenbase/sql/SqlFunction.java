@@ -24,6 +24,9 @@ package org.eigenbase.sql;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.util.EnumeratedValues;
 import org.eigenbase.util.Util;
+import org.eigenbase.sql.type.UnknownParamInference;
+import org.eigenbase.sql.type.ReturnTypeInference;
+import org.eigenbase.sql.type.OperandsTypeChecking;
 
 
 /**
@@ -48,9 +51,9 @@ public abstract class SqlFunction extends SqlOperator
 
     public SqlFunction(
         String name,
-        TypeInference typeInference,
-        ParamTypeInference paramTypeInference,
-        AllowedArgInference paramTypes)
+        ReturnTypeInference typeInference,
+        UnknownParamInference paramTypeInference,
+        OperandsTypeChecking paramTypes)
     {
         super(name, SqlKind.Function, 100, 100, typeInference,
             paramTypeInference, paramTypes);
@@ -59,9 +62,9 @@ public abstract class SqlFunction extends SqlOperator
     public SqlFunction(
         String name,
         SqlKind kind,
-        TypeInference typeInference,
-        ParamTypeInference paramTypeInference,
-        AllowedArgInference paramTypes,
+        ReturnTypeInference typeInference,
+        UnknownParamInference paramTypeInference,
+        OperandsTypeChecking paramTypes,
         SqlFuncTypeName funcType)
     {
         super(name, kind, 100, 100, typeInference, paramTypeInference,
@@ -72,9 +75,9 @@ public abstract class SqlFunction extends SqlOperator
     public SqlFunction(
         String name,
         SqlKind kind,
-        TypeInference typeInference,
-        ParamTypeInference paramTypeInference,
-        AllowedArgInference paramTypes)
+        ReturnTypeInference typeInference,
+        UnknownParamInference paramTypeInference,
+        OperandsTypeChecking paramTypes)
     {
         super(name, kind, 100, 100, typeInference, paramTypeInference,
             paramTypes);

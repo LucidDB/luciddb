@@ -22,6 +22,9 @@
 package org.eigenbase.sql;
 
 import org.eigenbase.util.Util;
+import org.eigenbase.sql.type.UnknownParamInference;
+import org.eigenbase.sql.type.ReturnTypeInference;
+import org.eigenbase.sql.type.OperandsTypeChecking;
 
 
 /**
@@ -36,9 +39,9 @@ public abstract class SqlBinaryOperator extends SqlOperator
         SqlKind kind,
         int prec,
         boolean isLeftAssoc,
-        SqlOperator.TypeInference typeInference,
-        SqlOperator.ParamTypeInference paramTypeInference,
-        SqlOperator.AllowedArgInference argTypes)
+        ReturnTypeInference typeInference,
+        UnknownParamInference paramTypeInference,
+        OperandsTypeChecking argTypes)
     {
         super(name, kind, (2 * prec) + (isLeftAssoc ? 0 : 1),
             (2 * prec) + (isLeftAssoc ? 1 : 0), typeInference,

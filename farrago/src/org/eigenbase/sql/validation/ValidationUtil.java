@@ -21,12 +21,17 @@
 package org.eigenbase.sql.validation;
 
 import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.util.Util;
 import org.eigenbase.sql.SqlValidator;
 import org.eigenbase.sql.SqlNode;
+import org.eigenbase.sql.SqlCall;
+import org.eigenbase.sql.SqlSymbol;
 import org.eigenbase.rex.RexNode;
+import org.eigenbase.resource.EigenbaseResource;
 
 /**
+ * TODO: move this file into package type
  * Contains utility methods used during validation or type derivation
  *
  * @author Wael Chatila
@@ -132,4 +137,84 @@ public class ValidationUtil
 
         return types;
     }
+
+    /**
+     * Helper function that recreates a given RelDataType with nullablility
+     * iff any of a calls operand types are nullable.
+     */
+    public final static RelDataType makeNullableIfOperandsAre(
+        final SqlValidator validator,
+        final SqlValidator.Scope scope,
+        final SqlCall call,
+        RelDataType type)
+    {
+        for (int i = 0; i < call.operands.length; ++i) {
+            if (call.operands[i] instanceof SqlSymbol) {
+                continue;
+            }
+
+            RelDataType operandType =
+                validator.deriveType(scope, call.operands[i]);
+
+            if (operandType.isNullable()) {
+                type =
+                    validator.typeFactory.createTypeWithNullability(type, true);
+                break;
+            }
+        }
+        return type;
+    }
+
+    /**
+     * Helper function that recreates a given RelDataType with nullablility
+     * iff any of the {@param argTypes} are nullable.
+     */
+    public final static RelDataType makeNullableIfOperandsAre(
+        final RelDataTypeFactory typeFactory,
+        final RelDataType [] argTypes,
+        RelDataType type)
+    {
+        for (int i = 0; i < argTypes.length; ++i) {
+            if (argTypes[i].isNullable()) {
+                type = typeFactory.createTypeWithNullability(type, true);
+                break;
+            }
+        }
+        return type;
+    }
+
+    public static void isCharTypeComparableThrows(RelDataType [] argTypes)
+    {
+        if (!isCharTypeComparable(argTypes)) {
+            String msg = "";
+            for (int i = 0; i < argTypes.length; i++) {
+                if (i > 0) {
+                    msg += ", ";
+                }
+                RelDataType argType = argTypes[i];
+                msg += argType.toString();
+            }
+            throw EigenbaseResource.instance().newTypeNotComparableEachOther(msg);
+        }
+    }
+
+    public static void isCharTypeComparableThrows(
+        SqlValidator validator,
+        SqlValidator.Scope scope,
+        SqlNode [] operands)
+    {
+        if (!isCharTypeComparable(validator, scope, operands)) {
+            String msg = "";
+            for (int i = 0; i < operands.length; i++) {
+                if (i > 0) {
+                    msg += ", ";
+                }
+                msg += operands[i].toString();
+            }
+            throw EigenbaseResource.instance().newOperandNotComparable(msg);
+        }
+    }
 }
+
+
+// End ValidationUtil.java

@@ -33,6 +33,7 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.test.SqlOperatorIterator;
 import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.sql.type.OperandsTypeChecking;
 import org.eigenbase.util.Util;
 
 
@@ -175,12 +176,27 @@ public class FarragoCalcSystemTest extends FarragoTestCase
             while (it.hasNext()) {
                 Integer n = (Integer) it.next();
                 SqlNode [] operands = new SqlNode[n.intValue()];
-                SqlOperator.AllowedArgInference allowedTypes =
-                    op.getAllowedArgInference();
-                if (allowedTypes instanceof SqlOperator.CompositeAllowedArgInference) {
-                    allowedTypes =
-                        ((SqlOperator.CompositeAllowedArgInference) allowedTypes)
-                            .getRules()[0];
+                OperandsTypeChecking allowedTypes =
+                    op.getOperandsCheckingRule();
+                SqlTypeName[][] rules;
+                if (allowedTypes instanceof
+                    OperandsTypeChecking.CompositeOperandsTypeChecking) {
+                    OperandsTypeChecking rule =
+                        ((OperandsTypeChecking.CompositeOperandsTypeChecking)
+                        allowedTypes).getRules()[0];
+                    if (rule instanceof
+                        OperandsTypeChecking.SimpleOperandsTypeChecking) {
+                        rules =
+                            ((OperandsTypeChecking.SimpleOperandsTypeChecking)
+                            rule).getTypes();
+                    } else {
+                        throw Util.needToImplement(rule);
+                    }
+                } else if (allowedTypes instanceof OperandsTypeChecking.SimpleOperandsTypeChecking) {
+                    rules = ((OperandsTypeChecking.SimpleOperandsTypeChecking)
+                        allowedTypes).getTypes();
+                } else {
+                    throw Util.needToImplement(allowedTypes);
                 }
 
                 if (null == allowedTypes) {
@@ -189,9 +205,9 @@ public class FarragoCalcSystemTest extends FarragoTestCase
                 }
 
                 for (int i = 0; i < n.intValue(); i++) {
-                    SqlTypeName typeName = allowedTypes.getTypes()[i][0];
+                    SqlTypeName typeName = rules[i][0];
                     if (typeName.equals(SqlTypeName.Null)) {
-                        typeName = allowedTypes.getTypes()[i][1];
+                        typeName = rules[i][1];
                     } else if (typeName.equals(SqlTypeName.Any)) {
                         typeName = SqlTypeName.Boolean;
                     }

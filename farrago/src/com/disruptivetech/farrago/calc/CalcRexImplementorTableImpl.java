@@ -812,33 +812,22 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
             dm = new DoubleKeyMap();
             dm.setEnforceUniqueness(true);
 
-            Object [] exactTypes =
-            {
-                SqlTypeName.Tinyint, SqlTypeName.Smallint, SqlTypeName.Integer,
-                SqlTypeName.Bigint
-            };
-            Object [] approxTypes =
-            { SqlTypeName.Float, SqlTypeName.Real, SqlTypeName.Double };
-            Object [] timeTypes =
-            { SqlTypeName.Date, SqlTypeName.Time, SqlTypeName.Timestamp };
-            Object [] charTypes = { SqlTypeName.Char, SqlTypeName.Varchar };
-
             dm.put(
-                exactTypes,
-                exactTypes,
+                SqlTypeName.intTypes,
+                SqlTypeName.intTypes,
                 new UsingInstrImplementor(CalcProgramBuilder.Cast));
             dm.put(
-                exactTypes,
-                approxTypes,
+                SqlTypeName.intTypes,
+                SqlTypeName.approxTypes,
                 new UsingInstrImplementor(CalcProgramBuilder.Cast));
             dm.put(
-                timeTypes,
+                SqlTypeName.timeTypes,
                 SqlTypeName.Bigint,
                 new UsingInstrImplementor(
                     ExtInstructionDefTable.castDateToMillis));
             dm.put(
-                exactTypes,
-                charTypes,
+                SqlTypeName.intTypes,
+                SqlTypeName.charTypes,
                 new UsingInstrImplementor(ExtInstructionDefTable.castA) {
                     public CalcProgramBuilder.Register implement(
                         RexCall call,
@@ -855,12 +844,12 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                 });
 
             dm.put(
-                approxTypes,
-                approxTypes,
+                SqlTypeName.approxTypes,
+                SqlTypeName.approxTypes,
                 new UsingInstrImplementor(CalcProgramBuilder.Cast));
             dm.put(
-                approxTypes,
-                charTypes,
+                SqlTypeName.approxTypes,
+                SqlTypeName.charTypes,
                 new UsingInstrImplementor(ExtInstructionDefTable.castA) {
                     public CalcProgramBuilder.Register implement(
                         RexCall call,
@@ -876,8 +865,8 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                     }
                 });
             dm.put(
-                approxTypes,
-                exactTypes,
+                SqlTypeName.approxTypes,
+                SqlTypeName.intTypes,
                 new AbstractCalcRexImplementor() {
                     public CalcProgramBuilder.Register implement(
                         RexCall call,
@@ -905,39 +894,39 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                 });
 
             dm.put(
-                charTypes,
+                SqlTypeName.charTypes,
                 SqlTypeName.Date,
                 new UsingInstrImplementor(
                     ExtInstructionDefTable.castStrAToDate));
             dm.put(
                 SqlTypeName.Date,
-                charTypes,
+                SqlTypeName.charTypes,
                 new UsingInstrImplementor(ExtInstructionDefTable.castDateToStr));
 
             dm.put(
-                charTypes,
+                SqlTypeName.charTypes,
                 SqlTypeName.Time,
                 new UsingInstrImplementor(
                     ExtInstructionDefTable.castStrAToTime));
             dm.put(
                 SqlTypeName.Time,
-                charTypes,
+                SqlTypeName.charTypes,
                 new UsingInstrImplementor(ExtInstructionDefTable.castTimeToStr));
 
             dm.put(
-                charTypes,
+                SqlTypeName.charTypes,
                 SqlTypeName.Timestamp,
                 new UsingInstrImplementor(
                     ExtInstructionDefTable.castStrAToTimestamp));
             dm.put(
                 SqlTypeName.Timestamp,
-                charTypes,
+                SqlTypeName.charTypes,
                 new UsingInstrImplementor(
                     ExtInstructionDefTable.castTimestampToStr));
 
             dm.put(
-                charTypes,
-                exactTypes,
+                SqlTypeName.charTypes,
+                SqlTypeName.intTypes,
                 new UsingInstrImplementor(ExtInstructionDefTable.castA) {
                     public CalcProgramBuilder.Register implement(
                         RexCall call,
@@ -953,8 +942,8 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                     }
                 });
             dm.put(
-                charTypes,
-                approxTypes,
+                SqlTypeName.charTypes,
+                SqlTypeName.approxTypes,
                 new UsingInstrImplementor(ExtInstructionDefTable.castA) {
                     public CalcProgramBuilder.Register implement(
                         RexCall call,
@@ -971,8 +960,8 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                 });
 
             dm.put(
-                charTypes,
-                charTypes,
+                SqlTypeName.charTypes,
+                SqlTypeName.charTypes,
                 new UsingInstrImplementor(ExtInstructionDefTable.castA));
         }
 

@@ -25,6 +25,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.validation.ValidationUtil;
+import org.eigenbase.sql.type.UnknownParamInference;
+import org.eigenbase.sql.type.ReturnTypeInference;
+import org.eigenbase.sql.type.OperandsTypeChecking;
 import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.sql.parser.ParserUtil;
 import org.eigenbase.util.Util;
@@ -65,11 +69,11 @@ public abstract class SqlLikeOperator extends SqlSpecialOperator
         // LIKE is right-associative, because that makes it easier to capture
         // dangling ESCAPE clauses: "a like b like c escape d" becomes
         // "a like (b like c escape d)".
-        super(name, kind, 15, false, SqlOperatorTable.useNullableBoolean,
-            SqlOperatorTable.useFirstKnownParam,
+        super(name, kind, 15, false, ReturnTypeInference.useNullableBoolean,
+            UnknownParamInference.useFirstKnown,
             
         /** this is not correct in general */
-        SqlOperatorTable.typeNullableStringStringString);
+        OperandsTypeChecking.typeNullableStringStringString);
         this.negated = negated;
     }
 
@@ -87,11 +91,11 @@ public abstract class SqlLikeOperator extends SqlSpecialOperator
     {
         switch (call.operands.length) {
         case 2:
-            SqlOperatorTable.typeNullableStringStringOfSameType.check(validator,
+            OperandsTypeChecking.typeNullableStringStringOfSameType.check(validator,
                 scope, call);
             break;
         case 3:
-            SqlOperatorTable.typeNullableStringStringStringOfSameType.check(validator,
+            OperandsTypeChecking.typeNullableStringStringStringOfSameType.check(validator,
                 scope, call);
 
             //calc implementation should
@@ -101,7 +105,7 @@ public abstract class SqlLikeOperator extends SqlSpecialOperator
             throw Util.newInternal("unexpected number of args to " + call);
         }
 
-        isCharTypeComparableThrows(validator, scope, call.operands);
+        ValidationUtil.isCharTypeComparableThrows(validator, scope, call.operands);
     }
 
     public void unparse(

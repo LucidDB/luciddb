@@ -23,7 +23,6 @@ package org.eigenbase.sql.type;
 
 import org.eigenbase.util.EnumeratedValues;
 
-
 /**
  * Enumeration of the type names which can be used to construct a SQL type.
  *
@@ -118,11 +117,11 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
      */
     public static final EnumeratedValues enumeration =
         new EnumeratedValues(new SqlTypeName [] {
-                Boolean, Integer, Varchar, Date, Time, Timestamp, Null, Decimal,
-                Any, Char, Binary, Varbinary, Tinyint, Smallint, Bigint, Real,
-                Double, Bit, Symbol, IntervalYearToMonth, IntervalDayTime,
-                Float
-            });
+            Boolean, Integer, Varchar, Date, Time, Timestamp, Null, Decimal,
+            Any, Char, Binary, Varbinary, Tinyint, Smallint, Bigint, Real,
+            Double, Bit, Symbol, IntervalYearToMonth, IntervalDayTime,
+            Float
+        });
 
     //~ Instance fields -------------------------------------------------------
 
@@ -130,6 +129,50 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
      * Bitwise-or of flags indicating allowable precision/scale combinations.
      */
     private final int signatures;
+
+    public static final SqlTypeName [] booleanTypes =
+        { Boolean };
+    public static final SqlTypeName [] booleanNullableTypes =
+        makeNullable(booleanTypes);
+
+    public static final SqlTypeName [] binaryTypes =
+        { Bit, Binary, Varbinary };
+    public static final SqlTypeName [] binaryNullableTypes =
+        makeNullable(binaryTypes);
+
+    public static final SqlTypeName [] intTypes =
+        { Tinyint, Smallint, Integer, Bigint };
+    public static final SqlTypeName [] intNullableTypes =
+        makeNullable(intTypes);
+
+    public static final SqlTypeName[] approxTypes =
+        { Float, Real, Double };
+    public static final SqlTypeName[] approxNullableTypes =
+        makeNullable(approxTypes);
+
+    public static final SqlTypeName [] numericTypes =
+        combine(intTypes, approxTypes);
+    public static final SqlTypeName [] numericNullableTypes =
+        makeNullable(numericTypes);
+
+    public static final SqlTypeName [] charTypes =
+        { Char, Varchar };
+    public static final SqlTypeName [] charNullableTypes =
+        makeNullable(charTypes);
+
+    public static final SqlTypeName [] stringTypes =
+        combine(charTypes, binaryTypes);
+    public static final SqlTypeName [] stringNullableTypes =
+        makeNullable(stringTypes);
+
+    public static final SqlTypeName[] timeTypes =
+        { Date, Time, Timestamp };
+
+    public static final SqlTypeName [] timeIntervalTypes =
+        { IntervalDayTime, IntervalYearToMonth };
+    public static final SqlTypeName [] timeIntervalNullableTypes =
+        makeNullable(timeIntervalTypes);
+
 
     //~ Constructors ----------------------------------------------------------
 
@@ -228,6 +271,18 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
         }
 
         return false;
+    }
+
+    private static SqlTypeName[] makeNullable(SqlTypeName[] array) {
+        return combine(new SqlTypeName[]{SqlTypeName.Null},array);
+    }
+
+    private static SqlTypeName[] combine(SqlTypeName[] array0,
+        SqlTypeName[] array1) {
+        SqlTypeName[] ret = new SqlTypeName[array0.length+array1.length];
+        System.arraycopy(array0,0,ret,0,array0.length);
+        System.arraycopy(array1,0,ret,array0.length,array1.length);
+        return ret;
     }
 }
 

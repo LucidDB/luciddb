@@ -29,6 +29,8 @@ import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.sql.parser.ParserUtil;
 import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.validation.ValidationUtil;
+import org.eigenbase.sql.type.ReturnTypeInference;
+import org.eigenbase.sql.type.OperandsTypeChecking;
 import org.eigenbase.util.Util;
 
 
@@ -99,7 +101,7 @@ public class SqlBetweenOperator extends SqlInfixOperator
         SqlValidator.Scope scope,
         SqlCall call)
     {
-        return SqlOperatorTable.useNullableBoolean.getType(
+        return ReturnTypeInference.useNullableBoolean.getType(
             validator.typeFactory,
             getTypeArray(validator, scope, call));
     }
@@ -114,15 +116,15 @@ public class SqlBetweenOperator extends SqlInfixOperator
     {
         StringBuffer ret = new StringBuffer();
         ret.append(
-            SqlOperatorTable.typeNullableNumericNumericNumeric
+            OperandsTypeChecking.typeNullableNumericNumericNumeric
                 .getAllowedSignatures(this));
         ret.append(NL);
         ret.append(
-            SqlOperatorTable.typeNullableBinariesBinariesBinaries
+            OperandsTypeChecking.typeNullableBinariesBinariesBinaries
                 .getAllowedSignatures(this));
         ret.append(NL);
         ret.append(
-            SqlOperatorTable.typeNullableVarcharVarcharVarchar
+            OperandsTypeChecking.typeNullableVarcharVarcharVarchar
                 .getAllowedSignatures(this));
         return replaceAnonymous(
             ret.toString(),
@@ -142,15 +144,15 @@ public class SqlBetweenOperator extends SqlInfixOperator
         SqlValidator validator,
         SqlValidator.Scope scope)
     {
-        SqlOperator.AllowedArgInference [] rules =
-            new SqlOperator.AllowedArgInference [] {
-                SqlOperatorTable.typeNullableNumeric,
-                SqlOperatorTable.typeNullableBinariesBinaries,
-                SqlOperatorTable.typeNullableVarchar
+        OperandsTypeChecking [] rules =
+            new OperandsTypeChecking [] {
+                OperandsTypeChecking.typeNullableNumeric,
+                OperandsTypeChecking.typeNullableBinariesBinaries,
+                OperandsTypeChecking.typeNullableVarchar
             };
         int failCount = 0;
         for (int i = 0; i < rules.length; i++) {
-            SqlOperator.AllowedArgInference rule = rules[i];
+            OperandsTypeChecking rule = rules[i];
             boolean ok;
             ok = rule.check(call, validator, scope, call.operands[0], 0);
             ok = ok && rule.check(call, validator, scope, call.operands[2], 0);
@@ -167,6 +169,7 @@ public class SqlBetweenOperator extends SqlInfixOperator
 
     public SqlOperator.OperandsCountDescriptor getOperandsCountDescriptor()
     {
+        //exp1 [ASYMMETRIC|SYMMETRIC] BETWEEN exp4 AND exp4
         return new OperandsCountDescriptor(4);
     }
 

@@ -33,6 +33,8 @@ import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.fun.SqlRowOperator;
 import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.sql.type.UnknownParamInference;
+import org.eigenbase.sql.type.ReturnTypeInference;
 import org.eigenbase.util.Util;
 
 
@@ -64,7 +66,8 @@ public class SqlValidator
     private SqlNode outermostNode;
     private int nextGeneratedId;
     public final RelDataTypeFactory typeFactory;
-    final RelDataType unknownType;
+    public final RelDataType unknownType;
+    public final RelDataType anyType;
 
     /**
      * Map of derived RelDataType for each node.  This is an IdentityHashMap
@@ -99,6 +102,7 @@ public class SqlValidator
         // NOTE jvs 23-Dec-2003:  This is used as the type for dynamic
         // parameters and null literals until a real type is imposed for them.
         unknownType = typeFactory.createSqlType(SqlTypeName.Null);
+        anyType = typeFactory.createSqlType(SqlTypeName.Any);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -917,6 +921,7 @@ public class SqlValidator
                 inferUnknownTypes(type, scope, child);
             }
         } else if (node instanceof SqlCase) {
+            //REVIEW wael: can this be done in a paramtypeinference strategy object?
             SqlCase caseCall = (SqlCase) node;
             RelDataType returnType = deriveType(scope, node);
 
@@ -945,7 +950,7 @@ public class SqlValidator
             }
         } else if (node instanceof SqlCall) {
             SqlCall call = (SqlCall) node;
-            SqlOperator.ParamTypeInference paramTypeInference =
+            UnknownParamInference paramTypeInference =
                 call.operator.getParamTypeInference();
             SqlNode [] operands = call.getOperands();
             RelDataType [] operandTypes = new RelDataType[operands.length];
@@ -1490,6 +1495,9 @@ public class SqlValidator
         // TODO:  validate updatability, type compatibility
     }
 
+    /**
+     * Validates a VALUES clause
+     */
     private void validateValues(
         SqlCall node,
         RelDataType targetRowType)
@@ -1547,7 +1555,7 @@ public class SqlValidator
                 }
 
                 final RelDataType type =
-                    SqlOperatorTable.useNullableBiggest.getType(typeFactory,
+                    ReturnTypeInference.useNullableBiggest.getType(typeFactory,
                         types);
 
                 if (null == type) {

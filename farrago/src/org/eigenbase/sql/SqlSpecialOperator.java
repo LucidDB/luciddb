@@ -24,6 +24,9 @@ package org.eigenbase.sql;
 import java.util.List;
 
 import org.eigenbase.util.Util;
+import org.eigenbase.sql.type.UnknownParamInference;
+import org.eigenbase.sql.type.ReturnTypeInference;
+import org.eigenbase.sql.type.OperandsTypeChecking;
 
 
 /**
@@ -53,9 +56,9 @@ public abstract class SqlSpecialOperator extends SqlOperator
         SqlKind kind,
         int pred,
         boolean isLeftAssoc,
-        TypeInference typeInference,
-        ParamTypeInference paramTypeInference,
-        AllowedArgInference argTypeInference)
+        ReturnTypeInference typeInference,
+        UnknownParamInference paramTypeInference,
+        OperandsTypeChecking argTypeInference)
     {
         super(name, kind, pred, isLeftAssoc, typeInference,
             paramTypeInference, argTypeInference);

@@ -667,7 +667,8 @@ public abstract class SqlValidatorTestCase extends TestCase
     {
         checkExpFails("'a'||x'ff'",
             "(?s).*Can not apply '\\|\\|' to arguments of type '<VARCHAR.1.> \\|\\| <VARBINARY.1.>'"
-            + ".*Supported form.s.: '<VARCHAR> \\|\\| <VARCHAR>'"
+            + ".*Supported form.s.: '<CHAR> \\|\\| <CHAR>'"
+            + ".*'<VARCHAR> \\|\\| <VARCHAR>'"            
             + ".*'<BIT> \\|\\| <BIT>'" + ".*'<BINARY> \\|\\| <BINARY>'"
             + ".*'<VARBINARY> \\|\\| <VARBINARY>'.*");
     }

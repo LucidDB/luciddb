@@ -24,6 +24,7 @@ package org.eigenbase.sql.fun;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.type.UnknownParamInference;
 import org.eigenbase.sql.test.*;
 
 
@@ -42,7 +43,7 @@ public class SqlRowOperator extends SqlSpecialOperator
     {
         // Precedence of 100 because nothing can pull parentheses apart.
         super("ROW", SqlKind.Row, 100, false, null,
-            SqlOperatorTable.useReturnForParam, null);
+            UnknownParamInference.useReturnType, null);
     }
 
     //~ Methods ---------------------------------------------------------------

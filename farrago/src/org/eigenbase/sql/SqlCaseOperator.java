@@ -31,6 +31,8 @@ import org.eigenbase.sql.fun.SqlCastFunction;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.sql.type.UnknownParamInference;
+import org.eigenbase.sql.type.ReturnTypeInference;
 import org.eigenbase.util.Util;
 
 
@@ -118,7 +120,7 @@ public abstract class SqlCaseOperator extends SqlOperator
     public SqlCaseOperator()
     {
         super("CASE", SqlKind.Case, 1, true, null,
-            SqlOperatorTable.useReturnForParam, null);
+            UnknownParamInference.useReturnType, null);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -193,7 +195,7 @@ public abstract class SqlCaseOperator extends SqlOperator
             nullList.add(elseOp);
         }
         RelDataType ret =
-            SqlOperatorTable.useNullableBiggest.getType(validator.typeFactory,
+            ReturnTypeInference.useNullableBiggest.getType(validator.typeFactory,
                 argTypes);
         if (null == ret) {
             //todo use position data when available
@@ -222,7 +224,7 @@ public abstract class SqlCaseOperator extends SqlOperator
 
         thenTypes[thenTypes.length - 1] = argTypes[argTypes.length - 1];
         RelDataType ret =
-            SqlOperatorTable.useNullableBiggest.getType(typeFactory, thenTypes);
+            ReturnTypeInference.useNullableBiggest.getType(typeFactory, thenTypes);
         return ret;
     }
 

@@ -28,6 +28,7 @@ import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.type.UnknownParamInference;
 import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.util.Util;
 
@@ -48,7 +49,7 @@ public class SqlCastFunction extends SqlFunction
 
     public SqlCastFunction()
     {
-        super("CAST", SqlKind.Cast, null, SqlOperatorTable.useFirstKnownParam,
+        super("CAST", SqlKind.Cast, null, UnknownParamInference.useFirstKnown,
             null, SqlFunction.SqlFuncTypeName.System);
     }
 

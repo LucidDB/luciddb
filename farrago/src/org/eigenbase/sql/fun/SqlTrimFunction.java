@@ -24,6 +24,8 @@ package org.eigenbase.sql.fun;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.type.OperandsTypeChecking;
+import org.eigenbase.sql.validation.ValidationUtil;
 import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.sql.test.SqlTester;
 
@@ -42,7 +44,7 @@ public class SqlTrimFunction extends SqlFunction
     public SqlTrimFunction()
     {
         super("TRIM", SqlKind.Trim, null, null,
-            SqlOperatorTable.typeNullableStringStringOfSameType,
+            OperandsTypeChecking.typeNullableStringStringOfSameType,
             SqlFunction.SqlFuncTypeName.String);
     }
 
@@ -103,7 +105,7 @@ public class SqlTrimFunction extends SqlFunction
         SqlValidator.Scope scope)
     {
         for (int i = 1; i < 3; i++) {
-            if (!SqlOperatorTable.typeNullableString.check(call, validator,
+            if (!OperandsTypeChecking.typeNullableString.check(call, validator,
                         scope, call.operands[i], 0)) {
                 throw call.newValidationSignatureError(validator, scope);
             }
@@ -115,7 +117,7 @@ public class SqlTrimFunction extends SqlFunction
         RelDataType [] argTypes)
     {
         assert (3 == argTypes.length);
-        return SqlOperatorTable.makeNullableIfOperandsAre(typeFactory,
+        return ValidationUtil.makeNullableIfOperandsAre(typeFactory,
             argTypes, argTypes[2]);
     }
 
@@ -131,9 +133,9 @@ public class SqlTrimFunction extends SqlFunction
             ops[i - 1] = call.operands[i];
         }
 
-        isCharTypeComparableThrows(validator, scope, ops);
+        ValidationUtil.isCharTypeComparableThrows(validator, scope, ops);
         RelDataType type = validator.deriveType(scope, call.operands[2]);
-        return SqlOperatorTable.makeNullableIfOperandsAre(validator, scope,
+        return ValidationUtil.makeNullableIfOperandsAre(validator, scope,
             call, type);
     }
 
