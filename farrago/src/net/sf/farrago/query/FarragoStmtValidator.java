@@ -382,6 +382,12 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
             return (CwmSqldataType) alias.getType();
         }
 
+        types = getRepos().femPackage.getSql2003().getFemSqlcollectionType().refAllOfType();
+        modelElement = getRepos().getCollectionModelElement(types, typeName);
+        if (modelElement != null) {
+            return (CwmSqldataType) modelElement;
+        }
+
         throw FarragoResource.instance().newValidatorUnknownObject(
             getRepos().getLocalizedObjectName(
                 null,

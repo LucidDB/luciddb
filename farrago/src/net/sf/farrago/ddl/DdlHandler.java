@@ -582,56 +582,73 @@ public class DdlHandler
         CwmSqldataType cwmType = validator.getStmtValidator().findSqldataType(
             element.getType().getName());
 
-        // TODO jvs 15-Dec-2004:  non-simple types
-        assert(cwmType instanceof CwmSqlsimpleType) : cwmType;
-        CwmSqlsimpleType simpleType = (CwmSqlsimpleType) cwmType;
-        
-        if (element.getLength() != null) {
-            Integer maximum = simpleType.getCharacterMaximumLength();
-            assert (maximum != null);
-            if (element.getLength().intValue() > maximum.intValue()) {
-                throw validator.res.newValidatorLengthExceeded(
-                    element.getLength(),
-                    maximum,
-                    getLocalizedName(element),
-                    validator.getParserPosString(element));
-            }
-        }
-        if (element.getPrecision() != null) {
-            Integer maximum = simpleType.getNumericPrecision();
-            if (maximum == null) {
-                maximum = simpleType.getDateTimePrecision();
-            }
-            assert (maximum != null);
-            if (element.getPrecision().intValue() > maximum.intValue()) {
-                throw validator.res.newValidatorPrecisionExceeded(
-                    element.getPrecision(),
-                    maximum,
-                    getLocalizedName(element),
-                    validator.getParserPosString(element));
-            }
-        }
-        if (element.getScale() != null) {
-            Integer maximum = simpleType.getNumericScale();
-            assert (maximum != null);
-            if (element.getScale().intValue() > maximum.intValue()) {
-                throw validator.res.newValidatorScaleExceeded(
-                    element.getScale(),
-                    maximum,
-                    getLocalizedName(element),
-                    validator.getParserPosString(element));
-            }
-        }
+        if (cwmType instanceof CwmSqlsimpleType) {
+            CwmSqlsimpleType simpleType = (CwmSqlsimpleType) cwmType;
 
-        // REVIEW jvs 18-April-2004: I had to put these in because CWM declares
-        // them as mandatory.  This is stupid, since CWM also says these fields
-        // are inapplicable for non-character types.
-        if (element.getCollationName() == null) {
-            element.setCollationName("");
-        }
+            if (element.getLength() != null) {
+                Integer maximum = simpleType.getCharacterMaximumLength();
+                assert (maximum != null);
+                if (element.getLength().intValue() > maximum.intValue()) {
+                    throw validator.res.newValidatorLengthExceeded(
+                        element.getLength(),
+                        maximum,
+                        getLocalizedName(element),
+                        validator.getParserPosString(element));
+                }
+            }
+            if (element.getPrecision() != null) {
+                Integer maximum = simpleType.getNumericPrecision();
+                if (maximum == null) {
+                    maximum = simpleType.getDateTimePrecision();
+                }
+                assert (maximum != null);
+                if (element.getPrecision().intValue() > maximum.intValue()) {
+                    throw validator.res.newValidatorPrecisionExceeded(
+                        element.getPrecision(),
+                        maximum,
+                        getLocalizedName(element),
+                        validator.getParserPosString(element));
+                }
+            }
+            if (element.getScale() != null) {
+                Integer maximum = simpleType.getNumericScale();
+                assert (maximum != null);
+                if (element.getScale().intValue() > maximum.intValue()) {
+                    throw validator.res.newValidatorScaleExceeded(
+                        element.getScale(),
+                        maximum,
+                        getLocalizedName(element),
+                        validator.getParserPosString(element));
+                }
+            }
 
-        if (element.getCharacterSetName() == null) {
-            element.setCharacterSetName("");
+            // REVIEW jvs 18-April-2004: I had to put these in because CWM declares
+            // them as mandatory.  This is stupid, since CWM also says these fields
+            // are inapplicable for non-character types.
+            if (element.getCollationName() == null) {
+                element.setCollationName("");
+            }
+
+            if (element.getCharacterSetName() == null) {
+                element.setCharacterSetName("");
+            }
+        } else if (cwmType instanceof FemSqlcollectionType) {
+            FemSqlcollectionType collectionType =
+                (FemSqlcollectionType) element.getType();
+            FemSqltypedElement componentType =
+                collectionType.getComponentType();
+            validateTypedElement(componentType);
+            // REVIEW wael 04-Jan-2005: see comment by jvs 18-April-2004 above
+            if (element.getCollationName() == null) {
+                element.setCollationName("");
+            }
+
+            if (element.getCharacterSetName() == null) {
+                element.setCharacterSetName("");
+            }
+        } else {
+            Util.permAssert(false,
+                "only simple and collection types are supported");
         }
     }
 

@@ -214,6 +214,7 @@ public abstract class FennelRelUtil
             return 13; // STANDARD_TYPE_VARCHAR
         case Types.BIT:
         case Types.VARBINARY:
+        case Types.ARRAY:
             return 15; // STANDARD_TYPE_VARBINARY
         case Types.CHAR:
             return 12; // STANDARD_TYPE_CHAR
