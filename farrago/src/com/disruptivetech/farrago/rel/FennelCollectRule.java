@@ -28,7 +28,7 @@ import org.eigenbase.rel.CollectRel;
 import net.sf.farrago.query.FennelPullRel;
 
 /**
- * FennelCollectRule is a rule to implement a call with the
+ * FennelCollectRule is a rule to implement a call made with the
  * {@link org.eigenbase.sql.fun.SqlMultisetOperator}
  *
  * @author Wael Chatila 
@@ -61,7 +61,8 @@ public class FennelCollectRule extends RelOptRule {
         }
 
         FennelPullCollectRel fennelCollectRel =
-            new FennelPullCollectRel(collectRel.getCluster(), fennelInput);
+            new FennelPullCollectRel(
+                collectRel.getCluster(), fennelInput, collectRel.name);
         call.transformTo(fennelCollectRel);
     }
 }
