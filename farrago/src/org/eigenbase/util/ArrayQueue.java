@@ -101,7 +101,7 @@ public class ArrayQueue
     /**
      * Constructs an ArrayQueue with the given contents.  The initial
      * capacity of the queue is {@link #DEFAULT_CAPACITY 10} or
-     * {@link Collection.size() c.size()} whichever is larger.  The
+     * {@link Collection#size() c.size()} whichever is larger.  The
      * queue is populated with the elements of <code>c</code> in the
      * order in which <code>c</code>'s iterator returns them.
      *
@@ -119,7 +119,7 @@ public class ArrayQueue
     /**
      * Constructs an ArrayQueue with the given contents and initial
      * capacity.  If <code>capacity</code> is smaller than
-     * {@link Collection.size() c.size()}, the initial capacity will
+     * {@link Collection#size() c.size()}, the initial capacity will
      * be <code>c.size()</code>.  The queue is populated with the
      * elements of <code>c</code> in the order in which
      * <code>c</code>'s iterator returns them.
@@ -440,7 +440,7 @@ public class ArrayQueue
      * the result of {@link #peek()} unless the queue is empty.
      *
      * @return the head of this queue
-     * @throw NoSuchElementException if the queue is empty
+     * @throws NoSuchElementException if the queue is empty
      */
     public Object element()
     {
@@ -457,7 +457,7 @@ public class ArrayQueue
      * result of {@link #poll()} unless the queue is empty.
      *
      * @return the head of the queue
-     * @throws NoSuchMethodException if the queue is empty
+     * @throws NoSuchElementException if the queue is empty
      */
     public Object remove()
     {
