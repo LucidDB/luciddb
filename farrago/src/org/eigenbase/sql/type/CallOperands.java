@@ -7,20 +7,65 @@ import org.eigenbase.rex.*;
 import org.eigenbase.util.Util;
 
 /**
- * ...
+ * A common interface into the SqlNode and RexNode worlds. Used during type inference.
+ *
  * @author Wael Chatila
  * @since Dec 16, 2004
  * @version $Id$
  */
 public interface CallOperands
 {
+    /**
+     * Returns the string value of a string literal
+     * @param ordinal the n<i>th</i> operand of the call (zero based). Operand MUST be a string literal 
+     */
     String        getStringLiteral(int ordinal);
-    Integer           getIntLiteral(int ordinal);
+ 
+    /**
+     * Returns the integer value of a numerical literal
+     * Returns NULL if not an int literal //todo fix this so consistant with getStringLiteral
+     * @param ordinal the nth operand of the call (zero based)
+     */
+    Integer       getIntLiteral(int ordinal);
+ 
+    /**
+     * Returns if node is NULL, allowing infintite number of null casts.<br>
+     * <code>
+     * NULL<BR>
+     * CAST(NULL AS <type>)<br>
+     * CAST(CAST(NULL AS <type>) AS <type>))<br>
+     * ...<br>
+     * </code>
+     * all return true.
+     * @param ordinal the nth operand of the call (zero based)
+     */
     boolean       isNull(int ordinal);
+ 
+    /**
+     * Returns SqlOperator of the call
+     */
     SqlOperator   getOperator();
+ 
+    /**
+     * Returns the number of operands
+     */
     int           size();
+
+    /**
+     * Gets the type of node at position ordinal (zero based)
+     */
     RelDataType   getType(int ordinal);
+
+
+    /**
+     * 
+     */
     RelDataType[] collectTypes();
+    
+    /**
+     * Returns the underlying object, accessed from all other methods in this interface. 
+     * This method should only be used for highly specialized code and should be avoided as far as possible.
+     */
     Object        getUnderlyingObject();
 
     //~ Inner Classes ---------------------------------------------------------
