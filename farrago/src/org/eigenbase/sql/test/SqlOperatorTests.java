@@ -652,4 +652,9 @@ public class SqlOperatorTests
         tester.checkNull("trim(cast(null as varchar) from 'a')");
         tester.checkNull("trim('a' from cast(null as varchar))");
     }
+
+    public static void testWindow(SqlTester tester) {
+        tester.check("select sum(1) over () from values (true)", "1",
+                SqlTypeName.Integer);
+    }
 }

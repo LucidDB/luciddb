@@ -24,6 +24,7 @@ package org.eigenbase.sql.parser;
 import java.util.regex.Pattern;
 
 import junit.framework.TestCase;
+import junit.framework.AssertionFailedError;
 
 import org.eigenbase.sql.SqlNode;
 import org.eigenbase.util.Util;
@@ -42,7 +43,7 @@ public class SqlParserTest extends TestCase
 {
     //~ Static fields/initializers --------------------------------------------
 
-    private static final String NL = System.getProperty("line.separator");
+    protected static final String NL = System.getProperty("line.separator");
 
     //~ Constructors ----------------------------------------------------------
 
@@ -53,37 +54,48 @@ public class SqlParserTest extends TestCase
 
     //~ Methods ---------------------------------------------------------------
 
-    //Helper functions-------------------------------------------------------------------
-    private void check(
+    // Helper functions -------------------------------------------------------
+    protected void check(
         String sql,
         String expected)
     {
         final SqlNode sqlNode;
         try {
-            sqlNode = new SqlParser(sql).parseStmt();
+            sqlNode = parseStmt(sql);
         } catch (ParseException e) {
-            throw Util.newInternal(e, "Error while parsing SQL '" + sql + "'");
+            String message = "Received error while parsing SQL '" + sql +
+                    "'; error is:" + NL + e.toString();
+            throw new AssertionFailedError(message);
         }
         final String actual = sqlNode.toSqlString(null);
         assertEqualsUnabridged(expected, actual);
     }
 
-    private void checkExp(
+    protected SqlNode parseStmt(String sql) throws ParseException {
+        return new SqlParser(sql).parseStmt();
+    }
+
+    protected void checkExp(
         String sql,
         String expected)
     {
         final SqlNode sqlNode;
         try {
-            sqlNode = new SqlParser(sql).parseExpression();
+            sqlNode = parseExpression(sql);
         } catch (ParseException e) {
-            throw Util.newInternal(e,
-                "Error while parsing SQL expression '" + sql + "'");
+            String message = "Received error while parsing SQL '" + sql +
+                    "'; error is:" + NL + e.toString();
+            throw new AssertionFailedError(message);
         }
         final String actual = sqlNode.toSqlString(null);
         assertEqualsUnabridged(expected, actual);
     }
 
-    private void checkExpSame(String sql)
+    protected SqlNode parseExpression(String sql) throws ParseException {
+        return new SqlParser(sql).parseExpression();
+    }
+
+    protected void checkExpSame(String sql)
     {
         checkExp(sql, sql);
     }
@@ -105,12 +117,12 @@ public class SqlParserTest extends TestCase
         }
     }
 
-    private void checkFails(
+    protected void checkFails(
         String sql,
         String exceptionPattern)
     {
         try {
-            final SqlNode sqlNode = new SqlParser(sql).parseStmt();
+            final SqlNode sqlNode = parseStmt(sql);
             Util.discard(sqlNode);
             fail("Expected query '" + sql + "' to throw exception matching '"
                 + exceptionPattern + "'");
@@ -937,11 +949,11 @@ public class SqlParserTest extends TestCase
             "SELECT DISTINCT `FOO`" + NL + "FROM `BAR`");
     }
 
-    public void testSelectUnique()
+    public void testSelectAll()
     {
         // "unique" is the default -- so drop the keyword
-        check("select * from (select unique foo from bar) as xyz",
-            "SELECT *" + NL + "FROM (SELECT `FOO`" + NL
+        check("select * from (select all foo from bar) as xyz",
+            "SELECT *" + NL + "FROM (SELECT ALL `FOO`" + NL
             + "FROM `BAR`) AS `XYZ`");
     }
 
@@ -1332,6 +1344,34 @@ public class SqlParserTest extends TestCase
         checkExp("{fN apa(*)}", "{fn APA(*) }");
         checkExp("{   FN\t\r\n apa()}", "{fn APA() }");
         checkExp("{fn insert()}", "{fn INSERT() }");
+    }
+
+    public void _testOver()
+    {
+        checkExp("sum(sal) over ()", "x");
+        checkExp("sum(sal) over (partition by x, y)", "x");
+        checkExp("sum(sal) over (order by x desc, y asc)", "x");
+        checkExp("sum(sal) over (rows 5 preceding)", "x");
+        checkExp("sum(sal) over (range between interval '1' second preceding and interval '1' second following)",
+            "sum(sal) over (`emp` over (range between (interval '1' second preceding) and (interval '1' second following)))");
+        checkExp("sum(sal) over (range between interval '1:03' hour preceding and interval '2' minute following)",
+            "sum(sal) over (`emp` over (range between (interval '1:03' hour preceding) and (interval '2' minute following)))");
+        checkExp("sum(sal) over (range between interval '5' day preceding and current row)",
+            "sum(sal) over (`emp` over (range between (interval '5' day preceding) and current row))");
+        checkExp("sum(sal) over (range interval '5' day preceding)",
+            "sum(sal) over (`emp` over (range (interval '5' day preceding)))");
+        checkExp("sum(sal) over (range between unbounded preceding and current row)",
+            "sum(sal) over (`emp` over (range between unbounded preceding and current row))");
+        checkExp("sum(sal) over (range unbounded preceding)",
+            "sum(sal) over (`emp` over (range unbounded preceding))");
+        checkExp("sum(sal) over (range between current row and unbounded preceding)",
+            "sum(sal) over (`emp` over (range between current row and unbounded preceding))");
+        checkExp("sum(sal) over (range between current row and unbounded following)",
+            "sum(sal) over (`emp` over (range between current row and unbounded following))");
+        checkExp("sum(sal) over (range between 6 preceding and interval '1:03' hour preceding)",
+            "sum(sal) over (`emp` over (range between (6 preceding) and (interval '1:03' hour preceding)))");
+        checkExp("sum(sal) over (range between interval '1' second following and interval '5' day following)",
+            "sum(sal) over (`emp` over (range between (interval '1' second following) and (interval '5' day following)))");
     }
 }
 

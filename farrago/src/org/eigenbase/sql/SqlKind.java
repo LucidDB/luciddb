@@ -114,6 +114,14 @@ public class SqlKind extends EnumeratedValues.BasicValue
     public static final int AsORDINAL = 15;
     public static final SqlKind As = new SqlKind("As", AsORDINAL);
 
+    public static final int OverORDINAL = 16;
+    /** Over */
+    public static SqlKind Over = new SqlKind("Over", OverORDINAL);
+
+    public static final int WindowORDINAL = 17;
+    /** Window specification */
+    public static final SqlKind Window = new SqlKind("Window", WindowORDINAL);
+
     // binary operators
     // arithmetic 100 - 109
 
@@ -340,7 +348,7 @@ public class SqlKind extends EnumeratedValues.BasicValue
 
             // the basics
             Other, Select, Join, Identifier, Literal, Function, Explain, Insert,
-                Update, Delete, Union, Except, Intersect, As,
+                Update, Delete, Union, Except, Intersect, As, Window,
             // arithmetic
             Times, Divide, Plus, Minus,
             // comparisons
