@@ -1054,13 +1054,9 @@ public class FarragoTestConcurrentScriptedCommandGenerator
 
             boolean timeoutSet = setTimeout(stmt);
 
-            try {
-                storeResults(executor.getThreadId(),
-                             stmt.executeQuery(),
-                             timeoutSet);
-            } finally {
-                stmt.close();
-            }
+            storeResults(executor.getThreadId(),
+                         stmt.executeQuery(),
+                         timeoutSet);
         }
     }
 }
