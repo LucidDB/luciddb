@@ -28,12 +28,19 @@ import java.util.*;
  * CalcIterator} for use in implementing nested loop inner joins
  * over iterators.
  *
+ *<p>
+ *
+ * REVIEW jvs 20-Mar-2004:  I have parameterized this to handle inner and
+ * left outer joins, as well as one-to-many and many-to-one variants.  This
+ * comes at the price of some efficiency.  It would probably be better to
+ * write specialized bases for each purpose.
+ *
  * @author John V. Sichi
  * @version $Id$
  */
 public abstract class NestedLoopCalcIterator extends CalcIterator
 {
-    protected Iterator rightIterator;
+    protected Object rightIterator;
     
     protected Object leftObj;
 
@@ -41,16 +48,30 @@ public abstract class NestedLoopCalcIterator extends CalcIterator
 
     private boolean isOpen;
 
-    protected NestedLoopCalcIterator(Iterator leftIterator)
+    private boolean isLeftOuter;
+
+    private boolean needNullRow;
+
+    protected static final Iterator EMPTY_ITERATOR =
+        Collections.EMPTY_LIST.iterator();
+
+    protected NestedLoopCalcIterator(
+        Iterator leftIterator,
+        boolean isLeftOuter)
     {
         super(leftIterator);
+        this.isLeftOuter = isLeftOuter;
     }
     
     // override CalcIterator
     public void remove()
     {
-        rightIterator.remove();
-        super.remove();
+        if (rightIterator instanceof Iterator) {
+            ((Iterator) rightIterator).remove();
+            super.remove();
+        } else {
+            throw new UnsupportedOperationException();
+        }
     }
 
     // implement CalcIterator
@@ -69,16 +90,28 @@ public abstract class NestedLoopCalcIterator extends CalcIterator
             }
             if (rightIterator == null) {
                 rightIterator = getNextRightIterator();
+                needNullRow = isLeftOuter;
             }
-            if (!rightIterator.hasNext()) {
-                leftObj = null;
-                rightObj = null;
-                rightIterator = null;
-                continue;
+            if (rightIterator instanceof Iterator) {
+                Iterator ri = (Iterator) rightIterator;
+                if (!ri.hasNext()) {
+                    if (needNullRow) {
+                        needNullRow = false;
+                        return calcRightNullRow();
+                    }
+                    leftObj = null;
+                    rightObj = null;
+                    rightIterator = null;
+                    continue;
+                }
+                rightObj = ri.next();
+            } else {
+                rightObj = rightIterator;
+                rightIterator = EMPTY_ITERATOR;
             }
-            rightObj = rightIterator.next();
             Object row = calcJoinRow();
             if (row != null) {
+                needNullRow = false;
                 return row;
             }
         }
@@ -94,11 +127,13 @@ public abstract class NestedLoopCalcIterator extends CalcIterator
 
     /**
      * Method to be implemented by subclasses to determine next right-hand
-     * iterator based on current value of leftObj.
+     * iterator based on current value of leftObj.  For a many-to-one
+     * join, this can return the right-hand object directly instead
+     * of an Iterator, but should return EMPTY_ITERATOR for a mismatch.
      *
-     * @return iterator (never null)
+     * @return iterator or object
      */
-    protected abstract Iterator getNextRightIterator();
+    protected abstract Object getNextRightIterator();
 
     /**
      * Method to be implemented by subclasses to either calculate the next
@@ -108,6 +143,18 @@ public abstract class NestedLoopCalcIterator extends CalcIterator
      * @return row or null for filtered oute
      */
     protected abstract Object calcJoinRow();
+
+    /**
+     * Method to be implemented by subclasses to calculate a
+     * mismatch row in a left outer join.  Inner joins can use
+     * the default (return null) because it will never be called.
+     *
+     * @return row with all right fields set to null
+     */
+    protected Object calcRightNullRow()
+    {
+        return null;
+    }
 }
 
 // End NestedLoopCalcIterator.java

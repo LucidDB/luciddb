@@ -256,6 +256,10 @@ public:
                                              TupleDatum& tupleDatum,  
                                              TupleAttributeDescriptor& desc,
                                              string value);
+    static void CalcAssembler::setTupleDatum(StandardTypeDescriptorOrdinal type,
+                                             TupleDatum& tupleDatum,  
+                                             TupleAttributeDescriptor& desc,
+                                             PConstBuffer buffer);
 
 protected:
     friend int CalcYYparse (void *);
@@ -444,7 +448,8 @@ protected:
      */ 
     void checkPC(TProgramCounter pc, CalcYYLocType& loc) {
         assert(mCalc->mCode.size() > 0);
-        if (pc >= mCalc->mCode.size()) {
+        if (pc >= static_cast<TProgramCounter>(mCalc->mCode.size())) 
+        {
             ostringstream errorStr("");
             errorStr << "Invalid PC " << pc << ": PC should be between 0 and "
                      << (mCalc->mCode.size() - 1);

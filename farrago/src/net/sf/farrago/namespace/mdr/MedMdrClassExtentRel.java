@@ -194,7 +194,7 @@ class MedMdrClassExtentRel extends TableAccessRel
         
         SaffronType outputRowType = getRowType();
         List features = JmiUtil.getFeatures(
-            mdrClassExtent.refClass,StructuralFeature.class);
+            mdrClassExtent.refClass,StructuralFeature.class,false);
         int n = features.size();
         Expression [] accessorExps = new Expression[n + 2];
         SaffronField [] outputFields = outputRowType.getFields();

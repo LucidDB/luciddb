@@ -95,7 +95,7 @@ inline bool isMAXU(tU u)
     return (u == tU(0xFFFFFFFFFFFFFFFFLL));
 }
 
-enum { ETERNITY = 0xFFFFFFFFFFFFFFFFLL };
+enum { ETERNITY = 0xFFFFFFFF };
 
 /**
  * LockMode enumerates various common lock modes.

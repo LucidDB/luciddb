@@ -717,6 +717,9 @@
         <allow>
           <to pattern="parser" />
         </allow>
+        <allow>
+          <to pattern="fennel" />
+        </allow>
       </deny>
     </access-rule>
 

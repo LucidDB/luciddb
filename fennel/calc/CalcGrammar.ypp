@@ -11,7 +11,7 @@
 #include "fennel/calc/InstructionCommon.h"
 #include "fennel/calc/CalcAssembler.h"
 
-FENNEL_BEGIN_CPPFILE("$Id")
+FENNEL_BEGIN_CPPFILE("$Id$")
 
 /* Define parameters for yyparse and yylex so we can pass them as
    arguments and create a re-entrant parser/lexer */
@@ -111,13 +111,14 @@ literal_set: REG_LITERAL { ((CalcAssembler*) parm)->selectRegisterSet($1); }
 literal_values: VALUES literal_defs { ((CalcAssembler*) parm)->bindLiteralDone(); } TERM
 ;
 
-literal_defs: literal_def | literal_defs COMMA literal_def
+literal_defs: literal_def | literal_defs COMMA literal_def 
 ;
 
 literal_def:  UNSIGNED_INTEGER  { ((CalcAssembler*) parm)->bindNextLiteral<uint64_t>($1); }
             | NEGATIVE_INTEGER  { ((CalcAssembler*) parm)->bindNextLiteral<int64_t>($1);  }
             | REAL              { ((CalcAssembler*) parm)->bindNextLiteral<double>($1);   }
             | STRING            { ((CalcAssembler*) parm)->bindNextLiteral<string>($1);   }
+            | { ((CalcAssembler*) parm)->bindNextLiteral<PConstBuffer>(NULL); }
 ;
 
 set_name:   REG_LOCAL | REG_STATUS | REG_INPUT | REG_OUTPUT
@@ -222,4 +223,4 @@ void CalcYYerror(char *s)
     throw CalcAssemblerException(s);
 }
 
-FENNEL_END_CPPFILE("$Id")
+FENNEL_END_CPPFILE("$Id$")

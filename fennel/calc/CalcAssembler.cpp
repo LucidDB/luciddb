@@ -113,6 +113,14 @@ int CalcAssembler::assemble()
 }
 
 void CalcAssembler::setTupleDatum(StandardTypeDescriptorOrdinal type,
+                                  TupleDatum& tupleDatum,
+                                  TupleAttributeDescriptor& desc /* Unused */,
+                                  PConstBuffer buffer)
+{
+    tupleDatum.pData = buffer;
+}
+
+void CalcAssembler::setTupleDatum(StandardTypeDescriptorOrdinal type,
                                   TupleDatum& tupleDatum,  
                                   TupleAttributeDescriptor& desc, /* Unused */
                                   double value)

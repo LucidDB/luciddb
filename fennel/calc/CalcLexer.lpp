@@ -1,34 +1,95 @@
+%{
+/* Flex options Used:
+ * noyywrap - Do not specify a yywrap function.  Scanner will behave as
+ *            if yywrap() always returns 1, so that when the EOF is reached,
+ *            the scanner will terminate.
+ * c++      - Generate c++ flex scanner (a re-entrant scanner)
+ * full     - Generate a fast, noninteractive scanner with a full table
+ *            NOTE: This also causes a 7-bit scanner to be generated,
+ *                  which should be okay since the Calculator BNF
+ *                  only uses 7-bit ascii characters.
+ * backup   - Generate lex.backup for checking if rules causes scanner backup
+ *            For best performance, the scanner should not have any backup.
+ *            TODO: Need to eliminate backup introduced by adding support
+ *                  for parsing exponential notation for reals.
+ *
+ * prefix   - Specifies prefix to use instead of "yy"
+ *            NOTE: Because we are generating C++ scanner, this option
+ *                  is pretty much useless.  Keep this option mainly for
+ *                  consistency with the prefix used for bison.
+ * outfile  - Specifies the name of the output file to use. 
+ *            NOTE: Use "lex.yy.c" since that what automake expects the
+ *                  output file to be, automake will use lex.yy.c to generate
+ *                  the final output file "CalcLexer.cpp"
+ * yyclass  - Specifies the name of the C++ class to generate 
+ *
+ * NOTE: Do not use the yylineno option to keep track of line numbers
+ *       since that causes a compiler warning about yy_flex_realloc being
+ *       defined but not used.  Instead, keep track of lineno ourselves
+ *       since we are already keeping tracking of other location information.
+ */
+%}
+
 %option noyywrap
 %option c++
-%option yylineno
+%option full
+%option backup
+
 %option prefix="CalcYY"
 %option outfile="lex.yy.c"
 %option yyclass="CalcLexer"
 
 %{
+/* Undefine _XOPEN_SOURCE to avoid compiler warnings when including
+   fennel/common/CommonPreamble.h */
+
+#ifdef _XOPEN_SOURCE
+#undef _XOPEN_SOURCE
+#endif
+
 #include "fennel/common/CommonPreamble.h"
+
+/* Include CalcLexer.h to get the definition of the CalcLexer class,
+   but don't need to include the original flex header since that
+   will already been included in the generated C++ file */
 #define  DONOT_INCLUDE_FLEX_HEADER
 #include "fennel/calc/CalcLexer.h"
+
 #include "fennel/calc/CalcGrammar.h"
 #include "fennel/calc/CalcAssemblerException.h"
 
 /* need this for checking results of strtoull, strtoll, strtod */
 #include <errno.h>
 
+/* For each token, update the location information */
 #define YY_USER_ACTION updateLocation();
 
 using namespace fennel;
 
-/*FENNEL_BEGIN_CPPFILE("$Id") */
+/*FENNEL_BEGIN_CPPFILE("$Id$")*/
 %}
 
 DIGIT       [0-9]
-HEX         [A-Za-z0-9]
+HEX         [A-Fa-f0-9]
 NAME        [a-zA-Z_][a-zA-Z_0-9]*
-%s          expect_hex
 %s          expect_name
 
 %%
+
+"0x"{HEX}* { 
+                yylval.v_string = hex2string(yytext+2, yyleng-2); 
+                return STRING; 
+           }
+
+"'"         BEGIN(expect_name);
+   
+<expect_name>{NAME}      { 
+                yylval.v_string = yytext;
+                BEGIN(INITIAL);
+                return NAME; 
+            }
+
+<expect_name>. BEGIN(INITIAL);
 
 ","         return COMMA;
 ";"         return TERM;
@@ -62,13 +123,6 @@ NAME        [a-zA-Z_][a-zA-Z_0-9]*
 
 [A-Z]+      { yylval.v_opcode = yytext; return OPCODE; }
 
-"0x"        BEGIN(expect_hex);
-<expect_hex>{HEX}+ { 
-                     yylval.v_string = hex2string(yytext, yyleng); 
-                     BEGIN(INITIAL); 
-                     return STRING; 
-                   }
-
 {DIGIT}+    {
                 errno = 0;
                 yylval.u.v_uint64 = strtoull(yytext, NULL, 10);
@@ -85,20 +139,12 @@ NAME        [a-zA-Z_][a-zA-Z_0-9]*
                 return NEGATIVE_INTEGER;
             }
 
--?{DIGIT}+"."{DIGIT}*    {
+-?{DIGIT}+"."{DIGIT}*("e"[+-]{DIGIT}+)?   {
                 errno = 0;
                 yylval.u.v_double = strtod(yytext, NULL);
                 if (errno != 0)
                     LexerError(strerror(errno));
                 return REAL;
-            }
-
-"'"         BEGIN(expect_name);
-   
-<expect_name>{NAME}      { 
-                yylval.v_string = yytext;
-                BEGIN(INITIAL);
-                return NAME; 
             }
 
 [ \t\r]+    /* eat up whitespace */
@@ -107,6 +153,7 @@ NAME        [a-zA-Z_][a-zA-Z_0-9]*
                /* Don't need to worry about row number 
                   (that's taken care of automatically) */
                yycolno=1;
+               yylineno+=yyleng;
             }
 
 .           return UNKNOWN_TOKEN;
@@ -115,7 +162,7 @@ NAME        [a-zA-Z_][a-zA-Z_0-9]*
 
 void CalcLexer::updateLocation()
 {   
-    /* We don't need to update yylineno since flex takes care of that automatically
+    /* 
      * This function does not handle tokens that span multiple lines.
      */
     yyloc.first_line   = yylineno;
@@ -164,4 +211,4 @@ string CalcLexer::hex2string(const char *buf, uint buflen)
     return str;
 }
 
-/*FENNEL_END_CPPFILE("$Id") */
+/*FENNEL_END_CPPFILE("$Id$")*/

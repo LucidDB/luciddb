@@ -165,6 +165,7 @@ class FarragoDbStmtContext
     public void execute()
     {
         assert(isPrepared());
+        closeResultSet();
         traceExecute();
         boolean isDml = executableStmt.isDml();
         boolean success = false;

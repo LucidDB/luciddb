@@ -32,7 +32,7 @@ class CalcYYFlexLexer;
 #include <FlexLexer.h>
 #endif
 
-/*FENNEL_BEGIN_NAMESPACE */
+/*FENNEL_BEGIN_NAMESPACE*/
 
 using namespace fennel;
 
@@ -100,7 +100,7 @@ class CalcLexer : public CalcYYFlexLexer
   public:
       explicit
       //! Constructs a new Calculator Lexer object
-      CalcLexer(): CalcYYFlexLexer(), yycolno(1), yypos(0) {}
+      CalcLexer(): CalcYYFlexLexer(), yycolno(1), yylineno(1), yypos(0) {}
 
       //! The lexical analzyer function.  It scans the input stream, 
       //! consuming tokens, until a rule's action returns a value
@@ -129,6 +129,8 @@ class CalcLexer : public CalcYYFlexLexer
 
       //! The column number of the next token
       int yycolno;
+      //! The line number of the next token
+      int yylineno;
       //! The character position (starting from 0) of the next token
       int yypos;
       //! The sematic value of the current token

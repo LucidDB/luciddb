@@ -125,7 +125,7 @@ public class FarragoDbSession
         
         // TODO:  excn handling
         database = FarragoDatabase.connect(
-            new FennelCmdExecutorImpl());
+            sessionFactory.newFennelCmdExecutor());
         
         connectionDefaults = new FarragoConnectionDefaults();
 

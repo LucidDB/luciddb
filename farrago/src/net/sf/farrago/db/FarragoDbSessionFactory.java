@@ -22,6 +22,7 @@ package net.sf.farrago.db;
 import net.sf.farrago.session.*;
 import net.sf.farrago.parser.*;
 import net.sf.farrago.catalog.*;
+import net.sf.farrago.fennel.*;
 
 import java.util.*;
 
@@ -46,6 +47,11 @@ public class FarragoDbSessionFactory implements FarragoSessionFactory
         String sql)
     {
         return new FarragoParser(catalog,sql);
+    }
+    
+    public FennelCmdExecutor newFennelCmdExecutor()
+    {
+        return new FennelCmdExecutorImpl();
     }
 }
 

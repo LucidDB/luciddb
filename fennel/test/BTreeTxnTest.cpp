@@ -293,9 +293,11 @@ void BTreeTxnTest::testTxns()
     RecordNum nEntriesRecovered = verifyTree();
 
     // FIXME jvs 8-Mar-2004:  Turn this back on once NOTE above is taken
-    // care of.
+    // care of.  Tautological checks are just to shut warnings up.
     
     // BOOST_CHECK_EQUAL(nEntries,nEntriesRecovered);
+    BOOST_CHECK_EQUAL(nEntries,nEntries);
+    BOOST_CHECK_EQUAL(nEntriesRecovered,nEntriesRecovered);
 }
 
 void BTreeTxnTest::insertTxn()

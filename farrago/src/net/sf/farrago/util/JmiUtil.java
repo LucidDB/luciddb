@@ -53,7 +53,7 @@ public abstract class JmiUtil
     public static SortedMap getAttributeValues(RefObject src)
     {
         RefClass refClass = src.refClass();
-        Iterator iter = getFeatures(refClass,Attribute.class).iterator();
+        Iterator iter = getFeatures(refClass,Attribute.class,false).iterator();
         SortedMap map = new TreeMap();
         while (iter.hasNext()) {
             Attribute attr = (Attribute) iter.next();
@@ -63,9 +63,7 @@ public abstract class JmiUtil
     }
 
     /**
-     * Gets a List of instance-level StructuralFeatures for a RefClass.  For
-     * now, multi-valued features are always filtered out (TODO:
-     * parameterize).
+     * Gets a List of instance-level StructuralFeatures for a RefClass.
      *
      * @param refClass class of interest
      *
@@ -73,10 +71,13 @@ public abstract class JmiUtil
      * be returned; so, for example, pass Attribute.class if you want only
      * attributes, or StructuralFeature.class if you want everything
      *
+     * @param includeMultiValued if true, multi-valued attributes will
+     * be included; otherwise, they will be filtered out
+     *
      * @return attribute list
      */
     public static List getFeatures(
-        RefClass refClass,Class filterClass)
+        RefClass refClass,Class filterClass,boolean includeMultiValued)
     {
         assert(StructuralFeature.class.isAssignableFrom(filterClass));
         List list = new ArrayList();
@@ -85,14 +86,15 @@ public abstract class JmiUtil
         Iterator iter = superList.iterator();
         while (iter.hasNext()) {
             MofClass mofSuper = (MofClass) iter.next();
-            addFeatures(list,mofSuper,filterClass);
+            addFeatures(list,mofSuper,filterClass,includeMultiValued);
         }
-        addFeatures(list,mofClass,filterClass);
+        addFeatures(list,mofClass,filterClass,includeMultiValued);
         return list;
     }
 
     private static void addFeatures(
-        List list,MofClass mofClass,Class filterClass)
+        List list,MofClass mofClass,Class filterClass,
+        boolean includeMultiValued)
     {
         Iterator iter = mofClass.getContents().iterator();
         while (iter.hasNext()) {
@@ -104,8 +106,10 @@ public abstract class JmiUtil
             if (!(feature.getScope().equals(ScopeKindEnum.INSTANCE_LEVEL))) {
                 continue;
             }
-            if (feature.getMultiplicity().getUpper() != 1) {
-                continue;
+            if (!includeMultiValued) {
+                if (feature.getMultiplicity().getUpper() != 1) {
+                    continue;
+                }
             }
             list.add(feature);
         }

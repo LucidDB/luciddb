@@ -1,16 +1,5 @@
-0: jdbc:farrago:> -- $Id: //open/farrago/unitsql/expressions/nullable.sql#2 $
+0: jdbc:farrago:> -- $Id: //open/farrago/unitsql/expressions/nullable.sql#3 $
 0: jdbc:farrago:> -- Test expressions on nullable data
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- computation
-0: jdbc:farrago:> select age+1 from sales.emps order by 1;
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-| 26      |
-| 51      |
-| 81      |
-+---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- comparison
 0: jdbc:farrago:> select name from sales.emps where age > 30;
@@ -20,5 +9,17 @@
 | Eric   |
 | Wilma  |
 +--------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- use outputformat xmlattr so we can see nulls
+0: jdbc:farrago:> !set outputformat xmlattr
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- computation
+0: jdbc:farrago:> select age+1 from sales.emps order by 1;
+<resultset>
+  <result EXPR$0="null"/>
+  <result EXPR$0="26"/>
+  <result EXPR$0="51"/>
+  <result EXPR$0="81"/>
+</resultset>
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

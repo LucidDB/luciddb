@@ -20,7 +20,7 @@ select "name" from mof_repository.model."Exception" order by 1;
 select "name" from mof_repository.model."Class" where "isAbstract"
 order by 1;
 
--- two-way join
+-- two-way one-to-many join
 select 
     e."name" as exception_name,
     p."name" as param_name
@@ -28,8 +28,10 @@ from
     mof_repository.model."Exception" e
 inner join
     mof_repository.model."Parameter" p
-on e."mofId" = p."container"
-order by exception_name,param_name;
+on 
+    e."mofId" = p."container"
+order by 
+    exception_name,param_name;
 
 -- two-way join with filter
 select 
@@ -41,11 +43,25 @@ from
     where "name"='NameNotResolved') e
 inner join
     mof_repository.model."Parameter" p
-on e."mofId" = p."container"
-order by exception_name,param_name;
+on 
+    e."mofId" = p."container"
+order by 
+    exception_name,param_name;
+
+-- two-way many-to-one join
+select 
+    p."name" as param_name,
+    e."name" as exception_name
+from
+    mof_repository.model."Parameter" p
+inner join
+    mof_repository.model."Exception" e
+on 
+    p."container" = e."mofId"
+order by 
+    param_name,exception_name;
 
 -- three-way join
-
 select 
     namespace_name,
     exception_name,
@@ -60,10 +76,43 @@ from
     on n."mofId" = e."container") ne
 inner join
     mof_repository.model."Parameter" p
-on ne.e_id = p."container"
-order by namespace_name,exception_name,param_name;
+on 
+    ne.e_id = p."container"
+order by 
+    namespace_name,exception_name,param_name;
 
+-- use outputformat xmlattr for outer joins so we can see nulls
+!set outputformat xmlattr
 
+-- one-to-many left outer join
+select 
+    p."name" as package_name,
+    i."name" as import_name
+from
+    mof_repository.model."Package" p
+left outer join
+    mof_repository.model."Import" i
+on 
+    p."mofId" = i."container"
+order by 
+    package_name,import_name;
+
+-- many-to-one left outer join
+select 
+    p."name" as param_name,
+    e."name" as exception_name
+from 
+    mof_repository.model."Parameter" p
+left outer join
+    mof_repository.model."Exception" e
+on 
+    p."container" = e."mofId"
+where 
+    p."name"='name'
+order by
+    param_name,exception_name;
+
+    
 -- now explain plans for above queries
 !set outputformat csv
 
@@ -82,8 +131,10 @@ from
     mof_repository.model."Exception" e
 inner join
     mof_repository.model."Parameter" p
-on e."mofId" = p."container"
-order by exception_name,param_name;
+on 
+    e."mofId" = p."container"
+order by 
+    exception_name,param_name;
 
 explain plan for
 select 
@@ -95,8 +146,23 @@ from
     where "name"='NameNotResolved') e
 inner join
     mof_repository.model."Parameter" p
-on e."mofId" = p."container"
-order by exception_name,param_name;
+on 
+    e."mofId" = p."container"
+order by
+     exception_name,param_name;
+
+explain plan for
+select 
+    p."name" as param_name,
+    e."name" as exception_name
+from
+    mof_repository.model."Parameter" p
+inner join
+    mof_repository.model."Exception" e
+on 
+    p."container" = e."mofId"
+order 
+    by param_name,exception_name;
 
 explain plan for
 select 
@@ -110,8 +176,39 @@ from
         mof_repository.model."Namespace" n
     inner join
         mof_repository.model."Exception" e
-    on n."mofId" = e."container") ne
+    on 
+        n."mofId" = e."container") ne
 inner join
     mof_repository.model."Parameter" p
-on ne.e_id = p."container"
-order by namespace_name,exception_name,param_name;
+on 
+    ne.e_id = p."container"
+order by 
+    namespace_name,exception_name,param_name;
+
+explain plan for
+select 
+    p."name" as package_name,
+    i."name" as import_name
+from
+    mof_repository.model."Package" p
+left outer join
+    mof_repository.model."Import" i
+on 
+    p."mofId" = i."container"
+order by 
+    package_name,import_name;
+
+explain plan for
+select 
+    p."name" as param_name,
+    e."name" as exception_name
+from 
+    mof_repository.model."Parameter" p
+left outer join
+    mof_repository.model."Exception" e
+on 
+    p."container" = e."mofId"
+where 
+    p."name"='name'
+order by 
+    param_name,exception_name;

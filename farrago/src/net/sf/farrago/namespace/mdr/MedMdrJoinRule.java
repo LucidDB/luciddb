@@ -76,7 +76,9 @@ class MedMdrJoinRule extends VolcanoRule
             return;
         }
         
-        if (joinRel.getJoinType() != JoinRel.JoinType.INNER) {
+        if ((joinRel.getJoinType() != JoinRel.JoinType.INNER)
+            && (joinRel.getJoinType() != JoinRel.JoinType.LEFT))
+        {
             return;
         }
 
@@ -90,13 +92,20 @@ class MedMdrJoinRule extends VolcanoRule
         // on right side, must join to reference field which refers to
         // left side type
         List features = JmiUtil.getFeatures(
-            rightRel.mdrClassExtent.refClass,StructuralFeature.class);
-        StructuralFeature feature = (StructuralFeature)
-            features.get(rightOrdinal);
-        if (!(feature instanceof Reference)) {
-            return;
+            rightRel.mdrClassExtent.refClass,StructuralFeature.class,false);
+        Reference reference;
+        if (rightOrdinal == features.size()) {
+            // join to mofId: this is a many-to-one join (primary key lookup on
+            // right hand side), which we will represent with a null reference
+            reference = null;
+        } else {
+            StructuralFeature feature = (StructuralFeature)
+                features.get(rightOrdinal);
+            if (!(feature instanceof Reference)) {
+                return;
+            }
+            reference = (Reference) feature;
         }
-        Reference reference = (Reference) feature;
 
         // TODO:  verify that leftOrdinal specifies a MOFID of an
         // appropriate type; also, verify that left and right

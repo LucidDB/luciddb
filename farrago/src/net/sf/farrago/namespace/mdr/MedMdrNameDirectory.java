@@ -162,7 +162,8 @@ class MedMdrNameDirectory extends MedAbstractNameDirectory
         FarragoTypeFactory typeFactory,
         RefClass refClass)
     {
-        List features = JmiUtil.getFeatures(refClass,StructuralFeature.class);
+        List features = JmiUtil.getFeatures(
+            refClass,StructuralFeature.class,false);
         int n = features.size();
         SaffronType [] types = new SaffronType[n + 2];
         String [] fieldNames = new String[n + 2];

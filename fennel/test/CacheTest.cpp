@@ -113,12 +113,12 @@ public:
         QuotaCacheAccessor *pQuota = new QuotaCacheAccessor(
             SharedQuotaCacheAccessor(),pCache,5);
         SharedCacheAccessor pSharedQuota(pQuota);
-        BOOST_CHECK_EQUAL(pQuota->getMaxLockedPages(),5);
-        BOOST_CHECK_EQUAL(pQuota->getLockedPageCount(),0);
+        BOOST_CHECK_EQUAL(pQuota->getMaxLockedPages(),5U);
+        BOOST_CHECK_EQUAL(pQuota->getLockedPageCount(),0U);
         CachePage *pPage = pQuota->lockPage(makeBlockId(0),LOCKMODE_S,0);
-        BOOST_CHECK_EQUAL(pQuota->getLockedPageCount(),1);
+        BOOST_CHECK_EQUAL(pQuota->getLockedPageCount(),1U);
         pQuota->unlockPage(*pPage,LOCKMODE_S);
-        BOOST_CHECK_EQUAL(pQuota->getLockedPageCount(),0);
+        BOOST_CHECK_EQUAL(pQuota->getLockedPageCount(),0U);
         pSharedQuota.reset();
         closeStorage();
     }

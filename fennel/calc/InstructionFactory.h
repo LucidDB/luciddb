@@ -1078,16 +1078,19 @@ public:
     {
         // Register boolean instructions
         registerBoolBoolInstruction<BoolAnd,3>("AND");
+        registerBoolBoolInstruction<BoolOr,3>("OR");
         registerBoolBoolInstruction<BoolNot,2>("NOT");
         registerBoolBoolInstruction<BoolIs,3>("IS");
         registerBoolBoolInstruction<BoolIsNot,3>("ISNOT");
+        registerBoolBoolInstruction<BoolMove,2>("MOVE");
+        registerBoolBoolInstruction<BoolToNull,1>("TONULL");
+
         registerBoolBoolInstruction<BoolEqual,3>("EQ");
         registerBoolBoolInstruction<BoolNotEqual,3>("NE");
         registerBoolBoolInstruction<BoolGreater,3>("GT");
         registerBoolBoolInstruction<BoolLess,3>("LT");
         registerBoolBoolInstruction<BoolIsNull,2>("ISNULL");
         registerBoolBoolInstruction<BoolIsNotNull,2>("ISNOTNULL");
-        registerBoolBoolInstruction<BoolToNull,1>("TONULL");
 
         registerBoolNativeInstruction<BoolNativeEqual,3>("EQ");
         registerBoolNativeInstruction<BoolNativeNotEqual,3>("NE");

@@ -21,6 +21,7 @@ package net.sf.farrago.session;
 
 import net.sf.farrago.parser.*;
 import net.sf.farrago.catalog.*;
+import net.sf.farrago.fennel.*;
 
 import java.util.*;
 
@@ -62,6 +63,13 @@ public interface FarragoSessionFactory
     public FarragoParser newFarragoParser(
         FarragoCatalog catalog,
         String sql);
+
+    /**
+     * Creates a new intrepreter for Fennel commands.
+     *
+     * @return new interpeter
+     */
+    public FennelCmdExecutor newFennelCmdExecutor();
 }
 
 // End FarragoSessionFactory.java
