@@ -119,7 +119,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     private Argument [] implementingArgs;
     private boolean processingDirectDependencies;
     private Set loadedServerClassNameSet;
-    private RelOptPlanner planner;
+    private FarragoSessionPlanner planner;
     private FarragoRelImplementor relImplementor;
 
     //~ Constructors ----------------------------------------------------------
@@ -163,12 +163,12 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         return stmtValidator;
     }
 
-    public void setPlanner(RelOptPlanner planner)
+    public void setPlanner(FarragoSessionPlanner planner)
     {
         this.planner = planner;
     }
 
-    public RelOptPlanner getPlanner()
+    public FarragoSessionPlanner getPlanner()
     {
         return planner;
     }
@@ -179,11 +179,11 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         if (sqlOperatorTable != null) {
             return sqlOperatorTable;
         }
-        
+
         SqlOperatorTable systemOperators = getSession().getSqlOperatorTable();
         SqlOperatorTable userOperators =
             new FarragoUserDefinedRoutineLookup(stmtValidator, this);
-        
+
         ChainedSqlOperatorTable table = new ChainedSqlOperatorTable();
         table.add(userOperators);
         table.add(systemOperators);
@@ -385,7 +385,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         // during function lookup because overloads need to be resolved
         // first.  And we can't do this any later because we stop
         // collecting direct dependencies during SqlToRelConverter.
-        SqlVisitor udfInvocationFinder = new SqlBasicVisitor() 
+        SqlVisitor udfInvocationFinder = new SqlBasicVisitor()
             {
                 public void visit(SqlCall call)
                 {
@@ -398,7 +398,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
                 }
             };
         sqlNode.accept(udfInvocationFinder);
-        
+
         getSqlToRelConverter();
         if (analyzedSql.paramRowType == null) {
             // query expression
@@ -414,7 +414,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             Collections.unmodifiableSet(directDependencies);
 
         // walk the expression looking for dynamic parameters
-        SqlVisitor dynamicParamFinder = new SqlBasicVisitor() 
+        SqlVisitor dynamicParamFinder = new SqlBasicVisitor()
             {
                 public void visit(SqlDynamicParam param)
                 {
@@ -504,11 +504,11 @@ public class FarragoPreparingStmt extends OJPreparingStmt
 
     RexNode expandFunction(
         String bodyString,
-        Map paramNameToArgMap, 
+        Map paramNameToArgMap,
         final Map paramNameToTypeMap)
     {
         stopCollectingDirectDependencies();
-        
+
         SqlParser parser = new SqlParser(bodyString);
         SqlNode sqlExpr;
         try {
@@ -529,7 +529,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         // TODO jvs 1-Jan-2005: support a RexVariableBinding (like "let" in
         // Lisp), and avoid expansion of parameters which are referenced more
         // than once
-        
+
         return sqlToRelConverter.convertExpression(sqlExpr, paramNameToArgMap);
     }
 
@@ -791,12 +791,12 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             resolved.getQualifiedName(),
             rowType);
     }
-    
+
     // implement SqlValidator.CatalogReader
     public String [] getAllSchemaObjectNames(String [] names)
-    {   
+    {
         return stmtValidator.getAllSchemaObjectNames(names);
-    }   
+    }
 
     void addDependency(Object supplier)
     {

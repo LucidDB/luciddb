@@ -41,7 +41,6 @@ import org.eigenbase.oj.rex.*;
 import org.eigenbase.oj.stmt.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
-import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.util.*;
 
@@ -258,7 +257,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     }
 
     // implement FarragoSession
-    public RelOptPlanner newPlanner(
+    public FarragoSessionPlanner newPlanner(
         FarragoSessionPreparingStmt stmt,
         boolean init)
     {

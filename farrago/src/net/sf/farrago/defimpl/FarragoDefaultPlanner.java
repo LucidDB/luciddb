@@ -43,7 +43,7 @@ import org.eigenbase.util.*;
  * @version $Id$
  */
 public class FarragoDefaultPlanner extends VolcanoPlanner
-    implements FarragoPlanner
+    implements FarragoSessionPlanner
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -142,7 +142,7 @@ public class FarragoDefaultPlanner extends VolcanoPlanner
         }
     }
 
-    public FarragoPreparingStmt getPreparingStmt()
+    public FarragoSessionPreparingStmt getPreparingStmt()
     {
         return stmt;
     }

@@ -27,8 +27,6 @@ import java.util.*;
 import net.sf.farrago.db.*;
 import net.sf.farrago.session.*;
 
-import org.eigenbase.relopt.*;
-
 /**
  * FarragoDefaultSession is a default implementation of the
  * {@link FarragoSession} interface.
@@ -47,7 +45,7 @@ public class FarragoDefaultSession extends FarragoDbSession
     }
 
     // implement FarragoSession
-    public RelOptPlanner newPlanner(
+    public FarragoSessionPlanner newPlanner(
         FarragoSessionPreparingStmt stmt,
         boolean init)
     {

@@ -25,7 +25,6 @@ import net.sf.farrago.util.FarragoAllocation;
 
 import org.eigenbase.oj.rex.OJRexImplementorTable;
 import org.eigenbase.sql.SqlOperatorTable;
-import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 
 
@@ -171,7 +170,7 @@ public interface FarragoSession
      *
      * @return new planner
      */
-    public RelOptPlanner newPlanner(
+    public FarragoSessionPlanner newPlanner(
         FarragoSessionPreparingStmt stmt,
         boolean init);
 
