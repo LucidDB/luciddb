@@ -21,18 +21,18 @@
 
 package org.eigenbase.sql;
 
-import java.util.List;
-
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.sql.parser.ParserUtil;
+import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.test.SqlTester;
-import org.eigenbase.sql.validation.ValidationUtil;
-import org.eigenbase.sql.type.ReturnTypeInference;
 import org.eigenbase.sql.type.OperandsTypeChecking;
+import org.eigenbase.sql.type.ReturnTypeInference;
+import org.eigenbase.sql.validation.ValidationUtil;
 import org.eigenbase.util.Util;
 
+import java.util.List;
 
 /**
  * Defines the BETWEEN operator.
@@ -243,6 +243,15 @@ public class SqlBetweenOperator extends SqlInfixOperator
 
         // Return the ordinal of the new current node.
         return opOrdinal - 1;
+    }
+
+    public void test(SqlTester tester)
+    {
+        if (negated) {
+            SqlOperatorTests.testNotBetween(tester);
+        } else {
+            SqlOperatorTests.testBetween(tester);
+        }
     }
 
     //~ Inner Classes ---------------------------------------------------------

@@ -21,17 +21,16 @@
 
 package org.eigenbase.sql.fun;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validation.ValidationUtil;
-import org.eigenbase.sql.type.UnknownParamInference;
-import org.eigenbase.sql.type.ReturnTypeInference;
-import org.eigenbase.sql.type.OperandsTypeChecking;
 import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.sql.parser.ParserUtil;
+import org.eigenbase.sql.type.OperandsTypeChecking;
+import org.eigenbase.sql.type.ReturnTypeInference;
+import org.eigenbase.sql.type.UnknownParamInference;
+import org.eigenbase.sql.validation.ValidationUtil;
 import org.eigenbase.util.Util;
+
+import java.util.List;
 
 
 /**
@@ -71,7 +70,7 @@ public class SqlLikeOperator extends SqlSpecialOperator
         // "a like (b like c escape d)".
         super(name, kind, 15, false, ReturnTypeInference.useNullableBoolean,
             UnknownParamInference.useFirstKnown,
-            
+
         /** this is not correct in general */
         OperandsTypeChecking.typeNullableStringStringString);
         this.negated = negated;

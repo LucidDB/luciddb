@@ -21,17 +21,14 @@ package com.disruptivetech.farrago.test;
 
 import com.disruptivetech.farrago.calc.CalcRexImplementorTableImpl;
 
-import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Properties;
 
 import junit.extensions.TestSetup;
 import junit.framework.Test;
-import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 import net.sf.farrago.defimpl.FarragoDefaultSession;
@@ -59,8 +56,6 @@ import org.eigenbase.sql.type.UnknownParamInference;
 import org.eigenbase.sql.type.ReturnTypeInference;
 import org.eigenbase.sql.type.OperandsTypeChecking;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
-import org.eigenbase.sql.test.SqlTester;
-
 
 /**
  * FarragoAutoCalcRuleTest tests FarragoAutoCalcRule.  This class
@@ -139,12 +134,7 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
                 ReturnTypeInference.useNullableBiggest,
                 UnknownParamInference.useFirstKnown,
                 OperandsTypeChecking.typeNullableNumericNumeric,
-                SqlFunction.SqlFuncTypeName.Numeric) {
-                public void test(SqlTester tester)
-                {
-                }
-            };
-
+                SqlFunction.SqlFuncTypeName.Numeric);
         opTab.register(cppFunc);
 
         CalcRexImplementorTableImpl cImplTab =
@@ -264,11 +254,7 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
                     ReturnTypeInference.useNullableBiggest,
                     UnknownParamInference.useFirstKnown,
                     OperandsTypeChecking.typeNullableNumericNumeric,
-                    SqlFunction.SqlFuncTypeName.Numeric) {
-                    public void test(SqlTester tester)
-                    {
-                    }
-                };
+                    SqlFunction.SqlFuncTypeName.Numeric);
             opTab.register(jplusFunc);
 
             registerOperator(
@@ -279,11 +265,8 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
                 new SqlFunction("JROW", SqlKind.Function, null,
                     UnknownParamInference.useFirstKnown,
                     OperandsTypeChecking.typeNullableNumericNumeric,
-                    SqlFunction.SqlFuncTypeName.Numeric) {
-                    public void test(SqlTester tester)
-                    {
-                    }
-
+                    SqlFunction.SqlFuncTypeName.Numeric)
+                {
                     public RelDataType getType(
                         RelDataTypeFactory typeFactory,
                         RexNode [] args)

@@ -21,20 +21,21 @@
 
 package org.eigenbase.sql.fun;
 
-import org.eigenbase.sql.*;
-import org.eigenbase.sql.validation.ValidationUtil;
-import org.eigenbase.sql.test.SqlTester;
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.sql.type.ReturnTypeInference;
-import org.eigenbase.sql.type.OperandsTypeChecking;
 import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.test.SqlOperatorTests;
+import org.eigenbase.sql.test.SqlTester;
+import org.eigenbase.sql.type.OperandsTypeChecking;
+import org.eigenbase.sql.type.ReturnTypeInference;
+import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.sql.validation.ValidationUtil;
 
 import java.util.ArrayList;
 
 /**
  * Definition of the "SUBSTRING" builtin SQL function.
  *
- * @author Wael Chatila 
+ * @author Wael Chatila
  * @since Sep 5, 2004
  * @version $Id$
  */
@@ -142,4 +143,12 @@ public class SqlSubstringFunction extends SqlFunction {
 
         writer.print(")");
     }
+
+    public void test(SqlTester tester)
+    {
+        SqlOperatorTests.testSubstringFunction(tester);
+
+    }
 }
+
+// End SqlSubstringFunction.java

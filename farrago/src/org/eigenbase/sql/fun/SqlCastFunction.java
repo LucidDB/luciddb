@@ -21,15 +21,13 @@
 
 package org.eigenbase.sql.fun;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.type.UnknownParamInference;
+import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.test.SqlTester;
+import org.eigenbase.sql.type.UnknownParamInference;
 import org.eigenbase.util.Util;
 
 
@@ -165,6 +163,11 @@ public class SqlCastFunction extends SqlFunction
             operand.unparse(writer, 0, 0);
         }
         writer.print(')');
+    }
+
+    public void test(SqlTester tester)
+    {
+        SqlOperatorTests.testCast(tester);
     }
 }
 

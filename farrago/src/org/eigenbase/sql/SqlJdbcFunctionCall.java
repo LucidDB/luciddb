@@ -21,16 +21,17 @@
 
 package org.eigenbase.sql;
 
-import java.util.HashMap;
-
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.fun.SqlTrimFunction;
 import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.util.Util;
+
+import java.util.HashMap;
 
 
 /**
@@ -282,6 +283,11 @@ public class SqlJdbcFunctionCall extends SqlFunction
     {
         thisOperands = operands;
         return super.createCall(operands, pos);
+    }
+
+    public void test(SqlTester tester)
+    {
+        SqlOperatorTests.testJdbcFn(tester);
     }
 
     public SqlCall getLookupCall()

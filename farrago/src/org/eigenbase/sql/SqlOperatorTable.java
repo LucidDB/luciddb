@@ -23,7 +23,6 @@ package org.eigenbase.sql;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.parser.ParserPosition;
-import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.util.MultiMap;
 import org.eigenbase.util.Util;
 
@@ -165,7 +164,7 @@ public class SqlOperatorTable
             // REVIEW/TODO wael: why is this call neccessary? I tried removing
             // it and tests failed.
             fun = new SqlFunction(funName, SqlKind.Function, null, null, null,
-                    null);
+                null);
         }
         return fun.createCall(operands, pos);
     }

@@ -192,19 +192,30 @@ public abstract class SqlOperator
     public abstract SqlSyntax getSyntax();
 
     /**
-     * An abstract method where its implementations call the
-     * {@link org.eigenbase.sql.test.SqlTester}'s
-     * different <code>checkXXX</code> methods.
-     * An example test function for the sin operator
-     * <blockqoute><pre><code>
-     * void test(SqlTester tester) {<br>
-     *     tester.checkScalar("sin(0)", "0");<br>
-     *     tester.checkScalar("sin(1.5707)", "1");<br>
-     * }<br>
-     * </code></pre></blockqoute>
+     * Runs a series of tests to verify that this operator validates and
+     * executes correctly.
+     *
+     * <p>The specific implementation should call the various
+     * <code>checkXxx</code> methods in the {@link SqlTester} interface. The
+     * test harness may call the test method several times with different
+     * implementations of {@link SqlTester} -- perhaps one which uses the
+     * farrago calculator, and another which implements operators by generating
+     * Java code.
+     *
+     * <p>The default implementation does nothing.
+     *
+     * <p>An example test function for the sin operator:
+     * 
+     * <blockqoute><pre><code>void test(SqlTester tester) {
+     *     tester.checkScalar("sin(0)", "0");
+     *     tester.checkScalar("sin(1.5707)", "1");
+     * }</code></pre></blockqoute>
+     *
      * @param tester The tester to use.
      */
-//    public abstract void test(SqlTester tester);
+    public void test(SqlTester tester)
+    {
+    }
 
     /**
      * Creates a call to this operand with an array of operands.

@@ -24,11 +24,11 @@ package org.eigenbase.sql.fun;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.test.SqlOperatorTests;
+import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.type.OperandsTypeChecking;
 import org.eigenbase.sql.validation.ValidationUtil;
-import org.eigenbase.sql.parser.ParserPosition;
-import org.eigenbase.sql.test.SqlTester;
-
 
 /**
  * Definition of the "TRIM" builtin SQL function.
@@ -137,6 +137,11 @@ public class SqlTrimFunction extends SqlFunction
         RelDataType type = validator.deriveType(scope, call.operands[2]);
         return ValidationUtil.makeNullableIfOperandsAre(validator, scope,
             call, type);
+    }
+
+    public void test(SqlTester tester)
+    {
+        SqlOperatorTests.testTrimFunc(tester);
     }
 
     //~ Inner Classes ---------------------------------------------------------

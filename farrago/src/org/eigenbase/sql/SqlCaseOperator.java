@@ -26,6 +26,8 @@ import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.test.SqlOperatorTests;
+import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.type.ReturnTypeInference;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql.type.UnknownParamInference;
@@ -306,6 +308,11 @@ public class SqlCaseOperator extends SqlOperator
         int rightPrec)
     {
         throw Util.needToImplement("need to implement");
+    }
+
+    public void test(SqlTester tester)
+    {
+        SqlOperatorTests.testCase(tester);
     }
 }
 

@@ -22,8 +22,8 @@
 package org.eigenbase.sql;
 
 import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.test.SqlTester;
-import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql.type.ReturnTypeInference;
 
 
@@ -152,6 +152,11 @@ public class SqlSelectOperator extends SqlOperator
             writer.print("ORDER BY ");
             orderClause.unparse(writer, 0, 0);
         }
+    }
+
+    public void test(SqlTester tester)
+    {
+        SqlOperatorTests.testSelect(tester);
     }
 }
 

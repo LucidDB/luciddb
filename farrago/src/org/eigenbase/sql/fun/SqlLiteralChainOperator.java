@@ -1,15 +1,16 @@
 package org.eigenbase.sql.fun;
 
-import org.eigenbase.sql.*;
-import org.eigenbase.sql.test.SqlTester;
-import org.eigenbase.sql.parser.ParserPosition;
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.sql.type.UnknownParamInference;
-import org.eigenbase.sql.type.ReturnTypeInference;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.resource.EigenbaseResource;
-import org.eigenbase.util.NlsString;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.test.SqlOperatorTests;
+import org.eigenbase.sql.test.SqlTester;
+import org.eigenbase.sql.type.ReturnTypeInference;
+import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.sql.type.UnknownParamInference;
 import org.eigenbase.util.BitString;
+import org.eigenbase.util.NlsString;
 
 /**
  * Internal operator, by which the parser represents a continued string
@@ -158,4 +159,12 @@ public class SqlLiteralChainOperator extends SqlInternalOperator {
             writer.print(collation.toString());
         }
     }
+
+    public void test(SqlTester tester)
+    {
+        SqlOperatorTests.testLiteralChain(tester);
+    }
+
 }
+
+// End SqlLiteralChainOperator.java

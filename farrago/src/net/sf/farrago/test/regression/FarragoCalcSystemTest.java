@@ -28,7 +28,6 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 
 import net.sf.farrago.test.FarragoTestCase;
-import net.sf.farrago.test.FarragoSqlOperatorsTest;
 import net.sf.farrago.ojrex.FarragoOJRexImplementorTable;
 
 import org.eigenbase.sql.*;
@@ -257,8 +256,6 @@ public class FarragoCalcSystemTest extends FarragoTestCase
             String testName = "NULL-TEST-" + op.name + "-";
             suite.addTest(
                 new FarragoCalcSystemTest(vm, sql, testName + vm.name));
-
-            //                suite.addTest(new FarragoCalcSystemTest(vmJava, sql, testName+"JAVA"));
         }
     }
 
@@ -300,11 +297,11 @@ public class FarragoCalcSystemTest extends FarragoTestCase
 
         public boolean canImplement(SqlOperator op)
         {
-            if ((name.equals(Java.name) || name.equals(Auto.name)) &&
+            if ((this == Java || this == Auto) &&
                 javaTab.get(op) != null) {
                     return true;
             }
-            if ((name.equals(Fennel.name) || name.equals(Auto.name)) &&
+            if ((this == Fennel || this == Auto) &&
                 fennelTab.get(op) != null) {
                 return true;
             }

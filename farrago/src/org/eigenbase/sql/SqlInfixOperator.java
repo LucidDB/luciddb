@@ -21,10 +21,9 @@
 
 package org.eigenbase.sql;
 
-import org.eigenbase.sql.test.SqlTester;
-import org.eigenbase.sql.type.UnknownParamInference;
-import org.eigenbase.sql.type.ReturnTypeInference;
 import org.eigenbase.sql.type.OperandsTypeChecking;
+import org.eigenbase.sql.type.ReturnTypeInference;
+import org.eigenbase.sql.type.UnknownParamInference;
 
 
 /**
@@ -92,10 +91,6 @@ public class SqlInfixOperator extends SqlSpecialOperator
     boolean needsSpace()
     {
         return true;
-    }
-
-    public void test(SqlTester tester)
-    {
     }
 }
 

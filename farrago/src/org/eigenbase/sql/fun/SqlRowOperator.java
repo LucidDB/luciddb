@@ -24,6 +24,7 @@ package org.eigenbase.sql.fun;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.type.UnknownParamInference;
 
@@ -110,6 +111,11 @@ public class SqlRowOperator extends SqlSpecialOperator
     protected void checkNumberOfArg(SqlCall call)
     {
         // any number of arguments is fine
+    }
+
+    public void test(SqlTester tester)
+    {
+        SqlOperatorTests.testRow();
     }
 
     public void unparse(

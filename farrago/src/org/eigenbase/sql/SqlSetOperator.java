@@ -21,9 +21,6 @@
 
 package org.eigenbase.sql;
 
-import org.eigenbase.sql.test.SqlTester;
-
-
 /**
  * SqlSetOperator represents a relational set theory operator
  * (UNION, INTERSECT, MINUS).  These are binary operators, but with
