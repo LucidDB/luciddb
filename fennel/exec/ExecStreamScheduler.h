@@ -155,11 +155,14 @@ public:
     virtual void makeRunnable(ExecStream &stream) = 0;
 
     /**
-     * Asynchronously aborts execution of any scheduled streams
-     * and prevents further scheduling.  Returns immediately, not waiting
-     * for abort request to be fully processed.
+     * Asynchronously aborts execution of any scheduled streams contained by a
+     * particular graph and prevents further scheduling.  Returns immediately,
+     * not waiting for abort request to be fully processed.
+     *
+     * @param graph graph to abort; must be one of the graphs
+     * associated with this scheduler
      */
-    virtual void abort() = 0;
+    virtual void abort(ExecStreamGraph &graph) = 0;
 
     /**
      * Shuts down this scheduler, preventing any further streams from

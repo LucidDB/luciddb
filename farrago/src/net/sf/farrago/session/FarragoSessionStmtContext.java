@@ -154,6 +154,11 @@ public interface FarragoSessionStmtContext extends FarragoAllocation
     public void closeResultSet();
 
     /**
+     * Cancels execution.
+     */
+    public void cancel();
+
+    /**
      * Releases any resources (including result sets) associated with
      * this statement context.
      */

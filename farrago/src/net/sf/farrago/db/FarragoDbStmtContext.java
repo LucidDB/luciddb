@@ -29,6 +29,7 @@ import net.sf.farrago.runtime.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
+import net.sf.farrago.fennel.*;
 
 import org.eigenbase.oj.stmt.*;
 import org.eigenbase.rel.RelNode;
@@ -70,6 +71,9 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
     private FarragoSessionExecutableStmt executableStmt;
     private FarragoCompoundAllocation allocations;
     private String sql;
+    
+    private FennelStreamGraph streamGraph;
+    private Object streamGraphMutex = new Integer(0);
 
     /**
      * query timeout in seconds, default to 0.
@@ -248,6 +252,9 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
             }
 
             resultSet = executableStmt.execute(context);
+            synchronized(streamGraphMutex) {
+                streamGraph = context.getFennelStreamGraph();
+            }
 
             if (queryTimeoutMillis > 0) {
                 IteratorResultSet iteratorRS = (IteratorResultSet) resultSet;
@@ -284,6 +291,9 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
                     throw Util.newInternal(ex);
                 } finally {
                     resultSet = null;
+                    synchronized(streamGraphMutex) {
+                        streamGraph = null;
+                    }
                 }
             }
         }
@@ -310,6 +320,16 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
     }
 
     // implement FarragoSessionStmtContext
+    public void cancel()
+    {
+        synchronized(streamGraphMutex) {
+            if (streamGraph != null) {
+                streamGraph.abort();
+            }
+        }
+    }
+
+    // implement FarragoSessionStmtContext
     public void closeResultSet()
     {
         if (resultSet != null) {
@@ -319,6 +339,9 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
                 throw Util.newInternal(ex);
             }
             resultSet = null;
+            synchronized(streamGraphMutex) {
+                streamGraph = null;
+            }
         }
     }
 

@@ -418,9 +418,8 @@ void CmdInterpreter::visit(ProxyCmdPrepareExecutionStreamGraph &cmd)
         ExecStreamBuilder streamBuilder(
             graphEmbryo, 
             *(pStreamGraphHandle->pExecStreamFactory));
-        streamBuilder.buildStreamGraph(cmd);
+        streamBuilder.buildStreamGraph(cmd, true);
         pStreamGraphHandle->pExecStreamFactory.reset();
-        pScheduler->start();
         pStreamGraphHandle->pScheduler = pScheduler;
     }
 }

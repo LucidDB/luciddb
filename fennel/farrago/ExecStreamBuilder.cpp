@@ -40,28 +40,26 @@ ExecStreamBuilder::~ExecStreamBuilder()
 }
 
 void ExecStreamBuilder::buildStreamGraph(
-    ProxyCmdPrepareExecutionStreamGraph &cmd)
+    ProxyCmdPrepareExecutionStreamGraph &cmd,
+    bool assumeOutputFromSinks)
 {
     streamFactory.setScratchAccessor(graphEmbryo.getScratchAccessor());
 
     // PASS 1: add streams to graph
-    SharedProxyExecutionStreamDef pNext = cmd.getStreamDefs();
-    for (; pNext; ++pNext) {
-        buildStream(*pNext);
+    SharedProxyExecutionStreamDef pStreamDef = cmd.getStreamDefs();
+    for (; pStreamDef; ++pStreamDef) {
+        buildStream(*pStreamDef);
     }
 
     // PASS 2: add dataflows
-    pNext = cmd.getStreamDefs();
-    for (; pNext; ++pNext) {
-        buildStreamInputs(*pNext);
+    pStreamDef = cmd.getStreamDefs();
+    for (; pStreamDef; ++pStreamDef) {
+        buildStreamInputs(*pStreamDef);
         
-        // REVIEW jvs 18-Nov-2004: convention below is incorrect for plans with
-        // true sinks (e.g. network socket)
-        
-        // Streams with no consumer are read directly by clients.  They 
-        // are expected to support producer provisioned results.
-        if (! pNext->getConsumer()) {
-            std::string name = pNext->getName();
+        if (!pStreamDef->getConsumer() && assumeOutputFromSinks) {
+            // Streams with no consumer are read directly by clients.  They 
+            // are expected to support producer provisioned results.
+            std::string name = pStreamDef->getName();
             SharedExecStream pAdaptedStream =
                 graphEmbryo.addAdapterFor(name, BUFPROV_PRODUCER);
             graphEmbryo.getGraph().addOutputDataflow(

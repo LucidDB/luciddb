@@ -18,6 +18,7 @@
 */
 package net.sf.farrago.session;
 
+import net.sf.farrago.fennel.*;
 import net.sf.farrago.util.*;
 
 
@@ -46,6 +47,11 @@ public interface FarragoSessionRuntimeContext extends FarragoAllocationOwner
      * created.
      */
     public void openStreams();
+
+    /**
+     * @return FennelStreamGraph pinned by loadFennelPlan
+     */
+    public FennelStreamGraph getFennelStreamGraph();
 }
 
 

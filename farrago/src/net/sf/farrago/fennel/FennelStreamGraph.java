@@ -163,31 +163,56 @@ public class FennelStreamGraph implements FarragoAllocation
         }
     }
 
+    // NOTE:  close/abort/closeAllocation are synchronized since
+    // abort can be asynchronous
+
     /**
      * Close the tuple stream graph (but do not deallocate it).
      */
-    public void close()
+    public synchronized void close()
     {
         traceGraphHandle("close");
         if (streamGraphHandle == 0) {
             return;
         }
         try {
-            FennelStorage.tupleStreamGraphClose(streamGraphHandle, false);
+            FennelStorage.tupleStreamGraphClose(
+                streamGraphHandle,
+                FennelStorage.CLOSE_RESULT);
+        } catch (SQLException ex) {
+            throw fennelDbHandle.handleNativeException(ex);
+        }
+    }
+
+    /**
+     * Abort the current execution (but do not close).
+     */
+    public synchronized void abort()
+    {
+        traceGraphHandle("abort");
+        if (streamGraphHandle == 0) {
+            return;
+        }
+        try {
+            FennelStorage.tupleStreamGraphClose(
+                streamGraphHandle,
+                FennelStorage.CLOSE_ABORT);
         } catch (SQLException ex) {
             throw fennelDbHandle.handleNativeException(ex);
         }
     }
 
     // implement FarragoAllocation
-    public void closeAllocation()
+    public synchronized void closeAllocation()
     {
         traceGraphHandle("deallocate");
         if (streamGraphHandle == 0) {
             return;
         }
         try {
-            FennelStorage.tupleStreamGraphClose(streamGraphHandle, true);
+            FennelStorage.tupleStreamGraphClose(
+                streamGraphHandle,
+                FennelStorage.CLOSE_DEALLOCATE);
         } catch (SQLException ex) {
             throw fennelDbHandle.handleNativeException(ex);
         } finally {

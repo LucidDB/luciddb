@@ -328,7 +328,9 @@ public class FarragoJdbcEngineStatement implements Statement
     public void cancel()
         throws SQLException
     {
-        throw new UnsupportedOperationException();
+        if (stmtContext != null) {
+            stmtContext.cancel();
+        }
     }
 
     // implement Statement
@@ -348,7 +350,9 @@ public class FarragoJdbcEngineStatement implements Statement
         throws SQLException
     {
         try {
-            stmtContext.closeAllocation();
+            if (stmtContext != null) {
+                stmtContext.closeAllocation();
+            }
         } finally {
             stmtContext = null;
         }

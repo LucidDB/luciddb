@@ -76,7 +76,7 @@ void DfsTreeExecStreamScheduler::makeRunnable(ExecStream &)
     permAssert(false);
 }
 
-void DfsTreeExecStreamScheduler::abort()
+void DfsTreeExecStreamScheduler::abort(ExecStreamGraph &)
 {
     FENNEL_TRACE(TRACE_FINE,"abort requested");
     

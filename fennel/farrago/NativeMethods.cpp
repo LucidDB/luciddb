@@ -149,6 +149,9 @@ Java_net_sf_farrago_fennel_FennelStorage_tupleStreamGraphOpen(
         } else {
             streamGraphHandle.pExecStreamGraph->setTxn(txnHandle.pTxn);
             streamGraphHandle.pExecStreamGraph->open();
+            if (streamGraphHandle.pScheduler.unique()) {
+                streamGraphHandle.pScheduler->start();
+            }
         }
         // TODO:  finally?
         streamGraphHandle.javaRuntimeContext = NULL;
@@ -159,30 +162,46 @@ Java_net_sf_farrago_fennel_FennelStorage_tupleStreamGraphOpen(
 
 extern "C" JNIEXPORT void JNICALL
 Java_net_sf_farrago_fennel_FennelStorage_tupleStreamGraphClose(
-    JNIEnv *pEnvInit, jclass, jlong hStreamGraph, jboolean deallocate)
+    JNIEnv *pEnvInit, jclass, jlong hStreamGraph, jint action)
 {
     JniEnvRef pEnv(pEnvInit);
     try {
         CmdInterpreter::StreamGraphHandle &streamGraphHandle =
             CmdInterpreter::getStreamGraphHandleFromLong(hStreamGraph);
-        if (deallocate) {
-            if (streamGraphHandle.pScheduler) {
-                streamGraphHandle.pScheduler->removeGraph(
-                    streamGraphHandle.pExecStreamGraph);
-                if (streamGraphHandle.pScheduler.unique()) {
-                    streamGraphHandle.pScheduler->stop();
-                }
-            }
-            delete &streamGraphHandle;
-            --JniUtil::handleCount;
-        } else {
+        switch (action) {
+        case net_sf_farrago_fennel_FennelStorage_CLOSE_RESULT:
             if (streamGraphHandle.getGraph()) {
                 // DEPRECATED
                 streamGraphHandle.getGraph()->close();
             }
+            if (streamGraphHandle.pScheduler.unique()) {
+                streamGraphHandle.pScheduler->stop();
+            }
             if (streamGraphHandle.pExecStreamGraph) {
                 streamGraphHandle.pExecStreamGraph->close();
             }
+            break;
+        case net_sf_farrago_fennel_FennelStorage_CLOSE_ABORT:
+            if (streamGraphHandle.pScheduler) {
+                if (streamGraphHandle.pExecStreamGraph) {
+                    streamGraphHandle.pScheduler->abort(
+                        *(streamGraphHandle.pExecStreamGraph));
+                }
+            }
+            break;
+        case net_sf_farrago_fennel_FennelStorage_CLOSE_DEALLOCATE:
+            if (streamGraphHandle.pScheduler) {
+                if (streamGraphHandle.pScheduler.unique()) {
+                    streamGraphHandle.pScheduler->stop();
+                }
+                streamGraphHandle.pScheduler->removeGraph(
+                    streamGraphHandle.pExecStreamGraph);
+            }
+            delete &streamGraphHandle;
+            --JniUtil::handleCount;
+            break;
+        default:
+            permAssert(false);
         }
     } catch (std::exception &ex) {
         pEnv.handleExcn(ex);

@@ -24,15 +24,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.sql.*;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.regex.Pattern;
 
 import junit.framework.Assert;
 import junit.framework.Test;
 
+import java.sql.Date;
 
 /**
  * FarragoJdbcTest tests specifics of the Farrago implementation of the JDBC
@@ -206,6 +204,74 @@ public class FarragoJdbcTest extends FarragoTestCase
         TimeZone timeZone = TimeZone.getTimeZone(tz);
         cal.setTimeZone(timeZone);
         return cal;
+    }
+
+    public void testSynchronousCancel()
+        throws Exception
+    {
+        testCancel(true);
+    }
+    
+    public void testAsynchronousCancel()
+        throws Exception
+    {
+        testCancel(false);
+    }
+    
+    private void testCancel(boolean synchronous)
+        throws Exception
+    {
+        // cleanup
+        String sql = "drop schema cancel_test cascade";
+        try {
+            stmt.execute(sql);
+        } catch (SQLException ex) {
+            // ignore
+        }
+        
+        sql = "create schema cancel_test";
+        stmt.execute(sql);
+        sql = "create foreign table cancel_test.m(id int not null) "
+            + "server sys_mock_data_server "
+            + "options(executor_impl 'FENNEL', row_count '1000000000')";
+        stmt.execute(sql);
+        sql = "select * from cancel_test.m";
+        resultSet = stmt.executeQuery(sql);
+        boolean found;
+        found = resultSet.next();
+        assertTrue(found);
+        found = resultSet.next();
+        assertTrue(found);
+        if (synchronous) {
+            // cancel immediately
+            stmt.cancel();
+        } else {
+            Timer timer = new Timer(true);
+            // cancel after 2 seconds
+            TimerTask task = new TimerTask() 
+                {
+                    public void run()
+                    {
+                        try {
+                            stmt.cancel();
+                        } catch (SQLException ex) {
+                            Assert.fail(
+                                "Cancel request failed:  " 
+                                + ex.getMessage());
+                        }
+                    }
+                };
+            timer.schedule(task, 2000);
+        }
+        try {
+            while (resultSet.next()) {
+            }
+        } catch (SQLException ex) {
+            // expected
+            Assert.assertTrue(ex.getMessage().indexOf("abort") > -1);
+            return;
+        }
+        Assert.fail("Expected failure due to cancel request");
     }
 
     // NOTE jvs 26-July-2004:  some of the tests in this class modify fixture

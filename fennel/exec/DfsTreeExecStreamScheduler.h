@@ -61,7 +61,7 @@ public:
     virtual void removeGraph(SharedExecStreamGraph pGraph);
     virtual void start();
     virtual void makeRunnable(ExecStream &stream);
-    virtual void abort();
+    virtual void abort(ExecStreamGraph &graph);
     virtual void stop();
     virtual ExecStreamBufAccessor &readStream(ExecStream &stream);
 };

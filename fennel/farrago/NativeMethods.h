@@ -7,6 +7,12 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#undef net_sf_farrago_fennel_FennelStorage_CLOSE_RESULT
+#define net_sf_farrago_fennel_FennelStorage_CLOSE_RESULT 0L
+#undef net_sf_farrago_fennel_FennelStorage_CLOSE_ABORT
+#define net_sf_farrago_fennel_FennelStorage_CLOSE_ABORT 1L
+#undef net_sf_farrago_fennel_FennelStorage_CLOSE_DEALLOCATE
+#define net_sf_farrago_fennel_FennelStorage_CLOSE_DEALLOCATE 2L
 /*
  * Class:     net_sf_farrago_fennel_FennelStorage
  * Method:    newObjectHandle
@@ -74,10 +80,10 @@ JNIEXPORT jint JNICALL Java_net_sf_farrago_fennel_FennelStorage_tupleStreamFetch
 /*
  * Class:     net_sf_farrago_fennel_FennelStorage
  * Method:    tupleStreamGraphClose
- * Signature: (JZ)V
+ * Signature: (JI)V
  */
 JNIEXPORT void JNICALL Java_net_sf_farrago_fennel_FennelStorage_tupleStreamGraphClose
-  (JNIEnv *, jclass, jlong, jboolean);
+  (JNIEnv *, jclass, jlong, jint);
 
 #ifdef __cplusplus
 }

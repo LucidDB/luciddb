@@ -40,6 +40,12 @@ public class FennelStorage
         Util.loadLibrary("farrago");
     }
 
+    static final int CLOSE_RESULT = 0;
+
+    static final int CLOSE_ABORT = 1;
+
+    static final int CLOSE_DEALLOCATE = 2;
+
     //~ Methods ---------------------------------------------------------------
 
     /**
@@ -133,11 +139,11 @@ public class FennelStorage
      * Close a tuple stream graph.
      *
      * @param hStream handle to tuple stream
-     * @param deallocate if true, close and deallocate; if false, just close
+     * @param action CLOSE_XXX
      */
     static native void tupleStreamGraphClose(
         long hStreamGraph,
-        boolean deallocate)
+        int action)
         throws SQLException;
 }
 

@@ -113,8 +113,14 @@ public:
      *
      * @param streamDef Java representation for collection of stream
      * definitions
+     *
+     * @param assumeOutputFromSinks if true, sinks in the graph are
+     * assumed to be dataflow output nodes; if false, sinks in the
+     * graph are not treated specially
      */
-    void buildStreamGraph(ProxyCmdPrepareExecutionStreamGraph &cmd);
+    void buildStreamGraph(
+        ProxyCmdPrepareExecutionStreamGraph &cmd,
+        bool assumeOutputFromSinks);
 };
 
 FENNEL_END_NAMESPACE
