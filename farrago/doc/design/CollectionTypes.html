@@ -76,8 +76,14 @@ FROM genome_sequences
 ORDER BY sequence_id;
 </code></pre>
 
-Notice that array offsets are 1-based.  Attempting to access an
-out-of-bound offset results in an exception.  <p>
+Notice that array offsets are 1-based.  Attempting to read an
+out-of-bound offset (or to write an offset past the maximum
+cardinality) results in an exception.  Any element of an array may be
+null, and there is no straightforward means of declaring them NOT
+NULL.  Updating an element past the current cardinality automatically
+extends the array and sets any new elements thus created to null.
+
+<p>
 
 Arrays can be concatenated with the usual notation:
 
@@ -120,21 +126,7 @@ WHERE s1.codons = s2.codons;
 No other inequality operator is supported, and usage of arrays in just
 about any other context (including GROUP BY) is illegal.
 
-<h2>SQL2003 Array Type</h2>
-
-SQL2003 extends array semantics in a number of ways.  Arrays can be
-declared without a maximum cardinality, in which case the maximum is
-vendor-defined (possibly unbounded like a LOB).  Array nesting is
-unrestricted.  A new constructor is added for converting a query into
-an array:
-
-<pre><code>
-INSERT INTO listbox_choices VALUES(
-    'Department Names',ARRAY(SELECT name FROM sales.depts ORDER BY 1));
-</pre></code>
-
-In the other direction, the UNNEST operator converts an array into a
-query expression:
+The UNNEST operator converts an array into a query expression:
 
 <pre><code>
 -- convert a particular sequence into a table
@@ -149,9 +141,8 @@ The WITH ORDINALITY clause specifies that the array ordering should be
 used to derive the offset column.  Without this clause, the codons
 would be returned without any ordering information.
 
-What if we wanted to convert all of the sequences together?  I think
-that's what the new LATERAL subquery feature is for, although I'm a little
-fuzzy on this part:
+What if we wanted to convert all of the sequences together?
+That's what the new LATERAL derived table feature is for:
 
 <pre><code>
 SELECT 
@@ -174,7 +165,25 @@ relative offset of the codon within the sequence.  The last column is
 the absolute offset of the codon within the chromosome.  Returned rows are
 ordered by absolute position.
 
-</ul>
+<p>
+
+Note that the new LATERAL keyword is normally required in order to
+reference a table expression defined earlier in the FROM list
+(<code>g</code> in this example).  However, when UNNEST is specified,
+LATERAL is implicit.
+
+<h2>SQL2003 Array Type</h2>
+
+SQL2003 extends array semantics in a number of ways.  Arrays can be
+declared without a maximum cardinality, in which case the maximum is
+vendor-defined (possibly unbounded like a LOB).  Array nesting is
+unrestricted.  And a new constructor is added for converting a query
+into an array:
+
+<pre><code>
+INSERT INTO listbox_choices VALUES(
+    'Department Names',ARRAY(SELECT name FROM sales.depts ORDER BY 1));
+</pre></code>
 
 <h2>SQL2003 Multiset Type</h2>
 
@@ -185,7 +194,7 @@ don't mix (e.g. you can't INSERT a multiset into an array column).
 
 <p>
 
-Unlike arays, multisets never have a declared maximum cardinality:
+Unlike arrays, multisets never have a declared maximum cardinality:
 
 <pre><code>
 CREATE TABLE logins(
@@ -195,7 +204,7 @@ CREATE TABLE logins(
     attempts ROW(VARCHAR(128),VARCHAR(128) MULTISET);
 </code></pre>
 
-Multisets constructors are similar to array constructors:
+Multiset constructors are similar to array constructors:
 
 <pre><code>
 
@@ -298,16 +307,9 @@ uid.
 <ul>
 
 <li>
-From my reading of the standard, I haven't yet been able to figure out
-whether individual elements of a collection can be set to NULL (and if
-so, whether it is possible to declare them as NOT NULL).  If anyone
-has a definitive answer on this, please <a
-href="mailto:perfecthash@users.sf.net">let me know</a>.
-
-<li>
 For contrast, see
 <a href="http://developer.postgresql.org/docs/postgres/arrays.html">
-the PostgreSQL docs</a>, which supports both standard and non-standard
+the PostgreSQL docs</a>, which covers both standard and non-standard
 syntax and semantics.
 
 <li>
@@ -316,20 +318,14 @@ See also
 the official SQL:2003 announcement</a>.
 
 <li>
-I based my understanding of LATERAL on
-<a href="http://www.midrangeserver.com/fhg/fhg071404-story01.html">
-a random article</a>; I didn't actually try to decode that part of the
-standard.
-
-<li>
 This document does not cover non-SQL language bindings.  For JDBC, see
 <a href="http://java.sun.com/j2se/1.4.2/docs/api/java/sql/Array.html">
 the Javadoc</a>.
 
 <li>
 The examples in this document should not be taken as recommendations
-for good schema design.  (Many critics have suggested that adding
-collection types to SQL is a step backwards.)
+for good schema design.  (Many critics have suggested that the addition
+of collection types to SQL is a step backwards.)
 
 </ul>
 
