@@ -51,18 +51,9 @@ class FarragoRJMedDataWrapper
         Properties serverProps)
     {
         try {
-            FarragoRJDriverPropertyInfo infos[] = 
+            return getDriverPropertyInfo(
                 rmiDataWrapper_.getServerPropertyInfo(
-                    locale, wrapperProps, serverProps);
-                
-            if (infos == null) return null;
-
-            DriverPropertyInfo dpis[] = new DriverPropertyInfo[infos.length];
-            for (int i = 0; i < infos.length; i++) {
-                if (infos[i] == null) dpis[i] = null;
-                dpis[i] = infos[i].getPropertyInfo();
-            }
-            return dpis;
+                    locale, wrapperProps, serverProps));
         } catch (RemoteException e) {
             throw new RuntimeException(e.getMessage());
             // TODO: add 'throws SQLException' to interface, and throw new SQLException(e.getMessage());
@@ -76,18 +67,9 @@ class FarragoRJMedDataWrapper
         Properties tableProps)
     {
         try {
-            FarragoRJDriverPropertyInfo infos[] = 
+            return getDriverPropertyInfo(
                 rmiDataWrapper_.getColumnSetPropertyInfo(
-                    locale, wrapperProps, serverProps, tableProps);
-
-            if (infos == null) return null;
-
-            DriverPropertyInfo dpis[] = new DriverPropertyInfo[infos.length];
-            for (int i = 0; i < infos.length; i++) {
-                if (infos[i] == null) dpis[i] = null;
-                dpis[i] = infos[i].getPropertyInfo();
-            }
-            return dpis;
+                    locale, wrapperProps, serverProps, tableProps));
         } catch (RemoteException e) {
             throw new RuntimeException(e.getMessage());
             // TODO: add 'throws SQLException' to interface, and throw new SQLException(e.getMessage());
@@ -102,18 +84,9 @@ class FarragoRJMedDataWrapper
         Properties columnProps)
     {
         try {
-            FarragoRJDriverPropertyInfo infos[] = 
-                rmiDataWrapper_.getColumnPropertyInfo(
-                    locale, wrapperProps, serverProps, tableProps, columnProps);
-
-            if (infos == null) return null;
-
-            DriverPropertyInfo dpis[] = new DriverPropertyInfo[infos.length];
-            for (int i = 0; i < infos.length; i++) {
-                if (infos[i] == null) dpis[i] = null;
-                dpis[i] = infos[i].getPropertyInfo();
-            }
-            return dpis;
+            return getDriverPropertyInfo(
+                rmiDataWrapper_.getColumnPropertyInfo(locale,
+                    wrapperProps, serverProps, tableProps, columnProps));
         } catch (RemoteException e) {
             throw new RuntimeException(e.getMessage());
             // TODO: add 'throws SQLException' to interface, and throw new SQLException(e.getMessage());
@@ -127,5 +100,15 @@ class FarragoRJMedDataWrapper
             throw new RuntimeException(e.getMessage());
             // TODO: add 'throws SQLException' to interface, and throw new SQLException(e.getMessage());
         }
+    }
+
+    private DriverPropertyInfo [] getDriverPropertyInfo(
+        FarragoRJDriverPropertyInfo [] infos) {
+
+        DriverPropertyInfo dpis[] = new DriverPropertyInfo[infos.length];
+        for (int i = 0; i < infos.length; i++) {
+            dpis[i] = infos[i].getPropertyInfo();
+        }
+        return dpis;
     }
 }

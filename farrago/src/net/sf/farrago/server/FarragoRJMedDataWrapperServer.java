@@ -79,19 +79,9 @@ class FarragoRJMedDataWrapperServer
         Properties serverProps)
         throws RemoteException
     {
-        DriverPropertyInfo infos[] = 
+        return makeSerializable(
             getWrapper().getServerPropertyInfo(
-                locale, wrapperProps, serverProps);
-        if (infos == null) return null;
-        
-        FarragoRJDriverPropertyInfo dpis[] = 
-            new FarragoRJDriverPropertyInfo[infos.length];
-        
-        for (int i = 0; i < infos.length; i++) {
-            if (infos[i] == null) dpis[i] = null;
-            dpis[i] = new FarragoRJDriverPropertyInfo(infos[i]);
-        }
-        return dpis;
+                locale, wrapperProps, serverProps));
     }
 
     public FarragoRJDriverPropertyInfo [] getColumnSetPropertyInfo(
@@ -101,19 +91,9 @@ class FarragoRJMedDataWrapperServer
         Properties tableProps)
         throws RemoteException
     {
-        DriverPropertyInfo infos[] =  
+        return makeSerializable(
             getWrapper().getColumnSetPropertyInfo(
-                locale, wrapperProps, serverProps, tableProps); 
-        if (infos == null) return null;
-                
-        FarragoRJDriverPropertyInfo dpis[] = 
-            new FarragoRJDriverPropertyInfo[infos.length];
-        
-        for (int i = 0; i < infos.length; i++) {
-            if (infos[i] == null) dpis[i] = null;
-            dpis[i] = new FarragoRJDriverPropertyInfo(infos[i]);
-        }
-        return dpis;
+                locale, wrapperProps, serverProps, tableProps)); 
     }
 
     public FarragoRJDriverPropertyInfo [] getColumnPropertyInfo(
@@ -124,19 +104,9 @@ class FarragoRJMedDataWrapperServer
         Properties columnProps)
         throws RemoteException
     {
-        DriverPropertyInfo infos[] =  
+        return makeSerializable(
             getWrapper().getColumnPropertyInfo(
-                locale, wrapperProps, serverProps, tableProps, columnProps); 
-        if (infos == null) return null;
-        
-        FarragoRJDriverPropertyInfo dpis[] = 
-            new FarragoRJDriverPropertyInfo[infos.length];
-        
-        for (int i = 0; i < infos.length; i++) {
-            if (infos[i] == null) dpis[i] = null;
-            dpis[i] = new FarragoRJDriverPropertyInfo(infos[i]);
-        }
-        return dpis;
+                locale, wrapperProps, serverProps, tableProps, columnProps)); 
     }
 
     public boolean isForeign() throws RemoteException
@@ -157,5 +127,17 @@ class FarragoRJMedDataWrapperServer
         } catch (SQLException e) {
             throw new RemoteException("", e);
         }
+    }
+
+    private FarragoRJDriverPropertyInfo [] 
+        makeSerializable(DriverPropertyInfo [] infos) {
+
+        FarragoRJDriverPropertyInfo dpis[] = 
+            new FarragoRJDriverPropertyInfo[infos.length];
+        
+        for (int i = 0; i < infos.length; i++) {
+            dpis[i] = new FarragoRJDriverPropertyInfo(infos[i]);
+        }
+        return dpis;
     }
 }
