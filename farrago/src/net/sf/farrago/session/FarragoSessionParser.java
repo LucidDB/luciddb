@@ -19,7 +19,10 @@
 */
 package net.sf.farrago.session;
 
-import net.sf.farrago.catalog.FarragoReposTxnContext;
+import net.sf.farrago.catalog.*;
+import net.sf.farrago.util.*;
+
+import org.eigenbase.sql.*;
 
 
 /**
@@ -98,6 +101,17 @@ public interface FarragoSessionParser
      * @return validator to use for validating statements as they are parse
      */
     public FarragoSessionStmtValidator getStmtValidator();
+
+    /**
+     * Wraps a validation error with the current position information
+     * of the parser.
+     *
+     * @param ex exception to be wrapped
+     *
+     * @return wrapping exception
+     */
+    public FarragoException newPositionalError(
+        SqlValidatorException ex);
 }
 
 

@@ -242,8 +242,10 @@ void SchemaPath(FemLocalSchema schema) :
                 CwmSchema searchedSchema = (CwmSchema) iter.next();
                 if (searchedSchema.getNamespace() != schema.getNamespace()) {
                     throw FarragoResource.instance().newValidatorPathBadCatalog(
-                        searchedSchema.getNamespace().getName(),
-                        schema.getNamespace().getName());
+                        getRepos().getLocalizedObjectName(
+                            searchedSchema.getNamespace()),
+                        getRepos().getLocalizedObjectName(
+                            schema.getNamespace()));
                 }
                 FemSqlpathElement element = getRepos().newFemSqlpathElement();
                 element.setSearchedSchemaCatalogName(
@@ -450,9 +452,9 @@ FemLocalIndex IndexDefinition(CwmTable table) :
             } else {
                 // TODO:  move rule down into validator
                 if (table != specifiedTable) {
-                    throw FarragoResource.instance().newValidatorIndexBadTable(
-                        farragoParser.getDdlValidator().getParserPosString(
-                            index));
+                    throw farragoParser.getDdlValidator().newPositionalError(
+                        index,
+                        FarragoResource.instance().newValidatorIndexBadTable());
                 }
             }
             getRepos().getKeysIndexesPackage().getIndexSpansClass().add(
@@ -562,13 +564,13 @@ FemRoutine RoutineReference() :
             // and the object found does not match, pretend we
             // found nothing
             if ((routineType != null) && (routineType != routine.getType())) {
-                throw FarragoResource.instance().newValidatorUnknownObject(
-                    routineType.toString() + " " +
-                    getRepos().getLocalizedObjectName(
-                        routine.getNamespace().getName(),
-                        routine.getName(),
-                        null),
-                    getCurrentPosition().toString());
+                throw farragoParser.newPositionalError(
+                    FarragoResource.instance().newValidatorUnknownObject(
+                        routineType.toString() + " " +
+                        getRepos().getLocalizedObjectName(
+                            routine.getNamespace().getName(),
+                            routine.getName(),
+                            null)));
             }
         }
     {
@@ -1278,12 +1280,14 @@ void RoutineCharacteristics(FemRoutine routine) :
             assert(specificName.names.length == 2);
             if (!specificName.names[0].equals(routine.getNamespace().getName()))
             {
-                throw FarragoResource.instance().
+                throw farragoParser.getDdlValidator().newPositionalError(
+                    routine, 
+                    FarragoResource.instance().
                     newValidatorRoutineSchemaMismatch(
-                        specificName.names[0], 
-                        routine.getNamespace().getName(),
-                        farragoParser.getDdlValidator().getParserPosString(
-                            routine));
+                        getRepos().getLocalizedObjectName(
+                            specificName.names[0]), 
+                        getRepos().getLocalizedObjectName(
+                            routine.getNamespace())));
             }
             routine.setName(specificName.names[1]);
         } else {

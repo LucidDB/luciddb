@@ -667,16 +667,15 @@ public class DdlValidator extends FarragoCompoundAllocation
                     // simultaneously
                     // REVIEW: error message assumes collection is sorted by
                     // definition order, which may not be guaranteed?
-                    throw res.newValidatorDuplicateNames(
-                        getRepos().getLocalizedObjectName(
-                            null,
-                            element.getName(),
-                            element.refClass()),
-                        getRepos().getLocalizedObjectName(
-                            container,
-                            container.refClass()),
-                        getParserPosString(element),
-                        getParserPosString(other));
+                    throw newPositionalError(
+                        element, 
+                        res.newValidatorDuplicateNames(
+                            getRepos().getLocalizedObjectName(
+                                null,
+                                element.getName(),
+                                element.refClass()),
+                            getRepos().getLocalizedObjectName(container), 
+                            getParserPosString(other)));
                 } else {
                     CwmModelElement newElement;
                     CwmModelElement oldElement;
@@ -691,15 +690,14 @@ public class DdlValidator extends FarragoCompoundAllocation
                     }
 
                     // new object clashes with existing object
-                    throw res.newValidatorNameInUse(
-                        getRepos().getLocalizedObjectName(
-                            null,
-                            oldElement.getName(),
-                            oldElement.refClass()),
-                        getRepos().getLocalizedObjectName(
-                            container,
-                            container.refClass()),
-                        getParserPosString(newElement));
+                    throw newPositionalError(
+                        newElement, 
+                        res.newValidatorNameInUse(
+                            getRepos().getLocalizedObjectName(
+                                null,
+                                oldElement.getName(),
+                                oldElement.refClass()),
+                            getRepos().getLocalizedObjectName(container)));
                 }
             }
             nameMap.put(name, element);
@@ -792,6 +790,16 @@ public class DdlValidator extends FarragoCompoundAllocation
         }
         sessionVariables.schemaSearchPath =
             Collections.unmodifiableList(list);
+    }
+
+    // implement FarragoSessionDdlValidator
+    public FarragoException newPositionalError(
+        RefObject refObj,
+        SqlValidatorException ex)
+    {
+        String msg = getParserPosString(refObj);
+        assert(msg != null);
+        return res.newValidatorPositionContext(msg, ex);
     }
     
     /**

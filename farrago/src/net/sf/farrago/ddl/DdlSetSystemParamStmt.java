@@ -96,7 +96,8 @@ public class DdlSetSystemParamStmt extends DdlStmt
                 // if we get here, it's a Fennel parameter
                 config = farragoConfig.getFennelConfig();
             } catch (InvalidNameException ex2) {
-                throw FarragoResource.instance().newValidatorUnknownSysParam(paramName);
+                throw FarragoResource.instance().newValidatorUnknownSysParam(
+                    ddlValidator.getRepos().getLocalizedObjectName(paramName));
             }
         }
 
@@ -126,7 +127,7 @@ public class DdlSetSystemParamStmt extends DdlStmt
         } catch (Exception ex) {
             throw FarragoResource.instance().newValidatorSysParamTypeMismatch(
                 paramValue.toString(),
-                paramName);
+                ddlValidator.getRepos().getLocalizedObjectName(paramName));
         }
 
         try {
@@ -134,7 +135,8 @@ public class DdlSetSystemParamStmt extends DdlStmt
         } catch (InvalidNameException ex) {
             // We know the parameter exists, so InvalidNameException in this
             // context implies that it's immutable.
-            throw FarragoResource.instance().newValidatorImmutableSysParam(paramName);
+            throw FarragoResource.instance().newValidatorImmutableSysParam(
+                ddlValidator.getRepos().getLocalizedObjectName(paramName));
         } catch (TypeMismatchException ex) {
             throw FarragoResource.instance().newValidatorSysParamTypeMismatch(
                 paramValue.toString(),

@@ -28,8 +28,10 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
+import net.sf.farrago.util.*;
 
 import org.eigenbase.resource.*;
+import org.eigenbase.sql.*;
 
 
 /**
@@ -105,6 +107,14 @@ public class FarragoParser implements FarragoSessionParser
         }
     }
 
+    // implement FarragoSessionParser
+    public FarragoException newPositionalError(
+        SqlValidatorException ex)
+    {
+        String msg = getCurrentPosition().toString();
+        return FarragoResource.instance().newValidatorPositionContext(msg, ex);
+    }
+    
     // implement FarragoSessionParser
     public String getSQLKeywords()
     {

@@ -63,10 +63,13 @@ public class DdlHandler
     private static final Logger tracer = FarragoTrace.getDdlValidatorTracer();
     
     protected final DdlValidator validator;
+
+    protected final FarragoRepos repos;
     
     public DdlHandler(DdlValidator validator)
     {
         this.validator = validator;
+        repos = validator.getRepos();
     }
     
     public void validateDefinition(CwmCatalog catalog)
@@ -93,10 +96,8 @@ public class DdlHandler
                 // REVIEW: support this?  What to do about instances of the
                 // same temporary table in other sessions?
                 throw validator.res.newValidatorIndexOnExistingTempTable(
-                    validator.getRepos().getLocalizedObjectName(index, null),
-                    validator.getRepos().getLocalizedObjectName(
-                        table,
-                        null));
+                    repos.getLocalizedObjectName(index),
+                    repos.getLocalizedObjectName(table));
             }
         }
 
@@ -135,14 +136,13 @@ public class DdlHandler
     protected void validateForeignColumnSetDefinition(
         FemBaseColumnSet columnSet)
     {
-        FarragoRepos repos = validator.getRepos();
         FemDataServer dataServer = columnSet.getServer();
         FemDataWrapper dataWrapper = dataServer.getWrapper();
 
         if (!dataWrapper.isForeign()) {
             throw validator.res.newValidatorForeignTableButLocalWrapper(
-                repos.getLocalizedObjectName(columnSet, null),
-                repos.getLocalizedObjectName(dataWrapper, null));
+                repos.getLocalizedObjectName(columnSet),
+                repos.getLocalizedObjectName(dataWrapper));
         }
         
         validateBaseColumnSet(columnSet);
@@ -187,8 +187,8 @@ public class DdlHandler
         FemDataWrapper dataWrapper = dataServer.getWrapper();
         if (dataWrapper.isForeign()) {
             throw validator.res.newValidatorLocalTableButForeignWrapper(
-                validator.getRepos().getLocalizedObjectName(table, null),
-                validator.getRepos().getLocalizedObjectName(dataWrapper, null));
+                repos.getLocalizedObjectName(table),
+                repos.getLocalizedObjectName(dataWrapper));
         }
 
         validator.validateUniqueNames(
@@ -196,8 +196,7 @@ public class DdlHandler
             table.getFeature(),
             false);
 
-        Collection indexes = FarragoCatalogUtil.getTableIndexes(
-            validator.getRepos(), table);
+        Collection indexes = FarragoCatalogUtil.getTableIndexes(repos, table);
 
         // NOTE:  don't need to validate index name uniqueness since indexes
         // live in same schema as table, so enforcement will take place at
@@ -212,7 +211,7 @@ public class DdlHandler
         }
         if (nClustered > 1) {
             throw validator.res.newValidatorDuplicateClusteredIndex(
-                table.getName());
+                repos.getLocalizedObjectName(table));
         }
 
         CwmPrimaryKey primaryKey = null;
@@ -226,7 +225,7 @@ public class DdlHandler
             if (constraint instanceof CwmPrimaryKey) {
                 if (primaryKey != null) {
                     throw validator.res.newValidatorMultiplePrimaryKeys(
-                        table.getName());
+                        repos.getLocalizedObjectName(table));
                 }
                 primaryKey = (CwmPrimaryKey) constraint;
             }
@@ -245,7 +244,8 @@ public class DdlHandler
         if (primaryKey == null) {
             // TODO:  This is not SQL-standard.  Fixing it requires the
             // introduction of a system-managed surrogate key.
-            throw validator.res.newValidatorNoPrimaryKey(table.getName());
+            throw validator.res.newValidatorNoPrimaryKey(
+                repos.getLocalizedObjectName(table));
         }
 
         // NOTE:  do this after PRIMARY KEY uniqueness validation to get a
@@ -283,7 +283,7 @@ public class DdlHandler
                 continue;
             }
             throw validator.res.newValidatorNoConstraintAllowed(
-                getLocalizedName(columnSet));
+                repos.getLocalizedObjectName(columnSet));
         }
     }
 
@@ -300,9 +300,7 @@ public class DdlHandler
                     validator.getTypeFactory());
         } catch (Throwable ex) {
             throw validator.res.newValidatorDataServerTableInvalid(
-                validator.getRepos().getLocalizedObjectName(
-                    femColumnSet,
-                    femColumnSet.refClass()),
+                repos.getLocalizedObjectName(femColumnSet),
                 ex);
         }
 
@@ -314,14 +312,6 @@ public class DdlHandler
         return medColumnSet;
     }
     
-    protected String getLocalizedName(FemBaseColumnSet femBaseColumnSet)
-    {
-        return validator.getRepos().getLocalizedObjectName(
-            null,
-            femBaseColumnSet.getName(),
-            femBaseColumnSet.refClass());
-    }
-
     public void validateModification(CwmView view)
     {
         // nothing to do
@@ -340,9 +330,7 @@ public class DdlHandler
             // TODO: if ex has parser position information in it, need to
             // either delete it or adjust it
             throw validator.res.newValidatorInvalidObjectDefinition(
-                validator.getRepos().getLocalizedObjectName(
-                    view,
-                    validator.getRepos().getRelationalPackage().getCwmView()), 
+                repos.getLocalizedObjectName(view), 
                 ex);
         } finally {
             validator.releaseReentrantSession(session);
@@ -387,7 +375,7 @@ public class DdlHandler
         for (int i = 0; i < fields.length; ++i) {
             FemViewColumn column;
             if (implicitColumnNames) {
-                column = validator.getRepos().newFemViewColumn();
+                column = repos.newFemViewColumn();
                 columnList.add(column);
             } else {
                 column = (FemViewColumn) columnList.get(i);
@@ -424,10 +412,11 @@ public class DdlHandler
             try {
                 validateDefaultClause(column, session, defaultExpression);
             } catch (Throwable ex) {
-                throw validator.res.newValidatorBadDefaultClause(
-                    column.getName(),
-                    validator.getParserPosString(column),
-                    ex);
+                throw validator.newPositionalError(
+                    column,
+                    validator.res.newValidatorBadDefaultClause(
+                        repos.getLocalizedObjectName(column), 
+                        ex));
             } finally {
                 validator.releaseReentrantSession(session);
             }
@@ -446,9 +435,10 @@ public class DdlHandler
         assert (rowType.getFieldList().size() == 1);
 
         if (stmtContext.getPreparedParamType().getFieldList().size() > 0) {
-            throw validator.res.newValidatorBadDefaultParam(
-                column.getName(),
-                validator.getParserPosString(column));
+            throw validator.newPositionalError(
+                column,
+                validator.res.newValidatorBadDefaultParam(
+                    repos.getLocalizedObjectName(column)));
         }
 
         // SQL standard is very picky about what can go in a DEFAULT clause
@@ -460,11 +450,12 @@ public class DdlHandler
         RelDataTypeFamily targetTypeFamily = targetType.getFamily();
 
         if (sourceTypeFamily != targetTypeFamily) {
-            throw validator.res.newValidatorBadDefaultType(
-                column.getName(),
-                targetTypeFamily.toString(),
-                sourceTypeFamily.toString(),
-                validator.getParserPosString(column));
+            throw validator.newPositionalError(
+                column,
+                validator.res.newValidatorBadDefaultType(
+                    repos.getLocalizedObjectName(column),
+                    targetTypeFamily.toString(),
+                    sourceTypeFamily.toString()));
         }
 
         // TODO:  additional rules from standard, like no truncation allowed.
@@ -484,8 +475,7 @@ public class DdlHandler
     protected void validateTypedElement(FemSqltypedElement element)
     {
         if (element.getInitialValue() == null) {
-            CwmExpression nullExpression =
-                validator.getRepos().newCwmExpression();
+            CwmExpression nullExpression = repos.newCwmExpression();
             nullExpression.setLanguage("SQL");
             nullExpression.setBody("NULL");
             element.setInitialValue(nullExpression);
@@ -516,27 +506,30 @@ public class DdlHandler
                 }
             }
             if ((precision == null) && !typeName.allowsNoPrecNoScale()) {
-                throw validator.res.newValidatorPrecRequired(
-                    getLocalizedTypeName(element),
-                    getLocalizedName(element),
-                    validator.getParserPosString(element));
+                throw validator.newPositionalError(
+                    element,
+                    validator.res.newValidatorPrecRequired(
+                        repos.getLocalizedObjectName(element.getType()),
+                        repos.getLocalizedObjectName(element)));
             }
         } else {
             if (precision != null) {
-                throw validator.res.newValidatorPrecUnexpected(
-                    getLocalizedTypeName(element),
-                    getLocalizedName(element),
-                    validator.getParserPosString(element));
+                throw validator.newPositionalError(
+                    element,
+                    validator.res.newValidatorPrecUnexpected(
+                        repos.getLocalizedObjectName(element.getType()),
+                        repos.getLocalizedObjectName(element)));
             }
         }
         if ((typeName != null) && typeName.allowsScale()) {
             // assume scale is always optional
         } else {
             if (element.getScale() != null) {
-                throw validator.res.newValidatorScaleUnexpected(
-                    getLocalizedTypeName(element),
-                    getLocalizedName(element),
-                    validator.getParserPosString(element));
+                throw validator.newPositionalError(
+                    element,
+                    validator.res.newValidatorScaleUnexpected(
+                        repos.getLocalizedObjectName(element.getType()),
+                        repos.getLocalizedObjectName(element)));
             }
         }
         SqlTypeFamily typeFamily = null;
@@ -559,13 +552,14 @@ public class DdlHandler
                 // NOTE: don't leave character set name implicit, since if the
                 // default ever changed, that would invalidate existing data
                 element.setCharacterSetName(
-                    validator.getRepos().getDefaultCharsetName());
+                    repos.getDefaultCharsetName());
             } else {
                 if (!Charset.isSupported(element.getCharacterSetName())) {
-                    throw validator.res.newValidatorCharsetUnsupported(
-                        element.getCharacterSetName(),
-                        getLocalizedName(element),
-                        validator.getParserPosString(element));
+                    throw validator.newPositionalError(
+                        element,
+                        validator.res.newValidatorCharsetUnsupported(
+                            element.getCharacterSetName(),
+                            repos.getLocalizedObjectName(element)));
                 }
             }
             Charset charSet = Charset.forName(element.getCharacterSetName());
@@ -575,10 +569,11 @@ public class DdlHandler
             }
         } else {
             if (!JmiUtil.isBlank(element.getCharacterSetName())) {
-                throw validator.res.newValidatorCharsetUnexpected(
-                    getLocalizedTypeName(element),
-                    getLocalizedName(element),
-                    validator.getParserPosString(element));
+                throw validator.newPositionalError(
+                    element,
+                    validator.res.newValidatorCharsetUnexpected(
+                        repos.getLocalizedObjectName(element.getType()),
+                        repos.getLocalizedObjectName(element)));
             }
         }
 
@@ -593,11 +588,12 @@ public class DdlHandler
                 Integer maximum = simpleType.getCharacterMaximumLength();
                 assert (maximum != null);
                 if (element.getLength().intValue() > maximum.intValue()) {
-                    throw validator.res.newValidatorLengthExceeded(
-                        element.getLength(),
-                        maximum,
-                        getLocalizedName(element),
-                        validator.getParserPosString(element));
+                    throw validator.newPositionalError(
+                        element,
+                        validator.res.newValidatorLengthExceeded(
+                            element.getLength(),
+                            maximum,
+                            repos.getLocalizedObjectName(element)));
                 }
             }
             if (element.getPrecision() != null) {
@@ -607,34 +603,25 @@ public class DdlHandler
                 }
                 assert (maximum != null);
                 if (element.getPrecision().intValue() > maximum.intValue()) {
-                    throw validator.res.newValidatorPrecisionExceeded(
-                        element.getPrecision(),
-                        maximum,
-                        getLocalizedName(element),
-                        validator.getParserPosString(element));
+                    throw validator.newPositionalError(
+                        element,
+                        validator.res.newValidatorPrecisionExceeded(
+                            element.getPrecision(),
+                            maximum,
+                            repos.getLocalizedObjectName(element)));
                 }
             }
             if (element.getScale() != null) {
                 Integer maximum = simpleType.getNumericScale();
                 assert (maximum != null);
                 if (element.getScale().intValue() > maximum.intValue()) {
-                    throw validator.res.newValidatorScaleExceeded(
-                        element.getScale(),
-                        maximum,
-                        getLocalizedName(element),
-                        validator.getParserPosString(element));
+                    throw validator.newPositionalError(
+                        element,
+                        validator.res.newValidatorScaleExceeded(
+                            element.getScale(),
+                            maximum,
+                            repos.getLocalizedObjectName(element)));
                 }
-            }
-
-            // REVIEW jvs 18-April-2004: I had to put these in because CWM declares
-            // them as mandatory.  This is stupid, since CWM also says these fields
-            // are inapplicable for non-character types.
-            if (element.getCollationName() == null) {
-                element.setCollationName("");
-            }
-
-            if (element.getCharacterSetName() == null) {
-                element.setCharacterSetName("");
             }
         } else if (cwmType instanceof FemSqlcollectionType) {
             FemSqlcollectionType collectionType =
@@ -642,24 +629,25 @@ public class DdlHandler
             FemSqltypedElement componentType =
                 collectionType.getComponentType();
             validateTypedElement(componentType);
-            // REVIEW wael 04-Jan-2005: see comment by jvs 18-April-2004 above
-            if (element.getCollationName() == null) {
-                element.setCollationName("");
-            }
-
-            if (element.getCharacterSetName() == null) {
-                element.setCharacterSetName("");
-            }
         } else {
             Util.permAssert(false,
                 "only simple and collection types are supported");
+        }
+
+        // REVIEW jvs 18-April-2004: I had to put these in because CWM
+        // declares them as mandatory.  This is stupid, since CWM also says
+        // these fields are inapplicable for non-character types.
+        if (element.getCollationName() == null) {
+            element.setCollationName("");
+        }
+
+        if (element.getCharacterSetName() == null) {
+            element.setCharacterSetName("");
         }
     }
 
     public void validateDefinition(FemDataServer femServer)
     {
-        FarragoRepos repos = validator.getRepos();
-
         // since servers are in the same namespace with CWM catalogs,
         // need a special name uniquness check here
         validator.validateUniqueNames(
@@ -671,8 +659,8 @@ public class DdlHandler
             // validate that we can successfully initialize the server
             validator.getDataWrapperCache().loadServerFromCatalog(femServer);
         } catch (Throwable ex) {
-            throw validator.res.newValidatorDataServerInvalid(
-                repos.getLocalizedObjectName(femServer, null),
+            throw validator.res.newValidatorDefinitionInvalid(
+                repos.getLocalizedObjectName(femServer),
                 ex);
         }
 
@@ -697,8 +685,6 @@ public class DdlHandler
     
     public void validateDefinition(FemDataWrapper femWrapper)
     {
-        FarragoRepos repos = validator.getRepos();
-
         FarragoMedDataWrapper wrapper;
         try {
             if (!femWrapper.getLibraryFile().startsWith(
@@ -738,20 +724,20 @@ public class DdlHandler
             wrapper = validator.getDataWrapperCache().loadWrapperFromCatalog(
                 femWrapper);
         } catch (Throwable ex) {
-            throw validator.res.newValidatorDataWrapperInvalid(
-                repos.getLocalizedObjectName(femWrapper, null),
+            throw validator.res.newValidatorDefinitionInvalid(
+                repos.getLocalizedObjectName(femWrapper),
                 ex);
         }
 
         if (femWrapper.isForeign()) {
             if (!wrapper.isForeign()) {
                 throw validator.res.newValidatorForeignWrapperHasLocalImpl(
-                    repos.getLocalizedObjectName(femWrapper, null));
+                    repos.getLocalizedObjectName(femWrapper));
             }
         } else {
             if (wrapper.isForeign()) {
                 throw validator.res.newValidatorLocalWrapperHasForeignImpl(
-                    repos.getLocalizedObjectName(femWrapper, null));
+                    repos.getLocalizedObjectName(femWrapper));
             }
         }
     }
@@ -767,10 +753,10 @@ public class DdlHandler
                 returnParam = param;
             } else {
                 if (param.getKind() != ParameterDirectionKindEnum.PDK_IN) {
-                    throw validator.res.newValidatorFunctionOutputParam(
-                        validator.getRepos().getLocalizedObjectName(
-                            routine, null),
-                        validator.getParserPosString(param));
+                    throw validator.newPositionalError(
+                        param,
+                        validator.res.newValidatorFunctionOutputParam(
+                            repos.getLocalizedObjectName(routine)));
                 }
                 param.setOrdinal(iOrdinal);
                 ++iOrdinal;
@@ -778,9 +764,10 @@ public class DdlHandler
             validateRoutineParam(param);
         }
         if (routine.getDataAccess() == null) {
-            throw validator.res.newValidatorRoutineDataAccessUnspecified(
-                validator.getRepos().getLocalizedObjectName(routine, null),
-                validator.getParserPosString(routine));
+            throw validator.newPositionalError(
+                routine,
+                validator.res.newValidatorRoutineDataAccessUnspecified(
+                    repos.getLocalizedObjectName(routine)));
         }
 
         if (routine.getBody() != null) {
@@ -799,14 +786,16 @@ public class DdlHandler
         }
         // TODO jvs 11-Jan-2005:  enum for supported languages
         if (!routine.getLanguage().equals("SQL")) {
-            throw validator.res.newValidatorRoutineBodySqlOnly(
-                validator.getRepos().getLocalizedObjectName(routine, null),
-                validator.getParserPosString(routine));
+            throw validator.newPositionalError(
+                routine,
+                validator.res.newValidatorRoutineBodySqlOnly(
+                    repos.getLocalizedObjectName(routine)));
         }
         if (routine.getDataAccess() == RoutineDataAccessEnum.RDA_NO_SQL) {
-            throw validator.res.newValidatorRoutineNoSql(
-                validator.getRepos().getLocalizedObjectName(routine, null),
-                validator.getParserPosString(routine));
+            throw validator.newPositionalError(
+                routine,
+                validator.res.newValidatorRoutineNoSql(
+                    repos.getLocalizedObjectName(routine)));
         }
         if (routine.getParameterStyle() == null) {
             routine.setParameterStyle(RoutineParameterStyleEnum.RPS_SQL);
@@ -814,9 +803,10 @@ public class DdlHandler
         if (routine.getParameterStyle() !=
             RoutineParameterStyleEnum.RPS_SQL)
         {
-            throw validator.res.newValidatorRoutineSqlParamStyleOnly(
-                validator.getRepos().getLocalizedObjectName(routine, null),
-                validator.getParserPosString(routine));
+            throw validator.newPositionalError(
+                routine,
+                validator.res.newValidatorRoutineSqlParamStyleOnly(
+                    repos.getLocalizedObjectName(routine)));
         }
         FarragoSession session = validator.newReentrantSession();
         try {
@@ -828,10 +818,7 @@ public class DdlHandler
             // TODO: if ex has parser position information in it, need to
             // either delete it or adjust it
             throw validator.res.newValidatorInvalidObjectDefinition(
-                validator.getRepos().getLocalizedObjectName(
-                    routine,
-                    validator.getRepos().
-                    getSql2003Package().getFemRoutine()), 
+                repos.getLocalizedObjectName(routine), 
                 ex);
         } finally {
             validator.releaseReentrantSession(session);
@@ -843,7 +830,7 @@ public class DdlHandler
         FemRoutineParameter returnParam)
     {
         CwmProcedureExpression dummyBody =
-            validator.getRepos().newCwmProcedureExpression();
+            repos.newCwmProcedureExpression();
         dummyBody.setLanguage("JAVA");
         dummyBody.setBody(";");
         routine.setBody(dummyBody);
@@ -852,9 +839,10 @@ public class DdlHandler
             routine.setLanguage("JAVA");
         }
         if (!routine.getLanguage().equals("JAVA")) {
-            throw validator.res.newValidatorRoutineExternalJavaOnly(
-                validator.getRepos().getLocalizedObjectName(routine, null),
-                validator.getParserPosString(routine));
+            throw validator.newPositionalError(
+                routine,
+                validator.res.newValidatorRoutineExternalJavaOnly(
+                    repos.getLocalizedObjectName(routine)));
         }
         if (routine.getParameterStyle() == null) {
             routine.setParameterStyle(RoutineParameterStyleEnum.RPS_JAVA);
@@ -862,9 +850,10 @@ public class DdlHandler
         if (routine.getParameterStyle() !=
             RoutineParameterStyleEnum.RPS_JAVA)
         {
-            throw validator.res.newValidatorRoutineJavaParamStyleOnly(
-                validator.getRepos().getLocalizedObjectName(routine, null),
-                validator.getParserPosString(routine));
+            throw validator.newPositionalError(
+                routine,
+                validator.res.newValidatorRoutineJavaParamStyleOnly(
+                    repos.getLocalizedObjectName(routine)));
         }
         String externalName = routine.getExternalName();
         // TODO jvs 11-Jan-2005:  JAR support, and move some of this
@@ -885,10 +874,11 @@ public class DdlHandler
         if (iLeftParen == -1) {
             int iLastDot = classPlusMethodName.lastIndexOf('.');
             if (iLastDot == -1) {
-                throw validator.res.newValidatorRoutineInvalidJavaMethod(
-                    validator.getRepos().getLocalizedObjectName(routine, null),
-                    externalName,
-                    validator.getParserPosString(routine));
+                throw validator.newPositionalError(
+                    routine,
+                    validator.res.newValidatorRoutineInvalidJavaMethod(
+                        repos.getLocalizedObjectName(routine),
+                        repos.getLocalizedObjectName(externalName)));
             }
             javaClassName = classPlusMethodName.substring(0, iLastDot);
             javaMethodName = classPlusMethodName.substring(iLastDot + 1);
@@ -927,10 +917,12 @@ public class DdlHandler
         try {
             javaMethod = javaClass.getMethod(javaMethodName, javaParamTypes);
         } catch (NoSuchMethodException ex) {
-            throw validator.res.newValidatorRoutineJavaMethodNotFound(
-                validator.getRepos().getLocalizedObjectName(routine, null),
-                javaUnmangledMethodName,
-                validator.getParserPosString(routine));
+            throw validator.newPositionalError(
+                routine,
+                validator.res.newValidatorRoutineJavaMethodNotFound(
+                    repos.getLocalizedObjectName(routine),
+                    repos.getLocalizedObjectName(
+                        javaUnmangledMethodName)));
         } catch (Exception ex) {
             throw validator.res.newPluginInitFailed(
                 javaClassName, ex);
@@ -938,10 +930,11 @@ public class DdlHandler
 
         int modifiers = javaMethod.getModifiers();
         if (!Modifier.isStatic(modifiers) || !Modifier.isPublic(modifiers)) {
-            throw validator.res.newValidatorRoutineJavaMethodNotPublicStatic(
-                validator.getRepos().getLocalizedObjectName(routine, null),
-                javaUnmangledMethodName,
-                validator.getParserPosString(routine));
+            throw validator.newPositionalError(
+                routine,
+                validator.res.newValidatorRoutineJavaMethodNotPublicStatic(
+                    repos.getLocalizedObjectName(routine),
+                    repos.getLocalizedObjectName(javaUnmangledMethodName)));
         }
 
         Class javaActualReturnType = javaMethod.getReturnType();
@@ -951,11 +944,13 @@ public class DdlHandler
             validator.getTypeFactory().getClassForJavaParamStyle(returnType);
         if (javaExpectedReturnType != javaActualReturnType) {
             // TODO jvs 11-Jan-2005:  permit compatible types
-            throw validator.res.newValidatorRoutineJavaReturnMismatch(
-                validator.getRepos().getLocalizedObjectName(routine, null),
-                javaExpectedReturnType.toString(),
-                javaActualReturnType.toString(),
-                validator.getParserPosString(routine));
+            throw validator.newPositionalError(
+                routine,
+                validator.res.newValidatorRoutineJavaReturnMismatch(
+                    repos.getLocalizedObjectName(routine),
+                    javaExpectedReturnType.toString(),
+                    repos.getLocalizedObjectName(javaUnmangledMethodName),
+                    javaActualReturnType.toString()));
         }
     }
 
@@ -1011,7 +1006,7 @@ public class DdlHandler
         if (!SqlTypeUtil.canAssignFrom(declaredReturnType, actualReturnType)) {
             throw validator.res.newValidatorFunctionReturnType(
                 actualReturnType.toString(),
-                validator.getRepos().getLocalizedObjectName(routine, null),
+                repos.getLocalizedObjectName(routine),
                 declaredReturnType.toString());
         }
 
@@ -1026,28 +1021,12 @@ public class DdlHandler
         validateTypedElement(param);
     }
 
-    protected String getLocalizedName(CwmColumn column)
-    {
-        return validator.getRepos().getLocalizedObjectName(
-            null,
-            column.getName(),
-            column.refClass());
-    }
-
-    protected String getLocalizedTypeName(CwmColumn column)
-    {
-        return validator.getRepos().getLocalizedObjectName(
-            column.getType(),
-            column.getType().refClass());
-    }
-    
     protected FemLocalIndex createUniqueConstraintIndex(
         FemLocalTable table, 
         CwmUniqueConstraint constraint)
     {
         // TODO:  make index SYSTEM-owned so that it can't be
         // dropped explicitly
-        FarragoRepos repos = validator.getRepos();
         FemLocalIndex index = repos.newFemLocalIndex();
         FarragoCatalogUtil.generateConstraintIndexName(
             repos, constraint, index);
@@ -1081,26 +1060,24 @@ public class DdlHandler
         }
 
         if (index.isClustered()) {
-            throw validator.res.newValidatorDropClusteredIndex(
-                validator.getRepos().getLocalizedObjectName(index, null),
-                validator.getParserPosString(index));
+            throw validator.newPositionalError(
+                index, 
+                validator.res.newValidatorDropClusteredIndex(
+                    repos.getLocalizedObjectName(index)));
         }
 
         if (table.isTemporary()) {
             // REVIEW: support this?  What to do about instances of the
             // same temporary table in other sessions?
             throw validator.res.newValidatorIndexOnExistingTempTable(
-                validator.getRepos().getLocalizedObjectName(index, null),
-                validator.getRepos().getLocalizedObjectName(
-                    table,
-                    null));
+                repos.getLocalizedObjectName(index),
+                repos.getLocalizedObjectName(table));
         }
     }
     
     public void validateTruncation(FemLocalTable table)
     {
-        Collection indexes = FarragoCatalogUtil.getTableIndexes(
-            validator.getRepos(), table);
+        Collection indexes = FarragoCatalogUtil.getTableIndexes(repos, table);
         Iterator indexIter = indexes.iterator();
         while (indexIter.hasNext()) {
             FemLocalIndex index = (FemLocalIndex) indexIter.next();
@@ -1169,7 +1146,7 @@ public class DdlHandler
         SqlTypeName typeName = type.getSqlTypeName();
         String lookupName;
         if (typeName == null) {
-            // TODO jvs 15-Dec-2005:  UDF etc
+            // TODO jvs 15-Dec-2005:  UDT etc
             lookupName = type.toString();
         } else {
             lookupName = typeName.getName();

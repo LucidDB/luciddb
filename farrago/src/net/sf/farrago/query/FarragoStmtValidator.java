@@ -178,10 +178,13 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
                 namedColumnSet.getFeature(),
                 columnName);
         if (column == null) {
-            throw FarragoResource.instance().newValidatorUnknownColumn(
-                columnName,
-                namedColumnSet.getName(),
-                parser.getCurrentPosition().toString());
+            throw parser.newPositionalError(
+                FarragoResource.instance().newValidatorUnknownObjectInScope(
+                    getRepos().getLocalizedObjectName(
+                        null,
+                        columnName,
+                        getRepos().getRelationalPackage().getCwmColumn()),
+                    getRepos().getLocalizedObjectName(namedColumnSet)));
         }
         return column;
     }
@@ -198,12 +201,12 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
         CwmCatalog catalog = getRepos().getCatalog(catalogName);
 
         if ((catalog == null) && throwIfNotFound) {
-            throw FarragoResource.instance().newValidatorUnknownObject(
-                getRepos().getLocalizedObjectName(
-                    null,
-                    catalogName,
-                    getRepos().getRelationalPackage().getCwmCatalog()),
-                parser.getCurrentPosition().toString());
+            throw parser.newPositionalError(
+                FarragoResource.instance().newValidatorUnknownObject(
+                    getRepos().getLocalizedObjectName(
+                        null,
+                        catalogName,
+                        getRepos().getRelationalPackage().getCwmCatalog())));
         }
         return catalog;
     }
@@ -248,12 +251,12 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
             if (!throwIfNotFound) {
                 return null;
             }
-            throw FarragoResource.instance().newValidatorUnknownObject(
-                getRepos().getLocalizedObjectName(
-                    catalog.getName(),
-                    simpleName,
-                    getRepos().getRelationalPackage().getCwmSchema()),
-                parser.getCurrentPosition().toString());
+            throw parser.newPositionalError(
+                FarragoResource.instance().newValidatorUnknownObject(
+                    getRepos().getLocalizedObjectName(
+                        catalog.getName(),
+                        simpleName,
+                        getRepos().getRelationalPackage().getCwmSchema())));
         }
         return schema;
     }
@@ -273,12 +276,12 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
             }
         }
         if (wrapper == null) {
-            throw FarragoResource.instance().newValidatorUnknownObject(
-                getRepos().getLocalizedObjectName(
-                    null,
-                    wrapperName.getSimple(),
-                    getRepos().getMedPackage().getFemDataWrapper()),
-                parser.getCurrentPosition().toString());
+            throw parser.newPositionalError(
+                FarragoResource.instance().newValidatorUnknownObject(
+                    getRepos().getLocalizedObjectName(
+                        null,
+                        wrapperName.getSimple(),
+                        getRepos().getMedPackage().getFemDataWrapper())));
         }
         return wrapper;
     }
@@ -291,12 +294,12 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
                 getRepos().getMedPackage().getFemDataServer().refAllOfType(),
                 serverName.getSimple());
         if (server == null) {
-            throw FarragoResource.instance().newValidatorUnknownObject(
-                getRepos().getLocalizedObjectName(
-                    null,
-                    serverName.getSimple(),
-                    getRepos().getMedPackage().getFemDataServer()),
-                parser.getCurrentPosition().toString());
+            throw parser.newPositionalError(
+                FarragoResource.instance().newValidatorUnknownObject(
+                    getRepos().getLocalizedObjectName(
+                        null,
+                        serverName.getSimple(),
+                        getRepos().getMedPackage().getFemDataServer())));
         }
         return server;
     }
@@ -333,11 +336,11 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
         }
 
         if (element == null) {
-            throw FarragoResource.instance().newValidatorUnknownObject(
+            throw parser.newPositionalError(
+                FarragoResource.instance().newValidatorUnknownObject(
                 getRepos().getLocalizedObjectName(schemaName,
                     qualifiedName.names[qualifiedName.names.length - 1],
-                    refClass),
-                parser.getCurrentPosition().toString());
+                    refClass)));
         }
 
         return element;
@@ -415,12 +418,12 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
             return (CwmSqldataType) modelElement;
         }
 
-        throw FarragoResource.instance().newValidatorUnknownObject(
-            getRepos().getLocalizedObjectName(
-                null,
-                typeName,
-                getRepos().getRelationalPackage().getCwmSqldataType()),
-            parser.getCurrentPosition().toString());
+        throw parser.newPositionalError(
+            FarragoResource.instance().newValidatorUnknownObject(
+                getRepos().getLocalizedObjectName(
+                    null,
+                    typeName,
+                    getRepos().getRelationalPackage().getCwmSqldataType())));
     }
 
     // implement FarragoSessionStmtValidator

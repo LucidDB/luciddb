@@ -353,7 +353,8 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     {
         if (name != null) {
             if (findSavepointByName(name, false) != -1) {
-                throw FarragoResource.instance().newSessionDupSavepointName(name);
+                throw FarragoResource.instance().newSessionDupSavepointName(
+                    repos.getLocalizedObjectName(name));
             }
         }
         return newSavepointImpl(name);
@@ -489,7 +490,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     {
         if (!(savepoint instanceof FarragoDbSavepoint)) {
             throw FarragoResource.instance().newSessionWrongSavepoint(
-                savepoint.getName());
+                repos.getLocalizedObjectName(savepoint.getName()));
         }
         FarragoDbSavepoint dbSavepoint = (FarragoDbSavepoint) savepoint;
         if (dbSavepoint.session != this) {
@@ -502,8 +503,8 @@ public class FarragoDbSession extends FarragoCompoundAllocation
                 throw FarragoResource.instance().newSessionInvalidSavepointId(
                     new Integer(savepoint.getId()));
             } else {
-                throw FarragoResource.instance()
-                    .newSessionInvalidSavepointName(savepoint.getName());
+                throw FarragoResource.instance().newSessionInvalidSavepointName(
+                        repos.getLocalizedObjectName(savepoint.getName()));
             }
         }
         return iSavepoint;

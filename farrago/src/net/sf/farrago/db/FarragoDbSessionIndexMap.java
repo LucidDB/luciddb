@@ -199,7 +199,7 @@ class FarragoDbSessionIndexMap extends FarragoCompoundAllocation
             indexRoot = server.createIndex(index);
         } catch (SQLException ex) {
             throw FarragoResource.instance().newDataServerIndexCreateFailed(
-                repos.getLocalizedObjectName(index, null),
+                repos.getLocalizedObjectName(index),
                 ex);
         }
         setIndexRoot(index, indexRoot);
@@ -230,7 +230,7 @@ class FarragoDbSessionIndexMap extends FarragoCompoundAllocation
                 truncate);
         } catch (SQLException ex) {
             throw FarragoResource.instance().newDataServerIndexDropFailed(
-                repos.getLocalizedObjectName(index, null),
+                repos.getLocalizedObjectName(index),
                 ex);
         }
 

@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/udf.sql#4 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/udf.sql#5 $
 0: jdbc:farrago:> -- Test DDL for user-defined functions
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema udftest;
@@ -20,8 +20,7 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- this should fail since add_integers is not a procedure
 0: jdbc:farrago:> drop procedure add_integers;
-Error: Reference to unknown procedure UDFTEST.ADD_INTEGERS;
-encountered near line 1, column 16 (state=,code=0)
+Error: DDL validation error near line 1, column 16: Reference to unknown procedure "UDFTEST"."ADD_INTEGERS" (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- but DROP ROUTINE should work
 0: jdbc:farrago:> drop routine add_integers;
@@ -33,8 +32,7 @@ encountered near line 1, column 16 (state=,code=0)
 . . . . . . . . > returns real
 . . . . . . . . > contains sql
 . . . . . . . . > return c*1.8 + 32;
-Error: Routine CELSIUS_TO_FAHRENHEIT already exists within Schema LOCALDB.UDFTEST;
-duplicate name encountered near line 1, column 8 (state=,code=0)
+Error: DDL validation error near line 1, column 8: Target schema "LOCALDB"."UDFTEST" already contains routine "CELSIUS_TO_FAHRENHEIT" with same name (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should succeed:  specific name avoids conflict
 0: jdbc:farrago:> create function celsius_to_fahrenheit(in c real)
@@ -49,8 +47,7 @@ duplicate name encountered near line 1, column 8 (state=,code=0)
 . . . . . . . . > specific udftest2.add_ints
 . . . . . . . . > contains sql
 . . . . . . . . > return i + j;
-Error: Schema UDFTEST2 for specific name does not match schema UDFTEST for invocation name;
-encountered near line 1, column 8 (state=,code=0)
+Error: DDL validation error near line 1, column 8: Schema "UDFTEST2" for specific name does not match schema "LOCALDB"."UDFTEST" for invocation name (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- drop by specific name
 0: jdbc:farrago:> drop function celsius_to_fahrenheit;
@@ -77,16 +74,14 @@ encountered near line 1, column 8 (state=,code=0)
 . . . . . . . . > returns int
 . . . . . . . . > contains sql
 . . . . . . . . > return i + j;
-Error: Parameters to function UDFTEST.ADD_INTEGERS may not be declared as OUT or INOUT;
-encountered near line 1, column 29 (state=,code=0)
+Error: DDL validation error near line 1, column 29: Parameters to routine "UDFTEST"."ADD_INTEGERS" may not be declared as OUT or INOUT because it is a function (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  can't declare INOUT parameter to function
 0: jdbc:farrago:> create function add_integers(inout i int,in j int)
 . . . . . . . . > returns int
 . . . . . . . . > contains sql
 . . . . . . . . > return i + j;
-Error: Parameters to function UDFTEST.ADD_INTEGERS may not be declared as OUT or INOUT;
-encountered near line 1, column 29 (state=,code=0)
+Error: DDL validation error near line 1, column 29: Parameters to routine "UDFTEST"."ADD_INTEGERS" may not be declared as OUT or INOUT because it is a function (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test various modifiers
 0: jdbc:farrago:> 
@@ -95,8 +90,7 @@ encountered near line 1, column 29 (state=,code=0)
 . . . . . . . . > returns int
 . . . . . . . . > no sql
 . . . . . . . . > return i + j;
-Error: Routine UDFTEST.ADD_INTEGERS with SQL definition cannot specify NO SQL;
-encountered near line 1, column 8 (state=,code=0)
+Error: DDL validation error near line 1, column 8: NO SQL cannot be specified for routine "UDFTEST"."ADD_INTEGERS" with SQL definition (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- a bit of a fib, but should pass
 0: jdbc:farrago:> create function add_integers(in i int,in j int)
@@ -169,13 +163,13 @@ encountered near line 1, column 8 (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  restrict
 0: jdbc:farrago:> drop function to_upper;
-Error: Routine UDFTEST.TO_UPPER can only be dropped with CASCADE because other objects still reference it (state=,code=0)
+Error: Dropping routine "UDFTEST"."TO_UPPER" requires CASCADE because other objects still reference it (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> drop function to_upper cascade;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  restrict
 0: jdbc:farrago:> drop function to_upper2;
-Error: Routine UDFTEST.TO_UPPER2 can only be dropped with CASCADE because other objects still reference it (state=,code=0)
+Error: Dropping routine "UDFTEST"."TO_UPPER2" requires CASCADE because other objects still reference it (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> drop function to_uppertrim;
 0: jdbc:farrago:> 
@@ -223,8 +217,7 @@ Was expecting one of:
 . . . . . . . . > language sql
 . . . . . . . . > contains sql
 . . . . . . . . > external name 'class java.lang.System.getProperty';
-Error: External routine UDFTEST.GET_JAVA_PROPERTY cannot specify non-JAVA language;
-encountered near line 1, column 8 (state=,code=0)
+Error: DDL validation error near line 1, column 8: External routine "UDFTEST"."GET_JAVA_PROPERTY" cannot specify non-JAVA language (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  cannot specify parameter style SQL with external name
 0: jdbc:farrago:> create function get_java_property(in name varchar(128))
@@ -232,8 +225,7 @@ encountered near line 1, column 8 (state=,code=0)
 . . . . . . . . > parameter style sql
 . . . . . . . . > contains sql
 . . . . . . . . > external name 'class java.lang.System.getProperty';
-Error: External JAVA routine UDFTEST.GET_JAVA_PROPERTY cannot specify non-JAVA parameter style;
-encountered near line 1, column 8 (state=,code=0)
+Error: DDL validation error near line 1, column 8: External JAVA routine "UDFTEST"."GET_JAVA_PROPERTY" cannot specify non-JAVA parameter style (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  cannot specify parameter style SQL with external name
 0: jdbc:farrago:> create function get_java_property(in name varchar(128))
@@ -241,8 +233,7 @@ encountered near line 1, column 8 (state=,code=0)
 . . . . . . . . > contains sql
 . . . . . . . . > external name 'class java.lang.System.getProperty'
 . . . . . . . . > parameter style sql;
-Error: External JAVA routine UDFTEST.GET_JAVA_PROPERTY cannot specify non-JAVA parameter style;
-encountered near line 1, column 8 (state=,code=0)
+Error: DDL validation error near line 1, column 8: External JAVA routine "UDFTEST"."GET_JAVA_PROPERTY" cannot specify non-JAVA parameter style (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  cannot specify language JAVA with SQL body
 0: jdbc:farrago:> create function celsius_to_fahrenheit(in c double)
@@ -250,8 +241,7 @@ encountered near line 1, column 8 (state=,code=0)
 . . . . . . . . > language java
 . . . . . . . . > contains sql
 . . . . . . . . > return c*1.8 + 32;
-Error: Routine UDFTEST.CELSIUS_TO_FAHRENHEIT with SQL definition cannot specify non-SQL language;
-encountered near line 1, column 8 (state=,code=0)
+Error: DDL validation error near line 1, column 8: Non-SQL language cannot be specified for routine "UDFTEST"."CELSIUS_TO_FAHRENHEIT" with SQL definition (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  cannot specify parameter style JAVA with SQL body
 0: jdbc:farrago:> create function celsius_to_fahrenheit(in c double)
@@ -259,8 +249,7 @@ encountered near line 1, column 8 (state=,code=0)
 . . . . . . . . > parameter style java
 . . . . . . . . > contains sql
 . . . . . . . . > return c*1.8 + 32;
-Error: Routine UDFTEST.CELSIUS_TO_FAHRENHEIT with SQL definition cannot specify non-SQL parameter style;
-encountered near line 1, column 8 (state=,code=0)
+Error: DDL validation error near line 1, column 8: Non-SQL parameter style cannot be specified for routine "UDFTEST"."CELSIUS_TO_FAHRENHEIT" with SQL definition (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- begin tests for external Java routines
 0: jdbc:farrago:> 
@@ -291,8 +280,7 @@ encountered near line 1, column 8 (state=,code=0)
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > no sql
 . . . . . . . . > external name 'class foobar';
-Error: Routine UDFTEST.GET_JAVA_PROPERTY has invalid external Java method specification 'class foobar';
-encountered near line 1, column 8 (state=,code=0)
+Error: DDL validation error near line 1, column 8: Invalid external Java method specification "class foobar" specified for routine "UDFTEST"."GET_JAVA_PROPERTY" (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  unknown class
 0: jdbc:farrago:> create function get_java_property(in name varchar(128))
@@ -306,23 +294,20 @@ Error: java.lang.ClassNotFoundException: java.lang.Rodent (state=,code=0)
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > no sql
 . . . . . . . . > external name 'class java.lang.System.getHotels';
-Error: Routine UDFTEST.GET_JAVA_PROPERTY references unknown external Java method 'java.lang.System.getHotels(java.lang.String)';
-encountered near line 1, column 8 (state=,code=0)
+Error: DDL validation error near line 1, column 8: Unknown external Java method "java.lang.System.getHotels(java.lang.String)" referenced by routine "UDFTEST"."GET_JAVA_PROPERTY" (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  parameter type mismatch
 0: jdbc:farrago:> create function get_java_property(in name int)
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > no sql
 . . . . . . . . > external name 'class java.lang.System.getProperty';
-Error: Routine UDFTEST.GET_JAVA_PROPERTY references unknown external Java method 'java.lang.System.getProperty(int)';
-encountered near line 1, column 8 (state=,code=0)
+Error: DDL validation error near line 1, column 8: Unknown external Java method "java.lang.System.getProperty(int)" referenced by routine "UDFTEST"."GET_JAVA_PROPERTY" (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  return type mismatch
 0: jdbc:farrago:> create function get_java_property(in name varchar(128))
 . . . . . . . . > returns int
 . . . . . . . . > no sql
 . . . . . . . . > external name 'class java.lang.System.getProperty';
-Error: Routine UDFTEST.GET_JAVA_PROPERTY returns int but references external Java method which returns class java.lang.String;
-encountered near line 1, column 8 (state=,code=0)
+Error: DDL validation error near line 1, column 8: Return type of routine "UDFTEST"."GET_JAVA_PROPERTY" is int but external Java method "java.lang.System.getProperty(java.lang.String)" has return type class java.lang.String (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

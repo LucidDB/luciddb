@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/view.sql#1 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/view.sql#2 $
 0: jdbc:farrago:> -- Test DDL on views
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema s;
@@ -36,9 +36,7 @@ Error: Column name count does not match query (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- bad:  duplicate column names
 0: jdbc:farrago:> create view v4(empno,empno) as select empno, name from sales.emps;
-Error: Duplicate definition for ViewColumn EMPNO within View S.V4;
-encountered near line 1, column 22;
-earlier definition was near line 1, column 22 (state=,code=0)
+Error: DDL validation error near line 1, column 22: Duplicate definition for column "EMPNO" within view "S"."V4"; earlier definition was near line 1, column 22 (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- bad:  invalid view def
 0: jdbc:farrago:> create view v5 as select * from nonexistent_table;
@@ -50,8 +48,7 @@ Error: Dynamic parameters are illegal in views (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- bad:  duplicate view name
 0: jdbc:farrago:> create view v1 as select * from sales.emps;
-Error: View V1 already exists within Schema LOCALDB.S;
-duplicate name encountered near line 1, column 13 (state=,code=0)
+Error: DDL validation error near line 1, column 13: Target schema "LOCALDB"."S" already contains view "V1" with same name (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- bad:  ORDER BY in view
 0: jdbc:farrago:> create view v7 as select * from sales.emps order by name;
@@ -75,9 +72,9 @@ Error: ORDER BY is illegal in views (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- bad:  can't drop without cascade
 0: jdbc:farrago:> drop table t1;
-Error: LocalTable S.T1 can only be dropped with CASCADE because other objects still reference it (state=,code=0)
+Error: Dropping table "S"."T1" requires CASCADE because other objects still reference it (state=,code=0)
 0: jdbc:farrago:> drop table t1 restrict;
-Error: LocalTable S.T1 can only be dropped with CASCADE because other objects still reference it (state=,code=0)
+Error: Dropping table "S"."T1" requires CASCADE because other objects still reference it (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should work
 0: jdbc:farrago:> drop table t1 cascade;
@@ -98,13 +95,13 @@ Error: At line 1, column 15: Table 'V7' not found (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- bad: can't drop without cascade
 0: jdbc:farrago:> drop view v8;
-Error: View S.V8 can only be dropped with CASCADE because other objects still reference it (state=,code=0)
+Error: Dropping view "S"."V8" requires CASCADE because other objects still reference it (state=,code=0)
 0: jdbc:farrago:> drop view v8 restrict;
-Error: View S.V8 can only be dropped with CASCADE because other objects still reference it (state=,code=0)
+Error: Dropping view "S"."V8" requires CASCADE because other objects still reference it (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- bad: can't drop without cascade
 0: jdbc:farrago:> drop view v9;
-Error: View S.V9 can only be dropped with CASCADE because other objects still reference it (state=,code=0)
+Error: Dropping view "S"."V9" requires CASCADE because other objects still reference it (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should work
 0: jdbc:farrago:> drop view v9 cascade;

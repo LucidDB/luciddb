@@ -7,35 +7,46 @@
   exceptionClassName="net.sf.farrago.util.FarragoException">
 
 <!-- ====================================================================== -->
+ General Notes:
+ 1) Do not quote object names in this file.  Instead, make a
+    call to getLocalizedObjectName.
+ 2) Where possible, do not include class names such as table.  Again,
+    make a call to getLocalizedObjectName.
+ 3) Do not start messages with substitutions which may have lower-case
+    replacements.  (At least not in English.)
+ 4) TODO:  link to style guide
+<!-- ====================================================================== -->
+
+<!-- ====================================================================== -->
 <!-- Catalog resources 400,000 - 410,000 -->
 <!-- ====================================================================== -->
 
 <exception id="400000" name="MissingHomeProperty">
-    <text>Installation error: required Java property {0} not set</text>
+<text>Installation error: required Java property {0} not set</text>
 </exception>
 
 <exception id="400010" name="CatalogUninitialized">
-    <text>Installation error: catalog package not found in repository</text>
+<text>Installation error: catalog package not found in repository</text>
 </exception>
 
 <exception id="400020" name="CatalogFileLockFailed">
-    <text>Failed to lock catalog file {0}</text>
+<text>Failed to lock catalog file {0}</text>
 </exception>
 
 <exception id="400030" name="CatalogInitTransientFailed">
-    <text>Failed to initialize transient portion of catalog</text>
+<text>Failed to initialize transient portion of catalog</text>
 </exception>
 
 <exception id="400040" name="CatalogExternalLoadFailed">
-    <text>Failed to access external repository</text>
+<text>Failed to access external repository</text>
 </exception>
 
 <exception id="400050" name="CatalogExternalInitFailed">
-    <text>Failed to initialize external repository</text>
+<text>Failed to initialize external repository</text>
 </exception>
 
 <exception id="400060" name="CatalogPropsAccessFailed">
-    <text>Failed to access repository storage properties file {0}</text>
+<text>Failed to access repository storage properties file {0}</text>
 </exception>
 
 <!-- ====================================================================== -->
@@ -43,295 +54,289 @@
 <!-- ====================================================================== -->
 
 <exception id="410000" name="JdbcInvalidTxnState">
-    <text>Invalid transaction state</text>
+<text>Invalid transaction state</text>
 </exception>
 
 <exception id="410010" name="JdbcInvalidUrl">
-    <text>Invalid URL:  {0}</text>
+<text>Invalid URL:  {0}</text>
 </exception>
 
 <!-- ====================================================================== -->
 <!-- Validator resources 420,000 - 430,000 -->
 <!-- ====================================================================== -->
 
-<exception id="420000" name="ValidatorDuplicateNames">
-    <text>Duplicate definition for {0} within {1};
-encountered near {2};
-earlier definition was near {3}</text>
+<exception id="420000" name="ValidatorDuplicateNames"
+    className="org.eigenbase.sql.SqlValidatorException">
+<text>Duplicate definition for {0} within {1}; earlier definition was near {2}</text>
 </exception>
 
-<exception id="420010" name="ValidatorNameInUse">
-    <text>{0} already exists within {1};
-duplicate name encountered near {2}</text>
+<exception id="420005" name="ValidatorPositionContext">
+<text>DDL validation error near {0}</text>
 </exception>
 
-<exception id="420040" name="ValidatorCharsetUnexpected">
-    <text>{0} does not accept a CHARACTER SET specification;
-encountered in definition of {1} near {2}</text>
+<exception id="420010" name="ValidatorNameInUse"
+    className="org.eigenbase.sql.SqlValidatorException">
+<text>Target {1} already contains {0} with same name</text>
 </exception>
 
-<exception id="420050" name="ValidatorPrecRequired">
-    <text>{0} requires a precision specification;
-encountered in definition of {1} near {2}</text>
+<exception id="420040" name="ValidatorCharsetUnexpected"
+    className="org.eigenbase.sql.SqlValidatorException">
+<text>CHARACTER SET specification not allowed on {0} in definition of {1}</text>
 </exception>
 
-<exception id="420060" name="ValidatorPrecUnexpected">
-    <text>{0} does not accept a precision specification;
-encountered in definition of {1} near {2}</text>
+<exception id="420050" name="ValidatorPrecRequired"
+    className="org.eigenbase.sql.SqlValidatorException">
+<text>Precision specification required for {0} in definition of {1}</text>
 </exception>
 
-<exception id="420070" name="ValidatorScaleUnexpected">
-    <text>{0} does not accept a scale specification;
-encountered in definition of {1} near {2}</text>
+<exception id="420060" name="ValidatorPrecUnexpected"
+    className="org.eigenbase.sql.SqlValidatorException">
+<text>Precision specification not allowed on {0} in definition of {1}</text>
 </exception>
 
-<exception id="420080" name="ValidatorCharsetUnsupported">
-    <text>Character set {0} unsupported;
-encountered in definition of {1} near {2}</text>
+<exception id="420070" name="ValidatorScaleUnexpected"
+    className="org.eigenbase.sql.SqlValidatorException">
+<text>Scale specification not allowed on {0} in definition of {1}</text>
 </exception>
 
-<exception id="420090" name="ValidatorLengthExceeded">
-    <text>Character length {0,number,#} exceeds maximum of {1,number,#};
-encountered in definition of {2} near {3}</text>
+<exception id="420080" name="ValidatorCharsetUnsupported"
+    className="org.eigenbase.sql.SqlValidatorException">
+<text>Character set {0} unsupported in definition of {1}</text>
 </exception>
 
-<exception id="420100" name="ValidatorPrecisionExceeded">
-    <text>Precision {0,number,#} exceeds maximum of {1,number,#};
-encountered in definition of {2} near {3}</text>
+<exception id="420090" name="ValidatorLengthExceeded"
+    className="org.eigenbase.sql.SqlValidatorException">
+<text>Character length {0,number,#} exceeds maximum of {1,number,#} in definition of {2}</text>
 </exception>
 
-<exception id="420110" name="ValidatorScaleExceeded">
-    <text>Scale {0,number,#} exceeds maximum of {1,number,#};
-encountered in definition of {2} near {3}</text>
+<exception id="420100" name="ValidatorPrecisionExceeded"
+    className="org.eigenbase.sql.SqlValidatorException">
+<text>Precision {0,number,#} exceeds maximum of {1,number,#} in definition of {2}</text>
 </exception>
 
-<exception id="420120" name="ValidatorUnknownObject">
-    <text>Reference to unknown {0};
-encountered near {1}</text>
+<exception id="420110" name="ValidatorScaleExceeded"
+    className="org.eigenbase.sql.SqlValidatorException">
+<text>Scale {0,number,#} exceeds maximum of {1,number,#} in definition of {2}</text>
 </exception>
 
-<exception id="420130" name="ValidatorUnknownColumn">
-    <text>Column {0} not defined in table {1};
-encountered near {2}</text>
+<exception id="420120" name="ValidatorUnknownObject"
+    className="org.eigenbase.sql.SqlValidatorException">
+<text>Reference to unknown {0}</text>
+</exception>
+
+<exception id="420130" name="ValidatorUnknownObjectInScope"
+    className="org.eigenbase.sql.SqlValidatorException">
+<text>Reference to unknown {0} in {1}</text>
 </exception>
 
 <exception id="420150" name="ValidatorDuplicateClusteredIndex">
-    <text>Table {0} already has a clustered index</text>
+<text>Clustered index already defined on {0}</text>
 </exception>
 
 <exception id="420170" name="ValidatorDropRestrict">
-    <text>{0} can only be dropped with CASCADE because other objects still reference it</text>
+<text>Dropping {0} requires CASCADE because other objects still reference it</text>
 </exception>
 
-<exception id="420180" name="ValidatorDropClusteredIndex">
-    <text>Clustered index {0} cannot be dropped;
-encountered at {1}</text>
+<exception id="420180" name="ValidatorDropClusteredIndex"
+    className="org.eigenbase.sql.SqlValidatorException">
+<text>Clustered {0} cannot be dropped</text>
 </exception>
 
 <exception id="420190" name="ValidatorNoDefaultSchema">
-    <text>No default schema specified; execute SET SCHEMA or use fully qualified names</text>
+<text>No default schema specified; execute SET SCHEMA or use fully qualified names</text>
 </exception>
 
 <exception id="420200" name="ValidatorNoPrimaryKey">
-    <text>Table {0} must have a PRIMARY KEY</text>
+<text>PRIMARY KEY constraint required for {0}</text>
 </exception>
 
 <exception id="420210" name="ValidatorMultiplePrimaryKeys">
-    <text>Table {0} cannot have more than one PRIMARY KEY</text>
+<text>Multiple PRIMARY KEY constraints not allowed on {0}</text>
 </exception>
 
-<exception id="420220" name="ValidatorIndexBadTable">
-    <text>Cannot create index on different table from one being defined;
-encountered at {0}</text>
+<exception id="420220" name="ValidatorIndexBadTable"
+    className="org.eigenbase.sql.SqlValidatorException">
+<text>Cannot create index on table other than the one being defined</text>
 </exception>
 
-<exception id="420230" name="ValidatorBadDefaultClause">
-    <text>Invalid DEFAULT clause for column {0};
-encountered near {1}</text>
+<exception id="420230" name="ValidatorBadDefaultClause"
+    className="org.eigenbase.sql.SqlValidatorException">
+<text>Invalid DEFAULT clause for {0}</text>
 </exception>
 
-<exception id="420240" name="ValidatorBadDefaultType">
-    <text>Type mismatch in DEFAULT clause for column {0};
-column type family is {1} but default value type family is {2};
-encountered near {3}
-</text>
+<exception id="420240" name="ValidatorBadDefaultType"
+    className="org.eigenbase.sql.SqlValidatorException">
+<text>Type mismatch in DEFAULT clause for {0};
+column type family is {1} but default value type family is {2}</text>
 </exception>
 
 <exception id="420250" name="ValidatorUnknownSysParam">
-    <text>Reference to unknown system parameter {0}</text>
+<text>Reference to unknown system parameter {0}</text>
 </exception>
 
 <exception id="420260" name="ValidatorSysParamTypeMismatch">
-    <text>Type mismatch in value {0} for system parameter {1}</text>
+<text>Type mismatch in value ''{0}'' for system parameter {1}</text>
 </exception>
 
 <exception id="420270" name="ValidatorImmutableSysParam">
-    <text>Cannot change immutable system parameter {0}</text>
+<text>Cannot change immutable system parameter {0}</text>
 </exception>
 
 <exception id="420280" name="ValidatorIndexOnExistingTempTable">
-    <text>Cannot create or drop index {0} on existing temporary table {1}</text>
+<text>Cannot create or drop {0} on existing TEMPORARY {1}</text>
 </exception>
 
-<exception id="420290" name="ValidatorBadDefaultParam">
-    <text>Cannot reference dynamic parameter in DEFAULT clause for column {0};
-encountered near {1}</text>
-</exception>
-
-<exception id="420300" name="ValidatorUntranslated">
-    <text>{0}</text>
+<exception id="420290" name="ValidatorBadDefaultParam"
+    className="org.eigenbase.sql.SqlValidatorException">
+<text>Cannot reference dynamic parameter in DEFAULT clause for {0}</text>
 </exception>
 
 <exception id="420310" name="ValidatorViewColumnCountMismatch">
-    <text>Column name count does not match query</text>
+<text>Column name count does not match query</text>
 </exception>
 
 <exception id="420320" name="ValidatorInvalidObjectDefinition">
-    <text>Invalid definition for {0}</text>
+<text>Invalid definition for {0}</text>
 </exception>
 
 <exception id="420330" name="ValidatorInvalidViewDynamicParam">
-    <text>Dynamic parameters are illegal in views</text>
+<text>Dynamic parameters are illegal in views</text>
 </exception>
 
 <exception id="420340" name="ValidatorSchemaDependencyCycle">
-    <text>Object definition contains recursive cycle</text>
+<text>Object definition contains recursive cycle</text>
 </exception>
 
 <exception id="420350" name="ValidatorInvalidViewOrderBy">
-    <text>ORDER BY is illegal in views</text>
+<text>ORDER BY is illegal in views</text>
 </exception>
 
-<exception id="420360" name="ValidatorDataWrapperInvalid">
-    <text>Failed to validate definition for data wrapper {0}</text>
-</exception>
-
-<exception id="420360" name="ValidatorDataServerInvalid">
-    <text>Failed to validate definition for data server {0}</text>
+<exception id="420360" name="ValidatorDefinitionInvalid">
+<text>Failed to validate definition for {0}</text>
 </exception>
 
 <exception id="420360" name="ValidatorDataServerTableInvalid">
-    <text>Failed to validate data server definition for {0}</text>
+<text>Failed to validate data server definition for {0}</text>
 </exception>
 
 <exception id="420370" name="ValidatorForeignTableLookupFailed">
-    <text>Failed to look up foreign table name {0}</text>
+<text>Failed to look up foreign table {0}</text>
 </exception>
 
 <exception id="420380" name="ValidatorForeignTableButLocalWrapper">
-    <text>Cannot create foreign table {0} using local data wrapper {1}</text>
+<text>Cannot create {0} using local {1}</text>
 </exception>
 
 <exception id="420390" name="ValidatorLocalTableButForeignWrapper">
-    <text>Cannot create local table {0} using foreign data wrapper {1}</text>
+<text>Cannot create local {0} using foreign {1}</text>
 </exception>
 
 <exception id="420400" name="ValidatorForeignWrapperHasLocalImpl">
-    <text>Cannot create foreign data wrapper {0} because its library implements local storage</text>
+<text>Cannot create foreign {0} because its library implements local storage</text>
 </exception>
 
 <exception id="420410" name="ValidatorLocalWrapperHasForeignImpl">
-    <text>Cannot create local data wrapper {0} because its library implements foreign storage</text>
+<text>Cannot create local {0} because its library implements foreign storage</text>
 </exception>
 
 <exception id="420420" name="ValidatorCalcUnavailable">
-    <text>Requested calculator implementation is unavailable</text>
+<text>Requested calculator implementation is unavailable</text>
 </exception>
 
 <exception id="420430" name="ValidatorNoConstraintAllowed">
-    <text>{0} does not accept a constraint definition</text>
+<text>Constraint definition not allowed on {0}</text>
 </exception>
 
-<exception id="420440" name="ValidatorRoutineSchemaMismatch">
-    <text>Schema {0} for specific name does not match schema {1} for invocation name;
-encountered near {2}</text>
+<exception id="420440" name="ValidatorRoutineSchemaMismatch"
+    className="org.eigenbase.sql.SqlValidatorException">
+<text>Schema {0} for specific name does not match {1} for invocation name</text>
 </exception>
 
-<exception id="420450" name="ValidatorRoutineDataAccessUnspecified">
-    <text>SQL data access must be specified in definition of routine {0};
-encountered near {1}</text>
+<exception id="420450" name="ValidatorRoutineDataAccessUnspecified"
+    className="org.eigenbase.sql.SqlValidatorException">
+<text>SQL data access must be specified in definition of {0}</text>
 </exception>
 
 <exception id="420460" name="ValidatorInvalidRoutineDynamicParam">
-    <text>Dynamic parameters are illegal in routine bodies</text>
+<text>Dynamic parameters are illegal in routine bodies</text>
 </exception>
 
-<exception id="420470" name="ValidatorFunctionOutputParam">
-    <text>Parameters to function {0} may not be declared as OUT or INOUT;
-encountered near {1}</text>
+<exception id="420470" name="ValidatorFunctionOutputParam"
+    className="org.eigenbase.sql.SqlValidatorException">
+<text>Parameters to {0} may not be declared as OUT or INOUT because it is a function</text>
 </exception>
 
-<exception id="420480" name="ValidatorRoutineNoSql">
-    <text>Routine {0} with SQL definition cannot specify NO SQL;
-encountered near {1}</text>
+<exception id="420480" name="ValidatorRoutineNoSql"
+    className="org.eigenbase.sql.SqlValidatorException">
+<text>NO SQL cannot be specified for {0} with SQL definition</text>
 </exception>
 
 <exception id="420490" name="ValidatorFunctionReturnType">
-    <text>Result expression type {0} from {1} does not match declared return type {2}</text>
+<text>Result expression type {0} from {1} does not match declared return type {2}</text>
 </exception>
 
 <exception id="420500" name="ValidatorPathBadCatalog">
-    <text>Search path catalog {0} does not match catalog {1} of schema being defined</text>
+<text>Search path {0} does not match {1} of schema being defined</text>
 </exception>
 
 <exception id="420510" name="ValidatorSetStmtNonString">
-    <text>SET statement requires character string value expression</text>
+<text>SET statement requires character string value expression</text>
 </exception>
 
 <exception id="420520" name="ValidatorSetCatalogInvalidExpr">
-    <text>Invalid catalog name ''{0}'' in SET CATALOG statement</text>
+<text>Invalid catalog name {0} in SET CATALOG statement</text>
 </exception>
 
 <exception id="420530" name="ValidatorSetSchemaInvalidExpr">
-    <text>Invalid schema name ''{0}'' in SET SCHEMA statement</text>
+<text>Invalid schema name {0} in SET SCHEMA statement</text>
 </exception>
 
 <exception id="420540" name="ValidatorSetPathInvalidExpr">
-    <text>Invalid schema name list specification ''{0}'' in SET PATH statement</text>
+<text>Invalid schema name list specification {0} in SET PATH statement</text>
 </exception>
 
 <exception id="420550" name="ValidatorSetStmtInvalid">
-    <text>Unable to evaluate expression in SET statement</text>
+<text>Unable to evaluate expression in SET statement</text>
 </exception>
 
-<exception id="420560" name="ValidatorRoutineBodySqlOnly">
-    <text>Routine {0} with SQL definition cannot specify non-SQL language;
-encountered near {1}</text>
+<exception id="420560" name="ValidatorRoutineBodySqlOnly"
+    className="org.eigenbase.sql.SqlValidatorException">
+<text>Non-SQL language cannot be specified for {0} with SQL definition</text>
 </exception>
 
-<exception id="420570" name="ValidatorRoutineExternalJavaOnly">
-    <text>External routine {0} cannot specify non-JAVA language;
-encountered near {1}</text>
+<exception id="420570" name="ValidatorRoutineExternalJavaOnly"
+    className="org.eigenbase.sql.SqlValidatorException">
+<text>External {0} cannot specify non-JAVA language</text>
 </exception>
 
-<exception id="420580" name="ValidatorRoutineJavaParamStyleOnly">
-    <text>External JAVA routine {0} cannot specify non-JAVA parameter style;
-encountered near {1}</text>
+<exception id="420580" name="ValidatorRoutineJavaParamStyleOnly"
+    className="org.eigenbase.sql.SqlValidatorException">
+<text>External JAVA {0} cannot specify non-JAVA parameter style</text>
 </exception>
 
-<exception id="420590" name="ValidatorRoutineSqlParamStyleOnly">
-    <text>Routine {0} with SQL definition cannot specify non-SQL parameter style;
-encountered near {1}</text>
+<exception id="420590" name="ValidatorRoutineSqlParamStyleOnly"
+    className="org.eigenbase.sql.SqlValidatorException">
+<text>Non-SQL parameter style cannot be specified for {0} with SQL definition</text>
 </exception>
 
-<exception id="420600" name="ValidatorRoutineInvalidJavaMethod">
-    <text>Routine {0} has invalid external Java method specification ''{1}'';
-encountered near {2}</text>
+<exception id="420600" name="ValidatorRoutineInvalidJavaMethod"
+    className="org.eigenbase.sql.SqlValidatorException">
+<text>Invalid external Java method specification {1} specified for {0}</text>
 </exception>
 
-<exception id="420610" name="ValidatorRoutineJavaMethodNotFound">
-    <text>Routine {0} references unknown external Java method ''{1}'';
-encountered near {2}</text>
+<exception id="420610" name="ValidatorRoutineJavaMethodNotFound"
+    className="org.eigenbase.sql.SqlValidatorException">
+<text>Unknown external Java method {1} referenced by {0}</text>
 </exception>
 
-<exception id="420620" name="ValidatorRoutineJavaReturnMismatch">
-    <text>Routine {0} returns {1} but references external Java method which returns {2};
-encountered near {3}</text>
+<exception id="420620" name="ValidatorRoutineJavaReturnMismatch"
+    className="org.eigenbase.sql.SqlValidatorException">
+<text>Return type of {0} is {1} but external Java method {2} has return type {3}</text>
 </exception>
 
-<exception id="420630" name="ValidatorRoutineJavaMethodNotPublicStatic">
-    <text>Routine {0} references external Java method {1} which is not both public and static;
-encountered near {2}</text>
+<exception id="420630" name="ValidatorRoutineJavaMethodNotPublicStatic"
+    className="org.eigenbase.sql.SqlValidatorException">
+<text>External Java method {1} referenced by {0} is not both public and static</text>
 </exception>
 
 <!-- ====================================================================== -->
@@ -341,7 +346,7 @@ encountered near {2}</text>
 <!-- ====================================================================== -->
 
 <exception id="440000" name="FennelUntranslated">
-    <text>{0}</text>
+<text>{0}</text>
 </exception>
 
 <!-- ====================================================================== -->
@@ -349,19 +354,19 @@ encountered near {2}</text>
 <!-- ====================================================================== -->
 
 <exception id="450000" name="NullNotAllowed">
-    <text>NOT NULL field cannot be assigned null value</text>
+<text>NOT NULL field cannot be assigned null value</text>
 </exception>
 
 <exception id="450010" name="AssignFromFailed">
-    <text>Cannot assign ''{0}'' to a {1} value: {2}</text>
+<text>Cannot assign ''{0}'' to a {1} value: {2}</text>
 </exception>
 
 <exception id="450020" name="ParameterValueTooLong">
-    <text>Value ''{0}'' is too long for parameter ''{1}'' of type ''{2}''</text>
+<text>Value ''{0}'' is too long for parameter of type {1}</text>
 </exception>
 
 <exception id="450020" name="ParameterValueIncompatible">
-    <text>Cannot assign a value of Java class ''{0}'' to parameter ''{1}'' of type ''{2}''</text>
+<text>Cannot assign a value of Java class {0} to parameter of type {1}</text>
 </exception>
 
 <!-- ====================================================================== -->
@@ -369,31 +374,31 @@ encountered near {2}</text>
 <!-- ====================================================================== -->
 
 <exception id="460020" name="DataServerInitFailed">
-    <text>Failed to initialize data server</text>
+<text>Failed to initialize data server</text>
 </exception>
 
 <exception id="460030" name="ForeignTableAccessFailed">
-    <text>Failed to access foreign table {0}</text>
+<text>Failed to access foreign table {0}</text>
 </exception>
 
 <exception id="460040" name="JdbcDriverLoadFailed">
-    <text>Could not load JDBC driver class {0}</text>
+<text>Could not load JDBC driver class {0}</text>
 </exception>
 
 <exception id="460050" name="JdbcDriverTypeInfoFailed">
-    <text>Could not obtain type information from JDBC driver</text>
+<text>Could not obtain type information from JDBC driver</text>
 </exception>
 
 <exception id="460060" name="DataServerRuntimeFailed">
-    <text>Failed to access data server for execution</text>
+<text>Failed to access data server for execution</text>
 </exception>
 
 <exception id="460080" name="DataServerIndexCreateFailed">
-    <text>Failed to create storage for index {0}</text>
+<text>Failed to create storage for {0}</text>
 </exception>
 
 <exception id="460090" name="DataServerIndexDropFailed">
-    <text>Failed to drop storage for index {0}</text>
+<text>Failed to drop storage for {0}</text>
 </exception>
 
 <!-- ====================================================================== -->
@@ -401,39 +406,39 @@ encountered near {2}</text>
 <!-- ====================================================================== -->
 
 <exception id="470000" name="DatabaseLoadFailed">
-    <text>Failed to load database</text>
+<text>Failed to load database</text>
 </exception>
 
 <exception id="470010" name="SessionNoCommitInAutocommit">
-    <text>Can't COMMIT in auto-commit mode</text>
+<text>Cannot COMMIT in auto-commit mode</text>
 </exception>
 
 <exception id="470020" name="SessionNoRollbackInAutocommit">
-    <text>Can't ROLLBACK in auto-commit mode</text>
+<text>Cannot ROLLBACK in auto-commit mode</text>
 </exception>
 
 <exception id="470030" name="SessionDupSavepointName">
-    <text>Savepoint name {0} already in use</text>
+<text>Savepoint name {0} already in use</text>
 </exception>
 
 <exception id="470040" name="SessionNoSavepointInAutocommit">
-    <text>Can't create SAVEPOINT in auto-commit mode</text>
+<text>Cannot create SAVEPOINT in auto-commit mode</text>
 </exception>
 
 <exception id="470050" name="SessionWrongSavepoint">
-    <text>Savepoint {0} is from wrong session</text>
+<text>Savepoint {0} is from wrong session</text>
 </exception>
 
 <exception id="470060" name="SessionInvalidSavepointId">
-    <text>Invalid savepoint ID {0,number,#}</text>
+<text>Invalid savepoint ID {0,number,#}</text>
 </exception>
 
 <exception id="470070" name="SessionInvalidSavepointName">
-    <text>Invalid savepoint name {0}</text>
+<text>Invalid savepoint name {0}</text>
 </exception>
 
 <exception id="470080" name="SessionNoExecuteImmediateParameters">
-    <text>Cannot EXECUTE IMMEDIATE a statement with dynamic parameters:  {0}</text>
+<text>Cannot EXECUTE IMMEDIATE a statement with dynamic parameters:  {0}</text>
 </exception>
 
 <!-- ====================================================================== -->
@@ -441,31 +446,31 @@ encountered near {2}</text>
 <!-- ====================================================================== -->
 
 <message id="480000" name="ServerLoadingDatabase">
-    <text>Loading database...</text>
+<text>Loading database...</text>
 </message>
 
 <message id="480010" name="ServerStartingNetwork">
-    <text>Starting network...</text>
+<text>Starting network...</text>
 </message>
 
 <message id="480020" name="ServerListening">
-    <text>Server now listening for connections on port {0,number,#}; enter !quit to stop</text>
+<text>Server now listening for connections on port {0,number,#}; enter !quit to stop</text>
 </message>
 
 <message id="480030" name="ServerBadCommand">
-    <text>Unknown server command:  {0}</text>
+<text>Unknown server command:  {0}</text>
 </message>
 
 <message id="480040" name="ServerShuttingDown">
-    <text>Server shutting down...</text>
+<text>Server shutting down...</text>
 </message>
 
 <message id="480050" name="ServerShutdownComplete">
-    <text>Server shutdown complete</text>
+<text>Server shutdown complete</text>
 </message>
 
 <message id="480060" name="ServerSessionsExist">
-    <text>Server sessions are still running; enter !kill to force shutdown</text>
+<text>Server sessions are still running; enter !kill to force shutdown</text>
 </message>
 
 <!-- ====================================================================== -->
@@ -473,15 +478,15 @@ encountered near {2}</text>
 <!-- ====================================================================== -->
 
 <exception id="490000" name="PluginInvalidIntProp">
-    <text>Invalid value {0} for integer property {1}</text>
+<text>Invalid value ''{0}'' for integer property {1}</text>
 </exception>
 
 <exception id="490010" name="PluginJarLoadFailed">
-    <text>Failed to load plugin jar {0}</text>
+<text>Failed to load plugin jar ''{0}''</text>
 </exception>
 
 <exception id="490020" name="PluginInitFailed">
-    <text>Failed to initialize plugin {0}</text>
+<text>Failed to initialize plugin {0}</text>
 </exception>
 
 <!-- ====================================================================== -->
@@ -490,16 +495,190 @@ encountered near {2}</text>
 <!-- ====================================================================== -->
 
 <exception id="500000" name="ProgramCompilationError">
-    <text>Calculator program compilation error: {0}</text>
+<text>Calculator program compilation error: {0}</text>
 </exception>
 
 <exception id="500010" name="ProgramImplementationError">
-    <text>Calculator program implementation error: {0}</text>
+<text>Calculator program implementation error: {0}</text>
 </exception>
 
 <exception id="500020" name="CompilationAssertionError">
-    <text>Calculator program compilation assertion error: {0}</text>
+<text>Calculator program compilation assertion error: {0}</text>
 </exception>
+
+
+<!-- ====================================================================== -->
+<!-- UML model resources 510,000 - 520,000 -->
+<!-- These correspond to UML classes from CWM and FEM -->
+<!-- ====================================================================== -->
+
+<message id="510000" name="UmlCatalog">
+<text>catalog</text>
+</message>
+
+<message id="510001" name="UmlCheckConstraint">
+<text>CHECK constraint</text>
+</message>
+
+<message id="510002" name="UmlColumn">
+<text>column</text>
+</message>
+
+<message id="510003" name="UmlColumnSet">
+<text>table</text>
+</message>
+
+<message id="510004" name="UmlForeignKey">
+<text>FOREIGN KEY constraint</text>
+</message>
+
+<message id="510005" name="UmlNamedColumnSet">
+<text>table</text>
+</message>
+
+<message id="510006" name="UmlPrimaryKey">
+<text>PRIMARY KEY constraint</text>
+</message>
+
+<message id="510007" name="UmlProcedure">
+<text>routine</text>
+</message>
+
+<message id="510008" name="UmlSchema">
+<text>schema</text>
+</message>
+
+<message id="510009" name="UmlSQLDataType">
+<text>datatype</text>
+</message>
+
+<message id="510010" name="UmlSQLDistinctType">
+<text>distinct datatype</text>
+</message>
+
+<message id="510011" name="UmlSQLIndex">
+<text>index</text>
+</message>
+
+<message id="510012" name="UmlSQLIndexColumn">
+<text>index column</text>
+</message>
+
+<message id="510013" name="UmlSQLParameter">
+<text>routine parameter</text>
+</message>
+
+<message id="510014" name="UmlSQLSimpleType">
+<text>datatype</text>
+</message>
+
+<message id="510015" name="UmlSQLStructuredType">
+<text>structured type</text>
+</message>
+
+<message id="510016" name="UmlTable">
+<text>table</text>
+</message>
+
+<message id="510017" name="UmlTrigger">
+<text>trigger</text>
+</message>
+
+<message id="510018" name="UmlUniqueConstraint">
+<text>UNIQUE constraint</text>
+</message>
+
+<message id="510019" name="UmlView">
+<text>view</text>
+</message>
+
+<message id="510020" name="UmlBaseColumnSet">
+<text>table</text>
+</message>
+
+<message id="510021" name="UmlDataServer">
+<text>data server</text>
+</message>
+
+<message id="510022" name="UmlDataWrapper">
+<text>data wrapper</text>
+</message>
+
+<message id="510023" name="UmlForeignTable">
+<text>foreign table</text>
+</message>
+
+<message id="510024" name="UmlLocalIndex">
+<text>index</text>
+</message>
+
+<message id="510025" name="UmlLocalIndexColumn">
+<text>index column</text>
+</message>
+
+<message id="510026" name="UmlLocalTable">
+<text>table</text>
+</message>
+
+<message id="510027" name="UmlStoredColumn">
+<text>column</text>
+</message>
+
+<message id="510028" name="UmlStoredTable">
+<text>table</text>
+</message>
+
+<message id="510029" name="UmlViewColumn">
+<text>column</text>
+</message>
+
+<message id="510031" name="UmlAuthorizationIdentifier">
+<text>authorization identifier</text>
+</message>
+
+<message id="510032" name="UmlPrivilege">
+<text>privilege</text>
+</message>
+
+<message id="510033" name="UmlAbstractColumn">
+<text>column</text>
+</message>
+
+<message id="510034" name="UmlLocalSchema">
+<text>schema</text>
+</message>
+
+<message id="510035" name="UmlRoutine">
+<text>routine</text>
+</message>
+
+<message id="510036" name="UmlRoutineParameter">
+<text>routine parameter</text>
+</message>
+
+<message id="510037" name="UmlSQLArrayType">
+<text>ARRAY datatype</text>
+</message>
+
+<message id="510038" name="UmlSQLCollectionType">
+<text>COLLECTION datatype</text>
+</message>
+
+<message id="510039" name="UmlSQLMultisetType">
+<text>MULTISET datatype</text>
+</message>
+
+<message id="510040" name="UmlSQLObjectType">
+<text>structured object type</text>
+</message>
+
+<message id="510041" name="UmlSQLRowType">
+<text>ROW type</text>
+</message>
+
+<message id="510042" name="UmlSQLTypeAttribute">
+<text>structured type attribute</text>
+</message>
 
 <!-- End of last error section ============================================ -->
 

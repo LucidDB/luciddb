@@ -98,12 +98,14 @@ public class FarragoRepos extends FarragoMetadataFactory
 
     private final FarragoCompoundAllocation allocations;
     
-    private String memStorageId;
+    private final Set localizedClasses;
     
+    private String memStorageId;
+
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Open a Farrago repository.
+     * Opens a Farrago repository.
      */
     public FarragoRepos(
         FarragoAllocationOwner owner,
@@ -182,11 +184,34 @@ public class FarragoRepos extends FarragoMetadataFactory
         currentConfigMofId = defaultConfig.refMofId();
         isFennelEnabled = !defaultConfig.isFennelDisabled();
 
+        localizedClasses = loadLocalizedClasses(
+            FarragoResource.instance());
+
         tracer.info("Catalog successfully loaded");
     }
 
     //~ Methods ---------------------------------------------------------------
 
+    protected static Set loadLocalizedClasses(ResourceBundle resourceBundle)
+    {
+        Set localizedClasses = new HashSet();
+        Enumeration e = resourceBundle.getKeys();
+        while (e.hasMoreElements()) {
+            String key = (String) e.nextElement();
+            if (key.startsWith("Uml")) {
+                localizedClasses.add(key);
+            }
+        }
+        return localizedClasses;
+    }
+
+    protected static String getLocalizedClassKey(RefClass refClass)
+    {
+        String className =
+            refClass.refMetaObject().refGetValue("name").toString();
+        return "Uml" + className;
+    }
+    
     private Map stringToMap(String propString)
     {
         // TODO:  find something industrial strength
@@ -288,7 +313,32 @@ public class FarragoRepos extends FarragoMetadataFactory
     }
 
     /**
-     * Format the fully-qualified localized name for an existing object.
+     * Formats the fully-qualified localized name for an existing object,
+     * including its type.
+     *
+     * @param modelElement catalog object
+     * @return localized name
+     */
+    public String getLocalizedObjectName(
+        CwmModelElement modelElement)
+    {
+        return getLocalizedObjectName(modelElement, modelElement.refClass());
+    }
+
+    /**
+     * Formats the localized name for an unqualified typeless object.
+     *
+     * @param name object name
+     * @return localized name
+     */
+    public String getLocalizedObjectName(
+        String name)
+    {
+        return getLocalizedObjectName(null, name, null);
+    }
+
+    /**
+     * Formats the fully-qualified localized name for an existing object.
      *
      * @param modelElement catalog object
      * @param refClass if non-null, use this as the type of the object, e.g.
@@ -313,7 +363,7 @@ public class FarragoRepos extends FarragoMetadataFactory
     }
 
     /**
-     * Format the fully-qualified localized name for an object that may not
+     * Formats the fully-qualified localized name for an object that may not
      * exist yet.
      *
      * @param qualifierName name of containing object, or null for unqualified
@@ -331,29 +381,44 @@ public class FarragoRepos extends FarragoMetadataFactory
     {
         StringBuffer sb = new StringBuffer();
 
-        // TODO:  actual localization, quoting, etc.
+        // TODO:  escaping
         if (refClass != null) {
-            String className =
-                refClass.refMetaObject().refGetValue("name").toString();
-            if (className.equals("LocalSchema")) {
-                // TODO jvs 8-Jan-2005:  temporary hack to avoid
-                // breaking logs multiple times; remove as part of
-                // fixing localization and quoting
-                className = "Schema";
-            }
-            sb.append(className);
+            sb.append(getLocalizedClassName(refClass));
             sb.append(" ");
         }
         if (qualifierName != null) {
+            sb.append("\"");
             sb.append(qualifierName);
-            sb.append('.');
+            sb.append("\".");
         }
+        sb.append("\"");
         sb.append(objectName);
+        sb.append("\"");
         return sb.toString();
     }
 
     /**
-     * Look up a catalog by name.
+     * Looks up the localized name for a class of metadata.
+     *
+     * @param refClass class of metadata, e.g. CwmTableClass
+     *
+     * @return localized name,  e.g. "table"
+     */
+    public String getLocalizedClassName(RefClass refClass)
+    {
+        String umlKey = getLocalizedClassKey(refClass);
+        if (localizedClasses.contains(umlKey)) {
+            return FarragoResource.instance().getString(umlKey);
+        } else {
+            // NOTE jvs 12-Jan-2005:  we intentionally return something
+            // nasty so that if it shows up in user-level error messages,
+            // someone nice will log a bug and get it fixed
+            return "NOT_YET_LOCALIZED_" + umlKey;
+        }
+    }
+
+    /**
+     * Looks up a catalog by name.
      *
      * @param catalogName name of catalog to find
      *
@@ -368,7 +433,7 @@ public class FarragoRepos extends FarragoMetadataFactory
     }
 
     /**
-     * Get an element's tag.
+     * Gets an element's tag.
      *
      * @param element the tagged CwmModelElement
      * @param tagName name of tag to find
@@ -392,7 +457,7 @@ public class FarragoRepos extends FarragoMetadataFactory
     }
 
     /**
-     * Tag an element.
+     * Tags an element.
      *
      * @param element the CwmModelElement to tag
      * @param tagName name of tag to create; if a tag with this name already
@@ -414,7 +479,7 @@ public class FarragoRepos extends FarragoMetadataFactory
     }
 
     /**
-     * Get a value tagged to an element.
+     * Gets a value tagged to an element.
      *
      * @param element the tagged CwmModelElement
      * @param tagName name of tag to find
@@ -466,7 +531,7 @@ public class FarragoRepos extends FarragoMetadataFactory
     }
 
     /**
-     * Create objects owned by the system.  This is only done once during
+     * Creates objects owned by the system.  This is only done once during
      * database creation.
      */
     public void createSystemObjects()
@@ -498,7 +563,7 @@ public class FarragoRepos extends FarragoMetadataFactory
     }
 
     /**
-     * Begin a metadata transaction on the repository.
+     * Begins a metadata transaction on the repository.
      *
      * @param writable true for read/write; false for read-only
      */
@@ -513,7 +578,7 @@ public class FarragoRepos extends FarragoMetadataFactory
     }
 
     /**
-     * End a metadata transaction on the repository.
+     * Ends a metadata transaction on the repository.
      *
      * @param rollback true to rollback; false to commit
      */
@@ -677,24 +742,6 @@ public class FarragoRepos extends FarragoMetadataFactory
         collectType.setName("MULTISET");
         // a multiset has the same type# as an array for now
         collectType.setTypeNumber(new Integer(Types.ARRAY));
-    }
-
-    /**
-     * Reconstruct a FemTupleAccessor from an XMI string.
-     *
-     * @param tupleAccessorXmiString XMI string containing definition of
-     *        TupleAccessor
-     *
-     * @return FemTupleAccessor for accessing tuples conforming to tupleDesc
-     */
-    public FemTupleAccessor parseTupleAccessor(String tupleAccessorXmiString)
-    {
-        Collection c =
-            JmiUtil.importFromXmiString(transientFarragoPackage,
-                tupleAccessorXmiString);
-        assert (c.size() == 1);
-        FemTupleAccessor accessor = (FemTupleAccessor) c.iterator().next();
-        return accessor;
     }
 }
 
