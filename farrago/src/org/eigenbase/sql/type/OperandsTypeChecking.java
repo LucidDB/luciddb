@@ -453,9 +453,62 @@ public abstract class OperandsTypeChecking
 
     /**
      * Parameter type-checking strategy
-     * type must be a literal, but NOT a NULL literal
+     * type must be a literal. NULL literal allowed
      */
-    public static final OperandsTypeChecking typeLiteral =
+    public static final OperandsTypeChecking typeNullableLiteral =
+        new OperandsTypeChecking() {
+            public boolean check(
+                SqlCall call,
+                SqlValidator validator,
+                SqlValidator.Scope scope,
+                SqlNode node,
+                int ruleOrdinal,
+                boolean throwOnFailure) {
+
+                Util.discard(ruleOrdinal);
+
+                if (SqlUtil.isNullLiteral(node, true)) {
+                    return true;
+                }
+
+                if (!SqlUtil.isLiteral(node)) {
+                    if (throwOnFailure) {
+                        throw EigenbaseResource.instance()
+                            .newArgumentMustBeLiteral(call.operator.name);
+                    }
+                    return false;
+                }
+
+                return true;
+            }
+
+            public boolean check(
+                SqlValidator validator,
+                SqlValidator.Scope scope,
+                SqlCall call,
+                boolean throwOnFailure) {
+
+                Util.pre(null != call, "null != call");
+                return check(call, validator, scope,
+                    call.operands[0], 0, throwOnFailure);
+            }
+
+            public int getArgCount() {
+                return 1;
+            }
+
+            public String getAllowedSignatures(SqlOperator op) {
+                return "<LITERAL>";
+            }
+        };
+
+    /**
+     * Parameter type-checking strategy
+     * type must be a literal, but NOT a NULL literal.
+     * <code>CAST(NULL as ...)</code> is considered to be a NULL literal but not
+     * <code>CAST(CAST(NULL as ...) AS ...)</code>
+     */
+    public static final OperandsTypeChecking typeNotNullLiteral =
         new OperandsTypeChecking() {
             public boolean check(
                 SqlCall call,
@@ -520,7 +573,7 @@ public abstract class OperandsTypeChecking
                 SqlNode node,
                 int ruleOrdinal, boolean throwOnFailure)
             {
-                if (!typeLiteral.check(call, validator, scope, node,
+                if (!typeNotNullLiteral.check(call, validator, scope, node,
                                         ruleOrdinal, throwOnFailure)) {
                     return false;
                 }
@@ -726,7 +779,7 @@ public abstract class OperandsTypeChecking
         new OperandsTypeChecking[] {
         new SimpleOperandsTypeChecking(
             new SqlTypeName[][]{SqlTypeName.charTypes})
-        , typeLiteral
+        , typeNotNullLiteral
         });
 
     /**
@@ -738,7 +791,7 @@ public abstract class OperandsTypeChecking
         new OperandsTypeChecking[] {
         new SimpleOperandsTypeChecking(
             new SqlTypeName[][]{SqlTypeName.charNullableTypes})
-        , typeLiteral
+        , typeNullableLiteral
         });
 
     /**
@@ -762,7 +815,7 @@ public abstract class OperandsTypeChecking
                 }
 
                 // check that the 2nd argument is a literal
-                return typeLiteral.check(call,validator, scope,
+                return typeNotNullLiteral.check(call,validator, scope,
                     call.operands[1],0, throwOnFailure);
             }
         };
