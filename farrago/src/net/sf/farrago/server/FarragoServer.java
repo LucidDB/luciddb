@@ -28,6 +28,7 @@ import net.sf.farrago.fem.config.*;
 import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
+import net.sf.farrago.util.*;
 
 /**
  * FarragoServer is a wrapper for an RmiJdbc server.
@@ -127,7 +128,7 @@ public class FarragoServer
 
         // NOTE:  use groundReferences=1 in shutdownConditional
         // to account for our baseline reference
-        if (FarragoDatabase.shutdownConditional(1)) {
+        if (FarragoDatabase.shutdownConditional(getGroundReferences())) {
             System.out.println(res.getServerShutdownComplete());
 
             // TODO: should find a way to prevent new messages BEFORE shutdown
@@ -137,6 +138,21 @@ public class FarragoServer
             System.out.println(res.getServerSessionsExist());
             return false;
         }
+    }
+
+    /**
+     * Returns the number of ground references for this server.  Ground
+     * references are references pinned at startup time.  For the base
+     * implementation of FarragoServer this is always 1.  Farrago extensions,
+     * especially those that initialize resources via
+     * {@link FarragoSessionFactory#specializedInitialization(
+     *     FarragoAllocationOwner)}, may need to alter this value.
+     *
+     * @return the number of ground references for this server
+     */
+    protected int getGroundReferences()
+    {
+        return 1;
     }
 
     /**

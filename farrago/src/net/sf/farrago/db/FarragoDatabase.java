@@ -81,6 +81,7 @@ public class FarragoDatabase extends FarragoCompoundAllocation
     private FarragoRepos userRepos;
     private FennelDbHandle fennelDbHandle;
     private OJRexImplementorTable ojRexImplementorTable;
+    protected FarragoSessionFactory sessionFactory;
 
     /**
      * Cache of all sorts of stuff.
@@ -121,6 +122,8 @@ public class FarragoDatabase extends FarragoCompoundAllocation
             traceConfigFile = new File(loggingConfigFile);
 
             dumpTraceConfig();
+
+            this.sessionFactory = sessionFactory;
 
             systemRepos = sessionFactory.newRepos(this, false);
             userRepos = systemRepos;
@@ -289,6 +292,7 @@ public class FarragoDatabase extends FarragoCompoundAllocation
         tracer.info("shutdown");
         assert (instance != null);
         try {
+            instance.sessionFactory.specializedShutdown();
             instance.close(false);
         } finally {
             instance = null;

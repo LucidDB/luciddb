@@ -74,6 +74,11 @@ public class FarragoDbSessionFactory implements FarragoSessionFactory
     {
     }
 
+    // implement FarragoSessionFactory    
+    public void specializedShutdown()
+    {
+    }
+
     // implement FarragoSessionFactory
     public void cleanupSessions()
     {

@@ -94,6 +94,13 @@ public interface FarragoSessionFactory
 
 
     /**
+     * Allows extensions of Farrago to perform their own
+     * shutdown tasks.  
+     */
+    public void specializedShutdown();
+
+
+    /**
      * Gives this factory a chance to clean up after a session has been closed.
      */
     public void cleanupSessions();
