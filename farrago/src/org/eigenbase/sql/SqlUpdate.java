@@ -24,6 +24,8 @@
 package org.eigenbase.sql;
 
 import org.eigenbase.sql.parser.SqlParserPos;
+import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.eigenbase.sql.validate.SqlValidator;
 
 import java.util.Iterator;
 
@@ -167,7 +169,7 @@ public class SqlUpdate extends SqlCall
         }
     }
 
-    public void validate(SqlValidator validator, SqlValidator.Scope scope)
+    public void validate(SqlValidator validator, SqlValidatorScope scope)
     {
         validator.validateUpdate(this);
     }

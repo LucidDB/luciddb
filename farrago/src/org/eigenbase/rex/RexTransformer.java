@@ -26,16 +26,16 @@ package org.eigenbase.rex;
 import java.util.HashSet;
 
 import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.rex.*;
-import org.eigenbase.sql.SqlOperatorTable;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.type.*;
 
 
 /**
- * Takes a rextree and transforms it into another in one sense equivalent rextree.
- * Nodes in tree will be modified and hence tree will not remain unchanged
- * @pre The RexTree needs to have gone through the {@link org.eigenbase.sql.SqlValidator} prior to using this class
+ * Takes a tree of {@link RexNode} objects and transforms it into another in
+ * one sense equivalent tree. Nodes in tree will be modified and hence tree
+ * will not remain unchanged.
+ *
+ * @pre The RexTree must have been validated prior to using this class
  *
  * @author wael
  * @since Mar 8, 2004

@@ -24,8 +24,9 @@ package org.eigenbase.sql.fun;
 
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.type.OperandsTypeChecking;
-import org.eigenbase.sql.type.ReturnTypeInference;
 import org.eigenbase.sql.type.ReturnTypeInferenceImpl;
 
 /**
@@ -55,8 +56,8 @@ public class SqlOverOperator extends SqlBinaryOperator
     public void validateCall(
         SqlCall call,
         SqlValidator validator,
-        SqlValidator.Scope scope,
-        SqlValidator.Scope operandScope)
+        SqlValidatorScope scope,
+        SqlValidatorScope operandScope)
     {
         assert call.operator == this;
         final SqlNode[] operands = call.getOperands();

@@ -1,6 +1,6 @@
 /*
 // Saffron preprocessor and data engine.
-// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2002-2005 Disruptive Tech
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -33,11 +33,8 @@ import org.eigenbase.oj.util.OJUtil;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptConnection;
 import org.eigenbase.relopt.RelOptPlanWriter;
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.reltype.RelDataTypeFactoryImpl;
 import org.eigenbase.sql.SqlNode;
-import org.eigenbase.sql.SqlOperatorTable;
-import org.eigenbase.sql.SqlValidator;
+import org.eigenbase.sql.validate.*;
 import org.eigenbase.sql.parser.SqlParseException;
 import org.eigenbase.sql.parser.SqlParser;
 import org.eigenbase.sql.fun.*;
@@ -98,7 +95,7 @@ public class ConverterTest extends TestCase
             throw new AssertionFailedError(e.toString());
         }
         final SqlValidator validator =
-            new SqlValidator(
+            SqlValidatorUtil.newValidator(
                 SqlStdOperatorTable.instance(),
                 testContext.seeker,
                 testContext.connection.getRelOptSchema().getTypeFactory());
@@ -139,7 +136,7 @@ public class ConverterTest extends TestCase
      */
     static class TestContext
     {
-        private final SqlValidator.CatalogReader seeker;
+        private final SqlValidatorCatalogReader seeker;
         private final Connection jdbcConnection;
         private final RelOptConnection connection;
         Environment env;

@@ -24,13 +24,17 @@
 package org.eigenbase.sql.advise;
 
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.eigenbase.sql.validate.SqlValidatorCatalogReader;
+import org.eigenbase.sql.validate.SqlValidatorImpl;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import net.sf.farrago.util.FarragoException;
 
 /**
- * <code>SqlAdvisorValidator</code> is used by SqlAdvisor to traverse the parse  * tree of a SQL statement, not for validation purpose but for setting up the 
- * scopes and namespaces to facilitate retrieval of SQL statement completion 
+ * <code>SqlAdvisorValidator</code> is used by SqlAdvisor to traverse the parse
+ * tree of a SQL statement, not for validation purpose but for setting up the
+ * scopes and namespaces to facilitate retrieval of SQL statement completion
  * hints
  *
  * @author tleung
@@ -38,7 +42,7 @@ import net.sf.farrago.util.FarragoException;
  *
  * @since Jan 16, 2005
  */
-public class SqlAdvisorValidator extends SqlValidator
+public class SqlAdvisorValidator extends SqlValidatorImpl
 {
     //~ Constructors ----------------------------------------------------------
 
@@ -52,9 +56,9 @@ public class SqlAdvisorValidator extends SqlValidator
      */
     public SqlAdvisorValidator(
         SqlOperatorTable opTab,
-        CatalogReader catalogReader,
+        SqlValidatorCatalogReader catalogReader,
         RelDataTypeFactory typeFactory)
-    {   
+    {
         super(opTab, catalogReader, typeFactory);
     }
 
@@ -67,7 +71,7 @@ public class SqlAdvisorValidator extends SqlValidator
      * @param id
      * @param scope
      */
-    public void validateIdentifier(SqlIdentifier id, Scope scope)
+    public void validateIdentifier(SqlIdentifier id, SqlValidatorScope scope)
     {
         String ppstring = id.getParserPosition().toString();
         sqlids.put(ppstring, id);
@@ -75,57 +79,57 @@ public class SqlAdvisorValidator extends SqlValidator
     }
 
     /**
-     * call the parent class method and mask any exception thrown
+     * Calls the parent class method and mask any exception thrown.
      */
     public RelDataType deriveType(
-        Scope scope,
+        SqlValidatorScope scope,
         SqlNode operand)
     {
+        // REVIEW Do not mask Error (indicates a serious system problem) or
+        //   UnsupportedOperationException (a bug).
         try {
             return super.deriveType(scope, operand);
-        }
-        catch (FarragoException e) {
+        } catch (FarragoException e) {
             return unknownType;
-        }
-        catch (UnsupportedOperationException e) {
+        } catch (UnsupportedOperationException e) {
             return unknownType;
-        }
-        catch (Error e) {
+        } catch (Error e) {
             return unknownType;
         }
     }
 
     // we do not need to validate from clause for traversing the parse tree
-    // because there is no SqlIdentifier in from clause that need to be 
+    // because there is no SqlIdentifier in from clause that need to be
     // registered into sqlids map
     protected void validateFrom(
         SqlNode node,
         RelDataType targetRowType,
-        Scope scope)
+        SqlValidatorScope scope)
     {
     }
 
     /**
-     * call the parent class method and mask any exception thrown
+     * Calls the parent class method and masks any exception thrown.
      */
     protected void validateWhereClause(SqlSelect select)
     {
         try {
             super.validateWhereClause(select);
-        }
-        catch (FarragoException e) {
+        } catch (FarragoException e) {
         }
     }
 
     /**
-     * call the parent class method and mask any exception thrown
+     * Calls the parent class method and masks any exception thrown.
      */
     protected void validateHavingClause(SqlSelect select)
     {
         try {
             super.validateHavingClause(select);
-        }
-        catch (FarragoException e) {
+        } catch (FarragoException e) {
         }
     }
-} // End of SqlAdvisorValidator
+}
+
+// End of SqlAdvisorValidator.java
+

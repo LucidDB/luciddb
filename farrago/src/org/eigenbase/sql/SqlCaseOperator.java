@@ -31,6 +31,8 @@ import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.util.Util;
 
 import java.util.ArrayList;
@@ -129,8 +131,8 @@ public class SqlCaseOperator extends SqlOperator
     public void validateCall(
         SqlCall call,
         SqlValidator validator,
-        SqlValidator.Scope scope,
-        SqlValidator.Scope operandScope)
+        SqlValidatorScope scope,
+        SqlValidatorScope operandScope)
     {
         final SqlCase sqlCase = (SqlCase) call;
         final SqlNodeList whenOperands = sqlCase.getWhenOperands();
@@ -152,7 +154,7 @@ public class SqlCaseOperator extends SqlOperator
     protected boolean checkArgTypes(
         SqlCall call,
         SqlValidator validator,
-        SqlValidator.Scope scope,
+        SqlValidatorScope scope,
         boolean throwOnFailure)
     {
         SqlCase caseCall = (SqlCase) call;
@@ -200,7 +202,7 @@ public class SqlCaseOperator extends SqlOperator
 
     protected RelDataType getType(
         SqlValidator validator,
-        SqlValidator.Scope scope,
+        SqlValidatorScope scope,
         RelDataTypeFactory typeFactory,
         CallOperands callOperands)
     {
@@ -210,9 +212,10 @@ public class SqlCaseOperator extends SqlOperator
         return getTypeFromValidator(callOperands, validator, scope, typeFactory);
     }
 
-    private RelDataType getTypeFromValidator(CallOperands callOperands,
+    private RelDataType getTypeFromValidator(
+        CallOperands callOperands,
         SqlValidator validator,
-        SqlValidator.Scope scope,
+        SqlValidatorScope scope,
         RelDataTypeFactory typeFactory)
     {
         SqlCase caseCall = (SqlCase) callOperands.getUnderlyingObject();

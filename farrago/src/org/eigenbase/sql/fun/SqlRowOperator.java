@@ -26,6 +26,8 @@ package org.eigenbase.sql.fun;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.type.UnknownParamInference;
@@ -70,7 +72,7 @@ public class SqlRowOperator extends SqlSpecialOperator
 
     protected RelDataType getType(
         SqlValidator validator,
-        SqlValidator.Scope scope,
+        SqlValidatorScope scope,
         RelDataTypeFactory typeFactory,
         CallOperands callOperands)
     {
@@ -80,7 +82,7 @@ public class SqlRowOperator extends SqlSpecialOperator
         RelDataType[] argTypes = callOperands.collectTypes();
         final String [] fieldNames = new String[argTypes.length];
         for (int i = 0; i < fieldNames.length; i++) {
-            fieldNames[i] = SqlValidator.deriveAliasFromOrdinal(i);
+            fieldNames[i] = SqlUtil.deriveAliasFromOrdinal(i);
         }
         return typeFactory.createStructType(argTypes, fieldNames);
     }
@@ -89,7 +91,7 @@ public class SqlRowOperator extends SqlSpecialOperator
     protected boolean checkArgTypes(
         SqlCall call,
         SqlValidator validator,
-        SqlValidator.Scope scope,
+        SqlValidatorScope scope,
         boolean throwOnFailure)
     {
         // any arguments are fine

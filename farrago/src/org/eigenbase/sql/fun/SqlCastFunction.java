@@ -27,6 +27,8 @@ import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.type.*;
@@ -55,20 +57,9 @@ public class SqlCastFunction extends SqlFunction
 
     //~ Methods ---------------------------------------------------------------
 
-    // private SqlNode returnNode;
-
-    /**
-     * Creates a call to this operand with an array of operands.
-     */
-
-    /* public SqlCall createCall(SqlNode [] operands) {
-    assert(operands.length == 2); // the parser should choke on more than 2 operands? test
-    returnNode = operands[1];
-    return super.createCall(new SqlNode [] {operands[0]});
-    } */
     protected RelDataType getType(
         SqlValidator validator,
-        SqlValidator.Scope scope,
+        SqlValidatorScope scope,
         RelDataTypeFactory typeFactory,
         CallOperands callOperands)
     {
@@ -76,7 +67,7 @@ public class SqlCastFunction extends SqlFunction
         RelDataType ret = callOperands.getType(1);
         RelDataType firstType = callOperands.getType(0);
         ret = typeFactory.createTypeWithNullability(ret, firstType.isNullable());
-        if (null!=validator) {
+        if (null != validator) {
             SqlCall call = (SqlCall) callOperands.getUnderlyingObject();
             validator.setValidatedNodeType(call.operands[0], ret);
         }
@@ -114,7 +105,7 @@ public class SqlCastFunction extends SqlFunction
     protected boolean checkArgTypes(
         SqlCall call,
         SqlValidator validator,
-        SqlValidator.Scope scope,
+        SqlValidatorScope scope,
         boolean throwOnFailure)
     {
         if (SqlUtil.isNullLiteral(call.operands[0], false)) {

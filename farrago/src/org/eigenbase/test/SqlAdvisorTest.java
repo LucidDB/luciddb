@@ -24,12 +24,12 @@
 package org.eigenbase.test;
 
 import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.sql.SqlValidator;
 import org.eigenbase.sql.advise.SqlAdvisor;
 import org.eigenbase.sql.advise.SqlAdvisorValidator;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.type.SqlTypeFactoryImpl;
+import org.eigenbase.sql.validate.SqlValidator;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -61,7 +61,7 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         expected.add("CONTACT");
         expected.add("ACCOUNT");
         expected.add("EMP_ADDRESS");
-        
+
         sql = "select a.empno, b.deptno from ^dummy a, sales.dummy b";
         assertHint(sql, expected); // join
 
@@ -78,10 +78,10 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         expected.add("BONUS");
         expected.add("SALGRADE");
         expected.add("EMP_ADDRESS");
-        
+
         sql = "select a.empno, b.deptno from dummy a, ^sales.dummy b";
         assertHint(sql, expected); // join
-        
+
         sql = "select a.empno, b.deptno from dummy a, sales.^";
         assertComplete(sql, expected);
     }
@@ -98,7 +98,7 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         expected.add("CONTACT");
         expected.add("ACCOUNT");
         expected.add("EMP_ADDRESS");
-        
+
         sql = "select a.empno, b.deptno from ^dummy a join sales.dummy b "
             + "on a.deptno=b.deptno where empno=1";
         assertHint(sql, expected); // from
@@ -112,11 +112,11 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         expected.add("BONUS");
         expected.add("SALGRADE");
         expected.add("EMP_ADDRESS");
-        
+
         sql = "select a.empno, b.deptno from dummy a join ^sales.dummy b "
             + "on a.deptno=b.deptno where empno=1";
         assertHint(sql, expected); // join
-        
+
         sql = "select a.empno, b.deptno from dummy a join sales.^";
         assertComplete(sql, expected); // join
         sql = "select a.empno, b.deptno from dummy a join sales.^ on";
@@ -140,7 +140,7 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         sql = "select a.empno, b.deptno from sales.emp a join sales.dept b "
             + "on ^a.deptno=b.dummy where empno=1";
         assertHint(sql, expected); // on left
-        
+
         sql = "select a.empno, b.deptno from sales.emp a join sales.dept b "
             + "on a.^";
         assertComplete(sql, expected); // on left
@@ -148,11 +148,11 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         expected.clear();
         expected.add("DEPTNO");
         expected.add("NAME");
-        
+
         sql = "select a.empno, b.deptno from sales.emp a join sales.dept b "
             + "on a.deptno=^b.dummy where empno=1";
         assertHint(sql, expected); // on right
-        
+
         sql = "select a.empno, b.deptno from sales.emp a join sales.dept b "
             + "on a.deptno=b.^ where empno=1";
         assertComplete(sql, expected); // on right
@@ -173,7 +173,7 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         expected.add("SAL");
         expected.add("COMM");
         expected.add("DEPTNO");
-        
+
         sql = "select a.empno, b.deptno from sales.emp a, sales.dept b "
             + "where b.deptno=^a.dummy";
         assertHint(sql, expected); // where list
@@ -194,11 +194,11 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         expected.add("COMM");
         expected.add("DEPTNO");
         expected.add("NAME");
-        
+
         sql = "select a.empno, b.deptno from sales.emp a, sales.dept b "
             + "where ^dummy=1";
         assertHint(sql, expected); // where list
-        
+
         sql = "select a.empno, b.deptno from sales.emp a, sales.dept b "
             + "where ^";
         assertComplete(sql, expected); // where list
@@ -218,11 +218,11 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         expected.add("COMM");
         expected.add("DEPTNO");
         expected.add("NAME");
-        
+
         sql = "select a.empno, b.deptno from sales.emp a join sales.dept b "
             + "on a.deptno=b.deptno where ^dummy=1";
         assertHint(sql, expected); // where list
-        
+
         sql = "select a.empno, b.deptno from sales.emp a join sales.dept b "
             + "on a.deptno=b.deptno where ^";
         assertComplete(sql, expected); // where list
@@ -236,11 +236,11 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         expected.add("SAL");
         expected.add("COMM");
         expected.add("DEPTNO");
-        
+
         sql = "select a.empno, b.deptno from sales.emp a join sales.dept b "
             + "on a.deptno=b.deptno where ^a.dummy=1";
         assertHint(sql, expected); // where list
-        
+
         sql = "select a.empno, b.deptno from sales.emp a join sales.dept b "
             + "on a.deptno=b.deptno where a.^";
         assertComplete(sql, expected); // where list
@@ -260,7 +260,7 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         expected.add("COMM");
         expected.add("DEPTNO");
         expected.add("NAME");
-        
+
         sql = "select ^dummy, b.dummy from sales.emp a join sales.dept b "
             + "on a.deptno=b.deptno where empno=1";
         assertHint(sql, expected); // select list
@@ -271,11 +271,11 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         expected.clear();
         expected.add("DEPTNO");
         expected.add("NAME");
-        
+
         sql = "select dummy, ^b.dummy from sales.emp a join sales.dept b "
             + "on a.deptno=b.deptno where empno=1";
         assertHint(sql, expected); // select list
-        
+
         sql = "select dummy, b.^ from sales.emp a join sales.dept b";
         assertComplete(sql, expected); // select list
 
@@ -292,10 +292,10 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         expected.add("SAL");
         expected.add("COMM");
         expected.add("DEPTNO");
-        
+
         sql = "select ^emp.dummy from sales.emp";
         assertHint(sql, expected); // select list
-        
+
         sql = "select emp.^ from sales.emp";
         assertComplete(sql, expected); // select list
     }
@@ -305,10 +305,10 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         ArrayList expected = new ArrayList();
         expected.add("SALES.EMP");
         expected.add("EMPNO");
-        
+
         sql = "select emp.empno from sales.emp where empno=1 order by ^dummy";
         assertHint(sql, expected); // where list
-        
+
         sql = "select emp.empno from sales.emp where empno=1 order by ^";
         assertComplete(sql, expected); // where list
     }
@@ -319,7 +319,7 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         ArrayList expected = new ArrayList();
         expected.add("X");
         expected.add("Y");
-        
+
         sql = "select ^t.dummy from (select 1 as x, 2 as y from sales.emp) as t where t.dummy=1";
         assertHint(sql, expected); // select list
 
@@ -329,7 +329,7 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         expected.clear();
         expected.add("X");
         expected.add("Y");
-        
+
         sql = "select t.x from (select 1 as x, 2 as y from sales.emp) as t where ^t.dummy=1";
         assertHint(sql, expected); // select list
 
@@ -401,7 +401,7 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         sql = "select ^from (select 1 as x, 2 as y from sales.emp), (select 2 as y from (select m from n where)) as t where t.dummy=1";
         expected = "select $suggest$ from (select 1 as x, 2 as y from sales.emp), (select 2 as y from (select m from n)) as t where t.dummy=1";
         assertSimplify(sql, expected);
-        
+
         sql = "select a.empno, b.deptno from dummy a, sales.^";
         expected = "select a.empno, b.deptno from dummy a, sales.$suggest$";
         assertSimplify(sql, expected);
@@ -427,7 +427,7 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
             sqlSansCaret.toString(), pos);
         assertEquals(results, expectedResults);
     }
-    
+
     /**
      * Tests that a given SQL statement simplifies to the expected result.
      *
@@ -485,7 +485,7 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         }
         return;
     }
-    
+
     private int checkCaret(String sql, StringBuffer sqlSansCaret)
     {
         int cursor = sql.indexOf('^');
@@ -498,7 +498,7 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         sqlSansCaret.append(sql.substring(0, cursor));
         sqlSansCaret.append(sql.substring(cursor + 1));
         return cursor;
-    } 
+    }
 
     public Tester getTester() {
         return new AdvisorTestImpl();

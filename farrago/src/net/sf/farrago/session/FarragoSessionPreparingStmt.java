@@ -30,6 +30,7 @@ import net.sf.farrago.util.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql2rel.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.oj.rel.*;

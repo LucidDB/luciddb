@@ -10,12 +10,12 @@
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -33,6 +33,7 @@ import net.sf.farrago.util.*;
 import net.sf.farrago.ojrex.*;
 
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.validate.SqlValidatorException;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.reltype.*;
@@ -62,16 +63,16 @@ public class FarragoUserDefinedRoutine
     private final FemRoutine routine;
 
     private final RelDataType returnType;
-    
+
     private final FarragoSessionStmtValidator stmtValidator;
 
     private final FarragoPreparingStmt preparingStmt;
-    
+
     private FemJar femJar;
 
     public FarragoUserDefinedRoutine(
         FarragoSessionStmtValidator stmtValidator,
-        FarragoPreparingStmt preparingStmt, 
+        FarragoPreparingStmt preparingStmt,
         FemRoutine routine,
         RelDataType returnType,
         RelDataType [] paramTypes)
@@ -128,7 +129,7 @@ public class FarragoUserDefinedRoutine
         FarragoRepos repos = stmtValidator.getRepos();
 
         // TODO jvs 18-Jan-2005:  support OUT and INOUT parameters
-        
+
         String externalName = routine.getExternalName();
         // TODO jvs 11-Jan-2005:  move some of this code to FarragoPluginCache
         String jarName = null;
@@ -213,7 +214,7 @@ public class FarragoUserDefinedRoutine
                     javaClassName);
             }
         }
-        
+
         Class javaClass;
         if (jarName == null) {
             try {
@@ -248,12 +249,12 @@ public class FarragoUserDefinedRoutine
                 preparingStmt.addJarUrl(femJar.getUrl());
             }
         }
-        
+
         String javaUnmangledMethodName = ReflectUtil.getUnmangledMethodName(
             javaClass,
             javaMethodName,
             javaParamClasses);
-        
+
         Method javaMethod;
         try {
             javaMethod = javaClass.getMethod(javaMethodName, javaParamClasses);
@@ -337,7 +338,7 @@ public class FarragoUserDefinedRoutine
     {
         FarragoRexToOJTranslator farragoTranslator =
             (FarragoRexToOJTranslator) translator;
-        
+
         assert(call.getOperator() == this);
         ExpressionList exprList = new ExpressionList();
         Method method;
@@ -358,7 +359,7 @@ public class FarragoUserDefinedRoutine
         }
 
         Expression callExpr = new MethodCall(
-            OJClass.forClass(method.getDeclaringClass()), 
+            OJClass.forClass(method.getDeclaringClass()),
             method.getName(),
             exprList);
 
@@ -393,8 +394,8 @@ public class FarragoUserDefinedRoutine
                                     varException,
                                     Literal.makeLiteral(
                                         method.getName()))))))));
-        
-        
+
+
         tryStmt.setFinallyBody(
             new StatementList(
                 new ExpressionStatement(
@@ -417,7 +418,7 @@ public class FarragoUserDefinedRoutine
                 farragoTranslator.createSetNullStatement(nullVar, true));
             return nullVar;
         }
-        
+
         Variable varResult =
             farragoTranslator.getRelImplementor().newVariable();
         farragoTranslator.addStatement(
@@ -436,15 +437,15 @@ public class FarragoUserDefinedRoutine
                         AssignmentExpression.EQUALS,
                         callExpr))));
         farragoTranslator.addStatement(tryStmt);
-        
+
         RelDataType actualReturnType;
         if (method.getReturnType().isPrimitive()) {
-            actualReturnType = 
+            actualReturnType =
                 stmtValidator.getTypeFactory().createTypeWithNullability(
                     returnType,
                     false);
         } else {
-            actualReturnType = 
+            actualReturnType =
                 stmtValidator.getTypeFactory().createJavaType(
                     method.getReturnType());
         }
@@ -454,7 +455,7 @@ public class FarragoUserDefinedRoutine
             null,
             varResult);
     }
-    
+
     // implement OJRexImplementor
     public boolean canImplement(RexCall call)
     {

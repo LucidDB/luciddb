@@ -26,6 +26,7 @@ import java.math.*;
 
 import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.validate.SqlValidatorImpl;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
 
@@ -36,7 +37,7 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class FarragoSqlValidator extends SqlValidator
+class FarragoSqlValidator extends SqlValidatorImpl
 {
     //~ Constructors ----------------------------------------------------------
 
@@ -70,7 +71,7 @@ class FarragoSqlValidator extends SqlValidator
     public void validateLiteral(SqlLiteral literal)
     {
         super.validateLiteral(literal);
-        
+
         // REVIEW jvs 4-Aug-2005:  This should probably be calling over to the
         // available calculator implementations to see what they support.  For
         // now use ESP instead.

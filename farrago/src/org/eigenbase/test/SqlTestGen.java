@@ -24,7 +24,7 @@ package org.eigenbase.test;
 
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.SqlCollation;
-import org.eigenbase.sql.SqlValidator;
+import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.util.Util;
 
 import java.io.File;
@@ -44,7 +44,8 @@ import java.util.ArrayList;
  * @since Nov 10, 2004
  * @version $Id$
  **/
-public class SqlTestGen {
+public class SqlTestGen
+{
     public static void main(String[] args) {
         new SqlTestGen().genValidatorTest();
     }

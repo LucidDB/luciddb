@@ -24,6 +24,7 @@ package org.eigenbase.sql;
 
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.fun.SqlWindowOperator;
+import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.util.Util;
 import org.eigenbase.resource.EigenbaseResource;
 
@@ -83,7 +84,7 @@ public class SqlWindow extends SqlCall
     }
 
     public void unparse(SqlWriter writer, int leftPrec, int rightPrec) {
-        // Override, so we don't print extra parentheses. 
+        // Override, so we don't print extra parentheses.
         operator.unparse(writer, operands, 0, 0);
     }
 

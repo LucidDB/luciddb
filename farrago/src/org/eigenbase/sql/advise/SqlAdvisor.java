@@ -23,12 +23,12 @@
 
 package org.eigenbase.sql.advise;
 
-import java.util.List;
-import org.eigenbase.sql.SqlValidator;
 import org.eigenbase.sql.SqlNode;
+import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.sql.validate.SqlValidatorImpl;
+import org.eigenbase.sql.parser.SqlParseException;
 import org.eigenbase.sql.parser.SqlParser;
 import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.parser.SqlParseException;
 
 /**
  * An assistant which offers hints and corrections to a partially-formed SQL
@@ -43,7 +43,7 @@ public class SqlAdvisor
     //~ Static fields/initializers --------------------------------------------
 
     // Flags indicating precision/scale combinations
-    
+
     //~ Instance fields -------------------------------------------------------
     private final SqlValidator validator;
     private final String hintToken = "$suggest$";
@@ -61,23 +61,23 @@ public class SqlAdvisor
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * Get completion hints for a partially completed or syntatically incorrect      * sql statement with cursor pointing to the position where completion 
+     * Get completion hints for a partially completed or syntatically incorrect      * sql statement with cursor pointing to the position where completion
      * hints are requested
-     * 
+     *
      * @param sql A partial or syntatically incorrect sql statement for which
      * to retrieve completion hints
      *
-     * @param cursor to indicate the 0-based cursor position in the query at 
-     * which completion hints need to be retrieved.  
+     * @param cursor to indicate the 0-based cursor position in the query at
+     * which completion hints need to be retrieved.
      */
     public String[] getCompletionHints(String sql, int cursor)
         throws SqlParseException
     {
         String simpleSql = simplifySql(sql, cursor);
         int idx = simpleSql.indexOf(hintToken);
-        int idxAdj = adjustTokenPosition(simpleSql, idx); 
-        if (idxAdj >=0 ) { 
-            idx = idxAdj; 
+        int idxAdj = adjustTokenPosition(simpleSql, idx);
+        if (idxAdj >=0 ) {
+            idx = idxAdj;
         }
         SqlParserPos pp = new SqlParserPos(1, idx+1);
         return getCompletionHints(simpleSql, pp);
@@ -86,12 +86,12 @@ public class SqlAdvisor
     /**
      * Get completion hints for a syntatically correct sql statement with
      * dummy SqlIdentifier
-     * 
-     * @param sql A syntatically correct sql statement for which to retrieve 
+     *
+     * @param sql A syntatically correct sql statement for which to retrieve
      * completion hints
      * @param pp to indicate the line and column position in the query at which
      * completion hints need to be retrieved.  For example,
-     * "select a.ename, b.deptno from sales.emp a join sales.dept b 
+     * "select a.ename, b.deptno from sales.emp a join sales.dept b
      * "on a.deptno=b.deptno where empno=1";
      * setting pp to 'Line 1, Column 17' returns all the possible column names
      * that can be selected from sales.dept table
@@ -116,16 +116,17 @@ public class SqlAdvisor
             // we are doing a best effort here to try to come up with the
             // requested completion hints
         }
-        return validator.lookupHints(sqlNode, pp);
+        // XXX new interface?
+        return ((SqlValidatorImpl) validator).lookupHints(sqlNode, pp);
     }
 
     /**
      * Turn a partially completed or syntatically incorrect sql statement into
      * a simplified, valid one that can be passed into getCompletionHints()
-     * 
-     * @param sql A partial or syntatically incorrect sql statement 
+     *
+     * @param sql A partial or syntatically incorrect sql statement
      * @param cursor to indicate column position in the query at which
-     * completion hints need to be retrieved.  
+     * completion hints need to be retrieved.
      *
      * @return a completed, valid (and possibly simplified SQL statement
      *
@@ -141,19 +142,19 @@ public class SqlAdvisor
      * completion hint is to be requested.
      *
      * getCompletionHints takes a 1-based SqlParserPos which points to the
-     * beginning of a SqlIdentifier.  
-     * 
-     * For example, the caret in 'where b.^' indicates the cursor position 
-     * needed for simplifySql, while getCompletionHints will require the 
+     * beginning of a SqlIdentifier.
+     *
+     * For example, the caret in 'where b.^' indicates the cursor position
+     * needed for simplifySql, while getCompletionHints will require the
      * same clause to be represented as 'where ^b.$suggest$'
-     * 
+     *
      */
     private int adjustTokenPosition(String sql, int cursor)
     {
         if (sql.charAt(cursor-1) == '.') {
             int idxLastSpace = sql.lastIndexOf(' ', cursor-1);
             int idxLastEqual = sql.lastIndexOf('=', cursor-1);
-            return idxLastSpace < idxLastEqual ? 
+            return idxLastSpace < idxLastEqual ?
                 idxLastEqual+1 : idxLastSpace+1;
         } else {
             return -1;
@@ -164,7 +165,7 @@ public class SqlAdvisor
      * Parser does not like the '$suggest$' token used in SqlSimpleParser.
      * Convert it to a 'dummy' token for Parser and Validator. The validator
      * would not really try to interpret this token in context.
-     * 
+     *
      * @param sql The sql containing '$suggest$' token
      *
      * @return a new sql with $suggest$ token replaced by dummy

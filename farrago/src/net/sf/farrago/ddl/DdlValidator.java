@@ -47,6 +47,7 @@ import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.validate.SqlValidatorException;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.util.*;
 import org.netbeans.api.mdr.events.*;
@@ -249,7 +250,7 @@ public class DdlValidator extends FarragoCompoundAllocation
         list.add(new DdlRelationalHandler(medHandler));
         return list;
     }
-    
+
     // implement FarragoSessionDdlValidator
     public FarragoSessionStmtValidator getStmtValidator()
     {
@@ -373,19 +374,19 @@ public class DdlValidator extends FarragoCompoundAllocation
     {
         parserOffsetMap.put(obj, pos);
     }
-    
+
     // implement FarragoSessionDdlValidator
     public SqlParserPos getParserOffset(RefObject obj)
     {
         return (SqlParserPos) parserOffsetMap.get(obj);
     }
-    
+
     // implement FarragoSessionDdlValidator
     public void setSqlDefinition(RefObject obj, SqlNode sqlNode)
     {
         sqlMap.put(obj, sqlNode);
     }
-    
+
     // implement FarragoSessionDdlValidator
     public SqlNode getSqlDefinition(RefObject obj)
     {
@@ -396,7 +397,7 @@ public class DdlValidator extends FarragoCompoundAllocation
         }
         return sqlNode;
     }
-    
+
     // implement FarragoSessionDdlValidator
     public void setSchemaObjectName(
         CwmModelElement schemaElement,
@@ -605,7 +606,7 @@ public class DdlValidator extends FarragoCompoundAllocation
         checkValidationExcnQueue();
 
         actionHandlers = defineHandlers();
-        
+
         if (ddlStmt instanceof DdlDropStmt) {
             // Process deletions until a fixpoint is reached, using MDR events
             // to implement RESTRICT/CASCADE.
@@ -721,13 +722,13 @@ public class DdlValidator extends FarragoCompoundAllocation
                     // REVIEW: error message assumes collection is sorted by
                     // definition order, which may not be guaranteed?
                     throw newPositionalError(
-                        element, 
+                        element,
                         res.newValidatorDuplicateNames(
                             getRepos().getLocalizedObjectName(
                                 null,
                                 element.getName(),
                                 element.refClass()),
-                            getRepos().getLocalizedObjectName(container), 
+                            getRepos().getLocalizedObjectName(container),
                             getParserPosString(other)));
                 } else {
                     CwmModelElement newElement;
@@ -744,7 +745,7 @@ public class DdlValidator extends FarragoCompoundAllocation
 
                     // new object clashes with existing object
                     throw newPositionalError(
-                        newElement, 
+                        newElement,
                         res.newValidatorNameInUse(
                             getRepos().getLocalizedObjectName(
                                 null,
@@ -817,7 +818,7 @@ public class DdlValidator extends FarragoCompoundAllocation
     {
         FarragoSessionVariables sessionVariables =
             getStmtValidator().getSessionVariables();
-            
+
         sessionVariables.catalogName =
             schema.getNamespace().getName();
         sessionVariables.schemaName =
@@ -830,7 +831,7 @@ public class DdlValidator extends FarragoCompoundAllocation
             FemSqlpathElement element = (FemSqlpathElement) iter.next();
             SqlIdentifier id = new SqlIdentifier(
                 new String [] {
-                    element.getSearchedSchemaCatalogName(), 
+                    element.getSearchedSchemaCatalogName(),
                     element.getSearchedSchemaName()
                 },
                 null);
@@ -850,11 +851,11 @@ public class DdlValidator extends FarragoCompoundAllocation
         String msg = parserContext.toString();
         FarragoException contextExcn = res.newValidatorPositionContext(msg, ex);
         contextExcn.setPosition(
-            parserContext.getLineNum(), 
+            parserContext.getLineNum(),
             parserContext.getColumnNum());
         return contextExcn;
     }
-    
+
     /**
      * Add a new DropRule.
      *
@@ -1037,7 +1038,7 @@ public class DdlValidator extends FarragoCompoundAllocation
         }
         return false;
     }
-    
+
     //~ Inner Classes ---------------------------------------------------------
 
     /**

@@ -1,6 +1,6 @@
 /*
 // Saffron preprocessor and data engine.
-// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2002-2005 Disruptive Tech
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -21,12 +21,7 @@ package net.sf.saffron.oj.stmt;
 
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.sql.ResultSet;
-import java.util.Enumeration;
-import java.util.Iterator;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import net.sf.saffron.oj.OJConnectionRegistry;
@@ -42,21 +37,17 @@ import openjava.ptree.*;
 import openjava.ptree.util.*;
 import openjava.tools.*;
 
-import org.eigenbase.javac.*;
 import org.eigenbase.oj.*;
-import org.eigenbase.oj.rel.JavaRel;
 import org.eigenbase.oj.rel.JavaRelImplementor;
 import org.eigenbase.oj.stmt.*;
-import org.eigenbase.oj.util.ClassCollector;
 import org.eigenbase.oj.util.JavaRexBuilder;
 import org.eigenbase.oj.util.OJUtil;
-import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.*;
-import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.RexBuilder;
 import org.eigenbase.runtime.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.validate.*;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.parser.SqlParseException;
 import org.eigenbase.sql.parser.SqlParser;
@@ -236,16 +227,16 @@ public class OJStatement extends OJPreparingStmt
                 "Error while parsing SQL '" + queryString + "'");
         }
         RelOptSchema schema = connection.getRelOptSchema();
-        SqlValidator.CatalogReader catalogReader;
-        if (schema instanceof SqlValidator.CatalogReader) {
-            catalogReader = (SqlValidator.CatalogReader) schema;
+        SqlValidatorCatalogReader catalogReader;
+        if (schema instanceof SqlValidatorCatalogReader) {
+            catalogReader = (SqlValidatorCatalogReader) schema;
         } else {
             catalogReader =
                 new SqlToOpenjavaConverter.SchemaCatalogReader(schema, false);
         }
         setupFactories();
         final SqlValidator validator =
-            new SqlValidator(
+            SqlValidatorUtil.newValidator(
                 SqlStdOperatorTable.instance(),
                 catalogReader,
                 schema.getTypeFactory());
@@ -358,7 +349,7 @@ public class OJStatement extends OJPreparingStmt
         return super.prepareSql(
             sqlQuery,runtimeContextClass,validator,needValidation);
     }
-    
+
     // override OJPreparingStmt
     protected void bindArgument(Argument arg)
     {
@@ -399,7 +390,7 @@ public class OJStatement extends OJPreparingStmt
                             new Variable(varDecl.getVariable())))));
         }
     }
-    
+
     private static class ArgumentInfo implements Environment.VariableInfo
     {
         private Argument arg;
@@ -413,7 +404,7 @@ public class OJStatement extends OJPreparingStmt
         {
             return arg.getType();
         }
-        
+
         public RelOptSchema getRelOptSchema()
         {
             if (arg.getValue() == null) {

@@ -29,7 +29,8 @@ import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.sql.SqlCollation;
 import org.eigenbase.sql.SqlNode;
-import org.eigenbase.sql.SqlValidator;
+import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.sql.validate.*;
 import org.eigenbase.sql.parser.SqlParseException;
 import org.eigenbase.sql.parser.SqlParser;
 import org.eigenbase.sql.fun.*;
@@ -42,7 +43,7 @@ import java.util.regex.Pattern;
 
 /**
  * An abstract base class for implementing tests against
- * {@link org.eigenbase.sql.SqlValidator} and derived classes.
+ * {@link SqlValidator}.
  *
  * <p>A derived class can refine this test in two ways. First, it can add
  * <code>testXxx()</code> methods, to test more functionality.
@@ -215,25 +216,27 @@ public class SqlValidatorTestCase extends TestCase
      * Implementation of {@link org.eigenbase.test.SqlValidatorTestCase.Tester}
      * which talks to a mock catalog.
      */
-    public class TesterImpl implements Tester {
+    public class TesterImpl implements Tester
+    {
         private final Pattern lineColPattern =
             Pattern.compile("At line (.*), column (.*)");
 
-        public SqlValidator getValidator() {
+        public SqlValidator getValidator()
+        {
             final RelDataTypeFactory typeFactory = new SqlTypeFactoryImpl();
-            return new SqlValidator(
-                SqlStdOperatorTable.instance(),
+            return SqlValidatorUtil.newValidator(SqlStdOperatorTable.instance(),
                 new MockCatalogReader(typeFactory),
                 typeFactory);
         }
 
         /**
          * Asserts either if a sql query is valid or not.
+         *
          * @param sql
          * @param expectedMsgPattern If this parameter is null the query must be
-         *   valid for the test to pass;
-         *   If this parameter is not null the query must be malformed and the msg
-         *   pattern must match the the error raised for the test to pass.
+         * valid for the test to pass;
+         * If this parameter is not null the query must be malformed and the msg
+         * pattern must match the the error raised for the test to pass.
          */
         public void assertExceptionIsThrown(
             String sql,
@@ -355,8 +358,7 @@ public class SqlValidatorTestCase extends TestCase
             return sqlNode;
         }
 
-        public void checkType(
-            String sql,
+        public void checkType(String sql,
             String expected)
         {
             RelDataType actualType = getResultType(sql);
@@ -369,8 +371,7 @@ public class SqlValidatorTestCase extends TestCase
             }
         }
 
-        public void checkCollation(
-            String sql,
+        public void checkCollation(String sql,
             String expectedCollationName,
             SqlCollation.Coercibility expectedCoercibility)
         {
@@ -385,8 +386,7 @@ public class SqlValidatorTestCase extends TestCase
             assertEquals(expectedCoercibilityOrd, actualCoercibility);
         }
 
-        public void checkCharset(
-            String sql,
+        public void checkCharset(String sql,
             Charset expectedCharset)
         {
             sql = "select " + sql + " from (values(true))";

@@ -22,12 +22,9 @@
 */
 package net.sf.farrago.session;
 
-import net.sf.farrago.catalog.*;
-import net.sf.farrago.util.*;
-
-import org.eigenbase.sql.*;
-import org.eigenbase.sql.parser.*;
-
+import net.sf.farrago.util.FarragoException;
+import org.eigenbase.sql.parser.SqlParserPos;
+import org.eigenbase.sql.validate.SqlValidatorException;
 
 /**
  * FarragoSessionParser represents an object capable of parsing Farrago
@@ -49,7 +46,7 @@ public interface FarragoSessionParser
      *
      * @param sql the SQL text to be parsed
      *
-     * @param expectStatement if true, expect a statement; if false, 
+     * @param expectStatement if true, expect a statement; if false,
      * expect a row-expression
      *
      * @return for DDL, a FarragoSessionDdlStmt; for DML or query, top-level

@@ -27,6 +27,8 @@ import org.eigenbase.sql.type.ReturnTypeInference;
 import org.eigenbase.sql.type.UnknownParamInference;
 import org.eigenbase.sql.type.OperandsTypeChecking;
 import org.eigenbase.sql.type.ReturnTypeInferenceImpl;
+import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.eigenbase.sql.validate.SqlValidator;
 
 /**
  * SqlSetOperator represents a relational set theory operator
@@ -74,8 +76,8 @@ public class SqlSetOperator extends SqlBinaryOperator
     public void validateCall(
         SqlCall call,
         SqlValidator validator,
-        SqlValidator.Scope scope,
-        SqlValidator.Scope operandScope)
+        SqlValidatorScope scope,
+        SqlValidatorScope operandScope)
     {
         validator.validateQuery(call);
     }

@@ -32,10 +32,10 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.sql.SqlNode;
-import org.eigenbase.sql.SqlValidator;
+import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.parser.SqlParser;
-import org.eigenbase.sql.fun.*;
-import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.type.SqlTypeFactoryImpl;
+import org.eigenbase.sql.validate.*;
 import org.eigenbase.sql2rel.SqlToRelConverter;
 import org.eigenbase.util.Util;
 
@@ -65,7 +65,7 @@ public class SqlToRelConverterTest extends TestCase
         final RelDataTypeFactory typeFactory =
             new SqlTypeFactoryImpl();
 
-        final SqlValidator.CatalogReader catalogReader =
+        final SqlValidatorCatalogReader catalogReader =
             createCatalogReader(typeFactory);
         final SqlValidator validator =
             createValidator(catalogReader, typeFactory);
@@ -112,33 +112,33 @@ public class SqlToRelConverterTest extends TestCase
     }
 
     /**
-     * Factory method for a {@link SqlValidator}.
+     * Factory method to create a {@link SqlValidator}.
      */
     protected SqlValidator createValidator(
-        SqlValidator.CatalogReader catalogReader,
+        SqlValidatorCatalogReader catalogReader,
         RelDataTypeFactory typeFactory)
     {
-        return new SqlValidator(
+        return SqlValidatorUtil.newValidator(
             SqlStdOperatorTable.instance(),
             new MockCatalogReader(typeFactory),
             typeFactory);
     }
 
     /**
-     * Factory method for a {@link SqlValidator.CatalogReader}.
+     * Factory method for a {@link SqlValidatorCatalogReader}.
      */
-    protected SqlValidator.CatalogReader createCatalogReader(
+    protected SqlValidatorCatalogReader createCatalogReader(
         RelDataTypeFactory typeFactory)
     {
         return new MockCatalogReader(typeFactory);
     }
 
     private class MockRelOptSchema implements RelOptSchema {
-        private final SqlValidator.CatalogReader catalogReader;
+        private final SqlValidatorCatalogReader catalogReader;
         private final RelDataTypeFactory typeFactory;
 
         public MockRelOptSchema(
-            SqlValidator.CatalogReader catalogReader,
+            SqlValidatorCatalogReader catalogReader,
             RelDataTypeFactory typeFactory)
         {
             this.catalogReader = catalogReader;
@@ -147,7 +147,7 @@ public class SqlToRelConverterTest extends TestCase
 
         public RelOptTable getTableForMember(String[] names)
         {
-            final SqlValidator.Table table = catalogReader.getTable(names);
+            final SqlValidatorTable table = catalogReader.getTable(names);
             final RelDataType rowType = table.getRowType();
             return new MockColumnSet(
                 names,

@@ -65,7 +65,7 @@
 <!-- ====================================================================== -->
 <!-- Eigenbase Validator resources 121,000 - 130,000 -->
 <!-- ====================================================================== -->
-<exception id="120000" name="ValidatorUnknownFunction" className="org.eigenbase.sql.SqlValidatorException">
+<exception id="120000" name="ValidatorUnknownFunction" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>No match found for function signature {0}</text>
 </exception>
 
@@ -75,7 +75,7 @@
 </exception>
  -->
 
-<exception id="120002" name="InvalidArgCount" className="org.eigenbase.sql.SqlValidatorException">
+<exception id="120002" name="InvalidArgCount" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Invalid number of arguments to function ''{0}''. Was expecting {1,number,#} arguments</text>
 </exception>
 
@@ -87,11 +87,11 @@
     <text>Cast function cannot convert value of type {0} to type {1}</text>
 </exception>
 
-<exception id="120011" name="UnknownDatatypeName" className="org.eigenbase.sql.SqlValidatorException">
+<exception id="120011" name="UnknownDatatypeName" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Unknown datatype name ''{0}''</text>
 </exception>
 
-<exception id="120020" name="IncompatibleValueType" className="org.eigenbase.sql.SqlValidatorException">
+<exception id="120020" name="IncompatibleValueType" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Values passed to VALUES operator must have compatible types</text>
 </exception>
 
@@ -99,19 +99,19 @@
     <text>Cannot apply {0} to the two different charsets {1} and {2}</text>
 </exception>
 
-<exception id="120040" name="InvalidOrderByPos" className="org.eigenbase.sql.SqlValidatorException">
+<exception id="120040" name="InvalidOrderByPos" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>ORDER BY is only allowed on top-level SELECT</text>
 </exception>
 
-<exception id="120050" name="UnknownIdentifier" className="org.eigenbase.sql.SqlValidatorException">
+<exception id="120050" name="UnknownIdentifier" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Unknown identifier ''{0}''</text>
 </exception>
 
-<exception id="120055" name="UnknownField" className="org.eigenbase.sql.SqlValidatorException">
+<exception id="120055" name="UnknownField" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Unknown field ''{0}''</text>
 </exception>
 
-<exception id="120060" name="UnknownTargetColumn" className="org.eigenbase.sql.SqlValidatorException">
+<exception id="120060" name="UnknownTargetColumn" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Unknown target column ''{0}''</text>
 </exception>
 
@@ -119,11 +119,11 @@
     <text>Number of INSERT target columns ({0,number}) does not equal number of source items ({1,number})</text>
 </exception>
 
-<exception id="120080" name="TableNameNotFound" className="org.eigenbase.sql.SqlValidatorException">
+<exception id="120080" name="TableNameNotFound" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Table ''{0}'' not found</text>
 </exception>
 
-<exception id="120085" name="ColumnNotFound" className="org.eigenbase.sql.SqlValidatorException">
+<exception id="120085" name="ColumnNotFound" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Column ''{0}'' not found in any table</text>
 </exception>
 
@@ -131,24 +131,24 @@
     <text>Column ''{0}'' not found in table {1}</text>
 </exception>
 
-<exception id="120100" name="ColumnAmbiguous" className="org.eigenbase.sql.SqlValidatorException">
+<exception id="120100" name="ColumnAmbiguous" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Column ''{0}'' is ambiguous</text>
 </exception>
 
 <!-- REVIEW: jhyde: should this be an internal error? is there a test? -->
-<exception id="120110" name="NeedQueryOp" className="org.eigenbase.sql.SqlValidatorException">
+<exception id="120110" name="NeedQueryOp" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Operand {0} must be a query</text>
 </exception>
 
-<exception id="120120" name="NeedSameTypeParameter" className="org.eigenbase.sql.SqlValidatorException">
+<exception id="120120" name="NeedSameTypeParameter" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Parameters must be of the same type</text>
 </exception>
 
-<exception id="120130" name="CanNotApplyOp2Type" className="org.eigenbase.sql.SqlValidatorException">
+<exception id="120130" name="CanNotApplyOp2Type" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Cannot apply ''{0}'' to arguments of type {1}. Supported form(s): {2}</text>
 </exception>
 
-<exception id="120140" name="ExpectedBoolean" className="org.eigenbase.sql.SqlValidatorException">
+<exception id="120140" name="ExpectedBoolean" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Expected a boolean type</text>
 </exception>
 
@@ -156,16 +156,16 @@
     <text>ELSE clause or at least one THEN clause must be non-NULL</text>
 </exception>
 
-<exception id="120160" name="FunctionUndefined" className="org.eigenbase.sql.SqlValidatorException">
+<exception id="120160" name="FunctionUndefined" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Function ''{0}'' is not defined</text>
 </exception>
 
 <!-- REVIEW: jhyde: sentence construction is not l10n-safe -->
-<exception id="120170" name="WrongNumberOfParam" className="org.eigenbase.sql.SqlValidatorException">
+<exception id="120170" name="WrongNumberOfParam" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Encountered {0} with {1,number} parameter(s); was expecting {2}</text>
 </exception>
 
-<exception id="120180" name="IllegalMixingOfTypes" className="org.eigenbase.sql.SqlValidatorException">
+<exception id="120180" name="IllegalMixingOfTypes" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Illegal mixing of types in CASE or COALESCE statement</text>
 </exception>
 
@@ -181,11 +181,11 @@
     <text>{0} is not comparable to {1}</text>
 </exception>
 
-<exception id="120225" name="TypeNotComparableNear" className="org.eigenbase.sql.SqlValidatorException">
+<exception id="120225" name="TypeNotComparableNear" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Cannot compare values of types ''{0}'', ''{1}''</text>
 </exception>
 
-<exception id="120230" name="WrongNumOfArguments" className="org.eigenbase.sql.SqlValidatorException">
+<exception id="120230" name="WrongNumOfArguments" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Wrong number of arguments to expression</text>
 </exception>
 
@@ -197,67 +197,67 @@
     <text>Types {0} not comparable to each other</text>
 </exception>
 
-<exception id="120260" name="NumberLiteralOutOfRange" className="org.eigenbase.sql.SqlValidatorException">
+<exception id="120260" name="NumberLiteralOutOfRange" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Numeric literal ''{0}'' out of range</text>
 </exception>
 
-<exception id="120270" name="StringFragsOnSameLine" className="org.eigenbase.sql.SqlValidatorException">
+<exception id="120270" name="StringFragsOnSameLine" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>String literal continued on same line</text>
 </exception>
 
-<exception id="120280" name="AliasMustBeSimpleIdentifier" className="org.eigenbase.sql.SqlValidatorException">
+<exception id="120280" name="AliasMustBeSimpleIdentifier" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Table or column alias must be a simple identifier</text>
 </exception>
 
-<exception id="120290" name="JoinRequiresCondition" className="org.eigenbase.sql.SqlValidatorException">
+<exception id="120290" name="JoinRequiresCondition" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>INNER, LEFT, RIGHT or FULL join requires a condition (NATURAL keyword or ON or USING clause)</text>
 </exception>
 
-<exception id="120300" name="CrossJoinDisallowsCondition" className="org.eigenbase.sql.SqlValidatorException">
+<exception id="120300" name="CrossJoinDisallowsCondition" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Cannot specify condition (NATURAL keyword, or ON or USING clause) following CROSS JOIN</text>
 </exception>
 
-<exception id="120310" name="NaturalDisallowsOnOrUsing" className="org.eigenbase.sql.SqlValidatorException">
+<exception id="120310" name="NaturalDisallowsOnOrUsing" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Cannot specify NATURAL keyword with ON or USING clause</text>
 </exception>
 
-<exception id="120320" name="WindowNotFound" className="org.eigenbase.sql.SqlValidatorException">
+<exception id="120320" name="WindowNotFound" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Window ''{0}'' not found</text>
 </exception>
 
-<exception id="120330" name="NotGroupExpr" className="org.eigenbase.sql.SqlValidatorException">
+<exception id="120330" name="NotGroupExpr" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Expression ''{0}'' is not being grouped</text>
 </exception>
 
-<exception id="120340" name="AggregateIllegalInWhere" className="org.eigenbase.sql.SqlValidatorException">
+<exception id="120340" name="AggregateIllegalInWhere" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Aggregate expression is illegal in WHERE clause</text>
 </exception>
 
-<exception id="120350" name="WhereMustBeBoolean" className="org.eigenbase.sql.SqlValidatorException">
+<exception id="120350" name="WhereMustBeBoolean" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>WHERE clause must be a condition</text>
 </exception>
 
-<exception id="120360" name="HavingMustBeBoolean" className="org.eigenbase.sql.SqlValidatorException">
+<exception id="120360" name="HavingMustBeBoolean" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>HAVING clause must be a condition</text>
 </exception>
 
-<exception id="120370" name="OverNonAggregate" className="org.eigenbase.sql.SqlValidatorException">
+<exception id="120370" name="OverNonAggregate" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>OVER must be applied to aggregate function</text>
 </exception>
 
-<exception id="120380" name="CannotOverrideWindowAttribute" className="org.eigenbase.sql.SqlValidatorException">
+<exception id="120380" name="CannotOverrideWindowAttribute" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Cannot override window attribute</text>
 </exception>
 
-<exception id="120390" name="ColumnCountMismatchInSetop" className="org.eigenbase.sql.SqlValidatorException">
+<exception id="120390" name="ColumnCountMismatchInSetop" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Column count mismatch in {0}</text>
 </exception>
 
-<exception id="120400" name="ColumnTypeMismatchInSetop" className="org.eigenbase.sql.SqlValidatorException">
+<exception id="120400" name="ColumnTypeMismatchInSetop" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Type mismatch in column {0,number} of {1}</text>
 </exception>
 
-<exception id="120410" name="BinaryLiteralOdd" className="org.eigenbase.sql.SqlValidatorException">
+<exception id="120410" name="BinaryLiteralOdd" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Binary literal string must contain an even number of hexits</text>
 </exception>
 
@@ -292,7 +292,7 @@
     <text>Argument to function ''{0}'' must not be NULL</text>
 </exception>
 
-<exception id="130070" name="NullIllegal" className="org.eigenbase.sql.SqlValidatorException">
+<exception id="130070" name="NullIllegal" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Illegal use of ''NULL''</text>
 </exception>
 

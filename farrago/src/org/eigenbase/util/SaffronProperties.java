@@ -149,28 +149,28 @@ public class SaffronProperties extends Properties
 
     /**
      * The string property "saffron.test.Name" is used by
-     * {@link net.sf.saffron.test.Main#suite}.
+     * {@link net.sf.farrago.test.FarragoTestCase} to filter tests.
      */
     public final StringProperty testName =
         new StringProperty(this, "saffron.test.Name", null);
 
     /**
      * The string property "saffron.test.Class" is used by
-     * {@link net.sf.saffron.test.Main#suite}.
+     * {@link net.sf.farrago.test.FarragoTestCase} to filter tests.
      */
     public final StringProperty testClass =
         new StringProperty(this, "saffron.test.Class", null);
 
     /**
      * The string property "saffron.test.Suite" is used by
-     * {@link net.sf.saffron.test.Main#suite}.
+     * {@link net.sf.farrago.test.FarragoTestCase} to filter tests.
      */
     public final StringProperty testSuite =
         new StringProperty(this, "saffron.test.Suite", null);
 
     /**
      * The string property "saffron.test.everything" is used by
-     * {@link net.sf.saffron.test.Main#suite}.
+     * {@link net.sf.farrago.test.FarragoTestCase} to filter tests.
      */
     public final BooleanProperty testEverything =
         new BooleanProperty(this, "saffron.test.everything", false);
@@ -203,7 +203,7 @@ public class SaffronProperties extends Properties
      * The string property "saffron.default.charset" is the name of the
      * default character set.
      * The default is "ISO-8859-1".
-     * It is used in {@link org.eigenbase.sql.SqlValidator}.
+     * It is used in {@link org.eigenbase.sql.validate.SqlValidator}.
      */
     public final StringProperty defaultCharset =
         new StringProperty(this, "saffron.default.charset", "ISO-8859-1");

@@ -1,6 +1,6 @@
 /*
 // Saffron preprocessor and data engine.
-// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2002-2005 Disruptive Tech
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,15 +19,6 @@
 
 package net.sf.saffron.oj.xlat;
 
-import java.math.BigDecimal;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-
 import junit.framework.AssertionFailedError;
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -39,15 +30,28 @@ import net.sf.saffron.oj.stmt.OJStatement;
 import openjava.ptree.*;
 
 import org.eigenbase.rel.JoinRel;
-import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.*;
+import org.eigenbase.relopt.RelOptConnection;
+import org.eigenbase.relopt.RelOptSchema;
+import org.eigenbase.relopt.RelOptTable;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.fun.*;
+import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.parser.SqlParseException;
 import org.eigenbase.sql.parser.SqlParser;
 import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.NlsString;
 import org.eigenbase.util.Util;
+
+import java.math.BigDecimal;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 
 
 /**
@@ -98,21 +102,17 @@ public class SqlToOpenjavaConverter
         final SqlNodeList orderList = query.getOrderList();
         final SqlNodeList selectList = query.getSelectList();
         final SqlNode where = query.getWhere();
-        final SqlValidator.Scope selectScope = validator.getScope(query,
-            SqlSelect.SELECT_OPERAND);
+        final SqlValidatorScope selectScope = validator.getSelectScope(query);
         final ExpressionList convertedSelectList =
             convertSelectList(selectScope, selectList, query);
-        final SqlValidator.Scope groupScope = validator.getScope(query,
-            SqlSelect.GROUP_OPERAND);
+        final SqlValidatorScope groupScope = validator.getGroupScope(query);
         final ExpressionList convertedGroup =
             convertGroup(groupScope, groupList);
-        final SqlValidator.Scope fromScope = validator.getScope(query,
-            SqlSelect.FROM_OPERAND);
+        final SqlValidatorScope fromScope = validator.getFromScope(query);
         final Expression convertedFrom = convertFrom(fromScope, from, false);
         final Expression convertedWhere =
             (where == null) ? null : convertExpression(selectScope, where);
-        final SqlValidator.Scope orderScope = validator.getScope(query,
-            SqlSelect.ORDER_OPERAND);
+        final SqlValidatorScope orderScope = validator.getOrderScope(query);
         final ExpressionList convertedOrder =
             convertOrder(orderScope, orderList);
         QueryExpression queryExpression =
@@ -139,7 +139,7 @@ public class SqlToOpenjavaConverter
     }
 
     private Expression convertExpression(
-        SqlValidator.Scope scope,
+        SqlValidatorScope scope,
         SqlNode node)
     {
         final SqlNode [] operands;
@@ -187,7 +187,7 @@ public class SqlToOpenjavaConverter
     }
 
     private Expression convertFrom(
-        SqlValidator.Scope scope,
+        SqlValidatorScope scope,
         SqlNode from,
         boolean inAs)
     {
@@ -293,7 +293,7 @@ public class SqlToOpenjavaConverter
     }
 
     private ExpressionList convertGroup(
-        SqlValidator.Scope scope,
+        SqlValidatorScope scope,
         SqlNodeList groupList)
     {
         if (groupList == null) {
@@ -342,7 +342,7 @@ public class SqlToOpenjavaConverter
     }
 
     private ExpressionList convertOrder(
-        SqlValidator.Scope scope,
+        SqlValidatorScope scope,
         SqlNodeList orderList)
     {
         if (orderList == null) {
@@ -420,7 +420,7 @@ public class SqlToOpenjavaConverter
      * "emp.empno".
      */
     private Expression convertIdentifier(
-        SqlValidator.Scope scope,
+        SqlValidatorScope scope,
         SqlIdentifier identifier)
     {
         identifier = scope.fullyQualify(identifier);
@@ -433,7 +433,7 @@ public class SqlToOpenjavaConverter
     }
 
     private QueryExpression convertRowConstructor(
-        SqlValidator.Scope scope,
+        SqlValidatorScope scope,
         SqlCall rowConstructor)
     {
         final SqlNode [] operands = rowConstructor.getOperands();
@@ -452,7 +452,7 @@ public class SqlToOpenjavaConverter
     }
 
     private ExpressionList convertSelectList(
-        SqlValidator.Scope scope,
+        SqlValidatorScope scope,
         SqlNodeList selectList, SqlSelect select)
     {
         ExpressionList list = new ExpressionList();
@@ -466,7 +466,7 @@ public class SqlToOpenjavaConverter
     }
 
     private Expression convertValues(
-        SqlValidator.Scope scope,
+        SqlValidatorScope scope,
         SqlCall values,
         boolean inAs)
     {
@@ -530,7 +530,7 @@ public class SqlToOpenjavaConverter
                 throw new AssertionFailedError(e.toString());
             }
             final SqlValidator validator =
-                new SqlValidator(
+                SqlValidatorUtil.newValidator(
                     SqlStdOperatorTable.instance(),
                     testContext.seeker,
                     testContext.schema.getTypeFactory());
@@ -546,7 +546,7 @@ public class SqlToOpenjavaConverter
      * {@link RelOptSchema saffron schema object}.
      */
     public static class SchemaCatalogReader
-        implements SqlValidator.CatalogReader
+        implements SqlValidatorCatalogReader
     {
         private final RelOptSchema schema;
         private final boolean upperCase;
@@ -559,7 +559,7 @@ public class SqlToOpenjavaConverter
             this.upperCase = upperCase;
         }
 
-        public SqlValidator.Table getTable(String [] names)
+        public SqlValidatorTable getTable(String [] names)
         {
             if (names.length != 1) {
                 return null;
@@ -568,7 +568,7 @@ public class SqlToOpenjavaConverter
                 schema.getTableForMember(
                     new String [] { maybeUpper(names[0]) });
             if (table != null) {
-                return new SqlValidator.Table() {
+                return new SqlValidatorTable() {
                         public RelDataType getRowType()
                         {
                             return table.getRowType();
@@ -601,7 +601,7 @@ public class SqlToOpenjavaConverter
             // TODO jvs 12-Feb-2005:  use OpenJava/reflection?
             return null;
         }
-        
+
         public String [] getAllSchemaObjectNames(String [] names)
         {
             throw new UnsupportedOperationException();
@@ -615,7 +615,7 @@ public class SqlToOpenjavaConverter
 
     static class TestContext
     {
-        private final SqlValidator.CatalogReader seeker;
+        private final SqlValidatorCatalogReader seeker;
         private final Connection jdbcConnection;
         private final RelOptConnection connection;
         private final RelOptSchema schema;

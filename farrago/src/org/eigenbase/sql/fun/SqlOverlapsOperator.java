@@ -23,6 +23,8 @@
 package org.eigenbase.sql.fun;
 
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.type.*;
@@ -109,7 +111,7 @@ public class SqlOverlapsOperator extends SqlSpecialOperator {
     protected boolean checkArgTypes(
         SqlCall call,
         SqlValidator validator,
-        SqlValidator.Scope scope,
+        SqlValidatorScope scope,
         boolean throwOnFailure) {
         if (!OperandsTypeChecking.typeNullableDatetime.check(
             call, validator, scope, call.operands[0], 0, throwOnFailure)) {

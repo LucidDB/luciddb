@@ -62,6 +62,7 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.validate.*;
 import org.eigenbase.sql.util.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql2rel.*;
@@ -80,7 +81,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     implements FarragoSessionPreparingStmt,
         RelOptConnection,
         RelOptSchema,
-        SqlValidator.CatalogReader
+        SqlValidatorCatalogReader
 {
     //~ Static fields/initializers --------------------------------------------
 
@@ -802,7 +803,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     }
 
     // implement SqlValidator.CatalogReader
-    public SqlValidator.Table getTable(String [] names)
+    public SqlValidatorTable getTable(String [] names)
     {
         FarragoSessionResolvedObject resolved =
             stmtValidator.resolveSchemaObjectName(
@@ -928,7 +929,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     /**
      * Private implementation for SqlValidator.Table.
      */
-    private static class ValidatorTable implements SqlValidator.Table
+    private static class ValidatorTable implements SqlValidatorTable
     {
         private final String [] qualifiedName;
         private final RelDataType rowType;
@@ -967,7 +968,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         FarragoObjectCache.CachedObjectFactory
     {
         private Map constructorToSqlMap = new HashMap();
-        
+
         // implement DefaultValueFactory
         public RexNode newColumnDefaultValue(
             RelOptTable table,

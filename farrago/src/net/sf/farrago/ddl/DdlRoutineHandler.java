@@ -10,12 +10,12 @@
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -26,6 +26,7 @@ import org.eigenbase.util.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.validate.SqlValidatorException;
 import org.eigenbase.sql.type.*;
 
 import net.sf.farrago.catalog.*;
@@ -169,7 +170,7 @@ public class DdlRoutineHandler extends DdlHandler
     {
         validateDefinition(routine);
     }
-    
+
     private void validateSqlRoutine(
         FemRoutine routine,
         FemRoutineParameter returnParam)
@@ -220,7 +221,7 @@ public class DdlRoutineHandler extends DdlHandler
             throw ex;
         } catch (Throwable ex) {
             throw validator.res.newValidatorInvalidObjectDefinition(
-                repos.getLocalizedObjectName(routine), 
+                repos.getLocalizedObjectName(routine),
                 ex);
         } finally {
             validator.releaseReentrantSession(session);
@@ -228,7 +229,7 @@ public class DdlRoutineHandler extends DdlHandler
     }
 
     private void validateJavaRoutine(
-        FemRoutine routine, 
+        FemRoutine routine,
         FemRoutineParameter returnParam)
     {
         if (routine.getBody() != null) {
@@ -241,13 +242,13 @@ public class DdlRoutineHandler extends DdlHandler
                         repos.getLocalizedObjectName(routine)));
             }
         }
-        
+
         CwmProcedureExpression dummyBody =
             repos.newCwmProcedureExpression();
         dummyBody.setLanguage("JAVA");
         dummyBody.setBody(";");
         routine.setBody(dummyBody);
-        
+
         if (!routine.getLanguage().equals("JAVA")) {
             throw validator.newPositionalError(
                 routine,
@@ -288,7 +289,7 @@ public class DdlRoutineHandler extends DdlHandler
     }
 
     private void validateRoutineBody(
-        FarragoSession session, 
+        FarragoSession session,
         final FemRoutine routine,
         FemRoutineParameter returnParam)
         throws Throwable
@@ -297,13 +298,13 @@ public class DdlRoutineHandler extends DdlHandler
         final List params = routine.getParameter();
 
         RelDataType paramRowType = typeFactory.createStructType(
-            new RelDataTypeFactory.FieldInfo() 
+            new RelDataTypeFactory.FieldInfo()
             {
                 public int getFieldCount()
                 {
                     return FarragoCatalogUtil.getRoutineParamCount(routine);
                 }
-                
+
                 public String getFieldName(int index)
                 {
                     FemRoutineParameter param =
@@ -335,7 +336,7 @@ public class DdlRoutineHandler extends DdlHandler
 
     private void validateReturnBody(
         FemRoutine routine,
-        FarragoSession session, 
+        FarragoSession session,
         RelDataType paramRowType,
         FemRoutineParameter returnParam)
         throws Throwable
@@ -354,11 +355,11 @@ public class DdlRoutineHandler extends DdlHandler
 
         validator.createDependency(
             routine, analyzedSql.dependencies, "RoutineUsage");
-        
+
         routine.getBody().setBody(
             FarragoUserDefinedRoutine.addReturnPrefix(
                 analyzedSql.canonicalString));
-        
+
         if (analyzedSql.hasDynamicParams) {
             // TODO jvs 29-Dec-2005:  add a test for this; currently
             // hits an earlier assertion in SqlValidator
@@ -366,7 +367,7 @@ public class DdlRoutineHandler extends DdlHandler
         }
 
         // TODO jvs 28-Dec-2005:  CAST FROM
-        
+
         RelDataType declaredReturnType =
             typeFactory.createCwmElementType(returnParam);
         RelDataType actualReturnType = analyzedSql.resultType;
@@ -380,7 +381,7 @@ public class DdlRoutineHandler extends DdlHandler
 
     private void validateConstructorBody(
         FemRoutine routine,
-        FarragoSession session, 
+        FarragoSession session,
         RelDataType paramRowType,
         FemSqlobjectType objectType)
     {
@@ -444,7 +445,7 @@ public class DdlRoutineHandler extends DdlHandler
     {
         validateTypedElement(param);
     }
-    
+
     // implement FarragoSessionDdlHandler
     public void validateDefinition(FemJar jar)
     {
@@ -494,14 +495,14 @@ public class DdlRoutineHandler extends DdlHandler
 
         // NOTE jvs 13-Feb-2005: Once we support inheritance, we will allow
         // abstract and non-final for FemSqlobjectTypes.
-        
+
         if (!typeDef.isFinal()) {
             throw validator.newPositionalError(
                 typeDef,
                 validator.res.newValidatorNonFinalType(
                     repos.getLocalizedObjectName(typeDef)));
         }
-        
+
         if (typeDef.isAbstract()) {
             throw validator.newPositionalError(
                 typeDef,

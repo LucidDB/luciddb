@@ -22,7 +22,6 @@ package com.disruptivetech.farrago.test;
 
 import com.disruptivetech.farrago.calc.CalcRexImplementorTableImpl;
 
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -34,7 +33,6 @@ import junit.framework.TestSuite;
 
 import net.sf.farrago.defimpl.FarragoDefaultSession;
 import net.sf.farrago.db.FarragoDbSessionFactory;
-import net.sf.farrago.jdbc.engine.FarragoJdbcEngineConnection;
 import net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver;
 import net.sf.farrago.ojrex.FarragoOJRexImplementor;
 import net.sf.farrago.ojrex.FarragoOJRexImplementorTable;
@@ -51,8 +49,9 @@ import org.eigenbase.oj.rex.OJRexImplementorTable;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.rex.RexCall;
-import org.eigenbase.rex.RexNode;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 
@@ -122,12 +121,12 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
     {
         // close any previous connection and create a special one
         FarragoTestCase.forceShutdown();
-        
+
         opTab = new SqlStdOperatorTable();
         opTab.init();
         testOjRexImplementor = new TestOJRexImplementorTable(opTab);
 
-        String originalDriverClass = 
+        String originalDriverClass =
             FarragoProperties.instance().testJdbcDriverClass.get();
 
         FarragoProperties.instance().testJdbcDriverClass.set(
@@ -149,7 +148,7 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
             cImplTab.get(opTab.plusOperator));
 
         FarragoTestCase.staticSetUp();
-        
+
         return originalDriverClass;
     }
 
@@ -185,7 +184,7 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
             "select name, cplus(1, jplus(2, cplus(3, 4))) from sales.emps where name like ?");
         try {
             stmt.setString(1, "F%");
-             
+
             ResultSet rset = stmt.executeQuery();
             try {
                 assertTrue(rset.next());
@@ -212,7 +211,7 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
             "values cplus(1, jplus(100, cplus(50, ?)))");
         try {
             stmt.setInt(1, 13);
-             
+
             ResultSet rset = stmt.executeQuery();
             try {
                 assertTrue(rset.next());
@@ -267,7 +266,7 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
                 {
                     protected RelDataType getType(
                         SqlValidator validator,
-                        SqlValidator.Scope scope,
+                        SqlValidatorScope scope,
                         RelDataTypeFactory typeFactory,
                         CallOperands callOperands)
                     {
@@ -364,7 +363,7 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
         {
             return opTab;
         }
-        
+
         public OJRexImplementorTable getOJRexImplementorTable()
         {
             return ojRexImplementor;

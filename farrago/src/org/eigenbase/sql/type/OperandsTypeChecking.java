@@ -26,6 +26,8 @@ import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.util.EnumeratedValues;
 import org.eigenbase.util.Util;
 
@@ -53,19 +55,18 @@ public abstract class OperandsTypeChecking
      * signature the node should correspond too.
      * <p>For example, if we have typeStringInt, a check can be made to see
      * if a <code>node</code> is of type int by calling
-     * <code>typeStringInt.check(validator,scope,node,1);</code>
      */
     public abstract boolean check(
         SqlCall call,
         SqlValidator validator,
-        SqlValidator.Scope scope,
+        SqlValidatorScope scope,
         SqlNode node,
         int ruleOrdinal,
         boolean throwOnFailure);
 
     public abstract boolean check(
         SqlValidator validator,
-        SqlValidator.Scope scope,
+        SqlValidatorScope scope,
         SqlCall call,
         boolean throwOnFailure);
 
@@ -132,18 +133,17 @@ public abstract class OperandsTypeChecking
         public boolean check(
             SqlCall call,
             SqlValidator validator,
-            SqlValidator.Scope scope,
+            SqlValidatorScope scope,
             SqlNode node,
             int ruleOrdinal,
             boolean throwOnFailure)
         {
-            RelDataType anyType = validator.anyType;
             RelDataType actualType = null;
 
-            //for each operand, iterater over its allowed types...
+            // for each operand, iterate over its allowed types...
             for (int j = 0; j < types[ruleOrdinal].length; j++) {
                 SqlTypeName expectedTypeName = types[ruleOrdinal][j];
-                if (anyType.getSqlTypeName().equals(expectedTypeName)) {
+                if (SqlTypeName.Any.equals(expectedTypeName)) {
                     // If the argument type is defined as any type, we don't need to check
                     return true;
                 } else {
@@ -165,7 +165,7 @@ public abstract class OperandsTypeChecking
 
         public boolean check(
             SqlValidator validator,
-            SqlValidator.Scope scope,
+            SqlValidatorScope scope,
             SqlCall call,
             boolean throwOnFailure)
         {
@@ -299,7 +299,7 @@ public abstract class OperandsTypeChecking
         public boolean check(
             SqlCall call,
             SqlValidator validator,
-            SqlValidator.Scope scope,
+            SqlValidatorScope scope,
             SqlNode node,
             int ruleOrdinal,
             boolean throwOnFailure)
@@ -349,7 +349,7 @@ public abstract class OperandsTypeChecking
 
         public boolean check(
             SqlValidator validator,
-            SqlValidator.Scope scope,
+            SqlValidatorScope scope,
             SqlCall call,
             boolean throwOnFailure)
         {
@@ -456,7 +456,7 @@ public abstract class OperandsTypeChecking
             public boolean check(
                 SqlCall call,
                 SqlValidator validator,
-                SqlValidator.Scope scope,
+                SqlValidatorScope scope,
                 SqlNode node,
                 int ruleOrdinal,
                 boolean throwOnFailure) {
@@ -480,7 +480,7 @@ public abstract class OperandsTypeChecking
 
             public boolean check(
                 SqlValidator validator,
-                SqlValidator.Scope scope,
+                SqlValidatorScope scope,
                 SqlCall call,
                 boolean throwOnFailure) {
 
@@ -509,7 +509,7 @@ public abstract class OperandsTypeChecking
             public boolean check(
                 SqlCall call,
                 SqlValidator validator,
-                SqlValidator.Scope scope,
+                SqlValidatorScope scope,
                 SqlNode node,
                 int ruleOrdinal,
                 boolean throwOnFailure) {
@@ -536,7 +536,7 @@ public abstract class OperandsTypeChecking
 
             public boolean check(
                 SqlValidator validator,
-                SqlValidator.Scope scope,
+                SqlValidatorScope scope,
                 SqlCall call,
                 boolean throwOnFailure) {
 
@@ -565,7 +565,7 @@ public abstract class OperandsTypeChecking
             public boolean check(
                 SqlCall call,
                 SqlValidator validator,
-                SqlValidator.Scope scope,
+                SqlValidatorScope scope,
                 SqlNode node,
                 int ruleOrdinal, boolean throwOnFailure)
             {
@@ -639,7 +639,7 @@ public abstract class OperandsTypeChecking
         }) {
             public boolean check(
                 SqlValidator validator,
-                SqlValidator.Scope scope,
+                SqlValidatorScope scope,
                 SqlCall call, boolean throwOnFailure)
             {
                 RelDataType type1 =
@@ -647,7 +647,7 @@ public abstract class OperandsTypeChecking
                 RelDataType type2 =
                     validator.deriveType(scope, call.operands[1]);
                 RelDataType nullType =
-                    validator.typeFactory.createSqlType(SqlTypeName.Null);
+                    validator.getTypeFactory().createSqlType(SqlTypeName.Null);
                 if (type1.equals(nullType) || type2.equals(nullType)) {
                     return true; //null is ok;
                 }
@@ -675,7 +675,7 @@ public abstract class OperandsTypeChecking
         }) {
             public boolean check(
                 SqlValidator validator,
-                SqlValidator.Scope scope,
+                SqlValidatorScope scope,
                 SqlCall call, boolean throwOnFailure)
             {
                 assert (3 == call.operands.length);
@@ -686,7 +686,7 @@ public abstract class OperandsTypeChecking
                 RelDataType type3 =
                     validator.deriveType(scope, call.operands[2]);
                 RelDataType nullType =
-                    validator.typeFactory.createSqlType(SqlTypeName.Null);
+                    validator.getTypeFactory().createSqlType(SqlTypeName.Null);
 
                 //null is ok;
                 if (!(
@@ -810,7 +810,7 @@ public abstract class OperandsTypeChecking
         }) {
             public boolean check(
                 SqlValidator validator,
-                SqlValidator.Scope scope,
+                SqlValidatorScope scope,
                 SqlCall call, boolean throwOnFailure)
             {
                 //checking if char types
@@ -855,7 +855,7 @@ public abstract class OperandsTypeChecking
 
             public boolean check(
                 SqlValidator validator,
-                SqlValidator.Scope scope,
+                SqlValidatorScope scope,
                 SqlCall call, boolean throwOnFailure)
             {
                 RelDataType t0 = validator.deriveType(scope, call.operands[0]);
@@ -920,7 +920,7 @@ public abstract class OperandsTypeChecking
 
             public boolean check(
                 SqlValidator validator,
-                SqlValidator.Scope scope,
+                SqlValidatorScope scope,
                 SqlCall call, boolean throwOnFailure)
             {
                 RelDataType t0 = validator.deriveType(scope, call.operands[0]);
@@ -1255,7 +1255,7 @@ public abstract class OperandsTypeChecking
         }) {
             public boolean check(
                 SqlValidator validator,
-                SqlValidator.Scope scope,
+                SqlValidatorScope scope,
                 SqlCall call,
                 boolean throwOnFailure) {
                 if (!super.check(validator, scope, call, throwOnFailure)) {
@@ -1302,7 +1302,7 @@ public abstract class OperandsTypeChecking
             public boolean check(
                 SqlCall call,
                 SqlValidator validator,
-                SqlValidator.Scope scope,
+                SqlValidatorScope scope,
                 SqlNode node,
                 int ruleOrdinal,
                 boolean throwOnFailure)
@@ -1327,7 +1327,7 @@ public abstract class OperandsTypeChecking
 
             public boolean check(
                 SqlValidator validator,
-                SqlValidator.Scope scope,
+                SqlValidatorScope scope,
                 SqlCall call,
                 boolean throwOnFailure)
             {
@@ -1368,7 +1368,7 @@ public abstract class OperandsTypeChecking
             public boolean check(
                 SqlCall call,
                 SqlValidator validator,
-                SqlValidator.Scope scope,
+                SqlValidatorScope scope,
                 SqlNode node,
                 int ruleOrdinal,
                 boolean throwOnFailure) {
@@ -1377,7 +1377,7 @@ public abstract class OperandsTypeChecking
 
             public boolean check(
                 SqlValidator validator,
-                SqlValidator.Scope scope,
+                SqlValidatorScope scope,
                 SqlCall call,
                 boolean throwOnFailure) {
 
@@ -1399,7 +1399,7 @@ public abstract class OperandsTypeChecking
                 //TODO this wont work if element types are of ROW types and there is a
                 //mismatch.
                 RelDataType biggest = SqlTypeUtil.getNullableBiggest(
-                    validator.typeFactory, argTypes);
+                    validator.getTypeFactory(), argTypes);
                 if (null==biggest) {
                     if (throwOnFailure) {
                         throw EigenbaseResource.instance().newTypeNotComparable(
@@ -1441,7 +1441,7 @@ public abstract class OperandsTypeChecking
         public boolean check(
             SqlCall call,
             SqlValidator validator,
-            SqlValidator.Scope scope,
+            SqlValidatorScope scope,
             SqlNode node,
             int ruleOrdinal,
             boolean throwOnFailure)
@@ -1452,7 +1452,7 @@ public abstract class OperandsTypeChecking
 
         public boolean check(
             SqlValidator validator,
-            SqlValidator.Scope scope,
+            SqlValidatorScope scope,
             SqlCall call,
             boolean throwOnFailure)
         {
@@ -1495,7 +1495,7 @@ public abstract class OperandsTypeChecking
                     colTypes[j] = field.getType();
                 }
                 final RelDataType type =
-                    validator.typeFactory.leastRestrictive(colTypes);
+                    validator.getTypeFactory().leastRestrictive(colTypes);
                 if (type == null) {
                     if (throwOnFailure) {
                         SqlNode field = SqlUtil.getSelectListItem(call.operands[0], i);

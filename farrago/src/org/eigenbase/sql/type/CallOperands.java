@@ -25,6 +25,8 @@ package org.eigenbase.sql.type;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.rex.*;
 import org.eigenbase.util.Util;
 
@@ -135,17 +137,18 @@ public interface CallOperands
         }
     }
 
-    public static class SqlCallOperands extends AbstractCallOperands {
+    public static class SqlCallOperands extends AbstractCallOperands
+    {
 
         private final SqlValidator validator;
-        private final SqlValidator.Scope scope;
+        private final SqlValidatorScope scope;
         private final SqlCall call;
 
         public SqlCallOperands(SqlValidator validator,
-                               SqlValidator.Scope scope,
-                               SqlCall call)
+            SqlValidatorScope scope,
+            SqlCall call)
         {
-            super(validator.typeFactory, call.operator);
+            super(validator.getTypeFactory(), call.operator);
             this.validator = validator;
             this.scope = scope;
             this.call = call;

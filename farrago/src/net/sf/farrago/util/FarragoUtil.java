@@ -26,8 +26,7 @@ import java.io.*;
 import java.sql.*;
 import java.util.logging.*;
 
-import org.eigenbase.util.*;
-import org.eigenbase.sql.SqlValidatorException;
+import org.eigenbase.sql.validate.SqlValidatorException;
 
 
 /**

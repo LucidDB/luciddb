@@ -25,6 +25,8 @@ import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.util.EnumeratedValues;
 
 /**
@@ -175,8 +177,8 @@ public class SqlWindowOperator extends SqlOperator {
     public void validateCall(
         SqlCall call,
         SqlValidator validator,
-        SqlValidator.Scope scope,
-        SqlValidator.Scope operandScope)
+        SqlValidatorScope scope,
+        SqlValidatorScope operandScope)
     {
         // TODO: validate
         assert call.operator == this;
@@ -204,7 +206,7 @@ public class SqlWindowOperator extends SqlOperator {
     }
 
     /**
-     * An enumeration of types of bounds in a window: <code>CURRENT ROW</code>, 
+     * An enumeration of types of bounds in a window: <code>CURRENT ROW</code>,
      * <code>UNBOUNDED PRECEDING</code>, and <code>UNBOUNDED FOLLOWING</code>.
      */
     static class Bound extends EnumeratedValues.BasicValue {

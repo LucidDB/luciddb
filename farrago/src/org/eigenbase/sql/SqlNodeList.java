@@ -30,6 +30,8 @@ import java.util.Iterator;
 
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.util.SqlVisitor;
+import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.eigenbase.sql.validate.SqlValidator;
 
 
 /**
@@ -124,7 +126,7 @@ public class SqlNodeList extends SqlNode
         }
     }
 
-    public void validate(SqlValidator validator, SqlValidator.Scope scope)
+    public void validate(SqlValidator validator, SqlValidatorScope scope)
     {
         Iterator iter = getList().iterator();
         while (iter.hasNext()) {

@@ -24,6 +24,8 @@ package org.eigenbase.sql;
 import org.eigenbase.util.EnumeratedValues;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.util.SqlVisitor;
+import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.eigenbase.sql.validate.SqlValidator;
 
 /**
  * Represents an INTERVAL qualifier.
@@ -78,45 +80,55 @@ public class SqlIntervalQualifier extends SqlNode
         int startPrecision,
         TimeUnit endUnit,
         int fractionalSecondPrecision,
-        SqlParserPos pos) {
+        SqlParserPos pos)
+    {
         super(pos);
-        assert(null!=startUnit);
+        assert null != startUnit;
         this.startPrecision = startPrecision;
         this.startUnit = startUnit;
         this.endUnit = endUnit;
         this.fractionalSecondPrecision = fractionalSecondPrecision;
     }
 
-    public void validate(SqlValidator validator,
-        SqlValidator.Scope scope) {
+    public void validate(
+        SqlValidator validator,
+        SqlValidatorScope scope)
+    {
         validator.validateIntervalQualifier(this);
     }
 
-    public void accept(SqlVisitor visitor) {
+    public void accept(SqlVisitor visitor)
+    {
         visitor.visit(this);
     }
 
-    public boolean equalsDeep(SqlNode node) {
+    public boolean equalsDeep(SqlNode node)
+    {
         return this.toString().equals(node.toString());
     }
 
-    public int getStartPrecision() {
+    public int getStartPrecision()
+    {
         return startPrecision;
     }
 
-    public int getFractionalSecondPrecision() {
+    public int getFractionalSecondPrecision()
+    {
         return fractionalSecondPrecision;
     }
 
-    public TimeUnit getStartUnit() {
+    public TimeUnit getStartUnit()
+    {
         return startUnit;
     }
 
-    public TimeUnit getEndUnit() {
+    public TimeUnit getEndUnit()
+    {
         return endUnit;
     }
 
-    public String toString() {
+    public String toString()
+    {
         StringBuffer ret = new StringBuffer();
         ret.append(startUnit.name.toUpperCase());
         if (startUnit.equals(TimeUnit.Second)) {
@@ -156,11 +168,13 @@ public class SqlIntervalQualifier extends SqlNode
     public void unparse(
         SqlWriter writer,
         int leftPrec,
-        int rightPrec) {
+        int rightPrec)
+    {
         writer.print(this.toString());
     }
 
-    public boolean isYearMonth() {
+    public boolean isYearMonth()
+    {
         return TimeUnit.Year.equals(startUnit) ||
                TimeUnit.Month.equals(startUnit);
     }
@@ -170,7 +184,8 @@ public class SqlIntervalQualifier extends SqlNode
     /**
      * Enumeration of time units used to construct an interval.
      */
-    public static class TimeUnit extends EnumeratedValues.BasicValue {
+    public static class TimeUnit extends EnumeratedValues.BasicValue
+    {
         private TimeUnit(String name, int ordinal) {
             super(name, ordinal, null);
         }

@@ -23,6 +23,8 @@
 package org.eigenbase.sql.type;
 
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.reltype.*;
 
 /**
@@ -54,23 +56,23 @@ public class AssignableOperandsTypeChecking extends OperandsTypeChecking
     {
         return paramTypes.length;
     }
-    
+
     // implement OperandsTypeChecking
     public boolean check(
         SqlCall call,
         SqlValidator validator,
-        SqlValidator.Scope scope,
+        SqlValidatorScope scope,
         SqlNode node,
         int ruleOrdinal,
         boolean throwOnFailure)
     {
         return check(validator, scope, call, throwOnFailure);
     }
-    
+
     // implement OperandsTypeChecking
     public boolean check(
         SqlValidator validator,
-        SqlValidator.Scope scope,
+        SqlValidatorScope scope,
         SqlCall call,
         boolean throwOnFailure)
     {
@@ -86,7 +88,7 @@ public class AssignableOperandsTypeChecking extends OperandsTypeChecking
         }
         return true;
     }
-    
+
     // implement OperandsTypeChecking
     public String getAllowedSignatures(SqlOperator op)
     {

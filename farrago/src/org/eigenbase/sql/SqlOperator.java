@@ -31,6 +31,8 @@ import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.util.SqlVisitor;
+import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.util.Util;
 
 import java.text.MessageFormat;
@@ -346,13 +348,12 @@ public abstract class SqlOperator
      * @param scope validator scope
      * @param operandScope validator scope in which to validate operands to
      *    this call. Usually equal to scope, but may be different if the
-     *    operator is an aggregate function.
      */
     public void validateCall(
         SqlCall call,
         SqlValidator validator,
-        SqlValidator.Scope scope,
-        SqlValidator.Scope operandScope)
+        SqlValidatorScope scope,
+        SqlValidatorScope operandScope)
     {
         assert call.operator == this;
         final SqlNode[] operands = call.getOperands();
@@ -368,7 +369,7 @@ public abstract class SqlOperator
      * Normally (as in the default implementation), only the types of the operands
      * are needed  to determine the type of the call.  If the call type depends
      * on the values of the operands, then override
-     * {@link #getType(org.eigenbase.sql.SqlValidator, org.eigenbase.sql.SqlValidator.Scope, org.eigenbase.sql.SqlCall)}
+     * {@link #getType(SqlValidator, SqlValidatorScope, RelDataTypeFactory, CallOperands)}
      */
     public final RelDataType getType(
         RelDataTypeFactory typeFactory,
@@ -384,44 +385,48 @@ public abstract class SqlOperator
      * the validator and scope provided.
      *
      * <p>Particular operators can affect the behavior of this method in two
-     * ways. If they have a {@link org.eigenbase.sql.type.ReturnTypeInference},
-     * it is used (prefered since it enables code reuse); otherwise, operators with unusual type inference schemes
+     * ways. If they have a {@link ReturnTypeInference},
+     * it is used (prefered since it enables code reuse);
+     * otherwise, operators with unusual type inference schemes
      * should override
-     * {@link #getType(org.eigenbase.sql.SqlValidator, org.eigenbase.sql.SqlValidator.Scope, org.eigenbase.reltype.RelDataTypeFactory, org.eigenbase.sql.type.CallOperands)}
+     * {@link #getType(SqlValidator, SqlValidatorScope, RelDataTypeFactory, CallOperands)}
      */
     public final RelDataType getType(
         SqlValidator validator,
-        SqlValidator.Scope scope,
+        SqlValidatorScope scope,
         SqlCall call)
     {
         // Check that there's the right number of arguments.
-        checkNumberOfArg(validator, operandsCheckingRule, call);
+        checkArgCount(validator, operandsCheckingRule, call);
 
         checkArgTypes(call, validator, scope, true);
 
         // Now infer the result type.
         CallOperands.SqlCallOperands callOperands =
             new CallOperands.SqlCallOperands(validator,  scope, call);
-        RelDataType ret =
-            getType(validator, scope, validator.typeFactory, callOperands);
+        RelDataType ret = getType(
+            validator, scope, validator.getTypeFactory(), callOperands);
         validator.setValidatedNodeType(call, ret);
         return ret;
     }
 
     /**
-     * Figure out the type of the return of this function.
+     * Deduces the type of the return of a call to this operator.
      * We have already checked that the number and types of arguments are as
      * required.
      * If no {@link ReturnTypeInference} object was set, you must override this
      * method.
-     * This method can be called by the {@link SqlValidator validator}
-     * in which case validator!=null and scope!=null<br>
-     * or in the {@link org.eigenbase.sql2rel.SqlToRelConverter} in which
-     * case validator==null and scope==null
+     *
+     * <p>This method can be called by the {@link SqlValidator validator}
+     * in which case validator != null and scope != null;
+     * or by the {@link org.eigenbase.sql2rel.SqlToRelConverter} in which
+     * case validator == null and scope == null
+     *
+     * XXX converter should provide mock validator
      */
     protected RelDataType getType(
         SqlValidator validator,
-        SqlValidator.Scope scope,
+        SqlValidatorScope scope,
         RelDataTypeFactory typeFactory,
         CallOperands callOperands)
     {
@@ -443,7 +448,7 @@ public abstract class SqlOperator
     protected boolean checkArgTypes(
         SqlCall call,
         SqlValidator validator,
-        SqlValidator.Scope scope, boolean throwOnFailure)
+        SqlValidatorScope scope, boolean throwOnFailure)
     {
         // Check that all of the arguments are of the right type, or are at
         // least assignable to the right type.
@@ -456,8 +461,9 @@ public abstract class SqlOperator
         return operandsCheckingRule.check(validator, scope, call, throwOnFailure);
     }
 
-    protected void checkNumberOfArg(
-        SqlValidator validator, OperandsTypeChecking argType,
+    protected void checkArgCount(
+        SqlValidator validator,
+        OperandsTypeChecking argType,
         SqlCall call)
     {
         OperandsCountDescriptor od =
@@ -553,6 +559,12 @@ public abstract class SqlOperator
         return unknownParamTypeInference;
     }
 
+    /**
+     * Returns whether this operator is an aggregate function.
+     *
+     * <p>TODO: use aggs registered in the fun table; we currently look for
+     *   SUM and COUNT
+     */
     public boolean isAggregator()
     {
         return "SUM".equals(name) || "COUNT".equals(name);

@@ -23,9 +23,9 @@ package org.eigenbase.sql.type;
 
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.sql.SqlValidator;
-import org.eigenbase.sql.SqlCollation;
-import org.eigenbase.sql.SqlNode;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.util.Util;
 import org.eigenbase.resource.EigenbaseResource;
 
@@ -69,7 +69,7 @@ public class ReturnTypeInferenceImpl
          */
         RelDataType getType(
             SqlValidator validator,
-            SqlValidator.Scope scope,
+            SqlValidatorScope scope,
             RelDataTypeFactory typeFactory,
             CallOperands callOperands,
             RelDataType typeToTransform);
@@ -138,7 +138,7 @@ public class ReturnTypeInferenceImpl
 
         public RelDataType getType(
             SqlValidator validator,
-            SqlValidator.Scope scope,
+            SqlValidatorScope scope,
             RelDataTypeFactory typeFactory,
             CallOperands callOperands)
         {
@@ -194,7 +194,7 @@ public class ReturnTypeInferenceImpl
 
         public RelDataType getType(
             SqlValidator validator,
-            SqlValidator.Scope scope,
+            SqlValidatorScope scope,
             RelDataTypeFactory typeFactory,
             CallOperands callOperands)
         {
@@ -252,7 +252,7 @@ public class ReturnTypeInferenceImpl
 
         public RelDataType getType(
             SqlValidator validator,
-            SqlValidator.Scope scope,
+            SqlValidatorScope scope,
             RelDataTypeFactory typeFactory,
             CallOperands callOperands) {
             for (int i = start; i < callOperands.size(); i++) {
@@ -277,7 +277,7 @@ public class ReturnTypeInferenceImpl
 
         public RelDataType getType(
             SqlValidator validator,
-            SqlValidator.Scope scope,
+            SqlValidatorScope scope,
             RelDataTypeFactory typeFactory,
             CallOperands callOperands) {
             return callOperands.getType(ordinal);
@@ -331,7 +331,7 @@ public class ReturnTypeInferenceImpl
 
         public RelDataType getType(
             SqlValidator validator,
-            SqlValidator.Scope scope,
+            SqlValidatorScope scope,
             RelDataTypeFactory typeFactory,
             CallOperands callOperands)
         {
@@ -366,7 +366,7 @@ public class ReturnTypeInferenceImpl
         new Transform() {
             public RelDataType getType(
                 SqlValidator validator,
-                SqlValidator.Scope scope,
+                SqlValidatorScope scope,
                 RelDataTypeFactory typeFactory,
                 CallOperands callOperands,
                 RelDataType typeToTransform)
@@ -390,7 +390,7 @@ public class ReturnTypeInferenceImpl
         new Transform() {
             public RelDataType getType(
                 SqlValidator validator,
-                SqlValidator.Scope scope,
+                SqlValidatorScope scope,
                 RelDataTypeFactory typeFactory,
                 CallOperands callOperands,
                 RelDataType typeToTransform)
@@ -419,7 +419,7 @@ public class ReturnTypeInferenceImpl
         new Transform() {
             public RelDataType getType(
                 SqlValidator validator,
-                SqlValidator.Scope scope,
+                SqlValidatorScope scope,
                 RelDataTypeFactory fac,
                 CallOperands callOperands,
                 RelDataType typeToTransform)
@@ -470,7 +470,7 @@ public class ReturnTypeInferenceImpl
         new Transform() {
             public RelDataType getType(
                 SqlValidator validator,
-                SqlValidator.Scope scope,
+                SqlValidatorScope scope,
                 RelDataTypeFactory typeFactory,
                 CallOperands callOperands,
                 RelDataType typeToTransform)
@@ -607,7 +607,7 @@ public class ReturnTypeInferenceImpl
         new ReturnTypeInference() {
             public RelDataType getType(
                 SqlValidator validator,
-                SqlValidator.Scope scope,
+                SqlValidatorScope scope,
                 RelDataTypeFactory typeFactory,
                 CallOperands callOperands)
             {
@@ -659,7 +659,7 @@ public class ReturnTypeInferenceImpl
              */
             public RelDataType getType(
                 SqlValidator validator,
-                SqlValidator.Scope scope,
+                SqlValidatorScope scope,
                 RelDataTypeFactory typeFactory,
                 CallOperands callOperands)
             {
@@ -731,14 +731,14 @@ public class ReturnTypeInferenceImpl
 
     /**
      * Type-inference strategy where the expression is assumed to be registered
-     * as a {@link org.eigenbase.sql.SqlValidator.Namespace}, and therefore the result type of
-     * the call is the type of that namespace.
+     * as a {@link org.eigenbase.sql.validate.SqlValidatorNamespace}, and
+     * therefore the result type of the call is the type of that namespace.
      */
     public static final ReturnTypeInference useScope =
         new ReturnTypeInference() {
             public RelDataType getType(
                 SqlValidator validator,
-                SqlValidator.Scope scope,
+                SqlValidatorScope scope,
                 RelDataTypeFactory typeFactory,
                 CallOperands callOperands)
             {
@@ -762,7 +762,7 @@ public class ReturnTypeInferenceImpl
         new ReturnTypeInference() {
             public RelDataType getType(
                 SqlValidator validator,
-                SqlValidator.Scope scope,
+                SqlValidatorScope scope,
                 RelDataTypeFactory typeFactory,
                 CallOperands callOperands)
             {

@@ -23,9 +23,10 @@
 package org.eigenbase.sql.type;
 
 import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.sql.SqlValidator;
-import org.eigenbase.sql.SqlCall;
-import org.eigenbase.sql.SqlNode;
+import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.eigenbase.sql.validate.SqlValidator;
 
 /**
  * Strategy to infer unknown types of the operands of an operator call.
@@ -50,7 +51,7 @@ public interface UnknownParamInference
      */
     void inferOperandTypes(
         SqlValidator validator,
-        SqlValidator.Scope scope,
+        SqlValidatorScope scope,
         SqlCall call,
         RelDataType returnType,
         RelDataType [] operandTypes);
@@ -66,20 +67,21 @@ public interface UnknownParamInference
         new UnknownParamInference() {
             public void inferOperandTypes(
                 SqlValidator validator,
-                SqlValidator.Scope scope,
+                SqlValidatorScope scope,
                 SqlCall call,
                 RelDataType returnType,
                 RelDataType [] operandTypes)
             {
                 SqlNode [] operands = call.getOperands();
-                RelDataType knownType = validator.unknownType;
+                final RelDataType unknownType = validator.getUnknownType();
+                RelDataType knownType = unknownType;
                 for (int i = 0; i < operands.length; ++i) {
                     knownType = validator.deriveType(scope, operands[i]);
-                    if (!knownType.equals(validator.unknownType)) {
+                    if (!knownType.equals(unknownType)) {
                         break;
                     }
                 }
-                assert (!knownType.equals(validator.unknownType));
+                assert !knownType.equals(unknownType);
                 for (int i = 0; i < operandTypes.length; ++i) {
                     operandTypes[i] = knownType;
                 }
@@ -95,7 +97,7 @@ public interface UnknownParamInference
         new UnknownParamInference() {
             public void inferOperandTypes(
                 SqlValidator validator,
-                SqlValidator.Scope scope,
+                SqlValidatorScope scope,
                 SqlCall call,
                 RelDataType returnType,
                 RelDataType [] operandTypes)
@@ -117,14 +119,15 @@ public interface UnknownParamInference
         new UnknownParamInference() {
             public void inferOperandTypes(
                 SqlValidator validator,
-                SqlValidator.Scope scope,
+                SqlValidatorScope scope,
                 SqlCall call,
                 RelDataType returnType,
                 RelDataType [] operandTypes)
             {
+                RelDataTypeFactory typeFactory = validator.getTypeFactory();
                 for (int i = 0; i < operandTypes.length; ++i) {
                     operandTypes[i] =
-                        validator.typeFactory.createSqlType(SqlTypeName.Boolean);
+                        typeFactory.createSqlType(SqlTypeName.Boolean);
                 }
             }
         };

@@ -25,12 +25,8 @@ package org.eigenbase.oj.stmt;
 
 import java.io.File;
 import java.io.FileWriter;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.sql.ResultSet;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.logging.Level;
@@ -38,10 +34,8 @@ import java.util.logging.Logger;
 
 import openjava.mop.*;
 import openjava.ptree.*;
-import openjava.ptree.util.*;
 
 import org.eigenbase.javac.*;
-import org.eigenbase.oj.OJTypeFactoryImpl;
 import org.eigenbase.oj.rel.JavaRel;
 import org.eigenbase.oj.rel.JavaRelImplementor;
 import org.eigenbase.oj.util.*;
@@ -52,7 +46,7 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.rex.RexBuilder;
 import org.eigenbase.runtime.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.parser.SqlParser;
+import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql2rel.*;
 import org.eigenbase.trace.EigenbaseTrace;
 import org.eigenbase.util.SaffronProperties;
@@ -145,7 +139,7 @@ public abstract class OJPreparingStmt
     protected void initSub()
     {
     }
-    
+
     public ClassDeclaration init(Argument [] arguments)
     {
         env = OJSystem.env;
@@ -164,7 +158,7 @@ public abstract class OJPreparingStmt
         env = new ClosedEnvironment(clazz.getEnvironment());
 
         initSub();
-        
+
         OJUtil.threadDeclarers.set(clazz);
         if ((arguments != null) && (arguments.length > 0)) {
             for (int i = 0; i < arguments.length; i++) {

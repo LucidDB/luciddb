@@ -26,6 +26,8 @@ import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.type.*;
 
@@ -67,7 +69,7 @@ public class SqlMultisetOperator extends SqlSpecialOperator
 
     protected RelDataType getType(
         SqlValidator validator,
-        SqlValidator.Scope scope,
+        SqlValidatorScope scope,
         RelDataTypeFactory typeFactory,
         CallOperands callOperands)
     {
@@ -87,11 +89,14 @@ public class SqlMultisetOperator extends SqlSpecialOperator
     protected boolean checkArgTypes(
         SqlCall call,
         SqlValidator validator,
-        SqlValidator.Scope scope,
+        SqlValidatorScope scope,
         boolean throwOnFailure)
     {
-        if (null==getComponentType(validator.typeFactory,
-                SqlTypeUtil.collectTypes(validator, scope, call.operands))) {
+        final RelDataType[] argTypes =
+            SqlTypeUtil.collectTypes(validator, scope, call.operands);
+        final RelDataType componentType = getComponentType(
+            validator.getTypeFactory(), argTypes);
+        if (null == componentType) {
             if (throwOnFailure) {
                 throw validator.newValidationError(call,
                     EigenbaseResource.instance().newNeedSameTypeParameter());
@@ -100,7 +105,6 @@ public class SqlMultisetOperator extends SqlSpecialOperator
         }
         return true;
     }
-
 
     public void test(SqlTester tester)
     {

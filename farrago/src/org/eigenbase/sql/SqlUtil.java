@@ -28,11 +28,6 @@ import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.util.BarfingInvocationHandler;
 import org.eigenbase.util.Util;
-import org.eigenbase.resource.EigenbaseResource;
-import org.eigenbase.rex.RexNode;
-import org.eigenbase.rex.RexLiteral;
-import org.eigenbase.rex.RexKind;
-import org.eigenbase.rex.RexCall;
 import org.eigenbase.reltype.*;
 
 import java.lang.reflect.Proxy;
@@ -318,7 +313,7 @@ public abstract class SqlUtil
      * @sql.99 Part 2 Section 10.4
      */
     public static SqlFunction lookupRoutine(
-        SqlOperatorTable opTab, 
+        SqlOperatorTable opTab,
         SqlIdentifier funcName,
         RelDataType [] argTypes,
         boolean isProcedure)
@@ -332,7 +327,7 @@ public abstract class SqlUtil
             return (SqlFunction) list.get(0);
         }
     }
-    
+
     /**
      * Looks up all subject routines matching the given name
      * and argument types.
@@ -351,7 +346,7 @@ public abstract class SqlUtil
      * @sql.99 Part 2 Section 10.4
      */
     public static List lookupSubjectRoutines(
-        SqlOperatorTable opTab, 
+        SqlOperatorTable opTab,
         SqlIdentifier funcName,
         RelDataType [] argTypes,
         boolean isProcedure)
@@ -359,11 +354,11 @@ public abstract class SqlUtil
         // start with all routines matching by name
         List routines = opTab.lookupOperatorOverloads(
             funcName, SqlSyntax.Function);
-        
+
         // first pass:  eliminate routines which don't accept the given
         // number of arguments
         filterRoutinesByParameterCount(routines, argTypes);
-        
+
         // NOTE: according to SQL99, procedures are NOT overloaded on type,
         // only on number of arguments.
         if (isProcedure) {
@@ -379,7 +374,7 @@ public abstract class SqlUtil
         if (routines.size() < 2) {
             return routines;
         }
-        
+
         // third pass:  for each parameter from left to right, eliminate
         // all routines except those with the best precedence match for
         // the given arguments
@@ -517,7 +512,40 @@ public abstract class SqlUtil
             throw Util.needToImplement(query);
         }
     }
-    
+
+    /**
+     * If an identifier is a legitimate call to a function which has no
+     * arguments and requires no parentheses (for example "CURRENT_USER"),
+     * returns a call to that function, otherwise returns null.
+     */
+    public static SqlCall makeCall(
+        SqlOperatorTable opTab,
+        SqlIdentifier id)
+    {
+        if (id.names.length == 1) {
+            List list = opTab.lookupOperatorOverloads(id, SqlSyntax.Function);
+            for (int i = 0; i < list.size(); i++) {
+                SqlOperator operator = (SqlOperator) list.get(i);
+                if (operator.getSyntax() == SqlSyntax.FunctionId) {
+                    // Even though this looks like an identifier, it is a
+                    // actually a call to a function. Construct a fake
+                    // call to this function, so we can use the regular
+                    // operator validation.
+                    return new SqlCall(operator, SqlNode.emptyArray,
+                        id.getParserPosition());
+                }
+            }
+        }
+        return null;
+    }
+
+    public static String deriveAliasFromOrdinal(int ordinal)
+    {
+        // Use a '$' so that queries can't easily reference the
+        // generated name.
+        return "EXPR$" + ordinal;
+    }
+
     //~ Inner Classes ---------------------------------------------------------
 
     /**

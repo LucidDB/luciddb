@@ -23,6 +23,8 @@
 package org.eigenbase.test;
 
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.validate.SqlValidatorCatalogReader;
+import org.eigenbase.sql.validate.SqlValidatorTable;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.util.Util;
@@ -35,14 +37,14 @@ import java.util.Vector;
 
 /**
  * Mock implementation of
- * {@link org.eigenbase.sql.SqlValidator.CatalogReader} which returns
+ * {@link SqlValidatorCatalogReader} which returns
  * tables "EMP", "DEPT", "BONUS", "SALGRADE" (same as Oracle's SCOTT
  * schema).
  *
  * @author jhyde
  * @version $Id$
  */
-public class MockCatalogReader implements SqlValidator.CatalogReader
+public class MockCatalogReader implements SqlValidatorCatalogReader
 {
     protected final RelDataTypeFactory typeFactory;
     private final HashMap tables = new HashMap();
@@ -69,7 +71,7 @@ public class MockCatalogReader implements SqlValidator.CatalogReader
             new RelDataTypeField [] {
                 new RelDataTypeFieldImpl("STREET", 0, varchar20Type),
                 new RelDataTypeFieldImpl("CITY", 1, varchar20Type),
-                new RelDataTypeFieldImpl("ZIP", 1, intType), 
+                new RelDataTypeFieldImpl("ZIP", 1, intType),
                 new RelDataTypeFieldImpl("STATE", 1, varchar20Type)
             });
 
@@ -114,7 +116,7 @@ public class MockCatalogReader implements SqlValidator.CatalogReader
         contactAddressTable.addColumn("HOME_ADDRESS", addressType);
         contactAddressTable.addColumn("MAILING_ADDRESS", addressType);
         registerTable(contactAddressTable);
-        
+
         // Register "CUSTOMER" schema.
         MockSchema customerSchema = new MockSchema("CUSTOMER");
         registerSchema(customerSchema);
@@ -142,18 +144,18 @@ public class MockCatalogReader implements SqlValidator.CatalogReader
         schemas.put(schema.name, schema);
     }
 
-    public SqlValidator.Table getTable(final String [] names)
+    public SqlValidatorTable getTable(final String [] names)
     {
         if (names.length == 1) {
             // assume table in SALES schema (the original default)
-            // if it's not supplied, because SqlValidatorTest is effectively 
+            // if it's not supplied, because SqlValidatorTest is effectively
             // using SALES as its default schema.
             String [] qualifiedName = { "SALES", names[0] };
-            return (SqlValidator.Table) tables.get(
+            return (SqlValidatorTable) tables.get(
                 convertToVector(qualifiedName));
         }
         else if (names.length == 2) {
-            return (SqlValidator.Table) tables.get(convertToVector(names));
+            return (SqlValidatorTable) tables.get(convertToVector(names));
         }
         return null;
     }
@@ -166,19 +168,19 @@ public class MockCatalogReader implements SqlValidator.CatalogReader
             return null;
         }
     }
-    
+
     public String [] getAllSchemaObjectNames(String [] names)
     {
         if (names.length == 1) {
             // looking for both schema and object names
-            Collection schemasColl = schemas.values(); 
+            Collection schemasColl = schemas.values();
             Iterator i = schemasColl.iterator();
             ArrayList result = new ArrayList();
             while (i.hasNext()) {
                 MockSchema schema = (MockSchema) i.next();
                 result.add(schema.name);
                 result.addAll(schema.tableNames);
-            }     
+            }
             return (String [])result.toArray(Util.emptyStringArray);
         }
         else if (names.length == 2) {
@@ -202,7 +204,7 @@ public class MockCatalogReader implements SqlValidator.CatalogReader
     public static class MockSchema
     {
         private final ArrayList tableNames = new ArrayList();
-        private String name; 
+        private String name;
 
         public MockSchema(String name) {
             this.name = name;
@@ -214,9 +216,9 @@ public class MockCatalogReader implements SqlValidator.CatalogReader
     }
 
     /**
-     * Mock implementation of {@link SqlValidator.Table}.
+     * Mock implementation of {@link SqlValidatorTable}.
      */
-    public static class MockTable implements SqlValidator.Table
+    public static class MockTable implements SqlValidatorTable
     {
         private final ArrayList columnNames = new ArrayList();
         private final ArrayList columnTypes = new ArrayList();

@@ -24,12 +24,13 @@
 package org.eigenbase.sql;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.util.SqlVisitor;
+import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.util.Util;
 
 /**
@@ -95,9 +96,9 @@ public class SqlCall extends SqlNode
         int leftPrec,
         int rightPrec)
     {
-        if ((leftPrec > operator.leftPrec)
-                || (operator.rightPrec <= rightPrec)
-                || (writer.alwaysUseParentheses && isA(SqlKind.Expression))) {
+        if ((leftPrec > operator.leftPrec) ||
+            (operator.rightPrec <= rightPrec) ||
+            (SqlWriter.alwaysUseParentheses && isA(SqlKind.Expression))) {
             writer.print('(');
             operator.unparse(writer, operands, 0, 0);
             writer.print(')');
@@ -113,27 +114,27 @@ public class SqlCall extends SqlNode
      * {@link SqlOperator#validateCall}. Derived classes may override (as do,
      * for example {@link SqlSelect} and {@link SqlUpdate}).
      */
-    public void validate(SqlValidator validator, SqlValidator.Scope scope)
+    public void validate(SqlValidator validator, SqlValidatorScope scope)
     {
         validator.validateCall(this, scope);
     }
 
     /**
-     * Find out all the valid alternatives for the operand of this node's 
+     * Find out all the valid alternatives for the operand of this node's
      * operator that matches the parse position indicated by pp
      *
      * @param validator Validator
      * @param scope Validation scope
-     * @param pp SqlParserPos indicating the cursor position at which 
+     * @param pp SqlParserPos indicating the cursor position at which
      * competion hints are requested for
      * @return a string array of valid options
      */
-    public String[] findValidOptions(SqlValidator validator, 
-        SqlValidator.Scope scope,
+    public String[] findValidOptions(
+        SqlValidator validator,
+        SqlValidatorScope scope,
         SqlParserPos pp)
     {
         final SqlNode[] operands = getOperands();
-        HashMap sqlids = new HashMap();
         for (int i = 0; i < operands.length; i++) {
             if (operands[i] instanceof SqlIdentifier) {
                 SqlIdentifier id = (SqlIdentifier) operands[i];
@@ -179,7 +180,7 @@ public class SqlCall extends SqlNode
      */
     protected String getCallSignature(
         SqlValidator validator,
-        SqlValidator.Scope scope)
+        SqlValidatorScope scope)
     {
 
         ArrayList signatureList = new ArrayList();
@@ -197,7 +198,7 @@ public class SqlCall extends SqlNode
 
     public RuntimeException newValidationSignatureError(
         SqlValidator validator,
-        SqlValidator.Scope scope)
+        SqlValidatorScope scope)
     {
         return validator.newValidationError(
             this,

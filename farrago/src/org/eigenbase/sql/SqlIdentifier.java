@@ -25,6 +25,8 @@ package org.eigenbase.sql;
 
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.util.SqlVisitor;
+import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.util.Util;
 import java.util.ArrayList;
 
@@ -101,7 +103,7 @@ public class SqlIdentifier extends SqlNode
     public Object clone()
     {
         return new SqlIdentifier(
-            Util.clone(names), 
+            Util.clone(names),
             collation,
             getParserPosition());
     }
@@ -138,20 +140,20 @@ public class SqlIdentifier extends SqlNode
         }
     }
 
-    public void validate(SqlValidator validator, SqlValidator.Scope scope)
+    public void validate(SqlValidator validator, SqlValidatorScope scope)
     {
         validator.validateIdentifier(this, scope);
     }
 
     /**
-     * Find out all the valid alternatives for this identifier. 
+     * Find out all the valid alternatives for this identifier.
      *
      * @param validator Validator
      * @param scope Validation scope
      * @return a string array of valid options
      */
-    public String[] findValidOptions(SqlValidator validator, 
-        SqlValidator.Scope scope)
+    public String[] findValidOptions(SqlValidator validator,
+        SqlValidatorScope scope)
     {
         String tableName;
         ArrayList result = new ArrayList();
@@ -169,11 +171,11 @@ public class SqlIdentifier extends SqlNode
         return (String [])result.toArray(Util.emptyStringArray);
     }
 
-    public void validateExpr(SqlValidator validator, SqlValidator.Scope scope)
+    public void validateExpr(SqlValidator validator, SqlValidatorScope scope)
     {
         // First check for builtin functions which don't have parentheses,
         // like "LOCALTIME".
-        SqlCall call = validator.makeCall(this);
+        SqlCall call = SqlUtil.makeCall(validator.getOperatorTable(), this);
         if (call != null) {
             return;
         }
@@ -202,7 +204,7 @@ public class SqlIdentifier extends SqlNode
     {
         visitor.visit(this);
     }
-    
+
     public SqlCollation getCollation()
     {
         return collation;
@@ -221,7 +223,7 @@ public class SqlIdentifier extends SqlNode
 
     /**
      * Returns whether this identifier is a star, such as "*" or "foo.bar.*".
-     */ 
+     */
     public boolean isStar()
     {
         return names[names.length - 1].equals("*");

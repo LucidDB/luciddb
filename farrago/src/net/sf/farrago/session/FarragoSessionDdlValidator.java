@@ -38,6 +38,7 @@ import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.validate.SqlValidatorException;
 import org.eigenbase.sql.parser.*;
 
 

@@ -25,6 +25,8 @@ import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.test.SqlTester;
@@ -67,7 +69,7 @@ public class SqlLiteralChainOperator extends SqlInternalOperator {
     private boolean argTypesValid(
         SqlCall call,
         SqlValidator validator,
-        SqlValidator.Scope scope)
+        SqlValidatorScope scope)
     {
         if (call.operands.length < 2) {
             return true; // nothing to compare
@@ -88,7 +90,7 @@ public class SqlLiteralChainOperator extends SqlInternalOperator {
     protected boolean checkArgTypes(
         SqlCall call,
         SqlValidator validator,
-        SqlValidator.Scope scope,
+        SqlValidatorScope scope,
         boolean throwOnFailure)
     {
         if (!argTypesValid(call, validator, scope)) {
@@ -107,7 +109,7 @@ public class SqlLiteralChainOperator extends SqlInternalOperator {
     // the strategy useFirstArgType with a new transformer.
     protected RelDataType getType(
         SqlValidator validator,
-        SqlValidator.Scope scope,
+        SqlValidatorScope scope,
         RelDataTypeFactory typeFactory,
         CallOperands callOperands)
     {
@@ -135,8 +137,8 @@ public class SqlLiteralChainOperator extends SqlInternalOperator {
     public void validateCall(
         SqlCall call,
         SqlValidator validator,
-        SqlValidator.Scope scope,
-        SqlValidator.Scope operandScope)
+        SqlValidatorScope scope,
+        SqlValidatorScope operandScope)
     {
         // per the SQL std, each string fragment must be on a different line
         for (int i = 1; i < call.operands.length; i++) {

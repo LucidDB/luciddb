@@ -25,6 +25,8 @@ package org.eigenbase.sql;
 
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.parser.SqlParserPos;
+import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.util.Util;
 
 
@@ -150,7 +152,7 @@ public class SqlSelect extends SqlCall
         writer.popQuery(this);
     }
 
-    public void validate(SqlValidator validator, SqlValidator.Scope scope)
+    public void validate(SqlValidator validator, SqlValidatorScope scope)
     {
         validator.validateQuery(this);
     }

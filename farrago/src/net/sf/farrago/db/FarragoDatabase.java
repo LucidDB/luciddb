@@ -47,6 +47,7 @@ import org.eigenbase.oj.rex.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.util.*;
 

@@ -32,6 +32,8 @@ import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.type.CallOperands;
+import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.util.Util;
 
 import java.util.HashMap;
@@ -310,14 +312,14 @@ public class SqlJdbcFunctionCall extends SqlFunction
     //    private SqlCall thisCall;
     SqlNode [] thisOperands;
 
-    static 
+    static
     {
         numericFunctions = constructFuncList(allNumericFunctions);
         stringFunctions = constructFuncList(allStringFunctions);
         timeDateFunctions = constructFuncList(allTimeDateFunctions);
         systemFunctions = constructFuncList(allSystemFunctions);
     }
-    
+
     private static String constructFuncList(String [] functionNames)
     {
         StringBuffer sb = new StringBuffer();
@@ -365,7 +367,7 @@ public class SqlJdbcFunctionCall extends SqlFunction
     protected boolean checkArgTypes(
         SqlCall call,
         SqlValidator validator,
-        SqlValidator.Scope scope, boolean throwOnFailure)
+        SqlValidatorScope scope, boolean throwOnFailure)
     {
         // no op, arg checking is done in getType
         return true;
@@ -391,7 +393,7 @@ public class SqlJdbcFunctionCall extends SqlFunction
 
     protected RelDataType getType(
         SqlValidator validator,
-        SqlValidator.Scope scope,
+        SqlValidatorScope scope,
         RelDataTypeFactory typeFactory,
         CallOperands callOperands)
     {
@@ -474,7 +476,7 @@ public class SqlJdbcFunctionCall extends SqlFunction
     {
         return stringFunctions;
     }
-    
+
     /**
      * @see DatabaseMetaData#getTimeDateFunctions
      */

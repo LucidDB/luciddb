@@ -23,16 +23,15 @@
 
 package org.eigenbase.sql.fun;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.type.OperandsTypeChecking;
-import org.eigenbase.sql.type.SqlTypeUtil;
-import org.eigenbase.sql.type.ReturnTypeInference;
 import org.eigenbase.sql.type.ReturnTypeInferenceImpl;
+import org.eigenbase.sql.type.SqlTypeUtil;
+import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.eigenbase.sql.validate.SqlValidator;
 
 /**
  * Definition of the "TRIM" builtin SQL function.
@@ -111,7 +110,7 @@ public class SqlTrimFunction extends SqlFunction
     protected boolean checkArgTypes(
         SqlCall call,
         SqlValidator validator,
-        SqlValidator.Scope scope,
+        SqlValidatorScope scope,
         boolean throwOnFailure)
     {
         for (int i = 1; i < 3; i++) {
@@ -129,12 +128,8 @@ public class SqlTrimFunction extends SqlFunction
             ops[i - 1] = call.operands[i];
         }
 
-        if (!SqlTypeUtil.isCharTypeComparable(
-                validator, scope, ops, throwOnFailure))
-        {
-            return false;
-        }
-        return true;
+        return SqlTypeUtil.isCharTypeComparable(
+            validator, scope, ops, throwOnFailure);
     }
 
     public void test(SqlTester tester)

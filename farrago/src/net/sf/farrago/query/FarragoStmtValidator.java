@@ -41,6 +41,7 @@ import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.validate.SqlValidatorException;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.util.Util;
 
@@ -67,7 +68,7 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
     private final FarragoSessionIndexMap indexMap;
     private final FarragoObjectCache sharedDataWrapperCache;
     private final FarragoSessionParser parser;
-    
+
     private SqlParserPos parserPos;
 
     //~ Constructors ----------------------------------------------------------
@@ -214,7 +215,7 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
 
         // look for both schema and object names
         if (names.length == 1) {
-            // get all schema names 
+            // get all schema names
             List schemaNames = getAllObjectNamesByType(
                 catalog.getOwnedElement(),
                 FemLocalSchema.class);
@@ -279,7 +280,7 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
         }
         return catalog;
     }
-    
+
 
     // implement FarragoSessionStmtValidator
     public CwmCatalog getDefaultCatalog()
@@ -467,7 +468,7 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
         }
         return overloads;
     }
-    
+
     // implement FarragoSessionStmtValidator
     public CwmSqldataType findSqldataType(SqlIdentifier typeName)
     {
@@ -517,7 +518,7 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
                 return (CwmSqldataType) modelElement;
             }
         }
-            
+
         throw newPositionalError(
             FarragoResource.instance().newValidatorUnknownObject(
                 getRepos().getLocalizedObjectName(
@@ -600,7 +601,7 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
     {
         this.parserPos = pos;
     }
-    
+
     private FarragoException newPositionalError(
         SqlValidatorException ex)
     {

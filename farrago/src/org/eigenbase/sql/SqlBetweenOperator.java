@@ -31,6 +31,8 @@ import org.eigenbase.sql.parser.SqlParserUtil;
 import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.util.Util;
 
 import java.util.List;
@@ -96,7 +98,7 @@ public class SqlBetweenOperator extends SqlInfixOperator
 
     private RelDataType [] getTypeArray(
         SqlValidator validator,
-        SqlValidator.Scope scope,
+        SqlValidatorScope scope,
         SqlCall call)
     {
         RelDataType [] argTypes =
@@ -111,7 +113,7 @@ public class SqlBetweenOperator extends SqlInfixOperator
 
     protected RelDataType getType(
         SqlValidator validator,
-        SqlValidator.Scope scope,
+        SqlValidatorScope scope,
         RelDataTypeFactory typeFactory,
         CallOperands callOperands)
     {
@@ -153,7 +155,7 @@ public class SqlBetweenOperator extends SqlInfixOperator
     protected boolean checkArgTypes(
         SqlCall call,
         SqlValidator validator,
-        SqlValidator.Scope scope,
+        SqlValidatorScope scope,
         boolean throwOnFailure)
     {
         OperandsTypeChecking [] rules =

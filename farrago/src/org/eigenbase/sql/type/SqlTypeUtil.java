@@ -26,6 +26,8 @@ package org.eigenbase.sql.type;
 import org.eigenbase.reltype.*;
 import org.eigenbase.util.Util;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.rel.RelNode;
@@ -104,7 +106,7 @@ public abstract class SqlTypeUtil
      */
     public static boolean isCharTypeComparable(
         SqlValidator validator,
-        SqlValidator.Scope scope,
+        SqlValidatorScope scope,
         SqlNode [] operands,
         boolean throwOnFailure)
     {
@@ -128,11 +130,11 @@ public abstract class SqlTypeUtil
     }
 
     /**
-     * Iterates over all operands and collect their type.
+     * Iterates over all operands and collects their type.
      */
     public static RelDataType [] collectTypes(
         SqlValidator validator,
-        SqlValidator.Scope scope,
+        SqlValidatorScope scope,
         SqlNode [] operands)
     {
         RelDataType [] types = new RelDataType[operands.length];
@@ -166,7 +168,7 @@ public abstract class SqlTypeUtil
      */
     public final static RelDataType makeNullableIfOperandsAre(
         final SqlValidator validator,
-        final SqlValidator.Scope scope,
+        final SqlValidatorScope scope,
         final SqlCall call,
         RelDataType type)
     {
@@ -179,8 +181,8 @@ public abstract class SqlTypeUtil
                 validator.deriveType(scope, call.operands[i]);
 
             if (operandType.isNullable()) {
-                type =
-                    validator.typeFactory.createTypeWithNullability(type, true);
+                RelDataTypeFactory typeFactory = validator.getTypeFactory();
+                type = typeFactory.createTypeWithNullability(type, true);
                 break;
             }
         }
@@ -542,9 +544,9 @@ public abstract class SqlTypeUtil
      *
      * REVIEW jvs 17-Dec-2005:  the coerce param below shouldn't really be
      * necessary.  We're using it as a hack because
-     * SqlTypeFactoryImpl.leastRestrictiveSqlType isn't complete enough
+     * {@link SqlTypeFactoryImpl#leastRestrictiveSqlType} isn't complete enough
      * yet.  Once it is, this param (and the non-coerce rules of
-     * SqlTypeAssignmentRules) should go away.
+     * {@link SqlTypeAssignmentRules}) should go away.
      *
      * @param toType target of assignment
      *

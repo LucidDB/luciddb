@@ -27,6 +27,8 @@ import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.util.*;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.test.SqlOperatorTests;
@@ -95,7 +97,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         protected boolean checkArgTypes(
             SqlCall call,
             SqlValidator validator,
-            SqlValidator.Scope scope, boolean throwOnFailure)
+            SqlValidatorScope scope, boolean throwOnFailure)
         {
             if (null != operandsCheckingRule) {
                 return super.checkArgTypes(
@@ -116,7 +118,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
 
         protected RelDataType getType(
             SqlValidator validator,
-            SqlValidator.Scope scope,
+            SqlValidatorScope scope,
             RelDataTypeFactory typeFactory,
             CallOperands callOperands)
         {
@@ -250,8 +252,8 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
             public void validateCall(
                 SqlCall call,
                 SqlValidator validator,
-                SqlValidator.Scope scope,
-                SqlValidator.Scope operandScope)
+                SqlValidatorScope scope,
+                SqlValidatorScope operandScope)
             {
                 // The base method validates all operands. We override because
                 // we don't want to validate the identifier.
@@ -480,7 +482,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
                 protected boolean checkArgTypes(
                     SqlCall call,
                     SqlValidator validator,
-                    SqlValidator.Scope scope,
+                    SqlValidatorScope scope,
                     boolean throwOnFailure) {
 
                     if (!OperandsTypeChecking.typeNullableMultiset.check(
@@ -766,7 +768,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
 
             protected RelDataType getType(
                 SqlValidator validator,
-                SqlValidator.Scope scope,
+                SqlValidatorScope scope,
                 RelDataTypeFactory typeFactory,
                 CallOperands callOperands)
             {
@@ -1032,7 +1034,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
             protected boolean checkArgTypes(
                 SqlCall call,
                 SqlValidator validator,
-                SqlValidator.Scope scope,
+                SqlValidatorScope scope,
                 boolean throwOnFailure)
             {
                 switch (call.operands.length) {
@@ -1147,7 +1149,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
             protected boolean checkArgTypes(
                 SqlCall call,
                 SqlValidator validator,
-                SqlValidator.Scope scope,
+                SqlValidatorScope scope,
                 boolean throwOnFailure)
             {
                 //check that the two operands are of same type.
@@ -1468,7 +1470,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         }
 
         protected boolean checkArgTypes(SqlCall call, SqlValidator validator,
-                SqlValidator.Scope scope, boolean throwOnFailure)
+                SqlValidatorScope scope, boolean throwOnFailure)
         {
             Util.discard(call);
             Util.discard(validator);

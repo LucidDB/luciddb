@@ -25,6 +25,8 @@ package org.eigenbase.sql;
 
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.util.SqlVisitor;
+import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.util.*;
 
 import java.io.PrintWriter;
@@ -174,24 +176,25 @@ public abstract class SqlNode implements Cloneable
      * purposes.
      *
      * @param scope Validator
-     * @param scope Validation scope
      */
-    public abstract void validate(SqlValidator validator,
-        SqlValidator.Scope scope);
+    public abstract void validate(
+        SqlValidator validator,
+        SqlValidatorScope scope);
 
     /**
      * Find out all the valid alternatives for this node if the parse position
-     * of the node matches that of pp.  Only implemented now for 
+     * of the node matches that of pp.  Only implemented now for
      * SqlCall and SqlOperator
      *
      * @param validator Validator
      * @param scope Validation scope
-     * @param pp SqlParserPos indicating the cursor position at which 
+     * @param pp SqlParserPos indicating the cursor position at which
      * competion hints are requested for
      * @return a string array of valid options
      */
-    public String[] findValidOptions(SqlValidator validator, 
-        SqlValidator.Scope scope,
+    public String[] findValidOptions(
+        SqlValidator validator,
+        SqlValidatorScope scope,
         SqlParserPos pp)
     {
         return Util.emptyStringArray;
@@ -205,8 +208,9 @@ public abstract class SqlNode implements Cloneable
      * @param scope Validation scope
      * @return a string array of valid options
      */
-    public String[] findValidOptions(SqlValidator validator, 
-        SqlValidator.Scope scope)
+    public String[] findValidOptions(
+        SqlValidator validator,
+        SqlValidatorScope scope)
     {
         return Util.emptyStringArray;
     }
@@ -217,8 +221,10 @@ public abstract class SqlNode implements Cloneable
      * <p>Usually, this method does much the same as {@link #validate},
      * but a {@link SqlIdentifier} can occur in expression and non-expression
      * contexts.
-     */ 
-    public void validateExpr(SqlValidator validator, SqlValidator.Scope scope)
+     */
+    public void validateExpr(
+        SqlValidator validator,
+        SqlValidatorScope scope)
     {
         validate(validator, scope);
         Util.discard(validator.deriveType(scope, this));

@@ -40,7 +40,8 @@ import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.rex.RexTransformer;
 import org.eigenbase.sql.SqlNode;
-import org.eigenbase.sql.SqlValidator;
+import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.sql.validate.SqlValidatorUtil;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.parser.SqlParseException;
 import org.eigenbase.sql.parser.SqlParser;
@@ -63,7 +64,6 @@ public class Rex2CalcPlanTest extends FarragoTestCase
 {
     //~ Static fields/initializers --------------------------------------------
 
-    private static final String NL = System.getProperty("line.separator");
     private static TestContext testContext;
 
     //~ Constructors ----------------------------------------------------------
@@ -137,7 +137,7 @@ public class Rex2CalcPlanTest extends FarragoTestCase
         RelDataTypeFactory typeFactory =
             testContext.stmt.getRelOptSchema().getTypeFactory();
         final SqlValidator validator =
-            new SqlValidator(
+            SqlValidatorUtil.newValidator(
                 SqlStdOperatorTable.instance(),
                 testContext.stmt,
                 typeFactory);

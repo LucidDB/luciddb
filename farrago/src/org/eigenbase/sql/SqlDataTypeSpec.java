@@ -25,11 +25,12 @@ package org.eigenbase.sql;
 
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.reltype.RelDataTypeFactoryImpl;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.util.SqlVisitor;
+import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.util.Util;
 
 import java.nio.charset.Charset;
@@ -142,7 +143,7 @@ public class SqlDataTypeSpec extends SqlNode
         String name = typeName.getSimple();
         if (SqlTypeName.containsName(name)) {
             SqlTypeName sqlTypeName = SqlTypeName.get(name);
-            
+
             //we have a built in data type
             writer.print(name);
 
@@ -164,7 +165,7 @@ public class SqlDataTypeSpec extends SqlNode
         }
     }
 
-    public void validate(SqlValidator validator, SqlValidator.Scope scope)
+    public void validate(SqlValidator validator, SqlValidatorScope scope)
     {
         validator.validateDataType(this);
     }
@@ -200,7 +201,7 @@ public class SqlDataTypeSpec extends SqlNode
         }
 
         SqlTypeName sqlTypeName = SqlTypeName.get(name);
-        RelDataTypeFactory typeFactory = validator.typeFactory;
+        RelDataTypeFactory typeFactory = validator.getTypeFactory();
 
         // TODO jvs 13-Dec-2005:  these assertions should be real
         // validation errors instead; need to share code with DDL

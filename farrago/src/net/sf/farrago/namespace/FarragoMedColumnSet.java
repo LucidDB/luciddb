@@ -23,7 +23,7 @@
 package net.sf.farrago.namespace;
 
 import org.eigenbase.relopt.*;
-import org.eigenbase.sql.*;
+import org.eigenbase.sql.validate.SqlValidatorTable;
 
 
 /**
@@ -36,7 +36,7 @@ import org.eigenbase.sql.*;
  * @version $Id$
  */
 public interface FarragoMedColumnSet extends RelOptTable,
-    SqlValidator.Table
+    SqlValidatorTable
 {
 }
 

@@ -23,6 +23,8 @@
 package org.eigenbase.sql.type;
 
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.reltype.*;
 
 /**
@@ -35,15 +37,15 @@ import org.eigenbase.reltype.*;
 public class ExplicitParamInference implements UnknownParamInference
 {
     private final RelDataType [] paramTypes;
-    
+
     public ExplicitParamInference(RelDataType [] paramTypes)
     {
         this.paramTypes = paramTypes;
     }
-    
+
     public void inferOperandTypes(
         SqlValidator validator,
-        SqlValidator.Scope scope,
+        SqlValidatorScope scope,
         SqlCall call,
         RelDataType returnType,
         RelDataType [] operandTypes)
