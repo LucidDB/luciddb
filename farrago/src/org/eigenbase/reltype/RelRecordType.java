@@ -35,7 +35,7 @@ public class RelRecordType extends RelDataTypeImpl
     public RelRecordType(RelDataTypeField [] fields)
     {
         super(fields);
-        this.digest = computeDigest();
+        computeDigest();
     }
 
     public boolean isStruct()
@@ -55,20 +55,23 @@ public class RelRecordType extends RelDataTypeImpl
         return false;
     }
 
-    protected String computeDigest()
+    protected void generateTypeString(StringBuffer sb, boolean withDetail)
     {
-        final StringBuffer sb = new StringBuffer();
         sb.append("RecordType(");
         for (int i = 0; i < fields.length; i++) {
             if (i > 0) {
                 sb.append(", ");
             }
             RelDataTypeField field = fields[i];
-            sb.append(field.getType().getFullTypeString() + " "
-                + field.getName());
+            if (withDetail) {
+                sb.append(field.getType().getFullTypeString());
+            } else {
+                sb.append(field.getType().toString());
+            }
+            sb.append(" ");
+            sb.append(field.getName());
         }
         sb.append(")");
-        return sb.toString();
     }
 }
 

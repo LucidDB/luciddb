@@ -26,7 +26,7 @@ import org.eigenbase.util.*;
 /**
  * MultisetSqlType represents a standard SQL2003 multiset type.
  *
- * @author John V. Sichi
+ * @author wael
  * @version $Id$
  */
 public class MultisetSqlType extends AbstractSqlType
@@ -36,29 +36,33 @@ public class MultisetSqlType extends AbstractSqlType
     /**
      * @pre null!=elementType
      */
-    public MultisetSqlType(RelDataType elementType, boolean isNullable) {
+    public MultisetSqlType(RelDataType elementType, boolean isNullable)
+    {
         super(SqlTypeName.Multiset, isNullable);
         Util.pre(null!=elementType,"null!=elementType");
         this.elementType = elementType;
-        digest = computeDigest();
+        computeDigest();
     }
 
-    protected String computeDigest()
+    protected void generateTypeString(StringBuffer sb, boolean withDetail)
     {
-        return elementType.getFullTypeString() + " MULTISET";
+        if (withDetail) {
+            sb.append(elementType.getFullTypeString());
+        } else {
+            sb.append(elementType.toString());
+        }
+        sb.append(" MULTISET");
     }
-        
-    public String toString() {
-        return elementType.toString() + " MULTISET";
-    }
-
-    public RelDataType getComponentType() {
+    
+    public RelDataType getComponentType()
+    {
         return elementType;
     }
 
     public boolean isAssignableFrom(
         RelDataType t,
-        boolean coerce) {
+        boolean coerce)
+    {
         return (t instanceof MultisetSqlType) &&
             ((MultisetSqlType) t).elementType.isAssignableFrom(
                 elementType, coerce);

@@ -221,6 +221,7 @@ public abstract class FennelRelUtil
             return 14; // STANDARD_TYPE_BINARY
         case Types.REAL:
             return 10; // STANDARD_TYPE_REAL
+        case Types.FLOAT:
         case Types.DOUBLE:
             return 11; // STANDARD_TYPE_DOUBLE
         default:

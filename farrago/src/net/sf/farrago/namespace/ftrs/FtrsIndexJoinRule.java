@@ -173,9 +173,16 @@ class FtrsIndexJoinRule extends RelOptRule
             // no cast required
             castRel = nullFilterRel;
         } else {
+            RelDataType rightStructType =
+                typeFactory.createStructType(
+                    new RelDataType [] { rightType },
+                    new String [] { "rightColumn" });
+            
             RelDataType castRowType =
                 typeFactory.createJoinType(
-                    new RelDataType [] { leftRel.getRowType(), rightType });
+                    new RelDataType [] {
+                        leftRel.getRowType(), rightStructType
+                    });
             RexNode [] castExps = new RexNode[leftFieldCount + 1];
             String [] fieldNames = new String[leftFieldCount + 1];
             RexBuilder rexBuilder = leftRel.getCluster().rexBuilder;

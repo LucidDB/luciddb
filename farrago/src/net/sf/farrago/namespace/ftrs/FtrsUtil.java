@@ -326,7 +326,7 @@ abstract class FtrsUtil
             FennelRelUtil.addTupleAttrDescriptor(
                 repos,
                 tupleDesc,
-                typeFactory.createColumnType(column, true));
+                typeFactory.createColumnType(column));
         }
         return tupleDesc;
     }
@@ -344,7 +344,7 @@ abstract class FtrsUtil
             FennelRelUtil.addTupleAttrDescriptor(
                 repos,
                 tupleDesc,
-                typeFactory.createColumnType(column, true));
+                typeFactory.createColumnType(column));
         }
         return tupleDesc;
     }

@@ -240,7 +240,7 @@ public abstract class RelDataTypeFactoryImpl implements RelDataTypeFactory
         } else {
             newType = copySimpleType(type, nullable);
         }
-        return canonizeOnceDigestFixed(newType);
+        return canonize(newType);
     }
 
     /**
@@ -342,13 +342,6 @@ public abstract class RelDataTypeFactoryImpl implements RelDataTypeFactory
             new RelDataTypeField[list.size()]);
     }
 
-    // TODO jvs 2-Dec-2004:  fix digest generation for all types,
-    // and then replace this with canonize
-    protected RelDataType canonizeOnceDigestFixed(RelDataType type)
-    {
-        return type;
-    }
-    
     public RelDataType createArrayType(
         RelDataType elementType,
         long maxCardinality)
@@ -396,19 +389,19 @@ public abstract class RelDataTypeFactoryImpl implements RelDataTypeFactory
         {
             super(fieldsOf(clazz));
             this.clazz = clazz;
-            this.digest = computeDigest();
 
             isNullable =
-                clazz.equals(Integer.class) || clazz.equals(int.class)
-                    || clazz.equals(Long.class) || clazz.equals(long.class)
-                    || clazz.equals(Integer.class) || clazz.equals(int.class)
-                    || clazz.equals(Byte.class) || clazz.equals(byte.class)
+                clazz.equals(Integer.class)
+                    || clazz.equals(Long.class)
+                    || clazz.equals(Short.class)
+                    || clazz.equals(Integer.class)
+                    || clazz.equals(Byte.class)
                     || clazz.equals(Double.class)
-                    || clazz.equals(double.class)
+                    || clazz.equals(Float.class)
                     || clazz.equals(Boolean.class)
-                    || clazz.equals(boolean.class)
                     || clazz.equals(byte [].class)
                     || clazz.equals(String.class);
+            computeDigest();
         }
 
         public JavaType(
@@ -439,9 +432,11 @@ public abstract class RelDataTypeFactoryImpl implements RelDataTypeFactory
             return isNullable;
         }
         
-        protected String computeDigest()
+        protected void generateTypeString(StringBuffer sb, boolean withDetail)
         {
-            return "JavaType(" + clazz + ")";
+            sb.append("JavaType(");
+            sb.append(clazz);
+            sb.append(")");
         }
 
         public RelDataType getComponentType()
@@ -457,20 +452,12 @@ public abstract class RelDataTypeFactoryImpl implements RelDataTypeFactory
         public Charset getCharset()
             throws RuntimeException
         {
-            if (!SqlTypeUtil.inCharFamily(this)) {
-                throw Util.newInternal(computeDigest()
-                    + " is not defined to carry a charset");
-            }
             return this.charset;
         }
 
         public SqlCollation getCollation()
             throws RuntimeException
         {
-            if (!SqlTypeUtil.inCharFamily(this)) {
-                throw Util.newInternal(computeDigest()
-                    + " is not defined to carry a collation");
-            }
             return this.collation;
         }
 

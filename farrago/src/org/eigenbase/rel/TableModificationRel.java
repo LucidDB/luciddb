@@ -29,6 +29,7 @@ import org.eigenbase.relopt.RelOptPlanWriter;
 import org.eigenbase.relopt.RelOptTable;
 import org.eigenbase.relopt.RelOptUtil;
 import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.util.EnumeratedValues;
 
 
@@ -112,7 +113,7 @@ public class TableModificationRel extends SingleRel
     {
         RelDataType [] types = new RelDataType[1];
         String [] fieldNames = new String[1];
-        types[0] = cluster.typeFactory.createJavaType(Long.TYPE);
+        types[0] = cluster.typeFactory.createSqlType(SqlTypeName.Bigint);
         fieldNames[0] = "ROWCOUNT";
         return cluster.typeFactory.createStructType(types, fieldNames);
     }

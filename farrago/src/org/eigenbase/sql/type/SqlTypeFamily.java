@@ -74,15 +74,14 @@ public class SqlTypeFamily
             IntervalYearMonth, IntervalDayTime
         };
     private static SqlTypeFamily [] jdbcTypeToFamily;
-    private static final int MIN_JDBC_TYPE = Types.BIT;
-    private static final int MAX_JDBC_TYPE = Types.REF;
 
     private static SqlTypeFamily [] sqlTypeToFamily;
     
     static {
         // This squanders some memory since MAX_JDBC_TYPE == 2006!
         jdbcTypeToFamily =
-            new SqlTypeFamily[(1 + MAX_JDBC_TYPE) - MIN_JDBC_TYPE];
+            new SqlTypeFamily[
+                (1 + SqlTypeName.MAX_JDBC_TYPE) - SqlTypeName.MIN_JDBC_TYPE];
 
         setFamilyForJdbcType(Types.BIT, Numeric);
         setFamilyForJdbcType(Types.TINYINT, Numeric);
@@ -156,7 +155,7 @@ public class SqlTypeFamily
         int jdbcType,
         SqlTypeFamily family)
     {
-        jdbcTypeToFamily[jdbcType - MIN_JDBC_TYPE] = family;
+        jdbcTypeToFamily[jdbcType - SqlTypeName.MIN_JDBC_TYPE] = family;
     }
 
     /**
@@ -180,7 +179,7 @@ public class SqlTypeFamily
      */
     public static SqlTypeFamily getFamilyForJdbcType(int jdbcType)
     {
-        return jdbcTypeToFamily[jdbcType - MIN_JDBC_TYPE];
+        return jdbcTypeToFamily[jdbcType - SqlTypeName.MIN_JDBC_TYPE];
     }
 }
 

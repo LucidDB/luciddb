@@ -30,7 +30,7 @@ import java.nio.charset.*;
  * BasicSqlType represents a standard atomic SQL type (excluding
  * interval types).
  *
- * @author John V. Sichi
+ * @author jhyde
  * @version $Id$
  */
 public class BasicSqlType extends AbstractSqlType
@@ -49,14 +49,14 @@ public class BasicSqlType extends AbstractSqlType
      */
     public BasicSqlType(SqlTypeName typeName)
     {
-        super(typeName, true);
+        super(typeName, false);
         Util.pre(
             typeName.allowsPrecScale(false, false),
             "typeName.allowsPrecScale(false,false), typeName="
             + typeName.name);
         this.precision = PRECISION_NOT_SPECIFIED;
         this.scale = SCALE_NOT_SPECIFIED;
-        this.digest = typeName.name;
+        computeDigest();
     }
 
     /**
@@ -68,13 +68,13 @@ public class BasicSqlType extends AbstractSqlType
         SqlTypeName typeName,
         int precision)
     {
-        super(typeName, true);
+        super(typeName, false);
         Util.pre(
             typeName.allowsPrecScale(true, false),
             "typeName.allowsPrecScale(true,false)");
         this.precision = precision;
         this.scale = SCALE_NOT_SPECIFIED;
-        this.digest = typeName.name + "(" + precision + ")";
+        computeDigest();
     }
 
     /**
@@ -87,20 +87,19 @@ public class BasicSqlType extends AbstractSqlType
         int precision,
         int scale)
     {
-        super(typeName, true);
+        super(typeName, false);
         Util.pre(
             typeName.allowsPrecScale(true, true),
             "typeName.allowsPrecScale(true,true)");
         this.precision = precision;
         this.scale = scale;
-        this.digest =
-            typeName.name + "(" + precision + ", " + scale + ")";
+        computeDigest();
     }
 
     /**
      * Constructs a type with nullablity
      */
-    public BasicSqlType createWithNullability(boolean nullable)
+    BasicSqlType createWithNullability(boolean nullable)
     {
         BasicSqlType ret = null;
         try {
@@ -109,6 +108,7 @@ public class BasicSqlType extends AbstractSqlType
             throw Util.newInternal(e);
         }
         ret.isNullable = nullable;
+        ret.computeDigest();
         return ret;
     }
 
@@ -129,33 +129,76 @@ public class BasicSqlType extends AbstractSqlType
         }
         ret.charset = charset;
         ret.collation = collation;
+        ret.computeDigest();
         return ret;
     }
 
     //implement RelDataType
     public int getPrecision()
     {
+        if (precision == PRECISION_NOT_SPECIFIED) {
+            switch(typeName.getOrdinal()) {
+            case SqlTypeName.Boolean_ordinal:
+                return 1;
+            case SqlTypeName.Tinyint_ordinal:
+                return 3;
+            case SqlTypeName.Smallint_ordinal:
+                return 5;
+            case SqlTypeName.Integer_ordinal:
+                return 10;
+            case SqlTypeName.Bigint_ordinal:
+                return 20;
+            default:
+                throw new AssertionError();
+            }
+        }
         return precision;
+    }
+
+    // implement RelDataType
+    public int getScale()
+    {
+        assert(scale != SCALE_NOT_SPECIFIED);
+        return scale;
     }
 
     public Charset getCharset()
         throws RuntimeException
     {
-        if (!SqlTypeUtil.inCharFamily(this)) {
-            throw Util.newInternal(typeName.toString()
-                + " is not defined to carry a charset");
-        }
         return this.charset;
     }
 
     public SqlCollation getCollation()
         throws RuntimeException
     {
-        if (!SqlTypeUtil.inCharFamily(this)) {
-            throw Util.newInternal(typeName.toString()
-                + " is not defined to carry a collation");
-        }
         return this.collation;
+    }
+
+    protected void generateTypeString(StringBuffer sb, boolean withDetail)
+    {
+        sb.append(typeName.getName());
+        if (precision != PRECISION_NOT_SPECIFIED) {
+            sb.append('(');
+            sb.append(getPrecision());
+            if (scale != SCALE_NOT_SPECIFIED) {
+                sb.append(", ");
+                sb.append(getScale());
+            }
+            sb.append(')');
+        }
+        if (!withDetail) {
+            return;
+        }
+        if (charset != null) {
+            sb.append(" CHARACTER SET \"");
+            sb.append(charset.name());
+            sb.append("\"");
+        }
+        if (collation != null) {
+            sb.append(" COLLATE \"");
+            sb.append(collation.getCollationName());
+            sb.append("\"");
+        }
     }
 }
 

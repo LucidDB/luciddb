@@ -56,7 +56,7 @@ public class RelCrossType extends RelDataTypeImpl
         for (int i = 0; i < types.length; i++) {
             assert (!(types[i] instanceof RelCrossType));
         }
-        this.digest = computeDigest();
+        computeDigest();
     }
 
     public RelDataTypeField getField(String fieldName)
@@ -87,19 +87,21 @@ public class RelCrossType extends RelDataTypeImpl
             "not applicable to a join type");
     }
 
-    protected String computeDigest()
+    protected void generateTypeString(StringBuffer sb, boolean withDetail)
     {
-        final StringBuffer sb = new StringBuffer();
         sb.append("CrossType(");
         for (int i = 0; i < types.length; i++) {
             if (i > 0) {
                 sb.append(", ");
             }
             RelDataType type = types[i];
-            sb.append(type.getFullTypeString());
+            if (withDetail) {
+                sb.append(type.getFullTypeString());
+            } else {
+                sb.append(type.toString());
+            }
         }
         sb.append(")");
-        return sb.toString();
     }
 }
 

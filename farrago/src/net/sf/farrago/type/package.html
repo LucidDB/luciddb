@@ -8,11 +8,10 @@ Defines Farrago-specific datatype support.
 
 <hr>
 
-This package subclasses generic datatype interfaces from
-{@link org.eigenbase.reltype} and {@link org.eigenbase.oj} in order to
-implement true SQL datatype semantics (e.g. nullability, precision,
-scale, character set, and collation sequence).  During query
-processing, the Farrago JDBC driver ensures that an instance of {@link
+This package subclasses generic datatype interfaces from {@link
+org.eigenbase.reltype} and {@link org.eigenbase.oj} in order to
+implement Farrago-specific type handling.  During query processing,
+the Farrago JDBC driver ensures that an instance of {@link
 net.sf.farrago.type.FarragoTypeFactory} is used for all type analysis.
 
 </body>

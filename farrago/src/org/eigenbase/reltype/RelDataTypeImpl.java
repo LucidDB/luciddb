@@ -64,7 +64,11 @@ public abstract class RelDataTypeImpl
     // implement RelDataType
     public int getFieldCount()
     {
-        return fields.length;
+        if (fields == null) {
+            return 0;
+        } else {
+            return fields.length;
+        }
     }
 
     // implement RelDataType
@@ -115,12 +119,6 @@ public abstract class RelDataTypeImpl
     }
 
     // implement RelDataType
-    public String toString()
-    {
-        return digest;
-    }
-
-    // implement RelDataType
     public String getFullTypeString()
     {
         return digest;
@@ -150,14 +148,14 @@ public abstract class RelDataTypeImpl
     // implement RelDataType
     public Charset getCharset()
     {
-        throw Util.newInternal("attribute not applicable");
+        return null;
     }
 
     // implement RelDataType
     public SqlCollation getCollation()
         throws RuntimeException
     {
-        throw Util.newInternal("attribute not applicable");
+        return null;
     }
 
     // implement RelDataType
@@ -183,6 +181,42 @@ public abstract class RelDataTypeImpl
     {
         // by default, put each type into its own family
         return this;
+    }
+
+    /**
+     * Generates a string representation of this type.
+     *
+     * @param StringBuffer into which to generate the string
+     *
+     * @param withDetail when true, all detail information needed to
+     * compute a unique digest (and return from getFullTypeString)
+     * should be included; when false, less verbosity is appropriate
+     * (for return from toString)
+     */
+    protected abstract void generateTypeString(
+        StringBuffer sb,
+        boolean withDetail);
+
+    /**
+     * Computes the digest field.  This should be called in every
+     * non-abstract subclass constructor once the type is fully defined.
+     */
+    protected void computeDigest()
+    {
+        StringBuffer sb = new StringBuffer();
+        generateTypeString(sb, true);
+        if (!isNullable()) {
+            sb.append(" NOT NULL");
+        }
+        digest = sb.toString();
+    }
+
+    // implement RelDataType
+    public String toString()
+    {
+        StringBuffer sb = new StringBuffer();
+        generateTypeString(sb, false);
+        return sb.toString();
     }
 }
 

@@ -44,7 +44,7 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
     {
         assertBasic(typeName);
         RelDataType newType = new BasicSqlType(typeName);
-        return canonizeOnceDigestFixed(newType);
+        return canonize(newType);
     }
 
     // implement RelDataTypeFactory
@@ -55,7 +55,7 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
         assertBasic(typeName);
         Util.pre(length >= 0, "length >= 0");
         RelDataType newType = new BasicSqlType(typeName, length);
-        return canonizeOnceDigestFixed(newType);
+        return canonize(newType);
     }
 
     // implement RelDataTypeFactory
@@ -67,22 +67,22 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
         assertBasic(typeName);
         Util.pre(length >= 0, "length >= 0");
         RelDataType newType = new BasicSqlType(typeName, length, scale);
-        return canonizeOnceDigestFixed(newType);
+        return canonize(newType);
     }
     
     // implement RelDataTypeFactory
     public RelDataType createMultisetType(RelDataType type)
     {
-        RelDataType newType = new MultisetSqlType(type, true);
-        return canonizeOnceDigestFixed(newType);
+        RelDataType newType = new MultisetSqlType(type, false);
+        return canonize(newType);
     }
 
     // implement RelDataTypeFactory
     public RelDataType createIntervalType(
         SqlIntervalQualifier intervalQualifier)
     {
-        RelDataType newType = new IntervalSqlType(intervalQualifier, true);
-        return canonizeOnceDigestFixed(newType);
+        RelDataType newType = new IntervalSqlType(intervalQualifier, false);
+        return canonize(newType);
     }
     
     // implement RelDataTypeFactory
@@ -108,7 +108,7 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
         } else {
             throw Util.needToImplement("need to implement " + type);
         }
-        return canonizeOnceDigestFixed(newType);
+        return canonize(newType);
     }
 
     // implement RelDataTypeFactory
@@ -141,7 +141,7 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
         } else {
             return super.createTypeWithNullability(type, nullable);
         }
-        return canonizeOnceDigestFixed(newType);
+        return canonize(newType);
     }
     
     private void assertBasic(SqlTypeName typeName)
@@ -208,16 +208,18 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
             } else if (SqlTypeUtil.isExactNumeric(type)) {
                 if (SqlTypeUtil.isExactNumeric(resultType)) {
                     if (!type.equals(resultType)) {
-                        if (!typeName.allowsPrecNoScale()
-                            && !resultTypeName.allowsPrecNoScale())
+                        if (!typeName.allowsPrec()
+                            && !resultTypeName.allowsPrec())
                         {
                             // use the bigger primitive
                             if (type.getPrecision() > resultType.getPrecision()) {
                                 resultType = type;
                             }
                         } else {
-                            // TODO:  the real thing for numerics
-                            resultType = createDoublePrecisionType();
+                            // TODO:  the real thing for numerics;
+                            // for now we let leastRestrictiveGenericType
+                            // handle it
+                            return null;
                         }
                     }
                 } else if (SqlTypeUtil.isApproximateNumeric(resultType)) {
@@ -246,9 +248,7 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
 
     private RelDataType createDoublePrecisionType()
     {
-        return createTypeWithNullability(
-            createSqlType(SqlTypeName.Double),
-            false);
+        return createSqlType(SqlTypeName.Double);
     }
     
     private RelDataType copyMultisetType(RelDataType type, boolean nullable)

@@ -39,7 +39,7 @@ Error: At line 1, column 17: Cannot apply 'AND' to arguments of type '<BOOLEAN> 
 0: jdbc:farrago:> values false and '';
 Error: At line 1, column 18: Cannot apply 'AND' to arguments of type '<BOOLEAN> AND <VARCHAR(0)>'. Supported form(s): '<BOOLEAN> AND <BOOLEAN>' (state=,code=0)
 0: jdbc:farrago:> values 1.2 and unknown;
-Error: At line 1, column 16: Cannot apply 'AND' to arguments of type '<DECIMAL> AND <BOOLEAN>'. Supported form(s): '<BOOLEAN> AND <BOOLEAN>' (state=,code=0)
+Error: At line 1, column 16: Cannot apply 'AND' to arguments of type '<DECIMAL(2, 1)> AND <BOOLEAN>'. Supported form(s): '<BOOLEAN> AND <BOOLEAN>' (state=,code=0)
 0: jdbc:farrago:> values unknown or 1;
 Error: At line 1, column 19: Cannot apply 'OR' to arguments of type '<BOOLEAN> OR <INTEGER>'. Supported form(s): '<BOOLEAN> OR <BOOLEAN>' (state=,code=0)
 0: jdbc:farrago:> values '' or b'';
@@ -262,7 +262,7 @@ Error: At line 1, column 14: Cannot apply '=' to arguments of type '<BOOLEAN> = 
 '<INTERVALYEARMONTH> = <INTERVALYEARMONTH>'
 '<ANY> = <ANY>' (state=,code=0)
 0: jdbc:farrago:> values b'101'=0.001;
-Error: At line 1, column 15: Cannot apply '=' to arguments of type '<BIT(3)> = <DECIMAL>'. Supported form(s): '<ANY> = <ANY>'
+Error: At line 1, column 15: Cannot apply '=' to arguments of type '<BIT(3)> = <DECIMAL(4, 3)>'. Supported form(s): '<ANY> = <ANY>'
 '<TINYINT> = <TINYINT>'
 '<TINYINT> = <SMALLINT>'
 '<TINYINT> = <INTEGER>'
@@ -514,7 +514,7 @@ Error: At line 1, column 15: Cannot apply '<>' to arguments of type '<BOOLEAN> <
 '<INTERVALYEARMONTH> <> <INTERVALYEARMONTH>'
 '<ANY> <> <ANY>' (state=,code=0)
 0: jdbc:farrago:> values b''<>0.2;
-Error: At line 1, column 13: Cannot apply '<>' to arguments of type '<BIT(0)> <> <DECIMAL>'. Supported form(s): '<ANY> <> <ANY>'
+Error: At line 1, column 13: Cannot apply '<>' to arguments of type '<BIT(0)> <> <DECIMAL(2, 1)>'. Supported form(s): '<ANY> <> <ANY>'
 '<TINYINT> <> <TINYINT>'
 '<TINYINT> <> <SMALLINT>'
 '<TINYINT> <> <INTEGER>'
@@ -850,7 +850,7 @@ Error: At line 1, column 10: Cannot apply '<' to arguments of type '<INTEGER> < 
 '<INTERVALYEARMONTH> < <INTERVALYEARMONTH>'
 '<ANY> < <ANY>' (state=,code=0)
 0: jdbc:farrago:> values ''<0.1;
-Error: At line 1, column 11: Cannot apply '<' to arguments of type '<VARCHAR(0)> < <DECIMAL>'. Supported form(s): '<ANY> < <ANY>'
+Error: At line 1, column 11: Cannot apply '<' to arguments of type '<VARCHAR(0)> < <DECIMAL(2, 1)>'. Supported form(s): '<ANY> < <ANY>'
 '<TINYINT> < <TINYINT>'
 '<TINYINT> < <SMALLINT>'
 '<TINYINT> < <INTEGER>'
@@ -1186,7 +1186,7 @@ Error: At line 1, column 11: Cannot apply '<=' to arguments of type '<INTEGER> <
 '<INTERVALYEARMONTH> <= <INTERVALYEARMONTH>'
 '<ANY> <= <ANY>' (state=,code=0)
 0: jdbc:farrago:> values ''<=0.0;
-Error: At line 1, column 12: Cannot apply '<=' to arguments of type '<VARCHAR(0)> <= <DECIMAL>'. Supported form(s): '<ANY> <= <ANY>'
+Error: At line 1, column 12: Cannot apply '<=' to arguments of type '<VARCHAR(0)> <= <DECIMAL(2, 1)>'. Supported form(s): '<ANY> <= <ANY>'
 '<TINYINT> <= <TINYINT>'
 '<TINYINT> <= <SMALLINT>'
 '<TINYINT> <= <INTEGER>'
@@ -1282,7 +1282,7 @@ Error: At line 1, column 18: Cannot apply 'IS NOT TRUE' to arguments of type '<V
 0: jdbc:farrago:> values 1 is false;
 Error: At line 1, column 13: Cannot apply 'IS FALSE' to arguments of type '<INTEGER> IS FALSE'. Supported form(s): '<BOOLEAN> IS FALSE' (state=,code=0)
 0: jdbc:farrago:> values 0.01 is not false;
-Error: At line 1, column 20: Cannot apply 'IS NOT FALSE' to arguments of type '<DECIMAL> IS NOT FALSE'. Supported form(s): '<BOOLEAN> IS NOT FALSE' (state=,code=0)
+Error: At line 1, column 20: Cannot apply 'IS NOT FALSE' to arguments of type '<DECIMAL(3, 2)> IS NOT FALSE'. Supported form(s): '<BOOLEAN> IS NOT FALSE' (state=,code=0)
 0: jdbc:farrago:> values x'' is unknown; 
 Error: At line 1, column 15: Cannot apply 'IS UNKNOWN' to arguments of type '<VARBINARY(0)> IS UNKNOWN'. Supported form(s): '<BOOLEAN> IS UNKNOWN' (state=,code=0)
 0: jdbc:farrago:> values b'' is not unknown;
@@ -2431,7 +2431,7 @@ Error: At line 1, column 16: Cannot apply 'NOT BETWEEN' to arguments of type '<B
 '<VARCHAR> NOT BETWEEN <VARCHAR> AND <CHAR>'
 '<VARCHAR> NOT BETWEEN <VARCHAR> AND <VARCHAR>' (state=,code=0)
 0: jdbc:farrago:> values '' between '' and 1.0;
-Error: At line 1, column 11: Cannot apply 'BETWEEN' to arguments of type '<VARCHAR(0)> BETWEEN <VARCHAR(0)> AND <DECIMAL>'. Supported form(s): '<TINYINT> BETWEEN <TINYINT> AND <TINYINT>'
+Error: At line 1, column 11: Cannot apply 'BETWEEN' to arguments of type '<VARCHAR(0)> BETWEEN <VARCHAR(0)> AND <DECIMAL(2, 1)>'. Supported form(s): '<TINYINT> BETWEEN <TINYINT> AND <TINYINT>'
 '<TINYINT> BETWEEN <TINYINT> AND <SMALLINT>'
 '<TINYINT> BETWEEN <TINYINT> AND <INTEGER>'
 '<TINYINT> BETWEEN <TINYINT> AND <BIGINT>'
@@ -3027,7 +3027,7 @@ Error: At line 1, column 8: Cannot apply 'CHARACTER_LENGTH' to arguments of type
 Error: At line 1, column 8: Cannot apply 'CHAR_LENGTH' to arguments of type 'CHAR_LENGTH(<VARBINARY(0)>)'. Supported form(s): 'CHAR_LENGTH(<CHAR>)'
 'CHAR_LENGTH(<VARCHAR>)' (state=,code=0)
 0: jdbc:farrago:> values upper(0.02);
-Error: At line 1, column 8: Cannot apply 'UPPER' to arguments of type 'UPPER(<DECIMAL>)'. Supported form(s): 'UPPER(<CHAR>)'
+Error: At line 1, column 8: Cannot apply 'UPPER' to arguments of type 'UPPER(<DECIMAL(3, 2)>)'. Supported form(s): 'UPPER(<CHAR>)'
 'UPPER(<VARCHAR>)' (state=,code=0)
 0: jdbc:farrago:> values lower(b'');
 Error: At line 1, column 8: Cannot apply 'LOWER' to arguments of type 'LOWER(<BIT(0)>)'. Supported form(s): 'LOWER(<CHAR>)'

@@ -25,10 +25,10 @@ import org.eigenbase.reltype.*;
 /**
  * Abstract base class for SQL implementations of {@link RelDataType}.
  *
- * @author John V. Sichi
+ * @author jhyde
  * @version $Id$
  */
-public class AbstractSqlType
+public abstract class AbstractSqlType
     extends RelDataTypeImpl implements Cloneable
 {
     protected final SqlTypeName typeName;

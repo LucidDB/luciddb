@@ -853,11 +853,11 @@ public class FarragoRepos extends FarragoMetadataFactory
         // This is where all the builtin types are defined.  To add a new
         // builtin type, you have to:
         // (1) add a definition here
-        // (2) add Java mappings in FarragoTypeFactoryImpl
+        // (2) add mappings in FarragoTypeFactoryImpl and maybe
+        // SqlTypeName/SqlTypeFamily
         // (3) add Fennel mappings in
         // FennelRelUtil.convertSqlTypeNumberToFennelTypeOrdinal
-        // (4) review classes in package net.sf.farrago.type
-        // (5) since I've already done all the easy cases, you'll probably
+        // (4) since I've already done all the easy cases, you'll probably
         // need lots of extra fancy semantics elsewhere
         type = newCwmSqlsimpleType();
         type.setName("BOOLEAN");

@@ -54,16 +54,10 @@ public interface FarragoTypeFactory extends OJTypeFactory
      *
      * @param column CWM column
      *
-     * @param validated if true, the column's definition has already been
-     * validated, and the returned type will be complete; if false, the
-     * returned type will have only enough information needed for
-     * column DDL validation
-     *
      * @return generated type
      */
     public RelDataType createColumnType(
-        CwmColumn column,
-        boolean validated);
+        CwmColumn column);
 
     /**
      * Creates a type which represents the row datatype of a CWM
@@ -93,30 +87,6 @@ public interface FarragoTypeFactory extends OJTypeFactory
      * @return generated type
      */
     public RelDataType createMofType(StructuralFeature feature);
-
-    /**
-     * Initializes a CwmColumn definition based on a RelDataTypeField.
-     * If the column has no name, the name is initialized from the field
-     * name; otherwise, the existing name is left unmodified.
-     *
-     * @param field input field
-     *
-     * @param column on input, contains unintialized CwmColumn instance;
-     * on return, this has been initialized (but not validated)
-     */
-    public void convertFieldToCwmColumn(
-        RelDataTypeField field,
-        CwmColumn column);
-
-    /**
-     * Looks up the CWM simple type descriptor corresponding to a
-     * RelDataType.
-     *
-     * @param type type to look up
-     *
-     * @return type descriptor, or null if type is not simple
-     */
-    public CwmSqlsimpleType getCwmSimpleType(RelDataType type);
 
     /**
      * Constructs an OpenJava expression to access a value of an

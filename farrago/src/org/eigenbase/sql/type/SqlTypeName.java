@@ -41,6 +41,10 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
     private static final int PrecYesScaleNo = 2;
     private static final int PrecYesScaleYes = 4;
 
+    private static SqlTypeName [] jdbcTypeToName;
+    public static final int MIN_JDBC_TYPE = Types.BIT;
+    public static final int MAX_JDBC_TYPE = Types.REF;
+    
     // SQL Type Definitions ------------------
     public static final int Boolean_ordinal = 0;
     public static final SqlTypeName Boolean =
@@ -130,6 +134,42 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
             Float, Multiset
         });
 
+    static 
+    {
+        // This squanders some memory since MAX_JDBC_TYPE == 2006!
+        jdbcTypeToName =
+            new SqlTypeName[(1 + MAX_JDBC_TYPE) - MIN_JDBC_TYPE];
+
+        setNameForJdbcType(Types.BIT, Bit);
+        setNameForJdbcType(Types.TINYINT, Tinyint);
+        setNameForJdbcType(Types.SMALLINT, Smallint);
+        setNameForJdbcType(Types.BIGINT, Bigint);
+        setNameForJdbcType(Types.INTEGER, Integer);
+        setNameForJdbcType(Types.NUMERIC, Decimal); // REVIEW
+        setNameForJdbcType(Types.DECIMAL, Decimal);
+
+        setNameForJdbcType(Types.FLOAT, Float);
+        setNameForJdbcType(Types.REAL, Real);
+        setNameForJdbcType(Types.DOUBLE, Double);
+
+        setNameForJdbcType(Types.CHAR, Char);
+        setNameForJdbcType(Types.VARCHAR, Varchar);
+
+        // TODO
+        // setNameForJdbcType(Types.LONGVARCHAR, Longvarchar);
+        // setNameForJdbcType(Types.CLOB, Clob);
+        // setNameForJdbcType(Types.LONGVARBINARY, Longvarbinary);
+        // setNameForJdbcType(Types.BLOB, Blob);
+
+        setNameForJdbcType(Types.BINARY, Binary);
+        setNameForJdbcType(Types.VARBINARY, Varbinary);
+
+        setNameForJdbcType(Types.DATE, Date);
+        setNameForJdbcType(Types.TIME, Time);
+        setNameForJdbcType(Types.TIMESTAMP, Timestamp);
+        setNameForJdbcType(Types.BOOLEAN, Boolean);
+    }
+    
     //~ Instance fields -------------------------------------------------------
 
     /**
@@ -220,7 +260,11 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
      */
     public static SqlTypeName get(String name)
     {
-        return (SqlTypeName) enumeration.getValue(name);
+        if (enumeration.containsName(name)) {
+            return (SqlTypeName) enumeration.getValue(name);
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -243,6 +287,17 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
         return (signatures & PrecYesScaleNo) != 0;
     }
 
+    public boolean allowsPrec()
+    {
+        return allowsPrecScale(true, true)
+            || allowsPrecScale(true, false);
+    }
+
+    public boolean allowsScale()
+    {
+        return allowsPrecScale(true, true);
+    }
+    
     /**
      * Returns whether this type can be specified with a given combination
      * of precision and scale.
@@ -377,6 +432,25 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
         default:
             return -1;
         }
+    }
+    
+    /**
+     * Gets the SqlTypeName corresponding to a JDBC type.
+     *
+     * @param jdbcType the JDBC type of interest
+     *
+     * @return corresponding SqlTypeName
+     */
+    public static SqlTypeName getNameForJdbcType(int jdbcType)
+    {
+        return jdbcTypeToName[jdbcType - MIN_JDBC_TYPE];
+    }
+    
+    private static void setNameForJdbcType(
+        int jdbcType,
+        SqlTypeName name)
+    {
+        jdbcTypeToName[jdbcType - MIN_JDBC_TYPE] = name;
     }
 }
 

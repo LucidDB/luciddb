@@ -45,7 +45,6 @@ public class RexTransformer
 
     private RexNode root;
     private final RexBuilder rexBuilder;
-    private final RelDataType boolType;
     private int isParentsCount;
     private final SqlStdOperatorTable opTab = SqlOperatorTable.std();
     private final HashSet transformableOperators = new HashSet();
@@ -58,8 +57,6 @@ public class RexTransformer
     {
         this.root = root;
         this.rexBuilder = rexBuilder;
-        boolType =
-            rexBuilder.getTypeFactory().createSqlType(SqlTypeName.Boolean);
         isParentsCount = 0;
 
         transformableOperators.add(opTab.andOperator);

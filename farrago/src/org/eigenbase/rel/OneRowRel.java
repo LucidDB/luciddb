@@ -23,6 +23,7 @@ package org.eigenbase.rel;
 
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
+import org.eigenbase.sql.type.*;
 
 
 /**
@@ -64,8 +65,8 @@ public class OneRowRel extends AbstractRelNode
     protected RelDataType deriveRowType()
     {
         return cluster.typeFactory.createStructType(
-            new RelDataType [] { cluster.typeFactory.createJavaType(
-                    Integer.TYPE) },
+            new RelDataType [] { cluster.typeFactory.createSqlType(
+                    SqlTypeName.Integer) },
             new String [] { "ZERO" });
     }
 }

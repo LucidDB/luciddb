@@ -179,7 +179,11 @@ class FtrsScanToSearchRule extends RelOptRule
         FarragoTypeFactory typeFactory =
             origScan.getPreparingStmt().getFarragoTypeFactory();
         RelDataType lhsRowType =
-            typeFactory.createColumnType(filterColumn, true);
+            typeFactory.createStructType(
+                new RelDataType [] { 
+                    typeFactory.createColumnType(filterColumn)
+                },
+                new String [] { "filterColumn" });
         RelNode castRel = RelOptUtil.createCastRel(nullFilterRel, lhsRowType);
 
         RelNode keyInput =

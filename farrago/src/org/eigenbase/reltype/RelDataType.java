@@ -96,24 +96,16 @@ public interface RelDataType
         boolean coerce);
 
     /**
-     * Returns this type's character set, or null if this type can carry a
-     * character set but no character set is defined.
-     *
-     * @throws RuntimeException if this type is not of a kind (char,
-     *   varchar, and so forth) that can carry a character set.
+     * Returns this type's character set, or null if this type cannot carry a
+     * character set or has no character set defined.
      */
-    Charset getCharset()
-        throws RuntimeException;
+    Charset getCharset();
 
     /**
-     * Returns this type's collation, or null if this type can carry a
-     * collation but no collation is defined.
-     *
-     * @throws RuntimeException if this type is not of a kind (char,
-     *   varchar, and so forth) that can carry a collation.
+     * Returns this type's collation, or null if this type cannot carry a
+     * collation or has no collation defined.
      */
-    SqlCollation getCollation()
-        throws RuntimeException;
+    SqlCollation getCollation();
 
     /**
      * @return number of digits or characters of precision

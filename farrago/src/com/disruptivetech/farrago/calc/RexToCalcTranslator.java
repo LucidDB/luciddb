@@ -106,6 +106,9 @@ public class RexToCalcTranslator implements RexVisitor
                     fac.createSqlType(SqlTypeName.Bigint),
                     CalcProgramBuilder.OpType.Int8),
                 new TypePair(
+                    fac.createSqlType(SqlTypeName.Float),
+                    CalcProgramBuilder.OpType.Double),
+                new TypePair(
                     fac.createSqlType(SqlTypeName.Double),
                     CalcProgramBuilder.OpType.Double),
                 new TypePair(

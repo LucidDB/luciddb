@@ -131,7 +131,6 @@ public class DdlHandler
         }
         
         FarragoRepos repos = validator.getRepos();
-        FarragoTypeFactory typeFactory = validator.getTypeFactory();
 
         FemDataServer dataServer = columnSet.getServer();
         FemDataWrapper dataWrapper = dataServer.getWrapper();
@@ -155,7 +154,7 @@ public class DdlHandler
             for (int i = 0; i < n; ++i) {
                 CwmColumn column = repos.newFemStoredColumn();
                 columnList.add(column);
-                typeFactory.convertFieldToCwmColumn(fields[i], column);
+                convertFieldToCwmColumn(fields[i], column);
                 validateColumnImpl(column);
             }
         }
@@ -388,7 +387,7 @@ public class DdlHandler
             } else {
                 column = (CwmColumn) columnList.get(i);
             }
-            typeFactory.convertFieldToCwmColumn(fields[i], column);
+            convertFieldToCwmColumn(fields[i], column);
             validateColumnImpl(column);
         }
 
@@ -451,7 +450,7 @@ public class DdlHandler
         RelDataTypeFamily sourceTypeFamily = sourceType.getFamily();
 
         RelDataType targetType =
-            validator.getTypeFactory().createColumnType(column, true);
+            validator.getTypeFactory().createColumnType(column);
         RelDataTypeFamily targetTypeFamily = targetType.getFamily();
 
         if (sourceTypeFamily != targetTypeFamily) {
@@ -491,8 +490,8 @@ public class DdlHandler
             column.setIsNullable(NullableTypeEnum.COLUMN_NULLABLE);
         }
 
-        RelDataType type = 
-            validator.getTypeFactory().createColumnType(column,false);
+        SqlTypeName typeName = SqlTypeName.get(
+            column.getType().getName());
 
         // NOTE: parser only generates precision, but CWM discriminates
         // precision from length, so we take care of it below
@@ -503,15 +502,14 @@ public class DdlHandler
 
         // TODO:  break this method up
         // first, validate presence of modifiers
-        SqlTypeName typeName = type.getSqlTypeName();
-        if ((typeName != null) && typeName.allowsPrecScale(true, false)) {
+        if ((typeName != null) && typeName.allowsPrec()) {
             if (precision == null) {
                 int p = typeName.getDefaultPrecision();
                 if (p != -1) {
                     precision = new Integer(p);
                 }
             }
-            if (precision == null) {
+            if ((precision == null) && !typeName.allowsNoPrecNoScale()) {
                 throw validator.res.newValidatorPrecRequired(
                     getLocalizedTypeName(column),
                     getLocalizedName(column),
@@ -525,7 +523,7 @@ public class DdlHandler
                     validator.getParserPosString(column));
             }
         }
-        if ((typeName != null) && typeName.allowsPrecScale(true, true)) {
+        if ((typeName != null) && typeName.allowsScale()) {
             // assume scale is always optional
         } else {
             if (column.getScale() != null) {
@@ -535,14 +533,20 @@ public class DdlHandler
                     validator.getParserPosString(column));
             }
         }
-        if (SqlTypeUtil.inCharOrBinaryFamilies(type)) {
+        SqlTypeFamily typeFamily = null;
+        if (typeName != null) {
+            typeFamily = SqlTypeFamily.getFamilyForSqlType(typeName);
+        }
+        if ((typeFamily == SqlTypeFamily.Character)
+            || (typeFamily == SqlTypeFamily.Binary))
+        {
             // convert precision to length
             if (column.getLength() == null) {
                 column.setLength(column.getPrecision());
                 column.setPrecision(null);
             }
         }
-        if (type.getFamily() == SqlTypeFamily.Character) {
+        if (typeFamily == SqlTypeFamily.Character) {
             // TODO jvs 18-April-2004:  Should be inheriting these defaults
             // from schema/catalog.
             if (JmiUtil.isBlank(column.getCharacterSetName())) {
@@ -573,8 +577,13 @@ public class DdlHandler
         }
 
         // now, enforce type-defined limits
-        CwmSqlsimpleType simpleType =
-            validator.getTypeFactory().getCwmSimpleType(type);
+        CwmSqldataType cwmType = validator.getStmtValidator().findSqldataType(
+            column.getType().getName());
+
+        // TODO jvs 15-Dec-2004:  non-simple types
+        assert(cwmType instanceof CwmSqlsimpleType) : cwmType;
+        CwmSqlsimpleType simpleType = (CwmSqlsimpleType) cwmType;
+        
         if (column.getLength() != null) {
             Integer maximum = simpleType.getCharacterMaximumLength();
             assert (maximum != null);
@@ -840,6 +849,50 @@ public class DdlHandler
     public void executeDrop(FemDataWrapper wrapper)
     {
         validator.discardDataWrapper(wrapper);
+    }
+    
+    /**
+     * Initializes a CwmColumn definition based on a RelDataTypeField.
+     * If the column has no name, the name is initialized from the field
+     * name; otherwise, the existing name is left unmodified.
+     *
+     * @param field input field
+     *
+     * @param column on input, contains unintialized CwmColumn instance;
+     * on return, this has been initialized (but not validated)
+     */
+    private void convertFieldToCwmColumn(
+        RelDataTypeField field,
+        CwmColumn column)
+    {
+        RelDataType type = field.getType();
+        if (column.getName() == null) {
+            column.setName(field.getName());
+        }
+        SqlTypeName typeName = type.getSqlTypeName();
+        String lookupName;
+        if (typeName == null) {
+            // TODO jvs 15-Dec-2005:  UDF etc
+            lookupName = type.toString();
+        } else {
+            lookupName = typeName.getName();
+        }
+        CwmSqldataType cwmType = 
+            validator.getStmtValidator().findSqldataType(lookupName);
+        column.setType(cwmType);
+        if (typeName != null) {
+            if (typeName.allowsPrec()) {
+                column.setPrecision(new Integer(type.getPrecision()));
+                if (typeName.allowsScale()) {
+                    column.setScale(new Integer(type.getScale()));
+                }
+            }
+        }
+        if (type.isNullable()) {
+            column.setIsNullable(NullableTypeEnum.COLUMN_NULLABLE);
+        } else {
+            column.setIsNullable(NullableTypeEnum.COLUMN_NO_NULLS);
+        }
     }
 }
 

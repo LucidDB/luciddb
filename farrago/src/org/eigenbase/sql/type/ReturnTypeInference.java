@@ -599,7 +599,7 @@ public abstract class ReturnTypeInference
      * Type-inference strategy which always returns "VARCHAR(30)".
      */
     public static final ReturnTypeInference useVarchar30 =
-        new FixedReturnTypeInference(SqlTypeName.Varchar, 30, 0);
+        new FixedReturnTypeInference(SqlTypeName.Varchar, 30);
 
     /**
      * Type-inference strategy whereby the result type of a call is using its

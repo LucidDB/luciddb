@@ -49,7 +49,7 @@ public class OJTypeFactoryImpl extends SqlTypeFactoryImpl
 {
     //~ Instance fields -------------------------------------------------------
 
-    private final HashMap mapOJClassToType = new HashMap();
+    protected final HashMap mapOJClassToType = new HashMap();
 
     private final OJClassMap ojClassMap;
 
@@ -209,7 +209,7 @@ public class OJTypeFactoryImpl extends SqlTypeFactoryImpl
             //assert(!OJSyntheticClass.isProjectClass(ojClass));
             fields[0] = new RelDataTypeFieldImpl("this", 0, this);
             this.ojClass = ojClass;
-            this.digest = computeDigest();
+            computeDigest();
         }
 
         public RelDataTypeField getField(String fieldName)
@@ -241,9 +241,11 @@ public class OJTypeFactoryImpl extends SqlTypeFactoryImpl
             return toType(colType);
         }
 
-        protected String computeDigest()
+        protected void generateTypeString(StringBuffer sb, boolean withDetail)
         {
-            return "OJScalarType(" + ojClass + ")";
+            sb.append("OJScalarType(");
+            sb.append(ojClass);
+            sb.append(")");
         }
     }
 }

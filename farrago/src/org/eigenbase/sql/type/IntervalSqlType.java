@@ -27,7 +27,7 @@ import org.eigenbase.util.*;
 /**
  * IntervalSqlType represents a standard SQL datetime interval type.
  *
- * @author John V. Sichi
+ * @author wael
  * @version $Id$
  */
 public class IntervalSqlType extends AbstractSqlType
@@ -44,12 +44,13 @@ public class IntervalSqlType extends AbstractSqlType
             : SqlTypeName.IntervalDayTime,
             isNullable);
         this.intervalQualifier = intervalQualifier;
-        digest = computeDigest();
+        computeDigest();
     }
 
-    protected String computeDigest()
+    protected void generateTypeString(StringBuffer sb, boolean withDetail)
     {
-        return "INTERVAL "+intervalQualifier.toString();
+        sb.append("INTERVAL ");
+        sb.append(intervalQualifier.toString());
     }
         
     public SqlIntervalQualifier getIntervalQualifier()

@@ -76,12 +76,14 @@ public class SqlTypeAssignmentRules
 
         // Int is assignable from...
         rule = new HashSet();
+        rule.add(SqlTypeName.Tinyint);
         rule.add(SqlTypeName.Smallint);
         rule.add(SqlTypeName.Integer);
         rules.put(SqlTypeName.Integer, rule);
 
         // BigInt is assignable from...
         rule = new HashSet();
+        rule.add(SqlTypeName.Tinyint);
         rule.add(SqlTypeName.Smallint);
         rule.add(SqlTypeName.Integer);
         rule.add(SqlTypeName.Bigint);
@@ -89,6 +91,7 @@ public class SqlTypeAssignmentRules
 
         // Float is assignable from...
         rule = new HashSet();
+        rule.add(SqlTypeName.Tinyint);
         rule.add(SqlTypeName.Smallint);
         rule.add(SqlTypeName.Integer);
         rule.add(SqlTypeName.Bigint);
@@ -98,6 +101,7 @@ public class SqlTypeAssignmentRules
 
         // Real is assignable from...
         rule = new HashSet();
+        rule.add(SqlTypeName.Tinyint);
         rule.add(SqlTypeName.Smallint);
         rule.add(SqlTypeName.Integer);
         rule.add(SqlTypeName.Bigint);
@@ -108,6 +112,7 @@ public class SqlTypeAssignmentRules
 
         // Double is assignable from...
         rule = new HashSet();
+        rule.add(SqlTypeName.Tinyint);
         rule.add(SqlTypeName.Smallint);
         rule.add(SqlTypeName.Integer);
         rule.add(SqlTypeName.Bigint);
@@ -119,6 +124,7 @@ public class SqlTypeAssignmentRules
 
         // Decimal is assignable from...
         rule = new HashSet();
+        rule.add(SqlTypeName.Tinyint);
         rule.add(SqlTypeName.Smallint);
         rule.add(SqlTypeName.Integer);
         rule.add(SqlTypeName.Bigint);
