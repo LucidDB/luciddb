@@ -19,8 +19,8 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#ifndef Fennel_UncollectExecutionStream_Included
-#define Fennel_UncollectExecutionStream_Included
+#ifndef Fennel_UncollectExecStream_Included
+#define Fennel_UncollectExecStream_Included
 
 #include "fennel/exec/ConduitExecStream.h"
 #include "fennel/tuple/TupleAccessor.h"
@@ -30,22 +30,22 @@
 FENNEL_BEGIN_NAMESPACE
 
 /**
- * UncollectExecutionStreamParams defines parameters for instantiating a
- * UncollectExecutionStream.
+ * UncollectExecStreamParams defines parameters for instantiating a
+ * UncollectExecStream.
  */
-struct UncollectExecutionStreamParams : public ConduitExecStreamParams
+struct UncollectExecStreamParams : public ConduitExecStreamParams
 {
     //empty
 };
 
 /**
- * UncollectExecutionStream reads all tuples from a child stream and collects them 
+ * UncollectExecStream reads all tuples from a child stream and collects them 
  * into a single tuple which is written to one output tuple.
  *
  * @author Wael Chatila
  * @version $Id$
  */
-class UncollectExecutionStream : public ConduitExecStream
+class UncollectExecStream : public ConduitExecStream
 {
 private:
     //    TupleData outputTupleData;
@@ -53,7 +53,7 @@ private:
     uint bytesWritten;
     
 public:
-    virtual void prepare(UncollectExecutionStreamParams const &params);
+    virtual void prepare(UncollectExecStreamParams const &params);
     virtual ExecStreamResult execute(ExecStreamQuantum const &quantum);
     virtual void open(bool restart);
     
@@ -63,4 +63,4 @@ FENNEL_END_NAMESPACE
 
 #endif
 
-// End UncollectExecutionStream.h
+// End UncollectExecStream.h

@@ -20,17 +20,17 @@
 */
 
 #include "fennel/common/CommonPreamble.h"
-#include "fennel/disruptivetech/xo/UncollectExecutionStream.h"
+#include "fennel/disruptivetech/xo/UncollectExecStream.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-void UncollectExecutionStream::prepare(UncollectExecutionStreamParams const &params)
+void UncollectExecStream::prepare(UncollectExecStreamParams const &params)
 {
     ConduitExecStream::prepare(params);
 }
 
-void UncollectExecutionStream::open(bool restart) 
+void UncollectExecStream::open(bool restart) 
 {
     ConduitExecStream::open(restart);
     //outputTupleData.compute(pOutAccessor->getTupleDesc());    
@@ -41,7 +41,7 @@ void UncollectExecutionStream::open(bool restart)
 }
 
 
-ExecStreamResult UncollectExecutionStream::execute(ExecStreamQuantum const &quantum)
+ExecStreamResult UncollectExecStream::execute(ExecStreamQuantum const &quantum)
 {
     ExecStreamResult rc = precheckConduitBuffers();
     if (EXECRC_YIELD != rc) {
@@ -79,4 +79,4 @@ ExecStreamResult UncollectExecutionStream::execute(ExecStreamQuantum const &quan
 
 FENNEL_END_CPPFILE("$Id$");
 
-// End UncollectExecutionStream.cpp
+// End UncollectExecStream.cpp
