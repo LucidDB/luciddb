@@ -50,6 +50,7 @@ jmethodID ProxyIndexWriterDef::meth_getInputProj = 0;
 jmethodID ProxyIndexWriterDef::meth_getDistinctness = 0;
 jmethodID ProxyIndexWriterDef::meth_isUpdateInPlace = 0;
 jmethodID ProxyIndexWriterDef::meth_getTableWriter = 0;
+jmethodID ProxyJavaSinkStreamDef::meth_getStreamId = 0;
 jmethodID ProxyJavaTupleStreamDef::meth_getStreamId = 0;
 jmethodID ProxyKeyAccessorDef::meth_getKeyProj = 0;
 jmethodID ProxyMergeStreamDef::meth_isSequential = 0;
@@ -75,8 +76,8 @@ jmethodID ProxyTxnCmd::meth_getTxnHandle = 0;
 jmethodID ProxyWindowDef::meth_getOrderKeyList = 0;
 jmethodID ProxyWindowDef::meth_isPhysical = 0;
 jmethodID ProxyWindowDef::meth_getRange = 0;
-jmethodID ProxyWindowDef::meth_getPartition = 0;
 jmethodID ProxyWindowDef::meth_getWindowStream = 0;
+jmethodID ProxyWindowDef::meth_getPartition = 0;
 jmethodID ProxyWindowPartitionDef::meth_getWindow = 0;
 jmethodID ProxyWindowPartitionDef::meth_getPartitionKeyList = 0;
 jmethodID ProxyWindowPartitionDef::meth_getInitializeProgram = 0;
@@ -237,6 +238,10 @@ ProxyIndexWriterDef::meth_getDistinctness = pEnv->GetMethodID(jClass,"getDistinc
 ProxyIndexWriterDef::meth_isUpdateInPlace = pEnv->GetMethodID(jClass,"isUpdateInPlace","()Z");
 ProxyIndexWriterDef::meth_getTableWriter = pEnv->GetMethodID(jClass,"getTableWriter","()Lnet/sf/farrago/fem/fennel/FemTableWriterDef;");
 
+jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemJavaSinkStreamDef");
+visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyJavaSinkStreamDef>));
+ProxyJavaSinkStreamDef::meth_getStreamId = pEnv->GetMethodID(jClass,"getStreamId","()I");
+
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemJavaTupleStreamDef");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyJavaTupleStreamDef>));
 ProxyJavaTupleStreamDef::meth_getStreamId = pEnv->GetMethodID(jClass,"getStreamId","()I");
@@ -333,8 +338,8 @@ visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(ne
 ProxyWindowDef::meth_getOrderKeyList = pEnv->GetMethodID(jClass,"getOrderKeyList","()Lnet/sf/farrago/fem/fennel/FemTupleProjection;");
 ProxyWindowDef::meth_isPhysical = pEnv->GetMethodID(jClass,"isPhysical","()Z");
 ProxyWindowDef::meth_getRange = pEnv->GetMethodID(jClass,"getRange","()Ljava/lang/String;");
-ProxyWindowDef::meth_getPartition = pEnv->GetMethodID(jClass,"getPartition","()Ljava/util/List;");
 ProxyWindowDef::meth_getWindowStream = pEnv->GetMethodID(jClass,"getWindowStream","()Lnet/sf/farrago/fem/fennel/FemWindowStreamDef;");
+ProxyWindowDef::meth_getPartition = pEnv->GetMethodID(jClass,"getPartition","()Ljava/util/List;");
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemWindowPartitionDef");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyWindowPartitionDef>));
@@ -685,6 +690,11 @@ if (!p->jObject) p.reset();
 return p;
 }
 
+int32_t ProxyJavaSinkStreamDef::getStreamId()
+{
+return pEnv->CallIntMethod(jObject,meth_getStreamId);
+}
+
 int32_t ProxyJavaTupleStreamDef::getStreamId()
 {
 return pEnv->CallIntMethod(jObject,meth_getStreamId);
@@ -851,6 +861,15 @@ std::string ProxyWindowDef::getRange()
 return constructString(pEnv->CallObjectMethod(jObject,meth_getRange));
 }
 
+SharedProxyWindowStreamDef ProxyWindowDef::getWindowStream()
+{
+SharedProxyWindowStreamDef p;
+p->pEnv = pEnv;
+p->jObject = pEnv->CallObjectMethod(jObject,meth_getWindowStream);
+if (!p->jObject) p.reset();
+return p;
+}
+
 SharedProxyWindowPartitionDef ProxyWindowDef::getPartition()
 {
 SharedProxyWindowPartitionDef p;
@@ -858,15 +877,6 @@ p->pEnv = pEnv;
 p->jObject = pEnv->CallObjectMethod(jObject,meth_getPartition);
 p.jIter = JniUtil::getIter(p->pEnv,p->jObject);
 ++p;
-return p;
-}
-
-SharedProxyWindowStreamDef ProxyWindowDef::getWindowStream()
-{
-SharedProxyWindowStreamDef p;
-p->pEnv = pEnv;
-p->jObject = pEnv->CallObjectMethod(jObject,meth_getWindowStream);
-if (!p->jObject) p.reset();
 return p;
 }
 

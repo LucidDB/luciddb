@@ -100,6 +100,7 @@ protected:
     virtual void visit(ProxyIndexScanDef &);
     virtual void visit(ProxyIndexSearchDef &);
     virtual void visit(ProxyJavaTupleStreamDef &);
+    virtual void visit(ProxyJavaSinkStreamDef &);
     virtual void visit(ProxyTableInserterDef &);
     virtual void visit(ProxyTableDeleterDef &);
     virtual void visit(ProxyTableUpdaterDef &);

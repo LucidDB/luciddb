@@ -18,34 +18,30 @@
 */
 package net.sf.farrago.runtime;
 
-import java.nio.*;
-import java.util.*;
+import net.sf.farrago.fennel.FennelStreamGraph;
+import net.sf.farrago.fennel.FennelStreamHandle;
 
-import net.sf.farrago.fem.fennel.*;
-import net.sf.farrago.fennel.*;
-import net.sf.farrago.util.*;
-
-import org.eigenbase.util.*;
-import org.eigenbase.runtime.*;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 
 /**
- * FennelIterator implements the Iterator interface by reading tuples from a
- * Fennel TupleStream.  FennelIterator only deals with raw byte buffers; it
- * is the responsibility of subclasses to unmarshal individual fields.
+ * FennelIterator implements the {@link java.util.Iterator} and
+ * {@link org.eigenbase.runtime.RestartableIterator} interfaces by reading
+ * tuples from a Fennel ExecStream.
+ *
+ * <p>FennelIterator only deals with raw byte buffers; it delegates to a
+ * {@link FennelTupleReader} object the responsibility to unmarshal individual
+ * fields.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FennelIterator implements RestartableIterator
+public class FennelIterator extends FennelAbstractIterator
 {
     //~ Instance fields -------------------------------------------------------
-
-    private ByteBuffer byteBuffer;
-    private FennelStreamGraph streamGraph;
-    private FennelStreamHandle streamHandle;
-    private FennelTupleReader tupleReader;
-    private byte [] bufferAsArray;
+    private final FennelStreamGraph streamGraph;
+    private final FennelStreamHandle streamHandle;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -55,7 +51,8 @@ public class FennelIterator implements RestartableIterator
      * @param tupleReader FennelTupleReader to use to interpret Fennel data
      * @param streamGraph underlying FennelStreamGraph
      * @param streamHandle handle to underlying Fennel TupleStream
-     * @param bufferSize number of bytes in buffer used for fetching from Fennel
+     * @param bufferSize number of bytes in buffer used for fetching from
+     *     Fennel
      */
     public FennelIterator(
         FennelTupleReader tupleReader,
@@ -63,10 +60,13 @@ public class FennelIterator implements RestartableIterator
         FennelStreamHandle streamHandle,
         int bufferSize)
     {
-        this.tupleReader = tupleReader;
+        super(tupleReader);
         this.streamGraph = streamGraph;
         this.streamHandle = streamHandle;
 
+        // In this implementation of FennelAbstractIterator, byteBuffer and
+        // bufferAsArray are effectively final. In other implementations, they
+        // might be set by populateBuffer.
         bufferAsArray = new byte[bufferSize];
         byteBuffer = ByteBuffer.wrap(bufferAsArray);
         byteBuffer.order(ByteOrder.nativeOrder());
@@ -76,53 +76,6 @@ public class FennelIterator implements RestartableIterator
 
     //~ Methods ---------------------------------------------------------------
 
-    // implement Iterator
-    public boolean hasNext()
-    {
-        if (bufferAsArray == null) {
-            return false;
-        }
-        if (byteBuffer.hasRemaining()) {
-            return true;
-        }
-        byteBuffer.clear();
-        int cb = streamGraph.fetch(streamHandle, bufferAsArray);
-        if (cb == 0) {
-            bufferAsArray = null;
-            return false;
-        }
-        byteBuffer.limit(cb);
-        return true;
-    }
-
-    // implement Iterator
-    public Object next()
-    {
-        if (!hasNext()) {
-            throw new NoSuchElementException();
-        }
-
-        // REVIEW:  is slice allocation worth it?
-        ByteBuffer sliceBuffer = byteBuffer.slice();
-        sliceBuffer.order(byteBuffer.order());
-        Object obj =
-            tupleReader.unmarshalTuple(byteBuffer, bufferAsArray, sliceBuffer);
-        int newPosition = byteBuffer.position() + sliceBuffer.position();
-
-        // eat final alignment padding
-        while ((newPosition & 3) != 0) {
-            ++newPosition;
-        }
-        byteBuffer.position(newPosition);
-        return obj;
-    }
-
-    // implement Iterator
-    public void remove()
-    {
-        throw new UnsupportedOperationException();
-    }
-    
     // implement RestartableIterator
     public void restart()
     {
@@ -131,6 +84,12 @@ public class FennelIterator implements RestartableIterator
         byteBuffer.limit(0);
         streamGraph.restart(streamHandle);
     }
+
+    protected int populateBuffer()
+    {
+        return streamGraph.fetch(streamHandle, bufferAsArray);
+    }
+
 }
 
 

@@ -23,6 +23,7 @@
 #include "fennel/farrago/ExecStreamFactory.h"
 #include "fennel/farrago/ExecutionStreamFactory.h"
 #include "fennel/farrago/JavaSourceExecStream.h"
+#include "fennel/farrago/JavaSinkExecStream.h"
 #include "fennel/farrago/CmdInterpreter.h"
 #include "fennel/ftrs/BTreeScanExecStream.h"
 #include "fennel/ftrs/BTreeSearchExecStream.h"
@@ -155,6 +156,15 @@ void ExecStreamFactory::visit(ProxyJavaTupleStreamDef &streamDef)
     params.pStreamGraphHandle = pStreamGraphHandle;
     params.javaTupleStreamId = streamDef.getStreamId();
     embryo.init(new JavaSourceExecStream(), params);
+}
+
+void ExecStreamFactory::visit(ProxyJavaSinkStreamDef &streamDef)
+{
+    JavaSinkExecStreamParams params;
+    readExecStreamParams(params, streamDef);
+    params.pStreamGraphHandle = pStreamGraphHandle;
+    params.javaFennelPipeIterId = streamDef.getStreamId();
+    embryo.init(new JavaSinkExecStream(), params);
 }
 
 void ExecStreamFactory::visit(ProxyTableInserterDef &streamDef)
@@ -366,6 +376,6 @@ ExecStreamSubFactory::~ExecStreamSubFactory()
 {
 }
 
-FENNEL_END_CPPFILE("$Id$");
+FENNEL_END_CPPFILE("$Id: //open/dt/dev/fennel/farrago/ExecStreamFactory.cpp#5 $");
 
 // End ExecStreamFactory.cpp

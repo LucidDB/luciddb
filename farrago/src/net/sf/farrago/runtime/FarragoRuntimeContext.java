@@ -108,6 +108,14 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
 
     //~ Methods ---------------------------------------------------------------
 
+    /**
+     * Returns the stream graph.
+     */
+    protected FennelStreamGraph getStreamGraph()
+    {
+        return streamGraph;
+    }
+
     // implement RelOptConnection
     public RelOptSchema getRelOptSchema()
     {
