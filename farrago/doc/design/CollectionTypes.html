@@ -272,6 +272,7 @@ into multisets, and for aggregating multisets:
 
 <pre><code>
 SELECT 
+    uid,
     COLLECT(session_id) AS session_ids,
     FUSION(attempts) AS all_attempts,
     INTERSECTION(attempts) AS common_attempts
@@ -280,12 +281,14 @@ WHERE successful
 GROUP BY uid;
 </code></pre>
 
-For each uid, the query above returns a row with three columns.  The
-first column contains a multiset of the session_id's which
-successfully logged in that uid.  The second column contains a
-multiset of all of the username/password combinations used for that
-uid.  The last column contains a multiset of any username/password
-combinations which were tried for all logins of that uid.
+For each user, the query above returns a row with the uid key and three
+multiset columns.  The <code>session_ids</code> column contains a
+multiset of the sessions which successfully logged in that uid.  The
+<code>all_attempts</code> column contains a multiset of all of the
+username/password combinations used for that uid.  The
+<code>common_attempts</code> column contains a multiset of any
+username/password combinations which were tried for all logins of that
+uid.
 
 <h2>Notes</h2>
 
