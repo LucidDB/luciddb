@@ -153,8 +153,13 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
             this.value = sqlDate.value;
             this.isNull = sqlDate.isNull;
             return;
+        } else {
+            // REVIEW jvs 27-Aug-2004:  this is dangerous; should probably
+            // require a specific interface instead
+            String s = date.toString();
+            assignFrom(s);
+            return;
         }
-        assert false : "Unsupported object " + date;
     }
 
     public void assignFrom(long l) {
@@ -228,11 +233,12 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
         /**
          * Assigns date from a String
          */
-        public void assignFrom(String date) {
-            if (date == null) {
-                setNull(true);
+        public void assignFrom(Object obj) {
+            if (!(obj instanceof String)) {
+                super.assignFrom(obj);
                 return;
             }
+            String date = (String) obj;
 
             Calendar cal = ParserUtil.parseDateFormat(date, DateFormatStr);
             if (cal != null) {
@@ -276,11 +282,12 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
         /**
          * Assigns time from a String
          */
-        public void assignFrom(String date) {
-            if (date == null) {
-                setNull(true);
+        public void assignFrom(Object obj) {
+            if (!(obj instanceof String)) {
+                super.assignFrom(obj);
                 return;
             }
+            String date = (String) obj;
 
             ParserUtil.PrecisionTime pt =
                 ParserUtil.parsePrecisionDateTimeLiteral(date, TimeFormatStr);
@@ -327,11 +334,12 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
         /**
          * Assigns timestamp from a String
          */
-        public void assignFrom(String date) {
-            if (date == null) {
-                setNull(true);
+        public void assignFrom(Object obj) {
+            if (!(obj instanceof String)) {
+                super.assignFrom(obj);
                 return;
             }
+            String date = (String) obj;
 
             ParserUtil.PrecisionTime pt =
                 ParserUtil.parsePrecisionDateTimeLiteral(date, TimestampFormatStr);
