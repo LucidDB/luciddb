@@ -263,10 +263,9 @@ public abstract class RelOptUtil
 
     public static String [] getFieldNames(RelDataType type)
     {
-        int n = type.getFieldCount();
-        String [] names = new String[n];
         RelDataTypeField [] fields = type.getFields();
-        for (int i = 0; i < n; ++i) {
+        String [] names = new String[fields.length];
+        for (int i = 0; i < fields.length; ++i) {
             names[i] = fields[i].getName();
         }
         return names;
@@ -304,8 +303,8 @@ public abstract class RelOptUtil
         if (rowType1 == rowType2) {
             return true;
         }
-        int n = rowType1.getFieldCount();
-        if (rowType2.getFieldCount() != n) {
+        int n = rowType1.getFieldList().size();
+        if (rowType2.getFieldList().size() != n) {
             return false;
         }
         RelDataTypeField [] f1 = rowType1.getFields();
@@ -335,7 +334,7 @@ public abstract class RelOptUtil
     {
         RelDataType inputType = rel.getRowType();
 
-        int n = outputType.getFieldCount();
+        int n = outputType.getFieldList().size();
         RexNode [] renameExps = new RexNode[n];
         String [] renameNames = new String[n];
 
@@ -384,7 +383,7 @@ public abstract class RelOptUtil
         if (fieldOrdinals != null) {
             n = fieldOrdinals.length;
         } else {
-            n = rowType.getFieldCount();
+            n = rowType.getFieldList().size();
         }
         RelDataTypeField [] fields = rowType.getFields();
         for (int i = 0; i < n; ++i) {
@@ -469,7 +468,7 @@ public abstract class RelOptUtil
         }
 
         final int leftFieldCount =
-            joinRel.getLeft().getRowType().getFieldCount();
+            joinRel.getLeft().getRowType().getFieldList().size();
         RexInputRef leftFieldAccess = (RexInputRef) leftComparand;
         if (!(leftFieldAccess.index < leftFieldCount)) {
             // left field must access left side of join

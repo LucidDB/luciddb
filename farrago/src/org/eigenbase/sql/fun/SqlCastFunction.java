@@ -27,8 +27,7 @@ import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.test.SqlTester;
-import org.eigenbase.sql.type.UnknownParamInference;
-import org.eigenbase.sql.type.CallOperands;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.util.Util;
 
 
@@ -122,7 +121,7 @@ public class SqlCastFunction extends SqlFunction
         RelDataType validatedNodeType =
             validator.getValidatedNodeType(call.operands[0]);
         RelDataType returnType = validator.deriveType(scope, call.operands[1]);
-        if (!returnType.isAssignableFrom(validatedNodeType, true)) {
+        if (!SqlTypeUtil.canCastFrom(returnType, validatedNodeType, true)) {
             if (throwOnFailure) {
                 throw EigenbaseResource.instance().newCannotCastValue(
                     validatedNodeType.toString(),

@@ -681,7 +681,7 @@ public class SqlValidator
         }
 
         if (operand instanceof SqlIntervalQualifier) {
-            return typeFactory.createIntervalType(
+            return typeFactory.createSqlIntervalType(
                 (SqlIntervalQualifier) operand);
         }
 
@@ -921,7 +921,7 @@ public class SqlValidator
         } else if (node instanceof SqlNodeList) {
             SqlNodeList nodeList = (SqlNodeList) node;
             if (inferredType.isStruct()) {
-                if (inferredType.getFieldCount() != nodeList.size()) {
+                if (inferredType.getFieldList().size() != nodeList.size()) {
                     // this can happen when we're validating an INSERT
                     // where the source and target degrees are different;
                     // bust out, and the error will be detected higher up
@@ -1737,13 +1737,13 @@ public class SqlValidator
         RelDataTypeField [] targetFields = baseRowType.getFields();
         int targetColumnCount = targetColumnList.size();
         if (append) {
-            targetColumnCount += baseRowType.getFieldCount();
+            targetColumnCount += baseRowType.getFieldList().size();
         }
         RelDataType [] types = new RelDataType[targetColumnCount];
         String [] fieldNames = new String[targetColumnCount];
         int iTarget = 0;
         if (append) {
-            iTarget += baseRowType.getFieldCount();
+            iTarget += baseRowType.getFieldList().size();
             for (int i = 0; i < iTarget; ++i) {
                 types[i] = targetFields[i].getType();
                 fieldNames[i] = deriveAliasFromOrdinal(i);
@@ -1788,10 +1788,12 @@ public class SqlValidator
         validateSelect(sqlSelect, targetRowType);
         RelDataType sourceRowType = getNamespace(sqlSelect).getRowType();
 
-        if (targetRowType.getFieldCount() != sourceRowType.getFieldCount()) {
+        if (targetRowType.getFieldList().size()
+            != sourceRowType.getFieldList().size())
+        {
             throw EigenbaseResource.instance().newUnmatchInsertColumn(
-                new Integer(targetRowType.getFieldCount()),
-                new Integer(sourceRowType.getFieldCount()));
+                new Integer(targetRowType.getFieldList().size()),
+                new Integer(sourceRowType.getFieldList().size()));
         }
 
         // TODO:  validate updatability, type compatibility, etc.
@@ -1857,7 +1859,7 @@ public class SqlValidator
             SqlCall rowConstructor = (SqlCall) operands[i];
             if (targetRowType.isStruct() &&
                 rowConstructor.getOperands().length !=
-                targetRowType.getFieldCount()) {
+                targetRowType.getFieldList().size()) {
                 return;
             }
 

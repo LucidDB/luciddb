@@ -48,31 +48,22 @@ public class RelDataTypeFieldImpl implements RelDataTypeField
         this.type = type;
     }
 
+    // implement RelDataTypeField
     public String getName()
     {
         return name;
     }
 
+    // implement RelDataTypeField
     public int getIndex()
     {
         return index;
     }
 
+    // implement RelDataTypeField
     public RelDataType getType()
     {
         return type;
-    }
-
-    public Object get(Object o)
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    public void set(
-        Object o,
-        Object value)
-    {
-        throw new UnsupportedOperationException();
     }
 }
 

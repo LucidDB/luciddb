@@ -616,7 +616,7 @@ public class JavaRelImplementor implements RelImplementor
         final RelNode [] inputs = rel.getInputs();
         for (int i = 0; i < ordinal; i++) {
             RelNode input = inputs[i];
-            fieldOffset += input.getRowType().getFieldCount();
+            fieldOffset += input.getRowType().getFieldList().size();
         }
         return fieldOffset;
     }
@@ -639,7 +639,7 @@ public class JavaRelImplementor implements RelImplementor
         assert ordinal >= 0;
         assert ordinal < rel.getInputs().length;
         assert fieldOrdinal >= 0;
-        assert fieldOrdinal < rel.getInput(ordinal).getRowType().getFieldCount();
+        assert fieldOrdinal < rel.getInput(ordinal).getRowType().getFieldList().size();
         RelDataType rowType = rel.getRowType();
         final RelDataTypeField [] fields = rowType.getFields();
         final int fieldIndex = computeFieldOffset(rel, ordinal) + fieldOrdinal;

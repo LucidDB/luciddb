@@ -582,19 +582,19 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     // implement RelDataTypeFactory
     public RelDataType createSqlType(
         SqlTypeName typeName,
-        int length)
+        int precision)
     {
-        RelDataType type = super.createSqlType(typeName, length);
+        RelDataType type = super.createSqlType(typeName, precision);
         return addDefaultAttributes(type);
     }
 
     // implement RelDataTypeFactory
     public RelDataType createSqlType(
         SqlTypeName typeName,
-        int length,
+        int precision,
         int scale)
     {
-        RelDataType type = super.createSqlType(typeName, length, scale);
+        RelDataType type = super.createSqlType(typeName, precision, scale);
         return addDefaultAttributes(type);
     }
 

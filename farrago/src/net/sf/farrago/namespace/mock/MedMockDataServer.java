@@ -86,7 +86,7 @@ class MedMockDataServer extends MedAbstractDataServer
         Map columnPropMap)
         throws SQLException
     {
-        assert (rowType.getFieldCount() == 1);
+        assert (rowType.getFieldList().size() == 1);
         RelDataType type = rowType.getFields()[0].getType();
         assert (!type.isNullable());
         assert (typeFactory.getClassForPrimitive(type) != null);

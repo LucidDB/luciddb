@@ -149,9 +149,8 @@ public class DdlHandler
         if (columnList.isEmpty()) {
             // derive column information
             RelDataType rowType = medColumnSet.getRowType();
-            int n = rowType.getFieldCount();
             RelDataTypeField [] fields = rowType.getFields();
-            for (int i = 0; i < n; ++i) {
+            for (int i = 0; i < fields.length; ++i) {
                 CwmColumn column = repos.newFemStoredColumn();
                 columnList.add(column);
                 convertFieldToCwmColumn(fields[i], column);
@@ -377,9 +376,8 @@ public class DdlHandler
         // Derive column information from result set metadata
         FarragoTypeFactory typeFactory = validator.getTypeFactory();
         RelDataType rowType = typeFactory.createResultSetType(metaData);
-        int n = rowType.getFieldCount();
         RelDataTypeField [] fields = rowType.getFields();
-        for (int i = 0; i < n; ++i) {
+        for (int i = 0; i < fields.length; ++i) {
             CwmColumn column;
             if (implicitColumnNames) {
                 column = validator.getRepos().newFemViewColumn();
@@ -437,9 +435,9 @@ public class DdlHandler
         FarragoSessionStmtContext stmtContext = session.newStmtContext();
         stmtContext.prepare(sql, false);
         RelDataType rowType = stmtContext.getPreparedRowType();
-        assert (rowType.getFieldCount() == 1);
+        assert (rowType.getFieldList().size() == 1);
 
-        if (stmtContext.getPreparedParamType().getFieldCount() > 0) {
+        if (stmtContext.getPreparedParamType().getFieldList().size() > 0) {
             throw validator.res.newValidatorBadDefaultParam(
                 column.getName(),
                 validator.getParserPosString(column));

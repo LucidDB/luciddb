@@ -201,7 +201,7 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
         // TODO:  compute page-based I/O cost
         // CPU cost is proportional to number of columns projected
         // I/O cost is proportional to pages of index scanned
-        double dCpu = dRows * getRowType().getFieldCount();
+        double dCpu = dRows * getRowType().getFieldList().size();
 
         FarragoRepos repos = getPreparingStmt().getRepos();
         int nIndexCols =
@@ -269,7 +269,7 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
         if (projectedColumns != null) {
             return projectedColumns;
         }
-        int n = table.getRowType().getFieldCount();
+        int n = table.getRowType().getFieldList().size();
         return FennelRelUtil.newIotaProjection(n);
     }
 

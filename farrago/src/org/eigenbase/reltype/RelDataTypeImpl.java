@@ -21,6 +21,8 @@
 package org.eigenbase.reltype;
 
 import java.nio.charset.*;
+import java.util.*;
+
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
@@ -42,11 +44,17 @@ public abstract class RelDataTypeImpl
     implements RelDataType, RelDataTypeFamily
 {
     protected final RelDataTypeField [] fields;
+    protected final List fieldList;
     protected String digest;
 
     protected RelDataTypeImpl(RelDataTypeField [] fields)
     {
         this.fields = fields;
+        if (fields != null) {
+            fieldList = Collections.unmodifiableList(Arrays.asList(fields));
+        } else {
+            fieldList = null;
+        }
     }
 
     // implement RelDataType
@@ -62,16 +70,6 @@ public abstract class RelDataTypeImpl
     }
 
     // implement RelDataType
-    public int getFieldCount()
-    {
-        if (fields == null) {
-            return 0;
-        } else {
-            return fields.length;
-        }
-    }
-
-    // implement RelDataType
     public int getFieldOrdinal(String fieldName)
     {
         for (int i = 0; i < fields.length; i++) {
@@ -84,8 +82,16 @@ public abstract class RelDataTypeImpl
     }
 
     // implement RelDataType
+    public List getFieldList()
+    {
+        assert(isStruct());
+        return fieldList;
+    }
+    
+    // implement RelDataType
     public RelDataTypeField [] getFields()
     {
+        assert(isStruct());
         return fields;
     }
 
@@ -99,7 +105,7 @@ public abstract class RelDataTypeImpl
     // implement RelDataType
     public boolean isStruct()
     {
-        return false;
+        return fields != null;
     }
 
     // implement RelDataType
@@ -131,21 +137,6 @@ public abstract class RelDataTypeImpl
     }
 
     // implement RelDataType
-    public boolean isAssignableFrom(
-        RelDataType t,
-        boolean coerce)
-    {
-        SqlTypeName thisName = getSqlTypeName();
-        SqlTypeName thatName = t.getSqlTypeName();
-        if (thisName == null || thatName == null) {
-            return false;
-        }
-        SqlTypeAssignmentRules assignmentRules =
-            SqlTypeAssignmentRules.instance();
-        return assignmentRules.isAssignableFrom(thisName, thatName, coerce);
-    }
-
-    // implement RelDataType
     public Charset getCharset()
     {
         return null;
@@ -158,6 +149,12 @@ public abstract class RelDataTypeImpl
         return null;
     }
 
+    // implement RelDataType
+    public SqlIntervalQualifier getIntervalQualifier()
+    {
+        return null;
+    }
+    
     // implement RelDataType
     public int getPrecision()
     {

@@ -43,7 +43,7 @@ public class JavaExistsRel extends DistinctRel implements JavaLoopRel
         RelNode child)
     {
         super(cluster, child);
-        assert child.getRowType().getFieldCount() == 0;
+        assert child.getRowType().getFieldList().size() == 0;
     }
 
     public CallingConvention getConvention()

@@ -56,7 +56,7 @@ public class RemoveDistinctRule extends RelOptRule
                 new AggregateRel(
                     child.getCluster(),
                     child,
-                    child.getRowType().getFieldCount(),
+                    child.getRowType().getFieldList().size(),
                     new AggregateRel.Call[0]));
         }
     }

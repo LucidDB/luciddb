@@ -366,7 +366,7 @@ public class SqlToRelConverter
             } else {
                 // If "seek" is "emp", generate the condition "emp = Q.c1". The
                 // query must have precisely one column.
-                assert converted.getRowType().getFieldCount() == 1;
+                assert converted.getRowType().getFieldList().size() == 1;
                 conditionExp =
                     rexBuilder.makeCall(
                         rexBuilder.opTab.equalsOperator,
@@ -565,7 +565,7 @@ public class SqlToRelConverter
             assert expr != null : "expr != null";
 
             // The indicator column is the last field of the subquery.
-            final int fieldCount = expr.getType().getFieldCount();
+            final int fieldCount = expr.getType().getFieldList().size();
             return rexBuilder.makeFieldAccess(expr, fieldCount - 1);
 
         case SqlKind.OverORDINAL:
@@ -1225,7 +1225,7 @@ public class SqlToRelConverter
                 // (and expressions, but flagged as non-standard)
                 throw Util.needToImplement(orderItem);
             }
-            assert (iOrdinal < bb.root.getRowType().getFieldCount());
+            assert (iOrdinal < bb.root.getRowType().getFieldList().size());
             collations[i] = new RelFieldCollation(iOrdinal);
         }
         bb.setRoot(new SortRel(cluster, bb.root, collations));
@@ -1285,7 +1285,7 @@ public class SqlToRelConverter
         SqlNodeList targetColumnList = call.getTargetColumnList();
 
         RelDataType sourceRowType = sourceRel.getRowType();
-        int nExps = lhsRowType.getFieldCount();
+        int nExps = lhsRowType.getFieldList().size();
         RexNode [] rhsExps = new RexNode[nExps];
 
         final RexNode sourceRef =
@@ -1623,7 +1623,7 @@ public class SqlToRelConverter
                 setRoot(join);
                 return rexBuilder.makeRangeReference(
                     rel.getRowType(),
-                    join.getLeft().getRowType().getFieldCount());
+                    join.getLeft().getRowType().getFieldList().size());
             }
         }
 
@@ -1707,7 +1707,7 @@ public class SqlToRelConverter
             int fieldOffset = 0;
             for (int i = 0; i < offset; i++) {
                 final RelNode rel = (RelNode) relList.get(i);
-                fieldOffset += rel.getRowType().getFieldCount();
+                fieldOffset += rel.getRowType().getFieldList().size();
             }
             RelNode rel = (RelNode) relList.get(offset);
             if (isParent) {
@@ -1737,10 +1737,10 @@ public class SqlToRelConverter
                     // is correctly implemented
                     return null;
                 }
-                if (fieldOffset < rowType.getFieldCount()) {
+                if (fieldOffset < rowType.getFieldList().size()) {
                     return rowType.getFields()[fieldOffset];
                 }
-                fieldOffset -= rowType.getFieldCount();
+                fieldOffset -= rowType.getFieldList().size();
             }
             throw new AssertionError();
         }

@@ -106,7 +106,7 @@ public class OJQueryExpander extends QueryExpander
         }
 
         // Project out the one and only field.
-        if (rel.getRowType().getFieldCount() == 1) {
+        if (rel.getRowType().getFieldList().size() == 1) {
             final RelDataTypeField field0 = rel.getRowType().getFields()[0];
             rel = new ProjectRel(
                     rel.getCluster(),

@@ -34,6 +34,8 @@ public class MultisetSqlType extends AbstractSqlType
     private RelDataType elementType;
 
     /**
+     * This should only be called from a factory method.
+     *
      * @pre null!=elementType
      */
     public MultisetSqlType(RelDataType elementType, boolean isNullable)
@@ -44,6 +46,7 @@ public class MultisetSqlType extends AbstractSqlType
         computeDigest();
     }
 
+    // implement RelDataTypeImpl
     protected void generateTypeString(StringBuffer sb, boolean withDetail)
     {
         if (withDetail) {
@@ -54,20 +57,13 @@ public class MultisetSqlType extends AbstractSqlType
         sb.append(" MULTISET");
     }
     
+    // implement RelDataType
     public RelDataType getComponentType()
     {
         return elementType;
     }
 
-    public boolean isAssignableFrom(
-        RelDataType t,
-        boolean coerce)
-    {
-        return (t instanceof MultisetSqlType) &&
-            ((MultisetSqlType) t).elementType.isAssignableFrom(
-                elementType, coerce);
-    }
-
+    // implement RelDataType
     public RelDataTypeFamily getFamily()
     {
         // TODO jvs 2-Dec-2004:  This gives each multiset type its

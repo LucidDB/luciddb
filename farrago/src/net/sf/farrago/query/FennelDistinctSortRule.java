@@ -70,7 +70,7 @@ public class FennelDistinctSortRule extends RelOptRule
             return;
         }
         RelNode relInput = call.rels[1];
-        int n = relInput.getRowType().getFieldCount();
+        int n = relInput.getRowType().getFieldList().size();
         if (agg.getGroupCount() < n) {
             return;
         }

@@ -81,8 +81,8 @@ public class RemoveTrivialProjectRule extends RelOptRule
         String [] fieldNames,
         RelDataType childRowType)
     {
-        int fieldCount = childRowType.getFieldCount();
         RelDataTypeField [] childFields = childRowType.getFields();
+        int fieldCount = childFields.length;
         if (exps.length != fieldCount) {
             return false;
         }

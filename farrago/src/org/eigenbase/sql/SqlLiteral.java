@@ -474,7 +474,7 @@ public class SqlLiteral extends SqlNode
         case SqlTypeName.IntervalDayTime_ordinal:
             SqlIntervalLiteral.IntervalValue intervalValue =
                 (SqlIntervalLiteral.IntervalValue) value;
-            RelDataType t = typeFactory.createIntervalType(
+            RelDataType t = typeFactory.createSqlIntervalType(
                 intervalValue.getIntervalQualifier());
             return typeFactory.createTypeWithNullability(t, false);
 

@@ -206,7 +206,7 @@ public class ObjectSchemaTest extends SaffronTestCase
             ExtentRel extent = (ExtentRel) call.rels[2];
             Util.discard(extent);
             final RexBuilder rexBuilder = join.getCluster().rexBuilder;
-            int fieldIndex = rel.getRowType().getFieldCount();
+            int fieldIndex = rel.getRowType().getFieldList().size();
             final EqualsPattern equalsPattern =
                 new EqualsPattern(
                     rexBuilder.makeInputRef(

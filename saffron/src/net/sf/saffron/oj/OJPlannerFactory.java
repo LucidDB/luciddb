@@ -260,7 +260,7 @@ public class OJPlannerFactory
         {
             JavaDistinctRel distinct = (JavaDistinctRel) call.rels[0];
             RelDataType rowType = distinct.child.getRowType();
-            if (rowType.getFieldCount() == 0) {
+            if (rowType.getFieldList().size() == 0) {
                 call.transformTo(
                     new JavaExistsRel(
                         distinct.getCluster(),

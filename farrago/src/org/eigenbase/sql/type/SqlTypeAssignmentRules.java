@@ -261,29 +261,15 @@ public class SqlTypeAssignmentRules
         return instance;
     }
 
-    public boolean isAssignableFrom(
+    public boolean canCastFrom(
         SqlTypeName to,
         SqlTypeName from,
         boolean coerce)
     {
-        HashMap ruleset = coerce ? coerceRules : rules;
-        return isAssignableFrom(to, from, ruleset);
-    }
-
-    public boolean isAssignableFrom(
-        SqlTypeName to,
-        SqlTypeName from)
-    {
-        return isAssignableFrom(to, from, false);
-    }
-
-    private boolean isAssignableFrom(
-        SqlTypeName to,
-        SqlTypeName from,
-        HashMap ruleset)
-    {
         assert (null != to);
         assert (null != from);
+        
+        HashMap ruleset = coerce ? coerceRules : rules;
 
         if (to.equals(SqlTypeName.Null)) {
             return false;
@@ -293,7 +279,8 @@ public class SqlTypeAssignmentRules
 
         HashSet rule = (HashSet) ruleset.get(to);
         if (null == rule) {
-            //if you hit this assert, see the constructor of this class on how to add new rule
+            // if you hit this assert, see the constructor of this class on how
+            // to add new rule
             throw Util.newInternal("No assign rules for " + to
                 + " defined");
         }

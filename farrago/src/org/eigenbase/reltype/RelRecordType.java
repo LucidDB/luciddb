@@ -29,18 +29,21 @@ package org.eigenbase.reltype;
 public class RelRecordType extends RelDataTypeImpl
 {
     /**
-     * Creates a <code>RecordType</code>.
+     * Creates a <code>RecordType</code>.  This should only be called
+     * from a factory method.
+     *
+     * <p>
+     *
+     * REVIEW jvs 17-Dec-2004:  is the misspelled comment below correct?
+     *
+     * <p>
+     * 
      * Field names doesnt need to be unique.
      */
     public RelRecordType(RelDataTypeField [] fields)
     {
         super(fields);
         computeDigest();
-    }
-
-    public boolean isStruct()
-    {
-        return true;
     }
 
     public boolean isNullable()

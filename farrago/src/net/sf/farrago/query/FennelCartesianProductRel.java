@@ -69,7 +69,7 @@ class FennelCartesianProductRel extends FennelPullDoubleRel
         // TODO:  account for buffering I/O and CPU
         double rowCount = getRows();
         return planner.makeCost(rowCount, 0,
-            rowCount * getRowType().getFieldCount());
+            rowCount * getRowType().getFieldList().size());
     }
 
     // implement RelNode

@@ -629,7 +629,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
             FarragoSessionExecutableStmt stmt =
                 database.prepareStmt(stmtValidator, sqlNode, owner, viewInfo);
             if (isExecDirect
-                    && (stmt.getDynamicParamRowType().getFieldCount() > 0)) {
+                    && (stmt.getDynamicParamRowType().getFieldList().size() > 0)) {
                 owner.closeAllocation();
                 throw FarragoResource.instance()
                     .newSessionNoExecuteImmediateParameters(sql);

@@ -81,7 +81,7 @@ public class FennelSortRel extends FennelPullSingleRel
         // sort results are distinct if duplicates are discarded AND
         // the sort key is the whole tuple
         return discardDuplicates
-            && (keyProjection.length == getRowType().getFieldCount());
+            && (keyProjection.length == getRowType().getFieldList().size());
     }
 
     // implement Cloneable

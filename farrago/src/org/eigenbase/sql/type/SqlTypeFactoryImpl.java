@@ -50,35 +50,36 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
     // implement RelDataTypeFactory
     public RelDataType createSqlType(
         SqlTypeName typeName,
-        int length)
+        int precision)
     {
         assertBasic(typeName);
-        Util.pre(length >= 0, "length >= 0");
-        RelDataType newType = new BasicSqlType(typeName, length);
+        Util.pre(precision >= 0, "precision >= 0");
+        RelDataType newType = new BasicSqlType(typeName, precision);
         return canonize(newType);
     }
 
     // implement RelDataTypeFactory
     public RelDataType createSqlType(
         SqlTypeName typeName,
-        int length,
+        int precision,
         int scale)
     {
         assertBasic(typeName);
-        Util.pre(length >= 0, "length >= 0");
-        RelDataType newType = new BasicSqlType(typeName, length, scale);
+        Util.pre(precision >= 0, "precision >= 0");
+        RelDataType newType = new BasicSqlType(typeName, precision, scale);
         return canonize(newType);
     }
     
     // implement RelDataTypeFactory
-    public RelDataType createMultisetType(RelDataType type)
+    public RelDataType createMultisetType(RelDataType type, long maxCardinality)
     {
+        assert(maxCardinality == -1);
         RelDataType newType = new MultisetSqlType(type, false);
         return canonize(newType);
     }
 
     // implement RelDataTypeFactory
-    public RelDataType createIntervalType(
+    public RelDataType createSqlIntervalType(
         SqlIntervalQualifier intervalQualifier)
     {
         RelDataType newType = new IntervalSqlType(intervalQualifier, false);
@@ -114,15 +115,39 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
     // implement RelDataTypeFactory
     public RelDataType leastRestrictive(RelDataType [] types)
     {
+        assert (types != null);
+        assert (types.length >= 1);
+        
         RelDataType type0 = types[0];
         if (type0.getSqlTypeName() != null) {
             RelDataType resultType = leastRestrictiveSqlType(types);
             if (resultType != null) {
                 return resultType;
             }
+            return leastRestrictiveByCast(types);
         }
-        
+
         return super.leastRestrictive(types);
+    }
+    
+    private RelDataType leastRestrictiveByCast(RelDataType [] types)
+    {
+        RelDataType resultType = types[0];
+        for (int i = 1; i < types.length; i++) {
+            RelDataType type = types[i];
+            if (type.getSqlTypeName() == SqlTypeName.Null) {
+                continue;
+            }
+
+            if (SqlTypeUtil.canCastFrom(type, resultType, false)) {
+                resultType = type;
+            } else {
+                if (!SqlTypeUtil.canCastFrom(resultType, type, false)) {
+                    return null;
+                }
+            }
+        }
+        return resultType;
     }
     
     // implement RelDataTypeFactory
@@ -150,9 +175,9 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
         assert(typeName != SqlTypeName.Multiset) :
             "use createMultisetType() instead";
         assert(typeName != SqlTypeName.IntervalDayTime) :
-            "use createIntervalType() instead";
+            "use createSqlIntervalType() instead";
         assert(typeName != SqlTypeName.IntervalYearMonth) :
-            "use createIntervalType() instead";
+            "use createSqlIntervalType() instead";
     }
     
     private RelDataType leastRestrictiveSqlType(RelDataType [] types)
@@ -260,8 +285,7 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
 
     private RelDataType copyIntervalType(RelDataType type, boolean nullable)
     {
-        IntervalSqlType it = (IntervalSqlType) type;
-        return new IntervalSqlType(it.getIntervalQualifier(), nullable);
+        return new IntervalSqlType(type.getIntervalQualifier(), nullable);
     }
 }
 

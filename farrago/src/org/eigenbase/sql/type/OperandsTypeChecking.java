@@ -862,19 +862,14 @@ public abstract class OperandsTypeChecking
                 RelDataType t1 = validator.deriveType(scope, call.operands[1]);
                 assert (null != t0) : "should not be null";
                 assert (null != t1) : "should not be null";
-                RelDataType nullType =
-                    validator.typeFactory.createSqlType(SqlTypeName.Null);
-                if (!nullType.isAssignableFrom(t0, false)
-                    && !nullType.isAssignableFrom(t1, false)) {
-                    if (!SqlTypeUtil.inSameFamily(t0, t1)) {
-                        if (throwOnFailure) {
-                            //parser postition retrieved in
-                            //newValidationSignatureError()
-                            throw call.newValidationSignatureError(
-                                validator, scope);
-                        }
-                        return false;
+                if (!SqlTypeUtil.inSameFamilyOrNull(t0, t1)) {
+                    if (throwOnFailure) {
+                        //parser postition retrieved in
+                        //newValidationSignatureError()
+                        throw call.newValidationSignatureError(
+                            validator, scope);
                     }
+                    return false;
                 }
                 return super.check(validator, scope, call, throwOnFailure);
             }
@@ -934,19 +929,14 @@ public abstract class OperandsTypeChecking
                 assert (null != t0) : "should not be null";
                 assert (null != t1) : "should not be null";
                 assert (null != t2) : "should not be null";
-                RelDataType nullType =
-                    validator.typeFactory.createSqlType(SqlTypeName.Null);
-                if (!nullType.isAssignableFrom(t0, false)
-                    && !nullType.isAssignableFrom(t1, false)
-                    && !nullType.isAssignableFrom(t2, false)) {
-                    if (!SqlTypeUtil.inSameFamily(t0, t1)
-                        || !SqlTypeUtil.inSameFamily(t1, t2))
-                    {
-                        if (throwOnFailure) {
-                            throw call.newValidationSignatureError(validator, scope);
-                        }
-                        return false;
+                if (!SqlTypeUtil.inSameFamilyOrNull(t0, t1)
+                    || !SqlTypeUtil.inSameFamilyOrNull(t1, t2)
+                    || !SqlTypeUtil.inSameFamilyOrNull(t0, t2))
+                {
+                    if (throwOnFailure) {
+                        throw call.newValidationSignatureError(validator, scope);
                     }
+                    return false;
                 }
                 return super.check(validator, scope, call, throwOnFailure);
             }

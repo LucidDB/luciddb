@@ -87,8 +87,8 @@ public class RexUtil
         RelDataType lhsRowType,
         RelDataType rhsRowType)
     {
-        int n = rhsRowType.getFieldCount();
-        assert (n == lhsRowType.getFieldCount());
+        int n = rhsRowType.getFieldList().size();
+        assert (n == lhsRowType.getFieldList().size());
         RexNode [] rhsExps = new RexNode[n];
         for (int i = 0; i < n; ++i) {
             rhsExps[i] =
@@ -115,10 +115,10 @@ public class RexUtil
         RelDataType lhsRowType,
         RexNode [] rhsExps)
     {
-        final int fieldCount = lhsRowType.getFieldCount();
+        RelDataTypeField [] lhsFields = lhsRowType.getFields();
+        final int fieldCount = lhsFields.length;
         RexNode [] castExps = new RexNode[fieldCount];
         assert fieldCount == rhsExps.length;
-        RelDataTypeField [] lhsFields = lhsRowType.getFields();
         for (int i = 0; i < fieldCount; ++i) {
             RelDataTypeField lhsField = lhsFields[i];
             RelDataType lhsType = lhsField.getType();

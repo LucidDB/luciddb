@@ -44,6 +44,8 @@ public class BasicSqlType extends AbstractSqlType
 
     /**
      * Constructs a type with no parameters.
+     * This should only be called from a factory method.
+     *
      * @param typeName Type name
      * @pre typeName.allowsNoPrecNoScale(false,false)
      */
@@ -162,18 +164,21 @@ public class BasicSqlType extends AbstractSqlType
         return scale;
     }
 
+    // implement RelDataType
     public Charset getCharset()
         throws RuntimeException
     {
-        return this.charset;
+        return charset;
     }
 
+    // implement RelDataType
     public SqlCollation getCollation()
         throws RuntimeException
     {
-        return this.collation;
+        return collation;
     }
 
+    // implement RelDataTypeImpl
     protected void generateTypeString(StringBuffer sb, boolean withDetail)
     {
         sb.append(typeName.getName());

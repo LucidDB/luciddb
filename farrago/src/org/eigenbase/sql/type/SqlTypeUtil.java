@@ -283,6 +283,21 @@ public abstract class SqlTypeUtil
     }
 
     /**
+     * @return true if two types are in same type family,
+     * or one or the other is of type SqlTypeName.Null
+     */
+    public static boolean inSameFamilyOrNull(RelDataType t1, RelDataType t2)
+    {
+        if (t1.getSqlTypeName() == SqlTypeName.Null) {
+            return true;
+        }
+        if (t2.getSqlTypeName() == SqlTypeName.Null) {
+            return true;
+        }
+        return t1.getFamily() == t2.getFamily();
+    }
+
+    /**
      * @return true if type family is either character or binary
      */
     public static boolean inCharOrBinaryFamilies(RelDataType type)
@@ -381,12 +396,12 @@ public abstract class SqlTypeUtil
             if (!t1.isStruct() || !t2.isStruct()) {
                 return false;
             }
-            if (t1.getFieldCount() != t2.getFieldCount()) {
+            if (t1.getFieldList().size() != t2.getFieldList().size()) {
                 return false;
             }
             RelDataTypeField [] fields1 = t1.getFields();
             RelDataTypeField [] fields2 = t2.getFields();
-            for (int i = 0; i < t1.getFieldCount(); ++i) {
+            for (int i = 0; i < fields1.length; ++i) {
                 if (!sameNamedType(fields1[i].getType(), fields2[i].getType()))
                 {
                     return false;
@@ -480,11 +495,63 @@ public abstract class SqlTypeUtil
      * object
      */
     public static RelDataType getNullableBiggest(RelDataTypeFactory typeFactory,
-        RelDataType[] argTypes) {
+        RelDataType[] argTypes)
+    {
         CallOperands.RelDataTypesCallOperands types =
             new CallOperands.RelDataTypesCallOperands(argTypes);
         return ReturnTypeInferenceImpl.useNullableBiggest.getType(
                  null, null, typeFactory, types);
+    }
+
+    /**
+     * Compares two types and returns true if fromType can
+     * be cast to toType.
+     *
+     *<p>
+     *
+     * NOTE jvs 17-Dec-2004: despite the name, these are NOT the SQL rules used
+     * for deciding whether the assignment (SET X=Y) is legal.
+     *
+     *<p>
+     *
+     * REVIEW jvs 17-Dec-2004:  the coerce param below shouldn't really be
+     * necessary.  We're using it as a hack because
+     * SqlTypeFactoryImpl.leastRestrictiveSqlType isn't complete enough
+     * yet.  Once it is, this param (and the non-coerce rules of
+     * SqlTypeAssignmentRules) should go away.
+     *
+     * @param toType target of assignment
+     *
+     * @param fromType source of assignment
+     *
+     * @param coerce if true, the SQL rules for CAST are used; if
+     * false, the rules are similar to Java (e.g. you can't assign
+     * short x = (int) y, and you can't assign int x = (String) z.
+     */
+    public static boolean canCastFrom(
+        RelDataType toType,
+        RelDataType fromType,
+        boolean coerce)
+    {
+        if (toType.isStruct() || fromType.isStruct()) {
+            // could handle this, but there's no point
+            return false;
+        }
+        RelDataType c1 = toType.getComponentType();
+        if (c1 != null) {
+            RelDataType c2 = fromType.getComponentType();
+            if (c2 == null) {
+                return false;
+            }
+            return canCastFrom(c1, c2, coerce);
+        }
+        SqlTypeName tn1 = toType.getSqlTypeName();
+        SqlTypeName tn2 = fromType.getSqlTypeName();
+        if ((tn1 == null) || (tn2 == null)) {
+            return false;
+        }
+        SqlTypeAssignmentRules rules = SqlTypeAssignmentRules.instance();
+        return rules.canCastFrom(tn1, tn2, coerce);
     }
 }
 

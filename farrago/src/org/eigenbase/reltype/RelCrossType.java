@@ -22,6 +22,9 @@ package org.eigenbase.reltype;
 
 import org.eigenbase.oj.util.*;
 
+// REVIEW jvs 17-Dec-2004:  does this still need to exist?  Is it supposed
+// to have fields?
+
 /**
  * Type of the cartesian product of two or more sets of records.
  *
@@ -39,7 +42,8 @@ public class RelCrossType extends RelDataTypeImpl
     public final RelDataType [] types;
 
     /**
-     * Creates a cartesian product type.
+     * Creates a cartesian product type.  This should only
+     * be called from a factory method.
      *
      * @pre types != null
      * @pre types.length >= 1
@@ -59,13 +63,12 @@ public class RelCrossType extends RelDataTypeImpl
         computeDigest();
     }
 
-    public RelDataTypeField getField(String fieldName)
+    public boolean isStruct()
     {
-        throw new UnsupportedOperationException(
-            "not applicable to a join type");
+        return false;
     }
-
-    public int getFieldCount()
+    
+    public RelDataTypeField getField(String fieldName)
     {
         throw new UnsupportedOperationException(
             "not applicable to a join type");

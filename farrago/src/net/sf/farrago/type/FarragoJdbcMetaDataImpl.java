@@ -59,7 +59,7 @@ public class FarragoJdbcMetaDataImpl
 
     protected int getFieldCount()
     {
-        return rowType.getFieldCount();
+        return rowType.getFieldList().size();
     }
 
     protected String getFieldClassName(int fieldOrdinal)

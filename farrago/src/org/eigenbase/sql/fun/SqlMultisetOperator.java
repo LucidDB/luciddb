@@ -70,7 +70,7 @@ public class SqlMultisetOperator extends SqlSpecialOperator
         if (null == type) {
             return null;
         }
-        RelDataType ret = typeFactory.createMultisetType(type);
+        RelDataType ret = typeFactory.createMultisetType(type, -1);
         ret = typeFactory.createTypeWithNullability(ret, type.isNullable());
         return ret;
     }

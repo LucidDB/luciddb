@@ -199,7 +199,7 @@ public class OJTypeFactoryImpl extends SqlTypeFactoryImpl
          */
         OJScalarType(OJClass ojClass)
         {
-            super(new RelDataTypeField[1]);
+            super(null);
             assert (ojClass != null);
             assert (!OJSyntheticClass.isJoinClass(ojClass));
 
@@ -207,29 +207,8 @@ public class OJTypeFactoryImpl extends SqlTypeFactoryImpl
             // why
             
             //assert(!OJSyntheticClass.isProjectClass(ojClass));
-            fields[0] = new RelDataTypeFieldImpl("this", 0, this);
             this.ojClass = ojClass;
             computeDigest();
-        }
-
-        public RelDataTypeField getField(String fieldName)
-        {
-            return null;
-        }
-
-        public int getFieldCount()
-        {
-            return 1;
-        }
-
-        public int getFieldOrdinal(String fieldName)
-        {
-            return 0;
-        }
-
-        public RelDataTypeField [] getFields()
-        {
-            return new RelDataTypeField[0];
         }
 
         public RelDataType getComponentType()

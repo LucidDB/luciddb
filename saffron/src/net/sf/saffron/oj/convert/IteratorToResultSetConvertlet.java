@@ -66,7 +66,7 @@ public class IteratorToResultSetConvertlet extends JavaConvertlet
                         new FieldAccess(
                             TypeName.forOJClass(rowClass),
                             "class")));
-        } else if (rowType.isStruct() && (rowType.getFieldCount() == 1)) {
+        } else if (rowType.isStruct() && (rowType.getFieldList().size() == 1)) {
             getter =
                 new AllocationExpression(
                     TypeName.forOJClass(

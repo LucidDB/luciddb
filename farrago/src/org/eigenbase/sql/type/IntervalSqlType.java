@@ -34,6 +34,9 @@ public class IntervalSqlType extends AbstractSqlType
 {
     private SqlIntervalQualifier intervalQualifier;
 
+    /**
+     * This should only be called from a factory method.
+     */
     public IntervalSqlType(
         SqlIntervalQualifier intervalQualifier,
         boolean isNullable)
@@ -47,12 +50,14 @@ public class IntervalSqlType extends AbstractSqlType
         computeDigest();
     }
 
+    // implement RelDataTypeImpl
     protected void generateTypeString(StringBuffer sb, boolean withDetail)
     {
         sb.append("INTERVAL ");
         sb.append(intervalQualifier.toString());
     }
         
+    // implement RelDataType
     public SqlIntervalQualifier getIntervalQualifier()
     {
         return intervalQualifier;
@@ -112,19 +117,7 @@ public class IntervalSqlType extends AbstractSqlType
                 thisStart, secondPrec, thisEnd, fracPrec, null), nullable);
     }
 
-    public boolean isNullable()
-    {
-        return isNullable;
-    }
-
-    public boolean isAssignableFrom(
-        RelDataType t,
-        boolean coerce)
-    {
-        Util.discard(coerce);
-        return SqlTypeUtil.sameNamedType(this, t);
-    }
-
+    // implement RelDataType
     public int getPrecision()
     {
         return intervalQualifier.getStartPrecision();

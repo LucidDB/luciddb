@@ -168,7 +168,7 @@ class FtrsIndexJoinRule extends RelOptRule
         // cast the search keys from the left to the type of the search column
         // on the right
         RelNode castRel;
-        int leftFieldCount = leftRel.getRowType().getFieldCount();
+        int leftFieldCount = leftRel.getRowType().getFieldList().size();
         if (leftType.equals(rightType)) {
             // no cast required
             castRel = nullFilterRel;

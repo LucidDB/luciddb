@@ -22,20 +22,21 @@
 package org.eigenbase.reltype;
 
 import java.nio.charset.Charset;
+import java.util.*;
 
-import org.eigenbase.sql.SqlCollation;
-import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.type.*;
 
 
 /**
- * The type of a scalar expression or a row returned from a relational
- * expression.
+ * RelDataType represents the type of a scalar expression or entire row
+ * returned from a relational expression.
  *
  *<p>
  *
- * This is a "fat" interface which unions the attributes of many different type
- * classes into one.  Inelegant, but since it was defined before the advent of
- * Java generics, it avoided a lot of typecasting.
+ * This is a somewhat "fat" interface which unions the attributes of many
+ * different type classes into one.  Inelegant, but since our type system was
+ * defined before the advent of Java generics, it avoids a lot of typecasting.
  *
  * @author jhyde
  * @version $Id$
@@ -46,101 +47,153 @@ public interface RelDataType
 {
     //~ Methods ---------------------------------------------------------------
 
-    RelDataTypeField getField(String fieldName);
-
     /**
-     * @return true if this type has fields; examples include rows and
+     * Queries whether this is a structured type.
+     *
+     * @return whether this type has fields; examples include rows and
      * user-defined structured types in SQL, and classes in Java
      */
-    boolean isStruct();
+    public boolean isStruct();
 
+    // NOTE jvs 17-Dec-2004:  once we move to Java generics, getFieldList()
+    // will be declared to return a read-only List<RelDataTypeField>,
+    // and getFields() will be eliminated.  Currently,
+    // anyone can mutate a type by poking into the array returned
+    // by getFields!
+    
     /**
-     * @return the number of fields in a struct type; result is
-     * undefined for a non-struct type
-     */
-    int getFieldCount();
-
-    int getFieldOrdinal(String fieldName);
-
-    /**
-     * @return the fields in a struct type; result is undefined
-     * for a non-struct type
+     * Gets the fields in a struct type.  The field count is equal
+     * to the size of the returned list.
      *
-     * @post return != null
+     * @return read-only list of fields
+     *
+     * @pre this.isStruct()
      */
-    RelDataTypeField [] getFields();
+    public List getFieldList();
 
     /**
-     * @return whether this type allows null values.
+     * Gets the fields in a struct type.  The field count is equal
+     * to the length of the returned array.
+     *
+     *<p>
+     *
+     * NOTE jvs 17-Dec-2004:  this method will become deprecated
+     * once we move to Java generics, and eventually eliminated
+     *
+     * @return array of fields
+     *
+     * @pre this.isStruct()
      */
-    boolean isNullable();
+    public RelDataTypeField [] getFields();
 
     /**
-     * Returns the component type if type is a collection, otherwise null.
+     * Looks up the ordinal of a field by name.
+     *
+     * @param fieldName name of field to find
+     *
+     * @return 0-based ordinal of named field, or -1 if not found
+     *
+     * @pre this.isStruct()
      */
-    RelDataType getComponentType();
-
-    // REVIEW jvs 1-Mar-2004:  The implementations for this method
-    // are asymmetric, e.g. INT.isAssignableFrom(SMALLINT) but
-    // not vice-versa (due to possible overflow?).  The SQL definition of
-    // assignability is symmetric (e.g. overflow is a runtime check).  So
-    // maybe the name of this method should be something like
-    // isSupertypeOf instead?
+    public int getFieldOrdinal(String fieldName);
+    
+    /**
+     * Looks up a field by name.
+     *
+     * @param fieldName name of field to find
+     *
+     * @return named field, or null if not found
+     *
+     * @pre this.isStruct()
+     */
+    public RelDataTypeField getField(String fieldName);
 
     /**
-     * Returns whether a value of this type can be assigned from a value of
-     * a given other type.
+     * Queries whether this type allows null values.
+     *
+     * @return whether type allows null values
      */
-    boolean isAssignableFrom(
-        RelDataType t,
-        boolean coerce);
+    public boolean isNullable();
 
     /**
-     * Returns this type's character set, or null if this type cannot carry a
+     * Gets the component type if this type is a collection, otherwise null.
+     *
+     * @return canonical type descriptor for components
+     */
+    public RelDataType getComponentType();
+
+    /**
+     * Gets this type's character set, or null if this type cannot carry a
      * character set or has no character set defined.
+     *
+     * @return charset of type
      */
-    Charset getCharset();
+    public Charset getCharset();
 
     /**
-     * Returns this type's collation, or null if this type cannot carry a
+     * Gets this type's collation, or null if this type cannot carry a
      * collation or has no collation defined.
+     *
+     * @return collation of type
      */
-    SqlCollation getCollation();
+    public SqlCollation getCollation();
 
     /**
-     * @return number of digits or characters of precision
+     * Gets this type's interval qualifier, or null if this is
+     * not an interval type.
+     *
+     * @return interval qualifier
+     */
+    public SqlIntervalQualifier getIntervalQualifier();
+    
+    /**
+     * Gets the precision of this type.
+     *
+     * @return number of digits of precision for numeric and datetime types;
+     * length in characters for character types; length in bytes
+     * for binary types; length in bits for bit types
      */
     public int getPrecision();
 
     /**
+     * Gets the scale of this type.
+     *
      * @return number of digits of scale
      */
     public int getScale();
 
     /**
-     * @return the SqlTypeName for this RelDataType, or null if
-     * it is not an SQL type
+     * Gets the {@link SqlTypeName} of this type.
+     *
+     * @return SqlTypeName, or null if
+     * this is not an SQL type
      */
     public SqlTypeName getSqlTypeName();
 
     /**
-     * @return this type as a string without detail
-     * such as character set and nullability
+     * Gets a string representation of this type without detail
+     * such as character set and nullability.
+     *
+     * @return abbreviated type string
      */
     public String toString();
 
     /**
-     * Compute a string from this type with full detail such as character set
-     * and nullability.  This string must serve as a "digest" for the type,
-     * meaning two types can be considered identical iff their digests are
-     * equal.
+     * Gets a string representation of this type with full detail such as
+     * character set and nullability.  The string must serve as a "digest" for
+     * this type, meaning two types can be considered identical iff their
+     * digests are equal.
      *
-     * @return the full type string
+     * @return full type string
      */
     public String getFullTypeString();
 
     /**
-     * @return a canonical object representing the family of this type
+     * Gets a canonical object representing the family of this type.
+     * Two values can be compared if and only if their types are in
+     * the same family.
+     *
+     * @return canonical object representing type family
      */
     public RelDataTypeFamily getFamily();
 }

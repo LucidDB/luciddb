@@ -81,7 +81,7 @@ public class FennelRenameRule extends RelOptRule
 
         int n = project.getChildExps().length;
         RelDataType inputType = inputRel.getRowType();
-        if (inputType.getFieldCount() != n) {
+        if (inputType.getFieldList().size() != n) {
             return;
         }
         RelDataType projType = project.getRowType();

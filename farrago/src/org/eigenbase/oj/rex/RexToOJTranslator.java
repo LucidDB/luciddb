@@ -338,7 +338,7 @@ public class RexToOJTranslator implements RexVisitor
             // Index of first field in next input. Special case if this
             // input has no fields: it's ambiguous (we could be looking
             // at the first field of the next input) but we allow it.
-            final int fieldCount = input.getRowType().getFieldCount();
+            final int fieldCount = input.getRowType().getFieldList().size();
             final int lastFieldIndex = firstFieldIndex + fieldCount;
             if ((lastFieldIndex > fieldIndex)
                     || ((fieldCount == 0) && (lastFieldIndex == fieldIndex))) {

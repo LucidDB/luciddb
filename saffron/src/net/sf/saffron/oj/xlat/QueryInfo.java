@@ -440,9 +440,9 @@ class QueryInfo
         RelDataType fieldType = relRowType;
 
         /*
-        if (relRowType.getFieldCount() == 1) {
+        if (relRowType.getFieldList().size() == 1) {
             fieldType = relRowType.getFields()[0].getType();
-        } else if (relRowType.getFieldCount() == 0) {
+        } else if (relRowType.getFieldList().size() == 0) {
             fieldType = relRowType; // ?why
         } else {
             throw Util.newInternal(
@@ -468,7 +468,7 @@ class QueryInfo
      */
     int countColumns(RelNode rel)
     {
-        return rel.getRowType().getFieldCount();
+        return rel.getRowType().getFieldList().size();
     }
 
     /**
@@ -488,7 +488,7 @@ class QueryInfo
         int fieldOffset = 0;
         for (int i = 0; i < offset; i++) {
             final RelNode rel = (RelNode) relList.get(i);
-            fieldOffset += rel.getRowType().getFieldCount();
+            fieldOffset += rel.getRowType().getFieldList().size();
         }
         RelNode rel = (RelNode) relList.get(offset);
         if (isParent) {

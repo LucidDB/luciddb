@@ -61,11 +61,13 @@ public abstract class RelDataTypeFactoryImpl implements RelDataTypeFactory
 
     //~ Methods ---------------------------------------------------------------
 
+    // implement RelDataTypeFactory
     public RelDataType createJavaType(Class clazz)
     {
         return canonize(new JavaType(clazz));
     }
 
+    // implement RelDataTypeFactory
     public RelDataType createJoinType(RelDataType [] types)
     {
         final RelDataType [] flattenedTypes = getTypeArray(types);
@@ -75,6 +77,7 @@ public abstract class RelDataTypeFactoryImpl implements RelDataTypeFactory
                 getFieldArray(flattenedTypes)));
     }
 
+    // implement RelDataTypeFactory
     public RelDataType createStructType(
         RelDataType [] types,
         String [] fieldNames)
@@ -86,6 +89,7 @@ public abstract class RelDataTypeFactoryImpl implements RelDataTypeFactory
         return canonize(new RelRecordType(fields));
     }
 
+    // implement RelDataTypeFactory
     public RelDataType createStructType(
         RelDataTypeFactory.FieldInfo fieldInfo)
     {
@@ -101,6 +105,7 @@ public abstract class RelDataTypeFactoryImpl implements RelDataTypeFactory
         return canonize(new RelRecordType(fields));
     }
 
+    // implement RelDataTypeFactory
     public RelDataType leastRestrictive(RelDataType [] types)
     {
         assert (types != null);
@@ -109,20 +114,20 @@ public abstract class RelDataTypeFactoryImpl implements RelDataTypeFactory
         if (type0.isStruct()) {
             return leastRestrictiveStructuredType(types);
         }
-        return leastRestrictiveGenericType(types);
+        return null;
     }
 
-    private RelDataType leastRestrictiveStructuredType(RelDataType [] types)
+    protected RelDataType leastRestrictiveStructuredType(RelDataType [] types)
     {
         RelDataType type0 = types[0];
-        int nFields = type0.getFieldCount();
+        int nFields = type0.getFieldList().size();
         
         // precheck that all types are structs with same number of fields
         for (int i = 0; i < types.length; ++i) {
             if (!types[i].isStruct()) {
                 return null;
             }
-            if (types[i].getFieldCount() != nFields) {
+            if (types[i].getFieldList().size() != nFields) {
                 return null;
             }
         }
@@ -143,28 +148,6 @@ public abstract class RelDataTypeFactoryImpl implements RelDataTypeFactory
         return createStructType(outputTypes, fieldNames);
     }
 
-    private RelDataType leastRestrictiveGenericType(RelDataType [] types)
-    {
-        RelDataType resultType = types[0];
-        for (int i = 1; i < types.length; i++) {
-            // For now, we demand that types are assignable, and assume
-            // some asymmetry in the definition of isAssignableFrom.
-            RelDataType type = types[i];
-            if (type.getSqlTypeName() == SqlTypeName.Null) {
-                continue;
-            }
-
-            if (type.isAssignableFrom(resultType, false)) {
-                resultType = type;
-            } else {
-                if (!resultType.isAssignableFrom(type, false)) {
-                    return null;
-                }
-            }
-        }
-        return resultType;
-    }
-    
     // copy a non-record type, setting nullability
     private RelDataType copySimpleType(
         RelDataType type,
@@ -199,7 +182,7 @@ public abstract class RelDataTypeFactoryImpl implements RelDataTypeFactory
             new FieldInfo() {
                 public int getFieldCount()
                 {
-                    return type.getFieldCount();
+                    return type.getFieldList().size();
                 }
 
                 public String getFieldName(int index)
@@ -342,6 +325,7 @@ public abstract class RelDataTypeFactoryImpl implements RelDataTypeFactory
             new RelDataTypeField[list.size()]);
     }
 
+    // implement RelDataTypeFactory
     public RelDataType createArrayType(
         RelDataType elementType,
         long maxCardinality)
@@ -354,24 +338,6 @@ public abstract class RelDataTypeFactoryImpl implements RelDataTypeFactory
         throw Util.newInternal("array of non-Java type unsupported");
     }
     
-    /**
-     * @pre to!=null && from !=null
-     * @param to
-     * @param from
-     * @param coerce
-     */
-    public boolean assignableFrom(
-        SqlTypeName to,
-        SqlTypeName from,
-        boolean coerce)
-    {
-        Util.pre((to != null) && (from != null), "to!=null && from !=null");
-
-        SqlTypeAssignmentRules assignableFromRules =
-            SqlTypeAssignmentRules.instance();
-        return assignableFromRules.isAssignableFrom(to, from, coerce);
-    }
-
     //~ Inner Classes ---------------------------------------------------------
 
     // TODO jvs 13-Dec-2004:  move to OJTypeFactoryImpl?

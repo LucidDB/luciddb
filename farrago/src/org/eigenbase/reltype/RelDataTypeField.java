@@ -23,7 +23,8 @@ package org.eigenbase.reltype;
 
 
 /**
- * The definition of a field in a {@link RelDataType}.
+ * RelDataTypeField represents the definition of a field in a structured {@link
+ * RelDataType}.
  *
  * @author jhyde
  * @version $Id$
@@ -35,33 +36,25 @@ public interface RelDataTypeField
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * Returns the name of this field. The name is unique within the type.
+     * Gets the name of this field, which is unique within its containing type.
+     *
+     * @return field name
      */
-    String getName();
+    public String getName();
 
     /**
-     * Returns the index of this field within its record type.
+     * Gets the ordinal of this field within its containing type.
+     *
+     * @return 0-based ordinal
      */
-    int getIndex();
+    public int getIndex();
 
     /**
-     * Returns the type of this field.
+     * Gets the type of this field.
+     *
+     * @return field type
      */
-    RelDataType getType();
-
-    /**
-     * Retrieves the value of this field in an instance of this type.
-     */
-    Object get(Object o)
-        throws IllegalAccessException;
-
-    /**
-     * Sets the value of this field in an instance of the type.
-     */
-    void set(
-        Object o,
-        Object value)
-        throws IllegalAccessException;
+    public RelDataType getType();
 }
 
 

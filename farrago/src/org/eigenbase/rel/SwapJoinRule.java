@@ -93,7 +93,7 @@ public class SwapJoinRule extends RelOptRule
             newJoin.getRowType().getFields();
         final RexNode [] exps = new RexNode[newJoinFields.length];
         for (int i = 0; i < exps.length; i++) {
-            int source = (i + rightRowType.getFieldCount()) % exps.length;
+            int source = (i + rightRowType.getFieldList().size()) % exps.length;
             exps[i] =
                 rexBuilder.makeInputRef(
                     newJoinFields[source].getType(),
@@ -141,7 +141,7 @@ public class SwapJoinRule extends RelOptRule
             final String [] fieldNames = new String[newJoinFields.length];
             for (int i = 0; i < exps.length; i++) {
                 int source =
-                    (i + join.getLeft().getRowType().getFieldCount()) % exps.length;
+                    (i + join.getLeft().getRowType().getFieldList().size()) % exps.length;
                 final RelDataTypeField newJoinField = newJoinFields[i];
                 exps[i] =
                     rexBuilder.makeInputRef(

@@ -309,8 +309,8 @@ class MedMdrJoinRelImplementor
     private void generateRowCalc(RexNode [] rightExps)
     {
         RelDataTypeField [] fields = outputRowType.getFields();
-        int nLeft = leftRowType.getFieldCount();
-        int n = outputRowType.getFieldCount();
+        int nLeft = leftRowType.getFieldList().size();
+        int n = fields.length;
         for (int i = 0; i < n; i++) {
             Expression lhs =
                 new FieldAccess(varOutputRow,

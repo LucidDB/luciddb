@@ -27,6 +27,19 @@ import java.sql.*;
 
 /**
  * Enumeration of the type names which can be used to construct a SQL type.
+ * Rationale for this class's existence (instead of just using the standard
+ * java.sql.Type ordinals):
+ *
+ *<ul>
+ *
+ *<li>java.sql.Type does not include all SQL2003 datatypes
+ *
+ *<li>SqlTypeName provides a type-safe enumeration
+ *
+ *<li>SqlTypeName provides a place to hang extra information such
+ * as whether the type carries precision and scale
+ *
+ *</ul>
  *
  * @author jhyde
  * @since Nov 24, 2003

@@ -741,7 +741,7 @@ public class ReturnTypeInferenceImpl
                     CallOperands.RelDataTypesCallOperands(argElementTypes);
                 RelDataType biggestElementType = useBiggest.
                     getType(validator, scope,typeFactory, types);
-                return  typeFactory.createMultisetType(biggestElementType);
+                return  typeFactory.createMultisetType(biggestElementType, -1);
             }
         };
 

@@ -40,17 +40,20 @@ public abstract class AbstractSqlType
         this.typeName = typeName;
         this.isNullable = isNullable;
     }
-        
+
+    // implement RelDataType
     public SqlTypeName getSqlTypeName()
     {
         return typeName;
     }
 
+    // implement RelDataType
     public boolean isNullable()
     {
         return isNullable;
     }
         
+    // implement RelDataType
     public RelDataTypeFamily getFamily()
     {
         return SqlTypeFamily.getFamilyForSqlType(typeName);

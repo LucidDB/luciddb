@@ -482,8 +482,7 @@ public class SqlStdOperatorTable extends SqlOperatorTable
                     RelDataType t0 = validator.deriveType(scope, call.operands[0]);
                     RelDataType t1 = mt.getComponentType();
 
-                    if (!t0.isAssignableFrom(t1, false) &&
-                        !t1.isAssignableFrom(t0, false)) {
+                    if (t0.getFamily() != t1.getFamily()) {
                         if (throwOnFailure) {
                             throw validator.newValidationError(call,
                                 EigenbaseResource.instance().

@@ -110,7 +110,7 @@ class MedMdrJoinRel extends JoinRel implements JavaRel
         // TODO:  refine
         double rowCount = getRows();
         return planner.makeCost(rowCount, 0,
-            rowCount * getRowType().getFieldCount());
+            rowCount * getRowType().getFieldList().size());
     }
 
     // implement RelNode
