@@ -28,9 +28,10 @@
   <!-- Definitions for Farrago build properties and macros -->
   <import file="../../buildMacros.xml"/>
 
-  <property name="xmi.dir" location="catalog/xmi"/>
-  <property name="catalog.src.dir" location="catalog/java"/>
-  <property name="catalog.basename" location="catalog/mdr"/>
+  <property name="catalog.dir" location="catalog"/>
+  <property name="xmi.dir" location="${catalog.dir}/xmi"/>
+  <property name="catalog.src.dir" location="${catalog.dir}/java"/>
+  <property name="catalog.basename" location="${catalog.dir}/FarragoCatalog"/>
   <property name="src.dir" location="src"/>
   <property name="classes.dir" location="classes"/>
   <property name="parserimpl.dir" 
@@ -48,6 +49,8 @@
   <target name="all" depends="clean,mdr_taskdef">
     <mkdir dir="${catalog.src.dir}"/>
     <mkdir dir="${classes.dir}"/>
+    <copy file="${farrago.catalog.dir}/templates/BTreeRepos.properties" 
+      tofile="${catalog.dir}/ReposStorage.properties"/>
     <farrago.extractPoseidonModel 
       zumlFile="${xmi.dir}/RandomNumberGeneratorModel.zuml"
       umlBasename="RandomNumberGeneratorModel"
@@ -95,13 +98,32 @@
     </farrago.javaCompile>
   </target>
 
-  <target name="tmp">
+  <target name="exportPluginModel">
+    <farrago.javaExec
+      classname="net.sf.farrago.catalog.FarragoReposUtil"
+      classpathref="farrago.run.classpath">
+      <sysproperty 
+        key="net.sf.farrago.catalog" 
+        value="${catalog.dir}"/>
+      <arg value="exportSubModel"/>
+      <arg value="${xmi.dir}/PluginModel.xmi"/>
+      <arg value="RNGModel"/>
+    </farrago.javaExec>
+  </target>
+
+  <target name="importPluginModel">
+    <farrago.javaExec
+      classname="net.sf.farrago.catalog.FarragoReposUtil"
+      classpathref="farrago.run.classpath">
+      <arg value="importSubModel"/>
+      <arg value="${xmi.dir}/PluginModel.xmi"/>
+    </farrago.javaExec>
   </target>
 
   <target name="clean">
     <delete quiet="true">
       <fileset dir="${xmi.dir}" includes="*.xmi"/>
-      <fileset dir="catalog" includes="mdr.*"/>
+      <fileset dir="${catalog.dir}" includes="FarragoCatalog.*"/>
       <fileset dir="${parserimpl.dir}" includes="*.java,*.jj"/>
     </delete>
   </target>

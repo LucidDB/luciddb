@@ -678,6 +678,10 @@ require version '${required.ant.version}'."/>
   </target>
 
   <target name="exportMetamodel" depends="mdr_taskdef">
+    <farrago.mdrFork target="forked_exportMetamodel"/>
+  </target>
+
+  <target name="forked_exportMetamodel" depends="mdr_taskdef">
     <mdr>
       <writeXMI
         file="${farrago.xmi.dir}/FarragoMetamodelExport.xmi"
