@@ -102,6 +102,22 @@ protected:
         ExecStream &stream,
         uint nRowsExpected,
         MockProducerExecStreamGenerator &verifier);
+
+    /**
+     * Executes the prepared stream graph and verifies that all output tuples
+     * matche an expected and given one
+     *
+     * @param stream output stream from which to read
+     *
+     * @param expectedTuple
+     *
+     * @param nRowsExpected
+     */
+    void verifyConstantOutput(
+        ExecStream &stream, 
+        const TupleData  &expectedTuple,
+        uint nRowsExpected);
+
     
 public:
     // override TestBase
@@ -114,10 +130,20 @@ public:
  */
 class RampExecStreamGenerator : public MockProducerExecStreamGenerator
 {
+protected:
+    int offset;
 public:
+    RampExecStreamGenerator(int offset_) {
+        offset = offset_;
+    }
+
+    RampExecStreamGenerator() {
+        offset = 0;
+    }
+
     virtual int64_t generateValue(uint iRow)
     {
-        return iRow;
+        return iRow + offset;
     }
 };
 

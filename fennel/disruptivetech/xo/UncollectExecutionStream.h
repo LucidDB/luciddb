@@ -19,8 +19,8 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#ifndef Fennel_CollectExecutionStream_Included
-#define Fennel_CollectExecutionStream_Included
+#ifndef Fennel_UncollectExecutionStream_Included
+#define Fennel_UncollectExecutionStream_Included
 
 #include "fennel/exec/ConduitExecStream.h"
 #include "fennel/tuple/TupleAccessor.h"
@@ -30,35 +30,32 @@
 FENNEL_BEGIN_NAMESPACE
 
 /**
- * CollectExecutionStreamParams defines parameters for instantiating a
- * CollectExecutionStream.
+ * UncollectExecutionStreamParams defines parameters for instantiating a
+ * UncollectExecutionStream.
  */
-struct CollectExecutionStreamParams : public ConduitExecStreamParams
+struct UncollectExecutionStreamParams : public ConduitExecStreamParams
 {
     //empty
 };
 
 /**
- * CollectExecutionStream reads all tuples from a child stream and collects them 
+ * UncollectExecutionStream reads all tuples from a child stream and collects them 
  * into a single tuple which is written to one output tuple.
  *
  * @author Wael Chatila
  * @version $Id$
  */
-class CollectExecutionStream : public ConduitExecStream
+class UncollectExecutionStream : public ConduitExecStream
 {
 private:
-    TupleData outputTupleData;
-    TupleData inputTupleData;
-    boost::scoped_array<FixedBuffer> pOutputBuffer;
+    //    TupleData outputTupleData;
+    //boost::scoped_array<FixedBuffer> pOutputBuffer;
     uint bytesWritten;
-    bool alreadyWrittenToOutput;
     
 public:
-    virtual void prepare(CollectExecutionStreamParams const &params);
+    virtual void prepare(UncollectExecutionStreamParams const &params);
     virtual ExecStreamResult execute(ExecStreamQuantum const &quantum);
     virtual void open(bool restart);
-    virtual void close();
     
 };
 
@@ -66,4 +63,4 @@ FENNEL_END_NAMESPACE
 
 #endif
 
-// End CollectExecutionStream.h
+// End UncollectExecutionStream.h

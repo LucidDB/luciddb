@@ -1,7 +1,7 @@
 /*
 // $Id$
 // Fennel is a relational database kernel.
-// Copyright (C) 2004-2004 John V. Sichi.
+// Copyright (C) 2004-2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
@@ -28,6 +28,7 @@
 #include "fennel/exec/ExecStreamBufAccessor.h"
 #include "fennel/exec/DfsTreeExecStreamScheduler.h"
 #include "fennel/exec/MockProducerExecStream.h"
+#include "fennel/tuple/TuplePrinter.h"
 
 #include <boost/test/test_tools.hpp>
 
@@ -179,6 +180,53 @@ void ExecStreamTestBase::verifyOutput(
         }
     }
     BOOST_CHECK_EQUAL(nRowsExpected,nRows);
+}
+
+void ExecStreamTestBase::verifyConstantOutput(
+    ExecStream &stream, 
+    const TupleData  &expectedTuple,
+    uint nRowsExpected)
+{
+    // TODO:  assertions about output tuple, or better yet, use proper tuple
+    // access
+    
+    pGraph->open();
+    pScheduler->start();
+    uint nRows = 0;
+    for (;;) {
+        ExecStreamBufAccessor &bufAccessor =
+            pScheduler->readStream(stream);
+        if (bufAccessor.getState() == EXECBUF_EOS) {
+            break;
+        }
+        BOOST_REQUIRE(bufAccessor.isConsumptionPossible());
+
+        if (!bufAccessor.demandData()) {
+            break;
+        }
+        BOOST_REQUIRE(nRows < nRowsExpected);
+
+        TupleData actualTuple;
+        actualTuple.compute(bufAccessor.getTupleDesc());
+        bufAccessor.unmarshalTuple(actualTuple);
+
+        int c = bufAccessor.getTupleDesc().compareTuples(
+                               expectedTuple, actualTuple);
+        bufAccessor.consumeTuple();
+        ++nRows;
+        if (c) {
+#if 1 
+            TupleDescriptor statusDesc = bufAccessor.getTupleDesc();
+            TuplePrinter tuplePrinter;
+            tuplePrinter.print(std::cout, statusDesc, actualTuple);
+            tuplePrinter.print(std::cout, statusDesc, expectedTuple);
+            std::cout << std::endl;
+#endif
+            BOOST_CHECK_EQUAL(0,c);
+            break;
+        }
+    }
+    BOOST_CHECK_EQUAL(nRowsExpected, nRows);
 }
 
 FENNEL_END_CPPFILE("$Id$");

@@ -22,35 +22,60 @@
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/disruptivetech/xo/CollectExecutionStream.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
+#include "fennel/tuple/TuplePrinter.h"
+#include "fennel/tuple/StandardTypeDescriptor.h"
+
+using namespace std;
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 void CollectExecutionStream::prepare(CollectExecutionStreamParams const &params)
 {
     ConduitExecStream::prepare(params);
+    FENNEL_TRACE(
+        TRACE_FINER,
+        "collect xo input TupleDescriptor = " 
+        << pInAccessor->getTupleDesc());
+
+    FENNEL_TRACE(
+        TRACE_FINER,
+        "collect xo output TupleDescriptor = " 
+        << pOutAccessor->getTupleDesc());
+
+    StandardTypeDescriptorOrdinal ordinal =
+        StandardTypeDescriptorOrdinal(
+        pOutAccessor->getTupleDesc()[0].pTypeDescriptor->getOrdinal());
+    assert(ordinal == STANDARD_TYPE_VARBINARY);
+    assert(1 == pOutAccessor->getTupleDesc().size());
 }
 
 void CollectExecutionStream::open(bool restart) 
 {
     ConduitExecStream::open(restart);
     outputTupleData.compute(pOutAccessor->getTupleDesc());    
+    inputTupleData.compute(pInAccessor->getTupleDesc());    
+
     uint cbOutMaxsize = pOutAccessor->getConsumptionTupleAccessor().getMaxByteCount();
     pOutputBuffer.reset(new FixedBuffer[cbOutMaxsize]);
     bytesWritten = 0;
+    alreadyWrittenToOutput = false;
 }
 
+void CollectExecutionStream::close()
+{
+    pOutputBuffer.reset();
+    ConduitExecStream::closeImpl();
+}
 
 ExecStreamResult CollectExecutionStream::execute(ExecStreamQuantum const &quantum)
 {
-    
-    if (EXECBUF_EOS == pInAccessor->getState()) {
-        // REVIEW wael 11/29-2004: Is it ok to return outbuf_overflow when we should(?) return EOS?
-        TupleAccessor& ta = pOutAccessor->getScratchTupleAccessor();
-        ta.setCurrentTupleBuf(pOutputBuffer.get());
-        ta.unmarshal(outputTupleData);
+    if (!alreadyWrittenToOutput && (EXECBUF_EOS == pInAccessor->getState())) {
+        outputTupleData[0].pData = pOutputBuffer.get();
+        outputTupleData[0].cbData = bytesWritten;
+        alreadyWrittenToOutput = true;
         if (!pOutAccessor->produceTuple(outputTupleData)) {
             return EXECRC_BUF_OVERFLOW;
-        }
+        } 
     } 
 
     ExecStreamResult rc = precheckConduitBuffers();
@@ -59,24 +84,33 @@ ExecStreamResult CollectExecutionStream::execute(ExecStreamQuantum const &quantu
     }
         
     for (uint nTuples = 0; nTuples < quantum.nTuplesMax; ++nTuples) {
-        while (!pInAccessor->isTupleConsumptionPending()) {
-            if (!pInAccessor->demandData()) {
-                return EXECRC_BUF_UNDERFLOW;
-            }
-            
-            // write one input tuple to the staging output buffer
-            memcpy(pOutputBuffer.get() + bytesWritten, 
-                   pInAccessor->getConsumptionStart(),
-                   pInAccessor->getScratchTupleAccessor().getCurrentByteCount());
-            bytesWritten += pInAccessor->getScratchTupleAccessor().getCurrentByteCount();
+        assert(!pInAccessor->isTupleConsumptionPending());
+        if (!pInAccessor->demandData()) {
+            return EXECRC_BUF_UNDERFLOW;
         }
+  
+        pInAccessor->unmarshalTuple(inputTupleData);
+          
+#if 0
+    TupleDescriptor statusDesc = pInAccessor->getTupleDesc();
+    TuplePrinter tuplePrinter;
+    tuplePrinter.print(std::cout, statusDesc, inputTupleData);
+    std::cout << std::endl;
+#endif
 
-        
+        // write one input tuple to the staging output buffer
+        memcpy(pOutputBuffer.get() + bytesWritten, 
+               pInAccessor->getConsumptionStart(),
+               pInAccessor->getConsumptionTupleAccessor().getCurrentByteCount());
+        // NOTE. bytesWritten is updated with the tuple max size, 
+        // not the actual size
+        // in order to be able to safely and easily uncollect it later
+        bytesWritten += pInAccessor->getConsumptionTupleAccessor().getMaxByteCount();
         pInAccessor->consumeTuple();
     }
     return EXECRC_QUANTUM_EXPIRED;
 }
 
-FENNEL_END_CPPFILE("$Id$");
+FENNEL_END_CPPFILE("$Id: //open/dt/dev/fennel/disruptivetech/xo/CollectExecutionStream.cpp#2 $");
 
 // End CollectExecutionStream.cpp
