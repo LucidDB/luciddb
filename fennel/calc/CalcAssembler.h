@@ -221,7 +221,7 @@ public:
         Instruction* inst = NULL;
 
         try {
-            inst = InstructionFactory::createInstruction(mCalc, name, function, operands);
+            inst = InstructionFactory::createInstruction(name, function, operands);
         }
         catch (FennelExcn& ex) {
             throw CalcAssemblerException(ex.getMessage(), location);

@@ -21,7 +21,10 @@
 
 package net.sf.saffron.core;
 
+import net.sf.saffron.sql.SqlCollation;
+
 import java.io.PrintWriter;
+import java.nio.charset.Charset;
 
 /**
  * The type of a scalar expression or a row returned from a relational
@@ -112,6 +115,44 @@ public interface SaffronType
      *  double and float, don't
      */
     boolean isSameTypeFamily(SaffronType t);
+
+    /**
+     * If type represent a string, char, varchar or any other type that can carry a collation
+     * this function must return true, otherwise returns false. <BR>
+     * Comments: Technically this function is not needed. Its possible to do the same with multiple calls to
+     * {@link #isSameTypeFamily}, however having this function is convenient and doesn't only simplify code where
+     * {@link #getCharset}, {@link #setCharset}, {@link #getCollation} and {@link #setCollation}
+     * are used but also slightly simplifies the implementations of the named functions.
+     */
+    boolean isCharType();
+
+    /**
+     * If type represent a string, char, varchar or any other type that can carry a character set
+     * this function will return the charset or null if not defined.
+     * If type can not carry a charset an runtime exception MUST be thrown.
+     */
+    Charset getCharset();
+
+    /**
+     * If type represent a string, char, varchar or any other type that can carry a character set
+     * this function will set the charset
+     * If type can not carry a charset an runtime exception MUST be thrown.
+     */
+     void setCharset(Charset charset);
+
+    /**
+     * If type represent a string, char, varchar or any other type that can carry a collation this function will return
+     * the collation or null if not defined.
+     * If type can not carry a collation an runtime exception MUST be thrown.
+     */
+    SqlCollation getCollation() throws RuntimeException;
+
+    /**
+     * If type represent a string, char, varchar or any other type that can carry a collation this function will set
+     * the collation.
+     * If type can not carry a collation an runtime exception MUST be thrown.
+     */
+    void setCollation(SqlCollation collation) throws RuntimeException;
 }
 
 

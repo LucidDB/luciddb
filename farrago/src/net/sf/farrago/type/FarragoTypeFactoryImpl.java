@@ -37,6 +37,7 @@ import openjava.mop.*;
 
 import java.util.*;
 import java.sql.*;
+import java.sql.Date;
 
 import javax.jmi.model.*;
 import javax.jmi.reflect.*;
@@ -164,6 +165,17 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         addPrecisionPrototype(
             new FarragoPrecisionType(
                 getSimpleType("BINARY"),false,0,0,null));
+        addPrecisionPrototype(
+            new FarragoPrecisionType(
+                getSimpleType("BIT"),false,0,0,null));
+        addPrecisionPrototype(
+            new FarragoPrecisionType(
+                getSimpleType("DECIMAL"),false,0,0,null));
+        // Date types
+        // addPrototype(new FarragoPrimitiveType(getSimpleType("DATE"), false, Date.class));
+        addPrecisionPrototype(new FarragoPrecisionType(getSimpleType("DATE"), false, 0, 0, null));
+        addPrecisionPrototype(new FarragoPrecisionType(getSimpleType("TIME"), false, 0, 0, null));
+        addPrecisionPrototype(new FarragoPrecisionType(getSimpleType("TIMESTAMP"), false, 0, 0, null));
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -193,7 +205,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             catalog.getModelElement(
                 catalog.relationalPackage.getCwmSqlsimpleType().refAllOfClass(),
                 typeName.getName());
-        assert(simpleType != null) : typeName.getName();
+        assert(simpleType != null) : "Type named " + typeName.getName() + " not found.";
         FarragoType prototype =
             (FarragoType) sqlTypeNumberToPrototype.get(
                 getTypeHashKey(simpleType,false));
@@ -205,7 +217,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     public SaffronType createSqlType(SqlTypeName typeName, int length)
     {
         SaffronType type = createSqlType(typeName);
-        assert(type instanceof FarragoPrecisionType);
+        assert(type instanceof FarragoPrecisionType) : type.getClass().toString();
         FarragoPrecisionType precisionType =
             (FarragoPrecisionType) type;
         precisionType = new FarragoPrecisionType(
@@ -254,13 +266,17 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         }
         assert (pPrecision != null);
         Integer pScale = column.getScale();
+        String charsetName = column.getCharacterSetName();
+        if (charsetName.equals("")) {
+            charsetName = null;
+        }
         FarragoType specializedType = 
             new FarragoPrecisionType(
                 prototype.getSimpleType(),
                 getCatalog().isNullable(column),
                 pPrecision.intValue(),
                 (pScale == null) ? 0 : pScale.intValue(),
-                column.getCharacterSetName());
+                charsetName);
         specializedType.factory = this;
         return (FarragoType) canonize(specializedType);
     }

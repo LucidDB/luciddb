@@ -3,12 +3,12 @@
 
 -- create a private wrapper for mdr (don't use the standard mdr wrapper)
 create foreign data wrapper test_mdr
-library 'plugin/FarragoMedMdr.jar'
+library 'class net.sf.farrago.namespace.mdr.MedMdrForeignDataWrapper'
 language java;
 
 -- test name uniqueness:  should fail
 create foreign data wrapper test_mdr
-library 'plugin/FarragoMedMdr.jar'
+library 'class net.sf.farrago.namespace.mdr.MedMdrForeignDataWrapper'
 language java;
 
 create server mof_server

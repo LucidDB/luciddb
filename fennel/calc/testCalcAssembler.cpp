@@ -21,6 +21,7 @@
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/calc/CalcCommon.h"
 #include "fennel/calc/CalcAssembler.h"
+#include "fennel/calc/StringToHex.h"
 #include "fennel/tuple/TuplePrinter.h"
 
 #include <fstream.h>
@@ -636,24 +637,6 @@ public:
         return mExpectedOutputTuple;
     }
 
-    static string getHexString(const char* buf)
-    {
-        assert(buf != NULL);
-        uint buflen = strlen(buf);
-        return getHexString(buf, buflen);
-    }
-
-    static string getHexString(const char* buf, uint buflen)
-    {
-        assert(buf != NULL);
-        ostringstream ostr;
-        for (uint i=0; i<buflen; i++) {
-            unsigned char ch = (unsigned char) buf[i];
-            ostr << hex << setw(2) << setfill('0') << (uint) ch;
-        }
-        return ostr.str();
-    }
-
     bool failed()
     {
         return mFailed;
@@ -779,7 +762,7 @@ string CalcAssemblerTestCase::toLiteralString(TupleDatum &datum,
         case STANDARD_TYPE_VARCHAR:
         case STANDARD_TYPE_VARBINARY:
             ostr << "0x";
-            ostr << getHexString( (reinterpret_cast<const char*>(datum.pData)),
+            ostr << stringToHex( (reinterpret_cast<const char*>(datum.pData)),
                                   datum.cbData);
             break;
         default:
@@ -1747,7 +1730,7 @@ void CalcAssemblerTest::testLiteralBinding()
     // Test bind a string (char)
     string teststr9;
     teststr9 = "O c,4, u8; C c,4, u8; V 0x";
-    teststr9 += CalcAssemblerTestCase::getHexString("test");
+    teststr9 += stringToHex("test");
     teststr9 += ", 60000000; T; MOVE O0, C0; MOVE O1, C1;";
     CalcAssemblerTestCase testCase9(__LINE__, "STRING (CHAR) = \"test\"", teststr9.c_str());
     if (testCase9.assemble()) {
@@ -1759,7 +1742,7 @@ void CalcAssemblerTest::testLiteralBinding()
     // Test bind a string (varchar)
     string teststr10;
     teststr10 = "O vc,8; C vc,8; V 0x";
-    teststr10 += CalcAssemblerTestCase::getHexString("short");
+    teststr10 += stringToHex("short");
     teststr10 += "; T; MOVE O0, C0;";
     CalcAssemblerTestCase testCase10(__LINE__, "STRING (VARCHAR) = \"short\"", teststr10.c_str());
     if (testCase10.assemble()) {
@@ -1770,7 +1753,7 @@ void CalcAssemblerTest::testLiteralBinding()
     // Test bind a string (varchar) that's too long
     string teststr11;
     teststr11 = "O vc,8, u8; C vc,8, u8; V 0x";
-    teststr11 += CalcAssemblerTestCase::getHexString("muchtoolongstring");
+    teststr11 += stringToHex("muchtoolongstring");
     teststr11 += "; T; MOVE O0, C0;";
     
     CalcAssemblerTestCase testCase11(__LINE__, "STRING (VARCHAR) TOO LONG", teststr11.c_str());
@@ -1780,7 +1763,7 @@ void CalcAssemblerTest::testLiteralBinding()
     // Test bind a binary string (binary) that's too short
     string teststr12;
     teststr12 = "O c,100, u8; C c,100, u8; V 0x";
-    teststr12 += CalcAssemblerTestCase::getHexString("binarytooshort");
+    teststr12 += stringToHex("binarytooshort");
     teststr12 += ", 60000000; T; MOVE O0, C0; MOVE O1, C1;";
     CalcAssemblerTestCase testCase12(__LINE__, "STRING (BINARY) TOO SHORT", teststr12.c_str());
     testCase12.expectAssemblerError("not equal");
@@ -1915,8 +1898,7 @@ void CalcAssemblerTest::testReturn()
     }
 }
 
-void convertFloatToInt(Calculator *pCalc,
-                       RegisterRef<int>* regOut,
+void convertFloatToInt(RegisterRef<int>* regOut,
                        RegisterRef<float>* regIn)
 {
     regOut->value((int)regIn->value());

@@ -42,6 +42,7 @@
     <pattern name="namespace.impl" class="net.sf.farrago.namespace.impl.*" />
     <pattern name="namespace.mdr" class="net.sf.farrago.namespace.mdr.*" />
     <pattern name="namespace.jdbc" class="net.sf.farrago.namespace.jdbc.*" />
+    <pattern name="namespace.ftrs" class="net.sf.farrago.namespace.ftrs.*" />
     <pattern name="test" class="net.sf.farrago.test.*" />
 
     <!-- explicit list of all farrago components above -->
@@ -71,6 +72,7 @@
       <include pattern="namespace.impl"/>
       <include pattern="namespace.mdr"/>
       <include pattern="namespace.jdbc"/>
+      <include pattern="namespace.ftrs"/>
       <include pattern="test"/>
     </pattern>
 
@@ -437,6 +439,22 @@
         <to pattern="farrago" />
         <allow>
           <to pattern="namespace.jdbc.deps" />
+        </allow>
+      </deny>
+    </access-rule>
+
+    <pattern name="namespace.ftrs.deps">
+      <include pattern="namespace.impl.deps" />
+      <include pattern="namespace.ftrs" />
+    </pattern>
+
+    <access-rule>
+      <message>namespace.ftrs dependency violation</message>
+      <deny>
+        <from pattern="namespace.ftrs" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="namespace.ftrs.deps" />
         </allow>
       </deny>
     </access-rule>

@@ -172,7 +172,7 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
      *
      * @return column found
      */
-    public CwmColumn findColumn(CwmTable table,String columnName);
+    public CwmColumn findColumn(CwmNamedColumnSet namedColumnSet,String columnName);
     
     /**
      * Looks up a catalog by name, throwing a validation error if not found.
@@ -205,9 +205,14 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
      *
      * @param wrapperName name of wrapper to look up (must be simple)
      *
+     * @param isForeign true for foreign data wrapper; false for
+     * local data wrapper
+     *
      * @return wrapper found
      */
-    public FemDataWrapper findDataWrapper(SqlIdentifier wrapperName);
+    public FemDataWrapper findDataWrapper(
+        SqlIdentifier wrapperName,
+        boolean isForeign);
     
     /**
      * Looks up a data server by name, throwing a validation error if not found.
@@ -217,6 +222,12 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
      * @return server found
      */
     public FemDataServer findDataServer(SqlIdentifier serverName);
+
+    /**
+     * @return default data server to use if none specified in
+     * local table definition
+     */
+    public FemDataServer getDefaultLocalDataServer();
     
     /**
      * Looks up a schema object by name, throwing a validation error if not

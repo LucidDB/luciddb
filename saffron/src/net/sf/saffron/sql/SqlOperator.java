@@ -25,10 +25,17 @@ import net.sf.saffron.util.EnumeratedValues;
 import net.sf.saffron.util.Util;
 import net.sf.saffron.core.SaffronType;
 import net.sf.saffron.core.SaffronTypeFactory;
+import net.sf.saffron.core.SaffronTypeFactoryImpl;
 import net.sf.saffron.sql.type.SqlTypeName;
+import net.sf.saffron.resource.SaffronResource;
+import net.sf.saffron.rex.RexNode;
+import net.sf.saffron.calc.CalcProgramBuilder;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.text.MessageFormat;
+
+import openjava.ptree.Expression;
 
 
 /**
@@ -57,9 +64,12 @@ public abstract class SqlOperator
      */
     final int rightPrec;
 
+    /** used to get the return type of operator/function */
     private final TypeInference typeInference;
+    /** used to inference unknown params */
     private final ParamTypeInference paramTypeInference;
-    protected final AllowdArgInference argTypeInference;
+    /** used to validate operands */
+    protected final AllowedArgInference argTypeInference;
 
     public static final String NL = System.getProperty("line.separator");
     //~ Constructors ----------------------------------------------------------
@@ -74,7 +84,7 @@ public abstract class SqlOperator
         String name,SqlKind kind,int leftPrecedence,int rightPrecedence,
         TypeInference typeInference,
         ParamTypeInference paramTypeInference,
-        AllowdArgInference argTypeInference)
+        AllowedArgInference argTypeInference)
     {
         Util.pre(kind != null, "kind != null");
 //        Util.pre(argTypeInference != null, "argTypeInference != null");
@@ -94,7 +104,7 @@ public abstract class SqlOperator
         String name,SqlKind kind,int prec,boolean isLeftAssoc,
         TypeInference typeInference,
         ParamTypeInference paramTypeInference,
-        AllowdArgInference argTypeInference)
+        AllowedArgInference argTypeInference)
     {
         this(
             name,
@@ -107,9 +117,39 @@ public abstract class SqlOperator
 
     //~ Methods ---------------------------------------------------------------
 
-    /** Returns how many operands this operator takes */
-    public int getNumOfOperands() {
-        return argTypeInference.getNbrOfArgs();
+    public List getPossibleNumOfOperands() {
+        if (null!=argTypeInference) {
+            List ret = new ArrayList(argTypeInference.getArgCount());
+            ret.add(new Integer(argTypeInference.getArgCount()));
+            return ret;
+        }
+
+        throw Util.needToImplement(
+                "if you see this you must either give argTypeInference a value or override this method");
+    }
+
+    /**
+     * Returns how many operands this operator takes.
+     * See also {@link #getPossibleNumOfOperands}.
+     * @param desiredCount Indicates how many operands the caller would like
+     * to have, and can be ignored depending on the operator.
+     * This parameter can be used to return the right value in case
+     * the operator can take a different number of operands.
+     * See {@link #getPossibleNumOfOperands}
+     * @return the number of operands this operator can take.
+     * Note, this value is not fixed. Depending on the operator and the input
+     * and how it was created (i.e. how many operands it was created with)
+     * it may return a different value.
+     * See {@link #getPossibleNumOfOperands}
+     */
+    public int getNumOfOperands(int desiredCount) {
+        Util.discard(desiredCount);
+        if (null==argTypeInference) {
+            Util.needToImplement(
+                    "If you see this you need to overide this method"+
+                    "or give argTypeInference a value");
+        }
+        return argTypeInference.getArgCount();
     }
 
     public String toString() {
@@ -120,7 +160,8 @@ public abstract class SqlOperator
      * Returns a template describing how the operator signature is to be built.
      * E.g for the binary + operator the template looks like "{1} {0} {2}"
      * {0} is the operator, subsequent nbrs are operands.
-     * If null is returned, the default template will be used which is opname(operand0, operand1, ...)
+     * If null is returned, the default template will be used which
+     * is opname(operand0, operand1, ...)
      */
     protected String getSignatureTemplate() {
         return null;
@@ -255,10 +296,16 @@ public abstract class SqlOperator
         return kind.getOrdinal()*31 + name.hashCode();
     }
 
-    public SaffronType getType(SqlValidator validator, SqlValidator.Scope scope,
-            SqlCall call) {
+    public SaffronType getType(SaffronTypeFactory typeFactory, SaffronType[] argTypes) {
+        if (typeInference != null) {
+            return typeInference.getType(typeFactory, argTypes);
+        }
+        throw Util.needToImplement(this);
+    }
+
+    public SaffronType getType(SqlValidator validator, SqlValidator.Scope scope, SqlCall call) {
         // Check that there's the right number of arguments.
-        checkNumberOfArg(argTypeInference, call); //todo
+        checkNumberOfArg(call);
 
         checkArgTypes(call, validator, scope);
 
@@ -271,16 +318,39 @@ public abstract class SqlOperator
      * Operators (such as "ROW" and "AS") which do not check their arguments
      * can override this method.
      */
-    protected void checkArgTypes(
-        SqlCall call, SqlValidator validator, SqlValidator.Scope scope)
+    protected void checkArgTypes(SqlCall call, SqlValidator validator, SqlValidator.Scope scope)
     {
         // Check that all of the arguments are of the right type, or are at
         // least assignable to the right type.
+        if (null==argTypeInference) {
+            throw Util.needToImplement(
+                "if you see this you must either give argTypeInference a value"+
+                " or override this method");
+
+        }
+
         argTypeInference.check(validator,scope,call);
     }
 
-    protected void checkNumberOfArg(final AllowdArgInference argType, SqlCall call) {
-        if (argType!=null && argType.getNbrOfArgs() != call.operands.length) {
+    protected void checkNumberOfArg(final AllowedArgInference argType, SqlCall call) {
+        boolean doThrow = false;
+        if (argType!=null) {
+            doThrow = argType.getArgCount() != call.operands.length;
+        } else {
+            doThrow = call.operator.getNumOfOperands(call.operands.length)!=
+                            call.operands.length;
+        }
+
+        if (doThrow) {
+            throw SaffronResource.instance().newValidationError(
+                                    "Wrong number of arguments to " + call);
+        }
+    }
+
+    protected void checkNumberOfArg(SqlCall call) {
+        assert argTypeInference != null : "Derived class should have set " +
+                "argTypeInference or overridden this method";
+        if (argTypeInference.getArgCount() != call.operands.length) {
             throw Util.newInternal("todo: Wrong number of arguments to " + call);
         }
     }
@@ -301,33 +371,17 @@ public abstract class SqlOperator
     }
 
     /**
-     * Returns a string describing the actual argument types of a call, e.g.
-     * "SUBSTR(VARCHAR(12), NUMBER(3,2), INTEGER)".
-     */
-    protected String getCallSignature(
-        SqlValidator validator, SqlValidator.Scope scope, SqlCall call) {
-        // REVIEW maybe move this method to SqlCall
-        StringBuffer buf = new StringBuffer();
-        ArrayList signatureList = new ArrayList();
-        for (int i = 0; i < call.operands.length; i++) {
-            final SqlNode operand = call.operands[i];
-            final SaffronType argType =
-                validator.deriveType(scope,operand);
-            signatureList.add(argType.toString());
-        }
-        buf.append(getSignature(signatureList));
-        return buf.toString();
-    }
-
-    /**
      * Returns a string describing the expected argument types of a call, e.g.
      * "SUBSTR(VARCHAR, INTEGER, INTEGER)".
      */
     public String getAllowedSignatures() {
+        assert(null!=argTypeInference) :
+                "If you see this, assign argTypeInference a value " +
+                "or override this function";
         return argTypeInference.getAllowedSignatures(this).trim();
     }
 
-    private String getSignature(ArrayList list){
+    protected String getSignature(final ArrayList list){
         StringBuffer ret = new StringBuffer();
         String template = getSignatureTemplate();
         if (null==template) {
@@ -354,23 +408,130 @@ public abstract class SqlOperator
             assert((list.size()+1)==values.length);
         }
 
-
-
         return ret.toString();
-    }
-
-
-    public SaffronType getType(SaffronTypeFactory typeFactory, SaffronType[] argTypes) {
-        if (typeInference != null) {
-            return typeInference.getType(typeFactory, argTypes);
-        }
-        throw Util.needToImplement(this);
     }
 
     // REVIEW jvs 23-Dec-2003:  need wrapper call like getType?
     public ParamTypeInference getParamTypeInference()
     {
         return paramTypeInference;
+    }
+
+    /**
+     * Checks if two types or more are char comparable.
+     * @pre argTypes != null
+     * @pre argTypes.length >= 2
+     * @return Returns true if all operands are of char type
+     *         and if they are comparable, i.e. charset and collation agree
+     */
+    public boolean isCharTypeComparable(SaffronType[] argTypes){
+        Util.pre(null!=argTypes,"null!=operands");
+        Util.pre(2<=argTypes.length,"1<=operands.length");
+
+        for (int j=0;j<(argTypes.length-1);j++){
+             SaffronType t0 = argTypes[j];
+             SaffronType t1 = argTypes[j+1];
+
+            if (!t0.isCharType() && !t1.isCharType()) {
+                return false;
+            }
+
+             if (null==t0.getCharset()) {
+                 Util.newInternal(
+                    "SaffronType object should have been assigned a " +
+                    "(default) charset when calling deriveType");
+            } else if (!t0.getCharset().equals(t1.getCharset())) {
+                return false;
+            }
+
+            if (null==t0.getCollation()) {
+                Util.newInternal(
+                    "SaffronType object should have been assigned a " +
+                    "(default) collation when calling deriveType");
+            } else if (!t0.getCollation().equals(t1.getCollation())) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+     public void isCharTypeComparableThrows(SaffronType[] argTypes){
+        if (!isCharTypeComparable(argTypes)) {
+            String msg="Types ";
+            for (int i = 0; i < argTypes.length; i++) {
+                if (i>0) {
+                    msg+=", ";
+                }
+                SaffronType argType = argTypes[i];
+                msg+=argType.toString();
+            }
+            msg+=" not comparable to eachother";
+            throw SaffronResource.instance().newValidationError(msg);
+        }
+     }
+
+    public void isCharTypeComparableThrows(SqlValidator validator,
+                                           SqlValidator.Scope scope,
+                                           SqlNode[] operands) {
+        if (!isCharTypeComparable(validator,scope,operands)) {
+            String msg="Operands ";
+            for (int i = 0; i < operands.length; i++) {
+                if (i>0) {
+                    msg+=", ";
+                }
+                msg+=operands[i].toString();
+            }
+            msg+=" not comparable to eachother";
+            throw SaffronResource.instance().newValidationError(msg);
+        }
+    }
+
+    /**
+     * @param start zero based index
+     * @param stop zero based index
+     */
+    public boolean isCharTypeComparable(SaffronType[] argTypes,
+                                        int start, int stop){
+        int n = stop-start+1;
+        SaffronType[] subset = new SaffronType[n];
+        System.arraycopy(argTypes, start, subset, 0, n );
+        return isCharTypeComparable(subset);
+    }
+
+    public boolean isCharTypeComparable(SqlValidator validator,
+                                           SqlValidator.Scope scope,
+                                           SqlNode[] operands) {
+        Util.pre(null!=operands,"null!=operands");
+        Util.pre(2<=operands.length,"1<=operands.length");
+
+        SaffronType[] argTypes = new SaffronType[operands.length];
+        for (int i = 0; i < operands.length; i++) {
+            argTypes[i] = validator.deriveType(scope, operands[i]);
+        }
+
+        return isCharTypeComparable(argTypes);
+    }
+
+    /**
+     * Returns an object which can convert a call to this operator into a Java
+     * expression, or null if this operator cannot be converted.
+     *
+     * <p>The base implementation returns null; derived classes can override.
+     */
+    public JavaRexImplementor getJavaImplementor() {
+        return null;
+    }
+
+    /**
+     * Returns an object which can convert a call to this operator into an
+     * instruction in calculator program, or null if this operator cannot be
+     * converted.
+     *
+     * <p>The base implementation returns null; derived classes can override.
+     */
+    public CalcRexImplementor getCalcImplementor() {
+        return null;
     }
 
     //~ Inner Classes ---------------------------------------------------------
@@ -440,15 +601,15 @@ public abstract class SqlOperator
     /**
      * Strategy to check for allowed operand types of an operator call.
      */
-    public static class AllowdArgInference
+    public static class AllowedArgInference
     {
-        private SqlTypeName[][] m_types;
+        protected SqlTypeName[][] m_types;
 
-        public AllowdArgInference()
+        public AllowedArgInference()
         {   //empty constructor
         }
 
-        public AllowdArgInference(SqlTypeName[][] types)
+        public AllowedArgInference(SqlTypeName[][] types)
         {
             Util.pre(null!=types,"null!=types");
             Util.pre(types.length>0,"types.length>0");
@@ -476,58 +637,78 @@ public abstract class SqlOperator
             this.m_types=types;
         }
 
-        public void check(
-            SqlValidator validator,
-            SqlValidator.Scope scope,
-            SqlCall call)
+        /**
+         * Calls {@link #check(SqlValidator,SqlValidator.Scope,SqlNode,int)}
+         * with {@param node}
+         * @param node one of the operands of {@param call}
+         * @param operandNbr
+         * @pre call!=null
+         */
+        public void checkThrows(SqlValidator validator, SqlValidator.Scope scope,
+                                SqlCall call, SqlNode node, int operandNbr) {
+            Util.pre(null!=call,"null!=call");
+            if (!check(validator,scope,node,operandNbr)){
+                throw call.newValidationSignatureError(validator, scope);
+            }
+        }
+
+
+        /**
+         * Checks if a node is of correct type
+         * @param validator
+         * @param scope
+         * @param node
+         * @param operandNbr Note this is <i>not</i> an index in any call.operands[] array.
+         *        Its rather used to specify which signature the node should correspond too.
+         * <p>Example. if we have typeStringInt<br>
+         * a check can be made to see if a <code>node</code> is of type int by calling
+         * <code>typeStringInt.check(validator,scope,node,1);</code>
+         */
+        public boolean check(SqlValidator validator, SqlValidator.Scope scope,
+                SqlNode node, int operandNbr)
         {
-            assert(getNbrOfArgs()==call.operands.length);
+            int foundAllowed=0;
             SaffronType anyType = validator.typeFactory.createSqlType(SqlTypeName.Any);
+            SaffronType actualType = validator.deriveType(scope,node);
+
+            //for each operand, iterater over its allowed types...
+            for (int j = 0; j < m_types[operandNbr].length; j++)
+            {
+                SqlTypeName typeName = m_types[operandNbr][j];
+                SaffronType expectedType =
+                        SaffronTypeFactoryImpl.createSqlTypeIgnorePrecOrScale(validator.typeFactory, typeName);
+                assert(expectedType != null);
+                if(anyType.equals(expectedType)) {
+                    // If the argument type is defined as any type, we don't need to check
+                    foundAllowed++;
+                    continue;
+                }
+                else if (expectedType.isAssignableFrom(actualType)){
+                    foundAllowed++;
+                    break;
+                }
+            }
+            return foundAllowed>0;
+        }
+
+        public void check(SqlValidator validator, SqlValidator.Scope scope, SqlCall call)
+        {
+            assert(getArgCount()==call.operands.length);
 
             //iterating over the operands...
             for(int i=0;i<call.operands.length;i++)
             {
                 SqlNode operand = call.operands[i];
-                SaffronType actualType = validator.deriveType(scope,operand);
-                //for each operand, iterater over its allowed types...
-                int foundAllowed=0;
-                for (int j = 0; j < m_types[i].length; j++)
-                {
-                    SqlTypeName typeName = m_types[i][j];
-                    SaffronType expectedType;
-                    if (typeName.allowsNoPrecNoScale()){
-                        expectedType = validator.typeFactory.createSqlType(typeName);
-                    } else if (typeName.allowsPrecNoScale()){
-                        expectedType = validator.typeFactory.createSqlType(typeName,0);
-                    } else {
-                        expectedType = validator.typeFactory.createSqlType(typeName,0,0);
-                    }
-
-                    assert(expectedType != null);
-                    if(anyType.equals(expectedType)) {
-                        // If the argument type is defined as any type, we don't need to check
-                        foundAllowed++;
-                        continue;
-                    }
-                    else if (expectedType.isAssignableFrom(actualType)){
-                        foundAllowed++;
-                        break;
-                    }
-
-                }
                 //finished checking all allowed types for this operand
-                if (0==foundAllowed)
+                if (!check(validator,scope,operand,i))
                 {
-                    throw validator.newValidationError("Can not apply '"+call.operator.name+"' to arguments of type " +
-                                                       call.operator.getCallSignature(validator, scope, call)+
-                                                       ". Supported form(s): "
-                                                       +call.operator.getAllowedSignatures());
+                    throw call.newValidationSignatureError(validator, scope);
                 }
 
             }
         }
 
-        int getNbrOfArgs() {
+        int getArgCount() {
             return m_types.length;
         }
 
@@ -575,15 +756,29 @@ public abstract class SqlOperator
         }
     }
 
-    public static class CompositeAllowdArgInference extends AllowdArgInference{
-        private AllowdArgInference[] m_allowedRules;
 
-        public CompositeAllowdArgInference(AllowdArgInference[] allowedRules) {
+    /**
+     * This class allows multiple existing {@link #AllowedArgInference} rules
+     * to be combined into one rule.<p>
+     * For example, giving an operand the signature of both a string and a numeric
+     * could be done by:
+     * <blockquote><pre><code>
+     *
+     * CompositeAllowedArgInference newCompositeRule =
+     *  new SqlOperator.CompositeAllowedArgInference(
+     *    new SqlOperator.AllowedArgInference[]{stringRule, numericRule});
+     *
+     * </code></pre></blockquote>
+     */
+    public static class CompositeAllowedArgInference extends AllowedArgInference{
+        private AllowedArgInference[] m_allowedRules;
+
+        public CompositeAllowedArgInference(AllowedArgInference[] allowedRules) {
             Util.pre(null!=allowedRules,"null!=allowedRules");
             Util.pre(allowedRules.length>1,"Not a composite type");
-            int firstArgsLength = allowedRules[0].getNbrOfArgs();
+            int firstArgsLength = allowedRules[0].getArgCount();
             for (int i = 1; i < allowedRules.length; i++) {
-                Util.pre(allowedRules[i].getNbrOfArgs()==firstArgsLength,"All must have the same operand length");
+                Util.pre(allowedRules[i].getArgCount()==firstArgsLength,"All must have the same operand length");
             }
             m_allowedRules = allowedRules;
         }
@@ -591,7 +786,7 @@ public abstract class SqlOperator
         public String getAllowedSignatures(SqlOperator op) {
             StringBuffer ret = new StringBuffer();
             for (int i = 0; i < m_allowedRules.length; i++) {
-                AllowdArgInference rule = m_allowedRules[i];
+                AllowedArgInference rule = m_allowedRules[i];
                 if (i>0){
                     ret.append(NL);
                 }
@@ -606,10 +801,21 @@ public abstract class SqlOperator
             return null;
         }
 
-        int getNbrOfArgs() {
+        int getArgCount() {
             //check made in constructor to verify that all rules have the same nbrOfArgs
             //take and return the first one
-            return m_allowedRules[0].getNbrOfArgs();
+            return m_allowedRules[0].getArgCount();
+        }
+
+        public boolean check(SqlValidator validator, SqlValidator.Scope scope, SqlNode node, int operandNbr) {
+            Util.pre(m_allowedRules.length>=1,"m_allowedRules.length>=1");
+            for (int i = 0; i < m_allowedRules.length; i++) {
+                AllowedArgInference rule = m_allowedRules[i];
+                if(rule.check(validator,scope, node,operandNbr)) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         public void check(
@@ -620,7 +826,7 @@ public abstract class SqlOperator
             int nbrOfTypeErrors = 0;
 
             for (int i = 0; i < m_allowedRules.length; i++) {
-                AllowdArgInference rule = m_allowedRules[i];
+                AllowedArgInference rule = m_allowedRules[i];
                 try {
                     typeErrors[i] = null;
                     rule.check(validator,scope,call);
@@ -646,6 +852,20 @@ public abstract class SqlOperator
                 throw validator.newValidationError(msg.toString());
             }
         }
+    }
+
+    /**
+     * Translates an expression to a Java parse tree.
+     */
+    interface JavaRexImplementor {
+        Expression translateToJava(RexNode rex);
+    }
+
+    /**
+     * Translates an expression to a calculator program.
+     */
+    interface CalcRexImplementor {
+        void translateToCalc(RexNode rex, CalcProgramBuilder builder);
     }
 }
 

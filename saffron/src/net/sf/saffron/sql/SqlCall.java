@@ -21,6 +21,11 @@
 
 package net.sf.saffron.sql;
 
+import net.sf.saffron.core.SaffronType;
+
+import java.util.ArrayList;
+import java.text.MessageFormat;
+
 /**
  * A <code>SqlCall</code> is a call to an {@link SqlOperator operator}.
  * (Operators can be used to describe any syntactic construct, so in
@@ -92,6 +97,36 @@ public class SqlCall extends SqlNode
         } else {
             operator.unparse(writer,operands,leftPrec,rightPrec);
         }
+    }
+
+    /**
+     * Returns a string describing the actual argument types of a call, e.g.
+     * "SUBSTR(VARCHAR(12), NUMBER(3,2), INTEGER)".
+     */
+    protected String getCallSignature(SqlValidator validator, SqlValidator.Scope scope) {
+        StringBuffer buf = new StringBuffer();
+        ArrayList signatureList = new ArrayList();
+        for (int i = 0; i < operands.length; i++) {
+            final SqlNode operand = operands[i];
+            final SaffronType argType =
+                validator.deriveType(scope,operand);
+
+            if (null==argType) {
+                continue;
+            }
+
+            signatureList.add(argType.toString());
+        }
+        buf.append(operator.getSignature(signatureList));
+        return buf.toString();
+    }
+
+
+    protected RuntimeException newValidationSignatureError(SqlValidator validator, SqlValidator.Scope scope) {
+        return validator.newValidationError("Can not apply '"+operator.name+"' to arguments of type " +
+                                           getCallSignature(validator, scope)+
+                                           ". Supported form(s): "
+                                           +operator.getAllowedSignatures());
     }
 }
 

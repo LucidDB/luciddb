@@ -252,20 +252,6 @@ public class FarragoCatalog
     }
 
     /**
-     * Determine the ordinal position of a column within a table.
-     *
-     * @param column the column to query
-     *
-     * @return 0-based ordinal
-     */
-    public int getColumnOrdinal(CwmColumn column)
-    {
-        int i = column.getOwner().getFeature().indexOf(column);
-        assert (i != -1);
-        return i;
-    }
-
-    /**
      * .
      *
      * @return the name of the default Charset for this catalog
@@ -274,6 +260,17 @@ public class FarragoCatalog
     {
         // REVIEW:  should this be configurable and/or based on default locale?
         return "ISO-8859-1";
+    }
+
+    /**
+     * .
+     *
+     * @return the name of the default Collation for this catalog
+     */
+    public String getDefaultCollationName()
+    {
+        // REVIEW:  should this be configurable and/or based on default locale?
+        return "iso-8859-1$en_US";
     }
 
     /**
@@ -749,9 +746,17 @@ public class FarragoCatalog
 
         cwmCatalog = newCwmCatalog();
         cwmCatalog.setName(SYSBOOT_CATALOG_NAME);
+        initializeCwmCatalog(cwmCatalog);
 
         cwmCatalog = newCwmCatalog();
         cwmCatalog.setName(LOCALDB_CATALOG_NAME);
+        initializeCwmCatalog(cwmCatalog);
+    }
+
+    public void initializeCwmCatalog(CwmCatalog cwmCatalog)
+    {
+        cwmCatalog.setDefaultCharacterSetName(getDefaultCharsetName());
+        cwmCatalog.setDefaultCollationName(getDefaultCollationName());
     }
 
     private void createSystemTypes()
@@ -841,9 +846,34 @@ public class FarragoCatalog
         type.setTypeNumber(new Integer(Types.BINARY));
         type.setCharacterMaximumLength(new Integer(65535));
         
-        // TODO
-        // defineTypeAlias("DEC","DECIMAL");
+        // do we need to set date/time precision=0 explictly here?
+        type = newCwmSqlsimpleType();
+        type.setName("DATE");
+        type.setTypeNumber(new Integer(Types.DATE));
+        type.setDateTimePrecision(new Integer(0));
+
+        type = newCwmSqlsimpleType();
+        type.setName("TIME");
+        type.setTypeNumber(new Integer(Types.TIME));
+        type.setDateTimePrecision(new Integer(0));
+
+        type = newCwmSqlsimpleType();
+        type.setName("TIMESTAMP");
+        type.setTypeNumber(new Integer(Types.TIMESTAMP));
+        type.setDateTimePrecision(new Integer(0));
+
+        type = newCwmSqlsimpleType();
+        type.setName("BIT");
+        type.setTypeNumber(new Integer(Types.BIT));
+        type.setCharacterMaximumLength(new Integer(65535));
+
+        type = newCwmSqlsimpleType();
+        type.setName("DECIMAL");
+        type.setTypeNumber(new Integer(Types.DECIMAL));
+        type.setNumericPrecision(new Integer(39));
+        defineTypeAlias("DEC",type);
     }
+
 
     /**
      * Generated names are normally unique by construction.  However, if they

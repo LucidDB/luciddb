@@ -26,6 +26,7 @@
 #include "fennel/common/Distinctness.h"
 #include "fennel/xo/TupleStream.h"
 #include "fennel/farrago/CmdInterpreter.h"
+#include "fennel/farrago/ExecutionStreamFactory.h"
 
 #include <boost/utility.hpp>
 
@@ -65,39 +66,103 @@ class TupleStreamBuilder : public boost::noncopyable, public FemVisitor
     SharedTupleStreamGraph pGraph;
 
     /**
-     * Stream returned by current invocation visit method.  Have to do it this
-     * way since visit returns void; means we have to be careful about
-     * recursion order.
+     * Private graph, for sorting streams
      */
-    SharedTupleStream pChildStream;
+    SharedExecutionStreamGraph pSortingGraph;
+
+    typedef std::map<std::string,ExecutionStreamFactors> StreamMap;
+    typedef StreamMap::const_iterator StreamMapConstIter;
 
     /**
-     * Copy of params used for building last child.  Kinda ugly.
+     * Streams to be linked and prepared, mapped by name
      */
-    TupleStreamParams childParams;
+    StreamMap streams;
 
+    /**
+     * Allocate a stream based on stream definition, add the stream to a 
+     * graph and remember how to prepare the stream. Interposes tracing
+     * stream, if applicable, as xo.<i>stream</i>.
+     */
     void visitStream(
-        ProxyExecutionStreamDef &,
-        TupleStream::BufferProvision requiredDataflow);
-
-    // REVIEW:  some of this is generic logic which should be moved
-    // down into an abstract builder in the xo library
-    void addTracingStream(std::string);
-    void addAdapterFor(TupleStream::BufferProvision);
-    void addAdapter(TupleStream &adapter);
+        ProxyExecutionStreamDef &);
 
     /**
-     * Add a new stream to the graph, recursively build its inputs, and set up
-     * the corresponding dataflow edges.
-     *
-     * @param pStream newly allocated TupleStream implementation
+     * Add dataflows between a stream and its inputs. Interposes
+     * provisioning adapters as required.
      *
      * @param streamDef corresponding Java stream definition being converted
      */
     void buildStreamInputs(
-        ExecutionStream *pStream,
         ProxyExecutionStreamDef &streamDef);
 
+    /**
+     * Monitor a stream's output by appending a tracing stream. 
+     *
+     * @param name name of stream to add tracing for
+     *
+     * @param traceName name of tracing stream
+     */
+    void addTracingStream(
+        std::string &name,
+        std::string &traceName);
+
+    /**
+     * Modify a stream's dataflow, as required, to meet the provisioning
+     * requirements. An adapter stream may be added to the graph as 
+     * <i>base</i>.provisioner
+     *
+     * @param name name of stream
+     *
+     * @param base base name to use for adapter
+     *
+     * @param requiredDataFlow provisioning requirement
+     */
+    void addAdapterFor(
+        std::string &name,
+        std::string &base,
+        TupleStream::BufferProvision requiredDataFlow);
+
+    /**
+     * Call addAdapter using stream name as base name 
+     */
+    void addAdapterFor(
+        std::string &name,
+        TupleStream::BufferProvision requiredDataFlow);
+
+
+    /**
+     * Register a newly created, unprepared stream with the builder and add
+     * it to the graph. 
+     */
+    void registerStream(
+        ExecutionStreamFactors &);
+    
+    /**
+     * Lookup a registered stream. The stream *must* be registered.
+     */
+    ExecutionStreamFactors lookupStream(
+        std::string &name);
+    
+    /**
+     * Append an add-on stream, such as a tracing stream or adapter stream,
+     * which masks the output of the original stream.
+     */
+    void interposeStream(
+        std::string &name,
+        ExecutionStreamId interposedId);
+
+    /**
+     * Add dataflow to graph, from one stream's output, after add-ons, to
+     * another stream.
+     *
+     * @param source name of source stream
+     *
+     * @param target name of target stream
+     */
+    void addDataflow(
+        std::string &source,
+        std::string &target);
+    
 public:
     /**
      * Create a new TupleStreamBuilder.
@@ -118,11 +183,11 @@ public:
     /**
      * Main builder entry point.
      *
-     * @param streamDef Java representation for top of tree of stream
-     * definitions; the corresponding TupleStream will end up as the sink
-     * stream in the graph passed to the constructor
+     * @param streamDef Java representation for collection of stream
+     * definitions; the corresponding TupleStream objects will be
+     * retrievable by name from the graph passed to the constructor
      */
-    void buildStreamGraph(ProxyExecutionStreamDef &streamDef);
+    void buildStreamGraph(ProxyCmdPrepareExecutionStreamGraph &cmd);
 };
 
 FENNEL_END_NAMESPACE

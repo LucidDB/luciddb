@@ -27,10 +27,13 @@ import net.sf.farrago.util.*;
 import net.sf.saffron.rel.*;
 import net.sf.saffron.util.*;
 import net.sf.saffron.core.SaffronType;
+import net.sf.saffron.sql.SqlCollation;
 
 import openjava.mop.*;
 
 import openjava.ptree.*;
+
+import java.nio.charset.Charset;
 
 
 /**
@@ -44,7 +47,9 @@ public final class FarragoPrecisionType extends FarragoAtomicType
 {
     //~ Instance fields -------------------------------------------------------
 
-    private final String charsetName;
+    private String charsetName;
+
+    private SqlCollation collation;
 
     private final int precision;
 
@@ -88,6 +93,44 @@ public final class FarragoPrecisionType extends FarragoAtomicType
     public String getCharsetName()
     {
         return charsetName;
+    }
+
+    /** implement SaffronType */
+    public Charset getCharset() throws RuntimeException {
+        if (!isCharType()) {
+            throw Util.newInternal(digest+" is not defined to carry a charset");
+        }
+        if (null==this.charsetName) {
+            return null;
+        }
+        return Charset.forName(this.charsetName);
+    }
+
+    /** implement SaffronType */
+    public void setCharset(Charset charset) {
+        if (!isCharType()) {
+            throw Util.newInternal(digest+" is not defined to carry a charset");
+        }
+
+        if (null!=charset) { //review wael 4-April-2004: this if statement should go away eventually
+            charsetName=charset.name();
+        }
+    }
+
+    /** implement SaffronType */
+    public SqlCollation getCollation() throws RuntimeException {
+        if (!isCharType()) {
+            throw Util.newInternal(digest+" is not defined to carry a collation");
+        }
+        return this.collation;
+    }
+
+    /** implement SaffronType */
+    public void setCollation(SqlCollation collation) throws RuntimeException {
+        if (!isCharType()) {
+            throw Util.newInternal(digest+" is not defined to carry a collation");
+        }
+        this.collation=collation;
     }
 
     // override FarragoAtomicType

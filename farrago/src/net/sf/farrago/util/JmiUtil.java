@@ -357,6 +357,44 @@ public abstract class JmiUtil
             return refObject.refImmediatePackage();
         }
     }
+
+    /**
+     * Asserts that constraints are satisfied.  I tried using
+     * refVerifyConstraints to achieve this, but it didn't work in MDR.
+     * For now, this just checks that mandatory attributes have
+     * non-null values.
+     *
+     * @param obj the object to be verified
+     */
+    public static void assertConstraints(RefObject obj)
+    {
+        RefClass refClass = obj.refClass();
+        Iterator featureIter = getFeatures(
+            refClass,
+            Attribute.class,
+            false).iterator();
+        while (featureIter.hasNext()) {
+            Attribute attr = (Attribute) featureIter.next();
+            if (attr.getMultiplicity().getLower() != 0) {
+                assert (obj.refGetValue(attr) != null) :
+                    "Missing value for mandatory attribute "
+                    + ((ModelElement) refClass.refMetaObject()).getName() + "."
+                    + attr.getName();
+            }
+        }
+    }
+
+    /**
+     * Tests an attribute value to see if it is blank.
+     *
+     * @param value
+     *
+     * @return true if value is either null or the empty string
+     */
+    public static boolean isBlank(String value)
+    {
+        return (value == null) || value.equals("");
+    }
 }
 
 

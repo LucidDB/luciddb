@@ -66,7 +66,9 @@ public class TableModificationRel extends SingleRel
         this.connection = connection;
         this.operation = operation;
         this.updateColumnList = updateColumnList;
-        cluster.getPlanner().registerSchema(table.getSaffronSchema());
+        if (table.getSaffronSchema() != null) {
+            cluster.getPlanner().registerSchema(table.getSaffronSchema());
+        }
     }
 
     //~ Methods ---------------------------------------------------------------

@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/farrago/initsql/createStorageWrappers.sql#1 $
+0: jdbc:farrago:> -- $Id: //open/farrago/initsql/createStorageWrappers.sql#4 $
 0: jdbc:farrago:> -- This script creates the builtin storage data wrappers
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !set verbose true
@@ -6,7 +6,7 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- create wrapper for access to MDR repositories
 0: jdbc:farrago:> create foreign data wrapper sys_mdr
-. . . . . . . . > library 'plugin/FarragoMedMdr.jar'
+. . . . . . . . > library 'class net.sf.farrago.namespace.mdr.MedMdrForeignDataWrapper'
 . . . . . . . . > language java;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 
@@ -19,6 +19,16 @@
 0: jdbc:farrago:> create server sys_fem
 . . . . . . . . > foreign data wrapper sys_mdr
 . . . . . . . . > options(root_package_name 'FEM');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- create wrapper for access to local row-store data
+0: jdbc:farrago:> create local data wrapper sys_ftrs
+. . . . . . . . > library 'class net.sf.farrago.namespace.ftrs.FtrsDataWrapper'
+. . . . . . . . > language java;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- create singleton server for local row-store data
+0: jdbc:farrago:> create server sys_rowstore
+. . . . . . . . > local data wrapper sys_ftrs;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- create wrapper for access to JDBC data

@@ -140,7 +140,7 @@ This yields:
 <code>
 ProjectRel(DEPTNO=[$0], NAME=[$1], THE_ANSWER=[42])
   FilterRel(condition=[=($0,10):BOOLEAN])
-    FennelIndexScanRel(table=[SALES.DEPTS], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY],preserveOrder=[false])
+    FtrsIndexScanRel(table=[SALES.DEPTS], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY],preserveOrder=[false])
 </code>
 </pre>
 
@@ -155,7 +155,7 @@ SaffronRel); the two-dimensional boxes are validated row expressions
 represented by the {@link net.sf.saffron.rex.RexNode} object model.
 Besides children and row expressions, relational expressions may
 have additional attributes; e.g. ProjectRel has an array of names to
-be assigned to the columns it produces, and FennelIndexScanRel has a
+be assigned to the columns it produces, and FtrsIndexScanRel has a
 reference to the table to be scanned.  Within a row expression,
 a {@link net.sf.saffron.rex.RexInputRef} may refer to the output of a
 child relational expression via variables with names like
@@ -168,7 +168,7 @@ the expression is relative to the containing SaffronRel).
 
 <em>Note for Nit-Pickers</em>: the EXPLAIN PLAN output above is not
 completely abstract, since TableAccessRel has already been replaced with
-FennelIndexScanRel during translation.
+FtrsIndexScanRel during translation.
 
 <h3>Optimization</h3>
 
@@ -218,7 +218,7 @@ default is WITH IMPLEMENTATION, which is what we want.)  This yields:
 <code>
 IterCalcRel(DEPTNO=[$0], NAME=[$1], THE_ANSWER=[42])
   FennelToIteratorConverter
-    FennelIndexSearchRel(table=[SALES.DEPTS], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false],outer=[false],inputKeyProj=[*],inputJoinProj=[[]])
+    FtrsIndexSearchRel(table=[SALES.DEPTS], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false],outer=[false],inputKeyProj=[*],inputJoinProj=[[]])
       IteratorToFennelConverter
         IterCalcRel(field#0=[CAST(10):INTEGER])
           IterOneRowRel
@@ -233,9 +233,9 @@ which corresponds to the following relational expression tree:
 
 Wow, what happened?  The optimizer found that the table's clustered
 index could satisfy the WHERE clause, and accordingly transformed the
-query using a {@link net.sf.farrago.query.FennelIndexSearchRel} for
+query using a {@link net.sf.farrago.query.FtrsIndexSearchRel} for
 the table access.  (It knew how to do this because FarragoPlanner told
-it about {@link net.sf.farrago.query.FennelScanToSearchRule}.)  What's
+it about {@link net.sf.farrago.query.FtrsScanToSearchRule}.)  What's
 interesting is that this search is sandwiched between Java iterators.
 The lowest level ({@link net.sf.saffron.oj.rel.IterOneRowRel})
 produces a single row with no columns; the next level up ({@link
@@ -250,7 +250,7 @@ net.sf.saffron.rel.convert.ConverterRel} is required; in this case,
 
 <p>
 
-But wait, there's more!  The FennelIndexSearchRel is going to produce
+But wait, there's more!  The FtrsIndexSearchRel is going to produce
 matching rows in FENNEL representation, but in order to compute the
 select list and return results via JDBC, we need another converter:
 {@link net.sf.farrago.query.FennelToIteratorConverter}.  The top-level

@@ -54,7 +54,6 @@ public:
 protected:
     friend class fennel::Calculator;
 
-    virtual void setCalc(Calculator* calcP) = 0;
     virtual void exec(long &pc) const = 0;
 
     void describeHelper(string &out,

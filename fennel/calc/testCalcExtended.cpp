@@ -57,26 +57,22 @@ fail(const char *str, int line) {
 // ----------------------------------------------------------------------
 // conversion functions
 // ----------------------------------------------------------------------
-void convertDoubleToFloat(Calculator *pCalc,
-                          RegisterRef<float>* regOut,
+void convertDoubleToFloat(RegisterRef<float>* regOut,
                           RegisterRef<double>* regIn)
 {
     regOut->value((float)regIn->value());
 }
-void convertFloatToDouble(Calculator *pCalc,
-                          RegisterRef<double>* regOut,
+void convertFloatToDouble(RegisterRef<double>* regOut,
                           RegisterRef<float>* regIn)
 {
     regOut->value((double)regIn->value());
 }
-void convertFloatToInt(Calculator *pCalc,
-                       RegisterRef<int>* regOut,
+void convertFloatToInt(RegisterRef<int>* regOut,
                        RegisterRef<float>* regIn)
 {
     regOut->value((int)regIn->value());
 }
-void convertIntToFloat(Calculator *pCalc,
-                       RegisterRef<float>* regOut,
+void convertIntToFloat(RegisterRef<float>* regOut,
                        RegisterRef<int>* regIn)
 {
     regOut->value((float)regIn->value());
@@ -84,8 +80,7 @@ void convertIntToFloat(Calculator *pCalc,
 /**
  * Assigns "input" * 10 ^ "exponent" to "result".
  */
-void convertDecimal(Calculator *pCalc,
-                    RegisterRef<int32_t>* resultReg,
+void convertDecimal(RegisterRef<int32_t>* resultReg,
                     RegisterRef<int32_t>* inputReg,
                     RegisterRef<int32_t>* exponentReg)
 {
@@ -104,8 +99,7 @@ void convertDecimal(Calculator *pCalc,
     resultReg->value(result);
 }
 
-void convertStringToExactNumber(Calculator *pCalc,
-                                RegisterRef<int>* regOut,
+void convertStringToExactNumber(RegisterRef<int>* regOut,
                                 RegisterRef<char *>* regIn)
 {
     // TODO: Wrap this code in 
@@ -120,8 +114,7 @@ void convertStringToExactNumber(Calculator *pCalc,
     
 }
 
-void convertExactNumberToString(Calculator *pCalc,
-                                RegisterRef<char *>* regOut,
+void convertExactNumberToString(RegisterRef<char *>* regOut,
                                 RegisterRef<int>* regIn)
 {
     // TODO: Change the following proof-of-concept code into 
@@ -151,29 +144,25 @@ void convertExactNumberToString(Calculator *pCalc,
     delete [] nullTermStr;
 }
 
-void convertStringToFloat(Calculator *pCalc,
-                          RegisterRef<float>* regOut,
+void convertStringToFloat(RegisterRef<float>* regOut,
                           RegisterRef<char *>* regIn)
 {
     //*regOut = strtof(*regIn, (char **)NULL);
 }
 
-void convertFloatToString(Calculator *pCalc,
-                          RegisterRef<char *>* regOut,
+void convertFloatToString(RegisterRef<char *>* regOut,
                           RegisterRef<float>* regIn)
 {
     //*str = itoa ((int) *approx);
 }
 
-void convertStringToDouble(Calculator *pCalc,
-                           RegisterRef<double>* regOut,
+void convertStringToDouble(RegisterRef<double>* regOut,
                            RegisterRef<char *>* regIn)     
 {
     //*regOut = strtod(*regIn, (char **)NULL);
 }
 
-void convertDoubleToString(Calculator *pCalc,
-                           RegisterRef<char *>* regOut,
+void convertDoubleToString(RegisterRef<char *>* regOut,
                            RegisterRef<double>* regIn)
 {}
 

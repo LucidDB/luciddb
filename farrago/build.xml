@@ -323,16 +323,6 @@ require version '${required.ant.version}'."/>
   </path>
   <property name="farrago.sourcepath" refid="farrago.sourcepath"/>
 
-  <!-- classpath for running from iSQL -->
-  <path id="isql.classpath">
-    <pathelement location="${isql.dir}/isql-core.jar"/>
-    <pathelement location="${isql.dir}/xerces.jar"/>
-    <pathelement location="${isql.dir}/base64codec.jar"/>
-    <pathelement location="${isql.dir}/bsf.jar"/>
-    <pathelement location="${isql.dir}/jpython1.1.jar"/>
-    <pathelement path="${farrago.run.classpath}"/>
-  </path>
-  <property name="isql.classpath" refid="isql.classpath"/>
 
   <!-- classpath for running from sqlline -->
   <path id="sqlline.classpath">
@@ -399,6 +389,12 @@ require version '${required.ant.version}'."/>
   <!-- Macro Definitions -->
   <import file="buildMacros.xml"/>
 
+  <!-- classpath for running from iSQL -->
+  <path id="isql.run.classpath">
+    <pathelement path="${isql.classpath}"/>
+    <pathelement path="${farrago.run.classpath}"/>
+  </path>
+  <property name="isql.run.classpath" refid="isql.run.classpath"/>
 
   <!-- Targets -->
 
@@ -422,16 +418,16 @@ require version '${required.ant.version}'."/>
   </target>
 
   <!-- default target:  assumes catalog has already been created -->
-  <target name="all" depends="compile, buildJdbcPlugin, buildMdrPlugin"/>
+  <target name="all" 
+    depends="compile, buildJdbcPlugin"/>
 
-  <target name="compile" depends="generateResources,ddlParser,generateNonResKeywords">
+  <target name="compile" depends="generateResources,ddlParser">
     <javaCompile
       srcdir="${src.dir}"
       destdir="${classes.dir}"
       classpathref="farrago.build.classpath">
       <include name="**/*.java" />
       <exclude name="**/namespace/jdbc/**/*.java" />
-      <exclude name="**/namespace/mdr/**/*.java" />
     </javaCompile>
   </target>
 
@@ -455,39 +451,11 @@ require version '${required.ant.version}'."/>
     </jar>
   </target>
 
-  <target name="buildMdrPlugin" 
-    depends="checkMdrPluginUptodate" unless="plugin.mdr.uptodate">
-    <javaCompile
-      srcdir="${src.dir}"
-      destdir="${plugin.classes.dir}"
-      classpathref="plugin.build.classpath">
-      <include name="**/namespace/mdr/**/*.java" />
-    </javaCompile>
-    <jar jarfile="${plugin.dir}/FarragoMedMdr.jar">
-      <fileset dir="${plugin.classes.dir}">
-        <include name="**/namespace/mdr/**/*.class" />
-      </fileset>
-      <manifest>
-        <attribute 
-          name="DataWrapperClassName" 
-          value="net.sf.farrago.namespace.mdr.MedMdrForeignDataWrapper" />
-      </manifest>
-    </jar>
-  </target>
-
   <target name="checkJdbcPluginUptodate">
     <uptodate property="plugin.jdbc.uptodate" 
       targetfile="${plugin.dir}/FarragoMedJdbc.jar">
       <srcfiles dir="${src.dir}" 
         includes="**/namespace/jdbc/**/*.java"/>
-    </uptodate>
-  </target>
-
-  <target name="checkMdrPluginUptodate">
-    <uptodate property="plugin.mdr.uptodate" 
-      targetfile="${plugin.dir}/FarragoMedMdr.jar">
-      <srcfiles dir="${src.dir}" 
-        includes="**/namespace/mdr/**/*.java"/>
     </uptodate>
   </target>
 
@@ -713,6 +681,7 @@ require version '${required.ant.version}'."/>
       <sysproperty key="java.ext.dirs" value="${sqlline.dir}"/>
       <sysproperty key="net.sf.farrago.fileset.unitsql" 
         value="${fileset.initsql}"/>
+      <sysproperty key="net.sf.farrago.test.diff" value="true"/>
       <formatter type="plain"/>
       <formatter type="xml"/> <!-- for integration builds -->
       <test todir="${testlog.dir}" name="net.sf.farrago.test.FarragoSqlTest" />
@@ -857,6 +826,7 @@ require version '${required.ant.version}'."/>
     <uptodate property="parser.uptodate" 
       targetfile="${parser.dir}/FarragoParserImpl.java">
       <srcfiles dir="${parser.dir}" includes="DdlParser.jj"/>
+      <srcfiles dir="${parser.dir}" includes="CommonDdlParser.jj"/>
       <srcfiles dir="${saffron.dir}" 
         includes="src/net/sf/saffron/sql/parser/CommonParser.jj"/>
     </uptodate>
@@ -872,6 +842,7 @@ require version '${required.ant.version}'."/>
       destfile="${parser.dir}/CombinedParser.jj"
       append="false">
       <fileset dir="${parser.dir}" includes="DdlParser.jj"/>
+      <fileset dir="${parser.dir}" includes="CommonDdlParser.jj"/>
       <fileset dir="${saffron.dir}" 
         includes="src/net/sf/saffron/sql/parser/CommonParser.jj"/>
     </concat>
@@ -1007,41 +978,6 @@ require version '${required.ant.version}'."/>
     </javaExec>
   </target>
 
-  <target name="checkKeywordUptodate">
-    <uptodate property="keyword.uptodate" 
-      targetfile="${parser.dir}/NonReservedKeyword.java">
-      <srcfiles dir="${parser.dir}" includes="DdlParser.jj"/>
-      <srcfiles dir="${saffron.dir}" 
-        includes="src/net/sf/saffron/sql/parser/CommonParser.jj"/>
-	  <srcfiles dir="${parser.dir}"
-	    includes="NonReservedKeywordGen"/>
-    </uptodate>
-  </target>
-
-  <!-- Generate JDBC non-reserved keywords -->
-  <target name="generateNonResKeywords" depends="checkKeywordUptodate"
-    unless="keyword.uptodate">
-    <delete file="${parser.dir}/NonReservedKeyword.java"/>
-    <!-- NonReservedKeywordGen needed for code generation -->
-    <javaCompile
-	  srcdir="${src.dir}"
-	  destdir="${classes.dir}"
-	  classpathref="farrago.build.classpath">
-      <include name="**/NonReservedKeywordGen.java" />
-    </javaCompile>
-    <javaExec
-      classname="net.sf.farrago.parser.NonReservedKeywordGen"
-      classpathref="farrago.run.classpath">
-      <arg 
-        value="${parser.dir}/NonReservedKeyword.java"/>
-    </javaExec>
-    <javaCompile
-	  srcdir="${src.dir}"
-	  destdir="${classes.dir}"
-	  classpathref="farrago.build.classpath">
-      <include name="**/NonReservedKeyword.java" />
-    </javaCompile>
-  </target>
 
   <!-- Debugging target for listing repository extents -->
   <target name="printRepositoryExtents" depends="mdr_taskdef">
@@ -1185,11 +1121,10 @@ require version '${required.ant.version}'."/>
 
   <!-- run iSQL -->
   <target name="isql" depends="all">
-    <javaExec
-      classname="org.isqlviewer.core.Launcher"
-      classpathref="isql.classpath">
-      <sysproperty key="isql.home" value="${farrago.dir}/isql" />
-    </javaExec>
+    <iSQL
+      classpath="isql.run.classpath"
+      propertieshome="${farrago.dir}/isql">
+    </iSQL>
   </target>
 
   <!-- NOTE:  To debug iSQL itself, you have to get its source and
@@ -1199,7 +1134,7 @@ require version '${required.ant.version}'."/>
   <!-- run JSwat on iSQL -->
   <target name="jswat.isql" depends="all">
     <jswatDebug
-      classpath="${isql.classpath}"
+      classpath="${isql.run.classpath}"
       sourcepath="${jswat.isql.sourcepath}"
       classname="org.isqlviewer.core.Launcher">
       <jvmargs>
@@ -1216,9 +1151,10 @@ require version '${required.ant.version}'."/>
       classname="sqlline.SqlLine">
       <jvmargs>
         <arg value="-Djava.ext.dirs=${sqlline.dir}"/>
+       <jvmarg line="&FarragoProps;"/>
       </jvmargs>
       <programargs>
-        <arg value="${farrago.dir}/isql/sqlline.properties"/>
+        <arg value="-u jdbc:farrago: -d net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver -n guest"/>
       </programargs>
     </jswatDebug>
   </target>

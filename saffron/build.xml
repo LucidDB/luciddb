@@ -225,6 +225,8 @@
         <include name="net/sf/saffron/resource/SaffronResource_en_US.properties"/>
       </fileset>
       <fileset dir="${java.dir}">
+
+
         <!-- ParserTokenManager.java is generated too, but don't delete, cuz
              we have modified it and checked it in. -->
         <include name="openjava/tools/parser/Parser.java"/>
@@ -359,7 +361,7 @@
     <resgen srcdir="${src.dir}" locales="en_US">
       <include name="net/sf/saffron/resource/SaffronResource.xml"/>
     </resgen>
-    <!-- Copy The generated property files into the class folder -->
+    <!-- Move the generated property files into the class folder -->
     <mkdir dir="${classes.dir}"/>
     <move todir="${classes.dir}">
         <fileset dir="${src.dir}" includes="**/SaffronResource*.properties"/>

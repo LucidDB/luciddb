@@ -38,10 +38,6 @@ public:
     virtual
     ~JumpInstruction() { }
 
-    virtual void setCalc(Calculator* calcP) {
-        mOp->setCalc(calcP);    // note: may be unused if instruction has no operands
-    }
-
 protected:
     TProgramCounter mJumpTo;
     RegisterRef<bool>* mOp;     // may be unused

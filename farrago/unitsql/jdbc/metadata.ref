@@ -1,17 +1,18 @@
-0: jdbc:farrago:> -- $Id: //open/farrago/unitsql/jdbc/metadata.sql#3 $
+0: jdbc:farrago:> -- $Id: //open/farrago/unitsql/jdbc/metadata.sql#4 $
 0: jdbc:farrago:> -- Test JDBC metadata calls
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test getCatalogs
 0: jdbc:farrago:> !metadata getCatalogs
-+--------------+
-|  TABLE_CAT   |
-+--------------+
-| HSQLDB_DEMO  |
-| LOCALDB      |
-| SYS_BOOT     |
-| SYS_CWM      |
-| SYS_FEM      |
-+--------------+
++---------------+
+|   TABLE_CAT   |
++---------------+
+| HSQLDB_DEMO   |
+| LOCALDB       |
+| SYS_BOOT      |
+| SYS_CWM       |
+| SYS_FEM       |
+| SYS_ROWSTORE  |
++---------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test getSchemas
 0: jdbc:farrago:> !metadata getSchemas
@@ -28,7 +29,7 @@
 |  TABLE_TYPE   |
 +---------------+
 | ForeignTable  |
-| Table         |
+| LocalTable    |
 | View          |
 +---------------+
 0: jdbc:farrago:> 
@@ -37,9 +38,9 @@
 +------------+--------------+-------------+-------------+----------+-----------+-------------+------------+----------------------------+-----------------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | TABLE_TYPE  | REMARKS  | TYPE_CAT  | TYPE_SCHEM  | TYPE_NAME  | SELF_REFERENCING_COL_NAME  | REF_GENERATION  |
 +------------+--------------+-------------+-------------+----------+-----------+-------------+------------+----------------------------+-----------------+
-| LOCALDB    | SALES        | DEPTS       | Table       |          |           |             |            |                            |                 |
-| LOCALDB    | SALES        | EMPS        | Table       |          |           |             |            |                            |                 |
-| LOCALDB    | SALES        | TEMPS       | Table       |          |           |             |            |                            |                 |
+| LOCALDB    | SALES        | DEPTS       | LocalTable  |          |           |             |            |                            |                 |
+| LOCALDB    | SALES        | EMPS        | LocalTable  |          |           |             |            |                            |                 |
+| LOCALDB    | SALES        | TEMPS       | LocalTable  |          |           |             |            |                            |                 |
 | LOCALDB    | SALES        | EMPSVIEW    | View        |          |           |             |            |                            |                 |
 | LOCALDB    | SALES        | JOINVIEW    | View        |          |           |             |            |                            |                 |
 | LOCALDB    | SALES        | TEMPSVIEW   | View        |          |           |             |            |                            |                 |
@@ -48,16 +49,36 @@
 0: jdbc:farrago:> -- test getTables (system catalog)
 0: jdbc:farrago:> set catalog sys_boot;
 0: jdbc:farrago:> !tables
-+------------+----------------+------------------------+-------------+----------+-----------+-------------+------------+----------------------------+-----------------+
-| TABLE_CAT  |  TABLE_SCHEM   |       TABLE_NAME       | TABLE_TYPE  | REMARKS  | TYPE_CAT  | TYPE_SCHEM  | TYPE_NAME  | SELF_REFERENCING_COL_NAME  | REF_GENERATION  |
-+------------+----------------+------------------------+-------------+----------+-----------+-------------+------------+----------------------------+-----------------+
-| SYS_BOOT   | JDBC_METADATA  | CATALOGS_VIEW          | View        |          |           |             |            |                            |                 |
-| SYS_BOOT   | JDBC_METADATA  | SCHEMAS_VIEW           | View        |          |           |             |            |                            |                 |
-| SYS_BOOT   | JDBC_METADATA  | SCHEMAS_VIEW_INTERNAL  | View        |          |           |             |            |                            |                 |
-| SYS_BOOT   | JDBC_METADATA  | TABLES_VIEW            | View        |          |           |             |            |                            |                 |
-| SYS_BOOT   | JDBC_METADATA  | TABLES_VIEW_INTERNAL   | View        |          |           |             |            |                            |                 |
-| SYS_BOOT   | JDBC_METADATA  | TABLE_TYPES_VIEW       | View        |          |           |             |            |                            |                 |
-+------------+----------------+------------------------+-------------+----------+-----------+-------------+------------+----------------------------+-----------------+
++------------+----------------+-------------------------------+-------------+----------+-----------+-------------+------------+----------------------------+-----------------+
+| TABLE_CAT  |  TABLE_SCHEM   |          TABLE_NAME           | TABLE_TYPE  | REMARKS  | TYPE_CAT  | TYPE_SCHEM  | TYPE_NAME  | SELF_REFERENCING_COL_NAME  | REF_GENERATION  |
++------------+----------------+-------------------------------+-------------+----------+-----------+-------------+------------+----------------------------+-----------------+
+| SYS_BOOT   | JDBC_METADATA  | CATALOGS_VIEW                 | View        |          |           |             |            |                            |                 |
+| SYS_BOOT   | JDBC_METADATA  | COLUMNS_VIEW                  | View        |          |           |             |            |                            |                 |
+| SYS_BOOT   | JDBC_METADATA  | SCHEMAS_VIEW                  | View        |          |           |             |            |                            |                 |
+| SYS_BOOT   | JDBC_METADATA  | SCHEMAS_VIEW_INTERNAL         | View        |          |           |             |            |                            |                 |
+| SYS_BOOT   | JDBC_METADATA  | TABLES_COLUMNS_VIEW_INTERNAL  | View        |          |           |             |            |                            |                 |
+| SYS_BOOT   | JDBC_METADATA  | TABLES_VIEW                   | View        |          |           |             |            |                            |                 |
+| SYS_BOOT   | JDBC_METADATA  | TABLES_VIEW_INTERNAL          | View        |          |           |             |            |                            |                 |
+| SYS_BOOT   | JDBC_METADATA  | TABLE_TYPES_VIEW              | View        |          |           |             |            |                            |                 |
++------------+----------------+-------------------------------+-------------+----------+-----------+-------------+------------+----------------------------+-----------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test getColumns
+0: jdbc:farrago:> set catalog localdb;
+0: jdbc:farrago:> !columns EMPS
++------------+--------------+-------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------------+----------+-------------+----------------+-------------------+--------------------+-------------------+-----------------+----------------+---------------+--------------+-------------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | COLUMN_NAME  | DATA_TYPE  | TYPE_NAME  | COLUMN_SIZE  | BUFFER_LEN  | DEC_DIGITS  | NUM_PREC_RADIX  |    NULLABLE     | REMARKS  | COLUMN_DEF  | SQL_DATA_TYPE  | SQL_DATETIME_SUB  | CHAR_OCTET_LENGTH  | ORDINAL_POSITION  |   IS_NULLABLE   | SCOPE_CATALOG  | SCOPE_SCHEMA  | SCOPE_TABLE  | SOURCE_DATA_TYPE  |
++------------+--------------+-------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------------+----------+-------------+----------------+-------------------+--------------------+-------------------+-----------------+----------------+---------------+--------------+-------------------+
+| LOCALDB    | SALES        | EMPS        | EMPNO        | 4          | INTEGER    |              |             |             |                 | columnNoNulls   |          | INTEGER     | 0              | 0                 |                    | 1                 | columnNoNulls   |                |               |              |                   |
+| LOCALDB    | SALES        | EMPS        | NAME         | 12         | VARCHAR    | 128          |             |             |                 | columnNoNulls   |          | VARCHAR     | 0              | 0                 | 128                | 2                 | columnNoNulls   |                |               |              |                   |
+| LOCALDB    | SALES        | EMPS        | DEPTNO       | 4          | INTEGER    |              |             |             |                 | columnNoNulls   |          | INTEGER     | 0              | 0                 |                    | 3                 | columnNoNulls   |                |               |              |                   |
+| LOCALDB    | SALES        | EMPS        | GENDER       | 1          | CHAR       | 1            |             |             |                 | columnNullable  |          | CHAR        | 0              | 0                 | 1                  | 4                 | columnNullable  |                |               |              |                   |
+| LOCALDB    | SALES        | EMPS        | CITY         | 12         | VARCHAR    | 128          |             |             |                 | columnNullable  |          | VARCHAR     | 0              | 0                 | 128                | 5                 | columnNullable  |                |               |              |                   |
+| LOCALDB    | SALES        | EMPS        | EMPID        | 4          | INTEGER    |              |             |             |                 | columnNoNulls   |          | INTEGER     | 0              | 0                 |                    | 6                 | columnNoNulls   |                |               |              |                   |
+| LOCALDB    | SALES        | EMPS        | AGE          | 4          | INTEGER    |              |             |             |                 | columnNullable  |          | INTEGER     | 0              | 0                 |                    | 7                 | columnNullable  |                |               |              |                   |
+| LOCALDB    | SALES        | EMPS        | PUBLIC_KEY   | -3         | VARBINARY  | 50           |             |             |                 | columnNullable  |          | VARBINARY   | 0              | 0                 | 50                 | 8                 | columnNullable  |                |               |              |                   |
+| LOCALDB    | SALES        | EMPS        | SLACKER      | 16         | BOOLEAN    |              |             |             |                 | columnNullable  |          | BOOLEAN     | 0              | 0                 |                    | 9                 | columnNullable  |                |               |              |                   |
+| LOCALDB    | SALES        | EMPS        | MANAGER      | 16         | BOOLEAN    |              |             |             |                 | columnNoNulls   |          | BOOLEAN     | 0              | 0                 |                    | 10                | columnNoNulls   |                |               |              |                   |
++------------+--------------+-------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+-----------------+----------+-------------+----------------+-------------------+--------------------+-------------------+-----------------+----------------+---------------+--------------+-------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test misc calls
 0: jdbc:farrago:> !dbinfo
@@ -97,14 +118,14 @@ getMaxStatements                                  0
 getMaxTableNameLength                             128
 getMaxTablesInSelect                              0
 getMaxUserNameLength                              128
-getNumericFunctions                               
+getNumericFunctions                               POSITION,CHAR_LENGTH,CHARACTER_LENGTH,POW,MOD,LN,LOG,ABS
 getProcedureTerm                                  
 getSchemaTerm                                     schema
 getSearchStringEscape                             null
-getSQLKeywords                                    cascade,catalog,data,index,java,key,library,options,preserve,restrict,schema,server,temporary,version,view,wrapper,asc,ascending,implementation,plan
-getStringFunctions                                
-getSystemFunctions                                
-getTimeDateFunctions                              
+getSQLKeywords                                    checkpoint,clustered,release,savepoint,system,truncate,type,POSITION,CONVERT,TRANSLATE,OVERLAY,SUBSTRING,TRIM,descending,explain,placing,row,similar,without
+getStringFunctions                                SUBSTRING,CONVERT,TRANSLATE,OVERLAY,TRIM,UPPER,LOWER,INITCAP
+getSystemFunctions                                NULLIF,COALESCE,CAST
+getTimeDateFunctions                              LOCALTIME,LOCALTIMESTAMP,CURRENT_TIME,CURRENT_TIMESTAMP,CURRENT_DATE
 getURL                                            jdbc:farrago:
 getUserName                                       jackalope
 isCatalogAtStart                                  true

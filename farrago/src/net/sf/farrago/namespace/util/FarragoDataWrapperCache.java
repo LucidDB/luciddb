@@ -42,6 +42,12 @@ import java.util.jar.*;
  */
 public class FarragoDataWrapperCache extends FarragoCompoundAllocation
 {
+    /**
+     * Prefix used to indicate that a wrapper library is loaded directly from
+     * a class rather than a JAR.
+     */
+    public static final String LIBRARY_CLASS_PREFIX = "class ";
+    
     private FarragoObjectCache sharedCache;
 
     private Map mapMofIdToWrapper;
@@ -170,13 +176,19 @@ public class FarragoDataWrapperCache extends FarragoCompoundAllocation
     private Class loadPluginClass(String libraryName)
     {
         try {
-            JarFile jar = new JarFile(libraryName);
-            Manifest manifest = jar.getManifest();
-            String className =
-                manifest.getMainAttributes().getValue("DataWrapperClassName");
-            URLClassLoader classLoader = new URLClassLoader(
-                new URL [] {new URL("file:" + libraryName)});
-            return classLoader.loadClass(className);
+            if (libraryName.startsWith(LIBRARY_CLASS_PREFIX)) {
+                String className = libraryName.substring(
+                    LIBRARY_CLASS_PREFIX.length());
+                return Class.forName(className);
+            } else {
+                JarFile jar = new JarFile(libraryName);
+                Manifest manifest = jar.getManifest();
+                String className = manifest.getMainAttributes().getValue(
+                    "DataWrapperClassName");
+                URLClassLoader classLoader = new URLClassLoader(
+                    new URL [] {new URL("file:" + libraryName)});
+                return classLoader.loadClass(className);
+            }
         } catch (Throwable ex) {
             throw FarragoResource.instance().newDataWrapperJarLoadFailed(
                 libraryName,

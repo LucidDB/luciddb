@@ -25,7 +25,9 @@ import net.sf.saffron.util.MultiMap;
 import net.sf.saffron.util.Util;
 import net.sf.saffron.core.SaffronType;
 import net.sf.saffron.core.SaffronTypeFactory;
+import net.sf.saffron.core.SaffronTypeFactoryImpl;
 import net.sf.saffron.sql.type.SqlTypeName;
+import net.sf.saffron.resource.SaffronResource;
 
 import java.lang.reflect.Field;
 
@@ -45,26 +47,66 @@ public class SqlOperatorTable
 
     private static SqlOperatorTable instance;
 
+    public static final SqlTypeName[] stringTypes =
+      {SqlTypeName.Varchar,SqlTypeName.Bit,SqlTypeName.Binary,SqlTypeName.Varbinary};
+    public static final SqlTypeName[] stringNullableTypes =
+      {SqlTypeName.Null,SqlTypeName.Varchar,SqlTypeName.Bit,SqlTypeName.Binary,SqlTypeName.Varbinary};
+    public static final SqlTypeName[] numericTypes =
+            {SqlTypeName.Integer,SqlTypeName.Bigint,SqlTypeName.Decimal,
+                                        SqlTypeName.Real,SqlTypeName.Double};
+    public static final SqlTypeName[] numericNullableTypes =
+            {SqlTypeName.Null,SqlTypeName.Integer,SqlTypeName.Bigint,SqlTypeName.Decimal,
+                                        SqlTypeName.Real,SqlTypeName.Double};
+    public static final SqlTypeName[] booleanTypes = {SqlTypeName.Boolean};
+    public static final SqlTypeName[] booleanNullableTypes =
+            {SqlTypeName.Null,SqlTypeName.Boolean};
+    public static final SqlTypeName[] binaryNullableTypes =
+            {SqlTypeName.Null,SqlTypeName.Bit,SqlTypeName.Varbinary};
+    public static final SqlTypeName[] intTypes =
+                   {SqlTypeName.Integer,SqlTypeName.Bigint};
+    public static final SqlTypeName[] intNullableTypes =
+                   {SqlTypeName.Null,SqlTypeName.Integer,SqlTypeName.Bigint};
+    public static final SqlTypeName[] varcharTypes =
+            {SqlTypeName.Varchar};
+    public static final SqlTypeName[] varcharNullableTypes =
+            {SqlTypeName.Null,SqlTypeName.Varchar};
+
     /**
      * Type-inference strategy whereby the result type of a call is the type of
      * the first operand.
      */
     public static final SqlOperator.TypeInference useFirstArgType =
             new SqlOperator.TypeInference() {
-                public SaffronType getType(SqlValidator validator,
-                        SqlValidator.Scope scope, SqlCall call) {
+
+                public SaffronType getType(SqlValidator validator, SqlValidator.Scope scope, SqlCall call) {
                     return validator.deriveType(scope, call.operands[0]);
                 }
 
-                public SaffronType getType(SaffronTypeFactory typeFactory,
-                        SaffronType[] argTypes) {
+                public SaffronType getType(SaffronTypeFactory typeFactory, SaffronType[] argTypes) {
                     return argTypes[0];
                 }
             };
+
+    /**
+     * Type-inference strategy whereby the result type of a call is the type of
+     * the second operand.
+     */
+    public static final SqlOperator.TypeInference useSecondArgType =
+            new SqlOperator.TypeInference() {
+
+                public SaffronType getType(SqlValidator validator, SqlValidator.Scope scope, SqlCall call) {
+                    return validator.deriveType(scope, call.operands[1]);
+                }
+
+                public SaffronType getType(SaffronTypeFactory typeFactory,SaffronType[] argTypes) {
+                    return argTypes[1];
+                }
+            };
+
     /**
      * Type-inference strategy whereby the result type of a call is Boolean.
      */
-    public static final SqlOperator.TypeInference booleanType =
+    public static final SqlOperator.TypeInference useBoolean =
             new SqlOperator.TypeInference() {
                 public SaffronType getType(SqlValidator validator,
                         SqlValidator.Scope scope, SqlCall call) {
@@ -79,14 +121,14 @@ public class SqlOperatorTable
      * Type-inference strategy whereby the result type of a call is Boolean,
      * with nulls allowed if any of the operands allow nulls.
      */
-    public static final SqlOperator.TypeInference nullableBooleanType =
+    public static final SqlOperator.TypeInference useNullableBoolean =
     new SqlOperator.TypeInference() {
         public SaffronType getType(
             SqlValidator validator,
             SqlValidator.Scope scope,
             SqlCall call)
         {
-            SaffronType type = booleanType.getType(validator,scope,call);
+            SaffronType type = useBoolean.getType(validator,scope,call);
             for (int i = 0; i < call.operands.length; ++i) {
                 SaffronType operandType = validator.deriveType(
                     scope,call.operands[i]);
@@ -102,7 +144,7 @@ public class SqlOperatorTable
             SaffronTypeFactory typeFactory,
             SaffronType[] argTypes)
         {
-            SaffronType type = booleanType.getType(typeFactory,argTypes);
+            SaffronType type = useBoolean.getType(typeFactory,argTypes);
             for (int i = 0; i < argTypes.length; ++i) {
                 if (argTypes[i].isNullable()) {
                     type = typeFactory.createTypeWithNullability(type,true);
@@ -116,7 +158,7 @@ public class SqlOperatorTable
     /**
      * Type-inference strategy whereby the result type of a call is Double.
      */
-    public static final SqlOperator.TypeInference doubleType =
+    public static final SqlOperator.TypeInference useDouble =
             new SqlOperator.TypeInference() {
                 public SaffronType getType(SqlValidator validator,
                         SqlValidator.Scope scope, SqlCall call) {
@@ -131,7 +173,7 @@ public class SqlOperatorTable
     /**
      * Type-inference strategy whereby the result type of a call is a Integer.
      */
-    public static final SqlOperator.TypeInference integerType =
+    public static final SqlOperator.TypeInference useInteger =
             new SqlOperator.TypeInference() {
                 public SaffronType getType(SqlValidator validator,
                         SqlValidator.Scope scope, SqlCall call) {
@@ -156,8 +198,8 @@ public class SqlOperatorTable
      */
     public static final SqlOperator.TypeInference useBiggest =
             new SqlOperator.TypeInference() {
-                public SaffronType getType(SqlValidator validator,
-                        SqlValidator.Scope scope, SqlCall call) {
+
+                public SaffronType getType(SqlValidator validator, SqlValidator.Scope scope, SqlCall call) {
                     SaffronType[] types = new SaffronType[call.operands.length];
                     for (int i = 0; i < call.operands.length; i++) {
                         types[i] = validator.deriveType(scope, call.operands[i]);
@@ -165,8 +207,7 @@ public class SqlOperatorTable
                     return getType(validator.typeFactory,types);
                 }
 
-                public SaffronType getType(SaffronTypeFactory typeFactory,
-                        SaffronType[] argTypes) {
+                public SaffronType getType(SaffronTypeFactory typeFactory, SaffronType[] argTypes) {
                     // REVIEW jvs 1-Mar-2004: I changed this to
                     // leastRestrictive since that's its purpose (and at least
                     // for Farrago, works better than the old getBiggest code).
@@ -276,37 +317,78 @@ public class SqlOperatorTable
      * Parameter type-checking strategy
      * type must be nullable boolean, nullable boolean.
      */
-    public static final SqlOperator.AllowdArgInference typeNullableBoolBool =
-        new SqlOperator.AllowdArgInference
-                (new SqlTypeName[][]{{SqlTypeName.Null,SqlTypeName.Boolean},{SqlTypeName.Null,SqlTypeName.Boolean}} );
+    public static final SqlOperator.AllowedArgInference typeNullableBoolBool =
+        new SqlOperator.AllowedArgInference
+                (new SqlTypeName[][]{booleanNullableTypes,booleanNullableTypes} );
 
     /**
      * Parameter type-checking strategy
      * type must be numeric.
      */
-    public static final SqlOperator.AllowdArgInference typeNumeric =
-        new SqlOperator.AllowdArgInference
-                (new SqlTypeName[][]{{SqlTypeName.Integer,SqlTypeName.Bigint,SqlTypeName.Decimal,
-                                        SqlTypeName.Real,SqlTypeName.Double}});
+    public static final SqlOperator.AllowedArgInference typeNumeric =
+        new SqlOperator.AllowedArgInference
+                (new SqlTypeName[][]{numericTypes});
 
     /**
+     * Parameter type-checking strategy
+     * type must be a numeric literal.
+     */
+    public static final SqlOperator.AllowedArgInference typeNumericLiteral =
+        new SqlOperator.AllowedArgInference
+                (new SqlTypeName[][]{{SqlTypeName.Integer,SqlTypeName.Bigint,SqlTypeName.Decimal,
+                                        SqlTypeName.Real,SqlTypeName.Double}}) {
+            public void check(SqlValidator validator, SqlValidator.Scope scope, SqlCall call) {
+                // check that we have a single numeric argument
+                super.check(validator, scope, call);
+                if (call.getOperands()[0] instanceof SqlLiteral) {
+                    final SqlLiteral arg = ((SqlLiteral) call.getOperands()[0]);
+                    final int value = ((Number) arg.getValue()).intValue(); // todo: handle cast exception?
+                    if (value < 0) {
+                        throw SaffronResource.instance().newArgumentMustBePositiveInteger(call.operator.name);
+                    }
+                } else {
+                    throw SaffronResource.instance().newArgumentMustBeLiteral(call.operator.name);
+                }
+            }
+        };
+
+    /**
+     * Parameter type-checking strategy
+     * type must be a numeric literal.
+     */
+    public static final SqlOperator.AllowedArgInference typePositiveIntegerLiteral =
+        new SqlOperator.AllowedArgInference
+                (new SqlTypeName[][]{{SqlTypeName.Integer}}) {
+            public void check(SqlValidator validator, SqlValidator.Scope scope, SqlCall call) {
+                // check that we have a single numeric argument
+                super.check(validator, scope, call);
+                if (call.getOperands()[0] instanceof SqlLiteral) {
+                    final SqlLiteral arg = ((SqlLiteral) call.getOperands()[0]);
+                    final int value = ((Number) arg.getValue()).intValue(); // todo: handle cast exception?
+                    if (value < 0) {
+                        throw SaffronResource.instance().newArgumentMustBePositiveInteger(call.operator.name);
+                    }
+                } else {
+                    throw SaffronResource.instance().newArgumentMustBeLiteral(call.operator.name);
+                }
+            }
+        };
+    
+        /**
          * Parameter type-checking strategy
          * type must be numeric, numeric.
          */
-        public static final SqlOperator.AllowdArgInference typeNumericNumeric =
-            new SqlOperator.AllowdArgInference
-                    (new SqlTypeName[][]{{SqlTypeName.Integer,SqlTypeName.Bigint,SqlTypeName.Decimal,
-                                            SqlTypeName.Real,SqlTypeName.Double},
-                                         {SqlTypeName.Integer,SqlTypeName.Bigint,SqlTypeName.Decimal,
-                                            SqlTypeName.Real,SqlTypeName.Double}});
+        public static final SqlOperator.AllowedArgInference typeNumericNumeric =
+            new SqlOperator.AllowedArgInference
+                    (new SqlTypeName[][]{numericTypes,numericTypes});
 
 
     /**
      * Parameter type-checking strategy
      * type must be nullable aType, nullable sameType
      */
-    public static final SqlOperator.AllowdArgInference typeNullableSameSame =
-        new SqlOperator.AllowdArgInference(new SqlTypeName[][]{{SqlTypeName.Any}, {SqlTypeName.Any}}) {
+    public static final SqlOperator.AllowedArgInference typeNullableSameSame =
+        new SqlOperator.AllowedArgInference(new SqlTypeName[][]{{SqlTypeName.Any}, {SqlTypeName.Any}}) {
             public void check(
                     SqlValidator validator,
                     SqlValidator.Scope scope,
@@ -320,7 +402,7 @@ public class SqlOperatorTable
                     return; //null is ok;
                 }
 
-                if (!type1.isSameTypeFamily(type2)){
+                if (!type1.isSameTypeFamily(type2) && !type2.isSameTypeFamily(type1)){
                     throw validator.newValidationError("Parameters must be of same type");
                 }
             }
@@ -331,87 +413,209 @@ public class SqlOperatorTable
      * Parameter type-checking strategy
      * type must be nullable numeric, nullable numeric.
      */
-    public static final SqlOperator.AllowdArgInference typeNullableNumericNumeric =
-        new SqlOperator.AllowdArgInference
-        (new SqlTypeName[][]{{SqlTypeName.Null,SqlTypeName.Integer,SqlTypeName.Bigint,SqlTypeName.Decimal,
-                                               SqlTypeName.Real,SqlTypeName.Double},
-                             {SqlTypeName.Null,SqlTypeName.Integer,SqlTypeName.Bigint,SqlTypeName.Decimal,
-                                               SqlTypeName.Real,SqlTypeName.Double}} );
+    public static final SqlOperator.AllowedArgInference typeNullableNumericNumeric =
+        new SqlOperator.AllowedArgInference(
+            new SqlTypeName[][]{numericNullableTypes, numericNullableTypes} );
     /**
      * Parameter type-checking strategy
      * type must be nullable numeric, nullable numeric.
      */
-    public static final SqlOperator.AllowdArgInference typeNullableBinariesBinaries =
-        new SqlOperator.AllowdArgInference
-        (new SqlTypeName[][]{{SqlTypeName.Null,SqlTypeName.Bit,SqlTypeName.Varbinary},
-                             {SqlTypeName.Null,SqlTypeName.Bit,SqlTypeName.Varbinary}} );
+    public static final SqlOperator.AllowedArgInference typeNullableBinariesBinaries =
+        new SqlOperator.AllowedArgInference(
+            new SqlTypeName[][]{binaryNullableTypes, binaryNullableTypes} );
+
+    /**
+     * Parameter type-checking strategy
+     * type must be null | charstring | bitstring | hexstring
+     */
+    public static final SqlOperator.AllowedArgInference typeNullableString =
+        new SqlOperator.AllowedArgInference(
+            new SqlTypeName[][]{stringNullableTypes});
+
+    /**
+     * Parameter type-checking strategy
+     * types must be null | charstring | bitstring | hexstring
+     */
+    public static final SqlOperator.AllowedArgInference typeNullableStringString =
+        new SqlOperator.AllowedArgInference(
+            new SqlTypeName[][]{stringNullableTypes,stringNullableTypes});
+
+     /**
+     * Parameter type-checking strategy
+     * types must be null | charstring | bitstring | hexstring
+     * AND types must be identical to eachother
+     */
+    public static final SqlOperator.AllowedArgInference typeNullableStringStringOfSameType =
+        new SqlOperator.AllowedArgInference(
+            new SqlTypeName[][]{stringNullableTypes,stringNullableTypes}) {
+
+            public String getAllowedSignatures(SqlOperator op) {
+                StringBuffer ret=new StringBuffer();
+                for (int i = 0; i < m_types[0].length; i++) {
+                    if (m_types[0][i].getOrdinal()==SqlTypeName.Null_ordinal) {
+                        continue;
+                    }
+
+                    ArrayList list = new ArrayList(2);
+                    list.add(m_types[0][i]); //adding same twice
+                    list.add(m_types[0][i]); //adding same twice
+                    ret.append(op.getSignature(list));
+
+                    if ((i+1)<m_types[0].length){
+                        ret.append(op.NL);
+                    }
+                }
+                return ret.toString();
+            }
+
+            protected void getAllowedSignatures(int depth, ArrayList list, StringBuffer buf, SqlOperator op) {
+                throw Util.needToImplement("should not be called unless implemented");
+            }
+
+            public void check(SqlValidator validator, SqlValidator.Scope scope, SqlCall call) {
+                SaffronType t0 = validator.deriveType(scope,call.operands[0]);
+                SaffronType t1 = validator.deriveType(scope,call.operands[1]);
+                assert(null!=t0) : "should not be null";
+                assert(null!=t1) : "should not be null";
+                SaffronType nullType = validator.typeFactory.createSqlType(SqlTypeName.Null);
+                if (!nullType.isAssignableFrom(t0) && !nullType.isAssignableFrom(t1)) {
+                    if (!t0.isSameTypeFamily(t1)) {
+                        throw call.newValidationSignatureError(validator,scope);
+                    }
+                }
+                super.check(validator, scope, call);
+            }
+        };
+
+
+    /**
+     * Parameter type-checking strategy
+     * types must be null | charstring | bitstring | hexstring
+     */
+    public static final SqlOperator.AllowedArgInference typeNullableStringStringString =
+        new SqlOperator.AllowedArgInference(
+            new SqlTypeName[][]{stringNullableTypes,stringNullableTypes,stringNullableTypes});
+
+    /**
+     * Parameter type-checking strategy
+     * types must be
+     * null | charstring | bitstring | hexstring
+     * null | int
+     */
+    public static final SqlOperator.AllowedArgInference typeNullableStringInt=
+        new SqlOperator.AllowedArgInference(
+            new SqlTypeName[][]{stringNullableTypes, intNullableTypes});
+
+
+    /**
+     * Parameter type-checking strategy
+     * types must be
+     * null | charstring | bitstring | hexstring
+     * null | int
+     * null | int
+     */
+    public static final SqlOperator.AllowedArgInference typeNullableStringIntInt =
+        new SqlOperator.AllowedArgInference(
+            new SqlTypeName[][]{stringTypes, intNullableTypes,intNullableTypes});
+
+    /**
+     * Parameter type-checking strategy
+     * 2 first types must be null | charstring | bitstring | hexstring
+     * 3 type must be integer
+     */
+    public static final SqlOperator.AllowedArgInference typeNullableStringStringNotNullableInt =
+        new SqlOperator.AllowedArgInference(
+            new SqlTypeName[][]{stringTypes,stringTypes,intTypes});
+
+    /**
+     * Parameter type-checking strategy
+     * 2 first types must be null | charstring | bitstring | hexstring
+     * 3&4 type must be integer
+     */
+    public static final SqlOperator.AllowedArgInference typeNullableStringStringNotNullableIntInt  =
+        new SqlOperator.AllowedArgInference(
+            new SqlTypeName[][]{stringTypes,stringTypes,intTypes,intTypes});
 
     /**
          * Parameter type-checking strategy
          * type must be nullable numeric
          */
-        public static final SqlOperator.AllowdArgInference typeNullableNumeric =
-            new SqlOperator.AllowdArgInference
-                    (new SqlTypeName[][]{{SqlTypeName.Null,SqlTypeName.Integer,SqlTypeName.Bigint,SqlTypeName.Decimal,
-                                                           SqlTypeName.Real,SqlTypeName.Double}});
+        public static final SqlOperator.AllowedArgInference typeNullableNumeric =
+            new SqlOperator.AllowedArgInference(
+                new SqlTypeName[][]{numericNullableTypes});
 
 
     /**
      * Parameter type-checking strategy
      * types must be varchar, int, int
      */
-    public static final SqlOperator.AllowdArgInference typeVarcharIntInt =
-        new SqlOperator.AllowdArgInference
-                (new SqlTypeName[][]{{SqlTypeName.Varchar},{SqlTypeName.Integer},{SqlTypeName.Integer}} );
+    public static final SqlOperator.AllowedArgInference typeVarcharIntInt =
+        new SqlOperator.AllowedArgInference(
+            new SqlTypeName[][]{varcharTypes,intTypes,intTypes} );
 
     /**
      * Parameter type-checking strategy
-     * types must be varchar, int
+     * types must be [nullable] varchar, [nullable] int, [nullable] int
      */
-    public static final SqlOperator.AllowdArgInference typeVarcharInt =
-        new SqlOperator.AllowdArgInference
-                (new SqlTypeName[][]{{SqlTypeName.Varchar},{SqlTypeName.Integer}} );
+    public static final SqlOperator.AllowedArgInference
+                                                typeNullableVarcharIntInt =
+        new SqlOperator.AllowedArgInference(
+            new SqlTypeName[][]{varcharNullableTypes,
+                                intNullableTypes,intNullableTypes} );
+
+    /**
+         * Parameter type-checking strategy
+         * types must be varchar, int
+         */
+        public static final SqlOperator.AllowedArgInference typeVarcharInt =
+            new SqlOperator.AllowedArgInference
+                    (new SqlTypeName[][]{varcharTypes,intTypes} );
+
+    /**
+     * Parameter type-checking strategy
+     * types must be [nullable] varchar, [nullable] int, [nullable] int
+     */
+    public static final SqlOperator.AllowedArgInference
+                                            typeNullableVarcharVarcharVarchar =
+        new SqlOperator.AllowedArgInference(
+            new SqlTypeName[][]{varcharNullableTypes,varcharNullableTypes,
+                                varcharNullableTypes} );
 
     /**
      * Parameter type-checking strategy
      * types must be nullable boolean
      */
-    public static final SqlOperator.AllowdArgInference typeNullableBool =
-        new SqlOperator.AllowdArgInference
-                (new SqlTypeName[][]{{SqlTypeName.Null,SqlTypeName.Boolean}} );
+    public static final SqlOperator.AllowedArgInference typeNullableBool =
+        new SqlOperator.AllowedArgInference(new SqlTypeName[][]{booleanNullableTypes} );
 
     /**
      * Parameter type-checking strategy
      * types can be any,any
      */
-    public static final SqlOperator.AllowdArgInference typeAnyAny =
-        new SqlOperator.AllowdArgInference
-                (new SqlTypeName[][]{{SqlTypeName.Any},{SqlTypeName.Any}} );
+    public static final SqlOperator.AllowedArgInference typeAnyAny =
+        new SqlOperator.AllowedArgInference(new SqlTypeName[][]{{SqlTypeName.Any},{SqlTypeName.Any}} );
 
     /**
      * Parameter type-checking strategy
      * types can be any
      */
-    public static final SqlOperator.AllowdArgInference typeAny =
-        new SqlOperator.AllowdArgInference
-                (new SqlTypeName[][]{{SqlTypeName.Any}} );
+    public static final SqlOperator.AllowedArgInference typeAny =
+        new SqlOperator.AllowedArgInference(new SqlTypeName[][]{{SqlTypeName.Any}} );
 
 
     /**
      * Parameter type-checking strategy
      * types must be varchar,varchar
      */
-    public static final SqlOperator.AllowdArgInference typeVarcharVarchar =
-        new SqlOperator.AllowdArgInference
-                (new SqlTypeName[][]{{SqlTypeName.Varchar},{SqlTypeName.Varchar}} );
+    public static final SqlOperator.AllowedArgInference typeVarcharVarchar =
+        new SqlOperator.AllowedArgInference(new SqlTypeName[][]{varcharTypes,varcharTypes} );
 
     /**
      * Parameter type-checking strategy
      * types must be nullable varchar
      */
-    public static final SqlOperator.AllowdArgInference typeNullableVarchar =
-        new SqlOperator.AllowdArgInference
-                (new SqlTypeName[][]{{SqlTypeName.Null,SqlTypeName.Varchar}} );
+    public static final SqlOperator.AllowedArgInference typeNullableVarchar =
+        new SqlOperator.AllowedArgInference(new SqlTypeName[][]{varcharNullableTypes} );
 
 
     /**
@@ -421,19 +625,43 @@ public class SqlOperatorTable
      * OR nullable numeric, nullable numeric.
      * OR nullable binary, nullable binary.
      */
-    public static final SqlOperator.CompositeAllowdArgInference
+    public static final SqlOperator.CompositeAllowedArgInference
             typeNullabeSameSame_or_NullableNumericNumeric_or_NullableBinariesBinaries =
-        new SqlOperator.CompositeAllowdArgInference(
-                new SqlOperator.AllowdArgInference[]{typeNullableSameSame,
+        new SqlOperator.CompositeAllowedArgInference(
+                new SqlOperator.AllowedArgInference[]{typeNullableSameSame,
                                                      typeNullableNumericNumeric,
                                                      typeNullableBinariesBinaries} );
+
+    /**
+     * Parameter type-checking strategy
+     * type must be
+     * nullable string, nullable string, nulalble string
+     * OR nullable string, nullable numeric, nullable numeric.
+     */
+    public static final SqlOperator.CompositeAllowedArgInference
+            typeNullabeStringStringString_or_NullableStringIntInt =
+        new SqlOperator.CompositeAllowedArgInference(
+                new SqlOperator.AllowedArgInference[]{typeNullableStringStringString,
+                                                     typeNullableStringIntInt});
+
+    /**
+     * Parameter type-checking strategy
+     * type must be
+     * nullable String
+     * OR nullable numeric
+     */
+    public static final SqlOperator.CompositeAllowedArgInference
+            typeNullableString_or_NullableNumeric =
+        new SqlOperator.CompositeAllowedArgInference(
+                new SqlOperator.AllowedArgInference[]{typeNullableString,
+                                                     typeNullableNumeric} );
 
     //~ Instance fields -------------------------------------------------------
 
     // infix
     public final SqlBinaryOperator andOperator =
         new SqlBinaryOperator("AND",SqlKind.And,14,true,
-                                  nullableBooleanType,booleanParam, typeNullableBoolBool);
+                                  useNullableBoolean,booleanParam, typeNullableBoolBool);
 
     public final SqlBinaryOperator asOperator =
         new SqlBinaryOperator("AS",SqlKind.As,10,true,
@@ -448,7 +676,27 @@ public class SqlOperatorTable
     // have to promote CHAR to VARCHAR
     public final SqlBinaryOperator concatOperator =
         new SqlBinaryOperator("||",SqlKind.Other,30,true,
-                              null,useFirstKnownParam, typeVarcharVarchar);
+                              useFirstArgType,null,typeNullableStringStringOfSameType ) {
+            protected SaffronType _inferType(SqlValidator validator,
+                    SqlValidator.Scope scope, SqlCall call) {
+                //todo: make return a string with the correct precision.
+                return useBiggest.getType(validator,scope,call);
+            }
+
+
+            protected void checkArgTypes(SqlCall call, SqlValidator validator,
+                                         SqlValidator.Scope scope) {
+                SqlNode op0 = call.operands[0];
+                SqlNode op1 = call.operands[1];
+                typeNullableString.checkThrows(validator,scope,call,op0,0);
+                typeNullableString.checkThrows(validator,scope,call,op1,0);
+                SaffronType t0 = validator.deriveType(scope,op0);
+                SaffronType t1 = validator.deriveType(scope,op1);
+                if (!t0.isSameTypeFamily(t1)) {
+                    throw call.newValidationSignatureError(validator, scope);
+                }
+            }
+        };
 
     public final SqlBinaryOperator divideOperator =
         new SqlBinaryOperator("/",SqlKind.Divide,30,true,
@@ -459,7 +707,7 @@ public class SqlOperatorTable
 
     public final SqlBinaryOperator equalsOperator =
         new SqlBinaryOperator("=",SqlKind.Equals,15,true,
-                              nullableBooleanType,useFirstKnownParam,
+                              useNullableBoolean,useFirstKnownParam,
                               typeNullabeSameSame_or_NullableNumericNumeric_or_NullableBinariesBinaries);
 
     public final SqlSetOperator exceptOperator =
@@ -470,20 +718,22 @@ public class SqlOperatorTable
 
     public final SqlBinaryOperator greaterThanOperator =
         new SqlBinaryOperator(">",SqlKind.GreaterThan,15,true,
-                              nullableBooleanType,useFirstKnownParam, typeNullableNumericNumeric);
+                              useNullableBoolean,useFirstKnownParam,
+                              typeNullabeSameSame_or_NullableNumericNumeric_or_NullableBinariesBinaries);
 
     public final SqlBinaryOperator greaterThanOrEqualOperator =
         new SqlBinaryOperator(">=",SqlKind.GreaterThanOrEqual,15,true,
-                              nullableBooleanType,useFirstKnownParam, typeNullableNumericNumeric);
+                              useNullableBoolean,useFirstKnownParam,
+                              typeNullabeSameSame_or_NullableNumericNumeric_or_NullableBinariesBinaries);
 
     public final SqlBinaryOperator inOperator =
         new SqlBinaryOperator("IN",SqlKind.In,15,true,
-              nullableBooleanType,useFirstKnownParam, null);
+              useNullableBoolean,useFirstKnownParam, null);
 
 
     public final SqlBinaryOperator overlapsOperator =
             //TODO: wael, check types
-        new SqlBinaryOperator("OVERLAPS",SqlKind.Overlaps,15,true,nullableBooleanType,useFirstKnownParam, null);
+        new SqlBinaryOperator("OVERLAPS",SqlKind.Overlaps,15,true,useNullableBoolean,useFirstKnownParam, null);
 
     public final SqlSetOperator intersectOperator =
         new SqlSetOperator("INTERSECT",SqlKind.Intersect,9,false);
@@ -493,11 +743,13 @@ public class SqlOperatorTable
 
     public final SqlBinaryOperator lessThanOperator =
         new SqlBinaryOperator("<",SqlKind.LessThan,15,true,
-                              nullableBooleanType,useFirstKnownParam, typeNullableNumericNumeric);
+                              useNullableBoolean,useFirstKnownParam,
+                              typeNullabeSameSame_or_NullableNumericNumeric_or_NullableBinariesBinaries);
 
     public final SqlBinaryOperator lessThanOrEqualOperator =
         new SqlBinaryOperator("<=",SqlKind.LessThanOrEqual,15,true,
-                              nullableBooleanType,useFirstKnownParam, typeNullableNumericNumeric);
+                              useNullableBoolean,useFirstKnownParam,
+                              typeNullabeSameSame_or_NullableNumericNumeric_or_NullableBinariesBinaries);
 
     public final SqlBinaryOperator minusOperator =
         new SqlBinaryOperator("-",SqlKind.Minus,20,true,
@@ -509,12 +761,12 @@ public class SqlOperatorTable
 
     public final SqlBinaryOperator notEqualsOperator =
         new SqlBinaryOperator("<>",SqlKind.NotEquals,15,true,
-                              nullableBooleanType,useFirstKnownParam,
+                              useNullableBoolean,useFirstKnownParam,
                               typeNullabeSameSame_or_NullableNumericNumeric_or_NullableBinariesBinaries);
 
     public final SqlBinaryOperator orOperator =
         new SqlBinaryOperator("OR",SqlKind.Or,13,true,
-                              nullableBooleanType,booleanParam, typeNullableBoolBool);
+                              useNullableBoolean,booleanParam, typeNullableBoolBool);
 
     // todo: useFirstArgType isn't correct in general
     public final SqlBinaryOperator plusOperator =
@@ -528,7 +780,7 @@ public class SqlOperatorTable
         new SqlSetOperator("UNION ALL",SqlKind.Union,7,true);
 
     public final SqlBinaryOperator isDistinctFromOperator =
-        new SqlBinaryOperator("IS DISTINCT FROM",SqlKind.Other,15,true,nullableBooleanType,useFirstKnownParam, null);
+        new SqlBinaryOperator("IS DISTINCT FROM",SqlKind.Other,15,true,useNullableBoolean,useFirstKnownParam, null);
 
     // function
 //    public final SqlFunction substringFunction =
@@ -537,7 +789,7 @@ public class SqlOperatorTable
     public final SqlFunction rowConstructor =
             new SqlFunction("ROW",SqlKind.Row,null,useReturnForParam, null) {
 
-                protected void checkNumberOfArg(AllowdArgInference[] parameterTypes, SqlCall call) {
+                protected void checkNumberOfArg(AllowedArgInference[] parameterTypes, SqlCall call) {
                     // ang number of argument is fine
                 }
 
@@ -570,7 +822,8 @@ public class SqlOperatorTable
      * operand.
      */
     public final SqlFunction cast = new SqlFunction(
-        "CAST",null,useReturnForParam, null);
+        "CAST",null,useReturnForParam, null, SqlFunction.System
+    );
 
     // postfix
     public final SqlPostfixOperator descendingOperator =
@@ -579,37 +832,37 @@ public class SqlOperatorTable
 
     public final SqlPostfixOperator isNotNullOperator =
         new SqlPostfixOperator("IS NOT NULL",SqlKind.Other,15,
-                               booleanType,booleanParam,typeAny);
+                               useBoolean,booleanParam,typeAny);
 
     public final SqlPostfixOperator isNullOperator =
         new SqlPostfixOperator("IS NULL",SqlKind.IsNull,15,
-                               booleanType,booleanParam,typeAny);
+                               useBoolean,booleanParam,typeAny);
 
 
 	public final SqlPostfixOperator isNotTrueOperator =
 	        new SqlPostfixOperator("IS NOT TRUE",SqlKind.Other,15,
-	                               booleanType,booleanParam,typeNullableBool);
+	                               useBoolean,booleanParam,typeNullableBool);
 
 	public final SqlPostfixOperator isTrueOperator =
 	        new SqlPostfixOperator("IS TRUE",SqlKind.IsTrue,15,
-	                               booleanType,booleanParam,typeNullableBool);
+	                               useBoolean,booleanParam,typeNullableBool);
 
 	public final SqlPostfixOperator isNotFalseOperator =
 	        new SqlPostfixOperator("IS NOT FALSE",SqlKind.Other,15,
-	                               booleanType,booleanParam,typeNullableBool);
+	                               useBoolean,booleanParam,typeNullableBool);
 
 	public final SqlPostfixOperator isFalseOperator =
 	        new SqlPostfixOperator("IS FALSE",SqlKind.IsFalse,15,
-	                               booleanType,booleanParam,typeNullableBool);
+	                               useBoolean,booleanParam,typeNullableBool);
 
     // prefix
     public final SqlPrefixOperator existsOperator =
         new SqlPrefixOperator("EXISTS",SqlKind.Exists,20,
-                              booleanType,null, typeNullableBool);
+                              useBoolean,null, typeNullableBool);
 
     public final SqlPrefixOperator notOperator =
         new SqlPrefixOperator("NOT",SqlKind.Not,15,
-                              nullableBooleanType,booleanParam, typeNullableBool);
+                              useNullableBoolean,booleanParam, typeNullableBool);
 
     public final SqlPrefixOperator prefixMinusOperator =
         new SqlPrefixOperator("-",SqlKind.MinusPrefix,20,
@@ -678,6 +931,7 @@ public class SqlOperatorTable
     private final HashMap mapNameToOp = new HashMap();
 
     private final SqlFunctionTable funcTable = SqlFunctionTable.instance();
+
 
     //~ Constructors ----------------------------------------------------------
 

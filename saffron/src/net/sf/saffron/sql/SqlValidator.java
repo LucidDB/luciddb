@@ -23,15 +23,18 @@ package net.sf.saffron.sql;
 
 import junit.framework.TestCase;
 import net.sf.saffron.util.Util;
+import net.sf.saffron.util.SaffronProperties;
 import net.sf.saffron.core.SaffronType;
 import net.sf.saffron.core.SaffronField;
 import net.sf.saffron.core.SaffronTypeFactory;
 import net.sf.saffron.sql.type.SqlTypeName;
+import net.sf.saffron.resource.SaffronResource;
 
 import java.util.*;
 import java.sql.Timestamp;
 import java.sql.Time;
 import java.math.BigInteger;
+import java.nio.charset.Charset;
 
 
 /**
@@ -173,10 +176,8 @@ public class SqlValidator
                     for (int i = 0; i < fields.length; i++) {
                         SaffronField field = fields[i];
                         String columnName = field.getName();
-                        final SqlNode exp =
-                            new SqlIdentifier(
-                                new String [] { tableName,columnName },
-                                null);
+                        //todo: do real implicit collation here
+                        final SqlNode exp = new SqlIdentifier(new String [] { tableName,columnName });
                         addToSelectList(selectItems,aliases, types, exp, scope);
                     }
                 }
@@ -193,10 +194,8 @@ public class SqlValidator
                 for (int i = 0; i < fields.length; i++) {
                     SaffronField field = fields[i];
                     String columnName = field.getName();
-                    final SqlIdentifier exp =
-                        new SqlIdentifier(
-                            new String [] { tableName,columnName },
-                            null);
+                    //todo: do real implicit collation here
+                    final SqlIdentifier exp = new SqlIdentifier(new String [] { tableName,columnName });
                     addToSelectList(selectItems,aliases, types, exp, scope);
                 }
                 return true;
@@ -559,6 +558,61 @@ public class SqlValidator
         nodeToTypeMap.put(node,type);
     }
 
+    /**
+     * Helper function. If {@param type} is of charType and type.getCollation() is null,
+     * create a new {@link SqlCollation} and assign it to type.
+     * @param type
+     * @param collationName The collation name a created SqlCollation would have.
+     *                      If <code>null</code> the default collation name will be used
+     * @param coericbility The coercibility value a created SqlCollation would have
+     */
+    private void setCollationIfCharType(SaffronType type, String collationName,
+                                       SqlCollation.Coercibility coericbility) {
+        if (type.isCharType() && (null==type.getCollation())) {
+            SqlCollation newCollation;
+            if (null==collationName) {
+                newCollation = new SqlCollation(coericbility);
+            } else {
+                newCollation = new SqlCollation(collationName, coericbility);
+            }
+            type.setCollation(newCollation);
+        }
+    }
+
+    /**
+     * Helper function. If {@param type} is of charType and type.getCharset() is null,
+     * assign the charset {@param charset} to type. If charset is null. The default value will be used.
+     * @param type
+     * @param charset The charset to set to {@param type}.
+     * @throws RuntimeException If {@param charset} is <i>not</i> null and type.getCharset() is <i>not</i> null
+     */
+    private void setCharsetIfCharType(SaffronType type, Charset charset) {
+        if (type.isCharType() && (null==type.getCharset())) {
+            if (null==charset){
+                charset = Charset.forName(
+                    SaffronProperties.instance().getProperty(
+                        SaffronProperties.PROPERTY_saffron_default_charset,
+                        SaffronProperties.PROPERTY_saffron_default_charset_DEFAULT));
+            }
+            type.setCharset(charset);
+        }
+    }
+
+    private void checkCharsetAndCollateConsistentIfCharType(SaffronType type) {
+        //(every charset must have a default collation)
+        if (type.isCharType()) {
+            Charset strCharset = type.getCharset();
+            Charset colCharset = type.getCollation().getCharset();
+            assert(null!=strCharset);
+            assert(null!=colCharset);
+            if (!strCharset.equals(colCharset)) {
+                //todo: enable this checking when we have a charset to collation mapping
+//                throw newValidationError(type.toString()+" was found to have charset="+strCharset.name()+
+//                        " and a mismatched collation charset="+colCharset.name());
+            }
+        }
+    }
+
     SaffronType deriveType(Scope scope, SqlNode operand)
     {
         // if we already know the type, no need to re-derive
@@ -566,7 +620,7 @@ public class SqlValidator
         if (type != null) {
             return type;
         }
-
+        //~ SqlIdentifier -----------------------------------------------------------
         if (operand instanceof SqlIdentifier) {
             // REVIEW klo 1-Jan-2004:
             // We should have assert scope != null here. The idea is we should figure
@@ -578,6 +632,10 @@ public class SqlValidator
             // first check for reserved identifiers like CURRENT_USER
             type = contextVariableTable.deriveType(id);
             if (type != null) {
+                setCharsetIfCharType(type, null);
+                //todo: should get the implicit collation from repository instead of null
+                setCollationIfCharType(type, null, SqlCollation.Coercibility.Implicit);
+                checkCharsetAndCollateConsistentIfCharType(type);
                 return type;
             }
 
@@ -616,8 +674,13 @@ public class SqlValidator
                     }
                 }
             }
+            setCharsetIfCharType(type, null);
+            //todo: should get the implicit collation from repository instead of null
+            setCollationIfCharType(type, null, SqlCollation.Coercibility.Implicit);
+            checkCharsetAndCollateConsistentIfCharType(type);
             return type;
         }
+        //~ SqlLiteral.Numeric  -----------------------------------------------------------
         if (operand instanceof SqlLiteral.Numeric) {
             SqlLiteral.Numeric numLiteral = (SqlLiteral.Numeric) operand;
             if (numLiteral.isExact()){
@@ -631,7 +694,11 @@ public class SqlValidator
             //else we have a float, real or double. Make them all double for now
             return typeFactory.createSqlType(SqlTypeName.Double);
         }
-
+        //~ SqlLiteral.BooleanUnknown  (special case) ---------------------------------------
+        if (operand instanceof SqlLiteral.BooleanUnknown) {
+            return typeFactory.createSqlType(SqlTypeName.Boolean);
+        }
+        //~ SqlLiteral ----------------------------------------------------------------------
         if (operand instanceof SqlLiteral)
         {
             SqlLiteral literal = (SqlLiteral) operand;
@@ -645,8 +712,20 @@ public class SqlValidator
                 return typeFactory.createSqlType(SqlTypeName.Bit, bitLiteral.getBitCount());
             } else if (value instanceof SqlLiteral.StringLiteral){
                 SqlLiteral.StringLiteral strLiteral = (SqlLiteral.StringLiteral) value;
-                //REVIEW 1-march-2004 wael: is varchar correct in general?
-                return typeFactory.createSqlType(SqlTypeName.Varchar, strLiteral.getValue().length());
+                type = typeFactory.createSqlType(SqlTypeName.Varchar, strLiteral.getValue().length());
+                setCharsetIfCharType(type, strLiteral.getCharset());
+                type.setCollation(strLiteral.getCollation());
+                setCollationIfCharType(type, null, SqlCollation.Coercibility.Coercible);
+                checkCharsetAndCollateConsistentIfCharType(type);
+
+                if (null==strLiteral.getCharset()) {
+                    strLiteral.setCharset(type.getCharset());
+                }
+                if (null==strLiteral.getCollation()) {
+                    strLiteral.setCollation(type.getCollation());
+                }
+
+                return type;
             } else if (value instanceof String) {
                 return typeFactory.createSqlType(SqlTypeName.Varchar, ((String) value).length());
             } else if (value instanceof byte[]) {
@@ -663,16 +742,22 @@ public class SqlValidator
             } else if (value instanceof java.math.BigDecimal) {
                 //REVIEW 29-feb-2004 wael: can this else if clause safely be removed?
                 return typeFactory.createSqlType(SqlTypeName.Double);
+            } else if (value instanceof SqlFunctionTable.FunctionFlagType) {
+                return null;
             }
+
             else {
                 throw Util.needToImplement(this.toString() + ", operand=" + operand);
             }
         }
+        //~ SqlDynamicParam -----------------------------------------------------------
         if (operand instanceof SqlDynamicParam) {
             return unknownType;
         }
+        //~ SqlCall -----------------------------------------------------------
         if (operand instanceof SqlCall) {
             SqlCall call = (SqlCall) operand;
+            //~ SqlCaseOperator ---------
             if (call.operator instanceof SqlCaseOperator) {
                 SqlCase caseCall = (SqlCase) call;
                 List whenList = caseCall.getWhenOperands();
@@ -687,8 +772,33 @@ public class SqlValidator
                 setValidatedNodeType(caseCall.getElseOperand(), nodeType);
                 return call.operator.getType(this, scope, call);
             }
-            if(call.operator instanceof SqlFunction ||
-               call.operator instanceof SqlBinaryOperator ||
+            //~ FunctionCall ---------
+            if(call.operator instanceof SqlFunction) {
+                SqlCall node = (SqlCall) operand;
+                SqlNode[] operands = node.getOperands();
+                SaffronType[] argTypes = new SaffronType[operands.length];
+                int start=0;
+                int stop =operands.length;
+                //special cases
+                if (call.operator.equals(SqlFunctionTable.instance().trimFunc)) {
+                    start=1;
+                }
+
+                for (int i = start; i < stop; ++i) {
+                    SaffronType nodeType = deriveType(scope, operands[i]);
+                    setValidatedNodeType(operands[i], nodeType);
+                    argTypes[i] = nodeType;
+                }
+
+                SqlFunction function = SqlFunctionTable.instance().lookup(call.operator.name, argTypes);
+                if (function == null) {
+                    throw SaffronResource.instance().newFunctionNotFound(call.operator.name);
+                }
+                call.operator = function;
+                return call.operator.getType(this, scope, call);
+            }
+            //~ Unary and Binary Operators ---------
+            if(call.operator instanceof SqlBinaryOperator ||
                call.operator instanceof SqlPostfixOperator ||
                call.operator instanceof SqlPrefixOperator ) {
                 // REVIEW: do we need to get the type for special operator?
@@ -707,10 +817,55 @@ public class SqlValidator
                     setValidatedNodeType(operands[i], nodeType);
                     argTypes[i] = nodeType;
                 }
-                if (call.operator instanceof SqlFunction) {
-                    call.operator = SqlFunctionTable.instance().lookup(call.operator.name, argTypes);
+                type = call.operator.getType(this, scope, call);
+                if (operand.isA(SqlKind.As)) {
+                    return type;
                 }
-                return call.operator.getType(this, scope, call);
+
+                //validate and determine coercibility and resulting collation name of binary operator if needed
+                if (call.operator instanceof SqlBinaryOperator) {
+                    SaffronType operandType1 = getValidatedNodeType(call.operands[0]);
+                    SaffronType operandType2 = getValidatedNodeType(call.operands[1]);
+                    if (null==operandType1 || null==operandType2) {
+                        throw Util.newInternal("operands' types should have been derived");
+                    }
+                    if (operandType1.isCharType() && operandType2.isCharType()){
+                        Charset cs1 = operandType1.getCharset();
+                        Charset cs2 = operandType2.getCharset();
+                        assert(null!=cs1 && null!=cs2) : "An implicit or explicit charset should have been set";
+                        if (!cs1.equals(cs2)) {
+                            throw newValidationError("Can not apply '"+call.operator.name+
+                                                   "' to the two differnet charsets "+cs1.name()+" and "+cs2.name());
+                        }
+
+                        SqlCollation col1 = operandType1.getCollation();
+                        SqlCollation col2 = operandType2.getCollation();
+                        assert(null!=col1 && null!=col2) :
+                                "An implicit or explicit collation should have been set";
+                        //validation will occur inside getCoercibilityDyadicOperator...
+
+
+                        SqlCollation resultCol = SqlCollation.getCoercibilityDyadicOperator(col1,  col2);
+
+                        if (type.isCharType()) {
+                            type.setCollation(resultCol);
+                        }
+                    }
+                }
+                //determine coercibility and resulting collation name of unary operator if needed
+                else if (type.isCharType()) {
+                    SaffronType operandType = getValidatedNodeType(call.operands[0]);
+                    if (null==operandType) {
+                        throw Util.newInternal("operand's type should have been derived");
+                    }
+                    if (operandType.isCharType()){
+                        SqlCollation collation = operandType.getCollation();
+                        assert(null!=collation) : "An implicit or explicit collation should have been set";
+                        type.setCollation(new SqlCollation(collation.getCollationName(), collation.getCoercibility()));
+                    }
+                }
+                checkCharsetAndCollateConsistentIfCharType(type);
+                return type;
             } else {
                 // TODO: if function can take record type (select statement) as parameter,
                 // we need to derive type of SqlSelectOperator, SqlJoinOperator etc here.
@@ -725,18 +880,19 @@ public class SqlValidator
     private void inferUnknownTypes(
         SaffronType inferredType,Scope scope,SqlNode node)
     {
-        if ((node instanceof SqlDynamicParam) || SqlLiteral.
-                isNullLiteral(node)) {
+        if ((node instanceof SqlDynamicParam) || SqlLiteral.isNullLiteral(node)) {
             if (inferredType.equals(unknownType)) {
                 // TODO: scrape up some positional context information
                 throw newValidationError(
                     "Unable to infer type for " + node);
             }
             // REVIEW:  should dynamic parameter types always be nullable?
-            setValidatedNodeType(
-                node,
-                typeFactory.createTypeWithNullability(
-                    inferredType,true));
+            SaffronType newInferredType= typeFactory.createTypeWithNullability(inferredType,true);
+            if (inferredType.isCharType()) {
+                newInferredType.setCharset(inferredType.getCharset());
+                newInferredType.setCollation(inferredType.getCollation());
+            }
+            setValidatedNodeType(node, newInferredType);
         } else if (node instanceof SqlNodeList) {
             SqlNodeList nodeList = (SqlNodeList) node;
             if (inferredType.isProject()) {
@@ -804,6 +960,7 @@ public class SqlValidator
             for (int i = 0; i < operands.length; ++i) {
                 inferUnknownTypes(operandTypes[i],scope,operands[i]);
             }
+
         }
     }
 
@@ -879,7 +1036,7 @@ public class SqlValidator
 
     protected RuntimeException newValidationError(String s)
     {
-        return new RuntimeException(s);
+        return SaffronResource.instance().newValidationError(s);
     }
 
     /**
@@ -1156,6 +1313,7 @@ public class SqlValidator
             inferUnknownTypes(
                 typeFactory.createSqlType(SqlTypeName.Boolean),
                 scope,where);
+            deriveType(scope, where);
         }
         SqlNodeList group = select.getGroup();
         if (group != null) {
@@ -1398,9 +1556,8 @@ public class SqlValidator
             case 1: {
                 final String columnName = identifier.names[0];
                 final String tableName = findQualifyingTableName(columnName);
-                return new SqlIdentifier(
-                    new String [] { tableName,columnName },
-                    null);
+                //todo: do implicit collation here
+                return new SqlIdentifier(new String [] { tableName,columnName });
             }
             case 2: {
                 final String tableName = identifier.names[0];

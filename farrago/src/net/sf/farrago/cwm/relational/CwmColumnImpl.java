@@ -21,11 +21,13 @@ package net.sf.farrago.cwm.relational;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.ddl.*;
+import net.sf.farrago.fem.med.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.session.*;
+import net.sf.farrago.util.*;
 
 import org.netbeans.mdr.handlers.*;
 import org.netbeans.mdr.storagemodel.*;
@@ -63,28 +65,17 @@ public abstract class CwmColumnImpl extends InstanceHandler
     // implement DdlValidatedElement
     public void validateDefinition(DdlValidator validator,boolean creation)
     {
-        // REVIEW: Currently a non-creation column change is triggered by
-        // creating an index on it.  For that case, we don't need to
-        // revalidate stuff like types.  But eventually, ALTER TABLE may
-        // require us to do some work here.
-        if (!creation) {
-            return;
-        }
-
-        if (getOwner() instanceof CwmView) {
-            // CwmViewImpl will call our validateDefinitionImpl explicitly
-            return;
-        }
-
-        validateDefinitionImpl(validator);
+        // let the containing table handle this by calling our
+        // validateDefinitionImpl, since sometimes it has extra work to do
+        // first
     }
 
-    void validateDefinitionImpl(DdlValidator validator)
+    public void validateDefinitionImpl(DdlValidator validator)
     {
-        validateType(validator,this);
+        validateCommon(validator,this);
 
-        CwmExpression defaultExpression = getInitialValue();
-        if (defaultExpression != null) {
+        String defaultExpression = getInitialValue().getBody();
+        if (!defaultExpression.equalsIgnoreCase("NULL")) {
             FarragoSession session = validator.newReentrantSession();
             try {
                 validateDefaultClause(validator,session,defaultExpression);
@@ -111,9 +102,9 @@ public abstract class CwmColumnImpl extends InstanceHandler
     private void validateDefaultClause(
         DdlValidator validator,
         FarragoSession session,
-        CwmExpression defaultExpression)
+        String defaultExpression)
     {
-        String sql = "SELECT " + defaultExpression.getBody()
+        String sql = "SELECT " + defaultExpression
             + " AS DEFAULT_VALUE FROM VALUES(0)";
         FarragoSessionStmtContext stmtContext = session.newStmtContext();
         stmtContext.prepare(sql,false);
@@ -150,10 +141,27 @@ public abstract class CwmColumnImpl extends InstanceHandler
         // make sure the same value comes back.
     }
 
-    public static void validateType(
+    public static void validateCommon(
         DdlValidator validator,
         CwmColumn column)
     {
+        if (column instanceof FemAbstractColumn) {
+            // REVIEW jvs 5-April-2004:  This is kind of sneaky.
+            // Need to reorg all this column stuff.
+            FemAbstractColumn femColumn = (FemAbstractColumn) column;
+            int ordinal = column.getOwner().getFeature().indexOf(column);
+            assert(ordinal != -1);
+            femColumn.setOrdinal(ordinal);
+        }
+
+        if (column.getInitialValue() == null) {
+            CwmExpression nullExpression =
+                validator.getCatalog().newCwmExpression();
+            nullExpression.setLanguage("SQL");
+            nullExpression.setBody("NULL");
+            column.setInitialValue(nullExpression);
+        }
+
         // if NOT NULL not specified, default to nullable
         if (column.getIsNullable() == null) {
             column.setIsNullable(NullableTypeEnum.COLUMN_NULLABLE);
@@ -206,7 +214,10 @@ public abstract class CwmColumnImpl extends InstanceHandler
             }
         }
         if (type.getFamily() == FarragoTypeFamily.CHARACTER) {
-            if (column.getCharacterSetName() == null) {
+            // TODO jvs 18-April-2004:  Should be inheriting these defaults
+            // from schema/catalog.
+            
+            if (JmiUtil.isBlank(column.getCharacterSetName())) {
                 // NOTE: don't leave character set name implicit, since if the
                 // default ever changed, that would invalidate existing data
                 column.setCharacterSetName(
@@ -225,7 +236,7 @@ public abstract class CwmColumnImpl extends InstanceHandler
                 throw Util.needToImplement(charSet);
             }
         } else {
-            if (column.getCharacterSetName() != null) {
+            if (!JmiUtil.isBlank(column.getCharacterSetName())) {
                 throw validator.res.newValidatorCharsetUnexpected(
                     getLocalizedTypeName(validator,column),
                     getLocalizedName(validator,column),
@@ -271,6 +282,19 @@ public abstract class CwmColumnImpl extends InstanceHandler
                     validator.getParserPosString(column));
             }
         }
+
+        // REVIEW jvs 18-April-2004: I had to put these in because CWM declares
+        // them as mandatory.  This is stupid, since CWM also says these fields
+        // are inapplicable for non-character columns.
+        
+        if (column.getCollationName() == null) {
+            column.setCollationName("");
+        }
+        
+        if (column.getCharacterSetName() == null) {
+            column.setCharacterSetName("");
+        }
+        
     }
 
     private static String getLocalizedName(

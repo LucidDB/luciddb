@@ -51,7 +51,7 @@ import javax.jmi.reflect.*;
  * catalog.  By implementing MDRPreChangeListener, it is able to
  * automatically collect references to all objects modified by the statement.
  * (MDRChangeListener isn't suitable since it's asynchronous.)
- * 
+ *
  * <p>
  * Generic validation support is implemented in this class, but
  * object-specific rules should be implemented in the Impl classes for the
@@ -83,7 +83,7 @@ public class DdlValidator extends FarragoCompoundAllocation
     /** Symbolic constant used to mark an element being truncated */
     private static final Integer VALIDATE_TRUNCATION = new Integer(4);
 
-    
+
 
     //~ Instance fields -------------------------------------------------------
 
@@ -93,9 +93,9 @@ public class DdlValidator extends FarragoCompoundAllocation
      * control.
      */
     public final FarragoResource res;
-    
+
     private final FarragoSession invokingSession;
-    
+
     private final FarragoCatalog catalog;
 
     private final FennelDbHandle fennelDbHandle;
@@ -193,7 +193,7 @@ public class DdlValidator extends FarragoCompoundAllocation
         this.connectionDefaults = connectionDefaults;
         this.indexMap = indexMap;
         this.sharedDataWrapperCache = sharedDataWrapperCache;
-        
+
         activeThread = Thread.currentThread();
 
         typeFactory = new FarragoTypeFactoryImpl(catalog);
@@ -293,7 +293,7 @@ public class DdlValidator extends FarragoCompoundAllocation
     {
         return dataWrapperCache;
     }
-    
+
     // implement FarragoSessionDdlValidator
     public FarragoSession newReentrantSession()
     {
@@ -323,7 +323,7 @@ public class DdlValidator extends FarragoCompoundAllocation
     {
         return connectionDefaults;
     }
-    
+
     // implement FarragoSessionDdlValidator
     public boolean isDeletedObject(RefObject refObject)
     {
@@ -444,6 +444,15 @@ public class DdlValidator extends FarragoCompoundAllocation
                 modelElement.setVisibility(VisibilityKindEnum.VK_PUBLIC);
             }
 
+            if (obj instanceof CwmStructuralFeature) {
+                // Set some mandatory but irrelevant attributes.
+                CwmStructuralFeature feature = (CwmStructuralFeature) obj;
+
+                feature.setChangeability(ChangeableKindEnum.CK_CHANGEABLE);
+            }
+
+            JmiUtil.assertConstraints(obj);
+
             if (action == VALIDATE_DELETION) {
                 clearDependencySuppliers(obj);
                 RefFeatured container = obj.refImmediateComposite();
@@ -491,14 +500,14 @@ public class DdlValidator extends FarragoCompoundAllocation
     }
 
     // implement FarragoSessionDdlValidator
-    public CwmColumn findColumn(CwmTable table,String columnName)
+    public CwmColumn findColumn(CwmNamedColumnSet namedColumnSet,String columnName)
     {
         CwmColumn column =
-            (CwmColumn) catalog.getModelElement(table.getFeature(),columnName);
+            (CwmColumn) catalog.getModelElement(namedColumnSet.getFeature(),columnName);
         if (column == null) {
             throw res.newValidatorUnknownColumn(
                 columnName,
-                table.getName(),
+                namedColumnSet.getName(),
                 parser.getCurrentPosition().toString());
         }
         return column;
@@ -552,12 +561,18 @@ public class DdlValidator extends FarragoCompoundAllocation
     }
 
     // implement FarragoSessionDdlValidator
-    public FemDataWrapper findDataWrapper(SqlIdentifier wrapperName)
+    public FemDataWrapper findDataWrapper(
+        SqlIdentifier wrapperName,boolean isForeign)
     {
         FemDataWrapper wrapper = (FemDataWrapper)
             catalog.getModelElement(
                 catalog.medPackage.getFemDataWrapper().refAllOfType(),
                 wrapperName.getSimple());
+        if (wrapper != null) {
+            if (wrapper.isForeign() != isForeign) {
+                wrapper = null;
+            }
+        }
         if (wrapper == null) {
             throw res.newValidatorUnknownObject(
                 catalog.getLocalizedObjectName(
@@ -588,6 +603,13 @@ public class DdlValidator extends FarragoCompoundAllocation
     }
 
     // implement FarragoSessionDdlValidator
+    public FemDataServer getDefaultLocalDataServer()
+    {
+        // TODO:  make this configurable
+        return findDataServer(new SqlIdentifier("SYS_ROWSTORE"));
+    }
+
+    // implement FarragoSessionDdlValidator
     public CwmModelElement findSchemaObject(
         CwmSchema schema,
         SqlIdentifier qualifiedName,
@@ -599,7 +621,7 @@ public class DdlValidator extends FarragoCompoundAllocation
             fcd.schemaCatalogName = schema.getNamespace().getName();
             fcd.schemaName = schema.getName();
         }
-        
+
         FarragoCatalog.ResolvedSchemaObject resolved =
             catalog.resolveSchemaObjectName(
                 fcd,
@@ -630,7 +652,7 @@ public class DdlValidator extends FarragoCompoundAllocation
                     refClass),
                 parser.getCurrentPosition().toString());
         }
-        
+
         return element;
     }
 
@@ -668,11 +690,11 @@ public class DdlValidator extends FarragoCompoundAllocation
         if (activeThread != Thread.currentThread()) {
             // REVIEW:  This isn't going to be good enough if we have
             // reentrant DDL.
-            
+
             // ignore events from other threads
             return;
         }
-        
+
         // NOTE:  do not throw exceptions from this method, because MDR will
         // swallow them!  Instead, use enqueueValidationExcn(), and the
         // exception will be thrown when validate() is called.
@@ -740,7 +762,7 @@ public class DdlValidator extends FarragoCompoundAllocation
         this.ddlStmt = ddlStmt;
         ddlStmt.preValidate(this);
         checkValidationExcnQueue();
-        
+
         if (ddlStmt instanceof DdlDropStmt) {
             // Process deletions until a fixpoint is reached, using MDR events
             // to implement RESTRICT/CASCADE.
@@ -768,7 +790,7 @@ public class DdlValidator extends FarragoCompoundAllocation
 
         while (!schedulingMap.isEmpty()) {
             checkValidationExcnQueue();
-            
+
             // Swap in a new map so new scheduling calls aren't handled until
             // the next round.
             transitMap = schedulingMap;
@@ -850,6 +872,9 @@ public class DdlValidator extends FarragoCompoundAllocation
         while (iter.hasNext()) {
             CwmModelElement element = (CwmModelElement) iter.next();
             String name = element.getName();
+            if (name == null) {
+                continue;
+            }
 
             // TODO:  implement includeType, since SQL standard says object
             // names within a schema are distinguished by type.  However, it's
@@ -908,9 +933,9 @@ public class DdlValidator extends FarragoCompoundAllocation
         String kind)
     {
         CwmDependency dependency = catalog.newCwmDependency();
-        dependency.setName(client.getName());
+        dependency.setName(client.getName()+"$DEP");
         dependency.setKind(kind);
-        
+
         Iterator iter = suppliers.iterator();
         while (iter.hasNext()) {
             Object supplier = iter.next();
@@ -988,7 +1013,7 @@ public class DdlValidator extends FarragoCompoundAllocation
         // deleted.  Instead, defer until after rollback.
         final String mofId = droppedEnd.refMofId();
         enqueueValidationExcn(
-            new DeferredException() 
+            new DeferredException()
             {
                 FarragoException getException()
                 {
@@ -1105,11 +1130,11 @@ public class DdlValidator extends FarragoCompoundAllocation
      * This is needed since it is not possible to correctly construct
      * an exception in certain validation contexts.
      */
-    private static abstract class DeferredException 
+    private static abstract class DeferredException
     {
         abstract FarragoException getException();
     }
-    
+
 }
 
 

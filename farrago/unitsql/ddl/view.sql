@@ -92,4 +92,4 @@ select * from v8;
 select * from v11;
 
 -- make sure dependencies got dropped too
-select "name" from sys_cwm."Core"."Dependency" where "name"='V8';
+select "name" from sys_cwm."Core"."Dependency" where "name"='V8$DEP';

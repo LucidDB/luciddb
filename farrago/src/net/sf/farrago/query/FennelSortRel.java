@@ -41,7 +41,7 @@ import java.util.List;
  * @author John V. Sichi
  * @version $Id$
  */
-class FennelSortRel extends FennelSingleRel
+public class FennelSortRel extends FennelSingleRel
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -49,10 +49,10 @@ class FennelSortRel extends FennelSingleRel
      * 0-based ordinals of fields on which to sort, from most significant to
      * least significant.
      */
-    final Integer [] keyProjection;
+    public final Integer [] keyProjection;
 
     /** Whether to discard tuples with duplicate keys. */
-    final boolean discardDuplicates;
+    public final boolean discardDuplicates;
 
     //~ Constructors ----------------------------------------------------------
 

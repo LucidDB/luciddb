@@ -123,6 +123,8 @@ public abstract class CwmSqlindexImpl extends InstanceHandler
         } else {
             setNamespace(getTable().getNamespace());
         }
+
+        setFilterCondition("TRUE");
     }
 
     // implement DdlValidatedElement

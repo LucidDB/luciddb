@@ -33,33 +33,31 @@ import net.sf.saffron.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class FarragoView extends FarragoTable
+class FarragoView extends FarragoQueryNamedColumnSet
 {
     /**
      * Creates a new FarragoView object.
      *
-     * @param preparingStmt statement through which this view is being accessed
      * @param cwmView catalog definition for view
      * @param rowType type for rows produced by view
      */
     FarragoView(
-        FarragoPreparingStmt preparingStmt,
         CwmNamedColumnSet cwmView,
         SaffronType rowType)
     {
-        super(preparingStmt,cwmView,rowType);
+        super(cwmView,rowType);
     }
 
     public CwmView getCwmView()
     {
-        return (CwmView) cwmTable;
+        return (CwmView) getCwmColumnSet();
     }
     
     // implement SaffronTable
     public SaffronRel toRel(VolcanoCluster cluster,SaffronConnection connection)
     {
         // REVIEW:  cache view definition?
-        SaffronRel rel = preparingStmt.expandView(
+        SaffronRel rel = getPreparingStmt().expandView(
             getCwmView().getQueryExpression().getBody());
         return OptUtil.createRenameRel(
             getRowType(),

@@ -17,13 +17,14 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-package net.sf.farrago.query;
+package net.sf.farrago.namespace.ftrs;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.keysindexes.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
+import net.sf.farrago.query.*;
 
 import net.sf.saffron.core.*;
 import net.sf.saffron.opt.*;
@@ -38,26 +39,26 @@ import java.util.List;
 
 
 /**
- * FennelScanToSearchRule is a rule for converting FilterRel+FennelIndexScanRel
- * into FennelIndexSearchRel (when the filter has the appropriate form).
+ * FtrsScanToSearchRule is a rule for converting FilterRel+FtrsIndexScanRel
+ * into FtrsIndexSearchRel (when the filter has the appropriate form).
  *
  * @author John V. Sichi
  * @version $Id$
  */
-class FennelScanToSearchRule extends VolcanoRule
+class FtrsScanToSearchRule extends VolcanoRule
 {
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Creates a new FennelScanToSearchRule object.
+     * Creates a new FtrsScanToSearchRule object.
      */
-    public FennelScanToSearchRule()
+    public FtrsScanToSearchRule()
     {
         super(
             new RuleOperand(
                 FilterRel.class,
                 new RuleOperand [] {
-                    new RuleOperand(FennelIndexScanRel.class,null)
+                    new RuleOperand(FtrsIndexScanRel.class,null)
                 }));
     }
 
@@ -73,7 +74,7 @@ class FennelScanToSearchRule extends VolcanoRule
     public void onMatch(VolcanoRuleCall call)
     {
         FilterRel filter = (FilterRel) call.rels[0];
-        FennelIndexScanRel scan = (FennelIndexScanRel) call.rels[1];
+        FtrsIndexScanRel scan = (FtrsIndexScanRel) call.rels[1];
 
         FarragoCatalog catalog = scan.getPreparingStmt().getCatalog();
 
@@ -106,14 +107,15 @@ class FennelScanToSearchRule extends VolcanoRule
             return;
         }
         RexInputRef fieldAccess = (RexInputRef) left;
-        CwmColumn filterColumn = scan.getColumnForFieldAccess(fieldAccess.index);
+        CwmColumn filterColumn = scan.getColumnForFieldAccess(
+            fieldAccess.index);
         assert (filterColumn != null);
 
         if (catalog.isClustered(scan.index)) {
             // if we're working with a clustered index scan, consider all of
             // the unclustered indexes as well
             Iterator iter =
-                catalog.getIndexes(scan.fennelTable.cwmTable).iterator();
+                catalog.getIndexes(scan.ftrsTable.getCwmColumnSet()).iterator();
             while (iter.hasNext()) {
                 CwmSqlindex index = (CwmSqlindex) iter.next();
                 considerIndex(index,scan,filterColumn,right,call,extraFilter);
@@ -140,7 +142,7 @@ class FennelScanToSearchRule extends VolcanoRule
 
     private void considerIndex(
         CwmSqlindex index,
-        FennelIndexScanRel origScan,
+        FtrsIndexScanRel origScan,
         CwmColumn filterColumn,
         RexNode searchValue,
         VolcanoRuleCall call,
@@ -201,25 +203,25 @@ class FennelScanToSearchRule extends VolcanoRule
                 FennelRelUtil.getClusteredDistinctKeyArray(
                     catalog,
                     origScan.index);
-            FennelIndexScanRel unclusteredScan =
-                new FennelIndexScanRel(
+            FtrsIndexScanRel unclusteredScan =
+                new FtrsIndexScanRel(
                     origScan.getCluster(),
-                    origScan.fennelTable,
+                    origScan.ftrsTable,
                     index,
                     origScan.getConnection(),
                     clusteredKeyColumns,
                     origScan.isOrderPreserving);
-            FennelIndexSearchRel unclusteredSearch =
-                new FennelIndexSearchRel(
+            FtrsIndexSearchRel unclusteredSearch =
+                new FtrsIndexSearchRel(
                     unclusteredScan,keyInput,isUnique,false,null,null);
-            FennelIndexSearchRel clusteredSearch =
-                new FennelIndexSearchRel(
+            FtrsIndexSearchRel clusteredSearch =
+                new FtrsIndexSearchRel(
                     origScan,unclusteredSearch,true,false,null,null);
             transformCall(call,clusteredSearch,extraFilter);
         } else {
             // A direct search against an index is easier.
-            FennelIndexSearchRel search =
-                new FennelIndexSearchRel(
+            FtrsIndexSearchRel search =
+                new FtrsIndexSearchRel(
                     origScan,keyInput,isUnique,false,null,null);
             transformCall(call,search,extraFilter);
         }
@@ -237,4 +239,4 @@ class FennelScanToSearchRule extends VolcanoRule
 }
 
 
-// End FennelScanToSearchRule.java
+// End FtrsScanToSearchRule.java

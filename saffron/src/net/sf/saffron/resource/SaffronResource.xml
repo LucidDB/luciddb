@@ -46,6 +46,25 @@
     <text>Assertion Error: {0}</text>
 </exception>
 
+<exception id="5" name="FunctionNotFound">
+    <text>Function ''{0}'' does not exist</text>
+</exception>
+
+<exception id="6" name="ArgumentMustBeLiteral">
+    <text>Argument to function ''{0}'' must be a literal</text>
+</exception>
+
+<exception id="7" name="ArgumentMustBePositiveInteger">
+        <text>Argument to function ''{0}'' must be a positive integer</text>
+    </exception>
+
+<exception id="8" name="ValidationError">
+    <text>Validation Error: {0}</text>
+</exception>
+
+<exception id="9" name="ParserError">
+    <text>Parser Error: {0}</text>
+</exception>
 
 <!-- End of last error section ============================================ -->
 

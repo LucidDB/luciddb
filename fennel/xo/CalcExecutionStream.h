@@ -35,6 +35,8 @@ FENNEL_BEGIN_NAMESPACE
 struct CalcExecutionStreamParams
 {
     std::string program;
+
+    bool isFilter;
 };
 
 // REVIEW jvs 25-Mar-2004: CalcExecutionStream should inherit from
@@ -80,6 +82,14 @@ protected:
      * The Calculator object which does the real work.
      */
     SharedCalculator pCalc;
+
+    /**
+     * If this stream filters tuples, pFilterDatum refers to the boolean
+     * TupleDatum containing the filter status; otherwise, pFilterDatum is
+     * NULL, and the result cardinality is always equal to the input
+     * cardinality.
+     */
+    TupleDatum const *pFilterDatum;
     
     virtual ~CalcExecutionStream();
 

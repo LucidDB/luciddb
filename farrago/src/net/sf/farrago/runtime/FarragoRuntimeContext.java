@@ -414,6 +414,18 @@ public class FarragoRuntimeContext
         }
     }
 
+     /**
+     * Called when a nullable value is cast to a NOT NULL type.
+     *
+     * @param obj source value
+     */
+    public static void checkNotNull(Object obj)
+    {
+        if (null == obj) {
+            throw FarragoResource.instance().newNullNotAllowed();
+        }
+    }
+
     private void setCacheQuotas(FemTupleStreamDef streamDef)
     {
         assert (streamDef.getCachePageMin() <= streamDef.getCachePageMax());

@@ -14,8 +14,11 @@ RegisterReference.cpp \
 CalcGrammar.ypp \
 CalcLexer.lpp \
 CalcAssembler.cpp \
+CalcInit.cpp \
+SqlString.cpp \
 SqlStringAscii.cpp \
-ExtString.cpp
+ExtString.cpp \
+StringToHex.cpp
 
 # noinst_PROGRAMS =    \
 # testCalc tuple testCalcAssembler testCalcExtString
@@ -34,7 +37,12 @@ LDADD = -L$(top_builddir)/calc      \
 		-lfennel_common     \
 	$(EXTRA_LDFLAGS)
 
-# Cygwin Fix:
+DESIGN_DOC=ExtendedInstructionHowTo.cpp
+EXTRA_DIST=$(DESIGN_DOC)
+TAGS_DEPENDENCIES=$(DESIGN_DOC)
+ETAGS_ARGS=$(DESIGN_DOC)
+
+# Flex workaround:
 # Explictly define how to generate a .cpp file from a flex .lpp file
 # This is exactly what automake will do normally, 
 # except we insert the line
@@ -47,4 +55,3 @@ LDADD = -L$(top_builddir)/calc      \
 	echo "#include \"fennel/common/CommonPreamble.h\"" > $@
 	sed '/^#/ s|$(LEX_OUTPUT_ROOT)\.c|$@|' $(LEX_OUTPUT_ROOT).c >> $@
 	rm -f $(LEX_OUTPUT_ROOT).c
-

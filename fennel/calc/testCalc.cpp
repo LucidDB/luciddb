@@ -3560,7 +3560,9 @@ unitTestStatusRegister()
 int main(int argc, char* argv[])
 {
     ProgramName = argv[0];
-        
+
+    CalcInit::instance();
+
     unitTestBool();
     unitTestLong();
     unitTestFloat();

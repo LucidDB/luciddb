@@ -91,6 +91,19 @@ According to the standard, foreign data wrappers are catalog objects.
 In Farrago, they are implicitly created under the SYS_BOOT catalog
 (and so must have top-level unique names).
 
+<p>
+
+As an extension, Farrago also allows a foreign data wrapper to be
+specified as the fully-qualified name of a class available on
+the server's classpath (instead of in a particular JAR file):
+
+<pre><code>
+CREATE FOREIGN DATA WRAPPER xml_
+LIBRARY 'class com.yoyodyne.farrago.plugin.xml.FarragoXmlDataWrapper'
+LANGUAGE JAVA
+OPTIONS ( protocol 'TCP/IP' )
+</code></pre>
+
 <h2>Foreign Server Definition</h2>
 
 Once a foreign data wrapper has been installed, it can be bound to data

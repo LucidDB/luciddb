@@ -15,6 +15,7 @@ CalcTupleStream.cpp \
 CartesianProductStream.cpp \
 ConsumerToProducerProvisionAdapter.cpp \
 DoubleInputTupleStream.cpp \
+ExecutionStream.cpp \
 ExecutionStreamGraph.cpp \
 ProducerToConsumerProvisionAdapter.cpp \
 SingleInputTupleStream.cpp \

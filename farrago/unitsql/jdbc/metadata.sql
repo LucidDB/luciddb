@@ -17,5 +17,9 @@
 set catalog sys_boot;
 !tables
 
+-- test getColumns
+set catalog localdb;
+!columns EMPS
+
 -- test misc calls
 !dbinfo

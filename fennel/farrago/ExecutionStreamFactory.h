@@ -162,6 +162,7 @@ class ExecutionStreamFactory : public boost::noncopyable, public FemVisitor
     virtual void visit(ProxyBufferingTupleStreamDef &);
     virtual void visit(ProxyIndexLoaderDef &);
     virtual void visit(ProxyCartesianProductStreamDef &);
+    virtual void visit(ProxyCalcTupleStreamDef &);
 
     // helpers for above visitors
 
@@ -208,6 +209,19 @@ public:
     const ExecutionStreamFactors &visitStream(
         ProxyExecutionStreamDef &);
 
+    const ExecutionStreamFactors &newTracingStream(
+        TraceTarget &traceTarget,
+        std::string &name,
+        ExecutionStreamParams &params);
+
+    const ExecutionStreamFactors &newConsumerToProducerProvisionAdapter(
+        std::string &name,
+        ExecutionStreamParams &params);
+    
+    const ExecutionStreamFactors &newProducerToConsumerProvisionAdapter(
+        std::string &name,
+        ExecutionStreamParams &params);
+    
     // Some static utilities which are also used in non-stream contexts.  TODO:
     // move somewhere more appropriate.
 

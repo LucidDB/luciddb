@@ -34,35 +34,33 @@ import net.sf.saffron.rel.*;
  * @author John V. Sichi
  * @version $Id$
  */
-abstract class FarragoTable
+public abstract class FarragoQueryNamedColumnSet
     extends AbstractTable
-    implements FarragoMedColumnSet
+    implements FarragoQueryColumnSet
 {
     //~ Instance fields -------------------------------------------------------
 
-    /** Catalog definition of table. */
-    protected final CwmNamedColumnSet cwmTable;
+    /** Catalog definition of column set. */
+    private CwmNamedColumnSet cwmColumnSet;
 
     /** Refinement for AbstractTable.schema. */
-    protected final FarragoPreparingStmt preparingStmt;
+    private FarragoPreparingStmt preparingStmt;
 
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Creates a new FarragoTable object.
+     * Creates a new FarragoQueryNamedColumnSet object.
      *
-     * @param preparingStmt statement through which this table is being accessed
-     * @param cwmTable catalog definition for table
-     * @param rowType type for rows stored in table
+     * @param cwmTable catalog definition for column set
+     *
+     * @param rowType type for rows stored in column set
      */
-    FarragoTable(
-        FarragoPreparingStmt preparingStmt,
-        CwmNamedColumnSet cwmTable,
+    FarragoQueryNamedColumnSet(
+        CwmNamedColumnSet cwmColumnSet,
         SaffronType rowType)
     {
-        super(preparingStmt,cwmTable.getName(),rowType);
-        this.preparingStmt = preparingStmt;
-        this.cwmTable = cwmTable;
+        super(null,cwmColumnSet.getName(),rowType);
+        this.cwmColumnSet = cwmColumnSet;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -72,9 +70,34 @@ abstract class FarragoTable
     {
         return new String [] 
             {
-                cwmTable.getNamespace().getNamespace().getName(),
-                cwmTable.getNamespace().getName(),
-                cwmTable.getName() };
+                cwmColumnSet.getNamespace().getNamespace().getName(),
+                cwmColumnSet.getNamespace().getName(),
+                cwmColumnSet.getName()
+            };
+    }
+
+    // implement FarragoQueryColumnSet
+    public FarragoPreparingStmt getPreparingStmt()
+    {
+        return preparingStmt;
+    }
+    
+    // implement FarragoQueryColumnSet
+    public void setPreparingStmt(FarragoPreparingStmt stmt)
+    {
+        preparingStmt = stmt;
+    }
+    
+    // implement FarragoQueryColumnSet
+    public void setCwmColumnSet(CwmNamedColumnSet cwmColumnSet)
+    {
+        this.cwmColumnSet = cwmColumnSet;
+    }
+
+    // implement FarragoQueryColumnSet
+    public CwmNamedColumnSet getCwmColumnSet()
+    {
+        return cwmColumnSet;
     }
 }
 

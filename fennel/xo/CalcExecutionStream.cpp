@@ -34,6 +34,12 @@ void CalcExecutionStream::prepare(
 {
     pCalc.reset(new Calculator());
     pCalc->assemble(params.program.c_str());
+
+    if (params.isFilter) {
+        pFilterDatum = &((*(pCalc->getStatusRegister()))[0]);
+    } else {
+        pFilterDatum = NULL;
+    }
     
     assert(pCalc->getInputRegisterDescriptor() == inputDesc);
 
@@ -85,11 +91,13 @@ PBuffer CalcExecutionStream::execute(
             inputAccessor.setCurrentTupleBuf(pNextInputTuple);
             inputAccessor.unmarshal(inputData);
             pCalc->exec();
-            // TODO:  figure out how to get filter status
-            bool filterPassed = true;
-            if (!filterPassed) {
-                pNextInputTuple += inputAccessor.getCurrentByteCount();
-                inputAccessor.resetCurrentTupleBuf();
+            if (pFilterDatum) {
+                bool filterPassed = *reinterpret_cast<bool const *>(
+                    pFilterDatum->pData);
+                if (!filterPassed) {
+                    pNextInputTuple += inputAccessor.getCurrentByteCount();
+                    inputAccessor.resetCurrentTupleBuf();
+                }
             }
         }
         if (!outputAccessor.isBufferSufficient(

@@ -17,7 +17,9 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-package net.sf.farrago.query;
+package net.sf.farrago.namespace.ftrs;
+
+import net.sf.farrago.query.*;
 
 import net.sf.saffron.opt.*;
 import net.sf.saffron.rel.*;
@@ -25,20 +27,20 @@ import net.sf.saffron.util.*;
 
 
 /**
- * FennelTableModificationRule is a rule for converting an abstract
- * TableModification into a corresponding FennelTableModificationRel.
+ * FtrsTableModificationRule is a rule for converting an abstract
+ * TableModification into a corresponding FtrsTableModificationRel.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-class FennelTableModificationRule extends VolcanoRule
+class FtrsTableModificationRule extends VolcanoRule
 {
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Creates a new FennelTableModificationRule object.
+     * Creates a new FtrsTableModificationRule object.
      */
-    public FennelTableModificationRule()
+    public FtrsTableModificationRule()
     {
         super(
             new RuleOperand(
@@ -60,7 +62,7 @@ class FennelTableModificationRule extends VolcanoRule
         TableModificationRel tableModification =
             (TableModificationRel) call.rels[0];
 
-        if (!(tableModification.getTable() instanceof FennelTable)) {
+        if (!(tableModification.getTable() instanceof FtrsTable)) {
             return;
         }
 
@@ -81,10 +83,10 @@ class FennelTableModificationRule extends VolcanoRule
             return;
         }
 
-        FennelTableModificationRel fennelModificationRel =
-            new FennelTableModificationRel(
+        FtrsTableModificationRel fennelModificationRel =
+            new FtrsTableModificationRel(
                 tableModification.getCluster(),
-                (FennelTable) tableModification.getTable(),
+                (FtrsTable) tableModification.getTable(),
                 tableModification.getConnection(),
                 fennelInput,
                 tableModification.getOperation(),
@@ -95,4 +97,4 @@ class FennelTableModificationRule extends VolcanoRule
 }
 
 
-// End FennelTableModificationRule.java
+// End FtrsTableModificationRule.java

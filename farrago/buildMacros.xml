@@ -17,6 +17,16 @@
 
 <project name="farragoBuildMacros" default="unspecified">
 
+  <!-- classpath for running from iSQL -->
+  <path id="isql.classpath">
+    <pathelement location="${isql.dir}/isql-core.jar"/>
+    <pathelement location="${isql.dir}/xerces.jar"/>
+    <pathelement location="${isql.dir}/base64codec.jar"/>
+    <pathelement location="${isql.dir}/bsf.jar"/>
+    <pathelement location="${isql.dir}/jpython1.1.jar"/>
+  </path>
+  <property name="isql.classpath" refid="isql.classpath"/>
+
   <!-- NOTE: there's an ant bug preventing the use of mixed case names
   for macro elements -->
 
@@ -118,6 +128,18 @@
     <delete>
       <fileset dir="." includes="mdr.bt*"/>
     </delete>
+    </sequential>
+  </macrodef>
+
+  <macrodef name="iSQL">
+    <attribute name="classpath" default="unspecified"/>
+    <attribute name="propertieshome" default="unspecified"/>
+    <sequential>
+    <javaExec
+      classname="org.isqlviewer.core.Launcher"
+      classpathref="@{classpath}">
+      <sysproperty key="isql.home" value="@{propertieshome}" />
+    </javaExec>
     </sequential>
   </macrodef>
 

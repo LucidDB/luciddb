@@ -21,15 +21,12 @@
 package net.sf.saffron.test;
 
 import junit.framework.TestCase;
-import net.sf.saffron.rex.RexBuilder;
-import net.sf.saffron.rex.RexNode;
-import net.sf.saffron.rex.RexInputRef;
-import net.sf.saffron.rex.RexLiteral;
+import net.sf.saffron.rex.*;
 import net.sf.saffron.oj.util.JavaRexBuilder;
 import net.sf.saffron.oj.OJTypeFactoryImpl;
 import net.sf.saffron.core.SaffronTypeFactory;
-import net.sf.saffron.core.SaffronTypeFactoryImpl;
-import net.sf.saffron.opt.RexTransformer;
+import net.sf.saffron.core.SaffronType;
+import net.sf.saffron.rex.RexTransformer;
 import net.sf.saffron.sql.type.SqlTypeName;
 import net.sf.saffron.sql.SqlOperatorTable;
 
@@ -40,8 +37,6 @@ import net.sf.saffron.sql.SqlOperatorTable;
  * @since Mar 9, 2004
  * @version $Id$
  **/
-
-
 public class RexTransformerTest extends TestCase
 {
     RexBuilder rexBuilder = null;
@@ -51,22 +46,36 @@ public class RexTransformerTest extends TestCase
     RexNode z;
     RexNode trueRex;
     RexNode falseRex;
+    SaffronType boolSaffronType;
     SaffronTypeFactory typeFactory;
 
     protected void setUp() throws Exception {
 //        typeFactory = new SaffronTypeFactoryImpl();
         typeFactory = new OJTypeFactoryImpl();
         rexBuilder = new JavaRexBuilder(typeFactory);
+        boolSaffronType =typeFactory.createSqlType(SqlTypeName.Boolean);
 
-        x = new RexInputRef(0, typeFactory.createSqlType(SqlTypeName.Boolean));
-        y = new RexInputRef(1, typeFactory.createSqlType(SqlTypeName.Boolean));
-        z = new RexInputRef(2, typeFactory.createSqlType(SqlTypeName.Boolean));
+        x = new RexInputRef(0, typeFactory.createTypeWithNullability(
+                               boolSaffronType, true));
+        y = new RexInputRef(1, typeFactory.createTypeWithNullability(
+                               boolSaffronType, true));
+        z = new RexInputRef(2, typeFactory.createTypeWithNullability(
+                               boolSaffronType, true));
         trueRex = rexBuilder.makeLiteral(true);
         falseRex = rexBuilder.makeLiteral(false);
     }
 
-    void check(RexNode node, String expected) {
-        RexTransformer transformer = new RexTransformer(node, rexBuilder);
+    void check(Boolean encapsulateType, RexNode node, String expected) {
+        RexNode root;
+        if (null==encapsulateType) {
+            root=node;
+        } else if (encapsulateType.equals(Boolean.TRUE)) {
+            root = rexBuilder.makeCall(opTab.isTrueOperator, node);
+        } else { //if (encapsulateType.equals(Boolean.FALSE))
+            root = rexBuilder.makeCall(opTab.isFalseOperator, node);
+        }
+
+        RexTransformer transformer = new RexTransformer(root, rexBuilder);
         RexNode result = transformer.tranformNullSemantics();
         String actual = result.toString();
         if (!actual.equals(expected)){
@@ -92,7 +101,9 @@ public class RexTransformerTest extends TestCase
     public void testNonBooleans() {
         RexNode node = rexBuilder.makeCall(opTab.plusOperator, x, y);
         String expected = node.toString();
-        check(node, expected);
+        check(Boolean.TRUE, node, expected);
+        check(Boolean.FALSE, node, expected);
+        check(null, node, expected);
     }
 
     /**
@@ -103,56 +114,63 @@ public class RexTransformerTest extends TestCase
     public void testOrUnchanged() {
         RexNode node = rexBuilder.makeCall(opTab.orOperator, x, y);
         String expected = node.toString();
-        check(node, expected);
+        check(Boolean.TRUE,node, expected);
+        check(Boolean.FALSE,node, expected);
+        check(null,node, expected);
     }
 
     public void testSimpleAnd() {
         RexNode node = rexBuilder.makeCall(opTab.andOperator, x, y);
-        check(node, "AND(AND(IS NOT NULL($0), IS NOT NULL($1)), AND($0, $1))");
+        check(Boolean.FALSE,node, "AND(AND(IS NOT NULL($0), IS NOT NULL($1)), AND($0, $1))");
     }
 
     public void testSimpleEquals() {
         RexNode node = rexBuilder.makeCall(opTab.equalsOperator, x, y);
-        check(node, "AND(AND(IS NOT NULL($0), IS NOT NULL($1)), =($0, $1))");
+        check(Boolean.TRUE,node, "AND(AND(IS NOT NULL($0), IS NOT NULL($1)), =($0, $1))");
     }
 
     public void testSimpleNotEquals() {
         RexNode node = rexBuilder.makeCall(opTab.notEqualsOperator, x, y);
-        check(node, "AND(AND(IS NOT NULL($0), IS NOT NULL($1)), <>($0, $1))");
+        check(Boolean.FALSE,node, "AND(AND(IS NOT NULL($0), IS NOT NULL($1)), <>($0, $1))");
     }
 
     public void testSimpleGreaterThan() {
         RexNode node = rexBuilder.makeCall(opTab.greaterThanOperator, x, y);
-        check(node, "AND(AND(IS NOT NULL($0), IS NOT NULL($1)), >($0, $1))");
+        check(Boolean.TRUE,node, "AND(AND(IS NOT NULL($0), IS NOT NULL($1)), >($0, $1))");
     }
 
     public void testSimpleGreaterEquals() {
         RexNode node = rexBuilder.makeCall(opTab.greaterThanOrEqualOperator, x, y);
-        check(node, "AND(AND(IS NOT NULL($0), IS NOT NULL($1)), >=($0, $1))");
+        check(Boolean.FALSE,node, "AND(AND(IS NOT NULL($0), IS NOT NULL($1)), >=($0, $1))");
     }
 
     public void testSimpleLessThan() {
         RexNode node = rexBuilder.makeCall(opTab.lessThanOperator, x, y);
-        check(node, "AND(AND(IS NOT NULL($0), IS NOT NULL($1)), <($0, $1))");
+        check(Boolean.TRUE,node, "AND(AND(IS NOT NULL($0), IS NOT NULL($1)), <($0, $1))");
     }
 
     public void testSimpleLessEqual() {
         RexNode node = rexBuilder.makeCall(opTab.lessThanOrEqualOperator, x, y);
-        check(node, "AND(AND(IS NOT NULL($0), IS NOT NULL($1)), <=($0, $1))");
+        check(Boolean.FALSE,node, "AND(AND(IS NOT NULL($0), IS NOT NULL($1)), <=($0, $1))");
     }
 
     public void testOptimizeNonNullLiterals() {
         RexNode node = rexBuilder.makeCall(opTab.lessThanOrEqualOperator, x, trueRex);
-        check(node, "AND(IS NOT NULL($0), <=($0, true))");
+        check(Boolean.TRUE,node, "AND(IS NOT NULL($0), <=($0, true))");
         node = rexBuilder.makeCall(opTab.lessThanOrEqualOperator, trueRex, x);
-        check(node, "AND(IS NOT NULL($0), <=(true, $0))");
+        check(Boolean.FALSE,node, "AND(IS NOT NULL($0), <=(true, $0))");
+    }
+
+    public void testSimpleIdentifier() {
+        RexNode node= rexBuilder.makeInputRef(boolSaffronType, 0);
+        check(Boolean.TRUE,node,"AND(IS NOT NULL($0), =($0, true))");
     }
 
     public void testMixed1() {
         //x=true AND y
         RexNode op1 = rexBuilder.makeCall(opTab.equalsOperator, x, trueRex);
         RexNode and = rexBuilder.makeCall(opTab.andOperator, op1, y);
-        check(and, "AND(IS NOT NULL($1), AND(AND(IS NOT NULL($0), =($0, true)), $1))");
+        check(Boolean.FALSE,and, "AND(IS NOT NULL($1), AND(AND(IS NOT NULL($0), =($0, true)), $1))");
     }
 
     public void testMixed2() {
@@ -160,7 +178,7 @@ public class RexTransformerTest extends TestCase
         RexNode op1 = rexBuilder.makeCall(opTab.notEqualsOperator, x, trueRex);
         RexNode op2 = rexBuilder.makeCall(opTab.greaterThanOperator, y, z);
         RexNode and = rexBuilder.makeCall(opTab.andOperator, op1, op2);
-        check(and, "AND(AND(IS NOT NULL($0), <>($0, true)), AND(AND(IS NOT NULL($1), IS NOT NULL($2)), >($1, $2)))");
+        check(Boolean.FALSE,and, "AND(AND(IS NOT NULL($0), <>($0, true)), AND(AND(IS NOT NULL($1), IS NOT NULL($2)), >($1, $2)))");
     }
 
     public void testMixed3() {
@@ -168,7 +186,7 @@ public class RexTransformerTest extends TestCase
         RexNode op1 = rexBuilder.makeCall(opTab.equalsOperator, x, y);
         RexNode op2 = rexBuilder.makeCall(opTab.greaterThanOperator, falseRex, z);
         RexNode and = rexBuilder.makeCall(opTab.andOperator, op1, op2);
-        check(and, "AND(AND(AND(IS NOT NULL($0), IS NOT NULL($1)), =($0, $1)), AND(IS NOT NULL($2), >(false, $2)))");
+        check(Boolean.TRUE,and, "AND(AND(AND(IS NOT NULL($0), IS NOT NULL($1)), =($0, $1)), AND(IS NOT NULL($2), >(false, $2)))");
     }
 }
 

@@ -499,32 +499,47 @@ public class FarragoPreparingStmt extends OJStatement
 
         CwmNamedColumnSet columnSet = (CwmNamedColumnSet) resolved.object;
 
-        if (columnSet instanceof FemForeignTable) {
-            FemForeignTableImpl table = (FemForeignTableImpl) columnSet;
-            loadDataServerFromCache(table.getDataServer(catalog));
-            return table.loadFromCache(
-                dataWrapperCache,catalog,farragoTypeFactory);
-        }
-        
-        if (columnSet instanceof CwmTable) {
-            CwmTable table = (CwmTable) columnSet;
+        if (columnSet instanceof FemLocalTable) {
+            FemLocalTable table = (FemLocalTable) columnSet;
             
             // REVIEW:  maybe defer this until physical implementation?
             if (table.isTemporary()) {
                 indexMap.instantiateTemporaryTable(table);
             }
         }
-        
-        SaffronType rowType =
-            getFarragoTypeFactory().createColumnSetType(columnSet);
-        
-        if (columnSet instanceof CwmTable) {
-            return new FennelTable(this,columnSet,rowType);
+
+        SaffronTable saffronTable;
+        if (columnSet instanceof FemBaseColumnSet) {
+            FemBaseColumnSet table = (FemBaseColumnSet) columnSet;
+            FemDataServerImpl femServer = (FemDataServerImpl)
+                table.getServer();
+            loadDataServerFromCache(femServer);
+            saffronTable = femServer.loadColumnSetFromCache(
+                dataWrapperCache,catalog,farragoTypeFactory,table);
         } else if (columnSet instanceof CwmView) {
-            return new FarragoView(this,columnSet,rowType);
+            SaffronType rowType =
+                getFarragoTypeFactory().createColumnSetType(columnSet);
+            saffronTable = new FarragoView(columnSet,rowType);
         } else {
             throw Util.needToImplement(columnSet);
         }
+        initializeQueryColumnSet(saffronTable,columnSet);
+        return saffronTable;
+    }
+
+    private void initializeQueryColumnSet(
+        SaffronTable saffronTable,CwmNamedColumnSet cwmColumnSet)
+    {
+        if (saffronTable == null) {
+            return;
+        }
+        if (!(saffronTable instanceof FarragoQueryColumnSet)) {
+            return;
+        }
+        FarragoQueryColumnSet queryColumnSet =
+            (FarragoQueryColumnSet) saffronTable;
+        queryColumnSet.setPreparingStmt(this);
+        queryColumnSet.setCwmColumnSet(cwmColumnSet);
     }
 
     private FarragoMedColumnSet getForeignTableFromNamespace(
@@ -555,10 +570,12 @@ public class FarragoPreparingStmt extends OJStatement
             if (directory == null) {
                 return null;
             }
-            return directory.lookupColumnSet(
+            FarragoMedColumnSet medColumnSet = directory.lookupColumnSet(
                 farragoTypeFactory,
                 namesWithoutCatalog,
                 resolved.getQualifiedName());
+            initializeQueryColumnSet(medColumnSet,null);
+            return medColumnSet;
         } catch (Throwable ex) {
             // TODO:  better name formatting
             throw
@@ -764,12 +781,15 @@ public class FarragoPreparingStmt extends OJStatement
             SaffronTable table,
             int iColumn)
         {
-            // REVIEW:  will we ever get anything else?
-            FennelTable fennelTable = (FennelTable) table;
+            if (!(table instanceof FarragoQueryColumnSet)) {
+                return sqlToRelConverter.getRexBuilder().constantNull();
+            }
+            FarragoQueryColumnSet queryColumnSet =
+                (FarragoQueryColumnSet) table;
             CwmColumn column = (CwmColumn)
-                fennelTable.cwmTable.getFeature().get(iColumn);
+                queryColumnSet.getCwmColumnSet().getFeature().get(iColumn);
             CwmExpression cwmExp = column.getInitialValue();
-            if (cwmExp == null) {
+            if (cwmExp.getBody().equalsIgnoreCase("NULL")) {
                 return sqlToRelConverter.getRexBuilder().constantNull();
             }
 

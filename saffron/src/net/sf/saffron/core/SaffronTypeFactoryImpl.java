@@ -23,6 +23,8 @@ package net.sf.saffron.core;
 
 import net.sf.saffron.sql.type.SqlTypeName;
 import net.sf.saffron.sql.SqlLiteral;
+import net.sf.saffron.sql.SqlCollation;
+import net.sf.saffron.sql.SqlFunctionTable;
 import net.sf.saffron.util.Util;
 import openjava.ptree.util.SyntheticClass;
 
@@ -34,6 +36,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.math.BigInteger;
+import java.nio.charset.Charset;
+import java.sql.Date;
+import java.sql.Timestamp;
+import java.sql.Time;
 
 
 /**
@@ -180,7 +186,16 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
                         return createTypeWithNullability(fieldType,nullable);
                     }
                 });
-        } else {
+       } else if (type instanceof SqlType) {
+            SqlType sqlType = (SqlType) type;
+            sqlType.setIsNullable(nullable);
+            return sqlType;
+        } else if (type instanceof JavaType) {
+            JavaType javaType = (JavaType) type;
+            javaType.setIsNullable(nullable);
+            return javaType;
+        }
+        else {
             // REVIEW: CrossType if it stays around; otherwise get rid of this
             // comment
             return type;
@@ -394,6 +409,26 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
         public boolean isSameTypeFamily(SaffronType t) {
             return false;
         }
+
+        public Charset getCharset() {
+            throw Util.needToImplement("need to implement");
+        }
+
+        public void setCharset(Charset charset) {
+            throw Util.needToImplement("need to implement");
+        }
+
+        public SqlCollation getCollation() throws RuntimeException {
+            throw Util.needToImplement("need to implement");
+        }
+
+        public void setCollation(SqlCollation collation) throws RuntimeException {
+            throw Util.needToImplement("need to implement");
+        }
+
+        public boolean isCharType() {
+            return false;
+        }
     }
 
     /**
@@ -595,14 +630,20 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
         return t instanceof JavaType;
     }
 
+    public static boolean isSqlType(SaffronType t){
+        return t instanceof SqlType;
+    }
+
     public static SaffronType createSqlTypeIgnorePrecOrScale(SaffronTypeFactory fac, SqlTypeName typeName) {
-        if (typeName.allowsNoPrecNoScale()) {
-            return fac.createSqlType(typeName);
+        if (typeName.allowsPrecScale(true,true)) {
+            return fac.createSqlType(typeName,0,0);
         }
-        else if (typeName.allowsPrecNoScale()) {
+
+        if (typeName.allowsPrecNoScale()) {
             return fac.createSqlType(typeName,0);
         }
-        return fac.createSqlType(typeName,0,0);
+
+        return fac.createSqlType(typeName);
     }
 
     /**
@@ -611,12 +652,40 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
     protected class JavaType extends TypeImpl
     {
         public final Class clazz;
+        private boolean isNullable;
+        private SqlCollation collation;
+        private Charset charset;
 
         public JavaType(Class clazz)
         {
             super(fieldsOf(clazz));
             this.clazz = clazz;
             this.digest = computeDigest();
+
+            isNullable =
+                clazz.equals(Integer.class)||
+                clazz.equals(int.class)||
+                clazz.equals(Long.class)||
+                clazz.equals(long.class)||
+                clazz.equals(Integer.class)||
+                clazz.equals(int.class)||
+                clazz.equals(Byte.class)||
+                clazz.equals(byte.class)||
+                clazz.equals(Double.class)||
+                clazz.equals(double.class)||
+                clazz.equals(Boolean.class)||
+                clazz.equals(boolean.class)||
+                clazz.equals(byte[].class)||
+                clazz.equals(String.class);
+
+        }
+
+        public boolean isNullable() {
+            return isNullable;
+        }
+
+        void setIsNullable(boolean isNullable) {
+            this.isNullable = isNullable;
         }
 
         public boolean isAssignableFrom(SaffronType t) {
@@ -624,12 +693,18 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
                 return false;
             }
             SqlTypeName thisSqlTypeName = JavaToSqlTypeConversionRules.instance().lookup(this);
+            if (null==thisSqlTypeName) {
+                return false;
+            }
             SqlTypeName thatSqlTypeName;
 
             if (t instanceof SqlType) {
                 thatSqlTypeName = ((SqlType) t).getTypeName();
             } else {
                 thatSqlTypeName= JavaToSqlTypeConversionRules.instance().lookup(t);
+                if (null==thatSqlTypeName) {
+                    return false;
+                }
             }
 
             SaffronTypeFactory  fac = getFactory();
@@ -671,6 +746,38 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
                 pw.print(value);
             }
         }
+
+        public Charset getCharset() throws RuntimeException {
+            if (!isCharType()) {
+                throw Util.newInternal(computeDigest()+" is not defined to carry a charset");
+            }
+            return this.charset;
+        }
+
+        public void setCharset(Charset charset) throws RuntimeException {
+            if (!isCharType()) {
+                throw Util.newInternal(computeDigest()+" is not defined to carry a charset");
+            }
+            this.charset=charset;
+        }
+
+        public SqlCollation getCollation() throws RuntimeException {
+            if (!isCharType()) {
+                throw Util.newInternal(computeDigest()+" is not defined to carry a collation");
+            }
+            return this.collation;
+        }
+
+        public void setCollation(SqlCollation collation) throws RuntimeException {
+            if (!isCharType()) {
+                throw Util.newInternal(computeDigest()+" is not defined to carry a collation");
+            }
+            this.collation=collation;
+        }
+
+        public boolean isCharType() {
+            return clazz.equals(String.class);
+        }
     }
 
     private SaffronField[] fieldsOf(Class clazz) {
@@ -709,11 +816,15 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
      */
     protected class SqlType implements SaffronType {
         private final SqlTypeName typeName;
+        private boolean isNullable=true;
         private final int precision;
         private final int scale;
         private final String digest;
+
         public static final int SCALE_NOT_SPECIFIED = Integer.MIN_VALUE;
         public static final int PRECISION_NOT_SPECIFIED = -1;
+        private SqlCollation collation;
+        private Charset charset;
 
         /**
          * Constructs a type with no parameters.
@@ -754,6 +865,14 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
             this.digest = typeName.name_ + "(" + precision + ", " + scale + ")";
         }
 
+        protected void setIsNullable(boolean isNullable) {
+            this.isNullable = isNullable;
+        }
+
+        public int getPrecision() {
+            return precision;
+        }
+
         public SqlTypeName getTypeName()
         {
             return typeName;
@@ -773,6 +892,14 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
         }
 
         public boolean isSameTypeFamily(SaffronType t) {
+            if (t instanceof JavaType) {
+                SqlTypeName thatSqlTypeName= JavaToSqlTypeConversionRules.instance().lookup(t);
+                if (null==thatSqlTypeName) {
+                    return false;
+                }
+                SaffronType that = createSqlTypeIgnorePrecOrScale(getFactory(), thatSqlTypeName);
+                return this.isSameTypeFamily(that);
+            }
             return t instanceof SqlType &&
                     ((SqlType) t).typeName.ordinal_==this.typeName.ordinal_;
         }
@@ -823,8 +950,7 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
 
         public boolean isNullable()
         {
-            // TODO
-            return typeName.equals(SqlTypeName.Null);
+            return isNullable;
         }
 
         public void format(Object value, PrintWriter pw) {
@@ -857,14 +983,63 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
                 assert value == null;
                 pw.print("null");
                 break;
+            case SqlTypeName.Flag_ordinal:
+                assert value instanceof SqlFunctionTable.FunctionFlagType;
+                pw.print("FLAG(");
+                pw.print(((SqlFunctionTable.FunctionFlagType) value).name_);
+                pw.print(")");
+                break;
+
+
             default:
                 throw Util.needToImplement(this);
             }
         }
 
         public boolean isAssignableFrom(SaffronType t) {
-            return t instanceof SqlType
+            SqlTypeName thatSqlTypeName;
+            if (t instanceof JavaType) {
+                thatSqlTypeName= JavaToSqlTypeConversionRules.instance().lookup(t);
+                if (null==thatSqlTypeName) {
+                    return false;
+                }
+                return AssignableFromRules.instance().isAssignableFrom(this.typeName,thatSqlTypeName);
+            } else {
+                return t instanceof SqlType
                     && AssignableFromRules.instance().isAssignableFrom(this.typeName,((SqlType) t).typeName);
+            }
+        }
+
+         public Charset getCharset() throws RuntimeException {
+            if (!isCharType()) {
+                throw Util.newInternal(typeName.toString()+" is not defined to carry a charset");
+            }
+            return this.charset;
+        }
+
+        public void setCharset(Charset charset) throws RuntimeException {
+            if (!isCharType()) {
+                throw Util.newInternal(typeName.toString()+" is not defined to carry a charset");
+            }
+            this.charset=charset;
+        }
+
+        public SqlCollation getCollation() throws RuntimeException {
+            if (!isCharType()){
+                throw Util.newInternal(typeName.toString()+" is not defined to carry a collation");
+            }
+            return this.collation;
+        }
+
+        public void setCollation(SqlCollation collation) throws RuntimeException {
+            if (!isCharType()){
+                throw Util.newInternal(typeName.toString()+" is not defined to carry a collation");
+            }
+            this.collation=collation;
+        }
+
+        public boolean isCharType() {
+            return typeName.equals(SqlTypeName.Char) || typeName.equals(SqlTypeName.Varchar);
         }
     }
 
@@ -889,7 +1064,9 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
             rules.put(byte[].class, SqlTypeName.Varbinary);
             rules.put(String.class, SqlTypeName.Varchar);
 
-
+            rules.put(Date.class, SqlTypeName.Date);
+            rules.put(Timestamp.class, SqlTypeName.Timestamp);
+            rules.put(Time.class, SqlTypeName.Time);
         }
 
         public static JavaToSqlTypeConversionRules instance() {
@@ -987,6 +1164,12 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
             rule = new HashSet();
             rule.add(SqlTypeName.Boolean);
             rules.put(SqlTypeName.Boolean, rule);
+
+            //Binary is assignable from...
+            rule = new HashSet();
+            rule.add(SqlTypeName.Binary);
+            rules.put(SqlTypeName.Binary, rule);
+
         }
 
         public static AssignableFromRules instance() {
@@ -999,6 +1182,9 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
 
         public boolean isAssignableFrom(SqlTypeName to, SqlTypeName from)
         {
+            assert(null!=to);
+            assert(null!=from);
+
             if (to.equals(SqlTypeName.Null)) {
                 return false;
             } else if (from.equals(SqlTypeName.Null)) {
@@ -1008,7 +1194,7 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
             HashSet rule = (HashSet) rules.get(to);
             if (null==rule){
                 //if you hit this assert, see the constructor of this class on how to add new rule
-                throw Util.newInternal("No assign rule between from="+from+" and "+to+" defined");
+                throw Util.newInternal("No assign rules for "+to+" defined");
             }
 
             return rule.contains(from);

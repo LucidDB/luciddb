@@ -20,7 +20,7 @@
 package net.sf.farrago.jdbc.engine;
 
 import net.sf.farrago.catalog.*;
-import net.sf.farrago.parser.NonReservedKeyword;
+import net.sf.farrago.parser.FarragoParser;
 
 import java.sql.*;
 
@@ -38,7 +38,23 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
 {
     private FarragoJdbcEngineConnection connection;
     private FarragoCatalog catalog;
-    
+
+    //~ Static fields/initializers --------------------------------------------
+
+    static String sqlKeywords = null;
+    static String numericFunctions = null;
+    static String stringFunctions = null;
+    static String timeDateFunctions = null;
+    static String systemFunctions = null;
+    static {
+        FarragoParser parser = new FarragoParser();
+        sqlKeywords = parser.getSQLKeywords();
+        numericFunctions = parser.getNumericFunctions();
+        stringFunctions = parser.getStringFunctions();
+        systemFunctions = parser.getSystemFunctions();
+        timeDateFunctions = parser.getTimeDateFunctions();
+    }
+
     FarragoJdbcEngineDatabaseMetaData(FarragoJdbcEngineConnection connection)
     {
         this.connection = connection;
@@ -202,38 +218,35 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
         return "\"";
     }
 
+
     // implement DatabaseMetaData
-    public String getSQLKeywords() throws SQLException
-    {
-       return NonReservedKeyword.nonRservedKeywords;
+    public String getSQLKeywords() throws SQLException {
+        return sqlKeywords;
     }
+
 
     // implement DatabaseMetaData
     public String getNumericFunctions() throws SQLException
     {
-        // TODO:  get these from catalog
-        return "";
+        return numericFunctions;
     }
 
     // implement DatabaseMetaData
     public String getStringFunctions() throws SQLException
     {
-        // TODO:  get these from catalog
-        return "";
+        return stringFunctions;
     }
 
     // implement DatabaseMetaData
     public String getSystemFunctions() throws SQLException
     {
-        // TODO:  get these from catalog
-        return "";
+        return systemFunctions;
     }
 
     // implement DatabaseMetaData
     public String getTimeDateFunctions() throws SQLException
     {
-        // TODO:  get these from catalog
-        return "";
+        return timeDateFunctions;
     }
 
     // implement DatabaseMetaData
@@ -807,6 +820,9 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
         /*
         queryBuilder.addInList("table_type",types);
         */
+        if ((types != null) && (types.length == 1)) {
+            queryBuilder.addExact("table_type",types[0]);
+        }
         queryBuilder.addOrderBy("table_type,table_schem,table_name,table_cat");
         return queryBuilder.execute();
     }
@@ -846,7 +862,7 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
     {
         return newDaemonStatement().executeQuery(
             "select * from sys_boot.jdbc_metadata.table_types_view "
-            + "order by table_type");
+           + "order by table_type");
     }
 
     // implement DatabaseMetaData
@@ -857,7 +873,14 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
         String columnNamePattern)
         throws SQLException
     {
-        throw new UnsupportedOperationException();
+        QueryBuilder queryBuilder = new QueryBuilder(
+            "select * from sys_boot.jdbc_metadata.columns_view");
+        queryBuilder.addExact("table_cat",catalog);
+        queryBuilder.addPattern("table_schem",schemaPattern);
+        queryBuilder.addPattern("table_name",tableNamePattern);
+        queryBuilder.addPattern("column_name", columnNamePattern);
+        queryBuilder.addOrderBy("table_schem,table_name,ordinal_position");
+        return queryBuilder.execute();
     }
 
     // implement DatabaseMetaData
@@ -1179,26 +1202,36 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
 
         void addPattern(String colName,String value)
         {
-            if (value == null || value.equals("%")) {
+            if (value == null) {
                 return;
             }
             if (value.equals("%")) {
-                // FIXME:  this is incorrect since it's supposed to
-                // be equivalent to IS NOT NULL.  Just here to be able
-                // to use metadata from sqlline; remove once LIKE is working.
+                // TODO jvs 5-April-2005:  replace with IS NOT NULL once
+                // that is working
+                addConjunction();
+                sql.append(colName);
+                sql.append(" = ");
+                sql.append(colName);
                 return;
             }
-            addConjunction();
-            sql.append(colName);
-            sql.append(" like ?");
-            values.add(value);
+            if (value.indexOf('%') == -1) {
+                // NOTE jvs 5-April-2005:  technically, '_' is a wildcard
+                // symbol also, but it can wait for LIKE support since
+                // its non-wildcard usage is so common
+                addExact(colName,value);
+                return;
+            }
+            if (false) {
+                // TODO jvs 5-April-2005:  turn this on once LIKE is working
+                addConjunction();
+                sql.append(colName);
+                sql.append(" like ?");
+                values.add(value);
+            }
         }
 
         void addExact(String colName,String value)
         {
-            if (value == null) {
-                return;
-            }
             addConjunction();
             sql.append(colName);
             sql.append(" = ?");

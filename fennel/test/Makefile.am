@@ -35,6 +35,10 @@ LinearViewSegmentTest \
 VersionedSegmentTest \
 BTreeTxnTest \
 BTreeTest \
+CalcStatusRegTest \
+CalcExtStringTest \
+CalcExtContextTest \
+SqlStringTest \
 SqlStringAsciiTest
 
 TESTS = $(noinst_PROGRAMS)
@@ -66,6 +70,14 @@ BTreeTxnTest_SOURCES=BTreeTxnTest.cpp
 TupleTest_SOURCES=TupleTest.cpp
 
 StandardTypeTest_SOURCES=StandardTypeTest.cpp
+
+CalcStatusRegTest_SOURCES=CalcStatusRegTest.cpp
+
+CalcExtStringTest_SOURCES=CalcExtStringTest.cpp
+
+CalcExtContextTest_SOURCES=CalcExtContextTest.cpp
+
+SqlStringTest_SOURCES=SqlStringBuffer.cpp SqlStringTest.cpp 
 
 SqlStringAsciiTest_SOURCES=SqlStringBuffer.cpp SqlStringAsciiTest.cpp 
 

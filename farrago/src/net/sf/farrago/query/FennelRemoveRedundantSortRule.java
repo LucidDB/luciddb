@@ -29,15 +29,16 @@ import net.sf.saffron.util.*;
 import java.util.*;
 
 /**
- * RemoveRedundantSortRule removes instances of SortRel which are already
- * satisfied by the physical ordering produced by an underlying FennelRel.
+ * FennelRemoveRedundantSortRule removes instances of SortRel which are
+ * already satisfied by the physical ordering produced by an underlying
+ * FennelRel.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-class RemoveRedundantSortRule extends VolcanoRule
+public class FennelRemoveRedundantSortRule extends VolcanoRule
 {
-    public RemoveRedundantSortRule()
+    public FennelRemoveRedundantSortRule()
     {
         super(
             new RuleOperand(
@@ -62,19 +63,7 @@ class RemoveRedundantSortRule extends VolcanoRule
             return;
         }
 
-        if (inputRel instanceof FennelIndexScanRel) {
-            // make sure scan order is preserved, since now we're relying
-            // on it
-            FennelIndexScanRel scanRel = (FennelIndexScanRel) inputRel;
-            FennelIndexScanRel sortedScanRel = new FennelIndexScanRel(
-                scanRel.getCluster(),
-                scanRel.fennelTable,
-                scanRel.index,
-                scanRel.getConnection(),
-                scanRel.projectedColumns,
-                true);
-            call.transformTo(sortedScanRel);
-        } else if (inputRel instanceof FennelSortRel) {
+        if (inputRel instanceof FennelSortRel) {
             SaffronRel newRel =
                 convert(planner,(SaffronRel) inputRel,
                         FennelRel.FENNEL_CALLING_CONVENTION);
@@ -88,7 +77,8 @@ class RemoveRedundantSortRule extends VolcanoRule
         }
     }
 
-    public boolean isSortRedundant(FennelSortRel sortRel,FennelRel inputRel)
+    public static boolean isSortRedundant(
+        FennelSortRel sortRel,FennelRel inputRel)
     {
         if (sortRel.discardDuplicates) {
             // TODO:  once we can obtain the key for a SaffronRel, check
@@ -117,4 +107,4 @@ class RemoveRedundantSortRule extends VolcanoRule
     }
 }
 
-// End RemoveRedundantSortRule.java
+// End FennelRemoveRedundantSortRule.java

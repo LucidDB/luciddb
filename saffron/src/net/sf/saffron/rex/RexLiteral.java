@@ -22,6 +22,7 @@ package net.sf.saffron.rex;
 
 import net.sf.saffron.core.SaffronType;
 import net.sf.saffron.sql.SqlLiteral;
+import net.sf.saffron.sql.SqlFunctionTable;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -58,6 +59,7 @@ public class RexLiteral extends RexNode
      *   value instanceof byte[] ||
      *   value instanceof SqlLiteral.BitString ||
      *   value instanceof SqlLiteral.StringLiteral ||
+     *   value instanceof SqlFunctionTable.FunctionFlagType ||
      *   value == null
      */
     RexLiteral(Object value,SaffronType type)
@@ -69,6 +71,7 @@ public class RexLiteral extends RexNode
                 value instanceof byte[] ||
                 value instanceof SqlLiteral.BitString ||
                 value instanceof SqlLiteral.StringLiteral ||
+                value instanceof SqlFunctionTable.FunctionFlagType ||
                 value == null :
                 value;
         assert type != null;
@@ -105,6 +108,7 @@ public class RexLiteral extends RexNode
      *   return value instanceof byte[] ||
      *   return value instanceof SqlLiteral.BitString ||
      *   return value instanceof SqlLiteral.StringLiteral ||
+     *   return value instanceof SqlFunctionTable.FunctionFlagType ||
      *   return == null
      */
     public Object getValue()
@@ -116,6 +120,7 @@ public class RexLiteral extends RexNode
                 value instanceof byte[] ||
                 value instanceof SqlLiteral.BitString ||
                 value instanceof SqlLiteral.StringLiteral ||
+                value instanceof SqlFunctionTable.FunctionFlagType ||
                 value == null :
                 value;
         return value;

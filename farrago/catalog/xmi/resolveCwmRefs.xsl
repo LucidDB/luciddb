@@ -14,8 +14,8 @@
   <xsl:template match="Model:Package[@name='CwmRef']">
   </xsl:template>
 
-  <!-- Filter out the FenelRef subpackage.  -->
-  <xsl:template match="Model:Package[@name='FennelRef']">
+  <!-- Filter out the FemRef subpackage.  -->
+  <xsl:template match="Model:Package[@name='FemRef']">
   </xsl:template>
 
   <xsl:template match="Model:Package[@name='PrimitiveTypesRef']">
@@ -32,40 +32,40 @@
        CwmRef, remap it to the id of the real CWM class instead.  -->
   <xsl:template match="@xmi.idref">
     <xsl:variable 
-      name="refClass" 
+      name="refCwmClass" 
       select=
       "//Model:Package[@name='CwmRef']//Model:Class[@xmi.id=current()]" />
     <xsl:variable 
-      name="refFenelClass" 
+      name="refFemClass" 
       select=
-      "//Model:Package[@name='FennelRef']//Model:Class[@xmi.id=current()]" />
+      "//Model:Package[@name='FemRef']//Model:Class[@xmi.id=current()]" />
     <xsl:variable 
       name="refPrimitive" 
       select=
       "//Model:Package[@name='PrimitiveTypesRef']//Model:PrimitiveType[@xmi.id=current()]" />
     <xsl:choose>
-      <xsl:when test="$refClass">
+      <xsl:when test="$refCwmClass">
         <xsl:variable 
-          name="refClassName" 
-          select="$refClass/@name"/>
+          name="refCwmClassName" 
+          select="$refCwmClass/@name"/>
         <xsl:variable 
-          name="realClass" 
+          name="realCwmClass" 
           select=
-          "//Model:Package[@name='CWM']//Model:Class[@name=$refClassName]"/>
+          "//Model:Package[@name='CWM']//Model:Class[@name=$refCwmClassName]"/>
         <xsl:attribute name="xmi.idref">
-          <xsl:value-of select="$realClass/@xmi.id"/>
+          <xsl:value-of select="$realCwmClass/@xmi.id"/>
         </xsl:attribute>
       </xsl:when>
-      <xsl:when test="$refFenelClass">
+      <xsl:when test="$refFemClass">
         <xsl:variable 
-          name="refFenelClassName" 
-          select="$refFenelClass/@name"/>
+          name="refFemClassName" 
+          select="$refFemClass/@name"/>
         <xsl:variable 
-          name="realFenelClass" 
+          name="realFemClass" 
           select=
-          "//Model:Package[@name='Fennel']//Model:Class[@name=$refFenelClassName]"/>
+          "//Model:Package[@name='FEM']//Model:Class[@name=$refFemClassName]"/>
         <xsl:attribute name="xmi.idref">
-          <xsl:value-of select="$realFenelClass/@xmi.id"/>
+          <xsl:value-of select="$realFemClass/@xmi.id"/>
         </xsl:attribute>
       </xsl:when>
       <xsl:when test="$refPrimitive">

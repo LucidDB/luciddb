@@ -24,6 +24,7 @@ import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.keysindexes.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
+import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
@@ -123,8 +124,8 @@ public abstract class FennelRelUtil
         Iterator iter = list.iterator();
         int i = 0;
         for (; iter.hasNext(); ++i) {
-            CwmColumn column = (CwmColumn) iter.next();
-            projection[i] = new Integer(catalog.getColumnOrdinal(column));
+            FemAbstractColumn column = (FemAbstractColumn) iter.next();
+            projection[i] = new Integer(column.getOrdinal());
         }
         return projection;
     }
@@ -153,10 +154,9 @@ public abstract class FennelRelUtil
         appendClusteredDistinctKey(catalog,index,indexColumnList);
         Integer [] array = new Integer[indexColumnList.size()];
         for (int i = 0; i < array.length; ++i) {
-            array[i] =
-                new Integer(
-                    catalog.getColumnOrdinal(
-                        (CwmColumn) indexColumnList.get(i)));
+            FemAbstractColumn column = (FemAbstractColumn)
+                indexColumnList.get(i);
+            array[i] = new Integer(column.getOrdinal());
         }
         return array;
     }
@@ -533,12 +533,12 @@ public abstract class FennelRelUtil
             catalog.newFemTupleProjection();
         Iterator indexColumnIter = indexColumnList.iterator();
         while (indexColumnIter.hasNext()) {
-            Object column = indexColumnIter.next();
+            FemAbstractColumn column = (FemAbstractColumn)
+                indexColumnIter.next();
             FemTupleAttrProjection attrProj =
                 catalog.newFemTupleAttrProjection();
             tupleProj.getAttrProjection().add(attrProj);
-            attrProj.setAttributeIndex(
-                catalog.getColumnOrdinal((CwmColumn) column));
+            attrProj.setAttributeIndex(column.getOrdinal());
         }
         return tupleProj;
     }

@@ -34,7 +34,7 @@ import net.sf.saffron.core.SaffronConnection;
  * @author John V. Sichi
  * @version $Id$
  */
-abstract class FennelSingleRel extends SingleRel implements FennelRel
+public abstract class FennelSingleRel extends SingleRel implements FennelRel
 {
     //~ Constructors ----------------------------------------------------------
 

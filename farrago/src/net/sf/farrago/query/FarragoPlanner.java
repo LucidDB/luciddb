@@ -95,13 +95,8 @@ public class FarragoPlanner extends VolcanoPlanner
 
         addRule(new FennelSortRule());
         addRule(new FennelDistinctSortRule());
-        addRule(new FennelTableProjectionRule());
         addRule(new FennelRenameRule());
-        addRule(new FennelTableModificationRule());
-        addRule(new FennelScanToSearchRule());
-        addRule(new FennelIndexJoinRule());
         addRule(new FennelCartesianJoinRule());
-        addRule(new RemoveRedundantSortRule());
 
         addRule(
             new ConverterRule(

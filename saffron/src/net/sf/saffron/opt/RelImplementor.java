@@ -35,6 +35,7 @@ import net.sf.saffron.util.Util;
 import net.sf.saffron.sql.SqlOperator;
 import net.sf.saffron.sql.SqlBinaryOperator;
 import net.sf.saffron.sql.SqlFunction;
+import net.sf.saffron.sql.SqlLiteral;
 import openjava.mop.*;
 import openjava.ptree.*;
 import openjava.tools.DebugOut;
@@ -857,6 +858,8 @@ public class RelImplementor
                 return Literal.constantNull();
             } else if (value instanceof String) {
                 return Literal.makeLiteral((String) value);
+            } else if (value instanceof SqlLiteral.StringLiteral) {
+                return Literal.makeLiteral(((SqlLiteral.StringLiteral) value).getValue());
             } else if (value instanceof Boolean) {
                 return Literal.makeLiteral((Boolean) value);
             } else if (value instanceof BigInteger) {

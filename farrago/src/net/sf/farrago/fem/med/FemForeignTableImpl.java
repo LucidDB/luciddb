@@ -58,8 +58,20 @@ public abstract class FemForeignTableImpl extends InstanceHandler
     // implement DdlValidatedElement
     public void validateDefinition(DdlValidator validator,boolean creation)
     {
+        if (!creation) {
+            return;
+        }
+        
         FarragoCatalog catalog = validator.getCatalog();
         FarragoTypeFactory typeFactory = validator.getTypeFactory();
+
+        FemDataServerImpl dataServer = (FemDataServerImpl) getServer();
+        FemDataWrapper dataWrapper = dataServer.getWrapper();
+        if (!dataWrapper.isForeign()) {
+            throw validator.res.newValidatorForeignTableButLocalWrapper(
+                catalog.getLocalizedObjectName(this,null),
+                catalog.getLocalizedObjectName(dataWrapper,null));
+        }
 
         validator.validateUniqueNames(this,getFeature(),false);
 
@@ -67,23 +79,13 @@ public abstract class FemForeignTableImpl extends InstanceHandler
             // columns were specified; we are to validate them
             Iterator iter = getFeature().iterator();
             while (iter.hasNext()) {
-                FemForeignColumn column = (FemForeignColumn) iter.next();
-                CwmColumnImpl.validateType(validator,column);
+                FemStoredColumn column = (FemStoredColumn) iter.next();
+                CwmColumnImpl.validateCommon(validator,column);
             }
         }
-            
-        FarragoMedColumnSet columnSet;
-        try {
-            // validate that we can successfully initialize the table
-            columnSet = loadFromCache(
-                validator.getDataWrapperCache(),
-                catalog,
-                typeFactory);
-        } catch (Throwable ex) {
-            throw validator.res.newValidatorForeignTableInvalid(
-                catalog.getLocalizedObjectName(this,null),
-                ex);
-        }
+        
+        FarragoMedColumnSet columnSet =
+            dataServer.validateColumnSet(validator,this);
 
         List columnList = getFeature();
         if (columnList.isEmpty()) {
@@ -92,94 +94,17 @@ public abstract class FemForeignTableImpl extends InstanceHandler
             int n = rowType.getFieldCount();
             SaffronField [] fields = rowType.getFields();
             for (int i = 0; i < n; ++i) {
-                CwmColumn column = catalog.newFemForeignColumn();
+                CwmColumn column = catalog.newFemStoredColumn();
                 columnList.add(column);
                 typeFactory.convertFieldToCwmColumn(fields[i],column);
-                CwmColumnImpl.validateType(validator,column);
+                CwmColumnImpl.validateCommon(validator,column);
             }
         }
-
-        validator.createDependency(
-            this,
-            Collections.singleton(getDataServer(catalog)),
-            "ServerStoresTable");
     }
 
     // implement DdlValidatedElement
     public void validateDeletion(DdlValidator validator,boolean truncation)
     {
-    }
-    
-    /**
-     * Finds the definition for the data server storing this foreign table.
-     *
-     * @param catalog catalog storing association
-     *
-     * @return server definition
-     */
-    public FemDataServerImpl getDataServer(FarragoCatalog catalog)
-    {
-        return (FemDataServerImpl)
-            catalog.medPackage.getServerStoresTable().getServer(this);
-    }
-
-    /**
-     * Creates a FarragoMedColumnSet representation for this foreign table.
-     *
-     * @param cache cache for loading server
-     *
-     * @return loaded table
-     */
-    public FarragoMedColumnSet loadFromCache(
-        FarragoDataWrapperCache cache,
-        FarragoCatalog catalog,
-        FarragoTypeFactory typeFactory)
-    {
-        String [] qualifiedName = new String [] 
-            {
-                getNamespace().getNamespace().getName(),
-                getNamespace().getName(),
-                getName()
-            };
-
-        Properties props =
-            FemDataWrapperImpl.getStorageOptionsAsProperties(this);
-
-        Map columnPropMap = new HashMap();
-
-        SaffronType rowType = typeFactory.createColumnSetType(this);
-            
-        Iterator iter = getFeature().iterator();
-        while (iter.hasNext()) {
-            FemForeignColumn column = (FemForeignColumn) iter.next();
-            columnPropMap.put(
-                column.getName(),
-                FemDataWrapperImpl.getStorageOptionsAsProperties(column));
-        }
-        
-        FemDataServerImpl femServer = getDataServer(catalog);
-
-        FarragoMedDataServer server = femServer.loadFromCache(cache);
-
-        FarragoMedColumnSet columnSet;
-        try {
-            columnSet = server.newColumnSet(
-                qualifiedName,
-                props,
-                typeFactory,
-                rowType,
-                columnPropMap);
-        } catch (Throwable ex) {
-            throw FarragoResource.instance().newForeignTableAccessFailed(
-                catalog.getLocalizedObjectName(this,null),
-                ex);
-        }
-
-        if (rowType != null) {
-            assert(rowType.equals(columnSet.getRowType()));
-        }
-        
-        return columnSet;
     }
 }
 

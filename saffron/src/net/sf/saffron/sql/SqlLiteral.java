@@ -44,13 +44,23 @@ public class SqlLiteral extends SqlNode
     /** Constant for {@link Boolean#FALSE}. */
     public static final SqlLiteral False = new SqlLiteral(Boolean.FALSE);
 
+    /** Constant for the unknown value in 3 valued logic. */
+    public static final SqlLiteral Unknown = new BooleanUnknown();
+
     /** Constant for the {@link Integer} value 0. */
     public static final SqlLiteral Zero = new SqlLiteral(new Integer(0));
 
     /** Constant for the {@link Integer} value 1. */
     public static final SqlLiteral One = new SqlLiteral(new Integer(1));
 
+
     //~ Inner Classes   -------------------------------------------------------
+    public static class BooleanUnknown extends SqlLiteral{
+        public BooleanUnknown() {
+            super(null);
+        }
+    }
+
     public static class Numeric extends SqlLiteral {
         //~ Member variables -----------
         private Integer m_prec;
@@ -158,9 +168,12 @@ public class SqlLiteral extends SqlNode
     }
 
     public static class StringLiteral {
+        private static String m_defaultCollationName = "iso-8859-1$en_US";
+
         private String m_charSetName;
         private String m_value;
-        private Charset m_charSet;
+        private Charset m_charset;
+        private SqlCollation m_collation;
         //~ Member variables -----------
 
         //~ Methods -----------
@@ -171,11 +184,16 @@ public class SqlLiteral extends SqlNode
          * @throws java.nio.charset.UnsupportedCharsetException -
          *         If no support for the named charset is available in this instance of the Java virtual machine
          */
-        protected StringLiteral(String charSetName, String s) {
-            charSetName = charSetName.toUpperCase();
-            m_charSet = Charset.forName(charSetName);
+        protected StringLiteral(String charSetName, String theString, SqlCollation collation) {
             m_charSetName=charSetName;
-            m_value=s;
+            if (null!=m_charSetName){
+                m_charSetName = charSetName.toUpperCase();
+                m_charset = Charset.forName(m_charSetName);
+            } else {
+                m_charset = null;
+            }
+            m_collation=collation;
+            m_value=theString;
         }
 
         public String getCharsetName() {
@@ -183,19 +201,23 @@ public class SqlLiteral extends SqlNode
         }
 
         public Charset getCharset() {
-            return m_charSet;
+            return m_charset;
         }
 
-        public static SqlLiteral create(String s){
+        public SqlCollation getCollation() {
+            return m_collation;
+        }
+
+        public static SqlLiteral create(String s, SqlCollation collation){
 
             if (s.charAt(0) == '\'') {
                 //we have a "regular" string
                 s = ParserUtil.strip(s, "'");
                 s = ParserUtil.parseString(s);
-                return new SqlLiteral(s);
+                return new SqlLiteral(new StringLiteral(null,s,collation));
             }
 
-            //else we have a National string or a string with a char set
+            //else we have a National string or a string with a charset
             String charSet;
             if (Character.toUpperCase(s.charAt(0)) == 'N') {
                 s= s.substring(1);
@@ -209,17 +231,41 @@ public class SqlLiteral extends SqlNode
             }
             s = ParserUtil.strip(s, "'");
             s = ParserUtil.parseString(s);
-            return new SqlLiteral(new StringLiteral(charSet,s));
+            return new SqlLiteral(new StringLiteral(charSet,s,collation));
         }
 
         public String toString() {
-            return "_"+m_charSetName+"'"+
-                    Util.replace(m_value,"'","''")+
-                    "'";
+            StringBuffer ret = new StringBuffer();
+            if (null!=m_charSetName) {
+                ret.append("_");
+                ret.append(m_charSetName);
+            }
+            ret.append("'");
+            ret.append(Util.replace(m_value,"'","''"));
+            ret.append("'");
+            if (null!=m_collation) {
+                ret.append(" ");
+                ret.append(m_collation.toString());
+            }
+
+            return ret.toString();
         }
 
         public String getValue(){
             return m_value;
+        }
+
+        public void setCollation(SqlCollation collation) {
+//            assert(null!=collation);
+//            assert(null==m_collation);
+            m_collation=collation;
+        }
+
+        public void setCharset(Charset charset) {
+//            assert(null!=charset);
+//            assert(null==m_charset);
+            m_charset=charset;
+            m_charSetName=m_charset.name();
         }
     }
 
@@ -267,7 +313,9 @@ public class SqlLiteral extends SqlNode
 
     public static boolean isNullLiteral(SqlNode node)
     {
-        return (node instanceof SqlLiteral) && (((SqlLiteral) node).getValue() == null);
+        return (node instanceof SqlLiteral) &&
+                !(node instanceof SqlLiteral.BooleanUnknown)
+                && (((SqlLiteral) node).getValue() == null);
     }
 
     /**

@@ -44,11 +44,6 @@ public:
         if (0) PointerInstruction_NotAPointerType<PTR_TYPE>();
     }
 
-    virtual void setCalc(Calculator* calcP) {
-        mResult->setCalc(calcP);
-        mOp1->setCalc(calcP);
-    }
-    
 protected:
     RegisterRef<PointerSizeT>* mResult;
     RegisterRef<PTR_TYPE>* mOp1;

@@ -38,8 +38,39 @@ import javax.jmi.reflect.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoParser implements FarragoSessionParser
+public class FarragoParser implements FarragoSessionParser, FarragoParserWrapper
 {
+    //~ Static fields/initializers --------------------------------------------
+
+    private static final String STR_FUNC_NAMES;
+    private static final String NUMERIC_FUNC_NAMES;
+    private static final String TIME_DATE_FUNC_NAMES;
+    private static final String SYS_FUNC_NAMES;
+
+    static {
+        FarragoParserImpl parser = new FarragoParserImpl(new StringReader(""));
+
+        STR_FUNC_NAMES = constructFuncList(parser.getStringFunctionNames());
+        NUMERIC_FUNC_NAMES = constructFuncList(parser.getNumericFunctionNames());
+        TIME_DATE_FUNC_NAMES = constructFuncList(parser.getTimeDateFunctionNames());
+        SYS_FUNC_NAMES = constructFuncList(parser.getSystemFunctionNames());
+    }
+
+    private static String constructFuncList(Set functionNames) {
+        StringBuffer sb = new StringBuffer();
+        boolean first = true;
+        for (Iterator iterator = functionNames.iterator(); iterator.hasNext();) {
+            String funcName = (String) iterator.next();
+            if (first) {
+                first = false;
+            } else {
+                sb.append(",");
+            }
+            sb.append(funcName);
+        }
+        return sb.toString();
+    }
+
     //~ Instance fields -------------------------------------------------------
 
     /** Validator to use for validating DDL statements as they are parsed. */
@@ -73,6 +104,81 @@ public class FarragoParser implements FarragoSessionParser
     }
 
     // implement FarragoSessionParser
+    public String getSQLKeywords()
+    {
+        String[] tokens = FarragoParserImplConstants.tokenImage;
+        StringBuffer sb = new StringBuffer();
+        boolean withComma = false;
+        for (int i = 0, size = tokens.length; i < size; i++) {
+            String tokenVal = getTokenVal(tokens[i]);
+            if (tokenVal != null &&
+                    !FarragoParserImpl.SQL92ReservedWords.contains(tokenVal) &&
+                    !isNonReserved(tokenVal)) {
+                if (withComma) {
+                    sb.append(",");
+                } else {
+                    withComma = true;
+                }
+                sb.append(tokenVal);
+            }
+        }
+        return sb.toString();
+    }
+
+
+    // implement FarragoSessionParser
+    public String getStringFunctions() {
+       return FarragoParser.STR_FUNC_NAMES;
+    }
+
+    // implement FarragoSessionParser
+    public String getNumericFunctions() {
+        return FarragoParser.NUMERIC_FUNC_NAMES;
+    }
+
+    // implement FarragoSessionParser
+    public String getTimeDateFunctions() {
+        return FarragoParser.TIME_DATE_FUNC_NAMES;
+    }
+
+    // implement FarragoSessionParser
+    public String getSystemFunctions() {
+        return FarragoParser.SYS_FUNC_NAMES;
+    }
+
+    // implement FarragoParserWrapper
+    public FarragoSessionDdlValidator getDdlValidator() {
+        return ddlValidator;
+    }
+
+    private String getTokenVal(String token) {
+
+        // We don't care about the token which are not string
+        if (!token.startsWith("\"")) {
+            return null;
+        }
+        // Remove the quote from the token
+        int startIndex = token.indexOf("\"");
+        int endIndex = token.lastIndexOf("\"");
+        String tokenVal = token.substring(startIndex + 1, endIndex);
+        char c = tokenVal.charAt(0);
+        if (Character.isLetter(c)) {
+            return tokenVal;
+        }
+        return null;
+    }
+
+    private boolean isNonReserved(String keyword) {
+        FarragoParserImpl parserImpl = new FarragoParserImpl(new StringReader(keyword));
+        try {
+            parserImpl.NonReservedKeyWord();
+            return true;
+        } catch (ParseException e) {
+            return false;
+        }
+    }
+
+    // implement FarragoSessionParser
     public Object parseSqlStatement(
         FarragoSessionDdlValidator ddlValidator,
         FarragoReposTxnContext txnContext,
@@ -80,7 +186,7 @@ public class FarragoParser implements FarragoSessionParser
     {
         this.ddlValidator = ddlValidator;
         this.txnContext = txnContext;
-        
+
         parserImpl = new FarragoParserImpl(new StringReader(sql));
         parserImpl.farragoParser = this;
 
@@ -100,7 +206,7 @@ public class FarragoParser implements FarragoSessionParser
      * it's sure the statement is DDL and before it starts making any catalog
      * updates.
      */
-    void startReposWriteTxn()
+    public void startReposWriteTxn()
     {
         txnContext.beginWriteTxn();
     }

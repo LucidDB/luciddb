@@ -32,7 +32,7 @@ public class SqlPrefixOperator extends SqlOperator
         String name,SqlKind kind,int precedence,
         TypeInference typeInference,
         ParamTypeInference paramTypeInference,
-        AllowdArgInference argInference)
+        AllowedArgInference argInference)
     {
         super(name, kind, 0, precedence * 2, typeInference, paramTypeInference, argInference);
     }

@@ -49,7 +49,7 @@ public class SqlTypeName extends EnumeratedValues.BasicValue {
     public static final SqlTypeName Boolean = new SqlTypeName("BOOLEAN", Boolean_ordinal, PrecNoScaleNo);
 
     public static final int Integer_ordinal = 1;
-    public static final SqlTypeName Integer = new SqlTypeName("INTEGER", Integer_ordinal, PrecNoScaleNo|PrecYesScaleNo);
+    public static final SqlTypeName Integer = new SqlTypeName("INTEGER", Integer_ordinal, PrecNoScaleNo);
 
     public static final int Varchar_ordinal = 2;
     public static final SqlTypeName Varchar = new SqlTypeName("VARCHAR", Varchar_ordinal, PrecYesScaleNo);
@@ -58,10 +58,10 @@ public class SqlTypeName extends EnumeratedValues.BasicValue {
     public static final SqlTypeName Date = new SqlTypeName("DATE", Date_ordinal, PrecNoScaleNo);
 
     public static final int Time_ordinal = 4;
-    public static final SqlTypeName Time = new SqlTypeName("TIME", Time_ordinal, PrecNoScaleNo);
+    public static final SqlTypeName Time = new SqlTypeName("TIME", Time_ordinal, PrecNoScaleNo|PrecYesScaleNo);
 
     public static final int Timestamp_ordinal = 5;
-    public static final SqlTypeName Timestamp = new SqlTypeName("TIMESTAMP", Timestamp_ordinal, PrecNoScaleNo);
+    public static final SqlTypeName Timestamp = new SqlTypeName("TIMESTAMP", Timestamp_ordinal, PrecNoScaleNo|PrecYesScaleNo);
 
     public static final int Null_ordinal = 6;
     public static final SqlTypeName Null = new SqlTypeName("NULL", Null_ordinal, PrecNoScaleNo);
@@ -99,7 +99,15 @@ public class SqlTypeName extends EnumeratedValues.BasicValue {
     public static final int Bit_ordinal = 17;
     public static final SqlTypeName Bit = new SqlTypeName("BIT", Bit_ordinal, PrecYesScaleNo);
 
+    public static final int Flag_ordinal = 18;
+    public static final SqlTypeName Flag = new SqlTypeName("FLAG", Flag_ordinal, PrecNoScaleNo);
 
+
+    public static final int IntervalYearToMonth_ordinal = 19;
+    public static final SqlTypeName IntervalYearToMonth = new SqlTypeName("IntervalYearToMonth", IntervalYearToMonth_ordinal, PrecNoScaleNo);
+
+    public static final int IntervalDayTime_ordinal = 20;
+    public static final SqlTypeName IntervalDayTime = new SqlTypeName("IntervalDayTime", IntervalDayTime_ordinal, PrecYesScaleNo);
 
     /**
      * List of all allowable {@link SqlTypeName} values.
@@ -108,7 +116,7 @@ public class SqlTypeName extends EnumeratedValues.BasicValue {
             new SqlTypeName[] {
                 Boolean, Integer, Varchar, Date, Time, Timestamp, Null,
                 Decimal, Any, Char, Binary, Varbinary, Tinyint,
-                Smallint, Bigint, Real, Double, Bit
+                Smallint, Bigint, Real, Double, Bit, IntervalYearToMonth, IntervalDayTime
             }
     );
     /**

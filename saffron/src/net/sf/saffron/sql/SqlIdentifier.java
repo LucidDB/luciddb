@@ -33,8 +33,8 @@ public class SqlIdentifier extends SqlNode
     // contents weren't, so I've further degraded an imperfect situation.
     public String [] names;
 
-    /** Extra information (such as a table) which is not displayed. */
-    final Object extra;
+    /** This identifiers collation (if any) */
+    SqlCollation collation;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -42,12 +42,26 @@ public class SqlIdentifier extends SqlNode
      * Creates a compound identifier, for example <code>foo.bar</code>.
      *
      * @param names Parts of the identifier, length &gt;= 1
-     * @param extra Extra information, may be null
      */
-    public SqlIdentifier(String [] names,Object extra)
+    public SqlIdentifier(String [] names, SqlCollation collation)
     {
         this.names = names;
-        this.extra = extra;
+        this.collation=collation;
+    }
+
+    public SqlIdentifier(String [] names)
+    {
+        this.names = names;
+        this.collation=null;
+    }
+
+
+    /**
+     * Creates a simple identifier, for example <code>foo</code>.
+     */
+    public SqlIdentifier(String name, SqlCollation collation)
+    {
+        this(new String [] { name }, collation);
     }
 
     /**
@@ -55,7 +69,7 @@ public class SqlIdentifier extends SqlNode
      */
     public SqlIdentifier(String name)
     {
-        this(new String [] { name },null);
+        this(new String [] { name }, null);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -67,7 +81,10 @@ public class SqlIdentifier extends SqlNode
 
     public Object clone()
     {
-        return new SqlIdentifier((String []) names.clone(),extra);
+        if (null!=collation) {
+            return new SqlIdentifier((String []) names.clone(),(SqlCollation)collation.clone());
+        }
+        return new SqlIdentifier((String []) names.clone(),null);
     }
 
     public String toString()
@@ -92,11 +109,21 @@ public class SqlIdentifier extends SqlNode
                 writer.printIdentifier(name);
             }
         }
+
+        if (null!=collation) {
+            writer.print(" ");
+            collation.unparse(writer,leftPrec,rightPrec);
+        }
     }
 
-    public Object getExtra() {
-        return extra;
+    public SqlCollation getCollation() {
+        return collation;
     }
+
+    public void setCollation(SqlCollation collation) {
+        this.collation=collation;
+    }
+
 
     public String getSimple()
     {

@@ -28,6 +28,7 @@
 #define Fennel_CalcCommon_Included
 
 #include "fennel/calc/Calculator.h"
+#include "fennel/calc/CalcInit.h"
 
 #endif
 

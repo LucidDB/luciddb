@@ -21,12 +21,15 @@ package net.sf.farrago.fem.med;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.ddl.*;
+import net.sf.farrago.type.*;
+import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.util.*;
 
 import net.sf.saffron.util.*;
+import net.sf.saffron.core.*;
 
 import org.netbeans.mdr.handlers.*;
 import org.netbeans.mdr.storagemodel.*;
@@ -73,6 +76,19 @@ public abstract class FemDataServerImpl extends InstanceHandler
                 ex);
         }
 
+        // REVIEW jvs 18-April-2004:  This uses default charset/collation
+        // info from local catalog, but should really allow foreign
+        // servers to override.
+        catalog.initializeCwmCatalog(this);
+
+        // REVIEW jvs 18-April-2004:  Query the plugin for these?
+        if (getType() == null) {
+            setType("UNKNOWN");
+        }
+        if (getVersion() == null) {
+            setVersion("UNKNOWN");
+        }
+
         validator.createDependency(
             this,
             Collections.singleton(getWrapper()),
@@ -108,6 +124,99 @@ public abstract class FemDataServerImpl extends InstanceHandler
             refMofId(),
             dataWrapper,
             props);
+    }
+
+    /**
+     * Creates a FarragoMedColumnSet representation for a BaseColumnSet
+     * provided by this server.
+     *
+     * @param cache cache for loading server
+     *
+     * @param catalog catalog for object names
+     *
+     * @param typeFactory factory for data types
+     *
+     * @param baseColumnSet column set definition
+     *
+     * @return loaded column set
+     */
+    public FarragoMedColumnSet loadColumnSetFromCache(
+        FarragoDataWrapperCache cache,
+        FarragoCatalog catalog,
+        FarragoTypeFactory typeFactory,
+        FemBaseColumnSet baseColumnSet)
+    {
+        String [] qualifiedName = new String [] 
+            {
+                baseColumnSet.getNamespace().getNamespace().getName(),
+                baseColumnSet.getNamespace().getName(),
+                baseColumnSet.getName()
+            };
+
+        Properties props =
+            FemDataWrapperImpl.getStorageOptionsAsProperties(baseColumnSet);
+
+        Map columnPropMap = new HashMap();
+
+        SaffronType rowType = typeFactory.createColumnSetType(baseColumnSet);
+            
+        Iterator iter = baseColumnSet.getFeature().iterator();
+        while (iter.hasNext()) {
+            Object obj = iter.next();
+            FemStoredColumn column = (FemStoredColumn) obj;
+            columnPropMap.put(
+                column.getName(),
+                FemDataWrapperImpl.getStorageOptionsAsProperties(column));
+        }
+        
+        FarragoMedDataServer medServer = loadFromCache(cache);
+
+        FarragoMedColumnSet loadedColumnSet;
+        try {
+            loadedColumnSet = medServer.newColumnSet(
+                qualifiedName,
+                props,
+                typeFactory,
+                rowType,
+                columnPropMap);
+        } catch (Throwable ex) {
+            throw FarragoResource.instance().newForeignTableAccessFailed(
+                catalog.getLocalizedObjectName(baseColumnSet,null),
+                ex);
+        }
+
+        if (rowType != null) {
+            assert(rowType.equals(loadedColumnSet.getRowType()));
+        }
+        
+        return loadedColumnSet;
+    }
+
+    FarragoMedColumnSet validateColumnSet(
+        DdlValidator validator,FemBaseColumnSet baseColumnSet)
+    {
+        FarragoMedColumnSet columnSet;
+
+        try {
+            // validate that we can successfully initialize the table
+            columnSet = loadColumnSetFromCache(
+                validator.getDataWrapperCache(),
+                validator.getCatalog(),
+                validator.getTypeFactory(),
+                baseColumnSet);
+        } catch (Throwable ex) {
+            throw validator.res.newValidatorDataServerTableInvalid(
+                validator.getCatalog().getLocalizedObjectName(
+                    baseColumnSet,baseColumnSet.refClass()),
+                ex);
+        }
+        
+        validator.createDependency(
+            baseColumnSet,
+            Collections.singleton(this),
+            "ServerProvidesColumnSet");
+
+        return columnSet;
     }
 
     // implement DdlStoredElement

@@ -240,6 +240,7 @@ public class Main extends TestCase
         suite.addTestSuite(OptionsListTest.class);
         suite.addTestSuite(SaffronSqlValidationTest.class);
         suite.addTestSuite(Rex2CalcPlanTestCase.class);
+        suite.addTestSuite(RexTransformerTest.class);
     }
 
     /**

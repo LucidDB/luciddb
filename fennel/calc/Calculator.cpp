@@ -172,6 +172,18 @@ Calculator::getInputRegisterDescriptor() const
     return *(mRegisterSetDescriptor[RegisterReference::EInput]);
 }
 
+TupleDescriptor
+Calculator::getStatusRegisterDescriptor() const
+{
+    return *(mRegisterSetDescriptor[RegisterReference::EStatus]);
+}
+
+TupleData const * const 
+Calculator::getStatusRegister() const
+{
+    return mRegisterTuple[RegisterReference::EStatus];
+}
+
 void
 Calculator::exec()
 {

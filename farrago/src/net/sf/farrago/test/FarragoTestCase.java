@@ -109,7 +109,7 @@ public abstract class FarragoTestCase extends DiffTestCase
      */
     public static void staticSetUp() throws Exception
     {
-        FarragoJdbcEngineDriver driver = new FarragoJdbcEngineDriver();
+        FarragoJdbcEngineDriver driver = newJdbcEngineDriver();
         connection = DriverManager.getConnection(
             driver.getUrlPrefix());
         FarragoJdbcEngineConnection farragoConnection =
@@ -280,9 +280,21 @@ public abstract class FarragoTestCase extends DiffTestCase
         assertEquals(refList,actualSet);
     }
 
+    private static FarragoJdbcEngineDriver newJdbcEngineDriver()
+        throws Exception
+    {
+        String driverName = System.getProperty(
+            "net.sf.farrago.test.jdbcDriverClass");
+        if (driverName == null) {
+            return new FarragoJdbcEngineDriver();
+        }
+        return (FarragoJdbcEngineDriver)
+            Class.forName(driverName).newInstance();
+    }
+
     protected void runSqlLineTest(String sqlFile) throws Exception
     {
-        FarragoJdbcEngineDriver driver = new FarragoJdbcEngineDriver();
+        FarragoJdbcEngineDriver driver = newJdbcEngineDriver();
         assert(sqlFile.endsWith(".sql"));
         File sqlFileSansExt = new File(
             sqlFile.substring(0,sqlFile.length() - 4));
@@ -321,7 +333,7 @@ public abstract class FarragoTestCase extends DiffTestCase
             System.setProperty("sqlline.system.exit","true");
             SqlLine.mainWithInputRedirection(args, sequenceStream);
             printStream.flush();
-            if (catalog.isFennelEnabled()) {
+            if (shouldDiff()) {
                 diffTestLog();
             }
         } finally {
@@ -331,6 +343,16 @@ public abstract class FarragoTestCase extends DiffTestCase
         }
     }
 
+    protected boolean shouldDiff()
+    {
+        if (catalog.isFennelEnabled()) {
+            return true;
+        }
+        String diffProp =
+            System.getProperties().getProperty("net.sf.farrago.test.diff");
+        return "true".equals(diffProp);
+    }
+    
     //~ Inner Classes ---------------------------------------------------------
 
     /**

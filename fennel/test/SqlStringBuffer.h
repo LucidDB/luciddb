@@ -41,14 +41,16 @@ public:
     static const uint mBumperChar;
     static const int mBumperLen;
 
-    SqlStringBuffer(int storage,         // maximum size (column width) of string
-                    int size,            // size of text, excluding padding
-                    int leftpad = 0,     // pad left with this many chars
-                    int rightpad = 0,    // pad right with this many chars
+    explicit
+    SqlStringBuffer(int storage,         // maximum size of string in characters
+                    int size,            // size of text, in characters, excluding padding
+                    int leftpad = 0,     // pad left with this many characters
+                    int rightpad = 0,    // pad right with this many chararacters
                     uint text = 'x',     // fill text w/this
                     uint pad = ' ',      // pad w/this
-                    int leftBumper = mBumperLen,  // try to pick something unaligned...
-                    int rightBumper = mBumperLen) :
+                    // Try to use something unaligned below:
+                    int leftBumper = mBumperLen,  // In characters
+                    int rightBumper = mBumperLen) : 
         mStorage(storage),
         mSize(size),
         mLeftPad(leftpad),
@@ -96,29 +98,83 @@ public:
     string mS;
 
 private:
-    string vectortostring(vector<char> &v);
 };
 
-class SqlStringBufferUCS2 : public SqlStringBuffer
+class SqlStringBufferUCS2
 {
-    SqlStringBufferUCS2(int storage,         // maximum size (column width) of string
-                        int size,            // size of text, excluding padding
-                        int leftpad = 0,     // pad left with this many chars
-                        int rightpad = 0,    // pad right with this many chars
+public:
+    static const uint mBumperChar;
+    static const int mBumperLen;
+
+    explicit
+    SqlStringBufferUCS2(int storage,         // maximum size of string in characters
+                        int size,            // size of text, in characters, excluding padding
+                        int leftpad = 0,     // pad left with this many characters
+                        int rightpad = 0,    // pad right with this many chararacters
                         uint text = 'x',     // fill text w/this
                         uint pad = ' ',      // pad w/this
-                        int leftBumper = mBumperLen,  // try to pick something unaligned...
-                        int rightBumper = mBumperLen) :
-        SqlStringBuffer(storage >> 1,
-                        size >> 1,
-                        leftpad >> 1,
-                        rightpad >> 1,
-                        leftBumper >> 1,   // keep things even
-                        rightBumper >> 1)  // keep things even
+                        // Try to use something unaligned below:
+                        int leftBumper = mBumperLen,  // In characters
+                        int rightBumper = mBumperLen) : 
+        mStorage(storage*2),
+        mSize(size*2),
+        mLeftPad(leftpad*2),
+        mRightPad(rightpad*2),
+        mLeftBump(leftBumper),
+        mRightBump(rightBumper),
+        mTotal(storage*2 + leftBumper + rightBumper),
+        mS(mTotal, mBumperChar)
     {
-    }
-                        
-};
+        init();
 
+        // pad all first
+        char byte1 = (pad >> 8) & 0xff;
+        char byte2 = pad & 0xff;
+        int i = 0;
+        while (i < mStorage) {
+            mStr[i++] = byte1;
+            mStr[i++] = byte2;
+        }
+
+        // fill text
+        byte1 = (text >> 8) & 0xff;
+        byte2 = text & 0xff;
+        i = 0;
+        while (i < mSize) {
+            mStr[mLeftPad + i++] = byte1;
+            mStr[mLeftPad + i++] = byte2;
+            
+        }
+    }
+
+    explicit
+    SqlStringBufferUCS2(SqlStringBuffer const &src);
+
+    void init();
+    bool verify();
+    void randomize(uint start = 'A',
+                   uint lower = ' ', 
+                   uint upper = '~');
+    void patternfill(uint start = 'A',
+                     uint lower = ' ',
+                     uint upper = '~');
+    string dump();
+    bool equal(SqlStringBufferUCS2 const &other);
+
+    char * mStr;           // valid string start. (includes left padding)
+    char * mStrPostPad;    // valid string start, skipping left padding
+    char * mRightP;        // right bumper start. valid string ends 1 before here
+    char * mLeftP;         // left bumper start.
+    const int mStorage;    // maximum size (column width) of string
+    const int mSize;       // size of string
+    const int mLeftPad;    // length of left padding
+    const int mRightPad;   // length of right padding
+    const int mLeftBump;   // length of left bumper
+    const int mRightBump;  // length of right bumper
+    const int mTotal;      // size of string + bumpers
+    string mS;
+
+private:
+};
 
 #endif

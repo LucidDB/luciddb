@@ -136,6 +136,21 @@ public:
     //! asserts. Typically called before exec().
     TupleDescriptor getInputRegisterDescriptor() const;
 
+    //! Determine Status Tuple format
+    //!
+    //! When assemble() is used, an XO <b>may</b> learn the format of its
+    //! status from Calculator. The XO could use this information to
+    //! double-check the integrety of other plan information.
+    //! Typically called before exec().
+    TupleDescriptor getStatusRegisterDescriptor() const;
+
+
+    //! Get a pointer to Status Register Tuple
+    //!
+    //! Typically called once after Calculator configuration, as
+    //! this tuple never changes.
+    TupleData const * const getStatusRegister() const;
+    
 
     //! Bind commonly changing Register Sets Input and Output.
     //!

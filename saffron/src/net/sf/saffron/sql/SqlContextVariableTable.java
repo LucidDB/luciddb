@@ -58,11 +58,8 @@ public class SqlContextVariableTable
         mapNameToType.put(CURRENT_PATH.getSimple(),varcharType);
         mapNameToType.put(CURRENT_ROLE.getSimple(),varcharType);
 
-        // TODO jvs 20-Feb-2004:  once Farrago supports temporal types
-        /*
-          
-        SaffronType dateType = typeFactory.createSqlType(
-            SqlTypeName.Date);
+
+        SaffronType dateType = typeFactory.createSqlType(SqlTypeName.Date);
 
         // REVIEW jvs 20-Feb-2004:  SqlTypeName says Time and Timestamp
         // don't take precision, but they should (according to the standard).
@@ -79,7 +76,7 @@ public class SqlContextVariableTable
         mapNameToType.put(CURRENT_TIMESTAMP.getSimple(),timestampType);
         mapNameToType.put(LOCALTIME.getSimple(),timeType);
         mapNameToType.put(LOCALTIMESTAMP.getSimple(),timestampType);
-        */
+
     }
 
     public SaffronType deriveType(SqlIdentifier id)

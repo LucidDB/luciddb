@@ -1,7 +1,22 @@
 /*
 // $Id$
-// Aspen dataflow server
-// (C) Copyright 2003-2003 Disruptive Technologies, Inc.
+// Saffron preprocessor and data engine
+// (C) Copyright 2004-2004 Disruptive Technologies, Inc.
+// You must accept the terms in LICENSE.html to use this software.
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public License
+// as published by the Free Software Foundation; either version 2.1
+// of the License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 package net.sf.saffron.opt;
 
@@ -40,32 +55,6 @@ public class CalcRelImplementor extends RelImplementor {
         return new Rex2CalcTranslator(this.rexBuilder, projectExps, conditionExp);
     }
 
-    /**
-     *  Takes a rextree and transforms it into another in one sense equivalent rextree.
-     *  Nodes in tree will be modified and hence tree will not remain unchanged
-     */
-//    public class RexToRexTransformer
-//    {
-//        private RexNode m_root;
-//        public RexToRexTransformer(RexNode root)
-//        {
-//            m_root = root;
-//        }
-//
-//        public boolean isBoolean(RexNode node)
-//        {
-//            if (node instanceof RexCall) {
-//                SqlBinaryOperator op;
-//                op.
-//            }
-//        }
-//
-//        public RexNode tranform()
-//        {
-//            RexCall c;
-//            c.
-//        }
-//    }
 
     /** Inner class Translator */
     public class Rex2CalcTranslator
@@ -109,6 +98,19 @@ public class CalcRelImplementor extends RelImplementor {
             m_knownTypes.put(fac.createSqlType(SqlTypeName.Boolean), CalcProgramBuilder.OpType.Boolean);
 
 
+            m_knownTypes.put(fac.createSqlType(SqlTypeName.Date), CalcProgramBuilder.OpType.Int);
+            m_knownTypes.put(fac.createSqlType(SqlTypeName.Time), CalcProgramBuilder.OpType.Int);
+            m_knownTypes.put(fac.createSqlType(SqlTypeName.Timestamp), CalcProgramBuilder.OpType.Int);
+
+            m_knownTypes.put(fac.createJavaType(Integer.class), CalcProgramBuilder.OpType.Int);
+            m_knownTypes.put(fac.createJavaType(int.class), CalcProgramBuilder.OpType.Int);
+            m_knownTypes.put(fac.createJavaType(Long.class), CalcProgramBuilder.OpType.LongLong);
+            m_knownTypes.put(fac.createJavaType(long.class), CalcProgramBuilder.OpType.LongLong);
+            m_knownTypes.put(fac.createJavaType(Double.class), CalcProgramBuilder.OpType.Double);
+            m_knownTypes.put(fac.createJavaType(double.class), CalcProgramBuilder.OpType.Double);
+            m_knownTypes.put(fac.createJavaType(String.class), CalcProgramBuilder.OpType.VarCharPointer);
+            m_knownTypes.put(fac.createJavaType(Boolean.class), CalcProgramBuilder.OpType.VarCharPointer);
+            m_knownTypes.put(fac.createJavaType(boolean.class), CalcProgramBuilder.OpType.VarCharPointer);
         }
 
         private CalcProgramBuilder.OpType getCalcType(RexNode node)
@@ -183,10 +185,13 @@ public class CalcRelImplementor extends RelImplementor {
             CalcProgramBuilder.Register statusReg = m_builder.newStatus(CalcProgramBuilder.OpType.Boolean);
 
             //step 2-1: figure out the status
-            m_builder.addJumpTrue(m_builder.getCurrentLineNumber()+4,filterResult); //todo line number incorrect
+            String prepareOutput = newLabel();
+            m_builder.addLabelJumpTrue(prepareOutput,filterResult);
             // row didnt match
             m_builder.addMove(statusReg, m_trueReg);
             m_builder.addReturn();
+            m_builder.addLabel(prepareOutput);
+
             // row matched. Now calculate all the outputs
             for (int i = 0; i < m_projectExps.length; i++)
             {
@@ -226,7 +231,7 @@ public class CalcRelImplementor extends RelImplementor {
             else {
                 //nodes of type RexCorrelVariable, RexDynamicVariable, RexRangeRef should never feed to us
                 throw SaffronResource.instance().newProgramImplementationError(
-                        "Don't know how to implment rex node="+node);
+                        "Don't know how to implement rex node="+node);
             }
 
         }
@@ -235,8 +240,8 @@ public class CalcRelImplementor extends RelImplementor {
         {
             assert(call.operands.length == 2) : "not a binary operator";
             if (containsResult(call)) {
-                assert(false) : "Shouldn't call this function directly, use implmentNode(RexNode) instead";
-                return;//avoid reimplmenting node
+                assert(false) : "Shouldn't call this function directly, use implementNode(RexNode) instead";
+                return;//avoid reimplementing node
             }
             SqlOperator op = call.op;
 
@@ -271,7 +276,9 @@ public class CalcRelImplementor extends RelImplementor {
 
                 setResult(call, result);
 
-                m_builder.addLabel(restOfInstructions); //TODO this assumes that more instructions will follow.
+                //WARNING this assumes that more instructions will follow.
+                //Return is currently always at the end.
+                m_builder.addLabel(restOfInstructions);
             }
             else{
                 throw SaffronResource.instance().newProgramImplementationError(op.toString());
@@ -282,8 +289,8 @@ public class CalcRelImplementor extends RelImplementor {
         private void implementNode(RexCall call)
         {
             if (containsResult(call)) {
-                assert(false) : "Shouldn't call this function directly, use implmentNode(RexNode) instead";
-                return;//avoid reimplmenting node
+                assert(false) : "Shouldn't call this function directly, use implementNode(RexNode) instead";
+                return;//avoid reimplementing node
             }
 
             SqlOperator op = call.op;
@@ -305,13 +312,35 @@ public class CalcRelImplementor extends RelImplementor {
 
                 implementNode(call.operands[0]);
                 implementNode(call.operands[1]);
-                implmentConversionIfNeeded(op, call.operands[0], call.operands[1]);
+                implementConversionIfNeeded(op, call.operands[0], call.operands[1]);
                 resultOfCall = m_builder.newLocal(resultType);
                 CalcProgramBuilder.Register reg1=getResult(call.operands[0]);
                 CalcProgramBuilder.Register reg2=getResult(call.operands[1]);
 
-
-                if (op.kind.isA(SqlKind.Plus)) {
+                if (isStrCmp(call)) {
+                    assert(resultOfCall.getOpType().getOrdinal()==CalcProgramBuilder.OpType.Boolean.getOrdinal());
+                    CalcProgramBuilder.Register temp = m_builder.newLocal(CalcProgramBuilder.OpType.Int);
+                    String collationToUse =
+                            SqlCollation.getCoercibilityDyadicComparison(call.operands[0].getType().getCollation(),
+                                                                         call.operands[1].getType().getCollation());
+                    CalcProgramBuilder.Register colReg = m_builder.newLiteral(CalcProgramBuilder.OpType.VarCharPointer, collationToUse);
+                    m_builder.addExtendedInstructionCall(temp,"NLSCompare",new CalcProgramBuilder.Register[]{reg1,reg2,colReg});
+                    CalcProgramBuilder.Register zero = m_builder.newLongLiteral(0);
+                    if (op.kind.isA(SqlKind.Equals)) {
+                        m_builder.addBoolNativeEqual(resultOfCall, temp, zero);
+                    } else if (op.kind.isA(SqlKind.NotEquals)) {
+                        m_builder.addBoolNativeNotEqual(resultOfCall, temp, zero);
+                    } else if (op.kind.isA(SqlKind.GreaterThan)) {
+                        m_builder.addBoolNativeGreaterThan(resultOfCall, temp, zero);
+                    } else if (op.kind.isA(SqlKind.LessThan)) {
+                        m_builder.addBoolNativeLessThan(resultOfCall, temp, zero);
+                    } else if (op.kind.isA(SqlKind.GreaterThanOrEqual)) {
+                        m_builder.addBoolNativeGreaterOrEqual(resultOfCall, temp, zero);
+                    } else if (op.kind.isA(SqlKind.LessThanOrEqual)) {
+                        m_builder.addBoolNativeLessOrEqual(resultOfCall, temp, zero);
+                    }
+                }
+                else if (op.kind.isA(SqlKind.Plus)) {
                     m_builder.addNativeAdd(resultOfCall, reg1, reg2);
                 }else if (op.kind.isA(SqlKind.Minus)) {
                     m_builder.addNativeSub(resultOfCall, reg1, reg2);
@@ -335,10 +364,16 @@ public class CalcRelImplementor extends RelImplementor {
                         m_builder.addBoolAnd(resultOfCall, reg1, reg2);
                 }else if (op.kind.isA(SqlKind.Or)) {
                     m_builder.addBoolOr(resultOfCall, reg1, reg2);
+                }else if (op.equals(m_opTab.concatOperator)) {
+                    //todo need to pump in charset as well
+                    m_builder.addExtendedInstructionCall(resultOfCall, "CONCAT",
+                               new CalcProgramBuilder.Register[]{ reg1, reg2 });
                 }
 
                 else {
-                    throw SaffronResource.instance().newProgramImplementationError("Binary operator"+op+" unknown");
+                    throw SaffronResource.instance().
+                            newProgramImplementationError(
+                                    "Binary operator"+op+" unknown");
                 }
             }
             //-- Postfix Operators------------------------------------------
@@ -353,11 +388,19 @@ public class CalcRelImplementor extends RelImplementor {
                 {
                     boolean boolValue = op.kind.isA(SqlKind.IsTrue);
                     RexNode operand =call.operands[0];
-                    RexNode notNullCall = rexBuilder.makeCall(m_opTab.isNotNullOperator,operand);
-                    RexNode eqCall = rexBuilder.makeCall(m_opTab.equalsOperator,operand, rexBuilder.makeLiteral(boolValue));
-                    RexNode andCall = rexBuilder.makeCall(m_opTab.andOperator, notNullCall, eqCall);
-                    implementNode(andCall);
-                    resultOfCall = getResult(andCall);
+                    RexNode node;
+                    SaffronType t = operand.getType();
+                    if (t.isNullable()) {
+                        RexNode notNullCall = rexBuilder.makeCall(m_opTab.isNotNullOperator,operand);
+                        RexNode eqCall = rexBuilder.makeCall(m_opTab.equalsOperator,operand, rexBuilder.makeLiteral(boolValue));
+                        RexNode andCall = rexBuilder.makeCall(m_opTab.andOperator, notNullCall, eqCall);
+                        implementNode(andCall);
+                        resultOfCall = getResult(andCall);
+                    } else {
+                        RexNode eqCall = rexBuilder.makeCall(m_opTab.equalsOperator,operand, rexBuilder.makeLiteral(boolValue));
+                        implementNode(eqCall);
+                        resultOfCall = getResult(eqCall);
+                    }
                 }
                 //~  IS NOT NULL            --------------------------
                 else if (op.equals(m_opTab.isNotNullOperator)){ //kind.isA(SqlKind.IsNotNull)) {
@@ -369,7 +412,7 @@ public class CalcRelImplementor extends RelImplementor {
                 else if (op.kind.isA(SqlKind.IsNull)) {
                     resultOfCall = m_builder.newLocal(resultType);
                     CalcProgramBuilder.Register reg=getResult(call.operands[0]);
-                    m_builder.addBoolIsNull(resultOfCall, reg);
+                    m_builder.addBoolNativeIsNull(resultOfCall, reg);
                 }
                 else {
                     throw SaffronResource.instance().newProgramImplementationError("Postfix operator "+op+" unknown");
@@ -419,16 +462,84 @@ public class CalcRelImplementor extends RelImplementor {
             else if (op.equals(m_funTab.cast) && RexLiteral.isNullLiteral(call.operands[0])){
                 resultOfCall = m_builder.newLiteral(resultType, null);
             }
+            else if (op.equals(m_funTab.charLengthFunc) || op.equals(m_funTab.characterLengthFunc)){
+                implementNode(call.operands[0]);
+                resultOfCall = m_builder.newLocal(resultType);
+                CalcProgramBuilder.Register charSetName =
+                        m_builder.newStringLiteral(call.operands[0].getType().getCharset().name());
+                CalcProgramBuilder.Register[] operands =
+                        new CalcProgramBuilder.Register[]{getResult(call.operands[0]), charSetName};
+                m_builder.addExtendedInstructionCall(resultOfCall,m_funTab.charLengthFunc.name,operands);
+            }
+            else if (op.equals(m_funTab.upperFunc) || op.equals(m_funTab.lowerFunc)){
+                implementNode(call.operands[0]);
+                resultOfCall = m_builder.newLocal(resultType);
+                CalcProgramBuilder.Register charSetName =
+                        m_builder.newStringLiteral(call.operands[0].getType().getCharset().name());
+                CalcProgramBuilder.Register[] operands =
+                        new CalcProgramBuilder.Register[]{getResult(call.operands[0]), charSetName};
+                m_builder.addExtendedInstructionCall(resultOfCall,((SqlFunction) op).name,operands);
+            }
+            else if (op.equals(m_funTab.trimFunc)) {
+                implementNode(call.operands[1]);
+                implementNode(call.operands[2]);
+                resultOfCall = m_builder.newLocal(resultType);
+                assert(call.operands[0] instanceof RexLiteral);
+                assert(((RexLiteral)call.operands[0]).getValue() instanceof SqlFunctionTable.FunctionFlagType);
+                SqlFunctionTable.FunctionFlagType flag =
+                        (SqlFunctionTable.FunctionFlagType) ((RexLiteral)call.operands[0]).getValue();
+                Util.pre(flag.equals(SqlFunctionTable.FunctionFlagType.Both) ||
+                         flag.equals(SqlFunctionTable.FunctionFlagType.Trailing) ||
+                         flag.equals(SqlFunctionTable.FunctionFlagType.Leading),"unknown flag");
+                CalcProgramBuilder.Register leftPad;
+                CalcProgramBuilder.Register rightPad;
+                if (flag.equals(SqlFunctionTable.flagBoth))
+                {
+                    leftPad = m_builder.newLongLiteral(1);
+                    rightPad = m_builder.newLongLiteral(1);
+                }
+                else if (flag.equals(SqlFunctionTable.flagLeading))
+                {
+                    leftPad = m_builder.newLongLiteral(1);
+                    rightPad = m_builder.newLongLiteral(0);
+                }
+                else //if (flag.equals(SqlFunctionTable.flagTrailing))
+                {
+                    leftPad = m_builder.newLongLiteral(0);
+                    rightPad = m_builder.newLongLiteral(1);
+                }
+
+                CalcProgramBuilder.Register[] operands =
+                        new CalcProgramBuilder.Register[] {
+                            getResult(call.operands[1]),getResult(call.operands[2]), leftPad, rightPad};
+                m_builder.addExtendedInstructionCall(resultOfCall,((SqlFunction) op).name,operands);
+            }
+            else if (op.equals(m_funTab.overlayFunc))
+            {
+                int n = call.operands.length;
+                assert(3==n || 4==n);
+                implementNode(call.operands[0]);
+                implementNode(call.operands[1]);
+                implementNode(call.operands[2]);
+                if (4==n) {
+                    implementNode(call.operands[3]);
+                }
+                resultOfCall = m_builder.newLocal(resultType);
+
+                CalcProgramBuilder.Register[] operands =new CalcProgramBuilder.Register[n];
+                for(int i=0;i<n;i++) {
+                    operands[i] = getResult(call.operands[i]);
+                }
+                m_builder.addExtendedInstructionCall(resultOfCall,((SqlFunction) op).name,operands);
+            }
             else if (op instanceof SqlFunction)
             {
                 //sanity checking that function exists, probably already done in the validator
                 SqlFunction fun = (SqlFunction) op;
-                Util.pre(fun.getNumOfOperands() == call.operands.length,"nbr of operands mismatch");
+                Util.pre(fun.getNumOfOperands(call.operands.length) == call.operands.length,"nbr of operands mismatch");
                 if (null==m_funTab.lookup(fun.name)) {
                     throw SaffronResource.instance().newProgramImplementationError("Function "+fun+" unknown");
                 }
-
-
 
                 //implement the operands of the function
                 for (int i = 0; i < call.operands.length; i++) {
@@ -441,7 +552,7 @@ public class CalcRelImplementor extends RelImplementor {
 
                 //add the call to the extended instruction
                 //gather the result registers of the operands
-                CalcProgramBuilder.Register[] resultOfOperands = new CalcProgramBuilder.Register[fun.getNumOfOperands()];
+                CalcProgramBuilder.Register[] resultOfOperands = new CalcProgramBuilder.Register[call.operands.length];
                 for (int i = 0; i < call.operands.length; i++) {
                     resultOfOperands[i] = getResult(call.operands[i]);
                 }
@@ -482,13 +593,27 @@ public class CalcRelImplementor extends RelImplementor {
             setResult(call, resultOfCall);
         }
 
+        private boolean isStrCmp(RexCall call) {
+            SqlOperator op = call.op;
+            if (op.kind.isA(SqlKind.Equals) ||
+                op.kind.isA(SqlKind.NotEquals) ||
+                op.kind.isA(SqlKind.GreaterThan) ||
+                op.kind.isA(SqlKind.LessThan) ||
+                op.kind.isA(SqlKind.GreaterThanOrEqual) ||
+                op.kind.isA(SqlKind.LessThanOrEqual))
+            {
+                return call.operands[0].getType().isCharType() && call.operands[1].getType().isCharType();
+            }
+            return false;
+        }
+
         /** If conversion is needed between the two operands this function will insert a call
          * to the calculator convert function and silently update the result register of the operands as needed
          * @param op
          * @param op1
          * @param op2
          */
-        private void implmentConversionIfNeeded(SqlOperator op, RexNode op1, RexNode op2)
+        private void implementConversionIfNeeded(SqlOperator op, RexNode op1, RexNode op2)
         {
             //TODO
         }
@@ -496,8 +621,8 @@ public class CalcRelImplementor extends RelImplementor {
         private void implementNode(RexLiteral node)
         {
            if (containsResult(node)) {
-               assert(false) : "Shouldn't call this function directly, use implmentNode(RexNode) instead";
-               return;//avoid reimplmenting node
+               assert(false) : "Shouldn't call this function directly, use implementNode(RexNode) instead";
+               return;//avoid reimplementing node
            }
 
            Object value = node.getValue();
@@ -513,8 +638,8 @@ public class CalcRelImplementor extends RelImplementor {
         private void implementNode(RexInputRef node)
         {
            if (containsResult(node)) {
-               assert(false) : "Shouldn't call this function directly, use implmentNode(RexNode) instead";
-               return;//avoid reimplmenting node
+               assert(false) : "Shouldn't call this function directly, use implementNode(RexNode) instead";
+               return;//avoid reimplementing node
            }
            setResult(node, m_builder.newInput(getCalcType(node)));
         }

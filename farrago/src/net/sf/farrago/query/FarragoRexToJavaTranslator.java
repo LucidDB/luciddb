@@ -6,12 +6,12 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
@@ -41,7 +41,7 @@ class FarragoRexToJavaTranslator extends RelImplementor.Translator
     private FarragoRelImplementor farragoImplementor;
     private StatementList stmtList;
     private MemberDeclarationList memberList;
-        
+
     FarragoRexToJavaTranslator(
         FarragoRelImplementor implementor,
         SaffronRel rel,
@@ -93,7 +93,7 @@ class FarragoRexToJavaTranslator extends RelImplementor.Translator
             "getContextVariable_" + contextVariable.getName(),
             new ExpressionList());
     }
-    
+
     // override RelImplementor.Translator
     protected Expression convertDynamicParam(RexDynamicParam dynamicParam)
     {
@@ -128,7 +128,7 @@ class FarragoRexToJavaTranslator extends RelImplementor.Translator
 
     protected Expression convertByteArrayLiteral(byte [] bytes)
     {
-        // NOTE:  we override Saffron's default because DynamicJava 
+        // NOTE:  we override Saffron's default because DynamicJava
         // has a bug dealing with anonymous byte [] initializers
         Variable variable = farragoImplementor.newVariable();
         memberList.add(
@@ -151,7 +151,7 @@ class FarragoRexToJavaTranslator extends RelImplementor.Translator
         }
         return variable;
     }
-    
+
     private Expression convertIsTrue(RexCall call,Expression operand)
     {
         if (call.operands[0].getType().isNullable()) {
@@ -293,9 +293,9 @@ class FarragoRexToJavaTranslator extends RelImplementor.Translator
                     lhsExp,
                     AssignableValue.ASSIGNMENT_METHOD_NAME,
                     new ExpressionList(rhsExp))));
-        
+
         if (lhsType instanceof FarragoPrecisionType) {
-            
+
             // may need to pad or truncate
             FarragoPrecisionType lhsPrecisionType =
                 (FarragoPrecisionType) lhsType;
@@ -329,7 +329,7 @@ class FarragoRexToJavaTranslator extends RelImplementor.Translator
             // determine target precision
             Expression precisionExp = Literal.makeLiteral(
                 lhsPrecisionType.getPrecision());
-            
+
             // need to pad only for fixed width
             Expression needPadExp = Literal.makeLiteral(
                 !lhsPrecisionType.isBoundedVariableWidth());
@@ -369,22 +369,33 @@ class FarragoRexToJavaTranslator extends RelImplementor.Translator
         if (!lhsType.isNullable() && rhsType.isNullable()) {
             // generate code which will throw an exception whenever an attempt
             // is made to cast a null value to a NOT NULL type
-            Variable variable = createScratchVariable(rhsType);
-            stmtList.add(
-                new ExpressionStatement(
-                    new AssignmentExpression(
-                        variable,
-                        AssignmentExpression.EQUALS,
-                        rhsExp)));
-            // TODO:  provide exception context
-            stmtList.add(
-                new ExpressionStatement(
-                    new MethodCall(
-                        farragoImplementor.preparingStmt.
-                        getConnectionVariable(),
-                        "checkNotNull",
-                        new ExpressionList(variable))));
-            rhsExp = variable;
+
+            if (SaffronTypeFactoryImpl.isJavaType(rhsType)) {
+                stmtList.add(
+                    new ExpressionStatement(
+                        new MethodCall(
+                            farragoImplementor.preparingStmt.
+                            getConnectionVariable(),
+                            "checkNotNull",
+                            new ExpressionList(rhsExp))));
+            } else {
+                Variable variable = createScratchVariable(rhsType);
+                stmtList.add(
+                    new ExpressionStatement(
+                        new AssignmentExpression(
+                            variable,
+                            AssignmentExpression.EQUALS,
+                            rhsExp)));
+                // TODO:  provide exception context
+                stmtList.add(
+                    new ExpressionStatement(
+                        new MethodCall(
+                            farragoImplementor.preparingStmt.
+                            getConnectionVariable(),
+                            "checkNotNull",
+                            new ExpressionList(variable))));
+                rhsExp = variable;
+            }
         }
 
         // special case for source explicit null
@@ -398,7 +409,7 @@ class FarragoRexToJavaTranslator extends RelImplementor.Translator
                 return rhsExp;
             }
         }
-        
+
         if (isNullablePrimitive(lhsType)) {
             if (rhsType instanceof FarragoPrimitiveType) {
                 return convertCastPrimitiveToNullablePrimitive(
@@ -439,7 +450,7 @@ class FarragoRexToJavaTranslator extends RelImplementor.Translator
         // TODO:  overflow detection, type promotion, etc.  Also, if global
         // analysis is used on the expression, we can reduce the number of
         // null-tests.
-        
+
         if (!call.getType().isNullable()) {
             return convertBinaryNotNull(call,binaryKind,operands);
         }
@@ -469,7 +480,7 @@ class FarragoRexToJavaTranslator extends RelImplementor.Translator
                 assignmentStmt));
 
         stmtList.add(ifStatement);
-        
+
         return varResult;
     }
 
@@ -494,7 +505,7 @@ class FarragoRexToJavaTranslator extends RelImplementor.Translator
                     "compareCharStrings",
                     new ExpressionList(operands[0],operands[1]));
         } else {
-            comparisonResultExp = 
+            comparisonResultExp =
                 new MethodCall(
                     OJClass.forClass(VarbinaryComparator.class),
                     "compareVarbinary",
@@ -549,7 +560,7 @@ class FarragoRexToJavaTranslator extends RelImplementor.Translator
         }
         return nullTest;
     }
-    
+
     boolean isNullablePrimitive(SaffronType type)
     {
         OJClass ojClass = OJUtil.typeToOJClass(type);

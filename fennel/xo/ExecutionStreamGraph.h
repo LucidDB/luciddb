@@ -23,6 +23,7 @@
 
 #include "fennel/common/ClosableObject.h"
 
+#include <vector>
 #include <boost/utility.hpp>
 
 FENNEL_BEGIN_NAMESPACE
@@ -36,6 +37,22 @@ typedef uint ExecutionStreamId;
 /**
  * A ExecutionStreamGraph is a directed graph representing dataflow
  * among ExecutionStreams.
+ *
+ * <p>
+ *
+ * When a stream is added to a graph is assigned an ExecutionStreamId. The
+ * identifier is later used to work with the stream.
+ *
+ * <p>
+ * 
+ * In addition, streams are required to have unique names when they are added
+ * to the graph. These names are used to find the streams by name. Because
+ * tracing streams and adapters may replace a stream's output, the graph also 
+ * finds the last stream for a given name.
+ *
+ * The graph can retrieve streams by these names. In order to
+ * support tracing streams and adapters and tracing streams
+ * are sometimes interposed behind regular streams.
  */
 class ExecutionStreamGraph : public boost::noncopyable, public ClosableObject
 {
@@ -57,6 +74,26 @@ public:
         ExecutionStreamId producerId,
         ExecutionStreamId consumerId) = 0;
     
+    /**
+     * Find a stream by name
+     */
+    virtual SharedExecutionStream findStream(
+            std::string name) = 0;
+    
+    /**
+     * Find last stream for name. May be original stream or an adapter.
+     */
+    virtual SharedExecutionStream findLastStream(
+            std::string name) = 0;
+    
+    /**
+     * Replace last stream for name. In the process, creates a dataflow 
+     * from last stream to it's replacement.
+     */
+    virtual void interposeStream(
+        std::string name,
+        ExecutionStreamId interposedId) = 0;
+
     virtual void prepare() = 0;
     
     virtual void open() = 0;
@@ -73,6 +110,11 @@ public:
      * consumed by any other stream.
      */
     virtual SharedExecutionStream getSinkStream() = 0;
+
+    /**
+     * Get streams, sorted topologically. Can only be called after prepare.
+     */
+    virtual std::vector<SharedExecutionStream> getSortedStreams() = 0;
 };
 
 FENNEL_END_NAMESPACE

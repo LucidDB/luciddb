@@ -34,7 +34,7 @@ public class SqlBinaryOperator extends SqlOperator
         String name,SqlKind kind,int prec,boolean isLeftAssoc,
         SqlOperator.TypeInference typeInference,
         SqlOperator.ParamTypeInference paramTypeInference,
-        SqlOperator.AllowdArgInference argTypes)
+        SqlOperator.AllowedArgInference argTypes)
     {
         super(
             name,

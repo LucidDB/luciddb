@@ -331,12 +331,7 @@ void CmdInterpreter::visit(ProxyCmdPrepareExecutionStreamGraph &cmd)
         pTxnHandle->pDb,
         streamFactory,
         pGraph);
-    // TODO jvs 12-Feb-2004: Temporarily, we assume the first stream is the
-    // root of a tree.  This assumption will go away once TupleStreamBuilder
-    // can handle an arbitrary topology (and then it will take the
-    // entire collection, not just one stream).
-    streamBuilder.buildStreamGraph(*(cmd.getStreamDefs()));
-    pGraph->prepare();
+    streamBuilder.buildStreamGraph(cmd);
     pStreamHandle->pTupleStreamGraph = pGraph;
     setStreamHandle(cmd.getResultHandle(),pStreamHandle);
 }

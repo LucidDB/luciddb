@@ -17,12 +17,13 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-package net.sf.farrago.query;
+package net.sf.farrago.namespace.ftrs;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.type.*;
+import net.sf.farrago.query.*;
 
 import net.sf.saffron.core.*;
 import net.sf.saffron.opt.*;
@@ -33,7 +34,7 @@ import java.util.*;
 
 
 /**
- * FennelIndexSearchRel refines FennelIndexScanRel.  Instead of scanning an
+ * FtrsIndexSearchRel refines FtrsIndexScanRel.  Instead of scanning an
  * entire index, it only searches for keys produced by its child.  In addition,
  * it is able to propagate non-key values from its child, implementing an index
  * join.  For a join, the output order is child first and index search results
@@ -42,12 +43,12 @@ import java.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class FennelIndexSearchRel extends FennelSingleRel
+class FtrsIndexSearchRel extends FennelSingleRel
 {
     //~ Instance fields -------------------------------------------------------
 
     /** Aggregation used since multiple inheritance is unavailable. */
-    final FennelIndexScanRel scanRel;
+    final FtrsIndexScanRel scanRel;
 
     final boolean isUniqueKey;
 
@@ -60,17 +61,17 @@ class FennelIndexSearchRel extends FennelSingleRel
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Creates a new FennelIndexSearchRel object.
+     * Creates a new FtrsIndexSearchRel object.
      *
-     * @param scanRel underlying FennelIndexScanRel
+     * @param scanRel underlying FtrsIndexScanRel
      * @param child input which produces keys
      * @param isUniqueKey whether keys are known to be unique
      * @param isOuter whether nulls should be made up for unmatched inputs
      * @param inputKeyProj TODO:  doc
      * @param inputJoinProj TODO:  doc
      */
-    public FennelIndexSearchRel(
-        FennelIndexScanRel scanRel,
+    public FtrsIndexSearchRel(
+        FtrsIndexScanRel scanRel,
         SaffronRel child,
         boolean isUniqueKey,
         boolean isOuter,
@@ -103,7 +104,7 @@ class FennelIndexSearchRel extends FennelSingleRel
     // implement Cloneable
     public Object clone()
     {
-        return new FennelIndexSearchRel(
+        return new FtrsIndexSearchRel(
             scanRel,
             OptUtil.clone(child),
             isUniqueKey,
@@ -191,7 +192,7 @@ class FennelIndexSearchRel extends FennelSingleRel
                 "preserveOrder","outer","inputKeyProj","inputJoinProj"
             },
             new Object [] {
-                Arrays.asList(scanRel.fennelTable.getQualifiedName()),
+                Arrays.asList(scanRel.ftrsTable.getQualifiedName()),
                 projection,
                 scanRel.index.getName(),Boolean.valueOf(isUniqueKey),
                 Boolean.valueOf(scanRel.isOrderPreserving),
@@ -232,9 +233,9 @@ class FennelIndexSearchRel extends FennelSingleRel
         return scanRel.getTable();
     }
 
-    // TODO:  under some circumstances, FennelIndexSearchRel could produce
+    // TODO:  under some circumstances, FtrsIndexSearchRel could produce
     // sorted output, in which case we should implement getCollations()
 }
 
 
-// End FennelIndexSearchRel.java
+// End FtrsIndexSearchRel.java

@@ -83,7 +83,7 @@ public class FarragoRelImplementor extends RelImplementor
             streamDefSetStack.get(streamDefSetStack.size() - 1);
     }
 
-    FemExecutionStreamDef implementFennelRel(SaffronRel rel)
+    public FemExecutionStreamDef implementFennelRel(SaffronRel rel)
     {
         FemExecutionStreamDef streamDef =
             ((FennelRel) rel).toStreamDef(this);

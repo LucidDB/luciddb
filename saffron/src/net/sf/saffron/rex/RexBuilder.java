@@ -299,13 +299,15 @@ public class RexBuilder {
     }
 
     /**
-     * Creates a Bit String literal
+     * Creates a String literal
      * @pre str != null
      */
     public RexLiteral makeLiteral(SqlLiteral.StringLiteral str) {
         Util.pre(str != null, "str != null");
-        return new RexLiteral(str,
-                  typeFactory.createSqlType(SqlTypeName.Varchar, str.getValue().length())); //todo varchar correct here?
+        SaffronType type = typeFactory.createSqlType(SqlTypeName.Varchar, str.getValue().length());
+        type.setCollation(str.getCollation());
+        type.setCharset(str.getCharset());
+        return new RexLiteral(str,type);
     }
 
     /**
@@ -353,6 +355,11 @@ public class RexBuilder {
 
     public SqlOperator getOperator(String name, int syntax) {
         return operatorTable.lookup(name, syntax);
+    }
+
+    public RexLiteral makeLiteral(SqlFunctionTable.FunctionFlagType flag) {
+        Util.pre(flag != null, "time != null");
+        return new RexLiteral(flag, typeFactory.createSqlType(SqlTypeName.Flag));
     }
 }
 

@@ -42,8 +42,7 @@ FENNEL_BEGIN_NAMESPACE
 //! width, to maintain fixed width string length == width. 
 //! Behavior may be undefined if, after Calculator exits, length != width.
 void
-strCatA2(Calculator *pCalc,
-         RegisterRef<char*> *result,
+strCatA2(RegisterRef<char*> *result,
          RegisterRef<char*> *str1);
 
 //! Strcat. Ascii. dest = str1 || str2.
@@ -55,48 +54,41 @@ strCatA2(Calculator *pCalc,
 //! If concatenating multiple strings, strCatA2 will honor
 //! the intermediate length set by strCatAF3()
 void
-strCatAF3(Calculator *pCalc,
-          RegisterRef<char*> *result,
+strCatAF3(RegisterRef<char*> *result,
           RegisterRef<char*> *str1,
           RegisterRef<char*> *str2);
 
 //! StrCmp. Ascii.
 void
-strCmpA(Calculator *pCalc,
-        RegisterRef<int32_t> *result,   
+strCmpA(RegisterRef<int32_t> *result,   
         RegisterRef<char*> *str1,
         RegisterRef<char*> *str2);
 
 //! StrLen in Bits. Ascii.
 void
-strLenBitA(Calculator *pCalc,
-           RegisterRef<int32_t> *result,   
+strLenBitA(RegisterRef<int32_t> *result,   
            RegisterRef<char*> *str);
 
 //! StrLen in Characters. Ascii.
 void
-strLenCharA(Calculator *pCalc,
-            RegisterRef<int32_t> *result,   
+strLenCharA(RegisterRef<int32_t> *result,   
             RegisterRef<char*> *str);
 
 //! StrLen in Octets. Ascii.
 void
-strLenOctA(Calculator *pCalc,
-           RegisterRef<int32_t> *result,   
+strLenOctA(RegisterRef<int32_t> *result,   
            RegisterRef<char*> *str);
 
 //! Overlay. Length unspecified -- to end. Ascii.
 void
-strOverlayA4(Calculator *pCalc,
-             RegisterRef<char*> *result,
+strOverlayA4(RegisterRef<char*> *result,
              RegisterRef<char*> *str,
              RegisterRef<char*> *overlay,
              RegisterRef<int32_t> *start);  
 
 //! Overlay. Length specified. Ascii.
 void
-strOverlayA5(Calculator *pCalc,
-             RegisterRef<char*> *result,
+strOverlayA5(RegisterRef<char*> *result,
              RegisterRef<char*> *str,
              RegisterRef<char*> *overlay,
              RegisterRef<int32_t> *start,   
@@ -105,51 +97,46 @@ strOverlayA5(Calculator *pCalc,
 
 //! Position of find string in str string. Ascii.
 void
-strPosA(Calculator *pCalc,
-        RegisterRef<int32_t>* result,
+strPosA(RegisterRef<int32_t>* result,
         RegisterRef<char*>* str,
         RegisterRef<char*>* find);
 
 //! SubString. By reference. Length not specified -- to end. Ascii.
 void
-strSubStringA3(Calculator *pCalc,
-               RegisterRef<char*>* result,
+strSubStringA3(RegisterRef<char*>* result,
                RegisterRef<char*>* str,
                RegisterRef<int32_t>* start);
 
 //! SubString. By Reference. Length specified. Ascii.
 void
-strSubStringA4(Calculator *pCalc,
-               RegisterRef<char*>* result,
+strSubStringA4(RegisterRef<char*>* result,
                RegisterRef<char*>* str,
                RegisterRef<int32_t>* start,
                RegisterRef<int32_t>* len);
 
 //! ToLower. Ascii.
 void
-strToLowerA(Calculator *pCalc,
-            RegisterRef<char*>* result,
+strToLowerA(RegisterRef<char*>* result,
             RegisterRef<char*>* str);
 
 
 //! ToUpper. Ascii.
 void
-strToUpperA(Calculator *pCalc,
-            RegisterRef<char*>* result,
+strToUpperA(RegisterRef<char*>* result,
             RegisterRef<char*>* str);
 
 
 //! Trim. By Reference. Ascii.
 void
-strTrimA(Calculator *pCalc,
-         RegisterRef<char*>* result,
+strTrimA(RegisterRef<char*>* result,
          RegisterRef<char*>* str,
          RegisterRef<int32_t>* trimLeft,
          RegisterRef<int32_t>* trimRight);
-        
 
+class ExtendedInstructionTable;
+        
 void
-strRegister();
+ExtStringRegister(ExtendedInstructionTable* eit);
 
 
 FENNEL_END_NAMESPACE

@@ -39,8 +39,6 @@ public:
     virtual
     ~ReturnInstruction() { }
 
-    virtual void setCalc(Calculator* calcP) { }
-
     virtual void exec(TProgramCounter& pc) const { 
         ReturnException ret(pc);
         throw ret;

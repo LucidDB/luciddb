@@ -17,11 +17,12 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-package net.sf.farrago.cwm.relational;
+package net.sf.farrago.fem.med;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.ddl.*;
 import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.resource.*;
 
 import org.netbeans.mdr.handlers.*;
@@ -31,22 +32,22 @@ import java.util.*;
 
 
 /**
- * CwmTableImpl is a custom implementation for CWM Table.
+ * FemLocalTableImpl is a custom implementation for FemLocalTable.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class CwmTableImpl extends InstanceHandler implements CwmTable,
-    DdlValidatedElement
+public abstract class FemLocalTableImpl extends InstanceHandler
+    implements FemLocalTable, DdlValidatedElement
 {
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Creates a new CwmTableImpl object.
+     * Creates a new FemLocalTableImpl object.
      *
      * @param storable .
      */
-    protected CwmTableImpl(StorableObject storable)
+    protected FemLocalTableImpl(StorableObject storable)
     {
         super(storable);
     }
@@ -56,6 +57,23 @@ public abstract class CwmTableImpl extends InstanceHandler implements CwmTable,
     // implement DdlValidatedElement
     public void validateDefinition(DdlValidator validator,boolean creation)
     {
+        // need to validate columns first
+        Iterator columnIter = getFeature().iterator();
+        while (columnIter.hasNext()) {
+            CwmColumnImpl column = (CwmColumnImpl) columnIter.next();
+            column.validateDefinitionImpl(validator);
+        }
+        
+        FemDataServerImpl dataServer = (FemDataServerImpl) getServer();
+        FemDataWrapper dataWrapper = dataServer.getWrapper();
+        if (dataWrapper.isForeign()) {
+            throw validator.res.newValidatorLocalTableButForeignWrapper(
+                validator.getCatalog().getLocalizedObjectName(
+                    this,null),
+                validator.getCatalog().getLocalizedObjectName(
+                    dataWrapper,null));
+        }
+        
         validator.validateUniqueNames(this,getFeature(),false);
 
         Collection indexes = validator.getCatalog().getIndexes(this);
@@ -79,8 +97,11 @@ public abstract class CwmTableImpl extends InstanceHandler implements CwmTable,
         CwmPrimaryKey primaryKey = null;
         Iterator constraintIter = getOwnedElement().iterator();
         while (constraintIter.hasNext()) {
-            CwmUniqueConstraint constraint =
-                (CwmUniqueConstraint) constraintIter.next();
+            Object obj = constraintIter.next();
+            if (!(obj instanceof CwmUniqueConstraint)) {
+                continue;
+            }
+            CwmUniqueConstraint constraint = (CwmUniqueConstraint) obj;
             if (constraint instanceof CwmPrimaryKey) {
                 if (primaryKey != null) {
                     throw validator.res.newValidatorMultiplePrimaryKeys(
@@ -96,7 +117,7 @@ public abstract class CwmTableImpl extends InstanceHandler implements CwmTable,
                     // If no clustered index was specified, make the primary
                     // key's index clustered.
                     validator.getCatalog().setTagValue(
-                        index,"clusteredIndex",null);
+                        index,"clusteredIndex","");
                 }
             }
         }
@@ -111,6 +132,10 @@ public abstract class CwmTableImpl extends InstanceHandler implements CwmTable,
         // NOTE:  do this after PRIMARY KEY uniqueness validation to get a
         // better error message in the case of generated constraint names
         validator.validateUniqueNames(this,getOwnedElement(),false);
+
+        if (creation) {
+            dataServer.validateColumnSet(validator,this);
+        }
     }
 
     // implement DdlValidatedElement
@@ -146,6 +171,7 @@ public abstract class CwmTableImpl extends InstanceHandler implements CwmTable,
             CwmColumn column = (CwmColumn) columnIter.next();
             CwmSqlindexColumn indexColumn =
                 catalog.newCwmSqlindexColumn();
+            indexColumn.setName(column.getName());
             indexColumn.setAscending(Boolean.TRUE);
             indexColumn.setFeature(column);
             indexColumn.setIndex(index);

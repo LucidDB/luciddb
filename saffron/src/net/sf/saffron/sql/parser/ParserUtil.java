@@ -21,11 +21,17 @@
 package net.sf.saffron.sql.parser;
 
 import net.sf.saffron.sql.SqlNode;
+import net.sf.saffron.util.Util;
+import net.sf.saffron.util.SaffronProperties;
+import net.sf.saffron.resource.SaffronResource;
 
 import java.util.List;
 import java.util.Collections;
+import java.util.StringTokenizer;
+import java.util.Locale;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.nio.charset.Charset;
 
 /**
  * Utility methods relating to parsing SQL.
@@ -134,6 +140,46 @@ public final class ParserUtil {
         return s.substring(start,stop);
     }
 
+    /**
+     * Extracts the values from a collation name.
+     * Collation names are on the form <i>charset$locale$strength</i>
+     * @param in The collation name
+     * @return An array of length 3. Each element object represents the three
+     * parts of the collation name.<br>
+     * <i>1st</i> is an object of type <code>{@ java.nio.charset.Charset}</code><br>
+     * <i>2nd</i> is an object of type <code>{@ java.util.Locale}</code><br>
+     * <i>3rd</i> is an object of type <code>{@ java.lang.String}</code><br>
+     */
+    public static Object[] parseCollation(String in) {
+        Object[] ret = new Object[3];
+        StringTokenizer st = new StringTokenizer(in, "$");
+        String charsetStr = st.nextToken();
+        String localeStr = st.nextToken();
+        if (st.countTokens()>0) {
+            ret[2]=st.nextToken();
+        }else {
+            ret[2]=SaffronProperties.instance().getProperty(
+              SaffronProperties.PROPERTY_saffron_default_collation_strength,
+              SaffronProperties.PROPERTY_saffron_default_collation_strength_DEFAULT);
+        }
+
+        ret[0] = Charset.forName(charsetStr);
+        String[] localeParts = localeStr.split("_");
+        Locale locale;
+        if (1==localeParts.length) {
+            locale=new Locale(localeParts[0]);
+        } else if (2==localeParts.length) {
+            locale=new Locale(localeParts[0],localeParts[1]);
+        } else if (3==localeParts.length) {
+            locale=new Locale(localeParts[0],localeParts[1],localeParts[2]);
+        } else {
+            throw SaffronResource.instance().
+                  newParserError("Locale '"+localeStr+"' in an illegal format");
+        }
+        ret[1]=locale;
+        return ret;
+    }
+
     public static String[] toStringArray(List list) {
         return (String[]) list.toArray(emptyStringArray);
     }
@@ -141,7 +187,6 @@ public final class ParserUtil {
     public static SqlNode[] toNodeArray(List list) {
         return (SqlNode[]) list.toArray(emptySqlNodeArray);
     }
-
 }
 
 // End ParserUtil.java

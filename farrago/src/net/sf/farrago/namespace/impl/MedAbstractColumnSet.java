@@ -20,6 +20,8 @@
 package net.sf.farrago.namespace.impl;
 
 import net.sf.farrago.namespace.*;
+import net.sf.farrago.query.*;
+import net.sf.farrago.cwm.relational.*;
 
 import net.sf.saffron.core.*;
 import net.sf.saffron.ext.*;
@@ -37,7 +39,7 @@ import java.util.*;
  */
 public abstract class MedAbstractColumnSet
     extends AbstractTable
-    implements FarragoMedColumnSet
+    implements FarragoQueryColumnSet
 {
     private final String [] localName;
     
@@ -46,6 +48,10 @@ public abstract class MedAbstractColumnSet
     private Properties tableProps;
 
     private Map columnPropMap;
+
+    private FarragoPreparingStmt preparingStmt;
+
+    private CwmNamedColumnSet cwmColumnSet;
     
     /**
      * Creates a new MedAbstractColumnSet.
@@ -114,6 +120,30 @@ public abstract class MedAbstractColumnSet
     public Map getColumnPropertyMap()
     {
         return columnPropMap;
+    }
+
+    // implement FarragoQueryColumnSet
+    public FarragoPreparingStmt getPreparingStmt()
+    {
+        return preparingStmt;
+    }
+    
+    // implement FarragoQueryColumnSet
+    public void setPreparingStmt(FarragoPreparingStmt stmt)
+    {
+        preparingStmt = stmt;
+    }
+    
+    // implement FarragoQueryColumnSet
+    public void setCwmColumnSet(CwmNamedColumnSet cwmColumnSet)
+    {
+        this.cwmColumnSet = cwmColumnSet;
+    }
+
+    // implement FarragoQueryColumnSet
+    public CwmNamedColumnSet getCwmColumnSet()
+    {
+        return cwmColumnSet;
     }
 }
 

@@ -194,6 +194,56 @@ public class SaffronProperties extends Properties
     public static final String PROPERTY_saffron_opt_allowInfiniteCostConverters =
         "saffron.opt.allowInfiniteCostConverters";
 
+    /**
+     * The default charset.
+     * Used in
+     * {@link net.sf.saffron.sql.SqlLiteral#SqlLiteral}
+     * {@link net.sf.saffron.sql.SqlValidator}
+     * <br> The default value is
+     * "{@link #PROPERTY_saffron_java_compiler_class_DEFAULT}".
+     */
+    public static final String PROPERTY_saffron_default_charset =
+            "saffron.default.charset";
+
+    /**
+     * Default value for {@link #PROPERTY_saffron_default_charset} ("{@value}").
+     */
+    public static final String PROPERTY_saffron_default_charset_DEFAULT =
+            "ISO-8859-1";
+
+
+    /**
+     * The default collation.
+     * Used in
+     * {@link net.sf.saffron.sql.SqlCollation}
+     * and {@link net.sf.saffron.sql.SqlLiteral#SqlLiteral}
+     */
+    public static final String PROPERTY_saffron_default_collation_name =
+            "saffron.default.collation.name";
+
+    /**
+     * Default value for
+     * {@link #PROPERTY_saffron_default_collation_name} ("{@value}").
+     */
+    public static final String PROPERTY_saffron_default_collation_name_DEFAULT =
+            "ISO-8859-1$en_US";
+
+    /**
+     * The default collation.
+     * Used in
+     * {@link net.sf.saffron.sql.SqlCollation}
+     * and {@link net.sf.saffron.sql.SqlLiteral#SqlLiteral}
+     */
+    public static final String PROPERTY_saffron_default_collation_strength =
+            "saffron.default.collation.strength";
+
+    /**
+     * Default value for
+     * {@link #PROPERTY_saffron_default_collation_strength} ("{@value}").
+     */
+    public static final String PROPERTY_saffron_default_collation_strength_DEFAULT =
+                "primary";
+
     //~ Constructors ----------------------------------------------------------
 
     /**

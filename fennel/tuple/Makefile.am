@@ -8,7 +8,8 @@ TupleAccessor.cpp \
 TupleData.cpp \
 TupleDescriptor.cpp \
 TuplePrinter.cpp \
-TupleProjectionAccessor.cpp
+TupleProjectionAccessor.cpp \
+TupleDataWithBuffer.cpp
 
 DESIGN_DOC=TupleDesign.cpp
 EXTRA_DIST=$(DESIGN_DOC)

@@ -37,7 +37,7 @@ import java.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class FennelRenameRel extends FennelSingleRel
+public class FennelRenameRel extends FennelSingleRel
 {
     //~ Instance fields -------------------------------------------------------
 

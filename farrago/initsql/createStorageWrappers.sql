@@ -6,7 +6,7 @@
 
 -- create wrapper for access to MDR repositories
 create foreign data wrapper sys_mdr
-library 'plugin/FarragoMedMdr.jar'
+library 'class net.sf.farrago.namespace.mdr.MedMdrForeignDataWrapper'
 language java;
 
 
@@ -19,6 +19,16 @@ options(root_package_name 'CWM');
 create server sys_fem
 foreign data wrapper sys_mdr
 options(root_package_name 'FEM');
+
+
+-- create wrapper for access to local row-store data
+create local data wrapper sys_ftrs
+library 'class net.sf.farrago.namespace.ftrs.FtrsDataWrapper'
+language java;
+
+-- create singleton server for local row-store data
+create server sys_rowstore
+local data wrapper sys_ftrs;
 
 
 -- create wrapper for access to JDBC data

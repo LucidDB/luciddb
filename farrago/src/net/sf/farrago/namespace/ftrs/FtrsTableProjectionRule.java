@@ -17,11 +17,12 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-package net.sf.farrago.query;
+package net.sf.farrago.namespace.ftrs;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.util.*;
+import net.sf.farrago.query.*;
 
 import net.sf.saffron.core.*;
 import net.sf.saffron.opt.*;
@@ -34,26 +35,26 @@ import java.util.*;
 
 
 /**
- * FennelTableProjectionRule implements the rule for pushing a Projection into
- * a FennelIndexScanRel.
+ * FtrsTableProjectionRule implements the rule for pushing a Projection into
+ * a FtrsIndexScanRel.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-class FennelTableProjectionRule extends VolcanoRule
+class FtrsTableProjectionRule extends VolcanoRule
 {
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Creates a new FennelTableProjectionRule object.
+     * Creates a new FtrsTableProjectionRule object.
      */
-    public FennelTableProjectionRule()
+    public FtrsTableProjectionRule()
     {
         super(
             new RuleOperand(
                 ProjectRel.class,
                 new RuleOperand [] {
-                    new RuleOperand(FennelIndexScanRel.class,null)
+                    new RuleOperand(FtrsIndexScanRel.class,null)
                 }));
     }
 
@@ -73,7 +74,7 @@ class FennelTableProjectionRule extends VolcanoRule
             return;
         }
 
-        FennelIndexScanRel origScan = (FennelIndexScanRel) call.rels[1];
+        FtrsIndexScanRel origScan = (FtrsIndexScanRel) call.rels[1];
         if (origScan.projectedColumns != null) {
             // TODO:  fold existing projection?
             return;
@@ -86,7 +87,7 @@ class FennelTableProjectionRule extends VolcanoRule
         
         int n = origProject.getChildExps().length;
         Integer [] projectedColumns = new Integer[n];
-        SaffronType rowType = origScan.fennelTable.getRowType();
+        SaffronType rowType = origScan.ftrsTable.getRowType();
         SaffronType projType = origProject.getRowType();
         SaffronField [] projFields = projType.getFields();
         String [] fieldNames = new String[n];
@@ -112,7 +113,7 @@ class FennelTableProjectionRule extends VolcanoRule
         // based on cost, since sort order and I/O may be in competition.
         FarragoCatalog catalog = origScan.getPreparingStmt().getCatalog();
         Iterator iter =
-            catalog.getIndexes(origScan.fennelTable.cwmTable).iterator();
+            catalog.getIndexes(origScan.ftrsTable.getCwmColumnSet()).iterator();
         while (iter.hasNext()) {
             CwmSqlindex index = (CwmSqlindex) iter.next();
 
@@ -128,9 +129,9 @@ class FennelTableProjectionRule extends VolcanoRule
 
             // REVIEW:  should cluster be from origProject or origScan?
             SaffronRel projectedScan =
-                new FennelIndexScanRel(
+                new FtrsIndexScanRel(
                     origProject.getCluster(),
-                    origScan.fennelTable,
+                    origScan.ftrsTable,
                     index,
                     origScan.getConnection(),
                     projectedColumns,
@@ -165,4 +166,4 @@ class FennelTableProjectionRule extends VolcanoRule
 }
 
 
-// End FennelTableProjectionRule.java
+// End FtrsTableProjectionRule.java

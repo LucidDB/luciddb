@@ -103,6 +103,7 @@ SqlNode OrderedQueryOrExpr(ExprContext exprContext) :
 }
 {
     (
+
         e = QueryOrExpr(exprContext)
     )
     (
@@ -489,7 +490,8 @@ SqlNode SelectExpression() :
 }
 {
     LOOKAHEAD(3)
-    id = Identifier() <DOT> <STAR> { return new SqlIdentifier(new String[] {id, "*"}, null); }
+    id = Identifier() <DOT> <STAR>
+    { return new SqlIdentifier(new String[] {id, "*"}); }
 |
     <STAR> { return new SqlIdentifier("*"); }
 |
@@ -1038,6 +1040,21 @@ SqlNode Expression3(ExprContext exprContext) :
         }
 }
 
+
+/**
+ * Parses a COLLATE clause
+ */
+SqlCollation CollateClause() :
+{
+    String collation ="";
+}
+{
+    <COLLATE> <COLLATION_NAME> {
+        return new SqlCollation(
+            getToken(0).image, SqlCollation.Coercibility.Explicit);
+    }
+}
+
 /**
  * Parses an atomic row expression.
  */
@@ -1073,7 +1090,8 @@ SqlNode AtomicRowExpression() :
     <END>
     {
         return opTab.caseOperator.createCall(caseIdentifier,
-                                             new SqlNodeList(whenList), new SqlNodeList(thenList),
+                                             new SqlNodeList(whenList),
+                                             new SqlNodeList(thenList),
                                              elseClause);
     }
 }
@@ -1116,29 +1134,35 @@ SqlLiteral Literal() :
         return new SqlLiteral(SqlLiteral.BitString.createFromHexString(p));
     }
 |
+    { SqlCollation collation=null; }
     <STRING_LITERAL> {
-        return SqlLiteral.StringLiteral.create(getToken(0).image);
+        p = getToken(0).image;
     }
+    [collation = CollateClause()]
+    { return SqlLiteral.StringLiteral.create(p, collation); }
 
 |
     <TRUE> { return SqlLiteral.True; }
 |
     <FALSE> { return SqlLiteral.False; }
 |
-    (<NULL> | <UNKNOWN>) {
-        return SqlLiteral.createNull();
-    }
+    <UNKNOWN> { return SqlLiteral.Unknown; }
+|
+    <NULL> { return SqlLiteral.createNull(); }
 |
     <LBRACE_D> <STRING_LITERAL> { p = getToken(0).image; } <RBRACE> {
-        return SqlLiteral.create(ParserUtil.parseDate(ParserUtil.strip(p, "'")));
+        return SqlLiteral.create(
+            ParserUtil.parseDate(ParserUtil.strip(p, "'")));
     }
 |
     <LBRACE_T> <STRING_LITERAL> { p = getToken(0).image; } <RBRACE> {
-        return SqlLiteral.create(ParserUtil.parseTime(ParserUtil.strip(p, "'")));
+        return SqlLiteral.create(
+            ParserUtil.parseTime(ParserUtil.strip(p, "'")));
     }
 |
     <LBRACE_TS> <STRING_LITERAL> { p = getToken(0).image; } <RBRACE> {
-        return SqlLiteral.create(ParserUtil.parseTimestamp(ParserUtil.strip(p, "'")));
+        return SqlLiteral.create(
+            ParserUtil.parseTimestamp(ParserUtil.strip(p, "'")));
     }
 }
 
@@ -1177,10 +1201,12 @@ String Identifier() :
 SqlIdentifier SimpleIdentifier() :
 {
     String p;
+    SqlCollation collation=null;
 }
 {
-    p = Identifier()
-    {return new SqlIdentifier(p);}
+    p = Identifier() [collation = CollateClause()]
+
+    {return new SqlIdentifier(p,collation);}
 }
 
 /**
@@ -1204,11 +1230,13 @@ SqlIdentifier CompoundIdentifier() :
 {
     List list = new ArrayList();
     String p;
+    SqlCollation collation=null;
 }
 {
     (p = Identifier() {list.add(p);})
     (<DOT> p = Identifier() {list.add(p);})*
-    {return new SqlIdentifier(ParserUtil.toStringArray(list),null);}
+    [collation = CollateClause()]
+    {return new SqlIdentifier(ParserUtil.toStringArray(list),collation);}
 }
 
 /**
@@ -1218,21 +1246,115 @@ SqlNode FunctionCall() :
 {
     String name;
     List args;
+    SqlNode e;
 }
 {
-    name = Identifier()
-    (
-        LOOKAHEAD(2) <LPAREN> <STAR> <RPAREN> {
-            args = startList(new SqlIdentifier("*"));
-        }
-        | LOOKAHEAD(2) <LPAREN> <RPAREN> {
-            args = ParserUtil.emptyList;
-        }
-        | args = ParenthesizedQueryOrCommaList(EXPR_ACCEPT_SUBQUERY)
+    //~ FUNCTIONS WITH SPECIAL SYNTAX ---------------------------------------
+
+    (   "POSITION" <LPAREN> e = AtomicRowExpression() { args = startList(e); }
+                   <IN>    e = Expression(EXPR_ACCEPT_SUBQUERY) { args.add(e);}
+                   <RPAREN> {
+                        return funcTab.positionFunc.createCall(
+                            ParserUtil.toNodeArray(args));
+                   }
     )
-        {
-            return funcTab.createCall(name, ParserUtil.toNodeArray(args));
-        }
+|
+    (   "CONVERT"  <LPAREN> e = Expression(EXPR_ACCEPT_SUBQUERY)
+                            { args = startList(e); }
+                   <USING>  name = Identifier()
+                            { args.add(new SqlIdentifier(name)); }
+                   <RPAREN> {
+                        return funcTab.convertFunc.createCall(
+                            ParserUtil.toNodeArray(args));
+                   }
+    )
+|
+    (  "TRANSLATE" <LPAREN> e = Expression(EXPR_ACCEPT_SUBQUERY)
+                            { args = startList(e); }
+                   <USING>  name = Identifier()
+                            { args.add(new SqlIdentifier(name)); }
+                   <RPAREN> {
+                        return funcTab.translateFunc.createCall(
+                            ParserUtil.toNodeArray(args));
+                   }
+    )
+|
+    (  "OVERLAY"   <LPAREN>  e = Expression(EXPR_ACCEPT_SUBQUERY)
+                             { args = startList(e); }
+                   <PLACING> e = Expression(EXPR_ACCEPT_SUBQUERY)
+                             { args.add(e); }
+                   <FROM>    e = Literal()
+                             { args.add(e); }
+                   [<FOR>    e = Literal()
+                             { args.add(e); }
+                   ]
+                   <RPAREN> {
+                        return funcTab.overlayFunc.createCall(
+                            ParserUtil.toNodeArray(args));
+                   }
+    )
+|
+    (   "SUBSTRING" <LPAREN> e = Expression(EXPR_ACCEPT_SUBQUERY)
+                             { args = startList(e); }
+                    ( <FROM> | <COMMA>)   e = Expression(EXPR_ACCEPT_SUBQUERY)
+                                          { args.add(e); }
+                    [ (<FOR> | <COMMA>)   e=Expression(EXPR_ACCEPT_SUBQUERY)
+                                          { args.add(e); }
+                    ]
+                    <RPAREN> {
+                        return funcTab.substringFunc.createCall(
+                            ParserUtil.toNodeArray(args));
+                    }
+    )
+|
+    {
+        SqlLiteral flag = null;
+        SqlNode trimChars = null;
+    }
+    (   "TRIM"     <LPAREN>
+                   [    LOOKAHEAD(2)
+                        [   (<BOTH>     { flag=funcTab.flagBoth;})
+                          | (<TRAILING> { flag=funcTab.flagTrailing;})
+                          | (<LEADING>  { flag=funcTab.flagLeading;})
+                        ]
+                        [ trimChars = AtomicRowExpression() ]
+                        (
+                          <FROM> {
+                            if (null==flag && null==trimChars) {
+                              throw new ParseException(
+                                "'FROM' near "+getPositionString()+
+                                ", without operands preceding it is illegal");
+                            }
+                          }
+                        )
+                   ]
+
+                   e = AtomicRowExpression()
+                   {
+                      args = startList(flag);
+                      args.add(trimChars);
+                      args.add(e);
+                   }
+                   <RPAREN> {
+                        return funcTab.trimFunc.createCall(
+                            ParserUtil.toNodeArray(args));
+                   }
+    )
+|
+    //~ "NORMAL" FUNCTIONS WITHOUT SPECIAL SYNTAX -----------------------------
+    (
+        name = Identifier()
+        (
+            LOOKAHEAD(2) <LPAREN> <STAR> <RPAREN>
+            { args = startList(new SqlIdentifier("*")); }
+          | LOOKAHEAD(2) <LPAREN> <RPAREN>
+            { args = ParserUtil.emptyList; }
+          | args = ParenthesizedQueryOrCommaList(EXPR_ACCEPT_SUBQUERY)
+
+        )
+
+        { return funcTab.createCall(name, ParserUtil.toNodeArray(args)); }
+    )
 }
 
 /**
@@ -1324,6 +1446,7 @@ TOKEN :
 | < ASC: "asc" >
 | < ASCENDING: "ascending" >
 | < BETWEEN: "between" >
+| < BOTH: "both" >
 | < BY: "by" >
 | < CASE: "case" >
 | < COLLATE: "collate" >
@@ -1352,6 +1475,7 @@ TOKEN :
 | < INTO: "into" >
 | < IS: "is" >
 | < JOIN: "join" >
+| < LEADING: "leading" >
 | < LEFT: "left" >
 | < LIKE: "like" >
 | < NATURAL: "natural" >
@@ -1359,6 +1483,7 @@ TOKEN :
 | < ORDER: "order" >
 | < OUTER: "outer" >
 | < OVERLAPS: "overlaps" >
+| < PLACING: "placing" >
 | < PLAN: "plan" >
 | < RIGHT: "right" >
 | < ROW: "row" >
@@ -1367,6 +1492,7 @@ TOKEN :
 | < SIMILAR: "similar" >
 | < TABLE: "table" >
 | < THEN: "then" >
+| < TRAILING: "trailing" >
 | < TRUE: "true" >
 | < UNION: "union" >
 | < UNKNOWN: "unknown" >
@@ -1433,13 +1559,15 @@ TOKEN :
     < STRING_LITERAL:
       ("_" <CHARSETNAME> | "N")?
       "'"
-      (   (~["'","\\","\n","\r"])
+      (   (~["'","\n","\r"])
         | ("''")
       )*
       "'"
     >
 |
-    < #CHARSETNAME: (["a"-"z","A"-"Z","0"-"9"]) (["a"-"z","A"-"Z","0"-"9",":",".","-","_"])* >
+    < #CHARSETNAME: (["a"-"z","A"-"Z","0"-"9"])
+                    (["a"-"z","A"-"Z","0"-"9",":",".","-","_"])*
+    >
 
 }
 
@@ -1554,6 +1682,13 @@ TOKEN :
 
 TOKEN :
 {
+< COLLATION_NAME:
+    (<LETTER>|<DIGIT>)+ (<LETTER>|<DIGIT>|":"|"."|"-"|"_")*
+    "$"
+    (<LETTER>|"_")+
+    ("$" (<LETTER>|<DIGIT>|"_")+)?
+  >
+|
   < IDENTIFIER: <LETTER> (<LETTER>|<DIGIT>)* >
 |
   < QUOTED_IDENTIFIER:

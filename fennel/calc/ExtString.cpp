@@ -29,8 +29,7 @@ FENNEL_BEGIN_NAMESPACE
 
 
 void
-strCatA2(Calculator *pCalc,
-         RegisterRef<char*>* result,
+strCatA2(RegisterRef<char*>* result,
          RegisterRef<char*>* str1)
 {
     assert(str1->type() == STANDARD_TYPE_CHAR || str1->type() == STANDARD_TYPE_VARCHAR);
@@ -48,8 +47,7 @@ strCatA2(Calculator *pCalc,
 }
 
 void
-strCatA3(Calculator *pCalc,
-         RegisterRef<char*>* result,
+strCatA3(RegisterRef<char*>* result,
          RegisterRef<char*>* str1,
          RegisterRef<char*>* str2)
 {
@@ -69,8 +67,7 @@ strCatA3(Calculator *pCalc,
 }
 
 void
-strCmpA(Calculator *pCalc,
-        RegisterRef<int32_t>* result,
+strCmpA(RegisterRef<int32_t>* result,
         RegisterRef<char*>* str1,
         RegisterRef<char*>* str2)
 {
@@ -96,8 +93,7 @@ strCmpA(Calculator *pCalc,
 }
 
 void
-strLenBitA(Calculator *pCalc,
-           RegisterRef<int32_t>* result,
+strLenBitA(RegisterRef<int32_t>* result,
            RegisterRef<char*>* str)
 {
     assert(str->type() == STANDARD_TYPE_CHAR || str->type() == STANDARD_TYPE_VARCHAR);
@@ -111,8 +107,7 @@ strLenBitA(Calculator *pCalc,
 }
     
 void
-strLenCharA(Calculator *pCalc,
-            RegisterRef<int32_t>* result,
+strLenCharA(RegisterRef<int32_t>* result,
             RegisterRef<char*>* str)
 {
     assert(str->type() == STANDARD_TYPE_CHAR || str->type() == STANDARD_TYPE_VARCHAR);
@@ -126,8 +121,7 @@ strLenCharA(Calculator *pCalc,
 }
 
 void
-strLenOctA(Calculator *pCalc,
-           RegisterRef<int32_t>* result,
+strLenOctA(RegisterRef<int32_t>* result,
            RegisterRef<char*>* str)
 {
     assert(str->type() == STANDARD_TYPE_CHAR || str->type() == STANDARD_TYPE_VARCHAR);
@@ -141,8 +135,7 @@ strLenOctA(Calculator *pCalc,
 }
 
 void
-strOverlayA4(Calculator *pCalc,
-             RegisterRef<char*>* result,
+strOverlayA4(RegisterRef<char*>* result,
              RegisterRef<char*>* str,
              RegisterRef<char*>* overlay,
              RegisterRef<int32_t>* start)
@@ -168,8 +161,7 @@ strOverlayA4(Calculator *pCalc,
 }
 
 void
-strOverlayA5(Calculator *pCalc,
-             RegisterRef<char*>* result,
+strOverlayA5(RegisterRef<char*>* result,
              RegisterRef<char*>* str,
              RegisterRef<char*>* overlay,
              RegisterRef<int32_t>* start,
@@ -196,8 +188,7 @@ strOverlayA5(Calculator *pCalc,
 }
 
 void
-strPosA(Calculator *pCalc,
-        RegisterRef<int32_t>* result,
+strPosA(RegisterRef<int32_t>* result,
         RegisterRef<char*>* str,
         RegisterRef<char*>* find)
 {
@@ -215,8 +206,7 @@ strPosA(Calculator *pCalc,
 }
 
 void
-strSubStringA3(Calculator* pCalc,
-               RegisterRef<char*>* result,
+strSubStringA3(RegisterRef<char*>* result,
                RegisterRef<char*>* str,
                RegisterRef<int32_t>* start)
 {
@@ -242,8 +232,7 @@ strSubStringA3(Calculator* pCalc,
 }
 
 void
-strSubStringA4(Calculator* pCalc,
-               RegisterRef<char*>* result,
+strSubStringA4(RegisterRef<char*>* result,
                RegisterRef<char*>* str,
                RegisterRef<int32_t>* start,
                RegisterRef<int32_t>* len)
@@ -270,8 +259,7 @@ strSubStringA4(Calculator* pCalc,
 }
 
 void
-strToLowerA(Calculator *pCalc,
-            RegisterRef<char*>* result,
+strToLowerA(RegisterRef<char*>* result,
             RegisterRef<char*>* str)
 {
     assert(str->type() == STANDARD_TYPE_CHAR || str->type() == STANDARD_TYPE_VARCHAR);
@@ -291,8 +279,7 @@ strToLowerA(Calculator *pCalc,
 }
 
 void
-strToUpperA(Calculator *pCalc,
-            RegisterRef<char*>* result,
+strToUpperA(RegisterRef<char*>* result,
             RegisterRef<char*>* str)
 {
     assert(str->type() == STANDARD_TYPE_CHAR || str->type() == STANDARD_TYPE_VARCHAR);
@@ -313,8 +300,7 @@ strToUpperA(Calculator *pCalc,
 
 
 void
-strTrimA(Calculator *pCalc,
-         RegisterRef<char*>* result,
+strTrimA(RegisterRef<char*>* result,
          RegisterRef<char*>* str,
          RegisterRef<int32_t>* trimLeft,
          RegisterRef<int32_t>* trimRight)
@@ -340,9 +326,9 @@ strTrimA(Calculator *pCalc,
 
 
 void
-strRegister()
+ExtStringRegister(ExtendedInstructionTable* eit)
 {
-    ExtendedInstructionTable* eit = ExtendedInstructionTable::instance();
+    assert(eit != NULL);
     
     vector<StandardTypeDescriptorOrdinal> params_2F;
     params_2F.push_back(STANDARD_TYPE_CHAR);

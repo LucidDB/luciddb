@@ -67,30 +67,31 @@ Update ExtendedInstruction to check datatypes against the
 RegisterReference type. Should allow extra assert() level testing
 of type-correctness.
 
-If the program was assembled, the status register is controlled by Calculator.
-Therefore can make RegisterReferences CachePointer.
-
 If JS's assertion that binds() are not required between exec() calls is true,
 then Input and Output tuples could have a CachePtrToPtr property defined
 on them. Cache a ptr to pData and the various length fields.
 
-Split getP() into a version that returns (or sets) a const pointer, and one
-that returns a non-const. The non-const version should check for the Read-Only
-property. For some reason, putting a const around the TMPLT does not work
-as expected.
-
 Update spec to reflect PointerSizeT and PointerOperandT being a unit32_t
 for the moment.
-
-Consider removing pointer to Calc from all extended instructions. Seems to 
-have no purpose.
 
 Verify that all SqlString fuctions can take the same string as both input and
 output. Or, for those like, perhaps, ToUpper, document the exceptions
 
 Rename PointerPutSize to PointerPutLength
 
-Add SqlString "identity" functions: create a zero length string and string copy.
+Add SqlString "identity" functions: create a zero length string.
+
+Add ; after T in BNF: T <terminator> in spec.
+
+Consider templating RegisterReference accessor functions on mProp flags
+to avoid the big if in each of them.
+
+Appears that ExtendedInstruction0 does not work -- not possible to have an
+extended instruction with no arguments. Probably OK, as the application
+would be what, exactly?
+
+SqlString throws exceptions, but ExtString.cpp doesn't set the result to NULL.
+ExtString must catch the exceptions and do the right thing.
 
 ====================================================
 Extended Instructions & Conversions Major Todo Items

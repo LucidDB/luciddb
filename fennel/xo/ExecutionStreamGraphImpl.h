@@ -57,6 +57,19 @@ protected:
 
     GraphRep graphRep;
     
+    typedef std::map<std::string,ExecutionStreamId> StreamMap;
+    typedef StreamMap::const_iterator StreamMapConstIter;
+    
+    /**
+     * Map of name to stream
+     */
+    StreamMap streamMap;
+    
+    /**
+     * Map of name to stream output, after add-ons
+     */
+    StreamMap streamOutMap;
+
     /**
      * Result of topologically sorting graph (producers before consumers).
      */
@@ -79,11 +92,16 @@ protected:
      * opened.
      */
     bool isOpen;
+
+    /**
+     * Whether this graph has been prepared.
+     */
+    bool isPrepared;
     
     explicit ExecutionStreamGraphImpl();
-    SharedExecutionStream getStreamFromVertex(Vertex);
-    void closeImpl();
-    void sortStreams();
+    virtual SharedExecutionStream getStreamFromVertex(Vertex);
+    virtual void closeImpl();
+    virtual void sortStreams();
     
 public:
     virtual ~ExecutionStreamGraphImpl() {}
@@ -99,12 +117,41 @@ public:
     virtual void addDataflow(
         ExecutionStreamId producerId,
         ExecutionStreamId consumerId);
+    virtual SharedExecutionStream findStream(
+            std::string name);
+    virtual SharedExecutionStream findLastStream(
+            std::string name);
+    virtual void interposeStream(
+        std::string name,
+        ExecutionStreamId interposedId);
     virtual uint getInputCount(
         ExecutionStreamId streamId);
     virtual SharedExecutionStream getStreamInput(
         ExecutionStreamId streamId,
         uint iInput);
     virtual SharedExecutionStream getSinkStream();
+    virtual std::vector<SharedExecutionStream> getSortedStreams();
+
+    /**
+     * Return a simple graph which only performs sorting
+     */
+    static SharedExecutionStreamGraph newSortingGraph();
+};
+
+/**
+ * Simple graph only usable for sorting streams
+ */
+class SortingGraph : public ExecutionStreamGraphImpl
+{
+protected:
+    virtual void closeImpl() {
+        // no need to clean up memory or streams because graph is only 
+        // used for sorting
+    }
+
+public:
+    virtual void prepare() { assert(false); }
+    virtual void open() { assert(false); }
 };
 
 FENNEL_END_NAMESPACE

@@ -17,13 +17,14 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-package net.sf.farrago.query;
+package net.sf.farrago.namespace.ftrs;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.keysindexes.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
+import net.sf.farrago.query.*;
 
 import net.sf.saffron.core.*;
 import net.sf.saffron.opt.*;
@@ -35,15 +36,15 @@ import net.sf.saffron.rex.*;
 import java.util.*;
 
 /**
- * FennelIndexJoinRule is a rule for converting a JoinRel into a
- * FennelIndexSearchRel when the inputs have the appropriate form.
+ * FtrsIndexJoinRule is a rule for converting a JoinRel into a
+ * FtrsIndexSearchRel when the inputs have the appropriate form.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-class FennelIndexJoinRule extends VolcanoRule
+class FtrsIndexJoinRule extends VolcanoRule
 {
-    public FennelIndexJoinRule()
+    public FtrsIndexJoinRule()
     {
         super(
             new RuleOperand(
@@ -53,7 +54,7 @@ class FennelIndexJoinRule extends VolcanoRule
                         SaffronRel.class,
                         null),
                     new RuleOperand(
-                        FennelIndexScanRel.class,
+                        FtrsIndexScanRel.class,
                         null)
                 }));
     }
@@ -69,7 +70,7 @@ class FennelIndexJoinRule extends VolcanoRule
     {
         JoinRel joinRel = (JoinRel) call.rels[0];
         SaffronRel leftRel = call.rels[1];
-        FennelIndexScanRel scanRel = (FennelIndexScanRel) call.rels[2];
+        FtrsIndexScanRel scanRel = (FtrsIndexScanRel) call.rels[2];
 
         if (!joinRel.getVariablesStopped().isEmpty()) {
             return;
@@ -83,7 +84,7 @@ class FennelIndexJoinRule extends VolcanoRule
             return;
         }
         
-        // TODO:  share more code with FennelScanToSearchRule, and expand
+        // TODO:  share more code with FtrsScanToSearchRule, and expand
         // set of supported join conditions
 
         if (scanRel.isOrderPreserving) {
@@ -110,7 +111,7 @@ class FennelIndexJoinRule extends VolcanoRule
         // if we're working with a clustered index scan, consider all of
         // the unclustered indexes as well
         Iterator iter =
-            catalog.getIndexes(scanRel.fennelTable.cwmTable).iterator();
+            catalog.getIndexes(scanRel.ftrsTable.getCwmColumnSet()).iterator();
         while (iter.hasNext()) {
             CwmSqlindex index = (CwmSqlindex) iter.next();
             considerIndex(
@@ -122,7 +123,7 @@ class FennelIndexJoinRule extends VolcanoRule
     private void considerIndex(
         JoinRel joinRel,
         CwmSqlindex index,
-        FennelIndexScanRel scanRel,
+        FtrsIndexScanRel scanRel,
         CwmColumn indexColumn,
         int leftOrdinal,
         int rightOrdinal,
@@ -138,7 +139,7 @@ class FennelIndexJoinRule extends VolcanoRule
         boolean isOuter =
             (joinRel.getJoinType() == JoinRel.JoinType.LEFT);
 
-        if (!FennelScanToSearchRule.testIndexColumn(index,indexColumn)) {
+        if (!FtrsScanToSearchRule.testIndexColumn(index,indexColumn)) {
             return;
         }
 
@@ -222,16 +223,16 @@ class FennelIndexJoinRule extends VolcanoRule
             // TupleStream, otherwise the left-hand join fields get
             // propagated one extra time.
             
-            FennelIndexScanRel unclusteredScan =
-                new FennelIndexScanRel(
+            FtrsIndexScanRel unclusteredScan =
+                new FtrsIndexScanRel(
                     scanRel.getCluster(),
-                    scanRel.fennelTable,
+                    scanRel.ftrsTable,
                     index,
                     scanRel.getConnection(),
                     clusteredKeyColumns,
                     scanRel.isOrderPreserving);
-            FennelIndexSearchRel unclusteredSearch =
-                new FennelIndexSearchRel(
+            FtrsIndexSearchRel unclusteredSearch =
+                new FtrsIndexSearchRel(
                     unclusteredScan,fennelInput,isUnique,isOuter,
                     inputKeyProj,inputJoinProj);
 
@@ -244,14 +245,14 @@ class FennelIndexJoinRule extends VolcanoRule
                     clusteredKeyColumns.length,
                     inputJoinProj.length);
 
-            FennelIndexSearchRel clusteredSearch =
-                new FennelIndexSearchRel(
+            FtrsIndexSearchRel clusteredSearch =
+                new FtrsIndexSearchRel(
                     scanRel,unclusteredSearch,true,isOuter,
                     clusteredInputKeyProj,inputJoinProj);
 
             call.transformTo(clusteredSearch);
         } else {
-            FennelIndexSearchRel searchRel = new FennelIndexSearchRel(
+            FtrsIndexSearchRel searchRel = new FtrsIndexSearchRel(
                 scanRel,fennelInput,isUnique,isOuter,inputKeyProj,
                 inputJoinProj);
             call.transformTo(searchRel);
@@ -259,4 +260,4 @@ class FennelIndexJoinRule extends VolcanoRule
     }
 }
 
-// End FennelIndexJoinRule.java
+// End FtrsIndexJoinRule.java

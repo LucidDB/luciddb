@@ -160,6 +160,7 @@ class MedJdbcDataServer extends MedAbstractDataServer
     // implement FarragoMedDataServer
     public void registerRules(SaffronPlanner planner)
     {
+        super.registerRules(planner);
         JdbcQuery.register(planner);
         
         // tell optimizer how to convert data from JDBC into Farrago

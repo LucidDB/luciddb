@@ -31,6 +31,7 @@
 
 #include "fennel/calc/CalcCommon.h"
 #include "fennel/calc/InstructionCommon.h"  // required as we're manipulating instructions
+#include "fennel/calc/InstructionFactory.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -352,7 +353,7 @@ unitTestStrings()
     int outVCLong = longIdx, outVCShort = shortIdx;
     int outCLong = longIdx, outCShort = shortIdx;
     
-    ExtendedInstructionTable* eit = ExtendedInstructionTable::instance();
+    ExtendedInstructionTable* eit = InstructionFactory::getExtendedInstructionTable();
 
     vector<RegisterReference*> regRefs;
 
@@ -371,13 +372,13 @@ unitTestStrings()
     // null case
     regRefs[0] = cOutP[outCLong++];
     regRefs[1] = cInP[nullRegister];
-    instP[pc++] = strCatA2F->createInstruction(&c, regRefs);
+    instP[pc++] = strCatA2F->createInstruction(regRefs);
 
     // force right truncation exception
     regRefs[0] = cOutP[veryShortIdx];
     regRefs[1] = cInP[longIdx + 0];
     const int strCatA2FException = pc;
-    instP[pc++] = strCatA2F->createInstruction(&c, regRefs);
+    instP[pc++] = strCatA2F->createInstruction(regRefs);
 
     //
     // strCatA3 Fixed
@@ -392,35 +393,35 @@ unitTestStrings()
     regRefs[0] = cOutP[outCLong++];
     regRefs[1] = cInP[shortIdx + 0];
     regRefs[2] = cInP[shortIdx + 1];
-    instP[pc++] = strCatA3F->createInstruction(&c, regRefs);
+    instP[pc++] = strCatA3F->createInstruction(regRefs);
 
     regRefs[0] = cOutP[outCLong++];
     regRefs[1] = cInP[shortIdx + 0];
     regRefs[2] = cInP[shortIdx + 0];
-    instP[pc++] = strCatA3F->createInstruction(&c, regRefs);
+    instP[pc++] = strCatA3F->createInstruction(regRefs);
 
     // null cases
     regRefs[0] = cOutP[outCLong++];
     regRefs[1] = cInP[nullRegister];
     regRefs[2] = cInP[shortIdx + 0];
-    instP[pc++] = strCatA3F->createInstruction(&c, regRefs);
+    instP[pc++] = strCatA3F->createInstruction(regRefs);
 
     regRefs[0] = cOutP[outCLong++];
     regRefs[1] = cInP[shortIdx + 0];
     regRefs[2] = cInP[nullRegister];
-    instP[pc++] = strCatA3F->createInstruction(&c, regRefs);
+    instP[pc++] = strCatA3F->createInstruction(regRefs);
 
     regRefs[0] = cOutP[outCLong++];
     regRefs[1] = cInP[nullRegister];
     regRefs[2] = cInP[nullRegister];
-    instP[pc++] = strCatA3F->createInstruction(&c, regRefs);
+    instP[pc++] = strCatA3F->createInstruction(regRefs);
 
     // force right truncation exception
     regRefs[0] = cOutP[veryShortIdx];
     regRefs[1] = cInP[shortIdx + 0];
     regRefs[2] = cInP[shortIdx + 1];
     const int strCatA3FException = pc;
-    instP[pc++] = strCatA3F->createInstruction(&c, regRefs);
+    instP[pc++] = strCatA3F->createInstruction(regRefs);
 
     //
     // strCatA2 & strCatA3 Fixed
@@ -430,16 +431,16 @@ unitTestStrings()
     regRefs[0] = cOutP[outCLong];
     regRefs[1] = cInP[shortIdx + 0];
     regRefs[2] = cInP[shortIdx + 1];
-    instP[pc++] = strCatA3F->createInstruction(&c, regRefs);
+    instP[pc++] = strCatA3F->createInstruction(regRefs);
 
     regRefs.resize(2);
     regRefs[0] = cOutP[outCLong];
     regRefs[1] = cInP[shortIdx + 2];
-    instP[pc++] = strCatA2F->createInstruction(&c, regRefs);
+    instP[pc++] = strCatA2F->createInstruction(regRefs);
 
     regRefs[0] = cOutP[outCLong++];
     regRefs[1] = cInP[shortIdx + 3];
-    instP[pc++] = strCatA2F->createInstruction(&c, regRefs);
+    instP[pc++] = strCatA2F->createInstruction(regRefs);
 
 
     //
@@ -454,27 +455,27 @@ unitTestStrings()
     // common case
     regRefs[0] = vcOutP[outVCLong++];
     regRefs[1] = vcInP[shortIdx + 4];
-    instP[pc++] = strCatA2V->createInstruction(&c, regRefs);
+    instP[pc++] = strCatA2V->createInstruction(regRefs);
 
     // just append to first string
     regRefs[1] = vcInP[shortIdx + 5];
-    instP[pc++] = strCatA2V->createInstruction(&c, regRefs);
+    instP[pc++] = strCatA2V->createInstruction(regRefs);
 
     // zero length case
     regRefs[0] = vcOutP[outVCLong++];
     regRefs[1] = vcInP[zeroLenIdx];
-    instP[pc++] = strCatA2V->createInstruction(&c, regRefs);
+    instP[pc++] = strCatA2V->createInstruction(regRefs);
 
     // null case
     regRefs[0] = vcOutP[outVCLong++];
     regRefs[1] = vcInP[nullRegister];
-    instP[pc++] = strCatA2V->createInstruction(&c, regRefs);
+    instP[pc++] = strCatA2V->createInstruction(regRefs);
 
     // force right truncation exception
     regRefs[0] = vcOutP[veryShortIdx];
     regRefs[1] = vcInP[longIdx + 0];
     const int strCatA2VException = pc;
-    instP[pc++] = strCatA2V->createInstruction(&c, regRefs);
+    instP[pc++] = strCatA2V->createInstruction(regRefs);
 
     //
     // strCatA3 Variable
@@ -489,51 +490,51 @@ unitTestStrings()
     regRefs[0] = vcOutP[outVCLong++];
     regRefs[1] = vcInP[shortIdx + 0];
     regRefs[2] = vcInP[shortIdx + 1];
-    instP[pc++] = strCatA3V->createInstruction(&c, regRefs);
+    instP[pc++] = strCatA3V->createInstruction(regRefs);
 
     regRefs[0] = vcOutP[outVCLong++];
     regRefs[1] = vcInP[shortIdx + 0];
     regRefs[2] = vcInP[shortIdx + 0];
-    instP[pc++] = strCatA3V->createInstruction(&c, regRefs);
+    instP[pc++] = strCatA3V->createInstruction(regRefs);
 
     // zero length cases
     regRefs[0] = vcOutP[outVCLong++];
     regRefs[1] = vcInP[zeroLenIdx];
     regRefs[2] = vcInP[zeroLenIdx];
-    instP[pc++] = strCatA3V->createInstruction(&c, regRefs);
+    instP[pc++] = strCatA3V->createInstruction(regRefs);
 
     regRefs[0] = vcOutP[outVCLong++];
     regRefs[1] = vcInP[zeroLenIdx];
     regRefs[2] = vcInP[shortIdx + 3];
-    instP[pc++] = strCatA3V->createInstruction(&c, regRefs);
+    instP[pc++] = strCatA3V->createInstruction(regRefs);
 
     regRefs[0] = vcOutP[outVCLong++];
     regRefs[1] = vcInP[shortIdx + 4];
     regRefs[2] = vcInP[zeroLenIdx];
-    instP[pc++] = strCatA3V->createInstruction(&c, regRefs);
+    instP[pc++] = strCatA3V->createInstruction(regRefs);
 
     // null cases
     regRefs[0] = vcOutP[outVCLong++];
     regRefs[1] = vcInP[nullRegister];
     regRefs[2] = vcInP[shortIdx + 0];
-    instP[pc++] = strCatA3V->createInstruction(&c, regRefs);
+    instP[pc++] = strCatA3V->createInstruction(regRefs);
 
     regRefs[0] = vcOutP[outVCLong++];
     regRefs[1] = vcInP[shortIdx + 0];
     regRefs[2] = vcInP[nullRegister];
-    instP[pc++] = strCatA3V->createInstruction(&c, regRefs);
+    instP[pc++] = strCatA3V->createInstruction(regRefs);
 
     regRefs[0] = vcOutP[outVCLong++];
     regRefs[1] = vcInP[nullRegister];
     regRefs[2] = vcInP[nullRegister];
-    instP[pc++] = strCatA3V->createInstruction(&c, regRefs);
+    instP[pc++] = strCatA3V->createInstruction(regRefs);
 
     // force right truncation exception
     regRefs[0] = vcOutP[veryShortIdx];
     regRefs[1] = vcInP[shortIdx + 0];
     regRefs[2] = vcInP[shortIdx + 1];
     const int strCatA3VException = pc;
-    instP[pc++] = strCatA3V->createInstruction(&c, regRefs);
+    instP[pc++] = strCatA3V->createInstruction(regRefs);
 
 
     //
@@ -549,33 +550,33 @@ unitTestStrings()
     regRefs[0] = iOutP[outI++];
     regRefs[1] = cInP[shortIdx + 0];
     regRefs[2] = cInP[shortIdx + 0];
-    instP[pc++] = strCmpAF->createInstruction(&c, regRefs);
+    instP[pc++] = strCmpAF->createInstruction(regRefs);
 
     regRefs[0] = iOutP[outI++];
     regRefs[1] = cInP[shortIdx + 0];
     regRefs[2] = cInP[shortIdx + 1];
-    instP[pc++] = strCmpAF->createInstruction(&c, regRefs);
+    instP[pc++] = strCmpAF->createInstruction(regRefs);
 
     regRefs[0] = iOutP[outI++];
     regRefs[1] = cInP[shortIdx + 1];
     regRefs[2] = cInP[shortIdx + 0];
-    instP[pc++] = strCmpAF->createInstruction(&c, regRefs);
+    instP[pc++] = strCmpAF->createInstruction(regRefs);
 
     // null cases
     regRefs[0] = iOutP[outI++];
     regRefs[1] = cInP[nullRegister];
     regRefs[2] = cInP[shortIdx + 0];
-    instP[pc++] = strCmpAF->createInstruction(&c, regRefs);
+    instP[pc++] = strCmpAF->createInstruction(regRefs);
 
     regRefs[0] = iOutP[outI++];
     regRefs[1] = cInP[shortIdx + 0];
     regRefs[2] = cInP[nullRegister];
-    instP[pc++] = strCmpAF->createInstruction(&c, regRefs);
+    instP[pc++] = strCmpAF->createInstruction(regRefs);
 
     regRefs[0] = iOutP[outI++];
     regRefs[1] = cInP[nullRegister];
     regRefs[2] = cInP[nullRegister];
-    instP[pc++] = strCmpAF->createInstruction(&c, regRefs);
+    instP[pc++] = strCmpAF->createInstruction(regRefs);
 
     //
     // strCmpA Variable
@@ -590,50 +591,50 @@ unitTestStrings()
     regRefs[0] = iOutP[outI++];
     regRefs[1] = cInP[shortIdx + 0];
     regRefs[2] = cInP[shortIdx + 0];
-    instP[pc++] = strCmpAV->createInstruction(&c, regRefs);
+    instP[pc++] = strCmpAV->createInstruction(regRefs);
 
     regRefs[0] = iOutP[outI++];
     regRefs[1] = cInP[shortIdx + 0];
     regRefs[2] = cInP[shortIdx + 1];
-    instP[pc++] = strCmpAV->createInstruction(&c, regRefs);
+    instP[pc++] = strCmpAV->createInstruction(regRefs);
 
     regRefs[0] = iOutP[outI++];
     regRefs[1] = cInP[shortIdx + 1];
     regRefs[2] = cInP[shortIdx + 0];
-    instP[pc++] = strCmpAV->createInstruction(&c, regRefs);
+    instP[pc++] = strCmpAV->createInstruction(regRefs);
 
     // zero length cases
     regRefs[0] = iOutP[outI++];
     regRefs[1] = vcInP[zeroLenIdx];
     regRefs[2] = vcInP[zeroLenIdx];
-    instP[pc++] = strCmpAV->createInstruction(&c, regRefs);
+    instP[pc++] = strCmpAV->createInstruction(regRefs);
 
     regRefs[0] = iOutP[outI++];
     regRefs[1] = vcInP[zeroLenIdx];
     regRefs[2] = vcInP[shortIdx + 3];
-    instP[pc++] = strCmpAV->createInstruction(&c, regRefs);
+    instP[pc++] = strCmpAV->createInstruction(regRefs);
 
     regRefs[0] = iOutP[outI++];
     regRefs[1] = vcInP[shortIdx + 4];
     regRefs[2] = vcInP[zeroLenIdx];
-    instP[pc++] = strCmpAV->createInstruction(&c, regRefs);
+    instP[pc++] = strCmpAV->createInstruction(regRefs);
 
 
     // null cases
     regRefs[0] = iOutP[outI++];
     regRefs[1] = cInP[nullRegister];
     regRefs[2] = cInP[shortIdx + 0];
-    instP[pc++] = strCmpAV->createInstruction(&c, regRefs);
+    instP[pc++] = strCmpAV->createInstruction(regRefs);
 
     regRefs[0] = iOutP[outI++];
     regRefs[1] = cInP[shortIdx + 0];
     regRefs[2] = cInP[nullRegister];
-    instP[pc++] = strCmpAV->createInstruction(&c, regRefs);
+    instP[pc++] = strCmpAV->createInstruction(regRefs);
 
     regRefs[0] = iOutP[outI++];
     regRefs[1] = cInP[nullRegister];
     regRefs[2] = cInP[nullRegister];
-    instP[pc++] = strCmpAV->createInstruction(&c, regRefs);
+    instP[pc++] = strCmpAV->createInstruction(regRefs);
 
 
     //
@@ -648,16 +649,16 @@ unitTestStrings()
     // common case
     regRefs[0] = iOutP[outI++];
     regRefs[1] = cInP[shortIdx + 0];
-    instP[pc++] = strLenBitAF->createInstruction(&c, regRefs);
+    instP[pc++] = strLenBitAF->createInstruction(regRefs);
 
     regRefs[0] = iOutP[outI++];
     regRefs[1] = cInP[longIdx + 0];
-    instP[pc++] = strLenBitAF->createInstruction(&c, regRefs);
+    instP[pc++] = strLenBitAF->createInstruction(regRefs);
 
     // null case
     regRefs[0] = iOutP[outI++];
     regRefs[1] = cInP[nullRegister];
-    instP[pc++] = strLenBitAF->createInstruction(&c, regRefs);
+    instP[pc++] = strLenBitAF->createInstruction(regRefs);
 
     //
     // strLenBitA Variable
@@ -671,20 +672,20 @@ unitTestStrings()
     // common case
     regRefs[0] = iOutP[outI++];
     regRefs[1] = vcInP[zeroLenIdx];
-    instP[pc++] = strLenBitAV->createInstruction(&c, regRefs);
+    instP[pc++] = strLenBitAV->createInstruction(regRefs);
 
     regRefs[0] = iOutP[outI++];
     regRefs[1] = vcInP[shortIdx + 0];
-    instP[pc++] = strLenBitAV->createInstruction(&c, regRefs);
+    instP[pc++] = strLenBitAV->createInstruction(regRefs);
 
     regRefs[0] = iOutP[outI++];
     regRefs[1] = vcInP[longIdx + 0];
-    instP[pc++] = strLenBitAV->createInstruction(&c, regRefs);
+    instP[pc++] = strLenBitAV->createInstruction(regRefs);
 
     // null case
     regRefs[0] = iOutP[outI++];
     regRefs[1] = vcInP[nullRegister];
-    instP[pc++] = strLenBitAV->createInstruction(&c, regRefs);
+    instP[pc++] = strLenBitAV->createInstruction(regRefs);
 
 
     //
@@ -699,16 +700,16 @@ unitTestStrings()
     // common case
     regRefs[0] = iOutP[outI++];
     regRefs[1] = cInP[shortIdx + 0];
-    instP[pc++] = strLenCharAF->createInstruction(&c, regRefs);
+    instP[pc++] = strLenCharAF->createInstruction(regRefs);
 
     regRefs[0] = iOutP[outI++];
     regRefs[1] = cInP[longIdx + 0];
-    instP[pc++] = strLenCharAF->createInstruction(&c, regRefs);
+    instP[pc++] = strLenCharAF->createInstruction(regRefs);
 
     // null case
     regRefs[0] = iOutP[outI++];
     regRefs[1] = cInP[nullRegister];
-    instP[pc++] = strLenCharAF->createInstruction(&c, regRefs);
+    instP[pc++] = strLenCharAF->createInstruction(regRefs);
 
     //
     // strLenCharA Variable
@@ -722,20 +723,20 @@ unitTestStrings()
     // common case
     regRefs[0] = iOutP[outI++];
     regRefs[1] = vcInP[zeroLenIdx];
-    instP[pc++] = strLenCharAV->createInstruction(&c, regRefs);
+    instP[pc++] = strLenCharAV->createInstruction(regRefs);
 
     regRefs[0] = iOutP[outI++];
     regRefs[1] = vcInP[shortIdx + 0];
-    instP[pc++] = strLenCharAV->createInstruction(&c, regRefs);
+    instP[pc++] = strLenCharAV->createInstruction(regRefs);
 
     regRefs[0] = iOutP[outI++];
     regRefs[1] = vcInP[longIdx + 0];
-    instP[pc++] = strLenCharAV->createInstruction(&c, regRefs);
+    instP[pc++] = strLenCharAV->createInstruction(regRefs);
 
     // null case
     regRefs[0] = iOutP[outI++];
     regRefs[1] = vcInP[nullRegister];
-    instP[pc++] = strLenCharAV->createInstruction(&c, regRefs);
+    instP[pc++] = strLenCharAV->createInstruction(regRefs);
 
 
     //
@@ -750,16 +751,16 @@ unitTestStrings()
     // common case
     regRefs[0] = iOutP[outI++];
     regRefs[1] = cInP[shortIdx + 0];
-    instP[pc++] = strLenOctAF->createInstruction(&c, regRefs);
+    instP[pc++] = strLenOctAF->createInstruction(regRefs);
 
     regRefs[0] = iOutP[outI++];
     regRefs[1] = cInP[longIdx + 0];
-    instP[pc++] = strLenOctAF->createInstruction(&c, regRefs);
+    instP[pc++] = strLenOctAF->createInstruction(regRefs);
 
     // null case
     regRefs[0] = iOutP[outI++];
     regRefs[1] = cInP[nullRegister];
-    instP[pc++] = strLenOctAF->createInstruction(&c, regRefs);
+    instP[pc++] = strLenOctAF->createInstruction(regRefs);
 
     //
     // strLenOctA Variable
@@ -773,20 +774,20 @@ unitTestStrings()
     // common case
     regRefs[0] = iOutP[outI++];
     regRefs[1] = vcInP[zeroLenIdx];
-    instP[pc++] = strLenOctAV->createInstruction(&c, regRefs);
+    instP[pc++] = strLenOctAV->createInstruction(regRefs);
 
     regRefs[0] = iOutP[outI++];
     regRefs[1] = vcInP[shortIdx + 0];
-    instP[pc++] = strLenOctAV->createInstruction(&c, regRefs);
+    instP[pc++] = strLenOctAV->createInstruction(regRefs);
 
     regRefs[0] = iOutP[outI++];
     regRefs[1] = vcInP[longIdx + 0];
-    instP[pc++] = strLenOctAV->createInstruction(&c, regRefs);
+    instP[pc++] = strLenOctAV->createInstruction(regRefs);
 
     // null case
     regRefs[0] = iOutP[outI++];
     regRefs[1] = vcInP[nullRegister];
-    instP[pc++] = strLenOctAV->createInstruction(&c, regRefs);
+    instP[pc++] = strLenOctAV->createInstruction(regRefs);
 
 
     //
@@ -805,7 +806,7 @@ unitTestStrings()
     regRefs[2] = cInP[shortIdx + 1];
     regRefs[3] = iInP[2];
     regRefs[4] = iInP[0];
-    instP[pc++] = strOverlayA5F->createInstruction(&c, regRefs);
+    instP[pc++] = strOverlayA5F->createInstruction(regRefs);
 
     // null cases
     regRefs[0] = vcOutP[outVCLong++];
@@ -813,28 +814,28 @@ unitTestStrings()
     regRefs[2] = cInP[shortIdx + 1];
     regRefs[3] = iInP[2];
     regRefs[4] = iInP[3];
-    instP[pc++] = strOverlayA5F->createInstruction(&c, regRefs);
+    instP[pc++] = strOverlayA5F->createInstruction(regRefs);
 
     regRefs[0] = vcOutP[outVCLong++];
     regRefs[1] = cInP[shortIdx + 1];
     regRefs[2] = cInP[nullRegister];
     regRefs[3] = iInP[2];
     regRefs[4] = iInP[3];
-    instP[pc++] = strOverlayA5F->createInstruction(&c, regRefs);
+    instP[pc++] = strOverlayA5F->createInstruction(regRefs);
 
     regRefs[0] = vcOutP[outVCLong++];
     regRefs[1] = cInP[shortIdx + 1];
     regRefs[2] = cInP[shortIdx + 1];
     regRefs[3] = iInP[nullRegister];
     regRefs[4] = iInP[3];
-    instP[pc++] = strOverlayA5F->createInstruction(&c, regRefs);
+    instP[pc++] = strOverlayA5F->createInstruction(regRefs);
 
     regRefs[0] = vcOutP[outVCLong++];
     regRefs[1] = cInP[shortIdx + 1];
     regRefs[2] = cInP[shortIdx + 1];
     regRefs[3] = iInP[2];
     regRefs[4] = iInP[nullRegister];
-    instP[pc++] = strOverlayA5F->createInstruction(&c, regRefs);
+    instP[pc++] = strOverlayA5F->createInstruction(regRefs);
 
     // substring errors
     regRefs[0] = vcOutP[outVCLong++];
@@ -843,7 +844,7 @@ unitTestStrings()
     regRefs[3] = iInP[negRegister + 2];
     regRefs[4] = iInP[3];
     const int strOverlayA5FException1 = pc;
-    instP[pc++] = strOverlayA5F->createInstruction(&c, regRefs);
+    instP[pc++] = strOverlayA5F->createInstruction(regRefs);
 
     regRefs[0] = vcOutP[outVCLong++];
     regRefs[1] = cInP[shortIdx + 0];
@@ -851,7 +852,7 @@ unitTestStrings()
     regRefs[3] = iInP[2];
     regRefs[4] = iInP[negRegister + 3];
     const int strOverlayA5FException2 = pc;
-    instP[pc++] = strOverlayA5F->createInstruction(&c, regRefs);
+    instP[pc++] = strOverlayA5F->createInstruction(regRefs);
 
     // right truncation
     regRefs[0] = vcOutP[outVCLong++];
@@ -860,7 +861,7 @@ unitTestStrings()
     regRefs[3] = iInP[2];
     regRefs[4] = iInP[3];
     const int strOverlayA5FException3 = pc;
-    instP[pc++] = strOverlayA5F->createInstruction(&c, regRefs);
+    instP[pc++] = strOverlayA5F->createInstruction(regRefs);
 
 
  
@@ -879,26 +880,26 @@ unitTestStrings()
     regRefs[1] = cInP[shortIdx + 0];
     regRefs[2] = cInP[shortIdx + 1];
     regRefs[3] = iInP[3];
-    instP[pc++] = strOverlayA4F->createInstruction(&c, regRefs);
+    instP[pc++] = strOverlayA4F->createInstruction(regRefs);
 
     // null cases
     regRefs[0] = vcOutP[outVCLong++];
     regRefs[1] = cInP[nullRegister];
     regRefs[2] = cInP[shortIdx + 1];
     regRefs[3] = iInP[2];
-    instP[pc++] = strOverlayA4F->createInstruction(&c, regRefs);
+    instP[pc++] = strOverlayA4F->createInstruction(regRefs);
 
     regRefs[0] = vcOutP[outVCLong++];
     regRefs[1] = cInP[shortIdx + 1];
     regRefs[2] = cInP[nullRegister];
     regRefs[3] = iInP[2];
-    instP[pc++] = strOverlayA4F->createInstruction(&c, regRefs);
+    instP[pc++] = strOverlayA4F->createInstruction(regRefs);
 
     regRefs[0] = vcOutP[outVCLong++];
     regRefs[1] = cInP[shortIdx + 1];
     regRefs[2] = cInP[shortIdx + 1];
     regRefs[3] = iInP[nullRegister];
-    instP[pc++] = strOverlayA4F->createInstruction(&c, regRefs);
+    instP[pc++] = strOverlayA4F->createInstruction(regRefs);
 
     // substring error
     regRefs[0] = vcOutP[outVCLong++];
@@ -906,7 +907,7 @@ unitTestStrings()
     regRefs[2] = cInP[shortIdx + 1];
     regRefs[3] = iInP[negRegister + 2];
     const int strOverlayA4FException1 = pc;
-    instP[pc++] = strOverlayA4F->createInstruction(&c, regRefs);
+    instP[pc++] = strOverlayA4F->createInstruction(regRefs);
 
     // right truncation
     regRefs[0] = vcOutP[outVCLong++];
@@ -914,7 +915,7 @@ unitTestStrings()
     regRefs[2] = cInP[longIdx + 1];
     regRefs[3] = iInP[2];
     const int strOverlayA4FException2 = pc;
-    instP[pc++] = strOverlayA4F->createInstruction(&c, regRefs);
+    instP[pc++] = strOverlayA4F->createInstruction(regRefs);
 
 
     //
@@ -933,7 +934,7 @@ unitTestStrings()
     regRefs[2] = vcInP[shortIdx + 1];
     regRefs[3] = iInP[2];
     regRefs[4] = iInP[0];
-    instP[pc++] = strOverlayA5V->createInstruction(&c, regRefs);
+    instP[pc++] = strOverlayA5V->createInstruction(regRefs);
 
     // null cases
     regRefs[0] = vcOutP[outVCLong++];
@@ -941,28 +942,28 @@ unitTestStrings()
     regRefs[2] = vcInP[shortIdx + 1];
     regRefs[3] = iInP[2];
     regRefs[4] = iInP[3];
-    instP[pc++] = strOverlayA5V->createInstruction(&c, regRefs);
+    instP[pc++] = strOverlayA5V->createInstruction(regRefs);
 
     regRefs[0] = vcOutP[outVCLong++];
     regRefs[1] = vcInP[shortIdx + 1];
     regRefs[2] = vcInP[nullRegister];
     regRefs[3] = iInP[2];
     regRefs[4] = iInP[3];
-    instP[pc++] = strOverlayA5V->createInstruction(&c, regRefs);
+    instP[pc++] = strOverlayA5V->createInstruction(regRefs);
 
     regRefs[0] = vcOutP[outVCLong++];
     regRefs[1] = vcInP[shortIdx + 1];
     regRefs[2] = vcInP[shortIdx + 1];
     regRefs[3] = iInP[nullRegister];
     regRefs[4] = iInP[3];
-    instP[pc++] = strOverlayA5V->createInstruction(&c, regRefs);
+    instP[pc++] = strOverlayA5V->createInstruction(regRefs);
 
     regRefs[0] = vcOutP[outVCLong++];
     regRefs[1] = vcInP[shortIdx + 1];
     regRefs[2] = vcInP[shortIdx + 1];
     regRefs[3] = iInP[2];
     regRefs[4] = iInP[nullRegister];
-    instP[pc++] = strOverlayA5V->createInstruction(&c, regRefs);
+    instP[pc++] = strOverlayA5V->createInstruction(regRefs);
 
     // substring errors
     regRefs[0] = vcOutP[outVCLong++];
@@ -971,7 +972,7 @@ unitTestStrings()
     regRefs[3] = iInP[negRegister + 2];
     regRefs[4] = iInP[3];
     const int strOverlayA5VException1 = pc;
-    instP[pc++] = strOverlayA5V->createInstruction(&c, regRefs);
+    instP[pc++] = strOverlayA5V->createInstruction(regRefs);
 
     regRefs[0] = vcOutP[outVCLong++];
     regRefs[1] = vcInP[shortIdx + 0];
@@ -979,7 +980,7 @@ unitTestStrings()
     regRefs[3] = iInP[2];
     regRefs[4] = iInP[negRegister + 3];
     const int strOverlayA5VException2 = pc;
-    instP[pc++] = strOverlayA5V->createInstruction(&c, regRefs);
+    instP[pc++] = strOverlayA5V->createInstruction(regRefs);
 
     // right truncation
     regRefs[0] = vcOutP[outVCShort++];
@@ -988,7 +989,7 @@ unitTestStrings()
     regRefs[3] = iInP[2];
     regRefs[4] = iInP[0];
     const int strOverlayA5VException3 = pc;
-    instP[pc++] = strOverlayA5V->createInstruction(&c, regRefs);
+    instP[pc++] = strOverlayA5V->createInstruction(regRefs);
 
 
 
@@ -1007,26 +1008,26 @@ unitTestStrings()
     regRefs[1] = vcInP[shortIdx + 0];
     regRefs[2] = vcInP[shortIdx + 1];
     regRefs[3] = iInP[3];
-    instP[pc++] = strOverlayA4V->createInstruction(&c, regRefs);
+    instP[pc++] = strOverlayA4V->createInstruction(regRefs);
 
     // null cases
     regRefs[0] = vcOutP[outVCLong++];
     regRefs[1] = vcInP[nullRegister];
     regRefs[2] = vcInP[shortIdx + 1];
     regRefs[3] = iInP[2];
-    instP[pc++] = strOverlayA4V->createInstruction(&c, regRefs);
+    instP[pc++] = strOverlayA4V->createInstruction(regRefs);
 
     regRefs[0] = vcOutP[outVCLong++];
     regRefs[1] = vcInP[shortIdx + 1];
     regRefs[2] = vcInP[nullRegister];
     regRefs[3] = iInP[2];
-    instP[pc++] = strOverlayA4V->createInstruction(&c, regRefs);
+    instP[pc++] = strOverlayA4V->createInstruction(regRefs);
 
     regRefs[0] = vcOutP[outVCLong++];
     regRefs[1] = vcInP[shortIdx + 1];
     regRefs[2] = vcInP[shortIdx + 1];
     regRefs[3] = iInP[nullRegister];
-    instP[pc++] = strOverlayA4V->createInstruction(&c, regRefs);
+    instP[pc++] = strOverlayA4V->createInstruction(regRefs);
 
     // substring error
     regRefs[0] = vcOutP[outVCLong++];
@@ -1034,7 +1035,7 @@ unitTestStrings()
     regRefs[2] = vcInP[shortIdx + 1];
     regRefs[3] = iInP[negRegister + 2];
     const int strOverlayA4VException1 = pc;
-    instP[pc++] = strOverlayA4V->createInstruction(&c, regRefs);
+    instP[pc++] = strOverlayA4V->createInstruction(regRefs);
 
     // right truncation
     regRefs[0] = vcOutP[outVCShort++];
@@ -1042,7 +1043,7 @@ unitTestStrings()
     regRefs[2] = vcInP[longIdx + 1];
     regRefs[3] = iInP[3];
     const int strOverlayA4VException2 = pc;
-    instP[pc++] = strOverlayA4V->createInstruction(&c, regRefs);
+    instP[pc++] = strOverlayA4V->createInstruction(regRefs);
 
 
     //
@@ -1058,23 +1059,23 @@ unitTestStrings()
     regRefs[0] = iOutP[outI++];
     regRefs[1] = cInP[shortIdx + 0];
     regRefs[2] = cInP[shortIdx + 0];
-    instP[pc++] = strPosAF->createInstruction(&c, regRefs);
+    instP[pc++] = strPosAF->createInstruction(regRefs);
 
     regRefs[0] = iOutP[outI++];
     regRefs[1] = cInP[longIdx + 0];
     regRefs[2] = cInP[longIdx + 1];
-    instP[pc++] = strPosAF->createInstruction(&c, regRefs);
+    instP[pc++] = strPosAF->createInstruction(regRefs);
 
     // null cases
     regRefs[0] = iOutP[outI++];
     regRefs[1] = cInP[longIdx + 0];
     regRefs[2] = cInP[nullRegister];
-    instP[pc++] = strPosAF->createInstruction(&c, regRefs);
+    instP[pc++] = strPosAF->createInstruction(regRefs);
 
     regRefs[0] = iOutP[outI++];
     regRefs[1] = cInP[nullRegister];
     regRefs[2] = cInP[longIdx + 1];
-    instP[pc++] = strPosAF->createInstruction(&c, regRefs);
+    instP[pc++] = strPosAF->createInstruction(regRefs);
 
 
     //
@@ -1090,33 +1091,33 @@ unitTestStrings()
     regRefs[0] = iOutP[outI++];
     regRefs[1] = vcInP[shortIdx + 0];
     regRefs[2] = vcInP[shortIdx + 0];
-    instP[pc++] = strPosAV->createInstruction(&c, regRefs);
+    instP[pc++] = strPosAV->createInstruction(regRefs);
 
     regRefs[0] = iOutP[outI++];
     regRefs[1] = vcInP[longIdx + 0];
     regRefs[2] = vcInP[longIdx + 1];
-    instP[pc++] = strPosAV->createInstruction(&c, regRefs);
+    instP[pc++] = strPosAV->createInstruction(regRefs);
 
     regRefs[0] = iOutP[outI++];
     regRefs[1] = vcInP[zeroLenIdx];
     regRefs[2] = vcInP[longIdx + 1];
-    instP[pc++] = strPosAV->createInstruction(&c, regRefs);
+    instP[pc++] = strPosAV->createInstruction(regRefs);
 
     regRefs[0] = iOutP[outI++];
     regRefs[1] = vcInP[longIdx + 0];
     regRefs[2] = vcInP[zeroLenIdx];
-    instP[pc++] = strPosAV->createInstruction(&c, regRefs);
+    instP[pc++] = strPosAV->createInstruction(regRefs);
 
     // null cases
     regRefs[0] = iOutP[outI++];
     regRefs[1] = vcInP[longIdx + 0];
     regRefs[2] = vcInP[nullRegister];
-    instP[pc++] = strPosAV->createInstruction(&c, regRefs);
+    instP[pc++] = strPosAV->createInstruction(regRefs);
 
     regRefs[0] = iOutP[outI++];
     regRefs[1] = vcInP[nullRegister];
     regRefs[2] = vcInP[longIdx + 1];
-    instP[pc++] = strPosAV->createInstruction(&c, regRefs);
+    instP[pc++] = strPosAV->createInstruction(regRefs);
 
  
     //
@@ -1133,23 +1134,23 @@ unitTestStrings()
     regRefs[0] = vcOutP[outVCShort++];
     regRefs[1] = cInP[shortIdx + 0];
     regRefs[2] = iInP[1];
-    instP[pc++] = strSubStringA3F->createInstruction(&c, regRefs);
+    instP[pc++] = strSubStringA3F->createInstruction(regRefs);
 
     regRefs[0] = vcOutP[outVCShort++];
     regRefs[1] = cInP[shortIdx + 0];
     regRefs[2] = iInP[5];
-    instP[pc++] = strSubStringA3F->createInstruction(&c, regRefs);
+    instP[pc++] = strSubStringA3F->createInstruction(regRefs);
 
     // null cases
     regRefs[0] = vcOutP[outVCShort++];
     regRefs[1] = cInP[nullRegister];
     regRefs[2] = iInP[5];
-    instP[pc++] = strSubStringA3F->createInstruction(&c, regRefs);
+    instP[pc++] = strSubStringA3F->createInstruction(regRefs);
 
     regRefs[0] = vcOutP[outVCShort++];
     regRefs[1] = cInP[shortIdx + 1];
     regRefs[2] = iInP[nullRegister];
-    instP[pc++] = strSubStringA3F->createInstruction(&c, regRefs);
+    instP[pc++] = strSubStringA3F->createInstruction(regRefs);
 
     // substring error not possible if len is unspecified
     // right truncation
@@ -1157,7 +1158,7 @@ unitTestStrings()
     regRefs[1] = cInP[longIdx + 0];
     regRefs[2] = iInP[0];
     const int strSubStringA3FException1 = pc;
-    instP[pc++] = strSubStringA3F->createInstruction(&c, regRefs);
+    instP[pc++] = strSubStringA3F->createInstruction(regRefs);
 
     //
     // strSubStringA3 Variable
@@ -1173,23 +1174,23 @@ unitTestStrings()
     regRefs[0] = vcOutP[outVCShort++];
     regRefs[1] = vcInP[shortIdx + 0];
     regRefs[2] = iInP[1];
-    instP[pc++] = strSubStringA3V->createInstruction(&c, regRefs);
+    instP[pc++] = strSubStringA3V->createInstruction(regRefs);
 
     regRefs[0] = vcOutP[outVCShort++];
     regRefs[1] = vcInP[shortIdx + 0];
     regRefs[2] = iInP[5];
-    instP[pc++] = strSubStringA3V->createInstruction(&c, regRefs);
+    instP[pc++] = strSubStringA3V->createInstruction(regRefs);
 
     // null cases
     regRefs[0] = vcOutP[outVCShort++];
     regRefs[1] = vcInP[nullRegister];
     regRefs[2] = iInP[5];
-    instP[pc++] = strSubStringA3V->createInstruction(&c, regRefs);
+    instP[pc++] = strSubStringA3V->createInstruction(regRefs);
 
     regRefs[0] = vcOutP[outVCShort++];
     regRefs[1] = vcInP[shortIdx + 1];
     regRefs[2] = iInP[nullRegister];
-    instP[pc++] = strSubStringA3V->createInstruction(&c, regRefs);
+    instP[pc++] = strSubStringA3V->createInstruction(regRefs);
 
     // substring error not possible if len is unspecified
     // right truncation
@@ -1197,7 +1198,7 @@ unitTestStrings()
     regRefs[1] = vcInP[varFullIdx];
     regRefs[2] = iInP[1];
     const int strSubStringA3VException1 = pc;
-    instP[pc++] = strSubStringA3V->createInstruction(&c, regRefs);
+    instP[pc++] = strSubStringA3V->createInstruction(regRefs);
 
  
     //
@@ -1215,32 +1216,32 @@ unitTestStrings()
     regRefs[1] = cInP[shortIdx + 0];
     regRefs[2] = iInP[1];
     regRefs[3] = iInP[2];
-    instP[pc++] = strSubStringA4F->createInstruction(&c, regRefs);
+    instP[pc++] = strSubStringA4F->createInstruction(regRefs);
 
     regRefs[0] = vcOutP[outVCShort++];
     regRefs[1] = cInP[shortIdx + 0];
     regRefs[2] = iInP[5];
     regRefs[3] = iInP[5];
-    instP[pc++] = strSubStringA4F->createInstruction(&c, regRefs);
+    instP[pc++] = strSubStringA4F->createInstruction(regRefs);
 
     // null cases
     regRefs[0] = vcOutP[outVCShort++];
     regRefs[1] = cInP[nullRegister];
     regRefs[2] = iInP[5];
     regRefs[3] = iInP[5];
-    instP[pc++] = strSubStringA4F->createInstruction(&c, regRefs);
+    instP[pc++] = strSubStringA4F->createInstruction(regRefs);
 
     regRefs[0] = vcOutP[outVCShort++];
     regRefs[1] = cInP[shortIdx + 1];
     regRefs[2] = iInP[nullRegister];
     regRefs[3] = iInP[5];
-    instP[pc++] = strSubStringA4F->createInstruction(&c, regRefs);
+    instP[pc++] = strSubStringA4F->createInstruction(regRefs);
 
     regRefs[0] = vcOutP[outVCShort++];
     regRefs[1] = cInP[shortIdx + 1];
     regRefs[2] = iInP[5];
     regRefs[3] = iInP[nullRegister];
-    instP[pc++] = strSubStringA4F->createInstruction(&c, regRefs);
+    instP[pc++] = strSubStringA4F->createInstruction(regRefs);
 
     // substring error
     regRefs[0] = vcOutP[outVCShort++];
@@ -1248,7 +1249,7 @@ unitTestStrings()
     regRefs[2] = iInP[0];
     regRefs[3] = iInP[negRegister + 3];
     const int strSubStringA4FException1 = pc;
-    instP[pc++] = strSubStringA4F->createInstruction(&c, regRefs);
+    instP[pc++] = strSubStringA4F->createInstruction(regRefs);
 
     // right truncation
     regRefs[0] = vcOutP[outVCShort++];
@@ -1256,7 +1257,7 @@ unitTestStrings()
     regRefs[2] = iInP[0];
     regRefs[3] = iInP[16];
     const int strSubStringA4FException2 = pc;
-    instP[pc++] = strSubStringA4F->createInstruction(&c, regRefs);
+    instP[pc++] = strSubStringA4F->createInstruction(regRefs);
 
     //
     // strSubStringA4 Variable
@@ -1273,32 +1274,32 @@ unitTestStrings()
     regRefs[1] = vcInP[shortIdx + 0];
     regRefs[2] = iInP[1];
     regRefs[3] = iInP[2];
-    instP[pc++] = strSubStringA4V->createInstruction(&c, regRefs);
+    instP[pc++] = strSubStringA4V->createInstruction(regRefs);
 
     regRefs[0] = vcOutP[outVCShort++];
     regRefs[1] = vcInP[shortIdx + 0];
     regRefs[2] = iInP[5];
     regRefs[3] = iInP[5];
-    instP[pc++] = strSubStringA4V->createInstruction(&c, regRefs);
+    instP[pc++] = strSubStringA4V->createInstruction(regRefs);
 
     // null cases
     regRefs[0] = vcOutP[outVCShort++];
     regRefs[1] = vcInP[nullRegister];
     regRefs[2] = iInP[5];
     regRefs[3] = iInP[5];
-    instP[pc++] = strSubStringA4V->createInstruction(&c, regRefs);
+    instP[pc++] = strSubStringA4V->createInstruction(regRefs);
 
     regRefs[0] = vcOutP[outVCShort++];
     regRefs[1] = vcInP[shortIdx + 1];
     regRefs[2] = iInP[nullRegister];
     regRefs[3] = iInP[5];
-    instP[pc++] = strSubStringA4V->createInstruction(&c, regRefs);
+    instP[pc++] = strSubStringA4V->createInstruction(regRefs);
 
     regRefs[0] = vcOutP[outVCShort++];
     regRefs[1] = vcInP[shortIdx + 1];
     regRefs[2] = iInP[5];
     regRefs[3] = iInP[nullRegister];
-    instP[pc++] = strSubStringA4V->createInstruction(&c, regRefs);
+    instP[pc++] = strSubStringA4V->createInstruction(regRefs);
 
     // substring error
     regRefs[0] = vcOutP[outVCShort++];
@@ -1306,7 +1307,7 @@ unitTestStrings()
     regRefs[2] = iInP[0];
     regRefs[3] = iInP[negRegister + 3];
     const int strSubStringA4VException1 = pc;
-    instP[pc++] = strSubStringA4V->createInstruction(&c, regRefs);
+    instP[pc++] = strSubStringA4V->createInstruction(regRefs);
 
     // right truncation
     regRefs[0] = vcOutP[outVCShort++];
@@ -1314,7 +1315,7 @@ unitTestStrings()
     regRefs[2] = iInP[1];
     regRefs[3] = iInP[16];
     const int strSubStringA4VException2 = pc;
-    instP[pc++] = strSubStringA4V->createInstruction(&c, regRefs);
+    instP[pc++] = strSubStringA4V->createInstruction(regRefs);
 
     //
     // strToLowerA Fixed
@@ -1330,13 +1331,13 @@ unitTestStrings()
     int toLowerOutCShort = outCShort;
     regRefs[0] = cOutP[outCShort++];
     regRefs[1] = cInP[shortIdx + 0];
-    instP[pc++] = strToLowerAF->createInstruction(&c, regRefs);
+    instP[pc++] = strToLowerAF->createInstruction(regRefs);
 
     // null case
     // use long register here as lengths must be equal and null register is long
     regRefs[0] = cOutP[outCLong++];
     regRefs[1] = cInP[nullRegister];
-    instP[pc++] = strToLowerAF->createInstruction(&c, regRefs);
+    instP[pc++] = strToLowerAF->createInstruction(regRefs);
 
     // right truncation not possible in fixed width, as both 
     // strings must be same length by definition.
@@ -1355,22 +1356,22 @@ unitTestStrings()
     int toLowerOutVCShort = outVCShort;
     regRefs[0] = vcOutP[outVCShort++];
     regRefs[1] = vcInP[shortIdx + 0];
-    instP[pc++] = strToLowerAV->createInstruction(&c, regRefs);
+    instP[pc++] = strToLowerAV->createInstruction(regRefs);
 
     regRefs[0] = vcOutP[outVCShort++];
     regRefs[1] = vcInP[zeroLenIdx];
-    instP[pc++] = strToLowerAV->createInstruction(&c, regRefs);
+    instP[pc++] = strToLowerAV->createInstruction(regRefs);
 
     // null case
     regRefs[0] = vcOutP[outVCShort++];
     regRefs[1] = vcInP[nullRegister];
-    instP[pc++] = strToLowerAV->createInstruction(&c, regRefs);
+    instP[pc++] = strToLowerAV->createInstruction(regRefs);
 
     // right truncation
     regRefs[0] = vcOutP[outVCShort++];
     regRefs[1] = vcInP[varFullIdx];
     const int strToLowerAVException1 = pc;
-    instP[pc++] = strToLowerAV->createInstruction(&c, regRefs);
+    instP[pc++] = strToLowerAV->createInstruction(regRefs);
 
     //
     // strToUpperA Fixed
@@ -1385,13 +1386,13 @@ unitTestStrings()
     // common case
     regRefs[0] = cOutP[outCShort++];
     regRefs[1] = cOutP[toLowerOutCShort];
-    instP[pc++] = strToUpperAF->createInstruction(&c, regRefs);
+    instP[pc++] = strToUpperAF->createInstruction(regRefs);
 
     // null case
     // use long register here as lengths must be equal and null register is long
     regRefs[0] = cOutP[outCLong++];
     regRefs[1] = cInP[nullRegister];
-    instP[pc++] = strToUpperAF->createInstruction(&c, regRefs);
+    instP[pc++] = strToUpperAF->createInstruction(regRefs);
 
     // right truncation not possible in fixed width, as both 
     // strings must be same length by definition.
@@ -1409,22 +1410,22 @@ unitTestStrings()
     // common cases
     regRefs[0] = vcOutP[outVCShort++];
     regRefs[1] = vcOutP[toLowerOutVCShort];
-    instP[pc++] = strToUpperAV->createInstruction(&c, regRefs);
+    instP[pc++] = strToUpperAV->createInstruction(regRefs);
 
     regRefs[0] = vcOutP[outVCShort++];
     regRefs[1] = vcInP[zeroLenIdx];
-    instP[pc++] = strToUpperAV->createInstruction(&c, regRefs);
+    instP[pc++] = strToUpperAV->createInstruction(regRefs);
 
     // null case
     regRefs[0] = vcOutP[outVCShort++];
     regRefs[1] = vcInP[nullRegister];
-    instP[pc++] = strToUpperAV->createInstruction(&c, regRefs);
+    instP[pc++] = strToUpperAV->createInstruction(regRefs);
 
     // right truncation
     regRefs[0] = vcOutP[outVCShort++];
     regRefs[1] = vcInP[varFullIdx];
     const int strToUpperAVException1 = pc;
-    instP[pc++] = strToUpperAV->createInstruction(&c, regRefs);
+    instP[pc++] = strToUpperAV->createInstruction(regRefs);
 
 
     //
@@ -1442,32 +1443,32 @@ unitTestStrings()
     regRefs[1] = cInP[trimmableIdx];
     regRefs[2] = iOutP[0];
     regRefs[3] = iOutP[0];
-    instP[pc++] = strTrimAF->createInstruction(&c, regRefs);
+    instP[pc++] = strTrimAF->createInstruction(regRefs);
 
     regRefs[0] = vcOutP[outVCLong++];
     regRefs[1] = cInP[trimmableIdx];
     regRefs[2] = iOutP[1];
     regRefs[3] = iOutP[0];
-    instP[pc++] = strTrimAF->createInstruction(&c, regRefs);
+    instP[pc++] = strTrimAF->createInstruction(regRefs);
 
     regRefs[0] = vcOutP[outVCLong++];
     regRefs[1] = cInP[trimmableIdx];
     regRefs[2] = iOutP[0];
     regRefs[3] = iOutP[1];
-    instP[pc++] = strTrimAF->createInstruction(&c, regRefs);
+    instP[pc++] = strTrimAF->createInstruction(regRefs);
 
     regRefs[0] = vcOutP[outVCLong++];
     regRefs[1] = cInP[trimmableIdx];
     regRefs[2] = iOutP[1];
     regRefs[3] = iOutP[1];
-    instP[pc++] = strTrimAF->createInstruction(&c, regRefs);
+    instP[pc++] = strTrimAF->createInstruction(regRefs);
 
     // null case
     regRefs[0] = vcOutP[outVCLong++];
     regRefs[1] = cInP[nullRegister];
     regRefs[2] = iOutP[1];
     regRefs[3] = iOutP[1];
-    instP[pc++] = strTrimAF->createInstruction(&c, regRefs);
+    instP[pc++] = strTrimAF->createInstruction(regRefs);
 
     //
     // strTrimA Variable
@@ -1484,32 +1485,32 @@ unitTestStrings()
     regRefs[1] = cInP[trimmableIdx];
     regRefs[2] = iOutP[0];
     regRefs[3] = iOutP[0];
-    instP[pc++] = strTrimAV->createInstruction(&c, regRefs);
+    instP[pc++] = strTrimAV->createInstruction(regRefs);
 
     regRefs[0] = vcOutP[outVCLong++];
     regRefs[1] = cInP[trimmableIdx];
     regRefs[2] = iOutP[1];
     regRefs[3] = iOutP[0];
-    instP[pc++] = strTrimAV->createInstruction(&c, regRefs);
+    instP[pc++] = strTrimAV->createInstruction(regRefs);
 
     regRefs[0] = vcOutP[outVCLong++];
     regRefs[1] = cInP[trimmableIdx];
     regRefs[2] = iOutP[0];
     regRefs[3] = iOutP[1];
-    instP[pc++] = strTrimAV->createInstruction(&c, regRefs);
+    instP[pc++] = strTrimAV->createInstruction(regRefs);
 
     regRefs[0] = vcOutP[outVCLong++];
     regRefs[1] = cInP[trimmableIdx];
     regRefs[2] = iOutP[1];
     regRefs[3] = iOutP[1];
-    instP[pc++] = strTrimAV->createInstruction(&c, regRefs);
+    instP[pc++] = strTrimAV->createInstruction(regRefs);
 
     // null case
     regRefs[0] = vcOutP[outVCLong++];
     regRefs[1] = cInP[nullRegister];
     regRefs[2] = iOutP[1];
     regRefs[3] = iOutP[1];
-    instP[pc++] = strTrimAV->createInstruction(&c, regRefs);
+    instP[pc++] = strTrimAV->createInstruction(regRefs);
 
     int lastPC = pc;
 
@@ -1541,7 +1542,7 @@ unitTestStrings()
     for (i = 0; i < pc; i++) {
         assert(instP[i]);
         instP[i]->describe(out, true);
-        printf("[%2ld] %s\n", i, out.c_str());
+        printf("[%2d] %s\n", i, out.c_str());
     }
 
     // Print out the output tuple
@@ -2055,7 +2056,8 @@ unitTestStrings()
 int main(int argc, char* argv[])
 {
     ProgramName = argv[0];
-    strRegister();
+
+    CalcInit::instance();
 
     unitTestStrings();
 

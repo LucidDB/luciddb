@@ -17,7 +17,7 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-package net.sf.farrago.query;
+package net.sf.farrago.namespace.ftrs;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.keysindexes.*;
@@ -25,6 +25,7 @@ import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
+import net.sf.farrago.query.*;
 
 import net.sf.saffron.sql.*;
 import net.sf.saffron.core.*;
@@ -35,41 +36,41 @@ import net.sf.saffron.util.*;
 import java.util.*;
 
 /**
- * FennelTableModificationRel is the relational expression corresponding to
- * modification of a Fennel table.
+ * FtrsTableModificationRel is the relational expression corresponding to
+ * modification of a FTRS table.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-class FennelTableModificationRel extends TableModificationRel
+class FtrsTableModificationRel extends TableModificationRel
     implements FennelRel
 {
     //~ Instance fields -------------------------------------------------------
 
     /** Refinement for TableModificationRel.table. */
-    final FennelTable fennelTable;
+    final FtrsTable ftrsTable;
 
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Creates a new FennelTableModificationRel object.
+     * Creates a new FtrsTableModificationRel object.
      *
      * @param cluster VolcanoCluster for this rel
-     * @param fennelTable target table
+     * @param ftrsTable target table
      * @param connection connection expression
      * @param child child producing rows to be inserted
      * @param operation modification operation to perform
      */
-    public FennelTableModificationRel(
+    public FtrsTableModificationRel(
         VolcanoCluster cluster,
-        FennelTable fennelTable,
+        FtrsTable ftrsTable,
         SaffronConnection connection,
         SaffronRel child,
         Operation operation,
         List updateColumnList)
     {
-        super(cluster,fennelTable,connection,child,operation,updateColumnList);
-        this.fennelTable = fennelTable;
+        super(cluster,ftrsTable,connection,child,operation,updateColumnList);
+        this.ftrsTable = ftrsTable;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -89,7 +90,7 @@ class FennelTableModificationRel extends TableModificationRel
     // implement FennelRel
     public FarragoPreparingStmt getPreparingStmt()
     {
-        return fennelTable.preparingStmt;
+        return ftrsTable.getPreparingStmt();
     }
 
     // implement FennelRel
@@ -101,9 +102,9 @@ class FennelTableModificationRel extends TableModificationRel
     // implement Cloneable
     public Object clone()
     {
-        return new FennelTableModificationRel(
+        return new FtrsTableModificationRel(
             cluster,
-            fennelTable,
+            ftrsTable,
             getConnection(),
             OptUtil.clone(child),
             getOperation(),
@@ -128,7 +129,7 @@ class FennelTableModificationRel extends TableModificationRel
     {
         int n = getUpdateColumnList().size();
         List list = new ArrayList();
-        Collection columns = fennelTable.cwmTable.getFeature();
+        Collection columns = ftrsTable.getCwmColumnSet().getFeature();
         for (int i = 0; i < n; i++) {
             String columnName = (String) getUpdateColumnList().get(i);
             CwmColumn column = (CwmColumn)
@@ -143,11 +144,11 @@ class FennelTableModificationRel extends TableModificationRel
     {
         FemExecutionStreamDef input = implementor.implementFennelRel(child);
         FarragoTypeFactory typeFactory = getFarragoTypeFactory();
-        if (!(fennelTable.cwmTable instanceof CwmTable)) {
+        if (!(ftrsTable.getCwmColumnSet() instanceof CwmTable)) {
             // e.g. view update
-            throw Util.needToImplement(fennelTable.cwmTable);
+            throw Util.needToImplement(ftrsTable.getCwmColumnSet());
         }
-        CwmTable table = (CwmTable) fennelTable.cwmTable;
+        CwmTable table = (CwmTable) ftrsTable.getCwmColumnSet();
         FarragoCatalog catalog = getCatalog();
 
         List updateCwmColumnList = null;
@@ -305,7 +306,7 @@ class FennelTableModificationRel extends TableModificationRel
             needBuffer = false;
         } else {
             TableAccessMap tableAccessMap = new TableAccessMap(this);
-            if (!tableAccessMap.isTableAccessedForRead(fennelTable)) {
+            if (!tableAccessMap.isTableAccessedForRead(ftrsTable)) {
                 needBuffer = false;
             }
         }
@@ -349,4 +350,4 @@ class FennelTableModificationRel extends TableModificationRel
 }
 
 
-// End FennelTableModificationRel.java
+// End FtrsTableModificationRel.java

@@ -22,23 +22,16 @@ package net.sf.saffron.test;
 
 import junit.framework.TestCase;
 import junit.framework.AssertionFailedError;
-import net.sf.saffron.sql2rel.ConverterTest;
 import net.sf.saffron.sql2rel.SqlToRelConverter;
 import net.sf.saffron.core.*;
 import net.sf.saffron.oj.OJTypeFactoryImpl;
 import net.sf.saffron.oj.OJPlannerFactory;
-//import net.sf.saffron.oj.stmt.BoundMethod;
-//import net.sf.saffron.oj.stmt.PreparedExecution;
 import net.sf.saffron.oj.util.JavaRexBuilder;
 import net.sf.saffron.oj.util.OJUtil;
-import net.sf.saffron.opt.VolcanoPlannerFactory;
-import net.sf.saffron.opt.CallingConvention;
-import net.sf.saffron.opt.RelImplementor;
-import net.sf.saffron.opt.CalcRelImplementor;
+import net.sf.saffron.opt.*;
 import net.sf.saffron.sql.SqlNode;
 import net.sf.saffron.sql.SqlValidator;
 import net.sf.saffron.sql.SqlOperatorTable;
-import net.sf.saffron.sql.SqlKind;
 import net.sf.saffron.sql.parser.SqlParser;
 import net.sf.saffron.sql.parser.ParseException;
 import net.sf.saffron.rel.SaffronRel;
@@ -48,15 +41,10 @@ import net.sf.saffron.util.Util;
 import net.sf.saffron.util.SaffronProperties;
 import net.sf.saffron.jdbc.SaffronJdbcConnection;
 import net.sf.saffron.runtime.SyntheticObject;
-import net.sf.saffron.rex.RexBuilder;
 import net.sf.saffron.rex.RexNode;
-import net.sf.saffron.rex.RexCall;
-import net.sf.saffron.rex.RexKind;
-import net.sf.saffron.calc.CalcProgramBuilder;
+import net.sf.saffron.rex.RexTransformer;
 
-import java.util.regex.Pattern;
-import java.io.StringWriter;
-import java.io.PrintWriter;
+import java.io.*;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -125,7 +113,8 @@ public class Rex2CalcPlanTestCase extends TestCase
         FilterRel filter = (FilterRel) project.getInput(0);
         RexNode condition = filter.condition;
         if (nullSemanics) {
-            condition = rexBuilder.makeCall(SqlOperatorTable.instance().isTrueOperator, filter.condition);
+            condition = rexBuilder.makeCall(SqlOperatorTable.instance().isTrueOperator, condition);
+            condition = new RexTransformer(condition, rexBuilder).tranformNullSemantics();
         }
         CalcRelImplementor implmentor = new CalcRelImplementor(rexBuilder);
         CalcRelImplementor.Rex2CalcTranslator translator = implmentor.newTranslator(
@@ -137,6 +126,17 @@ public class Rex2CalcPlanTestCase extends TestCase
         if (!expected.equals(actual)) {
             String message = "expected:<" + expected + ">" + NL + "but was:<"
                 + actual + ">";
+
+            String fileName = "CalcImpl_"+this.getClass().toString();
+            try {
+                OutputStreamWriter o = new OutputStreamWriter(new FileOutputStream(fileName+"_actual"));
+                o.write(actual,0,actual.length());
+                o.close();
+                o = new OutputStreamWriter(new FileOutputStream(fileName+"_expected"));
+                o.write(expected,0,expected.length());
+                o.close();
+            } catch(IOException ignored) {}
+
             fail(message);
         }
 
@@ -260,15 +260,14 @@ public class Rex2CalcPlanTestCase extends TestCase
                 "output: s4[0]"+T+
                 "input: s4[0]"+T+
                 "literal: u1[0]=true,u1[1]=false,s8[2]=123"+T+
-                "local: u1[0],u1[1],u1[2],u1[3]"+T+
+                "local: u1[0],u1[1],u1[2]"+T+
                 "status: u1[0]"+T+
                 //"values: 1,0,123"+T+
                 "T"+T+
-                "EQ T0, I0, L2"+T+
-                "ISNOTNULL T1, T0"+T+
-                "EQ T2, T0, L0"+T+
-                "AND T3, T1, T2"+T+
-                "JMPT 7, T3"+T+
+                "ISNOTNULL T0, I0"+T+
+                "EQ T1, I0, L2"+T+
+                "AND T2, T0, T1"+T+
+                "JMPT 6, T2"+T+
                 "MOVE S0, L0"+T+
                 "RETURN"+T+
                 "MOVE O0, I0"+T+
@@ -285,18 +284,16 @@ public class Rex2CalcPlanTestCase extends TestCase
                 "output: s4[0]"+T+
                 "input: s4[0]"+T+
                 "literal: u1[0]=true,u1[1]=false,s8[2]=123"+T+
-                "local: u1[0],u1[1],u1[2],u1[3]"+T+
+                "local: u1[0],u1[1],u1[2]"+T+
                 "status: u1[0]"+T+
-                //"values: 1,0,123"+T+
                 "T"+T+
-                "EQ T0, I0, L2"+T+
-                "ISNOTNULL T1, T0"+T+
-                "JMPF 6, T1"+T+
-                "EQ T2, T0, L0"+T+
-                "MOVE T3, T2"+T+
-                "JMP 7"+T+
-                "MOVE T3, L1"+T+
-                "JMPT 10, T3"+T+
+                "ISNOTNULL T0, I0"+T+
+                "JMPF 5, T0"+T+
+                "EQ T1, I0, L2"+T+
+                "MOVE T2, T1"+T+
+                "JMP 6"+T+
+                "MOVE T2, L1"+T+
+                "JMPT 9, T2"+T+
                 "MOVE S0, L0"+T+
                 "RETURN"+T+
                 "MOVE O0, I0"+T+
@@ -337,23 +334,21 @@ public class Rex2CalcPlanTestCase extends TestCase
                 "output: s8[0]"+T+
                 "input: s4[0]"+T+
                 "literal: u1[0]=true,u1[1]=false,s8[2]=10,s8[3]=2"+T+
-                "local: u1[0],u1[1],u1[2],u1[3],s8[4],s8[5],s8[6],s8[7],s8[8]"+T+
+                "local: u1[0],u1[1],u1[2],s8[3],s8[4],s8[5],s8[6],s8[7]"+T+
                 "status: u1[0]"+T+
-                //"values: 1, 0, \"Fred\", 2, 10"+T+
                 "T"+T+
-                "GT T0, I0, L2"+T+
-                "ISNOTNULL T1, T0"+T+
-                "EQ T2, T0, L0"+T+
-                "AND T3, T1, T2"+T+
-                "JMPT 7, T3"+T+
+                "ISNOTNULL T0, I0"+T+
+                "GT T1, I0, L2"+T+
+                "AND T2, T0, T1"+T+
+                "JMPT 6, T2"+T+
                 "MOVE S0, L0"+T+
                 "RETURN"+T+
-                "MUL T4, L3, L3"+T+
-                "SUB T5, L3, T4"+T+
-                "DIV T6, L3, L3"+T+
-                "ADD T7, T5, T6"+T+
-                "SUB T8, T7, L3"+T+
-                "MOVE O0, T8"+T+
+                "MUL T3, L3, L3"+T+
+                "SUB T4, L3, T3"+T+
+                "DIV T5, L3, L3"+T+
+                "ADD T6, T4, T5"+T+
+                "SUB T7, T6, L3"+T+
+                "MOVE O0, T7"+T+
                 "MOVE S0, L1"+T+
                 "RETURN"+T;
         check(sql, prg,true,false);
@@ -366,23 +361,24 @@ public class Rex2CalcPlanTestCase extends TestCase
         String prg=
                 "output: vc[0],s8[1]"+T+
                 "input: vc[0],s4[1]"+T+
-                "literal: u1[0]=true,u1[1]=false,vc[2]='Fred',s8[3]=10,s8[4]=2"+T+
-                "local: u1[0],u1[1],u1[2],u1[3],u1[4],u1[5],s8[6]"+T+
+                "literal: u1[0]=true,u1[1]=false,vc[2]='Fred',vc[3]='ISO-8859-1$en_US$primary',s4[4]=0,s8[5]=10,s8[6]=2"+T+
+                "local: u1[0],u1[1],s4[2],u1[3],u1[4],u1[5],u1[6],u1[7],s8[8]"+T+
                 "status: u1[0]"+T+
-                //"values: 1, 0, \"Fred\", 2, 10"+T+
                 "T"+T+
-                "EQ T0, I0, L2"+T+
-                "GT T1, I1, L3"+T+
-                "AND T2, T0, T1"+T+
-                "ISNOTNULL T3, T2"+T+
-                "EQ T4, T2, L0"+T+
-                "AND T5, T3, T4"+T+
-                "JMPT 9, T5"+T+
+                "ISNOTNULL T0, I0"+T+
+                "EXT T2, 'NLSCompare<vc, vc, vc>', I0, L2, L3"+T+
+                "EQ T1, T2, L4"+T+
+                "AND T3, T0, T1"+T+
+                "ISNOTNULL T4, I1"+T+
+                "GT T5, I1, L5"+T+
+                "AND T6, T4, T5"+T+
+                "AND T7, T3, T6"+T+
+                "JMPT 11, T7"+T+
                 "MOVE S0, L0"+T+
                 "RETURN"+T+
-                "MUL T6, L4, L4"+T+
+                "MUL T8, L6, L6"+T+
                 "MOVE O0, I0"+T+
-                "MOVE O1, T6"+T+
+                "MOVE O1, T8"+T+
                 "MOVE S0, L1"+T+
                 "RETURN"+T;
         check(sql, prg,true,false);
@@ -441,21 +437,21 @@ public class Rex2CalcPlanTestCase extends TestCase
     }
 
     public void testStringLiterals() {
-        String sql="SELECT n'aBc'=_iso_8859-2'', 'abc' FROM \"emps\" WHERE \"empno\" > 10";
+        String sql="SELECT n'aBc',_iso_8859-1'', 'abc' FROM \"emps\" WHERE \"empno\" > 10";
         String prg=
-                "output: u1[0],vc[1]"+T+
+                "output: vc[0],vc[1],vc[2]"+T+
                 "input: s4[0]"+T+
                 "literal: u1[0]=true,u1[1]=false,s8[2]=10,vc[3]='aBc',vc[4]='',vc[5]='abc'"+T+
-                "local: u1[0],u1[1]"+T+
+                "local: u1[0]"+T+
                 "status: u1[0]"+T+
                 "T"+T+
                 "GT T0, I0, L2"+T+      //empno > 10
                 "JMPT 4, T0"+T+
                 "MOVE S0, L0"+T+
                 "RETURN"+T+
-                "EQ T1, L3, L4"+T+         //'aBc'=''
-                "MOVE O0, T1"+T+
-                "MOVE O1, L5"+T+
+                "MOVE O0, L3"+T+
+                "MOVE O1, L4"+T+
+                "MOVE O2, L5"+T+
                 "MOVE S0, L1"+T+
                 "RETURN"+T;
         check(sql, prg,false,false);
@@ -632,6 +628,74 @@ public class Rex2CalcPlanTestCase extends TestCase
                 "MOVE T3, L5"+T+
                 "MOVE T1, T3"+T+
                 "MOVE O0, T1"+T+
+                "MOVE S0, L1"+T+
+                "RETURN"+T;
+        check(sql, prg,false,false);
+    }
+
+    public void testStringCompare() {
+        String[] ops =      {"=" ,"<>",">" ,"<" ,">=","<="};
+        String[] opsInstr = {"EQ","NE","GT","LT","GE","LE"};
+        for (int i=0;i<ops.length;i++){
+            String sql="SELECT 'a' "+ops[i]+"'b' collate latin1$sv$1 FROM \"emps\" WHERE \"empno\" > 10";
+            String prg=
+                    "output: u1[0]"+T+
+                    "input: s4[0]"+T+
+                    "literal: u1[0]=true,u1[1]=false,s8[2]=10,vc[3]='a',vc[4]='b',vc[5]='ISO-8859-1$sv$1',s4[6]=0"+T+
+                    "local: u1[0],u1[1],s4[2]"+T+
+                    "status: u1[0]"+T+
+                    "T"+T+
+                    "GT T0, I0, L2"+T+
+                    "JMPT 4, T0"+T+
+                    "MOVE S0, L0"+T+
+                    "RETURN"+T+
+                    "EXT T2, 'NLSCompare<vc, vc, vc>', L3, L4, L5"+T+
+                    opsInstr[i]+" T1, T2, L6"+T+
+                    "MOVE O0, T1"+T+
+                    "MOVE S0, L1"+T+
+                    "RETURN"+T;
+            check(sql, prg,false,false);
+        }
+    }
+
+    public void testStringFunctions() {
+        String sql=
+                   "SELECT char_length('a'),upper('a'),lower('a'),position('a' in 'a'),trim('a' from 'a')," +
+                   "overlay('a' placing 'a' from 1),substring('a' from 1)," +
+                   "substring('a' from 1 for 10),substring('a' from 'a' for '\\' )" +
+                   ", 'a'||'a'" +
+                   " FROM \"emps\" WHERE \"empno\" > 10";
+        String prg=
+                "output: s4[0],vc[1],vc[2],s4[3],vc[4],vc[5],vc[6],vc[7],vc[8],vc[9]"+T+
+                "input: s4[0]"+T+
+                "literal: u1[0]=true,u1[1]=false,s8[2]=10,vc[3]='a',vc[4]='ISO-8859-1',s4[5]=0,s4[6]=1,s8[7]=1,vc[8]='\\'"+T+
+                "local: u1[0],s4[1],vc[2],vc[3],s4[4],vc[5],vc[6],vc[7],vc[8],vc[9],vc[10]"+T+
+                "status: u1[0]"+T+
+                "T"+T+
+                "GT T0, I0, L2"+T+
+                "JMPT 4, T0"+T+
+                "MOVE S0, L0"+T+
+                "RETURN"+T+
+                "EXT T1, 'CHAR_LENGTH<vc, vc>', L3, L4"+T+
+                "EXT T2, 'UPPER<vc, vc>', L3, L4"+T+
+                "EXT T3, 'LOWER<vc, vc>', L3, L4"+T+
+                "EXT T4, 'POSITION<vc, vc>', L3, L3"+T+
+                "EXT T5, 'TRIM<vc, vc, s4, s4>', L3, L3, L5, L6"+T+
+                "EXT T6, 'OVERLAY<vc, vc, s8>', L3, L3, L7"+T+
+                "EXT T7, 'SUBSTRING<vc, s8>', L3, L7"+T+
+                "EXT T8, 'SUBSTRING<vc, s8, s8>', L3, L7, L2"+T+
+                "EXT T9, 'SUBSTRING<vc, vc, vc>', L3, L3, L8"+T+
+                "EXT T10, 'CONCAT<vc, vc>', L3, L3"+T+
+                "MOVE O0, T1"+T+
+                "MOVE O1, T2"+T+
+                "MOVE O2, T3"+T+
+                "MOVE O3, T4"+T+
+                "MOVE O4, T5"+T+
+                "MOVE O5, T6"+T+
+                "MOVE O6, T7"+T+
+                "MOVE O7, T8"+T+
+                "MOVE O8, T9"+T+
+                "MOVE O9, T10"+T+
                 "MOVE S0, L1"+T+
                 "RETURN"+T;
         check(sql, prg,false,false);

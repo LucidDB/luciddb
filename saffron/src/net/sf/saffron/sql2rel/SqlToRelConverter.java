@@ -69,6 +69,8 @@ public class SqlToRelConverter {
     //~ Instance fields -------------------------------------------------------
 
     private final SqlValidator validator;
+    private final SqlOperatorTable opTab;
+    private final SqlFunctionTable funTab;
     private RexBuilder rexBuilder;
     private SaffronConnection connection;
     private SaffronSchema schema;
@@ -100,6 +102,8 @@ public class SqlToRelConverter {
     {
         Util.pre(connection != null, "connection != null");
         this.validator = validator;
+        opTab = SqlOperatorTable.instance();
+        funTab = SqlFunctionTable.instance();
         this.schema = schema;
         this.connection = connection;
         this.defaultValueFactory = new NullDefaultValueFactory();
@@ -497,8 +501,11 @@ public class SqlToRelConverter {
                             op, convertExpression(bb,operands[0]),
                             convertExpression(bb,operands[1]));
                 } else if (call.operator instanceof SqlFunction) {
-                    return rexBuilder.makeCall(call.operator,
-                            convertExpressionList(bb,operands));
+                    if (call.operator.equals(funTab.characterLengthFunc)) {
+                        //todo: solve aliases in a more elegent way.
+                        call.operator = funTab.charLengthFunc;
+                    }
+                    return rexBuilder.makeCall(call.operator, convertExpressionList(bb,operands));
                 } else if (call.operator instanceof SqlPrefixOperator ||
                         call.operator instanceof SqlPostfixOperator) {
                     final RexNode exp = convertExpression(bb, operands[0]);
@@ -791,6 +798,8 @@ public class SqlToRelConverter {
             return rexBuilder.makeLiteral((SqlLiteral.BitString) value);
         } else if (value instanceof SqlLiteral.StringLiteral) {
             return rexBuilder.makeLiteral((SqlLiteral.StringLiteral) value);
+        } else if (value instanceof SqlFunctionTable.FunctionFlagType) {
+            return rexBuilder.makeLiteral((SqlFunctionTable.FunctionFlagType) value);
         } else {
             throw Util.needToImplement(literal);
         }
@@ -945,7 +954,7 @@ public class SqlToRelConverter {
                 rhsExps[i] = defaultValueFactory.newDefaultValue(
                     targetTable,i);
             }
-            
+
             sourceRel = new ProjectRel(
                 cluster,
                 sourceRel,
@@ -997,10 +1006,10 @@ public class SqlToRelConverter {
             String name = id.getSimple();
             targetColumnNameList.add(name);
         }
-        
+
         SaffronRel sourceRel = convertSelect(
             call.getSourceSelect());
-        
+
         return new TableModificationRel(
             cluster,
             targetTable,
@@ -1024,7 +1033,7 @@ public class SqlToRelConverter {
         if (type != null) {
             return rexBuilder.makeContextVariable(identifier.getSimple(),type);
         }
-        
+
         identifier = bb.scope.fullyQualify(identifier);
         RexNode e = bb.lookupExp(identifier.names[0]);
         for (int i = 1; i < identifier.names.length; i++) {

@@ -58,14 +58,6 @@ public:
     virtual
     ~NativeNativeInstruction() { }
 
-    virtual void
-    setCalc(Calculator* calcP)
-    {
-        mResult->setCalc(calcP);
-        mOp1->setCalc(calcP);
-        mOp2->setCalc(calcP);  // note: may be unused if instruction has 1 operand
-    }
-
 protected:
     RegisterRef<TMPLT>* mResult;
 };

@@ -35,6 +35,7 @@
 #include "fennel/xo/ConsumerToProducerProvisionAdapter.h"
 #include "fennel/xo/TableWriterFactory.h"
 #include "fennel/xo/CartesianProductStream.h"
+#include "fennel/xo/CalcTupleStream.h"
 #include "fennel/db/Database.h"
 #include "fennel/db/CheckpointThread.h"
 #include "fennel/tuple/TupleDescriptor.h"
@@ -81,7 +82,53 @@ const ExecutionStreamFactors &ExecutionStreamFactory::visitStream(
 {
     // dispatch based on polymorphic stream type
     FemVisitor::visitTbl.visit(*this,streamDef);
-    
+    factors.getStream()->name = streamDef.getName();
+    return factors;
+}
+
+const ExecutionStreamFactors &
+ExecutionStreamFactory::newTracingStream(
+    TraceTarget &traceTarget,
+    std::string &name,
+    ExecutionStreamParams &params)
+{
+    TracingTupleStream *pTracingStream =
+        new TracingTupleStream(traceTarget,name);
+    TupleStreamParams *pParams = new TupleStreamParams();
+    pParams->pCacheAccessor = params.pCacheAccessor;
+    pParams->scratchAccessor = params.scratchAccessor;
+    factors.setFactors(pTracingStream,pParams);
+    factors.getStream()->name = name;
+    return factors;
+}
+
+const ExecutionStreamFactors &
+ExecutionStreamFactory::newConsumerToProducerProvisionAdapter(
+    std::string &name,
+    ExecutionStreamParams &params)
+{
+    ConsumerToProducerProvisionAdapter *pAdapter = 
+        new ConsumerToProducerProvisionAdapter();
+    TupleStreamParams *pParams = new TupleStreamParams();
+    pParams->pCacheAccessor = params.pCacheAccessor;
+    pParams->scratchAccessor = params.scratchAccessor;
+    factors.setFactors(pAdapter,pParams);
+    factors.getStream()->name = name;
+    return factors;
+}
+
+const ExecutionStreamFactors &
+ExecutionStreamFactory::newProducerToConsumerProvisionAdapter(
+    std::string &name,
+    ExecutionStreamParams &params)
+{
+    ProducerToConsumerProvisionAdapter *pAdapter = 
+        new ProducerToConsumerProvisionAdapter();
+    TupleStreamParams *pParams = new TupleStreamParams();
+    pParams->pCacheAccessor = params.pCacheAccessor;
+    pParams->scratchAccessor = params.scratchAccessor;
+    factors.setFactors(pAdapter,pParams);
+    factors.getStream()->name = name;
     return factors;
 }
 
@@ -92,6 +139,8 @@ const ExecutionStreamFactors &ExecutionStreamFactory::visitStream(
 // (3) read stream-specific parameters
 // (4) set factors
 // TODO: do we have a possible memory leak here?
+// REVIEW jvs 3-April-2004:  Yes, there's a leak in case of exception.
+// Need to fix that in some uniform fashion.
 
 void ExecutionStreamFactory::visit(ProxyIndexScanDef &streamDef)
 {
@@ -215,6 +264,18 @@ void ExecutionStreamFactory::visit(ProxyCartesianProductStreamDef &streamDef)
 
     CartesianProductStreamParams *pParams = new CartesianProductStreamParams();
     readTupleStreamParams(*pParams,streamDef);
+
+    factors.setFactors(pStream,pParams);
+}
+
+void ExecutionStreamFactory::visit(ProxyCalcTupleStreamDef &streamDef)
+{
+    CalcTupleStream *pStream = new CalcTupleStream();
+
+    CalcTupleStreamParams *pParams = new CalcTupleStreamParams();
+    readTupleStreamParams(*pParams,streamDef);
+    pParams->program = streamDef.getProgram();
+    pParams->isFilter = streamDef.isFilter();
 
     factors.setFactors(pStream,pParams);
 }

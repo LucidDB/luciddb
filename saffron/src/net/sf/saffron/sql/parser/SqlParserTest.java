@@ -87,7 +87,7 @@ public class SqlParserTest extends TestCase
             // it very hard to find the problem with something like
             // a newline instead of a space.  Use diff-based testing instead;
             // it would also make updating the expected value much easier.
-            String message = NL+"expected:<" + expected + ">" + NL + "but was:<"
+            String message = NL+"expected:<" + expected + ">" + NL + " but was:<"
                 + actual + ">";
             fail(message);
         }
@@ -376,10 +376,28 @@ public class SqlParserTest extends TestCase
             "SELECT 1" + NL + "FROM `EMP` AS `E`" + NL + "WHERE 1");
     }
 
+    public void testConcat() {
+        checkExp("'a' || 'b'","('a' || 'b')");
+    }
+
+    public void testReverseSolidus() {
+        checkExp("'\\'","'\\'");
+    }
+
+    public void testSubstring() {
+        checkExp("substring('a' \n  FROM \t  1)","SUBSTRING('a' FROM 1)") ;
+        checkExp("substring('a' FROM 1 FOR 3)","SUBSTRING('a' FROM 1 FOR 3)") ;
+        checkExp("substring('a' FROM 'reg' FOR '\\')","SUBSTRING('a' FROM 'reg' FOR '\\')") ;
+
+        checkExp("substring('a', 'reg', '\\')","SUBSTRING('a' FROM 'reg' FOR '\\')") ;
+        checkExp("substring('a' FROM 1 FOR 2)","SUBSTRING('a' FROM 1 FOR 2)") ;
+        checkExp("substring('a' FROM 1)","SUBSTRING('a' FROM 1)") ;
+    }
+
     public void testFunction()
     {
         check("select substring('Eggs and ham', 1, 3 + 2) || ' benedict' from emp",
-              "SELECT (SUBSTRING('Eggs and ham', 1, (3 + 2)) || ' benedict')"
+              "SELECT (SUBSTRING('Eggs and ham' FROM 1 FOR (3 + 2)) || ' benedict')"
               + NL + "FROM `EMP`");
         checkExp("log(1)\r\n+pow(2, mod(\r\n3\n\t\t\f\n,ln(4))*log(5)-6*log(7/abs(8)+9))*pow(10,11)",
                  "(LOG(1) + (POW(2, ((MOD(3, LN(4)) * LOG(5)) - (6 * LOG(((7 / ABS(8)) + 9))))) * POW(10, 11)))");
@@ -991,7 +1009,79 @@ public class SqlParserTest extends TestCase
                                       "END)");
     }
 
+    public void testLiteralCollate(){
+        checkExp("'string' collate latin1$sv_SE$mega_strength","'string' COLLATE ISO-8859-1$sv_SE$mega_strength");
+        checkExp("x collate iso-8859-6$ar_LB$1","`X` COLLATE ISO-8859-6$ar_LB$1");
+        checkExp("x.y.z collate shift_jis$ja_JP$2","`X`.`Y`.`Z` COLLATE SHIFT_JIS$ja_JP$2");
+        checkExp("'str1'='str2' collate latin1$sv_SE","('str1' = 'str2' COLLATE ISO-8859-1$sv_SE$primary)");
+        checkExp("'str1' collate latin1$sv_SE>'str2'","('str1' COLLATE ISO-8859-1$sv_SE$primary > 'str2')");
+        checkExp("'str1' collate latin1$sv_SE<='str2' collate latin1$sv_FI",
+                 "('str1' COLLATE ISO-8859-1$sv_SE$primary <= 'str2' COLLATE ISO-8859-1$sv_FI$primary)");
 
+    }
+
+    public void testCharLength() {
+        checkExp("char_length('string')","CHAR_LENGTH('string')");
+        checkExp("character_length('string')","CHARACTER_LENGTH('string')");
+    }
+
+    public void testPosition() {
+        checkExp("posiTion('mouse' in 'house')","POSITION('mouse' IN 'house')");
+    }
+	// check date/time functions.
+	public void testTimeDate() {
+        
+        // CURRENT_TIME - returns time w/ timezone
+		checkExp("CURRENT_TIME(3)", "CURRENT_TIME(3)");
+		// checkFails("SELECT CURRENT_TIME() FROM foo", "SELECT CURRENT_TIME() FROM `FOO`");
+		checkExp("CURRENT_TIME", "`CURRENT_TIME`");
+		checkExp("CURRENT_TIME(x+y)", "CURRENT_TIME((`X` + `Y`))");
+
+        // LOCALTIME returns time w/o TZ
+        checkExp("LOCALTIME(3)", "LOCALTIME(3)");
+		// checkFails("SELECT LOCALTIME() FROM foo", "SELECT LOCALTIME() FROM `FOO`");
+		checkExp("LOCALTIME", "`LOCALTIME`");
+		checkExp("LOCALTIME(x+y)", "LOCALTIME((`X` + `Y`))");
+
+        // LOCALTIMESTAMP - returns timestamp w/o TZ
+        checkExp("LOCALTIMESTAMP(3)", "LOCALTIMESTAMP(3)");
+		// checkFails("SELECT LOCALTIMESTAMP() FROM foo", "SELECT LOCALTIMESTAMP() FROM `FOO`");
+		checkExp("LOCALTIMESTAMP", "`LOCALTIMESTAMP`");
+		checkExp("LOCALTIMESTAMP(x+y)", "LOCALTIMESTAMP((`X` + `Y`))");
+
+        // CURRENT_DATE - returns DATE
+        checkExp("CURRENT_DATE(3)", "CURRENT_DATE(3)");
+		// checkFails("SELECT CURRENT_DATE() FROM foo", "SELECT CURRENT_DATE() FROM `FOO`");
+		checkExp("CURRENT_DATE", "`CURRENT_DATE`");
+		// checkFails("SELECT CURRENT_DATE(x+y) FROM foo", "CURRENT_DATE((`X` + `Y`))");
+
+        // CURRENT_TIMESTAMP - returns timestamp w/ TZ
+        checkExp("CURRENT_TIMESTAMP(3)", "CURRENT_TIMESTAMP(3)");
+		// checkFails("SELECT CURRENT_TIMESTAMP() FROM foo", "SELECT CURRENT_TIMESTAMP() FROM `FOO`");
+		checkExp("CURRENT_TIMESTAMP", "`CURRENT_TIMESTAMP`");
+		checkExp("CURRENT_TIMESTAMP(x+y)", "CURRENT_TIMESTAMP((`X` + `Y`))");
+	}
+    public void testTrim() {
+        checkExp("trim('mustache' FROM 'beard')","TRIM(BOTH 'mustache' FROM 'beard')");
+        checkExp("trim('mustache')","TRIM(BOTH ' ' FROM 'mustache')");
+        checkExp("trim(TRAILING FROM 'mustache')","TRIM(TRAILING ' ' FROM 'mustache')");
+        checkExp("trim(bOth 'mustache' FROM 'beard')","TRIM(BOTH 'mustache' FROM 'beard')");
+        checkExp("trim( lEaDing       'mustache' FROM 'beard')","TRIM(LEADING 'mustache' FROM 'beard')");
+        checkExp("trim(\r\n\ttrailing\n  'mustache' FROM 'beard')","TRIM(TRAILING 'mustache' FROM 'beard')");
+
+        checkFails("trim(from 'beard')","(?s).*'FROM' near line 1 col 6, without operands preceding it is illegal.*");
+        checkFails("trim('mustache' in 'beard')","(?s).*Encountered .in. at line 1, column 17.*");
+    }
+
+    public void testConvertAndTranslate() {
+        checkExp("convert('abc' using conversion)","CONVERT('abc' USING `CONVERSION`)");
+        checkExp("translate('abc' using translation)","TRANSLATE('abc' USING `TRANSLATION`)");
+    }
+
+    public void testOverlay() {
+        checkExp("overlay('ABCdef' placing 'abc' from 1)","OVERLAY('ABCdef' PLACING 'abc' FROM 1)");
+        checkExp("overlay('ABCdef' placing 'abc' from 1 for 3)","OVERLAY('ABCdef' PLACING 'abc' FROM 1 FOR 3)");
+    }
 }
 
 

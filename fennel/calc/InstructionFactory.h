@@ -919,8 +919,7 @@ public:
         return ostr.str();
     }
 
-    static Instruction* createInstruction(Calculator* pCalc,
-                                          string& name,
+    static Instruction* createInstruction(string& name,
                                           string& function,
                                           vector<RegisterReference*>& operands)
     {
@@ -928,7 +927,7 @@ public:
         ExtendedInstructionDef* instDef = extendedInstructionMap.lookupBySignature(name, signature);
         if (instDef == NULL)
             return NULL;
-        return instDef->createInstruction(pCalc, operands);
+        return instDef->createInstruction(operands);
     }
 
     template < template <typename T, StandardTypeDescriptorOrdinal typeOrdinal> class TInstFactory >

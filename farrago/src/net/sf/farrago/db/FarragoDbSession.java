@@ -205,7 +205,7 @@ public class FarragoDbSession
             this,
             getCatalog(),
             getDatabase().getFennelDbHandle(),
-            new FarragoParser(),
+            newParser(),
             getConnectionDefaults(),
             getSessionIndexMap(),
             getDatabase().getDataWrapperCache());

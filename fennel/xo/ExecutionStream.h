@@ -28,12 +28,14 @@
 
 FENNEL_BEGIN_NAMESPACE
 
+class ExecutionStreamFactory;
+
 /**
  * Common parameters for instantiating any ExecutionStream.
  */
 struct ExecutionStreamParams 
 {
-    virtual ~ExecutionStreamParams() {}
+    virtual ~ExecutionStreamParams();
     
     /**
      * CacheAccessor to use for any data access.  This will be singular if the
@@ -56,6 +58,7 @@ struct ExecutionStreamParams
 class ExecutionStream : virtual public ClosableObject
 {
     friend class ExecutionStreamGraphImpl;
+    friend class ExecutionStreamFactory;
 protected:
 
     /**
@@ -78,16 +81,16 @@ protected:
     ExecutionStreamId id;
 
     /**
+     * Name of stream, as known by optimizer
+     */
+    std::string name;
+    
+    /**
      * Constructor.  Note that derived class constructors must never take any
      * parameters in order to support deserialization.  See notes on method
      * prepare() for more information.
      */
-    explicit ExecutionStream()
-    {
-        pGraph = NULL;
-        id = MAXU;
-        isOpen = false;
-    }
+    explicit ExecutionStream();
 
     // interface methods below are protected because they should only be called
     // indirectly via ExecutionStreamGraph interface
@@ -96,11 +99,8 @@ protected:
      * Inherited from ClosableObject.  ExecutionStream implementations must
      * override this to release any resources acquired while open.
      */
-    virtual void closeImpl()
-    {
-        isOpen = false;
-    }
-
+    virtual void closeImpl();
+    
     /**
      * Utility method for accessing a child input stream.
      *
@@ -108,16 +108,11 @@ protected:
      *
      * @return reference to child
      */
-    SharedExecutionStream getStreamInput(uint ordinal)
-    {
-        return pGraph->getStreamInput(getStreamId(),ordinal);
-    }
-    
+    virtual SharedExecutionStream getStreamInput(uint ordinal);
+        
 public:
-    virtual ~ExecutionStream()
-    {
-    }
-
+    virtual ~ExecutionStream();
+    
     /**
      * Enumeration of supported dataflow buffer provision
      * capabilities/requirements.
@@ -158,10 +153,8 @@ public:
      * @param params instance of stream parameterization class which should be
      * used to prepare this stream
      */
-    virtual void prepare(ExecutionStreamParams const &params)
-    {
-    }
-    
+    virtual void prepare(ExecutionStreamParams const &params);
+        
     /**
      * Open this stream, acquiring any resources needed in order to be able to
      * fetch data.  A precondition is that input streams
@@ -170,31 +163,18 @@ public:
      * @param restart if true, the stream must be already open, and should
      * reset itself to start from the beginning of its result set
      */
-    virtual void open(bool restart)
-    {
-        if (restart) {
-            assert(isOpen);
-        } else {
-            // NOTE: this assertion is bad because in case of multiple
-            // inheritance, open can be called twice.  So we rely on the
-            // corresponding assertion in TupleStreamGraph instead, unless
-            // someone can come up with something better.
-#if 0
-            assert(!isOpen);
-#endif
-            isOpen = true;
-            needsClose = true;
-        }
-    }
-
+    virtual void open(bool restart);
+    
     /**
      * @return the identifier for this stream within its graph
      */
-    inline ExecutionStreamId getStreamId() const
-    {
-        return id;
-    }
+    virtual ExecutionStreamId getStreamId() const;
     
+    /**
+     * @return the name of this stream, as known by the optimizer
+     */
+    virtual std::string const &getName() const;
+        
     /**
      * @return TupleDescriptor for tuples produced by this stream.
      */
@@ -204,11 +184,8 @@ public:
      * @return the format of the tuples produced by this stream; default is
      * TUPLE_FORMAT_STANDARD
      */
-    virtual TupleFormat getOutputFormat() const
-    {
-        return TUPLE_FORMAT_STANDARD;
-    }
-
+    virtual TupleFormat getOutputFormat() const;
+    
     // TODO: throttling interface to limit how many tuples are produced?
     
     /**
@@ -234,12 +211,8 @@ public:
      *
      * @return result stream
      */
-    virtual ByteInputStream &getProducerResultStream()
-    {
-        assert(false);
-        throw;
-    }
-
+    virtual ByteInputStream &getProducerResultStream();
+    
     /**
      * Request that a stream produce results and write as many of them as will
      * fit into the current buffer of a ByteOutputStream.  This can only be
@@ -256,11 +229,7 @@ public:
      * @return true if at least one tuple was written; false if no more results
      */
     virtual bool writeResultToConsumerBuffer(
-        ByteOutputStream &resultOutputStream) 
-    {
-        assert(false);
-        throw;
-    }
+        ByteOutputStream &resultOutputStream);
 
     /**
      * Query the BufferProvision which this stream is capable of when producing
@@ -283,10 +252,7 @@ public:
      *
      * @return required model
      */
-    virtual BufferProvision getInputBufferRequirement() const
-    {
-        return NO_PROVISION;
-    }
+    virtual BufferProvision getInputBufferRequirement() const;
 };
 
 FENNEL_END_NAMESPACE

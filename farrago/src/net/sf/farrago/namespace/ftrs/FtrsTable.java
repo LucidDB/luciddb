@@ -17,38 +17,36 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-package net.sf.farrago.query;
+package net.sf.farrago.namespace.ftrs;
 
+import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.query.*;
 
 import net.sf.saffron.core.*;
 import net.sf.saffron.ext.*;
 import net.sf.saffron.opt.*;
 import net.sf.saffron.rel.*;
 
+import java.util.*;
+
 /**
- * An implementation of SaffronTable for accessing data stored in Fennel.
+ * An implementation of SaffronTable for accessing data stored in FTRS.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-class FennelTable extends FarragoTable
+class FtrsTable extends MedAbstractColumnSet
 {
     //~ Constructors ----------------------------------------------------------
 
-    /**
-     * Creates a new FennelTable object.
-     *
-     * @param preparingStmt statement through which this table is being accessed
-     * @param cwmTable catalog definition for table
-     * @param rowType type for rows stored in table
-     */
-    FennelTable(
-        FarragoPreparingStmt preparingStmt,
-        CwmNamedColumnSet cwmTable,
-        SaffronType rowType)
+    FtrsTable(
+        String [] localName,
+        SaffronType rowType,
+        Properties tableProps,
+        Map columnPropMap)
     {
-        super(preparingStmt,cwmTable,rowType);
+        super(localName,null,rowType,tableProps,columnPropMap);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -56,10 +54,11 @@ class FennelTable extends FarragoTable
     // implement SaffronTable
     public SaffronRel toRel(VolcanoCluster cluster,SaffronConnection connection)
     {
-        return new FennelIndexScanRel(
+        return new FtrsIndexScanRel(
             cluster,
             this,
-            preparingStmt.getCatalog().getClusteredIndex(cwmTable),
+            getPreparingStmt().getCatalog().getClusteredIndex(
+                getCwmColumnSet()),
             connection,
             null,
             false);
@@ -67,4 +66,4 @@ class FennelTable extends FarragoTable
 }
 
 
-// End FennelTable.java
+// End FtrsTable.java

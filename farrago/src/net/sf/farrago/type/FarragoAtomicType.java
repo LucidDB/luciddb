@@ -25,9 +25,11 @@ import net.sf.farrago.resource.*;
 
 import net.sf.saffron.core.*;
 import net.sf.saffron.util.Util;
+import net.sf.saffron.sql.SqlCollation;
 
 import java.sql.*;
 import java.io.PrintWriter;
+import java.nio.charset.Charset;
 
 
 /**
@@ -216,6 +218,34 @@ public abstract class FarragoAtomicType extends FarragoType
         FarragoTypeFamily family = getFamily();
         return (family == FarragoTypeFamily.CHARACTER)
             || (family == FarragoTypeFamily.BINARY);
+    }
+
+    /** implement SaffronType */
+    public boolean isCharType() {
+        FarragoTypeFamily family = getFamily();
+        return (family == FarragoTypeFamily.CHARACTER);
+    }
+
+    /** implement SaffronType */
+    public Charset getCharset() {
+//        return null;
+        throw Util.newInternal(digest+" is not defined to carry a charset");
+    }
+
+    /** implement SaffronType */
+    public void setCharset(Charset charset) {
+        throw Util.newInternal(digest+" is not defined to carry a charset");
+    }
+
+    /** implement SaffronType */
+    public SqlCollation getCollation() throws RuntimeException {
+//        return null;
+        throw Util.newInternal(digest+" is not defined to carry a collation");
+    }
+
+    /** implement SaffronType */
+    public void setCollation(SqlCollation collation) throws RuntimeException {
+        throw Util.newInternal(digest+" is not defined to carry a collation");
     }
 
     /**

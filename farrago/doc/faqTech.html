@@ -129,6 +129,19 @@ caching by executing the SQL statement <code>alter system set
 operation will be much slower).
 
 <hr>
+<h2>JSwat is complaining about UnknownHostException or Socket transport error, What do I do?</h2>
+
+To solve the UnknownHostException, add the hostname of your computer to /etc/hosts. E.g<br>
+<blockquote><code>
+127.0.0.1	localhost<br>
+192.168.0.2	myHostName
+</code></blockquote>
+
+Run (as root) <code>service network restart</code> and try running jswat again. For non redhat users the <code>service</code> command might not be available.
+<p>
+If you get a <code>Socket transport failed to init</code> error when running jswat, make sure that the hostname you specified in /etc/hosts maps to the right ip address.
+Use <code>ifconfig</code> to get your ip address.
+<hr>
 
 </body>
 </html>

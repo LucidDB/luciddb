@@ -53,11 +53,11 @@ class ConsumerToProducerProvisionAdapter
     SharedByteArrayOutputStream pBufferOutputStream;
 
 protected:
-    virtual void prepare(TupleStreamParams const &params);
     virtual void closeImpl();
     
 public:
     // implement TupleStream
+    virtual void prepare(TupleStreamParams const &params);
     virtual void open(bool restart);
     virtual ByteInputStream &getProducerResultStream();
     virtual BufferProvision getResultBufferProvision() const;

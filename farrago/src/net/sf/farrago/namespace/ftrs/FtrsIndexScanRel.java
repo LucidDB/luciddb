@@ -17,7 +17,7 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-package net.sf.farrago.query;
+package net.sf.farrago.namespace.ftrs;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.*;
@@ -25,6 +25,7 @@ import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
+import net.sf.farrago.query.*;
 
 import net.sf.saffron.core.*;
 import net.sf.saffron.opt.*;
@@ -38,13 +39,13 @@ import java.util.List;
 
 
 /**
- * FennelIndexScanRel is the relational expression corresponding to a scan via
- * a particular index over the contents of a table stored by Fennel.
+ * FtrsIndexScanRel is the relational expression corresponding to a scan via
+ * a particular index over the contents of a table stored in FTRS format.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-class FennelIndexScanRel extends TableAccessRel implements FennelRel
+class FtrsIndexScanRel extends TableAccessRel implements FennelRel
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -52,7 +53,7 @@ class FennelIndexScanRel extends TableAccessRel implements FennelRel
     final CwmSqlindex index;
 
     /** Refinement for super.table. */
-    final FennelTable fennelTable;
+    final FtrsTable ftrsTable;
 
     /**
      * Array of 0-based column ordinals to project; if null, project all
@@ -66,10 +67,10 @@ class FennelIndexScanRel extends TableAccessRel implements FennelRel
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Creates a new FennelIndexScanRel object.
+     * Creates a new FtrsIndexScanRel object.
      *
      * @param cluster VolcanoCluster for this rel
-     * @param fennelTable table being scanned
+     * @param ftrsTable table being scanned
      * @param index index to use for table access
      * @param connection connection
      * @param projectedColumns array of 0-based table-relative column ordinals,
@@ -77,16 +78,16 @@ class FennelIndexScanRel extends TableAccessRel implements FennelRel
      * @param isOrderPreserving if true, returned rows must be in index order;
      * if false, rows can be returned out of order
      */
-    public FennelIndexScanRel(
+    public FtrsIndexScanRel(
         VolcanoCluster cluster,
-        FennelTable fennelTable,
+        FtrsTable ftrsTable,
         CwmSqlindex index,
         SaffronConnection connection,
         Integer [] projectedColumns,
         boolean isOrderPreserving)
     {
-        super(cluster,fennelTable,connection);
-        this.fennelTable = fennelTable;
+        super(cluster,ftrsTable,connection);
+        this.ftrsTable = ftrsTable;
         this.index = index;
         this.projectedColumns = projectedColumns;
         this.isOrderPreserving = isOrderPreserving;
@@ -107,7 +108,8 @@ class FennelIndexScanRel extends TableAccessRel implements FennelRel
         if (projectedColumns != null) {
             columnOrdinal = projectedColumns[columnOrdinal].intValue();
         }
-        return (CwmColumn) fennelTable.cwmTable.getFeature().get(columnOrdinal);
+        return (CwmColumn) ftrsTable.getCwmColumnSet().getFeature().get(
+            columnOrdinal);
     }
 
     // implement SaffronRel
@@ -119,7 +121,7 @@ class FennelIndexScanRel extends TableAccessRel implements FennelRel
     // implement FennelRel
     public FarragoPreparingStmt getPreparingStmt()
     {
-        return fennelTable.preparingStmt;
+        return ftrsTable.getPreparingStmt();
     }
 
     // implement SaffronRel
@@ -178,7 +180,7 @@ class FennelIndexScanRel extends TableAccessRel implements FennelRel
             new String [] {
                 "table","projection","index","preserveOrder" },
             new Object [] {
-                Arrays.asList(fennelTable.getQualifiedName()),
+                Arrays.asList(ftrsTable.getQualifiedName()),
                 projection,index.getName(),
                 Boolean.valueOf(isOrderPreserving)
             });
@@ -215,7 +217,7 @@ class FennelIndexScanRel extends TableAccessRel implements FennelRel
         FarragoCatalog catalog = getPreparingStmt().getCatalog();
         int nIndexCols =
             catalog.isClustered(index)
-            ? fennelTable.cwmTable.getFeature().size()
+            ? ftrsTable.getCwmColumnSet().getFeature().size()
             : FennelRelUtil.getUnclusteredCoverageColList(catalog,index).size();
 
         double dIo = dRows * nIndexCols;
@@ -323,4 +325,4 @@ class FennelIndexScanRel extends TableAccessRel implements FennelRel
 }
 
 
-// End FennelIndexScanRel.java
+// End FtrsIndexScanRel.java

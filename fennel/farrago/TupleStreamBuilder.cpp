@@ -35,6 +35,7 @@
 #include "fennel/xo/ConsumerToProducerProvisionAdapter.h"
 #include "fennel/xo/TableWriterFactory.h"
 #include "fennel/xo/CartesianProductStream.h"
+#include "fennel/xo/ExecutionStreamGraphImpl.h"
 #include "fennel/db/Database.h"
 #include "fennel/db/CheckpointThread.h"
 #include "fennel/tuple/TupleDescriptor.h"
@@ -54,102 +55,127 @@ TupleStreamBuilder::TupleStreamBuilder(
     pGraph = pGraphInit;
 }
 
-void TupleStreamBuilder::buildStreamGraph(ProxyExecutionStreamDef &streamDef)
+void TupleStreamBuilder::buildStreamGraph(
+    ProxyCmdPrepareExecutionStreamGraph &cmd)
 {
     SegmentAccessor scratchAccessor =
         pDatabase->getSegmentFactory()->newScratchSegment(
             pDatabase->getCache());
     streamFactory.setScratchAccessor(scratchAccessor);
     pGraph->setScratchSegment(scratchAccessor.pSegment);
-    // perform a recursive traversal, requesting that the topmost stream
-    // provide a buffer (since it has no consumer)
-    visitStream(streamDef,TupleStream::PRODUCER_PROVISION);
-    
-    // the top-level stream visit should have left pChildStream set
-    assert(pChildStream);
-    // but we don't actually need it, since the graph remembers all the streams
-    // just built
-    pChildStream.reset();
+    //pSortingGraph = ExecutionStreamGraphImpl::newSortingGraph();
+
+    // PASS 1: add streams to graph
+    SharedProxyExecutionStreamDef pNext = cmd.getStreamDefs();
+    for (; pNext; ++pNext) {
+        visitStream(*pNext);
+    }
+
+    // PASS 2: add dataflows
+    pNext = cmd.getStreamDefs();
+    for (; pNext; ++pNext) {
+        buildStreamInputs(*pNext);
+        // streams with no consumer are responsible for providing buffers
+        if (! pNext->getConsumer()) {
+            std::string name = pNext->getName();
+            SharedExecutionStream lastStream = pGraph->findLastStream(name);
+            std::string baseName = lastStream->getName();
+            addAdapterFor(name,baseName,TupleStream::PRODUCER_PROVISION);
+        }
+    }
+
+    // PASS 3: sort and prepare streams
+    //pSortingGraph->prepare();
+    pGraph->prepare();
+    std::vector<SharedExecutionStream> sortedStreams = 
+        pGraph->getSortedStreams();
+    std::vector<SharedExecutionStream>::iterator pos;
+    for (pos = sortedStreams.begin(); pos != sortedStreams.end(); pos++) {
+        std::string name = (*pos)->getName();
+        ExecutionStreamFactors factors = lookupStream(name);
+        factors.prepareStream();
+    }
 }
 
 void TupleStreamBuilder::visitStream(
-    ProxyExecutionStreamDef &streamDef,
-    TupleStream::BufferProvision requiredDataflow)
+    ProxyExecutionStreamDef &streamDef)
 {
-    TraceTarget &traceTarget = pDatabase->getTraceTarget();
-    std::string name = streamDef.getName();
-
-    // add the XO prefix
-    name = "xo." + name;
-
     ExecutionStreamFactors factors = streamFactory.visitStream(streamDef);
-    buildStreamInputs(factors.getStream(),streamDef);
-    factors.prepareStream();
-    childParams = static_cast<TupleStreamParams &>(factors.getParams());
-    
-    if (traceTarget.getSourceTraceLevel(name) <= TRACE_FINE) {
+    registerStream(factors);
+    TraceTarget &traceTarget = pDatabase->getTraceTarget();
+    // TODO: shouldn't we decide whether to trace based on stream type?
+    std::string name = streamDef.getName();
+    // add the XO prefix
+    std::string traceName = "xo." + name;
+    if (traceTarget.getSourceTraceLevel(traceName) <= TRACE_FINE) {
         // interpose a tracing stream
-        addTracingStream(name);
+        addTracingStream(name, traceName);
     }
-
-    addAdapterFor(requiredDataflow);
 }
 
 void TupleStreamBuilder::buildStreamInputs(
-    ExecutionStream *pNewStream,ProxyExecutionStreamDef &streamDef)
+    ProxyExecutionStreamDef &streamDef)
 {
-    // One of the visit methods is in the middle of building a new stream.
-    // First, add a reference to it to the graph.
-    TupleStream *pTupleStream = static_cast<TupleStream*>(pNewStream);
-    SharedTupleStream pStream(pTupleStream);
-    pGraph->addStream(pStream);
-
-    // Next, recursively visit each input, building depth-first
+    std::string name = streamDef.getName();
+    SharedExecutionStream pStream = pGraph->findStream(name);
+    TupleStream::BufferProvision requiredDataflow =
+        pStream->getInputBufferRequirement();
     SharedProxyExecutionStreamDef pInput = streamDef.getInput();
     for (; pInput; ++pInput) {
-        visitStream(
-            *pInput,
-            pNewStream->getInputBufferRequirement());
-
-        // visit should have left input subtree set in pChildStream
-        assert(pChildStream);
-        // record dataflow between input and pNewStream
-        pGraph->addDataflow(
-            pChildStream->getStreamId(),
-            pStream->getStreamId());
-        // forget input now that we're done with it; the graph remembers it
-        pChildStream.reset();
+        std::string inputName = pInput->getName();
+        SharedExecutionStream lastStream = pGraph->findLastStream(inputName);
+        std::string baseName = lastStream->getName();
+        addAdapterFor(inputName,baseName,requiredDataflow);
+        addDataflow(inputName,name);
     }
-    // return this stream to parent once current visit completes
-    pChildStream = pStream;
 }
 
-void TupleStreamBuilder::addAdapter(TupleStream &adapter)
+void TupleStreamBuilder::addTracingStream(
+    std::string &name,
+    std::string &traceName)
 {
-    SharedTupleStream pSharedAdapter(&adapter);
-    pGraph->addStream(pSharedAdapter);
-    pGraph->addDataflow(
-        pChildStream->getStreamId(),
-        pSharedAdapter->getStreamId());
-    pChildStream = pSharedAdapter;
-    adapter.prepare(childParams);
+    TraceTarget &traceTarget = pDatabase->getTraceTarget();
+    ExecutionStreamParams &params = lookupStream(name).getParams();
+    ExecutionStreamFactors factors =
+        streamFactory.newTracingStream(traceTarget,traceName,params);
+    registerStream(factors);
+
+    // TracingStream may have different buffer provisioning requirements from
+    // real stream, so may need adapters above and below.
+    addAdapterFor(name,factors.getStream()->getInputBufferRequirement());
+    interposeStream(name,factors.getStream()->getStreamId());
 }
 
 void TupleStreamBuilder::addAdapterFor(
+    std::string &streamName,
+    std::string &baseName,
     TupleStream::BufferProvision requiredDataflow)
 {
+    SharedExecutionStream pStream = pGraph->findLastStream(streamName);
     TupleStream::BufferProvision availableDataflow =
-        pChildStream->getResultBufferProvision();
+        pStream->getResultBufferProvision();
     assert(availableDataflow != TupleStream::NO_PROVISION);
+
+    std::string adapterName = baseName + ".provisioner";
     switch (requiredDataflow) {
     case TupleStream::CONSUMER_PROVISION:
         if (availableDataflow == TupleStream::PRODUCER_PROVISION) {
-            addAdapter(*new ProducerToConsumerProvisionAdapter());
+            ExecutionStreamFactors factors =
+                streamFactory.newProducerToConsumerProvisionAdapter(
+                    adapterName,
+                    lookupStream(streamName).getParams());
+            registerStream(factors);
+            interposeStream(streamName,factors.getStream()->getStreamId());
         }
         break;
     case TupleStream::PRODUCER_PROVISION:
         if (availableDataflow == TupleStream::CONSUMER_PROVISION) {
-            addAdapter(*new ConsumerToProducerProvisionAdapter());
+            ExecutionStreamFactors factors =
+                streamFactory.newConsumerToProducerProvisionAdapter(
+                    adapterName,
+                    lookupStream(streamName).getParams());
+            registerStream(factors);
+            interposeStream(streamName,factors.getStream()->getStreamId());
         }
         break;
     case TupleStream::PRODUCER_OR_CONSUMER_PROVISION:
@@ -161,23 +187,62 @@ void TupleStreamBuilder::addAdapterFor(
     }
 }
 
-void TupleStreamBuilder::addTracingStream(std::string name)
+void TupleStreamBuilder::addAdapterFor(
+    std::string &streamName,
+    TupleStream::BufferProvision requiredDataflow)
 {
-    TraceTarget &traceTarget = pDatabase->getTraceTarget();
-    TracingTupleStream *pTracingStream =
-        new TracingTupleStream(traceTarget,name);
-    SharedTupleStream pSharedTracingStream(pTracingStream);
-    pGraph->addStream(pSharedTracingStream);
+    addAdapterFor(streamName,streamName,requiredDataflow);
+}
 
-    // TracingStream may have different buffer provisioning requirements from
-    // real stream, so may need adapters above and below.
-    addAdapterFor(pTracingStream->getInputBufferRequirement());
+void TupleStreamBuilder::registerStream(ExecutionStreamFactors &factors)
+{
+    ExecutionStream *pNewStream = factors.getStream();
+    std::string name = pNewStream->getName();
+    streams[name] = factors;
+    SharedExecutionStream pStream(pNewStream);
+    // adding a stream to the graph sets a reference to the graph...
+    // so make sure the stream has a reference to the permanent graph, not 
+    // our temporary sorting graph
+    //pSortingGraph->addStream(pStream);
+    pGraph->addStream(pStream);
+}
 
+ExecutionStreamFactors TupleStreamBuilder::lookupStream(std::string &name)
+{
+    StreamMapConstIter pPair = streams.find(name);
+    if (pPair == streams.end()) {
+        assert(false);
+    } else {
+        return pPair->second;
+    }
+}
+
+void TupleStreamBuilder::addDataflow(
+    std::string &source,
+    std::string &target)
+{
+    SharedExecutionStream pInput = 
+        pGraph->findLastStream(source);
+    SharedExecutionStream pStream = 
+        pGraph->findStream(target);
     pGraph->addDataflow(
-        pChildStream->getStreamId(),
-        pSharedTracingStream->getStreamId());
-    pChildStream = pSharedTracingStream;
-    pTracingStream->prepare(childParams);
+        pInput->getStreamId(),
+        pStream->getStreamId());
+    /*pSortingGraph->addDataflow(
+        pInput->getStreamId(),
+        pStream->getStreamId());*/
+}
+    
+void TupleStreamBuilder::interposeStream(
+    std::string &name,
+    ExecutionStreamId interposedId)
+{
+    pGraph->interposeStream(
+        name,
+        interposedId);
+    /*pSortingGraph->interposeStream(
+        name,
+        interposedId);*/
 }
 
 FENNEL_END_CPPFILE("$Id$");

@@ -60,9 +60,13 @@ public abstract class FemDataWrapperImpl extends InstanceHandler
         Properties props = getStorageOptionsAsProperties(this);
 
         try {
-            // convert library filename to absolute path
-            File file = new File(getLibraryFile());
-            setLibraryFile(file.getAbsolutePath());
+            if (!getLibraryFile().startsWith(
+                    FarragoDataWrapperCache.LIBRARY_CLASS_PREFIX))
+            {
+                // convert library filename to absolute path
+                File file = new File(getLibraryFile());
+                setLibraryFile(file.getAbsolutePath());
+            }
             
             // validate that we can successfully initialize the wrapper
             loadFromCache(validator.getDataWrapperCache());

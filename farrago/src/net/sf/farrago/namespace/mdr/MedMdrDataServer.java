@@ -70,6 +70,8 @@ class MedMdrDataServer extends MedAbstractDataServer
     
     MDRepository repository;
 
+    RefPackage extentPackage;
+
     RefPackage rootPackage;
 
     boolean foreignRepository;
@@ -86,11 +88,19 @@ class MedMdrDataServer extends MedAbstractDataServer
     }
 
     /**
-     * @return the root package, or null if this is not a server
+     * @return the root package
      */
     public RefPackage getRootPackage()
     {
         return rootPackage;
+    }
+
+    /**
+     * @return the extent package
+     */
+    public RefPackage getExtentPackage()
+    {
+        return extentPackage;
     }
 
     void initialize()
@@ -145,14 +155,16 @@ class MedMdrDataServer extends MedAbstractDataServer
         repository = MdrUtil.loadRepository(
             storageFactoryClassName,
             storageProps);
-        rootPackage = repository.getExtent(extentName);
+        extentPackage = repository.getExtent(extentName);
+        rootPackage = extentPackage;
     }
     
     private void initAsCatalogServer()
     {
         foreignRepository = false;
         repository = catalog.getRepository();
-        rootPackage = catalog.farragoPackage;
+        extentPackage = catalog.farragoPackage;
+        rootPackage = extentPackage;
     }
 
     private String getNonStorageProperty(Properties props,String propName)
@@ -173,6 +185,11 @@ class MedMdrDataServer extends MedAbstractDataServer
         throws SQLException
     {
         return getMdrNameDirectory();
+    }
+
+    MedMdrNameDirectory getExtentNameDirectory()
+    {
+        return new MedMdrNameDirectory(this,extentPackage);
     }
     
     // implement FarragoMedDataServer
@@ -203,12 +220,13 @@ class MedMdrDataServer extends MedAbstractDataServer
             return repository;
         }
         String [] qualifiedName = (String []) param;
-        return getMdrNameDirectory().lookupRefBaseObject(qualifiedName);
+        return getExtentNameDirectory().lookupRefBaseObject(qualifiedName);
     }
     
     // implement FarragoMedDataServer
     public void registerRules(SaffronPlanner planner)
     {
+        super.registerRules(planner);
         planner.addRule(new MedMdrJoinRule());
     }
     

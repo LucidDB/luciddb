@@ -34,6 +34,7 @@ ExecutionStreamGraph::~ExecutionStreamGraph()
 
 ExecutionStreamGraphImpl::ExecutionStreamGraphImpl()
 {
+    isPrepared = false;
     isOpen = false;
 }
 
@@ -62,10 +63,14 @@ SharedExecutionStream ExecutionStreamGraphImpl::getStreamFromVertex(
 void ExecutionStreamGraphImpl::addStream(
     SharedExecutionStream pStream)
 {
+    assert(pStream->getName().length());
+    assert(findStream(pStream->getName()).get()==NULL);
     Vertex streamVertex = boost::add_vertex(graphRep);
     pStream->id = streamVertex;
     pStream->pGraph = this;
     boost::put(boost::vertex_data,graphRep,streamVertex,pStream);
+    streamMap[pStream->getName()] = pStream->getStreamId();
+    streamOutMap[pStream->getName()] = pStream->getStreamId();
 }
 
 void ExecutionStreamGraphImpl::addDataflow(
@@ -73,6 +78,42 @@ void ExecutionStreamGraphImpl::addDataflow(
     ExecutionStreamId consumerId)
 {
     boost::add_edge(producerId,consumerId,graphRep);
+}
+
+SharedExecutionStream ExecutionStreamGraphImpl::findStream(
+    std::string name)
+{
+    StreamMapConstIter pPair = streamMap.find(name);
+    if (pPair == streamMap.end()) {
+        SharedExecutionStream nullStream;
+        return nullStream;
+    } else {
+        return getStreamFromVertex(pPair->second);
+    }
+}
+
+SharedExecutionStream ExecutionStreamGraphImpl::findLastStream(
+    std::string name)
+{
+    StreamMapConstIter pPair = streamOutMap.find(name);
+    if (pPair == streamOutMap.end()) {
+        SharedExecutionStream nullStream;
+        return nullStream;
+    } else {
+        return getStreamFromVertex(pPair->second);
+    }
+}
+
+void ExecutionStreamGraphImpl::interposeStream(
+    std::string name,
+    ExecutionStreamId interposedId)
+{
+    SharedExecutionStream pLastStream = findLastStream(name);
+    assert(pLastStream.get());
+    streamOutMap[name] = interposedId;
+    addDataflow(
+        pLastStream->getStreamId(),
+        interposedId);
 }
 
 void ExecutionStreamGraphImpl::sortStreams()
@@ -93,6 +134,7 @@ void ExecutionStreamGraphImpl::sortStreams()
 
 void ExecutionStreamGraphImpl::prepare()
 {
+    isPrepared = true;
     sortStreams();
 }
 
@@ -150,6 +192,18 @@ SharedExecutionStream ExecutionStreamGraphImpl::getSinkStream()
 {
     // the sink comes at the end of the topological sort
     return sortedStreams.back();
+}
+
+SharedExecutionStreamGraph newSortingGraph()
+{
+    return SharedExecutionStreamGraph(
+        new SortingGraph(),ClosableObjectDestructor());
+}
+
+std::vector<SharedExecutionStream> ExecutionStreamGraphImpl::getSortedStreams()
+{
+    assert(isPrepared);
+    return sortedStreams;
 }
 
 FENNEL_END_CPPFILE("$Id$");

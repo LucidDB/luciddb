@@ -194,12 +194,20 @@ encountered near {1}</text>
     <text>Failed to validate definition for data server {0}</text>
 </exception>
 
-<exception id="420360" name="ValidatorForeignTableInvalid">
-    <text>Failed to validate definition for foreign table {0}</text>
+<exception id="420360" name="ValidatorDataServerTableInvalid">
+    <text>Failed to validate data server definition for {0}</text>
 </exception>
 
 <exception id="420370" name="ValidatorForeignTableLookupFailed">
     <text>Failed to look up foreign table name {0}</text>
+</exception>
+
+<exception id="420380" name="ValidatorForeignTableButLocalWrapper">
+    <text>Cannot create foreign table {0} using local data wrapper {1}</text>
+</exception>
+
+<exception id="420390" name="ValidatorLocalTableButForeignWrapper">
+    <text>Cannot create local table {0} using foreign data wrapper {1}</text>
 </exception>
 
 <!-- ====================================================================== -->
