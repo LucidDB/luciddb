@@ -8,6 +8,7 @@ endif
 
 # NOTE:  tests are ordered roughly from fastest to slowest
 noinst_PROGRAMS= \
+CalcAssemblerTest \
 CalcInstFactoryTest \
 CalcCastTest \
 CalcMiscTest \
@@ -23,6 +24,8 @@ SqlStringTest \
 SqlStringAsciiTest
 
 TESTS = $(noinst_PROGRAMS)
+
+CalcAssemblerTest_SOURCES=CalcAssemblerTest.cpp
 
 CalcInstFactoryTest_SOURCES=CalcInstFactoryTest.cpp
 

@@ -29,13 +29,12 @@ StringToHex.cpp \
 ExtMath.cpp
 
 #noinst_PROGRAMS =    \
-#testCalc tuple testCalcAssembler
+#testCalc tuple
 
 #TESTS = $(noinst_PROGRAMS)
 
 #testCalc_SOURCES=testCalc.cpp 
 #tuple_SOURCES= tuple.cpp
-#testCalcAssembler_SOURCES=testCalcAssembler.cpp
 
 #LDADD = -L$(top_builddir)/calc      \
 #		-l$(CALC_LIB)       \

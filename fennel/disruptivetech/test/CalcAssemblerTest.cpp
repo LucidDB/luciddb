@@ -19,10 +19,17 @@
 */
 
 #include "fennel/common/CommonPreamble.h"
-#include "fennel/calc/CalcCommon.h"
-#include "fennel/calc/CalcAssembler.h"
-#include "fennel/calc/StringToHex.h"
+#include "fennel/test/TestBase.h"
+#include "fennel/common/TraceSource.h"
+
+#include "fennel/tuple/TupleDataWithBuffer.h"
 #include "fennel/tuple/TuplePrinter.h"
+#include "fennel/disruptivetech/calc/CalcCommon.h"
+#include "fennel/disruptivetech/calc/CalcAssembler.h"
+#include "fennel/disruptivetech/calc/StringToHex.h"
+#include "fennel/common/FennelExcn.h"
+
+#include <boost/test/test_tools.hpp>
 
 #include <fstream.h>
 #include <strstream.h>
@@ -30,7 +37,6 @@
 
 using namespace fennel;
 
-char *ProgramName;
 bool verbose = false;
 bool showProgram = true;
 
@@ -223,7 +229,11 @@ public:
         // Check number of output registers
         if (outputTupleDesc.size() != mOutRegInfo.size())
         {
-            cout << "Mismatch of register number" << endl;
+            ostringstream message("");
+            message << "Mismatch of output register number: Expected ";
+            message << outputTupleDesc.size();
+            message << ", Actual " << mOutRegInfo.size();
+            BOOST_ERROR(message.str());
             return false;
         }
 
@@ -233,15 +243,22 @@ public:
             if (outputTupleDesc[i].pTypeDescriptor->getOrdinal() != 
                 static_cast<StoredTypeDescriptor::Ordinal>(typeOrdinal))
             {
-                cout << "Type ordinal mismatch" << endl;
+                ostringstream message("");
+                message << "Type ordinal mismatch: Expected ";
+                message << outputTupleDesc[i].pTypeDescriptor->getOrdinal();
+                message << ", Actual";
+                message << static_cast<StoredTypeDescriptor::Ordinal>(typeOrdinal);
+                BOOST_ERROR(message.str());
                 return false;
             }
 
             if (!mOutRegInfo[i].checkTupleDatum(outputTuple[i]))
             {
-                cout << "Tuple datum mismatch: Register " << i 
-                     << " should be " << mOutRegInfo[i].toString()
-                     << ". " << endl;
+                ostringstream message("");
+                message << "Tuple datum mismatch: Register " << i 
+                        << " should be " << mOutRegInfo[i].toString()
+                        << ".";
+                BOOST_ERROR(message.str());
                 return false;
             }
         }
@@ -249,8 +266,10 @@ public:
         // Check warnings
         if (calc.mWarnings.size() != mWarnings.size())
         {
-            cout << "# of warnings should be " << mWarnings.size() 
-                 << " not " << calc.mWarnings.size() << endl;
+            ostringstream message("");
+            message << "# of warnings should be " << mWarnings.size() 
+                    << " not " << calc.mWarnings.size();
+            BOOST_ERROR(message.str());
             return false;
         }
 
@@ -258,18 +277,23 @@ public:
         {
             if (calc.mWarnings[i].pc != mWarnings[i].pc)
             {
-                cout << "Warning expected at PC=" << mWarnings[i].pc
-                     << ". Got warning at PC="
-                     << calc.mWarnings[i].pc << endl;
+                ostringstream message("");
+                message << "Warning expected at PC=" << mWarnings[i].pc
+                        << ". Got warning at PC="
+                        << calc.mWarnings[i].pc;
+                BOOST_ERROR(message.str());
                 return false;
             }
+
             if (strcmp(calc.mWarnings[i].str, mWarnings[i].str))
             {
-                cout << "Message should be |" << mWarnings[i].str 
-                     << "| not |" << calc.mWarnings[i].str << "| at PC="
-                     << mWarnings[i].pc << endl;
+                ostringstream message("");
+                message << "Message should be |" << mWarnings[i].str 
+                        << "| not |" << calc.mWarnings[i].str << "| at PC="
+                        << mWarnings[i].pc ;
+                BOOST_ERROR(message.str());
                 return false;
-            }
+            } 
         }
         
         return true;
@@ -322,28 +346,30 @@ public:
 
     void fail(const char *exp, const char* actual) 
     {
-        assert(ProgramName);
         assert(exp);
         assert(actual);
         assert(mDescription);
-        printf("%s: unit test %d failed: | %s | Got \"%s\""
-               "| Expected \"%s\" | line %d\n", 
-               ProgramName, mID, mDescription, actual, exp, mLine);
+        ostringstream message("");
+        message << "test " << mID << " failed: | ";
+        message << mDescription << " | Got \"" << actual << "\" | ";
+        message << "Expected \"" << exp << "\" | line " << mLine;
+        BOOST_ERROR(message.str());
         mFailed = true;
         nFailed++;
     }
 
     void passed(const char *exp, const char* actual)
     {
-        assert(ProgramName);
         assert(exp);
         assert(actual);
         assert(mDescription);
         if (verbose) 
         {
-            printf("%s: unit test %d passed: | %s | Got \"%s\""
-                   "| Expected \"%s\" | line %d\n", 
-                   ProgramName, mID, mDescription, actual, exp, mLine);
+            ostringstream message("");
+            message << "test " << mID << " passed: | ";
+            message << mDescription << " | Got \"" << actual << "\" | ";
+            message << "Expected \"" << exp << "\" | line " << mLine;
+            BOOST_MESSAGE(message.str());
         }
         nPassed++;
     }
@@ -397,10 +423,12 @@ public:
 
                 if (showProgram) {
                     // Dump out program
-                    cout << "Program Code: " << endl;
-                    cout << ex.getCode() << endl;
-                    cout << "Program Snippet: " << endl;
-                    cout << ex.getCodeSnippet() << endl;
+                    ostringstream prog("");
+                    prog << "Program Code: " << endl;
+                    prog << ex.getCode() << endl;
+                    prog << "Program Snippet: " << endl;
+                    prog << ex.getCodeSnippet() << endl;
+                    BOOST_MESSAGE(prog.str());
                 }
             }
         }
@@ -666,7 +694,7 @@ uint CalcAssemblerTestCase::testID = 0;
 uint CalcAssemblerTestCase::nFailed = 0;
 uint CalcAssemblerTestCase::nPassed = 0;
 
-class CalcAssemblerTest 
+class CalcAssemblerTest : virtual public TestBase, public TraceSource
 {
 protected:
     void testAdd();
@@ -688,6 +716,9 @@ protected:
     template <typename T>
     void testNativeInstructions(StandardTypeDescriptorOrdinal type);
 
+    template <typename T>
+    void testIntegralNativeInstructions(StandardTypeDescriptorOrdinal type);
+
     string getTypeString(StandardTypeDescriptorOrdinal type, uint arraylen = 0);
     string createRegisterString(string s, uint n, char c = ',');
     void addBinaryInstructions(ostringstream& ostr,
@@ -701,16 +732,28 @@ protected:
                               uint n);
 
 public:
-    explicit
-    CalcAssemblerTest()
+public:
+    explicit CalcAssemblerTest()
+        : TraceSource(this,"CalcAssemblerTest")
     {
+        srand(time(NULL));
+        CalcInit::instance();
+        FENNEL_UNIT_TEST_CASE(CalcAssemblerTest, testLiteralBinding);
+        FENNEL_UNIT_TEST_CASE(CalcAssemblerTest, testInvalidPrograms);
+        FENNEL_UNIT_TEST_CASE(CalcAssemblerTest, testBool);
+        FENNEL_UNIT_TEST_CASE(CalcAssemblerTest, testPointer);
+        FENNEL_UNIT_TEST_CASE(CalcAssemblerTest, testAdd);
+        FENNEL_UNIT_TEST_CASE(CalcAssemblerTest, testReturn);
+        FENNEL_UNIT_TEST_CASE(CalcAssemblerTest, testJump);
+        FENNEL_UNIT_TEST_CASE(CalcAssemblerTest, testExtended);
+        FENNEL_UNIT_TEST_CASE(CalcAssemblerTest, testStandardTypes);
+        FENNEL_UNIT_TEST_CASE(CalcAssemblerTest, testComments);
     }
- 
+    
     virtual ~CalcAssemblerTest()
     {
     }
  
-    void testAssembler();
 };
 
 // Converts a tuple data to its literal string representation in the
@@ -949,6 +992,176 @@ void CalcAssemblerTest::addBinaryInstructions(ostringstream& ostr,
                  << i << ", I" << j << ";" << endl;
 }
 
+template <typename T>
+void CalcAssemblerTest::testIntegralNativeInstructions(StandardTypeDescriptorOrdinal type)
+{
+    string typestr = getTypeString(type, CalcAssemblerTestCase::MAX_WIDTH);
+    uint inregs = 4;
+
+    // Form instruction string
+    ostringstream instostr("");
+    uint outreg = 0;
+    CalcTestInfo<T> expectedCalcOut(type);
+    TProgramCounter pc = 0;
+    T* pNULL = NULL;
+    T  zero  = 0;
+    T  min = std::numeric_limits<T>::min();
+    T  max = std::numeric_limits<T>::max();
+    T  mid = 10;
+
+    const char* divbyzero = "22012";
+
+    // Test MOD
+    string modstr = string("MOD ") + typestr;
+    addBinaryInstructions(instostr, "MOD", outreg, inregs);
+    if (min != zero)
+        expectedCalcOut.add(modstr, (T) (min%min), pc++, __LINE__); // I0 % I0 (min % min)
+    else expectedCalcOut.add(modstr, divbyzero, pc++, __LINE__);    // I0 % I0 (min % min)
+    expectedCalcOut.add(modstr, (T) (min%max), pc++, __LINE__);    // I0 % I1 (min % max)
+    expectedCalcOut.add(modstr, pNULL,   pc++, __LINE__);          // I0 % I2 (min % NULL)
+    expectedCalcOut.add(modstr, (T) (min%mid),  pc++, __LINE__);   // I0 % I3 (min % 10)
+    
+    if (min != zero)
+        expectedCalcOut.add(modstr, (T) (max%min), pc++, __LINE__); // I1 % I0 (max % min)
+    else expectedCalcOut.add(modstr, divbyzero, pc++, __LINE__);    // I1 % I0 (max % min)
+    expectedCalcOut.add(modstr, (T) (max%max), pc++, __LINE__);    // I1 % I1 (max % max)
+    expectedCalcOut.add(modstr, pNULL,   pc++, __LINE__);          // I1 % I2 (max % NULL)
+    expectedCalcOut.add(modstr, (T) (max%mid), pc++, __LINE__);    // I1 % I3 (max % 10)
+    
+    expectedCalcOut.add(modstr, pNULL, pc++, __LINE__);      // I2 % I0 (NULL % min)
+    expectedCalcOut.add(modstr, pNULL, pc++, __LINE__);      // I2 % I1 (NULL % max)
+    expectedCalcOut.add(modstr, pNULL, pc++, __LINE__);      // I2 % I2 (NULL % NULL)
+    expectedCalcOut.add(modstr, pNULL, pc++, __LINE__);      // I2 % I3 (NULL % 10)
+    
+    if (min != zero)
+        expectedCalcOut.add(modstr, (T) (mid%min), pc++, __LINE__); // I3 % I0 (mid % min)
+    else expectedCalcOut.add(modstr, divbyzero, pc++, __LINE__);    // I3 % I0 (mid % min)
+    expectedCalcOut.add(modstr, (T) (mid%max), pc++, __LINE__);    // I3 % I1 (10 % max)
+    expectedCalcOut.add(modstr, pNULL, pc++, __LINE__);            // I3 % I2 (10 % NULL)
+    expectedCalcOut.add(modstr, (T) (mid%mid), pc++, __LINE__);    // I3 % I3 (10 % 10)
+    
+    // Test AND
+    string andstr = string("AND ") + typestr;
+    addBinaryInstructions(instostr, "AND", outreg, inregs);
+    expectedCalcOut.add(andstr, (T) (min&min), pc++, __LINE__);    // I0 & I0 (min & min)
+    expectedCalcOut.add(andstr, (T) (min&max), pc++, __LINE__);    // I0 & I1 (min & max)
+    expectedCalcOut.add(andstr, pNULL,   pc++, __LINE__);          // I0 & I2 (min & NULL)
+    expectedCalcOut.add(andstr, (T) (min&mid),  pc++, __LINE__);   // I0 & I3 (min & 10)
+        
+    expectedCalcOut.add(andstr, (T) (max&min), pc++, __LINE__);    // I1 & I0 (max & min)
+    expectedCalcOut.add(andstr, (T) (max&max), pc++, __LINE__);    // I1 & I1 (max & max)
+    expectedCalcOut.add(andstr, pNULL,   pc++, __LINE__);          // I1 & I2 (max & NULL)
+    expectedCalcOut.add(andstr, (T) (max&mid), pc++, __LINE__);    // I1 & I3 (max & 10)
+    
+    expectedCalcOut.add(andstr, pNULL, pc++, __LINE__);      // I2 & I0 (NULL & min)
+    expectedCalcOut.add(andstr, pNULL, pc++, __LINE__);      // I2 & I1 (NULL & max)
+    expectedCalcOut.add(andstr, pNULL, pc++, __LINE__);      // I2 & I2 (NULL & NULL)
+    expectedCalcOut.add(andstr, pNULL, pc++, __LINE__);      // I2 & I3 (NULL & 10)
+        
+    expectedCalcOut.add(andstr, (T) (mid&min), pc++, __LINE__);    // I3 & I0 (10 & min)
+    expectedCalcOut.add(andstr, (T) (mid&max), pc++, __LINE__);    // I3 & I1 (10 & max)
+    expectedCalcOut.add(andstr, pNULL, pc++, __LINE__);            // I3 & I2 (10 & NULL)
+    expectedCalcOut.add(andstr, (T) (mid&mid), pc++, __LINE__);    // I3 & I3 (10 & 10)
+    
+    // Test OR
+    string orstr = string("OR ") + typestr;
+    addBinaryInstructions(instostr, "OR", outreg, inregs);
+    expectedCalcOut.add(orstr, (T) (min|min), pc++, __LINE__);    // I0 | I0 (min | min)
+    expectedCalcOut.add(orstr, (T) (min|max), pc++, __LINE__);    // I0 | I1 (min | max)
+    expectedCalcOut.add(orstr, pNULL,   pc++, __LINE__);          // I0 | I2 (min | NULL)
+    expectedCalcOut.add(orstr, (T) (min|mid),  pc++, __LINE__);   // I0 | I3 (min | 10)
+    
+    expectedCalcOut.add(orstr, (T) (max|min), pc++, __LINE__);    // I1 | I0 (max | min)
+    expectedCalcOut.add(orstr, (T) (max|max), pc++, __LINE__);    // I1 | I1 (max | max)
+    expectedCalcOut.add(orstr, pNULL,   pc++, __LINE__);          // I1 | I2 (max | NULL)
+    expectedCalcOut.add(orstr, (T) (max|mid), pc++, __LINE__);    // I1 | I3 (max | 10)
+    
+    expectedCalcOut.add(orstr, pNULL, pc++, __LINE__);      // I2 | I0 (NULL | min)
+    expectedCalcOut.add(orstr, pNULL, pc++, __LINE__);      // I2 | I1 (NULL | max)
+    expectedCalcOut.add(orstr, pNULL, pc++, __LINE__);      // I2 | I2 (NULL | NULL)
+    expectedCalcOut.add(orstr, pNULL, pc++, __LINE__);      // I2 | I3 (NULL | 10)
+    
+    expectedCalcOut.add(orstr, (T) (mid|min), pc++, __LINE__);    // I3 | I0 (10 | min)
+    expectedCalcOut.add(orstr, (T) (mid|max), pc++, __LINE__);    // I3 | I1 (10 | max)
+    expectedCalcOut.add(orstr, pNULL, pc++, __LINE__);            // I3 | I2 (10 | NULL)
+    expectedCalcOut.add(orstr, (T) (mid|mid), pc++, __LINE__);    // I3 | I3 (10 | 10)
+    
+    // Test SHFL
+    string shflstr = string("SHFL ") + typestr;
+    addBinaryInstructions(instostr, "SHFL", outreg, inregs);
+    expectedCalcOut.add(shflstr, (T) (min<<min), pc++, __LINE__);    // I0 << I0 (min << min)
+    expectedCalcOut.add(shflstr, (T) (min<<max), pc++, __LINE__);    // I0 << I1 (min << max)
+    expectedCalcOut.add(shflstr, pNULL,   pc++, __LINE__);           // I0 << I2 (min << NULL)
+    expectedCalcOut.add(shflstr, (T) (min<<mid),  pc++, __LINE__);   // I0 << I3 (min << 10)
+    
+    expectedCalcOut.add(shflstr, (T) (max<<min), pc++, __LINE__);    // I1 << I0 (max << min)
+    expectedCalcOut.add(shflstr, (T) (max<<max), pc++, __LINE__);    // I1 << I1 (max << max)
+    expectedCalcOut.add(shflstr, pNULL,   pc++, __LINE__);           // I1 << I2 (max << NULL)
+    expectedCalcOut.add(shflstr, (T) (max<<mid), pc++, __LINE__);    // I1 << I3 (max << 10)
+    
+    expectedCalcOut.add(shflstr, pNULL, pc++, __LINE__);      // I2 << I0 (NULL << min)
+    expectedCalcOut.add(shflstr, pNULL, pc++, __LINE__);      // I2 << I1 (NULL << max)
+    expectedCalcOut.add(shflstr, pNULL, pc++, __LINE__);      // I2 << I2 (NULL << NULL)
+    expectedCalcOut.add(shflstr, pNULL, pc++, __LINE__);      // I2 << I3 (NULL << 10)
+    
+    expectedCalcOut.add(shflstr, (T) (mid<<min), pc++, __LINE__);    // I3 << I0 (10 << min)
+    expectedCalcOut.add(shflstr, (T) (mid<<max), pc++, __LINE__);    // I3 << I1 (10 << max)
+    expectedCalcOut.add(shflstr, pNULL, pc++, __LINE__);             // I3 << I2 (10 << NULL)
+    expectedCalcOut.add(shflstr, (T) (mid<<mid), pc++, __LINE__);    // I3 << I3 (10 << 10)
+    
+    // Test SHFR
+    string shfrstr = string("SHFR ") + typestr;
+    addBinaryInstructions(instostr, "SHFR", outreg, inregs);
+    expectedCalcOut.add(shfrstr, (T) (min>>min), pc++, __LINE__);    // I0 >> I0 (min >> min)
+    expectedCalcOut.add(shfrstr, (T) (min>>max), pc++, __LINE__);    // I0 >> I1 (min >> max)
+    expectedCalcOut.add(shfrstr, pNULL,   pc++, __LINE__);           // I0 >> I2 (min >> NULL)
+    expectedCalcOut.add(shfrstr, (T) (min>>mid),  pc++, __LINE__);   // I0 >> I3 (min >> 10)
+        
+    expectedCalcOut.add(shfrstr, (T) (max>>min), pc++, __LINE__);    // I1 >> I0 (max >> min)
+    expectedCalcOut.add(shfrstr, (T) (max>>max), pc++, __LINE__);    // I1 >> I1 (max >> max)
+    expectedCalcOut.add(shfrstr, pNULL,   pc++, __LINE__);           // I1 >> I2 (max >> NULL)
+    expectedCalcOut.add(shfrstr, (T) (max>>mid), pc++, __LINE__);    // I1 >> I3 (max >> 10)
+    
+    expectedCalcOut.add(shfrstr, pNULL, pc++, __LINE__);      // I2 >> I0 (NULL >> min)
+    expectedCalcOut.add(shfrstr, pNULL, pc++, __LINE__);      // I2 >> I1 (NULL >> max)
+    expectedCalcOut.add(shfrstr, pNULL, pc++, __LINE__);      // I2 >> I2 (NULL >> NULL)
+    expectedCalcOut.add(shfrstr, pNULL, pc++, __LINE__);      // I2 >> I3 (NULL >> 10)
+    
+    expectedCalcOut.add(shfrstr, (T) (mid>>min), pc++, __LINE__);    // I3 >> I0 (10 >> min)
+    expectedCalcOut.add(shfrstr, (T) (mid>>max), pc++, __LINE__);    // I3 >> I1 (10 >> max)
+    expectedCalcOut.add(shfrstr, pNULL, pc++, __LINE__);             // I3 >> I2 (10 >> NULL)
+    expectedCalcOut.add(shfrstr, (T) (mid>>mid), pc++, __LINE__);    // I3 >> I3 (10 >> 10)
+    
+    assert(outreg == static_cast<uint>(pc));
+
+    // Form test string
+    string testdesc = "testNativeInstructions: " + typestr;
+    ostringstream testostr("");
+
+    testostr << "I " << createRegisterString(typestr, inregs) << ";" << endl;
+    testostr << "O " << createRegisterString(typestr, outreg) << ";" << endl;
+    testostr << "T;" << endl;
+    
+    testostr << instostr.str();
+
+    string teststr = testostr.str();
+
+    CalcAssemblerTestCase testCase1(__LINE__, testdesc.c_str(),
+                                    teststr.c_str());
+    if (testCase1.assemble())
+    {
+        testCase1.setInputMin(0);
+        testCase1.setInputMax(1);
+        testCase1.setInputNull(2);
+        testCase1.template setInput<T>(3, mid);
+        TupleData* outputTuple = testCase1.getExpectedOutputTuple();
+        assert(outputTuple != NULL);
+        expectedCalcOut.setTupleData(*outputTuple);
+        testCase1.test(&expectedCalcOut);
+    }
+
+}
+
 /** 
  * Test instructions that returns a native type
  * @param type Type of the operands
@@ -1086,130 +1299,6 @@ void CalcAssemblerTest::testNativeInstructions(StandardTypeDescriptorOrdinal typ
     expectedCalcOut.add(negstr, (T) (-max), pc++, __LINE__);    // - I1 (- max)
     expectedCalcOut.add(negstr, pNULL,      pc++, __LINE__);    // - I2 (- NULL)
     expectedCalcOut.add(negstr, (T) (-mid), pc++, __LINE__);    // - I3 (- 10)
-
-    if (StandardTypeDescriptor::isIntegralNative(type))
-    {
-        // Test MOD
-        string modstr = string("MOD ") + typestr;
-        addBinaryInstructions(instostr, "MOD", outreg, inregs);
-        if (min != zero)
-            expectedCalcOut.add(modstr, (T) (min%min), pc++, __LINE__); // I0 % I0 (min % min)
-        else expectedCalcOut.add(modstr, divbyzero, pc++, __LINE__);    // I0 % I0 (min % min)
-        expectedCalcOut.add(modstr, (T) (min%max), pc++, __LINE__);    // I0 % I1 (min % max)
-        expectedCalcOut.add(modstr, pNULL,   pc++, __LINE__);          // I0 % I2 (min % NULL)
-        expectedCalcOut.add(modstr, (T) (min%mid),  pc++, __LINE__);   // I0 % I3 (min % 10)
-        
-        if (min != zero)
-            expectedCalcOut.add(modstr, (T) (max%min), pc++, __LINE__); // I1 % I0 (max % min)
-        else expectedCalcOut.add(modstr, divbyzero, pc++, __LINE__);    // I1 % I0 (max % min)
-        expectedCalcOut.add(modstr, (T) (max%max), pc++, __LINE__);    // I1 % I1 (max % max)
-        expectedCalcOut.add(modstr, pNULL,   pc++, __LINE__);          // I1 % I2 (max % NULL)
-        expectedCalcOut.add(modstr, (T) (max%mid), pc++, __LINE__);    // I1 % I3 (max % 10)
-        
-        expectedCalcOut.add(modstr, pNULL, pc++, __LINE__);      // I2 % I0 (NULL % min)
-        expectedCalcOut.add(modstr, pNULL, pc++, __LINE__);      // I2 % I1 (NULL % max)
-        expectedCalcOut.add(modstr, pNULL, pc++, __LINE__);      // I2 % I2 (NULL % NULL)
-        expectedCalcOut.add(modstr, pNULL, pc++, __LINE__);      // I2 % I3 (NULL % 10)
-        
-        if (min != zero)
-            expectedCalcOut.add(modstr, (T) (mid%min), pc++, __LINE__); // I3 % I0 (mid % min)
-        else expectedCalcOut.add(modstr, divbyzero, pc++, __LINE__);    // I3 % I0 (mid % min)
-        expectedCalcOut.add(modstr, (T) (mid%max), pc++, __LINE__);    // I3 % I1 (10 % max)
-        expectedCalcOut.add(modstr, pNULL, pc++, __LINE__);            // I3 % I2 (10 % NULL)
-        expectedCalcOut.add(modstr, (T) (mid%mid), pc++, __LINE__);    // I3 % I3 (10 % 10)
-
-        // Test AND
-        string andstr = string("AND ") + typestr;
-        addBinaryInstructions(instostr, "AND", outreg, inregs);
-        expectedCalcOut.add(andstr, (T) (min&min), pc++, __LINE__);    // I0 & I0 (min & min)
-        expectedCalcOut.add(andstr, (T) (min&max), pc++, __LINE__);    // I0 & I1 (min & max)
-        expectedCalcOut.add(andstr, pNULL,   pc++, __LINE__);          // I0 & I2 (min & NULL)
-        expectedCalcOut.add(andstr, (T) (min&mid),  pc++, __LINE__);   // I0 & I3 (min & 10)
-        
-        expectedCalcOut.add(andstr, (T) (max&min), pc++, __LINE__);    // I1 & I0 (max & min)
-        expectedCalcOut.add(andstr, (T) (max&max), pc++, __LINE__);    // I1 & I1 (max & max)
-        expectedCalcOut.add(andstr, pNULL,   pc++, __LINE__);          // I1 & I2 (max & NULL)
-        expectedCalcOut.add(andstr, (T) (max&mid), pc++, __LINE__);    // I1 & I3 (max & 10)
-        
-        expectedCalcOut.add(andstr, pNULL, pc++, __LINE__);      // I2 & I0 (NULL & min)
-        expectedCalcOut.add(andstr, pNULL, pc++, __LINE__);      // I2 & I1 (NULL & max)
-        expectedCalcOut.add(andstr, pNULL, pc++, __LINE__);      // I2 & I2 (NULL & NULL)
-        expectedCalcOut.add(andstr, pNULL, pc++, __LINE__);      // I2 & I3 (NULL & 10)
-        
-        expectedCalcOut.add(andstr, (T) (mid&min), pc++, __LINE__);    // I3 & I0 (10 & min)
-        expectedCalcOut.add(andstr, (T) (mid&max), pc++, __LINE__);    // I3 & I1 (10 & max)
-        expectedCalcOut.add(andstr, pNULL, pc++, __LINE__);            // I3 & I2 (10 & NULL)
-        expectedCalcOut.add(andstr, (T) (mid&mid), pc++, __LINE__);    // I3 & I3 (10 & 10)
-    
-        // Test OR
-        string orstr = string("OR ") + typestr;
-        addBinaryInstructions(instostr, "OR", outreg, inregs);
-        expectedCalcOut.add(orstr, (T) (min|min), pc++, __LINE__);    // I0 | I0 (min | min)
-        expectedCalcOut.add(orstr, (T) (min|max), pc++, __LINE__);    // I0 | I1 (min | max)
-        expectedCalcOut.add(orstr, pNULL,   pc++, __LINE__);          // I0 | I2 (min | NULL)
-        expectedCalcOut.add(orstr, (T) (min|mid),  pc++, __LINE__);   // I0 | I3 (min | 10)
-        
-        expectedCalcOut.add(orstr, (T) (max|min), pc++, __LINE__);    // I1 | I0 (max | min)
-        expectedCalcOut.add(orstr, (T) (max|max), pc++, __LINE__);    // I1 | I1 (max | max)
-        expectedCalcOut.add(orstr, pNULL,   pc++, __LINE__);          // I1 | I2 (max | NULL)
-        expectedCalcOut.add(orstr, (T) (max|mid), pc++, __LINE__);    // I1 | I3 (max | 10)
-        
-        expectedCalcOut.add(orstr, pNULL, pc++, __LINE__);      // I2 | I0 (NULL | min)
-        expectedCalcOut.add(orstr, pNULL, pc++, __LINE__);      // I2 | I1 (NULL | max)
-        expectedCalcOut.add(orstr, pNULL, pc++, __LINE__);      // I2 | I2 (NULL | NULL)
-        expectedCalcOut.add(orstr, pNULL, pc++, __LINE__);      // I2 | I3 (NULL | 10)
-        
-        expectedCalcOut.add(orstr, (T) (mid|min), pc++, __LINE__);    // I3 | I0 (10 | min)
-        expectedCalcOut.add(orstr, (T) (mid|max), pc++, __LINE__);    // I3 | I1 (10 | max)
-        expectedCalcOut.add(orstr, pNULL, pc++, __LINE__);            // I3 | I2 (10 | NULL)
-        expectedCalcOut.add(orstr, (T) (mid|mid), pc++, __LINE__);    // I3 | I3 (10 | 10)
-
-        // Test SHFL
-        string shflstr = string("SHFL ") + typestr;
-        addBinaryInstructions(instostr, "SHFL", outreg, inregs);
-        expectedCalcOut.add(shflstr, (T) (min<<min), pc++, __LINE__);    // I0 << I0 (min << min)
-        expectedCalcOut.add(shflstr, (T) (min<<max), pc++, __LINE__);    // I0 << I1 (min << max)
-        expectedCalcOut.add(shflstr, pNULL,   pc++, __LINE__);           // I0 << I2 (min << NULL)
-        expectedCalcOut.add(shflstr, (T) (min<<mid),  pc++, __LINE__);   // I0 << I3 (min << 10)
-        
-        expectedCalcOut.add(shflstr, (T) (max<<min), pc++, __LINE__);    // I1 << I0 (max << min)
-        expectedCalcOut.add(shflstr, (T) (max<<max), pc++, __LINE__);    // I1 << I1 (max << max)
-        expectedCalcOut.add(shflstr, pNULL,   pc++, __LINE__);           // I1 << I2 (max << NULL)
-        expectedCalcOut.add(shflstr, (T) (max<<mid), pc++, __LINE__);    // I1 << I3 (max << 10)
-        
-        expectedCalcOut.add(shflstr, pNULL, pc++, __LINE__);      // I2 << I0 (NULL << min)
-        expectedCalcOut.add(shflstr, pNULL, pc++, __LINE__);      // I2 << I1 (NULL << max)
-        expectedCalcOut.add(shflstr, pNULL, pc++, __LINE__);      // I2 << I2 (NULL << NULL)
-        expectedCalcOut.add(shflstr, pNULL, pc++, __LINE__);      // I2 << I3 (NULL << 10)
-        
-        expectedCalcOut.add(shflstr, (T) (mid<<min), pc++, __LINE__);    // I3 << I0 (10 << min)
-        expectedCalcOut.add(shflstr, (T) (mid<<max), pc++, __LINE__);    // I3 << I1 (10 << max)
-        expectedCalcOut.add(shflstr, pNULL, pc++, __LINE__);             // I3 << I2 (10 << NULL)
-        expectedCalcOut.add(shflstr, (T) (mid<<mid), pc++, __LINE__);    // I3 << I3 (10 << 10)
-
-        // Test SHFR
-        string shfrstr = string("SHFR ") + typestr;
-        addBinaryInstructions(instostr, "SHFR", outreg, inregs);
-        expectedCalcOut.add(shfrstr, (T) (min>>min), pc++, __LINE__);    // I0 >> I0 (min >> min)
-        expectedCalcOut.add(shfrstr, (T) (min>>max), pc++, __LINE__);    // I0 >> I1 (min >> max)
-        expectedCalcOut.add(shfrstr, pNULL,   pc++, __LINE__);           // I0 >> I2 (min >> NULL)
-        expectedCalcOut.add(shfrstr, (T) (min>>mid),  pc++, __LINE__);   // I0 >> I3 (min >> 10)
-        
-        expectedCalcOut.add(shfrstr, (T) (max>>min), pc++, __LINE__);    // I1 >> I0 (max >> min)
-        expectedCalcOut.add(shfrstr, (T) (max>>max), pc++, __LINE__);    // I1 >> I1 (max >> max)
-        expectedCalcOut.add(shfrstr, pNULL,   pc++, __LINE__);           // I1 >> I2 (max >> NULL)
-        expectedCalcOut.add(shfrstr, (T) (max>>mid), pc++, __LINE__);    // I1 >> I3 (max >> 10)
-        
-        expectedCalcOut.add(shfrstr, pNULL, pc++, __LINE__);      // I2 >> I0 (NULL >> min)
-        expectedCalcOut.add(shfrstr, pNULL, pc++, __LINE__);      // I2 >> I1 (NULL >> max)
-        expectedCalcOut.add(shfrstr, pNULL, pc++, __LINE__);      // I2 >> I2 (NULL >> NULL)
-        expectedCalcOut.add(shfrstr, pNULL, pc++, __LINE__);      // I2 >> I3 (NULL >> 10)
-        
-        expectedCalcOut.add(shfrstr, (T) (mid>>min), pc++, __LINE__);    // I3 >> I0 (10 >> min)
-        expectedCalcOut.add(shfrstr, (T) (mid>>max), pc++, __LINE__);    // I3 >> I1 (10 >> max)
-        expectedCalcOut.add(shfrstr, pNULL, pc++, __LINE__);             // I3 >> I2 (10 >> NULL)
-        expectedCalcOut.add(shfrstr, (T) (mid>>mid), pc++, __LINE__);    // I3 >> I3 (10 >> 10)
-    }
 
     assert(outreg == static_cast<uint>(pc));
 
@@ -1637,37 +1726,44 @@ void CalcAssemblerTest::testStandardTypes()
         switch (type) {
         case STANDARD_TYPE_UINT_8:
             testNativeInstructions<uint8_t>(type);
+            testIntegralNativeInstructions<uint8_t>(type);
             break;
 
         case STANDARD_TYPE_INT_8:
             testNativeInstructions<int8_t>(type);
+            testIntegralNativeInstructions<int8_t>(type);
             break;
 
         case STANDARD_TYPE_UINT_16:
             testNativeInstructions<uint16_t>(type);
+            testIntegralNativeInstructions<uint16_t>(type);
             break;
 
         case STANDARD_TYPE_INT_16:
             testNativeInstructions<int16_t>(type);
+            testIntegralNativeInstructions<int16_t>(type);
             break;
 
         case STANDARD_TYPE_UINT_32:
             testNativeInstructions<uint32_t>(type);
+            testIntegralNativeInstructions<uint32_t>(type);
             break;
 
         case STANDARD_TYPE_INT_32:
             testNativeInstructions<int32_t>(type);
+            testIntegralNativeInstructions<int32_t>(type);
             break;
 
         case STANDARD_TYPE_UINT_64:
             testNativeInstructions<uint64_t>(type);
+            testIntegralNativeInstructions<uint64_t>(type);
             break;
 
         case STANDARD_TYPE_INT_64:
             testNativeInstructions<int64_t>(type);
+            testIntegralNativeInstructions<int64_t>(type);
             break;
 
-#if 0
         case STANDARD_TYPE_REAL:
             testNativeInstructions<float>(type);
             break;
@@ -1675,7 +1771,6 @@ void CalcAssemblerTest::testStandardTypes()
         case STANDARD_TYPE_DOUBLE:
             testNativeInstructions<double>(type);
             break;
-#endif
 
         default:
             break;
@@ -2066,20 +2161,7 @@ void CalcAssemblerTest::testComments()
     testCase5.assemble();
 }
 
-void CalcAssemblerTest::testAssembler()
-{
-    testLiteralBinding();
-    testInvalidPrograms();
-    testAdd();
-    testBool();
-    testPointer();
-    testReturn();
-    testJump();
-    testExtended();
-    testStandardTypes();
-    testComments();
-}
-
+#if 0
 int main (int argc, char **argv)
 {
     ProgramName = argv[0];
@@ -2100,4 +2182,7 @@ int main (int argc, char **argv)
     return CalcAssemblerTestCase::getFailedNumber(); 
 }
 
-// End TestCalcAssembler
+#endif 
+FENNEL_UNIT_TEST_SUITE(CalcAssemblerTest);
+
+// End CalcAssemblerTest
