@@ -1037,10 +1037,10 @@ public class SqlToRelConverter
             return rexBuilder.makeSymbolLiteral((SqlSymbol) value);
         case SqlTypeName.Timestamp_ordinal:
             return rexBuilder.makeTimestampLiteral((Calendar) value,
-                ((SqlLiteral.TimestampLiteral) literal).precision);
+                ((SqlTimestampLiteral) literal).precision);
         case SqlTypeName.Time_ordinal:
             return rexBuilder.makeTimeLiteral((Calendar) value,
-                ((SqlLiteral.TimeLiteral) literal).precision);
+                ((SqlTimeLiteral) literal).precision);
         case SqlTypeName.Date_ordinal:
             return rexBuilder.makeDateLiteral((Calendar) value);
         default:

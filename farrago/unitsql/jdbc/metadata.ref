@@ -205,7 +205,7 @@ getNumericFunctions                               POSITION,CHAR_LENGTH,CHARACTER
 getProcedureTerm                                  
 getSchemaTerm                                     schema
 getSearchStringEscape                             \
-getSQLKeywords                                    checkpoint,clustered,release,savepoint,system,truncate,type,CAST,POSITION,CONVERT,TRANSLATE,OVERLAY,SUBSTRING,TRIM,asymmetric,bigint,binary,boolean,descending,explain,placing,row,similar,symmetric,tinyint,varbinary,without
+getSQLKeywords                                    checkpoint,clustered,release,savepoint,system,truncate,type,CAST,POSITION,CONVERT,TRANSLATE,OVERLAY,SUBSTRING,TRIM,asymmetric,bigint,binary,boolean,descending,explain,following,over,partition,placing,preceding,range,row,similar,symmetric,tinyint,unbounded,varbinary,window,without
 getStringFunctions                                SUBSTRING,CONVERT,TRANSLATE,OVERLAY,TRIM,UPPER,LOWER,INITCAP
 getSystemFunctions                                NULLIF,COALESCE,USER,CURRENT_USER,SESSION_USER,SYSTEM_USER,CURRENT_PATH,CURRENT_ROLE,CAST
 getTimeDateFunctions                              LOCALTIME,LOCALTIMESTAMP,CURRENT_TIME,CURRENT_TIMESTAMP,CURRENT_DATE

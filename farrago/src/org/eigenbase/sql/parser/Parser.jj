@@ -74,5 +74,26 @@ String NonReservedKeyWord() :
         }
 }
 
+/**
+ * Allows an OVER clause following a table expression as an extension to
+ * standard SQL syntax. The default implementation of this production is empty.
+ */
+SqlNode TableOverOpt() :
+{
+}
+{
+    { return null; }
+}
+
+/*
+ * Parses dialect-specific keywords immediately following the SELECT keyword.
+ */
+void SqlSelectKeywords(List keywords) :
+{}
+{
+    E()
+}
+
+
 // End Parser.jj
 

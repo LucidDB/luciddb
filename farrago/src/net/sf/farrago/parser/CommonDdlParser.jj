@@ -792,12 +792,12 @@ SqlLiteral SystemParamValue() :
         {
             // TODO jvs 22-May-2004:  for MIN and MAX here, use metadata
             // to determine the correct min and max values
-            pos = getCurrentParserPosition();
+            pos = getPos();
             paramValue = SqlLiteral.Numeric.createExact("-1", pos);
         }
         | <MIN>
         {
-            pos = getCurrentParserPosition();
+            pos = getPos();
             paramValue = SqlLiteral.Numeric.createExact("0", pos);
         }
     )
@@ -1142,7 +1142,6 @@ TOKEN :
 | < ROLLBACK: "rollback" >
 | < RELEASE: "release" >
 | < RESTRICT: "restrict" >
-| < ROWS: "rows" >
 | < SAVEPOINT: "savepoint" >
 | < SCHEMA: "schema" >
 | < SERVER: "server" >

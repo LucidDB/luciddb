@@ -29,6 +29,7 @@ import net.sf.farrago.util.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.util.*;
 
@@ -85,7 +86,7 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
         }
         SqlSelect select =
             opTab.selectOperator.createCall(
-                false,
+                null,
                 new SqlNodeList(
                     Collections.singletonList(new SqlIdentifier("*", null)),
                     null),
@@ -94,7 +95,8 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
                 null,
                 null,
                 null,
-                null);
+                null,
+                    ParserPosition.ZERO);
 
         if (rowType == null) {
             String sql = select.toSqlString(dialect);

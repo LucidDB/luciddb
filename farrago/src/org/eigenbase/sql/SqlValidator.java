@@ -426,9 +426,9 @@ public class SqlValidator
                 new SqlNodeList(ParserPosition.ZERO);
             selectList.add(new SqlIdentifier("*", ParserPosition.ZERO));
             SqlSelect wrapperNode =
-                SqlOperatorTable.std().selectOperator.createCall(false,
-                    selectList, node, null, null, null, null,
-                    ParserPosition.ZERO);
+                SqlOperatorTable.std().selectOperator.createCall(null,
+                    selectList, node, null, null, null, null, null,
+                        ParserPosition.ZERO);
             return wrapperNode;
         } else if (node.isA(SqlKind.OrderBy)) {
             SqlCall orderBy = (SqlCall) node;
@@ -451,8 +451,9 @@ public class SqlValidator
                 new SqlNodeList(ParserPosition.ZERO);
             selectList.add(new SqlIdentifier("*", null));
             SqlSelect wrapperNode =
-                SqlOperatorTable.std().selectOperator.createCall(false,
-                    selectList, query, null, null, null, orderList, null);
+                SqlOperatorTable.std().selectOperator.createCall(null,
+                    selectList, query, null, null, null, null, orderList,
+                        ParserPosition.ZERO);
             return wrapperNode;
         } else if (node.isA(SqlKind.ExplicitTable)) {
             // (TABLE t) is equivalent to (SELECT * FROM t)
@@ -461,9 +462,9 @@ public class SqlValidator
                 new SqlNodeList(ParserPosition.ZERO);
             selectList.add(new SqlIdentifier("*", null));
             SqlSelect wrapperNode =
-                SqlOperatorTable.std().selectOperator.createCall(false,
+                SqlOperatorTable.std().selectOperator.createCall(null,
                     selectList, call.getOperands()[0], null, null, null, null,
-                    null);
+                    null, ParserPosition.ZERO);
             return wrapperNode;
         } else if (node.isA(SqlKind.Insert)) {
             SqlInsert call = (SqlInsert) node;
@@ -476,15 +477,9 @@ public class SqlValidator
                 new SqlNodeList(ParserPosition.ZERO);
             selectList.add(new SqlIdentifier("*", null));
             SqlSelect select =
-                SqlOperatorTable.std().selectOperator.createCall(
-                    false,
-                    selectList,
-                    call.getTargetTable(),
-                    call.getCondition(),
-                    null,
-                    null,
-                    null,
-                    null);
+                SqlOperatorTable.std().selectOperator.createCall(null,
+                    selectList, call.getTargetTable(), call.getCondition(),
+                    null, null, null, null, ParserPosition.ZERO);
             call.setOperand(SqlDelete.SOURCE_SELECT_OPERAND, select);
         } else if (node.isA(SqlKind.Update)) {
             SqlUpdate call = (SqlUpdate) node;
@@ -508,15 +503,9 @@ public class SqlValidator
                 ++ordinal;
             }
             SqlSelect select =
-                SqlOperatorTable.std().selectOperator.createCall(
-                    false,
-                    selectList,
-                    call.getTargetTable(),
-                    call.getCondition(),
-                    null,
-                    null,
-                    null,
-                    null);
+                SqlOperatorTable.std().selectOperator.createCall(null,
+                    selectList, call.getTargetTable(), call.getCondition(),
+                    null, null, null, null, ParserPosition.ZERO);
             call.setOperand(SqlUpdate.SOURCE_SELECT_OPERAND, select);
         }
         return node;

@@ -22,6 +22,7 @@
 package org.eigenbase.sql;
 
 import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -34,14 +35,15 @@ public class SqlSelect extends SqlCall
     //~ Static fields/initializers --------------------------------------------
 
     // constants representing operand positions
-    public static final int DISTINCT_OPERAND = 0;
+    public static final int KEYWORDS_OPERAND = 0;
     public static final int SELECT_OPERAND = 1;
     public static final int FROM_OPERAND = 2;
     public static final int WHERE_OPERAND = 3;
     public static final int GROUP_OPERAND = 4;
     public static final int HAVING_OPERAND = 5;
-    public static final int ORDER_OPERAND = 6;
-    public static final int OPERAND_COUNT = 7;
+    public static final int WINDOW_OPERAND = 6;
+    public static final int ORDER_OPERAND = 7;
+    public static final int OPERAND_COUNT = 8;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -51,13 +53,32 @@ public class SqlSelect extends SqlCall
         ParserPosition pos)
     {
         super(operator, operands, pos);
+        Util.pre(operands.length == OPERAND_COUNT,
+            "operands.length == OPERAND_COUNT");
+        Util.pre(operands[KEYWORDS_OPERAND] != null,
+            "operands[KEYWORDS_OPERAND] != null");
+        Util.pre(operands[KEYWORDS_OPERAND] instanceof SqlNodeList,
+            "operands[KEYWORDS_OPERAND] instanceof SqlNodeList");
+        Util.pre(operands[WINDOW_OPERAND] != null,
+            "operands[WINDOW_OPERAND] != null");
+        Util.pre(operands[WINDOW_OPERAND] instanceof SqlNodeList,
+                "operands[WINDOW_OPERAND] instanceof SqlNodeList");
+        Util.pre(pos != null, "pos != null");
     }
 
     //~ Methods ---------------------------------------------------------------
 
     public final boolean isDistinct()
     {
-        return SqlLiteral.booleanValue(operands[SqlSelect.DISTINCT_OPERAND]);
+        final SqlNodeList keywords =
+            (SqlNodeList) operands[SqlSelect.KEYWORDS_OPERAND];
+        for (int i = 0; i < keywords.size(); i++) {
+            SqlSymbol keyword = (SqlSymbol) keywords.get(i);
+            if (keyword.getName().equals("DISTINCT")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public final SqlNode getFrom()
@@ -85,6 +106,11 @@ public class SqlSelect extends SqlCall
         return operands[SqlSelect.WHERE_OPERAND];
     }
 
+    public final SqlNodeList getWindowList()
+    {
+        return (SqlNodeList) operands[SqlSelect.WINDOW_OPERAND];
+    }
+
     public final SqlNodeList getOrderList()
     {
         return (SqlNodeList) operands[SqlSelect.ORDER_OPERAND];
@@ -105,7 +131,8 @@ public class SqlSelect extends SqlCall
 
     public void addWhere(SqlNode condition)
     {
-        assert (operands[SELECT_OPERAND] == null) : "cannot add a filter if there is already a select list";
+        assert (operands[SELECT_OPERAND] == null) :
+                "cannot add a filter if there is already a select list";
         operands[WHERE_OPERAND] =
             SqlUtil.andExpressions(operands[WHERE_OPERAND], condition);
     }

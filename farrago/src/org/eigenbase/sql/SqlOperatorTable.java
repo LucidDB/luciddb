@@ -35,7 +35,7 @@ import java.util.*;
  * get instance method returns an instance of {@link SqlStdOperatorTable} which
  * contain all defined operators and functions.
  */
-public class SqlOperatorTable
+public abstract class SqlOperatorTable
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -263,14 +263,18 @@ public class SqlOperatorTable
             return (SqlFunction) candidates.get(1);
         }
 
-        // Next, consider each argument of the function invocation, from left to right. For each argument,
-        // eliminate all functions that are not the best match for that argument. The best match for a given
-        // argument is the first data type appearing in the precedence list corresponding to the argument data
-        // type in Table 3 for which there exists a function with a parameter of that data type. Lengths,
-        // precisions, scales and the "FOR BIT DATA" attribute are not considered in this comparison.
-        // For example, a DECIMAL(9,1) argument is considered an exact match for a DECIMAL(6,5) parameter,
-        // and a VARCHAR(19) argument is an exact match for a VARCHAR(6) parameter.
-        // Reference: http://www.pdc.kth.se/doc/SP/manuals/db2-5.0/html/db2s0/db2s067.htm#HDRUDFSEL
+        // Next, consider each argument of the function invocation, from left
+        // to right. For each argument, eliminate all functions that are not
+        // the best match for that argument. The best match for a given
+        // argument is the first data type appearing in the precedence list
+        // corresponding to the argument data type in Table 3 for which there
+        // exists a function with a parameter of that data type. Lengths,
+        // precisions, scales and the "FOR BIT DATA" attribute are not
+        // considered in this comparison.  For example, a DECIMAL(9,1) argument
+        // is considered an exact match for a DECIMAL(6,5) parameter, and a
+        // VARCHAR(19) argument is an exact match for a VARCHAR(6) parameter.
+        // Reference:
+        // http://www.pdc.kth.se/doc/SP/manuals/db2-5.0/html/db2s0/db2s067.htm#HDRUDFSEL
         //
         for (int i = 0; i < argTypes.length; i++) {
             throw Util.needToImplement("Function resolution with different "

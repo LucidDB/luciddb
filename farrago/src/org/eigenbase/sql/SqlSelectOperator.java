@@ -53,7 +53,10 @@ import org.eigenbase.sql.type.ReturnTypeInference;
  * 5: groupClause ({@link SqlNode})
  * </li>
  * <li>
- * 6: orderClause ({@link SqlNode})
+ * 6: widnowClause ({@link SqlNodeList})
+ * </li>
+ * <li>
+ * 7: orderClause ({@link SqlNode})
  * </li>
  * </ul>
  * </p>
@@ -82,20 +85,42 @@ public class SqlSelectOperator extends SqlOperator
         return new SqlSelect(this, operands, pos);
     }
 
+    /**
+     * Creates a call to the <code>SELECT</code> operator.
+     *
+     * @param keywordList  List of keywords such DISTINCT and ALL, or null
+     * @param selectList   The SELECT clause, or null if empty
+     * @param fromClause   The FROM clause
+     * @param whereClause  The WHERE clause, or null if not present
+     * @param groupBy      The GROUP BY clause, or null if not present
+     * @param having       The HAVING clause, or null if not present
+     * @param windowDecls  The WINDOW clause, or null if not present
+     * @param orderBy      The ORDER BY clause, or null if not present
+     * @param pos          The parser position, or {@link ParserPosition#ZERO}
+     *                     if not specified; must not be null.
+     * @return A {@link SqlSelect}, never null
+     */
     public SqlSelect createCall(
-        boolean isDistinct,
+        SqlNodeList keywordList,
         SqlNodeList selectList,
         SqlNode fromClause,
         SqlNode whereClause,
         SqlNode groupBy,
         SqlNode having,
+        SqlNodeList windowDecls,
         SqlNode orderBy,
-        ParserPosition pos)
+            ParserPosition pos)
     {
+        if (keywordList == null) {
+            keywordList = new SqlNodeList(pos);
+        }
+        if (windowDecls == null) {
+            windowDecls = new SqlNodeList(pos);
+        }
         return (SqlSelect) createCall(
             new SqlNode [] {
-                SqlLiteral.createBoolean(isDistinct, pos),
-                selectList, fromClause, whereClause, groupBy, having, orderBy
+                keywordList, selectList, fromClause, whereClause, groupBy,
+                having, windowDecls, orderBy
             },
             pos);
     }
@@ -107,8 +132,12 @@ public class SqlSelectOperator extends SqlOperator
         int rightPrec)
     {
         writer.print("SELECT ");
-        if (SqlLiteral.booleanValue(operands[SqlSelect.DISTINCT_OPERAND])) {
-            writer.print("DISTINCT ");
+        final SqlNodeList keywords =
+            (SqlNodeList) operands[SqlSelect.KEYWORDS_OPERAND];
+        for (int i = 0; i < keywords.size(); i++) {
+            SqlSymbol keyword = (SqlSymbol) keywords.get(i);
+            writer.print(keyword.getName());
+            writer.print(" ");
         }
         SqlNode selectClause = operands[SqlSelect.SELECT_OPERAND];
         if (selectClause == null) {
@@ -145,6 +174,19 @@ public class SqlSelectOperator extends SqlOperator
             writer.println();
             writer.print("HAVING ");
             havingClause.unparse(writer, 0, 0);
+        }
+        SqlNodeList windowDecls = (SqlNodeList)
+                operands[SqlSelect.WINDOW_OPERAND];
+        for (int i = 0; i < windowDecls.size(); i++) {
+            SqlNode windowDecl = windowDecls.get(i);
+            if (i == 0) {
+                writer.println();
+                writer.print("WINDOW ");
+            } else {
+                writer.print(",");
+                writer.println();
+            }
+            windowDecl.unparse(writer, 0, 0);
         }
         SqlNode orderClause = operands[SqlSelect.ORDER_OPERAND];
         if (orderClause != null) {

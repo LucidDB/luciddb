@@ -21,21 +21,18 @@
 
 package org.eigenbase.sql;
 
-import java.math.BigDecimal;
-import java.sql.Date;
-import java.sql.Time;
-import java.sql.Timestamp;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.TimeZone;
-
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.sql.parser.ParserUtil;
 import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.util.*;
+import org.eigenbase.util.BitString;
+import org.eigenbase.util.EnumeratedValues;
+import org.eigenbase.util.NlsString;
+import org.eigenbase.util.Util;
+
+import java.math.BigDecimal;
+import java.util.Calendar;
 
 
 /**
@@ -135,6 +132,11 @@ import org.eigenbase.util.*;
  *       and also implements {@link EnumeratedValues}), or a class derived from
  *       it.</td>
  * </tr>
+ * <tr>
+ *   <td>{@link SqlTypeName#IntervalDayTime}</td>
+ *   <td>Interval, for example <code>INTERVAL '1:34' HOUR</code>.</td>
+ *   <td><{@link SqlIntervalLiteral.DayTimeInterval}.</td>
+ * </tr>
  * </table>
  */
 public class SqlLiteral extends SqlNode
@@ -208,6 +210,11 @@ public class SqlLiteral extends SqlNode
         case SqlTypeName.Time_ordinal:
         case SqlTypeName.Timestamp_ordinal:
             return value instanceof Calendar;
+        case SqlTypeName.IntervalDayTime_ordinal:
+            return value instanceof SqlIntervalLiteral.DayTimeInterval;
+        case SqlTypeName.IntervalYearToMonth_ordinal:
+            throw typeName.unexpected(); // not implemented yet
+
         case SqlTypeName.Binary_ordinal:
 
             // created from X'ABC' (odd length) or X'AB' (even length)
@@ -216,8 +223,8 @@ public class SqlLiteral extends SqlNode
             return value instanceof BitString; // created from B'0101'
         case SqlTypeName.Char_ordinal:
             return value instanceof NlsString;
-        case SqlTypeName.Symbol_ordinal:
 
+        case SqlTypeName.Symbol_ordinal:
             // We grudgingly allow the value to be a String, because
             // SqlSymbol extends SqlLiteral and implements
             // EnumeratedValues.Value, and it would be silly if it were its
@@ -473,27 +480,40 @@ public class SqlLiteral extends SqlNode
         }
     }
 
-    public static DateLiteral createDate(
+    public static SqlDateLiteral createDate(
         Calendar calendar,
         ParserPosition pos)
     {
-        return new DateLiteral(calendar, pos);
+        return new SqlDateLiteral(calendar, pos);
     }
 
-    public static TimestampLiteral createTimestamp(
+    public static SqlTimestampLiteral createTimestamp(
         Calendar calendar,
         int precision,
         ParserPosition pos)
     {
-        return new TimestampLiteral(calendar, precision, pos);
+        return new SqlTimestampLiteral(calendar, precision, false, pos);
     }
 
-    public static TimeLiteral createTime(
+    public static SqlTimeLiteral createTime(
         Calendar calendar,
         int precision,
         ParserPosition pos)
     {
-        return new TimeLiteral(calendar, precision, pos);
+        return new SqlTimeLiteral(calendar, precision, false, pos);
+    }
+
+    /**
+     * Creates an interval literal.
+     * @param value    Value, e.g. '1:23:04'
+     * @param timeUnit Time unit
+     * @param pos      Parser position
+     */
+    public static SqlIntervalLiteral createInterval(String value,
+        SqlIntervalLiteral.TimeUnit timeUnit, ParserPosition pos)
+    {
+        return new SqlIntervalLiteral(value, timeUnit,
+            SqlTypeName.IntervalDayTime, pos);
     }
 
     //~ Inner Classes ---------------------------------------------------------
@@ -501,207 +521,6 @@ public class SqlLiteral extends SqlNode
     // NOTE jvs 26-Jan-2004:  There's no singleton constant for a NULL literal.
     // Instead, nulls must be instantiated via createNull(), because
     // different instances have different context-dependent types.
-
-    /**
-     * DateLiteral for wrapping java date/time types.
-     * This is sort of an odd thing to do - a static nested class that extends
-     * its super class.
-     */
-    public static class DateLiteral extends SqlLiteral
-    {
-        protected boolean hasTimeZone;
-        protected String formatString = ParserUtil.DateFormatStr;
-
-        public DateLiteral(
-            Calendar d,
-            ParserPosition pos)
-        {
-            this(d, false, SqlTypeName.Date, pos);
-        }
-
-        public DateLiteral(
-            Calendar d,
-            boolean tz,
-            ParserPosition pos)
-        {
-            this(d, tz, SqlTypeName.Date, pos);
-        }
-
-        protected DateLiteral(
-            Calendar d,
-            boolean tz,
-            SqlTypeName typeName,
-            ParserPosition pos)
-        {
-            super(d, typeName, pos);
-            hasTimeZone = tz;
-        }
-
-        /**
-         *  Construct a new dateformat object for the given string.
-         *  DateFormat objects aren't thread safe
-         * @param dfString
-         * @return date format object
-         */
-        public static DateFormat getDateFormat(String dfString)
-        {
-            SimpleDateFormat df = new SimpleDateFormat(dfString);
-            df.setLenient(false);
-            return df;
-        }
-
-        public String toValue()
-        {
-            return Long.toString(getCal().getTimeInMillis());
-        }
-
-        private Date getDate()
-        {
-            return new java.sql.Date(getCal().getTimeInMillis()
-                - Calendar.getInstance().getTimeZone().getRawOffset());
-        }
-
-        public Calendar getCal()
-        {
-            return (Calendar) value;
-        }
-
-        /**
-         * technically, a sql date doesn't come with a tz, but time and ts
-         * inherit this, and the calendar object has one, so it seems harmless.
-         * @return timezone
-         */
-        public TimeZone getTimeZone()
-        {
-            assert hasTimeZone : "Attempt to get timezone on Literal date: "
-            + getCal() + ", which has no timezone";
-            return getCal().getTimeZone();
-        }
-
-        public String toString()
-        {
-            return "DATE '" + getDateFormat(formatString).format(getDate())
-            + "'";
-        }
-
-        public RelDataType createSqlType(RelDataTypeFactory typeFactory)
-        {
-            return typeFactory.createSqlType(SqlTypeName.Date);
-        }
-
-        public void unparse(
-            SqlWriter writer,
-            int leftPrec,
-            int rightPrec)
-        {
-            writer.print(this.toString());
-        }
-    }
-
-    public static class TimeLiteral extends DateLiteral
-    {
-        public final int precision;
-
-        protected TimeLiteral(
-            Calendar t,
-            int p,
-            boolean hasTZ,
-            SqlTypeName typeName,
-            ParserPosition pos)
-        {
-            super(t, hasTZ, typeName, pos);
-            precision = p;
-            formatString = ParserUtil.TimeFormatStr;
-        }
-
-        /**
-         * Constructor is private; use {@link #createTime}.
-         */
-        private TimeLiteral(
-            Calendar t,
-            int p,
-            ParserPosition pos)
-        {
-            this(t, p, false, SqlTypeName.Time, pos);
-        }
-
-        private Time getTime()
-        {
-            long millis = getCal().getTimeInMillis();
-            int tzOffset =
-                Calendar.getInstance().getTimeZone().getOffset(millis);
-            return new java.sql.Time(millis - tzOffset);
-        }
-
-        public int getPrec()
-        {
-            return precision;
-        }
-
-        public String toString()
-        {
-            return "TIME '" + toFormattedString() + "'";
-        }
-
-        public String toFormattedString()
-        {
-            String result =
-                new SimpleDateFormat(formatString).format(getTime());
-            if (precision > 0) {
-                assert (precision <= 3);
-
-                // get the millisecond count.  millisecond => at most 3 digits.
-                String digits = Long.toString(getCal().getTimeInMillis());
-                result =
-                    result + "."
-                    + digits.substring(digits.length() - 3,
-                        digits.length() - 3 + precision);
-            } else {
-                assert (0 == getCal().get(Calendar.MILLISECOND));
-            }
-            return result;
-        }
-
-        public RelDataType createSqlType(RelDataTypeFactory typeFactory)
-        {
-            return typeFactory.createSqlType(typeName, precision);
-        }
-    }
-
-    /**
-     * This is largely a place holder, the type allows to determine what this object is,
-     *  but most of its functionality comes from above.
-     */
-    public static class TimestampLiteral extends TimeLiteral
-    {
-        public TimestampLiteral(
-            Calendar cal,
-            int p,
-            boolean hasTZ,
-            ParserPosition pos)
-        {
-            super(cal, p, hasTZ, SqlTypeName.Timestamp, pos);
-            formatString = ParserUtil.TimestampFormatStr;
-        }
-
-        public TimestampLiteral(
-            Calendar cal,
-            int p,
-            ParserPosition pos)
-        {
-            this(cal, p, false, pos);
-        }
-
-        public Timestamp getTimestamp()
-        {
-            return new java.sql.Timestamp(getCal().getTimeInMillis());
-        }
-
-        public String toString()
-        {
-            return "TIMESTAMP '" + toFormattedString() + "'";
-        }
-    }
 
     public static class Numeric extends SqlLiteral
     {
@@ -1048,6 +867,7 @@ public class SqlLiteral extends SqlNode
                 lits[0].getParserPosition());
         }
     }
+
 }
 
 

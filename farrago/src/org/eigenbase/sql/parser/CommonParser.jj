@@ -59,7 +59,7 @@ JAVACODE List startList(Object o)
  * future changes to the grammar, making it very brittle.
  */
 
-JAVACODE ParserPosition getCurrentParserPosition()
+JAVACODE ParserPosition getPos()
 {
     return new ParserPosition(
             token.beginLine,
@@ -98,11 +98,12 @@ JAVACODE void checkNonQueryExpression(ExprContext exprContext)
     }
 }
 
-// The date/time parse utilities have to live here, instead of in the ParserUtil
-// class because ParseException is ambigous, and CommonParser has to live in
-// multiple packages.
-JAVACODE SqlLiteral.DateLiteral parseDateLiteral(String s, ParserPosition pos) throws ParseException {
-    pos = getCurrentParserPosition();
+// The date/time parse utilities have to live here, instead of in the
+// ParserUtil class because ParseException is ambigous, and CommonParser has to
+// live in multiple packages.
+
+JAVACODE SqlDateLiteral parseDateLiteral(String s, ParserPosition pos) throws ParseException {
+    pos = getPos();
     String dateStr = ParserUtil.strip(s, "'");
     Calendar cal = ParserUtil.parseDateFormat(dateStr, ParserUtil.DateFormatStr);
     if (null==cal) {
@@ -114,9 +115,9 @@ JAVACODE SqlLiteral.DateLiteral parseDateLiteral(String s, ParserPosition pos) t
     return SqlLiteral.createDate(cal, pos);
 }
 
-JAVACODE SqlLiteral.TimeLiteral parseTimeLiteral(String s, ParserPosition pos)
+JAVACODE SqlTimeLiteral parseTimeLiteral(String s, ParserPosition pos)
     throws ParseException{
-    pos = getCurrentParserPosition();
+    pos = getPos();
     String dateStr = ParserUtil.strip(s, "'");
     ParserUtil.PrecisionTime pt =
         ParserUtil.parsePrecisionDateTimeLiteral(dateStr, ParserUtil.TimeFormatStr);
@@ -129,9 +130,9 @@ JAVACODE SqlLiteral.TimeLiteral parseTimeLiteral(String s, ParserPosition pos)
     return SqlLiteral.createTime(pt.cal, pt.precision, pos);
 }
 
-JAVACODE SqlLiteral.TimeLiteral parseTimestampLiteral(String s, ParserPosition pos)
+JAVACODE SqlTimestampLiteral parseTimestampLiteral(String s, ParserPosition pos)
     throws ParseException{
-    pos = getCurrentParserPosition();
+    pos = getPos();
     String dateStr = ParserUtil.strip(s, "'");
     ParserUtil.PrecisionTime pt =
         ParserUtil.parsePrecisionDateTimeLiteral(dateStr, ParserUtil.TimestampFormatStr);
@@ -142,6 +143,15 @@ JAVACODE SqlLiteral.TimeLiteral parseTimestampLiteral(String s, ParserPosition p
         throw new ParseException(msg);
     }
     return SqlLiteral.createTimestamp(pt.cal, pt.precision, pos);
+}
+
+JAVACODE SqlIntervalLiteral parseIntervalLiteral(
+    String s,
+    SqlIntervalLiteral.TimeUnit timeUnit) throws ParseException
+{
+    ParserPosition pos = getPos();
+    String intervalStr = ParserUtil.strip(s, "'");
+    return SqlLiteral.createInterval(intervalStr, timeUnit, pos);
 }
 
 /*****************************************
@@ -168,7 +178,7 @@ SqlNode OrderedQueryOrExpr(ExprContext exprContext) :
         // to decide whether ORDER BY makes sense
         orderBy = OrderBy(e.isA(SqlKind.Query))
         {
-            pos = getCurrentParserPosition();
+            pos = getPos();
             e = opTab.orderByOperator.createCall(e,orderBy, pos);
         }
     )?
@@ -321,40 +331,47 @@ SqlNode SqlStmtEof() :
  */
 SqlSelect SqlSelect() :
 {
-    boolean distinct = false;
+    List keywords = new ArrayList();
     List selectList;
     SqlNode fromClause;
     SqlNode where;
     SqlNode groupBy;
     SqlNode having;
+    SqlNodeList windowDecls;
     ParserPosition pos;
 }
 {
-    // REVIEW jvs 9-Feb-2004:  What is this SELECT UNIQUE syntax?
-    // It's not standard.
-
     <SELECT>
+    SqlSelectKeywords(keywords)
     (
-        <DISTINCT> { distinct = true; }
-    |   <UNIQUE> { distinct = false; }
-    |   <ALL> { distinct = false; }
+        <DISTINCT> { keywords.add(new SqlSymbol("DISTINCT", getPos())); }
+    |   <ALL> { keywords.add(new SqlSymbol("ALL", getPos())); }
     |   E()
     )
     selectList = SelectList()
     {
-        pos = getCurrentParserPosition();
+        pos = getPos();
     }
     <FROM>
     fromClause = FromClause()
     where = WhereOpt()
     groupBy = GroupByOpt()
     having = HavingOpt()
+    windowDecls = WindowOpt()
     {
         return opTab.selectOperator.createCall(
-                distinct, new SqlNodeList(selectList,pos), fromClause, where,
-                groupBy, having, null, pos);
+            new SqlNodeList(keywords, pos), new SqlNodeList(selectList,pos),
+            fromClause, where, groupBy, having, windowDecls, null, pos);
     }
 }
+
+/*
+ * Abstract production:
+ *
+ *    void SqlSelectKeywords(List keywords)
+ *
+ * Parses dialect-specific keywords immediately following the SELECT keyword.
+ */
 
 /**
  * Parses an EXPLAIN PLAN statement.
@@ -381,7 +398,7 @@ SqlNode SqlExplain() :
         }
     )
         {
-            pos = getCurrentParserPosition();
+            pos = getPos();
             return new SqlExplain(
                 opTab.explainOperator,
                 stmt,
@@ -423,13 +440,14 @@ SqlNode SqlInsert() :
 {
     <INSERT> <INTO> table = CompoundIdentifier()
         {
-            pos = getCurrentParserPosition();
+            pos = getPos();
         }
-    ( LOOKAHEAD(2)
+    ( 
+        LOOKAHEAD(2)
         <LPAREN>
         columnList = SimpleIdentifierCommaList()
         {
-            columnListPos = getCurrentParserPosition();
+            columnListPos = getPos();
         }
         <RPAREN>
     )?
@@ -460,7 +478,7 @@ SqlNode SqlDelete() :
 {
     <DELETE>
         {
-            pos = getCurrentParserPosition();
+            pos = getPos();
         }
  <FROM> table = CompoundIdentifier()
         {
@@ -490,7 +508,7 @@ SqlNode SqlUpdate() :
 {
     <UPDATE> table = CompoundIdentifier()
         {
-            pos = getCurrentParserPosition();
+            pos = getPos();
             targetColumnList = new SqlNodeList(pos);
             sourceExpressionList = new SqlNodeList(pos);
         }
@@ -557,7 +575,7 @@ SqlNode SelectItem() :
     e = SelectExpression()
     ((<AS>)?
      id = SimpleIdentifier() {
-         pos = getCurrentParserPosition();
+         pos = getPos();
          e = opTab.asOperator.createCall(e, id,  pos); } )?
     {return e;}
 }
@@ -575,12 +593,12 @@ SqlNode SelectExpression() :
     LOOKAHEAD(3)
     id = Identifier() <DOT> <STAR>
     {
-        pos = getCurrentParserPosition();
+        pos = getPos();
         return new SqlIdentifier(new String[] {id, "*"}, pos); }
 |
     <STAR>
         {
-            pos = getCurrentParserPosition();
+            pos = getPos();
             return new SqlIdentifier("*", pos); }
 |
     e = Expression(EXPR_ACCEPT_SUBQUERY) { return e; }
@@ -614,7 +632,7 @@ SqlNode FromClause() :
             {isNatural = false;}
         )
         {
-            naturalPos = getCurrentParserPosition();
+            naturalPos = getPos();
         }
         (
             <JOIN>
@@ -636,7 +654,7 @@ SqlNode FromClause() :
             {joinType = SqlJoinOperator.JoinType.Cross;}
         )
         {
-            joinTypePos = getCurrentParserPosition();
+            joinTypePos = getPos();
         }
         e2 = TableRef()
         (
@@ -649,7 +667,7 @@ SqlNode FromClause() :
             }
         |
             <USING> <LPAREN> list = SimpleIdentifierCommaList() <RPAREN> {
-                pos = getCurrentParserPosition();
+                pos = getPos();
                 e = opTab.joinOperator.createCall(e,
                         SqlLiteral.createBoolean(isNatural, naturalPos),
                         SqlLiteral.createFlag(joinType, joinTypePos), e2,
@@ -671,7 +689,7 @@ SqlNode FromClause() :
         // lookahead form to get JavaCC to shut up, which makes
         // me even more uneasy.
         LOOKAHEAD({true})
-        <COMMA> { pos = getCurrentParserPosition(); }
+        <COMMA> { pos = getPos(); }
         e2 = TableRef() {
             e = opTab.joinOperator.createCall(e,
                     SqlLiteral.createBoolean(false, pos),
@@ -697,6 +715,7 @@ SqlNode FromClause() :
 SqlNode TableRef() :
 {
     SqlNode tableRef;
+    SqlNode over;
     String alias;
     ParserPosition pos;
 }
@@ -708,15 +727,30 @@ SqlNode TableRef() :
     |
         tableRef = TableConstructor()
     )
+    over = TableOverOpt() {
+        if (over != null) {
+            pos = getPos();
+            tableRef = opTab.overOperator.createCall(tableRef, over, pos);
+        }
+    }
     (
         (<AS>)? alias = Identifier() {
-            pos = getCurrentParserPosition();
+            pos = getPos();
             tableRef = opTab.asOperator.createCall(
                 tableRef, new SqlIdentifier(alias, pos), pos);
         }
     )?
     { return tableRef; }
 }
+
+/*
+ * Abstract production:
+ *
+ *    SqlNode TableOverOpt()
+ *
+ * Allows an OVER clause following a table expression as an extension to
+ * standard SQL syntax. The default implementation of this production is empty.
+ */
 
 /**
  * Parses an explicit TABLE t reference.
@@ -729,7 +763,7 @@ SqlNode ExplicitTable() :
 {
     <TABLE> tableRef = CompoundIdentifier()
         {
-            pos = getCurrentParserPosition();
+            pos = getPos();
             return opTab.explicitTableOperator.createCall(tableRef, pos);
         }
 }
@@ -745,7 +779,7 @@ SqlNode TableConstructor() :
 {
     <VALUES>
     {
-         pos = getCurrentParserPosition();
+         pos = getPos();
     }
          rowConstructorList = RowConstructorList(pos)
     {
@@ -790,11 +824,11 @@ SqlNode RowConstructor() :
         // for unparse, but this is actually invalid SQL; should
         // fix unparse
         LOOKAHEAD(3)
-        <LPAREN> <ROW> { pos = getCurrentParserPosition(); }
+        <LPAREN> <ROW> { pos = getPos(); }
         valueList = ParenthesizedQueryOrCommaList(EXPR_ACCEPT_ALL) <RPAREN>
     |
         LOOKAHEAD(3)
-        { pos = getCurrentParserPosition(); }
+        { pos = getPos(); }
         [ 
             <ROW>
         ] valueList = ParenthesizedQueryOrCommaList(EXPR_ACCEPT_ALL)
@@ -845,7 +879,7 @@ SqlNode GroupByOpt() :
 {
     <GROUP> <BY> e = Expression(EXPR_ACCEPT_SUBQUERY)
     {
-        pos = getCurrentParserPosition();
+        pos = getPos();
         list = startList(e); }
     (
         // NOTE jvs 6-Feb-2004:  See comments at top of file for why
@@ -871,6 +905,124 @@ SqlNode HavingOpt() :
 }
 
 /**
+ * Parses the optional WINDOW clause for SELECT
+ */
+SqlNodeList WindowOpt() :
+{
+    SqlIdentifier id;
+    SqlNode e;
+    List list;
+    ParserPosition pos;
+}
+{
+    <WINDOW> id = SimpleIdentifier() <AS> e = WindowSpecification()
+        {
+            pos = getPos();
+            list = startList(e);
+        }
+    (
+        // NOTE jhyde 22-Oct-2004:  See comments at top of file for why
+        // hint is necessary here.
+        LOOKAHEAD(2)
+        <COMMA> SimpleIdentifier() <AS> e = WindowSpecification()
+        { list.add(e); }
+    )*
+    { return new SqlNodeList(list, pos); }
+|
+    { return null; }
+}
+
+/**
+ * Parses a window specification.
+ */
+SqlNode WindowSpecification() :
+{
+    SqlIdentifier id;
+    List list;
+    SqlNodeList partitionList;
+    SqlNodeList orderList;
+    boolean isRows = false;
+    SqlNode lowerBound = null, upperBound = null;
+    ParserPosition pos;
+}
+{
+    <LPAREN>
+    (
+        id = SimpleIdentifier()
+    |
+        { id = null; }
+    )
+    (
+        <PARTITION> <BY> list = SimpleIdentifierCommaList()
+        { partitionList = new SqlNodeList(list, getPos()); }
+    |
+        { partitionList = null; }
+    )
+    (
+        orderList = OrderBy(true)
+    |
+        { orderList = null; }
+    )
+    (
+        (
+            <ROWS> { isRows = true; }
+        |
+            <RANGE> { isRows = false; }
+        )
+        (
+            <BETWEEN> lowerBound = WindowRange()
+            <AND> upperBound = WindowRange()
+        |
+            lowerBound = WindowRange()
+        )
+    )?
+    <RPAREN> {
+        pos = getPos();
+        return opTab.windowOperator.createCall(
+                id, partitionList, orderList,
+                isRows, lowerBound, upperBound, pos);
+    }
+}
+
+SqlNode WindowRange() :
+{
+    SqlLiteral literal;
+    ParserPosition pos;
+}
+{
+    <CURRENT> <ROW> {
+        pos = getPos();
+        return opTab.windowOperator.createCurrentRow(pos);
+    }
+|
+    <UNBOUNDED>
+    (
+        <PRECEDING> {
+            pos = getPos();
+            return opTab.windowOperator.createUnboundedPreceding(pos);
+        }
+    |
+        <FOLLOWING> {
+            pos = getPos();
+            return opTab.windowOperator.createUnboundedFollowing(pos);
+        }
+    )
+|
+    literal = StrictLiteral()
+    (
+        <PRECEDING> {
+            pos = getPos();
+            return opTab.windowOperator.createPreceding(literal, pos);
+        }
+    |
+        <FOLLOWING> {
+            pos = getPos();
+            return opTab.windowOperator.createFollowing(literal, pos);
+        }
+    )
+}
+
+/**
  * Parses an ORDER BY clause.
  */
 SqlNodeList OrderBy(boolean accept) :
@@ -890,7 +1042,7 @@ SqlNodeList OrderBy(boolean accept) :
                      "ORDER BY unexpected near " + getPositionString());
              }
          }
-    <BY> e = OrderItem() { pos = getCurrentParserPosition();list = startList(e); }
+    <BY> e = OrderItem() { pos = getPos();list = startList(e); }
     (
         // NOTE jvs 6-Feb-2004:  See comments at top of file for why
         // hint is necessary here.
@@ -916,12 +1068,12 @@ SqlNode OrderItem() :
     |   <ASCENDING> { return e; }
     |   <DESC>
         {
-            pos = getCurrentParserPosition();
+            pos = getPos();
             return opTab.descendingOperator.createCall(e, pos);
         }
     |   <DESCENDING>
         {
-            pos = getCurrentParserPosition();
+            pos = getPos();
             return opTab.descendingOperator.createCall(e, pos);
         }
     |   { return e; }
@@ -970,7 +1122,7 @@ SqlNode QueryOrExpr(ExprContext exprContext) :
         op = BinaryQueryOperator()
         {
             // ensure a query is legal in this context
-            pos = getCurrentParserPosition();
+            pos = getPos();
             checkQueryExpression(exprContext);
 
         }
@@ -1057,12 +1209,12 @@ List Expression2(ExprContext exprContext) :
                 <IN>
                 {
                     checkNonQueryExpression(exprContext);
-                    pos = getCurrentParserPosition();
+                    pos = getPos();
                     list.add(new ParserUtil.ToTreeListItem(opTab.inOperator,pos));
                 }
                 list2 = ParenthesizedQueryOrCommaList(EXPR_ACCEPT_ALL)
                 {
-                    pos = getCurrentParserPosition();
+                    pos = getPos();
                     // special case for stuff like IN (s1 UNION s2)
                     if (list2.size() == 1) {
                         SqlNode item = (SqlNode) list2.get(0);
@@ -1084,7 +1236,7 @@ List Expression2(ExprContext exprContext) :
                     <NOT> <BETWEEN>
                     {
                         op = opTab.notBetweenOperator;
-                        pos = getCurrentParserPosition();
+                        pos = getPos();
                     }
                     [
                         <SYMMETRIC> { op = opTab.symmetricNotBetweenOperator; }
@@ -1095,7 +1247,7 @@ List Expression2(ExprContext exprContext) :
                     <BETWEEN>
                     {
                         op = opTab.betweenOperator;
-                        pos = getCurrentParserPosition();
+                        pos = getPos();
                     }
                     [
                         <SYMMETRIC> { op = opTab.symmetricBetweenOperator; }
@@ -1111,7 +1263,7 @@ List Expression2(ExprContext exprContext) :
             |
                 {
                     checkNonQueryExpression(exprContext);
-                    pos = getCurrentParserPosition();
+                    pos = getPos();
                 }
                 (
                     <NOT> 
@@ -1134,7 +1286,7 @@ List Expression2(ExprContext exprContext) :
                 LOOKAHEAD(2)
                 <ESCAPE> e = Expression3(EXPR_ACCEPT_SUBQUERY)
                     {
-                        pos = getCurrentParserPosition();
+                        pos = getPos();
                         list.add(new ParserUtil.ToTreeListItem(opTab.escapeOperator, pos));
                         list.add(e); 
                     }
@@ -1146,7 +1298,7 @@ List Expression2(ExprContext exprContext) :
                 }
                 e = Expression3(EXPR_ACCEPT_SUBQUERY)
                 {
-                    list.add(new ParserUtil.ToTreeListItem(op, getCurrentParserPosition()));
+                    list.add(new ParserUtil.ToTreeListItem(op, getPos()));
                     list.add(e);
                 }
             |
@@ -1154,7 +1306,7 @@ List Expression2(ExprContext exprContext) :
                     checkNonQueryExpression(exprContext);
                 }
                 op = PostfixRowOperator() {
-                    list.add(new ParserUtil.ToTreeListItem(op, getCurrentParserPosition()));
+                    list.add(new ParserUtil.ToTreeListItem(op, getPos()));
                 }
             )
         )+
@@ -1183,7 +1335,7 @@ SqlNode Expression3(ExprContext exprContext) :
 }
 {
     op = PrefixRowOperator() {
-        prefixRowOpPos = getCurrentParserPosition();
+        prefixRowOpPos = getPos();
         checkNonQueryExpression(exprContext);
     }
     e = Expression3(EXPR_ACCEPT_SUBQUERY) {
@@ -1195,9 +1347,9 @@ SqlNode Expression3(ExprContext exprContext) :
         return e;
     }
 |
-    { pos = getCurrentParserPosition(); }
+    { pos = getPos(); }
     [
-        <ROW> {  pos = getCurrentParserPosition(); rowSeen = true; }
+        <ROW> {  pos = getPos(); rowSeen = true; }
     ]
     list = ParenthesizedQueryOrCommaList(exprContext) {
         if ((list.size() == 1) && !rowSeen) {
@@ -1254,14 +1406,14 @@ SqlNode AtomicRowExpression() :
     }
     <CASE>
         {
-            casePos = getCurrentParserPosition();
+            casePos = getPos();
         }
         [caseIdentifier = Expression(EXPR_ACCEPT_NONQUERY)]
         (
             <WHEN> e = Expression(EXPR_ACCEPT_NONQUERY)
-            {  whenPos = getCurrentParserPosition();whenList.add(e); }
+            {  whenPos = getPos();whenList.add(e); }
             <THEN> e = Expression(EXPR_ACCEPT_NONQUERY)
-            {  thenPos = getCurrentParserPosition();thenList.add(e); }
+            {  thenPos = getPos();thenList.add(e); }
         )+
         [<ELSE> elseClause = Expression(EXPR_ACCEPT_NONQUERY)]
     <END>
@@ -1282,32 +1434,34 @@ SqlNode AtomicRowExpression() :
 SqlNode Literal() :
 {
     SqlNode e;
-    ParserPosition pos = getCurrentParserPosition();
+    ParserPosition pos = getPos();
 }
 {
     e = NumericLiteral(pos)       { return e; }
 |   e = StringLiteral(pos,false)  { return e; }
 |   e = SpecialLiteral(pos)       { return e; }
 |   e = DateTimeLiteral(pos)      { return e; }
+|   e = IntervalLiteral()         { return e; }
 }
 
 
 /**
- * Parses a literal expression, not allowing a continued string literal.  Always
- * returns an SqlLiteral. (Some places in the DDL parser expect a simple
+ * Parses a literal expression, not allowing a continued string literal.
+ * Always returns an SqlLiteral. (Some places in the DDL parser expect a simple
  * SqlLiteral.)
  */
 SqlLiteral StrictLiteral() :
 {
     SqlLiteral lit;
     SqlNode e;
-    ParserPosition pos = getCurrentParserPosition();
+    ParserPosition pos = getPos();
 }
 {
     lit = NumericLiteral(pos)     { return lit; }
 |   e   = StringLiteral(pos,true) { return (SqlLiteral) e; }
 |   lit = SpecialLiteral(pos)     { return lit; }
 |   lit = DateTimeLiteral(pos)    { return lit; }
+|   lit = IntervalLiteral()       { return lit; }
 }
 
 
@@ -1377,7 +1531,7 @@ SqlNode StringLiteral(ParserPosition pos, boolean strict) :
         {
             try {
                 p = ParserUtil.trim(token.image, "'"); // no embedded quotes
-                frags.add(SqlLiteral.BitStringLiteral.create(p, getCurrentParserPosition()));
+                frags.add(SqlLiteral.BitStringLiteral.create(p, getPos()));
                 nfrags++;
             } catch (NumberFormatException ex) {
                 throw new ParseException(
@@ -1406,7 +1560,7 @@ SqlNode StringLiteral(ParserPosition pos, boolean strict) :
        {
            try {
                p = ParserUtil.trim(token.image, "'"); // no embedded quotes
-               frags.add(SqlLiteral.BinaryStringLiteral.create(p, getCurrentParserPosition()));
+               frags.add(SqlLiteral.BinaryStringLiteral.create(p, getPos()));
                nfrags++;
            } catch (NumberFormatException ex) {
                 throw new ParseException(
@@ -1441,7 +1595,7 @@ SqlNode StringLiteral(ParserPosition pos, boolean strict) :
         <QUOTED_STRING>
         {
             p = ParserUtil.parseString(token.image);
-            frags.add(SqlLiteral.CharString.create(p, charSet, getCurrentParserPosition()));
+            frags.add(SqlLiteral.CharString.create(p, charSet, getPos()));
             nfrags++;
         }
     )*
@@ -1463,7 +1617,9 @@ SqlNode StringLiteral(ParserPosition pos, boolean strict) :
 }
 
 
-/** Parse a date/time literal */
+/** 
+ * Parses a date/time literal.
+ */
 SqlLiteral DateTimeLiteral(ParserPosition pos) :
 {
     String  p;
@@ -1495,6 +1651,36 @@ SqlLiteral DateTimeLiteral(ParserPosition pos) :
 }
 
 /**
+ * Parses an interval literal.
+ */
+SqlLiteral IntervalLiteral() :
+{
+    String p;
+    SqlIntervalLiteral.TimeUnit timeUnit;
+}
+{
+    <INTERVAL> <QUOTED_STRING> { p = token.image; } timeUnit = TimeUnit() {
+        return parseIntervalLiteral(p, timeUnit);
+    }
+}
+
+SqlIntervalLiteral.TimeUnit TimeUnit() :
+{}
+{
+    <YEAR> { return SqlIntervalLiteral.TimeUnit.Year; }
+|
+    <MONTH> { return SqlIntervalLiteral.TimeUnit.Month; }
+|
+    <DAY> { return SqlIntervalLiteral.TimeUnit.Day.Day; }
+|
+    <HOUR> { return SqlIntervalLiteral.TimeUnit.Hour; }
+|
+    <MINUTE> { return SqlIntervalLiteral.TimeUnit.Minute; }
+|
+    <SECOND> { return SqlIntervalLiteral.TimeUnit.Second; }
+}
+
+/**
  * Parses a dynamic parameter marker.
  */
 SqlDynamicParam DynamicParam() :
@@ -1504,7 +1690,7 @@ SqlDynamicParam DynamicParam() :
 {
     <HOOK>
         {
-            pos = getCurrentParserPosition();
+            pos = getPos();
             return new SqlDynamicParam(nDynamicParams++, pos);
         }
 }
@@ -1535,7 +1721,7 @@ SqlIdentifier SimpleIdentifier() :
     ParserPosition pos;
 }
 {
-    p = Identifier(){pos = getCurrentParserPosition();}
+    p = Identifier(){pos = getPos();}
         [collation = CollateClause()]
 
     {return new SqlIdentifier(p,collation, pos);}
@@ -1566,7 +1752,7 @@ SqlIdentifier CompoundIdentifier() :
     ParserPosition pos;
 }
 {
-    (p = Identifier() {pos = getCurrentParserPosition();list.add(p);})
+    (p = Identifier() {pos = getPos();list.add(p);})
     (<DOT> p = Identifier() {list.add(p);})*
     [collation = CollateClause()]
     {return new SqlIdentifier(ParserUtil.toStringArray(list),collation, pos);}
@@ -1603,7 +1789,7 @@ SqlDataType DataType() :
     (
         typeName = TypeName()
         {
-            pos = getCurrentParserPosition();
+            pos = getPos();
         }
         (
             <LPAREN>
@@ -1630,7 +1816,7 @@ SqlDataType DataType() :
 SqlIdentifier TypeName() :
 {
     SqlIdentifier typeName = null;
-    ParserPosition pos = getCurrentParserPosition();
+    ParserPosition pos = getPos();
 }
 {
     (
@@ -1679,7 +1865,7 @@ SqlNode FunctionCall() :
 
     (   ("CAST" | "\"CAST\"")
     {
-        pos = getCurrentParserPosition();
+        pos = getPos();
     }
         <LPAREN> e = Expression(EXPR_ACCEPT_SUBQUERY) { args = startList(e); }
                    <AS> dt = DataType() { args.add(dt); }
@@ -1692,7 +1878,7 @@ SqlNode FunctionCall() :
 |
     (   ("POSITION" | "\"POSITION\"")
     {
-        pos = getCurrentParserPosition();
+        pos = getPos();
     }
         <LPAREN> e = AtomicRowExpression() { args = startList(e); }
                    <IN>    e = Expression(EXPR_ACCEPT_SUBQUERY) { args.add(e);}
@@ -1704,12 +1890,12 @@ SqlNode FunctionCall() :
 |
     (   ("CONVERT" | "\"CONVERT\"")
     {
-        pos = getCurrentParserPosition();
+        pos = getPos();
     }
         <LPAREN> e = Expression(EXPR_ACCEPT_SUBQUERY)
                             { args = startList(e); }
                    <USING>  name = Identifier()
-        {    namePos = getCurrentParserPosition();
+        {    namePos = getPos();
                                 args.add(new SqlIdentifier(name, namePos)); }
                    <RPAREN> {
                         return opTab.convertFunc.createCall(
@@ -1719,12 +1905,12 @@ SqlNode FunctionCall() :
 |
     (  ("TRANSLATE" | "\"TRANSLATE\"")
     {
-        pos = getCurrentParserPosition();
+        pos = getPos();
     }
        <LPAREN> e = Expression(EXPR_ACCEPT_SUBQUERY)
                             { args = startList(e); }
                    <USING>  name = Identifier()
-                            {  namePos = getCurrentParserPosition();
+                            {  namePos = getPos();
                               args.add(new SqlIdentifier(name, namePos)); }
                    <RPAREN> {
                         return opTab.translateFunc.createCall(
@@ -1734,7 +1920,7 @@ SqlNode FunctionCall() :
 |
     (  ("OVERLAY" | "\"OVERLAY\"")
     {
-        pos = getCurrentParserPosition();
+        pos = getPos();
     }
        <LPAREN>  e = Expression(EXPR_ACCEPT_SUBQUERY)
                              { args = startList(e); }
@@ -1753,7 +1939,7 @@ SqlNode FunctionCall() :
 |
     (   ("SUBSTRING" | "\"SUBSTRING\"")
     {
-        pos = getCurrentParserPosition();
+        pos = getPos();
     }
         <LPAREN> e = Expression(EXPR_ACCEPT_SUBQUERY)
                              { args = startList(e); }
@@ -1774,22 +1960,22 @@ SqlNode FunctionCall() :
     }
     (  ("TRIM" | "\"TRIM\"")
     {
-        pos = getCurrentParserPosition();
+        pos = getPos();
     }
         <LPAREN>
                    [    LOOKAHEAD(2)
                         [   <BOTH> {
-                                pos = getCurrentParserPosition();
+                                pos = getPos();
                                 flag = org.eigenbase.sql.fun.SqlTrimFunction.Flag.createBoth(pos);
                             }
                         |
                             <TRAILING> {
-                                pos = getCurrentParserPosition();
+                                pos = getPos();
                                 flag = org.eigenbase.sql.fun.SqlTrimFunction.Flag.createTrailing(pos);
                             }
                         |
                             <LEADING> {
-                                pos = getCurrentParserPosition();
+                                pos = getPos();
                                 flag = org.eigenbase.sql.fun.SqlTrimFunction.Flag.createLeading(pos);
                             }
                         ]
@@ -1819,10 +2005,10 @@ SqlNode FunctionCall() :
     (
         name = Identifier()
         {
-            pos = getCurrentParserPosition();
+            pos = getPos();
         }
         (
-            LOOKAHEAD(2) <LPAREN> <STAR> { starPos = getCurrentParserPosition();} <RPAREN>
+            LOOKAHEAD(2) <LPAREN> <STAR> { starPos = getPos();} <RPAREN>
             { args = startList(new SqlIdentifier("*", starPos)); }
           | LOOKAHEAD(2) <LPAREN> <RPAREN>
             { args = ParserUtil.emptyList; }
@@ -1839,7 +2025,7 @@ SqlNode FunctionCall() :
     (
         <LBRACE_FN>
     {
-        pos = getCurrentParserPosition();
+        pos = getPos();
     }
         (
             // SPECIAL CASE WHEN WE HAVE a {fn insert} call
@@ -1848,7 +2034,7 @@ SqlNode FunctionCall() :
             name = Identifier()
         )
         (
-            LOOKAHEAD(2) <LPAREN> <STAR> {starPos = getCurrentParserPosition();} <RPAREN>
+            LOOKAHEAD(2) <LPAREN> <STAR> {starPos = getPos();} <RPAREN>
             { args = startList(new SqlIdentifier("*", starPos)); }
           | LOOKAHEAD(2) <LPAREN> <RPAREN>
             { args = ParserUtil.emptyList; }
@@ -1963,7 +2149,9 @@ TOKEN :
 | < CHARACTER: "character" >
 | < COLLATE: "collate" >
 | < CROSS: "cross" >
+| < CURRENT: "current" >
 | < DATE: "date" >
+| < DAY: "day" >
 | < DECIMAL: "decimal" >
 | < DELETE: "delete" >
 | < DESC: "desc" >
@@ -1977,6 +2165,7 @@ TOKEN :
 | < EXISTS: "exists" >
 | < EXPLAIN: "explain" >
 | < FALSE: "false" >
+| < FOLLOWING: "following" >
 | < FOR: "for" >
 | < FROM: "from" >
 | < FULL: "full" >
@@ -1989,6 +2178,7 @@ TOKEN :
 | < INSERT: "insert" >
 | < INTEGER: "integer" >
 | < INTERSECT: "intersect" >
+| < INTERVAL: "interval" >
 | < INTO: "into" >
 | < IS: "is" >
 | < JOIN: "join" >
@@ -1996,17 +2186,23 @@ TOKEN :
 | < LEFT: "left" >
 | < LIKE: "like" >
 | < MINUTE: "minute" >
+| < MONTH: "month" >
 | < NATURAL: "natural" >
 | < OR: "or" >
 | < ORDER: "order" >
 | < OUTER: "outer" >
+| < OVER: "over" >
 | < OVERLAPS: "overlaps" >
+| < PARTITION: "partition" >
 | < PLACING: "placing" >
 | < PLAN: "plan" >
+| < PRECEDING: "preceding" >
 | < PRECISION: "precision" >
+| < RANGE: "range" >
 | < REAL: "real" >
 | < RIGHT: "right" >
 | < ROW: "row" >
+| < ROWS: "rows" >
 | < SECOND: "second" >
 | < SELECT: "select" >
 | < SET: "set" >
@@ -2023,6 +2219,7 @@ TOKEN :
 | < TO: "to" >
 | < TRAILING: "trailing" >
 | < TRUE: "true" >
+| < UNBOUNDED: "unbounded" >
 | < UNION: "union" >
 | < UNKNOWN: "unknown" >
 | < UPDATE: "update" >
@@ -2033,6 +2230,7 @@ TOKEN :
 | < VARYING: "varying" >
 | < WHEN: "when" >
 | < WHERE: "where" >
+| < WINDOW: "window" >
 | < WITH: "with" >
 | < WITHOUT: "without" >
 | < YEAR: "year" >
