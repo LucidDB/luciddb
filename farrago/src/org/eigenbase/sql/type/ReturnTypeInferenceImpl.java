@@ -585,7 +585,7 @@ public class ReturnTypeInferenceImpl
      * <p>For example, the expression <code>(500000000000 + 3.0e-3)</code> has
      * the operands INTEGER and DOUBLE. Its biggest type is double.
      */
-    private static final ReturnTypeInference useLeastRestrictive =
+    public static final ReturnTypeInference useLeastRestrictive =
         new ReturnTypeInference() {
             public RelDataType getType(
                 SqlValidator validator,
@@ -773,7 +773,6 @@ public class ReturnTypeInferenceImpl
      */
     public static final ReturnTypeInference useNullableMultisetElementType =
         new TransformCascade(useMultiset, toMultisetElementType);
-
 }
 
 // End ReturnTypeInferenceImpl.java

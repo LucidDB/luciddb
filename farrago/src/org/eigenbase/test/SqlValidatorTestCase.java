@@ -246,14 +246,18 @@ public class SqlValidatorTestCase extends TestCase
                 sqlNode = parseQuery(sql);
                 validator = getValidator();
             } catch (SqlParseException ex) {
-                ex.printStackTrace();
-                fail("SqlValidationTest: Parse Error while parsing query=" + sql
-                    + "\n" + ex.getMessage());
+                String errMessage = ex.getMessage();
+                if (null == errMessage ||
+                    !errMessage.matches(expectedMsgPattern)) {
+                    ex.printStackTrace();
+                    fail("SqlValidationTest: Parse Error while parsing query="
+                        + sql + "\n" + errMessage);
+                }
                 return;
             } catch (Throwable e) {
                 e.printStackTrace(System.err);
-                fail(
-                    "SqlValidationTest: Failed while trying to connect or get statement");
+                fail("SqlValidationTest: Failed while trying to connect or " +
+                    "get statement");
                 return;
             }
 
