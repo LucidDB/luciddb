@@ -38,6 +38,7 @@ import net.sf.farrago.util.*;
 
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -194,6 +195,67 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
     public CwmCatalog findCatalog(String catalogName)
     {
         return lookupCatalog(catalogName, true);
+    }
+
+    // implement FarragoSessionStmtValidator
+    public String[] getAllSchemaObjectNames(String[] names)
+    {
+        // use default catalog.  If not set, don't do anything
+        CwmCatalog catalog = repos.getCatalog(sessionVariables.catalogName);
+        if (catalog == null) {
+            return Util.emptyStringArray;
+        }
+
+        // look for both schema and object names
+        if (names.length == 1) {
+            // get all schema names 
+            List schemaNames = getAllObjectNamesByType(
+                catalog.getOwnedElement(),
+                FemLocalSchema.class);
+
+            // if default schema is set, get all table names in this schema
+            FemLocalSchema schema = FarragoCatalogUtil.getSchemaByName(
+                catalog, sessionVariables.schemaName);
+            if (schema != null) {
+                List tableNames = getAllObjectNamesByType(
+                    schema.getOwnedElement(),
+                    FemLocalTable.class);
+                schemaNames.addAll(tableNames);
+            }
+            return (String[]) schemaNames.toArray(Util.emptyStringArray);
+        }
+        // looking for table names under the specified schema
+        else if (names.length == 2) {
+            FemLocalSchema schema = FarragoCatalogUtil.getSchemaByName(
+                catalog, names[0]);
+            if (schema != null) {
+                List tableNames = getAllObjectNamesByType(
+                    schema.getOwnedElement(),
+                    FemLocalTable.class);
+                return (String []) tableNames.toArray(Util.emptyStringArray);
+            }
+            else {
+                return Util.emptyStringArray;
+            }
+        }
+        // currently not supporting the likes of SALES.EMPS.$DUMMY
+        else {
+            return Util.emptyStringArray;
+        }
+    }
+
+    // get all the object names of 'type' in the 'collection'
+    private List getAllObjectNamesByType(Collection collection, Class type)
+    {
+        Iterator iter = collection.iterator();
+        List list = new ArrayList();
+        while (iter.hasNext()) {
+            CwmModelElement element = (CwmModelElement) iter.next();
+            if (type.isInstance(element)) {
+                list.add(element.getName());
+            }
+        }
+        return list;
     }
 
     private CwmCatalog lookupCatalog(

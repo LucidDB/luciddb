@@ -219,6 +219,24 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
      */
     public FarragoSessionResolvedObject resolveSchemaObjectName(
         String [] names);
+
+    /**
+      * Gets schema object names as specified. They can be schema or table
+      * object.
+      * If names array contain 1 element, return all schema names and 
+      *    all table names under the default schema (if that is set)
+      * If names array contain 2 elements, treat 1st element as schema name
+      *    and return all table names in this schema
+      *
+      * @param names the array contains either 2 elements representing a 
+      * partially qualified object name in the format of 'schema.object', or an 
+      * unqualified name in the format of 'object'
+      *
+      * @return the list of all object (schema and table) names under the above
+      *  criteria
+      */
+    public String [] getAllSchemaObjectNames(String [] names);
+
 }
 
 

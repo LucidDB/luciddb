@@ -2310,15 +2310,17 @@ public class SqlValidator
         /**
          * Gets schema object names as specified. They can be schema or table
          * object.
-         * If names array contain 1 element, return all schema and table names
+         * If names array contain 1 element, return all schema names and 
+         *    all table names under the default schema (if that is set)
          * If names array contain 2 elements, treat 1st element as schema name
-         * and return all table names in this schema
+         *    and return all table names in this schema
          *
-         * @param names the array contains either a fully qualified schema 
-         * object name with catalog.schema.object or a partially qualified name
-         * ending with the object name
+         * @param names the array contains either 2 elements representing a 
+         * partially qualified object name in the format of 'schema.object', 
+         * or an unqualified name in the format of 'object'
          *
-         * @return the list of possible object names (and schema names)
+         * @return the list of all object (schema and table) names under 
+         *         the above criteria
          */
         String [] getAllSchemaObjectNames(String [] names);
     }

@@ -151,7 +151,6 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         String sql;
         sql = "select a.empno, b.deptno from sales.emp a join sales.dept b "
             + "on a.deptno=b.deptno where dummy=1";
-        System.out.println("where list");
         ArrayList expected = new ArrayList();
         expected.add("SALES.EMP");
         expected.add("SALES.DEPT");
@@ -168,7 +167,6 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         
         sql = "select a.empno, b.deptno from sales.emp a join sales.dept b "
             + "on a.deptno=b.deptno where a.dummy=1";
-        System.out.println("where list");
         expected.clear();
         expected.add("EMPNO");
         expected.add("ENAME");
@@ -198,7 +196,6 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         expected.add("DEPTNO");
         expected.add("NAME");
         hint(sql, new ParserPosition(1,8), expected); // select list
-        System.out.println("\nSelect list");
         expected.clear();
         expected.add("DEPTNO");
         expected.add("NAME");
