@@ -45,13 +45,16 @@ class ExecStreamTest : public ExecStreamTestBase
     void testCartesianJoinExecStream(uint nRowsLeft,uint nRowsRight);
     
 public:
-    explicit ExecStreamTest()
+    // noTestCases is for subclasses that want finer control
+    explicit ExecStreamTest(bool noTestCases = false)
     {
-        FENNEL_UNIT_TEST_CASE(ExecStreamTest,testScratchBufferExecStream);
-        FENNEL_UNIT_TEST_CASE(ExecStreamTest,testCopyExecStream);
-        FENNEL_UNIT_TEST_CASE(ExecStreamTest,testSegBufferExecStream);
-        FENNEL_UNIT_TEST_CASE(ExecStreamTest,testCartesianJoinExecStreamOuter);
-        FENNEL_UNIT_TEST_CASE(ExecStreamTest,testCartesianJoinExecStreamInner);
+        if (!noTestCases) {
+            FENNEL_UNIT_TEST_CASE(ExecStreamTest,testScratchBufferExecStream);
+            FENNEL_UNIT_TEST_CASE(ExecStreamTest,testCopyExecStream);
+            FENNEL_UNIT_TEST_CASE(ExecStreamTest,testSegBufferExecStream);
+            FENNEL_UNIT_TEST_CASE(ExecStreamTest,testCartesianJoinExecStreamOuter);
+            FENNEL_UNIT_TEST_CASE(ExecStreamTest,testCartesianJoinExecStreamInner);
+        }
     }
 
     void testScratchBufferExecStream();
