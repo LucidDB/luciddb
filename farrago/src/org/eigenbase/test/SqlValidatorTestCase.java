@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of database components.
-// Copyright (C) 2002-2004 Disruptive Tech
-// Copyright (C) 2003-2004 John V. Sichi
+// Copyright (C) 2002-2005 Disruptive Tech
+// Copyright (C) 2003-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -25,10 +25,8 @@ import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.reltype.RelDataTypeFactoryImpl;
 import org.eigenbase.sql.SqlCollation;
 import org.eigenbase.sql.SqlNode;
-import org.eigenbase.sql.SqlOperatorTable;
 import org.eigenbase.sql.SqlValidator;
 import org.eigenbase.sql.parser.SqlParseException;
 import org.eigenbase.sql.parser.SqlParser;
@@ -72,7 +70,7 @@ public class SqlValidatorTestCase extends TestCase
      * tables, which can run without having to start up Farrago.
      */
     public interface Tester {
-        SqlNode parseQuery(String sql) throws Exception;
+        SqlNode parseQuery(String sql) throws SqlParseException;
         SqlValidator getValidator();
         /**
          * Asserts either if a sql query is valid or not.
@@ -113,7 +111,8 @@ public class SqlValidatorTestCase extends TestCase
      * Returns a tester. Derived classes should override this method to run
      * the same set of tests in a different testing environment.
      */
-    public Tester getTester() {
+    public Tester getTester()
+    {
         return new TesterImpl();
     }
 
@@ -346,7 +345,7 @@ public class SqlValidatorTestCase extends TestCase
             return n;
         }
 
-        public SqlNode parseQuery(String sql) throws Exception
+        public SqlNode parseQuery(String sql) throws SqlParseException
         {
             SqlParser parser = new SqlParser(sql);
             SqlNode sqlNode = parser.parseQuery();

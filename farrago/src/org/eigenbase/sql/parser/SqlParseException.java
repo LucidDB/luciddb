@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of database components.
-// Copyright (C) 2004-2004 Disruptive Tech
-// Copyright (C) 2004-2004 John V. Sichi.
+// Copyright (C) 2004-2005 Disruptive Tech
+// Copyright (C) 2004-2005 John V. Sichi.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -31,15 +31,15 @@ import org.eigenbase.sql.parser.impl.*;
  */
 public class SqlParseException extends ParseException
 {
-    SqlParseException(ParseException ex)
+    public SqlParseException(ParseException ex)
     {
         super(
             ex.currentToken,
             ex.expectedTokenSequences,
             ex.tokenImage);
     }
-    
-    SqlParseException(String message)
+
+    public SqlParseException(String message)
     {
         super(message);
     }
