@@ -1345,14 +1345,14 @@ public class FarragoJdbcTest extends FarragoTestCase
             Timestamp tstamp = resultSet.getTimestamp(3);
 
             Calendar cal = Calendar.getInstance();
-            cal.setTimeZone(TimeZone.getTimeZone("GMT-8"));
+            cal.setTimeZone(TimeZone.getDefault());
             cal.clear();
             cal.set(2004, 11, 21); //month is zero based.  idiots ...
-            assert date.getTime() == cal.getTime().getTime();
+            assertEquals(cal.getTime().getTime(), date.getTime());
 
             cal.set(2004, 11, 21, 12, 22, 33);
 
-            assert tstamp.getTime() == cal.getTime().getTime();
+            assertEquals(cal.getTime().getTime(), tstamp.getTime());
         } else {
             assert false : "Static query returned no rows?";
         }
@@ -1373,11 +1373,11 @@ public class FarragoJdbcTest extends FarragoTestCase
                 cal.setTimeZone(TimeZone.getTimeZone("GMT-8"));
                 cal.clear();
                 cal.set(2004, 11, 21); //month is zero based.  idiots ...
-                assert date.getTime() == cal.getTime().getTime();
+                assertEquals(cal.getTime().getTime(), date.getTime());
 
                 cal.set(2004, 11, 21, 12, 22, 33);
 
-                assert tstamp.getTime() == cal.getTime().getTime();
+                assertEquals(cal.getTime().getTime(), tstamp.getTime());
             }
         }
     }
