@@ -103,7 +103,9 @@ public class IteratorToFennelConverter extends ConverterRel
         JavaRelImplementor implementor,
         RelDataType rowType)
     {
-        OJClass ojClass = OJUtil.typeToOJClass(rowType);
+        FarragoTypeFactory factory = stmt.getFarragoTypeFactory();
+        
+        OJClass ojClass = OJUtil.typeToOJClass(rowType, factory);
 
         FemTupleDescriptor tupleDesc =
             FennelRelUtil.createTupleDescriptorFromRowType(
@@ -161,7 +163,6 @@ public class IteratorToFennelConverter extends ConverterRel
                     Util.toJavaId(
                         field.getName(),
                         i));
-            FarragoTypeFactory factory = stmt.getFarragoTypeFactory();
             Class primitiveClass = factory.getClassForPrimitive(type);
             if (primitiveClass != null) {
                 Method method =

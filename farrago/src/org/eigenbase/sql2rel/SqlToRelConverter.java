@@ -742,7 +742,7 @@ public class SqlToRelConverter
         SqlCall call)
     {
         assert SqlKind.Cast.equals(call.operator.kind);
-        SqlDataType dataType = (SqlDataType) call.operands[1];
+        SqlDataTypeSpec dataType = (SqlDataTypeSpec) call.operands[1];
         if (SqlUtil.isNullLiteral(call.operands[0], false)) {
             return convertExpression(bb, call.operands[0]);
         }

@@ -72,7 +72,7 @@ public class FarragoOJRexBinaryExpressionImplementor
         }
 
         if (!call.getType().isNullable()) {
-            return implementNotNull(call, valueOperands);
+            return implementNotNull(translator, call, valueOperands);
         }
 
         Variable varResult = translator.createScratchVariable(call.getType());
@@ -91,7 +91,7 @@ public class FarragoOJRexBinaryExpressionImplementor
                     new FieldAccess(varResult,
                         NullablePrimitive.VALUE_FIELD_NAME),
                     AssignmentExpression.EQUALS,
-                    implementNotNull(call, valueOperands)));
+                    implementNotNull(translator, call, valueOperands)));
 
         Statement ifStatement =
             new IfStatement(nullTest,
@@ -107,13 +107,14 @@ public class FarragoOJRexBinaryExpressionImplementor
     }
 
     private Expression implementNotNull(
+        FarragoRexToOJTranslator translator,
         RexCall call,
         Expression [] operands)
     {
         // REVIEW:  heterogeneous operands?
         RelDataType type = call.operands[0].getType();
 
-        FarragoTypeFactory factory = (FarragoTypeFactory) (type.getFactory());
+        FarragoTypeFactory factory = translator.getFarragoTypeFactory();
         if (factory.getClassForPrimitive(type) != null) {
             return new BinaryExpression(operands[0],
                 ojBinaryExpressionOrdinal, operands[1]);

@@ -268,10 +268,12 @@ public abstract class BuiltinAggregation
         }
 
         public Expression implementResult(
+            JavaRelImplementor implementor,
             Expression accumulator,
             AggregateRel.Call call)
         {
-            return aggImplementor.implementResult(accumulator, call);
+            return aggImplementor.implementResult(
+                implementor, accumulator, call);
         }
 
         public Expression implementStart(

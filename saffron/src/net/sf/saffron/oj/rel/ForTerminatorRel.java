@@ -105,7 +105,9 @@ public class ForTerminatorRel extends SingleRel implements TerminatorRel,
         Expression exp = implementor.translateInput(this, 0);
         stmtList.add(
             new VariableDeclaration(
-                OJUtil.toTypeName(child.getRowType()),
+                OJUtil.toTypeName(
+                    child.getRowType(),
+                    implementor.getTypeFactory()),
                 variable.toString(),
                 exp));
         stmtList.addAll(body);

@@ -241,6 +241,7 @@ public class OJRexImplementorTableImpl implements OJRexImplementorTable
         }
 
         public Expression implementResult(
+            JavaRelImplementor implementor,
             Expression accumulator,
             AggregateRel.Call call)
         {
@@ -334,6 +335,7 @@ public class OJRexImplementorTableImpl implements OJRexImplementorTable
         }
 
         public Expression implementResult(
+            JavaRelImplementor implementor,
             Expression accumulator,
             AggregateRel.Call call)
         {
@@ -412,7 +414,8 @@ public class OJRexImplementorTableImpl implements OJRexImplementorTable
                     new VariableDeclaration(
                         TypeName.forOJClass(
                             OJUtil.typeToOJClass(
-                                agg.argTypes[0])),
+                                agg.argTypes[0],
+                                implementor.getTypeFactory())),
                         var_t.toString(),
                         arg));
                 stmtList.add(
@@ -462,6 +465,7 @@ public class OJRexImplementorTableImpl implements OJRexImplementorTable
         }
 
         public Expression implementResult(
+            JavaRelImplementor implementor,
             Expression accumulator,
             AggregateRel.Call call)
         {
@@ -483,7 +487,8 @@ public class OJRexImplementorTableImpl implements OJRexImplementorTable
                 return new CastExpression(
                     TypeName.forOJClass(
                         OJUtil.typeToOJClass(
-                            agg.argTypes[0])),
+                            agg.argTypes[0],
+                            implementor.getTypeFactory())),
                     accumulator);
             case SqlMinMaxAggFunction.MINMAX_COMPARATOR:
 
@@ -491,7 +496,8 @@ public class OJRexImplementorTableImpl implements OJRexImplementorTable
                 return new CastExpression(
                     TypeName.forOJClass(
                         OJUtil.typeToOJClass(
-                            agg.argTypes[1])),
+                            agg.argTypes[1],
+                            implementor.getTypeFactory())),
                     new FieldAccess(
                         new CastExpression(
                             new TypeName(
@@ -522,7 +528,9 @@ public class OJRexImplementorTableImpl implements OJRexImplementorTable
                         new FieldAccess(
                             TypeName.forOJClass(
                                 OJUtil.typeToOJClass(
-                                    agg.argTypes[0]).primitiveWrapper()),
+                                    agg.argTypes[0],
+                                    implementor.getTypeFactory()).
+                                primitiveWrapper()),
                             agg.isMin ? "MAX_VALUE" : "MIN_VALUE")));
             case SqlMinMaxAggFunction.MINMAX_COMPARABLE:
 

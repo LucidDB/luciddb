@@ -274,9 +274,10 @@ public abstract class RelOptUtil
 
     public static RelDataType createTypeFromProjection(
         final RelDataType type,
+        final RelDataTypeFactory typeFactory,
         final List columnNameList)
     {
-        return type.getFactory().createStructType(
+        return typeFactory.createStructType(
             new RelDataTypeFactory.FieldInfo() {
                 public int getFieldCount()
                 {

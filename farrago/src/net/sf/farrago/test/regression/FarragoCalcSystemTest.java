@@ -230,9 +230,13 @@ public class FarragoCalcSystemTest extends FarragoTestCase
                     typeName = SqlTypeName.Boolean;
                 }
 
-                SqlDataType dt =
-                    new SqlDataType(new SqlIdentifier(typeName.name, null),
-                        0,
+                int precision = 0;
+                if (typeName.allowsPrecNoScale()) {
+                    precision = 1;
+                }
+                SqlDataTypeSpec dt =
+                    new SqlDataTypeSpec(new SqlIdentifier(typeName.name, null),
+                        precision,
                         0,
                         null,
                         null);

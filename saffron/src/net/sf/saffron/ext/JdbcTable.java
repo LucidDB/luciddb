@@ -122,7 +122,9 @@ public class JdbcTable extends RelOptAbstractTable
         Variable varRow = implementor.newVariable();
         Variable varEx = implementor.newVariable();
 
-        final TypeName rowTypeName = OJUtil.toTypeName(rowType);
+        final TypeName rowTypeName = OJUtil.toTypeName(
+            rowType,
+            schema.getTypeFactory());
         StatementList whileBody =
             new StatementList(
             // Emp emp = new Emp(resultSet);

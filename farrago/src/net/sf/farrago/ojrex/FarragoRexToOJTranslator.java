@@ -181,7 +181,8 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
 
     public Variable createScratchVariable(RelDataType type)
     {
-        OJClass ojClass = OJUtil.typeToOJClass(type);
+        OJClass ojClass = OJUtil.typeToOJClass(
+            type, getFarragoTypeFactory());
         return createScratchVariable(ojClass, null, null);
     }
 
@@ -222,7 +223,8 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
 
     public boolean isNullablePrimitive(RelDataType type)
     {
-        OJClass ojClass = OJUtil.typeToOJClass(type);
+        OJClass ojClass = OJUtil.typeToOJClass(
+            type, getFarragoTypeFactory());
         return ojNullablePrimitive.isAssignableFrom(ojClass);
     }
 
@@ -242,9 +244,7 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
         RexNode op)
     {
         RelDataType type = op.getType();
-        FarragoTypeFactory factory =
-            (FarragoTypeFactory) type.getFactory();
-        return factory.getValueAccessExpression(type, expr);
+        return getFarragoTypeFactory().getValueAccessExpression(type, expr);
     }
 
     public Expression convertCastOrAssignment(
@@ -255,6 +255,11 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
     {
         return castImplementor.convertCastOrAssignment(this, lhsType, rhsType,
             lhsExp, rhsExp);
+    }
+
+    public FarragoTypeFactory getFarragoTypeFactory()
+    {
+        return (FarragoTypeFactory) getTypeFactory();
     }
 }
 

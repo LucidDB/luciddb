@@ -136,7 +136,7 @@ public class ExpressionReaderRel extends AbstractRelNode implements JavaRel
         super(cluster);
         if (rowType != null) {
             exp = cluster.rexBuilder.makeCast(
-                    rowType.getArrayType(),
+                    cluster.getTypeFactory().createArrayType(rowType, -1),
                     exp);
         }
         this.exp = exp;
@@ -255,7 +255,9 @@ public class ExpressionReaderRel extends AbstractRelNode implements JavaRel
     private CallingConvention chooseConvention(RexNode exp)
     {
         final RelDataType saffronType = exp.getType();
-        OJClass clazz = OJUtil.typeToOJClass(saffronType);
+        OJClass clazz = OJUtil.typeToOJClass(
+            saffronType,
+            getCluster().getTypeFactory());
         if (clazz.getComponentType() != null) {
             return CallingConvention.ARRAY;
         } else if (Util.clazzCollection.isAssignableFrom(clazz)) {

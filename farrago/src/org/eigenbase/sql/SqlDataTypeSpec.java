@@ -34,7 +34,7 @@ import java.nio.charset.Charset;
 
 
 /**
- * Represents a SQL data type in a parse tree.
+ * Represents a SQL data type specification in a parse tree.
  *
  * <p>todo: This should really be a subtype of {@link SqlCall}.
  *
@@ -49,14 +49,14 @@ import java.nio.charset.Charset;
  *     ) AS rec
  * )</code></blockquote>
  *
- * <p>Currently it only supports simple datatypes, like char,varchar, double,
+ * <p>Currently it only supports simple datatypes, like char, varchar, double,
  * with optional precision and scale.
  *
  * @author Lee Schumacher
  * @since Jun 4, 2004
  * @version $Id$
  **/
-public class SqlDataType extends SqlNode
+public class SqlDataTypeSpec extends SqlNode
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -68,7 +68,7 @@ public class SqlDataType extends SqlNode
 
     //~ Constructors ----------------------------------------------------------
 
-    public SqlDataType(
+    public SqlDataTypeSpec(
         final SqlIdentifier typeName,
         int precision,
         int scale,
@@ -171,8 +171,8 @@ public class SqlDataType extends SqlNode
 
     public boolean equalsDeep(SqlNode node)
     {
-        if (node instanceof SqlDataType) {
-            SqlDataType that = (SqlDataType) node;
+        if (node instanceof SqlDataTypeSpec) {
+            SqlDataTypeSpec that = (SqlDataTypeSpec) node;
             return this.typeName.equalsDeep(that.typeName) &&
                 this.precision == that.precision &&
                 this.scale == that.scale &&
@@ -197,17 +197,17 @@ public class SqlDataType extends SqlNode
         SqlTypeName sqlTypeName = SqlTypeName.get(name);
         RelDataTypeFactory typeFactory = validator.typeFactory;
 
-        if ((precision > 0) && (scale > 0)
-                && sqlTypeName.allowsPrecScale(true, true)) {
+        // TODO jvs 13-Dec-2004:  these assertions should be real
+        // validation errors instead; need to share code with DDL
+        if ((precision > 0) && (scale > 0)) {
+            assert(sqlTypeName.allowsPrecScale(true, true));
             type = typeFactory.createSqlType(sqlTypeName, precision, scale);
-        } else if ((precision > 0) && sqlTypeName.allowsPrecNoScale()) {
+        } else if (precision > 0) {
+            assert(sqlTypeName.allowsPrecNoScale());
             type = typeFactory.createSqlType(sqlTypeName, precision);
-        } else if (sqlTypeName.allowsNoPrecNoScale()) {
-            type = typeFactory.createSqlType(sqlTypeName);
         } else {
-            type =
-                RelDataTypeFactoryImpl.createSqlTypeIgnorePrecOrScale(typeFactory,
-                    sqlTypeName);
+            assert(sqlTypeName.allowsNoPrecNoScale());
+            type = typeFactory.createSqlType(sqlTypeName);
         }
 
         if (SqlTypeUtil.inCharFamily(type)) {
@@ -235,4 +235,4 @@ public class SqlDataType extends SqlNode
 }
 
 
-// End SqlDataType.java
+// End SqlDataTypeSpec.java

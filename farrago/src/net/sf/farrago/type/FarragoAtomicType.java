@@ -67,7 +67,7 @@ abstract class FarragoAtomicType extends FarragoType
         this.simpleType = simpleType;
         this.isNullable = isNullable;
         fields[0] =
-            new FarragoTypeFactoryImpl.ExposedFieldImpl("this", 0, this);
+            new RelDataTypeFieldImpl("this", 0, this);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -102,12 +102,6 @@ abstract class FarragoAtomicType extends FarragoType
     public RelDataTypeField [] getFields()
     {
         return fields;
-    }
-
-    // implement RelDataType
-    public RelDataType getArrayType()
-    {
-        throw Util.needToImplement(this);
     }
 
     // implement RelDataType

@@ -99,7 +99,7 @@ public class SqlOperatorTests
         tester.checkScalarExact("case 'a' when 'a' then 1 end", "1");
         tester.checkNull("case 'a' when 'b' then 1 end");
         tester.checkScalarExact(
-            "case when 'a'=cast(null as varchar) then 1 else 2 end", "2");
+            "case when 'a'=cast(null as varchar(1)) then 1 else 2 end", "2");
     }
 
     public static void testJdbcFn(SqlTester tester)
@@ -240,7 +240,7 @@ public class SqlOperatorTests
     {
         tester.checkBoolean("1<>1", Boolean.FALSE);
         tester.checkBoolean("'a'<>'A'", Boolean.TRUE);
-        tester.checkNull("'a'<>cast(null as varchar)");
+        tester.checkNull("'a'<>cast(null as varchar(1))");
     }
 
     public static void testOrOperator(SqlTester tester)
@@ -461,11 +461,11 @@ public class SqlOperatorTests
         tester.checkNull(
             "overlay('ABCdef' placing 'abc' from 1 for cast(null as integer))");
         tester.checkNull(
-            "overlay(cast(null as varchar) placing 'abc' from 1)");
+            "overlay(cast(null as varchar(1)) placing 'abc' from 1)");
 
         //hex and bit strings not yet implemented in calc
         //                    tester.checkNull("overlay(x'abc' placing x'abc' from cast(null as integer))");
-        //                    tester.checkNull("overlay(b'1' placing cast(null as bit) from 1)");
+        //                    tester.checkNull("overlay(b'1' placing cast(null as bit(1)) from 1)");
     }
 
     public static void testPositionFunc(SqlTester tester)
@@ -475,20 +475,20 @@ public class SqlOperatorTests
 
         //bit not yet implemented
         //                    tester.checkScalarExact("position(b'10' in b'0010')", "3");
-        tester.checkNull("position(cast(null as varchar) in '0010')");
-        tester.checkNull("position('a' in cast(null as varchar))");
+        tester.checkNull("position(cast(null as varchar(1)) in '0010')");
+        tester.checkNull("position('a' in cast(null as varchar(1)))");
     }
 
     public static void testCharLengthFunc(SqlTester tester)
     {
         tester.checkScalarExact("char_length('abc')", "3");
-        tester.checkNull("char_length(cast(null as varchar))");
+        tester.checkNull("char_length(cast(null as varchar(1)))");
     }
 
     public static void testCharacterLengthFunc(SqlTester tester)
     {
         tester.checkScalarExact("CHARACTER_LENGTH('abc')", "3");
-        tester.checkNull("CHARACTER_LENGTH(cast(null as varchar))");
+        tester.checkNull("CHARACTER_LENGTH(cast(null as varchar(1)))");
     }
 
     public static void testUpperFunc(SqlTester tester)
@@ -496,7 +496,7 @@ public class SqlOperatorTests
         tester.checkString("upper('a')", "A");
         tester.checkString("upper('A')", "A");
         tester.checkString("upper('1')", "1");
-        tester.checkNull("upper(cast(null as varchar))");
+        tester.checkNull("upper(cast(null as varchar(1)))");
     }
 
     public static void testLowerFunc(SqlTester tester)
@@ -504,7 +504,7 @@ public class SqlOperatorTests
         tester.checkString("lower('A')", "a");
         tester.checkString("lower('a')", "a");
         tester.checkString("lower('1')", "1");
-        tester.checkNull("lower(cast(null as varchar))");
+        tester.checkNull("lower(cast(null as varchar(1)))");
     }
 
     public static void testInitcapFunc(SqlTester tester)
@@ -515,7 +515,7 @@ public class SqlOperatorTests
         //                    tester.checkString("initcap('Aa')", "'Aa'");
         //                    tester.checkString("initcap('1a')", "'1a'");
         //                    tester.checkString("initcap('ab cd Ef 12')", "'Ab Cd Ef 12'");
-        //                    tester.checkNull("initcap(cast(null as varchar))");
+        //                    tester.checkNull("initcap(cast(null as varchar(1)))");
     }
 
     public static void testPowFunc(SqlTester tester)
@@ -555,8 +555,8 @@ public class SqlOperatorTests
     {
         tester.checkNull("nullif(1,1)");
         tester.checkString("nullif('a','b')", "a");
-        tester.checkString("nullif('a',cast(null as varchar))", "a");
-        tester.checkNull("nullif(cast(null as varchar),'a')");
+        tester.checkString("nullif('a',cast(null as varchar(1)))", "a");
+        tester.checkNull("nullif(cast(null as varchar(1)),'a')");
     }
 
     public static void testCoalesceFunc(SqlTester tester)
@@ -645,7 +645,7 @@ public class SqlOperatorTests
 
         //substring reg exp not yet supported
         //                    tester.checkString("substring('foobar' from '%#\"o_b#\"%' for '#')", "oob");
-        tester.checkNull("substring(cast(null as varchar),1,2)");
+        tester.checkNull("substring(cast(null as varchar(1)),1,2)");
     }
 
     public static void testTrimFunc(SqlTester tester)
@@ -654,8 +654,8 @@ public class SqlOperatorTests
         tester.checkString("trim(both 'a' from 'aAa')", "A");
         tester.checkString("trim(leading 'a' from 'aAa')", "Aa");
         tester.checkString("trim(trailing 'a' from 'aAa')", "aA");
-        tester.checkNull("trim(cast(null as varchar) from 'a')");
-        tester.checkNull("trim('a' from cast(null as varchar))");
+        tester.checkNull("trim(cast(null as varchar(1)) from 'a')");
+        tester.checkNull("trim('a' from cast(null as varchar(1)))");
     }
 
     public static void testWindow(SqlTester tester) {

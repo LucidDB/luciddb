@@ -270,7 +270,8 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             PreparedExecution preparedExecution =
                 (PreparedExecution) preparedResult;
             RelDataType rowType = preparedExecution.getRowType();
-            OJClass ojRowClass = OJUtil.typeToOJClass(rowType);
+            OJClass ojRowClass =
+                OJUtil.typeToOJClass(rowType, getFarragoTypeFactory());
             Class rowClass;
             try {
                 String ojRowClassName = ojRowClass.getName();

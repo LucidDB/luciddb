@@ -77,7 +77,9 @@ public class IteratorToJavaConvertlet extends JavaConvertlet
                 Util.castObject(
                     new MethodCall(variable_iter, "next", null),
                     Toolbox.clazzObject,
-                    OJUtil.typeToOJClass(converter.child.getRowType())));
+                    OJUtil.typeToOJClass(
+                        converter.child.getRowType(),
+                        implementor.getTypeFactory())));
         Util.discard(variable_row);
         implementor.generateParentBody(converter, whileBody);
         return null;

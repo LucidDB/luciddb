@@ -465,8 +465,7 @@ public class SqlStdOperatorTable extends SqlOperatorTable
                         return false;
                     }
 
-                    RelDataTypeFactoryImpl.MultisetSqlType mt =
-                        (RelDataTypeFactoryImpl.MultisetSqlType)
+                    MultisetSqlType mt = (MultisetSqlType)
                         validator.deriveType(scope, call.operands[1]);
 
                     RelDataType t0 = validator.deriveType(scope, call.operands[0]);
@@ -737,8 +736,7 @@ public class SqlStdOperatorTable extends SqlOperatorTable
             public RelDataType getType(
                 RelDataTypeFactory typeFactory,
                 RelDataType[] argTypes) {
-                RelDataTypeFactoryImpl.MultisetSqlType t =
-                    (RelDataTypeFactoryImpl.MultisetSqlType) argTypes[0];
+                MultisetSqlType t = (MultisetSqlType) argTypes[0];
                 return t.getComponentType();
             }
 

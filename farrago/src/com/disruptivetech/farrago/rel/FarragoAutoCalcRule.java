@@ -687,7 +687,7 @@ public class FarragoAutoCalcRule extends RelOptRule
         {
             // Generate the actual CalcRel objects that represent the
             // decomposition of the original CalcRel.
-            RelDataTypeFactory typeFactory = calc.getCluster().typeFactory;
+            RelDataTypeFactory typeFactory = calc.getCluster().getTypeFactory();
 
             RelNode resultCalcRel = calc.child;
             for (int i = levelExpressions.length - 1; i >= 0; i--) {

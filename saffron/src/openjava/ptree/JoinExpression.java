@@ -104,7 +104,7 @@ public class JoinExpression extends SetExpression {
             types[i] = OJUtil.ojToType(typeFactory, ojClass);
 		}
         final RelDataType joinType = typeFactory.createJoinType(types);
-        return OJUtil.typeToOJClass(joinType);
+        return OJUtil.typeToOJClass(joinType, typeFactory);
 	}
 }
 

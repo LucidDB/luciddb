@@ -97,7 +97,9 @@ public class HashtableToJavaConvertlet extends JavaConvertlet
                         variable_h,
                         "get",
                         new ExpressionList(variable_key)))));
-        OJClass rowType = OJUtil.typeToOJClass(converter.getRowType());
+        OJClass rowType = OJUtil.typeToOJClass(
+            converter.getRowType(),
+            implementor.getTypeFactory());
         Variable variable_row =
             implementor.bind(
                 converter,

@@ -116,6 +116,7 @@ public interface OJAggImplementor
      * ((saffron.runtime.Holder.int_Holder) accumulator).value</code>.
      */
     Expression implementResult(
+        JavaRelImplementor implementor,
         Expression accumulator,
         AggregateRel.Call call);
 }

@@ -70,7 +70,9 @@ public class JavaOneRowRel extends OneRowRel implements JavaLoopRel,
     public Expression implementSelf(JavaRelImplementor implementor)
     {
         return new AllocationExpression(
-            OJUtil.typeToOJClass(getRowType()),
+            OJUtil.typeToOJClass(
+                getRowType(),
+                implementor.getTypeFactory()),
             new ExpressionList());
     }
 }

@@ -108,7 +108,9 @@ public class JavaNestedLoopJoinRel extends JoinRel implements JavaLoopRel,
                 Expression exp = implementor.makeReference(variable, this);
                 stmtList.add(
                     new VariableDeclaration(
-                        OJUtil.toTypeName(rowType),
+                        OJUtil.toTypeName(
+                            rowType,
+                            implementor.getTypeFactory()),
                         variableCorrel.toString(),
                         exp));
                 implementor.bindCorrel(variable, variableCorrel);
@@ -148,7 +150,7 @@ public class JavaNestedLoopJoinRel extends JoinRel implements JavaLoopRel,
                         i)));
         }
         return new AllocationExpression(
-            OJUtil.toTypeName(rowType),
+            OJUtil.toTypeName(rowType, implementor.getTypeFactory()),
             args);
     }
 }

@@ -88,7 +88,8 @@ public class ResultSetToJavaConvertlet extends JavaConvertlet
         Variable varRow = implementor.newVariable();
         Variable varEx = implementor.newVariable();
 
-        final OJClass clazz = OJUtil.typeToOJClass(converter.getRowType());
+        final OJClass clazz = OJUtil.typeToOJClass(
+            converter.getRowType(), implementor.getTypeFactory());
         StatementList whileBody =
             new StatementList(
             // Emp emp = new Emp();

@@ -34,6 +34,7 @@ import org.eigenbase.sql.SqlNode;
 import org.eigenbase.sql.SqlOperatorTable;
 import org.eigenbase.sql.SqlValidator;
 import org.eigenbase.sql.parser.SqlParser;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.sql2rel.SqlToRelConverter;
 import org.eigenbase.util.Util;
 
@@ -61,7 +62,7 @@ public class SqlToRelConverterTest extends TestCase
             throw Util.newInternal(e); // todo: better handling
         }
         final RelDataTypeFactory typeFactory =
-            new RelDataTypeFactoryImpl();
+            new SqlTypeFactoryImpl();
 
         final SqlValidator.CatalogReader catalogReader =
             createCatalogReader(typeFactory);

@@ -86,6 +86,29 @@ public interface RelDataTypeFactory
     RelDataType createStructType(FieldInfo fieldInfo);
 
     /**
+     * Creates an array type.  Arrays are ordered collections of elements.
+     *
+     * @param elementType type of the elements of the array
+     *
+     * @param maxCardinality maximum array size, or -1 for unlimited
+     *
+     * @return array type
+     */
+    RelDataType createArrayType(
+        RelDataType elementType,
+        long maxCardinality);
+
+    /**
+     * Creates a multiset type.  Multisets are unordered collections
+     * of elements.
+     *
+     * @param elementType type of the elements of the multiset
+     *
+     * @return multiset type
+     */
+    RelDataType createMultisetType(RelDataType elementType);
+    
+    /**
      * Duplicates a type, making a deep copy.  Normally, this is a
      * no-op, since canonical type objects are returned.  However,
      * it is useful when copying a type from one factory to another.
@@ -182,13 +205,6 @@ public interface RelDataTypeFactory
         SqlTypeName typeName,
         int length,
         int scale);
-
-
-    /**
-     * Creates a SQL multiset where each item has a type of type
-     * @param type the type each item in the MULTISET has
-     */
-    RelDataType createMultisetType(RelDataType type);
 
     /**
      * Creates a SQL interval type

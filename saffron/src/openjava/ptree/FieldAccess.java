@@ -193,7 +193,10 @@ public class FieldAccess extends NonLeaf
 
         RelOptTable table = Toolbox.getTable(env, refexpr, null, name);
         if (table != null) {
-            return OJClass.arrayOf(OJUtil.typeToOJClass(table.getRowType()));
+            return OJClass.arrayOf(
+                OJUtil.typeToOJClass(
+                    table.getRowType(),
+                    table.getRelOptSchema().getTypeFactory()));
         }
 
         /* try to consult this class and outer classes */

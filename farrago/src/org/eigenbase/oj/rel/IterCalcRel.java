@@ -30,8 +30,7 @@ import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptPlanWriter;
 import org.eigenbase.relopt.RelOptUtil;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeField;
+import org.eigenbase.reltype.*;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.rex.RexUtil;
 import org.eigenbase.runtime.CalcIterator;
@@ -128,8 +127,11 @@ public class IterCalcRel extends ProjectRelBase implements JavaRel
         RexNode condition,
         RexNode [] exps)
     {
-        OJClass outputRowClass = OJUtil.typeToOJClass(outputRowType);
-        OJClass inputRowClass = OJUtil.typeToOJClass(inputRowType);
+        RelDataTypeFactory typeFactory = implementor.getTypeFactory();
+        OJClass outputRowClass = OJUtil.typeToOJClass(
+            outputRowType, typeFactory);
+        OJClass inputRowClass = OJUtil.typeToOJClass(
+            inputRowType, typeFactory);
 
         Variable varOutputRow = implementor.newVariable();
 

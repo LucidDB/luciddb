@@ -31,6 +31,7 @@ import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.*;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.reltype.*;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.util.Util;
 
@@ -70,7 +71,7 @@ import org.eigenbase.util.Util;
 public class ReflectSchema implements RelOptSchema
 {
     public final RelDataTypeFactoryImpl typeFactory =
-        new RelDataTypeFactoryImpl();
+        new SqlTypeFactoryImpl();
     private final Object target;
 
     /**

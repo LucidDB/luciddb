@@ -231,6 +231,7 @@ class ExtenderAggregation implements Aggregation, OJAggImplementor
 
     // implement Aggregation
     public Expression implementResult(
+        JavaRelImplementor implementor,
         Expression accumulator,
         AggregateRel.Call call)
     {

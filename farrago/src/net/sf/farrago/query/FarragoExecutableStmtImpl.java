@@ -50,7 +50,7 @@ abstract class FarragoExecutableStmtImpl extends FarragoCompoundAllocation
         boolean isDml)
     {
         this.isDml = isDml;
-        this.dynamicParamRowType = forgetTypeFactory(dynamicParamRowType);
+        this.dynamicParamRowType = dynamicParamRowType;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -71,24 +71,6 @@ abstract class FarragoExecutableStmtImpl extends FarragoCompoundAllocation
     public Set getReferencedObjectIds()
     {
         return Collections.EMPTY_SET;
-    }
-
-    protected static RelDataType forgetTypeFactory(RelDataType rowType)
-    {
-        // Need to forget about the type factory that was used during stmt
-        // preparation so that it can be garbage collected.  So, create a
-        // private type factory here and use it to create a copy of the row
-        // type.
-        // TODO:  a better solution would be to serialize this in the form of
-        // ResultSetMetaData.  This would (a) guarantee no references; (b) allow
-        // for an accurate memory usage computation and (c) allow for
-        // persistent caching.  Use RmiJdbc serialization support?
-        FarragoTypeFactory oldFactory =
-            (FarragoTypeFactory) rowType.getFactory();
-        FarragoTypeFactory newFactory =
-            new FarragoTypeFactoryImpl(oldFactory.getRepos());
-        // TODO jvs 9-Dec-2004:  disown factory
-        return newFactory.copyType(rowType);
     }
 }
 

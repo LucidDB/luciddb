@@ -61,7 +61,7 @@ public class SqlBasicVisitor implements SqlVisitor
     {
     }
 
-    public void visit(SqlDataType type)
+    public void visit(SqlDataTypeSpec type)
     {
     }
 

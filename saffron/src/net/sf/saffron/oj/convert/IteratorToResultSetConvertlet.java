@@ -54,7 +54,8 @@ public class IteratorToResultSetConvertlet extends JavaConvertlet
         Object o =
             implementor.visitJavaChild(converter, 0, (JavaRel) converter.child);
         final RelDataType rowType = converter.getRowType();
-        OJClass rowClass = OJUtil.typeToOJClass(rowType);
+        OJClass rowClass = OJUtil.typeToOJClass(
+            rowType, implementor.getTypeFactory());
         Expression getter;
         if (true) {
             getter =

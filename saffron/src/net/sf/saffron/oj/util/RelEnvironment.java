@@ -71,14 +71,19 @@ public class RelEnvironment extends Environment
             RelNode correl = rel.getQuery().lookupCorrel(name);
             if (correl != null) {
                 final RelDataType rowType = correl.getRowType();
-                return new BasicVariableInfo(OJUtil.typeToOJClass(rowType));
+                return new BasicVariableInfo(
+                    OJUtil.typeToOJClass(
+                        rowType,
+                        rel.getCluster().getTypeFactory()));
             }
         }
         int i = RelOptUtil.getInputOrdinal(name);
         if (i >= 0) {
             RelNode input = rel.getInput(i);
             RelDataType rowType = input.getRowType();
-            final OJClass rowClass = OJUtil.typeToOJClass(rowType);
+            final OJClass rowClass = OJUtil.typeToOJClass(
+                rowType,
+                rel.getCluster().getTypeFactory());
             return new BasicVariableInfo(rowClass);
         } else {
             return parent.lookupBind(name);

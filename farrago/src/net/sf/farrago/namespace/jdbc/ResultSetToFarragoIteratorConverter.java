@@ -111,7 +111,9 @@ class ResultSetToFarragoIteratorConverter extends ConverterRel
                 varResultSet);
 
         RelDataType rowType = getRowType();
-        OJClass rowClass = OJUtil.typeToOJClass(rowType);
+        FarragoTypeFactory factory =
+            farragoImplementor.getPreparingStmt().getFarragoTypeFactory();
+        OJClass rowClass = OJUtil.typeToOJClass(rowType,factory);
 
         JavaRexBuilder javaRexBuilder =
             (JavaRexBuilder) getCluster().rexBuilder;
@@ -125,8 +127,6 @@ class ResultSetToFarragoIteratorConverter extends ConverterRel
             ExpressionList colPosExpList =
                 new ExpressionList(Literal.makeLiteral(i + 1));
             Expression rhsExp;
-            FarragoTypeFactory factory =
-                (FarragoTypeFactory) type.getFactory();
             if ((SqlTypeUtil.isJavaPrimitive(type)) && !type.isNullable()) {
                 // TODO:  make this official:  java.sql and java.nio
                 // use the same accessor names, happily

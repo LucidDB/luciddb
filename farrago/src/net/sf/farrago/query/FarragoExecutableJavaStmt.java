@@ -85,7 +85,7 @@ class FarragoExecutableJavaStmt extends FarragoExecutableStmtImpl
         this.xmiFennelPlan = xmiFennelPlan;
         this.referencedObjectIds = referencedObjectIds;
 
-        rowType = forgetTypeFactory(preparedRowType);
+        rowType = preparedRowType;
     }
 
     //~ Methods ---------------------------------------------------------------

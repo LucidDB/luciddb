@@ -138,17 +138,20 @@ public abstract class OJUtil
      *
      * @pre threadDeclarers.get() != null
      */
-    public static TypeName toTypeName(RelDataType rowType)
+    public static TypeName toTypeName(
+        RelDataType rowType,
+        RelDataTypeFactory typeFactory)
     {
-        return TypeName.forOJClass(typeToOJClass(rowType));
+        return TypeName.forOJClass(typeToOJClass(rowType, typeFactory));
     }
 
     public static OJClass typeToOJClass(
         OJClass declarer,
-        RelDataType rowType)
+        RelDataType rowType, 
+        RelDataTypeFactory typeFactory)
     {
-        OJTypeFactory typeFactory = (OJTypeFactory) rowType.getFactory();
-        return typeFactory.toOJClass(declarer, rowType);
+        OJTypeFactory ojTypeFactory = (OJTypeFactory) typeFactory;
+        return ojTypeFactory.toOJClass(declarer, rowType);
     }
 
     /**
@@ -156,13 +159,15 @@ public abstract class OJUtil
      *
      * @pre threadDeclarers.get() != null
      */
-    public static OJClass typeToOJClass(RelDataType rowType)
+    public static OJClass typeToOJClass(
+        RelDataType rowType,
+        RelDataTypeFactory typeFactory)
     {
         OJClass declarer = (OJClass) threadDeclarers.get();
         if (declarer == null) {
             assert (false) : "threadDeclarers.get() != null";
         }
-        return typeToOJClass(declarer, rowType);
+        return typeToOJClass(declarer, rowType, typeFactory);
     }
 
     public static Object literalValue(Literal literal)

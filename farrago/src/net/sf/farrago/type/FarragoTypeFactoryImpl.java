@@ -50,9 +50,6 @@ import org.eigenbase.util.*;
 
 import java.util.List;
 
-// REVIEW:  should FarragoTypeFactoryImpl even have to subclass
-// OJTypeFactoryImpl?
-
 /**
  * FarragoTypeFactoryImpl is the Farrago-specific implementation of the
  * RelDataTypeFactory interface.
@@ -656,15 +653,6 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         throw Util.needToImplement("Need to implement " + type);
     }
 
-    private FarragoType createTypeForPrimitive(
-        Class boxingClass,
-        boolean isNullable)
-    {
-        return createTypeForPrimitiveByName(
-            ReflectUtil.getUnqualifiedClassName(boxingClass),
-            isNullable);
-    }
-
     private FarragoType createTypeForPrimitiveByName(
         String boxingClassName,
         boolean isNullable)
@@ -696,8 +684,8 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         if (type instanceof FarragoType) {
             FarragoType farragoType = (FarragoType) type;
             return farragoType.getOjClass(declarer);
-        } else if (type instanceof UnitlessSqlType) {
-            UnitlessSqlType sqlType = (UnitlessSqlType) type;
+        } else if (type instanceof BasicSqlType) {
+            BasicSqlType sqlType = (BasicSqlType) type;
             assert (sqlType.getSqlTypeName().equals(SqlTypeName.Null));
             return OJSystem.NULLTYPE;
         } else {
@@ -726,7 +714,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     // disabled override OJTypeFactoryImpl
     protected OJClass disabled_createOJClassForRecordType(
         OJClass declarer,
-        RecordType recordType)
+        RelRecordType recordType)
     {
         List fieldList = new ArrayList();
         if (flattenFields(
@@ -741,7 +729,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
                 // FIXME jvs 27-May-2004:  uniquify
                 fieldNames[i] = field.getName();
             }
-            recordType = (RecordType) createStructType(types, fieldNames);
+            recordType = (RelRecordType) createStructType(types, fieldNames);
         }
         return super.createOJClassForRecordType(declarer, recordType);
     }
@@ -762,107 +750,6 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             }
         }
         return nested;
-    }
-
-    // override RelDataTypeFactoryImpl
-    public RelDataType leastRestrictive(RelDataType [] types)
-    {
-        assert (types.length > 0);
-        if (types[0].isStruct()) {
-            return super.leastRestrictive(types);
-        }
-        if (!(types[0] instanceof FarragoAtomicType)) {
-            return super.leastRestrictive(types);
-        }
-        FarragoAtomicType resultType = (FarragoAtomicType) types[0];
-        boolean anyNullable = resultType.isNullable();
-
-        for (int i = 1; i < types.length; ++i) {
-            if (!(types[i] instanceof FarragoAtomicType)) {
-                return super.leastRestrictive(types);
-            }
-
-            RelDataTypeFamily resultFamily = resultType.getFamily();
-            FarragoAtomicType type = (FarragoAtomicType) types[i];
-            RelDataTypeFamily family = type.getFamily();
-
-            if (type.isNullable()) {
-                anyNullable = true;
-            }
-
-            if ((family == SqlTypeFamily.Character)
-                    || (family == SqlTypeFamily.Binary)) {
-                // TODO:  character set, collation
-                if (resultFamily != family) {
-                    return null;
-                }
-                FarragoPrecisionType type1 = (FarragoPrecisionType) resultType;
-                FarragoPrecisionType type2 = (FarragoPrecisionType) type;
-                int precision =
-                    Math.max(
-                        type1.getPrecision(),
-                        type2.getPrecision());
-
-                // If either type is LOB, then result is LOB with no precision.
-                // Otherwise, if either is variable width, result is variable
-                // width.  Otherwise, result is fixed width.
-                RelDataType relDataType;
-                if (SqlTypeUtil.isLob(type1)) {
-                    relDataType = createSqlType(getSqlTypeName(type1));
-                } else if (SqlTypeUtil.isLob(type2)) {
-                    relDataType = createSqlType(getSqlTypeName(type2));
-                } else if (SqlTypeUtil.isBoundedVariableWidth(type1)) {
-                    relDataType =
-                        createSqlType(
-                            getSqlTypeName(type1),
-                            precision);
-                } else {
-                    // this catch-all case covers type2 variable, and both fixed
-                    relDataType =
-                        createSqlType(
-                            getSqlTypeName(type2),
-                            precision);
-                }
-                resultType = (FarragoAtomicType) relDataType;
-            } else if (SqlTypeUtil.isExactNumeric(type)) {
-                if (SqlTypeUtil.isExactNumeric(resultType)) {
-                    if (!type.equals(resultType)) {
-                        if (!type.takesPrecision() && !type.takesScale()
-                                && !resultType.takesPrecision()
-                                && !resultType.takesScale()) {
-                            // use the bigger primitive
-                            if (type.getPrecision() > resultType.getPrecision()) {
-                                resultType = type;
-                            }
-                        } else {
-                            // TODO:  the real thing for numerics
-                            resultType = createDoublePrecisionType();
-                        }
-                    }
-                } else if (SqlTypeUtil.isApproximateNumeric(resultType)) {
-                    // already approximate; promote to double just in case
-                    // TODO:  only promote when required
-                    resultType = createDoublePrecisionType();
-                } else {
-                    return null;
-                }
-            } else if (SqlTypeUtil.isApproximateNumeric(type)) {
-                if (!(type.equals(resultType))) {
-                    resultType = createDoublePrecisionType();
-                }
-            } else {
-                if (family != resultFamily) {
-                    return null;
-                }
-
-                // TODO:  datetime precision details
-            }
-        }
-        if (anyNullable) {
-            return createTypeWithNullability(resultType, true);
-        } else {
-            return resultType;
-        }
     }
 
     // implement FarragoTypeFactory
@@ -897,16 +784,6 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         return ((FarragoAtomicType) type).getSimpleType();
     }
     
-    private SqlTypeName getSqlTypeName(FarragoAtomicType type)
-    {
-        return SqlTypeName.get(type.getSimpleType().getName());
-    }
-
-    private FarragoAtomicType createDoublePrecisionType()
-    {
-        return (FarragoAtomicType) createTypeForPrimitive(Double.class, false);
-    }
-
     private FarragoAtomicType getPrototype(CwmColumn column)
     {
         CwmClassifier classifier = column.getType();
@@ -1028,28 +905,6 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             return null;
         }
         return atomicType.getClassForPrimitive();
-    }
-    
-    //~ Inner Classes ---------------------------------------------------------
-
-    /**
-     * Make FieldImpl accessible to FarragoTypeImpl.
-     */
-    static class ExposedFieldImpl extends FieldImpl
-    {
-        /**
-         * Creates a new ExposedFieldImpl object.
-         *
-         * @param name .
-         * @param type .
-         */
-        ExposedFieldImpl(
-            String name,
-            int index,
-            RelDataType type)
-        {
-            super(name, index, type);
-        }
     }
 }
 

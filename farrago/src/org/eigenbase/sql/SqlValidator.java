@@ -689,10 +689,10 @@ public class SqlValidator
             return unknownType;
         }
 
-        // SqlDataType may occur in an expression as the 2nd arg to the CAST
+        // SqlDataTypeSpec may occur in an expression as the 2nd arg to the CAST
         // function.
-        if (operand instanceof SqlDataType) {
-            SqlDataType dataType = (SqlDataType) operand;
+        if (operand instanceof SqlDataTypeSpec) {
+            SqlDataTypeSpec dataType = (SqlDataTypeSpec) operand;
             return dataType.deriveType(this);
         }
 
@@ -1971,7 +1971,7 @@ public class SqlValidator
     /**
      * Validates a data type expression.
      */
-    public void validateDataType(SqlDataType dataType)
+    public void validateDataType(SqlDataTypeSpec dataType)
     {
     }
 
@@ -2459,7 +2459,7 @@ public class SqlValidator
         {
             return expr instanceof SqlLiteral ||
                 expr instanceof SqlDynamicParam ||
-                expr instanceof SqlDataType;
+                expr instanceof SqlDataTypeSpec;
         }
     }
 

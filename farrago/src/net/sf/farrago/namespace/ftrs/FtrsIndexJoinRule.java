@@ -147,6 +147,9 @@ class FtrsIndexJoinRule extends RelOptRule
         RelDataType rightType =
             scanRel.getRowType().getFields()[rightOrdinal].getType();
 
+        FarragoTypeFactory typeFactory =
+            scanRel.getPreparingStmt().getFarragoTypeFactory();
+
         // decide what to do with nulls
         RelNode nullFilterRel;
         if (isOuter) {
@@ -154,7 +157,7 @@ class FtrsIndexJoinRule extends RelOptRule
             // handle the null semantics
             nullFilterRel = leftRel;
             rightType =
-                rightType.getFactory().createTypeWithNullability(
+                typeFactory.createTypeWithNullability(
                     rightType,
                     leftType.isNullable());
         } else {
@@ -171,7 +174,7 @@ class FtrsIndexJoinRule extends RelOptRule
             castRel = nullFilterRel;
         } else {
             RelDataType castRowType =
-                leftType.getFactory().createJoinType(
+                typeFactory.createJoinType(
                     new RelDataType [] { leftRel.getRowType(), rightType });
             RexNode [] castExps = new RexNode[leftFieldCount + 1];
             String [] fieldNames = new String[leftFieldCount + 1];

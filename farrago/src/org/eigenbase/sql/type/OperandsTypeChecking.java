@@ -1312,7 +1312,7 @@ public abstract class OperandsTypeChecking
      * types must be
      * [nullable] Multiset, [nullable] mutliset
      * and the two types must have the same element type
-     * @see {@link RelDataTypeFactoryImpl.MultisetSqlType#getComponentType}
+     * @see {@link MultisetSqlType#getComponentType}
      */
     public static final OperandsTypeChecking typeNullableMultisetMultiset =
         new OperandsTypeChecking() {

@@ -33,8 +33,7 @@ import org.eigenbase.oj.util.OJUtil;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.relopt.RelImplementor;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeField;
+import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.trace.EigenbaseTrace;
 import org.eigenbase.util.SaffronProperties;
@@ -119,6 +118,11 @@ public class JavaRelImplementor implements RelImplementor
         return rexBuilder;
     }
 
+    public RelDataTypeFactory getTypeFactory()
+    {
+        return rexBuilder.getTypeFactory();
+    }
+
     /**
      * Record the fact that instances of <code>rel</code> are available in
      * <code>variable</code>.
@@ -153,7 +157,7 @@ public class JavaRelImplementor implements RelImplementor
         Variable variable = newVariable();
         LazyBind bind =
             new LazyBind(variable, statementList,
-                rel.getRowType(), thunk);
+                getTypeFactory(), rel.getRowType(), thunk);
         bind(rel, bind);
         return bind.getVariable();
     }
@@ -290,6 +294,7 @@ public class JavaRelImplementor implements RelImplementor
                 new LazyBind(
                     newVariable(),
                     statementList,
+                    getTypeFactory(), 
                     rel.getRowType(),
                     new VariableInitializerThunk() {
                         public VariableInitializer getInitializer()
@@ -760,7 +765,7 @@ public class JavaRelImplementor implements RelImplementor
     {
         OJAggImplementor aggImplementor =
             implementorTable.get(call.aggregation);
-        return aggImplementor.implementResult(accumulator, call);
+        return aggImplementor.implementResult(this, accumulator, call);
     }
 
     //~ Inner Interfaces ------------------------------------------------------
@@ -881,6 +886,7 @@ public class JavaRelImplementor implements RelImplementor
 
     private static class LazyBind implements Bind
     {
+        final RelDataTypeFactory typeFactory;
         final RelDataType type;
         final Statement after;
         StatementList statementList;
@@ -891,6 +897,7 @@ public class JavaRelImplementor implements RelImplementor
         LazyBind(
             Variable variable,
             StatementList statementList,
+            RelDataTypeFactory typeFactory, 
             RelDataType type,
             VariableInitializerThunk thunk)
         {
@@ -900,6 +907,7 @@ public class JavaRelImplementor implements RelImplementor
                 (statementList.size() == 0) ? null
                 : statementList.get(statementList.size() - 1);
             this.type = type;
+            this.typeFactory = typeFactory;
             this.thunk = thunk;
         }
 
@@ -910,7 +918,7 @@ public class JavaRelImplementor implements RelImplementor
                 int position = find(statementList, after);
                 VariableDeclaration varDecl =
                     new VariableDeclaration(
-                        OJUtil.toTypeName(type),
+                        OJUtil.toTypeName(type, typeFactory),
                         variable.toString(),
                         null);
                 statementList.insertElementAt(varDecl, position);

@@ -60,7 +60,6 @@ public class RexTransformerTest extends TestCase
     protected void setUp()
         throws Exception
     {
-        //        typeFactory = new RelDataTypeFactoryImpl();
         typeFactory = new OJTypeFactoryImpl();
         rexBuilder = new JavaRexBuilder(typeFactory);
         boolRelDataType = typeFactory.createSqlType(SqlTypeName.Boolean);

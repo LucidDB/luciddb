@@ -25,6 +25,7 @@ import javax.jmi.reflect.*;
 
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
+import net.sf.farrago.query.*;
 
 import openjava.mop.*;
 import openjava.ptree.*;
@@ -53,7 +54,7 @@ class MedMdrJoinRelImplementor
 {
     //~ Instance fields -------------------------------------------------------
 
-    private JavaRelImplementor implementor;
+    private FarragoRelImplementor implementor;
     private StatementList stmtList;
     private MedMdrJoinRel joinRel;
     private RelNode leftRel;
@@ -90,7 +91,7 @@ class MedMdrJoinRelImplementor
         // NOTE:  if you actually want to understand this monster,
         // the best approach is to look at the code it generates
         // (particularly methods getNextRightIterator and calcJoinRow)
-        this.implementor = implementor;
+        this.implementor = (FarragoRelImplementor) implementor;
 
         leftRel = joinRel.getLeft();
         rightRel = (MedMdrClassExtentRel) joinRel.getRight();
@@ -99,7 +100,9 @@ class MedMdrJoinRelImplementor
             implementor.visitJavaChild(joinRel, 0, (JavaRel) leftRel);
 
         outputRowType = joinRel.getRowType();
-        outputRowClass = OJUtil.typeToOJClass(outputRowType);
+        outputRowClass = OJUtil.typeToOJClass(
+            outputRowType,
+            implementor.getTypeFactory());
 
         // first, define class data members
         memberList = new MemberDeclarationList();
@@ -141,7 +144,9 @@ class MedMdrJoinRelImplementor
 
         leftRowType = leftRel.getRowType();
         leftFields = leftRowType.getFields();
-        leftRowClass = OJUtil.typeToOJClass(leftRowType);
+        leftRowClass = OJUtil.typeToOJClass(
+            leftRowType, 
+            implementor.getTypeFactory());
         varLeftRow = implementor.newVariable();
         FieldDeclaration declLeftRow =
             new FieldDeclaration(new ModifierList(ModifierList.PRIVATE),

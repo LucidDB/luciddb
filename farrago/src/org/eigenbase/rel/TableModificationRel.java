@@ -133,6 +133,7 @@ public class TableModificationRel extends SingleRel
                         table.getRowType(),
                         RelOptUtil.createTypeFromProjection(
                             table.getRowType(),
+                            getCluster().typeFactory, 
                             updateColumnList)
                     });
         } else {

@@ -50,7 +50,10 @@ public class TableReference extends FieldAccess
         if (getQualifier() != null) {
             RelOptTable table = Toolbox.getTable(
                 env,getReferenceExpr(),getQualifier(),getName());
-            return OJClass.arrayOf(OJUtil.typeToOJClass(table.getRowType()));
+            return OJClass.arrayOf(
+                OJUtil.typeToOJClass(
+                    table.getRowType(),
+                    table.getRelOptSchema().getTypeFactory()));
         } else {
             return super.getType(env);
         }

@@ -477,7 +477,7 @@ public class Rex2CalcPlanTest extends FarragoTestCase
     public void testCastNull() {
         String sql =
             "SELECT " +
-            "cast(null as varchar)" +
+            "cast(null as varchar(1))" +
             ", cast(null as integer)" +
             " FROM emps WHERE empno > 10";
        check(sql, false,false);

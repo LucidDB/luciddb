@@ -32,6 +32,7 @@ import org.eigenbase.sql.SqlOperatorTable;
 import org.eigenbase.sql.SqlValidator;
 import org.eigenbase.sql.parser.ParseException;
 import org.eigenbase.sql.parser.SqlParser;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.util.EnumeratedValues;
 
 import java.nio.charset.Charset;
@@ -217,7 +218,7 @@ public class SqlValidatorTestCase extends TestCase
             Pattern.compile("At line (.*), column (.*)");
 
         public SqlValidator getValidator() {
-            final RelDataTypeFactory typeFactory = new RelDataTypeFactoryImpl();
+            final RelDataTypeFactory typeFactory = new SqlTypeFactoryImpl();
             return new SqlValidator(
                 SqlOperatorTable.instance(),
                 new MockCatalogReader(typeFactory),

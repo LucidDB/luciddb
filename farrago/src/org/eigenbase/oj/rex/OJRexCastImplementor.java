@@ -45,7 +45,7 @@ public class OJRexCastImplementor implements OJRexImplementor
         Expression [] operands)
     {
         OJTypeFactory typeFactory =
-            (OJTypeFactory) call.getType().getFactory();
+            (OJTypeFactory) translator.getTypeFactory();
         OJClass type = typeFactory.toOJClass(
                 null,
                 call.getType());

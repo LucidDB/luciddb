@@ -64,7 +64,8 @@ public class IterOneRowRel extends OneRowRel implements JavaRel
     public ParseTree implement(JavaRelImplementor implementor)
     {
         final RelDataType outputRowType = getRowType();
-        OJClass outputRowClass = OJUtil.typeToOJClass(outputRowType);
+        OJClass outputRowClass = OJUtil.typeToOJClass(
+            outputRowType, implementor.getTypeFactory());
 
         Expression newRowExp =
             new AllocationExpression(

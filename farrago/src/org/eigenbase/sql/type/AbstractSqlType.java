@@ -2,6 +2,7 @@
 // $Id$
 // Package org.eigenbase is a class library of database components.
 // Copyright (C) 2004-2004 Disruptive Tech
+// Copyright (C) 2004-2004 John V. Sichi.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -17,27 +18,43 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-package org.eigenbase.sql.util;
+package org.eigenbase.sql.type;
 
-import org.eigenbase.sql.*;
+import org.eigenbase.reltype.*;
 
 /**
- * Visitor class, follows the
- * {@link org.eigenbase.util.Glossary#VisitorPattern visitor pattern}.
+ * Abstract base class for SQL implementations of {@link RelDataType}.
  *
- * @see org.eigenbase.sql.util.SqlBasicVisitor
- *
- * @author jhyde
+ * @author John V. Sichi
  * @version $Id$
  */
-public interface SqlVisitor {
-    void visit(SqlLiteral literal);
-    void visit(SqlCall call);
-    void visit(SqlNodeList nodeList);
-    void visit(SqlIdentifier id);
-    void visit(SqlDataTypeSpec type);
-    void visit(SqlDynamicParam param);
-    void visit(SqlIntervalQualifier intervalQualifier);
+public class AbstractSqlType
+    extends RelDataTypeImpl implements Cloneable
+{
+    protected final SqlTypeName typeName;
+    protected boolean isNullable;
+        
+    protected AbstractSqlType(SqlTypeName typeName, boolean isNullable)
+    {
+        super(null);
+        this.typeName = typeName;
+        this.isNullable = isNullable;
+    }
+        
+    public SqlTypeName getSqlTypeName()
+    {
+        return typeName;
+    }
+
+    public boolean isNullable()
+    {
+        return isNullable;
+    }
+        
+    public RelDataTypeFamily getFamily()
+    {
+        return SqlTypeFamily.getFamilyForSqlType(typeName);
+    }
 }
 
-// End SqlVisitor.java
+// End AbstractSqlType.java

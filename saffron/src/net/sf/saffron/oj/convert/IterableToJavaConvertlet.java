@@ -79,7 +79,9 @@ public class IterableToJavaConvertlet extends JavaConvertlet
             new WhileStatement(
                 new MethodCall(variable_iter, "hasNext", null),
                 whileBody));
-        OJClass rowType = OJUtil.typeToOJClass(converter.child.getRowType());
+        OJClass rowType = OJUtil.typeToOJClass(
+            converter.child.getRowType(),
+            implementor.getTypeFactory());
         Variable variable_row =
             implementor.bind(
                 converter,

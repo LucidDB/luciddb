@@ -93,6 +93,11 @@ public class RelOptCluster
     {
         return planner;
     }
+
+    public RelDataTypeFactory getTypeFactory()
+    {
+        return typeFactory;
+    }
 }
 
 

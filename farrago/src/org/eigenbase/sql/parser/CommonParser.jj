@@ -1920,7 +1920,7 @@ int IntLiteral() :
 }
 
 // Type name with optional scale and precision
-SqlDataType DataType() :
+SqlDataTypeSpec DataType() :
 {
     SqlIdentifier typeName;
     int scale = 0;
@@ -1948,7 +1948,8 @@ SqlDataType DataType() :
         )?
     )
     {
-        return new SqlDataType(typeName, precision, scale, charSetName, pos);
+        return new SqlDataTypeSpec(
+            typeName, precision, scale, charSetName, pos);
     }
 }
 
@@ -2004,7 +2005,7 @@ SqlNode FunctionCall() :
     ParserPosition starPos;
     ParserPosition namePos;
     ParserPosition overPos = null;
-    SqlDataType dt;
+    SqlDataTypeSpec dt;
     boolean over = false;
     SqlCall function = null;
 }

@@ -100,8 +100,12 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
         FennelRel fennelRel = (FennelRel) child;
         FarragoRepos repos = fennelRel.getPreparingStmt().getRepos();
 
+        FarragoTypeFactory factory =
+            fennelRel.getPreparingStmt().getFarragoTypeFactory();
+        
         final RelDataType rowType = getRowType();
-        OJClass rowClass = OJUtil.typeToOJClass(rowType);
+        OJClass rowClass = OJUtil.typeToOJClass(
+            rowType, factory);
 
         FennelRelImplementor farragoRelImplementor =
             (FennelRelImplementor) implementor;
@@ -178,8 +182,6 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
             }
             RelDataTypeField field = fields[i];
             RelDataType type = field.getType();
-            FarragoTypeFactory factory =
-                fennelRel.getPreparingStmt().getFarragoTypeFactory();
             Class primitiveClass = factory.getClassForPrimitive(type);
             if (primitiveClass != null) {
                 Method method =

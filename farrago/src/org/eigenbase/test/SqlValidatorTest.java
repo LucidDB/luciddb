@@ -669,18 +669,18 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExpType("cast(null as float)", "FLOAT");
         checkExpType("cast(null as real)", "REAL");
         checkExpType("cast(null as double)", "DOUBLE");
-        checkExpType("cast(null as bit)", "BIT(0)");
+        checkExpType("cast(null as bit(1))", "BIT(1)");
         checkExpType("cast(null as boolean)", "BOOLEAN");
-        checkExpType("cast(null as varchar)", "VARCHAR(0)");
-        checkExpType("cast(null as char)", "CHAR(0)");
-        checkExpType("cast(null as binary)", "BINARY(0)");
+        checkExpType("cast(null as varchar(1))", "VARCHAR(1)");
+        checkExpType("cast(null as char(1))", "CHAR(1)");
+        checkExpType("cast(null as binary(1))", "BINARY(1)");
         checkExpType("cast(null as date)", "DATE");
         checkExpType("cast(null as time)", "TIME");
         checkExpType("cast(null as timestamp)", "TIMESTAMP");
         checkExpType("cast(null as decimal)", "DECIMAL");
-        checkExpType("cast(null as varbinary)", "VARBINARY(0)");
+        checkExpType("cast(null as varbinary(1))", "VARBINARY(1)");
 
-        checkExp("cast(null as integer), cast(null as char)");
+        checkExp("cast(null as integer), cast(null as char(1))");
     }
 
     public void testCastTypeToType() {
@@ -703,9 +703,9 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExpType("cast(1.0 as double)", "DOUBLE");
         checkExpType("cast(1 as double)", "DOUBLE");
         checkExpType("cast(null as boolean)", "BOOLEAN");
-        checkExpType("cast('abc' as varchar)", "VARCHAR(0)"); //return type precision is not correct
-        checkExpType("cast('abc' as char)", "CHAR(0)"); //return type precision is not correct
-        checkExpType("cast(x'ff' as binary)", "BINARY(0)");
+        checkExpType("cast('abc' as varchar(1))", "VARCHAR(1)");
+        checkExpType("cast('abc' as char(1))", "CHAR(1)");
+        checkExpType("cast(x'ff' as binary(1))", "BINARY(1)");
     }
 
     public void testCastFails() {

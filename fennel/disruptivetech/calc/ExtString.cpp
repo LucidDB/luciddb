@@ -327,7 +327,6 @@ strToLowerA(RegisterRef<char*>* result,
 {
     assert(StandardTypeDescriptor::isTextArray(str->type()));
     assert(str->type() == result->type());
-    assert(str->type() == STANDARD_TYPE_CHAR ? (result->storage() == str->storage()) : true);
 
     // tolower to a null results in null
     if (result->isNull() || str->isNull()) {
@@ -335,6 +334,7 @@ strToLowerA(RegisterRef<char*>* result,
         result->length(0);
     } else {
         // fixed width case: length should be harmlessly reset to same value
+        assert(str->type() == STANDARD_TYPE_CHAR ? (result->storage() == str->storage()) : true);
         result->length(SqlStrAlterCase
                        <1,1,AlterCaseLower>
                        (result->pointer(),
@@ -350,13 +350,13 @@ strToUpperA(RegisterRef<char*>* result,
 {
     assert(StandardTypeDescriptor::isTextArray(str->type()));
     assert(str->type() == result->type());
-    assert(str->type() == STANDARD_TYPE_CHAR ? (result->storage() == str->storage()) : true);
 
     // toupper to a null results in null
     if (result->isNull() || str->isNull()) {
         result->toNull();
         result->length(0);
     } else {
+        assert(str->type() == STANDARD_TYPE_CHAR ? (result->storage() == str->storage()) : true);
         // fixed width case: length should be harmlessly reset to same value
         result->length(SqlStrAlterCase
                        <1,1,AlterCaseUpper>

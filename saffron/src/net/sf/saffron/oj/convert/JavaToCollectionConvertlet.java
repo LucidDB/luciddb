@@ -127,7 +127,9 @@ public class JavaToCollectionConvertlet extends JavaConvertlet
                     "add",
                     new ExpressionList(
                         OJUtil.box(
-                            OJUtil.typeToOJClass(converter.child.getRowType()),
+                            OJUtil.typeToOJClass(
+                                converter.child.getRowType(),
+                                implementor.getTypeFactory()),
                             implementor.translateInput(javaConverter, 0))))));
     }
 }

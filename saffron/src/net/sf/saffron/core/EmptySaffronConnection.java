@@ -21,6 +21,7 @@ package net.sf.saffron.core;
 
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
+import org.eigenbase.sql.type.*;
 
 
 /**
@@ -54,7 +55,7 @@ public class EmptySaffronConnection implements RelOptConnection
     private static class EmptyRelOptSchema implements RelOptSchema
     {
         private final RelDataTypeFactoryImpl typeFactory =
-            new RelDataTypeFactoryImpl();
+            new SqlTypeFactoryImpl();
 
         public RelOptTable getTableForMember(String [] names)
         {

@@ -46,8 +46,6 @@ public interface RelDataType
 {
     //~ Methods ---------------------------------------------------------------
 
-    RelDataTypeFactory getFactory();
-
     RelDataTypeField getField(String fieldName);
 
     /**
@@ -81,11 +79,6 @@ public interface RelDataType
      * Returns the component type if type is a collection, otherwise null.
      */
     RelDataType getComponentType();
-
-    /**
-     * Returns an array type with this type as the component.
-     */
-    RelDataType getArrayType();
 
     // REVIEW jvs 1-Mar-2004:  The implementations for this method
     // are asymmetric, e.g. INT.isAssignableFrom(SMALLINT) but

@@ -233,17 +233,9 @@ public class RexToCalcTranslator implements RexVisitor
         if (typeDigest.startsWith("BINARY")) {
             calcType = CalcProgramBuilder.OpType.Binary;
         }
-        RelDataType lookupThis = getSimilarSqlType(relDataType);
         for (int i = 0; i < knownTypes.length; i++) {
             TypePair knownType = knownTypes[i];
             if (SqlTypeUtil.sameNamedType(relDataType, knownType.relDataType)) {
-                calcType = knownType.opType;
-            }
-
-            if ((lookupThis != null)
-                && SqlTypeUtil.sameNamedType(
-                    lookupThis, knownType.relDataType))
-            {
                 calcType = knownType.opType;
             }
         }
@@ -268,23 +260,6 @@ public class RexToCalcTranslator implements RexVisitor
         }
 
         return new CalcProgramBuilder.RegisterDescriptor(calcType, bytes);
-    }
-
-    /**
-     * If type is a SQL type, returns a broader SQL type, otherwise returns
-     * null.
-     */
-    private RelDataType getSimilarSqlType(RelDataType type)
-    {
-        if (!RelDataTypeFactoryImpl.isJavaType(type)) {
-            return null;
-        }
-        SqlTypeName typeName =
-            RelDataTypeFactoryImpl.JavaToSqlTypeConversionRules.instance()
-                .lookup(type);
-        return RelDataTypeFactoryImpl.createSqlTypeIgnorePrecOrScale(
-            rexBuilder.getTypeFactory(),
-            typeName);
     }
 
     private Object getKey(RexNode node)

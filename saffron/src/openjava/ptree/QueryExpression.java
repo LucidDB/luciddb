@@ -126,7 +126,7 @@ public class QueryExpression extends SetExpression {
                     }
                 }
         );
-        return OJUtil.typeToOJClass(projectType);
+        return OJUtil.typeToOJClass(projectType, typeFactory);
     }
 }
 

@@ -64,7 +64,9 @@ public class JavaToVectorConvertlet extends JavaConvertlet
                     "addElement",
                     new ExpressionList(
                         OJUtil.box(
-                            OJUtil.typeToOJClass(converter.child.getRowType()),
+                            OJUtil.typeToOJClass(
+                                converter.child.getRowType(),
+                                implementor.getTypeFactory()),
                             implementor.translateInput(javaConverter, 0))))));
     }
 

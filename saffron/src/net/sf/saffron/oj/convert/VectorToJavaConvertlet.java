@@ -60,7 +60,9 @@ public class VectorToJavaConvertlet extends JavaConvertlet
         StatementList forBody = new StatementList();
         Expression exp =
             implementor.visitJavaChild(converter, 0, (JavaRel) converter.child);
-        OJClass rowType = OJUtil.typeToOJClass(converter.child.getRowType());
+        OJClass rowType = OJUtil.typeToOJClass(
+            converter.child.getRowType(),
+            implementor.getTypeFactory());
         stmtList.add(
             new ForStatement(
                 TypeName.forOJClass(Util.clazzEnumeration),

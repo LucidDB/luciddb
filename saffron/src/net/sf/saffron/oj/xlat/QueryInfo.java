@@ -386,7 +386,7 @@ class QueryInfo
             OJClass queryRowClass = queryExp.getRowType(env);
             final RelDataType queryRowType =
                 OJUtil.ojToType(
-                    relRowType.getFactory(),
+                    cluster.getTypeFactory(),
                     queryRowClass);
             tracer.log(Level.FINE,
                 "] return [" + getRoot() + "] rowType=[" + relRowType + "]");
@@ -453,7 +453,7 @@ class QueryInfo
         final OJClass queryRowClass = queryExp.getRowType(env);
         RelDataType queryRowType =
             OJUtil.ojToType(
-                relRowType.getFactory(),
+                cluster.getTypeFactory(),
                 queryRowClass);
         if (fieldType != queryRowType) {
             throw Util.newInternal("rel row type (" + fieldType

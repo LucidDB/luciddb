@@ -107,6 +107,11 @@ public class RexToOJTranslator implements RexVisitor
         return implementor;
     }
 
+    public RelDataTypeFactory getTypeFactory()
+    {
+        return contextRel.getCluster().typeFactory;
+    }
+
     // implement RexVisitor
     public void visitInputRef(RexInputRef inputRef)
     {
@@ -248,7 +253,7 @@ public class RexToOJTranslator implements RexVisitor
         }
         setTranslation(
             new AllocationExpression(
-                OJUtil.typeToOJClass(rangeType),
+                OJUtil.typeToOJClass(rangeType, getTypeFactory()),
                 args));
     }
 

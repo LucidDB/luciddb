@@ -172,7 +172,9 @@ public class JavaAggregateRel extends AggregateRel implements JavaLoopRel
                 stmtList2));
 
         //       T row = new T();
-        OJClass rowType = OJUtil.typeToOJClass(getRowType());
+        OJClass rowType = OJUtil.typeToOJClass(
+            getRowType(),
+            implementor.getTypeFactory());
         Variable var_row = implementor.newVariable();
         stmtList2.add(
             new VariableDeclaration(

@@ -397,7 +397,7 @@ public abstract class ReturnTypeInference
      * {@link org.eigenbase.sql.SqlIntervalQualifier}.
      * If the type to transform is not of a INTERVAL type, this transformation
      * does nothing.
-     * @see {@link RelDataTypeFactoryImpl.IntervalSqlType}
+     * @see {@link IntervalSqlType}
      */
     public static final Transform toLeastRestrictiveInterval =
         new Transform() {
@@ -406,13 +406,11 @@ public abstract class ReturnTypeInference
                 RelDataType [] argTypes,
                 RelDataType typeToTransform)
             {
-                if (typeToTransform instanceof
-                    RelDataTypeFactoryImpl.IntervalSqlType) {
-                    RelDataTypeFactoryImpl.IntervalSqlType it =
-                       (RelDataTypeFactoryImpl.IntervalSqlType) typeToTransform;
+                if (typeToTransform instanceof IntervalSqlType) {
+                    IntervalSqlType it =
+                       (IntervalSqlType) typeToTransform;
                     for (int i = 0; i < argTypes.length; i++) {
-                        it = it.combine((RelDataTypeFactoryImpl.IntervalSqlType)
-                            argTypes[i]);
+                        it = it.combine((IntervalSqlType) argTypes[i]);
                     }
                     return it;
                 }
@@ -477,7 +475,7 @@ public abstract class ReturnTypeInference
      * Parameter type-inference transform strategy where a derived type
      * must be a multiset type and the returned type is the multiset's
      * element type.
-     * @see {@link RelDataTypeFactoryImpl.MultisetSqlType#getComponentType}
+     * @see {@link MultisetSqlType#getComponentType}
      */
     public static final Transform toMultisetElementType =
         new Transform() {

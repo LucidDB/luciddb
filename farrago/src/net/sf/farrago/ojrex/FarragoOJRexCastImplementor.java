@@ -96,7 +96,7 @@ public class FarragoOJRexCastImplementor extends FarragoOJRexImplementor
                         NullablePrimitive.NULL_IND_FIELD_NAME),
                     AssignmentExpression.EQUALS,
                     rhsIsNull)));
-        FarragoTypeFactory factory = (FarragoTypeFactory) lhsType.getFactory();
+        FarragoTypeFactory factory = translator.getFarragoTypeFactory();
         translator.addStatement(
             new ExpressionStatement(
                 new AssignmentExpression(
@@ -120,7 +120,8 @@ public class FarragoOJRexCastImplementor extends FarragoOJRexImplementor
             rhsExp =
                 new FieldAccess(rhsExp, NullablePrimitive.VALUE_FIELD_NAME);
         }
-        OJClass lhsClass = OJUtil.typeToOJClass(lhsType);
+        OJClass lhsClass = OJUtil.typeToOJClass(
+            lhsType, translator.getFarragoTypeFactory());
         rhsExp = new CastExpression(lhsClass, rhsExp);
         return convertDirectAssignment(translator, lhsExp, rhsExp);
     }
@@ -235,35 +236,29 @@ public class FarragoOJRexCastImplementor extends FarragoOJRexImplementor
         if (!lhsType.isNullable() && rhsType.isNullable()) {
             // generate code which will throw an exception whenever an attempt
             // is made to cast a null value to a NOT NULL type
-            if (RelDataTypeFactoryImpl.isJavaType(rhsType)) {
-                translator.addStatement(
-                    new ExpressionStatement(
-                        new MethodCall(
-                            translator.getRelImplementor()
-                                .getConnectionVariable(),
-                            "checkNotNull",
-                            new ExpressionList(rhsExp))));
-            } else {
+            if (!RelDataTypeFactoryImpl.isJavaType(rhsType)) {
                 Variable variable = translator.createScratchVariable(rhsType);
                 translator.addStatement(
                     new ExpressionStatement(
                         new AssignmentExpression(variable,
                             AssignmentExpression.EQUALS, rhsExp)));
-
-                // TODO:  provide exception context
-                translator.addStatement(
-                    new ExpressionStatement(
-                        new MethodCall(
-                            translator.getRelImplementor()
-                                .getConnectionVariable(),
-                            "checkNotNull",
-                            new ExpressionList(variable))));
                 rhsExp = variable;
             }
+            
+            // TODO:  provide exception context
+            translator.addStatement(
+                new ExpressionStatement(
+                    new MethodCall(
+                        translator.getRelImplementor()
+                        .getConnectionVariable(),
+                        "checkNotNull",
+                        new ExpressionList(rhsExp))));
         }
 
         // special case for source explicit null
-        OJClass rhsClass = OJUtil.typeToOJClass(rhsType);
+        OJClass rhsClass = OJUtil.typeToOJClass(
+            rhsType,
+            translator.getFarragoTypeFactory());
         if (rhsClass == OJSystem.NULLTYPE) {
             if (lhsType.isNullable()) {
                 return convertCastNull(translator, lhsType, rhsType, lhsExp,

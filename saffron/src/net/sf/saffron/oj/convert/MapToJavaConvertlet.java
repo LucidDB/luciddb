@@ -92,7 +92,9 @@ public class MapToJavaConvertlet extends JavaConvertlet
                     new CastExpression(
                         TypeName.forOJClass(Toolbox.clazzMapEntry),
                         new MethodCall(variable_entries, "next", null)))));
-        OJClass rowType = OJUtil.typeToOJClass(converter.getRowType());
+        OJClass rowType = OJUtil.typeToOJClass(
+            converter.getRowType(),
+            implementor.getTypeFactory());
         Variable variable_row =
             implementor.bind(
                 converter,

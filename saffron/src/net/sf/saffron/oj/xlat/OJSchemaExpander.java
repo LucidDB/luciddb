@@ -77,7 +77,9 @@ public class OJSchemaExpander extends VariableBinder
                 return new AliasedExpression(
                     new CastExpression(
                         OJClass.arrayOf(
-                            OJUtil.typeToOJClass(table.getRowType())),
+                            OJUtil.typeToOJClass(
+                                table.getRowType(),
+                                table.getRelOptSchema().getTypeFactory())),
                         new MethodCall(
                             refexpr,
                             "contentsAsArray",

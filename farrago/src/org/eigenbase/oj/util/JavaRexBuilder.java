@@ -128,7 +128,7 @@ public class JavaRexBuilder extends RexBuilder
     {
         if (exp instanceof JavaRowExpression) {
             JavaRowExpression java = (JavaRowExpression) exp;
-            final OJClass ojClass = OJUtil.typeToOJClass(type);
+            final OJClass ojClass = OJUtil.typeToOJClass(type, typeFactory);
             final CastExpression castExpr =
                 new CastExpression(ojClass, java.expression);
             return new JavaRowExpression(java.env, type, castExpr);

@@ -123,7 +123,9 @@ public class JavaProjectRel extends ProjectRel implements JavaLoopRel,
             // complex row-type, hence "V v = new V(exp, ...);"
             ExpressionList args = implementor.translateList(this, exps);
             return new AllocationExpression(
-                OJUtil.toTypeName(getRowType()),
+                OJUtil.toTypeName(
+                    getRowType(),
+                    implementor.getTypeFactory()),
                 args);
         }
     }
