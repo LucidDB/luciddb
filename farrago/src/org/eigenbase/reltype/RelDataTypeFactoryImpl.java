@@ -321,6 +321,11 @@ public abstract class RelDataTypeFactoryImpl implements RelDataTypeFactory
                     list.size(),
                     createJavaType(field.getType())));
         }
+
+        if (list.isEmpty()) {
+            return null;
+        }
+
         return (RelDataTypeField []) list.toArray(
             new RelDataTypeField[list.size()]);
     }
