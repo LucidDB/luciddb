@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/farrago/unitsql/expressions/values.sql#6 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/expressions/values.sql#1 $
 0: jdbc:farrago:> -- Test queries with VALUES
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- single-row
@@ -45,11 +45,11 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- bad:  identifiers in values
 0: jdbc:farrago:> values (x,2);
-Error: Unknown identifier 'X' near: line 1, column 9 (state=,code=0)
+Error: At line 1, column 9: Unknown identifier 'X' (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- bad:  expressions on identifiers in values
 0: jdbc:farrago:> values (x+1,2);
-Error: Unknown identifier 'X' near: line 1, column 9 (state=,code=0)
+Error: At line 1, column 9: Unknown identifier 'X' (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test SESSION_USER
 0: jdbc:farrago:> values (session_user);

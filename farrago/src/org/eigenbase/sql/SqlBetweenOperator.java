@@ -217,7 +217,8 @@ public class SqlBetweenOperator extends SqlInfixOperator
                 || !(list.get(opOrdinal + 2) instanceof ParserUtil.ToTreeListItem)
                 || (((ParserUtil.ToTreeListItem) list.get(opOrdinal + 2)).op.kind != SqlKind.And)) {
             throw EigenbaseResource.instance().newBetweenWithoutAnd(
-                pos.toString());
+                new Integer(pos.getBeginLine()),
+                new Integer(pos.getBeginColumn()));
         }
 
         // Create the expression after 'AND', but stopping if we encounter an

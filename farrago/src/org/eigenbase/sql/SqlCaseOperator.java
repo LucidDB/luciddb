@@ -145,8 +145,8 @@ public class SqlCaseOperator extends SqlOperator
             //should throw validation error if something wrong...
             RelDataType type = validator.deriveType(scope, node);
             if (!boolType.isSameType(type)) {
-                throw EigenbaseResource.instance().newExpectedBoolean(
-                    node.getParserPosition().toString());
+                throw validator.newValidationError(node,
+                    EigenbaseResource.instance().newExpectedBoolean());
             }
         }
 
@@ -199,9 +199,8 @@ public class SqlCaseOperator extends SqlOperator
             ReturnTypeInference.useNullableBiggest.getType(validator.typeFactory,
                 argTypes);
         if (null == ret) {
-            //todo use position data when available
-            throw EigenbaseResource.instance().newIllegalMixingOfTypes(
-                call.getParserPosition().toString());
+            throw validator.newValidationError(call,
+                EigenbaseResource.instance().newIllegalMixingOfTypes());
         }
         for (int i = 0; i < nullList.size(); i++) {
             SqlNode node = (SqlNode) nullList.get(i);

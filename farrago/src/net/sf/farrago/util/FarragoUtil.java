@@ -23,6 +23,7 @@ import java.sql.*;
 import java.util.logging.*;
 
 import org.eigenbase.util.*;
+import org.eigenbase.sql.SqlValidatorException;
 
 
 /**
@@ -87,13 +88,27 @@ public abstract class FarragoUtil
         Throwable ex,
         Logger tracer)
     {
-        tracer.severe(ex.getMessage());
+        final String message = ex.getMessage();
+        tracer.severe(message);
         tracer.throwing("FarragoUtil", "newSqlException", ex);
 
+        Throwable cause = ex.getCause();
         SQLException sqlExcn;
         if (ex instanceof FarragoException) {
             // TODO:  map for SQLState
-            sqlExcn = new SQLException(ex.getMessage());
+            if (cause instanceof SqlValidatorException) {
+                // We're looking at
+                //   ex = "Validation error at line 5, column 10"
+                //   ex.cause = "Bad column 'FOO'"
+                // so the message should be
+                //   "Validation error at line 5, column 10: Bad column 'FOO'"
+                final String causeMessage = cause.getMessage();
+                sqlExcn = new SQLException(message + ": " + causeMessage);
+                // Discard this cause and move on to next.
+                cause = cause.getCause();
+            } else {
+                sqlExcn = new SQLException(message);
+            }
         } else if (ex instanceof SQLException) {
             sqlExcn = (SQLException) ex;
         } else {
@@ -101,14 +116,13 @@ public abstract class FarragoUtil
             // as part of what went wrong
             sqlExcn =
                 new SQLException(ex.getClass().getName() + ": "
-                    + ex.getMessage());
+                    + message);
         }
 
         // preserve additional attributes of the original excn
         sqlExcn.setStackTrace(ex.getStackTrace());
 
         // convert to SQLException-style chaining
-        Throwable cause = ex.getCause();
         if (cause != null) {
             // NOTE jvs 18-June-2004:  reverse the order so that
             // the underlying cause comes out on top

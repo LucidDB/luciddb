@@ -50,56 +50,66 @@
     <text>not in format ''{0}''</text>
 </message>
 
+<exception id="100040" name="BetweenWithoutAnd">
+    <text>BETWEEN operator has no terminating AND; at line {0,number,#}, column {1,number,#}</text>
+</exception>
+
 
 <!-- ====================================================================== -->
 <!-- Eigenbase Validator resources 121,000 - 130,000 -->
 <!-- ====================================================================== -->
-<exception id="120000" name="ValidatorUnknownFunction">
-    <text>Reference to unknown function ''{0}''; encountered near {1}</text>
+<exception id="120000" name="ValidatorUnknownFunction" className="org.eigenbase.sql.SqlValidatorException">
+    <text>Reference to unknown function ''{0}''</text>
 </exception>
 
+<!-- 
 <exception id="120001" name="InvalidArgument">
     <text>Argument {0,number,#} to function ''{1}'' is invalid: {2}</text>
 </exception>
+ -->
 
-<exception id="120002" name="InvalidNbrOfArgument">
-    <text>Invalid number of arguments to function ''{0}''; encountered near {1}. Was expecting {2,number,#} arguments</text>
+<exception id="120002" name="InvalidArgCount" className="org.eigenbase.sql.SqlValidatorException">
+    <text>Invalid number of arguments to function ''{0}''. Was expecting {1,number,#} arguments</text>
+</exception>
+
+<exception id="120003" name="ValidatorContext">
+    <text>At line {0,number,#}, column {1,number,#}</text>
 </exception>
 
 <exception id="120010" name="CannotCastValue">
     <text>Cast function cannot convert value of type {0} to type {1}</text>
 </exception>
 
-<exception id="120011" name="UnknownDatatypeName">
-    <text>Unknown datatype name: {0} near {1}</text>
+<exception id="120011" name="UnknownDatatypeName" className="org.eigenbase.sql.SqlValidatorException">
+    <text>Unknown datatype name ''{0}''</text>
 </exception>
 
-<exception id="120020" name="IncompatibleValueType">
-    <text>Values passed to VALUES operator near {0} must have compatible types</text>
+<exception id="120020" name="IncompatibleValueType" className="org.eigenbase.sql.SqlValidatorException">
+    <text>Values passed to VALUES operator must have compatible types</text>
 </exception>
 
 <exception id="120030" name="IncompatibleCharset">
     <text>Can not apply {0} to the two different charsets {1} and {2}</text>
 </exception>
 
-<exception id="120040" name="InvalidOrderByPos">
-    <text>ORDER BY near {0} is only allowed on top-level SELECT</text>
+<exception id="120040" name="InvalidOrderByPos" className="org.eigenbase.sql.SqlValidatorException">
+    <text>ORDER BY is only allowed on top-level SELECT</text>
 </exception>
 
-<exception id="120050" name="UnknownIdentifier">
-    <text>Unknown identifier ''{0}'' near: {1}</text>
+<exception id="120050" name="UnknownIdentifier" className="org.eigenbase.sql.SqlValidatorException">
+    <text>Unknown identifier ''{0}''</text>
 </exception>
 
-<exception id="120060" name="UnknownTargetColumn">
-    <text>Unknown target column ''{0}'' near: {1}</text>
+<exception id="120060" name="UnknownTargetColumn" className="org.eigenbase.sql.SqlValidatorException">
+    <text>Unknown target column ''{0}''</text>
 </exception>
 
 <exception id="120070" name="UnmatchInsertColumn">
     <text>Number of INSERT target column ({0}) does not equal number of source items ({1})</text>
 </exception>
 
-<exception id="120080" name="TableNameNotFound">
-    <text>Table ''{0}'' not found near: {1}</text>
+<exception id="120080" name="TableNameNotFound" className="org.eigenbase.sql.SqlValidatorException">
+    <text>Table ''{0}'' not found</text>
 </exception>
 
 <exception id="120085" name="ColNotFound">
@@ -114,40 +124,38 @@
     <text>Column ''{0}'' is ambiguous</text>
 </exception>
 
-<exception id="120110" name="NeedQueryOp">
-    <text>Operand {0} must be a query near: {1}</text>
+<!-- REVIEW: jhyde: should this be an internal error? is there a test? -->
+<exception id="120110" name="NeedQueryOp" className="org.eigenbase.sql.SqlValidatorException">
+    <text>Operand {0} must be a query</text>
 </exception>
 
-<exception id="120120" name="NeedSameTypeParameter">
-    <text>Parameters must be of the same type near: {0}</text>
+<exception id="120120" name="NeedSameTypeParameter" className="org.eigenbase.sql.SqlValidatorException">
+    <text>Parameters must be of the same type</text>
 </exception>
 
-<exception id="120130" name="CanNotApplyOp2Type">
-    <text>Can not apply ''{0}'' to arguments of type {1}. Supported form(s): {2} near: {3}</text>
+<exception id="120130" name="CanNotApplyOp2Type" className="org.eigenbase.sql.SqlValidatorException">
+    <text>Can not apply ''{0}'' to arguments of type {1}. Supported form(s): {2}</text>
 </exception>
 
-<exception id="120140" name="ExpectedBoolean">
-    <text>Expected a boolean type near: {0}</text>
+<exception id="120140" name="ExpectedBoolean" className="org.eigenbase.sql.SqlValidatorException">
+    <text>Expected a boolean type</text>
 </exception>
 
 <exception id="120150" name="MustNotNullInElse">
     <text>ELSE clause or at least one THEN clause must be non-NULL</text>
 </exception>
 
-<exception id="120160" name="FunctionUndefined">
-    <text>Function {0} is not defined near: {1}</text>
+<exception id="120160" name="FunctionUndefined" className="org.eigenbase.sql.SqlValidatorException">
+    <text>Function ''{0}'' is not defined</text>
 </exception>
 
-<exception id="120170" name="WrongNumberOfParam">
-    <text>Encountered {0} with {1} parameter(s), was expecting {2} near: {3}</text>
+<!-- REVIEW: jhyde: sentence construction is not l10n-safe -->
+<exception id="120170" name="WrongNumberOfParam" className="org.eigenbase.sql.SqlValidatorException">
+    <text>Encountered {0} with {1,number} parameter(s); was expecting {2}</text>
 </exception>
 
-<exception id="120180" name="IllegalMixingOfTypes">
-    <text>Illegal mixing of types found in statement starting near: {0}</text>
-</exception>
-
-<exception id="120190" name="BetweenWithoutAnd">
-    <text>BETWEEN operator has no terminating AND, at {0}</text>
+<exception id="120180" name="IllegalMixingOfTypes" className="org.eigenbase.sql.SqlValidatorException">
+    <text>Illegal mixing of types in CASE or COALESCE statement</text>
 </exception>
 
 <exception id="120200" name="InvalidCompare">
@@ -162,13 +170,12 @@
     <text>{0} is not comparable to {1}</text>
 </exception>
 
-<exception id="120225" name="TypeNotComparableNear">
-    <text>{0} is not comparable to {1} near: {2}</text>
+<exception id="120225" name="TypeNotComparableNear" className="org.eigenbase.sql.SqlValidatorException">
+    <text>Cannot compare values of types ''{0}'', ''{1}''</text>
 </exception>
 
-
-<exception id="120230" name="WrongNumOfArguments">
-    <text>Wrong number of arguments to {0} near: {1}</text>
+<exception id="120230" name="WrongNumOfArguments" className="org.eigenbase.sql.SqlValidatorException">
+    <text>Wrong number of arguments to expression</text>
 </exception>
 
 <exception id="120240" name="OperandNotComparable">
@@ -177,6 +184,14 @@
 
 <exception id="120250" name="TypeNotComparableEachOther">
     <text>Types {0} not comparable to each other</text>
+</exception>
+
+<exception id="120255" name="NumberLiteralOutOfRange" className="org.eigenbase.sql.SqlValidatorException">
+    <text>Numeric literal ''{0}'' out of range</text>
+</exception>
+
+<exception id="120257" name="StringFragsOnSameLine" className="org.eigenbase.sql.SqlValidatorException">
+    <text>String literal continued on same line</text>
 </exception>
 
 <!-- ====================================================================== -->
@@ -212,10 +227,6 @@
 
 <exception id="130070" name="NullIllegal">
     <text>Illegal use of ''NULL''</text>
-</exception>
-
-<exception id="130080" name="NumberLiteralOutOfRange">
-    <text>Number literal ''{0}'' out of range near: {1}</text>
 </exception>
 
 <!-- End of last error section ============================================ -->

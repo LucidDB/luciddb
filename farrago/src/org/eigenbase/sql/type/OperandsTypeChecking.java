@@ -654,9 +654,9 @@ public abstract class OperandsTypeChecking
                 }
                 if (!(type1.isSameType(type2) || type2.isSameType(type1))) {
                     if (throwOnFailure) {
-                        throw EigenbaseResource.instance()
-                            .newNeedSameTypeParameter(
-                                call.getParserPosition().toString());
+                        throw validator.newValidationError(call,
+                            EigenbaseResource.instance()
+                            .newNeedSameTypeParameter());
                     }
                     return false;
                 }
@@ -699,9 +699,9 @@ public abstract class OperandsTypeChecking
                     type2.isSameType(type3) || type3.isSameType(type2)))) {
 
                     if (throwOnFailure) {
-                        throw EigenbaseResource.instance()
-                            .newNeedSameTypeParameter(
-                                call.getParserPosition().toString());
+                        throw validator.newValidationError(call,
+                            EigenbaseResource.instance()
+                            .newNeedSameTypeParameter());
                     }
                     return false;
                 }

@@ -20,17 +20,12 @@
 */
 package org.eigenbase.sql.fun;
 
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.test.SqlTester;
-import org.eigenbase.sql.test.SqlOperatorTests;
-import org.eigenbase.sql.type.UnknownParamInference;
 import org.eigenbase.sql.type.ReturnTypeInference;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.util.Util;
-import org.eigenbase.resource.EigenbaseResource;
-
-import java.util.List;
+import org.eigenbase.sql.type.UnknownParamInference;
 
 /**
  * SqlMultisetOperator represents the SQL:2003 standard MULTISET constructor
@@ -73,10 +68,9 @@ public class SqlMultisetOperator extends SqlSpecialOperator
     {
         RelDataType type =
             ReturnTypeInference.useNullableBiggest.getType(validator, scope, call);
-        if (null==type) {
-            throw EigenbaseResource.instance().
-                        newNeedSameTypeParameter(
-                            call.getParserPosition().toString());
+        if (null == type) {
+            throw validator.newValidationError(call,
+                EigenbaseResource.instance().newNeedSameTypeParameter());
         }
         RelDataType ret = validator.typeFactory.createMultisetType(type);
         ret = validator.typeFactory.createTypeWithNullability(ret, type.isNullable());

@@ -86,10 +86,9 @@ class FarragoSqlValidator extends SqlValidator
                 long longValue = bd.longValue();
                 if (!BigDecimal.valueOf(longValue).equals(bd)) {
                     // overflow
-                    throw EigenbaseResource.instance()
-                        .newNumberLiteralOutOfRange(
-                            bd.toString(),
-                            literal.getParserPosition().toString());
+                    throw newValidationError(
+                        literal, EigenbaseResource.instance()
+                        .newNumberLiteralOutOfRange(bd.toString()));
                 }
             } else {
                 // fall through for scaled case
@@ -116,9 +115,10 @@ class FarragoSqlValidator extends SqlValidator
         double d = bd.doubleValue();
         if (Double.isInfinite(d) || Double.isNaN(d)) {
             // overflow
-            throw EigenbaseResource.instance().newNumberLiteralOutOfRange(
-                Util.toScientificNotation(bd),
-                literal.getParserPosition().toString());
+            throw newValidationError(
+                literal, EigenbaseResource.instance().newNumberLiteralOutOfRange(
+                    Util.toScientificNotation(bd))
+            );
         }
 
         // REVIEW jvs 4-Aug-2004:  what about underflow?

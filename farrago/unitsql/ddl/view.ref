@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/farrago/unitsql/ddl/view.sql#5 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/view.sql#1 $
 0: jdbc:farrago:> -- Test DDL on views
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema s;
@@ -42,7 +42,7 @@ earlier definition was near line 1, column 22 (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- bad:  invalid view def
 0: jdbc:farrago:> create view v5 as select * from nonexistent_table;
-Error: Table 'NONEXISTENT_TABLE' not found near: line 2, column 6 (state=,code=0)
+Error: At line 2, column 6: Table 'NONEXISTENT_TABLE' not found (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- bad:  view with dynamic params
 0: jdbc:farrago:> create view v6 as select * from sales.emps where empno = ?;
@@ -86,7 +86,7 @@ Error: LocalTable S.T1 can only be dropped with CASCADE because other objects st
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- bad:  v7 shouldn't be there any more
 0: jdbc:farrago:> select * from v7;
-Error: Table 'V7' not found near: line 1, column 15 (state=,code=0)
+Error: At line 1, column 15: Table 'V7' not found (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create table t2(i int not null primary key);
 0: jdbc:farrago:> 
@@ -113,16 +113,16 @@ Error: View S.V9 can only be dropped with CASCADE because other objects still re
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- bad:  no longer exists
 0: jdbc:farrago:> select * from v10;
-Error: Table 'V10' not found near: line 1, column 15 (state=,code=0)
+Error: At line 1, column 15: Table 'V10' not found (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> drop table t2 cascade;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- bad:  no longer exists
 0: jdbc:farrago:> select * from v8;
-Error: Table 'V8' not found near: line 1, column 15 (state=,code=0)
+Error: At line 1, column 15: Table 'V8' not found (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from v11;
-Error: Table 'V11' not found near: line 1, column 15 (state=,code=0)
+Error: At line 1, column 15: Table 'V11' not found (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- make sure dependencies got dropped too
 0: jdbc:farrago:> select "name" from sys_cwm."Core"."Dependency" where "name"='V8$DEP';

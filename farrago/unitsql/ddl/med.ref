@@ -139,13 +139,13 @@ Error: DataServer SYS_BOOT.MOF_SERVER can only be dropped with CASCADE because o
 0: jdbc:farrago:> -- table mof_exception and boths views should be gone now
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from mof_schema.mof_exception;
-Error: Table 'MOF_SCHEMA.MOF_EXCEPTION' not found near: line 1, column 15 (state=,code=0)
+Error: At line 1, column 15: Table 'MOF_SCHEMA.MOF_EXCEPTION' not found (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from mof_schema.exception_names;
-Error: Table 'MOF_SCHEMA.EXCEPTION_NAMES' not found near: line 1, column 15 (state=,code=0)
+Error: At line 1, column 15: Table 'MOF_SCHEMA.EXCEPTION_NAMES' not found (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from mof_schema.foreign_exception_names;
-Error: Table 'MOF_SCHEMA.FOREIGN_EXCEPTION_NAMES' not found near: line 1, column 15 (state=,code=0)
+Error: At line 1, column 15: Table 'MOF_SCHEMA.FOREIGN_EXCEPTION_NAMES' not found (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should be OK to drop wrapper now
 0: jdbc:farrago:> drop foreign data wrapper test_mdr restrict;

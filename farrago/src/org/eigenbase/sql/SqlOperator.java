@@ -308,12 +308,13 @@ public abstract class SqlOperator
     }
 
     /**
-     * Validate a call to this operator. Called just after the operands have been
-     * validated.
+     * Validate a call to this operator. Called just after the operands have
+     * been validated.
+     * 
      * @param call the SqlCall node for the call.
      * @param validator the active validator.
      */
-    void validateCall(
+    public void validateCall(
         SqlCall call,
         SqlValidator validator)
     {
@@ -377,7 +378,7 @@ public abstract class SqlOperator
         SqlCall call)
     {
         // Check that there's the right number of arguments.
-        checkNumberOfArg(operandsCheckingRule, call);
+        checkNumberOfArg(validator, operandsCheckingRule, call);
 
         checkArgTypes(call, validator, scope);
 
@@ -426,7 +427,7 @@ public abstract class SqlOperator
     }
 
     protected void checkNumberOfArg(
-        OperandsTypeChecking argType,
+        SqlValidator validator, OperandsTypeChecking argType,
         SqlCall call)
     {
         OperandsCountDescriptor od =
@@ -434,9 +435,8 @@ public abstract class SqlOperator
         if (!od.isVariadic()
                 && !od.getPossibleNumOfOperands().contains(
                     new Integer(call.operands.length))) {
-            throw EigenbaseResource.instance().newWrongNumOfArguments(
-                "" + call,
-                call.getParserPosition().toString());
+            throw validator.newValidationError(call,
+                EigenbaseResource.instance().newWrongNumOfArguments());
         }
     }
 

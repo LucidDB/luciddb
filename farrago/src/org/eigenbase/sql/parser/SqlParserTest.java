@@ -299,13 +299,13 @@ public class SqlParserTest extends TestCase
             "(VALUES (ROW((((`A` BETWEEN ASYMMETRIC `C` AND `D`) AND `E`) AND (`F` BETWEEN ASYMMETRIC `G` AND `H`)))))");
 
         checkFails("values a between b or c",
-            ".*BETWEEN operator has no terminating AND, at line 1, column 18");
+            ".*BETWEEN operator has no terminating AND; at line 1, column 18");
 
         checkFails("values a between",
             "(?s).*Encountered \"between <EOF>\" at line 1, column 10.*");
 
         checkFails("values a between symmetric 1",
-            ".*BETWEEN operator has no terminating AND, at line 1, column 18");
+            ".*BETWEEN operator has no terminating AND; at line 1, column 18");
 
         // precedence of BETWEEN is higher than AND and OR, but lower than '+'
         check("values a between b and c + 2 or d and e",

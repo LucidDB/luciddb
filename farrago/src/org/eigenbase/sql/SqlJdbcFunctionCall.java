@@ -314,18 +314,16 @@ public class SqlJdbcFunctionCall extends SqlFunction
         SqlCall call)
     {
         if (null == lookupMakeCallObj) {
-            throw EigenbaseResource.instance().newFunctionUndefined(
-                name,
-                call.getParserPosition().toString());
+            throw validator.newValidationError(call,
+                EigenbaseResource.instance().newFunctionUndefined(name));
         }
 
         if (!lookupMakeCallObj.checkNumberOfArg(call.operands.length)) {
-            //todo add position data
-            throw EigenbaseResource.instance().newWrongNumberOfParam(
-                name,
-                "" + thisOperands.length,
-                getArgCountMismatchMsg(),
-                call.getParserPosition().toString());
+            throw validator.newValidationError(call,
+                EigenbaseResource.instance().newWrongNumberOfParam(
+                    name,
+                    new Integer(thisOperands.length),
+                    getArgCountMismatchMsg()));
         }
 
         if (!lookupMakeCallObj.operator.checkArgTypesNoThrow(

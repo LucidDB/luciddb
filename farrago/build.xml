@@ -942,12 +942,13 @@ require version '${required.ant.version}'."/>
 
   <target name="generateResources" depends="mkdir.classes,checkResourceUptodate"
     unless="resource.uptodate">
-    <!-- FarragoException.class needs to exist for reflection -->
+    <!-- Exception classes need to exist for reflection -->
     <javaCompile
       srcdir="${src.dir}"
       destdir="${classes.dir}"
       classpathref="farrago.3p.classpath">
       <include name="**/FarragoException.java" />
+      <include name="**/SqlValidatorException.java" />
     </javaCompile>
     <taskdef name="resgen" classname="mondrian.resource.ResourceGenTask">
       <classpath refid="farrago.run.classpath"/>

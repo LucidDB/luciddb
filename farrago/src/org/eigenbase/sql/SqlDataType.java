@@ -21,16 +21,15 @@
 
 package org.eigenbase.sql;
 
-import java.nio.charset.Charset;
-
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.reltype.RelDataTypeFactoryImpl;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.util.SaffronProperties;
 import org.eigenbase.util.Util;
+
+import java.nio.charset.Charset;
 
 
 /**
@@ -159,8 +158,7 @@ public class SqlDataType extends SqlNode
     }
 
     /**
-     * @throws {@link EigenbaseResource#newUnknownDatatypeName} if
-     * {@link SqlDataType#typeName#getSimple()} is not defined.
+     * Throws an error if the type is not built-in.
      */
     public RelDataType deriveType(SqlValidator validator)
     {
@@ -168,8 +166,8 @@ public class SqlDataType extends SqlNode
 
         //for now we only support builtin datatypes
         if (!SqlTypeName.containsName(name)) {
-            ParserPosition pos = getParserPosition();
-            throw EigenbaseResource.instance().newUnknownDatatypeName(name,pos.toString());
+            throw validator.newValidationError(this,
+                EigenbaseResource.instance().newUnknownDatatypeName(name));
         }
 
         SqlTypeName sqlTypeName = SqlTypeName.get(name);

@@ -128,11 +128,12 @@ public class SqlCall extends SqlNode
         SqlValidator validator,
         SqlValidator.Scope scope)
     {
-        return EigenbaseResource.instance().newCanNotApplyOp2Type(
-            operator.name,
-            getCallSignature(validator, scope),
-            operator.getAllowedSignatures(),
-            getParserPosition().toString());
+        return validator.newValidationError(
+            this,
+            EigenbaseResource.instance().newCanNotApplyOp2Type(
+                operator.name,
+                getCallSignature(validator, scope),
+                operator.getAllowedSignatures()));
     }
 }
 

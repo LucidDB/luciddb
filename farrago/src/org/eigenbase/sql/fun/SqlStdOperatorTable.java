@@ -401,10 +401,10 @@ public class SqlStdOperatorTable extends SqlOperatorTable
 
                     if (!t0.isAssignableFrom(t1, false) &&
                         !t1.isAssignableFrom(t0, false)) {
-                        throw EigenbaseResource.instance().
+                        throw validator.newValidationError(call,
+                            EigenbaseResource.instance().
                             newTypeNotComparableNear(
-                                t0.toString(), t1.toString(),
-                                call.getParserPosition().toString());
+                                t0.toString(), t1.toString()));
                     }
                 }
 
@@ -1042,10 +1042,12 @@ public class SqlStdOperatorTable extends SqlOperatorTable
             {
                 if (2 != operands.length) {
                     //todo put this in the validator
-                    throw EigenbaseResource.instance().newInvalidNbrOfArgument(
-                        name,
-                        pos.toString(),
-                        new Integer(2));
+                    throw EigenbaseResource.instance().newValidatorContext(
+                        new Integer(pos.getBeginLine()),
+                        new Integer(pos.getBeginColumn()),
+                        EigenbaseResource.instance().newInvalidArgCount(
+                            name,
+                            new Integer(2)));
                 }
                 SqlNodeList whenList = new SqlNodeList(pos);
                 SqlNodeList thenList = new SqlNodeList(pos);

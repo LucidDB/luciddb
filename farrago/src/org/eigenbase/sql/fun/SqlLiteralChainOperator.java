@@ -1,3 +1,22 @@
+/*
+// $Id$
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2004-2004 Disruptive Tech
+//
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
 package org.eigenbase.sql.fun;
 
 import org.eigenbase.reltype.RelDataType;
@@ -14,11 +33,14 @@ import org.eigenbase.util.NlsString;
 
 /**
  * Internal operator, by which the parser represents a continued string
- * literal.  The string fragments are SqlLiterals (of the same type),
- * collected as the operands of an SqlCall with this operator.  The
- * validator concatenates them into a single RexLiteral.
- * (For a chain of SqlLiteral.CharStrings, an SqlCollation is attached
- * only to the head of the chain.)
+ * literal.
+ *
+ * <p>The string fragments are {@link SqlLiteral} objects, all of the same
+ * type, collected as the operands of an {@link SqlCall} using this operator.
+ * After validation, the fragments will be concatenated into a single literal.
+ *
+ * <p>For a chain of {@link SqlLiteral.CharString} objects, a
+ * {@link SqlCollation} object is attached only to the head of the chain.
  *
  * @author Marc Berkowitz
  * @since Sep 7, 2004
@@ -85,8 +107,8 @@ public class SqlLiteralChainOperator extends SqlInternalOperator {
         RelDataType rt =
             validator.getValidatedNodeType(call.operands[0]);
         SqlTypeName tname = rt.getSqlTypeName();
-        assert tname.allowsPrecNoScale() : "LitChain has impossible operand type "
-            + tname;
+        assert tname.allowsPrecNoScale() :
+            "LitChain has impossible operand type " + tname;
         int size = rt.getPrecision();
         for (int i = 1; i < call.operands.length; i++) {
             rt = validator.getValidatedNodeType(call.operands[i]);
@@ -100,20 +122,18 @@ public class SqlLiteralChainOperator extends SqlInternalOperator {
         return opName + "(...)";
     }
 
-    // per the SQL std, each string fragment must be on a different line
-    void validateCall(
+    public void validateCall(
         SqlCall call,
         SqlValidator validator)
     {
-        ParserPosition pos;
-        ParserPosition prevPos = call.operands[0].getParserPosition();
-        for (int i = 1; i < call.operands.length;
-             i++, prevPos = pos) {
-            pos = call.operands[i].getParserPosition();
+        // per the SQL std, each string fragment must be on a different line
+        for (int i = 1; i < call.operands.length; i++) {
+            ParserPosition prevPos = call.operands[i - 1].getParserPosition();
+            final SqlNode operand = call.operands[i];
+            ParserPosition pos = operand.getParserPosition();
             if (pos.getBeginLine() <= prevPos.getBeginLine()) {
-                // FIXME jvs 28-Aug-2004:  i18n
-                throw EigenbaseResource.instance().newValidationError("String literal continued on same line, at "
-                    + pos);
+                throw validator.newValidationError(operand,
+                    EigenbaseResource.instance().newStringFragsOnSameLine());
             }
         }
     }
