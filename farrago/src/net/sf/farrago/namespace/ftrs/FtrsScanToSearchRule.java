@@ -38,6 +38,10 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.util.*;
 
+// TODO jvs 22-Feb-2005:  combine FtrsScanToSearchRule with
+// FtrsTableProjectionRule (say FtrsIndexAccessRule?).  Without combining them,
+// we currently miss the opportunity to use an index-only search
+// for {select name from sales.depts where name='Hector'}.
 
 /**
  * FtrsScanToSearchRule is a rule for converting FilterRel+FtrsIndexScanRel
