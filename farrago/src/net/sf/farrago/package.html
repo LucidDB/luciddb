@@ -25,12 +25,13 @@ packages.
 
 <p>
 
-TBD: dependencies on packages like java.sql, org.eigenbase, and MDR.  TODO:
-update diagram to show that farrago.runtime depends on
-farrago.session, and add farrago.plugin, farrago.ojrex.  Also note
-special case for farrago.trace.  farrago.type.runtime depends on
-farrago.resource.  Also com.disruptivetech.**.  Eliminate cwm.impl 
-and fem.impl.
+Note that the farrago.trace package is special in that it is allowed
+(and in fact required) to participate in circular dependencies with other
+packages.
+
+<p>
+TBD: dependencies on packages like java.sql, org.eigenbase, and MDR.
+Also need to show com.disruptivetech.**, com.redsquare.**.
 
 <p>
 
