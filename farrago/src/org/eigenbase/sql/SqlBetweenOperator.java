@@ -154,9 +154,9 @@ public class SqlBetweenOperator extends SqlInfixOperator
         for (int i = 0; i < rules.length; i++) {
             OperandsTypeChecking rule = rules[i];
             boolean ok;
-            ok = rule.check(call, validator, scope, call.operands[0], 0);
-            ok = ok && rule.check(call, validator, scope, call.operands[2], 0);
-            ok = ok && rule.check(call, validator, scope, call.operands[3], 0);
+            ok = rule.check(call, validator, scope, call.operands[0], 0, false);
+            ok = ok && rule.check(call, validator, scope, call.operands[2], 0, false);
+            ok = ok && rule.check(call, validator, scope, call.operands[3], 0, false);
             if (!ok) {
                 failCount++;
             }

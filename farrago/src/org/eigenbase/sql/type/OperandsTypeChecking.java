@@ -23,6 +23,7 @@ package org.eigenbase.sql.type;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql.*;
 import org.eigenbase.util.Util;
+import org.eigenbase.util.EnumeratedValues;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactoryImpl;
 import org.eigenbase.resource.EigenbaseResource;
@@ -39,34 +40,14 @@ import java.util.ArrayList;
 public abstract class OperandsTypeChecking
 {
     /**
-     * Calls {@link #check(SqlCall, SqlValidator,org.eigenbase.sql.SqlValidator.Scope,SqlNode,int)}
-     * with {@param node}
-     * @param node one of the operands of {@param call}
-     * @param operandOrdinal
-     * @pre call != null
-     */
-    public void checkThrows(
-        SqlValidator validator,
-        SqlValidator.Scope scope,
-        SqlCall call,
-        SqlNode node,
-        int operandOrdinal)
-    {
-        Util.pre(null != call, "null != call");
-        if (!check(call, validator, scope, node, operandOrdinal)) {
-            throw call.newValidationSignatureError(validator, scope);
-        }
-    }
-
-    /**
      * Checks if a node is of correct type
      * @param call
      * @param validator
      * @param scope
      * @param node
-     * @param operandOrdinal
+     * @param ruleOrdinal
      *
-     * Note that <code>operandOrdinal</code> is <i>not</i> an index in any
+     * Note that <code>ruleOrdinal</code> is <i>not</i> an index in any
      * call.operands[] array. It's rather used to specify which
      * signature the node should correspond too.
      *
@@ -79,29 +60,18 @@ public abstract class OperandsTypeChecking
         SqlValidator validator,
         SqlValidator.Scope scope,
         SqlNode node,
-        int operandOrdinal);
+        int ruleOrdinal,
+        boolean throwOnFailure);
 
-    public abstract void check(
+    public abstract boolean check(
         SqlValidator validator,
         SqlValidator.Scope scope,
-        SqlCall call);
-
-    public boolean checkNoThrowing(
         SqlCall call,
-        SqlValidator validator,
-        SqlValidator.Scope scope)
-    {
-        assert (getArgCount() == call.operands.length);
+        boolean throwOnFailure);
 
-        for (int i = 0; i < call.operands.length; i++) {
-            SqlNode operand = call.operands[i];
-            if (!check(call, validator, scope, operand, i)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
+    /**
+     * Returns the argument count
+     */
     public abstract int getArgCount();
 
     /**
@@ -109,7 +79,6 @@ public abstract class OperandsTypeChecking
          * "SUBSTR(VARCHAR, INTEGER, INTEGER)".
          */
     public abstract String getAllowedSignatures(SqlOperator op);
-
 
     /**
      * Operand type-checking strategy which checks operands against an array
@@ -137,7 +106,7 @@ public abstract class OperandsTypeChecking
         public SimpleOperandsTypeChecking(SqlTypeName[][] typeses)
         {
             Util.pre(null != typeses, "null!=types");
-            //Util.pre(typeses.length > 0, "types.length>0");
+//            Util.pre(typeses.length > 0, "types.length>0");
 
             //only Null types specified? Prohibit! need more than null
             for (int i = 0; i < typeses.length; i++) {
@@ -165,14 +134,15 @@ public abstract class OperandsTypeChecking
             SqlValidator validator,
             SqlValidator.Scope scope,
             SqlNode node,
-            int operandOrdinal)
+            int ruleOrdinal,
+            boolean throwOnFailure)
         {
             RelDataType anyType = validator.anyType;
             RelDataType actualType = null;
 
             //for each operand, iterater over its allowed types...
-            for (int j = 0; j < types[operandOrdinal].length; j++) {
-                SqlTypeName typeName = types[operandOrdinal][j];
+            for (int j = 0; j < types[ruleOrdinal].length; j++) {
+                SqlTypeName typeName = types[ruleOrdinal][j];
                 RelDataType expectedType =
                     RelDataTypeFactoryImpl.createSqlTypeIgnorePrecOrScale(validator.typeFactory,
                         typeName);
@@ -190,17 +160,28 @@ public abstract class OperandsTypeChecking
                     }
                 }
             }
+
+            if (throwOnFailure) {
+                throw call.newValidationSignatureError(validator, scope);
+            }
             return false;
         }
 
-        public void check(
+        public boolean check(
             SqlValidator validator,
             SqlValidator.Scope scope,
-            SqlCall call)
+            SqlCall call,
+            boolean throwOnFailure)
         {
-            if (!checkNoThrowing(call, validator, scope)) {
-                throw call.newValidationSignatureError(validator, scope);
+           assert (getArgCount() == call.operands.length);
+
+            for (int i = 0; i < call.operands.length; i++) {
+                SqlNode operand = call.operands[i];
+                if (!check(call, validator, scope, operand, i, throwOnFailure)) {
+                    return false;
+                }
             }
+            return true;
         }
 
         public int getArgCount()
@@ -254,13 +235,23 @@ public abstract class OperandsTypeChecking
     /**
      * This class allows multiple existing {@link SimpleOperandsTypeChecking} rules
      * to be combined into one rule.<p>
-     * For example, giving an operand the signature of both a string and a numeric
+     * For example, giving an operand the signature of both a string or a numeric
      * could be done by:
      * <blockquote><pre><code>
      *
      * CompositeOperandsTypeChecking newCompositeRule =
      *  new SqlOperator.CompositeOperandsTypeChecking(
+     *    Composition.OR,
      *    new SqlOperator.OperandsTypeChecking[]{stringRule, numericRule});
+     *
+     * </code></pre></blockquote>
+     * Simmilary a rule that would only allow a numeric literal can be done by:
+     * <blockquote><pre><code>
+     *
+     * CompositeOperandsTypeChecking newCompositeRule =
+     *  new SqlOperator.CompositeOperandsTypeChecking(
+     *    Composition.AND,
+     *    new SqlOperator.OperandsTypeChecking[]{literalRule, numericRule});
      *
      * </code></pre></blockquote>
      */
@@ -268,8 +259,9 @@ public abstract class OperandsTypeChecking
         extends OperandsTypeChecking
     {
         private OperandsTypeChecking[] allowedRules;
+        private Composition composition;
 
-        public CompositeOperandsTypeChecking(
+        public CompositeOperandsTypeChecking(Composition composition,
             OperandsTypeChecking[] allowedRules)
         {
             Util.pre(null != allowedRules, "null != allowedRules");
@@ -280,6 +272,7 @@ public abstract class OperandsTypeChecking
                     "All must have the same operand length");
             }
             this.allowedRules = allowedRules;
+            this.composition = composition;
         }
 
         public OperandsTypeChecking[] getRules()
@@ -312,36 +305,123 @@ public abstract class OperandsTypeChecking
             SqlValidator validator,
             SqlValidator.Scope scope,
             SqlNode node,
-            int operandOrdinal)
+            int ruleOrdinal,
+            boolean throwOnFailure)
         {
             Util.pre(allowedRules.length >= 1, "allowedRules.length>=1");
+            int typeErrorCount = 0;
+
+            boolean throwOnAndFailure =
+                Composition.AND.equals(composition) && throwOnFailure;
+
             for (int i = 0; i < allowedRules.length; i++) {
                 OperandsTypeChecking rule = allowedRules[i];
-                if (rule.check(call, validator, scope, node, operandOrdinal)) {
-                    return true;
+                if (!rule.check(call, validator, scope, node,
+                    ruleOrdinal, throwOnAndFailure)) {
+                    typeErrorCount++;
                 }
             }
-            return false;
+
+            boolean ret=false;
+            if (Composition.AND.equals(composition)) {
+                ret = typeErrorCount == 0;
+            } else if (Composition.OR.equals(composition)) {
+                ret = (typeErrorCount < allowedRules.length);
+            } else {
+                //should never come here
+                throw Util.needToImplement(this);
+            }
+
+            if (!ret && throwOnFailure) {
+                //in the case of a composite OR we want to throw an error
+                //describing in more detail what the problem was, hence doing
+                //the loop again
+                for (int i = 0; i < allowedRules.length; i++) {
+                    OperandsTypeChecking rule = allowedRules[i];
+                    if (!rule.check(call, validator, scope, node,
+                        ruleOrdinal, true)) {
+                        typeErrorCount++;
+                    }
+                }
+                //if no exception thrown, just throw a generic validation
+                //signature error
+                throw call.newValidationSignatureError(validator, scope);
+            }
+
+            return ret;
         }
 
-        public void check(
+        public boolean check(
             SqlValidator validator,
             SqlValidator.Scope scope,
-            SqlCall call)
+            SqlCall call,
+            boolean throwOnFailure)
         {
             int typeErrorCount = 0;
 
             for (int i = 0; i < allowedRules.length; i++) {
                 OperandsTypeChecking rule = allowedRules[i];
 
-                if (!rule.checkNoThrowing(call, validator, scope)) {
+                if (!rule.check(validator, scope, call, false)) {
                     typeErrorCount++;
                 }
             }
 
-            if (typeErrorCount == allowedRules.length) {
-                throw call.newValidationSignatureError(validator, scope);
+            boolean failed = true;
+            if (Composition.AND.equals(composition)) {
+                failed = typeErrorCount>0;
+            } else if (Composition.OR.equals(composition)) {
+                failed = (typeErrorCount == allowedRules.length);
             }
+
+            if (failed) {
+                if (throwOnFailure) {
+                    throw call.newValidationSignatureError(validator, scope);
+                }
+                return false;
+            }
+            return true;
+        }
+
+        //~ Inner Class ----------------------
+        public static class Composition extends EnumeratedValues.BasicValue {
+            private Composition(String name, int ordinal) {
+                super(name, ordinal, null);
+            }
+
+            public static final Composition AND = new Composition("AND", 0);
+            public static final Composition OR = new Composition("OR", 1);
+
+            public static final EnumeratedValues enumeration =
+                new EnumeratedValues(new Composition [] { AND, OR });
+        }
+    }
+
+    /**
+     * A Convenience class that is equivalent to
+     * <code>CompositeOperandsTypeChecking(Composistion.AND, rules)</code>
+     */
+    public static class CompositeAndOperandsTypeChecking
+        extends CompositeOperandsTypeChecking
+    {
+        public CompositeAndOperandsTypeChecking(
+            OperandsTypeChecking[] allowedRules)
+        {
+            super(Composition.AND, allowedRules);
+        }
+    }
+
+    /**
+     * A Convenience class that is equivalent to
+     * <code>CompositeOperandsTypeChecking(Composistion.OR, rules)</code>
+     */
+    public static class CompositeOrOperandsTypeChecking
+        extends CompositeOperandsTypeChecking
+    {
+        public CompositeOrOperandsTypeChecking(
+            OperandsTypeChecking[] allowedRules)
+        {
+            super(Composition.OR, allowedRules);
         }
     }
 
@@ -362,83 +442,107 @@ public abstract class OperandsTypeChecking
         new SimpleOperandsTypeChecking(new SqlTypeName [][] {
             SqlTypeName.booleanNullableTypes, SqlTypeName.booleanNullableTypes
         });
+
     /**
      * Parameter type-checking strategy
      * type must be numeric.
      */
     public static final OperandsTypeChecking typeNumeric =
-        new SimpleOperandsTypeChecking(new SqlTypeName [][] { SqlTypeName.numericTypes });
+        new SimpleOperandsTypeChecking(new SqlTypeName [][] {
+            SqlTypeName.numericTypes });
+
     /**
      * Parameter type-checking strategy
-     * type must be a numeric literal.
+     * type must be a literal, but NOT a NULL literal
      */
-    public static final OperandsTypeChecking typeNumericLiteral =
-        new SimpleOperandsTypeChecking(new SqlTypeName [][] { SqlTypeName.numericTypes }) {
+    public static final OperandsTypeChecking typeLiteral =
+        new OperandsTypeChecking() {
             public boolean check(
                 SqlCall call,
                 SqlValidator validator,
                 SqlValidator.Scope scope,
                 SqlNode node,
-                int operandOrdinal)
-            {
-                boolean res =
-                    super.check(call, validator, scope, node, operandOrdinal);
-                if (!res) {
-                    return res;
+                int ruleOrdinal,
+                boolean throwOnFailure) {
+
+                Util.discard(ruleOrdinal);
+
+                if (SqlUtil.isNullLiteral(node, true)) {
+                    if (throwOnFailure) {
+                        throw EigenbaseResource.instance()
+                            .newArgumentMustNotBeNull(call.operator.name);
+                    }
+                    return false;
                 }
-                if (operandOrdinal == 0) {
-                    if (!SqlUtil.isLiteral(node)) {
+                if (!SqlUtil.isLiteral(node)) {
+                    if (throwOnFailure) {
                         throw EigenbaseResource.instance()
                             .newArgumentMustBeLiteral(call.operator.name);
                     }
+                    return false;
                 }
-                return res;
+
+                return true;
+            }
+
+            public boolean check(
+                SqlValidator validator,
+                SqlValidator.Scope scope,
+                SqlCall call,
+                boolean throwOnFailure) {
+
+                Util.pre(null != call, "null != call");
+                return check(call, validator, scope,
+                    call.operands[0], 0, throwOnFailure);
+            }
+
+            public int getArgCount() {
+                return 1;
+            }
+
+            public String getAllowedSignatures(SqlOperator op) {
+                return "<LITERAL>";
             }
         };
+
     /**
      * Parameter type-checking strategy
      * type must be a positive integer literal. Null literal not allowed
      */
     public static final OperandsTypeChecking typePositiveIntegerLiteral =
         new SimpleOperandsTypeChecking(new SqlTypeName [][] {
-            { SqlTypeName.Integer }
+            SqlTypeName.intTypes
         }) {
             public boolean check(
                 SqlCall call,
                 SqlValidator validator,
                 SqlValidator.Scope scope,
                 SqlNode node,
-                int operandOrdinal)
+                int ruleOrdinal, boolean throwOnFailure)
             {
-                boolean res =
-                    super.check(call, validator, scope, node, operandOrdinal);
-                if (!res) {
-                    return res;
+                if (!typeLiteral.check(call, validator, scope, node,
+                                        ruleOrdinal, throwOnFailure)) {
+                    return false;
                 }
 
-                // REVIEW (jhyde, 2004/7/23) why is the isNullLiteral check
-                //   outside the 'if (operandOrdinal == 0)' check, and the
-                //   isLiteral check inside? In fact, why the 'operandOrdinal == 0'
-                //   check at all?
-                if (SqlUtil.isNullLiteral(node, true)) {
-                    throw EigenbaseResource.instance()
-                        .newArgumentMustNotBeNull(call.operator.name);
+                if (!super.check(call, validator, scope, node,
+                                  ruleOrdinal, throwOnFailure)) {
+                    return false;
                 }
-                if (operandOrdinal == 0) {
-                    if (!SqlUtil.isLiteral(node)) {
-                        throw EigenbaseResource.instance()
-                            .newArgumentMustBeLiteral(call.operator.name);
-                    }
-                    final SqlLiteral arg = ((SqlLiteral) node);
-                    final int value = arg.intValue();
-                    if (value < 0) {
+
+                final SqlLiteral arg = ((SqlLiteral) node);
+                final int value = arg.intValue();
+                if (value < 0) {
+                    if (throwOnFailure) {
                         throw EigenbaseResource.instance()
                             .newArgumentMustBePositiveInteger(call.operator.name);
                     }
+                    return false;
                 }
-                return res;
+                return true;
             }
         };
+
     /**
      * Parameter type-checking strategy
      * type must be numeric, numeric.
@@ -447,14 +551,25 @@ public abstract class OperandsTypeChecking
         new SimpleOperandsTypeChecking(new SqlTypeName [][] {
             SqlTypeName.numericTypes, SqlTypeName.numericTypes
         });
+
     /**
      * Parameter type-checking strategy
-     * type must be integer, integer. (exact types)
+     * type must be integer.
+     */
+    public static final OperandsTypeChecking typeInteger =
+        new SimpleOperandsTypeChecking(new SqlTypeName [][] {
+            SqlTypeName.intTypes
+        });
+
+    /**
+     * Parameter type-checking strategy
+     * type must be integer, integer.
      */
     public static final OperandsTypeChecking typeIntegerInteger =
         new SimpleOperandsTypeChecking(new SqlTypeName [][] {
             SqlTypeName.intTypes, SqlTypeName.intTypes
         });
+
     /**
      * Parameter type-checking strategy
      * type must be nullable integer, nullable integer. (exact types)
@@ -463,6 +578,7 @@ public abstract class OperandsTypeChecking
         new SimpleOperandsTypeChecking(new SqlTypeName [][] {
             SqlTypeName.intNullableTypes, SqlTypeName.intNullableTypes
         });
+
     /**
      * Parameter type-checking strategy
      * type must be nullable aType, nullable sameType
@@ -472,22 +588,10 @@ public abstract class OperandsTypeChecking
             { SqlTypeName.Any },
             { SqlTypeName.Any }
         }) {
-            public void check(
+            public boolean check(
                 SqlValidator validator,
                 SqlValidator.Scope scope,
-                SqlCall call)
-            {
-                if (!checkNoThrowing(call, validator, scope)) {
-                    throw EigenbaseResource.instance()
-                        .newNeedSameTypeParameter(
-                            call.getParserPosition().toString());
-                }
-            }
-
-            public boolean checkNoThrowing(
-                SqlCall call,
-                SqlValidator validator,
-                SqlValidator.Scope scope)
+                SqlCall call, boolean throwOnFailure)
             {
                 assert (2 == call.operands.length);
                 RelDataType type1 =
@@ -499,9 +603,18 @@ public abstract class OperandsTypeChecking
                 if (type1.equals(nullType) || type2.equals(nullType)) {
                     return true; //null is ok;
                 }
-                return type1.isSameType(type2) || type2.isSameType(type1);
+                if (!(type1.isSameType(type2) || type2.isSameType(type1))) {
+                    if (throwOnFailure) {
+                        throw EigenbaseResource.instance()
+                        .newNeedSameTypeParameter(
+                            call.getParserPosition().toString());
+                    }
+                    return false;
+                }
+                return true;
             }
         };
+
     /**
      * Parameter type-checking strategy
      * type must be nullable aType, nullable sameType, nullable sameType
@@ -512,22 +625,10 @@ public abstract class OperandsTypeChecking
             { SqlTypeName.Any },
             { SqlTypeName.Any }
         }) {
-            public void check(
+            public boolean check(
                 SqlValidator validator,
                 SqlValidator.Scope scope,
-                SqlCall call)
-            {
-                if (!checkNoThrowing(call, validator, scope)) {
-                    throw EigenbaseResource.instance()
-                        .newNeedSameTypeParameter(
-                            call.getParserPosition().toString());
-                }
-            }
-
-            public boolean checkNoThrowing(
-                SqlCall call,
-                SqlValidator validator,
-                SqlValidator.Scope scope)
+                SqlCall call, boolean throwOnFailure)
             {
                 assert (3 == call.operands.length);
                 RelDataType type1 =
@@ -540,15 +641,25 @@ public abstract class OperandsTypeChecking
                     validator.typeFactory.createSqlType(SqlTypeName.Null);
 
                 //null is ok;
-                return
+                if (!(
                     (type1.equals(nullType) || type2.equals(nullType) ||
                     type1.isSameType(type2) || type2.isSameType(type1)) &&
                     (type1.equals(nullType) || type3.equals(nullType) ||
                     type1.isSameType(type3) || type3.isSameType(type1)) &&
                     (type2.equals(nullType) || type3.equals(nullType) ||
-                    type2.isSameType(type3) || type3.isSameType(type2));
+                    type2.isSameType(type3) || type3.isSameType(type2)))) {
+
+                    if (throwOnFailure) {
+                        throw EigenbaseResource.instance()
+                            .newNeedSameTypeParameter(
+                                call.getParserPosition().toString());
+                    }
+                    return false;
+                }
+                return true;
             }
         };
+
     /**
      * Parameter type-checking strategy
      * type must be nullable numeric, nullable numeric.
@@ -557,6 +668,7 @@ public abstract class OperandsTypeChecking
         new SimpleOperandsTypeChecking(new SqlTypeName [][] {
             SqlTypeName.numericNullableTypes, SqlTypeName.numericNullableTypes
         });
+
     /**
      * Parameter type-checking strategy
      * type must be nullable numeric, nullable numeric, nullabl numeric.
@@ -566,6 +678,7 @@ public abstract class OperandsTypeChecking
             SqlTypeName.numericNullableTypes, SqlTypeName.numericNullableTypes,
             SqlTypeName.numericNullableTypes
         });
+
     /**
      * Parameter type-checking strategy
      * type must be nullable binary, nullable binary.
@@ -574,14 +687,18 @@ public abstract class OperandsTypeChecking
         new SimpleOperandsTypeChecking(new SqlTypeName [][] {
             SqlTypeName.binaryNullableTypes, SqlTypeName.binaryNullableTypes
         });
+
     /**
      * Parameter type-checking strategy
      * type must be nullable binary, nullable binary, nullable binary.
      */
     public static final OperandsTypeChecking typeNullableBinariesBinariesBinaries =
         new SimpleOperandsTypeChecking(new SqlTypeName [][] {
-            SqlTypeName.binaryNullableTypes, SqlTypeName.binaryNullableTypes, SqlTypeName.binaryNullableTypes
+            SqlTypeName.binaryNullableTypes,
+            SqlTypeName.binaryNullableTypes,
+            SqlTypeName.binaryNullableTypes
         });
+
     /**
      * Parameter type-checking strategy
      * type must be null | charstring | bitstring | hexstring
@@ -590,6 +707,7 @@ public abstract class OperandsTypeChecking
         new SimpleOperandsTypeChecking(new SqlTypeName [][] {
             SqlTypeName.stringNullableTypes
         });
+
     /**
      * Parameter type-checking strategy
      * types must be null | charstring | bitstring | hexstring
@@ -598,97 +716,57 @@ public abstract class OperandsTypeChecking
         new SimpleOperandsTypeChecking(new SqlTypeName [][] {
             SqlTypeName.stringNullableTypes, SqlTypeName.stringNullableTypes
         });
+
     /**
      * Parameter type-checking strategy
      * type must be a varchar literal.
      */
     public static final OperandsTypeChecking typeVarcharLiteral =
-        new SimpleOperandsTypeChecking(new SqlTypeName [][] {SqlTypeName.charTypes}) {
-            public boolean check(
-                SqlCall call,
-                SqlValidator validator,
-                SqlValidator.Scope scope,
-                SqlNode node,
-                int operandOrdinal)
-            {
-                boolean res =
-                    super.check(call, validator, scope, node, operandOrdinal);
-                if (!res) {
-                    return res;
-                }
-                if (SqlUtil.isNullLiteral(node, true)) {
-                    throw EigenbaseResource.instance()
-                        .newArgumentMustNotBeNull(call.operator.name);
-                }
-                if (operandOrdinal == 0) {
-                    if (node instanceof SqlLiteral) {
-                    } else {
-                        throw EigenbaseResource.instance()
-                            .newArgumentMustBeLiteral(call.operator.name);
-                    }
-                }
-                return res;
-            }
-        };
+        new CompositeAndOperandsTypeChecking(
+        new OperandsTypeChecking[] {
+        new SimpleOperandsTypeChecking(
+            new SqlTypeName[][]{SqlTypeName.charTypes})
+        , typeLiteral
+        });
+
     /**
      * Parameter type-checking strategy
      * type must be a nullable varchar literal.
      */
     public static final OperandsTypeChecking typeNullableVarcharLiteral =
-        new SimpleOperandsTypeChecking(new SqlTypeName [][] {
-            SqlTypeName.charNullableTypes
-        }) {
-            public boolean check(
-                SqlCall call,
-                SqlValidator validator,
-                SqlValidator.Scope scope,
-                SqlNode node,
-                int operandOrdinal)
-            {
-                boolean res =
-                    super.check(call, validator, scope, node, operandOrdinal);
-                if (!res) {
-                    return res;
-                }
-                if (operandOrdinal == 0) {
-                    if (SqlUtil.isNullLiteral(node, true)) {
-                        return res;
-                    } else if (SqlUtil.isLiteral(node)) {
-                        return res;
-                    } else {
-                        throw EigenbaseResource.instance()
-                            .newArgumentMustBeLiteral(call.operator.name);
-                    }
-                }
-                return res;
-            }
-        };
+        new CompositeAndOperandsTypeChecking(
+        new OperandsTypeChecking[] {
+        new SimpleOperandsTypeChecking(
+            new SqlTypeName[][]{SqlTypeName.charNullableTypes})
+        , typeLiteral
+        });
+
     /**
      * Parameter type-checking strategy
      * type must be nullable varchar, NOT nullable varchar literal.
      * the expression <code>CAST(NULL AS TYPE)</code> is considered a NULL literal.
      */
-    public static final OperandsTypeChecking typeNullableVarcharNotNullableVarcharLiteral =
+    public static final OperandsTypeChecking
+        typeNullableVarcharNotNullableVarcharLiteral =
         new SimpleOperandsTypeChecking(new SqlTypeName [][] {
             SqlTypeName.charNullableTypes, SqlTypeName.charTypes
         }) {
-            public void check(
+            public boolean check(
                 SqlValidator validator,
                 SqlValidator.Scope scope,
-                SqlCall call)
+                SqlCall call, boolean throwOnFailure)
             {
-                // check that the 2nd argument is a varchar literal
-                super.check(validator, scope, call);
-                if (SqlUtil.isNullLiteral(call.getOperands()[1], true)) {
-                    throw EigenbaseResource.instance()
-                        .newArgumentMustNotBeNull(call.operator.name);
+                //checking if char types
+                if (!super.check(validator, scope, call, throwOnFailure)) {
+                    return false;
                 }
-                if (!(call.getOperands()[1] instanceof SqlLiteral)) {
-                    throw EigenbaseResource.instance()
-                        .newArgumentMustBeLiteral(call.operator.name);
-                }
+
+                // check that the 2nd argument is a literal
+                return typeLiteral.check(call,validator, scope,
+                    call.operands[1],0, throwOnFailure);
             }
         };
+
     /**
      * Parameter type-checking strategy
      * types must be null | charstring | bitstring | hexstring
@@ -718,20 +796,10 @@ public abstract class OperandsTypeChecking
                 return ret.toString();
             }
 
-            protected void getAllowedSignatures(
-                int depth,
-                ArrayList list,
-                StringBuffer buf,
-                SqlOperator op)
-            {
-                throw Util.needToImplement(
-                    "should not be called unless implemented");
-            }
-
-            public void check(
+            public boolean check(
                 SqlValidator validator,
                 SqlValidator.Scope scope,
-                SqlCall call)
+                SqlCall call, boolean throwOnFailure)
             {
                 RelDataType t0 = validator.deriveType(scope, call.operands[0]);
                 RelDataType t1 = validator.deriveType(scope, call.operands[1]);
@@ -742,22 +810,30 @@ public abstract class OperandsTypeChecking
                 if (!nullType.isAssignableFrom(t0, false)
                     && !nullType.isAssignableFrom(t1, false)) {
                     if (!t0.isSameTypeFamily(t1)) {
-                        //parser postition retrieved in
-                        //newValidationSignatureError()
-                        throw call.newValidationSignatureError(validator, scope);
+                        if (throwOnFailure) {
+                            //parser postition retrieved in
+                            //newValidationSignatureError()
+                            throw call.newValidationSignatureError(
+                                validator, scope);
+                        }
+                        return false;
                     }
                 }
-                super.check(validator, scope, call);
+                return super.check(validator, scope, call, throwOnFailure);
             }
         };
+
     /**
      * Parameter type-checking strategy
      * types must be null | charstring | bitstring | hexstring
      * AND types must be identical to eachother
      */
-    public static final OperandsTypeChecking typeNullableStringStringStringOfSameType =
+    public static final OperandsTypeChecking
+        typeNullableStringStringStringOfSameType =
         new SimpleOperandsTypeChecking(new SqlTypeName [][] {
-            SqlTypeName.stringNullableTypes, SqlTypeName.stringNullableTypes, SqlTypeName.stringNullableTypes
+            SqlTypeName.stringNullableTypes,
+            SqlTypeName.stringNullableTypes,
+            SqlTypeName.stringNullableTypes
         }) {
             public String getAllowedSignatures(SqlOperator op)
             {
@@ -790,10 +866,10 @@ public abstract class OperandsTypeChecking
                     "should not be called unless implemented");
             }
 
-            public void check(
+            public boolean check(
                 SqlValidator validator,
                 SqlValidator.Scope scope,
-                SqlCall call)
+                SqlCall call, boolean throwOnFailure)
             {
                 RelDataType t0 = validator.deriveType(scope, call.operands[0]);
                 RelDataType t1 = validator.deriveType(scope, call.operands[1]);
@@ -807,20 +883,26 @@ public abstract class OperandsTypeChecking
                     && !nullType.isAssignableFrom(t1, false)
                     && !nullType.isAssignableFrom(t2, false)) {
                     if (!t0.isSameTypeFamily(t1) || !t1.isSameTypeFamily(t2)) {
-                        throw call.newValidationSignatureError(validator, scope);
+                        if (throwOnFailure) {
+                            throw call.newValidationSignatureError(validator, scope);
+                        }
+                        return false;
                     }
                 }
-                super.check(validator, scope, call);
+                return super.check(validator, scope, call, throwOnFailure);
             }
         };
+
     /**
      * Parameter type-checking strategy
      * types must be null | charstring | bitstring | hexstring
      */
     public static final OperandsTypeChecking typeNullableStringStringString =
         new SimpleOperandsTypeChecking(new SqlTypeName [][] {
-            SqlTypeName.stringNullableTypes, SqlTypeName.stringNullableTypes, SqlTypeName.stringNullableTypes
+            SqlTypeName.stringNullableTypes, SqlTypeName.stringNullableTypes,
+            SqlTypeName.stringNullableTypes
         });
+
     /**
      * Parameter type-checking strategy
      * types must be
@@ -831,6 +913,7 @@ public abstract class OperandsTypeChecking
         new SimpleOperandsTypeChecking(new SqlTypeName [][] {
             SqlTypeName.stringNullableTypes, SqlTypeName.intNullableTypes
         });
+
     /**
      * Parameter type-checking strategy
      * types must be
@@ -840,8 +923,10 @@ public abstract class OperandsTypeChecking
      */
     public static final OperandsTypeChecking typeNullableStringIntInt =
         new SimpleOperandsTypeChecking(new SqlTypeName [][] {
-            SqlTypeName.stringTypes, SqlTypeName.intNullableTypes, SqlTypeName.intNullableTypes
+            SqlTypeName.stringTypes, SqlTypeName.intNullableTypes,
+            SqlTypeName.intNullableTypes
         });
+
     /**
      * Parameter type-checking strategy
      * 2 first types must be null | charstring | bitstring | hexstring
@@ -849,17 +934,23 @@ public abstract class OperandsTypeChecking
      */
     public static final OperandsTypeChecking typeNullableStringStringNotNullableInt =
         new SimpleOperandsTypeChecking(new SqlTypeName [][] {
-            SqlTypeName.stringTypes, SqlTypeName.stringTypes, SqlTypeName.intTypes
+            SqlTypeName.stringTypes, SqlTypeName.stringTypes,
+            SqlTypeName.intTypes
         });
+
     /**
      * Parameter type-checking strategy
      * 2 first types must be null | charstring | bitstring | hexstring
      * 3&4 type must be integer
      */
-    public static final OperandsTypeChecking typeNullableStringStringNotNullableIntInt =
+    public static final OperandsTypeChecking
+        typeNullableStringStringNotNullableIntInt =
         new SimpleOperandsTypeChecking(new SqlTypeName [][] {
-            SqlTypeName.stringTypes, SqlTypeName.stringTypes, SqlTypeName.intTypes, SqlTypeName.intTypes
+            SqlTypeName.stringTypes, SqlTypeName.stringTypes,
+            SqlTypeName.intTypes,
+            SqlTypeName.intTypes
         });
+
     /**
      * Parameter type-checking strategy
      * type must be nullable numeric
@@ -868,6 +959,7 @@ public abstract class OperandsTypeChecking
         new SimpleOperandsTypeChecking(new SqlTypeName [][] {
             SqlTypeName.numericNullableTypes
         });
+
     /**
      * Parameter type-checking strategy
      * types must be varchar, int, int
@@ -876,14 +968,17 @@ public abstract class OperandsTypeChecking
         new SimpleOperandsTypeChecking(new SqlTypeName [][] {
             SqlTypeName.charTypes, SqlTypeName.intTypes, SqlTypeName.intTypes
         });
+
     /**
      * Parameter type-checking strategy
      * types must be [nullable] varchar, [nullable] int, [nullable] int
      */
     public static final OperandsTypeChecking typeNullableVarcharIntInt =
         new SimpleOperandsTypeChecking(new SqlTypeName [][] {
-            SqlTypeName.charNullableTypes, SqlTypeName.intNullableTypes, SqlTypeName.intNullableTypes
+            SqlTypeName.charNullableTypes, SqlTypeName.intNullableTypes,
+            SqlTypeName.intNullableTypes
         });
+
     /**
      * Parameter type-checking strategy
      * types must be not nullable varchar, not nullable int
@@ -892,6 +987,7 @@ public abstract class OperandsTypeChecking
         new SimpleOperandsTypeChecking(new SqlTypeName [][] {
             SqlTypeName.charTypes, SqlTypeName.intTypes
         });
+
     /**
      * Parameter type-checking strategy
      * types must be [nullable] varchar, [nullable] varchar,
@@ -900,14 +996,17 @@ public abstract class OperandsTypeChecking
         new SimpleOperandsTypeChecking(new SqlTypeName [][] {
             SqlTypeName.charNullableTypes, SqlTypeName.charNullableTypes
         });
+
     /**
      * Parameter type-checking strategy
      * types must be [nullable] varchar, [nullable] varchar, [nullable] varchar
      */
     public static final OperandsTypeChecking typeNullableVarcharVarcharVarchar =
         new SimpleOperandsTypeChecking(new SqlTypeName [][] {
-            SqlTypeName.charNullableTypes, SqlTypeName.charNullableTypes, SqlTypeName.charNullableTypes
+            SqlTypeName.charNullableTypes, SqlTypeName.charNullableTypes,
+            SqlTypeName.charNullableTypes
         });
+
     /**
      * Parameter type-checking strategy
      * types must be nullable boolean
@@ -916,6 +1015,7 @@ public abstract class OperandsTypeChecking
         new SimpleOperandsTypeChecking(new SqlTypeName [][] {
             SqlTypeName.booleanNullableTypes
         });
+
     /**
      * Parameter type-checking strategy
      * types can be any,any
@@ -925,6 +1025,7 @@ public abstract class OperandsTypeChecking
             { SqlTypeName.Any },
             { SqlTypeName.Any }
         });
+
     /**
      * Parameter type-checking strategy
      * types can be any
@@ -933,6 +1034,7 @@ public abstract class OperandsTypeChecking
         new SimpleOperandsTypeChecking(new SqlTypeName [][] {
             { SqlTypeName.Any }
         });
+
     /**
      * Parameter type-checking strategy
      * types must be varchar,varchar
@@ -941,6 +1043,7 @@ public abstract class OperandsTypeChecking
         new SimpleOperandsTypeChecking(new SqlTypeName [][] {
             SqlTypeName.charTypes, SqlTypeName.charTypes
         });
+
     /**
      * Parameter type-checking strategy
      * types must be nullable varchar
@@ -949,16 +1052,19 @@ public abstract class OperandsTypeChecking
         new SimpleOperandsTypeChecking(new SqlTypeName [][] {
             SqlTypeName.charNullableTypes
         });
+
     /**
      * Parameter type-checking strategy
      * type must be
      * positive integer literal
      * OR varchar literal
      */
-    public static final OperandsTypeChecking typePositiveIntegerLiteral_or_VarcharLiteral =
-        new CompositeOperandsTypeChecking(new OperandsTypeChecking [] {
+    public static final OperandsTypeChecking
+        typePositiveIntegerLiteral_or_VarcharLiteral =
+        new CompositeOrOperandsTypeChecking(new OperandsTypeChecking [] {
             typePositiveIntegerLiteral, typeVarcharLiteral
         });
+
     /**
      * Parameter type-checking strategy
      * type must be
@@ -966,20 +1072,23 @@ public abstract class OperandsTypeChecking
      * and must be comparable to eachother
      */
     public static final OperandsTypeChecking typeNullableComparable =
-        new CompositeOperandsTypeChecking(new OperandsTypeChecking [] {
+        new CompositeOrOperandsTypeChecking(new OperandsTypeChecking [] {
             typeNullableSameSame, typeNullableNumericNumeric,
             typeNullableBinariesBinaries, typeNullableVarcharVarchar
         });
+
     /**
      * Parameter type-checking strategy
      * type must be
      * nullable string, nullable string, nulalble string
      * OR nullable string, nullable numeric, nullable numeric.
      */
-    public static final OperandsTypeChecking typeNullabeStringStringString_or_NullableStringIntInt =
-        new CompositeOperandsTypeChecking(new OperandsTypeChecking [] {
+    public static final OperandsTypeChecking
+        typeNullabeStringStringString_or_NullableStringIntInt =
+        new CompositeOrOperandsTypeChecking(new OperandsTypeChecking [] {
             typeNullableStringStringString, typeNullableStringIntInt
         });
+
     /**
      * Parameter type-checking strategy
      * type must be
@@ -987,9 +1096,10 @@ public abstract class OperandsTypeChecking
      * OR nullable numeric
      */
     public static final OperandsTypeChecking typeNullableString_or_NullableNumeric =
-        new CompositeOperandsTypeChecking(new OperandsTypeChecking [] {
+        new CompositeOrOperandsTypeChecking(new OperandsTypeChecking [] {
             typeNullableString, typeNullableNumeric
         });
+
     /**
      * Parameter type-checking strategy
      * type must a nullable time interval
@@ -998,13 +1108,15 @@ public abstract class OperandsTypeChecking
         new SimpleOperandsTypeChecking(new SqlTypeName [][] {
             SqlTypeName.timeIntervalNullableTypes
         });
+
     /**
      * Parameter type-checking strategy
      * type must a nullable time interval, nullable time interval
      */
     public static final OperandsTypeChecking typeNullableIntervalInterval =
         new SimpleOperandsTypeChecking(new SqlTypeName [][] {
-            SqlTypeName.timeIntervalNullableTypes, SqlTypeName.timeIntervalNullableTypes
+            SqlTypeName.timeIntervalNullableTypes,
+            SqlTypeName.timeIntervalNullableTypes
         });
 
 }

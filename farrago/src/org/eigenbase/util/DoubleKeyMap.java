@@ -47,6 +47,9 @@ public class DoubleKeyMap
 
     //~ Methods ---------------------------------------------------------------
 
+    /**
+     * Set to true if you want to ennforces the inserting of one key pair once 
+     */
     public void setEnforceUniqueness(boolean enforce)
     {
         enforceUniquness = enforce;

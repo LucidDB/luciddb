@@ -106,7 +106,7 @@ public class SqlTrimFunction extends SqlFunction
     {
         for (int i = 1; i < 3; i++) {
             if (!OperandsTypeChecking.typeNullableString.check(call, validator,
-                        scope, call.operands[i], 0)) {
+                        scope, call.operands[i], 0, true)) {
                 throw call.newValidationSignatureError(validator, scope);
             }
         }

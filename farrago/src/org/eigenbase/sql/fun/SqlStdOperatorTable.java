@@ -47,7 +47,126 @@ import java.util.regex.Pattern;
  **/
 public class SqlStdOperatorTable extends SqlOperatorTable
 {
-    //~ Instance fields -------------------------------------------------------
+    //~ Instance fields -------------------------------------------
+    /**
+     * The standard operator table.
+     */
+    private static SqlStdOperatorTable instance;
+
+    /**
+     * Regular expression for a SQL TIME(0) value.
+     */
+    private static final Pattern timePattern = Pattern.compile(
+        "[0-9][0-9]:[0-9][0-9]:[0-9][0-9]");
+
+    /**
+     * Regular expression for a SQL TIMESTAMP(3) value.
+     */
+    private static final Pattern timestampPattern = Pattern.compile(
+        "[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9] " +
+        "[0-9][0-9]:[0-9][0-9]:[0-9][0-9]\\.[0-9]+");
+
+    /**
+     * Regular expression for a SQL DATE value.
+     */
+    private static final Pattern datePattern = Pattern.compile(
+        "[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]");
+
+
+    //~ INNER CLASSES ------------------------------------------
+    /**
+     * Returns the standard operator table, creating it if necessary.
+     */
+    public static synchronized SqlStdOperatorTable std() {
+        if (instance == null) {
+            // Creates and initializes the standard operator table.
+            // Uses two-phase construction, because we can't intialize the
+            // table until the constructor of the sub-class has completed.
+            instance = new SqlStdOperatorTable();
+            instance.init();
+        }
+        return instance;
+    }
+
+    /**
+     * Base class for time functions such as "LOCALTIME", "LOCALTIME(n)".
+     */
+    private abstract static class SqlAbstractTimeFunction extends SqlFunction {
+        private final SqlTypeName typeName;
+
+        public SqlAbstractTimeFunction(String name, SqlTypeName typeName) {
+            super(name, SqlKind.Function, null, null, null,
+                    SqlFunction.SqlFuncTypeName.TimeDate);
+            this.typeName = typeName;
+        }
+        // no argTypeInference, so must override these methods.
+        // Probably need a niladic version of that.
+        public OperandsCountDescriptor getOperandsCountDescriptor()
+        {
+            return new OperandsCountDescriptor(0, 1);
+        }
+
+        public SqlSyntax getSyntax()
+        {
+            return SqlSyntax.FunctionId;
+        }
+
+        public RelDataType getType(SqlValidator validator,
+                SqlValidator.Scope scope, SqlCall call)
+        {
+            return inferType(validator, scope, call);
+        }
+
+        public RelDataType getType(RelDataTypeFactory typeFactory,
+            RelDataType[] argTypes)
+        {
+            // REVIEW jvs 20-Feb-2004:  SqlTypeName says Time and Timestamp
+            // don't take precision, but they should (according to the
+            // standard). Also, need to take care of time zones.
+
+            // TODO: use first arg as precision
+            int precision = 0;
+            return typeFactory.createSqlType(typeName, precision);
+        }
+
+        protected RelDataType inferType(SqlValidator validator,
+                SqlValidator.Scope scope, SqlCall call)
+        {
+            int precision = 0;
+            if (call.operands.length == 1) {
+                precision = validator.getOperandAsPositiveInteger(call, 0);
+            }
+            return validator.typeFactory.createSqlType(typeName, precision);
+        }
+    }
+
+    /**
+     * Abstract base class for user functions such as "USER", "CURRENT_ROLE".
+     */
+    private static abstract class SqlAbstractUserFunction extends SqlFunction {
+        public SqlAbstractUserFunction(String name) {
+            super(name, SqlKind.Function, ReturnTypeInference.useVarchar30,
+                null, OperandsTypeChecking.typeEmpty, SqlFunction.SqlFuncTypeName.System);
+        }
+
+        public OperandsCountDescriptor getOperandsCountDescriptor()
+        {
+            return new OperandsCountDescriptor(0);
+        }
+
+        public SqlSyntax getSyntax() {
+            return SqlSyntax.FunctionId;
+        }
+
+        protected void checkArgTypes(SqlCall call, SqlValidator validator,
+                SqlValidator.Scope scope) {
+            if (call.operands.length != 0) {
+                throw call.newValidationSignatureError(validator, scope);
+            }
+        }
+    }
+
+    //~ OPERATORS AND FUNCTIONS -----------------------------------
 
     //-------------------------------------------------------------
     //                   SET OPERATORS
@@ -710,11 +829,11 @@ public class SqlStdOperatorTable extends SqlOperatorTable
                 switch (call.operands.length) {
                 case 3:
                     OperandsTypeChecking.typeNullableStringStringNotNullableInt
-                        .check(validator, scope, call);
+                        .check(validator, scope, call, true);
                     break;
                 case 4:
                     OperandsTypeChecking.typeNullableStringStringNotNullableIntInt
-                        .check(validator, scope, call);
+                        .check(validator, scope, call, true);
                     break;
                 default:
                     throw Util.needToImplement(this);
@@ -844,7 +963,7 @@ public class SqlStdOperatorTable extends SqlOperatorTable
                     throw call.newValidationSignatureError(validator, scope);
                 }
 
-                operandsCheckingRule.check(validator, scope, call);
+                operandsCheckingRule.check(validator, scope, call, true);
             }
 
             public void test(SqlTester tester)
@@ -1066,9 +1185,7 @@ public class SqlStdOperatorTable extends SqlOperatorTable
             public void test(SqlTester tester)
             {
                 tester.checkString("coalesce('a','b')", "a");
-                if (false) {
-                    tester.checkScalarExact("coalesce(null,null,3)", "3");
-                }
+                tester.checkScalarExact("coalesce(null,null,3)", "3");
             }
         };
 
@@ -1097,6 +1214,7 @@ public class SqlStdOperatorTable extends SqlOperatorTable
             tester.checkScalar("SESSION_USER", null, "VARCHAR(30) NOT NULL");
         }
     };
+
 
     /** The <code>SYSTEM_USER</code> function. */
     public final SqlFunction systemUserFunc = new SqlAbstractUserFunction(
@@ -1127,7 +1245,6 @@ public class SqlStdOperatorTable extends SqlOperatorTable
             tester.checkScalar("CURRENT_ROLE", "", "VARCHAR(30) NOT NULL");
         }
     };
-
 
     /** The <code>LOCALTIME [(<i>precision</i>)]</code> function. */
     public final SqlFunction localTimeFunc = new SqlAbstractTimeFunction(
@@ -1218,120 +1335,8 @@ public class SqlStdOperatorTable extends SqlOperatorTable
      */
     public final SqlFunction castFunc = new SqlCastFunction();
 
-
-    /**
-     * The standard operator table.
-     */
-    private static SqlStdOperatorTable instance;
-    /**
-     * Regular expression for a SQL TIME(0) value.
-     */
-    private static final Pattern timePattern = Pattern.compile(
-        "[0-9][0-9]:[0-9][0-9]:[0-9][0-9]");
-    /**
-     * Regular expression for a SQL TIMESTAMP(3) value.
-     */
-    private static final Pattern timestampPattern = Pattern.compile(
-        "[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9] " +
-        "[0-9][0-9]:[0-9][0-9]:[0-9][0-9]\\.[0-9]+");
-    /**
-     * Regular expression for a SQL DATE value.
-     */
-    private static final Pattern datePattern = Pattern.compile(
-        "[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]");
-
-    /**
-     * Returns the standard operator table, creating it if necessary.
-     */ 
-    public static synchronized SqlStdOperatorTable std() {
-        if (instance == null) {
-            // Creates and initializes the standard operator table.
-            // Uses two-phase construction, because we can't intialize the
-            // table until the constructor of the sub-class has completed.
-            instance = new SqlStdOperatorTable();
-            instance.init();
-        }
-        return instance;
-    }
-
-    /**
-     * Base class for time functions such as "LOCALTIME", "LOCALTIME(n)".
-     */
-    private abstract static class SqlAbstractTimeFunction extends SqlFunction {
-        private final SqlTypeName typeName;
-
-        public SqlAbstractTimeFunction(String name, SqlTypeName typeName) {
-            super(name, SqlKind.Function, null, null, null,
-                    SqlFunction.SqlFuncTypeName.TimeDate);
-            this.typeName = typeName;
-        }
-        // no argTypeInference, so must override these methods.
-        // Probably need a niladic version of that.
-        public OperandsCountDescriptor getOperandsCountDescriptor()
-        {
-            return new OperandsCountDescriptor(0, 1);
-        }
-
-        public SqlSyntax getSyntax()
-        {
-            return SqlSyntax.FunctionId;
-        }
-
-        public RelDataType getType(SqlValidator validator,
-                SqlValidator.Scope scope, SqlCall call)
-        {
-            return inferType(validator, scope, call);
-        }
-
-        public RelDataType getType(RelDataTypeFactory typeFactory,
-            RelDataType[] argTypes)
-        {
-            // REVIEW jvs 20-Feb-2004:  SqlTypeName says Time and Timestamp
-            // don't take precision, but they should (according to the
-            // standard). Also, need to take care of time zones.
-
-            // TODO: use first arg as precision
-            int precision = 0;
-            return typeFactory.createSqlType(typeName, precision);
-        }
-
-        protected RelDataType inferType(SqlValidator validator,
-                SqlValidator.Scope scope, SqlCall call)
-        {
-            int precision = 0;
-            if (call.operands.length == 1) {
-                precision = validator.getOperandAsPositiveInteger(call, 0);
-            }
-            return validator.typeFactory.createSqlType(typeName, precision);
-        }
-    }
-
-    /**
-     * Abstract base class for user functions such as "USER", "CURRENT_ROLE".
-     */
-    private static abstract class SqlAbstractUserFunction extends SqlFunction {
-        public SqlAbstractUserFunction(String name) {
-            super(name, SqlKind.Function, ReturnTypeInference.useVarchar30,
-                null, OperandsTypeChecking.typeEmpty, SqlFunction.SqlFuncTypeName.System);
-        }
-
-        public OperandsCountDescriptor getOperandsCountDescriptor()
-        {
-            return new OperandsCountDescriptor(0);
-        }
-
-        public SqlSyntax getSyntax() {
-            return SqlSyntax.FunctionId;
-        }
-
-        protected void checkArgTypes(SqlCall call, SqlValidator validator,
-                SqlValidator.Scope scope) {
-            if (call.operands.length != 0) {
-                throw call.newValidationSignatureError(validator, scope);
-            }
-        }
-    }
 }
 
 
 // End SqlStdOperatorTable.java
+

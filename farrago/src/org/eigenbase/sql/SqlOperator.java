@@ -392,7 +392,7 @@ public abstract class SqlOperator
             throw Util.needToImplement(this);
         }
 
-        operandsCheckingRule.check(validator, scope, call);
+        operandsCheckingRule.check(validator, scope, call, true);
     }
 
     protected boolean checkArgTypesNoThrow(

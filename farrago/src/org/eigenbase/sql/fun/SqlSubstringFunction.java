@@ -86,11 +86,11 @@ public class SqlSubstringFunction extends SqlFunction {
     {
         int n = call.operands.length;
         assert ((3 == n) || (2 == n));
-        OperandsTypeChecking.typeNullableString.checkThrows(validator,
-            scope, call, call.operands[0], 0);
+        OperandsTypeChecking.typeNullableString.check(call, validator,
+            scope, call.operands[0], 0, true);
         if (2 == n) {
-            OperandsTypeChecking.typeNullableNumeric.checkThrows(validator,
-                scope, call, call.operands[1], 0);
+            OperandsTypeChecking.typeNullableNumeric.check(call, validator,
+                scope, call.operands[1], 0, true);
         } else {
             RelDataType t1 =
                 validator.deriveType(scope, call.operands[1]);
@@ -98,18 +98,18 @@ public class SqlSubstringFunction extends SqlFunction {
                 validator.deriveType(scope, call.operands[2]);
 
             if (t1.isCharType()) {
-                OperandsTypeChecking.typeNullableString.checkThrows(validator,
-                    scope, call, call.operands[1], 0);
-                OperandsTypeChecking.typeNullableString.checkThrows(validator,
-                    scope, call, call.operands[2], 0);
+                OperandsTypeChecking.typeNullableString.check(call, validator,
+                    scope, call.operands[1], 0, true);
+                OperandsTypeChecking.typeNullableString.check(call, validator,
+                    scope, call.operands[2], 0, true);
 
                 ValidationUtil.isCharTypeComparableThrows(validator, scope,
                     call.operands);
             } else {
-                OperandsTypeChecking.typeNullableNumeric.checkThrows(validator,
-                    scope, call, call.operands[1], 0);
-                OperandsTypeChecking.typeNullableNumeric.checkThrows(validator,
-                    scope, call, call.operands[2], 0);
+                OperandsTypeChecking.typeNullableNumeric.check(call, validator,
+                    scope, call.operands[1], 0, true);
+                OperandsTypeChecking.typeNullableNumeric.check(call, validator,
+                    scope, call.operands[2], 0, true);
             }
 
             if (!t1.isSameTypeFamily(t2)) {

@@ -32,11 +32,12 @@ import java.util.*;
 
 
 /**
- * <code>SqlOperatorTable</code> is a singleton which contains an instance of
- * each operator.
+ * <code>SqlOperatorTable</code> is a (almost) a singleton. Almost since it
+ * get instance method returns an instance of {@link SqlStdOperatorTable} which
+ * contain all defined operators and functions.
  */
 public class SqlOperatorTable
-{
+{    
     //~ Instance fields -------------------------------------------------------
 
     private final MultiMap operators = new MultiMap();
@@ -312,3 +313,4 @@ public class SqlOperatorTable
 
 
 // End SqlOperatorTable.java
+

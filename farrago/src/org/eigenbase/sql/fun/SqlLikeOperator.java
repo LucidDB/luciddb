@@ -92,11 +92,11 @@ public abstract class SqlLikeOperator extends SqlSpecialOperator
         switch (call.operands.length) {
         case 2:
             OperandsTypeChecking.typeNullableStringStringOfSameType.check(validator,
-                scope, call);
+                scope, call, true);
             break;
         case 3:
             OperandsTypeChecking.typeNullableStringStringStringOfSameType.check(validator,
-                scope, call);
+                scope, call, true);
 
             //calc implementation should
             //enforce the escape character length to be 1
