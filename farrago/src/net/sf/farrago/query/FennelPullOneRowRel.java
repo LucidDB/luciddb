@@ -79,9 +79,9 @@ public class FennelPullOneRowRel extends AbstractRelNode implements FennelPullRe
 
     public Object implementFennelChild(FennelRelImplementor implementor)
     {
-        return IterOneRowRel.implementOneRow(cluster.typeFactory, getRowType());
+        return Literal.constantNull();
     }
-
+    
     public RelFieldCollation[] getCollations()
     {
         return RelFieldCollation.emptyCollationArray;

@@ -64,14 +64,8 @@ public class IterOneRowRel extends OneRowRel implements JavaRel
     // implement RelNode
     public ParseTree implement(JavaRelImplementor implementor)
     {
-        return implementOneRow(implementor.getTypeFactory(), getRowType());
-    }
-
-    public static ParseTree implementOneRow(RelDataTypeFactory typeFactory,
-        RelDataType outputRowType)
-    {
         OJClass outputRowClass = OJUtil.typeToOJClass(
-            outputRowType, typeFactory);
+            getRowType(), cluster.typeFactory);
 
         Expression newRowExp =
             new AllocationExpression(
