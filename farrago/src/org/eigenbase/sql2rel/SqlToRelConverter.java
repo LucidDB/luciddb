@@ -358,10 +358,10 @@ public class SqlToRelConverter
         String extraName)
     {
         assert (extraExpr == null) || (extraName != null) : "precondition: extraExpr == null || extraName != null";
-        RelNode converted = convertQueryOrInList(bb, seek);
+        RelNode seekRel = convertQueryOrInList(bb, seek);
+        List conditions = new ArrayList();
         if (condition != null) {
             // We are translating an IN clause, so add a condition.
-            RexNode conditionExp = null;
             final RexNode ref =
                 rexBuilder.makeRangeReference(
                     bb.root.getRowType(),
@@ -372,49 +372,29 @@ public class SqlToRelConverter
                 SqlNodeList conditionList = (SqlNodeList) condition;
                 for (int i = 0; i < conditionList.size(); i++) {
                     SqlNode conditionNode = conditionList.get(i);
-                    RexNode e =
+                    conditions.add(
                         rexBuilder.makeCall(
                             rexBuilder.opTab.equalsOperator,
                             convertExpression(bb, conditionNode),
-                            rexBuilder.makeFieldAccess(ref, i));
-                    if (i == 0) {
-                        conditionExp = e;
-                    } else {
-                        conditionExp =
-                            rexBuilder.makeCall(opTab.andOperator,
-                                conditionExp, e);
-                    }
+                            rexBuilder.makeFieldAccess(ref, i)));
                 }
             } else {
                 // If "seek" is "emp", generate the condition "emp = Q.c1". The
                 // query must have precisely one column.
-                assert converted.getRowType().getFieldList().size() == 1;
-                conditionExp =
+                assert seekRel.getRowType().getFieldList().size() == 1;
+                conditions.add(
                     rexBuilder.makeCall(
                         rexBuilder.opTab.equalsOperator,
                         convertExpression(bb, condition),
-                        rexBuilder.makeFieldAccess(ref, 0));
+                        rexBuilder.makeFieldAccess(ref, 0)));
             }
-            converted = new FilterRel(cluster, converted, conditionExp);
         }
-        if (extraExpr != null) {
-            final RelDataType rowType = converted.getRowType();
-            final RelDataTypeField [] fields = rowType.getFields();
-            final RexNode [] expressions = new RexNode[fields.length + 1];
-            String [] fieldNames = new String[fields.length + 1];
-            final RexNode ref = rexBuilder.makeRangeReference(rowType, 0);
-            for (int j = 0; j < fields.length; j++) {
-                expressions[j] = rexBuilder.makeFieldAccess(ref, j);
-                fieldNames[j] = fields[j].getName();
-            }
-            expressions[fields.length] = extraExpr;
-            fieldNames[fields.length] =
-                uniqueFieldName(fieldNames, fields.length, extraName);
-            converted =
-                new ProjectRel(cluster, converted, expressions, fieldNames,
-                    ProjectRelBase.Flags.Boxed);
-        }
-        return converted;
+        return RelOptUtil.createExistsPlan(
+            cluster,
+            seekRel,
+            (RexNode[]) conditions.toArray(RexUtil.emptyExpressionArray),
+            extraExpr,
+            extraName);
     }
 
     private RelNode convertQueryOrInList(
@@ -459,49 +439,6 @@ public class SqlToRelConverter
         }
         SqlCall call = (SqlCall) node;
         return call.operator.name.equalsIgnoreCase("row");
-    }
-
-    /**
-     * Generates a unique name
-     *
-     * @param names  Array of existing names
-     * @param length Number of existing names
-     * @param s Suggested name
-     * @return Name which does not match any of the names in the first
-     *   <code>length</code> positions of the <code>names</code> array.
-     */
-    private static String uniqueFieldName(
-        String [] names,
-        int length,
-        String s)
-    {
-        if (!contains(names, length, s)) {
-            return s;
-        }
-        int n = length;
-        while (true) {
-            s = "EXPR_" + n;
-            if (!contains(names, length, s)) {
-                return s;
-            }
-
-            // FIXME jvs 15-Nov-2003:  If we ever get here, it's an infinite
-            // loop; should be ++n?
-            assert(false);
-        }
-    }
-
-    private static boolean contains(
-        String [] names,
-        int length,
-        String s)
-    {
-        for (int i = 0; i < length; i++) {
-            if (names[i].equals(s)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /**
@@ -992,7 +929,7 @@ public class SqlToRelConverter
         case SqlKind.UnnestORDINAL:
             SqlCall call = (SqlCall) ((SqlCall) from).operands[0];
             replaceSubqueries(bb, call);
-            RexNode[] exprs =new RexNode[]{convertExpression(bb,call)};
+            RexNode[] exprs = new RexNode[]{convertExpression(bb,call)};
             final RelNode childRel = new ProjectRel(
                 cluster,
                 null != bb.root  ? bb.root : new OneRowRel(cluster),

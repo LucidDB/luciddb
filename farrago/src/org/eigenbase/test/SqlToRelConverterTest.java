@@ -327,6 +327,28 @@ public class SqlToRelConverterTest extends TestCase
             "          TableAccessRel(table=[[EMP]])" + NL);
     }
 
+    public void testExists() {
+        check("select*from emp where exists (select 1 from dept where deptno=55)",
+            "ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7])" + NL +
+            "  FilterRel(condition=[$9])" + NL +
+            "    JoinRel(condition=[true], joinType=[left])" + NL +
+            "      TableAccessRel(table=[[EMP]])" + NL +
+            "      ProjectRel(EXPR$0=[$0], $indicator=[true])" + NL +
+            "        ProjectRel(EXPR$0=[1])" + NL +
+            "          FilterRel(condition=[=($0, 55)])" + NL +
+            "            TableAccessRel(table=[[DEPT]])" + NL);
+
+        check("select*from emp where exists (select 1 from dept where emp.deptno=dept.deptno)",
+            "ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7])" + NL +
+            "  FilterRel(condition=[$9])" + NL +
+            "    CorrelatorRel(condition=[true], joinType=[left])" + NL +
+            "      TableAccessRel(table=[[EMP]])" + NL +
+            "      ProjectRel(EXPR$0=[$0], $indicator=[true])" + NL +
+            "        ProjectRel(EXPR$0=[1])" + NL +
+            "          FilterRel(condition=[=($cor0.DEPTNO, $0)])" + NL +
+            "            TableAccessRel(table=[[DEPT]])" + NL);
+    }
+
     public void testUnnestSelect() {
         check("select*from unnest(select multiset[deptno] from dept)",
             "ProjectRel(EXPR$0=[$0])" + NL +
@@ -355,7 +377,7 @@ public class SqlToRelConverterTest extends TestCase
     public void testElement() {
         check("select element(multiset[5]) from emp",
             "ProjectRel(EXPR$0=[ELEMENT($8)])" + NL +
-            "  JoinRel(condition=[true], joinType=[left])" + NL + 
+            "  JoinRel(condition=[true], joinType=[left])" + NL +
             "    TableAccessRel(table=[[EMP]])" + NL +
             "    CollectRel" + NL +
             "      UnionRel(all=[true])" + NL +

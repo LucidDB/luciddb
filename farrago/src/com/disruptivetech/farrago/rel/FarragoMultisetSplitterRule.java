@@ -24,14 +24,11 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
-import org.eigenbase.sql.SqlOperator;
 import org.eigenbase.sql.SqlStateCodes;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.util.Util;
 import org.eigenbase.reltype.RelDataType;
 
-import java.util.Set;
-import java.util.Iterator;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.math.BigDecimal;
@@ -192,7 +189,7 @@ public class FarragoMultisetSplitterRule extends RelOptRule
         RelNode input = calc.child;
         // correlatorRel is the new input rel that will replace the child of the
         // current calc.child
-        CorrelatorRel correlatorRel = null;
+        RelNode convertedRel = null;
 
         final RexCall rexCall;
         final RexNode rexNode;
@@ -219,7 +216,7 @@ public class FarragoMultisetSplitterRule extends RelOptRule
 
         final RexNode corRef =
             cluster.rexBuilder.makeCorrel(rexInput.getType(), dyn_inIdStr);
-        ProjectRel projectRel = new ProjectRel(
+        ProjectRel corProjectRel = new ProjectRel(
             cluster,
             new OneRowRel(cluster),
             new RexNode[]{corRef},
@@ -238,16 +235,16 @@ public class FarragoMultisetSplitterRule extends RelOptRule
             //       Uncollect
             //          ProjectRel=[output=$cor0]
             //            OneRowRel
-            UncollectRel uncollect = new UncollectRel(cluster, projectRel);
+            UncollectRel uncollect = new UncollectRel(cluster, corProjectRel);
             // TODO wael 3/15/05: need to create proper count agg call def.
             AggregateRel aggregateRel =
                 new AggregateRel(
                     cluster, uncollect, 1, new AggregateRel.Call[]{});
-            correlatorRel =
+            convertedRel =
                 new CorrelatorRel(cluster, input, aggregateRel, correlations);
-            HashSet stoppedVariableSet = new HashSet();
-            stoppedVariableSet.add(corRef);
-            correlatorRel.setVariablesStopped(stoppedVariableSet);
+//            HashSet stoppedVariableSet = new HashSet();
+//            stoppedVariableSet.add(corRef);
+//            convertedRel.setVariablesStopped(stoppedVariableSet);
 //            correlatorRel.registerCorrelVariable(dyn_inIdStr);
         } else if (RexMultisetUtil.opTab.castFunc == rexCall.op) {
             // A call to
@@ -262,7 +259,7 @@ public class FarragoMultisetSplitterRule extends RelOptRule
             //         Uncollect
             //           ProjectRel=[output=$cor0]
             //             OneRowRel
-            UncollectRel uncollect = new UncollectRel(cluster, projectRel);
+            UncollectRel uncollect = new UncollectRel(cluster, corProjectRel);
             RelDataType type = rexCall.getType().getComponentType();
             assert(null != type);
             assert(type.isStruct());
@@ -270,15 +267,76 @@ public class FarragoMultisetSplitterRule extends RelOptRule
             RexNode newCastCall =
                 cluster.rexBuilder.makeCast(
                     type,
-                    cluster.rexBuilder.makeInputRef(uncollect.getRowType().getFields()[0].getType(), 0));
+                    cluster.rexBuilder.makeInputRef(
+                        uncollect.getRowType().getFields()[0].getType(), 0));
             ProjectRel castRel = new ProjectRel(
                 cluster,
                 uncollect,
                 new RexNode[]{newCastCall},
                 new String[]{uncollect.getRowType().getFields()[0].getName()},
                 ProjectRel.Flags.Boxed);
-            correlatorRel =
+            convertedRel =
                 new CorrelatorRel(cluster, input, castRel, correlations);
+        } else if (RexMultisetUtil.opTab.isASetOperator == rexCall.op) {
+            // A call to
+            // CalcRel=[...,$in_i IS A SET,...]
+            //   CalcInput
+            //is eq. to
+            // CalcRel=[...,$in_N,...]
+            //   CorrelRel=[$cor0=$in_i]
+            //     CalcInput
+            //     ProjectRel=[CASE $0 == 0 THEN true ELSE false END]
+            //       AggregateRel[count(*)]
+            //         FilterRel=[c > 1]
+            //           AggregateRel[count(*) as c group by $0]
+            //             Uncollect
+            //               ProjectRel=[output=$cor0]
+            //                 OneRowRel
+            UncollectRel uncollect = new UncollectRel(cluster, corProjectRel);
+            // TODO wael 4/5/05: need to create proper count & group by agg call def.
+            AggregateRel aggregateGroupRel =
+                new AggregateRel(
+                    cluster, uncollect, 1, new AggregateRel.Call[]{});
+            RexNode c = cluster.rexBuilder.makeInputRef(
+                            cluster.typeFactory.createSqlType(
+                                SqlTypeName.Integer), 0);
+            RelNode filterRel =
+                RelOptUtil.createExistsPlan(
+                    cluster,
+                    aggregateGroupRel,
+                    new RexNode[]{ cluster.rexBuilder.makeCall(
+                        RexMultisetUtil.opTab.greaterThanOperator,
+                        c,
+                        cluster.rexBuilder.makeExactLiteral(new BigDecimal(1)))},
+                    null,
+                    null);
+            // TODO wael 4/5/05: need to create proper count call def.
+            AggregateRel countAggregateRel =
+                new AggregateRel(
+                    cluster, filterRel, 1, new AggregateRel.Call[]{});
+            RexNode[] whenThenElse = new RexNode[] {
+                // when
+                cluster.rexBuilder.makeCall(RexMultisetUtil.opTab.equalsOperator
+                    ,cluster.rexBuilder.makeInputRef(
+                        cluster.typeFactory.createSqlType(
+                            SqlTypeName.Integer), 0)
+                    ,cluster.rexBuilder.makeExactLiteral(new BigDecimal(0)))
+                // then
+                ,cluster.rexBuilder.makeLiteral(true)
+                // else
+                ,cluster.rexBuilder.makeLiteral(false)};
+            RexNode caseRexNode =
+                cluster.rexBuilder.makeCall(RexMultisetUtil.opTab.caseOperator, whenThenElse);
+            ProjectRel caseRel =
+                new ProjectRel(
+                    cluster,
+                    countAggregateRel,
+                    new RexNode[]{caseRexNode},
+                    new String[]{"case"},
+                    ProjectRel.Flags.Boxed);
+            convertedRel =
+                new CorrelatorRel(cluster, input, caseRel, correlations);
+
         } else if (RexMultisetUtil.opTab.elementFunc == rexCall.op) {
             // A call to
             // CalcRel=[...,ELEMENT($in_i),...]
@@ -299,7 +357,7 @@ public class FarragoMultisetSplitterRule extends RelOptRule
             //      AggregateRel[count(*), $0]
             //
             // 21000 is the standard CARDINALITY VIOLATION error code
-            UncollectRel uncollect = new UncollectRel(cluster, projectRel);
+            UncollectRel uncollect = new UncollectRel(cluster, corProjectRel);
             // TODO wael 3/29/05: need to create proper count agg call def.
             AggregateRel aggregateRel =
                 new AggregateRel(
@@ -330,7 +388,7 @@ public class FarragoMultisetSplitterRule extends RelOptRule
                             uncollect.getRowType(), 1)},
                     new String[]{"rangeref"},
                     ProjectRel.Flags.Boxed);
-            correlatorRel =
+            convertedRel =
                 new CorrelatorRel(cluster, input, limitRel, correlations);
         } else if (rexCall.op instanceof
             SqlStdOperatorTable.SqlMultisetSetOperator) {
@@ -364,7 +422,7 @@ public class FarragoMultisetSplitterRule extends RelOptRule
                 new String[]{"output"+corRef2.toString()},
                 ProjectRel.Flags.Boxed);
             final UncollectRel uncollectRel =
-                new UncollectRel(cluster, projectRel);
+                new UncollectRel(cluster, corProjectRel);
             final UncollectRel uncollectRel2 =
                 new UncollectRel(cluster, projectRel2);
 
@@ -394,12 +452,12 @@ public class FarragoMultisetSplitterRule extends RelOptRule
 
             final CollectRel collectRel =
                 new CollectRel(cluster, setRel, "multiset");
-            correlatorRel =
+            convertedRel =
                 new CorrelatorRel(cluster, input, collectRel, correlations);
         }
 
         Util.permAssert(
-            null != correlatorRel,
+            null != convertedRel,
             rexCall.op.name + " is not defined to be implementable");
 
         final RexNode newRexInputRef = cluster.rexBuilder.makeInputRef(
@@ -419,7 +477,7 @@ public class FarragoMultisetSplitterRule extends RelOptRule
             calc.projectExprs[offset.intValue()] = newRexInputRef;
         }
 
-        calc.replaceInput(0, correlatorRel);
+        calc.replaceInput(0, convertedRel);
         call.transformTo(RelOptUtil.clone(calc));
         return;
     }

@@ -32,7 +32,7 @@ import java.util.Iterator;
 /**
  * Utility class for various multiset related methods
  *
- * @author Wael Chatila 
+ * @author Wael Chatila
  * @since Apr 4, 2005
  * @version $Id$
  */
@@ -52,6 +52,8 @@ public class RexMultisetUtil
             multisetOperators.add(opTab.multisetIntersectOperator);
             multisetOperators.add(opTab.multisetUnionAllOperator);
             multisetOperators.add(opTab.multisetUnionOperator);
+            multisetOperators.add(opTab.isASetOperator);
+            multisetOperators.add(opTab.memberOfOperator);
         }
 
 

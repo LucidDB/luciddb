@@ -919,6 +919,49 @@ public class Util extends Toolbox
         }
         return null;
     }
+
+    /**
+     * Generates a unique name
+     *
+     * @param names  Array of existing names
+     * @param length Number of existing names
+     * @param s Suggested name
+     * @return Name which does not match any of the names in the first
+     *   <code>length</code> positions of the <code>names</code> array.
+     */
+    public static String uniqueFieldName(
+        String [] names,
+        int length,
+        String s)
+    {
+        if (!contains(names, length, s)) {
+            return s;
+        }
+        int n = length;
+        while (true) {
+            s = "EXPR_" + n;
+            if (!contains(names, length, s)) {
+                return s;
+            }
+
+            // FIXME jvs 15-Nov-2003:  If we ever get here, it's an infinite
+            // loop; should be ++n?
+            assert(false);
+        }
+    }
+
+    public static boolean contains(
+        String [] names,
+        int length,
+        String s)
+    {
+        for (int i = 0; i < length; i++) {
+            if (names[i].equals(s)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
 
 
