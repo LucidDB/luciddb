@@ -63,12 +63,11 @@ insert into emps values
     (120,'Wilma',20,'F',null,1,50,null,null,true);
 
 -- define foreign server for hsqldb sample data
--- TODO:  location independence
 create server hsqldb_demo
 foreign data wrapper sys_jdbc
 options(
     driver_class 'org.hsqldb.jdbcDriver',
-    url 'jdbc:hsqldb:../saffron/demo/hsqldb/scott',
+    url 'jdbc:hsqldb:testcases/hsqldb/scott',
     user_name 'SA',
     schema_name 'SALES');
 

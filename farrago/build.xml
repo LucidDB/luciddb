@@ -23,9 +23,6 @@
   <!-- Farrago project root  -->
   <property name="farrago.dir" location="."/>
 
-  <!-- Saffron project root -->
-  <property name="saffron.dir" location="${open.dir}/saffron"/>
-
   <!-- import the fennel.disabled setting; this takes highest precedence -->
   <property file="initBuild.properties"/>
 
@@ -366,8 +363,7 @@ require version '${required.ant.version}'."/>
     <pathelement location="${classes.dir}"/>
     <pathelement location="${catalog.src.dir}"/>
     <pathelement location="${src.dir}"/>
-        <!-- TODO:  move hsqldb to thirdparty -->
-    <pathelement location="${saffron.dir}/lib/hsqldb.jar"/>
+    <pathelement location="${hsqldb.dir}/lib/hsqldb.jar"/>
   </path>
   <property name="farrago.run.classpath" refid="farrago.run.classpath"/>
 

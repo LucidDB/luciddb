@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/jdbc/medmetadata.sql#1 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/jdbc/medmetadata.sql#2 $
 0: jdbc:farrago:> -- Test JDBC metadata calls for foreign data wrappers
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- !set verbose true
@@ -38,19 +38,19 @@
 | SYS_MOCK_DATA_SERVER  |
 +-----------------------+
 0: jdbc:farrago:> select "name","value" from sys_fem.med."StorageOption" order by 1,2;
-+--------------------+-------------------------------------------+
-|        name        |                   value                   |
-+--------------------+-------------------------------------------+
-| DRIVER_CLASS       | org.hsqldb.jdbcDriver                     |
-| DRIVER_CLASS       | org.relique.jdbc.csv.CsvDriver            |
-| ROOT_PACKAGE_NAME  | CWM                                       |
-| ROOT_PACKAGE_NAME  | FEM                                       |
-| SCHEMA_NAME        | SALES                                     |
-| SCHEMA_NAME        | TESTDATA                                  |
-| URL                | jdbc:hsqldb:../saffron/demo/hsqldb/scott  |
-| URL                | jdbc:relique:csv:unitsql/med              |
-| USER_NAME          | SA                                        |
-+--------------------+-------------------------------------------+
++--------------------+-------------------------------------+
+|        name        |                value                |
++--------------------+-------------------------------------+
+| DRIVER_CLASS       | org.hsqldb.jdbcDriver               |
+| DRIVER_CLASS       | org.relique.jdbc.csv.CsvDriver      |
+| ROOT_PACKAGE_NAME  | CWM                                 |
+| ROOT_PACKAGE_NAME  | FEM                                 |
+| SCHEMA_NAME        | SALES                               |
+| SCHEMA_NAME        | TESTDATA                            |
+| URL                | jdbc:hsqldb:testcases/hsqldb/scott  |
+| URL                | jdbc:relique:csv:unitsql/med        |
+| USER_NAME          | SA                                  |
++--------------------+-------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- Create schema and table
 0: jdbc:farrago:> create schema csv_schema;

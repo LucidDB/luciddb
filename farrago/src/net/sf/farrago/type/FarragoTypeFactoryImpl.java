@@ -480,10 +480,10 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
                             return (FarragoType) canonize(dateTimeType);
                         }
                         int precision = metaData.getPrecision(iOneBased);
-                        if (precision == 0) {
+                        if ((precision == 0) || (precision > 65535)) {
                             // REVIEW jvs 4-Mar-2004:  Need a good way to
                             // handle drivers like hsqldb which return 0
-                            // to indicate unlimited precision.
+                            // or large numbers to indicate unlimited precision.
                             precision = 2048;
                         }
                         String charsetName = null;
