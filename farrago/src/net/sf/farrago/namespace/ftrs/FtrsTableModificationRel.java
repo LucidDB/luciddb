@@ -298,6 +298,7 @@ class FtrsTableModificationRel extends TableModificationRel
             buffer.setOutputDesc(
                 FennelRelUtil.createTupleDescriptorFromRowType(
                     repos,
+                    getFarragoTypeFactory(),
                     child.getRowType()));
 
             buffer.getInput().add(input);

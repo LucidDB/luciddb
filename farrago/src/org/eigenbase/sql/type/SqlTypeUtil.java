@@ -577,7 +577,7 @@ public abstract class SqlTypeUtil
                     fromType.getFields()[0].getType(),
                     coerce);
             } else {
-                return false;
+                return toType.getFamily() == fromType.getFamily();
             }
         }
         RelDataType c1 = toType.getComponentType();

@@ -32,6 +32,8 @@ import org.eigenbase.sql.*;
 public class ObjectSqlType extends AbstractSqlType
 {
     private final SqlIdentifier sqlIdentifier;
+
+    private RelDataTypeFamily family;
     
     /**
      * Constructs an object type.
@@ -55,6 +57,11 @@ public class ObjectSqlType extends AbstractSqlType
         this.sqlIdentifier = sqlIdentifier;
         computeDigest();
     }
+
+    public void setFamily(RelDataTypeFamily family)
+    {
+        this.family = family;
+    }
     
     // override AbstractSqlType
     public SqlIdentifier getSqlIdentifier()
@@ -68,7 +75,7 @@ public class ObjectSqlType extends AbstractSqlType
         // each UDT is in its own lonely family, until one day when
         // we support inheritance (at which time also need to implement
         // getPrecedenceList).
-        return this;
+        return family;
     }
 
     // implement RelDataTypeImpl

@@ -231,6 +231,8 @@ public interface FarragoSession
      *
      * @param sql text of SQL expression
      *
+     * @param typeFactory factory for creating result and param types
+     *
      * @param paramRowType if non-null, expression is expected to be
      * a function body with these parameters; if null, expression is
      * expected to be a query
@@ -239,6 +241,7 @@ public interface FarragoSession
      */
     public FarragoSessionAnalyzedSql analyzeSql(
         String sql,
+        RelDataTypeFactory typeFactory,
         RelDataType paramRowType);
 
     /**

@@ -352,7 +352,9 @@ public class RelStructuredTypeFlattener
                                 field.getType()));
                         flattenedFieldNames.add(null);
                     }
-                } else if (isConstructor(exp)) {
+                } else if (isConstructor(exp) || exp.isA(RexKind.Cast)) {
+                    // REVIEW jvs 27-Feb-2005:  for cast, see corresponding note
+                    // in RewriteRexShuttle
                     RexCall call = (RexCall) exp;
                     flattenProjections(
                         call.getOperands(),
@@ -478,10 +480,18 @@ public class RelStructuredTypeFlattener
                     RexInputRef inputRef = (RexInputRef) refExp;
                     iInput += getNewForOldInput(inputRef.index);
                     return new RexInputRef(iInput, fieldType);
-                } else {
-                    if (!(refExp instanceof RexFieldAccess)) {
-                        throw Util.needToImplement(refExp);
-                    }
+                } else if (refExp.isA(RexKind.Cast)) {
+                    // REVIEW jvs 27-Feb-2005:  what about a cast between
+                    // different user-defined types (once supported)?
+                    RexCall cast = (RexCall) refExp;
+                    refExp = cast.getOperands()[0];
+                }
+                if (refExp.isA(RexKind.NewSpecification)) {
+                    return ((RexCall) refExp).getOperands()[
+                        fieldAccess.getField().getIndex()];
+                }
+                if (!(refExp instanceof RexFieldAccess)) {
+                    throw Util.needToImplement(refExp);
                 }
                 fieldAccess = (RexFieldAccess) refExp;
             }

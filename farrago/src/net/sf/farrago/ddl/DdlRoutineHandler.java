@@ -343,6 +343,7 @@ public class DdlRoutineHandler extends DdlHandler
             analyzedSql = session.analyzeSql(
                 FarragoUserDefinedRoutine.removeReturnPrefix(
                     routine.getBody().getBody()),
+                typeFactory,
                 paramRowType);
         } catch (Throwable ex) {
             throw adjustExceptionParserPosition(routine, ex);
@@ -409,6 +410,7 @@ public class DdlRoutineHandler extends DdlHandler
             // adjust parser pos in error msgs
             analyzedSql = session.analyzeSql(
                 expr.toSqlString(sqlDialect),
+                typeFactory,
                 paramRowType);
             if (analyzedSql.hasDynamicParams) {
                 throw validator.res.newValidatorInvalidRoutineDynamicParam();

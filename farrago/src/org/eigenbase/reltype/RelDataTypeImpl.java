@@ -230,12 +230,12 @@ public abstract class RelDataTypeImpl
     public RelDataTypePrecedenceList getPrecedenceList()
     {
         // by default, make each type have a precedence list containing
-        // only itself
+        // only other types in the same family
         return new RelDataTypePrecedenceList() 
             {
                 public boolean containsType(RelDataType type)
                 {
-                    return RelDataTypeImpl.this == type;
+                    return getFamily() == type.getFamily();
                 }
                 
                 public int compareTypePrecedence(

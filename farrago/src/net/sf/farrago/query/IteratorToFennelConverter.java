@@ -97,6 +97,7 @@ public class IteratorToFennelConverter extends ConverterRel
         FemTupleDescriptor tupleDesc =
             FennelRelUtil.createTupleDescriptorFromRowType(
                 stmt.getRepos(),
+                factory,
                 rowType);
         FemTupleAccessor tupleAccessor =
             FennelRelUtil.getAccessorForTupleDescriptor(

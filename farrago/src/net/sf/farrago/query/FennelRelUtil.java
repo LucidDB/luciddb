@@ -88,8 +88,13 @@ public abstract class FennelRelUtil
      */
     public static FemTupleDescriptor createTupleDescriptorFromRowType(
         FarragoRepos repos,
+        RelDataTypeFactory typeFactory,
         RelDataType rowType)
     {
+        rowType = SqlTypeUtil.flattenRecordType(
+            typeFactory,
+            rowType,
+            null);
         FemTupleDescriptor tupleDesc = repos.newFemTupleDescriptor();
         RelDataTypeField [] fields = rowType.getFields();
         for (int i = 0; i < fields.length; ++i) {

@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/udt.sql#6 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/udt.sql#7 $
 0: jdbc:farrago:> -- Test DDL for user-defined types
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema udttest;
@@ -316,6 +316,46 @@ Error: DDL validation error near line 1, column 34: Must define representation f
 . . . . . . . . >     tb udttest.toothbrush
 . . . . . . . . > ) final;
 Error: DDL validation error near line 1, column 33: Reference to unknown user-defined type "TOOTHBRUSH" (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test UDF's which operate on UDT's
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create function slope(c rectilinear_coord_non0)
+. . . . . . . . > returns double
+. . . . . . . . > contains sql
+. . . . . . . . > return c.y/c.x;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create function make_coord(x double,y double)
+. . . . . . . . > returns rectilinear_coord_non0
+. . . . . . . . > contains sql
+. . . . . . . . > return new rectilinear_coord_non0(x,y);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create function transpose(c rectilinear_coord_non0)
+. . . . . . . . > returns rectilinear_coord_non0
+. . . . . . . . > contains sql
+. . . . . . . . > return new rectilinear_coord_non0(c.y,c.x);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values slope(new rectilinear_coord_non0(5,20));
++---------+
+| EXPR$0  |
++---------+
+| 4.0     |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select t.c.x, t.c.y from (select make_coord(7,9) as c from (values(0))) t;
++------+------+
+|  X   |  Y   |
++------+------+
+| 7.0  | 9.0  |
++------+------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select t.c.x, t.c.y from 
+. . . . . . . . > (select transpose(new rectilinear_coord_non0(7,9)) as c from (values(0))) t;
++------+------+
+|  X   |  Y   |
++------+------+
+| 9.0  | 7.0  |
++------+------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test implicit path lookup
 0: jdbc:farrago:> 

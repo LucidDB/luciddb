@@ -150,6 +150,11 @@ public class BasicSqlType extends AbstractSqlType
                 return 10;
             case SqlTypeName.Bigint_ordinal:
                 return 20;
+            case SqlTypeName.Real_ordinal:
+                return 7;
+            case SqlTypeName.Float_ordinal:
+            case SqlTypeName.Double_ordinal:
+                return 15;
             default:
                 throw new AssertionError();
             }

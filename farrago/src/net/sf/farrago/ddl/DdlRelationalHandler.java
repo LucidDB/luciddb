@@ -252,7 +252,8 @@ public class DdlRelationalHandler extends DdlHandler
         tracer.fine(sql);
         FarragoSessionAnalyzedSql analyzedSql;
         try {
-            analyzedSql = session.analyzeSql(sql, null);
+            analyzedSql = session.analyzeSql(
+                sql, validator.getTypeFactory(), null);
         } catch (Throwable ex) {
             throw adjustExceptionParserPosition(view, ex);
         }

@@ -114,7 +114,10 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
         String rootStreamName = rootStream.getName();
 
         FemTupleDescriptor tupleDesc =
-            FennelRelUtil.createTupleDescriptorFromRowType(repos, rowType);
+            FennelRelUtil.createTupleDescriptorFromRowType(
+                repos,
+                factory,
+                rowType);
         FemTupleAccessor tupleAccessor =
             FennelRelUtil.getAccessorForTupleDescriptor(
                 repos,

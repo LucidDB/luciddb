@@ -115,6 +115,11 @@ public class FarragoResultSetMetaData extends FarragoJdbcMetaDataImpl
                 // 1 extra for decimal point
                 return 20 + precision;
             }
+        case Types.REAL:
+        case Types.FLOAT:
+            return 13;
+        case Types.DOUBLE:
+            return 22;
         default:
 
             // TODO:  adjust for numeric formatting, etc.

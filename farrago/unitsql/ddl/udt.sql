@@ -283,6 +283,31 @@ create type bad_schema as (
     tb udttest.toothbrush
 ) final;
 
+
+-- test UDF's which operate on UDT's
+
+create function slope(c rectilinear_coord_non0)
+returns double
+contains sql
+return c.y/c.x;
+
+create function make_coord(x double,y double)
+returns rectilinear_coord_non0
+contains sql
+return new rectilinear_coord_non0(x,y);
+
+create function transpose(c rectilinear_coord_non0)
+returns rectilinear_coord_non0
+contains sql
+return new rectilinear_coord_non0(c.y,c.x);
+
+values slope(new rectilinear_coord_non0(5,20));
+
+select t.c.x, t.c.y from (select make_coord(7,9) as c from (values(0))) t;
+
+select t.c.x, t.c.y from 
+(select transpose(new rectilinear_coord_non0(7,9)) as c from (values(0))) t;
+
 -- test implicit path lookup
 
 set path 'spare_types';
