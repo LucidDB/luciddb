@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/optimizer/multiset.sql#5 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/optimizer/multiset.sql#6 $
 0: jdbc:farrago:> -- Test multiset related queries
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set schema 'sales';
@@ -210,6 +210,25 @@ Error: java.lang.AssertionError: Internal error: node could not be implemented: 
 |                 FennelPullCalcRel(output$cor0=[$cor0])          |
 |                   FennelPullOneRowRel                           |
 +-----------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test MEMBER OF
+0: jdbc:farrago:> explain plan for values 632 MEMBER OF multiset[2];
++-------------------------------------------------------------------+
+|                              column0                              |
++-------------------------------------------------------------------+
+| IterCalcRel(EXPR$0=[$2])                                          |
+|   FennelToIteratorConverter                                       |
+|     FennelPullCorrelatorRel                                       |
+|       FennelPullCollectRel                                        |
+|         FennelPullCalcRel(EXPR$0=[2])                             |
+|           FennelPullOneRowRel                                     |
+|       FennelPullCalcRel(case=[CASE(>($0, 0), true, false)])       |
+|         FennelSortRel(key=[[0]], discardDuplicates=[true])        |
+|           FennelPullCalcRel(EXPR$0=[$0], condition=[=(632, $0)])  |
+|             FennelPullUncollectRel                                |
+|               FennelPullCalcRel(output$cor0=[$cor0])              |
+|                 FennelPullOneRowRel                               |
++-------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- explain plan for select fusion(multiset[3]) from emps;

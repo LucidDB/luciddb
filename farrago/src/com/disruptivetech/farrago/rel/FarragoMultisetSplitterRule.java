@@ -205,17 +205,22 @@ public class FarragoMultisetSplitterRule extends RelOptRule
             rexCall = (RexCall) rexNode;
         }
 
-        final RelOptCluster cluster = calc.getCluster();
-        final String dyn_inIdStr = cluster.query.createCorrel();
-        final int dyn_inId = cluster.query.getCorrelOrdinal(dyn_inIdStr);
-        assert(rexCall.operands[0] instanceof RexInputRef);
-        final RexInputRef rexInput = (RexInputRef) rexCall.operands[0];
         ArrayList correlations = new ArrayList();
-        correlations.add(
-            new CorrelatorRel.Correlation(dyn_inId,rexInput.index));
-
-        final RexNode corRef =
-            cluster.rexBuilder.makeCorrel(rexInput.getType(), dyn_inIdStr);
+        final RelOptCluster cluster = calc.getCluster();
+        final RexNode corRef;
+        if ((RexMultisetUtil.opTab.memberOfOperator == rexCall.op) &&
+            !(rexCall.operands[0] instanceof RexInputRef)) {
+            corRef = rexCall.operands[0];
+        } else {
+            final String dyn_inIdStr = cluster.query.createCorrel();
+            final int dyn_inId = cluster.query.getCorrelOrdinal(dyn_inIdStr);
+            assert(rexCall.operands[0] instanceof RexInputRef);
+            final RexInputRef rexInput = (RexInputRef) rexCall.operands[0];
+            correlations.add(
+                new CorrelatorRel.Correlation(dyn_inId,rexInput.index));
+            corRef  =
+                cluster.rexBuilder.makeCorrel(rexInput.getType(), dyn_inIdStr);
+        }
         ProjectRel corProjectRel = new ProjectRel(
             cluster,
             new OneRowRel(cluster),
@@ -278,6 +283,10 @@ public class FarragoMultisetSplitterRule extends RelOptRule
             convertedRel =
                 new CorrelatorRel(cluster, input, castRel, correlations);
         } else if (RexMultisetUtil.opTab.isASetOperator == rexCall.op) {
+            // (ms IS A SET) <=>
+            // UNIQUE(UNNEST(ms)) <=>
+            // NOT EXITS ((select <ms element>, count(*) as c from UNNEST(ms) GROUP BY v) WHERE c > 1)
+            //
             // A call to
             // CalcRel=[...,$in_i IS A SET,...]
             //   CalcInput
@@ -336,7 +345,6 @@ public class FarragoMultisetSplitterRule extends RelOptRule
                     ProjectRel.Flags.Boxed);
             convertedRel =
                 new CorrelatorRel(cluster, input, caseRel, correlations);
-
         } else if (RexMultisetUtil.opTab.elementFunc == rexCall.op) {
             // A call to
             // CalcRel=[...,ELEMENT($in_i),...]
@@ -391,8 +399,9 @@ public class FarragoMultisetSplitterRule extends RelOptRule
             convertedRel =
                 new CorrelatorRel(cluster, input, limitRel, correlations);
         } else if (rexCall.op instanceof
-            SqlStdOperatorTable.SqlMultisetSetOperator) {
-             // A call to
+            SqlStdOperatorTable.SqlMultisetSetOperator  ||
+            (RexMultisetUtil.opTab.memberOfOperator == rexCall.op)) {
+            // A call to
             // CalcRel=[...,ms1 UNION ms2,...]
             //   CalcInput
             //is eq. to
@@ -407,6 +416,24 @@ public class FarragoMultisetSplitterRule extends RelOptRule
             //         Uncollect
             //           ProjectRel=[output=$cor1]
             //            OneRowRel
+            // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            // (x MEMBER OF ms) <=>
+            // (x IN UNNEST(ms)) <=>
+            // (EXISTS (select <multiset element> from UNNEST(ms) WHERE <multiset element>=x))
+            //
+            // A call to
+            // CalcRel=[...,$in_i MEMBER OF $in_j,...]
+            //   CalcInput
+            //is eq. to
+            // CalcRel=[...,$in_N,...]
+            //   CorrelRel=[$cor0=$in_i, $cor1=in_j]
+            //     CalcInput
+            //     ProjectRel=[CASE $0 > 0 THEN true ELSE false END]
+            //       AggregateRel[count(*)]
+            //         FilterRel=[$cor0 = $0]
+            //           Uncollect
+            //             ProjectRel=[output=$cor1]
+            //                 OneRowRel
             final String dyn_inIdStr2 = cluster.query.createCorrel();
             final int dyn_inId2 = cluster.query.getCorrelOrdinal(dyn_inIdStr2);
             assert(rexCall.operands[1] instanceof RexInputRef);
@@ -421,39 +448,84 @@ public class FarragoMultisetSplitterRule extends RelOptRule
                 new RexNode[]{corRef2},
                 new String[]{"output"+corRef2.toString()},
                 ProjectRel.Flags.Boxed);
-            final UncollectRel uncollectRel =
-                new UncollectRel(cluster, corProjectRel);
-            final UncollectRel uncollectRel2 =
-                new UncollectRel(cluster, projectRel2);
 
-            RelNode[] inputs = new RelNode[]{ uncollectRel, uncollectRel2};
-            final RelNode setRel;
-            if (RexMultisetUtil.opTab.multisetExceptAllOperator == rexCall.op) {
-                setRel =
-                    new MinusRel(cluster, uncollectRel, uncollectRel2, true);
-            } else if (RexMultisetUtil.opTab.multisetExceptOperator == rexCall.op) {
-                setRel =
-                    new MinusRel(cluster, uncollectRel, uncollectRel2, false);
-            } else if (RexMultisetUtil.opTab.multisetIntersectAllOperator == rexCall.op) {
-                setRel =
-                    new IntersectRel(cluster, uncollectRel, uncollectRel2,true);
-            } else if (RexMultisetUtil.opTab.multisetIntersectOperator == rexCall.op) {
-                setRel =
-                    new IntersectRel(cluster, uncollectRel,uncollectRel2,false);
-            } else if (RexMultisetUtil.opTab.multisetUnionAllOperator == rexCall.op) {
-                setRel =
-                    new UnionRel(cluster, inputs, true);
-            } else if (RexMultisetUtil.opTab.multisetUnionOperator == rexCall.op) {
-                setRel =
-                    new UnionRel(cluster, inputs, false);
-            } else {
-                throw Util.newInternal("should never come here");
+            ///////////////////////////////////
+            if (rexCall.op instanceof
+                SqlStdOperatorTable.SqlMultisetSetOperator) {
+                final UncollectRel uncollectRel =
+                    new UncollectRel(cluster, corProjectRel);
+                final UncollectRel uncollectRel2 =
+                    new UncollectRel(cluster, projectRel2);
+                RelNode[] inputs = new RelNode[]{ uncollectRel, uncollectRel2};
+                final RelNode setRel;
+                if (RexMultisetUtil.opTab.multisetExceptAllOperator == rexCall.op) {
+                    setRel =
+                        new MinusRel(cluster, uncollectRel, uncollectRel2, true);
+                } else if (RexMultisetUtil.opTab.multisetExceptOperator == rexCall.op) {
+                    setRel =
+                        new MinusRel(cluster, uncollectRel, uncollectRel2, false);
+                } else if (RexMultisetUtil.opTab.multisetIntersectAllOperator == rexCall.op) {
+                    setRel =
+                        new IntersectRel(cluster, uncollectRel, uncollectRel2,true);
+                } else if (RexMultisetUtil.opTab.multisetIntersectOperator == rexCall.op) {
+                    setRel =
+                        new IntersectRel(cluster, uncollectRel,uncollectRel2,false);
+                } else if (RexMultisetUtil.opTab.multisetUnionAllOperator == rexCall.op) {
+                    setRel =
+                        new UnionRel(cluster, inputs, true);
+                } else if (RexMultisetUtil.opTab.multisetUnionOperator == rexCall.op) {
+                    setRel =
+                        new UnionRel(cluster, inputs, false);
+                } else {
+                    throw Util.newInternal("should never come here");
+                }
+
+                final CollectRel collectRel =
+                    new CollectRel(cluster, setRel, "multiset");
+                convertedRel =
+                    new CorrelatorRel(cluster, input, collectRel, correlations);
+            } else if (RexMultisetUtil.opTab.memberOfOperator == rexCall.op) {
+                final UncollectRel uncollectRel =
+                    new UncollectRel(cluster, projectRel2);
+                RelDataType elementType = rexInput2.getType().getComponentType();
+                assert(null != elementType);
+                RelNode filterRel =
+                    RelOptUtil.createExistsPlan(
+                        cluster,
+                        uncollectRel,
+                        new RexNode[]{ cluster.rexBuilder.makeCall(
+                            RexMultisetUtil.opTab.equalsOperator,
+                            corRef,
+                            cluster.rexBuilder.makeInputRef(elementType, 0))},
+                        null,
+                        null);
+                // TODO wael 4/5/05: need to create proper count call def.
+                AggregateRel countAggregateRel =
+                    new AggregateRel(
+                        cluster, filterRel, 1, new AggregateRel.Call[]{});
+                RexNode[] whenThenElse = new RexNode[] {
+                    // when
+                    cluster.rexBuilder.makeCall(RexMultisetUtil.opTab.greaterThanOperator
+                        ,cluster.rexBuilder.makeInputRef(
+                            cluster.typeFactory.createSqlType(
+                                SqlTypeName.Integer), 0)
+                        ,cluster.rexBuilder.makeExactLiteral(new BigDecimal(0)))
+                    // then
+                    ,cluster.rexBuilder.makeLiteral(true)
+                    // else
+                    ,cluster.rexBuilder.makeLiteral(false)};
+                RexNode caseRexNode =
+                    cluster.rexBuilder.makeCall(RexMultisetUtil.opTab.caseOperator, whenThenElse);
+                ProjectRel caseRel =
+                    new ProjectRel(
+                        cluster,
+                        countAggregateRel,
+                        new RexNode[]{caseRexNode},
+                        new String[]{"case"},
+                        ProjectRel.Flags.Boxed);
+                convertedRel =
+                    new CorrelatorRel(cluster, input, caseRel, correlations);
             }
-
-            final CollectRel collectRel =
-                new CollectRel(cluster, setRel, "multiset");
-            convertedRel =
-                new CorrelatorRel(cluster, input, collectRel, correlations);
         }
 
         Util.permAssert(

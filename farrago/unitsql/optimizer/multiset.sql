@@ -35,6 +35,9 @@ explain plan for select * from unnest(cast(multiset['1'] as double multiset));
 -- test IS A SET
 explain plan for values multiset[1] is a set;
 
+-- test MEMBER OF
+explain plan for values 632 MEMBER OF multiset[2];
+
 
 -- explain plan for select fusion(multiset[3]) from emps;
 -- explain plan for select collect(deptno) from emps;
