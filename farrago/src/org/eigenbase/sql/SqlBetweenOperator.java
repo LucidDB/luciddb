@@ -38,10 +38,10 @@ import java.util.List;
  * Defines the BETWEEN operator.
  *
  * <p>Syntax:
- * <blockquote><code>X [NOT] BETWEEN [ASSYMETRIC | SYMMETRIC] Y AND
+ * <blockquote><code>X [NOT] BETWEEN [ASYMMETRIC | SYMMETRIC] Y AND
  * Z</code></blockquote>
  *
- * <p>If the assymetric/symmeteric keywords are left out ASSYMETRIC is default.
+ * <p>If the asymmetric/symmeteric keywords are left out ASYMMETRIC is default.
  *
  * <p>This operator is always expanded (into something like <code>Y &lt;= X
  * AND X &lt;= Z</code>) before being converted into Rex nodes.
@@ -58,6 +58,15 @@ public class SqlBetweenOperator extends SqlInfixOperator
         new String [] { "BETWEEN", "AND" };
     private static final String [] notBetweenNames =
         new String [] { "NOT BETWEEN", "AND" };
+
+    /** Ordinal of the 'value' operand. */
+    public static final int VALUE_OPERAND = 0;
+    /** Ordinal of the 'lower' operand. */
+    public static final int LOWER_OPERAND = 1;
+    /** Ordinal of the 'upper' operand. */
+    public static final int UPPER_OPERAND = 2;
+    /** Ordinal of the 'symmetric' operand. */
+    public static final int SYMFLAG_OPERAND = 3;
 
     //~ Instance fields -------------------------------------------------------
 
@@ -91,8 +100,11 @@ public class SqlBetweenOperator extends SqlInfixOperator
     {
         RelDataType [] argTypes =
             TypeUtil.collectTypes(validator, scope, call.operands);
-        RelDataType [] newArgTypes =
-            new RelDataType [] { argTypes[0], argTypes[2], argTypes[3] };
+        RelDataType [] newArgTypes = {
+            argTypes[VALUE_OPERAND],
+            argTypes[LOWER_OPERAND],
+            argTypes[UPPER_OPERAND]
+        };
         return newArgTypes;
     }
 
@@ -154,9 +166,9 @@ public class SqlBetweenOperator extends SqlInfixOperator
         for (int i = 0; i < rules.length; i++) {
             OperandsTypeChecking rule = rules[i];
             boolean ok;
-            ok = rule.check(call, validator, scope, call.operands[0], 0, false);
-            ok = ok && rule.check(call, validator, scope, call.operands[2], 0, false);
-            ok = ok && rule.check(call, validator, scope, call.operands[3], 0, false);
+            ok = rule.check(call, validator, scope, call.operands[VALUE_OPERAND], 0, false);
+            ok = ok && rule.check(call, validator, scope, call.operands[LOWER_OPERAND], 0, false);
+            ok = ok && rule.check(call, validator, scope, call.operands[UPPER_OPERAND], 0, false);
             if (!ok) {
                 failCount++;
             }
@@ -179,16 +191,16 @@ public class SqlBetweenOperator extends SqlInfixOperator
         int leftPrec,
         int rightPrec)
     {
-        operands[0].unparse(writer, this.leftPrec, this.rightPrec);
+        operands[VALUE_OPERAND].unparse(writer, this.leftPrec, this.rightPrec);
         writer.print(" " + name);
-        if (((SqlBetweenOperator.Flag) operands[1]).isAsymmetric) {
+        if (((SqlBetweenOperator.Flag) operands[SYMFLAG_OPERAND]).isAsymmetric) {
             writer.print(" ASYMMETRIC ");
         } else {
             writer.print(" SYMMETRIC ");
         }
-        operands[2].unparse(writer, this.leftPrec, this.rightPrec);
+        operands[LOWER_OPERAND].unparse(writer, this.leftPrec, this.rightPrec);
         writer.print(" AND ");
-        operands[3].unparse(writer, this.leftPrec, this.rightPrec);
+        operands[UPPER_OPERAND].unparse(writer, this.leftPrec, this.rightPrec);
     }
 
     public int reduceExpr(
@@ -236,7 +248,7 @@ public class SqlBetweenOperator extends SqlInfixOperator
         SqlNode exp0 = (SqlNode) list.get(opOrdinal - 1);
         SqlCall newExp =
             createCall(
-                new SqlNode [] { exp0, flag, exp1, exp2 },
+                new SqlNode [] { exp0, exp1, exp2, flag },
                 betweenNode.pos);
 
         // Replace all of the matched nodes with the single reduced node.
@@ -280,7 +292,7 @@ public class SqlBetweenOperator extends SqlInfixOperator
 
         public static final Flag createAsymmetric(ParserPosition pos)
         {
-            return new Flag("Assymetric", true, pos);
+            return new Flag("Asymmetric", true, pos);
         }
 
         public static final Flag createSymmetric(ParserPosition pos)

@@ -628,11 +628,15 @@ public class SqlToRelConverter
         Blackboard bb,
         SqlCall call)
     {
-        RexNode x = convertExpression(bb, call.operands[0]);
-        boolean isAsymmetric =
-            ((SqlBetweenOperator.Flag) call.operands[1]).isAsymmetric;
-        RexNode y = convertExpression(bb, call.operands[2]);
-        RexNode z = convertExpression(bb, call.operands[3]);
+        final SqlNode value = call.operands[SqlBetweenOperator.VALUE_OPERAND];
+        RexNode x = convertExpression(bb, value);
+        final SqlBetweenOperator.Flag symmetric = (SqlBetweenOperator.Flag)
+            call.operands[SqlBetweenOperator.SYMFLAG_OPERAND];
+        boolean isAsymmetric = symmetric.isAsymmetric;
+        final SqlNode lower = call.operands[SqlBetweenOperator.LOWER_OPERAND];
+        RexNode y = convertExpression(bb, lower);
+        final SqlNode upper = call.operands[SqlBetweenOperator.UPPER_OPERAND];
+        RexNode z = convertExpression(bb, upper);
 
         RexNode res;
 

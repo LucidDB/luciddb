@@ -122,7 +122,7 @@ public class SqlCall extends SqlNode
         SqlValidator validator,
         SqlValidator.Scope scope)
     {
-        StringBuffer buf = new StringBuffer();
+
         ArrayList signatureList = new ArrayList();
         for (int i = 0; i < operands.length; i++) {
             final SqlNode operand = operands[i];
@@ -132,8 +132,8 @@ public class SqlCall extends SqlNode
             }
             signatureList.add(argType.toString());
         }
-        buf.append(operator.getSignature(signatureList));
-        return buf.toString();
+        return operator.getSignature(signatureList);
+
     }
 
     public RuntimeException newValidationSignatureError(
