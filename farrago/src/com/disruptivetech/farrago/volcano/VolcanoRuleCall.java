@@ -20,6 +20,8 @@
 package com.disruptivetech.farrago.volcano;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -130,7 +132,7 @@ public class VolcanoRuleCall extends RelOptRuleCall
                 rule.operands[previousOperandOrdinal];
             RelOptRuleOperand operand = rule.operands[operandOrdinal];
 
-            ArrayList successors;
+            List successors;
             if (ascending) {
                 assert (previousOperand.parent == operand);
                 final RelNode childRel = rels[previousOperandOrdinal];
@@ -140,8 +142,15 @@ public class VolcanoRuleCall extends RelOptRuleCall
                 int parentOrdinal = operand.parent.ordinalInRule;
                 RelNode parentRel = rels[parentOrdinal];
                 RelNode [] inputs = parentRel.getInputs();
-                RelSubset subset = (RelSubset) inputs[operand.ordinalInParent];
-                successors = subset.rels;
+                if (operand.ordinalInParent < inputs.length) {
+                    RelSubset subset =
+                        (RelSubset) inputs[operand.ordinalInParent];
+                    successors = subset.rels;
+                } else {
+                    // The operand expects parentRel to have a certain number
+                    // of inputs and it does not.
+                    successors = Collections.EMPTY_LIST;
+                }
             }
 
             for (int i = 0, n = successors.size(); i < n; i++) {
