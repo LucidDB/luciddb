@@ -21,15 +21,23 @@ foreign data wrapper sys_mdr
 options(root_package_name 'FEM');
 
 
--- create wrapper for access to local row-store data
+-- create wrapper for access to local FTRS data
 create local data wrapper sys_ftrs
 library 'class net.sf.farrago.namespace.ftrs.FtrsDataWrapper'
 language java;
 
--- create singleton server for local row-store data
-create server sys_rowstore
+-- create wrapper for access to local mock data
+create local data wrapper sys_mock
+library 'class net.sf.farrago.namespace.mock.MedMockLocalDataWrapper'
+language java;
+
+-- create singleton server for local FTRS row-store data
+create server sys_ftrs_data_server
 local data wrapper sys_ftrs;
 
+-- create singleton server for local mock row-store data
+create server sys_mock_data_server
+local data wrapper sys_mock;
 
 -- create wrapper for access to JDBC data
 create foreign data wrapper sys_jdbc

@@ -16,20 +16,16 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.util;
-
-import net.sf.saffron.util.*;
-
-import org.apache.xerces.jaxp.*;
-
-import org.w3c.dom.*;
-
-import org.xml.sax.*;
 
 import java.io.*;
 
 import javax.xml.parsers.*;
+
+import org.apache.xerces.jaxp.*;
+import org.eigenbase.util.*;
+import org.w3c.dom.*;
+import org.xml.sax.*;
 
 
 /**

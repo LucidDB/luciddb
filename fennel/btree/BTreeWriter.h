@@ -73,10 +73,10 @@ class BTreeWriter : public BTreeReader, public LogicalTxnParticipant
     inline void optimizeRootLockMode();
     
     /**
-     * Perform compaction on a node to free up space for inserting a tuple.
+     * Performs compaction on a node to free up space for inserting a tuple.
      * This method uses swapBuffers for efficiency; as a side-effect,
      * pointers to BTreeNodes may be invalidated, so use with caution.
-     * (This is also why the parameter is a page lock rather than a
+     * (That's also why the parameter is a page lock rather than a
      * node reference).
      *
      * @param targetPageLock lock on node to be compacted
@@ -84,7 +84,7 @@ class BTreeWriter : public BTreeReader, public LogicalTxnParticipant
     void compactNode(BTreePageLock &targetPageLock);
 
     /**
-     * Split a node to free up space for inserting a tuple, and then perform
+     * Splits a node to free up space for inserting a tuple, and then performs
      * the actual insertion.
      *
      * @param node the node to be split
@@ -102,8 +102,8 @@ class BTreeWriter : public BTreeReader, public LogicalTxnParticipant
         uint iNewTuple);
 
     /**
-     * Attempt to perform an insertion without splitting.  Compaction
-     * will be performed if it will allow the insertion to succeed.
+     * Attempts to perform an insertion without splitting, performing
+     * compaction automatically if it will allow the insertion to succeed.
      * See warnings on compactNode.
      *
      * @param targetPageLock lock on node into which tuple is to be inserted
@@ -122,14 +122,14 @@ class BTreeWriter : public BTreeReader, public LogicalTxnParticipant
     void insertIntoParent();
 
     /**
-     * Insert a tuple read from a log stream.
+     * Inserts a tuple read from a log stream.
      *
      * @param logStream stream containing tuple image
      */
     void insertLogged(ByteInputStream &logStream);
     
     /**
-     * Delete a tuple read from a log stream.
+     * Deletes a tuple read from a log stream.
      *
      * @param logStream stream containing tuple image
      */
@@ -137,7 +137,7 @@ class BTreeWriter : public BTreeReader, public LogicalTxnParticipant
 
 public:
     /**
-     * Create a new BTreeWriter.
+     * Creates a new BTreeWriter.
      *
      * @param descriptor descriptor for tree to be accessed
      *
@@ -150,7 +150,7 @@ public:
     virtual ~BTreeWriter();
 
     /**
-     * Insert a tuple from unmarshalled TupleData form.  See
+     * Inserts a tuple from unmarshalled TupleData form.  See
      * insertTupleFromBuffer for duplicate handling.
      *
      * @param tupleData tuple to be inserted
@@ -162,7 +162,7 @@ public:
         Distinctness distinctness);
     
     /**
-     * Insert a tuple from a marshalled tuple buffer.  If the key already
+     * Inserts a tuple from a marshalled tuple buffer.  If the key already
      * exists, and distinctness is set to DUP_FAIL, a BTreeDuplicateKeyExcn
      * will be thrown.  If distinctness is set to DUP_DISCARD, the new
      * tuple is not inserted.  Otherwise (DUP_ALLOW), the tuple is inserted
@@ -176,15 +176,15 @@ public:
         PConstBuffer pTupleBuffer,Distinctness distinctness);
 
     /**
-     * Delete the current tuple.  This can be called after one
+     * Deletes the current tuple.  Can be called after one
      * of the BTreeReader search methods.  Deletion invalidates the current
      * tuple, but the next tuple can still be accessed by calling searchNext().
      */
     void deleteCurrent();
 
     /**
-     * Attempt to update the current tuple's value without changing its key and
-     * without splitting the page.  This can be called afer one of the
+     * Attempts to update the current tuple's value without changing its key and
+     * without splitting the page.  Can be called after one of the
      * BTreeReader search methods.  It is the caller's responsibility to ensure
      * that the key is preserved (otherwise index corruption results).  This
      * action is NOT logged; an assertion failure will result if logging is
@@ -198,7 +198,7 @@ public:
     bool updateCurrent(TupleData const &tupleData);
 
     /**
-     * Release any allocated scratch buffers.
+     * Releases any allocated scratch buffers.
      */
     void releaseScratchBuffers();
 

@@ -1,33 +1,34 @@
 /*
-// $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2004-2004 Disruptive Tech
-// You must accept the terms in LICENSE.html to use this software.
+// Saffron preprocessor and data engine.
+// Copyright (C) 2002-2004 Disruptive Tech
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+
 package net.sf.saffron.oj.convert;
 
-import openjava.ptree.*;
 import openjava.mop.Toolbox;
-import net.sf.saffron.oj.rel.JavaRelImplementor;
-import net.sf.saffron.oj.rel.JavaRel;
-import net.sf.saffron.oj.util.OJUtil;
-import net.sf.saffron.rel.convert.ConverterRel;
-import net.sf.saffron.util.Util;
-import net.sf.saffron.opt.CallingConvention;
+import openjava.ptree.*;
+
+import org.eigenbase.oj.rel.JavaRel;
+import org.eigenbase.oj.rel.JavaRelImplementor;
+import org.eigenbase.oj.util.OJUtil;
+import org.eigenbase.rel.convert.ConverterRel;
+import org.eigenbase.relopt.CallingConvention;
+import org.eigenbase.util.Util;
+
 
 /**
  * Thunk to convert between {@link CallingConvention#ITERATOR iterator}
@@ -37,13 +38,17 @@ import net.sf.saffron.opt.CallingConvention;
  * @since May 27, 2004
  * @version $Id$
  **/
-public class IteratorToJavaConvertlet extends JavaConvertlet {
-    public IteratorToJavaConvertlet() {
-        super(CallingConvention.ITERATOR,CallingConvention.JAVA);
+public class IteratorToJavaConvertlet extends JavaConvertlet
+{
+    public IteratorToJavaConvertlet()
+    {
+        super(CallingConvention.ITERATOR, CallingConvention.JAVA);
     }
 
-    public ParseTree implement(JavaRelImplementor implementor,
-            ConverterRel converter) {
+    public ParseTree implement(
+        JavaRelImplementor implementor,
+        ConverterRel converter)
+    {
         // Generate
         //   Iterator iter = <<exp>>;
         //   while (iter.hasNext()) {
@@ -54,8 +59,8 @@ public class IteratorToJavaConvertlet extends JavaConvertlet {
         StatementList stmtList = implementor.getStatementList();
         StatementList whileBody = new StatementList();
         Variable variable_iter = implementor.newVariable();
-        Expression exp = implementor.visitJavaChild(converter, 0, (JavaRel)
-                converter.child);
+        Expression exp =
+            implementor.visitJavaChild(converter, 0, (JavaRel) converter.child);
         stmtList.add(
             new VariableDeclaration(
                 new TypeName("java.util.Iterator"),
@@ -63,20 +68,21 @@ public class IteratorToJavaConvertlet extends JavaConvertlet {
                 exp));
         stmtList.add(
             new WhileStatement(
-                new MethodCall(variable_iter,"hasNext",null),
+                new MethodCall(variable_iter, "hasNext", null),
                 whileBody));
         Variable variable_row =
             implementor.bind(
                 converter,
                 whileBody,
                 Util.castObject(
-                    new MethodCall(variable_iter,"next",null),
+                    new MethodCall(variable_iter, "next", null),
                     Toolbox.clazzObject,
                     OJUtil.typeToOJClass(converter.child.getRowType())));
         Util.discard(variable_row);
-        implementor.generateParentBody(converter,whileBody);
+        implementor.generateParentBody(converter, whileBody);
         return null;
     }
 }
+
 
 // End IteratorToJavaConvertlet.java

@@ -1,7 +1,7 @@
 /*
 // $Id$
 // Saffron preprocessor and data engine
-// (C) Copyright 2003-2003 Disruptive Technologies, Inc.
+// (C) Copyright 2003-2003 Disruptive Tech
 // You must accept the terms in LICENSE.html to use this software.
 //
 // This program is free software; you can redistribute it and/or
@@ -20,13 +20,14 @@
 */
 package net.sf.farrago.type.runtime;
 
-import net.sf.farrago.resource.FarragoResource;
-import net.sf.saffron.sql.parser.ParserUtil;
-import net.sf.saffron.resource.SaffronResource;
-
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.TimeZone;
-import java.text.SimpleDateFormat;
+
+import net.sf.farrago.resource.FarragoResource;
+
+import org.eigenbase.resource.*;
+import org.eigenbase.sql.parser.ParserUtil;
 
 
 /**
@@ -44,7 +45,24 @@ import java.text.SimpleDateFormat;
  **/
 public abstract class SqlDateTimeWithoutTZ implements AssignableValue
 {
+    //~ Static fields/initializers --------------------------------------------
+
+    // ~ Static fields --------------------------------------------------------
+    // Use same format as supported by parser (should be ISO format)
+    public static final String DateFormatStr = ParserUtil.DateFormatStr;
+    public static final String TimeFormatStr = ParserUtil.TimeFormatStr;
+    public static final String TimestampFormatStr =
+        ParserUtil.TimestampFormatStr;
+    private static final TimeZone gmtZone = TimeZone.getTimeZone("GMT+0");
+
+    /** The default timezone for this Java VM. */
+    private static final TimeZone defaultZone =
+        Calendar.getInstance().getTimeZone();
+
+    //~ Instance fields -------------------------------------------------------
+
     // ~ Instance fields ------------------------------------------------------
+
     /**
      * Calendar, which holds this object's time value. Its timezone is GMT,
      * unless you call {@link #setCal}.
@@ -60,18 +78,7 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
     /** Whether this value is null. */
     public boolean isNull;
 
-    // ~ Static fields --------------------------------------------------------
-
-    // Use same format as supported by parser (should be ISO format)
-    public static final String DateFormatStr = ParserUtil.DateFormatStr;
-    public static final String TimeFormatStr = ParserUtil.TimeFormatStr;
-    public static final String TimestampFormatStr = ParserUtil.TimestampFormatStr;
-
-    private static final TimeZone gmtZone = TimeZone.getTimeZone("GMT+0");
-
-    /** The default timezone for this Java VM. */
-    private static final TimeZone defaultZone =
-            Calendar.getInstance().getTimeZone();
+    //~ Constructors ----------------------------------------------------------
 
     /**
      * Create a runtime object with timezone offset set from localtime.
@@ -85,11 +92,13 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
     }
 
     //~ Methods ---------------------------------------------------------------
+
     /**
      *
      * @return long.class
      */
-    public static Class getPrimitiveClass() {
+    public static Class getPrimitiveClass()
+    {
         return long.class;
     }
 
@@ -103,7 +112,8 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
      * @param b true to set a null value; false to indicate a non-null
      *        value
      */
-    public void setNull(boolean b) {
+    public void setNull(boolean b)
+    {
         isNull = b;
     }
 
@@ -112,10 +122,12 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
      * embedded value object. The value object is a {@link java.sql.Time
      * JDBC Time/Date/Timestamp} in local time.
      */
-    public Object getNullableData() {
-        if (isNull() || getCal() == null) {
+    public Object getNullableData()
+    {
+        if (isNull() || (getCal() == null)) {
             return null;
         }
+
         // subtract timeZoneOffset to get localtime == GMT time.
         long millis = cal.getTimeInMillis();
         timeZoneOffset = defaultZone.getOffset(millis);
@@ -126,7 +138,8 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
      *
      * @return whether the value has been set to null
      */
-    public boolean isNull() {
+    public boolean isNull()
+    {
         return isNull;
     }
 
@@ -135,29 +148,35 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
      *
      * @param date value to assign, or null to set null
      */
-    public void assignFrom(Object date) {
-        assert !isNull :
-                "attempt to assign to null object in SqlDateTimeWithoutTZ";
+    public void assignFrom(Object date)
+    {
+        assert !isNull : "attempt to assign to null object in SqlDateTimeWithoutTZ";
         if (null == date) {
             setNull(true);
             return;
         } else if (date instanceof Long) {
-            value = ((Long)date).longValue();
+            value = ((Long) date).longValue();
             return;
         } else if (date instanceof java.util.Date) {
-            value = ((java.util.Date) date).getTime();// + timeZoneOffset; // set tzOffset?
+            value = ((java.util.Date) date).getTime(); // + timeZoneOffset; // set tzOffset?
             return;
         } else if (date instanceof SqlDateTimeWithoutTZ) {
-            SqlDateTimeWithoutTZ  sqlDate = (SqlDateTimeWithoutTZ) date;
+            SqlDateTimeWithoutTZ sqlDate = (SqlDateTimeWithoutTZ) date;
             this.timeZoneOffset = sqlDate.timeZoneOffset;
             this.value = sqlDate.value;
             this.isNull = sqlDate.isNull;
             return;
+        } else {
+            // REVIEW jvs 27-Aug-2004:  this is dangerous; should probably
+            // require a specific interface instead
+            String s = date.toString();
+            assignFrom(s);
+            return;
         }
-        assert false : "Unsupported object " + date;
     }
 
-    public void assignFrom(long l) {
+    public void assignFrom(long l)
+    {
         assert (!isNull) : "attempt to assign to null object in SqlDateTimeWithoutTZ";
         value = l;
         cal.setTimeInMillis(value);
@@ -165,11 +184,13 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
     }
 
     // implement NullablePrimitive
-    protected void setNumber(Number num) {
+    protected void setNumber(Number num)
+    {
         assignFrom(num);
     }
 
-    public Calendar getCal() {
+    public Calendar getCal()
+    {
         if (cal == null) {
             cal = Calendar.getInstance();
             cal.setTimeZone(gmtZone);
@@ -178,7 +199,8 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
         return cal;
     }
 
-    public void setCal(Calendar cal) {
+    public void setCal(Calendar cal)
+    {
         assert !isNull : "attempt to assign to null object in SqlDateTimeWithoutTZ";
         this.cal = cal;
         value = cal.getTimeInMillis();
@@ -199,52 +221,39 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
         return dateFormat.format(new java.util.Date(value - timeZoneOffset));
     }
 
-    /**
-     * Pad or truncate this value according to the given precision.
-     *
-     * @param precision desired precision
-     *
-     * @param needPad true if short values should be padded
-     *
-     * @param padByte byte to pad with
-     */
-    public void enforceBytePrecision(int precision,boolean needPad,byte padByte)
-    {
-        // Function stolen from BytePointer.java, currently does nothing
-        // TODO: Properly implement for timestamps
-    }
-
+    //~ Inner Classes ---------------------------------------------------------
 
     /**
      * sql date
      */
-    public static class SqlDate extends SqlDateTimeWithoutTZ {
-
-
-        public SqlDate() {
+    public static class SqlDate extends SqlDateTimeWithoutTZ
+    {
+        public SqlDate()
+        {
             super();
         }
 
         /**
          * Assigns date from a String
          */
-        public void assignFrom(String date) {
-            if (date == null) {
-                setNull(true);
+        public void assignFrom(Object obj)
+        {
+            if (!(obj instanceof String)) {
+                super.assignFrom(obj);
                 return;
             }
+            String date = (String) obj;
 
             Calendar cal = ParserUtil.parseDateFormat(date, DateFormatStr);
             if (cal != null) {
                 java.util.Date parsedDate = cal.getTime();
                 assignFrom(parsedDate);
-            }
-            else {
-                String reason = SaffronResource.instance().
-                    getBadFormat(DateFormatStr);
+            } else {
+                String reason =
+                    EigenbaseResource.instance().getBadFormat(DateFormatStr);
 
-                throw FarragoResource.instance().
-                    newAssignFromFailed(date, "DATE", reason);
+                throw FarragoResource.instance().newAssignFromFailed(date,
+                    "DATE", reason);
             }
         }
 
@@ -262,38 +271,39 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
          * @return an Object representation of this value's data, or null if this
          *         value is null
          */
-        public Object getData(long millisecond) {
+        public Object getData(long millisecond)
+        {
             return new java.sql.Date(millisecond);
         }
-
-
     }
 
     /**
      * sql time
      */
-    public static class SqlTime extends SqlDateTimeWithoutTZ {
+    public static class SqlTime extends SqlDateTimeWithoutTZ
+    {
         /**
          * Assigns time from a String
          */
-        public void assignFrom(String date) {
-            if (date == null) {
-                setNull(true);
+        public void assignFrom(Object obj)
+        {
+            if (!(obj instanceof String)) {
+                super.assignFrom(obj);
                 return;
             }
+            String date = (String) obj;
 
             ParserUtil.PrecisionTime pt =
                 ParserUtil.parsePrecisionDateTimeLiteral(date, TimeFormatStr);
             if (pt != null) {
                 java.util.Date parsedDate = pt.cal.getTime();
                 assignFrom(parsedDate);
-            }
-            else {
-                String reason = SaffronResource.instance().
-                    getBadFormat(TimeFormatStr);
+            } else {
+                String reason =
+                    EigenbaseResource.instance().getBadFormat(TimeFormatStr);
 
-                throw FarragoResource.instance().
-                    newAssignFromFailed(date, "TIME", reason);
+                throw FarragoResource.instance().newAssignFromFailed(date,
+                    "TIME", reason);
             }
         }
 
@@ -311,7 +321,8 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
          * @return an Object representation of this value's data, or null if this
          *         value is null
          */
-        public Object getData(long millisecond) {
+        public Object getData(long millisecond)
+        {
             /* int hour = cal.get(Calendar.HOUR_OF_DAY);
             int min = cal.get(Calendar.MINUTE);
             int sec = cal.get(Calendar.SECOND); */
@@ -322,29 +333,31 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
     /**
      * sql timestamp.
      */
-    public static class SqlTimestamp extends SqlDateTimeWithoutTZ {
-
+    public static class SqlTimestamp extends SqlDateTimeWithoutTZ
+    {
         /**
          * Assigns timestamp from a String
          */
-        public void assignFrom(String date) {
-            if (date == null) {
-                setNull(true);
+        public void assignFrom(Object obj)
+        {
+            if (!(obj instanceof String)) {
+                super.assignFrom(obj);
                 return;
             }
+            String date = (String) obj;
 
             ParserUtil.PrecisionTime pt =
-                ParserUtil.parsePrecisionDateTimeLiteral(date, TimestampFormatStr);
+                ParserUtil.parsePrecisionDateTimeLiteral(date,
+                    TimestampFormatStr);
             if (pt != null) {
                 java.util.Date parsedDate = pt.cal.getTime();
                 assignFrom(parsedDate);
-            }
-            else {
-                String reason = SaffronResource.instance().
-                    getBadFormat(TimestampFormatStr);
+            } else {
+                String reason =
+                    EigenbaseResource.instance().getBadFormat(TimestampFormatStr);
 
-                throw FarragoResource.instance().
-                    newAssignFromFailed(date, "TIMESTAMP", reason);
+                throw FarragoResource.instance().newAssignFromFailed(date,
+                    "TIMESTAMP", reason);
             }
         }
 
@@ -362,11 +375,12 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
          * @return an Object representation of this value's data, or null if this
          *         value is null
          */
-        public Object getData(long millisecond) {
+        public Object getData(long millisecond)
+        {
             return new java.sql.Timestamp(millisecond);
         }
-
     }
 }
+
 
 // End SqlDateTimeWithoutTZ.java

@@ -16,9 +16,9 @@ options(
     schema_name 'TESTDATA');
 
 -- Check the foreign data wrapper and server
-select "name" from sys_fem.med."DataWrapper";
-select "name" from sys_fem.med."DataServer";
-select "name","value" from sys_fem.med."StorageOption";
+select "name" from sys_fem.med."DataWrapper" order by 1;
+select "name" from sys_fem.med."DataServer" order by 1;
+select "name","value" from sys_fem.med."StorageOption" order by 1,2;
 
 -- Create schema and table
 create schema csv_schema;
@@ -41,10 +41,10 @@ drop foreign table cvs_schema.example;
 !columns EXAMPLE
 
 drop server csv_server cascade;
-select "name" from sys_fem.med."DataServer";
+select "name" from sys_fem.med."DataServer" order by 1;
 
 drop schema csv_schema cascade;
 !metadata getSchemas
 
 drop foreign data wrapper test_jdbc;
-select "name" from sys_fem.med."DataWrapper";
+select "name" from sys_fem.med."DataWrapper" order by 1;

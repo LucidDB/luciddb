@@ -41,7 +41,7 @@ public:
     static ParamVal RTTI_WHAT_JavaExcn;
     
     /**
-     * Construct a new JavaExcn.
+     * Constructs a new JavaExcn.
      *
      * @param javaExceptionInit the wrapped Java exception
      */
@@ -54,7 +54,7 @@ public:
     jthrowable getJavaException() const;
 
     /**
-     * Override std::exception.  This returns "JavaExcn"; we make use of
+     * Overrides std::exception.  Returns "JavaExcn"; we make use of
      * this as a substitute for RTTI, which is incompatible with JNI.
      */
     virtual const char * what() const throw();

@@ -130,7 +130,7 @@ protected:
 
 public:
     /**
-     * Interpret the given command object.
+     * Interprets the given command object.
      *
      * @param cmd the ProxyCmd to be executed
      *

@@ -195,7 +195,7 @@ public:
     void checkpointImpl(CheckpointType = CHECKPOINT_FLUSH_ALL);
 
     /**
-     * Request a checkpoint.
+     * Receives request for a checkpoint.
      *
      * @param checkpointType must be CHECKPOINT_FLUSH_FUZZY or
      * CHECKPOINT_FLUSH_ALL

@@ -16,16 +16,15 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.query;
 
 import net.sf.farrago.catalog.*;
-import net.sf.farrago.type.*;
 import net.sf.farrago.fem.fennel.*;
+import net.sf.farrago.type.*;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
+
 
 /**
  * FennelCartesianProductRel represents the Fennel implementation of Cartesian
@@ -36,61 +35,63 @@ import net.sf.saffron.rel.*;
  */
 class FennelCartesianProductRel extends FennelPullDoubleRel
 {
+    //~ Constructors ----------------------------------------------------------
+
     /**
      * Creates a new FennelCartesianProductRel object.
      *
-     * @param cluster VolcanoCluster for this rel
+     * @param cluster RelOptCluster for this rel
      * @param left left input
      * @param right right input
      */
     public FennelCartesianProductRel(
-        VolcanoCluster cluster,
-        SaffronRel left,
-        SaffronRel right)
+        RelOptCluster cluster,
+        RelNode left,
+        RelNode right)
     {
-        super(cluster,left,right);
+        super(cluster, left, right);
     }
+
+    //~ Methods ---------------------------------------------------------------
 
     // implement Cloneable
     public Object clone()
     {
         return new FennelCartesianProductRel(
             cluster,
-            OptUtil.clone(left),
-            OptUtil.clone(right));
+            RelOptUtil.clone(left),
+            RelOptUtil.clone(right));
     }
 
-    // implement SaffronRel
-    public PlanCost computeSelfCost(SaffronPlanner planner)
+    // implement RelNode
+    public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
         // TODO:  account for buffering I/O and CPU
         double rowCount = getRows();
-        return planner.makeCost(
-            rowCount,
-            0,
-            rowCount*getRowType().getFieldCount());
+        return planner.makeCost(rowCount, 0,
+            rowCount * getRowType().getFieldCount());
     }
 
-    // implement SaffronRel
+    // implement RelNode
     public double getRows()
     {
-        return left.getRows()*right.getRows();
+        return left.getRows() * right.getRows();
     }
 
-    // override SaffronRel
-    public void explain(PlanWriter pw)
+    // override RelNode
+    public void explain(RelOptPlanWriter pw)
     {
         pw.explain(
             this,
-            new String [] { "left","right" },
-            new Object [] {});
+            new String [] { "left", "right" },
+            new Object [] {  });
     }
 
     // implement FennelRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
         FemCartesianProductStreamDef streamDef =
-            getCatalog().newFemCartesianProductStreamDef();
+            getRepos().newFemCartesianProductStreamDef();
 
         FemExecutionStreamDef leftInput =
             implementor.visitFennelChild((FennelRel) left);
@@ -113,7 +114,7 @@ class FennelCartesianProductRel extends FennelPullDoubleRel
 
         if (needBuffer) {
             FemBufferingTupleStreamDef buffer =
-                getCatalog().newFemBufferingTupleStreamDef();
+                getRepos().newFemBufferingTupleStreamDef();
             buffer.setInMemory(false);
             buffer.setMultipass(true);
 
@@ -129,5 +130,6 @@ class FennelCartesianProductRel extends FennelPullDoubleRel
 
     // TODO:  implement getCollations()
 }
+
 
 // End FennelCartesianProductRel.java

@@ -16,24 +16,23 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.namespace.ftrs;
 
 import net.sf.farrago.query.*;
 
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.util.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.util.*;
 
 
 /**
- * FtrsTableModificationRule is a rule for converting an abstract
- * TableModification into a corresponding FtrsTableModificationRel.
+ * FtrsTableModificationRule is a rule for converting an abstract {@link
+ * TableModificationRel} into a corresponding {@link FtrsTableModificationRel}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-class FtrsTableModificationRule extends VolcanoRule
+class FtrsTableModificationRule extends RelOptRule
 {
     //~ Constructors ----------------------------------------------------------
 
@@ -42,22 +41,23 @@ class FtrsTableModificationRule extends VolcanoRule
      */
     public FtrsTableModificationRule()
     {
-        super(
-            new RuleOperand(
+        super(new RelOptRuleOperand(
                 TableModificationRel.class,
-                new RuleOperand [] { new RuleOperand(SaffronRel.class,null) }));
+                new RelOptRuleOperand [] {
+                    new RelOptRuleOperand(RelNode.class, null)
+                }));
     }
 
     //~ Methods ---------------------------------------------------------------
 
-    // implement VolcanoRule
+    // implement RelOptRule
     public CallingConvention getOutConvention()
     {
         return FennelPullRel.FENNEL_PULL_CONVENTION;
     }
 
-    // implement VolcanoRule
-    public void onMatch(VolcanoRuleCall call)
+    // implement RelOptRule
+    public void onMatch(RelOptRuleCall call)
     {
         TableModificationRel tableModification =
             (TableModificationRel) call.rels[0];
@@ -66,19 +66,18 @@ class FtrsTableModificationRule extends VolcanoRule
             return;
         }
 
-        SaffronRel inputRel = call.rels[1];
+        RelNode inputRel = call.rels[1];
 
         // Require input types to match expected types exactly.  This
         // is accomplished by the usage of CoerceInputsRule.
-        if (!OptUtil.areRowTypesEqual(
-                inputRel.getRowType(),
-                tableModification.getExpectedInputRowType(0)))
-        {
+        if (!RelOptUtil.areRowTypesEqual(
+                    inputRel.getRowType(),
+                    tableModification.getExpectedInputRowType(0))) {
             return;
         }
-        
-        SaffronRel fennelInput =
-            convert(inputRel,FennelPullRel.FENNEL_PULL_CONVENTION);
+
+        RelNode fennelInput =
+            convert(inputRel, FennelPullRel.FENNEL_PULL_CONVENTION);
         if (fennelInput == null) {
             return;
         }

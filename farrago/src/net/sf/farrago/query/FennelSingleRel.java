@@ -17,14 +17,13 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.query;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.type.*;
 
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
 
 
 /**
@@ -41,12 +40,14 @@ public abstract class FennelSingleRel extends SingleRel implements FennelRel
     /**
      * Creates a new FennelSingleRel object.
      *
-     * @param cluster VolcanoCluster for this rel
+     * @param cluster RelOptCluster for this rel
      * @param child input rel
      */
-    protected FennelSingleRel(VolcanoCluster cluster,SaffronRel child)
+    protected FennelSingleRel(
+        RelOptCluster cluster,
+        RelNode child)
     {
-        super(cluster,child);
+        super(cluster, child);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -66,11 +67,11 @@ public abstract class FennelSingleRel extends SingleRel implements FennelRel
     /**
      * .
      *
-     * @return catalog for object definitions
+     * @return repos for object definitions
      */
-    public FarragoCatalog getCatalog()
+    public FarragoRepos getRepos()
     {
-        return getPreparingStmt().getCatalog();
+        return getPreparingStmt().getRepos();
     }
 
     /**
@@ -92,7 +93,8 @@ public abstract class FennelSingleRel extends SingleRel implements FennelRel
     }
 
     // implement FennelRel
-    public Object implementFennelChild(FennelRelImplementor implementor) {
+    public Object implementFennelChild(FennelRelImplementor implementor)
+    {
         return implementor.visitChild(this, 0, child);
     }
 }

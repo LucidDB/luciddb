@@ -35,8 +35,8 @@ net.sf.farrago.jdbc.engine.FarragoJdbcEngineConnection} processes an
 SQL string by creating a new instance of {@link
 net.sf.farrago.parser.FarragoParser} and asking it to parse the
 statement.  This is accomplished via an extension of {@link
-net.sf.saffron.sql.parser.SqlParser}, and the result (assuming no syntax
-error is thrown) is a tree of {@link net.sf.saffron.sql.SqlNode}
+org.eigenbase.sql.parser.SqlParser}, and the result (assuming no syntax
+error is thrown) is a tree of {@link org.eigenbase.sql.SqlNode}
 objects:
 
 <hr>
@@ -60,9 +60,9 @@ TODO:  details on caching
 <h3>Validation</h3>
 
 After parsing, the parse tree must be validated.  prepareSql in {@link
-net.sf.saffron.oj.stmt.OJStatement} is called, this time taking the
+org.eigenbase.oj.stmt.OJPreparingStmt} is called, this time taking the
 root SqlNode and an instance of {@link
-net.sf.saffron.sql.SqlValidator} (we supply a {@link
+org.eigenbase.sql.SqlValidator} (we supply a {@link
 net.sf.farrago.query.FarragoSqlValidator}).  SqlValidator walks the parse
 tree performing validation tasks such as type inference, resolving
 identifiers, and expanding '*' in select lists; this results in a
@@ -102,24 +102,24 @@ reference to a column produced by an enclosing scope.
 
 The next step is to convert the validated SQL parse tree into a
 relational algebra expression.  The dirty work is all performed by
-{@link net.sf.saffron.sql2rel.SqlToRelConverter}, relying on the
+{@link org.eigenbase.sql2rel.SqlToRelConverter}, relying on the
 validator's scope and type information.  The result is again a tree, but this
-time of instances of {@link net.sf.saffron.rel.SaffronRel}.  The
+time of instances of {@link org.eigenbase.rel.RelNode}.  The
 target set of relational expressions is constrained to the following
 abstract operators:
 
 <ul>
-<li>{@link net.sf.saffron.rel.TableAccessRel}
-<li>{@link net.sf.saffron.rel.TableModificationRel}
-<li>{@link net.sf.saffron.rel.ProjectRel}
-<li>{@link net.sf.saffron.rel.FilterRel}
-<li>{@link net.sf.saffron.rel.JoinRel}
-<li>{@link net.sf.saffron.rel.CorrelatorRel}
-<li>{@link net.sf.saffron.rel.AggregateRel}
-<li>{@link net.sf.saffron.rel.UnionRel}
-<li>{@link net.sf.saffron.rel.IntersectRel}
-<li>{@link net.sf.saffron.rel.MinusRel}
-<li>{@link net.sf.saffron.rel.OneRowRel}
+<li>{@link org.eigenbase.rel.TableAccessRel}
+<li>{@link org.eigenbase.rel.TableModificationRel}
+<li>{@link org.eigenbase.rel.ProjectRel}
+<li>{@link org.eigenbase.rel.FilterRel}
+<li>{@link org.eigenbase.rel.JoinRel}
+<li>{@link org.eigenbase.rel.CorrelatorRel}
+<li>{@link org.eigenbase.rel.AggregateRel}
+<li>{@link org.eigenbase.rel.UnionRel}
+<li>{@link org.eigenbase.rel.IntersectRel}
+<li>{@link org.eigenbase.rel.MinusRel}
+<li>{@link org.eigenbase.rel.OneRowRel}
 </ul>
 
 The <code>EXPLAIN PLAN</code> statement can be used to see the
@@ -151,18 +151,18 @@ Here's a graphical representation:
 <hr>
 
 The three-dimensional boxes are relational algebra nodes (instances of
-SaffronRel); the two-dimensional boxes are validated row expressions
-represented by the {@link net.sf.saffron.rex.RexNode} object model.
+RelNode); the two-dimensional boxes are validated row expressions
+represented by the {@link org.eigenbase.rex.RexNode} object model.
 Besides children and row expressions, relational expressions may
 have additional attributes; e.g. ProjectRel has an array of names to
 be assigned to the columns it produces, and FtrsIndexScanRel has a
 reference to the table to be scanned.  Within a row expression,
-a {@link net.sf.saffron.rex.RexInputRef} may refer to the output of a
+a {@link org.eigenbase.rex.RexInputRef} may refer to the output of a
 child relational expression via variables with names like
 <code>$N</code> (hence the <code>$0</code> in the
 ProjectRel's expression refers to something different from the
 <code>$0</code> in the FilterRel's condition expression, since
-the expression is relative to the containing SaffronRel).
+the expression is relative to the containing RelNode).
 
 <p>
 
@@ -175,10 +175,10 @@ FtrsIndexScanRel during translation.
 Query optimization transforms the abstract relational algebra
 expression described above into an equivalent expression consisting
 only of operators for which physical implementations are available.
-For an overview of the process, see {@link net.sf.saffron.opt the
-Saffron optimizer docs}.  To tailor the optimization process for our
-requirements, {@link net.sf.farrago.query.FarragoPlanner} subclasses
-{@link net.sf.saffron.opt.VolcanoPlanner} to define Farrago-specific
+For an overview of the process, see {@link com.disruptivetech.farrago.volcano the
+Volcano optimizer docs}.  To tailor the optimization process for our
+requirements, {@link net.sf.farrago.defimpl.FarragoDefaultPlanner} subclasses
+{@link com.disruptivetech.farrago.volcano.VolcanoPlanner} to define Farrago-specific
 rules, relational expressions, and calling conventions.
 
 <p>
@@ -233,18 +233,18 @@ which corresponds to the following relational expression tree:
 Wow, what happened?  The optimizer found that the table's clustered
 index could satisfy the WHERE clause, and accordingly transformed the
 query using a {@link net.sf.farrago.query.FtrsIndexSearchRel} for
-the table access.  (It knew how to do this because FarragoPlanner told
+the table access.  (It knew how to do this because FarragoDefaultPlanner told
 it about {@link net.sf.farrago.query.FtrsScanToSearchRule}.)  What's
 interesting is that this search is sandwiched between Java iterators.
-The lowest level ({@link net.sf.saffron.oj.rel.IterOneRowRel})
+The lowest level ({@link org.eigenbase.oj.rel.IterOneRowRel})
 produces a single row with no columns; the next level up ({@link
-net.sf.saffron.oj.rel.IterCalcRel}) produces the constant DEPTNO value
+org.eigenbase.oj.rel.IterCalcRel}) produces the constant DEPTNO value
 (10) which we're searching for.  (This can remain anonymous as
 <code>$f0</code> since Fennel accesses data by tuple position, not
 name.)  Now, the optimizer wants to feed this into the Fennel search
 as the input key, but the search has FENNEL_PULL calling convention, while
 IterCalcRel has ITERATOR calling convention.  So, a {@link
-net.sf.saffron.rel.convert.ConverterRel} is required; in this case,
+org.eigenbase.rel.convert.ConverterRel} is required; in this case,
 {@link net.sf.farrago.query.IteratorToFennelConverter}.
 
 <p>
@@ -259,8 +259,8 @@ IterCalcRel then implements the original abstract ProjectRel.
 
 Once the optimizer has decided on the best implementation, it's time
 to generate corresponding executable code.  This is the job of {@link
-net.sf.saffron.oj.rel.JavaRelImplementor}, which walks the optimized
-SaffronRel tree calling implement on each expression, producing the
+org.eigenbase.oj.rel.JavaRelImplementor}, which walks the optimized
+RelNode tree calling implement on each expression, producing the
 parse tree representation of a Java class.  From this, the query
 processor generates the Java class definition as text, saves it to a
 file, and then invokes the Java compiler and loads the resulting
@@ -343,7 +343,7 @@ public class ExecutableStmt
         throws java.sql.SQLException
     {
         final net.sf.farrago.runtime.FarragoRuntimeContext connection = connection_p;
-        return new net.sf.saffron.runtime.CalcIterator( connection.newFennelIterator( new net.sf.farrago.runtime.FennelTupleReader(){
+        return new org.eigenbase.runtime.CalcIterator( connection.newFennelIterator( new net.sf.farrago.runtime.FennelTupleReader(){
             
             private net.sf.farrago.dynamic.stmt39449.ExecutableStmt$Ojp_2 oj_var3 = new net.sf.farrago.dynamic.stmt39449.ExecutableStmt$Ojp_2();
 
@@ -365,7 +365,7 @@ public class ExecutableStmt
                 sliceBuffer.putInt( 0, oj_var2.$f0 );
                 sliceBuffer.position( 4 );
             }
-        }, new net.sf.saffron.runtime.CalcIterator( java.util.Collections.singletonList( new net.sf.farrago.dynamic.stmt39449.ExecutableStmt$Ojp_0() ).iterator() ){
+        }, new org.eigenbase.runtime.CalcIterator( java.util.Collections.singletonList( new net.sf.farrago.dynamic.stmt39449.ExecutableStmt$Ojp_0() ).iterator() ){
             
             private net.sf.farrago.dynamic.stmt39449.ExecutableStmt$Ojp_1 oj_var1 = new net.sf.farrago.dynamic.stmt39449.ExecutableStmt$Ojp_1();
 

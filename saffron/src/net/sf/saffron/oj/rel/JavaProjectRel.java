@@ -1,65 +1,60 @@
 /*
-// $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Saffron preprocessor and data engine.
+// Copyright (C) 2002-2004 Disruptive Tech
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package net.sf.saffron.oj.rel;
 
-import net.sf.saffron.oj.util.OJUtil;
-import net.sf.saffron.opt.CallingConvention;
-import net.sf.saffron.opt.OptUtil;
-import net.sf.saffron.opt.VolcanoCluster;
-import net.sf.saffron.rel.ProjectRel;
-import net.sf.saffron.rel.SaffronRel;
-import net.sf.saffron.rex.RexNode;
-import net.sf.saffron.rex.RexUtil;
-import net.sf.saffron.util.Util;
 import openjava.ptree.AllocationExpression;
 import openjava.ptree.Expression;
 import openjava.ptree.ExpressionList;
 import openjava.ptree.ParseTree;
+
+import org.eigenbase.oj.rel.*;
+import org.eigenbase.oj.util.OJUtil;
+import org.eigenbase.rel.ProjectRel;
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.relopt.CallingConvention;
+import org.eigenbase.relopt.RelOptCluster;
+import org.eigenbase.relopt.RelOptUtil;
+import org.eigenbase.rex.RexNode;
+import org.eigenbase.rex.RexUtil;
+import org.eigenbase.util.Util;
 
 
 /**
  * Implements the {@link ProjectRel} relational
  * expression as Java code.
  */
-public class JavaProjectRel extends ProjectRel
-        implements JavaLoopRel, JavaSelfRel
+public class JavaProjectRel extends ProjectRel implements JavaLoopRel,
+    JavaSelfRel
 {
-    //~ Constructors ----------------------------------------------------------
-
     public JavaProjectRel(
-        VolcanoCluster cluster,
-        SaffronRel child,
+        RelOptCluster cluster,
+        RelNode child,
         RexNode [] exps,
         String [] fieldNames,
         int flags)
     {
-        super(cluster,child,exps,fieldNames,flags);
-        assert(child.getConvention() == CallingConvention.JAVA);
+        super(cluster, child, exps, fieldNames, flags);
+        assert (child.getConvention() == CallingConvention.JAVA);
     }
 
-    //~ Methods ---------------------------------------------------------------
-
-    // implement SaffronRel
+    // implement RelNode
     public CallingConvention getConvention()
     {
         return CallingConvention.JAVA;
@@ -69,22 +64,24 @@ public class JavaProjectRel extends ProjectRel
     {
         return new JavaProjectRel(
             cluster,
-            OptUtil.clone(child),
+            RelOptUtil.clone(child),
             RexUtil.clone(exps),
             Util.clone(fieldNames),
             getFlags());
     }
 
-    // implement SaffronRel
+    // implement RelNode
     public ParseTree implement(JavaRelImplementor implementor)
     {
         return implementor.visitJavaChild(this, 0, (JavaRel) child);
     }
 
-    public void implementJavaParent(JavaRelImplementor implementor,
-            int ordinal) {
+    public void implementJavaParent(
+        JavaRelImplementor implementor,
+        int ordinal)
+    {
         assert ordinal == 0;
-        implementor.generateParentBody(this,null);
+        implementor.generateParentBody(this, null);
     }
 
     /**
@@ -121,10 +118,10 @@ public class JavaProjectRel extends ProjectRel
     {
         if (!isBoxed()) {
             // simple row-type, hence "V v = exp;"
-            return implementor.translate(this,exps[0]);
+            return implementor.translate(this, exps[0]);
         } else {
             // complex row-type, hence "V v = new V(exp, ...);"
-            ExpressionList args = implementor.translateList(this,exps);
+            ExpressionList args = implementor.translateList(this, exps);
             return new AllocationExpression(
                 OJUtil.toTypeName(getRowType()),
                 args);

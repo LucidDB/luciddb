@@ -54,6 +54,7 @@ public:
     inline PConstBuffer getEntryForReadInline(
         BTreeNode const &node,uint iEntry);
 
+    // implement the BTreeNodeAccessor interface
     virtual void clearNode(BTreeNode &node,uint cbPage);
     virtual PBuffer allocateEntry(BTreeNode &node,uint iEntry,uint cbEntry);
     virtual void deallocateEntry(BTreeNode &node,uint iEntry);

@@ -1,0 +1,107 @@
+/*
+// $Id$
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
+//
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+package org.eigenbase.sql.parser;
+
+import java.io.Reader;
+import java.io.StringReader;
+
+import org.eigenbase.sql.SqlNode;
+
+
+/**
+ * A <code>SqlParser</code> parses a SQL statement.
+ *
+ * @author jhyde$
+ * @version $Id$
+ *
+ * @since Mar 18, 2003$
+ */
+public class SqlParser
+{
+    //~ Instance fields -------------------------------------------------------
+
+    private final Parser parser;
+
+    //~ Constructors ----------------------------------------------------------
+
+    /**
+     * Creats a <code>SqlParser</code> which reads input from a string.
+     */
+    public SqlParser(String s)
+    {
+        parser = new Parser(new StringReader(s));
+    }
+
+    /**
+     * Creats a <code>SqlParser</code> which reads input from a reader.
+     */
+    public SqlParser(Reader reader)
+    {
+        parser = new Parser(reader);
+    }
+
+    //~ Methods ---------------------------------------------------------------
+
+    /**
+     * Parses a SQL expression.
+     *
+     * @throws ParseException if there is a parse error
+     */
+    public SqlNode parseExpression()
+        throws ParseException
+    {
+        return parser.SqlExpressionEof();
+    }
+
+    /**
+     * Parses a <code>SELECT</code> statement.
+     *
+     * @return A {@link org.eigenbase.sql.SqlSelect} for a regular
+     *         <code>SELECT</code> statement; a {@link
+     *         org.eigenbase.sql.SqlBinaryOperator} for a
+     *         <code>UNION</code>, <code>INTERSECT</code>, or
+     *         <code>EXCEPT</code>.
+     *
+     * @throws ParseException if there is a parse error
+     */
+    public SqlNode parseQuery()
+        throws ParseException
+    {
+        return parser.SqlQueryEof();
+    }
+
+    /**
+     * Parses an SQL statement.
+     *
+     * @return top-level SqlNode representing stmt
+     *
+     * @throws ParseException if there is a parse error
+     */
+    public SqlNode parseStmt()
+        throws ParseException
+    {
+        return parser.SqlStmtEof();
+    }
+}
+
+
+// End SqlParser.java

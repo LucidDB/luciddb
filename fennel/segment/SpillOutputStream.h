@@ -85,7 +85,7 @@ class SpillOutputStream : public ByteOutputStream
     
 public:
     /**
-     * Factory method for creating a new SpillOutputStream.
+     * Creates a new SpillOutputStream.
      *
      * @param pSegmentFactory the SegmentFactory to use if the output stream
      * spills
@@ -102,7 +102,7 @@ public:
     virtual ~SpillOutputStream();
 
     /**
-     * Obtain a ByteInputStream suitable for accessing the contents of this
+     * Obtains a ByteInputStream suitable for accessing the contents of this
      * SpillOutputStream.  If spill has already occurred, then this is a
      * SegInputStream, otherwise a ByteArrayInputStream.
      *
@@ -116,7 +116,7 @@ public:
         SeekPosition seekPosition = SEEK_STREAM_BEGIN);
 
     /**
-     * Obtain a reference to the underlying segment if this stream has
+     * Obtains a reference to the underlying segment if this stream has
      * spilled.
      *
      * @return the segment, or a singular pointer if the stream has not spilled
@@ -124,7 +124,7 @@ public:
     SharedSegment getSegment();
 
     /**
-     * Obtain a reference to the underlying SegOutputStream if this stream has
+     * Obtains a reference to the underlying SegOutputStream if this stream has
      * spilled.
      *
      * @return the stream, or a singular pointer if the stream has not spilled

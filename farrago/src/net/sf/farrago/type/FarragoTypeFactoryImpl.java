@@ -17,35 +17,35 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.type;
 
-import net.sf.farrago.catalog.*;
-import net.sf.farrago.cwm.core.*;
-import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.cwm.relational.enumerations.*;
-import net.sf.farrago.cwm.datatypes.CwmTypeAlias;
-import net.sf.farrago.runtime.*;
-import net.sf.farrago.type.runtime.*;
-import net.sf.farrago.resource.*;
-import net.sf.farrago.util.*;
-
-import net.sf.saffron.core.*;
-import net.sf.saffron.oj.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.util.*;
-import net.sf.saffron.sql.type.*;
-import net.sf.saffron.sql.SqlCollation;
-
-import openjava.mop.*;
-
-import java.util.*;
+import java.nio.charset.Charset;
 import java.sql.*;
 import java.sql.Date;
-import java.nio.charset.Charset;
+import java.util.*;
 
 import javax.jmi.model.*;
 import javax.jmi.reflect.*;
+
+import net.sf.farrago.catalog.*;
+import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.cwm.datatypes.CwmTypeAlias;
+import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.cwm.relational.enumerations.*;
+import net.sf.farrago.resource.*;
+import net.sf.farrago.runtime.*;
+import net.sf.farrago.type.runtime.*;
+import net.sf.farrago.util.*;
+
+import openjava.mop.*;
+
+import org.eigenbase.oj.*;
+import org.eigenbase.oj.util.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.SqlCollation;
+import org.eigenbase.sql.type.*;
+import org.eigenbase.util.*;
 
 
 // REVIEW:  should FarragoTypeFactoryImpl even have to subclass
@@ -53,7 +53,7 @@ import javax.jmi.reflect.*;
 
 /**
  * FarragoTypeFactoryImpl is the Farrago-specific implementation of the
- * Saffron TypeFactory interface.
+ * RelDataTypeFactory interface.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -63,8 +63,8 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
 {
     //~ Instance fields -------------------------------------------------------
 
-    /** Catalog for type object definitions. */
-    private final FarragoCatalog catalog;
+    /** Repos for type object definitions. */
+    private final FarragoRepos repos;
 
     /** Map of OJ types corresponding to FarragoPrimitiveType instances. */
     private Map ojPrimitiveToFarragoType = new HashMap();
@@ -81,7 +81,6 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
      * Map of MOF Classifier names to corresponding SQL type.
      */
     private Map classifierNameToSqlType = new HashMap();
-
     private int nextGeneratedClassId;
 
     //~ Constructors ----------------------------------------------------------
@@ -90,9 +89,11 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     // REVIEW: LES 6-7-2004 - note that date/time prototypes hold a ref to this
     // factory, making the above TODO problematic.
     // instance
-    public FarragoTypeFactoryImpl(FarragoCatalog catalog)
+    public FarragoTypeFactoryImpl(FarragoRepos repos)
     {
-        this.catalog = catalog;
+        super(new OJClassMap(FarragoSyntheticObject.class));
+            
+        this.repos = repos;
 
         addPrimitivePrototype(
             new FarragoPrimitiveType(
@@ -106,7 +107,10 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
                 NullablePrimitive.NullableBoolean.class));
 
         addPrimitivePrototype(
-            new FarragoPrimitiveType(getSimpleType("TINYINT"),false,Byte.TYPE));
+            new FarragoPrimitiveType(
+                getSimpleType("TINYINT"),
+                false,
+                Byte.TYPE));
         addPrimitivePrototype(
             new FarragoPrimitiveType(
                 getSimpleType("TINYINT"),
@@ -136,7 +140,10 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
                 NullablePrimitive.NullableInteger.class));
 
         addPrimitivePrototype(
-            new FarragoPrimitiveType(getSimpleType("BIGINT"),false,Long.TYPE));
+            new FarragoPrimitiveType(
+                getSimpleType("BIGINT"),
+                false,
+                Long.TYPE));
         addPrimitivePrototype(
             new FarragoPrimitiveType(
                 getSimpleType("BIGINT"),
@@ -144,7 +151,10 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
                 NullablePrimitive.NullableLong.class));
 
         addPrimitivePrototype(
-            new FarragoPrimitiveType(getSimpleType("REAL"),false,Float.TYPE));
+            new FarragoPrimitiveType(
+                getSimpleType("REAL"),
+                false,
+                Float.TYPE));
         addPrimitivePrototype(
             new FarragoPrimitiveType(
                 getSimpleType("REAL"),
@@ -164,129 +174,180 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
 
         addPrecisionPrototype(
             new FarragoPrecisionType(
-                getSimpleType("VARCHAR"),false,0,0,null,null));
+                getSimpleType("VARCHAR"),
+                false,
+                0,
+                0,
+                null,
+                null));
         addPrecisionPrototype(
             new FarragoPrecisionType(
-                getSimpleType("VARBINARY"),false,0,0,null,null));
+                getSimpleType("VARBINARY"),
+                false,
+                0,
+                0,
+                null,
+                null));
         addPrecisionPrototype(
             new FarragoPrecisionType(
-                getSimpleType("CHAR"),false,0,0,null,null));
+                getSimpleType("CHAR"),
+                false,
+                0,
+                0,
+                null,
+                null));
         addPrecisionPrototype(
             new FarragoPrecisionType(
-                getSimpleType("BINARY"),false,0,0,null,null));
+                getSimpleType("BINARY"),
+                false,
+                0,
+                0,
+                null,
+                null));
         addPrecisionPrototype(
             new FarragoPrecisionType(
-                getSimpleType("BIT"),false,0,0,null,null));
+                getSimpleType("BIT"),
+                false,
+                0,
+                0,
+                null,
+                null));
         addPrecisionPrototype(
             new FarragoPrecisionType(
-                getSimpleType("DECIMAL"),false,0,0,null,null));
+                getSimpleType("DECIMAL"),
+                false,
+                0,
+                0,
+                null,
+                null));
 
         // Date/time types
         addPrecisionPrototype(
-            new FarragoDateTimeType(getSimpleType("DATE"),
-                                    false,false, 0, this));
+            new FarragoDateTimeType(
+                getSimpleType("DATE"),
+                false,
+                false,
+                0,
+                this));
         addPrecisionPrototype(
-            new FarragoDateTimeType(getSimpleType("TIME"),
-                                    false,false,0, this));
+            new FarragoDateTimeType(
+                getSimpleType("TIME"),
+                false,
+                false,
+                0,
+                this));
         addPrecisionPrototype(
-            new FarragoDateTimeType(getSimpleType("TIMESTAMP"),
-                                    false,false,0, this));
+            new FarragoDateTimeType(
+                getSimpleType("TIMESTAMP"),
+                false,
+                false,
+                0,
+                this));
     }
-
-
 
     //~ Methods ---------------------------------------------------------------
 
     // implement FarragoTypeFactory
-    public FarragoCatalog getCatalog()
+    public FarragoRepos getRepos()
     {
-        return catalog;
+        return repos;
     }
 
-    // override SaffronTypeFactoryImpl
-    public SaffronType createJoinType(SaffronType [] types)
+    // override RelDataTypeFactoryImpl
+    public RelDataType createJoinType(RelDataType [] types)
     {
-        assert(types.length == 2);
-        return JoinRel.createJoinType(this,types[0],types[1]);
+        assert (types.length == 2);
+        return JoinRel.createJoinType(this, types[0], types[1]);
     }
 
-    // override SaffronTypeFactoryImpl
-    public SaffronType createSqlType(SqlTypeName typeName)
+    // override RelDataTypeFactoryImpl
+    public RelDataType createSqlType(SqlTypeName typeName)
     {
-        if (typeName.isSpecial())
-            {
-                return super.createSqlType(typeName);
-            }
-        CwmSqlsimpleType simpleType = (CwmSqlsimpleType)
-            catalog.getModelElement(
-                catalog.relationalPackage.getCwmSqlsimpleType().refAllOfType(),
+        if (typeName.isSpecial()) {
+            return super.createSqlType(typeName);
+        }
+        CwmSqlsimpleType simpleType =
+            (CwmSqlsimpleType) repos.getModelElement(
+                repos.relationalPackage.getCwmSqlsimpleType().refAllOfType(),
                 typeName.getName());
+
         // If type not found directly look in aliases
         if (null == simpleType) {
             Object typeAlias =
-                catalog.getModelElement(
-                    catalog.datatypesPackage.getCwmTypeAlias().refAllOfType(),
+                repos.getModelElement(
+                    repos.datatypesPackage.getCwmTypeAlias().refAllOfType(),
                     typeName.getName());
-            simpleType = (CwmSqlsimpleType)
-                    ((CwmTypeAlias) typeAlias).getType();
+            simpleType =
+                (CwmSqlsimpleType) ((CwmTypeAlias) typeAlias).getType();
         }
-        assert(simpleType != null) : "Type named " + typeName.getName() + " not found.";
+        assert (simpleType != null) : "Type named " + typeName.getName()
+        + " not found.";
         FarragoType prototype =
             (FarragoType) sqlTypeNumberToPrototype.get(
-                getTypeHashKey(simpleType,false));
-        assert(prototype != null);
+                getTypeHashKey(simpleType, false));
+        assert (prototype != null);
         return prototype;
     }
 
-    // override SaffronTypeFactoryImpl
-    public SaffronType createSqlType(SqlTypeName typeName, int length)
+    // override RelDataTypeFactoryImpl
+    public RelDataType createSqlType(
+        SqlTypeName typeName,
+        int length)
     {
         return createSqlType(typeName, length, 0);
     }
 
-    // override SaffronTypeFactoryImpl
-    public SaffronType createSqlType(
-        SqlTypeName typeName, int length, int scale)
+    // override RelDataTypeFactoryImpl
+    public RelDataType createSqlType(
+        SqlTypeName typeName,
+        int length,
+        int scale)
     {
-        SaffronType type = createSqlType(typeName);
-        assert(type instanceof FarragoPrecisionType);
-        FarragoPrecisionType precisionType =
-            (FarragoPrecisionType) type;
+        RelDataType type = createSqlType(typeName);
+        assert (type instanceof FarragoPrecisionType);
+        FarragoPrecisionType precisionType = (FarragoPrecisionType) type;
         switch (precisionType.getSimpleType().getTypeNumber().intValue()) {
         case Types.DATE:
         case Types.TIME:
         case Types.TIMESTAMP:
-            assert (scale == 0) : "Non-zero scale for date/time type " + typeName;
-            precisionType = new FarragoDateTimeType(
-                precisionType.getSimpleType(),
-                false,
-                false,
-                length, null);
+            assert (scale == 0) : "Non-zero scale for date/time type "
+            + typeName;
+            precisionType =
+                new FarragoDateTimeType(
+                    precisionType.getSimpleType(),
+                    false,
+                    false,
+                    length,
+                    null);
             break;
         default:
             String charsetName;
             SqlCollation collation;
             if (precisionType.isCharType()) {
-                charsetName = catalog.getDefaultCharsetName();
-                collation = new SqlCollation(SqlCollation.Coercibility.Coercible);
+                charsetName = repos.getDefaultCharsetName();
+                collation =
+                    new SqlCollation(SqlCollation.Coercibility.Coercible);
             } else {
                 charsetName = null;
                 collation = null;
             }
-            precisionType = new FarragoPrecisionType(
-                precisionType.getSimpleType(),
-                false,
-                length,
-                scale,
-                charsetName,
-                collation);
+            precisionType =
+                new FarragoPrecisionType(
+                    precisionType.getSimpleType(),
+                    false,
+                    length,
+                    scale,
+                    charsetName,
+                    collation);
         }
         precisionType.factory = this;
         return canonize(precisionType);
     }
 
     // implement FarragoTypeFactory
-    public FarragoType createColumnType(CwmColumn column,boolean validated)
+    public FarragoType createColumnType(
+        CwmColumn column,
+        boolean validated)
     {
         FarragoAtomicType prototype = getPrototype(column);
         if (!validated) {
@@ -306,10 +367,12 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         }
         if (prototype instanceof FarragoDateTimeType) {
             FarragoType dateTimeType =
-                new FarragoDateTimeType(prototype.getSimpleType(),
-                                        getCatalog().isNullable(column),
-                                        false /* fixme - Timezone */,
-                                        pPrecision.intValue(), this);
+                new FarragoDateTimeType(
+                    prototype.getSimpleType(),
+                    getRepos().isNullable(column),
+                    false /* fixme - Timezone */,
+                    pPrecision.intValue(),
+                    this);
             return (FarragoType) canonize(dateTimeType);
         }
 
@@ -326,7 +389,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         FarragoType specializedType =
             new FarragoPrecisionType(
                 prototype.getSimpleType(),
-                getCatalog().isNullable(column),
+                getRepos().isNullable(column),
                 pPrecision.intValue(),
                 (pScale == null) ? 0 : pScale.intValue(),
                 charsetName,
@@ -336,14 +399,14 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     }
 
     // implement FarragoTypeFactory
-    public SaffronType createColumnSetType(CwmColumnSet columnSet)
+    public RelDataType createColumnSetType(CwmColumnSet columnSet)
     {
         final List featureList = columnSet.getFeature();
         if (featureList.isEmpty()) {
             return null;
         }
         return createProjectType(
-            new SaffronTypeFactory.FieldInfo() {
+            new RelDataTypeFactory.FieldInfo() {
                 public int getFieldCount()
                 {
                     return featureList.size();
@@ -356,21 +419,21 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
                     return column.getName();
                 }
 
-                public SaffronType getFieldType(int index)
+                public RelDataType getFieldType(int index)
                 {
                     final CwmColumn column =
                         (CwmColumn) featureList.get(index);
-                    return createColumnType(column,true);
+                    return createColumnType(column, true);
                 }
             });
     }
 
     // implement FarragoTypeFactory
-    public SaffronType createResultSetType(final ResultSetMetaData metaData)
+    public RelDataType createResultSetType(final ResultSetMetaData metaData)
     {
         final FarragoTypeFactoryImpl factory = this;
         return createProjectType(
-            new SaffronTypeFactory.FieldInfo() {
+            new RelDataTypeFactory.FieldInfo() {
                 public int getFieldCount()
                 {
                     try {
@@ -390,13 +453,12 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
                     }
                 }
 
-                public SaffronType getFieldType(int index)
+                public RelDataType getFieldType(int index)
                 {
                     int iOneBased = index + 1;
                     try {
                         boolean isNullable =
-                            (metaData.isNullable(iOneBased)
-                             != ResultSetMetaData.columnNoNulls);
+                            (metaData.isNullable(iOneBased) != ResultSetMetaData.columnNoNulls);
                         FarragoAtomicType prototype =
                             (FarragoAtomicType) sqlTypeNumberToPrototype.get(
                                 getTypeHashKey(
@@ -409,17 +471,27 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
                         }
                         if (prototype instanceof FarragoDateTimeType) {
                             FarragoType dateTimeType =
-                                new FarragoDateTimeType(prototype.getSimpleType(),
-                                                        isNullable,
-                                                        false /* fixme - chech TZ*/, metaData.getPrecision(iOneBased), factory);
+                                new FarragoDateTimeType(
+                                    prototype.getSimpleType(),
+                                    isNullable,
+                                    false /* fixme - chech TZ*/,
+                                    metaData.getPrecision(iOneBased),
+                                    factory);
                             return (FarragoType) canonize(dateTimeType);
                         }
                         int precision = metaData.getPrecision(iOneBased);
                         if (precision == 0) {
                             // REVIEW jvs 4-Mar-2004:  Need a good way to
                             // handle drivers like hsqldb which return 0
-                            // to indicated unlimited precision.
+                            // to indicate unlimited precision.
                             precision = 2048;
+                        }
+                        String charsetName = null;
+                        SqlCollation collation = null;
+                        if (prototype.isCharType()) {
+                            charsetName = repos.getDefaultCharsetName();
+                            collation = new SqlCollation(
+                                SqlCollation.Coercibility.Coercible);
                         }
                         FarragoType specializedType =
                             new FarragoPrecisionType(
@@ -427,8 +499,8 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
                                 isNullable,
                                 precision,
                                 metaData.getScale(iOneBased),
-                                null,
-                                null);
+                                charsetName,
+                                collation);
                         specializedType.factory = factory;
                         return (FarragoType) canonize(specializedType);
                     } catch (SQLException ex) {
@@ -457,8 +529,10 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         if (feature != null) {
             Classifier classifier = feature.getType();
             isNullable = (feature.getMultiplicity().getLower() == 0);
-            prototype = createTypeForPrimitiveByName(
-                classifier.getName(),isNullable);
+            prototype =
+                createTypeForPrimitiveByName(
+                    classifier.getName(),
+                    isNullable);
         } else {
             // just a hack to allow for generated mofId field
             prototype = null;
@@ -466,10 +540,14 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
 
         if (prototype == null) {
             // TODO:  cleanup
-            prototype = new FarragoPrecisionType(
-                getSimpleType("VARCHAR"),isNullable,128,0,
-                catalog.getDefaultCharsetName(),
-                new SqlCollation(SqlCollation.Coercibility.Coercible));
+            prototype =
+                new FarragoPrecisionType(
+                    getSimpleType("VARCHAR"),
+                    isNullable,
+                    128,
+                    0,
+                    repos.getDefaultCharsetName(),
+                    new SqlCollation(SqlCollation.Coercibility.Coercible));
             prototype.factory = this;
             prototype = (FarragoType) canonize(prototype);
         }
@@ -477,16 +555,19 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     }
 
     // copy a FarragoAtomicType, setting nullability
-    private SaffronType copyFarragoAtomicType(
-        FarragoAtomicType type, boolean nullable)
+    private RelDataType copyFarragoAtomicType(
+        FarragoAtomicType type,
+        boolean nullable)
     {
         if (type instanceof FarragoDateTimeType) {
             FarragoDateTimeType dtType = (FarragoDateTimeType) type;
-            dtType = new FarragoDateTimeType(
-                dtType.getSimpleType(),
-                nullable,
-                dtType.hasTimeZone(),
-                dtType.getPrecision(), this);
+            dtType =
+                new FarragoDateTimeType(
+                    dtType.getSimpleType(),
+                    nullable,
+                    dtType.hasTimeZone(),
+                    dtType.getPrecision(),
+                    this);
             return canonize(dtType);
         }
         if (type instanceof FarragoPrecisionType) {
@@ -501,121 +582,137 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
                 charsetName = null;
                 collation = null;
             }
-            precisionType = new FarragoPrecisionType(
-                precisionType.getSimpleType(),
-                nullable,
-                precisionType.getPrecision(),
-                precisionType.getScale(),
-                charsetName,
-                collation);
+            precisionType =
+                new FarragoPrecisionType(
+                    precisionType.getSimpleType(),
+                    nullable,
+                    precisionType.getPrecision(),
+                    precisionType.getScale(),
+                    charsetName,
+                    collation);
             precisionType.factory = this;
             return canonize(precisionType);
         } else {
             return createTypeForPrimitiveBySqlsimpleType(
-                type.getSimpleType(),nullable);
+                type.getSimpleType(),
+                nullable);
         }
     }
 
-    // override SaffronTypeFactoryImpl
-    public SaffronType createTypeWithNullability(SaffronType type,boolean nullable)
+    // override RelDataTypeFactoryImpl
+    public RelDataType createTypeWithNullability(
+        RelDataType type,
+        boolean nullable)
     {
         if (type instanceof FarragoAtomicType) {
-            if (type.isNullable() == nullable)
+            if (type.isNullable() == nullable) {
                 return type;
-            else
+            } else {
                 return copyFarragoAtomicType((FarragoAtomicType) type, nullable);
+            }
         } else {
-            return super.createTypeWithNullability(type,nullable);
+            return super.createTypeWithNullability(type, nullable);
         }
     }
 
-    // override SaffronTypeFactoryImpl
-    public SaffronType copyType(SaffronType type)
+    // override RelDataTypeFactoryImpl
+    public RelDataType copyType(RelDataType type)
     {
         if (type instanceof FarragoAtomicType) {
-            return copyFarragoAtomicType((FarragoAtomicType) type, type.isNullable());
+            return copyFarragoAtomicType(
+                (FarragoAtomicType) type,
+                type.isNullable());
         } else {
             return super.copyType(type);
         }
     }
 
-    public SaffronType createTypeWithCharsetAndCollation(SaffronType type,
-                                                         Charset charset, SqlCollation collation) {
-        assert(type.isCharType()) : "type.isCharType()==true";
+    public RelDataType createTypeWithCharsetAndCollation(
+        RelDataType type,
+        Charset charset,
+        SqlCollation collation)
+    {
+        assert (type.isCharType()) : "type.isCharType()==true";
         if (!(type instanceof FarragoAtomicType)) {
-            return super.createTypeWithCharsetAndCollation(type,
-                                                           charset, collation);
+            return super.createTypeWithCharsetAndCollation(type, charset,
+                collation);
         }
 
         if (type instanceof FarragoPrecisionType) {
             FarragoPrecisionType precisionType;
             precisionType = (FarragoPrecisionType) type;
-            precisionType = new FarragoPrecisionType(
-                precisionType.getSimpleType(),
-                precisionType.isNullable(),
-                precisionType.getPrecision(),
-                precisionType.getScale(),
-                charset.name(),
-                collation);
+            precisionType =
+                new FarragoPrecisionType(
+                    precisionType.getSimpleType(),
+                    precisionType.isNullable(),
+                    precisionType.getPrecision(),
+                    precisionType.getScale(),
+                    charset.name(),
+                    collation);
             precisionType.factory = this;
             return canonize(precisionType);
         }
 
-        throw Util.needToImplement("Need to implement "+type);
-
+        throw Util.needToImplement("Need to implement " + type);
     }
 
     private FarragoType createTypeForPrimitive(
-        Class boxingClass,boolean isNullable)
+        Class boxingClass,
+        boolean isNullable)
     {
         return createTypeForPrimitiveByName(
-            ReflectUtil.getUnqualifiedClassName(boxingClass),isNullable);
+            ReflectUtil.getUnqualifiedClassName(boxingClass),
+            isNullable);
     }
 
     private FarragoType createTypeForPrimitiveByName(
-        String boxingClassName,boolean isNullable)
+        String boxingClassName,
+        boolean isNullable)
     {
-        CwmSqlsimpleType sqlType = (CwmSqlsimpleType)
-            classifierNameToSqlType.get(boxingClassName);
+        CwmSqlsimpleType sqlType =
+            (CwmSqlsimpleType) classifierNameToSqlType.get(boxingClassName);
         if (sqlType == null) {
             return null;
         }
-        return createTypeForPrimitiveBySqlsimpleType(sqlType,isNullable);
+        return createTypeForPrimitiveBySqlsimpleType(sqlType, isNullable);
     }
 
     FarragoType createTypeForPrimitiveBySqlsimpleType(
-        CwmSqlsimpleType simpleType,boolean isNullable)
+        CwmSqlsimpleType simpleType,
+        boolean isNullable)
     {
         // no clone required since it's primitive
-        FarragoType prototype = (FarragoType)
-            sqlTypeNumberToPrototype.get(
-                getTypeHashKey(simpleType,isNullable));
+        FarragoType prototype =
+            (FarragoType) sqlTypeNumberToPrototype.get(
+                getTypeHashKey(simpleType, isNullable));
         return prototype;
     }
 
     // override OJTypeFactoryImpl
-    public OJClass toOJClass(OJClass declarer,SaffronType type)
+    public OJClass toOJClass(
+        OJClass declarer,
+        RelDataType type)
     {
         if (type instanceof FarragoType) {
             FarragoType farragoType = (FarragoType) type;
             return farragoType.getOjClass(declarer);
         } else if (type instanceof SqlType) {
             SqlType sqlType = (SqlType) type;
-            assert(sqlType.getTypeName().equals(SqlTypeName.Null));
+            assert (sqlType.getTypeName().equals(SqlTypeName.Null));
             return OJSystem.NULLTYPE;
         } else {
-            return super.toOJClass(declarer,type);
+            return super.toOJClass(declarer, type);
         }
     }
 
     // override OJTypeFactoryImpl
-    public SaffronType toType(final OJClass ojClass)
+    public RelDataType toType(final OJClass ojClass)
     {
         if (ojClass instanceof OJTypedClass) {
             return ((OJTypedClass) ojClass).type;
         } else {
-            SaffronType type =
-                (SaffronType) ojPrimitiveToFarragoType.get(ojClass);
+            RelDataType type =
+                (RelDataType) ojPrimitiveToFarragoType.get(ojClass);
             if (type != null) {
                 return type;
             }
@@ -626,33 +723,40 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     // REVIEW jvs 27-May-2004:  no longer using the code below for Java row
     // manipulation.  But perhaps it will be useful for flattening before going
     // into Fennel?
-
     // disabled override OJTypeFactoryImpl
     protected OJClass disabled_createOJClassForRecordType(
-        OJClass declarer,RecordType recordType)
+        OJClass declarer,
+        RecordType recordType)
     {
         List fieldList = new ArrayList();
-        if (flattenFields(recordType.getFields(),fieldList)) {
-            SaffronType [] types = new SaffronType[fieldList.size()];
+        if (flattenFields(
+                    recordType.getFields(),
+                    fieldList)) {
+            RelDataType [] types = new RelDataType[fieldList.size()];
             String [] fieldNames = new String[types.length];
             for (int i = 0; i < types.length; ++i) {
-                SaffronField field = (SaffronField) fieldList.get(i);
+                RelDataTypeField field = (RelDataTypeField) fieldList.get(i);
                 types[i] = field.getType();
+
                 // FIXME jvs 27-May-2004:  uniquify
                 fieldNames[i] = field.getName();
             }
-            recordType = (RecordType) createProjectType(types,fieldNames);
+            recordType = (RecordType) createProjectType(types, fieldNames);
         }
-        return super.createOJClassForRecordType(declarer,recordType);
+        return super.createOJClassForRecordType(declarer, recordType);
     }
 
-    private boolean flattenFields(SaffronField [] fields,List list)
+    private boolean flattenFields(
+        RelDataTypeField [] fields,
+        List list)
     {
         boolean nested = false;
         for (int i = 0; i < fields.length; ++i) {
             if (fields[i].getType().isProject()) {
                 nested = true;
-                flattenFields(fields[i].getType().getFields(),list);
+                flattenFields(
+                    fields[i].getType().getFields(),
+                    list);
             } else {
                 list.add(fields[i]);
             }
@@ -660,10 +764,10 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         return nested;
     }
 
-    // override SaffronTypeFactoryImpl
-    public SaffronType leastRestrictive(SaffronType [] types)
+    // override RelDataTypeFactoryImpl
+    public RelDataType leastRestrictive(RelDataType [] types)
     {
-        assert(types.length > 0);
+        assert (types.length > 0);
         if (types[0].isProject()) {
             return super.leastRestrictive(types);
         }
@@ -674,7 +778,6 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         boolean anyNullable = resultType.isNullable();
 
         for (int i = 1; i < types.length; ++i) {
-
             if (!(types[i] instanceof FarragoAtomicType)) {
                 return super.leastRestrictive(types);
             }
@@ -688,72 +791,75 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             }
 
             if (family.equals(FarragoTypeFamily.CHARACTER)
-                || (family.equals(FarragoTypeFamily.BINARY)))
-                {
-                    // TODO:  character set, collation
-                    if (!resultFamily.equals(family)) {
-                        return null;
-                    }
-                    FarragoPrecisionType type1 =
-                        (FarragoPrecisionType) resultType;
-                    FarragoPrecisionType type2 =
-                        (FarragoPrecisionType) type;
-                    int precision = Math.max(
-                        type1.getPrecision(),type2.getPrecision());
-                    // If either type is LOB, then result is LOB with no precision.
-                    // Otherwise, if either is variable width, result is variable
-                    // width.  Otherwise, result is fixed width.
-                    SaffronType saffronType;
-                    if (type1.isLob()) {
-                        saffronType = createSqlType(getSqlTypeName(type1));
-                    } else if (type2.isLob()) {
-                        saffronType = createSqlType(getSqlTypeName(type2));
-                    } else if (type1.isBoundedVariableWidth()) {
-                        saffronType = createSqlType(
-                            getSqlTypeName(type1),precision);
-                    } else {
-                        // this catch-all case covers type2 variable, and both fixed
-                        saffronType = createSqlType(
-                            getSqlTypeName(type2),precision);
-                    }
-                    resultType = (FarragoAtomicType) saffronType;
-                } else if (type.isExactNumeric()) {
-                    if (resultType.isExactNumeric()) {
-                        if (!type.equals(resultType)) {
-                            if (!type.takesPrecision() && !type.takesScale()
-                                && !resultType.takesPrecision()
-                                && !resultType.takesScale())
-                                {
-                                    // use the bigger primitive
-                                    if (type.getPrecision() > resultType.getPrecision())
-                                        {
-                                            resultType = type;
-                                        }
-                                } else {
-                                    // TODO:  the real thing for numerics
-                                    resultType = createDoublePrecisionType();
-                                }
-                        }
-                    } else if (resultType.isApproximateNumeric()) {
-                        // already approximate; promote to double just in case
-                        // TODO:  only promote when required
-                        resultType = createDoublePrecisionType();
-                    } else {
-                        return null;
-                    }
-                } else if (type.isApproximateNumeric()) {
-                    if (!(type.equals(resultType))) {
-                        resultType = createDoublePrecisionType();
-                    }
-                } else {
-                    if (!family.equals(resultFamily)) {
-                        return null;
-                    }
-                    // TODO:  datetime precision details
+                    || (family.equals(FarragoTypeFamily.BINARY))) {
+                // TODO:  character set, collation
+                if (!resultFamily.equals(family)) {
+                    return null;
                 }
+                FarragoPrecisionType type1 = (FarragoPrecisionType) resultType;
+                FarragoPrecisionType type2 = (FarragoPrecisionType) type;
+                int precision =
+                    Math.max(
+                        type1.getPrecision(),
+                        type2.getPrecision());
+
+                // If either type is LOB, then result is LOB with no precision.
+                // Otherwise, if either is variable width, result is variable
+                // width.  Otherwise, result is fixed width.
+                RelDataType relDataType;
+                if (type1.isLob()) {
+                    relDataType = createSqlType(getSqlTypeName(type1));
+                } else if (type2.isLob()) {
+                    relDataType = createSqlType(getSqlTypeName(type2));
+                } else if (type1.isBoundedVariableWidth()) {
+                    relDataType =
+                        createSqlType(
+                            getSqlTypeName(type1),
+                            precision);
+                } else {
+                    // this catch-all case covers type2 variable, and both fixed
+                    relDataType =
+                        createSqlType(
+                            getSqlTypeName(type2),
+                            precision);
+                }
+                resultType = (FarragoAtomicType) relDataType;
+            } else if (type.isExactNumeric()) {
+                if (resultType.isExactNumeric()) {
+                    if (!type.equals(resultType)) {
+                        if (!type.takesPrecision() && !type.takesScale()
+                                && !resultType.takesPrecision()
+                                && !resultType.takesScale()) {
+                            // use the bigger primitive
+                            if (type.getPrecision() > resultType.getPrecision()) {
+                                resultType = type;
+                            }
+                        } else {
+                            // TODO:  the real thing for numerics
+                            resultType = createDoublePrecisionType();
+                        }
+                    }
+                } else if (resultType.isApproximateNumeric()) {
+                    // already approximate; promote to double just in case
+                    // TODO:  only promote when required
+                    resultType = createDoublePrecisionType();
+                } else {
+                    return null;
+                }
+            } else if (type.isApproximateNumeric()) {
+                if (!(type.equals(resultType))) {
+                    resultType = createDoublePrecisionType();
+                }
+            } else {
+                if (!family.equals(resultFamily)) {
+                    return null;
+                }
+
+                // TODO:  datetime precision details
+            }
         }
         if (anyNullable) {
-            return createTypeWithNullability(resultType,true);
+            return createTypeWithNullability(resultType, true);
         } else {
             return resultType;
         }
@@ -761,7 +867,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
 
     // implement FarragoTypeFactory
     public void convertFieldToCwmColumn(
-        SaffronField field,
+        RelDataTypeField field,
         CwmColumn column)
     {
         FarragoAtomicType type = (FarragoAtomicType) field.getType();
@@ -789,8 +895,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
 
     private FarragoAtomicType createDoublePrecisionType()
     {
-        return (FarragoAtomicType) createTypeForPrimitive(
-            Double.class,false);
+        return (FarragoAtomicType) createTypeForPrimitive(Double.class, false);
     }
 
     private FarragoAtomicType getPrototype(CwmColumn column)
@@ -800,7 +905,9 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         CwmSqlsimpleType simpleType = (CwmSqlsimpleType) classifier;
         FarragoAtomicType prototype =
             (FarragoAtomicType) sqlTypeNumberToPrototype.get(
-                getTypeHashKey(simpleType,catalog.isNullable(column)));
+                getTypeHashKey(
+                    simpleType,
+                    repos.isNullable(column)));
         assert (prototype != null);
         return prototype;
     }
@@ -808,15 +915,17 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     private CwmSqlsimpleType getSimpleType(String typeName)
     {
         Collection types =
-            catalog.relationalPackage.getCwmSqlsimpleType().refAllOfClass();
-        return (CwmSqlsimpleType) catalog.getModelElement(types,typeName);
+            repos.relationalPackage.getCwmSqlsimpleType().refAllOfClass();
+        return (CwmSqlsimpleType) repos.getModelElement(types, typeName);
     }
 
     private Object getTypeHashKey(
         CwmSqlsimpleType simpleType,
         boolean isNullable)
     {
-        return getTypeHashKey(simpleType.getTypeNumber().intValue(),isNullable);
+        return getTypeHashKey(
+            simpleType.getTypeNumber().intValue(),
+            isNullable);
     }
 
     private Object getTypeHashKey(
@@ -839,29 +948,33 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     {
         addPrototype(prototype);
         sqlTypeNumberToPrototype.put(
-            getTypeHashKey(prototype.getSimpleType(),isNullable),
+            getTypeHashKey(
+                prototype.getSimpleType(),
+                isNullable),
             prototype);
     }
 
     private void addPrecisionPrototype(FarragoPrecisionType prototype)
     {
         // add both nullable and NOT NULL variants
-        addAtomicPrototype(prototype,false);
-        addAtomicPrototype(prototype,true);
+        addAtomicPrototype(prototype, false);
+        addAtomicPrototype(prototype, true);
     }
 
     private void addPrimitivePrototype(FarragoPrimitiveType prototype)
     {
-        addAtomicPrototype(prototype,prototype.isNullable());
+        addAtomicPrototype(
+            prototype,
+            prototype.isNullable());
         ojPrimitiveToFarragoType.put(
             OJClass.forClass(prototype.getClassForValue()),
             prototype);
+
         // Java boxing types happen to match the MOF names for primitive
         // types, isn't that nice?
         classifierNameToSqlType.put(
             ReflectUtil.getUnqualifiedClassName(
-                ReflectUtil.getBoxingClass(
-                    prototype.getClassForPrimitive())),
+                ReflectUtil.getBoxingClass(prototype.getClassForPrimitive())),
             prototype.getSimpleType());
     }
 
@@ -869,6 +982,20 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     {
         prototype.factory = this;
         canonize(prototype);
+    }
+
+    /**
+     * Registers a type, or returns the existing type if it is already
+     * registered.
+     * Protect against bogus factory values.
+     */
+    protected synchronized RelDataType canonize(RelDataType type)
+    {
+        RelDataType relDataType = super.canonize(type);
+        if (relDataType instanceof FarragoType) {
+            assert ((FarragoType) relDataType).factory == this;
+        }
+        return relDataType;
     }
 
     //~ Inner Classes ---------------------------------------------------------
@@ -884,23 +1011,13 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
          * @param name .
          * @param type .
          */
-        ExposedFieldImpl(String name, int index, SaffronType type)
+        ExposedFieldImpl(
+            String name,
+            int index,
+            RelDataType type)
         {
-            super(name,index,type);
+            super(name, index, type);
         }
-    }
-
-    /**
-     * Registers a type, or returns the existing type if it is already
-     * registered.
-     * Protect against bogus factory values.
-     */
-    protected synchronized SaffronType canonize(SaffronType type) {
-        SaffronType saffronType = super.canonize(type);
-        if (saffronType instanceof FarragoType) {
-            assert ((FarragoType)saffronType).factory == this;
-        }
-        return saffronType;
     }
 }
 

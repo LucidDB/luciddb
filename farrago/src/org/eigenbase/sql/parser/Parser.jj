@@ -1,0 +1,78 @@
+/*
+// $Id$
+// Saffron preprocessor and data engine
+// (C) Copyright 2002-2003 Disruptive Tech
+// (C) Copyright 2003-2004 John V. Sichi
+// You must accept the terms in LICENSE.html to use this software.
+//
+// jhyde, Mar 18, 2003
+//
+// This parser was derived from Parser.jj, part of the OpenJava system
+// written by Michiaki Tatsubori.
+*/
+options {
+    STATIC = false;
+    JAVA_UNICODE_ESCAPE = true;
+    IGNORE_CASE = true;
+}
+
+
+PARSER_BEGIN(Parser)
+
+package org.eigenbase.sql.parser;
+
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.fun.*;
+import org.eigenbase.trace.EigenbaseTrace;
+import org.eigenbase.util.BitString;
+import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.resource.*;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.List;
+import java.util.Iterator;
+import java.util.logging.Logger;
+import java.util.logging.Level;
+
+/**
+ * SQL parser, generated from Parser.jj and CommonParser.jj by JavaCC.
+ *
+ * <p>The public wrapper for this parser is {@link SqlParser}.
+ *
+ * @author jhyde
+ * @since Mar 18, 2003
+ * @version $Id$
+ */
+class Parser extends CommonParserBase {
+    private static final Logger tracer = EigenbaseTrace.getParserTracer();
+}
+
+PARSER_END(Parser)
+
+
+/*****************************************
+ * Utility Codes for Semantical Analysis *
+ *****************************************/
+
+/* For Debug */
+JAVACODE
+void debug_message1() {
+    tracer.log(Level.INFO,  getToken( 0 ).image
+             + " , " + getToken( 1 ).image );
+}
+
+String NonReservedKeyWord() :
+{
+    String kw;
+}
+{
+    kw = CommonNonReservedKeyWord()
+        {
+            return kw;
+        }
+}
+
+// End Parser.jj
+

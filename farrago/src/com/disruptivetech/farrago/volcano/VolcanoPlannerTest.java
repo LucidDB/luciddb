@@ -1,0 +1,509 @@
+/*
+// $Id$
+// Farrago is a relational database management system.
+// Copyright (C) 2002-2004 Disruptive Tech
+//
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+package com.disruptivetech.farrago.volcano;
+
+import junit.framework.TestCase;
+
+import openjava.mop.*;
+
+import org.eigenbase.rel.*;
+import org.eigenbase.rel.convert.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.rex.*;
+
+
+/**
+ * A <code>VolcanoPlannerTest</code> is a unit-test for {@link VolcanoPlanner
+ * the optimizer}.
+ *
+ * @author John V. Sichi
+ * @version $Id$
+ * @since Mar 19, 2003
+ */
+public class VolcanoPlannerTest extends TestCase
+{
+    //~ Static fields/initializers --------------------------------------------
+
+    /**
+     * Private calling convention representing a physical implementation.
+     */
+    private static final CallingConvention PHYS_CALLING_CONVENTION =
+        new CallingConvention("PHYS",
+            CallingConvention.enumeration.getMax() + 1, RelNode.class);
+
+    //~ Constructors ----------------------------------------------------------
+
+    public VolcanoPlannerTest(String name)
+    {
+        super(name);
+    }
+
+    //~ Methods ---------------------------------------------------------------
+
+    private RelOptCluster newCluster(VolcanoPlanner planner)
+    {
+        RelOptQuery query = new RelOptQuery(planner);
+        RelDataTypeFactory typeFactory = new RelDataTypeFactoryImpl();
+        return query.createCluster(
+            new TestEnvironment(),
+            typeFactory,
+            new RexBuilder(typeFactory));
+    }
+
+    /**
+     * Test transformation of a leaf from NONE to PHYS.
+     */
+    public void testTransformLeaf()
+    {
+        VolcanoPlanner planner = new VolcanoPlanner();
+        planner.addCallingConvention(CallingConvention.NONE);
+        planner.addCallingConvention(PHYS_CALLING_CONVENTION);
+
+        planner.addRule(new PhysLeafRule());
+
+        NoneLeafRel leafRel = new NoneLeafRel(
+                newCluster(planner),
+                "a");
+        RelNode convertedRel =
+            planner.changeConvention(leafRel, PHYS_CALLING_CONVENTION);
+        planner.setRoot(convertedRel);
+        RelNode result = planner.chooseDelegate().findBestExp();
+        assertTrue(result instanceof PhysLeafRel);
+    }
+
+    /**
+     * Test transformation of a single+leaf from NONE to PHYS.
+     */
+    public void testTransformSingleGood()
+    {
+        VolcanoPlanner planner = new VolcanoPlanner();
+        planner.addCallingConvention(CallingConvention.NONE);
+        planner.addCallingConvention(PHYS_CALLING_CONVENTION);
+
+        planner.addRule(new PhysLeafRule());
+        planner.addRule(new GoodSingleRule());
+
+        NoneLeafRel leafRel = new NoneLeafRel(
+                newCluster(planner),
+                "a");
+        NoneSingleRel singleRel =
+            new NoneSingleRel(
+                leafRel.getCluster(),
+                leafRel);
+        RelNode convertedRel =
+            planner.changeConvention(singleRel, PHYS_CALLING_CONVENTION);
+        planner.setRoot(convertedRel);
+        RelNode result = planner.chooseDelegate().findBestExp();
+        assertTrue(result instanceof PhysSingleRel);
+    }
+
+    /**
+     * Test transformation of a single+leaf from NONE to PHYS.
+     * This one doesn't work due to the definition of BadSingleRule.
+     */
+    public void _testTransformSingleBad()
+    {
+        VolcanoPlanner planner = new VolcanoPlanner();
+        planner.addCallingConvention(CallingConvention.NONE);
+        planner.addCallingConvention(PHYS_CALLING_CONVENTION);
+
+        planner.addRule(new PhysLeafRule());
+        planner.addRule(new BadSingleRule());
+
+        NoneLeafRel leafRel = new NoneLeafRel(
+                newCluster(planner),
+                "a");
+        NoneSingleRel singleRel =
+            new NoneSingleRel(
+                leafRel.getCluster(),
+                leafRel);
+        RelNode convertedRel =
+            planner.changeConvention(singleRel, PHYS_CALLING_CONVENTION);
+        planner.setRoot(convertedRel);
+        RelNode result = planner.chooseDelegate().findBestExp();
+        assertTrue(result instanceof PhysSingleRel);
+    }
+
+    private void removeTrivialProject(boolean useRule)
+    {
+        VolcanoPlanner planner = new VolcanoPlanner();
+        planner.addCallingConvention(CallingConvention.NONE);
+        planner.addCallingConvention(CallingConvention.ITERATOR);
+        planner.addCallingConvention(PHYS_CALLING_CONVENTION);
+
+        if (useRule) {
+            planner.addRule(new RemoveTrivialProjectRule());
+        }
+
+        planner.addRule(new PhysLeafRule());
+        planner.addRule(new GoodSingleRule());
+        planner.addRule(new PhysProjectRule());
+
+        planner.addRule(
+            new ConverterRule(RelNode.class, PHYS_CALLING_CONVENTION,
+                CallingConvention.ITERATOR, "PhysToIteratorRule") {
+                public RelNode convert(RelNode rel)
+                {
+                    return new PhysToIteratorConverter(
+                        rel.getCluster(),
+                        rel);
+                }
+            });
+
+        PhysLeafRel leafRel = new PhysLeafRel(
+                newCluster(planner),
+                "a");
+        RexInputRef inputRef =
+            new RexInputRef(0,
+                leafRel.getRowType().getFields()[0].getType());
+        ProjectRel projectRel =
+            new ProjectRel(
+                leafRel.getCluster(),
+                leafRel,
+                new RexNode [] { inputRef },
+                new String [] { "this" },
+                ProjectRel.Flags.Boxed);
+        NoneSingleRel singleRel =
+            new NoneSingleRel(
+                projectRel.getCluster(),
+                projectRel);
+        RelNode convertedRel =
+            planner.changeConvention(singleRel, CallingConvention.ITERATOR);
+        planner.setRoot(convertedRel);
+        RelNode result = planner.chooseDelegate().findBestExp();
+        assertTrue(result instanceof PhysToIteratorConverter);
+    }
+
+    // NOTE:  this fails due to a problem with RemoveTrivialProjectRule
+    public void _testWithRemoveTrivialProject()
+    {
+        removeTrivialProject(true);
+    }
+
+    // NOTE:  this succeeds; it's here as constrast to
+    // testWithRemoveTrivialProject()
+    public void testWithoutRemoveTrivialProject()
+    {
+        removeTrivialProject(false);
+    }
+
+    //~ Inner Classes ---------------------------------------------------------
+
+    private static class TestEnvironment extends GlobalEnvironment
+    {
+        public String toString()
+        {
+            return null;
+        }
+
+        public void record(
+            String name,
+            OJClass clazz)
+        {
+            throw new AssertionError();
+        }
+    }
+
+    private static abstract class TestLeafRel extends AbstractRelNode
+    {
+        private String label;
+
+        protected TestLeafRel(
+            RelOptCluster cluster,
+            String label)
+        {
+            super(cluster);
+            this.label = label;
+        }
+
+        public String getLabel()
+        {
+            return label;
+        }
+
+        // implement RelNode
+        public Object clone()
+        {
+            return this;
+        }
+
+        // implement RelNode
+        public RelOptCost computeSelfCost(RelOptPlanner planner)
+        {
+            return planner.makeInfiniteCost();
+        }
+
+        // implement RelNode
+        protected RelDataType deriveRowType()
+        {
+            return cluster.typeFactory.createProjectType(
+                new RelDataType [] {
+                    cluster.typeFactory.createJavaType(Void.TYPE)
+                },
+                new String [] { "this" });
+        }
+
+        public void explain(RelOptPlanWriter pw)
+        {
+            pw.explain(
+                this,
+                new String [] { "label" },
+                new Object [] { label });
+        }
+    }
+
+    private static abstract class TestSingleRel extends SingleRel
+    {
+        protected TestSingleRel(
+            RelOptCluster cluster,
+            RelNode child)
+        {
+            super(cluster, child);
+        }
+
+        // implement RelNode
+        public RelOptCost computeSelfCost(RelOptPlanner planner)
+        {
+            return planner.makeInfiniteCost();
+        }
+
+        // implement RelNode
+        protected RelDataType deriveRowType()
+        {
+            return child.getRowType();
+        }
+    }
+
+    private static class NoneSingleRel extends TestSingleRel
+    {
+        protected NoneSingleRel(
+            RelOptCluster cluster,
+            RelNode child)
+        {
+            super(cluster, child);
+        }
+
+        // implement RelNode
+        public Object clone()
+        {
+            return new NoneSingleRel(cluster, child);
+        }
+    }
+
+    private static class NoneLeafRel extends TestLeafRel
+    {
+        protected NoneLeafRel(
+            RelOptCluster cluster,
+            String label)
+        {
+            super(cluster, label);
+        }
+    }
+
+    private static class PhysLeafRel extends TestLeafRel
+    {
+        PhysLeafRel(
+            RelOptCluster cluster,
+            String label)
+        {
+            super(cluster, label);
+        }
+
+        // implement RelNode
+        public RelOptCost computeSelfCost(RelOptPlanner planner)
+        {
+            return planner.makeTinyCost();
+        }
+
+        // implement RelNode
+        public CallingConvention getConvention()
+        {
+            return PHYS_CALLING_CONVENTION;
+        }
+    }
+
+    private static class PhysSingleRel extends TestSingleRel
+    {
+        PhysSingleRel(
+            RelOptCluster cluster,
+            RelNode child)
+        {
+            super(cluster, child);
+        }
+
+        // implement RelNode
+        public RelOptCost computeSelfCost(RelOptPlanner planner)
+        {
+            return planner.makeTinyCost();
+        }
+
+        // implement RelNode
+        public CallingConvention getConvention()
+        {
+            return PHYS_CALLING_CONVENTION;
+        }
+
+        // implement RelNode
+        public Object clone()
+        {
+            return new PhysSingleRel(cluster, child);
+        }
+    }
+
+    class PhysToIteratorConverter extends ConverterRel
+    {
+        public PhysToIteratorConverter(
+            RelOptCluster cluster,
+            RelNode child)
+        {
+            super(cluster, child);
+        }
+
+        // implement RelNode
+        public CallingConvention getConvention()
+        {
+            return CallingConvention.ITERATOR;
+        }
+
+        // implement RelNode
+        public Object clone()
+        {
+            return new PhysToIteratorConverter(cluster, child);
+        }
+    }
+
+    private static class PhysLeafRule extends RelOptRule
+    {
+        PhysLeafRule()
+        {
+            super(new RelOptRuleOperand(NoneLeafRel.class, null));
+        }
+
+        // implement RelOptRule
+        public CallingConvention getOutConvention()
+        {
+            return PHYS_CALLING_CONVENTION;
+        }
+
+        // implement RelOptRule
+        public void onMatch(RelOptRuleCall call)
+        {
+            NoneLeafRel leafRel = (NoneLeafRel) call.rels[0];
+            call.transformTo(
+                new PhysLeafRel(
+                    leafRel.getCluster(),
+                    leafRel.getLabel()));
+        }
+    }
+
+    private static class GoodSingleRule extends RelOptRule
+    {
+        GoodSingleRule()
+        {
+            super(new RelOptRuleOperand(
+                    NoneSingleRel.class,
+                    new RelOptRuleOperand [] {
+                        new RelOptRuleOperand(RelNode.class, null)
+                    }));
+        }
+
+        // implement RelOptRule
+        public CallingConvention getOutConvention()
+        {
+            return PHYS_CALLING_CONVENTION;
+        }
+
+        // implement RelOptRule
+        public void onMatch(RelOptRuleCall call)
+        {
+            NoneSingleRel singleRel = (NoneSingleRel) call.rels[0];
+            RelNode childRel = call.rels[1];
+            RelNode physInput = convert(childRel, PHYS_CALLING_CONVENTION);
+            call.transformTo(
+                new PhysSingleRel(
+                    singleRel.getCluster(),
+                    physInput));
+        }
+    }
+
+    // NOTE:  BadSingleRule doesn't work because it explicitly specifies
+    // PhysLeafRel rather than RelNode for the single input.  I'm
+    // not sure if this should work (it does in other contexts)?
+    private static class BadSingleRule extends RelOptRule
+    {
+        BadSingleRule()
+        {
+            super(new RelOptRuleOperand(
+                    NoneSingleRel.class,
+                    new RelOptRuleOperand [] {
+                        new RelOptRuleOperand(PhysLeafRel.class, null)
+                    }));
+        }
+
+        // implement RelOptRule
+        public CallingConvention getOutConvention()
+        {
+            return PHYS_CALLING_CONVENTION;
+        }
+
+        // implement RelOptRule
+        public void onMatch(RelOptRuleCall call)
+        {
+            NoneSingleRel singleRel = (NoneSingleRel) call.rels[0];
+            RelNode childRel = call.rels[1];
+            RelNode physInput = convert(childRel, PHYS_CALLING_CONVENTION);
+            call.transformTo(
+                new PhysSingleRel(
+                    singleRel.getCluster(),
+                    physInput));
+        }
+    }
+
+    private static class PhysProjectRule extends RelOptRule
+    {
+        PhysProjectRule()
+        {
+            super(new RelOptRuleOperand(
+                    ProjectRel.class,
+                    new RelOptRuleOperand [] {
+                        new RelOptRuleOperand(RelNode.class, null)
+                    }));
+        }
+
+        // implement RelOptRule
+        public CallingConvention getOutConvention()
+        {
+            return PHYS_CALLING_CONVENTION;
+        }
+
+        // implement RelOptRule
+        public void onMatch(RelOptRuleCall call)
+        {
+            RelNode childRel = call.rels[1];
+            call.transformTo(new PhysLeafRel(
+                    childRel.getCluster(),
+                    "b"));
+        }
+    }
+}
+
+
+// End VolcanoPlannerTest.java

@@ -6,25 +6,25 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.namespace.impl;
+
+import java.sql.*;
+import java.util.*;
 
 import net.sf.farrago.namespace.*;
 
-import net.sf.saffron.core.*;
+import org.eigenbase.relopt.*;
 
-import java.util.*;
-import java.sql.*;
 
 /**
  * MedAbstractDataServer is an abstract base class for
@@ -33,13 +33,15 @@ import java.sql.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class MedAbstractDataServer
-    extends MedAbstractBase
+public abstract class MedAbstractDataServer extends MedAbstractBase
     implements FarragoMedDataServer
 {
+    //~ Instance fields -------------------------------------------------------
+
     private String serverMofId;
-    
     private Properties props;
+
+    //~ Constructors ----------------------------------------------------------
 
     protected MedAbstractDataServer(
         String serverMofId,
@@ -48,6 +50,8 @@ public abstract class MedAbstractDataServer
         this.serverMofId = serverMofId;
         this.props = props;
     }
+
+    //~ Methods ---------------------------------------------------------------
 
     /**
      * @return the MofId of the catalog definition for this server
@@ -64,9 +68,9 @@ public abstract class MedAbstractDataServer
     {
         return props;
     }
-    
+
     // implement FarragoMedDataServer
-    public void registerRules(SaffronPlanner planner)
+    public void registerRules(RelOptPlanner planner)
     {
     }
 
@@ -75,5 +79,6 @@ public abstract class MedAbstractDataServer
     {
     }
 }
+
 
 // End MedAbstractDataServer.java

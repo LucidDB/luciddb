@@ -16,22 +16,21 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.namespace.ftrs;
-
-import net.sf.farrago.namespace.impl.*;
-import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.query.*;
-
-import net.sf.saffron.core.*;
-import net.sf.saffron.ext.*;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.*;
 
 import java.util.*;
 
+import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.namespace.impl.*;
+import net.sf.farrago.query.*;
+
+import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+
+
 /**
- * An implementation of SaffronTable for accessing data stored in FTRS.
+ * An implementation of RelOptTable for accessing data stored in FTRS.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -42,23 +41,24 @@ class FtrsTable extends MedAbstractColumnSet
 
     FtrsTable(
         String [] localName,
-        SaffronType rowType,
+        RelDataType rowType,
         Properties tableProps,
         Map columnPropMap)
     {
-        super(localName,null,rowType,tableProps,columnPropMap);
+        super(localName, null, rowType, tableProps, columnPropMap);
     }
 
     //~ Methods ---------------------------------------------------------------
 
-    // implement SaffronTable
-    public SaffronRel toRel(VolcanoCluster cluster,SaffronConnection connection)
+    // implement RelOptTable
+    public RelNode toRel(
+        RelOptCluster cluster,
+        RelOptConnection connection)
     {
         return new FtrsIndexScanRel(
             cluster,
             this,
-            getPreparingStmt().getCatalog().getClusteredIndex(
-                getCwmColumnSet()),
+            getPreparingStmt().getRepos().getClusteredIndex(getCwmColumnSet()),
             connection,
             null,
             false);

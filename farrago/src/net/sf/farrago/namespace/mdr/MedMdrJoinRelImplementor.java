@@ -6,41 +6,41 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.namespace.mdr;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.rex.*;
-import net.sf.saffron.util.*;
-import net.sf.saffron.runtime.*;
-import net.sf.saffron.oj.rel.*;
-import net.sf.saffron.oj.util.*;
-import net.sf.saffron.oj.*;
-import net.sf.saffron.oj.stmt.*;
+import java.util.*;
+
+import javax.jmi.model.*;
+import javax.jmi.reflect.*;
 
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
+import openjava.mop.*;
+import openjava.ptree.*;
+
+import org.eigenbase.oj.*;
+import org.eigenbase.oj.rel.*;
+import org.eigenbase.oj.stmt.*;
+import org.eigenbase.oj.util.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.rex.*;
+import org.eigenbase.runtime.*;
+import org.eigenbase.util.*;
 import org.netbeans.api.mdr.*;
 
-import openjava.ptree.*;
-import openjava.mop.*;
-
-import java.util.*;
-import javax.jmi.model.*;
-import javax.jmi.reflect.*;
 
 /**
  * MedMdrJoinRelImplementor keeps track of lots of transient state
@@ -51,68 +51,52 @@ import javax.jmi.reflect.*;
  */
 class MedMdrJoinRelImplementor
 {
+    //~ Instance fields -------------------------------------------------------
+
     private JavaRelImplementor implementor;
-
     private StatementList stmtList;
-    
     private MedMdrJoinRel joinRel;
-
-    private SaffronRel leftRel;
-    
+    private RelNode leftRel;
     private MedMdrClassExtentRel rightRel;
-    
     private Expression leftChildExp;
-    
-    private SaffronType outputRowType;
-    
+    private RelDataType outputRowType;
     private OJClass outputRowClass;
-    
     private MemberDeclarationList memberList;
-    
     private Variable varOutputRow;
-    
-    private SaffronType leftRowType;
-    
-    private SaffronField [] leftFields;
-
+    private RelDataType leftRowType;
+    private RelDataTypeField [] leftFields;
     private OJClass leftRowClass;
-    
     private Variable varLeftRow;
-    
     private MedMdrDataServer server;
-    
     private Variable varRepository;
-    
     private Variable varRightClassifier;
-    
     private Association association;
-    
     private Classifier leftKeyClassifier;
-    
     private RefClass leftKeyRefClass;
-    
     private Class leftKeyClass;
-    
     private Variable varRefAssociation;
 
-    
+    //~ Constructors ----------------------------------------------------------
+
     MedMdrJoinRelImplementor(MedMdrJoinRel joinRel)
     {
         this.joinRel = joinRel;
     }
+
+    //~ Methods ---------------------------------------------------------------
 
     Expression implement(JavaRelImplementor implementor)
     {
         // NOTE:  if you actually want to understand this monster,
         // the best approach is to look at the code it generates
         // (particularly methods getNextRightIterator and calcJoinRow)
-
         this.implementor = implementor;
 
         leftRel = joinRel.getLeft();
         rightRel = (MedMdrClassExtentRel) joinRel.getRight();
-        
-        leftChildExp = implementor.visitJavaChild(joinRel, 0, (JavaRel) leftRel);
+
+        leftChildExp =
+            implementor.visitJavaChild(joinRel, 0, (JavaRel) leftRel);
 
         outputRowType = joinRel.getRowType();
         outputRowClass = OJUtil.typeToOJClass(outputRowType);
@@ -123,22 +107,22 @@ class MedMdrJoinRelImplementor
 
         // construct the body of the getNextRightIterator method
         generateGetNextRightIterator();
-        
+
         // construct the body of the calcJoinRow method
         generateCalcJoinRow();
-        
+
         // construct the open method
         generateOpen();
-        
+
         // put it all together in an anonymous class definition
-        
-        Expression newIteratorExp = new AllocationExpression(
-            TypeName.forClass(NestedLoopCalcIterator.class),
-            new ExpressionList(
-                leftChildExp,
-                Literal.makeLiteral(
-                    joinRel.getJoinType() == JoinRel.JoinType.LEFT)),
-            memberList);
+        Expression newIteratorExp =
+            new AllocationExpression(
+                OJUtil.typeNameForClass(NestedLoopCalcIterator.class),
+                new ExpressionList(
+                    leftChildExp,
+                    Literal.makeLiteral(
+                        joinRel.getJoinType() == JoinRel.JoinType.LEFT)),
+                memberList);
 
         return newIteratorExp;
     }
@@ -146,34 +130,32 @@ class MedMdrJoinRelImplementor
     private void generateRequiredMembers()
     {
         varOutputRow = implementor.newVariable();
-        FieldDeclaration declOutputRow = new FieldDeclaration(
-            new ModifierList(ModifierList.PRIVATE),
-            TypeName.forOJClass(outputRowClass),
-            varOutputRow.toString(),
-            new AllocationExpression(
-                outputRowClass,
-                new ExpressionList()));
+        FieldDeclaration declOutputRow =
+            new FieldDeclaration(new ModifierList(ModifierList.PRIVATE),
+                TypeName.forOJClass(outputRowClass),
+                varOutputRow.toString(),
+                new AllocationExpression(
+                    outputRowClass,
+                    new ExpressionList()));
         memberList.add(declOutputRow);
 
         leftRowType = leftRel.getRowType();
         leftFields = leftRowType.getFields();
         leftRowClass = OJUtil.typeToOJClass(leftRowType);
         varLeftRow = implementor.newVariable();
-        FieldDeclaration declLeftRow = new FieldDeclaration(
-            new ModifierList(ModifierList.PRIVATE),
-            TypeName.forOJClass(leftRowClass),
-            varLeftRow.toString(),
-            null);
+        FieldDeclaration declLeftRow =
+            new FieldDeclaration(new ModifierList(ModifierList.PRIVATE),
+                TypeName.forOJClass(leftRowClass),
+                varLeftRow.toString(), null);
         memberList.add(declLeftRow);
 
         server = rightRel.mdrClassExtent.directory.server;
-        
+
         varRepository = implementor.newVariable();
-        FieldDeclaration declRepository = new FieldDeclaration(
-            new ModifierList(ModifierList.PRIVATE),
-            TypeName.forClass(MDRepository.class),
-            varRepository.toString(),
-            null);
+        FieldDeclaration declRepository =
+            new FieldDeclaration(new ModifierList(ModifierList.PRIVATE),
+                OJUtil.typeNameForClass(MDRepository.class),
+                varRepository.toString(), null);
         memberList.add(declRepository);
     }
 
@@ -181,15 +163,11 @@ class MedMdrJoinRelImplementor
     {
         stmtList = new StatementList();
         MemberDeclaration getNextRightIteratorMethodDecl =
-            new MethodDeclaration(
-                new ModifierList(ModifierList.PROTECTED),
-                TypeName.forClass(Object.class),
-                "getNextRightIterator",
-                new ParameterList(),
-                null,
-                stmtList);
+            new MethodDeclaration(new ModifierList(ModifierList.PROTECTED),
+                OJUtil.typeNameForClass(Object.class), "getNextRightIterator",
+                new ParameterList(), null, stmtList);
         memberList.add(getNextRightIteratorMethodDecl);
-        
+
         stmtList.add(
             new ExpressionStatement(
                 new AssignmentExpression(
@@ -198,46 +176,40 @@ class MedMdrJoinRelImplementor
                     new CastExpression(
                         TypeName.forOJClass(leftRowClass),
                         new FieldAccess("leftObj")))));
-            
+
         Expression iterExpr;
         if (joinRel.getRightReference() == null) {
             iterExpr = generateManyToOneLookup();
         } else {
             iterExpr = generateOneToManyLookup();
         }
-        
-        stmtList.add(
-            new ReturnStatement(iterExpr));
+
+        stmtList.add(new ReturnStatement(iterExpr));
     }
 
     private void generateCalcJoinRow()
     {
         stmtList = new StatementList();
         MemberDeclaration calcJoinRowMethodDecl =
-            new MethodDeclaration(
-                new ModifierList(ModifierList.PROTECTED),
-                TypeName.forClass(Object.class),
-                "calcJoinRow",
-                new ParameterList(),
-                null,
-                stmtList);
+            new MethodDeclaration(new ModifierList(ModifierList.PROTECTED),
+                OJUtil.typeNameForClass(Object.class), "calcJoinRow",
+                new ParameterList(), null, stmtList);
         memberList.add(calcJoinRowMethodDecl);
 
         if ((joinRel.getRightReference() == null)
-            || !joinRel.getRightReference().getType().equals(
-                rightRel.mdrClassExtent.refClass.refMetaObject()))
-        {
+                || !joinRel.getRightReference().getType().equals(
+                    rightRel.mdrClassExtent.refClass.refMetaObject())) {
             // since the right-hand input is more specific than the
             // corresponding association end, we have to filter out any
             // unrelated types we might encounter
             Expression instanceofExpr;
             if (rightRel.useReflection) {
                 varRightClassifier = implementor.newVariable();
-                FieldDeclaration declRightClassifier = new FieldDeclaration(
-                    new ModifierList(ModifierList.PRIVATE),
-                    TypeName.forClass(RefObject.class),
-                    varRightClassifier.toString(),
-                    null);
+                FieldDeclaration declRightClassifier =
+                    new FieldDeclaration(new ModifierList(ModifierList.PRIVATE),
+                        OJUtil.typeNameForClass(RefObject.class),
+                        varRightClassifier.toString(),
+                        null);
                 memberList.add(declRightClassifier);
 
                 instanceofExpr =
@@ -250,23 +222,20 @@ class MedMdrJoinRelImplementor
                             varRightClassifier,
                             Literal.constantTrue()));
             } else {
-                instanceofExpr = 
+                instanceofExpr =
                     new InstanceofExpression(
                         new FieldAccess("rightObj"),
-                        TypeName.forClass(rightRel.rowClass));
+                        OJUtil.typeNameForClass(rightRel.rowClass));
             }
             stmtList.add(
                 new IfStatement(
-                    new UnaryExpression(
-                        UnaryExpression.NOT,
-                        instanceofExpr),
+                    new UnaryExpression(UnaryExpression.NOT, instanceofExpr),
                     new StatementList(
-                        new ReturnStatement(
-                            Literal.constantNull()))));
+                        new ReturnStatement(Literal.constantNull()))));
         }
 
-        RexNode [] rightExps = rightRel.implementProjection(
-            new FieldAccess("rightObj"));
+        RexNode [] rightExps =
+            rightRel.implementProjection(new FieldAccess("rightObj"));
 
         generateRowCalc(rightExps);
         stmtList.add(new ReturnStatement(varOutputRow));
@@ -276,22 +245,18 @@ class MedMdrJoinRelImplementor
     {
         stmtList = new StatementList();
         MemberDeclaration openMethodDecl =
-            new MethodDeclaration(
-                new ModifierList(ModifierList.PROTECTED),
-                TypeName.forOJClass(OJSystem.VOID),
-                "open",
-                new ParameterList(),
-                null,
-                stmtList);
+            new MethodDeclaration(new ModifierList(ModifierList.PROTECTED),
+                TypeName.forOJClass(OJSystem.VOID), "open",
+                new ParameterList(), null, stmtList);
         memberList.add(openMethodDecl);
-        
+
         stmtList.add(
             new ExpressionStatement(
                 new AssignmentExpression(
                     varRepository,
                     AssignmentExpression.EQUALS,
                     new CastExpression(
-                        TypeName.forClass(MDRepository.class),
+                        OJUtil.typeNameForClass(MDRepository.class),
                         server.generateRuntimeSupportCall(
                             Literal.constantNull())))));
         if (varRefAssociation != null) {
@@ -324,9 +289,8 @@ class MedMdrJoinRelImplementor
         if (joinRel.getJoinType() == JoinRel.JoinType.LEFT) {
             stmtList = new StatementList();
             MemberDeclaration calcRightNullRowMethodDecl =
-                new MethodDeclaration(
-                    new ModifierList(ModifierList.PROTECTED),
-                    TypeName.forClass(Object.class),
+                new MethodDeclaration(new ModifierList(ModifierList.PROTECTED),
+                    OJUtil.typeNameForClass(Object.class),
                     "calcRightNullRow",
                     new ParameterList(),
                     null,
@@ -336,15 +300,18 @@ class MedMdrJoinRelImplementor
             stmtList.add(new ReturnStatement(varOutputRow));
         }
     }
-    
+
     private void generateRowCalc(RexNode [] rightExps)
     {
-        SaffronField [] fields = outputRowType.getFields();
+        RelDataTypeField [] fields = outputRowType.getFields();
         int nLeft = leftRowType.getFieldCount();
         int n = outputRowType.getFieldCount();
         for (int i = 0; i < n; i++) {
-            Expression lhs = new FieldAccess(varOutputRow,
-                                          Util.toJavaId(fields[i].getName(),i));
+            Expression lhs =
+                new FieldAccess(varOutputRow,
+                    Util.toJavaId(
+                        fields[i].getName(),
+                        i));
             if (i < nLeft) {
                 // REVIEW:  is this assignment-by-reference for object types
                 // OK?  If it is, we should be generating it in such
@@ -356,7 +323,9 @@ class MedMdrJoinRelImplementor
                             AssignmentExpression.EQUALS,
                             new FieldAccess(
                                 varLeftRow,
-                                Util.toJavaId(leftFields[i].getName(),i)))));
+                                Util.toJavaId(
+                                    leftFields[i].getName(),
+                                    i)))));
             } else {
                 RexNode rhs;
                 if (rightExps == null) {
@@ -379,14 +348,15 @@ class MedMdrJoinRelImplementor
 
     private Expression generateOneToManyLookup()
     {
-        association = (Association)
-            joinRel.getRightReference().getReferencedEnd().getContainer();
+        association =
+            (Association) joinRel.getRightReference().getReferencedEnd()
+                .getContainer();
 
         // TODO:  preserve the left type in the FarragoType system instead
         leftKeyClassifier =
             joinRel.getRightReference().getReferencedEnd().getType();
-        leftKeyRefClass = (RefClass)
-            rightRel.getRefObjectFromModelElement(leftKeyClassifier);
+        leftKeyRefClass =
+            (RefClass) rightRel.getRefObjectFromModelElement(leftKeyClassifier);
         leftKeyClass = JmiUtil.getClassForRefClass(leftKeyRefClass);
 
         boolean useAssocReflection = rightRel.useReflection;
@@ -398,10 +368,10 @@ class MedMdrJoinRelImplementor
         Variable varLeftObj = implementor.newVariable();
         stmtList.add(
             new VariableDeclaration(
-                TypeName.forClass(leftKeyClass),
+                OJUtil.typeNameForClass(leftKeyClass),
                 varLeftObj.toString(),
                 new CastExpression(
-                    TypeName.forClass(leftKeyClass),
+                    OJUtil.typeNameForClass(leftKeyClass),
                     new MethodCall(
                         varRepository,
                         "getByMofId",
@@ -409,21 +379,25 @@ class MedMdrJoinRelImplementor
                             new MethodCall(
                                 new FieldAccess(
                                     varLeftRow,
-                                    Util.toJavaId(leftFields[
-                                        joinRel.getLeftOrdinal()].getName(),
+                                    Util.toJavaId(
+                                        leftFields[joinRel.getLeftOrdinal()]
+                                            .getName(),
                                         joinRel.getLeftOrdinal())),
                                 "toString",
                                 new ExpressionList()))))));
 
         Expression collectionExpr = null;
         if (!useAssocReflection) {
-            String accessorName = JmiUtil.getAccessorName(
-                joinRel.getRightReference().getExposedEnd());
+            String accessorName =
+                JmiUtil.getAccessorName(
+                    joinRel.getRightReference().getExposedEnd());
             try {
                 // verify that the desired accessor method actually exists
                 // using Java reflection, which will throw if it
                 // doesn't exist
-                leftKeyClass.getMethod(accessorName,new Class[0]);
+                leftKeyClass.getMethod(
+                    accessorName,
+                    new Class[0]);
 
                 // all good:  generate the call
                 collectionExpr =
@@ -440,11 +414,10 @@ class MedMdrJoinRelImplementor
 
         if (useAssocReflection) {
             varRefAssociation = implementor.newVariable();
-            FieldDeclaration declRefAssociation = new FieldDeclaration(
-                new ModifierList(ModifierList.PRIVATE),
-                TypeName.forClass(RefAssociation.class),
-                varRefAssociation.toString(),
-                null);
+            FieldDeclaration declRefAssociation =
+                new FieldDeclaration(new ModifierList(ModifierList.PRIVATE),
+                    OJUtil.typeNameForClass(RefAssociation.class),
+                    varRefAssociation.toString(), null);
             memberList.add(declRefAssociation);
 
             // generate the JMI reflective query call
@@ -454,8 +427,8 @@ class MedMdrJoinRelImplementor
                     "refQuery",
                     new ExpressionList(
                         Literal.makeLiteral(
-                            joinRel.getRightReference().
-                            getReferencedEnd().getName()),
+                            joinRel.getRightReference().getReferencedEnd()
+                                .getName()),
                         varLeftObj));
         }
         return new MethodCall(
@@ -469,7 +442,7 @@ class MedMdrJoinRelImplementor
         Variable varLeftObj = implementor.newVariable();
         stmtList.add(
             new VariableDeclaration(
-                TypeName.forClass(String.class),
+                OJUtil.typeNameForClass(String.class),
                 varLeftObj.toString(),
                 new MethodCall(
                     new FieldAccess(
@@ -480,13 +453,10 @@ class MedMdrJoinRelImplementor
                     "toString",
                     new ExpressionList())));
         Expression lookupExpr =
-            new CastExpression(
-                OJSystem.OBJECT,
-                new MethodCall(
-                    varRepository,
+            new CastExpression(OJSystem.OBJECT,
+                new MethodCall(varRepository,
                     "getByMofId",
-                    new ExpressionList(
-                        varLeftObj)));
+                    new ExpressionList(varLeftObj)));
         return new ConditionalExpression(
             new BinaryExpression(
                 varLeftObj,
@@ -498,5 +468,6 @@ class MedMdrJoinRelImplementor
             lookupExpr);
     }
 }
+
 
 // End MedMdrJoinRelImplementor.java

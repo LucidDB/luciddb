@@ -6,24 +6,24 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.util;
-
-import net.sf.saffron.util.*;
 
 import java.io.*;
 import java.sql.*;
 import java.util.logging.*;
+
+import org.eigenbase.util.*;
+
 
 /**
  * Miscellaneous static utilities that don't fit into other categories.
@@ -33,6 +33,8 @@ import java.util.logging.*;
  */
 public abstract class FarragoUtil
 {
+    //~ Methods ---------------------------------------------------------------
+
     /**
      * Calculate the memory used by a string's data (not including the String
      * object itself).  This represents the actual memory used by the Java
@@ -42,7 +44,7 @@ public abstract class FarragoUtil
      */
     public static int getStringMemoryUsage(String s)
     {
-        return s.length()*2;
+        return s.length() * 2;
     }
 
     /**
@@ -54,10 +56,12 @@ public abstract class FarragoUtil
      *
      * @return number of chars copied
      */
-    public static int copyFromReaderToWriter(Reader reader,Writer writer)
+    public static int copyFromReaderToWriter(
+        Reader reader,
+        Writer writer)
         throws IOException
     {
-        char[] buf = new char[4096];
+        char [] buf = new char[4096];
         int charsCopied = 0;
         for (;;) {
             int charsRead = reader.read(buf, 0, buf.length);
@@ -69,7 +73,6 @@ public abstract class FarragoUtil
         }
     }
 
-    
     /**
      * Converter from any Throwable to SQLException.
      *
@@ -85,10 +88,10 @@ public abstract class FarragoUtil
         Logger tracer)
     {
         tracer.severe(ex.getMessage());
-        tracer.throwing("FarragoUtil","newSqlException",ex);
-        
+        tracer.throwing("FarragoUtil", "newSqlException", ex);
+
         SQLException sqlExcn;
-        if (ex instanceof FarragoException || ex instanceof SaffronException) {
+        if (ex instanceof FarragoException) {
             // TODO:  map for SQLState
             sqlExcn = new SQLException(ex.getMessage());
         } else if (ex instanceof SQLException) {
@@ -96,8 +99,9 @@ public abstract class FarragoUtil
         } else {
             // for anything else, include the class name
             // as part of what went wrong
-            sqlExcn = new SQLException(
-                ex.getClass().getName() + ": " + ex.getMessage());
+            sqlExcn =
+                new SQLException(ex.getClass().getName() + ": "
+                    + ex.getMessage());
         }
 
         // preserve additional attributes of the original excn
@@ -108,7 +112,7 @@ public abstract class FarragoUtil
         if (cause != null) {
             // NOTE jvs 18-June-2004:  reverse the order so that
             // the underlying cause comes out on top
-            SQLException sqlCause = newSqlException(cause,tracer);
+            SQLException sqlCause = newSqlException(cause, tracer);
             sqlCause.setNextException(sqlExcn);
             return sqlCause;
         } else {
@@ -116,5 +120,6 @@ public abstract class FarragoUtil
         }
     }
 }
+
 
 // End FarragoUtil.java

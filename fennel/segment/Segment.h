@@ -141,7 +141,7 @@ public:
     virtual BlockNum getAllocatedSizeInPages() = 0;
     
     /**
-     * Checkpoint this segment.
+     * Checkpoints this segment.
      *
      * @param checkpointType type of checkpoint to execute
      */
@@ -161,7 +161,7 @@ public:
         CheckpointType checkpointType);
     
     /**
-     * Determine the successor of a given PageId.  This is an optional
+     * Determines the successor of a given PageId.  This is an optional
      * interface only supported by segments with some concept of linearity.
      *
      * @param pageId PageId for which the successor is to be found
@@ -171,7 +171,7 @@ public:
     virtual PageId getPageSuccessor(PageId pageId) = 0;
     
     /**
-     * Set the successor of a given PageId.  This is an optional interface only
+     * Sets the successor of a given PageId.  This is an optional interface only
      * supported by segments with some concept of modifiable linearity.
      *
      * @param pageId PageId for which the successor is to be set
@@ -186,17 +186,17 @@ public:
     virtual AllocationOrder getAllocationOrder() const = 0;
 
     /**
-     * Map from a PageId in this segment to a BlockId.
+     * Maps from a PageId in this segment to a BlockId.
      */
     virtual BlockId translatePageId(PageId) = 0;
     
     /**
-     * Map from a BlockId to a PageId in this segment.
+     * Maps from a BlockId to a PageId in this segment.
      */
     virtual PageId translateBlockId(BlockId) = 0;
 
     /**
-     * Allocate a page without locking it into memory.
+     * Allocates a page without locking it into memory.
      *
      * @param ownerId the PageOwnerId of the object which will own this page,
      * or ANON_PAGE_OWNER_ID for pages unassociated with an owner
@@ -207,7 +207,7 @@ public:
     virtual PageId allocatePageId(PageOwnerId ownerId = ANON_PAGE_OWNER_ID) = 0;
 
     /**
-     * Allocate pages as needed to make getAllocatedSizeInPages() meet
+     * Allocates pages as needed to make getAllocatedSizeInPages() meet
      * a lower bound.  The PageId's of the allocated pages are not returned,
      * so this is mostly only meaningful for linear segments.
      *
@@ -218,7 +218,7 @@ public:
     virtual bool ensureAllocatedSize(BlockNum nPages);
     
     /**
-     * Deallocate a range of pages allocated from this segment.  Some segment
+     * Deallocates a range of pages allocated from this segment.  Some segment
      * implementations may impose restrictions on the range
      * (e.g. individual pages only, entire segment truncation only,
      * start-ranges, or end-ranges).  The interpretation of the range
@@ -237,7 +237,7 @@ public:
         PageId endPageId) = 0;
 
     /**
-     * Test whether a PageId is allocated.
+     * Tests whether a PageId is allocated.
      *
      * @param pageId the PageId of interest
      *
@@ -253,12 +253,12 @@ public:
     virtual bool isTracingSegment() const;
     
     /**
-     * Construct a linear PageId based on a linear page number.
+     * Constructs a linear PageId based on a linear page number.
      */
     static PageId getLinearPageId(BlockNum iPage);
 
     /**
-     * Obtain the linear page number from a linear PageId.
+     * Obtains the linear page number from a linear PageId.
      */
     static BlockNum getLinearBlockNum(PageId pageId);
 };

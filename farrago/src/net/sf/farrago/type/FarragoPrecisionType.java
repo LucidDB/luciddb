@@ -17,27 +17,26 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.type;
 
+import java.nio.charset.Charset;
+import java.sql.Types;
+
+import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.type.runtime.*;
 import net.sf.farrago.util.*;
-import net.sf.farrago.catalog.*;
-
-import net.sf.saffron.rel.*;
-import net.sf.saffron.util.*;
-import net.sf.saffron.sql.SqlCollation;
-import net.sf.saffron.core.SaffronTypeFactoryImpl;
 
 import openjava.mop.*;
-
 import openjava.ptree.*;
 
-import java.nio.charset.Charset;
-import java.sql.Types;
+import org.eigenbase.oj.util.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.reltype.RelDataTypeFactoryImpl;
+import org.eigenbase.sql.SqlCollation;
+import org.eigenbase.util.*;
 
 
 /**
@@ -52,13 +51,9 @@ public class FarragoPrecisionType extends FarragoAtomicType
     //~ Instance fields -------------------------------------------------------
 
     private String charsetName;
-
     private SqlCollation collation;
-
     private final int precision;
-
     private final int scale;
-
     protected OJClass ojClass;
 
     //~ Constructors ----------------------------------------------------------
@@ -81,12 +76,12 @@ public class FarragoPrecisionType extends FarragoAtomicType
         String charsetName,
         SqlCollation collation)
     {
-        super(simpleType,isNullable);
+        super(simpleType, isNullable);
         this.precision = precision;
         this.scale = scale;
         if (!isCharType()) {
-            assert(null==charsetName);
-            assert(null==collation);
+            assert (null == charsetName);
+            assert (null == collation);
         }
         this.charsetName = charsetName;
         this.collation = collation;
@@ -104,26 +99,33 @@ public class FarragoPrecisionType extends FarragoAtomicType
     public String getCharsetName()
     {
         if (!isCharType()) {
-            throw Util.newInternal(digest+" is not defined to carry a charset");
+            throw Util.newInternal(digest
+                + " is not defined to carry a charset");
         }
         return charsetName;
     }
 
-    /** implement SaffronType */
-    public Charset getCharset() throws RuntimeException {
+    /** implement RelDataType */
+    public Charset getCharset()
+        throws RuntimeException
+    {
         if (!isCharType()) {
-            throw Util.newInternal(digest+" is not defined to carry a charset");
+            throw Util.newInternal(digest
+                + " is not defined to carry a charset");
         }
-        if (null==this.charsetName) {
+        if (null == this.charsetName) {
             return null;
         }
         return Charset.forName(this.charsetName);
     }
 
-    /** implement SaffronType */
-    public SqlCollation getCollation() throws RuntimeException {
+    /** implement RelDataType */
+    public SqlCollation getCollation()
+        throws RuntimeException
+    {
         if (!isCharType()) {
-            throw Util.newInternal(digest+" is not defined to carry a collation");
+            throw Util.newInternal(digest
+                + " is not defined to carry a collation");
         }
         return this.collation;
     }
@@ -146,21 +148,23 @@ public class FarragoPrecisionType extends FarragoAtomicType
         return scale;
     }
 
-    public int getOctetLength() {
+    public int getOctetLength()
+    {
         switch (getSimpleType().getTypeNumber().intValue()) {
         case Types.BIT:
+
             // 8 bits per byte.
             return (precision + 7) / 8;
         case Types.CHAR:
         case Types.VARCHAR:
-            return precision *
-                    SaffronTypeFactoryImpl.getMaxBytesPerChar(charsetName);
+            return precision * RelDataTypeFactoryImpl.getMaxBytesPerChar(charsetName);
         default:
             return precision;
         }
     }
 
-    public int getMaxBytesStorage() {
+    public int getMaxBytesStorage()
+    {
         switch (getSimpleType().getTypeNumber().intValue()) {
         case Types.BIT:
         case Types.CHAR:
@@ -172,14 +176,15 @@ public class FarragoPrecisionType extends FarragoAtomicType
         case Types.BLOB:
         case Types.LONGVARBINARY:
         case Types.LONGVARCHAR:
+
             // Long types are not implemented yet.
             throw Util.needToImplement(this);
         default:
+
             // This is a fixed-width type.
             return -1;
         }
     }
-
 
     // implement FarragoType
     protected OJClass getOjClass(OJClass declarer)
@@ -197,45 +202,55 @@ public class FarragoPrecisionType extends FarragoAtomicType
             memberDecls.add(
                 new MethodDeclaration(
                     new ModifierList(ModifierList.PROTECTED),
-                    TypeName.forClass(String.class),
+                    OJUtil.typeNameForClass(String.class),
                     "getCharsetName",
                     new ParameterList(),
                     new TypeName[0],
                     new StatementList(
-                        new ReturnStatement(Literal.makeLiteral(charsetName)))));
+                        new ReturnStatement(
+                            Literal.makeLiteral(charsetName)))));
         }
 
         TypeName [] superDecl =
-            new TypeName [] { TypeName.forClass(superclass) };
+            new TypeName [] { OJUtil.typeNameForClass(superclass) };
 
         TypeName [] interfaceDecls = null;
         if (isNullable()) {
             interfaceDecls =
-                new TypeName [] { TypeName.forClass(NullableValue.class) };
+                new TypeName [] {
+                    OJUtil.typeNameForClass(NullableValue.class)
+                };
         }
         ClassDeclaration decl =
-            new ClassDeclaration(
-                new ModifierList(ModifierList.PUBLIC | ModifierList.STATIC),
+            new ClassDeclaration(new ModifierList(ModifierList.PUBLIC
+                        | ModifierList.STATIC),
                 "Oj_inner_" + getFactoryImpl().generateClassId(),
                 superDecl,
                 interfaceDecls,
                 memberDecls);
-        ojClass = new OJTypedClass(declarer,decl,this);
+        ojClass = new OJTypedClass(declarer, decl, this);
         try {
             declarer.addClass(ojClass);
         } catch (CannotAlterException e) {
-            throw Util.newInternal(e,"holder class must be OJClassSourceCode");
+            throw Util.newInternal(e, "holder class must be OJClassSourceCode");
         }
         Environment env = declarer.getEnvironment();
-        env.recordMemberClass(declarer.getName(),decl.getName());
-        env.getGlobalEnvironment().record(ojClass.getName(),ojClass);
+        OJUtil.recordMemberClass(
+            env,
+            declarer.getName(),
+            decl.getName());
+        OJUtil.getGlobalEnvironment(env).record(
+            ojClass.getName(),
+            ojClass);
         return ojClass;
     }
 
     // override FarragoAtomicType
-    protected void generateTypeString(StringBuffer sb,boolean withDetail)
+    protected void generateTypeString(
+        StringBuffer sb,
+        boolean withDetail)
     {
-        super.generateTypeString(sb,withDetail);
+        super.generateTypeString(sb, withDetail);
         if (!withDetail) {
             return;
         }

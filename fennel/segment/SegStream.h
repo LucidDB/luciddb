@@ -108,7 +108,7 @@ protected:
 public:
 
     /**
-     * Obtain the current stream position.
+     * Obtains the current stream position.
      *
      * @param pos receives the position
      */

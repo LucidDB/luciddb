@@ -105,9 +105,9 @@ public:
     }
 
     /**
-     * Called by CacheImpl when a page is allocated.  This gives the
-     * VictimPolicy a chance to initialize its own data structures for this
-     * page.
+     * Receives notification from CacheImpl when a page is allocated,
+     * giving the VictimPolicy a chance to initialize its own data structures
+     * for this page.
      *
      * @param page the page being allocated
      */
@@ -123,8 +123,8 @@ public:
     }
 
     /**
-     * Called by CacheImpl when a page is freed.  This gives the
-     * VictimPolicy a chance to initialize its own data structures for this
+     * Receives notification from CacheImpl when a page is freed, giving the
+     * VictimPolicy a chance to deinitialize its own data structures for this
      * page.
      *
      * @param page the page being freed
@@ -137,11 +137,11 @@ public:
     }
 
     /**
-     * Called by CacheImpl when a page is accessed.  On entry, the page's mutex
-     * is held by the calling thread, so the state of the page (e.g. its mapped
-     * BlockId) is guaranteed to remain stable.  This is true for all other
-     * notify methods as well.  For LRUVictimPolicy, a page access results in
-     * the page being moved to the MRU end of the list.
+     * Receives notification from CacheImpl when a page is accessed.  On entry,
+     * the page's mutex is held by the calling thread, so the state of the page
+     * (e.g. its mapped BlockId) is guaranteed to remain stable.  This is true
+     * for all other notify methods as well.  For LRUVictimPolicy, a page
+     * access results in the page being moved to the MRU end of the list.
      *
      * @param page the page being accessed
      */
@@ -160,9 +160,9 @@ public:
     }
 
     /**
-     * Called by CacheImpl when a hint is received that a page is a
-     * good candidate for victimization.  For LRUVictimPolicy, this results in
-     * the page being moved to the LRU end of the list.
+     * Receives notification from CacheImpl on a hint that a page
+     * is a good candidate for victimization.  For LRUVictimPolicy, this
+     * results in the page being moved to the LRU end of the list.
      *
      * @param page the page to which the hint pertains
      */
@@ -181,9 +181,9 @@ public:
     }
 
     /**
-     * Called by CacheImpl just after a page is mapped.  This implies an access
-     * as well, so for efficiency no corresponding notifyPageAccess call is
-     * made.
+     * Receives notification from CacheImpl just after a page is mapped.  This
+     * implies an access as well, so for efficiency no corresponding
+     * notifyPageAccess notification is received.
      *
      * @param page the page being mapped
      */
@@ -195,8 +195,8 @@ public:
     }
 
     /**
-     * Called by CacheImpl just before a page is unmapped.  The Page
-     * object still has the ID being unmapped.
+     * Receives notification from CacheImpl just before a page is unmapped.
+     * The Page object still has the ID being unmapped.
      *
      * @param page the page being unmapped
      */
@@ -208,8 +208,8 @@ public:
     }
 
     /**
-     * Called by CacheImpl to initialize a SharedGuard before calling
-     * getVictimRange().  The mutex guard is held for the duration of
+     * Provides an SXMutex to CacheImpl to be acquired before
+     * calling getVictimRange().  The mutex guard is held for the duration of
      * the iteration.
      *
      * @return a reference to the RW_Mutex protecting the LRU list
@@ -220,7 +220,7 @@ public:
     }
 
     /**
-     * Called by CacheImpl to obtain a range of candidate victims.
+     * Provides a range of candidate victims to CacheImpl.
      *
      * @return a pair of PageIterators, where pair.first references
      * the best victim and pair.second is the end of the victim range

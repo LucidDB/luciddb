@@ -41,15 +41,15 @@ public:
     virtual ~CacheAccessor();
     
     /**
-     * Lock a page into memory with the specified concurrency mode.  When page
-     * access is complete, the caller must invoke the unlockPage() method with
-     * the same concurrency mode to release it.  If the desired page is already
-     * locked by another thread with an incompatible concurrency mode, this
-     * method will block until the page becomes available (unless the lock mode
-     * is of the NoWait variety, in which case this method returns NULL
-     * immediately).  Note that NoWait locking only applies to lock contention,
-     * not I/O, so if an unmapped page is locked in NoWait mode, the method
-     * blocks until the read completes.
+     * Locks a page into memory with the specified concurrency mode.  When the
+     * page contents are no longer needed, the caller must invoke the
+     * unlockPage() method with the same concurrency mode to release it.  If
+     * the desired page is already locked by another thread with an
+     * incompatible concurrency mode, blocks until the page
+     * becomes available (unless the lock mode is of the NoWait variety, in
+     * which case returns NULL immediately).  Note that NoWait
+     * locking only applies to lock contention, not I/O, so if an unmapped page
+     * is locked in NoWait mode, blocks until the read completes.
      *
      *<p>
      *
@@ -103,7 +103,7 @@ public:
         MappedPageListener *pMappedPageListener = NULL) = 0;
     
     /**
-     * Release lock held on page.
+     * Releases lock held on page.
      *
      * @param page the page to be unlocked
      *
@@ -114,7 +114,7 @@ public:
     virtual void unlockPage(CachePage &page,LockMode lockMode) = 0;
 
     /**
-     * Unmap a page from the cache if already mapped, discarding its contents
+     * Unmaps a page from the cache if already mapped, discarding its contents
      * if dirty.  The caller must ensure that no other thread has the page
      * locked.
      *
@@ -123,7 +123,7 @@ public:
     virtual void discardPage(BlockId blockId) = 0;
     
     /**
-     * Hint that a page should be prefetched in preparation for a
+     * Hints that a page should be prefetched in preparation for a
      * future lock request.
      *
      * @param blockId the BlockId of the page to be prefetched
@@ -137,7 +137,7 @@ public:
         MappedPageListener *pMappedPageListener = NULL) = 0;
 
     /**
-     * Hint that a contiguous run of pages should be prefetched.
+     * Hints that a contiguous run of pages should be prefetched.
      *
      * @param blockId the BlockId of the first page to be prefetched; more
      * will be prefetched depending on the configured batch size
@@ -153,7 +153,7 @@ public:
         MappedPageListener *pMappedPageListener = NULL) = 0;
 
     /**
-     * Force the contents of a dirty page to its mapped location.  Page must
+     * Forces the contents of a dirty page to its mapped location.  Page must
      * already be locked in exclusive mode.  For an asynchronous flush,
      * the caller must ensure that the page contents remain unchanged
      * until the flush completes.
@@ -166,7 +166,7 @@ public:
     virtual void flushPage(CachePage &page,bool async) = 0;
 
     /**
-     * Mark a page as nice, indicating that it is very unlikely the page's
+     * Marks a page as nice, indicating that it is very unlikely the page's
      * mapping will be needed again any time soon, so it is a good candidate
      * for victimization.
      *
@@ -180,7 +180,7 @@ public:
     virtual uint getMaxLockedPages() = 0;
 
     /**
-     * Set the page lock quota on this accessor.  Ignored
+     * Sets the page lock quota on this accessor.  Ignored
      * for accessor implementations that don't support quotas.
      *
      * @param nPages new quota

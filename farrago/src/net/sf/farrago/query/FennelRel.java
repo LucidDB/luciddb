@@ -17,28 +17,29 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.query;
 
 import net.sf.farrago.fem.fennel.FemExecutionStreamDef;
-import net.sf.saffron.rel.RelFieldCollation;
-import net.sf.saffron.rel.SaffronRel;
+
+import org.eigenbase.rel.RelFieldCollation;
+import org.eigenbase.rel.RelNode;
+
 
 /**
  * FennelRel defines the interface which must be implemented by any
- * {@link SaffronRel} corresponding to a C++ physical implementation conforming
+ * {@link RelNode} corresponding to a C++ physical implementation conforming
  * to the fennel::ExecutionStream interface.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public interface FennelRel extends SaffronRel
+public interface FennelRel extends RelNode
 {
     //~ Methods ---------------------------------------------------------------
 
     // TODO jvs 8-May-2004:  get rid of method getPreparingStmt();
     // instead, add a utility method for getting it from the cluster
-    
+
     /**
      * .
      *
@@ -56,8 +57,7 @@ public interface FennelRel extends SaffronRel
      *
      * @return generated FemExecutionStreamDef
      */
-    public FemExecutionStreamDef toStreamDef(
-        FennelRelImplementor implementor);
+    public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor);
 
     /**
      * Visits this relational expression as part of the implementation
@@ -73,7 +73,6 @@ public interface FennelRel extends SaffronRel
      * the output is not guaranteed to be in any particular order
      */
     public RelFieldCollation [] getCollations();
-
 }
 
 

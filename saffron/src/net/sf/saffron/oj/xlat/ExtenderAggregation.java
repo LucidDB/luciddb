@@ -1,40 +1,39 @@
 /*
-// $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Saffron preprocessor and data engine.
+// Copyright (C) 2002-2004 Disruptive Tech
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package net.sf.saffron.oj.xlat;
 
 import net.sf.saffron.core.*;
-import net.sf.saffron.oj.util.*;
-import net.sf.saffron.oj.rel.JavaRelImplementor;
-import net.sf.saffron.oj.rel.JavaRel;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.util.Util;
 
 import openjava.mop.Environment;
 import openjava.mop.OJClass;
 import openjava.mop.OJMethod;
 import openjava.mop.Toolbox;
-
 import openjava.ptree.*;
+
+import org.eigenbase.oj.rel.JavaRel;
+import org.eigenbase.oj.rel.JavaRelImplementor;
+import org.eigenbase.oj.util.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -42,14 +41,14 @@ import openjava.ptree.*;
  * instantiating a user-defined aggregation ({@link
  * net.sf.saffron.core.AggregationExtender}), as opposed to generating custom
  * code.
- * 
+ *
  * <p>
  * Two bugs with the current implementation of {@link #implementStart} etc.
  * First, the aggregation expression should be evaluated only once -- when
  * the query starts -- and stored in a variable. I guess it should be added
  * to the environment holding the query.
  * </p>
- * 
+ *
  * <p>
  * Second, we pass real expressions as the values of the dummy arguments to
  * {@link #implementStart} and {@link #implementResult}. This is inefficient,
@@ -64,8 +63,6 @@ import openjava.ptree.*;
  */
 class ExtenderAggregation implements Aggregation
 {
-    //~ Instance fields -------------------------------------------------------
-
     Expression aggExp;
     OJClass aggClazz;
     OJMethod aggregateMethod;
@@ -75,51 +72,30 @@ class ExtenderAggregation implements Aggregation
     OJMethod startMethod;
     OJClass [] argTypes;
 
-    //~ Constructors ----------------------------------------------------------
-
-    ExtenderAggregation(Expression aggExp,Environment env,OJClass [] argTypes)
+    ExtenderAggregation(
+        Expression aggExp,
+        Environment env,
+        OJClass [] argTypes)
     {
         this.aggExp = aggExp;
-        this.aggClazz = Toolbox.getType(env,aggExp);
-        assert(
-            Toolbox.clazzAggregationExtender.isAssignableFrom(aggClazz));
+        this.aggClazz = Toolbox.getType(env, aggExp);
+        assert (Toolbox.clazzAggregationExtender.isAssignableFrom(aggClazz));
         this.argTypes = argTypes;
         this.aggregateMethod =
-            findMethod(
-                aggClazz,
-                AggregationExtender.METHOD_AGGREGATE,
-                argTypes,
-                0,
-                null,
-                true);
+            findMethod(aggClazz, AggregationExtender.METHOD_AGGREGATE,
+                argTypes, 0, null, true);
         if (this.aggregateMethod.getReturnType() == Toolbox.clazzVoid) {
-            throw Util.newInternal(
-                "Method 'aggregate' must not return 'void'");
+            throw Util.newInternal("Method 'aggregate' must not return 'void'");
         }
         this.startMethod =
-            findMethod(
-                aggClazz,
-                AggregationExtender.METHOD_START,
-                argTypes,
-                0,
-                Toolbox.clazzObject,
-                true);
+            findMethod(aggClazz, AggregationExtender.METHOD_START, argTypes,
+                0, Toolbox.clazzObject, true);
         this.nextMethod =
-            findMethod(
-                aggClazz,
-                AggregationExtender.METHOD_NEXT,
-                argTypes,
-                1,
-                Toolbox.clazzObject,
-                true);
+            findMethod(aggClazz, AggregationExtender.METHOD_NEXT, argTypes, 1,
+                Toolbox.clazzObject, true);
         this.mergeMethod =
-            findMethod(
-                aggClazz,
-                AggregationExtender.METHOD_MERGE,
-                argTypes,
-                2,
-                Toolbox.clazzObject,
-                false);
+            findMethod(aggClazz, AggregationExtender.METHOD_MERGE, argTypes,
+                2, Toolbox.clazzObject, false);
         this.resultMethod =
             findMethod(
                 aggClazz,
@@ -130,15 +106,13 @@ class ExtenderAggregation implements Aggregation
                 true);
     }
 
-    //~ Methods ---------------------------------------------------------------
-
     // implement Aggregation
-    public SaffronType [] getParameterTypes(SaffronTypeFactory typeFactory)
+    public RelDataType [] getParameterTypes(RelDataTypeFactory typeFactory)
     {
         OJClass [] classes = argTypes;
-        SaffronType [] types = new SaffronType[classes.length];
+        RelDataType [] types = new RelDataType[classes.length];
         for (int i = 0; i < classes.length; ++i) {
-            types[i] = OJUtil.ojToType(typeFactory,classes[i]);
+            types[i] = OJUtil.ojToType(typeFactory, classes[i]);
         }
         return types;
     }
@@ -146,18 +120,22 @@ class ExtenderAggregation implements Aggregation
     // TODO:  share common type adapter with BuiltinAggregation, and
     // move this to oj.rel
     // implement Aggregation
-    public SaffronType getReturnType(SaffronTypeFactory typeFactory)
+    public RelDataType getReturnType(RelDataTypeFactory typeFactory)
     {
-        return OJUtil.ojToType(typeFactory,resultMethod.getReturnType());
+        return OJUtil.ojToType(
+            typeFactory,
+            resultMethod.getReturnType());
     }
 
     /**
      * Returns whether this aggregation has an overloading which matches the
      * given name and argument types.
      */
-    public static boolean matches(OJClass aggClazz,OJClass [] argTypes)
+    public static boolean matches(
+        OJClass aggClazz,
+        OJClass [] argTypes)
     {
-        return findMethod(aggClazz,"result",argTypes,1,null,false) != null;
+        return findMethod(aggClazz, "result", argTypes, 1, null, false) != null;
     }
 
     // implement Aggregation
@@ -169,11 +147,11 @@ class ExtenderAggregation implements Aggregation
     // implement Aggregation
     public void implementMerge(
         JavaRelImplementor implementor,
-        SaffronRel rel,
+        RelNode rel,
         Expression accumulator,
         Expression otherAccumulator)
     {
-        assert(canMerge());
+        assert (canMerge());
 
         // saffron.runtime.AggAndAcc a = (saffron.runtime.AggAndAcc) acc;
         // "acc.total = acc.agg.merge(
@@ -191,20 +169,20 @@ class ExtenderAggregation implements Aggregation
                 new CastExpression(
                     TypeName.forOJClass(argTypes[i]),
                     argTypes[i].isPrimitive() ? Literal.constantZero()
-                                              : Literal.constantNull()));
+                    : Literal.constantNull()));
         }
-        exprList.add(new FieldAccess(var,"total"));
+        exprList.add(new FieldAccess(var, "total"));
         exprList.add(
             new FieldAccess(
-                new CastExpression(Toolbox.clazzAggAndAcc,otherAccumulator),
+                new CastExpression(Toolbox.clazzAggAndAcc, otherAccumulator),
                 "total"));
         stmtList.add(
             new ExpressionStatement(
                 new AssignmentExpression(
-                    new FieldAccess(var,"total"),
+                    new FieldAccess(var, "total"),
                     AssignmentExpression.EQUALS,
                     new MethodCall(
-                        new FieldAccess(var,"agg"),
+                        new FieldAccess(var, "agg"),
                         AggregationExtender.METHOD_MERGE,
                         exprList))));
     }
@@ -229,18 +207,18 @@ class ExtenderAggregation implements Aggregation
                     accumulator)));
         ExpressionList exprList = new ExpressionList();
         for (int i = 0; i < args.length; i++) {
-            exprList.add(implementor.translateInputField(rel,0,args[i]));
+            exprList.add(implementor.translateInputField(rel, 0, args[i]));
         }
-        exprList.add(new FieldAccess(var,"total"));
+        exprList.add(new FieldAccess(var, "total"));
         stmtList.add(
             new ExpressionStatement(
                 new AssignmentExpression(
-                    new FieldAccess(var,"total"),
+                    new FieldAccess(var, "total"),
                     AssignmentExpression.EQUALS,
                     new MethodCall(
                         new CastExpression(
                             TypeName.forOJClass(aggClazz),
-                            new FieldAccess(var,"agg")),
+                            new FieldAccess(var, "agg")),
                         AggregationExtender.METHOD_NEXT,
                         exprList))));
     }
@@ -256,17 +234,17 @@ class ExtenderAggregation implements Aggregation
                 new CastExpression(
                     TypeName.forOJClass(argTypes[i]),
                     argTypes[i].isPrimitive() ? Literal.constantZero()
-                                              : Literal.constantNull()));
+                    : Literal.constantNull()));
         }
         exprList.add(
             new FieldAccess(
-                new CastExpression(Toolbox.clazzAggAndAcc,accumulator),
+                new CastExpression(Toolbox.clazzAggAndAcc, accumulator),
                 "total"));
         return new MethodCall(
             new CastExpression(
                 aggClazz,
                 new FieldAccess(
-                    new CastExpression(Toolbox.clazzAggAndAcc,accumulator),
+                    new CastExpression(Toolbox.clazzAggAndAcc, accumulator),
                     "agg")),
             AggregationExtender.METHOD_RESULT,
             exprList);
@@ -297,13 +275,13 @@ class ExtenderAggregation implements Aggregation
                 new CastExpression(
                     TypeName.forOJClass(argTypes[i]),
                     argTypes[i].isPrimitive() ? Literal.constantZero()
-                                              : Literal.constantNull()));
+                    : Literal.constantNull()));
         }
         return new AllocationExpression(
             OJClass.forClass(net.sf.saffron.runtime.AggAndAcc.class),
             new ExpressionList(
                 var,
-                new MethodCall(var,AggregationExtender.METHOD_START,exprList)));
+                new MethodCall(var, AggregationExtender.METHOD_START, exprList)));
     }
 
     // implement Aggregation
@@ -336,11 +314,11 @@ class ExtenderAggregation implements Aggregation
                 new CastExpression(
                     TypeName.forOJClass(argTypes[i]),
                     argTypes[i].isPrimitive() ? Literal.constantZero()
-                                              : Literal.constantNull()));
-            nextList.add(implementor.translateInputField(rel,0,args[i]));
+                    : Literal.constantNull()));
+            nextList.add(implementor.translateInputField(rel, 0, args[i]));
         }
         nextList.add(
-            new MethodCall(var_agg,AggregationExtender.METHOD_START,startList));
+            new MethodCall(var_agg, AggregationExtender.METHOD_START, startList));
         Variable var_acc = implementor.newVariable();
         stmtList.add(
             new VariableDeclaration(
@@ -350,10 +328,8 @@ class ExtenderAggregation implements Aggregation
                     Toolbox.clazzAggAndAcc,
                     new ExpressionList(
                         var_agg,
-                        new MethodCall(
-                            var_agg,
-                            AggregationExtender.METHOD_NEXT,
-                            nextList)))));
+                        new MethodCall(var_agg,
+                            AggregationExtender.METHOD_NEXT, nextList)))));
         return var_acc;
     }
 
@@ -367,7 +343,7 @@ class ExtenderAggregation implements Aggregation
     {
         if (extra > 0) {
             OJClass [] newArgTypes = new OJClass[argTypes.length + extra];
-            System.arraycopy(argTypes,0,newArgTypes,0,argTypes.length);
+            System.arraycopy(argTypes, 0, newArgTypes, 0, argTypes.length);
             for (int i = 0; i < extra; i++) {
                 newArgTypes[argTypes.length + i] = Toolbox.clazzObject;
             }
@@ -375,10 +351,9 @@ class ExtenderAggregation implements Aggregation
         }
         OJMethod [] allMethods = aggClazz.getMethods();
 loop: 
-        for (int i = 0,n = allMethods.length; i < n; i++) {
+        for (int i = 0, n = allMethods.length; i < n; i++) {
             OJMethod method = allMethods[i];
-            if (
-                method.getName().equals(name)
+            if (method.getName().equals(name)
                     && (method.getParameterTypes().length == argTypes.length)) {
                 OJClass [] parameterTypes = method.getParameterTypes();
                 for (int j = 0; j < argTypes.length; j++) {
@@ -386,12 +361,10 @@ loop:
                         continue loop;
                     }
                 }
-                if (
-                    (desiredType != null)
+                if ((desiredType != null)
                         && (method.getReturnType() != desiredType)) {
-                    throw Util.newInternal(
-                        "Method '" + name + "' should return '" + desiredType
-                        + "'");
+                    throw Util.newInternal("Method '" + name
+                        + "' should return '" + desiredType + "'");
                 }
                 return method;
             }
@@ -404,8 +377,7 @@ loop:
                 }
                 sb.append(argTypes[i]);
             }
-            throw Util.newInternal(
-                "could not find method " + name + "(" + sb
+            throw Util.newInternal("could not find method " + name + "(" + sb
                 + ") required to implement AggregationExtender");
         } else {
             return null;

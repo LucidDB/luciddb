@@ -15,8 +15,8 @@ package openjava.ptree;
 import openjava.ptree.util.*;
 import openjava.mop.*;
 
-import net.sf.saffron.oj.util.OJUtil;
-import net.sf.saffron.core.SaffronTable;
+import org.eigenbase.oj.util.OJUtil;
+import org.eigenbase.relopt.RelOptTable;
 
 /**
  * The <code>FieldAccess</code> class represents
@@ -191,7 +191,7 @@ public class FieldAccess extends NonLeaf
         if (reftype != null)  field = pickupField(reftype, name);
         if (field != null)  return field.getType();
 
-        SaffronTable table = Toolbox.getTable(env, refexpr, null, name);
+        RelOptTable table = Toolbox.getTable(env, refexpr, null, name);
         if (table != null) {
             return OJClass.arrayOf(OJUtil.typeToOJClass(table.getRowType()));
         }

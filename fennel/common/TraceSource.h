@@ -41,7 +41,7 @@ class TraceSource
 protected:
     
     /**
-     * Record a trace message.  Normally only called via FENNEL_TRACE.
+     * Records a trace message.  Normally only called via FENNEL_TRACE.
      *
      * @param level severity level of event being trace
      *
@@ -50,12 +50,12 @@ protected:
     void trace(TraceLevel level,std::string message) const;
 
     /**
-     * Construct a new uninitialized TraceSource.
+     * Constructs a new uninitialized TraceSource.
      */
     explicit TraceSource();
 
     /**
-     * Construct a new TraceSource.
+     * Constructs a new TraceSource.
      *
      * @param pTraceTarget the TraceTarget to which messages will be sent,
      * or NULL to disable tracing entirely

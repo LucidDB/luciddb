@@ -51,12 +51,12 @@ public:
     virtual ~Thread();
 
     /**
-     * spawn the OS thread
+     * Spawns the OS thread.
      */
     void start();
 
     /**
-     * wait for the OS thread to terminate
+     * Waits for the OS thread to terminate.
      */
     void join();
 
@@ -78,7 +78,7 @@ public:
     }
 
     /**
-     * Access the underlying boost::thread, e.g. for use in a
+     * Accesses the underlying boost::thread, e.g. for use in a
      * boost::thread_group.  This thread must already be started.
      *
      * @return the underlying boost::thread

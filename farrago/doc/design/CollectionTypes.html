@@ -201,7 +201,7 @@ CREATE TABLE logins(
     session_id INT NOT NULL PRIMARY KEY,
     successful BOOLEAN NOT NULL,
     uid INT,
-    attempts ROW(VARCHAR(128),VARCHAR(128) MULTISET);
+    attempts ROW(VARCHAR(128),VARCHAR(128)) MULTISET);
 </code></pre>
 
 Multiset constructors are similar to array constructors:

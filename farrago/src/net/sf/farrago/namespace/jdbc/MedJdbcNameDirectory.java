@@ -6,31 +6,32 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.namespace.jdbc;
 
-import net.sf.saffron.sql.*;
-import net.sf.saffron.sql.fun.SqlStdOperatorTable;
-import net.sf.saffron.core.*;
-import net.sf.saffron.util.*;
+import java.sql.*;
+import java.util.*;
 
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
-import java.sql.*;
-import java.util.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.fun.SqlStdOperatorTable;
+import org.eigenbase.util.*;
+
 
 /**
  * MedJdbcNameDirectory implements the FarragoMedNameDirectory
@@ -41,13 +42,18 @@ import java.util.*;
  */
 class MedJdbcNameDirectory extends MedAbstractNameDirectory
 {
+    //~ Instance fields -------------------------------------------------------
+
     final MedJdbcDataServer server;
 
-    MedJdbcNameDirectory(
-        MedJdbcDataServer server)
+    //~ Constructors ----------------------------------------------------------
+
+    MedJdbcNameDirectory(MedJdbcDataServer server)
     {
         this.server = server;
     }
+
+    //~ Methods ---------------------------------------------------------------
 
     // implement FarragoMedNameDirectory
     public FarragoMedColumnSet lookupColumnSet(
@@ -56,44 +62,44 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
         String [] localName)
         throws SQLException
     {
-        return lookupColumnSetAndImposeType(
-            typeFactory,foreignName,localName,null);
+        return lookupColumnSetAndImposeType(typeFactory, foreignName,
+            localName, null);
     }
-    
+
     FarragoMedColumnSet lookupColumnSetAndImposeType(
         FarragoTypeFactory typeFactory,
         String [] foreignName,
         String [] localName,
-        SaffronType rowType)
+        RelDataType rowType)
         throws SQLException
     {
         SqlDialect dialect = new SqlDialect(server.databaseMetaData);
         SqlStdOperatorTable opTab = SqlOperatorTable.std();
         if (server.schemaName != null) {
-            assert(foreignName.length == 2);
+            assert (foreignName.length == 2);
+
             // TODO jvs 11-June-2004: this should be a real error, not an
             // assert
-            assert(foreignName[0].equals(server.schemaName));
-            foreignName = new String [] 
-                {
-                    foreignName[1]
-                };
+            assert (foreignName[0].equals(server.schemaName));
+            foreignName = new String [] { foreignName[1] };
         }
-        SqlSelect select = opTab.selectOperator.createCall(
-            false,
-            new SqlNodeList(
-                Collections.singletonList(
-                    new SqlIdentifier("*",null)), null),
-            new SqlIdentifier(foreignName,null),
-            null,
-            null,
-            null,
-            null,null);
+        SqlSelect select =
+            opTab.selectOperator.createCall(
+                false,
+                new SqlNodeList(
+                    Collections.singletonList(new SqlIdentifier("*", null)),
+                    null),
+                new SqlIdentifier(foreignName, null),
+                null,
+                null,
+                null,
+                null,
+                null);
 
         if (rowType == null) {
             String sql = select.toSqlString(dialect);
             sql = normalizeQueryString(sql);
-        
+
             PreparedStatement ps = null;
             try {
                 ps = server.connection.prepareStatement(sql);
@@ -137,24 +143,20 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
             // REVIEW:  should we at least check to see if the inferred
             // row type is compatible with the enforced row type?
         }
-        
-        return new MedJdbcColumnSet(
-            this,
-            foreignName,
-            localName,
-            select,
-            dialect,
-            rowType);
+
+        return new MedJdbcColumnSet(this, foreignName, localName, select,
+            dialect, rowType);
     }
 
     String normalizeQueryString(String sql)
     {
         // some drivers don't like multi-line SQL, so convert all
         // whitespace into plain spaces
-        return sql.replaceAll("\\s"," ");
+        return sql.replaceAll("\\s", " ");
     }
-    
+
     // TODO:  lookupSubdirectory, getContentsAsCwm
 }
+
 
 // End MedJdbcNameDirectory.java

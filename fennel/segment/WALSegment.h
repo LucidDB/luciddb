@@ -52,7 +52,7 @@ public:
     virtual ~WALSegment();
     
     /**
-     * Determine the ID of the lowest dirty log page.
+     * Determines the ID of the lowest dirty log page.
      *
      * @return the PageId, or NULL_PAGE_ID if no dirty log pages
      */

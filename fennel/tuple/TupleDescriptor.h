@@ -96,7 +96,7 @@ public:
 
     bool containsNullable() const;
 
-    /** Perform a comparison only of type & size, not nullability */
+    /** Performs a comparison only of type & size, not nullability */
     bool storageEqual(
         TupleDescriptor const &other) const;
 

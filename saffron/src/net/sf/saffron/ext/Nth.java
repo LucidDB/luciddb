@@ -1,23 +1,20 @@
 /*
-// $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Saffron preprocessor and data engine.
+// Copyright (C) 2002-2004 Disruptive Tech
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package net.sf.saffron.ext;
@@ -40,18 +37,12 @@ import net.sf.saffron.core.AggregationExtender;
  */
 public class Nth implements AggregationExtender
 {
-    //~ Instance fields -------------------------------------------------------
-
     private int n;
-
-    //~ Constructors ----------------------------------------------------------
 
     public Nth(int n)
     {
         this.n = n;
     }
-
-    //~ Methods ---------------------------------------------------------------
 
     // int methods
     public int aggregate(int value)
@@ -71,7 +62,9 @@ public class Nth implements AggregationExtender
         throw new UnsupportedOperationException();
     }
 
-    public Object next(int value,Object accumulator)
+    public Object next(
+        int value,
+        Object accumulator)
     {
         Holder_int holder = (Holder_int) accumulator;
         if (holder.count++ == n) {
@@ -80,7 +73,9 @@ public class Nth implements AggregationExtender
         return holder;
     }
 
-    public Object next(double value,Object accumulator)
+    public Object next(
+        double value,
+        Object accumulator)
     {
         Holder_double holder = (Holder_double) accumulator;
         if (holder.count++ == n) {
@@ -89,7 +84,9 @@ public class Nth implements AggregationExtender
         return holder;
     }
 
-    public Object next(Object value,Object accumulator)
+    public Object next(
+        Object value,
+        Object accumulator)
     {
         Holder_Object holder = (Holder_Object) accumulator;
         if (holder.count++ == n) {
@@ -98,19 +95,25 @@ public class Nth implements AggregationExtender
         return holder;
     }
 
-    public int result(int value,Object accumulator)
+    public int result(
+        int value,
+        Object accumulator)
     {
         Holder_int holder = (Holder_int) accumulator;
         return holder.result;
     }
 
-    public double result(double value,Object accumulator)
+    public double result(
+        double value,
+        Object accumulator)
     {
         Holder_double holder = (Holder_double) accumulator;
         return holder.result;
     }
 
-    public Object result(Object value,Object accumulator)
+    public Object result(
+        Object value,
+        Object accumulator)
     {
         Holder_Object holder = (Holder_Object) accumulator;
         return holder.result;
@@ -130,8 +133,6 @@ public class Nth implements AggregationExtender
     {
         return new Holder_Object();
     }
-
-    //~ Inner Classes ---------------------------------------------------------
 
     private static class Holder_Object
     {

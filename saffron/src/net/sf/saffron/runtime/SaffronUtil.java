@@ -1,29 +1,25 @@
 /*
-// $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Saffron preprocessor and data engine.
+// Copyright (C) 2002-2004 Disruptive Tech
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package net.sf.saffron.runtime;
 
 import java.lang.reflect.Array;
-
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Vector;
@@ -39,13 +35,13 @@ import java.util.Vector;
  */
 public class SaffronUtil
 {
-    //~ Methods ---------------------------------------------------------------
-
     /**
      * Copies a vector into a <code>boolean</code> array. Equivalent to {@link
      * Vector#copyInto}.
      */
-    public static boolean [] copyInto(Vector v,boolean [] a)
+    public static boolean [] copyInto(
+        Vector v,
+        boolean [] a)
     {
         int n = v.size();
         if (a.length < n) {
@@ -61,7 +57,9 @@ public class SaffronUtil
      * Copies a vector into a <code>int</code> array. Equivalent to {@link
      * Vector#copyInto}.
      */
-    public static int [] copyInto(Vector v,int [] a)
+    public static int [] copyInto(
+        Vector v,
+        int [] a)
     {
         int n = v.size();
         if (a.length < n) {
@@ -77,12 +75,14 @@ public class SaffronUtil
      * Copies a vector into an array. If the array is not large enough,
      * allocates a new array with the same component type as <code>a</code>.
      */
-    public static Object [] copyInto(Vector v,Object [] a)
+    public static Object [] copyInto(
+        Vector v,
+        Object [] a)
     {
         int n = v.size();
         if (a.length < n) {
             Class clazz = a.getClass().getComponentType();
-            a = (Object []) Array.newInstance(clazz,n);
+            a = (Object []) Array.newInstance(clazz, n);
         }
         v.copyInto(a);
         return a;
@@ -92,7 +92,9 @@ public class SaffronUtil
      * Copies a collection into a <code>boolean</code> array. Equivalent to
      * {@link Collection#toArray(Object[])}.
      */
-    public static boolean [] copyInto(Collection v,boolean [] a)
+    public static boolean [] copyInto(
+        Collection v,
+        boolean [] a)
     {
         int n = v.size();
         if (a.length < n) {
@@ -109,7 +111,9 @@ public class SaffronUtil
      * Copies a collection into an <code>int</code> array. Equivalent to
      * {@link Collection#toArray(Object[])}.
      */
-    public static int [] copyInto(Collection v,int [] a)
+    public static int [] copyInto(
+        Collection v,
+        int [] a)
     {
         int n = v.size();
         if (a.length < n) {
@@ -127,7 +131,9 @@ public class SaffronUtil
      * allocates a new array with the same component type as <code>a</code>.
      * Equivalent to {@link Collection#toArray(Object[])}.
      */
-    public static Object [] copyInto(Collection c,Object [] a)
+    public static Object [] copyInto(
+        Collection c,
+        Object [] a)
     {
         return c.toArray(a);
     }
@@ -169,7 +175,9 @@ public class SaffronUtil
     /**
      * Returns whether two objects are equal or are both null.
      */
-    public static boolean equals(Object o,Object p)
+    public static boolean equals(
+        Object o,
+        Object p)
     {
         if (o == null) {
             return p == null;

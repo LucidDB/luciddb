@@ -6,26 +6,26 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.namespace.jdbc;
-
-import net.sf.farrago.namespace.*;
-import net.sf.farrago.namespace.impl.*;
-import net.sf.farrago.catalog.*;
-import net.sf.farrago.resource.*;
 
 import java.sql.*;
 import java.util.*;
+
+import net.sf.farrago.catalog.*;
+import net.sf.farrago.namespace.*;
+import net.sf.farrago.namespace.impl.*;
+import net.sf.farrago.resource.*;
+
 
 /**
  * MedJdbcForeignDataWrapper implements the FarragoMedDataWrapper
@@ -34,11 +34,14 @@ import java.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class MedJdbcForeignDataWrapper
-    extends MedAbstractDataWrapper
+public class MedJdbcForeignDataWrapper extends MedAbstractDataWrapper
 {
+    //~ Static fields/initializers --------------------------------------------
+
     public static final String PROP_DRIVER_CLASS_NAME = "DRIVER_CLASS";
-    
+
+    //~ Constructors ----------------------------------------------------------
+
     /**
      * Creates a new data wrapper instance.
      */
@@ -46,36 +49,38 @@ public class MedJdbcForeignDataWrapper
     {
     }
 
+    //~ Methods ---------------------------------------------------------------
+
     // implement FarragoMedDataWrapper
     public String getSuggestedName()
     {
         return "JDBC_DATA_WRAPPER";
     }
-    
+
     // implement FarragoMedDataWrapper
     public String getDescription(Locale locale)
     {
         // TODO: localize
         return "Foreign data wrapper for JDBC data";
     }
-    
+
     // TODO:  DriverPropertyInfo calls
-    
     // implement FarragoMedDataWrapper
     public void initialize(
-        FarragoCatalog catalog,
-        Properties props) throws SQLException
+        FarragoRepos repos,
+        Properties props)
+        throws SQLException
     {
-        super.initialize(catalog,props);
+        super.initialize(repos, props);
 
         String driverClassName = props.getProperty(PROP_DRIVER_CLASS_NAME);
         if (driverClassName == null) {
             // REVIEW:  should we support connecting at the wrapper level,
             // and then allowing different servers to represent different
             // subsets of the data from the same connection?
-            assert(props.isEmpty());
+            assert (props.isEmpty());
         } else {
-            assert(props.size() == 1);
+            assert (props.size() == 1);
             loadDriverClass(driverClassName);
         }
     }
@@ -85,22 +90,22 @@ public class MedJdbcForeignDataWrapper
         try {
             Class.forName(driverClassName);
         } catch (ClassNotFoundException ex) {
-            throw FarragoResource.instance().newJdbcDriverLoadFailed(
-                driverClassName,ex);
+            throw FarragoResource.instance().newJdbcDriverLoadFailed(driverClassName,
+                ex);
         }
     }
-    
+
     // implement FarragoMedDataWrapper
     public FarragoMedDataServer newServer(
         String serverMofId,
-        Properties props) throws SQLException
+        Properties props)
+        throws SQLException
     {
         String driverClassName = props.getProperty(PROP_DRIVER_CLASS_NAME);
         if (driverClassName != null) {
             loadDriverClass(driverClassName);
         }
-        MedJdbcDataServer server =
-            new MedJdbcDataServer(serverMofId,props);
+        MedJdbcDataServer server = new MedJdbcDataServer(serverMofId, props);
         boolean success = false;
         try {
             server.initialize();
@@ -113,5 +118,6 @@ public class MedJdbcForeignDataWrapper
         }
     }
 }
+
 
 // End MedJdbcForeignDataWrapper.java

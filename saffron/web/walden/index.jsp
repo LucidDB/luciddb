@@ -2,7 +2,7 @@
 <%--
 // $Id$
 // 
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
+// (C) Copyright 2002-2003 Disruptive Tech
 // You must accept the terms in LICENSE.html to use this software.
 //
 // jhyde, 25 May, 2002

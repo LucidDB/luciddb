@@ -87,14 +87,14 @@ public:
         CacheAllocator *bufferAllocator = NULL);
 
     /**
-     * Destructor.  This should not be called directly; use close instead.  All
+     * Destructor.  Should not be called directly; use close instead.  All
      * devices must already have been unregistered.
      */
     virtual ~Cache();
 
     /**
-     * Resize this cache.  If nMemPages is greater than the number of page
-     * buffers currently allocated, allocate more.  If less, free some
+     * Resizes this cache.  If nMemPages is greater than the number of page
+     * buffers currently allocated, allocates more.  If less, frees some
      * (victimizing as necessary).
      *
      * @param nMemPages desired buffer allocation count; must be less than the
@@ -104,14 +104,14 @@ public:
     virtual void setAllocatedPageCount(uint nMemPages) = 0;
 
     /**
-     * Find out how many pages currently have allocated buffers.
+     * Gets a count of how many pages currently have allocated buffers.
      *
      * @return the current count
      */
     virtual uint getAllocatedPageCount() = 0;
 
     /**
-     * Get a snapshot of cache activity; as a side-effect, this clears
+     * Gets a snapshot of cache activity; as a side-effect, clears
      * cumulative performance counters.
      *
      * @param stats receives the snapshot
@@ -135,7 +135,7 @@ public:
 // ----------------------------------------------------------------------
     
     /**
-     * Register the given device with the Cache; this must be called exactly
+     * Registers the given device with the Cache; must be called exactly
      * once before any other caching operations can be requested for pages of
      * this device.
      *
@@ -147,8 +147,8 @@ public:
         DeviceId deviceId,SharedRandomAccessDevice pDevice) = 0;
 
     /**
-     * Unregister the given device from the Cache.  An assertion failure will
-     * result if any pages are still mapped to the specified device.
+     * Unregisters the given device from the Cache, asserting
+     * that no pages remain mapped to the specified device.
      *
      * @param deviceId the ID of the device to be unregistered
      */
@@ -156,7 +156,7 @@ public:
         DeviceId deviceId) = 0;
 
     /**
-     * Dereference a device ID to the registered object which represents it.
+     * Dereferences a device ID to the registered object which represents it.
      *
      * @param deviceId the ID of the device of interest
      * @return the device, or NULL if no such device is registered with
@@ -169,7 +169,7 @@ public:
 // ----------------------------------------------------------------------
     
     /**
-     * Flush and/or unmap selected pages.
+     * Flushes and/or unmaps selected pages.
      *
      * @param pagePredicate caller-provided interface for deciding which pages
      * should be checkpointed; the given PagePredicate will be called for each
@@ -186,7 +186,7 @@ public:
         CheckpointType checkpointType = CHECKPOINT_FLUSH_ALL) = 0;
 
     /**
-     * Determine if a particular page is mapped.
+     * Determines if a particular page is mapped.
      *
      * @param blockId BlockId of the page to test
      *
@@ -195,11 +195,10 @@ public:
     virtual bool isPageMapped(BlockId blockId) = 0;
 
     /**
-     * Allocate a free page buffer for scratch usage.  The page is considered to
-     * be locked in exclusive mode but not mapped to any device.  To
-     * release the page, use unlock(LOCKMODE_X).  If no free
-     * pages are available, this method will block until one becomes
-     * free.
+     * Allocates a free page buffer for scratch usage.  The returned page is
+     * considered to be locked in exclusive mode but not mapped to any device.
+     * To release the page, use unlock(LOCKMODE_X).  If no free pages are
+     * available, blocks until one becomes free.
      *
      *<p>
      *

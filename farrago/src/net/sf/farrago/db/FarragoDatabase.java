@@ -17,36 +17,34 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.db;
 
-import net.sf.farrago.catalog.*;
-import net.sf.farrago.util.*;
-import net.sf.farrago.trace.*;
-import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.fem.config.*;
-import net.sf.farrago.fem.fennel.*;
-import net.sf.farrago.fennel.*;
-import net.sf.farrago.query.*;
-import net.sf.farrago.session.*;
-import net.sf.farrago.resource.*;
-import net.sf.farrago.ddl.*;
-import net.sf.farrago.namespace.*;
-import net.sf.farrago.ojrex.*;
-
-import net.sf.saffron.sql.*;
-import net.sf.saffron.util.*;
-import net.sf.saffron.oj.rex.*;
-import net.sf.saffron.rel.SaffronRel;
-
-import openjava.tools.DebugOut;
-
-import java.sql.*;
 import java.io.*;
+import java.sql.*;
 import java.util.*;
 import java.util.logging.*;
 
 import javax.jmi.reflect.*;
+
+import net.sf.farrago.catalog.*;
+import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.ddl.*;
+import net.sf.farrago.fem.config.*;
+import net.sf.farrago.fem.fennel.*;
+import net.sf.farrago.fennel.*;
+import net.sf.farrago.namespace.*;
+import net.sf.farrago.ojrex.*;
+import net.sf.farrago.query.*;
+import net.sf.farrago.resource.*;
+import net.sf.farrago.session.*;
+import net.sf.farrago.trace.*;
+import net.sf.farrago.util.*;
+
+import org.eigenbase.oj.rex.*;
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.sql.*;
+import org.eigenbase.util.*;
+
 
 /**
  * FarragoDatabase is a top-level singleton representing an instance of a
@@ -58,13 +56,13 @@ import javax.jmi.reflect.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoDatabase
-    extends FarragoCompoundAllocation
+public class FarragoDatabase extends FarragoCompoundAllocation
 {
+    //~ Static fields/initializers --------------------------------------------
+
     // TODO jvs 11-Aug-2004:  Get rid of this once corresponding TODO in
     // FarragoDbSession.prepare is resolved.
     public static final Object DDL_LOCK = new Integer(1994);
-
     private static final Logger tracer = FarragoTrace.getDatabaseTracer();
 
     /**
@@ -77,12 +75,11 @@ public class FarragoDatabase
      */
     private static FarragoDatabase instance;
 
-    private FarragoCatalog systemCatalog;
+    //~ Instance fields -------------------------------------------------------
 
-    private FarragoCatalog userCatalog;
-
+    private FarragoRepos systemRepos;
+    private FarragoRepos userRepos;
     private FennelDbHandle fennelDbHandle;
-
     private OJRexImplementorTable ojRexImplementorTable;
 
     /**
@@ -100,6 +97,110 @@ public class FarragoDatabase
      */
     private File traceConfigFile;
 
+    //~ Constructors ----------------------------------------------------------
+
+    /**
+     * Creates a <code>FarragoDatabase</code>.
+     *
+     * @param sessionFactory factory for various database-level objects
+     * @param init whether to initialize the system catalog (the first time
+     *     the database is started)
+     */
+    private FarragoDatabase(
+        FarragoSessionFactory sessionFactory,
+        boolean init)
+    {
+        instance = this;
+        try {
+            final String prop = "java.util.logging.config.file";
+            String loggingConfigFile =
+                System.getProperties().getProperty(prop);
+            if (loggingConfigFile == null) {
+                throw FarragoResource.instance().newMissingHomeProperty(prop);
+            }
+            traceConfigFile = new File(loggingConfigFile);
+
+            dumpTraceConfig();
+
+            systemRepos = sessionFactory.newRepos(this, false);
+            userRepos = systemRepos;
+            if (init) {
+                systemRepos.createSystemObjects();
+            }
+
+            // REVIEW:  system/user configuration
+            FemFarragoConfig currentConfig = systemRepos.getCurrentConfig();
+
+            tracer.config("java.class.path = "
+                + System.getProperty("java.class.path"));
+
+            tracer.config("java.library.path = "
+                + System.getProperty("java.library.path"));
+
+            if (systemRepos.isFennelEnabled()) {
+                systemRepos.beginReposTxn(true);
+                try {
+                    loadFennel(
+                        sessionFactory.newFennelCmdExecutor(),
+                        init);
+                } finally {
+                    systemRepos.endReposTxn(false);
+                }
+            } else {
+                tracer.config("Fennel support disabled");
+            }
+
+            long codeCacheMaxBytes = getCodeCacheMaxBytes(currentConfig);
+            codeCache = new FarragoObjectCache(this, codeCacheMaxBytes);
+
+            // TODO:  parameter for cache size limit
+            dataWrapperCache = new FarragoObjectCache(this, Long.MAX_VALUE);
+
+            ojRexImplementorTable =
+                new FarragoOJRexImplementorTable(SqlOperatorTable.std());
+
+            // REVIEW:  sequencing from this point on
+            if (currentConfig.isUserCatalogEnabled()) {
+                userRepos = new FarragoRepos(this, true);
+                if (userRepos.getSelfAsCwmCatalog() == null) {
+                    // REVIEW:  request this explicitly?
+                    userRepos.createSystemObjects();
+                }
+
+                // During shutdown, we want to reverse this process, making
+                // userRepos revert to systemRepos.  ReposSwitcher takes
+                // care of this before userRepos gets closed.
+                addAllocation(new ReposSwitcher());
+            }
+
+            // Start up timer.  This comes last so that the first thing we do
+            // in close is to cancel it, avoiding races with other shutdown
+            // activity.
+            Timer timer = new Timer();
+            new FarragoTimerAllocation(this, timer);
+            timer.schedule(
+                new WatchdogTask(),
+                1000,
+                1000);
+
+            if (currentConfig.getCheckpointInterval() > 0) {
+                long checkpointIntervalMillis =
+                    currentConfig.getCheckpointInterval();
+                checkpointIntervalMillis *= 1000;
+                timer.schedule(
+                    new CheckpointTask(),
+                    checkpointIntervalMillis,
+                    checkpointIntervalMillis);
+            }
+        } catch (Throwable ex) {
+            tracer.throwing("FarragoDatabase", "<init>", ex);
+            close(true);
+            throw FarragoResource.instance().newDatabaseLoadFailed(ex);
+        }
+    }
+
+    //~ Methods ---------------------------------------------------------------
+
     /**
      * Establish a database reference.  If this is the first reference, the
      * database will be loaded first; otherwise, the existing database is
@@ -114,15 +215,14 @@ public class FarragoDatabase
     {
         tracer.info("connect");
 
-        // Do this first for reentrancy.
         ++nReferences;
         if (nReferences == 1) {
-            assert(instance == null);
+            assert (instance == null);
             boolean success = false;
             try {
-                FarragoDatabase newDb = new FarragoDatabase(
-                    sessionFactory,false);
-                assert(newDb == instance);
+                FarragoDatabase newDb =
+                    new FarragoDatabase(sessionFactory, false);
+                assert (newDb == instance);
                 success = true;
             } finally {
                 if (!success) {
@@ -138,7 +238,7 @@ public class FarragoDatabase
         FarragoDatabase db,
         FarragoDbSession session)
     {
-        assert(db == instance);
+        assert (db == instance);
         db.addAllocation(session);
     }
 
@@ -148,8 +248,8 @@ public class FarragoDatabase
 
         FarragoDatabase db = session.getDatabase();
 
-        assert(nReferences > 0);
-        assert(db == instance);
+        assert (nReferences > 0);
+        assert (db == instance);
 
         db.forgetAllocation(session);
 
@@ -168,7 +268,7 @@ public class FarragoDatabase
     public static synchronized boolean shutdownConditional(
         int groundReferences)
     {
-        assert(instance != null);
+        assert (instance != null);
         tracer.fine("ground reference count = " + groundReferences);
         tracer.fine("actual reference count = " + nReferences);
         if (nReferences <= groundReferences) {
@@ -185,7 +285,7 @@ public class FarragoDatabase
     public static synchronized void shutdown()
     {
         tracer.info("shutdown");
-        assert(instance != null);
+        assert (instance != null);
         try {
             instance.close(false);
         } finally {
@@ -197,10 +297,10 @@ public class FarragoDatabase
     public static boolean isReferenced()
     {
         if (nReferences > 0) {
-            assert(instance != null);
+            assert (instance != null);
             return true;
         } else {
-            assert(instance == null);
+            assert (instance == null);
             return false;
         }
     }
@@ -225,103 +325,6 @@ public class FarragoDatabase
         return dataWrapperCache;
     }
 
-    /**
-     * Creates a <code>FarragoDatabase</code>.
-     *
-     * @param sessionFactory factory for various database-level objects
-     * @param init whether to initialize the system catalog (the first time
-     *     the database is started)
-     */
-    private FarragoDatabase(FarragoSessionFactory sessionFactory,boolean init)
-    {
-        instance = this;
-        try {
-            final String prop = "java.util.logging.config.file";
-            String loggingConfigFile =
-                    System.getProperties().getProperty(prop);
-            if (loggingConfigFile == null) {
-                throw FarragoResource.instance().newMissingHomeProperty(prop);
-            }
-            traceConfigFile = new File(loggingConfigFile);
-
-            dumpTraceConfig();
-
-            systemCatalog = sessionFactory.newCatalog(this,false);
-            userCatalog = systemCatalog;
-            if (init) {
-                systemCatalog.createSystemObjects();
-            }
-
-            // REVIEW:  system/user configuration
-            FemFarragoConfig currentConfig = systemCatalog.getCurrentConfig();
-
-            tracer.config(
-                "java.class.path = "
-                + System.getProperty("java.class.path"));
-
-            tracer.config(
-                "java.library.path = "
-                + System.getProperty("java.library.path"));
-
-            if (systemCatalog.isFennelEnabled()) {
-                systemCatalog.beginReposTxn(true);
-                try {
-                    loadFennel(sessionFactory.newFennelCmdExecutor(),init);
-                } finally {
-                    systemCatalog.endReposTxn(false);
-                }
-            } else {
-                tracer.config("Fennel support disabled");
-            }
-
-            integrateSaffronTracing();
-
-            long codeCacheMaxBytes = getCodeCacheMaxBytes(currentConfig);
-            codeCache = new FarragoObjectCache(this,codeCacheMaxBytes);
-
-            // TODO:  parameter for cache size limit
-            dataWrapperCache = new FarragoObjectCache(this,Long.MAX_VALUE);
-
-            ojRexImplementorTable =
-                new FarragoOJRexImplementorTable(SqlOperatorTable.std());
-
-            // REVIEW:  sequencing from this point on
-
-            if (currentConfig.isUserCatalogEnabled()) {
-                userCatalog = new FarragoCatalog(this,true);
-                if (userCatalog.getSelfAsCwmCatalog() == null) {
-                    // REVIEW:  request this explicitly?
-                    userCatalog.createSystemObjects();
-                }
-                // During shutdown, we want to reverse this process, making
-                // userCatalog revert to systemCatalog.  CatalogSwitcher takes
-                // care of this before userCatalog gets closed.
-                addAllocation(new CatalogSwitcher());
-            }
-
-            // Start up timer.  This comes last so that the first thing we do
-            // in close is to cancel it, avoiding races with other shutdown
-            // activity.
-            Timer timer = new Timer();
-            new FarragoTimerAllocation(this,timer);
-            timer.schedule(new WatchdogTask(),1000,1000);
-
-            if (currentConfig.getCheckpointInterval() > 0) {
-                long checkpointIntervalMillis =
-                    currentConfig.getCheckpointInterval();
-                checkpointIntervalMillis *= 1000;
-                timer.schedule(
-                    new CheckpointTask(),
-                    checkpointIntervalMillis,
-                    checkpointIntervalMillis);
-            }
-        } catch (Throwable ex) {
-            tracer.throwing("FarragoDatabase","<init>",ex);
-            close(true);
-            throw FarragoResource.instance().newDatabaseLoadFailed(ex);
-        }
-    }
-
     private void close(boolean suppressExcns)
     {
         try {
@@ -330,21 +333,22 @@ public class FarragoDatabase
             closeAllocation();
             assertNoFennelHandles();
         } catch (Throwable ex) {
-            warnOnClose(ex,suppressExcns);
+            warnOnClose(ex, suppressExcns);
         }
 
         fennelDbHandle = null;
-        systemCatalog = null;
-        userCatalog = null;
+        systemRepos = null;
+        userRepos = null;
     }
 
-    private void warnOnClose(Throwable ex,boolean suppressExcns)
+    private void warnOnClose(
+        Throwable ex,
+        boolean suppressExcns)
     {
-        tracer.warning(
-            "Caught " + ex.getClass().getName() + " during database shutdown:"
-            + ex.getMessage());
+        tracer.warning("Caught " + ex.getClass().getName()
+            + " during database shutdown:" + ex.getMessage());
         if (!suppressExcns) {
-            tracer.throwing("FarragoDatabase","warnOnClose",ex);
+            tracer.throwing("FarragoDatabase", "warnOnClose", ex);
             throw Util.newInternal(ex);
         }
     }
@@ -354,7 +358,7 @@ public class FarragoDatabase
         try {
             FileReader fileReader = new FileReader(traceConfigFile);
             StringWriter stringWriter = new StringWriter();
-            FarragoUtil.copyFromReaderToWriter(fileReader,stringWriter);
+            FarragoUtil.copyFromReaderToWriter(fileReader, stringWriter);
             tracer.config(stringWriter.toString());
         } catch (IOException ex) {
             tracer.severe(
@@ -363,51 +367,37 @@ public class FarragoDatabase
         }
     }
 
-    // TODO jvs 4-June-2004:  eliminate this once all Saffron tracing
-    // has been rewritten to use java.util.logging
-    private void integrateSaffronTracing()
-    {
-        Logger saffronTrace = Logger.getLogger("net.sf.farrago.saffron");
-        if (saffronTrace.isLoggable(Level.FINE)) {
-            DebugOut.setDebugLevel(3);
-            DebugOut.setDebugOut(
-                new LoggingPrintStream(saffronTrace,Level.FINE));
-        } else {
-            DebugOut.setDebugOut(
-                new LoggingPrintStream(saffronTrace,Level.OFF));
-        }
-    }
-
     private void assertNoFennelHandles()
     {
-        assert systemCatalog != null : "FarragoDatabase.systemCatalog is " +
-                "null: server has probably already been started";
-        if (!systemCatalog.isFennelEnabled()) {
+        assert systemRepos != null : "FarragoDatabase.systemRepos is "
+        + "null: server has probably already been started";
+        if (!systemRepos.isFennelEnabled()) {
             return;
         }
         int n = FennelStorage.getHandleCount();
-        assert(n == 0);
+        assert (n == 0);
     }
 
-    private void loadFennel(FennelCmdExecutor cmdExecutor,boolean init)
+    private void loadFennel(
+        FennelCmdExecutor cmdExecutor,
+        boolean init)
     {
         tracer.fine("Loading Fennel");
         assertNoFennelHandles();
-        FemCmdOpenDatabase cmd =
-            systemCatalog.newFemCmdOpenDatabase();
+        FemCmdOpenDatabase cmd = systemRepos.newFemCmdOpenDatabase();
         FemFennelConfig fennelConfig =
-            systemCatalog.getCurrentConfig().getFennelConfig();
+            systemRepos.getCurrentConfig().getFennelConfig();
         Map attributeMap = JmiUtil.getAttributeValues(fennelConfig);
         FemDatabaseParam param;
         Iterator iter = attributeMap.entrySet().iterator();
         while (iter.hasNext()) {
             Map.Entry entry = (Map.Entry) iter.next();
 
-            String expandedValue = 
+            String expandedValue =
                 FarragoProperties.instance().expandProperties(
                     entry.getValue().toString());
 
-            param = systemCatalog.newFemDatabaseParam();
+            param = systemRepos.newFemDatabaseParam();
             param.setName(entry.getKey().toString());
             param.setValue(expandedValue);
             cmd.getParams().add(param);
@@ -415,7 +405,7 @@ public class FarragoDatabase
 
         // databaseDir is set dynamically, allowing the catalog
         // to be moved
-        param = systemCatalog.newFemDatabaseParam();
+        param = systemRepos.newFemDatabaseParam();
         param.setName("databaseDir");
         param.setValue(
             FarragoProperties.instance().getCatalogDir().getAbsolutePath());
@@ -424,22 +414,21 @@ public class FarragoDatabase
         iter = cmd.getParams().iterator();
         while (iter.hasNext()) {
             param = (FemDatabaseParam) iter.next();
+
             // REVIEW:  use Fennel tracer instead?
-            tracer.config(
-                "Fennel parameter " + param.getName() + "="
+            tracer.config("Fennel parameter " + param.getName() + "="
                 + param.getValue());
         }
 
         cmd.setCreateDatabase(init);
 
-        NativeTrace nativeTrace =
-            new NativeTrace("net.sf.fennel.");
+        NativeTrace nativeTrace = new NativeTrace("net.sf.fennel.");
 
         FennelJavaHandle hNativeTrace =
-            FennelDbHandle.allocateNewObjectHandle(this,nativeTrace);
+            FennelDbHandle.allocateNewObjectHandle(this, nativeTrace);
         cmd.setJavaTraceHandle(hNativeTrace.getLongHandle());
-        fennelDbHandle = new FennelDbHandle(
-            systemCatalog,systemCatalog,this,cmdExecutor,cmd);
+        fennelDbHandle =
+            new FennelDbHandle(systemRepos, systemRepos, this, cmdExecutor, cmd);
 
         tracer.config("Fennel successfully loaded");
     }
@@ -455,21 +444,21 @@ public class FarragoDatabase
     /**
      * .
      *
-     * @return system catalog for this database
+     * @return system repos for this database
      */
-    public FarragoCatalog getSystemCatalog()
+    public FarragoRepos getSystemRepos()
     {
-        return systemCatalog;
+        return systemRepos;
     }
 
     /**
      * .
      *
-     * @return user catalog for this database
+     * @return user repos for this database
      */
-    public FarragoCatalog getUserCatalog()
+    public FarragoRepos getUserRepos()
     {
-        return userCatalog;
+        return userRepos;
     }
 
     /**
@@ -505,15 +494,13 @@ public class FarragoDatabase
     {
         final FarragoPreparingStmt stmt =
             new FarragoPreparingStmt(stmtValidator);
-        return prepareStmtImpl(
-            stmt,sqlNode,owner,viewInfo);
+        return prepareStmtImpl(stmt, sqlNode, owner, viewInfo);
     }
-
 
     /**
      * Implement a logical or physical query plan but do not execute it.
      * @param prep the FarragoSessionPreparingStmt that is managing the query.
-     * @param rootRel root of query plan (saffron relational expression)
+     * @param rootRel root of query plan (relational expression)
      * @param sqlKind SqlKind for the relational expression: only
      *   SqlKind.Explain and SqlKind.Dml are special cases.
      * @param logical true for a logical query plan (still needs to be
@@ -524,7 +511,9 @@ public class FarragoDatabase
      */
     public FarragoSessionExecutableStmt implementStmt(
         FarragoSessionPreparingStmt prep,
-        SaffronRel rootRel, SqlKind sqlKind, boolean logical,
+        RelNode rootRel,
+        SqlKind sqlKind,
+        boolean logical,
         FarragoAllocationOwner owner)
     {
         try {
@@ -554,18 +543,17 @@ public class FarragoDatabase
 
         // Use unparsed validated SQL as cache key.  This eliminates trivial
         // differences such as whitespace and implicit qualifiers.
-
         final SqlNode validatedSqlNode = stmt.validate(sqlNode);
 
-        SqlDialect sqlDialect = new SqlDialect(
-            stmt.getSession().getDatabaseMetaData());
+        SqlDialect sqlDialect =
+            new SqlDialect(stmt.getSession().getDatabaseMetaData());
         final String sql = validatedSqlNode.toSqlString(sqlDialect);
 
         if (viewInfo != null) {
             SqlSelect select = (SqlSelect) validatedSqlNode;
             if (select.getOrderList() != null) {
-                throw
-                    FarragoResource.instance().newValidatorInvalidViewOrderBy();
+                throw FarragoResource.instance()
+                    .newValidatorInvalidViewOrderBy();
             }
 
             // Need to force preparation so we can dig out required info, so
@@ -576,23 +564,23 @@ public class FarragoDatabase
             // statement, some of the tables it depends on may not have
             // storage defined yet.)
             viewInfo.validatedSql = sql;
-            stmt.prepareViewInfo(validatedSqlNode,viewInfo);
+            stmt.prepareViewInfo(validatedSqlNode, viewInfo);
             return null;
         }
 
-        FarragoObjectCache.CachedObjectFactory stmtFactory = new
-            FarragoObjectCache.CachedObjectFactory()
-            {
+        FarragoObjectCache.CachedObjectFactory stmtFactory =
+            new FarragoObjectCache.CachedObjectFactory() {
                 public void initializeEntry(
                     Object key,
                     FarragoObjectCache.UninitializedEntry entry)
                 {
-                    assert(key.equals(sql));
+                    assert (key.equals(sql));
                     FarragoSessionExecutableStmt executableStmt =
                         stmt.prepare(validatedSqlNode);
-                    long memUsage = FarragoUtil.getStringMemoryUsage(sql)
+                    long memUsage =
+                        FarragoUtil.getStringMemoryUsage(sql)
                         + executableStmt.getMemoryUsage();
-                    entry.initialize(executableStmt,memUsage);
+                    entry.initialize(executableStmt, memUsage);
                 }
             };
 
@@ -600,11 +588,13 @@ public class FarragoDatabase
         FarragoSessionExecutableStmt executableStmt;
 
         do {
-            cacheEntry = codeCache.pin(sql,stmtFactory,false);
-            executableStmt = 
+            cacheEntry = codeCache.pin(sql, stmtFactory, false);
+            executableStmt =
                 (FarragoSessionExecutableStmt) cacheEntry.getValue();
 
-            if (isStale(stmt.getCatalog(),executableStmt)) {
+            if (isStale(
+                        stmt.getRepos(),
+                        executableStmt)) {
                 // TODO jvs 17-July-2004: Need DDL-vs-query concurrency control
                 // here.  FarragoRuntimeContext needs to acquire DDL-locks on
                 // referenced objects so that they cannot be modified/dropped
@@ -620,14 +610,13 @@ public class FarragoDatabase
     }
 
     private boolean isStale(
-        FarragoCatalog catalog,
+        FarragoRepos repos,
         FarragoSessionExecutableStmt stmt)
     {
         Iterator idIter = stmt.getReferencedObjectIds().iterator();
         while (idIter.hasNext()) {
             String mofid = (String) idIter.next();
-            RefBaseObject obj =
-                catalog.getRepository().getByMofId(mofid);
+            RefBaseObject obj = repos.getMdrRepos().getByMofId(mofid);
             if (obj == null) {
                 // TODO jvs 17-July-2004:  Once we support ALTER TABLE, this
                 // won't be good enough.  In addition to checking that the
@@ -642,39 +631,37 @@ public class FarragoDatabase
     public void updateSystemParameter(DdlSetSystemParamStmt ddlStmt)
     {
         // TODO:  something cleaner
-
         boolean setCodeCacheSize = false;
-        
+
         String paramName = ddlStmt.getParamName();
 
         if (paramName.equals("calcVirtualMachine")) {
-
             // sanity check
-            if (!userCatalog.isFennelEnabled()) {
-                CalcVirtualMachine vm = 
-                    userCatalog.getCurrentConfig().getCalcVirtualMachine();
+            if (!userRepos.isFennelEnabled()) {
+                CalcVirtualMachine vm =
+                    userRepos.getCurrentConfig().getCalcVirtualMachine();
                 if (vm.equals(CalcVirtualMachineEnum.CALCVM_FENNEL)) {
-                    throw FarragoResource.instance().
-                        newValidatorCalcUnavailable();
+                    throw FarragoResource.instance()
+                        .newValidatorCalcUnavailable();
                 }
             }
-            
+
             // when this parameter changes, we need to clear the code cache,
             // since cached plans may be based on the old setting
             codeCache.setMaxBytes(0);
-            
+
             // this makes sure that we reset the cache to the correct size
             // below
             setCodeCacheSize = true;
         }
-        
+
         if (paramName.equals("codeCacheMaxBytes")) {
             setCodeCacheSize = true;
         }
 
         if (setCodeCacheSize) {
             codeCache.setMaxBytes(
-                getCodeCacheMaxBytes(systemCatalog.getCurrentConfig()));
+                getCodeCacheMaxBytes(systemRepos.getCurrentConfig()));
         }
     }
 
@@ -687,21 +674,23 @@ public class FarragoDatabase
         return codeCacheMaxBytes;
     }
 
-    public void requestCheckpoint(boolean fuzzy,boolean async)
+    public void requestCheckpoint(
+        boolean fuzzy,
+        boolean async)
     {
-        if (!systemCatalog.isFennelEnabled()) {
+        if (!systemRepos.isFennelEnabled()) {
             return;
         }
 
-        systemCatalog.beginTransientTxn();
+        systemRepos.beginTransientTxn();
         try {
-            FemCmdCheckpoint cmd = systemCatalog.newFemCmdCheckpoint();
-            cmd.setDbHandle(fennelDbHandle.getFemDbHandle(systemCatalog));
+            FemCmdCheckpoint cmd = systemRepos.newFemCmdCheckpoint();
+            cmd.setDbHandle(fennelDbHandle.getFemDbHandle(systemRepos));
             cmd.setFuzzy(fuzzy);
             cmd.setAsync(async);
             fennelDbHandle.executeCmd(cmd);
         } finally {
-            systemCatalog.endTransientTxn();
+            systemRepos.endTransientTxn();
         }
     }
 
@@ -712,11 +701,12 @@ public class FarragoDatabase
      */
     public static void main(String [] args)
     {
-        FarragoDatabase database = new FarragoDatabase(
-            new FarragoDbSessionFactory(),
-            true);
+        FarragoDatabase database =
+            new FarragoDatabase(new FarragoDbSessionFactory(), true);
         database.close(false);
     }
+
+    //~ Inner Classes ---------------------------------------------------------
 
     /**
      * 1 Hz task for background activities.  Currently all it does is re-read
@@ -746,10 +736,8 @@ public class FarragoDatabase
                 } catch (IOException ex) {
                     // REVIEW:  do more?  There's a good chance this will end
                     // up in /dev/null.
-                    tracer.severe(
-                        "Caught IOException while updating "
-                        + "trace configuration:  "
-                        + ex.getMessage());
+                    tracer.severe("Caught IOException while updating "
+                        + "trace configuration:  " + ex.getMessage());
                 }
                 dumpTraceConfig();
             }
@@ -761,17 +749,18 @@ public class FarragoDatabase
         // implement Runnable
         public void run()
         {
-            requestCheckpoint(true,true);
+            requestCheckpoint(true, true);
         }
     }
 
-    private class CatalogSwitcher implements FarragoAllocation
+    private class ReposSwitcher implements FarragoAllocation
     {
         public void closeAllocation()
         {
-            userCatalog = systemCatalog;
+            userRepos = systemRepos;
         }
     }
 }
+
 
 // End FarragoDatabase.java

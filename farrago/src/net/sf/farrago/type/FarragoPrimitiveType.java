@@ -16,16 +16,15 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.type;
 
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.type.runtime.*;
 
-import net.sf.saffron.util.*;
-
 import openjava.mop.*;
+
+import org.eigenbase.util.*;
 
 
 /**
@@ -62,16 +61,17 @@ public final class FarragoPrimitiveType extends FarragoAtomicType
         boolean isNullable,
         Class classForValue)
     {
-        super(simpleType,isNullable);
+        super(simpleType, isNullable);
         this.classForValue = classForValue;
+
         // REVIEW: I'd like to have a 'getPrimitiveClass' interface to
         // implement, rather than relying on the supertype being a
         // NullablePrimitive, but its a bit of a pain to do it that way, due to
         // the desire to make it a static method ..
         if (NullablePrimitive.class.isAssignableFrom(classForValue)) {
             try {
-                classForPrimitive = NullablePrimitive.getPrimitiveClass(
-                    classForValue);
+                classForPrimitive =
+                    NullablePrimitive.getPrimitiveClass(classForValue);
             } catch (Exception ex) {
                 throw Util.newInternal(ex);
             }
@@ -120,7 +120,6 @@ public final class FarragoPrimitiveType extends FarragoAtomicType
     {
         return isNullable();
     }
-
 }
 
 

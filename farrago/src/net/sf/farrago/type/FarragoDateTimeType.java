@@ -16,21 +16,21 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
-
 package net.sf.farrago.type;
-
-import net.sf.farrago.cwm.relational.CwmSqlsimpleType;
-import net.sf.farrago.type.runtime.SqlDateTimeWithoutTZ;
-import net.sf.farrago.type.runtime.NullableValue;
-import net.sf.saffron.util.Util;
 
 import java.sql.Types;
 
-import openjava.mop.OJClass;
+import net.sf.farrago.cwm.relational.CwmSqlsimpleType;
+import net.sf.farrago.type.runtime.NullableValue;
+import net.sf.farrago.type.runtime.SqlDateTimeWithoutTZ;
+
 import openjava.mop.CannotAlterException;
 import openjava.mop.Environment;
+import openjava.mop.OJClass;
 import openjava.ptree.*;
+
+import org.eigenbase.oj.util.*;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -40,42 +40,56 @@ import openjava.ptree.*;
  * @since May 1, 2004
  * @version $Id$
  **/
-public class FarragoDateTimeType extends FarragoPrecisionType {
+public class FarragoDateTimeType extends FarragoPrecisionType
+{
+    //~ Instance fields -------------------------------------------------------
+
     private boolean hasTimeZone;
 
+    //~ Constructors ----------------------------------------------------------
+
     public FarragoDateTimeType(
-            CwmSqlsimpleType simpleType,
-            boolean isNullable,
-            boolean hasTZ,
-            int precision,
-            FarragoTypeFactory typeFactory) {
-        super(simpleType,isNullable,precision,0,null,null);
+        CwmSqlsimpleType simpleType,
+        boolean isNullable,
+        boolean hasTZ,
+        int precision,
+        FarragoTypeFactory typeFactory)
+    {
+        super(simpleType, isNullable, precision, 0, null, null);
         assertSupportedType(simpleType, precision);
         hasTimeZone = hasTZ;
         computeDigest();
         this.factory = typeFactory;
     }
 
-    private void assertSupportedType(CwmSqlsimpleType simpleType, int precision) {
+    //~ Methods ---------------------------------------------------------------
+
+    private void assertSupportedType(
+        CwmSqlsimpleType simpleType,
+        int precision)
+    {
         switch (simpleType.getTypeNumber().intValue()) {
         case Types.DATE:
         case Types.TIME:
         case Types.TIMESTAMP:
             return;
         }
-        assert (0 <= precision && precision <= 3) : "Unsupported precision " + precision + " in type " + simpleType.getName();
+        assert ((0 <= precision) && (precision <= 3)) : "Unsupported precision "
+        + precision + " in type " + simpleType.getName();
         throw new AssertionError("Unsupported type:" + simpleType.getName());
     }
 
-
-    public boolean hasTimeZone() {
+    public boolean hasTimeZone()
+    {
         return hasTimeZone;
     }
 
     // override FarragoAtomicType
-    protected void generateTypeString(StringBuffer sb,boolean withDetail)
+    protected void generateTypeString(
+        StringBuffer sb,
+        boolean withDetail)
     {
-        super.generateTypeString(sb,withDetail);
+        super.generateTypeString(sb, withDetail);
         if (!withDetail) {
             return;
         }
@@ -83,12 +97,14 @@ public class FarragoDateTimeType extends FarragoPrecisionType {
             sb.append(" WITH TIME ZONE");
         }
     }
-    
-    public int getOctetLength() {
+
+    public int getOctetLength()
+    {
         return 8; // sizeof long.
     }
 
-    protected OJClass getOjClass(OJClass declarer) {
+    protected OJClass getOjClass(OJClass declarer)
+    {
         if (ojClass != null) {
             return ojClass;
         }
@@ -109,49 +125,60 @@ public class FarragoDateTimeType extends FarragoPrecisionType {
             superclass = SqlDateTimeWithoutTZ.SqlTimestamp.class;
             break;
         default:
-           throw new AssertionError("Unsupported type:" + this.getSimpleType().getName());
+            throw new AssertionError("Unsupported type:"
+                + this.getSimpleType().getName());
         }
 
         TypeName [] superDecl =
-            new TypeName [] { TypeName.forClass(superclass) };
+            new TypeName [] { OJUtil.typeNameForClass(superclass) };
 
         TypeName [] interfaceDecls = null;
         if (isNullable()) {
             interfaceDecls =
-                new TypeName [] { TypeName.forClass(NullableValue.class) };
+                new TypeName [] {
+                    OJUtil.typeNameForClass(NullableValue.class)
+                };
         }
         ClassDeclaration decl =
-            new ClassDeclaration(
-                new ModifierList(ModifierList.PUBLIC | ModifierList.STATIC),
+            new ClassDeclaration(new ModifierList(ModifierList.PUBLIC
+                        | ModifierList.STATIC),
                 "Oj_inner_" + getFactoryImpl().generateClassId(),
                 superDecl,
                 interfaceDecls,
                 memberDecls);
-        ojClass = new OJTypedClass(declarer,decl,this);
+        ojClass = new OJTypedClass(declarer, decl, this);
         try {
             declarer.addClass(ojClass);
         } catch (CannotAlterException e) {
-            throw Util.newInternal(e,"holder class must be OJClassSourceCode");
+            throw Util.newInternal(e, "holder class must be OJClassSourceCode");
         }
         Environment env = declarer.getEnvironment();
-        env.recordMemberClass(declarer.getName(),decl.getName());
-        env.getGlobalEnvironment().record(ojClass.getName(),ojClass);
+        OJUtil.recordMemberClass(
+            env,
+            declarer.getName(),
+            decl.getName());
+        OJUtil.getGlobalEnvironment(env).record(
+            ojClass.getName(),
+            ojClass);
         return ojClass;
     }
 
-    public boolean hasClassForPrimitive() {
+    public boolean hasClassForPrimitive()
+    {
         return true;
     }
 
-    public Class getClassForPrimitive() {
+    public Class getClassForPrimitive()
+    {
         return SqlDateTimeWithoutTZ.getPrimitiveClass();
     }
-    
+
     // implement FarragoAtomicType
     public boolean requiresValueAccess()
     {
         return true;
     }
 }
+
 
 // End FarragoDateTimeType.java

@@ -6,36 +6,36 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.namespace.ftrs;
-
-import net.sf.farrago.namespace.*;
-import net.sf.farrago.namespace.impl.*;
-import net.sf.farrago.util.*;
-import net.sf.farrago.type.*;
-import net.sf.farrago.catalog.*;
-import net.sf.farrago.resource.*;
-import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.fem.fennel.*;
-
-import net.sf.saffron.core.*;
-import net.sf.saffron.util.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.convert.*;
 
 import java.sql.*;
 import java.util.*;
+
+import net.sf.farrago.catalog.*;
+import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.fem.fennel.*;
+import net.sf.farrago.namespace.*;
+import net.sf.farrago.namespace.impl.*;
+import net.sf.farrago.resource.*;
+import net.sf.farrago.type.*;
+import net.sf.farrago.util.*;
+
+import org.eigenbase.rel.*;
+import org.eigenbase.rel.convert.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.util.*;
+
 
 /**
  * FtrsDataServer implements the {@link FarragoMedDataServer} interface
@@ -46,19 +46,24 @@ import java.util.*;
  */
 class FtrsDataServer extends MedAbstractLocalDataServer
 {
-    private FarragoCatalog catalog;
-    
+    //~ Instance fields -------------------------------------------------------
+
+    private FarragoRepos repos;
     private FarragoTypeFactory indexTypeFactory;
-    
+
+    //~ Constructors ----------------------------------------------------------
+
     FtrsDataServer(
         String serverMofId,
         Properties props,
-        FarragoCatalog catalog)
+        FarragoRepos repos)
     {
-        super(serverMofId,props);
-        this.catalog = catalog;
-        indexTypeFactory = new FarragoTypeFactoryImpl(catalog);
+        super(serverMofId, props);
+        this.repos = repos;
+        indexTypeFactory = new FarragoTypeFactoryImpl(repos);
     }
+
+    //~ Methods ---------------------------------------------------------------
 
     // implement FarragoMedDataServer
     public FarragoMedNameDirectory getNameDirectory()
@@ -72,21 +77,22 @@ class FtrsDataServer extends MedAbstractLocalDataServer
         String [] localName,
         Properties tableProps,
         FarragoTypeFactory typeFactory,
-        SaffronType rowType,
+        RelDataType rowType,
         Map columnPropMap)
         throws SQLException
     {
-        return new FtrsTable(localName,rowType,tableProps,columnPropMap);
+        return new FtrsTable(localName, rowType, tableProps, columnPropMap);
     }
 
     // implement FarragoMedDataServer
-    public Object getRuntimeSupport(Object param) throws SQLException
+    public Object getRuntimeSupport(Object param)
+        throws SQLException
     {
         return null;
     }
 
     // implement FarragoMedDataServer
-    public void registerRules(SaffronPlanner planner)
+    public void registerRules(RelOptPlanner planner)
     {
         super.registerRules(planner);
         planner.addRule(new FtrsTableProjectionRule());
@@ -97,20 +103,15 @@ class FtrsDataServer extends MedAbstractLocalDataServer
     }
 
     // implement FarragoMedLocalDataServer
-    public long createIndex(
-        CwmSqlindex index)
+    public long createIndex(CwmSqlindex index)
     {
-        catalog.beginTransientTxn();
+        repos.beginTransientTxn();
         try {
-            FemCmdCreateIndex cmd = catalog.newFemCmdCreateIndex();
-            if (!catalog.isFennelEnabled()) {
-                return 0;
-            }
-        
-            initIndexCmd(cmd,index);
+            FemCmdCreateIndex cmd = repos.newFemCmdCreateIndex();
+            initIndexCmd(cmd, index);
             return getFennelDbHandle().executeCmd(cmd);
         } finally {
-            catalog.endTransientTxn();
+            repos.endTransientTxn();
         }
     }
 
@@ -120,35 +121,30 @@ class FtrsDataServer extends MedAbstractLocalDataServer
         long rootPageId,
         boolean truncate)
     {
-        catalog.beginTransientTxn();
+        repos.beginTransientTxn();
         try {
             FemCmdDropIndex cmd;
             if (truncate) {
-                cmd = catalog.newFemCmdTruncateIndex();
+                cmd = repos.newFemCmdTruncateIndex();
             } else {
-                cmd = catalog.newFemCmdDropIndex();
+                cmd = repos.newFemCmdDropIndex();
             }
-            if (!catalog.isFennelEnabled()) {
-                return;
-            }
-            initIndexCmd(cmd,index);
+            initIndexCmd(cmd, index);
             cmd.setRootPageId(rootPageId);
             getFennelDbHandle().executeCmd(cmd);
         } finally {
-            catalog.endTransientTxn();
+            repos.endTransientTxn();
         }
     }
-    
+
     private void initIndexCmd(
-        FemIndexCmd cmd,CwmSqlindex index)
+        FemIndexCmd cmd,
+        CwmSqlindex index)
     {
-        cmd.setDbHandle(getFennelDbHandle().getFemDbHandle(catalog));
+        cmd.setDbHandle(getFennelDbHandle().getFemDbHandle(repos));
         cmd.setTupleDesc(
-            FtrsUtil.getCoverageTupleDescriptor(
-                indexTypeFactory,
-                index));
-        cmd.setKeyProj(
-            FtrsUtil.getDistinctKeyProjection(catalog,index));
+            FtrsUtil.getCoverageTupleDescriptor(indexTypeFactory, index));
+        cmd.setKeyProj(FtrsUtil.getDistinctKeyProjection(repos, index));
         cmd.setSegmentId(getIndexSegmentId(index));
         cmd.setIndexId(JmiUtil.getObjectId(index));
     }
@@ -160,17 +156,17 @@ class FtrsDataServer extends MedAbstractLocalDataServer
      *
      * @return containing SegmentId
      */
-    static long getIndexSegmentId(
-        CwmSqlindex index)
+    static long getIndexSegmentId(CwmSqlindex index)
     {
         // TODO:  share symbolic enum with Fennel rather than hard-coding
         // values here
-        if (FarragoCatalog.isTemporary(index)) {
+        if (FarragoRepos.isTemporary(index)) {
             return 2;
         } else {
             return 1;
         }
     }
 }
+
 
 // End FtrsDataServer.java

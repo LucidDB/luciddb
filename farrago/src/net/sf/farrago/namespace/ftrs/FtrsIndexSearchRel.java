@@ -16,21 +16,20 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.namespace.ftrs;
+
+import java.util.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
-import net.sf.farrago.type.*;
 import net.sf.farrago.query.*;
+import net.sf.farrago.type.*;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.rex.RexNode;
-
-import java.util.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.rex.RexNode;
 
 
 /**
@@ -49,13 +48,9 @@ class FtrsIndexSearchRel extends FennelPullSingleRel
 
     /** Aggregation used since multiple inheritance is unavailable. */
     final FtrsIndexScanRel scanRel;
-
     final boolean isUniqueKey;
-
     final boolean isOuter;
-
     final Integer [] inputKeyProj;
-
     final Integer [] inputJoinProj;
 
     //~ Constructors ----------------------------------------------------------
@@ -72,13 +67,15 @@ class FtrsIndexSearchRel extends FennelPullSingleRel
      */
     public FtrsIndexSearchRel(
         FtrsIndexScanRel scanRel,
-        SaffronRel child,
+        RelNode child,
         boolean isUniqueKey,
         boolean isOuter,
         Integer [] inputKeyProj,
         Integer [] inputJoinProj)
     {
-        super(scanRel.getCluster(),child);
+        super(
+            scanRel.getCluster(),
+            child);
         this.scanRel = scanRel;
         this.isUniqueKey = isUniqueKey;
         this.isOuter = isOuter;
@@ -106,67 +103,73 @@ class FtrsIndexSearchRel extends FennelPullSingleRel
     {
         return new FtrsIndexSearchRel(
             scanRel,
-            OptUtil.clone(child),
+            RelOptUtil.clone(child),
             isUniqueKey,
             isOuter,
             inputKeyProj,
             inputJoinProj);
     }
 
-    // implement SaffronRel
-    public PlanCost computeSelfCost(SaffronPlanner planner)
+    // implement RelNode
+    public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
         // TODO:  refined costing
-        return scanRel.computeCost(planner,getRows());
+        return scanRel.computeCost(
+            planner,
+            getRows());
     }
 
-    // implement SaffronRel
-    public SaffronType deriveRowType()
+    // implement RelNode
+    public RelDataType deriveRowType()
     {
         if (inputJoinProj != null) {
             // We're implementing a join, so make up an appropriate join type.
-            final SaffronField [] childFields = child.getRowType().getFields();
-            SaffronType leftType = getCluster().typeFactory.createProjectType(
-                new SaffronTypeFactory.FieldInfo()
-                {
-                    public int getFieldCount()
-                    {
-                        return inputJoinProj.length;
-                    }
+            final RelDataTypeField [] childFields =
+                child.getRowType().getFields();
+            RelDataType leftType =
+                getCluster().typeFactory.createProjectType(
+                    new RelDataTypeFactory.FieldInfo() {
+                        public int getFieldCount()
+                        {
+                            return inputJoinProj.length;
+                        }
 
-                    public String getFieldName(int index)
-                    {
-                        int i = inputJoinProj[index].intValue();
-                        return childFields[i].getName();
-                    }
+                        public String getFieldName(int index)
+                        {
+                            int i = inputJoinProj[index].intValue();
+                            return childFields[i].getName();
+                        }
 
-                    public SaffronType getFieldType(int index)
-                    {
-                        int i = inputJoinProj[index].intValue();
-                        return childFields[i].getType();
-                    }
-                });
+                        public RelDataType getFieldType(int index)
+                        {
+                            int i = inputJoinProj[index].intValue();
+                            return childFields[i].getType();
+                        }
+                    });
 
-            SaffronType rightType = scanRel.getRowType();
+            RelDataType rightType = scanRel.getRowType();
 
             // for outer join, have to make left side nullable
             if (isOuter) {
-                rightType = getFarragoTypeFactory().createTypeWithNullability(
-                    rightType,true);
+                rightType =
+                    getFarragoTypeFactory().createTypeWithNullability(rightType,
+                        true);
             }
 
             return getCluster().typeFactory.createJoinType(
-                new SaffronType[] { leftType, rightType });
+                new RelDataType [] { leftType, rightType });
         } else {
-            assert(!isOuter);
+            assert (!isOuter);
             return scanRel.getRowType();
         }
     }
 
-    // implement SaffronRel
-    public void explain(PlanWriter pw)
+    // implement RelNode
+    public void explain(RelOptPlanWriter pw)
     {
-        Object projection,inputKeyProjObj,inputJoinProjObj;
+        Object projection;
+        Object inputKeyProjObj;
+        Object inputJoinProjObj;
 
         if (scanRel.projectedColumns == null) {
             projection = "*";
@@ -188,38 +191,34 @@ class FtrsIndexSearchRel extends FennelPullSingleRel
         pw.explain(
             this,
             new String [] {
-                "child","table","projection","index","uniqueKey",
-                "preserveOrder","outer","inputKeyProj","inputJoinProj"
+                "child", "table", "projection", "index", "uniqueKey",
+                "preserveOrder", "outer", "inputKeyProj", "inputJoinProj"
             },
             new Object [] {
-                Arrays.asList(scanRel.ftrsTable.getQualifiedName()),
-                projection,
-                scanRel.index.getName(),Boolean.valueOf(isUniqueKey),
+                Arrays.asList(scanRel.ftrsTable.getQualifiedName()), projection,
+                scanRel.index.getName(), Boolean.valueOf(isUniqueKey),
                 Boolean.valueOf(scanRel.isOrderPreserving),
-                Boolean.valueOf(isOuter),
-                inputKeyProjObj,
-                inputJoinProjObj
+                Boolean.valueOf(isOuter), inputKeyProjObj, inputJoinProjObj
             });
     }
 
     // implement FennelRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
-        FarragoCatalog catalog = getPreparingStmt().getCatalog();
+        FarragoRepos repos = getPreparingStmt().getRepos();
 
-        FemIndexSearchDef searchStream =
-            catalog.newFemIndexSearchDef();
+        FemIndexSearchDef searchStream = repos.newFemIndexSearchDef();
 
         scanRel.defineScanStream(searchStream);
         searchStream.setUniqueKey(isUniqueKey);
         searchStream.setOuterJoin(isOuter);
         if (inputKeyProj != null) {
             searchStream.setInputKeyProj(
-                FennelRelUtil.createTupleProjection(catalog,inputKeyProj));
+                FennelRelUtil.createTupleProjection(repos, inputKeyProj));
         }
         if (inputJoinProj != null) {
             searchStream.setInputJoinProj(
-                FennelRelUtil.createTupleProjection(catalog,inputJoinProj));
+                FennelRelUtil.createTupleProjection(repos, inputJoinProj));
         }
         searchStream.getInput().add(
             implementor.visitFennelChild((FennelRel) child));
@@ -228,7 +227,7 @@ class FtrsIndexSearchRel extends FennelPullSingleRel
     }
 
     // override Rel
-    public SaffronTable getTable()
+    public RelOptTable getTable()
     {
         return scanRel.getTable();
     }

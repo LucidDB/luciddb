@@ -49,19 +49,19 @@ protected:
     explicit ByteInputStream();
 
     /**
-     * readNextBuffer must be implemented by derived class by calling either
+     * Must be implemented by derived class by calling either
      * setBuffer or nullifyBuffer.
      */
     virtual void readNextBuffer() = 0;
     
     /**
-     * readPrevBuffer must be implemented by derived class if seekBackward is
+     * Must be implemented by derived class if seekBackward is
      * to be supported.
      */
     virtual void readPrevBuffer();
 
     /**
-     * Set the current buffer to be read.
+     * Sets the current buffer to be read.
      *
      * @param pBuffer receives start address of new buffer
      *
@@ -72,7 +72,7 @@ protected:
         uint cbBuffer);
 
     /**
-     * Nullify the current buffer, indicating no more data is available.
+     * Nullifies the current buffer, indicating no more data is available.
      */
     void nullifyBuffer();
 
@@ -88,7 +88,7 @@ protected:
     
 public:
     /**
-     * Read bytes from the stream.
+     * Reads bytes from the stream.
      *
      * @param pData target buffer to read into
      *
@@ -99,7 +99,7 @@ public:
     uint readBytes(void *pData,uint cbRequested);
 
     /**
-     * Read a fixed-size value from the stream.
+     * Reads a fixed-size value from the stream.
      *
      * @param value value to write; type must be memcpy-safe
      *
@@ -112,8 +112,8 @@ public:
     }
     
     /**
-     * Copyless alternative for reading bytes from the stream.  This call
-     * provides direct access to the stream's internal buffer, but doesn't
+     * Copyless alternative for reading bytes from the stream.
+     * Provides direct access to the stream's internal buffer, but doesn't
      * move the stream position (see consumeReadPointer).
      *
      *<p>
@@ -140,7 +140,7 @@ public:
     PConstBuffer getReadPointer(uint cbRequested,uint *pcbActual = NULL);
 
     /**
-     * Advance stream position after a call to getReadPointer.
+     * Advances stream position after a call to getReadPointer.
      *
      * @param cbUsed number of bytes to advance; must be less than or equal to
      * the value of cbActual returned by the last call to getReadPointer
@@ -148,14 +148,14 @@ public:
     void consumeReadPointer(uint cbUsed);
 
     /**
-     * Skip forward in stream.
+     * Skips forward in stream.
      *
      * @param cb number of bytes to advance
      */
     void seekForward(uint cb);
 
     /**
-     * Skip backward in stream.  Not all stream implementations support this
+     * Skips backward in stream.  Not all stream implementations support this
      * behavior.
      *
      * @param cb number of bytes backward to seek
@@ -164,7 +164,7 @@ public:
 
     
     /**
-     * Create a new uninitialized marker for this stream.  The returned marker
+     * Creates a new uninitialized marker for this stream.  The returned marker
      * must be passed to mark() in order to initialize it.
      *
      * @return shared pointer to new marker
@@ -172,7 +172,7 @@ public:
     virtual SharedByteStreamMarker newMarker();
     
     /**
-     * Mark the current stream position in preparation for a future call to
+     * Marks the current stream position in preparation for a future call to
      * reset().  How long this marker remains valid depends upon the
      * implementation of the ByteInputStream.
      *
@@ -183,7 +183,7 @@ public:
     virtual void mark(ByteStreamMarker &marker);
 
     /**
-     * Reset stream to a previously marked position.  The base implementation
+     * Resets stream to a previously marked position.  The base implementation
      * uses seekForward/seekBackward (i.e. sequential access), making
      * it inefficient for large streams.  Derived classes may override
      * with more efficient implementations such as random access.

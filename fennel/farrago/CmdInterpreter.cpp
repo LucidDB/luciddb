@@ -25,7 +25,7 @@
 #include "fennel/farrago/JavaTraceTarget.h"
 
 #include "fennel/xo/TupleStreamGraph.h"
-#include "fennel/farrago/TupleStreamBuilder.h"
+#include "fennel/farrago/ExecutionStreamBuilder.h"
 #include "fennel/cache/CacheParams.h"
 #include "fennel/common/ConfigMap.h"
 #include "fennel/common/FennelExcn.h"
@@ -354,7 +354,7 @@ void CmdInterpreter::visit(ProxyCmdPrepareExecutionStreamGraph &cmd)
         pTxnHandle->pDb,
         pTxnHandle->pTableWriterFactory,
         pStreamGraphHandle);
-    TupleStreamBuilder streamBuilder(
+    ExecutionStreamBuilder streamBuilder(
         pTxnHandle->pDb,
         streamFactory,
         pStreamGraphHandle->getGraph());

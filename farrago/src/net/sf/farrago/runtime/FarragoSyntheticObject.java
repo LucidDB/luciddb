@@ -16,23 +16,20 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.runtime;
+
+import java.lang.reflect.*;
+import java.nio.*;
+import java.util.*;
 
 import net.sf.farrago.type.runtime.*;
 
-import net.sf.saffron.runtime.*;
-import net.sf.saffron.util.*;
-
-import java.lang.reflect.*;
-
-import java.nio.*;
-
-import java.util.*;
+import org.eigenbase.runtime.*;
+import org.eigenbase.util.*;
 
 
 /**
- * FarragoSyntheticObject refines Saffron's SyntheticObject with
+ * FarragoSyntheticObject refines SyntheticObject with
  * Farrago-specific runtime information such as null values.
  *
  * @author John V. Sichi
@@ -44,7 +41,7 @@ public abstract class FarragoSyntheticObject extends SyntheticObject
 
     /**
      * Array of BitReferences to be used by marshal/unmarshal.
-     * 
+     *
      * <p>
      * TODO:  assert somewhere that position in this array corresponds to
      * FemTupleAccessor info.
@@ -86,7 +83,7 @@ public abstract class FarragoSyntheticObject extends SyntheticObject
         int nBitsLeftInByte = 8;
         for (int i = 0; i < bitReferences.length; ++i) {
             if (nBitsLeftInByte == 0) {
-                byteBuffer.put(bitFieldByteOffset,oneByte);
+                byteBuffer.put(bitFieldByteOffset, oneByte);
                 ++bitFieldByteOffset;
                 nBitsLeftInByte = 8;
                 oneByte = 0;
@@ -100,7 +97,7 @@ public abstract class FarragoSyntheticObject extends SyntheticObject
         }
 
         // flush last byte
-        byteBuffer.put(bitFieldByteOffset,oneByte);
+        byteBuffer.put(bitFieldByteOffset, oneByte);
     }
 
     /**
@@ -146,6 +143,7 @@ public abstract class FarragoSyntheticObject extends SyntheticObject
             for (int i = 0; i < fields.length; ++i) {
                 Field field = fields[i];
                 Object obj = field.get(this);
+
                 // NOTE:  order has to match Fennel's TupleAccessor.cpp
                 if (obj instanceof NullablePrimitive.NullableBoolean) {
                     // add this field's holder object as a bit value
@@ -184,13 +182,15 @@ public abstract class FarragoSyntheticObject extends SyntheticObject
                 Class clazz = field.getType();
                 if (!clazz.isPrimitive()) {
                     Object obj = clazz.newInstance();
-                    field.set(this,obj);
+                    field.set(this, obj);
                 }
             }
         } catch (Exception ex) {
             throw Util.newInternal(ex);
         }
     }
+
+    //~ Inner Classes ---------------------------------------------------------
 
     /**
      * Implementation of BitReference for accessing a null indicator.
@@ -204,13 +204,13 @@ public abstract class FarragoSyntheticObject extends SyntheticObject
         {
             nullableValue.setNull(bit);
         }
-        
+
         public boolean getBit()
         {
             return nullableValue.isNull();
         }
     }
-    
+
     /**
      * Implementation of BitReference for accessing a NOT NULL boolean field.
      */
@@ -222,12 +222,12 @@ public abstract class FarragoSyntheticObject extends SyntheticObject
         public void setBit(boolean bit)
         {
             try {
-                field.setBoolean(FarragoSyntheticObject.this,bit);
+                field.setBoolean(FarragoSyntheticObject.this, bit);
             } catch (IllegalAccessException ex) {
                 throw Util.newInternal(ex);
             }
         }
-        
+
         public boolean getBit()
         {
             try {

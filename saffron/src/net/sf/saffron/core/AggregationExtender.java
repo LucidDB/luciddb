@@ -1,37 +1,35 @@
 /*
-// $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Saffron preprocessor and data engine.
+// Copyright (C) 2002-2004 Disruptive Tech
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package net.sf.saffron.core;
 
+
 /**
  * An <code>AggregationExtender</code> allows end-users to define their own
  * aggregate functions.
- * 
+ *
  * <p>
  * An aggregation extender supports one or more sets of argument types,
  * <i>T</i>. <i>T</i> can be a single type (such as {@link String} or
  * <code>int</code>), several types (such as <code>String, int</code>), or
  * empty. For each set <i>T</i>, it declares 4 methods:
- * 
+ *
  * <ul>
  * <li>
  * <code>Object start(T dummy)</code> creates an accumulator
@@ -50,12 +48,12 @@ package net.sf.saffron.core;
  * from an accumulator
  * </li>
  * </ul>
- * 
+ *
  * (The <code>merge</code> method is actually optional. If it is not present,
  * {@link net.sf.saffron.oj.xlat.ExtenderAggregation#canMerge} returns
  * <code>false</code>.)
  * </p>
- * 
+ *
  * <p>
  * Consider the query
  * <blockquote>
@@ -67,12 +65,12 @@ package net.sf.saffron.core;
  * from emps as emp</pre>
  * </blockquote>
  * </p>
- * 
+ *
  * <p> Here <i>T</i> is <code>String</code>, and so {@link
  * net.sf.saffron.ext.LocaleMin#start(String)} will be called when a group
  * starts, {@link net.sf.saffron.ext.LocaleMin#next(String,Object)} on each
  * row, and so forth.  </p>
- * 
+ *
  * <p>
  * Note that the aggregation object is evaluated <em>each time a group
  * starts</em>. If each department has its own locale, one could write
@@ -91,8 +89,6 @@ package net.sf.saffron.core;
  */
 public interface AggregationExtender
 {
-    //~ Static fields/initializers --------------------------------------------
-
     /** The name of the "aggregate" method. */
     public static final String METHOD_AGGREGATE = "aggregate";
 

@@ -35,9 +35,9 @@ public:
     virtual ~LogicalTxnParticipantFactory();
 
     /**
-     * Recover a LogicalTxnParticipant from the log.  Using the classId to
+     * Recovers a LogicalTxnParticipant from the log.  Using the classId to
      * determine the participant type to create, the factory reads required
-     * constructor parameters from the log input stream.  The factory may pool
+     * constructor parameters from the log input stream.  The factory may peool
      * participant instances; i.e. when the same constructor parameters are
      * encountered a second time, the factory can return the same instance.
      * (TODO:  refine this when parallelized recovery is implemented.)  The

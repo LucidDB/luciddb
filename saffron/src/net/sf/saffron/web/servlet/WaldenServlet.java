@@ -1,39 +1,28 @@
 /*
-// $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// You must accept the terms in LICENSE.html to use this software.
+// Saffron preprocessor and data engine.
+// Copyright (C) 2002-2004 Disruptive Tech
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package net.sf.saffron.web.servlet;
-
-import net.sf.saffron.util.SaffronProperties;
-import net.sf.saffron.util.Util;
-import net.sf.saffron.walden.Handler;
-import net.sf.saffron.walden.Interpreter;
-import net.sf.saffron.walden.PrintHandler;
-
-import openjava.tools.parser.Parser;
 
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
-
 import java.util.Enumeration;
 import java.util.Properties;
 
@@ -42,6 +31,15 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletException;
 import javax.servlet.http.*;
+
+import net.sf.saffron.walden.Handler;
+import net.sf.saffron.walden.Interpreter;
+import net.sf.saffron.walden.PrintHandler;
+
+import openjava.tools.parser.Parser;
+
+import org.eigenbase.util.SaffronProperties;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -54,8 +52,6 @@ import javax.servlet.http.*;
  */
 public class WaldenServlet extends HttpServlet
 {
-    //~ Methods ---------------------------------------------------------------
-
     public String getServletInfo()
     {
         return "Execute a Java/Saffron statement";
@@ -65,24 +61,26 @@ public class WaldenServlet extends HttpServlet
     {
     }
 
-    public void init(ServletConfig config) throws ServletException
+    public void init(ServletConfig config)
+        throws ServletException
     {
         super.init(config);
     }
 
     protected void doGet(
         HttpServletRequest request,
-        HttpServletResponse response) throws ServletException,IOException
+        HttpServletResponse response)
+        throws ServletException, IOException
     {
-        processRequest(request,response);
+        processRequest(request, response);
     }
 
     protected void doPost(
         HttpServletRequest request,
         HttpServletResponse response)
-        throws ServletException,java.io.IOException
+        throws ServletException, java.io.IOException
     {
-        processRequest(request,response);
+        processRequest(request, response);
     }
 
     /**
@@ -94,30 +92,26 @@ public class WaldenServlet extends HttpServlet
      */
     protected void processRequest(
         HttpServletRequest request,
-        HttpServletResponse response) throws ServletException,IOException
+        HttpServletResponse response)
+        throws ServletException, IOException
     {
         String command = request.getParameter("commandString");
-        request.setAttribute("commandString",command);
+        request.setAttribute("commandString", command);
         if (command != null) {
             Session session = Session.getInstance(request.getSession());
             StringWriter sw = new StringWriter();
             Handler handler =
-                new PrintHandler(
-                    session.interpreter,
-                    new PrintWriter(sw,true),
-                    false);
+                new PrintHandler(session.interpreter,
+                    new PrintWriter(sw, true), false);
             Parser parser = new Parser(new StringReader(command));
-            while (session.interpreter.runOne(parser,handler)) {
+            while (session.interpreter.runOne(parser, handler)) {
             }
             String result = sw.toString();
-            request.setAttribute("result",result);
+            request.setAttribute("result", result);
         }
-        getServletContext().getRequestDispatcher("/index.jsp").include(
-            request,
+        getServletContext().getRequestDispatcher("/index.jsp").include(request,
             response);
     }
-
-    //~ Inner Classes ---------------------------------------------------------
 
     /**
      * Holds the context required by {@link WaldenServlet}.
@@ -152,18 +146,17 @@ public class WaldenServlet extends HttpServlet
         public void init(ServletContextEvent event)
         {
             this.context = event.getServletContext();
-            context.setAttribute(ATTRNAME,this);
+            context.setAttribute(ATTRNAME, this);
 
             Properties properties = SaffronProperties.instance();
-            for (
-                Enumeration enumeration =
+            for (Enumeration enumeration =
                     event.getServletContext().getInitParameterNames();
                     enumeration.hasMoreElements();) {
                 String name = (String) enumeration.nextElement();
                 if (name.startsWith("saffron")) {
                     String value =
                         event.getServletContext().getInitParameter(name);
-                    properties.setProperty(name,value);
+                    properties.setProperty(name, value);
                 }
             }
         }
@@ -203,17 +196,16 @@ public class WaldenServlet extends HttpServlet
         public void init(HttpSessionEvent event)
         {
             this.httpSession = event.getSession();
-            httpSession.setAttribute(ATTRNAME,this);
+            httpSession.setAttribute(ATTRNAME, this);
 
             Properties properties = SaffronProperties.instance();
-            for (
-                Enumeration enumeration = httpSession.getAttributeNames();
+            for (Enumeration enumeration = httpSession.getAttributeNames();
                     enumeration.hasMoreElements();) {
                 String name = (String) enumeration.nextElement();
                 if (name.startsWith("saffron")) {
                     Object value = httpSession.getAttribute(name);
                     if (value instanceof String) {
-                        properties.setProperty(name,(String) value);
+                        properties.setProperty(name, (String) value);
                     }
                 }
             }

@@ -19,12 +19,12 @@
 package net.sf.farrago.test.regression;
 
 import java.io.PrintStream;
-
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
 
 import net.sf.farrago.test.FarragoTestCase;
+
 
 /**
  * FarragoConcurrencyTestCase provides a basic harness for executing
@@ -61,17 +61,22 @@ import net.sf.farrago.test.FarragoTestCase;
  * @author Stephan Zuercher
  * @version $Id$
  */
-public abstract class FarragoConcurrencyTestCase
-    extends FarragoTestCase
+public abstract class FarragoConcurrencyTestCase extends FarragoTestCase
 {
+    //~ Instance fields -------------------------------------------------------
+
     private boolean debug = false;
     private PrintStream printStream = System.out;
+
+    //~ Constructors ----------------------------------------------------------
 
     protected FarragoConcurrencyTestCase(String testName)
         throws Exception
     {
         super(testName);
     }
+
+    //~ Methods ---------------------------------------------------------------
 
     // TODO: other methods that read commands from a script and
     // automatically execute them -- use case is simply call the
@@ -109,11 +114,12 @@ public abstract class FarragoConcurrencyTestCase
      *
      * @param commandGenerator the configuration for this test
      * @param synchronizeClockTicks flag for thread synchronization (see above)
-     * @throws Exception if {@link FarragoTestCase#newJdbcEngineDriver} 
+     * @throws Exception if {@link FarragoTestCase#newJdbcEngineDriver}
      *                   fails or if a thread operation is interrupted
      */
-    protected void executeTest(FarragoTestCommandGenerator commandGenerator,
-                               boolean synchronizeClockTicks)
+    protected void executeTest(
+        FarragoTestCommandGenerator commandGenerator,
+        boolean synchronizeClockTicks)
         throws Exception
     {
         if (synchronizeClockTicks) {
@@ -130,12 +136,12 @@ public abstract class FarragoConcurrencyTestCase
         String jdbcURL = newJdbcEngineDriver().getUrlPrefix();
 
         // initialize command executors
-        FarragoTestCommandExecutor[] threads = 
+        FarragoTestCommandExecutor [] threads =
             new FarragoTestCommandExecutor[threadIds.size()];
 
         int threadIndex = 0;
-        for(Iterator i = threadIds.iterator(); i.hasNext(); ) {
-            Integer threadId = (Integer)i.next();
+        for (Iterator i = threadIds.iterator(); i.hasNext();) {
+            Integer threadId = (Integer) i.next();
             Iterator commands = commandGenerator.getCommandIterator(threadId);
 
             if (debug) {
@@ -143,28 +149,29 @@ public abstract class FarragoConcurrencyTestCase
                 commandGenerator.printCommands(printStream, threadId);
             }
 
-            threads[threadIndex++] = 
-                new FarragoTestCommandExecutor(threadId.intValue(),
-                                               jdbcURL,
-                                               commands,
-                                               sync,
-                                               debug ? printStream : null);
+            threads[threadIndex++] =
+                new FarragoTestCommandExecutor(
+                    threadId.intValue(),
+                    jdbcURL,
+                    commands,
+                    sync,
+                    debug ? printStream : null);
         }
 
         // start all the threads
-        for(int i = 0, n = threads.length; i < n; i++) {
+        for (int i = 0, n = threads.length; i < n; i++) {
             threads[i].start();
         }
 
         // wait for all threads to finish
-        for(int i = 0, n = threads.length; i < n; i++) {
+        for (int i = 0, n = threads.length; i < n; i++) {
             threads[i].join();
         }
 
         // check for failure(s)
         boolean failure = false;
         boolean needHeader = true;
-        for(int i = 0, n = threads.length; i < n; i++) {
+        for (int i = 0, n = threads.length; i < n; i++) {
             Throwable failureCause = threads[i].getFailureCause();
 
             if (failureCause != null) {
@@ -173,9 +180,8 @@ public abstract class FarragoConcurrencyTestCase
                     needHeader = false;
                 }
 
-                System.err.println(threads[i].getName()
-                                   + " failed "
-                                   + threads[i].getFailureLocation());
+                System.err.println(threads[i].getName() + " failed "
+                    + threads[i].getFailureLocation());
                 failureCause.printStackTrace(System.err);
                 System.err.println();
                 failure = true;
@@ -193,10 +199,11 @@ public abstract class FarragoConcurrencyTestCase
         debug = enabled;
     }
 
-    protected void setDebug(boolean enabled, PrintStream alternatePrintStream)
+    protected void setDebug(
+        boolean enabled,
+        PrintStream alternatePrintStream)
     {
         debug = enabled;
         printStream = alternatePrintStream;
     }
 }
-

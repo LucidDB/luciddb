@@ -19,12 +19,11 @@
 package net.sf.farrago.test.regression;
 
 import java.io.PrintStream;
-
-import java.util.Iterator;
-
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
+import java.util.Iterator;
+
 
 /**
  * FarragoTestCommandExecutor is a thread that executes a sequence of
@@ -33,16 +32,17 @@ import java.sql.Statement;
  * @author Stephan Zuercher
  * @version $Id$
  */
-public class FarragoTestCommandExecutor
-    extends Thread
+public class FarragoTestCommandExecutor extends Thread
 {
+    //~ Instance fields -------------------------------------------------------
+
     /** JDBC URL to connect with. */
     private String jdbcURL;
 
     /** Command sequence for this thread. */
     private Iterator commands;
 
-    /** 
+    /**
      * Used to synchronize command execution.
      */
     private Sync synchronizer;
@@ -62,6 +62,7 @@ public class FarragoTestCommandExecutor
     /** Debugging print stream.  May be null. */
     private final PrintStream debugPrintStream;
 
+    //~ Constructors ----------------------------------------------------------
 
     /**
      * Constructs a FarragoTestCommandExecutor with the given thread
@@ -76,11 +77,12 @@ public class FarragoTestCommandExecutor
      *                         debugging output (may help debugging
      *                         thread synchronization issues)
      */
-    FarragoTestCommandExecutor(int threadId,
-                               String jdbcURL,
-                               Iterator commands,
-                               Sync synchronizer,
-                               PrintStream debugPrintStream)
+    FarragoTestCommandExecutor(
+        int threadId,
+        String jdbcURL,
+        Iterator commands,
+        Sync synchronizer,
+        PrintStream debugPrintStream)
     {
         this.jdbcURL = jdbcURL;
         this.commands = commands;
@@ -90,6 +92,7 @@ public class FarragoTestCommandExecutor
         this.setName("Command Executor " + threadId);
     }
 
+    //~ Methods ---------------------------------------------------------------
 
     /**
      * Executes the configured commands.
@@ -99,7 +102,7 @@ public class FarragoTestCommandExecutor
         try {
             connection = DriverManager.getConnection(jdbcURL);
             connection.setAutoCommit(false);
-        } catch(Throwable t) {
+        } catch (Throwable t) {
             handleError(t, "during connect");
         }
 
@@ -107,29 +110,30 @@ public class FarragoTestCommandExecutor
         // numbers passed by the test case author.
         int stepNumber = 0;
 
-        while(commands.hasNext()) {
-            FarragoTestCommand command = (FarragoTestCommand)commands.next();
+        while (commands.hasNext()) {
+            FarragoTestCommand command = (FarragoTestCommand) commands.next();
 
             if (!(command instanceof FarragoTestCommandGenerator.AutoSynchronizationCommand)) {
                 stepNumber++;
             }
 
-//            if (debugPrintStream != null) {
-//                debugPrintStream.println(Thread.currentThread().getName()
-//                                         + ": Step "
-//                                         + stepNumber
-//                                         + ": "
-//                                         + System.currentTimeMillis());
-//            }
-
+            //            if (debugPrintStream != null) {
+            //                debugPrintStream.println(Thread.currentThread().getName()
+            //                                         + ": Step "
+            //                                         + stepNumber
+            //                                         + ": "
+            //                                         + System.currentTimeMillis());
+            //            }
             // synchronization commands are always executed, lest we deadlock
-            boolean isSync = command instanceof FarragoTestCommandGenerator.SynchronizationCommand;
+            boolean isSync =
+                command instanceof FarragoTestCommandGenerator.SynchronizationCommand;
 
-            if (isSync ||
-                (connection != null && command != null && error == null)) {
+            if (isSync
+                    || ((connection != null) && (command != null)
+                    && (error == null))) {
                 try {
                     command.execute(this);
-                } catch(Throwable t) {
+                } catch (Throwable t) {
                     handleError(t, "during step " + stepNumber);
                 }
             }
@@ -140,28 +144,27 @@ public class FarragoTestCommandExecutor
                 connection.rollback();
                 connection.close();
             }
-        } catch(Throwable t) {
+        } catch (Throwable t) {
             handleError(t, "during connection close");
         }
     }
 
-
     /**
      * Handle details of an exception during execution.
      */
-    private void handleError(Throwable error, String when)
+    private void handleError(
+        Throwable error,
+        String when)
     {
         this.error = error;
         this.when = when;
 
         if (debugPrintStream != null) {
-            debugPrintStream.println(Thread.currentThread().getName()
-                                     + ": "
-                                     + when);
+            debugPrintStream.println(Thread.currentThread().getName() + ": "
+                + when);
             error.printStackTrace(debugPrintStream);
         }
     }
-
 
     /**
      * Obtain the thread's JDBC connection.
@@ -171,7 +174,6 @@ public class FarragoTestCommandExecutor
         return connection;
     }
 
-
     /**
      * Obtain the thread's current JDBC statement.  May return null.
      */
@@ -179,7 +181,6 @@ public class FarragoTestCommandExecutor
     {
         return statement;
     }
-    
 
     /**
      * Set the thread's current JDBC statement.  To clear the JDBC
@@ -188,11 +189,10 @@ public class FarragoTestCommandExecutor
     public void setStatement(Statement stmt)
     {
         // assert that we don't already have a statement
-        assert(statement == null);
+        assert (statement == null);
 
         statement = stmt;
     }
-    
 
     /**
      * Clear the thread's current JDBC statement.  To set the JDBC
@@ -203,7 +203,6 @@ public class FarragoTestCommandExecutor
         statement = null;
     }
 
-
     /**
      * Retrieve the object used to synchronize threads at a point in
      * the list of commands.
@@ -212,7 +211,6 @@ public class FarragoTestCommandExecutor
     {
         return synchronizer;
     }
-    
 
     /**
      * Check whether an exception occurred during execution.  If this
@@ -234,7 +232,8 @@ public class FarragoTestCommandExecutor
         return when;
     }
 
-    
+    //~ Inner Classes ---------------------------------------------------------
+
     /**
      * Synchronization object that allows multiple
      * FarragoTestCommandExecutors to execute commands in lock-step.
@@ -248,7 +247,7 @@ public class FarragoTestCommandExecutor
 
         public Sync(int numThreads)
         {
-            assert(numThreads > 0);
+            assert (numThreads > 0);
             this.numThreads = numThreads;
             this.numWaiting = 0;
         }
@@ -268,5 +267,4 @@ public class FarragoTestCommandExecutor
             }
         }
     }
-
 }

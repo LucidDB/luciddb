@@ -6,25 +6,25 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.util;
-
-import net.sf.saffron.util.*;
-import net.sf.saffron.util.property.*;
 
 import java.io.*;
 import java.util.*;
 import java.util.regex.*;
+
+import org.eigenbase.util.*;
+import org.eigenbase.util.property.*;
+
 
 /**
  * Provides the properties which control limited aspects of Farrago behavior.
@@ -43,23 +43,38 @@ import java.util.regex.*;
  */
 public class FarragoProperties extends Properties
 {
-    private static FarragoProperties instance;
+    //~ Static fields/initializers --------------------------------------------
 
+    private static FarragoProperties instance;
     private static final String PROPERTY_EXPANSION_PATTERN = "\\$\\{\\w+\\}";
+
+    //~ Instance fields -------------------------------------------------------
 
     /**
      * The string property "net.sf.farrago.home" is the path to the Farrago
      * installation directory.
      */
-    public final StringProperty homeDir = new StringProperty(
-        this,"net.sf.farrago.home",null);
+    public final StringProperty homeDir =
+        new StringProperty(this, "net.sf.farrago.home", null);
 
     /**
      * The optional string property "net.sf.farrago.catalog" is the path to the
-     * Farrago catalog directory.  See also {@link #getCatalogDir}
+     * Farrago repository directory.  See also {@link #getCatalogDir}
      */
-    public final StringProperty catalogDir = new StringProperty(
-        this,"net.sf.farrago.catalog",null);
+    public final StringProperty catalogDir =
+        new StringProperty(this, "net.sf.farrago.catalog", null);
+
+    /**
+     * The optional string property
+     * "net.sf.farrago.defaultSessionFactoryLibraryName" is the name
+     * of the plugin library to use for the default session factory.
+     * Defaults to {@link net.sf.farrago.defimpl.FarragoDefaultSessionFactory}.
+     */
+    public final StringProperty defaultSessionFactoryLibraryName =
+        new StringProperty(
+            this,
+            "net.sf.farrago.defaultSessionFactoryLibraryName",
+            "class net.sf.farrago.defimpl.FarragoDefaultSessionFactory");
 
     /**
      * The string property "net.sf.farrago.test.jdbcDriverClass" specifies the
@@ -67,34 +82,34 @@ public class FarragoProperties extends Properties
      * specified, {@link net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver} is
      * used.
      */
-    public final StringProperty testJdbcDriverClass = new StringProperty(
-        this,"net.sf.farrago.test.jdbcDriverClass",null);
-
-    /**
-     * The boolean property "net.sf.farrago.test.diff" forces
-     * diffing to be performed during diff-based testing.  The
-     * default is false; this property is only used when Fennel
-     * is disabled.
-     */
-    public final BooleanProperty testDiff = new BooleanProperty(
-        this,"net.sf.farrago.test.diff",false);
+    public final StringProperty testJdbcDriverClass =
+        new StringProperty(this, "net.sf.farrago.test.jdbcDriverClass", null);
 
     /**
      * The string property "net.sf.farrago.fileset.unitsql" specifies a
      * newline-separated list of unit test SQL script files to run.
      */
-    public final StringProperty testFilesetUnitsql = new StringProperty(
-        this,"net.sf.farrago.fileset.unitsql",null);
+    public final StringProperty testFilesetUnitsql =
+        new StringProperty(this, "net.sf.farrago.fileset.unitsql", null);
 
     /**
      * The string property "net.sf.farrago.fileset.regressionsql" specifies a
      * newline-separated list of regression test SQL script files to run.
      */
-    public final StringProperty testFilesetRegression = new StringProperty(
-        this,"net.sf.farrago.fileset.regressionsql",null);
+    public final StringProperty testFilesetRegression =
+        new StringProperty(this, "net.sf.farrago.fileset.regressionsql", null);
+
+    //~ Constructors ----------------------------------------------------------
+
+    private FarragoProperties()
+    {
+        super(System.getProperties());
+    }
+
+    //~ Methods ---------------------------------------------------------------
 
     /**
-     * @return the {@link net.sf.saffron.util.Glossary#SingletonPattern
+     * @return the {@link org.eigenbase.util.Glossary#SingletonPattern
      * singleton} properties object, constructed from {@link
      * System#getProperties}.
      */
@@ -106,13 +121,8 @@ public class FarragoProperties extends Properties
         return instance;
     }
 
-    private FarragoProperties()
-    {
-        super(System.getProperties());
-    }
-
     /**
-     * @return the directory containing the Farrago catalog files; equivalent
+     * @return the directory containing the Farrago repos files; equivalent
      * to {@link #catalogDir} if set, otherwise the "catalog" subdirectory of
      * {@link #homeDir}
      */
@@ -123,11 +133,10 @@ public class FarragoProperties extends Properties
             return new File(catalogDirOpt);
         } else {
             String homeDir = instance().homeDir.get(true);
-            return new File(homeDir,"catalog");
+            return new File(homeDir, "catalog");
         }
     }
 
-    
     // REVIEW: SZ: 7/20/2004: Add support for expanding any of the
     // above properties?  Maybe just come up with a well-defined set
     // of FarragoProperties fields that should be expandable: homeDir,
@@ -161,7 +170,7 @@ public class FarragoProperties extends Properties
 
         StringBuffer result = null;
         int offset = 0;
-        while(matcher.find()) {
+        while (matcher.find()) {
             int start = matcher.start();
             int end = matcher.end();
 
@@ -176,7 +185,7 @@ public class FarragoProperties extends Properties
 
                 result.replace(start + offset, end + offset, homeDirValue);
 
-                offset += homeDirValue.length() - (end - start);
+                offset += (homeDirValue.length() - (end - start));
             }
         }
 
@@ -187,5 +196,6 @@ public class FarragoProperties extends Properties
         return value;
     }
 }
+
 
 // End FarragoProperties.java

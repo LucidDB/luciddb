@@ -6,25 +6,25 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.session;
 
-import net.sf.farrago.parser.*;
+import java.util.*;
+
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fennel.*;
+import net.sf.farrago.parser.*;
 import net.sf.farrago.util.*;
 
-import java.util.*;
 
 /**
  * FarragoSessionFactory defines an interface with factory methods used
@@ -35,6 +35,8 @@ import java.util.*;
  */
 public interface FarragoSessionFactory
 {
+    //~ Methods ---------------------------------------------------------------
+
     /**
      * Creates a new session.
      *
@@ -56,29 +58,29 @@ public interface FarragoSessionFactory
     public FennelCmdExecutor newFennelCmdExecutor();
 
     /**
-     * Opens a new catalog instance.
+     * Opens a new repositor instance.
      *
-     * @param owner the object which should own the new catalog
+     * @param owner the object which should own the new repos
      *
-     * @param userCatalog true for user catalog; false for system catalog
+     * @param userRepos true for user repos; false for system repos
      *
-     * @return new catalog instance
+     * @return new repos instance
      */
-    public FarragoCatalog newCatalog(
+    public FarragoRepos newRepos(
         FarragoAllocationOwner owner,
-        boolean userCatalog);
+        boolean userRepos);
 
     /**
      * Creates a new Fennel transaction context.
      *
-     * @param catalog catalog for transaction metadata access
+     * @param repos repos for transaction metadata access
      *
      * @param fennelDbHandle handle for database to access
      *
      * @return new context
      */
     public FennelTxnContext newFennelTxnContext(
-        FarragoCatalog catalog,
+        FarragoRepos repos,
         FennelDbHandle fennelDbHandle);
 
     /**
@@ -86,5 +88,6 @@ public interface FarragoSessionFactory
      */
     public void cleanupSessions();
 }
+
 
 // End FarragoSessionFactory.java

@@ -1,44 +1,40 @@
 /*
-// $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Saffron preprocessor and data engine.
+// Copyright (C) 2002-2004 Disruptive Tech
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package net.sf.saffron.jdbc;
 
-import net.sf.saffron.core.SaffronSchema;
-import net.sf.saffron.core.SaffronConnection;
+import java.sql.*;
+import java.util.Map;
+import java.util.Properties;
+import java.util.StringTokenizer;
+
 import net.sf.saffron.ext.ClassSchema;
-import net.sf.saffron.util.EnumeratedValues;
-import net.sf.saffron.util.Util;
 
 import openjava.mop.OJClass;
-
 import openjava.ptree.CastExpression;
 import openjava.ptree.Expression;
 import openjava.ptree.FieldAccess;
 
-import java.sql.*;
-
-import java.util.Map;
-import java.util.Properties;
-import java.util.StringTokenizer;
+import org.eigenbase.relopt.RelOptConnection;
+import org.eigenbase.relopt.RelOptSchema;
+import org.eigenbase.util.EnumeratedValues;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -52,130 +48,148 @@ import java.util.StringTokenizer;
  */
 public class SaffronJdbcConnection implements Connection
 {
-    //~ Instance fields -------------------------------------------------------
+    public RelOptConnection saffronConnection;
 
-    public SaffronConnection saffronConnection;
-
-    //~ Constructors ----------------------------------------------------------
-
-    public SaffronJdbcConnection(String url,Properties info)
+    public SaffronJdbcConnection(
+        String url,
+        Properties info)
     {
         this();
-        initSaffronConnection(url,info);
+        initRelOptConnection(url, info);
     }
 
     protected SaffronJdbcConnection()
     {
     }
 
-    //~ Methods ---------------------------------------------------------------
-
-    public void setAutoCommit(boolean autoCommit) throws SQLException
+    public void setAutoCommit(boolean autoCommit)
+        throws SQLException
     {
         throw new UnsupportedOperationException();
     }
 
-    public boolean getAutoCommit() throws SQLException
+    public boolean getAutoCommit()
+        throws SQLException
     {
         return false;
     }
 
-    public void setCatalog(String catalog) throws SQLException
+    public void setCatalog(String catalog)
+        throws SQLException
     {
         throw new UnsupportedOperationException();
     }
 
-    public String getCatalog() throws SQLException
+    public String getCatalog()
+        throws SQLException
     {
         throw new UnsupportedOperationException();
     }
 
-    public boolean isClosed() throws SQLException
+    public boolean isClosed()
+        throws SQLException
     {
         return false;
     }
 
-    public void setHoldability(int holdability) throws SQLException
+    public void setHoldability(int holdability)
+        throws SQLException
     {
         throw new UnsupportedOperationException();
     }
 
-    public int getHoldability() throws SQLException
+    public int getHoldability()
+        throws SQLException
     {
         return 0;
     }
 
-    public DatabaseMetaData getMetaData() throws SQLException
+    public DatabaseMetaData getMetaData()
+        throws SQLException
     {
         throw new UnsupportedOperationException();
     }
 
-    public void setReadOnly(boolean readOnly) throws SQLException
+    public void setReadOnly(boolean readOnly)
+        throws SQLException
     {
         throw new UnsupportedOperationException();
     }
 
-    public boolean isReadOnly() throws SQLException
+    public boolean isReadOnly()
+        throws SQLException
     {
         return false;
     }
 
-    public Savepoint setSavepoint() throws SQLException
+    public Savepoint setSavepoint()
+        throws SQLException
     {
         throw new UnsupportedOperationException();
     }
 
-    public Savepoint setSavepoint(String name) throws SQLException
+    public Savepoint setSavepoint(String name)
+        throws SQLException
     {
         throw new UnsupportedOperationException();
     }
 
-    public void setTransactionIsolation(int level) throws SQLException
+    public void setTransactionIsolation(int level)
+        throws SQLException
     {
         throw new UnsupportedOperationException();
     }
 
-    public int getTransactionIsolation() throws SQLException
+    public int getTransactionIsolation()
+        throws SQLException
     {
         return 0;
     }
 
-    public void setTypeMap(Map map) throws SQLException
+    public void setTypeMap(Map map)
+        throws SQLException
     {
         throw new UnsupportedOperationException();
     }
 
-    public Map getTypeMap() throws SQLException
+    public Map getTypeMap()
+        throws SQLException
     {
         throw new UnsupportedOperationException();
     }
 
-    public SQLWarning getWarnings() throws SQLException
+    public SQLWarning getWarnings()
+        throws SQLException
     {
         return null;
     }
 
-    public void clearWarnings() throws SQLException
+    public void clearWarnings()
+        throws SQLException
     {
     }
 
-    public void close() throws SQLException
+    public void close()
+        throws SQLException
     {
     }
 
-    public void commit() throws SQLException
+    public void commit()
+        throws SQLException
     {
         throw new UnsupportedOperationException();
     }
 
-    public Statement createStatement() throws SQLException
+    public Statement createStatement()
+        throws SQLException
     {
         return new SaffronJdbcStatement(this);
     }
 
     public Statement createStatement(
         int resultSetType,
-        int resultSetConcurrency) throws SQLException
+        int resultSetConcurrency)
+        throws SQLException
     {
         if (resultSetType != ResultSet.TYPE_FORWARD_ONLY) {
             throw new UnsupportedOperationException();
@@ -189,17 +203,20 @@ public class SaffronJdbcConnection implements Connection
     public Statement createStatement(
         int resultSetType,
         int resultSetConcurrency,
-        int resultSetHoldability) throws SQLException
+        int resultSetHoldability)
+        throws SQLException
     {
         throw new UnsupportedOperationException();
     }
 
-    public String nativeSQL(String sql) throws SQLException
+    public String nativeSQL(String sql)
+        throws SQLException
     {
         throw new UnsupportedOperationException();
     }
 
-    public CallableStatement prepareCall(String sql) throws SQLException
+    public CallableStatement prepareCall(String sql)
+        throws SQLException
     {
         throw new UnsupportedOperationException();
     }
@@ -207,7 +224,8 @@ public class SaffronJdbcConnection implements Connection
     public CallableStatement prepareCall(
         String sql,
         int resultSetType,
-        int resultSetConcurrency) throws SQLException
+        int resultSetConcurrency)
+        throws SQLException
     {
         throw new UnsupportedOperationException();
     }
@@ -216,7 +234,8 @@ public class SaffronJdbcConnection implements Connection
         String sql,
         int resultSetType,
         int resultSetConcurrency,
-        int resultSetHoldability) throws SQLException
+        int resultSetHoldability)
+        throws SQLException
     {
         throw new UnsupportedOperationException();
     }
@@ -230,7 +249,8 @@ public class SaffronJdbcConnection implements Connection
     public PreparedStatement prepareStatement(
         String sql,
         int resultSetType,
-        int resultSetConcurrency) throws SQLException
+        int resultSetConcurrency)
+        throws SQLException
     {
         throw new UnsupportedOperationException();
     }
@@ -239,19 +259,7 @@ public class SaffronJdbcConnection implements Connection
         String sql,
         int resultSetType,
         int resultSetConcurrency,
-        int resultSetHoldability) throws SQLException
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    public PreparedStatement prepareStatement(
-        String sql,
-        int autoGeneratedKeys) throws SQLException
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    public PreparedStatement prepareStatement(String sql,int [] columnIndexes)
+        int resultSetHoldability)
         throws SQLException
     {
         throw new UnsupportedOperationException();
@@ -259,22 +267,42 @@ public class SaffronJdbcConnection implements Connection
 
     public PreparedStatement prepareStatement(
         String sql,
-        String [] columnNames) throws SQLException
+        int autoGeneratedKeys)
+        throws SQLException
     {
         throw new UnsupportedOperationException();
     }
 
-    public void releaseSavepoint(Savepoint savepoint) throws SQLException
+    public PreparedStatement prepareStatement(
+        String sql,
+        int [] columnIndexes)
+        throws SQLException
     {
         throw new UnsupportedOperationException();
     }
 
-    public void rollback() throws SQLException
+    public PreparedStatement prepareStatement(
+        String sql,
+        String [] columnNames)
+        throws SQLException
     {
         throw new UnsupportedOperationException();
     }
 
-    public void rollback(Savepoint savepoint) throws SQLException
+    public void releaseSavepoint(Savepoint savepoint)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    public void rollback()
+        throws SQLException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    public void rollback(Savepoint savepoint)
+        throws SQLException
     {
         throw new UnsupportedOperationException();
     }
@@ -284,37 +312,38 @@ public class SaffronJdbcConnection implements Connection
         return SaffronJdbcDriver.getUrlPrefixStatic();
     }
 
-    protected void initSaffronConnection(String url,Properties info)
+    protected void initRelOptConnection(
+        String url,
+        Properties info)
     {
-        Properties properties = parseURL(url,info);
+        Properties properties = parseURL(url, info);
         final String schemaName = properties.getProperty(Property.Schema);
         if (schemaName == null) {
-            throw Util.newInternal(
-                "Required connection property '" + Property.Schema
-                + "' is missing");
+            throw Util.newInternal("Required connection property '"
+                + Property.Schema + "' is missing");
         }
         try {
             final Class clazz = Class.forName(schemaName);
             Object o = clazz.newInstance();
-            if (o instanceof SaffronConnection) {
-                saffronConnection = (SaffronConnection) o;
-            } else if (o instanceof SaffronSchema) {
-                saffronConnection = new MyConnection(o,(SaffronSchema) o);
+            if (o instanceof RelOptConnection) {
+                saffronConnection = (RelOptConnection) o;
+            } else if (o instanceof RelOptSchema) {
+                saffronConnection = new MyConnection(o, (RelOptSchema) o);
             } else {
                 final ClassSchema schema =
-                    new ClassSchema(clazz,false) {
+                    new ClassSchema(clazz, false) {
                         protected Expression getTarget(
                             Expression connectionExp)
                         {
                             return new CastExpression(
                                 OJClass.forClass(clazz),
-                                new FieldAccess(connectionExp,"target"));
+                                new FieldAccess(connectionExp, "target"));
                         }
                     };
-                saffronConnection = new MyConnection(o,schema);
+                saffronConnection = new MyConnection(o, schema);
             }
         } catch (Throwable e) {
-            throw Util.newInternal(e,"Error while connecting to " + url);
+            throw Util.newInternal(e, "Error while connecting to " + url);
         }
     }
 
@@ -322,12 +351,14 @@ public class SaffronJdbcConnection implements Connection
      * Parses the URL to get connection properties, then overrides with the
      * supplied properties set.
      */
-    private Properties parseURL(String url,Properties info)
+    private Properties parseURL(
+        String url,
+        Properties info)
     {
         Properties properties = new Properties();
-        assert(url.startsWith(getUrlPrefix()));
+        assert (url.startsWith(getUrlPrefix()));
         String s = url.substring(getUrlPrefix().length());
-        final StringTokenizer stringTokenizer = new StringTokenizer(s,"&");
+        final StringTokenizer stringTokenizer = new StringTokenizer(s, "&");
         while (stringTokenizer.hasMoreTokens()) {
             final String tokenValue = stringTokenizer.nextToken();
             final int equals = tokenValue.indexOf("=");
@@ -337,34 +368,36 @@ public class SaffronJdbcConnection implements Connection
                 token = tokenValue;
                 value = null;
             } else {
-                token = tokenValue.substring(0,equals);
+                token = tokenValue.substring(0, equals);
                 value = tokenValue.substring(equals + 1);
             }
-            properties.setProperty(token,value);
+            properties.setProperty(token, value);
         }
         properties.putAll(info);
         return properties;
     }
 
-    //~ Inner Classes ---------------------------------------------------------
-
-    public static class MyConnection implements SaffronConnection
+    public static class MyConnection implements RelOptConnection
     {
         public final Object target;
-        private final SaffronSchema schema;
+        private final RelOptSchema schema;
 
-        public MyConnection(Object target,SaffronSchema schema)
+        public MyConnection(
+            Object target,
+            RelOptSchema schema)
         {
             this.target = target;
             this.schema = schema;
         }
 
-        public SaffronSchema getSaffronSchema()
+        public RelOptSchema getRelOptSchema()
         {
             return schema;
         }
 
-        public Object contentsAsArray(String qualifier,String tableName)
+        public Object contentsAsArray(
+            String qualifier,
+            String tableName)
         {
             throw new UnsupportedOperationException();
         }
@@ -376,11 +409,11 @@ public class SaffronJdbcConnection implements Connection
 
         /**
          * {@value} is the name of a schema class.
-         * 
+         *
          * <p>
          * The class must have a zero-argument constructor. If it the class
-         * implements {@link SaffronSchema}, the fields are deduced using
-         * {@link SaffronSchema#getTableForMember}; otherwise, the fields are
+         * implements {@link RelOptSchema}, the fields are deduced using
+         * {@link RelOptSchema#getTableForMember}; otherwise, the fields are
          * deduced using reflection.
          * </p>
          */

@@ -52,7 +52,7 @@ public:
     }
     
     /**
-     * Override std::exception.  This returns "FennelExcn"; we make use of this
+     * Overrides std::exception.  Returns "FennelExcn"; we make use of this
      * as a substitute for RTTI, which is incompatible with JNI.
      */
     virtual const char * what() const throw();

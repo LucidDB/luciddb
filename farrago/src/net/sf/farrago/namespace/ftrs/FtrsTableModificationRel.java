@@ -16,22 +16,21 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.namespace.ftrs;
+
+import java.util.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
+import net.sf.farrago.query.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
-import net.sf.farrago.query.*;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.util.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.util.*;
 
-import java.util.*;
 
 /**
  * FtrsTableModificationRel is the relational expression corresponding to
@@ -53,33 +52,34 @@ class FtrsTableModificationRel extends TableModificationRel
     /**
      * Creates a new FtrsTableModificationRel object.
      *
-     * @param cluster VolcanoCluster for this rel
+     * @param cluster RelOptCluster for this rel
      * @param ftrsTable target table
      * @param connection connection expression
      * @param child child producing rows to be inserted
      * @param operation modification operation to perform
      */
     public FtrsTableModificationRel(
-        VolcanoCluster cluster,
+        RelOptCluster cluster,
         FtrsTable ftrsTable,
-        SaffronConnection connection,
-        SaffronRel child,
+        RelOptConnection connection,
+        RelNode child,
         Operation operation,
         List updateColumnList)
     {
-        super(cluster,ftrsTable,connection,child,operation,updateColumnList);
+        super(cluster, ftrsTable, connection, child, operation,
+            updateColumnList);
         this.ftrsTable = ftrsTable;
     }
 
     //~ Methods ---------------------------------------------------------------
 
     // implement FennelRel
-    public SaffronConnection getConnection()
+    public RelOptConnection getConnection()
     {
         return connection;
     }
 
-    // implement SaffronRel
+    // implement RelNode
     public CallingConvention getConvention()
     {
         return FennelPullRel.FENNEL_PULL_CONVENTION;
@@ -104,13 +104,13 @@ class FtrsTableModificationRel extends TableModificationRel
             cluster,
             ftrsTable,
             getConnection(),
-            OptUtil.clone(child),
+            RelOptUtil.clone(child),
             getOperation(),
             getUpdateColumnList());
     }
 
-    // implement SaffronRel
-    public PlanCost computeSelfCost(SaffronPlanner planner)
+    // implement RelNode
+    public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
         // TODO:  the real thing
         return planner.makeTinyCost();
@@ -129,8 +129,8 @@ class FtrsTableModificationRel extends TableModificationRel
         Collection columns = ftrsTable.getCwmColumnSet().getFeature();
         for (int i = 0; i < n; i++) {
             String columnName = (String) getUpdateColumnList().get(i);
-            CwmColumn column = (CwmColumn)
-                getCatalog().getModelElement(columns,columnName);
+            CwmColumn column =
+                (CwmColumn) getRepos().getModelElement(columns, columnName);
             list.add(column);
         }
         return list;
@@ -147,26 +147,24 @@ class FtrsTableModificationRel extends TableModificationRel
             throw Util.needToImplement(ftrsTable.getCwmColumnSet());
         }
         CwmTable table = (CwmTable) ftrsTable.getCwmColumnSet();
-        FarragoCatalog catalog = getCatalog();
+        FarragoRepos repos = getRepos();
 
         List updateCwmColumnList = null;
 
         FemTableWriterDef tableWriterDef;
         switch (getOperation().getOrdinal()) {
         case TableModificationRel.Operation.INSERT_ORDINAL:
-            tableWriterDef = catalog.newFemTableInserterDef();
+            tableWriterDef = repos.newFemTableInserterDef();
             break;
         case TableModificationRel.Operation.DELETE_ORDINAL:
-            tableWriterDef = catalog.newFemTableDeleterDef();
+            tableWriterDef = repos.newFemTableDeleterDef();
             break;
         case TableModificationRel.Operation.UPDATE_ORDINAL:
-            FemTableUpdaterDef tableUpdaterDef =
-                catalog.newFemTableUpdaterDef();
+            FemTableUpdaterDef tableUpdaterDef = repos.newFemTableUpdaterDef();
             tableWriterDef = tableUpdaterDef;
             updateCwmColumnList = getUpdateCwmColumnList();
             tableUpdaterDef.setUpdateProj(
-                FennelRelUtil.createTupleProjectionFromColumnList(
-                    catalog,
+                FennelRelUtil.createTupleProjectionFromColumnList(repos,
                     updateCwmColumnList));
             break;
         default:
@@ -186,15 +184,13 @@ class FtrsTableModificationRel extends TableModificationRel
         // also.  For updates, there is another consideration:  indexes which
         // are updated in place cannot be rolled back individually, so
         // they must come last (after any possible constraint violations).
-
-        CwmSqlindex clusteredIndex = catalog.getClusteredIndex(table);
+        CwmSqlindex clusteredIndex = repos.getClusteredIndex(table);
         boolean clusteredFirst = clusteredIndex.isUnique();
 
         List firstList = new ArrayList();
         List secondList = new ArrayList();
 
-        Iterator indexIter =
-            catalog.getIndexes(table).iterator();
+        Iterator indexIter = repos.getIndexes(table).iterator();
         while (indexIter.hasNext()) {
             CwmSqlindex index = (CwmSqlindex) indexIter.next();
 
@@ -203,8 +199,7 @@ class FtrsTableModificationRel extends TableModificationRel
             if (updateCwmColumnList != null) {
                 if (index != clusteredIndex) {
                     List coverageList =
-                        FtrsUtil.getUnclusteredCoverageColList(
-                            catalog,index);
+                        FtrsUtil.getUnclusteredCoverageColList(repos, index);
                     if (!coverageList.removeAll(updateCwmColumnList)) {
                         // no intersection between update list and index
                         // coverage, so skip this index entirely
@@ -212,8 +207,8 @@ class FtrsTableModificationRel extends TableModificationRel
                     }
                 }
 
-                List distinctKeyList = FtrsUtil.getDistinctKeyColList(
-                    catalog,index);
+                List distinctKeyList =
+                    FtrsUtil.getDistinctKeyColList(repos, index);
                 if (!distinctKeyList.removeAll(updateCwmColumnList)) {
                     // distinct key is not being changed, so it's safe to
                     // attempt update-in-place
@@ -222,31 +217,27 @@ class FtrsTableModificationRel extends TableModificationRel
             }
 
             FemIndexWriterDef indexWriter =
-                catalog.fennelPackage.getFemIndexWriterDef()
-                                         .createFemIndexWriterDef();
-            if (!catalog.isTemporary(index)) {
+                repos.fennelPackage.getFemIndexWriterDef()
+                    .createFemIndexWriterDef();
+            if (!repos.isTemporary(index)) {
                 indexWriter.setRootPageId(
                     getPreparingStmt().getIndexMap().getIndexRoot(index));
             } else {
                 indexWriter.setRootPageId(-1);
             }
-            indexWriter.setSegmentId(
-                FtrsDataServer.getIndexSegmentId(index));
-            indexWriter.setIndexId(
-                JmiUtil.getObjectId(index));
+            indexWriter.setSegmentId(FtrsDataServer.getIndexSegmentId(index));
+            indexWriter.setIndexId(JmiUtil.getObjectId(index));
             indexWriter.setTupleDesc(
-                FtrsUtil.getCoverageTupleDescriptor(typeFactory,index));
+                FtrsUtil.getCoverageTupleDescriptor(typeFactory, index));
             indexWriter.setKeyProj(
-                FtrsUtil.getDistinctKeyProjection(catalog,index));
+                FtrsUtil.getDistinctKeyProjection(repos, index));
             indexWriter.setUpdateInPlace(updateInPlace);
 
-            indexWriter.setDistinctness(
-                index.isUnique()
-                ? DistinctnessEnum.DUP_FAIL
-                : DistinctnessEnum.DUP_ALLOW);
+            indexWriter.setDistinctness(index.isUnique()
+                ? DistinctnessEnum.DUP_FAIL : DistinctnessEnum.DUP_ALLOW);
             if (index != clusteredIndex) {
                 indexWriter.setInputProj(
-                    FtrsUtil.getCoverageProjection(catalog,index));
+                    FtrsUtil.getCoverageProjection(repos, index));
             }
 
             boolean prepend = false;
@@ -255,7 +246,7 @@ class FtrsTableModificationRel extends TableModificationRel
                     prepend = true;
                 }
             } else {
-                if (catalog.isPrimary(index)) {
+                if (repos.isPrimary(index)) {
                     prepend = true;
                 }
             }
@@ -264,7 +255,7 @@ class FtrsTableModificationRel extends TableModificationRel
                 secondList.add(indexWriter);
             } else {
                 if (prepend) {
-                    firstList.add(0,indexWriter);
+                    firstList.add(0, indexWriter);
                 } else {
                     firstList.add(indexWriter);
                 }
@@ -297,7 +288,7 @@ class FtrsTableModificationRel extends TableModificationRel
 
         if (needBuffer) {
             FemBufferingTupleStreamDef buffer =
-                catalog.newFemBufferingTupleStreamDef();
+                repos.newFemBufferingTupleStreamDef();
             buffer.setInMemory(false);
             buffer.setMultipass(false);
 
@@ -314,11 +305,11 @@ class FtrsTableModificationRel extends TableModificationRel
     /**
      * .
      *
-     * @return catalog for object definitions
+     * @return repos for object definitions
      */
-    FarragoCatalog getCatalog()
+    FarragoRepos getRepos()
     {
-        return getPreparingStmt().getCatalog();
+        return getPreparingStmt().getRepos();
     }
 
     // implement FennelRel

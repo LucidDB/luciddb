@@ -33,14 +33,14 @@ public:
     virtual ~CacheAllocator();
 
     /**
-     * Allocate a chunk of memory of size determined by the constructor.
+     * Allocates a chunk of memory of size determined by the constructor.
      *
      * @return the allocated chunk
      */
     virtual void *allocate() = 0;
 
     /**
-     * Deallocate a chunk of memory.
+     * Deallocates a chunk of memory.
      *
      * @param pMem the allocated memory
      */

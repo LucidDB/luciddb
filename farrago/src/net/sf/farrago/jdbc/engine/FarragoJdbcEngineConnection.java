@@ -16,19 +16,18 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.jdbc.engine;
 
-import net.sf.farrago.util.*;
-import net.sf.farrago.resource.*;
-import net.sf.farrago.session.*;
-
-import net.sf.saffron.util.*;
-
 import java.sql.*;
-
 import java.util.*;
 import java.util.logging.*;
+
+import net.sf.farrago.resource.*;
+import net.sf.farrago.session.*;
+import net.sf.farrago.util.*;
+
+import org.eigenbase.util.*;
+
 
 /**
  * FarragoJdbcEngineConnection implements the {@link java.sql.Connection}
@@ -42,7 +41,6 @@ public class FarragoJdbcEngineConnection implements Connection
     //~ Instance fields -------------------------------------------------------
 
     private FarragoSessionFactory sessionFactory;
-    
     private FarragoSession session;
 
     //~ Constructors ----------------------------------------------------------
@@ -58,11 +56,13 @@ public class FarragoJdbcEngineConnection implements Connection
      * behavior
      */
     public FarragoJdbcEngineConnection(
-        String url,Properties info,FarragoSessionFactory sessionFactory)
+        String url,
+        Properties info,
+        FarragoSessionFactory sessionFactory)
         throws SQLException
     {
         this.sessionFactory = sessionFactory;
-        session = sessionFactory.newSession(url,info);
+        session = sessionFactory.newSession(url, info);
         session.setDatabaseMetaData(getMetaData());
     }
 
@@ -72,15 +72,17 @@ public class FarragoJdbcEngineConnection implements Connection
     {
         return session;
     }
-    
+
     // implement Connection
-    public boolean isClosed() throws SQLException
+    public boolean isClosed()
+        throws SQLException
     {
         return (session == null);
     }
 
     // implement Connection
-    public void setAutoCommit(boolean autoCommit) throws SQLException
+    public void setAutoCommit(boolean autoCommit)
+        throws SQLException
     {
         try {
             session.setAutoCommit(autoCommit);
@@ -90,25 +92,29 @@ public class FarragoJdbcEngineConnection implements Connection
     }
 
     // implement Connection
-    public boolean getAutoCommit() throws SQLException
+    public boolean getAutoCommit()
+        throws SQLException
     {
         return session.isAutoCommit();
     }
 
-    public void setCatalog(String catalog) throws SQLException
+    public void setCatalog(String catalog)
+        throws SQLException
     {
         // TODO
         throw new UnsupportedOperationException();
     }
 
     // implement Connection
-    public String getCatalog() throws SQLException
+    public String getCatalog()
+        throws SQLException
     {
-        return session.getConnectionDefaults().catalogName;
+        return session.getSessionVariables().catalogName;
     }
-    
+
     // implement Connection
-    public void close() throws SQLException
+    public void close()
+        throws SQLException
     {
         try {
             try {
@@ -131,7 +137,8 @@ public class FarragoJdbcEngineConnection implements Connection
         }
     }
 
-    public void commit() throws SQLException
+    public void commit()
+        throws SQLException
     {
         try {
             session.commit();
@@ -141,7 +148,8 @@ public class FarragoJdbcEngineConnection implements Connection
     }
 
     // implement Connection
-    public Statement createStatement() throws SQLException
+    public Statement createStatement()
+        throws SQLException
     {
         try {
             return new FarragoJdbcEngineStatement(
@@ -153,7 +161,8 @@ public class FarragoJdbcEngineConnection implements Connection
     }
 
     // implement Connection
-    public void rollback() throws SQLException
+    public void rollback()
+        throws SQLException
     {
         try {
             session.rollback(null);
@@ -163,9 +172,11 @@ public class FarragoJdbcEngineConnection implements Connection
     }
 
     // implement Connection
-    public void rollback(Savepoint savepoint) throws SQLException
+    public void rollback(Savepoint savepoint)
+        throws SQLException
     {
-        FarragoSessionSavepoint farragoSavepoint = validateSavepoint(savepoint);
+        FarragoSessionSavepoint farragoSavepoint =
+            validateSavepoint(savepoint);
         try {
             session.rollback(farragoSavepoint);
         } catch (Throwable ex) {
@@ -174,19 +185,22 @@ public class FarragoJdbcEngineConnection implements Connection
     }
 
     // implement Connection
-    public void setTransactionIsolation(int level) throws SQLException
+    public void setTransactionIsolation(int level)
+        throws SQLException
     {
         // TODO:  implement this; dummied out for now to shut sqlline up
     }
 
-    public int getTransactionIsolation() throws SQLException
+    public int getTransactionIsolation()
+        throws SQLException
     {
         // TODO:  implement this; dummied out for now to shut sqlline up
         return TRANSACTION_READ_UNCOMMITTED;
     }
 
     // implement Connection
-    public Savepoint setSavepoint() throws SQLException
+    public Savepoint setSavepoint()
+        throws SQLException
     {
         try {
             return new FarragoJdbcEngineSavepoint(session.newSavepoint(null));
@@ -196,7 +210,8 @@ public class FarragoJdbcEngineConnection implements Connection
     }
 
     // implement Connection
-    public Savepoint setSavepoint(String name) throws SQLException
+    public Savepoint setSavepoint(String name)
+        throws SQLException
     {
         try {
             return new FarragoJdbcEngineSavepoint(session.newSavepoint(name));
@@ -215,22 +230,25 @@ public class FarragoJdbcEngineConnection implements Connection
     }
 
     // implement Connection
-    public void releaseSavepoint(Savepoint savepoint) throws SQLException
+    public void releaseSavepoint(Savepoint savepoint)
+        throws SQLException
     {
-        FarragoSessionSavepoint farragoSavepoint = validateSavepoint(savepoint);
+        FarragoSessionSavepoint farragoSavepoint =
+            validateSavepoint(savepoint);
         try {
             session.releaseSavepoint(farragoSavepoint);
         } catch (Throwable ex) {
             throw FarragoJdbcEngineDriver.newSqlException(ex);
         }
     }
-    
+
     // implement Connection
-    public DatabaseMetaData getMetaData() throws SQLException
+    public DatabaseMetaData getMetaData()
+        throws SQLException
     {
         return new FarragoJdbcEngineDatabaseMetaData(this);
     }
-    
+
     // implement Connection
     public PreparedStatement prepareStatement(String sql)
         throws SQLException
@@ -238,18 +256,14 @@ public class FarragoJdbcEngineConnection implements Connection
         FarragoSessionStmtContext stmtContext = null;
         try {
             stmtContext = session.newStmtContext();
-            stmtContext.prepare(sql,false);
+            stmtContext.prepare(sql, false);
             FarragoJdbcEnginePreparedStatement preparedStmt;
             if (!stmtContext.isPrepared()) {
-                preparedStmt = new FarragoJdbcEnginePreparedDdl(
-                    this,
-                    stmtContext,
-                    sql);
+                preparedStmt =
+                    new FarragoJdbcEnginePreparedDdl(this, stmtContext, sql);
             } else {
-                preparedStmt = new FarragoJdbcEnginePreparedNonDdl(
-                    this,
-                    stmtContext,
-                    sql);
+                preparedStmt =
+                    new FarragoJdbcEnginePreparedNonDdl(this, stmtContext, sql);
                 stmtContext = null;
             }
             return preparedStmt;
@@ -266,7 +280,8 @@ public class FarragoJdbcEngineConnection implements Connection
     public PreparedStatement prepareStatement(
         String sql,
         int resultSetType,
-        int resultSetConcurrency) throws SQLException
+        int resultSetConcurrency)
+        throws SQLException
     {
         throw new UnsupportedOperationException();
     }
@@ -276,24 +291,7 @@ public class FarragoJdbcEngineConnection implements Connection
         String sql,
         int resultSetType,
         int resultSetConcurrency,
-        int resultSetHoldability) throws SQLException
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    // implement Connection
-    public PreparedStatement prepareStatement(
-        String sql,
-        int autoGeneratedKeys) throws SQLException
-    {
-        if (autoGeneratedKeys != Statement.NO_GENERATED_KEYS) {
-            throw new UnsupportedOperationException();
-        }
-        return prepareStatement(sql);
-    }
-
-    // implement Connection
-    public PreparedStatement prepareStatement(String sql,int [] columnIndexes)
+        int resultSetHoldability)
         throws SQLException
     {
         throw new UnsupportedOperationException();
@@ -302,53 +300,84 @@ public class FarragoJdbcEngineConnection implements Connection
     // implement Connection
     public PreparedStatement prepareStatement(
         String sql,
-        String [] columnNames) throws SQLException
+        int autoGeneratedKeys)
+        throws SQLException
+    {
+        if (autoGeneratedKeys != Statement.NO_GENERATED_KEYS) {
+            throw new UnsupportedOperationException();
+        }
+        return prepareStatement(sql);
+    }
+
+    // implement Connection
+    public PreparedStatement prepareStatement(
+        String sql,
+        int [] columnIndexes)
+        throws SQLException
     {
         throw new UnsupportedOperationException();
     }
 
-    public void setHoldability(int holdability) throws SQLException
+    // implement Connection
+    public PreparedStatement prepareStatement(
+        String sql,
+        String [] columnNames)
+        throws SQLException
     {
         throw new UnsupportedOperationException();
     }
 
-    public int getHoldability() throws SQLException
+    public void setHoldability(int holdability)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    public int getHoldability()
+        throws SQLException
     {
         return 0;
     }
 
-    public void setReadOnly(boolean readOnly) throws SQLException
+    public void setReadOnly(boolean readOnly)
+        throws SQLException
     {
         throw new UnsupportedOperationException();
     }
 
-    public boolean isReadOnly() throws SQLException
+    public boolean isReadOnly()
+        throws SQLException
     {
         return false;
     }
-    
-    public void setTypeMap(Map map) throws SQLException
+
+    public void setTypeMap(Map map)
+        throws SQLException
     {
         throw new UnsupportedOperationException();
     }
 
-    public Map getTypeMap() throws SQLException
+    public Map getTypeMap()
+        throws SQLException
     {
         throw new UnsupportedOperationException();
     }
-    
-    public SQLWarning getWarnings() throws SQLException
+
+    public SQLWarning getWarnings()
+        throws SQLException
     {
         return null;
     }
 
-    public void clearWarnings() throws SQLException
+    public void clearWarnings()
+        throws SQLException
     {
     }
 
     public Statement createStatement(
         int resultSetType,
-        int resultSetConcurrency) throws SQLException
+        int resultSetConcurrency)
+        throws SQLException
     {
         if (resultSetType != ResultSet.TYPE_FORWARD_ONLY) {
             throw new UnsupportedOperationException();
@@ -362,17 +391,20 @@ public class FarragoJdbcEngineConnection implements Connection
     public Statement createStatement(
         int resultSetType,
         int resultSetConcurrency,
-        int resultSetHoldability) throws SQLException
+        int resultSetHoldability)
+        throws SQLException
     {
         throw new UnsupportedOperationException();
     }
 
-    public String nativeSQL(String sql) throws SQLException
+    public String nativeSQL(String sql)
+        throws SQLException
     {
         throw new UnsupportedOperationException();
     }
 
-    public CallableStatement prepareCall(String sql) throws SQLException
+    public CallableStatement prepareCall(String sql)
+        throws SQLException
     {
         throw new UnsupportedOperationException();
     }
@@ -380,7 +412,8 @@ public class FarragoJdbcEngineConnection implements Connection
     public CallableStatement prepareCall(
         String sql,
         int resultSetType,
-        int resultSetConcurrency) throws SQLException
+        int resultSetConcurrency)
+        throws SQLException
     {
         throw new UnsupportedOperationException();
     }
@@ -389,10 +422,12 @@ public class FarragoJdbcEngineConnection implements Connection
         String sql,
         int resultSetType,
         int resultSetConcurrency,
-        int resultSetHoldability) throws SQLException
+        int resultSetHoldability)
+        throws SQLException
     {
         throw new UnsupportedOperationException();
     }
 }
+
 
 // End FarragoJdbcEngineConnection.java

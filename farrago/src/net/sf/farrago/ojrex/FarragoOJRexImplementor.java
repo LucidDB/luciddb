@@ -6,23 +6,23 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.ojrex;
 
-import net.sf.saffron.rex.*;
-import net.sf.saffron.oj.rex.*;
-
 import openjava.ptree.*;
+
+import org.eigenbase.oj.rex.*;
+import org.eigenbase.rex.*;
+
 
 /**
  * FarragoOJRexImplementor refines {@link OJRexImplementor}
@@ -33,15 +33,15 @@ import openjava.ptree.*;
  */
 public abstract class FarragoOJRexImplementor implements OJRexImplementor
 {
+    //~ Methods ---------------------------------------------------------------
+
     // implement OJRexImplementor
     public Expression implement(
         RexToOJTranslator translator,
         RexCall call,
         Expression [] operands)
     {
-        return implementFarrago(
-            (FarragoRexToOJTranslator) translator,
-            call,
+        return implementFarrago((FarragoRexToOJTranslator) translator, call,
             operands);
     }
 
@@ -71,5 +71,6 @@ public abstract class FarragoOJRexImplementor implements OJRexImplementor
         return true;
     }
 }
+
 
 // End FarragoOJRexImplementor.java

@@ -10,9 +10,6 @@ BTreeSearch.cpp \
 BTreeSearchUnique.cpp \
 BTreeTupleStream.cpp \
 BufferingTupleStream.cpp \
-CalcExcn.cpp \
-CalcExecutionStream.cpp \
-CalcTupleStream.cpp \
 CartesianProductStream.cpp \
 ConsumerToProducerProvisionAdapter.cpp \
 DoubleInputTupleStream.cpp \
@@ -28,3 +25,8 @@ TableWriterStream.cpp \
 TracingTupleStream.cpp \
 TupleStream.cpp \
 TupleStreamGraph.cpp
+
+DESIGN_DOC=SchedulerDesign.cpp
+EXTRA_DIST=$(DESIGN_DOC)
+TAGS_DEPENDENCIES=$(DESIGN_DOC)
+ETAGS_ARGS=$(DESIGN_DOC)

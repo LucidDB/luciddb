@@ -15,18 +15,21 @@ package openjava.mop;
 import openjava.ptree.*;
 import openjava.ptree.util.ParseTreeVisitor;
 import net.sf.saffron.core.AggregationExtender;
-import net.sf.saffron.core.SaffronSchema;
-import net.sf.saffron.core.SaffronTable;
-import net.sf.saffron.core.SaffronConnection;
+import org.eigenbase.relopt.RelOptSchema;
+import org.eigenbase.relopt.RelOptTable;
+import org.eigenbase.relopt.RelOptConnection;
 import net.sf.saffron.runtime.AggAndAcc;
 import net.sf.saffron.runtime.SaffronUtil;
-import net.sf.saffron.runtime.SyntheticObject;
+import org.eigenbase.runtime.SyntheticObject;
 import net.sf.saffron.runtime.SaffronError;
 import net.sf.saffron.oj.OJConnectionRegistry;
 
 import java.lang.reflect.InvocationTargetException;
 import java.sql.ResultSet;
 import java.util.*;
+
+import org.eigenbase.util.Util;
+import org.eigenbase.oj.util.OJUtil;
 
 /**
  * The class <code>Toolbox</code> is a utility class.
@@ -51,7 +54,7 @@ public abstract class Toolbox {
             clazzObject);
 
     public static final OJClass clazzConnection = OJClass.forClass(
-            SaffronConnection.class);
+            RelOptConnection.class);
 
     public static final OJClass clazzCollection = OJClass.forClass(
             java.util.Collection.class);
@@ -72,7 +75,7 @@ public abstract class Toolbox {
             java.util.Iterator.class);
 
     public static final OJClass clazzIterable = OJClass.forClass(
-            net.sf.saffron.runtime.Iterable.class);
+            org.eigenbase.runtime.Iterable.class);
 
     public static final OJClass clazzVector = OJClass.forClass(
             java.util.Vector.class);
@@ -906,7 +909,7 @@ public abstract class Toolbox {
         try {
             return OJClass.forName(name);
         } catch (OJClassNotFoundException e) {
-            throw newInternal(
+            throw Util.newInternal(
                 e,
                 "OJClass.forNameAnyway() failed for : " + name);
         }
@@ -1019,16 +1022,11 @@ public abstract class Toolbox {
         }
     }
 
-    public static OJClass getType(Environment env, Expression exp) {
-        try {
-            OJClass clazz = exp.getType(env);
-            assert(clazz != null);
-            return clazz;
-        } catch (Exception e) {
-            throw newInternal(e, "while deriving type for '" + exp + "'");
-        }
+    public static OJClass getType(Environment env, Expression exp)
+    {
+        return OJUtil.getType(env,exp);
     }
-
+    
     public static OJClass[] getTypes(Environment env, Expression[] exps) {
         OJClass[] classes = new OJClass[exps.length];
         for (int i = 0; i < classes.length; i++) {
@@ -1061,7 +1059,7 @@ public abstract class Toolbox {
             String qname = env.toQualifiedName(refType.toString());
             OJClass clazz = env.lookupClass(qname);
             if (clazz == null) {
-                throw newInternal(
+                throw Util.newInternal(
                         "unknown type '" + refType + "'");
             }
             return clazz;
@@ -1071,16 +1069,16 @@ public abstract class Toolbox {
             try {
                 clazz = exp.getType(env);
             } catch (Exception e) {
-                throw newInternal(
+                throw Util.newInternal(
                         e, "cannot derive type for expression '" + exp + "'");
             }
             if (clazz == null) {
-                throw newInternal(
+                throw Util.newInternal(
                         "cannot derive type for expression '" + exp + "'");
             }
             return clazz;
         } else {
-            throw newInternal(
+            throw Util.newInternal(
                     "cannot derive type for " + ref.getClass() + ": " + ref);
         }
     }
@@ -1103,97 +1101,6 @@ public abstract class Toolbox {
         }
         return list;
     }
-
-    public static Error newInternal() {
-        return newInternal("(unknown cause)");
-    }
-
-    public static Error newInternal(String s) {
-        if (false) {
-            // TODO re-enable this code when we're no longer throwing spurious
-            //   internal errors (which should be parse errors, for example)
-            System.err.println("Internal error: " + s);
-        }
-        return new SaffronError("Internal error: " + s);
-    }
-
-    public static Error newInternal(Throwable e) {
-        return newInternal(e, "(unknown cause)");
-    }
-
-    public static Error newInternal(Throwable e, String s) {
-        String message = "Internal error: " + s;
-        if (false) {
-            // TODO re-enable this code when we're no longer throwing spurious
-            //   internal errors (which should be parse errors, for example)
-            System.err.println(message);
-            e.printStackTrace(System.err);
-        }
-        return new SaffronError(message, e);
-    }
-
-    public static void pre(boolean b, String description) {
-        if (!b) {
-            throw newInternal("pre-condition failed: " + description);
-        }
-    }
-    /**
-     * Returns a {@link java.lang.RuntimeException} indicating that a
-     * particular feature has not been implemented, but should be.
-     *
-     * <p>If every 'hole' in our functionality uses this method, it will be
-     * easier for us to identity the holes. Throwing a
-     * {@link java.lang.UnsupportedOperationException} isn't as good, because
-     * sometimes we actually want to partially implement an API.
-     *
-     * @param o The object which was the target of the call, or null.
-     *   Passing the object gives crucial information if a method needs to be
-     *   overridden and a subclass forgot to do so.
-     *
-     * @return an {@link UnsupportedOperationException}.
-     */
-    public static RuntimeException needToImplement(Object o) {
-        String description = null;
-        if (o != null) {
-            description = o.getClass().toString() + ": " + o.toString();
-        }
-        throw new UnsupportedOperationException(description);
-    }
-
-    /**
-     * Sets a {@link ParseTreeVisitor} going on a parse tree, and returns the
-     * result.
-     */
-    public static ParseTree go(ParseTreeVisitor visitor, ParseTree p) {
-        ObjectList holder = new ObjectList(p);
-        try {
-            p.accept(visitor);
-        } catch (StopIterationException e) {
-            // ignore the exception -- it was just a way to abort the traversal
-        } catch (ParseTreeException e) {
-            throw Toolbox.newInternal(
-                    e, "while visiting expression " + p);
-        }
-        return (ParseTree) holder.get(0);
-    }
-
-    /**
-     * Sets a {@link ParseTreeVisitor} going on a given non-relational
-     * expression, and returns the result.
-     */
-    public static Expression go(ParseTreeVisitor visitor, Expression p) {
-        return (Expression) go(visitor, (ParseTree) p);
-    }
-
-    /**
-     * A <code>StopIterationException</code> is a way to tell a {@link
-     * openjava.ptree.util.ParseTreeVisitor} to halt traversal of the tree, but
-     * is not regarded as an error.
-     **/
-    public static class StopIterationException extends ParseTreeException {
-        public StopIterationException() {
-        }
-    };
 
     /**
      * Creates or (subsequently) retrieves a class object corresponding to the
@@ -1219,35 +1126,14 @@ public abstract class Toolbox {
                 try {
                     declarer.addClass(anonClass);
                 } catch (CannotAlterException e) {
-                    throw Toolbox.newInternal(
+                    throw Util.newInternal(
                             e, "declarer of anonymous class must be source code");
                 }
             }
-            env.recordMemberClass(declarer.getName(), cdecl.getName());
+            OJUtil.recordMemberClass(env, declarer.getName(), cdecl.getName());
             env.mapAnonDeclToClass.put(allocExp, anonClass);
         }
         return anonClass;
-    }
-
-    /**
-     * Ensures that an expression is an object.  Primitive expressions are
-     * wrapped in a constructor (for example, the <code>int</code> expression
-     * <code>2 + 3</code> becomes <code>new Integer(2 + 3)</code>);
-     * non-primitive expressions are unchanged.
-     *
-     * @param exp an expression
-     * @param clazz <code>exp</code>'s type
-     * @return a call to the constructor of a wrapper class if <code>exp</code>
-     *    is primitive, <code>exp</code> otherwise
-     **/
-    public static Expression box(OJClass clazz, Expression exp) {
-        if (clazz.isPrimitive()) {
-            return new AllocationExpression(
-                    clazz.primitiveWrapper(),
-                    new ExpressionList(exp));
-        } else {
-            return exp;
-        }
     }
 
     /**
@@ -1303,7 +1189,7 @@ public abstract class Toolbox {
         }
         if (toClazz == clazzObject) {
             if (!clazzObject.isAssignableFrom(fromClazz)) {
-                throw newInternal(
+                throw Util.newInternal(
                         "cannot cast non-object " + fromClazz +
                         " to java.lang.Object");
             }
@@ -1325,7 +1211,7 @@ public abstract class Toolbox {
                             intermediateClazz));
         } else if (fromClazz.isPrimitive()) {
             return castObject(
-                    box(
+                    OJUtil.box(
                             fromClazz,
                             exp),
                     fromClazz.unwrappedPrimitive(),
@@ -1370,9 +1256,9 @@ public abstract class Toolbox {
     /**
      * Converts a field access into a table.
      **/
-    public static SaffronTable getTable(
+    public static RelOptTable getTable(
         Environment env, ParseTree expr, String qualifier, String name) {
-        SaffronSchema schema = getSaffronSchema(expr, env);
+        RelOptSchema schema = getRelOptSchema(expr, env);
         if (schema == null) {
             return null;
         }
@@ -1381,30 +1267,31 @@ public abstract class Toolbox {
         return schema.getTableForMember(names);
     }
 
-    private static SaffronSchema getSaffronSchema(ParseTree expr, Environment env) {
+    private static RelOptSchema getRelOptSchema(ParseTree expr, Environment env) {
         if (expr instanceof Variable) {
             final Environment.VariableInfo info = env.lookupBind(expr.toString());
-            SaffronSchema schema = info.getSaffronSchema();
+            RelOptSchema schema = info.getRelOptSchema();
             if (schema != null) {
                 return schema;
             }
         }
-        final SaffronConnection saffronConnection = OJConnectionRegistry.instance.get(expr);
+        final RelOptConnection saffronConnection = OJConnectionRegistry.instance.get(expr);
         if (saffronConnection != null) {
-            return saffronConnection.getSaffronSchema();
+            return saffronConnection.getRelOptSchema();
         }
         OJClass exprType = getType(env, expr);
         if (clazzConnection.isAssignableFrom(exprType)) {
-            // Call the "getSaffronSchemaStatic()" method, if it exists.
+            // Call the "getRelOptSchemaStatic()" method, if it exists.
             OJMethod method;
             try {
-                method = exprType.getMethod("getSaffronSchemaStatic", null);
+                method = exprType.getMethod("getRelOptSchemaStatic", null);
                 try {
                     Object o = method.invoke(null, new Object[0]);
-                    if (!(o instanceof SaffronSchema)) {
-                        throw newInternal(method + " must return a SaffronSchema");
+                    if (!(o instanceof RelOptSchema)) {
+                        throw Util.newInternal(
+                            method + " must return a RelOptSchema");
                     }
-                    return (SaffronSchema) o;
+                    return (RelOptSchema) o;
                 } catch (IllegalAccessException e) {
                 } catch (InvocationTargetException e) {
                 } catch (CannotExecuteException e) {

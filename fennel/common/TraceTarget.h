@@ -48,7 +48,7 @@ public:
     virtual ~TraceTarget();
 
     /**
-     * Notification received when a trace event occurs.
+     * Receives notification when a trace event occurs.
      *
      * @param source the facility from which the message originated
      *
@@ -62,7 +62,7 @@ public:
         std::string message) = 0;
 
     /**
-     * Get the level at which a particular source should be traced.
+     * Gets the level at which a particular source should be traced.
      *
      * @param source name of source to be traced
      *

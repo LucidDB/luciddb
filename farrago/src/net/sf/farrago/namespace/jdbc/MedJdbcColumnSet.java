@@ -6,37 +6,36 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.namespace.jdbc;
+
+import java.sql.*;
+import java.util.*;
+
+import javax.sql.*;
 
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
-import net.sf.saffron.ext.*;
-import net.sf.saffron.sql.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.rel.jdbc.*;
-import net.sf.saffron.rel.convert.*;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.core.*;
-import net.sf.saffron.util.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.rel.convert.*;
+import org.eigenbase.rel.jdbc.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.util.*;
 
-import java.sql.*;
-import java.util.*;
-
-import javax.sql.*;
 
 /**
  * MedJdbcColumnSet implements FarragoMedColumnSet for foreign JDBC tables.
@@ -46,42 +45,41 @@ import javax.sql.*;
  */
 class MedJdbcColumnSet extends MedAbstractColumnSet
 {
-    final MedJdbcNameDirectory directory;
-    
-    final SqlSelect select;
+    //~ Instance fields -------------------------------------------------------
 
+    final MedJdbcNameDirectory directory;
+    final SqlSelect select;
     final SqlDialect dialect;
-    
+
+    //~ Constructors ----------------------------------------------------------
+
     MedJdbcColumnSet(
         MedJdbcNameDirectory directory,
         String [] foreignName,
         String [] localName,
         SqlSelect select,
         SqlDialect dialect,
-        SaffronType rowType)
+        RelDataType rowType)
     {
-        super(
-            localName,
-            foreignName,
-            rowType,
-            null,
-            null);
+        super(localName, foreignName, rowType, null, null);
         this.directory = directory;
         this.select = select;
         this.dialect = dialect;
     }
-    
-    // implement SaffronTable
+
+    //~ Methods ---------------------------------------------------------------
+
+    // implement RelOptTable
     public double getRowCount()
     {
         // TODO:  use getStatistics?
         return super.getRowCount();
     }
-    
-    // implement SaffronTable
-    public SaffronRel toRel(
-        VolcanoCluster cluster,
-        SaffronConnection connection)
+
+    // implement RelOptTable
+    public RelNode toRel(
+        RelOptCluster cluster,
+        RelOptConnection connection)
     {
         return new MedJdbcQueryRel(
             this,
@@ -92,5 +90,6 @@ class MedJdbcColumnSet extends MedAbstractColumnSet
             select);
     }
 }
+
 
 // End MedJdbcColumnSet.java

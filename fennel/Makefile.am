@@ -2,7 +2,7 @@ include $(top_srcdir)/am_include.mk
 
 AUTOMAKE_OPTIONS=foreign
 SUBDIRS=common synch device cache segment txn tuple btree \
-db calc xo libfennel test @farrago_subdir@
+db xo libfennel test disruptivetech @farrago_subdir@
 EXTRA_DIST=am_include.mk moodss web build test/verboseTest INSTALL.mingw
 
 libtool: $(LIBTOOL_DEPS)

@@ -6,31 +6,30 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.jdbc.engine;
 
-import net.sf.farrago.jdbc.*;
-import net.sf.farrago.util.*;
-import net.sf.farrago.trace.*;
-import net.sf.farrago.session.*;
-import net.sf.farrago.db.*;
-import net.sf.farrago.resource.*;
-import net.sf.saffron.util.SaffronException;
-
 import java.sql.*;
-
 import java.util.*;
 import java.util.logging.*;
+
+import net.sf.farrago.db.*;
+import net.sf.farrago.jdbc.*;
+import net.sf.farrago.resource.*;
+import net.sf.farrago.session.*;
+import net.sf.farrago.trace.*;
+import net.sf.farrago.util.*;
+import net.sf.farrago.plugin.*;
+
 
 /**
  * FarragoJdbcEngineDriver implements the Farrago engine/server side of
@@ -39,10 +38,11 @@ import java.util.logging.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoJdbcEngineDriver
-    extends FarragoAbstractJdbcDriver
+public class FarragoJdbcEngineDriver extends FarragoAbstractJdbcDriver
     implements FarragoJdbcServerDriver
 {
+    //~ Static fields/initializers --------------------------------------------
+
     private static final Logger tracer =
         FarragoTrace.getFarragoJdbcEngineDriverTracer();
 
@@ -50,12 +50,16 @@ public class FarragoJdbcEngineDriver
         new FarragoJdbcEngineDriver().register();
     }
 
+    //~ Constructors ----------------------------------------------------------
+
     /**
      * Creates a new FarragoJdbcEngineDriver object.
      */
     public FarragoJdbcEngineDriver()
     {
     }
+
+    //~ Methods ---------------------------------------------------------------
 
     /**
      * @return the prefix for JDBC URL's understood by this driver;
@@ -65,9 +69,11 @@ public class FarragoJdbcEngineDriver
     {
         return getBaseUrl();
     }
-    
+
     // implement Driver
-    public Connection connect(String url,Properties info)
+    public Connection connect(
+        String url,
+        Properties info)
         throws SQLException
     {
         if (!acceptsURL(url)) {
@@ -91,9 +97,18 @@ public class FarragoJdbcEngineDriver
     // implement FarragoJdbcServerDriver
     public FarragoSessionFactory newSessionFactory()
     {
-        return new FarragoDbSessionFactory();
+        String libraryName = 
+            FarragoProperties.instance().defaultSessionFactoryLibraryName.get();
+        try {
+            Class c = FarragoPluginCache.loadPluginClass(
+                libraryName,"SessionFactoryClassName");
+            return (FarragoSessionFactory) c.newInstance();
+        } catch (Throwable ex) {
+            throw FarragoResource.instance().newPluginInitFailed(
+                libraryName,ex);
+        }
     }
-    
+
     /**
      * Converter from any Throwable to SQLException.
      *
@@ -103,8 +118,9 @@ public class FarragoJdbcEngineDriver
      */
     static SQLException newSqlException(Throwable ex)
     {
-        return FarragoUtil.newSqlException(ex,tracer);
+        return FarragoUtil.newSqlException(ex, tracer);
     }
 }
+
 
 // End FarragoJdbcEngineDriver.java

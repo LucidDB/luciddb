@@ -70,12 +70,12 @@ public:
     uint maxRequests;
     
     /**
-     * Define a default set of scheduler parameters.
+     * Defines a default set of scheduler parameters.
      */
     DeviceAccessSchedulerParams();
 
     /**
-     * Read parameter settings from a ConfigMap.
+     * Reads parameter settings from a ConfigMap.
      */
     void readConfig(ConfigMap const &configMap);
 };

@@ -16,22 +16,21 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.namespace.ftrs;
+
+import java.util.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.util.*;
 import net.sf.farrago.query.*;
+import net.sf.farrago.util.*;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.util.*;
-import net.sf.saffron.rex.RexNode;
-import net.sf.saffron.rex.RexInputRef;
-
-import java.util.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.rex.RexInputRef;
+import org.eigenbase.rex.RexNode;
+import org.eigenbase.util.*;
 
 
 /**
@@ -41,7 +40,7 @@ import java.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class FtrsTableProjectionRule extends VolcanoRule
+class FtrsTableProjectionRule extends RelOptRule
 {
     //~ Constructors ----------------------------------------------------------
 
@@ -50,24 +49,23 @@ class FtrsTableProjectionRule extends VolcanoRule
      */
     public FtrsTableProjectionRule()
     {
-        super(
-            new RuleOperand(
+        super(new RelOptRuleOperand(
                 ProjectRel.class,
-                new RuleOperand [] {
-                    new RuleOperand(FtrsIndexScanRel.class,null)
+                new RelOptRuleOperand [] {
+                    new RelOptRuleOperand(FtrsIndexScanRel.class, null)
                 }));
     }
 
     //~ Methods ---------------------------------------------------------------
 
-    // implement VolcanoRule
+    // implement RelOptRule
     public CallingConvention getOutConvention()
     {
         return FennelPullRel.FENNEL_PULL_CONVENTION;
     }
 
-    // implement VolcanoRule
-    public void onMatch(VolcanoRuleCall call)
+    // implement RelOptRule
+    public void onMatch(RelOptRuleCall call)
     {
         ProjectRel origProject = (ProjectRel) call.rels[0];
         if (!origProject.isBoxed()) {
@@ -81,15 +79,13 @@ class FtrsTableProjectionRule extends VolcanoRule
         }
 
         // REVIEW:  what about AnonFields?
-        
         // TODO:  rather than failing, split into parts that can be
         // pushed down and parts that can't
-        
         int n = origProject.getChildExps().length;
         Integer [] projectedColumns = new Integer[n];
-        SaffronType rowType = origScan.ftrsTable.getRowType();
-        SaffronType projType = origProject.getRowType();
-        SaffronField [] projFields = projType.getFields();
+        RelDataType rowType = origScan.ftrsTable.getRowType();
+        RelDataType projType = origProject.getRowType();
+        RelDataTypeField [] projFields = projType.getFields();
         String [] fieldNames = new String[n];
         boolean needRename = false;
         for (int i = 0; i < n; ++i) {
@@ -111,9 +107,9 @@ class FtrsTableProjectionRule extends VolcanoRule
         // Generate a potential scan for each available index covering the
         // desired projection.  Leave it up to the optimizer to select one
         // based on cost, since sort order and I/O may be in competition.
-        FarragoCatalog catalog = origScan.getPreparingStmt().getCatalog();
+        FarragoRepos repos = origScan.getPreparingStmt().getRepos();
         Iterator iter =
-            catalog.getIndexes(origScan.ftrsTable.getCwmColumnSet()).iterator();
+            repos.getIndexes(origScan.ftrsTable.getCwmColumnSet()).iterator();
         while (iter.hasNext()) {
             CwmSqlindex index = (CwmSqlindex) iter.next();
 
@@ -123,12 +119,12 @@ class FtrsTableProjectionRule extends VolcanoRule
                 continue;
             }
 
-            if (!testIndexCoverage(catalog,index,projectedColumns)) {
+            if (!testIndexCoverage(repos, index, projectedColumns)) {
                 continue;
             }
 
             // REVIEW:  should cluster be from origProject or origScan?
-            SaffronRel projectedScan =
+            RelNode projectedScan =
                 new FtrsIndexScanRel(
                     origProject.getCluster(),
                     origScan.ftrsTable,
@@ -151,16 +147,16 @@ class FtrsTableProjectionRule extends VolcanoRule
     }
 
     private boolean testIndexCoverage(
-        FarragoCatalog catalog,
+        FarragoRepos repos,
         CwmSqlindex index,
         Integer [] projection)
     {
-        if (catalog.isClustered(index)) {
+        if (repos.isClustered(index)) {
             // clustered index guarantees coverage
             return true;
         }
         Integer [] indexProjection =
-            FtrsUtil.getUnclusteredCoverageArray(catalog,index);
+            FtrsUtil.getUnclusteredCoverageArray(repos, index);
         return Arrays.asList(indexProjection).containsAll(
             Arrays.asList(projection));
     }

@@ -1,36 +1,34 @@
 /*
-// $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Saffron preprocessor and data engine.
+// Copyright (C) 2002-2004 Disruptive Tech
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package net.sf.saffron.oj.rel;
 
-import net.sf.saffron.core.SaffronType;
-import net.sf.saffron.core.SaffronTypeFactory;
-import net.sf.saffron.oj.util.OJUtil;
-import net.sf.saffron.rel.Aggregation;
-import net.sf.saffron.rel.SaffronRel;
-import net.sf.saffron.util.Util;
 import openjava.mop.*;
 import openjava.ptree.*;
 
+import org.eigenbase.oj.rel.*;
+import org.eigenbase.oj.util.OJUtil;
+import org.eigenbase.rel.Aggregation;
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.util.Util;
 
 /**
  * <code>BuiltinAggregation</code> is a basic aggregator for which special
@@ -43,7 +41,7 @@ import openjava.ptree.*;
  */
 public abstract class BuiltinAggregation implements Aggregation
 {
-    //~ Methods ---------------------------------------------------------------
+    private static final String holderClassName = "saffron.runtime.Holder";
 
     // The following methods are placeholders.
     public static int count()
@@ -70,7 +68,9 @@ public abstract class BuiltinAggregation implements Aggregation
      * Creates a <code>BuiltinAggregation</code> with a given name and
      * argument types.
      */
-    public static BuiltinAggregation create(String name,OJClass [] argTypes)
+    public static BuiltinAggregation create(
+        String name,
+        OJClass [] argTypes)
     {
         if (name.equals("sum") && (argTypes.length == 1)) {
             return new Sum(argTypes[0]);
@@ -78,29 +78,32 @@ public abstract class BuiltinAggregation implements Aggregation
         if (name.equals("count")) {
             return new Count();
         }
-        if (
-            (name.equals("min") || name.equals("max"))
+        if ((name.equals("min") || name.equals("max"))
                 && (MinMax.getKind(argTypes) != MinMax.MINMAX_INVALID)) {
-            return new MinMax(argTypes,name.equals("min"));
+            return new MinMax(
+                argTypes,
+                name.equals("min"));
         }
         return null;
     }
 
     // implement Aggregation
-    public SaffronType [] getParameterTypes(SaffronTypeFactory typeFactory)
+    public RelDataType [] getParameterTypes(RelDataTypeFactory typeFactory)
     {
         OJClass [] classes = getParameterTypes();
-        SaffronType [] types = new SaffronType[classes.length];
+        RelDataType [] types = new RelDataType[classes.length];
         for (int i = 0; i < classes.length; ++i) {
-            types[i] = OJUtil.ojToType(typeFactory,classes[i]);
+            types[i] = OJUtil.ojToType(typeFactory, classes[i]);
         }
         return types;
     }
 
     // implement Aggregation
-    public SaffronType getReturnType(SaffronTypeFactory typeFactory)
+    public RelDataType getReturnType(RelDataTypeFactory typeFactory)
     {
-        return OJUtil.ojToType(typeFactory,getReturnType());
+        return OJUtil.ojToType(
+            typeFactory,
+            getReturnType());
     }
 
     // implement Aggregation
@@ -112,7 +115,7 @@ public abstract class BuiltinAggregation implements Aggregation
     // implement Aggregation
     public void implementMerge(
         JavaRelImplementor implementor,
-        SaffronRel rel,
+        RelNode rel,
         Expression accumulator,
         Expression otherAccumulator)
     {
@@ -137,8 +140,8 @@ public abstract class BuiltinAggregation implements Aggregation
             new VariableDeclaration(
                 TypeName.forOJClass(Toolbox.clazzObject),
                 var.toString(),
-                implementStart(implementor,rel,args)));
-        implementNext(implementor,rel,var,args);
+                implementStart(implementor, rel, args)));
+        implementNext(implementor, rel, var, args);
         return var;
     }
 
@@ -148,12 +151,14 @@ public abstract class BuiltinAggregation implements Aggregation
      * ("sum", say), but a particular instance may have different parameter
      * types.
      */
-    public static OJMethod lookup(String name,OJClass [] argTypes)
+    public static OJMethod lookup(
+        String name,
+        OJClass [] argTypes)
     {
         OJClass clazz = OJClass.forClass(BuiltinAggregation.class);
         OJMethod method;
         try {
-            method = clazz.getMethod(name,argTypes);
+            method = clazz.getMethod(name, argTypes);
         } catch (NoSuchMemberException e) {
             return null;
         }
@@ -209,8 +214,6 @@ public abstract class BuiltinAggregation implements Aggregation
 
     abstract String getName();
 
-    //~ Inner Classes ---------------------------------------------------------
-
     /**
      * <code>Count</code> is an aggregator which returns the number of rows
      * which have gone into it. With one argument (or more), it returns the
@@ -254,51 +257,50 @@ public abstract class BuiltinAggregation implements Aggregation
         {
             StatementList stmtList = implementor.getStatementList();
             ExpressionStatement stmt =
-                new ExpressionStatement(
-                    new UnaryExpression(
+                new ExpressionStatement(new UnaryExpression(
                         UnaryExpression.POST_INCREMENT,
                         new FieldAccess(
                             new CastExpression(
-                                new TypeName(
-                                    "saffron.runtime.Holder." + type
+                                new TypeName(holderClassName + "." + type
                                     + "_Holder"),
                                 accumulator),
                             "value")));
             if (args.length == 0) {
-                // e.g. "((saffron.runtime.Holder.int_Holder) acc).value++;"
+                // e.g. "((Holder.int_Holder) acc).value++;"
                 stmtList.add(stmt);
             } else {
                 // if (arg1 != null && arg2 != null) {
-                //  ((saffron.runtime.Holder.int_Holder) acc).value++;
+                //  ((Holder.int_Holder) acc).value++;
                 // }
                 Expression condition = null;
                 for (int i = 0; i < args.length; i++) {
                     Expression term =
                         new BinaryExpression(
-                            implementor.translateInputField(rel,0,args[i]),
+                            implementor.translateInputField(rel, 0, args[i]),
                             BinaryExpression.NOTEQUAL,
                             Literal.constantNull());
                     if (condition == null) {
                         condition = term;
                     } else {
                         condition =
-                            new BinaryExpression(
-                                condition,
-                                BinaryExpression.LOGICAL_AND,
-                                term);
+                            new BinaryExpression(condition,
+                                BinaryExpression.LOGICAL_AND, term);
                     }
                 }
                 stmtList.add(
-                    new IfStatement(condition,new StatementList(stmt)));
+                    new IfStatement(
+                        condition,
+                        new StatementList(stmt)));
             }
         }
 
         public Expression implementResult(Expression accumulator)
         {
-            // e.g. "o" becomes "((saffron.runtime.Holder.int_Holder) o).value"
+            // e.g. "o" becomes "((Holder.int_Holder) o).value"
             return new FieldAccess(
                 new CastExpression(
-                    new TypeName("saffron.runtime.Holder." + type + "_Holder"),
+                    new TypeName(holderClassName +
+                    "." + type + "_Holder"),
                     accumulator),
                 "value");
         }
@@ -308,9 +310,10 @@ public abstract class BuiltinAggregation implements Aggregation
             JavaRel rel,
             int [] args)
         {
-            // e.g. "new saffron.runtime.Holder.int_Holder(0)"
+            // e.g. "new Holder.int_Holder(0)"
             return new AllocationExpression(
-                new TypeName("saffron.runtime.Holder." + type + "_Holder"),
+                new TypeName(holderClassName +
+                    "." + type + "_Holder"),
                 new ExpressionList(Literal.constantZero()));
         }
 
@@ -359,7 +362,9 @@ public abstract class BuiltinAggregation implements Aggregation
         private boolean isMin;
         private int kind;
 
-        MinMax(OJClass [] argTypes,boolean isMin)
+        MinMax(
+            OJClass [] argTypes,
+            boolean isMin)
         {
             this.argTypes = argTypes;
             this.isMin = isMin;
@@ -375,7 +380,7 @@ public abstract class BuiltinAggregation implements Aggregation
             case MINMAX_COMPARATOR:
                 return new OJClass [] { argTypes[1] };
             default:
-                throw Toolbox.newInternal("bad kind: " + kind);
+                throw Util.newInternal("bad kind: " + kind);
             }
         }
 
@@ -388,7 +393,7 @@ public abstract class BuiltinAggregation implements Aggregation
             case MINMAX_COMPARATOR:
                 return argTypes[1];
             default:
-                throw Toolbox.newInternal("bad kind: " + kind);
+                throw Util.newInternal("bad kind: " + kind);
             }
         }
 
@@ -401,7 +406,7 @@ public abstract class BuiltinAggregation implements Aggregation
             case MINMAX_COMPARATOR:
                 return new OJClass [] { Toolbox.clazzComparator };
             default:
-                throw Toolbox.newInternal("bad kind: " + kind);
+                throw Util.newInternal("bad kind: " + kind);
             }
         }
 
@@ -420,16 +425,15 @@ public abstract class BuiltinAggregation implements Aggregation
             switch (kind) {
             case MINMAX_PRIMITIVE:
 
-                // "((saffron.runtime.Holder.int_Holder) acc).setLesser(arg)"
+                // "((Holder.int_Holder) acc).setLesser(arg)"
                 Expression arg =
-                    implementor.translateInputField(rel,0,args[0]);
+                    implementor.translateInputField(rel, 0, args[0]);
                 stmtList.add(
                     new ExpressionStatement(
                         new MethodCall(
                             new CastExpression(
-                                new TypeName(
-                                    "saffron.runtime.Holder." + argTypes[0]
-                                    + "_Holder"),
+                                new TypeName(holderClassName + "."
+                                    + argTypes[0] + "_Holder"),
                                 accumulator),
                             isMin ? "setLesser" : "setGreater",
                             new ExpressionList(arg))));
@@ -440,7 +444,7 @@ public abstract class BuiltinAggregation implements Aggregation
                 // if (acc == null || (t != null && t.compareTo(acc) < 0)) {
                 //   acc = t;
                 // }
-                arg = implementor.translateInputField(rel,0,args[0]);
+                arg = implementor.translateInputField(rel, 0, args[0]);
                 Variable var_t = implementor.newVariable();
                 stmtList.add(
                     new VariableDeclaration(
@@ -470,29 +474,26 @@ public abstract class BuiltinAggregation implements Aggregation
                                     Literal.constantZero()))),
                         new StatementList(
                             new ExpressionStatement(
-                                new AssignmentExpression(
-                                    accumulator,
-                                    AssignmentExpression.EQUALS,
-                                    var_t)))));
+                                new AssignmentExpression(accumulator,
+                                    AssignmentExpression.EQUALS, var_t)))));
                 return;
             case MINMAX_COMPARATOR:
 
-                // "((saffron.runtime.Holder.ComparatorHolder)
+                // "((Holder.ComparatorHolder)
                 // acc).setLesser(arg)"
-                arg = implementor.translateInputField(rel,0,args[1]);
+                arg = implementor.translateInputField(rel, 0, args[1]);
                 stmtList.add(
                     new ExpressionStatement(
                         new MethodCall(
                             new CastExpression(
-                                new TypeName(
-                                    "saffron.runtime.Holder." + argTypes[1]
-                                    + "_Holder"),
+                                new TypeName(holderClassName + "."
+                                    + argTypes[1] + "_Holder"),
                                 accumulator),
                             isMin ? "setLesser" : "setGreater",
                             new ExpressionList(arg))));
                 return;
             default:
-                throw Toolbox.newInternal("bad kind: " + kind);
+                throw Util.newInternal("bad kind: " + kind);
             }
         }
 
@@ -501,11 +502,10 @@ public abstract class BuiltinAggregation implements Aggregation
             switch (kind) {
             case MINMAX_PRIMITIVE:
 
-                // ((saffron.runtime.Holder.int_Holder) acc).value
+                // ((Holder.int_Holder) acc).value
                 return new FieldAccess(
                     new CastExpression(
-                        new TypeName(
-                            "saffron.runtime.Holder." + argTypes[1]
+                        new TypeName(holderClassName + "." + argTypes[1]
                             + "_Holder"),
                         accumulator),
                     "value");
@@ -517,17 +517,17 @@ public abstract class BuiltinAggregation implements Aggregation
                     accumulator);
             case MINMAX_COMPARATOR:
 
-                // (T) ((saffron.runtime.Holder.int_Holder) acc).value
+                // (T) ((Holder.int_Holder) acc).value
                 return new CastExpression(
                     TypeName.forOJClass(argTypes[1]),
                     new FieldAccess(
                         new CastExpression(
                             new TypeName(
-                                "saffron.runtime.Holder.ComparatorHolder"),
+                                holderClassName + ".ComparatorHolder"),
                             accumulator),
                         "value"));
             default:
-                throw Toolbox.newInternal("bad kind: " + kind);
+                throw Util.newInternal("bad kind: " + kind);
             }
         }
 
@@ -539,11 +539,11 @@ public abstract class BuiltinAggregation implements Aggregation
             switch (kind) {
             case MINMAX_PRIMITIVE:
 
-                // "new saffron.runtime.Holder.int_Holder(Integer.MAX_VALUE)" if
+                // "new Holder.int_Holder(Integer.MAX_VALUE)" if
                 // the type is "int" and the function is "min"
                 return new AllocationExpression(
-                    new TypeName(
-                        "saffron.runtime.Holder." + argTypes[0] + "_Holder"),
+                    new TypeName(holderClassName + "." + argTypes[0]
+                        + "_Holder"),
                     new ExpressionList(
                         new FieldAccess(
                             TypeName.forOJClass(
@@ -557,12 +557,14 @@ public abstract class BuiltinAggregation implements Aggregation
 
                 // "new saffron.runtime.ComparatorAndObject(comparator, null)"
                 Expression arg =
-                    implementor.translateInputField(rel,0,args[0]);
+                    implementor.translateInputField(rel, 0, args[0]);
                 return new AllocationExpression(
                     new TypeName("saffron.runtime.ComparatorAndObject"),
-                    new ExpressionList(arg,Literal.constantNull()));
+                    new ExpressionList(
+                        arg,
+                        Literal.constantNull()));
             default:
-                throw Toolbox.newInternal("bad kind: " + kind);
+                throw Util.newInternal("bad kind: " + kind);
             }
         }
 
@@ -570,12 +572,10 @@ public abstract class BuiltinAggregation implements Aggregation
         {
             if ((argTypes.length == 1) && argTypes[0].isPrimitive()) {
                 return MINMAX_PRIMITIVE;
-            } else if (
-                (argTypes.length == 1)
+            } else if ((argTypes.length == 1)
                     && Toolbox.clazzComparable.isAssignableFrom(argTypes[0])) {
                 return MINMAX_COMPARABLE;
-            } else if (
-                (argTypes.length == 2)
+            } else if ((argTypes.length == 2)
                     && Toolbox.clazzComparator.isAssignableFrom(argTypes[0])
                     && Toolbox.clazzObject.isAssignableFrom(argTypes[1])) {
                 return MINMAX_COMPARATOR;
@@ -631,18 +631,17 @@ public abstract class BuiltinAggregation implements Aggregation
             Expression accumulator,
             int [] args)
         {
-            assert(args.length == 1);
+            assert (args.length == 1);
             StatementList stmtList = implementor.getStatementList();
-            Expression arg = implementor.translateInputField(rel,0,args[0]);
+            Expression arg = implementor.translateInputField(rel, 0, args[0]);
 
-            // e.g. "((saffron.runtime.Holder.int_Holder) acc).value += arg"
+            // e.g. "((Holder.int_Holder) acc).value += arg"
             stmtList.add(
                 new ExpressionStatement(
                     new AssignmentExpression(
                         new FieldAccess(
                             new CastExpression(
-                                new TypeName(
-                                    "saffron.runtime.Holder." + type
+                                new TypeName(holderClassName + "." + type
                                     + "_Holder"),
                                 accumulator),
                             "value"),
@@ -652,10 +651,10 @@ public abstract class BuiltinAggregation implements Aggregation
 
         public Expression implementResult(Expression accumulator)
         {
-            // e.g. "o" becomes "((saffron.runtime.Holder.int_Holder) o).value"
+            // e.g. "o" becomes "((Holder.int_Holder) o).value"
             return new FieldAccess(
                 new CastExpression(
-                    new TypeName("saffron.runtime.Holder." + type + "_Holder"),
+                    new TypeName(holderClassName + "." + type + "_Holder"),
                     accumulator),
                 "value");
         }
@@ -665,9 +664,9 @@ public abstract class BuiltinAggregation implements Aggregation
             JavaRel rel,
             int [] args)
         {
-            // e.g. "new saffron.runtime.Holder.int_Holder(0)"
+            // e.g. "new Holder.int_Holder(0)"
             return new AllocationExpression(
-                new TypeName("saffron.runtime.Holder." + type + "_Holder"),
+                new TypeName(holderClassName + "." + type + "_Holder"),
                 new ExpressionList(Literal.constantZero()));
         }
 

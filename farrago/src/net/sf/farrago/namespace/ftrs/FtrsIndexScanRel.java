@@ -16,26 +16,25 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.namespace.ftrs;
+
+import java.util.*;
+import java.util.List;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
+import net.sf.farrago.query.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
-import net.sf.farrago.query.*;
-
-import net.sf.saffron.core.*;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.util.*;
-
-import java.util.*;
-import java.util.List;
 
 import openjava.ptree.Literal;
+
+import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.util.*;
 
 
 /**
@@ -61,7 +60,6 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
      * index.
      */
     final Integer [] projectedColumns;
-
     final boolean isOrderPreserving;
 
     //~ Constructors ----------------------------------------------------------
@@ -69,7 +67,7 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
     /**
      * Creates a new FtrsIndexScanRel object.
      *
-     * @param cluster VolcanoCluster for this rel
+     * @param cluster RelOptCluster for this rel
      * @param ftrsTable table being scanned
      * @param index index to use for table access
      * @param connection connection
@@ -79,14 +77,14 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
      * if false, rows can be returned out of order
      */
     public FtrsIndexScanRel(
-        VolcanoCluster cluster,
+        RelOptCluster cluster,
         FtrsTable ftrsTable,
         CwmSqlindex index,
-        SaffronConnection connection,
+        RelOptConnection connection,
         Integer [] projectedColumns,
         boolean isOrderPreserving)
     {
-        super(cluster,ftrsTable,connection);
+        super(cluster, ftrsTable, connection);
         this.ftrsTable = ftrsTable;
         this.index = index;
         this.projectedColumns = projectedColumns;
@@ -108,11 +106,10 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
         if (projectedColumns != null) {
             columnOrdinal = projectedColumns[columnOrdinal].intValue();
         }
-        return (CwmColumn) ftrsTable.getCwmColumnSet().getFeature().get(
-            columnOrdinal);
+        return (CwmColumn) ftrsTable.getCwmColumnSet().getFeature().get(columnOrdinal);
     }
 
-    // implement SaffronRel
+    // implement RelNode
     public CallingConvention getConvention()
     {
         return FennelPullRel.FENNEL_PULL_CONVENTION;
@@ -124,21 +121,23 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
         return ftrsTable.getPreparingStmt();
     }
 
-    // implement SaffronRel
-    public PlanCost computeSelfCost(SaffronPlanner planner)
+    // implement RelNode
+    public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
-        return computeCost(planner,getRows());
+        return computeCost(
+            planner,
+            getRows());
     }
 
-    // implement SaffronRel
-    public SaffronType deriveRowType()
+    // implement RelNode
+    public RelDataType deriveRowType()
     {
         if (projectedColumns == null) {
             return super.deriveRowType();
         } else {
-            final SaffronField [] fields = table.getRowType().getFields();
+            final RelDataTypeField [] fields = table.getRowType().getFields();
             return cluster.typeFactory.createProjectType(
-                new SaffronTypeFactory.FieldInfo() {
+                new RelDataTypeFactory.FieldInfo() {
                     public int getFieldCount()
                     {
                         return projectedColumns.length;
@@ -150,7 +149,7 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
                         return fields[i].getName();
                     }
 
-                    public SaffronType getFieldType(int index)
+                    public RelDataType getFieldType(int index)
                     {
                         final int i = projectedColumns[index].intValue();
                         return fields[i].getType();
@@ -160,7 +159,7 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
     }
 
     // override TableAccess
-    public void explain(PlanWriter pw)
+    public void explain(RelOptPlanWriter pw)
     {
         Object projection;
         if (projectedColumns == null) {
@@ -170,12 +169,10 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
         }
         pw.explain(
             this,
-            new String [] {
-                "table","projection","index","preserveOrder" },
+            new String [] { "table", "projection", "index", "preserveOrder" },
             new Object [] {
-                Arrays.asList(ftrsTable.getQualifiedName()),
-                projection,index.getName(),
-                Boolean.valueOf(isOrderPreserving)
+                Arrays.asList(ftrsTable.getQualifiedName()), projection,
+                index.getName(), Boolean.valueOf(isOrderPreserving)
             });
     }
 
@@ -187,33 +184,34 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
     // implement FennelRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
-        FarragoCatalog catalog = getPreparingStmt().getCatalog();
+        FarragoRepos repos = getPreparingStmt().getRepos();
 
-        FemIndexScanDef scanStream =
-            catalog.newFemIndexScanDef();
+        FemIndexScanDef scanStream = repos.newFemIndexScanDef();
 
         defineScanStream(scanStream);
 
         return scanStream;
     }
 
-    // implement SaffronRel
-    PlanCost computeCost(SaffronPlanner planner,double dRows)
+    // implement RelNode
+    RelOptCost computeCost(
+        RelOptPlanner planner,
+        double dRows)
     {
         // TODO:  compute page-based I/O cost
         // CPU cost is proportional to number of columns projected
         // I/O cost is proportional to pages of index scanned
         double dCpu = dRows * getRowType().getFieldCount();
 
-        FarragoCatalog catalog = getPreparingStmt().getCatalog();
+        FarragoRepos repos = getPreparingStmt().getRepos();
         int nIndexCols =
-            catalog.isClustered(index)
+            repos.isClustered(index)
             ? ftrsTable.getCwmColumnSet().getFeature().size()
-            : FtrsUtil.getUnclusteredCoverageColList(catalog,index).size();
+            : FtrsUtil.getUnclusteredCoverageColList(repos, index).size();
 
         double dIo = dRows * nIndexCols;
 
-        return planner.makeCost(dRows,dCpu,dIo);
+        return planner.makeCost(dRows, dCpu, dIo);
     }
 
     /**
@@ -223,9 +221,9 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
      */
     void defineScanStream(FemIndexScanDef scanStream)
     {
-        FarragoCatalog catalog = getPreparingStmt().getCatalog();
+        FarragoRepos repos = getPreparingStmt().getRepos();
 
-        if (!catalog.isTemporary(index)) {
+        if (!repos.isTemporary(index)) {
             scanStream.setRootPageId(
                 getPreparingStmt().getIndexMap().getIndexRoot(index));
         } else {
@@ -234,30 +232,26 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
             // the plan.
             scanStream.setRootPageId(-1);
         }
-        scanStream.setSegmentId(
-            FtrsDataServer.getIndexSegmentId(index));
-        scanStream.setIndexId(
-            JmiUtil.getObjectId(index));
+        scanStream.setSegmentId(FtrsDataServer.getIndexSegmentId(index));
+        scanStream.setIndexId(JmiUtil.getObjectId(index));
 
         scanStream.setTupleDesc(
             FtrsUtil.getCoverageTupleDescriptor(
-                (FarragoTypeFactory) cluster.typeFactory,
-                index));
+                (FarragoTypeFactory) cluster.typeFactory, index));
 
-        scanStream.setKeyProj(
-            FtrsUtil.getDistinctKeyProjection(catalog,index));
+        scanStream.setKeyProj(FtrsUtil.getDistinctKeyProjection(repos, index));
 
         Integer [] projection = computeProjectedColumns();
         Integer [] indexProjection;
 
-        if (catalog.isClustered(index)) {
+        if (repos.isClustered(index)) {
             indexProjection = projection;
         } else {
             // transform from table-relative to index-relative ordinals
             indexProjection = new Integer[projection.length];
             List indexTableColList =
                 Arrays.asList(
-                    FtrsUtil.getUnclusteredCoverageArray(catalog,index));
+                    FtrsUtil.getUnclusteredCoverageArray(repos, index));
             for (int i = 0; i < projection.length; ++i) {
                 Integer iTableCol = projection[i];
                 int iIndexCol = indexTableColList.indexOf(iTableCol);
@@ -267,7 +261,7 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
         }
 
         scanStream.setOutputProj(
-            FennelRelUtil.createTupleProjection(catalog,indexProjection));
+            FennelRelUtil.createTupleProjection(repos, indexProjection));
     }
 
     private Integer [] computeProjectedColumns()
@@ -282,9 +276,10 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
     // implement FennelRel
     public RelFieldCollation [] getCollations()
     {
-        Integer [] indexedCols = FtrsUtil.getCollationKeyArray(
-            getPreparingStmt().getCatalog(),
-            index);
+        Integer [] indexedCols =
+            FtrsUtil.getCollationKeyArray(
+                getPreparingStmt().getRepos(),
+                index);
         List collationList = new ArrayList();
         for (int i = 0; i < indexedCols.length; ++i) {
             int iCol = indexedCols[i].intValue();
@@ -304,8 +299,7 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
             }
             collationList.add(collation);
         }
-        return (RelFieldCollation []) collationList.toArray(
-            RelFieldCollation.emptyCollationArray);
+        return (RelFieldCollation []) collationList.toArray(RelFieldCollation.emptyCollationArray);
     }
 }
 

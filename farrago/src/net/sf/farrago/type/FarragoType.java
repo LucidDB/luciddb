@@ -17,24 +17,23 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.type;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.util.*;
-import net.sf.saffron.sql.type.SqlTypeName;
-
 import openjava.mop.*;
+
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.util.*;
 
 
 /**
  * FarragoType is the abstract superclass for all Farrago-specific
- * implementations of the SaffronType interface.
+ * implementations of the RelDataType interface.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class FarragoType implements SaffronType
+public abstract class FarragoType implements RelDataType
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -46,26 +45,26 @@ public abstract class FarragoType implements SaffronType
 
     //~ Methods ---------------------------------------------------------------
 
-    // implement SaffronType
-    public SaffronTypeFactory getFactory()
+    // implement RelDataType
+    public RelDataTypeFactory getFactory()
     {
         return factory;
     }
 
-    // implement SaffronType
+    // implement RelDataType
     public boolean isJoin()
     {
         return false;
     }
 
-    // implement SaffronType
-    public SaffronType [] getJoinTypes()
+    // implement RelDataType
+    public RelDataType [] getJoinTypes()
     {
         assert (isJoin());
         throw Util.newInternal("not reached");
     }
 
-    // implement SaffronType
+    // implement RelDataType
     public boolean isProject()
     {
         return false;
@@ -128,11 +127,15 @@ public abstract class FarragoType implements SaffronType
      * @param coerce - true when using cast rules, rather than implicit
      * @return
      */
-    public boolean isAssignableFrom(SaffronType t, boolean coerce)
+    public boolean isAssignableFrom(
+        RelDataType t,
+        boolean coerce)
     {
         // TODO jvs 22-Jan-2004:  implement real SQL rules
-       return this.getFactory().assignableFrom(this.getSqlTypeName(),
-               t.getSqlTypeName(), coerce);
+        return this.getFactory().assignableFrom(
+            this.getSqlTypeName(),
+            t.getSqlTypeName(),
+            coerce);
     }
 }
 

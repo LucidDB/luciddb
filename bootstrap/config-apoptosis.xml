@@ -19,8 +19,9 @@
 <!ENTITY failureaddress   "perfecthash@users.sf.net">
 <!ENTITY reportwhenfixed  "true">
 
-<!ENTITY scp_user        "cruise">
-<!ENTITY scp_host        "apoptosis">
+<!ENTITY scp_user         "cruise">
+<!ENTITY scp_host         "apoptosis">
+<!ENTITY scp_filesep      "/">
 <!ENTITY rsync_cmd        "rsync -az -e ssh --delete-after">
 <!ENTITY rsync_dest       "cruise@apoptosis:web/artifacts">
 

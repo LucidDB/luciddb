@@ -17,7 +17,7 @@
       serverRmiRegistryPort='5433'
       serverSingleListenerPort='-1'
       calcVirtualMachine='CALCVM_AUTO'
-      javaCompilerClassName='openjava.ojc.JaninoCompiler'
+      javaCompilerClassName='org.eigenbase.javac.JaninoCompiler'
       >
       <FEMConfig:FarragoConfig.fennelConfig>
         <FEMConfig:FennelConfig

@@ -125,7 +125,7 @@ protected:
     // indirectly via ExecutionStreamGraph interface
     
     /**
-     * Inherited from ClosableObject.  ExecutionStream implementations must
+     * Implements ClosableObject.  ExecutionStream implementations must
      * override this to release any resources acquired while open.
      */
     virtual void closeImpl();
@@ -171,12 +171,12 @@ public:
     };
     
     /**
-     * Prepare this stream for execution.  A precondition is that input streams
+     * Prepares this stream for execution.  A precondition is that input streams
      * must already be defined and prepared.  As an effect of this call, the
      * output tuple descriptor should be defined and remain unchanged for the
-     * lifetime of the stream.  Prepare is only ever called once, before the
+     * lifetime of the stream.  This method is only ever called once, before the
      * first open.  Although this method is virtual, derived classes may choose
-     * to define an overloaded version of this instead with a specialized
+     * to define an overloaded version instead with a specialized
      * covariant parameter class.
      *
      * @param params instance of stream parameterization class which should be
@@ -185,7 +185,7 @@ public:
     virtual void prepare(ExecutionStreamParams const &params);
 
     /**
-     * Determine resource requirements for this stream.  Default implementation
+     * Determines resource requirements for this stream.  Default implementation
      * declares zero resource requirements.
      *
      * @param minQuantity receives the minimum resource quantity
@@ -199,7 +199,7 @@ public:
         ExecutionStreamResourceQuantity &optQuantity);
 
     /**
-     * Set current resource allocation for this stream.
+     * Sets current resource allocation for this stream.
      *
      * @param quantity allocated resource quantity
      */
@@ -207,7 +207,7 @@ public:
         ExecutionStreamResourceQuantity const &quantity);
         
     /**
-     * Open this stream, acquiring any resources needed in order to be able to
+     * Opens this stream, acquiring any resources needed in order to be able to
      * fetch data.  A precondition is that input streams
      * must already be opened.  A stream can be closed and reopened.
      *
@@ -222,7 +222,7 @@ public:
     virtual ExecutionStreamId getStreamId() const;
     
     /**
-     * Set unique name of this stream for testing
+     * Sets unique name of this stream for testing.
      *
      * TODO: factor this out into testing harness
      */
@@ -247,7 +247,7 @@ public:
     // TODO: throttling interface to limit how many tuples are produced?
     
     /**
-     * Obtain a ByteInputStream which can produce result tuple data.  This can
+     * Obtains a ByteInputStream which can produce result tuple data.  Can
      * only be called while the stream is open.  The caller will fetch data by
      * reading bytes from the result stream, which produces them on demand.
      * The returned byte data consists of contiguously marshalled tuples.
@@ -272,7 +272,7 @@ public:
     virtual ByteInputStream &getProducerResultStream();
     
     /**
-     * Request that a stream produce results and write as many of them as will
+     * Requests that a stream produce results and write as many of them as will
      * fit into the current buffer of a ByteOutputStream.  This can only be
      * called while the stream is open, and its usage is mutually exclusive
      * with usage of getProducerResultStream (but the data representation is
@@ -290,8 +290,8 @@ public:
         ByteOutputStream &resultOutputStream);
 
     /**
-     * Query the BufferProvision which this stream is capable of when producing
-     * tuples.  If CONSUMER_PROVISION, getProducerResultStream is not
+     * Queries the BufferProvision which this stream is capable of when
+     * producing tuples.  If CONSUMER_PROVISION, getProducerResultStream is not
      * supported.  If PRODUCER_PROVISION, writeResultToConsumerBuffer is not
      * supported.  If PRODUCER_OR_CONSUMER_PROVISION, consumers can call
      * either.  NO_PROVISION is an illegal return value in this context.
@@ -302,7 +302,7 @@ public:
 
     // REVIEW:  need to discriminate by input ordinal?
     /**
-     * Query the BufferProvision which this stream requires of its inputs when
+     * Queries the BufferProvision which this stream requires of its inputs when
      * consuming their tuples.  If CONSUMER_PROVISION or PRODUCER_PROVISION,
      * inputs must support the corresponding model.  If
      * PRODUCER_OR_CONSUMER_PROVISION, inputs can be of either model.  If
@@ -313,7 +313,7 @@ public:
     virtual BufferProvision getInputBufferRequirement() const;
 
     /**
-     * Get a pointer which can be static_cast to the ExecutionStream subclass
+     * Gets a pointer which can be static_cast to the ExecutionStream subclass
      * known to implement this stream (said class must override this method).
      * This is like an extremely unsafe version of dynamic_cast, except that it
      * also takes care of digging through adapters.  Don't use this unless

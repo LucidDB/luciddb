@@ -6,35 +6,34 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.fem.med;
 
-import net.sf.farrago.catalog.*;
-import net.sf.farrago.ddl.*;
-import net.sf.farrago.type.*;
+import java.util.*;
+
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
-import net.sf.farrago.resource.*;
+import net.sf.farrago.ddl.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.util.*;
+import net.sf.farrago.resource.*;
+import net.sf.farrago.type.*;
 
-import net.sf.saffron.util.*;
-import net.sf.saffron.core.*;
-
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.util.*;
 import org.netbeans.mdr.handlers.*;
 import org.netbeans.mdr.storagemodel.*;
 
-import java.util.*;
 
 /**
  * FemDataServerImpl is a custom implementation for FemDataServer.
@@ -43,8 +42,12 @@ import java.util.*;
  * @version $Id$
  */
 public abstract class FemDataServerImpl extends InstanceHandler
-    implements FemDataServer, DdlValidatedElement, DdlStoredElement
+    implements FemDataServer,
+        DdlValidatedElement,
+        DdlStoredElement
 {
+    //~ Constructors ----------------------------------------------------------
+
     /**
      * Creates a new FemDataServerImpl object.
      *
@@ -55,16 +58,20 @@ public abstract class FemDataServerImpl extends InstanceHandler
         super(storable);
     }
 
+    //~ Methods ---------------------------------------------------------------
+
     // implement DdlValidatedElement
-    public void validateDefinition(DdlValidator validator,boolean creation)
+    public void validateDefinition(
+        DdlValidator validator,
+        boolean creation)
     {
-        FarragoCatalog catalog = validator.getCatalog();
+        FarragoRepos repos = validator.getRepos();
 
         // since servers are in the same namespace with CWM catalogs,
         // need a special name uniquness check here
         validator.validateUniqueNames(
-            catalog.getCwmCatalog(FarragoCatalog.SYSBOOT_CATALOG_NAME),
-            catalog.relationalPackage.getCwmCatalog().refAllOfType(),
+            repos.getCwmCatalog(FarragoRepos.SYSBOOT_CATALOG_NAME),
+            repos.relationalPackage.getCwmCatalog().refAllOfType(),
             false);
 
         try {
@@ -72,14 +79,14 @@ public abstract class FemDataServerImpl extends InstanceHandler
             loadFromCache(validator.getDataWrapperCache());
         } catch (Throwable ex) {
             throw validator.res.newValidatorDataServerInvalid(
-                catalog.getLocalizedObjectName(this,null),
+                repos.getLocalizedObjectName(this, null),
                 ex);
         }
 
         // REVIEW jvs 18-April-2004:  This uses default charset/collation
         // info from local catalog, but should really allow foreign
         // servers to override.
-        catalog.initializeCwmCatalog(this);
+        repos.initializeCwmCatalog(this);
 
         // REVIEW jvs 18-April-2004:  Query the plugin for these?
         if (getType() == null) {
@@ -96,10 +103,12 @@ public abstract class FemDataServerImpl extends InstanceHandler
     }
 
     // implement DdlValidatedElement
-    public void validateDeletion(DdlValidator validator,boolean truncation)
+    public void validateDeletion(
+        DdlValidator validator,
+        boolean truncation)
     {
     }
-    
+
     /**
      * Loads and caches an accessor for this server, or uses a cached
      * instance.
@@ -108,21 +117,21 @@ public abstract class FemDataServerImpl extends InstanceHandler
      *
      * @return loaded server accessor
      */
-    public FarragoMedDataServer loadFromCache(
-        FarragoDataWrapperCache cache)
+    public FarragoMedDataServer loadFromCache(FarragoDataWrapperCache cache)
     {
         Properties props =
             FemDataWrapperImpl.getStorageOptionsAsProperties(this);
         {
             String val;
-            if ((val = getType()) != null)
+            if ((val = getType()) != null) {
                 props.setProperty(FarragoMedDataServer.PROP_SERVER_TYPE, val);
-            if ((val = getVersion()) != null)
+            }
+            if ((val = getVersion()) != null) {
                 props.setProperty(FarragoMedDataServer.PROP_SERVER_VERSION, val);
+            }
         }
 
-        FemDataWrapperImpl femDataWrapper =
-            (FemDataWrapperImpl) getWrapper();
+        FemDataWrapperImpl femDataWrapper = (FemDataWrapperImpl) getWrapper();
 
         FarragoMedDataWrapper dataWrapper =
             femDataWrapper.loadFromCache(cache);
@@ -139,7 +148,7 @@ public abstract class FemDataServerImpl extends InstanceHandler
      *
      * @param cache cache for loading server
      *
-     * @param catalog catalog for object names
+     * @param repos repos for object names
      *
      * @param typeFactory factory for data types
      *
@@ -149,15 +158,14 @@ public abstract class FemDataServerImpl extends InstanceHandler
      */
     public FarragoMedColumnSet loadColumnSetFromCache(
         FarragoDataWrapperCache cache,
-        FarragoCatalog catalog,
+        FarragoRepos repos,
         FarragoTypeFactory typeFactory,
         FemBaseColumnSet baseColumnSet)
     {
-        String [] qualifiedName = new String [] 
-            {
+        String [] qualifiedName =
+            new String [] {
                 baseColumnSet.getNamespace().getNamespace().getName(),
-                baseColumnSet.getNamespace().getName(),
-                baseColumnSet.getName()
+                baseColumnSet.getNamespace().getName(), baseColumnSet.getName()
             };
 
         Properties props =
@@ -165,8 +173,8 @@ public abstract class FemDataServerImpl extends InstanceHandler
 
         Map columnPropMap = new HashMap();
 
-        SaffronType rowType = typeFactory.createColumnSetType(baseColumnSet);
-            
+        RelDataType rowType = typeFactory.createColumnSetType(baseColumnSet);
+
         Iterator iter = baseColumnSet.getFeature().iterator();
         while (iter.hasNext()) {
             Object obj = iter.next();
@@ -175,49 +183,49 @@ public abstract class FemDataServerImpl extends InstanceHandler
                 column.getName(),
                 FemDataWrapperImpl.getStorageOptionsAsProperties(column));
         }
-        
+
         FarragoMedDataServer medServer = loadFromCache(cache);
 
         FarragoMedColumnSet loadedColumnSet;
         try {
-            loadedColumnSet = medServer.newColumnSet(
-                qualifiedName,
-                props,
-                typeFactory,
-                rowType,
-                columnPropMap);
+            loadedColumnSet =
+                medServer.newColumnSet(qualifiedName, props, typeFactory,
+                    rowType, columnPropMap);
         } catch (Throwable ex) {
             throw FarragoResource.instance().newForeignTableAccessFailed(
-                catalog.getLocalizedObjectName(baseColumnSet,null),
+                repos.getLocalizedObjectName(baseColumnSet, null),
                 ex);
         }
 
         if (rowType != null) {
-            assert(rowType.equals(loadedColumnSet.getRowType()));
+            assert (rowType.equals(loadedColumnSet.getRowType()));
         }
-        
+
         return loadedColumnSet;
     }
 
     FarragoMedColumnSet validateColumnSet(
-        DdlValidator validator,FemBaseColumnSet baseColumnSet)
+        DdlValidator validator,
+        FemBaseColumnSet baseColumnSet)
     {
         FarragoMedColumnSet columnSet;
 
         try {
             // validate that we can successfully initialize the table
-            columnSet = loadColumnSetFromCache(
-                validator.getDataWrapperCache(),
-                validator.getCatalog(),
-                validator.getTypeFactory(),
-                baseColumnSet);
+            columnSet =
+                loadColumnSetFromCache(
+                    validator.getDataWrapperCache(),
+                    validator.getRepos(),
+                    validator.getTypeFactory(),
+                    baseColumnSet);
         } catch (Throwable ex) {
             throw validator.res.newValidatorDataServerTableInvalid(
-                validator.getCatalog().getLocalizedObjectName(
-                    baseColumnSet,baseColumnSet.refClass()),
+                validator.getRepos().getLocalizedObjectName(
+                    baseColumnSet,
+                    baseColumnSet.refClass()),
                 ex);
         }
-        
+
         validator.createDependency(
             baseColumnSet,
             Collections.singleton(this),
@@ -242,5 +250,6 @@ public abstract class FemDataServerImpl extends InstanceHandler
     {
     }
 }
+
 
 // End FemDataServerImpl.java

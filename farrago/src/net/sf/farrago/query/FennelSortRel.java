@@ -17,19 +17,18 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.query;
+
+import java.util.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.util.*;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.util.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.util.*;
 
-import java.util.*;
 
 /**
  * FennelSortRel is the relational expression corresponding to a sort
@@ -56,18 +55,18 @@ public class FennelSortRel extends FennelPullSingleRel
     /**
      * Creates a new FennelSortRel object.
      *
-     * @param cluster VolcanoCluster for this rel
+     * @param cluster RelOptCluster for this rel
      * @param child rel producing rows to be sorted
      * @param keyProjection 0-based ordinals of fields making up sort key
      * @param discardDuplicates whether to discard duplicates based on key
      */
     public FennelSortRel(
-        VolcanoCluster cluster,
-        SaffronRel child,
+        RelOptCluster cluster,
+        RelNode child,
         Integer [] keyProjection,
         boolean discardDuplicates)
     {
-        super(cluster,child);
+        super(cluster, child);
 
         // TODO:  validate that keyProject references are distinct
         this.keyProjection = keyProjection;
@@ -90,13 +89,13 @@ public class FennelSortRel extends FennelPullSingleRel
     {
         return new FennelSortRel(
             cluster,
-            OptUtil.clone(child),
+            RelOptUtil.clone(child),
             keyProjection,
             discardDuplicates);
     }
 
-    // implement SaffronRel
-    public PlanCost computeSelfCost(SaffronPlanner planner)
+    // implement RelNode
+    public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
         // TODO:  the real thing
         double rowCount = getRows();
@@ -107,12 +106,12 @@ public class FennelSortRel extends FennelPullSingleRel
             rowCount * bytesPerRow);
     }
 
-    // override SaffronRel
-    public void explain(PlanWriter pw)
+    // override RelNode
+    public void explain(RelOptPlanWriter pw)
     {
         pw.explain(
             this,
-            new String [] { "child","key","discardDuplicates" },
+            new String [] { "child", "key", "discardDuplicates" },
             new Object [] {
                 Arrays.asList(keyProjection),
                 Boolean.valueOf(discardDuplicates)
@@ -123,14 +122,14 @@ public class FennelSortRel extends FennelPullSingleRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
         FemSortingStreamDef sortingStream =
-            getCatalog().newFemSortingStreamDef();
+            getRepos().newFemSortingStreamDef();
 
-        sortingStream.setDistinctness(
-            discardDuplicates
-            ? DistinctnessEnum.DUP_DISCARD
-            : DistinctnessEnum.DUP_ALLOW);
+        sortingStream.setDistinctness(discardDuplicates
+            ? DistinctnessEnum.DUP_DISCARD : DistinctnessEnum.DUP_ALLOW);
         sortingStream.setKeyProj(
-            FennelRelUtil.createTupleProjection(getCatalog(),keyProjection));
+            FennelRelUtil.createTupleProjection(
+                getRepos(),
+                keyProjection));
         sortingStream.getInput().add(
             implementor.visitFennelChild((FennelRel) child));
         return sortingStream;

@@ -43,7 +43,7 @@ public:
     explicit AttributeAccessorImpl();
 
     /**
-     * Test the null indicator for this attribute in the tuple's null bit
+     * Tests the null indicator for this attribute in the tuple's null bit
      * array.
      *
      * @param tupleAccessor containing TupleAccessor set up with the current

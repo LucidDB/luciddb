@@ -156,4 +156,26 @@
     </sequential>
   </macrodef>
 
+  <!-- Macro for running JUnit and sqlline tests -->
+  <macrodef name="runTests">
+    <element name="testfileset" optional="no"/>
+    <element name="junitargs" optional="no"/>
+    <sequential>
+      <mkdir dir="${testlog.dir}"/>
+      <junit printsummary="yes" fork="no" failureproperty="junit.failure"
+        tempdir="${testlog.dir}" reloading="false">
+        <sysproperty key="java.ext.dirs" value="${sqlline.dir}"/>
+        <junitargs/>
+        <formatter type="plain"/>
+        <formatter type="xml"/> <!-- for integration builds -->
+        <batchtest todir="${testlog.dir}" unless="junit.class">
+          <testfileset/>
+        </batchtest>
+        <test todir="${testlog.dir}" if="junit.class"
+          name="${junit.class}" />
+      </junit>
+      <fail message="Test failure(s)" if="junit.failure"/>
+    </sequential>
+  </macrodef>
+
 </project>

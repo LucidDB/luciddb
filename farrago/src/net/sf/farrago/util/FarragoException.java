@@ -16,15 +16,14 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.util;
 
 
 // NOTE:  This class gets compiled independently of everything else so that
 // resource generation can use reflection.  That means it must have no
 // dependencies on other Farrago code.
-
 import java.util.logging.*;
+
 
 /**
  * Base class for all exceptions originating from Farrago.
@@ -34,9 +33,11 @@ import java.util.logging.*;
  */
 public class FarragoException extends RuntimeException
 {
-    private static Logger tracer = Logger.getLogger(
-        FarragoException.class.getName());
-    
+    //~ Static fields/initializers --------------------------------------------
+
+    private static Logger tracer =
+        Logger.getLogger(FarragoException.class.getName());
+
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -45,13 +46,15 @@ public class FarragoException extends RuntimeException
      * @param message error message
      * @param cause underlying cause
      */
-    public FarragoException(String message,Throwable cause)
+    public FarragoException(
+        String message,
+        Throwable cause)
     {
-        super(message,cause);
+        super(message, cause);
 
         // TODO: Force the caller to pass in a Logger as a trace argument for
         // better context.  Need to extend MonRG for this.
-        tracer.throwing("FarragoException","constructor",this);
+        tracer.throwing("FarragoException", "constructor", this);
         tracer.severe(toString());
     }
 }

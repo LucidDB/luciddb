@@ -63,7 +63,7 @@ public:
     virtual uint getFixedByteCount() const = 0;
     
     /**
-     * Get the number of bytes required to store the narrowest value with this
+     * Gets the number of bytes required to store the narrowest value with this
      * type, given a particular max byte count.  For a fixed-width
      * type, the return value is the same as the input.
      *
@@ -74,7 +74,7 @@ public:
     virtual uint getMinByteCount(uint cbMaxWidth) const = 0;
 
     /**
-     * Get the alignment size in bytes required for values of this type, given
+     * Gets the alignment size in bytes required for values of this type, given
      * a particular max byte count.  This must be 1, 2, 4, or 8, and may not be
      * greater than 1 for variable-width datatypes.  For fixed-width datatypes,
      * the width must be a multiple of the alignment size.
@@ -86,7 +86,7 @@ public:
     virtual uint getAlignmentByteCount(uint cbWidth) const = 0;
 
     /**
-     * Visit a value of this type.
+     * Visits a value of this type.
      *
      * @param dataVisitor the DataVisitor which should be called with the
      * interpreted value
@@ -101,7 +101,7 @@ public:
         TupleStorageByteLength cbData) const = 0;
 
     /**
-     * Compare two values of this type.
+     * Compares two values of this type.
      *
      * @param pData1 the address of the first data value
      *

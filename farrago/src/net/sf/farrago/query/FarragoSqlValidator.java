@@ -7,27 +7,27 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.query;
 
-import net.sf.saffron.sql.*;
-import net.sf.saffron.util.*;
-import net.sf.saffron.resource.*;
-import net.sf.saffron.sql.type.*;
+import java.math.*;
 
 import net.sf.farrago.resource.*;
 
-import java.math.*;
+import org.eigenbase.resource.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.type.*;
+import org.eigenbase.util.*;
+
 
 /**
  * FarragoSqlValidator refines SqlValidator with some Farrago-specifics.
@@ -37,6 +37,8 @@ import java.math.*;
  */
 class FarragoSqlValidator extends SqlValidator
 {
+    //~ Constructors ----------------------------------------------------------
+
     FarragoSqlValidator(FarragoPreparingStmt preparingStmt)
     {
         super(
@@ -45,10 +47,12 @@ class FarragoSqlValidator extends SqlValidator
             preparingStmt.getFarragoTypeFactory());
     }
 
+    //~ Methods ---------------------------------------------------------------
+
     // override SqlValidator
     public RuntimeException newValidationError(String s)
     {
-        // TODO:  need to integrate i18n with Saffron
+        // TODO:  need to integrate i18n with org.eigenbase.sql
         return FarragoResource.instance().newValidatorUntranslated(s);
     }
 
@@ -74,7 +78,6 @@ class FarragoSqlValidator extends SqlValidator
         // REVIEW jvs 4-Aug-2004:  This should probably be calling over to the
         // available calculator implementations to see what they support.  For
         // now use ESP instead.
-        
         switch (literal.getTypeName().getOrdinal()) {
         case SqlTypeName.Decimal_ordinal:
             BigDecimal bd = (BigDecimal) literal.getValue();
@@ -83,14 +86,15 @@ class FarragoSqlValidator extends SqlValidator
                 long longValue = bd.longValue();
                 if (!BigDecimal.valueOf(longValue).equals(bd)) {
                     // overflow
-                    throw SaffronResource.instance().newNumberLiteralOutOfRange(
-                        bd.toString(),
-                        literal.getParserPosition().toString());
+                    throw EigenbaseResource.instance()
+                        .newNumberLiteralOutOfRange(
+                            bd.toString(),
+                            literal.getParserPosition().toString());
                 }
             } else {
                 // fall through for scaled case
             }
-            
+
             // TODO jvs 4-Aug-2004:  support exact numerics,
             // which may also be able to handle overflow case above
             // if our maximum precision is bigger than that of a long
@@ -100,6 +104,7 @@ class FarragoSqlValidator extends SqlValidator
             validateLiteralAsDouble(literal);
             break;
         default:
+
             // no validation needed
             return;
         }
@@ -111,12 +116,14 @@ class FarragoSqlValidator extends SqlValidator
         double d = bd.doubleValue();
         if (Double.isInfinite(d) || Double.isNaN(d)) {
             // overflow
-            throw SaffronResource.instance().newNumberLiteralOutOfRange(
+            throw EigenbaseResource.instance().newNumberLiteralOutOfRange(
                 Util.toScientificNotation(bd),
                 literal.getParserPosition().toString());
         }
+
         // REVIEW jvs 4-Aug-2004:  what about underflow?
     }
 }
+
 
 // End FarragoSqlValidator.java

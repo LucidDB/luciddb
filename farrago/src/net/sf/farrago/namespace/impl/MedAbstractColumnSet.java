@@ -6,29 +6,28 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.namespace.impl;
 
+import java.util.*;
+
+import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.query.*;
-import net.sf.farrago.cwm.relational.*;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.ext.*;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
 
-import java.util.*;
 
 /**
  * MedAbstractColumnSet is an abstract base class for implementations
@@ -37,22 +36,20 @@ import java.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class MedAbstractColumnSet
-    extends AbstractTable
+public abstract class MedAbstractColumnSet extends RelOptAbstractTable
     implements FarragoQueryColumnSet
 {
+    //~ Instance fields -------------------------------------------------------
+
     private final String [] localName;
-    
     private final String [] foreignName;
-
     private Properties tableProps;
-
     private Map columnPropMap;
-
     private FarragoPreparingStmt preparingStmt;
-
     private CwmNamedColumnSet cwmColumnSet;
-    
+
+    //~ Constructors ----------------------------------------------------------
+
     /**
      * Creates a new MedAbstractColumnSet.
      *
@@ -68,21 +65,20 @@ public abstract class MedAbstractColumnSet
     protected MedAbstractColumnSet(
         String [] localName,
         String [] foreignName,
-        SaffronType rowType,
+        RelDataType rowType,
         Properties tableProps,
         Map columnPropMap)
     {
-        super(
-            null,
-            localName[localName.length - 1],
-            rowType);
+        super(null, localName[localName.length - 1], rowType);
         this.localName = localName;
         this.foreignName = foreignName;
         this.tableProps = tableProps;
         this.columnPropMap = columnPropMap;
     }
 
-    // implement SaffronTable
+    //~ Methods ---------------------------------------------------------------
+
+    // implement RelOptTable
     public String [] getQualifiedName()
     {
         return localName;
@@ -104,7 +100,7 @@ public abstract class MedAbstractColumnSet
     {
         return foreignName;
     }
-    
+
     /**
      * @return options specified by CREATE FOREIGN TABLE
      */
@@ -127,13 +123,13 @@ public abstract class MedAbstractColumnSet
     {
         return preparingStmt;
     }
-    
+
     // implement FarragoQueryColumnSet
     public void setPreparingStmt(FarragoPreparingStmt stmt)
     {
         preparingStmt = stmt;
     }
-    
+
     // implement FarragoQueryColumnSet
     public void setCwmColumnSet(CwmNamedColumnSet cwmColumnSet)
     {
@@ -146,5 +142,6 @@ public abstract class MedAbstractColumnSet
         return cwmColumnSet;
     }
 }
+
 
 // End MedAbstractColumnSet.java

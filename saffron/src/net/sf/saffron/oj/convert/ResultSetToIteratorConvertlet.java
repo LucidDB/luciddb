@@ -1,35 +1,36 @@
 /*
-// $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2004-2004 Disruptive Tech
-// You must accept the terms in LICENSE.html to use this software.
+// Saffron preprocessor and data engine.
+// Copyright (C) 2002-2004 Disruptive Tech
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+
 package net.sf.saffron.oj.convert;
 
-import net.sf.saffron.opt.CallingConvention;
-import net.sf.saffron.oj.rel.JavaRelImplementor;
-import net.sf.saffron.oj.rel.JavaRel;
-import net.sf.saffron.oj.util.OJUtil;
-import net.sf.saffron.runtime.ResultSetIterator;
-import net.sf.saffron.util.Util;
-import net.sf.saffron.rel.convert.ConverterRel;
-import openjava.ptree.*;
 import openjava.mop.OJClass;
 import openjava.mop.OJField;
+import openjava.ptree.*;
+
+import org.eigenbase.oj.rel.JavaRel;
+import org.eigenbase.oj.rel.JavaRelImplementor;
+import org.eigenbase.oj.util.OJUtil;
+import org.eigenbase.rel.convert.ConverterRel;
+import org.eigenbase.relopt.CallingConvention;
+import org.eigenbase.runtime.ResultSetIterator;
+import org.eigenbase.util.Util;
+
 
 /**
  * Thunk to convert between {@link CallingConvention#RESULT_SET result-set}
@@ -39,16 +40,19 @@ import openjava.mop.OJField;
  * @since May 27, 2004
  * @version $Id$
  **/
-public class ResultSetToIteratorConvertlet extends JavaConvertlet {
-    public ResultSetToIteratorConvertlet() {
-        super(CallingConvention.RESULT_SET,CallingConvention.ITERATOR);
-
+public class ResultSetToIteratorConvertlet extends JavaConvertlet
+{
+    public ResultSetToIteratorConvertlet()
+    {
+        super(CallingConvention.RESULT_SET, CallingConvention.ITERATOR);
     }
 
-    public ParseTree implement(JavaRelImplementor implementor,
-            ConverterRel converter) {
-        Object o = implementor.visitJavaChild(converter, 0, (JavaRel)
-                converter.child);
+    public ParseTree implement(
+        JavaRelImplementor implementor,
+        ConverterRel converter)
+    {
+        Object o =
+            implementor.visitJavaChild(converter, 0, (JavaRel) converter.child);
         StatementList methodBody = new StatementList();
         Variable varResultSet = new Variable("resultSet");
         OJClass rowClass = OJUtil.typeToOJClass(converter.rowType);
@@ -72,14 +76,14 @@ public class ResultSetToIteratorConvertlet extends JavaConvertlet {
                 methodBody.add(
                     new ExpressionStatement(
                         new AssignmentExpression(
-                            new FieldAccess(varRow,field.getName()),
+                            new FieldAccess(
+                                varRow,
+                                field.getName()),
                             AssignmentExpression.EQUALS,
                             new MethodCall(
                                 varResultSet,
-                                getResultSetAccessorMethod(
-                                    field.getType()),
-                                new ExpressionList(
-                                    Literal.makeLiteral(i + 1))))));
+                                getResultSetAccessorMethod(field.getType()),
+                                new ExpressionList(Literal.makeLiteral(i + 1))))));
             }
             methodBody.add(new ReturnStatement(varRow));
         } else {
@@ -101,9 +105,8 @@ public class ResultSetToIteratorConvertlet extends JavaConvertlet {
                     TypeName.forOJClass(Util.clazzObject),
                     "makeRow",
                     new ParameterList(),
-                    new TypeName [] {
-                        TypeName.forOJClass(Util.clazzSQLException)
-                    },
+                    new TypeName [] { TypeName.forOJClass(
+                            Util.clazzSQLException) },
                     methodBody)));
     }
 
@@ -127,8 +130,9 @@ public class ResultSetToIteratorConvertlet extends JavaConvertlet {
 
     private static String toInitcap(String s)
     {
-        return s.substring(0,1).toUpperCase() + s.substring(1);
+        return s.substring(0, 1).toUpperCase() + s.substring(1);
     }
 }
+
 
 // End ResultSetToIteratorConvertlet.java

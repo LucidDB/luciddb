@@ -6,33 +6,34 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.ojrex;
 
 import net.sf.farrago.type.*;
 import net.sf.farrago.type.runtime.*;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.sql.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.rex.*;
-import net.sf.saffron.util.*;
-import net.sf.saffron.oj.rel.*;
-import net.sf.saffron.oj.rex.*;
-import net.sf.saffron.oj.util.*;
-
-import openjava.ptree.*;
 import openjava.mop.*;
+import openjava.ptree.*;
+
+import org.eigenbase.oj.rel.*;
+import org.eigenbase.oj.rex.*;
+import org.eigenbase.oj.util.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.rex.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.util.*;
+
 
 /**
  * FarragoRexToOJTranslator refines {@link RexToOJTranslator} with
@@ -55,14 +56,15 @@ import openjava.mop.*;
  */
 public class FarragoRexToOJTranslator extends RexToOJTranslator
 {
+    //~ Instance fields -------------------------------------------------------
+
     private StatementList stmtList;
-    
     private MemberDeclarationList memberList;
-
     private FarragoOJRexCastImplementor castImplementor;
-
     private OJClass ojNullablePrimitive;
-    
+
+    //~ Constructors ----------------------------------------------------------
+
     /**
      * Creates a translator based on a {@link OJRexImplementorTable}.
      *
@@ -80,15 +82,12 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
      */
     public FarragoRexToOJTranslator(
         JavaRelImplementor relImplementor,
-        SaffronRel contextRel,
+        RelNode contextRel,
         OJRexImplementorTable implementorTable,
         StatementList stmtList,
         MemberDeclarationList memberList)
     {
-        super(
-            relImplementor,
-            contextRel,
-            implementorTable);
+        super(relImplementor, contextRel, implementorTable);
         this.stmtList = stmtList;
         this.memberList = memberList;
 
@@ -97,9 +96,11 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
         castImplementor = (FarragoOJRexCastImplementor)
             getImplementorTable().get(
                 SqlOperatorTable.std().castFunc);
-        
+
         ojNullablePrimitive = OJClass.forClass(NullablePrimitive.class);
     }
+
+    //~ Methods ---------------------------------------------------------------
 
     public void addMember(MemberDeclaration member)
     {
@@ -112,52 +113,36 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
     }
 
     // implement RexVisitor
-    public void visitContextVariable(RexContextVariable contextVariable)
-    {
-        setTranslation(
-            convertVariable(
-                contextVariable,
-                "getContextVariable_" + contextVariable.getName(),
-                new ExpressionList()));
-    }
-
-    // implement RexVisitor
     public void visitDynamicParam(RexDynamicParam dynamicParam)
     {
         setTranslation(
             convertVariable(
-                dynamicParam,
+                dynamicParam.getType(),
                 "getDynamicParamValue",
-                new ExpressionList(
-                    Literal.makeLiteral(dynamicParam.index))));
+                new ExpressionList(Literal.makeLiteral(dynamicParam.index))));
     }
 
-    private Expression convertVariable(
-        RexVariable rexVariable,
+    Expression convertVariable(
+        RelDataType type,
         String accessorName,
         ExpressionList accessorArgList)
     {
-        Variable variable = createScratchVariable(rexVariable.getType());
-        stmtList.add(
-            new ExpressionStatement(
-                new MethodCall(
-                    variable,
-                    AssignableValue.ASSIGNMENT_METHOD_NAME,
-                    new ExpressionList(
-                        new MethodCall(
-                            getRelImplementor().getConnectionVariable(),
-                            accessorName,
-                            accessorArgList)))));
-        return new CastExpression(
-            OJUtil.typeToOJClass(rexVariable.getType()),
-            variable);
+        return castImplementor.convertCastToAssignableValue(
+            this,
+            type,
+            null,
+            null,
+            new MethodCall(
+                getRelImplementor().getConnectionVariable(),
+                accessorName,
+                accessorArgList));
     }
 
     // override RexToOJTranslator
     public void visitLiteral(RexLiteral literal)
     {
         super.visitLiteral(literal);
-        SaffronType type = literal.getType();
+        RelDataType type = literal.getType();
         if (type instanceof FarragoDateTimeType) {
             // TODO jvs 22-May-2004: Need to do something similar for anything
             // which requires a holder class at runtime (e.g. VARCHAR),
@@ -174,7 +159,8 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
     }
 
     public Variable createScratchVariable(
-        OJClass ojClass, ExpressionList exprs,
+        OJClass ojClass,
+        ExpressionList exprs,
         MemberDeclarationList mdlst)
     {
         Variable variable = getRelImplementor().newVariable();
@@ -184,18 +170,21 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
                 TypeName.forOJClass(ojClass),
                 variable.toString(),
                 new AllocationExpression(
-                    TypeName.forOJClass(ojClass), exprs, mdlst)));
+                    TypeName.forOJClass(ojClass),
+                    exprs,
+                    mdlst)));
         return variable;
     }
 
-    public Variable createScratchVariable(SaffronType type)
+    public Variable createScratchVariable(RelDataType type)
     {
         OJClass ojClass = OJUtil.typeToOJClass(type);
         return createScratchVariable(ojClass, null, null);
     }
 
     public Statement createSetNullStatement(
-        Expression varResult,boolean isNull)
+        Expression varResult,
+        boolean isNull)
     {
         return new ExpressionStatement(
             new MethodCall(
@@ -206,12 +195,13 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
 
     public Expression createNullTest(
         RexNode node,
-        Expression  originalOperand,
+        Expression originalOperand,
         Expression nullTest)
     {
         if (node.getType().isNullable()) {
             Expression newNullTest;
-            newNullTest = new MethodCall(
+            newNullTest =
+                new MethodCall(
                     originalOperand,
                     NullableValue.NULL_IND_ACCESSOR_NAME,
                     new ExpressionList());
@@ -219,54 +209,54 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
             if (nullTest == null) {
                 nullTest = newNullTest;
             } else {
-                nullTest = new BinaryExpression(
-                        nullTest,
-                        BinaryExpression.LOGICAL_OR,
-                        newNullTest);
+                nullTest =
+                    new BinaryExpression(nullTest,
+                        BinaryExpression.LOGICAL_OR, newNullTest);
             }
         }
         return nullTest;
     }
 
-    public boolean isNullablePrimitive(SaffronType type)
+    public boolean isNullablePrimitive(RelDataType type)
     {
         OJClass ojClass = OJUtil.typeToOJClass(type);
         return ojNullablePrimitive.isAssignableFrom(ojClass);
     }
 
-    public FieldAccess convertFieldAccess(Variable variable, SaffronField field)
+    public FieldAccess convertFieldAccess(
+        Variable variable,
+        RelDataTypeField field)
     {
         final String javaFieldName =
-                Util.toJavaId(field.getName(), field.getIndex());
+            Util.toJavaId(
+                field.getName(),
+                field.getIndex());
         return new FieldAccess(variable, javaFieldName);
     }
 
-    public Expression convertPrimitiveAccess(Expression expr, RexNode op)
+    public Expression convertPrimitiveAccess(
+        Expression expr,
+        RexNode op)
     {
         assert (op.getType() instanceof FarragoAtomicType);
-        FarragoAtomicType type = (FarragoAtomicType)op.getType();
+        FarragoAtomicType type = (FarragoAtomicType) op.getType();
         if (type.requiresValueAccess()) {
-            return new FieldAccess(
-                expr,
-                NullablePrimitive.VALUE_FIELD_NAME);
+            return new FieldAccess(expr, NullablePrimitive.VALUE_FIELD_NAME);
         } else {
-           return expr;
+            return expr;
         }
     }
-    
+
     public Expression convertCastOrAssignment(
-        SaffronType lhsType,
-        SaffronType rhsType,
+        RelDataType lhsType,
+        RelDataType rhsType,
         Expression lhsExp,
         Expression rhsExp)
     {
-        return castImplementor.convertCastOrAssignment(
-            this,
-            lhsType,
-            rhsType,
-            lhsExp,
-            rhsExp);
+        return castImplementor.convertCastOrAssignment(this, lhsType, rhsType,
+            lhsExp, rhsExp);
     }
 }
+
 
 // End FarragoRexToOJTranslator.java

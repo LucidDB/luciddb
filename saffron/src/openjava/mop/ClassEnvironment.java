@@ -13,6 +13,7 @@ import java.util.Hashtable;
 import java.util.Enumeration;
 import openjava.mop.OJClass;
 
+import org.eigenbase.util.Util;
 
 public final class ClassEnvironment
         extends ClosedEnvironment
@@ -82,15 +83,6 @@ public final class ClassEnvironment
 	memberClasses.addElement( name );
     }
 
-    public void recordMemberClass(String declarerName, String innerName)
-    {
-	if (declarerName.equals(currentClassName())) {
-	    recordMemberClass(innerName);
-	} else if (parent != null) {
-	    parent.recordMemberClass(declarerName, innerName);
-	}
-    }
-
     public OJClass lookupClass( String name ) {
 // 	try {
 	    OJClass declarer = parent.lookupClass(currentClassName());
@@ -123,7 +115,7 @@ public final class ClassEnvironment
 			return new BasicVariableInfo(field.getType());
 		}
 	} catch ( Exception e ) {
-        throw Toolbox.newInternal(
+        throw Util.newInternal(
             e,
             "unexpected exception looking up " + name + " in "
             + currentClassName());

@@ -16,7 +16,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.cwm.relational;
 
 import net.sf.farrago.catalog.*;
@@ -28,7 +27,7 @@ import org.netbeans.mdr.storagemodel.*;
 
 
 /**
- * CatalogImpl is a custom implementation for CWM Catalog.
+ * CwmCatalogImpl is a custom implementation for CWM Catalog.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -52,13 +51,20 @@ public abstract class CwmCatalogImpl extends InstanceHandler
     //~ Methods ---------------------------------------------------------------
 
     // implement DdlValidatedElement
-    public void validateDefinition(DdlValidator validator,boolean creation)
+    public void validateDefinition(
+        DdlValidator validator,
+        boolean creation)
     {
-        validator.validateUniqueNames(this,getOwnedElement(),true);
+        validator.validateUniqueNames(
+            this,
+            getOwnedElement(),
+            true);
     }
 
     // implement DdlValidatedElement
-    public void validateDeletion(DdlValidator validator,boolean truncation)
+    public void validateDeletion(
+        DdlValidator validator,
+        boolean truncation)
     {
         assert (!truncation);
     }

@@ -42,8 +42,8 @@ class CheckpointThread :
     bool quit;
 
     /**
-     * Implement ClosableObject by requesting the checkpoint thread to shut
-     * down.
+     * Implements ClosableObject by requesting that the checkpoint thread shut
+     * itself down.
      */
     void closeImpl();
     
@@ -52,7 +52,7 @@ class CheckpointThread :
     
 public:
     /**
-     * Create a checkpoint thread for the given database (no more than
+     * Creates a checkpoint thread for the given database (no more than
      * one is ever needed).  This constructor does not start the thread;
      * that must be done explicitly.
      *
@@ -61,8 +61,8 @@ public:
     explicit CheckpointThread(Database &database);
 
     /**
-     * Get the action mutex.  The checkpoint thread takes an exclusive lock on
-     * this mutex for the duration of each checkpoint.  So any thread which
+     * Gets the action mutex.  The checkpoint thread takes an exclusive lock on
+     * this mutex for the duration of each checkpoint, so any thread which
      * needs to carry out an action which must not overlap a checkpoint
      * should take a shared lock on this for the duration of the action.
      *
@@ -71,7 +71,7 @@ public:
     SXMutex &getActionMutex();
 
     /**
-     * Implement CheckpointProvider by signalling the checkpoint thread, which
+     * Implements CheckpointProvider by signalling the checkpoint thread, which
      * in response will quiesce the system and carry out a checkpoint.
      *
      * @param checkpointType type of checkpoint to request

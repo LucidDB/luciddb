@@ -101,7 +101,7 @@ class BTreeBuilder : public BTreeAccessBase
 
 public:
     /**
-     * Create a new BTreeBuilder.  To build a non-empty
+     * Creates a new BTreeBuilder.  In order to build a non-empty
      * tree with variable-width tuples in the leaf nodes and
      * fixed-width entries in the non-leaf nodes, a temporary disk
      * buffer is required.
@@ -117,7 +117,7 @@ public:
     virtual ~BTreeBuilder();
 
     /**
-     * Build the tree, which must be currently empty or non-existent.  Use
+     * Builds the tree, which must be currently empty or non-existent.  Call
      * getRootPageId() afterwards to find the root of a newly created tree.
      *
      * @param sortedStream stream containing tuples presorted by the tree's
@@ -134,14 +134,14 @@ public:
         double fillFactor = 1.0);
 
     /**
-     * Create an empty tree (just a root node with no tuples).
+     * Creates an empty tree (just a root node with no tuples).
      * On entry, the builder should have NULL_PAGE_ID for its root.
-     * Use getRootPageId() afterwards to get the new root.
+     * Call getRootPageId() afterwards to get the new root.
      */
     void createEmptyRoot();
 
     /**
-     * Truncate or drop an existing tree.
+     * Truncates or drops an existing tree.
      *
      * @param rootless if true, all nodes of the existing tree are deallocated;
      * if false, the root is cleared but remains allocated while all

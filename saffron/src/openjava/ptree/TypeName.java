@@ -108,10 +108,6 @@ public class TypeName extends NonLeaf
         return new TypeName( name, demension );
     }
 
-	public static TypeName forClass( Class clazz ) {
-		return TypeName.forOJClass(OJClass.forClass(clazz));
-	}
-
     public ParseTree makeRecursiveCopy() {
 	TypeName result = (TypeName) super.makeRecursiveCopy();
 	result.dim = this.dim;

@@ -16,7 +16,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.runtime;
 
 import java.nio.*;
@@ -48,7 +47,8 @@ public abstract class FennelTupleWriter
      * @exception IndexOutOfBoundException see above
      */
     protected abstract void marshalTupleOrThrow(
-        ByteBuffer sliceBuffer,Object object);
+        ByteBuffer sliceBuffer,
+        Object object);
 
     /**
      * Marshal one tuple if it can fit.
@@ -63,15 +63,15 @@ public abstract class FennelTupleWriter
      * buffer space
      */
     public boolean marshalTuple(
-        ByteBuffer byteBuffer,Object object)
+        ByteBuffer byteBuffer,
+        Object object)
     {
         try {
             // REVIEW:  is slice allocation worth it?
             ByteBuffer sliceBuffer = byteBuffer.slice();
             sliceBuffer.order(byteBuffer.order());
-            marshalTupleOrThrow(sliceBuffer,object);
-            int newPosition =
-                byteBuffer.position() + sliceBuffer.position();
+            marshalTupleOrThrow(sliceBuffer, object);
+            int newPosition = byteBuffer.position() + sliceBuffer.position();
 
             // add final alignment padding
             while ((newPosition & 3) != 0) {
@@ -81,6 +81,10 @@ public abstract class FennelTupleWriter
         } catch (BufferOverflowException ex) {
             return false;
         } catch (IndexOutOfBoundsException ex) {
+            return false;
+        } catch (IllegalArgumentException ex) {
+            // NOTE jvs 31-Aug-2004:  The position() call throws this instead
+            // of BufferOverflowException.
             return false;
         }
         return true;

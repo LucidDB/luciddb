@@ -130,7 +130,7 @@ public:
     virtual ~TupleAccessor();
 
     /**
-     * Precompute access for a particular tuple format.  This must be called
+     * Precomputes access for a particular tuple format.  Must be called
      * before any other method, and may only be called once.
      *
      * @param tuple the tuple to be accessed
@@ -175,7 +175,7 @@ public:
     }
     
     /**
-     * The buffer storing the current tuple image.
+     * Accesses the buffer storing the current tuple image.
      *
      * @return address of tuple image, or NULL if no current tuple
      */
@@ -185,7 +185,7 @@ public:
     }
 
     /**
-     * Set the buffer storing the current tuple image.  This must be called
+     * Sets the buffer storing the current tuple image.  Must be called
      * before getCurrentByteCount and unmarshal.
      *
      * @param pTupleBuf address of tuple image
@@ -193,12 +193,12 @@ public:
     void setCurrentTupleBuf(PConstBuffer pTupleBuf);
 
     /**
-     * Forget the current tuple buffer.
+     * Forgets the current tuple buffer.
      */
     void resetCurrentTupleBuf();
 
     /**
-     * Determine the number of bytes stored in the current tuple buffer.  This
+     * Determines the number of bytes stored in the current tuple buffer.  This
      * will always be greater than or equal to getMinByteCount() and less than
      * getMaxByteCount().
      *
@@ -207,8 +207,8 @@ public:
     inline uint getCurrentByteCount() const;
 
     /**
-     * Determine the number of bytes stored in a tuple buffer without
-     * preparing to unmarshal it.
+     * Determines the number of bytes stored in a tuple buffer without
+     * actually preparing to unmarshal it.
      *
      * @param pBuf tuple buffer
      *
@@ -217,7 +217,7 @@ public:
     uint getBufferByteCount(PConstBuffer pBuf) const;
 
     /**
-     * Determine the number of bytes required to store a tuple without actually
+     * Determines the number of bytes required to store a tuple without actually
      * marshalling it.
      *
      * @param tuple the tuple data
@@ -227,7 +227,7 @@ public:
     uint getByteCount(TupleData const &tuple) const;
 
     /**
-     * Determine whether a buffer is big enough to fit marshalled tuple data.
+     * Determines whether a buffer is big enough to fit marshalled tuple data.
      *
      * @param tuple the tuple to be marshalled
      *
@@ -240,7 +240,7 @@ public:
     // TODO:  come up with a common interface for TupleProjectionAccessor, and
     // add an additional virtual interface
     /**
-     * Unmarshal the current tuple buffer, setting a tuple's values
+     * Unmarshals the current tuple buffer, setting a tuple's values
      * to reference the contents.
      *
      * @param tuple the tuple which will be modified to reference the
@@ -253,7 +253,7 @@ public:
     void unmarshal(TupleData &tuple,uint iFirstDatum = 0) const;
 
     /**
-     * Get an accessor for an individual attribute.  This can be used to
+     * Gets an accessor for an individual attribute.  This can be used to
      * unmarshal values individually.
      *
      * @param iAttribute 0-based index of the attribute within the tuple
@@ -264,7 +264,7 @@ public:
     }
     
     /**
-     * Marshal a tuple's values into a buffer.
+     * Marshals a tuple's values into a buffer.
      *
      * @param tuple the tuple to be marshalled
      *
@@ -284,7 +284,7 @@ public:
     // TODO:  private
     
     /**
-     * The array of bit fields for the current tuple image.
+     * @return the array of bit fields for the current tuple image
      */
     boost::dynamic_bitset<FixedBuffer> const &getBitFields() const
     {
@@ -292,7 +292,7 @@ public:
     }
 
     /**
-     * Resolve an indirect offset into a pointer to the data offset.
+     * Resolves an indirect offset into a pointer to the data offset.
      *
      * @param iIndirectOffset indirect offset within tuple image
      *
@@ -306,7 +306,7 @@ public:
     }
     
     /**
-     * Resolve an indirect offset into a pointer to the data offset.
+     * Resolves an indirect offset into a pointer to the data offset.
      *
      * @param pTupleBuf target buffer
      *

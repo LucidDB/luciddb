@@ -17,7 +17,7 @@ import openjava.mop.*;
 import java.io.OutputStream;
 import java.sql.Time;
 
-import net.sf.saffron.util.Util;
+import org.eigenbase.util.Util;
 
 
 
@@ -42,18 +42,15 @@ public class Literal extends Leaf
     public static final int CHARACTER	= 5;
     public static final int STRING	= 6;
     public static final int NULL	= 7;
-    public static final int DATE    = 8;
-    public static final int TIME    = 9;
-    public static final int TIMESTAMP = 10;
 
     protected int id = -1;
 
-    private static Literal constantTrue_ = null;
-    private static Literal constantFalse_ = null;
-    private static Literal constantNull_ = null;
-    private static Literal constantEmptyString_ = null;
-    private static Literal constantZero_ = null;
-    private static Literal constantOne_ = null;
+    private static Literal constantTrue = null;
+    private static Literal constantFalse = null;
+    private static Literal constantNull = null;
+    private static Literal constantEmptyString = null;
+    private static Literal constantZero = null;
+    private static Literal constantOne = null;
 
     /**
      * Allocates a new object.
@@ -191,71 +188,45 @@ public class Literal extends Leaf
 	return makeLiteral( d.doubleValue() );
     }
 
-    /**
-     * Dates are represented as long value that's milliseconds since the 'unix epoch'.
-     * @param date
-     * @return new date literal
-     */
-    public static Literal makeLiteral( java.sql.Date date) {
-        return new Literal(Literal.DATE, String.valueOf(date.getTime()) + "l");
-    }
-    /**
-     *
-     * @param time
-     * @return time literal
-     */
-    public static Expression makeLiteral(Time time) {
-        return new Literal(Literal.TIME, String.valueOf(time.getTime()) + "l");
-    }
-    /**
-     *
-     * @param timestamp
-     * @return timestampe literal
-     */
-    public static Expression makeLiteral(java.sql.Timestamp timestamp) {
-        return new Literal(Literal.TIMESTAMP, String.valueOf(timestamp.getTime()) + "l");
-    }
-
-
     public int getLiteralType() {
 	return this.id;
     }
 
     public static Literal constantTrue() {
-	if (constantTrue_ == null) {
-	    constantTrue_ = new Literal( Literal.BOOLEAN, "true" );
+	if (constantTrue == null) {
+	    constantTrue = new Literal( Literal.BOOLEAN, "true" );
 	}
-	return constantTrue_;
+	return constantTrue;
     }
     public static Literal constantFalse() {
-	if (constantFalse_ == null) {
-	    constantFalse_ = new Literal( Literal.BOOLEAN, "false" );
+	if (constantFalse == null) {
+	    constantFalse = new Literal( Literal.BOOLEAN, "false" );
 	}
-	return constantFalse_;
+	return constantFalse;
     }
     public static Literal constantNull() {
-	if (constantNull_ == null) {
-	    constantNull_ = new Literal( Literal.NULL, "null" );
+	if (constantNull == null) {
+	    constantNull = new Literal( Literal.NULL, "null" );
 	}
-	return constantNull_;
+	return constantNull;
     }
     public static Literal constantEmptyString() {
-	if (constantEmptyString_ == null) {
-	    constantEmptyString_ = new Literal( Literal.STRING, "\"\"" );
+	if (constantEmptyString == null) {
+	    constantEmptyString = new Literal( Literal.STRING, "\"\"" );
 	}
-	return constantEmptyString_;
+	return constantEmptyString;
     }
     public static Literal constantZero() {
-	if (constantZero_ == null) {
-	    constantZero_ = new Literal( Literal.INTEGER, "0" );
+	if (constantZero == null) {
+	    constantZero = new Literal( Literal.INTEGER, "0" );
 	}
-	return constantZero_;
+	return constantZero;
     }
     public static Literal constantOne() {
-	if (constantOne_ == null) {
-	    constantOne_ = new Literal( Literal.INTEGER, "1" );
+	if (constantOne == null) {
+	    constantOne = new Literal( Literal.INTEGER, "1" );
 	}
-	return constantOne_;
+	return constantOne;
     }
 
     public OJClass getType( Environment env )
@@ -276,12 +247,6 @@ public class Literal extends Leaf
 	    return OJClass.forClass( char . class );
 	case STRING :
 	    return OJClass.forClass( String . class );
-    case DATE:
-        return OJClass.forClass( java.sql.Date.class);
-    case TIME:
-        return OJClass.forClass( java.sql.Time.class);
-    case TIMESTAMP:
-        return OJClass.forClass( java.sql.Timestamp.class);
 	case NULL :
 	    return OJClass.forName( OJSystem.NULLTYPE_NAME );
 	}

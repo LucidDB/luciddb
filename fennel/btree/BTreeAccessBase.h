@@ -77,7 +77,7 @@ protected:
     // ----------------------------------------------------------------------
 
     /**
-     * Get the node accessor for a leaf node.  This method asserts that the
+     * Gets the node accessor for a leaf node, asserting that the
      * node really is a leaf.
      *
      * @param node leaf node to access
@@ -87,7 +87,7 @@ protected:
     inline BTreeNodeAccessor &getLeafNodeAccessor(BTreeNode const &node);
     
     /**
-     * Get the node accessor for a non-leaf node.  This method asserts that the
+     * Gets the node accessor for a non-leaf node, asserting that the
      * node really is a non-leaf.
      *
      * @param node non-leaf node to access
@@ -97,9 +97,9 @@ protected:
     inline BTreeNodeAccessor &getNonLeafNodeAccessor(BTreeNode const &node);
 
     /**
-     * Get the node accessor for any node.  This method uses the node
+     * Gets the node accessor for any node, using the node
      * height to determine whether it's a leaf or not.  If you already know
-     * this from the context, use getLeafNodeAccessor or
+     * this from the context, call getLeafNodeAccessor or
      * getNonLeafNodeAccessor instead.
      *
      * @param node node to access
@@ -109,8 +109,8 @@ protected:
     inline BTreeNodeAccessor &getNodeAccessor(BTreeNode const &node);
 
     /**
-     * Get the child PageId corresponding to the current key in a non-leaf
-     * node.  This method assumes that accessTuple has already been called on
+     * Gets the child PageId corresponding to the current key in a non-leaf
+     * node.  Assumes that accessTuple has already been called on
      * pNonLeafNodeAccessor (but can't assert this), so use with caution.
      *
      * @return child PageId
@@ -118,7 +118,7 @@ protected:
     inline PageId getChildForCurrent();
     
     /**
-     * Access a non-leaf tuple and get its child PageId.
+     * Accesses a non-leaf tuple and gets its child PageId.
      *
      * @param node non-leaf node to access
      *
@@ -129,9 +129,10 @@ protected:
     inline PageId getChild(BTreeNode const &node,uint iChild);
 
     /**
-     * Get the right sibling of a node.  This should only be used when the node
-     * is not already locked (e.g. during prefetch).  When the node is
-     * already locked, access its rightSibling field instead.
+     * Gets the right sibling of a node by consulting the containing segment's
+     * successor information.  Should only be used when the node is not already
+     * locked (e.g. during prefetch).  When the node is already locked, its
+     * rightSibling field should be accessed instead.
      *
      * @param pageId PageId of node whose sibling is to be found
      *
@@ -140,7 +141,7 @@ protected:
     inline PageId getRightSibling(PageId pageId);
 
     /**
-     * Set the right sibling of a node.
+     * Sets the right sibling of a node.
      *
      * @param leftNode node whose right sibling is to be set
      *
@@ -152,7 +153,7 @@ protected:
         BTreeNode &leftNode,PageId leftPageId,PageId rightPageId);
     
     /**
-     * Get the first child of a non-leaf node.
+     * Gets the first child of a non-leaf node.
      *
      * @param pageId PageId of non-leaf node
      *
@@ -181,7 +182,7 @@ public:
     inline PageId getRootPageId() const;
 
     /**
-     * Update the BTree's root PageId
+     * Updates the BTree's root PageId.
      */
     void setRootPageId(PageId rootPageId);
 

@@ -1,34 +1,31 @@
 /*
-// $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Saffron preprocessor and data engine.
+// Copyright (C) 2002-2004 Disruptive Tech
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package net.sf.saffron.ext;
 
 import junit.framework.TestSuite;
 
-import net.sf.saffron.core.SaffronSchema;
+import org.eigenbase.relopt.RelOptSchema;
 
 
 /**
- * <code>ObjectSchema</code> implements {@link SaffronSchema} by calling Java
+ * <code>ObjectSchema</code> implements {@link RelOptSchema} by calling Java
  * methods.
  *
  * @author jhyde
@@ -36,26 +33,24 @@ import net.sf.saffron.core.SaffronSchema;
  *
  * @since 8 February, 2002
  */
-public abstract class ObjectSchema implements SaffronSchema
+public abstract class ObjectSchema implements RelOptSchema
 {
-    //~ Constructors ----------------------------------------------------------
-
     public ObjectSchema()
     {
     }
 
-    //~ Methods ---------------------------------------------------------------
-
     // for Connection
-    public static SaffronSchema getSaffronSchemaStatic()
+    public static RelOptSchema getRelOptSchemaStatic()
     {
         throw new UnsupportedOperationException(
             "Derived class must implement "
-            + "public static Schema getSaffronSchemaStatic()");
+            + "public static Schema getRelOptSchemaStatic()");
     }
 
     // implement Connection
-    public Object contentsAsArray(String qualifier,String tableName)
+    public Object contentsAsArray(
+        String qualifier,
+        String tableName)
     {
         throw new UnsupportedOperationException(
             "JdbcConnection.contentsAsArray() should have been replaced");
@@ -64,7 +59,8 @@ public abstract class ObjectSchema implements SaffronSchema
     /**
      * Creates a test suite.
      */
-    public static TestSuite suite() throws Exception
+    public static TestSuite suite()
+        throws Exception
     {
         Class clazz = Class.forName("net.sf.saffron.test.ObjectSchemaTest");
         return new TestSuite(clazz);

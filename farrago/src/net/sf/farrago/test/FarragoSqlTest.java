@@ -6,24 +6,24 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.test;
 
-import net.sf.farrago.util.*;
+import java.io.*;
 
 import junit.framework.*;
 
-import java.io.*;
+import net.sf.farrago.util.*;
+
 
 /**
  * FarragoSqlTest is a JUnit harness for executing tests which are implemented
@@ -35,16 +35,18 @@ import java.io.*;
  */
 public class FarragoSqlTest extends FarragoTestCase
 {
-    public interface FarragoSqlTestFactory {
-        public FarragoTestCase createSqlTest(String testName) throws Exception;
-    }
+    //~ Constructors ----------------------------------------------------------
 
-    public FarragoSqlTest(String testName) throws Exception
+    public FarragoSqlTest(String testName)
+        throws Exception
     {
         super(testName);
     }
 
-    public static Test suite() throws Exception
+    //~ Methods ---------------------------------------------------------------
+
+    public static Test suite()
+        throws Exception
     {
         return gatherSuite(
             FarragoProperties.instance().testFilesetUnitsql.get(true),
@@ -58,7 +60,9 @@ public class FarragoSqlTest extends FarragoTestCase
     }
 
     protected static Test gatherSuite(
-        String fileSet, FarragoSqlTestFactory fac) throws Exception
+        String fileSet,
+        FarragoSqlTestFactory fac)
+        throws Exception
     {
         StringReader stringReader = new StringReader(fileSet);
         LineNumberReader lineReader = new LineNumberReader(stringReader);
@@ -73,19 +77,30 @@ public class FarragoSqlTest extends FarragoTestCase
         return wrappedSuite(suite);
     }
 
-    protected void setUp() throws Exception
+    protected void setUp()
+        throws Exception
     {
         // run cleanup before each test case
         runCleanup();
         super.setUp();
     }
-    
-    protected void runTest() throws Exception
+
+    protected void runTest()
+        throws Exception
     {
         // mask out source control Id
         addDiffMask("\\$Id.*\\$");
         runSqlLineTest(getName());
     }
+
+    //~ Inner Interfaces ------------------------------------------------------
+
+    public interface FarragoSqlTestFactory
+    {
+        public FarragoTestCase createSqlTest(String testName)
+            throws Exception;
+    }
 }
+
 
 // End FarragoSqlTest.java

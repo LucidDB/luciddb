@@ -105,7 +105,7 @@ class LogicalTxnLog
 public:
 
     /**
-     * Factory method to construct a new LogicalTxnLog in the given segment.
+     * Creates a new LogicalTxnLog in the given segment.
      *
      * @param logSegmentAccessor accessor for segment to contain log data
      *
@@ -124,7 +124,7 @@ public:
     virtual ~LogicalTxnLog();
     
     /**
-     * Start a new LogicalTxn.
+     * Starts a new LogicalTxn.
      *
      * @param pCacheAccessor CacheAccessor to use for cache access to log data
      *
@@ -134,7 +134,7 @@ public:
         SharedCacheAccessor pCacheAccessor);
 
     /**
-     * Checkpoint all active transactions. This method assumes that all
+     * Checkpoints all active transactions. Assumes that all
      * transactions have already been quiesced for the duration of the
      * checkpoint.  In most cases, deallocateCheckpointedLog must also
      * be called after the checkpoint.
@@ -148,8 +148,8 @@ public:
         CheckpointType checkpointType = CHECKPOINT_FLUSH_ALL);
 
     /**
-     * Release log space used by transactions which committed before current
-     * checkpoint.  This is separated from the checkpoint operation itself to
+     * Releases log space used by transactions which committed before current
+     * checkpoint.  Divorced from the checkpoint operation itself to
      * make possible atomicity as part of compound checkpoint sequences.
      *
      * @param memento memento returned by last checkpoint() call

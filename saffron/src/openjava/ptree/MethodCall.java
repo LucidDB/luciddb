@@ -14,7 +14,7 @@ package openjava.ptree;
 
 import openjava.ptree.util.*;
 import openjava.mop.*;
-import net.sf.saffron.rel.Aggregation;
+import org.eigenbase.rel.Aggregation;
 import net.sf.saffron.oj.rel.BuiltinAggregation;
 import java.io.OutputStream;
 

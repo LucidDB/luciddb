@@ -35,6 +35,9 @@ Eigenbase:
 Disruptive:
 	//depot/aspen/...	[work]/aspen
 
+After defining the client, do a manual sync and run 'make ant_ext' in
+thirdparty to unpack ant.
+
 The shell script startcc-chumley.sh starts Cruise Control and enables
 a JMX service on port 8080.  This port should be firewalled from
 access by outside users -- the JMX service has no protection against
@@ -43,7 +46,7 @@ malicious users.  You'll need a corresponding startcc-yourmachine.sh
 we'll refer to as config.xml).
 
 The ant build scripts assume the presence of a file called
-disruptive.perforce.properties configures Ant's p4 tasks to connect to
+disruptive.perforce.properties which configures Ant's p4 tasks to connect to
 the Disruptive Perforce server.
 
 Before executing startcc.sh, set the environment variable
@@ -60,8 +63,10 @@ server in for the copy to actually succeed.  This means creating an
 RSA public/private keypair and placing them in ~/.ssh/id_rsa and
 ~/.ssh/id_rsa_pub and modifiying ~/.ssh/authorized_keys on the server
 to contain a copy of the public key.  "man ssh" for more info.  Note
-that having two build servers copy data to the same place probably
-isn't a good idea!
+that having two build servers copy data to the same place
+isn't a good idea!  However, you can use configSuffix to parameterize
+the project names, so that builds from different platforms go to
+different locations on the same server.
 
 
 
@@ -83,3 +88,12 @@ To eliminate some errors from Tomcat while trying to view the build
 result pages, I had to copy xalan.jar from $CC_HOME/reporting/jsp/lib
 to $TOMCAT_HOME/common/endorsed.  I figured this out by reading
 http://wiki.apache.org/cocoon/EndorsedLibsProblem.
+
+-------------------------
+
+Win32 Notes from JVS 20-Sept-2004
+---------------------------------
+To build cruisecontrol, I had to set JAVA_HOME to a DOS path and run
+build.bat instead of build.sh.  To run, I had to add a link to p4.exe
+in the working directory (there's probably a way to fix the Windows
+path to avoid this).

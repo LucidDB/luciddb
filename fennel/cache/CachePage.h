@@ -165,7 +165,7 @@ private:
     }
 
     /**
-     * Wait for pending I/O to complete.  Note that this wraps a condition
+     * Waits for pending I/O to complete.  Note that this wraps a condition
      * variable, which is subject to spurious wakeups; for this reason, the
      * caller MUST enclose calls to this method in a while loop.
      */
@@ -175,7 +175,7 @@ private:
     }
     
     /**
-     * Variant for StrictMutexTryGuard.
+     * Waits for pending I/O to complete while holding a try-mutex.
      */
     void waitForPendingIO(StrictMutexTryGuard &guard)
     {
@@ -219,6 +219,9 @@ public:
         return dataStatus == DATA_DIRTY;
     }
 
+    /**
+     * @return is I/O currently in progress on this page?
+     */
     bool isTransferInProgress() const
     {
         return (dataStatus >= DATA_WRITE);
@@ -249,7 +252,7 @@ public:
     }
 
     /**
-     * Obtain a const pointer to the page contents.  The page must be locked in
+     * Obtains a const pointer to the page contents.  The page must be locked in
      * shared or exclusive mode first.  The number of valid bytes returned
      * depends on the page size.
      *
@@ -264,7 +267,7 @@ public:
     }
     
     /**
-     * Obtain a writable pointer to the page contents; this marks the page
+     * Obtains a writable pointer to the page contents, marking the page
      * dirty.  The page must be locked in exclusive mode first.  The number
      * of valid bytes returned depends on the page size.
      *
@@ -293,7 +296,7 @@ public:
     }
 
     /**
-     * Attempt to upgrade from LOCKMODE_S (which caller must already have
+     * Attempts to upgrade from LOCKMODE_S (which caller must already have
      * acquired) to LOCKMODE_X.  This is a NOWAIT operation; it fails
      * immediately if any other thread already holds a lock on the same page,
      * or when a transfer is already in progress.
@@ -310,7 +313,7 @@ public:
     }
 
     /**
-     * Swap this page's buffer with another page.  You almost certainly
+     * Swaps this page's buffer with another page.  You almost certainly
      * shouldn't be calling this directly (see SegPageLock::swapBuffers).
      *
      * @param other page to swap with

@@ -1,7 +1,7 @@
 <!-- This file is an XML fragment with the -->
 <!-- CruiseControl config for Aspen -->
 
-	<project name="aspen">
+	<project name="aspen&configSuffix;">
 		<labelincrementer defaultLabel="aspen.1"/>
 
 		<!-- Bootstrappers are run with every build before mod checks -->
@@ -37,32 +37,34 @@
 		<publishers>
 			<currentbuildstatuspublisher file="logs/aspen/currentbuildstatus.txt"/>
 
-			<artifactspublisher dir="build/farrago/trace" dest="artifacts/aspen" subdirectory="farrago_trace"/>
-			<artifactspublisher dir="build/farrago/unitsql" dest="artifacts/aspen" subdirectory="farrago_unitsql"/>
-			<artifactspublisher dir="build/farrago/initsql" dest="artifacts/aspen" subdirectory="farrago_initsql"/>
-			<artifactspublisher dir="build/farrago/regressionsql" dest="artifacts/aspen" subdirectory="farrago_regressionsql"/>
-			<artifactspublisher dir="build/farrago/testlog" dest="artifacts/aspen" subdirectory="farrago_testlog"/>
-			<artifactspublisher dir="build/aspen/testlog" dest="artifacts/aspen" subdirectory="testlog"/>
-			<artifactspublisher dir="build/aspen/initsql" dest="artifacts/aspen" subdirectory="initsql"/>
-			<artifactspublisher dir="build/aspen/unitsql" dest="artifacts/aspen" subdirectory="unitsql"/>
-			<artifactspublisher dir="build/aspen/trace" dest="artifacts/aspen" subdirectory="trace"/>
-			<artifactspublisher dir="build/aspen/testcases" dest="artifacts/aspen" subdirectory="testcases"/>
+			<artifactspublisher dir="build/farrago/trace" dest="artifacts/aspen&configSuffix;" subdirectory="farrago_trace"/>
+			<artifactspublisher dir="build/farrago/unitsql" dest="artifacts/aspen&configSuffix;" subdirectory="farrago_unitsql"/>
+			<artifactspublisher dir="build/farrago/initsql" dest="artifacts/aspen&configSuffix;" subdirectory="farrago_initsql"/>
+			<artifactspublisher dir="build/farrago/regressionsql" dest="artifacts/aspen&configSuffix;" subdirectory="farrago_regressionsql"/>
+			<artifactspublisher dir="build/farrago/testlog" dest="artifacts/aspen&configSuffix;" subdirectory="farrago_testlog"/>
+			<artifactspublisher dir="build/aspen/testlog" dest="artifacts/aspen&configSuffix;" subdirectory="testlog"/>
+			<artifactspublisher dir="build/aspen/initsql" dest="artifacts/aspen&configSuffix;" subdirectory="initsql"/>
+			<artifactspublisher dir="build/aspen/unitsql" dest="artifacts/aspen&configSuffix;" subdirectory="unitsql"/>
+			<artifactspublisher dir="build/aspen/trace" dest="artifacts/aspen&configSuffix;" subdirectory="trace"/>
+			<artifactspublisher dir="build/aspen/testcases" dest="artifacts/aspen&configSuffix;" subdirectory="testcases"/>
 
 			<!-- sync up artifacts on jsp machine: CC's scp would copy everything -->
-			<execute command="&rsync_cmd; artifacts/aspen &rsync_dest;"/>
+			<execute command="&rsync_cmd; artifacts/aspen&configSuffix; &rsync_dest;"/>
 
 			<scp sourcedir="logs/aspen"
 			     targetuser="&scp_user;"
 			     targethost="&scp_host;"
-			     targetdir="web/logs/aspen"/>
+			     targetseparator="&scp_filesep;"
+			     targetdir="web/logs/aspen&configSuffix;"/>
 			
 			<scp sourcedir="logs/aspen"
 			     file="currentbuildstatus.txt"
 			     targetuser="&scp_user;"
 			     targethost="&scp_host;"
-			     targetdir="web/logs/aspen"/>
+			     targetseparator="&scp_filesep;"
+			     targetdir="web/logs/aspen&configSuffix;"/>
 			
-			<email buildresultsurl="&buildresultsbase;/aspen"
+			<email buildresultsurl="&buildresultsbase;/aspen&configSuffix;"
 			       mailhost="&mailhost;"
 			       reportsuccess="&reportsuccess;"
 			       returnname="&returnname;"

@@ -129,8 +129,8 @@ public:
     static const LogicalActionType ACTION_REVERSE_UPDATE;
     
     /**
-     * Read all tuples from stream and perform the requested action with them
-     * on the target table.
+     * Reads all tuples from stream and uses them as input to the requested
+     * action on the target table.
      *
      * @param pInputStream stream from which to read
      *

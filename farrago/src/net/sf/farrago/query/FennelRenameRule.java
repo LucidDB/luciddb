@@ -17,18 +17,17 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.query;
-
-import net.sf.saffron.core.*;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.util.*;
-import net.sf.saffron.rex.RexNode;
-import net.sf.saffron.rex.RexInputRef;
 
 import java.util.*;
 import java.util.List;
+
+import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.rex.RexInputRef;
+import org.eigenbase.rex.RexNode;
+import org.eigenbase.util.*;
 
 
 /**
@@ -38,51 +37,56 @@ import java.util.List;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FennelRenameRule extends VolcanoRule
+public class FennelRenameRule extends RelOptRule
 {
+    //~ Instance fields -------------------------------------------------------
+
     private CallingConvention convention;
-    
+
     //~ Constructors ----------------------------------------------------------
 
     /**
      * Creates a new FennelRenameRule object.
      */
-    public FennelRenameRule(CallingConvention convention,String description)
+    public FennelRenameRule(
+        CallingConvention convention,
+        String description)
     {
-        super(
-            new RuleOperand(
+        super(new RelOptRuleOperand(
                 ProjectRel.class,
-                new RuleOperand [] { new RuleOperand(SaffronRel.class,null) }));
+                new RelOptRuleOperand [] {
+                    new RelOptRuleOperand(RelNode.class, null)
+                }));
         this.convention = convention;
         this.description = description;
     }
 
     //~ Methods ---------------------------------------------------------------
 
-    // implement VolcanoRule
+    // implement RelOptRule
     public CallingConvention getOutConvention()
     {
         return convention;
     }
 
-    // implement VolcanoRule
-    public void onMatch(VolcanoRuleCall call)
+    // implement RelOptRule
+    public void onMatch(RelOptRuleCall call)
     {
         ProjectRel project = (ProjectRel) call.rels[0];
         if (!project.isBoxed()) {
             return;
         }
 
-        SaffronRel inputRel = call.rels[1];
+        RelNode inputRel = call.rels[1];
 
         int n = project.getChildExps().length;
-        SaffronType inputType = inputRel.getRowType();
+        RelDataType inputType = inputRel.getRowType();
         if (inputType.getFieldCount() != n) {
             return;
         }
-        SaffronType projType = project.getRowType();
-        SaffronField [] projFields = projType.getFields();
-        SaffronField [] inputFields = inputType.getFields();
+        RelDataType projType = project.getRowType();
+        RelDataTypeField [] projFields = projType.getFields();
+        RelDataTypeField [] inputFields = inputType.getFields();
         String [] fieldNames = new String[n];
         boolean needRename = false;
         for (int i = 0; i < n; ++i) {
@@ -103,14 +107,18 @@ public class FennelRenameRule extends VolcanoRule
             fieldNames[i] = projFieldName;
         }
 
-        SaffronRel fennelInput = convert(inputRel,convention);
+        RelNode fennelInput = convert(inputRel, convention);
         if (fennelInput == null) {
             return;
         }
 
         if (needRename) {
-            FennelRenameRel rename = new FennelRenameRel(
-                project.getCluster(),fennelInput,fieldNames,convention);
+            FennelRenameRel rename =
+                new FennelRenameRel(
+                    project.getCluster(),
+                    fennelInput,
+                    fieldNames,
+                    convention);
             call.transformTo(rename);
         } else {
             // REVIEW:  Probably shouldn't do this.  Instead, make generic

@@ -50,7 +50,7 @@ framework}.
 In many cases, desired functionality can be verified by producing a
 string representing the test result and comparing this with another
 string which defines the expected results.  {@link
-net.sf.saffron.test.DiffTestCase} provides generic diff-based testing
+org.eigenbase.test.DiffTestCase} provides generic diff-based testing
 infrastructure.  A specific test case calls the
 DiffTestCase.openTestLog() method to get a {@link java.io.Writer}, and
 writes its output to this Writer.  The test case then calls the
@@ -146,12 +146,8 @@ pre-test state at the end of each test.
 
 <h3>Fennel Tests</h3>
 
-Tests must run successfully whether or not Fennel storage is
-available.  Java-based tests can alter their behavior by checking
-FarragoCatalog.isFennelEnabled().  SQL-based tests are unlikely to
-work without Fennel (since most tests require ORDER BY for
-non-determinism), so they are executed but the results are ignored
-when Fennel is disabled.
+Tests must run successfully when Fennel storage is
+available.  Without Fennel storage, many tests are expected to fail.
 
 <h3>Test Utilities</h3>
 

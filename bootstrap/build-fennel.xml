@@ -86,7 +86,15 @@
 
 	<!-- helper targets -->
 
-	<target name="do-test">
+  <!-- TODO jvs 21-Sept-2004: remove once Fennel unit tests work on Windows -->
+	<target name="os.check">
+	    <condition property="os.windows">
+                <os family="windows"/>
+	    </condition>
+	    <mkdir dir="${build.home}/fennel/test/.testlog" />
+	</target>
+
+	<target name="do-test" depends="os.check" unless="os.windows">
 		<property name="build.home" location="${default.build.home}"/>
 		<exec dir="${build.home}/fennel" executable="make" failonerror="true">
 			<arg value="check"/>
@@ -97,7 +105,8 @@
 
 	<target name="do-cleanbuild">
 		<property name="build.home" location="${default.build.home}"/>
-		<exec dir="${build.home}/fennel" executable="${build.home}/fennel/initBuild.sh" failonerror="true">
+		<exec dir="${build.home}/fennel" executable="bash" failonerror="true">
+			<arg value="${build.home}/fennel/initBuild.sh"/>
 			<arg value="${fennel.init.arg}"/>
 		</exec>
 	</target>

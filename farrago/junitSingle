@@ -1,10 +1,11 @@
 #!/bin/bash
 # $Id$
-# Run a single Junit test case from the default test package.
+# Run a single Junit test case.
 # usage: junitSingle [-repeat] TEST [TARGET],
-#  where TEST is the fully-qualified name of a test class
+#  where TEST is the name of a test class
 #  and TARGET is a target in build.xml.
 #  The -repeat option repeats the test until it fails.
+#  Unqualified test classes are assumed to live in package net.sf.farrago.test
 
 once=true
 if [ "$1" == "-repeat" ]; then
@@ -13,7 +14,7 @@ if [ "$1" == "-repeat" ]; then
 fi
 
 if [ ! "$1" ]; then 
-    echo "Error: specify a .sql filename or an unqualified test class name"; 
+    echo "Error: specify a .sql filename or a test class name"; 
     exit; 
 fi
 test=$1
@@ -47,7 +48,10 @@ if [ -e "$test" ]; then
     command="ant -Djunit.class=$junit_class -D$fileset=$test $target"
 else
     # Interpret the argument as the name of a test case
-    command="ant -Djunit.class=net.sf.farrago.test.$test -Dfileset.unitsql='' $target"
+    if [ -z `echo $test | grep '\.'` ]; then
+        test=net.sf.farrago.test.$test
+    fi
+    command="ant -Djunit.class=$test -Dfileset.unitsql='' $target"
 fi
 
 if $once; then

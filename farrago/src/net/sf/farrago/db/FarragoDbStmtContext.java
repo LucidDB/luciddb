@@ -16,28 +16,29 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.db;
+
+import java.sql.*;
+import java.util.*;
+import java.util.logging.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.query.*;
-import net.sf.farrago.util.*;
-import net.sf.farrago.trace.*;
+import net.sf.farrago.resource.FarragoResource;
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.session.*;
-import net.sf.farrago.resource.FarragoResource;
+import net.sf.farrago.trace.*;
+import net.sf.farrago.util.*;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.util.*;
-import net.sf.saffron.oj.stmt.*;
-import net.sf.saffron.rel.SaffronRel;
-import net.sf.saffron.sql.SqlKind;
-import net.sf.saffron.sql.type.SqlTypeName;
-import net.sf.saffron.runtime.IteratorResultSet;
+import org.eigenbase.oj.stmt.*;
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.runtime.IteratorResultSet;
+import org.eigenbase.sql.SqlKind;
+import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.util.*;
 
-import java.util.*;
-import java.util.logging.*;
-import java.sql.*;
 
 /**
  * FarragoDbStmtContext implements the
@@ -47,8 +48,7 @@ import java.sql.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoDbStmtContext
-    implements FarragoSessionStmtContext
+public class FarragoDbStmtContext implements FarragoSessionStmtContext
 {
     //~ Static fields/initializers --------------------------------------------
 
@@ -58,31 +58,23 @@ public class FarragoDbStmtContext
     //~ Instance fields -------------------------------------------------------
 
     private int updateCount;
-
     private FarragoDbSession session;
 
     /**
      * Definitions of dynamic parameters.
      */
-    private ParamDef[] dynamicParamDefs;
-
+    private ParamDef [] dynamicParamDefs;
     private Object [] dynamicParamValues;
-
     private boolean daemon;
-
     private ResultSet resultSet;
-
     private FarragoSessionExecutableStmt executableStmt;
-
     private FarragoCompoundAllocation allocations;
-
     private String sql;
 
     /**
      * query timeout in seconds, default to 0.
      */
     private int queryTimeoutMillis = 0;
-
 
     //~ Constructors ----------------------------------------------------------
 
@@ -103,6 +95,7 @@ public class FarragoDbStmtContext
     public void closeAllocation()
     {
         unprepare();
+
         // purge self from session's list
         session.forgetAllocation(this);
     }
@@ -132,28 +125,34 @@ public class FarragoDbStmtContext
     }
 
     // implement FarragoSessionStmtContext
-    public void prepare(String sql,boolean isExecDirect)
+    public void prepare(
+        String sql,
+        boolean isExecDirect)
     {
         unprepare();
         allocations = new FarragoCompoundAllocation();
         this.sql = sql;
-        executableStmt = session.prepare(sql,allocations,isExecDirect,null);
+        executableStmt = session.prepare(sql, allocations, isExecDirect, null);
         postprepare();
     }
 
     private void postprepare()
     {
         if (isPrepared()) {
-            final SaffronType dynamicParamRowType =
-                    executableStmt.getDynamicParamRowType();
-            final SaffronField[] fields = dynamicParamRowType.getFields();
+            final RelDataType dynamicParamRowType =
+                executableStmt.getDynamicParamRowType();
+            final RelDataTypeField [] fields = dynamicParamRowType.getFields();
+
             // Allocate an array to hold parameter values.
             dynamicParamValues = new Object[fields.length];
+
             // Allocate an array of validators, one for each parameter.
             dynamicParamDefs = new ParamDef[fields.length];
             for (int i = 0; i < fields.length; i++) {
-                final SaffronField field = fields[i];
-                dynamicParamDefs[i] = ParamDef.create(field.getName(),
+                final RelDataTypeField field = fields[i];
+                dynamicParamDefs[i] =
+                    ParamDef.create(
+                        field.getName(),
                         field.getType());
             }
         } else {
@@ -164,42 +163,41 @@ public class FarragoDbStmtContext
 
     // implement FarragoSessionStmtContext
     public void prepare(
-        SaffronRel plan,
+        RelNode plan,
         SqlKind kind,
         boolean logical,
         FarragoSessionPreparingStmt prep)
     {
         unprepare();
         allocations = new FarragoCompoundAllocation();
-        this.sql = "";                  // not available
+        this.sql = ""; // not available
 
-        // As plan is never DDL, bypass FarragoDbSession.prepare(), which
-        // serves to wrap a DDL stmt in a transaction.
         executableStmt =
-            session.getDatabase().implementStmt(
-                prep, plan, kind, logical, allocations);
+            session.getDatabase().implementStmt(prep, plan, kind, logical,
+                allocations);
         postprepare();
     }
 
-
     // implement FarragoSessionStmtContext
-    public SaffronType getPreparedRowType()
+    public RelDataType getPreparedRowType()
     {
-        assert(isPrepared());
+        assert (isPrepared());
         return executableStmt.getRowType();
     }
 
     // implement FarragoSessionStmtContext
-    public SaffronType getPreparedParamType()
+    public RelDataType getPreparedParamType()
     {
-        assert(isPrepared());
+        assert (isPrepared());
         return executableStmt.getDynamicParamRowType();
     }
 
     // implement FarragoSessionStmtContext
-    public void setDynamicParam(int parameterIndex,Object x)
+    public void setDynamicParam(
+        int parameterIndex,
+        Object x)
     {
-        assert(isPrepared());
+        assert (isPrepared());
         Object y = dynamicParamDefs[parameterIndex].scrubValue(x);
         dynamicParamValues[parameterIndex] = y;
     }
@@ -207,8 +205,8 @@ public class FarragoDbStmtContext
     // implement FarragoSessionStmtContext
     public void clearParameters()
     {
-        assert(isPrepared());
-        Arrays.fill(dynamicParamValues,null);
+        assert (isPrepared());
+        Arrays.fill(dynamicParamValues, null);
     }
 
     // implement FarragoSessionStmtContext
@@ -226,7 +224,7 @@ public class FarragoDbStmtContext
     // implement FarragoSessionStmtContext
     public void execute()
     {
-        assert(isPrepared());
+        assert (isPrepared());
         closeResultSet();
         traceExecute();
         boolean isDml = executableStmt.isDml();
@@ -251,8 +249,7 @@ public class FarragoDbStmtContext
 
             resultSet = executableStmt.execute(context);
 
-            if (queryTimeoutMillis > 0)
-            {
+            if (queryTimeoutMillis > 0) {
                 IteratorResultSet iteratorRS = (IteratorResultSet) resultSet;
                 iteratorRS.setTimeout(queryTimeoutMillis);
             }
@@ -265,16 +262,11 @@ public class FarragoDbStmtContext
         if (isDml) {
             success = false;
             try {
-                if (session.getCatalog().isFennelEnabled()) {
-                    boolean found = resultSet.next();
-                    assert (found);
-                    updateCount = resultSet.getInt(1);
-                    // REVIEW: jvp 20-Jun-2004 workaround limitations of
-                    // other libraries
-                    while (resultSet.next()) {
-                    }
-                } else {
-                    updateCount = 0;
+                boolean found = resultSet.next();
+                assert (found);
+                updateCount = resultSet.getInt(1);
+                // REVIEW jvs 13-Sept-2004:  johnp, is this still needed?
+                while (resultSet.next()) {
                 }
                 if (tracer.isLoggable(Level.FINE)) {
                     tracer.fine("Update count = " + updateCount);
@@ -357,6 +349,8 @@ public class FarragoDbStmtContext
         }
     }
 
+    //~ Inner Classes ---------------------------------------------------------
+
     /**
      * Enforces constraints on parameters.
      *
@@ -373,14 +367,17 @@ public class FarragoDbStmtContext
      *
      * <p>TODO: Actually enfore these constraints.
      */
-    private static class ParamDef {
-        final SaffronType type;
-        final String paramName;
-
+    private static class ParamDef
+    {
         static final TimeZone defaultZone = TimeZone.getDefault();
         static final TimeZone gmtZone = TimeZone.getTimeZone("GMT");
+        final RelDataType type;
+        final String paramName;
 
-        public ParamDef(String paramName, SaffronType type) {
+        public ParamDef(
+            String paramName,
+            RelDataType type)
+        {
             this.type = type;
             this.paramName = paramName;
         }
@@ -390,9 +387,12 @@ public class FarragoDbStmtContext
          *
          * @post return != null
          */
-        static ParamDef create(String paramName, SaffronType type) {
+        static ParamDef create(
+            String paramName,
+            RelDataType type)
+        {
             final SqlTypeName sqlTypeName = type.getSqlTypeName();
-            switch (sqlTypeName.ordinal_) {
+            switch (sqlTypeName.ordinal) {
             case SqlTypeName.Char_ordinal:
             case SqlTypeName.Varchar_ordinal:
                 return new StringParamDef(paramName, type);
@@ -416,7 +416,8 @@ public class FarragoDbStmtContext
          * @param x
          * @return Value to be sent into the depths...
          */
-        public Object scrubValue(Object x) {
+        public Object scrubValue(Object x)
+        {
             return x;
         }
 
@@ -424,24 +425,35 @@ public class FarragoDbStmtContext
          * Returns an error that the value is not valid for the desired SQL
          * type.
          */
-        protected FarragoException newInvalidType(Object x) {
+        protected FarragoException newInvalidType(Object x)
+        {
             return FarragoResource.instance().newParameterValueIncompatible(
-                    x.getClass().getName(),
-                    paramName,
-                    type.toString());
+                x.getClass().getName(),
+                paramName,
+                type.toString());
         }
     }
 
+    // TODO jvs 7-Oct-2004: according to Appendix B of the JDBC spec (Data Type
+    // Conversion Tables), it's possible to pass String objects as the values
+    // for date/time/timestamp/binary parameters.  Need to implement the
+    // appropriate conversions here.  Also, need a NumericParamDef impl.
+    
     /**
      * Definition of a Timestamp parameter. Converts parameters from local time
      * (the JVM's timezone) into system time.
      */
-    private static class TimestampParamDef extends ParamDef {
-        public TimestampParamDef(String paramName, SaffronType type) {
+    private static class TimestampParamDef extends ParamDef
+    {
+        public TimestampParamDef(
+            String paramName,
+            RelDataType type)
+        {
             super(paramName, type);
         }
 
-        public Object scrubValue(Object x) {
+        public Object scrubValue(Object x)
+        {
             // java.sql.Date, java.sql.Time, java.sql.Timestamp are all OK.
             if (!(x instanceof java.util.Date)) {
                 throw newInvalidType(x);
@@ -449,38 +461,46 @@ public class FarragoDbStmtContext
             java.util.Date timestamp = (java.util.Date) x;
             long millis = timestamp.getTime();
             int timeZoneOffset = defaultZone.getOffset(millis);
+
             // shift the time into gmt
             return new Timestamp(millis + timeZoneOffset);
         }
-
     }
 
     /**
      * Definition of a date parameter. Converts parameters from local time
      * (the JVM's timezone) into system time.
      */
-    private static class DateParamDef extends ParamDef {
-        public DateParamDef(String paramName, SaffronType type) {
+    private static class DateParamDef extends ParamDef
+    {
+        public DateParamDef(
+            String paramName,
+            RelDataType type)
+        {
             super(paramName, type);
         }
 
-        public Object scrubValue(Object x) {
+        public Object scrubValue(Object x)
+        {
             if (!(x instanceof java.util.Date)) {
                 throw newInvalidType(x);
             }
             java.util.Date date = (java.util.Date) x;
-            final long millis = date.getTime(),
-                    shiftedMillis;
+            final long millis = date.getTime();
+            final long shiftedMillis;
+
             // Shift time into gmt and truncate to previous midnight.
             // (There's probably a more efficient way of doing this.)
             Calendar cal = Calendar.getInstance();
             cal.setTimeInMillis(millis);
+
             // Truncate to midnight before we shift into GMT, just in case
             // the untruncated date falls in a different day in GMT.
             cal.set(Calendar.HOUR_OF_DAY, 0);
             cal.set(Calendar.MINUTE, 0);
             cal.set(Calendar.SECOND, 0);
             cal.set(Calendar.MILLISECOND, 0);
+
             // Shift into gmt and truncate again.
             cal.setTimeZone(gmtZone);
             cal.set(Calendar.HOUR_OF_DAY, 0);
@@ -491,24 +511,29 @@ public class FarragoDbStmtContext
 
             return new java.sql.Date(shiftedMillis);
         }
-
     }
 
     /**
      * Definition of a time parameter. Converts parameters from local time
      * (the JVM's timezone) into system time.
      */
-    private static class TimeParamDef extends ParamDef {
-        public TimeParamDef(String paramName, SaffronType type) {
+    private static class TimeParamDef extends ParamDef
+    {
+        public TimeParamDef(
+            String paramName,
+            RelDataType type)
+        {
             super(paramName, type);
         }
 
-        public Object scrubValue(Object x) {
+        public Object scrubValue(Object x)
+        {
             // java.sql.Date, java.sql.Time, java.sql.Timestamp are all OK.
             if (!(x instanceof java.util.Date)) {
                 throw newInvalidType(x);
             }
             java.util.Date time = (java.util.Date) x;
+
             // create a calendar containing time in locale timezone
             Calendar cal = Calendar.getInstance();
             cal.setTime(time);
@@ -516,91 +541,94 @@ public class FarragoDbStmtContext
             final int minute = cal.get(Calendar.MINUTE);
             final int second = cal.get(Calendar.SECOND);
             final int millisecond = cal.get(Calendar.MILLISECOND);
+
             // set date to epoch
             cal.clear();
+
             // shift to gmt
             cal.setTimeZone(gmtZone);
+
             // now restore the time part
             cal.set(Calendar.HOUR_OF_DAY, hour);
             cal.set(Calendar.MINUTE, minute);
             cal.set(Calendar.SECOND, second);
             cal.set(Calendar.MILLISECOND, millisecond);
+
             // convert to a time object
             return new Time(cal.getTimeInMillis());
         }
-
     }
 
     /**
      * Definition of a string parameter. Values which are not strings are
      * converted into strings. Strings are not padded, even for CHAR columns.
      */
-    private static class StringParamDef extends ParamDef {
+    private static class StringParamDef extends ParamDef
+    {
         private final int maxCharCount;
 
-        public StringParamDef(String paramName, SaffronType type) {
+        public StringParamDef(
+            String paramName,
+            RelDataType type)
+        {
             super(paramName, type);
             maxCharCount = type.getPrecision();
         }
 
-        public Object scrubValue(Object x) {
+        public Object scrubValue(Object x)
+        {
             if (x == null) {
                 return x;
             }
             if (x instanceof String) {
                 return x;
             }
+            // REVIEW jvs 7-Oct-2004: the default toString() implementation for
+            // Float/Double/Date/Time/Timestamp/byte[] may not be correct here.
             final String s = x.toString();
             if (s.length() > maxCharCount) {
                 throw FarragoResource.instance().newParameterValueTooLong(
-                        s, paramName, type.toString());
+                    s,
+                    paramName,
+                    type.toString());
             }
             return s;
         }
     }
 
     /**
-     * Definition of a string parameter. Values which are not strings are
-     * converted into strings. Strings are not padded, even for CHAR columns.
+     * Definition of a binary parameter. Only accepts byte-array values.
      */
-    private static class BinaryParamDef extends ParamDef {
+    private static class BinaryParamDef extends ParamDef
+    {
         private final int maxByteCount;
 
-        public BinaryParamDef(String paramName, SaffronType type) {
+        public BinaryParamDef(
+            String paramName,
+            RelDataType type)
+        {
             super(paramName, type);
             maxByteCount = type.getPrecision();
         }
 
-        public Object scrubValue(Object x) {
+        public Object scrubValue(Object x)
+        {
             if (x == null) {
                 return x;
             }
-            if (!(x instanceof byte[])) {
+            if (!(x instanceof byte [])) {
                 throw newInvalidType(x);
             }
-            final byte[] bytes = (byte[]) x;
+            final byte [] bytes = (byte []) x;
             if (bytes.length > maxByteCount) {
                 throw FarragoResource.instance().newParameterValueTooLong(
-                        toString(bytes), paramName, type.toString());
+                    Util.toStringFromByteArray(bytes,16),
+                    paramName,
+                    type.toString());
             }
             return bytes;
         }
-
-        private static String toString(byte[] bytes) {
-            StringBuffer buf = new StringBuffer(2 + bytes.length * 5);
-            for (int i = 0; i < bytes.length; i++) {
-                byte b = bytes[i];
-                if (i > 0) {
-                    buf.append(", ");
-                }
-                buf.append("x");
-                buf.append(Integer.toString(b, 16));
-            }
-            buf.append("}");
-            return buf.toString();
-        }
     }
-
 }
 
 

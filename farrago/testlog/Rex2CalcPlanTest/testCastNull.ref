@@ -1,0 +1,15 @@
+O vc,0, s4;
+I s4;
+L bo;
+S bo;
+C bo, bo, s4, vc,0, s4;
+V 1, 0, 10,  /* <NULL> */,  /* <NULL> */;
+T;
+GT L0, I0, C2 /* 0: >($0, 10) */;
+JMPT @4, L0 /* 1: */;
+MOVE S0, C0 /* 2: */;
+RETURN /* 3: */;
+MOVE S0, C1 /* 4: */;
+REF O0, C3 /* 5: */;
+REF O1, C4 /* 6: */;
+RETURN /* 7: */;

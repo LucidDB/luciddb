@@ -19,9 +19,11 @@
 package net.sf.farrago.query;
 
 import net.sf.farrago.fem.fennel.FemExecutionStreamDef;
-import net.sf.saffron.opt.RelImplementor;
-import net.sf.saffron.rel.SaffronRel;
-import net.sf.saffron.core.SaffronType;
+
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.relopt.RelImplementor;
+import org.eigenbase.reltype.RelDataType;
+
 
 /**
  * Callback used to hold state while converting a tree of {@link FennelRel}
@@ -33,7 +35,10 @@ import net.sf.saffron.core.SaffronType;
  * @since May 24, 2004
  * @version $Id$
  **/
-public interface FennelRelImplementor extends RelImplementor {
+public interface FennelRelImplementor extends RelImplementor
+{
+    //~ Methods ---------------------------------------------------------------
+
     /**
      * Converts a relational expression into a plan by calling its
      * {@link FennelRel#toStreamDef} method.
@@ -49,14 +54,15 @@ public interface FennelRelImplementor extends RelImplementor {
      *
      * @param streamDef new stream definition
      *
-     * @param rel SaffronRel which stream implements
+     * @param rel RelNode which stream implements
      *
      * @param rowType row type for stream, or null to use rel's row type
      */
     public void registerRelStreamDef(
         FemExecutionStreamDef streamDef,
-        SaffronRel rel,
-        SaffronType rowType);
+        RelNode rel,
+        RelDataType rowType);
 }
+
 
 // End FennelRelImplementor.java

@@ -73,6 +73,10 @@ public class OJSystem
      */
     public static final String NULLTYPE_NAME = "<type>null";
 
+    public static void initConstants()
+    {
+    }
+
     private static final OJClass getNullClass() {
 		OJClass clazz = new OJClass();
 		env.record( NULLTYPE_NAME, clazz );

@@ -6,28 +6,29 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.query;
-
-import net.sf.farrago.runtime.*;
-import net.sf.farrago.util.*;
-import net.sf.farrago.session.*;
-
-import net.sf.saffron.oj.stmt.*;
-import net.sf.saffron.core.*;
 
 import java.sql.*;
 import java.util.*;
+
+import net.sf.farrago.runtime.*;
+import net.sf.farrago.session.*;
+import net.sf.farrago.util.*;
+
+import org.eigenbase.oj.stmt.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+
 
 /**
  * FarragoExecutableExplainStmt implements FarragoSessionExecutableStmt for
@@ -43,27 +44,32 @@ import java.util.*;
  */
 class FarragoExecutableExplainStmt extends FarragoExecutableStmtImpl
 {
+    //~ Instance fields -------------------------------------------------------
+
     private final String explanation;
 
+    //~ Constructors ----------------------------------------------------------
+
     FarragoExecutableExplainStmt(
-        SaffronType dynamicParamRowType,
+        RelDataType dynamicParamRowType,
         String explanation)
     {
-        super(dynamicParamRowType,false);
-        
+        super(dynamicParamRowType, false);
+
         this.explanation = explanation;
     }
 
+    //~ Methods ---------------------------------------------------------------
+
     // implement FarragoSessionExecutableStmt
-    public SaffronType getRowType()
+    public RelDataType getRowType()
     {
         // TODO:  make a proper type descriptor (and use it for execute also)
         throw new UnsupportedOperationException();
     }
 
     // implement FarragoSessionExecutableStmt
-    public ResultSet execute(
-        FarragoSessionRuntimeContext runtimeContext)
+    public ResultSet execute(FarragoSessionRuntimeContext runtimeContext)
     {
         // don't need a context
         runtimeContext.closeAllocation();
@@ -77,5 +83,6 @@ class FarragoExecutableExplainStmt extends FarragoExecutableStmtImpl
         return FarragoUtil.getStringMemoryUsage(explanation);
     }
 }
+
 
 // End FarragoExecutableExplainStmt.java

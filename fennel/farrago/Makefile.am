@@ -15,14 +15,16 @@ JavaTupleStream.cpp \
 JniProxy.cpp \
 JniUtil.cpp \
 NativeMethods.cpp \
-TupleStreamBuilder.cpp
+ExecutionStreamBuilder.cpp
 
 libfarrago_la_LIBADD = \
 	-L$(top_builddir)/libfennel \
+	-L$(top_builddir)/disruptivetech/libfennel_dt \
+	-lfennel_dt_xo \
+	-lfennel_dt_calc \
 	-lfennel_xo \
 	-lfennel_db \
 	-lfennel_btree \
-	-lfennel_calc \
 	-lfennel_tuple \
 	-lfennel_txn \
 	-lfennel_segment \

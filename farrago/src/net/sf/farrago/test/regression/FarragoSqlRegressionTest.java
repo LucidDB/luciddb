@@ -16,13 +16,13 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.test.regression;
 
-import net.sf.farrago.util.*;
-import net.sf.farrago.test.*;
-
 import junit.framework.Test;
+
+import net.sf.farrago.test.*;
+import net.sf.farrago.util.*;
+
 
 /**
  * FarragoSqlRegressionTest is a JUnit harness for executing tests which are implemented
@@ -34,12 +34,18 @@ import junit.framework.Test;
  */
 public class FarragoSqlRegressionTest extends FarragoSqlTest
 {
-    public FarragoSqlRegressionTest(String testName) throws Exception
+    //~ Constructors ----------------------------------------------------------
+
+    public FarragoSqlRegressionTest(String testName)
+        throws Exception
     {
         super(testName);
     }
 
-    public static Test suite() throws Exception
+    //~ Methods ---------------------------------------------------------------
+
+    public static Test suite()
+        throws Exception
     {
         return gatherSuite(
             FarragoProperties.instance().testFilesetRegression.get(true),
@@ -52,11 +58,15 @@ public class FarragoSqlRegressionTest extends FarragoSqlTest
             });
     }
 
-    protected void runTest() throws Exception {
+    protected void runTest()
+        throws Exception
+    {
         addDiffMask("\\$Id.*\\$");
-        stmt.execute(FarragoCalcSystemTest.vmFennel);
+        stmt.execute(FarragoCalcSystemTest.VirtualMachine.Fennel
+            .getAlterSystemCommand());
         runSqlLineTest(getName());
-//        stmt.execute(FarragoCalcSystemTest.vmJava);
-//        runSqlLineTest(getName());
+
+        //        stmt.execute(FarragoCalcSystemTest.vmJava);
+        //        runSqlLineTest(getName());
     }
 }

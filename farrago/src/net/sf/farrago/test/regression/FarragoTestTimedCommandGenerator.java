@@ -19,10 +19,10 @@
 package net.sf.farrago.test.regression;
 
 import java.io.PrintStream;
-
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+
 
 /**
  * FarragoTestTimedCommandGenerator extends
@@ -40,12 +40,16 @@ import java.util.NoSuchElementException;
 public class FarragoTestTimedCommandGenerator
     extends FarragoTestCommandGenerator
 {
+    //~ Instance fields -------------------------------------------------------
+
     private int runTimeSeconds;
     private long endTimeMillis;
 
+    //~ Constructors ----------------------------------------------------------
+
     /**
      * Construct a new FarragoTestTimedCommandGenerator that will run
-     * for at least the given amount of time.  See 
+     * for at least the given amount of time.  See
      * {@link FarragoTestTimedCommandGenerator} for more information
      * on the semantics of run-time length.
      *
@@ -58,7 +62,8 @@ public class FarragoTestTimedCommandGenerator
         this.runTimeSeconds = runTimeSeconds;
     }
 
-    
+    //~ Methods ---------------------------------------------------------------
+
     /**
      * Retrieves an Iterator based on the configured commands.  This
      * Iterator, when it reaches the end of the command list will
@@ -74,43 +79,46 @@ public class FarragoTestTimedCommandGenerator
      */
     Iterator getCommandIterator(Integer threadId)
     {
-        synchronized(this) {
+        synchronized (this) {
             if (endTimeMillis == 0L) {
-                endTimeMillis = 
+                endTimeMillis =
                     System.currentTimeMillis() + (runTimeSeconds * 1000);
             }
         }
 
-        return new TimedIterator(getCommands(threadId), endTimeMillis);
+        return new TimedIterator(
+            getCommands(threadId),
+            endTimeMillis);
     }
-
 
     /**
      * Outputs command sequence and notes how long the sequence will
      * be repeated.
      */
-    void printCommands(PrintStream out, Integer threadId)
+    void printCommands(
+        PrintStream out,
+        Integer threadId)
     {
         super.printCommands(out, threadId);
-        out.println("Repeat sequence for "
-                    + runTimeSeconds
-                    + " seconds");
+        out.println("Repeat sequence for " + runTimeSeconds + " seconds");
     }
 
+    //~ Inner Classes ---------------------------------------------------------
 
     /**
      * TimedIterator is an Iterator that repeats a given collection's
      * elements until <code>System.currentTimeMillis() >=
      * endTimeMillis</code>.
      */
-    private class TimedIterator
-        implements Iterator
+    private class TimedIterator implements Iterator
     {
-        private Object[] commands;
+        private Object [] commands;
         private long endTimeMillis;
         private int commandIndex;
 
-        private TimedIterator(Collection commands, long endTimeMillis)
+        private TimedIterator(
+            Collection commands,
+            long endTimeMillis)
         {
             this.commands = commands.toArray();
             this.endTimeMillis = endTimeMillis;
@@ -130,7 +138,7 @@ public class FarragoTestTimedCommandGenerator
 
             return false;
         }
-        
+
         public Object next()
         {
             if (!hasNext()) {
@@ -140,11 +148,9 @@ public class FarragoTestTimedCommandGenerator
             return commands[commandIndex++];
         }
 
-        
         public void remove()
         {
             throw new UnsupportedOperationException();
         }
     }
 }
-

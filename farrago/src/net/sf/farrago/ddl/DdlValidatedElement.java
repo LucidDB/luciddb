@@ -16,7 +16,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.ddl;
 
 import net.sf.farrago.cwm.core.*;
@@ -42,7 +41,9 @@ public interface DdlValidatedElement extends CwmModelElement
      * @param creation true for creation of a new object; false for
      *        modification of an existing object
      */
-    public void validateDefinition(DdlValidator validator,boolean creation);
+    public void validateDefinition(
+        DdlValidator validator,
+        boolean creation);
 
     /**
      * Called when this object is deleted or truncated.
@@ -50,7 +51,9 @@ public interface DdlValidatedElement extends CwmModelElement
      * @param validator DdlValidator managing the validation process
      * @param truncation true for truncation; false for deletion
      */
-    public void validateDeletion(DdlValidator validator,boolean truncation);
+    public void validateDeletion(
+        DdlValidator validator,
+        boolean truncation);
 }
 
 

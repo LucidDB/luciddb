@@ -16,23 +16,26 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.test;
 
 import junit.framework.TestCase;
 
 import net.sf.farrago.util.FarragoProperties;
 
+
 /**
  * FarragoPropertiesTest tests the {@link FarragoProperties} class.
  */
-public class FarragoPropertiesTest
-    extends TestCase
+public class FarragoPropertiesTest extends TestCase
 {
+    //~ Constructors ----------------------------------------------------------
+
     public FarragoPropertiesTest(String name)
     {
         super(name);
     }
+
+    //~ Methods ---------------------------------------------------------------
 
     public void testPropertyFields()
         throws Exception
@@ -47,52 +50,45 @@ public class FarragoPropertiesTest
     {
         FarragoProperties props = FarragoProperties.instance();
 
-        String[] expectUnchanged = new String[] { 
-            "foo",
-            "foo ${",
-            "} foo",
-            "${foo}",
-            "${}",
-            "${",
-            "$}",
-            "{}",
-            "$ {FARRAGO_HOME}",
-            "${ FARRAGO_HOME}",
-            "${FARRAGO_HOME }",
-            "${ FARRAGO_HOME }",
-            "$ { FARRAGO_HOME }",
-            "$FARRAGO_HOME",
-            "${FARRAGO_HOME",
-            "$FARRAGO_HOME}",
-            "{FARRAGO_HOME}"
-        };
-         
-        for(int i = 0; i < expectUnchanged.length; i++) {
-            assertSame(expectUnchanged[i],
-                       props.expandProperties(expectUnchanged[i]));
+        String [] expectUnchanged =
+            new String [] {
+                "foo", "foo ${", "} foo", "${foo}", "${}", "${", "$}", "{}",
+                "$ {FARRAGO_HOME}", "${ FARRAGO_HOME}", "${FARRAGO_HOME }",
+                "${ FARRAGO_HOME }", "$ { FARRAGO_HOME }", "$FARRAGO_HOME",
+                "${FARRAGO_HOME", "$FARRAGO_HOME}", "{FARRAGO_HOME}"
+            };
+
+        for (int i = 0; i < expectUnchanged.length; i++) {
+            assertSame(
+                expectUnchanged[i],
+                props.expandProperties(expectUnchanged[i]));
         }
 
         String home = props.homeDir.get();
 
-        String[][] expectChanged = new String[][] {
-            { "${FARRAGO_HOME}",                    home },
-            { "{${FARRAGO_HOME}}",                  "{" + home + "}" },
-            { "${FARRAGO_HOME}/foo",                home + "/foo" },
-            { "${FARRAGO_HOME}${FARRAGO_HOME}",     home + home },
-            { "${FARRAGO_HOME} ${FARRAGO_HOME}",    home + " " + home },
-            { " ${FARRAGO_HOME} ${FARRAGO_HOME}",   " " + home + " " + home },
-            { " ${FARRAGO_HOME} ${FARRAGO_HOME} ",  " " + home + " " + home
-                                                    + " "},
-            { "${X}${FARRAGO_HOME}",                "${X}" + home },
-            { "${FARRAGO_HOME}${X}",                home + "${X}" },
-            { "${X}${FARRAGO_HOME}${X}",            "${X}" + home + "${X}" },
-            { "${FARRAGO_HOME} is ${FARRAGO_HOME}", home + " is " + home },
-            { "No place like ${FARRAGO_HOME}",      "No place like " + home },
-        };
+        String [][] expectChanged =
+            new String [][] {
+                { "${FARRAGO_HOME}", home },
+                { "{${FARRAGO_HOME}}", "{" + home + "}" },
+                { "${FARRAGO_HOME}/foo", home + "/foo" },
+                { "${FARRAGO_HOME}${FARRAGO_HOME}", home + home },
+                { "${FARRAGO_HOME} ${FARRAGO_HOME}", home + " " + home },
+                { " ${FARRAGO_HOME} ${FARRAGO_HOME}", " " + home + " " + home },
+                {
+                    " ${FARRAGO_HOME} ${FARRAGO_HOME} ",
+                    " " + home + " " + home + " "
+                },
+                { "${X}${FARRAGO_HOME}", "${X}" + home },
+                { "${FARRAGO_HOME}${X}", home + "${X}" },
+                { "${X}${FARRAGO_HOME}${X}", "${X}" + home + "${X}" },
+                { "${FARRAGO_HOME} is ${FARRAGO_HOME}", home + " is " + home },
+                { "No place like ${FARRAGO_HOME}", "No place like " + home },
+            };
 
-        for(int i = 0; i < expectChanged.length; i++) {
-            assertEquals(expectChanged[i][1],
-                         props.expandProperties(expectChanged[i][0]));
+        for (int i = 0; i < expectChanged.length; i++) {
+            assertEquals(
+                expectChanged[i][1],
+                props.expandProperties(expectChanged[i][0]));
         }
     }
 }

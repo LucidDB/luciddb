@@ -36,7 +36,7 @@ class RandomAccessFileDevice : public RandomAccessDevice, public FileDevice
 {
 public:
     /**
-     * Open a file device for random access.
+     * Opens a file device for random access.
      *
      * @param filename path to file
      * @param mode modifiers for how to open file

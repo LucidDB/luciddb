@@ -1,39 +1,40 @@
 /*
-// $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Saffron preprocessor and data engine.
+// Copyright (C) 2002-2004 Disruptive Tech
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package net.sf.saffron.ext;
 
 import net.sf.saffron.core.*;
 import net.sf.saffron.oj.OJConnectionRegistry;
-import net.sf.saffron.oj.rel.JavaRelImplementor;
-import net.sf.saffron.oj.util.OJUtil;
-import net.sf.saffron.opt.VolcanoCluster;
-import net.sf.saffron.rel.SaffronRel;
-import net.sf.saffron.rel.TableAccessRel;
+
 import openjava.ptree.*;
+
+import org.eigenbase.oj.rel.JavaRelImplementor;
+import org.eigenbase.oj.util.OJUtil;
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.TableAccessRel;
+import org.eigenbase.relopt.*;
+import org.eigenbase.relopt.RelOptCluster;
+import org.eigenbase.reltype.*;
 
 
 /**
- * A <code>JdbcTable</code> implements {@link SaffronTable} by connecting to a
+ * A <code>JdbcTable</code> implements {@link RelOptTable} by connecting to a
  * JDBC database.
  *
  * @author jhyde
@@ -41,30 +42,28 @@ import openjava.ptree.*;
  *
  * @since 10 November, 2001
  */
-public class JdbcTable extends AbstractTable implements ImplementableTable
+public class JdbcTable extends RelOptAbstractTable
+    implements ImplementableTable
 {
-    //~ Instance fields -------------------------------------------------------
-
     JdbcColumn [] columns;
 
-    //~ Constructors ----------------------------------------------------------
-
     public JdbcTable(
-        SaffronSchema schema,
+        RelOptSchema schema,
         String name,
-        SaffronType rowType,
+        RelDataType rowType,
         JdbcColumn [] columns)
     {
-        super(schema,name,rowType);
+        super(schema, name, rowType);
         this.columns = columns;
     }
 
-    public JdbcTable(SaffronSchema schema,String name,SaffronType rowType)
+    public JdbcTable(
+        RelOptSchema schema,
+        String name,
+        RelDataType rowType)
     {
-        super(schema,name,rowType);
+        super(schema, name, rowType);
     }
-
-    //~ Methods ---------------------------------------------------------------
 
     /**
      * Returns the column that the named field maps to.
@@ -72,7 +71,7 @@ public class JdbcTable extends AbstractTable implements ImplementableTable
     public JdbcColumn getColumn(String fieldName)
     {
         if (columns == null) {
-            return new JdbcColumn(fieldName,fieldName);
+            return new JdbcColumn(fieldName, fieldName);
         } else {
             for (int i = 0; i < columns.length; i++) {
                 JdbcColumn column = columns[i];
@@ -85,7 +84,9 @@ public class JdbcTable extends AbstractTable implements ImplementableTable
     }
 
     // implement ImplementableTable
-    public void implement(SaffronRel rel,JavaRelImplementor implementor)
+    public void implement(
+        RelNode rel,
+        JavaRelImplementor implementor)
     {
         // Generate
         //
@@ -124,152 +125,149 @@ public class JdbcTable extends AbstractTable implements ImplementableTable
         final TypeName rowTypeName = OJUtil.toTypeName(rowType);
         StatementList whileBody =
             new StatementList(
-                
             // Emp emp = new Emp(resultSet);
             // <<body>>
-            new VariableDeclaration(
-                    rowTypeName,
+            new VariableDeclaration(rowTypeName,
                     varRow.toString(),
                     new AllocationExpression(
                         rowTypeName,
                         new ExpressionList(varRs))));
-        implementor.bind(rel,varRow);
-        implementor.generateParentBody(rel,whileBody);
+        implementor.bind(rel, varRow);
+        implementor.generateParentBody(rel, whileBody);
 
         // java.sql.Statement jdbcCon = null;
         // java.sql.Statement stmt = null;
         stmtList.add(
-                new VariableDeclaration(
-                        TypeName.forClass(java.sql.Connection.class),
-                        varJdbcCon.toString(),
-                        Literal.constantNull()));
+            new VariableDeclaration(
+                OJUtil.typeNameForClass(java.sql.Connection.class),
+                varJdbcCon.toString(),
+                Literal.constantNull()));
         stmtList.add(
-                new VariableDeclaration(
-                        TypeName.forClass(java.sql.Statement.class),
-                        varStmt.toString(),
-                        Literal.constantNull()));
+            new VariableDeclaration(
+                OJUtil.typeNameForClass(java.sql.Statement.class),
+                varStmt.toString(),
+                Literal.constantNull()));
 
         String queryString = "select * from " + getName();
-        final SaffronConnection connection =
-                ((TableAccessRel) rel).getConnection();
+        final RelOptConnection connection =
+            ((TableAccessRel) rel).getConnection();
         final OJConnectionRegistry.ConnectionInfo connectionInfo =
-                OJConnectionRegistry.instance.get(connection);
+            OJConnectionRegistry.instance.get(connection);
         stmtList.add(
-                new TryStatement(
-
-                        // try {
+            new TryStatement(
+                
+        // try {
+        new StatementList(
+                    
+        // jdbcCon = ((javax.sql.DataSource) connection).getConnection();
+        new ExpressionStatement(
+                        new AssignmentExpression(
+                            varJdbcCon,
+                            AssignmentExpression.EQUALS,
+                            new MethodCall(
+                                new CastExpression(
+                                    OJUtil.typeNameForClass(
+                                        javax.sql.DataSource.class),
+                                    connectionInfo.expr),
+                                "getConnection",
+                                null))),
+                    
+        // statement = jdbcCon.createStatement();
+        new ExpressionStatement(
+                        new AssignmentExpression(
+                            varStmt,
+                            AssignmentExpression.EQUALS,
+                            new MethodCall(varJdbcCon, "createStatement", null))),
+                    
+        // java.sql.ResultSet resultSet =
+        //   statement.executeQuery(
+        //     "select * from table");
+        new VariableDeclaration(
+                        new TypeName("java.sql.ResultSet"),
+                        varRs.toString(),
+                        new MethodCall(
+                            varStmt,
+                            "executeQuery",
+                            new ExpressionList(
+                                Literal.makeLiteral(queryString)))),
+                    
+        // while (resultSet.next()) {
+        new WhileStatement(new MethodCall(varRs, "next", null),
+                        
+        // Emp emp = new Emp(resultSet);
+        // <<body>>
+        whileBody)),
+                new CatchList(
+                    
+        // catch (java.sql.SQLException e) {
+        //   throw new saffron.runtime.SaffronError(e);
+        // }
+        new CatchBlock(new Parameter(
+                            new TypeName("java.sql.SQLException"),
+                            varEx.toString()),
                         new StatementList(
-
-                                // jdbcCon = ((javax.sql.DataSource) connection).getConnection();
-                                new ExpressionStatement(
-                                        new AssignmentExpression(
-                                                varJdbcCon,
-                                                AssignmentExpression.EQUALS,
-                                                new MethodCall(
-                                                        new CastExpression(
-                                                                TypeName.forClass(javax.sql.DataSource.class),
-                                                                connectionInfo.expr
-                                                        ),
-                                                        "getConnection",
-                                                        null))),
-
-                                // statement = jdbcCon.createStatement();
-                                new ExpressionStatement(
-                                        new AssignmentExpression(
-                                                varStmt,
-                                                AssignmentExpression.EQUALS,
-                                                new MethodCall(
-                                                        varJdbcCon,
-                                                        "createStatement",
-                                                        null))),
-
-                                // java.sql.ResultSet resultSet =
-                                //   statement.executeQuery(
-                                //     "select * from table");
-                                new VariableDeclaration(
-                                        new TypeName("java.sql.ResultSet"),
-                                        varRs.toString(),
-                                        new MethodCall(
-                                                varStmt,
-                                                "executeQuery",
-                                                new ExpressionList(
-                                                        Literal.makeLiteral(queryString)))),
-
-                                // while (resultSet.next()) {
-                                new WhileStatement(new MethodCall(varRs,"next",null),
-                                        // Emp emp = new Emp(resultSet);
-                                        // <<body>>
-                                        whileBody)),
-                        new CatchList(
-
-                                // catch (java.sql.SQLException e) {
-                                //   throw new saffron.runtime.SaffronError(e);
-                                // }
-                                new CatchBlock(new Parameter(
-                                        new TypeName("java.sql.SQLException"),
-                                        varEx.toString()),
-                                        new StatementList(
-                                                new ThrowStatement(
-                                                        new AllocationExpression(
-                                                                TypeName.forClass(
-                                                                        net.sf.saffron.runtime.SaffronError.class),
-                                                                new ExpressionList(varEx)))))),
-
-                        // finally {
-                        //    if (stmt != null) {
-                        //       try {
-                        //          stmt.close();
-                        //       } catch (java.sql.SQLException e) {}
-                        //    }
-                        //    if (jdbcCon != null) {
-                        //       try {
-                        //          jdbcCon.close();
-                        //       } catch (java.sql.SQLException e) {}
-                        //    }
-                        // }
+                            new ThrowStatement(
+                                new AllocationExpression(
+                                    OJUtil.typeNameForClass(
+                                        net.sf.saffron.runtime.SaffronError.class),
+                                    new ExpressionList(varEx)))))),
+                
+        // finally {
+        //    if (stmt != null) {
+        //       try {
+        //          stmt.close();
+        //       } catch (java.sql.SQLException e) {}
+        //    }
+        //    if (jdbcCon != null) {
+        //       try {
+        //          jdbcCon.close();
+        //       } catch (java.sql.SQLException e) {}
+        //    }
+        // }
+        new StatementList(
+                    new IfStatement(
+                        new BinaryExpression(
+                            varStmt,
+                            BinaryExpression.NOTEQUAL,
+                            Literal.constantNull()),
                         new StatementList(
-                                new IfStatement(
-                                        new BinaryExpression(
-                                                varStmt,
-                                                BinaryExpression.NOTEQUAL,
-                                                Literal.constantNull()),
-                                        new StatementList(
-                                                new TryStatement(
-                                                        new StatementList(
-                                                                new ExpressionStatement(
-                                                                        new MethodCall(varStmt,"close",null))),
-                                                        new CatchList(
-                                                                new CatchBlock(
-                                                                        new Parameter(
-                                                                                new TypeName(
-                                                                                        "java.sql.SQLException"),
-                                                                                varEx.toString()),
-                                                                        new StatementList()))))),
-                                new IfStatement(
-                                        new BinaryExpression(
-                                                varJdbcCon,
-                                                BinaryExpression.NOTEQUAL,
-                                                Literal.constantNull()),
-                                        new StatementList(
-                                                new TryStatement(
-                                                        new StatementList(
-                                                                new ExpressionStatement(
-                                                                        new MethodCall(varJdbcCon,"close",null))),
-                                                        new CatchList(
-                                                                new CatchBlock(
-                                                                        new Parameter(
-                                                                                new TypeName(
-                                                                                        "java.sql.SQLException"),
-                                                                                varEx.toString()),
-                                                                        new StatementList()))))))));
+                            new TryStatement(
+                                new StatementList(
+                                    new ExpressionStatement(
+                                        new MethodCall(varStmt, "close", null))),
+                                new CatchList(
+                                    new CatchBlock(
+                                        new Parameter(
+                                            new TypeName(
+                                                "java.sql.SQLException"),
+                                            varEx.toString()),
+                                        new StatementList()))))),
+                    new IfStatement(
+                        new BinaryExpression(
+                            varJdbcCon,
+                            BinaryExpression.NOTEQUAL,
+                            Literal.constantNull()),
+                        new StatementList(
+                            new TryStatement(
+                                new StatementList(
+                                    new ExpressionStatement(
+                                        new MethodCall(varJdbcCon, "close",
+                                            null))),
+                                new CatchList(
+                                    new CatchBlock(
+                                        new Parameter(
+                                            new TypeName(
+                                                "java.sql.SQLException"),
+                                            varEx.toString()),
+                                        new StatementList()))))))));
     }
 
-    public SaffronRel toRel(VolcanoCluster cluster,SaffronConnection connection)
+    public RelNode toRel(
+        RelOptCluster cluster,
+        RelOptConnection connection)
     {
-        return new TableAccessRel(cluster,this,connection);
+        return new TableAccessRel(cluster, this, connection);
     }
-
-    //~ Inner Classes ---------------------------------------------------------
 
     // classes
 
@@ -282,7 +280,9 @@ public class JdbcTable extends AbstractTable implements ImplementableTable
         String columnName;
         String fieldName;
 
-        JdbcColumn(String fieldName,String columnName)
+        JdbcColumn(
+            String fieldName,
+            String columnName)
         {
             this.fieldName = fieldName;
             this.columnName = columnName;

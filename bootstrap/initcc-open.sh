@@ -15,7 +15,6 @@ fi
 
 if [ "!" -d logs ]; then
     mkdir logs
-    mkdir logs/aspen
     mkdir logs/farrago
     mkdir logs/fennel
     mkdir logs/saffron
@@ -23,9 +22,9 @@ fi
 
 if [ "!" -d artifacts ]; then
     mkdir artifacts
-    mkdir artifacts/farrago
-    mkdir artifacts/fennel
-    mkdir artifacts/saffron
+    mkdir artifacts/farrago${configSuffix}
+    mkdir artifacts/fennel${configSuffix}
+    mkdir artifacts/saffron${configSuffix}
 fi
 
 if [ "!" -d build ]; then

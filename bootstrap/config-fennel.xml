@@ -1,7 +1,7 @@
 <!-- This file is an XML fragment with the -->
 <!-- CruiseControl config for Fennel -->
 
-	<project name="fennel">
+	<project name="fennel&configSuffix;">
 		<labelincrementer defaultLabel="fennel.1"/>
 
 		<!-- Bootstrappers are run with every build before mod checks -->
@@ -32,23 +32,25 @@
 		<publishers>
 			<currentbuildstatuspublisher file="logs/fennel/currentbuildstatus.txt"/>
 
-			<artifactspublisher dir="build/fennel/test/.testlog" dest="artifacts/fennel"/>
+			<artifactspublisher dir="build/fennel/test/.testlog" dest="artifacts/fennel&configSuffix;"/>
 
 			<!-- sync up artifacts on jsp machine: CC's scp would copy everything -->
-			<execute command="&rsync_cmd; artifacts/fennel &rsync_dest;"/>
+			<execute command="&rsync_cmd; artifacts/fennel&configSuffix; &rsync_dest;"/>
 
 			<scp sourcedir="logs/fennel"
 			     targetuser="&scp_user;"
 			     targethost="&scp_host;"
-			     targetdir="web/logs/fennel"/>
+			     targetseparator="&scp_filesep;"
+			     targetdir="web/logs/fennel&configSuffix;"/>
 			
 			<scp sourcedir="logs/fennel"
 			     file="currentbuildstatus.txt"
 			     targetuser="&scp_user;"
 			     targethost="&scp_host;"
-			     targetdir="web/logs/fennel"/>
+			     targetseparator="&scp_filesep;"
+			     targetdir="web/logs/fennel&configSuffix;"/>
 			
-			<email buildresultsurl="&buildresultsbase;/fennel"
+			<email buildresultsurl="&buildresultsbase;/fennel&configSuffix;"
 			       mailhost="&mailhost;"
 			       reportsuccess="&reportsuccess;"
 			       returnname="&returnname;"

@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/farrago/unitsql/jdbc/medmetadata.sql#1 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/jdbc/medmetadata.sql#1 $
 0: jdbc:farrago:> -- Test JDBC metadata calls for foreign data wrappers
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- !set verbose true
@@ -16,38 +16,40 @@
 . . . . . . . . >     schema_name 'TESTDATA');
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- Check the foreign data wrapper and server
-0: jdbc:farrago:> select "name" from sys_fem.med."DataWrapper";
+0: jdbc:farrago:> select "name" from sys_fem.med."DataWrapper" order by 1;
 +------------+
 |    name    |
 +------------+
-| TEST_JDBC  |
-| SYS_JDBC   |
 | SYS_FTRS   |
+| SYS_JDBC   |
 | SYS_MDR    |
+| SYS_MOCK   |
+| TEST_JDBC  |
 +------------+
-0: jdbc:farrago:> select "name" from sys_fem.med."DataServer";
-+---------------+
-|     name      |
-+---------------+
-| CSV_SERVER    |
-| HSQLDB_DEMO   |
-| SYS_ROWSTORE  |
-| SYS_FEM       |
-| SYS_CWM       |
-+---------------+
-0: jdbc:farrago:> select "name","value" from sys_fem.med."StorageOption";
+0: jdbc:farrago:> select "name" from sys_fem.med."DataServer" order by 1;
++-----------------------+
+|         name          |
++-----------------------+
+| CSV_SERVER            |
+| HSQLDB_DEMO           |
+| SYS_CWM               |
+| SYS_FEM               |
+| SYS_FTRS_DATA_SERVER  |
+| SYS_MOCK_DATA_SERVER  |
++-----------------------+
+0: jdbc:farrago:> select "name","value" from sys_fem.med."StorageOption" order by 1,2;
 +--------------------+-------------------------------------------+
 |        name        |                   value                   |
 +--------------------+-------------------------------------------+
-| SCHEMA_NAME        | TESTDATA                                  |
-| URL                | jdbc:relique:csv:unitsql/med              |
-| DRIVER_CLASS       | org.relique.jdbc.csv.CsvDriver            |
-| SCHEMA_NAME        | SALES                                     |
-| USER_NAME          | SA                                        |
-| URL                | jdbc:hsqldb:../saffron/demo/hsqldb/scott  |
 | DRIVER_CLASS       | org.hsqldb.jdbcDriver                     |
-| ROOT_PACKAGE_NAME  | FEM                                       |
+| DRIVER_CLASS       | org.relique.jdbc.csv.CsvDriver            |
 | ROOT_PACKAGE_NAME  | CWM                                       |
+| ROOT_PACKAGE_NAME  | FEM                                       |
+| SCHEMA_NAME        | SALES                                     |
+| SCHEMA_NAME        | TESTDATA                                  |
+| URL                | jdbc:hsqldb:../saffron/demo/hsqldb/scott  |
+| URL                | jdbc:relique:csv:unitsql/med              |
+| USER_NAME          | SA                                        |
 +--------------------+-------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- Create schema and table
@@ -116,15 +118,16 @@ encountered near line 1, column 31 (state=,code=0)
 +------------+--------------+-------------+--------------+------------+------------+--------------+-------------+-------------+-----------------+----------------+----------+-------------+----------------+-------------------+--------------------+-------------------+----------------+----------------+---------------+--------------+-------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> drop server csv_server cascade;
-0: jdbc:farrago:> select "name" from sys_fem.med."DataServer";
-+---------------+
-|     name      |
-+---------------+
-| HSQLDB_DEMO   |
-| SYS_ROWSTORE  |
-| SYS_FEM       |
-| SYS_CWM       |
-+---------------+
+0: jdbc:farrago:> select "name" from sys_fem.med."DataServer" order by 1;
++-----------------------+
+|         name          |
++-----------------------+
+| HSQLDB_DEMO           |
+| SYS_CWM               |
+| SYS_FEM               |
+| SYS_FTRS_DATA_SERVER  |
+| SYS_MOCK_DATA_SERVER  |
++-----------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> drop schema csv_schema cascade;
 0: jdbc:farrago:> !metadata getSchemas
@@ -136,12 +139,14 @@ encountered near line 1, column 31 (state=,code=0)
 +----------------+----------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> drop foreign data wrapper test_jdbc;
-0: jdbc:farrago:> select "name" from sys_fem.med."DataWrapper";
+0: jdbc:farrago:> select "name" from sys_fem.med."DataWrapper" order by 1;
 +-----------+
 |   name    |
 +-----------+
-| SYS_JDBC  |
 | SYS_FTRS  |
+| SYS_JDBC  |
 | SYS_MDR   |
+| SYS_MOCK  |
 +-----------+
+0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

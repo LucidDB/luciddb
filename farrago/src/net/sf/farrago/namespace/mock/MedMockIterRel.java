@@ -6,35 +6,35 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.namespace.mock;
+
+import java.sql.*;
 
 import net.sf.farrago.util.*;
 
-import net.sf.saffron.opt.*;
-import net.sf.saffron.core.*;
-import net.sf.saffron.sql.*;
-import net.sf.saffron.util.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.rel.jdbc.*;
-import net.sf.saffron.oj.stmt.*;
-import net.sf.saffron.oj.rel.*;
-import net.sf.saffron.oj.util.*;
-
-import openjava.ptree.*;
 import openjava.mop.*;
+import openjava.ptree.*;
 
-import java.sql.*;
+import org.eigenbase.oj.rel.*;
+import org.eigenbase.oj.stmt.*;
+import org.eigenbase.oj.util.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.rel.jdbc.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.util.*;
+
 
 /**
  * MedMockIterRel provides a mock implementation for
@@ -45,16 +45,22 @@ import java.sql.*;
  */
 class MedMockIterRel extends TableAccessRel implements JavaRel
 {
+    //~ Instance fields -------------------------------------------------------
+
     private MedMockColumnSet columnSet;
-    
+
+    //~ Constructors ----------------------------------------------------------
+
     MedMockIterRel(
         MedMockColumnSet columnSet,
-        VolcanoCluster cluster,
-        SaffronConnection connection)
+        RelOptCluster cluster,
+        RelOptConnection connection)
     {
-        super(cluster,columnSet,connection);
+        super(cluster, columnSet, connection);
         this.columnSet = columnSet;
     }
+
+    //~ Methods ---------------------------------------------------------------
 
     public CallingConvention getConvention()
     {
@@ -63,21 +69,24 @@ class MedMockIterRel extends TableAccessRel implements JavaRel
 
     public ParseTree implement(JavaRelImplementor implementor)
     {
-        final SaffronType outputRowType = getRowType();
+        final RelDataType outputRowType = getRowType();
         OJClass outputRowClass = OJUtil.typeToOJClass(outputRowType);
 
-        Expression newRowExp = new AllocationExpression(
-            TypeName.forOJClass(outputRowClass),
-            new ExpressionList());
+        Expression newRowExp =
+            new AllocationExpression(
+                TypeName.forOJClass(outputRowClass),
+                new ExpressionList());
 
-        Expression iterExp = new AllocationExpression(
-            TypeName.forClass(MedMockIterator.class),
-            new ExpressionList(
-                newRowExp,
-                Literal.makeLiteral(columnSet.nRows)));
-        
+        Expression iterExp =
+            new AllocationExpression(
+                OJUtil.typeNameForClass(MedMockIterator.class),
+                new ExpressionList(
+                    newRowExp,
+                    Literal.makeLiteral(columnSet.nRows)));
+
         return iterExp;
     }
 }
+
 
 // End MedMockIterRel.java

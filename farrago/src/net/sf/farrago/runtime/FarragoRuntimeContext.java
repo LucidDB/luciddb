@@ -7,37 +7,40 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.runtime;
 
-import net.sf.saffron.core.*;
-import net.sf.farrago.fennel.*;
+import java.util.*;
+import java.sql.*;
+
+import javax.jmi.reflect.*;
+
+import net.sf.farrago.catalog.*;
+import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
-import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.catalog.*;
+import net.sf.farrago.fennel.*;
+import net.sf.farrago.namespace.*;
+import net.sf.farrago.namespace.util.*;
+import net.sf.farrago.resource.*;
+import net.sf.farrago.session.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.type.runtime.*;
 import net.sf.farrago.util.*;
-import net.sf.farrago.resource.*;
-import net.sf.farrago.session.*;
-import net.sf.farrago.namespace.*;
-import net.sf.farrago.namespace.util.*;
 
-import net.sf.saffron.util.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.util.*;
 
-import java.util.*;
-import javax.jmi.reflect.*;
+import java.sql.Date;
 
 /**
  * FarragoRuntimeContext defines runtime support routines needed by generated
@@ -46,61 +49,57 @@ import javax.jmi.reflect.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoRuntimeContext
-    extends FarragoCompoundAllocation
+public class FarragoRuntimeContext extends FarragoCompoundAllocation
     implements FarragoSessionRuntimeContext,
-        SaffronConnection,
+        RelOptConnection,
         FennelJavaStreamMap
 {
-    private FarragoCatalog catalog;
+    //~ Instance fields -------------------------------------------------------
 
+    private FarragoRepos repos;
     private FarragoObjectCache codeCache;
-
     private Map txnCodeCache;
-
     private FennelTxnContext fennelTxnContext;
-
     private Map streamIdToHandleMap = new HashMap();
-
     private Object [] dynamicParamValues;
-
     private FarragoCompoundAllocation streamOwner;
-
-    private FarragoIndexMap indexMap;
-
-    private FarragoConnectionDefaults connectionDefaults;
-
+    private FarragoSessionIndexMap indexMap;
+    private FarragoSessionVariables sessionVariables;
     private FarragoDataWrapperCache dataWrapperCache;
-
     private FennelStreamGraph streamGraph;
+    private long currentTime;
+
+    //~ Constructors ----------------------------------------------------------
 
     /**
      * Create a new FarragoRuntimeContext.
      *
      * @param params constructor params
      */
-    public FarragoRuntimeContext(
-        FarragoSessionRuntimeParams params)
+    public FarragoRuntimeContext(FarragoSessionRuntimeParams params)
     {
-        this.catalog = params.catalog;
+        this.repos = params.repos;
         this.codeCache = params.codeCache;
         this.txnCodeCache = params.txnCodeCache;
         this.fennelTxnContext = params.fennelTxnContext;
         this.indexMap = params.indexMap;
         this.dynamicParamValues = params.dynamicParamValues;
-        this.connectionDefaults = params.connectionDefaults;
+        this.sessionVariables = params.sessionVariables;
 
-        dataWrapperCache = new FarragoDataWrapperCache(
-            this,
-            params.sharedDataWrapperCache,
-            params.catalog,
-            params.fennelTxnContext.getFennelDbHandle());
+        dataWrapperCache =
+            new FarragoDataWrapperCache(
+                this,
+                params.sharedDataWrapperCache,
+                params.repos,
+                params.fennelTxnContext.getFennelDbHandle());
 
         streamOwner = new StreamOwner();
     }
 
-    // implement SaffronConnection
-    public SaffronSchema getSaffronSchema()
+    //~ Methods ---------------------------------------------------------------
+
+    // implement RelOptConnection
+    public RelOptSchema getRelOptSchema()
     {
         throw new AssertionError();
     }
@@ -112,13 +111,15 @@ public class FarragoRuntimeContext
         streamOwner.closeAllocation();
         super.closeAllocation();
     }
-    
-    // implement SaffronConnection
-    public Object contentsAsArray(String qualifier,String tableName)
+
+    // implement RelOptConnection
+    public Object contentsAsArray(
+        String qualifier,
+        String tableName)
     {
         throw new AssertionError();
     }
-    
+
     /**
      * Get an object needed to support the implementation of foreign
      * data access.
@@ -133,10 +134,10 @@ public class FarragoRuntimeContext
         String serverMofId,
         Object param)
     {
-        FemDataServerImpl femServer = (FemDataServerImpl)
-            catalog.getRepository().getByMofId(serverMofId);
+        FemDataServerImpl femServer =
+            (FemDataServerImpl) repos.getMdrRepos().getByMofId(serverMofId);
 
-        FarragoMedDataServer server = 
+        FarragoMedDataServer server =
             femServer.loadFromCache(dataWrapperCache);
         try {
             Object obj = server.getRuntimeSupport(param);
@@ -185,9 +186,9 @@ public class FarragoRuntimeContext
      */
     public String getContextVariable_USER()
     {
-        return connectionDefaults.currentUserName;
+        return sessionVariables.currentUserName;
     }
-    
+
     /**
      * Called from generated code.
      *
@@ -195,9 +196,9 @@ public class FarragoRuntimeContext
      */
     public String getContextVariable_CURRENT_USER()
     {
-        return connectionDefaults.currentUserName;
+        return sessionVariables.currentUserName;
     }
-    
+
     /**
      * Called from generated code.
      *
@@ -205,9 +206,9 @@ public class FarragoRuntimeContext
      */
     public String getContextVariable_SYSTEM_USER()
     {
-        return connectionDefaults.systemUserName;
+        return sessionVariables.systemUserName;
     }
-    
+
     /**
      * Called from generated code.
      *
@@ -215,9 +216,91 @@ public class FarragoRuntimeContext
      */
     public String getContextVariable_SESSION_USER()
     {
-        return connectionDefaults.sessionUserName;
+        return sessionVariables.sessionUserName;
     }
-    
+
+    /**
+     * Called from generated code.
+     *
+     * @return the value of context variable CURRENT_ROLE.
+     */
+    public String getContextVariable_CURRENT_ROLE()
+    {
+        // TODO jvs 25-Sept-2004:  once supported
+        return "";
+    }
+
+    /**
+     * Called from generated code.
+     *
+     * @return the value of context variable CURRENT_PATH.
+     */
+    public String getContextVariable_CURRENT_PATH()
+    {
+        // TODO jvs 25-Sept-2004:  once supported
+        return "";
+    }
+
+    protected long getCurrentTime()
+    {
+        // NOTE jvs 25-Sept-2004:  per SQL standard, the same time
+        // is used for all references within the same statement.
+        if (currentTime == 0) {
+            currentTime = System.currentTimeMillis();
+        }
+        return currentTime;
+    }
+
+    /**
+     * Called from generated code.
+     *
+     * @return the value of context variable CURRENT_DATE.
+     */
+    public Date getContextVariable_CURRENT_DATE()
+    {
+        return new Date(getCurrentTime());
+    }
+
+    /**
+     * Called from generated code.
+     *
+     * @return the value of context variable CURRENT_TIME.
+     */
+    public Time getContextVariable_CURRENT_TIME()
+    {
+        return new Time(getCurrentTime());
+    }
+
+    /**
+     * Called from generated code.
+     *
+     * @return the value of context variable CURRENT_TIMESTAMP.
+     */
+    public Timestamp getContextVariable_CURRENT_TIMESTAMP()
+    {
+        return new Timestamp(getCurrentTime());
+    }
+
+    /**
+     * Called from generated code.
+     *
+     * @return the value of context variable LOCALTIME.
+     */
+    public Time getContextVariable_LOCALTIME()
+    {
+        return getContextVariable_CURRENT_TIME();
+    }
+
+    /**
+     * Called from generated code.
+     *
+     * @return the value of context variable LOCALTIMESTAMP.
+     */
+    public Timestamp getContextVariable_LOCALTIMESTAMP()
+    {
+        return getContextVariable_CURRENT_TIMESTAMP();
+    }
+
     /**
      * Create a JavaTupleStream (for feeding the results of an Iterator to
      * Fennel) and store it in a handle.  This is called at execution from
@@ -234,17 +317,12 @@ public class FarragoRuntimeContext
         FennelTupleWriter tupleWriter,
         Iterator iter)
     {
-        if (!catalog.isFennelEnabled()) {
-            return null;
-        }
-
-        JavaTupleStream stream = new JavaTupleStream(tupleWriter,iter);
+        JavaTupleStream stream = new JavaTupleStream(tupleWriter, iter);
 
         streamIdToHandleMap.put(
             new Integer(streamId),
-            getFennelDbHandle().allocateNewObjectHandle(
-                this,stream));
-                
+            getFennelDbHandle().allocateNewObjectHandle(this, stream));
+
         return null;
     }
 
@@ -255,56 +333,57 @@ public class FarragoRuntimeContext
      * @param dummy2 another dummy
      * @return yet another dummy
      */
-    public Object dummyPair(Object dummy1,Object dummy2)
+    public Object dummyPair(
+        Object dummy1,
+        Object dummy2)
     {
-        assert(dummy1 == null);
-        assert(dummy2 == null);
+        assert (dummy1 == null);
+        assert (dummy2 == null);
         return null;
     }
 
     // implement FarragoSessionRuntimeContext
     public void loadFennelPlan(final String xmiFennelPlan)
     {
-        assert(streamGraph == null);
-        
-        FarragoObjectCache.CachedObjectFactory streamFactory = new
-            FarragoObjectCache.CachedObjectFactory()
-            {
+        assert (streamGraph == null);
+
+        FarragoObjectCache.CachedObjectFactory streamFactory =
+            new FarragoObjectCache.CachedObjectFactory() {
                 public void initializeEntry(
                     Object key,
                     FarragoObjectCache.UninitializedEntry entry)
                 {
-                    assert(key.equals(xmiFennelPlan));
+                    assert (key.equals(xmiFennelPlan));
                     streamGraph = prepareStreamGraph(xmiFennelPlan);
+
                     // TODO:  proper memory accounting
-                    long memUsage = FarragoUtil.getStringMemoryUsage(
-                        xmiFennelPlan);
-                    entry.initialize(streamGraph,memUsage);
+                    long memUsage =
+                        FarragoUtil.getStringMemoryUsage(xmiFennelPlan);
+                    entry.initialize(streamGraph, memUsage);
                 }
             };
 
         FarragoObjectCache.Entry cacheEntry = null;
         if (txnCodeCache != null) {
-            cacheEntry = (FarragoObjectCache.Entry)
-                txnCodeCache.get(xmiFennelPlan);
+            cacheEntry =
+                (FarragoObjectCache.Entry) txnCodeCache.get(xmiFennelPlan);
         }
         if (cacheEntry == null) {
             // NOTE jvs 15-July-2004:  to avoid deadlock, grab the catalog
             // lock BEFORE we pin the cache entry (this matches the
             // order used by statement preparation)
-            catalog.beginTransientTxn();
+            repos.beginTransientTxn();
             try {
-                cacheEntry =
-                    codeCache.pin(xmiFennelPlan,streamFactory,true);
+                cacheEntry = codeCache.pin(xmiFennelPlan, streamFactory, true);
             } finally {
-                catalog.endTransientTxn();
+                repos.endTransientTxn();
             }
         }
 
         if (txnCodeCache == null) {
             addAllocation(cacheEntry);
         } else {
-            txnCodeCache.put(xmiFennelPlan,cacheEntry);
+            txnCodeCache.put(xmiFennelPlan, cacheEntry);
         }
 
         if (streamGraph == null) {
@@ -316,8 +395,8 @@ public class FarragoRuntimeContext
     // implement FarragoSessionRuntimeContext
     public void openStreams()
     {
-        assert(streamGraph != null);
-        streamGraph.open(fennelTxnContext,this);
+        assert (streamGraph != null);
+        streamGraph.open(fennelTxnContext, this);
     }
 
     /**
@@ -337,30 +416,25 @@ public class FarragoRuntimeContext
         String streamName,
         Object dummies)
     {
-        if (!catalog.isFennelEnabled()) {
-            return Collections.EMPTY_LIST.iterator();
-        }
-
         assert (dummies == null);
-        assert(streamGraph != null);
+        assert (streamGraph != null);
 
         FennelStreamHandle streamHandle = getStreamHandle(streamName);
-        
+
         return new FennelIterator(
             tupleReader,
             streamGraph,
             streamHandle,
-            catalog.getCurrentConfig().getFennelConfig().getCachePageSize());
+            repos.getCurrentConfig().getFennelConfig().getCachePageSize());
     }
 
-    protected FennelStreamHandle getStreamHandle(
-        String globalStreamName)
+    protected FennelStreamHandle getStreamHandle(String globalStreamName)
     {
-        catalog.beginReposTxn(true);
+        repos.beginReposTxn(true);
         try {
-            return streamGraph.findStream(catalog,globalStreamName);
+            return streamGraph.findStream(repos, globalStreamName);
         } finally {
-            catalog.endReposTxn(false);
+            repos.endReposTxn(false);
         }
     }
 
@@ -369,12 +443,12 @@ public class FarragoRuntimeContext
         boolean success = false;
         FennelStreamGraph newStreamGraph = null;
         try {
-            Collection collection = JmiUtil.importFromXmiString(
-                catalog.transientFarragoPackage,xmiFennelPlan);
+            Collection collection =
+                JmiUtil.importFromXmiString(repos.transientFarragoPackage,
+                    xmiFennelPlan);
             assert (collection.size() == 1);
             FemCmdPrepareExecutionStreamGraph cmd =
-                (FemCmdPrepareExecutionStreamGraph)
-                collection.iterator().next();
+                (FemCmdPrepareExecutionStreamGraph) collection.iterator().next();
 
             newStreamGraph = fennelTxnContext.newStreamGraph(streamOwner);
             cmd.setStreamGraphHandle(newStreamGraph.getStreamGraphHandle());
@@ -391,9 +465,9 @@ public class FarragoRuntimeContext
     // implement FennelJavaStreamMap
     public long getJavaStreamHandle(int streamId)
     {
-        FennelJavaHandle handle = (FennelJavaHandle)
-            streamIdToHandleMap.get(new Integer(streamId));
-        assert(handle != null);
+        FennelJavaHandle handle =
+            (FennelJavaHandle) streamIdToHandleMap.get(new Integer(streamId));
+        assert (handle != null);
         return handle.getLongHandle();
     }
 
@@ -403,7 +477,7 @@ public class FarragoRuntimeContext
         CwmSqlindex index = indexMap.getIndexById(pageOwnerId);
         return indexMap.getIndexRoot(index);
     }
-    
+
     /**
      * .
      *
@@ -426,17 +500,19 @@ public class FarragoRuntimeContext
         }
     }
 
-     /**
-     * Called when a nullable value is cast to a NOT NULL type.
-     *
-     * @param obj source value
-     */
+    /**
+    * Called when a nullable value is cast to a NOT NULL type.
+    *
+    * @param obj source value
+    */
     public void checkNotNull(Object obj)
     {
         if (null == obj) {
             throw FarragoResource.instance().newNullNotAllowed();
         }
     }
+
+    //~ Inner Classes ---------------------------------------------------------
 
     /**
      * Inner class for taking care of closing streams without deallocating
@@ -449,13 +525,14 @@ public class FarragoRuntimeContext
             // traverse in reverse order
             ListIterator iter = allocations.listIterator(allocations.size());
             while (iter.hasPrevious()) {
-                FennelStreamGraph streamGraph = (FennelStreamGraph)
-                    iter.previous();
+                FennelStreamGraph streamGraph =
+                    (FennelStreamGraph) iter.previous();
                 streamGraph.close();
             }
             allocations.clear();
         }
     }
 }
+
 
 // End FarragoRuntimeContext.java

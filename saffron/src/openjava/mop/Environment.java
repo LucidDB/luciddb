@@ -8,7 +8,7 @@ package openjava.mop;
 
 
 import openjava.mop.OJClass;
-import net.sf.saffron.core.SaffronSchema;
+import org.eigenbase.relopt.RelOptSchema;
 
 
 public abstract class Environment
@@ -43,21 +43,6 @@ public abstract class Environment
 	    return null;
 	} else {
 	    return parent.getClassEnvironmentParent();
-	}
-    }
-
-    /**
-     * Gets the root environment, which is always a {@link GlobalEnvironment}.
-     **/
-    public GlobalEnvironment getGlobalEnvironment()
-    {
-	for (Environment e = this;;) {
-	    Environment parent = e.getParent();
-	    if (parent == null) {
-		return (GlobalEnvironment) e;
-	    } else {
-		e = parent;
-	    }
 	}
     }
 
@@ -153,7 +138,7 @@ public abstract class Environment
 
 	public interface VariableInfo {
 		OJClass getType();
-		SaffronSchema getSaffronSchema();
+		RelOptSchema getRelOptSchema();
 	}
 
 	protected static class BasicVariableInfo implements VariableInfo {
@@ -167,7 +152,7 @@ public abstract class Environment
 			return clazz;
 		}
 
-		public SaffronSchema getSaffronSchema() {
+		public RelOptSchema getRelOptSchema() {
 			return null;
 		}
 	}
@@ -234,17 +219,5 @@ public abstract class Environment
     public boolean isRegisteredModifier( String str ) {
         if (parent == null)  return false;
         return parent.isRegisteredModifier( str );
-    }
-
-    /**
-     * If this is a {@link ClassEnvironment} for declarerName, record new inner
-     * class innerName; otherwise, pass up the environment hierarchy.
-     *
-     * @param declarerName fully-qualified name of enclosing class
-     * @param innerName    simple name of inner class
-     */
-    public void recordMemberClass(String declarerName, String innerName)
-    {
-	if (parent != null) parent.recordMemberClass(declarerName, innerName);
     }
 }

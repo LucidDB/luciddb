@@ -39,9 +39,9 @@ Object FarragoSqlStmtEof() :
 {
     (
         obj = DdlStmtEof()
-	|
+    |
         obj = SqlStmtEof()
-	)
+    )
         { return obj; }
 }
 
@@ -82,13 +82,13 @@ DdlStmt DdlStmtEof() :
               modelElement = NamedColumnSetDrop()
               |
               modelElement = IndexDrop()
-			  |
-			  modelElement = ViewDrop()
-			  |
+              |
+              modelElement = ViewDrop()
+              |
               LOOKAHEAD(2)
-			  modelElement = DataWrapperDrop()
-			  |
-			  modelElement = DataServerDrop()
+              modelElement = DataWrapperDrop()
+              |
+              modelElement = DataServerDrop()
           )
         {
             ddlStmt = new DdlDropStmt(modelElement,dropRestrict);
@@ -150,12 +150,12 @@ CwmSchema SchemaDefinition() :
 {
     <SCHEMA> schemaName = CompoundIdentifier2()
         {
-            schema = getCatalog().newCwmSchema();
+            schema = getRepos().newCwmSchema();
             if (schemaName.names.length == 2) {
-                CwmCatalog cwmCatalog =
+                CwmCatalog catalog =
                     farragoParser.getStmtValidator().findCatalog(
                         schemaName.names[0]);
-                schema.setNamespace(cwmCatalog);
+                schema.setNamespace(catalog);
                 schema.setName(schemaName.names[1]);
             } else {
                 schema.setNamespace(
@@ -221,7 +221,7 @@ FemLocalTable UnscopedTableDefinition(CwmSchema schema) :
 {
     <TABLE>
         {
-            table = getCatalog().newFemLocalTable();
+            table = getRepos().newFemLocalTable();
         }
     qualifiedTableName = CompoundIdentifier2()
         {
@@ -277,15 +277,15 @@ FemLocalTable ScopedTableDefinition(CwmSchema schema) :
 
 CwmView ViewDefinition(CwmSchema schema) :
 {
-	CwmView view;
-	SqlIdentifier qualifiedViewName;
-	SqlNode query;
+    CwmView view;
+    SqlIdentifier qualifiedViewName;
+    SqlNode query;
     List columnNameList;
 }
 {
-	<VIEW>
-		{
-           view = getCatalog().newCwmView();
+    <VIEW>
+        {
+           view = getRepos().newCwmView();
         }
     qualifiedViewName = CompoundIdentifier2()
         {
@@ -293,17 +293,17 @@ CwmView ViewDefinition(CwmSchema schema) :
                 schema,view,qualifiedViewName);
         }
     [<LPAREN> columnNameList = SimpleIdentifierCommaList() 
-		{
+        {
             Iterator columnNameIter = columnNameList.iterator();
-			while (columnNameIter.hasNext()) {
-				String columnName = 
-					((SqlIdentifier) columnNameIter.next()).getSimple();
-                CwmColumn column = getCatalog().newFemViewColumn();
+            while (columnNameIter.hasNext()) {
+                String columnName = 
+                    ((SqlIdentifier) columnNameIter.next()).getSimple();
+                CwmColumn column = getRepos().newFemViewColumn();
                 column.setName(columnName);
                 view.getFeature().add(column);
-			}
-		}
-	 <RPAREN>]
+            }
+        }
+     <RPAREN>]
 
     <AS> query = OrderedQueryOrExpr(EXPR_ACCEPT_QUERY)
     {
@@ -314,12 +314,12 @@ CwmView ViewDefinition(CwmSchema schema) :
             farragoParser.getDdlValidator().getInvokingSession();
         String unparseSql = query.toSqlString(
             new SqlDialect(session.getDatabaseMetaData()));
-		CwmQueryExpression queryExp = getCatalog().newCwmQueryExpression();
-		queryExp.setLanguage("SQL");
+        CwmQueryExpression queryExp = getRepos().newCwmQueryExpression();
+        queryExp.setLanguage("SQL");
         queryExp.setBody(unparseSql);
-		view.setQueryExpression(queryExp);
-	}
-	{
+        view.setQueryExpression(queryExp);
+    }
+    {
        return view;
     }
 }
@@ -347,7 +347,7 @@ CwmSqlindex IndexDefinition(CwmSchema schema,CwmTable table) :
         }
     <INDEX>
         {
-            index = getCatalog().newCwmSqlindex();
+            index = getRepos().newCwmSqlindex();
         }
     indexName = SimpleIdentifier()
         {
@@ -365,12 +365,12 @@ CwmSqlindex IndexDefinition(CwmSchema schema,CwmTable table) :
                             index));
                 }
             }
-            getCatalog().indexPackage.getIndexSpansClass().add(table,index);
+            getRepos().indexPackage.getIndexSpansClass().add(table,index);
             // REVIEW:  why is this necessary?  shouldn't association above be
             // sufficient?
             index.setSpannedClass(table);
             if (clustered) {
-                getCatalog().setTagValue(index,"clusteredIndex","");
+                getRepos().setTagValue(index,"clusteredIndex","");
             }
             index.setUnique(unique);
         }
@@ -383,7 +383,7 @@ CwmSqlindex IndexDefinition(CwmSchema schema,CwmTable table) :
                 CwmColumn column = farragoParser.getStmtValidator().findColumn(
                     table,columnName);
                 CwmSqlindexColumn indexColumn =
-                    getCatalog().newCwmSqlindexColumn();
+                    getRepos().newCwmSqlindexColumn();
                 indexColumn.setName(columnName);
                 indexColumn.setAscending(Boolean.TRUE);
                 indexColumn.setFeature(column);
@@ -407,7 +407,7 @@ CwmTable TableIdentifier(CwmSchema schema) :
             farragoParser.getStmtValidator().findSchemaObject(
                 schema,
                 qualifiedTableName,
-                getCatalog().relationalPackage.getCwmTable());
+                getRepos().relationalPackage.getCwmTable());
         }
     {
         return table;
@@ -425,7 +425,7 @@ CwmView ViewReference(CwmSchema schema) :
             view = (CwmView) farragoParser.getStmtValidator().findSchemaObject(
                 schema,
                 qualifiedViewName,
-                getCatalog().relationalPackage.getCwmView());
+                getRepos().relationalPackage.getCwmView());
         }
     {
         return view;
@@ -512,7 +512,7 @@ CwmColumn ColumnDefinition(CwmTable table) :
 }
 {
     {
-        column = getCatalog().newFemStoredColumn();
+        column = getRepos().newFemStoredColumn();
     }
     BasicColumnDefinition(table,column)
         {
@@ -521,7 +521,7 @@ CwmColumn ColumnDefinition(CwmTable table) :
         defaultClause = DefaultClause() 
         {
             CwmExpression defaultExpression =
-            getCatalog().newCwmExpression();
+            getRepos().newCwmExpression();
             defaultExpression.setBody(defaultClause.toSqlString(null));
             defaultExpression.setLanguage("SQL");
             column.setInitialValue(defaultExpression);
@@ -570,7 +570,7 @@ CwmModelElement TableConstraint(CwmTable table) :
             if (constraintName != null) {
                 constraint.setName(constraintName);
             } else {
-                getCatalog().generateConstraintName(constraint);
+                getRepos().generateConstraintName(constraint);
             }
             table.getOwnedElement().add(constraint);
         }
@@ -614,12 +614,12 @@ CwmUniqueConstraint UniqueConstraint() :
     (
         <UNIQUE>
     {
-        constraint = getCatalog().newCwmUniqueConstraint();
+        constraint = getRepos().newCwmUniqueConstraint();
     }
         |
         <PRIMARY> <KEY>
     {
-        constraint = getCatalog().newCwmPrimaryKey();
+        constraint = getRepos().newCwmPrimaryKey();
     }
     )
         {
@@ -651,7 +651,7 @@ void ColumnConstraint(CwmNamedColumnSet table,CwmColumn column) :
             if (constraintName != null) {
                 constraint.setName(constraintName);
             } else {
-                getCatalog().generateConstraintName(constraint);
+                getRepos().generateConstraintName(constraint);
             }
         }
     )
@@ -735,7 +735,7 @@ CwmModelElement IndexDrop() :
             return farragoParser.getStmtValidator().findSchemaObject(
                 null,
                 qualifiedIndexName,
-                getCatalog().relationalPackage.getCwmSqlindex());
+                getRepos().relationalPackage.getCwmSqlindex());
         }
 }
 
@@ -781,7 +781,7 @@ DdlStmt SystemParamAssignment() :
 SqlLiteral SystemParamValue() :
 {
     SqlLiteral paramValue;
-	ParserPosition parserPosition = null;	
+    ParserPosition pos = null;  
 }
 {
     (
@@ -792,13 +792,13 @@ SqlLiteral SystemParamValue() :
         {
             // TODO jvs 22-May-2004:  for MIN and MAX here, use metadata
             // to determine the correct min and max values
-            parserPosition = getCurrentParserPosition();
-            paramValue = SqlLiteral.Numeric.createExact("-1", parserPosition);
+            pos = getCurrentParserPosition();
+            paramValue = SqlLiteral.Numeric.createExact("-1", pos);
         }
         | <MIN>
         {
-            parserPosition = getCurrentParserPosition();
-            paramValue = SqlLiteral.Numeric.createExact("0", parserPosition);
+            pos = getCurrentParserPosition();
+            paramValue = SqlLiteral.Numeric.createExact("0", pos);
         }
     )
         {
@@ -862,11 +862,11 @@ FemDataWrapper DataWrapperDefinition() :
         }
     <DATA> <WRAPPER> wrapperName = SimpleIdentifier()
         {
-            wrapper = getCatalog().newFemDataWrapper();
+            wrapper = getRepos().newFemDataWrapper();
             wrapper.setName(wrapperName.getSimple());
             wrapper.setNamespace(
-                getCatalog().getCwmCatalog(
-                    FarragoCatalog.SYSBOOT_CATALOG_NAME));
+                getRepos().getCwmCatalog(
+                    FarragoRepos.SYSBOOT_CATALOG_NAME));
             wrapper.setForeign(isForeign);
         }
     <LIBRARY> libraryFile = QuotedString()
@@ -926,11 +926,11 @@ FemDataServer DataServerDefinition() :
 {
     <SERVER> serverName = SimpleIdentifier()
         {
-            server = getCatalog().newFemDataServer();
+            server = getRepos().newFemDataServer();
             server.setName(serverName.getSimple());
             server.setNamespace(
-                getCatalog().getCwmCatalog(
-                    FarragoCatalog.SYSBOOT_CATALOG_NAME));
+                getRepos().getCwmCatalog(
+                    FarragoRepos.SYSBOOT_CATALOG_NAME));
         }
     [
         <TYPE> serverType = QuotedString() 
@@ -978,7 +978,7 @@ FemForeignTable ForeignTableDefinition(CwmSchema schema) :
 {
     <FOREIGN> <TABLE>
         {
-            table = getCatalog().newFemForeignTable();
+            table = getRepos().newFemForeignTable();
         }
     qualifiedTableName = CompoundIdentifier2()
         {
@@ -1012,7 +1012,7 @@ FemForeignTable ForeignTableReference(CwmSchema schema) :
             farragoParser.getStmtValidator().findSchemaObject(
                 schema,
                 qualifiedTableName,
-                getCatalog().medPackage.getFemForeignTable());
+                getRepos().medPackage.getFemForeignTable());
         }
     {
         return table;
@@ -1060,7 +1060,7 @@ void StorageOption(FemElementWithStorageOptions element) :
         {
         }
     {
-        FemStorageOption option = getCatalog().newFemStorageOption();
+        FemStorageOption option = getRepos().newFemStorageOption();
         option.setName(name.getSimple());
         option.setValue(value);
         element.getStorageOptions().add(option);

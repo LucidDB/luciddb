@@ -17,18 +17,17 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.query;
+
+import java.util.*;
 
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.util.*;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.util.*;
-
-import java.util.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.util.*;
 
 
 /**
@@ -44,7 +43,6 @@ public class FennelRenameRel extends FennelSingleRel
     //~ Instance fields -------------------------------------------------------
 
     private String [] fieldNames;
-
     private CallingConvention convention;
 
     //~ Constructors ----------------------------------------------------------
@@ -52,30 +50,30 @@ public class FennelRenameRel extends FennelSingleRel
     /**
      * Creates a new FennelRenameRel object.
      *
-     * @param cluster VolcanoCluster for this rel
+     * @param cluster RelOptCluster for this rel
      * @param child input rel whose fields are to be renamed
      * @param fieldNames new field names
      */
     public FennelRenameRel(
-        VolcanoCluster cluster,
-        SaffronRel child,
+        RelOptCluster cluster,
+        RelNode child,
         String [] fieldNames,
         CallingConvention convention)
     {
-        super(cluster,child);
+        super(cluster, child);
         this.fieldNames = fieldNames;
         this.convention = convention;
     }
 
     //~ Methods ---------------------------------------------------------------
 
-    // implement SaffronRel
+    // implement RelNode
     public CallingConvention getConvention()
     {
         return convention;
     }
-    
-    // implement SaffronRel
+
+    // implement RelNode
     public boolean isDistinct()
     {
         return child.isDistinct();
@@ -85,21 +83,24 @@ public class FennelRenameRel extends FennelSingleRel
     public Object clone()
     {
         return new FennelRenameRel(
-            cluster,OptUtil.clone(child),fieldNames,convention);
+            cluster,
+            RelOptUtil.clone(child),
+            fieldNames,
+            convention);
     }
 
-    // implement SaffronRel
-    public PlanCost computeSelfCost(SaffronPlanner planner)
+    // implement RelNode
+    public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
         return planner.makeTinyCost();
     }
 
-    // implement SaffronRel
-    public SaffronType deriveRowType()
+    // implement RelNode
+    public RelDataType deriveRowType()
     {
-        final SaffronField [] fields = child.getRowType().getFields();
+        final RelDataTypeField [] fields = child.getRowType().getFields();
         return cluster.typeFactory.createProjectType(
-            new SaffronTypeFactory.FieldInfo() {
+            new RelDataTypeFactory.FieldInfo() {
                 public int getFieldCount()
                 {
                     return fields.length;
@@ -110,7 +111,7 @@ public class FennelRenameRel extends FennelSingleRel
                     return fieldNames[index];
                 }
 
-                public SaffronType getFieldType(int index)
+                public RelDataType getFieldType(int index)
                 {
                     return fields[index].getType();
                 }
@@ -118,11 +119,11 @@ public class FennelRenameRel extends FennelSingleRel
     }
 
     // override Rel
-    public void explain(PlanWriter pw)
+    public void explain(RelOptPlanWriter pw)
     {
         pw.explain(
             this,
-            new String [] { "child","fieldNames" },
+            new String [] { "child", "fieldNames" },
             new Object [] { Arrays.asList(fieldNames) });
     }
 

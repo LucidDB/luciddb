@@ -35,7 +35,7 @@ public:
     virtual ~StatsSource();
     
     /**
-     * Write a current stats snapshot to a StatsTarget.
+     * Writes a current stats snapshot to a StatsTarget.
      *
      * @param target receives the stats
      */

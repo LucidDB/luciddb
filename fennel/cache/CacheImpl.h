@@ -239,9 +239,9 @@ class CacheImpl : public Cache, private TimerThreadClient
 // ----------------------------------------------------------------------
     
     /**
-     * Find a page by BlockId within a particular bucket.  If found,
-     * wait for any pending read and increment the page reference count;
-     * also notify victimPolicy of the page access.
+     * Finds a page by BlockId within a particular bucket.  If found,
+     * waits for any pending read and then increments the page reference count;
+     * also notifies victimPolicy of the page access.
      *
      * @param bucket the bucket to search; must be the same as
      * getHashBucket(blockId)
@@ -253,8 +253,8 @@ class CacheImpl : public Cache, private TimerThreadClient
     PageT *lookupPage(PageBucketT &bucket,BlockId blockId);
 
     /**
-     * Obtain a free page (either from the free queue or by victimizing
-     * a mapped page); if none is available, suspend for
+     * Obtains a free page (either from the free queue or by victimizing
+     * a mapped page); if none is available, suspends for
      * a little while to help reduce cache load.  The returned page
      * is clean, unmapped, and ready to be remapped.
      *
@@ -263,13 +263,13 @@ class CacheImpl : public Cache, private TimerThreadClient
     PageT *findFreePage();
 
     /**
-     * Initiate asynchronous writes for a few dirty pages which are the best
+     * Initiates asynchronous writes for a few dirty pages which are the best
      * victimization candidates.
      */
     void flushSomePages();
 
     /**
-     * Get the correct access scheduler for a given device.  Currently
+     * Gets the correct access scheduler for a given device.  Currently
      * the same scheduler is used for all devices.
      */
     DeviceAccessScheduler &getDeviceAccessScheduler(RandomAccessDevice &)
@@ -278,7 +278,7 @@ class CacheImpl : public Cache, private TimerThreadClient
     }
     
     /**
-     * Perform an asynchronous I/O operation on the given page.  The Page's ID
+     * Performs an asynchronous I/O operation on the given page.  The page's ID
      * and dataStatus should already be defined.
      *
      * @param page page to transfer
@@ -286,21 +286,21 @@ class CacheImpl : public Cache, private TimerThreadClient
     void transferPageAsync(PageT &page);
 
     /**
-     * Read the given page asynchronously.
+     * Reads the given page asynchronously.
      *
      * @param page page to read
      */
     void readPageAsync(PageT &page);
     
     /**
-     * Write the given page asynchronously.
+     * Writes the given page asynchronously.
      *
      * @param page page to write
      */
     void writePageAsync(PageT &page);
 
     /**
-     * Translate a BlockId into the byte offset of the corresponding device
+     * Translates a BlockId into the byte offset of the corresponding device
      * block.
      * 
      * @param blockId the BlockId to translate
@@ -310,7 +310,7 @@ class CacheImpl : public Cache, private TimerThreadClient
     FileSize getPageOffset(BlockId const &blockId);
 
     /**
-     * Get the hash bucket containing the given BlockId.
+     * Gets the hash bucket containing the given BlockId.
      *
      * @param blockId the BlockId being sought
      *
@@ -319,7 +319,7 @@ class CacheImpl : public Cache, private TimerThreadClient
     PageBucketT &getHashBucket(BlockId const &blockId);
 
     /**
-     * Verify the match between a PageBucket and BlockId.  Some methods
+     * Verifies the match between a PageBucket and BlockId.  Some methods
      * (e.g. lockPage) precompute the correct bucket for a BlockId parameter
      * and then make calls to helper methods (e.g. lookupPage, mapPage)
      * which can skip the bucket lookup.  This assertion
@@ -328,8 +328,8 @@ class CacheImpl : public Cache, private TimerThreadClient
     void assertCorrectBucket(PageBucketT &bucket,BlockId const &blockId);
     
     /**
-     * Unmap a currently mapped page, but do not add it to the free list.  
-     * Also notify victimPolicy of the unmapping.  The page must have
+     * Unmaps a currently mapped page, but does not add it to the free list.  
+     * Also notifies victimPolicy of the unmapping.  The page must have
      * no outstanding references.
      *
      * @param page a currently mapped page to be unmapped
@@ -341,8 +341,8 @@ class CacheImpl : public Cache, private TimerThreadClient
     void unmapPage(PageT &page,StrictMutexTryGuard &guard);
 
     /**
-     * Unmap a page being discarded and add it to unmappedBucket.
-     * Also notify victimPolicy of the unmapping.  If the page is
+     * Unmaps a page being discarded and adds it to unmappedBucket.
+     * Also notifies victimPolicy of the unmapping.  If the page is
      * dirty, it is not flushed.  However, any pending I/O is allowed to
      * complete before discard.
      *
@@ -357,8 +357,8 @@ class CacheImpl : public Cache, private TimerThreadClient
         StrictMutexTryGuard &guard);
 
     /**
-     * Map a page if it is not already mapped (and notify victimPolicy of the
-     * page mapping); otherwise, find the existing mapping (and notify
+     * Maps a page if it is not already mapped (and notifies victimPolicy of the
+     * page mapping); otherwise, finds the existing mapping (and notifies
      * victimPolicy of the page access).
      *
      * @param bucket the bucket to contain the Page; must be 
@@ -388,7 +388,7 @@ class CacheImpl : public Cache, private TimerThreadClient
         bool bPendingRead = true,bool bIncRef = true);
 
     /**
-     * Place an unmapped page in unmappedBucket, making it available for
+     * Places an unmapped page in unmappedBucket, making it available for
      * the next call to findFreePage.
      *
      * @param page the page to be freed
@@ -396,7 +396,7 @@ class CacheImpl : public Cache, private TimerThreadClient
     void freePage(PageT &page);
 
     /**
-     * Decide whether a page can be victimized.  The page must be mapped,
+     * Decides whether a page can be victimized.  The page must be mapped,
      * have no references, and no pending I/O.
      *
      * @param page the page to test; the page's mutex must already
@@ -407,21 +407,21 @@ class CacheImpl : public Cache, private TimerThreadClient
     bool canVictimizePage(PageT &page);
 
     /**
-     * Increment a counter variable safely.
+     * Increments a counter variable safely.
      *
      * @param x reference to counter to be updated
      */
     void incrementCounter(AtomicCounter &x);
     
     /**
-     * Decrement a counter variable safely.
+     * Decrements a counter variable safely.
      *
      * @param x reference to counter to be updated
      */
     void decrementCounter(AtomicCounter &x);
     
     /**
-     * Increment a statistical counter.  This can be defined to NOP to increase
+     * Increments a statistical counter.  Can be defined to NOP to increase
      * cache performance if statistics aren't important.
      *
      * @param x reference to counter to be updated
@@ -429,7 +429,7 @@ class CacheImpl : public Cache, private TimerThreadClient
     void incrementStatsCounter(AtomicCounter &x);
     
     /**
-     * Decrement a statistical counter.  This can be defined to NOP to increase
+     * Decrements a statistical counter.  Can be defined to NOP to increase
      * cache performance if statistics aren't important.
      *
      * @param x reference to counter to be updated

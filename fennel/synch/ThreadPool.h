@@ -49,22 +49,22 @@ protected:
     State state;
     LocalCondition stoppingCondition;
     
-    ThreadPoolBase();
+    explicit ThreadPoolBase();
     virtual ~ThreadPoolBase();
     virtual bool isQueueEmpty() = 0;
     virtual void runOneTask(StrictMutexGuard &) = 0;
     
 public:
     /**
-     * Start the given number of threads in the pool.
+     * Starts the given number of threads in the pool.
      *
      * @param nThreads number of threads to start
      */
     void start(uint nThreads);
     
     /**
-     * Shut down the pool, waiting for any pending tasks to complete.
-     * The start/stop calls should never be called from more than one thread
+     * Shuts down the pool, waiting for any pending tasks to complete.
+     * The start/stop calls should never be invoked from more than one thread
      * simultaneously.
      */
     void stop();
@@ -114,7 +114,7 @@ public:
     }
 
     /**
-     * Submit a task to the pool.  It will be executed as soon as a thread is
+     * Submits a task to the pool.  It will be executed as soon as a thread is
      * available.
      *
      * @param task the task to execute, expressed as a function object

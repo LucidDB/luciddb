@@ -16,11 +16,9 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.runtime;
 
 import java.nio.*;
-
 import java.util.*;
 
 
@@ -47,7 +45,9 @@ public class JavaTupleStream
      * @param tupleWriter the FennelTupleWriter to use for marshalling tuples
      * @param iter Iterator producing objects
      */
-    public JavaTupleStream(FennelTupleWriter tupleWriter,Iterator iter)
+    public JavaTupleStream(
+        FennelTupleWriter tupleWriter,
+        Iterator iter)
     {
         this.tupleWriter = tupleWriter;
         this.iter = iter;
@@ -76,7 +76,7 @@ public class JavaTupleStream
         byteBuffer.order(ByteOrder.nativeOrder());
         byteBuffer.clear();
         for (;;) {
-            if (!tupleWriter.marshalTuple(byteBuffer,next)) {
+            if (!tupleWriter.marshalTuple(byteBuffer, next)) {
                 break;
             }
             if (!iter.hasNext()) {

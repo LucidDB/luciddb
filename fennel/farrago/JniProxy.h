@@ -68,7 +68,7 @@ public:
     virtual ~JniProxy();
 
     /**
-     * Initialize this proxy.
+     * Initializes this proxy.
      *
      * @param pEnv the JniEnvRef in which this proxy will operate
      *
@@ -134,7 +134,7 @@ public:
     virtual ~JniProxyVisitor();
 
     /**
-     * What to do when a visitor attempts to visit a proxy whose type's
+     * Handles case when a visitor attempts to visit a proxy whose type's
      * visit method has not been overridden.  Default action is to throw
      * an assertion failure; subclasses may override to ignore or whatever.
      */
@@ -153,8 +153,8 @@ public:
     virtual void *getLeafPtr() = 0;
     
     /**
-     * Returns the name of the visitor type, for example "FemVisitor". A sanity
-     * check.
+     * @return the name of the visitor type, for example "FemVisitor" (used for
+     * sanity check)
      */
     virtual const char *getLeafTypeName() = 0;
 };
@@ -191,7 +191,7 @@ public:
     MethodMap methodMap;
     
     /**
-     * This is called by generated code once for each proxy class.
+     * Called by generated code once for each proxy class.
      *
      * @param jClass java.lang.Class for the Java interface being proxied
      *

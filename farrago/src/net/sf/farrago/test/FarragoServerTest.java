@@ -6,27 +6,27 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.test;
-
-import net.sf.farrago.server.*;
-import net.sf.farrago.jdbc.engine.*;
-import net.sf.farrago.jdbc.client.*;
-
-import junit.framework.*;
 
 import java.sql.*;
 import java.util.*;
+
+import junit.framework.*;
+
+import net.sf.farrago.jdbc.client.*;
+import net.sf.farrago.jdbc.engine.*;
+import net.sf.farrago.server.*;
+
 
 /**
  * FarragoServerTest tests Farrago client/server connections.  It does
@@ -37,29 +37,46 @@ import java.util.*;
  */
 public class FarragoServerTest extends TestCase
 {
+    //~ Instance fields -------------------------------------------------------
+
     private FarragoServer server;
+
+    //~ Constructors ----------------------------------------------------------
 
     /**
      * Initializes a new FarragoServerTest.
      *
      * @param testCaseName JUnit test case name
      */
-    public FarragoServerTest(String testCaseName) throws Exception
+    public FarragoServerTest(String testCaseName)
+        throws Exception
     {
         super(testCaseName);
     }
 
-    public void testServer() throws Exception
+    //~ Methods ---------------------------------------------------------------
+
+    protected void setUp()
+        throws Exception
+    {
+        super.setUp();
+        FarragoTestCase.forceShutdown();
+    }
+    
+    public void testServer()
+        throws Exception
     {
         server = new FarragoServer();
         FarragoJdbcEngineDriver serverDriver = new FarragoJdbcEngineDriver();
         server.start(serverDriver);
+
         // NOTE:  can't call DriverManager.connect here, because that would
         // deadlock
         FarragoJdbcClientDriver clientDriver = new FarragoJdbcClientDriver();
-        Connection connection = clientDriver.connect(
-            clientDriver.getUrlPrefix() + "localhost",
-            new Properties());
+        Connection connection =
+            clientDriver.connect(
+                clientDriver.getUrlPrefix() + "localhost",
+                new Properties());
         boolean stopped;
         try {
             connection.createStatement().execute("set schema sales");
@@ -73,21 +90,24 @@ public class FarragoServerTest extends TestCase
         assertTrue(stopped);
     }
 
-    public void testKillServer() throws Exception
+    public void testKillServer()
+        throws Exception
     {
         server = new FarragoServer();
         FarragoJdbcEngineDriver serverDriver = new FarragoJdbcEngineDriver();
         server.start(serverDriver);
         FarragoJdbcClientDriver clientDriver = new FarragoJdbcClientDriver();
-        Connection connection = clientDriver.connect(
-            clientDriver.getUrlPrefix() + "localhost",
-            new Properties());
+        Connection connection =
+            clientDriver.connect(
+                clientDriver.getUrlPrefix() + "localhost",
+                new Properties());
         connection.createStatement().execute("set schema sales");
         killServer();
     }
 
     // implement TestCase
-    protected void tearDown() throws Exception
+    protected void tearDown()
+        throws Exception
     {
         if (server != null) {
             try {
@@ -108,5 +128,6 @@ public class FarragoServerTest extends TestCase
         }
     }
 }
+
 
 // End FarragoServerTest.java

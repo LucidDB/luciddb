@@ -17,8 +17,11 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.query;
+
+import java.lang.reflect.*;
+import java.nio.*;
+import java.util.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
@@ -27,21 +30,17 @@ import net.sf.farrago.type.*;
 import net.sf.farrago.type.runtime.*;
 import net.sf.farrago.util.*;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.oj.util.*;
-import net.sf.saffron.oj.rel.JavaRelImplementor;
-import net.sf.saffron.oj.rel.JavaRel;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.rel.convert.*;
-import net.sf.saffron.util.Util;
-
 import openjava.mop.*;
 import openjava.ptree.*;
 
-import java.util.*;
-import java.nio.*;
-import java.lang.reflect.*;
+import org.eigenbase.oj.rel.JavaRel;
+import org.eigenbase.oj.rel.JavaRelImplementor;
+import org.eigenbase.oj.util.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.rel.convert.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.util.*;
 
 
 /**
@@ -52,8 +51,7 @@ import java.lang.reflect.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class IteratorToFennelConverter
-    extends ConverterRel
+public class IteratorToFennelConverter extends ConverterRel
     implements FennelPullRel
 {
     //~ Instance fields -------------------------------------------------------
@@ -66,22 +64,22 @@ public class IteratorToFennelConverter
      * Creates a new IteratorToFennelConverter object.
      *
      * @param stmt statement to use for catalog access
-     * @param cluster VolcanoCluster for this rel
+     * @param cluster RelOptCluster for this rel
      * @param child input rel producing rows to be converted to Fennel
      * TupleStream representation
      */
     public IteratorToFennelConverter(
         FarragoPreparingStmt stmt,
-        VolcanoCluster cluster,
-        SaffronRel child)
+        RelOptCluster cluster,
+        RelNode child)
     {
-        super(cluster,child);
+        super(cluster, child);
         this.stmt = stmt;
     }
 
     //~ Methods ---------------------------------------------------------------
 
-    // implement SaffronRel
+    // implement RelNode
     public CallingConvention getConvention()
     {
         return FennelPullRel.FENNEL_PULL_CONVENTION;
@@ -93,26 +91,26 @@ public class IteratorToFennelConverter
         return stmt;
     }
 
-    // implement SaffronRel
+    // implement RelNode
     public Object clone()
     {
-        return new IteratorToFennelConverter(stmt,cluster,child);
+        return new IteratorToFennelConverter(stmt, cluster, child);
     }
 
     public static Expression generateTupleWriter(
         FarragoPreparingStmt stmt,
         JavaRelImplementor implementor,
-        SaffronType rowType)
+        RelDataType rowType)
     {
         OJClass ojClass = OJUtil.typeToOJClass(rowType);
 
         FemTupleDescriptor tupleDesc =
             FennelRelUtil.createTupleDescriptorFromRowType(
-                stmt.getCatalog(),
+                stmt.getRepos(),
                 rowType);
         FemTupleAccessor tupleAccessor =
             FennelRelUtil.getAccessorForTupleDescriptor(
-                stmt.getCatalog(),
+                stmt.getRepos(),
                 stmt.getFennelDbHandle(),
                 tupleDesc);
 
@@ -144,7 +142,7 @@ public class IteratorToFennelConverter
 
         // for each field in synthetic object, generate the type-appropriate
         // code with help from the tuple accessor
-        SaffronField [] fields = rowType.getFields();
+        RelDataTypeField [] fields = rowType.getFields();
         assert (fields.length == tupleAccessor.getAttrAccessor().size());
         Iterator attrIter = tupleAccessor.getAttrAccessor().iterator();
         boolean variableWidth = false;
@@ -155,23 +153,28 @@ public class IteratorToFennelConverter
                 // bit fields are already handled
                 continue;
             }
-            SaffronField field = fields[i];
+            RelDataTypeField field = fields[i];
             FarragoAtomicType type = (FarragoAtomicType) field.getType();
-            Expression fieldExp = new FieldAccess(varTuple,
-                Util.toJavaId(field.getName(),i));
+            Expression fieldExp =
+                new FieldAccess(varTuple,
+                    Util.toJavaId(
+                        field.getName(),
+                        i));
             if (type.hasClassForPrimitive()) {
-                Class primitiveClass =
-                    type.getClassForPrimitive();
+                Class primitiveClass = type.getClassForPrimitive();
                 Method method =
                     ReflectUtil.getByteBufferWriteMethod(primitiveClass);
                 String byteBufferAccessorName = method.getName();
+
                 // this field is marshalled to a fixed offset relative
                 // to the sliceBuffer start
                 if (type.requiresValueAccess()) {
                     // extra dereference for NullablePrimitives
-                    fieldExp = new FieldAccess(
-                        fieldExp,NullablePrimitive.VALUE_FIELD_NAME);
+                    fieldExp =
+                        new FieldAccess(fieldExp,
+                            NullablePrimitive.VALUE_FIELD_NAME);
                 }
+
                 // REVIEW:  skip write if field is null?
                 methodBody.add(
                     new ExpressionStatement(
@@ -181,7 +184,7 @@ public class IteratorToFennelConverter
                             new ExpressionList(
                                 Literal.makeLiteral(
                                     attrAccessor.getFixedOffset()),
-                                    fieldExp))));
+                                fieldExp))));
             } else if (type.isBoundedVariableWidth()) {
                 variableWidth = true;
                 if (attrAccessor.getFixedOffset() != -1) {
@@ -198,22 +201,23 @@ public class IteratorToFennelConverter
                 } else {
                     // use position set by previous variable-width field
                 }
+
                 // write data
                 methodBody.add(
                     new ExpressionStatement(
                         new MethodCall(
                             fieldExp,
                             "writeToBuffer",
-                            new ExpressionList(
-                                new FieldAccess("sliceBuffer")))));
+                            new ExpressionList(new FieldAccess("sliceBuffer")))));
+
                 // position after data has been written is the end
                 // offset for this field
-                Expression currPosExp = new CastExpression(
-                    OJSystem.SHORT,
-                    new MethodCall(
-                        new FieldAccess("sliceBuffer"),
-                        "position",
-                        new ExpressionList()));
+                Expression currPosExp =
+                    new CastExpression(OJSystem.SHORT,
+                        new MethodCall(new FieldAccess("sliceBuffer"),
+                            "position",
+                            new ExpressionList()));
+
                 // write the end indirect offset
                 methodBody.add(
                     new ExpressionStatement(
@@ -256,7 +260,7 @@ public class IteratorToFennelConverter
         paramList.add(
             new Parameter(
                 new ModifierList(0),
-                TypeName.forClass(ByteBuffer.class),
+                OJUtil.typeNameForClass(ByteBuffer.class),
                 "sliceBuffer"));
         paramList.add(
             new Parameter(
@@ -266,17 +270,13 @@ public class IteratorToFennelConverter
 
         // put it all together
         MemberDeclaration methodDecl =
-            new MethodDeclaration(
-                new ModifierList(ModifierList.PROTECTED),
-                TypeName.forOJClass(OJSystem.VOID),
-                "marshalTupleOrThrow",
-                paramList,
-                null,
-                methodBody);
+            new MethodDeclaration(new ModifierList(ModifierList.PROTECTED),
+                TypeName.forOJClass(OJSystem.VOID), "marshalTupleOrThrow",
+                paramList, null, methodBody);
 
         // generate code to allocate instance of anonymous class defined above
         return new AllocationExpression(
-            TypeName.forClass(FennelTupleWriter.class),
+            OJUtil.typeNameForClass(FennelTupleWriter.class),
             new ExpressionList(),
             new MemberDeclarationList(methodDecl));
     }
@@ -284,29 +284,23 @@ public class IteratorToFennelConverter
     // implement FennelRel
     public Object implementFennelChild(FennelRelImplementor implementor)
     {
-        if (getInputConvention().getOrdinal()
-            != CallingConvention.ITERATOR_ORDINAL)
-        {
+        if (getInputConvention().getOrdinal() != CallingConvention.ITERATOR_ORDINAL) {
             throw cannotImplement();
         }
 
-        if (!getPreparingStmt().getCatalog().isFennelEnabled()) {
-            return Literal.constantNull();
-        }
-
-        SaffronType rowType = child.getRowType();
+        RelDataType rowType = child.getRowType();
 
         // Cheeky! We happen to know it's a FarragoRelImplementor (for now).
-        JavaRelImplementor javaRelImplementor = (JavaRelImplementor) implementor;
+        JavaRelImplementor javaRelImplementor =
+            (JavaRelImplementor) implementor;
+
         // Generate code for children, producing the iterator expression
         // whose results are to be converted.
         Expression childExp =
-                javaRelImplementor.visitJavaChild(this, 0, (JavaRel) child);
+            javaRelImplementor.visitJavaChild(this, 0, (JavaRel) child);
 
-        Expression newTupleWriterExp = generateTupleWriter(
-            stmt,
-            javaRelImplementor,
-            rowType);
+        Expression newTupleWriterExp =
+            generateTupleWriter(stmt, javaRelImplementor, rowType);
 
         // and pass this to FarragoRuntimeContext.newJavaTupleStream to produce
         // a JavaTupleStream, which will invoke our generated FennelTupleWriter
@@ -324,10 +318,9 @@ public class IteratorToFennelConverter
     // implement FennelRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
-        FarragoCatalog catalog = getPreparingStmt().getCatalog();
+        FarragoRepos repos = getPreparingStmt().getRepos();
 
-        FemJavaTupleStreamDef streamDef =
-            catalog.newFemJavaTupleStreamDef();
+        FemJavaTupleStreamDef streamDef = repos.newFemJavaTupleStreamDef();
         streamDef.setStreamId(getId());
 
         return streamDef;
@@ -342,21 +335,20 @@ public class IteratorToFennelConverter
 
     /**
      * Registers this relational expression and rule(s) with the planner, as
-     * per {@link SaffronBaseRel#register}.
+     * per {@link AbstractRelNode#register}.
      *
      * @param planner Planner
      * @param farragoPreparingStmt Context for the preparation process
      */
-    public static void register(FarragoPlanner planner,
-            final FarragoPreparingStmt farragoPreparingStmt) {
+    public static void register(
+        RelOptPlanner planner,
+        final FarragoPreparingStmt farragoPreparingStmt)
+    {
         planner.addRule(
-            new ConverterRule(
-                SaffronRel.class,
-                CallingConvention.ITERATOR,
+            new ConverterRule(RelNode.class, CallingConvention.ITERATOR,
                 FennelPullRel.FENNEL_PULL_CONVENTION,
-                "IteratorToFennelPullRule")
-            {
-                public SaffronRel convert(SaffronRel rel)
+                "IteratorToFennelPullRule") {
+                public RelNode convert(RelNode rel)
                 {
                     return new IteratorToFennelConverter(
                         farragoPreparingStmt,

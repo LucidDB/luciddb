@@ -1,18 +1,19 @@
-0: jdbc:farrago:> -- $Id: //open/farrago/unitsql/jdbc/metadata.sql#8 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/jdbc/metadata.sql#1 $
 0: jdbc:farrago:> -- Test JDBC metadata calls
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test getCatalogs
 0: jdbc:farrago:> !metadata getCatalogs
-+---------------+
-|   TABLE_CAT   |
-+---------------+
-| HSQLDB_DEMO   |
-| LOCALDB       |
-| SYS_BOOT      |
-| SYS_CWM       |
-| SYS_FEM       |
-| SYS_ROWSTORE  |
-+---------------+
++-----------------------+
+|       TABLE_CAT       |
++-----------------------+
+| HSQLDB_DEMO           |
+| LOCALDB               |
+| SYS_BOOT              |
+| SYS_CWM               |
+| SYS_FEM               |
+| SYS_FTRS_DATA_SERVER  |
+| SYS_MOCK_DATA_SERVER  |
++-----------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test getSchemas
 0: jdbc:farrago:> !metadata getSchemas
@@ -206,7 +207,7 @@ getSchemaTerm                                     schema
 getSearchStringEscape                             \
 getSQLKeywords                                    checkpoint,clustered,release,savepoint,system,truncate,type,CAST,POSITION,CONVERT,TRANSLATE,OVERLAY,SUBSTRING,TRIM,asymmetric,bigint,binary,boolean,descending,explain,placing,row,similar,symmetric,tinyint,varbinary,without
 getStringFunctions                                SUBSTRING,CONVERT,TRANSLATE,OVERLAY,TRIM,UPPER,LOWER,INITCAP
-getSystemFunctions                                NULLIF,COALESCE,CAST
+getSystemFunctions                                NULLIF,COALESCE,USER,CURRENT_USER,SESSION_USER,SYSTEM_USER,CURRENT_PATH,CURRENT_ROLE,CAST
 getTimeDateFunctions                              LOCALTIME,LOCALTIMESTAMP,CURRENT_TIME,CURRENT_TIMESTAMP,CURRENT_DATE
 getURL                                            jdbc:farrago:
 getUserName                                       jackalope
@@ -296,11 +297,11 @@ usesLocalFiles                                    false
 . . . . . . . . >        "serverRmiRegistryPort", "serverSingleListenerPort",
 . . . . . . . . >        "calcVirtualMachine", "javaCompilerClassName"
 . . . . . . . . >      from sys_fem."Config"."FarragoConfig";
-+----------+-----------------+---------------------+--------------------+---------------------+------------------------+---------------------------+---------------------+------------------------------+
-|   name   | fennelDisabled  | userCatalogEnabled  | codeCacheMaxBytes  | checkpointInterval  | serverRmiRegistryPort  | serverSingleListenerPort  | calcVirtualMachine  |    javaCompilerClassName     |
-+----------+-----------------+---------------------+--------------------+---------------------+------------------------+---------------------------+---------------------+------------------------------+
-| Current  | false           | false               | -1                 | 300                 | 5433                   | -1                        | CALCVM_AUTO         | openjava.ojc.JaninoCompiler  |
-+----------+-----------------+---------------------+--------------------+---------------------+------------------------+---------------------------+---------------------+------------------------------+
++----------+-----------------+---------------------+--------------------+---------------------+------------------------+---------------------------+---------------------+-------------------------------------+
+|   name   | fennelDisabled  | userCatalogEnabled  | codeCacheMaxBytes  | checkpointInterval  | serverRmiRegistryPort  | serverSingleListenerPort  | calcVirtualMachine  |        javaCompilerClassName        |
++----------+-----------------+---------------------+--------------------+---------------------+------------------------+---------------------------+---------------------+-------------------------------------+
+| Current  | false           | false               | -1                 | 300                 | 5433                   | -1                        | CALCVM_AUTO         | org.eigenbase.javac.JaninoCompiler  |
++----------+-----------------+---------------------+--------------------+---------------------+------------------------+---------------------------+---------------------+-------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select "databaseInitSize", "databaseIncrementSize", "databaseMaxSize",
 . . . . . . . . >        "tempInitSize", "tempIncrementSize", "tempMaxSize",

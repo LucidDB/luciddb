@@ -44,7 +44,7 @@ class StatsTimer : private TimerThreadClient
     
 public:
     /**
-     * Create a new StatsTimer.
+     * Creates a new StatsTimer.
      *
      * @param target the StatsTarget that will receive stats
      *
@@ -55,19 +55,19 @@ public:
     virtual ~StatsTimer();
 
     /**
-     * Add a source to be published.  This should not be used after start().
+     * Adds a source to be published.  Should not be used after start().
      *
      * @param pSource source from which stats will be collected
      */
     void addSource(SharedStatsSource pSource);
 
     /**
-     * Start publication.  Sources must all remain valid until stop().
+     * Starts publication.  Sources must all remain valid until stop().
      */
     void start();
 
     /**
-     * Stop publication and forgets all sources.
+     * Stops publication and forgets all sources.
      */
     void stop();
 };

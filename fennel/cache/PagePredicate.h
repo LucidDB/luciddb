@@ -37,6 +37,8 @@ public:
     virtual ~PagePredicate();
     
     /**
+     * Tests the predicate.
+     *
      * @param page the page to be considered
      *
      * @return true iff the page satisfies the predicate

@@ -17,36 +17,35 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.ddl;
 
+import java.sql.*;
+import java.util.*;
+import java.util.logging.*;
+
+import javax.jmi.reflect.*;
+
+import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.datatypes.*;
 import net.sf.farrago.cwm.keysindexes.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.fem.med.*;
-import net.sf.farrago.catalog.*;
 import net.sf.farrago.fennel.*;
-import net.sf.farrago.resource.*;
-import net.sf.farrago.type.*;
-import net.sf.farrago.util.*;
-import net.sf.farrago.trace.*;
-import net.sf.farrago.query.*;
-import net.sf.farrago.session.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.util.*;
+import net.sf.farrago.query.*;
+import net.sf.farrago.resource.*;
+import net.sf.farrago.session.*;
+import net.sf.farrago.trace.*;
+import net.sf.farrago.type.*;
+import net.sf.farrago.util.*;
 
-import net.sf.saffron.sql.*;
-import net.sf.saffron.util.*;
-
+import org.eigenbase.sql.*;
+import org.eigenbase.util.*;
 import org.netbeans.api.mdr.events.*;
 
-import java.util.*;
-import java.sql.*;
-import java.util.logging.*;
-
-import javax.jmi.reflect.*;
 
 /**
  * DdlValidator validates the process of applying a DDL statement to the
@@ -67,7 +66,8 @@ import javax.jmi.reflect.*;
  * @version $Id$
  */
 public class DdlValidator extends FarragoCompoundAllocation
-    implements FarragoSessionDdlValidator, MDRPreChangeListener
+    implements FarragoSessionDdlValidator,
+        MDRPreChangeListener
 {
     //~ Static fields/initializers --------------------------------------------
 
@@ -85,8 +85,6 @@ public class DdlValidator extends FarragoCompoundAllocation
     /** Symbolic constant used to mark an element being truncated */
     private static final Integer VALIDATE_TRUNCATION = new Integer(4);
 
-
-
     //~ Instance fields -------------------------------------------------------
 
     /**
@@ -95,7 +93,6 @@ public class DdlValidator extends FarragoCompoundAllocation
      * control.
      */
     public final FarragoResource res;
-
     private final FarragoSessionStmtValidator stmtValidator;
 
     /** Queue of excns detected during plannedChange. */
@@ -113,7 +110,8 @@ public class DdlValidator extends FarragoCompoundAllocation
     /**
      * Map containing scheduled validation actions.  The key is the MofId of
      * the object scheduled for validation; the value is the action type (one
-     * of the VALIDATE_ symbols).
+     * of the symbols {@link #VALIDATE_CREATION}, {@link #VALIDATE_DELETION},
+     * {@link #VALIDATE_MODIFICATION}, {@link #VALIDATE_TRUNCATION}).
      */
     private Map schedulingMap;
 
@@ -154,12 +152,11 @@ public class DdlValidator extends FarragoCompoundAllocation
      *
      * @param stmtValidator generic stmt validator
      */
-    public DdlValidator(
-        FarragoSessionStmtValidator stmtValidator)
+    public DdlValidator(FarragoSessionStmtValidator stmtValidator)
     {
         this.stmtValidator = stmtValidator;
         stmtValidator.addAllocation(this);
-        
+
         // NOTE jvs 25-Jan-2004:  Use LinkedHashXXX everywhere, since order
         // matters in some cases.
         schedulingMap = new LinkedHashMap();
@@ -172,39 +169,31 @@ public class DdlValidator extends FarragoCompoundAllocation
         // When a table is dropped, all indexes on the table should also be
         // implicitly dropped.
         addDropRule(
-            getCatalog().indexPackage.getIndexSpansClass(),
-            new DropRule(
-                "spannedClass",
-                null,
+            getRepos().indexPackage.getIndexSpansClass(),
+            new DropRule("spannedClass", null,
                 ReferentialRuleTypeEnum.IMPORTED_KEY_CASCADE));
 
         // Dependencies can never be dropped without CASCADE, but with
         // CASCADE, they go away (a special case later on takes care of
         // cascading to the dependent object as well).
         addDropRule(
-            getCatalog().corePackage.getDependencySupplier(),
-            new DropRule(
-                "supplier",
-                null,
+            getRepos().corePackage.getDependencySupplier(),
+            new DropRule("supplier", null,
                 ReferentialRuleTypeEnum.IMPORTED_KEY_RESTRICT));
 
         // When a dependency gets dropped, take its owner (the client)
         // down with it.
         addDropRule(
-            getCatalog().corePackage.getElementOwnership(),
-            new DropRule(
-                "ownedElement",
-                CwmDependency.class,
+            getRepos().corePackage.getElementOwnership(),
+            new DropRule("ownedElement", CwmDependency.class,
                 ReferentialRuleTypeEnum.IMPORTED_KEY_CASCADE));
 
         // Without CASCADE, a schema can only be dropped when it is empty.
         // This is not true for other namespaces (e.g. a table's constraints
         // are dropped implicitly), so we specify the superInterface filter.
         addDropRule(
-            getCatalog().corePackage.getElementOwnership(),
-            new DropRule(
-                "namespace",
-                CwmSchema.class,
+            getRepos().corePackage.getElementOwnership(),
+            new DropRule("namespace", CwmSchema.class,
                 ReferentialRuleTypeEnum.IMPORTED_KEY_RESTRICT));
 
         // MDR pre-change instance creation events are useless, since they
@@ -213,8 +202,7 @@ public class DdlValidator extends FarragoCompoundAllocation
         // attributes or associations set (though someone will probably come up
         // with a pathological case eventually).
         activeThread = Thread.currentThread();
-        getCatalog().getRepository().addListener(
-            this,
+        getRepos().getMdrRepos().addListener(this,
             InstanceEvent.EVENT_INSTANCE_DELETE
                 | AttributeEvent.EVENTMASK_ATTRIBUTE
                 | AssociationEvent.EVENTMASK_ASSOCIATION);
@@ -229,11 +217,11 @@ public class DdlValidator extends FarragoCompoundAllocation
     {
         return stmtValidator;
     }
-    
+
     // implement FarragoSessionDdlValidator
-    public FarragoCatalog getCatalog()
+    public FarragoRepos getRepos()
     {
-        return stmtValidator.getCatalog();
+        return stmtValidator.getRepos();
     }
 
     // implement FarragoSessionDdlValidator
@@ -249,7 +237,7 @@ public class DdlValidator extends FarragoCompoundAllocation
     }
 
     // implement FarragoSessionDdlValidator
-    public FarragoIndexMap getIndexMap()
+    public FarragoSessionIndexMap getIndexMap()
     {
         return stmtValidator.getIndexMap();
     }
@@ -285,29 +273,31 @@ public class DdlValidator extends FarragoCompoundAllocation
     }
 
     // implement FarragoSessionDdlValidator
-    public FarragoConnectionDefaults getConnectionDefaults()
+    public FarragoSessionVariables getSessionVariables()
     {
-        return stmtValidator.getConnectionDefaults();
+        return stmtValidator.getSessionVariables();
     }
 
     // implement FarragoSessionDdlValidator
     public boolean isDeletedObject(RefObject refObject)
     {
-        return testObjectStatus(refObject,VALIDATE_DELETION);
+        return testObjectStatus(refObject, VALIDATE_DELETION);
     }
 
     // implement FarragoSessionDdlValidator
     public boolean isCreatedObject(RefObject refObject)
     {
-        return testObjectStatus(refObject,VALIDATE_CREATION);
+        return testObjectStatus(refObject, VALIDATE_CREATION);
     }
 
-    private boolean testObjectStatus(RefObject refObject,Integer status)
+    private boolean testObjectStatus(
+        RefObject refObject,
+        Integer status)
     {
         return (schedulingMap.get(refObject.refMofId()) == status)
             || (validatedMap.get(refObject) == status)
             || ((transitMap != null)
-                && (transitMap.get(refObject.refMofId()) == status));
+            && (transitMap.get(refObject.refMofId()) == status));
     }
 
     // implement FarragoSessionDdlValidator
@@ -350,6 +340,7 @@ public class DdlValidator extends FarragoCompoundAllocation
         String schemaName = null;
         assert (qualifiedName.names.length > 0);
         assert (qualifiedName.names.length < 3);
+
         // TODO:  support catalog names
         if (qualifiedName.names.length == 2) {
             schemaElement.setName(qualifiedName.names[1]);
@@ -357,14 +348,15 @@ public class DdlValidator extends FarragoCompoundAllocation
         } else {
             schemaElement.setName(qualifiedName.names[0]);
             if (schema == null) {
-                if (getConnectionDefaults().schemaName == null) {
+                if (getSessionVariables().schemaName == null) {
                     throw res.newValidatorNoDefaultSchema();
                 }
-                schemaName = getConnectionDefaults().schemaName;
+                schemaName = getSessionVariables().schemaName;
             }
         }
         if (schema == null) {
-            schema = stmtValidator.findSchema(new SqlIdentifier(schemaName,null));
+            schema =
+                stmtValidator.findSchema(new SqlIdentifier(schemaName, null));
         }
         schema.getOwnedElement().add(schemaElement);
     }
@@ -474,7 +466,6 @@ public class DdlValidator extends FarragoCompoundAllocation
         if (activeThread != Thread.currentThread()) {
             // REVIEW:  This isn't going to be good enough if we have
             // reentrant DDL.
-
             // ignore events from other threads
             return;
         }
@@ -509,8 +500,8 @@ public class DdlValidator extends FarragoCompoundAllocation
                 while (ruleIter.hasNext()) {
                     DropRule rule = (DropRule) ruleIter.next();
                     if ((rule != null)
-                        && rule.endName.equals(associationEvent.getEndName()))
-                    {
+                            && rule.endName.equals(
+                                associationEvent.getEndName())) {
                         fireDropRule(
                             rule,
                             associationEvent.getFixedElement(),
@@ -522,6 +513,7 @@ public class DdlValidator extends FarragoCompoundAllocation
             // REVIEW:  when I turn this on, I see notifications for
             // CreateInstanceEvent, which is supposed to be masked out.
             // Probably an MDR bug.
+
             /*
                tracer.warning(
                    "Unexpected event "+event.getClass().getName()
@@ -536,7 +528,9 @@ public class DdlValidator extends FarragoCompoundAllocation
     {
         assert (!validatedMap.containsKey(modelElement));
         assert (!schedulingMap.containsKey(modelElement.refMofId()));
-        schedulingMap.put(modelElement.refMofId(),VALIDATE_TRUNCATION);
+        schedulingMap.put(
+            modelElement.refMofId(),
+            VALIDATE_TRUNCATION);
         mapParserPosition(modelElement);
     }
 
@@ -584,14 +578,14 @@ public class DdlValidator extends FarragoCompoundAllocation
             Iterator mapIter = transitMap.entrySet().iterator();
             while (mapIter.hasNext()) {
                 Map.Entry mapEntry = (Map.Entry) mapIter.next();
-                RefObject obj = (RefObject)
-                    getCatalog().getRepository().getByMofId(
-                    (String) mapEntry.getKey());
+                RefObject obj =
+                    (RefObject) getRepos().getMdrRepos().getByMofId((String) mapEntry
+                            .getKey());
                 Object action = mapEntry.getValue();
 
                 // mark this object as already validated so it doesn't slip
                 // back in by updating itself
-                validatedMap.put(obj,action);
+                validatedMap.put(obj, action);
 
                 if (!(obj instanceof DdlValidatedElement)) {
                     progress = true;
@@ -600,14 +594,14 @@ public class DdlValidator extends FarragoCompoundAllocation
                 DdlValidatedElement element = (DdlValidatedElement) obj;
                 try {
                     if (action == VALIDATE_CREATION) {
-                        element.validateDefinition(this,true);
+                        element.validateDefinition(this, true);
                     } else if (action == VALIDATE_MODIFICATION) {
-                        element.validateDefinition(this,false);
+                        element.validateDefinition(this, false);
                     } else if (action == VALIDATE_DELETION) {
-                        element.validateDeletion(this,false);
+                        element.validateDeletion(this, false);
                     } else {
                         assert (action == VALIDATE_TRUNCATION);
-                        element.validateDeletion(this,true);
+                        element.validateDeletion(this, true);
                     }
                     if (element.getVisibility() == null) {
                         // mark this new element as validated
@@ -618,7 +612,9 @@ public class DdlValidator extends FarragoCompoundAllocation
                     // Something hit an unvalidated dependency; we'll have
                     // to retry this object later.
                     validatedMap.remove(obj);
-                    schedulingMap.put(obj.refMofId(),action);
+                    schedulingMap.put(
+                        obj.refMofId(),
+                        action);
                 }
             }
             transitMap = null;
@@ -673,11 +669,11 @@ public class DdlValidator extends FarragoCompoundAllocation
                     // REVIEW: error message assumes collection is sorted by
                     // definition order, which may not be guaranteed?
                     throw res.newValidatorDuplicateNames(
-                        getCatalog().getLocalizedObjectName(
+                        getRepos().getLocalizedObjectName(
                             null,
                             element.getName(),
                             element.refClass()),
-                        getCatalog().getLocalizedObjectName(
+                        getRepos().getLocalizedObjectName(
                             container,
                             container.refClass()),
                         getParserPosString(element),
@@ -697,17 +693,17 @@ public class DdlValidator extends FarragoCompoundAllocation
 
                     // new object clashes with existing object
                     throw res.newValidatorNameInUse(
-                        getCatalog().getLocalizedObjectName(
+                        getRepos().getLocalizedObjectName(
                             null,
                             oldElement.getName(),
                             oldElement.refClass()),
-                        getCatalog().getLocalizedObjectName(
+                        getRepos().getLocalizedObjectName(
                             container,
                             container.refClass()),
                         getParserPosString(newElement));
                 }
             }
-            nameMap.put(name,element);
+            nameMap.put(name, element);
         }
     }
 
@@ -717,8 +713,8 @@ public class DdlValidator extends FarragoCompoundAllocation
         Collection suppliers,
         String kind)
     {
-        CwmDependency dependency = getCatalog().newCwmDependency();
-        dependency.setName(client.getName()+"$DEP");
+        CwmDependency dependency = getRepos().newCwmDependency();
+        dependency.setName(client.getName() + "$DEP");
         dependency.setKind(kind);
 
         Iterator iter = suppliers.iterator();
@@ -726,6 +722,7 @@ public class DdlValidator extends FarragoCompoundAllocation
             Object supplier = iter.next();
             dependency.getSupplier().add(supplier);
         }
+
         // NOTE:  The client owns the dependency, so their lifetimes are coeval.
         // We don't use the DependencyClient association at all because it
         // causes all kinds of weird problems.  That's why we have to
@@ -747,12 +744,16 @@ public class DdlValidator extends FarragoCompoundAllocation
      * @param refAssoc the association to embellish
      * @param dropRule the rule to use for this association
      */
-    private void addDropRule(RefAssociation refAssoc,DropRule dropRule)
+    private void addDropRule(
+        RefAssociation refAssoc,
+        DropRule dropRule)
     {
         // NOTE:  use class object because in some circumstances MDR makes
         // up multiple instances of the same association, but doesn't implement
         // equals/hashCode correctly.
-        dropRules.putMulti(refAssoc.getClass(),dropRule);
+        dropRules.putMulti(
+            refAssoc.getClass(),
+            dropRule);
     }
 
     private void enqueueValidationExcn(DeferredException excn)
@@ -780,8 +781,7 @@ public class DdlValidator extends FarragoCompoundAllocation
         RefObject otherEnd)
     {
         if ((rule.superInterface != null)
-            && !(rule.superInterface.isInstance(droppedEnd)))
-        {
+                && !(rule.superInterface.isInstance(droppedEnd))) {
             return;
         }
         ReferentialRuleTypeEnum action = rule.action;
@@ -798,14 +798,13 @@ public class DdlValidator extends FarragoCompoundAllocation
         // deleted.  Instead, defer until after rollback.
         final String mofId = droppedEnd.refMofId();
         enqueueValidationExcn(
-            new DeferredException()
-            {
+            new DeferredException() {
                 FarragoException getException()
                 {
-                    CwmModelElement droppedElement = (CwmModelElement)
-                        getCatalog().getRepository().getByMofId(mofId);
+                    CwmModelElement droppedElement =
+                        (CwmModelElement) getRepos().getMdrRepos().getByMofId(mofId);
                     return res.newValidatorDropRestrict(
-                        getCatalog().getLocalizedObjectName(
+                        getRepos().getLocalizedObjectName(
                             droppedElement,
                             droppedElement.refClass()));
                 }
@@ -814,11 +813,12 @@ public class DdlValidator extends FarragoCompoundAllocation
 
     private void mapParserPosition(Object obj)
     {
-        FarragoSessionParserPosition context = getParser().getCurrentPosition();
+        FarragoSessionParserPosition context =
+            getParser().getCurrentPosition();
         if (context == null) {
             return;
         }
-        parserContextMap.put(obj,context);
+        parserContextMap.put(obj, context);
     }
 
     private void rollbackDeletions()
@@ -827,11 +827,11 @@ public class DdlValidator extends FarragoCompoundAllocation
         // doesn't support those.  Instead, have to restart the txn
         // altogether.  Take advantage of the fact that MDR allows us to retain
         // references across txns.
-        getCatalog().endReposTxn(true);
+        getRepos().endReposTxn(true);
 
         // TODO:  really need a lock to protect us against someone else's DDL
         // here, which could invalidate our schedulingMap.
-        getCatalog().beginReposTxn(true);
+        getRepos().beginReposTxn(true);
     }
 
     private void scheduleDeletion(RefObject obj)
@@ -839,7 +839,9 @@ public class DdlValidator extends FarragoCompoundAllocation
         assert (!validatedMap.containsKey(obj));
 
         // delete overrides anything else
-        schedulingMap.put(obj.refMofId(),VALIDATE_DELETION);
+        schedulingMap.put(
+            obj.refMofId(),
+            VALIDATE_DELETION);
         mapParserPosition(obj);
     }
 
@@ -856,9 +858,13 @@ public class DdlValidator extends FarragoCompoundAllocation
         }
         DdlValidatedElement element = (DdlValidatedElement) obj;
         if (isNewObject(element)) {
-            schedulingMap.put(obj.refMofId(),VALIDATE_CREATION);
+            schedulingMap.put(
+                obj.refMofId(),
+                VALIDATE_CREATION);
         } else {
-            schedulingMap.put(obj.refMofId(),VALIDATE_MODIFICATION);
+            schedulingMap.put(
+                obj.refMofId(),
+                VALIDATE_MODIFICATION);
         }
         mapParserPosition(obj);
     }
@@ -866,7 +872,7 @@ public class DdlValidator extends FarragoCompoundAllocation
     private void stopListening()
     {
         if (activeThread != null) {
-            getCatalog().getRepository().removeListener(this);
+            getRepos().getMdrRepos().removeListener(this);
             activeThread = null;
         }
     }
@@ -921,7 +927,6 @@ public class DdlValidator extends FarragoCompoundAllocation
     {
         abstract FarragoException getException();
     }
-
 }
 
 

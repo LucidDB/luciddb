@@ -6,29 +6,30 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.ddl;
 
+import java.lang.reflect.*;
+
+import javax.jmi.reflect.*;
+
+import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.fem.config.*;
-import net.sf.farrago.catalog.*;
-import net.sf.farrago.session.*;
 import net.sf.farrago.resource.*;
+import net.sf.farrago.session.*;
 
-import net.sf.saffron.sql.*;
+import org.eigenbase.sql.*;
 
-import java.lang.reflect.*;
-import javax.jmi.reflect.*;
 
 /**
  * DdlSetSystemParamStmt represents the ALTER SYSTEM SET ... statement.
@@ -38,10 +39,13 @@ import javax.jmi.reflect.*;
  */
 public class DdlSetSystemParamStmt extends DdlStmt
 {
-    private final String paramName;
+    //~ Instance fields -------------------------------------------------------
 
+    private final String paramName;
     private final SqlLiteral paramValue;
-    
+
+    //~ Constructors ----------------------------------------------------------
+
     /**
      * Construct a new DdlSetSystemParamStmt.
      *
@@ -58,6 +62,8 @@ public class DdlSetSystemParamStmt extends DdlStmt
         this.paramValue = paramValue;
     }
 
+    //~ Methods ---------------------------------------------------------------
+
     /**
      * .
      *
@@ -67,14 +73,14 @@ public class DdlSetSystemParamStmt extends DdlStmt
     {
         return paramName;
     }
-    
+
     // override DdlStmt
     public void preValidate(FarragoSessionDdlValidator ddlValidator)
     {
         super.preValidate(ddlValidator);
 
         FemFarragoConfig farragoConfig =
-            ddlValidator.getCatalog().getCurrentConfig();
+            ddlValidator.getRepos().getCurrentConfig();
         RefObject config = farragoConfig;
 
         Object oldValue;
@@ -86,11 +92,11 @@ public class DdlSetSystemParamStmt extends DdlStmt
             try {
                 oldValue =
                     farragoConfig.getFennelConfig().refGetValue(paramName);
+
                 // if we get here, it's a Fennel parameter
                 config = farragoConfig.getFennelConfig();
             } catch (InvalidNameException ex2) {
-                throw FarragoResource.instance().newValidatorUnknownSysParam(
-                    paramName);
+                throw FarragoResource.instance().newValidatorUnknownSysParam(paramName);
             }
         }
 
@@ -101,33 +107,38 @@ public class DdlSetSystemParamStmt extends DdlStmt
         Object newValue;
         try {
             if (oldValue instanceof RefEnum) {
-                Method method = oldValue.getClass().getMethod(
-                    "forName",
-                    new Class [] { String.class});
-                newValue = method.invoke(
-                    null,
-                    new Object [] { newValueAsString });
+                Method method =
+                    oldValue.getClass().getMethod(
+                        "forName",
+                        new Class [] { String.class });
+                newValue =
+                    method.invoke(
+                        null,
+                        new Object [] { newValueAsString });
             } else {
-                Constructor constructor = oldValue.getClass().getConstructor(
-                    new Class [] { String.class });
-                newValue = constructor.newInstance(
-                    new Object [] { newValueAsString });
+                Constructor constructor =
+                    oldValue.getClass().getConstructor(
+                        new Class [] { String.class });
+                newValue =
+                    constructor.newInstance(
+                        new Object [] { newValueAsString });
             }
         } catch (Exception ex) {
             throw FarragoResource.instance().newValidatorSysParamTypeMismatch(
-                paramValue.toString(),paramName);
+                paramValue.toString(),
+                paramName);
         }
-        
+
         try {
-            config.refSetValue(paramName,newValue);
+            config.refSetValue(paramName, newValue);
         } catch (InvalidNameException ex) {
             // We know the parameter exists, so InvalidNameException in this
             // context implies that it's immutable.
-            throw FarragoResource.instance().newValidatorImmutableSysParam(
-                paramName);
+            throw FarragoResource.instance().newValidatorImmutableSysParam(paramName);
         } catch (TypeMismatchException ex) {
             throw FarragoResource.instance().newValidatorSysParamTypeMismatch(
-                paramValue.toString(),paramName);
+                paramValue.toString(),
+                paramName);
         }
     }
 
@@ -137,5 +148,6 @@ public class DdlSetSystemParamStmt extends DdlStmt
         visitor.visit(this);
     }
 }
+
 
 // End DdlSetSystemParam.java

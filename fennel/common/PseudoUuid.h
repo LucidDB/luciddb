@@ -46,12 +46,12 @@ class PseudoUuid
 
 public:
     /**
-     * Generate a new UUID.
+     * Generates a new UUID.
      */
     void generate();
 
     /**
-     * Generate a bogus constant UUID.
+     * Generates a bogus constant UUID.
      */
     void generateInvalid();
     

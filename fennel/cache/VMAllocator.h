@@ -37,7 +37,7 @@ class VMAllocator : public CacheAllocator
     
 public:
     /**
-     * Construct a new VMAllocator.
+     * Constructs a new VMAllocator.
      *
      * @param cbAlloc number of bytes per allocation; all calls
      * to allocate must specify this same value

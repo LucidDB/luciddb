@@ -1,6 +1,6 @@
 @rem $Id$
 @rem Saffron preprocessor and data engine
-@rem (C) Copyright 2002-2004 Disruptive Technologies, Inc.
+@rem (C) Copyright 2002-2004 Disruptive Tech
 @rem You must accept the terms in LICENSE.html to use this software.
 
 @set SRCROOT=%~dp0

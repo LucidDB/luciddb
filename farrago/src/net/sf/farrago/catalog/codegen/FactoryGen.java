@@ -7,31 +7,33 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.catalog.codegen;
-
-import net.sf.farrago.catalog.FarragoModelLoader;
-import net.sf.farrago.FarragoPackage;
-import net.sf.farrago.util.*;
-
-import org.netbeans.api.mdr.*;
-import org.netbeans.lib.jmi.util.*;
 
 import java.io.*;
 import java.util.*;
 
 import javax.jmi.model.*;
 import javax.jmi.reflect.*;
+
+import net.sf.farrago.FarragoPackage;
+import net.sf.farrago.catalog.FarragoModelLoader;
+import net.sf.farrago.util.*;
+
+import org.eigenbase.util.*;
+
+import org.netbeans.api.mdr.*;
+import org.netbeans.lib.jmi.util.*;
+
 
 /**
  * FactoryGen generates a factory class for a JMI model.  It's purely a
@@ -44,6 +46,8 @@ import javax.jmi.reflect.*;
  */
 public class FactoryGen
 {
+    //~ Methods ---------------------------------------------------------------
+
     /**
      * Main generator entry point invoked by build.xml (target
      * "generateMetadataFactory").
@@ -99,9 +103,9 @@ public class FactoryGen
 
             modelLoader = new FarragoModelLoader();
             FarragoPackage farragoPackage =
-                modelLoader.loadModel(sourceExtentName,false);
-            generatePackage(pw,farragoPackage,"rootPackage");
-            
+                modelLoader.loadModel(sourceExtentName, false);
+            generatePackage(pw, farragoPackage, "rootPackage");
+
             pw.println("}");
         } finally {
             pw.flush();
@@ -113,11 +117,13 @@ public class FactoryGen
     }
 
     private static void generatePackage(
-        PrintWriter pw,RefPackage refPackage,String packageAccessor)
+        PrintWriter pw,
+        RefPackage refPackage,
+        String packageAccessor)
         throws ClassNotFoundException
     {
         TagProvider tagProvider = new TagProvider();
-        
+
         // first generate accessor for package
         Class pkgInterface = JmiUtil.getJavaInterfaceForRefPackage(refPackage);
         pw.print("    public ");
@@ -165,27 +171,25 @@ public class FactoryGen
             RefPackage refSubPackage = (RefPackage) iter.next();
             MofPackage mofSubPackage =
                 (MofPackage) refSubPackage.refMetaObject();
-            
+
             String subPackageName = mofSubPackage.getName();
 
             // This is a trick to detect and skip the package aliases which are
             // created for imports.
             Package javaPackage = refPackage.getClass().getPackage();
             Package childJavaPackage = refSubPackage.getClass().getPackage();
-            if (!childJavaPackage.getName().equals(
-                    javaPackage.getName() + "." + subPackageName.toLowerCase()))
-            {
+            if (!childJavaPackage.getName().equals(javaPackage.getName() + "."
+                        + subPackageName.toLowerCase())) {
                 continue;
             }
 
             subPackageName = tagProvider.getSubstName(mofSubPackage);
-            
-            generatePackage(
-                pw,
-                refSubPackage,
+
+            generatePackage(pw, refSubPackage,
                 packageAccessor + ".get" + subPackageName + "()");
         }
     }
 }
+
 
 // End FactoryGen.java

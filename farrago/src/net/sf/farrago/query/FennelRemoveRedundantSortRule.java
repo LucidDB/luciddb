@@ -6,28 +6,28 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.query;
-
-import net.sf.saffron.opt.CallingConvention;
-import net.sf.saffron.opt.RuleOperand;
-import net.sf.saffron.opt.VolcanoRule;
-import net.sf.saffron.opt.VolcanoRuleCall;
-import net.sf.saffron.rel.RelFieldCollation;
-import net.sf.saffron.rel.SaffronRel;
 
 import java.util.Arrays;
 import java.util.List;
+
+import org.eigenbase.rel.RelFieldCollation;
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.relopt.CallingConvention;
+import org.eigenbase.relopt.RelOptRule;
+import org.eigenbase.relopt.RelOptRuleCall;
+import org.eigenbase.relopt.RelOptRuleOperand;
+
 
 /**
  * FennelRemoveRedundantSortRule removes instances of SortRel which are
@@ -37,36 +37,40 @@ import java.util.List;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FennelRemoveRedundantSortRule extends VolcanoRule
+public class FennelRemoveRedundantSortRule extends RelOptRule
 {
+    //~ Constructors ----------------------------------------------------------
+
     public FennelRemoveRedundantSortRule()
     {
-        super(
-            new RuleOperand(
+        super(new RelOptRuleOperand(
                 FennelSortRel.class,
-                new RuleOperand [] {
-                    new RuleOperand(FennelPullRel.class,null) }));
+                new RelOptRuleOperand [] {
+                    new RelOptRuleOperand(FennelPullRel.class, null)
+                }));
     }
 
-    // implement VolcanoRule
+    //~ Methods ---------------------------------------------------------------
+
+    // implement RelOptRule
     public CallingConvention getOutConvention()
     {
         return FennelPullRel.FENNEL_PULL_CONVENTION;
     }
 
-    // implement VolcanoRule
-    public void onMatch(VolcanoRuleCall call)
+    // implement RelOptRule
+    public void onMatch(RelOptRuleCall call)
     {
         FennelSortRel sortRel = (FennelSortRel) call.rels[0];
         FennelRel inputRel = (FennelRel) call.rels[1];
 
-        if (!isSortRedundant(sortRel,inputRel)) {
+        if (!isSortRedundant(sortRel, inputRel)) {
             return;
         }
 
         if (inputRel instanceof FennelSortRel) {
-            SaffronRel newRel =
-                convert(inputRel,FennelPullRel.FENNEL_PULL_CONVENTION);
+            RelNode newRel =
+                convert(inputRel, FennelPullRel.FENNEL_PULL_CONVENTION);
             if (newRel == null) {
                 return;
             }
@@ -78,16 +82,16 @@ public class FennelRemoveRedundantSortRule extends VolcanoRule
     }
 
     public static boolean isSortRedundant(
-        FennelSortRel sortRel,FennelRel inputRel)
+        FennelSortRel sortRel,
+        FennelRel inputRel)
     {
         if (sortRel.discardDuplicates) {
-            // TODO:  once we can obtain the key for a SaffronRel, check
+            // TODO:  once we can obtain the key for a RelNode, check
             // that
             return false;
         }
 
-        RelFieldCollation [] inputCollationArray =
-            inputRel.getCollations();
+        RelFieldCollation [] inputCollationArray = inputRel.getCollations();
         RelFieldCollation [] outputCollationArray = sortRel.getCollations();
         if (outputCollationArray.length > inputCollationArray.length) {
             // no way input more specific order can be satisfied by less
@@ -99,12 +103,12 @@ public class FennelRemoveRedundantSortRule extends VolcanoRule
         List outputCollationList = Arrays.asList(outputCollationArray);
         if (outputCollationArray.length < inputCollationArray.length) {
             // truncate for prefix comparison
-            inputCollationList = inputCollationList.subList(
-                0,
-                outputCollationArray.length);
+            inputCollationList =
+                inputCollationList.subList(0, outputCollationArray.length);
         }
         return inputCollationList.equals(outputCollationList);
     }
 }
+
 
 // End FennelRemoveRedundantSortRule.java

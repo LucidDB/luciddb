@@ -1,34 +1,36 @@
 /*
-// $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2003-2003 Disruptive Technologies, Inc.
-// You must accept the terms in LICENSE.html to use this software.
+// Saffron preprocessor and data engine.
+// Copyright (C) 2002-2004 Disruptive Tech
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+
 package net.sf.saffron.oj;
 
-import net.sf.saffron.core.SaffronConnection;
-import net.sf.saffron.oj.util.OJUtil;
-import net.sf.saffron.util.Util;
+import java.util.HashMap;
+
+import javax.sql.DataSource;
+
 import openjava.mop.Environment;
 import openjava.mop.OJSystem;
 import openjava.ptree.*;
 
-import javax.sql.DataSource;
-import java.util.HashMap;
+import org.eigenbase.oj.util.OJUtil;
+import org.eigenbase.relopt.RelOptConnection;
+import org.eigenbase.util.Util;
+
 
 /**
  * Collection of saffron connections, and the expression by which they can be
@@ -48,24 +50,27 @@ import java.util.HashMap;
  * @since Nov 28, 2003
  * @version $Id$
  **/
-public class OJConnectionRegistry {
+public class OJConnectionRegistry
+{
     public static final OJConnectionRegistry instance =
-            new OJConnectionRegistry();
+        new OJConnectionRegistry();
     private HashMap map = new HashMap();
     private int counter = 0;
     private HashMap tokenMap = new HashMap();
     private HashMap equivMap = new HashMap();
 
-    private OJConnectionRegistry() {}
+    private OJConnectionRegistry()
+    {
+    }
 
     /**
      * Registers a connection with an expression and environment
      *
-     * @param connection SaffronConnection
+     * @param connection RelOptConnection
      * @param expr Java expression with which to access the connection in a
      *   generated program
      * @param jdbcExprFunctor Functor which converts an expression for the
-     *   {@link SaffronConnection} into an expression for the {@link DataSource}
+     *   {@link RelOptConnection} into an expression for the {@link DataSource}
      *   for a JDBC connection.
      *   If null, the default functor converts <code>{expr}</code> into
      *   <code>(DataSource) {expr}</code>.
@@ -74,9 +79,12 @@ public class OJConnectionRegistry {
      * @pre expr != null
      * @pre env != null
      */
-    public synchronized void register(SaffronConnection connection,
-            Expression expr, ExpressionFunctor jdbcExprFunctor,
-            Environment env) {
+    public synchronized void register(
+        RelOptConnection connection,
+        Expression expr,
+        ExpressionFunctor jdbcExprFunctor,
+        Environment env)
+    {
         Util.pre(connection != null, "connection != null");
         Util.pre(expr != null, "expr != null");
         Util.pre(env != null, "env != null");
@@ -84,21 +92,28 @@ public class OJConnectionRegistry {
         registerInternal(connection, expr, jdbcExprFunctor, env, token);
     }
 
-    private ConnectionInfo registerInternal(SaffronConnection connection,
-            Expression expr, ExpressionFunctor jdbcExprFunctor, Environment env,
-            String token) {
+    private ConnectionInfo registerInternal(
+        RelOptConnection connection,
+        Expression expr,
+        ExpressionFunctor jdbcExprFunctor,
+        Environment env,
+        String token)
+    {
         if (jdbcExprFunctor == null) {
-            jdbcExprFunctor = new ExpressionFunctor() {
-                public Expression go(Expression conExpr,
-                        Expression jdbcConStrExpr) {
-                    return new CastExpression(
-                            TypeName.forClass(DataSource.class),
-                            conExpr);
-                }
-            };
+            jdbcExprFunctor =
+                new ExpressionFunctor() {
+                        public Expression go(
+                            Expression conExpr,
+                            Expression jdbcConStrExpr)
+                        {
+                            return new CastExpression(
+                                OJUtil.typeNameForClass(DataSource.class),
+                                conExpr);
+                        }
+                    };
         }
-        final ConnectionInfo info = new ConnectionInfo(connection, expr,
-                jdbcExprFunctor, env, token);
+        final ConnectionInfo info =
+            new ConnectionInfo(connection, expr, jdbcExprFunctor, env, token);
         map.put(connection, info);
         tokenMap.put(token, connection);
         return info;
@@ -111,14 +126,16 @@ public class OJConnectionRegistry {
      * which it has been declared to be equivalent to using
      * {@link #setEquivalent}.</p>
      */
-    public synchronized ConnectionInfo get(SaffronConnection connection) {
+    public synchronized ConnectionInfo get(RelOptConnection connection)
+    {
         do {
             final ConnectionInfo info = (ConnectionInfo) map.get(connection);
             if (info != null) {
                 return info;
             }
+
             // No info for this connection; look for an equivalent connection.
-            connection = (SaffronConnection) equivMap.get(connection);
+            connection = (RelOptConnection) equivMap.get(connection);
         } while (connection != null);
         return null;
     }
@@ -142,24 +159,26 @@ public class OJConnectionRegistry {
      * @return Information about the connection, null if the connection has not
      *   been registered and create is false
      */
-    public synchronized ConnectionInfo get(SaffronConnection connection,
-            boolean create) {
+    public synchronized ConnectionInfo get(
+        RelOptConnection connection,
+        boolean create)
+    {
         ConnectionInfo info = get(connection);
-        if (info == null && create) {
+        if ((info == null) && create) {
             // Returns an expression like:
             //   OJConnectionRegistry.instance.get("45")
             final String token = Integer.toString(counter++);
-            final CastExpression expr = new CastExpression(
-                    TypeName.forClass(connection.getClass()),
+            final CastExpression expr =
+                new CastExpression(
+                    OJUtil.typeNameForClass(connection.getClass()),
                     new MethodCall(
-                            new FieldAccess(
-                                    TypeName.forClass(getClass()),
-                                    "instance"),
-                            "get",
-                            new ExpressionList(
-                                    Literal.makeLiteral(token))));
-            info = registerInternal(connection, expr, null, OJSystem.env,
-                    token);
+                        new FieldAccess(
+                            OJUtil.typeNameForClass(getClass()),
+                            "instance"),
+                        "get",
+                        new ExpressionList(Literal.makeLiteral(token))));
+            info =
+                registerInternal(connection, expr, null, OJSystem.env, token);
         }
         return info;
     }
@@ -168,12 +187,13 @@ public class OJConnectionRegistry {
      * Retrieves a connection based upon a token. If no connection has been
      * registered with this token, throws an error.
      */
-    public synchronized SaffronConnection get(String token) {
-        final SaffronConnection saffronConnection = (SaffronConnection)
-                tokenMap.get(token);
+    public synchronized RelOptConnection get(String token)
+    {
+        final RelOptConnection saffronConnection =
+            (RelOptConnection) tokenMap.get(token);
         if (saffronConnection == null) {
-            throw Util.newInternal("No connection is registered with token '" +
-                    token + "'");
+            throw Util.newInternal("No connection is registered with token '"
+                + token + "'");
         }
         return saffronConnection;
     }
@@ -187,16 +207,16 @@ public class OJConnectionRegistry {
      * </blockquote>returns the same connection as <code>get("45")</code>,
      * otherwise returns <code>null</code>.
      */
-    public synchronized SaffronConnection get(ParseTree expr) {
+    public synchronized RelOptConnection get(ParseTree expr)
+    {
         if (expr instanceof MethodCall) {
             MethodCall call = (MethodCall) expr;
-            if (call.getName().equals("get") &&
-                    call.getReferenceExpr().equals(
-                            new FieldAccess(
-                            TypeName.forClass(getClass()),
-                            "instance")) &&
-                    call.getArguments().size() == 1 &&
-                    call.getArguments().get(0) instanceof Literal) {
+            if (call.getName().equals("get")
+                    && call.getReferenceExpr().equals(
+                        new FieldAccess(
+                            OJUtil.typeNameForClass(getClass()),
+                            "instance")) && (call.getArguments().size() == 1)
+                    && call.getArguments().get(0) instanceof Literal) {
                 final Literal literal = (Literal) call.getArguments().get(0);
                 final Object value = OJUtil.literalValue(literal);
                 if (value instanceof String) {
@@ -212,24 +232,31 @@ public class OJConnectionRegistry {
      * @param connection  The new connection
      * @param equiv       The existing connection it is equivalent to
      */
-    public void setEquivalent(SaffronConnection connection,
-            SaffronConnection equiv) {
-        equivMap.put(connection,equiv);
+    public void setEquivalent(
+        RelOptConnection connection,
+        RelOptConnection equiv)
+    {
+        equivMap.put(connection, equiv);
     }
 
     /**
-     * Properties of a {@link SaffronConnection}.
+     * Properties of a {@link RelOptConnection}.
      */
-    public static class ConnectionInfo {
-        public final SaffronConnection connection;
+    public static class ConnectionInfo
+    {
+        public final RelOptConnection connection;
         public Expression expr;
         public ExpressionFunctor jdbcExprFunctor;
         public Environment env;
         public final String token;
 
-        private ConnectionInfo(SaffronConnection connection, Expression expr,
-                ExpressionFunctor jdbcExprFunctor, Environment env,
-                String token) {
+        private ConnectionInfo(
+            RelOptConnection connection,
+            Expression expr,
+            ExpressionFunctor jdbcExprFunctor,
+            Environment env,
+            String token)
+        {
             this.connection = connection;
             this.expr = expr;
             this.jdbcExprFunctor = jdbcExprFunctor;
@@ -240,8 +267,9 @@ public class OJConnectionRegistry {
         /**
          * Given an expression for the JDBC connect string, yields an
          * expression for the a JDBC data source.
-		 */
-        public Expression getDataSourceExpr(Expression jdbcConStrExpr) {
+         */
+        public Expression getDataSourceExpr(Expression jdbcConStrExpr)
+        {
             return this.jdbcExprFunctor.go(this.expr, jdbcConStrExpr);
         }
     }
@@ -250,9 +278,13 @@ public class OJConnectionRegistry {
      * Yields an expression for a JDBC data source when given expressions for
      * the Saffron connection and a JDBC connect string.
      */
-    public interface ExpressionFunctor {
-        Expression go(Expression conExpr, Expression jdbcConStrExpr);
+    public interface ExpressionFunctor
+    {
+        Expression go(
+            Expression conExpr,
+            Expression jdbcConStrExpr);
     }
 }
+
 
 // End OJConnectionRegistry.java

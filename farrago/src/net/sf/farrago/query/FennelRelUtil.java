@@ -17,8 +17,11 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.query;
+
+import java.nio.charset.*;
+import java.sql.*;
+import java.util.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
@@ -27,19 +30,14 @@ import net.sf.farrago.fennel.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.util.*;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rex.RexNode;
-import net.sf.saffron.rex.RexBuilder;
-import net.sf.saffron.sql.type.SqlTypeName;
+import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.rex.RexBuilder;
+import org.eigenbase.rex.RexNode;
+import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.util.*;
 
-import java.nio.charset.*;
-
-import java.sql.*;
-
-import java.util.*;
 
 /**
  * Static utilities for FennelRel implementations.  Examples in the comments
@@ -59,43 +57,40 @@ public abstract class FennelRelUtil
     /**
      * Generate a FemTupleAccessor from a FemTupleDescriptor.
      *
-     * @param catalog catalog for storing transient objects
+     * @param repos repos for storing transient objects
      * @param fennelDbHandle handle to Fennel database being accessed
      * @param tupleDesc source FemTupleDescriptor
      *
      * @return FemTupleAccessor for accessing tuples conforming to tupleDesc
      */
     public static FemTupleAccessor getAccessorForTupleDescriptor(
-        FarragoCatalog catalog,
+        FarragoRepos repos,
         FennelDbHandle fennelDbHandle,
         FemTupleDescriptor tupleDesc)
     {
         String tupleAccessorXmiString =
             fennelDbHandle.getAccessorXmiForTupleDescriptorTraced(tupleDesc);
-        return catalog.parseTupleAccessor(tupleAccessorXmiString);
+        return repos.parseTupleAccessor(tupleAccessorXmiString);
     }
 
     /**
-     * Create a FemTupleDescriptor for a SaffronType which is a row of
+     * Create a FemTupleDescriptor for a RelDataType which is a row of
      * FarragoTypes.
      *
-     * @param catalog catalog storing object definitions
+     * @param repos repos storing object definitions
      * @param rowType row of FarragoTypes
      *
      * @return generated tuple descriptor
      */
     public static FemTupleDescriptor createTupleDescriptorFromRowType(
-        FarragoCatalog catalog,
-        SaffronType rowType)
+        FarragoRepos repos,
+        RelDataType rowType)
     {
-        FemTupleDescriptor tupleDesc =
-            catalog.newFemTupleDescriptor();
-        SaffronField [] fields = rowType.getFields();
+        FemTupleDescriptor tupleDesc = repos.newFemTupleDescriptor();
+        RelDataTypeField [] fields = rowType.getFields();
         for (int i = 0; i < fields.length; ++i) {
             assert (fields[i].getType() instanceof FarragoType);
-            addTupleAttrDescriptor(
-                catalog,
-                tupleDesc,
+            addTupleAttrDescriptor(repos, tupleDesc,
                 (FarragoType) fields[i].getType());
         }
         return tupleDesc;
@@ -104,21 +99,20 @@ public abstract class FennelRelUtil
     /**
      * Generate a FemTupleProjection.
      *
-     * @param catalog the catalog for storing transient objects
+     * @param repos the repos for storing transient objects
      * @param projection the projection to generate
      *
      * @return generated FemTupleProjection
      */
     public static FemTupleProjection createTupleProjection(
-        FarragoCatalog catalog,
+        FarragoRepos repos,
         Integer [] projection)
     {
-        FemTupleProjection tupleProj =
-            catalog.newFemTupleProjection();
+        FemTupleProjection tupleProj = repos.newFemTupleProjection();
 
         for (int i = 0; i < projection.length; ++i) {
             FemTupleAttrProjection attrProj =
-                catalog.newFemTupleAttrProjection();
+                repos.newFemTupleAttrProjection();
             tupleProj.getAttrProjection().add(attrProj);
             attrProj.setAttributeIndex(projection[i].intValue());
         }
@@ -151,7 +145,9 @@ public abstract class FennelRelUtil
      *
      * @return generated array
      */
-    public static Integer [] newBiasedIotaProjection(int n,int base)
+    public static Integer [] newBiasedIotaProjection(
+        int n,
+        int base)
     {
         Integer [] array = new Integer[n];
         for (int i = 0; i < n; ++i) {
@@ -161,14 +157,13 @@ public abstract class FennelRelUtil
     }
 
     public static void addTupleAttrDescriptor(
-        FarragoCatalog catalog,
+        FarragoRepos repos,
         FemTupleDescriptor tupleDesc,
         FarragoType type)
     {
         assert (type instanceof FarragoAtomicType);
         FarragoAtomicType atomicType = (FarragoAtomicType) type;
-        FemTupleAttrDescriptor attrDesc =
-            catalog.newFemTupleAttrDescriptor();
+        FemTupleAttrDescriptor attrDesc = repos.newFemTupleAttrDescriptor();
         tupleDesc.getAttrDescriptor().add(attrDesc);
         attrDesc.setTypeOrdinal(
             convertSqlTypeNumberToFennelTypeOrdinal(
@@ -178,27 +173,26 @@ public abstract class FennelRelUtil
     }
 
     public static FemTupleProjection createTupleProjectionFromColumnList(
-        FarragoCatalog catalog,
+        FarragoRepos repos,
         List indexColumnList)
     {
-        FemTupleProjection tupleProj =
-            catalog.newFemTupleProjection();
+        FemTupleProjection tupleProj = repos.newFemTupleProjection();
         Iterator indexColumnIter = indexColumnList.iterator();
         while (indexColumnIter.hasNext()) {
-            FemAbstractColumn column = (FemAbstractColumn)
-                indexColumnIter.next();
+            FemAbstractColumn column =
+                (FemAbstractColumn) indexColumnIter.next();
             FemTupleAttrProjection attrProj =
-                catalog.newFemTupleAttrProjection();
+                repos.newFemTupleAttrProjection();
             tupleProj.getAttrProjection().add(attrProj);
             attrProj.setAttributeIndex(column.getOrdinal());
         }
         return tupleProj;
     }
-    
+
     private static int getByteLength(FarragoAtomicType type)
     {
-        if (type instanceof FarragoPrimitiveType ||
-                type  instanceof FarragoDateTimeType) {
+        if (type instanceof FarragoPrimitiveType
+                || type instanceof FarragoDateTimeType) {
             // for primitives, length is implied by datatype
             return 0;
         }
@@ -207,22 +201,19 @@ public abstract class FennelRelUtil
 
         // TODO:  numeric, date, etc.
         try {
-
             if (!precisionType.isCharType()) {
                 if (precisionType.getSqlTypeName().equals(SqlTypeName.Bit)) {
-                    return (precisionType.getPrecision()+7) / 8;
+                    return (precisionType.getPrecision() + 7) / 8;
                 }
                 return precisionType.getPrecision();
             } else {
-                assert(null!=precisionType.getCharsetName());
+                assert (null != precisionType.getCharsetName());
                 Charset charset = precisionType.getCharset();
-                return (int) charset.newEncoder().maxBytesPerChar()
-                    * precisionType.getPrecision();
+                return (int) charset.newEncoder().maxBytesPerChar() * precisionType
+                    .getPrecision();
             }
-                
         } catch (Exception ex) {
-            throw Util.newInternal(
-                ex,
+            throw Util.newInternal(ex,
                 "Unsupported charset " + precisionType.getCharsetName());
         }
     }
@@ -248,7 +239,7 @@ public abstract class FennelRelUtil
             return 5; // STANDARD_TYPE_INT_32
         case Types.DATE:
         case Types.TIME:
-        case Types.TIMESTAMP:    
+        case Types.TIMESTAMP:
         case Types.BIGINT:
             return 7; // STANDARD_TYPE_INT_64
         case Types.VARCHAR:

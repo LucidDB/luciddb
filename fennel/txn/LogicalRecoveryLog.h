@@ -71,7 +71,7 @@ class LogicalRecoveryLog
 
 public:
     /**
-     * Factory method to open a LogicalRecoveryLog stored in the given
+     * Opens a LogicalRecoveryLog stored in the given
      * segment.
      *
      * @param participantFactory factory for reloading instances of
@@ -96,7 +96,7 @@ public:
     void recover(LogicalTxnLogCheckpointMemento const &memento);
     
     /**
-     * Get the relative filename for a long transaction log.  This is
+     * Gets the relative filename for a long transaction log.  This is
      * deterministic based on the TxnId.
      *
      * @param txnId the TxnId of the transaction

@@ -95,7 +95,7 @@ public:
     static const uint MAX_BYTE_OFFSET = 0xFFFFF;
 
     /**
-     * Extract the BlockNum from a PageId or BlockId.
+     * Extracts the BlockNum from a PageId or BlockId.
      *
      * @param pageId the PageId or BlockId to access
      * 
@@ -108,7 +108,7 @@ public:
     }
 
     /**
-     * Set just the BlockNum of a PageId or BlockId.
+     * Sets just the BlockNum of a PageId or BlockId.
      *
      * @param pageId the PageId or BlockId to modify
      *
@@ -123,7 +123,7 @@ public:
     }
 
     /**
-     * Increment the BlockNum of a PageId or BlockId.
+     * Increments the BlockNum of a PageId or BlockId.
      *
      * @param pageId the PageId or BlockId to modify
      */
@@ -134,7 +134,7 @@ public:
     }
     
     /**
-     * Decrement the BlockNum of a PageId or BlockId.
+     * Decrements the BlockNum of a PageId or BlockId.
      *
      * @param pageId the PageId or BlockId to modify
      */
@@ -145,7 +145,7 @@ public:
     }
     
     /**
-     * Extract the DeviceId from a PageId or BlockId.
+     * Extracts the DeviceId from a PageId or BlockId.
      *
      * @param pageId the PageId or BlockId to access
      *
@@ -159,7 +159,7 @@ public:
     }
         
     /**
-     * Set just the DeviceId of a PageId or BlockId.
+     * Sets just the DeviceId of a PageId or BlockId.
      *
      * @param pageId the PageId or BlockId to modify
      *
@@ -175,7 +175,7 @@ public:
     }
 
     /**
-     * Extract the PageId component of a SegByteId.
+     * Extracts the PageId component of a SegByteId.
      *
      * @param segByteId the SegByteId to access
      *
@@ -187,7 +187,7 @@ public:
     }
 
     /**
-     * Set the PageId component of a SegByteId.
+     * Sets the PageId component of a SegByteId.
      *
      * @param segByteId the SegByteId to modify
      *
@@ -201,7 +201,7 @@ public:
     }
 
     /**
-     * Extract the byte offset component of a SegByteId.
+     * Extracts the byte offset component of a SegByteId.
      *
      * @param segByteId the SegByteId to access
      *
@@ -213,7 +213,7 @@ public:
     }
 
     /**
-     * Set the byte offset component of a SegByteId.
+     * Sets the byte offset component of a SegByteId.
      *
      * @param segByteId the SegByteId to modify
      *
@@ -228,7 +228,7 @@ public:
     }
     
     /**
-     * Compare two PageIds.
+     * Compares two PageIds.
      *
      * @param p1 first PageId to compare
      *
@@ -244,7 +244,7 @@ public:
     }
     
     /**
-     * Compare two SegByteIds.
+     * Compares two SegByteIds.
      *
      * @param t1 first SegByteId to compare
      *

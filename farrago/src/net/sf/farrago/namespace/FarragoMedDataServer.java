@@ -6,26 +6,27 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.namespace;
-
-import net.sf.farrago.util.*;
-import net.sf.farrago.type.*;
-
-import net.sf.saffron.core.*;
 
 import java.sql.*;
 import java.util.*;
+
+import net.sf.farrago.type.*;
+import net.sf.farrago.util.*;
+
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+
 
 /**
  * FarragoMedDataServer defines an interface representing a server instance
@@ -36,12 +37,15 @@ import java.util.*;
  */
 public interface FarragoMedDataServer extends FarragoAllocation
 {
+    //~ Static fields/initializers --------------------------------------------
+
     /** keyword for TYPE in server properties list */
     public static final String PROP_SERVER_TYPE = "TYPE";
 
     /** keyword for VERSION in server properties list */
     public static final String PROP_SERVER_VERSION = "VERSION";
 
+    //~ Methods ---------------------------------------------------------------
 
     /**
      * Gets a FarragoMedNameDirectory corresponding to this server.
@@ -64,7 +68,7 @@ public interface FarragoMedDataServer extends FarragoAllocation
      * @param localName the qualified name to assign to the column set
      * within Farrago; this should NOT be used for finding the actual data,
      * since it can be set arbitrarily by the caller; instead, it
-     * should be used to implement the SaffronTable.getQualifiedName() method,
+     * should be used to implement the RelOptTable.getQualifiedName() method,
      * and can be useful for correlation during debugging
      *
      * @param tableProps properties to use for data location and access
@@ -90,7 +94,7 @@ public interface FarragoMedDataServer extends FarragoAllocation
         String [] localName,
         Properties tableProps,
         FarragoTypeFactory typeFactory,
-        SaffronType rowType,
+        RelDataType rowType,
         Map columnPropMap)
         throws SQLException;
 
@@ -105,7 +109,8 @@ public interface FarragoMedDataServer extends FarragoAllocation
      *
      * @return support object
      */
-    public Object getRuntimeSupport(Object param) throws SQLException;
+    public Object getRuntimeSupport(Object param)
+        throws SQLException;
 
     /**
      * Gives this wrapper a chance to register any special optimization rules.
@@ -115,7 +120,8 @@ public interface FarragoMedDataServer extends FarragoAllocation
      * @param planner the planner in which the rules should
      * be registered
      */
-    public void registerRules(SaffronPlanner planner);
+    public void registerRules(RelOptPlanner planner);
 }
+
 
 // End FarragoMedDataServer.java

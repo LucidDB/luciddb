@@ -22,51 +22,146 @@ package net.sf.farrago.test;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import net.sf.farrago.test.regression.FarragoCalcSystemTest;
-import net.sf.saffron.sql.SqlOperator;
-import net.sf.saffron.sql.SqlSyntax;
-import net.sf.saffron.sql.test.SaffronSqlTester;
-import net.sf.saffron.sql.test.SqlOperatorIterator;
-import net.sf.saffron.sql.type.SqlTypeName;
+import org.eigenbase.sql.SqlOperator;
+import org.eigenbase.sql.SqlOperatorTable;
+import org.eigenbase.sql.SqlSyntax;
+import org.eigenbase.sql.fun.SqlStdOperatorTable;
+import org.eigenbase.sql.test.AbstractSqlTester;
+import org.eigenbase.sql.test.SqlOperatorIterator;
+import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.util.Util;
 
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.regex.Pattern;
+
 
 /**
- * FarragoSqlOperatorsTest contains an implementation of {@link SaffronSqlTester}.
- * It uses the visitor pattern to vist all SqlOperators for unit test purposes.
+ * FarragoSqlOperatorsTest contains an implementation of
+ * {@link AbstractSqlTester}. It uses the visitor pattern to visit every
+ * {@link SqlOperator} for unit test purposes.
  *
  * @author Wael Chatila
  * @since May 25, 2004
  * @version $Id$
  */
-public class FarragoSqlOperatorsTest extends FarragoTestCase {
+public class FarragoSqlOperatorsTest extends FarragoTestCase
+{
+    private static final SqlStdOperatorTable opTab = SqlOperatorTable.std();
+    private static final boolean bug260fixed = false;
 
-    String vmFlag;
-    SqlOperator operator;
+    //~ Instance fields -------------------------------------------------------
 
-    public FarragoSqlOperatorsTest(String vmFlag, SqlOperator operator,
-                                   String testName) throws Exception
+    /**
+     * The virtual machine this test is targeted at.
+     */
+    private final FarragoCalcSystemTest.VirtualMachine vm;
+    /**
+     * The operator this test is testing.
+     */
+    private final SqlOperator operator;
+
+    //~ Constructors ----------------------------------------------------------
+
+    public FarragoSqlOperatorsTest(
+        FarragoCalcSystemTest.VirtualMachine vm,
+        SqlOperator operator,
+        String testName)
+        throws Exception
     {
         super(testName);
-        this.vmFlag = vmFlag;
+        this.vm = vm;
         this.operator = operator;
     }
 
-    /**
-     * Implementation of {@link SaffronSqlTester}, leveraging connection setup
-     * and result set comparing from the class {@link FarragoTestCase}
-     */
-    private class FarragoSqlTester extends SaffronSqlTester
-    {
-        /** The name of the operator which should be the same as its syntax */
-        SqlOperator operator;
+    //~ Methods ---------------------------------------------------------------
 
-        FarragoSqlTester(SqlOperator op) {
-            operator = op;
+    public static Test suite()
+        throws Exception
+    {
+        TestSuite suite = new TestSuite();
+        addTests(suite, FarragoCalcSystemTest.VirtualMachine.Auto);
+        addTests(suite, FarragoCalcSystemTest.VirtualMachine.Fennel);
+        addTests(suite, FarragoCalcSystemTest.VirtualMachine.Java);
+
+        return wrappedSuite(suite);
+    }
+
+    private static void addTests(TestSuite suite,
+        FarragoCalcSystemTest.VirtualMachine vm)
+        throws Exception
+    {
+        Iterator operatorsIt = new SqlOperatorIterator();
+        while (operatorsIt.hasNext()) {
+            SqlOperator op = (SqlOperator) operatorsIt.next();
+            String testName = "SQL-TESTER-" + op.name + "-";
+            if (!vm.canImplement(op)) {
+                continue;
+            }
+            if (!bug260fixed) {
+                if (op == opTab.orOperator ||
+                    op == opTab.andOperator ||
+                    op == opTab.isFalseOperator ||
+                    op == opTab.litChainOperator ||
+                    op == opTab.multiplyOperator ||
+                    op == opTab.localTimeFunc ||
+                    op == opTab.localTimestampFunc) {
+                    continue;
+                }
+            }
+            suite.addTest(
+                new FarragoSqlOperatorsTest(vm,
+                    op, testName + vm.name));
+        }
+    }
+
+    protected void setUp()
+        throws Exception
+    {
+        super.setUp();
+        stmt.execute(vm.getAlterSystemCommand());
+    }
+
+    protected void runTest()
+        throws Throwable
+    {
+        operator.test(new FarragoSqlTester());
+    }
+
+    //~ Inner Classes ---------------------------------------------------------
+
+    /**
+     * Implementation of {@link AbstractSqlTester}, leveraging connection setup
+     * and result set comparison from the class {@link FarragoTestCase}.
+     */
+    private class FarragoSqlTester extends AbstractSqlTester
+    {
+        public void checkFails(
+            String expression,
+            String expectedError)
+        {
+            if (bug260fixed) {
+                // todo: implement this
+                throw Util.needToImplement(this);
+            }
         }
 
-        public void check(String query, String result, SqlTypeName resultType) {
+        public void checkType(
+            String expression,
+            String type)
+        {
+            if (bug260fixed) {
+                // todo: implement this
+                throw Util.needToImplement(this);
+            }
+        }
+
+        public void check(
+            String query,
+            Object result,
+            SqlTypeName resultType)
+        {
             try {
                 if (operator.getSyntax() != SqlSyntax.Internal) {
                     // check that query really contains a call to the operator we
@@ -74,55 +169,31 @@ public class FarragoSqlOperatorsTest extends FarragoTestCase {
                     String queryCmp = query.toUpperCase();
                     String opNameCmp = operator.name.toUpperCase();
                     if (queryCmp.indexOf(opNameCmp) < 0) {
-                        fail("Not exercising operator <"+operator+"> " +
-                             "with the query <"+query+">");
+                        fail("Not exercising operator <" + operator + "> "
+                            + "with the query <" + query + ">");
                     }
                 }
 
                 resultSet = stmt.executeQuery(query);
-                Set refSet = new HashSet();
-                refSet.add(result);
-                compareResultSet(refSet);
+                if (result instanceof Pattern) {
+                    compareResultSetWithPattern((Pattern) result);
+                } else {
+                    Set refSet = new HashSet();
+                    refSet.add(result);
+                    compareResultSet(refSet);
+                }
                 stmt.close();
                 stmt = connection.createStatement();
             } catch (Throwable e) {
-                RuntimeException newException = new RuntimeException(
-                        "Exception occured while testing "+operator+". "+
-                        "Exception msg = "+e.getMessage());
+                RuntimeException newException =
+                    new RuntimeException("Exception occured while testing "
+                        + operator + ". " + "Exception msg = "
+                        + e.getMessage());
                 newException.setStackTrace(e.getStackTrace());
                 throw newException;
             }
         }
     }
-
-    public static Test suite() throws Exception
-    {
-        TestSuite suite = new TestSuite();
-        Iterator operatorsIt = new SqlOperatorIterator();
-        while (operatorsIt.hasNext()) {
-            SqlOperator op = (SqlOperator) operatorsIt.next();
-            String testName = "SQL-TESTER-" + op.name + "-";
-            suite.addTest(new FarragoSqlOperatorsTest(
-                    FarragoCalcSystemTest.vmFennel,
-                    op,
-                    testName+"FENNEL"));
-            if (false) {
-                suite.addTest(new FarragoSqlOperatorsTest(
-                        FarragoCalcSystemTest.vmJava,
-                        op,
-                        testName + "JAVA"));
-            }
-        }
-
-        return wrappedSuite(suite);
-    }
-
-    protected void setUp() throws Exception {
-        super.setUp();
-        stmt.execute(vmFlag);
-    }
-
-    protected void runTest() throws Throwable {
-        operator.test(new FarragoSqlTester(operator));
-    }
 }
+
+// End FarragoSqlOperatorsTest.java

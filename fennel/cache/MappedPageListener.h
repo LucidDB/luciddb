@@ -37,41 +37,41 @@ public:
     virtual ~MappedPageListener();
 
     /**
-     * Called by CacheImpl as soon as a page is mapped, before any I/O is
-     * initiated to retrieve the page contents.  This notification method is
-     * called with the page mutex held, so the implementation must take care to
-     * avoid deadlock.
+     * Receives notification from CacheImpl as soon as a page is mapped, before
+     * any I/O is initiated to retrieve the page contents. 
+     * Called with the page mutex held, so the implementation must
+     * take care to avoid deadlock.
      *
      * @param page the page being mapped
      */
     virtual void notifyPageMap(CachePage &page);
     
     /**
-     * Called by CacheImpl just before a page is unmapped.  This notification
-     * method is called with the page mutex held, so the implementation must
-     * take care to avoid deadlock.
+     * Receives notification from CacheImpl just before a page is unmapped.
+     * Called with the page mutex held, so the implementation must take care to
+     * avoid deadlock.
      *
      * @param page the page being unmapped
      */
     virtual void notifyPageUnmap(CachePage &page);
     
     /**
-     * Called by CacheImpl after a page read completes.  This notification
-     * method is called with the page mutex held, so the implementation must
-     * take care to avoid deadlock.
+     * Receives notification from CacheImpl after a page read completes.
+     * Called with the page mutex held, so the implementation must take care to
+     * avoid deadlock.
      *
      * @param page the page read
      */
     virtual void notifyAfterPageRead(CachePage &page);
     
     /**
-     * Called by CacheImpl the first time a page becomes dirty after it has
-     * been mapped (but before the contents have changed).  This notification
-     * allows some logging action to be taken; for example, making a backup
-     * copy of the unmodified page contents.  Note that when this is called for
-     * a newly allocated page, the page contents are invalid.  Because it is
-     * implied that the calling thread already has an exclusive lock on the
-     * page, no cache locks are held when this notification is called.
+     * Receives notification from CacheImpl the first time a page becomes dirty
+     * after it has been mapped (but before the contents have changed).
+     * Allows some logging action to be taken; for example, making
+     * a backup copy of the unmodified page contents.  Note that when
+     * called for a newly allocated page, the page contents are invalid.
+     * Because it is implied that the calling thread already has an exclusive
+     * lock on the page, no cache locks are held when called.
      *
      * @param page the page being modified
      *
@@ -82,29 +82,29 @@ public:
     virtual void notifyPageDirty(CachePage &page,bool bDataValid);
 
     /**
-     * Called by CacheImpl to determine whether a dirty page can safely be
-     * flushed to disk.  This notification method is called with the page
-     * mutex held, so the implementation must take care to avoid deadlock.
+     * Informs CacheImpl whether a dirty page can safely be flushed to disk.
+     * Called with the page mutex held, so the implementation must take care to
+     * avoid deadlock.
      *
      * @param page the page to be flushed
      */
     virtual bool canFlushPage(CachePage &page);
     
     /**
-     * Called by CacheImpl just before a dirty page is flushed to disk.  This
-     * notification allows some logging action to be taken; for example,
-     * flushing corresponding write-ahead log pages, or storing a checksum in
-     * the page header.  This notification method is called with the page
-     * mutex held, so the implementation must take care to avoid deadlock.
+     * Receives notification from CacheImpl just before a dirty page is flushed
+     * to disk.  Allows some logging action to be taken; for example, flushing
+     * corresponding write-ahead log pages, or storing a checksum in the page
+     * header.  Called with the page mutex held, so the implementation must
+     * take care to avoid deadlock.
      *
      * @param page the page to be flushed
      */
     virtual void notifyBeforePageFlush(CachePage &page);
     
     /**
-     * Called by CacheImpl when a page flush completes successfully.  This
-     * notification method is called with the page mutex held, so the
-     * implementation must take care to avoid deadlock.
+     * Receives notification from CacheImpl when a page flush completes
+     * successfully.  Called with the page mutex held, so the implementation
+     * must take care to avoid deadlock.
      *
      * @param page the page that was flushed
      */

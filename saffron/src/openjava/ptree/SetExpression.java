@@ -1,13 +1,15 @@
 /*
 // $Id$
 // Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
+// (C) Copyright 2002-2003 Disruptive Tech
 // You must accept the terms in LICENSE.html to use this software.
 */
 
 package openjava.ptree;
 import openjava.mop.*;
 import java.util.Vector;
+
+import org.eigenbase.util.Util;
 
 /**
  * A <code>SetExpression</code> is an expression which consists of a set of
@@ -26,7 +28,7 @@ public abstract class SetExpression extends NonLeaf
 	    try {
 		rowType = deriveRowType(env);
 	    } catch (Exception e) {
-            throw Toolbox.newInternal(
+            throw Util.newInternal(
                 e,
                 "unexpected exception getting row type for SetExpression");
 	    }

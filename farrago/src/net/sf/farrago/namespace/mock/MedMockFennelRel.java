@@ -6,38 +6,37 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.namespace.mock;
 
-import net.sf.farrago.util.*;
-import net.sf.farrago.query.*;
+import java.sql.*;
+
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
+import net.sf.farrago.query.*;
+import net.sf.farrago.util.*;
 
-import net.sf.saffron.opt.*;
-import net.sf.saffron.core.*;
-import net.sf.saffron.sql.*;
-import net.sf.saffron.util.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.rel.jdbc.*;
-import net.sf.saffron.oj.stmt.*;
-import net.sf.saffron.oj.rel.*;
-import net.sf.saffron.oj.util.*;
-
-import openjava.ptree.*;
 import openjava.mop.*;
+import openjava.ptree.*;
 
-import java.sql.*;
+import org.eigenbase.oj.rel.*;
+import org.eigenbase.oj.stmt.*;
+import org.eigenbase.oj.util.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.rel.jdbc.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.util.*;
+
 
 /**
  * MedMockFennelRel provides a mock implementation for
@@ -48,18 +47,24 @@ import java.sql.*;
  */
 class MedMockFennelRel extends TableAccessRel implements FennelPullRel
 {
+    //~ Instance fields -------------------------------------------------------
+
     private MedMockColumnSet columnSet;
-    
+
+    //~ Constructors ----------------------------------------------------------
+
     MedMockFennelRel(
         MedMockColumnSet columnSet,
-        VolcanoCluster cluster,
-        SaffronConnection connection)
+        RelOptCluster cluster,
+        RelOptConnection connection)
     {
-        super(cluster,columnSet,connection);
+        super(cluster, columnSet, connection);
         this.columnSet = columnSet;
     }
 
-    // implement SaffronRel
+    //~ Methods ---------------------------------------------------------------
+
+    // implement RelNode
     public CallingConvention getConvention()
     {
         return FennelPullRel.FENNEL_PULL_CONVENTION;
@@ -80,10 +85,9 @@ class MedMockFennelRel extends TableAccessRel implements FennelPullRel
     // implement FennelRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
-        FarragoCatalog catalog = getPreparingStmt().getCatalog();
+        FarragoRepos repos = getPreparingStmt().getRepos();
 
-        FemMockTupleStreamDef streamDef =
-            catalog.newFemMockTupleStreamDef();
+        FemMockTupleStreamDef streamDef = repos.newFemMockTupleStreamDef();
         streamDef.setRowCount(columnSet.nRows);
         return streamDef;
     }
@@ -92,11 +96,9 @@ class MedMockFennelRel extends TableAccessRel implements FennelPullRel
     public RelFieldCollation [] getCollations()
     {
         // trivially sorted
-        return new RelFieldCollation []
-            {
-                new RelFieldCollation(0)
-            };
+        return new RelFieldCollation [] { new RelFieldCollation(0) };
     }
 }
+
 
 // End MedMockFennelRel.java

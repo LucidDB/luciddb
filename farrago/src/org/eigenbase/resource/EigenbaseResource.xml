@@ -1,0 +1,216 @@
+<?xml version="1.0" ?>
+<?xml-stylesheet type="text/xsl"
+ href="http://perforce.eigenbase.org:8080/open/mondrian/resource/Resource.xsl" ?>
+<!-- 
+ !DOCTYPE resourceBundle SYSTEM "Resource.dtd"
+  -->
+<!--
+// $Id$
+// Saffron preprocessor and data engine
+// (C) Copyright 2004-2004 Disruptive Tech
+// You must accept the terms in LICENSE.html to use this software.
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public License
+// as published by the Free Software Foundation; either version 2.1
+// of the License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+-->
+
+<!-- REVIEW jvs 29-Aug-2004:  Introduce EigenbaseException? -->
+<resourceBundle
+	static="false"
+	locale="en_US"
+	exceptionClassName="net.sf.farrago.util.FarragoException">
+
+<!-- ====================================================================== -->
+<!-- Eigenbase Parser resources 100,000 - 110,000 -->
+<!-- ====================================================================== -->
+<message id="100000" name="ParserContext">
+    <text>line {0,number,#}, column {1,number,#}</text>
+</message>
+
+<message id="100010" name="IllegalLiteral">
+    <text>Illegal {0} literal {1} at {2}: {3}</text>
+</message>
+
+<message id="100011" name="BadFormat">
+    <text>not in format ''{0}''</text>
+</message>
+
+
+<!-- ====================================================================== -->
+<!-- Eigenbase Validator resources 121,000 - 130,000 -->
+<!-- ====================================================================== -->
+<exception id="120000" name="ValidatorUnknownFunction">
+    <text>Reference to unknown function ''{0}''; encountered near {1}</text>
+</exception>
+
+<exception id="120001" name="InvalidArgument">
+    <text>Argument {0,number,#} to function ''{1}'' is invalid: {2}</text>
+</exception>
+
+<exception id="120002" name="InvalidNbrOfArgument">
+    <text>Invalid number of arguments to function ''{0}''; encountered near {1}. Was expecting {2,number,#} arguments</text>
+</exception>
+
+<exception id="120010" name="CannotCastValue">
+    <text>Cast function cannot convert value of type {0} to type {1}</text>
+</exception>
+
+<exception id="120011" name="UnknownDatatypeName">
+    <text>Unknown datatype name: {0}</text>
+</exception>
+
+<exception id="120020" name="IncompatibleValueType">
+    <text>Values passed to VALUES operator near {0} must have compatible types</text>
+</exception>
+
+<exception id="120030" name="IncompatibleCharset">
+    <text>Can not apply {0} to the two different charsets {1} and {2}</text>
+</exception>
+
+<exception id="120040" name="InvalidOrderByPos">
+    <text>ORDER BY near {0} is only allowed on top-level SELECT</text>
+</exception>
+
+<exception id="120050" name="UnknownIdentifier">
+    <text>Unknown identifier ''{0}'' near: {1}</text>
+</exception>
+
+<exception id="120060" name="UnknownTargetColumn">
+    <text>Unknown target column ''{0}'' near: {1}</text>
+</exception>
+
+<exception id="120070" name="UnmatchInsertColumn">
+    <text>Number of INSERT target column ({0}) does not equal number of source items ({1})</text>
+</exception>
+
+<exception id="120080" name="TableNameNotFound">
+    <text>Table ''{0}'' not found near: {1}</text>
+</exception>
+
+<exception id="120085" name="ColNotFound">
+    <text>Column ''{0}'' not found in any table</text>
+</exception>
+
+<exception id="120090" name="ColumnNotFoundInTable">
+    <text>Column ''{0}'' not found in table {1}</text>
+</exception>
+
+<exception id="120100" name="ColumnAmbiguous">
+    <text>Column ''{0}'' is ambiguous</text>
+</exception>
+
+<exception id="120110" name="NeedQueryOp">
+    <text>Operand {0} must be a query near: {1}</text>
+</exception>
+
+<exception id="120120" name="NeedSameTypeParameter">
+    <text>Parameters must be of the same type near: {0}</text>
+</exception>
+
+<exception id="120130" name="CanNotApplyOp2Type">
+    <text>Can not apply ''{0}'' to arguments of type {1}. Supported form(s): {2} near: {3}</text>
+</exception>
+
+<exception id="120140" name="ExpectedBoolean">
+    <text>Expected a boolean type near : {0}</text>
+</exception>
+
+<exception id="120150" name="MustNotNullInElse">
+    <text>ELSE clause or at least one THEN clause must be non-NULL</text>
+</exception>
+
+<exception id="120160" name="FunctionUndefined">
+    <text>Function {0} is not defined : {1}</text>
+</exception>
+
+<exception id="120170" name="WrongNumberOfParam">
+    <text>Encountered {0} with {1} parameter(s), was expecting {2} near: {3}</text>
+</exception>
+
+<exception id="120180" name="IllegalMixingOfTypes"> 
+    <text>Illegal mixing of types found in statement starting near: {0}</text>
+</exception>
+
+<exception id="120190" name="BetweenWithoutAnd">
+    <text>BETWEEN operator has no terminating AND, at {0}</text>
+</exception>
+
+<exception id="120200" name="InvalidCompare">
+    <text>Invalid compare. Comparing  (collation, coercibility): ({0}, {1} with ({2}, {3}) is illegal</text>
+</exception>
+
+<exception id="120210" name="DifferentCollations">
+    <text>Invalid syntax. Two explicit different collations ({0}, {1}) are illegal</text>
+</exception>
+
+<exception id="120220" name="TypeNotComparable">
+    <text>{0} is not comparable to {1}</text>
+</exception>
+
+<exception id="120230" name="WrongNumOfArguments">
+    <text>Wrong number of arguments to {0} near: {1}</text>
+</exception>
+
+<exception id="120240" name="OperandNotComparable">
+    <text>Operands {0} not comparable to each other</text>
+</exception>
+
+<exception id="120250" name="TypeNotComparableEachOther">
+    <text>Types {0} not comparable to each other</text>
+</exception>
+
+<!-- ====================================================================== -->
+<!-- Eigenbase Generic resources 130,000 - 140,000 -->
+<!-- ====================================================================== -->
+<exception id="130000" name="Internal">
+    <text>Internal error: {0}</text>
+</exception>
+
+<exception id="130010" name="FunctionNotFound">
+    <text>Function ''{0}'' does not exist</text>
+</exception>
+
+<exception id="130020" name="ArgumentMustBeLiteral">
+    <text>Argument to function ''{0}'' must be a literal</text>
+</exception>
+
+<exception id="130030" name="ArgumentMustBePositiveInteger">
+    <text>Argument to function ''{0}'' must be a positive integer literal</text>
+</exception>
+
+<exception id="130040" name="ValidationError">
+    <text>Validation Error: {0}</text>
+</exception>
+
+<exception id="130050" name="ParserError">
+    <text>Parser Error: {0}</text>
+</exception>
+
+<exception id="130060" name="ArgumentMustNotBeNull">
+    <text>Argument to function ''{0}'' must not be NULL</text>
+</exception>
+
+<exception id="130070" name="NullIllegal">
+    <text>Illegal use of ''NULL''</text>
+</exception>
+
+<exception id="130080" name="NumberLiteralOutOfRange">
+    <text>Number literal ''{0}'' out of range near: {1}</text>
+</exception>
+
+<!-- End of last error section ============================================ -->
+
+</resourceBundle>
+
+<!-- End EigenbaseResource.xml -->

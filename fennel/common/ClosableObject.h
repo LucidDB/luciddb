@@ -58,7 +58,7 @@ public:
     }
 
     /**
-     * Close this object, releasing any unallocated resources.
+     * Closes this object, releasing any unallocated resources.
      */
     void close();
 };

@@ -42,7 +42,7 @@ class ByteArrayInputStream : public ByteInputStream
 
 public:
     /**
-     * Factory method for creating a new ByteArrayInputStream.
+     * Creates a new ByteArrayInputStream.
      *
      * @param pBuffer bytes to read
      *
@@ -55,7 +55,7 @@ public:
         uint cbBuffer);
 
     /**
-     * Reset stream to read from a new array.
+     * Resets stream to read from a new array.
      *
      * @param pBuffer bytes to read
      *

@@ -50,7 +50,7 @@ protected:
     explicit ByteOutputStream();
 
     /**
-     * flushBuffer must be implemented by derived class to flush buffered data.
+     * Must be implemented by derived class to flush buffered data.
      *
      * @param cbRequested if non-zero, the derived class should allocate a new
      * buffer with at least the requested size and call setBuffer
@@ -60,7 +60,7 @@ protected:
     virtual void closeImpl();
 
     /**
-     * Set the current buffer to be written.
+     * Sets the current buffer to be written.
      *
      * @param pBuffer receives start address of new buffer
      *
@@ -75,7 +75,7 @@ protected:
 
 public:
     /**
-     * Write bytes to the stream.
+     * Writes bytes to the stream.
      *
      * @param pData source buffer containing bytes to be written
      *
@@ -84,8 +84,8 @@ public:
     void writeBytes(void const *pData,uint cbRequested);
 
     /**
-     * Copyless alternative for writing bytes to the stream.  This call
-     * provides direct access to the stream's internal buffer, but doesn't
+     * Copyless alternative for writing bytes to the stream.
+     * Provides direct access to the stream's internal buffer, but doesn't
      * move the stream position (see consumeWritePointer).
      *
      * @param cbRequested number of contiguous bytes to access; if fewer
@@ -101,7 +101,7 @@ public:
     PBuffer getWritePointer(uint cbRequested,uint *pcbActual = NULL);
 
     /**
-     * Advance stream position after a call to getWritePointer.
+     * Advances stream position after a call to getWritePointer.
      *
      * @param cbUsed number of bytes to advance; must be less than or equal to
      * the value of cbActual returned by the last call to getWritePointer
@@ -109,14 +109,14 @@ public:
     void consumeWritePointer(uint cbUsed);
 
     /**
-     * Mark the current buffer as complete regardless of how much data it
+     * Marks the current buffer as complete regardless of how much data it
      * contains.  The exact semantics are dependent on the buffering
      * implementation.
      */
     void hardPageBreak();
 
     /**
-     * Change the write latency.  May not be meaningful for all stream
+     * Changes the write latency.  May not be meaningful for all stream
      * implementations.
      *
      * @param writeLatency new WriteLatency setting
@@ -124,7 +124,7 @@ public:
     virtual void setWriteLatency(WriteLatency writeLatency);
     
     /**
-     * Write a fixed-size type to the stream.
+     * Writes a fixed-size type to the stream.
      *
      * @param value value to read; type must be memcpy-safe
      */

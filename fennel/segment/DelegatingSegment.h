@@ -37,7 +37,7 @@ class DelegatingSegment : public Segment
     
 public:
     /**
-     * Construct a new DelegatingSegment.
+     * Constructs a new DelegatingSegment.
      *
      * @param delegateSegment the underlying segment
      */

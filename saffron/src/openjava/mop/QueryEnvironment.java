@@ -1,7 +1,7 @@
 /*
 // $Id$
 // Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
+// (C) Copyright 2002-2003 Disruptive Tech
 // You must accept the terms in LICENSE.html to use this software.
 */
 
@@ -9,6 +9,8 @@ package openjava.mop;
 import openjava.ptree.Expression;
 import openjava.ptree.QueryExpression;
 import openjava.ptree.SetExpression;
+
+import org.eigenbase.util.Util;
 
 /**
  * <code>QueryEnvironment</code> is the environment seen inside a {@link
@@ -34,7 +36,7 @@ public class QueryEnvironment extends ClosedEnvironment {
 		try {
 			return new BasicVariableInfo(expressions[i].getRowType(parent));
 		} catch (Exception e) {
-            throw Toolbox.newInternal(
+            throw Util.newInternal(
                 e,
                 "unexpected exception looking up " + name
                 + " in QueryEnvironment");
