@@ -35,32 +35,32 @@ Messages:
 [0]:PC=0 Code=22019 (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> values true and 1;
-Error: Can not apply 'AND' to arguments of type '<BOOLEAN> AND <INTEGER>'. Supported form(s): '<BOOLEAN> AND <BOOLEAN>' near: line 1, column 17 (state=,code=0)
+Error: At line 1, column 17: Cannot apply 'AND' to arguments of type '<BOOLEAN> AND <INTEGER>'. Supported form(s): '<BOOLEAN> AND <BOOLEAN>' (state=,code=0)
 0: jdbc:farrago:> values false and '';
-Error: Can not apply 'AND' to arguments of type '<BOOLEAN> AND <VARCHAR(0)>'. Supported form(s): '<BOOLEAN> AND <BOOLEAN>' near: line 1, column 18 (state=,code=0)
+Error: At line 1, column 18: Cannot apply 'AND' to arguments of type '<BOOLEAN> AND <VARCHAR(0)>'. Supported form(s): '<BOOLEAN> AND <BOOLEAN>' (state=,code=0)
 0: jdbc:farrago:> values 1.2 and unknown;
-Error: Can not apply 'AND' to arguments of type '<DECIMAL(2,1)> AND <BOOLEAN>'. Supported form(s): '<BOOLEAN> AND <BOOLEAN>' near: line 1, column 16 (state=,code=0)
+Error: At line 1, column 16: Cannot apply 'AND' to arguments of type '<DECIMAL(2,1)> AND <BOOLEAN>'. Supported form(s): '<BOOLEAN> AND <BOOLEAN>' (state=,code=0)
 0: jdbc:farrago:> values unknown or 1;
-Error: Can not apply 'OR' to arguments of type '<BOOLEAN> OR <INTEGER>'. Supported form(s): '<BOOLEAN> OR <BOOLEAN>' near: line 1, column 19 (state=,code=0)
+Error: At line 1, column 19: Cannot apply 'OR' to arguments of type '<BOOLEAN> OR <INTEGER>'. Supported form(s): '<BOOLEAN> OR <BOOLEAN>' (state=,code=0)
 0: jdbc:farrago:> values '' or b'';
-Error: Can not apply 'OR' to arguments of type '<VARCHAR(0)> OR <BIT(0)>'. Supported form(s): '<BOOLEAN> OR <BOOLEAN>' near: line 1, column 14 (state=,code=0)
+Error: At line 1, column 14: Cannot apply 'OR' to arguments of type '<VARCHAR(0)> OR <BIT(0)>'. Supported form(s): '<BOOLEAN> OR <BOOLEAN>' (state=,code=0)
 0: jdbc:farrago:> values not 1;
-Error: Can not apply 'NOT' to arguments of type 'NOT<INTEGER>'. Supported form(s): 'NOT<BOOLEAN>' near: line 1, column 8 (state=,code=0)
+Error: At line 1, column 8: Cannot apply 'NOT' to arguments of type 'NOT<INTEGER>'. Supported form(s): 'NOT<BOOLEAN>' (state=,code=0)
 0: jdbc:farrago:> values not '';
-Error: Can not apply 'NOT' to arguments of type 'NOT<VARCHAR(0)>'. Supported form(s): 'NOT<BOOLEAN>' near: line 1, column 8 (state=,code=0)
+Error: At line 1, column 8: Cannot apply 'NOT' to arguments of type 'NOT<VARCHAR(0)>'. Supported form(s): 'NOT<BOOLEAN>' (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> values 'a'||1;
-Error: Can not apply '||' to arguments of type '<VARCHAR(1)> || <INTEGER>'. Supported form(s): '<CHAR> || <CHAR>'
+Error: At line 1, column 13: Cannot apply '||' to arguments of type '<VARCHAR(1)> || <INTEGER>'. Supported form(s): '<CHAR> || <CHAR>'
 '<VARCHAR> || <VARCHAR>'
 '<BIT> || <BIT>'
 '<BINARY> || <BINARY>'
-'<VARBINARY> || <VARBINARY>' near: line 1, column 13 (state=,code=0)
+'<VARBINARY> || <VARBINARY>' (state=,code=0)
 0: jdbc:farrago:> values false||'a';
-Error: Can not apply '||' to arguments of type '<BOOLEAN> || <VARCHAR(1)>'. Supported form(s): '<CHAR> || <CHAR>'
+Error: At line 1, column 15: Cannot apply '||' to arguments of type '<BOOLEAN> || <VARCHAR(1)>'. Supported form(s): '<CHAR> || <CHAR>'
 '<VARCHAR> || <VARCHAR>'
 '<BIT> || <BIT>'
 '<BINARY> || <BINARY>'
-'<VARBINARY> || <VARBINARY>' near: line 1, column 15 (state=,code=0)
+'<VARBINARY> || <VARBINARY>' (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> values 1/0;
 Error: could not calculate results for the following row:
@@ -94,7 +94,7 @@ Messages:
 [0]:PC=0 Code=22023 (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> values 1='';
-Error: Can not apply '=' to arguments of type '<INTEGER> = <VARCHAR(0)>'. Supported form(s): '<ANY> = <ANY>'
+Error: At line 1, column 10: Cannot apply '=' to arguments of type '<INTEGER> = <VARCHAR(0)>'. Supported form(s): '<ANY> = <ANY>'
 '<TINYINT> = <TINYINT>'
 '<TINYINT> = <SMALLINT>'
 '<TINYINT> = <INTEGER>'
@@ -171,9 +171,9 @@ Error: Can not apply '=' to arguments of type '<INTEGER> = <VARCHAR(0)>'. Suppor
 '<CHAR> = <CHAR>'
 '<CHAR> = <VARCHAR>'
 '<VARCHAR> = <CHAR>'
-'<VARCHAR> = <VARCHAR>' near: line 1, column 10 (state=,code=0)
+'<VARCHAR> = <VARCHAR>' (state=,code=0)
 0: jdbc:farrago:> values false='';
-Error: Can not apply '=' to arguments of type '<BOOLEAN> = <VARCHAR(0)>'. Supported form(s): '<ANY> = <ANY>'
+Error: At line 1, column 14: Cannot apply '=' to arguments of type '<BOOLEAN> = <VARCHAR(0)>'. Supported form(s): '<ANY> = <ANY>'
 '<TINYINT> = <TINYINT>'
 '<TINYINT> = <SMALLINT>'
 '<TINYINT> = <INTEGER>'
@@ -250,9 +250,9 @@ Error: Can not apply '=' to arguments of type '<BOOLEAN> = <VARCHAR(0)>'. Suppor
 '<CHAR> = <CHAR>'
 '<CHAR> = <VARCHAR>'
 '<VARCHAR> = <CHAR>'
-'<VARCHAR> = <VARCHAR>' near: line 1, column 14 (state=,code=0)
+'<VARCHAR> = <VARCHAR>' (state=,code=0)
 0: jdbc:farrago:> values b'101'=0.001;
-Error: Can not apply '=' to arguments of type '<BIT(3)> = <DECIMAL(4,3)>'. Supported form(s): '<ANY> = <ANY>'
+Error: At line 1, column 15: Cannot apply '=' to arguments of type '<BIT(3)> = <DECIMAL(4,3)>'. Supported form(s): '<ANY> = <ANY>'
 '<TINYINT> = <TINYINT>'
 '<TINYINT> = <SMALLINT>'
 '<TINYINT> = <INTEGER>'
@@ -329,9 +329,9 @@ Error: Can not apply '=' to arguments of type '<BIT(3)> = <DECIMAL(4,3)>'. Suppo
 '<CHAR> = <CHAR>'
 '<CHAR> = <VARCHAR>'
 '<VARCHAR> = <CHAR>'
-'<VARCHAR> = <VARCHAR>' near: line 1, column 15 (state=,code=0)
+'<VARCHAR> = <VARCHAR>' (state=,code=0)
 0: jdbc:farrago:> values 1<>'';
-Error: Can not apply '<>' to arguments of type '<INTEGER> <> <VARCHAR(0)>'. Supported form(s): '<ANY> <> <ANY>'
+Error: At line 1, column 11: Cannot apply '<>' to arguments of type '<INTEGER> <> <VARCHAR(0)>'. Supported form(s): '<ANY> <> <ANY>'
 '<TINYINT> <> <TINYINT>'
 '<TINYINT> <> <SMALLINT>'
 '<TINYINT> <> <INTEGER>'
@@ -408,9 +408,9 @@ Error: Can not apply '<>' to arguments of type '<INTEGER> <> <VARCHAR(0)>'. Supp
 '<CHAR> <> <CHAR>'
 '<CHAR> <> <VARCHAR>'
 '<VARCHAR> <> <CHAR>'
-'<VARCHAR> <> <VARCHAR>' near: line 1, column 11 (state=,code=0)
+'<VARCHAR> <> <VARCHAR>' (state=,code=0)
 0: jdbc:farrago:> values false<>'';
-Error: Can not apply '<>' to arguments of type '<BOOLEAN> <> <VARCHAR(0)>'. Supported form(s): '<ANY> <> <ANY>'
+Error: At line 1, column 15: Cannot apply '<>' to arguments of type '<BOOLEAN> <> <VARCHAR(0)>'. Supported form(s): '<ANY> <> <ANY>'
 '<TINYINT> <> <TINYINT>'
 '<TINYINT> <> <SMALLINT>'
 '<TINYINT> <> <INTEGER>'
@@ -487,9 +487,9 @@ Error: Can not apply '<>' to arguments of type '<BOOLEAN> <> <VARCHAR(0)>'. Supp
 '<CHAR> <> <CHAR>'
 '<CHAR> <> <VARCHAR>'
 '<VARCHAR> <> <CHAR>'
-'<VARCHAR> <> <VARCHAR>' near: line 1, column 15 (state=,code=0)
+'<VARCHAR> <> <VARCHAR>' (state=,code=0)
 0: jdbc:farrago:> values b''<>0.2;
-Error: Can not apply '<>' to arguments of type '<BIT(0)> <> <DECIMAL(2,1)>'. Supported form(s): '<ANY> <> <ANY>'
+Error: At line 1, column 13: Cannot apply '<>' to arguments of type '<BIT(0)> <> <DECIMAL(2,1)>'. Supported form(s): '<ANY> <> <ANY>'
 '<TINYINT> <> <TINYINT>'
 '<TINYINT> <> <SMALLINT>'
 '<TINYINT> <> <INTEGER>'
@@ -566,9 +566,9 @@ Error: Can not apply '<>' to arguments of type '<BIT(0)> <> <DECIMAL(2,1)>'. Sup
 '<CHAR> <> <CHAR>'
 '<CHAR> <> <VARCHAR>'
 '<VARCHAR> <> <CHAR>'
-'<VARCHAR> <> <VARCHAR>' near: line 1, column 13 (state=,code=0)
+'<VARCHAR> <> <VARCHAR>' (state=,code=0)
 0: jdbc:farrago:> values 1>true;
-Error: Can not apply '>' to arguments of type '<INTEGER> > <BOOLEAN>'. Supported form(s): '<ANY> > <ANY>'
+Error: At line 1, column 10: Cannot apply '>' to arguments of type '<INTEGER> > <BOOLEAN>'. Supported form(s): '<ANY> > <ANY>'
 '<TINYINT> > <TINYINT>'
 '<TINYINT> > <SMALLINT>'
 '<TINYINT> > <INTEGER>'
@@ -645,9 +645,9 @@ Error: Can not apply '>' to arguments of type '<INTEGER> > <BOOLEAN>'. Supported
 '<CHAR> > <CHAR>'
 '<CHAR> > <VARCHAR>'
 '<VARCHAR> > <CHAR>'
-'<VARCHAR> > <VARCHAR>' near: line 1, column 10 (state=,code=0)
+'<VARCHAR> > <VARCHAR>' (state=,code=0)
 0: jdbc:farrago:> values x''>'';
-Error: Can not apply '>' to arguments of type '<VARBINARY(0)> > <VARCHAR(0)>'. Supported form(s): '<ANY> > <ANY>'
+Error: At line 1, column 12: Cannot apply '>' to arguments of type '<VARBINARY(0)> > <VARCHAR(0)>'. Supported form(s): '<ANY> > <ANY>'
 '<TINYINT> > <TINYINT>'
 '<TINYINT> > <SMALLINT>'
 '<TINYINT> > <INTEGER>'
@@ -724,9 +724,9 @@ Error: Can not apply '>' to arguments of type '<VARBINARY(0)> > <VARCHAR(0)>'. S
 '<CHAR> > <CHAR>'
 '<CHAR> > <VARCHAR>'
 '<VARCHAR> > <CHAR>'
-'<VARCHAR> > <VARCHAR>' near: line 1, column 12 (state=,code=0)
+'<VARCHAR> > <VARCHAR>' (state=,code=0)
 0: jdbc:farrago:> values 1<false;
-Error: Can not apply '<' to arguments of type '<INTEGER> < <BOOLEAN>'. Supported form(s): '<ANY> < <ANY>'
+Error: At line 1, column 10: Cannot apply '<' to arguments of type '<INTEGER> < <BOOLEAN>'. Supported form(s): '<ANY> < <ANY>'
 '<TINYINT> < <TINYINT>'
 '<TINYINT> < <SMALLINT>'
 '<TINYINT> < <INTEGER>'
@@ -803,9 +803,9 @@ Error: Can not apply '<' to arguments of type '<INTEGER> < <BOOLEAN>'. Supported
 '<CHAR> < <CHAR>'
 '<CHAR> < <VARCHAR>'
 '<VARCHAR> < <CHAR>'
-'<VARCHAR> < <VARCHAR>' near: line 1, column 10 (state=,code=0)
+'<VARCHAR> < <VARCHAR>' (state=,code=0)
 0: jdbc:farrago:> values ''<0.1;
-Error: Can not apply '<' to arguments of type '<VARCHAR(0)> < <DECIMAL(2,1)>'. Supported form(s): '<ANY> < <ANY>'
+Error: At line 1, column 11: Cannot apply '<' to arguments of type '<VARCHAR(0)> < <DECIMAL(2,1)>'. Supported form(s): '<ANY> < <ANY>'
 '<TINYINT> < <TINYINT>'
 '<TINYINT> < <SMALLINT>'
 '<TINYINT> < <INTEGER>'
@@ -882,9 +882,9 @@ Error: Can not apply '<' to arguments of type '<VARCHAR(0)> < <DECIMAL(2,1)>'. S
 '<CHAR> < <CHAR>'
 '<CHAR> < <VARCHAR>'
 '<VARCHAR> < <CHAR>'
-'<VARCHAR> < <VARCHAR>' near: line 1, column 11 (state=,code=0)
+'<VARCHAR> < <VARCHAR>' (state=,code=0)
 0: jdbc:farrago:> values 1>=true;
-Error: Can not apply '>=' to arguments of type '<INTEGER> >= <BOOLEAN>'. Supported form(s): '<ANY> >= <ANY>'
+Error: At line 1, column 11: Cannot apply '>=' to arguments of type '<INTEGER> >= <BOOLEAN>'. Supported form(s): '<ANY> >= <ANY>'
 '<TINYINT> >= <TINYINT>'
 '<TINYINT> >= <SMALLINT>'
 '<TINYINT> >= <INTEGER>'
@@ -961,9 +961,9 @@ Error: Can not apply '>=' to arguments of type '<INTEGER> >= <BOOLEAN>'. Support
 '<CHAR> >= <CHAR>'
 '<CHAR> >= <VARCHAR>'
 '<VARCHAR> >= <CHAR>'
-'<VARCHAR> >= <VARCHAR>' near: line 1, column 11 (state=,code=0)
+'<VARCHAR> >= <VARCHAR>' (state=,code=0)
 0: jdbc:farrago:> select b''>=name from sales.emps;
-Error: Can not apply '>=' to arguments of type '<BIT(0)> >= <VARCHAR(128)>'. Supported form(s): '<ANY> >= <ANY>'
+Error: At line 1, column 13: Cannot apply '>=' to arguments of type '<BIT(0)> >= <VARCHAR(128)>'. Supported form(s): '<ANY> >= <ANY>'
 '<TINYINT> >= <TINYINT>'
 '<TINYINT> >= <SMALLINT>'
 '<TINYINT> >= <INTEGER>'
@@ -1040,9 +1040,9 @@ Error: Can not apply '>=' to arguments of type '<BIT(0)> >= <VARCHAR(128)>'. Sup
 '<CHAR> >= <CHAR>'
 '<CHAR> >= <VARCHAR>'
 '<VARCHAR> >= <CHAR>'
-'<VARCHAR> >= <VARCHAR>' near: line 1, column 13 (state=,code=0)
+'<VARCHAR> >= <VARCHAR>' (state=,code=0)
 0: jdbc:farrago:> values 1<=true;
-Error: Can not apply '<=' to arguments of type '<INTEGER> <= <BOOLEAN>'. Supported form(s): '<ANY> <= <ANY>'
+Error: At line 1, column 11: Cannot apply '<=' to arguments of type '<INTEGER> <= <BOOLEAN>'. Supported form(s): '<ANY> <= <ANY>'
 '<TINYINT> <= <TINYINT>'
 '<TINYINT> <= <SMALLINT>'
 '<TINYINT> <= <INTEGER>'
@@ -1119,9 +1119,9 @@ Error: Can not apply '<=' to arguments of type '<INTEGER> <= <BOOLEAN>'. Support
 '<CHAR> <= <CHAR>'
 '<CHAR> <= <VARCHAR>'
 '<VARCHAR> <= <CHAR>'
-'<VARCHAR> <= <VARCHAR>' near: line 1, column 11 (state=,code=0)
+'<VARCHAR> <= <VARCHAR>' (state=,code=0)
 0: jdbc:farrago:> values ''<=0.0;
-Error: Can not apply '<=' to arguments of type '<VARCHAR(0)> <= <DECIMAL(2,1)>'. Supported form(s): '<ANY> <= <ANY>'
+Error: At line 1, column 12: Cannot apply '<=' to arguments of type '<VARCHAR(0)> <= <DECIMAL(2,1)>'. Supported form(s): '<ANY> <= <ANY>'
 '<TINYINT> <= <TINYINT>'
 '<TINYINT> <= <SMALLINT>'
 '<TINYINT> <= <INTEGER>'
@@ -1198,7 +1198,7 @@ Error: Can not apply '<=' to arguments of type '<VARCHAR(0)> <= <DECIMAL(2,1)>'.
 '<CHAR> <= <CHAR>'
 '<CHAR> <= <VARCHAR>'
 '<VARCHAR> <= <CHAR>'
-'<VARCHAR> <= <VARCHAR>' near: line 1, column 12 (state=,code=0)
+'<VARCHAR> <= <VARCHAR>' (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --should throw overflow error?
 0: jdbc:farrago:> --values 2147483647+1
@@ -1206,58 +1206,58 @@ Error: Can not apply '<=' to arguments of type '<VARCHAR(0)> <= <DECIMAL(2,1)>'.
 0: jdbc:farrago:> --how about underflow?
 0: jdbc:farrago:> 
 0: jdbc:farrago:> values 1 is true;
-Error: Can not apply 'IS TRUE' to arguments of type '<INTEGER> IS TRUE'. Supported form(s): '<BOOLEAN> IS TRUE' near: line 1, column 13 (state=,code=0)
+Error: At line 1, column 13: Cannot apply 'IS TRUE' to arguments of type '<INTEGER> IS TRUE'. Supported form(s): '<BOOLEAN> IS TRUE' (state=,code=0)
 0: jdbc:farrago:> values '' is not true;
-Error: Can not apply 'IS NOT TRUE' to arguments of type '<VARCHAR(0)> IS NOT TRUE'. Supported form(s): '<BOOLEAN> IS NOT TRUE' near: line 1, column 18 (state=,code=0)
+Error: At line 1, column 18: Cannot apply 'IS NOT TRUE' to arguments of type '<VARCHAR(0)> IS NOT TRUE'. Supported form(s): '<BOOLEAN> IS NOT TRUE' (state=,code=0)
 0: jdbc:farrago:> values 1 is false;
-Error: Can not apply 'IS FALSE' to arguments of type '<INTEGER> IS FALSE'. Supported form(s): '<BOOLEAN> IS FALSE' near: line 1, column 13 (state=,code=0)
+Error: At line 1, column 13: Cannot apply 'IS FALSE' to arguments of type '<INTEGER> IS FALSE'. Supported form(s): '<BOOLEAN> IS FALSE' (state=,code=0)
 0: jdbc:farrago:> values 0.01 is not false;
-Error: Can not apply 'IS NOT FALSE' to arguments of type '<DECIMAL(3,2)> IS NOT FALSE'. Supported form(s): '<BOOLEAN> IS NOT FALSE' near: line 1, column 20 (state=,code=0)
+Error: At line 1, column 20: Cannot apply 'IS NOT FALSE' to arguments of type '<DECIMAL(3,2)> IS NOT FALSE'. Supported form(s): '<BOOLEAN> IS NOT FALSE' (state=,code=0)
 0: jdbc:farrago:> values x'' is unknown; 
-Error: Can not apply 'IS UNKNOWN' to arguments of type '<VARBINARY(0)> IS UNKNOWN'. Supported form(s): '<BOOLEAN> IS UNKNOWN' near: line 1, column 15 (state=,code=0)
+Error: At line 1, column 15: Cannot apply 'IS UNKNOWN' to arguments of type '<VARBINARY(0)> IS UNKNOWN'. Supported form(s): '<BOOLEAN> IS UNKNOWN' (state=,code=0)
 0: jdbc:farrago:> values b'' is not unknown;
-Error: Can not apply 'IS NOT UNKNOWN' to arguments of type '<BIT(0)> IS NOT UNKNOWN'. Supported form(s): '<BOOLEAN> IS NOT UNKNOWN' near: line 1, column 19 (state=,code=0)
+Error: At line 1, column 19: Cannot apply 'IS NOT UNKNOWN' to arguments of type '<BIT(0)> IS NOT UNKNOWN'. Supported form(s): '<BOOLEAN> IS NOT UNKNOWN' (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --prefix
 0: jdbc:farrago:> values -b'';
-Error: Can not apply '-' to arguments of type '-<BIT(0)>'. Supported form(s): '-<TINYINT>'
+Error: At line 1, column 8: Cannot apply '-' to arguments of type '-<BIT(0)>'. Supported form(s): '-<TINYINT>'
 '-<SMALLINT>'
 '-<INTEGER>'
 '-<BIGINT>'
 '-<DECIMAL>'
 '-<FLOAT>'
 '-<REAL>'
-'-<DOUBLE>' near: line 1, column 8 (state=,code=0)
+'-<DOUBLE>' (state=,code=0)
 0: jdbc:farrago:> values -'2';
-Error: Can not apply '-' to arguments of type '-<VARCHAR(1)>'. Supported form(s): '-<TINYINT>'
+Error: At line 1, column 8: Cannot apply '-' to arguments of type '-<VARCHAR(1)>'. Supported form(s): '-<TINYINT>'
 '-<SMALLINT>'
 '-<INTEGER>'
 '-<BIGINT>'
 '-<DECIMAL>'
 '-<FLOAT>'
 '-<REAL>'
-'-<DOUBLE>' near: line 1, column 8 (state=,code=0)
+'-<DOUBLE>' (state=,code=0)
 0: jdbc:farrago:> values +x'';
-Error: Can not apply '+' to arguments of type '+<VARBINARY(0)>'. Supported form(s): '+<TINYINT>'
+Error: At line 1, column 8: Cannot apply '+' to arguments of type '+<VARBINARY(0)>'. Supported form(s): '+<TINYINT>'
 '+<SMALLINT>'
 '+<INTEGER>'
 '+<BIGINT>'
 '+<DECIMAL>'
 '+<FLOAT>'
 '+<REAL>'
-'+<DOUBLE>' near: line 1, column 8 (state=,code=0)
+'+<DOUBLE>' (state=,code=0)
 0: jdbc:farrago:> values +cast(null as date);
-Error: Can not apply '+' to arguments of type '+<DATE>'. Supported form(s): '+<TINYINT>'
+Error: At line 1, column 8: Cannot apply '+' to arguments of type '+<DATE>'. Supported form(s): '+<TINYINT>'
 '+<SMALLINT>'
 '+<INTEGER>'
 '+<BIGINT>'
 '+<DECIMAL>'
 '+<FLOAT>'
 '+<REAL>'
-'+<DOUBLE>' near: line 1, column 8 (state=,code=0)
+'+<DOUBLE>' (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> values x'' between x'' and 1;
-Error: Can not apply 'BETWEEN' to arguments of type '<VARBINARY(0)> BETWEEN <VARBINARY(0)> AND <INTEGER>'. Supported form(s): '<TINYINT> BETWEEN <TINYINT> AND <TINYINT>'
+Error: At line 1, column 12: Cannot apply 'BETWEEN' to arguments of type '<VARBINARY(0)> BETWEEN <VARBINARY(0)> AND <INTEGER>'. Supported form(s): '<TINYINT> BETWEEN <TINYINT> AND <TINYINT>'
 '<TINYINT> BETWEEN <TINYINT> AND <SMALLINT>'
 '<TINYINT> BETWEEN <TINYINT> AND <INTEGER>'
 '<TINYINT> BETWEEN <TINYINT> AND <BIGINT>'
@@ -1803,9 +1803,9 @@ Error: Can not apply 'BETWEEN' to arguments of type '<VARBINARY(0)> BETWEEN <VAR
 '<VARCHAR> BETWEEN <CHAR> AND <CHAR>'
 '<VARCHAR> BETWEEN <CHAR> AND <VARCHAR>'
 '<VARCHAR> BETWEEN <VARCHAR> AND <CHAR>'
-'<VARCHAR> BETWEEN <VARCHAR> AND <VARCHAR>' near: line 1, column 12 (state=,code=0)
+'<VARCHAR> BETWEEN <VARCHAR> AND <VARCHAR>' (state=,code=0)
 0: jdbc:farrago:> values b'' not between '' and 3;
-Error: Can not apply 'NOT BETWEEN' to arguments of type '<BIT(0)> NOT BETWEEN <VARCHAR(0)> AND <INTEGER>'. Supported form(s): '<TINYINT> NOT BETWEEN <TINYINT> AND <TINYINT>'
+Error: At line 1, column 16: Cannot apply 'NOT BETWEEN' to arguments of type '<BIT(0)> NOT BETWEEN <VARCHAR(0)> AND <INTEGER>'. Supported form(s): '<TINYINT> NOT BETWEEN <TINYINT> AND <TINYINT>'
 '<TINYINT> NOT BETWEEN <TINYINT> AND <SMALLINT>'
 '<TINYINT> NOT BETWEEN <TINYINT> AND <INTEGER>'
 '<TINYINT> NOT BETWEEN <TINYINT> AND <BIGINT>'
@@ -2351,9 +2351,9 @@ Error: Can not apply 'NOT BETWEEN' to arguments of type '<BIT(0)> NOT BETWEEN <V
 '<VARCHAR> NOT BETWEEN <CHAR> AND <CHAR>'
 '<VARCHAR> NOT BETWEEN <CHAR> AND <VARCHAR>'
 '<VARCHAR> NOT BETWEEN <VARCHAR> AND <CHAR>'
-'<VARCHAR> NOT BETWEEN <VARCHAR> AND <VARCHAR>' near: line 1, column 16 (state=,code=0)
+'<VARCHAR> NOT BETWEEN <VARCHAR> AND <VARCHAR>' (state=,code=0)
 0: jdbc:farrago:> values '' between '' and 1.0;
-Error: Can not apply 'BETWEEN' to arguments of type '<VARCHAR(0)> BETWEEN <VARCHAR(0)> AND <DECIMAL(2,1)>'. Supported form(s): '<TINYINT> BETWEEN <TINYINT> AND <TINYINT>'
+Error: At line 1, column 11: Cannot apply 'BETWEEN' to arguments of type '<VARCHAR(0)> BETWEEN <VARCHAR(0)> AND <DECIMAL(2,1)>'. Supported form(s): '<TINYINT> BETWEEN <TINYINT> AND <TINYINT>'
 '<TINYINT> BETWEEN <TINYINT> AND <SMALLINT>'
 '<TINYINT> BETWEEN <TINYINT> AND <INTEGER>'
 '<TINYINT> BETWEEN <TINYINT> AND <BIGINT>'
@@ -2899,7 +2899,7 @@ Error: Can not apply 'BETWEEN' to arguments of type '<VARCHAR(0)> BETWEEN <VARCH
 '<VARCHAR> BETWEEN <CHAR> AND <CHAR>'
 '<VARCHAR> BETWEEN <CHAR> AND <VARCHAR>'
 '<VARCHAR> BETWEEN <VARCHAR> AND <CHAR>'
-'<VARCHAR> BETWEEN <VARCHAR> AND <VARCHAR>' near: line 1, column 11 (state=,code=0)
+'<VARCHAR> BETWEEN <VARCHAR> AND <VARCHAR>' (state=,code=0)
 0: jdbc:farrago:> --all then's and else return null forbidden in SQL99
 0: jdbc:farrago:> select CASE 1 WHEN 1 THEN NULL WHEN 2 THEN NULL END from values(1);
 Error: ELSE clause or at least one THEN clause must be non-NULL (state=,code=0)
@@ -2917,7 +2917,7 @@ Messages:
 [0]:PC=0 Code=22027 (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> values position(1 in 'superman');
-Error: Can not apply 'POSITION' to arguments of type 'POSITION(<INTEGER> IN <VARCHAR(8)>)'. Supported form(s): 'POSITION(<CHAR> IN <CHAR>)'
+Error: At line 1, column 8: Cannot apply 'POSITION' to arguments of type 'POSITION(<INTEGER> IN <VARCHAR(8)>)'. Supported form(s): 'POSITION(<CHAR> IN <CHAR>)'
 'POSITION(<CHAR> IN <VARCHAR>)'
 'POSITION(<CHAR> IN <BIT>)'
 'POSITION(<CHAR> IN <BINARY>)'
@@ -2941,38 +2941,38 @@ Error: Can not apply 'POSITION' to arguments of type 'POSITION(<INTEGER> IN <VAR
 'POSITION(<VARBINARY> IN <VARCHAR>)'
 'POSITION(<VARBINARY> IN <BIT>)'
 'POSITION(<VARBINARY> IN <BINARY>)'
-'POSITION(<VARBINARY> IN <VARBINARY>)' near: line 1, column 8 (state=,code=0)
+'POSITION(<VARBINARY> IN <VARBINARY>)' (state=,code=0)
 0: jdbc:farrago:> values character_length(1);
-Error: Can not apply 'CHARACTER_LENGTH' to arguments of type 'CHARACTER_LENGTH(<INTEGER>)'. Supported form(s): 'CHARACTER_LENGTH(<CHAR>)'
-'CHARACTER_LENGTH(<VARCHAR>)' near: line 1, column 8 (state=,code=0)
+Error: At line 1, column 8: Cannot apply 'CHARACTER_LENGTH' to arguments of type 'CHARACTER_LENGTH(<INTEGER>)'. Supported form(s): 'CHARACTER_LENGTH(<CHAR>)'
+'CHARACTER_LENGTH(<VARCHAR>)' (state=,code=0)
 0: jdbc:farrago:> values char_length(x'');
-Error: Can not apply 'CHAR_LENGTH' to arguments of type 'CHAR_LENGTH(<VARBINARY(0)>)'. Supported form(s): 'CHAR_LENGTH(<CHAR>)'
-'CHAR_LENGTH(<VARCHAR>)' near: line 1, column 8 (state=,code=0)
+Error: At line 1, column 8: Cannot apply 'CHAR_LENGTH' to arguments of type 'CHAR_LENGTH(<VARBINARY(0)>)'. Supported form(s): 'CHAR_LENGTH(<CHAR>)'
+'CHAR_LENGTH(<VARCHAR>)' (state=,code=0)
 0: jdbc:farrago:> values upper(0.02);
-Error: Can not apply 'UPPER' to arguments of type 'UPPER(<DECIMAL(3,2)>)'. Supported form(s): 'UPPER(<CHAR>)'
-'UPPER(<VARCHAR>)' near: line 1, column 8 (state=,code=0)
+Error: At line 1, column 8: Cannot apply 'UPPER' to arguments of type 'UPPER(<DECIMAL(3,2)>)'. Supported form(s): 'UPPER(<CHAR>)'
+'UPPER(<VARCHAR>)' (state=,code=0)
 0: jdbc:farrago:> values lower(b'');
-Error: Can not apply 'LOWER' to arguments of type 'LOWER(<BIT(0)>)'. Supported form(s): 'LOWER(<CHAR>)'
-'LOWER(<VARCHAR>)' near: line 1, column 8 (state=,code=0)
+Error: At line 1, column 8: Cannot apply 'LOWER' to arguments of type 'LOWER(<BIT(0)>)'. Supported form(s): 'LOWER(<CHAR>)'
+'LOWER(<VARCHAR>)' (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --doesnt return the correct error message but keeping it active until its fixed
 0: jdbc:farrago:> --values initcap(cast(null as date));
 0: jdbc:farrago:> values initcap(1);
-Error: Can not apply 'INITCAP' to arguments of type 'INITCAP(<INTEGER>)'. Supported form(s): 'INITCAP(<CHAR>)'
-'INITCAP(<VARCHAR>)' near: line 1, column 8 (state=,code=0)
+Error: At line 1, column 8: Cannot apply 'INITCAP' to arguments of type 'INITCAP(<INTEGER>)'. Supported form(s): 'INITCAP(<CHAR>)'
+'INITCAP(<VARCHAR>)' (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> values abs('');
-Error: Can not apply 'ABS' to arguments of type 'ABS(<VARCHAR(0)>)'. Supported form(s): 'ABS(<TINYINT>)'
+Error: At line 1, column 8: Cannot apply 'ABS' to arguments of type 'ABS(<VARCHAR(0)>)'. Supported form(s): 'ABS(<TINYINT>)'
 'ABS(<SMALLINT>)'
 'ABS(<INTEGER>)'
 'ABS(<BIGINT>)'
 'ABS(<DECIMAL>)'
 'ABS(<FLOAT>)'
 'ABS(<REAL>)'
-'ABS(<DOUBLE>)' near: line 1, column 8 (state=,code=0)
+'ABS(<DOUBLE>)' (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select nullif('',1) from values(1);
-Error: Can not apply '=' to arguments of type '<VARCHAR(0)> = <INTEGER>'. Supported form(s): '<ANY> = <ANY>'
+Error: At line 1, column 8: Cannot apply '=' to arguments of type '<VARCHAR(0)> = <INTEGER>'. Supported form(s): '<ANY> = <ANY>'
 '<TINYINT> = <TINYINT>'
 '<TINYINT> = <SMALLINT>'
 '<TINYINT> = <INTEGER>'
@@ -3049,9 +3049,9 @@ Error: Can not apply '=' to arguments of type '<VARCHAR(0)> = <INTEGER>'. Suppor
 '<CHAR> = <CHAR>'
 '<CHAR> = <VARCHAR>'
 '<VARCHAR> = <CHAR>'
-'<VARCHAR> = <VARCHAR>' near: line 1, column 8 (state=,code=0)
+'<VARCHAR> = <VARCHAR>' (state=,code=0)
 0: jdbc:farrago:> values nullif('',1);
-Error: Can not apply '=' to arguments of type '<VARCHAR(0)> = <INTEGER>'. Supported form(s): '<ANY> = <ANY>'
+Error: At line 1, column 8: Cannot apply '=' to arguments of type '<VARCHAR(0)> = <INTEGER>'. Supported form(s): '<ANY> = <ANY>'
 '<TINYINT> = <TINYINT>'
 '<TINYINT> = <SMALLINT>'
 '<TINYINT> = <INTEGER>'
@@ -3128,31 +3128,31 @@ Error: Can not apply '=' to arguments of type '<VARCHAR(0)> = <INTEGER>'. Suppor
 '<CHAR> = <CHAR>'
 '<CHAR> = <VARCHAR>'
 '<VARCHAR> = <CHAR>'
-'<VARCHAR> = <VARCHAR>' near: line 1, column 8 (state=,code=0)
+'<VARCHAR> = <VARCHAR>' (state=,code=0)
 0: jdbc:farrago:> select coalesce('a','b',1) from values(1);
-Error: Illegal mixing of types found in statement starting near: line 1, column 8 (state=,code=0)
+Error: At line 1, column 8: Illegal mixing of types in CASE or COALESCE statement (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> values localtime(1);
 Error: java.lang.AssertionError: Wrong number of params for instruction LocalTime; expected=1 but was=2 (state=,code=0)
 0: jdbc:farrago:> values localtimestamp(1);
 Error: java.lang.AssertionError: Wrong number of params for instruction LocalTimestamp; expected=1 but was=2 (state=,code=0)
 0: jdbc:farrago:> values current_time(2,3);
-Error: Invalid number of arguments to function 'CURRENT_TIME'; encountered near line 1, column 8. Was expecting 0 arguments (state=,code=0)
+Error: At line 1, column 8: Invalid number of arguments to function 'CURRENT_TIME'. Was expecting 0 arguments (state=,code=0)
 0: jdbc:farrago:> values current_timestamp(-1);
 Error: Argument to function 'CURRENT_TIMESTAMP' must be a positive integer literal (state=,code=0)
 0: jdbc:farrago:> values current_time(-20);
 Error: Argument to function 'CURRENT_TIME' must be a positive integer literal (state=,code=0)
 0: jdbc:farrago:> values current_date(2);
-Error: Invalid number of arguments to function 'CURRENT_DATE'; encountered near line 1, column 8. Was expecting 0 arguments (state=,code=0)
+Error: At line 1, column 8: Invalid number of arguments to function 'CURRENT_DATE'. Was expecting 0 arguments (state=,code=0)
 0: jdbc:farrago:> values log(1,2,3);
-Error: Invalid number of arguments to function 'LOG'; encountered near line 1, column 8. Was expecting 1 arguments (state=,code=0)
+Error: At line 1, column 8: Invalid number of arguments to function 'LOG'. Was expecting 1 arguments (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> values (1),(2,3);
-Error: Values passed to VALUES operator near line 1, column 1 must have compatible types (state=,code=0)
+Error: At line 1, column 1: Values passed to VALUES operator must have compatible types (state=,code=0)
 0: jdbc:farrago:> values (1),('1');
-Error: Values passed to VALUES operator near line 1, column 1 must have compatible types (state=,code=0)
+Error: At line 1, column 1: Values passed to VALUES operator must have compatible types (state=,code=0)
 0: jdbc:farrago:> values (1,'1'),(2,3);
-Error: Values passed to VALUES operator near line 1, column 1 must have compatible types (state=,code=0)
+Error: At line 1, column 1: Values passed to VALUES operator must have compatible types (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 

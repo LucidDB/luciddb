@@ -518,7 +518,7 @@ public class CalcProgramBuilder
                     Line line = (Line) inst.getOperands()[0];
                     if (line.getLine().intValue() == i) {
                         throw FarragoResource.instance()
-                            .newProgramCompilationError("Can not jump to the same line as the instruction");
+                            .newProgramCompilationError("Cannot jump to the same line as the instruction");
                     }
                 }
 
@@ -527,7 +527,7 @@ public class CalcProgramBuilder
                     Line line = (Line) inst.getOperands()[0];
                     if (line.getLine().intValue() < i) {
                         throw FarragoResource.instance()
-                            .newProgramCompilationError("Loops are forbidden. Can not jump to a previous line");
+                            .newProgramCompilationError("Loops are forbidden. Cannot jump to a previous line");
                     }
                 }
 

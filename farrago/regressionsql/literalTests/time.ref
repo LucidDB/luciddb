@@ -80,7 +80,7 @@ Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast fro
 0: jdbc:farrago:> insert into t_time values(1234,null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'INTEGER' to 'TIME(0)' (state=,code=0)
 0: jdbc:farrago:> insert into t_time values(10e400,null);
-Error: Number literal '1.0000000000000000000E401' out of range near: line 1, column 26 (state=,code=0)
+Error: At line 1, column 26: Numeric literal '1.0000000000000000000E401' out of range (state=,code=0)
 0: jdbc:farrago:> insert into t_time values(-1.2345678901234e-200,null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'DOUBLE' to 'TIME(0)' (state=,code=0)
 0: jdbc:farrago:> insert into t_time values(-1234.03,null);
@@ -90,7 +90,7 @@ Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast fro
 0: jdbc:farrago:> insert into t_time values(b'10',null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'BIT(2)' to 'TIME(0)' (state=,code=0)
 0: jdbc:farrago:> insert into t_date values(date '1999-01-08',null);
-Error: Table 'T_DATE' not found near: line 1, column 13 (state=,code=0)
+Error: At line 1, column 13: Table 'T_DATE' not found (state=,code=0)
 0: jdbc:farrago:> insert into t_time values(timestamp '2004-12-01 12:01:01',null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'TIMESTAMP(0)' to 'TIME(0)' (state=,code=0)
 0: jdbc:farrago:> 

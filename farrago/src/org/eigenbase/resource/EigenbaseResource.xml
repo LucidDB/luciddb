@@ -89,7 +89,7 @@
 </exception>
 
 <exception id="120030" name="IncompatibleCharset">
-    <text>Can not apply {0} to the two different charsets {1} and {2}</text>
+    <text>Cannot apply {0} to the two different charsets {1} and {2}</text>
 </exception>
 
 <exception id="120040" name="InvalidOrderByPos" className="org.eigenbase.sql.SqlValidatorException">
@@ -134,7 +134,7 @@
 </exception>
 
 <exception id="120130" name="CanNotApplyOp2Type" className="org.eigenbase.sql.SqlValidatorException">
-    <text>Can not apply ''{0}'' to arguments of type {1}. Supported form(s): {2}</text>
+    <text>Cannot apply ''{0}'' to arguments of type {1}. Supported form(s): {2}</text>
 </exception>
 
 <exception id="120140" name="ExpectedBoolean" className="org.eigenbase.sql.SqlValidatorException">

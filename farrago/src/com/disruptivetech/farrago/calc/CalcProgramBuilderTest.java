@@ -214,7 +214,7 @@ public class CalcProgramBuilderTest extends TestCase
         CalcProgramBuilder.boolAnd.add(builder, out0, const0, const1);
         builder.addJump(2); //jumping back
         assertExceptionIsThrown(
-            "(?s)(?i).*Loops are forbidden. Can not jump to a previous line.*");
+            "(?s)(?i).*Loops are forbidden. Cannot jump to a previous line.*");
     }
 
     public void testJumpingToItSelf()
@@ -226,7 +226,7 @@ public class CalcProgramBuilderTest extends TestCase
         CalcProgramBuilder.boolAnd.add(builder, out0, const0, const1);
         builder.addJump(1); //jumping to itself
         assertExceptionIsThrown(
-            "(?s)(?i).*Can not jump to the same line as the instruction.*");
+            "(?s)(?i).*Cannot jump to the same line as the instruction.*");
     }
 
     public void testLabelJump()
@@ -274,7 +274,7 @@ public class CalcProgramBuilderTest extends TestCase
         builder.addLabel("label$0");
         builder.addLabelJump("label$0");
         assertExceptionIsThrown(
-            "(?s)(?i).*Can not jump to the same line as the instruction.*");
+            "(?s)(?i).*Cannot jump to the same line as the instruction.*");
     }
 
     public void testLabelMultipleTimes()

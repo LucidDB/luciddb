@@ -136,7 +136,7 @@ Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast fro
 0: jdbc:farrago:> insert into t_timestamp values(1234,null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'INTEGER' to 'TIMESTAMP(0)' (state=,code=0)
 0: jdbc:farrago:> insert into t_timestamp values(10e400,null);
-Error: Number literal '1.0000000000000000000E401' out of range near: line 1, column 31 (state=,code=0)
+Error: At line 1, column 31: Numeric literal '1.0000000000000000000E401' out of range (state=,code=0)
 0: jdbc:farrago:> insert into t_timestamp values(-1.2345678901234e-200,null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'DOUBLE' to 'TIMESTAMP(0)' (state=,code=0)
 0: jdbc:farrago:> insert into t_timestamp values(-1234.03,null);

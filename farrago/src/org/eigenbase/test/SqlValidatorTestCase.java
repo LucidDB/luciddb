@@ -375,7 +375,7 @@ public abstract class SqlValidatorTestCase extends TestCase
 
         check("select 1 IS NULL FROM values(true)");
         check("select 1.2 IS NULL FROM values(true)");
-        checkExpFails("'abc' IS NOT UNKNOWN", "(?s).*Can not apply.*");
+        checkExpFails("'abc' IS NOT UNKNOWN", "(?s).*Cannot apply.*");
     }
 
     public void testIsFails()
@@ -387,7 +387,7 @@ public abstract class SqlValidatorTestCase extends TestCase
             "(?s).*");
 
         assertExceptionIsThrown("select 1.1e1 IS NOT FALSE FROM values(true)",
-            "(?s).*Can not apply 'IS NOT FALSE' to arguments of type '<DOUBLE> IS NOT FALSE'.*");
+            "(?s).*Cannot apply 'IS NOT FALSE' to arguments of type '<DOUBLE> IS NOT FALSE'.*");
 
         assertExceptionIsThrown("select 'abc' IS NOT TRUE FROM values(true)",
             "(?s).*");
@@ -420,7 +420,7 @@ public abstract class SqlValidatorTestCase extends TestCase
     {
         //TODO need col+line number
         assertExceptionIsThrown("select 1+TRUE from values(true)",
-            "(?s).*Can not apply '\\+' to arguments of type '<INTEGER> \\+ <BOOLEAN>'\\. Supported form\\(s\\):.*");
+            "(?s).*Cannot apply '\\+' to arguments of type '<INTEGER> \\+ <BOOLEAN>'\\. Supported form\\(s\\):.*");
     }
 
     public void testNumbers()
@@ -431,9 +431,9 @@ public abstract class SqlValidatorTestCase extends TestCase
     public void testPrefixFails()
     {
         assertExceptionIsThrown("SELECT -'abc' from values(true)",
-            "(?s).*Can not apply '-' to arguments of type '-<VARCHAR.3.>'.*");
+            "(?s).*Cannot apply '-' to arguments of type '-<VARCHAR.3.>'.*");
         assertExceptionIsThrown("SELECT +'abc' from values(true)",
-            "(?s).*Can not apply '\\+' to arguments of type '\\+<VARCHAR.3.>'.*");
+            "(?s).*Cannot apply '\\+' to arguments of type '\\+<VARCHAR.3.>'.*");
     }
 
     public void testEqualNotEqual()
@@ -486,25 +486,25 @@ public abstract class SqlValidatorTestCase extends TestCase
     public void testEqualNotEqualFails()
     {
         checkExpFails("''<>1",
-            "(?s).*Can not apply '<>' to arguments of type '<VARCHAR.0.> <> <INTEGER>'.*");
+            "(?s).*Cannot apply '<>' to arguments of type '<VARCHAR.0.> <> <INTEGER>'.*");
         checkExpFails("'1'>=1",
-            "(?s).*Can not apply '>=' to arguments of type '<VARCHAR.1.> >= <INTEGER>'.*");
+            "(?s).*Cannot apply '>=' to arguments of type '<VARCHAR.1.> >= <INTEGER>'.*");
         checkExpFails("1<>n'abc'",
-            "(?s).*Can not apply '<>' to arguments of type '<INTEGER> <> <VARCHAR.3.>'.*");
+            "(?s).*Cannot apply '<>' to arguments of type '<INTEGER> <> <VARCHAR.3.>'.*");
         checkExpFails("''=.1",
-            "(?s).*Can not apply '=' to arguments of type '<VARCHAR.0.> = <DECIMAL.1..1.>'.*");
+            "(?s).*Cannot apply '=' to arguments of type '<VARCHAR.0.> = <DECIMAL.1..1.>'.*");
         checkExpFails("true<>1e-1",
-            "(?s).*Can not apply '<>' to arguments of type '<BOOLEAN> <> <DOUBLE>'.*");
+            "(?s).*Cannot apply '<>' to arguments of type '<BOOLEAN> <> <DOUBLE>'.*");
         checkExpFails("false=''",
-            "(?s).*Can not apply '=' to arguments of type '<BOOLEAN> = <VARCHAR.0.>'.*");
+            "(?s).*Cannot apply '=' to arguments of type '<BOOLEAN> = <VARCHAR.0.>'.*");
         checkExpFails("b'1'=0.01",
-            "(?s).*Can not apply '=' to arguments of type '<BIT.1.> = <DECIMAL.3, 2.>'.*");
+            "(?s).*Cannot apply '=' to arguments of type '<BIT.1.> = <DECIMAL.3, 2.>'.*");
         checkExpFails("b'1'=1",
-            "(?s).*Can not apply '=' to arguments of type '<BIT.1.> = <INTEGER>'.*");
+            "(?s).*Cannot apply '=' to arguments of type '<BIT.1.> = <INTEGER>'.*");
         checkExpFails("b'1'<>0.01",
-            "(?s).*Can not apply '<>' to arguments of type '<BIT.1.> <> <DECIMAL.3, 2.>'.*");
+            "(?s).*Cannot apply '<>' to arguments of type '<BIT.1.> <> <DECIMAL.3, 2.>'.*");
         checkExpFails("b'1'<>1",
-            "(?s).*Can not apply '<>' to arguments of type '<BIT.1.> <> <INTEGER>'.*");
+            "(?s).*Cannot apply '<>' to arguments of type '<BIT.1.> <> <INTEGER>'.*");
     }
 
     public void testHexBitBinaryString()
@@ -520,13 +520,13 @@ public abstract class SqlValidatorTestCase extends TestCase
     public void testHexBitBinaryStringFails()
     {
         assertExceptionIsThrown("select x'f'='abc' from values(true)",
-            "(?s).*Can not apply '=' to arguments of type '<BIT.4.> = <VARCHAR.3.>'.*");
+            "(?s).*Cannot apply '=' to arguments of type '<BIT.4.> = <VARCHAR.3.>'.*");
         assertExceptionIsThrown("select x'ff'=88 from values(true)",
-            "(?s).*Can not apply '=' to arguments of type '<VARBINARY.1.> = <INTEGER>'.*");
+            "(?s).*Cannot apply '=' to arguments of type '<VARBINARY.1.> = <INTEGER>'.*");
         assertExceptionIsThrown("select x''<>1.1e-1 from values(true)",
-            "(?s).*Can not apply '<>' to arguments of type '<VARBINARY.0.> <> <DOUBLE>'.*");
+            "(?s).*Cannot apply '<>' to arguments of type '<VARBINARY.0.> <> <DOUBLE>'.*");
         assertExceptionIsThrown("select b''<>1.1 from values(true)",
-            "(?s).*Can not apply '<>' to arguments of type '<BIT.0.> <> <DECIMAL.2, 1.>'.*");
+            "(?s).*Cannot apply '<>' to arguments of type '<BIT.0.> <> <DECIMAL.2, 1.>'.*");
     }
 
     public void testStringLiteral()
@@ -550,8 +550,8 @@ public abstract class SqlValidatorTestCase extends TestCase
         checkExp("ln(5.43  )");
         checkExp("log(- -.2  )");
 
-        checkExpFails("mod(5.1, 3)", "(?s).*Can not apply.*");
-        checkExpFails("mod(2,5.1)", "(?s).*Can not apply.*");
+        checkExpFails("mod(5.1, 3)", "(?s).*Cannot apply.*");
+        checkExpFails("mod(2,5.1)", "(?s).*Cannot apply.*");
     }
 
     public void testArthimeticOperatorsTypes()
@@ -567,19 +567,19 @@ public abstract class SqlValidatorTestCase extends TestCase
     public void testArthimeticOperatorsFails()
     {
         checkExpFails("pow(2,'abc')",
-            "(?s).*Can not apply 'POW' to arguments of type 'POW.<INTEGER>, <VARCHAR.3.>.*");
+            "(?s).*Cannot apply 'POW' to arguments of type 'POW.<INTEGER>, <VARCHAR.3.>.*");
         checkExpFails("pow(true,1)",
-            "(?s).*Can not apply 'POW' to arguments of type 'POW.<BOOLEAN>, <INTEGER>.*");
+            "(?s).*Cannot apply 'POW' to arguments of type 'POW.<BOOLEAN>, <INTEGER>.*");
         checkExpFails("mod(b'11001',1)",
-            "(?s).*Can not apply 'MOD' to arguments of type 'MOD.<BIT.5.>, <INTEGER>.*");
+            "(?s).*Cannot apply 'MOD' to arguments of type 'MOD.<BIT.5.>, <INTEGER>.*");
         checkExpFails("mod(1, b'11001')",
-            "(?s).*Can not apply 'MOD' to arguments of type 'MOD.<INTEGER>, <BIT.5.>.*");
+            "(?s).*Cannot apply 'MOD' to arguments of type 'MOD.<INTEGER>, <BIT.5.>.*");
         checkExpFails("abs(x'')",
-            "(?s).*Can not apply 'ABS' to arguments of type 'ABS.<VARBINARY.0.>.*");
+            "(?s).*Cannot apply 'ABS' to arguments of type 'ABS.<VARBINARY.0.>.*");
         checkExpFails("ln(x'f')",
-            "(?s).*Can not apply 'LN' to arguments of type 'LN.<BIT.4.>.*");
+            "(?s).*Cannot apply 'LN' to arguments of type 'LN.<BIT.4.>.*");
         checkExpFails("log(x'f')",
-            "(?s).*Can not apply 'LOG' to arguments of type 'LOG.<BIT.4.>.*");
+            "(?s).*Cannot apply 'LOG' to arguments of type 'LOG.<BIT.4.>.*");
     }
 
     public void testCaseExpression()
@@ -627,7 +627,7 @@ public abstract class SqlValidatorTestCase extends TestCase
     {
         //varchar not comparable with bit string
         checkExpFails("case 'string' when b'01' then 'zero one' else 'something' end",
-            "(?s).*Can not apply '=' to arguments of type '<VARCHAR.6.> = <BIT.2.>'.*");
+            "(?s).*Cannot apply '=' to arguments of type '<VARCHAR.6.> = <BIT.2.>'.*");
 
         //all thens and else return null
         checkExpFails("case 1 when 1 then null else null end",
@@ -718,7 +718,7 @@ public abstract class SqlValidatorTestCase extends TestCase
     public void testConcatFails()
     {
         checkExpFails("'a'||x'ff'",
-            "(?s).*Can not apply '\\|\\|' to arguments of type '<VARCHAR.1.> \\|\\| <VARBINARY.1.>'"
+            "(?s).*Cannot apply '\\|\\|' to arguments of type '<VARCHAR.1.> \\|\\| <VARBINARY.1.>'"
             + ".*Supported form.s.: '<CHAR> \\|\\| <CHAR>'"
             + ".*'<VARCHAR> \\|\\| <VARCHAR>'"
             + ".*'<BIT> \\|\\| <BIT>'" + ".*'<BINARY> \\|\\| <BINARY>'"
@@ -729,23 +729,23 @@ public abstract class SqlValidatorTestCase extends TestCase
     {
         checkExp("1 between 2 and 3");
         checkExp("'a' between 'b' and 'c'");
-        checkExpFails("'' between 2 and 3", "(?s).*Can not apply.*");
+        checkExpFails("'' between 2 and 3", "(?s).*Cannot apply.*");
     }
 
     public void testCharsetMismatch()
     {
         checkExpFails("''=_shift_jis''",
-            "(?s).*Can not apply .* to the two different charsets.*");
+            "(?s).*Cannot apply .* to the two different charsets.*");
         checkExpFails("''<>_shift_jis''",
-            "(?s).*Can not apply .* to the two different charsets.*");
+            "(?s).*Cannot apply .* to the two different charsets.*");
         checkExpFails("''>_shift_jis''",
-            "(?s).*Can not apply .* to the two different charsets.*");
+            "(?s).*Cannot apply .* to the two different charsets.*");
         checkExpFails("''<_shift_jis''",
-            "(?s).*Can not apply .* to the two different charsets.*");
+            "(?s).*Cannot apply .* to the two different charsets.*");
         checkExpFails("''<=_shift_jis''",
-            "(?s).*Can not apply .* to the two different charsets.*");
+            "(?s).*Cannot apply .* to the two different charsets.*");
         checkExpFails("''>=_shift_jis''",
-            "(?s).*Can not apply .* to the two different charsets.*");
+            "(?s).*Cannot apply .* to the two different charsets.*");
         checkExpFails("''||_shift_jis''", "(?s).*");
         checkExpFails("'a'||'b'||_iso-8859-6'c'", "(?s).*");
     }
@@ -809,7 +809,7 @@ public abstract class SqlValidatorTestCase extends TestCase
         checkExp("lower(n'sadf')");
         checkExpType("lower('sadf')", "VARCHAR(4)");
         checkExpFails("upper(123)",
-            "(?s).*Can not apply 'UPPER' to arguments of type 'UPPER.<INTEGER>.'.*");
+            "(?s).*Cannot apply 'UPPER' to arguments of type 'UPPER.<INTEGER>.'.*");
     }
 
     public void testPosition()
@@ -821,9 +821,9 @@ public abstract class SqlValidatorTestCase extends TestCase
 
         //review wael 29 March 2004: is x'1' (hexstring) and x'1010' (bytestring) a type mismatch?
         checkExpFails("position(x'1' in x'1010')",
-            "(?s).*Can not apply 'POSITION' to arguments of type 'POSITION.<BIT.4.> IN <VARBINARY.2.>.'.*");
+            "(?s).*Cannot apply 'POSITION' to arguments of type 'POSITION.<BIT.4.> IN <VARBINARY.2.>.'.*");
         checkExpFails("position(x'1' in '110')",
-            "(?s).*Can not apply 'POSITION' to arguments of type 'POSITION.<BIT.4.> IN <VARCHAR.3.>.'.*");
+            "(?s).*Cannot apply 'POSITION' to arguments of type 'POSITION.<BIT.4.> IN <VARCHAR.3.>.'.*");
     }
 
     public void testTrim()
@@ -844,9 +844,9 @@ public abstract class SqlValidatorTestCase extends TestCase
     public void testTrimFails()
     {
         checkExpFails("trim(123 FROM 'beard')",
-            "(?s).*Can not apply 'TRIM' to arguments of type.*");
+            "(?s).*Cannot apply 'TRIM' to arguments of type.*");
         checkExpFails("trim('a' FROM 123)",
-            "(?s).*Can not apply 'TRIM' to arguments of type.*");
+            "(?s).*Cannot apply 'TRIM' to arguments of type.*");
         checkExpFails("trim('a' FROM _shift_jis'b')",
             "(?s).*not comparable to each other.*");
     }
@@ -900,7 +900,7 @@ public abstract class SqlValidatorTestCase extends TestCase
     public void testSubstringFails()
     {
         checkExpFails("substring('a' from 1 for 'b')",
-            "(?s).*Can not apply 'SUBSTRING' to arguments of type.*");
+            "(?s).*Cannot apply 'SUBSTRING' to arguments of type.*");
         checkExpFails("substring(_shift_jis'10' FROM '0' FOR '\\')",
             "(?s).* not comparable to each other.*");
         checkExpFails("substring('10' FROM _shift_jis'0' FOR '\\')",
@@ -1099,7 +1099,7 @@ public abstract class SqlValidatorTestCase extends TestCase
         checkExpFails("{fn insert('','',1)}", "(?s).*4.*");
         checkExpFails("{fn locate('','',1)}", "(?s).*"); //todo this is legal jdbc syntax, just that currently the 3 ops call is not implemented in the system
         checkExpFails("{fn log('1')}",
-            "(?s).*Can not apply.*fn LOG..<VARCHAR.1.>.*");
+            "(?s).*Cannot apply.*fn LOG..<VARCHAR.1.>.*");
         checkExpFails("{fn log(1,1)}",
             "(?s).*Encountered .fn LOG. with 2 parameter.s.; was expecting 1 parameter.s.*");
         checkExpFails("{fn fn(1)}",
@@ -1182,13 +1182,13 @@ public abstract class SqlValidatorTestCase extends TestCase
     public void testIsASet() {
         checkExp("multiset[1] is a set");
         checkExp("multiset['1'] is a set");
-        checkExpFails("'a' is a set",".*Can not apply 'IS A SET' to.*");
+        checkExpFails("'a' is a set",".*Cannot apply 'IS A SET' to.*");
     }
 
     public void testCardinality() {
         checkExpType("cardinality(multiset[1])","INTEGER");
         checkExpType("cardinality(multiset['1'])","INTEGER");
-        checkExpFails("cardinality('a')","Can not apply 'CARDINALITY' to arguments of type 'CARDINALITY.<VARCHAR.1.>.'. Supported form.s.: 'CARDINALITY.<MULTISET>.'", 1, 8);
+        checkExpFails("cardinality('a')","Cannot apply 'CARDINALITY' to arguments of type 'CARDINALITY.<VARCHAR.1.>.'. Supported form.s.: 'CARDINALITY.<MULTISET>.'", 1, 8);
     }
 }
 

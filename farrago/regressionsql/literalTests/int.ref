@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/farrago/regressionsql/literalTests/int.sql#4 $ 
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/literalTests/int.sql#1 $ 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test int literal
 0: jdbc:farrago:> 
@@ -108,7 +108,7 @@ Messages:
 0: jdbc:farrago:> insert into t_int values(TRUE,null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'BOOLEAN' to 'INTEGER' (state=,code=0)
 0: jdbc:farrago:> insert into t_int values(10e400,null);
-Error: Number literal '1.0000000000000000000E401' out of range near: line 1, column 25 (state=,code=0)
+Error: At line 1, column 25: Numeric literal '1.0000000000000000000E401' out of range (state=,code=0)
 0: jdbc:farrago:> insert into t_int values(x'ff',null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'VARBINARY(1)' to 'INTEGER' (state=,code=0)
 0: jdbc:farrago:> insert into t_int values(b'10',null);
