@@ -34,6 +34,7 @@ import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.util.Util;
+import org.eigenbase.util.EnumeratedValues;
 
 import java.util.List;
 
@@ -200,16 +201,15 @@ public class SqlBetweenOperator extends SqlInfixOperator
         int leftPrec,
         int rightPrec)
     {
-        operands[VALUE_OPERAND].unparse(writer, this.leftPrec, this.rightPrec);
-        writer.print(" " + name);
-        if (((SqlBetweenOperator.Flag) operands[SYMFLAG_OPERAND]).isAsymmetric) {
-            writer.print(" ASYMMETRIC ");
-        } else {
-            writer.print(" SYMMETRIC ");
-        }
-        operands[LOWER_OPERAND].unparse(writer, this.leftPrec, this.rightPrec);
+        operands[VALUE_OPERAND].unparse(writer, this.leftPrec, 0);
+        writer.print(" ");
+        writer.print(name);
+        writer.print(" ");
+        operands[SYMFLAG_OPERAND].unparse(writer, 0, 0);
+        writer.print(" ");
+        operands[LOWER_OPERAND].unparse(writer, 0, 0);
         writer.print(" AND ");
-        operands[UPPER_OPERAND].unparse(writer, this.leftPrec, this.rightPrec);
+        operands[UPPER_OPERAND].unparse(writer, 0, this.rightPrec);
     }
 
     public int reduceExpr(
@@ -257,7 +257,8 @@ public class SqlBetweenOperator extends SqlInfixOperator
         SqlNode exp0 = (SqlNode) list.get(opOrdinal - 1);
         SqlCall newExp =
             createCall(
-                new SqlNode [] { exp0, exp1, exp2, flag },
+                new SqlNode [] {
+                    exp0, exp1, exp2, SqlLiteral.createSymbol(flag, null) },
                 betweenNode.pos);
 
         // Replace all of the matched nodes with the single reduced node.
@@ -279,34 +280,20 @@ public class SqlBetweenOperator extends SqlInfixOperator
     //~ Inner Classes ---------------------------------------------------------
 
     /**
-     * TODO javadoc
-     *
-     * REVIEW jhyde 2004/8/11 Convert this back to an enumeration.
-     *   If you need to provide a parser position, wrap it in a
-     *   {@link SqlLiteral} or better, make {@link SqlSymbol} a subtype of
-     *   SqlLiteral.
+     * Defines the "SYMMETRIC" and "ASYMMETRIC" keywords.
      */
-    public static class Flag extends SqlSymbol
+    public static class Flag extends EnumeratedValues.BasicValue
     {
-        public final boolean isAsymmetric;
+        public static final int Asymmetric_ordinal = 0;
+        public static final Flag Asymmetric = new Flag("Asymmetric", Asymmetric_ordinal);
+        public static final int Symmetric_ordinal = 1;
+        public static final Flag Symmetric = new Flag("Symmetric", Symmetric_ordinal);
+        public static final EnumeratedValues enumeration =
+            new EnumeratedValues(new Flag[] {Asymmetric, Symmetric});
 
-        private Flag(
-            String name,
-            boolean isAsymmetric,
-            SqlParserPos pos)
+        private Flag(String name, int ordinal)
         {
-            super(name, pos);
-            this.isAsymmetric = isAsymmetric;
-        }
-
-        public static final Flag createAsymmetric(SqlParserPos pos)
-        {
-            return new Flag("Asymmetric", true, pos);
-        }
-
-        public static final Flag createSymmetric(SqlParserPos pos)
-        {
-            return new Flag("Symmetric", false, pos);
+            super(name, ordinal, null);
         }
     }
 }

@@ -926,20 +926,24 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         new SqlThrowOperator();
     public final SqlBetweenOperator betweenOperator =
         new SqlBetweenOperator(
-            SqlBetweenOperator.Flag.createAsymmetric(SqlParserPos.ZERO),
+            SqlBetweenOperator.Flag.Asymmetric,
             false);
+
     public final SqlBetweenOperator symmetricBetweenOperator =
         new SqlBetweenOperator(
-            SqlBetweenOperator.Flag.createSymmetric(SqlParserPos.ZERO),
+            SqlBetweenOperator.Flag.Symmetric,
             false);
+
     public final SqlBetweenOperator notBetweenOperator =
         new SqlBetweenOperator(
-            SqlBetweenOperator.Flag.createAsymmetric(SqlParserPos.ZERO),
+            SqlBetweenOperator.Flag.Asymmetric,
             true);
+
     public final SqlBetweenOperator symmetricNotBetweenOperator =
         new SqlBetweenOperator(
-            SqlBetweenOperator.Flag.createSymmetric(SqlParserPos.ZERO),
+            SqlBetweenOperator.Flag.Symmetric,
             true);
+
     public final SqlSpecialOperator notLikeOperator =
         new SqlLikeOperator("NOT LIKE", SqlKind.Like, true) {
             public void test(SqlTester tester)

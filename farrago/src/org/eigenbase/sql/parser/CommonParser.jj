@@ -373,8 +373,12 @@ SqlSelect SqlSelect() :
     <SELECT>
     SqlSelectKeywords(keywords)
     (
-        <DISTINCT> { keywords.add(new SqlSymbol("DISTINCT", getPos())); }
-    |   <ALL> { keywords.add(new SqlSymbol("ALL", getPos())); }
+        <DISTINCT> {
+            keywords.add(SqlLiteral.createSymbol(SqlSelectKeyword.Distinct, getPos())); 
+        }
+    |   <ALL> {
+            keywords.add(SqlLiteral.createSymbol(SqlSelectKeyword.All, getPos())); 
+        }
     |   E()
     )
     selectList = SelectList()
@@ -752,8 +756,8 @@ SqlNode FromClause() :
             <ON> condition = Expression(EXPR_ACCEPT_SUBQUERY) {
                 e = opTab.joinOperator.createCall(e,
                         SqlLiteral.createBoolean(isNatural, naturalPos),
-                        SqlLiteral.createFlag(joinType, joinTypePos), e2,
-                        SqlLiteral.createFlag(SqlJoinOperator.ConditionType.On, joinTypePos),
+                        SqlLiteral.createSymbol(joinType, joinTypePos), e2,
+                        SqlLiteral.createSymbol(SqlJoinOperator.ConditionType.On, joinTypePos),
                         condition, joinTypePos);
             }
         |
@@ -761,16 +765,16 @@ SqlNode FromClause() :
                 pos = getPos();
                 e = opTab.joinOperator.createCall(e,
                         SqlLiteral.createBoolean(isNatural, naturalPos),
-                        SqlLiteral.createFlag(joinType, joinTypePos), e2,
-                        SqlLiteral.createFlag(SqlJoinOperator.ConditionType.Using, joinTypePos),
+                        SqlLiteral.createSymbol(joinType, joinTypePos), e2,
+                        SqlLiteral.createSymbol(SqlJoinOperator.ConditionType.Using, joinTypePos),
                         new SqlNodeList(list, pos), joinTypePos);
             }
         |
             {
                 e = opTab.joinOperator.createCall(e,
                         SqlLiteral.createBoolean(isNatural, naturalPos),
-                        SqlLiteral.createFlag(joinType, joinTypePos), e2,
-                        SqlLiteral.createFlag(SqlJoinOperator.ConditionType.None, joinTypePos),
+                        SqlLiteral.createSymbol(joinType, joinTypePos), e2,
+                        SqlLiteral.createSymbol(SqlJoinOperator.ConditionType.None, joinTypePos),
                         null, joinTypePos);
             }
         )
@@ -784,9 +788,9 @@ SqlNode FromClause() :
         e2 = TableRef() {
             e = opTab.joinOperator.createCall(e,
                     SqlLiteral.createBoolean(false, pos),
-                    SqlLiteral.createFlag(SqlJoinOperator.JoinType.Comma, null),
+                    SqlLiteral.createSymbol(SqlJoinOperator.JoinType.Comma, null),
                     e2,
-                    SqlLiteral.createFlag(SqlJoinOperator.ConditionType.None, null),
+                    SqlLiteral.createSymbol(SqlJoinOperator.ConditionType.None, null),
                     null,
                     pos);
         }
@@ -2166,51 +2170,54 @@ SqlNode BuiltinFunctionCall() :
     {
         pos = getPos();
     }
-       <LPAREN> e = Expression(EXPR_ACCEPT_SUBQUERY)
-                            { args = startList(e); }
-                   <USING>  name = Identifier()
-                            {  namePos = getPos();
-                              args.add(new SqlIdentifier(name, namePos)); }
-                   <RPAREN> {
-                        return opTab.translateFunc.createCall(
-                            SqlParserUtil.toNodeArray(args),pos);
-                   }
+        <LPAREN> 
+        e = Expression(EXPR_ACCEPT_SUBQUERY)
+                 { args = startList(e); }
+        <USING>  name = Identifier()
+                 {  namePos = getPos();
+                   args.add(new SqlIdentifier(name, namePos)); }
+        <RPAREN> {
+             return opTab.translateFunc.createCall(
+                 SqlParserUtil.toNodeArray(args),pos);
+        }
     )
 |
     (  <OVERLAY>
     {
         pos = getPos();
     }
-       <LPAREN>  e = Expression(EXPR_ACCEPT_SUBQUERY)
-                             { args = startList(e); }
-                   <PLACING> e = Expression(EXPR_ACCEPT_SUBQUERY)
-                             { args.add(e); }
-                   <FROM>    e = Expression(EXPR_ACCEPT_SUBQUERY)
-                             { args.add(e); }
-                   [<FOR>    e = Expression(EXPR_ACCEPT_SUBQUERY)
-                             { args.add(e); }
-                   ]
-                   <RPAREN> {
-                        return opTab.overlayFunc.createCall(
-                            SqlParserUtil.toNodeArray(args),pos);
-                   }
+        <LPAREN>
+        e = Expression(EXPR_ACCEPT_SUBQUERY)
+                  { args = startList(e); }
+        <PLACING> e = Expression(EXPR_ACCEPT_SUBQUERY)
+                  { args.add(e); }
+        <FROM>    e = Expression(EXPR_ACCEPT_SUBQUERY)
+                  { args.add(e); }
+        [<FOR>    e = Expression(EXPR_ACCEPT_SUBQUERY)
+                  { args.add(e); }
+        ]
+        <RPAREN> {
+             return opTab.overlayFunc.createCall(
+                 SqlParserUtil.toNodeArray(args),pos);
+        }
     )
 |
     (   <SUBSTRING>
     {
         pos = getPos();
     }
-        <LPAREN> e = Expression(EXPR_ACCEPT_SUBQUERY)
-                             { args = startList(e); }
-                    ( <FROM> | <COMMA>)   e = Expression(EXPR_ACCEPT_SUBQUERY)
-                                          { args.add(e); }
-                    [ (<FOR> | <COMMA>)   e = Expression(EXPR_ACCEPT_SUBQUERY)
-                                          { args.add(e); }
-                    ]
-                    <RPAREN> {
-                        return opTab.substringFunc.createCall(
-                            SqlParserUtil.toNodeArray(args), pos);
-                    }
+        <LPAREN> 
+        e = Expression(EXPR_ACCEPT_SUBQUERY)
+                 { args = startList(e); }
+        ( <FROM> | <COMMA>)   e = Expression(EXPR_ACCEPT_SUBQUERY)
+                              { args.add(e); }
+        [ (<FOR> | <COMMA>)   e = Expression(EXPR_ACCEPT_SUBQUERY)
+                              { args.add(e); }
+        ]
+        <RPAREN> {
+            return opTab.substringFunc.createCall(
+                SqlParserUtil.toNodeArray(args), pos);
+        }
     )
 |
     {
@@ -2222,42 +2229,42 @@ SqlNode BuiltinFunctionCall() :
         pos = getPos();
     }
         <LPAREN>
-                   [    LOOKAHEAD(2)
-                        [   <BOTH> {
-                                pos = getPos();
-                                flag = SqlTrimFunction.Flag.createBoth(pos);
-                            }
-                        |
-                            <TRAILING> {
-                                pos = getPos();
-                                flag = SqlTrimFunction.Flag.createTrailing(pos);
-                            }
-                        |
-                            <LEADING> {
-                                pos = getPos();
-                                flag = SqlTrimFunction.Flag.createLeading(pos);
-                            }
-                        ]
-                        [ trimChars = AtomicRowExpression() ]
-                        <FROM> {
-                            if (null == flag && null == trimChars) {
-                                throw new ParseException(
-                                    "'FROM' near " + getPositionString() +
-                                    ", without operands preceding it is illegal");
-                            }
-                        }
-                   ]
+        [    LOOKAHEAD(2)
+             [   <BOTH> {
+                     pos = getPos();
+                     flag = SqlLiteral.createSymbol(SqlTrimFunction.Flag.Both, pos);
+                 }
+             |
+                 <TRAILING> {
+                     pos = getPos();
+                     flag = SqlLiteral.createSymbol(SqlTrimFunction.Flag.Trailing, pos);
+                 }
+             |
+                 <LEADING> {
+                     pos = getPos();
+                     flag = SqlLiteral.createSymbol(SqlTrimFunction.Flag.Leading, pos);
+                 }
+             ]
+             [ trimChars = AtomicRowExpression() ]
+             <FROM> {
+                 if (null == flag && null == trimChars) {
+                     throw new ParseException(
+                         "'FROM' near " + getPositionString() +
+                         ", without operands preceding it is illegal");
+                 }
+             }
+        ]
 
-                   e = AtomicRowExpression()
-                   {
-                      args = startList(flag);
-                      args.add(trimChars);
-                      args.add(e);
-                   }
-                   <RPAREN> {
-                        return opTab.trimFunc.createCall(
-                            SqlParserUtil.toNodeArray(args), pos);
-                   }
+        e = AtomicRowExpression()
+        {
+           args = startList(flag);
+           args.add(trimChars);
+           args.add(e);
+        }
+        <RPAREN> {
+             return opTab.trimFunc.createCall(
+                 SqlParserUtil.toNodeArray(args), pos);
+        }
     )
 }
 

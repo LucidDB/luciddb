@@ -173,10 +173,6 @@ public abstract class SqlTypeUtil
         RelDataType type)
     {
         for (int i = 0; i < call.operands.length; ++i) {
-            if (call.operands[i] instanceof SqlSymbol) {
-                continue;
-            }
-
             RelDataType operandType =
                 validator.deriveType(scope, call.operands[i]);
 

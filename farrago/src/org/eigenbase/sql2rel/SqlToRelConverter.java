@@ -38,9 +38,7 @@ import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.fun.SqlMultisetOperator;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.util.BitString;
-import org.eigenbase.util.NlsString;
-import org.eigenbase.util.Util;
+import org.eigenbase.util.*;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -780,8 +778,7 @@ public class SqlToRelConverter
         final SqlNode value = call.operands[SqlBetweenOperator.VALUE_OPERAND];
         RexNode x = convertExpression(bb, value);
         final SqlBetweenOperator.Flag symmetric = (SqlBetweenOperator.Flag)
-            call.operands[SqlBetweenOperator.SYMFLAG_OPERAND];
-        boolean isAsymmetric = symmetric.isAsymmetric;
+            SqlLiteral.symbolValue(call.operands[SqlBetweenOperator.SYMFLAG_OPERAND]);
         final SqlNode lower = call.operands[SqlBetweenOperator.LOWER_OPERAND];
         RexNode y = convertExpression(bb, lower);
         final SqlNode upper = call.operands[SqlBetweenOperator.UPPER_OPERAND];
@@ -794,15 +791,20 @@ public class SqlToRelConverter
         RexNode le1 = rexBuilder.makeCall(opTab.lessThanOrEqualOperator, x, z);
         RexNode and1 = rexBuilder.makeCall(opTab.andOperator, ge1, le1);
 
-        if (isAsymmetric) {
+        switch (symmetric.ordinal) {
+        case SqlBetweenOperator.Flag.Asymmetric_ordinal:
             res = and1;
-        } else {
+            break;
+        case SqlBetweenOperator.Flag.Symmetric_ordinal:
             RexNode ge2 =
                 rexBuilder.makeCall(opTab.greaterThanOrEqualOperator, x, z);
             RexNode le2 =
                 rexBuilder.makeCall(opTab.lessThanOrEqualOperator, x, y);
             RexNode and2 = rexBuilder.makeCall(opTab.andOperator, ge2, le2);
             res = rexBuilder.makeCall(opTab.orOperator, and1, and2);
+            break;
+        default:
+            throw symmetric.unexpected();
         }
         final SqlBetweenOperator betweenOp =
             (SqlBetweenOperator) call.operator;
@@ -1232,9 +1234,6 @@ public class SqlToRelConverter
      */
     private RexLiteral convertNonNullLiteral(final SqlLiteral literal)
     {
-        if (literal instanceof SqlSymbol) {
-            return rexBuilder.makeSymbolLiteral((SqlSymbol) literal);
-        }
         final Object value = literal.getValue();
         BitString bitString;
         switch (literal.typeName.ordinal) {
@@ -1261,7 +1260,7 @@ public class SqlToRelConverter
             byte [] bytes = bitString.getAsByteArray();
             return rexBuilder.makeBinaryLiteral(bytes);
         case SqlTypeName.Symbol_ordinal:
-            return rexBuilder.makeSymbolLiteral((SqlSymbol) value);
+            return rexBuilder.makeFlag((EnumeratedValues.Value) value);
         case SqlTypeName.Timestamp_ordinal:
             return rexBuilder.makeTimestampLiteral((Calendar) value,
                 ((SqlTimestampLiteral) literal).precision);

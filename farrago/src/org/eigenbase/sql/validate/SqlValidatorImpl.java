@@ -883,13 +883,9 @@ public class SqlValidatorImpl implements SqlValidator
                     || (call.operator instanceof SqlRowOperator))
             {
                 SqlOperator operator = call.operator;
-                
+
                 RelDataType[] argTypes = new RelDataType[operands.length];
                 for (int i = 0; i < operands.length; ++i) {
-                    // We can't derive a type for some operands.
-                    if (operands[i] instanceof SqlSymbol) {
-                        continue; // operand is a symbol e.g. LEADING
-                    }
                     RelDataType nodeType = deriveType(subScope, operands[i]);
                     setValidatedNodeTypeImpl(operands[i], nodeType);
                     argTypes[i] = nodeType;
@@ -917,7 +913,7 @@ public class SqlValidatorImpl implements SqlValidator
                             SqlFunctionCategory.UserDefinedConstructor)
                         {
                             return deriveConstructorType(
-                                scope, 
+                                scope,
                                 call,
                                 unresolvedFunction,
                                 function,
@@ -1087,7 +1083,7 @@ public class SqlValidatorImpl implements SqlValidator
         // For builtins, we can give a better error message
         List overloads = opTab.lookupOperatorOverloads(
             unresolvedFunction.getNameAsId(),
-            null, 
+            null,
             SqlSyntax.Function);
         if (overloads.size() == 1) {
             SqlFunction fun = (SqlFunction) overloads.get(0);

@@ -78,8 +78,9 @@ public class SqlSelect extends SqlCall
         final SqlNodeList keywords =
             (SqlNodeList) operands[SqlSelect.KEYWORDS_OPERAND];
         for (int i = 0; i < keywords.size(); i++) {
-            SqlSymbol keyword = (SqlSymbol) keywords.get(i);
-            if (keyword.getName().equals("DISTINCT")) {
+            SqlSelectKeyword keyword = (SqlSelectKeyword)
+                SqlLiteral.symbolValue(keywords.get(i));
+            if (keyword == SqlSelectKeyword.Distinct) {
                 return true;
             }
         }
