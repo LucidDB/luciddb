@@ -189,6 +189,15 @@ public abstract class FarragoTrace
     }
 
     /**
+     * The tracer "net.sf.farrago.mdr" traces Farrago's use of
+     * MDR.
+     */
+    public static Logger getMdrTracer()
+    {
+        return Logger.getLogger("net.sf.farrago.mdr");
+    }
+
+    /**
      * The "com.disruptivetech.farrago.calc.CalcProgramBuilder" tracer prints
      * the generated program at level {@link java.util.logging.Level#FINE} or
      * higher.

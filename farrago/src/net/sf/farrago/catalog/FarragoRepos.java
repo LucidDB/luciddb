@@ -150,6 +150,8 @@ public class FarragoRepos extends FarragoMetadataFactory
         }
         this.modelLoader = modelLoader;
 
+        MdrUtil.integrateTracing(FarragoTrace.getMdrTracer());
+
         if (!userRepos) {
             File reposFile = modelLoader.getSystemReposFile();
             try {
