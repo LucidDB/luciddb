@@ -182,6 +182,11 @@ public class SqlStdOperatorTable extends SqlOperatorTable
         new SqlBinaryOperator("AS", SqlKind.As, 10, true, ReturnTypeInference.useFirstArgType,
             UnknownParamInference.useReturnType, OperandsTypeChecking.typeAnyAny) {
         };
+
+    public final SqlBinaryOperator overOperator =
+        new SqlBinaryOperator("OVER", SqlKind.Over, 10, true,
+            ReturnTypeInference.useFirstArgType, null, null);
+
     public final SqlBinaryOperator concatOperator =
         new SqlBinaryOperator("||", SqlKind.Other, 30, true,
             ReturnTypeInference.useNullableVaryingDyadicStringSumPrecision, null,
@@ -559,7 +564,11 @@ public class SqlStdOperatorTable extends SqlOperatorTable
             }
         };
 
-    public final SqlSelectOperator selectOperator = new SqlSelectOperator();
+    /**
+     * The standard SELECT operator.
+     */
+    public SqlSelectOperator selectOperator = new SqlSelectOperator();
+
     public final SqlCaseOperator caseOperator = new SqlCaseOperator();
     public final SqlJoinOperator joinOperator = new SqlJoinOperator();
     public final SqlSpecialOperator insertOperator =
@@ -571,6 +580,7 @@ public class SqlStdOperatorTable extends SqlOperatorTable
     public final SqlSpecialOperator explainOperator =
         new SqlSpecialOperator("EXPLAIN", SqlKind.Explain);
     public final SqlOrderByOperator orderByOperator = new SqlOrderByOperator();
+    public final SqlWindowOperator windowOperator = new SqlWindowOperator();
 
 
     //-------------------------------------------------------------
