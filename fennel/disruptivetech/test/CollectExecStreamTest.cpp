@@ -22,6 +22,7 @@
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/test/ExecStreamTestBase.h"
 #include "fennel/disruptivetech/xo/CollectExecStream.h"
+#include "fennel/disruptivetech/xo/UncollectExecStream.h"
 #include "fennel/tuple/StandardTypeDescriptor.h"
 #include "fennel/tuple/TupleOverflowExcn.h"
 #include "fennel/exec/MockProducerExecStream.h"
@@ -33,55 +34,51 @@ using namespace fennel;
 
 class CollectExecStreamTest : public ExecStreamTestBase
 {
-    // TupleAttributeDescriptor descUint8;
-    //    TupleAttributeDescriptor descUint64;
-    //    TupleAttributeDescriptor descVarbinary500;
-    
-    
+    TupleAttributeDescriptor descAttrInt64;
+    TupleDescriptor descInt64;
+    TupleAttributeDescriptor descAttrVarbinary16;
+    TupleDescriptor descVarbinary16;
 public:
     
     explicit CollectExecStreamTest(); 
 
-    
     /**
      * Tests an stream input ints gets collected into an continues array
      */
     void testCollectInts();
-    
+
     /**
-     * Tests with program that produces a tuple which overflows output buffer.
+     * Tests an stream going through a cascade of the collect and 
+     * the uncollect xo, expecting the same result back
      */
-    //    void testTupleOverflow();
+    void testCollectUncollect();
 };
 
 CollectExecStreamTest::CollectExecStreamTest()
 {
     FENNEL_UNIT_TEST_CASE(CollectExecStreamTest,testCollectInts);
+    FENNEL_UNIT_TEST_CASE(CollectExecStreamTest,testCollectUncollect);
+
+    StandardTypeDescriptorFactory stdTypeFactory;
+
+    descAttrInt64 = TupleAttributeDescriptor(stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));
+    descInt64.push_back(descAttrInt64);
+    
+    descAttrVarbinary16 = TupleAttributeDescriptor(stdTypeFactory.newDataType(STANDARD_TYPE_VARBINARY),true,16);
+    descVarbinary16.push_back(descAttrVarbinary16);
 }
 
 void CollectExecStreamTest::testCollectInts()
 {
-        StandardTypeDescriptorFactory stdTypeFactory;
-        //    TupleAttributeDescriptor descUint8(
-        //         stdTypeFactory.newDataType(STANDARD_TYPE_UINT_8));
-    TupleAttributeDescriptor descAttrUint64(
-         stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));
-    TupleDescriptor descUint64;
-    descUint64.push_back(descAttrUint64);
-    
-    TupleAttributeDescriptor descAttrVarbinary500(
-         stdTypeFactory.newDataType(STANDARD_TYPE_VARBINARY),true,16);
-    TupleDescriptor descVarbinary500;
-    descVarbinary500.push_back(descAttrVarbinary500);
 
     uint rows = 2;
     MockProducerExecStreamParams mockParams;
-    mockParams.outputTupleDesc.push_back(descAttrUint64);
+    mockParams.outputTupleDesc.push_back(descAttrInt64);
     mockParams.nRows = rows;
     mockParams.pGenerator.reset(new RampExecStreamGenerator(1));
 
     CollectExecStreamParams collectParams;
-    collectParams.outputTupleDesc = descVarbinary500;
+    collectParams.outputTupleDesc = descVarbinary16;
 
     ExecStreamEmbryo mockStreamEmbryo;
     mockStreamEmbryo.init(new MockProducerExecStream(), mockParams);
@@ -93,30 +90,30 @@ void CollectExecStreamTest::testCollectInts()
 
 
     // setup the expected result
-    uint8_t intArrayBuff[500];
+    uint8_t intArrayBuff[16];
     uint64_t one = 1;
-    TupleData oneData(descUint64);
+    TupleData oneData(descInt64);
     oneData[0].pData = (PConstBuffer) &one;
     TupleAccessor oneAccessor;
-    oneAccessor.compute(descUint64);
+    oneAccessor.compute(descInt64);
     assert(oneAccessor.getMaxByteCount() <= sizeof(intArrayBuff));
     oneAccessor.marshal(oneData, (PBuffer) intArrayBuff);
 
     uint64_t two = 2;
-    TupleData twoData(descUint64);
+    TupleData twoData(descInt64);
     twoData[0].pData = (PConstBuffer) &two; 
     TupleAccessor twoAccessor;
-    twoAccessor.compute(descUint64);
+    twoAccessor.compute(descInt64);
     assert((oneAccessor.getMaxByteCount() + twoAccessor.getMaxByteCount() ) <= 
            sizeof(intArrayBuff));
     twoAccessor.marshal(twoData, 
                         ((PBuffer)intArrayBuff)+oneAccessor.getMaxByteCount());
 
     uint8_t varbinaryBuff[1000];
-    TupleData binData(descVarbinary500);
+    TupleData binData(descVarbinary16);
     binData[0].pData = (PConstBuffer) intArrayBuff;
     TupleAccessor binAccessor;
-    binAccessor.compute(descVarbinary500);
+    binAccessor.compute(descVarbinary16);
     binAccessor.marshal(binData, (PBuffer) varbinaryBuff);
 
 
@@ -124,6 +121,50 @@ void CollectExecStreamTest::testCollectInts()
         mockStreamEmbryo, collectStreamEmbryo);
 
     verifyConstantOutput(*pOutputStream, binData, 1);
+}
+
+void CollectExecStreamTest::testCollectUncollect()
+{
+    StandardTypeDescriptorFactory stdTypeFactory;
+    uint rows = 511;
+
+    TupleAttributeDescriptor tupleDescAttr(stdTypeFactory.newDataType(STANDARD_TYPE_VARBINARY),true,rows*sizeof(uint64_t));
+    TupleDescriptor tupleDesc;
+    tupleDesc.push_back(tupleDescAttr);
+
+    MockProducerExecStreamParams mockParams;
+    mockParams.outputTupleDesc.push_back(descAttrInt64);
+    mockParams.nRows = rows;
+    mockParams.pGenerator.reset(new RampExecStreamGenerator());
+
+    CollectExecStreamParams collectParams;
+    collectParams.outputTupleDesc = tupleDesc;
+
+    UncollectExecStreamParams uncollectParams;
+    uncollectParams.outputTupleDesc = descInt64;
+
+    ExecStreamEmbryo mockStreamEmbryo;
+    mockStreamEmbryo.init(new MockProducerExecStream(), mockParams);
+    mockStreamEmbryo.getStream()->setName("MockProducerExecStream");
+
+    ExecStreamEmbryo collectStreamEmbryo;
+    collectStreamEmbryo.init(new CollectExecStream(), collectParams);
+    collectStreamEmbryo.getStream()->setName("CollectExecStream"); 
+
+    ExecStreamEmbryo uncollectStreamEmbryo;
+    uncollectStreamEmbryo.init(new UncollectExecStream(), uncollectParams);
+    uncollectStreamEmbryo.getStream()->setName("UncollectExecStream"); 
+
+
+    std::vector<ExecStreamEmbryo> transforms;
+    transforms.push_back(collectStreamEmbryo);
+    transforms.push_back(uncollectStreamEmbryo);
+    SharedExecStream pOutputStream = prepareTransformGraph(
+         mockStreamEmbryo, transforms);
+
+    RampExecStreamGenerator rampExpectedGenerator;
+
+    verifyOutput(*pOutputStream, rows, rampExpectedGenerator);
 }
 
 FENNEL_UNIT_TEST_SUITE(CollectExecStreamTest);

@@ -22,24 +22,31 @@
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/disruptivetech/xo/UncollectExecStream.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
+#include "fennel/tuple/StandardTypeDescriptor.h"
+#include "fennel/tuple/TuplePrinter.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 void UncollectExecStream::prepare(UncollectExecStreamParams const &params)
 {
     ConduitExecStream::prepare(params);
+
+    StandardTypeDescriptorOrdinal ordinal =
+        StandardTypeDescriptorOrdinal(
+        pInAccessor->getTupleDesc()[0].pTypeDescriptor->getOrdinal());
+    assert(ordinal == STANDARD_TYPE_VARBINARY);
+    assert(1 == pInAccessor->getTupleDesc().size());
+
+    inputTupleData.compute(pInAccessor->getTupleDesc());
+    outputTupleData.compute(pOutAccessor->getTupleDesc());
 }
+
 
 void UncollectExecStream::open(bool restart) 
 {
     ConduitExecStream::open(restart);
-    //outputTupleData.compute(pOutAccessor->getTupleDesc());    
-    //REVIEW: do we need to keep a seperate copy of the in buffer?
-    //uint cbOutMaxsize = pInAccessor->getConsumptionTupleAccessor().getMaxByteCount();
-    //pInputBuffer.reset(new FixedBuffer[cbOutMaxsize]);
     bytesWritten = 0;
 }
-
 
 ExecStreamResult UncollectExecStream::execute(ExecStreamQuantum const &quantum)
 {
@@ -48,30 +55,44 @@ ExecStreamResult UncollectExecStream::execute(ExecStreamQuantum const &quantum)
         return rc;
     }
         
-    assert(1 == quantum.nTuplesMax);
-    TupleData td;
-    td.compute(pOutAccessor->getTupleDesc());
-    while (bytesWritten <= pInAccessor->getConsumptionTupleAccessor().getMaxByteCount()) {
-        // we havent read all of the in data yet
-        if (!pInAccessor->demandData()) {
-            return EXECRC_BUF_UNDERFLOW;
-        }
+    if (!pInAccessor->demandData()) {
+        return EXECRC_BUF_UNDERFLOW;
+    }
 
-        
-        
+    pInAccessor->unmarshalTuple(inputTupleData);
+
+#if 0
+    std::cout<<"input tuple descriptor" << pInAccessor->getTupleDesc()<<std::endl;
+    std::cout << "input tuple = "; 
+    TupleDescriptor statusDesc = pInAccessor->getTupleDesc();
+    TuplePrinter tuplePrinter;
+    tuplePrinter.print(std::cout, statusDesc, inputTupleData);
+    std::cout << std::endl;
+#endif
+
+
+    TupleAccessor& outTa = pOutAccessor->getScratchTupleAccessor();
+    while (bytesWritten < inputTupleData[0].cbData) {
         // write one item in the input array to the output buffer
-        TupleAccessor& ta = pOutAccessor->getScratchTupleAccessor();
-        ta.setCurrentTupleBuf(pInAccessor->getConsumptionTupleAccessor().getCurrentTupleBuf() + bytesWritten);
-        ta.unmarshal(td);
+        outTa.setCurrentTupleBuf(inputTupleData[0].pData + bytesWritten);
+        outTa.unmarshal(outputTupleData);
+#if 0
+    std::cout << "unmarshalling ouput tuple= ";
+    TupleDescriptor statusDesc = pInAccessor->getTupleDesc();
+    TuplePrinter tuplePrinter;
+    tuplePrinter.print(std::cout, statusDesc, outputTupleData);
+    std::cout << std::endl;
+#endif
 
-        if (!pOutAccessor->produceTuple(td)) {
+        if (!pOutAccessor->produceTuple(outputTupleData)) {
             return EXECRC_BUF_OVERFLOW;
         }
-
-        bytesWritten += ta.getCurrentByteCount();
+        bytesWritten += outTa.getMaxByteCount();
 
     }
-    
+
+    assert(pInAccessor->isTupleConsumptionPending());
+    assert(bytesWritten == inputTupleData[0].cbData);
     pInAccessor->consumeTuple();
 
     return EXECRC_QUANTUM_EXPIRED;

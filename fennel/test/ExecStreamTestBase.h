@@ -56,6 +56,21 @@ protected:
         ExecStreamEmbryo &transformStreamEmbryo);
 
     /**
+     * Defines and prepares a graph consisting of one source stream
+     * and one or multiple transform streams.
+     *
+     * @param sourceStreamEmbryo embryonic source stream which produces tuples
+     *
+     * @param transformStreamEmbryo embryonic transforms streams which processes
+     * tuples produced by sourceStreamEmbryo or a child stream
+     *
+     * @return output buffer stream
+     */
+    SharedExecStream prepareTransformGraph(
+        ExecStreamEmbryo &sourceStreamEmbryo,
+        std::vector<ExecStreamEmbryo> &transforms);
+
+    /**
      * Defines and prepares a graph consisting of two source streams
      * and one confluence stream.
      *

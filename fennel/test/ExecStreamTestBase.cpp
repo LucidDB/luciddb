@@ -38,22 +38,37 @@ SharedExecStream ExecStreamTestBase::prepareTransformGraph(
     ExecStreamEmbryo &sourceStreamEmbryo,
     ExecStreamEmbryo &transformStreamEmbryo)
 {
+    std::vector<ExecStreamEmbryo> transforms;
+    transforms.push_back(transformStreamEmbryo);
+    return prepareTransformGraph(sourceStreamEmbryo, transforms);
+}
+
+SharedExecStream ExecStreamTestBase::prepareTransformGraph(
+    ExecStreamEmbryo &sourceStreamEmbryo,
+    std::vector<ExecStreamEmbryo> &transforms)
+{
     pGraphEmbryo->saveStreamEmbryo(sourceStreamEmbryo);
-    pGraphEmbryo->saveStreamEmbryo(transformStreamEmbryo);
+    std::vector<ExecStreamEmbryo>::iterator it;
     
-    pGraphEmbryo->addDataflow(
-        sourceStreamEmbryo.getStream()->getName(),
-        transformStreamEmbryo.getStream()->getName());
+    // save all transforms
+    for (it = transforms.begin(); it != transforms.end(); ++it) {
+        pGraphEmbryo->saveStreamEmbryo(*it);
+    }
+
+    // connect streams in a cascade
+    ExecStreamEmbryo& previousStream = sourceStreamEmbryo;
+    for (it = transforms.begin(); it != transforms.end(); ++it) {
+        pGraphEmbryo->addDataflow(previousStream.getStream()->getName(),
+                                  (*it).getStream()->getName());
+        previousStream = *it;
+    }
 
     SharedExecStream pAdaptedStream =
-        pGraphEmbryo->addAdapterFor(
-            transformStreamEmbryo.getStream()->getName(),
-            BUFPROV_PRODUCER);
-    pGraph->addOutputDataflow(
-        pAdaptedStream->getStreamId());
+        pGraphEmbryo->addAdapterFor(previousStream.getStream()->getName(),
+                                    BUFPROV_PRODUCER);
+    pGraph->addOutputDataflow(pAdaptedStream->getStreamId());
 
     pGraphEmbryo->prepareGraph(this, "");
-
     return pAdaptedStream;
 }
 

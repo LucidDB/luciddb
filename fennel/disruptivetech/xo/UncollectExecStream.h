@@ -39,8 +39,7 @@ struct UncollectExecStreamParams : public ConduitExecStreamParams
 };
 
 /**
- * UncollectExecStream reads all tuples from a child stream and collects them 
- * into a single tuple which is written to one output tuple.
+ * Ouputs all tuples that previously has been collected by CollectExecStream
  *
  * @author Wael Chatila
  * @version $Id$
@@ -48,15 +47,13 @@ struct UncollectExecStreamParams : public ConduitExecStreamParams
 class UncollectExecStream : public ConduitExecStream
 {
 private:
-    //    TupleData outputTupleData;
-    //boost::scoped_array<FixedBuffer> pOutputBuffer;
-    uint bytesWritten;
-    
+    TupleData inputTupleData;
+    TupleData outputTupleData;
+    uint      bytesWritten;
 public:
     virtual void prepare(UncollectExecStreamParams const &params);
-    virtual ExecStreamResult execute(ExecStreamQuantum const &quantum);
     virtual void open(bool restart);
-    
+    virtual ExecStreamResult execute(ExecStreamQuantum const &quantum);
 };
 
 FENNEL_END_NAMESPACE
