@@ -1,0 +1,37 @@
+<body>
+Provides classes that are fundamental to the design of the OpenJava
+Meta-Object Protocols (MOP).
+
+<p>OpenJava is an extensible language based on Java. The extended
+features of OpenJava are specified by a meta-level program given at
+compile time. For distinction, programs written in OpenJava are called
+base-level programs. If no meta-level program is given, OpenJava is
+identical to regular Java.
+
+<p>The meta-level program extends OpenJava through the interface
+called the OpenJava MOP (Metaobject Protocol). The OpenJava compiler
+consists of three stages: preprocessor, source-to-source translator
+from OpenJava to Java, and the back-end Java compiler. The OpenJava
+MOP is an interface to control the translator at the second stage. It
+allows to specify how an extended feature of OpenJava is translated
+into regular Java code.
+
+<p>An extended feature of OpenJava is supplied as an add-on software
+for the compiler. The add-on software consists of not only the
+meta-level program but runtime support code. The runtime support code
+provides classes used by the base-level program translated into
+Java. The base-level program in OpenJava is first translated into Java
+by the meta-level program and is dynamically linked with the runtime
+support code.
+
+<p>The meta-level program is written in Java, accurately in OpenJava
+because OpenJava is a self-reflective language. It defines new
+metaobjects to control source-to-source translation. The metaobjects
+are the meta-level representation of the base-level program and they
+perform the translation. Details of the metaobjects are specified by
+the OpenJava MOP. In the following, we go through a few examples so
+that we illustrate how the OpenJava MOP is used to implement language
+extensions.
+
+
+</body>
