@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/udt.sql#8 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/udt.sql#9 $
 0: jdbc:farrago:> -- Test DDL for user-defined types
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema udttest;
@@ -44,6 +44,10 @@ Error: DDL validation error near line 1, column 34: Must define distinct datatyp
 . . . . . . . . > self as result
 . . . . . . . . > contains sql
 . . . . . . . . > ;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  constructor declared but not yet defined
+0: jdbc:farrago:> values rectilinear_coord_non0(8,8);
+Error: Method RECTILINEAR_COORD_NON0(<NUMERIC>, <NUMERIC>) has been declared but not yet defined (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  method name mismatch
 0: jdbc:farrago:> create specific method rectilinear_coord_nonzero

@@ -43,6 +43,9 @@ self as result
 contains sql
 ;
 
+-- should fail:  constructor declared but not yet defined
+values rectilinear_coord_non0(8,8);
+
 -- should fail:  method name mismatch
 create specific method rectilinear_coord_nonzero
 for rectilinear_coord_non0

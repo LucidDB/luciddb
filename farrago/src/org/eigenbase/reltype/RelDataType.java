@@ -213,6 +213,12 @@ public interface RelDataType
      * @return precedence list for this type
      */
     public RelDataTypePrecedenceList getPrecedenceList();
+
+    /**
+     * @return the category of comparison operators which make sense
+     * when applied to values of this type
+     */
+    public RelDataTypeComparability getComparability();
 }
 
 

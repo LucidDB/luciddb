@@ -60,13 +60,12 @@ contains sql
 return c*1.8 + 32;
 drop function celsius_to_fahrenheit;
 
--- test redundant parameter style specification
+-- should fail: can't specify parameter style for SQL-defined routine
 create function celsius_to_fahrenheit(c real)
 returns real
 parameter style sql
 contains sql
 return c*1.8 + 32;
-drop function celsius_to_fahrenheit;
 
 -- should fail:  can't declare explicit IN parameter to function
 create function add_integers(in i int,j int)

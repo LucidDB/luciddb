@@ -198,27 +198,7 @@ public class FarragoCalcSystemTest extends FarragoTestCase
             SqlNode [] operands = new SqlNode[n.intValue()];
             OperandsTypeChecking allowedTypes =
                 op.getOperandsCheckingRule();
-            SqlTypeName[][] rules;
-            if (allowedTypes instanceof
-                OperandsTypeChecking.CompositeOperandsTypeChecking) {
-                OperandsTypeChecking rule =
-                    ((OperandsTypeChecking.CompositeOperandsTypeChecking)
-                    allowedTypes).getRules()[0];
-                if (rule instanceof
-                    OperandsTypeChecking.SimpleOperandsTypeChecking) {
-                    rules =
-                        ((OperandsTypeChecking.SimpleOperandsTypeChecking)
-                        rule).getTypes();
-                } else {
-                    throw Util.needToImplement(rule);
-                }
-            } else if (allowedTypes instanceof
-                OperandsTypeChecking.SimpleOperandsTypeChecking) {
-                rules = ((OperandsTypeChecking.SimpleOperandsTypeChecking)
-                    allowedTypes).getTypes();
-            } else {
-                throw Util.needToImplement(allowedTypes);
-            }
+            SqlTypeName[][] rules = findRules(allowedTypes);
 
             if (null == allowedTypes) {
                 throw Util.needToImplement("Need to add to exclude list"
@@ -264,6 +244,27 @@ public class FarragoCalcSystemTest extends FarragoTestCase
             String testName = "NULL-TEST-" + op.name + "-";
             suite.addTest(
                 new FarragoCalcSystemTest(vm, sql, testName + vm.name));
+        }
+    }
+
+    // REVIEW jvs 17-Mar-2005:  This whole thing is really hokey.
+    private static SqlTypeName [][] findRules(OperandsTypeChecking otc)
+    {
+        SqlTypeName[][] rules;
+        if (otc instanceof
+            OperandsTypeChecking.CompositeOperandsTypeChecking)
+        {
+            OperandsTypeChecking rule =
+                ((OperandsTypeChecking.CompositeOperandsTypeChecking)
+                    otc).getRules()[0];
+            return findRules(rule);
+        } else if (otc instanceof
+            OperandsTypeChecking.SimpleOperandsTypeChecking)
+        {
+            return ((OperandsTypeChecking.SimpleOperandsTypeChecking)
+                otc).getTypes();
+        } else {
+            throw Util.needToImplement(otc);
         }
     }
 

@@ -915,6 +915,7 @@ public class SqlValidatorImpl implements SqlValidator
                             SqlFunction.SqlFuncTypeName.UserDefinedConstructor)
                         {
                             return deriveConstructorType(
+                                scope, 
                                 call,
                                 unresolvedFunction,
                                 function,
@@ -1018,6 +1019,7 @@ public class SqlValidatorImpl implements SqlValidator
     }
 
     private RelDataType deriveConstructorType(
+        SqlValidatorScope scope,
         SqlCall call,
         SqlFunction unresolvedConstructor,
         SqlFunction resolvedConstructor,
@@ -1040,6 +1042,15 @@ public class SqlValidatorImpl implements SqlValidator
                 // no user-defined constructor could be found
                 handleUnresolvedFunction(call, unresolvedConstructor, argTypes);
             }
+        } else {
+            SqlCall testCall = resolvedConstructor.createCall(
+                call.getOperands(),
+                call.getParserPosition());
+            RelDataType returnType = resolvedConstructor.getType(
+                this,
+                scope,
+                testCall);
+            assert(type == returnType);
         }
 
         if (shouldExpandIdentifiers()) {

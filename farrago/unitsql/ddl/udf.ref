@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/udf.sql#8 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/udf.sql#9 $
 0: jdbc:farrago:> -- Test DDL for user-defined functions
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema udftest;
@@ -63,13 +63,13 @@ Error: DDL validation error near line 1, column 8: Schema "UDFTEST2" for specifi
 . . . . . . . . > return c*1.8 + 32;
 0: jdbc:farrago:> drop function celsius_to_fahrenheit;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test redundant parameter style specification
+0: jdbc:farrago:> -- should fail: can't specify parameter style for SQL-defined routine
 0: jdbc:farrago:> create function celsius_to_fahrenheit(c real)
 . . . . . . . . > returns real
 . . . . . . . . > parameter style sql
 . . . . . . . . > contains sql
 . . . . . . . . > return c*1.8 + 32;
-0: jdbc:farrago:> drop function celsius_to_fahrenheit;
+Error: DDL validation error near line 1, column 8: Parameter style cannot be specified for routine "UDFTEST"."CELSIUS_TO_FAHRENHEIT" with language SQL (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  can't declare explicit IN parameter to function
 0: jdbc:farrago:> create function add_integers(in i int,j int)

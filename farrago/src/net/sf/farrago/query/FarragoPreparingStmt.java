@@ -1038,16 +1038,9 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             SqlNodeList nodeList = (SqlNodeList)
                 constructorToSqlMap.get(constructor.getFemRoutine());
             if (nodeList == null) {
-                String body = constructor.getFemRoutine().getBody().getBody();
-                // TODO jvs 26-Feb-2005:  need a utility method for detecting
-                // this, and need to catch it earlier (during validation) and
-                // report it properly
-                if (body.equals(";")) {
-                    throw Util.newInternal(
-                        "call to constructor which has been declared "
-                        + "but not yet defined");
-                }
+                assert (constructor.hasDefinition());
                 FarragoSessionParser parser = getSession().newParser();
+                String body = constructor.getFemRoutine().getBody().getBody();
                 nodeList = (SqlNodeList) parser.parseSqlText(
                     null,
                     body,

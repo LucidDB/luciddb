@@ -23,6 +23,7 @@
 package org.eigenbase.sql2rel;
 
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.fun.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.relopt.*;
@@ -579,6 +580,8 @@ public class RelStructuredTypeFlattener
                     "inequality comparison for row types");
             }
             RexNode conjunction = null;
+            SqlOperator andOperator = 
+                SqlStdOperatorTable.instance().andOperator;
             for (int i = 0; i < n; ++i) {
                 RexNode comparison = rexBuilder.makeCall(
                     rexCall.getOperator(),
@@ -588,7 +591,7 @@ public class RelStructuredTypeFlattener
                     conjunction = comparison;
                 } else {
                     conjunction = rexBuilder.makeCall(
-                        RexKind.And,
+                        andOperator,
                         conjunction,
                         comparison);
                 }

@@ -428,6 +428,15 @@ column type family is {1} but default value type family is {2}</text>
 <text>Unknown target field {0} in constructor assignment</text>
 </exception>
 
+<exception id="420750" name="ValidatorConstructorUndefined">
+<text>Method {0} has been declared but not yet defined</text>
+</exception>
+
+<exception id="420760" name="ValidatorMultipleOrderings"
+    className="org.eigenbase.sql.validate.SqlValidatorException">
+<text>User-defined ordering already declared for {0}</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Fennel resources 440,000 - 450,000 -->
 <!-- Actual resources are defined separately in Fennel -->
@@ -803,6 +812,10 @@ column type family is {1} but default value type family is {2}</text>
 
 <message id="510046" name="UmlOperation">
 <text>method</text>
+</message>
+
+<message id="510047" name="UmlUserDefinedOrdering">
+<text>user-defined ordering</text>
 </message>
 
 <!-- End of last error section ============================================ -->

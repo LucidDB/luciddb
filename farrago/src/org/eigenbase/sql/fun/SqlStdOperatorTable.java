@@ -315,7 +315,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
     public final SqlBinaryOperator equalsOperator =
         new SqlBinaryOperator("=", SqlKind.Equals, 15, true,
             ReturnTypeInferenceImpl.useNullableBoolean, UnknownParamInference.useFirstKnown,
-            OperandsTypeChecking.typeNullableComparable) {
+            OperandsTypeChecking.typeNullableComparableUnordered) {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testEqualsOperator(tester);
@@ -328,7 +328,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
     public final SqlBinaryOperator greaterThanOperator =
         new SqlBinaryOperator(">", SqlKind.GreaterThan, 15, true,
             ReturnTypeInferenceImpl.useNullableBoolean, UnknownParamInference.useFirstKnown,
-            OperandsTypeChecking.typeNullableComparable) {
+            OperandsTypeChecking.typeNullableComparableOrdered) {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testGreaterThanOperator(tester);
@@ -353,7 +353,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
     public final SqlBinaryOperator greaterThanOrEqualOperator =
         new SqlBinaryOperator(">=", SqlKind.GreaterThanOrEqual, 15, true,
             ReturnTypeInferenceImpl.useNullableBoolean, UnknownParamInference.useFirstKnown,
-            OperandsTypeChecking.typeNullableComparable) {
+            OperandsTypeChecking.typeNullableComparableOrdered) {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testGreaterThanOrEqualOperator(tester);
@@ -381,7 +381,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
     public final SqlBinaryOperator lessThanOperator =
         new SqlBinaryOperator("<", SqlKind.LessThan, 15, true,
             ReturnTypeInferenceImpl.useNullableBoolean, UnknownParamInference.useFirstKnown,
-            OperandsTypeChecking.typeNullableComparable) {
+            OperandsTypeChecking.typeNullableComparableOrdered) {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testLessThanOperator(tester);
@@ -394,7 +394,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
     public final SqlBinaryOperator lessThanOrEqualOperator =
         new SqlBinaryOperator("<=", SqlKind.LessThanOrEqual, 15, true,
             ReturnTypeInferenceImpl.useNullableBoolean, UnknownParamInference.useFirstKnown,
-            OperandsTypeChecking.typeNullableComparable) {
+            OperandsTypeChecking.typeNullableComparableOrdered) {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testLessThanOrEqualOperator(tester);
@@ -435,7 +435,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
     public final SqlBinaryOperator notEqualsOperator =
         new SqlBinaryOperator("<>", SqlKind.NotEquals, 15, true,
             ReturnTypeInferenceImpl.useNullableBoolean, UnknownParamInference.useFirstKnown,
-            OperandsTypeChecking.typeNullableComparable) {
+            OperandsTypeChecking.typeNullableComparableUnordered) {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testNotEqualsOperator(tester);

@@ -303,7 +303,8 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
             type.getSqlTypeName(),
             type.getSqlIdentifier(),
             nullable,
-            type.getFields());
+            type.getFields(),
+            type.getComparability());
     }
     
     // override RelDataTypeFactoryImpl

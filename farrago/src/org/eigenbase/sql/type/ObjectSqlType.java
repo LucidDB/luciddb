@@ -35,6 +35,8 @@ public class ObjectSqlType extends AbstractSqlType
 {
     private final SqlIdentifier sqlIdentifier;
 
+    private final RelDataTypeComparability comparability;
+    
     private RelDataTypeFamily family;
     
     /**
@@ -53,16 +55,24 @@ public class ObjectSqlType extends AbstractSqlType
         SqlTypeName typeName,
         SqlIdentifier sqlIdentifier,
         boolean nullable,
-        RelDataTypeField [] fields)
+        RelDataTypeField [] fields,
+        RelDataTypeComparability comparability)
     {
         super(typeName, nullable, fields);
         this.sqlIdentifier = sqlIdentifier;
+        this.comparability = comparability;
         computeDigest();
     }
 
     public void setFamily(RelDataTypeFamily family)
     {
         this.family = family;
+    }
+    
+    // implement RelDataType
+    public RelDataTypeComparability getComparability()
+    {
+        return comparability;
     }
     
     // override AbstractSqlType

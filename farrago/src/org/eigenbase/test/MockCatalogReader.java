@@ -73,7 +73,8 @@ public class MockCatalogReader implements SqlValidatorCatalogReader
                 new RelDataTypeFieldImpl("CITY", 1, varchar20Type),
                 new RelDataTypeFieldImpl("ZIP", 1, intType),
                 new RelDataTypeFieldImpl("STATE", 1, varchar20Type)
-            });
+            },
+            RelDataTypeComparability.None);
 
         // Register "SALES" schema.
         MockSchema salesSchema = new MockSchema("SALES");

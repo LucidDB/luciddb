@@ -50,7 +50,7 @@ import java.sql.*;
 import java.util.*;
 
 /**
- * DdlRelationalHandler defines DDL handler methods for SQL/MED objects.
+ * DdlMedHandler defines DDL handler methods for SQL/MED objects.
  *
  * @author John V. Sichi
  * @version $Id$

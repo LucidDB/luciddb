@@ -180,7 +180,7 @@ public abstract class SqlTypeUtil
             RelDataType operandType =
                 validator.deriveType(scope, call.operands[i]);
 
-            if (operandType.isNullable()) {
+            if (containsNullable(operandType)) {
                 RelDataTypeFactory typeFactory = validator.getTypeFactory();
                 type = typeFactory.createTypeWithNullability(type, true);
                 break;
@@ -199,12 +199,34 @@ public abstract class SqlTypeUtil
         RelDataType type)
     {
         for (int i = 0; i < argTypes.length; ++i) {
-            if (argTypes[i].isNullable()) {
+            if (containsNullable(argTypes[i])) {
                 type = typeFactory.createTypeWithNullability(type, true);
                 break;
             }
         }
         return type;
+    }
+
+    /**
+     * Determines whether a type or any of its fields (if a structured type)
+     * are nullable.
+     */
+    public static boolean containsNullable(RelDataType type)
+    {
+        if (type.isNullable()) {
+            return true;
+        }
+        if (!type.isStruct()) {
+            return false;
+        }
+        Iterator iter = type.getFieldList().iterator();
+        while (iter.hasNext()) {
+            RelDataTypeField field = (RelDataTypeField) iter.next();
+            if (containsNullable(field.getType())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static void isCharTypeComparableThrows(RelDataType [] argTypes)

@@ -276,6 +276,8 @@ CwmModelElement SchemaObjectDefinition() :
         |
         modelElement = UserDefinedTypeDefinition()
         |
+        modelElement = UserDefinedOrderingDefinition()
+        |
         modelElement = ExtensionModelSchemaObjDefinition()
     )
         {
@@ -593,13 +595,41 @@ CwmView ViewReference() :
 
 FemRoutine RoutineReference() :
 {
-    SqlIdentifier qualifiedRoutineName;
-    FemRoutine routine;
     boolean specific = false;
-    ProcedureType routineType;
+    FemRoutine routine;
 }
 {
     [ <SPECIFIC> { specific = true; } ]
+        {
+        }
+    routine = RoutineReferenceImpl(specific)
+        {
+        }
+    {
+        return routine;
+    }
+}
+
+FemRoutine SpecificRoutineReference() :
+{
+    FemRoutine routine;
+}
+{
+    <SPECIFIC> routine = RoutineReferenceImpl(true)
+        {
+        }
+    {
+        return routine;
+    }
+}
+
+FemRoutine RoutineReferenceImpl(boolean specific) :
+{
+    SqlIdentifier qualifiedRoutineName;
+    FemRoutine routine;
+    ProcedureType routineType;
+}
+{
     (
         <ROUTINE>
     {
@@ -1485,17 +1515,17 @@ void RoutineParameterStyle(FemRoutine routine) :
         <SQL>
     {
         routine.setParameterStyle(
-            RoutineParameterStyleEnum.RPS_SQL);
+            RoutineParameterStyleEnum.RPS_SQL.toString());
     }
         | <GENERAL>
     {
         routine.setParameterStyle(
-            RoutineParameterStyleEnum.RPS_GENERAL);
+            RoutineParameterStyleEnum.RPS_GENERAL.toString());
     }
         | <JAVA>
     {
         routine.setParameterStyle(
-            RoutineParameterStyleEnum.RPS_JAVA);
+            RoutineParameterStyleEnum.RPS_JAVA.toString());
     }
     )
         {
@@ -1692,6 +1722,67 @@ FemUserDefinedType UserDefinedTypeDefinition() :
         farragoParser.getDdlValidator().setSchemaObjectName(
             typeDef, qualifiedName);
         return typeDef;
+    }
+}
+
+FemUserDefinedOrdering UserDefinedOrderingDefinition() :
+{
+    FemUserDefinedOrdering orderingDef;
+    FemUserDefinedType typeDef;
+    SqlIdentifier typeName;
+}
+{
+    <ORDERING> <FOR> typeName = CompoundIdentifier2()
+        {
+            typeDef = (FemUserDefinedType)
+            farragoParser.getStmtValidator().findSchemaObject(
+                typeName,
+                getRepos().getSql2003Package().getFemUserDefinedType());
+            orderingDef = getRepos().newFemUserDefinedOrdering();
+            typeDef.getOrdering().add(orderingDef);
+        }
+    (
+        <EQUALS> <ONLY> <BY> OrderingCategory(orderingDef)
+    {
+        orderingDef.setFull(false);
+    }
+        | <ORDER> <FULL> <BY> OrderingCategory(orderingDef)
+    {
+        orderingDef.setFull(true);
+    }
+    )
+        {
+        }
+    {
+        return orderingDef;
+    }
+}
+
+void OrderingCategory(FemUserDefinedOrdering orderingDef) :
+{
+    FemRoutine routine;
+    SqlIdentifier specificName = null;
+}
+{
+    <RELATIVE> <WITH> routine = SpecificRoutineReference()
+        {
+            orderingDef.setCategory(
+                UserDefinedOrderingCategoryEnum.UDOC_RELATIVE);
+        }
+    | <MAP> <WITH> routine = SpecificRoutineReference()
+        {
+            orderingDef.setCategory(
+                UserDefinedOrderingCategoryEnum.UDOC_MAP);
+        }
+    | <STATE> [ specificName = CompoundIdentifier2() ]
+        {
+            // REVIEW jvs 17-Mar-2005:  do we care about the specific name?
+            // The standard in this area seems very pointless.  For now,
+            // ignore it and generate a name during validation.
+            orderingDef.setCategory(
+                UserDefinedOrderingCategoryEnum.UDOC_STATE);
+        }
+    {
     }
 }
 

@@ -36,6 +36,7 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.validate.SqlValidatorException;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.validate.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.util.*;
@@ -104,6 +105,21 @@ public class FarragoUserDefinedRoutine
         return routine;
     }
 
+    // override SqlOperator
+    // TODO jvs 16-Mar-2005:  it's arbitrary to override this; figure
+    // out the correct hook method
+    public void checkArgCount(
+        SqlValidator validator,
+        OperandsTypeChecking argType,
+        SqlCall call)
+    {
+        if (!hasDefinition()) {
+            throw FarragoResource.instance().newValidatorConstructorUndefined(
+                getAllowedSignatures(name));
+        }
+        super.checkArgCount(validator, argType, call);
+    }
+    
     public RelDataType getReturnType()
     {
         return returnType;
@@ -491,6 +507,16 @@ public class FarragoUserDefinedRoutine
         }
     }
 
+    public boolean hasDefinition()
+    {
+        if (routine.getLanguage().equals(ExtensionLanguageEnum.SQL.toString()))
+        {
+            return !routine.getBody().getBody().equals(";");
+        } else {
+            return routine.getExternalName() != null;
+        }
+    }
+    
     private static final String RETURN_PREFIX = "RETURN ";
 
     public static String removeReturnPrefix(String body)
