@@ -22,14 +22,9 @@
 package org.eigenbase.sql;
 
 import java.math.BigDecimal;
-import java.sql.Date;
-import java.sql.Time;
-import java.sql.Timestamp;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.TimeZone;
 import java.util.List;
+import java.math.BigDecimal;
+import java.util.Calendar;
 
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
@@ -40,13 +35,6 @@ import org.eigenbase.util.BitString;
 import org.eigenbase.util.EnumeratedValues;
 import org.eigenbase.util.NlsString;
 import org.eigenbase.util.Util;
-
-import java.math.BigDecimal;
-import java.util.Calendar;
-
-import org.eigenbase.sql.fun.SqlStdOperatorTable;
-import org.eigenbase.sql.fun.SqlRowOperator;
-import org.eigenbase.util.*;
 
 /**
  * A <code>SqlLiteral</code> is a constant. It is, appropriately, immutable.
@@ -710,7 +698,7 @@ public class SqlLiteral extends SqlNode
     }
 
     /**
-     * A character string literal. {@link #value} is an {@link NlsString} and 
+     * A character string literal. {@link #value} is an {@link NlsString} and
      * {@link #typeName} is {@link SqlTypeName#Char}.
      */
     public static class CharString extends StringLiteral
