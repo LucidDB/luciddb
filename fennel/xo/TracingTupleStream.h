@@ -48,7 +48,7 @@ public:
     virtual ByteInputStream &getProducerResultStream();
     virtual BufferProvision getResultBufferProvision() const;
     virtual BufferProvision getInputBufferRequirement() const;
-    virtual void *getImpl();
+    virtual ExecutionStream *getImpl();
 };
 
 FENNEL_END_NAMESPACE

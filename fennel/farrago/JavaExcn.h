@@ -36,11 +36,6 @@ class JavaExcn : public FennelExcn
     
 public:
     /**
-     * Constant for return value of what().
-     */
-    static ParamVal RTTI_WHAT_JavaExcn;
-    
-    /**
      * Constructs a new JavaExcn.
      *
      * @param javaExceptionInit the wrapped Java exception
@@ -52,12 +47,6 @@ public:
      * @return the wrapped Java exception
      */
     jthrowable getJavaException() const;
-
-    /**
-     * Overrides std::exception.  Returns "JavaExcn"; we make use of
-     * this as a substitute for RTTI, which is incompatible with JNI.
-     */
-    virtual const char * what() const throw();
 };
 
 FENNEL_END_NAMESPACE

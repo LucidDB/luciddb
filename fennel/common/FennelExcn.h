@@ -33,11 +33,6 @@ protected:
     
 public:
     /**
-     * Constant for return value of what().
-     */
-    static ParamVal RTTI_WHAT_FennelExcn;
-    
-    /**
      * Construct a new FennelExcn.
      *
      * @param msgInit message
@@ -50,12 +45,6 @@ public:
     {
         return msg;
     }
-    
-    /**
-     * Overrides std::exception.  Returns "FennelExcn"; we make use of this
-     * as a substitute for RTTI, which is incompatible with JNI.
-     */
-    virtual const char * what() const throw();
 };
 
 FENNEL_END_NAMESPACE

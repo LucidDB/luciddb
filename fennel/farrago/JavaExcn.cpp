@@ -23,8 +23,6 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-ParamVal JavaExcn::RTTI_WHAT_JavaExcn = "JavaExcn";
-
 JavaExcn::JavaExcn(jthrowable javaExceptionInit)
     : FennelExcn("FennelJavaExcn")
 {
@@ -34,11 +32,6 @@ JavaExcn::JavaExcn(jthrowable javaExceptionInit)
 jthrowable JavaExcn::getJavaException() const
 {
     return javaException;
-}
-
-const char *JavaExcn::what() const throw()
-{
-    return RTTI_WHAT_JavaExcn;
 }
 
 FENNEL_END_CPPFILE("$Id$");

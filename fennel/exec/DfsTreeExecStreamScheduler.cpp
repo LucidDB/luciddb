@@ -58,7 +58,8 @@ void DfsTreeExecStreamScheduler::start()
 {
     FENNEL_TRACE(TRACE_FINE,"start");
     
-    ExecStreamGraphImpl &graphImpl = pGraph->getImpl();
+    ExecStreamGraphImpl &graphImpl =
+        dynamic_cast<ExecStreamGraphImpl&>(*pGraph);
     ExecStreamGraphImpl::GraphRep graphRep = graphImpl.getGraphRep();
 
     // assert that graph is a tree (or forest of trees)
@@ -101,7 +102,8 @@ ExecStreamBufAccessor &DfsTreeExecStreamScheduler::readStream(
     ExecStreamId current = stream.getStreamId();
     ExecStreamQuantum quantum;
 
-    ExecStreamGraphImpl &graphImpl = pGraph->getImpl();
+    ExecStreamGraphImpl &graphImpl =
+        dynamic_cast<ExecStreamGraphImpl&>(*pGraph);
     ExecStreamGraphImpl::GraphRep graphRep = graphImpl.getGraphRep();
 
     // assert that we're reading from a designated output stream

@@ -103,14 +103,12 @@ if $cygwin ; then
     	echo "Error: ICU library not supported on Cygwin / Mingw"
 	exit -1;
     fi
-    #default to no ICU for Cygwin/Mingw
-    ICU_FLAG="--without-icu";
     export JAVA_HOME=`cygpath -u $JAVA_HOME`
 fi
 
-# the default for non-Cygwin/Mingw is to enable ICU
+# the default  is to disable ICU
 if [ "$ICU_FLAG" == "" ] ; then
-   ICU_FLAG="--with-icu";
+   ICU_FLAG="--without-icu";
 fi
 
 if [ "$ICU_FLAG" == "--with-icu" ] ; then

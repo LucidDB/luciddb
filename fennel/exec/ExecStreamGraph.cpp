@@ -308,21 +308,6 @@ std::vector<SharedExecStream> ExecStreamGraphImpl::getSortedStreams()
     return sortedStreams;
 }
 
-void *ExecStreamGraphImpl::getInterface()
-{
-    return static_cast<ExecStreamGraph *>(this);
-}
-
-char *ExecStreamGraphImpl::getInterfaceName()
-{
-    return "ExecStreamGraph";
-}
-
-ExecStreamGraphImpl &ExecStreamGraphImpl::getImpl()
-{
-    return *this;
-}
-
 FENNEL_END_CPPFILE("$Id$");
 
 // End ExecStreamGraph.cpp

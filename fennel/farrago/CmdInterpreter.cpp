@@ -47,16 +47,6 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-void *CmdInterpreter::getLeafPtr()
-{
-    return static_cast<FemVisitor *>(this);
-}
-
-const char *CmdInterpreter::getLeafTypeName()
-{
-    return "FemVisitor";
-}
-
 int64_t CmdInterpreter::executeCommand(
     ProxyCmd &cmd)
 {

@@ -146,11 +146,9 @@ ExecutionStream::getInputBufferRequirement() const
     return NO_PROVISION;
 }
 
-void *ExecutionStream::getImpl()
+ExecutionStream *ExecutionStream::getImpl()
 {
-    // TODO jvs 8-June-2004:  if we ever get a fix for the JNI+dynamic_cast
-    // problem, change this to return this
-    return NULL;
+    return this;
 }
 
 FENNEL_END_CPPFILE("$Id$");

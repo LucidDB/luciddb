@@ -99,7 +99,7 @@ void ConsumerToProducerProvisionAdapter::closeImpl()
     SingleInputTupleStream::closeImpl();
 }
 
-void *ConsumerToProducerProvisionAdapter::getImpl()
+ExecutionStream *ConsumerToProducerProvisionAdapter::getImpl()
 {
     return pInputStream->getImpl();
 }

@@ -84,7 +84,7 @@ ProducerToConsumerProvisionAdapter::getInputBufferRequirement() const
     return PRODUCER_PROVISION;
 }
 
-void *ProducerToConsumerProvisionAdapter::getImpl()
+ExecutionStream *ProducerToConsumerProvisionAdapter::getImpl()
 {
     return pInputStream->getImpl();
 }

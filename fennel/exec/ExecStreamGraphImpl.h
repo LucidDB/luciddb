@@ -171,9 +171,6 @@ public:
         ExecStreamId streamId,
         uint iOutput);
     virtual std::vector<SharedExecStream> getSortedStreams();
-    virtual void *getInterface();
-    virtual char *getInterfaceName();
-    virtual ExecStreamGraphImpl &getImpl();
 };
 
 inline ExecStreamGraphImpl::GraphRep const &ExecStreamGraphImpl::getGraphRep()

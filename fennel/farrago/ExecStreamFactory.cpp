@@ -55,16 +55,6 @@ ExecStreamFactory::ExecStreamFactory(
     pGraphEmbryo = NULL;
 }
 
-void *ExecStreamFactory::getLeafPtr() 
-{
-    return static_cast<FemVisitor *>(this);
-}
-
-const char *ExecStreamFactory::getLeafTypeName()
-{
-    return "FemVisitor";
-}
-
 SharedDatabase ExecStreamFactory::getDatabase()
 {
     return pDatabase;

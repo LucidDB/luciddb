@@ -36,11 +36,9 @@ FENNEL_BEGIN_NAMESPACE
  *<p>
  *
  * NOTE: A JniProxy will NOT always have the correct polymorphic type, so it
- * should never be downcast (dynamic_cast crashes at runtime in code called via
- * JNI; static_cast is prevented at compile time due to usage of virtual
- * inheritance; and if you try reinterpret_cast, you deserve whatever you get).
- * Instead, if you need polymorphism, use the visitor infrastructure (see
- * CmdInterpreter and TupleStreamBuilder for examples).
+ * should never be downcast.  Instead, if you need polymorphism, use the
+ * visitor infrastructure (see CmdInterpreter and TupleStreamBuilder for
+ * examples).
  */
 class JniProxy
 {
@@ -139,24 +137,6 @@ public:
      * an assertion failure; subclasses may override to ignore or whatever.
      */
     virtual void unhandledVisit();
-    
-    /**
-     * Gets a pointer to the leaf object. You can apply static_cast to
-     * convert this to the real object.
-     *
-     *<p>
-     *
-     * If multiple inheritance is not involved, this method just returns
-     * 'this'. If multiple inheritance is involved, why not use dynamic_cast?
-     * Because it doesn't work in combination with JNI.
-     */
-    virtual void *getLeafPtr() = 0;
-    
-    /**
-     * @return the name of the visitor type, for example "FemVisitor" (used for
-     * sanity check)
-     */
-    virtual const char *getLeafTypeName() = 0;
 };
 
 class JniProxyVisitTableBase
@@ -262,17 +242,8 @@ public:
             // identity.
             ProxyImpl proxyImpl;
             proxyImpl.init(proxy.pEnv,proxy.jObject);
-            // Sanity check: should be "FemVisitor" or "AemVisitor".
-            const char *visitorType = visitor.getLeafTypeName();
-            (void) visitorType;
             // This binds to the correct visit overload.
-            // Can't use static_cast with multiple inheritance:
-            //  Visitor visitorImpl = static_cast<Visitor &>(visitor);
-            // Dynamic_cast doesn't work in combination with JNI.
-            //  Visitor visitorImpl = dynamic_cast<Visitor &>(visitor);
-            // So:
-            Visitor& visitorImpl = *static_cast<Visitor *>(
-                visitor.getLeafPtr());
+            Visitor &visitorImpl = dynamic_cast<Visitor &>(visitor);
             visitorImpl.visit(proxyImpl);
         }
     };

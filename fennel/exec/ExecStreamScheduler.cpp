@@ -125,7 +125,8 @@ void ExecStreamScheduler::traceStreamBuffers(
     TraceLevel inputTupleTraceLevel,
     TraceLevel outputTupleTraceLevel)
 {
-    ExecStreamGraphImpl &graphImpl = stream.getGraph().getImpl();
+    ExecStreamGraphImpl &graphImpl =
+        dynamic_cast<ExecStreamGraphImpl&>(stream.getGraph());
     ExecStreamGraphImpl::GraphRep graphRep = graphImpl.getGraphRep();
 
     ExecStreamGraphImpl::InEdgeIterPair inEdges =

@@ -212,17 +212,17 @@ JniEnvAutoRef::JniEnvAutoRef()
 
 void JniEnvRef::handleExcn(std::exception &ex)
 {
-    std::string what = ex.what();
-    if (what == JavaExcn::RTTI_WHAT_JavaExcn) {
-        JavaExcn &javaExcn = dynamic_cast<JavaExcn &>(ex);
-        pEnv->Throw(javaExcn.getJavaException());
+    JavaExcn *pJavaExcn = dynamic_cast<JavaExcn *>(&ex);
+    if (pJavaExcn) {
+        pEnv->Throw(pJavaExcn->getJavaException());
         return;
     }
-    if (what == FennelExcn::RTTI_WHAT_FennelExcn) {
-        FennelExcn &fennelExcn = dynamic_cast<FennelExcn &>(ex);
-        what = fennelExcn.getMessage();
+    std::string what;
+    FennelExcn *pFennelExcn = dynamic_cast<FennelExcn *>(&ex);
+    if (pFennelExcn) {
+        what = pFennelExcn->getMessage();
     } else {
-        what = FennelResource::instance().internalError(what);
+        what = FennelResource::instance().internalError(ex.what());
     }
     // TODO:  need special-case handling for out-of-memory here
     jclass classSQLException = pEnv->FindClass("java/sql/SQLException");

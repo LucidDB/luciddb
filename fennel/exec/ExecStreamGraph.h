@@ -239,23 +239,6 @@ public:
      * @return vector of sorted streams
      */
     virtual std::vector<SharedExecStream> getSortedStreams() = 0;
-
-    /**
-     * Workaround for multiple inheritance. Gets pointer to this graph, 
-     * casted as its leaf-level interface. Useful when virtual inheritance
-     * prohibits static casting. 
-     */
-    virtual void *getInterface() =  0;
-
-    /**
-     * Workaround for multiple inheritance. Gets name of leaf-level interface.
-     */
-    virtual char *getInterfaceName() =  0;
-
-    /**
-     * @return equivalent of dynamic_cast<ExecStreamGraphImpl&>(*this)
-     */
-    virtual ExecStreamGraphImpl &getImpl() = 0;
 };
 
 inline ExecStreamScheduler &ExecStreamGraph::getScheduler() const

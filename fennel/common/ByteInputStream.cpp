@@ -96,7 +96,7 @@ void ByteInputStream::mark(ByteStreamMarker &marker)
     assert(&(marker.getStream()) == this);
 
     SequentialByteStreamMarker &seqMarker =
-        static_cast<SequentialByteStreamMarker &>(marker);
+        dynamic_cast<SequentialByteStreamMarker &>(marker);
     seqMarker.cbOffset = getOffset();
 }
 
@@ -105,7 +105,7 @@ void ByteInputStream::reset(ByteStreamMarker const &marker)
     assert(&(marker.getStream()) == this);
 
     SequentialByteStreamMarker const &seqMarker =
-        static_cast<SequentialByteStreamMarker const &>(marker);
+        dynamic_cast<SequentialByteStreamMarker const &>(marker);
     assert(!isMAXU(seqMarker.cbOffset));
     if (cbOffset == seqMarker.cbOffset) {
         // expedite common case where stream has not moved since mark

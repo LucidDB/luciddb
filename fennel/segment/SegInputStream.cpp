@@ -156,7 +156,7 @@ void SegInputStream::mark(ByteStreamMarker &marker)
     
     // memorize SegStream-specific info
     SegStreamMarker &segMarker =
-        static_cast<SegStreamMarker &>(marker);
+        dynamic_cast<SegStreamMarker &>(marker);
     getSegPos(segMarker.segPos);
 }
 
@@ -166,7 +166,7 @@ void SegInputStream::reset(ByteStreamMarker const &marker)
 
     // use SegStream-specific info
     SegStreamMarker const &segMarker =
-        static_cast<SegStreamMarker const &>(marker);
+        dynamic_cast<SegStreamMarker const &>(marker);
 
     // disable prefetch during seek
     bool prefetch = !pageIter.isSingular();

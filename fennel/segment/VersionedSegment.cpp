@@ -70,7 +70,7 @@ VersionedSegment::VersionedSegment(
     : DelegatingSegment(dataSegmentInit)
 {
     logSegment = logSegmentInit;
-    pWALSegment = SegmentFactory::staticCast<WALSegment *>(logSegment);
+    pWALSegment = SegmentFactory::dynamicCast<WALSegment *>(logSegment);
 
     setUsablePageSize(
         DelegatingSegment::getUsablePageSize()

@@ -56,16 +56,6 @@ ExecutionStreamFactory::ExecutionStreamFactory(
     pStreamGraphHandle = pStreamGraphHandleInit;
 }
 
-void *ExecutionStreamFactory::getLeafPtr() 
-{
-    return static_cast<FemVisitor *>(this);
-}
-
-const char *ExecutionStreamFactory::getLeafTypeName()
-{
-    return "FemVisitor";
-}
-
 SharedDatabase ExecutionStreamFactory::getDatabase()
 {
     return pDatabase;

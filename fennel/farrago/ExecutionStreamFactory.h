@@ -251,10 +251,6 @@ public:
 
     SharedDatabase getDatabase();
 
-    // override JniProxyVisitor
-    virtual void *getLeafPtr();
-    const char *getLeafTypeName();
-
     /**
      * Reads the Java representation of an ExecutionStream.
      */

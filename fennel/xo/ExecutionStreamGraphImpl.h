@@ -138,8 +138,6 @@ public:
         uint iInput);
     virtual SharedExecutionStream getSinkStream();
     virtual std::vector<SharedExecutionStream> getSortedStreams();
-    virtual void *getInterface();
-    virtual char *getInterfaceName();
 };
 
 FENNEL_END_NAMESPACE

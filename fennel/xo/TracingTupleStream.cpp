@@ -77,7 +77,7 @@ TracingTupleStream::getInputBufferRequirement() const
     return PRODUCER_PROVISION;
 }
 
-void *TracingTupleStream::getImpl()
+ExecutionStream *TracingTupleStream::getImpl()
 {
     return pInputStream->getImpl();
 }

@@ -190,10 +190,6 @@ public:
     static void readTupleProjection(
         TupleProjection &tupleProj,
         SharedProxyTupleProjection pJavaTupleProj);
-    
-    // override JniProxyVisitor
-    void *getLeafPtr();
-    const char *getLeafTypeName();
 };
 
 inline jobject CmdInterpreter::getObjectFromLong(jlong jHandle)

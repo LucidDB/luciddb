@@ -324,7 +324,7 @@ void Database::createDataSegment(
             header.onlineUuid,
             header.versionNumber + (recoveryRequired ? 0 : 1));
 
-    pVersionedSegment = SegmentFactory::staticCast<VersionedSegment *>(
+    pVersionedSegment = SegmentFactory::dynamicCast<VersionedSegment *>(
         pVersionedDataSegment);
 
     pDataSegment =

@@ -239,7 +239,7 @@ public:
     
     /**
      * Some implementations of the Segment interface extend the interface with
-     * implementation-specific features.  staticCast provides access to a
+     * implementation-specific features.  dynamicCast provides access to a
      * derived interface from the generic SharedSegment.  It is the caller's
      * responsibility to ensure that the returned (non-shared) pointer remains
      * protected by the original shared_ptr.  All generic access to the segment
@@ -252,7 +252,7 @@ public:
      *<code>
      *
      * VersionedSegment *pVersionedSegment =
-     *     SegmentFactory::staticCast<VersionedSegment *>(pSegment);
+     *     SegmentFactory::dynamicCast<VersionedSegment *>(pSegment);
      *
      *</code>
      *
@@ -260,26 +260,6 @@ public:
      *
      * @return result of the downcast as a reference, or NULL if
      * pSegment was singular or of a different type
-     */
-    template <class PDerivedSegment>
-    static PDerivedSegment staticCast(SharedSegment pSegment)
-    {
-        if (pSegment->isTracingSegment()) {
-            TracingSegment *pTracing = static_cast<TracingSegment *>(
-                pSegment.get());
-            pSegment = pTracing->getDelegateSegment();
-        }
-        return static_cast<PDerivedSegment>(
-            pSegment.get());
-    }
-
-    /**
-     * dynamic_cast replacement (see staticCast for details).
-     *
-     *<p>
-     *
-     * NOTE:  don't use this in code that may be called from JNI, since due
-     * to a runtime library bug it crashes on Linux.
      */
     template <class PDerivedSegment>
     static PDerivedSegment dynamicCast(SharedSegment pSegment)

@@ -72,7 +72,7 @@ JNI_OnLoad(JavaVM *vm,void *reserved)
     // libfarrago_dt and libfarrago_rs) are loaded.  It pins our .so
     // artificially, which probably isn't a good thing either.
 #ifndef __MINGW32__
-    dlopen("libfarrago.so", RTLD_NOW);
+    dlopen("libfarrago.so", RTLD_NOW | RTLD_GLOBAL);
 #endif
     
     return version;

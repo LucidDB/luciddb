@@ -69,7 +69,7 @@ public:
     
     // implement ByteInputStream
     virtual void readNextBuffer();
-    virtual void *getImpl();
+    virtual ExecutionStream *getImpl();
 };
 
 FENNEL_END_NAMESPACE

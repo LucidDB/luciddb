@@ -39,7 +39,7 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 class ExecStreamSubFactory_dt
     : public ExecutionStreamSubFactory, // DEPRECATED
         public ExecStreamSubFactory,
-        virtual public FemVisitor
+        public FemVisitor
 {
     ExecStreamFactory *pExecStreamFactory;
     ExecStreamEmbryo *pEmbryo;
@@ -93,18 +93,6 @@ class ExecStreamSubFactory_dt
         created = false;
     }
 
-    // implement JniProxyVisitor
-    virtual void *getLeafPtr()
-    {
-        return static_cast<FemVisitor *>(this);
-    }
-    
-    // implement JniProxyVisitor
-    virtual const char *getLeafTypeName()
-    {
-        return "FemVisitor";
-    }
-    
     // DEPRECATED
     // implement ExecutionStreamSubFactory
     virtual bool createStream(

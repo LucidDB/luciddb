@@ -313,7 +313,7 @@ public:
     virtual BufferProvision getInputBufferRequirement() const;
 
     /**
-     * Gets a pointer which can be static_cast to the ExecutionStream subclass
+     * Gets a pointer which can be dynamic_cast to the ExecutionStream subclass
      * known to implement this stream (said class must override this method).
      * This is like an extremely unsafe version of dynamic_cast, except that it
      * also takes care of digging through adapters.  Don't use this unless
@@ -322,7 +322,7 @@ public:
      * @return the implementation object, or NULL if this stream doesn't
      * like your prying
      */
-    virtual void *getImpl();
+    virtual ExecutionStream *getImpl();
 };
 
 FENNEL_END_NAMESPACE

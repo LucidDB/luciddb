@@ -223,7 +223,7 @@ TempSegDestructor::TempSegDestructor(
 void TempSegDestructor::operator()(Segment *pSegment)
 {
     LinearDeviceSegment *pLinearDeviceSegment =
-        static_cast<LinearDeviceSegment *>(pSegment);
+        dynamic_cast<LinearDeviceSegment *>(pSegment);
     SharedCache pCache = pSegment->getCache();
     DeviceId deviceId = pLinearDeviceSegment->getDeviceId();
     // NOTE:  pSegment and pLinearDeviceSegment are invalidated here
