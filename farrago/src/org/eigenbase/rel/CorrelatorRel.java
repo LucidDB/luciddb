@@ -31,6 +31,7 @@ import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptUtil;
 import org.eigenbase.relopt.RelOptPlanWriter;
 import org.eigenbase.util.Util;
+import org.eigenbase.reltype.RelDataType;
 
 
 /**
@@ -83,11 +84,10 @@ public class CorrelatorRel extends JoinRel
         RelOptCluster cluster,
         RelNode left,
         RelNode right,
-        int joinType,
         ArrayList correlations)
     {
         super(cluster, left, right,
-            cluster.rexBuilder.makeLiteral(true), joinType,
+            cluster.rexBuilder.makeLiteral(true), JoinType.LEFT,
             Collections.EMPTY_SET);
         this.correlations = correlations;
     }
@@ -100,8 +100,12 @@ public class CorrelatorRel extends JoinRel
             cluster,
             RelOptUtil.clone(left),
             RelOptUtil.clone(right),
-            joinType,
             (ArrayList) correlations.clone());
+    }
+
+    protected RelDataType deriveRowType()
+    {
+        return super.deriveRowType();
     }
 
     public void explain(RelOptPlanWriter pw)

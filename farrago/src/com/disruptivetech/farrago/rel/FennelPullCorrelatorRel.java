@@ -85,7 +85,7 @@ public class FennelPullCorrelatorRel extends FennelPullDoubleRel
 
     protected RelDataType deriveRowType()
     {
-        return JoinRel.deriveJoinRowType(left, right, JoinRel.JoinType.FULL, cluster.typeFactory);
+        return JoinRel.deriveJoinRowType(left, right, JoinRel.JoinType.LEFT, cluster.typeFactory);
     }
 
     // implement FennelRel

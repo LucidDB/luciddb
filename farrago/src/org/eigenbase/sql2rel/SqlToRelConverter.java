@@ -551,7 +551,7 @@ public class SqlToRelConverter
         final Map nameToNodeMap)
     {
         // REVIEW jvs 2-Jan-2005: should perhaps create a proper scope as well
-        Blackboard bb = new Blackboard(null) 
+        Blackboard bb = new Blackboard(null)
             {
                 RexNode lookupExp(String name)
                 {
@@ -1798,7 +1798,6 @@ public class SqlToRelConverter
                         rel.getCluster(),
                         root,
                         rel,
-                        JoinRel.JoinType.FULL,
                         correlations);
 
                 } else {
