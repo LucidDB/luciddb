@@ -830,7 +830,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         CwmSqldataType cwmType = stmtValidator.findSqldataType(typeName);
         if (!(cwmType instanceof FemSqlobjectType)) {
             // TODO jvs 12-Feb-2005:  throw an excn stating that only
-            // user-defined type is allowed here
+            // user-defined structured type is allowed here
             return null;
         }
         return getFarragoTypeFactory().createCwmType(cwmType);

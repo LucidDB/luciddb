@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/udt.sql#3 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/udt.sql#4 $
 0: jdbc:farrago:> -- Test DDL for user-defined types
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema udttest;
@@ -7,26 +7,78 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set path 'udttest';
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test something basic
+0: jdbc:farrago:> -- basic distinct types
+0: jdbc:farrago:> create type dollar_currency as double;
+0: jdbc:farrago:> create type euro_currency as double;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  can't specify NOT INSTANTIABLE for distinct type
+0: jdbc:farrago:> create type simolean_currency as double not instantiable;
+Error: DDL validation error near line 1, column 34: Cannot define distinct datatype "UDTTEST"."SIMOLEAN_CURRENCY" as both FINAL and NOT INSTANTIABLE (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  can't specify NOT FINAL for distinct type
+0: jdbc:farrago:> create type simolean_currency as double not final;
+Error: DDL validation error near line 1, column 34: Must define distinct datatype "UDTTEST"."SIMOLEAN_CURRENCY" as FINAL (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should succeed
+0: jdbc:farrago:> create type simolean_currency as double final;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- basic structured type
 0: jdbc:farrago:> create type rectilinear_coord as (
 . . . . . . . . >     x double,
 . . . . . . . . >     y double
-. . . . . . . . > );
+. . . . . . . . > ) final;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test default values
+0: jdbc:farrago:> -- structured type with default values
 0: jdbc:farrago:> create type rectilinear_coord0 as (
 . . . . . . . . >     x double default 0,
 . . . . . . . . >     y double default 0
-. . . . . . . . > );
+. . . . . . . . > ) final;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test nested type
+0: jdbc:farrago:> -- structured type nesting
 0: jdbc:farrago:> create type circle as (
 . . . . . . . . >     center rectilinear_coord0,
 . . . . . . . . >     radius double default 1
+. . . . . . . . > ) final;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- explicit instantiability declaration
+0: jdbc:farrago:> create type ellipse as (
+. . . . . . . . >     major_axis double,
+. . . . . . . . >     minor_axis double
+. . . . . . . . > ) final instantiable;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  must specify finality
+0: jdbc:farrago:> create type square as (
+. . . . . . . . >     side_length double
 . . . . . . . . > );
+Error: DDL validation error near line 1, column 41: Must define structured object type "UDTTEST"."SQUARE" as FINAL (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  can never specify FINAL+NOT INSTANTIABLE for anything
+0: jdbc:farrago:> create type square as (
+. . . . . . . . >     side_length double
+. . . . . . . . > ) final not instantiable;
+Error: DDL validation error near line 1, column 41: Cannot define structured object type "UDTTEST"."SQUARE" as both FINAL and NOT INSTANTIABLE (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  can't specify INSTANTIABLE+NOT FINAL for structured type...yet!
+0: jdbc:farrago:> create type square as (
+. . . . . . . . >     side_length double
+. . . . . . . . > ) instantiable not final;
+Error: DDL validation error near line 1, column 41: Must define structured object type "UDTTEST"."SQUARE" as FINAL (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  can't specify NOT FINAL for structured type...yet!
+0: jdbc:farrago:> create type square as (
+. . . . . . . . >     side_length double
+. . . . . . . . > ) not final;
+Error: DDL validation error near line 1, column 41: Must define structured object type "UDTTEST"."SQUARE" as FINAL (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  can't specify NOT FINAL+NOT INSTANTIABLE for 
+0: jdbc:farrago:> -- structured type...yet!
+0: jdbc:farrago:> create type square as (
+. . . . . . . . >     side_length double
+. . . . . . . . > ) not final not instantiable;
+Error: DDL validation error near line 1, column 41: Must define structured object type "UDTTEST"."SQUARE" as FINAL (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  at least one attribute required
-0: jdbc:farrago:> create type no_attributes as ();
+0: jdbc:farrago:> create type no_attributes as () final;
 Error: net.sf.farrago.parser.impl.ParseException: Encountered ")" at line 1, column 31.
 Was expecting one of:
     <IDENTIFIER> ...
@@ -35,13 +87,13 @@ Was expecting one of:
 0: jdbc:farrago:> -- should fail:  unknown attribute type
 0: jdbc:farrago:> create type bad_attrtype as (
 . . . . . . . . >     x foobar
-. . . . . . . . > );
+. . . . . . . . > ) final;
 Error: DDL validation error near line 1, column 35: Reference to unknown datatype "FOOBAR" (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  constraints not allowed on attributes
 0: jdbc:farrago:> create type bad_constraint as (
 . . . . . . . . >     x int not null
-. . . . . . . . > );
+. . . . . . . . > ) final;
 Error: net.sf.farrago.parser.impl.ParseException: Encountered "not" at line 1, column 43.
 Was expecting one of:
     "CHARACTER" ...
@@ -54,7 +106,7 @@ Was expecting one of:
 0: jdbc:farrago:> -- should fail:  default value type mismatch
 0: jdbc:farrago:> create type bad_default as (
 . . . . . . . . >     x double default 'zero'
-. . . . . . . . > );
+. . . . . . . . > ) final;
 Error: DDL validation error near line 1, column 34: Type mismatch in DEFAULT clause for structured type attribute "X";
 column type family is NUMERIC but default value type family is CHARACTER (state=,code=0)
 0: jdbc:farrago:> 
@@ -62,28 +114,32 @@ column type family is NUMERIC but default value type family is CHARACTER (state=
 0: jdbc:farrago:> create type linked_list_node as (
 . . . . . . . . >     x int,
 . . . . . . . . >     next linked_list_node
-. . . . . . . . > );
+. . . . . . . . > ) final;
 Error: Object definition contains recursive cycle (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  mutual nesting
 0: jdbc:farrago:> create schema cardiopulmonary
 . . . . . . . . > create type heart as (
 . . . . . . . . >     partner lung
-. . . . . . . . > )
+. . . . . . . . > ) final
 . . . . . . . . > create type lung as (
 . . . . . . . . >     partner heart
-. . . . . . . . > )
+. . . . . . . . > ) final
 . . . . . . . . > ;
 Error: Object definition contains recursive cycle (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  can't specify UDT for distinct type
+0: jdbc:farrago:> create type simolean_currency as ellipse final;
+Error: DDL validation error near line 1, column 34: Must define representation for distinct datatype "UDTTEST"."SIMOLEAN_CURRENCY" as a predefined type. (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test out-of-order definitions
 0: jdbc:farrago:> create schema musculoskeletal
 . . . . . . . . > create type muscle as (
 . . . . . . . . >     s skeleton
-. . . . . . . . > )
+. . . . . . . . > ) final
 . . . . . . . . > create type skeleton as (
 . . . . . . . . >     x double
-. . . . . . . . > )
+. . . . . . . . > ) final
 . . . . . . . . > ;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test path resolution and explicit qualification
@@ -92,32 +148,32 @@ Error: Object definition contains recursive cycle (state=,code=0)
 . . . . . . . . >     inner_radius double,
 . . . . . . . . >     outer_radius double,
 . . . . . . . . >     tread double
-. . . . . . . . > );
+. . . . . . . . > ) final;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema spare_types
 . . . . . . . . > create type tire as (
 . . . . . . . . >     radius double,
 . . . . . . . . >     tread double
-. . . . . . . . > )
+. . . . . . . . > ) final
 . . . . . . . . > create type toothbrush as (
 . . . . . . . . >     firmness double,
 . . . . . . . . >     length double,
 . . . . . . . . >     head_angle double,
 . . . . . . . . >     electric boolean
-. . . . . . . . > )
+. . . . . . . . > ) final
 . . . . . . . . > ;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test explicit qualification
 0: jdbc:farrago:> create type toiletries as (
 . . . . . . . . >     tb spare_types.toothbrush,
 . . . . . . . . >     c udttest.circle
-. . . . . . . . > );
+. . . . . . . . > ) final;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  wrong schema
 0: jdbc:farrago:> create type bad_schema as (
 . . . . . . . . >     tb udttest.toothbrush
-. . . . . . . . > );
-Error: DDL validation error near line 1, column 33: Reference to unknown structured object type "TOOTHBRUSH" (state=,code=0)
+. . . . . . . . > ) final;
+Error: DDL validation error near line 1, column 33: Reference to unknown user-defined type "TOOTHBRUSH" (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test implicit path lookup
 0: jdbc:farrago:> 
@@ -125,13 +181,13 @@ Error: DDL validation error near line 1, column 33: Reference to unknown structu
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create type washroom as (
 . . . . . . . . >     tb toothbrush
-. . . . . . . . > );
+. . . . . . . . > ) final;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  not on path
 0: jdbc:farrago:> create type line_segment as (
 . . . . . . . . >     endpoint1 rectilinear_coord,
 . . . . . . . . >     endpoint2 rectilinear_coord
-. . . . . . . . > );
+. . . . . . . . > ) final;
 Error: DDL validation error near line 1, column 35: Reference to unknown datatype "RECTILINEAR_COORD" (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 

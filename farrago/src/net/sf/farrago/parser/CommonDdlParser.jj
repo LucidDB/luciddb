@@ -1540,24 +1540,64 @@ FemJar JarDefinition() :
     }
 }
 
-CwmSqldataType UserDefinedTypeDefinition() :
+FemUserDefinedType UserDefinedTypeDefinition() :
 {
     SqlIdentifier qualifiedName;
-    CwmSqldataType typeDef;
+    FemUserDefinedType typeDef;
 }
 {
-    // TODO jvs 1-Feb-2005:  UNDER, AS-less, methods, distinct types,
-    // [NOT] FINAL, [NOT] INSTANTIABLE, references, cast defs
+    // TODO jvs 1-Feb-2005:  UNDER, AS-less, methods,
+    // references, cast defs
     <TYPE> qualifiedName = CompoundIdentifier2()
         {
         }
-    <AS> typeDef = ObjectTypeDefinition()
+    <AS> (
+        typeDef = ObjectTypeDefinition()
+        | typeDef = DistinctTypeDefinition()
+    )
+        {
+        }
+    UserDefinedTypeOptions(typeDef)
         {
         }
     {
         farragoParser.getDdlValidator().setSchemaObjectName(
             typeDef, qualifiedName);
         return typeDef;
+    }
+}
+
+void UserDefinedTypeOptions(FemUserDefinedType typeDef) :
+{
+}
+{
+// TODO jvs 13-Feb-2005:  prevent conflicting declarations.  Also, technically,
+// structured types REQUIRE a finality declaration, and distinct types
+// PROHIBIT an instantiability declaration.
+    (
+        <FINAL>
+    {
+        typeDef.setFinal(true);
+    }
+        | <INSTANTIABLE>
+    {
+        typeDef.setAbstract(false);
+    }
+        | <NOT>
+        (
+            <FINAL>
+        {
+            typeDef.setFinal(false);
+        }
+            | <INSTANTIABLE>
+        {
+            typeDef.setAbstract(true);
+        }
+        )
+    )*
+        {
+        }
+    {
     }
 }
 
@@ -1572,6 +1612,29 @@ FemSqlobjectType ObjectTypeDefinition() :
         {
         }    
     {
+        // NOTE jvs 13-Feb-2005:  for now, this is to trigger an error
+        // in case they forget to specify FINAL
+        typeDef.setFinal(false);
+        typeDef.setAbstract(false);
+        return typeDef;
+    }
+}
+
+FemSqldistinguishedType DistinctTypeDefinition() :
+{
+    FemSqldistinguishedType typeDef = getRepos().newFemSqldistinguishedType();
+    SqlDataTypeSpec dataType;
+}
+{
+    dataType = DataType()
+        {
+            farragoParser.getDdlValidator().setSqlDefinition(
+                typeDef,
+                dataType);
+        }
+    {
+        typeDef.setFinal(true);
+        typeDef.setAbstract(false);
         return typeDef;
     }
 }

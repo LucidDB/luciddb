@@ -479,7 +479,7 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
         if (!typeName.isSimple()) {
             modelElement = findSchemaObject(
                 typeName,
-                getRepos().getSql2003Package().getFemSqlobjectType());
+                getRepos().getSql2003Package().getFemUserDefinedType());
             checkValidated(modelElement);
             return (CwmSqldataType) modelElement;
         }
@@ -513,7 +513,7 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
             modelElement = FarragoCatalogUtil.getModelElementByNameAndType(
                 searchedSchema.getOwnedElement(),
                 simpleName,
-                FemSqlobjectType.class);
+                FemUserDefinedType.class);
             if (modelElement != null) {
                 checkValidated(modelElement);
                 return (CwmSqldataType) modelElement;

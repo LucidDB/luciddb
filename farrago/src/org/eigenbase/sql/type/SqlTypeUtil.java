@@ -634,9 +634,13 @@ public abstract class SqlTypeUtil
         RelDataType recordType,
         int [] flatteningMap)
     {
+        if (!recordType.isStruct()) {
+            return recordType;
+        }
         List fieldList = new ArrayList();
         boolean nested =
             flattenFields(
+                typeFactory,
                 recordType.getFields(),
                 fieldList,
                 flatteningMap);
@@ -654,6 +658,7 @@ public abstract class SqlTypeUtil
     }
 
     private static boolean flattenFields(
+        RelDataTypeFactory typeFactory,
         RelDataTypeField [] fields,
         List list,
         int [] flatteningMap)
@@ -666,9 +671,25 @@ public abstract class SqlTypeUtil
             if (fields[i].getType().isStruct()) {
                 nested = true;
                 flattenFields(
+                    typeFactory,
                     fields[i].getType().getFields(),
                     list,
                     null);
+            } else if (fields[i].getType().getComponentType() != null) {
+                // TODO jvs 14-Feb-2005:  generalize to any kind of
+                // collection type
+                RelDataType flattenedCollectionType =
+                    typeFactory.createMultisetType(
+                        flattenRecordType(
+                            typeFactory,
+                            fields[i].getType().getComponentType(),
+                            null),
+                        -1);
+                RelDataTypeField field = new RelDataTypeFieldImpl(
+                    fields[i].getName(),
+                    fields[i].getIndex(),
+                    flattenedCollectionType);
+                list.add(field);
             } else {
                 list.add(fields[i]);
             }

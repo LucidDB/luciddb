@@ -415,7 +415,7 @@ public abstract class FarragoCatalogUtil
                     Object [] args)
                     throws Throwable
                 {
-                    if (method.getName().equals("getImpl")) {
+                    if (method.getName().equals("getModelElement")) {
                         return element;
                     }
                     

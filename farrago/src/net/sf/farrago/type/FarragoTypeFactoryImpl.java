@@ -189,6 +189,17 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
                     new String[]{"EXP$0"});
             }
             return createMultisetType(componentType, -1);
+        } else if (classifier instanceof FemSqldistinguishedType) {
+            FemSqldistinguishedType type = (FemSqldistinguishedType) classifier;
+            RelDataType predefinedType = createCwmElementType(type);
+            RelDataTypeField field = new RelDataTypeFieldImpl(
+                "PREDEFINED",
+                0,
+                predefinedType);
+            SqlIdentifier id = FarragoCatalogUtil.getQualifiedName(type);
+            return canonize(
+                new ObjectSqlType(
+                    id, false, new RelDataTypeField [] {field}));
         } else if (classifier instanceof FemSqlobjectType) {
             FemSqlobjectType objectType =
                 (FemSqlobjectType) classifier;

@@ -317,8 +317,8 @@ public abstract class DdlHandler
             FemSqltypeAttribute componentType = (FemSqltypeAttribute)
                 collectionType.getFeature().get(0);
             validateAttribute(componentType);
-        } else if (type instanceof FemSqlobjectType) {
-            // nothing special to do for structured types, which were
+        } else if (type instanceof FemUserDefinedType) {
+            // nothing special to do for UDT's, which were
             // already validated on creation
         } else {
             throw Util.needToImplement(type);

@@ -362,6 +362,26 @@ column type family is {1} but default value type family is {2}</text>
 <text>Invocation name and parameter type signature of {0} conflicts with another routine</text>
 </exception>
 
+<exception id="420680" name="ValidatorFinalAbstractType"
+    className="org.eigenbase.sql.SqlValidatorException">
+<text>Cannot define {0} as both FINAL and NOT INSTANTIABLE</text>
+</exception>
+
+<exception id="420690" name="ValidatorNonFinalType"
+    className="org.eigenbase.sql.SqlValidatorException">
+<text>Must define {0} as FINAL</text>
+</exception>
+
+<exception id="420700" name="ValidatorNonInstantiableType"
+    className="org.eigenbase.sql.SqlValidatorException">
+<text>Must define {0} as INSTANTIABLE</text>
+</exception>
+
+<exception id="420710" name="ValidatorDistinctTypePredefined"
+    className="org.eigenbase.sql.SqlValidatorException">
+<text>Must define representation for {0} as a predefined type.</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Fennel resources 440,000 - 450,000 -->
 <!-- Actual resources are defined separately in Fennel -->
@@ -725,6 +745,14 @@ column type family is {1} but default value type family is {2}</text>
 
 <message id="510043" name="UmlJar">
 <text>jar</text>
+</message>
+
+<message id="510044" name="UmlSQLDistinguishedType">
+<text>distinct datatype</text>
+</message>
+
+<message id="510045" name="UmlUserDefinedType">
+<text>user-defined type</text>
 </message>
 
 <!-- End of last error section ============================================ -->

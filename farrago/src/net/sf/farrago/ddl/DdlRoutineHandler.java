@@ -310,6 +310,49 @@ public class DdlRoutineHandler extends DdlHandler
     public void validateDefinition(FemSqlobjectType typeDef)
     {
         validateAttributeSet(typeDef);
+        validateUserDefinedType(typeDef);
+    }
+
+    // implement FarragoSessionDdlHandler
+    public void validateDefinition(FemSqldistinguishedType typeDef)
+    {
+        validateUserDefinedType(typeDef);
+        validateTypedElement(typeDef);
+        if (!(typeDef.getType() instanceof CwmSqlsimpleType)) {
+            throw validator.newPositionalError(
+                typeDef,
+                validator.res.newValidatorDistinctTypePredefined(
+                    repos.getLocalizedObjectName(typeDef)));
+        }
+        CwmSqlsimpleType predefinedType = (CwmSqlsimpleType) typeDef.getType();
+        typeDef.setSqlSimpleType(predefinedType);
+    }
+
+    private void validateUserDefinedType(FemUserDefinedType typeDef)
+    {
+        if (typeDef.isFinal() && typeDef.isAbstract()) {
+            throw validator.newPositionalError(
+                typeDef,
+                validator.res.newValidatorFinalAbstractType(
+                    repos.getLocalizedObjectName(typeDef)));
+        }
+
+        // NOTE jvs 13-Feb-2005: Once we support inheritance, we will allow
+        // abstract and non-final for FemSqlobjectTypes.
+        
+        if (!typeDef.isFinal()) {
+            throw validator.newPositionalError(
+                typeDef,
+                validator.res.newValidatorNonFinalType(
+                    repos.getLocalizedObjectName(typeDef)));
+        }
+        
+        if (typeDef.isAbstract()) {
+            throw validator.newPositionalError(
+                typeDef,
+                validator.res.newValidatorNonInstantiableType(
+                    repos.getLocalizedObjectName(typeDef)));
+        }
     }
 }
 
