@@ -455,7 +455,7 @@ public abstract class OJPreparingStmt
         }
         if (parseTree instanceof Expression) {
             Expression expression = (Expression) parseTree;
-            returnType = Util.getType(env, expression);
+            returnType = OJUtil.getType(env, expression);
             if (!returnType.isPrimitive()) {
                 returnType = OJUtil.clazzObject;
             }

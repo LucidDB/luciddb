@@ -97,6 +97,11 @@ public abstract class OJUtil
         java.util.Map.Entry.class);
 
     public static final OJClass[] emptyArrayOfOJClass = new OJClass[]{};
+
+    static 
+    {
+        OJSystem.initConstants();
+    }
     
     /**
      * Each thread's enclosing {@link OJClass}. Synthetic classes are declared

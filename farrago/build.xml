@@ -329,8 +329,7 @@ require version '${required.ant.version}'."/>
     <pathelement location="${rmijdbc.dir}/dist/lib/RmiJdbc.jar"/>
     <pathelement location="${csvjdbc.dir}/csvjdbc.jar"/>
     <pathelement location="${janino.dir}/lib/janino.jar"/>
-    <!-- TODO jvs 23-Sept-2004:  once custom OpenJava is gone -->
-    <!-- pathelement location="${thirdparty.dir}/OpenJava/classes"/ -->
+    <pathelement location="${openjava.dir}/openjava.jar"/>
   </path>
   <property name="farrago.3p.classpath" refid="farrago.3p.classpath"/>
 

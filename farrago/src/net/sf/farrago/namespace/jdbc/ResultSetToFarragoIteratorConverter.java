@@ -106,7 +106,7 @@ class ResultSetToFarragoIteratorConverter extends ConverterRel
         // fails to find variable reference).
         Expression castResultSet =
             new CastExpression(
-                TypeName.forOJClass(Util.clazzResultSet),
+                TypeName.forOJClass(OJUtil.clazzResultSet),
                 varResultSet);
 
         RelDataType rowType = getRowType();
@@ -186,7 +186,7 @@ class ResultSetToFarragoIteratorConverter extends ConverterRel
             TypeName.forOJClass(OJClass.forClass(ResultSetIterator.class)),
             new ExpressionList(
                 new CastExpression(
-                    TypeName.forOJClass(Util.clazzResultSet),
+                    TypeName.forOJClass(OJUtil.clazzResultSet),
                     childObj)),
             memberList);
     }
