@@ -10,10 +10,11 @@ set -v
 # assumptions about g++ 3.x installation locations.
 # If it doesn't work for you, you'll have to
 # fix it manually by symlinking the correct location for the ctime header.
+GCC_VER=`g++ --version | head -n 1 | cut -f 3 -d ' '`
 rm -f ${STLPORT_LOCATION}/g++-v3
-rm -f ${STLPORT_LOCATION}/3.3.2
+rm -f ${STLPORT_LOCATION}/${GCC_VER}
 ln -s /usr/include/c++/3.* ${STLPORT_LOCATION}/g++-v3
-ln -s /usr/include/c++/3.* ${STLPORT_LOCATION}/3.3.2
+ln -s /usr/include/c++/3.* ${STLPORT_LOCATION}/${GCC_VER}
 
 STLPORT_DIR=${STLPORT_LOCATION}
 MINGW_CFLAGS="-mno-cygwin -D_STLP_THREADS"
