@@ -213,6 +213,23 @@ class RelSet
             planner.rename((RelNode) parentRels.next());
         }
 
+        // Make sure the cost changes as a result of merging are propogated.
+        for (Iterator relSubsets = subsets.iterator();
+                relSubsets.hasNext(); ) {
+            RelSubset relSubset = (RelSubset)relSubsets.next();
+            for (Iterator parentSubsets =
+                        relSubset.getParentSubsets().iterator();
+                    parentSubsets.hasNext(); ) {
+                RelSubset parentSubset = (RelSubset)parentSubsets.next();
+
+                for (Iterator parentRels = parentSubset.rels.iterator();
+                        parentRels.hasNext(); ) {
+                    parentSubset.propagateCostImprovements(
+                        planner, (RelNode) parentRels.next());
+                }
+            }
+        }
+
         // Each of the relations in the old set now has new parents, so
         // potentially new rules can fire. Check for rule matches, just as if
         // it were newly registered.  (This may cause rules which have fired

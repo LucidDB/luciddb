@@ -201,7 +201,7 @@ public class RelSubset extends AbstractRelNode
      * Checks whether a relexp has made its subset cheaper, and if it so,
      * recursively checks whether that subset's parents have gotten cheaper.
      */
-    private void propagateCostImprovements(
+    void propagateCostImprovements(
         VolcanoPlanner planner,
         RelNode rel)
     {
