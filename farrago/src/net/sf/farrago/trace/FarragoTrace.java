@@ -183,6 +183,15 @@ public abstract class FarragoTrace
     }
 
     /**
+     * The tracer "net.sf.farrago.query.plandump"
+     * cause the plan to be dumped before and after optimization.
+     */
+    public static Logger getPlanDumpTracer()
+    {
+        return Logger.getLogger("net.sf.farrago.query.plandump");
+    }
+
+    /**
      * The tracer "net.sf.farrago.plannerviz"
      * enables JGraph visualization of planner activity.  This
      * should not be enabled unless Farrago is running from a

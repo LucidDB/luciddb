@@ -22,6 +22,8 @@
 */
 package org.eigenbase.reltype;
 
+import org.eigenbase.sql.type.*;
+
 /**
  * RelRecordType represents a structured type having named fields.
  *
@@ -40,15 +42,15 @@ public class RelRecordType extends RelDataTypeImpl
         computeDigest();
     }
 
+    // implement RelDataType
+    public SqlTypeName getSqlTypeName()
+    {
+        return SqlTypeName.Row;
+    }
+
+    // implement RelDataType
     public boolean isNullable()
     {
-        // REVIEW:  maybe shouldn't even bother.  SQL structured types have
-        // a nullable status independent of that of their fields.
-        for (int i = 0; i < fields.length; ++i) {
-            if (fields[i].getType().isNullable()) {
-                return true;
-            }
-        }
         return false;
     }
 

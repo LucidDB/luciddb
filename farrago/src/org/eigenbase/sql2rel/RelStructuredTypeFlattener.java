@@ -58,17 +58,18 @@ import java.util.*;
  * After flattening, the resulting tree looks like
  *
  *<pre><code>
- * ProjectRel(C2=[$2], A2=[$1])
+ * ProjectRel(C2=[$3], A2=[$2])
  *   FtrsIndexScanRel(table=[T], index=[clustered])
  *</code></pre>
  *
- * The index scan produces a flattened row type <code>(smallint, bigint,
- * double)</code>, and the projection picks out the desired attributes
- * (omitting <code>$0</code> altogether).  After optimization, the projection
- * might be pushed down into the index scan, resulting in a final tree like
+ * The index scan produces a flattened row type <code>(boolean, smallint,
+ * bigint, double)</code> (the boolean is a null indicator for c1), and the
+ * projection picks out the desired attributes (omitting <code>$0</code> and
+ * <code>$1</code> altogether).  After optimization, the projection might be
+ * pushed down into the index scan, resulting in a final tree like
  *
  *<pre><code>
- * FtrsIndexScanRel(table=[T], index=[clustered], projection=[2, 1])
+ * FtrsIndexScanRel(table=[T], index=[clustered], projection=[3, 2])
  *</code></pre>
  *
  * @author John V. Sichi
@@ -137,6 +138,10 @@ public class RelStructuredTypeFlattener
         int ordinal)
     {
         int offset = 0;
+        if (SqlTypeUtil.needsNullIndicator(rowType)) {
+            // skip null indicator
+            ++offset;
+        }
         RelDataTypeField [] oldFields = rowType.getFields();
         for (int i = 0; i < ordinal; ++i) {
             RelDataType oldFieldType = oldFields[i].getType();
@@ -338,6 +343,7 @@ public class RelStructuredTypeFlattener
             if (exp.getType().isStruct()) {
                 if (exp instanceof RexInputRef) {
                     RexInputRef inputRef = (RexInputRef) exp;
+                    int newOffset = getNewForOldInput(inputRef.index);
                     // expand to range
                     RelDataType flattenedType = SqlTypeUtil.flattenRecordType(
                         rexBuilder.getTypeFactory(),
@@ -350,7 +356,7 @@ public class RelStructuredTypeFlattener
                             fieldList.get(j);
                         flattenedExps.add(
                             new RexInputRef(
-                                inputRef.index + j,
+                                newOffset + j,
                                 field.getType()));
                         flattenedFieldNames.add(null);
                     }
@@ -358,6 +364,25 @@ public class RelStructuredTypeFlattener
                     // REVIEW jvs 27-Feb-2005:  for cast, see corresponding note
                     // in RewriteRexShuttle
                     RexCall call = (RexCall) exp;
+                    if (exp.isA(RexKind.NewSpecification)) {
+                        // For object constructors, prepend a FALSE null
+                        // indicator.
+                        flattenedExps.add(
+                            rexBuilder.makeLiteral(false));
+                        flattenedFieldNames.add(null);
+                    } else if (exp.isA(RexKind.Cast)) {
+                        if (RexLiteral.isNullLiteral(
+                                ((RexCall) exp).getOperands()[0]))
+                        {
+                            // Translate CAST(NULL AS UDT) into
+                            // the correct number of null fields.
+                            flattenNullLiteral(
+                                exp.getType(),
+                                flattenedExps,
+                                flattenedFieldNames);
+                            continue;
+                        }
+                    }
                     flattenProjections(
                         call.getOperands(),
                         new String[call.getOperands().length],
@@ -367,6 +392,7 @@ public class RelStructuredTypeFlattener
                     // NOTE jvs 10-Feb-2005:  This is a lame hack to
                     // keep special functions which return row types
                     // working.
+                    
                     Iterator fieldIter =
                         exp.getType().getFieldList().iterator();
                     while (fieldIter.hasNext()) {
@@ -388,6 +414,28 @@ public class RelStructuredTypeFlattener
                     flattenedFieldNames.add(fieldNames[i]);
                 }
             }
+        }
+    }
+
+    private void flattenNullLiteral(
+        RelDataType type,
+        List flattenedExps,
+        List flattenedFieldNames)
+    {
+        RelDataType flattenedType = SqlTypeUtil.flattenRecordType(
+            rexBuilder.getTypeFactory(),
+            type,
+            null);
+        List fieldList = flattenedType.getFieldList();
+        int n = fieldList.size();
+        for (int j = 0; j < n; ++j) {
+            RelDataTypeField field = (RelDataTypeField)
+                fieldList.get(j);
+            flattenedExps.add(
+                rexBuilder.makeCast(
+                    field.getType(),
+                    rexBuilder.constantNull()));
+            flattenedFieldNames.add(null);
         }
     }
 
@@ -514,6 +562,9 @@ public class RelStructuredTypeFlattener
             }
             RexNode lhs = rexCall.getOperands()[0];
             if (!lhs.getType().isStruct()) {
+                // NOTE jvs 9-Mar-2005:  Calls like IS NULL operate 
+                // on the representative null indicator.  Since it comes
+                // first, we don't have to do any special translation.
                 return super.visit(rexCall);
             }
             List flattenedExps = new ArrayList();

@@ -91,6 +91,8 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         FarragoTrace.getDynamicTracer();
     private static final Logger streamGraphTracer =
         FarragoTrace.getPreparedStreamGraphTracer();
+    private static final Logger planDumpTracer =
+        FarragoTrace.getPlanDumpTracer();
 
     //~ Instance fields -------------------------------------------------------
 
@@ -476,8 +478,28 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     // override OJPreparingStmt
     protected RelNode optimize(RelNode rootRel)
     {
+        boolean dumpPlan = planDumpTracer.isLoggable(Level.FINE);
+        if (dumpPlan) {
+            planDumpTracer.fine(
+                RelOptUtil.dumpPlan(
+                    "Plan before flattening", 
+                    rootRel));
+        }
         rootRel = flattenTypes(rootRel);
-        return super.optimize(rootRel);
+        if (dumpPlan) {
+            planDumpTracer.fine(
+                RelOptUtil.dumpPlan(
+                    "Plan after flattening", 
+                    rootRel));
+        }
+        rootRel = super.optimize(rootRel);
+        if (dumpPlan) {
+            planDumpTracer.fine(
+                RelOptUtil.dumpPlan(
+                    "Plan after optimization", 
+                    rootRel));
+        }
+        return rootRel;
     }
 
     RelNode flattenTypes(RelNode rootRel)

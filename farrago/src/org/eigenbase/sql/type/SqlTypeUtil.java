@@ -581,6 +581,26 @@ public abstract class SqlTypeUtil
                     toType,
                     fromType.getFields()[0].getType(),
                     coerce);
+            } else if (toType.getSqlTypeName() == SqlTypeName.Row) {
+                if (fromType.getSqlTypeName() != SqlTypeName.Row) {
+                    return false;
+                }
+                int n = toType.getFieldList().size();
+                if (fromType.getFieldList().size() != n) {
+                    return false;
+                }
+                for (int i = 0; i < n; ++i) {
+                    RelDataTypeField toField = toType.getFields()[i];
+                    RelDataTypeField fromField = fromType.getFields()[i];
+                    if (!canCastFrom(
+                            toField.getType(),
+                            fromField.getType(),
+                            coerce))
+                    {
+                        return false;
+                    }
+                }
+                return true;
             } else {
                 return toType.getFamily() == fromType.getFamily();
             }
@@ -630,7 +650,11 @@ public abstract class SqlTypeUtil
 
     /**
      * Flattens a record type by recursively expanding any
-     * fields which are themselves record types.
+     * fields which are themselves record types.  For each
+     * record type, a representative null value field is also prepended
+     * (with state NULL for a null value and FALSE for non-null),
+     * and all component types are asserted to be nullable, since
+     * SQL doesn't allow NOT NULL to be specified on attributes.
      *
      * @param typeFactory factory which should produced flattened type
      *
@@ -654,7 +678,7 @@ public abstract class SqlTypeUtil
         boolean nested =
             flattenFields(
                 typeFactory,
-                recordType.getFields(),
+                recordType,
                 fieldList,
                 flatteningMap);
         if (!nested) {
@@ -670,41 +694,70 @@ public abstract class SqlTypeUtil
         return typeFactory.createStructType(types, fieldNames);
     }
 
+    public static boolean needsNullIndicator(RelDataType recordType)
+    {
+        // NOTE jvs 9-Mar-2005: It would be more storage-efficient to say that
+        // no null indicator is required for structured type columns declared
+        // as NOT NULL.  However, the uniformity of always having a null
+        // indicator makes things cleaner in many places.
+        return (recordType.getSqlTypeName() == SqlTypeName.Structured);
+    }
+
     private static boolean flattenFields(
         RelDataTypeFactory typeFactory,
-        RelDataTypeField [] fields,
+        RelDataType type,
         List list,
         int [] flatteningMap)
     {
         boolean nested = false;
-        for (int i = 0; i < fields.length; ++i) {
-            if (flatteningMap != null) {
-                flatteningMap[i] = list.size();
+        if (needsNullIndicator(type)) {
+            // NOTE jvs 9-Mar-2005:  other code
+            // (e.g. RelStructuredTypeFlattener) relies on the
+            // null indicator field coming first.
+            RelDataType indicatorType =
+                typeFactory.createSqlType(SqlTypeName.Boolean);
+            if (type.isNullable()) {
+                indicatorType = typeFactory.createTypeWithNullability(
+                    indicatorType, true);
             }
-            if (fields[i].getType().isStruct()) {
+            RelDataTypeField nullIndicatorField = new RelDataTypeFieldImpl(
+                "NULL_VALUE",
+                0,
+                indicatorType);
+            list.add(nullIndicatorField);
+            nested = true;
+        }
+        Iterator fieldIter = type.getFieldList().iterator();
+        while (fieldIter.hasNext()) {
+            RelDataTypeField field = (RelDataTypeField) fieldIter.next();
+            if (flatteningMap != null) {
+                flatteningMap[field.getIndex()] = list.size();
+            }
+            if (field.getType().isStruct()) {
                 nested = true;
                 flattenFields(
                     typeFactory,
-                    fields[i].getType().getFields(),
+                    field.getType(),
                     list,
                     null);
-            } else if (fields[i].getType().getComponentType() != null) {
+            } else if (field.getType().getComponentType() != null) {
+                nested = true;
                 // TODO jvs 14-Feb-2005:  generalize to any kind of
                 // collection type
                 RelDataType flattenedCollectionType =
                     typeFactory.createMultisetType(
                         flattenRecordType(
                             typeFactory,
-                            fields[i].getType().getComponentType(),
+                            field.getType().getComponentType(),
                             null),
                         -1);
-                RelDataTypeField field = new RelDataTypeFieldImpl(
-                    fields[i].getName(),
-                    fields[i].getIndex(),
+                field = new RelDataTypeFieldImpl(
+                    field.getName(),
+                    field.getIndex(),
                     flattenedCollectionType);
                 list.add(field);
             } else {
-                list.add(fields[i]);
+                list.add(field);
             }
         }
         return nested;

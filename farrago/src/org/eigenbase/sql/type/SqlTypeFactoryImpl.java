@@ -187,6 +187,11 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
     private RelDataType leastRestrictiveSqlType(RelDataType [] types)
     {
         RelDataType resultType = types[0];
+
+        if (resultType.getSqlTypeName() == SqlTypeName.Row) {
+            return leastRestrictiveStructuredType(types);
+        }
+        
         boolean anyNullable = resultType.isNullable();
 
         for (int i = 1; i < types.length; ++i) {

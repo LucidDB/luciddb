@@ -157,6 +157,12 @@ public class FarragoUserDefinedRoutineLookup implements SqlOperatorTable
             returnType = typeFactory.createTypeWithNullability(
                 returnType, true);
         }
+
+        if (femRoutine.getSpecification() != null) {
+            // constructors always return NOT NULL
+            returnType = typeFactory.createTypeWithNullability(
+                returnType, false);
+        }
         
         return new FarragoUserDefinedRoutine(
             stmtValidator,

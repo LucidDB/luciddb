@@ -139,6 +139,9 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
     public static final int Structured_ordinal = 23;
     public static final SqlTypeName Structured =
         new SqlTypeName("STRUCTURED", Structured_ordinal, PrecNoScaleNo);
+    public static final int Row_ordinal = 24;
+    public static final SqlTypeName Row =
+        new SqlTypeName("ROW", Row_ordinal, PrecNoScaleNo);
 
     /**
      * List of all allowable {@link SqlTypeName} values.
@@ -148,7 +151,7 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
             Boolean, Integer, Varchar, Date, Time, Timestamp, Null, Decimal,
             Any, Char, Binary, Varbinary, Tinyint, Smallint, Bigint, Real,
             Double, Symbol, IntervalYearMonth, IntervalDayTime,
-            Float, Multiset, Distinct, Structured
+            Float, Multiset, Distinct, Structured, Row
         });
 
     static
@@ -411,6 +414,7 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
             return Types.ARRAY;
         case Distinct_ordinal:
             return Types.DISTINCT;
+        case Row_ordinal:
         case Structured_ordinal:
             return Types.STRUCT;
         default:

@@ -269,8 +269,10 @@ class RelSet
         final RelDataType relRowType = rel.getRowType();
         String s =
             "Cannot add expression of different type to set: "
-            + Util.lineSeparator + "set type is " + rowType
-            + Util.lineSeparator + "expression type is " + relRowType
+            + Util.lineSeparator + "set type is "
+            + rowType.getFullTypeString()
+            + Util.lineSeparator + "expression type is "
+            + relRowType.getFullTypeString()
             + Util.lineSeparator + "set is " + toString() + Util.lineSeparator
             + "expression is " + rel.toString();
         throw Util.newInternal(s);

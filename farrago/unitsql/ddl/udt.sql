@@ -328,7 +328,7 @@ create type line_segment as (
 set path 'udttest';
 
 create table stored_coord_list(
-    coord1 rectilinear_coord0,
+    coord1 rectilinear_coord0 not null,
     coord2 rectilinear_coord0,
     pair_id int not null primary key
 );
@@ -381,8 +381,25 @@ values(new rectilinear_coord0(), new rectilinear_coord0(), 1);
 insert into stored_coord_list 
 values(new rectilinear_coord0(), new rectilinear_coord0(), 2);
 
+insert into stored_coord_list 
+values(new rectilinear_coord0(), null, 3);
+
+-- should fail due to NOT NULL constraint
+insert into stored_coord_list 
+values(null, null, 4);
+
 select t.pair_id, t.coord1.x, t.coord2.y 
 from stored_coord_list t
+order by pair_id;
+
+select t.pair_id
+from stored_coord_list t
+where t.coord2 is null
+order by pair_id;
+
+select t.pair_id
+from stored_coord_list t
+where t.coord2 is not null
 order by pair_id;
 
 update stored_coord_list set pair_id=-pair_id;

@@ -247,7 +247,8 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
                 {
                     final FemAbstractTypedElement element =
                         (FemAbstractTypedElement) featureList.get(index);
-                    return createCwmElementType(element);
+                    RelDataType type = createCwmElementType(element);
+                    return type;
                 }
             });
     }

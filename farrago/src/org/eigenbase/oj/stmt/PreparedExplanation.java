@@ -57,13 +57,7 @@ public class PreparedExplanation implements PreparedResult
 
     public String getCode()
     {
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
-        RelOptPlanWriter planWriter = new RelOptPlanWriter(pw);
-        planWriter.withIdPrefix = false;
-        rel.explain(planWriter);
-        pw.flush();
-        return sw.toString();
+        return RelOptUtil.dumpPlan("", rel);
     }
 
     public boolean isDml()

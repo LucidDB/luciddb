@@ -32,6 +32,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.io.*;
 
 import openjava.ptree.Expression;
 import openjava.ptree.FieldAccess;
@@ -528,6 +529,20 @@ public abstract class RelOptUtil
         planner.addRule(ProjectToCalcRule.instance);
         planner.addRule(MergeFilterOntoCalcRule.instance);
         planner.addRule(MergeProjectOntoCalcRule.instance);
+    }
+
+    public static String dumpPlan(String header, RelNode rel)
+    {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        if (!header.equals("")) {
+            pw.println(header);
+        }
+        RelOptPlanWriter planWriter = new RelOptPlanWriter(pw);
+        planWriter.withIdPrefix = false;
+        rel.explain(planWriter);
+        pw.flush();
+        return sw.toString();
     }
 
     //~ Inner Classes ---------------------------------------------------------
