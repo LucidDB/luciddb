@@ -232,7 +232,7 @@ public class OJTypeFactoryImpl extends RelDataTypeFactoryImpl
 
         public RelDataType getComponentType()
         {
-            OJClass colType = Util.guessRowType(ojClass);
+            OJClass colType = OJUtil.guessRowType(ojClass);
             if (colType == null) {
                 return null;
             }

@@ -171,7 +171,7 @@ outer:
             TypeName.forOJClass(returnType),
             name,
             parameterList,
-            new TypeName[] {TypeName.forOJClass(Util.clazzSQLException)},
+            new TypeName[] {TypeName.forOJClass(OJUtil.clazzSQLException)},
             statementList);
         MethodDeclaration oldMethodDecl = null;
         MemberDeclarationList body = classDecl.getBody();

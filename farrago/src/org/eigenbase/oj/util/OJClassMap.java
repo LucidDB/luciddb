@@ -134,8 +134,8 @@ public class OJClassMap
                 throw Util.newInternal(
                     e, "holder class must be OJClassSourceCode");
             }
-            env.recordMemberClass(declarer.getName(), decl.getName());
-            env.getGlobalEnvironment().record(clazz.getName(), clazz);
+            OJUtil.recordMemberClass(env, declarer.getName(), decl.getName());
+            OJUtil.getGlobalEnvironment(env).record(clazz.getName(), clazz);
 
             tracer.fine(
                 "created OJSyntheticClass: name=" + clazz.getName() +

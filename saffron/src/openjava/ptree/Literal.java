@@ -42,9 +42,6 @@ public class Literal extends Leaf
     public static final int CHARACTER	= 5;
     public static final int STRING	= 6;
     public static final int NULL	= 7;
-    public static final int DATE    = 8;
-    public static final int TIME    = 9;
-    public static final int TIMESTAMP = 10;
 
     protected int id = -1;
 
@@ -191,32 +188,6 @@ public class Literal extends Leaf
 	return makeLiteral( d.doubleValue() );
     }
 
-    /**
-     * Dates are represented as long value that's milliseconds since the 'unix epoch'.
-     * @param date
-     * @return new date literal
-     */
-    public static Literal makeLiteral( java.sql.Date date) {
-        return new Literal(Literal.DATE, String.valueOf(date.getTime()) + "l");
-    }
-    /**
-     *
-     * @param time
-     * @return time literal
-     */
-    public static Expression makeLiteral(Time time) {
-        return new Literal(Literal.TIME, String.valueOf(time.getTime()) + "l");
-    }
-    /**
-     *
-     * @param timestamp
-     * @return timestampe literal
-     */
-    public static Expression makeLiteral(java.sql.Timestamp timestamp) {
-        return new Literal(Literal.TIMESTAMP, String.valueOf(timestamp.getTime()) + "l");
-    }
-
-
     public int getLiteralType() {
 	return this.id;
     }
@@ -276,12 +247,6 @@ public class Literal extends Leaf
 	    return OJClass.forClass( char . class );
 	case STRING :
 	    return OJClass.forClass( String . class );
-    case DATE:
-        return OJClass.forClass( java.sql.Date.class);
-    case TIME:
-        return OJClass.forClass( java.sql.Time.class);
-    case TIMESTAMP:
-        return OJClass.forClass( java.sql.Timestamp.class);
 	case NULL :
 	    return OJClass.forName( OJSystem.NULLTYPE_NAME );
 	}

@@ -571,7 +571,7 @@ class QueryInfo
             RelNode oldFrom = getRoot();
             SubqueryFinder subqueryFinder = new SubqueryFinder(this, env);
             Expression oldExp = exp;
-            exp = Util.go(subqueryFinder, oldExp);
+            exp = OJUtil.go(subqueryFinder, oldExp);
             if (oldFrom == getRoot()) {
                 return exp;
             }

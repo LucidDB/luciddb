@@ -83,7 +83,7 @@ class SubqueryFinder extends ScopeHandler
                         new RexNode [] {
                             queryInfo.rexBuilder.makeJava(
                                 getEnvironment(),
-                                Toolbox.box(
+                                OJUtil.box(
                                     rightRowType,
                                     RelOptUtil.makeReference(0)))
                         },
@@ -146,7 +146,7 @@ class SubqueryFinder extends ScopeHandler
             p.replace(condition);
 
             // signal that we want to stop iteration (not really an error)
-            throw new Toolbox.StopIterationException();
+            throw new OJUtil.StopIterationException();
         } else {
             super.visit(p);
         }
@@ -195,7 +195,7 @@ class SubqueryFinder extends ScopeHandler
             p.replace(condition);
 
             // signal that we want to stop iteration (not really an error)
-            throw new Toolbox.StopIterationException();
+            throw new OJUtil.StopIterationException();
         } else {
             super.visit(p);
         }

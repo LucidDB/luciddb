@@ -153,10 +153,11 @@ public class FarragoDateTimeType extends FarragoPrecisionType
             throw Util.newInternal(e, "holder class must be OJClassSourceCode");
         }
         Environment env = declarer.getEnvironment();
-        env.recordMemberClass(
+        OJUtil.recordMemberClass(
+            env,
             declarer.getName(),
             decl.getName());
-        env.getGlobalEnvironment().record(
+        OJUtil.getGlobalEnvironment(env).record(
             ojClass.getName(),
             ojClass);
         return ojClass;

@@ -1,8 +1,6 @@
 /*
-// $Id$
-// Package org.eigenbase is a class library of database components.
+// Saffron preprocessor and data engine.
 // Copyright (C) 2002-2004 Disruptive Tech
-// Copyright (C) 2003-2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,7 +17,7 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-package org.eigenbase.oj.util;
+package net.sf.saffron.oj.util;
 
 import java.util.Enumeration;
 import java.util.Hashtable;

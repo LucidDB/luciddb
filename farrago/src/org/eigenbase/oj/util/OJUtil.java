@@ -21,10 +21,9 @@
 
 package org.eigenbase.oj.util;
 
-import openjava.mop.OJClass;
-import openjava.ptree.Expression;
-import openjava.ptree.Literal;
-import openjava.ptree.TypeName;
+import openjava.mop.*;
+import openjava.ptree.*;
+import openjava.ptree.util.*;
 
 import org.eigenbase.oj.OJTypeFactory;
 import org.eigenbase.rel.RelNode;
@@ -40,6 +39,65 @@ public abstract class OJUtil
 {
     //~ Static fields/initializers --------------------------------------------
 
+    public static final OJClass clazzVoid = OJClass.forClass(
+        void.class);
+
+    public static final OJClass clazzObject = OJClass.forClass(
+        java.lang.Object.class);
+
+    public static final OJClass clazzObjectArray = OJClass.arrayOf(
+        clazzObject);
+
+    public static final OJClass clazzCollection = OJClass.forClass(
+        java.util.Collection.class);
+
+    public static final OJClass clazzMap = OJClass.forClass(
+        java.util.Map.class);
+
+    public static final OJClass clazzMapEntry = OJClass.forClass(
+        java.util.Map.Entry.class);
+
+    public static final OJClass clazzHashtable = OJClass.forClass(
+        java.util.Hashtable.class);
+
+    public static final OJClass clazzEnumeration = OJClass.forClass(
+        java.util.Enumeration.class);
+
+    public static final OJClass clazzIterator = OJClass.forClass(
+        java.util.Iterator.class);
+
+    public static final OJClass clazzIterable = OJClass.forClass(
+        org.eigenbase.runtime.Iterable.class);
+
+    public static final OJClass clazzVector = OJClass.forClass(
+        java.util.Vector.class);
+
+    public static final OJClass clazzComparable = OJClass.forClass(
+        java.lang.Comparable.class);
+
+    public static final OJClass clazzComparator = OJClass.forClass(
+        java.util.Comparator.class);
+
+    public static final OJClass clazzResultSet = OJClass.forClass(
+        java.sql.ResultSet.class);
+
+    public static final OJClass clazzClass = OJClass.forClass(
+        java.lang.Class.class);
+
+    public static final OJClass clazzString = OJClass.forClass(
+        java.lang.String.class);
+
+    public static final OJClass clazzSet = OJClass.forClass(
+        java.util.Set.class);
+
+    public static final OJClass clazzSQLException = OJClass.forClass(
+        java.sql.SQLException.class);
+
+    public static final OJClass clazzEntry = OJClass.forClass(
+        java.util.Map.Entry.class);
+
+    public static final OJClass[] emptyArrayOfOJClass = new OJClass[]{};
+    
     /**
      * Each thread's enclosing {@link OJClass}. Synthetic classes are declared
      * as inner classes of this.
@@ -47,17 +105,6 @@ public abstract class OJUtil
     public static final ThreadLocal threadDeclarers = new ThreadLocal();
 
     //~ Methods ---------------------------------------------------------------
-
-    public static OJClass ojClassForExpression(
-        RelNode rel,
-        Expression exp)
-    {
-        try {
-            return exp.getType(new RelEnvironment(rel));
-        } catch (Exception e) {
-            throw Util.newInternal(e);
-        }
-    }
 
     public static RelDataType ojToType(
         RelDataTypeFactory typeFactory,
@@ -134,6 +181,148 @@ public abstract class OJUtil
     {
         return TypeName.forOJClass(OJClass.forClass(clazz));
     }
+    
+    public static String replaceDotWithDollar( String base, int i )
+    {
+	return base.substring( 0, i ) + '$' + base.substring( i + 1 );
+    }
+
+    /**
+     * Guesses the row-type of an expression which has type <code>clazz</code>.
+     * For example, {@link String}[] --> {@link String}; {@link
+     * java.util.Iterator} --> {@link Object}.
+     */
+    public static final OJClass guessRowType(OJClass clazz)
+    {
+        if (clazz.isArray()) {
+            return clazz.getComponentType();
+        } else if (clazzIterator.isAssignableFrom(clazz) ||
+            clazzEnumeration.isAssignableFrom(clazz) ||
+            clazzVector.isAssignableFrom(clazz) ||
+            clazzCollection.isAssignableFrom(clazz) ||
+            clazzResultSet.isAssignableFrom(clazz))
+        {
+            return clazzObject;
+        } else if (clazzHashtable.isAssignableFrom(clazz) ||
+            clazzMap.isAssignableFrom(clazz))
+        {
+            return clazzEntry;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Sets a {@link ParseTreeVisitor} going on a parse tree, and returns the
+     * result.
+     */
+    public static ParseTree go(ParseTreeVisitor visitor, ParseTree p)
+    {
+        ObjectList holder = new ObjectList(p);
+        try {
+            p.accept(visitor);
+        } catch (StopIterationException e) {
+            // ignore the exception -- it was just a way to abort the traversal
+        } catch (ParseTreeException e) {
+            throw Util.newInternal(
+                    e, "while visiting expression " + p);
+        }
+        return (ParseTree) holder.get(0);
+    }
+
+    /**
+     * Sets a {@link ParseTreeVisitor} going on a given non-relational
+     * expression, and returns the result.
+     */
+    public static Expression go(ParseTreeVisitor visitor, Expression p)
+    {
+        return (Expression) go(visitor, (ParseTree) p);
+    }
+
+    /**
+     * Ensures that an expression is an object.  Primitive expressions are
+     * wrapped in a constructor (for example, the <code>int</code> expression
+     * <code>2 + 3</code> becomes <code>new Integer(2 + 3)</code>);
+     * non-primitive expressions are unchanged.
+     *
+     * @param exp an expression
+     * @param clazz <code>exp</code>'s type
+     * @return a call to the constructor of a wrapper class if <code>exp</code>
+     *    is primitive, <code>exp</code> otherwise
+     **/
+    public static Expression box(OJClass clazz, Expression exp)
+    {
+        if (clazz.isPrimitive()) {
+            return new AllocationExpression(
+                    clazz.primitiveWrapper(),
+                    new ExpressionList(exp));
+        } else {
+            return exp;
+        }
+    }
+
+    /**
+     * Gets the root environment, which is always a {@link GlobalEnvironment}.
+     *
+     * @param env environment to start search from
+     */
+    public static GlobalEnvironment getGlobalEnvironment(Environment env)
+    {
+	for (;;) {
+	    Environment parent = env.getParent();
+	    if (parent == null) {
+		return (GlobalEnvironment) env;
+	    } else {
+		env = parent;
+	    }
+	}
+    }
+
+    /**
+     * If env is a {@link ClassEnvironment} for declarerName, record new inner
+     * class innerName; otherwise, pass up the environment hierarchy.
+     *
+     * @param env environment to start search from
+     * @param declarerName fully-qualified name of enclosing class
+     * @param innerName    simple name of inner class
+     */
+    public static void recordMemberClass(
+        Environment env,String declarerName, String innerName)
+    {
+	do {
+            if (env instanceof ClassEnvironment) {
+                if (declarerName.equals(env.currentClassName())) {
+                    ((ClassEnvironment) env).recordMemberClass(innerName);
+                    return;
+                }
+            } else {
+                env = env.getParent();
+            }
+        } while (env != null);
+    }
+    
+    public static OJClass getType(Environment env, Expression exp)
+    {
+        try {
+            OJClass clazz = exp.getType(env);
+            assert(clazz != null);
+            return clazz;
+        } catch (Exception e) {
+            throw Util.newInternal(e, "while deriving type for '" + exp + "'");
+        }
+    }
+
+    /**
+     * A <code>StopIterationException</code> is a way to tell a {@link
+     * openjava.ptree.util.ParseTreeVisitor} to halt traversal of the tree, but
+     * is not regarded as an error.
+     **/
+    public static class StopIterationException extends ParseTreeException
+    {
+        public StopIterationException()
+        {
+        }
+    };
 }
 
 

@@ -29,6 +29,7 @@ import java.sql.ResultSet;
 import java.util.*;
 
 import org.eigenbase.util.Util;
+import org.eigenbase.oj.util.OJUtil;
 
 /**
  * The class <code>Toolbox</code> is a utility class.
@@ -1021,16 +1022,11 @@ public abstract class Toolbox {
         }
     }
 
-    public static OJClass getType(Environment env, Expression exp) {
-        try {
-            OJClass clazz = exp.getType(env);
-            assert(clazz != null);
-            return clazz;
-        } catch (Exception e) {
-            throw Util.newInternal(e, "while deriving type for '" + exp + "'");
-        }
+    public static OJClass getType(Environment env, Expression exp)
+    {
+        return OJUtil.getType(env,exp);
     }
-
+    
     public static OJClass[] getTypes(Environment env, Expression[] exps) {
         OJClass[] classes = new OJClass[exps.length];
         for (int i = 0; i < classes.length; i++) {
@@ -1107,41 +1103,6 @@ public abstract class Toolbox {
     }
 
     /**
-     * Sets a {@link ParseTreeVisitor} going on a parse tree, and returns the
-     * result.
-     */
-    public static ParseTree go(ParseTreeVisitor visitor, ParseTree p) {
-        ObjectList holder = new ObjectList(p);
-        try {
-            p.accept(visitor);
-        } catch (StopIterationException e) {
-            // ignore the exception -- it was just a way to abort the traversal
-        } catch (ParseTreeException e) {
-            throw Util.newInternal(
-                    e, "while visiting expression " + p);
-        }
-        return (ParseTree) holder.get(0);
-    }
-
-    /**
-     * Sets a {@link ParseTreeVisitor} going on a given non-relational
-     * expression, and returns the result.
-     */
-    public static Expression go(ParseTreeVisitor visitor, Expression p) {
-        return (Expression) go(visitor, (ParseTree) p);
-    }
-
-    /**
-     * A <code>StopIterationException</code> is a way to tell a {@link
-     * openjava.ptree.util.ParseTreeVisitor} to halt traversal of the tree, but
-     * is not regarded as an error.
-     **/
-    public static class StopIterationException extends ParseTreeException {
-        public StopIterationException() {
-        }
-    };
-
-    /**
      * Creates or (subsequently) retrieves a class object corresponding to the
      * declaration of an anonymous class.
      **/
@@ -1169,31 +1130,10 @@ public abstract class Toolbox {
                             e, "declarer of anonymous class must be source code");
                 }
             }
-            env.recordMemberClass(declarer.getName(), cdecl.getName());
+            OJUtil.recordMemberClass(env, declarer.getName(), cdecl.getName());
             env.mapAnonDeclToClass.put(allocExp, anonClass);
         }
         return anonClass;
-    }
-
-    /**
-     * Ensures that an expression is an object.  Primitive expressions are
-     * wrapped in a constructor (for example, the <code>int</code> expression
-     * <code>2 + 3</code> becomes <code>new Integer(2 + 3)</code>);
-     * non-primitive expressions are unchanged.
-     *
-     * @param exp an expression
-     * @param clazz <code>exp</code>'s type
-     * @return a call to the constructor of a wrapper class if <code>exp</code>
-     *    is primitive, <code>exp</code> otherwise
-     **/
-    public static Expression box(OJClass clazz, Expression exp) {
-        if (clazz.isPrimitive()) {
-            return new AllocationExpression(
-                    clazz.primitiveWrapper(),
-                    new ExpressionList(exp));
-        } else {
-            return exp;
-        }
     }
 
     /**
@@ -1271,7 +1211,7 @@ public abstract class Toolbox {
                             intermediateClazz));
         } else if (fromClazz.isPrimitive()) {
             return castObject(
-                    box(
+                    OJUtil.box(
                             fromClazz,
                             exp),
                     fromClazz.unwrappedPrimitive(),

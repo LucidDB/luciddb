@@ -20,8 +20,7 @@
 package net.sf.farrago.runtime;
 
 import java.util.*;
-import java.sql.Time;
-import java.sql.Timestamp;
+import java.sql.*;
 
 import javax.jmi.reflect.*;
 
@@ -41,6 +40,7 @@ import net.sf.farrago.util.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.util.*;
 
+import java.sql.Date;
 
 /**
  * FarragoRuntimeContext defines runtime support routines needed by generated
@@ -67,6 +67,7 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
     private FarragoSessionVariables sessionVariables;
     private FarragoDataWrapperCache dataWrapperCache;
     private FennelStreamGraph streamGraph;
+    private long currentTime;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -225,6 +226,7 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
      */
     public String getContextVariable_CURRENT_ROLE()
     {
+        // TODO jvs 25-Sept-2004:  once supported
         return "";
     }
 
@@ -235,7 +237,18 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
      */
     public String getContextVariable_CURRENT_PATH()
     {
+        // TODO jvs 25-Sept-2004:  once supported
         return "";
+    }
+
+    protected long getCurrentTime()
+    {
+        // NOTE jvs 25-Sept-2004:  per SQL standard, the same time
+        // is used for all references within the same statement.
+        if (currentTime == 0) {
+            currentTime = System.currentTimeMillis();
+        }
+        return currentTime;
     }
 
     /**
@@ -245,8 +258,7 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
      */
     public Date getContextVariable_CURRENT_DATE()
     {
-        long time = System.currentTimeMillis();
-        return new Date(time);
+        return new Date(getCurrentTime());
     }
 
     /**
@@ -256,8 +268,7 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
      */
     public Time getContextVariable_CURRENT_TIME()
     {
-        long time = System.currentTimeMillis();
-        return new Time(time);
+        return new Time(getCurrentTime());
     }
 
     /**
@@ -267,8 +278,7 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
      */
     public Timestamp getContextVariable_CURRENT_TIMESTAMP()
     {
-        long time = System.currentTimeMillis();
-        return new Timestamp(time);
+        return new Timestamp(getCurrentTime());
     }
 
     /**

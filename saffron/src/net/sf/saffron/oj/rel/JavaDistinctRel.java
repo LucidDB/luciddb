@@ -102,7 +102,7 @@ public class JavaDistinctRel extends DistinctRel implements JavaLoopRel
                     this.var_h,
                     "add",
                     new ExpressionList(
-                        Toolbox.box(
+                        OJUtil.box(
                             OJUtil.typeToOJClass(child.getRowType()),
                             implementor.translateInput(this, 0)))),
                 ifBody));

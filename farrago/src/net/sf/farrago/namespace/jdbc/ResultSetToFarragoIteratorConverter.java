@@ -174,10 +174,12 @@ class ResultSetToFarragoIteratorConverter extends ConverterRel
         memberList.add(
             new MethodDeclaration(
                 new ModifierList(ModifierList.PUBLIC),
-                TypeName.forOJClass(Util.clazzObject),
+                TypeName.forOJClass(OJUtil.clazzObject),
                 "makeRow",
                 new ParameterList(),
-                new TypeName [] { TypeName.forOJClass(Util.clazzSQLException) },
+                new TypeName [] {
+                    TypeName.forOJClass(OJUtil.clazzSQLException)
+                },
                 methodBody));
 
         return new AllocationExpression(

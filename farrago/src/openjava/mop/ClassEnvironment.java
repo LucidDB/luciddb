@@ -83,15 +83,6 @@ public final class ClassEnvironment
 	memberClasses.addElement( name );
     }
 
-    public void recordMemberClass(String declarerName, String innerName)
-    {
-	if (declarerName.equals(currentClassName())) {
-	    recordMemberClass(innerName);
-	} else if (parent != null) {
-	    parent.recordMemberClass(declarerName, innerName);
-	}
-    }
-
     public OJClass lookupClass( String name ) {
 // 	try {
 	    OJClass declarer = parent.lookupClass(currentClassName());

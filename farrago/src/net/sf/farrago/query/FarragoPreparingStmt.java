@@ -280,7 +280,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
                 int i = ojRowClassName.lastIndexOf('.');
                 assert (i != -1);
                 ojRowClassName =
-                    OJClass.replaceDotWithDollar(ojRowClassName, i);
+                    OJUtil.replaceDotWithDollar(ojRowClassName, i);
                 rowClass =
                     Class.forName(
                         ojRowClassName,

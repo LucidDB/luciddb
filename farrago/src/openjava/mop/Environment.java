@@ -47,21 +47,6 @@ public abstract class Environment
     }
 
     /**
-     * Gets the root environment, which is always a {@link GlobalEnvironment}.
-     **/
-    public GlobalEnvironment getGlobalEnvironment()
-    {
-	for (Environment e = this;;) {
-	    Environment parent = e.getParent();
-	    if (parent == null) {
-		return (GlobalEnvironment) e;
-	    } else {
-		e = parent;
-	    }
-	}
-    }
-
-    /**
      * Gets the package name.
      */
     public String getPackage()
@@ -234,17 +219,5 @@ public abstract class Environment
     public boolean isRegisteredModifier( String str ) {
         if (parent == null)  return false;
         return parent.isRegisteredModifier( str );
-    }
-
-    /**
-     * If this is a {@link ClassEnvironment} for declarerName, record new inner
-     * class innerName; otherwise, pass up the environment hierarchy.
-     *
-     * @param declarerName fully-qualified name of enclosing class
-     * @param innerName    simple name of inner class
-     */
-    public void recordMemberClass(String declarerName, String innerName)
-    {
-	if (parent != null) parent.recordMemberClass(declarerName, innerName);
     }
 }

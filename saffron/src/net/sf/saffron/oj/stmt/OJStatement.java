@@ -281,16 +281,16 @@ public class OJStatement extends OJPreparingStmt
         QueryExpander queryExpander)
     {
         MemberAccessCorrector corrector = new MemberAccessCorrector(env);
-        parseTree = Util.go(corrector, parseTree);
+        parseTree = OJUtil.go(corrector, parseTree);
         OJSchemaExpander schemaExpander = new OJSchemaExpander(env);
-        parseTree = Util.go(schemaExpander, parseTree);
+        parseTree = OJUtil.go(schemaExpander, parseTree);
         OJValidator validator = new OJValidator(env);
-        parseTree = Util.go(validator, parseTree);
+        parseTree = OJUtil.go(validator, parseTree);
         if (queryExpander == null) {
             return parseTree;
         }
         try {
-            parseTree = Util.go(queryExpander, parseTree);
+            parseTree = OJUtil.go(queryExpander, parseTree);
         } catch (Throwable e) {
             throw Util.newInternal(e,
                 "while validating parse tree " + parseTree);
@@ -359,6 +359,74 @@ public class OJStatement extends OJPreparingStmt
             sqlQuery,runtimeContextClass,validator,needValidation);
     }
     
+    // override OJPreparingStmt
+    protected void bindArgument(Argument arg)
+    {
+        env.bindVariable(arg.getName(),new ArgumentInfo(arg));
+    }
+
+    // override OJPreparingStmt
+    protected void addDecl(
+        openjava.ptree.Statement statement,
+        ExpressionList exprList)
+    {
+        if (exprList == null) {
+            return;
+        }
+        if (statement instanceof VariableDeclaration) {
+            VariableDeclaration varDecl = (VariableDeclaration) statement;
+            TypeName typeSpecifier = varDecl.getTypeSpecifier();
+            String qname = env.toQualifiedName(typeSpecifier.getName());
+            OJClass clazz =
+                env.lookupClass(
+                    qname,
+                    typeSpecifier.getDimension());
+            String varName = varDecl.getVariable();
+
+            // return new VarDecl[] {
+            //   new VarDecl("s", "java.lang.String", s),
+            //   new VarDecl("i", "int", new Integer(i))};
+            exprList.add(
+                new AllocationExpression(
+                    OJClass.forClass(VarDecl.class),
+                    new ExpressionList(
+                        Literal.makeLiteral(varName),
+                        new FieldAccess(
+                            TypeName.forOJClass(clazz),
+                            "class"),
+                        OJUtil.box(
+                            clazz,
+                            new Variable(varDecl.getVariable())))));
+        }
+    }
+    
+    private static class ArgumentInfo implements Environment.VariableInfo
+    {
+        private Argument arg;
+
+        ArgumentInfo(Argument arg)
+        {
+            this.arg = arg;
+        }
+
+        public OJClass getType()
+        {
+            return arg.getType();
+        }
+        
+        public RelOptSchema getRelOptSchema()
+        {
+            if (arg.getValue() == null) {
+                return null;
+            } else if (arg.getValue() instanceof RelOptSchema) {
+                return (RelOptSchema) arg.getValue();
+            } else if (arg.getValue() instanceof RelOptConnection) {
+                return ((RelOptConnection) arg.getValue()).getRelOptSchema();
+            } else {
+                return null;
+            }
+        }
+    }
 }
 
 

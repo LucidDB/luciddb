@@ -28,6 +28,7 @@ import org.eigenbase.rel.convert.ConverterRel;
 import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.util.Util;
 
+import net.sf.saffron.oj.util.*;
 
 /**
  * Thunk to convert between {@link CallingConvention#ARRAY array}
@@ -63,7 +64,7 @@ public class ArrayToJavaConvertlet extends JavaConvertlet
         stmtList.add(
             new VariableDeclaration(
                 TypeName.forOJClass(
-                    OJUtil.ojClassForExpression(converter, exp)),
+                    RelEnvironment.ojClassForExpression(converter, exp)),
                 variable_array.toString(),
                 exp));
         stmtList.add(

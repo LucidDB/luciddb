@@ -30,6 +30,7 @@ import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanner;
+import org.eigenbase.oj.util.OJUtil;
 import org.eigenbase.util.Util;
 
 
@@ -83,7 +84,7 @@ public class IterConcatenateRel extends UnionRel implements JavaRel
             OJClass.forClass(org.eigenbase.runtime.CompoundIterator.class),
             new ExpressionList(
                 new ArrayAllocationExpression(
-                    Util.clazzIterator,
+                    OJUtil.clazzIterator,
                     new ExpressionList(null),
                     new ArrayInitializer(exps))));
     }

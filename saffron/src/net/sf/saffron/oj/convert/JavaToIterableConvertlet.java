@@ -25,11 +25,11 @@ import openjava.ptree.*;
 
 import org.eigenbase.oj.rel.JavaRel;
 import org.eigenbase.oj.rel.JavaRelImplementor;
-import org.eigenbase.oj.util.UnboundVariableCollector;
 import org.eigenbase.rel.convert.ConverterRel;
 import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.runtime.ThreadIterator;
 
+import net.sf.saffron.oj.util.UnboundVariableCollector;
 
 /**
  * Thunk to convert between {@link CallingConvention#JAVA java}

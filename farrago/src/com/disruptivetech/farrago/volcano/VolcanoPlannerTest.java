@@ -207,7 +207,7 @@ public class VolcanoPlannerTest extends TestCase
 
     //~ Inner Classes ---------------------------------------------------------
 
-    private static class TestEnvironment extends Environment
+    private static class TestEnvironment extends GlobalEnvironment
     {
         public String toString()
         {
@@ -217,13 +217,6 @@ public class VolcanoPlannerTest extends TestCase
         public void record(
             String name,
             OJClass clazz)
-        {
-            throw new AssertionError();
-        }
-
-        public void bindVariable(
-            String name,
-            VariableInfo info)
         {
             throw new AssertionError();
         }

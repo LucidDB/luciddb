@@ -1,8 +1,6 @@
 /*
-// $Id$
-// Package org.eigenbase is a class library of database components.
+// Saffron preprocessor and data engine.
 // Copyright (C) 2002-2004 Disruptive Tech
-// Copyright (C) 2003-2004 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,11 +17,14 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-package org.eigenbase.oj.util;
+package net.sf.saffron.oj.util;
 
 import openjava.mop.Environment;
 import openjava.mop.OJClass;
+import openjava.ptree.Expression;
 
+import org.eigenbase.util.*;
+import org.eigenbase.oj.util.*;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptQuery;
 import org.eigenbase.relopt.RelOptUtil;
@@ -102,6 +103,17 @@ public class RelEnvironment extends Environment
     public String toString()
     {
         return "RelEnvironment: rel=" + rel.toString();
+    }
+
+    public static OJClass ojClassForExpression(
+        RelNode rel,
+        Expression exp)
+    {
+        try {
+            return exp.getType(new RelEnvironment(rel));
+        } catch (Exception e) {
+            throw Util.newInternal(e);
+        }
     }
 }
 

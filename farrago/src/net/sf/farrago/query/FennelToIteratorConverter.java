@@ -347,11 +347,14 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
                     new ExpressionList()));
 
         // generate code to allocate instance of anonymous class defined above
+        MemberDeclarationList memberDeclList = new MemberDeclarationList();
+        memberDeclList.add(rowVarDecl);
+        memberDeclList.add(methodDecl);
         Expression newTupleReaderExp =
             new AllocationExpression(
                 OJUtil.typeNameForClass(FennelTupleReader.class),
                 new ExpressionList(),
-                new MemberDeclarationList(rowVarDecl, methodDecl));
+                memberDeclList);
 
         // and pass this to FarragoRuntimeContext.newFennelIterator to produce a
         // FennelIterator, which will invoke our generated FennelTupleReader to

@@ -27,6 +27,7 @@ import org.eigenbase.oj.util.*;
 import org.eigenbase.rel.convert.ConverterRel;
 import org.eigenbase.relopt.CallingConvention;
 
+import net.sf.saffron.oj.util.*;
 
 /**
  * Thunk to convert between {@link CallingConvention#JAVA java}

@@ -189,10 +189,15 @@ public abstract class OJPreparingStmt
                     argument.clazz =
                         visibleBaseClass(argument.clazz, packageName);
                 }
-                env.bindVariable(argument.name, argument);
+                bindArgument(argument);
             }
         }
         return decl;
+    }
+
+    protected void bindArgument(Argument arg)
+    {
+        env.bindVariable(arg.getName(),arg.getType());
     }
 
     /**
@@ -393,38 +398,11 @@ public abstract class OJPreparingStmt
         return java.lang.Object.class;
     }
 
-    private void addDecl(
+    protected void addDecl(
         openjava.ptree.Statement statement,
         ExpressionList exprList)
     {
-        if (exprList == null) {
-            return;
-        }
-        if (statement instanceof VariableDeclaration) {
-            VariableDeclaration varDecl = (VariableDeclaration) statement;
-            TypeName typeSpecifier = varDecl.getTypeSpecifier();
-            String qname = env.toQualifiedName(typeSpecifier.getName());
-            OJClass clazz =
-                env.lookupClass(
-                    qname,
-                    typeSpecifier.getDimension());
-            String varName = varDecl.getVariable();
-
-            // return new VarDecl[] {
-            //   new VarDecl("s", "java.lang.String", s),
-            //   new VarDecl("i", "int", new Integer(i))};
-            exprList.add(
-                new AllocationExpression(
-                    OJClass.forClass(VarDecl.class),
-                    new ExpressionList(
-                        Literal.makeLiteral(varName),
-                        new FieldAccess(
-                            TypeName.forOJClass(clazz),
-                            "class"),
-                        Util.box(
-                            clazz,
-                            new Variable(varDecl.getVariable())))));
-        }
+        return;
     }
 
     private BoundMethod compile(
@@ -440,7 +418,7 @@ public abstract class OJPreparingStmt
                 new Object [] { parseTree });
         }
         ClassCollector classCollector = new ClassCollector(env);
-        Util.discard(Util.go(classCollector, parseTree));
+        Util.discard(OJUtil.go(classCollector, parseTree));
         OJClass [] classes = classCollector.getClasses();
         OJSyntheticClass.addMembers(decl, classes);
 
@@ -465,7 +443,7 @@ public abstract class OJPreparingStmt
         }
 
         // form the body of the method, and figure out the return type
-        OJClass returnType = Util.clazzVoid;
+        OJClass returnType = OJUtil.clazzVoid;
         StatementList statementList = new StatementList();
         for (int i = 0; i < arguments.length; ++i) {
             statementList.add(
@@ -479,7 +457,7 @@ public abstract class OJPreparingStmt
             Expression expression = (Expression) parseTree;
             returnType = Util.getType(env, expression);
             if (!returnType.isPrimitive()) {
-                returnType = Util.clazzObject;
+                returnType = OJUtil.clazzObject;
             }
             openjava.ptree.Statement statement;
             if (returnType == OJSystem.VOID) {
@@ -624,7 +602,7 @@ public abstract class OJPreparingStmt
      * the value is a primitive type (such as <code>int</code>, as opposed to
      * {@link Integer}), or is a superclass of the object's runtime type.
      */
-    public static class Argument implements Environment.VariableInfo
+    public static class Argument
     {
         Class clazz;
         Object value;
@@ -666,19 +644,6 @@ public abstract class OJPreparingStmt
             this(name, java.lang.Integer.TYPE, new Integer(value));
         }
 
-        public RelOptSchema getRelOptSchema()
-        {
-            if (value == null) {
-                return null;
-            } else if (value instanceof RelOptSchema) {
-                return (RelOptSchema) value;
-            } else if (value instanceof RelOptConnection) {
-                return ((RelOptConnection) value).getRelOptSchema();
-            } else {
-                return null;
-            }
-        }
-
         public OJClass getType()
         {
             return OJClass.forClass(clazz);
@@ -687,6 +652,11 @@ public abstract class OJPreparingStmt
         public Object getValue()
         {
             return value;
+        }
+
+        public String getName()
+        {
+            return name;
         }
     }
 }

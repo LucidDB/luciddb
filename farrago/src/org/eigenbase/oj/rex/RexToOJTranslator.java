@@ -172,20 +172,12 @@ public class RexToOJTranslator implements RexVisitor
             byte [] bytes = ((BitString) value).getAsByteArray();
             setTranslation(convertByteArrayLiteral(bytes));
             break;
+        case SqlTypeName.Date_ordinal:
+        case SqlTypeName.Time_ordinal:
         case SqlTypeName.Timestamp_ordinal:
             calendar = (Calendar) value;
             timeInMillis = calendar.getTimeInMillis();
-            setTranslation(Literal.makeLiteral(new Timestamp(timeInMillis)));
-            break;
-        case SqlTypeName.Time_ordinal:
-            calendar = (Calendar) value;
-            timeInMillis = calendar.getTimeInMillis();
-            setTranslation(Literal.makeLiteral(new Time(timeInMillis)));
-            break;
-        case SqlTypeName.Date_ordinal:
-            calendar = (Calendar) value;
-            timeInMillis = calendar.getTimeInMillis();
-            setTranslation(Literal.makeLiteral(new Date(timeInMillis)));
+            setTranslation(Literal.makeLiteral(timeInMillis));
             break;
         default:
             throw Util.newInternal("Bad literal value " + value + " ("
