@@ -251,60 +251,60 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         assertSimplify(sql, expected);
 
         // from
-        sql = "select a.empno, b.deptno from ";
+        sql = "select a.empno, b.deptno from ^";
         expected = "select a.empno, b.deptno from $suggest$";
-        assertSimplify(sql, 30, expected);
+        assertSimplify(sql, expected);
 
         // select list
-        sql = "select emp. from sales.emp";
+        sql = "select emp.^ from sales.emp";
         expected = "select emp.$suggest$ from sales.emp";
-        assertSimplify(sql, 11, expected);
+        assertSimplify(sql, expected);
 
-        sql = "select from sales.emp";
+        sql = "select ^from sales.emp";
         expected = "select $suggest$ from sales.emp";
-        assertSimplify(sql, 7, expected);
+        assertSimplify(sql, expected);
 
-        sql = "select a.empno ,  from sales.emp a , sales.dept b";
+        sql = "select a.empno ,^  from sales.emp a , sales.dept b";
         expected = "select a.empno ,$suggest$ from sales.emp a , sales.dept b";
-        assertSimplify(sql, 16, expected);
+        assertSimplify(sql, expected);
 
         // join
-        sql = "select a.empno, b.deptno from dummy a join on where empno=1";
+        sql = "select a.empno, b.deptno from dummy a join ^on where empno=1";
         expected="select a.empno, b.deptno from dummy a join $suggest$ "
             + "where empno=1";
-        assertSimplify(sql, 43, expected);
+        assertSimplify(sql, expected);
 
         // on
         sql = "select a.empno, b.deptno from sales.emp a join sales.dept b "
-            + "on a.deptno=";
+            + "on a.deptno=^";
         expected="select a.empno, b.deptno from sales.emp a join sales.dept b "
             + "on a.deptno=$suggest$";
-        assertSimplify(sql, 73, expected);
+        assertSimplify(sql, expected);
 
         // where
         sql = "select a.empno, b.deptno from sales.emp a, sales.dept b "
-            + "where ";
+            + "where ^";
         expected = "select a.empno, b.deptno from sales.emp a, sales.dept b "
             + "where $suggest$";
-        assertSimplify(sql, 62, expected);
+        assertSimplify(sql, expected);
 
         // order by
-        sql = "select emp.empno from sales.emp where empno=1 order by ";
+        sql = "select emp.empno from sales.emp where empno=1 order by ^";
         expected = "select emp.empno from sales.emp where empno=1 order by $suggest$";
-        assertSimplify(sql, 55, expected);
+        assertSimplify(sql, expected);
 
         // subquery
-        sql = "select t. from (select 1 as x, 2 as y from sales.emp) as t where t.dummy=1";
+        sql = "select t.^ from (select 1 as x, 2 as y from sales.emp) as t where t.dummy=1";
         expected = "select t.$suggest$ from (select 1 as x, 2 as y from sales.emp) as t where t.dummy=1";
-        assertSimplify(sql, 9, expected);
+        assertSimplify(sql, expected);
 
-        sql = "select t. from (select 1 as x, 2 as y from (select x from sales.emp)) as t where ";
+        sql = "select t. from (select 1 as x, 2 as y from (select x from sales.emp)) as t where ^";
         expected = "select t. from (select 1 as x, 2 as y from (select x from sales.emp)) as t where $suggest$";
-        assertSimplify(sql, 81, expected);
+        assertSimplify(sql, expected);
 
-        sql = "select from (select 1 as x, 2 as y from sales.emp), (select 2 as y from (select m from n where)) as t where t.dummy=1";
+        sql = "select ^from (select 1 as x, 2 as y from sales.emp), (select 2 as y from (select m from n where)) as t where t.dummy=1";
         expected = "select $suggest$ from (select 1 as x, 2 as y from sales.emp), (select 2 as y from (select m from n)) as t where t.dummy=1";
-        assertSimplify(sql, 7, expected);
+        assertSimplify(sql, expected);
     }
 
     /**
@@ -341,22 +341,6 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         SqlAdvisor advisor = new SqlAdvisor(validator);
         String goodSql = advisor.simplifySql(sql, cursor);
         return goodSql;
-    }
-
-    /**
-     * Tests that a given SQL statement simplifies to the expected result.
-     *
-     * @param sql
-     * @param cursor
-     * @param expected
-     *
-     * @deprecated Use {@link #assertSimplify(String, String)}, which is
-     *   more maintainable
-     */
-    protected void assertSimplify(String sql, int cursor, String expected)
-    {
-        String actual = simplify(sql, cursor);
-        assertEquals(actual, expected);
     }
 
     /**
