@@ -154,6 +154,10 @@ void FtrsTableWriterExecStream::createSavepoint()
 
 void FtrsTableWriterExecStream::commitSavepoint()
 {
+    if (svptId == NULL_SVPT_ID) {
+        return;
+    }
+    
     SavepointId svptIdCopy = svptId;
     svptId = NULL_SVPT_ID;
     
@@ -164,6 +168,10 @@ void FtrsTableWriterExecStream::commitSavepoint()
 
 void FtrsTableWriterExecStream::rollbackSavepoint()
 {
+    if (svptId == NULL_SVPT_ID) {
+        return;
+    }
+    
     SavepointId svptIdCopy = svptId;
     svptId = NULL_SVPT_ID;
     
