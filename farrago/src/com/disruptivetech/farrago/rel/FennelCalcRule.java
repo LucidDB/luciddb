@@ -33,7 +33,7 @@ import org.eigenbase.relopt.RelOptRuleCall;
 import org.eigenbase.relopt.RelOptRuleOperand;
 
 
-// REVIEW jvs 11-May-2005:  shouldn't FennelCalcRule extend ConverterRule
+// REVIEW jvs 11-May-2004:  shouldn't FennelCalcRule extend ConverterRule
 // (just like IterCalcRule)?
 
 /**
