@@ -27,7 +27,8 @@ import org.eigenbase.rex.*;
 import org.eigenbase.util.Util;
 
 /**
- * A common interface into the SqlNode and RexNode worlds. Used during type inference.
+ * A common interface into the SqlNode and RexNode worlds.
+ * Used during type inference, post validation.
  *
  * @author Wael Chatila
  * @since Dec 16, 2004
@@ -37,17 +38,18 @@ public interface CallOperands
 {
     /**
      * Returns the string value of a string literal
-     * @param ordinal the n<i>th</i> operand of the call (zero based). Operand MUST be a string literal 
+     * @param ordinal the n<i>th</i> operand of the call (zero based).
+     *        Operand MUST be a string literal
      */
     String        getStringLiteral(int ordinal);
- 
+
     /**
      * Returns the integer value of a numerical literal
-     * Returns NULL if not an int literal //todo fix this so consistant with getStringLiteral
      * @param ordinal the nth operand of the call (zero based)
+     *        Operand MUST be an numerical literal
      */
-    Integer       getIntLiteral(int ordinal);
- 
+    int       getIntLiteral(int ordinal);
+
     /**
      * Returns if node is NULL, allowing infintite number of null casts.<br>
      * <code>
@@ -60,12 +62,12 @@ public interface CallOperands
      * @param ordinal the nth operand of the call (zero based)
      */
     boolean       isNull(int ordinal);
- 
+
     /**
      * Returns SqlOperator of the call
      */
     SqlOperator   getOperator();
- 
+
     /**
      * Returns the number of operands
      */
@@ -78,12 +80,12 @@ public interface CallOperands
 
 
     /**
-     * 
+     *
      */
     RelDataType[] collectTypes();
-    
+
     /**
-     * Returns the underlying object, accessed from all other methods in this interface. 
+     * Returns the underlying object, accessed from all other methods in this interface.
      * This method should only be used for highly specialized code and should be avoided as far as possible.
      */
     Object        getUnderlyingObject();
@@ -120,7 +122,7 @@ public interface CallOperands
             throw Util.newInternal();
         }
 
-        public Integer getIntLiteral(int ordinal)
+        public int getIntLiteral(int ordinal)
         {
             throw Util.newInternal();
         }
@@ -154,23 +156,23 @@ public interface CallOperands
             return sqlLiteral.getStringValue();
         }
 
-        public Integer getIntLiteral(int ordinal)
+        public int getIntLiteral(int ordinal)
         {
             //todo: move this to SqlTypeUtil
             SqlNode node = call.operands[ordinal];
             if (node instanceof SqlLiteral) {
                 SqlLiteral sqlLiteral = (SqlLiteral) node;
-                return new Integer(sqlLiteral.intValue());
+                return sqlLiteral.intValue();
             } else if (node instanceof SqlCall) {
                 final SqlCall c = (SqlCall) node;
                 if (c.isA(SqlKind.MinusPrefix)) {
                     SqlNode child = c.operands[0];
                     if (child instanceof SqlLiteral) {
-                        return new Integer(-((SqlLiteral) child).intValue());
+                        return -((SqlLiteral) child).intValue();
                     }
                 }
             }
-            return null;
+            throw Util.newInternal("should never come here");
         }
 
         public boolean isNull(int ordinal)
@@ -210,22 +212,22 @@ public interface CallOperands
              return RexLiteral.stringValue(operands[ordinal]);
         }
 
-        public Integer getIntLiteral(int ordinal)
+        public int getIntLiteral(int ordinal)
         {
             //todo move this to RexUtil
             RexNode node = operands[ordinal];
             if (node instanceof RexLiteral) {
-                return new Integer(RexLiteral.intValue(node));
+                return RexLiteral.intValue(node);
             } else if (node instanceof RexCall) {
                 RexCall call = (RexCall) node;
                 if (call.isA(RexKind.MinusPrefix)) {
                     RexNode child = call.operands[0];
                     if (child instanceof RexLiteral) {
-                        return new Integer(-RexLiteral.intValue(child));
+                        return -RexLiteral.intValue(child);
                     }
                 }
             }
-            return null;
+            throw Util.newInternal("should never come here");
         }
 
         public boolean isNull(int ordinal)

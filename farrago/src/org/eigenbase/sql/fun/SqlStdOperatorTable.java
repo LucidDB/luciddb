@@ -97,6 +97,16 @@ public class SqlStdOperatorTable extends SqlOperatorTable
             if (null != operandsCheckingRule) {
                 return super.checkArgTypes(
                     call, validator, scope, throwOnFailure);
+            } else if (1==call.operands.length) {
+                if (!OperandsTypeChecking.typePositiveIntegerLiteral.check(
+                        validator,  scope, call, false)) {
+                    if (throwOnFailure) {
+                        throw EigenbaseResource.instance().
+                            newArgumentMustBePositiveInteger(
+                                call.operator.name);
+                    }
+                    return false;
+                }
             }
             return true;
         }
@@ -110,22 +120,15 @@ public class SqlStdOperatorTable extends SqlOperatorTable
             // REVIEW jvs 20-Feb-2004:  SqlTypeName says Time and Timestamp
             // don't take precision, but they should (according to the
             // standard). Also, need to take care of time zones.
-            Integer precision = new Integer(0);
+            int precision = 0;
             if (callOperands.size() == 1) {
-                boolean error = true;
                 RelDataType type = callOperands.getType(0);
                 if (SqlTypeUtil.isNumeric(type)) {
                     precision = callOperands.getIntLiteral(0);
-                    error = (null==precision || precision.intValue() < 0);
-                }
-
-                if (error) {
-                    throw EigenbaseResource.instance().
-                        newArgumentMustBePositiveInteger(
-                            callOperands.getOperator().name);
                 }
             }
-            return typeFactory.createSqlType(typeName, precision.intValue());
+            assert(precision >= 0);
+            return typeFactory.createSqlType(typeName, precision);
         }
     }
 
