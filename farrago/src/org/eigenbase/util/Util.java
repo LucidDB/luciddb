@@ -637,6 +637,8 @@ public class Util extends Toolbox
     }
 
     /**
+     * @deprecated Use {@link java.util.Arrays.asList(Object[])} instead
+     * 
      * Converts the elements of an array into a {@link java.util.List}
      */
     public static List toList(final Object [] array)

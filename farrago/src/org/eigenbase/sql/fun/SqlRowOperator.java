@@ -57,7 +57,7 @@ public class SqlRowOperator extends SqlSpecialOperator
     // implement SqlOperator
     public SqlOperator.OperandsCountDescriptor getOperandsCountDescriptor()
     {
-        return OperandsCountDescriptor.variadic;
+        return OperandsCountDescriptor.variadicCountDescriptor;
     }
 
     // implement SqlOperator

@@ -31,6 +31,7 @@ import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.sql.validation.ValidationUtil;
 import org.eigenbase.util.MultiMap;
 import org.eigenbase.util.Util;
 
@@ -186,10 +187,10 @@ public class SqlOperatorTable
 
     /**
      * Type-inference strategy whereby the result type of a call is the type of
-     * the first operand. If any of the other operans are nullable the returned
+     * the first operand. If any of the other operands are nullable the returned
      * type will also be nullable.
      */
-    public static final SqlOperator.CascadeTypeInference useNullableFirstArgType =
+    public static final SqlOperator.TypeInference useNullableFirstArgType =
         new SqlOperator.CascadeTypeInference(useFirstArgType, transformNullable);
 
     /**
@@ -197,11 +198,11 @@ public class SqlOperatorTable
      * the type of the first argument.
      * The precision returned is the same as precision of the
      * first argument.
-     * If any of the other operans are nullable the returned
+     * If any of the other operands are nullable the returned
      * type will also be nullable.
      * First Arg must be of string type.
      */
-    public static final SqlOperator.CascadeTypeInference useNullableVaryingFirstArgType =
+    public static final SqlOperator.TypeInference useNullableVaryingFirstArgType =
         new SqlOperator.CascadeTypeInference(useFirstArgType,
             transformNullable, transformVarying);
 
@@ -252,7 +253,7 @@ public class SqlOperatorTable
      * Type-inference strategy whereby the result type of a call is Boolean,
      * with nulls allowed if any of the operands allow nulls.
      */
-    public static final SqlOperator.CascadeTypeInference useNullableBoolean =
+    public static final SqlOperator.TypeInference useNullableBoolean =
         new SqlOperator.CascadeTypeInference(useBoolean, transformNullable);
 
     /**
@@ -302,7 +303,7 @@ public class SqlOperatorTable
      * Type-inference strategy whereby the result type of a call is Double
      * with nulls allowed if any of the operands allow nulls.
      */
-    public static final SqlOperator.CascadeTypeInference useNullableDouble =
+    public static final SqlOperator.TypeInference useNullableDouble =
         new SqlOperator.CascadeTypeInference(useDouble, transformNullable);
 
     /**
@@ -330,7 +331,7 @@ public class SqlOperatorTable
      * Type-inference strategy whereby the result type of a call is an Integer
      * with nulls allowed if any of the operands allow nulls.
      */
-    public static final SqlOperator.CascadeTypeInference useNullableInteger =
+    public static final SqlOperator.TypeInference useNullableInteger =
         new SqlOperator.CascadeTypeInference(useInteger, transformNullable);
 
     /**
@@ -372,7 +373,7 @@ public class SqlOperatorTable
      * Type-inference strategy similar to {@link #useBiggest}, except that the
      * result is nullable if any of the arguments is nullable.
      */
-    public static final SqlOperator.CascadeTypeInference useNullableBiggest =
+    public static final SqlOperator.TypeInference useNullableBiggest =
         new SqlOperator.CascadeTypeInference(useBiggest, transformNullable);
 
     /**
@@ -411,7 +412,7 @@ public class SqlOperatorTable
                 }
                 SqlCollation pickedCollation = null;
                 if (argTypes[0].isCharType()) {
-                    if (!SqlOperator.isCharTypeComparable(argTypes, 0, 1)) {
+                    if (!ValidationUtil.isCharTypeComparable(argTypes, 0, 1)) {
                         throw EigenbaseResource.instance()
                             .newTypeNotComparable(
                                 argTypes[0].toString(),
@@ -452,7 +453,7 @@ public class SqlOperatorTable
      * Same as {@link #useDyadicStringSumPrecision} and using
      * {@link #transformNullable}
      */
-    public static final SqlOperator.CascadeTypeInference useNullableDyadicStringSumPrecision =
+    public static final SqlOperator.TypeInference useNullableDyadicStringSumPrecision =
         new SqlOperator.CascadeTypeInference(useDyadicStringSumPrecision,
             new SqlOperator.TypeInferenceTransform [] { transformNullable });
 
@@ -460,7 +461,7 @@ public class SqlOperatorTable
      * Same as {@link #useDyadicStringSumPrecision} and using
      * {@link #transformNullable}, {@link #transformVarying}
      */
-    public static final SqlOperator.CascadeTypeInference useNullableVaryingDyadicStringSumPrecision =
+    public static final SqlOperator.TypeInference useNullableVaryingDyadicStringSumPrecision =
         new SqlOperator.CascadeTypeInference(useDyadicStringSumPrecision,
             new SqlOperator.TypeInferenceTransform [] {
                 transformNullable, transformVarying
@@ -546,7 +547,7 @@ public class SqlOperatorTable
      * Parameter type-inference strategy where an unknown operand
      * type is assumed to be boolean.
      */
-    public static final SqlOperator.ParamTypeInference booleanParam =
+    public static final SqlOperator.ParamTypeInference useBooleanParam =
         new SqlOperator.ParamTypeInference() {
             public void inferOperandTypes(
                 SqlValidator validator,
@@ -754,13 +755,15 @@ public class SqlOperatorTable
                     validator.deriveType(scope, call.operands[2]);
                 RelDataType nullType =
                     validator.typeFactory.createSqlType(SqlTypeName.Null);
-                if (type1.equals(nullType) || type2.equals(nullType)
-                        || type3.equals(nullType)) {
-                    return true; //null is ok;
-                }
-                return type1.isSameType(type2) || type1.isSameType(type3)
-                    || type2.isSameType(type1) || type2.isSameType(type3)
-                    || type3.isSameType(type1) || type2.isSameType(type2);
+
+                //null is ok;
+                return
+                    (type1.equals(nullType) || type2.equals(nullType) ||
+                        type1.isSameType(type2) || type2.isSameType(type1)) &&
+                    (type1.equals(nullType) || type3.equals(nullType) ||
+                        type1.isSameType(type3) || type3.isSameType(type1)) &&
+                    (type2.equals(nullType) || type3.equals(nullType) ||
+                        type2.isSameType(type3) || type3.isSameType(type2));
             }
         };
 
@@ -824,9 +827,7 @@ public class SqlOperatorTable
       * type must be a varchar literal.
       */
     public static final SqlOperator.AllowedArgInference typeVarcharLiteral =
-        new SqlOperator.AllowedArgInference(new SqlTypeName [][] {
-                SqlOperatorTable.charTypes
-            }) {
+        new SqlOperator.AllowedArgInference(new SqlTypeName [][] {charTypes}) {
             public boolean check(
                 SqlCall call,
                 SqlValidator validator,
@@ -860,7 +861,7 @@ public class SqlOperatorTable
       */
     public static final SqlOperator.AllowedArgInference typeNullableVarcharLiteral =
         new SqlOperator.AllowedArgInference(new SqlTypeName [][] {
-                SqlOperatorTable.charNullableTypes
+                charNullableTypes
             }) {
             public boolean check(
                 SqlCall call,
@@ -890,12 +891,12 @@ public class SqlOperatorTable
 
     /**
       * Parameter type-checking strategy
-      * type must be nullable varchar, varchar literal.
+      * type must be nullable varchar, NOT nullable varchar literal.
       * the expression <code>CAST(NULL AS TYPE)</code> is considered a NULL literal.
       */
-    public static final SqlOperator.AllowedArgInference typeNullableVarcharVarcharLiteral =
+    public static final SqlOperator.AllowedArgInference typeNullableVarcharNotNullableVarcharLiteral =
         new SqlOperator.AllowedArgInference(new SqlTypeName [][] {
-                SqlOperatorTable.charNullableTypes, SqlOperatorTable.charTypes
+                charNullableTypes, charTypes
             }) {
             public void check(
                 SqlValidator validator,
@@ -968,6 +969,8 @@ public class SqlOperatorTable
                 if (!nullType.isAssignableFrom(t0, false)
                         && !nullType.isAssignableFrom(t1, false)) {
                     if (!t0.isSameTypeFamily(t1)) {
+                        //parser postition retrieved in
+                        //newValidationSignatureError()
                         throw call.newValidationSignatureError(validator, scope);
                     }
                 }
@@ -992,7 +995,7 @@ public class SqlOperatorTable
                         continue;
                     }
 
-                    ArrayList list = new ArrayList(2);
+                    ArrayList list = new ArrayList(3);
                     list.add(types[0][i]); //adding same trice
                     list.add(types[0][i]); //adding same trice
                     list.add(types[0][i]); //adding same trice
@@ -1120,7 +1123,7 @@ public class SqlOperatorTable
 
     /**
          * Parameter type-checking strategy
-         * types must be varchar, int
+         * types must be not nullable varchar, not nullable int
          */
     public static final SqlOperator.AllowedArgInference typeVarcharInt =
         new SqlOperator.AllowedArgInference(new SqlTypeName [][] {
@@ -1197,7 +1200,7 @@ public class SqlOperatorTable
      * positive integer literal
      * OR varchar literal
      */
-    public static final SqlOperator.CompositeAllowedArgInference typePositiveIntegerLiteral_or_VarcharLiteral =
+    public static final SqlOperator.AllowedArgInference typePositiveIntegerLiteral_or_VarcharLiteral =
         new SqlOperator.CompositeAllowedArgInference(new SqlOperator.AllowedArgInference [] {
                 typePositiveIntegerLiteral, typeVarcharLiteral
             });
@@ -1206,10 +1209,9 @@ public class SqlOperatorTable
      * Parameter type-checking strategy
      * type must be
      * nullable aType, nullable aType
-     * OR nullable numeric, nullable numeric.
-     * OR nullable binary, nullable binary.
+     * and must be comparable to eachother
      */
-    public static final SqlOperator.CompositeAllowedArgInference typeNullableSameSame_or_NullableNumericNumeric_or_NullableBinariesBinaries_or_NullableCharsChars =
+    public static final SqlOperator.AllowedArgInference typeNullableComparable =
         new SqlOperator.CompositeAllowedArgInference(new SqlOperator.AllowedArgInference [] {
                 typeNullableSameSame, typeNullableNumericNumeric,
                 typeNullableBinariesBinaries, typeNullableVarcharVarchar
@@ -1221,7 +1223,7 @@ public class SqlOperatorTable
      * nullable string, nullable string, nulalble string
      * OR nullable string, nullable numeric, nullable numeric.
      */
-    public static final SqlOperator.CompositeAllowedArgInference typeNullabeStringStringString_or_NullableStringIntInt =
+    public static final SqlOperator.AllowedArgInference typeNullabeStringStringString_or_NullableStringIntInt =
         new SqlOperator.CompositeAllowedArgInference(new SqlOperator.AllowedArgInference [] {
                 typeNullableStringStringString, typeNullableStringIntInt
             });
@@ -1232,14 +1234,14 @@ public class SqlOperatorTable
      * nullable String
      * OR nullable numeric
      */
-    public static final SqlOperator.CompositeAllowedArgInference typeNullableString_or_NullableNumeric =
+    public static final SqlOperator.AllowedArgInference typeNullableString_or_NullableNumeric =
         new SqlOperator.CompositeAllowedArgInference(new SqlOperator.AllowedArgInference [] {
                 typeNullableString, typeNullableNumeric
             });
 
     /**
     * Parameter type-checking strategy
-    * type must a time interval
+    * type must a nullable time interval
     */
     public static final SqlOperator.AllowedArgInference typeNullableInterval =
         new SqlOperator.AllowedArgInference(new SqlTypeName [][] {
@@ -1248,7 +1250,7 @@ public class SqlOperatorTable
 
     /**
      * Parameter type-checking strategy
-     * type must a time interval
+     * type must a nullable time interval, nullable time interval
      */
     public static final SqlOperator.AllowedArgInference typeNullableIntervalInterval =
         new SqlOperator.AllowedArgInference(new SqlTypeName [][] {
@@ -1302,36 +1304,29 @@ public class SqlOperatorTable
      * part of the constructor, because the sub-class' constructor needs to
      * complete first.
      */
-    public void init()
+    public final void init()
     {
         // Use reflection to register the expressions stored in public fields.
         Field [] fields = getClass().getFields();
         for (int i = 0; i < fields.length; i++) {
-            Field field = fields[i];
-            if (SqlFunction.class.isAssignableFrom(field.getType())) {
-                try {
+            try {
+                Field field = fields[i];
+                if (SqlFunction.class.isAssignableFrom(field.getType())) {
                     SqlFunction op = (SqlFunction) field.get(this);
                     if (op != null) {
                         register(op);
                     }
-                } catch (IllegalArgumentException e) {
-                    throw Util.newInternal(e,
-                        "Error while initializing operator table");
-                } catch (IllegalAccessException e) {
-                    throw Util.newInternal(e,
-                        "Error while initializing operator table");
-                }
-            } else if (SqlOperator.class.isAssignableFrom(field.getType())) {
-                try {
+                } else if (SqlOperator.class.isAssignableFrom(field.getType())) {
                     SqlOperator op = (SqlOperator) field.get(this);
                     register(op);
-                } catch (IllegalArgumentException e) {
-                    throw Util.newInternal(e,
-                        "Error while initializing operator table");
-                } catch (IllegalAccessException e) {
-                    throw Util.newInternal(e,
-                        "Error while initializing operator table");
+
                 }
+            } catch (IllegalArgumentException e) {
+                throw Util.newInternal(e,
+                    "Error while initializing operator table");
+            } catch (IllegalAccessException e) {
+                throw Util.newInternal(e,
+                    "Error while initializing operator table");
             }
         }
     }
@@ -1402,6 +1397,8 @@ public class SqlOperatorTable
         List funs = lookupFunctionsByName(funName);
         final SqlFunction fun;
         if (funs.isEmpty()) {
+            //REVIEW/TODO wael: why is this call neccessary? I tried removing it and
+            //tests failed.
             fun = new SqlFunction(funName, null, null, null) {
                         public void test(SqlTester tester)
                         {
@@ -1447,6 +1444,7 @@ public class SqlOperatorTable
         case SqlFunction.SqlFuncTypeName.System_ordinal:
             systemFuncNames.add(function.name);
             break;
+        default: Util.needToImplement(funcType);
         }
     }
 
@@ -1464,7 +1462,7 @@ public class SqlOperatorTable
             SqlFunction function = (SqlFunction) funcList.get(i);
             SqlOperator.OperandsCountDescriptor od =
                 function.getOperandsCountDescriptor();
-            if (od.getNoLimit()
+            if (od.isVariadic()
                     || od.getPossibleNumOfOperands().contains(
                         new Integer(numberOfParams))) {
                 candidateList.add(function);

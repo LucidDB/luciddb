@@ -22,8 +22,7 @@
 package org.eigenbase.sql;
 
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
@@ -33,6 +32,7 @@ import org.eigenbase.rex.RexNode;
 import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.sql.validation.ValidationUtil;
 import org.eigenbase.util.Util;
 
 
@@ -46,11 +46,30 @@ public abstract class SqlOperator
     //~ Static fields/initializers --------------------------------------------
 
     public static final String NL = System.getProperty("line.separator");
-    private static final String AnonymousReplaceString = "FUNCTIONNAME";
+
+    /**
+     * A call signature gets built with this string. It can then be
+     * replaced with a operator or a function name. This still works in the case
+     * the operator or function name has the same character sequence(s) as this
+     * string.
+     * In the case a user defines a type with a name with a match to this string
+     * there could be a potential problem. To avoid this, all types are outputted
+     * WITH CAPITAL letters, and this string must therefore consist
+     * of at least one lowercase letter.
+     */
+    private static final String ANONYMOUS_REPLACE = "anystringwilldothatisntthesameasatype";
 
     //~ Instance fields -------------------------------------------------------
 
-    public String name;
+    /**
+     * The name of the operator/function. Ex. "OVERLAY" or "TRIM"
+     */
+    public final String name;
+
+    /**
+     * See {@link SqlKind}. It's possible to have a name that doesn't match
+     * the kind
+     */
     public final SqlKind kind;
 
     /**
@@ -62,7 +81,7 @@ public abstract class SqlOperator
 
     /**
      * The precedence with which this operator binds to the expression to the
-     * right. This is more than the right precedence if the operator is
+     * right. This is more than the left precedence if the operator is
      * left-associative.
      */
     public final int rightPrec;
@@ -85,7 +104,7 @@ public abstract class SqlOperator
      */
 
     // @pre paramTypes != null
-    SqlOperator(
+    protected SqlOperator(
         String name,
         SqlKind kind,
         int leftPrecedence,
@@ -96,7 +115,7 @@ public abstract class SqlOperator
     {
         Util.pre(kind != null, "kind != null");
 
-        //        Util.pre(argTypeInference != null, "argTypeInference != null");
+//        Util.pre(argTypeInference != null, "argTypeInference != null");
         this.name = name;
         this.kind = kind;
         this.leftPrec = leftPrecedence;
@@ -109,7 +128,7 @@ public abstract class SqlOperator
     /**
      * Creates an operator specifying left/right associativity.
      */
-    SqlOperator(
+    protected SqlOperator(
         String name,
         SqlKind kind,
         int prec,
@@ -153,7 +172,7 @@ public abstract class SqlOperator
      * If null is returned, the default template will be used which
      * is opname(operand0, operand1, ...)
      *
-     * {@param operandsCount} can is used with functions that can take a variable
+     * @param operandsCount is used with functions that can take a variable
      * number of operands.
      */
     protected String getSignatureTemplate(final int operandsCount)
@@ -299,6 +318,9 @@ public abstract class SqlOperator
         if (typeInference != null) {
             return typeInference.getType(typeFactory, argTypes);
         }
+
+        // If you see this you must either give typeInference a value
+        // or override this method.
         throw Util.needToImplement(this);
     }
 
@@ -316,17 +338,7 @@ public abstract class SqlOperator
     {
         return getType(
             typeFactory,
-            getTypes(exprs));
-    }
-
-    private RelDataType [] getTypes(RexNode [] exprs)
-    {
-        RelDataType [] types = new RelDataType[exprs.length];
-        for (int i = 0; i < types.length; i++) {
-            types[i] = exprs[i].getType();
-        }
-
-        return types;
+            ValidationUtil.collectTypes(exprs));
     }
 
     /**
@@ -400,7 +412,7 @@ public abstract class SqlOperator
     {
         OperandsCountDescriptor od =
             call.operator.getOperandsCountDescriptor();
-        if (!od.getNoLimit()
+        if (!od.isVariadic()
                 && !od.getPossibleNumOfOperands().contains(
                     new Integer(call.operands.length))) {
             throw EigenbaseResource.instance().newWrongNumOfArguments(
@@ -453,7 +465,7 @@ public abstract class SqlOperator
 
     /**
      * Returns the same as {@link #getAnonymousSignature} with the exception that
-     * lookupMakeCallObj/fun name is this.operator.name
+     * {@link this.name} is the function/operator signature string
      * @param list
      * @return
      */
@@ -466,33 +478,34 @@ public abstract class SqlOperator
 
     /**
      * Returns a string of all allowed types, permutated with an anonymous
-     * lookupMakeCallObj/fun name represented by the string <code>{0}</code>
+     * string represented by {@link #ANONYMOUS_REPLACE}.
      */
-    protected String getAnonymousSignature(final ArrayList list)
+    protected String getAnonymousSignature(final ArrayList typeList)
     {
         StringBuffer ret = new StringBuffer();
-        String template = getSignatureTemplate(list.size());
+        String template = getSignatureTemplate(typeList.size());
         if (null == template) {
             ret.append("'");
-            ret.append(AnonymousReplaceString);
+            ret.append(ANONYMOUS_REPLACE);
             ret.append("(");
-            for (int i = 0; i < list.size(); i++) {
+            for (int i = 0; i < typeList.size(); i++) {
                 if (i > 0) {
                     ret.append(", ");
                 }
-                ret.append("<" + list.get(i).toString() + ">");
+                ret.append("<" + typeList.get(i).toString().toUpperCase() + ">");
             }
             ret.append(")'");
         } else {
-            Object [] values = new Object[list.size() + 1];
-            values[0] = AnonymousReplaceString;
+            Object [] values = new Object[typeList.size() + 1];
+            values[0] = ANONYMOUS_REPLACE;
             ret.append("'");
-            for (int i = 0; i < list.size(); i++) {
-                values[i + 1] = "<" + list.get(i) + ">";
+            for (int i = 0; i < typeList.size(); i++) {
+                values[i + 1] = "<" +
+                    typeList.get(i).toString().toUpperCase() + ">";
             }
             ret.append(MessageFormat.format(template, values));
             ret.append("'");
-            assert (list.size() + 1) == values.length;
+            assert (typeList.size() + 1) == values.length;
         }
 
         return ret.toString();
@@ -502,7 +515,7 @@ public abstract class SqlOperator
         String original,
         String name)
     {
-        return original.replaceAll(AnonymousReplaceString, name);
+        return original.replaceAll(ANONYMOUS_REPLACE, name);
     }
 
     // REVIEW jvs 23-Dec-2003:  need wrapper call like getType?
@@ -511,51 +524,9 @@ public abstract class SqlOperator
         return paramTypeInference;
     }
 
-    /**
-     * Checks if two types or more are char comparable.
-     * @pre argTypes != null
-     * @pre argTypes.length >= 2
-     * @return Returns true if all operands are of char type
-     *         and if they are comparable, i.e. of the same charset and
-     *         collation of same charset
-     */
-    public static boolean isCharTypeComparable(RelDataType [] argTypes)
-    {
-        Util.pre(null != argTypes, "null!=argTypes");
-        Util.pre(2 <= argTypes.length, "2<=argTypes.length");
-
-        for (int j = 0; j < (argTypes.length - 1); j++) {
-            RelDataType t0 = argTypes[j];
-            RelDataType t1 = argTypes[j + 1];
-
-            if (!t0.isCharType() || !t1.isCharType()) {
-                return false;
-            }
-
-            if (null == t0.getCharset()) {
-                throw Util.newInternal(
-                    "RelDataType object should have been assigned a "
-                    + "(default) charset when calling deriveType");
-            } else if (!t0.getCharset().equals(t1.getCharset())) {
-                return false;
-            }
-
-            if (null == t0.getCollation()) {
-                throw Util.newInternal(
-                    "RelDataType object should have been assigned a "
-                    + "(default) collation when calling deriveType");
-            } else if (!t0.getCollation().getCharset().equals(
-                        t1.getCollation().getCharset())) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
     public void isCharTypeComparableThrows(RelDataType [] argTypes)
     {
-        if (!isCharTypeComparable(argTypes)) {
+        if (!ValidationUtil.isCharTypeComparable(argTypes)) {
             String msg = "";
             for (int i = 0; i < argTypes.length; i++) {
                 if (i > 0) {
@@ -573,7 +544,7 @@ public abstract class SqlOperator
         SqlValidator.Scope scope,
         SqlNode [] operands)
     {
-        if (!isCharTypeComparable(validator, scope, operands)) {
+        if (!ValidationUtil.isCharTypeComparable(validator, scope, operands)) {
             String msg = "";
             for (int i = 0; i < operands.length; i++) {
                 if (i > 0) {
@@ -585,53 +556,14 @@ public abstract class SqlOperator
         }
     }
 
-    /**
-     * @param start zero based index
-     * @param stop zero based index
-     */
-    public static boolean isCharTypeComparable(
-        RelDataType [] argTypes,
-        int start,
-        int stop)
-    {
-        int n = stop - start + 1;
-        RelDataType [] subset = new RelDataType[n];
-        System.arraycopy(argTypes, start, subset, 0, n);
-        return isCharTypeComparable(subset);
-    }
-
-    public static boolean isCharTypeComparable(
-        SqlValidator validator,
-        SqlValidator.Scope scope,
-        SqlNode [] operands)
-    {
-        Util.pre(null != operands, "null!=operands");
-        Util.pre(2 <= operands.length, "2<=operands.length");
-
-        return isCharTypeComparable(collectTypes(validator, scope, operands));
-    }
-
-    /**
-     * Iterates over all operands and collect their type.
-     */
-    public static RelDataType [] collectTypes(
-        SqlValidator validator,
-        SqlValidator.Scope scope,
-        SqlNode [] operands)
-    {
-        RelDataType [] types = new RelDataType[operands.length];
-        for (int i = 0; i < operands.length; i++) {
-            types[i] = validator.deriveType(scope, operands[i]);
-        }
-        return types;
-    }
-
     //~ Inner Interfaces ------------------------------------------------------
 
     /**
-     * Strategy to infer the type of an operator call from the type of the
-     * operands.
-     * Can not be used by itself. Must be used in a object of type
+     * Strategy to transform one type to another. The transformation is dependent on
+     * the implemented strategy object and in the general case is a function of
+     * the type and the other operands
+     *
+     * Can not be used by itself. Must be used in an object of type
      * {@link CascadeTypeInference}
 
      * <p>This class is an example of the
@@ -642,10 +574,12 @@ public abstract class SqlOperator
     public interface TypeInferenceTransform
     {
         /**
-         * @param typeToTransform A type that is comming from an call to a
+         * @param typeToTransform The type subject of transformation. The return
+         * type is (in the general case) a function of
+         * <ul><li>The typeToTransform</li><li>The other operand types</li></ul>
          * {@link TypeInference}  object.
          * @return A new type depending on
-         * @param typeToTransform and @param argTypes
+         * {@param typeToTransform} and {@param argTypes}
          */
         RelDataType getType(
             RelDataTypeFactory typeFactory,
@@ -687,31 +621,31 @@ public abstract class SqlOperator
      */
     public static class OperandsCountDescriptor
     {
-        public static final OperandsCountDescriptor variadic =
+        public static final OperandsCountDescriptor variadicCountDescriptor =
             new OperandsCountDescriptor();
         List possibleList;
-        boolean noLimit;
+        boolean isVariadic;
 
         private OperandsCountDescriptor()
         {
             possibleList = null;
-            noLimit = true;
+            isVariadic = true;
         }
 
         public OperandsCountDescriptor(int count)
         {
-            possibleList = Util.toList(new Object [] { new Integer(count) });
-            noLimit = false;
+            possibleList = Collections.unmodifiableList(
+                Arrays.asList(new Object [] { new Integer(count) }));
+            isVariadic = false;
         }
 
         public OperandsCountDescriptor(
             int count1,
             int count2)
         {
-            possibleList =
-                Util.toList(
-                    new Object [] { new Integer(count1), new Integer(count2) });
-            noLimit = false;
+            possibleList = Collections.unmodifiableList(Arrays.asList(
+                  new Object [] { new Integer(count1), new Integer(count2) }));
+            isVariadic = false;
         }
 
         public OperandsCountDescriptor(
@@ -719,29 +653,29 @@ public abstract class SqlOperator
             int count2,
             int count3)
         {
-            possibleList =
-                Util.toList(
+            possibleList = Collections.unmodifiableList(
+                Arrays.asList(
                     new Object [] {
                         new Integer(count1), new Integer(count2),
                         new Integer(count3)
-                    });
-            noLimit = false;
+                    }));
+            isVariadic = false;
         }
 
         /**
-         * Returns a list with items containing how many operands a operator can
-         * accept
-         * @pre noLimit == false
+         * Returns a unmodifiable list with items containing how many operands
+         * a operator can accept
+         * @pre isVariadic == false
          */
         public List getPossibleNumOfOperands()
         {
-            Util.pre(!noLimit, "!noLimit");
+            Util.pre(!isVariadic, "!isVariadic");
             return possibleList;
         }
 
-        public boolean getNoLimit()
+        public boolean isVariadic()
         {
-            return noLimit;
+            return isVariadic;
         }
     }
 
@@ -768,7 +702,7 @@ public abstract class SqlOperator
             RelDataType [] argTypes);
 
         /**
-         * Iterates over all of {@param call}'s operands and derive their types
+         * Iterates over all of the call's operands and derive their types
          * before calling and returning the result from
          * {@link #getType(org.eigenbase.reltype.RelDataTypeFactory, org.eigenbase.reltype.RelDataType[])}
          */
@@ -779,19 +713,14 @@ public abstract class SqlOperator
         {
             return getType(
                 validator.typeFactory,
-                collectTypes(validator, scope, call.operands));
+                ValidationUtil.collectTypes(validator, scope, call.operands));
         }
     }
 
     /**
      * Strategy to infer the type of an operator call from the type of the
-     * operands by using one {@link TypeInference} rules and a combination of
+     * operands by using one {@link TypeInference} rule and a combination of
      * {@link TypeInferenceTransform}s
-     *
-     * <p>This class is an example of the
-     * {@link org.eigenbase.util.Glossary#StrategyPattern strategy pattern}.
-     * This makes sense because many operators have similar, straightforward
-     * strategies, such as to take the type of the first operand.</p>
      */
     public static class CascadeTypeInference extends TypeInference
     {
@@ -807,7 +736,7 @@ public abstract class SqlOperator
          * @pre transforms.length > 0
          * @pre transforms[i] != null
          */
-        CascadeTypeInference(
+        public CascadeTypeInference(
             TypeInference rule,
             TypeInferenceTransform [] transforms)
         {
@@ -827,7 +756,7 @@ public abstract class SqlOperator
          * @pre null!=rule
          * @pre null!=transform
          */
-        CascadeTypeInference(
+        public CascadeTypeInference(
             TypeInference rule,
             TypeInferenceTransform transform)
         {
@@ -841,7 +770,7 @@ public abstract class SqlOperator
          * @pre null!=transform0
          * @pre null!=transform1
          */
-        CascadeTypeInference(
+        public CascadeTypeInference(
             TypeInference rule,
             TypeInferenceTransform transform0,
             TypeInferenceTransform transform1)
@@ -951,7 +880,7 @@ public abstract class SqlOperator
         {
             RelDataType anyType =
                 validator.typeFactory.createSqlType(SqlTypeName.Any);
-            RelDataType actualType = validator.deriveType(scope, node);
+            RelDataType actualType = null;
 
             //for each operand, iterater over its allowed types...
             for (int j = 0; j < types[operandOrdinal].length; j++) {
@@ -963,8 +892,14 @@ public abstract class SqlOperator
                 if (anyType.equals(expectedType)) {
                     // If the argument type is defined as any type, we don't need to check
                     return true;
-                } else if (expectedType.isAssignableFrom(actualType, false)) {
-                    return true;
+                } else {
+                    if( null == actualType) {
+                        actualType = validator.deriveType(scope, node);
+                    }
+
+                    if (expectedType.isAssignableFrom(actualType, false)) {
+                        return true;
+                    }
                 }
             }
             return false;

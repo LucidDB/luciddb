@@ -28,6 +28,7 @@ import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.sql.parser.ParserUtil;
 import org.eigenbase.sql.test.SqlTester;
+import org.eigenbase.sql.validation.ValidationUtil;
 import org.eigenbase.util.Util;
 
 
@@ -87,7 +88,7 @@ public class SqlBetweenOperator extends SqlInfixOperator
         SqlCall call)
     {
         RelDataType [] argTypes =
-            collectTypes(validator, scope, call.operands);
+            ValidationUtil.collectTypes(validator, scope, call.operands);
         RelDataType [] newArgTypes =
             new RelDataType [] { argTypes[0], argTypes[2], argTypes[3] };
         return newArgTypes;

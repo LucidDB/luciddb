@@ -92,7 +92,7 @@ public class SqlJdbcFunctionCall extends SqlFunction
 
     public SqlOperator.OperandsCountDescriptor getOperandsCountDescriptor()
     {
-        return OperandsCountDescriptor.variadic;
+        return OperandsCountDescriptor.variadicCountDescriptor;
     }
 
     public RelDataType getType(
