@@ -60,6 +60,14 @@ public class FennelPseudoUuid
     //~ Methods ---------------------------------------------------------------
 
     /**
+     * @return a clone of the byte array that backs this FennelPseudoUuid.
+     */
+    public byte[] toByteArray()
+    {
+        return (byte[])uuid.clone();
+    }
+
+    /**
      * Parses the given string and returns the UUID it represents.  See
      * {@link #toString()} for details on the format of the UUID string.
      *
