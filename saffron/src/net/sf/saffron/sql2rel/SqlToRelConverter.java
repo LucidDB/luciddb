@@ -518,9 +518,8 @@ public class SqlToRelConverter {
                 } else if (call.operator instanceof SqlPrefixOperator ||
                         call.operator instanceof SqlPostfixOperator) {
                     final RexNode exp = convertExpression(bb, operands[0]);
-                    SqlOperator op;
-                    op = call.operator;
-                    if (op.name.equals("+")) {
+                    SqlOperator op = call.operator;
+                    if (op.equals(rexBuilder._opTab.prefixPlusOperator)) {
                         // Unary "+" has no effect. There is no
                         // corresponding Rex operator.
                         return exp;
@@ -528,6 +527,8 @@ public class SqlToRelConverter {
                     return rexBuilder.makeCall(op, new RexNode[]{exp});
                 } else if (call.operator instanceof SqlCaseOperator) {
                     return convertCase(bb, (SqlCase) call);
+                } else if (call.operator.equals(rexBuilder._opTab.betweenOperator)) {
+                    return convertBetween(bb, call);
                 }
 
                 else {
@@ -538,8 +539,37 @@ public class SqlToRelConverter {
             }
         }
     }
+
     /**
-     * convert a cast function node.
+     * converts a between call node.
+     */
+    private RexNode convertBetween(Blackboard bb, SqlCall call) {
+
+        RexNode x = convertExpression(bb,call.operands[0]);
+        boolean isAsymmetric =
+                ((SqlBetweenOperator.Flag) call.operands[1]).isAsymmetric;
+        RexNode y = convertExpression(bb,call.operands[2]);
+        RexNode z = convertExpression(bb,call.operands[3]);
+
+        RexNode res;
+
+        RexNode ge1 = rexBuilder.makeCall(opTab.greaterThanOrEqualOperator, x,y);
+        RexNode le1 = rexBuilder.makeCall(opTab.lessThanOrEqualOperator, x,z);
+        RexNode and1 = rexBuilder.makeCall(opTab.andOperator, ge1, le1);
+
+        if (isAsymmetric) {
+            res = and1;
+        } else {
+            RexNode ge2 = rexBuilder.makeCall(opTab.greaterThanOrEqualOperator, x,z);
+            RexNode le2 = rexBuilder.makeCall(opTab.lessThanOrEqualOperator, x,y);
+            RexNode and2 = rexBuilder.makeCall(opTab.andOperator, ge2, le2);
+            res = rexBuilder.makeCall(opTab.orOperator, and1,and2);
+        }
+        return res;
+    }
+
+    /**
+     * converts a cast function node.
      * @param bb
      * @param call
      * @return

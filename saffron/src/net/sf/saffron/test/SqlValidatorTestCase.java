@@ -397,6 +397,7 @@ public abstract class SqlValidatorTestCase extends TestCase {
 
     public void testEqualNotEqualFails() {
         checkExpFails("''<>1"       ,"(?s).*Can not apply '<>' to arguments of type '<VARCHAR.0.> <> <INTEGER>'.*");
+        checkExpFails("'1'>=1"       ,"(?s).*Can not apply '>=' to arguments of type '<VARCHAR.1.> >= <INTEGER>'.*");
         checkExpFails("1<>n'abc'"   ,"(?s).*Can not apply '<>' to arguments of type '<INTEGER> <> <VARCHAR.3.>'.*");
         checkExpFails("''=.1"       ,"(?s).*Can not apply '=' to arguments of type '<VARCHAR.0.> = <DECIMAL.1..1.>'.*");
         checkExpFails("true<>1e-1"  ,"(?s).*Can not apply '<>' to arguments of type '<BOOLEAN> <> <DOUBLE>'.*");

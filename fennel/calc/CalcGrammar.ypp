@@ -25,9 +25,9 @@ FENNEL_BEGIN_CPPFILE("$Id$")
    the character position is also updated */
 # define YYLLOC_DEFAULT(Current, Rhs, N)       	\
 {                                               \
-   Current.last_line   = Rhs[N].last_line;	    \
-   Current.last_column = Rhs[N].last_column;    \
-   Current.last_pos    = Rhs[N].last_pos;       \
+   (Current).last_line   = (Rhs)[(N)].last_line;	    \
+   (Current).last_column = (Rhs)[(N)].last_column;    \
+   (Current).last_pos    = (Rhs)[(N)].last_pos;       \
 }
 
 int  CalcYYlex(YYSTYPE*, YYLTYPE*, void*);

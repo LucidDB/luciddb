@@ -249,6 +249,28 @@ public class Rex2CalcPlanTestCase extends TestCase
 
     }
     //--- Tests ------------------------------------------------
+
+    public void _testSimplePassThroughFilter() {
+        String sql="SELECT \"empno\",\"empno\" FROM \"emps\" WHERE \"empno\" > 10";
+        String prg =
+                "O s4, s4;" + NL +
+                "I s4;" + NL +
+                "L bo;" + NL +
+                "S bo;" + NL +
+                "C bo, bo, s4;" + NL +
+                "V 1, 0, 10;" + NL +
+                "T;" + NL +
+                "GT L0, I0, C2;" + NL +
+                "JMPT @4, L0;" + NL +
+                "MOVE S0, C0;" + NL +
+                "RETURN;" + NL +
+                "MOVE S0, C1;" + NL +
+                "REF O0, I0;" + NL +
+                "REF O1, I0;" + NL +
+                "RETURN;";
+        check(sql, prg,false,false);
+    }
+
     public void testSimplyEqualsFilter()
     {
         String sql="select \"empno\" from \"emps\" where \"empno\"=123";
@@ -724,6 +746,74 @@ public class Rex2CalcPlanTestCase extends TestCase
                 "REF O9, L10;" + NL +
                 "RETURN;" + NL;
         check(sql, prg,false,false);
+    }
+
+    public void testBetween() {
+        String sql1="select \"empno\"  from \"emps\" where \"empno\" between 40 and 60";
+        String sql2="select \"empno\"  from \"emps\" where \"empno\" between asymmetric 40 and 60";
+        String prg1 =
+                "O s4;" + NL +
+                "I s4;" + NL +
+                "L bo, bo, bo;" + NL +
+                "S bo;" + NL +
+                "C bo, bo, s4, s4;" + NL +
+                "V 1, 0, 40, 60;" + NL +
+                "T;" + NL +
+                "GE L0, I0, C2;" + NL +
+                "LE L1, I0, C3;" + NL +
+                "AND L2, L0, L1;" + NL +
+                "JMPT @6, L2;" + NL +
+                "MOVE S0, C0;" + NL +
+                "RETURN;" + NL +
+                "MOVE S0, C1;" + NL +
+                "REF O0, I0;" + NL +
+                "RETURN;";
+        check(sql1, prg1,false,false);
+        check(sql2, prg1,false,false);
+        String sql3 ="select \"empno\"  from \"emps\" where \"empno\" not between 40 and 60";
+        String prg2 =
+                "O s4;" + NL +
+                "I s4;" + NL +
+                "L bo, bo, bo, bo;" + NL +
+                "S bo;" + NL +
+                "C bo, bo, s4, s4;" + NL +
+                "V 1, 0, 40, 60;" + NL +
+                "T;" + NL +
+                "GE L0, I0, C2;" + NL +
+                "LE L1, I0, C3;" + NL +
+                "AND L2, L0, L1;" + NL +
+                "NOT L3, L2;" + NL +
+                "JMPT @7, L3;" + NL +
+                "MOVE S0, C0;" + NL +
+                "RETURN;" + NL +
+                "MOVE S0, C1;" + NL +
+                "REF O0, I0;" + NL +
+                "RETURN;";
+        check(sql3, prg2,false,false);
+        String sql4 ="select \"empno\"  from \"emps\" where \"empno\" between symmetric 40 and 60";
+        String prg3 =
+                "O s4;" + NL +
+                "I s4;" + NL +
+                "L bo, bo, bo, bo, bo, bo, bo;" + NL +
+                "S bo;" + NL +
+                "C bo, bo, s4, s4;" + NL +
+                "V 1, 0, 40, 60;" + NL +
+                "T;" + NL +
+                "GE L0, I0, C2;" + NL +
+                "LE L1, I0, C3;" + NL +
+                "AND L2, L0, L1;" + NL +
+                "GE L3, I0, C3;" + NL +
+                "LE L4, I0, C2;" + NL +
+                "AND L5, L3, L4;" + NL +
+                "OR L6, L2, L5;" + NL +
+                "JMPT @10, L6;" + NL +
+                "MOVE S0, C0;" + NL +
+                "RETURN;" + NL +
+                "MOVE S0, C1;" + NL +
+                "REF O0, I0;" + NL +
+                "RETURN;";
+        check(sql4, prg3,false,false);
+
     }
 }
 

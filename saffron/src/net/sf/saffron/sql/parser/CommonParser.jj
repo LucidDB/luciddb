@@ -100,7 +100,7 @@ JAVACODE void checkNonQueryExpression(ExprContext exprContext)
 //  The date/time parse utilities have to live here, instead of in the ParserUtil
 // class because ParseException is ambigous, and CommonParser has to live in
 // multiple packages.
-JAVACODE SqlLiteral parseDateLiteral(String s) 
+JAVACODE SqlLiteral parseDateLiteral(String s)
     throws ParseException
 {
     Calendar calendar = parseDateTime(s, ParserUtil.DateFormatStr, 0);
@@ -109,10 +109,10 @@ JAVACODE SqlLiteral parseDateLiteral(String s)
 
 /**
  * this is a bit hokey - i could probably be smarter in the parsing code, but it works.
- * 
+ *
  */
-JAVACODE SqlLiteral parsePrecisionTimeLiteral(String preciseTimeString, String dfString) 
-    throws ParseException 
+JAVACODE SqlLiteral parsePrecisionTimeLiteral(String preciseTimeString, String dfString)
+    throws ParseException
 {
     int precision;
     String timeStr;
@@ -121,13 +121,13 @@ JAVACODE SqlLiteral parsePrecisionTimeLiteral(String preciseTimeString, String d
 
     int dot = preciseTimeString.indexOf('.');
 
-    if (dot < 0) 
+    if (dot < 0)
     {
         // no precision info
         millis = 0;
         timeStr = preciseTimeString;
         precision = 0;
-    } 
+    }
     else
     {
         // extract the milliseconds.
@@ -150,7 +150,7 @@ JAVACODE SqlLiteral parsePrecisionTimeLiteral(String preciseTimeString, String d
     } else {
         throw new ParseException("Internal parse error: Unrecognized format string " + dfString);
     }
-    
+
 
 
 }
@@ -1039,6 +1039,8 @@ SqlNode Expression2(ExprContext exprContext) :
             |
                 {
                     checkNonQueryExpression(exprContext);
+                    SqlLiteral flag =
+                        net.sf.saffron.sql.SqlBetweenOperator.Flag.Asymmetric;
                 }
                 (
                     <NOT> <BETWEEN>
@@ -1047,9 +1049,14 @@ SqlNode Expression2(ExprContext exprContext) :
                     <BETWEEN>
                     { op = opTab.betweenOperator; }
                 )
+                [  <SYMMETRIC>
+                   {flag=net.sf.saffron.sql.SqlBetweenOperator.Flag.Symmetric;}
+                 | <ASYMMETRIC>
+                ]
                 e = Expression3(EXPR_ACCEPT_SUBQUERY)
                 {
                     list.add(op);
+                    list.add(flag);
                     list.add(e);
                 }
             |
@@ -1243,15 +1250,15 @@ SqlLiteral Literal() :
     }
 |
     <DATE> <STRING_LITERAL> {
-        return parseDateLiteral(ParserUtil.strip(getToken(0).image,"'"));                
+        return parseDateLiteral(ParserUtil.strip(getToken(0).image,"'"));
     }
 |
     <TIME> <STRING_LITERAL> {
-        return parsePrecisionTimeLiteral(ParserUtil.strip(getToken(0).image,"'"), ParserUtil.TimeFormatStr);                
+        return parsePrecisionTimeLiteral(ParserUtil.strip(getToken(0).image,"'"), ParserUtil.TimeFormatStr);
     }
 |
     <TIMESTAMP> <STRING_LITERAL> {
-        return parsePrecisionTimeLiteral(ParserUtil.strip(getToken(0).image,"'"), ParserUtil.TimestampFormatStr);                
+        return parsePrecisionTimeLiteral(ParserUtil.strip(getToken(0).image,"'"), ParserUtil.TimestampFormatStr);
     }
 }
 
@@ -1347,7 +1354,7 @@ int IntLiteral() :
 
 
 // Type name with optional scale and precision
-SqlDataType DataType() : 
+SqlDataType DataType() :
 {
 	SqlIdentifier typeName;
 	int scale = 0;
@@ -1371,7 +1378,7 @@ SqlDataType DataType() :
 		)?
 	)
 	{
-		
+
 		return new SqlDataType(typeName, precision, scale, charSetName);
 	}
 }
@@ -1403,15 +1410,15 @@ SqlIdentifier TypeName() :
         {
             typeName = new SqlIdentifier("DOUBLE");
         }
-        | <DATE> 
+        | <DATE>
         {
             typeName = new SqlIdentifier("DATE");
         }
-        | <TIME> 
+        | <TIME>
         {
             typeName = new SqlIdentifier("TIME");
         }
-        | <TIMESTAMP> 
+        | <TIMESTAMP>
         {
             typeName = new SqlIdentifier("TIMESTAMP");
         }
@@ -1550,9 +1557,9 @@ SqlNode FunctionCall() :
 
         )
 
-        { 
-			
-			SqlCall call= opTab.createCall(name, ParserUtil.toNodeArray(args)); 
+        {
+
+			SqlCall call= opTab.createCall(name, ParserUtil.toNodeArray(args));
 			call.setParserPosition(parserPosition);
 			return call;
 		}
@@ -1647,6 +1654,7 @@ TOKEN :
 | < AS: "as" >
 | < ASC: "asc" >
 | < ASCENDING: "ascending" >
+| < ASYMMETRIC: "asymmetric" >
 | < BETWEEN: "between" >
 | < BOTH: "both" >
 | < BY: "by" >
@@ -1700,6 +1708,7 @@ TOKEN :
 | < SELECT: "select" >
 | < SET: "set" >
 | < SIMILAR: "similar" >
+| < SYMMETRIC: "symmetric" >
 | < TABLE: "table" >
 | < THEN: "then" >
 | < TIME: "time" >
@@ -1762,7 +1771,7 @@ TOKEN :
     < #HEXDIGIT: ["0"-"9","a"-"f","A"-"F"] >
 |
     < #WHITESPACE:
-        [ " ","\t","\n","\r","\f" ]    
+        [ " ","\t","\n","\r","\f" ]
     >
 |
     < BIT_STRING_LITERAL: ["b","B"] <QUOTE> (["0","1"])* <QUOTE> >
@@ -1839,7 +1848,7 @@ SKIP :
 | "\t"
 | "\n"
 | "\r"
-| "\f" 
+| "\f"
 }
 
 /* COMMENTS */

@@ -72,15 +72,20 @@ public:
 
     struct StreamGraphHandle : public BTreeRootMap
     {
-    private:
-        SharedTupleStreamGraph pTupleStreamGraph;
-    public:
         TxnHandle *pTxnHandle;
         jobject javaRuntimeContext;
         virtual PageId getRoot(PageOwnerId pageOwnerId);
-        virtual void setTupleStreamGraph(
-            SharedTupleStreamGraph pGraph);
-        virtual SharedExecutionStreamGraph getGraph();
+        virtual SharedExecutionStreamGraph getGraph() = 0;
+    };
+
+    struct TupleStreamGraphHandle : public StreamGraphHandle
+    {
+    private:
+        SharedTupleStreamGraph pGraph;
+    public:
+        void setTupleStreamGraph(SharedTupleStreamGraph pGraph);
+        SharedExecutionStreamGraph getGraph();
+        SharedTupleStreamGraph getTupleStreamGraph();
     };
     
 protected:

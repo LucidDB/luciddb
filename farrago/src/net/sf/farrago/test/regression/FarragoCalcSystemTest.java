@@ -81,6 +81,8 @@ public class FarragoCalcSystemTest extends FarragoTestCase{
         exclude.add(opTab.unionOperator);
         exclude.add(opTab.valuesOperator);
         exclude.add(opTab.deleteOperator);
+        exclude.add(opTab.betweenOperator);
+        exclude.add(opTab.notBetweenOperator);
         exclude.add(opTab.updateOperator);
         exclude.add(opTab.exceptOperator);
         exclude.add(opTab.exceptAllOperator);
@@ -150,6 +152,13 @@ public class FarragoCalcSystemTest extends FarragoTestCase{
     protected void setUp() throws Exception {
         super.setUp();
         stmt.execute(vmFlag);
+    }
+
+    // implement TestCase
+    protected void tearDown() throws Exception {
+        // reset to use java vm by default
+        stmt.execute(vmJava);
+        super.tearDown();
     }
 
     protected void runTest() throws Throwable {

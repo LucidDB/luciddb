@@ -122,6 +122,18 @@ public:
      * Get streams, sorted topologically. Can only be called after prepare.
      */
     virtual std::vector<SharedExecutionStream> getSortedStreams() = 0;
+
+    /**
+     * Workaround for multiple inheritance. Get pointer to this graph, 
+     * casted as it's ultimate interface. Useful when virtual inheritance
+     * prohibits static casting. 
+     */
+    virtual void *getInterface() =  0;
+
+    /**
+     * Workaround for multiple inheritance. Get name of ultimate interface.
+     */
+    virtual char *getInterfaceName() =  0;
 };
 
 FENNEL_END_NAMESPACE

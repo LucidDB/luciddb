@@ -132,27 +132,8 @@ public:
         uint iInput);
     virtual SharedExecutionStream getSinkStream();
     virtual std::vector<SharedExecutionStream> getSortedStreams();
-
-    /**
-     * Return a simple graph which only performs sorting
-     */
-    static SharedExecutionStreamGraph newSortingGraph();
-};
-
-/**
- * Simple graph only usable for sorting streams
- */
-class SortingGraph : public ExecutionStreamGraphImpl
-{
-protected:
-    virtual void closeImpl() {
-        // no need to clean up memory or streams because graph is only 
-        // used for sorting
-    }
-
-public:
-    virtual void prepare() { assert(false); }
-    virtual void open() { assert(false); }
+    virtual void *getInterface();
+    virtual char *getInterfaceName();
 };
 
 FENNEL_END_NAMESPACE

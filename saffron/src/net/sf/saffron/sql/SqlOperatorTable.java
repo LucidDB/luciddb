@@ -772,7 +772,7 @@ public class SqlOperatorTable
     /**
      * Call this method after constructing an operator table. It can't be
      * part of the constructor, because the sub-class' constructor needs to
-     * complete first. 
+     * complete first.
      */
     public void init() {
         // Use reflection to register the expressions stored in public fields.
@@ -976,18 +976,18 @@ public class SqlOperatorTable
                     SqlNode secondAnd=null;
                     // Find the first BETWEEN's AND
 
-                    int ii=i+1;
+                    int ii=i+2;
                     for ( /* empty */; ii < list.size(); ii++) {
                         Object o = list.get(ii);
                         if ((o instanceof SqlOperator) &&
                                 ((SqlOperator)o).kind.isA(SqlKind.And)) {
                             ArrayList suicideList = new ArrayList(i);
-                            suicideList.addAll(list.subList(i+1,ii));
+                            suicideList.addAll(list.subList(i+2,ii));
                             firstAnd = toTree(suicideList); // 1st BETWEEN AND's operand
                             break;
                         }
                     }
-                    // ii contains the position where first AND was found
+                    // ii now contains the position where first AND was found
                     // now search for the first (if exist) operator that has lower precedence than AND
 
                     int jj=++ii;
@@ -1004,9 +1004,14 @@ public class SqlOperatorTable
                     suicideList.addAll(list.subList(ii,jj));
                     secondAnd = toTree(suicideList); // 2nd BETWEEN AND's operand
 
-                    SqlNode leftExp = (SqlNode) list.get(i - 1);
+                    // at position
+                    // i-1 is before SqlBetweenOperator
+                    // i is SqlBetweenOperator
+                    // i+1 is flag
+                    SqlNode leftMostExp = (SqlNode) list.get(i - 1);
+                    SqlNode flag = (SqlNode) list.get(i + 1);
                     SqlCall newExp = std().betweenOperator.createCall(
-                            leftExp, firstAnd, secondAnd);
+                            new SqlNode[]{leftMostExp, flag, firstAnd, secondAnd});
                     if (current.kind.isA(SqlKind.NotBetween))
                     {
                         newExp = std().notOperator.createCall(newExp);

@@ -320,7 +320,7 @@ void CmdInterpreter::visit(ProxyCmdCreateExecutionStreamGraph &cmd)
     SharedTupleStreamGraph pGraph =
         TupleStreamGraph::newTupleStreamGraph();
     pGraph->setTxn(pTxnHandle->pTxn);
-    StreamGraphHandle *pStreamGraphHandle = new StreamGraphHandle();
+    TupleStreamGraphHandle *pStreamGraphHandle = new TupleStreamGraphHandle();
     ++JniUtil::handleCount;
     pStreamGraphHandle->pTxnHandle = pTxnHandle;
     pStreamGraphHandle->setTupleStreamGraph(pGraph);
@@ -365,15 +365,21 @@ PageId CmdInterpreter::StreamGraphHandle::getRoot(PageOwnerId pageOwnerId)
     return PageId(x);
 }
 
-SharedExecutionStreamGraph CmdInterpreter::StreamGraphHandle::getGraph()
+void CmdInterpreter::TupleStreamGraphHandle::setTupleStreamGraph(
+    SharedTupleStreamGraph pGraphIn)
 {
-    return pTupleStreamGraph;
+    pGraph = pGraphIn;
 }
 
-void CmdInterpreter::StreamGraphHandle::setTupleStreamGraph(
-    SharedTupleStreamGraph pGraph)
+SharedExecutionStreamGraph CmdInterpreter::TupleStreamGraphHandle::getGraph()
 {
-    pTupleStreamGraph = pGraph;
+    return pGraph;
+}
+
+SharedTupleStreamGraph 
+CmdInterpreter::TupleStreamGraphHandle::getTupleStreamGraph()
+{
+    return pGraph;
 }
 
 FENNEL_END_CPPFILE("$Id$");

@@ -120,6 +120,12 @@ public class FarragoSqlOperatorsTest extends FarragoTestCase {
         stmt.execute(vmFlag);
     }
 
+    // implement TestCase
+    protected void tearDown() throws Exception {
+        stmt.execute(FarragoCalcSystemTest.vmJava);
+        super.tearDown();
+    }
+
     protected void runTest() throws Throwable {
         operator.test(new FarragoSqlTester(operator));
     }

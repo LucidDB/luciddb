@@ -429,22 +429,11 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
             };
 
     public final SqlSpecialOperator betweenOperator =
-            new SqlSpecialOperator("BETWEEN", SqlKind.Between, 15, true,
-                    useFirstArgType, null, typeNullableNumericNumericNumeric) {
-                public void unparse(
-                        SqlWriter writer,
-                        SqlNode[] operands,
-                        int leftPrec,
-                        int rightPrec) {
-                    operands[0].unparse(writer, this.leftPrec, this.rightPrec);
-                    writer.print(" BETWEEN ");
-                    operands[1].unparse(writer, this.leftPrec, this.rightPrec);
-                    writer.print(" AND ");
-                    operands[2].unparse(writer, this.leftPrec, this.rightPrec);
-                }
-
+            new SqlBetweenOperator("BETWEEN", SqlKind.Between) {
                 public void test(SqlTester tester) {
                     tester.checkBoolean("2 between 1 and 3", "TRUE");
+                    tester.checkBoolean("2 between 3 and 2", "FALSE");
+                    tester.checkBoolean("2 between symmetric 3 and 2", "TRUE");
                     tester.checkBoolean("3 between 1 and 3", "TRUE");
                     tester.checkBoolean("4 between 1 and 3", "FALSE");
                     tester.checkBoolean("1 between 4 and -3", "FALSE");
@@ -459,24 +448,11 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
             };
 
     public final SqlSpecialOperator notBetweenOperator =
-            new SqlSpecialOperator("NOT BETWEEN", SqlKind.NotBetween, 15, true,
-                    useFirstArgType, null, typeNullableNumericNumericNumeric) {
+            new SqlBetweenOperator("NOT BETWEEN", SqlKind.NotBetween) {
                 public void test(SqlTester tester) {
                     tester.checkBoolean("2 not between 1 and 3", "FALSE");
                     tester.checkBoolean("3 not between 1 and 3", "FALSE");
                     tester.checkBoolean("4 not between 1 and 3", "TRUE");
-                }
-
-                public void unparse(
-                        SqlWriter writer,
-                        SqlNode[] operands,
-                        int leftPrec,
-                        int rightPrec) {
-                    operands[0].unparse(writer, leftPrec, rightPrec);
-                    writer.print(" NOT BETWEEN ");
-                    operands[1].unparse(writer, leftPrec, rightPrec);
-                    writer.print(" AND ");
-                    operands[2].unparse(writer, leftPrec, rightPrec);
                 }
             };
 

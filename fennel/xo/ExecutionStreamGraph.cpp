@@ -195,16 +195,20 @@ SharedExecutionStream ExecutionStreamGraphImpl::getSinkStream()
     return sortedStreams.back();
 }
 
-SharedExecutionStreamGraph newSortingGraph()
-{
-    return SharedExecutionStreamGraph(
-        new SortingGraph(),ClosableObjectDestructor());
-}
-
 std::vector<SharedExecutionStream> ExecutionStreamGraphImpl::getSortedStreams()
 {
     assert(isPrepared);
     return sortedStreams;
+}
+
+void *ExecutionStreamGraphImpl::getInterface()
+{
+    return static_cast<ExecutionStreamGraph *>(this);
+}
+
+char *ExecutionStreamGraphImpl::getInterfaceName()
+{
+    return "ExecutionStreamGraph";
 }
 
 FENNEL_END_CPPFILE("$Id$");

@@ -271,25 +271,31 @@ public class SqlParserTest extends TestCase
     public void testBetween()
     {
         check("select * from t where price between 1 and 2",
-                "SELECT *" + NL + "FROM `T`" + NL + "WHERE (`PRICE` BETWEEN 1 AND 2)");
+                "SELECT *" + NL + "FROM `T`" + NL + "WHERE (`PRICE` BETWEEN ASYMMETRIC 1 AND 2)");
 
-        check("select * from t where price between 1 and 2+2*2",
-                "SELECT *" + NL + "FROM `T`" + NL + "WHERE (`PRICE` BETWEEN 1 AND (2 + (2 * 2)))");
+        check("select * from t where price between symmetric 1 and 2",
+                "SELECT *" + NL + "FROM `T`" + NL + "WHERE (`PRICE` BETWEEN SYMMETRIC 1 AND 2)");
+
+        check("select * from t where price not between symmetric 1 and 2",
+                "SELECT *" + NL + "FROM `T`" + NL + "WHERE (NOT (`PRICE` BETWEEN SYMMETRIC 1 AND 2))");
+
+        check("select * from t where price between ASYMMETRIC 1 and 2+2*2",
+                "SELECT *" + NL + "FROM `T`" + NL + "WHERE (`PRICE` BETWEEN ASYMMETRIC 1 AND (2 + (2 * 2)))");
 
         check("select * from t where price > 5 and price not between 1 + 2 and 3 * 4 AnD price is null",
                   "SELECT *"+NL+
                   "FROM `T`"+NL+
-                  "WHERE (((`PRICE` > 5) AND (NOT (`PRICE` BETWEEN (1 + 2) AND (3 * 4)))) AND (`PRICE` IS NULL))");
+                  "WHERE (((`PRICE` > 5) AND (NOT (`PRICE` BETWEEN ASYMMETRIC (1 + 2) AND (3 * 4)))) AND (`PRICE` IS NULL))");
 
         check("select * from t where price > 5 and price between 1 + 2 and 3 * 4 + price is null",
                   "SELECT *"+NL+
                   "FROM `T`"+NL+
-                  "WHERE ((`PRICE` > 5) AND ((`PRICE` BETWEEN (1 + 2) AND ((3 * 4) + `PRICE`)) IS NULL))");
+                  "WHERE ((`PRICE` > 5) AND ((`PRICE` BETWEEN ASYMMETRIC (1 + 2) AND ((3 * 4) + `PRICE`)) IS NULL))");
 
         check("select * from t where price > 5 and price between 1 + 2 and 3 * 4 or price is null",
               "SELECT *"+NL+
               "FROM `T`"+NL+
-              "WHERE (((`PRICE` > 5) AND (`PRICE` BETWEEN (1 + 2) AND (3 * 4))) OR (`PRICE` IS NULL))");
+              "WHERE (((`PRICE` > 5) AND (`PRICE` BETWEEN ASYMMETRIC (1 + 2) AND (3 * 4))) OR (`PRICE` IS NULL))");
     }
 
     public void testOperateOnColumn()

@@ -58,5 +58,8 @@ public class FarragoSqlRegressionTest extends FarragoSqlTest
         runSqlLineTest(getName());
 //        stmt.execute(FarragoCalcSystemTest.vmJava);
 //        runSqlLineTest(getName());
+
+        //reset to use java
+        stmt.execute(FarragoCalcSystemTest.vmJava);
     }
 }
