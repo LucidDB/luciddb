@@ -55,8 +55,14 @@ for i in $(find $LOGDIR/* -type d -maxdepth 0); do
    fi
 
    rm -f $i/latest.xml
-   mostRecentXml="$(ls $i/*.xml | tail -1)"
-   ln -s $mostRecentXml $i/latest.xml
+   # redirect stderr if file doesn't exist.
+   mostRecentXml="$(ls $i/*.xml 2>/dev/null | tail -1)" 
+	echo "before if " $mostRecentXml;
+   if [ "$mostRecentXml" != "" ]; then
+	echo "in if " $mostRecentXml;
+       ln -s $mostRecentXml $i/latest.xml
+   fi
+
 done
 
 for i in $(find $ARTDIR/* -type d -maxdepth 0); do
