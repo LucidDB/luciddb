@@ -136,9 +136,9 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
     private final int signatures;
 
     public static final SqlTypeName [] booleanTypes =
-        { Boolean };
-    public static final SqlTypeName [] booleanNullableTypes =
-        makeNullable(booleanTypes);
+            { Boolean };
+        public static final SqlTypeName [] booleanNullableTypes =
+            makeNullable(booleanTypes);
 
     public static final SqlTypeName [] binaryTypes =
         { Bit, Binary, Varbinary };
@@ -150,13 +150,18 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
     public static final SqlTypeName [] intNullableTypes =
         makeNullable(intTypes);
 
+    public static final SqlTypeName[] exactTypes =
+        combine(intTypes, new SqlTypeName[]{ Decimal } );
+    public static final SqlTypeName[] exactNullableTypes =
+        makeNullable(exactTypes);
+
     public static final SqlTypeName[] approxTypes =
         { Float, Real, Double };
     public static final SqlTypeName[] approxNullableTypes =
         makeNullable(approxTypes);
 
     public static final SqlTypeName [] numericTypes =
-        combine(intTypes, approxTypes);
+        combine(exactTypes, approxTypes);
     public static final SqlTypeName [] numericNullableTypes =
         makeNullable(numericTypes);
 
@@ -177,6 +182,12 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
         { IntervalDayTime, IntervalYearToMonth };
     public static final SqlTypeName [] timeIntervalNullableTypes =
         makeNullable(timeIntervalTypes);
+
+    public static final SqlTypeName [] multisetType =
+            { Multiset };
+        public static final SqlTypeName [] multisetNullableType =
+            makeNullable(multisetType);
+
 
 
     //~ Constructors ----------------------------------------------------------

@@ -142,12 +142,8 @@ public abstract class OperandsTypeChecking
 
             //for each operand, iterater over its allowed types...
             for (int j = 0; j < types[ruleOrdinal].length; j++) {
-                SqlTypeName typeName = types[ruleOrdinal][j];
-                RelDataType expectedType =
-                    RelDataTypeFactoryImpl.createSqlTypeIgnorePrecOrScale(validator.typeFactory,
-                        typeName);
-                assert (expectedType != null);
-                if (anyType.equals(expectedType)) {
+                SqlTypeName expectedTypeName = types[ruleOrdinal][j];
+                if (anyType.getSqlTypeName().equals(expectedTypeName)) {
                     // If the argument type is defined as any type, we don't need to check
                     return true;
                 } else {
@@ -155,7 +151,7 @@ public abstract class OperandsTypeChecking
                         actualType = validator.deriveType(scope, node);
                     }
 
-                    if (expectedType.isAssignableFrom(actualType, false)) {
+                    if (actualType.getSqlTypeName().equals(expectedTypeName)) {
                         return true;
                     }
                 }
@@ -1172,49 +1168,14 @@ public abstract class OperandsTypeChecking
             SqlTypeName.timeIntervalNullableTypes
         });
 
-
     /**
      * Parameter type-checking strategy
-     * type must a nullable time interval
+     * type must a nullable multiset
      */
     public static final OperandsTypeChecking typeNullableMultiset =
-        new OperandsTypeChecking() {
-            public boolean check(
-                SqlCall call,
-                SqlValidator validator,
-                SqlValidator.Scope scope,
-                SqlNode node,
-                int ruleOrdinal,
-                boolean throwOnFailure) {
-                RelDataType type = validator.deriveType(scope, node);
-                if (!SqlTypeName.Multiset.equals(type.getSqlTypeName()) &&
-                    !SqlTypeName.Null.equals(type.getSqlTypeName())) {
-                    if (throwOnFailure) {
-                        throw EigenbaseResource.instance().newExpectedMultiset(
-                            node.getParserPosition().toString());
-                    }
-                    return false;
-                }
-                return true;
-            }
-
-            public boolean check(
-                SqlValidator validator,
-                SqlValidator.Scope scope,
-                SqlCall call,
-                boolean throwOnFailure) {
-                return check(call,
-                    validator, scope, call.operands[0], 0, throwOnFailure);
-            }
-
-            public int getArgCount() {
-                return 1;
-            }
-
-            public String getAllowedSignatures(SqlOperator op) {
-                return "MULTISET";
-            }
-        };
+        new SimpleOperandsTypeChecking(new SqlTypeName [][] {
+            SqlTypeName.multisetNullableType
+        });
 
     /**
      * Parameter type-checking strategy

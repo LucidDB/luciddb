@@ -529,7 +529,7 @@ public abstract class ReturnTypeInference
             }
 
             /**
-             * @pre type0 <COMPARABLE> to type1 (without casting)
+             * @pre argTypes[0].isSameType(argTypes[1])
              */
             public RelDataType getType(
                 RelDataTypeFactory typeFactory,

@@ -130,10 +130,6 @@
     <text>Expected a boolean type near: {0}</text>
 </exception>
 
-<exception id="120145" name="ExpectedMultiset">
-    <text>Expected MULTISET type near: {0}</text>
-</exception>
-
 <exception id="120150" name="MustNotNullInElse">
     <text>ELSE clause or at least one THEN clause must be non-NULL</text>
 </exception>

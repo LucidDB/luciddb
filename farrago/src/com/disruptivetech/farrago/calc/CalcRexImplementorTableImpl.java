@@ -22,6 +22,7 @@ package com.disruptivetech.farrago.calc;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Arrays;
 
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
@@ -514,15 +515,21 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
             new BinaryNumericMakeSametypeImplementor(
                 CalcProgramBuilder.boolNativeNotEqual));
 
+        // todo: optimization. If using 'NOT' in front of 'IS NULL',
+        // create a call to the calc instruction 'ISNOTNULL'
         registerInstr(opTab.notOperator, CalcProgramBuilder.boolNot);
 
-        // todo: optimization. If using not in front of IS NULL,
-        // create a call to the calc instruction ISNOTNULL
         registerInstr(opTab.orOperator, CalcProgramBuilder.boolOr);
 
-        registerInstr(opTab.overlayFunc, ExtInstructionDefTable.overlay);
+        register(
+            opTab.overlayFunc,
+            new BinaryStringMakeSametypeImplementor(
+                ExtInstructionDefTable.overlay, 0, 1));
 
-        registerInstr(opTab.positionFunc, ExtInstructionDefTable.position);
+        register(
+            opTab.positionFunc,
+            new BinaryStringMakeSametypeImplementor(
+                ExtInstructionDefTable.position));
 
         register(
             opTab.powFunc,
@@ -807,26 +814,26 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
      */
     private static class CastImplementor extends AbstractCalcRexImplementor
     {
-        private static DoubleKeyMap dm;
+        private static DoubleKeyMap doubleKeyMap;
 
         static {
-            dm = new DoubleKeyMap();
-            dm.setEnforceUniqueness(true);
+            doubleKeyMap = new DoubleKeyMap();
+            doubleKeyMap.setEnforceUniqueness(true);
 
-            dm.put(
+            doubleKeyMap.put(
                 SqlTypeName.intTypes,
                 SqlTypeName.intTypes,
                 new UsingInstrImplementor(CalcProgramBuilder.Cast));
-            dm.put(
+            doubleKeyMap.put(
                 SqlTypeName.intTypes,
                 SqlTypeName.approxTypes,
                 new UsingInstrImplementor(CalcProgramBuilder.Cast));
-            dm.put(
+            doubleKeyMap.put(
                 SqlTypeName.timeTypes,
                 SqlTypeName.Bigint,
                 new UsingInstrImplementor(
                     ExtInstructionDefTable.castDateToMillis));
-            dm.put(
+            doubleKeyMap.put(
                 SqlTypeName.intTypes,
                 SqlTypeName.charTypes,
                 new UsingInstrImplementor(ExtInstructionDefTable.castA) {
@@ -844,11 +851,11 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                     }
                 });
 
-            dm.put(
+            doubleKeyMap.put(
                 SqlTypeName.approxTypes,
                 SqlTypeName.approxTypes,
                 new UsingInstrImplementor(CalcProgramBuilder.Cast));
-            dm.put(
+            doubleKeyMap.put(
                 SqlTypeName.approxTypes,
                 SqlTypeName.charTypes,
                 new UsingInstrImplementor(ExtInstructionDefTable.castA) {
@@ -865,7 +872,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                         return translator.implementNode(newCall);
                     }
                 });
-            dm.put(
+            doubleKeyMap.put(
                 SqlTypeName.approxTypes,
                 SqlTypeName.intTypes,
                 new AbstractCalcRexImplementor() {
@@ -894,38 +901,38 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                     }
                 });
 
-            dm.put(
+            doubleKeyMap.put(
                 SqlTypeName.charTypes,
                 SqlTypeName.Date,
                 new UsingInstrImplementor(
                     ExtInstructionDefTable.castStrAToDate));
-            dm.put(
+            doubleKeyMap.put(
                 SqlTypeName.Date,
                 SqlTypeName.charTypes,
                 new UsingInstrImplementor(ExtInstructionDefTable.castDateToStr));
 
-            dm.put(
+            doubleKeyMap.put(
                 SqlTypeName.charTypes,
                 SqlTypeName.Time,
                 new UsingInstrImplementor(
                     ExtInstructionDefTable.castStrAToTime));
-            dm.put(
+            doubleKeyMap.put(
                 SqlTypeName.Time,
                 SqlTypeName.charTypes,
                 new UsingInstrImplementor(ExtInstructionDefTable.castTimeToStr));
 
-            dm.put(
+            doubleKeyMap.put(
                 SqlTypeName.charTypes,
                 SqlTypeName.Timestamp,
                 new UsingInstrImplementor(
                     ExtInstructionDefTable.castStrAToTimestamp));
-            dm.put(
+            doubleKeyMap.put(
                 SqlTypeName.Timestamp,
                 SqlTypeName.charTypes,
                 new UsingInstrImplementor(
                     ExtInstructionDefTable.castTimestampToStr));
 
-            dm.put(
+            doubleKeyMap.put(
                 SqlTypeName.charTypes,
                 SqlTypeName.intTypes,
                 new UsingInstrImplementor(ExtInstructionDefTable.castA) {
@@ -942,7 +949,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                         return translator.implementNode(newCall);
                     }
                 });
-            dm.put(
+            doubleKeyMap.put(
                 SqlTypeName.charTypes,
                 SqlTypeName.approxTypes,
                 new UsingInstrImplementor(ExtInstructionDefTable.castA) {
@@ -960,7 +967,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                     }
                 });
 
-            dm.put(
+            doubleKeyMap.put(
                 SqlTypeName.charTypes,
                 SqlTypeName.charTypes,
                 new UsingInstrImplementor(ExtInstructionDefTable.castA));
@@ -996,7 +1003,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
             SqlTypeName toTypeName = toType.getSqlTypeName();
 
             CalcRexImplementor implentor =
-                (CalcRexImplementor) dm.get(fromTypeName, toTypeName);
+                (CalcRexImplementor) doubleKeyMap.get(fromTypeName, toTypeName);
             if (null != implentor) {
                 return implentor.implement(call, translator);
             }
@@ -1012,17 +1019,17 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
     }
 
     /**
-     * Makes all types the same before calling a given
+     * Makes all numeric types the same before calling a given
      * {@link CalcProgramBuilder.InstructionDef instruction}. The way to make the
-     * types the same is by inserting appropiate call to various cast functions
+     * types the same is by inserting appropiate calls to cast functions
      * depending on the types. The "biggest" (least restrictive) type will
      * always win and other types will be conveted into that bigger type.
      * For example.
-     * In the expression <code>1.0+2</code> the '+' instruction is potentially called
-     * with types <code>(DOUBLE) + (INTEGER)</code> which is illegal.
+     * In the expression <code>1.0+2</code>, the '+' instruction is potentially called
+     * with types <code>(DOUBLE) + (INTEGER)</code> which is illegal (in terms of the calculator).
      * Therefore the expression's implementation will logically end looking something like
      * <code>1.0 + CAST(2 AS DOUBLE)</code>
-     * LIMITATION: For now only Binary operators are suppored with numeric types
+     * LIMITATION: For now only Binary operators are supported with numeric types
      * If any operand is of any other type than a numeric one, the base class
      * {@link InstrDefImplementor#implement implementation} will be called
      */
@@ -1097,6 +1104,73 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                     translator.implementNode(castCall);
                 regs.set(small, newOp);
             }
+
+            CalcProgramBuilder.Register res =
+                createResultRegister(translator, call);
+            regs.add(0, res);
+
+            instr.add(translator.builder, regs);
+            return res;
+        }
+    }
+
+    /**
+     * Makes all string types the same before calling a given
+     * {@link CalcProgramBuilder.InstructionDef instruction}. The way to make the
+     * types the same is by inserting appropiate calls to cast functions
+     * depending on the types. The "biggest" (least restrictive) type will
+     * always win and other types will be conveted into that bigger type.
+     * For example.
+     * In the expression <code>POSITION('varchar' in 'char')</code>, will end up
+     * looking something like
+     * <code>POSITION('varchar' in CAST('char' AS VARCHAR))</code>
+     * LIMITATION: For now only char types are supported
+     */
+    private static class BinaryStringMakeSametypeImplementor
+        extends InstrDefImplementor
+    {
+        private int iFirst;
+        private int iSecond;
+
+        /**
+         * @param iFirst Indicates which two operands in the call list that should be made
+         * the same type.
+         * @param iSecond Indicates which two operands in the call list that should be made
+         * the same type.
+         */
+        public BinaryStringMakeSametypeImplementor(
+            CalcProgramBuilder.InstructionDef instr, int iFirst, int iSecond)
+        {
+            super(instr);
+            assert(iFirst!=iSecond);
+            this.iFirst = iFirst;
+            this.iSecond = iSecond;
+        }
+
+        /**
+         * Convenience constructor that calls
+         * {@link #BinaryStringMakeSametypeImplementor(com.disruptivetech.farrago.calc.CalcProgramBuilder.InstructionDef, int, int)}
+         * with the iFirst=0 and iSecond=1
+         */
+        public BinaryStringMakeSametypeImplementor(
+            CalcProgramBuilder.InstructionDef instr)
+        {
+            this(instr, 0 ,1);
+        }
+
+        public CalcProgramBuilder.Register implement(
+            RexCall call,
+            RexToCalcTranslator translator)
+        {
+            ArrayList regs = implementOperands(call, translator);
+            CalcProgramBuilder.Register[] newRegs = new CalcProgramBuilder.Register[2];
+            newRegs[0] = (CalcProgramBuilder.Register) regs.get(iFirst);
+            newRegs[1] = (CalcProgramBuilder.Register) regs.get(iSecond);
+
+            translator.implementConversionIfNeeded(
+                call.operands[iFirst], call.operands[iSecond], newRegs);
+            regs.set(iFirst, newRegs[0]);
+            regs.set(iSecond, newRegs[1]);
 
             CalcProgramBuilder.Register res =
                 createResultRegister(translator, call);

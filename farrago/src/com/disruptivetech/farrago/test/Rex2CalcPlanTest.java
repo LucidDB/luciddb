@@ -424,6 +424,25 @@ public class Rex2CalcPlanTest extends FarragoTestCase
         check(sql, false,false);
     }
 
+    public void testPosition() {
+        String sql =
+            "SELECT " +
+            "position('a' in  cast('a' as char(1)))," +
+            "position('a' in  cast('ba' as char(2)))," +
+            "position(cast('abc' as char(3)) in 'bbabc')" +
+            " FROM emps WHERE empno > 10";
+        check(sql, false,false);
+    }
+
+    public void testOverlay() {
+        String sql =
+            "SELECT " +
+            "overlay('12' placing cast('abc' as char(3)) from 1)," +
+            "overlay(cast('12' as char(3)) placing 'abc' from 1)" +
+            " FROM emps WHERE empno > 10";
+        check(sql, false,false);
+    }
+
     public void testLikeAndSimilar() {
         String sql =
             "SELECT "+

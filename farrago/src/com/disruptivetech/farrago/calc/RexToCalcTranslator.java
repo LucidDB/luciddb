@@ -565,7 +565,7 @@ public class RexToCalcTranslator implements RexVisitor
             CalcProgramBuilder.Register reg2 = implementNode(call.operands[1]);
 
             CalcProgramBuilder.Register [] convRegs = { reg1, reg2 };
-            implementConversionIfNeeded(op, call.operands[0],
+            implementConversionIfNeeded(call.operands[0],
                 call.operands[1], convRegs);
             reg1 = convRegs[0];
             reg2 = convRegs[1];
@@ -671,10 +671,16 @@ public class RexToCalcTranslator implements RexVisitor
     /**
      * If conversion is needed between the two operands this function
      * inserts a call to the calculator convert function and silently
-     * updates the result register of the operands as needed
+     * updates the result register of the operands as needed.
+     * The new updated registers are returned in the regs array.
+     * @param op1 first operand
+     * @param op2 second operand
+     * @param regs at the time of calling this methods this array must contain
+     *        the result registers of op1 and op2.
+     *        The new updated registers are returned in the regs array.
+     *
      */
     void implementConversionIfNeeded(
-        SqlOperator op,
         RexNode op1,
         RexNode op2,
         CalcProgramBuilder.Register [] regs)
@@ -685,10 +691,13 @@ public class RexToCalcTranslator implements RexVisitor
             // Need to perform a cast.
             CalcProgramBuilder.Register newReg;
             if (op1.getType().getSqlTypeName() == SqlTypeName.Varchar) {
-                // cast op1 to op2's type
+                // cast op1 to op2's type but use op1's precision
+                CalcProgramBuilder.RegisterDescriptor reg1Desc =
+                    getCalcRegisterDescriptor(op1.getType());
+                CalcProgramBuilder.RegisterDescriptor reg2Desc =
+                    getCalcRegisterDescriptor(op2.getType());
                 newReg =
-                    builder.newLocal(
-                        getCalcRegisterDescriptor(op2.getType()));
+                    builder.newLocal(reg2Desc.getType(), reg1Desc.getBytes());
 
                 ExtInstructionDefTable.castA.add(
                     builder,
@@ -696,10 +705,13 @@ public class RexToCalcTranslator implements RexVisitor
 
                 regs[0] = newReg;
             } else {
-                // cast op2 to op1's type
+                // cast op2 to op1's type but use op2's precision
+                CalcProgramBuilder.RegisterDescriptor reg1Desc =
+                    getCalcRegisterDescriptor(op1.getType());
+                CalcProgramBuilder.RegisterDescriptor reg2Desc =
+                    getCalcRegisterDescriptor(op2.getType());
                 newReg =
-                    builder.newLocal(
-                        getCalcRegisterDescriptor(op1.getType()));
+                    builder.newLocal(reg1Desc.getType(), reg2Desc.getBytes());
 
                 ExtInstructionDefTable.castA.add(
                     builder,

@@ -1116,13 +1116,13 @@ public abstract class SqlValidatorTestCase extends TestCase
     public void testIsASet() {
         checkExp("multiset[1] is a set");
         checkExp("multiset['1'] is a set");
-        checkExpFails("'a' is a set","Expected MULTISET type near: line 1, column 1");
+        checkExpFails("'a' is a set",".*Can not apply 'IS A SET' to.*");
     }
 
     public void testCardinality() {
         checkExpType("cardinality(multiset[1])","INTEGER");
         checkExpType("cardinality(multiset['1'])","INTEGER");
-        checkExpFails("cardinality('a')","Expected MULTISET type near: line 1, column 19");
+        checkExpFails("cardinality('a')","Can not apply 'CARDINALITY' to arguments of type 'CARDINALITY.<VARCHAR.1.>.'. Supported form.s.: 'CARDINALITY.<MULTISET>.' near: line 1, column 8");
     }
 }
 
