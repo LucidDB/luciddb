@@ -360,6 +360,12 @@ public abstract class AbstractRelNode implements RelNode
                     + " inputs.length=" + inputs.length + " childExps.length="
                     + childExps.length + " values.length=" + values.length;
                     write(getRelTypeName());
+
+                    for(int i = 0; i < traits.size(); i++) {
+                        write(".");
+                        write(traits.getTrait(i).toString());
+                    }
+
                     write("(");
                     int j = 0;
                     for (int i = 0; i < inputs.length; i++) {

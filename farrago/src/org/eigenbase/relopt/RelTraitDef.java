@@ -131,13 +131,12 @@ public abstract class RelTraitDef
      * @param planner the planner requesting the conversion
      * @param rel RelNode to convert
      * @param toTrait RelTrait to convert to
-     * @param fromIndex index of the RelTrait in <code>rel.getTraits()</code>
      * @param allowInfiniteCostConverters flag indicating whether infinite
      *                                     cost converters are allowe
      * @return a converted RelNode or null if conversion is not possible
      */
     public abstract RelNode convert(
-        RelOptPlanner planner, RelNode rel, RelTrait toTrait, int fromIndex,
+        RelOptPlanner planner, RelNode rel, RelTrait toTrait,
         boolean allowInfiniteCostConverters);
 
     /**

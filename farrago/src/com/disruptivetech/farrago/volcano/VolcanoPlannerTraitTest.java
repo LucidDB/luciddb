@@ -263,9 +263,9 @@ public class VolcanoPlannerTraitTest
 
         public RelNode convert(
             RelOptPlanner planner, RelNode rel, RelTrait toTrait, 
-            int fromIndex, boolean allowInfiniteCostConverters)
+            boolean allowInfiniteCostConverters)
         {
-            RelTrait fromTrait = rel.getTraits().getTrait(fromIndex);
+            RelTrait fromTrait = rel.getTraits().getTrait(this);
 
             if (conversionMap.containsKey(fromTrait)) {
                 List entries = conversionMap.getMulti(fromTrait);

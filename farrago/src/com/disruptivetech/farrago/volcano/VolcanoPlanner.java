@@ -302,11 +302,14 @@ public class VolcanoPlanner implements RelOptPlanner
             return rel2;
         }
 
-        RelNode rel3 = changeTraitsUsingConverters(rel2, toTraits);
+        RelNode rel3 = changeTraitsUsingConverters(rel2, toTraits, true);
         if (rel3 != null) {
             return rel3;
         }
 
+        // REVIEW: SWZ: 3/5/2005: This is probably redundant.  The call
+        // to changeTraitsUsingConverters should create a string of
+        // AbstractConverter if none of the conversions is currently possible.
         RelNode converter = rel;
         for(int i = 0; i < toTraits.size(); i++) {
             RelTraitSet fromTraits = converter.getTraits();
@@ -336,6 +339,9 @@ public class VolcanoPlanner implements RelOptPlanner
                     stepTraits);
         }
 
+        // REVIEW: SWZ: 3/5/2005: Why is (was) this only done for abstract
+        // converters?  Seems to me, the caller has to register the
+        // conversion in the end anyway.
         return register(converter, rel);
     }
 
@@ -542,9 +548,8 @@ public class VolcanoPlanner implements RelOptPlanner
         return set.getSubset(traits);
     }
 
-    RelNode changeTraitsUsingConverters(
-        RelNode rel,
-        RelTraitSet toTraits)
+    private RelNode changeTraitsUsingConverters(
+        RelNode rel, RelTraitSet toTraits, boolean allowAbstractConverters)
     {
         final RelTraitSet fromTraits = rel.getTraits();
 
@@ -574,11 +579,30 @@ public class VolcanoPlanner implements RelOptPlanner
                 continue;
             }
 
-            converted = fromTrait.getTraitDef().convert(
-                this, converted, toTrait, i, allowInfiniteCostConverters);
+            rel = fromTrait.getTraitDef().convert(
+                this, converted, toTrait, allowInfiniteCostConverters);
+            if (rel == null && allowAbstractConverters) {
+                RelTraitSet stepTraits =
+                    RelOptUtil.clone(converted.getTraits());
+                stepTraits.setTrait(toTrait.getTraitDef(), toTrait);
+
+                rel =
+                    new AbstractConverter(
+                        converted.getCluster(), converted,
+                        toTrait.getTraitDef(), stepTraits);
+            }
+
+            converted = rel;
         }
 
         return converted;
+    }
+
+    RelNode changeTraitsUsingConverters(
+        RelNode rel,
+        RelTraitSet toTraits)
+    {
+        return changeTraitsUsingConverters(rel, toTraits, false);
     }
 
     void checkForSatisfiedConverters(
