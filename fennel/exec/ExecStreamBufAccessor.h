@@ -152,8 +152,8 @@ public:
     inline bool isConsumptionPossible() const;
 
     /**
-     * Tests whether immediate consumption is possible, and if it is not, calls
-     * requestProduction().  Must not be called in state EXECBUF_EOS.
+     * Tests whether immediate consumption is possible. If it is not, calls
+     * requestProduction(), except in state EXECBUF_EOS.
      *
      * @return whether consumption is possible
      */
@@ -622,9 +622,9 @@ inline TupleAccessor &ExecStreamBufAccessor::getScratchTupleAccessor()
 
 inline bool ExecStreamBufAccessor::demandData()
 {
-    assert(getState() != EXECBUF_EOS);
-    
-    if (isConsumptionPossible()) {
+    if (state == EXECBUF_EOS) {
+        return false;
+    } else if (isConsumptionPossible()) {
         return true;
     } else {
         requestProduction();
