@@ -324,6 +324,10 @@ require version '${required.ant.version}'."/>
 
   <!-- Classpaths -->
 
+  <!-- Set a default for this classpath in case it's not set in a
+       properties file.  The properties file will take precedence. -->
+  <property name="farrago.custom.classpath" value=""/>
+
   <!-- third-party libraries -->
   <path id="farrago.3p.classpath">
     <pathelement location="${mdrlibs.dir}/mdrant.jar"/>
