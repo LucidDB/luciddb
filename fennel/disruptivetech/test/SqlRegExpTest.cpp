@@ -83,7 +83,10 @@ SqlRegExpTest::testSqlRegExpLikeAsciiTrue()
 
     char* test[][2] = { 
         // pattern, matchValue
-        { "",    "" },           // Sql99 8.5 General Rule 3d, Case i.
+
+        // SQL99 Part 2 Section 8.5 General Rule 3.d.i
+        { "",    "" },           
+
         { "_",   "a" },
         { "a",   "a" },
         { "abc", "abc" },
