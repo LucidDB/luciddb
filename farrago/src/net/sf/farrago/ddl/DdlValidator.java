@@ -452,8 +452,10 @@ public class DdlValidator extends FarragoCompoundAllocation
                 invokeHandler(element, "executeDrop");
             } else if (action == VALIDATE_TRUNCATION) {
                 invokeHandler(element, "executeTruncation");
+            } else if (action == VALIDATE_MODIFICATION) {
+                invokeHandler(element, "executeModification");
             } else {
-                assert (action == VALIDATE_MODIFICATION);
+                assert (false);
             }
         }
 

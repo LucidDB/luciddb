@@ -83,6 +83,13 @@ public interface FarragoSessionDdlHandler
     public void executeCreation(CwmModelElement modelElement);
 
     /**
+     * Executes modification of an object.
+     *
+     * @param modelElement element being modified
+     */
+    public void executeModification(CwmModelElement modelElement);
+
+    /**
      * Executes drop of an object; for example, if modelElement
      * has stored data associated with it, this call should
      * deallocate the object's storage.
