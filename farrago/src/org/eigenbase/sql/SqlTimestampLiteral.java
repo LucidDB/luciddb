@@ -19,8 +19,8 @@
 */
 package org.eigenbase.sql;
 
-import org.eigenbase.sql.parser.ParserPosition;
-import org.eigenbase.sql.parser.ParserUtil;
+import org.eigenbase.sql.parser.SqlParserPos;
+import org.eigenbase.sql.parser.SqlParserUtil;
 import org.eigenbase.sql.type.SqlTypeName;
 
 import java.util.Calendar;
@@ -40,10 +40,10 @@ public class SqlTimestampLiteral extends SqlAbstractDateTimeLiteral
         Calendar cal,
         int precision,
         boolean hasTimeZone,
-        ParserPosition pos)
+        SqlParserPos pos)
     {
         super(cal, hasTimeZone, SqlTypeName.Timestamp, precision,
-            ParserUtil.TimestampFormatStr, pos);
+            SqlParserUtil.TimestampFormatStr, pos);
     }
 
     /**

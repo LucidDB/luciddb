@@ -57,14 +57,15 @@
 0: jdbc:farrago:> -- Create schema and table
 0: jdbc:farrago:> create schema csv_schema;
 0: jdbc:farrago:> !metadata getSchemas
-+----------------+----------------+
-|  TABLE_SCHEM   | TABLE_CATALOG  |
-+----------------+----------------+
-| CSV_SCHEMA     | LOCALDB        |
-| JDBC_METADATA  | SYS_BOOT       |
-| SALES          | LOCALDB        |
-| SQLJ           | LOCALDB        |
-+----------------+----------------+
++---------------------+----------------+
+|     TABLE_SCHEM     | TABLE_CATALOG  |
++---------------------+----------------+
+| CSV_SCHEMA          | LOCALDB        |
+| INFORMATION_SCHEMA  | LOCALDB        |
+| JDBC_METADATA       | SYS_BOOT       |
+| SALES               | LOCALDB        |
+| SQLJ                | LOCALDB        |
++---------------------+----------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create foreign table csv_schema.example(
 . . . . . . . . >     id int not null,
@@ -134,13 +135,14 @@ Error: DDL validation error near line 1, column 31: Reference to unknown foreign
 0: jdbc:farrago:> 
 0: jdbc:farrago:> drop schema csv_schema cascade;
 0: jdbc:farrago:> !metadata getSchemas
-+----------------+----------------+
-|  TABLE_SCHEM   | TABLE_CATALOG  |
-+----------------+----------------+
-| JDBC_METADATA  | SYS_BOOT       |
-| SALES          | LOCALDB        |
-| SQLJ           | LOCALDB        |
-+----------------+----------------+
++---------------------+----------------+
+|     TABLE_SCHEM     | TABLE_CATALOG  |
++---------------------+----------------+
+| INFORMATION_SCHEMA  | LOCALDB        |
+| JDBC_METADATA       | SYS_BOOT       |
+| SALES               | LOCALDB        |
+| SQLJ                | LOCALDB        |
++---------------------+----------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> drop foreign data wrapper test_jdbc;
 0: jdbc:farrago:> select "name" from sys_fem.med."DataWrapper" order by 1;

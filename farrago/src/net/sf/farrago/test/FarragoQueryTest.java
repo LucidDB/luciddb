@@ -123,6 +123,7 @@ public class FarragoQueryTest extends FarragoTestCase
         refSet.add("SQLJ");
         refSet.add("SALES");
         refSet.add("JDBC_METADATA");
+        refSet.add("INFORMATION_SCHEMA");
         compareResultSet(refSet);
 
         // restore default catalog

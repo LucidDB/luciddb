@@ -23,6 +23,7 @@ import org.eigenbase.util.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.type.*;
 
 import net.sf.farrago.catalog.*;
@@ -237,8 +238,6 @@ public class DdlRelationalHandler extends DdlHandler
             // pass this one through
             throw ex;
         } catch (Throwable ex) {
-            // TODO: if ex has parser position information in it, need to
-            // either delete it or adjust it
             throw validator.res.newValidatorInvalidObjectDefinition(
                 repos.getLocalizedObjectName(view), 
                 ex);
@@ -246,16 +245,21 @@ public class DdlRelationalHandler extends DdlHandler
             validator.releaseReentrantSession(session);
         }
     }
-    
+
     private void validateViewImpl(
         FarragoSession session,
         CwmView view)
-        throws SQLException
+        throws Throwable
     {
         String sql = view.getQueryExpression().getBody();
 
         tracer.fine(sql);
-        FarragoSessionAnalyzedSql analyzedSql = session.analyzeSql(sql, null);
+        FarragoSessionAnalyzedSql analyzedSql;
+        try {
+            analyzedSql = session.analyzeSql(sql, null);
+        } catch (Throwable ex) {
+            throw adjustExceptionParserPosition(view, ex);
+        }
         RelDataType rowType = analyzedSql.resultType;
 
         List columnList = view.getFeature();
@@ -276,7 +280,7 @@ public class DdlRelationalHandler extends DdlHandler
         }
 
         if (analyzedSql.hasTopLevelOrderBy) {
-            throw FarragoResource.instance().newValidatorInvalidViewOrderBy();
+            throw validator.res.newValidatorInvalidViewOrderBy();
         }
 
         // Derive column information from result set metadata

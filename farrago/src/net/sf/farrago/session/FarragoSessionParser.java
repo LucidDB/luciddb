@@ -23,6 +23,7 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.*;
 
 
 /**
@@ -59,7 +60,7 @@ public interface FarragoSessionParser
     /**
      * @return the current position, or null if done parsing
      */
-    public FarragoSessionParserPosition getCurrentPosition();
+    public SqlParserPos getCurrentPosition();
 
     /**
      * @return a comma-separated list of all a database's SQL keywords that are
@@ -88,6 +89,17 @@ public interface FarragoSessionParser
      */
     public FarragoException newPositionalError(
         SqlValidatorException ex);
+
+    /**
+     * Gets a substring from the text currently being parsed.
+     *
+     * @param start start position (inclusive) of substring
+     *
+     * @param end end position (exclusive) of substring
+     *
+     * @return substring
+     */
+    public String getSubstring(SqlParserPos start, SqlParserPos end);
 }
 
 

@@ -38,6 +38,10 @@ public class FarragoException extends RuntimeException
     private static Logger tracer =
         Logger.getLogger(FarragoException.class.getName());
 
+    private int posLine;
+
+    private int posColumn;
+
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -56,6 +60,35 @@ public class FarragoException extends RuntimeException
         // better context.  Need to extend MonRG for this.
         tracer.throwing("FarragoException", "constructor", this);
         tracer.severe(toString());
+    }
+
+    /**
+     * Sets a textual position at which this exception was detected.
+     *
+     * @param 1-based line number
+     *
+     * @param 1-based column number
+     */
+    public void setPosition(int posLine, int posColumn)
+    {
+        this.posLine = posLine;
+        this.posColumn = posColumn;
+    }
+
+    /**
+     * @return 1-based line number, or 0 for missing position information
+     */
+    public int getPosLine()
+    {
+        return posLine;
+    }
+
+    /**
+     * @return 1-based column number, or 0 for missing position information
+     */
+    public int getPosColumn()
+    {
+        return posColumn;
     }
 }
 

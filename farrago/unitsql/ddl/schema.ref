@@ -6,54 +6,58 @@
 0: jdbc:farrago:> create table s.t(i int not null primary key);
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !metadata getSchemas
-+----------------+----------------+
-|  TABLE_SCHEM   | TABLE_CATALOG  |
-+----------------+----------------+
-| JDBC_METADATA  | SYS_BOOT       |
-| S              | LOCALDB        |
-| SALES          | LOCALDB        |
-| SQLJ           | LOCALDB        |
-+----------------+----------------+
++---------------------+----------------+
+|     TABLE_SCHEM     | TABLE_CATALOG  |
++---------------------+----------------+
+| INFORMATION_SCHEMA  | LOCALDB        |
+| JDBC_METADATA       | SYS_BOOT       |
+| S                   | LOCALDB        |
+| SALES               | LOCALDB        |
+| SQLJ                | LOCALDB        |
++---------------------+----------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail
 0: jdbc:farrago:> drop schema s restrict;
 Error: Dropping schema "LOCALDB"."S" requires CASCADE because other objects still reference it (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !metadata getSchemas
-+----------------+----------------+
-|  TABLE_SCHEM   | TABLE_CATALOG  |
-+----------------+----------------+
-| JDBC_METADATA  | SYS_BOOT       |
-| S              | LOCALDB        |
-| SALES          | LOCALDB        |
-| SQLJ           | LOCALDB        |
-+----------------+----------------+
++---------------------+----------------+
+|     TABLE_SCHEM     | TABLE_CATALOG  |
++---------------------+----------------+
+| INFORMATION_SCHEMA  | LOCALDB        |
+| JDBC_METADATA       | SYS_BOOT       |
+| S                   | LOCALDB        |
+| SALES               | LOCALDB        |
+| SQLJ                | LOCALDB        |
++---------------------+----------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail
 0: jdbc:farrago:> drop schema s;
 Error: Dropping schema "LOCALDB"."S" requires CASCADE because other objects still reference it (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !metadata getSchemas
-+----------------+----------------+
-|  TABLE_SCHEM   | TABLE_CATALOG  |
-+----------------+----------------+
-| JDBC_METADATA  | SYS_BOOT       |
-| S              | LOCALDB        |
-| SALES          | LOCALDB        |
-| SQLJ           | LOCALDB        |
-+----------------+----------------+
++---------------------+----------------+
+|     TABLE_SCHEM     | TABLE_CATALOG  |
++---------------------+----------------+
+| INFORMATION_SCHEMA  | LOCALDB        |
+| JDBC_METADATA       | SYS_BOOT       |
+| S                   | LOCALDB        |
+| SALES               | LOCALDB        |
+| SQLJ                | LOCALDB        |
++---------------------+----------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should succeed
 0: jdbc:farrago:> drop schema s cascade;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !metadata getSchemas
-+----------------+----------------+
-|  TABLE_SCHEM   | TABLE_CATALOG  |
-+----------------+----------------+
-| JDBC_METADATA  | SYS_BOOT       |
-| SALES          | LOCALDB        |
-| SQLJ           | LOCALDB        |
-+----------------+----------------+
++---------------------+----------------+
+|     TABLE_SCHEM     | TABLE_CATALOG  |
++---------------------+----------------+
+| INFORMATION_SCHEMA  | LOCALDB        |
+| JDBC_METADATA       | SYS_BOOT       |
+| SALES               | LOCALDB        |
+| SQLJ                | LOCALDB        |
++---------------------+----------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail with duplicate name
 0: jdbc:farrago:> create schema sales;

@@ -27,7 +27,7 @@ import org.eigenbase.reltype.RelDataTypeFactoryImpl;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.util.*;
-import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.type.*;
@@ -811,19 +811,19 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         new SqlLiteralChainOperator();
     public final SqlBetweenOperator betweenOperator =
         new SqlBetweenOperator(
-            SqlBetweenOperator.Flag.createAsymmetric(ParserPosition.ZERO),
+            SqlBetweenOperator.Flag.createAsymmetric(SqlParserPos.ZERO),
             false);
     public final SqlBetweenOperator symmetricBetweenOperator =
         new SqlBetweenOperator(
-            SqlBetweenOperator.Flag.createSymmetric(ParserPosition.ZERO),
+            SqlBetweenOperator.Flag.createSymmetric(SqlParserPos.ZERO),
             false);
     public final SqlBetweenOperator notBetweenOperator =
         new SqlBetweenOperator(
-            SqlBetweenOperator.Flag.createAsymmetric(ParserPosition.ZERO),
+            SqlBetweenOperator.Flag.createAsymmetric(SqlParserPos.ZERO),
             true);
     public final SqlBetweenOperator symmetricNotBetweenOperator =
         new SqlBetweenOperator(
-            SqlBetweenOperator.Flag.createSymmetric(ParserPosition.ZERO),
+            SqlBetweenOperator.Flag.createSymmetric(SqlParserPos.ZERO),
             true);
     public final SqlSpecialOperator notLikeOperator =
         new SqlLikeOperator("NOT LIKE", SqlKind.Like, true) {
@@ -1262,13 +1262,13 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
             public SqlCall rewriteCall(SqlCall call)
             {
                 SqlNode [] operands = call.getOperands();
-                ParserPosition pos = call.getParserPosition();
+                SqlParserPos pos = call.getParserPosition();
                 
                 if (2 != operands.length) {
                     //todo put this in the validator
                     throw EigenbaseResource.instance().newValidatorContext(
-                        new Integer(pos.getBeginLine()),
-                        new Integer(pos.getBeginColumn()),
+                        new Integer(pos.getLineNum()),
+                        new Integer(pos.getColumnNum()),
                         EigenbaseResource.instance().newInvalidArgCount(
                             name,
                             new Integer(2)));
@@ -1304,7 +1304,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
             public SqlCall rewriteCall(SqlCall call)
             {
                 SqlNode [] operands = call.getOperands();
-                ParserPosition pos = call.getParserPosition();
+                SqlParserPos pos = call.getParserPosition();
                 
                 SqlNodeList whenList = new SqlNodeList(pos);
                 SqlNodeList thenList = new SqlNodeList(pos);

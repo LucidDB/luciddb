@@ -20,7 +20,7 @@
 package org.eigenbase.sql;
 
 import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.parser.SqlParserPos;
 
 /**
  * Abstract base for chararacter and binary string literals.
@@ -33,7 +33,7 @@ abstract class SqlAbstractStringLiteral extends SqlLiteral
     protected SqlAbstractStringLiteral(
         Object value,
         SqlTypeName typeName,
-        ParserPosition pos)
+        SqlParserPos pos)
     {
         super(value, typeName, pos);
     }

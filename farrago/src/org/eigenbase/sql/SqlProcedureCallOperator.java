@@ -52,18 +52,18 @@ public class SqlProcedureCallOperator extends SqlPrefixOperator
             new SqlNodeList(
                 Collections.singletonList(
                     call.getOperands()[0]),
-                ParserPosition.ZERO),
+                SqlParserPos.ZERO),
             opTab.valuesOperator.createCall(
                 opTab.rowConstructor.createCall(
-                    SqlLiteral.createExactNumeric("0", ParserPosition.ZERO),
-                    ParserPosition.ZERO),
-                ParserPosition.ZERO),
+                    SqlLiteral.createExactNumeric("0", SqlParserPos.ZERO),
+                    SqlParserPos.ZERO),
+                SqlParserPos.ZERO),
             null,
             null,
             null,
             null,
             null,
-            ParserPosition.ZERO);
+            SqlParserPos.ZERO);
     }
 }
 

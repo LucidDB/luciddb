@@ -29,7 +29,7 @@ import org.eigenbase.rex.RexNode;
 import org.eigenbase.sql.SqlNodeList;
 import org.eigenbase.sql.SqlSelect;
 import org.eigenbase.sql.SqlWriter;
-import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.parser.SqlParserPos;
 
 
 /**
@@ -75,7 +75,7 @@ class AddProjectToQueryRule extends RelOptRule
                 oldQuery.dataSource);
         SqlWriter writer = new SqlWriter(query.dialect, null);
         writer.pushQuery(query.sql);
-        SqlNodeList list = new SqlNodeList(ParserPosition.ZERO);
+        SqlNodeList list = new SqlNodeList(SqlParserPos.ZERO);
         for (int i = 0; i < project.getChildExps().length; i++) {
             RexNode exp = project.getChildExps()[i];
             list.add(

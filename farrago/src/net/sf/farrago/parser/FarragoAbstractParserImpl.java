@@ -58,7 +58,7 @@ public abstract class FarragoAbstractParserImpl extends SqlAbstractParserImpl
     /**
      * @return current parser position
      */
-    public abstract FarragoSessionParserPosition getCurrentPosition();
+    public abstract SqlParserPos getCurrentPosition();
 
     /**
      * @return result of parsing an SQL expression

@@ -300,3 +300,88 @@ returns varchar(128)
 no sql
 external name 
 'class net.sf.farrago.test.FarragoTestUDR.toHexString(java.lang.Integer)';
+
+
+-- test early definition binding
+
+create function magic(in i bigint)
+returns int
+specific magic10
+contains sql
+return 10;
+
+create function presto()
+returns int
+contains sql
+return magic(1);
+
+create function magic(in i int)
+returns int
+specific magic20
+contains sql
+return 20;
+
+-- should get 10, even though new overload for magic is a better match
+values presto();
+
+-- test stored binding for builtins vs routines
+
+create function upper(in x varchar(128))
+returns varchar(128)
+contains sql
+return x||'_plus_one';
+
+create function tweedledee()
+returns varchar(128)
+contains sql
+return upper('cobol');
+
+create function tweedledum()
+returns varchar(128)
+contains sql
+return information_schema.upper('cobol');
+
+values tweedledee();
+
+values tweedledum();
+
+
+-- test conflict detection
+
+create procedure set_java_property(in name varchar(128),in val varchar(128))
+no sql
+external name 'class net.sf.farrago.test.FarragoTestUDR.setSystemProperty';
+
+-- should fail:  procedures cannot be overloaded on parameter type
+create procedure set_java_property(in name char(128),in val char(128))
+no sql
+external name 'class net.sf.farrago.test.FarragoTestUDR.setSystemProperty';
+
+create function piffle(in i int)
+returns int
+specific piffle1
+contains sql
+return 20;
+
+-- should succeed:  functions can be overloaded on parameter type
+create function piffle(in d double)
+returns int
+specific piffle2
+contains sql
+return 20;
+
+-- should fail
+create function piffle(in d double)
+returns int
+specific piffle3
+contains sql
+return 20;
+
+-- should fail:  even though the parameter type is different, it is
+-- in the same type precedence equivalence class
+create function piffle(in f float)
+returns int
+specific piffle4
+contains sql
+return 20;
+

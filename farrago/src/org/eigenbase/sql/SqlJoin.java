@@ -21,7 +21,7 @@
 
 package org.eigenbase.sql;
 
-import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.parser.SqlParserPos;
 
 
 /**
@@ -57,7 +57,7 @@ public class SqlJoin extends SqlCall
     public SqlJoin(
         SqlJoinOperator operator,
         SqlNode [] operands,
-        ParserPosition pos)
+        SqlParserPos pos)
     {
         super(operator, operands, pos);
     }

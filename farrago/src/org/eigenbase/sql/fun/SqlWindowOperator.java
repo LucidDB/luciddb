@@ -19,7 +19,7 @@
 */
 package org.eigenbase.sql.fun;
 
-import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.*;
@@ -83,7 +83,7 @@ public class SqlWindowOperator extends SqlOperator {
 
     public SqlCall createCall(
         SqlNode[] operands,
-        ParserPosition pos)
+        SqlParserPos pos)
     {
         return new SqlWindow(this, operands, pos);
     }
@@ -96,7 +96,7 @@ public class SqlWindowOperator extends SqlOperator {
         boolean isRows,
         SqlNode lowerBound,
         SqlNode upperBound,
-        ParserPosition pos)
+        SqlParserPos pos)
     {
         return (SqlWindow) createCall(
             new SqlNode[] {
@@ -214,23 +214,23 @@ public class SqlWindowOperator extends SqlOperator {
         public static final Bound UnboundedFollowing = new Bound("UNBOUNDED FOLLOWING", 2);
     }
 
-    public SqlNode createCurrentRow(ParserPosition pos) {
+    public SqlNode createCurrentRow(SqlParserPos pos) {
         return SqlLiteral.createFlag(Bound.CurrentRow, pos);
     }
 
-    public SqlNode createUnboundedFollowing(ParserPosition pos) {
+    public SqlNode createUnboundedFollowing(SqlParserPos pos) {
         return SqlLiteral.createFlag(Bound.UnboundedFollowing, pos);
     }
 
-    public SqlNode createUnboundedPreceding(ParserPosition pos) {
+    public SqlNode createUnboundedPreceding(SqlParserPos pos) {
         return SqlLiteral.createFlag(Bound.UnboundedPreceding, pos);
     }
 
-    public SqlNode createFollowing(SqlLiteral literal, ParserPosition pos) {
+    public SqlNode createFollowing(SqlLiteral literal, SqlParserPos pos) {
         return followingOperator.createCall(literal, pos);
     }
 
-    public SqlNode createPreceding(SqlLiteral literal, ParserPosition pos) {
+    public SqlNode createPreceding(SqlLiteral literal, SqlParserPos pos) {
         return precedingOperator.createCall(literal, pos);
     }
 

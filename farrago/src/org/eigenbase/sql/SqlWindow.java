@@ -20,7 +20,7 @@
 
 package org.eigenbase.sql;
 
-import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.fun.SqlWindowOperator;
 import org.eigenbase.util.Util;
 import org.eigenbase.resource.EigenbaseResource;
@@ -73,7 +73,7 @@ public class SqlWindow extends SqlCall
     public static final int UpperBound_OPERAND = 6;
 
     public SqlWindow(SqlWindowOperator operator, SqlNode[] operands,
-            ParserPosition pos)
+            SqlParserPos pos)
     {
         super(operator,operands,pos);
         final SqlIdentifier declId = (SqlIdentifier) operands[DeclName_OPERAND];
@@ -147,7 +147,7 @@ public class SqlWindow extends SqlCall
         setOperand(newOperands, that.operands, LowerBound_OPERAND, validator);
         setOperand(newOperands, that.operands, UpperBound_OPERAND, validator);
         return new SqlWindow((SqlWindowOperator) operator, newOperands,
-            ParserPosition.ZERO);
+            SqlParserPos.ZERO);
     }
 
     private static void setOperand(

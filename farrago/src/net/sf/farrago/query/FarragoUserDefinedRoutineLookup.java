@@ -24,6 +24,7 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.type.*;
 
 import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.cwm.behavioral.*;
 
@@ -46,18 +47,41 @@ public class FarragoUserDefinedRoutineLookup implements SqlOperatorTable
     private final FarragoSessionStmtValidator stmtValidator;
     
     private final FarragoPreparingStmt preparingStmt;
+
+    private final FemRoutine validatingRoutine;
     
     public FarragoUserDefinedRoutineLookup(
         FarragoSessionStmtValidator stmtValidator,
-        FarragoPreparingStmt preparingStmt)
+        FarragoPreparingStmt preparingStmt,
+        FemRoutine validatingRoutine)
     {
         this.stmtValidator = stmtValidator;
         this.preparingStmt = preparingStmt;
+        this.validatingRoutine = validatingRoutine;
     }
 
     // implement SqlOperatorTable
     public List lookupOperatorOverloads(SqlIdentifier opName, SqlSyntax syntax)
     {
+        // TODO jvs 27-Jan-2005:  need to discriminate function vs. procedure
+        
+        if ((preparingStmt != null) && preparingStmt.isExpandingDefinition()) {
+            // While expanding view and function bodies, the lookup rules are
+            // different.  An unqualified name is assumed to be a builtin;
+            // anything else is assumed to be the fully-qualified specific name
+            // (NOT invocation name) of a routine.
+            if (opName.names.length == 1) {
+                // assume builtin
+                return Collections.EMPTY_LIST;
+            }
+            FemRoutine femRoutine = (FemRoutine) stmtValidator.findSchemaObject(
+                opName,
+                stmtValidator.getRepos().getSql2003Package().getFemRoutine());
+            List overloads = new ArrayList();
+            overloads.add(convertRoutine(femRoutine));
+            return overloads;
+        }
+        
         if (syntax != SqlSyntax.Function) {
             return Collections.EMPTY_LIST;
         }
@@ -70,10 +94,17 @@ public class FarragoUserDefinedRoutineLookup implements SqlOperatorTable
         while (iter.hasNext()) {
             FemRoutine femRoutine = (FemRoutine) iter.next();
             if (femRoutine.getVisibility() == null) {
-                // Oops, the referenced routine hasn't been validated yet.
-                // Throw a special exception and someone up above will
-                // figure out what to do.
-                throw new FarragoUnvalidatedDependencyException();
+                // Oops, the referenced routine hasn't been validated yet.  If
+                // requested, throw a special exception and someone up
+                // above will figure out what to do.
+                if (validatingRoutine == null) {
+                    throw new FarragoUnvalidatedDependencyException();
+                }
+                if (femRoutine != validatingRoutine) {
+                    // just skip this one for now; if there's a conflict,
+                    // we'll hit it by symmetry
+                    continue;
+                }
             }
             SqlFunction sqlFunction = convertRoutine(femRoutine);
             overloads.add(sqlFunction);

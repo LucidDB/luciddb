@@ -70,7 +70,7 @@ class TableAccessToQueryRule extends RelOptRule
                 null,
                 null,
                 null,
-                ParserPosition.ZERO);
+                SqlParserPos.ZERO);
         JdbcQuery query =
             new JdbcQuery(
                 javaTableAccess.getCluster(),

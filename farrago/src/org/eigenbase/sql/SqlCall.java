@@ -26,7 +26,7 @@ import java.util.HashMap;
 
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.resource.EigenbaseResource;
-import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.util.SqlVisitor;
 import org.eigenbase.util.Util;
 
@@ -48,7 +48,7 @@ public class SqlCall extends SqlNode
     SqlCall(
         SqlOperator operator,
         SqlNode [] operands,
-        ParserPosition pos)
+        SqlParserPos pos)
     {
         super(pos);
         this.operator = operator;
@@ -122,13 +122,13 @@ public class SqlCall extends SqlNode
      *
      * @param validator Validator
      * @param scope Validation scope
-     * @param pp ParserPosition indicating the cursor position at which 
+     * @param pp SqlParserPos indicating the cursor position at which 
      * competion hints are requested for
      * @return a string array of valid options
      */
     public String[] findValidOptions(SqlValidator validator, 
         SqlValidator.Scope scope,
-        ParserPosition pp)
+        SqlParserPos pp)
     {
         final SqlNode[] operands = getOperands();
         HashMap sqlids = new HashMap();

@@ -27,7 +27,7 @@ import java.util.TimeZone;
 import net.sf.farrago.resource.FarragoResource;
 
 import org.eigenbase.resource.*;
-import org.eigenbase.sql.parser.ParserUtil;
+import org.eigenbase.sql.parser.SqlParserUtil;
 
 
 /**
@@ -49,10 +49,10 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
 
     // ~ Static fields --------------------------------------------------------
     // Use same format as supported by parser (should be ISO format)
-    public static final String DateFormatStr = ParserUtil.DateFormatStr;
-    public static final String TimeFormatStr = ParserUtil.TimeFormatStr;
+    public static final String DateFormatStr = SqlParserUtil.DateFormatStr;
+    public static final String TimeFormatStr = SqlParserUtil.TimeFormatStr;
     public static final String TimestampFormatStr =
-        ParserUtil.TimestampFormatStr;
+        SqlParserUtil.TimestampFormatStr;
     private static final TimeZone gmtZone = TimeZone.getTimeZone("GMT+0");
 
     /** The default timezone for this Java VM. */
@@ -244,7 +244,7 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
             }
             String date = (String) obj;
 
-            Calendar cal = ParserUtil.parseDateFormat(date, DateFormatStr);
+            Calendar cal = SqlParserUtil.parseDateFormat(date, DateFormatStr);
             if (cal != null) {
                 java.util.Date parsedDate = cal.getTime();
                 assignFrom(parsedDate);
@@ -293,8 +293,8 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
             }
             String date = (String) obj;
 
-            ParserUtil.PrecisionTime pt =
-                ParserUtil.parsePrecisionDateTimeLiteral(date, TimeFormatStr);
+            SqlParserUtil.PrecisionTime pt =
+                SqlParserUtil.parsePrecisionDateTimeLiteral(date, TimeFormatStr);
             if (pt != null) {
                 java.util.Date parsedDate = pt.cal.getTime();
                 assignFrom(parsedDate);
@@ -346,8 +346,8 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
             }
             String date = (String) obj;
 
-            ParserUtil.PrecisionTime pt =
-                ParserUtil.parsePrecisionDateTimeLiteral(date,
+            SqlParserUtil.PrecisionTime pt =
+                SqlParserUtil.parsePrecisionDateTimeLiteral(date,
                     TimestampFormatStr);
             if (pt != null) {
                 java.util.Date parsedDate = pt.cal.getTime();

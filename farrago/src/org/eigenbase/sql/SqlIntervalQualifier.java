@@ -20,7 +20,7 @@
 package org.eigenbase.sql;
 
 import org.eigenbase.util.EnumeratedValues;
-import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.util.SqlVisitor;
 
 /**
@@ -76,7 +76,7 @@ public class SqlIntervalQualifier extends SqlNode
         int startPrecision,
         TimeUnit endUnit,
         int fractionalSecondPrecision,
-        ParserPosition pos) {
+        SqlParserPos pos) {
         super(pos);
         assert(null!=startUnit);
         this.startPrecision = startPrecision;

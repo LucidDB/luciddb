@@ -189,7 +189,7 @@ Error: Dropping routine "UDFTEST"."TO_UPPER2" requires CASCADE because other obj
 . . . . . . . . > returns int
 . . . . . . . . > contains sql
 . . . . . . . . > return add_integers(i,i);
-Error: At line 1, column 1: No match found for function signature ADD_INTEGERS(<NUMERIC>, <NUMERIC>) (state=,code=0)
+Error: At line 1, column 96: No match found for function signature ADD_INTEGERS(<NUMERIC>, <NUMERIC>) (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should succeed
 0: jdbc:farrago:> create schema goodpath
@@ -325,5 +325,108 @@ Error: DDL validation error near line 1, column 8: Return type of routine "UDFTE
 . . . . . . . . > no sql
 . . . . . . . . > external name 
 . . . . . . . . > 'class net.sf.farrago.test.FarragoTestUDR.toHexString(java.lang.Integer)';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test early definition binding
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create function magic(in i bigint)
+. . . . . . . . > returns int
+. . . . . . . . > specific magic10
+. . . . . . . . > contains sql
+. . . . . . . . > return 10;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create function presto()
+. . . . . . . . > returns int
+. . . . . . . . > contains sql
+. . . . . . . . > return magic(1);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create function magic(in i int)
+. . . . . . . . > returns int
+. . . . . . . . > specific magic20
+. . . . . . . . > contains sql
+. . . . . . . . > return 20;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should get 10, even though new overload for magic is a better match
+0: jdbc:farrago:> values presto();
++---------+
+| EXPR$0  |
++---------+
+| 10      |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test stored binding for builtins vs routines
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create function upper(in x varchar(128))
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > contains sql
+. . . . . . . . > return x||'_plus_one';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create function tweedledee()
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > contains sql
+. . . . . . . . > return upper('cobol');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create function tweedledum()
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > contains sql
+. . . . . . . . > return information_schema.upper('cobol');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values tweedledee();
++-----------------+
+|     EXPR$0      |
++-----------------+
+| cobol_plus_one  |
++-----------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values tweedledum();
++---------+
+| EXPR$0  |
++---------+
+| COBOL   |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test conflict detection
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create procedure set_java_property(in name varchar(128),in val varchar(128))
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.setSystemProperty';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  procedures cannot be overloaded on parameter type
+0: jdbc:farrago:> create procedure set_java_property(in name char(128),in val char(128))
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.setSystemProperty';
+Error: DDL validation error near line 1, column 8: Invocation name and parameter type signature of routine "UDFTEST"."SET_JAVA_PROPERTY" conflicts with another routine (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create function piffle(in i int)
+. . . . . . . . > returns int
+. . . . . . . . > specific piffle1
+. . . . . . . . > contains sql
+. . . . . . . . > return 20;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should succeed:  functions can be overloaded on parameter type
+0: jdbc:farrago:> create function piffle(in d double)
+. . . . . . . . > returns int
+. . . . . . . . > specific piffle2
+. . . . . . . . > contains sql
+. . . . . . . . > return 20;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail
+0: jdbc:farrago:> create function piffle(in d double)
+. . . . . . . . > returns int
+. . . . . . . . > specific piffle3
+. . . . . . . . > contains sql
+. . . . . . . . > return 20;
+Error: DDL validation error near line 1, column 8: Invocation name and parameter type signature of routine "UDFTEST"."PIFFLE3" conflicts with another routine (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  even though the parameter type is different, it is
+0: jdbc:farrago:> -- in the same type precedence equivalence class
+0: jdbc:farrago:> create function piffle(in f float)
+. . . . . . . . > returns int
+. . . . . . . . > specific piffle4
+. . . . . . . . > contains sql
+. . . . . . . . > return 20;
+Error: DDL validation error near line 1, column 8: Invocation name and parameter type signature of routine "UDFTEST"."PIFFLE4" conflicts with another routine (state=,code=0)
+0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

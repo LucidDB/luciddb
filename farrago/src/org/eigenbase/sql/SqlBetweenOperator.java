@@ -24,8 +24,8 @@ package org.eigenbase.sql;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.resource.EigenbaseResource;
-import org.eigenbase.sql.parser.ParserPosition;
-import org.eigenbase.sql.parser.ParserUtil;
+import org.eigenbase.sql.parser.SqlParserPos;
+import org.eigenbase.sql.parser.SqlParserUtil;
 import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.type.*;
@@ -69,7 +69,7 @@ public class SqlBetweenOperator extends SqlInfixOperator
 
     //~ Instance fields -------------------------------------------------------
 
-    /** todo: Use a wrapper 'class SqlTempCall(SqlOperator,ParserPosition)
+    /** todo: Use a wrapper 'class SqlTempCall(SqlOperator,SqlParserPos)
      * extends SqlNode' to store extra flags (neg and asymmetric) to calls to
      * BETWEEN. Then we can obsolete flag. SqlTempCall would never have any
      * SqlNodes as children, but it can have flags. */
@@ -212,8 +212,8 @@ public class SqlBetweenOperator extends SqlInfixOperator
         int opOrdinal,
         List list)
     {
-        final ParserUtil.ToTreeListItem betweenNode =
-            (ParserUtil.ToTreeListItem) list.get(opOrdinal);
+        final SqlParserUtil.ToTreeListItem betweenNode =
+            (SqlParserUtil.ToTreeListItem) list.get(opOrdinal);
         SqlOperator op = betweenNode.op;
         assert op == this;
 
@@ -226,16 +226,16 @@ public class SqlBetweenOperator extends SqlInfixOperator
         //    |_____|       |_____|   |_____|
         //     exp0          exp1      exp2
         // Create the expression between 'BETWEEN' and 'AND'.
-        final ParserPosition pos =
+        final SqlParserPos pos =
             ((SqlNode) list.get(opOrdinal + 1)).getParserPosition();
         SqlNode exp1 =
-            ParserUtil.toTreeEx(list, opOrdinal + 1, 0, SqlKind.And);
+            SqlParserUtil.toTreeEx(list, opOrdinal + 1, 0, SqlKind.And);
         if (((opOrdinal + 2) >= list.size())
-                || !(list.get(opOrdinal + 2) instanceof ParserUtil.ToTreeListItem)
-                || (((ParserUtil.ToTreeListItem) list.get(opOrdinal + 2)).op.kind != SqlKind.And)) {
+                || !(list.get(opOrdinal + 2) instanceof SqlParserUtil.ToTreeListItem)
+                || (((SqlParserUtil.ToTreeListItem) list.get(opOrdinal + 2)).op.kind != SqlKind.And)) {
             throw EigenbaseResource.instance().newBetweenWithoutAnd(
-                new Integer(pos.getBeginLine()),
-                new Integer(pos.getBeginColumn()));
+                new Integer(pos.getLineNum()),
+                new Integer(pos.getColumnNum()));
         }
 
         // Create the expression after 'AND', but stopping if we encounter an
@@ -247,7 +247,7 @@ public class SqlBetweenOperator extends SqlInfixOperator
         //   (a BETWEEN b AND c + d) OR e
         // because OR has lower precedence than BETWEEN.
         SqlNode exp2 =
-            ParserUtil.toTreeEx(list, opOrdinal + 3, rightPrec, SqlKind.Other);
+            SqlParserUtil.toTreeEx(list, opOrdinal + 3, rightPrec, SqlKind.Other);
 
         // Create the call.
         SqlNode exp0 = (SqlNode) list.get(opOrdinal - 1);
@@ -257,7 +257,7 @@ public class SqlBetweenOperator extends SqlInfixOperator
                 betweenNode.pos);
 
         // Replace all of the matched nodes with the single reduced node.
-        ParserUtil.replaceSublist(list, opOrdinal - 1, opOrdinal + 4, newExp);
+        SqlParserUtil.replaceSublist(list, opOrdinal - 1, opOrdinal + 4, newExp);
 
         // Return the ordinal of the new current node.
         return opOrdinal - 1;
@@ -289,18 +289,18 @@ public class SqlBetweenOperator extends SqlInfixOperator
         private Flag(
             String name,
             boolean isAsymmetric,
-            ParserPosition pos)
+            SqlParserPos pos)
         {
             super(name, pos);
             this.isAsymmetric = isAsymmetric;
         }
 
-        public static final Flag createAsymmetric(ParserPosition pos)
+        public static final Flag createAsymmetric(SqlParserPos pos)
         {
             return new Flag("Asymmetric", true, pos);
         }
 
-        public static final Flag createSymmetric(ParserPosition pos)
+        public static final Flag createSymmetric(SqlParserPos pos)
         {
             return new Flag("Symmetric", false, pos);
         }

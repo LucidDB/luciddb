@@ -154,5 +154,8 @@ create view columns_view as
         c."type" = t."mofId";
 
 -- TODO:  all the rest
+
+-- just a placeholder for now
+create schema localdb.information_schema;
          
 commit;

@@ -21,7 +21,7 @@
 
 package org.eigenbase.sql;
 
-import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.parser.SqlParserPos;
 
 
 /**
@@ -46,7 +46,7 @@ public class SqlInsert extends SqlCall
         SqlIdentifier targetTable,
         SqlNode source,
         SqlNodeList columnList,
-        ParserPosition pos)
+        SqlParserPos pos)
     {
         super(operator, new SqlNode[OPERAND_COUNT], pos);
         operands[TARGET_TABLE_OPERAND] = targetTable;

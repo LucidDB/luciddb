@@ -22,7 +22,7 @@ package org.eigenbase.sql.util;
 
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.util.MultiMap;
 import org.eigenbase.util.Util;
 

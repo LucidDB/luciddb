@@ -22,7 +22,7 @@
 package org.eigenbase.sql;
 
 import org.eigenbase.sql.SqlLiteral;
-import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.util.Util;
 
@@ -57,7 +57,7 @@ public class SqlSymbol extends SqlLiteral
 
     public SqlSymbol(
         String name,
-        ParserPosition pos)
+        SqlParserPos pos)
     {
         super(name, SqlTypeName.Symbol, pos);
         this.name = name;

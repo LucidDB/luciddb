@@ -24,7 +24,7 @@ package org.eigenbase.test;
 import junit.framework.TestCase;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.sql.SqlValidator;
-import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.parser.SqlParseException;
 import org.eigenbase.sql.advise.*;
 import org.eigenbase.sql.type.*;
@@ -60,7 +60,7 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         expected.add("CUSTOMER");
         expected.add("CONTACT");
         expected.add("ACCOUNT");
-        hint(sql, new ParserPosition(1,31), expected); // join
+        hint(sql, new SqlParserPos(1,31), expected); // join
         
         sql = "select a.empno, b.deptno from dummy a, sales.dummy b";
         expected.clear();
@@ -68,7 +68,7 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         expected.add("DEPT");
         expected.add("BONUS");
         expected.add("SALGRADE");
-        hint(sql, new ParserPosition(1,40), expected); // join
+        hint(sql, new SqlParserPos(1,40), expected); // join
     }
 
     public void testJoin() {
@@ -84,14 +84,14 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         expected.add("CUSTOMER");
         expected.add("CONTACT");
         expected.add("ACCOUNT");
-        hint(sql, new ParserPosition(1,31), expected); // from
+        hint(sql, new SqlParserPos(1,31), expected); // from
 
         expected.clear();
         expected.add("EMP");
         expected.add("DEPT");
         expected.add("BONUS");
         expected.add("SALGRADE");
-        hint(sql, new ParserPosition(1,44), expected); // join
+        hint(sql, new SqlParserPos(1,44), expected); // join
     }
 
     public void testOnCondition() {
@@ -107,12 +107,12 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         expected.add("SAL");
         expected.add("COMM");
         expected.add("DEPTNO");
-        hint(sql, new ParserPosition(1,64), expected); // on left
+        hint(sql, new SqlParserPos(1,64), expected); // on left
 
         expected.clear();
         expected.add("DEPTNO");
         expected.add("NAME");
-        hint(sql, new ParserPosition(1,73), expected); // on right
+        hint(sql, new SqlParserPos(1,73), expected); // on right
     }
 
     public void testFromWhere() {
@@ -128,7 +128,7 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         expected.add("SAL");
         expected.add("COMM");
         expected.add("DEPTNO");
-        hint(sql, new ParserPosition(1,72), expected); // where list
+        hint(sql, new SqlParserPos(1,72), expected); // where list
         
         sql = "select a.empno, b.deptno from sales.emp a, sales.dept b "
             + "where dummy=1";
@@ -144,7 +144,7 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         expected.add("COMM");
         expected.add("DEPTNO");
         expected.add("NAME");
-        hint(sql, new ParserPosition(1,63), expected); // where list
+        hint(sql, new SqlParserPos(1,63), expected); // where list
     }
     
     public void testWhereList() {
@@ -163,7 +163,7 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         expected.add("COMM");
         expected.add("DEPTNO");
         expected.add("NAME");
-        hint(sql, new ParserPosition(1,88), expected); // where list
+        hint(sql, new SqlParserPos(1,88), expected); // where list
         
         sql = "select a.empno, b.deptno from sales.emp a join sales.dept b "
             + "on a.deptno=b.deptno where a.dummy=1";
@@ -176,7 +176,7 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         expected.add("SAL");
         expected.add("COMM");
         expected.add("DEPTNO");
-        hint(sql, new ParserPosition(1,88), expected); // where list
+        hint(sql, new SqlParserPos(1,88), expected); // where list
     }
         
     public void testSelectList() {
@@ -195,11 +195,11 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         expected.add("COMM");
         expected.add("DEPTNO");
         expected.add("NAME");
-        hint(sql, new ParserPosition(1,8), expected); // select list
+        hint(sql, new SqlParserPos(1,8), expected); // select list
         expected.clear();
         expected.add("DEPTNO");
         expected.add("NAME");
-        hint(sql, new ParserPosition(1,15), expected); // select list
+        hint(sql, new SqlParserPos(1,15), expected); // select list
         
         sql = "select emp.dummy from sales.emp";
         expected.clear();
@@ -211,7 +211,7 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         expected.add("SAL");
         expected.add("COMM");
         expected.add("DEPTNO");
-        hint(sql, new ParserPosition(1,8), expected); // select list
+        hint(sql, new SqlParserPos(1,8), expected); // select list
     }
 
     public void testOrderByList() {
@@ -220,7 +220,7 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         ArrayList expected = new ArrayList();
         expected.add("SALES.EMP");
         expected.add("EMPNO");
-        hint(sql, new ParserPosition(1,56), expected); // where list
+        hint(sql, new SqlParserPos(1,56), expected); // where list
     }
 
 
@@ -230,17 +230,17 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         ArrayList expected = new ArrayList();
         expected.add("X");
         expected.add("Y");
-        hint(sql, new ParserPosition(1,8), expected); // select list
+        hint(sql, new SqlParserPos(1,8), expected); // select list
         
         sql = "select t.dummy from (select 1 as x, 2 as y from sales.emp) as t where t.dummy=1";
         expected.clear();
         expected.add("X");
         expected.add("Y");
-        hint(sql, new ParserPosition(1,71), expected); // select list
+        hint(sql, new SqlParserPos(1,71), expected); // select list
 
     }
 
-    public void hint(String sql, ParserPosition pp, List expectedResults) 
+    public void hint(String sql, SqlParserPos pp, List expectedResults) 
     {
         SqlValidator validator;
         validator = tester.getValidator();

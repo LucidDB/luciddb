@@ -29,7 +29,7 @@ import net.sf.farrago.util.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.util.*;
 
@@ -96,7 +96,7 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
                 null,
                 null,
                 null,
-                ParserPosition.ZERO);
+                SqlParserPos.ZERO);
 
         if (rowType == null) {
             String sql = select.toSqlString(dialect);

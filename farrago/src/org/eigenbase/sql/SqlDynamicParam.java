@@ -21,7 +21,7 @@
 
 package org.eigenbase.sql;
 
-import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.util.SqlVisitor;
 
 
@@ -44,7 +44,7 @@ public class SqlDynamicParam extends SqlNode
 
     public SqlDynamicParam(
         int index,
-        ParserPosition pos)
+        SqlParserPos pos)
     {
         super(pos);
         this.index = index;

@@ -37,7 +37,7 @@ import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
-import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.util.JdbcDataSource;
 import org.eigenbase.util.Util;
 
@@ -106,7 +106,7 @@ public class JdbcQuery extends AbstractRelNode implements ResultSetRel
         if (sql == null) {
             sql = SqlStdOperatorTable.instance().selectOperator.createCall(null,
                 null, null, null, null, null, null, null,
-                ParserPosition.ZERO);
+                SqlParserPos.ZERO);
         } else {
             Util.pre(
                 sql.isA(SqlKind.Select),

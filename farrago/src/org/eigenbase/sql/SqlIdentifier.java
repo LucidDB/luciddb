@@ -21,7 +21,7 @@
 
 package org.eigenbase.sql;
 
-import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.util.SqlVisitor;
 import org.eigenbase.util.Util;
 import java.util.ArrayList;
@@ -52,7 +52,7 @@ public class SqlIdentifier extends SqlNode
     public SqlIdentifier(
         String [] names,
         SqlCollation collation,
-        ParserPosition pos)
+        SqlParserPos pos)
     {
         super(pos);
         this.names = names;
@@ -61,7 +61,7 @@ public class SqlIdentifier extends SqlNode
 
     public SqlIdentifier(
         String [] names,
-        ParserPosition pos)
+        SqlParserPos pos)
     {
         super(pos);
         this.names = names;
@@ -74,7 +74,7 @@ public class SqlIdentifier extends SqlNode
     public SqlIdentifier(
         String name,
         SqlCollation collation,
-        ParserPosition pos)
+        SqlParserPos pos)
     {
         this(new String [] { name }, collation, pos);
     }
@@ -84,7 +84,7 @@ public class SqlIdentifier extends SqlNode
      */
     public SqlIdentifier(
         String name,
-        ParserPosition pos)
+        SqlParserPos pos)
     {
         this(new String [] { name }, null, pos);
     }

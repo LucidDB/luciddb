@@ -21,7 +21,7 @@
 
 package org.eigenbase.sql;
 
-import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.util.EnumeratedValues;
 
@@ -56,7 +56,7 @@ public class SqlJoinOperator extends SqlOperator
 
     public SqlCall createCall(
         SqlNode [] operands,
-        ParserPosition pos)
+        SqlParserPos pos)
     {
         assert (operands[SqlJoin.IS_NATURAL_OPERAND] instanceof SqlLiteral);
         final SqlLiteral isNatural = (SqlLiteral) operands[SqlJoin.IS_NATURAL_OPERAND];
@@ -77,7 +77,7 @@ public class SqlJoinOperator extends SqlOperator
         SqlNode right,
         SqlLiteral conditionType,
         SqlNode condition,
-        ParserPosition pos)
+        SqlParserPos pos)
     {
         return createCall(
             new SqlNode [] {

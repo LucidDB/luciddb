@@ -47,7 +47,7 @@ import java.util.logging.Level;
  * @since Oct 7, 2003
  * @version $Id$
  **/
-public final class ParserUtil
+public final class SqlParserUtil
 {
     //~ Static fields/initializers --------------------------------------------
 
@@ -64,7 +64,7 @@ public final class ParserUtil
 
     //~ Constructors ----------------------------------------------------------
 
-    private ParserUtil()
+    private SqlParserUtil()
     {
     }
 
@@ -590,7 +590,7 @@ outer:
             while (i < count) {
                 SqlOperator previous;
                 SqlOperator current = ((ToTreeListItem) list.get(i)).op;
-                ParserPosition currentPos = ((ToTreeListItem) list.get(i)).pos;
+                SqlParserPos currentPos = ((ToTreeListItem) list.get(i)).pos;
                 if ((stopperKind != SqlKind.Other)
                         && (current.kind == stopperKind)) {
                     break outer;
@@ -754,7 +754,7 @@ outer:
     //~ Inner Classes ---------------------------------------------------------
 
     /**
-     * Helper class for {@link ParserUtil#parsePrecisionDateTimeLiteral}
+     * Helper class for {@link SqlParserUtil#parsePrecisionDateTimeLiteral}
      */
     public static class PrecisionTime
     {
@@ -763,18 +763,18 @@ outer:
     }
 
     /**
-     * Class that holds a {@link SqlOperator} and a {@link ParserPosition}.
+     * Class that holds a {@link SqlOperator} and a {@link SqlParserPos}.
      * Used by {@link #toTree} and the parser to associate a parsed operator
      * with a parser position.
      */
     public static class ToTreeListItem
     {
         public SqlOperator op;
-        public ParserPosition pos;
+        public SqlParserPos pos;
 
         public ToTreeListItem(
             SqlOperator op,
-            ParserPosition pos)
+            SqlParserPos pos)
         {
             this.op = op;
             this.pos = pos;
@@ -783,4 +783,4 @@ outer:
 }
 
 
-// End ParserUtil.java
+// End SqlParserUtil.java

@@ -59,9 +59,9 @@ JAVACODE List startList(Object o)
  * future changes to the grammar, making it very brittle.
  */
 
-JAVACODE ParserPosition getPos()
+JAVACODE SqlParserPos getPos()
 {
-    return new ParserPosition(
+    return new SqlParserPos(
             token.beginLine,
             token.beginColumn);
 }
@@ -99,47 +99,47 @@ JAVACODE void checkNonQueryExpression(ExprContext exprContext)
 }
 
 // The date/time parse utilities have to live here, instead of in the
-// ParserUtil class because ParseException is ambigous, and CommonParser has to
-// live in multiple packages.
+// SqlParserUtil class because ParseException is ambigous, and CommonParser has
+// to live in multiple packages.
 
-JAVACODE SqlDateLiteral parseDateLiteral(String s, ParserPosition pos) throws ParseException {
+JAVACODE SqlDateLiteral parseDateLiteral(String s, SqlParserPos pos) throws ParseException {
     pos = getPos();
-    String dateStr = ParserUtil.strip(s, "'");
-    Calendar cal = ParserUtil.parseDateFormat(dateStr, ParserUtil.DateFormatStr);
+    String dateStr = SqlParserUtil.strip(s, "'");
+    Calendar cal = SqlParserUtil.parseDateFormat(dateStr, SqlParserUtil.DateFormatStr);
     if (null==cal) {
         EigenbaseResource res = EigenbaseResource.instance();
         String msg = res.getIllegalLiteral("DATE", s, pos.toString(),
-                         res.getBadFormat(ParserUtil.DateFormatStr));
+                         res.getBadFormat(SqlParserUtil.DateFormatStr));
         throw new ParseException(msg);
     }
     return SqlLiteral.createDate(cal, pos);
 }
 
-JAVACODE SqlTimeLiteral parseTimeLiteral(String s, ParserPosition pos)
+JAVACODE SqlTimeLiteral parseTimeLiteral(String s, SqlParserPos pos)
     throws ParseException{
     pos = getPos();
-    String dateStr = ParserUtil.strip(s, "'");
-    ParserUtil.PrecisionTime pt =
-        ParserUtil.parsePrecisionDateTimeLiteral(dateStr, ParserUtil.TimeFormatStr);
+    String dateStr = SqlParserUtil.strip(s, "'");
+    SqlParserUtil.PrecisionTime pt =
+        SqlParserUtil.parsePrecisionDateTimeLiteral(dateStr, SqlParserUtil.TimeFormatStr);
     if (null==pt) {
         EigenbaseResource res = EigenbaseResource.instance();
         String msg = res.getIllegalLiteral("TIME", s, pos.toString(),
-                         res.getBadFormat(ParserUtil.TimeFormatStr));
+                         res.getBadFormat(SqlParserUtil.TimeFormatStr));
         throw new ParseException(msg);
     }
     return SqlLiteral.createTime(pt.cal, pt.precision, pos);
 }
 
-JAVACODE SqlTimestampLiteral parseTimestampLiteral(String s, ParserPosition pos)
+JAVACODE SqlTimestampLiteral parseTimestampLiteral(String s, SqlParserPos pos)
     throws ParseException{
     pos = getPos();
-    String dateStr = ParserUtil.strip(s, "'");
-    ParserUtil.PrecisionTime pt =
-        ParserUtil.parsePrecisionDateTimeLiteral(dateStr, ParserUtil.TimestampFormatStr);
+    String dateStr = SqlParserUtil.strip(s, "'");
+    SqlParserUtil.PrecisionTime pt =
+        SqlParserUtil.parsePrecisionDateTimeLiteral(dateStr, SqlParserUtil.TimestampFormatStr);
     if (null==pt) {
         EigenbaseResource res = EigenbaseResource.instance();
         String msg = res.getIllegalLiteral("TIMESTAMP", s, pos.toString(),
-                         res.getBadFormat(ParserUtil.TimestampFormatStr));
+                         res.getBadFormat(SqlParserUtil.TimestampFormatStr));
         throw new ParseException(msg);
     }
     return SqlLiteral.createTimestamp(pt.cal, pt.precision, pos);
@@ -150,9 +150,9 @@ JAVACODE SqlIntervalLiteral parseIntervalLiteral(
     String s,
     SqlIntervalQualifier intervalQualifier) throws ParseException
 {
-    ParserPosition pos = getPos();
-    String intervalStr = ParserUtil.strip(s, "'");
-    int[] values = ParserUtil.parseIntervalValue(intervalStr, intervalQualifier);
+    SqlParserPos pos = getPos();
+    String intervalStr = SqlParserUtil.strip(s, "'");
+    int[] values = SqlParserUtil.parseIntervalValue(intervalStr, intervalQualifier);
     if (null==values) {
         EigenbaseResource res = EigenbaseResource.instance();
         String msg = res.getIllegalIntervalLiteral(
@@ -175,7 +175,7 @@ SqlNode OrderedQueryOrExpr(ExprContext exprContext) :
 {
     SqlNode e;
     SqlNodeList orderBy;
-    ParserPosition pos;
+    SqlParserPos pos;
 }
 {
     (
@@ -348,7 +348,7 @@ SqlSelect SqlSelect() :
     SqlNode groupBy;
     SqlNode having;
     SqlNodeList windowDecls;
-    ParserPosition pos;
+    SqlParserPos pos;
 }
 {
     <SELECT>
@@ -390,7 +390,7 @@ SqlNode SqlExplain() :
 {
     SqlNode stmt;
     boolean withImplementation = true;
-    ParserPosition pos;
+    SqlParserPos pos;
 }
 {
     <EXPLAIN> <PLAN> [ withImplementation = WithImplementation() ] <FOR> (
@@ -443,8 +443,8 @@ SqlNode SqlProcedureCall() :
 {
     SqlIdentifier name;
     List args;
-    ParserPosition callPos;
-    ParserPosition funcPos;
+    SqlParserPos callPos;
+    SqlParserPos funcPos;
 }
 {
     <CALL>
@@ -456,14 +456,14 @@ SqlNode SqlProcedureCall() :
             funcPos = getPos();
         }
     (
-        LOOKAHEAD(2) <LPAREN> <RPAREN> { args = ParserUtil.emptyList; }
+        LOOKAHEAD(2) <LPAREN> <RPAREN> { args = SqlParserUtil.emptyList; }
         | args = ParenthesizedQueryOrCommaList(EXPR_ACCEPT_SUBQUERY)
     )
         {
         }
     {
         SqlNode function = createCall(
-            name, ParserUtil.toNodeArray(args), funcPos,
+            name, SqlParserUtil.toNodeArray(args), funcPos,
             SqlFunction.SqlFuncTypeName.UserDefinedProcedure);
         return opTab.procedureCallOperator.createCall(function, callPos);
     }
@@ -477,8 +477,8 @@ SqlNode SqlInsert() :
     SqlIdentifier table;
     SqlNode source;
     List columnList = null;
-    ParserPosition pos;
-    ParserPosition columnListPos = null;
+    SqlParserPos pos;
+    SqlParserPos columnListPos = null;
 }
 {
     <INSERT> <INTO> table = CompoundIdentifier()
@@ -516,7 +516,7 @@ SqlNode SqlDelete() :
 {
     SqlIdentifier table;
     SqlNode condition;
-    ParserPosition pos;
+    SqlParserPos pos;
 }
 {
     <DELETE>
@@ -546,7 +546,7 @@ SqlNode SqlUpdate() :
     SqlNodeList targetColumnList;
     SqlIdentifier id;
     SqlNode exp;
-    ParserPosition pos;
+    SqlParserPos pos;
 }
 {
     <UPDATE> table = CompoundIdentifier()
@@ -612,7 +612,7 @@ SqlNode SelectItem() :
 {
     SqlNode e;
     SqlIdentifier id;
-    ParserPosition pos;
+    SqlParserPos pos;
 }
 {
     e = SelectExpression()
@@ -630,7 +630,7 @@ SqlNode SelectExpression() :
 {
     SqlNode e;
     String id;
-    ParserPosition pos;
+    SqlParserPos pos;
 }
 {
     LOOKAHEAD(3)
@@ -662,9 +662,9 @@ SqlNode FromClause() :
     boolean isNatural;
     SqlJoinOperator.JoinType joinType;
     List list;
-    ParserPosition pos;
-    ParserPosition joinTypePos;
-    ParserPosition naturalPos;
+    SqlParserPos pos;
+    SqlParserPos joinTypePos;
+    SqlParserPos naturalPos;
 }
 {
     e = TableRef()
@@ -760,7 +760,7 @@ SqlNode TableRef() :
     SqlNode tableRef;
     SqlNode over;
     String alias;
-    ParserPosition pos;
+    SqlParserPos pos;
     List args;
 }
 {
@@ -787,7 +787,7 @@ SqlNode TableRef() :
         args = ParenthesizedQueryOrCommaList(EXPR_ACCEPT_SUBQUERY)
         {
             tableRef = opTab.unnestOperator.createCall(
-                                        ParserUtil.toNodeArray(args),
+                                        SqlParserUtil.toNodeArray(args),
                                         getPos());
         }
     )
@@ -816,7 +816,7 @@ SqlNode TableRef() :
 SqlNode ExplicitTable() :
 {
     SqlNode tableRef;
-    ParserPosition pos;
+    SqlParserPos pos;
 }
 {
     <TABLE> tableRef = CompoundIdentifier()
@@ -832,7 +832,7 @@ SqlNode ExplicitTable() :
 SqlNode TableConstructor() :
 {
     SqlNodeList rowConstructorList;
-    ParserPosition pos;
+    SqlParserPos pos;
 }
 {
     <VALUES>
@@ -848,7 +848,7 @@ SqlNode TableConstructor() :
 /**
  * Parses one or more rows in a VALUES expression.
  */
-SqlNodeList RowConstructorList(ParserPosition pos) :
+SqlNodeList RowConstructorList(SqlParserPos pos) :
 {
     SqlNodeList list = new SqlNodeList(pos);
     SqlNode rowConstructor;
@@ -873,7 +873,7 @@ SqlNode RowConstructor() :
 {
     List valueList;
     SqlNode value;
-    ParserPosition pos;
+    SqlParserPos pos;
 }
 {
     // hints are necessary here due to common LPAREN prefixes
@@ -908,7 +908,7 @@ SqlNode RowConstructor() :
             // subqueries inside of ROW and row subqueries?  The standard does,
             // but the distinction seems to be purely syntactic.
             return opTab.rowConstructor.createCall(
-                ParserUtil.toNodeArray(valueList), pos);
+                SqlParserUtil.toNodeArray(valueList), pos);
         }
 }
 
@@ -932,7 +932,7 @@ SqlNode GroupByOpt() :
 {
     List list;
     SqlNode e;
-    ParserPosition pos;
+    SqlParserPos pos;
 }
 {
     <GROUP> <BY> e = Expression(EXPR_ACCEPT_SUBQUERY)
@@ -970,7 +970,7 @@ SqlNodeList WindowOpt() :
     SqlIdentifier id;
     SqlWindow e;
     List list;
-    ParserPosition pos;
+    SqlParserPos pos;
 }
 {
     <WINDOW> id = SimpleIdentifier() <AS> e = WindowSpecification()
@@ -1005,7 +1005,7 @@ SqlWindow WindowSpecification() :
     SqlNodeList orderList;
     boolean isRows = false;
     SqlNode lowerBound = null, upperBound = null;
-    ParserPosition pos;
+    SqlParserPos pos;
 }
 {
     <LPAREN>
@@ -1049,7 +1049,7 @@ SqlWindow WindowSpecification() :
 SqlNode WindowRange() :
 {
     SqlLiteral literal;
-    ParserPosition pos;
+    SqlParserPos pos;
 }
 {
     <CURRENT> <ROW> {
@@ -1091,7 +1091,7 @@ SqlNodeList OrderBy(boolean accept) :
 {
     List list;
     SqlNode e;
-    ParserPosition pos;
+    SqlParserPos pos;
 }
 {
     <ORDER>
@@ -1121,7 +1121,7 @@ SqlNodeList OrderBy(boolean accept) :
 SqlNode OrderItem() :
 {
     SqlNode e;
-    ParserPosition pos;
+    SqlParserPos pos;
 }
 {
     e = Expression(EXPR_ACCEPT_SUBQUERY)
@@ -1164,7 +1164,7 @@ SqlNode QueryOrExpr(ExprContext exprContext) :
 {
     SqlNode e;
     SqlOperator op;
-    ParserPosition pos;
+    SqlParserPos pos;
     List list;
 }
 {
@@ -1190,12 +1190,12 @@ SqlNode QueryOrExpr(ExprContext exprContext) :
         }
         e = LeafQueryOrExpr(EXPR_ACCEPT_QUERY)
         {
-            list.add(new ParserUtil.ToTreeListItem(op, pos));
+            list.add(new SqlParserUtil.ToTreeListItem(op, pos));
             list.add(e);
         }
     )*
         {
-            e = ParserUtil.toTree(list);
+            e = SqlParserUtil.toTree(list);
             return e;
         }
 }
@@ -1230,7 +1230,7 @@ SqlNode Expression(ExprContext exprContext) :
 {
     list = Expression2(exprContext)
     {
-        e = ParserUtil.toTree(list);
+        e = SqlParserUtil.toTree(list);
         return e;
     }
 }
@@ -1256,7 +1256,7 @@ List Expression2(ExprContext exprContext) :
     List list, list2;
     SqlNode e;
     SqlOperator op;
-    ParserPosition pos;
+    SqlParserPos pos;
     SqlNodeList orderBy;
     SqlIntervalQualifier intervalQualifier;
 }
@@ -1273,7 +1273,7 @@ List Expression2(ExprContext exprContext) :
                 {
                     checkNonQueryExpression(exprContext);
                     pos = getPos();
-                    list.add(new ParserUtil.ToTreeListItem(opTab.inOperator,pos));
+                    list.add(new SqlParserUtil.ToTreeListItem(opTab.inOperator,pos));
                 }
                 list2 = ParenthesizedQueryOrCommaList(EXPR_ACCEPT_ALL)
                 {
@@ -1320,7 +1320,7 @@ List Expression2(ExprContext exprContext) :
                 )
                 e = Expression3(EXPR_ACCEPT_SUBQUERY)
                 {
-                    list.add(new ParserUtil.ToTreeListItem(op, pos));
+                    list.add(new SqlParserUtil.ToTreeListItem(op, pos));
                     list.add(e);
                 }
             |
@@ -1342,7 +1342,7 @@ List Expression2(ExprContext exprContext) :
                 )
                 list2 = Expression2(EXPR_ACCEPT_SUBQUERY)
                 {
-                    list.add(new ParserUtil.ToTreeListItem(op, pos));
+                    list.add(new SqlParserUtil.ToTreeListItem(op, pos));
                     list.addAll(list2);
                 }
                 [
@@ -1350,7 +1350,7 @@ List Expression2(ExprContext exprContext) :
                 <ESCAPE> e = Expression3(EXPR_ACCEPT_SUBQUERY)
                     {
                         pos = getPos();
-                        list.add(new ParserUtil.ToTreeListItem(opTab.escapeOperator, pos));
+                        list.add(new SqlParserUtil.ToTreeListItem(opTab.escapeOperator, pos));
                         list.add(e);
                     }
                 ]
@@ -1361,7 +1361,7 @@ List Expression2(ExprContext exprContext) :
                 }
                 e = Expression3(EXPR_ACCEPT_SUBQUERY)
                 {
-                    list.add(new ParserUtil.ToTreeListItem(op, getPos()));
+                    list.add(new SqlParserUtil.ToTreeListItem(op, getPos()));
                     list.add(e);
                 }
             |
@@ -1369,7 +1369,7 @@ List Expression2(ExprContext exprContext) :
                     checkNonQueryExpression(exprContext);
                 }
                 op = PostfixRowOperator() {
-                    list.add(new ParserUtil.ToTreeListItem(op, getPos()));
+                    list.add(new SqlParserUtil.ToTreeListItem(op, getPos()));
                 }
             )
         )+
@@ -1394,8 +1394,8 @@ SqlNode Expression3(ExprContext exprContext) :
     List list2;
     SqlPrefixOperator op;
     boolean rowSeen = false;
-    ParserPosition pos;
-    ParserPosition prefixRowOpPos;
+    SqlParserPos pos;
+    SqlParserPos prefixRowOpPos;
 }
 {
     op = PrefixRowOperator() {
@@ -1419,7 +1419,7 @@ SqlNode Expression3(ExprContext exprContext) :
         if (rowSeen) {
             // interpret as row constructor
             return opTab.rowConstructor.createCall(
-                    ParserUtil.toNodeArray(list), pos);
+                    SqlParserUtil.toNodeArray(list), pos);
         }
     }
     [
@@ -1432,7 +1432,7 @@ SqlNode Expression3(ExprContext exprContext) :
                 }
                 list.addAll(list2);
                 return opTab.overlapsOperator.createCall(
-                                        ParserUtil.toNodeArray(list), getPos());
+                                        SqlParserUtil.toNodeArray(list), getPos());
            }
        )
        |
@@ -1452,7 +1452,7 @@ SqlNode Expression3(ExprContext exprContext) :
                     list2.add(e);
                 }
                 return opTab.minusDateOperator.createCall(
-                                        ParserUtil.toNodeArray(list2), getPos());
+                                        SqlParserUtil.toNodeArray(list2), getPos());
             }
        )
     ]
@@ -1463,7 +1463,7 @@ SqlNode Expression3(ExprContext exprContext) :
         } else {
             // interpret as row constructor
             return opTab.rowConstructor.createCall(
-                    ParserUtil.toNodeArray(list), pos);
+                    SqlParserUtil.toNodeArray(list), pos);
         }
     }
 
@@ -1489,9 +1489,9 @@ SqlCollation CollateClause() :
 SqlNode AtomicRowExpression() :
 {
     SqlNode e;
-    ParserPosition whenPos;
-    ParserPosition thenPos;
-    ParserPosition casePos;
+    SqlParserPos whenPos;
+    SqlParserPos thenPos;
+    SqlParserPos casePos;
 }
 {
     e = Literal() { return e; }
@@ -1550,7 +1550,7 @@ SqlNode AtomicRowExpression() :
 SqlNode Literal() :
 {
     SqlNode e;
-    ParserPosition pos = getPos();
+    SqlParserPos pos = getPos();
 }
 {
     e = NumericLiteral(pos)       { return e; }
@@ -1570,7 +1570,7 @@ SqlLiteral StrictLiteral() :
 {
     SqlLiteral lit;
     SqlNode e;
-    ParserPosition pos = getPos();
+    SqlParserPos pos = getPos();
 }
 {
     lit = NumericLiteral(pos)     { return lit; }
@@ -1582,7 +1582,7 @@ SqlLiteral StrictLiteral() :
 
 
 /** Parses a numeric literal */
-SqlLiteral NumericLiteral(ParserPosition pos) :
+SqlLiteral NumericLiteral(SqlParserPos pos) :
 {
 }
 {
@@ -1600,7 +1600,7 @@ SqlLiteral NumericLiteral(ParserPosition pos) :
 }
 
 /** Parse a special literal keyword */
-SqlLiteral SpecialLiteral(ParserPosition pos) :
+SqlLiteral SpecialLiteral(SqlParserPos pos) :
 {
 }
 {
@@ -1618,11 +1618,11 @@ SqlLiteral SpecialLiteral(ParserPosition pos) :
  * lines.  For a simple literal, the result is an SqlLiteral.  For a continued
  * literal, the result is an SqlCall expression, which concatenates 2 or more
  * string literals; the validator reduces this.
- * @param pos ParserPosition at start.
+ * @param pos SqlParserPos at start.
  * @param strict when false, allow continued literals; when true, forbid them.
  * @return a literal expression. When strict, returns an SqlLiteral.
  */
-SqlNode StringLiteral(ParserPosition pos, boolean strict) :
+SqlNode StringLiteral(SqlParserPos pos, boolean strict) :
 {
     String p;
     int nfrags = 0;
@@ -1638,7 +1638,7 @@ SqlNode StringLiteral(ParserPosition pos, boolean strict) :
 
     <BIT_STRING_LITERAL>
         {
-            p = ParserUtil.trim(token.image, "bB'");
+            p = SqlParserUtil.trim(token.image, "bB'");
             frags = startList(SqlLiteral.BitStringLiteral.create(p, pos));
             nfrags++;
         }
@@ -1646,7 +1646,7 @@ SqlNode StringLiteral(ParserPosition pos, boolean strict) :
         <QUOTED_STRING>
         {
             try {
-                p = ParserUtil.trim(token.image, "'"); // no embedded quotes
+                p = SqlParserUtil.trim(token.image, "'"); // no embedded quotes
                 frags.add(SqlLiteral.BitStringLiteral.create(p, getPos()));
                 nfrags++;
             } catch (NumberFormatException ex) {
@@ -1669,7 +1669,7 @@ SqlNode StringLiteral(ParserPosition pos, boolean strict) :
 
 |
     <BINARY_STRING_LITERAL> {
-        p = ParserUtil.trim(token.image, "xX'");
+        p = SqlParserUtil.trim(token.image, "xX'");
         frags = startList(SqlLiteral.createBinaryString(p, pos));
         nfrags++;
     }
@@ -1677,7 +1677,7 @@ SqlNode StringLiteral(ParserPosition pos, boolean strict) :
         <QUOTED_STRING>
        {
            try {
-               p = ParserUtil.trim(token.image, "'"); // no embedded quotes
+               p = SqlParserUtil.trim(token.image, "'"); // no embedded quotes
                frags.add(SqlLiteral.createBinaryString(p, getPos()));
                nfrags++;
            } catch (NumberFormatException ex) {
@@ -1701,18 +1701,18 @@ SqlNode StringLiteral(ParserPosition pos, boolean strict) :
         SqlCollation collation = null;
         String charSet = null;
     }
-    (    <PREFIXED_STRING_LITERAL> { charSet = ParserUtil.getCharacterSet(token.image); }
+    (    <PREFIXED_STRING_LITERAL> { charSet = SqlParserUtil.getCharacterSet(token.image); }
        | <QUOTED_STRING>
     )
         {
-            p = ParserUtil.parseString(token.image);
+            p = SqlParserUtil.parseString(token.image);
             frags = startList(SqlLiteral.createCharString(p, charSet, pos));
             nfrags++;
         }
     (
         <QUOTED_STRING>
         {
-            p = ParserUtil.parseString(token.image);
+            p = SqlParserUtil.parseString(token.image);
             frags.add(SqlLiteral.createCharString(p, charSet, getPos()));
             nfrags++;
         }
@@ -1738,7 +1738,7 @@ SqlNode StringLiteral(ParserPosition pos, boolean strict) :
 /**
  * Parses a date/time literal.
  */
-SqlLiteral DateTimeLiteral(ParserPosition pos) :
+SqlLiteral DateTimeLiteral(SqlParserPos pos) :
 {
     String  p;
 }
@@ -1792,7 +1792,7 @@ SqlNode MultisetConstructor() :
     )*
     <RBRACKET>
     {return opTab.multisetValueConstructor.createCall(
-                ParserUtil.toNodeArray(args), getPos());}
+                SqlParserUtil.toNodeArray(args), getPos());}
 
 }
 
@@ -1881,7 +1881,7 @@ SqlIntervalQualifier IntervalQualifier() :
  */
 SqlDynamicParam DynamicParam() :
 {
-    ParserPosition pos;
+    SqlParserPos pos;
 }
 {
     <HOOK>
@@ -1902,7 +1902,7 @@ String Identifier() :
 {
     (<A> | <IDENTIFIER>) {return getToken(0).image.toUpperCase();}
 |
-    <QUOTED_IDENTIFIER> { return ParserUtil.strip(getToken(0).image, "\""); }
+    <QUOTED_IDENTIFIER> { return SqlParserUtil.strip(getToken(0).image, "\""); }
 |
     kw = NonReservedKeyWord() {return kw;}
 }
@@ -1914,7 +1914,7 @@ SqlIdentifier SimpleIdentifier() :
 {
     String p;
     SqlCollation collation=null;
-    ParserPosition pos;
+    SqlParserPos pos;
 }
 {
     p = Identifier(){pos = getPos();}
@@ -1945,13 +1945,13 @@ SqlIdentifier CompoundIdentifier() :
     List list = new ArrayList();
     String p;
     SqlCollation collation=null;
-    ParserPosition pos;
+    SqlParserPos pos;
 }
 {
     (p = Identifier() {pos = getPos();list.add(p);})
     (<DOT> p = Identifier() {list.add(p);})*
     [collation = CollateClause()]
-    {return new SqlIdentifier(ParserUtil.toStringArray(list),collation, pos);}
+    {return new SqlIdentifier(SqlParserUtil.toStringArray(list),collation, pos);}
 }
 
 //TODO: real parse errors.
@@ -1977,7 +1977,7 @@ SqlDataTypeSpec DataType() :
     int scale = 0;
     int precision = 0;
     String charSetName = null;
-    ParserPosition pos;
+    SqlParserPos pos;
 }
 {
     (
@@ -2011,7 +2011,7 @@ SqlDataTypeSpec DataType() :
 SqlIdentifier TypeName() :
 {
     SqlIdentifier typeName = null;
-    ParserPosition pos = getPos();
+    SqlParserPos pos = getPos();
 }
 {
     (
@@ -2051,9 +2051,9 @@ SqlNode BuiltinFunctionCall() :
     String name;
     List args;
     SqlNode e = null;
-    ParserPosition pos;
-    ParserPosition starPos;
-    ParserPosition namePos;
+    SqlParserPos pos;
+    SqlParserPos starPos;
+    SqlParserPos namePos;
     SqlDataTypeSpec dt;
 }
 {
@@ -2069,7 +2069,7 @@ SqlNode BuiltinFunctionCall() :
                )
                <RPAREN>  {
                     return opTab.castFunc.createCall(
-                        ParserUtil.toNodeArray(args), getPos());
+                        SqlParserUtil.toNodeArray(args), getPos());
                 }
 
     )
@@ -2091,7 +2091,7 @@ SqlNode BuiltinFunctionCall() :
     <RPAREN>
     {
         return opTab.extractFunc.createCall(
-                ParserUtil.toNodeArray(args), getPos());
+                SqlParserUtil.toNodeArray(args), getPos());
     }
     )
 |
@@ -2103,7 +2103,7 @@ SqlNode BuiltinFunctionCall() :
                    <IN>    e = Expression(EXPR_ACCEPT_SUBQUERY) { args.add(e);}
                    <RPAREN> {
                         return opTab.positionFunc.createCall(
-                            ParserUtil.toNodeArray(args), pos);
+                            SqlParserUtil.toNodeArray(args), pos);
                    }
     )
 |
@@ -2118,7 +2118,7 @@ SqlNode BuiltinFunctionCall() :
                                 args.add(new SqlIdentifier(name, namePos)); }
                    <RPAREN> {
                         return opTab.convertFunc.createCall(
-                            ParserUtil.toNodeArray(args), pos);
+                            SqlParserUtil.toNodeArray(args), pos);
                    }
     )
 |
@@ -2133,7 +2133,7 @@ SqlNode BuiltinFunctionCall() :
                               args.add(new SqlIdentifier(name, namePos)); }
                    <RPAREN> {
                         return opTab.translateFunc.createCall(
-                            ParserUtil.toNodeArray(args),pos);
+                            SqlParserUtil.toNodeArray(args),pos);
                    }
     )
 |
@@ -2152,7 +2152,7 @@ SqlNode BuiltinFunctionCall() :
                    ]
                    <RPAREN> {
                         return opTab.overlayFunc.createCall(
-                            ParserUtil.toNodeArray(args),pos);
+                            SqlParserUtil.toNodeArray(args),pos);
                    }
     )
 |
@@ -2169,7 +2169,7 @@ SqlNode BuiltinFunctionCall() :
                     ]
                     <RPAREN> {
                         return opTab.substringFunc.createCall(
-                            ParserUtil.toNodeArray(args), pos);
+                            SqlParserUtil.toNodeArray(args), pos);
                     }
     )
 |
@@ -2216,7 +2216,7 @@ SqlNode BuiltinFunctionCall() :
                    }
                    <RPAREN> {
                         return opTab.trimFunc.createCall(
-                            ParserUtil.toNodeArray(args), pos);
+                            SqlParserUtil.toNodeArray(args), pos);
                    }
     )
 }
@@ -2230,9 +2230,9 @@ SqlNode NamedFunctionCall() :
     SqlIdentifier qualifiedName;
     SqlIdentifier id = null;
     List args;
-    ParserPosition pos;
-    ParserPosition starPos;
-    ParserPosition overPos = null;
+    SqlParserPos pos;
+    SqlParserPos starPos;
+    SqlParserPos overPos = null;
     boolean over = false;
     SqlCall function = null;
     SqlNode e = null;
@@ -2247,7 +2247,7 @@ SqlNode NamedFunctionCall() :
             LOOKAHEAD(2) <LPAREN> <STAR> { starPos = getPos();} <RPAREN>
             { args = startList(new SqlIdentifier("*", starPos)); }
           | LOOKAHEAD(2) <LPAREN> <RPAREN>
-            { args = ParserUtil.emptyList; }
+            { args = SqlParserUtil.emptyList; }
             [ <OVER>
               //~ only window aggreggation function has window inline
               //definition.
@@ -2275,7 +2275,7 @@ SqlNode NamedFunctionCall() :
 
         {
             function = createCall(
-                qualifiedName, ParserUtil.toNodeArray(args), pos,
+                qualifiedName, SqlParserUtil.toNodeArray(args), pos,
                 SqlFunction.SqlFuncTypeName.UserDefinedFunction);
             if (over) {
                 if (id != null) {
@@ -2300,8 +2300,8 @@ SqlNode JdbcFunctionCall() :
 {
     String name;
     List args;
-    ParserPosition pos;
-    ParserPosition starPos;
+    SqlParserPos pos;
+    SqlParserPos starPos;
 }
 {
     (
@@ -2319,13 +2319,13 @@ SqlNode JdbcFunctionCall() :
             LOOKAHEAD(2) <LPAREN> <STAR> {starPos = getPos();} <RPAREN>
             { args = startList(new SqlIdentifier("*", starPos)); }
           | LOOKAHEAD(2) <LPAREN> <RPAREN>
-            { args = ParserUtil.emptyList; }
+            { args = SqlParserUtil.emptyList; }
           | args = ParenthesizedQueryOrCommaList(EXPR_ACCEPT_SUBQUERY)
         )
         <RBRACE>
         {
             return new SqlJdbcFunctionCall(name).createCall(
-                    ParserUtil.toNodeArray(args), pos);
+                    SqlParserUtil.toNodeArray(args), pos);
         }
     )
 }

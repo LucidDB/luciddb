@@ -21,7 +21,7 @@
 
 package org.eigenbase.sql;
 
-import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.parser.SqlParserPos;
 
 
 /**
@@ -64,7 +64,7 @@ public class SqlCase extends SqlCall
     SqlCase(
         SqlCaseOperator operator,
         SqlNode [] operands,
-        ParserPosition pos)
+        SqlParserPos pos)
     {
         super(operator, operands, pos);
     }

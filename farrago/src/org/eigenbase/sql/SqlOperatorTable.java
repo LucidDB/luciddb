@@ -21,7 +21,7 @@
 package org.eigenbase.sql;
 
 import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.util.MultiMap;
 import org.eigenbase.util.Util;
 
@@ -44,7 +44,8 @@ public interface SqlOperatorTable
      *
      * @param syntax syntax type of operator
      *
-     * @return mutable list of SqlOperator objects (empty if no matches)
+     * @return mutable list of SqlOperator objects
+     * (or immutable empty list if no matches)
      */
     public List lookupOperatorOverloads(
         SqlIdentifier opName,

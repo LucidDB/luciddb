@@ -318,7 +318,7 @@ public abstract class SqlAbstractParserImpl
     protected SqlCall createCall(
         SqlIdentifier funName,
         SqlNode [] operands,
-        ParserPosition pos,
+        SqlParserPos pos,
         SqlFunction.SqlFuncTypeName funcType)
     {
         SqlOperator fun = null;

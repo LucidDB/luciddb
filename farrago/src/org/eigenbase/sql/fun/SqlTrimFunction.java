@@ -24,7 +24,7 @@ package org.eigenbase.sql.fun;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.type.OperandsTypeChecking;
@@ -93,7 +93,7 @@ public class SqlTrimFunction extends SqlFunction
 
     public SqlCall createCall(
         SqlNode [] operands,
-        ParserPosition pos)
+        SqlParserPos pos)
     {
         assert (3 == operands.length);
         if (null == operands[0]) {
@@ -154,7 +154,7 @@ public class SqlTrimFunction extends SqlFunction
             String name,
             int left,
             int right,
-            ParserPosition pos)
+            SqlParserPos pos)
         {
             super(name, pos);
             this.left = left;
@@ -162,19 +162,19 @@ public class SqlTrimFunction extends SqlFunction
         }
 
         public static final SqlSymbol createBoth(
-            ParserPosition pos)
+            SqlParserPos pos)
         {
             return new Flag("Both", 1, 1, pos);
         }
 
         public static final SqlSymbol createLeading(
-            ParserPosition pos)
+            SqlParserPos pos)
         {
             return new Flag("Leading", 1, 0, pos);
         }
 
         public static final SqlSymbol createTrailing(
-            ParserPosition pos)
+            SqlParserPos pos)
         {
             return new Flag("Trailing", 0, 1, pos);
         }

@@ -25,7 +25,7 @@ import java.nio.charset.Charset;
 import java.util.Locale;
 
 import org.eigenbase.resource.EigenbaseResource;
-import org.eigenbase.sql.parser.ParserUtil;
+import org.eigenbase.sql.parser.SqlParserUtil;
 import org.eigenbase.util.EnumeratedValues;
 import org.eigenbase.util.SaffronProperties;
 import org.eigenbase.util.Util;
@@ -60,8 +60,8 @@ public class SqlCollation
         Coercibility coercibility)
     {
         this.coercibility = coercibility;
-        ParserUtil.ParsedCollation parseValues =
-            ParserUtil.parseCollation(collation);
+        SqlParserUtil.ParsedCollation parseValues =
+            SqlParserUtil.parseCollation(collation);
         charset = parseValues.charset;
         locale = parseValues.locale;
         strength = parseValues.strength;

@@ -22,7 +22,7 @@
 package org.eigenbase.sql;
 
 import org.eigenbase.sql.fun.*;
-import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.util.Util;
 
 
@@ -51,7 +51,7 @@ public class SqlSelect extends SqlCall
     SqlSelect(
         SqlSelectOperator operator,
         SqlNode [] operands,
-        ParserPosition pos)
+        SqlParserPos pos)
     {
         super(operator, operands, pos);
         Util.pre(operands.length == OPERAND_COUNT,

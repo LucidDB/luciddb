@@ -35,6 +35,7 @@ import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.*;
 
 
 /**
@@ -144,6 +145,24 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
     public String getParserPosString(RefObject obj);
 
     /**
+     * Sets the parser offset for the body of a given object.
+     *
+     * @param obj object being defined
+     *
+     * @param pos parser offset
+     */
+    public void setParserOffset(RefObject obj, SqlParserPos pos);
+
+    /**
+     * Retrieves the parser offset for the body of a given object.
+     *
+     * @param obj object to look up
+     *
+     * @return parser offset, or null if none recorded
+     */
+    public SqlParserPos getParserOffset(RefObject obj);
+
+    /**
      * Sets the name of a new object being defined, and adds the object to
      * the correct schema.
      *
@@ -215,26 +234,6 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
      * @param wrapper definition of wrapper to discard
      */
     public void discardDataWrapper(CwmModelElement wrapper);
-
-    /**
-     * Sets the SQL statement of a view from a given SQL parse tree.
-     *
-     * @param view view to modify
-     * @param query SQL parse tree
-     */
-    public void setViewText(
-        CwmView view,
-        SqlNode query);
-
-    /**
-     * Sets the SQL body of a routine from a given SQL parse tree.
-     *
-     * @param routine routine to modify
-     * @param body SQL parse tree
-     */
-    public void setProcedureText(
-        CwmProcedure routine,
-        SqlNode body);
 
     /**
      * Defines the handlers to be used to validate and execute DDL actions

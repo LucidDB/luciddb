@@ -21,7 +21,7 @@
 
 package org.eigenbase.sql;
 
-import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.parser.SqlParserPos;
 
 
 /**
@@ -44,7 +44,7 @@ public class SqlDelete extends SqlCall
         SqlSpecialOperator operator,
         SqlIdentifier targetTable,
         SqlNode condition,
-        ParserPosition pos)
+        SqlParserPos pos)
     {
         super(operator, new SqlNode[OPERAND_COUNT], pos);
         operands[TARGET_TABLE_OPERAND] = targetTable;

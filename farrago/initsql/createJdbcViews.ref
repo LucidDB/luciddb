@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/farrago/initsql/createJdbcViews.sql#8 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/initsql/createJdbcViews.sql#3 $
 0: jdbc:farrago:> -- This script creates a view schema used by JDBC metadata calls
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !set verbose true
@@ -154,6 +154,9 @@
 . . . . . . . . >         c."type" = t."mofId";
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- TODO:  all the rest
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- just a placeholder for now
+0: jdbc:farrago:> create schema localdb.information_schema;
 0: jdbc:farrago:>          
 0: jdbc:farrago:> commit;
 0: jdbc:farrago:> 

@@ -25,6 +25,7 @@ import net.sf.farrago.util.*;
 
 import java.io.*;
 
+import org.eigenbase.util.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.resource.*;
@@ -42,13 +43,13 @@ public abstract class FarragoAbstractParser implements FarragoSessionParser
     protected FarragoSessionDdlValidator ddlValidator;
 
     protected FarragoAbstractParserImpl parserImpl;
-    
-    protected boolean parsing;
+
+    protected String sourceString;
 
     // implement FarragoSessionParser
-    public FarragoSessionParserPosition getCurrentPosition()
+    public SqlParserPos getCurrentPosition()
     {
-        if (!parsing) {
+        if (sourceString == null) {
             return null;
         } else {
             return parserImpl.getCurrentPosition();
@@ -59,7 +60,7 @@ public abstract class FarragoAbstractParser implements FarragoSessionParser
     public FarragoException newPositionalError(
         SqlValidatorException ex)
     {
-        if (!parsing) {
+        if (sourceString == null) {
             return FarragoResource.instance().newValidatorNoPositionContext(ex);
         } else {
             String msg = getCurrentPosition().toString();
@@ -92,7 +93,7 @@ public abstract class FarragoAbstractParser implements FarragoSessionParser
 
         parserImpl = newParserImpl(new StringReader(sql));
         parserImpl.farragoParser = this;
-        parsing = true;
+        sourceString = sql;
 
         try {
             if (expectStatement) {
@@ -105,8 +106,49 @@ public abstract class FarragoAbstractParser implements FarragoSessionParser
                 ex.getMessage(),
                 ex);
         } finally {
-            parsing = false;
+            sourceString = null;
         }
+    }
+
+    // implement FarragoSessionParser
+    public String getSubstring(SqlParserPos start, SqlParserPos end)
+    {
+        assert(sourceString != null);
+
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        try {
+            LineNumberReader reader =
+                new LineNumberReader(new StringReader(sourceString));
+            for (;;) {
+                String line = reader.readLine();
+                int lineNum = reader.getLineNumber();
+                if (lineNum < start.getLineNum()) {
+                    continue;
+                } else if (lineNum == start.getLineNum()) {
+                    if (lineNum == end.getLineNum()) {
+                        pw.print(
+                            line.substring(
+                                start.getColumnNum() - 1,
+                                end.getColumnNum() - 1));
+                        break;
+                    } else {
+                        pw.println(
+                            line.substring(start.getColumnNum() - 1));
+                    }
+                } else if (lineNum == end.getLineNum()) {
+                    pw.print(
+                        line.substring(0, end.getColumnNum() - 1));
+                    break;
+                } else {
+                    pw.println(line);
+                }
+            }
+        } catch (IOException ex) {
+            throw Util.newInternal(ex);
+        }
+        pw.close();
+        return sw.toString();
     }
 
     protected static String constructReservedKeywordList(

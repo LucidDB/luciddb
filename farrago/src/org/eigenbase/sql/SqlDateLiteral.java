@@ -21,8 +21,8 @@ package org.eigenbase.sql;
 
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.sql.parser.ParserPosition;
-import org.eigenbase.sql.parser.ParserUtil;
+import org.eigenbase.sql.parser.SqlParserPos;
+import org.eigenbase.sql.parser.SqlParserUtil;
 import org.eigenbase.sql.type.SqlTypeName;
 
 import java.text.DateFormat;
@@ -39,9 +39,9 @@ import java.sql.Date;
 public class SqlDateLiteral extends SqlAbstractDateTimeLiteral
  {
 
-    SqlDateLiteral(Calendar d, ParserPosition pos)
+    SqlDateLiteral(Calendar d, SqlParserPos pos)
     {
-        super(d, false, SqlTypeName.Date, 0, ParserUtil.DateFormatStr, pos);
+        super(d, false, SqlTypeName.Date, 0, SqlParserUtil.DateFormatStr, pos);
     }
 
     /**

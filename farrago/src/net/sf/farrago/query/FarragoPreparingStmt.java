@@ -98,6 +98,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     private Set allDependencies;
     private Set jarUrlSet;
     private SqlOperatorTable sqlOperatorTable;
+    private int expansionDepth;
 
     /**
      * Name of Java package containing code generated for this statement.
@@ -182,7 +183,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
 
         SqlOperatorTable systemOperators = getSession().getSqlOperatorTable();
         SqlOperatorTable userOperators =
-            new FarragoUserDefinedRoutineLookup(stmtValidator, this);
+            new FarragoUserDefinedRoutineLookup(stmtValidator, this, null);
 
         ChainedSqlOperatorTable table = new ChainedSqlOperatorTable();
         table.add(userOperators);
@@ -489,6 +490,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
 
     RelNode expandView(String queryString)
     {
+        expansionDepth++;
         stopCollectingDirectDependencies();
 
         SqlParser parser = new SqlParser(queryString);
@@ -499,7 +501,9 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             throw Util.newInternal(e,
                 "Error while parsing view definition:  " + queryString);
         }
-        return sqlToRelConverter.convertQuery(sqlQuery);
+        RelNode relNode = sqlToRelConverter.convertQuery(sqlQuery);
+        --expansionDepth;
+        return relNode;
     }
 
     RexNode expandFunction(
@@ -507,8 +511,10 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         Map paramNameToArgMap,
         final Map paramNameToTypeMap)
     {
+        expansionDepth++;
         stopCollectingDirectDependencies();
 
+        bodyString = FarragoUserDefinedRoutine.removeReturnPrefix(bodyString);
         SqlParser parser = new SqlParser(bodyString);
         SqlNode sqlExpr;
         try {
@@ -530,7 +536,18 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         // Lisp), and avoid expansion of parameters which are referenced more
         // than once
 
-        return sqlToRelConverter.convertExpression(sqlExpr, paramNameToArgMap);
+        RexNode rexNode = sqlToRelConverter.convertExpression(
+            sqlExpr, paramNameToArgMap);
+        --expansionDepth;
+        return rexNode;
+    }
+
+    /**
+     * @return true iff currently expanding a view or function
+     */
+    public boolean isExpandingDefinition()
+    {
+        return expansionDepth > 0;
     }
 
     private void stopCollectingDirectDependencies()

@@ -25,7 +25,7 @@ import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.reltype.RelDataTypeFactoryImpl;
 import org.eigenbase.resource.EigenbaseResource;
-import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.util.SqlVisitor;
 import org.eigenbase.util.Util;
@@ -73,7 +73,7 @@ public class SqlDataTypeSpec extends SqlNode
         int precision,
         int scale,
         String charSetName,
-        ParserPosition pos)
+        SqlParserPos pos)
     {
         super(pos);
         this.typeName = typeName;

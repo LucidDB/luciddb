@@ -23,7 +23,7 @@ package org.eigenbase.sql;
 
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.util.BarfingInvocationHandler;
 import org.eigenbase.util.Util;
 import org.eigenbase.resource.EigenbaseResource;
@@ -128,7 +128,7 @@ public abstract class SqlUtil
      * Convenience method to convert an SqlNode array to a SqlNodeList
      */
     public static SqlNodeList toNodeList(SqlNode[] operands) {
-        SqlNodeList ret = new SqlNodeList(ParserPosition.ZERO);
+        SqlNodeList ret = new SqlNodeList(SqlParserPos.ZERO);
         for (int i = 0; i < operands.length; i++) {
             SqlNode node = operands[i];
             ret.add(node);
@@ -311,11 +311,44 @@ public abstract class SqlUtil
      * @param isProcedure true if a procedure is being invoked, in
      * which case the overload rules are simpler
      *
-     * @return matching function, or null if none found
+     * @return matching routine, or null if none found
      *
      * @sql.99 Part 2 Section 10.4
      */
     public static SqlFunction lookupRoutine(
+        SqlOperatorTable opTab, 
+        SqlIdentifier funcName,
+        RelDataType [] argTypes,
+        boolean isProcedure)
+    {
+        List list = lookupSubjectRoutines(
+            opTab, funcName, argTypes, isProcedure);
+        if (list.isEmpty()) {
+            return null;
+        } else {
+            // return first on schema path
+            return (SqlFunction) list.get(0);
+        }
+    }
+    
+    /**
+     * Looks up all subject routines matching the given name
+     * and argument types.
+     *
+     * @param opTab operator table to search
+     *
+     * @param funcName name of function being invoked
+     *
+     * @param argTypes argument types
+     *
+     * @param isProcedure true if a procedure is being invoked, in
+     * which case the overload rules are simpler
+     *
+     * @return list of matching routines
+     *
+     * @sql.99 Part 2 Section 10.4
+     */
+    public static List lookupSubjectRoutines(
         SqlOperatorTable opTab, 
         SqlIdentifier funcName,
         RelDataType [] argTypes,
@@ -332,11 +365,7 @@ public abstract class SqlUtil
         // NOTE: according to SQL99, procedures are NOT overloaded on type,
         // only on number of arguments.
         if (isProcedure) {
-            if (routines.isEmpty()) {
-                return null;
-            } else {
-                return (SqlFunction) routines.get(0);
-            }
+            return routines;
         }
 
         // second pass:  eliminate routines which don't accept the given
@@ -345,10 +374,8 @@ public abstract class SqlUtil
 
         // see if we can stop now; this is necessary for the case
         // of builtin functions where we don't have param type info
-        if (routines.isEmpty()) {
-            return null;
-        } else if (routines.size() == 1) {
-            return (SqlFunction) routines.get(0);
+        if (routines.size() < 2) {
+            return routines;
         }
         
         // third pass:  for each parameter from left to right, eliminate
@@ -356,12 +383,7 @@ public abstract class SqlUtil
         // the given arguments
         filterRoutinesByTypePrecedence(routines, argTypes);
 
-        // return first on schema path (if anyone is left standing)
-        if (routines.isEmpty()) {
-            return null;
-        } else {
-            return (SqlFunction) routines.get(0);
-        }
+        return routines;
     }
 
     private static void filterRoutinesByParameterCount(

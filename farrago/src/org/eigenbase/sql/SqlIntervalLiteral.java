@@ -20,7 +20,7 @@
 package org.eigenbase.sql;
 
 import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.util.EnumeratedValues;
 
 /**
@@ -40,7 +40,7 @@ public class SqlIntervalLiteral extends SqlLiteral
 {
     protected SqlIntervalLiteral(
             int[] values, SqlIntervalQualifier intervalQualifier,
-            SqlTypeName sqlTypeName, ParserPosition pos) {
+            SqlTypeName sqlTypeName, SqlParserPos pos) {
         super(new IntervalValue(intervalQualifier, values), sqlTypeName, pos);
     }
 

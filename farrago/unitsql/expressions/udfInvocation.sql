@@ -249,25 +249,30 @@ values bob(19);
 -- verify path selection and overloading
 
 create schema v1
+
 create function important_constant()
 returns integer
 contains sql
 return 5
+
 create function confusing(in x integer)
 returns varchar(128)
 specific confusing_integer
 contains sql
 return 'INTEGER:  '||cast(x as varchar(128))
+
 create function confusing(in x smallint)
 returns varchar(128)
 specific confusing_smallint
 contains sql
 return 'SMALLINT:  '||cast(x as varchar(128))
+
 create function confusing(in x varchar(128))
 returns varchar(128)
 specific confusing_varchar
 contains sql
 return 'VARCHAR:  '||x
+
 create function confusing(in x char(20))
 returns varchar(128)
 specific confusing_char
@@ -276,10 +281,54 @@ return 'CHAR:  '||x
 ;
 
 create schema v2
+
 create function important_constant()
 returns integer
 contains sql
-return 17;
+return 17
+
+create function amusing(in x smallint,in y varchar(128))
+returns integer
+specific amusing1
+contains sql
+return 9
+
+create function amusing(in x bigint,in y int)
+returns integer
+specific amusing2
+contains sql
+return 10
+
+create function amusing(in x int,in y bigint)
+returns integer
+specific amusing3
+contains sql
+return 11
+
+create function confusing(in x integer)
+returns varchar(128)
+specific confusing_integer
+contains sql
+return 'V2INTEGER:  '||cast(x as varchar(128))
+
+create function upper(in x integer)
+returns integer
+specific upper1
+contains sql
+return x+1
+
+create function upper(in x varchar(128))
+returns varchar(128)
+specific upper2
+contains sql
+return x||'_plus_one'
+
+create function lower(in x integer)
+returns integer
+contains sql
+return x-1
+
+;
 
 set path 'v1';
 values important_constant();
@@ -310,6 +359,28 @@ values confusing(cast(5 as tinyint));
 values confusing('hello');
 
 values confusing(cast('hello' as varchar(5)));
+
+set path 'v2,v1';
+
+values confusing(5);
+
+-- v2 shouldn't hide the better match from v1 here
+values confusing('hello');
+
+-- verify that parameter filtering is left-to-right
+values amusing(cast(null as smallint),cast(null as integer));
+
+-- test resolution against builtins
+
+values upper(7);
+
+values upper('cobol');
+
+values information_schema.upper('cobol');
+
+values lower(7);
+
+values lower('COBOL');
 
 -- should fail
 values confusing(true);

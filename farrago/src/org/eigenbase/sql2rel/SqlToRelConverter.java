@@ -34,8 +34,8 @@ import org.eigenbase.sql.fun.SqlLikeOperator;
 import org.eigenbase.sql.fun.SqlRowOperator;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.fun.SqlMultisetOperator;
-import org.eigenbase.sql.parser.ParserPosition;
-import org.eigenbase.sql.parser.ParserUtil;
+import org.eigenbase.sql.parser.SqlParserPos;
+import org.eigenbase.sql.parser.SqlParserUtil;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql.type.SqlTypeUtil;
 import org.eigenbase.util.BitString;
@@ -1884,7 +1884,7 @@ public class SqlToRelConverter
          * The group-by expressions, in {@link SqlNode} format.
          */
         private final SqlNodeList groupExprs =
-            new SqlNodeList(ParserPosition.ZERO);
+            new SqlNodeList(SqlParserPos.ZERO);
         /**
          * Input expressions for the group columns and aggregates, in
          * {@link RexNode} format. The first elements of the list correspond

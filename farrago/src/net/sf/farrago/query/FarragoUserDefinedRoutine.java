@@ -479,6 +479,20 @@ public class FarragoUserDefinedRoutine
                     new ExpressionList()));
         }
     }
+
+    private static final String RETURN_PREFIX = "RETURN ";
+
+    public static String removeReturnPrefix(String body)
+    {
+        assert(body.startsWith(RETURN_PREFIX));
+        return body.substring(RETURN_PREFIX.length());
+    }
+
+    public static String addReturnPrefix(String body)
+    {
+        assert (!body.startsWith(RETURN_PREFIX));
+        return RETURN_PREFIX + body;
+    }
 }
 
 // End FarragoUserDefinedRoutine.java

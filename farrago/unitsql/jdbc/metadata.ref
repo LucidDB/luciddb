@@ -18,13 +18,14 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test getSchemas
 0: jdbc:farrago:> !metadata getSchemas
-+----------------+----------------+
-|  TABLE_SCHEM   | TABLE_CATALOG  |
-+----------------+----------------+
-| JDBC_METADATA  | SYS_BOOT       |
-| SALES          | LOCALDB        |
-| SQLJ           | LOCALDB        |
-+----------------+----------------+
++---------------------+----------------+
+|     TABLE_SCHEM     | TABLE_CATALOG  |
++---------------------+----------------+
+| INFORMATION_SCHEMA  | LOCALDB        |
+| JDBC_METADATA       | SYS_BOOT       |
+| SALES               | LOCALDB        |
+| SQLJ                | LOCALDB        |
++---------------------+----------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test getTableTypes
 0: jdbc:farrago:> !metadata getTableTypes
@@ -104,6 +105,7 @@
 +-----------------------+----------------+
 |      TABLE_SCHEM      | TABLE_CATALOG  |
 +-----------------------+----------------+
+| INFORMATION_SCHEMA    | LOCALDB        |
 | JDBC_METADATA         | SYS_BOOT       |
 | METADATA_TEST_SCHEMA  | LOCALDB        |
 | SALES                 | LOCALDB        |
@@ -159,13 +161,14 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> drop schema metadata_test_schema;
 0: jdbc:farrago:> !metadata getSchemas
-+----------------+----------------+
-|  TABLE_SCHEM   | TABLE_CATALOG  |
-+----------------+----------------+
-| JDBC_METADATA  | SYS_BOOT       |
-| SALES          | LOCALDB        |
-| SQLJ           | LOCALDB        |
-+----------------+----------------+
++---------------------+----------------+
+|     TABLE_SCHEM     | TABLE_CATALOG  |
++---------------------+----------------+
+| INFORMATION_SCHEMA  | LOCALDB        |
+| JDBC_METADATA       | SYS_BOOT       |
+| SALES               | LOCALDB        |
+| SQLJ                | LOCALDB        |
++---------------------+----------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test misc calls
 0: jdbc:farrago:> !dbinfo

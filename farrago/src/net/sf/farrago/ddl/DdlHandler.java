@@ -20,9 +20,11 @@
 package net.sf.farrago.ddl;
 
 import org.eigenbase.util.*;
+import org.eigenbase.resource.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.type.*;
 
 import net.sf.farrago.catalog.*;
@@ -326,6 +328,33 @@ public abstract class DdlHandler
         } else {
             column.setIsNullable(NullableTypeEnum.COLUMN_NO_NULLS);
         }
+    }
+    
+    public Throwable adjustExceptionParserPosition(
+        CwmModelElement modelElement,
+        Throwable ex)
+    {
+        if (ex instanceof FarragoException) {
+            FarragoException contextExcn = (FarragoException) ex;
+            if (contextExcn.getPosLine() != 0) {
+                // We have context information for the query, and
+                // need to adjust the position to match the original
+                // DDL statement.
+                SqlParserPos offsetPos = validator.getParserOffset(
+                    modelElement);
+                int line = contextExcn.getPosLine();
+                int col = contextExcn.getPosColumn();
+                if (line == 1) {
+                    col += (offsetPos.getColumnNum() - 1);
+                }
+                line += (offsetPos.getLineNum() - 1);
+                ex = EigenbaseResource.instance().newValidatorContext(
+                    new Integer(line),
+                    new Integer(col),
+                    ex.getCause());
+            }
+        }
+        return ex;
     }
 }
 

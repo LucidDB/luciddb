@@ -21,7 +21,7 @@ package org.eigenbase.sql;
 
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.type.SqlTypeName;
 
 import java.util.Calendar;
@@ -49,7 +49,7 @@ abstract class SqlAbstractDateTimeLiteral extends SqlLiteral {
         SqlTypeName typeName,
         int precision,
         String formatString,
-        ParserPosition pos)
+        SqlParserPos pos)
     {
         super(d, typeName, pos);
         this.hasTimeZone = tz;

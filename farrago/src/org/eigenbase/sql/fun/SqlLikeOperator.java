@@ -22,8 +22,8 @@
 package org.eigenbase.sql.fun;
 
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.parser.ParserPosition;
-import org.eigenbase.sql.parser.ParserUtil;
+import org.eigenbase.sql.parser.SqlParserPos;
+import org.eigenbase.sql.parser.SqlParserUtil;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.Util;
 
@@ -140,24 +140,24 @@ public class SqlLikeOperator extends SqlSpecialOperator
         // |  |    |      |      |      |
         //  exp0    exp1          exp2
         SqlNode exp0 = (SqlNode) list.get(opOrdinal - 1);
-        SqlOperator op = ((ParserUtil.ToTreeListItem) list.get(opOrdinal)).op;
+        SqlOperator op = ((SqlParserUtil.ToTreeListItem) list.get(opOrdinal)).op;
         assert op instanceof SqlLikeOperator;
         SqlNode exp1 =
-            ParserUtil.toTreeEx(list, opOrdinal + 1, rightPrec, SqlKind.Escape);
+            SqlParserUtil.toTreeEx(list, opOrdinal + 1, rightPrec, SqlKind.Escape);
         SqlNode exp2 = null;
         if ((opOrdinal + 2) < list.size()) {
             final Object o = list.get(opOrdinal + 2);
-            if (o instanceof ParserUtil.ToTreeListItem) {
-                final SqlOperator op2 = ((ParserUtil.ToTreeListItem) o).op;
+            if (o instanceof SqlParserUtil.ToTreeListItem) {
+                final SqlOperator op2 = ((SqlParserUtil.ToTreeListItem) o).op;
                 if (op2.kind == SqlKind.Escape) {
                     exp2 =
-                        ParserUtil.toTreeEx(list, opOrdinal + 3, rightPrec,
+                        SqlParserUtil.toTreeEx(list, opOrdinal + 3, rightPrec,
                             SqlKind.Escape);
                 }
             }
         }
         SqlCall call;
-        final ParserPosition pos = null;
+        final SqlParserPos pos = null;
         final SqlNode [] operands;
         int end;
         if (exp2 != null) {
@@ -168,7 +168,7 @@ public class SqlLikeOperator extends SqlSpecialOperator
             end = opOrdinal + 2;
         }
         call = createCall(operands, pos);
-        ParserUtil.replaceSublist(list, opOrdinal - 1, end, call);
+        SqlParserUtil.replaceSublist(list, opOrdinal - 1, end, call);
         return opOrdinal - 1;
     }
 }

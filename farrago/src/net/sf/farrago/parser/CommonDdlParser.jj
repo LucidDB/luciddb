@@ -20,6 +20,13 @@ JAVACODE void SqlDataTypeSpecToCwmColumnType(SqlDataTypeSpec dataType,
     }
 }
 
+JAVACODE SqlParserPos getEndPos()
+{
+    return new SqlParserPos(
+        token.beginLine,
+        token.beginColumn + token.image.length());
+}
+
 /*****************************************
  * Syntactical Descriptions              *
  *****************************************/
@@ -33,7 +40,7 @@ SqlIdentifier CompoundIdentifier2() :
 {
     (p = Identifier() {list.add(p);})
     (<DOT> p = Identifier() {list.add(p);})?
-    {return new SqlIdentifier(ParserUtil.toStringArray(list),null);}
+    {return new SqlIdentifier(SqlParserUtil.toStringArray(list),null);}
 }
 
 String QuotedString() :
@@ -43,7 +50,7 @@ String QuotedString() :
 {
     t = <QUOTED_STRING>
     {
-      return ParserUtil.parseString(t.image);
+      return SqlParserUtil.parseString(t.image);
     }
 }
 
@@ -414,6 +421,7 @@ CwmView ViewDefinition() :
     SqlIdentifier qualifiedViewName;
     SqlNode query;
     List columnNameList;
+    SqlParserPos defStart, defEnd;
 }
 {
     <VIEW>
@@ -438,13 +446,25 @@ CwmView ViewDefinition() :
         }
      <RPAREN>]
 
-    <AS> query = OrderedQueryOrExpr(EXPR_ACCEPT_QUERY)
-    {
-        // NOTE:  we accept ORDER BY on the view definition, even though
-        // that's not standard SQL, and leave it up to the validator to
-        // decide what to do with it
-        farragoParser.getDdlValidator().setViewText(view, query);
-    }
+    <AS>
+        {
+            defStart = getEndPos();
+            farragoParser.getDdlValidator().setParserOffset(view, defStart);
+        }
+    query = OrderedQueryOrExpr(EXPR_ACCEPT_QUERY)
+        {
+            defEnd = getEndPos();
+            
+            // NOTE:  we accept ORDER BY on the view definition, even though
+            // that's not standard SQL, and leave it up to the validator to
+            // decide what to do with it
+
+            String bodyText = farragoParser.getSubstring(defStart, defEnd);
+            CwmQueryExpression queryExpr = getRepos().newCwmQueryExpression();
+            queryExpr.setLanguage("SQL");
+            queryExpr.setBody(bodyText);
+            view.setQueryExpression(queryExpr);
+        }
     {
        return view;
     }
@@ -920,7 +940,7 @@ CwmModelElement JarDrop() :
         {
         }
     <OPTIONS>
-         <LPAREN> deploymentState = NumericLiteral(ParserPosition.ZERO) <RPAREN>
+         <LPAREN> deploymentState = NumericLiteral(SqlParserPos.ZERO) <RPAREN>
         {
         }
     CascadeOption()
@@ -990,7 +1010,7 @@ DdlStmt SystemParamAssignment() :
 SqlLiteral SystemParamValue() :
 {
     SqlLiteral paramValue;
-    ParserPosition pos = null;  
+    SqlParserPos pos = null;  
 }
 {
     (
@@ -1259,6 +1279,7 @@ FemRoutine ProcedureDefinition() :
 void SqlRoutineBody(FemRoutine routine) :
 {
     SqlNode expr;
+    SqlParserPos defStart, defEnd;
 }
 {
     [ <SQL> <SECURITY>
@@ -1275,12 +1296,26 @@ void SqlRoutineBody(FemRoutine routine) :
     ]
         {
         }
-        <RETURN> expr = Expression(EXPR_ACCEPT_NONQUERY)
-    {
-        // TODO jvs 24-Dec-2004: eventually allow subqueries and non-functional
-        // routine bodies.
-        farragoParser.getDdlValidator().setProcedureText(routine, expr);
-    }
+    <RETURN>
+        {
+            defStart = getEndPos();
+            farragoParser.getDdlValidator().setParserOffset(routine, defStart);
+            
+            // TODO jvs 24-Dec-2004: eventually allow subqueries and
+            // non-functional routine bodies.
+        }
+    expr = Expression(EXPR_ACCEPT_NONQUERY)
+        {
+            defEnd = getEndPos();
+        
+            String bodyText = farragoParser.getSubstring(defStart, defEnd);
+            CwmProcedureExpression procedureExpr =
+            getRepos().newCwmProcedureExpression();
+            procedureExpr.setLanguage("SQL");
+            procedureExpr.setBody(
+                FarragoUserDefinedRoutine.addReturnPrefix(bodyText));
+            routine.setBody(procedureExpr);
+        }
 }
 
 void ExternalRoutineBody(FemRoutine routine) :
@@ -1496,7 +1531,7 @@ FemJar JarDefinition() :
             jar.setUrl(url);
         }
     <OPTIONS> <LPAREN> 
-         deploymentState = NumericLiteral(ParserPosition.ZERO) <RPAREN>
+         deploymentState = NumericLiteral(SqlParserPos.ZERO) <RPAREN>
         {
             jar.setDeploymentState(deploymentState.intValue());
         }

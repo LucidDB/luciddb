@@ -21,7 +21,7 @@ package org.eigenbase.sql;
 
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.util.Util;
 
@@ -45,7 +45,7 @@ public class SqlNumericLiteral extends SqlLiteral
         Integer prec,
         Integer scale,
         boolean isExact,
-        ParserPosition pos)
+        SqlParserPos pos)
     {
         super(value, isExact ? SqlTypeName.Decimal : SqlTypeName.Double,
             pos);

@@ -25,7 +25,7 @@ import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
-import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.type.*;
@@ -275,7 +275,7 @@ public class SqlCaseOperator extends SqlOperator
 
     public SqlCall createCall(
         SqlNode [] operands,
-        ParserPosition pos)
+        SqlParserPos pos)
     {
         return new SqlCase(this, operands, pos);
     }
@@ -285,7 +285,7 @@ public class SqlCaseOperator extends SqlOperator
         SqlNodeList whenList,
         SqlNodeList thenList,
         SqlNode elseClause,
-        ParserPosition pos)
+        SqlParserPos pos)
     {
         SqlStdOperatorTable stdOps = SqlStdOperatorTable.instance();
         if (null != caseIdentifier) {

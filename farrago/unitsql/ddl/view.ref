@@ -40,7 +40,7 @@ Error: DDL validation error near line 1, column 22: Duplicate definition for col
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- bad:  invalid view def
 0: jdbc:farrago:> create view v5 as select * from nonexistent_table;
-Error: At line 2, column 6: Table 'NONEXISTENT_TABLE' not found (state=,code=0)
+Error: At line 1, column 33: Table 'NONEXISTENT_TABLE' not found (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- bad:  view with dynamic params
 0: jdbc:farrago:> create view v6 as select * from sales.emps where empno = ?;

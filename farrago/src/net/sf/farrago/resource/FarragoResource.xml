@@ -357,6 +357,11 @@ column type family is {1} but default value type family is {2}</text>
 <text>Invalid jar name {0} in definition of {1}</text>
 </exception>
 
+<exception id="420670" name="ValidatorRoutineConflict"
+    className="org.eigenbase.sql.SqlValidatorException">
+<text>Invocation name and parameter type signature of {0} conflicts with another routine</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Fennel resources 440,000 - 450,000 -->
 <!-- Actual resources are defined separately in Fennel -->

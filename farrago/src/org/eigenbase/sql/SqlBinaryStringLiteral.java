@@ -21,7 +21,7 @@ package org.eigenbase.sql;
 
 import org.eigenbase.util.BitString;
 import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.parser.SqlParserPos;
 
 /**
  * A binary (or hexadecimal) string literal.
@@ -36,7 +36,7 @@ public class SqlBinaryStringLiteral extends SqlAbstractStringLiteral
 {
     protected SqlBinaryStringLiteral(
         BitString val,
-        ParserPosition pos)
+        SqlParserPos pos)
     {
         super(val, SqlTypeName.Binary, pos);
     }

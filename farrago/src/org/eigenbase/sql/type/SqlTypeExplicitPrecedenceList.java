@@ -60,8 +60,8 @@ public class SqlTypeExplicitPrecedenceList implements RelDataTypePrecedenceList
                 SqlTypeName.Decimal,
                 null,
                 SqlTypeName.Real,
-                SqlTypeName.Float,
                 null,
+                SqlTypeName.Float,
                 SqlTypeName.Double }
             );
         typeNameToPrecedenceList = new HashMap();

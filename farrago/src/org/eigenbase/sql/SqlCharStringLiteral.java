@@ -21,7 +21,7 @@ package org.eigenbase.sql;
 
 import org.eigenbase.util.NlsString;
 import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.parser.SqlParserPos;
 
 /**
  * A character string literal.
@@ -36,7 +36,7 @@ public class SqlCharStringLiteral extends SqlAbstractStringLiteral
 {
     protected SqlCharStringLiteral(
         NlsString val,
-        ParserPosition pos)
+        SqlParserPos pos)
     {
         super(val, SqlTypeName.Char, pos);
     }

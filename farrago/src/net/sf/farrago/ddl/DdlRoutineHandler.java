@@ -94,6 +94,32 @@ public class DdlRoutineHandler extends DdlHandler
         } else {
             validateJavaRoutine(routine, returnParam);
         }
+
+        // make sure routine signature doesn't conflict with other routines
+        FarragoUserDefinedRoutineLookup lookup =
+            new FarragoUserDefinedRoutineLookup(
+                validator.getStmtValidator(),
+                null,
+                routine);
+        FarragoUserDefinedRoutine prototype = lookup.convertRoutine(routine);
+        SqlIdentifier invocationName = prototype.getSqlIdentifier();
+        invocationName.names[invocationName.names.length - 1] =
+            routine.getInvocationName();
+        List list = SqlUtil.lookupSubjectRoutines(
+            lookup,
+            invocationName,
+            prototype.getParamTypes(),
+            routine.getType().equals(ProcedureTypeEnum.PROCEDURE));
+
+        // should find at least this routine!
+        assert(!list.isEmpty());
+
+        if (list.size() > 1) {
+            throw validator.newPositionalError(
+                routine,
+                validator.res.newValidatorRoutineConflict(
+                    repos.getLocalizedObjectName(routine)));
+        }
     }
 
     private void validateSqlRoutine(
@@ -134,8 +160,6 @@ public class DdlRoutineHandler extends DdlHandler
             // pass this one through
             throw ex;
         } catch (Throwable ex) {
-            // TODO: if ex has parser position information in it, need to
-            // either delete it or adjust it
             throw validator.res.newValidatorInvalidObjectDefinition(
                 repos.getLocalizedObjectName(routine), 
                 ex);
@@ -175,7 +199,7 @@ public class DdlRoutineHandler extends DdlHandler
 
         FarragoUserDefinedRoutineLookup lookup =
             new FarragoUserDefinedRoutineLookup(
-                validator.getStmtValidator(), null);
+                validator.getStmtValidator(), null, null);
         FarragoUserDefinedRoutine sqlRoutine = lookup.convertRoutine(routine);
         try {
             sqlRoutine.getJavaMethod();
@@ -194,7 +218,7 @@ public class DdlRoutineHandler extends DdlHandler
         FarragoSession session, 
         final FemRoutine routine,
         FemRoutineParameter returnParam)
-        throws SQLException
+        throws Throwable
     {
         final FarragoTypeFactory typeFactory = validator.getTypeFactory();
         final List params = routine.getParameter();
@@ -224,8 +248,15 @@ public class DdlRoutineHandler extends DdlHandler
 
         tracer.fine(routine.getBody().getBody());
         
-        FarragoSessionAnalyzedSql analyzedSql = session.analyzeSql(
-            routine.getBody().getBody(), paramRowType);
+        FarragoSessionAnalyzedSql analyzedSql;
+        try {
+            analyzedSql = session.analyzeSql(
+                FarragoUserDefinedRoutine.removeReturnPrefix(
+                    routine.getBody().getBody()),
+                paramRowType);
+        } catch (Throwable ex) {
+            throw adjustExceptionParserPosition(routine, ex);
+        }
         
         if (analyzedSql.hasDynamicParams) {
             // TODO jvs 29-Dec-2004:  add a test for this; currently
@@ -248,7 +279,9 @@ public class DdlRoutineHandler extends DdlHandler
         validator.createDependency(
             routine, analyzedSql.dependencies, "RoutineUsage");
         
-        routine.getBody().setBody(analyzedSql.canonicalString);
+        routine.getBody().setBody(
+            FarragoUserDefinedRoutine.addReturnPrefix(
+                analyzedSql.canonicalString));
     }
 
     public void validateRoutineParam(FemRoutineParameter param)

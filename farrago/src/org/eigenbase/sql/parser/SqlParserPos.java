@@ -25,69 +25,69 @@ import org.eigenbase.resource.EigenbaseResource;
 
 
 /**
- * ParserPosition represents the position of a parsed
- * token within SQL statement text.
+ * SqlParserPos represents the position of a parsed token within SQL statement
+ * text.
  *
  * @author Kinkoi Lo
  * @since Jun 1, 2004
  * @version $Id$
  **/
-public class ParserPosition
+public class SqlParserPos
 {
     //~ Static fields/initializers --------------------------------------------
 
     /**
-     * ParserPosition representing line one, character one. Use this if the
+     * SqlParserPos representing line one, character one. Use this if the
      * node doesn't correspond to a position in piece of SQL text.
      */
-    public static final ParserPosition ZERO = new ParserPosition(0, 0);
+    public static final SqlParserPos ZERO = new SqlParserPos(0, 0);
 
     //~ Instance fields -------------------------------------------------------
 
-    private int beginLine;
-    private int beginColumn;
+    private int lineNumber;
+    private int columnNumber;
 
     //~ Constructors ----------------------------------------------------------
 
     /**
     * Creates a new parser position.
     */
-    public ParserPosition(
-        int beginLine,
-        int beginColumn)
+    public SqlParserPos(
+        int lineNumber,
+        int columnNumber)
     {
-        this.beginLine = beginLine;
-        this.beginColumn = beginColumn;
+        this.lineNumber = lineNumber;
+        this.columnNumber = columnNumber;
     }
 
     //~ Methods ---------------------------------------------------------------
 
     /**
      *
-     * @return  line position of token beginning
+     * @return 1-based line number
      */
-    public int getBeginLine()
+    public int getLineNum()
     {
-        return beginLine;
+        return lineNumber;
     }
 
     /**
      *
-     * @return column position of token beginning
+     * @return 1-based column number
      */
-    public int getBeginColumn()
+    public int getColumnNum()
     {
-        return beginColumn;
+        return columnNumber;
     }
 
     // implements Object
     public String toString()
     {
         return EigenbaseResource.instance().getParserContext(
-            new Integer(beginLine),
-            new Integer(beginColumn));
+            new Integer(lineNumber),
+            new Integer(columnNumber));
     }
 }
 
 
-// End ParserPosition.java
+// End SqlParserPos.java

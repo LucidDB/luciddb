@@ -21,7 +21,7 @@
 
 package org.eigenbase.sql;
 
-import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.parser.SqlParserPos;
 
 import java.util.Iterator;
 
@@ -50,7 +50,7 @@ public class SqlUpdate extends SqlCall
         SqlNodeList targetColumnList,
         SqlNodeList sourceExpressionList,
         SqlNode condition,
-        ParserPosition pos)
+        SqlParserPos pos)
     {
         super(operator, new SqlNode[OPERAND_COUNT], pos);
         operands[TARGET_TABLE_OPERAND] = targetTable;

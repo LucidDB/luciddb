@@ -24,7 +24,7 @@ package org.eigenbase.sql.advise;
 import org.eigenbase.sql.SqlValidator;
 import org.eigenbase.sql.SqlNode;
 import org.eigenbase.sql.parser.SqlParser;
-import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.parser.SqlParseException;
 
 /**
@@ -75,7 +75,7 @@ public class SqlAdvisor
      * the indicated position
      *
      */
-    public String[] getCompletionHints(String sql, ParserPosition pp)
+    public String[] getCompletionHints(String sql, SqlParserPos pp)
         throws SqlParseException
     {
         SqlParser parser = new SqlParser(sql);

@@ -23,8 +23,8 @@ package org.eigenbase.sql;
 
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.sql.parser.ParserPosition;
-import org.eigenbase.sql.parser.ParserUtil;
+import org.eigenbase.sql.parser.SqlParserPos;
+import org.eigenbase.sql.parser.SqlParserUtil;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql.util.SqlVisitor;
 import org.eigenbase.util.BitString;
@@ -169,7 +169,7 @@ public class SqlLiteral extends SqlNode
     protected SqlLiteral(
         Object value,
         SqlTypeName typeName,
-        ParserPosition pos)
+        SqlParserPos pos)
     {
         super(pos);
         this.value = value;
@@ -309,7 +309,7 @@ public class SqlLiteral extends SqlNode
     /**
      * Creates a NULL literal.
      */
-    public static SqlLiteral createNull(ParserPosition pos)
+    public static SqlLiteral createNull(SqlParserPos pos)
     {
         return new SqlLiteral(null, SqlTypeName.Null, pos);
     }
@@ -319,14 +319,14 @@ public class SqlLiteral extends SqlNode
      */
     public static SqlLiteral createBoolean(
         boolean b,
-        ParserPosition pos)
+        SqlParserPos pos)
     {
         return b
         ? new SqlLiteral(Boolean.TRUE, SqlTypeName.Boolean, pos)
         : new SqlLiteral(Boolean.FALSE, SqlTypeName.Boolean, pos);
     }
 
-    public static SqlLiteral createUnknown(ParserPosition pos)
+    public static SqlLiteral createUnknown(SqlParserPos pos)
     {
         return new SqlLiteral(null, SqlTypeName.Boolean, pos);
     }
@@ -339,7 +339,7 @@ public class SqlLiteral extends SqlNode
      */
     public static SqlLiteral createFlag(
         EnumeratedValues.Value o,
-        ParserPosition pos)
+        SqlParserPos pos)
     {
         return new SqlLiteral(o, SqlTypeName.Symbol, pos);
     }
@@ -468,7 +468,7 @@ public class SqlLiteral extends SqlNode
 
     public static SqlDateLiteral createDate(
         Calendar calendar,
-        ParserPosition pos)
+        SqlParserPos pos)
     {
         return new SqlDateLiteral(calendar, pos);
     }
@@ -476,7 +476,7 @@ public class SqlLiteral extends SqlNode
     public static SqlTimestampLiteral createTimestamp(
         Calendar calendar,
         int precision,
-        ParserPosition pos)
+        SqlParserPos pos)
     {
         return new SqlTimestampLiteral(calendar, precision, false, pos);
     }
@@ -484,7 +484,7 @@ public class SqlLiteral extends SqlNode
     public static SqlTimeLiteral createTime(
         Calendar calendar,
         int precision,
-        ParserPosition pos)
+        SqlParserPos pos)
     {
         return new SqlTimeLiteral(calendar, precision, false, pos);
     }
@@ -497,7 +497,7 @@ public class SqlLiteral extends SqlNode
      * @param pos               Parser position
      */
     public static SqlIntervalLiteral createInterval(int[] values,
-        SqlIntervalQualifier intervalQualifier, ParserPosition pos)
+        SqlIntervalQualifier intervalQualifier, SqlParserPos pos)
     {
         SqlTypeName typeName = intervalQualifier.isYearMonth() ?
             SqlTypeName.IntervalYearMonth :
@@ -508,7 +508,7 @@ public class SqlLiteral extends SqlNode
 
     public static SqlNumericLiteral createExactNumeric(
         String s,
-        ParserPosition pos)
+        SqlParserPos pos)
     {
         BigDecimal value;
         int prec;
@@ -516,16 +516,16 @@ public class SqlLiteral extends SqlNode
 
         int i = s.indexOf('.');
         if ((i >= 0) && ((s.length() - 1) != i)) {
-            value = ParserUtil.parseDecimal(s);
+            value = SqlParserUtil.parseDecimal(s);
             scale = s.length() - i - 1;
             assert scale == value.scale() : s;
             prec = s.length() - 1;
         } else if ((i >= 0) && ((s.length() - 1) == i)) {
-            value = ParserUtil.parseInteger(s.substring(0, i));
+            value = SqlParserUtil.parseInteger(s.substring(0, i));
             scale = 0;
             prec = s.length() - 1;
         } else {
-            value = ParserUtil.parseInteger(s);
+            value = SqlParserUtil.parseInteger(s);
             scale = 0;
             prec = s.length();
         }
@@ -539,9 +539,9 @@ public class SqlLiteral extends SqlNode
 
     public static SqlNumericLiteral createApproxNumeric(
         String s,
-        ParserPosition pos)
+        SqlParserPos pos)
     {
-        BigDecimal value = ParserUtil.parseDecimal(s);
+        BigDecimal value = SqlParserUtil.parseDecimal(s);
         return new SqlNumericLiteral(value, null, null, false, pos);
     }
 
@@ -552,7 +552,7 @@ public class SqlLiteral extends SqlNode
      */
     public static SqlBinaryStringLiteral createBinaryString(
         String s,
-        ParserPosition pos)
+        SqlParserPos pos)
     {
         BitString bits = BitString.createFromHexString(s);
         return new SqlBinaryStringLiteral(bits, pos);
@@ -564,7 +564,7 @@ public class SqlLiteral extends SqlNode
      */
     public static SqlCharStringLiteral createCharString(
         String s,
-        ParserPosition pos)
+        SqlParserPos pos)
     {
         return createCharString(s, null, pos);
     }
@@ -578,7 +578,7 @@ public class SqlLiteral extends SqlNode
     public static SqlCharStringLiteral createCharString(
         String s,
         String charSet,
-        ParserPosition pos)
+        SqlParserPos pos)
     {
         NlsString slit = new NlsString(s, charSet, null);
         return new SqlCharStringLiteral(slit, pos);
@@ -603,7 +603,7 @@ public class SqlLiteral extends SqlNode
     {
         protected BitStringLiteral(
             BitString val,
-            ParserPosition pos)
+            SqlParserPos pos)
         {
             super(val, SqlTypeName.Bit, pos);
         }
@@ -617,7 +617,7 @@ public class SqlLiteral extends SqlNode
         /* Creates a literal like B'0101' */
         public static BitStringLiteral create(
             String s,
-            ParserPosition pos)
+            SqlParserPos pos)
         {
             BitString bits = BitString.createFromBitString(s);
             return new BitStringLiteral(bits, pos);

@@ -26,7 +26,7 @@ import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.fun.SqlTrimFunction;
-import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.type.CallOperands;
@@ -349,7 +349,7 @@ public class SqlJdbcFunctionCall extends SqlFunction
 
     public SqlCall createCall(
         SqlNode [] operands,
-        ParserPosition pos)
+        SqlParserPos pos)
     {
         thisOperands = operands;
         return super.createCall(operands, pos);
@@ -577,7 +577,7 @@ public class SqlJdbcFunctionCall extends SqlFunction
          */
         SqlCall createCall(
             SqlNode [] operands,
-            ParserPosition pos)
+            SqlParserPos pos)
         {
             if (null == order) {
                 return operator.createCall(operands, pos);

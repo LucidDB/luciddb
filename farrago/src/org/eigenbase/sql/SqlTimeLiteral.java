@@ -19,8 +19,8 @@
 */
 package org.eigenbase.sql;
 
-import org.eigenbase.sql.parser.ParserPosition;
-import org.eigenbase.sql.parser.ParserUtil;
+import org.eigenbase.sql.parser.SqlParserPos;
+import org.eigenbase.sql.parser.SqlParserUtil;
 import org.eigenbase.sql.type.SqlTypeName;
 
 import java.sql.Time;
@@ -39,9 +39,9 @@ public class SqlTimeLiteral extends SqlAbstractDateTimeLiteral
         Calendar t,
         int precision,
         boolean hasTZ,
-        ParserPosition pos)
+        SqlParserPos pos)
     {
-        super(t, hasTZ, SqlTypeName.Time, precision, ParserUtil.TimeFormatStr,
+        super(t, hasTZ, SqlTypeName.Time, precision, SqlParserUtil.TimeFormatStr,
             pos);
     }
 

@@ -22,7 +22,7 @@
 package org.eigenbase.sql;
 
 import org.eigenbase.sql.fun.*;
-import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.type.ReturnTypeInference;
@@ -82,7 +82,7 @@ public class SqlSelectOperator extends SqlOperator
 
     public SqlCall createCall(
         SqlNode [] operands,
-        ParserPosition pos)
+        SqlParserPos pos)
     {
         return new SqlSelect(this, operands, pos);
     }
@@ -98,7 +98,7 @@ public class SqlSelectOperator extends SqlOperator
      * @param having       The HAVING clause, or null if not present
      * @param windowDecls  The WINDOW clause, or null if not present
      * @param orderBy      The ORDER BY clause, or null if not present
-     * @param pos          The parser position, or {@link ParserPosition#ZERO}
+     * @param pos          The parser position, or {@link SqlParserPos#ZERO}
      *                     if not specified; must not be null.
      * @return A {@link SqlSelect}, never null
      */
@@ -111,7 +111,7 @@ public class SqlSelectOperator extends SqlOperator
         SqlNode having,
         SqlNodeList windowDecls,
         SqlNode orderBy,
-            ParserPosition pos)
+            SqlParserPos pos)
     {
         if (keywordList == null) {
             keywordList = new SqlNodeList(pos);

@@ -23,7 +23,7 @@ import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.type.*;
@@ -138,10 +138,10 @@ public class SqlLiteralChainOperator extends SqlInternalOperator {
     {
         // per the SQL std, each string fragment must be on a different line
         for (int i = 1; i < call.operands.length; i++) {
-            ParserPosition prevPos = call.operands[i - 1].getParserPosition();
+            SqlParserPos prevPos = call.operands[i - 1].getParserPosition();
             final SqlNode operand = call.operands[i];
-            ParserPosition pos = operand.getParserPosition();
-            if (pos.getBeginLine() <= prevPos.getBeginLine()) {
+            SqlParserPos pos = operand.getParserPosition();
+            if (pos.getLineNum() <= prevPos.getLineNum()) {
                 throw validator.newValidationError(operand,
                     EigenbaseResource.instance().newStringFragsOnSameLine());
             }

@@ -21,7 +21,7 @@
 
 package org.eigenbase.sql;
 
-import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.util.SqlVisitor;
 import org.eigenbase.util.*;
 
@@ -42,13 +42,13 @@ public abstract class SqlNode implements Cloneable
 {
     //~ Instance fields -------------------------------------------------------
 
-    private final ParserPosition pos;
+    private final SqlParserPos pos;
 
     public static final SqlNode[] emptyArray = new SqlNode[0];
 
     //~ Constructors ----------------------------------------------------------
 
-    SqlNode(ParserPosition pos)
+    SqlNode(SqlParserPos pos)
     {
         this.pos = pos;
     }
@@ -158,7 +158,7 @@ public abstract class SqlNode implements Cloneable
         int leftPrec,
         int rightPrec);
 
-    public ParserPosition getParserPosition()
+    public SqlParserPos getParserPosition()
     {
         return pos;
     }
@@ -184,13 +184,13 @@ public abstract class SqlNode implements Cloneable
      *
      * @param validator Validator
      * @param scope Validation scope
-     * @param pp ParserPosition indicating the cursor position at which 
+     * @param pp SqlParserPos indicating the cursor position at which 
      * competion hints are requested for
      * @return a string array of valid options
      */
     public String[] findValidOptions(SqlValidator validator, 
         SqlValidator.Scope scope,
-        ParserPosition pp)
+        SqlParserPos pp)
     {
         return Util.emptyStringArray;
     }

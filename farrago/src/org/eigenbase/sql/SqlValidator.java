@@ -26,7 +26,7 @@ import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.fun.*;
-import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.util.SqlBasicVisitor;
 import org.eigenbase.util.EnumeratedValues;
@@ -159,7 +159,7 @@ public class SqlValidator
             final SqlNode selectItem = selectList.get(i);
             expandSelectItem(selectItem, query, list, aliases, types);
         }
-        return new SqlNodeList(list, ParserPosition.ZERO);
+        return new SqlNodeList(list, SqlParserPos.ZERO);
     }
 
     /**
@@ -202,7 +202,7 @@ public class SqlValidator
                             new SqlIdentifier(new String [] {
                                     tableName, columnName
                                 },
-                                ParserPosition.ZERO);
+                                SqlParserPos.ZERO);
                         addToSelectList(selectItems, aliases, types, exp,
                             scope);
                     }
@@ -275,7 +275,7 @@ public class SqlValidator
      * the indicated position
      *
      */
-    public String[] lookupHints(SqlNode topNode, ParserPosition pp)
+    public String[] lookupHints(SqlNode topNode, SqlParserPos pp)
     {
         Scope scope = new EmptyScope();
         try {
@@ -306,7 +306,7 @@ public class SqlValidator
      * the indicated position
      *
      */
-    private String[] lookupSelectHints(SqlSelect select, ParserPosition pp)
+    private String[] lookupSelectHints(SqlSelect select, SqlParserPos pp)
     {
         SqlIdentifier dummyId = (SqlIdentifier)sqlids.get(pp.toString());
         Scope dummyScope = (Scope)idscopes.get(pp.toString());
@@ -322,7 +322,7 @@ public class SqlValidator
 
 
     private String[] lookupFromHints(SqlNode node, 
-        Scope scope, ParserPosition pp) 
+        Scope scope, SqlParserPos pp) 
     {
         final Namespace ns = getNamespace(node);
         if (ns instanceof IdentifierNamespace) {
@@ -339,7 +339,7 @@ public class SqlValidator
         }
     }
 
-    private String[] lookupJoinHints(SqlJoin join, Scope scope, ParserPosition pp)
+    private String[] lookupJoinHints(SqlJoin join, Scope scope, SqlParserPos pp)
     {
         SqlNode left = join.getLeft();
         SqlNode right = join.getRight();
@@ -611,12 +611,12 @@ public class SqlValidator
         // now transform node itself
         if (node.isA(SqlKind.SetQuery) || node.isA(SqlKind.Values)) {
             final SqlNodeList selectList =
-                new SqlNodeList(ParserPosition.ZERO);
-            selectList.add(new SqlIdentifier("*", ParserPosition.ZERO));
+                new SqlNodeList(SqlParserPos.ZERO);
+            selectList.add(new SqlIdentifier("*", SqlParserPos.ZERO));
             SqlSelect wrapperNode =
                 SqlStdOperatorTable.instance().selectOperator.createCall(null,
                     selectList, node, null, null, null, null, null,
-                    ParserPosition.ZERO);
+                    SqlParserPos.ZERO);
             return wrapperNode;
         } else if (node.isA(SqlKind.OrderBy)) {
             SqlCall orderBy = (SqlCall) node;
@@ -636,23 +636,23 @@ public class SqlValidator
                 }
             }
             final SqlNodeList selectList =
-                new SqlNodeList(ParserPosition.ZERO);
+                new SqlNodeList(SqlParserPos.ZERO);
             selectList.add(new SqlIdentifier("*", null));
             SqlSelect wrapperNode =
                 SqlStdOperatorTable.instance().selectOperator.createCall(null,
                     selectList, query, null, null, null, null, orderList,
-                        ParserPosition.ZERO);
+                        SqlParserPos.ZERO);
             return wrapperNode;
         } else if (node.isA(SqlKind.ExplicitTable)) {
             // (TABLE t) is equivalent to (SELECT * FROM t)
             SqlCall call = (SqlCall) node;
             final SqlNodeList selectList =
-                new SqlNodeList(ParserPosition.ZERO);
+                new SqlNodeList(SqlParserPos.ZERO);
             selectList.add(new SqlIdentifier("*", null));
             SqlSelect wrapperNode =
                 SqlStdOperatorTable.instance().selectOperator.createCall(null,
                     selectList, call.getOperands()[0], null, null, null, null,
-                    null, ParserPosition.ZERO);
+                    null, SqlParserPos.ZERO);
             return wrapperNode;
         } else if (node.isA(SqlKind.Insert)) {
             SqlInsert call = (SqlInsert) node;
@@ -662,17 +662,17 @@ public class SqlValidator
         } else if (node.isA(SqlKind.Delete)) {
             SqlDelete call = (SqlDelete) node;
             final SqlNodeList selectList =
-                new SqlNodeList(ParserPosition.ZERO);
+                new SqlNodeList(SqlParserPos.ZERO);
             selectList.add(new SqlIdentifier("*", null));
             SqlSelect select =
                 SqlStdOperatorTable.instance().selectOperator.createCall(null,
                     selectList, call.getTargetTable(), call.getCondition(),
-                    null, null, null, null, ParserPosition.ZERO);
+                    null, null, null, null, SqlParserPos.ZERO);
             call.setOperand(SqlDelete.SOURCE_SELECT_OPERAND, select);
         } else if (node.isA(SqlKind.Update)) {
             SqlUpdate call = (SqlUpdate) node;
             final SqlNodeList selectList =
-                new SqlNodeList(ParserPosition.ZERO);
+                new SqlNodeList(SqlParserPos.ZERO);
             selectList.add(new SqlIdentifier("*", null));
             Iterator iter =
                 call.getSourceExpressionList().getList().iterator();
@@ -689,7 +689,7 @@ public class SqlValidator
             SqlSelect select =
                 SqlStdOperatorTable.instance().selectOperator.createCall(null,
                     selectList, call.getTargetTable(), call.getCondition(),
-                    null, null, null, null, ParserPosition.ZERO);
+                    null, null, null, null, SqlParserPos.ZERO);
             call.setOperand(SqlUpdate.SOURCE_SELECT_OPERAND, select);
         }
         return node;
@@ -1284,9 +1284,9 @@ public class SqlValidator
         SqlNode expr,
         String alias)
     {
-        final SqlIdentifier id = new SqlIdentifier(alias, ParserPosition.ZERO);
+        final SqlIdentifier id = new SqlIdentifier(alias, SqlParserPos.ZERO);
         return SqlStdOperatorTable.instance().asOperator.createCall(expr, id,
-            ParserPosition.ZERO);
+            SqlParserPos.ZERO);
     }
 
     /**
@@ -1948,7 +1948,7 @@ public class SqlValidator
         }
 
         SqlNodeList newSelectList =
-            new SqlNodeList(expandedSelectItems, ParserPosition.ZERO);
+            new SqlNodeList(expandedSelectItems, SqlParserPos.ZERO);
         if (shouldExpandIdentifiers()) {
             select.setOperand(SqlSelect.SELECT_OPERAND, newSelectList);
         }
@@ -2221,11 +2221,14 @@ public class SqlValidator
         SqlValidatorException e)
     {
         Util.pre(node != null, "node != null");
-        final ParserPosition pos = node.getParserPosition();
-        return EigenbaseResource.instance().newValidatorContext(
-            new Integer(pos.getBeginLine()),
-            new Integer(pos.getBeginColumn()),
-            e);
+        final SqlParserPos pos = node.getParserPosition();
+        FarragoException contextExcn = 
+            EigenbaseResource.instance().newValidatorContext(
+                new Integer(pos.getLineNum()),
+                new Integer(pos.getColumnNum()),
+                e);
+        contextExcn.setPosition(pos.getLineNum(), pos.getColumnNum());
+        return contextExcn;
     }
 
     /**
@@ -2419,7 +2422,7 @@ public class SqlValidator
         /**
          * lookup hints from this namespace
          */
-        String[] lookupHints(ParserPosition pp);
+        String[] lookupHints(SqlParserPos pp);
 
         SqlNode getNode();
 
@@ -2465,7 +2468,7 @@ public class SqlValidator
         AbstractNamespace() {
         }
 
-        public String[] lookupHints(ParserPosition pp) { 
+        public String[] lookupHints(SqlParserPos pp) { 
             return Util.emptyStringArray;
         }
 
@@ -2992,7 +2995,7 @@ public class SqlValidator
             return rowType;
         }
 
-        public String[] lookupHints(ParserPosition pp) {
+        public String[] lookupHints(SqlParserPos pp) {
             return lookupSelectHints(select, pp);
         }
     }
@@ -3054,7 +3057,7 @@ public class SqlValidator
             public void validate() {
             }
 
-            public String[] lookupHints(ParserPosition pp) {
+            public String[] lookupHints(SqlParserPos pp) {
                 return Util.emptyStringArray;
             }
 
@@ -3168,7 +3171,7 @@ public class SqlValidator
 
         /** List of monotonic expressions. */
         private final SqlNodeList monotonicExprs =
-            new SqlNodeList(ParserPosition.ZERO);
+            new SqlNodeList(SqlParserPos.ZERO);
 
         IdentifierNamespace(SqlIdentifier id)
         {
@@ -3496,7 +3499,7 @@ public class SqlValidator
                     //todo: do implicit collation here
                     return new SqlIdentifier(
                         new String[]{tableName, columnName},
-                        ParserPosition.ZERO);
+                        SqlParserPos.ZERO);
                 }
 
             case 2:

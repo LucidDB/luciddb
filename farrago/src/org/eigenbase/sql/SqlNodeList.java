@@ -26,7 +26,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Iterator;
 
-import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.util.SqlVisitor;
 
 
@@ -44,7 +44,7 @@ public class SqlNodeList extends SqlNode
      * An immutable, empty SqlNodeList.
      */
     public static final SqlNodeList Empty =
-        new SqlNodeList(ParserPosition.ZERO) {
+        new SqlNodeList(SqlParserPos.ZERO) {
             public void add(SqlNode node) {
                 throw new UnsupportedOperationException();
             }
@@ -55,7 +55,7 @@ public class SqlNodeList extends SqlNode
     /**
      * Creates an empty <code>SqlNodeList</code>.
      */
-    public SqlNodeList(ParserPosition pos)
+    public SqlNodeList(SqlParserPos pos)
     {
         super(pos);
         list = new ArrayList();
@@ -67,7 +67,7 @@ public class SqlNodeList extends SqlNode
      */
     public SqlNodeList(
         Collection collection,
-        ParserPosition pos)
+        SqlParserPos pos)
     {
         super(pos);
         list = new ArrayList(collection);
