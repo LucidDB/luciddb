@@ -1242,6 +1242,9 @@ public class SqlValidator
 
     private void validateExpression(SqlNode node)
     {
+        if (node == null) {
+            return;
+        }
         switch (node.getKind().getOrdinal()) {
         case SqlKind.UnionORDINAL:
         case SqlKind.ExceptORDINAL:
@@ -1327,6 +1330,69 @@ public class SqlValidator
             select.getFrom(),
             fromType);
 
+        validateWhereClause(select, scope);
+        validateGroupClause(select, scope);
+        validateOrderList(select);
+        validateWindowClause(select);
+
+        // validate the select list at the end because the select item might depends on the group by list, or
+        // the window function might reference window name in the window clause etc.
+        validateSelectList(selectItems, select, targetRowType, scope);
+
+    }
+
+    private void validateWindowClause(SqlSelect select)
+    {
+        final SqlNodeList windowList = select.getWindowList();
+        if(windowList != null) {
+            // todo: validate window clause
+            // validateExpression(windowList);
+        }
+    }
+
+    private void validateOrderList(SqlSelect select)
+    {
+        SqlNodeList orderList = select.getOrderList();
+        if (orderList != null) {
+            if (!shouldAllowIntermediateOrderBy()) {
+                if (select != outermostNode) {
+                    throw newValidationError(select,
+                        EigenbaseResource.instance().newInvalidOrderByPos());
+                }
+            }
+            validateExpression(orderList);
+        }
+    }
+
+    private void validateGroupClause(SqlSelect select, final SelectScope scope)
+    {
+        SqlNodeList group = select.getGroup();
+        if (group != null) {
+            // TODO jvs 20-May-2003 -- I enabled this for testing Fennel
+            // DISTINCT, but there's specific GROUP BY
+            // validation that needs to be added, which is why jhyde had a
+            // throw here before.
+            validateExpression(group);
+            inferUnknownTypes(unknownType, scope, group);
+        }
+    }
+
+    private void validateWhereClause(SqlSelect select, final SelectScope scope)
+    {
+        // validate WHERE clause
+        final SqlNode where = select.getWhere();
+        if (where != null) {
+            validateExpression(where);
+            inferUnknownTypes(
+                typeFactory.createSqlType(SqlTypeName.Boolean),
+                scope,
+                where);
+            deriveType(scope, where);
+        }
+    }
+
+    private void validateSelectList(final SqlNodeList selectItems, SqlSelect select, RelDataType targetRowType, final SelectScope scope)
+    {
         // First pass, ensure that aliases are unique. "*" and "TABLE.*" items
         // are ignored.
         final ArrayList aliases = new ArrayList();
@@ -1355,36 +1421,6 @@ public class SqlValidator
         scope.rowType =
             typeFactory.createProjectType((RelDataType []) types.toArray(
                     emptyTypes), (String []) aliases.toArray(emptyStrings));
-
-        // validate WHERE clause
-        final SqlNode where = select.getWhere();
-        if (where != null) {
-            validateExpression(where);
-            inferUnknownTypes(
-                typeFactory.createSqlType(SqlTypeName.Boolean),
-                scope,
-                where);
-            deriveType(scope, where);
-        }
-        SqlNodeList group = select.getGroup();
-        if (group != null) {
-            // TODO jvs 20-May-2003 -- I enabled this for testing Fennel
-            // DISTINCT, but there's specific GROUP BY
-            // validation that needs to be added, which is why jhyde had a
-            // throw here before.
-            validateExpression(group);
-            inferUnknownTypes(unknownType, scope, group);
-        }
-        SqlNodeList orderList = select.getOrderList();
-        if (orderList != null) {
-            if (!shouldAllowIntermediateOrderBy()) {
-                if (select != outermostNode) {
-                    throw newValidationError(select,
-                        EigenbaseResource.instance().newInvalidOrderByPos());
-                }
-            }
-            validateExpression(orderList);
-        }
     }
 
     private RelDataType createTargetRowType(

@@ -698,6 +698,7 @@ public class SqlStdOperatorTable extends SqlOperatorTable
         new SqlSpecialOperator("EXPLAIN", SqlKind.Explain);
     public final SqlOrderByOperator orderByOperator = new SqlOrderByOperator();
     public final SqlWindowOperator windowOperator = new SqlWindowOperator();
+    public final SqlOverOperator windowFuncOp = new SqlOverOperator();
 
 
     //-------------------------------------------------------------

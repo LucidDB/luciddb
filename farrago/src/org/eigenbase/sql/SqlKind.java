@@ -122,6 +122,10 @@ public class SqlKind extends EnumeratedValues.BasicValue
     /** Window specification */
     public static final SqlKind Window = new SqlKind("Window", WindowORDINAL);
 
+    public static final int WinFunORDINAL = 18;
+    /** Window function specification */
+    public static final SqlKind WindowFun = new SqlKind("WindownFunction", WinFunORDINAL);
+
     // binary operators
     // arithmetic 100 - 109
 

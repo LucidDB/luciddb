@@ -1264,6 +1264,44 @@ public abstract class SqlValidatorTestCase extends TestCase
         checkExpFails("interval '1' year - interval '1' day");
         checkExpFails("interval '1' month - interval '1' second");
     }
+
+    public void checkWinClauseExp(String sql, String expectedMsgPattern) {
+        sql = "select * from emp " + sql;
+        assertExceptionIsThrown(sql, expectedMsgPattern);
+    }
+
+    public void checkWindowExpFails(String sql, String expectedMsgPattern) {
+        sql = "select * from emp " + sql;
+        assertExceptionIsThrown(sql, expectedMsgPattern);
+    }
+
+    public void _testWindowClause() {
+        checkWinClauseExp("window as w (partition by sal order by deptno rows 2 preceding)", "expectedMsgPattern");
+
+        // check syntax rules
+        checkWindowExpFails("window as w ()", "");
+        // syntax rule 2
+        checkWindowExpFails("window as w (partition by sal), window as w (partition by sal)", "");
+//        checkWindowExpFails("window as w (partition by sal),
+//        checkWindowExpFails("window as w (partition by non_exist_col order by deptno)");
+//        checkWindowExpFails("window as w (partition by sal order by non_exist_col)");
+        // unambiguously reference a column in the window clause
+        // select * from emp, emp window w as (partition by sal);
+        // select * from emp empalias window w as (partition by sal);
+    }
+
+    public void checkWinFuncExp(String sql)
+    {
+        sql = "select " + sql + " from emp";
+        assertExceptionIsThrown(sql, null);
+    }
+
+    public void testOneWinFunc()
+    {
+        checkWinFuncExp("abs(2) over (partition by sal)");
+
+    }
+
 }
 
 

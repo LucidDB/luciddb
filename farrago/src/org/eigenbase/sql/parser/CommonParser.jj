@@ -1930,11 +1930,15 @@ SqlNode FunctionCall() :
 {
     String name;
     List args;
-    SqlNode e;
+    SqlIdentifier id = null;
+    SqlNode e = null;
     ParserPosition pos;
     ParserPosition starPos;
     ParserPosition namePos;
+    ParserPosition overPos = null;
     SqlDataType dt;
+    boolean windowFunc = false;
+    SqlCall function = null;
 }
 {
     //~ FUNCTIONS WITH SPECIAL SYNTAX ---------------------------------------
@@ -2088,12 +2092,45 @@ SqlNode FunctionCall() :
             { args = startList(new SqlIdentifier("*", starPos)); }
           | LOOKAHEAD(2) <LPAREN> <RPAREN>
             { args = ParserUtil.emptyList; }
+            [ <OVER> 
+              //~ only window aggreggation function has window inline
+              //definition. 
+            {
+                overPos = getPos();
+                windowFunc = true;
+            }
+             ( 
+                id = SimpleIdentifier()
+                | e = WindowSpecification()
+             )
+            ]
           | args = ParenthesizedQueryOrCommaList(EXPR_ACCEPT_SUBQUERY)
-
+            [ <OVER> 
+                {
+                    overPos = getPos();
+                    windowFunc = true;
+                }
+             ( 
+                id = SimpleIdentifier()
+                | e = WindowSpecification()
+             )
+            ]
         )
 
         {
-            return opTab.createCall(name, ParserUtil.toNodeArray(args), pos);
+            function = opTab.createCall(name, ParserUtil.toNodeArray(args), pos);
+            if (windowFunc) {
+                if (id != null) {
+                    return opTab.windowFuncOp.createCall(
+                            new SqlNode[] {function, id}, overPos);
+                } else {
+                    return opTab.windowFuncOp.createCall(
+                        new SqlNode[] { function, e },overPos);
+                }
+            } else {
+                return function;
+            }
+            
         }
     )
 |
