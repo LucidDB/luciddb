@@ -54,12 +54,14 @@
 			<scp sourcedir="logs/aspen"
 			     targetuser="&scp_user;"
 			     targethost="&scp_host;"
+			     targetseparator="&scp_filesep;"
 			     targetdir="web/logs/aspen&configSuffix;"/>
 			
 			<scp sourcedir="logs/aspen"
 			     file="currentbuildstatus.txt"
 			     targetuser="&scp_user;"
 			     targethost="&scp_host;"
+			     targetseparator="&scp_filesep;"
 			     targetdir="web/logs/aspen&configSuffix;"/>
 			
 			<email buildresultsurl="&buildresultsbase;/aspen&configSuffix;"

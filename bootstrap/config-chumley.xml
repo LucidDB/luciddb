@@ -23,8 +23,9 @@
 <!ENTITY failureaddress   "the.team@disruptivetech.com">
 <!ENTITY reportwhenfixed  "true">
 
-<!ENTITY scp_user        "aspen">
-<!ENTITY scp_host        "jhyde.dyndns.org">
+<!ENTITY scp_user         "aspen">
+<!ENTITY scp_host         "jhyde.dyndns.org">
+<!ENTITY scp_filesep      "/">
 <!ENTITY rsync_cmd        "rsync -az -e ssh --delete-after">
 <!ENTITY rsync_dest       "aspen@jhyde.dyndns.org:web/artifacts">
 

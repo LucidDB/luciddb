@@ -47,12 +47,14 @@
 			<scp sourcedir="logs/farrago"
 			     targetuser="&scp_user;"
 			     targethost="&scp_host;"
+			     targetseparator="&scp_filesep;"
 			     targetdir="web/logs/farrago&configSuffix;"/>
 			
 			<scp sourcedir="logs/farrago"
 			     file="currentbuildstatus.txt"
 			     targetuser="&scp_user;"
 			     targethost="&scp_host;"
+			     targetseparator="&scp_filesep;"
 			     targetdir="web/logs/farrago&configSuffix;"/> 
 			
 			<email buildresultsurl="&buildresultsbase;/farrago&configSuffix;"
