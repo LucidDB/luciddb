@@ -22,3 +22,11 @@ select public_key from sales.emps order by 1;
 select DATE '2004-12-01' as D1 from values('TRUE');
 select TIME '12:01:01' as T1 from values('TRUE');
 select TIMESTAMP '2004-12-01 12:01:01' as TS1 from values('TRUE');
+
+-- Exponent literals
+-- dtbug 271
+select 0e0 from values (0);
+
+-- End datatypes.sql
+
+

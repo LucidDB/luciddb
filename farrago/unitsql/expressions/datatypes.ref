@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/expressions/datatypes.sql#2 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/expressions/datatypes.sql#3 $
 0: jdbc:farrago:> -- Test expressions with different datatypes
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- VARCHAR comparison
@@ -53,5 +53,18 @@
 +------------------------+
 | 2004-12-01 12:01:01.0  |
 +------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- Exponent literals
+0: jdbc:farrago:> -- dtbug 271
+0: jdbc:farrago:> select 0e0 from values (0);
++---------+
+| EXPR$0  |
++---------+
+| 0.0     |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- End datatypes.sql
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit
