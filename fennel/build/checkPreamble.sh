@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id $
+# $Id$
 # Checks the header for all files.
 
 usage() {
@@ -26,8 +26,8 @@ check() {
 BEGIN {
     expects[++n] = "/\\*";
     actuals[n]   = "/*";
-    expects[++n] = "// \\$I" "d:.*\\$";
-    actuals[n]   = "// $I" "d:$";
+    expects[++n] = "// \\$I" "d.*\\$";
+    actuals[n]   = "// $I" "d$";
     if (component == "fennel") {
         expects[++n] = "// Fennel is a library of data storage and processing components\\.";
         actuals[n]   = "// Fennel is a library of data storage and processing components.";
