@@ -218,6 +218,13 @@ public class DdlValidator extends FarragoCompoundAllocation
             getRepos().getCorePackage().getElementOwnership(),
             new DropRule("namespace", CwmSchema.class,
                 ReferentialRuleTypeEnum.IMPORTED_KEY_RESTRICT));
+        
+        // When a UDT is dropped, all routines which realize methods should
+        // also be implicitly dropped.
+        addDropRule(
+            getRepos().getBehavioralPackage().getOperationMethod(),
+            new DropRule("specification", null,
+                ReferentialRuleTypeEnum.IMPORTED_KEY_CASCADE));
 
         // MDR pre-change instance creation events are useless, since they
         // don't refer to the new instance.  Instead, we rely on the
@@ -785,24 +792,32 @@ public class DdlValidator extends FarragoCompoundAllocation
     // implement FarragoSessionDdlValidator
     public CwmDependency createDependency(
         CwmNamespace client,
-        Collection suppliers,
-        String kind)
+        Collection suppliers)
     {
-        CwmDependency dependency = getRepos().newCwmDependency();
-        dependency.setName(client.getName() + "$DEP");
-        dependency.setKind(kind);
+        String depName = client.getName() + "$DEP";
+        CwmDependency dependency = (CwmDependency)
+            FarragoCatalogUtil.getModelElementByNameAndType(
+                client.getOwnedElement(),
+                depName,
+                getRepos().getCorePackage().getCwmDependency());
+
+        if (dependency == null) {
+            dependency = getRepos().newCwmDependency();
+            dependency.setName(client.getName() + "$DEP");
+            dependency.setKind("GenericDependency");
+            
+            // NOTE: The client owns the dependency, so their lifetimes are
+            // coeval.  We don't use the DependencyClient association at all
+            // because it causes weird problems.  That's why we have to
+            // restrict clients to being namespaces.  Ugh.
+            client.getOwnedElement().add(dependency);
+        }
 
         Iterator iter = suppliers.iterator();
         while (iter.hasNext()) {
             Object supplier = iter.next();
             dependency.getSupplier().add(supplier);
         }
-
-        // NOTE:  The client owns the dependency, so their lifetimes are coeval.
-        // We don't use the DependencyClient association at all because it
-        // causes all kinds of weird problems.  That's why we have to
-        // restrict clients to being namespaces.  Ugh.
-        client.getOwnedElement().add(dependency);
 
         return dependency;
     }

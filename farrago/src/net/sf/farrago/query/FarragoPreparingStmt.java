@@ -106,6 +106,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     private Set allDependencies;
     private Set jarUrlSet;
     private SqlOperatorTable sqlOperatorTable;
+    private final FarragoUserDefinedRoutineLookup routineLookup;
     private int expansionDepth;
 
     /**
@@ -126,7 +127,6 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     // attributes of the openjava code generated to implement the statement:
     private ClassDeclaration implementingClassDecl;
     private Argument [] implementingArgs;
-    private boolean processingDirectDependencies;
     private Set loadedServerClassNameSet;
     private FarragoSessionPlanner planner;
     private FarragoRelImplementor relImplementor;
@@ -152,7 +152,6 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         directDependencies = new HashSet();
         allDependencies = new HashSet();
         jarUrlSet = new LinkedHashSet();
-        processingDirectDependencies = true;
 
         classesRoot = new File(FarragoProperties.instance().homeDir.get(true));
         classesRoot = new File(classesRoot, "classes");
@@ -180,6 +179,9 @@ public class FarragoPreparingStmt extends OJPreparingStmt
                 throw Util.newInternal(ex);
             }
         }
+
+        routineLookup = new FarragoUserDefinedRoutineLookup(
+            stmtValidator, this, null);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -208,11 +210,9 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         }
 
         SqlOperatorTable systemOperators = getSession().getSqlOperatorTable();
-        SqlOperatorTable userOperators =
-            new FarragoUserDefinedRoutineLookup(stmtValidator, this, null);
 
         ChainedSqlOperatorTable table = new ChainedSqlOperatorTable();
-        table.add(userOperators);
+        table.add(routineLookup);
         table.add(systemOperators);
 
         sqlOperatorTable = table;
@@ -271,6 +271,14 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             super.prepareSql(rootRel, sqlKind, logical, implementingClassDecl,
                 implementingArgs);
         return implement(preparedResult);
+    }
+
+    /**
+     * @return lookup table for user-defined routines
+     */
+    public FarragoUserDefinedRoutineLookup getRoutineLookup()
+    {
+        return routineLookup;
     }
 
     void addJarUrl(String jarUrl)
@@ -553,7 +561,6 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     RelNode expandView(String queryString)
     {
         expansionDepth++;
-        stopCollectingDirectDependencies();
 
         SqlParser parser = new SqlParser(queryString);
         final SqlNode sqlQuery;
@@ -573,7 +580,6 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         FarragoRoutineInvocation invocation)
     {
         expansionDepth++;
-        stopCollectingDirectDependencies();
 
         // NOTE jvs 2-Jan-2005: We already validated the expression during DDL,
         // but we stored the original pre-validation expression, and validation
@@ -599,13 +605,6 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     public boolean isExpandingDefinition()
     {
         return expansionDepth > 0;
-    }
-
-    private void stopCollectingDirectDependencies()
-    {
-        // once we start expanding views and functions, all objects we
-        // encounter should be treated as indirect dependencies
-        processingDirectDependencies = false;
     }
 
     protected SqlToRelConverter getSqlToRelConverter(
@@ -871,6 +870,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             // user-defined structured type is allowed here
             return null;
         }
+        addDependency(cwmType);
         return getFarragoTypeFactory().createCwmType(cwmType);
     }
 
@@ -882,7 +882,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
 
     void addDependency(Object supplier)
     {
-        if (processingDirectDependencies) {
+        if (!isExpandingDefinition()) {
             directDependencies.add(supplier);
         }
         allDependencies.add(supplier);

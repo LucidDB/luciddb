@@ -284,8 +284,7 @@ public class DdlRoutineHandler extends DdlHandler
         if (sqlRoutine.getJar() != null) {
             validator.createDependency(
                 routine,
-                Collections.singleton(sqlRoutine.getJar()),
-                "RoutineUsesJar");
+                Collections.singleton(sqlRoutine.getJar()));
         }
     }
 
@@ -355,7 +354,7 @@ public class DdlRoutineHandler extends DdlHandler
         }
 
         validator.createDependency(
-            routine, analyzedSql.dependencies, "RoutineUsage");
+            routine, analyzedSql.dependencies);
 
         routine.getBody().setBody(
             FarragoUserDefinedRoutine.addReturnPrefix(
@@ -439,12 +438,12 @@ public class DdlRoutineHandler extends DdlHandler
         newBody.append("RETURN SELF; END");
         routine.getBody().setBody(newBody.toString());
         validator.createDependency(
-            routine, dependencies, "RoutineUsage");
+            routine, dependencies);
     }
 
     public void validateRoutineParam(FemRoutineParameter param)
     {
-        validateTypedElement(param);
+        validateTypedElement(param, (FemRoutine) param.getBehavioralFeature());
     }
 
     // implement FarragoSessionDdlHandler
@@ -474,7 +473,7 @@ public class DdlRoutineHandler extends DdlHandler
     public void validateDefinition(FemSqldistinguishedType typeDef)
     {
         validateUserDefinedType(typeDef);
-        validateTypedElement(typeDef);
+        validateTypedElement(typeDef, typeDef);
         if (!(typeDef.getType() instanceof CwmSqlsimpleType)) {
             throw validator.newPositionalError(
                 typeDef,
@@ -496,6 +495,86 @@ public class DdlRoutineHandler extends DdlHandler
                 orderingDef,
                 validator.res.newValidatorMultipleOrderings(
                     repos.getLocalizedObjectName(orderingDef.getType())));
+        }
+        FemRoutine routine = FarragoCatalogUtil.getRoutineForOrdering(
+            orderingDef);
+        CwmClassifier returnType = null;
+        if (routine != null) {
+            if (routine.getType() != ProcedureTypeEnum.FUNCTION) {
+                throw validator.newPositionalError(
+                    orderingDef,
+                    validator.res.newValidatorOrderingFunction(
+                        repos.getLocalizedObjectName(routine),
+                        repos.getLocalizedObjectName(orderingDef.getType())));
+            }
+            if (!routine.isDeterministic()) {
+                throw validator.newPositionalError(
+                    orderingDef,
+                    validator.res.newValidatorOrderingDeterministic(
+                        repos.getLocalizedObjectName(routine),
+                        repos.getLocalizedObjectName(orderingDef.getType())));
+            }
+            if (routine.getDataAccess() ==
+                RoutineDataAccessEnum.RDA_MODIFIES_SQL_DATA)
+            {
+                throw validator.newPositionalError(
+                    orderingDef,
+                    validator.res.newValidatorOrderingReadOnly(
+                        repos.getLocalizedObjectName(routine),
+                        repos.getLocalizedObjectName(orderingDef.getType())));
+            }
+            Iterator iter = routine.getParameter().iterator();
+            while (iter.hasNext()) {
+                FemRoutineParameter param = (FemRoutineParameter) iter.next();
+                if (param.getKind() == ParameterDirectionKindEnum.PDK_RETURN) {
+                    returnType = param.getType();
+                } else {
+                    if (param.getType() != orderingDef.getType()) {
+                        throw validator.newPositionalError(
+                            orderingDef,
+                            validator.res.newValidatorOrderingParamType(
+                                repos.getLocalizedObjectName(routine),
+                                repos.getLocalizedObjectName(
+                                    orderingDef.getType())));
+                    }
+                }
+            }
+        }
+        if (orderingDef.getCategory() ==
+            UserDefinedOrderingCategoryEnum.UDOC_RELATIVE)
+        {
+            if (FarragoCatalogUtil.getRoutineParamCount(routine) != 2) {
+                throw validator.newPositionalError(
+                    orderingDef,
+                    validator.res.newValidatorRelativeOrderingDyadic(
+                        repos.getLocalizedObjectName(routine),
+                        repos.getLocalizedObjectName(orderingDef.getType())));
+            }
+            // TODO jvs 22-Mar-2005:  better INTEGER identity check
+            if (!returnType.getName().equals("INTEGER")) {
+                throw validator.newPositionalError(
+                    orderingDef,
+                    validator.res.newValidatorRelativeOrderingResult(
+                        repos.getLocalizedObjectName(routine),
+                        repos.getLocalizedObjectName(orderingDef.getType())));
+            }
+        } else if (orderingDef.getCategory() ==
+            UserDefinedOrderingCategoryEnum.UDOC_MAP)
+        {
+            if (FarragoCatalogUtil.getRoutineParamCount(routine) != 1) {
+                throw validator.newPositionalError(
+                    orderingDef,
+                    validator.res.newValidatorMapOrderingMonadic(
+                        repos.getLocalizedObjectName(routine),
+                        repos.getLocalizedObjectName(orderingDef.getType())));
+            }
+            if (!(returnType instanceof CwmSqlsimpleType)) {
+                throw validator.newPositionalError(
+                    orderingDef,
+                    validator.res.newValidatorMapOrderingResult(
+                        repos.getLocalizedObjectName(routine),
+                        repos.getLocalizedObjectName(orderingDef.getType())));
+            }
         }
     }
     

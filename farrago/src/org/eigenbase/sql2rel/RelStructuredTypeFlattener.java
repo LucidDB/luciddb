@@ -568,35 +568,58 @@ public class RelStructuredTypeFlattener
                 // first, we don't have to do any special translation.
                 return super.visit(rexCall);
             }
+            // NOTE jvs 22-Mar-2005:  Likewise, the null indicator takes
+            // care of comparison null semantics without any special casing.
+            return flattenComparison(
+                rexBuilder,
+                rexCall.getOperator(),
+                rexCall.getOperands());
+        }
+
+        private RexNode flattenComparison(
+            RexBuilder rexBuilder,
+            SqlOperator op,
+            RexNode [] exprs)
+        {
+            SqlStdOperatorTable opTab = SqlStdOperatorTable.instance();
             List flattenedExps = new ArrayList();
             flattenProjections(
-                rexCall.getOperands(),
+                exprs,
                 null,
                 flattenedExps,
                 new ArrayList());
             int n = flattenedExps.size() / 2;
-            if ((n > 1) && !rexCall.isA(RexKind.Equals)) {
+            boolean negate = false;
+            if (op.kind.isA(SqlKind.NotEquals)) {
+                negate = true;
+                op = opTab.equalsOperator;
+            }
+            if ((n > 1) && !op.kind.isA(SqlKind.Equals)) {
                 throw Util.needToImplement(
                     "inequality comparison for row types");
             }
             RexNode conjunction = null;
-            SqlOperator andOperator = 
-                SqlStdOperatorTable.instance().andOperator;
             for (int i = 0; i < n; ++i) {
                 RexNode comparison = rexBuilder.makeCall(
-                    rexCall.getOperator(),
+                    op,
                     (RexNode) flattenedExps.get(i), 
                     (RexNode) flattenedExps.get(i + n));
                 if (conjunction == null) {
                     conjunction = comparison;
                 } else {
                     conjunction = rexBuilder.makeCall(
-                        andOperator,
+                        opTab.andOperator,
                         conjunction,
                         comparison);
                 }
             }
-            return conjunction;
+            if (negate) {
+                return rexBuilder.makeCall(
+                    opTab.notOperator,
+                    conjunction);
+            } else {
+                return conjunction;
+            }
         }
     }
 }

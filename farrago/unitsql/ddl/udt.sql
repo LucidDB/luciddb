@@ -7,19 +7,6 @@ set schema 'udttest';
 
 set path 'udttest';
 
--- basic distinct types
-create type dollar_currency as double;
-create type euro_currency as double;
-
--- should fail:  can't specify NOT INSTANTIABLE for distinct type
-create type simolean_currency as double not instantiable;
-
--- should fail:  can't specify NOT FINAL for distinct type
-create type simolean_currency as double not final;
-
--- should succeed
-create type simolean_currency as double final;
-
 -- basic structured type
 create type rectilinear_coord as (
     x double,
@@ -292,16 +279,19 @@ create type bad_schema as (
 create function slope(c rectilinear_coord_non0)
 returns double
 contains sql
+deterministic
 return c.y/c.x;
 
 create function make_coord(x double,y double)
 returns rectilinear_coord_non0
 contains sql
+deterministic
 return new rectilinear_coord_non0(x,y);
 
 create function transpose(c rectilinear_coord_non0)
 returns rectilinear_coord_non0
 contains sql
+deterministic
 return new rectilinear_coord_non0(c.y,c.x);
 
 values slope(new rectilinear_coord_non0(5,20));
@@ -416,6 +406,343 @@ delete from stored_coord_list t where t.coord1.x=0 and t.pair_id=-1;
 select t.pair_id, t.coord1.x, t.coord2.y 
 from stored_coord_list t
 order by pair_id;
+
+
+-- test user-defined orderings
+
+create type playing_card as (
+    card_suit char(1),
+    card_rank integer
+) final
+constructor method playing_card(
+    card_suit_init char(1),card_rank_init integer)
+returns playing_card
+self as result
+contains sql
+specific playing_card
+;
+
+create specific method playing_card
+for playing_card
+begin
+    set self.card_suit = card_suit_init; set 
+    self.card_rank = card_rank_init; return self
+; end;
+
+-- TODO jvs 22-Mar-2005:  once validator stops spewing for this
+-- should fail: no user-defined ordering available
+-- values playing_card('H',11) = playing_card('H',11);
+
+create ordering for playing_card
+equals only by state;
+
+values new playing_card('H',11) = new playing_card('H',11);
+
+values new playing_card('H',11) <> new playing_card('H',11);
+
+values new playing_card('H',11) = new playing_card('D',11);
+
+values new playing_card('H',11) <> new playing_card('D',11);
+
+-- TODO jvs 22-Mar-2005:  once validator stops spewing for this
+-- should fail: equals only
+-- values new playing_card('H',11) > new playing_card('D',11);
+
+-- should fail:  already defined
+create ordering for playing_card
+equals only by state;
+
+drop ordering for playing_card;
+
+-- should fail:  already gone
+drop ordering for playing_card;
+
+-- define a suit-independent ordering (like in war)
+create function map_card_to_card_rank(c playing_card)
+returns integer
+specific map_card_to_card_rank
+contains sql
+deterministic
+return c.card_rank;
+
+create ordering for playing_card
+order full by map
+with specific function map_card_to_card_rank;
+
+values new playing_card('H',11) = new playing_card('D',11);
+
+values new playing_card('H',11) <> new playing_card('D',11);
+
+values new playing_card('H',11) > new playing_card('D',11);
+
+values new playing_card('H',11) < new playing_card('D',11);
+
+values new playing_card('H',11) >= new playing_card('D',11);
+
+values new playing_card('H',11) <= new playing_card('D',11);
+
+values new playing_card('H',11) = new playing_card('H',10);
+
+values new playing_card('H',11) <> new playing_card('H',10);
+
+values new playing_card('H',11) > new playing_card('H',10);
+
+values new playing_card('H',11) < new playing_card('H',10);
+
+values new playing_card('H',11) >= new playing_card('H',10);
+
+values new playing_card('H',11) <= new playing_card('H',10);
+
+drop ordering for playing_card;
+
+-- define an ordering with spades as trump suit
+create function compare_cards_spades_trump(c1 playing_card,c2 playing_card)
+returns integer
+specific compare_cards_spades_trump
+contains sql
+deterministic
+return case 
+when c1.card_suit='S' and c2.card_suit<>'S' then 1
+when c2.card_suit='S' and c1.card_suit<>'S' then -1
+when c1.card_rank > c2.card_rank then 1
+when c1.card_rank < c2.card_rank then -1
+else 0
+end;
+
+create ordering for playing_card
+order full by relative
+with specific function compare_cards_spades_trump;
+
+values new playing_card('H',11) = new playing_card('D',11);
+
+values new playing_card('H',11) <> new playing_card('D',11);
+
+values new playing_card('H',11) > new playing_card('D',11);
+
+values new playing_card('H',11) < new playing_card('D',11);
+
+values new playing_card('H',11) >= new playing_card('D',11);
+
+values new playing_card('H',11) <= new playing_card('D',11);
+
+values new playing_card('H',11) = new playing_card('S',10);
+
+values new playing_card('H',11) <> new playing_card('S',10);
+
+values new playing_card('H',11) > new playing_card('S',10);
+
+values new playing_card('H',11) < new playing_card('S',10);
+
+values new playing_card('H',11) >= new playing_card('S',10);
+
+values new playing_card('H',11) <= new playing_card('S',10);
+
+drop ordering for playing_card;
+
+-- test some negative cases for ordering function mismatch
+
+create function compare_cards_bad_arity()
+returns integer
+specific compare_cards_bad_arity
+contains sql
+deterministic
+return 0;
+
+create function compare_cards_bad_map_nondeterministic(c playing_card)
+returns integer
+specific compare_cards_bad_map_nondeterministic
+contains sql
+not deterministic
+return 0;
+
+create function compare_cards_bad_relative_nondeterministic(
+    c1 playing_card, c2 playing_card)
+returns integer
+specific compare_cards_bad_relative_nondeterministic
+contains sql
+not deterministic
+return 0;
+
+create function compare_cards_bad_map_read_write(c playing_card)
+returns integer
+specific compare_cards_bad_map_read_write
+modifies sql data
+deterministic
+return 0;
+
+create function compare_cards_bad_relative_read_write(
+    c1 playing_card, c2 playing_card)
+returns integer
+specific compare_cards_bad_relative_read_write
+modifies sql data
+deterministic
+return 0;
+
+create function compare_cards_bad_map_return(c playing_card)
+returns playing_card
+specific compare_cards_bad_map_return
+contains sql
+deterministic
+return new playing_card('C',2);
+
+create function compare_cards_bad_relative_return(
+    c1 playing_card, c2 playing_card)
+returns double
+specific compare_cards_bad_relative_return
+contains sql
+deterministic
+return 0;
+
+-- should fail
+create ordering for playing_card
+order full by map
+with specific function compare_cards_bad_arity;
+
+-- should fail
+create ordering for playing_card
+order full by relative
+with specific function compare_cards_bad_arity;
+
+-- should fail
+create ordering for playing_card
+order full by map
+with specific function compare_cards_bad_map_nondeterministic;
+
+-- should fail
+create ordering for playing_card
+order full by relative
+with specific function compare_cards_bad_relative_nondeterministic;
+
+-- should fail
+create ordering for playing_card
+order full by map
+with specific function compare_cards_bad_map_read_write;
+
+-- should fail
+create ordering for playing_card
+order full by relative
+with specific function compare_cards_bad_relative_read_write;
+
+-- should fail
+create ordering for playing_card
+order full by map
+with specific function compare_cards_bad_map_return;
+
+-- should fail
+create ordering for playing_card
+order full by relative
+with specific function compare_cards_bad_relative_return;
+
+
+-- verify dependencies
+
+create table card_deck(
+    card_position int not null primary key,
+    card playing_card not null);
+
+create view card_view
+as select card from card_deck;
+
+create ordering for playing_card
+order full by relative
+with specific function compare_cards_spades_trump;
+
+create view high_card_view
+as select card from card_deck where card > new playing_card('S',10);
+
+-- should fail
+drop function compare_cards_spades_trump;
+
+-- should fail
+drop type playing_card;
+
+-- should fail
+drop ordering for playing_card;
+
+drop view high_card_view;
+
+-- now should succeed
+drop ordering for playing_card;
+
+-- explicitly drop objects that reference playing_card
+drop table card_deck cascade;
+drop function map_card_to_card_rank;
+drop function compare_cards_spades_trump;
+drop function compare_cards_bad_map_nondeterministic;
+drop function compare_cards_bad_relative_nondeterministic;
+drop function compare_cards_bad_map_read_write;
+drop function compare_cards_bad_relative_read_write;
+drop function compare_cards_bad_map_return;
+drop function compare_cards_bad_relative_return;
+
+-- now should succeed
+drop type playing_card;
+
+
+-- basic distinct types
+create type dollar_currency as double;
+create type euro_currency as double;
+
+-- should fail:  can't specify NOT INSTANTIABLE for distinct type
+create type simolean_currency as double not instantiable;
+
+-- should fail:  can't specify NOT FINAL for distinct type
+create type simolean_currency as double not final;
+
+-- should succeed
+create type simolean_currency as double final;
+
+-- table with distinct types
+create table sears_catalog(
+    item_name varchar(128) not null primary key,
+    dollar_price dollar_currency not null,
+    euro_price euro_currency not null);
+
+-- TODO:  enable the rest of this once cast to UDT is working
+-- insert into sears_catalog values
+-- ('Jeans',cast(29.99 as dollar_currency),cast(15.99 as euro_currency)),
+-- ('Thimble',cast(3.0 as dollar_currency),cast(2.0 as euro_currency));
+
+-- select item_name,cast(euro_price as double) as item_price
+-- from sears_catalog
+-- order by item_price;
+
+-- create function convert_dollar_to_euro(d dollar_currency)
+-- returns euro_currency
+-- contains sql
+-- deterministic
+-- return cast(cast(d as double)/2 as euro_currency);
+
+-- select item_name,
+-- cast(euro_price as double) 
+--   - cast(convert_dollar_to_euro(dollar_price) as double)
+--   as euro_diff
+-- from sears_catalog
+-- order by item_name;
+
+-- create ordering for dollar_currency
+-- equals only by state;
+
+-- select item_name from sears_catalog 
+-- where dollar_price > cast(10 as dollar_currency);
+
+-- In Europe, today is Opposite Day.
+-- create function negate_euro(e euro_currency)
+-- returns double
+-- specific negate_euro
+-- contains sql
+-- deterministic
+-- return -cast(e as double);
+
+-- create ordering for euro_currency
+-- order full by map
+-- with specific function negate_euro;
+
+-- select item_name from sears_catalog
+-- where euro_price > cast(10 as euro_currency);
+
+
+-- test internals of flattening
 
 !set outputformat csv
 

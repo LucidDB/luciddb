@@ -59,7 +59,7 @@ public abstract class FarragoCatalogUtil
         }
         return nParams;
     }
-    
+
     /**
      * Determines whether an index is temporary.
      *
@@ -370,6 +370,26 @@ public abstract class FarragoCatalogUtil
             }
         }
         return true;
+    }
+
+    /**
+     * Gets the routine which implements a particular user-defined ordering,
+     * or null if the ordering does not invoke a routine.
+     *
+     * @param ordering user-defined ordering of interest
+     *
+     * @return invoked routine or null
+     */
+    public static FemRoutine getRoutineForOrdering(FemUserDefinedOrdering udo)
+    {
+        Collection deps = udo.getOwnedElement();
+        if (deps.isEmpty()) {
+            return null;
+        }
+        assert(deps.size() == 1);
+        CwmDependency dep = (CwmDependency) deps.iterator().next();
+        assert(dep.getSupplier().size() == 1);
+        return (FemRoutine) dep.getSupplier().iterator().next();
     }
 
     /**

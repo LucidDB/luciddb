@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/udt.sql#9 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/udt.sql#10 $
 0: jdbc:farrago:> -- Test DDL for user-defined types
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema udttest;
@@ -6,21 +6,6 @@
 0: jdbc:farrago:> set schema 'udttest';
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set path 'udttest';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- basic distinct types
-0: jdbc:farrago:> create type dollar_currency as double;
-0: jdbc:farrago:> create type euro_currency as double;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail:  can't specify NOT INSTANTIABLE for distinct type
-0: jdbc:farrago:> create type simolean_currency as double not instantiable;
-Error: DDL validation error near line 1, column 34: Cannot define distinct datatype "UDTTEST"."SIMOLEAN_CURRENCY" as both FINAL and NOT INSTANTIABLE (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail:  can't specify NOT FINAL for distinct type
-0: jdbc:farrago:> create type simolean_currency as double not final;
-Error: DDL validation error near line 1, column 34: Must define distinct datatype "UDTTEST"."SIMOLEAN_CURRENCY" as FINAL (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should succeed
-0: jdbc:farrago:> create type simolean_currency as double final;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- basic structured type
 0: jdbc:farrago:> create type rectilinear_coord as (
@@ -327,16 +312,19 @@ Error: DDL validation error near line 1, column 33: Reference to unknown user-de
 0: jdbc:farrago:> create function slope(c rectilinear_coord_non0)
 . . . . . . . . > returns double
 . . . . . . . . > contains sql
+. . . . . . . . > deterministic
 . . . . . . . . > return c.y/c.x;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create function make_coord(x double,y double)
 . . . . . . . . > returns rectilinear_coord_non0
 . . . . . . . . > contains sql
+. . . . . . . . > deterministic
 . . . . . . . . > return new rectilinear_coord_non0(x,y);
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create function transpose(c rectilinear_coord_non0)
 . . . . . . . . > returns rectilinear_coord_non0
 . . . . . . . . > contains sql
+. . . . . . . . > deterministic
 . . . . . . . . > return new rectilinear_coord_non0(c.y,c.x);
 0: jdbc:farrago:> 
 0: jdbc:farrago:> values slope(new rectilinear_coord_non0(5,20));
@@ -537,6 +525,498 @@ Messages:
 | -3       | 0.0  |      |
 | -2       | 0.0  | 0.0  |
 +----------+------+------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test user-defined orderings
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create type playing_card as (
+. . . . . . . . >     card_suit char(1),
+. . . . . . . . >     card_rank integer
+. . . . . . . . > ) final
+. . . . . . . . > constructor method playing_card(
+. . . . . . . . >     card_suit_init char(1),card_rank_init integer)
+. . . . . . . . > returns playing_card
+. . . . . . . . > self as result
+. . . . . . . . > contains sql
+. . . . . . . . > specific playing_card
+. . . . . . . . > ;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create specific method playing_card
+. . . . . . . . > for playing_card
+. . . . . . . . > begin
+. . . . . . . . >     set self.card_suit = card_suit_init; set 
+. . . . . . . . >     self.card_rank = card_rank_init; return self
+. . . . . . . . > ; end;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- TODO jvs 22-Mar-2005:  once validator stops spewing for this
+0: jdbc:farrago:> -- should fail: no user-defined ordering available
+0: jdbc:farrago:> -- values playing_card('H',11) = playing_card('H',11);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create ordering for playing_card
+. . . . . . . . > equals only by state;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values new playing_card('H',11) = new playing_card('H',11);
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values new playing_card('H',11) <> new playing_card('H',11);
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values new playing_card('H',11) = new playing_card('D',11);
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values new playing_card('H',11) <> new playing_card('D',11);
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- TODO jvs 22-Mar-2005:  once validator stops spewing for this
+0: jdbc:farrago:> -- should fail: equals only
+0: jdbc:farrago:> -- values new playing_card('H',11) > new playing_card('D',11);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  already defined
+0: jdbc:farrago:> create ordering for playing_card
+. . . . . . . . > equals only by state;
+Error: DDL validation error near line 1, column 21: User-defined ordering already declared for structured object type "UDTTEST"."PLAYING_CARD" (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> drop ordering for playing_card;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  already gone
+0: jdbc:farrago:> drop ordering for playing_card;
+Error: No user-defined ordering declared for structured object type "UDTTEST"."PLAYING_CARD" (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- define a suit-independent ordering (like in war)
+0: jdbc:farrago:> create function map_card_to_card_rank(c playing_card)
+. . . . . . . . > returns integer
+. . . . . . . . > specific map_card_to_card_rank
+. . . . . . . . > contains sql
+. . . . . . . . > deterministic
+. . . . . . . . > return c.card_rank;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create ordering for playing_card
+. . . . . . . . > order full by map
+. . . . . . . . > with specific function map_card_to_card_rank;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values new playing_card('H',11) = new playing_card('D',11);
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values new playing_card('H',11) <> new playing_card('D',11);
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values new playing_card('H',11) > new playing_card('D',11);
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values new playing_card('H',11) < new playing_card('D',11);
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values new playing_card('H',11) >= new playing_card('D',11);
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values new playing_card('H',11) <= new playing_card('D',11);
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values new playing_card('H',11) = new playing_card('H',10);
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values new playing_card('H',11) <> new playing_card('H',10);
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values new playing_card('H',11) > new playing_card('H',10);
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values new playing_card('H',11) < new playing_card('H',10);
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values new playing_card('H',11) >= new playing_card('H',10);
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values new playing_card('H',11) <= new playing_card('H',10);
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> drop ordering for playing_card;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- define an ordering with spades as trump suit
+0: jdbc:farrago:> create function compare_cards_spades_trump(c1 playing_card,c2 playing_card)
+. . . . . . . . > returns integer
+. . . . . . . . > specific compare_cards_spades_trump
+. . . . . . . . > contains sql
+. . . . . . . . > deterministic
+. . . . . . . . > return case 
+. . . . . . . . > when c1.card_suit='S' and c2.card_suit<>'S' then 1
+. . . . . . . . > when c2.card_suit='S' and c1.card_suit<>'S' then -1
+. . . . . . . . > when c1.card_rank > c2.card_rank then 1
+. . . . . . . . > when c1.card_rank < c2.card_rank then -1
+. . . . . . . . > else 0
+. . . . . . . . > end;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create ordering for playing_card
+. . . . . . . . > order full by relative
+. . . . . . . . > with specific function compare_cards_spades_trump;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values new playing_card('H',11) = new playing_card('D',11);
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values new playing_card('H',11) <> new playing_card('D',11);
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values new playing_card('H',11) > new playing_card('D',11);
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values new playing_card('H',11) < new playing_card('D',11);
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values new playing_card('H',11) >= new playing_card('D',11);
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values new playing_card('H',11) <= new playing_card('D',11);
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values new playing_card('H',11) = new playing_card('S',10);
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values new playing_card('H',11) <> new playing_card('S',10);
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values new playing_card('H',11) > new playing_card('S',10);
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values new playing_card('H',11) < new playing_card('S',10);
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values new playing_card('H',11) >= new playing_card('S',10);
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values new playing_card('H',11) <= new playing_card('S',10);
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> drop ordering for playing_card;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test some negative cases for ordering function mismatch
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create function compare_cards_bad_arity()
+. . . . . . . . > returns integer
+. . . . . . . . > specific compare_cards_bad_arity
+. . . . . . . . > contains sql
+. . . . . . . . > deterministic
+. . . . . . . . > return 0;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create function compare_cards_bad_map_nondeterministic(c playing_card)
+. . . . . . . . > returns integer
+. . . . . . . . > specific compare_cards_bad_map_nondeterministic
+. . . . . . . . > contains sql
+. . . . . . . . > not deterministic
+. . . . . . . . > return 0;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create function compare_cards_bad_relative_nondeterministic(
+. . . . . . . . >     c1 playing_card, c2 playing_card)
+. . . . . . . . > returns integer
+. . . . . . . . > specific compare_cards_bad_relative_nondeterministic
+. . . . . . . . > contains sql
+. . . . . . . . > not deterministic
+. . . . . . . . > return 0;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create function compare_cards_bad_map_read_write(c playing_card)
+. . . . . . . . > returns integer
+. . . . . . . . > specific compare_cards_bad_map_read_write
+. . . . . . . . > modifies sql data
+. . . . . . . . > deterministic
+. . . . . . . . > return 0;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create function compare_cards_bad_relative_read_write(
+. . . . . . . . >     c1 playing_card, c2 playing_card)
+. . . . . . . . > returns integer
+. . . . . . . . > specific compare_cards_bad_relative_read_write
+. . . . . . . . > modifies sql data
+. . . . . . . . > deterministic
+. . . . . . . . > return 0;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create function compare_cards_bad_map_return(c playing_card)
+. . . . . . . . > returns playing_card
+. . . . . . . . > specific compare_cards_bad_map_return
+. . . . . . . . > contains sql
+. . . . . . . . > deterministic
+. . . . . . . . > return new playing_card('C',2);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create function compare_cards_bad_relative_return(
+. . . . . . . . >     c1 playing_card, c2 playing_card)
+. . . . . . . . > returns double
+. . . . . . . . > specific compare_cards_bad_relative_return
+. . . . . . . . > contains sql
+. . . . . . . . > deterministic
+. . . . . . . . > return 0;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail
+0: jdbc:farrago:> create ordering for playing_card
+. . . . . . . . > order full by map
+. . . . . . . . > with specific function compare_cards_bad_arity;
+Error: DDL validation error near line 1, column 21: Exactly one parameter required for routine "UDTTEST"."COMPARE_CARDS_BAD_ARITY" used as RELATIVE ordering for structured object type "UDTTEST"."PLAYING_CARD" (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail
+0: jdbc:farrago:> create ordering for playing_card
+. . . . . . . . > order full by relative
+. . . . . . . . > with specific function compare_cards_bad_arity;
+Error: DDL validation error near line 1, column 21: Exactly two parameters required for routine "UDTTEST"."COMPARE_CARDS_BAD_ARITY" used as RELATIVE ordering for structured object type "UDTTEST"."PLAYING_CARD" (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail
+0: jdbc:farrago:> create ordering for playing_card
+. . . . . . . . > order full by map
+. . . . . . . . > with specific function compare_cards_bad_map_nondeterministic;
+Error: DDL validation error near line 1, column 21: DETERMINISTIC must be specified for routine "UDTTEST"."COMPARE_CARDS_BAD_MAP_NONDETERMINISTIC" used as ordering for structured object type "UDTTEST"."PLAYING_CARD" (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail
+0: jdbc:farrago:> create ordering for playing_card
+. . . . . . . . > order full by relative
+. . . . . . . . > with specific function compare_cards_bad_relative_nondeterministic;
+Error: DDL validation error near line 1, column 21: DETERMINISTIC must be specified for routine "UDTTEST"."COMPARE_CARDS_BAD_RELATIVE_NONDETERMINISTIC" used as ordering for structured object type "UDTTEST"."PLAYING_CARD" (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail
+0: jdbc:farrago:> create ordering for playing_card
+. . . . . . . . > order full by map
+. . . . . . . . > with specific function compare_cards_bad_map_read_write;
+Error: DDL validation error near line 1, column 21: MODIFIES SQL DATA may not be specified for routine "UDTTEST"."COMPARE_CARDS_BAD_MAP_READ_WRITE" used as ordering for structured object type "UDTTEST"."PLAYING_CARD" (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail
+0: jdbc:farrago:> create ordering for playing_card
+. . . . . . . . > order full by relative
+. . . . . . . . > with specific function compare_cards_bad_relative_read_write;
+Error: DDL validation error near line 1, column 21: MODIFIES SQL DATA may not be specified for routine "UDTTEST"."COMPARE_CARDS_BAD_RELATIVE_READ_WRITE" used as ordering for structured object type "UDTTEST"."PLAYING_CARD" (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail
+0: jdbc:farrago:> create ordering for playing_card
+. . . . . . . . > order full by map
+. . . . . . . . > with specific function compare_cards_bad_map_return;
+Error: DDL validation error near line 1, column 21: Predefined type required for result of routine "UDTTEST"."COMPARE_CARDS_BAD_MAP_RETURN" used as MAP ordering for structured object type "UDTTEST"."PLAYING_CARD" (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail
+0: jdbc:farrago:> create ordering for playing_card
+. . . . . . . . > order full by relative
+. . . . . . . . > with specific function compare_cards_bad_relative_return;
+Error: DDL validation error near line 1, column 21: INTEGER required for result of routine "UDTTEST"."COMPARE_CARDS_BAD_RELATIVE_RETURN" used as RELATIVE ordering for structured object type "UDTTEST"."PLAYING_CARD" (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- verify dependencies
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create table card_deck(
+. . . . . . . . >     card_position int not null primary key,
+. . . . . . . . >     card playing_card not null);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view card_view
+. . . . . . . . > as select card from card_deck;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create ordering for playing_card
+. . . . . . . . > order full by relative
+. . . . . . . . > with specific function compare_cards_spades_trump;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view high_card_view
+. . . . . . . . > as select card from card_deck where card > new playing_card('S',10);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail
+0: jdbc:farrago:> drop function compare_cards_spades_trump;
+Error: Dropping routine "UDTTEST"."COMPARE_CARDS_SPADES_TRUMP" requires CASCADE because other objects still reference it (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail
+0: jdbc:farrago:> drop type playing_card;
+Error: Dropping structured object type "UDTTEST"."PLAYING_CARD" requires CASCADE because other objects still reference it (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail
+0: jdbc:farrago:> drop ordering for playing_card;
+Error: Dropping user-defined ordering "PLAYING_CARD" requires CASCADE because other objects still reference it (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> drop view high_card_view;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- now should succeed
+0: jdbc:farrago:> drop ordering for playing_card;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- explicitly drop objects that reference playing_card
+0: jdbc:farrago:> drop table card_deck cascade;
+0: jdbc:farrago:> drop function map_card_to_card_rank;
+0: jdbc:farrago:> drop function compare_cards_spades_trump;
+0: jdbc:farrago:> drop function compare_cards_bad_map_nondeterministic;
+0: jdbc:farrago:> drop function compare_cards_bad_relative_nondeterministic;
+0: jdbc:farrago:> drop function compare_cards_bad_map_read_write;
+0: jdbc:farrago:> drop function compare_cards_bad_relative_read_write;
+0: jdbc:farrago:> drop function compare_cards_bad_map_return;
+0: jdbc:farrago:> drop function compare_cards_bad_relative_return;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- now should succeed
+0: jdbc:farrago:> drop type playing_card;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- basic distinct types
+0: jdbc:farrago:> create type dollar_currency as double;
+0: jdbc:farrago:> create type euro_currency as double;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  can't specify NOT INSTANTIABLE for distinct type
+0: jdbc:farrago:> create type simolean_currency as double not instantiable;
+Error: DDL validation error near line 1, column 34: Cannot define distinct datatype "UDTTEST"."SIMOLEAN_CURRENCY" as both FINAL and NOT INSTANTIABLE (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  can't specify NOT FINAL for distinct type
+0: jdbc:farrago:> create type simolean_currency as double not final;
+Error: DDL validation error near line 1, column 34: Must define distinct datatype "UDTTEST"."SIMOLEAN_CURRENCY" as FINAL (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should succeed
+0: jdbc:farrago:> create type simolean_currency as double final;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- table with distinct types
+0: jdbc:farrago:> create table sears_catalog(
+. . . . . . . . >     item_name varchar(128) not null primary key,
+. . . . . . . . >     dollar_price dollar_currency not null,
+. . . . . . . . >     euro_price euro_currency not null);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- TODO:  enable the rest of this once cast to UDT is working
+0: jdbc:farrago:> -- insert into sears_catalog values
+0: jdbc:farrago:> -- ('Jeans',cast(29.99 as dollar_currency),cast(15.99 as euro_currency)),
+0: jdbc:farrago:> -- ('Thimble',cast(3.0 as dollar_currency),cast(2.0 as euro_currency));
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- select item_name,cast(euro_price as double) as item_price
+0: jdbc:farrago:> -- from sears_catalog
+0: jdbc:farrago:> -- order by item_price;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- create function convert_dollar_to_euro(d dollar_currency)
+0: jdbc:farrago:> -- returns euro_currency
+0: jdbc:farrago:> -- contains sql
+0: jdbc:farrago:> -- deterministic
+0: jdbc:farrago:> -- return cast(cast(d as double)/2 as euro_currency);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- select item_name,
+0: jdbc:farrago:> -- cast(euro_price as double) 
+0: jdbc:farrago:> --   - cast(convert_dollar_to_euro(dollar_price) as double)
+0: jdbc:farrago:> --   as euro_diff
+0: jdbc:farrago:> -- from sears_catalog
+0: jdbc:farrago:> -- order by item_name;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- create ordering for dollar_currency
+0: jdbc:farrago:> -- equals only by state;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- select item_name from sears_catalog 
+0: jdbc:farrago:> -- where dollar_price > cast(10 as dollar_currency);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- In Europe, today is Opposite Day.
+0: jdbc:farrago:> -- create function negate_euro(e euro_currency)
+0: jdbc:farrago:> -- returns double
+0: jdbc:farrago:> -- specific negate_euro
+0: jdbc:farrago:> -- contains sql
+0: jdbc:farrago:> -- deterministic
+0: jdbc:farrago:> -- return -cast(e as double);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- create ordering for euro_currency
+0: jdbc:farrago:> -- order full by map
+0: jdbc:farrago:> -- with specific function negate_euro;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- select item_name from sears_catalog
+0: jdbc:farrago:> -- where euro_price > cast(10 as euro_currency);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test internals of flattening
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !set outputformat csv
 0: jdbc:farrago:> 

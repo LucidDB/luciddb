@@ -247,12 +247,11 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
      *
      * @param suppliers collection of elements on which client depends
      *
-     * @param kind name for dependency type
+     * @return new dependency
      */
     public CwmDependency createDependency(
         CwmNamespace client,
-        Collection suppliers,
-        String kind);
+        Collection suppliers);
 
     /**
      * Discards a data wrapper or server from the shared cache
