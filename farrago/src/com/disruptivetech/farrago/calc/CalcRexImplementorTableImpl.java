@@ -829,7 +829,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                 SqlTypeName.approxTypes,
                 new UsingInstrImplementor(CalcProgramBuilder.Cast));
             doubleKeyMap.put(
-                SqlTypeName.timeTypes,
+                SqlTypeName.datetimeTypes,
                 SqlTypeName.Bigint,
                 new UsingInstrImplementor(
                     ExtInstructionDefTable.castDateToMillis));

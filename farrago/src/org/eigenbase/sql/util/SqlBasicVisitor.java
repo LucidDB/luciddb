@@ -68,6 +68,10 @@ public class SqlBasicVisitor implements SqlVisitor
     public void visit(SqlDynamicParam param)
     {
     }
+
+    public void visit(SqlIntervalQualifier intervalQualifier)
+    {
+    }
 }
 
 // End SqlBasicVisitor.java

@@ -1114,17 +1114,6 @@ public abstract class OperandsTypeChecking
             typePositiveIntegerLiteral, typeVarcharLiteral
         });
 
-    /**
-     * Parameter type-checking strategy
-     * types can be
-     * nullable aType, nullable aType
-     * and must be comparable to eachother
-     */
-    public static final OperandsTypeChecking typeNullableComparable =
-        new CompositeOrOperandsTypeChecking(new OperandsTypeChecking [] {
-            typeNullableSameSame, typeNullableNumericNumeric,
-            typeNullableBinariesBinaries, typeNullableVarcharVarchar
-        });
 
     /**
      * Parameter type-checking strategy
@@ -1151,6 +1140,32 @@ public abstract class OperandsTypeChecking
 
     /**
      * Parameter type-checking strategy
+     * type must a nullable datetime type
+     * A datetime type is either a TIME, DATE or TIMESTAMP,
+     * TIME WITH TIME ZONE, TIMESTAMP WITH TIMEZONE
+     * NOTE: timezone types not yet implemented
+     */
+    public static final OperandsTypeChecking typeNullableDatetime =
+        new SimpleOperandsTypeChecking(new SqlTypeName [][] {
+            SqlTypeName.datetimeNullableTypes
+        });
+
+    /**
+     * Parameter type-checking strategy
+     * type must a nullable time interval, nullable time interval
+     */
+    public static final OperandsTypeChecking typeNullableDatetimeDatetime =
+        new CompositeAndOperandsTypeChecking(
+            new OperandsTypeChecking[] {
+                new SimpleOperandsTypeChecking(
+                    new SqlTypeName[][]{
+                        SqlTypeName.datetimeNullableTypes,
+                        SqlTypeName.datetimeNullableTypes})
+                , typeNullableSameSame
+            });
+
+    /**
+     * Parameter type-checking strategy
      * type must a nullable time interval
      */
     public static final OperandsTypeChecking typeNullableInterval =
@@ -1173,17 +1188,55 @@ public abstract class OperandsTypeChecking
             });
 
     public static final OperandsTypeChecking typeNullableNumericInterval =
+        new SimpleOperandsTypeChecking(new SqlTypeName [][] {
+            SqlTypeName.numericNullableTypes,
+            SqlTypeName.timeIntervalNullableTypes
+        });
+
+    public static final OperandsTypeChecking typeNullableIntervalNumeric =
+        new SimpleOperandsTypeChecking(new SqlTypeName [][] {
+            SqlTypeName.timeIntervalNullableTypes,
+            SqlTypeName.numericNullableTypes            
+        });
+
+    public static final OperandsTypeChecking typeNullableDatetimeInterval =
         new CompositeAndOperandsTypeChecking(
             new OperandsTypeChecking[] {
-                 typeNullableNumeric
+                 typeNullableDatetime
                 ,typeNullableInterval
             });
 
+    /**
+     * Type checking strategy for the "+" operator
+     */
     public static final OperandsTypeChecking typePlusOperator =
         new CompositeOrOperandsTypeChecking(
             new OperandsTypeChecking[] {
                   typeNullableNumericNumeric
                 , typeNullableIntervalInterval
+                  //todo datetime+interval checking missing
+                  //todo interval+datetime checking missing
+            });
+
+    /**
+     * Type checking strategy for the "*" operator
+     */
+    public static final OperandsTypeChecking typeMultiplyOperator =
+        new CompositeOrOperandsTypeChecking(
+            new OperandsTypeChecking[] {
+                  typeNullableNumericNumeric
+                , typeNullableIntervalNumeric
+                , typeNullableNumericInterval
+            });
+
+    /**
+     * Type checking strategy for the "/" operator
+     */
+    public static final OperandsTypeChecking typeDivisionOperator =
+        new CompositeOrOperandsTypeChecking(
+            new OperandsTypeChecking[] {
+                  typeNullableNumericNumeric
+                , typeNullableIntervalNumeric
             });
 
     public static final OperandsTypeChecking typeMinusOperator =
@@ -1191,7 +1244,28 @@ public abstract class OperandsTypeChecking
             new OperandsTypeChecking[] {
                   typeNullableNumericNumeric
                 , typeNullableIntervalInterval
+//todo                , typeNullableDatetimeInterval
             });
+
+    public static final OperandsTypeChecking typeNullableNumericOrInterval =
+        new CompositeOrOperandsTypeChecking(
+            new OperandsTypeChecking[] {
+                  typeNullableNumeric
+                , typeNullableInterval
+            });
+
+    /**
+     * Parameter type-checking strategy
+     * types can be
+     * nullable aType, nullable aType
+     * and must be comparable to eachother
+     */
+    public static final OperandsTypeChecking typeNullableComparable =
+        new CompositeOrOperandsTypeChecking(new OperandsTypeChecking [] {
+            typeNullableSameSame, typeNullableNumericNumeric,
+            typeNullableBinariesBinaries, typeNullableVarcharVarchar,
+            typeNullableIntervalInterval
+        });
 
     /**
      * Parameter type-checking strategy

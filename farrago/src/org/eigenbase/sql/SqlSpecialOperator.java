@@ -88,6 +88,8 @@ public class SqlSpecialOperator extends SqlOperator
      *
      * <p>The default implementation throws
      * {@link UnsupportedOperationException}.
+     * @param ordinal indicating the ordinal of the current operator
+     * in the list on which a possible reduction can be made
      */
     public int reduceExpr(
         int ordinal,

@@ -175,8 +175,10 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
     public static final SqlTypeName [] stringNullableTypes =
         makeNullable(stringTypes);
 
-    public static final SqlTypeName[] timeTypes =
+    public static final SqlTypeName [] datetimeTypes =
         { Date, Time, Timestamp };
+    public static final SqlTypeName [] datetimeNullableTypes =
+        makeNullable(datetimeTypes);
 
     public static final SqlTypeName [] timeIntervalTypes =
         { IntervalDayTime, IntervalYearMonth };

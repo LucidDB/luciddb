@@ -671,6 +671,11 @@ public class SqlValidator
             return literal.createSqlType(typeFactory);
         }
 
+        if (operand instanceof SqlIntervalQualifier) {
+            return typeFactory.createIntervalType(
+                (SqlIntervalQualifier) operand);
+        }
+
         if (operand instanceof SqlDynamicParam) {
             return unknownType;
         }
@@ -1367,6 +1372,13 @@ public class SqlValidator
      */
     public void validateLiteral(SqlLiteral literal)
     {
+        // default is to do nothing
+    }
+
+    /**
+     * Validates a {@link SqlIntervalQualifier} 
+     */
+    public void validateIntervalQualifier(SqlIntervalQualifier qualifier) {
         // default is to do nothing
     }
 

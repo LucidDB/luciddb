@@ -351,18 +351,35 @@ public class SqlParserTest extends TestCase
             + NL + "FROM `T`");
     }
 
+    public void testRow() {
+        check("select t.r.\"EXPR$1\", t.r.\"EXPR$0\" from (select (1,2) r from sales.depts) t",
+            "SELECT `T`.`R`.`EXPR$1`, `T`.`R`.`EXPR$0`"+ NL +
+            "FROM (SELECT (ROW(1, 2)) AS `R`"+ NL +
+            "FROM `SALES`.`DEPTS`) AS `T`");
+
+        check("select t.r.\"EXPR$1\".\"EXPR$2\" " +
+              "from (select ((1,2),(3,4,5)) r from sales.depts) t",
+            "SELECT `T`.`R`.`EXPR$1`.`EXPR$2`" + NL +
+            "FROM (SELECT (ROW((ROW(1, 2)), (ROW(3, 4, 5)))) AS `R`" + NL +
+            "FROM `SALES`.`DEPTS`) AS `T`");
+
+//        check("select t.r.\"EXPR$1\".\"EXPR$2\" " +
+//              "from (select ((1,2),(3,4,5,6)) r from sales.depts) t",
+//            "SELECT `T`.`R`.`EXPR$1`.`EXPR$2`" + NL +
+//            "FROM (SELECT (ROW((ROW(1, 2)), (ROW(3, 4, 5, 6)))) AS `R`" + NL +
+//            "FROM `SALES`.`DEPTS`) AS `T`");
+    }
+
     public void testOverlaps()
     {
-        check("select * from t where x overlaps y",
-            "SELECT *" + NL + "FROM `T`" + NL + "WHERE (`X` OVERLAPS `Y`)");
+        checkExp("(x,xx) overlaps (y,yy)",
+                 "((`X`, `XX`) OVERLAPS (`Y`, `YY`))");
 
-        check("select * from t where true and x overlaps y or false",
-            "SELECT *" + NL + "FROM `T`" + NL
-            + "WHERE ((TRUE AND (`X` OVERLAPS `Y`)) OR FALSE)");
+        checkExp("(x,xx) overlaps (y,yy) or false",
+                 "(((`X`, `XX`) OVERLAPS (`Y`, `YY`)) OR FALSE)");
 
-        check("select * from t where true and not (x overlaps y or false)",
-            "SELECT *" + NL + "FROM `T`" + NL
-            + "WHERE (TRUE AND (NOT ((`X` OVERLAPS `Y`) OR FALSE)))");
+        checkExp("true and not (x,xx) overlaps (y,yy) or false",
+            "((TRUE AND (NOT ((`X`, `XX`) OVERLAPS (`Y`, `YY`)))) OR FALSE)");
     }
 
     public void testIsDistinctFrom()
@@ -1244,6 +1261,7 @@ public class SqlParserTest extends TestCase
     {
         checkExp("nullif(v1,v2)",
             "(CASE WHEN (`V1` = `V2`) THEN NULL ELSE `V1` END)");
+        checkExpFails("nullif(1,2,3)", "(?s).*");
     }
 
     public void testCoalesce()
@@ -1493,68 +1511,113 @@ public class SqlParserTest extends TestCase
 
     public void testIntervalQualifier() {
         checkExpFails("interval '1'","(?s).*");
-        checkExp("interval '1' year","INTERVAL '1' YEAR");
-        checkExp("interval '-1' year","INTERVAL '-1' YEAR");
-        checkExp("interval -'0' year","INTERVAL '-0' YEAR");
-        checkExp("interval '100' year(4)","INTERVAL '100' YEAR(4)");
-        checkExp("interval '1' month","INTERVAL '1' MONTH");
-        checkExp("interval -'0' month","INTERVAL '-0' MONTH");
-        checkExp("interval '21' month(3)","INTERVAL '21' MONTH(3)");
-        checkExp("interval '11-22' year to month","INTERVAL '11-22' YEAR TO MONTH");
-        checkExp("interval '1-2' year(4) to month","INTERVAL '1-2' YEAR(4) TO MONTH");
-        checkExp("interval '-1-2' year(4) to month","INTERVAL '-1-2' YEAR(4) TO MONTH");
-        checkExp("interval -'1-2' year(4) to month","INTERVAL '-1-2' YEAR(4) TO MONTH");
+        checkExp("interval '1' year","(INTERVAL '1' YEAR)");
+        checkExp("interval '-1' year","(INTERVAL '-1' YEAR)");
+        checkExp("interval -'0' year","(INTERVAL '-0' YEAR)");
+        checkExp("interval '100' year(4)","(INTERVAL '100' YEAR(4))");
+        checkExp("interval '1' month","(INTERVAL '1' MONTH)");
+        checkExp("interval -'0' month","(INTERVAL '-0' MONTH)");
+        checkExp("interval '21' month(3)","(INTERVAL '21' MONTH(3))");
+        checkExp("interval '11-22' year to month","(INTERVAL '11-22' YEAR TO MONTH)");
+        checkExp("interval '1-2' year(4) to month","(INTERVAL '1-2' YEAR(4) TO MONTH)");
+        checkExp("interval '-1-2' year(4) to month","(INTERVAL '-1-2' YEAR(4) TO MONTH)");
+        checkExp("interval -'1-2' year(4) to month","(INTERVAL '-1-2' YEAR(4) TO MONTH)");
         checkExpFails("interval '1-2' month to year","(?s).*");
         checkExpFails("interval '1-2' year to day","(?s).*");
         checkExpFails("interval '1-2' year to month(3)","(?s).*");
 
-        checkExp("interval '1' day","INTERVAL '1' DAY");
-        checkExp("interval '111 2' day to hour","INTERVAL '111 2' DAY TO HOUR");
-        checkExp("interval '1 2:3' day to minute","INTERVAL '1 2:3' DAY TO MINUTE");
-        checkExp("interval '1 2:3:4' day to second","INTERVAL '1 2:3:4' DAY TO SECOND");
-        checkExp("interval '1 2:3:4.5' day to second","INTERVAL '1 2:3:4.5' DAY TO SECOND");
+        checkExp("interval '1' day","(INTERVAL '1' DAY)");
+        checkExp("interval '111 2' day to hour","(INTERVAL '111 2' DAY TO HOUR)");
+        checkExp("interval '1 2:3' day to minute","(INTERVAL '1 2:3' DAY TO MINUTE)");
+        checkExp("interval '1 2:3:4' day to second","(INTERVAL '1 2:3:4' DAY TO SECOND)");
+        checkExp("interval '1 2:3:4.5' day to second","(INTERVAL '1 2:3:4.5' DAY TO SECOND)");
 
         checkExpFails("interval '1' day to hour");
         checkExpFails("interval '1 2' day to second");
 
-        checkExp("interval '123' hour","INTERVAL '123' HOUR");
-        checkExp("interval '1:2' hour to minute","INTERVAL '1:2' HOUR TO MINUTE");
+        checkExp("interval '123' hour","(INTERVAL '123' HOUR)");
+        checkExp("interval '1:2' hour to minute","(INTERVAL '1:2' HOUR TO MINUTE)");
         checkExpFails("interval '1 2' hour to minute","(?s).*Illegal INTERVAL literal.*");
-        checkExp("interval '1' hour","INTERVAL '1' HOUR");
-        checkExp("interval '1:2:3' hour(2) to second","INTERVAL '1:2:3' HOUR(2) TO SECOND");
-        checkExp("interval '1:22222:3.4567' hour(2) to second","INTERVAL '1:22222:3.4567' HOUR(2) TO SECOND");
+        checkExp("interval '1' hour","(INTERVAL '1' HOUR)");
+        checkExp("interval '1:2:3' hour(2) to second","(INTERVAL '1:2:3' HOUR(2) TO SECOND)");
+        checkExp("interval '1:22222:3.4567' hour(2) to second","(INTERVAL '1:22222:3.4567' HOUR(2) TO SECOND)");
 
-        checkExp("interval '1' minute","INTERVAL '1' MINUTE");
-        checkExp("interval '1:2' minute to second","INTERVAL '1:2' MINUTE TO SECOND");
-        checkExp("interval '1:2.3' minute to second","INTERVAL '1:2.3' MINUTE TO SECOND");
+        checkExp("interval '1' minute","(INTERVAL '1' MINUTE)");
+        checkExp("interval '1:2' minute to second","(INTERVAL '1:2' MINUTE TO SECOND)");
+        checkExp("interval '1:2.3' minute to second","(INTERVAL '1:2.3' MINUTE TO SECOND)");
         checkExpFails("interval '1:2' minute to second");
 
-        checkExp("interval '1' second","INTERVAL '1' SECOND");
-        checkExp("interval '1' second(3)","INTERVAL '1' SECOND(3)");
-        checkExp("interval '1' second(2,3)","INTERVAL '1' SECOND(2, 3)");
-        checkExp("interval '1.2' second","INTERVAL '1.2' SECOND");
-        checkExp("interval '-1.234' second","INTERVAL '-1.234' SECOND");
-        checkExp("interval '-0.234' second","INTERVAL '-0.234' SECOND");
-        checkExp("interval -'-0.234' second","INTERVAL '0.234' SECOND");
-        checkExp("interval -'-1.234' second","INTERVAL '1.234' SECOND");
+        checkExp("interval '1' second","(INTERVAL '1' SECOND)");
+        checkExp("interval '1' second(3)","(INTERVAL '1' SECOND(3))");
+        checkExp("interval '1' second(2,3)","(INTERVAL '1' SECOND(2, 3))");
+        checkExp("interval '1.2' second","(INTERVAL '1.2' SECOND)");
+        checkExp("interval '-1.234' second","(INTERVAL '-1.234' SECOND)");
+        checkExp("interval '-0.234' second","(INTERVAL '-0.234' SECOND)");
+        checkExp("interval -'-0.234' second","(INTERVAL '0.234' SECOND)");
+        checkExp("interval -'-1.234' second","(INTERVAL '1.234' SECOND)");
 
-        checkExp("interval '1 2:3:4.567' day to second","INTERVAL '1 2:3:4.567' DAY TO SECOND");
+        checkExp("interval '1 2:3:4.567' day to second","(INTERVAL '1 2:3:4.567' DAY TO SECOND)");
 
         checkExpFails("interval '-' day","(?s).*");
         checkExpFails("interval '1 2:3:4.567' day to hour to second","(?s).*");
         checkExpFails("interval '1:2' minute to second(2, 2)","(?s).*");
+        checkExpFails("interval '1:x' hour to minute","(?s).*");
+        checkExpFails("interval '1:x:2' hour to second","(?s).*");
     }
 
     public void testIntervalOperators() {
-        checkExp("-interval '1' day","(- INTERVAL '1' DAY)");
-        checkExp("interval '1' day + interval '1' day","(INTERVAL '1' DAY + INTERVAL '1' DAY)");
-        checkExp("interval '1' day - interval '1:2:3' hour to second","(INTERVAL '1' DAY - INTERVAL '1:2:3' HOUR TO SECOND)");
+        checkExp("-interval '1' day","(- (INTERVAL '1' DAY))");
+        checkExp("interval '1' day + interval '1' day","((INTERVAL '1' DAY) + (INTERVAL '1' DAY))");
+        checkExp("interval '1' day - interval '1:2:3' hour to second","((INTERVAL '1' DAY) - (INTERVAL '1:2:3' HOUR TO SECOND))");
 
-        checkExp("interval -'1' day","INTERVAL '-1' DAY");
-        checkExp("interval '-1' day","INTERVAL '-1' DAY");
-        checkExpFails("interval 'wael was here'","(?s).*Encountered ..EOF..*");
+        checkExp("interval -'1' day","(INTERVAL '-1' DAY)");
+        checkExp("interval '-1' day","(INTERVAL '-1' DAY)");
+        checkExpFails("interval 'wael was here'","(?s).*");
         checkExpFails("interval 'wael was here' HOUR","(?s).*Illegal INTERVAL literal .wael was here..*");
 
+    }
+
+    public void testDateMinusDate() {
+        checkExp("(date1 - date2) INTERVAL HOUR", "((`DATE1` - `DATE2`) INTERVAL HOUR)");
+        checkExp("(date1 - date2) INTERVAL YEAR TO MONTH", "((`DATE1` - `DATE2`) INTERVAL YEAR TO MONTH)");
+        checkExp("(date1 - date2) INTERVAL HOUR > interval '1' HOUR",
+                   "(((`DATE1` - `DATE2`) INTERVAL HOUR) > (INTERVAL '1' HOUR))");
+    }
+
+    public void testExtract() {
+        checkExp("extract(year from x)","EXTRACT(YEAR FROM `X`)");
+        checkExp("extract(month from x)","EXTRACT(MONTH FROM `X`)");
+        checkExp("extract(day from x)","EXTRACT(DAY FROM `X`)");
+        checkExp("extract(hour from x)","EXTRACT(HOUR FROM `X`)");
+        checkExp("extract(minute from x)","EXTRACT(MINUTE FROM `X`)");
+        checkExp("extract(second from x)","EXTRACT(SECOND FROM `X`)");
+
+        checkExpFails("extract(day to second from x)");
+    }
+
+    public void testIntervalArithmetics() {
+        checkExp("TIME '23:59:59' - interval '1' hour ", "(TIME '23:59:59' - (INTERVAL '1' HOUR))");
+        checkExp("TIMESTAMP '2000-01-01 23:59:59.1' - interval '1' hour ", "(TIMESTAMP '2000-01-01 23:59:59.1' - (INTERVAL '1' HOUR))");
+        checkExp("DATE '2000-01-01' - interval '1' hour ", "(DATE '2000-01-01' - (INTERVAL '1' HOUR))");
+
+        checkExp("TIME '23:59:59' + interval '1' hour ", "(TIME '23:59:59' + (INTERVAL '1' HOUR))");
+        checkExp("TIMESTAMP '2000-01-01 23:59:59.1' + interval '1' hour ", "(TIMESTAMP '2000-01-01 23:59:59.1' + (INTERVAL '1' HOUR))");
+        checkExp("DATE '2000-01-01' + interval '1' hour ", "(DATE '2000-01-01' + (INTERVAL '1' HOUR))");
+
+        checkExp("interval '1' hour + TIME '23:59:59' ", "((INTERVAL '1' HOUR) + TIME '23:59:59')");
+
+        checkExp("interval '1' hour * 8", "((INTERVAL '1' HOUR) * 8)");
+        checkExp("1 * interval '1' hour", "(1 * (INTERVAL '1' HOUR))");
+        checkExp("interval '1' hour / 8", "((INTERVAL '1' HOUR) / 8)");
+    }
+
+    public void testIntervalCompare(){
+        checkExp("interval '1' hour = interval '1' second", "((INTERVAL '1' HOUR) = (INTERVAL '1' SECOND))");
+        checkExp("interval '1' hour <> interval '1' second", "((INTERVAL '1' HOUR) <> (INTERVAL '1' SECOND))");
+        checkExp("interval '1' hour < interval '1' second", "((INTERVAL '1' HOUR) < (INTERVAL '1' SECOND))");
+        checkExp("interval '1' hour <= interval '1' second", "((INTERVAL '1' HOUR) <= (INTERVAL '1' SECOND))");
+        checkExp("interval '1' hour > interval '1' second", "((INTERVAL '1' HOUR) > (INTERVAL '1' SECOND))");
+        checkExp("interval '1' hour >= interval '1' second", "((INTERVAL '1' HOUR) >= (INTERVAL '1' SECOND))");
     }
 
 }

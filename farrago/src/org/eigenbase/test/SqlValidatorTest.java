@@ -194,10 +194,12 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         check("select 1+-2.*-3.e-1/-4>+5 AND true from values(true)");
     }
 
-    public void testPrefixFails() {
-        assertExceptionIsThrown("SELECT -'abc' from values(true)",
+    public void testPrefix() {
+        checkExpType("+interval '1' second","INTERVAL SECOND");
+        checkExpType("-interval '1' month","INTERVAL MONTH");
+        checkFails("SELECT -'abc' from values(true)",
             "(?s).*Cannot apply '-' to arguments of type '-<VARCHAR.3.>'.*");
-        assertExceptionIsThrown("SELECT +'abc' from values(true)",
+        checkFails("SELECT +'abc' from values(true)",
             "(?s).*Cannot apply '\\+' to arguments of type '\\+<VARCHAR.3.>'.*");
     }
 
@@ -316,6 +318,8 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExpType("pow(2,3)", "DOUBLE");
         checkExpType("aBs(-2.3e-2)", "DOUBLE");
         checkExpType("aBs(5000000000)", "BIGINT");
+        checkExpType("aBs(-interval '1-1' year to month)", "INTERVAL YEAR TO MONTH");
+        checkExpType("aBs(+interval '1:1' hour to minute)", "INTERVAL HOUR TO MINUTE");
         checkExpType("MOD(5,2)", "INTEGER");
         checkExpType("ln(5.43  )", "DOUBLE");
         checkExpType("log(- -.2  )", "DOUBLE");
@@ -399,11 +403,6 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExp("nullif(1,2)");
         checkExpType("nullif(1,2)", "INTEGER");
         checkExpType("nullif('a','b')", "VARCHAR(1)");
-    }
-
-    public void _testNullIfFails() {
-        //todo
-        checkExpFails("nullif(1,2,3)", "(?s)Invalid number of Arguments.*");
     }
 
     public void testCoalesce() {
@@ -973,7 +972,21 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExpFails("interval '1' month + interval '1' second");
         checkExpFails("interval '1' year - interval '1' day");
         checkExpFails("interval '1' month - interval '1' second");
+
+        // mixing between datetime and interval
+//todo        checkExpType("date '1234-12-12' + INTERVAL '1' month + interval '1' day","DATE");
+//todo        checkExpFails("date '1234-12-12' + (INTERVAL '1' month + interval '1' day)","?");
+
+        // multiply operator
+        checkExpType("interval '1' year * 2", "INTERVAL YEAR");
+        checkExpType("1.234*interval '1 1:2:3' day to second ", "INTERVAL DAY TO SECOND");
+
+        // division operator
+        checkExpType("interval '1' month / 0.1", "INTERVAL MONTH");
+        checkExpType("interval '1-2' year TO month / 0.1e-9", "INTERVAL YEAR TO MONTH");
+        checkExpFails("1.234/interval '1 1:2:3' day to second ", "(?s).*Cannot apply '/' to arguments of type '<DECIMAL.4, 3.> / <INTERVAL DAY TO SECOND>'.*");
     }
+
 
     public void checkWinClauseExp(String sql, String expectedMsgPattern) {
         sql = "select * from emp " + sql;
@@ -1477,6 +1490,43 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             "select * from dept where deptno = emp.sal)");
     }
 
+    public void testIntervalCompare(){
+        checkExpType("interval '1' hour = interval '1' day", "BOOLEAN");
+        checkExpType("interval '1' hour <> interval '1' hour", "BOOLEAN");
+        checkExpType("interval '1' hour < interval '1' second", "BOOLEAN");
+        checkExpType("interval '1' hour <= interval '1' minute", "BOOLEAN");
+        checkExpType("interval '1' minute > interval '1' second", "BOOLEAN");
+        checkExpType("interval '1' second >= interval '1' day", "BOOLEAN");
+        checkExpType("interval '1' year >= interval '1' year", "BOOLEAN");
+        checkExpType("interval '1' month = interval '1' year", "BOOLEAN");
+        checkExpType("interval '1' month <> interval '1' month", "BOOLEAN");
+        checkExpType("interval '1' year >= interval '1' month", "BOOLEAN");
+
+        checkExpFails("interval '1' second >= interval '1' year", "(?s).*Cannot apply '>=' to arguments of type '<INTERVAL SECOND> >= <INTERVAL YEAR>'.*");
+        checkExpFails("interval '1' month = interval '1' day", "(?s).*Cannot apply '=' to arguments of type '<INTERVAL MONTH> = <INTERVAL DAY>'.*");
+    }
+
+    public void testOverlaps() {
+        checkExpType("(date '1-2-3', date '1-2-3') overlaps (date '1-2-3', date '1-2-3')","BOOLEAN");
+        checkExp("(date '1-2-3', date '1-2-3') overlaps (date '1-2-3', interval '1' year)");
+        checkExp("(time '1:2:3', interval '1' second) overlaps (time '23:59:59', time '1:2:3')");
+        checkExp("(timestamp '1-2-3 4:5:6', timestamp '1-2-3 4:5:6' ) overlaps (timestamp '1-2-3 4:5:6', interval '1 2:3:4.5' day to second)");
+
+        checkExpFails("(timestamp '1-2-3 4:5:6', timestamp '1-2-3 4:5:6' ) overlaps (time '4:5:6', interval '1 2:3:4.5' day to second)","(?s).*Cannot apply 'OVERLAPS' to arguments of type '.<TIMESTAMP.0.>, <TIMESTAMP.0.>. OVERLAPS .<TIME.0.>, <INTERVAL DAY TO SECOND>.*");
+        checkExpFails("(time '4:5:6', timestamp '1-2-3 4:5:6' ) overlaps (time '4:5:6', interval '1 2:3:4.5' day to second)");
+        checkExpFails("(time '4:5:6', time '4:5:6' ) overlaps (time '4:5:6', date '1-2-3')");
+    }
+
+    public void testExtract() {
+        // The reason why extract returns double is because we can have
+        // seconds fractions
+        checkExpType("extract(year from interval '1-2' year to month)","DOUBLE");
+        checkExp("extract(minute from interval '1.1' second)");
+
+        checkExpFails("extract(minute from interval '11' month)","(?s).*Cannot apply.*");
+        checkExpFails("extract(year from interval '11' second)","(?s).*Cannot apply.*");
+    }
+
     public void testNew() {
         // (To debug invidual statements, paste them into this method.)
     }
@@ -1485,3 +1535,4 @@ public class SqlValidatorTest extends SqlValidatorTestCase
 
 
 // End SqlValidatorTest.java
+

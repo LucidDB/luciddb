@@ -27,15 +27,14 @@ import org.eigenbase.reltype.RelDataTypeFactoryImpl;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.parser.ParserUtil;
 import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.test.SqlOperatorTests;
-import org.eigenbase.sql.type.OperandsTypeChecking;
-import org.eigenbase.sql.type.ReturnTypeInference;
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.sql.type.UnknownParamInference;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.util.Util;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Extension to {@link org.eigenbase.sql.SqlOperatorTable} containing the
@@ -284,7 +283,9 @@ public class SqlStdOperatorTable extends SqlOperatorTable
      */
     public final SqlBinaryOperator divideOperator =
         new SqlBinaryOperator("/", SqlKind.Divide, 30, true,
-            ReturnTypeInference.useNullableBiggest, UnknownParamInference.useFirstKnown, OperandsTypeChecking.typeNumericNumeric) {
+            ReturnTypeInference.useNullableMutliplyDivison,
+            UnknownParamInference.useFirstKnown,
+            OperandsTypeChecking.typeDivisionOperator) {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testDivideOperator(tester);
@@ -362,18 +363,7 @@ public class SqlStdOperatorTable extends SqlOperatorTable
             }
         };
 
-    /**
-     * <code>OVERLAPS</code> operator tests whether two time intervals overlap.
-     */
-    public final SqlBinaryOperator overlapsOperator =
-        new SqlBinaryOperator("OVERLAPS", SqlKind.Overlaps, 15, true,
-            ReturnTypeInference.useNullableBoolean, UnknownParamInference.useFirstKnown,
-            OperandsTypeChecking.typeNullableIntervalInterval) {
-            public void test(SqlTester tester)
-            {
-                SqlOperatorTests.testOverlapsOperator(tester);
-            }
-        };
+
 
     /**
      * Logical less-than operator, '<code>&lt;</code>'.
@@ -420,7 +410,9 @@ public class SqlStdOperatorTable extends SqlOperatorTable
      */
     public final SqlBinaryOperator multiplyOperator =
         new SqlBinaryOperator("*", SqlKind.Times, 30, true,
-            ReturnTypeInference.useNullableBiggest, UnknownParamInference.useFirstKnown, OperandsTypeChecking.typeNullableNumericNumeric) {
+            ReturnTypeInference.useNullableMutliplyDivison,
+            UnknownParamInference.useFirstKnown,
+            OperandsTypeChecking.typeMultiplyOperator) {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testMultiplyOperator(tester);
@@ -643,8 +635,10 @@ public class SqlStdOperatorTable extends SqlOperatorTable
         };
 
     public final SqlPrefixOperator prefixMinusOperator =
-        new SqlPrefixOperator("-", SqlKind.MinusPrefix, 20, ReturnTypeInference.useFirstArgType,
-            UnknownParamInference.useReturnType, OperandsTypeChecking.typeNullableNumeric) {
+        new SqlPrefixOperator("-", SqlKind.MinusPrefix, 20,
+            ReturnTypeInference.useFirstArgType,
+            UnknownParamInference.useReturnType,
+            OperandsTypeChecking.typeNullableNumericOrInterval) {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testPrefixMinusOperator(tester);
@@ -652,8 +646,10 @@ public class SqlStdOperatorTable extends SqlOperatorTable
         };
 
     public final SqlPrefixOperator prefixPlusOperator =
-        new SqlPrefixOperator("+", SqlKind.PlusPrefix, 20, ReturnTypeInference.useFirstArgType,
-            UnknownParamInference.useReturnType, OperandsTypeChecking.typeNullableNumeric) {
+        new SqlPrefixOperator("+", SqlKind.PlusPrefix, 20,
+            ReturnTypeInference.useFirstArgType,
+            UnknownParamInference.useReturnType,
+            OperandsTypeChecking.typeNullableNumericOrInterval) {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testPrefixPlusOperator(tester);
@@ -686,11 +682,152 @@ public class SqlStdOperatorTable extends SqlOperatorTable
     public final SqlRowOperator rowConstructor = new SqlRowOperator();
 
     /**
+     * A special operator for the substraction of two DATETIMEs.
+     * The format of DATETIME substraction is: <br>
+     * <code>"(" &lt;datetime&gt; "-" &lt;datetime&gt; ")" "INTERVAL" <interval qualifier></code>
+     * This special operator is special since it needs to hold the additional
+     * interval qualifier specification.
+     */
+    public final SqlOperator minusDateOperator =
+            new SqlSpecialOperator("-", SqlKind.Minus, 20, true,
+                ReturnTypeInference.useNullableBiggest,
+                UnknownParamInference.useFirstKnown,
+                OperandsTypeChecking.typeMinusOperator) {
+                public void test(SqlTester tester)
+                {
+                    SqlOperatorTests.testMinusDateOperator(tester);
+                }
+
+                public SqlSyntax getSyntax() {
+                    return SqlSyntax.Special;
+                }
+
+                public void unparse(
+                    SqlWriter writer,
+                    SqlNode[] operands,
+                    int leftPrec,
+                    int rightPrec) {
+                    writer.print("(");
+                    operands[0].unparse(writer, leftPrec, rightPrec);
+                    writer.print(" - ");
+                    operands[1].unparse(writer, leftPrec, rightPrec);
+                    writer.print(") INTERVAL ");
+                    operands[2].unparse(writer, leftPrec, rightPrec);
+                }
+            };
+
+    /**
      * The MULTISET operator, e.g. "<code>SELECT dname, MULTISET(SELECT * FROM
      * emp WHERE deptno = dept.deptno) FROM dept</code>".
      */
     public final SqlMultisetOperator multisetOperator =
         new SqlMultisetOperator();
+
+    public final SqlSpecialOperator overlapsOperator =
+            new SqlSpecialOperator("OVERLAPS", SqlKind.Overlaps, 15, true,
+                ReturnTypeInference.useNullableBoolean,
+                UnknownParamInference.useFirstKnown, null) {
+                public void test(SqlTester tester)
+                {
+                    SqlOperatorTests.testOverlapsOperator(tester);
+                }
+
+                public void unparse(
+                    SqlWriter writer,
+                    SqlNode[] operands,
+                    int leftPrec,
+                    int rightPrec) {
+                    writer.print("(");
+                    operands[0].unparse(writer, leftPrec, rightPrec);
+                    writer.print(", ");
+                    operands[1].unparse(writer, leftPrec, rightPrec);
+                    writer.print(") ");
+                    writer.print(name);
+                    writer.print(" (");
+                    operands[2].unparse(writer, leftPrec, rightPrec);
+                    writer.print(", ");
+                    operands[3].unparse(writer, leftPrec, rightPrec);
+                    writer.print(")");
+                }
+
+                public OperandsCountDescriptor getOperandsCountDescriptor() {
+                    return OperandsCountDescriptor.Four;
+                }
+
+                protected String getSignatureTemplate(int operandsCount) {
+                    if (4 == operandsCount) {
+                        return "({1}, {2}) {0} ({3}, {4})";
+                    }
+                    assert(false);
+                    return null;
+                }
+
+                public String getAllowedSignatures(String name)
+                {
+                    final String d = "DATETIME";
+                    final String i = "INTERVAL";
+                    String[] typeNames = {
+                         d, d
+                        ,d, i
+                        ,i, d
+                        ,i, i
+                    };
+
+                    StringBuffer ret = new StringBuffer();
+                    for (int y = 0; y < typeNames.length; y+=2) {
+                        if (y > 0) {
+                            ret.append(NL);
+                        }
+                        ArrayList list = new ArrayList();
+                        list.add(d);
+                        list.add(typeNames[y]);
+                        list.add(d);
+                        list.add(typeNames[y+1]);
+                        ret.append(this.getAnonymousSignature(list));
+                    }
+                    return replaceAnonymous(ret.toString(), name);
+                }
+
+                protected void checkArgTypes(
+                    SqlCall call,
+                    SqlValidator validator,
+                    SqlValidator.Scope scope) {
+                    OperandsTypeChecking.typeNullableDatetime.check(
+                        call, validator, scope, call.operands[0], 0, true);
+                    OperandsTypeChecking.typeNullableDatetime.check(
+                        call, validator, scope, call.operands[2], 0, true);
+
+                    RelDataType t0 = validator.deriveType(scope, call.operands[0]);
+                    RelDataType t1 = validator.deriveType(scope, call.operands[1]);
+                    RelDataType t2 = validator.deriveType(scope, call.operands[2]);
+                    RelDataType t3 = validator.deriveType(scope, call.operands[3]);
+
+                    // t0 must be comparable with t2
+                    if (!t0.isSameType(t2)) {
+                        throw call.newValidationSignatureError(validator, scope);
+                    }
+
+                    if (TypeUtil.isDatetime(t1)) {
+                        // if t1 is of DATETIME,
+                        // then t1 must be comparable with t0
+                        if (!t0.isSameType(t1)) {
+                            throw call.newValidationSignatureError(validator, scope);
+                        }
+                    } else if (!TypeUtil.isInterval(t1)) {
+                        throw call.newValidationSignatureError(validator, scope);
+                    }
+
+                    if (TypeUtil.isDatetime(t3)) {
+                        // if t3 is of DATETIME,
+                        // then t3 must be comparable with t2
+                        if (!t2.isSameType(t3)) {
+                            throw call.newValidationSignatureError(validator, scope);
+                        }
+                    } else if (!TypeUtil.isInterval(t3)) {
+                        throw call.newValidationSignatureError(validator, scope);
+                    }
+                }
+            };
 
     public final SqlSpecialOperator valuesOperator =
         new SqlSpecialOperator("VALUES", SqlKind.Values) {
@@ -1138,8 +1275,9 @@ public class SqlStdOperatorTable extends SqlOperatorTable
 
     public final SqlFunction absFunc =
         new SqlFunction("ABS", SqlKind.Function,
-            ReturnTypeInference.useNullableBiggest, null,
-            OperandsTypeChecking.typeNumeric, SqlFunction.SqlFuncTypeName.Numeric) {
+            ReturnTypeInference.useFirstArgType, null,
+            OperandsTypeChecking.typeNullableNumericOrInterval,
+            SqlFunction.SqlFuncTypeName.Numeric) {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testAbsFunc(tester);
@@ -1344,7 +1482,7 @@ public class SqlStdOperatorTable extends SqlOperatorTable
         // Probably need a niladic version of that.
         public OperandsCountDescriptor getOperandsCountDescriptor()
         {
-            return new OperandsCountDescriptor(0);
+            return OperandsCountDescriptor.niladicCountDescriptor;
         }
     };
 
@@ -1358,6 +1496,43 @@ public class SqlStdOperatorTable extends SqlOperatorTable
      * operand.
      */
     public final SqlFunction castFunc = new SqlCastFunction();
+
+    /**
+     * The SQL <code>EXTRACT</code> operator.
+     * Extracts a specified field value from a DATETIME or an INTERVAL.
+     * E.g.<br>
+     * <code>EXTRACT(HOUR FROM INTERVAL '364 23:59:59')</code> returns <code>23</code>
+     */
+    public final SqlFunction extractFunc =
+        new SqlFunction("EXTRACT", SqlKind.Function,
+            ReturnTypeInference.useNullableDouble, null,
+            OperandsTypeChecking.typeNullableIntervalInterval,
+            SqlFunction.SqlFuncTypeName.System) {
+            public void test(SqlTester tester)
+            {
+                SqlOperatorTests.testExtractFunc(tester);
+            }
+
+            protected String getSignatureTemplate(int operandsCount) {
+                Util.discard(operandsCount);
+                return "{0}({1} FROM {2})";
+            }
+
+            public void unparse(
+                SqlWriter writer,
+                SqlNode[] operands,
+                int leftPrec,
+                int rightPrec) {
+                writer.print(name);
+                writer.print("(");
+                operands[0].unparse(writer, leftPrec, rightPrec);
+                writer.print(" FROM ");
+                operands[1].unparse(writer, leftPrec, rightPrec);
+                writer.print(")");
+            }
+
+
+        };
 
     /**
      * The ELEMENT SQL operator, used to convert a multiset with only one item
@@ -1393,4 +1568,5 @@ public class SqlStdOperatorTable extends SqlOperatorTable
 
 
 // End SqlStdOperatorTable.java
+
 

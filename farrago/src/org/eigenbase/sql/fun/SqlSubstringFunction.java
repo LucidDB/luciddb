@@ -62,8 +62,7 @@ public class SqlSubstringFunction extends SqlFunction {
     public String getAllowedSignatures(String name)
     {
         StringBuffer ret = new StringBuffer();
-        for (int i = 0; i < SqlTypeName.stringTypes.length;
-             i++) {
+        for (int i = 0; i < SqlTypeName.stringTypes.length;i++) {
             if (i > 0) {
                 ret.append(NL);
             }

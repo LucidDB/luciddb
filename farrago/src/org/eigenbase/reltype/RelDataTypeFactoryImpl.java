@@ -1448,7 +1448,7 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
 
             return new IntervalSqlType(
                 new SqlIntervalQualifier(
-                    thisStart, secondPrec, thisEnd, fracPrec), nullable);
+                    thisStart, secondPrec, thisEnd, fracPrec, null), nullable);
         }
 
         public RelDataTypeFactory getFactory() {

@@ -1209,6 +1209,7 @@ List Expression2(ExprContext exprContext) :
     SqlOperator op;
     ParserPosition pos;
     SqlNodeList orderBy;
+    SqlIntervalQualifier intervalQualifier;
 }
 {
     e = Expression3(exprContext)
@@ -1347,6 +1348,35 @@ SqlNode Expression3(ExprContext exprContext) :
     ParserPosition prefixRowOpPos;
 }
 {
+    LOOKAHEAD(12)
+    <LPAREN>
+    e =  Expression3(EXPR_ACCEPT_SUBQUERY) { list = startList(e); }
+    <MINUS>
+    e =  Expression3(EXPR_ACCEPT_SUBQUERY) { list.add(e); }
+    <RPAREN> <INTERVAL>
+    e = IntervalQualifer() { list.add(e); }
+    {
+        return opTab.minusDateOperator.createCall(
+                                    ParserUtil.toNodeArray(list), getPos());
+    }
+|
+   LOOKAHEAD(16)
+   <LPAREN>
+        e = Expression3(EXPR_ACCEPT_SUBQUERY) { list = startList(e); }
+        <COMMA>
+        e = Expression3(EXPR_ACCEPT_SUBQUERY) { list.add(e); }
+    <RPAREN>
+    <OVERLAPS>
+    <LPAREN>
+        e = Expression3(EXPR_ACCEPT_SUBQUERY) { list.add(e); }
+        <COMMA>
+        e =  Expression3(EXPR_ACCEPT_SUBQUERY) { list.add(e); }
+    <RPAREN>
+    {
+        return opTab.overlapsOperator.createCall(
+                                    ParserUtil.toNodeArray(list), getPos());
+    }
+|
     op = PrefixRowOperator() {
         prefixRowOpPos = getPos();
         checkNonQueryExpression(exprContext);
@@ -1355,6 +1385,7 @@ SqlNode Expression3(ExprContext exprContext) :
         return op.createCall(e,prefixRowOpPos);
     }
 |
+    LOOKAHEAD(3)
     e = AtomicRowExpression() {
         checkNonQueryExpression(exprContext);
         return e;
@@ -1406,7 +1437,7 @@ SqlNode AtomicRowExpression() :
 |
     e = DynamicParam() { return e; }
 |
-    LOOKAHEAD(2) e = FunctionCall() { return e; }
+    LOOKAHEAD(3) e = FunctionCall() { return e; }
 |
     e = MultisetConstructor() { return e; }
 |
@@ -1438,6 +1469,7 @@ SqlNode AtomicRowExpression() :
                                              new SqlNodeList(thenList, thenPos),
                                              elseClause, casePos);
     }
+
 }
 
 /**
@@ -1757,8 +1789,13 @@ SqlIntervalQualifier IntervalQualifer() :
     ]
     { start = SqlIntervalQualifier.TimeUnit.Second; }
 )
-    { return new SqlIntervalQualifier(start, startPrec, end, secondFracPrec); }
-
+    {
+        return new SqlIntervalQualifier(start,
+                                        startPrec,
+                                        end,
+                                        secondFracPrec,
+                                        getPos());
+    }
 }
 
 /**
@@ -1948,16 +1985,35 @@ SqlNode FunctionCall() :
     //~ FUNCTIONS WITH SPECIAL SYNTAX ---------------------------------------
 
     (   ("CAST" | "\"CAST\"")
-    {
-        pos = getPos();
-    }
-        <LPAREN> e = Expression(EXPR_ACCEPT_SUBQUERY) { args = startList(e); }
-                   <AS> dt = DataType() { args.add(dt); }
-                   <RPAREN>  {
-                        return opTab.castFunc.createCall(
-                            ParserUtil.toNodeArray(args), pos);
-                    }
 
+    <LPAREN> e = Expression(EXPR_ACCEPT_SUBQUERY) { args = startList(e); }
+               <AS> dt = DataType() { args.add(dt); }
+               <RPAREN>  {
+                    return opTab.castFunc.createCall(
+                        ParserUtil.toNodeArray(args), getPos());
+                }
+
+    )
+|
+    (   ("EXTRACT" | "\"EXTRACT\"")
+    { SqlIntervalQualifier.TimeUnit unit; }
+    <LPAREN>
+        (
+              <YEAR>  { unit = SqlIntervalQualifier.TimeUnit.Year; }
+            | <MONTH> { unit = SqlIntervalQualifier.TimeUnit.Month; }
+            | <DAY>   { unit = SqlIntervalQualifier.TimeUnit.Day; }
+            | <HOUR>  { unit = SqlIntervalQualifier.TimeUnit.Hour; }
+            | <MINUTE>{ unit = SqlIntervalQualifier.TimeUnit.Minute; }
+            | <SECOND>{ unit = SqlIntervalQualifier.TimeUnit.Second; }
+        )
+        { args = startList(new SqlIntervalQualifier(unit,0,null,0,getPos())); }
+    <FROM>
+    e = Expression(EXPR_ACCEPT_SUBQUERY) { args.add(e); }
+    <RPAREN>
+    {
+        return opTab.extractFunc.createCall(
+                ParserUtil.toNodeArray(args), getPos());
+    }
     )
 |
     (   ("POSITION" | "\"POSITION\"")
@@ -2096,25 +2152,25 @@ SqlNode FunctionCall() :
             { args = startList(new SqlIdentifier("*", starPos)); }
           | LOOKAHEAD(2) <LPAREN> <RPAREN>
             { args = ParserUtil.emptyList; }
-            [ <OVER> 
+            [ <OVER>
               //~ only window aggreggation function has window inline
-              //definition. 
+              //definition.
             {
                 overPos = getPos();
                 over = true;
             }
-             ( 
+             (
                 id = SimpleIdentifier()
                 | e = WindowSpecification()
              )
             ]
           | args = ParenthesizedQueryOrCommaList(EXPR_ACCEPT_SUBQUERY)
-            [ <OVER> 
+            [ <OVER>
                 {
                     overPos = getPos();
                     over = true;
                 }
-             ( 
+             (
                 id = SimpleIdentifier()
                 | e = WindowSpecification()
              )
@@ -2134,7 +2190,7 @@ SqlNode FunctionCall() :
             } else {
                 return function;
             }
-            
+
         }
     )
 |
@@ -2244,7 +2300,6 @@ SqlBinaryOperator BinaryRowOperator() :
 | <CONCAT> { return opTab.concatOperator; }
 | <AND> { return opTab.andOperator; }
 | <OR> { return opTab.orOperator; }
-| <OVERLAPS> { return opTab.overlapsOperator; }
 | <IS> <DISTINCT> <FROM> { return opTab.isDistinctFromOperator; }
 // <IN> is handled as a special case
 | <MEMBER> <OF> { return opTab.memberOfOperator; }

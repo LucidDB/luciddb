@@ -222,6 +222,11 @@ public class SqlOperatorTests
         tester.checkNull("1e1-cast(null as double)");
     }
 
+    public static void testMinusDateOperator(SqlTester tester)
+    {
+        //todo
+    }
+
     public static void testMultiplyOperator(SqlTester tester)
     {
         tester.checkScalarExact("2*3", "6");
@@ -674,6 +679,10 @@ public class SqlOperatorTests
 //        tester.checkBoolean("cast(null as double) member of multiset[cast(null as double)]",Boolean.TRUE);
 //        tester.checkBoolean("cast(null as double) member of multiset[1.1]",Boolean.FALSE);
 //        tester.checkBoolean("1.1 member of multiset[cast(null as double)]",Boolean.FALSE);
+    }
+
+    public static void testExtractFunc(SqlTester tester) {
+        //todo
     }
 }
 

@@ -710,11 +710,21 @@ outer:
                         next = null;
                         nextLeft = 0;
                     } else {
-                        next = ((ToTreeListItem) list.get(nextOrdinal)).op;
-                        nextLeft = next.leftPrec;
-                        if ((stopperKind != SqlKind.Other)
-                                && (next.kind == stopperKind)) {
-                            break outer;
+                        // find next op
+                        next = null;
+                        nextLeft = 0;
+                        for (;nextOrdinal < count; nextOrdinal++) {
+                            Object listItem = list.get(nextOrdinal);
+                            if (listItem instanceof ToTreeListItem) {
+                                next = ((ToTreeListItem) listItem).op;
+                                nextLeft = next.leftPrec;
+                                if ((stopperKind != SqlKind.Other)
+                                        && (next.kind == stopperKind)) {
+                                    break outer;
+                                } else {
+                                    break;
+                                }
+                            }
                         }
                     }
                     if (nextLeft < minPrec) {

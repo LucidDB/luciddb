@@ -212,6 +212,46 @@ public class TypeUtil
             throw EigenbaseResource.instance().newOperandNotComparable(msg);
         }
     }
+
+    /**
+     * @return Returns typeName.equals(type.getSqlTypeName())
+     *         If typeName.equals(SqlTypeName.Any) true is always returned
+     */
+    public static boolean isOfSameTypeName(SqlTypeName typeName,
+        RelDataType type) {
+        return SqlTypeName.Any.equals(typeName) ||
+               typeName.equals(type.getSqlTypeName());
+    }
+
+    /**
+     * @return Returns true if any element in typeNames
+     * matches type.getSqlTypeName()
+     * @see {@link #isOfSameTypeName(SqlTypeName, RelDataType)}
+     */
+    public static boolean isOfSameTypeName(SqlTypeName[] typeNames,
+        RelDataType type) {
+        for (int i = 0; i < typeNames.length; i++) {
+            SqlTypeName typeName = typeNames[i];
+            if (isOfSameTypeName(typeName, type)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @return Returns true if of type DATETIME
+     */
+    public static boolean isDatetime(RelDataType type) {
+        return isOfSameTypeName(SqlTypeName.datetimeTypes, type);
+    }
+
+    /**
+     * @return Returns true if of type INTERVAL
+     */
+    public static boolean isInterval(RelDataType type) {
+        return isOfSameTypeName(SqlTypeName.timeIntervalTypes, type);
+    }
 }
 
 

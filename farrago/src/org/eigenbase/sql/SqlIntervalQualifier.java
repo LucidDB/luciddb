@@ -20,6 +20,8 @@
 package org.eigenbase.sql;
 
 import org.eigenbase.util.EnumeratedValues;
+import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.util.SqlVisitor;
 
 /**
  * Represents an INTERVAL qualifier.
@@ -62,7 +64,7 @@ import org.eigenbase.util.EnumeratedValues;
  * @since Oct 31, 2004
  * @version $Id$
  */
-public class SqlIntervalQualifier implements Cloneable {
+public class SqlIntervalQualifier extends SqlNode implements Cloneable {
 
     private int         startPrecision;
     private TimeUnit    startUnit;
@@ -73,12 +75,31 @@ public class SqlIntervalQualifier implements Cloneable {
         TimeUnit startUnit,
         int startPrecision,
         TimeUnit endUnit,
-        int fractionalSecondPrecision) {
+        int fractionalSecondPrecision,
+        ParserPosition pos) {
+        super(pos);
         assert(null!=startUnit);
         this.startPrecision = startPrecision;
         this.startUnit = startUnit;
         this.endUnit = endUnit;
         this.fractionalSecondPrecision = fractionalSecondPrecision;
+    }
+
+    public void validate(SqlValidator validator,
+        SqlValidator.Scope scope) {
+        validator.validateIntervalQualifier(this);
+    }
+
+    public void accept(SqlVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    public boolean equalsDeep(SqlNode node) {
+        return this.toString().equals(node.toString());
+    }
+
+    public Object clone() {
+        return this.clone();
     }
 
     public int getStartPrecision() {
@@ -132,6 +153,13 @@ public class SqlIntervalQualifier implements Cloneable {
             }
         }
         return ret.toString();
+    }
+
+    public void unparse(
+        SqlWriter writer,
+        int leftPrec,
+        int rightPrec) {
+        writer.print(this.toString());
     }
 
     public boolean isYearMonth() {

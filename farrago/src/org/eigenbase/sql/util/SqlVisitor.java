@@ -37,6 +37,7 @@ public interface SqlVisitor {
     void visit(SqlIdentifier id);
     void visit(SqlDataType type);
     void visit(SqlDynamicParam param);
+    void visit(SqlIntervalQualifier intervalQualifier);
 }
 
 // End SqlVisitor.java

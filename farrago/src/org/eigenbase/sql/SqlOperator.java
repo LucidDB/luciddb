@@ -585,7 +585,7 @@ public abstract class SqlOperator
 
     public boolean isAggregator()
     {
-        return name.equals("SUM") || name.equals("COUNT");
+        return "SUM".equals(name) || "COUNT".equals(name);
     }
 
     //~ Inner Classes ---------------------------------------------------------
@@ -596,7 +596,18 @@ public abstract class SqlOperator
     public static class OperandsCountDescriptor
     {
         public static final OperandsCountDescriptor variadicCountDescriptor =
-            new OperandsCountDescriptor();
+                    new OperandsCountDescriptor();
+        public static final OperandsCountDescriptor niladicCountDescriptor =
+                    new OperandsCountDescriptor(0);
+        public static final OperandsCountDescriptor One =
+                    new OperandsCountDescriptor(1);
+        public static final OperandsCountDescriptor Two =
+                    new OperandsCountDescriptor(2);
+        public static final OperandsCountDescriptor Three =
+                    new OperandsCountDescriptor(3);
+        public static final OperandsCountDescriptor Four =
+                    new OperandsCountDescriptor(4);
+
         List possibleList;
         boolean isVariadic;
 
