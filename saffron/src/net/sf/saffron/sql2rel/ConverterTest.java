@@ -538,18 +538,6 @@ public class ConverterTest extends TestCase
     {
         check("select * from \"depts\" where deptno in (10) in (true)", "");
     }
-
-    public void testUnnest() {
-        check("select*from unnest(multiset[1,2])",
-            "ProjectRel(EXPR$0=[$0])" + NL +
-            "  UncollectRel" + NL +
-            "    CollectRel" + NL +
-            "      UnionRel(all=[true])" + NL +
-            "        ProjectRel(EXPR$0=[1])" + NL +
-            "          OneRowRel" + NL +
-            "        ProjectRel(EXPR$0=[2])" + NL +
-            "          OneRowRel" + NL);
-    }
 }
 
 

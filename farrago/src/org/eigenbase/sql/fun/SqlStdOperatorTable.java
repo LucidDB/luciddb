@@ -758,7 +758,7 @@ public class SqlStdOperatorTable extends SqlOperatorTable
                 int rightPrec) {
                 writer.print(name);
                 writer.print("(");
-                operands[0].unparse(writer,leftPrec,rightPrec);
+                operands[0].unparse(writer,0,0);
                 writer.print(")");
             }
         };

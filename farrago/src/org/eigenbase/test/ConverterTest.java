@@ -46,47 +46,9 @@ import java.io.StringWriter;
  * @author jhyde
  * @version $Id$
  */
-public class ConverterTest extends TestCase
+public class SqlToRelConverterTest extends TestCase
 {
     protected static final String NL = System.getProperty("line.separator");
-
-    public void testIntegerLiteral()
-    {
-        check("select 1 from emp",
-            "ProjectRel(EXPR$0=[1])" + NL +
-            "  TableAccessRel(table=[[EMP]])" + NL);
-    }
-
-    public void testGroup()
-    {
-        check("select deptno from emp group by deptno",
-            "ProjectRel(field#0=[$0])" + NL +
-            "  AggregateRel(groupCount=[1])" + NL +
-            "    ProjectRel(field#0=[$7])" + NL +
-            "      TableAccessRel(table=[[EMP]])" + NL);
-
-        // just one agg
-        check("select deptno, sum(sal) from emp group by deptno",
-            "ProjectRel(field#0=[$0], field#1=[$0])" + NL +
-            "  AggregateRel(groupCount=[1], agg#0=[SUM(1)])" + NL +
-            "    ProjectRel(field#0=[$7], field#1=[$5])" + NL +
-            "      TableAccessRel(table=[[EMP]])" + NL);
-
-        // expressions inside and outside aggs
-        check("select deptno + 4, sum(sal), sum(3 + sal), 2 * sum(sal) from emp group by deptno",
-            "ProjectRel(field#0=[+($0, 4)], field#1=[$0], field#2=[$1], field#3=[*(2, $2)])" + NL +
-            "  AggregateRel(groupCount=[1], agg#0=[SUM(1)], agg#1=[SUM(2)], agg#2=[SUM(3)])" + NL +
-            "    ProjectRel(field#0=[$7], field#1=[$5], field#2=[+(3, $5)], field#3=[$5])" + NL +
-            "      TableAccessRel(table=[[EMP]])" + NL);
-
-        // empty group-by clause, having
-        check("select sum(sal + sal) from emp having sum(sal) > 10",
-            "FilterRel(condition=[>($1, 10)])" + NL +
-            "  ProjectRel(field#0=[$0])" + NL +
-            "    AggregateRel(groupCount=[0], agg#0=[SUM(0)], agg#1=[SUM(1)])" + NL +
-            "      ProjectRel(field#0=[+($5, $5)], field#1=[$5])" + NL +
-            "        TableAccessRel(table=[[EMP]])" + NL);
-    }
 
     protected void check(
         String sql,
@@ -230,6 +192,59 @@ public class ConverterTest extends TestCase
                 return new TableAccessRel(cluster, this, connection);
             }
         }
+    }
+
+    //~ TESTS --------------------------------
+
+    public void testIntegerLiteral()
+    {
+        check("select 1 from emp",
+            "ProjectRel(EXPR$0=[1])" + NL +
+            "  TableAccessRel(table=[[EMP]])" + NL);
+    }
+
+    public void testGroup()
+    {
+        check("select deptno from emp group by deptno",
+            "ProjectRel(field#0=[$0])" + NL +
+            "  AggregateRel(groupCount=[1])" + NL +
+            "    ProjectRel(field#0=[$7])" + NL +
+            "      TableAccessRel(table=[[EMP]])" + NL);
+
+        // just one agg
+        check("select deptno, sum(sal) from emp group by deptno",
+            "ProjectRel(field#0=[$0], field#1=[$0])" + NL +
+            "  AggregateRel(groupCount=[1], agg#0=[SUM(1)])" + NL +
+            "    ProjectRel(field#0=[$7], field#1=[$5])" + NL +
+            "      TableAccessRel(table=[[EMP]])" + NL);
+
+        // expressions inside and outside aggs
+        check("select deptno + 4, sum(sal), sum(3 + sal), 2 * sum(sal) from emp group by deptno",
+            "ProjectRel(field#0=[+($0, 4)], field#1=[$0], field#2=[$1], field#3=[*(2, $2)])" + NL +
+            "  AggregateRel(groupCount=[1], agg#0=[SUM(1)], agg#1=[SUM(2)], agg#2=[SUM(3)])" + NL +
+            "    ProjectRel(field#0=[$7], field#1=[$5], field#2=[+(3, $5)], field#3=[$5])" + NL +
+            "      TableAccessRel(table=[[EMP]])" + NL);
+
+        // empty group-by clause, having
+        check("select sum(sal + sal) from emp having sum(sal) > 10",
+            "FilterRel(condition=[>($1, 10)])" + NL +
+            "  ProjectRel(field#0=[$0])" + NL +
+            "    AggregateRel(groupCount=[0], agg#0=[SUM(0)], agg#1=[SUM(1)])" + NL +
+            "      ProjectRel(field#0=[+($5, $5)], field#1=[$5])" + NL +
+            "        TableAccessRel(table=[[EMP]])" + NL);
+    }
+
+
+    public void testUnnest() {
+        check("select*from unnest(multiset[1,2])",
+            "ProjectRel(EXPR$0=[$0])" + NL +
+            "  UncollectRel" + NL +
+            "    CollectRel" + NL +
+            "      UnionRel(all=[true])" + NL +
+            "        ProjectRel(EXPR$0=[1])" + NL +
+            "          OneRowRel" + NL +
+            "        ProjectRel(EXPR$0=[2])" + NL +
+            "          OneRowRel" + NL);
     }
 }
 

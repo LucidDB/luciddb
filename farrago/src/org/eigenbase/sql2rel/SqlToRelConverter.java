@@ -56,7 +56,7 @@ import java.util.*;
  * {@link #convertValidatedQuery},
  * {@link #convertExpression(SqlNode)}.
  *
- * @testcase {@link org.eigenbase.test.ConverterTest}
+ * @testcase {@link org.eigenbase.test.SqlToRelConverterTest}
  * @author jhyde
  * @since Oct 10, 2003
  * @version $Id$
