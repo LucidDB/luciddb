@@ -207,7 +207,7 @@ result codes, including EXECRC_EOS).
 because it exhausted the space in at least one of its output buffers.
 
 <li>EXECRC_EOS: the invoked stream ceased execution because it
-reached the end of at least one of its inputs.
+reached the end of all of its inputs.
 
 <li>EXECRC_QUANTUM_EXPIRED: the invoked stream ceased execution because its
 quantum expired.
