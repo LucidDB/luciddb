@@ -1187,6 +1187,8 @@ String DdlNonReservedKeyWord() :
         | <JAVA>
         | <KEY>
         | <LIBRARY>
+        | <MAX>
+        | <MIN>
         | <OPTIONS>
         | <PRESERVE>
         | <RESTRICT>
