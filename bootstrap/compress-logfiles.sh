@@ -48,7 +48,7 @@ for i in $(find $LOGDIR/* -type d -maxdepth 0); do
    fi
 
    rm -f $i/latest.xml
-   mostRecentXml="$(ls -t $i/*.xml | tail -1)"
+   mostRecentXml="$(ls $i/*.xml | tail -1)"
    ln -s $mostRecentXml $i/latest.xml
 done
 
