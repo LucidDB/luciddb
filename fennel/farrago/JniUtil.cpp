@@ -214,12 +214,12 @@ void JniEnvRef::handleExcn(std::exception &ex)
 {
     std::string what = ex.what();
     if (what == JavaExcn::RTTI_WHAT_JavaExcn) {
-        JavaExcn &javaExcn = static_cast<JavaExcn &>(ex);
+        JavaExcn &javaExcn = dynamic_cast<JavaExcn &>(ex);
         pEnv->Throw(javaExcn.getJavaException());
         return;
     }
     if (what == FennelExcn::RTTI_WHAT_FennelExcn) {
-        FennelExcn &fennelExcn = static_cast<FennelExcn &>(ex);
+        FennelExcn &fennelExcn = dynamic_cast<FennelExcn &>(ex);
         what = fennelExcn.getMessage();
     } else {
         what = FennelResource::instance().internalError(what);
