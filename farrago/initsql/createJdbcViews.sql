@@ -118,7 +118,7 @@ create view tables_columns_view_internal as
     from 
         tables_view_internal t 
     inner join 
-        sys_fem."MED"."AbstractColumn" c 
+        sys_fem."SQL2003"."AbstractColumn" c 
     on 
         t."mofId" = c."owner";
 

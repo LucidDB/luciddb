@@ -118,7 +118,7 @@
 . . . . . . . . >     from 
 . . . . . . . . >         tables_view_internal t 
 . . . . . . . . >     inner join 
-. . . . . . . . >         sys_fem."MED"."AbstractColumn" c 
+. . . . . . . . >         sys_fem."SQL2003"."AbstractColumn" c 
 . . . . . . . . >     on 
 . . . . . . . . >         t."mofId" = c."owner";
 0: jdbc:farrago:> 

@@ -27,6 +27,7 @@ import net.sf.farrago.cwm.keysindexes.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.type.*;

@@ -26,6 +26,7 @@ import java.util.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;

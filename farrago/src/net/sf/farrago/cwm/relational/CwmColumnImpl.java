@@ -26,6 +26,7 @@ import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.ddl.*;
 import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.type.*;
