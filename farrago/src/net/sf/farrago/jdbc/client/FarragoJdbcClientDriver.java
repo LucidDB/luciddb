@@ -71,7 +71,7 @@ public class FarragoJdbcClientDriver extends FarragoAbstractJdbcDriver
 
         Driver rmiDriver;
         try {
-            rmiDriver = new org.objectweb.rmijdbc.Driver();
+            rmiDriver = new FarragoDriver();
         } catch (Exception ex) {
             throw new SQLException(ex.getMessage());
         }
