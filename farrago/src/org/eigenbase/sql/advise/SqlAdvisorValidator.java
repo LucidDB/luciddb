@@ -79,7 +79,7 @@ public class SqlAdvisorValidator extends SqlValidatorImpl
     }
 
     /**
-     * Calls the parent class method and mask any exception thrown.
+     * Calls the parent class method and mask Farrago exception thrown.
      */
     public RelDataType deriveType(
         SqlValidatorScope scope,
@@ -87,6 +87,11 @@ public class SqlAdvisorValidator extends SqlValidatorImpl
     {
         // REVIEW Do not mask Error (indicates a serious system problem) or
         //   UnsupportedOperationException (a bug).
+        // I have to mask UnsupportedOperationException because 
+        // SqlValidatorImpl.getValidatedNodeType throws it for an unrecognized
+        // identifier node
+        // I have to mask Error as well because AbstractNamespace.getRowType 
+        // called in super.deriveType can do a Util.permAssert that throws Error
         try {
             return super.deriveType(scope, operand);
         } catch (FarragoException e) {
@@ -109,7 +114,7 @@ public class SqlAdvisorValidator extends SqlValidatorImpl
     }
 
     /**
-     * Calls the parent class method and masks any exception thrown.
+     * Calls the parent class method and masks Farrago exception thrown.
      */
     protected void validateWhereClause(SqlSelect select)
     {
@@ -120,7 +125,7 @@ public class SqlAdvisorValidator extends SqlValidatorImpl
     }
 
     /**
-     * Calls the parent class method and masks any exception thrown.
+     * Calls the parent class method and masks Farrago exception thrown.
      */
     protected void validateHavingClause(SqlSelect select)
     {

@@ -336,6 +336,9 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         sql = "select t.x from (select 1 as x, 2 as y from sales.emp) as t where t.^";
         assertComplete(sql, expected); // select list
         
+        sql = "select t. from (select 1 as x, 2 as y from (select x from sales.emp)) as t where ^";
+        assertComplete(sql, expected);
+
         expected.clear();
         expected.add("EMP");
         expected.add("DEPT");
@@ -405,7 +408,7 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         assertSimplify(sql, expected);
 
         sql = "select t. from (select 1 as x, 2 as y from (select x from sales.emp)) as t where ^";
-        expected = "select t. from (select 1 as x , 2 as y from (select x from sales.emp)) as t where _suggest_";
+        expected = "select t from (select 1 as x , 2 as y from (select x from sales.emp)) as t where _suggest_";
         assertSimplify(sql, expected);
 
         sql = "select ^from (select 1 as x, 2 as y from sales.emp), (select 2 as y from (select m from n where)) as t where t.dummy=1";

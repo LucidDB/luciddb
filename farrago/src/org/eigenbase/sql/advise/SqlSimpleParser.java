@@ -66,9 +66,9 @@ public class SqlSimpleParser
         keywords.add("join");
         keywords.add("on");
         keywords.add("where");
-        keywords.add("group by");
+        keywords.add("group");
         keywords.add("having");
-        keywords.add("order by");
+        keywords.add("order");
         keywords.add("");
     }
 
@@ -279,38 +279,24 @@ public class SqlSimpleParser
     // remove unnecessary (incomplete) keyword clause
     private void simplifyBuckets(HashMap buckets)
     {
-        Iterator keywords = buckets.keySet().iterator();
         HashSet toRemove = new HashSet();
-        while (keywords.hasNext()) {
-            String keyword  = (String) keywords.next();
-            ArrayList entries = (ArrayList) buckets.get(keyword);
-            if (entries.isEmpty()) {
-                if (keyword.equals("from")) {
-                    // giving up right now if from list is empty
-                    return;
-                } else if (keyword.equals("select")) {
-                    entries.add("*");
-                } else {
-                    toRemove.add(keyword);
-                }
-            }
-        }
-        Iterator i = toRemove.iterator();
-        while (i.hasNext()) {
-            String keyword = (String) i.next();
-            buckets.remove(keyword);
-        }
-        validate(buckets);
-    }
 
-    private void validate(HashMap buckets)
-    {
         Iterator keywords = buckets.keySet().iterator();
         while (keywords.hasNext()) {
             String keyword  = (String) keywords.next();
             ArrayList entries = (ArrayList) buckets.get(keyword);
             SqlKw sqlkw = makeSqlKw(keyword, entries);
+            List valEntries = sqlkw.validate();
+            if (valEntries == null) {
+                toRemove.add(keyword);
+            }
             buckets.put(keyword, sqlkw.validate());
+        }
+        // remove keywords with an empty clause
+        Iterator i = toRemove.iterator();
+        while (i.hasNext()) {
+            String keyword = (String) i.next();
+            buckets.remove(keyword);
         }
     }
 
@@ -339,9 +325,11 @@ public class SqlSimpleParser
         if (keyword.equals("on")) {
             return new SqlKwOn(entries);
         } else if (keyword.equals("select")) {
-            return new SqlKwList(entries);
+            return new SqlKwSelect(entries);
         } else if (keyword.equals("from")) {
-            return new SqlKwList(entries);
+            return new SqlKwFrom(entries);
+        } else if (keyword.equals("group") || keyword.equals("order")) {
+            return new SqlKwGroupOrder(entries);
         } else {
             return new SqlKw(entries);
         }
@@ -355,7 +343,11 @@ public class SqlSimpleParser
         }
 
         List validate() {
-            return entries;
+            if (entries.isEmpty()) {
+                return null;
+            } else {
+                return entries;
+            }
         }
     }
 
@@ -368,22 +360,18 @@ public class SqlSimpleParser
         }
 
         List validate() {
+            if (entries.isEmpty()) {
+                return null;
+            }
             ArrayList validEntries = new ArrayList();
             StringBuffer onClause = new StringBuffer();
             for (int i = 0; i < entries.size(); i++) {
                 String entry = (String) entries.get(i);
                 onClause.append(entry);
             }
-            //System.out.println("onClause:" + onClause.toString());
             String [] operands = onClause.toString().split("=");
-            /* 
-            System.out.println("splitted:");
-            for (int i = 0; i < operands.length; i++) {
-                System.out.println(operands[i]);
-            }*/
                 
             if (operands.length >= 2) {
-                //System.out.println("2 operands or more"); 
                 validEntries.add(operands[0]);
                 validEntries.add("=");
                 validEntries.add(operands[1]);
@@ -392,14 +380,12 @@ public class SqlSimpleParser
                 // in that case we'll strip off the extra operands
                 return validEntries;
             } else if (operands.length == 1) {
-              //  System.out.println("1 operands");
                 validEntries.add(operands[0]);
                 validEntries.add("=");
                 validEntries.add(dummyOp);
                 // if there's only 1 operand, put 'dummy' as the other one
                 return validEntries;
             } else {
-               // System.out.println("0 operands");
                 // if there's no operands, there's no '='
                 validEntries.add(onClause.toString());
                 validEntries.add("=");
@@ -427,7 +413,12 @@ public class SqlSimpleParser
             }
             String [] selectList = selectClause.toString().split(",");
             for (int i = 0; i < selectList.length; i++) {
-                validEntries.add(selectList[i].trim());
+                // remove leading and trailing space
+                String entry = selectList[i].trim();
+                // remove leading and trailing '.'
+                entry = entry.replaceFirst("^\\.","");
+                entry = entry.replaceFirst("\\.$","");
+                validEntries.add(entry);
                 if (i < selectList.length-1) {
                     validEntries.add(",");
                 }
@@ -436,6 +427,56 @@ public class SqlSimpleParser
         }
     }
                 
+    class SqlKwSelect extends SqlKwList {
+        
+        SqlKwSelect(List entries) {
+            super(entries);
+        }
+
+        List validate() {
+            if (entries.isEmpty()) {
+                entries.add("*");
+                return entries;
+            } else {
+                return super.validate();
+            }
+        }
+    }
+    
+    class SqlKwFrom extends SqlKwList {
+        
+        SqlKwFrom(List entries) {
+            super(entries);
+        }
+
+        List validate() {
+            if (entries.isEmpty()) {
+                return null;
+            } else {
+                return super.validate();
+            }
+        }
+    }
+    
+    class SqlKwGroupOrder extends SqlKwList {
+        
+        SqlKwGroupOrder(List entries) {
+            super(entries);
+        }
+
+        List validate() {
+            if (entries.isEmpty()) {
+                return null;
+            } else if (entries.size() == 1 && 
+                ((String)entries.get(0)).trim().equals("by")) {
+                // a 'group' or 'order' keyword followed by 'by' but no 
+                // actual Sql Identifier
+                return null;
+            } else {
+                return super.validate();
+            }
+        }
+    }
 }
 
 
