@@ -87,10 +87,6 @@
 		        <propertyref prefix="open_"/>
 		    </propertyset>
 		</ant>
-		<!-- build just what is needed by Saffron -->
-		<property name="build.home" location="${default.build.home}"/>
-		<ant dir="${build.home}/farrago" target="compile.saffron.deps" 
-             inheritAll="false"/>
 	</target>
 
 
@@ -105,6 +101,9 @@
 
 	<target name="do-build">
 		<property name="build.home" location="${default.build.home}"/>
+		<!-- in Farrago, build only components needed by Saffron -->
+		<ant dir="${build.home}/farrago" target="compile.saffron.deps" 
+             inheritAll="false"/>
 		<ant dir="${build.home}/saffron" inheritAll="false"/>
 	</target>
 
