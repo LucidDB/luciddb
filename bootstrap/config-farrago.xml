@@ -1,7 +1,7 @@
 <!-- This file is an XML fragment with the -->
 <!-- CruiseControl config for Farrago -->
 
-	<project name="farrago">
+	<project name="farrago&configSuffix;">
 		<labelincrementer defaultLabel="farrago.1"/>
 
 		<!-- Bootstrappers are run with every build before mod checks -->
@@ -36,26 +36,26 @@
 		<publishers>
 			<currentbuildstatuspublisher file="logs/farrago/currentbuildstatus.txt"/>
 
-			<artifactspublisher dir="build/farrago/trace" dest="artifacts/farrago" subdirectory="trace"/>
-			<artifactspublisher dir="build/farrago/unitsql" dest="artifacts/farrago" subdirectory="unitsql"/>
-			<artifactspublisher dir="build/farrago/initsql" dest="artifacts/farrago" subdirectory="initsql"/>
-			<artifactspublisher dir="build/farrago/regressionsql" dest="artifacts/farrago" subdirectory="regressionsql"/>
+			<artifactspublisher dir="build/farrago/trace" dest="artifacts/farrago&configSuffix;" subdirectory="trace"/>
+			<artifactspublisher dir="build/farrago/unitsql" dest="artifacts/farrago&configSuffix;" subdirectory="unitsql"/>
+			<artifactspublisher dir="build/farrago/initsql" dest="artifacts/farrago&configSuffix;" subdirectory="initsql"/>
+			<artifactspublisher dir="build/farrago/regressionsql" dest="artifacts/farrago&configSuffix;" subdirectory="regressionsql"/>
 
 			<!-- sync up artifacts on jsp machine: CC's scp would copy everything -->
-			<execute command="&rsync_cmd; artifacts/farrago &rsync_dest;"/>
+			<execute command="&rsync_cmd; artifacts/farrago&configSuffix; &rsync_dest;"/>
 
 			<scp sourcedir="logs/farrago"
 			     targetuser="&scp_user;"
 			     targethost="&scp_host;"
-			     targetdir="web/logs/farrago"/>
+			     targetdir="web/logs/farrago&configSuffix;"/>
 			
 			<scp sourcedir="logs/farrago"
 			     file="currentbuildstatus.txt"
 			     targetuser="&scp_user;"
 			     targethost="&scp_host;"
-			     targetdir="web/logs/farrago"/> 
+			     targetdir="web/logs/farrago&configSuffix;"/> 
 			
-			<email buildresultsurl="&buildresultsbase;/farrago"
+			<email buildresultsurl="&buildresultsbase;/farrago&configSuffix;"
 			       mailhost="&mailhost;"
 			       reportsuccess="&reportsuccess;"
 			       returnname="&returnname;"

@@ -1,7 +1,7 @@
 <!-- This file is an XML fragment with the -->
 <!-- CruiseControl config for Saffron -->
 
-	<project name="saffron">
+	<project name="saffron&configSuffix;">
 		<labelincrementer defaultLabel="saffron.1"/>
 
 		<!-- Bootstrappers are run with every build before mod checks -->
@@ -35,23 +35,23 @@
 		<publishers>
 			<currentbuildstatuspublisher file="logs/saffron/currentbuildstatus.txt"/>
 
-			<artifactspublisher dir="build/saffron/trace" dest="artifacts/saffron" subdirectory="trace"/>
+			<artifactspublisher dir="build/saffron/trace" dest="artifacts/saffron&configSuffix;" subdirectory="trace"/>
 
 			<!-- sync up artifacts on jsp machine: CC's scp would copy everything -->
-			<execute command="&rsync_cmd; artifacts/saffron &rsync_dest;"/>
+			<execute command="&rsync_cmd; artifacts/saffron&configSuffix; &rsync_dest;"/>
 
 			<scp sourcedir="logs/saffron"
 			     targetuser="&scp_user;"
 			     targethost="&scp_host;"
-			     targetdir="web/logs/saffron"/>
+			     targetdir="web/logs/saffron&configSuffix;"/>
 			
 			<scp sourcedir="logs/saffron"
 			     file="currentbuildstatus.txt"
 			     targetuser="&scp_user;"
 			     targethost="&scp_host;"
-			     targetdir="web/logs/saffron"/>
+			     targetdir="web/logs/saffron&configSuffix;"/>
 			
-			<email buildresultsurl="&buildresultsbase;/saffron"
+			<email buildresultsurl="&buildresultsbase;/saffron&configSuffix;"
 			       mailhost="&mailhost;"
 			       reportsuccess="&reportsuccess;"
 			       returnname="&returnname;"
