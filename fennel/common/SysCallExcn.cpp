@@ -30,7 +30,7 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-SysCallExcn::SysCallExcn(std::string const &msgInit)
+SysCallExcn::SysCallExcn(std::string msgInit)
     : FennelExcn(msgInit)
 {
 #ifdef __MINGW32__

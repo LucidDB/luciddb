@@ -42,7 +42,7 @@ public:
      *
      * @param msgInit message
      */
-    explicit FennelExcn(std::string const &msgInit);
+    explicit FennelExcn(std::string msgInit);
 
     virtual ~FennelExcn() throw();
 

@@ -39,7 +39,7 @@ public:
      * @param msgInit a description of the failure from the program's point of
      * view; SysCallExcn will append additional information from the OS
      */
-    explicit SysCallExcn(std::string const &msgInit);
+    explicit SysCallExcn(std::string msgInit);
 };
 
 FENNEL_END_NAMESPACE

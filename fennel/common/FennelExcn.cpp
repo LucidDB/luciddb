@@ -25,7 +25,7 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 
 ParamVal FennelExcn::RTTI_WHAT_FennelExcn = "FennelExcn";
 
-FennelExcn::FennelExcn(std::string const &msgInit)
+FennelExcn::FennelExcn(std::string msgInit)
     : msg(msgInit)
 {
 }

@@ -39,7 +39,7 @@ public:
     //! Constructs a InvalidTypeException with the given description,
     //! invalid type, and expected type.
     explicit
-    InvalidTypeException(const string& str, StandardTypeDescriptorOrdinal type, StandardTypeDescriptorOrdinal expected)
+    InvalidTypeException(string str, StandardTypeDescriptorOrdinal type, StandardTypeDescriptorOrdinal expected)
         : FennelExcn(str), mInvalidType(type), mExpectedType(expected)
     {
         if (msg.length() > 0) msg += ": ";
@@ -67,7 +67,7 @@ public:
     //! Constructs a InvalidValueException with the given description,
     //! type, and value.
     explicit
-    InvalidValueException(const string& str, StandardTypeDescriptorOrdinal type, T value)
+    InvalidValueException(string str, StandardTypeDescriptorOrdinal type, T value)
         : FennelExcn(str), mType(type), mValue(value)
     {
         ostringstream ostr("");
@@ -96,7 +96,7 @@ class CalcAssemblerException: public FennelExcn
 public:
     //! Constructs CalcAssemblerException with location information
     explicit
-    CalcAssemblerException(const string& str, CalcYYLocType loc) 
+    CalcAssemblerException(string str, CalcYYLocType loc) 
         : FennelExcn(str), mDescription(str), mLoc(loc), mLocValid(true)
     {
         msg += getLocationString();
@@ -104,7 +104,7 @@ public:
 
     //! Constructs CalcAssemblerException without location information
     explicit
-    CalcAssemblerException(const string& str) 
+    CalcAssemblerException(string str) 
         : FennelExcn(str), mDescription(str), mLocValid(false)
     {
     }

@@ -31,7 +31,7 @@
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 CalcExcn::CalcExcn(
-    std::string const &warnings,
+    std::string warnings,
     TupleDescriptor const &inputDescriptor,
     TupleData const &inputData)
     : FennelExcn("")
