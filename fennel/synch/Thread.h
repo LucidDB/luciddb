@@ -40,6 +40,7 @@ class Thread : public boost::noncopyable
 protected:
     boost::thread *pBoostThread;
     bool bRunning;
+    std::string name;
     
     void initAndRun();
     virtual void run() = 0;
@@ -87,6 +88,16 @@ public:
     {
         assert(isStarted());
         return *pBoostThread;
+    }
+
+    std::string getName()
+    {
+        return name;
+    }
+
+    void setName(std::string const &s)
+    {
+        name = s;
     }
 };
 

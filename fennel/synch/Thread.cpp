@@ -30,9 +30,10 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 // thread calling start(), while bRunning is updated in the
 // context of the spawned thread.
 
-Thread::Thread(std::string const &) 
+Thread::Thread(std::string const & desc)
 {
     // TODO:  do something with description
+    name = desc;
     pBoostThread = NULL;
     bRunning = false;
 }
@@ -54,6 +55,7 @@ void Thread::join()
     assert(pBoostThread);
     assert(*pBoostThread != boost::thread());
     pBoostThread->join();
+    delete pBoostThread;
     pBoostThread = NULL;
 }
 
