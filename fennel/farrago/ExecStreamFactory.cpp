@@ -265,16 +265,21 @@ void ExecStreamFactory::readExecStreamParams(
     createQuotaAccessors(params);
 }
 
+void ExecStreamFactory::readTupleDescriptor(
+    TupleDescriptor& desc,
+    SharedProxyTupleDescriptor def)
+{
+    assert(def);
+    CmdInterpreter::readTupleDescriptor(desc, *def, pDatabase->getTypeFactory());
+}
+
+
 void ExecStreamFactory::readTupleStreamParams(
     SingleOutputExecStreamParams &params,
     ProxyTupleStreamDef &streamDef)
 {
     readExecStreamParams(params,streamDef);
-    assert(streamDef.getOutputDesc());
-    CmdInterpreter::readTupleDescriptor(
-        params.outputTupleDesc,
-        *(streamDef.getOutputDesc()),
-        pDatabase->getTypeFactory());
+    readTupleDescriptor(params.outputTupleDesc, streamDef.getOutputDesc());
 }
 
 void ExecStreamFactory::createQuotaAccessors(
@@ -324,12 +329,7 @@ void ExecStreamFactory::readBTreeStreamParams(
     params.segmentId = SegmentId(streamDef.getSegmentId());
     params.pageOwnerId = PageOwnerId(streamDef.getIndexId());
     params.pSegment = pDatabase->getSegmentById(params.segmentId);
-    
-    CmdInterpreter::readTupleDescriptor(
-        params.tupleDesc,
-        *(streamDef.getTupleDesc()),
-        pDatabase->getTypeFactory());
-    
+    readTupleDescriptor(params.tupleDesc, streamDef.getTupleDesc());
     CmdInterpreter::readTupleProjection(
         params.keyProj,
         streamDef.getKeyProj());
