@@ -94,9 +94,9 @@
     </misc>
     <printer>
         <alignment>
-            <methodCallChain>true</methodCallChain>
+            <methodCallChain>false</methodCallChain>
             <parameterMethodDeclaration>false</parameterMethodDeclaration>
-            <ternaryOperator>true</ternaryOperator>
+            <ternaryOperator>false</ternaryOperator>
             <variableAssignment>false</variableAssignment>
             <variableIdentifier>false</variableIdentifier>
         </alignment>
@@ -162,7 +162,7 @@
         </chunks>
         <comments>
             <format>
-                <multiline>true</multiline>
+                <multiline>false</multiline>
             </format>
             <javadoc>
                 <check>
@@ -170,17 +170,17 @@
                     <tags>false</tags>
                     <throwsTags>false</throwsTags>
                 </check>
-                <fieldsShort>true</fieldsShort>
+                <fieldsShort>false</fieldsShort>
                 <generate>
                     <class>0</class>
                     <constructor>0</constructor>
                     <field>0</field>
                     <method>0</method>
                 </generate>
-                <parseComments>true</parseComments>
+                <parseComments>false</parseComments>
                 <tags>
                     <in-line />
-                    <standard>@post|@pre</standard>
+                    <standard>@testcase|@post|@pre</standard>
                 </tags>
                 <templates>
                     <class>/**| * TODO:  doc| *| * @author $author$| * @version $Id$| */</class>
@@ -231,7 +231,7 @@
         <header>
             <keys>Saffron preprocessor and data engine</keys>
             <smartMode>0</smartMode>
-            <text>/*|// $Id$|// Saffron preprocessor and data engine|// (C) Copyright 2002-2003 Disruptive Technologies, Inc.|// You must accept the terms in LICENSE.html to use this software.|//|// This program is free software; you can redistribute it and/or|// modify it under the terms of the GNU Lesser General Public License|// as published by the Free Software Foundation; either version 2.1|// of the License, or (at your option) any later version.|//|// This program is distributed in the hope that it will be useful,|// but WITHOUT ANY WARRANTY; without even the implied warranty of|// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the|// GNU Lesser General Public License for more details.|//|// You should have received a copy of the GNU Lesser General Public License|// along with this program; if not, write to the Free Software|// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.|*/</text>
+            <text>/*|// Saffron preprocessor and data engine.|// Copyright (C) 2002-2004 Disruptive Tech|//|// This program is free software; you can redistribute it and/or modify|// it under the terms of the GNU General Public License as published by|// the Free Software Foundation; either version 2 of the License, or|// (at your option) any later version.|//|// This program is distributed in the hope that it will be useful,|// but WITHOUT ANY WARRANTY; without even the implied warranty of|// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the|// GNU General Public License for more details.|//|// You should have received a copy of the GNU General Public License|// along with this program; if not, write to the Free Software|// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA|*/</text>
             <use>true</use>
         </header>
         <history>
@@ -239,8 +239,8 @@
         </history>
         <imports>
             <grouping>
-                <defaultDepth>3</defaultDepth>
-                <packages>*:0|gnu:2|java:2|javax:2</packages>
+                <defaultDepth>1</defaultDepth>
+                <packages>*:0</packages>
             </grouping>
             <policy>disabled</policy>
             <sort>true</sort>
@@ -288,7 +288,7 @@
             <declaration>
                 <class>true</class>
                 <constructor>true</constructor>
-                <enable>true</enable>
+                <enable>false</enable>
                 <interface>true</interface>
                 <method>true</method>
                 <order>static|field|initializer|constructor|method|interface|class</order>
@@ -301,7 +301,7 @@
         </sorting>
         <whitespace>
             <after>
-                <comma>false</comma>
+                <comma>true</comma>
                 <semicolon>true</semicolon>
                 <typeCast>true</typeCast>
             </after>
@@ -353,12 +353,12 @@
                     <braceLeft>false</braceLeft>
                     <extends>false</extends>
                     <implements>false</implements>
-                    <throws>false</throws>
+                    <throws>true</throws>
                 </before>
                 <parameter>
                     <methodCall>false</methodCall>
-                    <methodCallNested>false</methodCallNested>
-                    <methodDeclaration>false</methodDeclaration>
+                    <methodCallNested>true</methodCallNested>
+                    <methodDeclaration>true</methodDeclaration>
                 </parameter>
             </always>
             <general>
@@ -369,8 +369,8 @@
             <ondemand>
                 <after>
                     <assignment>true</assignment>
-                    <leftParenthesis>true</leftParenthesis>
-                    <parameter>true</parameter>
+                    <leftParenthesis>false</leftParenthesis>
+                    <parameter>false</parameter>
                     <types>
                         <extends>true</extends>
                         <implements>true</implements>

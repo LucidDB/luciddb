@@ -98,6 +98,7 @@
     <pathelement location="${thirdparty.dir}/mondrian-resource.jar"/>
     <pathelement location="${thirdparty.dir}/mondrian-xom.jar"/>
     <pathelement location="${ant.home}/lib/ant.jar"/>
+    <pathelement location="${ant.home}/lib/ant-launcher.jar"/>
     <pathelement location="${ant.home}/lib/junit.jar"/>
     <pathelement location="${ant.home}/lib/optional.jar"/>
     <pathelement location="${ant.home}/lib/xercesImpl.jar"/>
@@ -418,7 +419,7 @@
   <!-- Beautify Saffron source code.  This forks a separate ant process using
        the server JVM to work around a problem documented at
        http://jalopy.sourceforge.net/javadoc.html.  -->
-  <target name="jalopy" depends="clean.examples,compile"
+  <target name="jalopy" depends="clean.examples,clean"
     description="Runs jalopy on all source code.">
     <java classname="org.apache.tools.ant.Main" fork="true"
       classpathref="saffron.run.classpath">

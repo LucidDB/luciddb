@@ -129,6 +129,10 @@ public class FarragoQueryTest extends FarragoTestCase
         refList.add("SALES");
         refList.add("JDBC_METADATA");
         compareResultList(refList);
+
+        // restore default catalog
+        sql = "set catalog localdb";
+        stmt.execute(sql);
     }
 }
 

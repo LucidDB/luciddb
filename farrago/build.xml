@@ -1159,8 +1159,8 @@ require version '${required.ant.version}'."/>
   <!-- Beautify Farrago source code.  This forks a separate ant process using
        the server JVM to work around a problem documented at
        http://jalopy.sourceforge.net/javadoc.html. -->
-  <target name="jalopy" depends="compile">
-    <antFork value="forked_jalopy">
+  <target name="jalopy" depends="clean">
+    <antFork target="forked_jalopy">
       <jvmargs>
         <jvmarg value="-server"/>
       </jvmargs>
@@ -1180,25 +1180,7 @@ require version '${required.ant.version}'."/>
     <jalopy backup="true" convention="${src.dir}/jalopy.xml"
       classpathref="farrago.run.classpath" history="FILE" force="true">
       <fileset dir="${src.dir}">
-        <include name="**/*.java"/>
-        <!-- TODO:  single-source the following set of generated files -->
-        <exclude name="net/sf/farrago/parser/FarragoParserImpl.java"/>
-        <exclude name="net/sf/farrago/parser/FarragoParserImplConstants.java"/>
-        <exclude
-          name="net/sf/farrago/parser/FarragoParserImplTokenManager.java"/>
-        <exclude name="net/sf/farrago/parser/TokenMgrError.java"/>
-        <exclude name="net/sf/farrago/parser/ParseException.java"/>
-        <exclude name="net/sf/farrago/parser/JavaCharStream.java"/>
-        <exclude name="net/sf/farrago/parser/Token.java"/>
-        <exclude name="net/sf/farrago/parser/ASCII_UCodeESC_CharStream.java"/>
-        <exclude name="net/sf/farrago/resource/FarragoResource*.java"/>
-        <exclude name="org/eigenbase/sql/parser/Parser.java"/>
-        <exclude name="org/eigenbase/sql/parser/TokenMgrError.java"/>
-        <exclude name="org/eigenbase/sql/parser/ParseException.java"/>
-        <exclude name="org/eigenbase/sql/parser/JavaCharStream.java"/>
-        <exclude name="org/eigenbase/sql/parser/Token.java"/>
-        <exclude name="org/eigenbase/sql/parser/SqlParseImpConstants.java"/>
-        <exclude name="org/eigenbase/sql/parser/ASCII_UCodeESC_CharStream.java"/>
+        <exclude name="openjava/**/*.java"/>
       </fileset>
     </jalopy>
   </target>
