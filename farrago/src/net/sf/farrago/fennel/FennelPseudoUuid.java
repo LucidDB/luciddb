@@ -19,7 +19,6 @@
 package net.sf.farrago.fennel;
 
 import java.util.Arrays;
-import org.eigenbase.util.Util;
 
 /**
  * FennelPseudoUuid provides access to the Fennel PseudoUuid class.  Fennel's
@@ -36,42 +35,29 @@ public class FennelPseudoUuid
     //~ Static fields/initializers --------------------------------------------
     private static final int UUID_LENGTH = 16;
 
-    static {
-        Util.loadLibrary("farrago");
-    }
-
     //~ Instance fields -------------------------------------------------------
     private final byte[] uuid;
 
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Private constructor.  Creates an empty FennelPseudoUuid.  Use
-     * {@link #generate()} or {@link #generateInvalid()} to create a UUID.
+     * Creates a FennelPseudoUuid with the given bytes.  Use
+     * {@link FennelPseudoUuidGenerator#validUuid()} or
+     * {@link FennelPseudoUuid#invalidUuid()} to create a UUID.
      */
-    private FennelPseudoUuid(byte[] bytes)
+    public FennelPseudoUuid(byte[] bytes)
     {
-        uuid = bytes;
+        this.uuid = (byte[])bytes.clone();
+        validate();
+    }
+
+    public FennelPseudoUuid(String uuidStr)
+    {
+        this.uuid = parse(uuidStr);
         validate();
     }
 
     //~ Methods ---------------------------------------------------------------
-
-    /**
-     * @return a valid UUID object
-     */
-    public static FennelPseudoUuid generate()
-    {
-        return new FennelPseudoUuid(nativeGenerate());
-    }
-
-    /**
-     * @return an invalid UUID object (UUID's actual value is constant)
-     */
-    public static FennelPseudoUuid generateInvalid()
-    {
-        return new FennelPseudoUuid(nativeGenerateInvalid());
-    }
 
     /**
      * Parses the given string and returns the UUID it represents.  See
@@ -81,7 +67,7 @@ public class FennelPseudoUuid
      * @throws IllegalArgumentException if the String is not in the correct
      *                                  format.
      */
-    public static FennelPseudoUuid parse(String uuid)
+    private byte[] parse(String uuid)
     {
         if (uuid.length() != 36) {
             throw new IllegalArgumentException("invalid uuid format");
@@ -131,22 +117,9 @@ public class FennelPseudoUuid
             throw iae;
         }
 
-        return new FennelPseudoUuid(bytes);
+        return bytes;
     }
 
-    /**
-     * Convert a sequence of 16 bytes into a UUID object.
-     *
-     * @param bytes the bytes of a UUID
-     * @return a UUID object
-     */
-    public static FennelPseudoUuid parse(byte[] bytes)
-    {
-        assert(bytes.length == UUID_LENGTH);
-
-        // clone byte array so changes can't affect us
-        return new FennelPseudoUuid((byte[])bytes.clone());
-    }
 
     /**
      * @return UUID in xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx format
@@ -211,8 +184,4 @@ public class FennelPseudoUuid
         assert(uuid != null);
         assert(uuid.length == UUID_LENGTH);
     }
-
-    private static native byte[] nativeGenerate();
-
-    private static native byte[] nativeGenerateInvalid();
 }

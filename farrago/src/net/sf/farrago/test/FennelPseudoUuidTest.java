@@ -19,6 +19,7 @@
 package net.sf.farrago.test;
 
 import net.sf.farrago.fennel.FennelPseudoUuid;
+import net.sf.farrago.fennel.FennelPseudoUuidGenerator;
 import org.eigenbase.util.Util;
 
 /**
@@ -41,7 +42,8 @@ public class FennelPseudoUuidTest
 
     public void testValidPseudoUuid() throws Exception
     {
-        FennelPseudoUuid uuid1 = FennelPseudoUuid.generate();
+        FennelPseudoUuid uuid1 =
+            new FennelPseudoUuid(FennelPseudoUuidGenerator.validUuid());
 
         assertEquals(uuid1, uuid1);
         assertNotNull(uuid1.toString());
@@ -50,8 +52,10 @@ public class FennelPseudoUuidTest
 
     public void testInvalidPseudoUuid() throws Exception
     {
-        FennelPseudoUuid uuid1 = FennelPseudoUuid.generate();
-        FennelPseudoUuid uuid2 = FennelPseudoUuid.generateInvalid();
+        FennelPseudoUuid uuid1 =
+            new FennelPseudoUuid(FennelPseudoUuidGenerator.validUuid());
+        FennelPseudoUuid uuid2 =
+            new FennelPseudoUuid(FennelPseudoUuidGenerator.invalidUuid());
 
         assertFalse(uuid1.equals(uuid2));
         assertNotNull(uuid2.toString());
@@ -60,12 +64,13 @@ public class FennelPseudoUuidTest
 
     public void testPseudoUuidSymmetry() throws Exception
     {
-        FennelPseudoUuid uuid1 = FennelPseudoUuid.generate();
-        FennelPseudoUuid uuid2 = FennelPseudoUuid.parse(uuid1.toString());
+        FennelPseudoUuid uuid1 =
+            new FennelPseudoUuid(FennelPseudoUuidGenerator.validUuid());
+        FennelPseudoUuid uuid2 = new FennelPseudoUuid(uuid1.toString());
         assertEquals(uuid1, uuid2);
 
         String uuidStr = "01234567-89ab-cdef-0123-456789abcdef";
-        FennelPseudoUuid uuid3 = FennelPseudoUuid.parse(uuidStr);
+        FennelPseudoUuid uuid3 = new FennelPseudoUuid(uuidStr);
 
         byte[] uuidBytes = new byte[16];
         byte val = 0;
@@ -77,7 +82,7 @@ public class FennelPseudoUuidTest
             uuidBytes[i] = val;
             val += 0x22;
         }
-        FennelPseudoUuid uuid4 = FennelPseudoUuid.parse(uuidBytes);
+        FennelPseudoUuid uuid4 = new FennelPseudoUuid(uuidBytes);
 
         assertEquals(uuid3, uuid4);
     }

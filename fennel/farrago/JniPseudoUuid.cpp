@@ -25,13 +25,14 @@
 #include <jni.h>
 
 FENNEL_BEGIN_CPPFILE("$Id$");
+#define UUID_LENGTH (net_sf_farrago_fennel_FennelPseudoUuidGenerator_UUID_LENGTH)
 
 static jbyteArray makeJbyteArray(JNIEnv *jEnv, PseudoUuid cppUuid)
 {
-    jbyteArray uuid = jEnv->NewByteArray(16);
+    jbyteArray uuid = jEnv->NewByteArray(UUID_LENGTH);
     jbyte *uuidBytes = jEnv->GetByteArrayElements(uuid, NULL);
 
-    for(int i = 0; i < 16; i++) {
+    for(int i = 0; i < UUID_LENGTH; i++) {
         uuidBytes[i] = cppUuid.getByte(i);
     }
 
@@ -41,7 +42,7 @@ static jbyteArray makeJbyteArray(JNIEnv *jEnv, PseudoUuid cppUuid)
 }
 
 extern "C" JNIEXPORT jbyteArray JNICALL
-Java_net_sf_farrago_fennel_FennelPseudoUuid_nativeGenerate(
+Java_net_sf_farrago_fennel_FennelPseudoUuidGenerator_nativeGenerate(
     JNIEnv *jEnv, jclass)
 {
     PseudoUuid cppUuid;
@@ -51,7 +52,7 @@ Java_net_sf_farrago_fennel_FennelPseudoUuid_nativeGenerate(
 }
 
 extern "C" JNIEXPORT jbyteArray JNICALL
-Java_net_sf_farrago_fennel_FennelPseudoUuid_nativeGenerateInvalid(
+Java_net_sf_farrago_fennel_FennelPseudoUuidGenerator_nativeGenerateInvalid(
     JNIEnv *jEnv, jclass)
 {
     PseudoUuid cppUuid;
