@@ -1,22 +1,23 @@
 /*
 // $Id$
-// Fennel is a relational database kernel.
-// Copyright (C) 2004 Red Square
-// Copyright (C) 2004-2004 John V. Sichi.
+// Fennel is a library of data storage and processing components.
+// Copyright (C) 2004-2005 Red Square, Inc.
+// Copyright (C) 2005-2005 The Eigenbase Project
+// Portions Copyright (C) 2004-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later Eigenbase-approved version.
 // 
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 // 
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307  USA
 */
 
 #ifndef Fennel_ExternalSortExecStreamImpl_Included
@@ -136,7 +137,7 @@ class ExternalSortExecStreamImpl : public ExternalSortExecStream
 // private methods
 // ----------------------------------------------------------------------
 
-    // TODO jvs 10-Nov-2004:  rework comments
+    // TODO jvs 10-Nov-2005:  rework comments
     /**
      * Performs enough sorting to be able to start returning results
      * (non-parallel version).

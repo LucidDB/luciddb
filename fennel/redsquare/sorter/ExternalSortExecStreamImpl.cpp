@@ -1,22 +1,23 @@
 /*
 // $Id$
-// Fennel is a relational database kernel.
-// Copyright (C) 2004 Red Square
-// Copyright (C) 2004-2004 John V. Sichi.
+// Fennel is a library of data storage and processing components.
+// Copyright (C) 2004-2005 Red Square, Inc.
+// Copyright (C) 2005-2005 The Eigenbase Project
+// Portions Copyright (C) 2004-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later Eigenbase-approved version.
 // 
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 // 
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include "fennel/common/CommonPreamble.h"
@@ -96,7 +97,7 @@ void ExternalSortExecStreamImpl::setResourceAllocation(
     sortInfo.nSortMemPages = quantity.nCachePages;
     nParallel = quantity.nThreads + 1;
 
-    // NOTE jvs 10-Nov-2004:  parallel sort is currently disabled
+    // NOTE jvs 10-Nov-2005:  parallel sort is currently disabled
     // as an effect of the scheduler-revamp.  We may resurrect it, or
     // we may decide to handle parallelism up at the scheduler level.
     assert(nParallel == 1);
@@ -239,7 +240,7 @@ void ExternalSortExecStreamImpl::mergeFirstResult()
         while (iFirstRun > 0) {
             uint nRunsToMerge;
 
-            // REVIEW jvs 13-June-2004:  I had to change this to account for
+            // REVIEW jvs 13-June-2005:  I had to change this to account for
             // the output buffer needed during merge.  Not sure why it worked
             // in BB?
             uint nMergePages = sortInfo.nSortMemPages - 1;
@@ -319,7 +320,7 @@ void ExternalSortExecStreamImpl::deleteStoredRunInfo(uint iFirstRun,uint nRuns)
 
 void ExternalSortExecStreamImpl::computeFirstResultParallel()
 {
-    // FIXME jvs 19-June-2004:  ThreadPool needs to propagate excns!
+    // FIXME jvs 19-June-2005:  ThreadPool needs to propagate excns!
 
     assert(nParallel > 1);
 
@@ -350,7 +351,7 @@ void ExternalSortExecStreamImpl::computeFirstResultParallel()
 #endif
         }
     } catch (...) {
-        // REVEW jvs 19-June-2004:  signal a request to expedite cleanup?
+        // REVEW jvs 19-June-2005:  signal a request to expedite cleanup?
         
         // wait for all tasks to clean up
         threadPool.stop();
@@ -406,6 +407,6 @@ void ExternalSortExecStreamImpl::unreserveRunLoader(
     runLoaderAvailable.notify_all();
 }
 
-FENNEL_END_CPPFILE("$Id$");
+FENNEL_END_CPPFILE("$Id: //open/dt/dev/fennel/redsquare/sorter/ExternalSortExecStreamImpl.cpp#3 $");
 
 // End ExternalSortExecStreamImpl.cpp

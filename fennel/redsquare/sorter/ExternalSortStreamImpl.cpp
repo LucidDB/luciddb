@@ -1,13 +1,14 @@
 /*
 // $Id$
-// Fennel is a relational database kernel.
-// Copyright (C) 2004 Red Square
-// Copyright (C) 2004 John V. Sichi
+// Fennel is a library of data storage and processing components.
+// Copyright (C) 2004-2005 Red Square, Inc.
+// Copyright (C) 2005-2005 The Eigenbase Project
+// Portions Copyright (C) 2004-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
-// (at your option) any later version.
+// (at your option) any later Eigenbase-approved version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -279,7 +280,7 @@ void ExternalSortStreamImpl::mergeFirstResult()
         while (iFirstRun > 0) {
             uint nRunsToMerge;
 
-            // REVIEW jvs 13-June-2004:  I had to change this to account for
+            // REVIEW jvs 13-June-2005:  I had to change this to account for
             // the output buffer needed during merge.  Not sure why it worked
             // in BB?
             uint nMergePages = sortInfo.nSortMemPages - 1;
@@ -359,7 +360,7 @@ void ExternalSortStreamImpl::deleteStoredRunInfo(uint iFirstRun,uint nRuns)
 
 ExternalSortRC ExternalSortStreamImpl::computeFirstResultParallel()
 {
-    // FIXME jvs 19-June-2004:  ThreadPool needs to propagate excns!
+    // FIXME jvs 19-June-2005:  ThreadPool needs to propagate excns!
 
     assert(nParallel > 1);
 
@@ -382,7 +383,7 @@ ExternalSortRC ExternalSortStreamImpl::computeFirstResultParallel()
             threadPool.submitTask(task);
         }
     } catch (...) {
-        // REVEW jvs 19-June-2004:  signal a request to expedite cleanup?
+        // REVEW jvs 19-June-2005:  signal a request to expedite cleanup?
         
         // wait for all tasks to clean up
         threadPool.stop();

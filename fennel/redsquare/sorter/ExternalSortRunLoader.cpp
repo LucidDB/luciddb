@@ -1,13 +1,14 @@
 /*
 // $Id$
-// Fennel is a relational database kernel.
-// Copyright (C) 2004 Red Square
-// Copyright (C) 2004 John V. Sichi
+// Fennel is a library of data storage and processing components.
+// Copyright (C) 2004-2005 Red Square, Inc.
+// Copyright (C) 2005-2005 The Eigenbase Project
+// Portions Copyright (C) 2004-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
-// (at your option) any later version.
+// (at your option) any later Eigenbase-approved version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -71,7 +72,7 @@ ExternalSortRunLoader::~ExternalSortRunLoader()
 
 inline PBuffer &ExternalSortRunLoader::getPointerArrayEntry(uint iTuple)
 {
-    // REVIEW jvs 12-June-2004:  This is the price we pay for not using a big
+    // REVIEW jvs 12-June-2005:  This is the price we pay for not using a big
     // linear array.  Is it too expensive?
     uint iPage = iTuple >> indexToPageShift;
     uint iSubKey = iTuple & indexPageMask;
@@ -124,7 +125,7 @@ PBuffer ExternalSortRunLoader::allocateBuffer()
     bufferLock.allocatePage();
     pBuffer = bufferLock.getPage().getWritableData();
     
-    // REVIEW jvs 12-June-2004:  we rely on the fact that the underlying
+    // REVIEW jvs 12-June-2005:  we rely on the fact that the underlying
     // ScratchSegment keeps the page pinned for us; need to make this
     // official.
     bufferLock.unlock();
@@ -163,7 +164,7 @@ void ExternalSortRunLoader::releaseResources()
     dataBuffers.clear();
     nMemPagesMax = 0;
 
-    // REVIEW jvs 12-June-2004:  see corresponding comment above in
+    // REVIEW jvs 12-June-2005:  see corresponding comment above in
     // allocateBuffer()
     
     sortInfo.memSegmentAccessor.pSegment->deallocatePageRange(

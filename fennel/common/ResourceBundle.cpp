@@ -1,21 +1,23 @@
 /*
 // $Id$
-// Fennel is a relational database kernel.
-// Copyright (C) 2004-2004 Disruptive Tech
+// Fennel is a library of data storage and processing components.
+// Copyright (C) 2005-2005 The Eigenbase Project
+// Copyright (C) 2004-2005 Disruptive Tech
+// Copyright (C) 2005-2005 Red Square, Inc.
 //
 // This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later Eigenbase-approved version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include "fennel/common/CommonPreamble.h"
@@ -226,7 +228,7 @@ static string convertPropertyToBoost(string &message)
     return ss.str();
 }
 
-// NOTE jvs 18-Feb-2004:  The conversion from Java resource format
+// NOTE jvs 18-Feb-2005:  The conversion from Java resource format
 // to Boost format could be done just once as part of the build, instead
 // of each time on startup.  However, keeping everything in Java format
 // simplifies the packaging/translation/distribution process.  And the
@@ -264,7 +266,7 @@ void ResourceBundle::loadMessages()
     if (tryGlobalLocation) {
         bool tryEnvVar = true;
 
-        // TODO jvs 18-Feb-2004: once Fennel starts using Boost's
+        // TODO jvs 18-Feb-2005: once Fennel starts using Boost's
         // platform-independent filesystem library, use it here too.
         if (!globalResourceLocation.empty()) {
             string path = globalResourceLocation + "/" + fileName;
@@ -310,4 +312,4 @@ void ResourceBundle::loadMessages()
     in.close();
 }
 
-FENNEL_END_CPPFILE("$Id$");
+FENNEL_END_CPPFILE("$Id: //open/dt/dev/fennel/common/ResourceBundle.cpp#2 $");
