@@ -129,10 +129,14 @@ do
    esac
 done
 
+exitCode=0
 for i in "$@"
 do
-    check "$i"
+    check "$i" || exitCode=1
 done
 
+exit $exitCode
 
-# End checkHeader
+
+# End checkPreamble.sh
+
