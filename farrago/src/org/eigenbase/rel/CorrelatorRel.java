@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of database components.
-// Copyright (C) 2002-2004 Disruptive Tech
-// Copyright (C) 2003-2004 John V. Sichi
+// Copyright (C) 2002-2005 Disruptive Tech
+// Copyright (C) 2003-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -76,7 +76,6 @@ public class CorrelatorRel extends JoinRel
      *        belongs to
      * @param left left input relational expression
      * @param right right  input relational expression
-     * @param joinType join type (see {@link JoinRel#joinType})
      * @param correlations set of expressions to set as variables each time a
      *        row arrives from the left input
      */

@@ -46,6 +46,8 @@ void CartesianJoinExecStream::prepare(
     pOutAccessor->setTupleShape(outputDesc);
 
     nLeftAttributes = leftDesc.size();
+    leftOuter = params.leftOuter;
+    rightInputEmpty = true;
     
     ConfluenceExecStream::prepare(params);
 }
@@ -78,9 +80,27 @@ ExecStreamResult CartesianJoinExecStream::execute(
         for (;;) {
             if (!pRightBufAccessor->isTupleConsumptionPending()) {
                 if (pRightBufAccessor->getState() == EXECBUF_EOS) {
+                    if (leftOuter && rightInputEmpty) {
+                        // put null in outputdata to the right of nLeftAttributes
+                        for (int i = nLeftAttributes; i < outputData.size(); ++i) {
+                            outputData[i].pData = 0;
+                        }
+
+                        if (pOutAccessor->produceTuple(outputData)) {
+                            ++nTuplesProduced;
+                        } else {
+                            return EXECRC_BUF_OVERFLOW;
+                        }
+                        
+                        if (nTuplesProduced >= quantum.nTuplesMax) {
+                            return EXECRC_QUANTUM_EXPIRED;
+                        }
+                    }
+
                     pLeftBufAccessor->consumeTuple();
                     // restart right input stream
                     pGraph->getStreamInput(getStreamId(),1)->open(true);
+                    rightInputEmpty = true;
                     // NOTE: break out of the inner for loop, which will take
                     // us back to the top of the outer for loop
                     break;
@@ -88,6 +108,7 @@ ExecStreamResult CartesianJoinExecStream::execute(
                 if (!pRightBufAccessor->demandData()) {
                     return EXECRC_BUF_UNDERFLOW;
                 }
+                rightInputEmpty = false;
                 pRightBufAccessor->unmarshalTuple(
                     outputData, nLeftAttributes);
                 break;

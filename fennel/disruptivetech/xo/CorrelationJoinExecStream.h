@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a relational database kernel.
-// Copyright (C) 2004-2004 Disruptive Tech
-// Copyright (C) 1999-2004 John V. Sichi.
+// Copyright (C) 2004-2005 Disruptive Tech
+// Copyright (C) 1999-2005 John V. Sichi.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -56,7 +56,8 @@ struct CorrelationJoinExecStreamParams : public ConfluenceExecStreamParams
 
 /**
  * CorrelationJoinExecStream produces a join of two input
- * streams.  The corrleation will happen based on a given column 
+ * streams.  The corrleation will happen based on one or serveral
+ * given column from the left hand side
  *
  * @author Wael Chatila
  * @version $Id$
@@ -67,8 +68,6 @@ class CorrelationJoinExecStream : public ConfluenceExecStream
     SharedExecStreamBufAccessor pLeftBufAccessor;
     SharedExecStreamBufAccessor pRightBufAccessor;
     uint nLeftAttributes;
-    uint leftAttributeOrdinal;
-    uint dynamicParamId;
     std::vector<Correlation> correlations;
 
 public:

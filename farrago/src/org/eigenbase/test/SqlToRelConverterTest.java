@@ -280,7 +280,7 @@ public class SqlToRelConverterTest extends TestCase
     public void testMultiset() {
         check("select multiset(select deptno from dept) from values(true)",
             "ProjectRel(EXPR$0=[$1])" + NL +
-            "  CorrelatorRel(condition=[true], joinType=[left])" + NL +
+            "  JoinRel(condition=[true], joinType=[left])" + NL +
             "    ProjectRel(EXPR$0=[$0])" + NL +
             "      ProjectRel(EXPR$0=[true])" + NL +
             "        OneRowRel" + NL +
@@ -290,7 +290,7 @@ public class SqlToRelConverterTest extends TestCase
 
         check("select 'a',multiset[10] from dept",
             "ProjectRel(EXPR$0=[_ISO-8859-1'a'], EXPR$1=[$2])" + NL +
-            "  CorrelatorRel(condition=[true], joinType=[left])" + NL +
+            "  JoinRel(condition=[true], joinType=[left])" + NL +
             "    TableAccessRel(table=[[DEPT]])" + NL +
             "    CollectRel" + NL +
             "      UnionRel(all=[true])" + NL +
@@ -335,6 +335,17 @@ public class SqlToRelConverterTest extends TestCase
             "          UnionRel(all=[true])" + NL +
             "            ProjectRel(DEPTNO=[$cor0.DEPTNO])" + NL +
             "              OneRowRel" + NL);
+    }
+
+    public void testLateral() {
+        check("select * from emp, LATERAL (select * from dept where emp.deptno=dept.deptno)",
+            "ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7], DEPTNO0=[$8], NAME=[$9])" + NL +
+            "  CorrelatorRel(condition=[true], joinType=[left])" + NL +
+            "    TableAccessRel(table=[[EMP]])" + NL +
+            "    ProjectRel(DEPTNO=[$0], NAME=[$1])" + NL +
+            "      FilterRel(condition=[=($cor0.DEPTNO, $0)])" + NL +
+            "        TableAccessRel(table=[[DEPT]])" + NL);
+
     }
 }
 

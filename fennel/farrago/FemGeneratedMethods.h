@@ -6,6 +6,7 @@ jmethodID ProxyBufferingTupleStreamDef::meth_isInMemory = 0;
 jmethodID ProxyBufferingTupleStreamDef::meth_isMultipass = 0;
 jmethodID ProxyCalcTupleStreamDef::meth_getProgram = 0;
 jmethodID ProxyCalcTupleStreamDef::meth_isFilter = 0;
+jmethodID ProxyCartesianProductStreamDef::meth_isLeftOuter = 0;
 jmethodID ProxyCmdBeginTxn::meth_getResultHandle = 0;
 jmethodID ProxyCmdCheckpoint::meth_isFuzzy = 0;
 jmethodID ProxyCmdCheckpoint::meth_isAsync = 0;
@@ -101,6 +102,7 @@ ProxyCalcTupleStreamDef::meth_isFilter = pEnv->GetMethodID(jClass,"isFilter","()
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemCartesianProductStreamDef");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyCartesianProductStreamDef>));
+ProxyCartesianProductStreamDef::meth_isLeftOuter = pEnv->GetMethodID(jClass,"isLeftOuter","()Z");
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemCmd");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyCmd>));
@@ -370,6 +372,11 @@ return constructString(pEnv->CallObjectMethod(jObject,meth_getProgram));
 bool ProxyCalcTupleStreamDef::isFilter()
 {
 return pEnv->CallBooleanMethod(jObject,meth_isFilter);
+}
+
+bool ProxyCartesianProductStreamDef::isLeftOuter()
+{
+return pEnv->CallBooleanMethod(jObject,meth_isLeftOuter);
 }
 
 SharedProxyTxnHandle ProxyCmdBeginTxn::getResultHandle()

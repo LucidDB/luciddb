@@ -64,7 +64,8 @@ public class FennelCartesianJoinRule extends RelOptRule
         RelNode leftRel = call.rels[1];
         RelNode rightRel = call.rels[2];
 
-        if (joinRel.getJoinType() != JoinRel.JoinType.INNER) {
+        if ((joinRel.getJoinType() != JoinRel.JoinType.INNER) &&
+            (joinRel.getJoinType() != JoinRel.JoinType.LEFT)) {
             return;
         }
 
@@ -95,7 +96,8 @@ public class FennelCartesianJoinRule extends RelOptRule
             new FennelCartesianProductRel(
                 joinRel.getCluster(),
                 fennelLeft,
-                fennelRight);
+                fennelRight,
+                joinRel.getJoinType());
         call.transformTo(productRel);
 
         // TODO:  supply a variant which uses a buffer, and let the optimizer

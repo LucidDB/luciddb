@@ -237,7 +237,8 @@ SqlNode ParenthesizedExpression(ExprContext exprContext) :
             exprContext = EXPR_ACCEPT_ALL;
         }
     }
-    e = OrderedQueryOrExpr(exprContext) <RPAREN>
+    e = OrderedQueryOrExpr(exprContext)
+    <RPAREN>
         {
             return e;
         }
@@ -274,6 +275,7 @@ List ParenthesizedQueryOrCommaList(
 {
     <LPAREN>
     {
+
         if (exprContext == EXPR_ACCEPT_SUBQUERY) {
             // we've now seen left paren, so queries inside should
             // be allowed as subqueries
@@ -802,11 +804,18 @@ SqlNode TableRef() :
             }
         }
     |
+        { boolean isLateral = false; }
+        [<LATERAL> { isLateral = true;} ]
         tableRef = ParenthesizedExpression(EXPR_ACCEPT_QUERY)
         over = TableOverOpt() {
             if (over != null) {
                 pos = getPos();
                 tableRef = opTab.overOperator.createCall(tableRef, over, pos);
+            }
+        }
+        {
+            if (isLateral) {
+                tableRef = opTab.lateralOperator.createCall(tableRef, getPos());
             }
         }
     |

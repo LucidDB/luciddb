@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a relational database kernel.
-// Copyright (C) 2004-2004 Disruptive Tech
-// Copyright (C) 1999-2004 John V. Sichi.
+// Copyright (C) 2004-2005 Disruptive Tech
+// Copyright (C) 1999-2005 John V. Sichi.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -70,7 +70,10 @@ void CorrelationJoinExecStream::open(bool restart)
 
 void CorrelationJoinExecStream::close()
 {
-    pGraph->getDynamicParamManager().removeParam(dynamicParamId);
+    std::vector<Correlation>::iterator it = correlations.begin();
+    for (/* empty */ ; it != correlations.end(); ++it) {
+        pGraph->getDynamicParamManager().removeParam(it->dynamicParamId);
+    }
     ConfluenceExecStream::closeImpl();
 }
 

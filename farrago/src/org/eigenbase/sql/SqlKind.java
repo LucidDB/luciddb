@@ -311,6 +311,10 @@ public class SqlKind extends EnumeratedValues.BasicValue
     public static final int UnnestORDINAL = 166;
     public static final SqlKind Unnest = new SqlKind("UNNEST", UnnestORDINAL);
 
+    /** Lateral */
+    public static final int LateralORDINAL = 167;
+    public static final SqlKind Lateral = new SqlKind("LATERAL", LateralORDINAL);
+
 
     // internal operators (evaluated in validator) 200-299
 
@@ -392,6 +396,7 @@ public class SqlKind extends EnumeratedValues.BasicValue
             Row, Cast, Trim,
             // special
             MultisetValueConstructor, MultisetQueryConstructor, LiteralChain,
+            Unnest, Lateral
             });
 
     //~ Constructors ----------------------------------------------------------

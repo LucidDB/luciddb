@@ -222,6 +222,7 @@ void ExecStreamFactory::visit(ProxyCartesianProductStreamDef &streamDef)
 {
     CartesianJoinExecStreamParams params;
     readTupleStreamParams(params, streamDef);
+    params.leftOuter = streamDef.isLeftOuter();
     embryo.init(new CartesianJoinExecStream(), params);
 }
 

@@ -221,6 +221,8 @@ class ProxyCartesianProductStreamDef
 : virtual public JniProxy, virtual public ProxyTupleStreamDef
 {
 public:
+bool isLeftOuter();
+static jmethodID meth_isLeftOuter;
 };
 
 class ProxyCmd

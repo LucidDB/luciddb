@@ -788,6 +788,25 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
             }
         };
 
+    public final SqlSpecialOperator lateralOperator =
+        new SqlSpecialOperator ("LATERAL", SqlKind.Lateral,
+            100, true,
+            ReturnTypeInferenceImpl.useFirstArgType,
+            null,
+            OperandsTypeChecking.typeAny) {
+
+            public void unparse(
+                SqlWriter writer,
+                SqlNode[] operands,
+                int leftPrec,
+                int rightPrec) {
+                writer.print(name);
+                writer.print("(");
+                operands[0].unparse(writer,0,0);
+                writer.print(")");
+            }
+        };
+
     public final SqlOverlapsOperator overlapsOperator =
         new SqlOverlapsOperator();
 

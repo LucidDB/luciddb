@@ -944,7 +944,7 @@ public class SqlToRelConverter
             if (convertedJoinType == JoinRel.JoinType.RIGHT) {
                 // "class Join" does not support RIGHT, so swap...
                 bb.setRoot(
-                    createJoin(
+                    createJoin2(
                         bb,
                         rightRel,
                         leftRel,
@@ -953,7 +953,7 @@ public class SqlToRelConverter
                         JoinRel.JoinType.LEFT));
             } else {
                 bb.setRoot(
-                    createJoin(
+                    createJoin2(
                         bb,
                         leftRel,
                         rightRel,
@@ -1045,6 +1045,65 @@ public class SqlToRelConverter
                 rightRel);
         return new JoinRel(cluster, leftRel, rightRel, conditionExp, joinType,
             variablesStopped);
+    }
+
+    private JoinRel createJoin2(
+        Blackboard bb,
+        RelNode leftRel,
+        RelNode rightRel,
+        SqlNode condition,
+        SqlJoinOperator.ConditionType conditionType,
+        int joinType)
+    {
+        // REVIEW Wael: I changed the implementation of lookup:ing deffered
+        // variables. Probably this code abuses the intended api, but there
+        // seem to be saffron code depending on it and didnt want to break any
+        // intended plan, sent Julian an email.
+        Set correlatedVariables = RelOptUtil.getVariablesUsed(rightRel);
+        if (correlatedVariables.size() > 0) {
+            ArrayList correlations = new ArrayList();
+            Iterator it = correlatedVariables.iterator();
+            while (it.hasNext()) {
+                String name = (String) it.next();
+
+                Iterator itt =
+                    cluster.query.mapDeferredToCorrel.keySet().iterator();
+                while (itt.hasNext()) {
+                    DeferredLookup lookup =
+                        (DeferredLookup) itt.next();
+                    String correlName = (String)
+                        cluster.query.mapDeferredToCorrel.get(
+                            lookup);
+                    if (correlName.equals(name)) {
+                        RexFieldAccess correlNode = (RexFieldAccess)
+                            lookup.bb.mapCorrelateVariableToRexNode.
+                            get(name);
+                        final int pos =
+                            leftRel.getRowType().getFieldOrdinal(
+                                correlNode.getField().getName());
+                        assert(leftRel.getRowType().getField(
+                            correlNode.getField().getName()).getType()==
+                            correlNode.getType());
+                        if (pos != -1) {
+                            correlations.add(new
+                                CorrelatorRel.Correlation(
+                                    RelOptQuery.getCorrelOrdinal(
+                                        correlName),pos));
+                        }
+                    }
+                }
+            }
+            return new CorrelatorRel(
+                            rightRel.getCluster(),
+                            leftRel,
+                            rightRel,
+                            correlations);
+        }
+        RexNode conditionExp =
+            convertJoinCondition(bb, condition, conditionType, leftRel,
+                rightRel);
+        return new JoinRel(cluster, leftRel, rightRel, conditionExp, joinType,
+            Collections.EMPTY_SET);
     }
 
     private RexNode convertJoinCondition(
@@ -1805,61 +1864,14 @@ public class SqlToRelConverter
                     root.getRowType(),
                     0);
             } else {
-                final JoinRel join;
-                if (rel instanceof CollectRel) {
-                    ArrayList correlations = new ArrayList();
-
-                    Set correlatedVariables = RelOptUtil.getVariablesUsed(rel);
-                    if (correlatedVariables.size() > 0) {
-                        Iterator it = correlatedVariables.iterator();
-                        while (it.hasNext()) {
-                            String name = (String) it.next();
-
-                            Iterator itt =
-                                cluster.query.mapDeferredToCorrel.keySet().iterator();
-                            while (itt.hasNext()) {
-                                DeferredLookup lookup =
-                                    (DeferredLookup) itt.next();
-                                String correlName = (String)
-                                    cluster.query.mapDeferredToCorrel.get(
-                                        lookup);
-                                if (correlName.equals(name)) {
-                                    RexFieldAccess correlNode = (RexFieldAccess)
-                                        lookup.bb.mapCorrelateVariableToRexNode.
-                                        get(name);
-                                    final int pos =
-                                        root.getRowType().getFieldOrdinal(
-                                            correlNode.getField().getName());
-                                    assert(root.getRowType().getField(correlNode.getField().getName()).getType() ==
-                                            correlNode.getType());
-                                    if (pos != -1) {
-                                        correlations.add(new
-                                            CorrelatorRel.Correlation(
-                                                RelOptQuery.getCorrelOrdinal(
-                                                    correlName),pos));
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    join =
-                    new CorrelatorRel(
-                        rel.getCluster(),
-                        root,
-                        rel,
-                        correlations);
-
-                } else {
-                    join =
-                    new JoinRel(
-                        rel.getCluster(),
-                        root,
-                        rel,
-                        rexBuilder.makeLiteral(true),
-                        JoinRel.JoinType.LEFT,
-                        Collections.EMPTY_SET);
-                }
+                final JoinRel join = createJoin2(
+                                        this,
+                                        root,
+                                        rel,
+                                        null,
+                                        SqlJoinOperator.ConditionType.None,
+                                        JoinRel.JoinType.LEFT);
+                
                 setRoot(join);
                 return rexBuilder.makeRangeReference(
                     rel.getRowType(),

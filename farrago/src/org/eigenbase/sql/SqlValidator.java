@@ -1444,7 +1444,15 @@ public class SqlValidator
                 join.setOperand(SqlJoin.LEFT_OPERAND, newLeft);
             }
             final SqlNode right = join.getRight();
-            final SqlNode newRight = registerFrom(parentScope, joinScope,
+            final Scope rightParentScope;
+            if (right.isA(SqlKind.Lateral) ||
+                    (right.isA(SqlKind.As) &&
+                    ((SqlCall) right).operands[0].isA(SqlKind.Lateral))) {
+                rightParentScope = joinScope;
+            } else {
+                rightParentScope = parentScope;
+            }
+            final SqlNode newRight = registerFrom(rightParentScope, joinScope,
                 right, null);
             if (newRight != right) {
                 join.setOperand(SqlJoin.RIGHT_OPERAND, newRight);
@@ -1465,6 +1473,13 @@ public class SqlValidator
             final IdentifierNamespace newNs = new IdentifierNamespace(id);
             registerNamespace(usingScope, alias, newNs);
             return newNode;
+
+        case SqlKind.LateralORDINAL:
+            return registerFrom(
+                    parentScope,
+                    usingScope,
+                    ((SqlCall) node).operands[0],
+                    alias);
 
         case SqlKind.SelectORDINAL:
         case SqlKind.UnionORDINAL:

@@ -37,6 +37,7 @@ FENNEL_BEGIN_NAMESPACE
  */
 struct CartesianJoinExecStreamParams : public ConfluenceExecStreamParams
 {
+    bool leftOuter;
 };
 
 /**
@@ -50,6 +51,8 @@ struct CartesianJoinExecStreamParams : public ConfluenceExecStreamParams
  */
 class CartesianJoinExecStream : public ConfluenceExecStream
 {
+    bool leftOuter;
+    bool rightInputEmpty;
     TupleData outputData;
     SharedExecStreamBufAccessor pLeftBufAccessor;
     SharedExecStreamBufAccessor pRightBufAccessor;

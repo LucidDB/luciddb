@@ -7,10 +7,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-/* Inaccessible static: _00024assertionsDisabled */
 #undef net_sf_farrago_fennel_FennelPseudoUuidGenerator_UUID_LENGTH
 #define net_sf_farrago_fennel_FennelPseudoUuidGenerator_UUID_LENGTH 16L
-/* Inaccessible static: class_00024net_00024sf_00024farrago_00024fennel_00024FennelPseudoUuidGenerator */
 /*
  * Class:     net_sf_farrago_fennel_FennelPseudoUuidGenerator
  * Method:    nativeGenerate

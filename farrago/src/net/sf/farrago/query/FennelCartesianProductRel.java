@@ -24,6 +24,7 @@ import net.sf.farrago.type.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.RelDataType;
 
 
 /**
@@ -35,6 +36,7 @@ import org.eigenbase.relopt.*;
  */
 class FennelCartesianProductRel extends FennelPullDoubleRel
 {
+    int joinType;
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -47,9 +49,11 @@ class FennelCartesianProductRel extends FennelPullDoubleRel
     public FennelCartesianProductRel(
         RelOptCluster cluster,
         RelNode left,
-        RelNode right)
+        RelNode right,
+        int joinType)
     {
         super(cluster, left, right);
+        this.joinType = joinType;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -60,7 +64,8 @@ class FennelCartesianProductRel extends FennelPullDoubleRel
         return new FennelCartesianProductRel(
             cluster,
             RelOptUtil.clone(left),
-            RelOptUtil.clone(right));
+            RelOptUtil.clone(right),
+            joinType);
     }
 
     // implement RelNode
@@ -83,8 +88,20 @@ class FennelCartesianProductRel extends FennelPullDoubleRel
     {
         pw.explain(
             this,
-            new String [] { "left", "right" },
-            new Object [] {  });
+            new String [] { "left", "right", "leftouterjoin" },
+            new Object [] { new Boolean(isLeftOuter()) });
+    }
+
+    private boolean isLeftOuter()
+    {
+        return JoinRel.JoinType.LEFT == joinType;
+    }
+
+    // implement RelNode
+    protected RelDataType deriveRowType()
+    {
+        return JoinRel.deriveJoinRowType(
+            left, right, joinType, cluster.typeFactory);
     }
 
     // implement FennelRel
@@ -130,6 +147,7 @@ class FennelCartesianProductRel extends FennelPullDoubleRel
             streamDef.getInput().add(rightInput);
         }
 
+        streamDef.setLeftOuter(isLeftOuter());
         return streamDef;
     }
 

@@ -1811,6 +1811,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             "      from dept");
 
         check("select*from unnest(select multiset[8] from dept)");
+        check("select*from unnest(select multiset[deptno] from dept)");
     }
 
     public void testStructuredTypes()
@@ -1827,6 +1828,15 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkType(
             "select ea.mailing_address.city from emp_address ea",
             "VARCHAR(20)");
+    }
+
+    public void testLateral() {
+        checkFails("select * from emp, (select * from dept where emp.deptno=dept.deptno)","(?s).*Unknown identifier 'EMP'.*");
+
+        check("select * from emp, LATERAL (select * from dept where emp.deptno=dept.deptno)");
+        check("select * from emp, LATERAL (select * from dept where emp.deptno=dept.deptno) as ldt");
+        check("select * from emp, LATERAL (select * from dept where emp.deptno=dept.deptno) ldt");
+
     }
 
     public void testNew() {
