@@ -18,17 +18,17 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-#ifndef Fennel_MockProducerStream_Included
-#define Fennel_MockProducerStream_Included
+#ifndef Fennel_MockProducerExecStream_Included
+#define Fennel_MockProducerExecStream_Included
 
 #include "fennel/exec/SingleOutputExecStream.h"
 
 FENNEL_BEGIN_NAMESPACE
 
 /**
- * MockProducerStreamParams defines parameters for MockProducerStream.
+ * MockProducerExecStreamParams defines parameters for MockProducerExecStream.
  */
-struct MockProducerStreamParams : public SingleOutputExecStreamParams
+struct MockProducerExecStreamParams : public SingleOutputExecStreamParams
 {
     /**
      * Number of rows to generate.
@@ -37,12 +37,12 @@ struct MockProducerStreamParams : public SingleOutputExecStreamParams
 };
 
 /**
- * MockProducerStream generates mock data.
+ * MockProducerExecStream generates mock data.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-class MockProducerStream : public SingleOutputExecStream
+class MockProducerExecStream : public SingleOutputExecStream
 {
     uint cbTuple;
     uint64_t nRowsMax;
@@ -50,7 +50,7 @@ class MockProducerStream : public SingleOutputExecStream
     
 public:
     // implement ExecStream
-    virtual void prepare(MockProducerStreamParams const &params);
+    virtual void prepare(MockProducerExecStreamParams const &params);
     virtual void open(bool restart);
     virtual ExecStreamResult execute(ExecStreamQuantum const &quantum);
 };
@@ -59,4 +59,4 @@ FENNEL_END_NAMESPACE
 
 #endif
 
-// End MockProducerStream.h
+// End MockProducerExecStream.h

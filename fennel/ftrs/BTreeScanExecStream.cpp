@@ -40,36 +40,31 @@ void BTreeScanExecStream::open(bool restart)
 
 ExecStreamResult BTreeScanExecStream::execute(ExecStreamQuantum const &quantum)
 {
-    if (!pReader->isPositioned()) {
-        pOutAccessor->markEOS();
-        return EXECRC_EOS;
-    }
-
     // TODO: (under parameter control) unlock current leaf before return and
     // relock it on next fetch
     
-    uint nTuplesProcessed = 0;
+    uint nTuples = 0;
     
-    do {
+    while (pReader->isPositioned()) {
         projAccessor.unmarshal(tupleData);
         if (pOutAccessor->produceTuple(tupleData)) {
-            ++nTuplesProcessed;
+            ++nTuples;
         } else {
-            if (nTuplesProcessed) {
-                return EXECRC_OUTPUT;
-            } else {
-                return EXECRC_NEED_OUTPUTBUF;
-            }
+            return EXECRC_BUF_OVERFLOW;
         }
         if (!pReader->searchNext()) {
             pReader->endSearch();
+            break;
         }
-        if (nTuplesProcessed >= quantum.nTuplesMax) {
-            return EXECRC_OUTPUT;
+        if (nTuples >= quantum.nTuplesMax) {
+            return EXECRC_QUANTUM_EXPIRED;
         }
-    } while (pReader->isPositioned());
+    }
 
-    return EXECRC_OUTPUT;
+    if (!nTuples) {
+        pOutAccessor->markEOS();
+    }
+    return EXECRC_EOS;
 }
 
 FENNEL_END_CPPFILE("$Id$");

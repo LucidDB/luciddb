@@ -19,14 +19,14 @@
 */
 
 #include "fennel/common/CommonPreamble.h"
-#include "fennel/exec/SegBufferStream.h"
+#include "fennel/exec/SegBufferExecStream.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
 #include "fennel/segment/SegInputStream.h"
 #include "fennel/segment/SegOutputStream.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-void SegBufferStream::prepare(SegBufferStreamParams const &params)
+void SegBufferExecStream::prepare(SegBufferExecStreamParams const &params)
 {
     ConduitExecStream::prepare(params);
     bufferSegmentAccessor = params.scratchAccessor;
@@ -35,7 +35,7 @@ void SegBufferStream::prepare(SegBufferStreamParams const &params)
     firstPageId = NULL_PAGE_ID;
 }
 
-void SegBufferStream::getResourceRequirements(
+void SegBufferExecStream::getResourceRequirements(
     ExecStreamResourceQuantity &minQuantity,
     ExecStreamResourceQuantity &optQuantity)
 {
@@ -47,7 +47,7 @@ void SegBufferStream::getResourceRequirements(
     optQuantity = minQuantity;
 }
 
-void SegBufferStream::open(bool restart)
+void SegBufferExecStream::open(bool restart)
 {
     assert(pInAccessor);
     assert(pInAccessor->getProvision() == BUFPROV_CONSUMER);
@@ -77,13 +77,13 @@ void SegBufferStream::open(bool restart)
     }
 }
 
-void SegBufferStream::closeImpl()
+void SegBufferExecStream::closeImpl()
 {
     destroyBuffer();
     ConduitExecStream::closeImpl();
 }
 
-void SegBufferStream::destroyBuffer()
+void SegBufferExecStream::destroyBuffer()
 {
     if (pByteOutputStream || (multipass && (firstPageId != NULL_PAGE_ID))) {
         // this is to make sure that buffer storage gets deallocated in all
@@ -94,7 +94,7 @@ void SegBufferStream::destroyBuffer()
     firstPageId = NULL_PAGE_ID;
 }
 
-void SegBufferStream::openBufferForRead(bool destroy)
+void SegBufferExecStream::openBufferForRead(bool destroy)
 {
     cbLastRead = 0;
     if (firstPageId == NULL_PAGE_ID) {
@@ -112,7 +112,7 @@ void SegBufferStream::openBufferForRead(bool destroy)
     }
 }
 
-ExecStreamResult SegBufferStream::execute(ExecStreamQuantum const &)
+ExecStreamResult SegBufferExecStream::execute(ExecStreamQuantum const &)
 {
     if (!pByteInputStream) {
         if (!pByteOutputStream) {
@@ -120,15 +120,16 @@ ExecStreamResult SegBufferStream::execute(ExecStreamQuantum const &)
                 bufferSegmentAccessor);
         }
         switch(pInAccessor->getState()) {
-        case EXECBUF_NEED_CONSUMPTION:
+        case EXECBUF_OVERFLOW:
             pByteOutputStream->consumeWritePointer(
                 pInAccessor->getConsumptionAvailable());
             pByteOutputStream->hardPageBreak();
             pInAccessor->consumeData(pInAccessor->getConsumptionEnd());
-            return EXECRC_NO_OUTPUT;
-        case EXECBUF_NEED_PRODUCTION:
-            return EXECRC_NEED_INPUT;
-        case EXECBUF_IDLE:
+            return EXECRC_BUF_UNDERFLOW;
+        case EXECBUF_NONEMPTY:
+        case EXECBUF_UNDERFLOW:
+            return EXECRC_BUF_UNDERFLOW;
+        case EXECBUF_EMPTY:
             {
                 uint cb;
                 PBuffer pBuffer = pByteOutputStream->getWritePointer(1,&cb);
@@ -137,7 +138,7 @@ ExecStreamResult SegBufferStream::execute(ExecStreamQuantum const &)
                     pBuffer + cb,
                     false);
             }
-            return EXECRC_NEED_INPUT;
+            return EXECRC_BUF_UNDERFLOW;
         case EXECBUF_EOS:
             openBufferForRead(!multipass);
             break;
@@ -145,14 +146,18 @@ ExecStreamResult SegBufferStream::execute(ExecStreamQuantum const &)
             permAssert(false);
         }
     }
+    
     switch(pOutAccessor->getState()) {
-    case EXECBUF_NEED_CONSUMPTION:
-        return EXECRC_NEED_OUTPUTBUF;
-    case EXECBUF_NEED_PRODUCTION:
-    case EXECBUF_IDLE:
+    case EXECBUF_NONEMPTY:
+    case EXECBUF_OVERFLOW:
+        return EXECRC_BUF_OVERFLOW;
+    case EXECBUF_UNDERFLOW:
+    case EXECBUF_EMPTY:
         break;
     case EXECBUF_EOS:
         return EXECRC_EOS;
+    default:
+        permAssert(false);
     }
     pByteInputStream->consumeReadPointer(cbLastRead);
     PConstBuffer pBuffer = pByteInputStream->getReadPointer(1,&cbLastRead);
@@ -163,19 +168,19 @@ ExecStreamResult SegBufferStream::execute(ExecStreamQuantum const &)
     pOutAccessor->provideBufferForConsumption(
         pBuffer,
         pBuffer + cbLastRead);
-    return EXECRC_OUTPUT;
+    return EXECRC_BUF_OVERFLOW;
 }
 
-ExecStreamBufProvision SegBufferStream::getOutputBufProvision() const
+ExecStreamBufProvision SegBufferExecStream::getOutputBufProvision() const
 {
     return BUFPROV_PRODUCER;
 }
 
-ExecStreamBufProvision SegBufferStream::getInputBufProvision() const
+ExecStreamBufProvision SegBufferExecStream::getInputBufProvision() const
 {
     return BUFPROV_CONSUMER;
 }
 
 FENNEL_END_CPPFILE("$Id$");
 
-// End SegBufferStream.cpp
+// End SegBufferExecStream.cpp

@@ -97,11 +97,11 @@ ExecStreamResult FtrsTableWriterExecStream::execute(
         pOutAccessor->provideBufferForConsumption(
             reinterpret_cast<PConstBuffer>(&nTuples), 
             reinterpret_cast<PConstBuffer>((&nTuples) + 1));
-        return EXECRC_OUTPUT;
+        return EXECRC_BUF_OVERFLOW;
     }
 
     ExecStreamResult rc = precheckConduitInput();
-    if (rc != EXECRC_OUTPUT) {
+    if (rc != EXECRC_YIELD) {
         return rc;
     }
 
@@ -117,7 +117,11 @@ ExecStreamResult FtrsTableWriterExecStream::execute(
         throw;
     }
 
-    return EXECRC_NO_OUTPUT;
+    if (!pInAccessor->isConsumptionPossible()) {
+        return EXECRC_BUF_UNDERFLOW;
+    } else {
+        return EXECRC_QUANTUM_EXPIRED;
+    }
 }
 
 ExecStreamBufProvision

@@ -120,14 +120,14 @@ ExecStreamBufAccessor &DfsTreeExecStreamScheduler::readStream(
             ExecStreamGraphImpl::Edge edge = *(inEdges.first);
             ExecStreamBufAccessor &bufAccessor =
                 graphImpl.getBufAccessorFromEdge(edge);
-            if (bufAccessor.getState() == EXECBUF_NEED_PRODUCTION) {
+            if (bufAccessor.getState() == EXECBUF_UNDERFLOW) {
                 // move current upstream
                 current = boost::source(edge,graphRep);
                 break;
             }
         }
         if (inEdges.first != inEdges.second) {
-            // hit EXECBUF_NEED_PRODUCTION
+            // hit EXECBUF_UNDERFLOW
             continue;
         }
 
@@ -141,7 +141,7 @@ ExecStreamBufAccessor &DfsTreeExecStreamScheduler::readStream(
 
         switch(rc) {
         case EXECRC_EOS:
-        case EXECRC_OUTPUT:
+        case EXECRC_BUF_OVERFLOW:
             {
                 // move current downstream
                 assert(boost::out_degree(current,graphRep) == 1);
@@ -158,11 +158,11 @@ ExecStreamBufAccessor &DfsTreeExecStreamScheduler::readStream(
                 }
             }
             break;
-        case EXECRC_NEED_INPUT:
+        case EXECRC_BUF_UNDERFLOW:
             // TODO:  assert that at least one input is in state
-            // EXECBUF_NEED_PRODUCTION
+            // EXECBUF_UNDERFLOW
             break;
-        case EXECRC_NO_OUTPUT:
+        case EXECRC_QUANTUM_EXPIRED:
             break;
         default:
             permAssert(false);

@@ -295,7 +295,7 @@ RecordNum FtrsTableWriter::execute(
     TupleAccessor &tupleAccessor = bufAccessor.getConsumptionTupleAccessor();
 
     do {
-        if (bufAccessor.getState() != EXECBUF_NEED_CONSUMPTION) {
+        if (!bufAccessor.demandData()) {
             break;
         }
         bufAccessor.unmarshalTuple(*pTupleData);

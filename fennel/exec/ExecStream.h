@@ -159,7 +159,9 @@ public:
         ExecStreamResourceQuantity &optQuantity);
 
     /**
-     * Sets current resource allocation for this stream.
+     * Sets current resource allocation for this stream.  If called while the
+     * stream is open, this indicates a request for the stream to dynamically
+     * adjust its memory usage.
      *
      * @param quantity allocated resource quantity
      */
@@ -187,11 +189,11 @@ public:
     virtual std::string const &getName() const;
         
     /**
-     * Executes this stream until the supplied quantum expires.
+     * Executes this stream.
      *
-     * @param quantum governs the amount of execution to perform
+     * @param quantum governs the maximum amount of execution to perform
      *
-     * @return code indicating effect of execution
+     * @return code indicating reason execution ceased
      */
     virtual ExecStreamResult execute(ExecStreamQuantum const &quantum) = 0;
     

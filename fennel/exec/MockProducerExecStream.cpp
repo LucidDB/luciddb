@@ -19,14 +19,14 @@
 */
 
 #include "fennel/common/CommonPreamble.h"
-#include "fennel/exec/MockProducerStream.h"
+#include "fennel/exec/MockProducerExecStream.h"
 #include "fennel/tuple/TupleAccessor.h"
 #include "fennel/tuple/StandardTypeDescriptor.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-void MockProducerStream::prepare(MockProducerStreamParams const &params)
+void MockProducerExecStream::prepare(MockProducerExecStreamParams const &params)
 {
     SingleOutputExecStream::prepare(params);
     for (uint i = 0; i < params.outputTupleDesc.size(); i++) {
@@ -42,17 +42,17 @@ void MockProducerStream::prepare(MockProducerStreamParams const &params)
     cbTuple = tupleAccessor.getMaxByteCount();
 }
 
-void MockProducerStream::open(bool restart)
+void MockProducerExecStream::open(bool restart)
 {
     SingleOutputExecStream::open(restart);
     nRowsProduced = 0;
 }
 
-// NOTE: MockProducerStream's implementation is kept lean and mean
+// NOTE: MockProducerExecStream's implementation is kept lean and mean
 // intentionally so that it can be used to drive other streams with minimal
 // overhead during profiling
 
-ExecStreamResult MockProducerStream::execute(ExecStreamQuantum const &)
+ExecStreamResult MockProducerExecStream::execute(ExecStreamQuantum const &)
 {
     uint cbBatch = 0;
     PBuffer pBuffer = pOutAccessor->getProductionStart();
@@ -66,16 +66,19 @@ ExecStreamResult MockProducerStream::execute(ExecStreamQuantum const &)
     // TODO:  pOutAccessor->validateTupleSize(?);
     if (cbBatch) {
         pOutAccessor->produceData(pBuffer + cbBatch);
-        return EXECRC_OUTPUT;
+        pOutAccessor->requestConsumption();
     } else {
         if (nRowsProduced == nRowsMax) {
             pOutAccessor->markEOS();
-            return EXECRC_EOS;
         }
-        return EXECRC_NEED_OUTPUTBUF;
+    }
+    if (nRowsProduced == nRowsMax) {
+        return EXECRC_EOS;
+    } else {
+        return EXECRC_BUF_OVERFLOW;
     }
 }
 
 FENNEL_END_CPPFILE("$Id$");
 
-// End MockProducerStream.cpp
+// End MockProducerExecStream.cpp

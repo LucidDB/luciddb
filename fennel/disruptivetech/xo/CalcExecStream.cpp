@@ -104,7 +104,7 @@ void CalcExecStream::prepare(CalcExecStreamParams const &params)
 ExecStreamResult CalcExecStream::execute(ExecStreamQuantum const &quantum)
 {
     ExecStreamResult rc = precheckConduitInput();
-    if (rc != EXECRC_OUTPUT) {
+    if (rc != EXECRC_YIELD) {
         return rc;
     }
     
@@ -113,19 +113,11 @@ ExecStreamResult CalcExecStream::execute(ExecStreamQuantum const &quantum)
 
     for (;;) {
         while (!pInAccessor->isTupleConsumptionPending()) {
-            if (pInAccessor->getState() != EXECBUF_NEED_CONSUMPTION) {
-                if (output) {
-                    return EXECRC_OUTPUT;
-                } else {
-                    return EXECRC_NEED_INPUT;
-                }
+            if (!pInAccessor->demandData()) {
+                return EXECRC_BUF_UNDERFLOW;
             }
             if (nTuplesProcessed >= quantum.nTuplesMax) {
-                if (output) {
-                    return EXECRC_OUTPUT;
-                } else {
-                    return EXECRC_NO_OUTPUT;
-                }
+                return EXECRC_QUANTUM_EXPIRED;
             }
             
             pInAccessor->unmarshalTuple(inputData);
@@ -155,11 +147,7 @@ ExecStreamResult CalcExecStream::execute(ExecStreamQuantum const &quantum)
         if (pOutAccessor->produceTuple(outputData)) {
             output = true;
         } else {
-            if (output) {
-                return EXECRC_OUTPUT;
-            } else {
-                return EXECRC_NEED_OUTPUTBUF;
-            }
+            return EXECRC_BUF_OVERFLOW;
         }
 
         pInAccessor->consumeTuple();

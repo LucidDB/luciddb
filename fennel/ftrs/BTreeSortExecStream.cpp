@@ -74,11 +74,8 @@ ExecStreamResult BTreeSortExecStream::execute(
         PBuffer pBuffer = pOutAccessor->getProductionStart();
         uint cbTuple = readAccessor.getCurrentByteCount();
         if (cbBuffer < cbTuple) {
-            if (nTuples > 0) {
-                return EXECRC_OUTPUT;
-            } else {
-                return EXECRC_NEED_OUTPUTBUF;
-            }
+            pOutAccessor->requestConsumption();
+            return EXECRC_BUF_OVERFLOW;
         }
         memcpy(
             pBuffer,
@@ -90,10 +87,10 @@ ExecStreamResult BTreeSortExecStream::execute(
             pWriter->endSearch();
         }
         if (nTuples >= quantum.nTuplesMax) {
-            return EXECRC_OUTPUT;
+            return EXECRC_QUANTUM_EXPIRED;
         }
     } while (pWriter->isPositioned());
-    return EXECRC_OUTPUT;
+    return EXECRC_EOS;
 }
 
 void BTreeSortExecStream::closeImpl()

@@ -19,19 +19,20 @@
 */
 
 #include "fennel/common/CommonPreamble.h"
-#include "fennel/exec/ScratchBufferStream.h"
+#include "fennel/exec/ScratchBufferExecStream.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-void ScratchBufferStream::prepare(ScratchBufferStreamParams const &params)
+void ScratchBufferExecStream::prepare(
+    ScratchBufferExecStreamParams const &params)
 {
     ConduitExecStream::prepare(params);
     scratchAccessor = params.scratchAccessor;
     bufferLock.accessSegment(scratchAccessor);
 }
 
-void ScratchBufferStream::getResourceRequirements(
+void ScratchBufferExecStream::getResourceRequirements(
     ExecStreamResourceQuantity &minQuantity,
     ExecStreamResourceQuantity &optQuantity)
 {
@@ -43,7 +44,7 @@ void ScratchBufferStream::getResourceRequirements(
     optQuantity = minQuantity;
 }
 
-void ScratchBufferStream::open(bool restart)
+void ScratchBufferExecStream::open(bool restart)
 {
     ConduitExecStream::open(restart);
 
@@ -69,13 +70,14 @@ void ScratchBufferStream::open(bool restart)
     pLastConsumptionEnd = NULL;
 }
 
-ExecStreamResult ScratchBufferStream::execute(ExecStreamQuantum const &)
+ExecStreamResult ScratchBufferExecStream::execute(ExecStreamQuantum const &)
 {
     switch(pOutAccessor->getState()) {
-    case EXECBUF_NEED_CONSUMPTION:
-        return EXECRC_NEED_OUTPUTBUF;
-    case EXECBUF_NEED_PRODUCTION:
-    case EXECBUF_IDLE:
+    case EXECBUF_NONEMPTY:
+    case EXECBUF_OVERFLOW:
+        return EXECRC_BUF_OVERFLOW;
+    case EXECBUF_UNDERFLOW:
+    case EXECBUF_EMPTY:
         if (pLastConsumptionEnd) {
             // Since our output buf is empty, the downstream consumer
             // must have consumed everything up to the last byte we
@@ -90,17 +92,18 @@ ExecStreamResult ScratchBufferStream::execute(ExecStreamQuantum const &)
         return EXECRC_EOS;
     }
     switch(pInAccessor->getState()) {
-    case EXECBUF_NEED_CONSUMPTION:
+    case EXECBUF_OVERFLOW:
+    case EXECBUF_NONEMPTY:
         pLastConsumptionEnd = pInAccessor->getConsumptionEnd();
         pOutAccessor->provideBufferForConsumption(
             pInAccessor->getConsumptionStart(),
             pLastConsumptionEnd);
-        return EXECRC_OUTPUT;
-    case EXECBUF_NEED_PRODUCTION:
-        return EXECRC_NEED_INPUT;
-    case EXECBUF_IDLE:
+        return EXECRC_BUF_OVERFLOW;
+    case EXECBUF_UNDERFLOW:
+        return EXECRC_BUF_UNDERFLOW;
+    case EXECBUF_EMPTY:
         pInAccessor->requestProduction();
-        return EXECRC_NEED_INPUT;
+        return EXECRC_BUF_UNDERFLOW;
     case EXECBUF_EOS:
         pOutAccessor->markEOS();
         return EXECRC_EOS;
@@ -109,22 +112,22 @@ ExecStreamResult ScratchBufferStream::execute(ExecStreamQuantum const &)
     }
 }
 
-void ScratchBufferStream::closeImpl()
+void ScratchBufferExecStream::closeImpl()
 {
     bufferLock.unlock();
     ConduitExecStream::closeImpl();
 }
 
-ExecStreamBufProvision ScratchBufferStream::getOutputBufProvision() const
+ExecStreamBufProvision ScratchBufferExecStream::getOutputBufProvision() const
 {
     return BUFPROV_PRODUCER;
 }
 
-ExecStreamBufProvision ScratchBufferStream::getInputBufProvision() const
+ExecStreamBufProvision ScratchBufferExecStream::getInputBufProvision() const
 {
     return BUFPROV_CONSUMER;
 }
 
-FENNEL_END_CPPFILE("$Id$");
+FENNEL_END_CPPFILE("$Id: //open/dt/dev/fennel/exec/ScratchBufferExecStream.cpp#1 $");
 
-// End ScratchBufferStream.cpp
+// End ScratchBufferExecStream.cpp

@@ -48,7 +48,7 @@ protected:
      * Checks the state of the input buffer.  If empty, requests production.
      * If EOS,  propagates that to output buffer.
      *
-     * @return result of precheck; anything but EXECRC_OUTPUT indicates
+     * @return result of precheck; anything but EXECRC_YIELD indicates
      * that execution should terminate immediately with returned code
      */
     ExecStreamResult precheckConduitInput();

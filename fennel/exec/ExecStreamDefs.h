@@ -34,12 +34,21 @@ typedef uint ExecStreamId;
 
 enum ExecStreamBufState 
 {
-    EXECBUF_IDLE,
-    EXECBUF_NEED_PRODUCTION,
-    EXECBUF_NEED_CONSUMPTION,
+    EXECBUF_EMPTY,
+    EXECBUF_NONEMPTY,
+    EXECBUF_UNDERFLOW,
+    EXECBUF_OVERFLOW,
     EXECBUF_EOS
 };
 
+static std::string ExecStreamBufState_names[] = {
+    "EXECBUF_EMPTY",
+    "EXECBUF_NONEMPTY",
+    "EXECBUF_UNDERFLOW",
+    "EXECBUF_OVERFLOW",
+    "EXECBUF_EOS"
+};
+    
 enum ExecStreamBufProvision
 {
     BUFPROV_NONE,
@@ -49,26 +58,19 @@ enum ExecStreamBufProvision
 
 enum ExecStreamResult
 {
-    EXECRC_NEED_INPUT,
-    EXECRC_NEED_OUTPUTBUF,
+    EXECRC_BUF_UNDERFLOW,
+    EXECRC_BUF_OVERFLOW,
     EXECRC_EOS,
-    EXECRC_NO_OUTPUT,
-    EXECRC_OUTPUT
+    EXECRC_QUANTUM_EXPIRED,
+    EXECRC_YIELD
 };
 
 static std::string ExecStreamResult_names[] = {
-    "EXECRC_NEED_INPUT",
-    "EXECRC_NEED_OUTPUTBUF",
+    "EXECRC_BUF_UNDERFLOW",
+    "EXECRC_BUF_OVERFLOW",
     "EXECRC_EOS",
-    "EXECRC_NO_OUTPUT",
-    "EXECRC_OUTPUT"
-};
-    
-static std::string ExecStreamBufState_names[] = {
-    "EXECBUF_IDLE",
-    "EXECBUF_NEED_PRODUCTION",
-    "EXECBUF_NEED_CONSUMPTION",
-    "EXECBUF_EOS"
+    "EXECRC_QUANTUM_EXPIRED",
+    "EXECRC_YIELD"
 };
     
 /**

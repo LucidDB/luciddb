@@ -78,7 +78,7 @@ ExecStreamResult BTreeSearchExecStream::execute(
     ExecStreamQuantum const &quantum)
 {
     ExecStreamResult rc = precheckConduitInput();
-    if (rc != EXECRC_OUTPUT) {
+    if (rc != EXECRC_YIELD) {
         return rc;
     }
     
@@ -89,26 +89,18 @@ ExecStreamResult BTreeSearchExecStream::execute(
     for (;;) {
 
         if (!innerSearchLoop()) {
-            if (nTuples > 0) {
-                return EXECRC_OUTPUT;
-            } else {
-                return EXECRC_NEED_INPUT;
-            }
+            return EXECRC_BUF_UNDERFLOW;
         }
 
         // inner fetch loop
         for (;;) {
             if (nTuples >= quantum.nTuplesMax) {
-                return EXECRC_OUTPUT;
+                return EXECRC_QUANTUM_EXPIRED;
             }
             if (pOutAccessor->produceTuple(tupleData)) {
                 ++nTuples;
             } else {
-                if (nTuples) {
-                    return EXECRC_OUTPUT;
-                } else {
-                    return EXECRC_NEED_OUTPUTBUF;
-                }
+                return EXECRC_BUF_OVERFLOW;
             }
             if (pReader->searchNext()) {
                 readerKeyAccessor.unmarshal(readerKeyData);
@@ -137,7 +129,7 @@ ExecStreamResult BTreeSearchExecStream::execute(
 bool BTreeSearchExecStream::innerSearchLoop()
 {
     while (!pReader->isPositioned()) {
-        if (pInAccessor->getState() != EXECBUF_NEED_CONSUMPTION) {
+        if (!pInAccessor->demandData()) {
             return false;
         }
         TupleAccessor &inputAccessor =

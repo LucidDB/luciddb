@@ -24,10 +24,10 @@
 #include "fennel/exec/ExecStream.h"
 #include "fennel/exec/ExecStreamGraph.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
-#include "fennel/exec/MockProducerStream.h"
-#include "fennel/exec/ScratchBufferStream.h"
-#include "fennel/exec/SegBufferStream.h"
-#include "fennel/exec/CartesianJoinStream.h"
+#include "fennel/exec/MockProducerExecStream.h"
+#include "fennel/exec/ScratchBufferExecStream.h"
+#include "fennel/exec/SegBufferExecStream.h"
+#include "fennel/exec/CartesianJoinExecStream.h"
 #include "fennel/tuple/StandardTypeDescriptor.h"
 
 #include <boost/test/test_tools.hpp>
@@ -40,30 +40,30 @@ using namespace fennel;
 class ExecStreamTest : public ExecStreamTestBase
 {
     void verifyZeroedOutput(ExecStream &stream,uint nBytesExpected);
-    void testCartesianJoinStream(uint nRowsLeft,uint nRowsRight);
+    void testCartesianJoinExecStream(uint nRowsLeft,uint nRowsRight);
     
 public:
     explicit ExecStreamTest()
     {
-        FENNEL_UNIT_TEST_CASE(ExecStreamTest,testScratchBufferStream);
-        FENNEL_UNIT_TEST_CASE(ExecStreamTest,testSegBufferStream);
-        FENNEL_UNIT_TEST_CASE(ExecStreamTest,testCartesianJoinStreamOuter);
-        FENNEL_UNIT_TEST_CASE(ExecStreamTest,testCartesianJoinStreamInner);
+        FENNEL_UNIT_TEST_CASE(ExecStreamTest,testScratchBufferExecStream);
+        FENNEL_UNIT_TEST_CASE(ExecStreamTest,testSegBufferExecStream);
+        FENNEL_UNIT_TEST_CASE(ExecStreamTest,testCartesianJoinExecStreamOuter);
+        FENNEL_UNIT_TEST_CASE(ExecStreamTest,testCartesianJoinExecStreamInner);
     }
 
-    void testScratchBufferStream();
-    void testSegBufferStream();
+    void testScratchBufferExecStream();
+    void testSegBufferExecStream();
     
-    void testCartesianJoinStreamOuter()
+    void testCartesianJoinExecStreamOuter()
     {
         // iterate multiple outer buffers
-        testCartesianJoinStream(10000,5);
+        testCartesianJoinExecStream(10000,5);
     }
     
-    void testCartesianJoinStreamInner()
+    void testCartesianJoinExecStreamInner()
     {
         // iterate multiple inner buffers
-        testCartesianJoinStream(5,10000);
+        testCartesianJoinExecStream(5,10000);
     }
 };
 
@@ -73,15 +73,15 @@ void ExecStreamTest::verifyZeroedOutput(
     verifyConstantOutput(stream,nBytesExpected,0);
 }
 
-void ExecStreamTest::testScratchBufferStream()
+void ExecStreamTest::testScratchBufferExecStream()
 {
-    MockProducerStream *pStreamImpl1 = new MockProducerStream();
+    MockProducerExecStream *pStreamImpl1 = new MockProducerExecStream();
     SharedExecStream pStream1(pStreamImpl1);
-    pStream1->setName("MockProducerStream");
+    pStream1->setName("MockProducerExecStream");
     
-    ScratchBufferStream *pStreamImpl2 = new ScratchBufferStream();
+    ScratchBufferExecStream *pStreamImpl2 = new ScratchBufferExecStream();
     SharedExecStream pStream2(pStreamImpl2);
-    pStream2->setName("ScratchBufferStream");
+    pStream2->setName("ScratchBufferExecStream");
 
     prepareGraphTwoStreams(pStream1,pStream2);
     
@@ -89,13 +89,13 @@ void ExecStreamTest::testScratchBufferStream()
     TupleAttributeDescriptor attrDesc(
         stdTypeFactory.newDataType(STANDARD_TYPE_INT_32));
     
-    MockProducerStreamParams params1;
+    MockProducerExecStreamParams params1;
     params1.outputTupleDesc.push_back(attrDesc);
     params1.nRows = 10000;     // at least two buffers
     params1.enforceQuotas = false;
     pStreamImpl1->prepare(params1);
     
-    ScratchBufferStreamParams params2;
+    ScratchBufferExecStreamParams params2;
     params2.scratchAccessor =
         pSegmentFactory->newScratchSegment(pCache,1);
     params2.enforceQuotas = false;
@@ -108,15 +108,15 @@ void ExecStreamTest::testScratchBufferStream()
         params1.nRows*sizeof(int32_t));
 }
 
-void ExecStreamTest::testSegBufferStream()
+void ExecStreamTest::testSegBufferExecStream()
 {
-    MockProducerStream *pStreamImpl1 = new MockProducerStream();
+    MockProducerExecStream *pStreamImpl1 = new MockProducerExecStream();
     SharedExecStream pStream1(pStreamImpl1);
-    pStream1->setName("MockProducerStream");
+    pStream1->setName("MockProducerExecStream");
     
-    SegBufferStream *pStreamImpl2 = new SegBufferStream();
+    SegBufferExecStream *pStreamImpl2 = new SegBufferExecStream();
     SharedExecStream pStream2(pStreamImpl2);
-    pStream2->setName("SegBufferStream");
+    pStream2->setName("SegBufferExecStream");
 
     prepareGraphTwoStreams(pStream1,pStream2);
     
@@ -124,13 +124,13 @@ void ExecStreamTest::testSegBufferStream()
     TupleAttributeDescriptor attrDesc(
         stdTypeFactory.newDataType(STANDARD_TYPE_INT_32));
     
-    MockProducerStreamParams params1;
+    MockProducerExecStreamParams params1;
     params1.outputTupleDesc.push_back(attrDesc);
     params1.nRows = 10000;     // at least two buffers
     params1.enforceQuotas = false;
     pStreamImpl1->prepare(params1);
     
-    SegBufferStreamParams params2;
+    SegBufferExecStreamParams params2;
     params2.scratchAccessor.pSegment = pLinearSegment;
     params2.scratchAccessor.pCacheAccessor = pCache;
     params2.enforceQuotas = false;
@@ -142,32 +142,32 @@ void ExecStreamTest::testSegBufferStream()
         params1.nRows*sizeof(int32_t));
 }
 
-void ExecStreamTest::testCartesianJoinStream(
+void ExecStreamTest::testCartesianJoinExecStream(
     uint nRowsOuter,uint nRowsInner)
 {
-    MockProducerStream *pStreamImpl1 = new MockProducerStream();
+    MockProducerExecStream *pStreamImpl1 = new MockProducerExecStream();
     SharedExecStream pStream1(pStreamImpl1);
-    pStream1->setName("MockProducerStream1");
+    pStream1->setName("MockProducerExecStream1");
     
-    MockProducerStream *pStreamImpl2 = new MockProducerStream();
+    MockProducerExecStream *pStreamImpl2 = new MockProducerExecStream();
     SharedExecStream pStream2(pStreamImpl2);
-    pStream2->setName("MockProducerStream2");
+    pStream2->setName("MockProducerExecStream2");
     
-    ScratchBufferStream *pStreamImpl3 = new ScratchBufferStream();
+    ScratchBufferExecStream *pStreamImpl3 = new ScratchBufferExecStream();
     SharedExecStream pStream3(pStreamImpl3);
-    pStream3->setName("ScratchBufferStream3");
+    pStream3->setName("ScratchBufferExecStream3");
 
-    ScratchBufferStream *pStreamImpl4 = new ScratchBufferStream();
+    ScratchBufferExecStream *pStreamImpl4 = new ScratchBufferExecStream();
     SharedExecStream pStream4(pStreamImpl4);
-    pStream4->setName("ScratchBufferStream4");
+    pStream4->setName("ScratchBufferExecStream4");
 
-    CartesianJoinStream *pStreamImpl5 = new CartesianJoinStream();
+    CartesianJoinExecStream *pStreamImpl5 = new CartesianJoinExecStream();
     SharedExecStream pStream5(pStreamImpl5);
-    pStream5->setName("CartesianJoinStream5");
+    pStream5->setName("CartesianJoinExecStream5");
 
-    ScratchBufferStream *pStreamImpl6 = new ScratchBufferStream();
+    ScratchBufferExecStream *pStreamImpl6 = new ScratchBufferExecStream();
     SharedExecStream pStream6(pStreamImpl6);
-    pStream6->setName("ScratchBufferStream6");
+    pStream6->setName("ScratchBufferExecStream6");
 
     pGraph->addStream(pStream1);
     pGraph->addStream(pStream2);
@@ -199,7 +199,7 @@ void ExecStreamTest::testCartesianJoinStream(
     TupleAttributeDescriptor attrDesc(
         stdTypeFactory.newDataType(STANDARD_TYPE_INT_32));
     
-    MockProducerStreamParams paramsMock;
+    MockProducerExecStreamParams paramsMock;
     paramsMock.outputTupleDesc.push_back(attrDesc);
     paramsMock.nRows = nRowsOuter;
     paramsMock.enforceQuotas = false;
@@ -208,14 +208,14 @@ void ExecStreamTest::testCartesianJoinStream(
     paramsMock.nRows = nRowsInner;
     pStreamImpl2->prepare(paramsMock);
     
-    ScratchBufferStreamParams paramsScratch;
+    ScratchBufferExecStreamParams paramsScratch;
     paramsScratch.scratchAccessor =
         pSegmentFactory->newScratchSegment(pCache,3);
     paramsScratch.enforceQuotas = false;
     pStreamImpl3->prepare(paramsScratch);
     pStreamImpl4->prepare(paramsScratch);
 
-    CartesianJoinStreamParams paramsJoin;
+    CartesianJoinExecStreamParams paramsJoin;
     paramsJoin.enforceQuotas = false;
     pStreamImpl5->prepare(paramsJoin);
     pStreamImpl6->prepare(paramsScratch);

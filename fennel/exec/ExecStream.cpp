@@ -100,9 +100,9 @@ void ExecStream::open(bool restart)
     }
 }
 
-void ExecStream::setName(std::string const &nameIn)
+void ExecStream::setName(std::string const &nameInit)
 {
-    name = nameIn;
+    name = nameInit;
 }
 
 std::string const &ExecStream::getName() const

@@ -29,7 +29,7 @@ ExecStreamResult BTreeSearchUniqueExecStream::execute(
     ExecStreamQuantum const &quantum)
 {
     ExecStreamResult rc = precheckConduitInput();
-    if (rc != EXECRC_OUTPUT) {
+    if (rc != EXECRC_YIELD) {
         return rc;
     }
     
@@ -40,25 +40,17 @@ ExecStreamResult BTreeSearchUniqueExecStream::execute(
     for (;;) {
 
         if (!innerSearchLoop()) {
-            if (nTuples > 0) {
-                return EXECRC_OUTPUT;
-            } else {
-                return EXECRC_NEED_INPUT;
-            }
+            return EXECRC_BUF_UNDERFLOW;
         }
         
         if (nTuples >= quantum.nTuplesMax) {
-            return EXECRC_OUTPUT;
+            return EXECRC_QUANTUM_EXPIRED;
         }
         
         if (pOutAccessor->produceTuple(tupleData)) {
             ++nTuples;
         } else {
-            if (nTuples) {
-                return EXECRC_OUTPUT;
-            } else {
-                return EXECRC_NEED_OUTPUTBUF;
-            }
+            return EXECRC_BUF_OVERFLOW;
         }
         
         pReader->endSearch();

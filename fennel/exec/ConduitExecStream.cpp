@@ -64,16 +64,17 @@ ExecStreamBufProvision ConduitExecStream::getInputBufProvision() const
 ExecStreamResult ConduitExecStream::precheckConduitInput()
 {
     switch (pInAccessor->getState()) {
-    case EXECBUF_IDLE:
+    case EXECBUF_EMPTY:
         pInAccessor->requestProduction();
-        // NOTE:  fall through
-    case EXECBUF_NEED_PRODUCTION:
-        return EXECRC_NEED_INPUT;
+        return EXECRC_BUF_UNDERFLOW;
+    case EXECBUF_UNDERFLOW:
+        return EXECRC_BUF_UNDERFLOW;
     case EXECBUF_EOS:
         pOutAccessor->markEOS();
         return EXECRC_EOS;
-    case EXECBUF_NEED_CONSUMPTION:
-        return EXECRC_OUTPUT;
+    case EXECBUF_NONEMPTY:
+    case EXECBUF_OVERFLOW:
+        return EXECRC_YIELD;
     default:
         permAssert(false);
     }

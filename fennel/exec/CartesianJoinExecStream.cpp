@@ -19,13 +19,14 @@
 */
 
 #include "fennel/common/CommonPreamble.h"
-#include "fennel/exec/CartesianJoinStream.h"
+#include "fennel/exec/CartesianJoinExecStream.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
 #include "fennel/exec/ExecStreamGraph.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-void CartesianJoinStream::prepare(CartesianJoinStreamParams const &params)
+void CartesianJoinExecStream::prepare(
+    CartesianJoinExecStreamParams const &params)
 {
     assert(inAccessors.size() == 2);
     
@@ -49,7 +50,8 @@ void CartesianJoinStream::prepare(CartesianJoinStreamParams const &params)
     ConfluenceExecStream::prepare(params);
 }
 
-ExecStreamResult CartesianJoinStream::execute(ExecStreamQuantum const &quantum)
+ExecStreamResult CartesianJoinExecStream::execute(
+    ExecStreamQuantum const &quantum)
 {
     // TODO:  lots of small optimizations possible here
     
@@ -64,25 +66,14 @@ ExecStreamResult CartesianJoinStream::execute(ExecStreamQuantum const &quantum)
     
     for (;;) {
         if (!pLeftBufAccessor->isTupleConsumptionPending()) {
-            if (pLeftBufAccessor->getState() == EXECBUF_NEED_CONSUMPTION) {
-                pLeftBufAccessor->unmarshalTuple(outputData);
-            } else {
-                if (nTuplesProduced) {
-                    return EXECRC_OUTPUT;
-                }
-                switch(pLeftBufAccessor->getState()) {
-                case EXECBUF_EOS:
-                    pOutAccessor->markEOS();
-                    return EXECRC_EOS;
-                case EXECBUF_IDLE:
-                    pLeftBufAccessor->requestProduction();
-                    return EXECRC_NEED_INPUT;
-                case EXECBUF_NEED_PRODUCTION:
-                    return EXECRC_NEED_INPUT;
-                default:
-                    permAssert(false);
-                }
+            if (pLeftBufAccessor->getState() == EXECBUF_EOS) {
+                pOutAccessor->markEOS();
+                return EXECRC_EOS;
             }
+            if (!pLeftBufAccessor->demandData()) {
+                return EXECRC_BUF_UNDERFLOW;
+            }
+            pLeftBufAccessor->unmarshalTuple(outputData);
         }
         for (;;) {
             if (!pRightBufAccessor->isTupleConsumptionPending()) {
@@ -94,39 +85,24 @@ ExecStreamResult CartesianJoinStream::execute(ExecStreamQuantum const &quantum)
                     // us back to the top of the outer for loop
                     break;
                 }
-                switch(pRightBufAccessor->getState()) {
-                case EXECBUF_NEED_CONSUMPTION:
-                    pRightBufAccessor->unmarshalTuple(
-                        outputData, nLeftAttributes);
-                    break;
-                case EXECBUF_IDLE:
-                    pRightBufAccessor->requestProduction();
-                    // NOTE:  fall through
-                case EXECBUF_NEED_PRODUCTION:
-                    if (nTuplesProduced) {
-                        return EXECRC_OUTPUT;
-                    } else {
-                        return EXECRC_NEED_INPUT;
-                    }
-                default:
-                    permAssert(false);
+                if (!pRightBufAccessor->demandData()) {
+                    return EXECRC_BUF_UNDERFLOW;
                 }
+                pRightBufAccessor->unmarshalTuple(
+                    outputData, nLeftAttributes);
+                break;
             }
             
             if (pOutAccessor->produceTuple(outputData)) {
                 ++nTuplesProduced;
             } else {
-                if (nTuplesProduced) {
-                    return EXECRC_OUTPUT;
-                } else {
-                    return EXECRC_NEED_OUTPUTBUF;
-                }
+                return EXECRC_BUF_OVERFLOW;
             }
             
             pRightBufAccessor->consumeTuple();
             
             if (nTuplesProduced >= quantum.nTuplesMax) {
-                return EXECRC_OUTPUT;
+                return EXECRC_QUANTUM_EXPIRED;
             }
         }
     }
@@ -134,4 +110,4 @@ ExecStreamResult CartesianJoinStream::execute(ExecStreamQuantum const &quantum)
 
 FENNEL_END_CPPFILE("$Id$");
 
-// End CartesianJoinStream.cpp
+// End CartesianJoinExecStream.cpp

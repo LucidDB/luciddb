@@ -65,7 +65,7 @@ ExecStreamResult BTreeInsertExecStream::execute(
     ExecStreamQuantum const &quantum)
 {
     ExecStreamResult rc = precheckConduitInput();
-    if (rc != EXECRC_OUTPUT) {
+    if (rc != EXECRC_YIELD) {
         return rc;
     }
 
@@ -73,14 +73,14 @@ ExecStreamResult BTreeInsertExecStream::execute(
     
     for (;;) {
         PConstBuffer pTupleBuf = pInAccessor->getConsumptionStart();
-        if (pTupleBuf == pInAccessor->getConsumptionEnd()) {
-            return EXECRC_NO_OUTPUT;
-        }
         uint cb = pWriter->insertTupleFromBuffer(pTupleBuf,distinctness);
         pInAccessor->consumeData(pTupleBuf + cb);
         ++nTuples;
         if (nTuples > quantum.nTuplesMax) {
-            return EXECRC_NO_OUTPUT;
+            return EXECRC_QUANTUM_EXPIRED;
+        }
+        if (!pInAccessor->demandData()) {
+            return EXECRC_BUF_UNDERFLOW;
         }
     }
 }

@@ -18,8 +18,8 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-#ifndef Fennel_CartesianJoinStream_Included
-#define Fennel_CartesianJoinStream_Included
+#ifndef Fennel_CartesianJoinExecStream_Included
+#define Fennel_CartesianJoinExecStream_Included
 
 #include "fennel/exec/ConfluenceExecStream.h"
 #include "fennel/tuple/TupleAccessor.h"
@@ -28,19 +28,19 @@
 FENNEL_BEGIN_NAMESPACE
 
 /**
- * CartesianJoinStreamParams defines parameters for instantiating a
- * CartesianJoinStream.
+ * CartesianJoinExecStreamParams defines parameters for instantiating a
+ * CartesianJoinExecStream.
  *
  *<p>
  *
  * TODO:  Take a join filter?
  */
-struct CartesianJoinStreamParams : public ConfluenceExecStreamParams
+struct CartesianJoinExecStreamParams : public ConfluenceExecStreamParams
 {
 };
 
 /**
- * CartesianJoinStream produces the Cartesian product of two input
+ * CartesianJoinExecStream produces the Cartesian product of two input
  * streams.  The first input will be iterated only once, while the second
  * input will be opened and re-iterated for each tuple from the first
  * input.
@@ -48,7 +48,7 @@ struct CartesianJoinStreamParams : public ConfluenceExecStreamParams
  * @author John V. Sichi
  * @version $Id$
  */
-class CartesianJoinStream : public ConfluenceExecStream
+class CartesianJoinExecStream : public ConfluenceExecStream
 {
     TupleData outputData;
     SharedExecStreamBufAccessor pLeftBufAccessor;
@@ -57,7 +57,7 @@ class CartesianJoinStream : public ConfluenceExecStream
 
 public:
     // implement ExecStream
-    virtual void prepare(CartesianJoinStreamParams const &params);
+    virtual void prepare(CartesianJoinExecStreamParams const &params);
     virtual ExecStreamResult execute(ExecStreamQuantum const &quantum);
 };
 
@@ -65,4 +65,4 @@ FENNEL_END_NAMESPACE
 
 #endif
 
-// End CartesianJoinStream.h
+// End CartesianJoinExecStream.h

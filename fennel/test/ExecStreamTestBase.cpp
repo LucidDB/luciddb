@@ -22,7 +22,7 @@
 #include "fennel/test/ExecStreamTestBase.h"
 #include "fennel/exec/ExecStreamGraphImpl.h"
 #include "fennel/exec/ExecStream.h"
-#include "fennel/exec/ScratchBufferStream.h"
+#include "fennel/exec/ScratchBufferExecStream.h"
 #include "fennel/exec/ExecStreamEmbryo.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
 #include "fennel/exec/DfsTreeExecStreamScheduler.h"
@@ -53,15 +53,15 @@ SharedExecStream ExecStreamTestBase::prepareGraphTwoBufferedStreams(
     SharedExecStream pSourceStream = sourceStreamEmbryo.getStream();
     SharedExecStream pTransformStream = transformStreamEmbryo.getStream();
     
-    ScratchBufferStream *pBufStreamImpl1 = new ScratchBufferStream();
+    ScratchBufferExecStream *pBufStreamImpl1 = new ScratchBufferExecStream();
     SharedExecStream pBufStream1(pBufStreamImpl1);
-    pBufStream1->setName("ScratchBufferStream1");
+    pBufStream1->setName("ScratchBufferExecStream1");
 
-    ScratchBufferStream *pBufStreamImpl2 = new ScratchBufferStream();
+    ScratchBufferExecStream *pBufStreamImpl2 = new ScratchBufferExecStream();
     SharedExecStream pBufStream2(pBufStreamImpl2);
-    pBufStream2->setName("ScratchBufferStream2");
+    pBufStream2->setName("ScratchBufferExecStream2");
     
-    ScratchBufferStreamParams paramsScratch;
+    ScratchBufferExecStreamParams paramsScratch;
     paramsScratch.scratchAccessor =
         pSegmentFactory->newScratchSegment(pCache,2);
     paramsScratch.enforceQuotas = false;
@@ -139,7 +139,7 @@ void ExecStreamTestBase::verifyConstantOutput(
         if (bufAccessor.getState() == EXECBUF_EOS) {
             break;
         }
-        BOOST_CHECK_EQUAL(EXECBUF_NEED_CONSUMPTION,bufAccessor.getState());
+        BOOST_CHECK(bufAccessor.isConsumptionPossible());
         uint nBytes = bufAccessor.getConsumptionAvailable();
         nBytesTotal += nBytes;
         for (uint i = 0; i < nBytes; ++i) {

@@ -18,60 +18,40 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-#ifndef Fennel_SegBufferStream_Included
-#define Fennel_SegBufferStream_Included
+#ifndef Fennel_ScratchBufferExecStream_Included
+#define Fennel_ScratchBufferExecStream_Included
 
 #include "fennel/exec/ConduitExecStream.h"
-#include "fennel/segment/SegStream.h"
+#include "fennel/segment/SegPageLock.h"
 
 FENNEL_BEGIN_NAMESPACE
 
 /**
- * SegBufferStreamParams defines parameters for instantiating a
- * SegBufferStream.
- *
- *<p>
- *
- * TODO:  support usage of a SpillOutputStream.
+ * ScratchBufferExecStreamParams defines parameters for ScratchBufferExecStream.
  */
-struct SegBufferStreamParams : public ConduitExecStreamParams
+struct ScratchBufferExecStreamParams : public ConduitExecStreamParams
 {
-    /**
-     * If true, buffer contents are preserved rather than deleted as they are
-     * read.  This allows open(restart=true) to be used to perform multiple
-     * iterations over the buffer.
-     *
-     *<p>
-     *
-     * TODO: support "tee" on the first pass.
-     */
-    bool multipass;
 };
     
 /**
- * SegBufferStream fully buffers its input (using segment storage as specified
- * in its parameters).  The first execute request causes all input data to be
- * stored, after which the original input stream is ignored and
- * data is returned from the stored buffer instead.
+ * ScratchBufferExecStream is an adapter for converting the output of an
+ * upstream BUFPROV_CONSUMER producer for use by a downstream BUFPROV_PRODUCER
+ * consumer.  The implementation works by allocating a scratch buffer; the
+ * upstream producer writes its results into this buffer, and the downstream
+ * consumer reads input from this buffer.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-class SegBufferStream : public ConduitExecStream
+class ScratchBufferExecStream : public ConduitExecStream
 {
-    SegmentAccessor bufferSegmentAccessor;
-    SharedSegOutputStream pByteOutputStream;
-    SharedSegInputStream pByteInputStream;
-    PageId firstPageId;
-    bool multipass;
-    SegStreamPosition restartPos;
-    uint cbLastRead;
-
-    void destroyBuffer();
-    void openBufferForRead(bool destroy);
+    SegmentAccessor scratchAccessor;
+    SegPageLock bufferLock;
+    PConstBuffer pLastConsumptionEnd;
     
 public:
-    virtual void prepare(SegBufferStreamParams const &params);
+    // implement ExecStream
+    virtual void prepare(ScratchBufferExecStreamParams const &params);
     virtual void getResourceRequirements(
         ExecStreamResourceQuantity &minQuantity,
         ExecStreamResourceQuantity &optQuantity);
@@ -86,4 +66,4 @@ FENNEL_END_NAMESPACE
 
 #endif
 
-// End SegBufferStream.h
+// End ScratchBufferExecStream.h

@@ -24,7 +24,7 @@
 #include "fennel/disruptivetech/xo/CalcExecStream.h"
 #include "fennel/tuple/StandardTypeDescriptor.h"
 #include "fennel/tuple/TupleOverflowExcn.h"
-#include "fennel/exec/MockProducerStream.h"
+#include "fennel/exec/MockProducerExecStream.h"
 #include "fennel/exec/ExecStreamEmbryo.h"
 
 #include <boost/test/test_tools.hpp>
@@ -197,7 +197,7 @@ void CalcExecStreamTest::testConstant(
     TupleDescriptor const &outputDesc,
     uint expectedFactor)
 {
-    MockProducerStreamParams mockParams;
+    MockProducerExecStreamParams mockParams;
     mockParams.outputTupleDesc = inputDesc;
     mockParams.nRows = 1000;
     mockParams.enforceQuotas = false;
@@ -208,8 +208,8 @@ void CalcExecStreamTest::testConstant(
     calcParams.isFilter = false;
 
     ExecStreamEmbryo mockStreamEmbryo;
-    mockStreamEmbryo.init(new MockProducerStream(),mockParams);
-    mockStreamEmbryo.getStream()->setName("MockProducerStream");
+    mockStreamEmbryo.init(new MockProducerExecStream(),mockParams);
+    mockStreamEmbryo.getStream()->setName("MockProducerExecStream");
 
     ExecStreamEmbryo calcStreamEmbryo;
     calcStreamEmbryo.init(new CalcExecStream(),calcParams);
