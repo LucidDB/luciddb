@@ -136,11 +136,11 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
         String serverMofId,
         Object param)
     {
-        FemDataServerImpl femServer =
-            (FemDataServerImpl) repos.getMdrRepos().getByMofId(serverMofId);
+        FemDataServer femServer =
+            (FemDataServer) repos.getMdrRepos().getByMofId(serverMofId);
 
         FarragoMedDataServer server =
-            femServer.loadFromCache(dataWrapperCache);
+            dataWrapperCache.loadServerFromCatalog(femServer);
         try {
             Object obj = server.getRuntimeSupport(param);
             if (obj instanceof FarragoAllocation) {

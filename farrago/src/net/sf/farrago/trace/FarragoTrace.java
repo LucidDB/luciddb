@@ -59,15 +59,6 @@ public abstract class FarragoTrace
     }
 
     /**
-     * The tracer "net.sf.farrago.cwm.relational.CwmViewImpl"
-     * traces {@link CwmViewImpl}.
-     */
-    public static Logger getCwmViewTracer()
-    {
-        return getClassTracer(CwmViewImpl.class);
-    }
-
-    /**
      * The tracer "net.sf.farrago.db.FarragoDatabase"
      * traces {@link FarragoDatabase}.
      */

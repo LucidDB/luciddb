@@ -377,6 +377,11 @@ public class FarragoRepos extends FarragoMetadataFactory
         return indexPackage.getIndexSpansClass().getIndex(table);
     }
 
+    public static CwmTable getIndexTable(CwmSqlindex index)
+    {
+        return (CwmTable) index.getSpannedClass();
+    }
+
     /**
      * Format the fully-qualified localized name for an existing object.
      *

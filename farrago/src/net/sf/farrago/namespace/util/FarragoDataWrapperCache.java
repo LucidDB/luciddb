@@ -26,8 +26,12 @@ import net.sf.farrago.namespace.*;
 import net.sf.farrago.plugin.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.util.*;
+import net.sf.farrago.type.*;
+
+import net.sf.farrago.fem.med.*;
 
 import org.eigenbase.util.*;
+import org.eigenbase.reltype.*;
 
 
 /**
@@ -145,6 +149,130 @@ public class FarragoDataWrapperCache extends FarragoPluginCache
 
         server = (FarragoMedDataServer) addToPrivateCache(entry);
         return server;
+    }
+
+    /**
+     * Loads a data wrapper based on its catalog definition.
+     *
+     * @param femWrapper catalog definition for data wrapper to load
+     *
+     * @return loaded data wrapper
+     */
+    public FarragoMedDataWrapper loadWrapperFromCatalog(
+        FemDataWrapper femWrapper)
+    {
+        Properties props = getStorageOptionsAsProperties(femWrapper);
+        return loadWrapper(
+            femWrapper.refMofId(),
+            femWrapper.getLibraryFile(),
+            props);
+    }
+    
+    /**
+     * Loads a data server based on its catalog definition.
+     *
+     * @param femServer catalog definition for data server to load
+     *
+     * @return loaded data server
+     */
+    public FarragoMedDataServer loadServerFromCatalog(FemDataServer femServer)
+    {
+        Properties props =
+            getStorageOptionsAsProperties(femServer);
+
+        String val;
+        val = femServer.getType();
+        if (val != null) {
+            props.setProperty(FarragoMedDataServer.PROP_SERVER_TYPE, val);
+        }
+        val = femServer.getVersion();
+        if (val != null) {
+            props.setProperty(FarragoMedDataServer.PROP_SERVER_VERSION, val);
+        }
+
+        FemDataWrapper femDataWrapper = femServer.getWrapper();
+
+        FarragoMedDataWrapper dataWrapper =
+            loadWrapperFromCatalog(femDataWrapper);
+
+        return loadServer(
+            femServer.refMofId(),
+            dataWrapper,
+            props);
+    }
+
+    /**
+     * Loads a FarragoMedColumnSet from its catalog definition.
+     *
+     * @param baseColumnSet column set definition
+     *
+     * @param typeFactory factory for column types
+     *
+     * @return loaded column set
+     */
+    public FarragoMedColumnSet loadColumnSetFromCatalog(
+        FemBaseColumnSet baseColumnSet,
+        FarragoTypeFactory typeFactory)
+    {
+        FemDataServer femServer = baseColumnSet.getServer();
+        
+        String [] qualifiedName =
+            new String [] {
+                baseColumnSet.getNamespace().getNamespace().getName(),
+                baseColumnSet.getNamespace().getName(),
+                baseColumnSet.getName()
+            };
+
+        Properties props =
+            getStorageOptionsAsProperties(baseColumnSet);
+
+        Map columnPropMap = new HashMap();
+
+        RelDataType rowType = typeFactory.createColumnSetType(baseColumnSet);
+
+        Iterator iter = baseColumnSet.getFeature().iterator();
+        while (iter.hasNext()) {
+            FemStoredColumn column = (FemStoredColumn) iter.next();
+            columnPropMap.put(
+                column.getName(),
+                getStorageOptionsAsProperties(column));
+        }
+
+        FarragoMedDataServer medServer = loadServerFromCatalog(femServer);
+
+        FarragoMedColumnSet loadedColumnSet;
+        try {
+            loadedColumnSet =
+                medServer.newColumnSet(qualifiedName, props, typeFactory,
+                    rowType, columnPropMap);
+        } catch (Throwable ex) {
+            throw FarragoResource.instance().newForeignTableAccessFailed(
+                typeFactory.getRepos().getLocalizedObjectName(
+                    baseColumnSet, null),
+                ex);
+        }
+
+        if (rowType != null) {
+            assert (rowType.equals(loadedColumnSet.getRowType()));
+        }
+
+        return loadedColumnSet;
+    }
+    
+    private Properties getStorageOptionsAsProperties(
+        FemElementWithStorageOptions element)
+    {
+        Properties props = new Properties();
+
+        // TODO:  validate no duplicates
+        Iterator iter = element.getStorageOptions().iterator();
+        while (iter.hasNext()) {
+            FemStorageOption option = (FemStorageOption) iter.next();
+            props.setProperty(
+                option.getName(),
+                option.getValue());
+        }
+        return props;
     }
 
     //~ Inner Classes ---------------------------------------------------------

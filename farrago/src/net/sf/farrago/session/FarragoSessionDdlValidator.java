@@ -36,8 +36,6 @@ import net.sf.farrago.util.*;
 import org.eigenbase.sql.*;
 
 
-// TODO:  use this interface everywhere
-
 /**
  * FarragoSessionDdlValidator represents an object capable of validating
  * a DDL statement.
@@ -165,7 +163,7 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
         SqlIdentifier qualifiedName);
 
     /**
-     * Executes storage management commands for any DdlStoredElements
+     * Executes storage management commands for any model elements
      * encountered during validation.
      */
     public void executeStorage();
@@ -227,13 +225,23 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
 
     /**
      * Sets the SQL statement of a view from a given SQL parse tree.
-
+     *
      * @param view   View to modify
      * @param query  SQL parse tree
      */
     public void setViewText(
         CwmView view,
         SqlNode query);
+
+    /**
+     * Defines the handlers to be used to validate and execute DDL actions
+     * for various object types.  See {@link FarragoSessionDdlHandler}
+     * for an explanation of how to define the handler objects in this
+     * list.
+     *
+     * @return list of handler objects
+     */
+    public List defineHandlers();
 }
 
 

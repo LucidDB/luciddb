@@ -177,8 +177,10 @@ class FarragoDbSessionIndexMap extends FarragoCompoundAllocation
     {
         Iterator iter = tempIndexRootMap.keySet().iterator();
         while (iter.hasNext()) {
-            CwmSqlindexImpl index = (CwmSqlindexImpl) iter.next();
-            if (index.getTable().getTemporaryScope().endsWith("PRESERVE")) {
+            CwmSqlindex index = (CwmSqlindex) iter.next();
+            String temporaryScope =
+                repos.getIndexTable(index).getTemporaryScope();
+            if (temporaryScope.endsWith("PRESERVE")) {
                 continue;
             }
             dropIndexStorage(privateDataWrapperCache, index, true);
@@ -248,12 +250,9 @@ class FarragoDbSessionIndexMap extends FarragoCompoundAllocation
     private FarragoMedLocalDataServer getIndexDataServer(
         FarragoDataWrapperCache wrapperCache,CwmSqlindex index)
     {
-        FemLocalTable localTable = (FemLocalTable)
-            index.getSpannedClass();
-        FemDataServerImpl femServer =
-            (FemDataServerImpl) localTable.getServer();
+        FemLocalTable localTable = (FemLocalTable) index.getSpannedClass();
         return (FarragoMedLocalDataServer)
-            femServer.loadFromCache(wrapperCache);
+            wrapperCache.loadServerFromCatalog(localTable.getServer());
     }
 }
 

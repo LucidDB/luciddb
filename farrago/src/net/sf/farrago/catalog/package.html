@@ -41,10 +41,6 @@ href="http://www.gentleware.com">Gentleware</a>.
 
 </ul>
 
-Currently, the two inputs are completely disjoint; FEM does not
-reference any CWM elements; it just defines a separate model.
-(Eventually, some parts of FEM will actually extend CWM.)
-
 <p>
 
 The first step of the catalog build is to combine the two models into
@@ -91,7 +87,7 @@ implemented by MDR).
 <p>
 
 For more details on the build process, please study the createCatalog
-target in //open/farrago/build.xml.
+target in <code>//open/dev/farrago/build.xml</code>.
 
 <h3>Catalog Population</h3>
 
@@ -102,7 +98,11 @@ with some initial metadata.  Currently, this includes:
 
 <li>supported datatypes
 
-<li>sample schema SALES with tables EMPS and DEPTS
+<li>builtin data wrappers needed by system
+
+<li>internal schema defining JDBC metadata views
+
+<li>sample schemas and data wrappers
 
 <li>initial configuration information</li>
 
@@ -119,17 +119,7 @@ distributions.)
 Once the system is fully initialized, DDL statements executed by users
 can also modify the catalog.  The geneneric DDL implementation is in
 {@link net.sf.farrago.ddl}.  Specific validation and storage rules for
-various catalog objects are supplied by taking advantage of MDR's <a
-href="http://mdr.netbeans.org/custom_implementations.html">custom
-implementation feature</a>.  To supply a custom implementation, all
-that is necessary is to define a class with the same name as the
-generated interface but with "Impl" on the end.  So, for example,
-class {@link net.sf.farrago.cwm.relational.CwmTableImpl} provides the
-custom implementation for interface {@link
-net.sf.farrago.cwm.relational.CwmTable}.  These custom implementation
-classes can also implement Farrago-specific interfaces such as {@link
-net.sf.farrago.ddl.DdlValidatedElement} and {@link
-net.sf.farrago.ddl.DdlStoredElement}.
+various catalog objects are supplied by {@link net.sf.farrago.ddl.DdlHandler}.
 
 </body>
 </html>

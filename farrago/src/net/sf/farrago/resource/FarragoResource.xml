@@ -238,7 +238,7 @@ encountered near {1}</text>
     <text>Requested calculator implementation is unavailable</text>
 </exception>
 
-<exception id="420430" name="ValidatorNoConstrainAllow">
+<exception id="420430" name="ValidatorNoConstraintAllowed">
     <text>{0} does not accept a constraint definition</text>
 </exception>
 

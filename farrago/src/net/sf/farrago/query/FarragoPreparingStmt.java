@@ -530,15 +530,12 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         RelOptTable relOptTable;
         if (columnSet instanceof FemBaseColumnSet) {
             FemBaseColumnSet table = (FemBaseColumnSet) columnSet;
-            FemDataServerImpl femServer =
-                (FemDataServerImpl) table.getServer();
+            FemDataServer femServer = table.getServer();
             loadDataServerFromCache(femServer);
             relOptTable =
-                femServer.loadColumnSetFromCache(
-                    stmtValidator.getDataWrapperCache(),
-                    getRepos(),
-                    getFarragoTypeFactory(),
-                    table);
+                stmtValidator.getDataWrapperCache().loadColumnSetFromCatalog(
+                    table,
+                    getFarragoTypeFactory());
         } else if (columnSet instanceof CwmView) {
             RelDataType rowType =
                 getFarragoTypeFactory().createColumnSetType(columnSet);
@@ -569,8 +566,8 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     private FarragoMedColumnSet getForeignTableFromNamespace(
         FarragoSessionResolvedObject resolved)
     {
-        FemDataServerImpl femServer =
-            (FemDataServerImpl) getRepos().getModelElement(
+        FemDataServer femServer =
+            (FemDataServer) getRepos().getModelElement(
                 getRepos().medPackage.getFemDataServer().refAllOfType(),
                 resolved.catalogName);
         if (femServer == null) {
@@ -609,15 +606,16 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     }
 
     private FarragoMedDataServer loadDataServerFromCache(
-        FemDataServerImpl femServer)
+        FemDataServer femServer)
     {
         FarragoMedDataServer server =
-            femServer.loadFromCache(stmtValidator.getDataWrapperCache());
+            stmtValidator.getDataWrapperCache().loadServerFromCatalog(
+                femServer);
         if (loadedServerClassNameSet.add(server.getClass().getName())) {
             // This is the first time we've seen this server class, so give it
             // a chance to register any planner info such as calling
             // conventions and rules.  REVIEW: the discrimination is based on
-            // class name, on the assumption that it should unique regardless
+            // class name, on the assumption that it should be unique regardless
             // of classloader, JAR, etc.  Is that correct?
             server.registerRules(planner);
         }

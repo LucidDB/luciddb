@@ -143,6 +143,11 @@ public class DdlValidator extends FarragoCompoundAllocation
      */
     private FarragoSessionDdlStmt ddlStmt;
 
+    /**
+     * List of handlers to be invoked.
+     */
+    protected List actionHandlers;
+
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -212,6 +217,14 @@ public class DdlValidator extends FarragoCompoundAllocation
 
     //~ Methods ---------------------------------------------------------------
 
+    // implement FarragoSessionDdlValidator
+    public List defineHandlers()
+    {
+        List list = new ArrayList();
+        list.add(new DdlHandler(this));
+        return list;
+    }
+    
     // implement FarragoSessionDdlValidator
     public FarragoSessionStmtValidator getStmtValidator()
     {
@@ -429,16 +442,16 @@ public class DdlValidator extends FarragoCompoundAllocation
                     deletionList.add(obj);
                 }
             }
-            if (!(obj instanceof DdlStoredElement)) {
+            if (!(obj instanceof CwmModelElement)) {
                 continue;
             }
-            DdlStoredElement element = (DdlStoredElement) obj;
+            CwmModelElement element = (CwmModelElement) obj;
             if (action == VALIDATE_CREATION) {
-                element.createStorage(this);
+                invokeHandler(element, "executeCreation");
             } else if (action == VALIDATE_DELETION) {
-                element.deleteStorage(this);
+                invokeHandler(element, "executeDrop");
             } else if (action == VALIDATE_TRUNCATION) {
-                element.truncateStorage(this);
+                invokeHandler(element, "executeTruncation");
             } else {
                 assert (action == VALIDATE_MODIFICATION);
             }
@@ -541,6 +554,8 @@ public class DdlValidator extends FarragoCompoundAllocation
         ddlStmt.preValidate(this);
         checkValidationExcnQueue();
 
+        actionHandlers = defineHandlers();
+        
         if (ddlStmt instanceof DdlDropStmt) {
             // Process deletions until a fixpoint is reached, using MDR events
             // to implement RESTRICT/CASCADE.
@@ -587,22 +602,13 @@ public class DdlValidator extends FarragoCompoundAllocation
                 // back in by updating itself
                 validatedMap.put(obj, action);
 
-                if (!(obj instanceof DdlValidatedElement)) {
+                if (!(obj instanceof CwmModelElement)) {
                     progress = true;
                     continue;
                 }
-                DdlValidatedElement element = (DdlValidatedElement) obj;
+                CwmModelElement element = (CwmModelElement) obj;
                 try {
-                    if (action == VALIDATE_CREATION) {
-                        element.validateDefinition(this, true);
-                    } else if (action == VALIDATE_MODIFICATION) {
-                        element.validateDefinition(this, false);
-                    } else if (action == VALIDATE_DELETION) {
-                        element.validateDeletion(this, false);
-                    } else {
-                        assert (action == VALIDATE_TRUNCATION);
-                        element.validateDeletion(this, true);
-                    }
+                    validateAction(element, action);
                     if (element.getVisibility() == null) {
                         // mark this new element as validated
                         element.setVisibility(VisibilityKindEnum.VK_PRIVATE);
@@ -860,7 +866,7 @@ public class DdlValidator extends FarragoCompoundAllocation
 
     private void scheduleModification(RefObject obj)
     {
-        if (!(obj instanceof DdlValidatedElement)) {
+        if (!(obj instanceof CwmModelElement)) {
             return;
         }
         if (validatedMap.containsKey(obj)) {
@@ -869,7 +875,7 @@ public class DdlValidator extends FarragoCompoundAllocation
         if (schedulingMap.containsKey(obj.refMofId())) {
             return;
         }
-        DdlValidatedElement element = (DdlValidatedElement) obj;
+        CwmModelElement element = (CwmModelElement) obj;
         if (isNewObject(element)) {
             schedulingMap.put(
                 obj.refMofId(),
@@ -890,6 +896,56 @@ public class DdlValidator extends FarragoCompoundAllocation
         }
     }
 
+    private boolean validateAction(
+        CwmModelElement modelElement,
+        Object action)
+    {
+        if (action == VALIDATE_MODIFICATION) {
+            boolean fired = invokeHandler(
+                modelElement,
+                "validateModification");
+            if (fired) {
+                return true;
+            } else {
+                action = VALIDATE_CREATION;
+            }
+        }
+        
+        if (action == VALIDATE_CREATION) {
+            return invokeHandler(
+                modelElement,
+                "validateDefinition");
+        } else if (action == VALIDATE_DELETION) {
+            return invokeHandler(
+                modelElement,
+                "validateDrop");
+        } else if (action == VALIDATE_TRUNCATION) {
+            return invokeHandler(
+                modelElement,
+                "validateTruncation");
+        } else {
+            throw new AssertionError();
+        }
+    }
+
+    private boolean invokeHandler(
+        CwmModelElement modelElement,
+        String action)
+    {
+        for (int i = 0; i < actionHandlers.size(); ++i) {
+            Object handler = actionHandlers.get(i);
+            boolean handled = ReflectUtil.invokeVisitor(
+                handler,
+                modelElement,
+                CwmModelElement.class,
+                action);
+            if (handled) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
     //~ Inner Classes ---------------------------------------------------------
 
     /**

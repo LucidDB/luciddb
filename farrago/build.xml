@@ -640,7 +640,8 @@ require version '${required.ant.version}'."/>
     depends="cleanCatalog,createRepository"/>
 
   <!-- initialize catalog repository -->
-  <target name="createRepository" depends="configureTrace,convertExtMetamodel, convertExtModel">
+  <target name="createRepository" 
+    depends="configureTrace,convertExtMetamodel, convertExtModel">
     <mkdir dir="${catalog.dir}"/>
     <mkdir dir="${catalog.src.dir}"/>
     <antcall target="transformMetamodel"/>
@@ -651,13 +652,10 @@ require version '${required.ant.version}'."/>
       classpathref="farrago.3p.classpath">
       <include name="**/*.java"/>
     </javaCompile>
-    <antcall target="backupCatalog"/>
-    <mdrFork target="forked_createTempCatalogRepository"/>
+    <mdrFork target="forked_createCatalogRepository"/>
     <antcall target="compile.saffron.deps"/>
     <antcall target="generateMetadataFactory"/>
-    <antcall target="restoreCatalog"/>
     <antcall target="all"/>
-    <mdrFork target="forked_createCatalogRepository"/>
   </target>
 
   <!-- NOTE:  don't use mapClass below to make sure all generated
@@ -684,15 +682,6 @@ require version '${required.ant.version}'."/>
       <writeDTD
         file="${xmi.dir}/FarragoCatalog.dtd"
         extent="FarragoCatalog"/>
-    </mdr>
-  </target>
-
-  <target name="forked_createTempCatalogRepository" depends="mdr_taskdef">
-    <mdr>
-      <instantiate
-        name="FarragoTempCatalog"
-        extent="FarragoMetamodel"
-        package="Farrago"/>
     </mdr>
   </target>
 
@@ -1178,7 +1167,7 @@ require version '${required.ant.version}'."/>
       <arg value="net.sf.farrago"/>
       <arg value="FarragoMetadataFactory"/>
       <arg value="net.sf.farrago.FarragoPackage"/>
-      <arg value="FarragoTempCatalog"/>
+      <arg value="FarragoCatalog"/>
     </javaExec>
   </target>
 

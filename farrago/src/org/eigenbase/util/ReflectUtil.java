@@ -148,6 +148,124 @@ public abstract class ReflectUtil
         }
         return className.substring(lastDot + 1);
     }
+
+    /**
+     * Implements the {@link Glossary#VisitorPattern} via reflection.  The
+     * basic technique is taken from <a
+     * href="http://www.javaworld.com/javaworld/javatips/jw-javatip98.html"> a
+     * Javaworld article</a>.  For an example of how to use it, see {@link
+     * ReflectVisitorTest}.  Visit method lookup follows the same rules as if
+     * compile-time resolution for VisitorClass.visit(VisiteeClass) were
+     * performed.  An ambiguous match due to multiple interface inheritance
+     * results in an IllegalArgumentException.  A non-match is indicated by
+     * returning false.
+     *
+     * @param visitor object whose visit method is to be invoked
+     *
+     * @param visitee object to be passed as a parameter to the visit method
+     *
+     * @param hierarchyRoot if non-null, visitor method will only
+     * be invoked if it takes a parameter whose type is a subtype of
+     * hierarchyRoot
+     *
+     * @param visitMethodName name of visit method, e.g. "visit"
+     *
+     * @return true if a matching visit method was found and invoked
+     */
+    public static boolean invokeVisitor(
+        Object visitor,
+        Object visitee,
+        Class hierarchyRoot,
+        String visitMethodName)
+    {
+        Class visitorClass = visitor.getClass();
+        Class visiteeClass = visitee.getClass();
+        Method method = lookupVisitMethod(
+            visitorClass, visiteeClass, visitMethodName);
+        if (method == null) {
+            return false;
+        }
+
+        if (hierarchyRoot != null) {
+            Class paramType = method.getParameterTypes()[0];
+            if (!hierarchyRoot.isAssignableFrom(paramType)) {
+                return false;
+            }
+        }
+        
+        try {
+            method.invoke(visitor, new Object[] { visitee });
+        } catch (IllegalAccessException ex) {
+            throw Util.newInternal(ex);
+        } catch (InvocationTargetException ex) {
+            // visit methods aren't allowed to have throws clauses,
+            // so the only exceptions which should come
+            // to us are RuntimeExceptions and Errors
+            Throwable t = ex.getTargetException();
+            if (t instanceof RuntimeException) {
+                throw (RuntimeException) t;
+            } else if (t instanceof Error) {
+                throw (Error) t;
+            } else {
+                throw new AssertionError(t.getClass().getName());
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Looks up a visit method.
+     *
+     * @param visitor object whose visit method is to be invoked
+     *
+     * @param visitee object to be passed as a parameter to the visit method
+     *
+     * @param visitMethodName name of visit method
+     *
+     * @return method found, or null if none found
+     */
+    public static Method lookupVisitMethod(
+        Class visitorClass,
+        Class visiteeClass,
+        String visitMethodName)
+    {
+        // TODO jvs 28-Nov-2004:  cache results in a dispatch map
+    
+        try {
+            return visitorClass.getMethod(
+                visitMethodName, new Class [] { visiteeClass });
+        } catch (NoSuchMethodException ex) {
+            // not found:  carry on with lookup
+        }
+
+        Method candidateMethod = null;
+
+        Class superClass = visiteeClass.getSuperclass();
+        if (superClass != null) {
+            candidateMethod = lookupVisitMethod(
+                visitorClass, superClass, visitMethodName);
+        }
+
+        Class [] interfaces = visiteeClass.getInterfaces();
+        for (int i = 0; i < interfaces.length; ++i) {
+            Method method = lookupVisitMethod(
+                visitorClass, interfaces[i], visitMethodName);
+            if (method != null) {
+                if (candidateMethod != null) {
+                    if (method != candidateMethod) {
+                        throw new IllegalArgumentException(
+                            "dispatch ambiguity between "
+                            + candidateMethod
+                            + " and "
+                            + method);
+                    }
+                }
+                candidateMethod = method;
+            }
+        }
+
+        return candidateMethod;
+    }
 }
 
 
