@@ -42,8 +42,13 @@ public class SqlSimpleParser
     // Flags indicating precision/scale combinations
 
     //~ Instance fields -------------------------------------------------------
-    final String hintToken;
-    final String subqueryRegex;
+    final static String hintToken = "$suggest$ ";
+    final static String subqueryRegex = "\\$subquery\\$";
+    
+    // patterns are made static, to amortize cost of compiling regexps
+    static Pattern psq = Pattern.compile(subqueryRegex);
+    static Pattern pparen = Pattern.compile("\\([^()]*\\)");
+    static Pattern pparensq = Pattern.compile("\\([^()]*"+subqueryRegex+"$\\)");
     final LinkedHashSet keywords;
 
     //~ Constructors ----------------------------------------------------------
@@ -52,8 +57,6 @@ public class SqlSimpleParser
      */
     public SqlSimpleParser()
     {
-        hintToken = "$suggest$ ";
-        subqueryRegex = "\\$subquery\\$";
         keywords = new LinkedHashSet();
         keywords.add("select");
         keywords.add("from");
@@ -113,8 +116,7 @@ public class SqlSimpleParser
         //printBuckets(buckets);
         String simplesq = createNewSql(buckets);
 
-        Pattern p = Pattern.compile(subqueryRegex);
-        Matcher m = p.matcher(simplesq);
+        Matcher m = psq.matcher(simplesq);
 
         // this stack is used to reverse the ordering of same level subqueries
         Stack reverseStack = new Stack();
@@ -134,30 +136,26 @@ public class SqlSimpleParser
     private String createNewSqlClause(List members)
     {
         Iterator i = members.iterator();
-        // REVIEW: consider using a StringBuffer
-        String result = "";
+        StringBuffer result = new StringBuffer();
         while (i.hasNext()) {
-            String word = (String) i.next();
-            result += word;
-            result += " ";
+            result.append(i.next()).append(" ");
         }
-        return result;
+        return result.toString();
     }
 
     private String createNewSql(HashMap buckets)
     {
         Iterator i = keywords.iterator();
-        String sql = "";
-        // REVIEW consider using a StringBuffer
+        StringBuffer sql = new StringBuffer();
         while (i.hasNext()) {
             String keyword = (String) i.next();
             List entries = (List) buckets.get(keyword);
             if (entries != null) {
-                sql += keyword + " " +
-                    createNewSqlClause((List)buckets.get(keyword));
+                sql.append(keyword).append(" ").append(
+                    createNewSqlClause((List)buckets.get(keyword)));
             }
         }
-        return sql;
+        return sql.toString();
     }
 
     private void stackSubqueries(String sql, Stack stack)
@@ -166,12 +164,8 @@ public class SqlSimpleParser
         // and its enclosing subqueries will be pushed into the stack
         // in that order
 
-        // REVIEW make psq and p static, to amortize cost of compiling regexps
-        Pattern psq = Pattern.compile("\\([^()]*"+subqueryRegex+"$\\)");
-        Matcher msq = psq.matcher(sql);
-
-        Pattern p = Pattern.compile("\\([^()]*\\)");
-        Matcher m = p.matcher(sql);
+        Matcher msq = pparensq.matcher(sql);
+        Matcher m = pparen.matcher(sql);
 
         boolean found = false;
         String remained = "";
