@@ -28,9 +28,9 @@ import java.sql.*;
 /**
  * FarragoSessionStmtContext represents a context for executing SQL statements
  * within a particular {@link FarragoSession}.  Contrast with {@link
- * net.sf.farrago.jdbc.FarragoJdbcStatement} (a JDBC wrapper), {@link
- * net.sf.farrago.query.FarragoPreparingStmt} (which manages the preparation
- * process for a single statement), and {@link
+ * net.sf.farrago.jdbc.engine.FarragoJdbcEngineStatement} (a JDBC wrapper),
+ * {@link net.sf.farrago.query.FarragoPreparingStmt} (which manages the
+ * preparation process for a single statement), and {@link
  * net.sf.farrago.query.FarragoExecutableStmt}, (which is shared by all
  * sessions).
  *

@@ -30,11 +30,265 @@
 using namespace fennel;
 
 char *ProgramName;
-bool verbose = true;
+bool verbose = false;
+bool showProgram = true;
+
+
+template <typename T>
+class RegisterTestInfo
+{
+public:
+    enum ERegisterCheck {
+        EINVALID = -1,
+        ENULL = 0,
+        EVALID = 1
+    };
+
+    explicit
+    RegisterTestInfo(string desc, TProgramCounter pc):
+        mDesc(desc), mCheckValue(EINVALID), mPC(pc)
+    {
+    }
+
+    explicit
+    RegisterTestInfo(string desc, T v, TProgramCounter pc):
+        mDesc(desc), mValue(v), mCheckValue(EVALID), mPC(pc)
+    {
+    }
+
+    explicit
+    RegisterTestInfo(string desc, T* pV, TProgramCounter pc):
+        mDesc(desc), mPC(pc)
+    {
+        if (pV == NULL) {
+            mCheckValue = ENULL;
+        }
+        else {
+            mValue = *pV;
+            mCheckValue = EVALID;
+        }
+    }
+
+    void setTupleDatum(TupleDatum& datum)
+    {
+        switch (mCheckValue)
+        {
+        case EINVALID:
+            // Nothing to set
+            break;
+        case ENULL:
+            // Set to NULL
+            datum.pData = NULL;
+            break;
+        case EVALID:
+            assert(datum.pData != NULL);
+            (*reinterpret_cast<T*>(const_cast<PBuffer>(datum.pData))) = mValue;
+             break;
+        default:
+            assert(false);
+        }
+    }
+
+    bool checkTupleDatum(TupleDatum& datum)
+    {
+        switch (mCheckValue)
+        {
+        case EINVALID:
+            // Nothing to check against, okay
+            return true;
+        case ENULL:
+            // Check for null
+            return (datum.pData == NULL);
+        case EVALID:
+            if (datum.pData == NULL) return false;
+            return (*reinterpret_cast<const T*>(datum.pData) == mValue);
+        default:
+            assert(false);
+        }
+    }
+
+    string toString()
+    {
+        ostringstream ostr("");
+        switch (mCheckValue)
+        {
+        case EINVALID:
+            break;
+        case ENULL:
+            ostr << "(NULL) for test ";
+            break;
+        case EVALID:
+            ostr << "(" << mValue << ") for test ";
+             break;
+        default:
+            assert(false);
+        }
+
+        ostr << "'" << mDesc << "'" << " at PC=" << mPC;
+        return ostr.str();
+    }
+
+    ~RegisterTestInfo() {}
+
+    // Description of this test
+    string          mDesc;
+
+    // Expected value of this register
+    T mValue;
+    
+    // Should we check the value?  Is it suppose to be NULL?
+    ERegisterCheck  mCheckValue;
+
+    // PC associated with setting this register
+    TProgramCounter mPC;
+};
+
+class CalcChecker
+{
+public:
+    virtual bool checkResult(Calculator& calc, TupleData& output) = 0;
+};
+
+template <typename T>
+class CalcTestInfo: public CalcChecker
+{
+public:
+    explicit
+    CalcTestInfo(StandardTypeDescriptorOrdinal type): typeOrdinal(type) {}
+    virtual ~CalcTestInfo() {}
+    
+    void add(string desc, T* pV, TProgramCounter pc, uint line = 0)
+    {
+        if (line)
+        {
+            ostringstream ostr("");
+            ostr << " Line: " << line;
+            desc += ostr.str();
+        }
+        mOutRegInfo.push_back( RegisterTestInfo<T>(desc, pV, pc) );
+    }
+
+    void add(string desc, T v, TProgramCounter pc, uint line = 0)
+    {
+        if (line)
+        {
+            ostringstream ostr("");
+            ostr << " Line: " << line;
+            desc += ostr.str();
+        }
+        mOutRegInfo.push_back( RegisterTestInfo<T>(desc, v, pc) );
+    }
+
+    void addRegister(string desc, TProgramCounter pc)
+    {
+        mOutRegInfo.push_back( RegisterTestInfo<T>(desc, pc) );
+    }
+
+    void addWarning(const char* msg, TProgramCounter pc)
+    {
+        mWarnings.push_back( CalcMessage(msg, pc) );
+    }
+
+    void add(string desc, const char* error, TProgramCounter pc, uint line = 0)
+    {
+        if (line)
+        {
+            ostringstream ostr("");
+            ostr << " Line: " << line;
+            desc += ostr.str();
+        }
+        addRegister(desc, pc);
+        if (error != NULL)
+            addWarning(error, pc);
+    }
+
+    void setTupleData(TupleData& tuple)
+    {
+        assert(tuple.size() == mOutRegInfo.size());
+
+        // Check type of output registers and value
+        for (uint i=0; i < tuple.size(); i++)
+        {
+            mOutRegInfo[i].setTupleDatum(tuple[i]);
+        }
+    }
+
+    virtual bool checkResult(Calculator& calc, TupleData& outputTuple)
+    {
+        TupleDescriptor outputTupleDesc = calc.getOutputRegisterDescriptor();
+        // Verify the output descriptor
+        assert(outputTupleDesc.size() == outputTuple.size());
+
+        // Check number of output registers
+        if (outputTupleDesc.size() != mOutRegInfo.size())
+        {
+            cout << "Mismatch of register number" << endl;
+            return false;
+        }
+
+        // Check type of output registers and value
+        for (uint i=0; i < outputTupleDesc.size(); i++)
+        {
+            if (outputTupleDesc[i].pTypeDescriptor->getOrdinal() != 
+                static_cast<StoredTypeDescriptor::Ordinal>(typeOrdinal))
+            {
+                cout << "Type ordinal mismatch" << endl;
+                return false;
+            }
+
+            if (!mOutRegInfo[i].checkTupleDatum(outputTuple[i]))
+            {
+                cout << "Tuple datum mismatch: Register " << i 
+                     << " should be " << mOutRegInfo[i].toString()
+                     << ". " << endl;
+                return false;
+            }
+        }
+
+        // Check warnings
+        if (calc.mWarnings.size() != mWarnings.size())
+        {
+            cout << "# of warnings should be " << mWarnings.size() 
+                 << " not " << calc.mWarnings.size() << endl;
+            return false;
+        }
+
+        for (uint i=0; i < mWarnings.size(); i++)
+        {
+            if (calc.mWarnings[i].mPc != mWarnings[i].mPc)
+            {
+                cout << "Warning expected at PC=" << mWarnings[i].mPc
+                     << ". Got warning at PC="
+                     << calc.mWarnings[i].mPc << endl;
+                return false;
+            }
+            if (calc.mWarnings[i].mStr != mWarnings[i].mStr)
+            {
+                cout << "Message should be " << mWarnings[i].mStr 
+                     << " not " << calc.mWarnings[i].mStr << " at PC="
+                     << mWarnings[i].mPc << endl;
+                return false;
+            }
+        }
+        
+        return true;
+    }
+
+public:
+    // Vector of expected output register values
+    vector< RegisterTestInfo<T> > mOutRegInfo;
+
+    // Vector of expected warnings
+    deque<CalcMessage> mWarnings;
+
+    StandardTypeDescriptorOrdinal typeOrdinal;
+};
 
 class CalcAssemblerTestCase 
 {
 public:
+    static const uint MAX_WIDTH = 512;
+
     explicit 
     CalcAssemblerTestCase(uint line, const char* desc, const char* code)
         : mDescription(desc), mProgram(code), mAssemblerError(NULL), 
@@ -65,12 +319,15 @@ public:
         return testID;
     }
 
-    void fail(const char *str) 
+    void fail(const char *exp, const char* actual) 
     {
         assert(ProgramName);
-        assert(str);
+        assert(exp);
+        assert(actual);
         assert(mDescription);
-        printf("%s: unit test %d failed: | %s | %s | line %d\n", ProgramName, mID, mDescription, str, mLine);
+        printf("%s: unit test %d failed: | %s | Got \"%s\""
+               "| Expected \"%s\" | line %d\n", 
+               ProgramName, mID, mDescription, actual, exp, mLine);
         mFailed = true;
         nFailed++;
     }
@@ -109,9 +366,9 @@ public:
             if (mAssemblerError) {
                 // Hmmm, we were expecting an error while assembling 
                 // What happened? 
-                string errorStr = "Program assembled, although expecting error: ";
+                string errorStr = "Error assembling program: ";
                 errorStr += mAssemblerError;
-                fail(errorStr.c_str());
+                fail(errorStr.c_str(), "Program assembled.");
             }
         }
         catch (CalcAssemblerException& ex) 
@@ -124,13 +381,7 @@ public:
                 if (ex.getMessage().find(mAssemblerError) == string::npos)
                 {
                     // Error message doesn't have the expected string
-                    string errorStr = "Error message mismatch: ";
-                    errorStr += "Got \"" + ex.getMessage() + "\"";
-                    errorStr += " | ";
-                    errorStr += "Expected \"";  
-                    errorStr += mAssemblerError;
-                    errorStr += "\"";
-                    fail(errorStr.c_str());
+                    fail(mAssemblerError, ex.getMessage().c_str());
                 }
                 else {
                     // Error message is okay
@@ -140,9 +391,9 @@ public:
             else {
                 string errorStr = "Error assembling program: ";
                 errorStr += ex.getMessage();
-                fail(errorStr.c_str());
+                fail("Success assembling program", errorStr.c_str());
 
-                if (verbose) {
+                if (showProgram) {
                     // Dump out program
                     cout << "Program Code: " << endl;
                     cout << ex.getCode() << endl;
@@ -165,9 +416,10 @@ public:
         return ostr.str();
     }
 
-    bool test()
+    bool test(CalcChecker* pChecker = NULL)
     {
         assert(mAssembled && !mFailed);
+        bool res = true;
 
         TupleDescriptor inputTupleDesc = mCalc.getInputRegisterDescriptor();
         TupleDescriptor outputTupleDesc = mCalc.getOutputRegisterDescriptor();
@@ -179,14 +431,26 @@ public:
     
         mCalc.exec();
     
-        if (!mCalc.mWarnings.empty()) fail("Calculator warnings");
-
-        // For now, let's just use the string representation of the tuples for comparison
         string instr = tupleToString(inputTupleDesc, mInputTuple);
         string outstr = tupleToString(outputTupleDesc, outputTuple);
         string expoutstr = tupleToString(outputTupleDesc, mExpectedOutputTuple);
+        
+        if (pChecker == NULL)
+        {
+            // For now, let's just use the string representation of the tuples for comparison
+            res = (expoutstr == outstr);
 
-        if (expoutstr == outstr)
+            // Make sure there are no warnings
+            if (!mCalc.mWarnings.empty()) {
+                res = false;
+                fail(expoutstr.c_str(), "Calculator warnings");
+            }
+        }
+        else {
+            res = pChecker->checkResult(mCalc, *outputTuple);
+        }
+
+        if (res)
         {
             // Everything good and matches
             string resStr = instr + " -> " + outstr;
@@ -194,12 +458,13 @@ public:
         }
         else {
             string errorStr = "Calculator result: " ;
-            errorStr += instr + " -> " + outstr + "(Expected = " + expoutstr + ")";
-            fail(errorStr.c_str());
+            errorStr += instr + " -> " + outstr;
+            fail(expoutstr.c_str(), errorStr.c_str());
         }
+
         delete outputTuple;
         delete[] outputBuf;
-        return true;
+        return res;
     }
 
     void expectAssemblerError(const char* err)
@@ -207,6 +472,26 @@ public:
         mAssemblerError = err;
     }
 
+    void   writeMaxData(TupleDatum &datum, uint typeOrdinal);
+    void   writeMinData(TupleDatum &datum, uint typeOrdinal);
+    string toLiteralString(TupleDatum &datum, uint typeOrdinal);
+
+    void setTupleDatumMax(TupleDatum& datum, TupleAttributeDescriptor& desc)
+    {
+        StoredTypeDescriptor::Ordinal type = desc.pTypeDescriptor->getOrdinal();
+        writeMaxData(datum, type);
+    }
+
+    void setTupleDatumMin(TupleDatum& datum, TupleAttributeDescriptor& desc)
+    {
+        StoredTypeDescriptor::Ordinal type = desc.pTypeDescriptor->getOrdinal();
+        writeMinData(datum, type);
+    }
+
+    void setTupleDatumNull(TupleDatum& datum)
+    {
+        datum.pData = NULL;
+    }
 
     template <typename T>
     void setTupleDatum(TupleDatum& datum, T value)
@@ -243,6 +528,29 @@ public:
         }
     }
 
+    void setInputMin(uint index)
+    {
+        assert(mInputTuple != NULL);
+        assert(index < mInputTuple->size());
+        TupleDescriptor inputTupleDesc = mCalc.getInputRegisterDescriptor();
+        setTupleDatumMin((*mInputTuple)[index], inputTupleDesc[index]);
+    }
+
+    void setInputMax(uint index)
+    {
+        assert(mInputTuple != NULL);
+        assert(index < mInputTuple->size());
+        TupleDescriptor inputTupleDesc = mCalc.getInputRegisterDescriptor();
+        setTupleDatumMax((*mInputTuple)[index], inputTupleDesc[index]);
+    }
+
+    void setInputNull(uint index)
+    {
+        assert(mInputTuple != NULL);
+        assert(index < mInputTuple->size());
+        setTupleDatumNull((*mInputTuple)[index]);
+    }
+
     template <typename T>
     void setInput(uint index, T value)
     {
@@ -258,6 +566,43 @@ public:
         assert(index < mInputTuple->size());
         TupleDescriptor inputTupleDesc = mCalc.getInputRegisterDescriptor();
         setTupleDatum((*mInputTuple)[index], inputTupleDesc[index], buf, buflen);
+    }
+
+    string getInput(uint index)
+    {
+        assert(mInputTuple != NULL);
+        assert(index < mInputTuple->size());
+        TupleDescriptor inputTupleDesc = mCalc.getInputRegisterDescriptor();
+        return toLiteralString((*mInputTuple)[index], 
+                               inputTupleDesc[index].pTypeDescriptor->getOrdinal());
+    }
+
+    TupleData* getInputTuple()
+    {
+        return mInputTuple;
+    }
+
+    /* Functions for setting the expected output */
+    void setExpectedOutputNull(uint index)
+    {
+        assert(mExpectedOutputTuple != NULL);
+        assert(index < mExpectedOutputTuple->size());
+        setTupleDatumNull((*mExpectedOutputTuple)[index]);
+    }
+
+    void setExpectedOutputMax(uint index)
+    {
+        assert(mExpectedOutputTuple != NULL);
+        assert(index < mExpectedOutputTuple->size());
+        TupleDescriptor outputTupleDesc = mCalc.getOutputRegisterDescriptor();
+        setTupleDatumMax((*mExpectedOutputTuple)[index], outputTupleDesc[index]);
+    }
+    void setExpectedOutputMin(uint index)
+    {
+        assert(mExpectedOutputTuple != NULL);
+        assert(index < mExpectedOutputTuple->size());
+        TupleDescriptor outputTupleDesc = mCalc.getOutputRegisterDescriptor();
+        setTupleDatumMin((*mExpectedOutputTuple)[index], outputTupleDesc[index]);
     }
 
     template <typename T>
@@ -277,13 +622,34 @@ public:
         setTupleDatum((*mExpectedOutputTuple)[index], outputTupleDesc[index], buf, buflen);
     }
 
+    string getExpectedOutput(uint index)
+    {
+        assert(mExpectedOutputTuple != NULL);
+        assert(index < mExpectedOutputTuple->size());
+        TupleDescriptor outputTupleDesc = mCalc.getOutputRegisterDescriptor();
+        return toLiteralString((*mExpectedOutputTuple)[index], 
+                               outputTupleDesc[index].pTypeDescriptor->getOrdinal());
+    }
+
+    TupleData* getExpectedOutputTuple()
+    {
+        return mExpectedOutputTuple;
+    }
+
     static string getHexString(const char* buf)
     {
         assert(buf != NULL);
-        ostringstream ostr;
         uint buflen = strlen(buf);
+        return getHexString(buf, buflen);
+    }
+
+    static string getHexString(const char* buf, uint buflen)
+    {
+        assert(buf != NULL);
+        ostringstream ostr;
         for (uint i=0; i<buflen; i++) {
-            ostr << hex << setw(2) << setfill('0') << (int) buf[i];
+            unsigned char ch = (unsigned char) buf[i];
+            ostr << hex << setw(2) << setfill('0') << (uint) ch;
         }
         return ostr.str();
     }
@@ -311,7 +677,1022 @@ uint CalcAssemblerTestCase::testID = 0;
 uint CalcAssemblerTestCase::nFailed = 0;
 uint CalcAssemblerTestCase::nPassed = 0;
 
-void testLiteralBinding()
+class CalcAssemblerTest 
+{
+protected:
+    void testAdd();
+
+    void testBool();
+    void testPointer();
+    void testReturn();
+    void testJump();
+    void testExtended();
+
+    void testLiteralBinding();
+    void testInvalidPrograms();
+
+    void testStandardTypes();
+
+    void testBoolInstructions(StandardTypeDescriptorOrdinal type);
+
+    template <typename T>
+    void testNativeInstructions(StandardTypeDescriptorOrdinal type);
+
+    string getTypeString(StandardTypeDescriptorOrdinal type, uint arraylen = 0);
+    string createRegisterString(string s, uint n, char c = ',');
+    void addBinaryInstructions(ostringstream& ostr,
+                               string opcode,
+                               uint& outreg,
+                               uint n);
+
+    void addUnaryInstructions(ostringstream& ostr,
+                              string opcode,
+                              uint& outreg,
+                              uint n);
+
+public:
+    explicit
+    CalcAssemblerTest()
+    {
+    }
+ 
+    virtual ~CalcAssemblerTest()
+    {
+    }
+ 
+    void testAssembler();
+};
+
+// Converts a tuple data to its literal string representation in the
+// assembler.
+// NOTE: This may be different from its normal string representation
+//       using the TuplePrinter.
+string CalcAssemblerTestCase::toLiteralString(TupleDatum &datum, 
+                                              uint typeOrdinal)
+{
+    ostringstream ostr("");
+    if (datum.pData != NULL)
+    {
+        switch(typeOrdinal) {
+        case STANDARD_TYPE_BOOL:
+            if (*reinterpret_cast<const bool*>(datum.pData))
+                ostr << "1";
+            else ostr << "0";
+            break;
+        case STANDARD_TYPE_INT_8:
+            ostr << (int) (*reinterpret_cast<const int8_t*>(datum.pData));
+            break;
+        case STANDARD_TYPE_UINT_8:
+            ostr << (int) (*reinterpret_cast<const uint8_t*>(datum.pData));
+            break;
+        case STANDARD_TYPE_INT_16:
+            ostr << (*reinterpret_cast<const int16_t*>(datum.pData));
+            break;
+        case STANDARD_TYPE_UINT_16:
+            ostr << (*reinterpret_cast<const uint16_t*>(datum.pData));
+        break;
+        case STANDARD_TYPE_INT_32:
+            ostr << (*reinterpret_cast<const int32_t*>(datum.pData));
+            break;
+        case STANDARD_TYPE_UINT_32:
+            ostr << (*reinterpret_cast<const uint32_t*>(datum.pData));
+        break;
+        case STANDARD_TYPE_INT_64:
+            ostr << (*reinterpret_cast<const int64_t*>(datum.pData));
+            break;
+        case STANDARD_TYPE_UINT_64:
+            ostr << (*reinterpret_cast<const uint64_t*>(datum.pData));
+            break;
+        case STANDARD_TYPE_REAL:
+            ostr << (*reinterpret_cast<const float*>(datum.pData));
+        break;
+        case STANDARD_TYPE_DOUBLE:
+            ostr << (*reinterpret_cast<const double*>(datum.pData));
+            break;
+        case STANDARD_TYPE_BINARY:
+        case STANDARD_TYPE_CHAR:
+        case STANDARD_TYPE_VARCHAR:
+        case STANDARD_TYPE_VARBINARY:
+            ostr << "0x";
+            ostr << getHexString( (reinterpret_cast<const char*>(datum.pData)),
+                                  datum.cbData);
+            break;
+        default:
+            assert(false);
+        }
+    }
+    return ostr.str();
+}
+
+// Copied from TupleTest::writeMaxData
+void CalcAssemblerTestCase::writeMaxData(TupleDatum &datum, uint typeOrdinal)
+{
+    PBuffer pData = const_cast<PBuffer>(datum.pData);
+    switch(typeOrdinal) {
+    case STANDARD_TYPE_BOOL:
+        *(reinterpret_cast<bool *>(pData)) = true;
+        break;
+    case STANDARD_TYPE_INT_8:
+        *(reinterpret_cast<int8_t *>(pData)) =
+            std::numeric_limits<int8_t>::max();
+        break;
+    case STANDARD_TYPE_UINT_8:
+        *(reinterpret_cast<uint8_t *>(pData)) =
+            std::numeric_limits<uint8_t>::max();
+        break;
+    case STANDARD_TYPE_INT_16:
+        *(reinterpret_cast<int16_t *>(pData)) =
+            std::numeric_limits<int16_t>::max();
+        break;
+    case STANDARD_TYPE_UINT_16:
+        *(reinterpret_cast<uint16_t *>(pData)) =
+            std::numeric_limits<uint16_t>::max();
+        break;
+    case STANDARD_TYPE_INT_32:
+        *(reinterpret_cast<int32_t *>(pData)) =
+            std::numeric_limits<int32_t>::max();
+        break;
+    case STANDARD_TYPE_UINT_32:
+        *(reinterpret_cast<uint32_t *>(pData)) =
+            std::numeric_limits<uint32_t>::max();
+        break;
+    case STANDARD_TYPE_INT_64:
+        *(reinterpret_cast<int64_t *>(pData)) =
+            std::numeric_limits<int64_t>::max();
+        break;
+    case STANDARD_TYPE_UINT_64:
+        *(reinterpret_cast<uint64_t *>(pData)) =
+            std::numeric_limits<uint64_t>::max();
+        break;
+    case STANDARD_TYPE_REAL:
+        *(reinterpret_cast<float *>(pData)) =
+            std::numeric_limits<float>::max();
+        break;
+    case STANDARD_TYPE_DOUBLE:
+        *(reinterpret_cast<double *>(pData)) =
+            std::numeric_limits<double>::max();
+        break;
+    case STANDARD_TYPE_BINARY:
+        memset(pData,0xFF,datum.cbData);
+        break;
+    case STANDARD_TYPE_CHAR:
+        memset(pData,'z',datum.cbData);
+        break;
+    case STANDARD_TYPE_VARCHAR:
+        datum.cbData = MAX_WIDTH;
+        memset(pData,'z',datum.cbData);
+        break;
+    case STANDARD_TYPE_VARBINARY:
+        datum.cbData = MAX_WIDTH;
+        memset(pData,0xFF,datum.cbData);
+        break;
+    default:
+        assert(false);
+    }
+}
+
+// Copied from TupleTest::writeMinData
+void CalcAssemblerTestCase::writeMinData(TupleDatum &datum,uint typeOrdinal)
+{
+    PBuffer pData = const_cast<PBuffer>(datum.pData);
+    switch(typeOrdinal) {
+    case STANDARD_TYPE_BOOL:
+        *(reinterpret_cast<bool *>(pData)) = false;
+        break;
+    case STANDARD_TYPE_INT_8:
+        *(reinterpret_cast<int8_t *>(pData)) =
+            std::numeric_limits<int8_t>::min();
+        break;
+    case STANDARD_TYPE_UINT_8:
+        *(reinterpret_cast<uint8_t *>(pData)) =
+            std::numeric_limits<uint8_t>::min();
+        break;
+    case STANDARD_TYPE_INT_16:
+        *(reinterpret_cast<int16_t *>(pData)) =
+            std::numeric_limits<int16_t>::min();
+        break;
+    case STANDARD_TYPE_UINT_16:
+        *(reinterpret_cast<uint16_t *>(pData)) =
+            std::numeric_limits<uint16_t>::min();
+        break;
+    case STANDARD_TYPE_INT_32:
+        *(reinterpret_cast<int32_t *>(pData)) =
+            std::numeric_limits<int32_t>::min();
+        break;
+    case STANDARD_TYPE_UINT_32:
+        *(reinterpret_cast<uint32_t *>(pData)) =
+            std::numeric_limits<uint32_t>::min();
+        break;
+    case STANDARD_TYPE_INT_64:
+        *(reinterpret_cast<int64_t *>(pData)) =
+            std::numeric_limits<int64_t>::min();
+        break;
+    case STANDARD_TYPE_UINT_64:
+        *(reinterpret_cast<uint64_t *>(pData)) =
+            std::numeric_limits<uint64_t>::min();
+        break;
+    case STANDARD_TYPE_REAL:
+        *(reinterpret_cast<float *>(pData)) =
+            std::numeric_limits<float>::min();
+        break;
+    case STANDARD_TYPE_DOUBLE:
+        *(reinterpret_cast<double *>(pData)) =
+            std::numeric_limits<double>::min();
+        break;
+    case STANDARD_TYPE_BINARY:
+        memset(pData,0,datum.cbData);
+        break;
+    case STANDARD_TYPE_CHAR:
+        memset(pData,'A',datum.cbData);
+        break;
+    case STANDARD_TYPE_VARCHAR:
+    case STANDARD_TYPE_VARBINARY:
+        datum.cbData = 0;
+        break;
+    default:
+        assert(false);
+    }
+}
+
+string CalcAssemblerTest::getTypeString(StandardTypeDescriptorOrdinal type, uint arraylen)
+{
+    string typestr = StandardTypeDescriptor::toString(type);
+    if (StandardTypeDescriptor::isArray(type)) 
+    {
+        ostringstream size("");
+        size << "," << arraylen;
+        typestr += size.str();
+    }
+    return typestr;
+}
+
+string CalcAssemblerTest::createRegisterString(string s, uint n, char c)
+{
+    ostringstream ostr("");
+    for (uint i=0; i<n; i++)
+    {
+        if (i > 0)
+            ostr << c;
+        ostr << s;
+    }
+    return ostr.str();
+}
+
+void CalcAssemblerTest::addUnaryInstructions(ostringstream& ostr,
+                                             string opcode,
+                                             uint& outreg,
+                                             uint n)
+{
+    for (uint i=0; i<n; i++)
+        ostr << opcode << " O" << outreg++ << ", I"
+             << i << ";" << endl;
+}
+                                        
+void CalcAssemblerTest::addBinaryInstructions(ostringstream& ostr,
+                                              string opcode,
+                                              uint& outreg,
+                                              uint n)
+{
+    for (uint i=0; i<n; i++)
+        for (uint j=0; j<n; j++)
+            ostr << opcode << " O" << outreg++ << ", I"
+                 << i << ", I" << j << ";" << endl;
+}
+
+/** 
+ * Test instructions that returns a native type
+ * @param type Type of the operands
+ * Instructions tested are:
+ * - For all native types: ADD, SUB, MUL, NEG
+ * - For integral types:   MOD, AND, OR, SHFL, SHFR
+ * Input registers:
+ * I0 = min
+ * I1 = max
+ * I2 = NULL
+ * I3 = 10
+ */
+template <typename T>
+void CalcAssemblerTest::testNativeInstructions(StandardTypeDescriptorOrdinal type)
+{
+    string typestr = getTypeString(type, CalcAssemblerTestCase::MAX_WIDTH);
+    uint inregs = 4;
+
+    // Form instruction string
+    ostringstream instostr("");
+    uint outreg = 0;
+    CalcTestInfo<T> expectedCalcOut(type);
+    TProgramCounter pc = 0;
+    T* pNULL = NULL;
+    T  zero  = 0;
+    T  min = std::numeric_limits<T>::min();
+    T  max = std::numeric_limits<T>::max();
+    T  mid = 10;
+
+    // TODO: Overflows/Underflows (different for unsigned/signed)
+
+    // Test ADD
+    addBinaryInstructions(instostr, "ADD", outreg, inregs);
+    string addstr = string("ADD ") + typestr;
+    expectedCalcOut.add(addstr, (T) (min+min), pc++, __LINE__);    // I0 + I0 (min + min)
+    expectedCalcOut.add(addstr, (T) (min+max), pc++, __LINE__);    // I0 + I1 (min + max)
+    expectedCalcOut.add(addstr, pNULL,   pc++, __LINE__);          // I0 + I2 (min + NULL)
+    expectedCalcOut.add(addstr, (T) (min+mid),  pc++, __LINE__);   // I0 + I3 (min + 10)
+
+    expectedCalcOut.add(addstr, (T) (max+min), pc++, __LINE__);    // I1 + I0 (max + min)
+    expectedCalcOut.add(addstr, (T) (max+max), pc++, __LINE__);    // I1 + I1 (max + max)
+    expectedCalcOut.add(addstr, pNULL,   pc++, __LINE__);          // I1 + I2 (max + NULL)
+    expectedCalcOut.add(addstr, (T) (max+mid), pc++, __LINE__);    // I1 + I3 (max + 10)
+
+    expectedCalcOut.add(addstr, pNULL, pc++, __LINE__);      // I2 + I0 (NULL + min)
+    expectedCalcOut.add(addstr, pNULL, pc++, __LINE__);      // I2 + I1 (NULL + max)
+    expectedCalcOut.add(addstr, pNULL, pc++, __LINE__);      // I2 + I2 (NULL + NULL)
+    expectedCalcOut.add(addstr, pNULL, pc++, __LINE__);      // I2 + I3 (NULL + 10)
+
+    expectedCalcOut.add(addstr, (T) (mid+min), pc++, __LINE__);    // I3 + I0 (10 + min)
+    expectedCalcOut.add(addstr, (T) (mid+max), pc++, __LINE__);    // I3 + I1 (10 + max)
+    expectedCalcOut.add(addstr, pNULL, pc++, __LINE__);            // I3 + I2 (10 + NULL)
+    expectedCalcOut.add(addstr, (T) (mid+mid), pc++, __LINE__);    // I3 + I3 (10 + 10)
+    
+    // Test SUB
+    addBinaryInstructions(instostr, "SUB", outreg, inregs);
+    string substr = string("SUB ") + typestr;
+    expectedCalcOut.add(substr, (T) (min-min), pc++, __LINE__);    // I0 - I0 (min - min)
+    expectedCalcOut.add(substr, (T) (min-max), pc++, __LINE__);    // I0 - I1 (min - max)
+    expectedCalcOut.add(substr, pNULL,   pc++, __LINE__);          // I0 - I2 (min - NULL)
+    expectedCalcOut.add(substr, (T) (min-mid),  pc++, __LINE__);   // I0 - I3 (min - 10)
+
+    expectedCalcOut.add(substr, (T) (max-min), pc++, __LINE__);    // I1 - I0 (max - min)
+    expectedCalcOut.add(substr, (T) (max-max), pc++, __LINE__);    // I1 - I1 (max - max)
+    expectedCalcOut.add(substr, pNULL,   pc++, __LINE__);          // I1 - I2 (max - NULL)
+    expectedCalcOut.add(substr, (T) (max-mid), pc++, __LINE__);    // I1 - I3 (max - 10)
+
+    expectedCalcOut.add(substr, pNULL, pc++, __LINE__);      // I2 - I0 (NULL - min)
+    expectedCalcOut.add(substr, pNULL, pc++, __LINE__);      // I2 - I1 (NULL - max)
+    expectedCalcOut.add(substr, pNULL, pc++, __LINE__);      // I2 - I2 (NULL - NULL)
+    expectedCalcOut.add(substr, pNULL, pc++, __LINE__);      // I2 - I3 (NULL - 10)
+
+    expectedCalcOut.add(substr, (T) (mid-min), pc++, __LINE__);    // I3 - I0 (10 - min)
+    expectedCalcOut.add(substr, (T) (mid-max), pc++, __LINE__);    // I3 - I1 (10 - max)
+    expectedCalcOut.add(substr, pNULL, pc++, __LINE__);            // I3 - I2 (10 - NULL)
+    expectedCalcOut.add(substr, (T) (mid-mid), pc++, __LINE__);    // I3 - I3 (10 - 10)
+
+    // Test MUL
+    addBinaryInstructions(instostr, "MUL", outreg, inregs);
+    string mulstr = string("MUL ") + typestr;
+    expectedCalcOut.add(mulstr, (T) (min*min), pc++, __LINE__);    // I0 * I0 (min * min)
+    expectedCalcOut.add(mulstr, (T) (min*max), pc++, __LINE__);    // I0 * I1 (min * max)
+    expectedCalcOut.add(mulstr, pNULL,   pc++, __LINE__);          // I0 * I2 (min * NULL)
+    expectedCalcOut.add(mulstr, (T) (min*mid),  pc++, __LINE__);   // I0 * I3 (min * 10)
+
+    expectedCalcOut.add(mulstr, (T) (max*min), pc++, __LINE__);    // I1 * I0 (max * min)
+    expectedCalcOut.add(mulstr, (T) (max*max), pc++, __LINE__);    // I1 * I1 (max * max)
+    expectedCalcOut.add(mulstr, pNULL,   pc++, __LINE__);          // I1 * I2 (max * NULL)
+    expectedCalcOut.add(mulstr, (T) (max*mid), pc++, __LINE__);    // I1 * I3 (max * 10)
+
+    expectedCalcOut.add(mulstr, pNULL, pc++, __LINE__);      // I2 * I0 (NULL * min)
+    expectedCalcOut.add(mulstr, pNULL, pc++, __LINE__);      // I2 * I1 (NULL * max)
+    expectedCalcOut.add(mulstr, pNULL, pc++, __LINE__);      // I2 * I2 (NULL * NULL)
+    expectedCalcOut.add(mulstr, pNULL, pc++, __LINE__);      // I2 * I3 (NULL * 10)
+
+    expectedCalcOut.add(mulstr, (T) (mid*min), pc++, __LINE__);    // I3 * I0 (10 * min)
+    expectedCalcOut.add(mulstr, (T) (mid*max), pc++, __LINE__);    // I3 * I1 (10 * max)
+    expectedCalcOut.add(mulstr, pNULL, pc++, __LINE__);            // I3 * I2 (10 * NULL)
+    expectedCalcOut.add(mulstr, (T) (mid*mid), pc++, __LINE__);    // I3 * I3 (10 * 10)
+
+    // Test DIV
+    const char* divbyzero = "22012";
+    addBinaryInstructions(instostr, "DIV", outreg, inregs);
+    string divstr = string("DIV ") + typestr;
+    if (min != zero)
+        expectedCalcOut.add(divstr, (T) (min/min), pc++, __LINE__); // I0 / I0 (min / min)
+    else expectedCalcOut.add(divstr, divbyzero, pc++, __LINE__);    // I0 / I0 (min / min)
+    expectedCalcOut.add(divstr, (T) (min/max), pc++, __LINE__);     // I0 / I1 (min / max)
+    expectedCalcOut.add(divstr, pNULL,   pc++, __LINE__);           // I0 / I2 (min / NULL)
+    expectedCalcOut.add(divstr, (T) (min/mid),  pc++, __LINE__);    // I0 / I3 (min / 10)
+
+    if (min != zero)
+        expectedCalcOut.add(divstr, (T) (max/min), pc++, __LINE__); // I1 / I0 (max / min)
+    else expectedCalcOut.add(divstr, divbyzero, pc++, __LINE__);    // I1 / I0 (max / min)
+    expectedCalcOut.add(divstr, (T) (max/max), pc++, __LINE__);     // I1 / I1 (max / max)
+    expectedCalcOut.add(divstr, pNULL,   pc++, __LINE__);           // I1 / I2 (max / NULL)
+    expectedCalcOut.add(divstr, (T) (max/mid), pc++, __LINE__);    // I1 / I3 (max / 10)
+
+    expectedCalcOut.add(divstr, pNULL, pc++, __LINE__);      // I2 / I0 (NULL / min)
+    expectedCalcOut.add(divstr, pNULL, pc++, __LINE__);      // I2 / I1 (NULL / max)
+    expectedCalcOut.add(divstr, pNULL, pc++, __LINE__);      // I2 / I2 (NULL / NULL)
+    expectedCalcOut.add(divstr, pNULL, pc++, __LINE__);      // I2 / I3 (NULL / 10)
+
+    if (min != zero)
+        expectedCalcOut.add(divstr, (T) (mid/min), pc++); // I3 / I0 (mid / min)
+    else expectedCalcOut.add(divstr, divbyzero, pc++);    // I3 / I0 (mid / min)
+    expectedCalcOut.add(divstr, (T) (mid/max), pc++);     // I3 / I1 (10 / max)
+    expectedCalcOut.add(divstr, pNULL, pc++);             // I3 / I2 (10 / NULL)
+    expectedCalcOut.add(divstr, (T) (mid/mid), pc++);     // I3 / I3 (10 / 10)
+
+    // Test NEG
+    addUnaryInstructions(instostr, "NEG", outreg, inregs);
+    string negstr = string("NEG ") + typestr;
+    expectedCalcOut.add(negstr, (T) (-min), pc++, __LINE__);    // - I0 (- min)
+    expectedCalcOut.add(negstr, (T) (-max), pc++, __LINE__);    // - I1 (- max)
+    expectedCalcOut.add(negstr, pNULL,      pc++, __LINE__);    // - I2 (- NULL)
+    expectedCalcOut.add(negstr, (T) (-mid), pc++, __LINE__);    // - I3 (- 10)
+
+    if (StandardTypeDescriptor::isIntegralNative(type))
+    {
+        // Test MOD
+        string modstr = string("MOD ") + typestr;
+        addBinaryInstructions(instostr, "MOD", outreg, inregs);
+        if (min != zero)
+            expectedCalcOut.add(modstr, (T) (min%min), pc++, __LINE__); // I0 % I0 (min % min)
+        else expectedCalcOut.add(modstr, divbyzero, pc++, __LINE__);    // I0 % I0 (min % min)
+        expectedCalcOut.add(modstr, (T) (min%max), pc++, __LINE__);    // I0 % I1 (min % max)
+        expectedCalcOut.add(modstr, pNULL,   pc++, __LINE__);          // I0 % I2 (min % NULL)
+        expectedCalcOut.add(modstr, (T) (min%mid),  pc++, __LINE__);   // I0 % I3 (min % 10)
+        
+        if (min != zero)
+            expectedCalcOut.add(modstr, (T) (max%min), pc++, __LINE__); // I1 % I0 (max % min)
+        else expectedCalcOut.add(modstr, divbyzero, pc++, __LINE__);    // I1 % I0 (max % min)
+        expectedCalcOut.add(modstr, (T) (max%max), pc++, __LINE__);    // I1 % I1 (max % max)
+        expectedCalcOut.add(modstr, pNULL,   pc++, __LINE__);          // I1 % I2 (max % NULL)
+        expectedCalcOut.add(modstr, (T) (max%mid), pc++, __LINE__);    // I1 % I3 (max % 10)
+        
+        expectedCalcOut.add(modstr, pNULL, pc++, __LINE__);      // I2 % I0 (NULL % min)
+        expectedCalcOut.add(modstr, pNULL, pc++, __LINE__);      // I2 % I1 (NULL % max)
+        expectedCalcOut.add(modstr, pNULL, pc++, __LINE__);      // I2 % I2 (NULL % NULL)
+        expectedCalcOut.add(modstr, pNULL, pc++, __LINE__);      // I2 % I3 (NULL % 10)
+        
+        if (min != zero)
+            expectedCalcOut.add(modstr, (T) (mid%min), pc++, __LINE__); // I3 % I0 (mid % min)
+        else expectedCalcOut.add(modstr, divbyzero, pc++, __LINE__);    // I3 % I0 (mid % min)
+        expectedCalcOut.add(modstr, (T) (mid%max), pc++, __LINE__);    // I3 % I1 (10 % max)
+        expectedCalcOut.add(modstr, pNULL, pc++, __LINE__);            // I3 % I2 (10 % NULL)
+        expectedCalcOut.add(modstr, (T) (mid%mid), pc++, __LINE__);    // I3 % I3 (10 % 10)
+
+        // Test AND
+        string andstr = string("AND ") + typestr;
+        addBinaryInstructions(instostr, "AND", outreg, inregs);
+        expectedCalcOut.add(andstr, (T) (min&min), pc++, __LINE__);    // I0 & I0 (min & min)
+        expectedCalcOut.add(andstr, (T) (min&max), pc++, __LINE__);    // I0 & I1 (min & max)
+        expectedCalcOut.add(andstr, pNULL,   pc++, __LINE__);          // I0 & I2 (min & NULL)
+        expectedCalcOut.add(andstr, (T) (min&mid),  pc++, __LINE__);   // I0 & I3 (min & 10)
+        
+        expectedCalcOut.add(andstr, (T) (max&min), pc++, __LINE__);    // I1 & I0 (max & min)
+        expectedCalcOut.add(andstr, (T) (max&max), pc++, __LINE__);    // I1 & I1 (max & max)
+        expectedCalcOut.add(andstr, pNULL,   pc++, __LINE__);          // I1 & I2 (max & NULL)
+        expectedCalcOut.add(andstr, (T) (max&mid), pc++, __LINE__);    // I1 & I3 (max & 10)
+        
+        expectedCalcOut.add(andstr, pNULL, pc++, __LINE__);      // I2 & I0 (NULL & min)
+        expectedCalcOut.add(andstr, pNULL, pc++, __LINE__);      // I2 & I1 (NULL & max)
+        expectedCalcOut.add(andstr, pNULL, pc++, __LINE__);      // I2 & I2 (NULL & NULL)
+        expectedCalcOut.add(andstr, pNULL, pc++, __LINE__);      // I2 & I3 (NULL & 10)
+        
+        expectedCalcOut.add(andstr, (T) (mid&min), pc++, __LINE__);    // I3 & I0 (10 & min)
+        expectedCalcOut.add(andstr, (T) (mid&max), pc++, __LINE__);    // I3 & I1 (10 & max)
+        expectedCalcOut.add(andstr, pNULL, pc++, __LINE__);            // I3 & I2 (10 & NULL)
+        expectedCalcOut.add(andstr, (T) (mid&mid), pc++, __LINE__);    // I3 & I3 (10 & 10)
+    
+        // Test OR
+        string orstr = string("OR ") + typestr;
+        addBinaryInstructions(instostr, "OR", outreg, inregs);
+        expectedCalcOut.add(orstr, (T) (min|min), pc++, __LINE__);    // I0 | I0 (min | min)
+        expectedCalcOut.add(orstr, (T) (min|max), pc++, __LINE__);    // I0 | I1 (min | max)
+        expectedCalcOut.add(orstr, pNULL,   pc++, __LINE__);          // I0 | I2 (min | NULL)
+        expectedCalcOut.add(orstr, (T) (min|mid),  pc++, __LINE__);   // I0 | I3 (min | 10)
+        
+        expectedCalcOut.add(orstr, (T) (max|min), pc++, __LINE__);    // I1 | I0 (max | min)
+        expectedCalcOut.add(orstr, (T) (max|max), pc++, __LINE__);    // I1 | I1 (max | max)
+        expectedCalcOut.add(orstr, pNULL,   pc++, __LINE__);          // I1 | I2 (max | NULL)
+        expectedCalcOut.add(orstr, (T) (max|mid), pc++, __LINE__);    // I1 | I3 (max | 10)
+        
+        expectedCalcOut.add(orstr, pNULL, pc++, __LINE__);      // I2 | I0 (NULL | min)
+        expectedCalcOut.add(orstr, pNULL, pc++, __LINE__);      // I2 | I1 (NULL | max)
+        expectedCalcOut.add(orstr, pNULL, pc++, __LINE__);      // I2 | I2 (NULL | NULL)
+        expectedCalcOut.add(orstr, pNULL, pc++, __LINE__);      // I2 | I3 (NULL | 10)
+        
+        expectedCalcOut.add(orstr, (T) (mid|min), pc++, __LINE__);    // I3 | I0 (10 | min)
+        expectedCalcOut.add(orstr, (T) (mid|max), pc++, __LINE__);    // I3 | I1 (10 | max)
+        expectedCalcOut.add(orstr, pNULL, pc++, __LINE__);            // I3 | I2 (10 | NULL)
+        expectedCalcOut.add(orstr, (T) (mid|mid), pc++, __LINE__);    // I3 | I3 (10 | 10)
+
+        // Test SHFL
+        string shflstr = string("SHFL ") + typestr;
+        addBinaryInstructions(instostr, "SHFL", outreg, inregs);
+        expectedCalcOut.add(shflstr, (T) (min<<min), pc++, __LINE__);    // I0 << I0 (min << min)
+        expectedCalcOut.add(shflstr, (T) (min<<max), pc++, __LINE__);    // I0 << I1 (min << max)
+        expectedCalcOut.add(shflstr, pNULL,   pc++, __LINE__);           // I0 << I2 (min << NULL)
+        expectedCalcOut.add(shflstr, (T) (min<<mid),  pc++, __LINE__);   // I0 << I3 (min << 10)
+        
+        expectedCalcOut.add(shflstr, (T) (max<<min), pc++, __LINE__);    // I1 << I0 (max << min)
+        expectedCalcOut.add(shflstr, (T) (max<<max), pc++, __LINE__);    // I1 << I1 (max << max)
+        expectedCalcOut.add(shflstr, pNULL,   pc++, __LINE__);           // I1 << I2 (max << NULL)
+        expectedCalcOut.add(shflstr, (T) (max<<mid), pc++, __LINE__);    // I1 << I3 (max << 10)
+        
+        expectedCalcOut.add(shflstr, pNULL, pc++, __LINE__);      // I2 << I0 (NULL << min)
+        expectedCalcOut.add(shflstr, pNULL, pc++, __LINE__);      // I2 << I1 (NULL << max)
+        expectedCalcOut.add(shflstr, pNULL, pc++, __LINE__);      // I2 << I2 (NULL << NULL)
+        expectedCalcOut.add(shflstr, pNULL, pc++, __LINE__);      // I2 << I3 (NULL << 10)
+        
+        expectedCalcOut.add(shflstr, (T) (mid<<min), pc++, __LINE__);    // I3 << I0 (10 << min)
+        expectedCalcOut.add(shflstr, (T) (mid<<max), pc++, __LINE__);    // I3 << I1 (10 << max)
+        expectedCalcOut.add(shflstr, pNULL, pc++, __LINE__);             // I3 << I2 (10 << NULL)
+        expectedCalcOut.add(shflstr, (T) (mid<<mid), pc++, __LINE__);    // I3 << I3 (10 << 10)
+
+        // Test SHFR
+        string shfrstr = string("SHFR ") + typestr;
+        addBinaryInstructions(instostr, "SHFR", outreg, inregs);
+        expectedCalcOut.add(shfrstr, (T) (min>>min), pc++, __LINE__);    // I0 >> I0 (min >> min)
+        expectedCalcOut.add(shfrstr, (T) (min>>max), pc++, __LINE__);    // I0 >> I1 (min >> max)
+        expectedCalcOut.add(shfrstr, pNULL,   pc++, __LINE__);           // I0 >> I2 (min >> NULL)
+        expectedCalcOut.add(shfrstr, (T) (min>>mid),  pc++, __LINE__);   // I0 >> I3 (min >> 10)
+        
+        expectedCalcOut.add(shfrstr, (T) (max>>min), pc++, __LINE__);    // I1 >> I0 (max >> min)
+        expectedCalcOut.add(shfrstr, (T) (max>>max), pc++, __LINE__);    // I1 >> I1 (max >> max)
+        expectedCalcOut.add(shfrstr, pNULL,   pc++, __LINE__);           // I1 >> I2 (max >> NULL)
+        expectedCalcOut.add(shfrstr, (T) (max>>mid), pc++, __LINE__);    // I1 >> I3 (max >> 10)
+        
+        expectedCalcOut.add(shfrstr, pNULL, pc++, __LINE__);      // I2 >> I0 (NULL >> min)
+        expectedCalcOut.add(shfrstr, pNULL, pc++, __LINE__);      // I2 >> I1 (NULL >> max)
+        expectedCalcOut.add(shfrstr, pNULL, pc++, __LINE__);      // I2 >> I2 (NULL >> NULL)
+        expectedCalcOut.add(shfrstr, pNULL, pc++, __LINE__);      // I2 >> I3 (NULL >> 10)
+        
+        expectedCalcOut.add(shfrstr, (T) (mid>>min), pc++, __LINE__);    // I3 >> I0 (10 >> min)
+        expectedCalcOut.add(shfrstr, (T) (mid>>max), pc++, __LINE__);    // I3 >> I1 (10 >> max)
+        expectedCalcOut.add(shfrstr, pNULL, pc++, __LINE__);             // I3 >> I2 (10 >> NULL)
+        expectedCalcOut.add(shfrstr, (T) (mid>>mid), pc++, __LINE__);    // I3 >> I3 (10 >> 10)
+    }
+
+    assert(outreg == static_cast<uint>(pc));
+
+    // Form test string
+    string testdesc = "testNativeInstructions: " + typestr;
+    ostringstream testostr("");
+
+    testostr << "I " << createRegisterString(typestr, inregs) << ";" << endl;
+    testostr << "O " << createRegisterString(typestr, outreg) << ";" << endl;
+    testostr << "T;" << endl;
+    
+    testostr << instostr.str();
+
+    string teststr = testostr.str();
+
+    CalcAssemblerTestCase testCase1(__LINE__, testdesc.c_str(),
+                                    teststr.c_str());
+    if (testCase1.assemble())
+    {
+        testCase1.setInputMin(0);
+        testCase1.setInputMax(1);
+        testCase1.setInputNull(2);
+        testCase1.template setInput<T>(3, mid);
+        TupleData* outputTuple = testCase1.getExpectedOutputTuple();
+        assert(outputTuple != NULL);
+        expectedCalcOut.setTupleData(*outputTuple);
+        testCase1.test(&expectedCalcOut);
+    }
+}
+
+/** 
+ * Test instructions that returns a boolean
+ * @param type Type of the operands
+ * Instructions tested are:
+ * - For all types:    EQ, NE, ISNULL, ISNOTNULL, GT, LT
+ * - For booleans:     IS, ISNOT, NOT, AND, OR
+ * - For non-booleans: GE, LE
+ * Input registers:
+ * I0 = min
+ * I1 = max
+ * I2 = NULL
+ */
+void CalcAssemblerTest::testBoolInstructions(StandardTypeDescriptorOrdinal type)
+{
+    string typestr = getTypeString(type, CalcAssemblerTestCase::MAX_WIDTH);
+    string boolstr = getTypeString(STANDARD_TYPE_BOOL);
+    uint inregs = 3;
+
+    // Form instruction string
+    ostringstream instostr("");
+    uint outreg = 0;
+    vector<bool*> boolout;
+    bool bFalse  = false;
+    bool bTrue   = true;
+    bool* pFalse = &bFalse;
+    bool* pTrue  = &bTrue;
+    
+    // Make copy of input registers to local registers
+    instostr << "MOVE L0, I0;" << endl;
+    instostr << "MOVE L1, I1;" << endl;
+    instostr << "MOVE L2, I2;" << endl;
+
+    // Test is null
+    addUnaryInstructions(instostr, "ISNULL", outreg, inregs);
+    boolout.push_back(pFalse); // I0 = min
+    boolout.push_back(pFalse); // I1 = max
+    boolout.push_back(pTrue);  // I2 = NULL
+
+    // Test is not null
+    addUnaryInstructions(instostr, "ISNOTNULL", outreg, inregs);
+    boolout.push_back(pTrue);  // I0 = min
+    boolout.push_back(pTrue);  // I1 = max
+    boolout.push_back(pFalse); // I2 = NULL
+
+    // Test equal
+    // Check equal if the registers are different (use local)
+    instostr << "EQ O" << outreg++ <<", L0, I0;" << endl; // true
+    boolout.push_back(pTrue);
+    instostr << "EQ O" << outreg++ <<", L1, I1;" << endl; // true
+    boolout.push_back(pTrue);
+
+    // Check equal using input registers
+    addBinaryInstructions(instostr, "EQ", outreg, inregs);
+    boolout.push_back(pTrue);  // I0, I0
+    boolout.push_back(pFalse); // I0, I1
+    boolout.push_back(NULL);   // I0, I2
+    boolout.push_back(pFalse); // I1, I0
+    boolout.push_back(pTrue);  // I1, I1
+    boolout.push_back(NULL);   // I1, I2
+    boolout.push_back(NULL);   // I2, I0
+    boolout.push_back(NULL);   // I2, I1
+    boolout.push_back(NULL);   // I2, I2
+
+    // Test not equal
+    // Check not equal if the registers are different (use local)
+    instostr << "NE O" << outreg++ <<", L0, I0;" << endl; // false
+    boolout.push_back(pFalse);
+    instostr << "NE O" << outreg++ <<", L1, I1;" << endl; // false
+    boolout.push_back(pFalse);
+
+    // Check not equal using input registers
+    addBinaryInstructions(instostr, "NE", outreg, inregs);
+    boolout.push_back(pFalse); // I0, I0
+    boolout.push_back(pTrue);  // I0, I1
+    boolout.push_back(NULL);   // I0, I2
+    boolout.push_back(pTrue);  // I1, I0
+    boolout.push_back(pFalse); // I1, I1
+    boolout.push_back(NULL);   // I1, I2
+    boolout.push_back(NULL);   // I2, I0
+    boolout.push_back(NULL);   // I2, I1
+    boolout.push_back(NULL);   // I2, I2
+
+    // Test greater than
+    addBinaryInstructions(instostr, "GT", outreg, inregs);
+    boolout.push_back(pFalse); // I0, I0
+    boolout.push_back(pFalse); // I0, I1
+    boolout.push_back(NULL);   // I0, I2
+    boolout.push_back(pTrue);  // I1, I0
+    boolout.push_back(pFalse); // I1, I1
+    boolout.push_back(NULL);   // I1, I2
+    boolout.push_back(NULL);   // I2, I0
+    boolout.push_back(NULL);   // I2, I1
+    boolout.push_back(NULL);   // I2, I2
+
+    // Test less than
+    addBinaryInstructions(instostr, "LT", outreg, inregs);
+    boolout.push_back(pFalse); // I0, I0
+    boolout.push_back(pTrue);  // I0, I1
+    boolout.push_back(NULL);   // I0, I2
+    boolout.push_back(pFalse); // I1, I0
+    boolout.push_back(pFalse); // I1, I1
+    boolout.push_back(NULL);   // I1, I2
+    boolout.push_back(NULL);   // I2, I0
+    boolout.push_back(NULL);   // I2, I1
+    boolout.push_back(NULL);   // I2, I2
+
+    if (type == STANDARD_TYPE_BOOL)
+    {
+        // Test NOT
+        addUnaryInstructions(instostr, "NOT", outreg, inregs);
+        boolout.push_back(pTrue);  // I0 = min = false
+        boolout.push_back(pFalse); // I1 = max = true
+        boolout.push_back(NULL);   // I2 = NULL
+
+        // Test IS
+        addBinaryInstructions(instostr, "IS", outreg, inregs);
+        boolout.push_back(pTrue);  // I0, I0
+        boolout.push_back(pFalse); // I0, I1
+        boolout.push_back(pFalse); // I0, I2
+        boolout.push_back(pFalse); // I1, I0
+        boolout.push_back(pTrue);  // I1, I1
+        boolout.push_back(pFalse); // I1, I2
+        boolout.push_back(pFalse); // I2, I0
+        boolout.push_back(pFalse); // I2, I1
+        boolout.push_back(pTrue);  // I2, I2
+
+        // Test IS NOT
+        addBinaryInstructions(instostr, "ISNOT", outreg, inregs);
+        boolout.push_back(pFalse); // I0, I0
+        boolout.push_back(pTrue);  // I0, I1
+        boolout.push_back(pTrue);  // I0, I2
+        boolout.push_back(pTrue);  // I1, I0
+        boolout.push_back(pFalse); // I1, I1
+        boolout.push_back(pTrue);  // I1, I2
+        boolout.push_back(pTrue);  // I2, I0
+        boolout.push_back(pTrue);  // I2, I1
+        boolout.push_back(pFalse); // I2, I2
+
+        // Test AND
+        addBinaryInstructions(instostr, "AND", outreg, inregs);
+        boolout.push_back(pFalse); // I0, I0
+        boolout.push_back(pFalse); // I0, I1
+        boolout.push_back(pFalse); // I0, I2
+        boolout.push_back(pFalse); // I1, I0
+        boolout.push_back(pTrue);  // I1, I1
+        boolout.push_back(NULL);   // I1, I2
+        boolout.push_back(pFalse); // I2, I0
+        boolout.push_back(NULL);   // I2, I1
+        boolout.push_back(NULL);   // I2, I2
+
+        // Test OR
+        addBinaryInstructions(instostr, "OR", outreg, inregs);
+        boolout.push_back(pFalse); // I0, I0
+        boolout.push_back(pTrue);  // I0, I1
+        boolout.push_back(NULL);   // I0, I2
+        boolout.push_back(pTrue);  // I1, I0
+        boolout.push_back(pTrue);  // I1, I1
+        boolout.push_back(pTrue);  // I1, I2
+        boolout.push_back(NULL);   // I2, I0
+        boolout.push_back(pTrue);  // I2, I1
+        boolout.push_back(NULL);   // I2, I2
+    }
+    else 
+    {
+        // Test GE
+        addBinaryInstructions(instostr, "GE", outreg, inregs);
+        boolout.push_back(pTrue);  // I0, I0
+        boolout.push_back(pFalse); // I0, I1
+        boolout.push_back(NULL);   // I0, I2
+        boolout.push_back(pTrue);  // I1, I0
+        boolout.push_back(pTrue);  // I1, I1
+        boolout.push_back(NULL);   // I1, I2
+        boolout.push_back(NULL);   // I2, I0
+        boolout.push_back(NULL);   // I2, I1
+        boolout.push_back(NULL);   // I2, I2
+        
+        // Test LE
+        addBinaryInstructions(instostr, "LE", outreg, inregs);
+        boolout.push_back(pTrue);  // I0, I0
+        boolout.push_back(pTrue);  // I0, I1
+        boolout.push_back(NULL);   // I0, I2
+        boolout.push_back(pFalse); // I1, I0
+        boolout.push_back(pTrue);  // I1, I1
+        boolout.push_back(NULL);   // I1, I2
+        boolout.push_back(NULL);   // I2, I0
+        boolout.push_back(NULL);   // I2, I1
+        boolout.push_back(NULL);   // I2, I2
+    }
+
+    assert(outreg == boolout.size());
+
+    // Form test string
+    string testdesc = "testBoolInstructions: " + typestr;
+    ostringstream testostr("");
+
+    testostr << "I " << createRegisterString(typestr, inregs) << ";" << endl;
+    testostr << "L " << createRegisterString(typestr, inregs) << ";" << endl;
+    testostr << "O " << createRegisterString(boolstr, outreg) << ";" << endl;
+    testostr << "T;" << endl;
+    
+    testostr << instostr.str();
+
+    string teststr = testostr.str();
+    
+    CalcAssemblerTestCase testCase1(__LINE__, testdesc.c_str(),
+                                    teststr.c_str());
+    if (testCase1.assemble())
+    {
+        testCase1.setInputMin(0);
+        testCase1.setInputMax(1);
+        testCase1.setInputNull(2);
+        for (uint i=0; i<outreg; i++) {
+            if (boolout[i])
+                testCase1.setExpectedOutput<bool>(i, *boolout[i]);
+            else testCase1.setExpectedOutputNull(i);
+        }
+        testCase1.test();
+    }
+}
+
+void CalcAssemblerTest::testStandardTypes()
+{
+    string max[STANDARD_TYPE_END];
+    string min[STANDARD_TYPE_END];
+    string overflow[STANDARD_TYPE_END];
+    string underflow[STANDARD_TYPE_END];
+
+    min[STANDARD_TYPE_BOOL] = "0";
+    max[STANDARD_TYPE_BOOL] = "1";
+    underflow[STANDARD_TYPE_BOOL] = "-1";
+    overflow[STANDARD_TYPE_BOOL] = "2";
+
+    min[STANDARD_TYPE_INT_8] = "-128";
+    max[STANDARD_TYPE_INT_8] = "127";
+    min[STANDARD_TYPE_UINT_8] = "0";
+    max[STANDARD_TYPE_UINT_8] = "255";
+
+    underflow[STANDARD_TYPE_INT_8] = "-129";
+    overflow[STANDARD_TYPE_INT_8] = "128";
+    underflow[STANDARD_TYPE_UINT_8] = "-1";
+    overflow[STANDARD_TYPE_UINT_8] = "256";
+
+    min[STANDARD_TYPE_INT_16] = "-32768";
+    max[STANDARD_TYPE_INT_16] = "32767";
+    min[STANDARD_TYPE_UINT_16] = "0";
+    max[STANDARD_TYPE_UINT_16] = "65535";
+
+    underflow[STANDARD_TYPE_INT_16] = "-32769";
+    overflow[STANDARD_TYPE_INT_16] = "32768";
+    underflow[STANDARD_TYPE_UINT_16] = "-1";
+    overflow[STANDARD_TYPE_UINT_16] = "65536";
+
+    min[STANDARD_TYPE_INT_32] = "-2147483648";
+    max[STANDARD_TYPE_INT_32] = "2147483647";
+    min[STANDARD_TYPE_UINT_32] = "0";
+    max[STANDARD_TYPE_UINT_32] = "4294967295";
+
+    underflow[STANDARD_TYPE_INT_32] = "-2147483649";
+    overflow[STANDARD_TYPE_INT_32] = "2147483648";
+    underflow[STANDARD_TYPE_UINT_32] = "-1";
+    overflow[STANDARD_TYPE_UINT_32] = "4294967296";
+
+    min[STANDARD_TYPE_INT_64] = "-9223372036854775808";
+    max[STANDARD_TYPE_INT_64] = "9223372036854775807";
+    min[STANDARD_TYPE_UINT_64] = "0";
+    max[STANDARD_TYPE_UINT_64] = "18446744073709551615";
+
+    underflow[STANDARD_TYPE_INT_64] = "-9223372036854775809";
+    // TODO: Check why the this overflow is not caught by boost's numeric cast
+    overflow[STANDARD_TYPE_INT_64] = "9223372036854775808";
+    underflow[STANDARD_TYPE_UINT_64] = "-1";
+    overflow[STANDARD_TYPE_UINT_64] = "18446744073709551616";
+
+    min[STANDARD_TYPE_REAL] = "1.17549e-38";
+    max[STANDARD_TYPE_REAL] = "3.40282e+38";
+    min[STANDARD_TYPE_DOUBLE] = "2.22507e-308";
+    max[STANDARD_TYPE_DOUBLE] = "1.79769e+308";
+
+    // TODO: What to do for underflow of floats/doubles? 
+    // Looks like they are just turned into 0s.
+    underflow[STANDARD_TYPE_REAL] = "1.17549e-309";
+    overflow[STANDARD_TYPE_REAL] = "3.40282e+39";
+    underflow[STANDARD_TYPE_DOUBLE] = "2.22507e-324";
+    overflow[STANDARD_TYPE_DOUBLE] = "1.79769e+309";
+
+    for (uint i = STANDARD_TYPE_MIN; i < STANDARD_TYPE_END; i++) 
+    {
+        // First test setting output = input (using move)
+        // Also test tonull
+        // For max, min, NULL
+        StandardTypeDescriptorOrdinal type = static_cast<StandardTypeDescriptorOrdinal>(i);
+        string typestr = getTypeString(type, CalcAssemblerTestCase::MAX_WIDTH);
+        string testdesc = "testStandardTypes: " + typestr;
+        ostringstream testostr("");
+        testostr << "I " << createRegisterString(typestr, 3) << ";" << endl;
+        testostr << "O " << createRegisterString(typestr, 4) << ";" << endl;
+        testostr << "T;" << endl;
+        testostr << "MOVE O0, I0;" << endl;
+        testostr << "MOVE O1, I1;" << endl;
+        testostr << "MOVE O2, I2;" << endl;
+        testostr << "TONULL O3;" << endl;
+        string teststr = testostr.str();
+
+        CalcAssemblerTestCase testCase1(__LINE__, testdesc.c_str(),
+                                        teststr.c_str());
+        if (testCase1.assemble())
+        {
+            testCase1.setInputMin(0);
+            testCase1.setExpectedOutputMin(0);
+            testCase1.setInputMax(1);
+            testCase1.setExpectedOutputMax(1);
+            testCase1.setInputNull(2);
+            testCase1.setExpectedOutputNull(2);
+            testCase1.setExpectedOutputNull(3);
+            testCase1.test();
+        }
+
+        if (!StandardTypeDescriptor::isArray(type))
+        {
+            // Verify what we think is the min/max is the min/max
+            assert (testCase1.getInput(0) == min[type]);
+            assert (testCase1.getInput(1) == max[type]);
+        }
+
+        // Now test literal binding for the type 
+        // For min, max, NULL
+        ostringstream testostr2("");
+        testostr2 << "O " << createRegisterString(typestr, 3) << ";" << endl;
+        testostr2 << "C " << createRegisterString(typestr, 3) << ";" << endl;
+        testostr2 << "V " << testCase1.getInput(0) 
+                  << ", " << testCase1.getInput(1)
+                  << ", " << testCase1.getInput(2)
+                  << ";" << endl; 
+        testostr2 << "T;" << endl;
+        testostr2 << "MOVE O0, C0;" << endl;
+        testostr2 << "MOVE O1, C1;" << endl;
+        testostr2 << "MOVE O2, C2;" << endl;
+        string teststr2 = testostr2.str();
+        
+        CalcAssemblerTestCase testCase2(__LINE__, testdesc.c_str(),
+                                        teststr2.c_str());
+        if (testCase2.assemble())
+        {
+            testCase2.setExpectedOutputMin(0);
+            testCase2.setExpectedOutputMax(1);
+            testCase2.setExpectedOutputNull(2);
+            testCase2.test();
+        }
+
+        if (!StandardTypeDescriptor::isArray(type))
+        {
+            // Now test literal binding for the type 
+            // For overflow and underflow
+            ostringstream testostr3("");
+            testostr3 << "O " << createRegisterString(typestr, 1) << ";" << endl;
+            testostr3 << "C " << createRegisterString(typestr, 1) << ";" << endl;
+            testostr3 << "V " << underflow[type] << ";" << endl;
+            testostr3 << "T;" << endl;
+            testostr3 << "MOVE O0, C0;" << endl;
+
+            string teststr3 = testostr3.str();
+            
+            CalcAssemblerTestCase testCase3(__LINE__, testdesc.c_str(),
+                                            teststr3.c_str());
+            if (type == STANDARD_TYPE_INT_64 || type == STANDARD_TYPE_DOUBLE)
+                testCase3.expectAssemblerError("out of");
+            else if (underflow[type] == "-1")
+                testCase3.expectAssemblerError("Invalid value");
+            else testCase3.expectAssemblerError("bad numeric cast");
+            testCase3.assemble();
+
+            // For overflow and underflow
+            ostringstream testostr4("");
+            testostr4 << "O " << createRegisterString(typestr, 1) << ";" << endl;
+            testostr4 << "C " << createRegisterString(typestr, 1) << ";" << endl;
+            testostr4 << "V " << overflow[type] << ";" << endl;
+            testostr4 << "T;" << endl;
+            testostr4 << "MOVE O0, C0;" << endl;
+
+            string teststr4 = testostr4.str();
+            
+            CalcAssemblerTestCase testCase4(__LINE__, testdesc.c_str(),
+                                            teststr4.c_str());
+            if (type == STANDARD_TYPE_UINT_64 || type == STANDARD_TYPE_DOUBLE)
+                testCase4.expectAssemblerError("out of range");
+            else if (type == STANDARD_TYPE_BOOL)
+                testCase4.expectAssemblerError("Invalid value");
+            else testCase4.expectAssemblerError("bad numeric cast");
+            testCase4.assemble();
+        }
+
+        testBoolInstructions(type);
+
+        switch (type) {
+        case STANDARD_TYPE_UINT_8:
+            testNativeInstructions<uint8_t>(type);
+            break;
+
+        case STANDARD_TYPE_INT_8:
+            testNativeInstructions<int8_t>(type);
+            break;
+
+        case STANDARD_TYPE_UINT_16:
+            testNativeInstructions<uint16_t>(type);
+            break;
+
+        case STANDARD_TYPE_INT_16:
+            testNativeInstructions<int16_t>(type);
+            break;
+
+        case STANDARD_TYPE_UINT_32:
+            testNativeInstructions<uint32_t>(type);
+            break;
+
+        case STANDARD_TYPE_INT_32:
+            testNativeInstructions<int32_t>(type);
+            break;
+
+        case STANDARD_TYPE_UINT_64:
+            testNativeInstructions<uint64_t>(type);
+            break;
+
+        case STANDARD_TYPE_INT_64:
+            testNativeInstructions<int64_t>(type);
+            break;
+
+#if 0
+        case STANDARD_TYPE_REAL:
+            testNativeInstructions<float>(type);
+            break;
+
+        case STANDARD_TYPE_DOUBLE:
+            testNativeInstructions<double>(type);
+            break;
+#endif
+
+        default:
+            break;
+        }
+    }
+}
+
+void CalcAssemblerTest::testLiteralBinding()
 {
     // Test invalid literals
     // Test overflow of u2
@@ -400,7 +1781,7 @@ void testLiteralBinding()
     testCase12.assemble();
 }
 
-void testAdd()
+void CalcAssemblerTest::testAdd()
 {
     CalcAssemblerTestCase testCase1(__LINE__, "ADD U4", "I u4, u4;\nO u4;\nT;\nADD O0, I0, I1;");
     if (testCase1.assemble()) {
@@ -432,7 +1813,7 @@ void testAdd()
     }
 }
 
-void testBool()
+void CalcAssemblerTest::testBool()
 {
     CalcAssemblerTestCase testCase1(__LINE__, "AND 1 1", "O bo;\nC bo, bo;\nV 1, 1; T;\n"
                                     "AND O0, C0, C1;");
@@ -449,7 +1830,7 @@ void testBool()
     }
 }
 
-void testPointer()
+void CalcAssemblerTest::testPointer()
 {
     CalcAssemblerTestCase testCase1(__LINE__, "CHAR EQ", "I c,10, c,10;\nO bo, bo;\nT;\n"
                                     "EQ O0, I0, I1; EQ O1, I0, I0;");
@@ -475,7 +1856,7 @@ void testPointer()
     }
 }
 
-void testJump()
+void CalcAssemblerTest::testJump()
 {
     // Test valid Jump True
     CalcAssemblerTestCase testCase1(__LINE__, "JUMP TRUE", 
@@ -512,7 +1893,7 @@ void testJump()
     }    
 }
 
-void testReturn()
+void CalcAssemblerTest::testReturn()
 {
     // Test the return instruction
     CalcAssemblerTestCase testCase1(__LINE__, "RETURN", 
@@ -532,10 +1913,10 @@ void convertFloatToInt(Calculator *pCalc,
                        RegisterRef<int>* regOut,
                        RegisterRef<float>* regIn)
 {
-    regOut->putV((int)regIn->getV());
+    regOut->value((int)regIn->value());
 }
 
-void testExtended()
+void CalcAssemblerTest::testExtended()
 {
     // Test valid function
     ExtendedInstructionTable* table = InstructionFactory::getExtendedInstructionTable();
@@ -571,10 +1952,12 @@ void testExtended()
     testCase2.assemble();
 }
 
-void testInvalidPrograms()
+void CalcAssemblerTest::testInvalidPrograms()
 {
+    const char* parse_error = "error";
+
     CalcAssemblerTestCase testCase1(__LINE__, "JUNK", "Junk");
-    testCase1.expectAssemblerError("parse error");
+    testCase1.expectAssemblerError(parse_error);
     testCase1.assemble();    
 
     // Test unregistered instruction
@@ -589,15 +1972,15 @@ void testInvalidPrograms()
 
     CalcAssemblerTestCase testCase4(__LINE__, "BAD SIGNATURE", 
                                     "I u2, u4;\nO u4;\nT;\nBAD O0, I0, I0, I1;");
-    testCase4.expectAssemblerError("parse error");
+    testCase4.expectAssemblerError(parse_error);
     testCase4.assemble();
 
-    CalcAssemblerTestCase testCase5(__LINE__, "BAD INST", "I u2, u4;\nO u4;\nT;\nklkdfw;");
-    testCase5.expectAssemblerError("parse error");
+    CalcAssemblerTestCase testCase5(__LINE__, "BAD INST", "I u2, u4;\nO u4;\nT;\nklk34dfw;");
+    testCase5.expectAssemblerError(parse_error);
     testCase5.assemble();
 
     // Test invalid register index
-    CalcAssemblerTestCase testCase6(__LINE__, "BAD REG INDEX", "I u2, u4;\nO u4;\nT;\nADD O0, I0, I12;");
+    CalcAssemblerTestCase testCase6(__LINE__, "BAD REG INDEX", "I u2, u4;\nO u4;\nT;\n\nADD O0, I0, I12;");
     testCase6.expectAssemblerError("out of bounds");
     testCase6.assemble();
 
@@ -610,7 +1993,7 @@ void testInvalidPrograms()
     // TODO: Test extremely long programs and stuff
 }
 
-void testAssembler()
+void CalcAssemblerTest::testAssembler()
 {
     testLiteralBinding();
     testInvalidPrograms();
@@ -620,6 +2003,7 @@ void testAssembler()
     testReturn();
     testJump();
     testExtended();
+    testStandardTypes();
 }
 
 int main (int argc, char **argv)
@@ -629,7 +2013,8 @@ int main (int argc, char **argv)
     InstructionFactory::registerInstructions();
   
     try {
-        testAssembler();
+        CalcAssemblerTest test;
+        test.testAssembler();
     }
     catch (exception& ex)
     {

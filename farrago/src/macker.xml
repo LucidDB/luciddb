@@ -36,6 +36,9 @@
     <pattern name="parser" class="net.sf.farrago.parser.*" />
     <pattern name="db" class="net.sf.farrago.db.*" />
     <pattern name="jdbc" class="net.sf.farrago.jdbc.*" />
+    <pattern name="jdbc.engine" class="net.sf.farrago.jdbc.engine.*" />
+    <pattern name="jdbc.client" class="net.sf.farrago.jdbc.client.*" />
+    <pattern name="server" class="net.sf.farrago.server.*" />
     <pattern name="namespace.impl" class="net.sf.farrago.namespace.impl.*" />
     <pattern name="namespace.mdr" class="net.sf.farrago.namespace.mdr.*" />
     <pattern name="namespace.jdbc" class="net.sf.farrago.namespace.jdbc.*" />
@@ -62,6 +65,9 @@
       <include pattern="parser"/>
       <include pattern="db"/>
       <include pattern="jdbc"/>
+      <include pattern="jdbc.engine"/>
+      <include pattern="jdbc.client"/>
+      <include pattern="server"/>
       <include pattern="namespace.impl"/>
       <include pattern="namespace.mdr"/>
       <include pattern="namespace.jdbc"/>
@@ -80,16 +86,8 @@
       <include pattern="fem" />
     </pattern>
 
-    <access-rule>
-      <message>FarragoPackage dependency violation</message>
-      <deny>
-        <from pattern="FarragoPackage" />
-        <to pattern="farrago" />
-        <allow>
-          <to pattern="FarragoPackage.deps" />
-        </allow>
-      </deny>
-    </access-rule>
+    <!-- NOTE:  we don't enforce any rules on what generated classes in
+         FarragoPackage can depend on; this is to allow extensions. -->
 
     <pattern name="util.deps">
       <include pattern="util" />
@@ -348,7 +346,6 @@
     </access-rule>
 
     <pattern name="jdbc.deps">
-      <include pattern="db.deps" />
       <include pattern="jdbc" />
     </pattern>
 
@@ -359,6 +356,55 @@
         <to pattern="farrago" />
         <allow>
           <to pattern="jdbc.deps" />
+        </allow>
+      </deny>
+    </access-rule>
+
+    <pattern name="jdbc.engine.deps">
+      <include pattern="db.deps" />
+      <include pattern="jdbc.deps" />
+      <include pattern="jdbc.engine" />
+    </pattern>
+
+    <access-rule>
+      <message>jdbc.engine dependency violation</message>
+      <deny>
+        <from pattern="jdbc.engine" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="jdbc.engine.deps" />
+        </allow>
+      </deny>
+    </access-rule>
+
+    <pattern name="jdbc.client.deps">
+      <include pattern="jdbc.deps" />
+      <include pattern="jdbc.client" />
+    </pattern>
+
+    <access-rule>
+      <message>jdbc.client dependency violation</message>
+      <deny>
+        <from pattern="jdbc.client" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="jdbc.client.deps" />
+        </allow>
+      </deny>
+    </access-rule>
+
+    <pattern name="server.deps">
+      <include pattern="jdbc.engine.deps" />
+      <include pattern="server" />
+    </pattern>
+
+    <access-rule>
+      <message>server dependency violation</message>
+      <deny>
+        <from pattern="server" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="server.deps" />
         </allow>
       </deny>
     </access-rule>

@@ -17,7 +17,7 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-package net.sf.farrago.jdbc;
+package net.sf.farrago.jdbc.engine;
 
 import net.sf.farrago.session.*;
 import net.sf.farrago.fem.fennel.*;
@@ -25,16 +25,17 @@ import net.sf.farrago.fem.fennel.*;
 import java.sql.*;
 
 /**
- * FarragoJdbcSavepoint implements the JDBC Savepoint interface for Farrago.
+ * FarragoJdbcEngineSavepoint implements the {@link java.sql.Savepoint}
+ * interface for Farrago.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoJdbcSavepoint implements Savepoint
+public class FarragoJdbcEngineSavepoint implements Savepoint
 {
     FarragoSessionSavepoint farragoSavepoint;
 
-    FarragoJdbcSavepoint(FarragoSessionSavepoint farragoSavepoint)
+    FarragoJdbcEngineSavepoint(FarragoSessionSavepoint farragoSavepoint)
     {
         this.farragoSavepoint = farragoSavepoint;
     }
@@ -59,4 +60,4 @@ public class FarragoJdbcSavepoint implements Savepoint
     }
 }
 
-// End FarragoJdbcSavepoint.java
+// End FarragoJdbcEngineSavepoint.java

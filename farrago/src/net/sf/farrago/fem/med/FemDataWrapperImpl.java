@@ -32,6 +32,7 @@ import org.netbeans.mdr.handlers.*;
 import org.netbeans.mdr.storagemodel.*;
 
 import java.util.*;
+import java.io.*;
 
 /**
  * FemDataWrapperImpl is a custom implementation for FemDataWrapper.
@@ -59,6 +60,10 @@ public abstract class FemDataWrapperImpl extends InstanceHandler
         Properties props = getStorageOptionsAsProperties(this);
 
         try {
+            // convert library filename to absolute path
+            File file = new File(getLibraryFile());
+            setLibraryFile(file.getAbsolutePath());
+            
             // validate that we can successfully initialize the wrapper
             loadFromCache(validator.getDataWrapperCache());
         } catch (Throwable ex) {

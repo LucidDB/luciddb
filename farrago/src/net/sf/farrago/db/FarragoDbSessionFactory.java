@@ -47,6 +47,12 @@ public class FarragoDbSessionFactory implements FarragoSessionFactory
     {
         return new FennelCmdExecutorImpl();
     }
+    
+    // implement FarragoSessionFactory
+    public void cleanupSessions()
+    {
+        FarragoDatabase.shutdownConditional(0);
+    }
 }
 
 // End FarragoDbSessionFactory.java

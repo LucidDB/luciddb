@@ -30,8 +30,8 @@ where deptno = 10
 
 <h3>Parsing</h3>
 
-Our story begins when the prepareImpl method of {@link
-net.sf.farrago.jdbc.FarragoJdbcConnection} processes an
+Our story begins when the prepareStatement method of {@link
+net.sf.farrago.jdbc.engine.FarragoJdbcEngineConnection} processes an
 SQL string by creating a new instance of {@link
 net.sf.farrago.parser.FarragoParser} and asking it to parse the
 statement.  This is accomplished via an extension of {@link
@@ -45,7 +45,7 @@ objects:
 
 <h3>Query Implementation Cache Lookup</h3>
 
-FarragoJdbcConnection delegates the rest of the preparation to the
+FarragoJdbcEngineConnection delegates the rest of the preparation to the
 prepareStmt method of {@link net.sf.farrago.db.FarragoDatabase}, which
 manages a shared cache of query plan implementations.  For this
 discussion, we'll assume nothing is cached initially, so

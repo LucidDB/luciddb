@@ -53,6 +53,11 @@ public interface FarragoSessionFactory
      * @return new interpeter
      */
     public FennelCmdExecutor newFennelCmdExecutor();
+
+    /**
+     * Gives this factory a chance to clean up after a session has been closed.
+     */
+    public void cleanupSessions();
 }
 
 // End FarragoSessionFactory.java

@@ -43,7 +43,7 @@ const char BUMPERCH = '@';
 class SqlStringTestGen
 {
 public:
-    SqlStringTestGen(int width,            // maximum size (column width) of string
+    SqlStringTestGen(int storage,            // maximum size (column width) of string
                      int size,             // size of text, excluding padding
                      int leftpad = 0,      // pad left with this many chars
                      int rightpad = 0,     // pad right with this many chars
@@ -51,27 +51,27 @@ public:
                      char pad = ' ',      // pad w/this
                      int leftBumper = BUMPERLEN,  // try to pick something unaligned...
                      int rightBumper = BUMPERLEN) :
-        mWidth(width),
+        mStorage(storage),
         mSize(size),
         mLeftPad(leftpad),
         mRightPad(rightpad),
         mLeftBump(leftBumper),
         mRightBump(rightBumper),
-        mTotal(width + leftBumper + rightBumper),
+        mTotal(storage + leftBumper + rightBumper),
         mS(mTotal, BUMPERCH)
     {
         assert(leftBumper > 0);
         assert(rightBumper > 0);
-        assert(width == size + leftpad + rightpad);
+        assert(storage == size + leftpad + rightpad);
 
         mLeftP = const_cast<char *>(mS.c_str()); // Too abusive of string()?
         mStr = mLeftP + mLeftBump;
-        mRightP = mStr + mWidth;
+        mRightP = mStr + mStorage;
 
-        string padS(mWidth, pad);
+        string padS(mStorage, pad);
         string textS(size, text);
 
-        mS.replace(mLeftBump, mWidth, padS, 0, mWidth); // pad all first
+        mS.replace(mLeftBump, mStorage, padS, 0, mStorage); // pad all first
         mS.replace(mLeftBump + mLeftPad, mSize, textS, 0, mSize);
     }
 
@@ -120,13 +120,13 @@ public:
     }
     
 
-    char * mStr;            // valid string start. (includes left padding)
-    char * mRightP;         // right bumper start. valid string ends 1 before here
-    char * mLeftP;          // left bumper start.
-    const int mWidth;      // maximum size (column width) of string
-    const int mSize;       // width of string
+    char * mStr;           // valid string start. (includes left padding)
+    char * mRightP;        // right bumper start. valid string ends 1 before here
+    char * mLeftP;         // left bumper start.
+    const int mStorage;    // maximum size (column width) of string
+    const int mSize;       // size of string
     const int mLeftPad;    // length of left padding
-    const int mRightPad;// length of right padding
+    const int mRightPad;   // length of right padding
     const int mLeftBump;   // length of left bumper
     const int mRightBump;  // length of right bumper
     const int mTotal;      // size of string + bumpers
@@ -174,10 +174,10 @@ class SqlStringTest : virtual public TestBase, public TraceSource
                                       SqlStringTestGen &src2,
                                       int src2_len);
     void testSqlStringAsciiCmpFHelper(SqlStringTestGen &src1,
-                                      int src1_width,
+                                      int src1_storage,
                                       int src1_len,
                                       SqlStringTestGen &src2,
-                                      int src2_width,
+                                      int src2_storage,
                                       int src2_len);
     int testSqlStringNormalizeLexicalCmp(int v);
     
@@ -213,26 +213,26 @@ public:
 void
 SqlStringTest::testSqlStringClass()
 {
-    int width, size, leftpad, rightpad;
+    int storage, size, leftpad, rightpad;
     int leftbump = 2;
     int rightbump = 2;
     int k;
     
-    for (width = 0; width <= 5; width++) {
-        for (size = 0; size <= width; size++) {
-            for (leftpad = 0; leftpad <= width-size; leftpad++) {
-                rightpad = (width-size) - leftpad;
+    for (storage = 0; storage <= 5; storage++) {
+        for (size = 0; size <= storage; size++) {
+            for (leftpad = 0; leftpad <= storage-size; leftpad++) {
+                rightpad = (storage-size) - leftpad;
 
-                SqlStringTestGen t(width, size,
+                SqlStringTestGen t(storage, size,
                                    leftpad, rightpad,
                                    'x', ' ', 
                                    leftbump, rightbump);
 
-                BOOST_CHECK_EQUAL(t.mWidth, width);
+                BOOST_CHECK_EQUAL(t.mStorage, storage);
                 BOOST_CHECK_EQUAL(t.mSize, size);
                 BOOST_CHECK_EQUAL(t.mLeftPad, leftpad);
                 BOOST_CHECK_EQUAL(t.mRightPad, rightpad);
-                BOOST_CHECK_EQUAL(static_cast<int>(t.mS.size()), width+leftbump+rightbump);
+                BOOST_CHECK_EQUAL(static_cast<int>(t.mS.size()), storage+leftbump+rightbump);
                 
                 BOOST_CHECK(t.verify());
 
@@ -259,7 +259,7 @@ SqlStringTest::testSqlStringClass()
                 for(k = 0; k < rightbump; k++) {
                     BOOST_CHECK_EQUAL(*(p++), BUMPERCH);
                 }
-                BOOST_CHECK_EQUAL(static_cast<int>(p - t.mLeftP), width+leftbump+rightbump);
+                BOOST_CHECK_EQUAL(static_cast<int>(p - t.mLeftP), storage+leftbump+rightbump);
         
                 BOOST_CHECK(t.verify());
 
@@ -300,40 +300,40 @@ SqlStringTest::testSqlStringClass()
 void
 SqlStringTest::testSqlStringAsciiCatF()
 {
-    int src1_width, src2_width, src3_width, dst_width;
+    int src1_storage, src2_storage, src3_storage, dst_storage;
     int src1_len, src2_len, src3_len;
     bool caught;
     int newlen;
     
-    for (dst_width = 0; dst_width < MAXLEN; dst_width++) {
-        for (src1_width = 0; src1_width < MAXLEN; src1_width++) {
-            for (src1_len = 0; src1_len <= src1_width; src1_len++) {
-                for (src2_width = 0; src2_width < MAXLEN; src2_width++) {
-                    for (src2_len = 0; src2_len <= src2_width; src2_len++) {
-                        for (src3_width = 0; src3_width < MAXLEN; src3_width++) {
-                            for (src3_len = 0; src3_len <= src3_width; src3_len++) {
-                                SqlStringTestGen dst(dst_width, 0,
-                                                     0, dst_width, 
+    for (dst_storage = 0; dst_storage < MAXLEN; dst_storage++) {
+        for (src1_storage = 0; src1_storage < MAXLEN; src1_storage++) {
+            for (src1_len = 0; src1_len <= src1_storage; src1_len++) {
+                for (src2_storage = 0; src2_storage < MAXLEN; src2_storage++) {
+                    for (src2_len = 0; src2_len <= src2_storage; src2_len++) {
+                        for (src3_storage = 0; src3_storage < MAXLEN; src3_storage++) {
+                            for (src3_len = 0; src3_len <= src3_storage; src3_len++) {
+                                SqlStringTestGen dst(dst_storage, 0,
+                                                     0, dst_storage, 
                                                      'd', ' ');
-                                SqlStringTestGen src1(src1_width, src1_len,
-                                                      0, src1_width-src1_len,
+                                SqlStringTestGen src1(src1_storage, src1_len,
+                                                      0, src1_storage-src1_len,
                                                       '1', ' ');
-                                SqlStringTestGen src2(src2_width, src2_len,
-                                                      0, src2_width-src2_len,
+                                SqlStringTestGen src2(src2_storage, src2_len,
+                                                      0, src2_storage-src2_len,
                                                       '2', ' ');
-                                SqlStringTestGen src3(src3_width, src3_len,
-                                                      0, src3_width-src3_len,
+                                SqlStringTestGen src3(src3_storage, src3_len,
+                                                      0, src3_storage-src3_len,
                                                       '3', ' ');
                                 
                                 caught = false;
                                 try {
-                                    newlen = SqlStrAsciiCat(dst.mStr, dst_width,
-                                                            src1.mStr, src1_width,
-                                                            src2.mStr, src2_width);
+                                    newlen = SqlStrAsciiCat(dst.mStr, dst_storage,
+                                                            src1.mStr, src1_storage,
+                                                            src2.mStr, src2_storage);
                                 } catch(const char *str) {
                                     caught = true;
                                     BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
-                                    BOOST_CHECK(src1_width + src2_width > dst_width);
+                                    BOOST_CHECK(src1_storage + src2_storage > dst_storage);
                                     BOOST_CHECK(dst.verify());
                                     BOOST_CHECK(src1.verify());
                                     BOOST_CHECK(src2.verify());
@@ -341,7 +341,7 @@ SqlStringTest::testSqlStringAsciiCatF()
                                     BOOST_CHECK(false);
                                 }
                                 if (!caught) {
-                                    BOOST_CHECK(src1_width + src2_width <= dst_width);
+                                    BOOST_CHECK(src1_storage + src2_storage <= dst_storage);
                                     BOOST_CHECK(dst.verify());
                                     BOOST_CHECK(src1.verify());
                                     BOOST_CHECK(src2.verify());
@@ -349,16 +349,16 @@ SqlStringTest::testSqlStringAsciiCatF()
                                     caught = false;
                                     try {
                                         newlen = SqlStrAsciiCat(dst.mStr,
-                                                                dst_width,
+                                                                dst_storage,
                                                                 newlen,
                                                                 src3.mStr,
-                                                                src3_width);
+                                                                src3_storage);
                                     } catch(const char *str) {
                                         caught = true;
                                         BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
-                                        BOOST_CHECK((src1_width + 
-                                                     src2_width +
-                                                     src3_width) > dst_width);
+                                        BOOST_CHECK((src1_storage + 
+                                                     src2_storage +
+                                                     src3_storage) > dst_storage);
                                         BOOST_CHECK(dst.verify());
                                         BOOST_CHECK(src1.verify());
                                         BOOST_CHECK(src2.verify());
@@ -372,14 +372,14 @@ SqlStringTest::testSqlStringAsciiCatF()
                                         BOOST_CHECK(src2.verify());
                                         BOOST_CHECK(src3.verify());
                                         BOOST_CHECK_EQUAL(newlen, 
-                                                          (src1_width +
-                                                           src2_width +
-                                                           src3_width));
+                                                          (src1_storage +
+                                                           src2_storage +
+                                                           src3_storage));
 
                                         string result(dst.mStr, newlen);
-                                        string expect(src1.mStr, src1_width);
-                                        expect.append(src2.mStr, src2_width);
-                                        expect.append(src3.mStr, src3_width);
+                                        string expect(src1.mStr, src1_storage);
+                                        expect.append(src2.mStr, src2_storage);
+                                        expect.append(src3.mStr, src3_storage);
 
                                         BOOST_CHECK(!result.compare(expect));
                                     }
@@ -398,29 +398,29 @@ SqlStringTest::testSqlStringAsciiCatF()
 void
 SqlStringTest::testSqlStringAsciiCatV2()
 {
-    int src1_width, src2_width, dst_width, src1_len, src2_len;
+    int src1_storage, src2_storage, dst_storage, src1_len, src2_len;
     int newlen;
     bool caught;
     
-    for (dst_width = 0; dst_width < MAXLEN; dst_width++) {
-        for (src1_width = 0; src1_width < MAXLEN; src1_width++) {
-            for (src1_len = 0; src1_len <= src1_width; src1_len++) {
-                for (src2_width = 0; src2_width < MAXLEN; src2_width++) {
-                    for (src2_len = 0; src2_len <= src2_width; src2_len++) {
-                        SqlStringTestGen dst(dst_width, 0,
-                                             0, dst_width, 
+    for (dst_storage = 0; dst_storage < MAXLEN; dst_storage++) {
+        for (src1_storage = 0; src1_storage < MAXLEN; src1_storage++) {
+            for (src1_len = 0; src1_len <= src1_storage; src1_len++) {
+                for (src2_storage = 0; src2_storage < MAXLEN; src2_storage++) {
+                    for (src2_len = 0; src2_len <= src2_storage; src2_len++) {
+                        SqlStringTestGen dst(dst_storage, 0,
+                                             0, dst_storage, 
                                              'd', ' ');
-                        SqlStringTestGen src1(src1_width, src1_len,
-                                              0, src1_width-src1_len,
+                        SqlStringTestGen src1(src1_storage, src1_len,
+                                              0, src1_storage-src1_len,
                                               's', ' ');
-                        SqlStringTestGen src2(src2_width, src2_len,
-                                              0, src2_width-src2_len,
+                        SqlStringTestGen src2(src2_storage, src2_len,
+                                              0, src2_storage-src2_len,
                                               'S', ' ');
 
                         caught = false;
                         try {
                             newlen = SqlStrAsciiCat(dst.mStr,
-                                                    dst_width,
+                                                    dst_storage,
                                                     src1.mStr,
                                                     src1_len,
                                                     src2.mStr,
@@ -428,12 +428,12 @@ SqlStringTest::testSqlStringAsciiCatV2()
                         } catch(const char *str) {
                             caught = true;
                             BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
-                            BOOST_CHECK(src1_len + src2_len > dst_width);
+                            BOOST_CHECK(src1_len + src2_len > dst_storage);
                         } catch(...) {
                             BOOST_CHECK(false);
                         }
                         if (!caught) {
-                            BOOST_CHECK(src1_len + src2_len <= dst_width);
+                            BOOST_CHECK(src1_len + src2_len <= dst_storage);
                             BOOST_CHECK_EQUAL(newlen, src1_len + src2_len);
 
                             string expect;
@@ -459,36 +459,36 @@ SqlStringTest::testSqlStringAsciiCatV2()
 void
 SqlStringTest::testSqlStringAsciiCatV()
 {
-    int src_width, dst_width, src_len, dst_len;
+    int src_storage, dst_storage, src_len, dst_len;
     int newlen;
     bool caught;
     
-    for (dst_width = 0; dst_width < MAXLEN; dst_width++) {
-        for (dst_len = 0; dst_len <= dst_width; dst_len++) {
-            for (src_width = 0; src_width < MAXLEN; src_width++) {
-                for (src_len = 0; src_len <= src_width; src_len++) {
-                    SqlStringTestGen dst(dst_width, dst_len,
-                                         0, dst_width - dst_len, 
+    for (dst_storage = 0; dst_storage < MAXLEN; dst_storage++) {
+        for (dst_len = 0; dst_len <= dst_storage; dst_len++) {
+            for (src_storage = 0; src_storage < MAXLEN; src_storage++) {
+                for (src_len = 0; src_len <= src_storage; src_len++) {
+                    SqlStringTestGen dst(dst_storage, dst_len,
+                                         0, dst_storage - dst_len, 
                                          'd', ' ');
-                    SqlStringTestGen src(src_width, src_len,
-                                         0, src_width-src_len,
+                    SqlStringTestGen src(src_storage, src_len,
+                                         0, src_storage-src_len,
                                          's', ' ');
                     caught = false;
                     try {
                         newlen = SqlStrAsciiCat(dst.mStr, 
-                                                dst_width,
+                                                dst_storage,
                                                 dst_len,
                                                 src.mStr,
                                                 src_len);
                     } catch(const char *str) {
                         caught = true;
                         BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
-                        BOOST_CHECK(src_len + dst_len > dst_width);
+                        BOOST_CHECK(src_len + dst_len > dst_storage);
                     } catch(...) {
                         BOOST_CHECK(false);
                     }
                     if (!caught) {
-                        BOOST_CHECK(src_len + dst_len <= dst_width);
+                        BOOST_CHECK(src_len + dst_len <= dst_storage);
                         BOOST_CHECK_EQUAL(newlen, src_len + dst_len);
                     
                         string expect;
@@ -520,10 +520,10 @@ SqlStringTest::testSqlStringNormalizeLexicalCmp(int v)
 
 void
 SqlStringTest::testSqlStringAsciiCmpFHelper(SqlStringTestGen &src1,
-                                            int src1_width,
+                                            int src1_storage,
                                             int src1_len,
                                             SqlStringTestGen &src2,
-                                            int src2_width,
+                                            int src2_storage,
                                             int src2_len)
 {
     int result;
@@ -541,8 +541,8 @@ SqlStringTest::testSqlStringAsciiCmpFHelper(SqlStringTestGen &src1,
     int expected2 = testSqlStringNormalizeLexicalCmp(strcmp(s1p, s2p));
     BOOST_CHECK_EQUAL(expected, expected2);
 
-    result = SqlStrAsciiCmpF(src1.mStr, src1_width,
-                             src2.mStr, src2_width);
+    result = SqlStrAsciiCmpF(src1.mStr, src1_storage,
+                             src2.mStr, src2_storage);
     BOOST_CHECK(src1.verify());
     BOOST_CHECK(src2.verify());
 
@@ -556,15 +556,15 @@ SqlStringTest::testSqlStringAsciiCmpFHelper(SqlStringTestGen &src1,
     BOOST_CHECK_EQUAL(result, expected);
 
     // check the exact opposite, even if equal
-    int result2 = SqlStrAsciiCmpF(src2.mStr, src2_width,
-                                  src1.mStr, src1_width);
+    int result2 = SqlStrAsciiCmpF(src2.mStr, src2_storage,
+                                  src1.mStr, src1_storage);
     BOOST_CHECK(src1.verify());
     BOOST_CHECK(src2.verify());
     BOOST_CHECK_EQUAL(result2 * -1, result);
     
     // force check of equal strings
-    result = SqlStrAsciiCmpF(src1.mStr, src1_width,
-                             src1.mStr, src1_width);
+    result = SqlStrAsciiCmpF(src1.mStr, src1_storage,
+                             src1.mStr, src1_storage);
     BOOST_CHECK(src1.verify());
     BOOST_CHECK_EQUAL(result, 0);
     
@@ -574,27 +574,27 @@ SqlStringTest::testSqlStringAsciiCmpFHelper(SqlStringTestGen &src1,
 void
 SqlStringTest::testSqlStringAsciiCmpFDiffLen()
 {
-    int src1_width, src2_width, src1_len, src2_len;
+    int src1_storage, src2_storage, src1_len, src2_len;
     unsigned char startchar;
 
-    for (src1_width = 0; src1_width <= MAXLEN; src1_width++) {
-        for (src1_len = 0; src1_len < src1_width; src1_len++) {
-            for (src2_width = 0; src2_width <= MAXLEN; src2_width++) {
-                for (src2_len = 0; src2_len < src2_width; src2_len++) {
+    for (src1_storage = 0; src1_storage <= MAXLEN; src1_storage++) {
+        for (src1_len = 0; src1_len < src1_storage; src1_len++) {
+            for (src2_storage = 0; src2_storage <= MAXLEN; src2_storage++) {
+                for (src2_len = 0; src2_len < src2_storage; src2_len++) {
                     // can't test w/ 0, confuses strcmp and/or std:string
                     for (startchar = 1; startchar < 255; startchar++) {
-                        SqlStringTestGen src1(src1_width, src1_len,
-                                              0, src1_width - src1_len, 
+                        SqlStringTestGen src1(src1_storage, src1_len,
+                                              0, src1_storage - src1_len, 
                                               'd', ' ');
-                        SqlStringTestGen src2(src2_width, src2_len,
-                                              0, src2_width-src2_len,
+                        SqlStringTestGen src2(src2_storage, src2_len,
+                                              0, src2_storage-src2_len,
                                               's', ' ');
                         
                         src1.patternfill(startchar, 1, 255);
                         src2.patternfill(startchar, 1, 255);
                         
-                        testSqlStringAsciiCmpFHelper(src1, src1_width, src1_len,
-                                                     src2, src2_width, src2_len);
+                        testSqlStringAsciiCmpFHelper(src1, src1_storage, src1_len,
+                                                     src2, src2_storage, src2_len);
                     }
                 }
             }
@@ -606,28 +606,28 @@ SqlStringTest::testSqlStringAsciiCmpFDiffLen()
 void
 SqlStringTest::testSqlStringAsciiCmpFEqLen()
 {
-    int src1_width, src2_width, src1_len, src2_len, randX;
+    int src1_storage, src2_storage, src1_len, src2_len, randX;
     
     // not much point large length, chances of 2 random strings being equal
     // are very low. test forces an equality check anyway.
-    src1_width = MAXCMPLEN;
-    src2_width = MAXCMPLEN;
-    for (src1_len = 0; src1_len < src1_width; src1_len++) {
+    src1_storage = MAXCMPLEN;
+    src2_storage = MAXCMPLEN;
+    for (src1_len = 0; src1_len < src1_storage; src1_len++) {
         src2_len = src1_len;
         for (randX = 0; randX <= 65536; randX++) {
-            SqlStringTestGen src1(src1_width, src1_len,
-                                  0, src1_width - src1_len, 
+            SqlStringTestGen src1(src1_storage, src1_len,
+                                  0, src1_storage - src1_len, 
                                   'd', ' ');
-            SqlStringTestGen src2(src2_width, src2_len,
-                                  0, src2_width-src2_len,
+            SqlStringTestGen src2(src2_storage, src2_len,
+                                  0, src2_storage-src2_len,
                                   's', ' ');
             
             // can't test w/ 0, confuses strcmp and/or std:string
             src1.randomize(1, 1, 255);
             src2.randomize(1, 1, 255);
             
-            testSqlStringAsciiCmpFHelper(src1, src1_width, src1_len,
-                                         src2, src2_width, src2_len);
+            testSqlStringAsciiCmpFHelper(src1, src1_storage, src1_len,
+                                         src2, src2_storage, src2_len);
         }
     }
 }
@@ -684,20 +684,20 @@ SqlStringTest::testSqlStringAsciiCmpVHelper(SqlStringTestGen &src1,
 void
 SqlStringTest::testSqlStringAsciiCmpVDiffLen()
 {
-    int src1_width, src2_width, src1_len, src2_len;
+    int src1_storage, src2_storage, src1_len, src2_len;
     unsigned char startchar;
 
-    for (src1_width = 0; src1_width <= MAXLEN; src1_width++) {
-        src1_len = src1_width;
-        for (src2_width = 0; src2_width <= MAXLEN; src2_width++) {
-            src2_len = src2_width;
+    for (src1_storage = 0; src1_storage <= MAXLEN; src1_storage++) {
+        src1_len = src1_storage;
+        for (src2_storage = 0; src2_storage <= MAXLEN; src2_storage++) {
+            src2_len = src2_storage;
             // can't test w/ 0, confuses strcmp and/or std:string
             for (startchar = 1; startchar < 255; startchar++) {
-                SqlStringTestGen src1(src1_width, src1_len,
-                                      0, src1_width - src1_len, 
+                SqlStringTestGen src1(src1_storage, src1_len,
+                                      0, src1_storage - src1_len, 
                                       'd', ' ');
-                SqlStringTestGen src2(src2_width, src2_len,
-                                      0, src2_width-src2_len,
+                SqlStringTestGen src2(src2_storage, src2_len,
+                                      0, src2_storage-src2_len,
                                       's', ' ');
                 
                 src1.patternfill(startchar, 1, 255);
@@ -714,20 +714,20 @@ SqlStringTest::testSqlStringAsciiCmpVDiffLen()
 void
 SqlStringTest::testSqlStringAsciiCmpVEqLen()
 {
-    int src1_width, src2_width, src1_len, src2_len, randX;
+    int src1_storage, src2_storage, src1_len, src2_len, randX;
     
     // not much point large length, chances of 2 random strings being equal
     // are very low. test forces an equality check anyway.
-    src1_width = MAXCMPLEN;
-    src1_len = src1_width;
-    src2_width = src1_width;
-    src2_len = src1_width;
+    src1_storage = MAXCMPLEN;
+    src1_len = src1_storage;
+    src2_storage = src1_storage;
+    src2_len = src1_storage;
     for (randX = 0; randX <= 65536; randX++) {
-        SqlStringTestGen src1(src1_width, src1_len,
-                              0, src1_width - src1_len, 
+        SqlStringTestGen src1(src1_storage, src1_len,
+                              0, src1_storage - src1_len, 
                               'd', ' ');
-        SqlStringTestGen src2(src2_width, src2_len,
-                              0, src2_width-src2_len,
+        SqlStringTestGen src2(src2_storage, src2_len,
+                              0, src2_storage-src2_len,
                               's', ' ');
         
         // can't test w/ 0, confuses strcmp and/or std:string
@@ -743,14 +743,14 @@ SqlStringTest::testSqlStringAsciiCmpVEqLen()
 void
 SqlStringTest::testSqlStringAsciiLenBit()
 {
-    int src_width, src_len;
+    int src_storage, src_len;
     int newlen;
     
-    src_width = MAXLEN;
-    for (src_width = 0; src_width <= MAXLEN; src_width++) {
-        for (src_len = 0; src_len <= src_width; src_len++) {
-            SqlStringTestGen src(src_width, src_len,
-                                 0, src_width-src_len,
+    src_storage = MAXLEN;
+    for (src_storage = 0; src_storage <= MAXLEN; src_storage++) {
+        for (src_len = 0; src_len <= src_storage; src_len++) {
+            SqlStringTestGen src(src_storage, src_len,
+                                 0, src_storage-src_len,
                                  's', ' ');
 
             newlen = SqlStrAsciiLenBit(src.mStr,
@@ -759,8 +759,8 @@ SqlStringTest::testSqlStringAsciiLenBit()
             BOOST_CHECK(src.verify());
 
             newlen = SqlStrAsciiLenBit(src.mStr,
-                                       src_width);
-            BOOST_CHECK_EQUAL(newlen, src_width * 8);
+                                       src_storage);
+            BOOST_CHECK_EQUAL(newlen, src_storage * 8);
             BOOST_CHECK(src.verify());
         }
     }
@@ -770,14 +770,14 @@ SqlStringTest::testSqlStringAsciiLenBit()
 void
 SqlStringTest::testSqlStringAsciiLenChar()
 {
-    int src_width, src_len;
+    int src_storage, src_len;
     int newlen;
     
-    src_width = MAXLEN;
-    for (src_width = 0; src_width <= MAXLEN; src_width++) {
-        for (src_len = 0; src_len <= src_width; src_len++) {
-            SqlStringTestGen src(src_width, src_len,
-                                 0, src_width-src_len,
+    src_storage = MAXLEN;
+    for (src_storage = 0; src_storage <= MAXLEN; src_storage++) {
+        for (src_len = 0; src_len <= src_storage; src_len++) {
+            SqlStringTestGen src(src_storage, src_len,
+                                 0, src_storage-src_len,
                                  's', ' ');
 
             newlen = SqlStrAsciiLenChar(src.mStr,
@@ -786,8 +786,8 @@ SqlStringTest::testSqlStringAsciiLenChar()
             BOOST_CHECK(src.verify());
 
             newlen = SqlStrAsciiLenChar(src.mStr,
-                                        src_width);
-            BOOST_CHECK_EQUAL(newlen, src_width);
+                                        src_storage);
+            BOOST_CHECK_EQUAL(newlen, src_storage);
             BOOST_CHECK(src.verify());
         }
     }
@@ -797,14 +797,14 @@ SqlStringTest::testSqlStringAsciiLenChar()
 void
 SqlStringTest::testSqlStringAsciiLenOct()
 {
-    int src_width, src_len;
+    int src_storage, src_len;
     int newlen;
     
-    src_width = MAXLEN;
-    for (src_width = 0; src_width <= MAXLEN; src_width++) {
-        for (src_len = 0; src_len <= src_width; src_len++) {
-            SqlStringTestGen src(src_width, src_len,
-                                 0, src_width-src_len,
+    src_storage = MAXLEN;
+    for (src_storage = 0; src_storage <= MAXLEN; src_storage++) {
+        for (src_len = 0; src_len <= src_storage; src_len++) {
+            SqlStringTestGen src(src_storage, src_len,
+                                 0, src_storage-src_len,
                                  's', ' ');
 
             newlen = SqlStrAsciiLenOct(src.mStr,
@@ -813,8 +813,8 @@ SqlStringTest::testSqlStringAsciiLenOct()
             BOOST_CHECK(src.verify());
 
             newlen = SqlStrAsciiLenOct(src.mStr,
-                                       src_width);
-            BOOST_CHECK_EQUAL(newlen, src_width);
+                                       src_storage);
+            BOOST_CHECK_EQUAL(newlen, src_storage);
             BOOST_CHECK(src.verify());
         }
     }
@@ -824,7 +824,7 @@ SqlStringTest::testSqlStringAsciiLenOct()
 void
 SqlStringTest::testSqlStringAsciiOverlay()
 {
-    int dst_width, src_width, src_len, over_width, over_len;
+    int dst_storage, src_storage, src_len, over_storage, over_len;
     int position, length, lengthI;
     int exLeftLen, exMidLen, exRightLen;
     char *exLeftP, *exMidP, *exRightP;
@@ -832,11 +832,11 @@ SqlStringTest::testSqlStringAsciiOverlay()
     bool caught;
     int newlen;
 
-    for (dst_width = 0; dst_width < MAXLEN; dst_width++) {
-        for (src_width = 0; src_width < MAXLEN; src_width++) {
-            src_len = src_width;
-            for (over_width = 0; over_width < MAXLEN; over_width++) {
-                over_len = over_width;
+    for (dst_storage = 0; dst_storage < MAXLEN; dst_storage++) {
+        for (src_storage = 0; src_storage < MAXLEN; src_storage++) {
+            src_len = src_storage;
+            for (over_storage = 0; over_storage < MAXLEN; over_storage++) {
+                over_len = over_storage;
                 for (position = 0; position < MAXLEN; position++) {
                     for (lengthI = -1; lengthI < MAXLEN; lengthI++) {
                         if (lengthI == -1) {
@@ -847,21 +847,21 @@ SqlStringTest::testSqlStringAsciiOverlay()
                             length = lengthI;
                         }
 #if 0
-                        BOOST_MESSAGE(" dst_width=" << dst_width <<
-                                      " src_width=" << src_width <<
-                                      " over_width=" << over_width <<
+                        BOOST_MESSAGE(" dst_storage=" << dst_storage <<
+                                      " src_storage=" << src_storage <<
+                                      " over_storage=" << over_storage <<
                                       " pos=" << position <<
                                       " length=" << length <<
                                       " spec=" << lenSpecified);
 #endif                        
-                        SqlStringTestGen dst(dst_width, dst_width,
+                        SqlStringTestGen dst(dst_storage, dst_storage,
                                              0, 0,
                                              'd', ' ');
-                        SqlStringTestGen src(src_width, src_len,
-                                             0, src_width-src_len,
+                        SqlStringTestGen src(src_storage, src_len,
+                                             0, src_storage-src_len,
                                              's', ' ');
-                        SqlStringTestGen over(over_width, over_len,
-                                              0, over_width-over_len,
+                        SqlStringTestGen over(over_storage, over_len,
+                                              0, over_storage-over_len,
                                               'o', ' ');
 
                         src.patternfill('a', 'a', 'z');
@@ -890,7 +890,7 @@ SqlStringTest::testSqlStringAsciiOverlay()
                         caught = false;
                         try {
                             newlen = SqlStrAsciiOverlay(dst.mStr, 
-                                                        dst_width,
+                                                        dst_storage,
                                                         src.mStr,
                                                         src_len,
                                                         over.mStr,
@@ -903,7 +903,7 @@ SqlStringTest::testSqlStringAsciiOverlay()
                             if (!strcmp(str, "22011")) {
                                 BOOST_CHECK(position < 1 || (lenSpecified && length < 1));
                             } else if (!strcmp(str, "22001")) {
-                                BOOST_CHECK(src_len + over_len > dst_width);
+                                BOOST_CHECK(src_len + over_len > dst_storage);
                             } else {
                                 BOOST_CHECK(false);
                             }
@@ -934,22 +934,22 @@ SqlStringTest::testSqlStringAsciiOverlay()
 void
 SqlStringTest::testSqlStringAsciiPos()
 {
-    int src_width, find_start, find_len, randX;
+    int src_storage, find_start, find_len, randX;
     int alter_char;
     
     int foundpos;
     
-    for (src_width = 0; src_width < MAXLEN; src_width++) {
+    for (src_storage = 0; src_storage < MAXLEN; src_storage++) {
         for (randX = 0; randX < MAXRANDOM; randX++) {
 
-            SqlStringTestGen src(src_width, src_width,
+            SqlStringTestGen src(src_storage, src_storage,
                                  0, 0,
                                  's', ' ');
             src.randomize('a', 'a', 'z');
         
             // find all possible valid substrings
-            for (find_start = 0; find_start <= src_width; find_start++) {
-                for (find_len = 0; find_len <= src_width - find_start; find_len++) {
+            for (find_start = 0; find_start <= src_storage; find_start++) {
+                for (find_len = 0; find_len <= src_storage - find_start; find_len++) {
                     string validsubstr(src.mStr + find_start, find_len);
                     SqlStringTestGen find(find_len, find_len, 
                                           0, 0,
@@ -957,7 +957,7 @@ SqlStringTest::testSqlStringAsciiPos()
                     memcpy(find.mStr, validsubstr.c_str(), find_len);
                 
                     foundpos  = SqlStrAsciiPos(src.mStr, 
-                                               src_width,
+                                               src_storage,
                                                find.mStr,
                                                find_len);
                     BOOST_CHECK(src.verify());
@@ -977,7 +977,7 @@ SqlStringTest::testSqlStringAsciiPos()
                         *(find.mStr + alter_char) = 'X'; // 'X' not between 'a' and 'z'
 
                         foundpos  = SqlStrAsciiPos(src.mStr, 
-                                                   src_width,
+                                                   src_storage,
                                                    find.mStr,
                                                    find_len);
                         BOOST_CHECK(src.verify());
@@ -996,30 +996,30 @@ SqlStringTest::testSqlStringAsciiPos()
 void
 SqlStringTest::testSqlStringAsciiSubStr()
 {
-    int src_width, src_len, dst_width, newlen;
+    int src_storage, src_len, dst_storage, newlen;
     int sub_start, sub_len;
     bool caught;
     char const * resultP;
 
-    // must test where substart and/or sublen larger than src_width and
+    // must test where substart and/or sublen larger than src_storage and
     // less than 0
     
-    for (dst_width = 0; dst_width < MAXLEN; dst_width++) {
-        for (src_width = 0; src_width <= dst_width; src_width++) {
-            for (src_len = 0; src_len <= src_width; src_len++) {
-                for (sub_start = -3; sub_start <= 3 + src_width; sub_start++) {
-                    for (sub_len = -3; sub_len <= 3 + src_width; sub_len++) {
-                        SqlStringTestGen dst(dst_width, dst_width,
+    for (dst_storage = 0; dst_storage < MAXLEN; dst_storage++) {
+        for (src_storage = 0; src_storage <= dst_storage; src_storage++) {
+            for (src_len = 0; src_len <= src_storage; src_len++) {
+                for (sub_start = -3; sub_start <= 3 + src_storage; sub_start++) {
+                    for (sub_len = -3; sub_len <= 3 + src_storage; sub_len++) {
+                        SqlStringTestGen dst(dst_storage, dst_storage,
                                              0, 0,
                                              'd', ' ');
-                        SqlStringTestGen src(src_width, src_len,
-                                             0, src_width - src_len,
+                        SqlStringTestGen src(src_storage, src_len,
+                                             0, src_storage - src_len,
                                              's', ' ');
                         src.randomize();
 #if 0
                         BOOST_MESSAGE("src =|" << src.mLeftP <<
-                                      "| dest_width=" << dst_width <<
-                                      " src_width=" << src_width << 
+                                      "| dest_storage=" << dst_storage <<
+                                      " src_storage=" << src_storage << 
                                       " src_len=" << src_len << 
                                       " sub_start=" << sub_start <<
                                       " sub_len=" << sub_len);
@@ -1033,11 +1033,11 @@ SqlStringTest::testSqlStringAsciiSubStr()
                         if (exsubstart < 0) exsubstart = 0; // clean up for std::string
                         if (exlen < 0) exlen = 0;           // clean up for std::string
 
-                        if (exsubstart + exlen > src_width) {
-                            if (exsubstart > src_width) {
+                        if (exsubstart + exlen > src_storage) {
+                            if (exsubstart > src_storage) {
                                 exlen = 0;
                             } else {
-                                exlen = src_width - exsubstart;
+                                exlen = src_storage - exsubstart;
                             }
                         }
                         if (exsubstart < 0) exsubstart = 0; // clean up for std::string
@@ -1047,15 +1047,15 @@ SqlStringTest::testSqlStringAsciiSubStr()
 
                         caught = false;
                         try {
-                            newlen = SqlStrAsciiSubStr(&resultP, dst_width,
-                                                       src.mStr, src_width,
+                            newlen = SqlStrAsciiSubStr(&resultP, dst_storage,
+                                                       src.mStr, src_storage,
                                                        sub_start, sub_len, true);
                         } catch(const char *str) {
                             caught = true;
                             if (!strcmp(str, "22011")) {
                                 BOOST_CHECK(sub_len < 0);
                             } else if (!strcmp(str, "22001")) {
-                                BOOST_CHECK(sub_len > dst_width);
+                                BOOST_CHECK(sub_len > dst_storage);
                                 BOOST_CHECK(sub_len >= 0);
                             } else {
                                 BOOST_CHECK(false);
@@ -1075,20 +1075,20 @@ SqlStringTest::testSqlStringAsciiSubStr()
                         BOOST_CHECK(src.verify());
 
                         // length unspecified mode
-                        // test when length is at or past the width
+                        // test when length is at or past the storage
                         if (sub_start > 0 && sub_len > 0 &&
-                            sub_start + sub_len - 1 > src_width) {
+                            sub_start + sub_len - 1 > src_storage) {
                             caught = false;
                             try {
-                                newlen = SqlStrAsciiSubStr(&resultP, dst_width,
-                                                           src.mStr, src_width,
+                                newlen = SqlStrAsciiSubStr(&resultP, dst_storage,
+                                                           src.mStr, src_storage,
                                                            sub_start, 0, false);
                             } catch(const char *str) {
                                 caught = true;
                                 if (!strcmp(str, "22011")) {
                                     BOOST_CHECK(sub_len < 0);
                                 } else if (!strcmp(str, "22001")) {
-                                    BOOST_CHECK(sub_len > dst_width);
+                                    BOOST_CHECK(sub_len > dst_storage);
                                 } else {
                                     BOOST_CHECK(false);
                                 }
@@ -1117,20 +1117,20 @@ SqlStringTest::testSqlStringAsciiSubStr()
 void
 SqlStringTest::testSqlStringAsciiToLower()
 {
-    int dest_width, dest_len, src_width, src_len, randX;
+    int dest_storage, dest_len, src_storage, src_len, randX;
     int newlen;
     bool caught;
     
-    for (dest_width = 0; dest_width < MAXLEN; dest_width++) {
-        dest_len = dest_width;
-        for (src_width = 0; src_width < MAXLEN; src_width++) {
-            src_len = src_width;
+    for (dest_storage = 0; dest_storage < MAXLEN; dest_storage++) {
+        dest_len = dest_storage;
+        for (src_storage = 0; src_storage < MAXLEN; src_storage++) {
+            src_len = src_storage;
             for (randX = 0; randX < MAXRANDOM; randX++) {
-                SqlStringTestGen dest(dest_width, dest_len,
+                SqlStringTestGen dest(dest_storage, dest_len,
                                       0, 0,
                                       'd', ' ');
-                SqlStringTestGen src(src_width, src_len,
-                                     0, src_width-src_len,
+                SqlStringTestGen src(src_storage, src_len,
+                                     0, src_storage-src_len,
                                      's', ' ');
                 src.randomize('A');
 
@@ -1142,16 +1142,16 @@ SqlStringTest::testSqlStringAsciiToLower()
                 // copy
                 caught = false;
                 try {
-                    newlen = SqlStrAsciiToLower(dest.mStr, dest_width, src.mStr, src_len);
+                    newlen = SqlStrAsciiToLower(dest.mStr, dest_storage, src.mStr, src_len);
                 } catch(const char *str) {
                     caught = true;
                     BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
-                    BOOST_CHECK(src_len > dest_width);
+                    BOOST_CHECK(src_len > dest_storage);
                 } catch(...) {
                     BOOST_CHECK(false);
                 }
                 if (!caught) {
-                    BOOST_CHECK(src_len <= dest_width);
+                    BOOST_CHECK(src_len <= dest_storage);
                     BOOST_CHECK(src.verify());
                     BOOST_CHECK(dest.verify());
                     BOOST_CHECK_EQUAL(newlen, src_len);
@@ -1180,21 +1180,21 @@ SqlStringTest::testSqlStringAsciiToLower()
 void
 SqlStringTest::testSqlStringAsciiToUpper()
 {
-    int dest_width, dest_len, src_width, src_len, randX;
+    int dest_storage, dest_len, src_storage, src_len, randX;
     int newlen;
     bool caught;
     
 
-    for (dest_width = 0; dest_width < MAXLEN; dest_width++) {
-        dest_len = dest_width;
-        for (src_width = 0; src_width < MAXLEN; src_width++) {
-            src_len = src_width;
+    for (dest_storage = 0; dest_storage < MAXLEN; dest_storage++) {
+        dest_len = dest_storage;
+        for (src_storage = 0; src_storage < MAXLEN; src_storage++) {
+            src_len = src_storage;
             for (randX = 0; randX < MAXRANDOM; randX++) {
-                SqlStringTestGen dest(dest_width, dest_len,
+                SqlStringTestGen dest(dest_storage, dest_len,
                                       0, 0,
                                       'd', ' ');
-                SqlStringTestGen src(src_width, src_len,
-                                     0, src_width-src_len,
+                SqlStringTestGen src(src_storage, src_len,
+                                     0, src_storage-src_len,
                                      's', ' ');
                 src.randomize('a');
 
@@ -1206,16 +1206,16 @@ SqlStringTest::testSqlStringAsciiToUpper()
                 // copy
                 caught = false;
                 try {
-                    newlen = SqlStrAsciiToUpper(dest.mStr, dest_width, src.mStr, src_len);
+                    newlen = SqlStrAsciiToUpper(dest.mStr, dest_storage, src.mStr, src_len);
                 } catch(const char *str) {
                     caught = true;
                     BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
-                    BOOST_CHECK(src_len > dest_width);
+                    BOOST_CHECK(src_len > dest_storage);
                 } catch(...) {
                     BOOST_CHECK(false);
                 }
                 if (!caught) {
-                    BOOST_CHECK(src_len <= dest_width);
+                    BOOST_CHECK(src_len <= dest_storage);
                     BOOST_CHECK(src.verify());
                     BOOST_CHECK(dest.verify());
                     BOOST_CHECK_EQUAL(newlen, src_len);
@@ -1244,34 +1244,34 @@ SqlStringTest::testSqlStringAsciiToUpper()
 void
 SqlStringTest::testSqlStringAsciiTrim()
 {
-    int dst_width, src_width, src_len, leftpad, rightpad, randX, i;
+    int dst_storage, src_storage, src_len, leftpad, rightpad, randX, i;
     char padchar = ' ';
     char textchar = 's';
     bool caught;
     
     BOOST_REQUIRE(MAXLEN >= 5); // 2 pad + 1 text + 2 pad
 
-    for (dst_width = 0; dst_width < MAXLEN; dst_width++) {
-        for (src_width = 0; src_width < dst_width + 5; src_width++) {
-            for (src_len = 0; src_len <= src_width; src_len++) {
-                for (leftpad = 0; leftpad <= src_width - src_len; leftpad++) {
-                    rightpad = src_width - (src_len + leftpad);
+    for (dst_storage = 0; dst_storage < MAXLEN; dst_storage++) {
+        for (src_storage = 0; src_storage < dst_storage + 5; src_storage++) {
+            for (src_len = 0; src_len <= src_storage; src_len++) {
+                for (leftpad = 0; leftpad <= src_storage - src_len; leftpad++) {
+                    rightpad = src_storage - (src_len + leftpad);
                     for (randX = 0; randX < MAXRANDOM; randX++) {
-                        BOOST_REQUIRE(leftpad+rightpad+src_len == src_width);
+                        BOOST_REQUIRE(leftpad+rightpad+src_len == src_storage);
                         for (i = 0; i < 4; i++) {
                             int newsize;
                             int expectsize;
                             string resultByReference;
                             string resultCopy;
                             string expect;
-                            SqlStringTestGen src(src_width, src_len,
+                            SqlStringTestGen src(src_storage, src_len,
                                                  leftpad, rightpad,
                                                  textchar, padchar);
-                            SqlStringTestGen dst(dst_width, dst_width,
+                            SqlStringTestGen dst(dst_storage, dst_storage,
                                                  0, 0,
                                                  textchar, padchar);
                             
-                            bool lefttrim, righttrim;
+                            int lefttrim, righttrim;
                             switch(i) {
                             case 0:
                                 lefttrim = true;
@@ -1310,7 +1310,7 @@ SqlStringTest::testSqlStringAsciiTrim()
                             try {
                                 newsize = 
                                     SqlStrAsciiTrim(dst.mStr,
-                                                    dst_width,
+                                                    dst_storage,
                                                     src.mStr,
                                                     src_len + leftpad + rightpad,
                                                     lefttrim,
@@ -1318,13 +1318,13 @@ SqlStringTest::testSqlStringAsciiTrim()
                             } catch(const char *str) {
                                 caught = true;
                                 BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
-                                BOOST_CHECK(expectsize > dst_width);
+                                BOOST_CHECK(expectsize > dst_storage);
                             } catch(...) {
                                 BOOST_CHECK(false);
                             }
                             
                             if (!caught) {
-                                BOOST_CHECK(expectsize <= dst_width);
+                                BOOST_CHECK(expectsize <= dst_storage);
 
                                 BOOST_CHECK(src.verify());
                                 BOOST_CHECK(dst.verify());
@@ -1346,7 +1346,7 @@ SqlStringTest::testSqlStringAsciiTrim()
                                                       righttrim);
 
                             BOOST_CHECK(start >= src.mStr);
-                            BOOST_CHECK(start <= src.mStr + src_width);
+                            BOOST_CHECK(start <= src.mStr + src_storage);
                             BOOST_CHECK(src.verify());
                             BOOST_CHECK(dst.verify());
                             BOOST_CHECK_EQUAL(newsize, expectsize);

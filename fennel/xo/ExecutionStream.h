@@ -51,9 +51,7 @@ struct ExecutionStreamParams
 /**
  * ExecutionStream is an abstract base class for all stream execution objects
  * (also known as XO's).  An ExecutionStream produces tuples according to a
- * fixed tuple descriptor.  An ExecutionStream has zero or more input streams
- * which it may transform to produce its output.  Dataflow takes place in
- * batches of tuples.
+ * fixed tuple descriptor.  Dataflow takes place in batches of tuples.
  */
 class ExecutionStream : virtual public ClosableObject
 {

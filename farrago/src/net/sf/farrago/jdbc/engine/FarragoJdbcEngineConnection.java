@@ -17,7 +17,7 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-package net.sf.farrago.jdbc;
+package net.sf.farrago.jdbc.engine;
 
 import net.sf.farrago.util.*;
 import net.sf.farrago.resource.*;
@@ -31,22 +31,24 @@ import java.util.*;
 import java.util.logging.*;
 
 /**
- * FarragoJdbcConnection implements the {@link java.sql.Connection}
- * interface for the Farrago JDBC driver.
+ * FarragoJdbcEngineConnection implements the {@link java.sql.Connection}
+ * interface for the Farrago JDBC engine driver.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoJdbcConnection implements Connection
+public class FarragoJdbcEngineConnection implements Connection
 {
     //~ Instance fields -------------------------------------------------------
 
+    private FarragoSessionFactory sessionFactory;
+    
     private FarragoSession session;
 
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Creates a new FarragoJdbcConnection object.
+     * Creates a new FarragoJdbcEngineConnection object.
      *
      * @param url URL used to connect
      *
@@ -55,10 +57,11 @@ public class FarragoJdbcConnection implements Connection
      * @param sessionFactory FarragoSessionFactory governing this connection's
      * behavior
      */
-    public FarragoJdbcConnection(
+    public FarragoJdbcEngineConnection(
         String url,Properties info,FarragoSessionFactory sessionFactory)
         throws SQLException
     {
+        this.sessionFactory = sessionFactory;
         session = sessionFactory.newSession(url,info);
         session.setDatabaseMetaData(getMetaData());
     }
@@ -82,7 +85,7 @@ public class FarragoJdbcConnection implements Connection
         try {
             session.setAutoCommit(autoCommit);
         } catch (Throwable ex) {
-            throw FarragoJdbcDriver.newSqlException(ex);
+            throw FarragoJdbcEngineDriver.newSqlException(ex);
         }
     }
 
@@ -114,7 +117,7 @@ public class FarragoJdbcConnection implements Connection
                     return;
                 }
             } catch (Throwable ex) {
-                throw FarragoJdbcDriver.newSqlException(ex);
+                throw FarragoJdbcEngineDriver.newSqlException(ex);
             }
             if (session.isTxnInProgress()) {
                 // TODO:  generate SQLException in FarragoResource?
@@ -122,6 +125,7 @@ public class FarragoJdbcConnection implements Connection
                     FarragoResource.instance().getJdbcInvalidTxnState(),
                     "25000");
             }
+            sessionFactory.cleanupSessions();
         } finally {
             session = null;
         }
@@ -132,7 +136,7 @@ public class FarragoJdbcConnection implements Connection
         try {
             session.commit();
         } catch (Throwable ex) {
-            throw FarragoJdbcDriver.newSqlException(ex);
+            throw FarragoJdbcEngineDriver.newSqlException(ex);
         }
     }
 
@@ -140,11 +144,11 @@ public class FarragoJdbcConnection implements Connection
     public Statement createStatement() throws SQLException
     {
         try {
-            return new FarragoJdbcStatement(
+            return new FarragoJdbcEngineStatement(
                 this,
                 session.newStmtContext());
         } catch (Throwable ex) {
-            throw FarragoJdbcDriver.newSqlException(ex);
+            throw FarragoJdbcEngineDriver.newSqlException(ex);
         }
     }
 
@@ -154,7 +158,7 @@ public class FarragoJdbcConnection implements Connection
         try {
             session.rollback(null);
         } catch (Throwable ex) {
-            throw FarragoJdbcDriver.newSqlException(ex);
+            throw FarragoJdbcEngineDriver.newSqlException(ex);
         }
     }
 
@@ -165,7 +169,7 @@ public class FarragoJdbcConnection implements Connection
         try {
             session.rollback(farragoSavepoint);
         } catch (Throwable ex) {
-            throw FarragoJdbcDriver.newSqlException(ex);
+            throw FarragoJdbcEngineDriver.newSqlException(ex);
         }
     }
 
@@ -185,9 +189,9 @@ public class FarragoJdbcConnection implements Connection
     public Savepoint setSavepoint() throws SQLException
     {
         try {
-            return new FarragoJdbcSavepoint(session.newSavepoint(null));
+            return new FarragoJdbcEngineSavepoint(session.newSavepoint(null));
         } catch (Throwable ex) {
-            throw FarragoJdbcDriver.newSqlException(ex);
+            throw FarragoJdbcEngineDriver.newSqlException(ex);
         }
     }
 
@@ -195,19 +199,19 @@ public class FarragoJdbcConnection implements Connection
     public Savepoint setSavepoint(String name) throws SQLException
     {
         try {
-            return new FarragoJdbcSavepoint(session.newSavepoint(name));
+            return new FarragoJdbcEngineSavepoint(session.newSavepoint(name));
         } catch (Throwable ex) {
-            throw FarragoJdbcDriver.newSqlException(ex);
+            throw FarragoJdbcEngineDriver.newSqlException(ex);
         }
     }
 
     private FarragoSessionSavepoint validateSavepoint(Savepoint savepoint)
         throws SQLException
     {
-        if (!(savepoint instanceof FarragoJdbcSavepoint)) {
+        if (!(savepoint instanceof FarragoJdbcEngineSavepoint)) {
             throw new SQLException("Savepoint class not recognized");
         }
-        return ((FarragoJdbcSavepoint) savepoint).farragoSavepoint;
+        return ((FarragoJdbcEngineSavepoint) savepoint).farragoSavepoint;
     }
 
     // implement Connection
@@ -217,14 +221,14 @@ public class FarragoJdbcConnection implements Connection
         try {
             session.releaseSavepoint(farragoSavepoint);
         } catch (Throwable ex) {
-            throw FarragoJdbcDriver.newSqlException(ex);
+            throw FarragoJdbcEngineDriver.newSqlException(ex);
         }
     }
     
     // implement Connection
     public DatabaseMetaData getMetaData() throws SQLException
     {
-        return new FarragoDatabaseMetaData(this);
+        return new FarragoJdbcEngineDatabaseMetaData(this);
     }
     
     // implement Connection
@@ -235,14 +239,14 @@ public class FarragoJdbcConnection implements Connection
         try {
             stmtContext = session.newStmtContext();
             stmtContext.prepare(sql,false);
-            FarragoJdbcPreparedStatement preparedStmt;
+            FarragoJdbcEnginePreparedStatement preparedStmt;
             if (!stmtContext.isPrepared()) {
-                preparedStmt = new FarragoJdbcPreparedDdl(
+                preparedStmt = new FarragoJdbcEnginePreparedDdl(
                     this,
                     stmtContext,
                     sql);
             } else {
-                preparedStmt = new FarragoJdbcPreparedNonDdl(
+                preparedStmt = new FarragoJdbcEnginePreparedNonDdl(
                     this,
                     stmtContext,
                     sql);
@@ -250,7 +254,7 @@ public class FarragoJdbcConnection implements Connection
             }
             return preparedStmt;
         } catch (Throwable ex) {
-            throw FarragoJdbcDriver.newSqlException(ex);
+            throw FarragoJdbcEngineDriver.newSqlException(ex);
         } finally {
             if (stmtContext != null) {
                 stmtContext.unprepare();
@@ -391,4 +395,4 @@ public class FarragoJdbcConnection implements Connection
     }
 }
 
-// End FarragoJdbcConnection.java
+// End FarragoJdbcEngineConnection.java

@@ -1,0 +1,112 @@
+/*
+// Farrago is a relational database management system.
+// Copyright (C) 2003-2004 John V. Sichi.
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public License
+// as published by the Free Software Foundation; either version 2.1
+// of the License, or (at your option) any later version.
+// 
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+// 
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+*/
+
+package net.sf.farrago.test;
+
+import net.sf.farrago.server.*;
+import net.sf.farrago.jdbc.engine.*;
+import net.sf.farrago.jdbc.client.*;
+
+import junit.framework.*;
+
+import java.sql.*;
+import java.util.*;
+
+/**
+ * FarragoServerTest tests Farrago client/server connections.  It does
+ * not inherit from FarragoTestCase since that pulls in an embedded engine.
+ *
+ * @author John V. Sichi
+ * @version $Id$
+ */
+public class FarragoServerTest extends TestCase
+{
+    private FarragoServer server;
+
+    /**
+     * Initializes a new FarragoServerTest.
+     *
+     * @param testCaseName JUnit test case name
+     */
+    public FarragoServerTest(String testCaseName) throws Exception
+    {
+        super(testCaseName);
+    }
+
+    public void testServer() throws Exception
+    {
+        server = new FarragoServer();
+        FarragoJdbcEngineDriver serverDriver = new FarragoJdbcEngineDriver();
+        server.start(serverDriver);
+        // NOTE:  can't call DriverManager.connect here, because that would
+        // deadlock
+        FarragoJdbcClientDriver clientDriver = new FarragoJdbcClientDriver();
+        Connection connection = clientDriver.connect(
+            clientDriver.getUrlPrefix() + "localhost",
+            new Properties());
+        boolean stopped;
+        try {
+            connection.createStatement().execute("set schema sales");
+            stopped = server.stopSoft();
+            assertFalse(stopped);
+        } finally {
+            connection.close();
+        }
+        stopped = server.stopSoft();
+        server = null;
+        assertTrue(stopped);
+    }
+
+    public void testKillServer() throws Exception
+    {
+        server = new FarragoServer();
+        FarragoJdbcEngineDriver serverDriver = new FarragoJdbcEngineDriver();
+        server.start(serverDriver);
+        FarragoJdbcClientDriver clientDriver = new FarragoJdbcClientDriver();
+        Connection connection = clientDriver.connect(
+            clientDriver.getUrlPrefix() + "localhost",
+            new Properties());
+        connection.createStatement().execute("set schema sales");
+        killServer();
+    }
+
+    // implement TestCase
+    protected void tearDown() throws Exception
+    {
+        if (server != null) {
+            try {
+                killServer();
+            } catch (Throwable ex) {
+                // NOTE:  swallow ex so it doesn't mask real exception
+            }
+        }
+        super.tearDown();
+    }
+
+    private void killServer()
+    {
+        try {
+            server.stopHard();
+        } finally {
+            server = null;
+        }
+    }
+}
+
+// End FarragoServerTest.java

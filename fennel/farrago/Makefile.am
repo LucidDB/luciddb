@@ -22,6 +22,7 @@ libfarrago_la_LIBADD = \
 	-lfennel_xo \
 	-lfennel_db \
 	-lfennel_btree \
+	-lfennel_calc \
 	-lfennel_tuple \
 	-lfennel_txn \
 	-lfennel_segment \

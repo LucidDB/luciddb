@@ -124,8 +124,10 @@ public class FarragoDbSession
         this.sessionFactory = sessionFactory;
         
         // TODO:  excn handling
-        database = FarragoDatabase.connect(
+        database = FarragoDatabase.pinReference(
             sessionFactory.newFennelCmdExecutor());
+
+        FarragoDatabase.addSession(database,this);
         
         connectionDefaults = new FarragoConnectionDefaults();
 
@@ -289,7 +291,7 @@ public class FarragoDbSession
         }
         endTransactionIfAuto(true);
         try {
-            FarragoDatabase.disconnect(database);
+            FarragoDatabase.disconnectSession(this);
         } finally {
             database = null;
             catalog = null;

@@ -17,7 +17,9 @@ CREATE TABLE), it isn't available yet.  Everything is supposed to work
 according to the SQL standard, so if something doesn't, that's either
 a bug or an incomplete feature.  Which standard?  Normal procedure is
 to consult the draft SQL200n standard and cross-check it with SQL-92
-or SQL-99 to see if there are any incompatibilities.
+or SQL-99 to see if there are any incompatibilities.  There's
+a very nice <a href="http://developer.mimer.se/validator">online validator</a>
+which distinguishes the three versions of the standard.
 
 <h2>DDL</h2>
 
@@ -118,12 +120,11 @@ parameter (TODO: documentation for parameters).
 <li>ROLLBACK TO SAVEPOINT "x": partially rollback current transaction
 to savepoint x.
 
-<li><a href="design/sqlmed.html">SQL/MED</a> support: currently under
-development.  CREATE/DROP FOREIGN DATA WRAPPER, CREATE/DROP SERVER,
-and CREATE/DROP FOREIGN TABLE are working already.  Implementations for
-JDBC and MDR are available (the MDR implementation is already being used
-for exposing the catalog contents via SQL).
-JAR support is not yet implemented.
+<li><a href="design/sqlmed.html">SQL/MED</a> support.  CREATE/DROP
+FOREIGN DATA WRAPPER, CREATE/DROP SERVER, and CREATE/DROP FOREIGN
+TABLE are working.  Implementations for JDBC and MDR are
+available (the MDR implementation is already being used for exposing
+the catalog contents via SQL).
 
 </ul>
 
@@ -168,12 +169,11 @@ SESSION_USER, CURRENT_USER,  and SYSTEM_USER are supported
 
 <ul>
 
-<li>local database access (no network client yet)
-
-<li>prepared statements with dynamic parameters (?)
+<li>prepared statements with dynamic parameters 
+(e.g. <code>select * from emps where name=?</code>)
 
 <li>some DatabaseMetaData:  getCatalogs, getSchemas, getTables, getTableTypes
-(no pattern search support)
+(no pattern search support yet)
 
 <li>savepoint API
 
@@ -219,6 +219,26 @@ by the standard.
 
 </ul>
 
+<h2>Runtime Modes</h2>
+
+<ul>
+
+<li>Embedded engine:  everything runs in a single process; JDBC calls
+go into the engine directly.
+
+<li>Client/server: implemented using <a
+href="http://rmijdbc.objectweb.org">RmiJdbc</a>.  By default, the
+server listens for RMI connections on port 5433, and uses multiple
+dynamically assigned ports for individual RMI objects.  This can be
+controlled via configuration parameters;
+<code>serverRmiRegistryPort</code> controls the connection port, and
+<code>serverSingleListenerPort</code> forces all RMI objects to
+multiplex over a single statically assigned port (default value of
+<code>-1</code> means use dynamically assigned ports for this
+instead).
+
+</ul>
+
 <h1>What's Broken?</h1>
 
 Besides the absence of great gobs of standard stuff like aggregates,
@@ -230,6 +250,10 @@ mentioning some serious limitations in the features listed above:
 <li>The validator is still under development, so when you make an invalid
 request, you'll very likely get ugly internal errors, data corruption,
 printer spontaneous combustion, etc.
+
+<li>Quoted identifiers cause problems because they get used directly as
+Java identifiers in generated code, causing problems with illegal
+characters.  Need to mangle them.
 
 <li>ORDER BY descending is not supported (nor is the non-standard
 ORDER BY a+b).

@@ -64,9 +64,16 @@ public class FarragoCompoundAllocation
         allocations.clear();
     }
 
-    public void forgetAllocation(FarragoAllocation allocation)
+    /**
+     * Forgets an allocation without closing it.
+     *
+     * @param allocation the allocation to forget
+     *
+     * @return whether the allocation was known
+     */
+    public boolean forgetAllocation(FarragoAllocation allocation)
     {
-        allocations.remove(allocation);
+        return allocations.remove(allocation);
     }
 }
 

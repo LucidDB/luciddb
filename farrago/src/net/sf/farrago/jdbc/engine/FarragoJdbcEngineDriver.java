@@ -6,22 +6,24 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-//
+// 
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-//
+// 
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-package net.sf.farrago.jdbc;
+package net.sf.farrago.jdbc.engine;
 
+import net.sf.farrago.jdbc.*;
 import net.sf.farrago.util.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.db.*;
+import net.sf.farrago.resource.*;
 
 import java.sql.*;
 
@@ -31,72 +33,39 @@ import java.util.logging.*;
 import koala.dynamicjava.interpreter.error.*;
 
 /**
- * FarragoJdbcDriver implements the {@link java.sql.Driver} interface as
- * the Farrago JDBC driver.
+ * FarragoJdbcEngineDriver implements the Farrago engine/server side of
+ * the {@link java.sql.Driver} interface.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoJdbcDriver implements Driver
+public class FarragoJdbcEngineDriver
+    extends FarragoAbstractJdbcDriver
+    implements FarragoJdbcServerDriver
 {
-    //~ Static fields/initializers --------------------------------------------
-
     private static Logger tracer =
-        TraceUtil.getClassTrace(FarragoJdbcDriver.class);
+        TraceUtil.getClassTrace(FarragoJdbcEngineDriver.class);
 
     static {
-        new FarragoJdbcDriver().register();
+        new FarragoJdbcEngineDriver().register();
     }
-
-    //~ Constructors ----------------------------------------------------------
 
     /**
-     * Creates a new FarragoJdbcDriver object.
+     * Creates a new FarragoJdbcEngineDriver object.
      */
-    public FarragoJdbcDriver()
+    public FarragoJdbcEngineDriver()
     {
     }
 
-    //~ Methods ---------------------------------------------------------------
-
-    // implement Driver
-    public boolean jdbcCompliant()
+    /**
+     * @return the prefix for JDBC URL's understood by this driver;
+     * subclassing drivers can override this to customize the URL scheme
+     */
+    public String getUrlPrefix()
     {
-        // TODO:  true once we pass compliance tests and SQL92 entry level
-        return false;
+        return getBaseUrl();
     }
     
-    private String getUrlPrefix()
-    {
-        return "jdbc:farrago:";
-    }
-
-    // implement Driver
-    public int getMajorVersion()
-    {
-        return 0;
-    }
-
-    // implement Driver
-    public int getMinorVersion()
-    {
-        return 0;
-    }
-
-    // implement Driver
-    public DriverPropertyInfo [] getPropertyInfo(String url,Properties info)
-        throws SQLException
-    {
-        // TODO
-        return new DriverPropertyInfo[0];
-    }
-
-    // implement Driver
-    public boolean acceptsURL(String url) throws SQLException
-    {
-        return url.startsWith(getUrlPrefix());
-    }
-
     // implement Driver
     public Connection connect(String url,Properties info)
         throws SQLException
@@ -106,36 +75,23 @@ public class FarragoJdbcDriver implements Driver
         }
 
         try {
-            return new FarragoJdbcConnection(
-                url,
-                info,
-                newSessionFactory());
+            if (url.equals(getBaseUrl()) || url.equals(getClientUrl())) {
+                return new FarragoJdbcEngineConnection(
+                    url,
+                    info,
+                    newSessionFactory());
+            } else {
+                throw FarragoResource.instance().newJdbcInvalidUrl(url);
+            }
         } catch (Throwable ex) {
             throw newSqlException(ex);
         }
     }
 
-    /**
-     * Creates a new FarragoSessionFactory which will govern the behavior
-     * of connections established through this driver.  Subclassing
-     * drivers can override this to customize Farrago behavior.
-     *
-     * @return new factory (FarragoDbSessionFactory by default)
-     */
-    protected FarragoSessionFactory newSessionFactory()
+    // implement FarragoJdbcServerDriver
+    public FarragoSessionFactory newSessionFactory()
     {
         return new FarragoDbSessionFactory();
-    }
-    
-    private void register()
-    {
-        try {
-            DriverManager.registerDriver(this);
-        } catch (SQLException e) {
-            System.out.println(
-                "Error occurred while registering JDBC driver " + this + ": "
-                + e.toString());
-        }
     }
     
     /**
@@ -148,7 +104,7 @@ public class FarragoJdbcDriver implements Driver
     static SQLException newSqlException(Throwable ex)
     {
         tracer.severe(ex.getMessage());
-        tracer.throwing("FarragoJdbcDriver","newSqlException",ex);
+        tracer.throwing("FarragoJdbcEngineDriver","newSqlException",ex);
 
         if (ex instanceof CatchedExceptionError) {
             ex = ((CatchedExceptionError) ex).getException();
@@ -180,5 +136,4 @@ public class FarragoJdbcDriver implements Driver
     }
 }
 
-
-// End FarragoJdbcDriver.java
+// End FarragoJdbcEngineDriver.java

@@ -78,10 +78,10 @@ public:
         pc++;
         if (mOp1->isNull() || mOp2->isNull()) {
             mResult->toNull();
-        } else if (mOp1->getV() == mOp2->getV()) {
-            mResult->putV(true);
+        } else if (mOp1->value() == mOp2->value()) {
+            mResult->value(true);
         } else {
-            mResult->putV(false);
+            mResult->value(false);
         }
     }
 
@@ -110,10 +110,10 @@ public:
         pc++;
         if (mOp1->isNull() || mOp2->isNull()) {
             mResult->toNull();
-        } else if (mOp1->getV() == mOp2->getV()) {
-            mResult->putV(false);
+        } else if (mOp1->value() == mOp2->value()) {
+            mResult->value(false);
         } else {
-            mResult->putV(true);
+            mResult->value(true);
         }
     }
 
@@ -142,10 +142,10 @@ public:
         pc++;
         if (mOp1->isNull() || mOp2->isNull()) {
             mResult->toNull();
-        } else if (mOp1->getV() > mOp2->getV()) {
-            mResult->putV(true);
+        } else if (mOp1->value() > mOp2->value()) {
+            mResult->value(true);
         } else {
-            mResult->putV(false);
+            mResult->value(false);
         }
     }
 
@@ -174,10 +174,10 @@ public:
         pc++;
         if (mOp1->isNull() || mOp2->isNull()) {
             mResult->toNull();
-        } else if (mOp1->getV() >= mOp2->getV()) {
-            mResult->putV(true);
+        } else if (mOp1->value() >= mOp2->value()) {
+            mResult->value(true);
         } else {
-            mResult->putV(false);
+            mResult->value(false);
         }
     }
 
@@ -206,10 +206,10 @@ public:
         pc++;
         if (mOp1->isNull() || mOp2->isNull()) {
             mResult->toNull();
-        } else if (mOp1->getV() < mOp2->getV()) {
-            mResult->putV(true);
+        } else if (mOp1->value() < mOp2->value()) {
+            mResult->value(true);
         } else {
-            mResult->putV(false);
+            mResult->value(false);
         }
     }
     const char * longName() const { return "BoolNativeLess"; }
@@ -237,10 +237,10 @@ public:
         pc++;
         if (mOp1->isNull() || mOp2->isNull()) {
             mResult->toNull();
-        } else if (mOp1->getV() <= mOp2->getV()) {
-            mResult->putV(true);
+        } else if (mOp1->value() <= mOp2->value()) {
+            mResult->value(true);
         } else {
-            mResult->putV(false);
+            mResult->value(false);
         }
     }
 
@@ -267,9 +267,9 @@ public:
     virtual void exec(TProgramCounter& pc) const { 
         pc++;
         if (mOp1->isNull()) {
-            mResult->putV(true);
+            mResult->value(true);
         } else {
-            mResult->putV(false);
+            mResult->value(false);
         }
     }
 
@@ -296,9 +296,9 @@ public:
     virtual void exec(TProgramCounter& pc) const { 
         pc++;
         if (mOp1->isNull()) {
-            mResult->putV(false);
+            mResult->value(false);
         } else {
-            mResult->putV(true);
+            mResult->value(true);
         }
     }
 

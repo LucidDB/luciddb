@@ -42,17 +42,25 @@ protected:
 
 //! PointerSizeT is the "size" and "maxsize" for array lengths
 //!
-//! This reads/writes, currently, a uint from TupleData
-//! and/or TupleDescriptor.
-typedef uint PointerSizeT;
+//! This typedef must be compatable with the size TupleStorageByteLength
+//! But, to prevent problems between say 32bit and 64 bit machines, this
+//! type is defined with an explicit length so that one program can be written
+//! for both architectures.
+typedef uint32_t PointerSizeT;
 
 //! Only integral type that can be used in pointer algebra.
+//!
 //! Would be nice if this was signed, but the presence of 
 //! both PointerAdd and PointerSub probably make it OK for
 //! this to be unsigned. It is probably more convienent for
 //! a compiler to have this the same type as PointerOperandT
 //! to avoid a type conversion. 
-typedef uint PointerOperandT;
+//!
+//! This typedef must be compatable with the size TupleStorageByteLength
+//! But, to prevent problems between say 32bit and 64 bit machines, this
+//! type is defined with an explicit length so that one program can be written
+//! for both architectures.
+typedef uint32_t PointerOperandT;
 
 
 //

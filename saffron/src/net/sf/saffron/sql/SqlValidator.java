@@ -717,12 +717,6 @@ public class SqlValidator
                 return unknownType;
             }
         }
-        if (operand instanceof SqlNodeList) {
-            SqlNodeList list = (SqlNodeList) operand;
-            for (int i = 0; i < list.size(); i++) {
-                 deriveType(scope,(SqlNode) list.get(i));
-            }
-        }
         throw Util.needToImplement(this.toString() + ", operand=" + operand);
     }
 

@@ -84,8 +84,9 @@ machines as needed).
 
 <p>
 
-Once you've got Perforce set up, run p4 client (or edit your default
-clientspec from P4WIN).  You need to map the following views:
+Once you've got Perforce set up, run <code>p4 client</code>
+(or edit your default clientspec from P4WIN).  
+You need to map the following views:
 <pre><code>
 //open/dev/thirdparty/...
 //open/dev/fennel/...
@@ -94,17 +95,18 @@ clientspec from P4WIN).  You need to map the following views:
 
 </code></pre>
 
-All of these should be mapped to a common root corresponding to //open/dev
-(you can call it whatever you like on your local filesystem, but we'll
-refer to it as dev in this and other developer docs).
+All of these should be mapped to a common root corresponding to
+<code>//open/dev</code> (you can call it whatever you like on your
+local filesystem, but we'll refer to it as <code>dev</code> in this
+and other developer docs).
 
 <p>
 
-Finally, run p4 sync to get all the source files and thirdparty
-distributions into your client workspace.  This will take quite a while
-because some of the thirdparty distributions are large, and
-apoptosis.dyndns.org is limited by DSL upload speed (regardless of the
-girth of your pipe).
+Finally, run <code>p4 sync</code> to get all the source files and
+thirdparty distributions into your client workspace.  This will take
+quite a while because some of the thirdparty distributions are large,
+and apoptosis.dyndns.org is limited by DSL upload speed (regardless of
+the girth of your pipe).
 
 You should also make sure you have <a
 href="http://java.sun.com/j2se/1.4">JDK 1.4</a> or higher installed,
@@ -114,18 +116,19 @@ with JAVA_HOME set to the JDK installation root.
 
 If you will be building Fennel, now is the time to make sure you have
 the correct versions of the required build tools such as autoconf.
-The file dev/fennel/INSTALL (and dev/fennel/INSTALL.mingw for Windows)
-has more information.  You can ignore the instructions for building
-STLport, Boost, and Fennel manually, since the next step is going to
-take care of all of that automatically.
+The file <code>dev/fennel/INSTALL</code> (and
+<code>dev/fennel/INSTALL.mingw</code> for Windows) has more
+information.  You can ignore the instructions for building STLport,
+Boost, and Fennel manually, since the next step is going to take care
+of all of that automatically.
 
 <h2>Initial Build</h2>
 
 For the first build in a new sandbox, there's a lot of
 one-time setup that needs to be done, possibly including building some
 of the third-party components from source.  This process is automated
-by the script dev/farrago/initBuild.sh.  Change to the
-dev/farrago directory and run the initial build as follows:
+by the script <code>dev/farrago/initBuild.sh</code>.  Change to the
+<code>dev/farrago</code> directory and run the initial build as follows:
 
 <pre><code>
 initBuild.sh --with-fennel
@@ -136,14 +139,14 @@ initBuild.sh --without-fennel
 
 </code></pre>
 
-If you're building without Fennel, this should be fairly quick; with
-Fennel it will take quite a bit longer.  If all goes well, you'll be
-left with a complete Farrago build for your platform.  Otherwise,
-you'll need to dig into the script and its output to see what's going
-wrong.  If you can't figure it out, ask for help on the <a
-href="#Feedback">farrago-developers mailing list</a>.  You should
-probably include the last 100 lines of build output including the
-error.
+If you're building without Fennel, this should be fairly quick (under
+ten minutes on most machines); with Fennel it will take quite a bit
+longer.  If all goes well, you'll be left with a complete Farrago
+build for your platform.  Otherwise, you'll need to dig into the
+script and its output to see what's going wrong.  If you can't figure
+it out, ask for help on the <a href="#Feedback">farrago-developers
+mailing list</a>.  You should probably include the last 100 lines of
+build output including the error.
 
 <h2>Environment Variables</h2>
 
@@ -151,20 +154,20 @@ The initial build script takes care of setting some necessary
 environment variables internally, but once it completes they are left
 unset.  For subsequent runs and builds of Farrago, you will need to
 make sure these are set.  Scripts are provided for this purpose.  You
-can run them automatically from a login script such as .bash_profile,
-or run them manually before working with Farrago:
+can run them automatically from a login script such as
+<code>.bash_profile</code>, or run them manually before working with
+Farrago:
 
 <pre><code>
-
 source dev/fennel/fennelenv.sh dev/fennel
 source dev/farrago/farragoenv.sh dev/thirdparty
 
 </code></pre>
 
 As usual, you only need the Fennel script if Fennel support is
-enabled.  Don't execute these scripts directly; you must use . or
-source in order for the environment variable settings to take effect
-for subsequent commands.
+enabled.  Don't execute these scripts directly; you must use
+<code>.</code> or <code>source</code> in order for the environment
+variable settings to take effect for subsequent commands.
 
 <h2>Incremental Builds</h2>
 
@@ -174,81 +177,87 @@ requires following these steps:
 <ol>
 
 <li>
-p4 sync.  You'll probably want to examine the output to see what has
-changed (or you can ignore it and blindly carry out the rest of the
-steps unconditionally).
+<code>p4 sync</code>.  You'll probably want to examine the output to
+see what has changed (or you can ignore it and blindly carry out the
+rest of the steps unconditionally).
 
 <li>
-If anything under dev/thirdparty/... has changed, cd to that
-directory and run make.  New thirdparty components and upgrades to new
-versions are fairly rare.
+If anything under <code>dev/thirdparty/...</code> has changed, cd to
+that directory and run make.  New thirdparty components and upgrades
+to new versions are fairly rare.
 
 <li>
-If anything under dev/fennel/... has changed (and you're building
-with Fennel support), cd to that directory and run make.  In very rare
-cases, you may need to make clean first, but that should be a last
-resort.  Upgrades to thirdparty components relied on by Fennel may
-require further action such as running configure again and rebuilding
-them; if you subscribe to the developer mailing list, there should be
-instructions posted whenever this is required.
+If anything under <code>dev/fennel/...</code> has changed (and you're
+building with Fennel support), cd to that directory and run make.  In
+very rare cases, you may need to make clean first, but that should be
+a last resort.  Upgrades to thirdparty components relied on by Fennel
+may require further action such as running configure again and
+rebuilding them; if you subscribe to the developer mailing list, there
+should be instructions posted whenever this is required.
 
 <li>
-If anything under dev/saffron/... has changed, cd to that directory
-and run ant.  This build is very quick, so an "ant clean" first never hurts.
+If anything under <code>dev/saffron/...</code> has changed, cd to that
+directory and run <code>ant</code>.  This build is very quick, so an
+<code>ant clean</code> first never hurts.
 
 <li>
-cd to dev/farrago and run "ant test" to make sure you'll be
-working from a good build (WARNING: this will rebuild your catalog
+cd to <code>dev/farrago</code> and run "ant test" to make sure you'll
+be working from a good build (WARNING: this will rebuild your catalog
 automatically, destroying any data in your Farrago database)
 
 </ol>
 
 <h2>Catalog Dump</h2>
 
-At any time, you can get a dump of the catalog by running "ant
-exportCatalog"; the output will be an XMI file in
-dev/farrago/catalog/xmi/FarragoCatalogExport.xmi.
+At any time, you can get a dump of the catalog by running <code>ant
+exportCatalog</code>; the output will be an XMI file in
+<code>dev/farrago/catalog/xmi/FarragoCatalogExport.xmi</code>.
 This can be useful for debugging the effects of DDL
 execution.
 
 <h2>Catalog Backup/Restore</h2>
 
-The "ant createCatalog" task (invoked automatically by "ant test")
-creates a backup of the initial catalog (and database if Fennel is
-enabled).  If your catalog gets corrupted (which will be a possibility
-on crash until we get Fennel to store the catalog), you can recover
-with "ant restoreCatalog".  This is a lot faster than "ant
-createCatalog" (which is another way to get back to a good state).
+The <code>ant createCatalog</code> task (invoked automatically as part
+of <code>ant test</code>) creates a backup of the initial catalog (and
+database if Fennel is enabled).  If your catalog gets corrupted (which
+will be a possibility on crash until we get Fennel to store the
+catalog), you can recover with <code>ant restoreCatalog</code>.  This
+is a lot faster than <code>ant createCatalog</code> (which is another
+way to get back to a good state).
 
 <h2>Interactive SQL</h2>
 
 You can execute interactive SQL from a command-line via the
 open-source JDBC <a href="http://sqlline.sourceforge.net">sqlline</a>
-project.  Just run the sqlline script from dev/farrago.  (You can
-ignore the UnsupportedOperationException thrown by the JDBC driver
-during startup.)  After connecting, try "select * from sales.emps;"
+project.  Just run the <code>sqllineEngine</code> script from dev/farrago.
+After connecting, try <code>select * from sales.emps;</code>
 (but if you disabled Fennel, don't be disappointed when the result set
 comes back empty).
 
 <p>
 
 If you prefer using a GUI, try the <a
-href="http://www.isqlviewer.com">iSQL</a> project instead.  To start
-the GUI, run "ant isql".  A service named Farrago is predefined
-automatically from dev/farrago/isql/Farrago.service.  
+href="http://www.isqlviewer.com">iSQL-Viewer</a> project instead.  To
+start the GUI, run <code>ant isql</code>.  From the services menu,
+choose <code>FarragoEmbedded</code> to start the engine and connect to
+it.  This service is predefined from
+<code>dev/farrago/isql/FarragoEmbedded.service</code>.  (The
+<code>FarragoServer</code> alternative is described later in this
+document.)
 
 <h2>Tracing</h2>
 
-Tracing based on the standard <a 
+Tracing based on the standard <a
 href="http://java.sun.com/j2se/1.4.1/docs/api/java/util/logging/package-summary.html#package_description">java.util.logging
 facility</a> is controlled by the file
-dev/farrago/trace/FarragoTrace.properties, which is generated when
-the catalog is created.  You can make modifications to this file; they
-won't be overwritten during regeneration.  However, comments cannot be
-preserved during regeneration, so don't bother.  Normally, trace output
-is written to dev/farrago/trace/FarragoTrace.log, but you can
-override this in the properties file.  The default trace level for all
-loggers is CONFIG.
+<code>dev/farrago/trace/FarragoTrace.properties</code>, which is
+generated when the catalog is created.  You can make modifications to
+this file; they won't be overwritten during regeneration.  However,
+comments cannot be preserved during regeneration, so don't bother.
+Normally, trace output is written to
+<code>dev/farrago/trace/FarragoTrace.log</code>, but you can override
+this in the properties file.  The default trace level for all loggers
+is CONFIG.
 
 <p>
 
@@ -261,32 +270,34 @@ make this configurable, since that's not always desirable.)
 
 Farrago classes use the standard logger naming scheme (logger name
 matches fully-qualified class name, so for detailed catalog tracing of
-the JDBC driver, add net.sf.farrago.jdbc.level=FINE).  However,
+the JDBC driver, add <code>net.sf.farrago.jdbc.level=FINE</code>).  However,
 Saffron and Fennel don't use java.util.logging API directly, so they
-have custom logger naming schemes:
+have custom logger naming schemes.  Below are some useful trace definitions:
 
 <ul>
 
-<li>add net.sf.farrago.jdbc.level=FINER to trace exceptions which
+<li>add <code>net.sf.farrago.jdbc.level=FINER</code> to trace exceptions which
 are returned via the JDBC driver (this is very useful
 since it traces underlying exceptions as well; these may
 not be visible in a front end such as sqlline)</li>
 
-<li>add net.sf.farrago.db.level=FINE to see all SQL statements
+<li>add <code>net.sf.farrago.db.level=FINE</code> to see all SQL statements
 executed (use FINER to see dynamic parameter values as well)</li>
 
-<li>add net.sf.farrago.saffron.level=FINE to turn on all Saffron tracing (no
-further discrimination is available)
+<li>add <code>net.sf.farrago.saffron.level=FINE</code> to turn on all
+Saffron tracing (no further discrimination is available)
 
-<li>add net.sf.farrago.fennel.level=FINE to turn on all Fennel tracing
-(probably more than you want!)
+<li>add <code>net.sf.farrago.fennel.level=FINE</code. to turn on all
+Fennel tracing (probably more than you want!)
 
-<li>add net.sf.farrago.fennel.FennelDbHandle.level=FINE to trace just
-the commands sent to the Fennel API (not their implementation)
+<li>add <code>net.sf.farrago.fennel.FennelDbHandle.level=FINE</code>
+to trace just the commands sent to the Fennel API (not their
+implementation)
 
-<li>add net.sf.farrago.fennel.xo.level=FINE to trace tuples processed
-by TupleStreams (you can also select individual stream types by name,
-e.g. net.sf.farrago.fennel.xo.FennelSortingStreamDef.level=FINE)
+<li>add <code>net.sf.farrago.fennel.xo.level=FINE</code> to trace
+tuples processed by TupleStreams (you can also select individual
+stream types by name,
+e.g. <code>net.sf.farrago.fennel.xo.FennelSortingStreamDef.level=FINE</code>)
 
 <li>some Fennel classes provide further tracing discrimination (TBD)
 
@@ -300,16 +311,32 @@ test package overview</a> for details.
 
 <h2>Debugging</h2>
 
-Run "ant jswat.sqlline" or "ant jswat.isql" to use the <a
-href="http://www.bluemarsh.com/java/jswat">JSwat</a> debugger for
-execution of interactive SQL commands.  For sqlline, input/output is
-performed through the JSwat Output pane at the bottom left of the
-screen.  The junitDebug script can also be used to debug one unit test
-at a time.  If you want to use another debugger, the jswatDebug ant
-macro definition in dev/farrago/buildMacros.xml might be helpful as
-a template for passing the right startup information.  Also, as part of a
-successful build, the full classpath is always dumped to the file
-dev/farrago/classpath.gen.
+Run <code>ant jswat.sqlline</code> or <code>ant jswat.isql</code> to
+use the <a href="http://www.bluemarsh.com/java/jswat">JSwat</a>
+debugger for execution of interactive SQL commands.  For sqlline,
+input/output is performed through the JSwat Output pane at the bottom
+left of the screen.  The <code>junitDebug</code> script can also be
+used to debug one unit test at a time.  If you want to use another
+debugger, the <code>jswatDebug</code> ant macro definition in
+<code>dev/farrago/buildMacros.xml</code> might be helpful as a
+template for passing the right startup information.  Also, as part of
+a successful build, the full classpath is always dumped to the file
+<code>dev/farrago/classpath.gen</code>.
+
+<h2>Client/Server Operation</h2>
+
+So far, all of the execution modes discussed have been <em>embedded
+engine mode</em>, where the Farrago engine is loaded directly into a
+single process such as iSQL-Viewer or sqlline.  This is the most
+useful for debugging, but scripts are also available to test
+client/server mode.  Run the <code>farragoServer</code> script to
+start the server in a shell (after startup, it waits listening for
+connections; enter the <code>!quit</code> command in order to shut it
+down).  From another shell, run <code>sqllineClient</code> (or
+<code>ant isql.client</code>, and choose the
+<code>FarragoServer</code> service) to communicate with the server in
+client/server mode.  To debug the server, start it with <code>ant
+jswat.server</code>.
 
 <h2>Coding</h2>
 

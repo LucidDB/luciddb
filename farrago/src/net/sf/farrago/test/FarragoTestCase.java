@@ -24,7 +24,7 @@ import junit.extensions.*;
 import junit.framework.*;
 
 import net.sf.farrago.catalog.*;
-import net.sf.farrago.jdbc.*;
+import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.util.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.med.*;
@@ -109,10 +109,11 @@ public abstract class FarragoTestCase extends DiffTestCase
      */
     public static void staticSetUp() throws Exception
     {
-        Class.forName("net.sf.farrago.jdbc.FarragoJdbcDriver");
-        connection = DriverManager.getConnection("jdbc:farrago:");
-        FarragoJdbcConnection farragoConnection =
-            (FarragoJdbcConnection) connection;
+        FarragoJdbcEngineDriver driver = new FarragoJdbcEngineDriver();
+        connection = DriverManager.getConnection(
+            driver.getUrlPrefix());
+        FarragoJdbcEngineConnection farragoConnection =
+            (FarragoJdbcEngineConnection) connection;
         catalog = farragoConnection.getSession().getCatalog();
         connection.setAutoCommit(false);
         runCleanup();
@@ -281,19 +282,21 @@ public abstract class FarragoTestCase extends DiffTestCase
 
     protected void runSqlLineTest(String sqlFile) throws Exception
     {
+        FarragoJdbcEngineDriver driver = new FarragoJdbcEngineDriver();
         assert(sqlFile.endsWith(".sql"));
         File sqlFileSansExt = new File(
             sqlFile.substring(0,sqlFile.length() - 4));
-        File file = new File(
-            System.getProperty(FarragoModelLoader.HOME_PROPERTY));
-        file = new File(file,"isql");
-        file = new File(file,"sqlline.properties");
         String [] args = new String [] {
+            "-u",
+            driver.getUrlPrefix(),
+            "-d",
+            "net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver",
+            "-n",
+            "guest",
             "--force=true",
             "--silent=true",
             "--showWarnings=false",
-            "--maxWidth=1024",
-            file.toString()
+            "--maxWidth=1024"
         };
         PrintStream savedOut = System.out;
         PrintStream savedErr = System.err;

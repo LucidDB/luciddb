@@ -45,6 +45,8 @@ import java.util.logging.*;
  * FarragoDatabase is a top-level singleton representing an instance of a
  * Farrago database engine.  It is reference-counted to allow it to be shared
  * in a library environment such as the directly embedded JDBC driver.
+ * Note that all synchronization is done at the class level, not the
+ * object level.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -58,12 +60,12 @@ public class FarragoDatabase
     /**
      * Reference count.
      */
-    private static int nConnections;
+    private static int nReferences;
 
     /**
-     * Singleton instance, or null when nConnections == 0.
+     * Singleton instance, or null when nReferences == 0.
      */
-    private static FarragoDatabase g_singleton;
+    private static FarragoDatabase instance;
 
     private FarragoCatalog systemCatalog;
 
@@ -86,10 +88,8 @@ public class FarragoDatabase
      */
     private File traceConfigFile;
 
-    private boolean closing;
-
     /**
-     * Establish a database connection.  If this is the first connection, the
+     * Establish a database reference.  If this is the first reference, the
      * database will be loaded first; otherwise, the existing database is
      * reused with an increased reference count.
      *
@@ -98,49 +98,87 @@ public class FarragoDatabase
      *
      * @return loaded database
      */
-    public static synchronized FarragoDatabase connect(
+    public static synchronized FarragoDatabase pinReference(
         FennelCmdExecutor cmdExecutor)
     {
+        tracer.info("connect");
+        
         // Do this first for reentrancy.
-        ++nConnections;
-        if (nConnections == 1) {
-            assert(g_singleton == null);
+        ++nReferences;
+        if (nReferences == 1) {
+            assert(instance == null);
             boolean success = false;
             try {
                 FarragoDatabase newDb = new FarragoDatabase(cmdExecutor,false);
-                assert(newDb == g_singleton);
+                assert(newDb == instance);
                 success = true;
             } finally {
                 if (!success) {
-                    nConnections = 0;
-                    g_singleton = null;
+                    nReferences = 0;
+                    instance = null;
                 }
             }
         }
-        return g_singleton;
+        return instance;
+    }
+
+    static synchronized void addSession(
+        FarragoDatabase db,
+        FarragoDbSession session)
+    {
+        assert(db == instance);
+        db.addAllocation(session);
+    }
+
+    static synchronized void disconnectSession(FarragoDbSession session)
+    {
+        tracer.info("disconnect");
+
+        FarragoDatabase db = session.getDatabase();
+        
+        assert(db.nReferences > 0);
+        assert(db == instance);
+
+        db.forgetAllocation(session);
+        
+        db.nReferences--;
     }
 
     /**
-     * Terminate a database connection.  If this is the last connection, the
-     * database will be shut down as a result.
+     * Conditionally shut down the database depending on the number
+     * of references.
      *
-     * @param db the database returned from {@link #connect}
+     * @param groundReferences threshold for shutdown; if actual number
+     * of sessions is greater than this, no shutdown takes place
+     *
+     * @return whether shutdown took place
      */
-    public static synchronized void disconnect(FarragoDatabase db)
+    public static synchronized boolean shutdownConditional(
+        int groundReferences)
     {
-        assert(nConnections > 0);
-        assert(db == g_singleton);
-        --nConnections;
-        int nConnectionsBase = 0;
-        if (db.systemCatalog != db.userCatalog) {
-            nConnectionsBase++;
+        assert(instance != null);
+        tracer.fine("ground reference count = " + groundReferences);
+        tracer.fine("actual reference count = " + instance.nReferences);
+        if (instance.nReferences <= groundReferences) {
+            shutdown();
+            return true;
+        } else {
+            return false;
         }
-        if (!db.closing && nConnections == nConnectionsBase) {
-            try {
-                g_singleton.close(false);
-            } finally {
-                g_singleton = null;
-            }
+    }
+
+    /**
+     * Shut down the database, killing any running sessions.
+     */
+    public static synchronized void shutdown()
+    {
+        tracer.info("shutdown");
+        assert(instance != null);
+        try {
+            instance.close(false);
+        } finally {
+            instance = null;
+            nReferences = 0;
         }
     }
 
@@ -166,7 +204,7 @@ public class FarragoDatabase
 
     private FarragoDatabase(FennelCmdExecutor cmdExecutor,boolean init)
     {
-        g_singleton = this;
+        instance = this;
         try {
             traceConfigFile = new File(
                 System.getProperties().getProperty(
@@ -239,7 +277,6 @@ public class FarragoDatabase
 
     private void close(boolean suppressExcns)
     {
-        closing = true;
         try {
             // This will close (in reverse order) all the FarragoAllocations
             // opened by the constructor.
@@ -256,11 +293,11 @@ public class FarragoDatabase
 
     private void warnOnClose(Throwable ex,boolean suppressExcns)
     {
-        // TODO:  something better
         tracer.warning(
             "Caught " + ex.getClass().getName() + " during database shutdown:"
             + ex.getMessage());
         if (!suppressExcns) {
+            tracer.throwing("FarragoDatabase","warnOnClose",ex);
             throw Util.newInternal(ex);
         }
     }

@@ -56,7 +56,7 @@ void
 unitTestStrings()
 {
     bool isNullable = true;    // Can tuple contain nulls?
-    int i, registersize = 100;
+    int i, registersize = 120;
     static uint buflen = 16;
 
     assert(!(registersize & 3)); // make sure registers are multiple of four
@@ -68,6 +68,8 @@ unitTestStrings()
     const int longIdx = registersize >> 1;     // half long
     const int veryShortIdx = registersize - 2; // just one very short
     const int zeroLenIdx = registersize - 3;   // zero length string, long string width
+    const int varFullIdx = registersize - 4;   // full width variable len string
+    const int trimmableIdx = registersize - 5; // string with leading and trailing spaces
 
     TupleDescriptor tupleDesc;
     tupleDesc.clear();
@@ -196,6 +198,13 @@ unitTestStrings()
             *ptr = 'V';
         } else if (i == zeroLenIdx) {
             itr->cbData = 0;
+        } else if (i == varFullIdx) {
+            itr->cbData = buflen;
+            memset(ptr, 'V', buflen);
+        } else if (i == trimmableIdx) {
+            itr->cbData = buflen;
+            assert(buflen == 16);
+            memcpy(ptr, "    1 3 5 78    ", buflen);
         } else {
             itr->cbData = variableStringLen;
             sprintf(ptr, "V%02d", i);
@@ -214,6 +223,10 @@ unitTestStrings()
             *ptr = 'F';
         } else if (i == zeroLenIdx) {
             itr->cbData = 0;
+        } else if (i == trimmableIdx) {
+            itr->cbData = buflen;
+            assert(buflen == 16);
+            memcpy(ptr, "    1 3 5 78    ", buflen);
         } else {
             sprintf(ptr, "F%02d", i);
             if (i < longIdx) {
@@ -367,7 +380,7 @@ unitTestStrings()
     instP[pc++] = strCatA2F->createInstruction(&c, regRefs);
 
     //
-    // strCatA3F
+    // strCatA3 Fixed
     //
     ExtendedInstructionDef* strCatA3F = eit->lookupBySignature("strCatA3(c,c,c)");
     assert(strCatA3F);
@@ -657,7 +670,7 @@ unitTestStrings()
 
     // common case
     regRefs[0] = iOutP[outI++];
-    regRefs[1] = vcInP[zeroLenIdx + 0];
+    regRefs[1] = vcInP[zeroLenIdx];
     instP[pc++] = strLenBitAV->createInstruction(&c, regRefs);
 
     regRefs[0] = iOutP[outI++];
@@ -850,7 +863,7 @@ unitTestStrings()
     instP[pc++] = strOverlayA5F->createInstruction(&c, regRefs);
 
 
-
+ 
     //
     // strOverlayA4 Fixed
     //
@@ -1032,8 +1045,471 @@ unitTestStrings()
     instP[pc++] = strOverlayA4V->createInstruction(&c, regRefs);
 
 
+    //
+    // strPosA Fixed
+    //
+    ExtendedInstructionDef* strPosAF = eit->lookupBySignature("strPosA(s4,c,c)");
+    assert(strPosAF);
+    assert(strPosAF->getName() == string("strPosA"));
+    assert(strPosAF->getParameterTypes().size() == 3);
+    regRefs.resize(3);
+
+    // common case
+    regRefs[0] = iOutP[outI++];
+    regRefs[1] = cInP[shortIdx + 0];
+    regRefs[2] = cInP[shortIdx + 0];
+    instP[pc++] = strPosAF->createInstruction(&c, regRefs);
+
+    regRefs[0] = iOutP[outI++];
+    regRefs[1] = cInP[longIdx + 0];
+    regRefs[2] = cInP[longIdx + 1];
+    instP[pc++] = strPosAF->createInstruction(&c, regRefs);
+
+    // null cases
+    regRefs[0] = iOutP[outI++];
+    regRefs[1] = cInP[longIdx + 0];
+    regRefs[2] = cInP[nullRegister];
+    instP[pc++] = strPosAF->createInstruction(&c, regRefs);
+
+    regRefs[0] = iOutP[outI++];
+    regRefs[1] = cInP[nullRegister];
+    regRefs[2] = cInP[longIdx + 1];
+    instP[pc++] = strPosAF->createInstruction(&c, regRefs);
 
 
+    //
+    // strPosA Variable
+    //
+    ExtendedInstructionDef* strPosAV = eit->lookupBySignature("strPosA(s4,vc,vc)");
+    assert(strPosAV);
+    assert(strPosAV->getName() == string("strPosA"));
+    assert(strPosAV->getParameterTypes().size() == 3);
+    regRefs.resize(3);
+
+    // common case
+    regRefs[0] = iOutP[outI++];
+    regRefs[1] = vcInP[shortIdx + 0];
+    regRefs[2] = vcInP[shortIdx + 0];
+    instP[pc++] = strPosAV->createInstruction(&c, regRefs);
+
+    regRefs[0] = iOutP[outI++];
+    regRefs[1] = vcInP[longIdx + 0];
+    regRefs[2] = vcInP[longIdx + 1];
+    instP[pc++] = strPosAV->createInstruction(&c, regRefs);
+
+    regRefs[0] = iOutP[outI++];
+    regRefs[1] = vcInP[zeroLenIdx];
+    regRefs[2] = vcInP[longIdx + 1];
+    instP[pc++] = strPosAV->createInstruction(&c, regRefs);
+
+    regRefs[0] = iOutP[outI++];
+    regRefs[1] = vcInP[longIdx + 0];
+    regRefs[2] = vcInP[zeroLenIdx];
+    instP[pc++] = strPosAV->createInstruction(&c, regRefs);
+
+    // null cases
+    regRefs[0] = iOutP[outI++];
+    regRefs[1] = vcInP[longIdx + 0];
+    regRefs[2] = vcInP[nullRegister];
+    instP[pc++] = strPosAV->createInstruction(&c, regRefs);
+
+    regRefs[0] = iOutP[outI++];
+    regRefs[1] = vcInP[nullRegister];
+    regRefs[2] = vcInP[longIdx + 1];
+    instP[pc++] = strPosAV->createInstruction(&c, regRefs);
+
+ 
+    //
+    // strSubStringA3 Fixed
+    //
+    ExtendedInstructionDef* strSubStringA3F = 
+        eit->lookupBySignature("strSubStringA3(vc,c,s4)");
+    assert(strSubStringA3F);
+    assert(strSubStringA3F->getName() == string("strSubStringA3"));
+    assert(strSubStringA3F->getParameterTypes().size() == 3);
+    regRefs.resize(3);
+
+    // common case
+    regRefs[0] = vcOutP[outVCShort++];
+    regRefs[1] = cInP[shortIdx + 0];
+    regRefs[2] = iInP[1];
+    instP[pc++] = strSubStringA3F->createInstruction(&c, regRefs);
+
+    regRefs[0] = vcOutP[outVCShort++];
+    regRefs[1] = cInP[shortIdx + 0];
+    regRefs[2] = iInP[5];
+    instP[pc++] = strSubStringA3F->createInstruction(&c, regRefs);
+
+    // null cases
+    regRefs[0] = vcOutP[outVCShort++];
+    regRefs[1] = cInP[nullRegister];
+    regRefs[2] = iInP[5];
+    instP[pc++] = strSubStringA3F->createInstruction(&c, regRefs);
+
+    regRefs[0] = vcOutP[outVCShort++];
+    regRefs[1] = cInP[shortIdx + 1];
+    regRefs[2] = iInP[nullRegister];
+    instP[pc++] = strSubStringA3F->createInstruction(&c, regRefs);
+
+    // substring error not possible if len is unspecified
+    // right truncation
+    regRefs[0] = vcOutP[outVCShort++];
+    regRefs[1] = cInP[longIdx + 0];
+    regRefs[2] = iInP[0];
+    const int strSubStringA3FException1 = pc;
+    instP[pc++] = strSubStringA3F->createInstruction(&c, regRefs);
+
+    //
+    // strSubStringA3 Variable
+    //
+    ExtendedInstructionDef* strSubStringA3V = 
+        eit->lookupBySignature("strSubStringA3(vc,vc,s4)");
+    assert(strSubStringA3V);
+    assert(strSubStringA3V->getName() == string("strSubStringA3"));
+    assert(strSubStringA3V->getParameterTypes().size() == 3);
+    regRefs.resize(3);
+
+    // common case
+    regRefs[0] = vcOutP[outVCShort++];
+    regRefs[1] = vcInP[shortIdx + 0];
+    regRefs[2] = iInP[1];
+    instP[pc++] = strSubStringA3V->createInstruction(&c, regRefs);
+
+    regRefs[0] = vcOutP[outVCShort++];
+    regRefs[1] = vcInP[shortIdx + 0];
+    regRefs[2] = iInP[5];
+    instP[pc++] = strSubStringA3V->createInstruction(&c, regRefs);
+
+    // null cases
+    regRefs[0] = vcOutP[outVCShort++];
+    regRefs[1] = vcInP[nullRegister];
+    regRefs[2] = iInP[5];
+    instP[pc++] = strSubStringA3V->createInstruction(&c, regRefs);
+
+    regRefs[0] = vcOutP[outVCShort++];
+    regRefs[1] = vcInP[shortIdx + 1];
+    regRefs[2] = iInP[nullRegister];
+    instP[pc++] = strSubStringA3V->createInstruction(&c, regRefs);
+
+    // substring error not possible if len is unspecified
+    // right truncation
+    regRefs[0] = vcOutP[outVCShort++];
+    regRefs[1] = vcInP[varFullIdx];
+    regRefs[2] = iInP[1];
+    const int strSubStringA3VException1 = pc;
+    instP[pc++] = strSubStringA3V->createInstruction(&c, regRefs);
+
+ 
+    //
+    // strSubStringA4 Fixed
+    //
+    ExtendedInstructionDef* strSubStringA4F = 
+        eit->lookupBySignature("strSubStringA4(vc,c,s4,s4)");
+    assert(strSubStringA4F);
+    assert(strSubStringA4F->getName() == string("strSubStringA4"));
+    assert(strSubStringA4F->getParameterTypes().size() == 4);
+    regRefs.resize(4);
+
+    // common case
+    regRefs[0] = vcOutP[outVCShort++];
+    regRefs[1] = cInP[shortIdx + 0];
+    regRefs[2] = iInP[1];
+    regRefs[3] = iInP[2];
+    instP[pc++] = strSubStringA4F->createInstruction(&c, regRefs);
+
+    regRefs[0] = vcOutP[outVCShort++];
+    regRefs[1] = cInP[shortIdx + 0];
+    regRefs[2] = iInP[5];
+    regRefs[3] = iInP[5];
+    instP[pc++] = strSubStringA4F->createInstruction(&c, regRefs);
+
+    // null cases
+    regRefs[0] = vcOutP[outVCShort++];
+    regRefs[1] = cInP[nullRegister];
+    regRefs[2] = iInP[5];
+    regRefs[3] = iInP[5];
+    instP[pc++] = strSubStringA4F->createInstruction(&c, regRefs);
+
+    regRefs[0] = vcOutP[outVCShort++];
+    regRefs[1] = cInP[shortIdx + 1];
+    regRefs[2] = iInP[nullRegister];
+    regRefs[3] = iInP[5];
+    instP[pc++] = strSubStringA4F->createInstruction(&c, regRefs);
+
+    regRefs[0] = vcOutP[outVCShort++];
+    regRefs[1] = cInP[shortIdx + 1];
+    regRefs[2] = iInP[5];
+    regRefs[3] = iInP[nullRegister];
+    instP[pc++] = strSubStringA4F->createInstruction(&c, regRefs);
+
+    // substring error
+    regRefs[0] = vcOutP[outVCShort++];
+    regRefs[1] = cInP[longIdx + 0];
+    regRefs[2] = iInP[0];
+    regRefs[3] = iInP[negRegister + 3];
+    const int strSubStringA4FException1 = pc;
+    instP[pc++] = strSubStringA4F->createInstruction(&c, regRefs);
+
+    // right truncation
+    regRefs[0] = vcOutP[outVCShort++];
+    regRefs[1] = cInP[longIdx + 0];
+    regRefs[2] = iInP[0];
+    regRefs[3] = iInP[16];
+    const int strSubStringA4FException2 = pc;
+    instP[pc++] = strSubStringA4F->createInstruction(&c, regRefs);
+
+    //
+    // strSubStringA4 Variable
+    //
+    ExtendedInstructionDef* strSubStringA4V = 
+        eit->lookupBySignature("strSubStringA4(vc,vc,s4,s4)");
+    assert(strSubStringA4V);
+    assert(strSubStringA4V->getName() == string("strSubStringA4"));
+    assert(strSubStringA4V->getParameterTypes().size() == 4);
+    regRefs.resize(4);
+
+    // common case
+    regRefs[0] = vcOutP[outVCShort++];
+    regRefs[1] = vcInP[shortIdx + 0];
+    regRefs[2] = iInP[1];
+    regRefs[3] = iInP[2];
+    instP[pc++] = strSubStringA4V->createInstruction(&c, regRefs);
+
+    regRefs[0] = vcOutP[outVCShort++];
+    regRefs[1] = vcInP[shortIdx + 0];
+    regRefs[2] = iInP[5];
+    regRefs[3] = iInP[5];
+    instP[pc++] = strSubStringA4V->createInstruction(&c, regRefs);
+
+    // null cases
+    regRefs[0] = vcOutP[outVCShort++];
+    regRefs[1] = vcInP[nullRegister];
+    regRefs[2] = iInP[5];
+    regRefs[3] = iInP[5];
+    instP[pc++] = strSubStringA4V->createInstruction(&c, regRefs);
+
+    regRefs[0] = vcOutP[outVCShort++];
+    regRefs[1] = vcInP[shortIdx + 1];
+    regRefs[2] = iInP[nullRegister];
+    regRefs[3] = iInP[5];
+    instP[pc++] = strSubStringA4V->createInstruction(&c, regRefs);
+
+    regRefs[0] = vcOutP[outVCShort++];
+    regRefs[1] = vcInP[shortIdx + 1];
+    regRefs[2] = iInP[5];
+    regRefs[3] = iInP[nullRegister];
+    instP[pc++] = strSubStringA4V->createInstruction(&c, regRefs);
+
+    // substring error
+    regRefs[0] = vcOutP[outVCShort++];
+    regRefs[1] = vcInP[longIdx + 0];
+    regRefs[2] = iInP[0];
+    regRefs[3] = iInP[negRegister + 3];
+    const int strSubStringA4VException1 = pc;
+    instP[pc++] = strSubStringA4V->createInstruction(&c, regRefs);
+
+    // right truncation
+    regRefs[0] = vcOutP[outVCShort++];
+    regRefs[1] = vcInP[varFullIdx];
+    regRefs[2] = iInP[1];
+    regRefs[3] = iInP[16];
+    const int strSubStringA4VException2 = pc;
+    instP[pc++] = strSubStringA4V->createInstruction(&c, regRefs);
+
+    //
+    // strToLowerA Fixed
+    //
+    ExtendedInstructionDef* strToLowerAF = 
+        eit->lookupBySignature("strToLowerA(c,c)");
+    assert(strToLowerAF);
+    assert(strToLowerAF->getName() == string("strToLowerA"));
+    assert(strToLowerAF->getParameterTypes().size() == 2);
+    regRefs.resize(2);
+
+    // common case
+    int toLowerOutCShort = outCShort;
+    regRefs[0] = cOutP[outCShort++];
+    regRefs[1] = cInP[shortIdx + 0];
+    instP[pc++] = strToLowerAF->createInstruction(&c, regRefs);
+
+    // null case
+    // use long register here as lengths must be equal and null register is long
+    regRefs[0] = cOutP[outCLong++];
+    regRefs[1] = cInP[nullRegister];
+    instP[pc++] = strToLowerAF->createInstruction(&c, regRefs);
+
+    // right truncation not possible in fixed width, as both 
+    // strings must be same length by definition.
+
+    //
+    // strToLowerA Variable
+    //
+    ExtendedInstructionDef* strToLowerAV = 
+        eit->lookupBySignature("strToLowerA(vc,vc)");
+    assert(strToLowerAV);
+    assert(strToLowerAV->getName() == string("strToLowerA"));
+    assert(strToLowerAV->getParameterTypes().size() == 2);
+    regRefs.resize(2);
+
+    // common cases
+    int toLowerOutVCShort = outVCShort;
+    regRefs[0] = vcOutP[outVCShort++];
+    regRefs[1] = vcInP[shortIdx + 0];
+    instP[pc++] = strToLowerAV->createInstruction(&c, regRefs);
+
+    regRefs[0] = vcOutP[outVCShort++];
+    regRefs[1] = vcInP[zeroLenIdx];
+    instP[pc++] = strToLowerAV->createInstruction(&c, regRefs);
+
+    // null case
+    regRefs[0] = vcOutP[outVCShort++];
+    regRefs[1] = vcInP[nullRegister];
+    instP[pc++] = strToLowerAV->createInstruction(&c, regRefs);
+
+    // right truncation
+    regRefs[0] = vcOutP[outVCShort++];
+    regRefs[1] = vcInP[varFullIdx];
+    const int strToLowerAVException1 = pc;
+    instP[pc++] = strToLowerAV->createInstruction(&c, regRefs);
+
+    //
+    // strToUpperA Fixed
+    //
+    ExtendedInstructionDef* strToUpperAF = 
+        eit->lookupBySignature("strToUpperA(c,c)");
+    assert(strToUpperAF);
+    assert(strToUpperAF->getName() == string("strToUpperA"));
+    assert(strToUpperAF->getParameterTypes().size() == 2);
+    regRefs.resize(2);
+
+    // common case
+    regRefs[0] = cOutP[outCShort++];
+    regRefs[1] = cOutP[toLowerOutCShort];
+    instP[pc++] = strToUpperAF->createInstruction(&c, regRefs);
+
+    // null case
+    // use long register here as lengths must be equal and null register is long
+    regRefs[0] = cOutP[outCLong++];
+    regRefs[1] = cInP[nullRegister];
+    instP[pc++] = strToUpperAF->createInstruction(&c, regRefs);
+
+    // right truncation not possible in fixed width, as both 
+    // strings must be same length by definition.
+
+    //
+    // strToUpperA Variable
+    //
+    ExtendedInstructionDef* strToUpperAV = 
+        eit->lookupBySignature("strToUpperA(vc,vc)");
+    assert(strToUpperAV);
+    assert(strToUpperAV->getName() == string("strToUpperA"));
+    assert(strToUpperAV->getParameterTypes().size() == 2);
+    regRefs.resize(2);
+
+    // common cases
+    regRefs[0] = vcOutP[outVCShort++];
+    regRefs[1] = vcOutP[toLowerOutVCShort];
+    instP[pc++] = strToUpperAV->createInstruction(&c, regRefs);
+
+    regRefs[0] = vcOutP[outVCShort++];
+    regRefs[1] = vcInP[zeroLenIdx];
+    instP[pc++] = strToUpperAV->createInstruction(&c, regRefs);
+
+    // null case
+    regRefs[0] = vcOutP[outVCShort++];
+    regRefs[1] = vcInP[nullRegister];
+    instP[pc++] = strToUpperAV->createInstruction(&c, regRefs);
+
+    // right truncation
+    regRefs[0] = vcOutP[outVCShort++];
+    regRefs[1] = vcInP[varFullIdx];
+    const int strToUpperAVException1 = pc;
+    instP[pc++] = strToUpperAV->createInstruction(&c, regRefs);
+
+
+    //
+    // strTrimA Fixed
+    //
+    ExtendedInstructionDef* strTrimAF = 
+        eit->lookupBySignature("strTrimA(vc,c,s4,s4)");
+    assert(strTrimAF);
+    assert(strTrimAF->getName() == string("strTrimA"));
+    assert(strTrimAF->getParameterTypes().size() == 4);
+    regRefs.resize(4);
+
+    // common case
+    regRefs[0] = vcOutP[outVCLong++];
+    regRefs[1] = cInP[trimmableIdx];
+    regRefs[2] = iOutP[0];
+    regRefs[3] = iOutP[0];
+    instP[pc++] = strTrimAF->createInstruction(&c, regRefs);
+
+    regRefs[0] = vcOutP[outVCLong++];
+    regRefs[1] = cInP[trimmableIdx];
+    regRefs[2] = iOutP[1];
+    regRefs[3] = iOutP[0];
+    instP[pc++] = strTrimAF->createInstruction(&c, regRefs);
+
+    regRefs[0] = vcOutP[outVCLong++];
+    regRefs[1] = cInP[trimmableIdx];
+    regRefs[2] = iOutP[0];
+    regRefs[3] = iOutP[1];
+    instP[pc++] = strTrimAF->createInstruction(&c, regRefs);
+
+    regRefs[0] = vcOutP[outVCLong++];
+    regRefs[1] = cInP[trimmableIdx];
+    regRefs[2] = iOutP[1];
+    regRefs[3] = iOutP[1];
+    instP[pc++] = strTrimAF->createInstruction(&c, regRefs);
+
+    // null case
+    regRefs[0] = vcOutP[outVCLong++];
+    regRefs[1] = cInP[nullRegister];
+    regRefs[2] = iOutP[1];
+    regRefs[3] = iOutP[1];
+    instP[pc++] = strTrimAF->createInstruction(&c, regRefs);
+
+    //
+    // strTrimA Variable
+    //
+    ExtendedInstructionDef* strTrimAV = 
+        eit->lookupBySignature("strTrimA(vc,vc,s4,s4)");
+    assert(strTrimAV);
+    assert(strTrimAV->getName() == string("strTrimA"));
+    assert(strTrimAV->getParameterTypes().size() == 4);
+    regRefs.resize(4);
+
+    // common case
+    regRefs[0] = vcOutP[outVCLong++];
+    regRefs[1] = cInP[trimmableIdx];
+    regRefs[2] = iOutP[0];
+    regRefs[3] = iOutP[0];
+    instP[pc++] = strTrimAV->createInstruction(&c, regRefs);
+
+    regRefs[0] = vcOutP[outVCLong++];
+    regRefs[1] = cInP[trimmableIdx];
+    regRefs[2] = iOutP[1];
+    regRefs[3] = iOutP[0];
+    instP[pc++] = strTrimAV->createInstruction(&c, regRefs);
+
+    regRefs[0] = vcOutP[outVCLong++];
+    regRefs[1] = cInP[trimmableIdx];
+    regRefs[2] = iOutP[0];
+    regRefs[3] = iOutP[1];
+    instP[pc++] = strTrimAV->createInstruction(&c, regRefs);
+
+    regRefs[0] = vcOutP[outVCLong++];
+    regRefs[1] = cInP[trimmableIdx];
+    regRefs[2] = iOutP[1];
+    regRefs[3] = iOutP[1];
+    instP[pc++] = strTrimAV->createInstruction(&c, regRefs);
+
+    // null case
+    regRefs[0] = vcOutP[outVCLong++];
+    regRefs[1] = cInP[nullRegister];
+    regRefs[2] = iOutP[1];
+    regRefs[3] = iOutP[1];
+    instP[pc++] = strTrimAV->createInstruction(&c, regRefs);
 
     int lastPC = pc;
 
@@ -1059,6 +1535,8 @@ unitTestStrings()
 
     c.exec();
 
+    cout << "Calculator Warnings: " << c.warnings() << endl;
+
     string out;
     for (i = 0; i < pc; i++) {
         assert(instP[i]);
@@ -1083,22 +1561,27 @@ unitTestStrings()
     deque<CalcMessage>::iterator iter = c.mWarnings.begin();
     if (c.mWarnings.empty()) fail("no warnings", __LINE__);
 
-
+    //
     // strCatA2F
     // note: cannot test common case of strCatA2F w/ running strCatA2F first
     // to have length set correctly.
+    //
     if (output[outCLong++].pData != NULL) fail("testStrCatA2F", __LINE__);
     if (iter->mPc != strCatA2FException) fail("testStrCatA2F", __LINE__);
     if (truncErr.compare(iter->mStr)) fail("testStrCatA2F", __LINE__);
     iter++;
 
+    //
     // strCatA3F
+    //
     if (memcmp(output[outCLong].pData, "F00 F01 ", 8))
         fail("testStrCatA3F", __LINE__);
+    // note: a real program should not exit with a fixed length != width
     if (output[outCLong++].cbData != 8)
         fail("testStrCatA3F", __LINE__);
     if (memcmp(output[outCLong].pData, "F00 F00 ", 8))
         fail("testStrCatA3F", __LINE__);
+    // note: a real program should not exit with a fixed length != width
     if (output[outCLong++].cbData != 8)
         fail("testStrCatA3F", __LINE__);
     if (output[outCLong++].pData != NULL) fail("testStrCatA3F", __LINE__);
@@ -1109,19 +1592,18 @@ unitTestStrings()
     iter++;
     
 
-    char b[100];
-    memset(b, 0, 99);
-    memcpy(b, output[outCLong].pData, buflen);
-    printf("output = |%s|\n", b);
-
+    //
     // strCatA2F & strCatA3F
     // four way fixed cat using both
+    //
     if (memcmp(output[outCLong].pData, "F00 F01 F02 F03 ", buflen))
         fail("testStrCatA2F/3", __LINE__);
     if (output[outCLong++].cbData != 16)
         fail("testStrCatA2F/3", __LINE__);
 
+    //
     // strCatA2V
+    //
     if (memcmp(output[outVCLong].pData, "V04V05", 6))
         fail("testStrCatA2V", __LINE__);
     if (output[outVCLong++].cbData !=  6)
@@ -1132,7 +1614,9 @@ unitTestStrings()
     if (truncErr.compare(iter->mStr)) fail("testStrCatA2V", __LINE__);
     iter++;
 
+    //
     // strCatA3V
+    //
     if (memcmp(output[outVCLong].pData, "V00V01", 6))
         fail("testStrCatA3V", __LINE__);
     if (output[outVCLong++].cbData !=  6)
@@ -1157,8 +1641,9 @@ unitTestStrings()
     if (truncErr.compare(iter->mStr)) fail("testStrCatA3V", __LINE__);
     iter++;
     
-
+    //
     // strCmpA Fixed
+    //
     if (*(reinterpret_cast<int32_t const *>(output[outI++].pData)) != 0) 
         fail("testStrCmpAF", __LINE__);
     if (*(reinterpret_cast<int32_t const *>(output[outI++].pData)) >= 0) 
@@ -1170,7 +1655,9 @@ unitTestStrings()
     if (output[outI++].pData != NULL) fail("testStrCcmpAF", __LINE__);
     if (output[outI++].pData != NULL) fail("testStrCcmpAF", __LINE__);
 
+    //
     // strCmpAV
+    //
     if (*(reinterpret_cast<int32_t const *>(output[outI++].pData)) != 0) 
         fail("testStrCmpAV", __LINE__);
     if (*(reinterpret_cast<int32_t const *>(output[outI++].pData)) >= 0) 
@@ -1189,8 +1676,9 @@ unitTestStrings()
     if (output[outI++].pData != NULL) fail("testStrCmpAV", __LINE__);
     if (output[outI++].pData != NULL) fail("testStrCmpAV", __LINE__);
 
-
+    //
     // strLenBitA Fixed
+    //
     if (*(reinterpret_cast<int32_t const *>(output[outI++].pData)) != 
         (static_cast<int32_t>(buflenShort * 8)))
         fail("strLenBitAF", __LINE__);
@@ -1200,7 +1688,9 @@ unitTestStrings()
 
     if (output[outI++].pData != NULL) fail("strLenBitAF", __LINE__);
 
+    //
     // strLenBitA Variable
+    //
     if (*(reinterpret_cast<int32_t const *>(output[outI++].pData)) != 
         (static_cast<int32_t>(0)))
         fail("strLenBitAV", __LINE__);
@@ -1213,7 +1703,9 @@ unitTestStrings()
 
     if (output[outI++].pData != NULL) fail("strLenBitAV", __LINE__);
 
+    //
     // strLenCharA Fixed
+    //
     if (*(reinterpret_cast<int32_t const *>(output[outI++].pData)) != 
         (static_cast<int32_t>(buflenShort)))
         fail("strLenCharAF", __LINE__);
@@ -1223,7 +1715,9 @@ unitTestStrings()
 
     if (output[outI++].pData != NULL) fail("strLenCharAF", __LINE__);
 
+    //
     // strLenCharA Variable
+    //
     if (*(reinterpret_cast<int32_t const *>(output[outI++].pData)) != 
         (static_cast<int32_t>(0)))
         fail("strLenCharAV", __LINE__);
@@ -1236,7 +1730,9 @@ unitTestStrings()
 
     if (output[outI++].pData != NULL) fail("strLenCharAV", __LINE__);
 
+    //
     // strLenOctA Fixed
+    //
     if (*(reinterpret_cast<int32_t const *>(output[outI++].pData)) != 
         (static_cast<int32_t>(buflenShort)))
         fail("strLenOctAF", __LINE__);
@@ -1246,7 +1742,9 @@ unitTestStrings()
 
     if (output[outI++].pData != NULL) fail("strLenOctAF", __LINE__);
 
+    //
     // strLenOctA Variable
+    //
     if (*(reinterpret_cast<int32_t const *>(output[outI++].pData)) != 
         (static_cast<int32_t>(0)))
         fail("strLenOctAV", __LINE__);
@@ -1259,8 +1757,9 @@ unitTestStrings()
 
     if (output[outI++].pData != NULL) fail("strLenOctAV", __LINE__);
 
-
+    //
     // strOverlayA5 Fixed
+    //
     if (memcmp(output[outVCLong].pData, "FF01 00 ", 8))
         fail("strOverlayA5F", __LINE__);
     if (output[outVCLong++].cbData != 8) fail("strOverlayA5F", __LINE__);
@@ -1284,7 +1783,9 @@ unitTestStrings()
     iter++;
     outVCLong++;
 
-    // strOverlayA4F
+    //
+    // strOverlayA4 Fixed
+    //
     if (memcmp(output[outVCLong].pData, "F0F01 ", 6))
         fail("strOverlayA4F", __LINE__);
     if (output[outVCLong++].cbData != 6) fail("strOverlayA4F", __LINE__);
@@ -1302,8 +1803,9 @@ unitTestStrings()
     iter++;
     outVCLong++;
 
-
-    // strOverlayA5V
+    //
+    // strOverlayA5 Variable
+    //
     if (memcmp(output[outVCLong].pData, "VV0100", 6))
         fail("strOverlayA5V", __LINE__);
     if (output[outVCLong++].cbData != 6) fail("strOverlayA5V", __LINE__);
@@ -1327,7 +1829,9 @@ unitTestStrings()
     iter++;
     outVCShort++;
 
-    // strOverlayA4V
+    //
+    // strOverlayA4 Variable
+    //
     if (memcmp(output[outVCLong].pData, "V0V01", 5))
         fail("strOverlayA4V", __LINE__);
     if (output[outVCLong++].cbData != 5) fail("strOverlayA4V", __LINE__);
@@ -1345,24 +1849,195 @@ unitTestStrings()
     iter++;
     outVCShort++;
 
+    //
+    // strPosA Fixed
+    //
+    if (*(reinterpret_cast<int32_t const *>(output[outI++].pData)) != 
+        (static_cast<int32_t>(1)))
+        fail("strPosAF", __LINE__);
+    if (*(reinterpret_cast<int32_t const *>(output[outI++].pData)) !=
+        (static_cast<int32_t>(0)))
+        fail("strPosAF", __LINE__);
 
-    // XXXXXXXXXXXXXXXXXXXXX TODO: Add the following:
-    // XXXXXXXXXXXXXXXXXXXXX TODO: Add the following:
-    // strPosA
-    // strSubStrA5
-    // strSubStrA4
-    // strToLowerA
-    // strToUpperA
-    // Trim functions: TBD. 2 flav-o-flavs?
-    // XXXXXXXXXXXXXXXXXXXXX TODO: Add the following:
-    // XXXXXXXXXXXXXXXXXXXXX TODO: Add the following:
+    if (output[outI++].pData != NULL) fail("strPosAF", __LINE__);
+    if (output[outI++].pData != NULL) fail("strPosAF", __LINE__);
+
+    //
+    // strPosA Variable
+    //
+    if (*(reinterpret_cast<int32_t const *>(output[outI++].pData)) != 
+        (static_cast<int32_t>(1)))
+        fail("strPosAV", __LINE__);
+    if (*(reinterpret_cast<int32_t const *>(output[outI++].pData)) !=
+        (static_cast<int32_t>(0)))
+        fail("strPosAV", __LINE__);
+    if (*(reinterpret_cast<int32_t const *>(output[outI++].pData)) !=
+        (static_cast<int32_t>(0)))
+        fail("strPosAV", __LINE__);
+    if (*(reinterpret_cast<int32_t const *>(output[outI++].pData)) !=
+        (static_cast<int32_t>(1)))
+        fail("strPosAV", __LINE__);
+
+    if (output[outI++].pData != NULL) fail("strPosAV", __LINE__);
+    if (output[outI++].pData != NULL) fail("strPosAV", __LINE__);
+
+    //
+    // strSubStringA3 Fixed
+    //
+    if (memcmp(output[outVCShort].pData, "F00 ", 4))
+        fail("strSubStringA3F", __LINE__);
+    if (output[outVCShort++].cbData != 4) fail("strSubStringA3F", __LINE__);
+    if (output[outVCShort++].cbData != 0) fail("strSubStringA3F", __LINE__);
+    if (output[outVCShort++].pData != NULL) fail("strSubStringA3F", __LINE__);
+    if (output[outVCShort++].pData != NULL) fail("strSubStringA3F", __LINE__);
+
+    if (iter->mPc != strSubStringA3FException1) fail("strSubStringA3F", __LINE__);
+    if (truncErr.compare(iter->mStr)) fail("strSubStringA3F", __LINE__);
+    iter++;
+    outVCShort++;
+
+    //
+    // strSubStringA3 Variable
+    //
+    if (memcmp(output[outVCShort].pData, "V00", 3))
+        fail("strSubStringA3V", __LINE__);
+    if (output[outVCShort++].cbData != 3) fail("strSubStringA3V", __LINE__);
+    if (output[outVCShort++].cbData != 0) fail("strSubStringA3V", __LINE__);
+    if (output[outVCShort++].pData != NULL) fail("strSubStringA3V", __LINE__);
+    if (output[outVCShort++].pData != NULL) fail("strSubStringA3V", __LINE__);
+
+    if (iter->mPc != strSubStringA3VException1) fail("strSubStringA3V", __LINE__);
+    if (truncErr.compare(iter->mStr)) fail("strSubStringA3V", __LINE__);
+    iter++;
+    outVCShort++;
+
+    //
+    // strSubStringA4 Fixed
+    //
+    if (memcmp(output[outVCShort].pData, "F0", 2))
+        fail("strSubStringA4F", __LINE__);
+    if (output[outVCShort++].cbData != 2) fail("strSubStringA4F", __LINE__);
+    if (output[outVCShort++].cbData != 0) fail("strSubStringA4F", __LINE__);
+    if (output[outVCShort++].pData != NULL) fail("strSubStringA4F", __LINE__);
+    if (output[outVCShort++].pData != NULL) fail("strSubStringA4F", __LINE__);
+    if (output[outVCShort++].pData != NULL) fail("strSubStringA4F", __LINE__);
+
+    if (iter->mPc != strSubStringA4FException1) fail("strSubStringA4F", __LINE__);
+    if (substrErr.compare(iter->mStr)) fail("strSubStringA4F", __LINE__);
+    iter++;
+    outVCShort++;
+
+    if (iter->mPc != strSubStringA4FException2) fail("strSubStringA4F", __LINE__);
+    if (truncErr.compare(iter->mStr)) fail("strSubStringA4F", __LINE__);
+    iter++;
+    outVCShort++;
+
+    //
+    // strSubStringA4 Variable
+    //
+    if (memcmp(output[outVCShort].pData, "V0", 2))
+        fail("strSubStringA4V", __LINE__);
+    if (output[outVCShort++].cbData != 2) fail("strSubStringA4V", __LINE__);
+    if (output[outVCShort++].cbData != 0) fail("strSubStringA4V", __LINE__);
+    if (output[outVCShort++].pData != NULL) fail("strSubStringA4V", __LINE__);
+    if (output[outVCShort++].pData != NULL) fail("strSubStringA4V", __LINE__);
+    if (output[outVCShort++].pData != NULL) fail("strSubStringA4V", __LINE__);
+
+    if (iter->mPc != strSubStringA4VException1) fail("strSubStringA4V", __LINE__);
+    if (substrErr.compare(iter->mStr)) fail("strSubStringA4V", __LINE__);
+    iter++;
+    outVCShort++;
+
+    if (iter->mPc != strSubStringA4VException2) fail("strSubStringA4V", __LINE__);
+    if (truncErr.compare(iter->mStr)) fail("strSubStringA4V", __LINE__);
+    iter++;
+    outVCShort++;
+
+    //
+    // strToLowerA Fixed
+    //
+    if (memcmp(output[outCShort].pData, "f00 ", 4))
+        fail("strToLowerAF", __LINE__);
+    if (output[outCShort++].cbData != 4) fail("strToLowerAF", __LINE__);
+    // use long register here as lengths must be equal and null register is long
+    if (output[outCLong++].pData != NULL) fail("strToLowerAF", __LINE__);
+
+    //
+    // strToLowerA Variable
+    //
+    if (memcmp(output[outVCShort].pData, "v00", 3))
+        fail("strToLowerAV", __LINE__);
+    if (output[outVCShort++].cbData != 3) fail("strToLowerAV", __LINE__);
+    if (output[outVCShort++].cbData != 0) fail("strToLowerAV", __LINE__);
+    if (output[outVCShort++].pData != NULL) fail("strToLowerAV", __LINE__);
+
+    if (iter->mPc != strToLowerAVException1) fail("strToLowerAV", __LINE__);
+    if (truncErr.compare(iter->mStr)) fail("strToLowerAV", __LINE__);
+    iter++;
+    outVCShort++;
 
 
+    //
+    // strToUpperA Fixed
+    //
+    if (memcmp(output[outCShort].pData, "F00 ", 4))
+        fail("strToUpperAF", __LINE__);
+    if (output[outCShort++].cbData != 4) fail("strToUpperAF", __LINE__);
+    // use long register here as lengths must be equal and null register is long
+    if (output[outCLong++].pData != NULL) fail("strToUpperAF", __LINE__);
+
+    //
+    // strToUpperA Variable
+    //
+    if (memcmp(output[outVCShort].pData, "V00", 3))
+        fail("strToUpperAV", __LINE__);
+    if (output[outVCShort++].cbData != 3) fail("strToUpperAV", __LINE__);
+    if (output[outVCShort++].cbData != 0) fail("strToUpperAV", __LINE__);
+    if (output[outVCShort++].pData != NULL) fail("strToUpperAV", __LINE__);
+
+    if (iter->mPc != strToUpperAVException1) fail("strToUpperAV", __LINE__);
+    if (truncErr.compare(iter->mStr)) fail("strToUpperAV", __LINE__);
+    iter++;
+    outVCShort++;
+
+    //
+    // strTrimA Fixed
+    //
+    if (memcmp(output[outVCLong].pData, "    1 3 5 78    ", 16))
+        fail("strTrimAF", __LINE__);
+    if (output[outVCLong++].cbData != 16) fail("strTrimAF", __LINE__);
+    if (memcmp(output[outVCLong].pData, "1 3 5 78    ", 12))
+        fail("strTrimAF", __LINE__);
+    if (output[outVCLong++].cbData != 12) fail("strTrimAF", __LINE__);
+    if (memcmp(output[outVCLong].pData, "    1 3 5 78", 12))
+        fail("strTrimAF", __LINE__);
+    if (output[outVCLong++].cbData != 12) fail("strTrimAF", __LINE__);
+    if (memcmp(output[outVCLong].pData, "1 3 5 78", 8))
+        fail("strTrimAF", __LINE__);
+    if (output[outVCLong++].cbData != 8) fail("strTrimAF", __LINE__);
+
+    if (output[outVCLong++].pData != NULL) fail("strTrimAF", __LINE__);
+
+    //
+    // strTrimA Variable
+    //
+    if (memcmp(output[outVCLong].pData, "    1 3 5 78    ", 16))
+        fail("strTrimAV", __LINE__);
+    if (output[outVCLong++].cbData != 16) fail("strTrimAV", __LINE__);
+    if (memcmp(output[outVCLong].pData, "1 3 5 78    ", 12))
+        fail("strTrimAV", __LINE__);
+    if (output[outVCLong++].cbData != 12) fail("strTrimAV", __LINE__);
+    if (memcmp(output[outVCLong].pData, "    1 3 5 78", 12))
+        fail("strTrimAV", __LINE__);
+    if (output[outVCLong++].cbData != 12) fail("strTrimAV", __LINE__);
+    if (memcmp(output[outVCLong].pData, "1 3 5 78", 8))
+        fail("strTrimAV", __LINE__);
+    if (output[outVCLong++].cbData != 8) fail("strTrimAV", __LINE__);
+
+    if (output[outVCLong++].pData != NULL) fail("strTrimAV", __LINE__);
 
     // must be no more warnings
     if (iter != c.mWarnings.end()) fail("MoreWarningsPresent", __LINE__);
-
-    cout << "Warnings: " << c.warnings() << endl;
 
     delete [] vcInP;
     delete [] vcOutP;

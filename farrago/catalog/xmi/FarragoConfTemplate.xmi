@@ -14,6 +14,8 @@
       userCatalogEnabled = 'false'
       codeCacheMaxBytes='-1'
       checkpointInterval='300'
+      serverRmiRegistryPort='5433'
+      serverSingleListenerPort='-1'
       >
       <FEMConfig:FarragoConfig.fennelConfig>
         <FEMConfig:FennelConfig

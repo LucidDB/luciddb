@@ -30,14 +30,13 @@ FENNEL_BEGIN_NAMESPACE
  * Common parameters for instantiating any TupleStream.
  */
 struct TupleStreamParams : public ExecutionStreamParams
-{};
+{
+};
 
 /**
- * TupleStream is an abstract base class for all tuple stream execution objects
- * (also known as XO's).  A TupleStream produces tuples according to a fixed
- * tuple descriptor.  A TupleStream has zero or more input streams which it may
- * transform to produce its output.  Dataflow is always initiated by the
- * consumer, and takes place in batches of tuples.  
+ * TupleStream is an abstract base class for all ExecutionStreams which expect
+ * dataflow to be initiated by the consumer (pull-model).  A TupleStream has
+ * zero or more input streams which it may transform to produce its output.
  */
 class TupleStream : public ExecutionStream
 {

@@ -63,9 +63,10 @@ import java.util.List;
 
 /**
  * FarragoPreparingStmt subclasses OJStatement to manage Farrago-specific
- * preparation of a single SQL statement (it's not a context for executing
- * a series of statements; for that, see FarragoJdbcStatement).  The result is
- * a FarragoExecutableStmt.
+ * preparation of a single SQL statement (it's not a context for executing a
+ * series of statements; for that, see {@link
+ * net.sf.farrago.session.FarragoSessionStmtContext}).  The result is a
+ * {@link FarragoExecutableStmt}.
  *
  *<p>
  *

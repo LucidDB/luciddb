@@ -82,7 +82,7 @@ public:
     ~JumpTrue() { }
 
     virtual void exec(TProgramCounter& pc) const { 
-        if (!mOp->isNull() && mOp->getV() == true) {
+        if (!mOp->isNull() && mOp->value() == true) {
             pc = mJumpTo;
         } else {
             pc++;
@@ -105,7 +105,7 @@ public:
     ~JumpFalse() { }
 
     virtual void exec(TProgramCounter& pc) const { 
-        if (!mOp->isNull() && mOp->getV() == false) {
+        if (!mOp->isNull() && mOp->value() == false) {
             pc = mJumpTo;
         } else {
             pc++;

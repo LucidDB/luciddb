@@ -18,12 +18,20 @@
     <text>Installation error: catalog package not found in repository</text>
 </exception>
 
+<exception id="400020" name="CatalogFileLockFailed">
+    <text>Failed to lock catalog file {0}</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- JDBC resources 410,000 - 420,000 -->
 <!-- ====================================================================== -->
 
 <exception id="410000" name="JdbcInvalidTxnState">
     <text>Invalid transaction state</text>
+</exception>
+
+<exception id="410010" name="JdbcInvalidUrl">
+    <text>Invalid URL:  {0}</text>
 </exception>
 
 <!-- ====================================================================== -->
@@ -67,17 +75,17 @@ encountered in definition of {1} near {2}</text>
 </exception>
 
 <exception id="420090" name="ValidatorLengthExceeded">
-    <text>Character length {0,number} exceeds maximum of {1,number};
+    <text>Character length {0,number,#} exceeds maximum of {1,number,#};
 encountered in definition of {2} near {3}</text>
 </exception>
 
 <exception id="420100" name="ValidatorPrecisionExceeded">
-    <text>Precision {0,number} exceeds maximum of {1,number};
+    <text>Precision {0,number,#} exceeds maximum of {1,number,#};
 encountered in definition of {2} near {3}</text>
 </exception>
 
 <exception id="420110" name="ValidatorScaleExceeded">
-    <text>Scale {0,number} exceeds maximum of {1,number};
+    <text>Scale {0,number,#} exceeds maximum of {1,number,#};
 encountered in definition of {2} near {3}</text>
 </exception>
 
@@ -203,7 +211,7 @@ encountered near {1}</text>
 </exception>
 
 <message id="430010" name="ParserContext">
-    <text>line {0,number}, column {1,number}</text>
+    <text>line {0,number,#}, column {1,number,#}</text>
 </message>
 
 <!-- ====================================================================== -->
@@ -289,7 +297,7 @@ encountered near {1}</text>
 </exception>
 
 <exception id="470060" name="SessionInvalidSavepointId">
-    <text>Invalid savepoint ID {0,number}</text>
+    <text>Invalid savepoint ID {0,number,#}</text>
 </exception>
 
 <exception id="470070" name="SessionInvalidSavepointName">
@@ -300,6 +308,37 @@ encountered near {1}</text>
     <text>Cannot EXECUTE IMMEDIATE a statement with dynamic parameters:  {0}</text>
 </exception>
 
+<!-- ====================================================================== -->
+<!-- Server resources 480,000 - 490,000 -->
+<!-- ====================================================================== -->
+
+<message id="480000" name="ServerLoadingDatabase">
+    <text>Loading database...</text>
+</message>
+
+<message id="480010" name="ServerStartingNetwork">
+    <text>Starting network...</text>
+</message>
+
+<message id="480020" name="ServerListening">
+    <text>Server now listening for connections on port {0,number,#}; enter !quit to stop</text>
+</message>
+
+<message id="480030" name="ServerBadCommand">
+    <text>Unknown server command:  {0}</text>
+</message>
+
+<message id="480040" name="ServerShuttingDown">
+    <text>Server shutting down...</text>
+</message>
+
+<message id="480050" name="ServerShutdownComplete">
+    <text>Server shutdown complete</text>
+</message>
+
+<message id="480060" name="ServerSessionsExist">
+    <text>Server sessions are still running; enter !kill to force shutdown</text>
+</message>
 
 <!-- End of last error section ============================================ -->
 

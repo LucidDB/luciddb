@@ -138,6 +138,9 @@ typedef boost::shared_ptr<TableWriterFactory> SharedTableWriterFactory;
 class ExecutionStreamFactory;
 typedef boost::shared_ptr<ExecutionStreamFactory> SharedExecutionStreamFactory;
 
+class Calculator;
+typedef boost::shared_ptr<Calculator> SharedCalculator;
+
 FENNEL_END_NAMESPACE
 
 #endif

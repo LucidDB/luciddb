@@ -79,28 +79,25 @@ that returns a non-const. The non-const version should check for the Read-Only
 property. For some reason, putting a const around the TMPLT does not work
 as expected.
 
-Update spec to reflect PointerSizeT and PointerOperandT being a unit,
+Update spec to reflect PointerSizeT and PointerOperandT being a unit32_t
 for the moment.
 
 Consider removing pointer to Calc from all extended instructions. Seems to 
 have no purpose.
 
-Rationalize length/width getS/putS getSMax/putSMax naming to be consistant
-and call out byte-length nature. Include ExtString.cpp, SqlString.cpp and
-RegisterReference (and all Instructions) in a grand-renaming.
-
 Verify that all SqlString fuctions can take the same string as both input and
 output. Or, for those like, perhaps, ToUpper, document the exceptions
+
+Rename PointerPutSize to PointerPutLength
 
 
 ====================================================
 Extended Instructions & Conversions Major Todo Items
 ====================================================
 
-Wrap all EIs in NULL semantic code. (if op1 or op2 is null,
-result tonull, etc.)
-
-Provide pc to EIs.
+Consider wrapping all EIs in NULL semantic code. (if op1 or op2 is null,
+result tonull, etc.) in ExtendedInstruction.h, so that each EI doesn't
+have to do the rote work.
 
 =================================================
 Extended Instructions & Conversions Cleanup Items

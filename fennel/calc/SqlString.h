@@ -32,29 +32,29 @@ FENNEL_BEGIN_NAMESPACE
 //!
 //! If either string is variable width, the result is variable
 //! width: per SQL99 6.27 Syntax Rule 3, Case A, item i.
-//! If both strings are fixed witdth, the reuslt is fixed width, 
-//! item ii.
+//! If both strings are fixed width, the result is fixed width, 
+//! per item ii.
 //!
 //! Note that CHAR('1  ') || CHAR('2 ') = CHAR('1  2 ') and 
 //! not CHAR('12   ').
 //!
 //! When called repeatedly to cat multiple strings together (e.g. A || B || C),
-//! the final destWidth must be exactly equal to the resulting width.
-//! (e.g. of A+B+C) for both VARCHAR & CHAR. Take care that these length
+//! the final destLength must be exactly equal to the defined resulting width.
+//! (e.g. width of A+B+C) for both VARCHAR & CHAR. Take care that these length
 //! semantics are adhered to in the final result, even though intermediate
 //! results (say A || B) may not have the correct length.
 //!
-//! When used with CHARs, set strLen to strWidth. On intermediate results
+//! When used with CHARs, set strLen to strStorage. On intermediate results
 //! set destLen = return value of previous call. Final result
-//! should/must have return value == destWidth.
+//! should/must have return value == destStorage.
 //
 //  TODO: Does not implement an implementation defined max length.
 int
 SqlStrAsciiCat(char* dest,
-                int destWidth,
-                int destLen,
-                char const * const str,
-                int strLen);
+               int destStorage,
+               int destLen,
+               char const * const str,
+               int strLen);
 
 //! StrCat. Ascii. SQL VARCHAR & CHAR. dest = str1 || str2.
 //! dest = str1 || str2
@@ -68,31 +68,31 @@ SqlStrAsciiCat(char* dest,
 //!
 //! If either string is variable width, the result is variable
 //! width: per SQL99 6.27 Syntax Rule 3, Case A, item i.
-//! If both strings are fixed witdth, the reuslt is fixed width, 
+//! If both strings are fixed width, the result is fixed width, 
 //! item ii.
 //!
 //! Note: CHAR('1  ') || CHAR('2 ') is CHAR('1  2 ') and 
 //! is not CHAR('12   ').
 //!
-//! When used with CHARs, ignore return value, and set destLen = destWidth
+//! When used with CHARs, ignore return value, and set destLen = destStorage
 //
 //  TODO: Does not implement an implementation defined max length.
 int
 SqlStrAsciiCat(char* dest,
-                int destWidth,
-                char const * const str1,
-                int str1Len,
-                char const * const str2,
-                int str2Len);
+               int destStorage,
+               char const * const str1,
+               int str1Len,
+               char const * const str2,
+               int str2Len);
 
 //! StrCmp. Ascii. Fixed Width / SQL CHAR.
 //!
-//! Returns -1, 0, 1
+//! Returns -1, 0, 1.
 int
 SqlStrAsciiCmpF(char const * const str1,
-                int str1Width,
+                int str1Len,
                 char const * const str2,
-                int str2Width,
+                int str2Len,
                 char trimchar = ' ');
 
 //! StrCmp. Ascii. VARCHAR.
@@ -134,7 +134,7 @@ SqlStrAsciiLenOct(char const * const str,
 //! and concatenation results in VARCHAR if any of its operands are VARCHAR.
 int
 SqlStrAsciiOverlay(char* dest,
-                   int destWidth,
+                   int destStorage,
                    char const * const str,
                    int strLen,
                    char const * const over,
@@ -149,11 +149,11 @@ SqlStrAsciiOverlay(char* dest,
 //! General Rule 2.
 int
 SqlStrAsciiPos(char const * const str,
-               int strWidth,
+               int strLen,
                char const * const find,
-               int findWidth);
+               int findLen);
 
-//! Substring. Ascii. CHAR/VARCHAR. 
+//! Substring by reference. Ascii. Returns VARCHAR. Accepts CHAR/VARCHAR. 
 //! Sets dest to start of of substring. Returns length of substring.
 //! 
 //! Note that subStart is 1-indexed, as per SQL99 spec.
@@ -164,7 +164,7 @@ SqlStrAsciiPos(char const * const str,
 //! See SQL99 6.18, General Rule 3.
 int
 SqlStrAsciiSubStr(char const ** dest,
-                  int destWidth,
+                  int destStorage,
                   char const * const str,
                   int strLen,
                   int subStart,
@@ -174,14 +174,14 @@ SqlStrAsciiSubStr(char const ** dest,
 //! toLower. Ascii. CHAR/VARCHAR. Returns length.
 int
 SqlStrAsciiToLower(char* dest,
-                   int destWidth,
+                   int destStorage,
                    char const * const src,
                    int srcLen);
 
 //! toUpper. Ascii. CHAR/VARCHAR. Returns length.
 int
 SqlStrAsciiToUpper(char* dest,
-                   int destWidth,
+                   int destStorage,
                    char const * const src,
                    int srcLen);
 
@@ -191,7 +191,7 @@ SqlStrAsciiToUpper(char* dest,
 //! Results in a VARCHAR.
 int 
 SqlStrAsciiTrim(char* dest,
-                int destWidth,
+                int destStorage,
                 char const * const str,
                 int strLen,
                 bool trimLeft,
@@ -202,12 +202,16 @@ SqlStrAsciiTrim(char* dest,
 //!
 //! See SQL99 6.18 General Rule 8.
 //! Results in a VARCHAR.
+//! Note: Does not check that result has enough capacity to contain
+//! substring as this is irrelevant. If a program depends on the size
+//! of result not changing, and this instruction inforcing that
+//! invariant -- probably a bad practice anyway -- trouble could result.
 int 
 SqlStrAsciiTrim(char const ** result,
                 char const * const str,
                 int strLen,
-                bool trimLeft,
-                bool trimRight,
+                int trimLeft,
+                int trimRight,
                 char trimchar = ' ');
 
 

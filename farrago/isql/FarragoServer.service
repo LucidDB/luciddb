@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<isql-service secure="false" name="FarragoServer" >
+	<authorization user="guest" password="" />
+	<config driver="net.sf.farrago.jdbc.client.FarragoJdbcClientDriver" 
+            url="jdbc:farrago:rmi://localhost" >
+	</config>
+</isql-service>

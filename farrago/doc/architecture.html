@@ -63,7 +63,16 @@ import/export, etc.)
 resource bundling</li>
 
 <li><a href="http://javacc.dev.java.net">JavaCC</a> for
-parser generation</li>
+Java parser generation</li>
+
+<li><a href="http://rmijdbc.objectweb.org">RmiJdbc</a> for
+client/server connectivity</li>
+
+<li><a href="http://www.isqlviewer.com">iSQL-Viewer</a> for
+a GUI front-end</li>
+
+<li><a href="http://sqlline.sourceforge.net">sqlline</a> for
+a command-line interface</li>
 
 </ul>
 
@@ -121,11 +130,11 @@ Farrago engine via the local JDBC driver.
 <p>
 
 In a heavyweight configuration, Farrago might be loaded in a dedicated
-server instance, and all communication would be via RMI.  (The RmiJdbc
-project could provides the necessary connectivity, but a
-Farrago-specific client/server JDBC driver is planned for performance
-reasons).  The example below shows this configuration with remote JDBC
-access from an EJB in a separate application server instance:
+server instance, and all communication would be via RMI.  (RmiJdbc
+provides the necessary connectivity, but a Farrago-specific
+client/server JDBC driver is planned for performance reasons).  The
+example below shows this configuration with remote JDBC access from an
+EJB in a separate application server instance:
 
 <hr>
 <img src="FarragoArchDedicated.gif">

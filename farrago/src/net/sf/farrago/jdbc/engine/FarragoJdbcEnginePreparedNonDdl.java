@@ -17,7 +17,7 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-package net.sf.farrago.jdbc;
+package net.sf.farrago.jdbc.engine;
 
 import net.sf.farrago.query.*;
 import net.sf.farrago.type.*;
@@ -32,16 +32,17 @@ import java.util.logging.*;
 import java.sql.Date;
 
 /**
- * FarragoJdbcPreparedNonDdl implements {@link FarragoJdbcPreparedStatement}
- * when the statement is a query or DML.
+ * FarragoJdbcEnginePreparedNonDdl implements {@link
+ * FarragoJdbcEnginePreparedStatement} when the statement is a query or DML.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoJdbcPreparedNonDdl extends FarragoJdbcPreparedStatement
+public class FarragoJdbcEnginePreparedNonDdl
+    extends FarragoJdbcEnginePreparedStatement
 {
     /**
-     * Creates a new FarragoJdbcPreparedNonDdl object.
+     * Creates a new FarragoJdbcEnginePreparedNonDdl object.
      *
      * @param connection the connection creating this statement
      *
@@ -49,8 +50,8 @@ public class FarragoJdbcPreparedNonDdl extends FarragoJdbcPreparedStatement
      *
      * @param sql the text of the SQL statement
      */
-    FarragoJdbcPreparedNonDdl(
-        FarragoJdbcConnection connection,
+    FarragoJdbcEnginePreparedNonDdl(
+        FarragoJdbcEngineConnection connection,
         FarragoSessionStmtContext stmtContext,
         String sql)
     {
@@ -100,7 +101,7 @@ public class FarragoJdbcPreparedNonDdl extends FarragoJdbcPreparedStatement
             return new FarragoResultSetMetaData(
                 stmtContext.getPreparedRowType());
         } catch (Throwable ex) {
-            throw FarragoJdbcDriver.newSqlException(ex);
+            throw FarragoJdbcEngineDriver.newSqlException(ex);
         }
     }
 
@@ -111,7 +112,7 @@ public class FarragoJdbcPreparedNonDdl extends FarragoJdbcPreparedStatement
             return new FarragoParameterMetaData(
                 stmtContext.getPreparedParamType());
         } catch (Throwable ex) {
-            throw FarragoJdbcDriver.newSqlException(ex);
+            throw FarragoJdbcEngineDriver.newSqlException(ex);
         }
     }
 
@@ -121,7 +122,7 @@ public class FarragoJdbcPreparedNonDdl extends FarragoJdbcPreparedStatement
         try {
             stmtContext.clearParameters();
         } catch (Throwable ex) {
-            throw FarragoJdbcDriver.newSqlException(ex);
+            throw FarragoJdbcEngineDriver.newSqlException(ex);
         }
     }
 
@@ -131,7 +132,7 @@ public class FarragoJdbcPreparedNonDdl extends FarragoJdbcPreparedStatement
         try {
             stmtContext.setDynamicParam(parameterIndex - 1,obj);
         } catch (Throwable ex) {
-            throw FarragoJdbcDriver.newSqlException(ex);
+            throw FarragoJdbcEngineDriver.newSqlException(ex);
         }
     }
 
@@ -229,4 +230,4 @@ public class FarragoJdbcPreparedNonDdl extends FarragoJdbcPreparedStatement
     }
 }
 
-// End FarragoJdbcPreparedNonDdl.java
+// End FarragoJdbcEnginePreparedNonDdl.java

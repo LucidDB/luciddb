@@ -24,7 +24,7 @@
 
 FENNEL_BEGIN_NAMESPACE
 
-//! PointerSizeT (long) is the only result type defined for IntegralPointerInstruction.
+//! PointerSizeT is the only valid result type defined for IntegralPointerInstruction.
 
 
 template<typename PTR_TYPE>
@@ -33,8 +33,8 @@ class IntegralPointerInstruction : public PointerInstruction
 public:
     explicit
     IntegralPointerInstruction(RegisterRef<PointerSizeT>* result,
-                           RegisterRef<PTR_TYPE>* op1,
-                           StandardTypeDescriptorOrdinal pointerType)
+                               RegisterRef<PTR_TYPE>* op1,
+                               StandardTypeDescriptorOrdinal pointerType)
         : mResult(result),
           mOp1(op1),
           mPointerType(pointerType)
@@ -61,8 +61,8 @@ class PointerGetSize : public IntegralPointerInstruction<PTR_TYPE>
 public: 
     explicit
     PointerGetSize(RegisterRef<PointerSizeT>* result,
-                     RegisterRef<PTR_TYPE>* op1, 
-                     StandardTypeDescriptorOrdinal pointerType)
+                   RegisterRef<PTR_TYPE>* op1, 
+                   StandardTypeDescriptorOrdinal pointerType)
         : IntegralPointerInstruction<PTR_TYPE>(result, op1, pointerType)
     { }
     virtual
@@ -74,7 +74,7 @@ public:
         if (mOp1->isNull()) {
             mResult->toNull();
         } else {
-            mResult->putV(mOp1->getS());  // get size, put value
+            mResult->value(mOp1->length());  // get size, put value
         }
     }
 
@@ -92,8 +92,8 @@ class PointerGetMaxSize : public IntegralPointerInstruction<PTR_TYPE>
 public: 
     explicit
     PointerGetMaxSize(RegisterRef<PointerSizeT>* result,
-                     RegisterRef<PTR_TYPE>* op1, 
-                     StandardTypeDescriptorOrdinal pointerType)
+                      RegisterRef<PTR_TYPE>* op1, 
+                      StandardTypeDescriptorOrdinal pointerType)
         : IntegralPointerInstruction<PTR_TYPE>(result, op1, pointerType)
     { }
     virtual
@@ -105,7 +105,7 @@ public:
         if (mOp1->isNull()) {
             mResult->toNull();
         } else {
-            mResult->putV(mOp1->getSMax());  // get size, put value
+            mResult->value(mOp1->storage());  // get size, put value
         }
     }
 

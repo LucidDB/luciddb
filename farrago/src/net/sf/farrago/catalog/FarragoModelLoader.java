@@ -75,12 +75,22 @@ public class FarragoModelLoader
         return (FarragoPackage) repository.getExtent(extentName);
     }
 
-    private void setSystemCatalogProperties()
+    private File getSystemCatalogFileSansExt()
     {
         String homeDir = System.getProperties().getProperty(HOME_PROPERTY);
         assert(homeDir != null);
-        File catalogFile = new File(homeDir,"catalog");
-        catalogFile = new File(catalogFile,"FarragoCatalog");
+        File catalogDir = new File(homeDir,"catalog");
+        return new File(catalogDir,"FarragoCatalog");
+    }
+
+    public File getSystemCatalogFile()
+    {
+        return new File(getSystemCatalogFileSansExt().toString() + ".btd");
+    }
+
+    private void setSystemCatalogProperties()
+    {
+        File catalogFile = getSystemCatalogFileSansExt();
 
         storageFactoryClassName = BtreeFactory.class.getName();
             
@@ -103,7 +113,7 @@ public class FarragoModelLoader
             "MDR");
         setStorageProperty(
             JdbcStorageFactory.STORAGE_DRIVER_CLASS_NAME,
-            "net.sf.farrago.jdbc.FarragoJdbcDriver");
+            "net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver");
         setStorageProperty(
             JdbcStorageFactory.STORAGE_DATATYPE_STREAMABLE,
             "VARBINARY(10000)");

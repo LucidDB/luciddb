@@ -44,7 +44,7 @@ FENNEL_BEGIN_NAMESPACE
 void
 strCatA2(Calculator *pCalc,
          RegisterRef<char*> *result,
-         RegisterRef<char*> *op1);
+         RegisterRef<char*> *str1);
 
 //! Strcat. Ascii. dest = str1 || str2.
 //!
@@ -57,33 +57,41 @@ strCatA2(Calculator *pCalc,
 void
 strCatAF3(Calculator *pCalc,
           RegisterRef<char*> *result,
-          RegisterRef<char*> *op1,
-          RegisterRef<char*> *op2);
+          RegisterRef<char*> *str1,
+          RegisterRef<char*> *str2);
 
 //! StrCmp. Ascii.
 void
 strCmpA(Calculator *pCalc,
         RegisterRef<int32_t> *result,   
-        RegisterRef<char*> *op1,
-        RegisterRef<char*> *op2);
+        RegisterRef<char*> *str1,
+        RegisterRef<char*> *str2);
 
 //! StrLen in Bits. Ascii.
 void
 strLenBitA(Calculator *pCalc,
            RegisterRef<int32_t> *result,   
-           RegisterRef<char*> *op1);
+           RegisterRef<char*> *str);
 
 //! StrLen in Characters. Ascii.
 void
 strLenCharA(Calculator *pCalc,
             RegisterRef<int32_t> *result,   
-            RegisterRef<char*> *op1);
+            RegisterRef<char*> *str);
 
 //! StrLen in Octets. Ascii.
 void
 strLenOctA(Calculator *pCalc,
            RegisterRef<int32_t> *result,   
-           RegisterRef<char*> *op1);
+           RegisterRef<char*> *str);
+
+//! Overlay. Length unspecified -- to end. Ascii.
+void
+strOverlayA4(Calculator *pCalc,
+             RegisterRef<char*> *result,
+             RegisterRef<char*> *str,
+             RegisterRef<char*> *overlay,
+             RegisterRef<int32_t> *start);  
 
 //! Overlay. Length specified. Ascii.
 void
@@ -94,14 +102,51 @@ strOverlayA5(Calculator *pCalc,
              RegisterRef<int32_t> *start,   
              RegisterRef<int32_t> *len);    
 
-//! Overlay. Length unspecified -- to end. Ascii.
-void
-strOverlayA4(Calculator *pCalc,
-             RegisterRef<char*> *result,
-             RegisterRef<char*> *str,
-             RegisterRef<char*> *overlay,
-             RegisterRef<int32_t> *start);  
 
+//! Position of find string in str string. Ascii.
+void
+strPosA(Calculator *pCalc,
+        RegisterRef<int32_t>* result,
+        RegisterRef<char*>* str,
+        RegisterRef<char*>* find);
+
+//! SubString. By reference. Length not specified -- to end. Ascii.
+void
+strSubStringA3(Calculator *pCalc,
+               RegisterRef<char*>* result,
+               RegisterRef<char*>* str,
+               RegisterRef<int32_t>* start);
+
+//! SubString. By Reference. Length specified. Ascii.
+void
+strSubStringA4(Calculator *pCalc,
+               RegisterRef<char*>* result,
+               RegisterRef<char*>* str,
+               RegisterRef<int32_t>* start,
+               RegisterRef<int32_t>* len);
+
+//! ToLower. Ascii.
+void
+strToLowerA(Calculator *pCalc,
+            RegisterRef<char*>* result,
+            RegisterRef<char*>* str);
+
+
+//! ToUpper. Ascii.
+void
+strToUpperA(Calculator *pCalc,
+            RegisterRef<char*>* result,
+            RegisterRef<char*>* str);
+
+
+//! Trim. By Reference. Ascii.
+void
+strTrimA(Calculator *pCalc,
+         RegisterRef<char*>* result,
+         RegisterRef<char*>* str,
+         RegisterRef<int32_t>* trimLeft,
+         RegisterRef<int32_t>* trimRight);
+        
 
 void
 strRegister();

@@ -17,23 +17,24 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-package net.sf.farrago.jdbc;
+package net.sf.farrago.jdbc.engine;
 
 import net.sf.farrago.session.*;
 
 import java.sql.*;
 
 /**
- * FarragoJdbcPreparedDdl implements {@link FarragoJdbcPreparedStatement} when
- * the statement is DDL.
+ * FarragoJdbcEnginePreparedDdl implements {@link
+ * FarragoJdbcEnginePreparedStatement} when the statement is DDL.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoJdbcPreparedDdl extends FarragoJdbcPreparedStatement
+public class FarragoJdbcEnginePreparedDdl
+    extends FarragoJdbcEnginePreparedStatement
 {
     /**
-     * Creates a new FarragoJdbcPreparedDdl object.
+     * Creates a new FarragoJdbcEnginePreparedDdl object.
      *
      * @param connection the connection creating this statement
      *
@@ -41,8 +42,8 @@ public class FarragoJdbcPreparedDdl extends FarragoJdbcPreparedStatement
      *
      * @param sql the text of the DDL statement
      */
-    FarragoJdbcPreparedDdl(
-        FarragoJdbcConnection connection,
+    FarragoJdbcEnginePreparedDdl(
+        FarragoJdbcEngineConnection connection,
         FarragoSessionStmtContext stmtContext,
         String sql)
     {
@@ -79,9 +80,9 @@ public class FarragoJdbcPreparedDdl extends FarragoJdbcPreparedStatement
             stmtContext.prepare(sql,true);
             assert(!stmtContext.isPrepared());
         } catch (Throwable ex) {
-            throw FarragoJdbcDriver.newSqlException(ex);
+            throw FarragoJdbcEngineDriver.newSqlException(ex);
         }
     }
 }
 
-// End FarragoJdbcPreparedDdl.java
+// End FarragoJdbcEnginePreparedDdl.java

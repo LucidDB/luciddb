@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<isql-service secure="false" name="FarragoEmbedded" >
+	<authorization user="guest" password="" />
+	<config driver="net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver" 
+            url="jdbc:farrago:" >
+	</config>
+</isql-service>

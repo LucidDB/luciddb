@@ -125,6 +125,7 @@
   <fail unless="sqlline.dir"/>
   <fail unless="sqlline.lib.dir"/>
   <fail unless="mdrlibs.dir"/>
+  <fail unless="rmijdbc.dir"/>
 
   <!-- The version of ANT we require. -->
   <property name="required.ant.version" value="1.6.0"/>
@@ -276,6 +277,7 @@ require version '${required.ant.version}'."/>
     <pathelement location="${ant.dir}/lib/xml-apis.jar"/>
     <pathelement location="${ant.dir}/lib/xercesImpl.jar"/>
     <pathelement location="${javahome.dir}/lib/tools.jar"/>
+    <pathelement location="${rmijdbc.dir}/dist/lib/RmiJdbc.jar"/>
   </path>
   <property name="farrago.3p.classpath" refid="farrago.3p.classpath"/>
 
@@ -385,6 +387,13 @@ require version '${required.ant.version}'."/>
     <pathelement path="${farrago.sourcepath}"/>
   </path>
   <property name="mdr.sourcepath" refid="mdr.sourcepath"/>
+
+  <!-- sourcepath for debugging server -->
+  <path id="server.sourcepath">
+    <pathelement location="${rmijdbc.dir}/src"/>
+    <pathelement path="${farrago.sourcepath}"/>
+  </path>
+  <property name="farrago.sourcepath" refid="farrago.sourcepath"/>
 
 
   <!-- Macro Definitions -->
@@ -1210,6 +1219,15 @@ require version '${required.ant.version}'."/>
       <jvmarg line="-Xrunjmp:nomonitors"/>
       <arg value="jmp"/>
     </javaExec>
+  </target>
+
+  <!-- run JSwat on Farrago as an RmiJdbc server -->
+  <target name="jswat.server" depends="all">
+    <jswatDebug
+      classpath="${farrago.run.classpath}"
+      sourcepath="${server.sourcepath}"
+      classname="net.sf.farrago.server.FarragoServer">
+    </jswatDebug>
   </target>
 
   <!-- Below is all experimental stuff for the user repository -->

@@ -136,6 +136,20 @@ public class FarragoCatalog
                 FarragoModelLoader.HOME_PROPERTY);
         }
         modelLoader = new FarragoModelLoader();
+
+        if (!userCatalog) {
+            File catalogFile = modelLoader.getSystemCatalogFile();
+            try {
+                new FarragoFileLockAllocation(
+                    owner,
+                    catalogFile,
+                    true);
+            } catch (IOException ex) {
+                throw FarragoResource.instance().newCatalogFileLockFailed(
+                    catalogFile.toString(),ex);
+            }
+        }
+        
         farragoPackage = modelLoader.loadModel("FarragoCatalog",userCatalog);
         if (farragoPackage == null) {
             throw FarragoResource.instance().newCatalogUninitialized();

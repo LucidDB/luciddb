@@ -1,0 +1,10 @@
+#!/bin/bash
+# $Id$
+# Run the sqlline command-line SQL interpreter 
+# with an embedded Farrago engine
+
+source ./defineFarragoRuntime.sh
+
+java ${SERVER_JAVA_ARGS} ${SQLLINE_JAVA_ARGS} \
+    -u jdbc:farrago: -d net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver \
+    -n guest $*

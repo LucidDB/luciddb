@@ -31,66 +31,66 @@ FENNEL_BEGIN_NAMESPACE
 void
 strCatA2(Calculator *pCalc,
          RegisterRef<char*>* result,
-         RegisterRef<char*>* op1)
+         RegisterRef<char*>* str1)
 {
-    assert(op1->type() == STANDARD_TYPE_CHAR || op1->type() == STANDARD_TYPE_VARCHAR);
+    assert(str1->type() == STANDARD_TYPE_CHAR || str1->type() == STANDARD_TYPE_VARCHAR);
 
-    if (op1->isNull()) {
+    if (str1->isNull()) {
         result->toNull();
-        result->putS(0);
+        result->length(0);
     } else {
-        result->putS(SqlStrAsciiCat(result->getP(),
-                                    result->getSMax(),
-                                    result->getS(),
-                                    op1->getP(),
-                                    op1->getSStr()));
+        result->length(SqlStrAsciiCat(result->pointer(),
+                                      result->storage(),
+                                      result->length(),
+                                      str1->pointer(),
+                                      str1->stringLength()));
     }
 }
 
 void
 strCatA3(Calculator *pCalc,
          RegisterRef<char*>* result,
-         RegisterRef<char*>* op1,
-         RegisterRef<char*>* op2)
+         RegisterRef<char*>* str1,
+         RegisterRef<char*>* str2)
 {
-    assert(op1->type() == STANDARD_TYPE_CHAR || op1->type() == STANDARD_TYPE_VARCHAR);
+    assert(str1->type() == STANDARD_TYPE_CHAR || str1->type() == STANDARD_TYPE_VARCHAR);
 
-    if (op1->isNull() || op2->isNull()) {
+    if (str1->isNull() || str2->isNull()) {
         result->toNull();
-        result->putS(0);
+        result->length(0);
     } else {
-        result->putS(SqlStrAsciiCat(result->getP(),
-                                    result->getSMax(),
-                                    op1->getP(),
-                                    op1->getSStr(),
-                                    op2->getP(),
-                                    op2->getSStr()));
+        result->length(SqlStrAsciiCat(result->pointer(),
+                                      result->storage(),
+                                      str1->pointer(),
+                                      str1->stringLength(),
+                                      str2->pointer(),
+                                      str2->stringLength()));
     }
 }
 
 void
 strCmpA(Calculator *pCalc,
         RegisterRef<int32_t>* result,
-        RegisterRef<char*>* op1,
-        RegisterRef<char*>* op2)
+        RegisterRef<char*>* str1,
+        RegisterRef<char*>* str2)
 {
-    assert(op1->type() == op2->type());
-    assert(op1->type() == STANDARD_TYPE_CHAR || op1->type() == STANDARD_TYPE_VARCHAR);
+    assert(str1->type() == str2->type());
+    assert(str1->type() == STANDARD_TYPE_CHAR || str1->type() == STANDARD_TYPE_VARCHAR);
 
-    if (op1->isNull() || op2->isNull()) {
+    if (str1->isNull() || str2->isNull()) {
         result->toNull();
     } else {
-        if (op1->type() == STANDARD_TYPE_CHAR) {
-            result->putV(SqlStrAsciiCmpF(op1->getP(),
-                                         op1->getSMax(),
-                                         op2->getP(),
-                                         op2->getSMax()));
+        if (str1->type() == STANDARD_TYPE_CHAR) {
+            result->value(SqlStrAsciiCmpF(str1->pointer(),
+                                          str1->storage(),
+                                          str2->pointer(),
+                                          str2->storage()));
         } else {
-            assert(op1->type()== STANDARD_TYPE_VARCHAR);
-            result->putV(SqlStrAsciiCmpV(op1->getP(),
-                                         op1->getS(),
-                                         op2->getP(),
-                                         op2->getS()));
+            assert(str1->type()== STANDARD_TYPE_VARCHAR);
+            result->value(SqlStrAsciiCmpV(str1->pointer(),
+                                          str1->length(),
+                                          str2->pointer(),
+                                          str2->length()));
         }
     }
 }
@@ -98,84 +98,54 @@ strCmpA(Calculator *pCalc,
 void
 strLenBitA(Calculator *pCalc,
            RegisterRef<int32_t>* result,
-           RegisterRef<char*>* op1)
+           RegisterRef<char*>* str)
 {
-    assert(op1->type() == STANDARD_TYPE_CHAR || op1->type() == STANDARD_TYPE_VARCHAR);
+    assert(str->type() == STANDARD_TYPE_CHAR || str->type() == STANDARD_TYPE_VARCHAR);
 
-    if (op1->isNull()) {
+    if (str->isNull()) {
         result->toNull();
     } else {
-        result->putV(SqlStrAsciiLenBit(op1->getP(),
-                                       op1->getSStr()));
+        result->value(SqlStrAsciiLenBit(str->pointer(),
+                                        str->stringLength()));
     }
 }
     
 void
 strLenCharA(Calculator *pCalc,
             RegisterRef<int32_t>* result,
-            RegisterRef<char*>* op1)
+            RegisterRef<char*>* str)
 {
-    assert(op1->type() == STANDARD_TYPE_CHAR || op1->type() == STANDARD_TYPE_VARCHAR);
+    assert(str->type() == STANDARD_TYPE_CHAR || str->type() == STANDARD_TYPE_VARCHAR);
 
-    if (op1->isNull()) {
+    if (str->isNull()) {
         result->toNull();
     } else {
-        printf("strLenCharA S=%d SMax=%d SStr=%d\n",
-               op1->getS(), op1->getSMax(), op1->getSStr());
-        result->putV(SqlStrAsciiLenChar(op1->getP(),
-                                        op1->getSStr()));
+        result->value(SqlStrAsciiLenChar(str->pointer(),
+                                         str->stringLength()));
     }
 }
 
 void
 strLenOctA(Calculator *pCalc,
            RegisterRef<int32_t>* result,
-           RegisterRef<char*>* op1)
+           RegisterRef<char*>* str)
 {
-    assert(op1->type() == STANDARD_TYPE_CHAR || op1->type() == STANDARD_TYPE_VARCHAR);
-
-    if (op1->isNull()) {
-        result->toNull();
-    } else {
-        result->putV(SqlStrAsciiLenOct(op1->getP(),
-                                       op1->getSStr()));
-    }
-}
-
-void
-strOverlayA5(Calculator *pCalc,
-             RegisterRef<char*> *result,
-             RegisterRef<char*> *str,
-             RegisterRef<char*> *overlay,
-             RegisterRef<int32_t> *start,
-             RegisterRef<int32_t> *len)
-{
-    assert(result->type() == STANDARD_TYPE_VARCHAR);
-    assert(str->type() == overlay->type());
     assert(str->type() == STANDARD_TYPE_CHAR || str->type() == STANDARD_TYPE_VARCHAR);
 
-    if (str->isNull() || overlay->isNull() || start->isNull() || len->isNull()) {
+    if (str->isNull()) {
         result->toNull();
-        result->putS(0);
     } else {
-        result->putS(SqlStrAsciiOverlay(result->getP(),
-                                        result->getSMax(),
-                                        str->getP(),
-                                        str->getSStr(),
-                                        overlay->getP(),
-                                        overlay->getSStr(),
-                                        start->getV(),
-                                        len->getV(),
-                                        true));
+        result->value(SqlStrAsciiLenOct(str->pointer(),
+                                        str->stringLength()));
     }
 }
 
 void
 strOverlayA4(Calculator *pCalc,
-             RegisterRef<char*> *result,
-             RegisterRef<char*> *str,
-             RegisterRef<char*> *overlay,
-             RegisterRef<int32_t> *start)
+             RegisterRef<char*>* result,
+             RegisterRef<char*>* str,
+             RegisterRef<char*>* overlay,
+             RegisterRef<int32_t>* start)
 {
     assert(result->type() == STANDARD_TYPE_VARCHAR);
     assert(str->type() == overlay->type());
@@ -183,17 +153,188 @@ strOverlayA4(Calculator *pCalc,
 
     if (str->isNull() || overlay->isNull() || start->isNull()) {
         result->toNull();
-        result->putS(0);
+        result->length(0);
     } else {
-        result->putS(SqlStrAsciiOverlay(result->getP(),
-                                        result->getSMax(),
-                                        str->getP(),
-                                        str->getSStr(),
-                                        overlay->getP(),
-                                        overlay->getSStr(),
-                                        start->getV(),
-                                        0,
-                                        false));
+        result->length(SqlStrAsciiOverlay(result->pointer(),
+                                          result->storage(),
+                                          str->pointer(),
+                                          str->stringLength(),
+                                          overlay->pointer(),
+                                          overlay->stringLength(),
+                                          start->value(),
+                                          0,
+                                          false));
+    }
+}
+
+void
+strOverlayA5(Calculator *pCalc,
+             RegisterRef<char*>* result,
+             RegisterRef<char*>* str,
+             RegisterRef<char*>* overlay,
+             RegisterRef<int32_t>* start,
+             RegisterRef<int32_t>* len)
+{
+    assert(result->type() == STANDARD_TYPE_VARCHAR);
+    assert(str->type() == overlay->type());
+    assert(str->type() == STANDARD_TYPE_CHAR || str->type() == STANDARD_TYPE_VARCHAR);
+
+    if (str->isNull() || overlay->isNull() || start->isNull() || len->isNull()) {
+        result->toNull();
+        result->length(0);
+    } else {
+        result->length(SqlStrAsciiOverlay(result->pointer(),
+                                          result->storage(),
+                                          str->pointer(),
+                                          str->stringLength(),
+                                          overlay->pointer(),
+                                          overlay->stringLength(),
+                                          start->value(),
+                                          len->value(),
+                                          true));
+    }
+}
+
+void
+strPosA(Calculator *pCalc,
+        RegisterRef<int32_t>* result,
+        RegisterRef<char*>* str,
+        RegisterRef<char*>* find)
+{
+    assert(str->type() == find->type());
+    assert(str->type() == STANDARD_TYPE_CHAR || str->type() == STANDARD_TYPE_VARCHAR);
+
+    if (str->isNull() || find->isNull()) {
+        result->toNull();
+    } else {
+        result->value(SqlStrAsciiPos(str->pointer(),
+                                     str->stringLength(),
+                                     find->pointer(),
+                                     find->stringLength()));
+    }
+}
+
+void
+strSubStringA3(Calculator* pCalc,
+               RegisterRef<char*>* result,
+               RegisterRef<char*>* str,
+               RegisterRef<int32_t>* start)
+{
+    assert(str->type() == STANDARD_TYPE_CHAR || str->type() == STANDARD_TYPE_VARCHAR);
+    assert(result->type() == STANDARD_TYPE_VARCHAR);
+
+    if (str->isNull() || start->isNull()) {
+        result->toNull();
+        result->length(0);
+    } else {
+        // Don't try anything fancy with RegisterRef accessors. KISS.
+        char * ptr = result->pointer(); // preserve old value if possible
+        // TODO: Not sure why cast from char* to char const * is required below.
+        int32_t newLen = SqlStrAsciiSubStr(const_cast<char const **>(&ptr),
+                                           result->storage(),
+                                           str->pointer(),
+                                           str->stringLength(),
+                                           start->value(),
+                                           0,
+                                           false);
+        result->pointer(ptr, newLen);
+    }
+}
+
+void
+strSubStringA4(Calculator* pCalc,
+               RegisterRef<char*>* result,
+               RegisterRef<char*>* str,
+               RegisterRef<int32_t>* start,
+               RegisterRef<int32_t>* len)
+{
+    assert(str->type() == STANDARD_TYPE_CHAR || str->type() == STANDARD_TYPE_VARCHAR);
+    assert(result->type() == STANDARD_TYPE_VARCHAR);
+
+    if (str->isNull() || start->isNull() || len->isNull()) {
+        result->toNull();
+        result->length(0);
+    } else {
+        // Don't try anything fancy with RegisterRef accessors. KISS.
+        char * ptr = result->pointer(); // preserve old value if possible
+        // TODO: Not sure why cast from char* to char const * is required below.
+        int32_t newLen = SqlStrAsciiSubStr(const_cast<char const **>(&ptr),
+                                           result->storage(),
+                                           str->pointer(),
+                                           str->stringLength(),
+                                           start->value(),
+                                           len->value(),
+                                           true);
+        result->pointer(ptr, newLen);
+    }
+}
+
+void
+strToLowerA(Calculator *pCalc,
+            RegisterRef<char*>* result,
+            RegisterRef<char*>* str)
+{
+    assert(str->type() == STANDARD_TYPE_CHAR || str->type() == STANDARD_TYPE_VARCHAR);
+    assert(str->type() == result->type());
+    assert(str->type() == STANDARD_TYPE_CHAR ? (result->storage() == str->storage()) : true);
+
+    if (str->isNull()) {
+        result->toNull();
+        result->length(0);
+    } else {
+        // fixed width case: length should be harmlessly reset to same value
+        result->length(SqlStrAsciiToLower(result->pointer(),
+                                          result->storage(),
+                                          str->pointer(),
+                                          str->stringLength()));
+    }
+}
+
+void
+strToUpperA(Calculator *pCalc,
+            RegisterRef<char*>* result,
+            RegisterRef<char*>* str)
+{
+    assert(str->type() == STANDARD_TYPE_CHAR || str->type() == STANDARD_TYPE_VARCHAR);
+    assert(str->type() == result->type());
+    assert(str->type() == STANDARD_TYPE_CHAR ? (result->storage() == str->storage()) : true);
+
+    if (str->isNull()) {
+        result->toNull();
+        result->length(0);
+    } else {
+        // fixed width case: length should be harmlessly reset to same value
+        result->length(SqlStrAsciiToUpper(result->pointer(),
+                                          result->storage(),
+                                          str->pointer(),
+                                          str->stringLength()));
+    }
+}
+
+
+void
+strTrimA(Calculator *pCalc,
+         RegisterRef<char*>* result,
+         RegisterRef<char*>* str,
+         RegisterRef<int32_t>* trimLeft,
+         RegisterRef<int32_t>* trimRight)
+{
+    assert(str->type() == STANDARD_TYPE_CHAR || str->type() == STANDARD_TYPE_VARCHAR);
+    assert(result->type() == STANDARD_TYPE_VARCHAR);
+
+    if (str->isNull() || trimLeft->isNull() || trimRight->isNull()) {
+        result->toNull();
+        result->length(0);
+    } else {
+        // Don't try anything fancy with RegisterRef accessors. KISS.
+        char * ptr = result->pointer(); // preserve old value if possible
+        // TODO: Not sure why cast from char* to char const * is required below.
+        int32_t newLen = SqlStrAsciiTrim(const_cast<char const **>(&ptr),
+                                         str->pointer(),
+                                         str->stringLength(),
+                                         trimLeft->value(),
+                                         trimRight->value());
+        result->pointer(ptr, newLen);
     }
 }
 
@@ -325,7 +466,91 @@ strRegister()
     eit->add("strOverlayA4", params_3V_1I,
              (ExtendedInstruction4<char*, char*, char*, int32_t>*) NULL,
              &strOverlayA4);
+
+
+    eit->add("strPosA", params_1N_2F,
+             (ExtendedInstruction3<int32_t, char*, char*>*) NULL,
+             &strPosA);
+
+    eit->add("strPosA", params_1N_2V,
+             (ExtendedInstruction3<int32_t, char*, char*>*) NULL,
+             &strPosA);
+
+    vector<StandardTypeDescriptorOrdinal> params_1V_1F_1N;
+    params_1V_1F_1N.push_back(STANDARD_TYPE_VARCHAR);
+    params_1V_1F_1N.push_back(STANDARD_TYPE_CHAR);
+    params_1V_1F_1N.push_back(STANDARD_TYPE_INT_32);
+
+    vector<StandardTypeDescriptorOrdinal> params_2V_1N;
+    params_2V_1N.push_back(STANDARD_TYPE_VARCHAR);
+    params_2V_1N.push_back(STANDARD_TYPE_VARCHAR);
+    params_2V_1N.push_back(STANDARD_TYPE_INT_32);
+
+    eit->add("strSubStringA3", params_1V_1F_1N,
+             (ExtendedInstruction3<char*, char*, int32_t>*) NULL,
+             &strSubStringA3);
     
+    eit->add("strSubStringA3", params_2V_1N,
+             (ExtendedInstruction3<char*, char*, int32_t>*) NULL,
+             &strSubStringA3);
+
+    vector<StandardTypeDescriptorOrdinal> params_1V_1F_2N;
+    params_1V_1F_2N.push_back(STANDARD_TYPE_VARCHAR);
+    params_1V_1F_2N.push_back(STANDARD_TYPE_CHAR);
+    params_1V_1F_2N.push_back(STANDARD_TYPE_INT_32);
+    params_1V_1F_2N.push_back(STANDARD_TYPE_INT_32);
+
+    vector<StandardTypeDescriptorOrdinal> params_2V_2N;
+    params_2V_2N.push_back(STANDARD_TYPE_VARCHAR);
+    params_2V_2N.push_back(STANDARD_TYPE_VARCHAR);
+    params_2V_2N.push_back(STANDARD_TYPE_INT_32);
+    params_2V_2N.push_back(STANDARD_TYPE_INT_32);
+
+    eit->add("strSubStringA4", params_1V_1F_2N,
+             (ExtendedInstruction4<char*, char*, int32_t, int32_t>*) NULL,
+             &strSubStringA4);
+    
+    eit->add("strSubStringA4", params_2V_2N,
+             (ExtendedInstruction4<char*, char*, int32_t, int32_t>*) NULL,
+             &strSubStringA4);
+    
+
+    eit->add("strToLowerA", params_2F,
+             (ExtendedInstruction2<char*, char*>*) NULL,
+             &strToLowerA);
+
+    eit->add("strToLowerA", params_2V,
+             (ExtendedInstruction2<char*, char*>*) NULL,
+             &strToLowerA);
+
+    eit->add("strToUpperA", params_2F,
+             (ExtendedInstruction2<char*, char*>*) NULL,
+             &strToUpperA);
+
+    eit->add("strToUpperA", params_2V,
+             (ExtendedInstruction2<char*, char*>*) NULL,
+             &strToUpperA);
+
+    vector<StandardTypeDescriptorOrdinal> params_1V_1F_2I;
+    params_1V_1F_2I.push_back(STANDARD_TYPE_VARCHAR);
+    params_1V_1F_2I.push_back(STANDARD_TYPE_CHAR);
+    params_1V_1F_2I.push_back(STANDARD_TYPE_INT_32);
+    params_1V_1F_2I.push_back(STANDARD_TYPE_INT_32);
+
+    eit->add("strTrimA", params_1V_1F_2I,
+             (ExtendedInstruction4<char*, char*, int32_t, int32_t>*) NULL,
+             &strTrimA);
+
+    vector<StandardTypeDescriptorOrdinal> params_2V_2I;
+    params_2V_2I.push_back(STANDARD_TYPE_VARCHAR);
+    params_2V_2I.push_back(STANDARD_TYPE_VARCHAR);
+    params_2V_2I.push_back(STANDARD_TYPE_INT_32);
+    params_2V_2I.push_back(STANDARD_TYPE_INT_32);
+
+    eit->add("strTrimA", params_2V_2I,
+             (ExtendedInstruction4<char*, char*, int32_t, int32_t>*) NULL,
+             &strTrimA);
+
 }
 
 

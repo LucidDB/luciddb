@@ -90,23 +90,23 @@ public:
         pc++;
         
         if (mOp1->isNull()) {
-            if (mOp2->isNull() || mOp2->getV() == false) {
+            if (mOp2->isNull() || mOp2->value() == false) {
                 mResult->toNull();
             } else {
-                mResult->putV(true);
+                mResult->value(true);
             }
         } else {
             if (mOp2->isNull()) {
-                if (mOp1->getV() == true) {
-                    mResult->putV(true);
+                if (mOp1->value() == true) {
+                    mResult->value(true);
                 } else {
                     mResult->toNull();
                 }
             } else {
-                if (mOp1->getV() == true || mOp2->getV() == true) {
-                    mResult->putV(true);
+                if (mOp1->value() == true || mOp2->value() == true) {
+                    mResult->value(true);
                 } else {
-                    mResult->putV(false);
+                    mResult->value(false);
                 }
             }
         }
@@ -133,22 +133,22 @@ public:
         // SQL99, 6.30, Table 13
         pc++;
         if (mOp1->isNull()) {
-            if (mOp2->isNull() || mOp2->getV() == true) {
+            if (mOp2->isNull() || mOp2->value() == true) {
                 mResult->toNull();
             } else {
-                mResult->putV(false);
+                mResult->value(false);
             }
         } else {
             if (mOp2->isNull()) {
-                if (mOp1->getV() == true) {
+                if (mOp1->value() == true) {
                     mResult->toNull();
                 } else {
-                    mResult->putV(false);
+                    mResult->value(false);
                 }
-            } else if (mOp1->getV() == true && mOp2->getV() == true) {
-                mResult->putV(true);
+            } else if (mOp1->value() == true && mOp2->value() == true) {
+                mResult->value(true);
             } else {
-                mResult->putV(false);
+                mResult->value(false);
             }
         }
     }
@@ -174,10 +174,10 @@ public:
         pc++;
         if (mOp1->isNull()) {
             mResult->toNull();
-        } else if (mOp1->getV() == true) {
-            mResult->putV(false);
+        } else if (mOp1->value() == true) {
+            mResult->value(false);
         } else {
-            mResult->putV(true);
+            mResult->value(true);
         }
     }
 };
@@ -202,7 +202,7 @@ public:
         if (mOp1->isNull()) {
             mResult->toNull();
         } else {
-            mResult->putV(mOp1->getV());
+            mResult->value(mOp1->value());
         }
     }
 };
@@ -228,16 +228,16 @@ public:
         pc++;
         if (mOp1->isNull()) {
             if (mOp2->isNull()) {
-                mResult->putV(true);
+                mResult->value(true);
             } else {
-                mResult->putV(false);
+                mResult->value(false);
             }
         } else if (mOp2->isNull()) {
-            mResult->putV(false);
-        } else if (mOp1->getV() == mOp2->getV()) {
-            mResult->putV(true);
+            mResult->value(false);
+        } else if (mOp1->value() == mOp2->value()) {
+            mResult->value(true);
         } else {
-            mResult->putV(false);
+            mResult->value(false);
         }
     }
 };
@@ -263,16 +263,16 @@ public:
         pc++;
         if (mOp1->isNull()) {
             if (mOp2->isNull()) {
-                mResult->putV(false);
+                mResult->value(false);
             } else {
-                mResult->putV(true);
+                mResult->value(true);
             }
         } else if (mOp2->isNull()) {
-            mResult->putV(true);
-        } else if (mOp1->getV() == mOp2->getV()) {
-            mResult->putV(false);
+            mResult->value(true);
+        } else if (mOp1->value() == mOp2->value()) {
+            mResult->value(false);
         } else {
-            mResult->putV(true);
+            mResult->value(true);
         }
     }
 };
@@ -301,10 +301,10 @@ public:
         if (mOp1->isNull() || mOp2->isNull()) {
             mResult->toNull();
         } else {
-            if (mOp1->getV() == mOp2->getV()) {
-                mResult->putV(true);
+            if (mOp1->value() == mOp2->value()) {
+                mResult->value(true);
             } else {
-                mResult->putV(false);
+                mResult->value(false);
             }
         }
     }
@@ -332,10 +332,10 @@ public:
         if (mOp1->isNull() || mOp2->isNull()) {
             mResult->toNull();
         } else {
-            if (mOp1->getV() == mOp2->getV()) {
-                mResult->putV(false);
+            if (mOp1->value() == mOp2->value()) {
+                mResult->value(false);
             } else {
-                mResult->putV(true);
+                mResult->value(true);
             }
         }
     }
@@ -363,10 +363,10 @@ public:
         if (mOp1->isNull() || mOp2->isNull()) {
             mResult->toNull();
         } else {
-            if ((mOp1->getV() == true) && (mOp2->getV() == false)) {
-                mResult->putV(true);
+            if ((mOp1->value() == true) && (mOp2->value() == false)) {
+                mResult->value(true);
             } else {
-                mResult->putV(false);
+                mResult->value(false);
             }
         }
     }
@@ -394,10 +394,10 @@ public:
         if (mOp1->isNull() || mOp2->isNull()) {
             mResult->toNull();
         } else {
-            if (mOp1->getV() == false && mOp2->getV() == true) {
-                mResult->putV(true);
+            if (mOp1->value() == false && mOp2->value() == true) {
+                mResult->value(true);
             } else {
-                mResult->putV(false);
+                mResult->value(false);
             }
         }
     }
@@ -421,9 +421,9 @@ public:
     virtual void exec(TProgramCounter& pc) const {
         pc++;
         if (mOp1->isNull()) {
-            mResult->putV(true);
+            mResult->value(true);
         } else {
-            mResult->putV(false);
+            mResult->value(false);
         }
     }
 };
@@ -447,9 +447,9 @@ public:
         // SQL99, 4.6.1 Comparison and Assignment of Booleans
         pc++;
         if (mOp1->isNull()) {
-            mResult->putV(false);
+            mResult->value(false);
         } else {
-            mResult->putV(true);
+            mResult->value(true);
         }
     }
 };

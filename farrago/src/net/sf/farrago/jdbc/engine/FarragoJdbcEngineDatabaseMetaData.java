@@ -17,7 +17,7 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-package net.sf.farrago.jdbc;
+package net.sf.farrago.jdbc.engine;
 
 import net.sf.farrago.catalog.*;
 
@@ -27,18 +27,18 @@ import java.util.*;
 
 
 /**
- * FarragoDatabaseMetaData implements the DatabaseMetaData interface with
- * Farrago specifics.
+ * FarragoJdbcEngineDatabaseMetaData implements the {@link
+ * java.sql.DatabaseMetaData} interface with Farrago specifics.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoDatabaseMetaData implements DatabaseMetaData
+public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
 {
-    private FarragoJdbcConnection connection;
+    private FarragoJdbcEngineConnection connection;
     private FarragoCatalog catalog;
     
-    FarragoDatabaseMetaData(FarragoJdbcConnection connection)
+    FarragoJdbcEngineDatabaseMetaData(FarragoJdbcEngineConnection connection)
     {
         this.connection = connection;
         catalog = connection.getSession().getCatalog();
@@ -820,7 +820,8 @@ public class FarragoDatabaseMetaData implements DatabaseMetaData
 
     private void daemonize(Statement stmt)
     {
-        FarragoJdbcStatement farragoStmt = (FarragoJdbcStatement) stmt;
+        FarragoJdbcEngineStatement farragoStmt =
+            (FarragoJdbcEngineStatement) stmt;
         farragoStmt.stmtContext.daemonize();
     }
 
@@ -1243,4 +1244,4 @@ public class FarragoDatabaseMetaData implements DatabaseMetaData
     }
 }
 
-// End FarragoDatabaseMetaData.java
+// End FarragoJdbcEngineDatabaseMetaData.java

@@ -31,8 +31,8 @@ class PointerIntegralInstruction : public PointerInstruction
 public:
     explicit
     PointerIntegralInstruction(RegisterRef<PTR_TYPE>* result,
-                           RegisterRef<PointerSizeT>* op1,
-                           StandardTypeDescriptorOrdinal pointerType)
+                               RegisterRef<PointerSizeT>* op1,
+                               StandardTypeDescriptorOrdinal pointerType)
         : mResult(result),
           mOp1(op1),
           mPointerType(pointerType)
@@ -53,14 +53,16 @@ protected:
     StandardTypeDescriptorOrdinal mPointerType;
 };
 
+// TODO: Rename to PointerPutLength to be consistant with RegisterReference
+// TODO: accessors.
 template <typename PTR_TYPE>
 class PointerPutSize : public PointerIntegralInstruction<PTR_TYPE>
 {
 public: 
     explicit
     PointerPutSize(RegisterRef<PTR_TYPE>* result,
-                     RegisterRef<PointerSizeT>* op1, 
-                     StandardTypeDescriptorOrdinal pointerType)
+                   RegisterRef<PointerSizeT>* op1, 
+                   StandardTypeDescriptorOrdinal pointerType)
         : PointerIntegralInstruction<PTR_TYPE>(result, op1, pointerType)
     { }
     virtual
@@ -71,9 +73,9 @@ public:
 
         if (mOp1->isNull()) {
             mResult->toNull();
-            mResult->putS(0);
+            mResult->length(0);
         } else {
-            mResult->putS(mOp1->getV());   // get value, put size
+            mResult->length(mOp1->value());   // get value, put size
         }
     }
 
@@ -85,8 +87,8 @@ public:
     }
 };
 
-//! Note: There cannot be a PointerIntegralPutSizeMax() as maximum size
-//! is always read-only.
+//! Note: There cannot be a PointerIntegralPutStorage() as cbStorage,
+//! the maximum size, is always read-only.
 
 FENNEL_END_NAMESPACE
 

@@ -167,18 +167,18 @@ public:
     static inline string getSetName(ERegisterSet set)
     {
         switch (set) {
-            case ELiteral:
-                return "C";
-            case ELocal:
-                return "L";
-            case EInput:
-                return "I";
-            case EOutput:
-                return "O";
-            case EStatus:
-                return "S";
-            default:
-                throw std::invalid_argument("fennel/calc/RegisterReference::getSetName"); 
+        case ELiteral:
+            return "C";
+        case ELocal:
+            return "L";
+        case EInput:
+            return "I";
+        case EOutput:
+            return "O";
+        case EStatus:
+            return "S";
+        default:
+            throw std::invalid_argument("fennel/calc/RegisterReference::getSetName"); 
         }
     }
 
@@ -230,10 +230,12 @@ protected:
     //!
     //! Only valid if CachePointer or PtrReset property is set.
     PBuffer mPData;
-    //! Cached and/or duplicated size of mPData;
+
+    //! Cached and/or duplicated length of mPData;
     //!
     //! Only valid if CachePointer or PtrReset property is set.
     TupleStorageByteLength mCbData;
+
     //! Cached and/or duplicated capacity of mPData;
     //!
     //! Only valid if CachePointer or PtrReset property is set.
@@ -292,7 +294,7 @@ public:
     //! get/peek/read a value from a register
     //!
     //! Assumes register is not null.
-    TMPLT getV() const {
+    TMPLT value() const {
         if (mProp & (EPropCachePointer|EPropPtrReset)) {
             assert(mPData);
             return *(reinterpret_cast<TMPLT*>(mPData));
@@ -302,7 +304,7 @@ public:
             assert(mRegisterSetP[mSetIndex]);
             TupleData* tupleDataP = mRegisterSetP[mSetIndex];
             TupleDatum* datumP = &((*tupleDataP)[mIndex]);
-            assert(datumP->pData); // Cannot getV() a NULL value
+            assert(datumP->pData); // Cannot read from a NULL value.
             return *(reinterpret_cast<TMPLT*>(const_cast<PBuffer>(datumP->pData)));
         }
     }
@@ -312,7 +314,7 @@ public:
     //!
     //! Assumes register is not null.
     void
-    putV(TMPLT newV)
+    value(TMPLT newV)
     {
         assert(!(mProp & EPropReadOnly));
         if (mProp & (EPropCachePointer|EPropPtrReset)) {
@@ -324,7 +326,7 @@ public:
             assert(mRegisterSetP[mSetIndex]);
             TupleData* tupleDataP = mRegisterSetP[mSetIndex];
             TupleDatum* datumP = &((*tupleDataP)[mIndex]);
-            assert(datumP->pData); // Cannot putV() into a NULL value
+            assert(datumP->pData); // Cannot write into a NULL value.
             *(reinterpret_cast<TMPLT*>(const_cast<PBuffer>(datumP->pData))) = newV;
         }
     }
@@ -372,7 +374,7 @@ public:
     //! type, never in other Instruction types, where TMPLT
     //! is not a pointer.
     TMPLT
-    getP() const {
+    pointer() const {
         assert(StandardTypeDescriptor::StandardTypeDescriptor::isArray(mType));
         if (mProp & (EPropCachePointer|EPropPtrReset)) {
             assert(mPData);  // useful or harmful?
@@ -394,7 +396,7 @@ public:
     //! is not a pointer.
     //! Will append to mResetP to allow register to be reset.
     void
-    putP(TMPLT newP, TupleStorageByteLength len)
+    pointer(TMPLT newP, TupleStorageByteLength len)
     {
         assert(!(mProp & EPropReadOnly));
         assert(newP);  // use toNull()
@@ -418,13 +420,13 @@ public:
         }
     }
 
-    //! Get size of data buffer
+    //! Get length, in bytes, of data buffer
     //!
-    //! This is the actual size of the object pointed to, not
+    //! This is the actual length of the object pointed to, not
     //! the amount of memory allocated for the object. For example,
     //! this could be the length, in bytes, of a VARCHAR string.
     TupleStorageByteLength
-    getS() const
+    length() const
     {
         if (mProp & (EPropCachePointer|EPropPtrReset)) {
             return mCbData;
@@ -437,14 +439,14 @@ public:
             return datumP->cbData;
         }
     }
-    //! Get maximum size of data buffer. (Column width or allocated size.)
+    //! Get storage length / maximum length, in bytes, of data buffer.
     //!
-    //! Note that there is no corresponding putSMax(). Calculator
+    //! Note that there is no corresponding write storage(arg). Calculator
     //! considers cbStorage to be read-only information. Calculator
     //! can change neither the defined column width nor the amount
     //! of memory allocated.
     TupleStorageByteLength
-    getSMax() const
+    storage() const
     {
         if (mProp & (EPropCachePointer|EPropPtrReset)) {
             return mCbStorage;
@@ -459,52 +461,52 @@ public:
             return ((*(mRegisterSetDescP[mSetIndex]))[mIndex]).cbStorage;
         }
     }
-    //! Get size of string, in bytes, based on type. 
+    //! Get length of string, in bytes, based on string type.
     //!
-    //! Fixed width, CHAR, BINARY:  Returns getSMax()
-    //! Variable width, VARCHAR, VARBINARY: Returns getS()
+    //! Fixed width, CHAR, BINARY:  Returns storage()
+    //! Variable width, VARCHAR, VARBINARY: Returns length()
     TupleStorageByteLength
-    getSStr() const
+    stringLength() const
     {
         assert(StandardTypeDescriptor::isArray(mType));
         if (StandardTypeDescriptor::isVariableLenArray(mType)) {
-            return getS();
+            return length();
         } else {
-            return getSMax();
+            return storage();
         }
     }
-    //! Set size, in bytes, of data buffer
+    //! Set length, in bytes, of data buffer.
     //!
-    //! This is the actual size of the object pointed to, not
+    //! This is the actual length of the object pointed to, not
     //! the amount of memory allocated for the object. For example,
     //! this could be the length, in bytes, of a VARCHAR string.
     void
-    putS(TupleStorageByteLength newsize)
+    length(TupleStorageByteLength newLen)
     {
         if (mProp & (EPropCachePointer|EPropPtrReset)) {
-            assert(newsize == 0 ? true : (mPData == 0 ? false : true)); // useful or harmful?
-            assert(newsize <= mCbStorage);         // useful or harmful?
-            mCbData = newsize;
+            assert(newLen == 0 ? true : (mPData == 0 ? false : true)); // useful or harmful?
+            assert(newLen <= mCbStorage);         // useful or harmful?
+            mCbData = newLen;
         } else {
             assert(mRegisterSetP);
             assert(mSetIndex < ELastSet);
             assert(mRegisterSetP[mSetIndex]);
-            assert(newsize <= ((*(mRegisterSetDescP[mSetIndex]))[mIndex]).cbStorage);
+            assert(newLen <= ((*(mRegisterSetDescP[mSetIndex]))[mIndex]).cbStorage);
             TupleData* tupleDataP = mRegisterSetP[mSetIndex];
             TupleDatum* pDatum = &((*tupleDataP)[mIndex]);
-            pDatum->cbData = newsize;
+            pDatum->cbData = newLen;
         }
     }
-    //! Set size of string, in bytes, based on type.
+    //! Set length of string, in bytes, based on string type.
     //!
-    //! Fixed width, CHAR/BINARY: has no effect. 
-    //! Variable width, VARCHAR/VARBINARY: acts as a putS() wrapper.
+    //! Fixed width, CHAR/BINARY: has no effect.
+    //! Variable width, VARCHAR/VARBINARY: acts as a length(arg) wrapper.
     void
-    putSStr(TupleStorageByteLength newsize)
+    stringLength(TupleStorageByteLength newLen)
     {
         assert(StandardTypeDescriptor::isArray(mType));
         if (StandardTypeDescriptor::isVariableLenArray(mType)) {
-            putS(newsize);
+            length(newLen);
         }
     }
 
@@ -522,14 +524,14 @@ public:
             // Does not compile due to ptr/non-ptr compile issue
             // TODO: Make this work with VARBINARY and I18N
             // TODO: Remove the reinterpret_cast. Ugly.
-            string ret((char *)(this->getP()), this->getS());
+            string ret((char *)(this->pointer()), this->getS());
             return ret;
 #endif
             return "Unimpl";
         }
         else {
             // TODO: Remove boost call, use stream instead
-            return boost::lexical_cast<std::string>(this->getV());
+            return boost::lexical_cast<std::string>(this->value());
         }
     }
 protected:

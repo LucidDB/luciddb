@@ -87,7 +87,7 @@ protected:
 
 };
 
-//! Decreases size by op2, which may be completely invalid. Reset with PointerPutSize.
+//! Decreases length by op2, which may be completely invalid. Reset with PointerPutSize.
 template <typename PTR_TYPE>
 class PointerAdd : public PointerPointerInstruction<PTR_TYPE, PointerOperandT>
 {
@@ -106,21 +106,21 @@ public:
         pc++;
         if (mOp1->isNull() || mOp2->isNull()) {
             mResult->toNull();
-            mResult->putS(0);
+            mResult->length(0);
         } else {
-            // Educated guess: Size decreases. If incorrect, compiler is 
-            // responsible for resetting the size correctly with
+            // Educated guess: Length decreases. If incorrect, compiler is
+            // responsible for resetting the length correctly with
             // Instruction PointerPutSize
-            uint oldSize = mOp1->getS();
-            uint delta = mOp2->getV();
-            uint newSize;
-            if (oldSize > delta) {
-                newSize = oldSize - delta;
+            uint oldLength = mOp1->length();
+            uint delta = mOp2->value();
+            uint newLength;
+            if (oldLength > delta) {
+                newLength = oldLength - delta;
             } else {
-                newSize = 0;
+                newLength = 0;
             }
-            mResult->putP(reinterpret_cast<PTR_TYPE>(mOp1->getP()) + mOp2->getV(),
-                          newSize);
+            mResult->pointer(reinterpret_cast<PTR_TYPE>(mOp1->pointer()) + mOp2->value(),
+                             newLength);
         }
     }
 
@@ -131,9 +131,9 @@ public:
     }
 };
 
-//! Increases size by op2, which may be completely invalid. Reset with PointerPutSize.
+//! Increases length by op2, which may be completely invalid. Reset with PointerPutSize.
 //!
-//! Will only increase size to at most op1->cbStorage length to avoid
+//! Will only increase length to at most op1->cbStorage length to avoid
 //! needless invariant breakage.
 template <typename PTR_TYPE>
 class PointerSub : public PointerPointerInstruction<PTR_TYPE, PointerOperandT>
@@ -153,16 +153,16 @@ public:
         pc++;
         if (mOp1->isNull() || mOp2->isNull()) {
             mResult->toNull();
-            mResult->putS(0);
+            mResult->length(0);
         } else {
-            // Educated guess: Size increases. If incorrect, compiler is 
-            // responsible for resetting the size correctly with
-            // Instruction PointerPutSize
-            uint newSize = mOp1->getS() + mOp2->getV();
-            uint maxSize = mOp1->getSMax();
-            if (newSize > maxSize) newSize = maxSize;
-            mResult->putP(reinterpret_cast<PTR_TYPE>(mOp1->getP()) - mOp2->getV(),
-                          newSize);
+            // Educated guess: Length increases. If incorrect, compiler is 
+            // responsible for resetting the length correctly with
+            // Instruction PointerPutLength
+            uint newLength = mOp1->length() + mOp2->value();
+            uint maxLength = mOp1->storage();
+            if (newLength > maxLength) newLength = maxLength;
+            mResult->pointer(reinterpret_cast<PTR_TYPE>(mOp1->pointer()) - mOp2->value(),
+                             newLength);
         }
     }
 
@@ -191,9 +191,9 @@ public:
         pc++;
         if (mOp1->isNull()) {
             mResult->toNull();
-            mResult->putS(0);
+            mResult->length(0);
         } else {
-            mResult->putP(mOp1->getP(), mOp1->getS());
+            mResult->pointer(mOp1->pointer(), mOp1->length());
         }
     }
     const char* longName() const { return "PointerMove"; }
@@ -219,7 +219,7 @@ public:
     virtual void exec(TProgramCounter& pc) const { 
         pc++;
         mResult->toNull();
-        mResult->putS(0);
+        mResult->length(0);
     }
     const char* longName() const { return "PointerToNull"; }
     const char* shortName() const { return "TONULL"; }

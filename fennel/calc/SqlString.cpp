@@ -28,12 +28,12 @@ FENNEL_BEGIN_NAMESPACE
 
 int
 SqlStrAsciiCat(char* dest,
-                int destWidth,
-                int destLen,
-                char const * const str,
-                int strLen)
+               int destStorage,
+               int destLen,
+               char const * const str,
+               int strLen)
 {
-    if (destLen + strLen > destWidth) {
+    if (destLen + strLen > destStorage) {
         // SQL99 22.1 22-001 "String Data Right truncation"
         throw "22001";
     }
@@ -45,13 +45,13 @@ SqlStrAsciiCat(char* dest,
 
 int
 SqlStrAsciiCat(char* dest,
-                int destWidth,
-                char const * const str1,
-                int str1Len,
-                char const * const str2,
-                int str2Len)
+               int destStorage,
+               char const * const str1,
+               int str1Len,
+               char const * const str2,
+               int str2Len)
 {
-    if (str1Len + str2Len > destWidth) {
+    if (str1Len + str2Len > destStorage) {
         // SQL99 22.1 22-001 "String Data Right truncation"
         throw "22001";
     }
@@ -63,44 +63,44 @@ SqlStrAsciiCat(char* dest,
 
 int
 SqlStrAsciiCmpF(char const * const str1,
-                int str1Width,
+                int str1Len,
                 char const * const str2,
-                int str2Width,
+                int str2Len,
                 char trimchar)
 {
 
     char const * start = str1;
-    char const * end = str1 + str1Width;
+    char const * end = str1 + str1Len;
     
     if (end != start) {
         end--;
         while (end != start && *end == trimchar) end--;
         if (end != start || *end != trimchar) end++;
     }
-    int str1Len = end - start;
+    int str1TrimLen = end - start;
     
     start = str2;
-    end = str2 + str2Width;
+    end = str2 + str2Len;
 
     if (end != start) {
         end--;
         while (end != start && *end == trimchar) end--;
         if (end != start || *end != trimchar) end++;
     }
-    int str2Len = end - start;
+    int str2TrimLen = end - start;
     
-    if (str1Len > str2Len) {
+    if (str1TrimLen > str2TrimLen) {
         return 1;
-    } else if (str1Len < str2Len) {
+    } else if (str1TrimLen < str2TrimLen) {
         return -1;
     }
 
-    assert(str1Len == str2Len);
+    assert(str1TrimLen == str2TrimLen);
     
     // comparison must be unsigned to work for > 128
     unsigned char const *s1 = reinterpret_cast<unsigned char const *>(str1);
     unsigned char const *s2 = reinterpret_cast<unsigned char const *>(str2);
-    int len = str1Len;
+    int len = str1TrimLen;
 
     while (len-- > 0) {
         if (*s1 != *s2) {
@@ -167,7 +167,7 @@ SqlStrAsciiLenOct(char const * const str,
 
 int
 SqlStrAsciiOverlay(char* dest,
-                   int destWidth,
+                   int destStorage,
                    char const * const str,
                    int strLen,
                    char const * const over,
@@ -199,7 +199,7 @@ SqlStrAsciiOverlay(char* dest,
     assert(rightLen >= 0);
     assert(rightP >= str);
     
-    if (leftLen + rightLen + overLen > destWidth) {
+    if (leftLen + rightLen + overLen > destStorage) {
         // SQL99 22.1 22-001 "String Data Right truncation"
         throw "22001";
     }
@@ -218,19 +218,19 @@ SqlStrAsciiOverlay(char* dest,
 
 int
 SqlStrAsciiPos(char const * const str,
-               int strWidth,
+               int strLen,
                char const * const find,
-               int findWidth)
+               int findLen)
 {
-    if (!findWidth) return 1;             // SQL99 6.17 General Rule 2 case A.
-    if (findWidth > strWidth) return 0;   // Case C.
+    if (!findLen) return 1;             // SQL99 6.17 General Rule 2 case A.
+    if (findLen > strLen) return 0;   // Case C.
 
-    assert(findWidth > 0);
-    assert(strWidth > 0);
-    assert(strWidth - findWidth >= 0);
+    assert(findLen > 0);
+    assert(strLen > 0);
+    assert(strLen - findLen >= 0);
 
     register char const * s = str;
-    char const * end = 1 + s + (strWidth - findWidth);
+    char const * end = 1 + s + (strLen - findLen);
 
     while(s < end) {
         // search for first char of find
@@ -238,7 +238,7 @@ SqlStrAsciiPos(char const * const str,
         if (!s) {
             return 0;                // Case C.
         }
-        if (!memcmp(s, find, findWidth)) {
+        if (!memcmp(s, find, findLen)) {
             // add 1 to make result 1-indexed.
             return (s - str) + 1;   // Case B.
         } else {
@@ -251,7 +251,7 @@ SqlStrAsciiPos(char const * const str,
 
 int
 SqlStrAsciiSubStr(char const ** dest,
-                  int destWidth,
+                  int destStorage,
                   char const * const str,
                   int strLen,
                   int subStart,
@@ -285,7 +285,7 @@ SqlStrAsciiSubStr(char const ** dest,
     int l1 = e1 - s1;
 
 
-    if (l1 > destWidth) {
+    if (l1 > destStorage) {
         // SQL99 22.1 22-001 "String Data Right truncation"
         throw "22001";
     }
@@ -302,7 +302,7 @@ SqlStrAsciiSubStr(char const ** dest,
 
 int
 SqlStrAsciiToLower(char* dest,
-                   int destWidth,
+                   int destStorage,
                    char const * src,
                    int srcLen)
 {
@@ -310,7 +310,7 @@ SqlStrAsciiToLower(char* dest,
     register char* d = dest;
     char* e = dest + srcLen;
 
-    if (srcLen > destWidth) {
+    if (srcLen > destStorage) {
         // SQL99 22.1 22-001 "String Data Right truncation"
         throw "22001";
     }
@@ -323,7 +323,7 @@ SqlStrAsciiToLower(char* dest,
 
 int
 SqlStrAsciiToUpper(char* dest,
-                   int destWidth,
+                   int destStorage,
                    char const * src,
                    int srcLen)
 {
@@ -331,7 +331,7 @@ SqlStrAsciiToUpper(char* dest,
     register char* d = dest;
     char* e = dest + srcLen;
 
-    if (srcLen > destWidth) {
+    if (srcLen > destStorage) {
         // SQL99 22.1 22-001 "String Data Right truncation"
         throw "22001";
     }
@@ -344,7 +344,7 @@ SqlStrAsciiToUpper(char* dest,
 
 int 
 SqlStrAsciiTrim(char* dest, 
-                int destWidth,
+                int destStorage,
                 char const * const str,
                 int strLen,
                 bool trimLeft,
@@ -366,7 +366,7 @@ SqlStrAsciiTrim(char* dest,
     }
     newLen = end - start;
 
-    if (newLen > destWidth) {
+    if (newLen > destStorage) {
         // SQL99 22.1 22-001 "String Data Right truncation"
         throw "22001";
     }
@@ -378,8 +378,8 @@ int
 SqlStrAsciiTrim(char const ** result,
                 char const * const str,
                 int strLen,
-                bool trimLeft,
-                bool trimRight,
+                int trimLeft,
+                int trimRight,
                 char trimchar)
 {
     char const * start = str;

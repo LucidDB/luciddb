@@ -112,13 +112,13 @@ public:
         if (mOp1->isNull() || mOp2->isNull()) {
             mResult->toNull();
         } else {
-            TMPLT o2 = mOp2->getV(); // encourage into register
+            TMPLT o2 = mOp2->value(); // encourage into register
             if (o2 == 0) {
                 mResult->toNull();
                 // SQL99 22.1 SQLState dataexception class 22, division by zero subclass 012
                 throw CalcMessage("22012", pc - 1); 
             }
-            mResult->putV(mOp1->getV() % o2);
+            mResult->value(mOp1->value() % o2);
         }
     }
 
@@ -148,7 +148,7 @@ public:
         if (mOp1->isNull() || mOp2->isNull()) {
             mResult->toNull();
         } else {
-            mResult->putV(mOp1->getV() & mOp2->getV());
+            mResult->value(mOp1->value() & mOp2->value());
         }
         pc++;
     }
@@ -180,7 +180,7 @@ public:
         if (mOp1->isNull() || mOp2->isNull()) {
             mResult->toNull();
         } else {
-            mResult->putV(mOp1->getV() | mOp2->getV());
+            mResult->value(mOp1->value() | mOp2->value());
         }
     }
 
@@ -211,7 +211,7 @@ public:
         if (mOp1->isNull() || mOp2->isNull()) {
             mResult->toNull();
         } else {
-            mResult->putV(mOp1->getV() << mOp2->getV());
+            mResult->value(mOp1->value() << mOp2->value());
         }
     }
 
@@ -242,7 +242,7 @@ public:
         if (mOp1->isNull() || mOp2->isNull()) {
             mResult->toNull();
         } else {
-            mResult->putV(mOp1->getV() >> mOp2->getV());
+            mResult->value(mOp1->value() >> mOp2->value());
         }
     }
 

@@ -17,7 +17,7 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-package net.sf.farrago.jdbc;
+package net.sf.farrago.jdbc.engine;
 
 import net.sf.farrago.session.*;
 
@@ -30,15 +30,15 @@ import java.math.*;
 import java.sql.Date;
 
 /**
- * FarragoJdbcPreparedStatement is an abstract base for Farrago implementations
- * of {@link java.sql.PreparedStatement}.  Subclasses define details of
- * preparation for DDL, DML, and queries.
+ * FarragoJdbcEnginePreparedStatement is an abstract base for Farrago
+ * implementations of {@link java.sql.PreparedStatement}.  Subclasses define
+ * details of preparation for DDL, DML, and queries.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class FarragoJdbcPreparedStatement
-    extends FarragoJdbcStatement
+public abstract class FarragoJdbcEnginePreparedStatement
+    extends FarragoJdbcEngineStatement
     implements PreparedStatement
 {
     protected static final String ERRMSG_ALREADY_PREPARED =
@@ -47,7 +47,7 @@ public abstract class FarragoJdbcPreparedStatement
     protected String sql;
 
     /**
-     * Creates a new FarragoJdbcPreparedStatement object.
+     * Creates a new FarragoJdbcEnginePreparedStatement object.
      *
      * @param connection the connection creating this statement
      *
@@ -55,8 +55,8 @@ public abstract class FarragoJdbcPreparedStatement
      *
      * @param sql the text of the SQL statement
      */
-    protected FarragoJdbcPreparedStatement(
-        FarragoJdbcConnection connection,
+    protected FarragoJdbcEnginePreparedStatement(
+        FarragoJdbcEngineConnection connection,
         FarragoSessionStmtContext stmtContext,
         String sql)
     {
@@ -377,4 +377,4 @@ public abstract class FarragoJdbcPreparedStatement
     }
 }
 
-// End FarragoJdbcPreparedStatement.java
+// End FarragoJdbcEnginePreparedStatement.java

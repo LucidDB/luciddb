@@ -481,7 +481,7 @@ unitTestBool()
     // tonull
     if (output[outC++].pData != NULL) fail("booltonull1", __LINE__);
 
-    cout << "Warnings: " << c.warnings() << endl;
+    cout << "Calculator Warnings: " << c.warnings() << endl;
 
     delete [] bInP;
     delete [] bOutP;
@@ -1186,7 +1186,7 @@ unitTestLong()
     // return
     if (*(reinterpret_cast<const int32_t *>(output[outC++].pData)) != 70) fail("longreturn", __LINE__);
 
-    cout << "Warnings: " << c.warnings() << endl;
+    cout << "Calculator Warnings: " << c.warnings() << endl;
 
     delete [] bInP;
     delete [] bOutP;
@@ -1789,7 +1789,7 @@ unitTestFloat()
     // return
     if (*(reinterpret_cast<const float *>(output[outC++].pData)) != 10) fail("floatreturn", __LINE__);
 
-    cout << "Warnings: " << c.warnings() << endl;
+    cout << "Calculator Warnings: " << c.warnings() << endl;
 
     delete [] fInP;
     delete [] fOutP;
@@ -1840,7 +1840,7 @@ unitTestPointer()
     const int ulongIdx = idx;
     for (i=0;i < registersize; i++) {
         // unsigned longs in third "half"
-        // will server as PointerSizeT
+        // will serve as PointerSizeT
         StoredTypeDescriptor const &typeDesc = typeFactory.newDataType(STANDARD_TYPE_UINT_32);
         tupleDesc.push_back(TupleAttributeDescriptor(typeDesc, isNullable));
         idx++;
@@ -2077,20 +2077,20 @@ unitTestPointer()
         c.appendRegRef(cpLiP[i]);
 
         lInP[i] = new RegisterRef<PointerOperandT>(RegisterReference::EInput,
-                                        ulongIdx + i,
-                                        STANDARD_TYPE_INT_32);
+                                                   ulongIdx + i,
+                                                   STANDARD_TYPE_INT_32);
         c.appendRegRef(lInP[i]);
         lOutP[i] = new RegisterRef<PointerOperandT>(RegisterReference::EOutput,
-                                         ulongIdx + i,
-                                         STANDARD_TYPE_INT_32);
+                                                    ulongIdx + i,
+                                                    STANDARD_TYPE_INT_32);
         c.appendRegRef(lOutP[i]);
         lLoP[i] = new RegisterRef<PointerOperandT>(RegisterReference::ELocal,
-                                        ulongIdx + i,
-                                        STANDARD_TYPE_INT_32);
+                                                   ulongIdx + i,
+                                                   STANDARD_TYPE_INT_32);
         c.appendRegRef(lLoP[i]);
         lLiP[i] = new RegisterRef<PointerOperandT>(RegisterReference::ELiteral,
-                                        ulongIdx + i, 
-                                        STANDARD_TYPE_INT_32);
+                                                   ulongIdx + i, 
+                                                   STANDARD_TYPE_INT_32);
         c.appendRegRef(lLiP[i]);
 
         bInP[i] = new RegisterRef<bool>(RegisterReference::EInput,
@@ -2434,7 +2434,7 @@ unitTestPointer()
     if (*(output[outL++].pData) != bufferlen) fail("pointergetsize10", __LINE__);
     
 
-    cout << "Warnings: " << c.warnings() << endl;
+    cout << "Calculator Warnings: " << c.warnings() << endl;
 
     delete [] cpInP;
     delete [] cpOutP;
@@ -2650,7 +2650,7 @@ unitTestWarnings()
     tuplePrinter.print(cout, tupleDesc, output);
     cout << endl;
 
-    cout << "Warnings: " << c.warnings() << endl;
+    cout << "Calculator Warnings: " << c.warnings() << endl;
 
     deque<CalcMessage>::iterator iter = c.mWarnings.begin();
     if (iter->mPc != 0) fail("warning:pc", __LINE__);
@@ -2679,7 +2679,7 @@ unitTestWarnings()
     c.bind(&input, &output);
     c.exec();
 
-    cout << "Warnings: " << c.warnings() << endl;
+    cout << "Calculator Warnings: " << c.warnings() << endl;
 
     if (!c.mWarnings.empty()) 
         fail("warning:warning deque has data", __LINE__);
@@ -2901,7 +2901,7 @@ unitTestPointerCache()
     tuplePrinter.print(cout, tupleDesc, output);
     cout << endl;
 
-    cout << "Warnings: " << c.warnings() << endl;
+    cout << "Calculator Warnings: " << c.warnings() << endl;
 
     outF = liF = 0;
     for (i = 0; i < (registersize / 2) - 1 ; i++) {
@@ -2946,7 +2946,7 @@ unitTestPointerCache()
         }
     }
 
-    cout << "Warnings: " << c.warnings() << endl;
+    cout << "Calculator Warnings: " << c.warnings() << endl;
 
     delete [] fInP;
     delete [] fOutP;
@@ -3534,7 +3534,7 @@ unitTestStatusRegister()
     tuplePrinter.print(cout, tupleDesc, status);
     cout << endl;
 
-    cout << "Warnings: " << c.warnings() << endl;
+    cout << "Calculator Warnings: " << c.warnings() << endl;
 
     statusS = liS = 0;
     for (i = 0; i < registersize - 1 ; i++) {

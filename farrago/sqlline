@@ -1,9 +1,0 @@
-#!/bin/bash
-# $Id$
-# Run the sqlline command-line SQL interpreter
-
-java -ea -esa -cp `cat classpath.gen` \
-  -Dnet.sf.farrago.home=. \
-  -Djava.util.logging.config.file=trace/FarragoTrace.properties \
-  -Djava.ext.dirs=../thirdparty/sqlline sqlline.SqlLine \
-  isql/sqlline.properties $*

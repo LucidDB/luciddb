@@ -17,7 +17,7 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-package net.sf.farrago.jdbc;
+package net.sf.farrago.jdbc.engine;
 
 import net.sf.farrago.session.*;
 import net.sf.farrago.util.*;
@@ -31,13 +31,13 @@ import java.util.logging.*;
 
 
 /**
- * FarragoJdbcStatement implements the {@link java.sql.Statement} interface
- * for the Farrago JDBC driver.
+ * FarragoJdbcEngineStatement implements the {@link java.sql.Statement}
+ * interface for the Farrago JDBC driver.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoJdbcStatement
+public class FarragoJdbcEngineStatement
     implements Statement
 {
     //~ Static fields/initializers --------------------------------------------
@@ -53,7 +53,7 @@ public class FarragoJdbcStatement
     /**
      * Connection through which this stmt was created.
      */
-    protected FarragoJdbcConnection connection;
+    protected FarragoJdbcEngineConnection connection;
 
     /**
      * Underlying statement context.
@@ -63,14 +63,14 @@ public class FarragoJdbcStatement
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Creates a new FarragoJdbcStatement object.
+     * Creates a new FarragoJdbcEngineStatement object.
      *
      * @param connection the connection creating this statement
      *
      * @param stmtContext underlying FarragoSessionStmtContext
      */
-    FarragoJdbcStatement(
-        FarragoJdbcConnection connection,
+    FarragoJdbcEngineStatement(
+        FarragoJdbcEngineConnection connection,
         FarragoSessionStmtContext stmtContext)
     {
         this.connection = connection;
@@ -116,7 +116,7 @@ public class FarragoJdbcStatement
                 return false;
             }
         } catch (Throwable ex) {
-            throw FarragoJdbcDriver.newSqlException(ex);
+            throw FarragoJdbcEngineDriver.newSqlException(ex);
         } finally {
             if (unprepare) {
                 stmtContext.unprepare();
@@ -149,7 +149,7 @@ public class FarragoJdbcStatement
         } catch (SQLException ex) {
             throw ex;
         } catch (Throwable ex) {
-            throw FarragoJdbcDriver.newSqlException(ex);
+            throw FarragoJdbcEngineDriver.newSqlException(ex);
         } finally {
             stmtContext.unprepare();
         }
@@ -171,7 +171,7 @@ public class FarragoJdbcStatement
         } catch (SQLException ex) {
             throw ex;
         } catch (Throwable ex) {
-            throw FarragoJdbcDriver.newSqlException(ex);
+            throw FarragoJdbcEngineDriver.newSqlException(ex);
         } finally {
             if (unprepare) {
                 stmtContext.unprepare();
@@ -381,4 +381,4 @@ public class FarragoJdbcStatement
 }
 
 
-// End FarragoJdbcStatement.java
+// End FarragoJdbcEngineStatement.java

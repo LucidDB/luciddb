@@ -128,10 +128,12 @@ void CalcAssembler::setTupleDatum(StandardTypeDescriptorOrdinal type,
     switch (type) 
     {
     case STANDARD_TYPE_REAL:
-        *(reinterpret_cast<float *>(const_cast<PBuffer>(tupleDatum.pData))) = (float) value;
+        *(reinterpret_cast<float *>(const_cast<PBuffer>(tupleDatum.pData))) = 
+            numeric_cast<float>(value);
         break;
     case STANDARD_TYPE_DOUBLE:
-        *(reinterpret_cast<double *>(const_cast<PBuffer>(tupleDatum.pData))) = (double) value;
+        *(reinterpret_cast<double *>(const_cast<PBuffer>(tupleDatum.pData))) = 
+            numeric_cast<double>(value);
         break;
     default:
         // Invalid real type - horrible, horrible

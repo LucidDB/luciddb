@@ -61,25 +61,25 @@ void convertDoubleToFloat(Calculator *pCalc,
                           RegisterRef<float>* regOut,
                           RegisterRef<double>* regIn)
 {
-    regOut->putV((float)regIn->getV());
+    regOut->value((float)regIn->value());
 }
 void convertFloatToDouble(Calculator *pCalc,
                           RegisterRef<double>* regOut,
                           RegisterRef<float>* regIn)
 {
-    regOut->putV((double)regIn->getV());
+    regOut->value((double)regIn->value());
 }
 void convertFloatToInt(Calculator *pCalc,
                        RegisterRef<int>* regOut,
                        RegisterRef<float>* regIn)
 {
-    regOut->putV((int)regIn->getV());
+    regOut->value((int)regIn->value());
 }
 void convertIntToFloat(Calculator *pCalc,
                        RegisterRef<float>* regOut,
                        RegisterRef<int>* regIn)
 {
-    regOut->putV((float)regIn->getV());
+    regOut->value((float)regIn->value());
 }
 /**
  * Assigns "input" * 10 ^ "exponent" to "result".
@@ -89,8 +89,8 @@ void convertDecimal(Calculator *pCalc,
                     RegisterRef<int32_t>* inputReg,
                     RegisterRef<int32_t>* exponentReg)
 {
-    int32_t in = inputReg->getV();
-    int32_t exp = exponentReg->getV();
+    int32_t in = inputReg->value();
+    int32_t exp = exponentReg->value();
     int32_t result = in;
     if (exp < 0) {
         while (exp++ < 0) {
@@ -101,7 +101,7 @@ void convertDecimal(Calculator *pCalc,
             result *= 10;
         }
     }
-    resultReg->putV(result);
+    resultReg->value(result);
 }
 
 void convertStringToExactNumber(Calculator *pCalc,
@@ -114,8 +114,8 @@ void convertStringToExactNumber(Calculator *pCalc,
     // TODO: something real.
     char *nullTermStr = new char [srcL+1];
     nullTermStr[srcL+1] = 0;
-    memcpy(nullTermStr, regIn->getP(), srcL);
-    regOut->putV(strtol(nullTermStr, 0, 10));
+    memcpy(nullTermStr, regIn->pointer(), srcL);
+    regOut->value(strtol(nullTermStr, 0, 10));
     delete [] nullTermStr;
     
 }
@@ -127,9 +127,9 @@ void convertExactNumberToString(Calculator *pCalc,
     // TODO: Change the following proof-of-concept code into 
     // TODO: something real.
     char *nullTermStr = new char[256];
-    sprintf(nullTermStr, "%d", regIn->getV());
+    sprintf(nullTermStr, "%d", regIn->value());
     
-    uint dstL = regOut->getSMax();
+    uint dstL = regOut->storage();
     uint newL = strlen(nullTermStr);
 
     printf("dstL = %d  newL = %d\n", dstL, newL);
@@ -139,7 +139,7 @@ void convertExactNumberToString(Calculator *pCalc,
         // TODO: truncated before going all wild and throwing exception
         assert(0);        // TODO: Must have a valid pc here!
         // SQL99 22.1 SQLState data exception class 22, string data, right truncation 001
-        memcpy(regOut->getP(), nullTermStr, dstL);
+        memcpy(regOut->pointer(), nullTermStr, dstL);
         regOut->putS(dstL);
         throw CalcMessage("22001", 0); // TODO: PC is bogus
         printf("ConvertExactNumberToString\n");
@@ -147,7 +147,7 @@ void convertExactNumberToString(Calculator *pCalc,
     }
     
     regOut->putS(newL);
-    memcpy(regOut->getP(), nullTermStr, newL);
+    memcpy(regOut->pointer(), nullTermStr, newL);
     delete [] nullTermStr;
 }
 
