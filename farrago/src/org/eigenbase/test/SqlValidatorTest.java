@@ -1841,6 +1841,16 @@ public class SqlValidatorTest extends SqlValidatorTestCase
 
     }
 
+    public void testCollect() {
+        check("select collect(deptno) from emp");
+        check("select collect(multiset[3]) from emp");
+    }
+
+    public void testFusion() {
+        checkFails("select fusion(deptno) from emp","(?s).*Cannot apply 'FUSION' to arguments of type 'FUSION.<INTEGER>.'.*");
+        check("select fusion(multiset[3]) from emp");
+    }
+
     public void testNew() {
         // (To debug invidual statements, paste them into this method.)
     }

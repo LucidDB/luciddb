@@ -1650,8 +1650,25 @@ public class SqlToRelConverter
         ArrayList unionRels = new ArrayList();
         for (int i = 0; i < rowConstructorList.length; i++) {
             SqlCall rowConstructor = (SqlCall) rowConstructorList[i];
-            RelNode queryExpr = convertRowConstructor(bb, rowConstructor);
-            unionRels.add(queryExpr);
+
+            Blackboard tmpBb = new Blackboard(bb.scope);
+            replaceSubqueries(tmpBb, rowConstructor);
+            RexNode [] exps = new RexNode[rowConstructor.operands.length];
+            String [] fieldNames = new String[rowConstructor.operands.length];
+            for (int j = 0; j < rowConstructor.operands.length; j++) {
+                final SqlNode node = rowConstructor.operands[j];
+                exps[j] = convertExpression(tmpBb, node);
+                fieldNames[j] = validator.deriveAlias(node, j);
+            }
+            RelNode in =
+                null == tmpBb.root ? new OneRowRel(cluster) : tmpBb.root;
+            unionRels.add(
+                new ProjectRel(
+                    cluster,
+                    in,
+                    exps,
+                    fieldNames,
+                    ProjectRel.Flags.Boxed));
         }
 
         if (unionRels.size() == 0) {

@@ -449,8 +449,7 @@ public class RexToCalcTranslator implements RexVisitor
 
     public void visitCorrelVariable(RexCorrelVariable correlVariable)
     {
-        throw FarragoResource.instance().newProgramImplementationError("Don't know how to implement rex node="
-            + correlVariable);
+        implementNode(correlVariable);
     }
 
     public void visitDynamicParam(RexDynamicParam dynamicParam)
@@ -746,8 +745,12 @@ public class RexToCalcTranslator implements RexVisitor
 
         final RexNode accessedNode = node.getReferenceExpr();
         assert(accessedNode instanceof RexCorrelVariable);
-        final RexCorrelVariable correlNode = (RexCorrelVariable) accessedNode;
-        final int id = RelOptQuery.getCorrelOrdinal(correlNode.getName());
+        implementNode((RexCorrelVariable) accessedNode);
+    }
+
+    private void implementNode(RexCorrelVariable node)
+    {
+        final int id = RelOptQuery.getCorrelOrdinal(node.getName());
         CalcProgramBuilder.Register idReg = builder.newInt4Literal(id);
         CalcProgramBuilder.Register result =
             builder.newLocal(getCalcRegisterDescriptor(node));

@@ -43,6 +43,15 @@ public class MinusRel extends UnionRel
     {
         super(cluster, new RelNode [] { left, right }, false);
     }
+
+    public MinusRel(
+        org.eigenbase.relopt.RelOptCluster cluster,
+        RelNode left,
+        RelNode right,
+        boolean all)
+    {
+        super(cluster, new RelNode [] { left, right }, all);
+    }
 }
 
 

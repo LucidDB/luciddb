@@ -349,6 +349,24 @@ public class SqlToRelConverterTest extends TestCase
 
     }
 
+    public void testElement() {
+        check("select element(multiset[5]) from emp",
+            "ProjectRel(EXPR$0=[ELEMENT($8)])" + NL +
+            "  JoinRel(condition=[true], joinType=[left])" + NL + 
+            "    TableAccessRel(table=[[EMP]])" + NL +
+            "    CollectRel" + NL +
+            "      UnionRel(all=[true])" + NL +
+            "        ProjectRel(EXPR$0=[5])" + NL +
+            "          OneRowRel" + NL);
+        check("values element(multiset[5])",
+            "ProjectRel(EXPR$0=[$0])" + NL +
+            "  ProjectRel(EXPR$0=[ELEMENT($0)])" + NL +
+            "    CollectRel" + NL +
+            "      UnionRel(all=[true])" + NL +
+            "        ProjectRel(EXPR$0=[5])" + NL +
+            "          OneRowRel" + NL);
+    }
+
     public void testUnion() {
         // union all
         check( "select empno from emp union all select deptno from dept",

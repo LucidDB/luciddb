@@ -34,6 +34,7 @@ import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.rex.RexNode;
+import org.eigenbase.rex.RexUtil;
 import org.eigenbase.util.Util;
 
 
@@ -90,7 +91,7 @@ public class CalcRel extends SingleRel
     public Object clone()
     {
         return new CalcRel(cluster, cloneTraits(), child, rowType,
-            projectExprs, conditionExpr);
+            RexUtil.clone(projectExprs), (RexNode) (null==conditionExpr ? null : conditionExpr.clone()));
     }
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)

@@ -218,7 +218,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      * <p>todo: Represent the ALL keyword to MULTISET UNION ALL etc. as a
      * hidden operand. Then we can obsolete this class.
      */
-    private static class SqlMultisetSetOperator extends SqlBinaryOperator {
+    public static class SqlMultisetSetOperator extends SqlBinaryOperator {
         private final boolean all;
 
         public SqlMultisetSetOperator(String name, int prec, boolean all)
@@ -531,8 +531,14 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
 
         };
 
+    /**
+     * Multiset Member of. Checks to see if a element belongs to a multiset.<br>
+     * Example:<br>
+     * <code>'green' MEMBER OF MULTISET['red','almost green','blue']</code>
+     * returns <code>false</code>.
+     */
     public final SqlBinaryOperator memberOfOperator =
-            //TODO check precedence is correct
+            //TODO check if precedence is correct
             new SqlBinaryOperator("MEMBER OF", SqlKind.Other, 15, true,
                 ReturnTypeInferenceImpl.useNullableBoolean,
                 null, null) {
@@ -577,6 +583,20 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
 
             };
 
+    /**
+     * Submultiset. Checks to see if an multiset is a sub-set of another
+     * multiset.<br>
+     * Example:<br>
+     * <code>
+     *  MULTISET['green'] SUBMULTISET OF MULTISET['red','almost green','blue']
+     * </code>
+     * returns <code>false</code>.<p>
+     * But
+     * <code>
+     *  MULTISET['blue', 'red'] SUBMULTISET OF MULTISET['red','almost green','blue']
+     * </code>
+     * returns <code>true</code> (<b>NB</b> multisets is order independant)
+     */
     public final SqlBinaryOperator submultisetOfOperator =
             //TODO check if precedence is correct
             new SqlBinaryOperator("SUBMULTISET OF", SqlKind.Other, 15, true,
@@ -1428,9 +1448,9 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
                 SqlOperatorTests.testCoalesceFunc(tester);
             }
         };
-    
+
     /** The <code>FLOOR</code> function. */
-    public final SqlFunction floorFunc = 
+    public final SqlFunction floorFunc =
         new SqlFunction("FLOOR", SqlKind.Function,
             ReturnTypeInferenceImpl.useFirstArgType, null,
             OperandsTypeChecking.typeNullableNumericOrInterval,
@@ -1652,8 +1672,8 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         };
 
     /**
-     * The CARDINALITY SQL operator, used to retreive the nbr of elements in
-     * the MULTISET
+     * The CARDINALITY SQL operator, used to retreive the number of elements in
+     * a MULTISET
      */
      public final SqlFunction cardinalityFunc =
         new SqlFunction("CARDINALITY", SqlKind.Function,
@@ -1662,6 +1682,33 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testCardinalityFunc(tester);
+            }
+        };
+
+
+    /**
+     * The COLLECT SQL operator. Multiset aggregator function.
+     */
+     public final SqlFunction collectFunc =
+        new SqlFunction("COLLECT", SqlKind.Function,
+            ReturnTypeInferenceImpl.useFirstArgType, null,
+            OperandsTypeChecking.typeAny, SqlFunctionCategory.System) {
+            public void test(SqlTester tester)
+            {
+//                SqlOperatorTests.testCollect(tester);
+            }
+        };
+
+    /**
+     * The FUSION SQL operator. Multiset aggregator function.
+     */
+     public final SqlFunction fusionFunc =
+        new SqlFunction("FUSION", SqlKind.Function,
+            ReturnTypeInferenceImpl.useFirstArgType, null,
+            OperandsTypeChecking.typeNullableMultiset, SqlFunctionCategory.System) {
+            public void test(SqlTester tester)
+            {
+//                SqlOperatorTests.testFusion(tester);
             }
         };
 }

@@ -1,7 +1,7 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2002-2005 Disruptive Tech
+// Copyright (C) 2005-2005 Disruptive Tech
 // Copyright (C) 2005-2005 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -85,6 +85,14 @@ public class FarragoMultisetSplitterRule extends RelOptRule
 
         multisetOperators.add(opTab.cardinalityFunc);
         multisetOperators.add(opTab.elementFunc);
+        multisetOperators.add(opTab.multisetExceptAllOperator);
+        multisetOperators.add(opTab.multisetExceptOperator);
+        multisetOperators.add(opTab.multisetIntersectAllOperator);
+        multisetOperators.add(opTab.multisetIntersectOperator);
+        multisetOperators.add(opTab.multisetUnionAllOperator);
+        multisetOperators.add(opTab.multisetUnionOperator);
+        multisetOperators.add(opTab.collectFunc);
+        multisetOperators.add(opTab.fusionFunc);
     }
 
     //~ Constructors ----------------------------------------------------------
@@ -255,8 +263,9 @@ public class FarragoMultisetSplitterRule extends RelOptRule
             correlatorRel.setVariablesStopped(stoppedVariableSet);
 //            correlatorRel.registerCorrelVariable(dyn_inIdStr);
         } else if (opTab.elementFunc == rexCall.op) {
+            //todo need to limit uncollect to one row
             // A call to
-            // CalcRel=[...,MEMBEROF($in_i),...]
+            // CalcRel=[...,ELEMENT($in_i),...]
             //   CalcInput
             //is eq. to
             // CalcRel=[...,$in_N,...]
@@ -266,7 +275,112 @@ public class FarragoMultisetSplitterRule extends RelOptRule
             //        ProjectRel=[output=$cor0]
             //          OneRowRel
             UncollectRel uncollect = new UncollectRel(cluster, projectRel);
-            correlatorRel = new CorrelatorRel(cluster, input, uncollect, correlations);
+            correlatorRel =
+                new CorrelatorRel(cluster, input, uncollect, correlations);
+        } else if (rexCall.op instanceof
+            SqlStdOperatorTable.SqlMultisetSetOperator) {
+             // A call to
+            // CalcRel=[...,ms1 UNION ms2,...]
+            //   CalcInput
+            //is eq. to
+            // CalcRel=[...,$in_N,...]
+            //   CorrelRel=[$cor0=$ms1, $cor1=$ms2]
+            //     CalcInput
+            //     CollectRel
+            //       UnionRel
+            //         Uncollect
+            //           ProjectRel=[output=$cor0]
+            //            OneRowRel
+            //         Uncollect
+            //           ProjectRel=[output=$cor1]
+            //            OneRowRel
+            final String dyn_inIdStr2 = cluster.query.createCorrel();
+            final int dyn_inId2 = cluster.query.getCorrelOrdinal(dyn_inIdStr2);
+            assert(rexCall.operands[1] instanceof RexInputRef);
+            final RexInputRef rexInput2 = (RexInputRef) rexCall.operands[1];
+            correlations.add(
+                new CorrelatorRel.Correlation(dyn_inId2,rexInput2.index));
+            final RexNode corRef2 =
+                cluster.rexBuilder.makeCorrel(rexInput2.getType(), dyn_inIdStr2);
+            ProjectRel projectRel2 = new ProjectRel(
+                cluster,
+                new OneRowRel(cluster),
+                new RexNode[]{corRef2},
+                new String[]{"output"+corRef2.toString()},
+                ProjectRel.Flags.Boxed);
+            final UncollectRel uncollectRel =
+                new UncollectRel(cluster, projectRel);
+            final UncollectRel uncollectRel2 =
+                new UncollectRel(cluster, projectRel2);
+
+            RelNode[] inputs = new RelNode[]{ uncollectRel, uncollectRel2};
+            final RelNode setRel;
+            if (opTab.multisetExceptAllOperator == rexCall.op) {
+                setRel =
+                    new MinusRel(cluster, uncollectRel, uncollectRel2, true);
+            } else if (opTab.multisetExceptOperator == rexCall.op) {
+                setRel =
+                    new MinusRel(cluster, uncollectRel, uncollectRel2, false);
+            } else if (opTab.multisetIntersectAllOperator == rexCall.op) {
+                setRel =
+                    new IntersectRel(cluster, uncollectRel, uncollectRel2,true);
+            } else if (opTab.multisetIntersectOperator == rexCall.op) {
+                setRel =
+                    new IntersectRel(cluster, uncollectRel,uncollectRel2,false);
+            } else if (opTab.multisetUnionAllOperator == rexCall.op) {
+                setRel =
+                    new UnionRel(cluster, inputs, true);
+            } else if (opTab.multisetUnionOperator == rexCall.op) {
+                setRel =
+                    new UnionRel(cluster, inputs, false);
+            } else {
+                throw Util.newInternal("should never come here");
+            }
+
+            final CollectRel collectRel =
+                new CollectRel(cluster, setRel, "multiset");
+            correlatorRel =
+                new CorrelatorRel(cluster, input, collectRel, correlations);
+        } else if (opTab.collectFunc == rexCall.op) {
+            // must fix, this is not a correct plan
+            // A call to
+            // CalcRel=[...,COLLECT($in),...]
+            //   CalcInput
+            //is eq. to
+            // CalcRel=[...,$in_N,...]
+            //   CorrelRel=[$cor0=$in]
+            //     CalcInput
+            //     CollectRel
+            //       ProjectRel=[output=$cor0]
+            //         OneRowRel
+            correlatorRel =
+                new CorrelatorRel(
+                    cluster,
+                    input,
+                    new CollectRel(cluster, projectRel, "multiset"),
+                    correlations);
+        } else if (opTab.fusionFunc == rexCall.op) {
+            // must fix, this is not a correct plan
+            // A call to
+            // CalcRel=[...,FUSION($in),...]
+            //   CalcInput
+            //is eq. to
+            // CalcRel=[...,$in_N,...]
+            //   CorrelRel=[$cor0=$in]
+            //     CalcInput
+            //     CollectRel
+            //       Uncollect
+            //         ProjectRel=[output=$cor0]
+            //           OneRowRel
+            correlatorRel =
+                new CorrelatorRel(
+                    cluster,
+                    input,
+                    new CollectRel(
+                        cluster,
+                        new UncollectRel(cluster, projectRel),
+                        "multiset"),
+                    correlations);
         }
 
         Util.permAssert(

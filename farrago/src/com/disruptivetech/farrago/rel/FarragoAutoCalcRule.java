@@ -155,6 +155,19 @@ public class FarragoAutoCalcRule extends RelOptRule
         CalcRel calc = (CalcRel) call.rels[0];
         RelNode relInput = call.rels[1];
 
+        for (int i = 0; i < calc.projectExprs.length; i++) {
+            if (FarragoMultisetSplitterRule.containsMultiset(
+                calc.projectExprs[i], true)) {
+                return; // Let FarragoMultisetSplitter work on it first.
+            }
+        }
+        if (calc.conditionExpr != null) {
+            if (FarragoMultisetSplitterRule.containsMultiset(
+                calc.conditionExpr, true)) {
+                return; // Let FarragoMultisetSplitter work on it first.
+            }
+        }
+
         // Test if we can translate the CalcRel to a fennel calc program
         RelNode fennelInput =
             mergeTraitsAndConvert(
@@ -172,6 +185,7 @@ public class FarragoAutoCalcRule extends RelOptRule
                     break;
                 }
             }
+
             if ((calc.conditionExpr != null)
                     && !translator.canTranslate(calc.conditionExpr, true)) {
                 canTranslate = false;
