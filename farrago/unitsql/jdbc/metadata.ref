@@ -3,17 +3,18 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test getCatalogs
 0: jdbc:farrago:> !metadata getCatalogs
-+-----------------------+
-|       TABLE_CAT       |
-+-----------------------+
-| HSQLDB_DEMO           |
-| LOCALDB               |
-| SYS_BOOT              |
-| SYS_CWM               |
-| SYS_FEM               |
-| SYS_FTRS_DATA_SERVER  |
-| SYS_MOCK_DATA_SERVER  |
-+-----------------------+
++-------------------------------+
+|           TABLE_CAT           |
++-------------------------------+
+| HSQLDB_DEMO                   |
+| LOCALDB                       |
+| SYS_BOOT                      |
+| SYS_CWM                       |
+| SYS_FEM                       |
+| SYS_FTRS_DATA_SERVER          |
+| SYS_MOCK_DATA_SERVER          |
+| SYS_MOCK_FOREIGN_DATA_SERVER  |
++-------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test getSchemas
 0: jdbc:farrago:> !metadata getSchemas

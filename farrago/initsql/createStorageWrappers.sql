@@ -31,6 +31,11 @@ create local data wrapper sys_mock
 library 'class net.sf.farrago.namespace.mock.MedMockLocalDataWrapper'
 language java;
 
+-- create wrapper for access to foreign mock data
+create foreign data wrapper sys_mock_foreign
+library 'class net.sf.farrago.namespace.mock.MedMockForeignDataWrapper'
+language java;
+
 -- create singleton server for local FTRS row-store data
 create server sys_ftrs_data_server
 local data wrapper sys_ftrs;
@@ -38,6 +43,10 @@ local data wrapper sys_ftrs;
 -- create singleton server for local mock row-store data
 create server sys_mock_data_server
 local data wrapper sys_mock;
+
+-- create singleton server for foreign mock data
+create server sys_mock_foreign_data_server
+foreign data wrapper sys_mock_foreign;
 
 -- create wrapper for access to JDBC data
 create foreign data wrapper sys_jdbc

@@ -17,26 +17,28 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- Check the foreign data wrapper and server
 0: jdbc:farrago:> select "name" from sys_fem.med."DataWrapper" order by 1;
-+------------+
-|    name    |
-+------------+
-| SYS_FTRS   |
-| SYS_JDBC   |
-| SYS_MDR    |
-| SYS_MOCK   |
-| TEST_JDBC  |
-+------------+
++-------------------+
+|       name        |
++-------------------+
+| SYS_FTRS          |
+| SYS_JDBC          |
+| SYS_MDR           |
+| SYS_MOCK          |
+| SYS_MOCK_FOREIGN  |
+| TEST_JDBC         |
++-------------------+
 0: jdbc:farrago:> select "name" from sys_fem.med."DataServer" order by 1;
-+-----------------------+
-|         name          |
-+-----------------------+
-| CSV_SERVER            |
-| HSQLDB_DEMO           |
-| SYS_CWM               |
-| SYS_FEM               |
-| SYS_FTRS_DATA_SERVER  |
-| SYS_MOCK_DATA_SERVER  |
-+-----------------------+
++-------------------------------+
+|             name              |
++-------------------------------+
+| CSV_SERVER                    |
+| HSQLDB_DEMO                   |
+| SYS_CWM                       |
+| SYS_FEM                       |
+| SYS_FTRS_DATA_SERVER          |
+| SYS_MOCK_DATA_SERVER          |
+| SYS_MOCK_FOREIGN_DATA_SERVER  |
++-------------------------------+
 0: jdbc:farrago:> select "name","value" from sys_fem.med."StorageOption" order by 1,2;
 +--------------------+-------------------------------------+
 |        name        |                value                |
@@ -119,15 +121,16 @@ encountered near line 1, column 31 (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> drop server csv_server cascade;
 0: jdbc:farrago:> select "name" from sys_fem.med."DataServer" order by 1;
-+-----------------------+
-|         name          |
-+-----------------------+
-| HSQLDB_DEMO           |
-| SYS_CWM               |
-| SYS_FEM               |
-| SYS_FTRS_DATA_SERVER  |
-| SYS_MOCK_DATA_SERVER  |
-+-----------------------+
++-------------------------------+
+|             name              |
++-------------------------------+
+| HSQLDB_DEMO                   |
+| SYS_CWM                       |
+| SYS_FEM                       |
+| SYS_FTRS_DATA_SERVER          |
+| SYS_MOCK_DATA_SERVER          |
+| SYS_MOCK_FOREIGN_DATA_SERVER  |
++-------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> drop schema csv_schema cascade;
 0: jdbc:farrago:> !metadata getSchemas
@@ -140,13 +143,14 @@ encountered near line 1, column 31 (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> drop foreign data wrapper test_jdbc;
 0: jdbc:farrago:> select "name" from sys_fem.med."DataWrapper" order by 1;
-+-----------+
-|   name    |
-+-----------+
-| SYS_FTRS  |
-| SYS_JDBC  |
-| SYS_MDR   |
-| SYS_MOCK  |
-+-----------+
++-------------------+
+|       name        |
++-------------------+
+| SYS_FTRS          |
+| SYS_JDBC          |
+| SYS_MDR           |
+| SYS_MOCK          |
+| SYS_MOCK_FOREIGN  |
++-------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

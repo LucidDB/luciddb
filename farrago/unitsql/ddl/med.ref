@@ -79,6 +79,18 @@ duplicate name encountered near line 1, column 15 (state=,code=0)
 . . . . . . . . > server mof_server
 . . . . . . . . > options(class_name 'Exception');
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- verify that creating a local table using foreign wrapper is illegal
+0: jdbc:farrago:> create table mof_schema.local_table_foreign_wrapper(
+. . . . . . . . >     id int not null primary key)
+. . . . . . . . > server mof_server;
+Error: Cannot create local table MOF_SCHEMA.LOCAL_TABLE_FOREIGN_WRAPPER using foreign data wrapper SYS_BOOT.TEST_MDR (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- and vice versa
+0: jdbc:farrago:> create foreign table mof_schema.foreign_table_local_wrapper(
+. . . . . . . . >     id int not null primary key)
+. . . . . . . . > server sys_mock_data_server;
+Error: Cannot create foreign table MOF_SCHEMA.FOREIGN_TABLE_LOCAL_WRAPPER using local data wrapper SYS_BOOT.SYS_MOCK (state=,code=0)
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- foreign does not allow constraint: should fail
 0: jdbc:farrago:> create foreign table mof_schema.test (name char(20) not null primary key)
 . . . . . . . . > server mof_server
@@ -153,25 +165,27 @@ Error: At line 1, column 15: Table 'MOF_SCHEMA.FOREIGN_EXCEPTION_NAMES' not foun
 0: jdbc:farrago:> -- now make sure entries are gone from catalog too
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select "name" from sys_fem.med."DataWrapper" order by 1;
-+-----------+
-|   name    |
-+-----------+
-| SYS_FTRS  |
-| SYS_JDBC  |
-| SYS_MDR   |
-| SYS_MOCK  |
-+-----------+
++-------------------+
+|       name        |
++-------------------+
+| SYS_FTRS          |
+| SYS_JDBC          |
+| SYS_MDR           |
+| SYS_MOCK          |
+| SYS_MOCK_FOREIGN  |
++-------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select "name" from sys_fem.med."DataServer" order by 1;
-+-----------------------+
-|         name          |
-+-----------------------+
-| HSQLDB_DEMO           |
-| SYS_CWM               |
-| SYS_FEM               |
-| SYS_FTRS_DATA_SERVER  |
-| SYS_MOCK_DATA_SERVER  |
-+-----------------------+
++-------------------------------+
+|             name              |
++-------------------------------+
+| HSQLDB_DEMO                   |
+| SYS_CWM                       |
+| SYS_FEM                       |
+| SYS_FTRS_DATA_SERVER          |
+| SYS_MOCK_DATA_SERVER          |
+| SYS_MOCK_FOREIGN_DATA_SERVER  |
++-------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test JDBC wrapper

@@ -233,7 +233,7 @@ public class FarragoJdbcTest extends FarragoTestCase
         sql = "create schema cancel_test";
         stmt.execute(sql);
         sql = "create foreign table cancel_test.m(id int not null) "
-            + "server sys_mock_data_server "
+            + "server sys_mock_foreign_data_server "
             + "options(executor_impl 'FENNEL', row_count '1000000000')";
         stmt.execute(sql);
         sql = "select * from cancel_test.m";

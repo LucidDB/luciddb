@@ -61,6 +61,16 @@ create foreign table mof_schema.mof_exception(
 server mof_server
 options(class_name 'Exception');
 
+-- verify that creating a local table using foreign wrapper is illegal
+create table mof_schema.local_table_foreign_wrapper(
+    id int not null primary key)
+server mof_server;
+
+-- and vice versa
+create foreign table mof_schema.foreign_table_local_wrapper(
+    id int not null primary key)
+server sys_mock_data_server;
+
 -- foreign does not allow constraint: should fail
 create foreign table mof_schema.test (name char(20) not null primary key)
 server mof_server

@@ -122,24 +122,25 @@ public class DdlHandler
             validateBaseColumnSet(columnSet);
         }
     }
-    
-    public void validateDefinition(FemBaseColumnSet columnSet)
-    {
-        if (!columnSet.getServer().getWrapper().isForeign()) {
-            validateBaseColumnSet(columnSet);
-            return;
-        }
-        
-        FarragoRepos repos = validator.getRepos();
 
+    public void validateDefinition(FemForeignTable foreignTable)
+    {
+        validateForeignColumnSetDefinition(foreignTable);
+    }
+    
+    protected void validateForeignColumnSetDefinition(
+        FemBaseColumnSet columnSet)
+    {
+        FarragoRepos repos = validator.getRepos();
         FemDataServer dataServer = columnSet.getServer();
         FemDataWrapper dataWrapper = dataServer.getWrapper();
+
         if (!dataWrapper.isForeign()) {
             throw validator.res.newValidatorForeignTableButLocalWrapper(
                 repos.getLocalizedObjectName(columnSet, null),
                 repos.getLocalizedObjectName(dataWrapper, null));
         }
-
+        
         validateBaseColumnSet(columnSet);
 
         FarragoMedColumnSet medColumnSet =
@@ -151,7 +152,7 @@ public class DdlHandler
             RelDataType rowType = medColumnSet.getRowType();
             RelDataTypeField [] fields = rowType.getFields();
             for (int i = 0; i < fields.length; ++i) {
-                CwmColumn column = repos.newFemStoredColumn();
+                FemStoredColumn column = repos.newFemStoredColumn();
                 columnList.add(column);
                 convertFieldToCwmColumn(fields[i], column);
                 validateColumnImpl(column);
@@ -161,20 +162,20 @@ public class DdlHandler
     
     public void validateDefinition(FemLocalTable table)
     {
-        validateDefinitionImpl(table, true);
+        validateLocalTable(table, true);
     }
     
     public void validateModification(FemLocalTable table)
     {
-        validateDefinitionImpl(table, false);
+        validateLocalTable(table, false);
     }
     
-    public void validateDefinitionImpl(FemLocalTable table, boolean creation)
+    protected void validateLocalTable(FemLocalTable table, boolean creation)
     {
         // need to validate columns first
         Iterator columnIter = table.getFeature().iterator();
         while (columnIter.hasNext()) {
-            CwmColumn column = (CwmColumn) columnIter.next();
+            FemStoredColumn column = (FemStoredColumn) columnIter.next();
             validateLocalTableColumn(column);
         }
 
@@ -279,7 +280,6 @@ public class DdlHandler
             if (!(obj instanceof CwmUniqueConstraint)) {
                 continue;
             }
-            // FIXME:  spelling
             throw validator.res.newValidatorNoConstraintAllowed(
                 getLocalizedName(columnSet));
         }
@@ -378,12 +378,12 @@ public class DdlHandler
         RelDataType rowType = typeFactory.createResultSetType(metaData);
         RelDataTypeField [] fields = rowType.getFields();
         for (int i = 0; i < fields.length; ++i) {
-            CwmColumn column;
+            FemViewColumn column;
             if (implicitColumnNames) {
                 column = validator.getRepos().newFemViewColumn();
                 columnList.add(column);
             } else {
-                column = (CwmColumn) columnList.get(i);
+                column = (FemViewColumn) columnList.get(i);
             }
             convertFieldToCwmColumn(fields[i], column);
             validateColumnImpl(column);
@@ -406,7 +406,7 @@ public class DdlHandler
         // do first
     }
     
-    protected void validateLocalTableColumn(CwmColumn column)
+    protected void validateLocalTableColumn(FemStoredColumn column)
     {
         validateColumnImpl(column);
 
@@ -464,16 +464,11 @@ public class DdlHandler
         // make sure the same value comes back.
     }
 
-    protected void validateColumnImpl(CwmColumn column)
+    protected void validateColumnImpl(FemAbstractColumn column)
     {
-        if (column instanceof FemAbstractColumn) {
-            // REVIEW jvs 5-April-2004:  This is kind of sneaky.
-            // Need to reorg all this column stuff.
-            FemAbstractColumn femColumn = (FemAbstractColumn) column;
-            int ordinal = column.getOwner().getFeature().indexOf(column);
-            assert (ordinal != -1);
-            femColumn.setOrdinal(ordinal);
-        }
+        int ordinal = column.getOwner().getFeature().indexOf(column);
+        assert (ordinal != -1);
+        column.setOrdinal(ordinal);
 
         if (column.getInitialValue() == null) {
             CwmExpression nullExpression =
