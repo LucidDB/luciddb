@@ -348,7 +348,7 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
 
         // from
         sql = "select a.empno, b.deptno from ^";
-        expected = "select a.empno, b.deptno from $suggest$";
+        expected = "select a.empno , b.deptno from $suggest$";
         assertSimplify(sql, expected);
 
         // select list
@@ -361,26 +361,26 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         assertSimplify(sql, expected);
 
         sql = "select a.empno ,^  from sales.emp a , sales.dept b";
-        expected = "select a.empno ,$suggest$ from sales.emp a , sales.dept b";
+        expected = "select a.empno , $suggest$ from sales.emp a , sales.dept b";
         assertSimplify(sql, expected);
 
         // join
         sql = "select a.empno, b.deptno from dummy a join ^on where empno=1";
-        expected="select a.empno, b.deptno from dummy a join $suggest$ "
+        expected="select a.empno , b.deptno from dummy a join $suggest$ "
             + "where empno=1";
         assertSimplify(sql, expected);
 
         // on
         sql = "select a.empno, b.deptno from sales.emp a join sales.dept b "
             + "on a.deptno=^";
-        expected="select a.empno, b.deptno from sales.emp a join sales.dept b "
+        expected="select a.empno , b.deptno from sales.emp a join sales.dept b "
             + "on a.deptno = $suggest$";
         assertSimplify(sql, expected);
 
         // where
         sql = "select a.empno, b.deptno from sales.emp a, sales.dept b "
             + "where ^";
-        expected = "select a.empno, b.deptno from sales.emp a, sales.dept b "
+        expected = "select a.empno , b.deptno from sales.emp a, sales.dept b "
             + "where $suggest$";
         assertSimplify(sql, expected);
 
@@ -391,19 +391,19 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
 
         // subquery
         sql = "select t.^ from (select 1 as x, 2 as y from sales.emp) as t where t.dummy=1";
-        expected = "select t.$suggest$ from (select 1 as x, 2 as y from sales.emp) as t where t.dummy=1";
+        expected = "select t.$suggest$ from (select 1 as x , 2 as y from sales.emp) as t where t.dummy=1";
         assertSimplify(sql, expected);
 
         sql = "select t. from (select 1 as x, 2 as y from (select x from sales.emp)) as t where ^";
-        expected = "select t. from (select 1 as x, 2 as y from (select x from sales.emp)) as t where $suggest$";
+        expected = "select t. from (select 1 as x , 2 as y from (select x from sales.emp)) as t where $suggest$";
         assertSimplify(sql, expected);
 
         sql = "select ^from (select 1 as x, 2 as y from sales.emp), (select 2 as y from (select m from n where)) as t where t.dummy=1";
-        expected = "select $suggest$ from (select 1 as x, 2 as y from sales.emp), (select 2 as y from (select m from n)) as t where t.dummy=1";
+        expected = "select $suggest$ from (select 1 as x , 2 as y from sales.emp), (select 2 as y from (select m from n)) as t where t.dummy=1";
         assertSimplify(sql, expected);
 
         sql = "select a.empno, b.deptno from dummy a, sales.^";
-        expected = "select a.empno, b.deptno from dummy a, sales.$suggest$";
+        expected = "select a.empno , b.deptno from dummy a, sales.$suggest$";
         assertSimplify(sql, expected);
     }
 

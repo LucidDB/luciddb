@@ -298,10 +298,8 @@ public class SqlSimpleParser
         while (keywords.hasNext()) {
             String keyword  = (String) keywords.next();
             ArrayList entries = (ArrayList) buckets.get(keyword);
-            if (keyword.equals("on")) {
-                SqlKwOn sqlon = new SqlKwOn(entries);
-                buckets.put(keyword, sqlon.validate());
-            }
+            SqlKw sqlkw = makeSqlKw(keyword, entries);
+            buckets.put(keyword, sqlkw.validate());
         }
     }
 
@@ -325,7 +323,17 @@ public class SqlSimpleParser
         st.wordChars(61, 61);
     }
 
-    abstract class SqlKw {
+    private SqlKw makeSqlKw(String keyword, List entries) {  
+        if (keyword.equals("on")) {
+            return new SqlKwOn(entries);
+        } else if (keyword.equals("select")) {
+            return new SqlKwSelect(entries);
+        } else {
+            return new SqlKw(entries);
+        }
+    } 
+
+    class SqlKw {
         protected List entries;
 
         SqlKw(List entries) {
@@ -336,6 +344,7 @@ public class SqlSimpleParser
             return entries;
         }
     }
+
     class SqlKwOn extends SqlKw {
         
         private String dummyOp = "dummy";
@@ -383,6 +392,33 @@ public class SqlSimpleParser
                 validEntries.add(dummyOp);
                 return validEntries;
             }
+        }
+    }
+    
+    class SqlKwSelect extends SqlKw {
+        
+        SqlKwSelect(List entries) {
+            super(entries);
+        }
+
+        List validate() {
+            ArrayList validEntries = new ArrayList();
+            StringBuffer selectClause = new StringBuffer();
+            for (int i = 0; i < entries.size(); i++) {
+                String entry = (String) entries.get(i);
+                selectClause.append(entry);
+                if (i < entries.size()-1) {
+                    selectClause.append(" ");
+                }
+            }
+            String [] selectList = selectClause.toString().split(",");
+            for (int i = 0; i < selectList.length; i++) {
+                validEntries.add(selectList[i].trim());
+                if (i < selectList.length-1) {
+                    validEntries.add(",");
+                }
+            }
+            return validEntries;
         }
     }
                 
