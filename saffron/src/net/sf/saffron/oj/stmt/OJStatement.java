@@ -41,11 +41,10 @@ import net.sf.saffron.oj.xlat.SqlToOpenjavaConverter;
 import net.sf.saffron.trace.SaffronTrace;
 
 import openjava.mop.*;
-import openjava.ojc.JavaCompiler;
-import openjava.ojc.JavaCompilerArgs;
 import openjava.ptree.*;
 import openjava.ptree.util.*;
 
+import org.eigenbase.javac.*;
 import org.eigenbase.oj.OJTypeFactoryImpl;
 import org.eigenbase.oj.rel.JavaRel;
 import org.eigenbase.oj.rel.JavaRelImplementor;

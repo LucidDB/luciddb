@@ -27,6 +27,7 @@ import java.util.logging.Logger;
 import org.eigenbase.oj.rel.JavaRelImplementor;
 import org.eigenbase.oj.stmt.OJPreparingStmt;
 import org.eigenbase.relopt.RelOptPlanner;
+import org.eigenbase.oj.util.OJClassMap;
 
 
 /**
@@ -101,10 +102,24 @@ public abstract class EigenbaseTrace
         return Logger.getLogger(JavaRelImplementor.class.getName());
     }
 
+    /**
+     * The "org.eigenbase.sql.parser" tracer reports
+     * parse events.
+     */
     public static Logger getParserTracer()
     {
         return Logger.getLogger("org.eigenbase.sql.parser");
     }
+    
+    /**
+     * The "org.eigenbase.oj.util.OJClassMap" tracer reports
+     * when synthetic classes are created ({@link Level#FINE})
+     */
+    public static Logger getClassMapTracer()
+    {
+        return Logger.getLogger(OJClassMap.class.getName());
+    }
+
 }
 
 

@@ -30,7 +30,6 @@ import openjava.mop.OJClass;
 import openjava.mop.Toolbox;
 import openjava.ptree.*;
 import openjava.ptree.util.ScopeHandler;
-import openjava.ptree.util.SyntheticClass;
 
 import org.eigenbase.rel.DistinctRel;
 import org.eigenbase.rel.JoinRel;
@@ -38,6 +37,7 @@ import org.eigenbase.rel.ProjectRel;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptUtil;
 import org.eigenbase.rex.RexNode;
+import org.eigenbase.oj.util.*;
 
 
 /**
@@ -119,7 +119,7 @@ class SubqueryFinder extends ScopeHandler
                 condition =
                     new FieldAccess(
                         RelOptUtil.makeFieldAccess(0, 1),
-                        SyntheticClass.makeField(1));
+                        OJSyntheticClass.makeField(1));
             }
             RelNode rightDistinct =
                 new DistinctRel(queryInfo.cluster, rightRel);

@@ -25,15 +25,14 @@ import java.util.HashMap;
 
 import openjava.mop.CannotExecuteException;
 import openjava.mop.OJClass;
-import openjava.ptree.util.ClassMap;
-import openjava.ptree.util.SyntheticClass;
 
-import org.eigenbase.oj.util.OJUtil;
+import org.eigenbase.oj.util.*;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.reltype.RelDataTypeFactoryImpl;
 import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.util.Util;
+import org.eigenbase.runtime.*;
 
 
 /**
@@ -54,6 +53,8 @@ public class OJTypeFactoryImpl extends RelDataTypeFactoryImpl
 
     private final HashMap mapOJClassToType = new HashMap();
 
+    private final OJClassMap ojClassMap;
+
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -61,6 +62,12 @@ public class OJTypeFactoryImpl extends RelDataTypeFactoryImpl
      */
     public OJTypeFactoryImpl()
     {
+        this(new OJClassMap(SyntheticObject.class));
+    }
+
+    protected OJTypeFactoryImpl(OJClassMap ojClassMap)
+    {
+        this.ojClassMap = ojClassMap;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -87,7 +94,7 @@ public class OJTypeFactoryImpl extends RelDataTypeFactoryImpl
             final RelDataType fieldType = field.getType();
             fieldClasses[i] = OJUtil.typeToOJClass(declarer, fieldType);
         }
-        return ClassMap.instance().createProject(declarer, fieldClasses,
+        return ojClassMap.createProject(declarer, fieldClasses,
             fieldNames);
     }
 
@@ -118,7 +125,7 @@ public class OJTypeFactoryImpl extends RelDataTypeFactoryImpl
                 ojClasses[i] = OJUtil.typeToOJClass(declarer, types[i]);
             }
             final OJClass joinClass =
-                ClassMap.instance().createJoin(declarer, ojClasses);
+                ojClassMap.createJoin(declarer, ojClasses);
 
             // store reverse mapping, so we will be able to convert
             // "joinClass" back to "type"
@@ -180,16 +187,19 @@ public class OJTypeFactoryImpl extends RelDataTypeFactoryImpl
          * @param ojClass Equivalent {@link OJClass}
          *
          * @pre ojClass != null
-         * @pre !SyntheticClass.isJoinClass(ojClass)
-         * @pre !SyntheticClass.isProjectClass(ojClass)
+         * @pre !OJSyntheticClass.isJoinClass(ojClass)
+         * @pre !OJSyntheticClass.isProjectClass(ojClass)
          */
         OJScalarType(OJClass ojClass)
         {
             super(new RelDataTypeField[1]);
             assert (ojClass != null);
-            assert (!SyntheticClass.isJoinClass(ojClass));
+            assert (!OJSyntheticClass.isJoinClass(ojClass));
 
-            //assert(!SyntheticClass.isProjectClass(ojClass));
+            // REVIEW jvs 23-Sept-2004:  find out who commented this out and
+            // why
+            
+            //assert(!OJSyntheticClass.isProjectClass(ojClass));
             fields[0] = new FieldImpl("this", 0, this);
             this.ojClass = ojClass;
             this.digest = computeDigest();

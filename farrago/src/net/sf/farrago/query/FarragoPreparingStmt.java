@@ -89,7 +89,6 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     private boolean needRestore;
     private SqlToRelConverter sqlToRelConverter;
     private RelDataTypeFactory savedTypeFactory;
-    private ClassMap savedClassMap;
     private Object savedDeclarer;
     private FarragoAllocation javaCodeDir;
     private FarragoSqlValidator sqlValidator;
@@ -147,11 +146,9 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         // Save some global state for reentrancy
         needRestore = true;
         savedTypeFactory = RelDataTypeFactoryImpl.threadInstance();
-        savedClassMap = ClassMap.instance();
         savedDeclarer = OJUtil.threadDeclarers.get();
 
         RelDataTypeFactoryImpl.setThreadInstance(getFarragoTypeFactory());
-        ClassMap.setInstance(new ClassMap(FarragoSyntheticObject.class));
         planner = getSession().newPlanner(this,true);
     }
 
@@ -403,7 +400,6 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             return;
         }
         RelDataTypeFactoryImpl.setThreadInstance(savedTypeFactory);
-        ClassMap.setInstance(savedClassMap);
         OJUtil.threadDeclarers.set(savedDeclarer);
 
         // TODO:  obtain locks to ensure that objects we intend to operate

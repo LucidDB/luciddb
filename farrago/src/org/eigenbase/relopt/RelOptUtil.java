@@ -34,7 +34,6 @@ import java.util.Set;
 import openjava.ptree.Expression;
 import openjava.ptree.FieldAccess;
 import openjava.ptree.Variable;
-import openjava.ptree.util.SyntheticClass;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.reltype.RelDataType;
@@ -49,7 +48,7 @@ import org.eigenbase.rex.RexNode;
 import org.eigenbase.rex.RexShuttle;
 import org.eigenbase.rex.RexUtil;
 import org.eigenbase.util.Util;
-
+import org.eigenbase.oj.util.*;
 
 /**
  * <code>RelOptUtil</code> defines static utility methods for use in optimizing
@@ -202,7 +201,7 @@ public abstract class RelOptUtil
     {
         return new FieldAccess(
             new Variable(makeName(ordinal)),
-            SyntheticClass.makeField(field));
+            OJSyntheticClass.makeField(field));
     }
 
     /**
@@ -215,7 +214,7 @@ public abstract class RelOptUtil
     {
         return new FieldAccess(
             expr,
-            SyntheticClass.makeField(field));
+            OJSyntheticClass.makeField(field));
     }
 
     /**

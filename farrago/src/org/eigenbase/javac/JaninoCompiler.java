@@ -20,7 +20,7 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-package openjava.ojc;
+package org.eigenbase.javac;
 
 import net.janino.*;
 import org.eigenbase.util.*;
@@ -36,7 +36,7 @@ import java.io.*;
  */
 public class JaninoCompiler implements JavaCompiler
 {
-	private JaninoCompilerArgs args = new JaninoCompilerArgs();
+    private JaninoCompilerArgs args = new JaninoCompilerArgs();
 
     // REVIEW jvs 28-June-2004:  pool this instance?  Is it thread-safe?
     private JavaSourceClassLoader classLoader;
@@ -63,30 +63,30 @@ public class JaninoCompiler implements JavaCompiler
         try {
             classLoader.loadClass(args.fullClassName);
         } catch (ClassNotFoundException ex) {
-			throw Util.newInternal(ex, "while compiling " + args.fullClassName);
+            throw Util.newInternal(ex, "while compiling " + args.fullClassName);
         }
     }
     
     // implement JavaCompiler
-	public JavaCompilerArgs getArgs()
+    public JavaCompilerArgs getArgs()
     {
         return args;
     }
     
     // implement JavaCompiler
-	public ClassLoader getClassLoader()
+    public ClassLoader getClassLoader()
     {
         return classLoader;
     }
 
-	private static class JaninoCompilerArgs extends JavaCompilerArgs
+    private static class JaninoCompilerArgs extends JavaCompilerArgs
     {
         String destdir;
         String fullClassName;
         
-		public JaninoCompilerArgs()
+        public JaninoCompilerArgs()
         {
-		}
+        }
 
         public void setDestdir(String destdir)
         {
@@ -96,19 +96,19 @@ public class JaninoCompiler implements JavaCompiler
 
         // NOTE jvs 28-June-2004:  these go along with TODO above
         /*
-		String source;
-		public void setSource(String source, String fileName)
+        String source;
+        public void setSource(String source, String fileName)
         {
-			this.source = source;
-			addFile(fileName);
-		}
+            this.source = source;
+            addFile(fileName);
+        }
         */
         
         public void setFullClassName(String fullClassName)
         {
             this.fullClassName = fullClassName;
         }
-	}
+    }
 }
 
 // End JaninoCompiler.java

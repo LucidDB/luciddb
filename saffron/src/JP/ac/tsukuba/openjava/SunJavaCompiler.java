@@ -12,8 +12,7 @@ package JP.ac.tsukuba.openjava;
 
 
 import java.io.*;
-import openjava.ojc.JavaCompiler;
-import openjava.ojc.JavaCompilerArgs;
+import org.eigenbase.javac.*;
 
 import java.lang.reflect.Method;
 

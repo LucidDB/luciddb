@@ -33,11 +33,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
-import openjava.ptree.util.SyntheticClass;
-
 import org.eigenbase.sql.SqlCollation;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.util.Util;
+import org.eigenbase.oj.util.*;
 
 
 /**
@@ -689,7 +688,7 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
 
         public int getFieldOrdinal(String fieldName)
         {
-            final int ordinal = SyntheticClass.getOrdinal(fieldName, false);
+            final int ordinal = OJSyntheticClass.getOrdinal(fieldName, false);
             if (ordinal >= 0) {
                 return ordinal;
             }

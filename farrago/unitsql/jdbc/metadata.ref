@@ -297,11 +297,11 @@ usesLocalFiles                                    false
 . . . . . . . . >        "serverRmiRegistryPort", "serverSingleListenerPort",
 . . . . . . . . >        "calcVirtualMachine", "javaCompilerClassName"
 . . . . . . . . >      from sys_fem."Config"."FarragoConfig";
-+----------+-----------------+---------------------+--------------------+---------------------+------------------------+---------------------------+---------------------+------------------------------+
-|   name   | fennelDisabled  | userCatalogEnabled  | codeCacheMaxBytes  | checkpointInterval  | serverRmiRegistryPort  | serverSingleListenerPort  | calcVirtualMachine  |    javaCompilerClassName     |
-+----------+-----------------+---------------------+--------------------+---------------------+------------------------+---------------------------+---------------------+------------------------------+
-| Current  | false           | false               | -1                 | 300                 | 5433                   | -1                        | CALCVM_AUTO         | openjava.ojc.JaninoCompiler  |
-+----------+-----------------+---------------------+--------------------+---------------------+------------------------+---------------------------+---------------------+------------------------------+
++----------+-----------------+---------------------+--------------------+---------------------+------------------------+---------------------------+---------------------+-------------------------------------+
+|   name   | fennelDisabled  | userCatalogEnabled  | codeCacheMaxBytes  | checkpointInterval  | serverRmiRegistryPort  | serverSingleListenerPort  | calcVirtualMachine  |        javaCompilerClassName        |
++----------+-----------------+---------------------+--------------------+---------------------+------------------------+---------------------------+---------------------+-------------------------------------+
+| Current  | false           | false               | -1                 | 300                 | 5433                   | -1                        | CALCVM_AUTO         | org.eigenbase.javac.JaninoCompiler  |
++----------+-----------------+---------------------+--------------------+---------------------+------------------------+---------------------------+---------------------+-------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select "databaseInitSize", "databaseIncrementSize", "databaseMaxSize",
 . . . . . . . . >        "tempInitSize", "tempIncrementSize", "tempMaxSize",

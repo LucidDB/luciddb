@@ -36,7 +36,6 @@ import openjava.mop.*;
 import openjava.ptree.ClassDeclaration;
 import openjava.ptree.MemberDeclarationList;
 import openjava.ptree.ModifierList;
-import openjava.ptree.util.ClassMap;
 
 import org.eigenbase.oj.OJTypeFactoryImpl;
 import org.eigenbase.oj.util.JavaRexBuilder;
@@ -499,12 +498,6 @@ public class ConverterTest extends TestCase
             // Nasty OJ stuff
             env = OJSystem.env;
 
-            // DynamicJava's compiler contains a class loader, so it was
-            // important that compiler and class map had same life-cycle. We no
-            // longer use DynamicJava, so it may not matter anymore.
-            if (ClassMap.instance() == null) {
-                ClassMap.setInstance(new ClassMap(SyntheticObject.class));
-            }
             String packageName = getTempPackageName();
             String className = getTempClassName();
             env = new FileEnvironment(env, packageName, className);

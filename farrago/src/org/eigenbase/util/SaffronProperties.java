@@ -86,7 +86,7 @@ public class SaffronProperties extends Properties
     /**
      * The string property "saffron.java.compiler.class" is the name of the
      * Java compiler to use.
-     * It must implement {@link openjava.ojc.JavaCompiler}.
+     * It must implement {@link org.eigenbase.javac.JavaCompiler}.
      * The default value is "JP.ac.tsukuba.openjava.SunJavaCompiler".
      */
     public final StringProperty javaCompilerClass =
@@ -117,7 +117,7 @@ public class SaffronProperties extends Properties
     /**
      * The string property "saffron.java.compiler.args" is the argument string
      * for the {@link #javaCompilerClass java compiler}.
-     * {@link openjava.ojc.JavaCompilerArgs#setString} describes how these
+     * {@link org.eigenbase.javac.JavaCompilerArgs#setString} describes how these
      * arguments are interpreted.
      */
     public final StringProperty javaCompilerArgs =

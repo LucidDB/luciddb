@@ -35,17 +35,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import openjava.mop.*;
-import openjava.ojc.JavaCompiler;
-import openjava.ojc.JavaCompilerArgs;
 import openjava.ptree.*;
 import openjava.ptree.util.*;
 
+import org.eigenbase.javac.*;
 import org.eigenbase.oj.OJTypeFactoryImpl;
 import org.eigenbase.oj.rel.JavaRel;
 import org.eigenbase.oj.rel.JavaRelImplementor;
-import org.eigenbase.oj.util.ClassCollector;
-import org.eigenbase.oj.util.JavaRexBuilder;
-import org.eigenbase.oj.util.OJUtil;
+import org.eigenbase.oj.util.*;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.*;
 import org.eigenbase.relopt.CallingConvention;
@@ -151,11 +148,6 @@ public abstract class OJPreparingStmt
     {
         env = OJSystem.env;
 
-        // compiler and class map must have same life-cycle, because
-        // DynamicJava's compiler contains a class loader
-        if (ClassMap.instance() == null) {
-            ClassMap.setInstance(new ClassMap(SyntheticObject.class));
-        }
         javaCompiler = createCompiler();
         String packageName = getTempPackageName();
         String className = getTempClassName();
@@ -457,7 +449,7 @@ public abstract class OJPreparingStmt
         ClassCollector classCollector = new ClassCollector(env);
         Util.discard(Util.go(classCollector, parseTree));
         OJClass [] classes = classCollector.getClasses();
-        SyntheticClass.addMembers(decl, classes);
+        OJSyntheticClass.addMembers(decl, classes);
 
         // NOTE jvs 14-Jan-2004:  DynamicJava doesn't correctly handle
         // the FINAL modifier on parameters.  So I made the codegen
@@ -529,7 +521,7 @@ public abstract class OJPreparingStmt
                         new ArrayInitializer(returnDeclList))));
             returnType = OJClass.arrayOf(OJClass.forClass(VarDecl.class));
         }
-        SyntheticClass.addMethod(
+        OJSyntheticClass.addMethod(
             decl,
             statementList,
             getTempMethodName(),

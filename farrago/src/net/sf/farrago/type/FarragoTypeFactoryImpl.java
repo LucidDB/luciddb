@@ -40,6 +40,7 @@ import net.sf.farrago.util.*;
 import openjava.mop.*;
 
 import org.eigenbase.oj.*;
+import org.eigenbase.oj.util.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.SqlCollation;
@@ -90,6 +91,8 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     // instance
     public FarragoTypeFactoryImpl(FarragoRepos repos)
     {
+        super(new OJClassMap(FarragoSyntheticObject.class));
+            
         this.repos = repos;
 
         addPrimitivePrototype(

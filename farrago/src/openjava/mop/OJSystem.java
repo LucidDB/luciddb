@@ -17,7 +17,6 @@ import java.util.Vector;
 import java.lang.Object;
 import java.io.*;
 import openjava.tools.DebugOut;
-import openjava.ojc.JavaCompiler;
 
 
 /**
@@ -101,18 +100,6 @@ public class OJSystem
     }
 
     /* internal uses */
-
-    private static JavaCompiler javac = null;
-
-    /** internal use only */
-    public static JavaCompiler getJavaCompiler() {
-        return javac;
-    }
-
-    /** internal use only */
-    public static void setJavaCompiler( JavaCompiler c ) {
-        javac = c;
-    }
 
     /** internal use only */
     public static OJClass[] addedClasses() {
