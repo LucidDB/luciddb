@@ -164,7 +164,8 @@ saffron.opt.allowInfiniteCostConverters=true
 	</target>
 
 	<target name="do-cleanbuild">
-		<exec dir="${build.home}/aspen" executable="${build.home}/aspen/initBuild.sh" failonerror="true">
+		<exec dir="${build.home}/aspen" executable="bash" failonerror="true">
+			<arg value="${build.home}/aspen/initBuild.sh"/>
 			<arg value="${build.home}/farrago"/>
 			<env key="ANT_HOME" file="${build.home}/thirdparty/ant"/>
 			<env key="PATH" path="${env.PATH}:${build.home}/thirdparty/ant/bin/ant"/>

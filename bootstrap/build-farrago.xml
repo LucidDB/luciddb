@@ -115,7 +115,8 @@
 
 	<target name="do-cleanbuild">
 		<property name="build.home" location="${default.build.home}"/>
-		<exec dir="${build.home}/farrago" executable="${build.home}/farrago/initBuild.sh" failonerror="true">
+		<exec dir="${build.home}/farrago" executable="bash" failonerror="true">
+			<arg value="${build.home}/farrago/initBuild.sh"/>
 			<arg value="${farrago.init.arg}"/>
 			<env key="ANT_HOME" file="${build.home}/thirdparty/ant"/>
 			<env key="PATH" path="${env.PATH}:${build.home}/thirdparty/ant/bin/ant"/>

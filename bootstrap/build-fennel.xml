@@ -97,7 +97,8 @@
 
 	<target name="do-cleanbuild">
 		<property name="build.home" location="${default.build.home}"/>
-		<exec dir="${build.home}/fennel" executable="${build.home}/fennel/initBuild.sh" failonerror="true">
+		<exec dir="${build.home}/fennel" executable="bash" failonerror="true">
+			<arg value="${build.home}/fennel/initBuild.sh"/>
 			<arg value="${fennel.init.arg}"/>
 		</exec>
 	</target>
