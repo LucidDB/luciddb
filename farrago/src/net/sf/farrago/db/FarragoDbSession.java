@@ -103,7 +103,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
      */
     private Map txnCodeCache;
     private DatabaseMetaData dbMetaData;
-    private FarragoSessionFactory sessionFactory;
+    protected FarragoSessionFactory sessionFactory;
 
     //~ Constructors ----------------------------------------------------------
 
