@@ -891,7 +891,7 @@ require version '${required.ant.version}'."/>
     <!-- not strictly part of fem, but it is JNI code -->
     <javah
       classpathref="farrago.run.classpath"
-      class="net.sf.farrago.fennel.FennelPseudoUuid"
+      class="net.sf.farrago.fennel.FennelPseudoUuidGenerator"
       outputFile="${open.dir}/fennel/farrago/JniPseudoUuid.h"/>
   </target>
 
