@@ -101,7 +101,7 @@ BEGIN {
                 actual = expect;
             }
             printf "%s:%d: Expected %c%s%c\n", FILENAME, FNR, 34, actual, 34;
-            exit;
+            exit -1;
         }
     }
     if ($0 ~ "// Portions Copyright \\(C\\) [0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9] .*") {

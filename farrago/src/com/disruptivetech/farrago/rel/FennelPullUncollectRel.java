@@ -1,6 +1,5 @@
 /*
 // $Id$
-
 // Farrago is an extensible data management system.
 // Copyright (C) 2002-2005 Disruptive Tech
 // Copyright (C) 2005-2005 The Eigenbase Project

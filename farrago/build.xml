@@ -838,6 +838,7 @@ require version '${required.ant.version}'."/>
     <antcall target="junit"/>
     <antcall target="regressionWithoutBuild"/>
     <antcall target="macker"/>
+    <antcall target="checkSourceFilePreambles"/>
   </target>
 
   <!-- run all regression test cases -->
@@ -986,6 +987,14 @@ require version '${required.ant.version}'."/>
         <include name="**/*.class" />
       </classes>
     </macker>
+  </target>
+
+  <!-- Verify that all source files have the required headers -->
+  <!-- TODO:  see if this works in non-Linux environments -->
+  <target name="checkSourceFilePreambles">
+    <exec os="Linux" dir="${farrago.dir}" failonerror="true"
+      executable="${fennel.dir}/build/checkPreambleFarrago.sh">
+    </exec>
   </target>
 
   <!-- Beautify Farrago source code.  This forks a separate ant process using
