@@ -141,6 +141,33 @@ public:
 };
 
 /**
+ * FixedWidthNetworkAccessor64 accesses NOT NULL fixed width 64-bit attributes
+ * in network byte order.
+ */
+class FixedWidthNetworkAccessor64
+    : public FixedWidthAccessor
+{
+public:
+    void unmarshalValue(
+        TupleAccessor const &tupleAccessor,TupleDatum &value) const
+    {
+        assert(value.cbData == sizeof(uint64_t));
+        FixedWidthAccessor::unmarshalValue(tupleAccessor,value);
+        value.data64 = ntohll(*reinterpret_cast<uint64_t const *>(value.pData));
+        value.pData = reinterpret_cast<PConstBuffer>(&(value.data64));
+    }
+    
+    void marshalValueData(
+        PBuffer pDestData,
+        TupleDatum const &value) const
+    {
+        assert(value.cbData == sizeof(uint64_t));
+        *reinterpret_cast<uint64_t *>(pDestData) =
+            htonll(*reinterpret_cast<uint64_t const *>(value.pData));
+    }
+};
+
+/**
  * FixedOffsetVarWidthAccessor accesses the first variable-width attribute if
  * it is NOT NULL.  This attribute is special because the offset is fixed, but
  * the width is not.

@@ -220,6 +220,12 @@ do { \
     } \
 } while (0)
 
+// Network to Host conversion for 64 bit quantities
+#define ntohll(x) ( ( (uint64_t) ntohl ((uint32_t)( x )) << 32 ) |  \
+                    ntohl ((uint32_t)(x >> 32))) 
+
+#define htonll(x) ntohll(x)
+
 
 FENNEL_END_NAMESPACE
 

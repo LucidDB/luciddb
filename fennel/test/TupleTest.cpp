@@ -43,6 +43,7 @@ class TupleTest : virtual public TestBase, public TraceSource
     
     void writeMinData(TupleDatum &datum,uint typeOrdinal);
     void writeMaxData(TupleDatum &datum,uint typeOrdinal);
+    void writeSampleData(TupleDatum &datum,uint typeOrdinal);
     uint testMarshal(TupleData const &tupleDataFixed);
     void checkData(TupleData const &tupleData1,TupleData const &tupleData2);
         
@@ -152,6 +153,16 @@ void TupleTest::testStandardTypes(
     uint cbMaxData = testMarshal(tupleDataFixed);
     BOOST_CHECK(cbMaxData > cbMinData);
     BOOST_CHECK(cbMaxData <= tupleAccessor.getMaxByteCount());
+    
+    pDatum = tupleDataFixed.begin();
+    for (uint i = STANDARD_TYPE_MIN; i < STANDARD_TYPE_END; ++i) {
+        writeSampleData(*pDatum,i);
+        ++pDatum;
+    }
+    FENNEL_TRACE(TRACE_FINE,"testMarshal(SampleData)");
+    uint cbSampleData = testMarshal(tupleDataFixed);
+    BOOST_CHECK(cbSampleData >= tupleAccessor.getMinByteCount());
+    BOOST_CHECK(cbSampleData <= tupleAccessor.getMaxByteCount());
 
     if (nullable) {
         pDatum = tupleDataFixed.begin();
@@ -170,13 +181,13 @@ uint TupleTest::testMarshal(TupleData const &tupleDataFixed)
 {
     FENNEL_TRACE(TRACE_FINE,"reference tuple:");
     traceTuple(tupleDataFixed);
-    boost::scoped_array<FixedBuffer> pTupleBufVar(
+    boost::scoped_array<FixedBuffer> pTupleBufVar( 
         new FixedBuffer[tupleAccessor.getMaxByteCount()]);
 
     uint cbTuple = tupleAccessor.getByteCount(tupleDataFixed);
     tupleAccessor.marshal(tupleDataFixed,pTupleBufVar.get());
     BOOST_CHECK_EQUAL(cbTuple,tupleAccessor.getCurrentByteCount());
-    
+
     TupleData tupleDataTogether(tupleDesc);
     tupleAccessor.unmarshal(tupleDataTogether);
     FENNEL_TRACE(TRACE_FINE,"unmarshalled tuple (together):");
@@ -342,6 +353,70 @@ void TupleTest::writeMaxData(TupleDatum &datum,uint typeOrdinal)
         break;
     default:
         permAssert(false);
+    }
+}
+
+void TupleTest::writeSampleData(TupleDatum &datum,uint typeOrdinal)
+{
+    /* Some sample data that's between min and max */
+    std::subtractive_rng randomNumberGenerator(time(NULL));
+    PBuffer pData = const_cast<PBuffer>(datum.pData);
+    switch(typeOrdinal) {
+    case STANDARD_TYPE_BOOL:
+        if (randomNumberGenerator(2))
+            *(reinterpret_cast<bool *>(pData)) = true;
+        else *(reinterpret_cast<bool *>(pData)) = false;
+        break;
+    case STANDARD_TYPE_INT_8:
+        *(reinterpret_cast<int8_t *>(pData)) =  0x28;
+        break;
+    case STANDARD_TYPE_UINT_8:
+        *(reinterpret_cast<uint8_t *>(pData)) = 0x54;
+        break;
+    case STANDARD_TYPE_INT_16:
+        *(reinterpret_cast<int16_t *>(pData)) = 0xfedc;
+        break;
+    case STANDARD_TYPE_UINT_16:
+        *(reinterpret_cast<uint16_t *>(pData)) = 0x1234;
+        break;
+    case STANDARD_TYPE_INT_32:
+        *(reinterpret_cast<int32_t *>(pData)) = 0xfedcba98;
+        break;
+    case STANDARD_TYPE_REAL:
+    case STANDARD_TYPE_UINT_32:
+        *(reinterpret_cast<uint32_t *>(pData)) = 0x12345678;
+        break;
+    case STANDARD_TYPE_INT_64:
+        *(reinterpret_cast<int64_t *>(pData)) = 0xfedcba0987654321LL;
+        break;
+    case STANDARD_TYPE_DOUBLE:
+    case STANDARD_TYPE_UINT_64:
+        *(reinterpret_cast<uint64_t *>(pData)) = 0x1234567890abcdefLL;
+        break;
+    case STANDARD_TYPE_BINARY:
+        for (int i = 0; i < datum.cbData; i++) {
+            pData[i] = i % 256;
+        }
+        break;
+    case STANDARD_TYPE_CHAR:
+        for (int i = 0; i < datum.cbData; i++) {
+            pData[i] = i % ('z' - ' ') + ' ';
+        }
+        break;
+    case STANDARD_TYPE_VARCHAR:
+        datum.cbData = randomNumberGenerator(MAX_WIDTH);
+        for (int i = 0; i < datum.cbData; i++) {
+            pData[i] = i % ('z' - ' ') + ' ';
+        }
+        break;
+    case STANDARD_TYPE_VARBINARY:
+        datum.cbData = randomNumberGenerator(MAX_WIDTH);
+        for (int i = 0; i < datum.cbData; i++) {
+            pData[i] = i % 256;
+        }
+        break;
+    default:
+        assert(false);
     }
 }
 

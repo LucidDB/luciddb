@@ -204,6 +204,23 @@ void TupleAccessor::compute(
                     }
                 }
                 break;
+            case 8:
+                if (bNullable) {
+                    if (format == TUPLE_FORMAT_NETWORK) {
+                        pNewAccessor =
+                            new NullableAccessor<FixedWidthNetworkAccessor64>;
+                    } else {
+                        pNewAccessor =
+                            new NullableAccessor<FixedWidthAccessor>;
+                    }
+                } else {
+                    if (format == TUPLE_FORMAT_NETWORK) {
+                        pNewAccessor = new FixedWidthNetworkAccessor64;
+                    } else {
+                        pNewAccessor = new FixedWidthAccessor;
+                    }
+                }
+                break;
             default:
                 if (bNullable) {
                     pNewAccessor = new NullableAccessor<FixedWidthAccessor>;
