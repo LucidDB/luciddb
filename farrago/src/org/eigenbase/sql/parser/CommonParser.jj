@@ -2429,6 +2429,7 @@ TOKEN :
 | < EXISTS: "exists" >
 | < EXPLAIN: "explain" >
 | < FALSE: "false" >
+| < FIRST: "first" >
 | < FOLLOWING: "following" >
 | < FOR: "for" >
 | < FROM: "from" >
@@ -2448,12 +2449,14 @@ TOKEN :
 | < JOIN: "join" >
 | < LEADING: "leading" >
 | < LEFT: "left" >
+| < LAST: "last" >
 | < LIKE: "like" >
 | < MEMBER: "member" >
 | < MINUTE: "minute" >
 | < MONTH: "month" >
 | < MULTISET: "multiset" >
 | < NATURAL: "natural" >
+| < NULLS: "nulls" >
 | < OF: "of" >
 | < OR: "or" >
 | < ORDER: "order" >
