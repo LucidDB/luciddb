@@ -75,6 +75,12 @@ public class FarragoDatabase extends FarragoCompoundAllocation
      */
     private static FarragoDatabase instance;
 
+    /**
+     * Flag indicating whether FarragoDatabase is already in
+     * {@link #shutdown()}, to help prevent recursive shutdown.
+     */
+    private static boolean inShutdown;
+
     //~ Instance fields -------------------------------------------------------
 
     private FarragoRepos systemRepos;
@@ -289,6 +295,21 @@ public class FarragoDatabase extends FarragoCompoundAllocation
      */
     public static synchronized void shutdown()
     {
+        // REVIEW: SWZ 12/31/2004: If an extension project adds "specialized
+        // initialization" that ends up pinning a reference to FarragoDatabase
+        // (e.g. it opens a Connection so that it can execute SQL statements),
+        // then the extension's specialized shutdown should close the
+        // connection. When it does, FarragoSessionFactory.cleanupSessions()
+        // will be invoked and calls shutdownConditional() -- resulting in a
+        // recursive call to shutdown. The inShutdown field blocks this, but
+        // there's probably a better way -- maybe a new implementation of
+        // Connection that represents an internal connection and avoids the
+        // extra reference count and cleanupSessions() call.
+        if (inShutdown) {
+            return;
+        }
+        inShutdown = true;
+
         tracer.info("shutdown");
         assert (instance != null);
         try {
@@ -297,6 +318,7 @@ public class FarragoDatabase extends FarragoCompoundAllocation
         } finally {
             instance = null;
             nReferences = 0;
+            inShutdown = false;
         }
     }
 
