@@ -289,6 +289,7 @@ public final class ParserUtil {
         } else if (3==localeParts.length) {
             locale=new Locale(localeParts[0],localeParts[1],localeParts[2]);
         } else {
+            // FIXME jvs 28-Aug-2004:  i18n
             throw SaffronResource.instance().
                   newParserError("Locale '"+localeStr+"' in an illegal format");
         }
