@@ -51,6 +51,11 @@ protected:
     uint cbMaxPageData;
 
     /**
+     * Counter for getPageCount().
+     */
+    BlockNum nPagesAllocated;
+
+    /**
      * @return number of bytes already written to current page
      */
     uint getBytesWrittenThisPage() const;
@@ -88,6 +93,11 @@ public:
      * written to the stream yet
      */
     PageId getFirstPageId() const;
+
+    /**
+     * @return the number of pages allocated by this segment
+     */
+    BlockNum getPageCount() const;
 
     /**
      * Update current page header without unlocking; this allows

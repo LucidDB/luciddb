@@ -162,6 +162,12 @@ public:
      */
     void seekBackward(uint cb);
 
+    // REVIEW jvs 12-June-2004: Subclasses may need more information in their
+    // markers (e.g. a physical file position).  One way to deal with this
+    // would be to introduce a factory method newMarker() which would return a
+    // shared_ptr; this would be passed to both mark and reset (which
+    // could downcast to the appropriate type).  This gives the benefits
+    // of polymorphism without excessive allocation cost.
     /**
      * Create a marker which can later be used to reset this steam to its
      * current position.
@@ -174,7 +180,7 @@ public:
     /**
      * Reset stream to the position it was at when the marker was created.
      */
-    inline void reset(ByteStreamMarker &marker);
+    inline void reset(ByteStreamMarker const &marker);
 };
 
 inline uint ByteInputStream::getBytesAvailable() const
@@ -238,7 +244,7 @@ inline ByteStreamMarker ByteInputStream::mark()
     return ByteStreamMarker(cbOffset);
 }
 
-inline void ByteInputStream::reset(ByteStreamMarker &marker)
+inline void ByteInputStream::reset(ByteStreamMarker const &marker)
 {
     // you can only use a marker to move backwards
     assert(marker.cbOffset <= cbOffset);

@@ -214,8 +214,9 @@ public:
      */
     virtual CachePage *lockScratchPage(BlockNum blockNum = 0) = 0;
 
-    // implementation of CacheAccessor
+    // partial implementation of CacheAccessor
     virtual SharedCache getCache();
+    virtual uint getMaxLockedPages();
 
     // implementation of StatsSource
     virtual void writeStats(StatsTarget &target);

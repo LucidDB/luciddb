@@ -175,6 +175,11 @@ public:
     virtual void nicePage(CachePage &page) = 0;
 
     /**
+     * @return the page lock quota on this accessor
+     */
+    virtual uint getMaxLockedPages() = 0;
+
+    /**
      * @return the underlying Cache accessed by this CacheAccessor
      */
     virtual SharedCache getCache() = 0;

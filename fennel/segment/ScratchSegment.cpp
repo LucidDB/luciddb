@@ -91,6 +91,8 @@ void ScratchSegment::deallocatePageRange(PageId startPageId,PageId endPageId)
 {
     assert(startPageId == NULL_PAGE_ID);
     assert(endPageId == NULL_PAGE_ID);
+    
+    StrictMutexGuard mutexGuard(mutex);
     clearPages();
 }
 
@@ -168,6 +170,15 @@ void ScratchSegment::nicePage(CachePage &)
 SharedCache ScratchSegment::getCache()
 {
     return Segment::getCache();
+}
+
+uint ScratchSegment::getMaxLockedPages()
+{
+    if (isMAXU(nPagesMax)) {
+        return getCache()->getMaxLockedPages();
+    } else {
+        return nPagesMax;
+    }
 }
 
 FENNEL_END_CPPFILE("$Id$");

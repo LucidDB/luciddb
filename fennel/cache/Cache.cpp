@@ -63,6 +63,11 @@ SharedCache Cache::getCache()
     return shared_from_this();
 }
 
+uint Cache::getMaxLockedPages()
+{
+    return getAllocatedPageCount();
+}
+
 void Cache::writeStats(StatsTarget &target)
 {
     CacheStats stats;

@@ -79,6 +79,11 @@ void QuotaCacheAccessor::decrementUsage()
     }
 }
 
+uint QuotaCacheAccessor::getMaxLockedPages()
+{
+    return maxLockedPages;
+}
+
 FENNEL_END_CPPFILE("$Id$");
 
 // End QuotaCacheAccessor.cpp

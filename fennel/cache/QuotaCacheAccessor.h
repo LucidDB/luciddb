@@ -66,14 +66,9 @@ public:
         uint maxLockedPages);
 
     virtual ~QuotaCacheAccessor();
-    
-    /**
-     * @return the page lock quota
-     */
-    uint getMaxLockedPages() const
-    {
-        return maxLockedPages;
-    }
+
+    // implement CacheAccessor
+    virtual uint getMaxLockedPages();
 
     /**
      * @return the current number of pages locked

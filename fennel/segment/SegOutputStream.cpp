@@ -38,6 +38,7 @@ SegOutputStream::SegOutputStream(
 {
     firstPageId = NULL_PAGE_ID;
     lastPageId = NULL_PAGE_ID;
+    nPagesAllocated = 0;
     cbMaxPageData = getSegment()->getUsablePageSize() - cbPageHeader;
     writeLatency = WRITE_LAZY;
     // force allocation of first page
@@ -47,6 +48,11 @@ SegOutputStream::SegOutputStream(
 PageId SegOutputStream::getFirstPageId() const
 {
     return firstPageId;
+}
+
+BlockNum SegOutputStream::getPageCount() const
+{
+    return nPagesAllocated;
 }
 
 void SegOutputStream::updatePage()
@@ -79,6 +85,7 @@ void SegOutputStream::flushBuffer(uint cbRequested)
         return;
     }
     PageId pageId = pageLock.allocatePage();
+    ++nPagesAllocated;
     if (firstPageId == NULL_PAGE_ID) {
         firstPageId = pageId;
     } else {
