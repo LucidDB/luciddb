@@ -167,7 +167,13 @@ public:
     virtual SharedExecStream getStreamInput(
         ExecStreamId streamId,
         uint iInput);
+    virtual SharedExecStreamBufAccessor getStreamInputAccessor(
+        ExecStreamId streamId,
+        uint iInput);
     virtual SharedExecStream getStreamOutput(
+        ExecStreamId streamId,
+        uint iOutput);
+    virtual SharedExecStreamBufAccessor getStreamOutputAccessor(
         ExecStreamId streamId,
         uint iOutput);
     virtual std::vector<SharedExecStream> getSortedStreams();

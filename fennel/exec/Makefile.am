@@ -7,18 +7,23 @@ ConduitExecStream.cpp \
 ConfluenceExecStream.cpp \
 CopyExecStream.cpp \
 DfsTreeExecStreamScheduler.cpp \
+DynamicParam.cpp \
 ExecStream.cpp \
 ExecStreamGraph.cpp \
 ExecStreamGraphEmbryo.cpp \
 ExecStreamScheduler.cpp \
+MockConsumerExecStream.cpp \
 MockProducerExecStream.cpp \
 ScratchBufferExecStream.cpp \
 SegBufferExecStream.cpp \
 SingleInputExecStream.cpp \
-SingleOutputExecStream.cpp \
-DynamicParam.cpp
+SingleOutputExecStream.cpp
 
-DESIGN_DOCS=SchedulerDesign.cpp ExecStreamHowTo.cpp ExecStreamDesign.cpp
+DESIGN_DOCS=\
+ExecStreamDesign.cpp \
+ExecStreamHowTo.cpp \
+SchedulerDesign.cpp
+
 EXTRA_DIST=$(DESIGN_DOCS)
 TAGS_DEPENDENCIES=$(DESIGN_DOCS)
 ETAGS_ARGS=$(DESIGN_DOCS)

@@ -289,7 +289,7 @@ public:
 
     /**
      * Accesses a tuple from getConsumptionStart() but does not unmarshal it or
-     * consumer it.  Once this is called, it may not be called again until
+     * consume it.  Once this is called, it may not be called again until
      * consumeTuple has been called.
      *
      * @return same as getConsumptionTupleAccessor()

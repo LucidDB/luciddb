@@ -232,6 +232,19 @@ public:
         uint iInput) = 0;
 
     /**
+     * Accesses a stream's input accessor.
+     *
+     * @param streamId ID of stream
+     *
+     * @param iInput 0-based input flow ordinal
+     *
+     * @return accessor used by upstream producer
+     */
+    virtual SharedExecStreamBufAccessor getStreamInputAccessor(
+        ExecStreamId streamId,
+        uint iInput) = 0;
+
+    /**
      * Accesses a stream's output.
      *
      * @param streamId ID of stream
@@ -241,6 +254,19 @@ public:
      * @return downstream consumer
      */
     virtual SharedExecStream getStreamOutput(
+        ExecStreamId streamId,
+        uint iOutput) = 0;
+
+    /**
+     * Accesses a stream's output accessor.
+     *
+     * @param streamId ID of stream
+     *
+     * @param iInput 0-based output flow ordinal
+     *
+     * @return accessor used by downstream consumer
+     */
+    virtual SharedExecStreamBufAccessor getStreamOutputAccessor(
         ExecStreamId streamId,
         uint iOutput) = 0;
 

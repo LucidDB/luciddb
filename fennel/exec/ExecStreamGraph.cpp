@@ -1,7 +1,7 @@
 /*
 // $Id$
 // Fennel is a relational database kernel.
-// Copyright (C) 1999-2004 John V. Sichi.
+// Copyright (C) 1999-2005 John V. Sichi.
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
@@ -292,6 +292,15 @@ SharedExecStream ExecStreamGraphImpl::getStreamInput(
     return getStreamFromVertex(inputVertex);
 }
 
+SharedExecStreamBufAccessor ExecStreamGraphImpl::getStreamInputAccessor(
+    ExecStreamId streamId,
+    uint iInput)
+{
+    Vertex streamVertex = boost::vertices(graphRep).first[streamId];
+    Edge inputEdge = boost::in_edges(streamVertex,graphRep).first[iInput];
+    return getSharedBufAccessorFromEdge(inputEdge);
+}
+
 SharedExecStream ExecStreamGraphImpl::getStreamOutput(
     ExecStreamId streamId,
     uint iOutput)
@@ -300,6 +309,15 @@ SharedExecStream ExecStreamGraphImpl::getStreamOutput(
     Edge outputEdge = boost::out_edges(streamVertex,graphRep).first[iOutput];
     Vertex outputVertex = boost::target(outputEdge,graphRep);
     return getStreamFromVertex(outputVertex);
+}
+
+SharedExecStreamBufAccessor ExecStreamGraphImpl::getStreamOutputAccessor(
+    ExecStreamId streamId,
+    uint iOutput)
+{
+    Vertex streamVertex = boost::vertices(graphRep).first[streamId];
+    Edge outputEdge = boost::out_edges(streamVertex,graphRep).first[iOutput];
+    return getSharedBufAccessorFromEdge(outputEdge);
 }
 
 std::vector<SharedExecStream> ExecStreamGraphImpl::getSortedStreams()

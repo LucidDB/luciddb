@@ -27,6 +27,8 @@
 
 FENNEL_BEGIN_NAMESPACE
 
+class ExecStreamScheduler;
+
 /**
  * ExecStreamTestBase is a common base for tests of ExecStream
  * implementations.
@@ -40,6 +42,11 @@ protected:
     SharedExecStreamScheduler pScheduler;
     SharedExecStreamGraph pGraph;
     SharedExecStreamGraphEmbryo pGraphEmbryo;
+
+    /**
+     * Creates a scheduler.
+     */
+    virtual ExecStreamScheduler *newScheduler();
 
     /**
      * Defines and prepares a graph consisting of one source stream

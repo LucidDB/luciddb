@@ -12,7 +12,8 @@ libfennel_exec.la \
 libfennel_btree.la \
 libfennel_db.la \
 libfennel_xo.la \
-libfennel_ftrs.la
+libfennel_ftrs.la \
+libfennel_test.la
 
 SYNCH_DEPS = libfennel_common.la
 
@@ -35,6 +36,8 @@ DB_DEPS = libfennel_btree.la $(BTREE_DEPS)
 XO_DEPS = libfennel_btree.la $(BTREE_DEPS)
 
 FTRS_DEPS = libfennel_btree.la libfennel_exec.la $(BTREE_DEPS)
+
+TEST_DEPS = libfennel_btree.la libfennel_exec.la $(BTREE_DEPS)
 
 libfennel_common_la_SOURCES=
 libfennel_common_la_LIBADD=\
@@ -83,6 +86,10 @@ libfennel_xo_la_LIBADD=\
 libfennel_ftrs_la_SOURCES=
 libfennel_ftrs_la_LIBADD=\
 	$(top_builddir)/ftrs/libftrs.la $(FTRS_DEPS)
+
+libfennel_test_la_SOURCES=
+libfennel_test_la_LIBADD=\
+	$(top_builddir)/test/libfenneltest.la $(TEST_DEPS)
 
 # Make sure that dependencies are strictly satisfied by failing on
 # undefined references.
