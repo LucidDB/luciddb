@@ -35,7 +35,7 @@ class DeviceAccessScheduler
 {
 public:
     /**
-     * Factory method for creating a scheduler.
+     * Creates a scheduler.
      *
      * @param params DeviceAccessSchedulerParams to use
      *
@@ -47,7 +47,7 @@ public:
     virtual ~DeviceAccessScheduler();
 
     /**
-     * Register a device for which this scheduler will process requests.
+     * Registers a device for which this scheduler will process requests.
      * The default implementation does nothing.
      *
      * @param pDevice device to be registered
@@ -56,7 +56,7 @@ public:
         SharedRandomAccessDevice pDevice);
     
     /**
-     * Unregister a device.
+     * Unregisters a device.
      * The default implementation does nothing.
      *
      * @param pDevice device to be unregistered
@@ -65,7 +65,7 @@ public:
         SharedRandomAccessDevice pDevice);
     
     /**
-     * Initiate a request, the details of which must already have been defined
+     * Initiates a request, the details of which must already have been defined
      * by the caller.  When the request completes, this scheduler will call
      * notifyTransferCompletion on each binding associated with the request,
      * and also break up the binding list.  The bindings must not be altered by
@@ -86,7 +86,7 @@ public:
     virtual void schedule(RandomAccessRequest &request) = 0;
 
     /**
-     * Shut down, waiting for all pending requests to complete.
+     * Shuts down, waiting for all pending requests to complete.
      */
     virtual void stop() = 0;
 };

@@ -32,7 +32,7 @@ class SysCallExcn : public FennelExcn
 {
 public:
     /**
-     * Construct a new SysCallExcn.  This should be called immediately after
+     * Constructs a new SysCallExcn.  This should be called immediately after
      * the failed system call in order to get the correct information from the
      * OS.
      *

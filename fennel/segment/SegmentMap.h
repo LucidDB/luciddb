@@ -31,7 +31,7 @@ class SegmentMap
 {
 public:
     /**
-     * Find a segment by its SegmentId.
+     * Finds a segment by its SegmentId.
      *
      * @param segmentId the SegmentId to find
      *

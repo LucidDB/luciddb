@@ -75,7 +75,7 @@ protected:
     
 public:
     /**
-     * Factory method for creating a new SegOutputStream.
+     * Creates a new SegOutputStream.
      *
      * @param segmentAccessor accessor for the segment in which to store the
      * data
@@ -86,7 +86,7 @@ public:
         SegmentAccessor const &segmentAccessor);
     
     /**
-     * Get the first PageId allocated.  For non-linear segments, this is
+     * Gets the first PageId allocated.  For non-linear segments, this is
      * required in order to be able to read the data back via SegInputStream.
      *
      * @return the first PageId allocated, or NULL_PAGE_ID if no data has been
@@ -100,7 +100,7 @@ public:
     BlockNum getPageCount() const;
 
     /**
-     * Update current page header without unlocking; this allows
+     * Updates current page header without unlocking; allows
      * a SegInputStream to read the contents from the same thread
      * (but another thread would be locked out).
      */

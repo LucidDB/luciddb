@@ -38,14 +38,14 @@ class FileStatsTarget : public StatsTarget
     
 public:
     /**
-     * Create a new FileStatsTarget.
+     * Creates a new FileStatsTarget.
      *
      * @param filename name of file into which to write stats
      */
     explicit FileStatsTarget(std::string filename);
 
     /**
-     * Get name of file receiving stats.
+     * Gets name of file receiving stats.
      */
     std::string getFilename() const;
 

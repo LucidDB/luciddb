@@ -71,7 +71,7 @@ class SegmentFactory
         TraceTarget *pTraceTarget);
 public:
     /**
-     * Construct a new SegmentFactory.
+     * Constructs a new SegmentFactory.
      *
      * @param configMap ConfigMap defining properties to use when instantiating
      * segments
@@ -88,7 +88,7 @@ public:
     virtual ~SegmentFactory();
 
     /**
-     * Open a LinearDeviceSegment.
+     * Opens a LinearDeviceSegment.
      *
      * @param cache the cache to use for this segment
      *
@@ -101,7 +101,7 @@ public:
         LinearDeviceSegmentParams const &params);
 
     /**
-     * Open a RandomAllocationSegment.
+     * Opens a RandomAllocationSegment.
      *
      * @param delegateSegment the underlying segment providing storage; this
      * segment must return LINEAR_ALLOCATION from getAllocationOrder(), and
@@ -117,7 +117,7 @@ public:
         bool bFormat);
 
     /**
-     * Open a WALSegment.
+     * Opens a WALSegment.
      *
      * @param logSegment the Segment in which log pages are stored; this
      * segment must guarantee at least ASCENDING_ALLOCATION (TBD: plus some
@@ -129,7 +129,7 @@ public:
         SharedSegment logSegment);
 
     /**
-     * Open a LinearViewSegment.
+     * Opens a LinearViewSegment.
      *
      * @param delegateSegment the underlying segment
      *
@@ -143,7 +143,7 @@ public:
         PageId firstPageId);
 
     /**
-     * Open a CircularSegment.
+     * Opens a CircularSegment.
      *
      * @param delegateSegment the underlying segment
      *
@@ -167,7 +167,7 @@ public:
         PageId newestPageId = NULL_PAGE_ID);
 
     /**
-     * Open a VersionedSegment.
+     * Opens a VersionedSegment.
      *
      * @param dataSegment the segment storing the latest page versions
      *
@@ -188,7 +188,7 @@ public:
         SegVersionNum versionNumber);
 
     /**
-     * Create a ScratchSegment.
+     * Creates a ScratchSegment.
      *
      * @param pCache cache from which to allocate scratch pages
      *
@@ -203,7 +203,7 @@ public:
         uint nPagesMax = MAXU);
 
     /**
-     * If necessary, wrap a TracingSegment around another segment.
+     * If necessary, wraps a TracingSegment around another segment.
      *
      * @param pSegment the underlying segment
      *
@@ -220,7 +220,7 @@ public:
         bool qualifySourceName = true);
 
     /**
-     * Create a new temporary device paired with a LinearDeviceSegment.  The
+     * Creates a new temporary device paired with a LinearDeviceSegment.  The
      * device will be automatically deleted when the segment is destroyed.
      *
      * @param pCache the cache to use for this segment

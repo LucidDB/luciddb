@@ -104,7 +104,7 @@ protected:
         PConstBuffer &pInputBufferEnd);
 
     /**
-     * Execute the calculator on a stream of tuples.
+     * Executes the calculator on a stream of tuples.
      *
      * @param inputStream input stream of tuples
      *

@@ -60,7 +60,7 @@ protected:
     
 public:
     /**
-     * Factory method for creating a new SegInputStream, positioned
+     * Creates a new SegInputStream, positioned
      * at beginning-of-stream.
      *
      * @param segmentAccessor accessor for the segment containing the stream
@@ -78,20 +78,20 @@ public:
         PageId beginPageId = FIRST_LINEAR_PAGE_ID);
 
     /**
-     * Request that prefetch be performed in anticipation of forward scan.
+     * Requests that prefetch be performed in anticipation of forward scan.
      */
     void startPrefetch();
 
     /**
-     * Stop prefetching.
+     * Disables prefetch.
      */
     void endPrefetch();
 
     /**
-     * Request that pages be deallocated after the stream is done reading
-     * them.  When true, any unread pages will also be deallocated when the
-     * stream is closed.  Note that usage of deallocation may cause
-     * other methods such as seekSegPos and seekBackward to fail.
+     * Requests that pages be deallocated after the stream is done reading
+     * them.  If in effect, any unread pages will also be deallocated when
+     * the stream is closed.  Note that usage of deallocation may cause other
+     * methods such as seekSegPos and seekBackward to fail.
      *
      * @param shouldDeallocate whether to deallocate pages
      */
@@ -101,7 +101,7 @@ public:
     virtual void getSegPos(SegStreamPosition &pos);
 
     /**
-     * Seek to a previously recorded stream position.
+     * Seeks to a previously recorded stream position.
      *
      * @param pos the new position, previously returned by getSegPos
      */

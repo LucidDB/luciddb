@@ -105,7 +105,7 @@ public:
     ExecutionStream *getStream() const;
     
     /**
-     * Gets parameters
+     * Gets parameters.
      */
     ExecutionStreamParams &getParams() const;
 
@@ -194,9 +194,9 @@ protected:
         ProxyTableWriterDef &);
 
     /**
-     * Decide whether cache quotas should actually be enforced.  By default
+     * Decides whether cache quotas should actually be enforced.  By default
      * they are only for a DEBUG build, but this can be overridden by setting
-     * trace level net.sf.farrago.fennel.xo.quota to FINE.
+     * trace level net.sf.fennel.xo.quota to FINE.
      */
     bool shouldEnforceCacheQuotas();
     
@@ -218,7 +218,7 @@ public:
     const char *getLeafTypeName();
 
     /**
-     * Read the Java representation of an ExecutionStream
+     * Reads the Java representation of an ExecutionStream.
      */
     virtual const ExecutionStreamFactors &visitStream(
         ProxyExecutionStreamDef &);
@@ -239,7 +239,7 @@ public:
     // move somewhere more appropriate.
 
     /**
-     * Read the Java representation of a TupleDescriptor.
+     * Reads the Java representation of a TupleDescriptor.
      *
      * @param tupleDesc target TupleDescriptor
      *
@@ -253,7 +253,7 @@ public:
         StoredTypeDescriptorFactory const &typeFactory);
 
     /**
-     * Read the Java representation of a TupleProjection
+     * Reads the Java representation of a TupleProjection
      *
      * @param tupleProj target TupleProjection
      *

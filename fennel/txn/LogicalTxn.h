@@ -123,8 +123,8 @@ public:
     virtual ~LogicalTxn();
 
     /**
-     * Called to permit a participant to join the transaction.  Must
-     * be called before the participant can log any actions
+     * Registers a participant which is joining the transaction.  Must
+     * be called before the participant can log any actions.
      *
      * @param pParticipant the participant to join; reference will be retained
      * for the duration of the txn
@@ -132,7 +132,7 @@ public:
     void addParticipant(SharedLogicalTxnParticipant pParticipant);
     
     /**
-     * Called to begin an action description log entry.  After this, the
+     * Begins an action description log entry.  After this, the
      * participant must write the action description to the txn's output
      * stream.
      *
@@ -147,20 +147,20 @@ public:
         LogicalActionType actionType);
 
     /**
-     * Called to end the log entry for an action description.  After this, the
+     * Ends the log entry for an action description.  After this, the
      * ByteOutputStream returned from beginLogicalAction is no longer valid.
      */
     void endLogicalAction();
 
     /**
-     * Create a savepoint representing the current transaction state.
+     * Creates a savepoint representing the current transaction state.
      *
      * @return ID of new savepoint
      */
     SavepointId createSavepoint();
 
     /**
-     * Commit a given savepoints and any later savepoints.  Note that
+     * Commits a given savepoint and any later savepoints.  Note that
      * committing a savepoint does not make its actions durable; it just
      * releases any information required to rollback to that savepoint.
      *
@@ -169,7 +169,7 @@ public:
     void commitSavepoint(SavepointId svptId);
     
     /**
-     * Rollback the transaction.
+     * Aborts the transaction.
      *
      * @param pSvptId Id of the savepoint to which to rollback (or
      * default NULL to rollback and end the entire transaction)
@@ -177,7 +177,7 @@ public:
     void rollback(SavepointId const *pSvptId = NULL);
 
     /**
-     * Commit the transaction.
+     * Commits the transaction.
      */
     void commit();
 

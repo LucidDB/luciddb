@@ -73,7 +73,7 @@ class TupleData : public std::vector<TupleDatum>
 {
 public:
     explicit TupleData();
-    TupleData(TupleDescriptor const &tupleDesc);
+    explicit TupleData(TupleDescriptor const &tupleDesc);
 
     void compute(TupleDescriptor const &);
 

@@ -53,7 +53,7 @@ class IntrusiveList : public RawIntrusiveList
     
 public:
     /**
-     * Add an element to the front of the list.
+     * Adds an element to the front of the list.
      *
      * @param element the element to add
      */
@@ -63,7 +63,7 @@ public:
     }
     
     /**
-     * Add an element to the back of the list.
+     * Adds an element to the back of the list.
      *
      * @param element the element to add
      */
@@ -91,7 +91,7 @@ public:
     }
     
     /**
-     * Find and remove a specified element by address (not equality).
+     * Finds and removes a specified element by address (not equality).
      *
      * @param element the element to be removed
      *
@@ -114,14 +114,14 @@ class IntrusiveListIter : public RawIntrusiveListIter
     
 public:
     /**
-     * Construct a singular iterator.
+     * Constructs a singular iterator.
      */
     explicit IntrusiveListIter() 
     {
     }
     
     /**
-     * Construct an iterator positioned at the front of a given list.
+     * Constructs an iterator positioned at the front of a given list.
      *
      * @param list the list to access
      */
@@ -159,7 +159,7 @@ public:
     }
 
     /**
-     * Reposition this iterator to the front of a given list.
+     * Repositions to the front of a given list.
      *
      * @param list the list to access
      */
@@ -181,14 +181,14 @@ class IntrusiveListMutator : public RawIntrusiveListMutator
     
 public:                                
     /**
-     * Construct a singular mutator.
+     * Constructs a singular mutator.
      */
     explicit IntrusiveListMutator() 
     {
     }
     
     /**
-     * Construct a mutator positioned at the front of a given list.
+     * Constructs a mutator positioned at the front of a given list.
      *
      * @param list the list to access
      */
@@ -226,7 +226,7 @@ public:
     }
 
     /**
-     * Remove current element from list.  This mutator will advance to the
+     * Removes current element from list.  This mutator will advance to the
      * original successor on next increment.
      *
      * @return element removed
@@ -238,7 +238,7 @@ public:
     }
     
     /**
-     * Reposition this mutator to the front of a given list.
+     * Repositions this mutator to the front of a given list.
      *
      * @param list the list to access
      */
@@ -249,7 +249,7 @@ public:
     }
     
     /**
-     * Reposition this mutator to the front of the current list.
+     * Repositions this mutator to the front of the current list.
      */
     void repositionToFront()
     {

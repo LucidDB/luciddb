@@ -81,7 +81,7 @@ protected:
     virtual bool testThreadedOp(int iOp) = 0;
     
     /**
-     * Execute specified test threads.
+     * Executes specified test threads.
      */
     void runThreadedTestCase();
 };

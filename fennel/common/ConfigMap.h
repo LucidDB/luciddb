@@ -39,17 +39,17 @@ class ConfigMap
     
 public:
     /**
-     * Create an empty map.
+     * Creates an empty map.
      */
     explicit ConfigMap();
 
     /**
-     * Destroy the map.
+     * Destroys the map.
      */
     virtual ~ConfigMap();
 
     /**
-     * Read parameter name/value pairs from an input stream, until
+     * Reads parameter name/value pairs from an input stream, until
      * end-of-stream is encountered.  Each pair should be on a line by itself,
      * with whitespace between the name and value.
      *
@@ -58,14 +58,14 @@ public:
     void readParams(std::istream &paramStream);
 
     /**
-     * Dump all parameter settings to a stream.
+     * Dumps all parameter settings to a stream.
      *
      * @param dumpStream target stream
      */
     void dumpParams(std::ostream &dumpStream) const;
     
     /**
-     * Get the value of a string-typed parameter.
+     * Gets the value of a string-typed parameter.
      *
      * @param paramName name of the parameter
      *
@@ -78,7 +78,7 @@ public:
         std::string defaultVal = "") const;
 
     /**
-     * Get the value of an integer-typed parameter.
+     * Gets the value of an integer-typed parameter.
      *
      * @param paramName name of the parameter
      *
@@ -91,7 +91,7 @@ public:
         int defaultVal = 0) const;
 
     /**
-     * Get the value of a long-typed parameter.
+     * Gets the value of a long-typed parameter.
      *
      * @param paramName name of the parameter
      *
@@ -104,7 +104,7 @@ public:
         long defaultVal = 0) const;
 
     /**
-     * Determine whether a parameter has an associated value
+     * Determines whether a parameter has an associated value.
      *
      * @param paramName name of the parameter
      *
@@ -113,7 +113,7 @@ public:
     bool isParamSet(std::string paramName) const;
 
     /**
-     * Set an individual parameter value.
+     * Sets an individual parameter value.
      *
      * @param paramName name of the parameter
      *
@@ -124,7 +124,7 @@ public:
         std::string paramVal);
 
     /**
-     * Clear all parameters.
+     * Clears all parameters.
      */
     void clear();
 };

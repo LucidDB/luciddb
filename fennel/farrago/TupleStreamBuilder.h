@@ -68,15 +68,15 @@ class TupleStreamBuilder : public boost::noncopyable
     StreamMap streams;
 
     /**
-     * Allocate a stream based on stream definition, add the stream to a 
-     * graph and remember how to prepare the stream. Interposes tracing
+     * Allocates a stream based on stream definition, adds the stream to a 
+     * graph, and remembers how to prepare the stream. Interposes tracing
      * stream, if applicable, as xo.<i>stream</i>.
      */
     void visitStream(
         ProxyExecutionStreamDef &);
 
     /**
-     * Add dataflows between a stream and its inputs. Interposes
+     * Adds dataflows between a stream and its inputs. Interposes
      * provisioning adapters as required.
      *
      * @param streamDef corresponding Java stream definition being converted
@@ -85,7 +85,7 @@ class TupleStreamBuilder : public boost::noncopyable
         ProxyExecutionStreamDef &streamDef);
 
     /**
-     * Monitor a stream's output by appending a tracing stream. 
+     * Monitors a stream's output by appending a tracing stream. 
      *
      * @param name name of stream to add tracing for
      */
@@ -93,7 +93,7 @@ class TupleStreamBuilder : public boost::noncopyable
         std::string &name);
 
     /**
-     * Get the name of the trace source to use based on a stream name.
+     * Gets the name of the trace source to use based on a stream name.
      *
      * @param streamName name of stream being traced
      *
@@ -103,7 +103,7 @@ class TupleStreamBuilder : public boost::noncopyable
         std::string streamName);
 
     /**
-     * Modify a stream's dataflow, as required, to meet the provisioning
+     * Modifies a stream's dataflow, as required, to meet the provisioning
      * requirements. An adapter stream may be added to the graph as 
      * <i>base</i>.provisioner
      *
@@ -119,7 +119,7 @@ class TupleStreamBuilder : public boost::noncopyable
         TupleStream::BufferProvision requiredDataFlow);
 
     /**
-     * Call addAdapter using stream name as base name 
+     * Calls addAdapter using stream name as base name.
      */
     void addAdapterFor(
         std::string &name,
@@ -127,20 +127,21 @@ class TupleStreamBuilder : public boost::noncopyable
 
 
     /**
-     * Register a newly created, unprepared stream with the builder and add
+     * Registers a newly created, unprepared stream with the builder and adds
      * it to the graph. 
      */
     void registerStream(
         ExecutionStreamFactors &);
     
     /**
-     * Lookup a registered stream. The stream *must* be registered.
+     * Looks up a registered stream, asserting if the stream hasn't been
+     * registered yet.
      */
     ExecutionStreamFactors lookupStream(
         std::string &name);
     
     /**
-     * Append an add-on stream, such as a tracing stream or adapter stream,
+     * Appends an add-on stream, such as a tracing stream or adapter stream,
      * which masks the output of the original stream.
      */
     void interposeStream(
@@ -148,7 +149,7 @@ class TupleStreamBuilder : public boost::noncopyable
         ExecutionStreamId interposedId);
 
     /**
-     * Add dataflow to graph, from one stream's output, after add-ons, to
+     * Adds dataflow to graph, from one stream's output (after add-ons) to
      * another stream.
      *
      * @param source name of source stream
@@ -161,7 +162,7 @@ class TupleStreamBuilder : public boost::noncopyable
     
 public:
     /**
-     * Create a new TupleStreamBuilder.
+     * Creates a new TupleStreamBuilder.
      *
      * @param pDatabase database to be accessed by streams
      *
@@ -175,7 +176,7 @@ public:
         SharedExecutionStreamGraph pGraph);
 
     /**
-     * Main builder entry point.
+     * Performs the stream builder work.
      *
      * @param streamDef Java representation for collection of stream
      * definitions; the corresponding TupleStream objects will be

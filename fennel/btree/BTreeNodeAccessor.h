@@ -71,7 +71,7 @@ public:
     virtual ~BTreeNodeAccessor();
 
     /**
-     * Get the number of keys stored on a node.  This may be one less
+     * Gets the number of keys stored on a node.  This may be one less
      * than the number of tuples, since in the rightmost node on a non-leaf
      * level, we pretend the last key is +infinity, so the actual stored
      * key is ignored.  But the last tuple is still stored, and
@@ -84,7 +84,7 @@ public:
     inline uint getKeyCount(BTreeNode const &node) const;
     
     /**
-     * Clear the contents of a node, converting it to an empty root.
+     * Clears the contents of a node, converting it to an empty root.
      *
      * @param node the node to clear
      *
@@ -94,7 +94,7 @@ public:
     virtual void clearNode(BTreeNode &node,uint cbPage);
 
     /**
-     * Allocate space for a new tuple.
+     * Allocates space for a new tuple.
      *
      * @param node the node in which the tuple will be stored
      *
@@ -108,7 +108,7 @@ public:
         BTreeNode &node,uint iEntry,uint cbEntry) = 0;
 
     /**
-     * Deallocate the space for an existing tuple.
+     * Deallocates the space for an existing tuple.
      *
      * @param node the node from which to deallocate the tuple
      *
@@ -118,7 +118,7 @@ public:
         BTreeNode &node,uint iEntry) = 0;
 
     /**
-     * Get the location of a stored tuple.
+     * Gets the location of a stored tuple.
      *
      * @param node the node to access
      *
@@ -130,12 +130,13 @@ public:
         BTreeNode const &node,uint iEntry) = 0;
 
     /**
-     * Called by BTreeAccessBase after tupleDescriptor has been set up.
+     * Receives notification from BTreeAccessBase after tupleDescriptor has
+     * been set up.
      */
     virtual void onInit();
 
     /**
-     * Dump the contents of a node.
+     * Dumps the contents of a node.
      *
      * @param os output stream receiving the dump
      *
@@ -153,7 +154,7 @@ public:
     virtual bool hasFixedWidthEntries() const = 0;
 
     /**
-     * Bind tupleAccessor to a stored tuple.
+     * Binds tupleAccessor to a stored tuple.
      *
      * @param node the node to access
      *
@@ -162,7 +163,7 @@ public:
     virtual void accessTuple(BTreeNode const &node,uint iEntry) = 0;
 
     /**
-     * Search for a tuple by its key.
+     * Searches for a tuple by its key.
      *
      * @param node the node to search
      *
@@ -205,7 +206,7 @@ public:
     };
 
     /**
-     * Determine whether a tuple can be inserted into a node.
+     * Determines whether a tuple can be inserted into a node.
      *
      * @param node the target node
      *
@@ -217,7 +218,7 @@ public:
         BTreeNode const &node,uint cbEntry) = 0;
 
     /**
-     * Determine the storage required for a tuple, including any overhead.
+     * Determines the storage required for a tuple, including any overhead.
      *
      * @param cbTuple number of bytes without overhead
      *
@@ -226,14 +227,14 @@ public:
     virtual uint getEntryByteCount(uint cbTuple) = 0;
 
     /**
-     * Unmarshal the key for the current tuple after a call to accessTuple.
+     * Unmarshals the key for the current tuple after a call to accessTuple.
      *
      * @param keyData receives the unmarshalled key
      */
     virtual void unmarshalKey(TupleData &keyData) = 0;
 
     /**
-     * Perform compaction on this node.
+     * Performs compaction on a node.
      *
      * @param node the fragmented node to be compacted
      *
@@ -242,7 +243,7 @@ public:
     virtual void compactNode(BTreeNode &node,BTreeNode &scratchNode);
 
     /**
-     * Split a node.
+     * Splits a node.
      *
      * @param node the node to be split
      *

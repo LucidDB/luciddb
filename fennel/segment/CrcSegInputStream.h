@@ -39,7 +39,7 @@ class CrcSegInputStream : public SegInputStream
     // TODO:  use a 64-bit crc instead
     boost::crc_32_type crcComputer;
     
-    CrcSegInputStream(
+    explicit CrcSegInputStream(
         SegmentAccessor const &segmentAccessor,
         PseudoUuid onlineUuid,
         PageId beginPageId);
@@ -50,7 +50,7 @@ class CrcSegInputStream : public SegInputStream
     
 public:
     /**
-     * Factory method for creating a new CrcSegInputStream.
+     * Creates a new CrcSegInputStream.
      *
      * @param segmentAccessor accessor for the segment containing the stream
      * data

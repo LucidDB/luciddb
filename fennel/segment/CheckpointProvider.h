@@ -32,7 +32,7 @@ class CheckpointProvider
 {
 public:
     /**
-     * Request a checkpoint.
+     * Requests a checkpoint.
      *
      * @param checkpointType type of checkpoint to request
      */

@@ -46,7 +46,9 @@ class GroupLock : public SynchMonitoredObject
 public:
     explicit GroupLock();
     ~GroupLock();
+    
     bool waitFor(uint iGroup,uint iTimeout = ETERNITY);
+    
     /**
      * // TODO:  pass the group key to release as well,
      * and assert that it matches iHeldGroup

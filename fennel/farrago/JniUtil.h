@@ -144,7 +144,7 @@ class JniUtil
     static jmethodID methToString;
 
     /**
-     * Get the JNIEnv for the current thread.  This can be used in contexts
+     * Gets the JNIEnv for the current thread.  Can be used in contexts
      * where the JNIEnv hasn't been passed down from the native entry point.
      *
      * @return current thread's JNIEnv
@@ -168,14 +168,14 @@ public:
     static jmethodID methGetIndexRoot;
 
     /**
-     * Initialize our JNI support.
+     * Initializes our JNI support.
      *
      * @param pVm the VM in which we're loaded
      */
     static jint init(JavaVM *pVm);
 
     /**
-     * Call java.lang.Class.getName().
+     * Calls java.lang.Class.getName().
      *
      * @param jClass the Class of interest
      *
@@ -184,7 +184,7 @@ public:
     static std::string getClassName(jclass jClass);
 
     /**
-     * Convert a Java string to a C++ string.
+     * Converts a Java string to a C++ string.
      *
      * @param pEnv the current thread's JniEnvRef
      *
@@ -195,7 +195,7 @@ public:
     static std::string toStdString(JniEnvRef pEnv,jstring jString);
 
     /**
-     * Call toString() on a Java object.
+     * Calls toString() on a Java object.
      *
      * @param pEnv the current thread's JniEnvRef
      *
@@ -206,7 +206,7 @@ public:
     static jstring toString(JniEnvRef pEnv,jobject jObject);
 
     /**
-     * Call java.util.Collection.iterator().
+     * Calls java.util.Collection.iterator().
      *
      * @param pEnv the JniEnvRef for the current thread
      *
@@ -217,7 +217,7 @@ public:
     static jobject getIter(JniEnvRef pEnv,jobject jCollection);
 
     /**
-     * Call java.util.Iterator.hasNext/next()
+     * Calls java.util.Iterator.hasNext/next()
      *
      * @param pEnv the JniEnvRef for the current thread
      *
@@ -228,7 +228,7 @@ public:
     static jobject getNextFromIter(JniEnvRef pEnv,jobject jIter);
 
     /**
-     * Look up an enum value.
+     * Looks up an enum value.
      *
      * @param pSymbols array of enum symbols, terminated by empty string
      *

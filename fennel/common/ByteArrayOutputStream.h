@@ -44,7 +44,7 @@ class ByteArrayOutputStream : public ByteOutputStream
 
 public:
     /**
-     * Factory method for creating a new ByteArrayOutputStream.
+     * Creates a new ByteArrayOutputStream.
      *
      * @param pBuffer byte array to fill
      *
@@ -57,7 +57,7 @@ public:
         uint cbBuffer);
 
     /**
-     * Clear any data written to the buffer, leaving it in the same
+     * Clears any data written to the buffer, leaving it in the same
      * state as after construction.
      */
     void clear();

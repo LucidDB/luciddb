@@ -41,18 +41,18 @@ public:
     explicit
     InstructionFactory() {}
 
-    // Create a typical instruction
+    // Creates a typical instruction
     static Instruction*
     createInstruction(string const & name,
                       vector<RegisterReference*> & operands); // add const?
 
-    // Create a Jump instruction
+    // Creates a Jump instruction
     static Instruction*
     createInstruction(string const & name, 
                       TProgramCounter pc,
                       RegisterReference* operand); // add const?
 
-    // Create an Extended instruction
+    // Creates an Extended instruction
     static Instruction*
     createInstruction(string const & name, 
                       string const & function,

@@ -85,7 +85,7 @@ public:
     }
 
     /**
-     * @return true iff size() is 0
+     * @return true iff size() is zero
      */
     bool empty() const
     {
@@ -93,7 +93,7 @@ public:
     }
     
     /**
-     * Truncate this list to 0 nodes.
+     * Truncates this list to zero nodes.
      *
      * @param debugClear when true and a DEBUG build is in effect, pNext links
      * of nodes are nulled out
@@ -131,7 +131,7 @@ protected:
 
 public:
     /**
-     * Advance iterator position to next node.
+     * Advances iterator position to next node.
      */
     void operator ++ ()
     {
@@ -184,7 +184,7 @@ protected:
     
 public:
     /**
-     * Advance iterator position to next node.
+     * Advances iterator position to next node.
      */
     void operator ++ ()
     {
@@ -199,25 +199,25 @@ public:
     }
     
     /**
-     * Move the current node to the front of the list.  This iterator will
+     * Moves the current node to the front of the list.  This iterator will
      * advance to the original successor on next increment.
      */
     void promoteCurrToFront();
     
     /**
-     * Move the current node to the back of the list.  This iterator will
+     * Moves the current node to the back of the list.  This iterator will
      * advance to the original successor on next increment.
      */
     void demoteCurrToBack();
     
     /**
-     * Move the front node of the list to just before the current node.
+     * Moves the front node of the list to just before the current node.
      * Iterator position is unchanged.
      */
     void demoteFrontBeforeCurr();
 
     /**
-     * Move iterator position to front of list.
+     * Moves iterator position to front of list.
      */
     void repositionToFront() 
     {

@@ -133,24 +133,24 @@ public:
     //! Status register can be cached if it is never re-bound.
     static const uint32_t KStatusSetDefault  = EPropNone;
 
-    //! Provide a pointer to encapsulating Calculator
+    //! Provides a pointer to encapsulating Calculator
     //! 
     //! Must be in .cpp file for recursive include requirement reasons.
     //! Refers to Calculator and RegisterReference objects.
     void setCalc(Calculator* calcP);
 
-    //! Perform pre-execution optimizations
+    //! Performs pre-execution optimizations
     //!
     //! If CachePointer or PtrReset properties are set, save a pointer
     //! directly to the data.
     void cachePointer();
 
-    //! Return set index.
+    //! Returns set index.
     ERegisterSet setIndex() const
     {
         return mSetIndex;
     }
-    //! Return register index within a set.
+    //! Returns register index within a set.
     unsigned long index() const 
     {
         return mIndex;
@@ -160,7 +160,7 @@ public:
     { 
         return ((mSetIndex < ELastSet) ? true : false);
     }
-    //! Return type information.
+    //! Returns type information.
     StandardTypeDescriptorOrdinal type() const {
         return mType;
     }
@@ -185,7 +185,7 @@ public:
     }
     
 
-    //! Provide a nicely formatted string describing the register for the
+    //! Provides a nicely formatted string describing the register for the
     //! specified set and index
     static inline string toString(ERegisterSet set, unsigned long index)
     {
@@ -194,9 +194,9 @@ public:
         return ostr.str();
     }
 
-    //! Provide a nicely formatted string describing this register.
+    //! Provides a nicely formatted string describing this register.
     string toString() const;
-    //! Return current value of register.
+    //! Returns current value of register.
     virtual string valueToString() const = 0;
     //! Is the register currently set to NULL?
     virtual bool isNull() const = 0;
@@ -247,7 +247,7 @@ protected:
     //! Behavior properties of this register.
     TRegisterRefProp mProp; 
 
-    //! Define default properties for registers based on register set.
+    //! Defines default properties for registers based on register set.
     void setDefaultProperties();
 };
 
@@ -257,11 +257,11 @@ class RegisterRef : public RegisterReference
 {
 public:
     explicit
-    //! Create an invalid object.
+    //! Creates an invalid object.
     RegisterRef () : RegisterReference()
     { }
 
-    //! Create a valid register reference
+    //! Creates a valid register reference
     //!
     //! @param set Register set
     //! @param index Register with a given set
@@ -273,7 +273,7 @@ public:
         : RegisterReference(set, index, datatype)
     { }
 
-    //! get/peek/read a value from a register
+    //! gets/peeks/reads a value from a register
     //!
     //! Assumes register is not null.
     TMPLT value() const {
@@ -292,7 +292,7 @@ public:
     }
 
 
-    //! put/poke/set a value into a register
+    //! puts/pokes/sets a value into a register
     //!
     //! Assumes register is not null.
     void
@@ -313,7 +313,7 @@ public:
         }
     }
 
-    //! Set a register to null.
+    //! Sets a register to null.
     //!
     //! Will append to mResetP to allow register to be reset.
     void toNull() {
@@ -335,7 +335,7 @@ public:
         }
         
     }
-    //! Check if register is null.
+    //! Checks if register is null.
     bool isNull() const {
         if (mProp & (EPropCachePointer|EPropPtrReset)) {
             return (mPData ? false : true );
@@ -350,7 +350,7 @@ public:
         }
         
     }
-    //! Get pointer value, rather than what pointer references.
+    //! Gets pointer value, rather than what pointer references.
     //!
     //! Used by PointerInstruction, where TMPLT is a pointer 
     //! type, never in other Instruction types, where TMPLT
@@ -371,7 +371,7 @@ public:
             return reinterpret_cast<TMPLT>(const_cast<PBuffer>(datumP->pData));
         }
     }
-    //! Set pointer value, rather than what pointer references.
+    //! Sets pointer value, rather than what pointer references.
     //!
     //! Used by PointerInstruction, where TMPLT is a pointer 
     //! type, never in other Instruction types, where TMPLT
@@ -400,7 +400,7 @@ public:
             datumP->cbData = len; 
         }
     }
-    //! Get reference by pointer for non-pointer types
+    //! Gets reference by pointer for non-pointer types
     TMPLT*
     refer() const {
         if (mProp & (EPropCachePointer|EPropPtrReset)) {
@@ -414,7 +414,7 @@ public:
             return reinterpret_cast<TMPLT*>(const_cast<PBuffer>(datumP->pData));
         }
     }
-    //! Refer to other RegisterRef for non-pointer types
+    //! Refers to other RegisterRef for non-pointer types
     //!
     //! Convenience function, replaces:
     //! to->pointer(from->pointer(), from->length())
@@ -434,7 +434,7 @@ public:
         datumP->cbData = from->length();
     }
 
-    //! Get length, in bytes, of data buffer
+    //! Gets length, in bytes, of data buffer
     //!
     //! This is the actual length of the object pointed to, not
     //! the amount of memory allocated for the object. For example,
@@ -453,7 +453,7 @@ public:
             return datumP->cbData;
         }
     }
-    //! Get storage length / maximum length, in bytes, of data buffer.
+    //! Gets storage length / maximum length, in bytes, of data buffer.
     //!
     //! Note that there is no corresponding write storage(arg). Calculator
     //! considers cbStorage to be read-only information. Calculator
@@ -475,7 +475,7 @@ public:
             return ((*(mRegisterSetDescP[mSetIndex]))[mIndex]).cbStorage;
         }
     }
-    //! Get length of string, in bytes, based on string type.
+    //! Gets length of string, in bytes, based on string type.
     //!
     //! Fixed width, CHAR, BINARY:  Returns storage()
     //! Variable width, VARCHAR, VARBINARY: Returns length()
@@ -489,7 +489,7 @@ public:
             return storage();
         }
     }
-    //! Set length, in bytes, of data buffer.
+    //! Sets length, in bytes, of data buffer.
     //!
     //! This is the actual length of the object pointed to, not
     //! the amount of memory allocated for the object. For example,
@@ -511,7 +511,7 @@ public:
             pDatum->cbData = newLen;
         }
     }
-    //! Set length of string, in bytes, based on string type.
+    //! Sets length of string, in bytes, based on string type.
     //!
     //! Fixed width, CHAR/BINARY: has no effect.
     //! Variable width, VARCHAR/VARBINARY: acts as a length(arg) wrapper.
@@ -524,7 +524,7 @@ public:
         }
     }
 
-    //! Return a nicely formatted string representing register's
+    //! Returns a nicely formatted string representing register's
     //! current value
     //!
     //! Note: Currently does not support pointer/array types like VARCHAR.

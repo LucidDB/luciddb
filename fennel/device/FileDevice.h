@@ -64,7 +64,7 @@ protected:
 
 public:
     /**
-     * Open a file device.
+     * Opens a file device.
      *
      * @param filename path to file
      * @param mode modifiers for how to open file

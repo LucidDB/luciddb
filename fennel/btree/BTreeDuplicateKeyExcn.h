@@ -35,7 +35,7 @@ class BTreeDuplicateKeyExcn : public FennelExcn
 {
 public:
     /**
-     * Construct a new BTreeDuplicateKeyExcn.
+     * Constructs a new BTreeDuplicateKeyExcn.
      *
      *<p>
      *

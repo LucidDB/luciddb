@@ -33,7 +33,7 @@ class TracingSegment : public DelegatingSegment, public TraceSource
 {
 public:
     /**
-     * Construct a new TracingSegment.
+     * Constructs a new TracingSegment.
      *
      * @param delegateSegment the underlying segment
      *

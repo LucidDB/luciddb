@@ -31,7 +31,7 @@ FENNEL_BEGIN_NAMESPACE
 
 //! castA. Ascii. Char & Varchar
 //! 
-//! Cast an exact numeric to an Ascii string.
+//! Casts an exact numeric to an Ascii string.
 //!
 //! May throw "22001" data exception - string data, right truncation
 void
@@ -40,7 +40,7 @@ castExactToStrA(RegisterRef<char*>* result,
 
 //! castA. Ascii. Char & Varchar
 //! 
-//! Cast an approximate numeric to an Ascii string.
+//! Casts an approximate numeric to an Ascii string.
 //!
 //! May throw "22001" data exception - string data, right truncation
 void
@@ -49,7 +49,7 @@ castApproxToStrA(RegisterRef<char*>* result,
 
 //! castA. Ascii. Char & Varchar
 //! 
-//! Cast a string to an exact numeric.
+//! Casts a string to an exact numeric.
 //!
 //! May throw "22018" data exception - invalid character value for cast
 void
@@ -58,7 +58,7 @@ castStrtoExactA(RegisterRef<int64_t>* result,
 
 //! castA. Ascii. Char & Varchar
 //! 
-//! Cast a string to an approximate numeric.
+//! Casts a string to an approximate numeric.
 //!
 //! May throw "22018" data exception - invalid character value for cast
 void
@@ -67,7 +67,7 @@ castStrToApproxA(RegisterRef<double>* result,
 
 //! castA. Ascii. String to Varchar
 //!
-//! Cast a string to a variable-length string.
+//! Casts a string to a variable-length string.
 //!
 //! May throw "22001" string data, right truncation
 void
@@ -76,7 +76,7 @@ castStrToVarCharA(RegisterRef<char*>* result,
 
 //! castA. Ascii. String to Char
 //!
-//! Cast a string to a fixed-length string.
+//! Casts a string to a fixed-length string.
 //!
 //! May throw "22001" string data, right truncation
 void

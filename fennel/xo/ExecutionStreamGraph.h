@@ -36,7 +36,7 @@ FENNEL_BEGIN_NAMESPACE
 typedef uint ExecutionStreamId;
 
 /**
- * A ExecutionStreamGraph is a directed graph representing dataflow
+ * An ExecutionStreamGraph is a directed graph representing dataflow
  * among ExecutionStreams.
  *
  * <p>
@@ -82,20 +82,20 @@ public:
     }
         
     /**
-     * Find a stream by name
+     * Finds a stream by name.
      */
     virtual SharedExecutionStream findStream(
             std::string name) = 0;
     
     /**
-     * Find last stream for name. May be original stream or an adapter.
+     * Finds last stream known for name. May be original stream or an adapter.
      */
     virtual SharedExecutionStream findLastStream(
             std::string name) = 0;
     
     /**
-     * Replace last stream for name. In the process, creates a dataflow 
-     * from last stream to it's replacement.
+     * Replaces last stream for name. In the process, creates a dataflow 
+     * from last stream to its replacement.
      */
     virtual void interposeStream(
         std::string name,
@@ -113,25 +113,25 @@ public:
         uint iInput) = 0;
 
     /**
-     * Get the sink of this graph; that is, the one stream which is not
+     * Gets the sink of this graph; that is, the one stream which is not
      * consumed by any other stream.
      */
     virtual SharedExecutionStream getSinkStream() = 0;
 
     /**
-     * Get streams, sorted topologically. Can only be called after prepare.
+     * Gets streams, sorted topologically. Can only be called after prepare.
      */
     virtual std::vector<SharedExecutionStream> getSortedStreams() = 0;
 
     /**
-     * Workaround for multiple inheritance. Get pointer to this graph, 
-     * casted as it's ultimate interface. Useful when virtual inheritance
+     * Workaround for multiple inheritance. Gets pointer to this graph, 
+     * casted as its leaf-level interface. Useful when virtual inheritance
      * prohibits static casting. 
      */
     virtual void *getInterface() =  0;
 
     /**
-     * Workaround for multiple inheritance. Get name of ultimate interface.
+     * Workaround for multiple inheritance. Gets name of leaf-level interface.
      */
     virtual char *getInterfaceName() =  0;
 };

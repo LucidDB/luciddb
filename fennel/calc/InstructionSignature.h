@@ -61,7 +61,7 @@ public:
     uint size() const;
     TProgramCounter getPc() const;
 
-    //! Return a vector that contains all types that match a given
+    //! Returns a vector that contains all types that match a given
     //! StandardTypeDescriptor::function()
     static vector<StandardTypeDescriptorOrdinal>
     typeVector(bool(*typeFunction)(StandardTypeDescriptorOrdinal));

@@ -90,15 +90,15 @@ public:
     virtual ~LogicalRecoveryTxn();
 
     /**
-     * Redo actions from the log in their original logged order.
+     * Performs redo for actions from the log in their original logged order.
      *
      * @param cbRedo number of log bytes to read; redo stops after this
      */
     void redoActions(uint cbRedo);
 
     /**
-     * Undo actions from the log in reverse order.  The undo may be limited by
-     * nActionsMax or minActionOffset, but not both.
+     * Performs undo for actions from the log in reverse order.  The undo may
+     * be limited by nActionsMax or minActionOffset, but not both.
      *
      * @param svptEnd savepoint for log position just after first action
      * to be undone

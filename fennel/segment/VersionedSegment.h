@@ -73,7 +73,7 @@ public:
     virtual ~VersionedSegment();
 
     /**
-     * Recover to the current version from the log.
+     * Recovers to the current version from the log.
      *
      * @param firstLogPageId starting PageId in log segment
      */
@@ -85,7 +85,7 @@ public:
     PageId getRecoveryPageId() const;
     
     /**
-     * Get the version number of a locked page.
+     * Gets the version number of a locked page.
      *
      * @param page the locked page
      *
@@ -104,8 +104,8 @@ public:
     SharedSegment getLogSegment() const;
 
     /**
-     * Deallocate any old log pages which have become irrelevant after a
-     * checkpoint.  This is separated from the checkpoint operation itself to
+     * Deallocates any old log pages which have become irrelevant after a
+     * checkpoint.  Divorced from the checkpoint operation itself to
      * make possible atomicity as part of compound checkpoint sequences.
      *
      * @param checkpointType the CheckpointType passed to the last checkpoint()

@@ -36,7 +36,7 @@ class RandomAccessNullDevice : public RandomAccessDevice
 {
 public:
     /**
-     * Create a new null device.
+     * Creates a new null device.
      */
     explicit RandomAccessNullDevice();
     

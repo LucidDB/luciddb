@@ -49,7 +49,7 @@ class FuzzyCheckpointSet : public PagePredicate
     
 public:
     /**
-     * Construct a new FuzzyCheckpointSet.
+     * Constructs a new FuzzyCheckpointSet.
      */
     explicit FuzzyCheckpointSet();
     
@@ -59,7 +59,7 @@ public:
     void clear();
 
     /**
-     * Must be called after checkpoint completes.
+     * Receives notification that a checkpoint is completing.
      */
     void finishCheckpoint();
 

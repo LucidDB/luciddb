@@ -94,7 +94,7 @@ protected:
     TupleData searchKeyData;
     
     /**
-     * Search a node for the current search key.
+     * Searches a node for the current search key.
      *
      * @param node the node to search
      *
@@ -114,9 +114,9 @@ protected:
     inline TupleData const &getSearchKey();
 
     /**
-     * Deal with the fact that when we lock the root, we don't know whether it
+     * Deals with the fact that when we lock the root, we don't know whether it
      * happens to be a leaf as well.  When that happens, and rootLockMode !=
-     * leafLockMode, have to compensate.
+     * leafLockMode, we have to compensate.
      *
      * @param lockMode the lock mode used to lock a root+leaf; receives
      * the adjusted lock mode on return
@@ -127,11 +127,11 @@ protected:
     inline bool adjustRootLockMode(LockMode &lockMode);
 
     /**
-     * The workhorse for performing the actual search through the tree.  It's a
-     * template to efficiently allow for certain variations needed when the
-     * search is used in preparation for an insertion by BTreeWriter.
-     * leafLockCoupling controls whether lock coupling is enforced while
-     * moving rightward at the leaf level.
+     * Implements the workhorse algorithm for performing the actual search
+     * through the tree; templated to efficiently allow for certain
+     * variations needed when the search is used in preparation for an
+     * insertion by BTreeWriter.  leafLockCoupling controls whether lock
+     * coupling is enforced while moving rightward at the leaf level.
      *
      * @param key the key being searched for
      *
@@ -150,7 +150,7 @@ public:
     virtual ~BTreeReader();
 
     /**
-     * Get a read-only accessor for leaf tuples.  Tuples found by a search are
+     * Gets a read-only accessor for leaf tuples.  Tuples found by a search are
      * returned implicitly by binding this accessor.
      *
      * @return the leaf tuple accessor
@@ -158,7 +158,7 @@ public:
     TupleAccessor const &getTupleAccessorForRead() const;
 
     /**
-     * Get writable TupleData which can be used to prepare a key to be used in
+     * Gets writable TupleData which can be used to prepare a key to be used in
      * searchForKey.  This is strictly an optional convenience; any key can be
      * passed to searchForKey.
      *
@@ -167,14 +167,14 @@ public:
     inline TupleData &getSearchKeyForWrite();
 
     /**
-     * Search for the first tuple in the tree.
+     * Searches for the first tuple in the tree.
      *
      * @return true if tuple found; false if tree is empty
      */
     bool searchFirst();
 
     /**
-     * Search for a tuple in the tree with the given key.
+     * Searches for a tuple in the tree with the given key.
      * TODO:  duplicate handling
      *
      * @param key the key to search for
@@ -187,7 +187,7 @@ public:
     bool searchForKey(TupleData const &key,DuplicateSeek dupSeek);
     
     /**
-     * Search for the next tuple.  This can be used after either searchFirst
+     * Searches for the next tuple.  Can be used after either searchFirst
      * or searchForKey.
      *
      * @return true if next tuple found; false if end of tree reached
@@ -195,7 +195,7 @@ public:
     bool searchNext();
 
     /**
-     * Forget the current search, releasing any page lock.
+     * Forgets the current search, releasing any page lock.
      */
     void endSearch();
 

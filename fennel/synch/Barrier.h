@@ -37,19 +37,19 @@ class Barrier : public SynchMonitoredObject
 public:
 
     /**
-     * Construct a new barrier.  Initially, the barrier is not ready to receive
+     * Constructs a new barrier.  Initially, the barrier is not ready to receive
      * threads; reset must be called first.
      */
     explicit Barrier();
 
     /**
-     * Destroy this barrier.  This is illegal if there are any threads still
+     * Destroys this barrier.  Illegal if there are any threads still
      * waiting.
      */
     ~Barrier();
 
     /**
-     * Reset the barrier.  This is illegal if there are any threads already
+     * Resets the barrier.  Illegal if there are any threads already
      * waiting.
      *
      * @param nThreadsExpected the number of threads which must call waitFor
@@ -58,7 +58,7 @@ public:
     void reset(uint nThreadsExpected);
     
     /**
-     * Wait for the expected number of threads to arrive.  This is illegal if
+     * Waits for the expected number of threads to arrive.  Illegal if
      * the barrier has not yet been reset.
      */
     void waitFor();

@@ -53,17 +53,18 @@ public:
     virtual ~RandomAccessRequestBinding();
     
     /**
-     * Memory address where transfer should start.
+     * @return memory address where transfer should start.
      */
     virtual PBuffer getBuffer() const = 0;
 
     /**
-     * Number of contiguous bytes from getBuffer() to be used for transfer.
+     * @return number of contiguous bytes from getBuffer() to be used for
+     * transfer.
      */
     virtual uint getBufferSize() const = 0;
     
     /**
-     * Notification method called when a transfer completes.
+     * Receives notification when a transfer completes.
      *
      * @param bSuccess true if the full buffer size was successfully
      * transferred for this binding
@@ -115,9 +116,9 @@ public:
     BindingList bindingList;
 
     /**
-     * Execute this request; this satisfies the ThreadPool Task signature,
+     * Executes this request.  (Satisfies the ThreadPool Task signature,
      * allowing instances of this class to be submitted directly as a Task by
-     * ThreadPoolScheduler.
+     * ThreadPoolScheduler).
      */
     void execute();
 };

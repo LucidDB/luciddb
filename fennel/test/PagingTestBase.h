@@ -99,13 +99,13 @@ public:
     virtual ~PagingTestBase();
     
     /**
-     * Scribble on the contents of a page.  The data written is derived from
+     * Scribbles on the contents of a page.  The data written is derived from
      * the parameter x.
      */
     virtual void fillPage(CachePage &page,uint x);
 
     /**
-     * Verify that the page contents are correct (based on the parameter x).
+     * Verifies that the page contents are correct (based on the parameter x).
      */
     virtual void verifyPage(CachePage &page,uint x);
 
@@ -115,7 +115,7 @@ public:
     virtual void prefetchBatch(uint iPage,uint nPagesPerBatch) = 0;
     
     /**
-     * Carry out one operation on a page.  This involves locking the page,
+     * Carries out one operation on a page.  This involves locking the page,
      * calling verifyPage or fillPage, and then unlocking the page.
      *
      * @param opType operation which  will be attempted
@@ -131,17 +131,17 @@ public:
     bool testOp(OpType opType,uint iPage,bool bNice);
 
     /**
-     * Make up an operation name based on an OpType.
+     * Makes up an operation name based on an OpType.
      */
     char const *getOpName(OpType opType);
 
     /**
-     * Get the LockMode corresponding to an OpType.
+     * Gets the LockMode corresponding to an OpType.
      */
     LockMode getLockMode(OpType opType);
     
     /**
-     * Carry out an operation on each disk page in order from
+     * Carries out an operation on each disk page in order from
      * 0 to nDiskPages-1.
      *
      * @param opType see testOp
@@ -149,59 +149,59 @@ public:
     void testSequentialOp(OpType opType);
     
     /**
-     * Carry out an operation on nRandomOps pages selected at random.
+     * Carries out an operation on nRandomOps pages selected at random.
      *
      * @param opType see testOp
      */
     void testRandomOp(OpType opType);
 
     /**
-     * Perform nRandomOps scratch operations.  A scratch operation
+     * Performs nRandomOps scratch operations.  A scratch operation
      * consists of locking a scratch page, filling it with random
      * data, and then unlocking it.
      */
     void testScratch();
 
     /**
-     * Perform a limited number of prefetch operations.  Prefetches
+     * Performs a limited number of prefetch operations.  Prefetches
      * are not verified.
      */
     void testPrefetch();
 
     /**
-     * Perform a limited number of batch prefetch operations.  Prefetches
+     * Performs a limited number of batch prefetch operations.  Prefetches
      * are not verified.
      */
     void testPrefetchBatch();
 
     /**
-     * Perform a periodic checkpoint.
+     * Performs a periodic checkpoint.
      */
     virtual void testCheckpoint();
     
     /**
-     * Initialize all disk pages, filling them with information based
+     * Initializes all disk pages, filling them with information based
      * on their block numbers.
      */
     virtual void testAllocateAll();
 
     /**
-     * Carry out one sequential read pass over the entire device.
+     * Carries out one sequential read pass over the entire device.
      */
     void testSequentialRead();
 
     /**
-     * Carry out one sequential write pass over the entire device.
+     * Carries out one sequential write pass over the entire device.
      */
     void testSequentialWrite();
 
     /**
-     * Carry out nRandomOps read operations on pages selected at random.
+     * Carries out nRandomOps read operations on pages selected at random.
      */
     void testRandomRead();
 
     /**
-     * Carry out nRandomOps write operations on pages selected at random.
+     * Carries out nRandomOps write operations on pages selected at random.
      */
     void testRandomWrite();
 
@@ -214,7 +214,7 @@ public:
     void testCacheResize();
     
     /**
-     * Carry out specified tests in multi-threaded mode.
+     * Carries out specified tests in multi-threaded mode.
      */
     void testMultipleThreads();
     

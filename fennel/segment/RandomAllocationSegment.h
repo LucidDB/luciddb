@@ -63,7 +63,7 @@ class RandomAllocationSegment
         SharedSegment delegateSegment);
 
     /**
-     * Allocate a new page from an extent known to have space.
+     * Allocates a new page from an extent known to have space.
      *
      * @param extentNum absolute 0-based extent number from which to allocate
      *
@@ -74,7 +74,7 @@ class RandomAllocationSegment
     PageId allocateFromExtent(ExtentNum extentNum,PageOwnerId ownerId);
 
     /**
-     * Allocate a new page from an extent known to have space, with the extent
+     * Allocates a new page from an extent known to have space, with the extent
      * allocation node already locked.
      *
      * @param extentNode locked ExtentAllocationNode corresponding to
@@ -91,7 +91,7 @@ class RandomAllocationSegment
         PageOwnerId ownerId);
 
     /**
-     * Calculate the PageId of a particular SegmentAllocationNode.
+     * Calculates the PageId of a particular SegmentAllocationNode.
      *
      * @param iSegPage 0-based index of desired SegmentAllocationNode
      *
@@ -100,7 +100,7 @@ class RandomAllocationSegment
     inline PageId getSegAllocPageId(uint iSegPage) const;
 
     /**
-     * Calculate the PageId of a particular ExtentAllocationNode.
+     * Calculates the PageId of a particular ExtentAllocationNode.
      *
      * @param extentNum absolute 0-based extent number
      *
@@ -109,7 +109,7 @@ class RandomAllocationSegment
     inline PageId getExtentAllocPageId(ExtentNum extentNum) const;
 
     /**
-     * Calculate a linear page number.
+     * Calculates a linear page number.
      *
      * @param extentNum absolute 0-based extent number of extent containing
      * desired page
@@ -122,7 +122,7 @@ class RandomAllocationSegment
         ExtentNum extentNum,BlockNum iPageInExtent) const;
 
     /**
-     * Map a linear PageId from this segment into the corresponding
+     * Maps a linear PageId from this segment into the corresponding
      * SegmentAllocationNode, ExtentAllocationNode, and extent-relative page
      * index.
      *
@@ -140,7 +140,7 @@ class RandomAllocationSegment
         ExtentNum &extentNum,BlockNum &iPageInExtent) const;
 
     /**
-     * Test whether the given PageId has valid contents
+     * Tests whether the given PageId has valid contents
      * (either an allocated data page or an allocation map page).
      *
      * @param pageId the PageId to test
@@ -155,7 +155,7 @@ class RandomAllocationSegment
     bool testPageId(PageId pageId,bool testAllocation);
 
     /**
-     * Deallocate a single page.
+     * Deallocates a single page.
      *
      * @param pageId PageId of page to deallocate
      */
@@ -167,19 +167,19 @@ class RandomAllocationSegment
     inline PageId getFirstSegAllocPageId() const;
 
     /**
-     * Infer the number of SegmentAllocationNodes from the
+     * Infers the number of SegmentAllocationNodes from the
      * size of the underlying segment.
      */
     uint inferSegAllocCount();
     
     /**
-     * Format allocation pages based on current size of underlying segment,
+     * Formats allocation pages based on current size of underlying segment,
      * marking all pages as deallocated.
      */
     void format();
     
     /**
-     * Format one extent allocation.
+     * Formats one extent allocation.
      *
      * @param extentNode locked ExtentAllocationNode
      */

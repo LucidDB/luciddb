@@ -33,19 +33,19 @@ public:
     virtual ~StatsTarget();
 
     /**
-     * Begin recording a snapshot.  Called before all writeCounter invocations
+     * Begins recording a snapshot.  Called before all writeCounter invocations
      * for the snapshot.
      */
     virtual void beginSnapshot() = 0;
     
     /**
-     * Finish recording a snapshot.  Called after all writeCounter invocations
+     * Finishes recording a snapshot.  Called after all writeCounter invocations
      * for the snapshot.
      */
     virtual void endSnapshot() = 0;
     
     /**
-     * Write one uint counter.  This is called from a StatsSource
+     * Writes one uint counter.  This is called from a StatsSource
      * implementation in response to writeStats().
      *
      * @param name name of counter

@@ -85,7 +85,7 @@ public:
     explicit SegPageIter();
 
     /**
-     * Begin a new iteration.
+     * Begins a new iteration.
      *
      * @param segmentAccessor accessor for the segment containing the pages to
      * visit
@@ -112,13 +112,13 @@ public:
     }
 
     /**
-     * Move to the next prefetched PageId.  An assertion violation results if
-     * this is called when positioned on endPageId.
+     * Moves to the next prefetched PageId.  An assertion violation results if
+     * called when positioned on endPageId.
      */
     void operator ++ ();
 
     /**
-     * Abort any iteration in progress and release all resources.
+     * Aborts any iteration in progress and release all resources.
      */
     void makeSingular()
     {

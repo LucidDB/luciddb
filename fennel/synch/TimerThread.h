@@ -33,15 +33,14 @@ class TimerThreadClient
 {
 public:
     /**
-     * Called from TimerThread to obtain the interval which should elapse
-     * before the next call to onTimerInterval.  This can be different each
-     * time.  A return value of 0 will cause the TimerThread to cease calling
-     * back.
+     * Calculates the interval which should elapse before the next call to
+     * onTimerInterval.  This can be different each time.  A return value of 0
+     * will cause the TimerThread to cease calling back.
      */
     virtual uint getTimerIntervalMillis() = 0;
 
     /**
-     * Called from TimerThread after interval has elapsed.
+     * Receives notification from TimerThread that interval has elapsed.
      */
     virtual void onTimerInterval() = 0;
 };
@@ -62,12 +61,12 @@ public:
         TimerThreadClient &clientInit);
     
     /**
-     * Stop (and join) the timer thread.
+     * Stops (and joins) the timer thread.
      */
     void stop();
 
     /**
-     * Request an immediate execution of onTimerInterval() in the timer thread
+     * Requests an immediate execution of onTimerInterval() in the timer thread
      * context.  Afterwards, timed execution resumes as usual.
      */
     void signalImmediate();

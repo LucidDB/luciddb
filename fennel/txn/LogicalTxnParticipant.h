@@ -77,7 +77,7 @@ public:
         ByteOutputStream &logStream) = 0;
 
     /**
-     * Called during rollback or recovery to undo one logical action.  The
+     * Performs undo for one logical action during rollback or recovery.  The
      * implementation must consume ALL log data for this action, even if some
      * of it turns out to be unneeded.
      *
@@ -91,7 +91,7 @@ public:
         ByteInputStream &logStream) = 0;
     
     /**
-     * Called during recovery to redo one logical action.  The
+     * Performs redo for one logical action during recovery.  The
      * implementation must consume ALL log data for this action, even if some
      * of it turns out to be unneeded.
      *

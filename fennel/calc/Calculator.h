@@ -81,14 +81,14 @@ public:
     //! Must be set before appending instructions.
     void outputRegisterByReference(bool flag);
 
-    //! Pre-execution: Append an Instruction to the Calculator
+    //! Pre-execution: Appends an Instruction to the Calculator
     void appendInstruction(Instruction* newInst) 
     {
         assert(mIsUsingAssembler ? mIsAssembling : true);
         mCode.push_back(newInst);
     }
 
-    //! Pre-execution: Append a RegisterReference to the Calculator
+    //! Pre-execution: Appends a RegisterReference to the Calculator
     //!
     //! Must occur only before a call to exec() or bind()
     void appendRegRef(RegisterReference* newRef)
@@ -107,13 +107,13 @@ public:
         newRef->setCalc(this);
     }
     
-    //! Pre-execution: Given a serialized program, populate Calculator
+    //! Pre-execution: Given a serialized program, populates Calculator
     //!
-    //! Given a serialized program, create register sets, set up literals
-    //! and prepare instructions
+    //! Given a serialized program, creates register sets, sets up literals
+    //! and prepares instructions
     void assemble(const char *program);
 
-    //! Pre-execution: Bind Tuples to Register Sets when XO is
+    //! Pre-execution: Binds Tuples to Register Sets when XO is
     //! populating Calculator
     //!
     //! Allows for the initial bind of externally allocated register
@@ -123,7 +123,7 @@ public:
               TupleData* data, 
               const TupleDescriptor& desc);
   
-    //! Determine Output Tuple format
+    //! Determines Output Tuple format
     //!
     //! When assemble() is used, an XO learns the format of its
     //! output from Calculator. Provides a copy of the internally
@@ -131,7 +131,7 @@ public:
     //! assemble(). Typically called before exec().
     TupleDescriptor getOutputRegisterDescriptor() const;
 
-    //! Determine Input Tuple format
+    //! Determines Input Tuple format
     //!
     //! When assemble() is used, an XO <b>may</b> learn the format of its
     //! input from Calculator. The XO could use this information to
@@ -139,7 +139,7 @@ public:
     //! asserts. Typically called before exec().
     TupleDescriptor getInputRegisterDescriptor() const;
 
-    //! Determine Status Tuple format
+    //! Determines Status Tuple format
     //!
     //! When assemble() is used, an XO <b>may</b> learn the format of its
     //! status from Calculator. The XO could use this information to
@@ -148,14 +148,14 @@ public:
     TupleDescriptor getStatusRegisterDescriptor() const;
 
 
-    //! Get a pointer to Status Register Tuple
+    //! Gets a pointer to Status Register Tuple
     //!
     //! Typically called once after Calculator configuration, as
     //! this tuple never changes.
     TupleData const * const getStatusRegister() const;
     
 
-    //! Bind commonly changing Register Sets Input and Output.
+    //! Binds commonly changing Register Sets Input and Output.
     //!
     //! Binding or rebinding of varying externally allocated 
     //! register memory tuples. This is the common case call to
@@ -168,7 +168,7 @@ public:
         mRegisterTuple[RegisterReference::EOutput] = output;
     }
 
-    //! Configure Calculator to either exit immediately upon
+    //! Configures Calculator to either exit immediately upon
     //! exceptions or to continue execution.
     void continueOnException(bool c);
 
@@ -176,14 +176,14 @@ public:
     // Execution
     //
 
-    //! Execute program
+    //! Executes program
     void exec();
 
     //
     // Post Execution Information
     //
 
-    //! Return a formatting string containing all warnings generated
+    //! Returns a formatting string containing all warnings generated
     //! during exec()
     //!
     //! String contains one warning per line, and includes PC and warning code.

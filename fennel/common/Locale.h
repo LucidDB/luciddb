@@ -53,7 +53,7 @@ public:
     const std::string &getCountry() const;
     const std::string &getVariant() const;
 
-    // Return lang, lang_country, lang_variant or lang_country_variant,
+    // Returns lang, lang_country, lang_variant or lang_country_variant,
     // depending on which fields were specified.
     std::string getDisplayName() const;
 

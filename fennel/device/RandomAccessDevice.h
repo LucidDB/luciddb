@@ -39,14 +39,14 @@ public:
     virtual ~RandomAccessDevice();
     
     /**
-     * The current size of this device.
+     * Gets the current size of this device.
      *
      * @return device size, in bytes
      */
     virtual FileSize getSizeInBytes() = 0;
 
     /**
-     * Set the size of this device; this will truncate or extend the device as
+     * Sets the size of this device, truncating or extending the device as
      * necessary.  Contents of extended portion are undefined.
      *
      * @param cbNew new device size in bytes
@@ -54,9 +54,9 @@ public:
     virtual void setSizeInBytes(FileSize cbNew) = 0;
 
     /**
-     * Synchronously read or write a range of bytes from the device.  This call
-     * itself never returns an error state; instead, a completion notification
-     * method is called (via
+     * Synchronously reads or writes a range of bytes from the device.
+     * Never returns an error state; instead, a completion
+     * notification method is called (via
      * RandomAccessRequestBinding::notifyTransferCompletion).
      *
      * @param request the encapsulated request parameters
@@ -65,7 +65,7 @@ public:
         RandomAccessRequest const &request) = 0;
 
     /**
-     * Prepare for an asynchronous transfer by associating required information
+     * Prepares for an asynchronous transfer by associating required information
      * about this device (e.g. file handle) with the given request.
      * The actual asynchronous transfer is initiated by a calling
      * DeviceAccessScheduler rather than this RandomAccessDevice itself.
@@ -76,7 +76,7 @@ public:
         RandomAccessRequest &request) = 0;
     
     /**
-     * Force any buffered writes to permanent storage (e.g. fsync for a file
+     * Forces any buffered writes to permanent storage (e.g. fsync for a file
      * device).
      */
     virtual void flush() = 0;

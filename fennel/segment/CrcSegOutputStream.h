@@ -41,13 +41,13 @@ class CrcSegOutputStream : public SegOutputStream
     
     virtual void writeExtraHeaders(SegStreamNode &node);
     
-    CrcSegOutputStream(
+    explicit CrcSegOutputStream(
         SegmentAccessor const &segmentAccessor,
         PseudoUuid onlineUuid);
     
 public:
     /**
-     * Factory method for creating a new CrcSegOutputStream.
+     * Creates a new CrcSegOutputStream.
      *
      * @param segmentAccessor accessor for the segment in which to store the
      * data

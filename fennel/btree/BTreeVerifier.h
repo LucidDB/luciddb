@@ -107,7 +107,7 @@ class BTreeVerifier : public BTreeAccessBase
     TupleData keyData2;
 
     /**
-     * Verify one node.  Various expected values should already have been set
+     * Verifies one node.  Various expected values should already have been set
      * up when this is called.
      *
      * @param pageId PageId of node to verify
@@ -120,7 +120,7 @@ class BTreeVerifier : public BTreeAccessBase
         PageId pageId);
 
     /**
-     * Verify all of the children of a non-leaf node.
+     * Verifies all of the children of a non-leaf node.
      *
      * @param node the non-leaf node to be verified
      */
@@ -132,7 +132,7 @@ public:
     virtual ~BTreeVerifier();
 
     /**
-     * Perform verification over the entire tree.
+     * Performs verification over the entire tree.
      *
      * @param strict if true, the tree is assumed to be in a quiescent state
      * with all update operations completed; if false, violations which are
@@ -141,7 +141,7 @@ public:
     void verify(bool strict = true);
 
     /**
-     * Get statistics collected during the previous verification.
+     * Gets statistics collected during the previous verification.
      * This is only valid after verify is called, and is overwritten by
      * each verify call, so copy as needed.
      *

@@ -246,8 +246,8 @@ protected:
     void  init();
 
     /**
-     * Allocate memory (create TupleData structure) for the literal, local, and
-     * status registers.
+     * Allocates memory (creating TupleData structure) for the literal, local,
+     * and status registers.
      * CalcYYparse should call this function after parsing the register
      * definitions and before parsing the literal values.
      * @note This function must be called before attempting to initialize the
@@ -256,7 +256,7 @@ protected:
     void allocateTuples();
 
     /**
-     * Bind registers to the calculator
+     * Binds registers to the calculator
      * CalcYYparse should call this function after parsing the register 
      * definitions and literal values to bind the TupleData to the calculator
      * registers.
@@ -350,14 +350,14 @@ protected:
     void selectRegisterSet(RegisterReference::ERegisterSet setIndex);
 
     /**
-     * Add a register to the current register set
+     * Adds a register to the current register set
      * @param regType type of the register to add
      * @param cbStorage space to allocate for the register (used for arrays)
      * @note Use selectRegisterSet to set the current register set
      */
     void addRegister(StandardTypeDescriptorOrdinal regType, uint cbStorage = 0);
     /**
-     * Add a register to the specified register set
+     * Adds a register to the specified register set
      * @param setIndex Register set index
      * @param regType type of the register to add
      * @param cbStorage space to allocate for the register (used for arrays)
@@ -369,7 +369,7 @@ protected:
     // CalcYYparse uses this function to add a instruction
 
     /**
-     * Add a instruction to the calulator
+     * Adds an instruction to the calulator
      * @param inst Instruction to add
      */
     void addInstruction(Instruction* inst);

@@ -39,7 +39,7 @@ using std::string;
 class ExtendedInstructionTable
 {
 public:
-    //! Register an extended instruction and the functor which implements it.
+    //! Registers an extended instruction and the functor which implements it.
     template <typename T>
     void add(const string &name,
              const vector<StandardTypeDescriptorOrdinal> &parameterTypes,
@@ -51,7 +51,7 @@ public:
         _defsByName[pDef->getSignature()] = pDef;
     }
 
-    //! Look up an extended instruction by signature (name + argument types)
+    //! Looks up an extended instruction by signature (name + argument types)
     //!
     //! Returns null if instruction not found.
     ExtendedInstructionDef* operator[] (string const &signature) {
