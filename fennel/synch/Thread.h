@@ -44,8 +44,8 @@ protected:
     
     void initAndRun();
     virtual void run() = 0;
-    void beforeRun();
-    void afterRun();
+    virtual void beforeRun();
+    virtual void afterRun();
     
 public:
     explicit Thread(std::string const &description = "anonymous thread");
@@ -54,7 +54,7 @@ public:
     /**
      * Spawns the OS thread.
      */
-    void start();
+    virtual void start();
 
     /**
      * Waits for the OS thread to terminate.

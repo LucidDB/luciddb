@@ -83,6 +83,19 @@ int ConfigMap::getIntParam(
     }
 }
 
+bool ConfigMap::getBoolParam(
+    std::string paramName,
+    bool defaultVal) const
+{
+    StringMapConstIter pPair = paramVals.find(paramName);
+    if (pPair == paramVals.end()) {
+        return defaultVal;
+    } else {
+        /* TODO: Support true/false? boost only likes 1/0 */
+        return boost::lexical_cast<bool>(pPair->second);
+    }
+}
+
 // REVIEW:  maybe use a template instead?
 long ConfigMap::getLongParam(
     std::string paramName,
