@@ -156,6 +156,9 @@ visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(ne
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemCollectTupleStreamDef");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyCollectTupleStreamDef>));
 
+jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemConcatenateStreamDef");
+visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyConcatenateStreamDef>));
+
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemDatabaseCmd");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyDatabaseCmd>));
 ProxyDatabaseCmd::meth_getDbHandle = pEnv->GetMethodID(jClass,"getDbHandle","()Lnet/sf/farrago/fem/fennel/FemDbHandle;");

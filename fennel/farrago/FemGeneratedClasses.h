@@ -54,6 +54,9 @@ typedef JniProxyIter<ProxyCmdTruncateIndex> SharedProxyCmdTruncateIndex;
 class ProxyCollectTupleStreamDef;
 typedef JniProxyIter<ProxyCollectTupleStreamDef> SharedProxyCollectTupleStreamDef;
 
+class ProxyConcatenateStreamDef;
+typedef JniProxyIter<ProxyConcatenateStreamDef> SharedProxyConcatenateStreamDef;
+
 class ProxyDatabaseCmd;
 typedef JniProxyIter<ProxyDatabaseCmd> SharedProxyDatabaseCmd;
 
@@ -371,6 +374,12 @@ public:
 };
 
 class ProxyCollectTupleStreamDef
+: virtual public JniProxy, virtual public ProxyTupleStreamDef
+{
+public:
+};
+
+class ProxyConcatenateStreamDef
 : virtual public JniProxy, virtual public ProxyTupleStreamDef
 {
 public:
@@ -703,6 +712,8 @@ virtual void visit(ProxyCmdSavepoint &)
 virtual void visit(ProxyCmdTruncateIndex &)
 { unhandledVisit(); }
 virtual void visit(ProxyCollectTupleStreamDef &)
+{ unhandledVisit(); }
+virtual void visit(ProxyConcatenateStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyDatabaseCmd &)
 { unhandledVisit(); }
