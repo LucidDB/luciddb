@@ -1,6 +1,7 @@
 package net.sf.farrago.fennel;
 
 import java.util.Arrays;
+import org.eigenbase.util.Util;
 
 /**
  * FennelPseudoUuid provides access to the Fennel PseudoUuid class.  Fennel's
@@ -16,6 +17,10 @@ public class FennelPseudoUuid
 {
     //~ Static fields/initializers --------------------------------------------
     private static final int UUID_LENGTH = 16;
+
+    static {
+        Util.loadLibrary("farrago");
+    }
 
     //~ Instance fields -------------------------------------------------------
     private final byte[] uuid;
@@ -50,9 +55,19 @@ public class FennelPseudoUuid
         return new FennelPseudoUuid(nativeGenerateInvalid());
     }
 
+    /**
+     * Parses the given string and returns the UUID it represents.  See
+     * {@link #toString()} for details on the format of the UUID string.
+     *
+     * @return a UUID object
+     * @throws IllegalArgumentException if the String is not in the correct
+     *                                  format.
+     */
     public static FennelPseudoUuid parse(String uuid)
     {
-        assert(uuid.length() == 36);
+        if (uuid.length() != 36) {
+            throw new IllegalArgumentException("invalid uuid format");
+        }
 
         byte[] bytes = new byte[UUID_LENGTH];
 
@@ -63,7 +78,9 @@ public class FennelPseudoUuid
 
                 bytes[i] = (byte)b;
             }
-            assert(uuid.charAt(8) == '-');
+            if (uuid.charAt(8) != '-') {
+                throw new IllegalArgumentException("invalid uuid format");
+            }
 
             // three 2 byte ints
             for(int i = 0; i < 3; i++) {
@@ -77,7 +94,9 @@ public class FennelPseudoUuid
                     bytes[4 + i * 2 + j] = (byte)b;
                 }
 
-                assert(uuid.charAt(start + 4) == '-');
+                if (uuid.charAt(start + 4) != '-') {
+                    throw new IllegalArgumentException("invalid uuid format");
+                }
             }
 
             // one 6-byte int
@@ -88,12 +107,21 @@ public class FennelPseudoUuid
                 bytes[10 + i] = (byte)b;
             }
         } catch(NumberFormatException e) {
-            assert(false): e.getMessage();
+            IllegalArgumentException iae =
+                new IllegalArgumentException("invalid uuid format");
+            iae.initCause(e);
+            throw iae;
         }
 
         return new FennelPseudoUuid(bytes);
     }
 
+    /**
+     * Convert a sequence of 16 bytes into a UUID object.
+     *
+     * @param bytes the bytes of a UUID
+     * @return a UUID object
+     */
     public static FennelPseudoUuid parse(byte[] bytes)
     {
         assert(bytes.length == UUID_LENGTH);
