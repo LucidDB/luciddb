@@ -44,9 +44,17 @@ public:
 
     /**
      * Tests an stream going through a cascade of the collect and 
-     * the uncollect xo, expecting the same result back
+     * the uncollect xos, expecting the same result back
      */
     void testCollectUncollect();
+
+    /**
+     * Tests an stream going through a cascade of two collect and 
+     * two uncollect xos, expecting the same result back
+     */
+    void testCollectCollectUncollectUncollect(); 
+
+
 };
 
 #endif
