@@ -18,6 +18,8 @@
 */
 package net.sf.farrago.type.runtime;
 
+import org.eigenbase.util.*;
+
 import java.io.*;
 import java.nio.*;
 
@@ -277,7 +279,10 @@ public class BytePointer extends ByteArrayInputStream
         if (buf == null) {
             return null;
         }
-        return new String(buf, pos, count - pos);
+        int n = count - pos;
+        byte [] bytes = new byte[n];
+        System.arraycopy(buf, pos, bytes, 0, n);
+        return Util.toStringFromByteArray(bytes, 16);
     }
 }
 

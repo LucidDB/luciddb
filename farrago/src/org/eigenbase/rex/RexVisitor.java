@@ -47,8 +47,6 @@ public interface RexVisitor
 
     void visitRangeRef(RexRangeRef rangeRef);
 
-    void visitContextVariable(RexContextVariable variable);
-
     void visitFieldAccess(RexFieldAccess fieldAccess);
 }
 

@@ -163,8 +163,14 @@ public class FarragoOJRexCastImplementor extends FarragoOJRexImplementor
                     AssignableValue.ASSIGNMENT_METHOD_NAME,
                     new ExpressionList(rhsExp))));
 
-        if (lhsType instanceof FarragoPrecisionType) {
-            // may need to pad or truncate
+        boolean mayNeedPadOrTruncate = false;
+        if (lhsType instanceof FarragoAtomicType) {
+            FarragoAtomicType lhsAtomicType = (FarragoAtomicType) lhsType;
+            if (lhsAtomicType.isString() && !lhsAtomicType.isLob()) {
+                mayNeedPadOrTruncate = true;
+            }
+        }
+        if (mayNeedPadOrTruncate) {
             FarragoPrecisionType lhsPrecisionType =
                 (FarragoPrecisionType) lhsType;
 

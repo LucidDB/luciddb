@@ -221,24 +221,6 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
         return dateFormat.format(new java.util.Date(value - timeZoneOffset));
     }
 
-    /**
-     * Pad or truncate this value according to the given precision.
-     *
-     * @param precision desired precision
-     *
-     * @param needPad true if short values should be padded
-     *
-     * @param padByte byte to pad with
-     */
-    public void enforceBytePrecision(
-        int precision,
-        boolean needPad,
-        byte padByte)
-    {
-        // Function stolen from BytePointer.java, currently does nothing
-        // TODO: Properly implement for timestamps
-    }
-
     //~ Inner Classes ---------------------------------------------------------
 
     /**

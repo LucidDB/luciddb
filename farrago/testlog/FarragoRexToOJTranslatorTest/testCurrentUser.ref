@@ -2,5 +2,6 @@
 ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
 
 oj_var0.assignFrom( connection.getContextVariable_CURRENT_USER() );
+oj_var0.enforceBytePrecision( 30, false, (byte) ' ' );
 
-return (ExecutableStmt.Oj_inner_0) oj_var0;
+return oj_var0;

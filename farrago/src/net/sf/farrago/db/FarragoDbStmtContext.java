@@ -434,6 +434,11 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
         }
     }
 
+    // TODO jvs 7-Oct-2004: according to Appendix B of the JDBC spec (Data Type
+    // Conversion Tables), it's possible to pass String objects as the values
+    // for date/time/timestamp/binary parameters.  Need to implement the
+    // appropriate conversions here.  Also, need a NumericParamDef impl.
+    
     /**
      * Definition of a Timestamp parameter. Converts parameters from local time
      * (the JVM's timezone) into system time.
@@ -578,6 +583,8 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
             if (x instanceof String) {
                 return x;
             }
+            // REVIEW jvs 7-Oct-2004: the default toString() implementation for
+            // Float/Double/Date/Time/Timestamp/byte[] may not be correct here.
             final String s = x.toString();
             if (s.length() > maxCharCount) {
                 throw FarragoResource.instance().newParameterValueTooLong(
@@ -590,8 +597,7 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
     }
 
     /**
-     * Definition of a string parameter. Values which are not strings are
-     * converted into strings. Strings are not padded, even for CHAR columns.
+     * Definition of a binary parameter. Only accepts byte-array values.
      */
     private static class BinaryParamDef extends ParamDef
     {
@@ -616,26 +622,11 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
             final byte [] bytes = (byte []) x;
             if (bytes.length > maxByteCount) {
                 throw FarragoResource.instance().newParameterValueTooLong(
-                    toString(bytes),
+                    Util.toStringFromByteArray(bytes,16),
                     paramName,
                     type.toString());
             }
             return bytes;
-        }
-
-        private static String toString(byte [] bytes)
-        {
-            StringBuffer buf = new StringBuffer(2 + (bytes.length * 5));
-            for (int i = 0; i < bytes.length; i++) {
-                byte b = bytes[i];
-                if (i > 0) {
-                    buf.append(", ");
-                }
-                buf.append("x");
-                buf.append(Integer.toString(b, 16));
-            }
-            buf.append("}");
-            return buf.toString();
         }
     }
 }

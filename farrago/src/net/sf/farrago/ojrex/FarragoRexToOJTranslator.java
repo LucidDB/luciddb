@@ -93,9 +93,9 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
 
         // keep a reference to the implementor for CAST, which
         // is needed for implementing assignments also
-        castImplementor =
-            (FarragoOJRexCastImplementor) getImplementorTable().get(SqlOperatorTable
-                    .std().castFunc);
+        castImplementor = (FarragoOJRexCastImplementor)
+            getImplementorTable().get(
+                SqlOperatorTable.std().castFunc);
 
         ojNullablePrimitive = OJClass.forClass(NullablePrimitive.class);
     }
@@ -113,44 +113,29 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
     }
 
     // implement RexVisitor
-    public void visitContextVariable(RexContextVariable contextVariable)
-    {
-        setTranslation(
-            convertVariable(
-                contextVariable,
-                "getContextVariable_" + contextVariable.getName(),
-                new ExpressionList()));
-    }
-
-    // implement RexVisitor
     public void visitDynamicParam(RexDynamicParam dynamicParam)
     {
         setTranslation(
             convertVariable(
-                dynamicParam,
+                dynamicParam.getType(),
                 "getDynamicParamValue",
                 new ExpressionList(Literal.makeLiteral(dynamicParam.index))));
     }
 
-    private Expression convertVariable(
-        RexVariable rexVariable,
+    Expression convertVariable(
+        RelDataType type,
         String accessorName,
         ExpressionList accessorArgList)
     {
-        Variable variable = createScratchVariable(rexVariable.getType());
-        stmtList.add(
-            new ExpressionStatement(
-                new MethodCall(
-                    variable,
-                    AssignableValue.ASSIGNMENT_METHOD_NAME,
-                    new ExpressionList(
-                        new MethodCall(
-                            getRelImplementor().getConnectionVariable(),
-                            accessorName,
-                            accessorArgList)))));
-        return new CastExpression(
-            OJUtil.typeToOJClass(rexVariable.getType()),
-            variable);
+        return castImplementor.convertCastToAssignableValue(
+            this,
+            type,
+            null,
+            null,
+            new MethodCall(
+                getRelImplementor().getConnectionVariable(),
+                accessorName,
+                accessorArgList));
     }
 
     // override RexToOJTranslator

@@ -475,11 +475,6 @@ public class RexToCalcTranslator implements RexVisitor
             + rangeRef);
     }
 
-    public void visitContextVariable(RexContextVariable variable)
-    {
-        implementNode(variable);
-    }
-
     public void visitFieldAccess(RexFieldAccess fieldAccess)
     {
         throw FarragoResource.instance().newProgramImplementationError("Don't know how to implement rex node="
@@ -744,17 +739,6 @@ public class RexToCalcTranslator implements RexVisitor
             builder.newInput(getCalcRegisterDescriptor(node)));
     }
 
-    private void implementNode(RexContextVariable node)
-    {
-        if (containsResult(node)) {
-            throw new AssertionError("Shouldn't call this function directly;"
-                + " use implementNode(RexNode) instead");
-        }
-
-        throw FarragoResource.instance().newProgramImplementationError("Don't know how to implement rex node="
-            + node);
-    }
-
     public void setGenerateShortCircuit(boolean generateShortCircuit)
     {
         this.generateShortCircuit = generateShortCircuit;
@@ -859,10 +843,6 @@ public class RexToCalcTranslator implements RexVisitor
         {
             // Matches RexToCalcTranslator.visitRangeRef()
             throw new TranslationException();
-        }
-
-        public void visitContextVariable(RexContextVariable variable)
-        {
         }
 
         public void visitFieldAccess(RexFieldAccess fieldAccess)

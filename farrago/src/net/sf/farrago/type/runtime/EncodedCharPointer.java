@@ -41,16 +41,10 @@ public abstract class EncodedCharPointer extends BytePointer
             return null;
         }
         try {
-            // If this represents a CHAR, there may be trailing NUL chars.
-            // Trim them off.
-            int end = pos;
-            while ((end < count) && (buf[end] != '\0')) {
-                ++end;
-            }
             return new String(
                 buf,
                 pos,
-                end - pos,
+                count - pos,
                 getCharsetName());
         } catch (UnsupportedEncodingException ex) {
             throw Util.newInternal(ex);

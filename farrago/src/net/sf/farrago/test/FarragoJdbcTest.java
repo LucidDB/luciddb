@@ -2090,15 +2090,13 @@ public class FarragoJdbcTest extends FarragoTestCase
                 public Object getExpected(Object value)
                 {
                     String s = String.valueOf(value);
-                    if (false) { // TODO: should char columns return padded strings?
-                        if (s.length() < 100) {
-                            // Pad to 100 characters.
-                            StringBuffer buf = new StringBuffer(s);
-                            while (buf.length() < 100) {
-                                buf.append(' ');
-                            }
-                            s = buf.toString();
+                    if (s.length() < 100) {
+                        // Pad to 100 characters.
+                        StringBuffer buf = new StringBuffer(s);
+                        while (buf.length() < 100) {
+                            buf.append(' ');
                         }
+                        s = buf.toString();
                     }
                     return s;
                 }

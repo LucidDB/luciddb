@@ -40,7 +40,8 @@ public class FarragoOJRexContextVariableImplementor implements OJRexImplementor
 {
     private final String name;
 
-    public FarragoOJRexContextVariableImplementor(String name) {
+    public FarragoOJRexContextVariableImplementor(String name)
+    {
         this.name = name;
     }
 
@@ -49,33 +50,12 @@ public class FarragoOJRexContextVariableImplementor implements OJRexImplementor
         RexCall call,
         Expression[] operands)
     {
-        return convertVariable(
-            (FarragoRexToOJTranslator) translator,
+        FarragoRexToOJTranslator farragoTranslator =
+            (FarragoRexToOJTranslator) translator;
+        return farragoTranslator.convertVariable(
             call.getType(),
-            "getContextVariable_" + name);
-    }
-
-    private Expression convertVariable(
-        FarragoRexToOJTranslator translator,
-        RelDataType type,
-        String accessorName)
-    {
-        Variable variable = translator.createScratchVariable(type);
-        Variable connectionVariable =
-            translator.getRelImplementor().getConnectionVariable();
-        translator.addStatement(
-            new ExpressionStatement(
-                new MethodCall(
-                    variable,
-                    AssignableValue.ASSIGNMENT_METHOD_NAME,
-                    new ExpressionList(
-                        new MethodCall(
-                            connectionVariable,
-                            accessorName,
-                            new ExpressionList())))));
-        return new CastExpression(
-            OJUtil.typeToOJClass(type),
-            variable);
+            "getContextVariable_" + name,
+            new ExpressionList());
     }
     
     public boolean canImplement(RexCall call)

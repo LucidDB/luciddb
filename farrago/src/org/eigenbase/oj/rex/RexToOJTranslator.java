@@ -253,12 +253,6 @@ public class RexToOJTranslator implements RexVisitor
     }
 
     // implement RexVisitor
-    public void visitContextVariable(RexContextVariable variable)
-    {
-        throw Util.needToImplement("Row-expression RexContextVariable");
-    }
-
-    // implement RexVisitor
     public void visitFieldAccess(RexFieldAccess fieldAccess)
     {
         final String javaFieldName =
