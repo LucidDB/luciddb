@@ -25,12 +25,8 @@ import org.eigenbase.sql.type.SqlTypeName;
 
 
 /**
- * A SqlTester is a tester of sql queries. The queries tested are specified in
- * {@link net.sf.saffron.sql.SqlOperator#test}.
- * Operators of base class {@link net.sf.saffron.sql.SqlOperator} and
- * {@link net.sf.saffron.sql.SqlFunction} added to the
- * singleton class {@link net.sf.saffron.sql.SqlOperatorTable}
- * are visited by calling their test functions.
+ * Abstract implementation of {@link SqlTester}. A derived class only needs
+ * to implement {@link #check} and {@link #checkType}.
  *
  * @author wael
  * @since May 22, 2004
@@ -40,22 +36,15 @@ public abstract class AbstractSqlTester implements SqlTester
 {
     //~ Methods ---------------------------------------------------------------
 
-    public String getQueryEndString()
+    /**
+     * Converts a scalar expression into a SQL query.
+     *
+     * <p>By default, "expr" becomes "SELECT expr FROM VALUES(1)". Derived
+     * classes may override.
+     */
+    protected String buildQuery(String expression)
     {
-        return "FROM VALUES(1)".intern();
-    }
-
-    public String getQueryStartString()
-    {
-        return "SELECT".intern();
-    }
-
-    private String buildQuery(String expression)
-    {
-        String sql =
-            getQueryStartString() + " " + expression + " "
-            + getQueryEndString();
-        return sql;
+        return "SELECT " + expression + " FROM VALUES(1)";
     }
 
     public void checkScalarExact(
@@ -103,5 +92,14 @@ public abstract class AbstractSqlTester implements SqlTester
 
         //any SqlTypeName should do
         check(sql, null, SqlTypeName.Boolean);
+    }
+
+    public void checkScalar(
+        String expression,
+        Object result,
+        String resultType)
+    {
+        checkType(expression, resultType);
+        check(buildQuery(expression), result, null);
     }
 }

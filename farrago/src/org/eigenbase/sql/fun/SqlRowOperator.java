@@ -21,15 +21,17 @@
 
 package org.eigenbase.sql.fun;
 
-import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.*;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.type.UnknownParamInference;
-import org.eigenbase.sql.test.*;
 
 
 /**
- * SqlRowOperator represents the special ROW constructor.  TODO: describe usage
+ * SqlRowOperator represents the special ROW constructor.
+ *
+ * <p>TODO: describe usage
  * for row-value construction and row-type construction (SQL supports both).
  *
  * @author John V. Sichi
@@ -66,6 +68,13 @@ public class SqlRowOperator extends SqlSpecialOperator
         RelDataTypeFactory typeFactory,
         RelDataType [] argTypes)
     {
+        return getTypeInternal(typeFactory, argTypes);
+    }
+
+    private static RelDataType getTypeInternal(
+        RelDataTypeFactory typeFactory,
+        RelDataType[] argTypes)
+    {
         // The type of a ROW(e1,e2) expression is a record with the types
         // {e1type,e2type}.  According to the standard, field names are
         // implementation-defined.
@@ -87,7 +96,7 @@ public class SqlRowOperator extends SqlSpecialOperator
             SqlNode operand = call.operands[i];
             types[i] = validator.deriveType(scope, operand);
         }
-        return getType(validator.typeFactory, types);
+        return getTypeInternal(validator.typeFactory, types);
     }
 
     protected void checkArgTypes(
@@ -114,7 +123,7 @@ public class SqlRowOperator extends SqlSpecialOperator
         int leftPrec,
         int rightPrec)
     {
-        SqlFunction.unparseFunctionSyntax(this, writer, operands);
+        SqlUtil.unparseFunctionSyntax(this, writer, operands, true);
     }
 }
 

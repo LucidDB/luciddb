@@ -502,13 +502,6 @@ public class RexBuilder
         return new RexDynamicParam(type, index);
     }
 
-    public RexContextVariable makeContextVariable(
-        String name,
-        RelDataType type)
-    {
-        return new RexContextVariable(name, type);
-    }
-
     public RexLiteral makeSymbolLiteral(SqlSymbol flag)
     {
         Util.pre(flag != null, "flag != null");

@@ -914,12 +914,16 @@ require version '${required.ant.version}'."/>
   </target>
 
   <target name="checkResourceUptodate">
-    <uptodate property="resource.uptodate"
-      srcfile="${farrago.resource.dir}/FarragoResource.xml"
-      targetfile="${farrago.resource.dir}/FarragoResource.java"/>
-    <uptodate property="resource.uptodate"
-      srcfile="${eigenbase.resource.dir}/EigenbaseResource.xml"
-      targetfile="${eigenbase.resource.dir}/EigenbaseResource.java"/>
+    <condition property="resource.uptodate">
+      <and>
+        <uptodate
+          srcfile="${farrago.resource.dir}/FarragoResource.xml"
+          targetfile="${farrago.resource.dir}/FarragoResource.java"/>
+        <uptodate property="resource.uptodate"
+          srcfile="${eigenbase.resource.dir}/EigenbaseResource.xml"
+          targetfile="${eigenbase.resource.dir}/EigenbaseResource.java"/>
+      </and>
+    </condition>
   </target>
 
   <target name="generateResources" depends="mkdir.classes,checkResourceUptodate"

@@ -57,7 +57,6 @@ public class SqlValidator
     //~ Instance fields -------------------------------------------------------
 
     public final SqlOperatorTable opTab;
-    public final SqlContextVariableTable contextVariableTable;
     private final CatalogReader catalogReader;
 
     /** Maps {@link SqlNode query nodes} to {@link Scope the scope created from
@@ -97,7 +96,6 @@ public class SqlValidator
         this.opTab = opTab;
         this.catalogReader = catalogReader;
         this.typeFactory = typeFactory;
-        contextVariableTable = new SqlContextVariableTable(typeFactory);
 
         // NOTE jvs 23-Dec-2003:  This is used as the type for dynamic
         // parameters and null literals until a real type is imposed for them.
@@ -588,9 +586,14 @@ public class SqlValidator
             assert (null != strCharset);
             assert (null != colCharset);
             if (!strCharset.equals(colCharset)) {
-                //todo: enable this checking when we have a charset to collation mapping
-                //                throw newValidationError(type.toString()+" was found to have charset="+strCharset.name()+
-                //                        " and a mismatched collation charset="+colCharset.name());
+                if (false) {
+                    // todo: enable this checking when we have a charset to
+                    //   collation mapping
+                    throw new Error(type.toString() +
+                        " was found to have charset '" + strCharset.name() +
+                        "' and a mismatched collation charset '" +
+                        colCharset.name() + "'");
+                }
             }
         }
     }
@@ -604,35 +607,18 @@ public class SqlValidator
         if (type != null) {
             return type;
         }
-
         if (operand instanceof SqlIdentifier) {
             // REVIEW klo 1-Jan-2004:
-            // We should have assert scope != null here. The idea is we should figure
-            // out the right scope for the SqlIdentifier before we call this method. Therefore, scope can't be
-            // null.
+            // We should have assert scope != null here. The idea is we should
+            // figure out the right scope for the SqlIdentifier before we call
+            // this method. Therefore, scope can't be null.
             SqlIdentifier id = (SqlIdentifier) operand;
 
-            // first check for reserved identifiers like CURRENT_USER
-            type = contextVariableTable.deriveType(id);
-            if (type != null) {
-                // TODO jvs 26-May-2004: share code with other exit path
-                // below.
-                if (type.isCharType()) {
-                    Charset charset =
-                        (type.getCharset() == null) ? Util.getDefaultCharset()
-                        : type.getCharset();
-                    SqlCollation collation =
-                        (type.getCollation() == null)
-                        ? new SqlCollation(SqlCollation.Coercibility.Implicit)
-                        : type.getCollation();
-
-                    //todo: should get the implicit collation from repository instead of null
-                    type =
-                        typeFactory.createTypeWithCharsetAndCollation(type,
-                            charset, collation);
-                    checkCharsetAndCollateConsistentIfCharType(type);
-                }
-                return type;
+            // First check for builtin functions which don't have parentheses,
+            // like "LOCALTIME".
+            SqlCall call = makeCall(id);
+            if (call != null) {
+                return call.operator.getType(this, scope, call);
             }
 
             for (int i = 0; i < id.names.length; i++) {
@@ -684,7 +670,8 @@ public class SqlValidator
                     ? new SqlCollation(SqlCollation.Coercibility.Implicit)
                     : type.getCollation();
 
-                //todo: should get the implicit collation from repository instead of null
+                // todo: should get the implicit collation from repository
+                //   instead of null
                 type =
                     typeFactory.createTypeWithCharsetAndCollation(type,
                         charset, collation);
@@ -702,7 +689,8 @@ public class SqlValidator
             return unknownType;
         }
 
-        // ~ SqlDataType - currently, the 2nd arg to a cast.
+        // SqlDataType may occur in an expression as the 2nd arg to the CAST
+        // function.
         if (operand instanceof SqlDataType) {
             SqlDataType dataType = (SqlDataType) operand;
             return dataType.deriveType(this);
@@ -711,34 +699,30 @@ public class SqlValidator
         if (operand instanceof SqlCall) {
             SqlCall call = (SqlCall) operand;
             checkForIllegalNull(call);
-
+            SqlNode[] operands = call.getOperands();
+            // special case for AS:  never try to derive type for alias
+            if (operand.isA(SqlKind.As)) {
+                RelDataType nodeType = deriveType(scope, operands[0]);
+                setValidatedNodeType(operands[0], nodeType);
+                type = call.operator.getType(this, scope, call);
+                return type;
+            }
+            final SqlSyntax syntax = call.operator.getSyntax();
+            switch (syntax.ordinal) {
+            case SqlSyntax.Prefix_ordinal:
+            case SqlSyntax.Postfix_ordinal:
+            case SqlSyntax.Binary_ordinal:
+                // TODO: use this switch statement to resolve functions instead
+                // of all of these 'if's.
+            }
             if (call.operator instanceof SqlCaseOperator) {
-                SqlCase caseCall = (SqlCase) call;
-                List whenList = caseCall.getWhenOperands();
-                List thenList = caseCall.getThenOperands();
-                for (int i = 0; i < whenList.size(); i++) {
-                    RelDataType nodeType =
-                        deriveType(scope, (SqlNode) whenList.get(i));
-                    setValidatedNodeType((SqlNode) whenList.get(i), nodeType);
-                    nodeType = deriveType(scope, (SqlNode) thenList.get(i));
-                    setValidatedNodeType((SqlNode) thenList.get(i), nodeType);
-                }
-                RelDataType nodeType =
-                    deriveType(
-                        scope,
-                        caseCall.getElseOperand());
-                setValidatedNodeType(
-                    caseCall.getElseOperand(),
-                    nodeType);
                 return call.operator.getType(this, scope, call);
             }
 
             if ((call.operator instanceof SqlFunction)
                     || (call.operator instanceof SqlSpecialOperator)
                     || (call.operator instanceof SqlRowOperator)) {
-                SqlCall node = (SqlCall) operand;
-                SqlNode [] operands = node.getOperands();
-                RelDataType [] argTypes = new RelDataType[operands.length];
+                RelDataType[] argTypes = new RelDataType[operands.length];
                 for (int i = 0; i < operands.length; ++i) {
                     // We can't derive a type for some operands.
                     if (operands[i] instanceof SqlSymbol) {
@@ -751,8 +735,17 @@ public class SqlValidator
 
                 if (!(call.operator instanceof SqlJdbcFunctionCall)
                         && call.operator instanceof SqlFunction) {
-                    SqlFunction function =
-                        opTab.lookupFunction(call.operator.name, argTypes);
+                    SqlFunction function;
+                    if (operands.length == 0 &&
+                        syntax == SqlSyntax.FunctionId) {
+                        // For example, "LOCALTIME()" is illegal. (It should be
+                        // "LOCALTIME", which would have been handled as a
+                        // SqlIdentifier.)
+                        function = null;
+                    } else {
+                        function = opTab.lookupFunction(call.operator.name,
+                                argTypes);
+                    }
                     if (function == null) {
                         // todo: localize "Function"
                         List overloads =
@@ -776,33 +769,19 @@ public class SqlValidator
                 }
                 return call.operator.getType(this, scope, call);
             }
-
-            if (call.operator instanceof SqlBinaryOperator
-                    || call.operator instanceof SqlPostfixOperator
-                    || call.operator instanceof SqlPrefixOperator) {
-                // REVIEW: do we need to get the type for special operator?
-                // Special operators are "update", "delete" etc.
-                SqlCall node = (SqlCall) operand;
-                SqlNode [] operands = node.getOperands();
-                RelDataType [] argTypes = new RelDataType[operands.length];
-                int n = operands.length;
-
-                // special case for AS:  never try to derive type
-                // for alias
-                if (operand.isA(SqlKind.As)) {
-                    n = 1;
-                }
-                for (int i = 0; i < n; ++i) {
+            if (call.operator instanceof SqlBinaryOperator ||
+               call.operator instanceof SqlPostfixOperator ||
+               call.operator instanceof SqlPrefixOperator ) {
+                RelDataType[] argTypes = new RelDataType[operands.length];
+                for (int i = 0; i < operands.length; ++i) {
                     RelDataType nodeType = deriveType(scope, operands[i]);
                     setValidatedNodeType(operands[i], nodeType);
                     argTypes[i] = nodeType;
                 }
                 type = call.operator.getType(this, scope, call);
-                if (operand.isA(SqlKind.As)) {
-                    return type;
-                }
 
-                //validate and determine coercibility and resulting collation name of binary operator if needed
+                // Validate and determine coercibility and resulting collation
+                // name of binary operator if needed.
                 if (call.operator instanceof SqlBinaryOperator) {
                     RelDataType operandType1 =
                         getValidatedNodeType(call.operands[0]);
@@ -815,7 +794,8 @@ public class SqlValidator
                     if (operandType1.isCharType() && operandType2.isCharType()) {
                         Charset cs1 = operandType1.getCharset();
                         Charset cs2 = operandType2.getCharset();
-                        assert ((null != cs1) && (null != cs2)) : "An implicit or explicit charset should have been set";
+                        assert ((null != cs1) && (null != cs2)) :
+                            "An implicit or explicit charset should have been set";
                         if (!cs1.equals(cs2)) {
                             throw EigenbaseResource.instance()
                                 .newIncompatibleCharset(
@@ -826,7 +806,8 @@ public class SqlValidator
 
                         SqlCollation col1 = operandType1.getCollation();
                         SqlCollation col2 = operandType2.getCollation();
-                        assert ((null != col1) && (null != col2)) : "An implicit or explicit collation should have been set";
+                        assert ((null != col1) && (null != col2)) :
+                            "An implicit or explicit collation should have been set";
 
                         //validation will occur inside getCoercibilityDyadicOperator...
                         SqlCollation resultCol =
@@ -873,6 +854,31 @@ public class SqlValidator
         }
         throw Util.needToImplement(operand);
     }
+
+    /**
+     * If an identifier is a legitimate call to a function which has no
+     * arguments and requires no parentheses (for example "CURRENT_USER"),
+     * returns a call to that function, otherwise returns null.
+     */
+    public SqlCall makeCall(SqlIdentifier id) {
+        if (id.names.length == 1) {
+            String name = id.names[0];
+            List list = opTab.lookupFunctionsByName(name);
+            for (int i = 0; i < list.size(); i++) {
+                SqlOperator operator = (SqlOperator) list.get(i);
+                if (operator.getSyntax() == SqlSyntax.FunctionId) {
+                    // Even though this looks like an identifier, it is a
+                    // actually a call to a function. Construct a fake
+                    // call to this function, so we can use the regular
+                    // operator validation.
+                    return new SqlCall(operator, SqlNode.emptyArray,
+                        id.getParserPosition());
+                }
+            }
+        }
+        return null;
+    }
+
 
     private void inferUnknownTypes(
         RelDataType inferredType,
@@ -1281,7 +1287,6 @@ public class SqlValidator
                 for (int i = 0; i < operands.length; i++) {
                     validateExpression(operands[i]);
                 }
-                call.operator.validateCall(call, this);
             } else if (node instanceof SqlNodeList) {
                 SqlNodeList nodeList = (SqlNodeList) node;
                 Iterator iter = nodeList.getList().iterator();
@@ -1502,7 +1507,12 @@ public class SqlValidator
         SqlCall node,
         RelDataType targetRowType)
     {
-        assert (node.isA(SqlKind.Values));
+        assert node.isA(SqlKind.Values);
+        // TODO: validate that all rows have the same number of columns
+        //   and that expressions in each column are union-compatible.
+        // jhyde: Having the same number of columns is a pre-requisite for
+        //   being union-compatible. So just check that they're
+        //   union-compatible.
         final SqlNode [] operands = node.getOperands();
         for (int i = 0; i < operands.length; i++) {
             SqlNode operand = operands[i];
@@ -1579,6 +1589,28 @@ public class SqlValidator
             }
         }
         return null;
+    }
+
+    /**
+     * Converts the <code>ordinal</code>th argument of a call to a positive
+     * integer, otherwise throws.
+     */
+    public static int getOperandAsPositiveInteger(SqlCall call, int ordinal) {
+        if (call.operands.length >= ordinal) {
+            SqlNode exp = call.operands[ordinal];
+            if (exp instanceof SqlLiteral) {
+                SqlLiteral literal = (SqlLiteral) exp;
+                switch (literal.typeName.ordinal) {
+                case SqlTypeName.Decimal_ordinal:
+                    int precision = literal.intValue();
+                    if (precision >= 0) {
+                        return precision;
+                    }
+                }
+            }
+        }
+        throw EigenbaseResource.instance().newArgumentMustBePositiveInteger(
+                call.operator.name);
     }
 
     //~ Inner Interfaces ------------------------------------------------------

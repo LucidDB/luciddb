@@ -21,18 +21,20 @@
 
 package org.eigenbase.sql.parser;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.nio.charset.Charset;
-import java.text.NumberFormat;
-import java.util.*;
-import java.util.logging.Logger;
-
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.*;
 import org.eigenbase.trace.EigenbaseTrace;
 import org.eigenbase.util.SaffronProperties;
 import org.eigenbase.util.Util;
+
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.nio.charset.Charset;
+import java.text.NumberFormat;
+import java.text.ParsePosition;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.logging.Logger;
 
 
 /**
@@ -48,7 +50,6 @@ public final class ParserUtil
 
     static final Logger tracer = EigenbaseTrace.getParserTracer();
     public static final String [] emptyStringArray = new String[0];
-    public static final SqlNode [] emptySqlNodeArray = new SqlNode[0];
     public static final List emptyList = Collections.EMPTY_LIST;
     public static final String DateFormatStr = "yyyy-MM-dd";
     public static final String TimeFormatStr = "HH:mm:ss";
@@ -119,27 +120,27 @@ public final class ParserUtil
     }
 
     /**
-     * Parses a string using {@link java.text.SimpleDateFormat} and a given pattern
+     * Parses a string using {@link SimpleDateFormat} and a given pattern
+     *
      * @param s string to be parsed
-     * @param pattern {@link java.text.SimpleDateFormat} pattern
+     * @param pattern {@link SimpleDateFormat} pattern
      * @param pp position to start parsing from
      * @return Null if parsing failed.
-     * @pre pattern!=null
+     * @pre pattern != null
      */
     private static Calendar parseDateFormat(
         String s,
         String pattern,
-        java.text.ParsePosition pp)
+        ParsePosition pp)
     {
-        Util.pre(null != pattern, "null!=pattern");
-        java.text.SimpleDateFormat df =
-            new java.text.SimpleDateFormat(pattern);
-        java.util.TimeZone tz = new java.util.SimpleTimeZone(0, "GMT+00:00");
+        Util.pre(pattern != null, "pattern != null");
+        SimpleDateFormat df = new SimpleDateFormat(pattern);
+        TimeZone tz = new SimpleTimeZone(0, "GMT+00:00");
         Calendar ret = Calendar.getInstance(tz);
         df.setCalendar(ret);
         df.setLenient(false);
 
-        java.util.Date d = df.parse(s, pp);
+        Date d = df.parse(s, pp);
         if (null == d) {
             return null;
         }
@@ -148,17 +149,19 @@ public final class ParserUtil
     }
 
     /**
-     * Parses a string using {@link java.text.SimpleDateFormat} and a given pattern
+     * Parses a string using {@link SimpleDateFormat} and a given pattern.
+     *
      * @param s string to be parsed
-     * @param pattern {@link java.text.SimpleDateFormat} pattern
+     * @param pattern {@link SimpleDateFormat} pattern
      * @return Null if parsing failed.
-     * @pre pattern!=null
+     * @pre pattern != null
      */
     public static Calendar parseDateFormat(
         String s,
         String pattern)
     {
-        java.text.ParsePosition pp = new java.text.ParsePosition(0);
+        Util.pre(pattern != null, "pattern != null");
+        ParsePosition pp = new ParsePosition(0);
         Calendar ret = parseDateFormat(s, pattern, pp);
         if (pp.getIndex() != s.length()) {
             // Didn't consume entire string - not good
@@ -171,7 +174,7 @@ public final class ParserUtil
         String s,
         String pattern)
     {
-        java.text.ParsePosition pp = new java.text.ParsePosition(0);
+        ParsePosition pp = new ParsePosition(0);
         Calendar cal = parseDateFormat(s, pattern, pp);
         if (cal == null) {
             return null; // Invalid date/time format
@@ -300,30 +303,41 @@ public final class ParserUtil
         return s.substring(start, stop);
     }
 
+    public static class ParsedCollation {
+        public final Charset charset;
+        public final Locale locale;
+        public final String strength;
+
+        public ParsedCollation(Charset charset, Locale locale, String strength)
+        {
+            this.charset = charset;
+            this.locale = locale;
+            this.strength = strength;
+        }
+    }
+
     /**
      * Extracts the values from a collation name.
-     * Collation names are on the form <i>charset$locale$strength</i>
+     *
+     * <p>Collation names are on the form <i>charset$locale$strength</i>.
+     *
      * @param in The collation name
-     * @return An array of length 3. Each element object represents the three
-     * parts of the collation name.<br>
-     * <i>1st</i> is an object of type <code>{@ java.nio.charset.Charset}</code><br>
-     * <i>2nd</i> is an object of type <code>{@ java.util.Locale}</code><br>
-     * <i>3rd</i> is an object of type <code>{@ java.lang.String}</code><br>
+     * @return A link {@link ParsedCollation}
      */
-    public static Object [] parseCollation(String in)
+    public static ParsedCollation parseCollation(String in)
     {
-        Object [] ret = new Object[3];
         StringTokenizer st = new StringTokenizer(in, "$");
         String charsetStr = st.nextToken();
         String localeStr = st.nextToken();
+        String strength;
         if (st.countTokens() > 0) {
-            ret[2] = st.nextToken();
+            strength = st.nextToken();
         } else {
-            ret[2] =
+            strength =
                 SaffronProperties.instance().defaultCollationStrength.get();
         }
 
-        ret[0] = Charset.forName(charsetStr);
+        Charset charset = Charset.forName(charsetStr);
         String [] localeParts = localeStr.split("_");
         Locale locale;
         if (1 == localeParts.length) {
@@ -338,8 +352,7 @@ public final class ParserUtil
             throw EigenbaseResource.instance().newParserError("Locale '"
                 + localeStr + "' in an illegal format");
         }
-        ret[1] = locale;
-        return ret;
+        return new ParsedCollation(charset, locale, strength);
     }
 
     public static String [] toStringArray(List list)
@@ -349,7 +362,7 @@ public final class ParserUtil
 
     public static SqlNode [] toNodeArray(List list)
     {
-        return (SqlNode []) list.toArray(emptySqlNodeArray);
+        return (SqlNode []) list.toArray(SqlNode.emptyArray);
     }
 
     public static String rightTrim(

@@ -45,19 +45,9 @@ public abstract class SqlFunction extends SqlOperator
 
     //~ Instance fields -------------------------------------------------------
 
-    private SqlFuncTypeName functionType = null;
+    private final SqlFuncTypeName functionType;
 
     //~ Constructors ----------------------------------------------------------
-
-    public SqlFunction(
-        String name,
-        ReturnTypeInference typeInference,
-        UnknownParamInference paramTypeInference,
-        OperandsTypeChecking paramTypes)
-    {
-        super(name, SqlKind.Function, 100, 100, typeInference,
-            paramTypeInference, paramTypes);
-    }
 
     public SqlFunction(
         String name,
@@ -70,17 +60,6 @@ public abstract class SqlFunction extends SqlOperator
         super(name, kind, 100, 100, typeInference, paramTypeInference,
             paramTypes);
         this.functionType = funcType;
-    }
-
-    public SqlFunction(
-        String name,
-        SqlKind kind,
-        ReturnTypeInference typeInference,
-        UnknownParamInference paramTypeInference,
-        OperandsTypeChecking paramTypes)
-    {
-        super(name, kind, 100, 100, typeInference, paramTypeInference,
-            paramTypes);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -96,24 +75,7 @@ public abstract class SqlFunction extends SqlOperator
         int leftPrec,
         int rightPrec)
     {
-        unparseFunctionSyntax(this, writer, operands);
-    }
-
-    public static void unparseFunctionSyntax(
-        SqlOperator operator,
-        SqlWriter writer,
-        SqlNode [] operands)
-    {
-        writer.print(operator.name);
-        writer.print('(');
-        for (int i = 0; i < operands.length; i++) {
-            SqlNode operand = operands[i];
-            if (i > 0) {
-                writer.print(", ");
-            }
-            operand.unparse(writer, 0, 0);
-        }
-        writer.print(')');
+        getSyntax().unparse(writer, this, operands, leftPrec, rightPrec);
     }
 
     /**

@@ -393,6 +393,12 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
         testTranslation("current_user");
     }
 
+    public void testSessionUser()
+        throws Exception
+    {
+        testTranslation("session_user");
+    }
+
     public void testSystemUser()
         throws Exception
     {

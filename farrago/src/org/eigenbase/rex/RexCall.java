@@ -24,6 +24,7 @@ package org.eigenbase.rex;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.SqlKind;
 import org.eigenbase.sql.SqlOperator;
+import org.eigenbase.sql.SqlSyntax;
 
 
 /**
@@ -151,15 +152,21 @@ public class RexCall extends RexNode
     private String computeDigest(boolean withType)
     {
         StringBuffer sb = new StringBuffer(op.name);
-        sb.append("(");
-        for (int i = 0; i < operands.length; i++) {
-            if (i > 0) {
-                sb.append(", ");
+        if (operands.length == 0
+            && op.getSyntax() == SqlSyntax.FunctionId) {
+            // Don't print params for empty arg list. For example, we want
+            // "SYSTEM_USER", not "SYSTEM_USER()".
+        } else {
+            sb.append("(");
+            for (int i = 0; i < operands.length; i++) {
+                if (i > 0) {
+                    sb.append(", ");
+                }
+                RexNode operand = operands[i];
+                sb.append(operand.toString());
             }
-            RexNode operand = operands[i];
-            sb.append(operand.toString());
+            sb.append(")");
         }
-        sb.append(")");
         if (withType) {
             sb.append(":");
             sb.append(type.toString());

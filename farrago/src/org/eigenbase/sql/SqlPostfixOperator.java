@@ -58,18 +58,6 @@ public abstract class SqlPostfixOperator extends SqlOperator
         Util.discard(operandsCount);
         return "{1} {0}";
     }
-
-    public void unparse(
-        SqlWriter writer,
-        SqlNode [] operands,
-        int leftPrec,
-        int rightPrec)
-    {
-        assert (operands.length == 1);
-        operands[0].unparse(writer, this.leftPrec, this.rightPrec);
-        writer.print(' ');
-        writer.print(name);
-    }
 }
 
 

@@ -18,11 +18,11 @@
 */
 package net.sf.farrago.ojrex;
 
-import openjava.ptree.*;
-
-import org.eigenbase.oj.rex.*;
-import org.eigenbase.sql.*;
-import org.eigenbase.sql.fun.*;
+import org.eigenbase.oj.rex.OJRexImplementorTable;
+import org.eigenbase.oj.rex.OJRexImplementorTableImpl;
+import org.eigenbase.sql.SqlBinaryOperator;
+import org.eigenbase.sql.SqlFunction;
+import org.eigenbase.sql.fun.SqlStdOperatorTable;
 
 
 /**
@@ -79,6 +79,25 @@ public class FarragoOJRexImplementorTable extends OJRexImplementorTableImpl
         registerOperator(
             opTab.rowConstructor,
             new FarragoOJRexRowImplementor());
+
+        registerContextOp(opTab.userFunc);
+        registerContextOp(opTab.systemUserFunc);
+        registerContextOp(opTab.sessionUserFunc);
+        registerContextOp(opTab.currentUserFunc);
+        registerContextOp(opTab.currentRoleFunc);
+        registerContextOp(opTab.currentPathFunc);
+        registerContextOp(opTab.currentDateFunc);
+        registerContextOp(opTab.currentTimeFunc);
+        registerContextOp(opTab.currentTimestampFunc);
+        registerContextOp(opTab.localTimeFunc);
+        registerContextOp(opTab.localTimestampFunc);
+    }
+
+    private void registerContextOp(SqlFunction op)
+    {
+        registerOperator(
+            op,
+            new FarragoOJRexContextVariableImplementor(op.name));
     }
 
     // override OJRexImplementorTableImpl

@@ -19,20 +19,26 @@
 */
 package net.sf.farrago.test;
 
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-
 import junit.framework.Test;
 import junit.framework.TestSuite;
-
 import net.sf.farrago.test.regression.FarragoCalcSystemTest;
-
+import net.sf.farrago.ojrex.FarragoOJRexImplementorTable;
 import org.eigenbase.sql.SqlOperator;
 import org.eigenbase.sql.SqlSyntax;
+import org.eigenbase.sql.SqlOperatorTable;
+import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.test.AbstractSqlTester;
 import org.eigenbase.sql.test.SqlOperatorIterator;
 import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.util.Util;
+
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import com.disruptivetech.farrago.calc.CalcRexImplementorTableImpl;
+import com.disruptivetech.farrago.calc.CalcRexImplementorTable;
 
 
 /**
@@ -45,6 +51,13 @@ import org.eigenbase.sql.type.SqlTypeName;
  */
 public class FarragoSqlOperatorsTest extends FarragoTestCase
 {
+    private static final SqlStdOperatorTable opTab = SqlOperatorTable.std();
+    private static FarragoOJRexImplementorTable javaTab =
+        new FarragoOJRexImplementorTable(opTab);
+    private static CalcRexImplementorTable fennelTab =
+        CalcRexImplementorTableImpl.std();
+    private static final boolean bug260fixed = false;
+
     //~ Instance fields -------------------------------------------------------
 
     String vmFlag;
@@ -69,21 +82,49 @@ public class FarragoSqlOperatorsTest extends FarragoTestCase
         throws Exception
     {
         TestSuite suite = new TestSuite();
+        addTests(suite, FarragoCalcSystemTest.vmAuto, "AUTO");
+        addTests(suite, FarragoCalcSystemTest.vmFennel, "FENNEL");
+        addTests(suite, FarragoCalcSystemTest.vmJava, "JAVA");
+
+        return wrappedSuite(suite);
+    }
+
+    private static void addTests(TestSuite suite,
+        String vmFlag,
+        String vmName)
+        throws Exception
+    {
         Iterator operatorsIt = new SqlOperatorIterator();
         while (operatorsIt.hasNext()) {
             SqlOperator op = (SqlOperator) operatorsIt.next();
             String testName = "SQL-TESTER-" + op.name + "-";
-            suite.addTest(
-                new FarragoSqlOperatorsTest(FarragoCalcSystemTest.vmFennel,
-                    op, testName + "FENNEL"));
-            if (false) {
-                suite.addTest(
-                    new FarragoSqlOperatorsTest(FarragoCalcSystemTest.vmJava,
-                        op, testName + "JAVA"));
+            if (vmName.equals("JAVA")) {
+                // Exclude operators which don't have java implementations.
+                if (javaTab.get(op) == null) {
+                    continue;
+                }
             }
+            if (vmName.equals("FENNEL")) {
+                // Exclude operators which don't have fennel implementations.
+                if (fennelTab.get(op) == null) {
+                    continue;
+                }
+            }
+            if (!bug260fixed) {
+                if (op == opTab.orOperator ||
+                    op == opTab.andOperator ||
+                    op == opTab.isFalseOperator ||
+                    op == opTab.litChainOperator ||
+                    op == opTab.multiplyOperator ||
+                    op == opTab.localTimeFunc ||
+                    op == opTab.localTimestampFunc) {
+                    continue;
+                }
+            }
+            suite.addTest(
+                new FarragoSqlOperatorsTest(vmFlag,
+                    op, testName + vmName));
         }
-
-        return wrappedSuite(suite);
     }
 
     protected void setUp()
@@ -115,9 +156,29 @@ public class FarragoSqlOperatorsTest extends FarragoTestCase
             operator = op;
         }
 
+        public void checkFails(
+            String expression,
+            String expectedError)
+        {
+            if (bug260fixed) {
+                // todo: implement this
+                throw Util.needToImplement(this);
+            }
+        }
+
+        public void checkType(
+            String expression,
+            String type)
+        {
+            if (bug260fixed) {
+                // todo: implement this
+                throw Util.needToImplement(this);
+            }
+        }
+
         public void check(
             String query,
-            String result,
+            Object result,
             SqlTypeName resultType)
         {
             try {
@@ -133,9 +194,13 @@ public class FarragoSqlOperatorsTest extends FarragoTestCase
                 }
 
                 resultSet = stmt.executeQuery(query);
-                Set refSet = new HashSet();
-                refSet.add(result);
-                compareResultSet(refSet);
+                if (result instanceof Pattern) {
+                    compareResultSetWithPattern((Pattern) result);
+                } else {
+                    Set refSet = new HashSet();
+                    refSet.add(result);
+                    compareResultSet(refSet);
+                }
                 stmt.close();
                 stmt = connection.createStatement();
             } catch (Throwable e) {

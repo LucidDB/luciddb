@@ -199,6 +199,57 @@ public abstract class SqlUtil
     }
 
     /**
+     * Unparse a call to an operator which has function syntax.
+     *
+     * @param operator The operator
+     * @param writer Writer
+     * @param operands List of 0 or more operands
+     * @param emptyParens Whether to print parentheses if there are 0 operands
+     */
+    public static void unparseFunctionSyntax(
+        SqlOperator operator,
+        SqlWriter writer,
+        SqlNode [] operands,
+        boolean emptyParens)
+    {
+        writer.print(operator.name);
+        if (operands.length == 0 && !emptyParens) {
+            // For example, the "LOCALTIME" function appears as "LOCALTIME"
+            // when it has 0 args, not "LOCALTIME()".
+            return;
+        }
+        writer.print('(');
+        for (int i = 0; i < operands.length; i++) {
+            SqlNode operand = operands[i];
+            if (i > 0) {
+                writer.print(", ");
+            }
+            operand.unparse(writer,0,0);
+        }
+        writer.print(')');
+    }
+
+    public static void unparseBinarySyntax(
+        SqlOperator operator,
+        SqlNode[] operands,
+        SqlWriter writer,
+        int leftPrec,
+        int rightPrec)
+    {
+        SqlBinaryOperator binop = (SqlBinaryOperator) operator;
+        assert operands.length == 2;
+        operands[0].unparse(writer,leftPrec,binop.leftPrec);
+        if (binop.needsSpace()) {
+            writer.print(' ');
+            writer.print(binop.name);
+            writer.print(' ');
+        } else {
+            writer.print(binop.name);
+        }
+        operands[1].unparse(writer,binop.rightPrec,rightPrec);
+    }
+
+    /**
      * Creates a {@link DatabaseMetaData} object good enough to create a
      * {@link SqlDialect} object with, but not good for much else.
      */

@@ -60,12 +60,12 @@ public class SqlCollation
         Coercibility coercibility)
     {
         this.coercibility = coercibility;
-        Object [] parseValues = ParserUtil.parseCollation(collation);
-        charset = (Charset) parseValues[0];
-        locale = (Locale) parseValues[1];
-        strength = (String) parseValues[2];
-        String c =
-            charset.name().toUpperCase() + "$" + locale.toString();
+        ParserUtil.ParsedCollation parseValues =
+            ParserUtil.parseCollation(collation);
+        charset = parseValues.charset;
+        locale = parseValues.locale;
+        strength = parseValues.strength;
+        String c = charset.name().toUpperCase() + "$" + locale.toString();
         if ((strength != null) && (strength.length() > 0)) {
             c += ("$" + strength);
         }
@@ -73,7 +73,9 @@ public class SqlCollation
     }
 
     /**
-     * Creates a SqlCollation with the default collation name and the given coercibility
+     * Creates a SqlCollation with the default collation name and the given
+     * coercibility.
+     * 
      * @param coercibility
      */
     public SqlCollation(Coercibility coercibility)

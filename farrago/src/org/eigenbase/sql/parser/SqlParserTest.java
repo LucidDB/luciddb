@@ -117,6 +117,7 @@ public class SqlParserTest extends TestCase
         } catch (Throwable e) {
             final String message = e.toString();
             if (!Pattern.matches(exceptionPattern, message)) {
+                e.printStackTrace();
                 fail("Expected query '" + sql
                     + "' to throw exception matching '" + exceptionPattern
                     + "', but it threw " + message);

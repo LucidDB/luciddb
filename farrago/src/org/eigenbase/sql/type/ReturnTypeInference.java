@@ -44,7 +44,7 @@ import org.eigenbase.resource.EigenbaseResource;
  */
 public abstract class ReturnTypeInference
 {
-     // REVIEW jvs 26-May-2004:  I think we should try to eliminate one
+    // REVIEW jvs 26-May-2004:  I think we should try to eliminate one
     // of these methods; they are redundant.
     public abstract RelDataType getType(
         SqlValidator validator,
@@ -93,7 +93,7 @@ public abstract class ReturnTypeInference
     /**
      * Type-inference strategy whereby the result type of a call is VARYING
      * the type given.
-     * The precision returned is the same as precision of the
+     * The length returned is the same as length of the
      * first argument.
      * Return type will have same nullablilty as input type nullablility.
      * First Arg must be of string type.
@@ -177,7 +177,7 @@ public abstract class ReturnTypeInference
     /**
      * Type-inference strategy whereby the result type of a call is VARYING
      * the type of the first argument.
-     * The precision returned is the same as precision of the
+     * The length returned is the same as length of the
      * first argument.
      * If any of the other operands are nullable the returned
      * type will also be nullable.
@@ -213,22 +213,7 @@ public abstract class ReturnTypeInference
      * Type-inference strategy whereby the result type of a call is Boolean.
      */
     public static final ReturnTypeInference useBoolean =
-        new ReturnTypeInference() {
-            public RelDataType getType(
-                SqlValidator validator,
-                SqlValidator.Scope scope,
-                SqlCall call)
-            {
-                return validator.typeFactory.createSqlType(SqlTypeName.Boolean);
-            }
-
-            public RelDataType getType(
-                RelDataTypeFactory typeFactory,
-                RelDataType [] argTypes)
-            {
-                return typeFactory.createSqlType(SqlTypeName.Boolean);
-            }
-        };
+        new FixedReturnTypeInference(SqlTypeName.Boolean);
 
     /**
      * Type-inference strategy whereby the result type of a call is Boolean,
@@ -238,26 +223,16 @@ public abstract class ReturnTypeInference
         new TransformCascade(useBoolean, toNullable);
 
     /**
-     * Type-inference strategy whereby the result type of a call is Time.
+     * Type-inference strategy whereby the result type of a call is Date.
+     */
+    public static final ReturnTypeInference useDate =
+        new FixedReturnTypeInference(SqlTypeName.Date);
+
+    /**
+     * Type-inference strategy whereby the result type of a call is Time(0).
      */
     public static final ReturnTypeInference useTime =
-        new ReturnTypeInference() {
-            public RelDataType getType(
-                SqlValidator validator,
-                SqlValidator.Scope scope,
-                SqlCall call)
-            {
-                return validator.typeFactory.createSqlType(SqlTypeName.Time, 0);
-            }
-
-            public RelDataType getType(
-                RelDataTypeFactory typeFactory,
-                RelDataType [] argTypes)
-            {
-                int precision = 0;
-                return typeFactory.createSqlType(SqlTypeName.Time, precision);
-            }
-        };
+        new FixedReturnTypeInference(SqlTypeName.Time, 0);
 
     /**
      * Type-inference strategy whereby the result type of a call is nullable Time.
@@ -269,22 +244,7 @@ public abstract class ReturnTypeInference
      * Type-inference strategy whereby the result type of a call is Double.
      */
     public static final ReturnTypeInference useDouble =
-        new ReturnTypeInference() {
-            public RelDataType getType(
-                SqlValidator validator,
-                SqlValidator.Scope scope,
-                SqlCall call)
-            {
-                return validator.typeFactory.createSqlType(SqlTypeName.Double);
-            }
-
-            public RelDataType getType(
-                RelDataTypeFactory typeFactory,
-                RelDataType [] argTypes)
-            {
-                return typeFactory.createSqlType(SqlTypeName.Double);
-            }
-        };
+        new FixedReturnTypeInference(SqlTypeName.Double);
 
     /**
      * Type-inference strategy whereby the result type of a call is Double
@@ -297,22 +257,7 @@ public abstract class ReturnTypeInference
      * Type-inference strategy whereby the result type of a call is an Integer.
      */
     public static final ReturnTypeInference useInteger =
-        new ReturnTypeInference() {
-            public RelDataType getType(
-                SqlValidator validator,
-                SqlValidator.Scope scope,
-                SqlCall call)
-            {
-                return validator.typeFactory.createSqlType(SqlTypeName.Integer);
-            }
-
-            public RelDataType getType(
-                RelDataTypeFactory typeFactory,
-                RelDataType [] argTypes)
-            {
-                return typeFactory.createSqlType(SqlTypeName.Integer);
-            }
-        };
+        new FixedReturnTypeInference(SqlTypeName.Integer);
 
     /**
      * Type-inference strategy whereby the result type of a call is an Integer
@@ -320,6 +265,12 @@ public abstract class ReturnTypeInference
      */
     public static final ReturnTypeInference useNullableInteger =
         new TransformCascade(useInteger, toNullable);
+
+    /**
+     * Type-inference strategy which always returns "VARCHAR(30)".
+     */
+    public static final ReturnTypeInference useVarchar30 =
+        new FixedReturnTypeInference(SqlTypeName.Varchar, 30, 0);
 
     /**
      * Type-inference strategy whereby the result type of a call is using its
@@ -349,8 +300,8 @@ public abstract class ReturnTypeInference
                 // for Farrago, works better than the old getBiggest code).
                 // But this type inference rule isn't general enough for
                 // numeric types, which use different rules depending on
-                // the operator (e.g. sum precision is based on the max of
-                // the arg precisions, while product precision is based on
+                // the operator (e.g. sum length is based on the max of
+                // the arg precisions, while product length is based on
                 // the sum of the arg precisions).
                 return typeFactory.leastRestrictive(argTypes);
             }
@@ -368,7 +319,7 @@ public abstract class ReturnTypeInference
      * Result type of a call is
      * <ul>
      * <li>the same type as the input types but with the
-     * combined precision of the two first types</li>
+     * combined length of the two first types</li>
      * <li>If types are of char type the type with the highest coercibility
      * will be used</li>
      *
@@ -585,6 +536,69 @@ public abstract class ReturnTypeInference
                 ret = transform.getType(typeFactory, argTypes, ret);
             }
             return ret;
+        }
+    }
+
+    /**
+     * A {@link ReturnTypeInference} which always returns the same SQL type.
+     */
+    private static class FixedReturnTypeInference extends ReturnTypeInference
+    {
+        private final int argCount;
+        private final SqlTypeName typeName;
+        private final int length;
+        private final int scale;
+
+        FixedReturnTypeInference(SqlTypeName typeName)
+        {
+            this.argCount = 1;
+            this.typeName = typeName;
+            this.length = -1;
+            this.scale = -1;
+        }
+
+        FixedReturnTypeInference(SqlTypeName typeName, int length)
+        {
+            this.argCount = 2;
+            this.typeName = typeName;
+            this.length = length;
+            this.scale = -1;
+        }
+
+        FixedReturnTypeInference(SqlTypeName typeName, int length, int scale)
+        {
+            this.argCount = 3;
+            this.typeName = typeName;
+            this.length = length;
+            this.scale = scale;
+        }
+
+        public RelDataType getType(
+            SqlValidator validator,
+            SqlValidator.Scope scope,
+            SqlCall call)
+        {
+            return createType(validator.typeFactory);
+        }
+
+        public RelDataType getType(
+            RelDataTypeFactory typeFactory,
+            RelDataType[] argTypes)
+        {
+            return createType(typeFactory);
+        }
+
+        private RelDataType createType(RelDataTypeFactory typeFactory) {
+            switch (argCount) {
+            case 1:
+                return typeFactory.createSqlType(typeName);
+            case 2:
+                return typeFactory.createSqlType(typeName, length);
+            case 3:
+                return typeFactory.createSqlType(typeName, length, scale);
+            default:
+                throw Util.newInternal("unexpected argCount " + argCount);
+            }
         }
     }
 }

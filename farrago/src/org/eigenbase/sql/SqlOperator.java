@@ -21,22 +21,23 @@
 
 package org.eigenbase.sql;
 
-import java.text.MessageFormat;
-import java.util.*;
-
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.reltype.RelDataTypeFactoryImpl;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.sql.test.SqlTester;
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.sql.type.UnknownParamInference;
-import org.eigenbase.sql.type.ReturnTypeInference;
 import org.eigenbase.sql.type.OperandsTypeChecking;
+import org.eigenbase.sql.type.ReturnTypeInference;
+import org.eigenbase.sql.type.UnknownParamInference;
 import org.eigenbase.sql.validation.ValidationUtil;
 import org.eigenbase.util.Util;
+
+import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 
 /**
@@ -220,9 +221,7 @@ public abstract class SqlOperator
      */
     public SqlCall createCall(ParserPosition pos)
     {
-        return createCall(
-            new SqlNode[0],
-            pos);
+        return createCall(SqlNode.emptyArray, pos);
     }
 
     /**
@@ -268,12 +267,18 @@ public abstract class SqlOperator
      * Writes a SQL representation of a call to this operator to a writer,
      * including parentheses if the operators on either side are of greater
      * precedence.
+     *
+     * <p>The default implementation of this method delegates to
+     * {@link SqlSyntax#unparse}.
      */
-    public abstract void unparse(
+    public void unparse(
         SqlWriter writer,
         SqlNode [] operands,
         int leftPrec,
-        int rightPrec);
+        int rightPrec)
+    {
+        getSyntax().unparse(writer, this, operands, leftPrec, rightPrec);
+    }
 
     // override Object
     public boolean equals(Object obj)

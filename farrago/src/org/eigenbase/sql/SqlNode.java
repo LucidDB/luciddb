@@ -42,6 +42,8 @@ public abstract class SqlNode
 
     private final ParserPosition pos;
 
+    public static final SqlNode[] emptyArray = new SqlNode[0];
+
     //~ Constructors ----------------------------------------------------------
 
     SqlNode(ParserPosition pos)

@@ -20,6 +20,8 @@
 package net.sf.farrago.runtime;
 
 import java.util.*;
+import java.sql.Time;
+import java.sql.Timestamp;
 
 import javax.jmi.reflect.*;
 
@@ -214,6 +216,79 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
     public String getContextVariable_SESSION_USER()
     {
         return sessionVariables.sessionUserName;
+    }
+
+    /**
+     * Called from generated code.
+     *
+     * @return the value of context variable CURRENT_ROLE.
+     */
+    public String getContextVariable_CURRENT_ROLE()
+    {
+        return "";
+    }
+
+    /**
+     * Called from generated code.
+     *
+     * @return the value of context variable CURRENT_PATH.
+     */
+    public String getContextVariable_CURRENT_PATH()
+    {
+        return "";
+    }
+
+    /**
+     * Called from generated code.
+     *
+     * @return the value of context variable CURRENT_DATE.
+     */
+    public Date getContextVariable_CURRENT_DATE()
+    {
+        long time = System.currentTimeMillis();
+        return new Date(time);
+    }
+
+    /**
+     * Called from generated code.
+     *
+     * @return the value of context variable CURRENT_TIME.
+     */
+    public Time getContextVariable_CURRENT_TIME()
+    {
+        long time = System.currentTimeMillis();
+        return new Time(time);
+    }
+
+    /**
+     * Called from generated code.
+     *
+     * @return the value of context variable CURRENT_TIMESTAMP.
+     */
+    public Timestamp getContextVariable_CURRENT_TIMESTAMP()
+    {
+        long time = System.currentTimeMillis();
+        return new Timestamp(time);
+    }
+
+    /**
+     * Called from generated code.
+     *
+     * @return the value of context variable LOCALTIME.
+     */
+    public Time getContextVariable_LOCALTIME()
+    {
+        return getContextVariable_CURRENT_TIME();
+    }
+
+    /**
+     * Called from generated code.
+     *
+     * @return the value of context variable LOCALTIMESTAMP.
+     */
+    public Timestamp getContextVariable_LOCALTIMESTAMP()
+    {
+        return getContextVariable_CURRENT_TIMESTAMP();
     }
 
     /**

@@ -144,6 +144,11 @@ public class SqlCastFunction extends SqlFunction
         return ret;
     }
 
+    public SqlSyntax getSyntax()
+    {
+        return SqlSyntax.Special;
+    }
+
     public void unparse(
         SqlWriter writer,
         SqlNode [] operands,

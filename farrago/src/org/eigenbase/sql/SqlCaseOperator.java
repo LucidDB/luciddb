@@ -208,6 +208,33 @@ public abstract class SqlCaseOperator extends SqlOperator
         return ret;
     }
 
+    public RelDataType getType(SqlValidator validator,
+            SqlValidator.Scope scope, SqlCall call) {
+        SqlCase caseCall = (SqlCase) call;
+        List whenList = caseCall.getWhenOperands();
+        List thenList = caseCall.getThenOperands();
+        for(int i = 0; i < whenList.size(); i++) {
+            final SqlNode when = (SqlNode)whenList.get(i);
+            RelDataType nodeType = validator.deriveType(scope, when);
+            validator.setValidatedNodeType(when, nodeType);
+            final SqlNode then = (SqlNode)thenList.get(i);
+            nodeType = validator.deriveType(scope, then);
+            validator.setValidatedNodeType(then, nodeType);
+        }
+        final SqlNode elsE = caseCall.getElseOperand();
+        RelDataType nodeType = validator.deriveType(scope, elsE);
+        validator.setValidatedNodeType(elsE, nodeType);
+
+        boolean sadButTrue = true;
+        if (sadButTrue) {
+            // We've already validated the operands -- we shouldn't have to do
+            // it again. But we get a different error message.
+            return super.getType(validator, scope, call);
+        } else {
+            return inferType(validator, scope, caseCall);
+        }
+    }
+
     public RelDataType getType(
         RelDataTypeFactory typeFactory,
         RelDataType [] argTypes)

@@ -20,21 +20,15 @@
 */
 package org.eigenbase.sql;
 
-import java.lang.reflect.Field;
-import java.util.*;
-
 import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.sql.test.SqlTester;
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.sql.type.ReturnTypeInference;
-import org.eigenbase.sql.type.OperandsTypeChecking;
-import org.eigenbase.sql.validation.ValidationUtil;
 import org.eigenbase.util.MultiMap;
 import org.eigenbase.util.Util;
+
+import java.lang.reflect.Field;
+import java.util.*;
 
 
 /**
@@ -43,13 +37,6 @@ import org.eigenbase.util.Util;
  */
 public class SqlOperatorTable
 {
-    /**
-     * The standard operator table.
-     */
-    // Must be declared last, because many of the strategy objects above are
-    // required by objects in the table.
-    private static final SqlStdOperatorTable instance = createStd();
-
     //~ Instance fields -------------------------------------------------------
 
     private final MultiMap operators = new MultiMap();
@@ -71,18 +58,6 @@ public class SqlOperatorTable
     }
 
     //~ Methods ---------------------------------------------------------------
-
-    /**
-     * Creates and initializes the standard operator table.
-     * Uses two-phase construction, because we can't intialize the table until
-     * the constructor of the sub-class has completed.
-     */
-    private static SqlStdOperatorTable createStd()
-    {
-        SqlStdOperatorTable table = new SqlStdOperatorTable();
-        table.init();
-        return table;
-    }
 
     /**
      * Call this method after constructing an operator table. It can't be
@@ -122,7 +97,7 @@ public class SqlOperatorTable
      */
     public static SqlOperatorTable instance()
     {
-        return instance;
+        return SqlStdOperatorTable.std();
     }
 
     /**
@@ -131,7 +106,7 @@ public class SqlOperatorTable
      */
     public static SqlStdOperatorTable std()
     {
-        return (SqlStdOperatorTable) instance();
+        return SqlStdOperatorTable.std();
     }
 
     /**
@@ -181,17 +156,19 @@ public class SqlOperatorTable
     {
         List funs = lookupFunctionsByName(funName);
         final SqlFunction fun;
-        if (funs.isEmpty()) {
-            //REVIEW/TODO wael: why is this call neccessary? I tried removing it and
-            //tests failed.
-            fun = new SqlFunction(funName, null, null, null) {
-                        public void test(SqlTester tester)
-                        {
-                            /* empty implementation */
-                        }
-                    };
-        } else {
+        if (!funs.isEmpty()){
+            assert funs.size() == 1 : "operator overloading not implemented";
             fun = (SqlFunction) funs.get(0);
+        } else {
+            // create an ad hoc function for just this call
+            // REVIEW/TODO wael: why is this call neccessary? I tried removing
+            // it and tests failed.
+            fun = new SqlFunction(funName, SqlKind.Function, null, null, null,
+                    null) {
+                public void test(SqlTester tester) {
+                    /* empty implementation */
+                }
+            };
         }
         return fun.createCall(operands, pos);
     }

@@ -67,24 +67,6 @@ public abstract class SqlBinaryOperator extends SqlOperator
     {
         return !name.equals(".");
     }
-
-    public void unparse(
-        SqlWriter writer,
-        SqlNode [] operands,
-        int leftPrec,
-        int rightPrec)
-    {
-        assert (operands.length == 2);
-        operands[0].unparse(writer, leftPrec, this.leftPrec);
-        if (needsSpace()) {
-            writer.print(' ');
-            writer.print(name);
-            writer.print(' ');
-        } else {
-            writer.print(name);
-        }
-        operands[1].unparse(writer, this.rightPrec, rightPrec);
-    }
 }
 
 

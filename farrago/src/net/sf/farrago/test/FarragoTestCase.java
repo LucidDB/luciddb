@@ -368,6 +368,28 @@ public abstract class FarragoTestCase extends DiffTestCase
     }
 
     /**
+     * Compare the first column of a result set against a pattern. The result
+     * set must return exactly one row.
+     *
+     * @param pattern Expected pattern
+     */
+    protected void compareResultSetWithPattern(Pattern pattern)
+        throws Exception
+    {
+        if (!resultSet.next()) {
+            fail("Query returned 0 rows, expected 1");
+        }
+        String actual = resultSet.getString(1);
+        if (resultSet.next()) {
+            fail("Query returned 2 or more rows, expected 1");
+        }
+        if (!pattern.matcher(actual).matches()) {
+            fail("Query returned '" + actual + "', expected '"
+                + pattern.pattern() + "'");
+        }
+    }
+
+    /**
      * Compare the first column of a result set against a String-valued
      * reference set, taking order into account.
      *

@@ -21,17 +21,13 @@
 
 package org.eigenbase.sql2rel;
 
-import java.math.BigDecimal;
-import java.util.*;
-
-import junit.framework.Test;
-import junit.framework.TestSuite;
-
 import openjava.mop.Environment;
-
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.*;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.reltype.RelDataTypeFactoryImpl;
+import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.SqlLikeOperator;
@@ -41,6 +37,9 @@ import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.util.BitString;
 import org.eigenbase.util.NlsString;
 import org.eigenbase.util.Util;
+
+import java.math.BigDecimal;
+import java.util.*;
 
 
 /**
@@ -1252,24 +1251,9 @@ public class SqlToRelConverter
         SqlIdentifier identifier)
     {
         // first check for reserved identifiers like CURRENT_USER
-        RelDataType type =
-            validator.contextVariableTable.deriveType(identifier);
-        if (type != null) {
-            // this is bogus, we should use functions for these guys.
-            if (identifier.getSimple().equals("LOCALTIME")) {
-                SqlOperator op = SqlOperatorTable.std().localTimeFunc;
-                return rexBuilder.makeCall(
-                    op,
-                    new RexNode [] {  });
-            } else if (identifier.getSimple().equals("LOCALTIMESTAMP")) {
-                SqlOperator op = SqlOperatorTable.std().localTimestampFunc;
-                return rexBuilder.makeCall(
-                    op,
-                    new RexNode [] {  });
-            }
-            return rexBuilder.makeContextVariable(
-                identifier.getSimple(),
-                type);
+        final SqlCall call = validator.makeCall(identifier);
+        if (call != null) {
+            return convertExpression(bb, call);
         }
 
         identifier = bb.scope.fullyQualify(identifier);

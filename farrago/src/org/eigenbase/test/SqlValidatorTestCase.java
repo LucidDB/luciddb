@@ -106,6 +106,7 @@ public abstract class SqlValidatorTestCase extends TestCase
     {
         RelDataType actualType = getResultType(sql);
         String actual = actualType.toString();
+        // REVIEW (jhyde, 2004/8/4): Why not use assertEquals
         if (!expected.equals(actual)) {
             String msg =
                 NL + "Expected=" + expected + NL + "   actual=" + actual;
@@ -200,32 +201,38 @@ public abstract class SqlValidatorTestCase extends TestCase
             return;
         }
 
-        Throwable exceptionHappended = null;
+        Throwable actualException = null;
         try {
             validator.validate(sqlNode);
         } catch (Throwable ex) {
-            exceptionHappended = ex;
+            actualException = ex;
         }
 
-        if ((null == expectedMsgPattern) && (null != exceptionHappended)) {
-            exceptionHappended.printStackTrace();
-            fail(
-                "SqlValidationTest: Validator throw unexpected exception while executing query='"
-                + sql + "'" + "\n" + exceptionHappended.getMessage());
-        } else if (null != expectedMsgPattern) {
-            if (null == exceptionHappended) {
-                fail(
-                    "SqlValidationTest: Validator didn't throw exception as expected while executing query='"
-                    + sql + "'");
-            } else if ((exceptionHappended.getMessage() == null)
-                    || (!exceptionHappended.getMessage().matches(expectedMsgPattern))) {
-                exceptionHappended.printStackTrace();
-                String actual = exceptionHappended.getMessage();
-                fail("SqlValidationTest: The thrown exception was unexpected"
-                    + " Expected='" + expectedMsgPattern + "' Actual='"
-                    + actual + "' query='" + sql + "'");
+        if (null == expectedMsgPattern) {
+            if ((null != actualException)) {
+                actualException.printStackTrace();
+                String actualMessage = actualException.getMessage();
+                fail("SqlValidationTest: Validator threw unexpected exception" +
+                        "; query [" + sql +
+                        "]; exception ["+ actualMessage + "]");
             }
-        }
+        } else if (null != expectedMsgPattern) {
+            if (null == actualException) {
+                fail("SqlValidationTest: Expected validator to throw " +
+                        "exception, but it did not; query [" + sql +
+                        "]; expected [" + expectedMsgPattern + "]");
+            } else {
+                String actualMessage = actualException.getMessage();
+                if (actualMessage == null ||
+                        !actualMessage.matches(expectedMsgPattern)) {
+                    actualException.printStackTrace();
+                    fail("SqlValidationTest: Validator threw different " +
+                            "exception than expected; query [" + sql +
+                            "]; expected [" + expectedMsgPattern +
+                            "]; actual [" + actualMessage + "]");
+                }
+            }
+		}
     }
 
     //-- tests -----------------------------------
@@ -935,32 +942,31 @@ public abstract class SqlValidatorTestCase extends TestCase
         checkExp("LOCALTIME(3)");
         checkExp("LOCALTIME"); //    fix sqlcontext later.
         checkExpFails("LOCALTIME(1+2)",
-            "Argument to function 'LOCALTIME' must be a literal");
+            "Argument to function 'LOCALTIME' must be a positive integer literal");
         checkExpFails("LOCALTIME()", INVALID_NUMBER_OF_ARGS);
-        checkExpType("LOCALTIME", "TIME"); //  NOT NULL, with TZ ?
+        checkExpType("LOCALTIME", "TIME(0)"); //  NOT NULL, with TZ ?
         checkExpFails("LOCALTIME(-1)",
-            "Argument to function 'LOCALTIME' must be a literal"); // i guess -s1 is an expression?
+            "Argument to function 'LOCALTIME' must be a positive integer literal"); // i guess -s1 is an expression?
         checkExpFails("LOCALTIME('foo')",
-            "(?s).*Can not apply .LOCALTIME. to arguments of type .LOCALTIME.<VARCHAR.3.>.*");
+            "Argument to function 'LOCALTIME' must be a positive integer literal");
 
         // LOCALTIMESTAMP
         checkExp("LOCALTIMESTAMP(3)");
         checkExp("LOCALTIMESTAMP"); //    fix sqlcontext later.
         checkExpFails("LOCALTIMESTAMP(1+2)",
-            "Argument to function 'LOCALTIMESTAMP' must be a literal");
+            "Argument to function 'LOCALTIMESTAMP' must be a positive integer literal");
         checkExpFails("LOCALTIMESTAMP()", INVALID_NUMBER_OF_ARGS);
-        checkExpType("LOCALTIMESTAMP", "TIMESTAMP"); //  NOT NULL, with TZ ?
+        checkExpType("LOCALTIMESTAMP", "TIMESTAMP(0)"); //  NOT NULL, with TZ ?
         checkExpFails("LOCALTIMESTAMP(-1)",
-            "Argument to function 'LOCALTIMESTAMP' must be a literal"); // i guess -s1 is an expression?
+            "Argument to function 'LOCALTIMESTAMP' must be a positive integer literal"); // i guess -s1 is an expression?
         checkExpFails("LOCALTIMESTAMP('foo')",
-            "(?s).*Can not apply .LOCALTIMESTAMP. to arguments of type .LOCALTIMESTAMP.<VARCHAR.3.>... "
-            + "Supported form.s.: .LOCALTIMESTAMP.<INTEGER>.*");
+            "Argument to function 'LOCALTIMESTAMP' must be a positive integer literal");
 
         // CURRENT_DATE
         checkExpFails("CURRENT_DATE(3)", INVALID_NUMBER_OF_ARGS);
         checkExp("CURRENT_DATE"); //    fix sqlcontext later.
         checkExpFails("CURRENT_DATE(1+2)", INVALID_NUMBER_OF_ARGS);
-        checkExp("CURRENT_DATE()"); // FIXME: works, but shouldn't
+        checkExpFails("CURRENT_DATE()", INVALID_NUMBER_OF_ARGS);
         checkExpType("CURRENT_DATE", "DATE"); //  NOT NULL, with TZ?
         checkExpFails("CURRENT_DATE(-1)", INVALID_NUMBER_OF_ARGS); // i guess -s1 is an expression?
         checkExpFails("CURRENT_DATE('foo')", "(?s).*");
@@ -969,25 +975,26 @@ public abstract class SqlValidatorTestCase extends TestCase
         checkExp("current_time(3)");
         checkExp("current_time"); //    fix sqlcontext later.
         checkExpFails("current_time(1+2)",
-            "Argument to function 'CURRENT_TIME' must be a literal");
+            "Argument to function 'CURRENT_TIME' must be a positive integer literal");
         checkExpFails("current_time()", INVALID_NUMBER_OF_ARGS);
-        checkExpType("current_time", "TIME"); //  NOT NULL, with TZ ?
+        checkExpType("current_time", "TIME(0)"); //  NOT NULL, with TZ ?
         checkExpFails("current_time(-1)",
-            "Argument to function 'CURRENT_TIME' must be a literal"); // i guess -s1 is an expression?
+            "Argument to function 'CURRENT_TIME' must be a positive integer literal");
         checkExpFails("current_time('foo')",
-            "(?s).*Can not apply .CURRENT_TIME. to arguments of type 'CURRENT_TIME.<VARCHAR.3.>.'.*");
+            "Argument to function 'CURRENT_TIME' must be a positive integer literal");
 
         // current_timestamp
         checkExp("CURRENT_TIMESTAMP(3)");
         checkExp("CURRENT_TIMESTAMP"); //    fix sqlcontext later.
         checkExpFails("CURRENT_TIMESTAMP(1+2)",
-            "Argument to function 'CURRENT_TIMESTAMP' must be a literal");
+            "Argument to function 'CURRENT_TIMESTAMP' must be a positive integer literal");
         checkExpFails("CURRENT_TIMESTAMP()", INVALID_NUMBER_OF_ARGS);
-        checkExpType("CURRENT_TIMESTAMP", "TIMESTAMP"); //  NOT NULL, with TZ ?
+        checkExpType("CURRENT_TIMESTAMP", "TIMESTAMP(0)"); //  NOT NULL, with TZ ?
+        checkExpType("CURRENT_TIMESTAMP(2)", "TIMESTAMP(2)"); //  NOT NULL, with TZ ?
         checkExpFails("CURRENT_TIMESTAMP(-1)",
-            "Argument to function 'CURRENT_TIMESTAMP' must be a literal"); // i guess -s1 is an expression?
+            "Argument to function 'CURRENT_TIMESTAMP' must be a positive integer literal");
         checkExpFails("CURRENT_TIMESTAMP('foo')",
-            "(?s).*Can not apply 'CURRENT_TIMESTAMP' to arguments of type 'CURRENT_TIMESTAMP.<VARCHAR.3.>.'.*");
+            "Argument to function 'CURRENT_TIMESTAMP' must be a positive integer literal");
 
         // Date literals
         checkExp("DATE '2004-12-01'");

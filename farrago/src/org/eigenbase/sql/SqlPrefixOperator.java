@@ -58,18 +58,6 @@ public abstract class SqlPrefixOperator extends SqlOperator
         Util.discard(operandsCount);
         return "{0}{1}";
     }
-
-    public void unparse(
-        SqlWriter writer,
-        SqlNode [] operands,
-        int leftPrec,
-        int rightPrec)
-    {
-        assert (operands.length == 1);
-        writer.print(name);
-        writer.print(' ');
-        operands[0].unparse(writer, this.leftPrec, this.rightPrec);
-    }
 }
 
 

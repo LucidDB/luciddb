@@ -275,6 +275,10 @@ public class SqlKind extends EnumeratedValues.BasicValue
     public static final int TrimORDINAL = 162;
     public static final SqlKind Trim = new SqlKind("TRIM", TrimORDINAL);
 
+    public static final int JdbcFnORDINAL = 163;
+    /** Call to a function using JDBC function syntax. */
+    public static final SqlKind JdbcFn = new SqlKind("JdbcFn", JdbcFnORDINAL);
+
     // internal operators (evaluated in validator) 200-299
 
     /** LitChain operator (for composite string literals) */
@@ -333,27 +337,27 @@ public class SqlKind extends EnumeratedValues.BasicValue
         new SqlKind("TopLevel", TopLevelORDINAL);
     public static final EnumeratedValues enumeration =
         new EnumeratedValues(new SqlKind [] {
-                
+
             // the basics
             Other, Select, Join, Identifier, Literal, Function, Explain, Insert,
-                Update, Delete, Union, Except, Intersect, As, 
+                Update, Delete, Union, Except, Intersect, As,
             // arithmetic
-            Times, Divide, Plus, Minus, 
+            Times, Divide, Plus, Minus,
             // comparisons
             In, LessThan, GreaterThan, LessThanOrEqual, GreaterThanOrEqual,
-                Equals, NotEquals, 
+                Equals, NotEquals,
             // boolean
-            Or, And, 
+            Or, And,
             // other infix
-            Dot, Overlaps, Like, Similar, Between, Case, 
+            Dot, Overlaps, Like, Similar, Between, Case,
             // prefix
             Not, PlusPrefix, MinusPrefix, Exists, Values, ExplicitTable,
-                
+
 
             // postfix
-            Descending, IsTrue, IsFalse, IsNull, 
+            Descending, IsTrue, IsFalse, IsNull,
             // row
-            Row, Cast, Trim, 
+            Row, Cast, Trim,
             // special
             LitChain,
             });
@@ -390,10 +394,10 @@ public class SqlKind extends EnumeratedValues.BasicValue
         case ExpressionORDINAL:
             return !((this == As) || (this == Descending) || (this == Select)
                 || (this == Join) || (this == Function) || (this == Cast)
-                || (this == Trim) || (this == LitChain));
+                || (this == Trim) || (this == LitChain) || (this == JdbcFn));
         case FunctionORDINAL:
             return (this == Function) || (this == Row) || (this == Trim)
-                || (this == Cast);
+                || (this == Cast) || (this == JdbcFn);
         default:
             return this == kind;
         }

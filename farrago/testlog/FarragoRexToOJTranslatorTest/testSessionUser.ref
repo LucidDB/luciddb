@@ -1,0 +1,6 @@
+
+ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
+
+oj_var0.assignFrom( connection.getContextVariable_SESSION_USER() );
+
+return (ExecutableStmt.Oj_inner_0) oj_var0;

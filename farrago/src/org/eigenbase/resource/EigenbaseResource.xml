@@ -186,8 +186,8 @@
 </exception>
 
 <exception id="130030" name="ArgumentMustBePositiveInteger">
-        <text>Argument to function ''{0}'' must be a positive integer</text>
-    </exception>
+    <text>Argument to function ''{0}'' must be a positive integer literal</text>
+</exception>
 
 <exception id="130040" name="ValidationError">
     <text>Validation Error: {0}</text>

@@ -21,23 +21,20 @@
 
 package org.eigenbase.sql.fun;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validation.ValidationUtil;
 import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.sql.test.SqlTester;
+import org.eigenbase.sql.type.OperandsTypeChecking;
+import org.eigenbase.sql.type.ReturnTypeInference;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql.type.UnknownParamInference;
-import org.eigenbase.sql.type.ReturnTypeInference;
-import org.eigenbase.sql.type.OperandsTypeChecking;
-import org.eigenbase.util.BitString;
-import org.eigenbase.util.NlsString;
 import org.eigenbase.util.Util;
+
+import java.util.ArrayList;
+import java.util.regex.Pattern;
 
 
 /**
@@ -1022,6 +1019,10 @@ public class SqlStdOperatorTable extends SqlOperatorTable
                 //                    tester.checkNull("nullif(cast(null as varchar),'a')");
             }
         };
+
+    /**
+     * The COALESCE builtin function.
+     */
     public final SqlFunction coalesceFunc =
         new SqlFunction("COALESCE", SqlKind.Function, null, null, null,
             SqlFunction.SqlFuncTypeName.System) {
@@ -1065,223 +1066,146 @@ public class SqlStdOperatorTable extends SqlOperatorTable
             public void test(SqlTester tester)
             {
                 tester.checkString("coalesce('a','b')", "a");
-
-                //                    tester.checkScalarExact("coalesce(null,null,3)", "3");
+                if (false) {
+                    tester.checkScalarExact("coalesce(null,null,3)", "3");
+                }
             }
         };
-    public final SqlFunction localTimeFunc =
-        new SqlFunction("LOCALTIME", SqlKind.Function, ReturnTypeInference.useNullableTime, null,
-            OperandsTypeChecking.typePositiveIntegerLiteral,
+
+    /** The <code>USER</code> function. */
+    public final SqlFunction userFunc = new SqlAbstractUserFunction("USER") {
+        public void test(SqlTester tester)
+        {
+            tester.checkScalar("USER", null, "VARCHAR(30) NOT NULL");
+        }
+    };
+
+    /** The <code>CURRENT_USER</code> function. */
+    public final SqlFunction currentUserFunc = new SqlAbstractUserFunction(
+            "CURRENT_USER") {
+        public void test(SqlTester tester)
+        {
+            tester.checkScalar("CURRENT_USER", null, "VARCHAR(30) NOT NULL");
+        }
+    };
+
+    /** The <code>SESSION_USER</code> function. */
+    public final SqlFunction sessionUserFunc = new SqlAbstractUserFunction(
+            "SESSION_USER") {
+        public void test(SqlTester tester)
+        {
+            tester.checkScalar("SESSION_USER", null, "VARCHAR(30) NOT NULL");
+        }
+    };
+
+    /** The <code>SYSTEM_USER</code> function. */
+    public final SqlFunction systemUserFunc = new SqlAbstractUserFunction(
+            "SYSTEM_USER") {
+        public void test(SqlTester tester)
+        {
+            String user = System.getProperty("user.name"); // e.g. "jhyde"
+            tester.checkScalar("SYSTEM_USER", user, "VARCHAR(30) NOT NULL");
+        }
+    };
+
+    /** The <code>CURRENT_PATH</code> function. */
+    public final SqlFunction currentPathFunc = new SqlAbstractUserFunction(
+            "CURRENT_PATH") {
+        public void test(SqlTester tester)
+        {
+            tester.checkScalar("CURRENT_PATH", "", "VARCHAR(30) NOT NULL");
+        }
+    };
+
+    /** The <code>CURRENT_ROLE</code> function. */
+    public final SqlFunction currentRoleFunc = new SqlAbstractUserFunction(
+            "CURRENT_ROLE") {
+        public void test(SqlTester tester)
+        {
+            // We don't have roles yet, so the CURRENT_ROLE function returns
+            // the empty string.
+            tester.checkScalar("CURRENT_ROLE", "", "VARCHAR(30) NOT NULL");
+        }
+    };
+
+
+    /** The <code>LOCALTIME [(<i>precision</i>)]</code> function. */
+    public final SqlFunction localTimeFunc = new SqlAbstractTimeFunction(
+            "LOCALTIME", SqlTypeName.Time) {
+        public void test(SqlTester tester)
+        {
+            tester.checkScalar("LOCALTIME", timePattern, "TIME(0) NOT NULL");
+            //TODO: tester.checkFails("LOCALTIME()", "?", SqlTypeName.Time);
+            tester.checkScalar("LOCALTIME(1)", timePattern,
+                "TIME(1) NOT NULL");
+        }
+
+    };
+
+    /** The <code>LOCALTIMESTAMP [(<i>precision</i>)]</code> function. */
+    public final SqlFunction localTimestampFunc = new SqlAbstractTimeFunction(
+            "LOCALTIMESTAMP", SqlTypeName.Timestamp) {
+        public void test(SqlTester tester) {
+            tester.checkScalar("LOCALTIMESTAMP", timestampPattern,
+                "TIMESTAMP(0) NOT NULL");
+            tester.checkFails("LOCALTIMESTAMP()", "?");
+            tester.checkScalar("LOCALTIMESTAMP(1)", timestampPattern,
+                "TIMESTAMP(1) NOT NULL");
+        }
+    };
+
+    /** The <code>CURRENT_TIME [(<i>precision</i>)]</code> function. */
+    public final SqlFunction currentTimeFunc = new SqlAbstractTimeFunction(
+            "CURRENT_TIME", SqlTypeName.Time) {
+        public void test(SqlTester tester) {
+            tester.checkScalar("CURRENT_TIME", timePattern,
+                "TIME(0) NOT NULL");
+            tester.checkFails("CURRENT_TIME()", "?");
+            tester.checkScalar("CURRENT_TIME(1)", timePattern,
+                "TIME(1) NOT NULL");
+        }
+    };
+
+    /** The <code>CURRENT_TIMESTAMP [(<i>precision</i>)]</code> function. */
+    public final SqlFunction currentTimestampFunc = new SqlAbstractTimeFunction(
+            "CURRENT_TIMESTAMP", SqlTypeName.Timestamp) {
+        public void test(SqlTester tester) {
+            tester.checkScalar("CURRENT_TIMESTAMP", timestampPattern,
+                "TIMESTAMP(0) NOT NULL");
+            tester.checkFails("CURRENT_TIMESTAMP()", "?");
+            tester.checkScalar("CURRENT_TIMESTAMP(1)", timestampPattern,
+                "TIMESTAMP(1) NOT NULL");
+        }
+    };
+
+    /** The <code>CURRENT_DATE</code> function. */
+    public final SqlFunction currentDateFunc = new SqlFunction("CURRENT_DATE",
+            SqlKind.Function, ReturnTypeInference.useDate, null, null,
             SqlFunction.SqlFuncTypeName.TimeDate) {
-            protected RelDataType inferType(
-                SqlValidator validator,
-                SqlValidator.Scope scope,
-                SqlCall call)
-            {
-                SqlLiteral literal = (SqlLiteral) call.operands[0];
-                int precision = literal.intValue();
-                if (precision < 0) {
-                    throw EigenbaseResource.instance()
-                        .newArgumentMustBePositiveInteger(call.operator.name);
-                }
-                RelDataType type =
-                    validator.typeFactory.createSqlType(SqlTypeName.Time,
-                        precision);
-                return ValidationUtil.makeNullableIfOperandsAre(validator, scope, call, type);
-            }
+        public void test(SqlTester tester)
+        {
+            tester.checkScalar("CURRENT_DATE", datePattern, "DATE NOT NULL");
+        }
+        public SqlSyntax getSyntax()
+        {
+            return SqlSyntax.FunctionId;
+        }
 
-//            public RelDataType getType(
-//                RelDataTypeFactory typeFactory,
-//                RelDataType [] argTypes)
-//            {
-//                //REVIEW wael, use Typeinferece Transform here
-//                return useNullableTime.getType(typeFactory, argTypes);
-////                return makeNullableIfOperandsAre(typeFactory, argTypes, type);
-//            }
-//
-//            public SqlOperator.OperandsCountDescriptor getOperandsCountDescriptor() {
-//                return new SqlOperator.OperandsCountDescriptor(0,1);
-//            }
-//
-//            protected void checkNumberOfArg(SqlCall call)
-//            {
-//                //REVIEW wael: shouldnt throw internal. Should be a validation error
-//
-//                if (call.getOperands().length > 1) {
-//                    throw Util.newInternal(
-//                        "todo: function takes 3 or 1 parameters");
-//                }
-//            }
-
-            public void test(SqlTester tester)
-            {
-                //todo: tester.check("","");
-            }
-        };
-    public final SqlFunction localTimestampFunc =
-        new SqlFunction("LOCALTIMESTAMP", SqlKind.Function, null, null,
-            OperandsTypeChecking.typePositiveIntegerLiteral,
-            SqlFunction.SqlFuncTypeName.TimeDate) {
-            protected RelDataType inferType(
-                SqlValidator validator,
-                SqlValidator.Scope scope,
-                SqlCall call)
-            {
-                SqlLiteral literal = (SqlLiteral) call.operands[0];
-                int precision = literal.intValue();
-                if (precision < 0) {
-                    throw EigenbaseResource.instance()
-                        .newArgumentMustBePositiveInteger(call.operator.name);
-                }
-                return validator.typeFactory.createSqlType(SqlTypeName.Timestamp,
-                    precision);
-            }
-
-            public RelDataType getType(
-                RelDataTypeFactory typeFactory,
-                RelDataType [] argTypes)
-            {
-                int precision = 0; // todo: access the value of the literal parmaeter
-                return typeFactory.createSqlType(SqlTypeName.Timestamp,
-                    precision);
-            }
-
-            protected void checkNumberOfArg(SqlCall call)
-            {
-                if (call.getOperands().length > 1) {
-                    throw Util.newInternal(
-                        "todo: function takes 0 or 1 parameters");
-                }
-            }
-
-            public void test(SqlTester tester)
-            {
-                //todo tester.check("","");
-            }
-        };
-    public final SqlFunction currentTimeFunc =
-        new SqlFunction("CURRENT_TIME", SqlKind.Function, null, null,
-            OperandsTypeChecking.typePositiveIntegerLiteral,
-            SqlFunction.SqlFuncTypeName.TimeDate) {
-            protected RelDataType inferType(
-                SqlValidator validator,
-                SqlValidator.Scope scope,
-                SqlCall call)
-            {
-                SqlLiteral literal = (SqlLiteral) call.operands[0];
-                int precision = literal.intValue();
-                if (precision < 0) {
-                    throw EigenbaseResource.instance()
-                        .newArgumentMustBePositiveInteger(call.operator.name);
-                }
-                return validator.typeFactory.createSqlType(SqlTypeName.Time,
-                    precision);
-            }
-
-            public RelDataType getType(
-                RelDataTypeFactory typeFactory,
-                RelDataType [] argTypes)
-            {
-                int precision = 0; // todo: access the value of the literal parmaeter
-                return typeFactory.createSqlType(SqlTypeName.Time, precision);
-            }
-
-            protected void checkNumberOfArg(SqlCall call)
-            {
-                if (call.getOperands().length > 1) {
-                    throw Util.newInternal(
-                        "todo: function takes 0 or 1 parameters");
-                }
-            }
-
-            public void test(SqlTester tester)
-            {
-                //todo tester.check("","");
-            }
-        };
-    public final SqlFunction currentTimestampFunc =
-        new SqlFunction("CURRENT_TIMESTAMP", SqlKind.Function, null, null,
-            OperandsTypeChecking.typePositiveIntegerLiteral,
-            SqlFunction.SqlFuncTypeName.TimeDate) {
-            protected RelDataType inferType(
-                SqlValidator validator,
-                SqlValidator.Scope scope,
-                SqlCall call)
-            {
-                SqlLiteral literal = (SqlLiteral) call.operands[0];
-                int precision = literal.intValue();
-                if (precision < 0) {
-                    throw EigenbaseResource.instance()
-                        .newArgumentMustBePositiveInteger(call.operator.name);
-                }
-                return validator.typeFactory.createSqlType(SqlTypeName.Timestamp,
-                    precision);
-            }
-
-            public RelDataType getType(
-                RelDataTypeFactory typeFactory,
-                RelDataType [] argTypes)
-            {
-                int precision = 0; // todo: access the value of the literal parmaeter
-                return typeFactory.createSqlType(SqlTypeName.Timestamp,
-                    precision);
-            }
-
-            protected void checkNumberOfArg(SqlCall call)
-            {
-                if (call.getOperands().length > 1) {
-                    throw Util.newInternal(
-                        "todo: function takes 0 or 1 parameters");
-                }
-            }
-
-            public void test(SqlTester tester)
-            {
-                //todo tester.check("","");
-            }
-        };
-    public final SqlFunction currentDateFunc =
-        new SqlFunction("CURRENT_DATE", SqlKind.Function, null, null, null,
-            SqlFunction.SqlFuncTypeName.TimeDate) {
-            protected RelDataType inferType(
-                SqlValidator validator,
-                SqlValidator.Scope scope,
-                SqlCall call)
-            {
-                return validator.typeFactory.createSqlType(SqlTypeName.Date);
-            }
-
-            public RelDataType getType(
-                SqlValidator validator,
-                SqlValidator.Scope scope,
-                SqlCall call)
-            {
-                int precision = 0; // todo: access the value of the literal parmaeter
-                return validator.typeFactory.createSqlType(SqlTypeName.Time,
-                    precision);
-            }
-
-            protected void checkArgTypes(
-                SqlCall call,
-                SqlValidator validator,
+        protected void checkArgTypes(SqlCall call, SqlValidator validator,
                 SqlValidator.Scope scope)
-            {
-                if (call.operands.length != 0) {
-                    throw call.newValidationSignatureError(validator, scope);
-                }
+        {
+            if (call.operands.length != 0) {
+                throw call.newValidationSignatureError(validator, scope);
             }
+        }
 
-            // no operandsCheckingRule, so must override these methods.  Probably need a niladic version of that.
-            public OperandsCountDescriptor getOperandsCountDescriptor()
-            {
-                return new OperandsCountDescriptor(0);
-            }
-
-            public void test(SqlTester tester)
-            {
-                //todo tester.check("","");
-            }
-        };
+        // no argTypeInference, so must override these methods.
+        // Probably need a niladic version of that.
+        public OperandsCountDescriptor getOperandsCountDescriptor()
+        {
+            return new OperandsCountDescriptor(0);
+        }
+    };
 
     /**
      * The SQL <code>CAST</code> operator.
@@ -1293,6 +1217,120 @@ public class SqlStdOperatorTable extends SqlOperatorTable
      * operand.
      */
     public final SqlFunction castFunc = new SqlCastFunction();
+
+
+    /**
+     * The standard operator table.
+     */
+    private static SqlStdOperatorTable instance;
+    /**
+     * Regular expression for a SQL TIME(0) value.
+     */
+    private static final Pattern timePattern = Pattern.compile(
+        "[0-9][0-9]:[0-9][0-9]:[0-9][0-9]");
+    /**
+     * Regular expression for a SQL TIMESTAMP(3) value.
+     */
+    private static final Pattern timestampPattern = Pattern.compile(
+        "[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9] " +
+        "[0-9][0-9]:[0-9][0-9]:[0-9][0-9]\\.[0-9]+");
+    /**
+     * Regular expression for a SQL DATE value.
+     */
+    private static final Pattern datePattern = Pattern.compile(
+        "[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]");
+
+    /**
+     * Returns the standard operator table, creating it if necessary.
+     */ 
+    public static synchronized SqlStdOperatorTable std() {
+        if (instance == null) {
+            // Creates and initializes the standard operator table.
+            // Uses two-phase construction, because we can't intialize the
+            // table until the constructor of the sub-class has completed.
+            instance = new SqlStdOperatorTable();
+            instance.init();
+        }
+        return instance;
+    }
+
+    /**
+     * Base class for time functions such as "LOCALTIME", "LOCALTIME(n)".
+     */
+    private abstract static class SqlAbstractTimeFunction extends SqlFunction {
+        private final SqlTypeName typeName;
+
+        public SqlAbstractTimeFunction(String name, SqlTypeName typeName) {
+            super(name, SqlKind.Function, null, null, null,
+                    SqlFunction.SqlFuncTypeName.TimeDate);
+            this.typeName = typeName;
+        }
+        // no argTypeInference, so must override these methods.
+        // Probably need a niladic version of that.
+        public OperandsCountDescriptor getOperandsCountDescriptor()
+        {
+            return new OperandsCountDescriptor(0, 1);
+        }
+
+        public SqlSyntax getSyntax()
+        {
+            return SqlSyntax.FunctionId;
+        }
+
+        public RelDataType getType(SqlValidator validator,
+                SqlValidator.Scope scope, SqlCall call)
+        {
+            return inferType(validator, scope, call);
+        }
+
+        public RelDataType getType(RelDataTypeFactory typeFactory,
+            RelDataType[] argTypes)
+        {
+            // REVIEW jvs 20-Feb-2004:  SqlTypeName says Time and Timestamp
+            // don't take precision, but they should (according to the
+            // standard). Also, need to take care of time zones.
+
+            // TODO: use first arg as precision
+            int precision = 0;
+            return typeFactory.createSqlType(typeName, precision);
+        }
+
+        protected RelDataType inferType(SqlValidator validator,
+                SqlValidator.Scope scope, SqlCall call)
+        {
+            int precision = 0;
+            if (call.operands.length == 1) {
+                precision = validator.getOperandAsPositiveInteger(call, 0);
+            }
+            return validator.typeFactory.createSqlType(typeName, precision);
+        }
+    }
+
+    /**
+     * Abstract base class for user functions such as "USER", "CURRENT_ROLE".
+     */
+    private static abstract class SqlAbstractUserFunction extends SqlFunction {
+        public SqlAbstractUserFunction(String name) {
+            super(name, SqlKind.Function, ReturnTypeInference.useVarchar30,
+                null, null, SqlFunction.SqlFuncTypeName.System);
+        }
+
+        public OperandsCountDescriptor getOperandsCountDescriptor()
+        {
+            return new OperandsCountDescriptor(0);
+        }
+
+        public SqlSyntax getSyntax() {
+            return SqlSyntax.FunctionId;
+        }
+
+        protected void checkArgTypes(SqlCall call, SqlValidator validator,
+                SqlValidator.Scope scope) {
+            if (call.operands.length != 0) {
+                throw call.newValidationSignatureError(validator, scope);
+            }
+        }
+    }
 }
 
 
