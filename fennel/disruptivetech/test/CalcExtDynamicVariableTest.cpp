@@ -133,12 +133,12 @@ CalcExtDynamicVariableTest::testCalcExtDynamicVariable()
     dpm.createParam(1, outTupleDesc[1]);
     dpm.setParam(1, dynamicData[1]);
 
-    int64_t data2 = 0xFFFFFFFFffffffff;
+    int64_t data2 = 0xFFFFFFFFffffffffLL;
     dynamicData[2].pData = (PConstBuffer) &data2;
     dpm.createParam(2, outTupleDesc[2]);
     dpm.setParam(2, dynamicData[2]);
 
-    uint64_t data3 = 0x8000000000000000;
+    uint64_t data3 = 0x8000000000000000ULL;
     dynamicData[3].pData = (PConstBuffer) &data3;
     dpm.createParam(3, outTupleDesc[3]);
     dpm.setParam(3, dynamicData[3]);
@@ -203,10 +203,10 @@ CalcExtDynamicVariableTest::testCalcExtDynamicVariable()
     calc.exec();
 
     //    printOutput(outTuple, calc);
-    BOOST_CHECK(*(reinterpret_cast<uint32_t*>(const_cast<PBuffer>(outTuple[0].pData)))==-321);
-    BOOST_CHECK(*(reinterpret_cast<int32_t*>(const_cast<PBuffer>(outTuple[1].pData)))==622);
+    BOOST_CHECK(*(reinterpret_cast<int32_t*>(const_cast<PBuffer>(outTuple[0].pData)))==-321);
+    BOOST_CHECK(*(reinterpret_cast<uint32_t*>(const_cast<PBuffer>(outTuple[1].pData)))==622);
     BOOST_CHECK(*(reinterpret_cast<int64_t*>(const_cast<PBuffer>(outTuple[2].pData)))==-1);
-    BOOST_CHECK(*(reinterpret_cast<uint64_t*>(const_cast<PBuffer>(outTuple[3].pData)))==0x8000000000000000);
+    BOOST_CHECK(*(reinterpret_cast<uint64_t*>(const_cast<PBuffer>(outTuple[3].pData)))==0x8000000000000000ULL);
     BOOST_CHECK(*(reinterpret_cast<int8_t*>(const_cast<PBuffer>(outTuple[4].pData)))==-1);
     BOOST_CHECK(*(reinterpret_cast<uint8_t*>(const_cast<PBuffer>(outTuple[5].pData)))==128);
     BOOST_CHECK(*(reinterpret_cast<int16_t*>(const_cast<PBuffer>(outTuple[6].pData)))==-1);
