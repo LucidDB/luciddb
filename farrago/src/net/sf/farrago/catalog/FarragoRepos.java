@@ -125,6 +125,8 @@ public class FarragoRepos extends FarragoMetadataFactory
     /** MofId for current instance of FemFarragoConfig. */
     private final String currentConfigMofId;
 
+    private String memStorageId;
+    
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -172,7 +174,7 @@ public class FarragoRepos extends FarragoMetadataFactory
         try {
             NBMDRepositoryImpl nbRepos = (NBMDRepositoryImpl) mdrRepository;
             Map props = new HashMap();
-            String memStorageId =
+            memStorageId =
                 nbRepos.mountStorage(
                     FarragoTransientStorageFactory.class.getName(),
                     props);
@@ -643,6 +645,17 @@ public class FarragoRepos extends FarragoMetadataFactory
             return;
         }
         tracer.fine("Closing catalog");
+        if (memStorageId != null) {
+            mdrRepository.beginTrans(true);
+            FarragoTransientStorage.ignoreCommit = false;
+            if (transientFarragoPackage != null) {
+                transientFarragoPackage.refDelete();
+            }
+            mdrRepository.endTrans();
+            NBMDRepositoryImpl nbRepos = (NBMDRepositoryImpl) mdrRepository;
+            nbRepos.unmountStorage(memStorageId);
+            memStorageId = null;
+        }
         modelLoader.close();
         modelLoader = null;
         tracer.info("Catalog successfully closed");
