@@ -29,6 +29,9 @@ import org.eigenbase.sql.SqlCollation;
 import org.eigenbase.util.Util;
 import org.eigenbase.resource.EigenbaseResource;
 
+import java.util.List;
+import java.util.ArrayList;
+
 /**
  * Strategy to infer the type of an operator call from the type of the
  * operands.
@@ -263,6 +266,35 @@ public abstract class ReturnTypeInference
                     typeToTransform);
             }
         };
+
+    /**
+     * Parameter type-inference transform strategy where a derived INTERVAL type
+     * is transformed into the same type but possible with a different
+     * {@link org.eigenbase.sql.SqlIntervalQualifier}.
+     * If the type to transform is not of a INTERVAL type, this transformation
+     * does nothing.
+     * @see {@link RelDataTypeFactoryImpl.IntervalSqlType}
+     */
+    public static final Transform toLeastRestrictiveInterval =
+        new Transform() {
+            public RelDataType getType(
+                RelDataTypeFactory typeFactory,
+                RelDataType [] argTypes,
+                RelDataType typeToTransform)
+            {
+                if (typeToTransform instanceof
+                    RelDataTypeFactoryImpl.IntervalSqlType) {
+                    RelDataTypeFactoryImpl.IntervalSqlType it =
+                       (RelDataTypeFactoryImpl.IntervalSqlType) typeToTransform;
+                    for (int i = 0; i < argTypes.length; i++) {
+                        it = it.combine((RelDataTypeFactoryImpl.IntervalSqlType)
+                            argTypes[i]);
+                    }
+                    return it;
+                }
+                return typeToTransform;
+            }
+        };
     /**
      * Type-inference strategy whereby the result type of a call is VARYING
      * the type given.
@@ -318,10 +350,10 @@ public abstract class ReturnTypeInference
             }
         };
      /**
-     * Parameter type-inference transform strategy where a derived type is
+     * Parameter type-inference transform strategy where a derived type
      * must be a multiset type and the returned type is the multiset's
      * element type.
-     * @see {@link RelDataTypeFactoryImpl.MultisetSqlType#getElementType}
+     * @see {@link RelDataTypeFactoryImpl.MultisetSqlType#getComponentType}
      */
     public static final Transform toMultisetElementType =
         new Transform() {
@@ -330,9 +362,7 @@ public abstract class ReturnTypeInference
                 RelDataType [] argTypes,
                 RelDataType typeToTransform)
             {
-                RelDataTypeFactoryImpl.MultisetSqlType mt =
-                    (RelDataTypeFactoryImpl.MultisetSqlType) typeToTransform;
-                return mt.getElementType();
+                return typeToTransform.getComponentType();
             }
         };
 
@@ -473,7 +503,7 @@ public abstract class ReturnTypeInference
      * <p>For example, the expression <code>(500000000000 + 3.0e-3)</code> has
      * the operands INTEGER and DOUBLE. Its biggest type is double.
      */
-    public static final ReturnTypeInference useBiggest =
+    private static final ReturnTypeInference useLeastRestrictive =
         new ReturnTypeInference() {
             public RelDataType getType(
                 SqlValidator validator,
@@ -500,11 +530,17 @@ public abstract class ReturnTypeInference
         };
 
     /**
+     * Same as {@link #useLeastRestrictive} but with INTERVAL aswell.
+     */
+    public static final ReturnTypeInference useBiggest =
+        new TransformCascade(useLeastRestrictive, toLeastRestrictiveInterval);
+
+    /**
      * Type-inference strategy similar to {@link #useBiggest}, except that the
      * result is nullable if any of the arguments is nullable.
      */
     public static final ReturnTypeInference useNullableBiggest =
-        new TransformCascade(useBiggest, toNullable);
+        new TransformCascade(useLeastRestrictive, toLeastRestrictiveInterval, toNullable);
 
     /**
      * Type-inference strategy where by the
@@ -641,9 +677,7 @@ public abstract class ReturnTypeInference
             {
                 RelDataType[] argElementTypes = new RelDataType[argTypes.length];
                 for (int i = 0; i < argTypes.length; i++) {
-                    argElementTypes[i] =
-                        ((RelDataTypeFactoryImpl.MultisetSqlType) argTypes[i]).
-                        getElementType();
+                    argElementTypes[i] = argTypes[i].getComponentType();
                 }
 
                 RelDataType biggestElementType = ReturnTypeInference.useBiggest.

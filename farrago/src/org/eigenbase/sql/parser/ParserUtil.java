@@ -225,6 +225,64 @@ public final class ParserUtil
     }
 
     /**
+     * Parses a INTERVAL value.
+     * @return If the value is defined as a year-month interval, then a
+     * {@link java.lang.Integer} object is returned holding the interval value
+     * as the number of months.
+     * <br>
+     * If the interval is a day-time interval then a {@link java.lang.Long}
+     * object is returned holding the interval value as the number of
+     * milliseconds
+     * <br>
+     * If value is in an incorrect format, a null value will be returned.
+     */
+    public static Number parseIntervalValue(String value,
+        SqlIntervalQualifier intervalQualifier) {
+        try {
+            if (intervalQualifier.isYearMonth()) {
+                int years = 0;
+                int months = 0;
+                String[] valArray = value.split("-");
+                if (2 == valArray.length) {
+                    years = Integer.parseInt(valArray[0]);
+                    int sign = (years >=0) ? 1 : -1;
+                    months = sign*parsePositiveInt(valArray[1]);
+                } else if (1 == valArray.length) {
+                    int i = Integer.parseInt(valArray[0]);
+                    if (SqlIntervalQualifier.TimeUnit.Year.equals(
+                        intervalQualifier.getStartUnit())) {
+                        years = i;
+                    } else {
+                        months = i;
+                    }
+                } else {
+                    return null;
+                }
+                //todo, need to set the proper precision aswell
+                return new Integer(years*12 + months);
+            } else {
+                //todo
+                return null;
+            }
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    /**
+     * Parses a positive int. All characters have to be digits.
+     * @see {@link java.lang.Integer#parseInt(String)}
+     */
+    public static int parsePositiveInt(String value) throws NumberFormatException
+    {
+        value = value.trim();
+        if (value.charAt(0) == '-') {
+            throw new NumberFormatException(value);
+        }
+        return Integer.parseInt(value);
+    }
+
+    /**
      * Parses a Binary string. SQL:99 defines a binary string as a hexstring with EVEN nbr of hex digits.
      */
     public static byte [] parseBinaryString(String s)
@@ -438,7 +496,7 @@ public final class ParserUtil
     {
 // Make several passes over the list, and each pass, coalesce the
 // expressions with the highest precedence.
-outer: 
+outer:
         while (true) {
             final int count = list.size();
             if (count <= (start + 1)) {

@@ -39,52 +39,40 @@ import org.eigenbase.util.EnumeratedValues;
 public class SqlIntervalLiteral extends SqlLiteral
 {
     protected SqlIntervalLiteral(
-            String value, TimeUnit timeUnit,
+            String value, SqlIntervalQualifier intervalQualifier,
             SqlTypeName sqlTypeName, ParserPosition pos) {
-        super(new DayTimeInterval(timeUnit, value), sqlTypeName, pos);
+        super(new IntervalValue(intervalQualifier, value), sqlTypeName, pos);
     }
 
     public void unparse(
             SqlWriter writer,
             int leftPrec,
             int rightPrec) {
-        DayTimeInterval dayTimeInterval = (DayTimeInterval) value;
+        IntervalValue interval = (IntervalValue) value;
         writer.print("INTERVAL '");
-        writer.print(dayTimeInterval.value);
+        writer.print(interval.value);
         writer.print("' ");
-        writer.print(dayTimeInterval.timeUnit.name.toUpperCase());
+        writer.print(interval.intervalQualifier.toString());
     }
 
     /**
-     * Enumeration of time units used to construct an interval.
+     * A Interval value.
      */
-    public static class TimeUnit extends EnumeratedValues.BasicValue {
-        private TimeUnit(String name, int ordinal) {
-            super(name, ordinal, null);
-        }
-
-        public static final TimeUnit Year = new TimeUnit("Year", 0);
-        public static final TimeUnit Month = new TimeUnit("Month", 1);
-        public static final TimeUnit Day = new TimeUnit("Day", 2);
-        public static final TimeUnit Hour = new TimeUnit("Hour", 3);
-        public static final TimeUnit Minute = new TimeUnit("Minute", 4);
-        public static final TimeUnit Second = new TimeUnit("Second", 5);
-        public static final EnumeratedValues enumeration =
-                new EnumeratedValues(new TimeUnit[]{
-                    Year, Month, Day, Hour, Minute, Second,
-                });
-    }
-
-    /**
-     * A day-time interval value.
-     */
-    static class DayTimeInterval {
-        private final TimeUnit timeUnit;
+    static class IntervalValue {
+        private final SqlIntervalQualifier intervalQualifier;
         private final String value;
 
-        DayTimeInterval(TimeUnit timeUnit, String value) {
-            this.timeUnit = timeUnit;
+        IntervalValue(SqlIntervalQualifier intervalQualifier, String value) {
+            this.intervalQualifier = intervalQualifier;
             this.value = value;
+        }
+
+        public SqlIntervalQualifier getIntervalQualifier() {
+            return intervalQualifier;
+        }
+
+        public String getValue() {
+            return value;
         }
     }
 }

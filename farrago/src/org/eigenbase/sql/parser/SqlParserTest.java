@@ -137,6 +137,26 @@ public class SqlParserTest extends TestCase
         }
     }
 
+    protected void checkExpFails(
+        String sql,
+        String exceptionPattern)
+    {
+        try {
+            final SqlNode sqlNode = parseExpression(sql);
+            Util.discard(sqlNode);
+            fail("Expected expression '" + sql + "' to throw exception matching '"
+                + exceptionPattern + "'");
+        } catch (Throwable e) {
+            final String message = e.toString();
+            if (!Pattern.matches(exceptionPattern, message)) {
+                e.printStackTrace();
+                fail("Expected expression '" + sql
+                    + "' to throw exception matching '" + exceptionPattern
+                    + "', but it threw " + message);
+            }
+        }
+    }
+
     public void _testDerivedColumnList()
     {
         check("select * from emp (empno, gender) where true", "foo");
@@ -1463,6 +1483,53 @@ public class SqlParserTest extends TestCase
         checkExp("multiset[1] MULTISET union b", "((MULTISET[1]) MULTISET UNION `B`)");
         checkExp("a MULTISET union b multiset intersect c multiset except d multiset union e",
             "(((`A` MULTISET UNION (`B` MULTISET INTERSECT `C`)) MULTISET EXCEPT `D`) MULTISET UNION `E`)");
+    }
+
+    public void testIntervalQualifier() {
+        checkExpFails("interval '1'","(?s).*");
+        checkExp("interval '1' year","INTERVAL '1' YEAR");
+        checkExp("interval '1' year(4)","INTERVAL '1' YEAR(4)");
+        checkExp("interval '1' month","INTERVAL '1' MONTH");
+        checkExp("interval '1' month(3)","INTERVAL '1' MONTH(3)");
+        checkExp("interval '1-2' year to month","INTERVAL '1-2' YEAR TO MONTH");
+        checkExp("interval '1-2' year(4) to month","INTERVAL '1-2' YEAR(4) TO MONTH");
+        checkExpFails("interval '1-2' month to year","(?s).*");
+        checkExpFails("interval '1-2' year to day","(?s).*");
+        checkExpFails("interval '1-2' year to month(3)","(?s).*");
+
+        checkExp("interval '1' day","INTERVAL '1' DAY");
+        checkExp("interval '1' day to hour","INTERVAL '1' DAY TO HOUR");
+        checkExp("interval '1' day to minute","INTERVAL '1' DAY TO MINUTE");
+        checkExp("interval '1' day to second","INTERVAL '1' DAY TO SECOND");
+
+        checkExp("interval '1' hour","INTERVAL '1' HOUR");
+        checkExp("interval '1' hour to minute","INTERVAL '1' HOUR TO MINUTE");
+        checkExp("interval '1' hour","INTERVAL '1' HOUR");
+        checkExp("interval '1' hour(2) to second","INTERVAL '1' HOUR(2) TO SECOND");
+
+        checkExp("interval '1' minute","INTERVAL '1' MINUTE");
+        checkExp("interval '1' minute to second","INTERVAL '1' MINUTE TO SECOND");
+
+        checkExp("interval '1' second","INTERVAL '1' SECOND");
+        checkExp("interval '1' second(3)","INTERVAL '1' SECOND(3)");
+        checkExp("interval '1' second(2,3)","INTERVAL '1' SECOND(2, 3)");
+        checkExp("interval '1.234' second","INTERVAL '1.234' SECOND");
+
+        checkExp("interval '1 2:3:4.567' day to second","INTERVAL '1 2:3:4.567' DAY TO SECOND");
+
+        checkExpFails("interval '1 2:3:4.567' day to hour to second","(?s).*");
+        checkExpFails("interval '1:2' minute to second(2, 2)","(?s).*");
+    }
+
+    public void testIntervalOperators() {
+        checkExp("-interval '1' day","(- INTERVAL '1' DAY)");
+        checkExp("interval '1' day + interval '1' day","(INTERVAL '1' DAY + INTERVAL '1' DAY)");
+        checkExp("interval '1' day - interval '1:2:3' hour to second","(INTERVAL '1' DAY - INTERVAL '1:2:3' HOUR TO SECOND)");
+
+//        checkExp("interval -'1' day","INTERVAL '-1' DAY");
+//        checkExp("interval '-1' day","INTERVAL '-1' DAY");
+//        checkExpFails("interval 'wael was here'","");
+
     }
 
 }

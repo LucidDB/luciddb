@@ -136,7 +136,7 @@ import org.eigenbase.util.Util;
  * <tr>
  *   <td>{@link SqlTypeName#IntervalDayTime}</td>
  *   <td>Interval, for example <code>INTERVAL '1:34' HOUR</code>.</td>
- *   <td><{@link SqlIntervalLiteral.DayTimeInterval}.</td>
+ *   <td><{@link SqlIntervalLiteral.IntervalValue}.</td>
  * </tr>
  * </table>
  */
@@ -212,10 +212,8 @@ public class SqlLiteral extends SqlNode
         case SqlTypeName.Timestamp_ordinal:
             return value instanceof Calendar;
         case SqlTypeName.IntervalDayTime_ordinal:
-            return value instanceof SqlIntervalLiteral.DayTimeInterval;
-        case SqlTypeName.IntervalYearToMonth_ordinal:
-            throw typeName.unexpected(); // not implemented yet
-
+        case SqlTypeName.IntervalYearMonth_ordinal:
+            return value instanceof SqlIntervalLiteral.IntervalValue;
         case SqlTypeName.Binary_ordinal:
 
             // created from X'ABC' (odd length) or X'AB' (even length)
@@ -465,23 +463,13 @@ public class SqlLiteral extends SqlNode
                     string.getCharset(),
                     string.getCollation());
             return type;
-        case SqlTypeName.Multiset_ordinal:
-            List l = (List) value;
-            SqlNode e = (SqlNode) l.get(0);
-            if (e.isA(SqlKind.Row)) {
-                SqlCall rowCall = (SqlCall) e;
-                RelDataType[] args = new RelDataType[rowCall.operands.length];
-                for (int i = 0; i < rowCall.operands.length; i++) {
-                    SqlLiteral operand = (SqlLiteral) rowCall.operands[i];
-                    args[i] = operand.createSqlType(typeFactory);
-                }
-                return rowCall.operator.getType(typeFactory, args);
-            } else {
-
-            }
-
-
-
+        case SqlTypeName.IntervalYearMonth_ordinal:
+        case SqlTypeName.IntervalDayTime_ordinal:
+            SqlIntervalLiteral.IntervalValue intervalValue =
+                (SqlIntervalLiteral.IntervalValue) value;
+            RelDataType t = typeFactory.createIntervalType(
+                intervalValue.getIntervalQualifier());
+            return typeFactory.createTypeWithNullability(t, false);
         case SqlTypeName.Symbol_ordinal:
 
             // Existing code expects symbols to have a null type.
@@ -525,15 +513,18 @@ public class SqlLiteral extends SqlNode
 
     /**
      * Creates an interval literal.
-     * @param value    Value, e.g. '1:23:04'
-     * @param timeUnit Time unit
-     * @param pos      Parser position
+     * @param value             Value, e.g. '1:23:04'
+     * @param intervalQualifier describes the interval type and precision
+     * @param pos               Parser position
      */
     public static SqlIntervalLiteral createInterval(String value,
-        SqlIntervalLiteral.TimeUnit timeUnit, ParserPosition pos)
+        SqlIntervalQualifier intervalQualifier, ParserPosition pos)
     {
-        return new SqlIntervalLiteral(value, timeUnit,
-            SqlTypeName.IntervalDayTime, pos);
+        SqlTypeName typeName = intervalQualifier.isYearMonth() ?
+            SqlTypeName.IntervalYearMonth :
+            SqlTypeName.IntervalDayTime;
+        return new SqlIntervalLiteral(value, intervalQualifier,
+            typeName, pos);
     }
 
     //~ Inner Classes ---------------------------------------------------------

@@ -24,6 +24,7 @@ package org.eigenbase.reltype;
 import java.nio.charset.Charset;
 
 import org.eigenbase.sql.SqlCollation;
+import org.eigenbase.sql.SqlIntervalQualifier;
 import org.eigenbase.sql.type.SqlTypeName;
 
 
@@ -192,6 +193,13 @@ public interface RelDataTypeFactory
      * @param type the type each item in the MULTISET has
      */
     RelDataType createMultisetType(RelDataType type);
+
+    /**
+     * Creates a SQL interval type
+     * @param intervalQualifier contains information if it is a year-month or a
+     * day-time interval along with precision information
+     */
+    RelDataType createIntervalType(SqlIntervalQualifier intervalQualifier);
 
     /**
      * coerce=true implies that explicit rather than implicit cast is being

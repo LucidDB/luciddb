@@ -78,14 +78,14 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
     public static final SqlTypeName Timestamp =
         new SqlTypeName("TIMESTAMP", Timestamp_ordinal,
             PrecNoScaleNo | PrecYesScaleNo);
-    public static final int IntervalYearToMonth_ordinal = 12;
-    public static final SqlTypeName IntervalYearToMonth =
-        new SqlTypeName("IntervalYearToMonth", IntervalYearToMonth_ordinal,
+    public static final int IntervalYearMonth_ordinal = 12;
+    public static final SqlTypeName IntervalYearMonth =
+        new SqlTypeName("IntervalYearMonth", IntervalYearMonth_ordinal,
             PrecNoScaleNo);
     public static final int IntervalDayTime_ordinal = 13;
     public static final SqlTypeName IntervalDayTime =
         new SqlTypeName("IntervalDayTime", IntervalDayTime_ordinal,
-            PrecYesScaleNo);
+            PrecNoScaleNo);
     public static final int Char_ordinal = 14;
     public static final SqlTypeName Char =
         new SqlTypeName("CHAR", Char_ordinal, PrecYesScaleNo);
@@ -124,7 +124,7 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
         new EnumeratedValues(new SqlTypeName [] {
             Boolean, Integer, Varchar, Date, Time, Timestamp, Null, Decimal,
             Any, Char, Binary, Varbinary, Tinyint, Smallint, Bigint, Real,
-            Double, Bit, Symbol, IntervalYearToMonth, IntervalDayTime,
+            Double, Bit, Symbol, IntervalYearMonth, IntervalDayTime,
             Float, Multiset
         });
 
@@ -179,7 +179,7 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
         { Date, Time, Timestamp };
 
     public static final SqlTypeName [] timeIntervalTypes =
-        { IntervalDayTime, IntervalYearToMonth };
+        { IntervalDayTime, IntervalYearMonth };
     public static final SqlTypeName [] timeIntervalNullableTypes =
         makeNullable(timeIntervalTypes);
 

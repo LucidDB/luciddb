@@ -34,6 +34,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 import org.eigenbase.sql.SqlCollation;
+import org.eigenbase.sql.SqlIntervalQualifier;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.util.Util;
 import org.eigenbase.oj.util.*;
@@ -162,8 +163,13 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
 
     private RelDataType copyMultisetType(RelDataType type, boolean nullable) {
         MultisetSqlType mt = (MultisetSqlType) type;
-        RelDataType elementType = copyType(mt.getElementType());
+        RelDataType elementType = copyType(mt.getComponentType());
         return new MultisetSqlType(elementType, nullable);
+    }
+
+    private RelDataType copyIntervalType(RelDataType type, boolean nullable) {
+        IntervalSqlType it = (IntervalSqlType) type;
+        return new IntervalSqlType(it.getIntervalQualifer(), nullable);
     }
 
     // copy a non-record type, setting nullability
@@ -248,6 +254,8 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
             return copyRecordTypeWithNullability((RecordType) type, nullable);
         } else if (type instanceof MultisetSqlType) {
             return copyMultisetType(type, nullable);
+        } else if (type instanceof IntervalSqlType) {
+            return copyIntervalType(type, nullable);
         } else {
             return copySimpleType(type, nullable);
         }
@@ -260,6 +268,8 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
             return copyRecordType((RecordType) type);
         } else if (type instanceof MultisetSqlType) {
             return copyMultisetType(type, type.isNullable());
+        } else if (type instanceof IntervalSqlType) {
+            return copyIntervalType(type, type.isNullable());
         } else {
             return copySimpleType(
                 type,
@@ -446,6 +456,11 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
 
     public RelDataType createMultisetType(RelDataType type) {
         return new MultisetSqlType(type, true);
+    }
+
+    public RelDataType createIntervalType(
+        SqlIntervalQualifier intervalQualifier) {
+        return new IntervalSqlType(intervalQualifier, true);
     }
 
     /**
@@ -1354,6 +1369,182 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
 
 
     /**
+     * IntervalSqlType represents SQL builtin type of INTERVAL
+     */
+    public class IntervalSqlType implements RelDataType, Cloneable
+    {
+        private SqlIntervalQualifier intervalQualifer;
+        private boolean isNullable;
+        private String digest;
+        private SqlTypeName typeName;
+
+        public IntervalSqlType(
+            SqlIntervalQualifier intervalQualifer,
+            boolean isNullable) {
+            this.isNullable = isNullable;
+            this.intervalQualifer = intervalQualifer;
+            typeName = intervalQualifer.isYearMonth() ?
+                SqlTypeName.IntervalYearMonth :
+                SqlTypeName.IntervalDayTime;
+            digest = "INTERVAL "+intervalQualifer.toString();
+        }
+
+        public SqlIntervalQualifier getIntervalQualifer() {
+            return intervalQualifer;
+        }
+
+        public String toString() {
+            return getFullTypeString();
+        }
+
+        /**
+         * Combines two IntervalTypes and returns the result.
+         * E.g. the result of combining <br>
+         * <code>INTERVAL DAY TO HOUR</code> <br>
+         * with <br>
+         * <code>INTERVAL SECOND</code> is <br>
+         * <code>INTERVAL DAY TO SECOND</code>
+         */
+        public IntervalSqlType combine(IntervalSqlType that) {
+            assert(this.intervalQualifer.isYearMonth()==
+                   that.intervalQualifer.isYearMonth());
+            boolean  nullable = isNullable || that.isNullable;
+            SqlIntervalQualifier.TimeUnit thisStart =
+                                     this.intervalQualifer.getStartUnit();
+            SqlIntervalQualifier.TimeUnit thisEnd =
+                                     this.intervalQualifer.getEndUnit();
+            SqlIntervalQualifier.TimeUnit thatStart =
+                                     that.intervalQualifer.getStartUnit();
+            SqlIntervalQualifier.TimeUnit thatEnd =
+                                     that.intervalQualifer.getEndUnit();
+
+            assert(null!=thisStart);
+            assert(null!=thatStart);
+
+            int secondPrec = intervalQualifer.getStartPrecision();
+            int fracPrec = Math.max(
+                this.intervalQualifer.getFractionalSecondPrecision(),
+                that.intervalQualifer.getFractionalSecondPrecision());
+
+            if (thisStart.getOrdinal() > thatStart.
+                getOrdinal()) {
+                thisEnd = thisStart;
+                thisStart = thatStart;
+                secondPrec = that.intervalQualifer.getStartPrecision();
+            } else if (thisStart.getOrdinal() == thatStart.getOrdinal()) {
+                secondPrec = Math.max(secondPrec,
+                    that.intervalQualifer.getStartPrecision());
+            } else  if ((null == thisEnd) || (thisEnd.getOrdinal() < thatStart.
+                getOrdinal())) {
+                thisEnd = thatStart;
+            }
+
+            if (null!=thatEnd) {
+                if ((null==thisEnd) ||
+                    (thisEnd.getOrdinal() < thatEnd.getOrdinal())) {
+                    thisEnd = thatEnd;
+                }
+            }
+
+            return new IntervalSqlType(
+                new SqlIntervalQualifier(
+                    thisStart, secondPrec, thisEnd, fracPrec), nullable);
+        }
+
+        public RelDataTypeFactory getFactory() {
+            return RelDataTypeFactoryImpl.this;
+        }
+
+        public RelDataTypeField getField(String fieldName) {
+            return null;
+        }
+
+        public int getFieldCount() {
+            return 0;
+        }
+
+        public int getFieldOrdinal(String fieldName) {
+            return 0;
+        }
+
+        public RelDataTypeField[] getFields() {
+            return new RelDataTypeField[0];
+        }
+
+        public boolean isJoin() {
+            return false;
+        }
+
+        public RelDataType[] getJoinTypes() {
+            return new RelDataType[0];
+        }
+
+        public boolean isProject() {
+            return false;
+        }
+
+        public boolean equalsSansNullability(RelDataType type) {
+            return isSameType(type);
+        }
+
+        public boolean isNullable() {
+            return isNullable;
+        }
+
+        public RelDataType getComponentType() {
+            return null;
+        }
+
+        public RelDataType getArrayType() {
+            return null;
+        }
+
+        public boolean isAssignableFrom(
+            RelDataType t,
+            boolean coerce) {
+            Util.discard(coerce);
+            return isSameType(t);
+        }
+
+        public boolean isSameType(RelDataType t) {
+            return getSqlTypeName().equals(t.getSqlTypeName());
+        }
+
+        public boolean isSameTypeFamily(RelDataType t) {
+            return isSameType(t);
+        }
+
+        public boolean isCharType() {
+            return false;
+        }
+
+        public Charset getCharset() {
+            throw new RuntimeException();
+        }
+
+        public SqlCollation getCollation()
+            throws RuntimeException {
+            throw new RuntimeException();
+        }
+
+        public int getMaxBytesStorage() {
+            return 0;
+        }
+
+        public int getPrecision() {
+            return intervalQualifer.getStartPrecision();
+        }
+
+        public SqlTypeName getSqlTypeName() {
+            return typeName;
+        }
+
+        public String getFullTypeString() {
+            return digest;
+        }
+
+    }
+    /**
      * MultisetSqlType is used to reperesent the type of the SQL builtin
      * MULTISET construct.
      */
@@ -1375,10 +1566,6 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
 
         public RelDataTypeFactory getFactory() {
             return RelDataTypeFactoryImpl.this;
-        }
-
-        public RelDataType getElementType() {
-            return elementType;
         }
 
         public String toString() {
@@ -1433,8 +1620,7 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
         }
 
         public RelDataType getComponentType() {
-//            throw Util.needToImplement(this);
-            return null;
+            return elementType;
         }
 
         public boolean isJoin()
@@ -1572,6 +1758,16 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
             rules = new HashMap();
 
             HashSet rule;
+
+            //IntervalYearMonth is assignable from...
+            rule = new HashSet();
+            rule.add(SqlTypeName.IntervalYearMonth);
+            rules.put(SqlTypeName.IntervalYearMonth, rule);
+
+            //IntervalDayTime is assignable from...
+            rule = new HashSet();
+            rule.add(SqlTypeName.IntervalDayTime);
+            rules.put(SqlTypeName.IntervalDayTime, rule);
 
             //Multiset is assignable from...
             rule = new HashSet();

@@ -204,7 +204,12 @@ Error: At line 1, column 52: Cannot apply '+' to arguments of type '<BOOLEAN> + 
 '<DOUBLE> + <DECIMAL>'
 '<DOUBLE> + <FLOAT>'
 '<DOUBLE> + <REAL>'
-'<DOUBLE> + <DOUBLE>' (state=,code=0)
+'<DOUBLE> + <DOUBLE>'
+'<INTERVALDAYTIME> + <INTERVALDAYTIME>'
+'<INTERVALDAYTIME> + <INTERVALYEARMONTH>'
+'<INTERVALYEARMONTH> + <INTERVALDAYTIME>'
+'<INTERVALYEARMONTH> + <INTERVALYEARMONTH>'
+'<ANY> + <ANY>' (state=,code=0)
 0: jdbc:farrago:> -- fails
 0: jdbc:farrago:> select cast(null as boolean) and 1 from values(1);
 Error: At line 1, column 34: Cannot apply 'AND' to arguments of type '<BOOLEAN> AND <INTEGER>'. Supported form(s): '<BOOLEAN> AND <BOOLEAN>' (state=,code=0)

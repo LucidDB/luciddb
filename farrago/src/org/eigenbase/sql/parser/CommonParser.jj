@@ -147,11 +147,11 @@ JAVACODE SqlTimestampLiteral parseTimestampLiteral(String s, ParserPosition pos)
 
 JAVACODE SqlIntervalLiteral parseIntervalLiteral(
     String s,
-    SqlIntervalLiteral.TimeUnit timeUnit) throws ParseException
+    SqlIntervalQualifier intervalQualifier) throws ParseException
 {
     ParserPosition pos = getPos();
     String intervalStr = ParserUtil.strip(s, "'");
-    return SqlLiteral.createInterval(intervalStr, timeUnit, pos);
+    return SqlLiteral.createInterval(intervalStr, intervalQualifier, pos);
 }
 
 /*****************************************
@@ -1679,28 +1679,70 @@ SqlNode MultisetConstructor() :
 SqlLiteral IntervalLiteral() :
 {
     String p;
-    SqlIntervalLiteral.TimeUnit timeUnit;
+    SqlIntervalQualifier intervalQualifier;
 }
 {
-    <INTERVAL> <QUOTED_STRING> { p = token.image; } timeUnit = TimeUnit() {
-        return parseIntervalLiteral(p, timeUnit);
+    <INTERVAL> <QUOTED_STRING> { p = token.image; }
+    intervalQualifier = IntervalQualifer() {
+        return parseIntervalLiteral(p, intervalQualifier);
     }
 }
 
-SqlIntervalLiteral.TimeUnit TimeUnit() :
-{}
+SqlIntervalQualifier IntervalQualifer() :
 {
-    <YEAR> { return SqlIntervalLiteral.TimeUnit.Year; }
+    SqlIntervalQualifier.TimeUnit start;
+    SqlIntervalQualifier.TimeUnit end = null;
+    int startPrec = 0;
+    int secondFracPrec = 0;
+}
+{
+(
+    <YEAR> [ <LPAREN> startPrec = IntLiteral() <RPAREN> ]
+    [ <TO> <MONTH> { end = SqlIntervalQualifier.TimeUnit.Month; } ]
+    { start = SqlIntervalQualifier.TimeUnit.Year; }
 |
-    <MONTH> { return SqlIntervalLiteral.TimeUnit.Month; }
+    <MONTH> [ <LPAREN> startPrec = IntLiteral() <RPAREN> ]
+    { start = SqlIntervalQualifier.TimeUnit.Month; }
 |
-    <DAY> { return SqlIntervalLiteral.TimeUnit.Day; }
+    <DAY> [ <LPAREN> startPrec = IntLiteral() <RPAREN> ]
+    [ <TO>
+    (
+      <HOUR> { end = SqlIntervalQualifier.TimeUnit.Hour; }
+    | <MINUTE> { end = SqlIntervalQualifier.TimeUnit.Minute; }
+    | <SECOND> { end = SqlIntervalQualifier.TimeUnit.Second; }
+      [ <LPAREN> secondFracPrec = IntLiteral() <RPAREN> ]
+    )
+    ]
+    { start = SqlIntervalQualifier.TimeUnit.Day; }
 |
-    <HOUR> { return SqlIntervalLiteral.TimeUnit.Hour; }
+    <HOUR> [ <LPAREN> startPrec = IntLiteral() <RPAREN> ]
+    [ <TO>
+    (
+      <MINUTE> { end = SqlIntervalQualifier.TimeUnit.Minute; }
+    | <SECOND> { end = SqlIntervalQualifier.TimeUnit.Second; }
+      [ <LPAREN> secondFracPrec = IntLiteral() <RPAREN> ]
+    )
+    ]
+    { start = SqlIntervalQualifier.TimeUnit.Hour; }
 |
-    <MINUTE> { return SqlIntervalLiteral.TimeUnit.Minute; }
+    <MINUTE> [ <LPAREN> startPrec = IntLiteral() <RPAREN> ]
+    [ <TO>
+    (
+      <SECOND> { end = SqlIntervalQualifier.TimeUnit.Second; }
+      [ <LPAREN> secondFracPrec = IntLiteral() <RPAREN> ]
+    )
+    ]
+    { start = SqlIntervalQualifier.TimeUnit.Minute; }
 |
-    <SECOND> { return SqlIntervalLiteral.TimeUnit.Second; }
+    <SECOND>
+    [   <LPAREN> startPrec = IntLiteral()
+        [ <COMMA> secondFracPrec = IntLiteral() ]
+        <RPAREN>
+    ]
+    { start = SqlIntervalQualifier.TimeUnit.Second; }
+)
+    { return new SqlIntervalQualifier(start, startPrec, end, secondFracPrec); }
+
 }
 
 /**
@@ -1796,8 +1838,6 @@ int IntLiteral() :
             }
         }
 }
-
-
 
 // Type name with optional scale and precision
 SqlDataType DataType() :

@@ -330,7 +330,9 @@ public class SqlStdOperatorTable extends SqlOperatorTable
 
     public final SqlBinaryOperator minusOperator =
         new SqlBinaryOperator("-", SqlKind.Minus, 20, true,
-            ReturnTypeInference.useNullableBiggest, UnknownParamInference.useFirstKnown, OperandsTypeChecking.typeNullableNumericNumeric) {
+            ReturnTypeInference.useNullableBiggest,
+            UnknownParamInference.useFirstKnown,
+            OperandsTypeChecking.typeMinusOperator) {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testMinusOperator(tester);
@@ -357,8 +359,11 @@ public class SqlStdOperatorTable extends SqlOperatorTable
         };
 
     public final SqlBinaryOperator orOperator =
-        new SqlBinaryOperator("OR", SqlKind.Or, 13, true, ReturnTypeInference.useNullableBoolean,
-            UnknownParamInference.useBoolean, OperandsTypeChecking.typeNullableBoolBool) {
+        new SqlBinaryOperator("OR", SqlKind.Or, 13, true,
+            ReturnTypeInference.useNullableBoolean,
+            UnknownParamInference.useBoolean,
+            OperandsTypeChecking.typeNullableBoolBool) {
+
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testOrOperator(tester);
@@ -366,8 +371,11 @@ public class SqlStdOperatorTable extends SqlOperatorTable
         };
 
     public final SqlBinaryOperator plusOperator =
-        new SqlBinaryOperator("+", SqlKind.Plus, 20, true, ReturnTypeInference.useNullableBiggest,
-            UnknownParamInference.useFirstKnown, OperandsTypeChecking.typeNullableNumericNumeric) {
+        new SqlBinaryOperator("+", SqlKind.Plus, 20, true,
+            ReturnTypeInference.useNullableBiggest,
+            UnknownParamInference.useFirstKnown,
+            OperandsTypeChecking.typePlusOperator) {
+
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testPlusOperator(tester);
@@ -397,7 +405,7 @@ public class SqlStdOperatorTable extends SqlOperatorTable
                         validator.deriveType(scope, call.operands[1]);
 
                     RelDataType t0 = validator.deriveType(scope, call.operands[0]);
-                    RelDataType t1 = mt.getElementType();
+                    RelDataType t1 = mt.getComponentType();
 
                     if (!t0.isAssignableFrom(t1, false) &&
                         !t1.isAssignableFrom(t0, false)) {

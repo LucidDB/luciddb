@@ -1163,10 +1163,35 @@ public abstract class OperandsTypeChecking
      * type must a nullable time interval, nullable time interval
      */
     public static final OperandsTypeChecking typeNullableIntervalInterval =
-        new SimpleOperandsTypeChecking(new SqlTypeName [][] {
-            SqlTypeName.timeIntervalNullableTypes,
-            SqlTypeName.timeIntervalNullableTypes
-        });
+        new CompositeAndOperandsTypeChecking(
+            new OperandsTypeChecking[] {
+                new SimpleOperandsTypeChecking(
+                    new SqlTypeName[][]{
+                        SqlTypeName.timeIntervalNullableTypes,
+                        SqlTypeName.timeIntervalNullableTypes})
+                , typeNullableSameSame
+            });
+
+    public static final OperandsTypeChecking typeNullableNumericInterval =
+        new CompositeAndOperandsTypeChecking(
+            new OperandsTypeChecking[] {
+                 typeNullableNumeric
+                ,typeNullableInterval
+            });
+
+    public static final OperandsTypeChecking typePlusOperator =
+        new CompositeOrOperandsTypeChecking(
+            new OperandsTypeChecking[] {
+                  typeNullableNumericNumeric
+                , typeNullableIntervalInterval
+            });
+
+    public static final OperandsTypeChecking typeMinusOperator =
+        new CompositeOrOperandsTypeChecking(
+            new OperandsTypeChecking[] {
+                  typeNullableNumericNumeric
+                , typeNullableIntervalInterval
+            });
 
     /**
      * Parameter type-checking strategy
@@ -1182,7 +1207,7 @@ public abstract class OperandsTypeChecking
      * types must be
      * [nullable] Multiset, [nullable] mutliset
      * and the two types must have the same element type
-     * @see {@link RelDataTypeFactoryImpl.MultisetSqlType#getElementType}
+     * @see {@link RelDataTypeFactoryImpl.MultisetSqlType#getComponentType}
      */
     public static final OperandsTypeChecking typeNullableMultisetMultiset =
         new OperandsTypeChecking() {
@@ -1215,10 +1240,8 @@ public abstract class OperandsTypeChecking
                 }
 
                 RelDataType[] argTypes = new RelDataType[2];
-                argTypes[0] = ((RelDataTypeFactoryImpl.MultisetSqlType)
-                    validator.deriveType(scope, op0)).getElementType();
-                argTypes[1] = ((RelDataTypeFactoryImpl.MultisetSqlType)
-                    validator.deriveType(scope, op1)).getElementType();
+                argTypes[0] = validator.deriveType(scope, op0).getComponentType();
+                argTypes[1] = validator.deriveType(scope, op1).getComponentType();
                 //TODO this wont work if element types are of ROW types and there is a
                 //mismatch.
                 RelDataType biggest = ReturnTypeInference.useBiggest.
