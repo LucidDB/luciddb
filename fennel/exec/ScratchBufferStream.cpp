@@ -55,6 +55,7 @@ void ScratchBufferStream::open(bool restart)
 
     if (restart) {
         pOutAccessor->clear();
+        pInAccessor->clear();
     } else {
         bufferLock.allocatePage();
     }

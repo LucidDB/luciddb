@@ -2,7 +2,9 @@ include $(top_srcdir)/am_include.mk
 
 noinst_LTLIBRARIES=libexec.la
 libexec_la_SOURCES=\
+CartesianJoinStream.cpp \
 ConduitExecStream.cpp \
+ConfluenceExecStream.cpp \
 DfsTreeExecStreamScheduler.cpp \
 ExecStream.cpp \
 ExecStreamGraph.cpp \
