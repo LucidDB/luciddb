@@ -38,6 +38,9 @@ import net.sf.farrago.cwm.core.*;
  *
  * If no handler is present for a particular type/action combination,
  * FarragoSessionDdlValidator will assume that no special handling is required.
+ * Invocation uses the
+ * {@link org.eigenbase.util.Glossary#ChainOfResponsibilityPattern},
+ * invoking handlers in order until one returns true.
  *
  * @author John V. Sichi
  * @version $Id$

@@ -222,7 +222,15 @@ public class DdlValidator extends FarragoCompoundAllocation
     public List defineHandlers()
     {
         List list = new ArrayList();
-        list.add(new DdlHandler(this));
+
+        // NOTE jvs 21-Jan-2005:  list order matters here.
+        // DdlRelationalHandler includes some catch-all methods for
+        // superinterfaces which we only want to invoke when one of
+        // the more specific handlers doesn't satisfied the request.
+        DdlMedHandler medHandler = new DdlMedHandler(this);
+        list.add(medHandler);
+        list.add(new DdlRoutineHandler(this));
+        list.add(new DdlRelationalHandler(medHandler));
         return list;
     }
     
