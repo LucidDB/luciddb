@@ -113,7 +113,7 @@ if test "$with_farrago" = "yes"
 then
     farrago_subdir="farrago"
     if test "x$JAVA_HOME" = "x"; then
-        AC_MSG_ERROR([Farrago build requires Java, but $JAVA_HOME is not set])
+        AC_MSG_ERROR([Farrago build requires Java, but JAVA_HOME is not set])
     fi
     AC_SUBST(JAVA_HOME)
 else
