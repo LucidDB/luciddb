@@ -95,8 +95,8 @@
 
   <!-- third-party libraries -->
   <path id="saffron.3p.classpath">
-    <pathelement location="${thirdparty.dir}/mondrian-resource.jar"/>
-    <pathelement location="${thirdparty.dir}/mondrian-xom.jar"/>
+    <pathelement location="${resgen.dir}/lib/eigenbase-resgen.jar"/>
+    <pathelement location="${resgen.dir}/lib/eigenbase-xom.jar"/>
     <pathelement location="${ant.home}/lib/ant.jar"/>
     <pathelement location="${ant.home}/lib/ant-launcher.jar"/>
     <pathelement location="${ant.home}/lib/junit.jar"/>
@@ -369,7 +369,7 @@
       classpathref="saffron.build.classpath">
       <include name="**/SaffronException.java" />
     </javac>
-    <taskdef name="resgen" classname="mondrian.resource.ResourceGenTask">
+    <taskdef name="resgen" classname="org.eigenbase.resgen.ResourceGenTask">
       <classpath refid="saffron.run.classpath"/>
     </taskdef>
     <resgen srcdir="${src.dir}" locales="en_US">

@@ -204,8 +204,8 @@
     <pathelement location="${mdrlibs.dir}/mof.jar"/>
     <pathelement location="${mdrlibs.dir}/jmi.jar"/>
     <pathelement location="${mdrlibs.dir}/openide-util.jar"/>
-    <pathelement location="${thirdparty.dir}/mondrian-resource.jar"/>
-    <pathelement location="${thirdparty.dir}/mondrian-xom.jar"/>
+    <pathelement location="${resgen.dir}/lib/eigenbase-resgen.jar"/>
+    <pathelement location="${resgen.dir}/lib/eigenbase-xom.jar"/>
     <pathelement location="${mdrlibs.dir}/mdrjdbc.jar"/>
     <pathelement location="${junit.dir}/junit.jar"/>
     <pathelement location="${ant.home}/lib/xml-apis.jar"/>
