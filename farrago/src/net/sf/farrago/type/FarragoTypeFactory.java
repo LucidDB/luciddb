@@ -19,11 +19,13 @@
 package net.sf.farrago.type;
 
 import java.sql.*;
+import java.util.*;
 
 import javax.jmi.model.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.fem.sql2003.*;
 
 import org.eigenbase.oj.*;
@@ -31,6 +33,9 @@ import org.eigenbase.rel.*;
 import org.eigenbase.reltype.*;
 
 import openjava.ptree.*;
+
+import java.util.List;
+
 
 /**
  * FarragoTypeFactory is a Farrago-specific refinement of the
@@ -61,14 +66,14 @@ public interface FarragoTypeFactory extends OJTypeFactory
         FemAbstractTypedElement element);
 
     /**
-     * Creates a type which represents the row datatype of a CWM
-     * ColumnSet
+     * Creates a type which represents a structured row based on a
+     * list of attribute definitions from the catalog.
      *
-     * @param columnSet CWM ColumnSet
+     * @param features list of FemAbstractTypedElement
      *
-     * @return generated type, or null if columnSet had no columns defined yet
+     * @return generated type, or null if cwmClass had no features
      */
-    public RelDataType createColumnSetType(CwmColumnSet columnSet);
+    public RelDataType createStructTypeFromFeatureList(List features);
 
     /**
      * Creates a type which represents the row datatype of a JDBC

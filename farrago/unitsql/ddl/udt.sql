@@ -114,3 +114,24 @@ create type line_segment as (
     endpoint1 rectilinear_coord,
     endpoint2 rectilinear_coord
 );
+
+
+-- test tables which contain typed columns
+set path 'udttest';
+
+-- create a mock table without any storage
+create table mock_vertex_list(
+    vertex_id int not null primary key,
+    coord rectilinear_coord0
+)
+server sys_mock_data_server
+options (executor_impl 'JAVA', row_count '1');
+
+select v.vertex_id, v.coord.x, v.coord.y
+from mock_vertex_list v;
+
+-- create a real stored table
+create table stored_vertex_list(
+    vertex_id int not null primary key,
+    coord rectilinear_coord0
+);

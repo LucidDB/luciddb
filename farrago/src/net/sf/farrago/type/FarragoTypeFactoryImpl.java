@@ -155,8 +155,12 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             assert(collectionType instanceof FemSqlmultisetType) :
                    "todo array type creation not yet implemented";
             type = createMultisetType(componentType, -1);
+        } else if (classifier instanceof FemSqlobjectType) {
+            FemSqlobjectType objectType =
+                (FemSqlobjectType) classifier;
+            return createStructTypeFromFeatureList(objectType.getFeature());
         } else {
-            Util.permAssert(false,"TODO jvs 15-Dec-2004:  UDT's, intervals");
+            Util.permAssert(false,"TODO jvs 15-Dec-2004:  intervals");
         }
 
         boolean isNullable = true;
@@ -170,9 +174,9 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     }
     
     // implement FarragoTypeFactory
-    public RelDataType createColumnSetType(CwmColumnSet columnSet)
+    public RelDataType createStructTypeFromFeatureList(
+        final List featureList)
     {
-        final List featureList = columnSet.getFeature();
         if (featureList.isEmpty()) {
             return null;
         }
@@ -185,9 +189,9 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
 
                 public String getFieldName(int index)
                 {
-                    final CwmColumn column =
-                        (CwmColumn) featureList.get(index);
-                    return column.getName();
+                    final FemAbstractTypedElement element =
+                        (FemAbstractTypedElement) featureList.get(index);
+                    return element.getName();
                 }
 
                 public RelDataType getFieldType(int index)
@@ -490,50 +494,6 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             ojClass);
         return ojClass;
         
-    }
-
-    // REVIEW jvs 27-May-2004:  no longer using the code below for Java row
-    // manipulation.  But perhaps it will be useful for flattening before going
-    // into Fennel?
-    // disabled override OJTypeFactoryImpl
-    protected OJClass disabled_createOJClassForRecordType(
-        OJClass declarer,
-        RelRecordType recordType)
-    {
-        List fieldList = new ArrayList();
-        if (flattenFields(
-                    recordType.getFields(),
-                    fieldList)) {
-            RelDataType [] types = new RelDataType[fieldList.size()];
-            String [] fieldNames = new String[types.length];
-            for (int i = 0; i < types.length; ++i) {
-                RelDataTypeField field = (RelDataTypeField) fieldList.get(i);
-                types[i] = field.getType();
-
-                // FIXME jvs 27-May-2004:  uniquify
-                fieldNames[i] = field.getName();
-            }
-            recordType = (RelRecordType) createStructType(types, fieldNames);
-        }
-        return super.createOJClassForRecordType(declarer, recordType);
-    }
-
-    private boolean flattenFields(
-        RelDataTypeField [] fields,
-        List list)
-    {
-        boolean nested = false;
-        for (int i = 0; i < fields.length; ++i) {
-            if (fields[i].getType().isStruct()) {
-                nested = true;
-                flattenFields(
-                    fields[i].getType().getFields(),
-                    list);
-            } else {
-                list.add(fields[i]);
-            }
-        }
-        return nested;
     }
 
     // implement FarragoTypeFactory

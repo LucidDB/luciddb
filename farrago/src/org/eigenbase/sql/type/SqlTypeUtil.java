@@ -26,6 +26,8 @@ import org.eigenbase.sql.*;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.resource.EigenbaseResource;
 
+import java.util.*;
+
 /**
  * Contains utility methods used during SQL validation or type derivation.
  *
@@ -595,6 +597,56 @@ public abstract class SqlTypeUtil
             ret[i] = fields[i].getType();
         }
         return ret;
+    }
+
+    /**
+     * Flattens a record type by recursively expanding any
+     * fields which are themselves record types.
+     *
+     * @param typeFactory factory which should produced flattened type
+     *
+     * @param recordType type with possible nesting
+     *
+     * @return flattened equivalent
+     */
+    public static RelDataType flattenRecordType(
+        RelDataTypeFactory typeFactory,
+        RelDataType recordType)
+    {
+        List fieldList = new ArrayList();
+        boolean nested =
+            flattenFields(
+                recordType.getFields(),
+                fieldList);
+        if (!nested) {
+            return recordType;
+        }
+        RelDataType [] types = new RelDataType[fieldList.size()];
+        String [] fieldNames = new String[types.length];
+        for (int i = 0; i < types.length; ++i) {
+            RelDataTypeField field = (RelDataTypeField) fieldList.get(i);
+            types[i] = field.getType();
+            fieldNames[i] = field.getName() + "_" + i;
+        }
+        return typeFactory.createStructType(types, fieldNames);
+    }
+
+    private static boolean flattenFields(
+        RelDataTypeField [] fields,
+        List list)
+    {
+        boolean nested = false;
+        for (int i = 0; i < fields.length; ++i) {
+            if (fields[i].getType().isStruct()) {
+                nested = true;
+                flattenFields(
+                    fields[i].getType().getFields(),
+                    list);
+            } else {
+                list.add(fields[i]);
+            }
+        }
+        return nested;
     }
 
     /**

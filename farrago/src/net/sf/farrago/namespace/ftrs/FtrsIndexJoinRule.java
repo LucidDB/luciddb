@@ -218,7 +218,8 @@ class FtrsIndexJoinRule extends RelOptRule
 
         if (!index.isClustered() && scanRel.index.isClustered()) {
             Integer [] clusteredKeyColumns =
-                FtrsUtil.getClusteredDistinctKeyArray(repos, scanRel.index);
+                scanRel.ftrsTable.getIndexGuide().getClusteredDistinctKeyArray(
+                    scanRel.index);
 
             // REVIEW:  in many cases it would probably be more efficient to
             // hide the unclustered-to-clustered translation inside a special

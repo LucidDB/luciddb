@@ -143,9 +143,12 @@ class FtrsDataServer extends MedAbstractLocalDataServer
         FemLocalIndex index)
     {
         cmd.setDbHandle(getFennelDbHandle().getFemDbHandle(repos));
+        FtrsIndexGuide indexGuide = new FtrsIndexGuide(
+            indexTypeFactory,
+            FarragoCatalogUtil.getIndexTable(index));
         cmd.setTupleDesc(
-            FtrsUtil.getCoverageTupleDescriptor(indexTypeFactory, index));
-        cmd.setKeyProj(FtrsUtil.getDistinctKeyProjection(repos, index));
+            indexGuide.getCoverageTupleDescriptor(index));
+        cmd.setKeyProj(indexGuide.getDistinctKeyProjection(index));
         cmd.setSegmentId(getIndexSegmentId(index));
         cmd.setIndexId(JmiUtil.getObjectId(index));
     }

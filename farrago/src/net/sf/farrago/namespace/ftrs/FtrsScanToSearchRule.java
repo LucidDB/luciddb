@@ -204,7 +204,8 @@ class FtrsScanToSearchRule extends RelOptRule
             }
 
             Integer [] clusteredKeyColumns =
-                FtrsUtil.getClusteredDistinctKeyArray(repos, origScan.index);
+                origScan.ftrsTable.getIndexGuide().getClusteredDistinctKeyArray(
+                    origScan.index);
             FtrsIndexScanRel unclusteredScan =
                 new FtrsIndexScanRel(
                     origScan.getCluster(),

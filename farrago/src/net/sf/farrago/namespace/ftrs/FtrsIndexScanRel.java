@@ -206,10 +206,11 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
         double dCpu = dRows * getRowType().getFieldList().size();
 
         FarragoRepos repos = getPreparingStmt().getRepos();
+        FtrsIndexGuide indexGuide = ftrsTable.getIndexGuide();
         int nIndexCols =
             index.isClustered()
             ? ftrsTable.getCwmColumnSet().getFeature().size()
-            : FtrsUtil.getUnclusteredCoverageColList(repos, index).size();
+            : indexGuide.getUnclusteredCoverageColList(index).size();
 
         double dIo = dRows * nIndexCols;
 
@@ -237,11 +238,13 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
         scanStream.setSegmentId(FtrsDataServer.getIndexSegmentId(index));
         scanStream.setIndexId(JmiUtil.getObjectId(index));
 
-        scanStream.setTupleDesc(
-            FtrsUtil.getCoverageTupleDescriptor(
-                (FarragoTypeFactory) cluster.typeFactory, index));
+        FtrsIndexGuide indexGuide = ftrsTable.getIndexGuide();
 
-        scanStream.setKeyProj(FtrsUtil.getDistinctKeyProjection(repos, index));
+        scanStream.setTupleDesc(
+            indexGuide.getCoverageTupleDescriptor(index));
+
+        scanStream.setKeyProj(
+            indexGuide.getDistinctKeyProjection(index));
 
         Integer [] projection = computeProjectedColumns();
         Integer [] indexProjection;
@@ -253,7 +256,7 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
             indexProjection = new Integer[projection.length];
             List indexTableColList =
                 Arrays.asList(
-                    FtrsUtil.getUnclusteredCoverageArray(repos, index));
+                    indexGuide.getUnclusteredCoverageArray(index));
             for (int i = 0; i < projection.length; ++i) {
                 Integer iTableCol = projection[i];
                 int iIndexCol = indexTableColList.indexOf(iTableCol);
@@ -279,9 +282,7 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
     public RelFieldCollation [] getCollations()
     {
         Integer [] indexedCols =
-            FtrsUtil.getCollationKeyArray(
-                getPreparingStmt().getRepos(),
-                index);
+            ftrsTable.getIndexGuide().getCollationKeyArray(index);
         List collationList = new ArrayList();
         for (int i = 0; i < indexedCols.length; ++i) {
             int iCol = indexedCols[i].intValue();

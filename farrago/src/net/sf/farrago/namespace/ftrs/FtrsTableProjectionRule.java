@@ -120,7 +120,9 @@ class FtrsTableProjectionRule extends RelOptRule
                 continue;
             }
 
-            if (!testIndexCoverage(repos, index, projectedColumns)) {
+            if (!testIndexCoverage(
+                    origScan.ftrsTable.getIndexGuide(),
+                    index, projectedColumns)) {
                 continue;
             }
 
@@ -148,7 +150,7 @@ class FtrsTableProjectionRule extends RelOptRule
     }
 
     private boolean testIndexCoverage(
-        FarragoRepos repos,
+        FtrsIndexGuide indexGuide,
         FemLocalIndex index,
         Integer [] projection)
     {
@@ -157,7 +159,7 @@ class FtrsTableProjectionRule extends RelOptRule
             return true;
         }
         Integer [] indexProjection =
-            FtrsUtil.getUnclusteredCoverageArray(repos, index);
+            indexGuide.getUnclusteredCoverageArray(index);
         return Arrays.asList(indexProjection).containsAll(
             Arrays.asList(projection));
     }

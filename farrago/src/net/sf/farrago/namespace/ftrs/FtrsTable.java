@@ -38,6 +38,8 @@ import org.eigenbase.reltype.*;
  */
 class FtrsTable extends MedAbstractColumnSet
 {
+    private FtrsIndexGuide indexGuide;
+    
     //~ Constructors ----------------------------------------------------------
 
     FtrsTable(
@@ -65,6 +67,18 @@ class FtrsTable extends MedAbstractColumnSet
             connection,
             null,
             false);
+    }
+
+    public FtrsIndexGuide getIndexGuide()
+    {
+        // have to defer initialization because not all information
+        // is available at construction time
+        if (indexGuide == null) {
+            indexGuide = new FtrsIndexGuide(
+                getPreparingStmt().getFarragoTypeFactory(), 
+                getCwmColumnSet());
+        }
+        return indexGuide;
     }
 }
 

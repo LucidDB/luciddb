@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/udf.sql#7 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/udt.sql#1 $
 0: jdbc:farrago:> -- Test DDL for user-defined types
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema udttest;
@@ -133,5 +133,31 @@ Error: DDL validation error near line 1, column 33: Reference to unknown structu
 . . . . . . . . >     endpoint2 rectilinear_coord
 . . . . . . . . > );
 Error: DDL validation error near line 1, column 35: Reference to unknown datatype "RECTILINEAR_COORD" (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test tables which contain typed columns
+0: jdbc:farrago:> set path 'udttest';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- create a mock table without any storage
+0: jdbc:farrago:> create table mock_vertex_list(
+. . . . . . . . >     vertex_id int not null primary key,
+. . . . . . . . >     coord rectilinear_coord0
+. . . . . . . . > )
+. . . . . . . . > server sys_mock_data_server
+. . . . . . . . > options (executor_impl 'JAVA', row_count '1');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select v.vertex_id, v.coord.x, v.coord.y
+. . . . . . . . > from mock_vertex_list v;
++------------+------+------+
+| VERTEX_ID  |  X   |  Y   |
++------------+------+------+
+| 0          | 0.0  | 0.0  |
++------------+------+------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- create a real stored table
+0: jdbc:farrago:> create table stored_vertex_list(
+. . . . . . . . >     vertex_id int not null primary key,
+. . . . . . . . >     coord rectilinear_coord0
+. . . . . . . . > );
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

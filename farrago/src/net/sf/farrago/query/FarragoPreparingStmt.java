@@ -667,7 +667,8 @@ public class FarragoPreparingStmt extends OJPreparingStmt
                     getFarragoTypeFactory());
         } else if (columnSet instanceof CwmView) {
             RelDataType rowType =
-                getFarragoTypeFactory().createColumnSetType(columnSet);
+                getFarragoTypeFactory().createStructTypeFromFeatureList(
+                    columnSet.getFeature());
             relOptTable = new FarragoView(columnSet, rowType);
         } else {
             throw Util.needToImplement(columnSet);
@@ -798,7 +799,8 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         }
 
         RelDataType rowType =
-            getFarragoTypeFactory().createColumnSetType(table);
+            getFarragoTypeFactory().createStructTypeFromFeatureList(
+                table.getFeature());
         return new ValidatorTable(
             resolved.getQualifiedName(),
             rowType);

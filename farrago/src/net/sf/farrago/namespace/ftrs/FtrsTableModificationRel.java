@@ -193,6 +193,8 @@ class FtrsTableModificationRel extends TableModificationRel
         List firstList = new ArrayList();
         List secondList = new ArrayList();
 
+        FtrsIndexGuide indexGuide = ftrsTable.getIndexGuide();
+
         Iterator indexIter = FarragoCatalogUtil.getTableIndexes(
             repos, table).iterator();
         while (indexIter.hasNext()) {
@@ -203,7 +205,7 @@ class FtrsTableModificationRel extends TableModificationRel
             if (updateCwmColumnList != null) {
                 if (index != clusteredIndex) {
                     List coverageList =
-                        FtrsUtil.getUnclusteredCoverageColList(repos, index);
+                        indexGuide.getUnclusteredCoverageColList(index);
                     if (!coverageList.removeAll(updateCwmColumnList)) {
                         // no intersection between update list and index
                         // coverage, so skip this index entirely
@@ -211,8 +213,7 @@ class FtrsTableModificationRel extends TableModificationRel
                     }
                 }
 
-                List distinctKeyList =
-                    FtrsUtil.getDistinctKeyColList(repos, index);
+                List distinctKeyList = indexGuide.getDistinctKeyColList(index);
                 if (!distinctKeyList.removeAll(updateCwmColumnList)) {
                     // distinct key is not being changed, so it's safe to
                     // attempt update-in-place
@@ -232,16 +233,16 @@ class FtrsTableModificationRel extends TableModificationRel
             indexWriter.setSegmentId(FtrsDataServer.getIndexSegmentId(index));
             indexWriter.setIndexId(JmiUtil.getObjectId(index));
             indexWriter.setTupleDesc(
-                FtrsUtil.getCoverageTupleDescriptor(typeFactory, index));
+                indexGuide.getCoverageTupleDescriptor(index));
             indexWriter.setKeyProj(
-                FtrsUtil.getDistinctKeyProjection(repos, index));
+                indexGuide.getDistinctKeyProjection(index));
             indexWriter.setUpdateInPlace(updateInPlace);
 
             indexWriter.setDistinctness(index.isUnique()
                 ? DistinctnessEnum.DUP_FAIL : DistinctnessEnum.DUP_ALLOW);
             if (index != clusteredIndex) {
                 indexWriter.setInputProj(
-                    FtrsUtil.getCoverageProjection(repos, index));
+                    indexGuide.getCoverageProjection(index));
             }
 
             boolean prepend = false;
