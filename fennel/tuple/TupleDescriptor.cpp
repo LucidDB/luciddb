@@ -43,7 +43,7 @@ TupleAttributeDescriptor::TupleAttributeDescriptor()
 TupleAttributeDescriptor::TupleAttributeDescriptor(
     StoredTypeDescriptor const &typeDescriptor,
     bool isNullableInit,
-    uint cbStorageInit)
+    TupleStorageByteLength cbStorageInit)
 {
     pTypeDescriptor = &typeDescriptor;
     isNullable = isNullableInit;
@@ -145,6 +145,7 @@ void TupleDescriptor::writePersistent(ByteOutputStream &stream) const
         stream.writeValue(iData);
         iData = htonl(attrDesc.isNullable);
         stream.writeValue(iData);
+        // Assume TupleAttributeDescriptor is long in htonl()
         iData = htonl(attrDesc.cbStorage);
         stream.writeValue(iData);
     }
@@ -166,7 +167,7 @@ void TupleDescriptor::readPersistent(
         stream.readValue(iData);
         bool isNullable = ntohl(iData);
         stream.readValue(iData);
-        uint cbStorage = ntohl(iData);
+        TupleStorageByteLength cbStorage = ntohl(iData);
         push_back(
             TupleAttributeDescriptor(
                 typeDescriptor,isNullable,cbStorage));

@@ -89,6 +89,38 @@ BoolMove::describe(string &out, bool values) const {
 
 
 const char *
+BoolIs::longName() const
+{
+    return "BoolIs";
+}
+const char *
+BoolIs::shortName() const
+{
+    return "IS";
+}
+void
+BoolIs::describe(string &out, bool values) const {
+    describeHelper(out, values, longName(), shortName(), mResult, mOp1, mOp2);
+}
+
+
+const char * 
+BoolIsNot::longName() const 
+{
+    return "BoolIsNot";
+}
+const char * 
+BoolIsNot::shortName() const 
+{
+    return "ISNOT";
+}
+void
+BoolIsNot::describe(string &out, bool values) const {
+    describeHelper(out, values, longName(), shortName(), mResult, mOp1, mOp2);
+}
+
+
+const char *
 BoolEqual::longName() const
 {
     return "BoolEqual";

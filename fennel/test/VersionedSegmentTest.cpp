@@ -25,7 +25,7 @@
 
 using namespace fennel;
 
-class TestVersionedSegment : virtual public SegmentTestBase
+class VersionedSegmentTest : virtual public SegmentTestBase
 {
     SegVersionNum versionNumber;
     DeviceId logDeviceId;
@@ -67,14 +67,14 @@ public:
         ++versionNumber;
     }
 
-    explicit TestVersionedSegment()
+    explicit VersionedSegmentTest()
     {
         logDeviceId = DeviceId(42);
         versionNumber = 0;
         firstLogPageId = NULL_PAGE_ID;
         onlineUuid.generateInvalid();
         FENNEL_UNIT_TEST_CASE(SegmentTestBase,testSingleThread);
-        FENNEL_UNIT_TEST_CASE(TestVersionedSegment,testRecovery);
+        FENNEL_UNIT_TEST_CASE(VersionedSegmentTest,testRecovery);
         FENNEL_UNIT_TEST_CASE(PagingTestBase,testMultipleThreads);
     }
 
@@ -119,6 +119,6 @@ public:
     }
 };
 
-FENNEL_UNIT_TEST_SUITE(TestVersionedSegment);
+FENNEL_UNIT_TEST_SUITE(VersionedSegmentTest);
 
-// End TestVersionedSegment.cpp
+// End VersionedSegmentTest.cpp

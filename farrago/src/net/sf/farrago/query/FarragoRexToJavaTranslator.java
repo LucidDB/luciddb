@@ -126,6 +126,32 @@ class FarragoRexToJavaTranslator extends RelImplementor.Translator
             variable);
     }
 
+    protected Expression convertByteArrayLiteral(byte [] bytes)
+    {
+        // NOTE:  we override Saffron's default because DynamicJava 
+        // has a bug dealing with anonymous byte [] initializers
+        Variable variable = farragoImplementor.newVariable();
+        memberList.add(
+            new FieldDeclaration(
+                new ModifierList(ModifierList.PRIVATE),
+                TypeName.forClass(byte [].class),
+                variable.toString(),
+                new ArrayAllocationExpression(
+                    TypeName.forOJClass(OJSystem.BYTE),
+                    new ExpressionList(
+                        Literal.makeLiteral(bytes.length)))));
+        // TODO:  generate this code in class static init block instead
+        for (int i = 0; i < bytes.length; ++i) {
+            stmtList.add(
+                new ExpressionStatement(
+                    new AssignmentExpression(
+                        new ArrayAccess(variable,Literal.makeLiteral(i)),
+                        AssignmentExpression.EQUALS,
+                        Literal.makeLiteral(bytes[i]))));
+        }
+        return variable;
+    }
+    
     private Expression convertIsTrue(RexCall call,Expression operand)
     {
         if (call.operands[0].getType().isNullable()) {
@@ -394,13 +420,14 @@ class FarragoRexToJavaTranslator extends RelImplementor.Translator
     {
         OJClass ojClass = OJUtil.typeToOJClass(type);
         Variable variable = farragoImplementor.newVariable();
-        memberList.add(new FieldDeclaration(
-            new ModifierList(ModifierList.PRIVATE),
-            TypeName.forOJClass(ojClass),
-            variable.toString(),
-            new AllocationExpression(
-                ojClass,
-                new ExpressionList())));
+        memberList.add(
+            new FieldDeclaration(
+                new ModifierList(ModifierList.PRIVATE),
+                TypeName.forOJClass(ojClass),
+                variable.toString(),
+                new AllocationExpression(
+                    ojClass,
+                    new ExpressionList())));
         return variable;
     }
 

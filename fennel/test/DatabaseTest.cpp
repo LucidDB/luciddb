@@ -37,7 +37,7 @@
 
 using namespace fennel;
 
-class TestDatabase
+class DatabaseTest
     : virtual public TestBase,
         public LogicalTxnParticipant,
         public LogicalTxnParticipantFactory
@@ -66,7 +66,7 @@ class TestDatabase
     void addTxnParticipant(SharedLogicalTxn);
     
 public:
-    explicit TestDatabase()
+    explicit DatabaseTest()
     {
         configMap.setStringParam(
             Database::paramDatabaseDir,".");
@@ -83,19 +83,19 @@ public:
         cacheParams.readConfig(configMap);
         pCache = Cache::newCache(cacheParams);
 
-        FENNEL_UNIT_TEST_CASE(TestDatabase,testCreateEmpty);
-        FENNEL_UNIT_TEST_CASE(TestDatabase,testLoadEmpty);
-        FENNEL_UNIT_TEST_CASE(TestDatabase,testRecoverEmpty);
-        FENNEL_UNIT_TEST_CASE(TestDatabase,testCreateData);
-        FENNEL_UNIT_TEST_CASE(TestDatabase,testLoadData);
-        FENNEL_UNIT_TEST_CASE(TestDatabase,testRecoverDataWithFlush);
-        FENNEL_UNIT_TEST_CASE(TestDatabase,testRecoverDataWithoutFlush);
-        FENNEL_UNIT_TEST_CASE(TestDatabase,testRecoverDataFromCheckpoint);
-        FENNEL_UNIT_TEST_CASE(TestDatabase,testRecoverDataFromFuzzyCheckpoint);
-        FENNEL_UNIT_TEST_CASE(TestDatabase,testRecoverDataFromRollback);
+        FENNEL_UNIT_TEST_CASE(DatabaseTest,testCreateEmpty);
+        FENNEL_UNIT_TEST_CASE(DatabaseTest,testLoadEmpty);
+        FENNEL_UNIT_TEST_CASE(DatabaseTest,testRecoverEmpty);
+        FENNEL_UNIT_TEST_CASE(DatabaseTest,testCreateData);
+        FENNEL_UNIT_TEST_CASE(DatabaseTest,testLoadData);
+        FENNEL_UNIT_TEST_CASE(DatabaseTest,testRecoverDataWithFlush);
+        FENNEL_UNIT_TEST_CASE(DatabaseTest,testRecoverDataWithoutFlush);
+        FENNEL_UNIT_TEST_CASE(DatabaseTest,testRecoverDataFromCheckpoint);
+        FENNEL_UNIT_TEST_CASE(DatabaseTest,testRecoverDataFromFuzzyCheckpoint);
+        FENNEL_UNIT_TEST_CASE(DatabaseTest,testRecoverDataFromRollback);
     }
     
-    virtual ~TestDatabase()
+    virtual ~DatabaseTest()
     {
     }
 
@@ -134,9 +134,9 @@ public:
         ByteInputStream &logStream);
 };
 
-const LogicalActionType TestDatabase::ACTION_INCREMENT = 1;
+const LogicalActionType DatabaseTest::ACTION_INCREMENT = 1;
 
-void TestDatabase::testCreateEmpty()
+void DatabaseTest::testCreateEmpty()
 {
     pDatabase.reset(
         new Database(
@@ -147,7 +147,7 @@ void TestDatabase::testCreateEmpty()
     BOOST_CHECK(!pDatabase->isRecoveryRequired());
 }
 
-void TestDatabase::testCreateData()
+void DatabaseTest::testCreateData()
 {
     testCreateEmpty();
     SegmentAccessor segmentAccessor(pDatabase->getDataSegment(),pCache);
@@ -159,19 +159,19 @@ void TestDatabase::testCreateData()
     executeIncrementTxn(5);
 }
 
-void TestDatabase::testLoadEmpty()
+void DatabaseTest::testLoadEmpty()
 {
     loadDatabase();
     BOOST_CHECK(!pDatabase->isRecoveryRequired());
 }
 
-void TestDatabase::testLoadData()
+void DatabaseTest::testLoadData()
 {
     testLoadEmpty();
     verifyData(5);
 }
 
-void TestDatabase::testRecoverEmpty()
+void DatabaseTest::testRecoverEmpty()
 {
     testCreateEmpty();
     pDatabase->checkpointImpl(CHECKPOINT_DISCARD);
@@ -182,17 +182,17 @@ void TestDatabase::testRecoverEmpty()
     pDatabase->recover(*this);
 }
 
-void TestDatabase::testRecoverDataWithoutFlush()
+void DatabaseTest::testRecoverDataWithoutFlush()
 {
     testRecoverData(false);
 }
 
-void TestDatabase::testRecoverDataWithFlush()
+void DatabaseTest::testRecoverDataWithFlush()
 {
     testRecoverData(true);
 }
 
-void TestDatabase::testRecoverData(bool flush)
+void DatabaseTest::testRecoverData(bool flush)
 {
     testCreateData();
     executeIncrementTxn(10);
@@ -209,7 +209,7 @@ void TestDatabase::testRecoverData(bool flush)
     verifyData(45);
 }
 
-void TestDatabase::testRecoverDataFromCheckpoint(CheckpointType checkpointType)
+void DatabaseTest::testRecoverDataFromCheckpoint(CheckpointType checkpointType)
 {
     testCreateData();
     executeIncrementTxn(10);
@@ -223,17 +223,17 @@ void TestDatabase::testRecoverDataFromCheckpoint(CheckpointType checkpointType)
     verifyData(110);
 }
 
-void TestDatabase::testRecoverDataFromCheckpoint()
+void DatabaseTest::testRecoverDataFromCheckpoint()
 {
     testRecoverDataFromCheckpoint(CHECKPOINT_FLUSH_ALL);
 }
 
-void TestDatabase::testRecoverDataFromFuzzyCheckpoint()
+void DatabaseTest::testRecoverDataFromFuzzyCheckpoint()
 {
     testRecoverDataFromCheckpoint(CHECKPOINT_FLUSH_FUZZY);
 }
 
-void TestDatabase::testRecoverDataFromRollback()
+void DatabaseTest::testRecoverDataFromRollback()
 {
     testCreateData();
     executeIncrementTxn(10);
@@ -247,7 +247,7 @@ void TestDatabase::testRecoverDataFromRollback()
     verifyData(15);
 }
 
-void TestDatabase::loadDatabase()
+void DatabaseTest::loadDatabase()
 {
     pDatabase.reset(
         new Database(
@@ -257,16 +257,16 @@ void TestDatabase::loadDatabase()
             this));
 }
 
-LogicalTxnClassId TestDatabase::getParticipantClassId() const
+LogicalTxnClassId DatabaseTest::getParticipantClassId() const
 {
     return LogicalTxnClassId(0xa470573b38dcaa0aLL);
 }
 
-void TestDatabase::describeParticipant(ByteOutputStream &)
+void DatabaseTest::describeParticipant(ByteOutputStream &)
 {
 }
 
-void TestDatabase::undoLogicalAction(
+void DatabaseTest::undoLogicalAction(
     LogicalActionType actionType,
     ByteInputStream &logStream)
 {
@@ -279,7 +279,7 @@ void TestDatabase::undoLogicalAction(
     pageLock.getNodeForWrite().x -= i;
 }
 
-void TestDatabase::redoLogicalAction(
+void DatabaseTest::redoLogicalAction(
     LogicalActionType actionType,
     ByteInputStream &logStream)
 {
@@ -292,7 +292,7 @@ void TestDatabase::redoLogicalAction(
     pageLock.getNodeForWrite().x += i;
 }
 
-SharedLogicalTxnParticipant TestDatabase::loadParticipant(
+SharedLogicalTxnParticipant DatabaseTest::loadParticipant(
     LogicalTxnClassId classId,
     ByteInputStream &)
 {
@@ -301,7 +301,7 @@ SharedLogicalTxnParticipant TestDatabase::loadParticipant(
         shared_from_this());
 }
 
-void TestDatabase::executeIncrementAction(int i)
+void DatabaseTest::executeIncrementAction(int i)
 {
     ByteOutputStream &logStream =
         getLogicalTxn()->beginLogicalAction(*this,ACTION_INCREMENT);
@@ -313,14 +313,14 @@ void TestDatabase::executeIncrementAction(int i)
     pageLock.getNodeForWrite().x += i;
 }
 
-void TestDatabase::addTxnParticipant(SharedLogicalTxn pTxn)
+void DatabaseTest::addTxnParticipant(SharedLogicalTxn pTxn)
 {
     pTxn->addParticipant(
         boost::dynamic_pointer_cast<LogicalTxnParticipant>(
             shared_from_this()));
 }
 
-void TestDatabase::executeIncrementTxn(int i)
+void DatabaseTest::executeIncrementTxn(int i)
 {
     SharedLogicalTxn pTxn = pDatabase->getTxnLog()->newLogicalTxn(pCache);
     addTxnParticipant(pTxn);
@@ -328,7 +328,7 @@ void TestDatabase::executeIncrementTxn(int i)
     pTxn->commit();
 }
 
-void TestDatabase::executeCheckpointedTxn(
+void DatabaseTest::executeCheckpointedTxn(
     int i,int j,bool commit,CheckpointType checkpointType)
 {
     SharedLogicalTxn pTxn = pDatabase->getTxnLog()->newLogicalTxn(pCache);
@@ -343,7 +343,7 @@ void TestDatabase::executeCheckpointedTxn(
     }
 }
 
-void TestDatabase::verifyData(uint x)
+void DatabaseTest::verifyData(uint x)
 {
     SegmentAccessor segmentAccessor(pDatabase->getDataSegment(),pCache);
     TestPageLock pageLock(segmentAccessor);
@@ -351,6 +351,6 @@ void TestDatabase::verifyData(uint x)
     BOOST_CHECK_EQUAL(pageLock.getNodeForRead().x,x);
 }
 
-FENNEL_UNIT_TEST_SUITE(TestDatabase);
+FENNEL_UNIT_TEST_SUITE(DatabaseTest);
 
-// End TestDatabase.cpp
+// End DatabaseTest.cpp

@@ -93,23 +93,6 @@ class MedJdbcColumnSet extends AbstractTable implements FarragoNamedColumnSet
         VolcanoCluster cluster,
         SaffronConnection connection)
     {
-        // make sure optimizer knows about JDBC-specific transformations
-        JdbcQuery.register(cluster.getPlanner());
-        cluster.getPlanner().addRule(
-            new ConverterRule(
-                SaffronRel.class,
-                CallingConvention.RESULT_SET,
-                CallingConvention.ITERATOR,
-                "ResultSetToFarragoIteratorRule")
-            {
-                public SaffronRel convert(SaffronRel rel)
-                {
-                    return new ResultSetToFarragoIteratorConverter(
-                        rel.getCluster(),
-                        rel);
-                }
-            });
-        
         return new MedJdbcQueryRel(
             this,
             cluster,

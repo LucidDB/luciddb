@@ -30,7 +30,7 @@
 
 using namespace fennel;
 
-class TestStandardType : virtual public TestBase, public TraceSource
+class StandardTypeTest : virtual public TestBase, public TraceSource
 {
     void testStandardTypeToString();
     void testStandardTypeIsNative();
@@ -40,23 +40,23 @@ class TestStandardType : virtual public TestBase, public TraceSource
     void testStandardTypeIsArray();
     
 public:
-    explicit TestStandardType()
-        : TraceSource(this,"TestStandardType")
+    explicit StandardTypeTest()
+        : TraceSource(this,"StandardTypeTest")
     {
-        FENNEL_UNIT_TEST_CASE(TestStandardType, testStandardTypeToString);
-        FENNEL_UNIT_TEST_CASE(TestStandardType, testStandardTypeIsNative);
-        FENNEL_UNIT_TEST_CASE(TestStandardType, testStandardTypeIsIntegralNative);
-        FENNEL_UNIT_TEST_CASE(TestStandardType, testStandardTypeIsExact);
-        FENNEL_UNIT_TEST_CASE(TestStandardType, testStandardTypeIsApprox);
-        FENNEL_UNIT_TEST_CASE(TestStandardType, testStandardTypeIsArray);
+        FENNEL_UNIT_TEST_CASE(StandardTypeTest, testStandardTypeToString);
+        FENNEL_UNIT_TEST_CASE(StandardTypeTest, testStandardTypeIsNative);
+        FENNEL_UNIT_TEST_CASE(StandardTypeTest, testStandardTypeIsIntegralNative);
+        FENNEL_UNIT_TEST_CASE(StandardTypeTest, testStandardTypeIsExact);
+        FENNEL_UNIT_TEST_CASE(StandardTypeTest, testStandardTypeIsApprox);
+        FENNEL_UNIT_TEST_CASE(StandardTypeTest, testStandardTypeIsArray);
     }
     
-    virtual ~TestStandardType()
+    virtual ~StandardTypeTest()
     {
     }
 };
 
-void TestStandardType::testStandardTypeToString()
+void StandardTypeTest::testStandardTypeToString()
 {
     int i;
     StandardTypeDescriptorOrdinal v, x;
@@ -86,7 +86,7 @@ void TestStandardType::testStandardTypeToString()
     }
 }
 
-void TestStandardType::testStandardTypeIsNative()
+void StandardTypeTest::testStandardTypeIsNative()
 {
     BOOST_REQUIRE(STANDARD_TYPE_MIN < STANDARD_TYPE_END);
     BOOST_REQUIRE(STANDARD_TYPE_MIN <= STANDARD_TYPE_INT_8);
@@ -109,7 +109,7 @@ void TestStandardType::testStandardTypeIsNative()
     }
 }
 
-void TestStandardType::testStandardTypeIsIntegralNative()
+void StandardTypeTest::testStandardTypeIsIntegralNative()
 {
     BOOST_REQUIRE(STANDARD_TYPE_MIN < STANDARD_TYPE_END);
     BOOST_REQUIRE(STANDARD_TYPE_MIN <= STANDARD_TYPE_INT_8);
@@ -134,7 +134,7 @@ void TestStandardType::testStandardTypeIsIntegralNative()
     }
 }
 
-void TestStandardType::testStandardTypeIsExact()
+void StandardTypeTest::testStandardTypeIsExact()
 {
     BOOST_REQUIRE(STANDARD_TYPE_MIN < STANDARD_TYPE_END);
     BOOST_REQUIRE(STANDARD_TYPE_MIN <= STANDARD_TYPE_INT_8);
@@ -160,7 +160,7 @@ void TestStandardType::testStandardTypeIsExact()
     }
 }
 
-void TestStandardType::testStandardTypeIsApprox()
+void StandardTypeTest::testStandardTypeIsApprox()
 {
     BOOST_REQUIRE(STANDARD_TYPE_MIN < STANDARD_TYPE_END);
     BOOST_REQUIRE(STANDARD_TYPE_MIN <= STANDARD_TYPE_INT_8);
@@ -182,7 +182,7 @@ void TestStandardType::testStandardTypeIsApprox()
 }
 
 
-void TestStandardType::testStandardTypeIsArray()
+void StandardTypeTest::testStandardTypeIsArray()
 {
     BOOST_REQUIRE(STANDARD_TYPE_MIN < STANDARD_TYPE_END);
     BOOST_REQUIRE(STANDARD_TYPE_MIN <= STANDARD_TYPE_INT_8);
@@ -207,7 +207,7 @@ void TestStandardType::testStandardTypeIsArray()
 
 
 
-FENNEL_UNIT_TEST_SUITE(TestStandardType);
+FENNEL_UNIT_TEST_SUITE(StandardTypeTest);
 
 // End TestTuple.cpp
 

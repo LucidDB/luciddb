@@ -19,20 +19,35 @@
 */
 
 #include "fennel/common/CommonPreamble.h"
-#include "fennel/test/SegmentTestBase.h"
+#include "fennel/test/TestBase.h"
+#include "fennel/common/FennelResource.h"
+
+#include <boost/test/test_tools.hpp>
 
 using namespace fennel;
 
-class TestLinearDeviceSegment : virtual public SegmentTestBase
+class ResourceTest : virtual public TestBase
 {
 public:
-    explicit TestLinearDeviceSegment()
+    
+    explicit ResourceTest()
     {
-        FENNEL_UNIT_TEST_CASE(SegmentTestBase,testSingleThread);
-        FENNEL_UNIT_TEST_CASE(PagingTestBase,testMultipleThreads);
+        FENNEL_UNIT_TEST_CASE(ResourceTest,testEnUsLocale);
     }
+    
+    void testEnUsLocale();
 };
 
-FENNEL_UNIT_TEST_SUITE(TestLinearDeviceSegment);
+void ResourceTest::testEnUsLocale()
+{
+    Locale locale("en","US");
+    std::string actual =
+        FennelResource::instance(locale).sysCallFailed("swizzle");
+    std::string expected = "System call failed:  swizzle";
+    BOOST_CHECK_EQUAL(expected,actual);
+}
 
-// End TestLinearDeviceSegment.cpp
+FENNEL_UNIT_TEST_SUITE(ResourceTest);
+
+// End ResourceTest.cpp
+

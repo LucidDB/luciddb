@@ -25,7 +25,6 @@ import net.sf.saffron.oj.convert.*;
 import net.sf.saffron.opt.*;
 import net.sf.saffron.rel.*;
 import net.sf.saffron.rel.convert.*;
-import net.sf.saffron.rel.jdbc.*;
 
 import openjava.ptree.*;
 
@@ -132,7 +131,6 @@ public class FarragoPlanner extends VolcanoPlanner
                         rel);
                 }
             });
-
     }
 }
 

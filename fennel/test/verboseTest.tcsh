@@ -1,0 +1,1 @@
+setenv BOOST_TEST_LOG_LEVEL test_suite

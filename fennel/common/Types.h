@@ -34,6 +34,9 @@ typedef uint8_t const *PConstBuffer;
 // use FileSize for all file sizes and offsets
 typedef uint64_t FileSize;
 
+// use TupleStorageByteLength for all tuple buffer length indicators
+typedef uint TupleStorageByteLength;
+
 // version number of a VersionedSegment
 typedef uint64_t SegVersionNum;
 

@@ -33,7 +33,7 @@
 
 using namespace fennel;
 
-class TestRandomAccessFileDevice : virtual public TestBase
+class RandomAccessFileDeviceTest : virtual public TestBase
 {
     static const uint ZERO_SIZE;
     static const uint HALF_SIZE;
@@ -265,12 +265,12 @@ class TestRandomAccessFileDevice : virtual public TestBase
     }
     
 public:
-    explicit TestRandomAccessFileDevice()
+    explicit RandomAccessFileDeviceTest()
     {
         schedParams.readConfig(configMap);
-        FENNEL_UNIT_TEST_CASE(TestRandomAccessFileDevice,testPermanentNoDirect);
-        FENNEL_UNIT_TEST_CASE(TestRandomAccessFileDevice,testTemporary);
-        FENNEL_UNIT_TEST_CASE(TestRandomAccessFileDevice,testPermanentDirect);
+        FENNEL_UNIT_TEST_CASE(RandomAccessFileDeviceTest,testPermanentNoDirect);
+        FENNEL_UNIT_TEST_CASE(RandomAccessFileDeviceTest,testTemporary);
+        FENNEL_UNIT_TEST_CASE(RandomAccessFileDeviceTest,testPermanentDirect);
     }
     
     void testPermanentNoDirect()
@@ -309,10 +309,10 @@ public:
 
 // NOTE:  HALF_SIZE and FULL_SIZE have to be multiples of the disk sector size
 // for direct I/O to work on Windows.
-const uint TestRandomAccessFileDevice::ZERO_SIZE = 0;
-const uint TestRandomAccessFileDevice::HALF_SIZE = 4096;
-const uint TestRandomAccessFileDevice::FULL_SIZE = 8192;
+const uint RandomAccessFileDeviceTest::ZERO_SIZE = 0;
+const uint RandomAccessFileDeviceTest::HALF_SIZE = 4096;
+const uint RandomAccessFileDeviceTest::FULL_SIZE = 8192;
 
-FENNEL_UNIT_TEST_SUITE(TestRandomAccessFileDevice);
+FENNEL_UNIT_TEST_SUITE(RandomAccessFileDeviceTest);
 
-// End TestRandomAccessFileDevice.cpp
+// End RandomAccessFileDeviceTest.cpp

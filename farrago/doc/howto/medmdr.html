@@ -25,14 +25,15 @@ document describes how to make use of the MDR plugin.
 
 The first step is to get a Farrago build.  See the <a
 href="../developerJumpStart.html">developer jump-start page</a> for
-details.  For very simple queries (e.g. just a WHERE clause) you don't
-need the Fennel C++ components; pure Java can do the job.  But if you
-want to do anything serious (e.g. join, ORDER BY), you'll need to
-build with Fennel.  The easiest approach is probably to start 
-with pure Java (specify --without-fennel to initBuild.sh) and test out
-the system with your MDR repository.  Once you have a feel for it and
-want to run more complicated queries, you can undertake the additional
-steps required for the C++ portion of the build.
+details.  For very simple queries (e.g. filters, projections, and
+limited joins) you don't need the Fennel C++ components; pure Java can
+do the job.  But if you want more comprehensive SQL support (e.g. ORDER
+BY), you'll need to build with Fennel.  The easiest approach is
+probably to start with pure Java (specify --without-fennel to
+initBuild.sh) and test out the system with your MDR repository.  Once
+you have a feel for it and want to run more complicated queries, you
+can undertake the additional steps required for the C++ portion of the
+build.
 
 <p>
 
@@ -624,18 +625,18 @@ Expected results:
 Notice that the <code>mofId</code> for the row with
 <code>name=Model</code> is the same as the <code>container</code> ID
 for all of the classes in the first result set.  So this means all MOF
-classes are defined in the <code>Model</code> package.  If you have a
-Farrago build with Fennel support, you can use a join to navigate the
-association; try the query below:
+classes are defined in the <code>Model</code> package.  You can use a
+join to navigate the association; try the query below:
 
 <pre><code>
 select 
     n."name" as container_name,
     e."name" as element_name
 from
-    mof_repository.model."Package" n,
+    mof_repository.model."Package" n
+inner join
     mof_repository.model."ModelElement" e
-where n."mofId" = e."container";
+on n."mofId" = e."container";
 </code></pre>
 
 <p>

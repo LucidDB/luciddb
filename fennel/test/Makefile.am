@@ -20,53 +20,56 @@ ThreadedTestBase.cpp
 
 # NOTE:  tests are ordered roughly from fastest to slowest
 noinst_PROGRAMS= \
-TestResource \
-TestLocalCondition \
-TestTuple \
-TestStandardType \
-TestDatabase \
-TestLogicalTxn \
-TestSegStream \
-TestSegPageIter \
-TestRandomAccessFileDevice \
-TestCache \
-TestLinearDeviceSegment \
-TestLinearViewSegment \
-TestVersionedSegment \
-TestBTreeTxn \
-TestBTree
+ResourceTest \
+LocalConditionTest \
+TupleTest \
+StandardTypeTest \
+SqlStringTest \
+DatabaseTest \
+LogicalTxnTest \
+SegStreamTest \
+SegPageIterTest \
+RandomAccessFileDeviceTest \
+CacheTest \
+LinearDeviceSegmentTest \
+LinearViewSegmentTest \
+VersionedSegmentTest \
+BTreeTxnTest \
+BTreeTest
 
 TESTS = $(noinst_PROGRAMS)
 
-TestResource_SOURCES=TestResource.cpp
+ResourceTest_SOURCES=ResourceTest.cpp
 
-TestLocalCondition_SOURCES=TestLocalCondition.cpp
+LocalConditionTest_SOURCES=LocalConditionTest.cpp
 
-TestRandomAccessFileDevice_SOURCES=TestRandomAccessFileDevice.cpp
+RandomAccessFileDeviceTest_SOURCES=RandomAccessFileDeviceTest.cpp
 
-TestCache_SOURCES=TestCache.cpp
+CacheTest_SOURCES=CacheTest.cpp
 
-TestLinearDeviceSegment_SOURCES=TestLinearDeviceSegment.cpp
+LinearDeviceSegmentTest_SOURCES=LinearDeviceSegmentTest.cpp
 
-TestLinearViewSegment_SOURCES=TestLinearViewSegment.cpp
+LinearViewSegmentTest_SOURCES=LinearViewSegmentTest.cpp
 
-TestVersionedSegment_SOURCES=TestVersionedSegment.cpp
+VersionedSegmentTest_SOURCES=VersionedSegmentTest.cpp
 
-TestSegStream_SOURCES=TestSegStream.cpp
+SegStreamTest_SOURCES=SegStreamTest.cpp
 
-TestSegPageIter_SOURCES=TestSegPageIter.cpp
+SegPageIterTest_SOURCES=SegPageIterTest.cpp
 
-TestLogicalTxn_SOURCES=TestLogicalTxn.cpp
+LogicalTxnTest_SOURCES=LogicalTxnTest.cpp
 
-TestBTree_SOURCES=TestBTree.cpp
+BTreeTest_SOURCES=BTreeTest.cpp
 
-TestBTreeTxn_SOURCES=TestBTreeTxn.cpp
+BTreeTxnTest_SOURCES=BTreeTxnTest.cpp
 
-TestTuple_SOURCES=TestTuple.cpp
+TupleTest_SOURCES=TupleTest.cpp
 
-TestStandardType_SOURCES=TestStandardType.cpp
+StandardTypeTest_SOURCES=StandardTypeTest.cpp
 
-TestDatabase_SOURCES=TestDatabase.cpp
+SqlStringTest_SOURCES=SqlStringTest.cpp
+
+DatabaseTest_SOURCES=DatabaseTest.cpp
 
 if !STATIC_TEST_LIBRARY
 libfenneltestdyn_la_LIBADD=libfenneltest.la
@@ -78,6 +81,7 @@ endif
 
 LDADD = -L$(top_builddir)/test -l$(TEST_LIB) \
     -L$(top_builddir)/libfennel \
+	-lfennel_calc \
 	-lfennel_xo \
 	-lfennel_db \
 	-lfennel_btree \

@@ -34,7 +34,7 @@
 
 using namespace fennel;
 
-class TestLogicalTxn
+class LogicalTxnTest
     : virtual public SegStorageTestBase,
         public LogicalTxnParticipant,
         public LogicalTxnParticipantFactory
@@ -58,24 +58,24 @@ class TestLogicalTxn
     SharedLogicalRecoveryLog createRecoveryLog();
 
 public:
-    explicit TestLogicalTxn()
+    explicit LogicalTxnTest()
     {
         onlineUuid.generateInvalid();
         
-        FENNEL_UNIT_TEST_CASE(TestLogicalTxn,testRollbackEmpty);
-        FENNEL_UNIT_TEST_CASE(TestLogicalTxn,testRollbackShort);
-        FENNEL_UNIT_TEST_CASE(TestLogicalTxn,testRollbackLong);
-        FENNEL_UNIT_TEST_CASE(TestLogicalTxn,testRollbackSavepointNoGap);
-        FENNEL_UNIT_TEST_CASE(TestLogicalTxn,testRollbackSavepointGap);
-        FENNEL_UNIT_TEST_CASE(TestLogicalTxn,testCheckpointCommitSavepoint);
-        FENNEL_UNIT_TEST_CASE(TestLogicalTxn,testCommitEmpty);
-        FENNEL_UNIT_TEST_CASE(TestLogicalTxn,testCommitShort);
-        FENNEL_UNIT_TEST_CASE(TestLogicalTxn,testCommitLong);
-        FENNEL_UNIT_TEST_CASE(TestLogicalTxn,testCheckpointCommitEmpty);
-        FENNEL_UNIT_TEST_CASE(TestLogicalTxn,testCheckpointCommitShort);
-        FENNEL_UNIT_TEST_CASE(TestLogicalTxn,testCheckpointCommitLong);
-        FENNEL_UNIT_TEST_CASE(TestLogicalTxn,testCheckpointRollbackShort);
-        FENNEL_UNIT_TEST_CASE(TestLogicalTxn,testCheckpointRollbackLong);
+        FENNEL_UNIT_TEST_CASE(LogicalTxnTest,testRollbackEmpty);
+        FENNEL_UNIT_TEST_CASE(LogicalTxnTest,testRollbackShort);
+        FENNEL_UNIT_TEST_CASE(LogicalTxnTest,testRollbackLong);
+        FENNEL_UNIT_TEST_CASE(LogicalTxnTest,testRollbackSavepointNoGap);
+        FENNEL_UNIT_TEST_CASE(LogicalTxnTest,testRollbackSavepointGap);
+        FENNEL_UNIT_TEST_CASE(LogicalTxnTest,testCheckpointCommitSavepoint);
+        FENNEL_UNIT_TEST_CASE(LogicalTxnTest,testCommitEmpty);
+        FENNEL_UNIT_TEST_CASE(LogicalTxnTest,testCommitShort);
+        FENNEL_UNIT_TEST_CASE(LogicalTxnTest,testCommitLong);
+        FENNEL_UNIT_TEST_CASE(LogicalTxnTest,testCheckpointCommitEmpty);
+        FENNEL_UNIT_TEST_CASE(LogicalTxnTest,testCheckpointCommitShort);
+        FENNEL_UNIT_TEST_CASE(LogicalTxnTest,testCheckpointCommitLong);
+        FENNEL_UNIT_TEST_CASE(LogicalTxnTest,testCheckpointRollbackShort);
+        FENNEL_UNIT_TEST_CASE(LogicalTxnTest,testCheckpointRollbackLong);
     }
 
     void testCaseSetUp()
@@ -124,28 +124,28 @@ public:
         ByteInputStream &logStream);
 };
 
-const int TestLogicalTxn::participantDescription = 42;
-const LogicalActionType TestLogicalTxn::ACTION_TEST = 1;
+const int LogicalTxnTest::participantDescription = 42;
+const LogicalActionType LogicalTxnTest::ACTION_TEST = 1;
 
-LogicalTxnClassId TestLogicalTxn::getParticipantClassId() const
+LogicalTxnClassId LogicalTxnTest::getParticipantClassId() const
 {
     return LogicalTxnClassId(0x83f6b9edfe168b93LL);
 }
 
-void TestLogicalTxn::describeParticipant(ByteOutputStream &logStream)
+void LogicalTxnTest::describeParticipant(ByteOutputStream &logStream)
 {
     int x = participantDescription;
     logStream.writeValue(x);
 }
 
-void TestLogicalTxn::checkpointTxnLog(
+void LogicalTxnTest::checkpointTxnLog(
     LogicalTxnLogCheckpointMemento &memento)
 {
     pTxnLog->checkpoint(memento);
     pTxnLog->deallocateCheckpointedLog(memento);
 }
 
-void TestLogicalTxn::undoLogicalAction(
+void LogicalTxnTest::undoLogicalAction(
     LogicalActionType actionType,
     ByteInputStream &logStream)
 {
@@ -162,7 +162,7 @@ void TestLogicalTxn::undoLogicalAction(
     }
 }
 
-void TestLogicalTxn::redoLogicalAction(
+void LogicalTxnTest::redoLogicalAction(
     LogicalActionType actionType,
     ByteInputStream &logStream)
 {
@@ -179,32 +179,32 @@ void TestLogicalTxn::redoLogicalAction(
     }
 }
 
-void TestLogicalTxn::testRollbackEmpty()
+void LogicalTxnTest::testRollbackEmpty()
 {
     testRollback(0);
 }
 
-void TestLogicalTxn::testRollbackShort()
+void LogicalTxnTest::testRollbackShort()
 {
     testRollback(10);
 }
 
-void TestLogicalTxn::testRollbackLong()
+void LogicalTxnTest::testRollbackLong()
 {
     testRollback(10000);
 }
 
-void TestLogicalTxn::testRollbackSavepointNoGap()
+void LogicalTxnTest::testRollbackSavepointNoGap()
 {
     testRollbackSavepoint(false);
 }
 
-void TestLogicalTxn::testRollbackSavepointGap()
+void LogicalTxnTest::testRollbackSavepointGap()
 {
     testRollbackSavepoint(true);
 }
 
-void TestLogicalTxn::testRollbackSavepoint(bool gap)
+void LogicalTxnTest::testRollbackSavepoint(bool gap)
 {
     // log actions 0 through 99, creating a savepoint after 50
     testTxn(100,-1,50);
@@ -225,7 +225,7 @@ void TestLogicalTxn::testRollbackSavepoint(bool gap)
     rollbackFull();
 }
 
-SharedLogicalRecoveryLog TestLogicalTxn::createRecoveryLog()
+SharedLogicalRecoveryLog LogicalTxnTest::createRecoveryLog()
 {
     SegmentAccessor segmentAccessor(pLinearSegment,pCache);
     SharedLogicalRecoveryLog pRecoveryLog =
@@ -237,7 +237,7 @@ SharedLogicalRecoveryLog TestLogicalTxn::createRecoveryLog()
     return pRecoveryLog;
 }
 
-void TestLogicalTxn::testCheckpointCommitSavepoint()
+void LogicalTxnTest::testCheckpointCommitSavepoint()
 {
     // log actions 0 through 99, checkpointing after 75 and creating a
     // savepoint after 50
@@ -265,47 +265,47 @@ void TestLogicalTxn::testCheckpointCommitSavepoint()
     assert(pRecoveryLog.unique());
 }
 
-void TestLogicalTxn::testCheckpointRollbackShort()
+void LogicalTxnTest::testCheckpointRollbackShort()
 {
     testRollback(10,true);
 }
 
-void TestLogicalTxn::testCheckpointRollbackLong()
+void LogicalTxnTest::testCheckpointRollbackLong()
 {
     testRollback(10000,true);
 }
 
-void TestLogicalTxn::testCommitEmpty()
+void LogicalTxnTest::testCommitEmpty()
 {
     testCommit(0);
 }
 
-void TestLogicalTxn::testCommitShort()
+void LogicalTxnTest::testCommitShort()
 {
     testCommit(10);
 }
 
-void TestLogicalTxn::testCommitLong()
+void LogicalTxnTest::testCommitLong()
 {
     testCommit(10000);
 }
 
-void TestLogicalTxn::testCheckpointCommitEmpty()
+void LogicalTxnTest::testCheckpointCommitEmpty()
 {
     testCommit(0,true);
 }
 
-void TestLogicalTxn::testCheckpointCommitShort()
+void LogicalTxnTest::testCheckpointCommitShort()
 {
     testCommit(10,true);
 }
 
-void TestLogicalTxn::testCheckpointCommitLong()
+void LogicalTxnTest::testCheckpointCommitLong()
 {
     testCommit(10000,true);
 }
 
-void TestLogicalTxn::testRollback(
+void LogicalTxnTest::testRollback(
     int nActions,
     bool checkpoint)
 {
@@ -324,7 +324,7 @@ void TestLogicalTxn::testRollback(
     rollbackFull();
 }
 
-void TestLogicalTxn::rollbackFull()
+void LogicalTxnTest::rollbackFull()
 {
     getLogicalTxn()->rollback();
     BOOST_CHECK(expected.empty());
@@ -333,7 +333,7 @@ void TestLogicalTxn::rollbackFull()
     pTxnLog.reset();
 }
 
-void TestLogicalTxn::commit()
+void LogicalTxnTest::commit()
 {
     getLogicalTxn()->commit();
     checkpointTxnLog(finalCheckpointMemento);
@@ -341,7 +341,7 @@ void TestLogicalTxn::commit()
     pTxnLog.reset();
 }
 
-void TestLogicalTxn::testCommit(int nActions,bool checkpoint)
+void LogicalTxnTest::testCommit(int nActions,bool checkpoint)
 {
     int iCheckpoint = checkpoint ? nActions/2 : -1;
     testTxn(nActions,iCheckpoint);
@@ -363,7 +363,7 @@ void TestLogicalTxn::testCommit(int nActions,bool checkpoint)
     assert(pRecoveryLog.unique());
 }
 
-void TestLogicalTxn::testTxn(int nActions,int iCheckpoint,int iSvpt)
+void LogicalTxnTest::testTxn(int nActions,int iCheckpoint,int iSvpt)
 {
     openStorage(DeviceMode::createNew);
     SegmentAccessor segmentAccessor(pLinearSegment,pCache);
@@ -391,7 +391,7 @@ void TestLogicalTxn::testTxn(int nActions,int iCheckpoint,int iSvpt)
     }
 }
 
-void TestLogicalTxn::testActions(int nActions,int iFirst)
+void LogicalTxnTest::testActions(int nActions,int iFirst)
 {
     for (int i = 0; i < nActions; ++i) {
         ByteOutputStream &logStream =
@@ -402,7 +402,7 @@ void TestLogicalTxn::testActions(int nActions,int iFirst)
     }
 }
 
-SharedLogicalTxnParticipant TestLogicalTxn::loadParticipant(
+SharedLogicalTxnParticipant LogicalTxnTest::loadParticipant(
     LogicalTxnClassId classId,
     ByteInputStream &logStream)
 {
@@ -414,6 +414,6 @@ SharedLogicalTxnParticipant TestLogicalTxn::loadParticipant(
         shared_from_this());
 }
 
-FENNEL_UNIT_TEST_SUITE(TestLogicalTxn);
+FENNEL_UNIT_TEST_SUITE(LogicalTxnTest);
 
-// End TestLogicalTxn.cpp
+// End LogicalTxnTest.cpp

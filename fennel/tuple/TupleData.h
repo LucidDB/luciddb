@@ -34,7 +34,7 @@ class TupleDescriptor;
  */
 struct TupleDatum
 {
-    uint cbData;
+    TupleStorageByteLength cbData;
     PConstBuffer pData;
 
     union

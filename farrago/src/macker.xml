@@ -555,6 +555,9 @@
         <allow>
           <to pattern="resource" />
         </allow>
+        <allow>
+          <to pattern="query" />
+        </allow>
       </deny>
     </access-rule>
 

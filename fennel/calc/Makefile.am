@@ -12,7 +12,8 @@ JumpInstruction.cpp  \
 RegisterReference.cpp \
 CalcGrammar.ypp \
 CalcLexer.lpp \
-CalcAssembler.cpp
+CalcAssembler.cpp \
+SqlString.cpp
 
 # noinst_PROGRAMS =    \
 # testCalc tuple testCalcAssembler

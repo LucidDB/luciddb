@@ -300,7 +300,7 @@ public:
         }
     }
     template <typename T>
-    void setInput(int index, T *valP, uint length)
+    void setInput(int index, T *valP, TupleStorageByteLength length)
     {
         reinterpret_cast<T *>(const_cast<PBuffer>(_tupleDataInput[index].pData)) = valP;
         _tupleDataInput[index].cbData = length;
@@ -321,7 +321,10 @@ public:
         }
     }
     template <typename T>
-    void setOutput(int index, T *valP, uint cbData, uint cbStorage)
+    void setOutput(int index, 
+                   T *valP, 
+                   TupleStorageByteLength cbData,
+                   TupleStorageByteLength cbStorage)
     {
         reinterpret_cast<T *>(const_cast<PBuffer>(_tupleDataOutput[index].pData)) = valP;
         _tupleDataOutput[index].cbData = cbData;

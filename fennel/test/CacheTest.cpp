@@ -30,7 +30,7 @@
 using namespace fennel;
 
 /**
- * TestCache exercises the entire Cache interface in both
+ * CacheTest exercises the entire Cache interface in both
  * single-threaded and multi-threaded modes.  Command-line options
  * allow control over variables such as the test size, duration,
  * and mix of operations.
@@ -39,7 +39,7 @@ using namespace fennel;
  *
  * TODO:  doc configuration parameters
  */
-class TestCache : virtual public PagingTestBase
+class CacheTest : virtual public PagingTestBase
 {
 public:
     /**
@@ -78,7 +78,7 @@ public:
         getCache().prefetchBatch(blockId,nPagesPerBatch);
     }
     
-    explicit TestCache()
+    explicit CacheTest()
     {
         // disable irrelevant threads
         threadCounts[OP_ALLOCATE] = 0;
@@ -86,8 +86,8 @@ public:
 
         cbPageUsable = cbPageFull;
         
-        FENNEL_UNIT_TEST_CASE(TestCache,testSingleThread);
-        FENNEL_UNIT_TEST_CASE(TestCache,testQuotaCacheAccessor);
+        FENNEL_UNIT_TEST_CASE(CacheTest,testSingleThread);
+        FENNEL_UNIT_TEST_CASE(CacheTest,testQuotaCacheAccessor);
         FENNEL_UNIT_TEST_CASE(PagingTestBase,testMultipleThreads);
     }
 
@@ -124,6 +124,6 @@ public:
     }
 };
 
-FENNEL_UNIT_TEST_SUITE(TestCache);
+FENNEL_UNIT_TEST_SUITE(CacheTest);
 
-// End TestCache.cpp
+// End CacheTest.cpp

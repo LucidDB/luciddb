@@ -142,6 +142,10 @@ public class FarragoPreparingStmt extends OJStatement
 
     private boolean rememberDependencies;
 
+    private Set initializedWrapperClassNameSet;
+
+    private FarragoPlanner planner;
+
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -176,6 +180,8 @@ public class FarragoPreparingStmt extends OJStatement
         farragoTypeFactory = new FarragoTypeFactoryImpl(catalog);
         this.dataWrapperCache = new FarragoDataWrapperCache(
             allocations,dataWrapperCache,catalog);
+        initializedWrapperClassNameSet = new HashSet();
+            
         super.setResultCallingConvention(CallingConvention.ITERATOR);
 
         directDependencies = new HashSet();
@@ -198,12 +204,11 @@ public class FarragoPreparingStmt extends OJStatement
             new VolcanoPlannerFactory() {
                 public VolcanoPlanner newPlanner()
                 {
-                    FarragoPlanner planner = new FarragoPlanner(
-                        FarragoPreparingStmt.this);
-                    planner.init();
                     return planner;
                 }
             });
+        planner = new FarragoPlanner(this);
+        planner.init();
         
         // FIXME:  should be beginTrans(false) for read-only, but that prevents
         // creation of transient objects for communication with Fennel
@@ -493,6 +498,7 @@ public class FarragoPreparingStmt extends OJStatement
 
         if (columnSet instanceof FemForeignTable) {
             FemForeignTableImpl table = (FemForeignTableImpl) columnSet;
+            loadDataServerFromCache(table.getDataServer(catalog));
             return table.loadFromCache(
                 dataWrapperCache,catalog,farragoTypeFactory);
         }
@@ -535,8 +541,8 @@ public class FarragoPreparingStmt extends OJStatement
         // gets dropped, dependent views will cascade.
         addDependency(server);
         
-        FarragoForeignDataWrapper wrapper =
-            server.loadFromCache(dataWrapperCache);
+        FarragoForeignDataWrapper wrapper = loadDataServerFromCache(server);
+        
         String [] namesWithoutCatalog = new String [] {
             resolved.schemaName,
             resolved.objectName
@@ -556,6 +562,22 @@ public class FarragoPreparingStmt extends OJStatement
                 FarragoResource.instance().newValidatorForeignTableLookupFailed(
                     Arrays.asList(resolved.getQualifiedName()).toString(),ex);
         }
+    }
+
+    private FarragoForeignDataWrapper loadDataServerFromCache(
+        FemDataServerImpl server)
+    {
+        FarragoForeignDataWrapper wrapper =
+            server.loadFromCache(dataWrapperCache);
+        if (initializedWrapperClassNameSet.add(wrapper.getClass().getName())) {
+            // This is the first time we've seen this wrapper, so give it
+            // a chance to register any planner info such as calling
+            // conventions and rules.  REVIEW:  the discrimination is
+            // based on class name, on the assumption that it should
+            // unique regardless of classloader, JAR, etc.  Is that correct?
+            wrapper.registerRules(planner);
+        }
+        return wrapper;
     }
 
     // implement SaffronSchema

@@ -27,6 +27,10 @@ import net.sf.farrago.resource.*;
 
 import net.sf.saffron.core.*;
 import net.sf.saffron.util.*;
+import net.sf.saffron.rel.*;
+import net.sf.saffron.opt.*;
+import net.sf.saffron.rel.convert.*;
+import net.sf.saffron.rel.jdbc.*;
 
 import java.sql.*;
 import java.util.*;
@@ -263,6 +267,28 @@ public class MedJdbcForeignDataWrapper
         }
     }
 
+    // implement FarragoForeignDataWrapper
+    public void registerRules(SaffronPlanner planner)
+    {
+        JdbcQuery.register(planner);
+        
+        // tell optimizer how to convert data from JDBC into Farrago
+        planner.addRule(
+            new ConverterRule(
+                SaffronRel.class,
+                CallingConvention.RESULT_SET,
+                CallingConvention.ITERATOR,
+                "ResultSetToFarragoIteratorRule")
+            {
+                public SaffronRel convert(SaffronRel rel)
+                {
+                    return new ResultSetToFarragoIteratorConverter(
+                        rel.getCluster(),
+                        rel);
+                }
+            });
+    }
+    
     // implement FarragoAllocation
     public void closeAllocation()
     {

@@ -357,17 +357,47 @@ void testLiteralBinding()
     testCase8.expectAssemblerError("Invalid value");
     testCase8.assemble();
 
-    // Test bind a string
+    // Test bind a string (char)
     string teststr9;
     teststr9 = "O c,4, u8; C c,4, u8; V 0x";
     teststr9 += CalcAssemblerTestCase::getHexString("test");
     teststr9 += ", 60000000; T; MOVE O0, C0; MOVE O1, C1;";
-    CalcAssemblerTestCase testCase9(__LINE__, "STRING = \"test\"", teststr9.c_str());
+    CalcAssemblerTestCase testCase9(__LINE__, "STRING (CHAR) = \"test\"", teststr9.c_str());
     if (testCase9.assemble()) {
         testCase9.setExpectedOutput<char>(0, "test", 4);
         testCase9.setExpectedOutput<uint64_t>(1, 60000000);
         testCase9.test();
     }
+ 
+    // Test bind a string (varchar)
+    string teststr10;
+    teststr10 = "O vc,8; C vc,8; V 0x";
+    teststr10 += CalcAssemblerTestCase::getHexString("short");
+    teststr10 += "; T; MOVE O0, C0;";
+    CalcAssemblerTestCase testCase10(__LINE__, "STRING (VARCHAR) = \"short\"", teststr10.c_str());
+    if (testCase10.assemble()) {
+        testCase10.setExpectedOutput<char>(0, "short", 5);
+        testCase10.test();
+    }
+
+    // Test bind a string (varchar) that's too long
+    string teststr11;
+    teststr11 = "O vc,8, u8; C vc,8, u8; V 0x";
+    teststr11 += CalcAssemblerTestCase::getHexString("muchtoolongstring");
+    teststr11 += "; T; MOVE O0, C0;";
+    
+    CalcAssemblerTestCase testCase11(__LINE__, "STRING (VARCHAR) TOO LONG", teststr11.c_str());
+    testCase11.expectAssemblerError("too long");
+    testCase11.assemble();
+
+    // Test bind a binary string (binary) that's too short
+    string teststr12;
+    teststr12 = "O c,100, u8; C c,100, u8; V 0x";
+    teststr12 += CalcAssemblerTestCase::getHexString("binarytooshort");
+    teststr12 += ", 60000000; T; MOVE O0, C0; MOVE O1, C1;";
+    CalcAssemblerTestCase testCase12(__LINE__, "STRING (BINARY) TOO SHORT", teststr12.c_str());
+    testCase12.expectAssemblerError("not equal");
+    testCase12.assemble();
 }
 
 void testAdd()

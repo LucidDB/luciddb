@@ -68,7 +68,7 @@ class NumericType : public StoredTypeDescriptor
     virtual void visitValue(
         DataVisitor &dataVisitor,
         void const *pData,
-        uint cbData) const
+        TupleStorageByteLength cbData) const
     {
         T t = *static_cast<T const *>(pData);
         assert(cbData == sizeof(T));
@@ -81,9 +81,9 @@ class NumericType : public StoredTypeDescriptor
 
     virtual int compareValues(
         void const *pData1,
-        uint cbData1,
+        TupleStorageByteLength cbData1,
         void const *pData2,
-        uint cbData2) const
+        TupleStorageByteLength cbData2) const
     {
         assert(cbData1 == sizeof(T));
         assert(cbData2 == sizeof(T));
@@ -103,7 +103,7 @@ template<>
 void NumericType<double,STANDARD_TYPE_DOUBLE>::visitValue(
     DataVisitor &dataVisitor,
     void const *pData,
-    uint cbData) const
+    TupleStorageByteLength cbData) const
 {
     double d = *static_cast<double const *>(pData);
     assert(cbData == sizeof(double));
@@ -114,7 +114,7 @@ template<>
 void NumericType<float,STANDARD_TYPE_REAL>::visitValue(
     DataVisitor &dataVisitor,
     void const *pData,
-    uint cbData) const
+    TupleStorageByteLength cbData) const
 {
     float d = *static_cast<float const *>(pData);
     assert(cbData == sizeof(float));
@@ -157,7 +157,7 @@ class CharType : public StoredTypeDescriptor
     virtual void visitValue(
         DataVisitor &dataVisitor,
         void const *pData,
-        uint cbData) const
+        TupleStorageByteLength cbData) const
     {
         char const *pStr = static_cast<char const *>(pData);
         dataVisitor.visitChars(pStr,cbData);
@@ -165,9 +165,9 @@ class CharType : public StoredTypeDescriptor
 
     virtual int compareValues(
         void const *pData1,
-        uint cbData1,
+        TupleStorageByteLength cbData1,
         void const *pData2,
-        uint cbData2) const
+        TupleStorageByteLength cbData2) const
     {
         assert(cbData1 == cbData2);
         // REVIEW jvs:  should be using strncmp here and below?
@@ -205,7 +205,7 @@ class VarCharType : public StoredTypeDescriptor
     virtual void visitValue(
         DataVisitor &dataVisitor,
         void const *pData,
-        uint cbData) const
+        TupleStorageByteLength cbData) const
     {
         char const *pStr = static_cast<char const *>(pData);
         dataVisitor.visitChars(pStr,cbData);
@@ -213,11 +213,11 @@ class VarCharType : public StoredTypeDescriptor
 
     virtual int compareValues(
         void const *pData1,
-        uint cbData1,
+        TupleStorageByteLength cbData1,
         void const *pData2,
-        uint cbData2) const
+        TupleStorageByteLength cbData2) const
     {
-        uint cbMin = std::min(cbData1,cbData2);
+        TupleStorageByteLength cbMin = std::min(cbData1,cbData2);
         int rc = memcmp(pData1, pData2, cbMin);
         if (rc) {
             return rc;
@@ -276,16 +276,16 @@ class BinaryType : public StoredTypeDescriptor
     virtual void visitValue(
         DataVisitor &dataVisitor,
         void const *pData,
-        uint cbData) const
+        TupleStorageByteLength cbData) const
     {
         dataVisitor.visitBytes(pData,cbData);
     }
 
     virtual int compareValues(
         void const *pData1,
-        uint cbData1,
+        TupleStorageByteLength cbData1,
         void const *pData2,
-        uint cbData2) const
+        TupleStorageByteLength cbData2) const
     {
         assert(cbData1 == cbData2);
         return memcmp(pData1,pData2,cbData1);
@@ -322,18 +322,18 @@ class VarBinaryType : public StoredTypeDescriptor
     virtual void visitValue(
         DataVisitor &dataVisitor,
         void const *pData,
-        uint cbData) const
+        TupleStorageByteLength cbData) const
     {
         dataVisitor.visitBytes(pData,cbData);
     }
 
     virtual int compareValues(
         void const *pData1,
-        uint cbData1,
+        TupleStorageByteLength cbData1,
         void const *pData2,
-        uint cbData2) const
+        TupleStorageByteLength cbData2) const
     {
-        uint cbMin = std::min(cbData1,cbData2);
+        TupleStorageByteLength cbMin = std::min(cbData1,cbData2);
         int rc = memcmp(pData1, pData2, cbMin);
         if (rc) {
             return rc;

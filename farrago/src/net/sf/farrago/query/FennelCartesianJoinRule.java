@@ -78,7 +78,9 @@ class FennelCartesianJoinRule extends VolcanoRule
             return;
         }
 
-        // REVIEW:  need to worry about variables stopped?
+        if (!joinRel.getVariablesStopped().isEmpty()) {
+            return;
+        }
 
         SaffronRel fennelLeft =
             convert(planner,leftRel,FennelRel.FENNEL_CALLING_CONVENTION);

@@ -3,17 +3,11 @@ TODO & Cleanup List for Fennel Assembler
 ================
 Major Todo Items
 ================
-Figure out a way to instantiate instructions with templates
-
-Add error handling
-
 Add test case framework - need lots and lots of test cases
 
-Add support for varbinary, varchar, binary, char.  Need to decide on encoding for strings.  Check on the maximum length that flex/bison supports.
+Check on the maximum length that flex/bison supports.
 
-Add support for pointer instructions, extended instructions, jump, return, raise, call, declare...
-
-For literal binding, check overflows, separate + and - values for integers.
+Add support for return, raise, declare...
 
 Make assembler an optional part of the calculator
 
@@ -40,7 +34,7 @@ Use explicit cast operators.
 =============
 Notes
 =============
-The destructor of the CalcLexer (created by flex) uses of delete instead of delete[]
+The destructor of the CalcLexer (created by flex) uses delete instead of delete[]
 to delete an array.  This could potentially be a problem, and we may need to include
 a patched flex in the third party libraries.  It could also be okay (maybe because
 we are just deleting chars) since it seems to work and this is the version of flex

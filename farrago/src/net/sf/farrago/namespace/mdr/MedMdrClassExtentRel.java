@@ -39,8 +39,6 @@ import java.util.*;
 import javax.jmi.model.*;
 import javax.jmi.reflect.*;
 
-import org.netbeans.lib.jmi.util.*;
-
 import java.util.List;
 
 /**
@@ -60,6 +58,10 @@ class MedMdrClassExtentRel extends TableAccessRel
      * Refinement for super.table.
      */
     final MedMdrClassExtent mdrClassExtent;
+
+    Class rowClass;
+
+    boolean useReflection;
     
     public MedMdrClassExtentRel(
         VolcanoCluster cluster,
@@ -68,6 +70,9 @@ class MedMdrClassExtentRel extends TableAccessRel
     {
         super(cluster,mdrClassExtent,connection);
         this.mdrClassExtent = mdrClassExtent;
+
+        rowClass = JmiUtil.getClassForRefClass(mdrClassExtent.refClass);
+        useReflection = (rowClass == RefObject.class);
     }
 
     // implement SaffronRel
@@ -76,35 +81,68 @@ class MedMdrClassExtentRel extends TableAccessRel
         return CallingConvention.ITERATOR;
     }
 
-    // implement SaffronRel
-    public Object implement(RelImplementor implementor,int ordinal)
+    private String [] getRuntimeName(RefBaseObject refObject)
     {
-        assert (ordinal == -1);
+        List nameList = new ArrayList();
 
-        // convert array of names into an ExpressionList to be used in
-        // generating lookup code
+        boolean useModel = (refObject instanceof ModelElement);
+        
+        // determine the path from the root package to refObject
+        RefBaseObject refPackage = JmiUtil.getContainer(refObject);
+        String rootPackageName = JmiUtil.getMetaObjectName(
+            mdrClassExtent.directory.dataWrapper.rootPackage);
+        for (;;) {
+            String packageName = JmiUtil.getMetaObjectName(refPackage);
+            if (packageName.equals(rootPackageName)) {
+                break;
+            }
+            // we're building up the list in reverse order
+            nameList.add(0,packageName);
+            refPackage = JmiUtil.getContainer(refPackage);
+            assert(refPackage != null);
+        }
+        
+        nameList.add(JmiUtil.getMetaObjectName(refObject));
+        String typeName;
+        if (useModel) {
+            typeName = JmiUtil.getMetaObjectName(refObject.refMetaObject());
+        } else {
+            typeName = JmiUtil.getMetaObjectName(
+                refObject.refMetaObject().refMetaObject());
+        }
+        nameList.add(typeName);
+        return (String []) nameList.toArray(new String[0]);
+    }
+
+    RefBaseObject getRefObjectFromModelElement(ModelElement modelElement)
+    {
+        String [] runtimeName = getRuntimeName(modelElement);
+        return (RefBaseObject)
+            mdrClassExtent.directory.lookupRefBaseObject(runtimeName);
+    }
+
+    Expression getRefBaseObjectRuntimeExpression(RefBaseObject refObject)
+    {
+        String [] runtimeName = getRuntimeName(refObject);
+
         ExpressionList nameList = new ExpressionList();
-        for (int i = 0; i < mdrClassExtent.foreignName.length; ++i) {
-            nameList.add(
-                Literal.makeLiteral(mdrClassExtent.foreignName[i]));
+        for (int i = 0; i < runtimeName.length; ++i) {
+            nameList.add(Literal.makeLiteral(runtimeName[i]));
         }
 
-        Variable connectionVariable =
-            new Variable(OJStatement.connectionVariable);
+        return mdrClassExtent.directory.dataWrapper.generateRuntimeSupportCall(
+            new ArrayAllocationExpression(
+                TypeName.forOJClass(OJSystem.STRING),
+                new ExpressionList(null),
+                new ArrayInitializer(nameList)));
+    }
 
+    public Expression getIteratorExpression()
+    {
         Expression metaClassExpression =
             new CastExpression(
                 OJClass.forClass(RefClass.class),
-                new MethodCall(
-                    connectionVariable,
-                    "getDataServerRuntimeSupport",
-                    new ExpressionList(
-                        Literal.makeLiteral(
-                            mdrClassExtent.directory.dataWrapper.serverMofId),
-                        new ArrayAllocationExpression(
-                            TypeName.forOJClass(OJSystem.STRING),
-                            new ExpressionList(null),
-                            new ArrayInitializer(nameList)))));
+                getRefBaseObjectRuntimeExpression(mdrClassExtent.refClass));
         Expression collectionExpression =
             new MethodCall(
                 metaClassExpression,
@@ -116,43 +154,51 @@ class MedMdrClassExtentRel extends TableAccessRel
                 "iterator",
                 new ExpressionList());
 
+        return iterExpression;
+    }
+
+    // implement SaffronRel
+    public Object implement(RelImplementor implementor,int ordinal)
+    {
+        Expression iterExpression = getIteratorExpression();
+
         Variable varInputRow = implementor.newVariable();
 
-        TagProvider tagProvider = new TagProvider();
+        SaffronType inputRowType = getCluster().typeFactory.createJavaType(
+            rowClass);
+        SaffronType outputRowType = getRowType();
 
-        // Look up the Java interface generated for the class being queried.
-        String className = tagProvider.getImplFullName(
-            (ModelElement) (mdrClassExtent.refClass.refMetaObject()),
-            TagProvider.INSTANCE);
-        assert(className.endsWith("Impl"));
-        className = className.substring(0,className.length() - 4);
-        Class rowClass;
-        boolean useReflection = false;
-        try {
-            rowClass = Class.forName(className);
-        } catch (ClassNotFoundException ex) {
-            // This is possible when we're querying an external repository
-            // for which we don't know the class mappings.  Do everything
-            // via JMI reflection instead.
-            rowClass = RefObject.class;
-            useReflection = true;
-        }
+        RexNode [] rexExps = implementProjection(varInputRow);
+        
+        return IterCalcRel.implementAbstract(
+            implementor,
+            this,
+            iterExpression,
+            varInputRow,
+            inputRowType,
+            outputRowType,
+            null,
+            rexExps);
+    }
+
+    RexNode [] implementProjection(Expression inputRow)
+    {
+        Variable connectionVariable =
+            new Variable(OJStatement.connectionVariable);
 
         // This is a little silly.  Have to put in a dummy cast
         // so that type inference will stop early (otherwise it
         // fails to find variable reference).
         Expression castInputRow = new CastExpression(
-            OJClass.forClass(rowClass),varInputRow);
+            OJClass.forClass(rowClass),inputRow);
         
-        SaffronType inputRowType = getCluster().typeFactory.createJavaType(
-            rowClass);
         SaffronType outputRowType = getRowType();
-
         List features = JmiUtil.getFeatures(
             mdrClassExtent.refClass,StructuralFeature.class);
         int n = features.size();
         Expression [] accessorExps = new Expression[n + 2];
         SaffronField [] outputFields = outputRowType.getFields();
+
         for (int i = 0; i < n; ++i) {
             StructuralFeature feature = (StructuralFeature) features.get(i);
             if (useReflection) {
@@ -161,20 +207,7 @@ class MedMdrClassExtentRel extends TableAccessRel
                     "refGetValue",
                     new ExpressionList(Literal.makeLiteral(feature.getName())));
             } else {
-                String accessorName = tagProvider.getSubstName(feature);
-                String prefix = null;
-                if (feature.getType().getName().equals("Boolean")) {
-                    if (!accessorName.startsWith("is")) {
-                        prefix = "is";
-                    }
-                } else {
-                    prefix = "get";
-                }
-                if (prefix != null) {
-                    accessorName = prefix
-                        + Character.toUpperCase(accessorName.charAt(0))
-                        + accessorName.substring(1);
-                }
+                String accessorName = JmiUtil.getAccessorName(feature);
                 accessorExps[i] = new MethodCall(
                     castInputRow,
                     accessorName,
@@ -219,16 +252,7 @@ class MedMdrClassExtentRel extends TableAccessRel
                 outputFields[i].getType(),
                 rexExps[i]);
         }
-        
-        return IterCalcRel.implementAbstract(
-            implementor,
-            this,
-            iterExpression,
-            varInputRow,
-            inputRowType,
-            outputRowType,
-            null,
-            rexExps);
+        return rexExps;
     }
 }
 

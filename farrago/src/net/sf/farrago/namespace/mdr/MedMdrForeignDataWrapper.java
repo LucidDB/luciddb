@@ -23,11 +23,16 @@ import net.sf.farrago.namespace.*;
 import net.sf.farrago.util.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.catalog.*;
+import net.sf.farrago.query.*;
 
 import net.sf.saffron.core.*;
 import net.sf.saffron.util.*;
+import net.sf.saffron.oj.stmt.*;
 
 import org.netbeans.api.mdr.*;
+
+import openjava.mop.*;
+import openjava.ptree.*;
 
 import java.sql.*;
 import java.util.*;
@@ -61,11 +66,11 @@ public class MedMdrForeignDataWrapper
     
     public static final String PROP_SCHEMA_NAME = "SCHEMA_NAME";
     
-    private MDRepository repository;
+    MDRepository repository;
 
-    private RefPackage rootPackage;
+    FarragoCatalog catalog;
 
-    private FarragoCatalog catalog;
+    RefPackage rootPackage;
 
     boolean foreignRepository;
 
@@ -262,8 +267,17 @@ public class MedMdrForeignDataWrapper
     // implement FarragoForeignDataWrapper
     public Object getRuntimeSupport(Object param) throws SQLException
     {
+        if (param == null) {
+            return repository;
+        }
         String [] qualifiedName = (String []) param;
-        return getMdrNameDirectory().lookupRefClass(qualifiedName);
+        return getMdrNameDirectory().lookupRefBaseObject(qualifiedName);
+    }
+    
+    // implement FarragoForeignDataWrapper
+    public void registerRules(SaffronPlanner planner)
+    {
+        planner.addRule(new MedMdrJoinRule());
     }
     
     // implement FarragoAllocation
@@ -275,6 +289,18 @@ public class MedMdrForeignDataWrapper
             }
             repository = null;
         }
+    }
+
+    Expression generateRuntimeSupportCall(Expression arg)
+    {
+        Variable connectionVariable =
+            new Variable(OJStatement.connectionVariable);
+        return new MethodCall(
+            connectionVariable,
+            "getDataServerRuntimeSupport",
+            new ExpressionList(
+                Literal.makeLiteral(serverMofId),
+                arg));
     }
 }
 

@@ -6,11 +6,7 @@ Calculator Major Todo Items
 
 Look through Spec for TBD. 
 
-Assembler
-	Support Serialized programs
-	Allocate Local/Literal/Status Tuple
-	Provide for initialization of literal register set.
-	Provite a TupleDescriptor (or the like) for each register set.
+Assembler: See TODO.assembler.
 
 External Functions
 

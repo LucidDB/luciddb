@@ -71,7 +71,9 @@ class FennelIndexJoinRule extends VolcanoRule
         SaffronRel leftRel = call.rels[1];
         FennelIndexScanRel scanRel = (FennelIndexScanRel) call.rels[2];
 
-        // REVIEW:  need to worry about variables stopped?
+        if (!joinRel.getVariablesStopped().isEmpty()) {
+            return;
+        }
         
         switch(joinRel.getJoinType()) {
         case JoinRel.JoinType.INNER:
@@ -90,36 +92,12 @@ class FennelIndexJoinRule extends VolcanoRule
         }
         
         FarragoCatalog catalog = scanRel.getPreparingStmt().getCatalog();
-        RexNode joinExp = joinRel.getCondition();
-        if (joinExp.getKind() != RexKind.Equals) {
+        int [] joinFieldOrdinals = new int[2];
+        if (!OptUtil.analyzeSimpleEquiJoin(joinRel,joinFieldOrdinals)) {
             return;
         }
-        RexCall binaryExpression = (RexCall) joinExp;
-        RexNode leftComparand = binaryExpression.operands[0];
-        RexNode rightComparand = binaryExpression.operands[1];
-        if (!(leftComparand instanceof RexInputRef)) {
-            return;
-        }
-        if (!(rightComparand instanceof RexInputRef)) {
-            return;
-        }
-
-        final int leftFieldCount =
-            joinRel.getLeft().getRowType().getFieldCount();
-        RexInputRef leftFieldAccess = (RexInputRef) leftComparand;
-        if (!(leftFieldAccess.index < leftFieldCount)) {
-            // left field must access left side of join
-            return;
-        }
-        
-        RexInputRef rightFieldAccess = (RexInputRef) rightComparand;
-        if (!(rightFieldAccess.index >= leftFieldCount)) {
-            // right field must access right side of join
-            return;
-        }
-
-        int leftOrdinal = leftFieldAccess.index;
-        int rightOrdinal = rightFieldAccess.index - leftFieldCount;
+        int leftOrdinal = joinFieldOrdinals[0];
+        int rightOrdinal = joinFieldOrdinals[1];
         
         CwmColumn indexColumn = scanRel.getColumnForFieldAccess(rightOrdinal);
         assert (indexColumn != null);

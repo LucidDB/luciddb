@@ -71,7 +71,7 @@ public:
      * Copied from TupleAttributeDescriptor.cbStorage.  This is not used
      * for anything except assertions.
      */
-    uint cbStorage;
+    TupleStorageByteLength cbStorage;
 
     virtual ~AttributeAccessor();
     

@@ -25,13 +25,13 @@
 
 using namespace fennel;
 
-class TestLinearViewSegment : virtual public SegmentTestBase
+class LinearViewSegmentTest : virtual public SegmentTestBase
 {
     uint nDiskPagesTotal;
     PageId firstPageId;
     
 public:
-    explicit TestLinearViewSegment()
+    explicit LinearViewSegmentTest()
     {
         nDiskPagesTotal = nDiskPages;
         FENNEL_UNIT_TEST_CASE(SegmentTestBase,testSingleThread);
@@ -65,6 +65,6 @@ public:
     }
 };
 
-FENNEL_UNIT_TEST_SUITE(TestLinearViewSegment);
+FENNEL_UNIT_TEST_SUITE(LinearViewSegmentTest);
 
-// End TestLinearViewSegment.cpp
+// End LinearViewSegmentTest.cpp

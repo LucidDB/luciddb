@@ -42,7 +42,7 @@ public:
     virtual void postVisitRow() = 0;
     virtual void visitAttribute(std::string) = 0;
     virtual void visitString(std::string) = 0;
-    virtual void visitChars(char const *, uint iChars) = 0;
+    virtual void visitChars(char const *, TupleStorageByteLength iChars) = 0;
     virtual void visitUnsignedInt(uint64_t) = 0;
     virtual void visitSignedInt(int64_t) = 0;
     virtual void visitDouble(double) = 0;
@@ -52,7 +52,7 @@ public:
     virtual void visitPageOwnerId(PageOwnerId) = 0;
     virtual void visitSegByteId(SegByteId) = 0;
     virtual void visitFormatted(char const *) = 0;
-    virtual void visitBytes(void const *v,uint iBytes) = 0;
+    virtual void visitBytes(void const *v,TupleStorageByteLength iBytes) = 0;
 };
 
 FENNEL_END_NAMESPACE

@@ -28,11 +28,15 @@ import net.sf.saffron.rel.RelVisitor;
 import net.sf.saffron.rel.SaffronRel;
 import net.sf.saffron.rel.ProjectRel;
 import net.sf.saffron.rel.FilterRel;
+import net.sf.saffron.rel.JoinRel;
 import net.sf.saffron.rex.RexCorrelVariable;
 import net.sf.saffron.rex.RexNode;
 import net.sf.saffron.rex.RexShuttle;
 import net.sf.saffron.rex.RexBuilder;
 import net.sf.saffron.rex.RexUtil;
+import net.sf.saffron.rex.RexKind;
+import net.sf.saffron.rex.RexInputRef;
+import net.sf.saffron.rex.RexCall;
 import net.sf.saffron.util.Util;
 import openjava.ptree.Expression;
 import openjava.ptree.FieldAccess;
@@ -438,6 +442,42 @@ public abstract class OptUtil
             castExps,
             fieldNames,
             ProjectRel.Flags.Boxed);
+    }
+
+    public static boolean analyzeSimpleEquiJoin(
+        JoinRel joinRel,int [] joinFieldOrdinals)
+    {
+        RexNode joinExp = joinRel.getCondition();
+        if (joinExp.getKind() != RexKind.Equals) {
+            return false;
+        }
+        RexCall binaryExpression = (RexCall) joinExp;
+        RexNode leftComparand = binaryExpression.operands[0];
+        RexNode rightComparand = binaryExpression.operands[1];
+        if (!(leftComparand instanceof RexInputRef)) {
+            return false;
+        }
+        if (!(rightComparand instanceof RexInputRef)) {
+            return false;
+        }
+
+        final int leftFieldCount =
+            joinRel.getLeft().getRowType().getFieldCount();
+        RexInputRef leftFieldAccess = (RexInputRef) leftComparand;
+        if (!(leftFieldAccess.index < leftFieldCount)) {
+            // left field must access left side of join
+            return false;
+        }
+        
+        RexInputRef rightFieldAccess = (RexInputRef) rightComparand;
+        if (!(rightFieldAccess.index >= leftFieldCount)) {
+            // right field must access right side of join
+            return false;
+        }
+
+        joinFieldOrdinals[0] = leftFieldAccess.index;
+        joinFieldOrdinals[1] = rightFieldAccess.index - leftFieldCount;
+        return true;
     }
 
     //~ Inner Classes ---------------------------------------------------------

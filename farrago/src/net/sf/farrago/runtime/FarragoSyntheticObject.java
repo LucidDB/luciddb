@@ -135,11 +135,6 @@ public abstract class FarragoSyntheticObject extends SyntheticObject
      * unmarshalling bit fields.  Note that this can't be done at
      * construction time, because subclass constructors may change field
      * references.  Instead, we do it lazily.
-     * 
-     * <p>
-     * TODO:  once Saffron is fixed to use assignment rather than allocation,
-     * do it eagerly.
-     * </p>
      */
     private void indexBitFields()
     {

@@ -233,11 +233,11 @@ protected:
     //! Cached and/or duplicated size of mPData;
     //!
     //! Only valid if CachePointer or PtrReset property is set.
-    uint mCbData;
+    TupleStorageByteLength mCbData;
     //! Cached and/or duplicated capacity of mPData;
     //!
     //! Only valid if CachePointer or PtrReset property is set.
-    uint mCbStorage;
+    TupleStorageByteLength mCbStorage;
 
     //! Behavior properties of this register.
     TRegisterRefProp mProp; 
@@ -394,7 +394,7 @@ public:
     //! is not a pointer.
     //! Will append to mResetP to allow register to be reset.
     void
-    putP(TMPLT newP, uint len)
+    putP(TMPLT newP, TupleStorageByteLength len)
     {
         assert(!(mProp & EPropReadOnly));
         assert(newP);  // use toNull()
@@ -423,7 +423,7 @@ public:
     //! This is the actual size of the object pointed to, not
     //! the amount of memory allocated for the object. For example,
     //! this could be the length, in bytes, of a VARCHAR string.
-    uint
+    TupleStorageByteLength
     getS() const
     {
         if (mProp & (EPropCachePointer|EPropPtrReset)) {
@@ -443,7 +443,7 @@ public:
     //! considers cbStorage to be read-only information. Calculator
     //! can change neither the defined column width nor the amount
     //! of memory allocated.
-    uint
+    TupleStorageByteLength
     getSMax() const
     {
         if (mProp & (EPropCachePointer|EPropPtrReset)) {
@@ -465,7 +465,7 @@ public:
     //! the amount of memory allocated for the object. For example,
     //! this could be the length, in bytes, of a VARCHAR string.
     void
-    putS(uint newsize)
+    putS(TupleStorageByteLength newsize)
     {
         if (mProp & (EPropCachePointer|EPropPtrReset)) {
             assert(newsize == 0 ? true : (mPData == 0 ? false : true)); // useful or harmful?

@@ -60,7 +60,7 @@ class CalcAssembler
 public:
     explicit
     CalcAssembler(Calculator* calc) { assert(calc != NULL); mCalc = calc; }
-    ~CalcAssembler() { }
+    ~CalcAssembler();
 
     CalcLexer&  getLexer() { return mLexer; }
 
@@ -246,13 +246,22 @@ protected:
     void  init();
 
     /**
+     * Allocate memory (create TupleData structure) for the literal, local, and
+     * status registers.
+     * CalcYYparse should call this function after parsing the register
+     * definitions and before parsing the literal values.
+     * @note This function must be called before attempting to initialize the
+     *       literal values.
+     */
+    void allocateTuples();
+
+    /**
      * Bind registers to the calculator
      * CalcYYparse should call this function after parsing the register 
-     * definitions to allocate memory (i.e create TupleData) for the literal,
-     * local, and status registers, and to bind the TupleData with the 
-     * calculator registers.
-     * @note This function must be called before attempting to bind literal
-     *       values to their registers.
+     * definitions and literal values to bind the TupleData to the calculator
+     * registers.
+     * @note This function must be called after all tuples have been allocated
+     *       and literal values initialized
      */
     void bindRegisters();
 
@@ -356,7 +365,13 @@ protected:
     void addRegister(RegisterReference::ERegisterSet setIndex,
                      StandardTypeDescriptorOrdinal regType, uint cbStorage = 0);
 
+
     // CalcYYparse uses this function to add a instruction
+
+    /**
+     * Add a instruction to the calulator
+     * @param inst Instruction to add
+     */
     void addInstruction(Instruction* inst);
 
     // Functions used by CalcYYparse to access registers and tuples
@@ -440,6 +455,14 @@ protected:
 
     //! TupleDescriptors for the register sets
     TupleDescriptor mRegisterSetDescriptor[RegisterReference::ELastSet];
+
+    //! Pointers to the tuple data
+    //! Once they have been bound to the calculator, it is the calculator's
+    //! responsibility to destroty the tuple data and the buffers.
+    TupleData* mRegisterTupleData[RegisterReference::ELastSet];
+    //! Actual storage used by the CalcAssembler for the literal, local
+    //! and status registers
+    FixedBuffer* mBuffers[RegisterReference::ELastSet];
 
     //! Factory used to create TupleAttributeDescriptor
     StandardTypeDescriptorFactory   mTypeFactory;

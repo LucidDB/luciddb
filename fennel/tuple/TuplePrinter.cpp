@@ -65,7 +65,7 @@ void TuplePrinter::visitString(std::string s)
     postVisitValue();
 }
 
-void TuplePrinter::visitChars(char const *c, uint n)
+void TuplePrinter::visitChars(char const *c, TupleStorageByteLength n)
 {
     std::string s(c,n);
     visitString(s);
@@ -112,7 +112,7 @@ void TuplePrinter::visitBoolean(bool b)
     postVisitValue();
 }
 
-void TuplePrinter::visitBytes(void const *v,uint iBytes)
+void TuplePrinter::visitBytes(void const *v, TupleStorageByteLength iBytes)
 {
     preVisitValue();
     if (!v) {

@@ -26,20 +26,20 @@
 
 using namespace fennel;
 
-class TestLocalCondition : virtual public TestBase
+class LocalConditionTest : virtual public TestBase
 {
 public:
     StrictMutex mutex;
     LocalCondition cond;
     bool bFlag;
     
-    explicit TestLocalCondition()
+    explicit LocalConditionTest()
     {
         bFlag = 0;
-        FENNEL_UNIT_TEST_CASE(TestLocalCondition,testNotifyAll);
+        FENNEL_UNIT_TEST_CASE(LocalConditionTest,testNotifyAll);
     }
     
-    virtual ~TestLocalCondition()
+    virtual ~LocalConditionTest()
     {
     }
     
@@ -48,11 +48,11 @@ public:
 
 class TestThread : public Thread
 {
-    TestLocalCondition &test;
+    LocalConditionTest &test;
 
 public:
     
-    TestThread(TestLocalCondition &testInit)
+    TestThread(LocalConditionTest &testInit)
         : test(testInit)    
     {
     }
@@ -66,7 +66,7 @@ public:
     }
 };
 
-void TestLocalCondition::testNotifyAll()
+void LocalConditionTest::testNotifyAll()
 {
     StrictMutexGuard mutexGuard(mutex);
     TestThread thread(*this);
@@ -81,7 +81,7 @@ void TestLocalCondition::testNotifyAll()
     BOOST_MESSAGE("joined");
 }
 
-FENNEL_UNIT_TEST_SUITE(TestLocalCondition);
+FENNEL_UNIT_TEST_SUITE(LocalConditionTest);
 
-// End TestLocalCondition.cpp
+// End LocalConditionTest.cpp
 

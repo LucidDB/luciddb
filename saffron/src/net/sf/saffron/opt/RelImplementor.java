@@ -35,7 +35,7 @@ import net.sf.saffron.util.Util;
 import net.sf.saffron.sql.SqlOperator;
 import net.sf.saffron.sql.SqlBinaryOperator;
 import net.sf.saffron.sql.SqlFunction;
-import openjava.mop.OJClass;
+import openjava.mop.*;
 import openjava.ptree.*;
 import openjava.tools.DebugOut;
 
@@ -811,26 +811,7 @@ public class RelImplementor
             }
             if (rex instanceof RexLiteral) {
                 RexLiteral literal = (RexLiteral) rex;
-                final Object value = literal.getValue();
-                if (value == null) {
-                    return Literal.constantNull();
-                } else if (value instanceof String) {
-                    return Literal.makeLiteral((String) value);
-                } else if (value instanceof Boolean) {
-                    return Literal.makeLiteral((Boolean) value);
-                } else if (value instanceof BigInteger) {
-                    long longValue = ((BigInteger) value).longValue();
-                    int intValue = (int) longValue;
-                    if (longValue == intValue) {
-                        return Literal.makeLiteral(intValue);
-                    } else {
-                        return Literal.makeLiteral(longValue);
-                    }
-                } else {
-                    throw Util.newInternal("Bad literal value " + value +
-                            " (" + value.getClass() + "); breaches " +
-                            "post-condition on RexLiteral.getValue()");
-                }
+                return convertLiteral(literal);
             }
             if (rex instanceof RexDynamicParam) {
                 return convertDynamicParam((RexDynamicParam) rex);
@@ -867,6 +848,51 @@ public class RelImplementor
             }
             throw Util.needToImplement("Translate row-expression of kind " +
                     rex.getKind() + "(" + rex + ")");
+        }
+
+        protected Expression convertLiteral(RexLiteral literal)
+        {
+            final Object value = literal.getValue();
+            if (value == null) {
+                return Literal.constantNull();
+            } else if (value instanceof String) {
+                return Literal.makeLiteral((String) value);
+            } else if (value instanceof Boolean) {
+                return Literal.makeLiteral((Boolean) value);
+            } else if (value instanceof BigInteger) {
+                long longValue = ((BigInteger) value).longValue();
+                int intValue = (int) longValue;
+                if (longValue == intValue) {
+                    return Literal.makeLiteral(intValue);
+                } else {
+                    return Literal.makeLiteral(longValue);
+                }
+            } else if (value instanceof byte []) {
+                return convertByteArrayLiteral((byte []) value);
+            } else {
+                throw Util.newInternal(
+                    "Bad literal value " + value +
+                    " (" + value.getClass() + "); breaches " +
+                    "post-condition on RexLiteral.getValue()");
+            }
+        }
+
+        protected ArrayInitializer convertByteArrayLiteralToInitializer(
+            byte [] bytes)
+        {
+            ExpressionList byteList = new ExpressionList();
+            for (int i = 0; i < bytes.length; ++i) {
+                byteList.add(Literal.makeLiteral(bytes[i]));
+            }
+            return new ArrayInitializer(byteList);
+        }
+
+        protected Expression convertByteArrayLiteral(byte [] bytes)
+        {
+            return new ArrayAllocationExpression(
+                TypeName.forOJClass(OJSystem.BYTE),
+                new ExpressionList(null),
+                convertByteArrayLiteralToInitializer(bytes));
         }
 
         /**

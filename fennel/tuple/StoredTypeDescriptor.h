@@ -97,7 +97,7 @@ public:
     virtual void visitValue(
         DataVisitor &dataVisitor,
         void const *pData,
-        uint cbData) const = 0;
+        TupleStorageByteLength cbData) const = 0;
 
     /**
      * Compare two values of this type.
@@ -115,9 +115,9 @@ public:
      */
     virtual int compareValues(
         void const *pData1,
-        uint cbData1,
+        TupleStorageByteLength cbData1,
         void const *pData2,
-        uint cbData2) const = 0;
+        TupleStorageByteLength cbData2) const = 0;
 };
 
 FENNEL_END_NAMESPACE

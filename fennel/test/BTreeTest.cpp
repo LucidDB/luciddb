@@ -35,7 +35,7 @@ using namespace fennel;
 
 #include <functional>
 
-class TestBTree : virtual public SegStorageTestBase
+class BTreeTest : virtual public SegStorageTestBase
 {
     enum {
         nRandomSeed = 1000000,
@@ -94,13 +94,13 @@ class TestBTree : virtual public SegStorageTestBase
     void testSearch(SharedByteInputStream,uint nRecords);
     
 public:
-    explicit TestBTree()
+    explicit BTreeTest()
     {
-        FENNEL_UNIT_TEST_CASE(TestBTree,testBulkLoadOneLevelNewRoot);
-        FENNEL_UNIT_TEST_CASE(TestBTree,testBulkLoadOneLevelReuseRoot);
-        FENNEL_UNIT_TEST_CASE(TestBTree,testBulkLoadTwoLevelsNewRoot);
-        FENNEL_UNIT_TEST_CASE(TestBTree,testBulkLoadTwoLevelsReuseRoot);
-        FENNEL_UNIT_TEST_CASE(TestBTree,testBulkLoadThreeLevels);
+        FENNEL_UNIT_TEST_CASE(BTreeTest,testBulkLoadOneLevelNewRoot);
+        FENNEL_UNIT_TEST_CASE(BTreeTest,testBulkLoadOneLevelReuseRoot);
+        FENNEL_UNIT_TEST_CASE(BTreeTest,testBulkLoadTwoLevelsNewRoot);
+        FENNEL_UNIT_TEST_CASE(BTreeTest,testBulkLoadTwoLevelsReuseRoot);
+        FENNEL_UNIT_TEST_CASE(BTreeTest,testBulkLoadThreeLevels);
         
         StandardTypeDescriptorFactory stdTypeFactory;
         TupleAttributeDescriptor attrDesc(
@@ -114,7 +114,7 @@ public:
     virtual void testCaseTearDown();
 };
 
-void TestBTree::testCaseSetUp()
+void BTreeTest::testCaseSetUp()
 {
     openStorage(DeviceMode::createNew);
     
@@ -130,13 +130,13 @@ void TestBTree::testCaseSetUp()
     descriptor.segmentAccessor.pCacheAccessor = pCache;
 }
 
-void TestBTree::testCaseTearDown()
+void BTreeTest::testCaseTearDown()
 {
     descriptor.segmentAccessor.reset();
     SegStorageTestBase::testCaseTearDown();
 }
 
-void TestBTree::testBulkLoad(uint nRecords,uint nLevelsExpected,bool newRoot)
+void BTreeTest::testBulkLoad(uint nRecords,uint nLevelsExpected,bool newRoot)
 {
     BlockNum nPagesAllocatedInitially =
         pRandomSegment->getAllocatedSizeInPages();
@@ -218,7 +218,7 @@ void TestBTree::testBulkLoad(uint nRecords,uint nLevelsExpected,bool newRoot)
         nPagesAllocatedInitially);
 }
 
-void TestBTree::verifyTree(uint nRecordsExpected,uint nLevelsExpected)
+void BTreeTest::verifyTree(uint nRecordsExpected,uint nLevelsExpected)
 {
     BTreeVerifier verifier(descriptor);
     verifier.verify();
@@ -228,7 +228,7 @@ void TestBTree::verifyTree(uint nRecordsExpected,uint nLevelsExpected)
     BOOST_CHECK_EQUAL(stats.nTuples,nRecordsExpected);
 }
 
-void TestBTree::testSearch(
+void BTreeTest::testSearch(
     SharedByteInputStream pInputStream,uint nRecords)
 {
     BTreeReader reader(descriptor);
@@ -252,7 +252,7 @@ void TestBTree::testSearch(
     }
 }
 
-void TestBTree::testScan(
+void BTreeTest::testScan(
     SharedByteInputStream pInputStream,uint nRecords,
     bool alternating,bool deletion)
 {
@@ -298,18 +298,18 @@ void TestBTree::testScan(
     }
 }
 
-int32_t TestBTree::readKey()
+int32_t BTreeTest::readKey()
 {
     return *reinterpret_cast<int32_t const *>(
         tupleData[0].pData);
 }
 
-int32_t TestBTree::readValue()
+int32_t BTreeTest::readValue()
 {
     return *reinterpret_cast<int32_t const *>(
         tupleData[1].pData);
 }
 
-FENNEL_UNIT_TEST_SUITE(TestBTree);
+FENNEL_UNIT_TEST_SUITE(BTreeTest);
 
-// End TestBTree.cpp
+// End BTreeTest.cpp

@@ -40,14 +40,14 @@ struct TupleAttributeDescriptor
 {
     StoredTypeDescriptor const *pTypeDescriptor;
     bool isNullable;
-    uint cbStorage;
+    TupleStorageByteLength cbStorage;
 
     explicit TupleAttributeDescriptor();
     
     explicit TupleAttributeDescriptor(
         StoredTypeDescriptor const &typeDescriptor,
         bool isNullable = false,
-        uint cbStorage = 0);
+        TupleStorageByteLength cbStorage = 0);
 
     bool operator == (TupleAttributeDescriptor const &other) const;
 };

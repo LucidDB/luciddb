@@ -43,7 +43,7 @@ using namespace fennel;
 
 // TODO:  factor out BTreeTestBase
 
-class TestBTreeTxn
+class BTreeTxnTest
     : virtual public ThreadedTestBase
 {
     struct TestThreadData 
@@ -107,7 +107,7 @@ class TestBTreeTxn
     void bindKey(int32_t &key);
     
 public:
-    explicit TestBTreeTxn();
+    explicit BTreeTxnTest();
 
     virtual void testCaseSetUp();
     virtual void testCaseTearDown();
@@ -117,7 +117,7 @@ public:
     virtual bool testThreadedOp(int iOp);
 };
 
-TestBTreeTxn::TestBTreeTxn()
+BTreeTxnTest::BTreeTxnTest()
 {
     nInsertsPerTxn = configMap.getIntParam("insertsPerTxn",5);
     nDeletesPerTxn = configMap.getIntParam("deletesPerTxn",5);
@@ -142,10 +142,10 @@ TestBTreeTxn::TestBTreeTxn()
         threadCounts[OP_CHECKPOINT] = 0;
     }
 
-    FENNEL_UNIT_TEST_CASE(TestBTreeTxn,testTxns);
+    FENNEL_UNIT_TEST_CASE(BTreeTxnTest,testTxns);
 }
 
-void TestBTreeTxn::testCaseSetUp()
+void BTreeTxnTest::testCaseSetUp()
 {
     // TODO:  cleanup
     
@@ -180,7 +180,7 @@ void TestBTreeTxn::testCaseSetUp()
     pDatabase->checkpointImpl();
 }
 
-void TestBTreeTxn::testCaseTearDown()
+void BTreeTxnTest::testCaseTearDown()
 {
     statsTimer.stop();
     
@@ -188,7 +188,7 @@ void TestBTreeTxn::testCaseTearDown()
     pCache.reset();
 }
 
-void TestBTreeTxn::createTree()
+void BTreeTxnTest::createTree()
 {
     TupleDescriptor &tupleDesc = treeDescriptor.tupleDescriptor;
     StandardTypeDescriptorFactory stdTypeFactory;
@@ -208,7 +208,7 @@ void TestBTreeTxn::createTree()
     treeDescriptor.rootPageId = builder.getRootPageId();
 }
 
-void TestBTreeTxn::threadInit()
+void BTreeTxnTest::threadInit()
 {
     ThreadedTestBase::threadInit();
     pTestThreadData.reset(new TestThreadData());
@@ -224,7 +224,7 @@ void TestBTreeTxn::threadInit()
         new BTreeWriter(treeDescriptor,scratchAccessor));
 }
 
-void TestBTreeTxn::threadTerminate()
+void BTreeTxnTest::threadTerminate()
 {
     // NOTE:  see corresponding code in PagingTestBase for why this is
     // commented out.
@@ -233,22 +233,22 @@ void TestBTreeTxn::threadTerminate()
     ThreadedTestBase::threadTerminate();
 }
     
-uint TestBTreeTxn::generateRandomNumber(uint iMax)
+uint BTreeTxnTest::generateRandomNumber(uint iMax)
 {
     return pTestThreadData->randomNumberGenerator(iMax);
 }
 
-BTreeReader &TestBTreeTxn::getReader()
+BTreeReader &BTreeTxnTest::getReader()
 {
     return *(pTestThreadData->pReader);
 }
 
-TupleData &TestBTreeTxn::getKeyData()
+TupleData &BTreeTxnTest::getKeyData()
 {
     return pTestThreadData->keyData;
 }
 
-BTreeWriter &TestBTreeTxn::getWriter()
+BTreeWriter &BTreeTxnTest::getWriter()
 {
     return *(pTestThreadData->pWriter);
 }
@@ -257,7 +257,7 @@ BTreeWriter &TestBTreeTxn::getWriter()
 // insert/delete sequence affecting the same key is reordered during recovery).
 // Need to add locking support.
 
-void TestBTreeTxn::testTxns()
+void BTreeTxnTest::testTxns()
 {
     runThreadedTestCase();
     RecordNum nEntries = verifyTree();
@@ -298,7 +298,7 @@ void TestBTreeTxn::testTxns()
     // BOOST_CHECK_EQUAL(nEntries,nEntriesRecovered);
 }
 
-void TestBTreeTxn::insertTxn()
+void BTreeTxnTest::insertTxn()
 {
     SharedLogicalTxn pTxn = pDatabase->getTxnLog()->newLogicalTxn(pCache);
     pTxn->addParticipant(pTestThreadData->pWriter);
@@ -314,7 +314,7 @@ void TestBTreeTxn::insertTxn()
     endTxn(pTxn);
 }
 
-void TestBTreeTxn::deleteTxn()
+void BTreeTxnTest::deleteTxn()
 {
     SharedLogicalTxn pTxn = pDatabase->getTxnLog()->newLogicalTxn(pCache);
     pTxn->addParticipant(pTestThreadData->pWriter);
@@ -330,7 +330,7 @@ void TestBTreeTxn::deleteTxn()
     endTxn(pTxn);
 }
 
-void TestBTreeTxn::scanTxn()
+void BTreeTxnTest::scanTxn()
 {
     BTreeReader &reader = getReader();
     int32_t key = generateRandomNumber(iKeyMax);
@@ -345,7 +345,7 @@ void TestBTreeTxn::scanTxn()
     reader.endSearch();
 }
     
-void TestBTreeTxn::endTxn(SharedLogicalTxn pTxn)
+void BTreeTxnTest::endTxn(SharedLogicalTxn pTxn)
 {
     if (testRollback) {
         if (generateRandomNumber(2)) {
@@ -358,7 +358,7 @@ void TestBTreeTxn::endTxn(SharedLogicalTxn pTxn)
     }
 }
 
-bool TestBTreeTxn::testThreadedOp(int iOp)
+bool BTreeTxnTest::testThreadedOp(int iOp)
 {
     SXMutexSharedGuard checkpointSharedGuard(
         pDatabase->getCheckpointThread()->getActionMutex(),false);
@@ -386,12 +386,12 @@ bool TestBTreeTxn::testThreadedOp(int iOp)
     return true;
 }
 
-void TestBTreeTxn::bindKey(int32_t &key)
+void BTreeTxnTest::bindKey(int32_t &key)
 {
     getKeyData()[0].pData = reinterpret_cast<PConstBuffer>(&key);
 }
 
-void TestBTreeTxn::testCheckpoint()
+void BTreeTxnTest::testCheckpoint()
 {
     snooze(nSecondsBetweenCheckpoints);
     CheckpointType checkpointType;
@@ -403,7 +403,7 @@ void TestBTreeTxn::testCheckpoint()
     pDatabase->requestCheckpoint(checkpointType,false);
 }
 
-RecordNum TestBTreeTxn::verifyTree()
+RecordNum BTreeTxnTest::verifyTree()
 {
     BTreeVerifier verifier(treeDescriptor);
     verifier.verify(false);
@@ -416,6 +416,6 @@ RecordNum TestBTreeTxn::verifyTree()
     return stats.nTuples;
 }
 
-FENNEL_UNIT_TEST_SUITE(TestBTreeTxn);
+FENNEL_UNIT_TEST_SUITE(BTreeTxnTest);
 
-// End TestBTreeTxn.cpp
+// End BTreeTxnTest.cpp

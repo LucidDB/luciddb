@@ -248,6 +248,30 @@ unitTestBool()
     instP[pc++] = new BoolMove(bOutP[outC++], bLiP[1]);
     instP[pc++] = new BoolMove(bOutP[outC++], bLiP[nullidx]);
 
+    // is
+    instP[pc++] = new BoolIs(bOutP[outC++], bLiP[0], bLiP[0]);
+    instP[pc++] = new BoolIs(bOutP[outC++], bLiP[1], bLiP[1]);
+    instP[pc++] = new BoolIs(bOutP[outC++], bLiP[0], bLiP[1]);
+    instP[pc++] = new BoolIs(bOutP[outC++], bLiP[1], bLiP[0]);
+
+    instP[pc++] = new BoolIs(bOutP[outC++], bLiP[nullidx], bLiP[0]);
+    instP[pc++] = new BoolIs(bOutP[outC++], bLiP[nullidx], bLiP[1]);
+    instP[pc++] = new BoolIs(bOutP[outC++], bLiP[0], bLiP[nullidx]);
+    instP[pc++] = new BoolIs(bOutP[outC++], bLiP[1], bLiP[nullidx]);
+    instP[pc++] = new BoolIs(bOutP[outC++], bLiP[nullidx], bLiP[nullidx]);
+
+    // isnot
+    instP[pc++] = new BoolIsNot(bOutP[outC++], bLiP[0], bLiP[0]);
+    instP[pc++] = new BoolIsNot(bOutP[outC++], bLiP[1], bLiP[1]);
+    instP[pc++] = new BoolIsNot(bOutP[outC++], bLiP[0], bLiP[1]);
+    instP[pc++] = new BoolIsNot(bOutP[outC++], bLiP[1], bLiP[0]);
+
+    instP[pc++] = new BoolIsNot(bOutP[outC++], bLiP[nullidx], bLiP[0]);
+    instP[pc++] = new BoolIsNot(bOutP[outC++], bLiP[nullidx], bLiP[1]);
+    instP[pc++] = new BoolIsNot(bOutP[outC++], bLiP[0], bLiP[nullidx]);
+    instP[pc++] = new BoolIsNot(bOutP[outC++], bLiP[1], bLiP[nullidx]);
+    instP[pc++] = new BoolIsNot(bOutP[outC++], bLiP[nullidx], bLiP[nullidx]);
+
     // equal
     instP[pc++] = new BoolEqual(bOutP[outC++], bLiP[0], bLiP[0]);
     instP[pc++] = new BoolEqual(bOutP[outC++], bLiP[1], bLiP[1]);
@@ -374,17 +398,41 @@ unitTestBool()
     if (*(output[outC++].pData) != true) fail("boolmove2", __LINE__);
     if (output[outC++].pData != NULL) fail("boolmove3", __LINE__);
 
+    // is
+    if (*(output[outC++].pData) != true) fail("boolis1", __LINE__);
+    if (*(output[outC++].pData) != true) fail("boolis2", __LINE__);
+    if (*(output[outC++].pData) != false) fail("boolis3", __LINE__);
+    if (*(output[outC++].pData) != false) fail("boolis4", __LINE__);
+
+    if (*(output[outC++].pData) != false) fail("boolis5", __LINE__);
+    if (*(output[outC++].pData) != false) fail("boolis6", __LINE__);
+    if (*(output[outC++].pData) != false) fail("boolis7", __LINE__);
+    if (*(output[outC++].pData) != false) fail("boolis8", __LINE__);
+    if (*(output[outC++].pData) != true) fail("boolis9", __LINE__);
+
+    // isnot
+    if (*(output[outC++].pData) != false) fail("boolisnot1", __LINE__);
+    if (*(output[outC++].pData) != false) fail("boolisnot2", __LINE__);
+    if (*(output[outC++].pData) != true) fail("boolisnot3", __LINE__);
+    if (*(output[outC++].pData) != true) fail("boolisnot4", __LINE__);
+
+    if (*(output[outC++].pData) != true) fail("boolisnot5", __LINE__);
+    if (*(output[outC++].pData) != true) fail("boolisnot6", __LINE__);
+    if (*(output[outC++].pData) != true) fail("boolisnot7", __LINE__);
+    if (*(output[outC++].pData) != true) fail("boolisnot8", __LINE__);
+    if (*(output[outC++].pData) != false) fail("boolisnot9", __LINE__);
+
     // equal
     if (*(output[outC++].pData) != true) fail("boolequal1", __LINE__);
     if (*(output[outC++].pData) != true) fail("boolequal2", __LINE__);
     if (*(output[outC++].pData) != false) fail("boolequal3", __LINE__);
     if (*(output[outC++].pData) != false) fail("boolequal4", __LINE__);
 
-    if (*(output[outC++].pData) != false) fail("boolequal5", __LINE__);
-    if (*(output[outC++].pData) != false) fail("boolequal6", __LINE__);
-    if (*(output[outC++].pData) != false) fail("boolequal7", __LINE__);
-    if (*(output[outC++].pData) != false) fail("boolequal8", __LINE__);
-    if (*(output[outC++].pData) != true) fail("boolequal9", __LINE__);
+    if (output[outC++].pData != NULL) fail("boolequal5", __LINE__);
+    if (output[outC++].pData != NULL) fail("boolequal6", __LINE__);
+    if (output[outC++].pData != NULL) fail("boolequal7", __LINE__);
+    if (output[outC++].pData != NULL) fail("boolequal8", __LINE__);
+    if (output[outC++].pData != NULL) fail("boolequal9", __LINE__);
 
     // notequal
     if (*(output[outC++].pData) != false) fail("boolnotequal1", __LINE__);
@@ -392,11 +440,11 @@ unitTestBool()
     if (*(output[outC++].pData) != true) fail("boolnotequal3", __LINE__);
     if (*(output[outC++].pData) != true) fail("boolnotequal4", __LINE__);
 
-    if (*(output[outC++].pData) != true) fail("boolnotequal5", __LINE__);
-    if (*(output[outC++].pData) != true) fail("boolnotequal6", __LINE__);
-    if (*(output[outC++].pData) != true) fail("boolnotequal7", __LINE__);
-    if (*(output[outC++].pData) != true) fail("boolnotequal8", __LINE__);
-    if (*(output[outC++].pData) != false) fail("boolnotequal9", __LINE__);
+    if (output[outC++].pData != NULL) fail("boolnotequal5", __LINE__);
+    if (output[outC++].pData != NULL) fail("boolnotequal6", __LINE__);
+    if (output[outC++].pData != NULL) fail("boolnotequal7", __LINE__);
+    if (output[outC++].pData != NULL) fail("boolnotequal8", __LINE__);
+    if (output[outC++].pData != NULL) fail("boolnotequal9", __LINE__);
 
     // greater
     if (*(output[outC++].pData) != false) fail("boolgreater1", __LINE__);

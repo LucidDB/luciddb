@@ -85,6 +85,7 @@ void CalcYYerror(char*);
 %%
 program:    { ((CalcAssembler*) parm)->init(); }
          preamble 
+            { ((CalcAssembler*) parm)->bindRegisters(); }
          CODE_START TERM
          program_text
 ;
@@ -95,12 +96,12 @@ preamble: register_sets literal_set_values
 register_sets: register_set | register_sets register_set
 ;
 
-register_set: set_name { ((CalcAssembler*) parm)->selectRegisterSet($1); } 
+register_set: set_name { ((CalcAssembler*) parm)->selectRegisterSet($1); }
               type_size_list TERM
 ;
 
-literal_set_values: { ((CalcAssembler*) parm)->bindRegisters(); }
-                    | literal_set  { ((CalcAssembler*) parm)->bindRegisters(); } literal_values
+literal_set_values: { ((CalcAssembler*) parm)->allocateTuples(); }
+                    | literal_set  { ((CalcAssembler*) parm)->allocateTuples(); } literal_values
 ;
 
 literal_set: REG_LITERAL { ((CalcAssembler*) parm)->selectRegisterSet($1); } 

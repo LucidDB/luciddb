@@ -16,10 +16,11 @@ create view schemas_view_internal as
         s."name" as table_schem,
         s."mofId"
     from 
-        sys_cwm."Relational"."Schema" s,
         sys_cwm."Relational"."Catalog" c
-    where 
-        s."namespace" = c."mofId"
+    inner join
+        sys_cwm."Relational"."Schema" s
+    on
+        c."mofId" = s."namespace"
 ;
 
 -- TODO:  replace t."type" with cast(null as varchar(128))
@@ -39,10 +40,11 @@ create view tables_view_internal as
         t."type" as ref_generation,
         t."mofId"
     from
-        schemas_view_internal s,
+        schemas_view_internal s
+    inner join
         sys_cwm."Relational"."NamedColumnSet" t
-    where 
-        t."namespace" = s."mofId"
+    on
+        s."mofId" = t."namespace"
 ;
 
 create view catalogs_view as

@@ -30,7 +30,7 @@
 
 using namespace fennel;
 
-class TestSegStream : virtual public SegStorageTestBase
+class SegStreamTest : virtual public SegStorageTestBase
 {
     size_t maxWordLength;
     uint totalDictLength;
@@ -111,15 +111,15 @@ class TestSegStream : virtual public SegStorageTestBase
     }
     
 public:
-    explicit TestSegStream()
+    explicit SegStreamTest()
     {
         // Grow page-by-page since preallocation will result in garbage at end
         // of stream.
         nDiskPages = 0;
         
-        FENNEL_UNIT_TEST_CASE(TestSegStream,testWriteSeg);
-        FENNEL_UNIT_TEST_CASE(TestSegStream,testReadSeg);
-        FENNEL_UNIT_TEST_CASE(TestSegStream,testWriteSpillAndRead);
+        FENNEL_UNIT_TEST_CASE(SegStreamTest,testWriteSeg);
+        FENNEL_UNIT_TEST_CASE(SegStreamTest,testReadSeg);
+        FENNEL_UNIT_TEST_CASE(SegStreamTest,testWriteSpillAndRead);
     }
 
     void testWriteSeg()
@@ -163,6 +163,6 @@ public:
     
 };
 
-FENNEL_UNIT_TEST_SUITE(TestSegStream);
+FENNEL_UNIT_TEST_SUITE(SegStreamTest);
 
-// End TestSegStream.cpp
+// End SegStreamTest.cpp

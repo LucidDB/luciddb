@@ -22,6 +22,7 @@ package net.sf.farrago.util;
 import net.sf.saffron.util.*;
 
 import org.netbeans.api.xmi.*;
+import org.netbeans.lib.jmi.util.*;
 
 import java.io.*;
 
@@ -42,7 +43,7 @@ public abstract class JmiUtil
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * Get a SortedMap (from String to Object) containing the attribute values
+     * Gets a SortedMap (from String to Object) containing the attribute values
      * for a RefObject.  Multi-valued attributes are not included.
      *
      * @param src RefObject to query
@@ -62,7 +63,7 @@ public abstract class JmiUtil
     }
 
     /**
-     * Get a List of instance-level StructuralFeatures for a RefClass.  For
+     * Gets a List of instance-level StructuralFeatures for a RefClass.  For
      * now, multi-valued features are always filtered out (TODO:
      * parameterize).
      *
@@ -111,7 +112,7 @@ public abstract class JmiUtil
     }
 
     /**
-     * Copy attribute values from one RefObject to another compatible
+     * Copies attribute values from one RefObject to another compatible
      * RefObject.
      *
      * @param dst RefObject to copy to
@@ -136,7 +137,7 @@ public abstract class JmiUtil
     }
 
     /**
-     * Export a collection of JMI objects as XMI.
+     * Exports a collection of JMI objects as XMI.
      *
      * @param collection JMI objects to be exported
      *
@@ -155,7 +156,7 @@ public abstract class JmiUtil
     }
 
     /**
-     * Import a collection of JMI objects from XMI.
+     * Imports a collection of JMI objects from XMI.
      *
      * @param extent target
      * @param string string representation of XMI
@@ -178,7 +179,7 @@ public abstract class JmiUtil
     }
 
     /**
-     * Clone a RefObject.
+     * Clones a RefObject.
      *
      * @param refObject RefObject to clone; must have neither associations nor
      *        composite types
@@ -195,7 +196,7 @@ public abstract class JmiUtil
     }
 
     /**
-     * Find the Java interface corresponding to a JMI class.
+     * Finds the Java interface corresponding to a JMI class.
      *
      * @param refClass the JMI class
      *
@@ -215,7 +216,7 @@ public abstract class JmiUtil
     }
 
     /**
-     * Get the 64-bit object ID for a JMI object.  This is taken from the last
+     * Gets the 64-bit object ID for a JMI object.  This is taken from the last
      * 8 bytes of the MofId.  REVIEW: need to make sure this is locally unique
      * within a repository.
      *
@@ -232,7 +233,7 @@ public abstract class JmiUtil
     }
 
     /**
-     * Look up a subpackage by name.
+     * Looks up a subpackage by name.
      *
      * @param rootPackage starting package from which to descend
      *
@@ -258,6 +259,98 @@ public abstract class JmiUtil
             return pkg;
         } catch (InvalidNameException ex) {
             return null;
+        }
+    }
+
+    /**
+     * Gets the name of the model element corresponding to a RefBaseObject
+     *
+     * @param refObject RefBaseObject representation of a model element
+     *
+     * @return model element name
+     */
+    public static String getMetaObjectName(
+        RefBaseObject refObject)
+    {
+        ModelElement modelElement;
+        if (refObject instanceof ModelElement) {
+            modelElement = (ModelElement) refObject;
+        } else {
+            modelElement = (ModelElement) refObject.refMetaObject();
+        }
+        return modelElement.getName();
+    }
+
+    /**
+     * Constructs the generated name of an accessor method.
+     *
+     * @param typedElement TypedElement to be accessed
+     *
+     * @return constructed accessor name
+     */
+    public static String getAccessorName(TypedElement typedElement)
+    {
+        TagProvider tagProvider = new TagProvider();
+        String accessorName = tagProvider.getSubstName(typedElement);
+        String prefix = null;
+        if (typedElement.getType().getName().equals("Boolean")) {
+            if (!accessorName.startsWith("is")) {
+                prefix = "is";
+            }
+        } else {
+            prefix = "get";
+        }
+        if (prefix != null) {
+            accessorName =
+                prefix
+                + Character.toUpperCase(accessorName.charAt(0))
+                + accessorName.substring(1);
+        }
+        return accessorName;
+    }
+
+    /**
+     * Finds the Java class generated for a particular RefClass.
+     *
+     * @param refClass the reflective JMI class representation
+     *
+     * @return the generated Java class, or RefObject.class if
+     * no Java class has been generated
+     */
+    public static Class getClassForRefClass(RefClass refClass)
+    {
+        // Look up the Java interface generated for the class being queried.
+        TagProvider tagProvider = new TagProvider();
+        String className = tagProvider.getImplFullName(
+            (ModelElement) (refClass.refMetaObject()),
+            TagProvider.INSTANCE);
+        assert(className.endsWith("Impl"));
+        className = className.substring(0,className.length() - 4);
+        try {
+            return Class.forName(className);
+        } catch (ClassNotFoundException ex) {
+            // This is possible when we're querying an external repository
+            // for which we don't know the class mappings.  Do everything
+            // via JMI reflection instead.
+            return RefObject.class;
+        }
+    }
+
+    /**
+     * Gets an object's container.  If the object is a ModelElement,
+     * its container will be too; otherwise, its container will be
+     * a RefPackage.
+     *
+     * @param refObject object for which to find the container
+     *
+     * @return container
+     */
+    public static RefBaseObject getContainer(RefBaseObject refObject)
+    {
+        if (refObject instanceof ModelElement) {
+            return ((ModelElement) refObject).getContainer();
+        } else {
+            return refObject.refImmediatePackage();
         }
     }
 }

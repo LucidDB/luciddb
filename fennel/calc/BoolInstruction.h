@@ -207,18 +207,17 @@ public:
     }
 };
 
-// BoolEqual is the same as SQL99 boolean IS
-class BoolEqual : public BoolInstruction
+class BoolIs : public BoolInstruction
 {
 public:
     explicit
-    BoolEqual(RegisterRef<bool>* result,
-              RegisterRef<bool>* op1,
-              RegisterRef<bool>* op2)
+    BoolIs(RegisterRef<bool>* result,
+           RegisterRef<bool>* op1,
+           RegisterRef<bool>* op2)
         : BoolInstruction(result, op1, op2)
     { }
 
-    ~BoolEqual() { }
+    ~BoolIs() { }
 
     const char* longName() const;
     const char* shortName() const;
@@ -243,18 +242,17 @@ public:
     }
 };
 
-// BoolEqual is the same as SQL99 boolean ISNOT
-class BoolNotEqual : public BoolInstruction
+class BoolIsNot : public BoolInstruction
 {
 public:
     explicit
-    BoolNotEqual(RegisterRef<bool>* result,
-                 RegisterRef<bool>* op1,
-                 RegisterRef<bool>* op2)
+    BoolIsNot(RegisterRef<bool>* result,
+              RegisterRef<bool>* op1,
+              RegisterRef<bool>* op2)
         : BoolInstruction(result, op1, op2)
     { }
 
-    ~BoolNotEqual() { }
+    ~BoolIsNot() { }
 
     const char* longName() const;
     const char* shortName() const;
@@ -275,6 +273,70 @@ public:
             mResult->putV(false);
         } else {
             mResult->putV(true);
+        }
+    }
+};
+
+
+// BoolEqual is not the same as SQL99 boolean IS
+class BoolEqual : public BoolInstruction
+{
+public:
+    explicit
+    BoolEqual(RegisterRef<bool>* result,
+              RegisterRef<bool>* op1,
+              RegisterRef<bool>* op2)
+        : BoolInstruction(result, op1, op2)
+    { }
+
+    ~BoolEqual() { }
+
+    const char* longName() const;
+    const char* shortName() const;
+    void describe(string& out, bool values) const;
+
+    virtual void exec(TProgramCounter& pc) const {
+        // SQL99, 4.6.1 Comparison and Assignment of Booleans
+        pc++;
+        if (mOp1->isNull() || mOp2->isNull()) {
+            mResult->toNull();
+        } else {
+            if (mOp1->getV() == mOp2->getV()) {
+                mResult->putV(true);
+            } else {
+                mResult->putV(false);
+            }
+        }
+    }
+};
+
+class BoolNotEqual : public BoolInstruction
+{
+public:
+    explicit
+    BoolNotEqual(RegisterRef<bool>* result,
+                 RegisterRef<bool>* op1,
+                 RegisterRef<bool>* op2)
+        : BoolInstruction(result, op1, op2)
+    { }
+
+    ~BoolNotEqual() { }
+
+    const char* longName() const;
+    const char* shortName() const;
+    void describe(string& out, bool values) const;
+
+    virtual void exec(TProgramCounter& pc) const {
+        // SQL99, 4.6.1 Comparison and Assignment of Booleans
+        pc++;
+        if (mOp1->isNull() || mOp2->isNull()) {
+            mResult->toNull();
+        } else {
+            if (mOp1->getV() == mOp2->getV()) {
+                mResult->putV(false);
+            } else {
+                mResult->putV(true);
+            }
         }
     }
 };

@@ -28,14 +28,14 @@
 
 using namespace fennel;
 
-class TestSegPageIter : virtual public SegStorageTestBase
+class SegPageIterTest : virtual public SegStorageTestBase
 {
 public:
-    explicit TestSegPageIter()
+    explicit SegPageIterTest()
     {
-        FENNEL_UNIT_TEST_CASE(TestSegPageIter,testUnboundedIter);
-        FENNEL_UNIT_TEST_CASE(TestSegPageIter,testBoundedIter);
-        FENNEL_UNIT_TEST_CASE(TestSegPageIter,testWithLock);
+        FENNEL_UNIT_TEST_CASE(SegPageIterTest,testUnboundedIter);
+        FENNEL_UNIT_TEST_CASE(SegPageIterTest,testBoundedIter);
+        FENNEL_UNIT_TEST_CASE(SegPageIterTest,testWithLock);
     }
 
     void testUnboundedIter()
@@ -86,6 +86,6 @@ public:
     }
 };
 
-FENNEL_UNIT_TEST_SUITE(TestSegPageIter);
+FENNEL_UNIT_TEST_SUITE(SegPageIterTest);
 
-// End TestSegPageIter.cpp
+// End SegPageIterTest.cpp

@@ -49,7 +49,7 @@ class TuplePrinter
     virtual void postVisitRow();
     virtual void visitAttribute(std::string);
     virtual void visitString(std::string);
-    virtual void visitChars(char const *, uint iChars);
+    virtual void visitChars(char const *, TupleStorageByteLength iChars);
     virtual void visitUnsignedInt(uint64_t);
     virtual void visitSignedInt(int64_t);
     virtual void visitDouble(double);
@@ -59,7 +59,7 @@ class TuplePrinter
     virtual void visitPageOwnerId(PageOwnerId);
     virtual void visitSegByteId(SegByteId);
     virtual void visitFormatted(char const *);
-    virtual void visitBytes(void const *v,uint iBytes);
+    virtual void visitBytes(void const *v, TupleStorageByteLength iBytes);
     
 public:
     explicit TuplePrinter();

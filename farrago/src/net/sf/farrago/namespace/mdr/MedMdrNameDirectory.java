@@ -36,13 +36,11 @@ import javax.jmi.reflect.*;
 /**
  * MedMdrNameDirectory implements the FarragoNameDirectory
  * interface by mapping the package structure of an MDR repository.
- * It is public because some of its services are used at
- * execution time by generated code.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class MedMdrNameDirectory implements FarragoNameDirectory
+class MedMdrNameDirectory implements FarragoNameDirectory
 {
     final MedMdrForeignDataWrapper dataWrapper;
     
@@ -86,7 +84,7 @@ public class MedMdrNameDirectory implements FarragoNameDirectory
      * @param foreignName name of this class relative to this directory's
      * root package
      */
-    public RefClass lookupRefClass(String [] foreignName)
+    RefClass lookupRefClass(String [] foreignName)
     {
         int prefix = foreignName.length - 1;
         RefPackage refPackage = lookupRefPackage(foreignName,prefix);
@@ -95,6 +93,29 @@ public class MedMdrNameDirectory implements FarragoNameDirectory
         }
         try {
             return refPackage.refClass(foreignName[prefix]);
+        } catch (InvalidNameException ex) {
+            return null;
+        }
+    }
+
+    RefBaseObject lookupRefBaseObject(String [] foreignName)
+    {
+        int prefix = foreignName.length - 2;
+        RefPackage refPackage = lookupRefPackage(foreignName,prefix);
+        if (refPackage == null) {
+            return null;
+        }
+        try {
+            String name = foreignName[prefix];
+            String type = foreignName[prefix+1];
+            if (type.equals("Class")) {
+                return refPackage.refClass(name);
+            } else if (type.equals("Association")) {
+                return refPackage.refAssociation(name);
+            } else {
+                assert(type.equals("Package"));
+                return refPackage.refPackage(name);
+            }
         } catch (InvalidNameException ex) {
             return null;
         }
@@ -155,6 +176,19 @@ public class MedMdrNameDirectory implements FarragoNameDirectory
                     types[i],true);
             }
         }
+
+        // TODO jvs 15-Mar-2004: We currently generate a VARCHAR type for the
+        // mofId.  This means that if we want to reference the object again
+        // later, we have to look it up via MDRepository.getByMofId.  This will
+        // always be required in cases where the object has to leave and
+        // re-enter Java (e.g. through Fennel or over the network), but within
+        // a contiguous series of Java XO's, it would be better to keep an
+        // object reference instead.  So, we need to enhance Farrago's type
+        // system to include Serializable object types and use the MOFID for
+        // serialization.  This would also allow us to return direct repository
+        // references to embedded JDBC clients (and remote JDBC clients with
+        // access to a repository shared with Farrago).
+        
         fieldNames[n] = "mofId";
         types[n] = typeFactory.createMofType(null);
         fieldNames[n+1] = "mofClassName";

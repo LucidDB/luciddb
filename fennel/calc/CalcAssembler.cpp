@@ -35,16 +35,34 @@ InstructionFactory::StringFactoryMap InstructionFactory::pointerInstructionMap;
 JumpInstructionFactoryMap InstructionFactory::jumpInstructionMap;
 ExtendedInstructionFactoryMap InstructionFactory::extendedInstructionMap;
 
+CalcAssembler::~CalcAssembler()
+{
+    for (uint i = RegisterReference::EFirstSet; i < RegisterReference::ELastSet; i++) {
+        if (mCalc->mRegisterTuple[i] == NULL)
+        {
+            // We did NOT successfully bind this register set to the calculator
+            // Will need to delete it on our own
+            if (mBuffers[i])
+                delete[] mBuffers[i];
+
+            if (mRegisterTupleData[i])
+                delete mRegisterTupleData[i];
+        }
+    }
+}
+
 void CalcAssembler::init()
 {
     mCurrentRegSet = RegisterReference::EUnknown;
     mLiteralIndex  = 0;
     mMaxPC         = 0;
 
-    /* Create tuple descriptors - to be deleted by the calculator */
-    for (int i=RegisterReference::EFirstSet; i<RegisterReference::ELastSet; i++)
+    /* Initialize tuple descriptors and tuple data */
+    for (uint i=RegisterReference::EFirstSet; i<RegisterReference::ELastSet; i++)
     {
         mRegisterSetDescriptor[i].clear();
+        mRegisterTupleData[i] = NULL;
+        mBuffers[i] = NULL;
     }
 }
 
@@ -213,21 +231,30 @@ void CalcAssembler::setTupleDatum(StandardTypeDescriptorOrdinal type,
     case STANDARD_TYPE_CHAR:
     case STANDARD_TYPE_BINARY:
         // Fixed length storage
-        if (str.length() > tupleDatum.cbData)
+        // For fixed length arrays, cbData should be the same as cbStorage 
+        assert(tupleDatum.cbData == desc.cbStorage);
+
+        // Fixed width arrays should be padded to be the specifed width
+        // Verify that the number of bytes matches the specified width
+        if (str.length() != tupleDatum.cbData)
         {
             ostringstream ostr("");
             ostr << "String length " << str.length()
-                 << " too long for fixed size array of length "
+                 << " not equal to fixed size array of length "
                  << tupleDatum.cbData;
             throw FennelExcn(ostr.str());
         }
-        memset(ptr, 0, tupleDatum.cbData);
+
+        // Copy the string
         memcpy(ptr, str.data(), str.length());
         break;
         
     case STANDARD_TYPE_VARCHAR:
     case STANDARD_TYPE_VARBINARY:
         // Variable length storage
+
+        // Verify that there the length of the string is not larger than the
+        // maximum length
         if (str.length() > desc.cbStorage)
         {
             ostringstream ostr("");
@@ -236,8 +263,10 @@ void CalcAssembler::setTupleDatum(StandardTypeDescriptorOrdinal type,
                  << desc.cbStorage;
             throw FennelExcn(ostr.str());
         }
-        memset(ptr, 0, desc.cbStorage);
+
+        // Copy the string
         memcpy(ptr, str.data(), str.length());
+        tupleDatum.cbData = str.length();
         break;
         
     default:
@@ -297,7 +326,7 @@ TRegisterIndex CalcAssembler::getRegisterSize(RegisterReference::ERegisterSet se
 TupleData* CalcAssembler::getTupleData(RegisterReference::ERegisterSet setIndex)
 {
     assert(setIndex < RegisterReference::ELastSet);
-    return mCalc->mRegisterTuple[setIndex];
+    return mRegisterTupleData[setIndex];
 }
 
 TupleDescriptor& CalcAssembler::getTupleDescriptor(RegisterReference::ERegisterSet setIndex)
@@ -369,7 +398,7 @@ RegisterReference* CalcAssembler::createRegisterReference(RegisterReference::ERe
 
 void CalcAssembler::addRegister(RegisterReference::ERegisterSet setIndex,
                                 StandardTypeDescriptorOrdinal   regType,
-                                uint                            cbStorage)
+                                TupleStorageByteLength          cbStorage)
 {
     assert(mCurrentRegSet < RegisterReference::ELastSet);
     bool isNullable = true;
@@ -384,7 +413,7 @@ void CalcAssembler::addRegister(RegisterReference::ERegisterSet setIndex,
     mCalc->appendRegRef(regRef);
 }
 
-void CalcAssembler::addRegister(StandardTypeDescriptorOrdinal const regType, uint cbStorage)
+void CalcAssembler::addRegister(StandardTypeDescriptorOrdinal const regType, TupleStorageByteLength cbStorage)
 {
     addRegister(mCurrentRegSet, regType, cbStorage);
 }
@@ -412,32 +441,48 @@ TupleData* CalcAssembler::createTupleData(TupleDescriptor const& tupleDesc, Fixe
     return pTupleData;
 }
 
+
+void CalcAssembler::allocateTuples()
+{
+    /* Allocate memory for the tuples */
+    for (uint reg = RegisterReference::EFirstSet; reg < RegisterReference::ELastSet; reg++)
+    {
+        /* Verify that tuples have not already been allocated */
+        assert(mRegisterTupleData[reg] == NULL);
+        assert(mBuffers[reg] == NULL);
+
+        if (reg == RegisterReference::ELiteral || 
+            reg == RegisterReference::EStatus ||
+            reg == RegisterReference::ELocal)
+        {
+            /* Allocate tuple for literal/status/local registers */
+            mRegisterTupleData[reg] = createTupleData(mRegisterSetDescriptor[reg],
+                                                      &mBuffers[reg]);
+        }
+     
+        /* Do not need to create input/output tuple data */
+    }
+}
+
 void CalcAssembler::bindRegisters()
 {
     /* Bind registers to calculator */
-
-    /* Create tupleData and bind it for the literal/local/status registers */
-    FixedBuffer* tmpBuf = NULL;
     RegisterReference::ERegisterSet reg;
-    TupleData* tupleData = NULL;
 
     /* Bind literal */
     reg = RegisterReference::ELiteral;
-    tupleData = createTupleData(getTupleDescriptor(reg), &tmpBuf);
-    mCalc->mBuffers.push_back(tmpBuf);
-    mCalc->bind(reg, tupleData, getTupleDescriptor(reg));
+    mCalc->mBuffers.push_back(mBuffers[reg]);
+    mCalc->bind(reg, getTupleData(reg), getTupleDescriptor(reg));
 
     /* Bind status */
     reg = RegisterReference::EStatus;
-    tupleData = createTupleData(getTupleDescriptor(reg), &tmpBuf);
-    mCalc->mBuffers.push_back(tmpBuf);
-    mCalc->bind(reg, tupleData, getTupleDescriptor(reg));
+    mCalc->mBuffers.push_back(mBuffers[reg]);
+    mCalc->bind(reg, getTupleData(reg), getTupleDescriptor(reg));
 
     /* Bind local */
     reg = RegisterReference::ELocal;
-    tupleData = createTupleData(getTupleDescriptor(reg), &tmpBuf);
-    mCalc->mBuffers.push_back(tmpBuf);
-    mCalc->bind(reg, tupleData, getTupleDescriptor(reg));
+    mCalc->mBuffers.push_back(mBuffers[reg]);
+    mCalc->bind(reg, getTupleData(reg), getTupleDescriptor(reg));
 
     /* Do not create input/output tuple data - we still need to bind the tuple descriptor */
     reg = RegisterReference::EInput;
@@ -453,6 +498,6 @@ void CalcAssembler::addInstruction(Instruction* inst)
     mCalc->appendInstruction(inst);
 }
 
-FENNEL_END_CPPFILE("$Id: //open/dev/fennel/calc/CalcAssembler.cpp#2 $");
+FENNEL_END_CPPFILE("$Id$");
 
 // End CalcAssembler.cpp

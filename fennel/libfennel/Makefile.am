@@ -10,7 +10,8 @@ libfennel_txn.la \
 libfennel_tuple.la \
 libfennel_btree.la \
 libfennel_db.la \
-libfennel_xo.la
+libfennel_xo.la \
+libfennel_calc.la
 
 SYNCH_DEPS = libfennel_common.la
 
@@ -29,6 +30,8 @@ BTREE_DEPS = libfennel_txn.la libfennel_tuple.la $(TXN_DEPS)
 DB_DEPS = libfennel_btree.la $(BTREE_DEPS)
 
 XO_DEPS = libfennel_btree.la $(BTREE_DEPS)
+
+CALC_DEPS = libfennel_tuple.la
 
 libfennel_common_la_SOURCES=
 libfennel_common_la_LIBADD=\
@@ -69,6 +72,10 @@ libfennel_db_la_LIBADD=\
 libfennel_xo_la_SOURCES=
 libfennel_xo_la_LIBADD=\
 	$(top_builddir)/xo/libxo.la $(XO_DEPS)
+
+libfennel_calc_la_SOURCES=
+libfennel_calc_la_LIBADD=\
+	$(top_builddir)/calc/libcalc.la $(CALC_DEPS)
 
 # Make sure that dependencies are strictly satisfied by failing on
 # undefined references.

@@ -57,14 +57,10 @@ insert into depts values
     (30,'Accounts');
 
 insert into emps values
-    (100,'Fred',10,null,null,30,25,'Abc ',true,false),
-    (110,'Eric',20,'M','San Francisco',3,80,'Abc',null,false),
-    (110,'John',40,'M','Vancouver',2,null,'Xyz',false,true),
-    (120,'Wilma',20,'F',null,1,50,'dummy',null,true);
-
--- TODO:  insert null directly once cast or binary literal available
-update emps set public_key = null where empno=120;
-
+    (100,'Fred',10,null,null,30,25, x'41626320',true,false),
+    (110,'Eric',20,'M','San Francisco',3,80,x'416263',null,false),
+    (110,'John',40,'M','Vancouver',2,null,x'58797A',false,true),
+    (120,'Wilma',20,'F',null,1,50,null,null,true);
 
 -- define foreign server for hsqldb sample data
 -- TODO:  location independence

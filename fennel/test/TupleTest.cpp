@@ -34,7 +34,7 @@
 
 using namespace fennel;
 
-class TestTuple : virtual public TestBase, public TraceSource
+class TupleTest : virtual public TestBase, public TraceSource
 {
     static const uint MAX_WIDTH = 512;
     
@@ -62,41 +62,41 @@ class TestTuple : virtual public TestBase, public TraceSource
     }
     
 public:
-    explicit TestTuple()
-        : TraceSource(this,"TestTuple")
+    explicit TupleTest()
+        : TraceSource(this,"TupleTest")
     {
-        FENNEL_UNIT_TEST_CASE(TestTuple,testStandardTypesNotNull);
-        FENNEL_UNIT_TEST_CASE(TestTuple,testStandardTypesNullable);
-        FENNEL_UNIT_TEST_CASE(TestTuple,testStandardTypesNetworkNotNull);
-        FENNEL_UNIT_TEST_CASE(TestTuple,testStandardTypesNetworkNullable);
+        FENNEL_UNIT_TEST_CASE(TupleTest,testStandardTypesNotNull);
+        FENNEL_UNIT_TEST_CASE(TupleTest,testStandardTypesNullable);
+        FENNEL_UNIT_TEST_CASE(TupleTest,testStandardTypesNetworkNotNull);
+        FENNEL_UNIT_TEST_CASE(TupleTest,testStandardTypesNetworkNullable);
     }
     
-    virtual ~TestTuple()
+    virtual ~TupleTest()
     {
     }
 };
 
-void TestTuple::testStandardTypesNullable()
+void TupleTest::testStandardTypesNullable()
 {
     testStandardTypes(TUPLE_FORMAT_STANDARD,true);
 }
 
-void TestTuple::testStandardTypesNotNull()
+void TupleTest::testStandardTypesNotNull()
 {
     testStandardTypes(TUPLE_FORMAT_STANDARD,false);
 }
 
-void TestTuple::testStandardTypesNetworkNullable()
+void TupleTest::testStandardTypesNetworkNullable()
 {
     testStandardTypes(TUPLE_FORMAT_NETWORK,true);
 }
 
-void TestTuple::testStandardTypesNetworkNotNull()
+void TupleTest::testStandardTypesNetworkNotNull()
 {
     testStandardTypes(TUPLE_FORMAT_NETWORK,false);
 }
 
-void TestTuple::testStandardTypes(
+void TupleTest::testStandardTypes(
     TupleFormat format,bool nullable)
 {
     StandardTypeDescriptorFactory typeFactory;
@@ -166,7 +166,7 @@ void TestTuple::testStandardTypes(
     }
 }
 
-uint TestTuple::testMarshal(TupleData const &tupleDataFixed)
+uint TupleTest::testMarshal(TupleData const &tupleDataFixed)
 {
     FENNEL_TRACE(TRACE_FINE,"reference tuple:");
     traceTuple(tupleDataFixed);
@@ -197,7 +197,7 @@ uint TestTuple::testMarshal(TupleData const &tupleDataFixed)
     return tupleAccessor.getCurrentByteCount();
 }
 
-void TestTuple::checkData(
+void TupleTest::checkData(
     TupleData const &tupleData1,TupleData const &tupleData2)
 {
     for (uint i = 0; i < tupleData1.size(); ++i) {
@@ -217,7 +217,7 @@ void TestTuple::checkData(
     }
 }
 
-void TestTuple::writeMinData(TupleDatum &datum,uint typeOrdinal)
+void TupleTest::writeMinData(TupleDatum &datum,uint typeOrdinal)
 {
     PBuffer pData = const_cast<PBuffer>(datum.pData);
     switch(typeOrdinal) {
@@ -279,7 +279,7 @@ void TestTuple::writeMinData(TupleDatum &datum,uint typeOrdinal)
     }
 }
 
-void TestTuple::writeMaxData(TupleDatum &datum,uint typeOrdinal)
+void TupleTest::writeMaxData(TupleDatum &datum,uint typeOrdinal)
 {
     PBuffer pData = const_cast<PBuffer>(datum.pData);
     switch(typeOrdinal) {
@@ -345,7 +345,7 @@ void TestTuple::writeMaxData(TupleDatum &datum,uint typeOrdinal)
     }
 }
 
-FENNEL_UNIT_TEST_SUITE(TestTuple);
+FENNEL_UNIT_TEST_SUITE(TupleTest);
 
-// End TestTuple.cpp
+// End TupleTest.cpp
 

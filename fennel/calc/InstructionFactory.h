@@ -1022,6 +1022,8 @@ public:
         // Register boolean instructions
         registerBoolBoolInstruction<BoolAnd,3>("AND");
         registerBoolBoolInstruction<BoolNot,2>("NOT");
+        registerBoolBoolInstruction<BoolIs,3>("IS");
+        registerBoolBoolInstruction<BoolIs,3>("ISNOT");
         registerBoolBoolInstruction<BoolEqual,3>("EQ");
         registerBoolBoolInstruction<BoolNotEqual,3>("NE");
         registerBoolBoolInstruction<BoolGreater,3>("GT");
