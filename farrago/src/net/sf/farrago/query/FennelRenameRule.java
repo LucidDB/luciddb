@@ -107,24 +107,23 @@ public class FennelRenameRule extends RelOptRule
             fieldNames[i] = projFieldName;
         }
 
+        if (!needRename) {
+            // let RemoveTrivialProjectRule handle this case
+            return;
+        }
+
         RelNode fennelInput = convert(inputRel, convention);
         if (fennelInput == null) {
             return;
         }
 
-        if (needRename) {
-            FennelRenameRel rename =
-                new FennelRenameRel(
-                    project.getCluster(),
-                    fennelInput,
-                    fieldNames,
-                    convention);
-            call.transformTo(rename);
-        } else {
-            // REVIEW:  Probably shouldn't do this.  Instead, make generic
-            // RemoveTrivialProject handle this case.
-            call.transformTo(fennelInput);
-        }
+        FennelRenameRel rename =
+            new FennelRenameRel(
+                project.getCluster(),
+                fennelInput,
+                fieldNames,
+                convention);
+        call.transformTo(rename);
     }
 }
 
