@@ -39,6 +39,8 @@
 
 #ifdef __MINGW32__
 #include <windows.h>
+#else
+#include <dlfcn.h>
 #endif
 
 // TODO:  figure out how to get compiler to cross-check method declarations in
@@ -55,7 +57,7 @@ extern "C" JNIEXPORT BOOL APIENTRY DllMain(
     return TRUE;
 }
 #endif
-    
+
 extern "C" JNIEXPORT jint JNICALL
 JNI_OnLoad(JavaVM *vm,void *reserved)
 {
@@ -64,6 +66,15 @@ JNI_OnLoad(JavaVM *vm,void *reserved)
     jint version = JniUtil::init(vm);
     JniEnvAutoRef pEnv;
     staticInitFem(pEnv,FemVisitor::visitTbl);
+
+    // REVIEW jvs 26-Nov-2004:  I had to put this in to squelch strange
+    // shutdown problems when extension JNI libraries (such as
+    // libfarrago_dt and libfarrago_rs) are loaded.  It pins our .so
+    // artificially, which probably isn't a good thing either.
+#ifndef __MINGW32__
+    dlopen("libfarrago.so", RTLD_NOW);
+#endif
+    
     return version;
 }
 
