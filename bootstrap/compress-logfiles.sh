@@ -7,33 +7,55 @@
 ## 00 04 * * * $HOME/open/bootstrap/compress-logfiles.sh
 
 # Set LOGDIR to a sensible default.
-if [ ! "$LOGDIR" ]; then
-   export LOGDIR=$HOME/web/logs
+if [ ! "$WEBDIR" ]; then
+   export WEBDIR=$HOME/web
 fi
+
+export LOGDIR=$WEBDIR/logs
 
 if [ ! -d "$LOGDIR" ]; then
    echo "Variable LOGDIR is not set or is not valid directory."
    exit 1
 fi
 
+export ARTDIR=$WEBDIR/artifacts
+
+if [ ! -d "$ARTDIR" ]; then
+   echo "Variable ARTDIR is not set or is not valid directory."
+   exit 1
+fi
+
+debug=false
+
 # Find all files more than 13 days old and compress them.
 find $LOGDIR -maxdepth 2 -daystart -mtime +13 \
  -not -name "*.bz2" \
  -not -name currentbuildstatus.txt \
+ -not -name latest.xml \
  -type f \
  -exec bzip2 {} ";" 
 
 # If the directories contain no .xml files (because the last build was more
 # than 13 days ago), decompress the most recent .xml.bz2
 for i in $(find $LOGDIR/* -type d -maxdepth 0); do
-   if [ "$(echo $i/*.xml)" = "$i/*.xml" \
+   if [ "$(echo $i/*.xml)" = "$i/latest.xml" \
          -a "$(echo $i/*.xml.bz2)" != "$i/*.xml.bz2" ]; then
       mostRecent="$(ls $i/*.xml.bz2 | tail -1)"
       if [ -f "$mostRecent" ]; then
-         echo "There are no .xml files in $i; compressing the most recent .xml.bz2, $mostRecent"
+         $debug && echo "There are no .xml files in $i; decompressing the most recent .xml.bz2, $mostRecent"
          bzip2 -d "$mostRecent"
       fi
    fi
+
+   rm -f $i/latest.xml
+   mostRecentXml="$(ls -t $i/*.xml | tail -1)"
+   ln -s $mostRecentXml $i/latest.xml
+done
+
+for i in $(find $ARTDIR/* -type d -maxdepth 0); do
+   rm -f $i/latest
+   mostRecentDir="$(ls -td $(find $i/* -type d -maxdepth 0) | tail -1)"
+   ln -s $mostRecentDir $i/latest
 done
 
 # End
