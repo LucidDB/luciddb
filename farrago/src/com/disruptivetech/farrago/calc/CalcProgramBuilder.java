@@ -917,10 +917,9 @@ public class CalcProgramBuilder
     private String formatComment(String comment)
     {
         return " /* "
+        /* all 6 \'s are needed */
         + comment.replaceAll("/\\*", "\\\\\\*").replaceAll("\\*/", "\\*\\\\")
         + " */";
-
-        /* all 6 \'s are needed */
     }
 
     // assert helper functions---
@@ -1772,7 +1771,9 @@ public class CalcProgramBuilder
         void printValue(PrintWriter writer)
         {
             if (null == value) {
-                // do nothing
+                if (outputComments) {
+                    writer.print(formatComment("<NULL>"));
+                }
             } else if (value instanceof String) {
                 // Convert the string to an array of bytes assuming (TODO:
                 // don's assume!) latin1 encoding, then hex-encode.
