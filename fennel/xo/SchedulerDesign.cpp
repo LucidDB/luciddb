@@ -26,14 +26,15 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 
 The Fennel XO scheduler is responsible for determining which execution streams
 to run and in what order (or with what parallelization).  In addition, the
-scheduler is responsible for the actual invocation of XO execution methods.  (A
+scheduler is responsible for the actual invocation of XO execution methods.  A
 more modular design would separate scheduling from execution, but there is
 currently no justification for the extra complexity this separation would
-introduce.)
+introduce.
 
 <h3>Interfaces</h3>
 
-The UML static structure diagram below illustrates the relevant relationships:
+The UML static structure diagram below illustrates the relevant relationships
+(only attributes and methods relevant to scheduling are shown):
 
 <hr>
 \image html SchedulerInterfaces.gif
@@ -45,6 +46,10 @@ desired.  Each graph consists of multiple vertex instances of ExecutionStream,
 with ExecutionStreamBuffer edges representing dataflow.  Each buffer is
 assigned a single producer/consumer stream pair.  Hence, the number of buffers
 accessible from a stream is equal to its vertex degree in the graph.
+The design goal is that the ExecutionStreamBuffer representation should
+remain very simple, with any complex buffering strategies
+(e.g. disk-based queueing) encapsulated as specialized stream 
+implementations instead.
 
 <p>
 
@@ -52,7 +57,7 @@ When the scheduler decides that a particular stream should run, it invokes its
 ExecutionStream::execute method, passing a reference to an instance of
 ExecutionStreamQuantum to limit the amount of data processed.  The exact
 interpretation of the quantum is up to the stream implementation.  The stream's
-response is dependent on the states of its incident buffers, which typically
+response is dependent on the states of its incident buffers, which usually
 change as a side-effect of the execution.  This protocol is specified in more
 detail later on.
 
@@ -88,11 +93,12 @@ policies (e.g. sequential vs. parallel, or full-result vs. top-N).
 <li>Derived classes of ExecutionStream implement different kinds of data
 processing (e.g. table scan, sorting, join, etc).
 
-<li>Derived classes of ExecutionStreamBuffer may keep track of
-scheduler-specific buffer state (e.g. a timestamp for implementing some
-fairness policy).  Because ExecutionStreamScheduler acts as a factory for
+<li>Derived classes of ExecutionStreamBuffer may contain additional attributes
+representing scheduler-specific buffer state (e.g. a timestamp for implementing
+some fairness policy).  Because ExecutionStreamScheduler acts as a factory for
 buffer instances, it can guarantee that all of the buffers it manages are of
-the correct type.
+the correct type, and can also create any necessary indexing structures over
+those buffers for efficiency of the scheduling algorithm.
 
 <li>Derived classes of ExecutionStreamQuantum may provide scheduler-specific
 quantization limits to streams that can understand it.  This requires the code
@@ -120,7 +126,8 @@ each dataflow edge in the graph (as well as one for each input or output to the
 graph) and notifies the incident streams of its existence.  Once a graph and
 its streams have been associated with a scheduler in this way, they may never
 be moved to another scheduler.  Buffers start out in state EXECBUF_IDLE, with
-pStart, pEnd, and nTuples all zero.
+pStart, pEnd, and nTuples all zero.  Buffer provision settings are recorded
+for use in sanity checking later.
 
 <li>The caller invokes ExecutionStreamGraph::open().
 
@@ -204,6 +211,22 @@ synchronize fine-grained access to buffer state.
 
 <h3>Example Graph</h3>
 
+To help explain the abstractions described so far, the UML object diagram 
+below shows a simple query stream graph with associated scheduler and buffers:
+
+<hr>
+\image html SchedulerObjectDiagram.gif
+<hr>
+
+This graph corresponds to a simple query like 
+<code>SELECT name FROM emps WHERE age > 30</code>.  Note that although 
+four buffer instances are created, the two instances of 
+ConsumerToProducerProvisionAdapter are the only streams that actually
+allocate any memory.  The BTreeScan writes into the memory allocated by
+adapter1 above it, which is also read by the calculator; the calculator
+writes into the memory allocated by adapter2 above it, which is also read by
+the caller via readStreamBuffer.
+
 <h3>DfsTreeExecutionStreamScheduler</h3>
 
 A reference implementation of the ExecutionStreamScheduler interface is
@@ -263,6 +286,76 @@ changes (makeRunnable and setTimer).
 TBD:  additional assertions; re-entrancy issues for Java XO's.
 
 <h3>Example Execution</h3>
+
+Putting together the example graph shown earlier with the 
+DfsTreeExecutionStreamScheduler algorithm, an example execution trace
+might read as follows for a table of five rows:
+
+<ol>
+
+<li>caller invokes readStreamBuffer on scheduler with adapter2 as argument.
+
+<li>scheduler calls execute on adapter2.  adapter2 sets buf3's state to 
+EXECBUF_NEED_PRODUCTION and points its pStart/pEnd to its allocated cache page.
+adapter2 returns EXECRC_NEED_INPUT.
+
+<li>scheduler calls execute on calc.  calc sets buf2's state to 
+EXECBUF_NEED_PRODUCTION.  calc returns EXECRC_NEED_INPUT.
+
+<li>scheduler calls execute on adapter1.  adapter1 sets buf1's state to 
+EXECBUF_NEED_PRODUCTION and points its pStart/pEnd to its
+allocated cache page.  adapter1 returns EXECRC_NEED_INPUT.
+
+<li>scheduler calls execute on scan.  scan writes five tuples into buf1, sets
+its state to EXECBUF_NEED_CONSUMPTION, adjusts its pEnd to point after fifth
+tuple, sets its nTuples to 5, and returns EXECRC_SUCCESS.
+
+<li>scheduler calls execute on adapter1.  adapter1 copies pStart/pEnd/nTuples
+from buf1 to buf2, then zeroes buf1 and sets its state to EXECBUF_IDLE.
+adapter1 sets buf2's state to EXECBUF_NEED_CONSUMPTION and returns 
+EXECRC_SUCCESS.
+
+<li>scheduler calls execute on calc.  calc applies filter and consumes all
+rows from buf2, zeroing it and setting its state to EXECBUF_IDLE.
+calc writes three rows into buf3, adjusting its pEnd to point after
+third tuple, and sets its state to EXECBUF_NEED_CONSUMPTION.
+calc returns EXECRC_SUCCESS.
+
+<li>scheduler calls execute on adapter2.  adapter2 copies pStart/pEnd/nTuples
+from buf3 to buf4, then zeroes buf3 and sets its state to EXECBUF_IDLE.
+adapter2 sets buf4's state to EXECBUF_NEED_CONSUMPTION.  adapter2 returns 
+EXECRC_SUCCESS.
+
+<li>scheduler returns to caller with EXECRC_SUCCESS, giving it 
+a reference to buf4.
+
+<li>caller reads the data from buf4 and zeroes it, setting its state to
+EXECBUF_IDLE.
+
+<li>caller invokes readStreamBuffer on adapter2 again.
+
+<li>scheduler calls execute on adapter2, which returns EXECRC_NEED_INPUT;
+same thing repeats all the way down the tree.
+
+<li>scheduler calls execute on scan, which zeroes buf1, sets its state to
+EXECBUF_EOS, and eturns EXECRC_EOS.
+
+<li>scheduler calls execute on adapter1, which returns EXECRC_EOS, etc.
+
+<li>scheduler calls execute on calc, which returns EXECRC_EOS, etc.
+
+<li>scheduler calls execute on adapter2, which returns EXECRC_EOS, etc.
+
+<li>scheduler returns to caller with EXECRC_EOS.
+
+</ol>
+
+TODO:  an animated visualization would be more useful.
+
+<p>
+
+Note that most real executions will be much more complicated due to
+joins and partial consumption of input.
 
  */
 struct SchedulerDesign 
