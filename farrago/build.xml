@@ -116,9 +116,6 @@
   <!-- MDRANT project root -->
   <property name="mdrant.dir" location="${mdr.dir}/extras/mdrant"/>
 
-  <!-- ANT installation root -->
-  <property name="ant.dir" location="${env.ANT_HOME}"/>
-
   <!-- Java installation root -->
   <property name="javahome.dir" location="${env.JAVA_HOME}"/>
 
@@ -341,8 +338,8 @@ require version '${required.ant.version}'."/>
     <pathelement location="${thirdparty.dir}/mondrian-xom.jar"/>
     <pathelement location="${mdrlibs.dir}/mdrjdbc.jar"/>
     <pathelement location="${junit.dir}/junit.jar"/>
-    <pathelement location="${ant.dir}/lib/xml-apis.jar"/>
-    <pathelement location="${ant.dir}/lib/xercesImpl.jar"/>
+    <pathelement location="${ant.home}/lib/xml-apis.jar"/>
+    <pathelement location="${ant.home}/lib/xercesImpl.jar"/>
     <pathelement location="${javahome.dir}/lib/tools.jar"/>
     <pathelement location="${rmijdbc.dir}/dist/lib/RmiJdbc.jar"/>
     <pathelement location="${csvjdbc.dir}/csvjdbc.jar"/>
@@ -406,12 +403,12 @@ require version '${required.ant.version}'."/>
 
   <!-- classpath for reentrantly invoking ant -->
   <path id="ant.classpath">
-    <pathelement location="${ant.dir}/lib/ant.jar"/>
-    <pathelement location="${ant.dir}/lib/ant-launcher.jar"/>
-    <pathelement location="${ant.dir}/lib/junit.jar"/>
-    <pathelement location="${ant.dir}/lib/xercesImpl.jar"/>
-    <pathelement location="${ant.dir}/lib/xml-apis.jar"/>
-    <pathelement location="${ant.dir}/lib/ant-junit.jar"/>
+    <pathelement location="${ant.home}/lib/ant.jar"/>
+    <pathelement location="${ant.home}/lib/ant-launcher.jar"/>
+    <pathelement location="${ant.home}/lib/junit.jar"/>
+    <pathelement location="${ant.home}/lib/xercesImpl.jar"/>
+    <pathelement location="${ant.home}/lib/xml-apis.jar"/>
+    <pathelement location="${ant.home}/lib/ant-junit.jar"/>
   </path>
   <property name="ant.classpath" refid="ant.classpath"/>
 
