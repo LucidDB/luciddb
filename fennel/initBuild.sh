@@ -102,6 +102,7 @@ if $cygwin ; then
     fi
     #default to no ICU for Cygwin/Mingw
     ICU_FLAG="--without-icu";
+    export JAVA_HOME=`cygpath -u $JAVA_HOME`
 fi
 
 # the default for non-Cygwin/Mingw is to enable ICU
