@@ -497,6 +497,8 @@ public class FarragoJdbcEngineConnection
         private final String libraryName;
         private final Properties options;
 
+        private FarragoDataWrapperCache dataWrapperCache;
+
         FleetingMedDataWrapperInfo(
             String mofId,
             String libraryName,
@@ -509,17 +511,25 @@ public class FarragoJdbcEngineConnection
 
         private FarragoMedDataWrapper getWrapper()
         {
+            assert(dataWrapperCache == null);
+            
             final FarragoDbSession session = (FarragoDbSession)getSession();
             final FarragoDatabase db = session.getDatabase();
             final FarragoObjectCache sharedCache = db.getDataWrapperCache();
 
-            final FarragoDataWrapperCache dataWrapperCache = 
+            dataWrapperCache = 
                 new FarragoDataWrapperCache(session, sharedCache, 
                     session.getRepos(), db.getFennelDbHandle());
 
             final FarragoMedDataWrapper dataWrapper =
                 dataWrapperCache.loadWrapper(mofId, libraryName, options);
             return dataWrapper;
+        }
+
+        private void closeWrapperCache()
+        {
+            dataWrapperCache.closeAllocation();
+            dataWrapperCache = null;
         }
 
         public DriverPropertyInfo[] getServerPropertyInfo(
@@ -532,7 +542,7 @@ public class FarragoJdbcEngineConnection
                 return dataWrapper.getServerPropertyInfo(locale, wrapperProps,
                     serverProps);
             } finally {
-                dataWrapper.closeAllocation();
+                closeWrapperCache();
             }
         }
 
@@ -547,7 +557,7 @@ public class FarragoJdbcEngineConnection
                 return dataWrapper.getColumnSetPropertyInfo(locale,
                     wrapperProps, serverProps, tableProps);
             } finally {
-                dataWrapper.closeAllocation();
+                closeWrapperCache();
             }
         }
 
@@ -563,7 +573,7 @@ public class FarragoJdbcEngineConnection
                 return dataWrapper.getColumnPropertyInfo(locale, wrapperProps,
                     serverProps, tableProps, columnProps);
             } finally {
-                dataWrapper.closeAllocation();
+                closeWrapperCache();
             }
         }
 
@@ -573,7 +583,7 @@ public class FarragoJdbcEngineConnection
             try {
                 return dataWrapper.isForeign();
             } finally {
-                dataWrapper.closeAllocation();
+                closeWrapperCache();
             }
         }
     }
