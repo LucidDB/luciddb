@@ -28,7 +28,9 @@ void CalcTupleStream::prepare(CalcTupleStreamParams const &params)
 {
     SingleInputTupleStream::prepare(params);
     CalcExecutionStream::prepare(
-        params,pInputStream->getOutputDesc());
+        params,
+        pInputStream->getOutputDesc(),
+        params.outputTupleDesc);
 }
 
 TupleDescriptor const &CalcTupleStream::getOutputDesc() const

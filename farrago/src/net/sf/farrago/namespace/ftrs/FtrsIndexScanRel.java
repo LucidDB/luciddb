@@ -32,10 +32,10 @@ import net.sf.saffron.opt.*;
 import net.sf.saffron.rel.*;
 import net.sf.saffron.util.*;
 
-import openjava.ptree.*;
-
 import java.util.*;
 import java.util.List;
+
+import openjava.ptree.Literal;
 
 
 /**
@@ -186,15 +186,13 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
             });
     }
 
-    // implement SaffronRel
-    public Object implement(RelImplementor implementor,int ordinal)
+    public Object implementFennelChild(FennelRelImplementor implementor)
     {
-        assert (ordinal == -1);
         return Literal.constantNull();
     }
 
     // implement FennelRel
-    public FemExecutionStreamDef toStreamDef(FarragoRelImplementor implementor)
+    public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
         FarragoCatalog catalog = getPreparingStmt().getCatalog();
 

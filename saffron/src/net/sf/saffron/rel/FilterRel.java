@@ -29,7 +29,6 @@ import net.sf.saffron.opt.PlanCost;
 import net.sf.saffron.opt.VolcanoCluster;
 import net.sf.saffron.rex.RexNode;
 import net.sf.saffron.rex.RexUtil;
-import net.sf.saffron.util.Util;
 
 
 /**

@@ -25,6 +25,7 @@
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/calc/ExtMath.h"
 #include "fennel/calc/ExtendedInstructionTable.h"
+#include "fennel/tuple/StandardTypeDescriptor.h"
 #include <math.h>
 
 FENNEL_BEGIN_NAMESPACE
@@ -34,6 +35,8 @@ void
 mathLn(RegisterRef<double>* result,
        RegisterRef<double>* x)
 {
+    assert(StandardTypeDescriptor::isApprox(x->type()));
+
     if (x->isNull()) {
         result->toNull();        
     } else if (x->value() <= 0.0) {
@@ -49,10 +52,7 @@ void
 mathLn(RegisterRef<double>* result,
        RegisterRef<long long>* x)
 {
-    assert(x->type() == STANDARD_TYPE_INT_8 ||
-	   x->type() == STANDARD_TYPE_INT_16 || 
-	   x->type() == STANDARD_TYPE_INT_32 || 
-	   x->type() == STANDARD_TYPE_INT_64);
+    assert(StandardTypeDescriptor::isExact(x->type()));
 
     if (x->isNull()) {
         result->toNull();        
@@ -69,7 +69,7 @@ void
 mathLog10(RegisterRef<double>* result,
 	  RegisterRef<double>* x)
 {
-    assert(x->type() == STANDARD_TYPE_DOUBLE || x->type() == STANDARD_TYPE_REAL);
+    assert(StandardTypeDescriptor::isApprox(x->type()));
 
     if (x->isNull()) {
         result->toNull();        
@@ -86,10 +86,7 @@ void
 mathLog10(RegisterRef<double>* result,
 	  RegisterRef<long long>* x)
 {
-    assert(x->type() == STANDARD_TYPE_INT_8 ||
-	   x->type() == STANDARD_TYPE_INT_16 || 
-	   x->type() == STANDARD_TYPE_INT_32 || 
-	   x->type() == STANDARD_TYPE_INT_64);
+    assert(StandardTypeDescriptor::isExact(x->type()));
 
     if (x->isNull()) {
         result->toNull();        
@@ -106,7 +103,7 @@ void
 mathAbs(RegisterRef<double>* result,
 	RegisterRef<double>* x)
 {
-    assert(x->type() == STANDARD_TYPE_DOUBLE || x->type() == STANDARD_TYPE_REAL);
+    assert(StandardTypeDescriptor::isApprox(x->type()));
 
     if (x->isNull()) {
         result->toNull();        
@@ -119,7 +116,7 @@ void
 mathAbs(RegisterRef<long long>* result,
 	RegisterRef<long long>* x)
 {
-    assert(x->type() == STANDARD_TYPE_INT_64);
+    assert(StandardTypeDescriptor::isExact(x->type()));
 
     if (x->isNull()) {
         result->toNull();        
@@ -133,8 +130,8 @@ mathPow(RegisterRef<double>* result,
 	RegisterRef<double>* x,
 	RegisterRef<double>* y)
 {
-    assert(x->type() == STANDARD_TYPE_DOUBLE || x->type() == STANDARD_TYPE_REAL);
-    assert(y->type() == STANDARD_TYPE_DOUBLE || y->type() == STANDARD_TYPE_REAL);
+    assert(StandardTypeDescriptor::isApprox(x->type()));
+    assert(StandardTypeDescriptor::isApprox(y->type()));
 
     if (x->isNull() || y->isNull()) {
         result->toNull();        

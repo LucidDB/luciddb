@@ -23,6 +23,8 @@
 package net.sf.saffron.core;
 
 import net.sf.saffron.rel.SaffronRel;
+import net.sf.saffron.rel.SaffronRel;
+import net.sf.saffron.rel.SaffronBaseRel;
 import net.sf.saffron.rex.RexNode;
 import net.sf.saffron.util.Util;
 
@@ -79,7 +81,8 @@ public class PlanWriter extends java.io.PrintWriter
         } else {
             s = "";
         }
-        s = s + rel.getRelTypeName() + rel.getQualifier();
+        s = s + rel.getRelTypeName() +
+                ((SaffronBaseRel) rel).getQualifier();
         if (brief) {
             explainBrief(s,rel,terms);
             return;

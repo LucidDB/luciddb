@@ -22,6 +22,7 @@ package net.sf.farrago.db;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.util.*;
+import net.sf.farrago.trace.*;
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.session.*;
 
@@ -41,13 +42,13 @@ import java.sql.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class FarragoDbStmtContext
+public class FarragoDbStmtContext
     implements FarragoSessionStmtContext
 {
     //~ Static fields/initializers --------------------------------------------
 
-    private static Logger tracer =
-        TraceUtil.getClassTrace(FarragoDbStmtContext.class);
+    private static final Logger tracer =
+        FarragoTrace.getDatabaseStatementContextTracer();
 
     //~ Instance fields -------------------------------------------------------
 
@@ -74,7 +75,7 @@ class FarragoDbStmtContext
      *
      * @param session the session creating this statement
      */
-    FarragoDbStmtContext(FarragoDbSession session)
+    public FarragoDbStmtContext(FarragoDbSession session)
     {
         this.session = session;
         updateCount = -1;

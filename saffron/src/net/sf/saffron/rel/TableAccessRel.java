@@ -31,7 +31,7 @@ import java.util.Arrays;
 /**
  * A <code>TableAccessRel</code> reads all the rows from a {@link
  * SaffronTable}.
- * 
+ *
  * <p> If the table is a {@link net.sf.saffron.ext.JdbcTable}, then this is
  * literally possible. But for other kinds of tables, there may be many ways to
  * read the data from the table. For some kinds of table, it may not even be
@@ -56,7 +56,7 @@ import java.util.Arrays;
  *
  * @since 10 November, 2001
  */
-public class TableAccessRel extends SaffronRel
+public class TableAccessRel extends SaffronBaseRel
 {
     //~ Instance fields -------------------------------------------------------
 

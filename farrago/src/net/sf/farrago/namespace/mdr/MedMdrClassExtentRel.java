@@ -6,12 +6,12 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
@@ -52,7 +52,7 @@ import java.util.List;
  * @author John V. Sichi
  * @version $Id$
  */
-class MedMdrClassExtentRel extends TableAccessRel
+class MedMdrClassExtentRel extends TableAccessRel implements JavaRel
 {
     /**
      * Refinement for super.table.
@@ -62,7 +62,7 @@ class MedMdrClassExtentRel extends TableAccessRel
     Class rowClass;
 
     boolean useReflection;
-    
+
     public MedMdrClassExtentRel(
         VolcanoCluster cluster,
         MedMdrClassExtent mdrClassExtent,
@@ -86,7 +86,7 @@ class MedMdrClassExtentRel extends TableAccessRel
         List nameList = new ArrayList();
 
         boolean useModel = (refObject instanceof ModelElement);
-        
+
         // determine the path from the root package to refObject
         RefBaseObject refPackage = JmiUtil.getContainer(refObject);
         String rootPackageName = JmiUtil.getMetaObjectName(
@@ -101,7 +101,7 @@ class MedMdrClassExtentRel extends TableAccessRel
             refPackage = JmiUtil.getContainer(refPackage);
             assert(refPackage != null);
         }
-        
+
         nameList.add(JmiUtil.getMetaObjectName(refObject));
         String typeName;
         if (useModel) {
@@ -117,10 +117,9 @@ class MedMdrClassExtentRel extends TableAccessRel
     RefBaseObject getRefObjectFromModelElement(ModelElement modelElement)
     {
         String [] runtimeName = getRuntimeName(modelElement);
-        MedMdrNameDirectory extentDirectory = 
+        MedMdrNameDirectory extentDirectory =
             mdrClassExtent.directory.server.getExtentNameDirectory();
-        return (RefBaseObject)
-            extentDirectory.lookupRefBaseObject(runtimeName);
+        return extentDirectory.lookupRefBaseObject(runtimeName);
     }
 
     Expression getRefBaseObjectRuntimeExpression(RefBaseObject refObject)
@@ -160,7 +159,7 @@ class MedMdrClassExtentRel extends TableAccessRel
     }
 
     // implement SaffronRel
-    public Object implement(RelImplementor implementor,int ordinal)
+    public ParseTree implement(JavaRelImplementor implementor)
     {
         Expression iterExpression = getIteratorExpression();
 
@@ -171,7 +170,7 @@ class MedMdrClassExtentRel extends TableAccessRel
         SaffronType outputRowType = getRowType();
 
         RexNode [] rexExps = implementProjection(varInputRow);
-        
+
         return IterCalcRel.implementAbstract(
             implementor,
             this,
@@ -193,7 +192,7 @@ class MedMdrClassExtentRel extends TableAccessRel
         // fails to find variable reference).
         Expression castInputRow = new CastExpression(
             OJClass.forClass(rowClass),inputRow);
-        
+
         SaffronType outputRowType = getRowType();
         List features = JmiUtil.getFeatures(
             mdrClassExtent.refClass,StructuralFeature.class,false);

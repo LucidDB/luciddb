@@ -9,12 +9,12 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
@@ -40,7 +40,7 @@ import java.util.*;
 public class CoerceInputsRule extends VolcanoRule
 {
     private Class consumerRelClass;
-    
+
     /**
      * Construct the rule.
      *
@@ -89,7 +89,7 @@ public class CoerceInputsRule extends VolcanoRule
         if (!coerce) {
             return;
         }
-        SaffronRel newConsumerRel = (SaffronRel) consumerRel.clone();
+        SaffronRel newConsumerRel = OptUtil.clone(consumerRel);
         for (int i = 0; i < newInputs.length; ++i) {
             newConsumerRel.replaceInput(i,newInputs[i]);
         }

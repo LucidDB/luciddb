@@ -23,13 +23,15 @@
 package net.sf.saffron.opt;
 
 import net.sf.saffron.core.SaffronPlanner;
+import net.sf.saffron.trace.SaffronTrace;
 import net.sf.saffron.opt.OptUtil;
+import net.sf.saffron.rel.SaffronRel;
 import net.sf.saffron.rel.SaffronRel;
 import net.sf.saffron.util.Util;
 
-import openjava.tools.DebugOut;
-
 import java.util.ArrayList;
+import java.util.logging.Logger;
+import java.util.logging.Level;
 
 
 /**
@@ -43,6 +45,7 @@ public class VolcanoRuleCall
     public final RuleOperand operand0;
     public final VolcanoRule rule;
     public final SaffronRel [] rels;
+    private static final Logger tracer = SaffronTrace.getPlannerTracer();
 
     //~ Constructors ----------------------------------------------------------
 
@@ -79,7 +82,7 @@ public class VolcanoRuleCall
             if (rel instanceof RelSubset || rule.planner.isRegistered(rel)) {
                 return;
             }
-            DebugOut.println(
+            tracer.fine(
                 "Rule " + rule + " arguments " + OptUtil.toString(rels)
                 + " created " + rel);
             Util.discard(rule.planner.register(rel,rels[0]));
@@ -96,10 +99,9 @@ public class VolcanoRuleCall
     protected void onMatch()
     {
         try {
-            if (DebugOut.getDebugLevel() > 2) {
-                DebugOut.println(
-                    "Apply rule [" + rule + "] to [" + OptUtil.toString(rels)
-                    + "]");
+            if (tracer.isLoggable(Level.FINE)) {
+                tracer.fine("Apply rule [" + rule + "] to [" +
+                        OptUtil.toString(rels) + "]");
             }
             rule.onMatch(this);
         } catch (Throwable e) {

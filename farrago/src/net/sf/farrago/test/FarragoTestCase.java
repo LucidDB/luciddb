@@ -26,10 +26,10 @@ import junit.framework.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.util.*;
+import net.sf.farrago.trace.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.med.*;
 
-import net.sf.saffron.util.*;
 import net.sf.saffron.test.*;
 
 import java.io.*;
@@ -54,8 +54,7 @@ public abstract class FarragoTestCase extends DiffTestCase
     //~ Static fields/initializers --------------------------------------------
 
     /** Logger to use for test tracing. */
-    protected static Logger tracer =
-        TraceUtil.getClassTrace(FarragoTestCase.class);
+    protected static final Logger tracer = FarragoTrace.getTestTracer();
 
     /** JDBC connection to Farrago database. */
     protected static Connection connection;
@@ -91,12 +90,7 @@ public abstract class FarragoTestCase extends DiffTestCase
     // override DiffTestCase
     protected File getSourceRoot() throws Exception
     {
-        String homeDir =
-            System.getProperties().getProperty("net.sf.farrago.home");
-        if (homeDir == null) {
-            throw new Exception(
-                "Java property net.sf.farrago.home must be set");
-        }
+        String homeDir = FarragoProperties.instance().homeDir.get(true);
         return new File(homeDir,"src");
     }
 
@@ -143,10 +137,6 @@ public abstract class FarragoTestCase extends DiffTestCase
             connection.close();
             connection = null;
         }
-    }
-
-    public static void dropUnknownObjects() throws SQLException
-    {
     }
 
     // NOTE: Catalog open/close is slow and causes sporadic problems when done
@@ -283,8 +273,8 @@ public abstract class FarragoTestCase extends DiffTestCase
     private static FarragoJdbcEngineDriver newJdbcEngineDriver()
         throws Exception
     {
-        String driverName = System.getProperty(
-            "net.sf.farrago.test.jdbcDriverClass");
+        String driverName =
+            FarragoProperties.instance().testJdbcDriverClass.get();
         if (driverName == null) {
             return new FarragoJdbcEngineDriver();
         }
@@ -348,9 +338,7 @@ public abstract class FarragoTestCase extends DiffTestCase
         if (catalog.isFennelEnabled()) {
             return true;
         }
-        String diffProp =
-            System.getProperties().getProperty("net.sf.farrago.test.diff");
-        return "true".equals(diffProp);
+        return FarragoProperties.instance().testDiff.get();
     }
     
     //~ Inner Classes ---------------------------------------------------------

@@ -45,6 +45,7 @@
 #include "fennel/calc/ExtendedInstruction.h"
 #include "fennel/calc/ExtendedInstructionTable.h"
 #include "fennel/calc/ExtString.h"
+#include "fennel/calc/ExtRegExp.h"
 #include "fennel/calc/ExtMath.h"
 #include "fennel/calc/ExtDateTime.h"
 

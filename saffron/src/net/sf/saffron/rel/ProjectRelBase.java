@@ -27,7 +27,8 @@ import net.sf.saffron.core.SaffronPlanner;
 import net.sf.saffron.core.SaffronType;
 import net.sf.saffron.core.SaffronTypeFactory;
 import net.sf.saffron.opt.PlanCost;
-import net.sf.saffron.opt.RelImplementor;
+import net.sf.saffron.oj.rel.JavaRelImplementor;
+import net.sf.saffron.oj.rel.JavaRel;
 import net.sf.saffron.opt.VolcanoCluster;
 import net.sf.saffron.rex.RexNode;
 
@@ -131,16 +132,21 @@ public abstract class ProjectRelBase extends SingleRel
         pw.explain(this,terms);
     }
     
-    public SaffronRel implementFieldAccess(
-        RelImplementor implementor,
+    /**
+     * Burrows into a synthetic record and returns the underlying relation
+     * which provides the field called <code>fieldName</code>.
+     */
+    public JavaRel implementFieldAccess(
+        JavaRelImplementor implementor,
         String fieldName)
     {
         if (!isBoxed()) {
-            return child.implementFieldAccess(implementor,fieldName);
+            return implementor.implementFieldAccess((JavaRel) child,
+                    fieldName);
         }
         SaffronType type = getRowType();
         int field = type.getFieldOrdinal(fieldName);
-        return implementor.findRel(this,exps[field]);
+        return implementor.findRel((JavaRel) this,exps[field]);
     }
 
     protected SaffronType deriveRowType()

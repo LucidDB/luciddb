@@ -6,12 +6,12 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
@@ -75,7 +75,7 @@ class FtrsIndexJoinRule extends VolcanoRule
         if (!joinRel.getVariablesStopped().isEmpty()) {
             return;
         }
-        
+
         switch(joinRel.getJoinType()) {
         case JoinRel.JoinType.INNER:
         case JoinRel.JoinType.LEFT:
@@ -83,7 +83,7 @@ class FtrsIndexJoinRule extends VolcanoRule
         default:
             return;
         }
-        
+
         // TODO:  share more code with FtrsScanToSearchRule, and expand
         // set of supported join conditions
 
@@ -91,7 +91,7 @@ class FtrsIndexJoinRule extends VolcanoRule
             // index join is guaranteed to destroy scan ordering
             return;
         }
-        
+
         FarragoCatalog catalog = scanRel.getPreparingStmt().getCatalog();
         int [] joinFieldOrdinals = new int[2];
         if (!OptUtil.analyzeSimpleEquiJoin(joinRel,joinFieldOrdinals)) {
@@ -99,7 +99,7 @@ class FtrsIndexJoinRule extends VolcanoRule
         }
         int leftOrdinal = joinFieldOrdinals[0];
         int rightOrdinal = joinFieldOrdinals[1];
-        
+
         CwmColumn indexColumn = scanRel.getColumnForFieldAccess(rightOrdinal);
         assert (indexColumn != null);
 
@@ -119,7 +119,7 @@ class FtrsIndexJoinRule extends VolcanoRule
                 indexColumn,leftOrdinal,rightOrdinal,leftRel,call);
         }
     }
-    
+
     private void considerIndex(
         JoinRel joinRel,
         CwmSqlindex index,
@@ -203,7 +203,7 @@ class FtrsIndexJoinRule extends VolcanoRule
                     new Integer(leftFieldCount)
                 };
         }
-        
+
         SaffronRel fennelInput = convert(
             planner,castRel,FennelPullRel.FENNEL_PULL_CONVENTION);
 
@@ -222,7 +222,7 @@ class FtrsIndexJoinRule extends VolcanoRule
             // hide the unclustered-to-clustered translation inside a special
             // TupleStream, otherwise the left-hand join fields get
             // propagated one extra time.
-            
+
             FtrsIndexScanRel unclusteredScan =
                 new FtrsIndexScanRel(
                     scanRel.getCluster(),

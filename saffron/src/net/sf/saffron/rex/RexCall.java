@@ -67,7 +67,7 @@ public class RexCall extends RexNode {
      * @post return != null
      */
     static RexKind sqlKindToRexKind(SqlKind kind) {
-        switch (kind.ordinal_) {
+        switch (kind.getOrdinal()) {
         case SqlKind.EqualsORDINAL: return RexKind.Equals;
         case SqlKind.IdentifierORDINAL: return RexKind.Identifier;
         case SqlKind.LiteralORDINAL: return RexKind.Literal;
@@ -90,6 +90,9 @@ public class RexCall extends RexNode {
         case SqlKind.PlusPrefixORDINAL: return RexKind.Plus;
         case SqlKind.MinusPrefixORDINAL: return RexKind.MinusPrefix;
         case SqlKind.ValuesORDINAL: return RexKind.Values;
+        case SqlKind.RowORDINAL: return RexKind.Row;
+        case SqlKind.CastORDINAL: return RexKind.Cast;
+        case SqlKind.TrimORDINAL: return RexKind.Trim;
         case SqlKind.FunctionORDINAL: return RexKind.Other;
         case SqlKind.CaseORDINAL: return RexKind.Other;
         case SqlKind.OtherORDINAL: return RexKind.Other;
@@ -118,6 +121,10 @@ public class RexCall extends RexNode {
 
     public String toString() {
         return computeDigest(false);
+    }
+
+    public void accept(RexVisitor visitor) {
+        visitor.visitCall(this);
     }
 
     public SaffronType getType() {

@@ -59,6 +59,14 @@ JAVACODE List startList(Object o)
  * future changes to the grammar, making it very brittle.
  */
 
+JAVACODE ParserPosition getCurrentParserPosition()
+{
+    return new ParserPosition(
+            token.beginLine,
+            token.beginColumn);
+}
+
+
 JAVACODE String getPositionString()
 {
     return "line " + token.beginLine + " col " + token.beginColumn;
@@ -89,40 +97,77 @@ JAVACODE void checkNonQueryExpression(ExprContext exprContext)
     }
 }
 
-// everytime, just to be sure.  These 3 utilities have to live here,
-// instead of in the ParserUtil class because ParseException is
-// ambigous, and CommonParser lives in multiple packages.
-JAVACODE java.sql.Date parseDateLiteral(String s) throws ParseException {
-    return new java.sql.Date(parseDateTime(s, ParserUtil.DateFormatStr));
+//  The date/time parse utilities have to live here, instead of in the ParserUtil
+// class because ParseException is ambigous, and CommonParser has to live in
+// multiple packages.
+JAVACODE SqlLiteral parseDateLiteral(String s) 
+    throws ParseException
+{
+    Calendar calendar = parseDateTime(s, ParserUtil.DateFormatStr, 0);
+    return SqlLiteral.createDate(calendar);
 }
 
-// this is a bit hokey - i could probably be smarter in the parsing code, but it works.
-JAVACODE java.sql.Time parseTimeLiteral(String s) throws ParseException {
-    if (s.indexOf('.') >= 0) {
-        return new java.sql.Time(parseDateTime(s, ParserUtil.PrecisionTimeFormatStr));
-    } else {
-        return new java.sql.Time(parseDateTime(s, ParserUtil.TimeFormatStr));        
+/**
+ * this is a bit hokey - i could probably be smarter in the parsing code, but it works.
+ * 
+ */
+JAVACODE SqlLiteral parsePrecisionTimeLiteral(String preciseTimeString, String dfString) 
+    throws ParseException 
+{
+    int precision;
+    String timeStr;
+    String subsec;
+    int millis;
+
+    int dot = preciseTimeString.indexOf('.');
+
+    if (dot < 0) 
+    {
+        // no precision info
+        millis = 0;
+        timeStr = preciseTimeString;
+        precision = 0;
+    } 
+    else
+    {
+        // extract the milliseconds.
+        int length = preciseTimeString.length();
+        precision = length - dot - 1;
+        assert (0 < precision && precision < 4);
+        timeStr = preciseTimeString.substring(0, dot);
+        subsec = preciseTimeString.substring(dot + 1, Math.min(dot+4, length));
+        millis = Integer.parseInt(subsec) * (int)Math.pow(10, 3 - subsec.length());
     }
-}
 
-JAVACODE java.sql.Timestamp parseTimestampLiteral(String s) throws ParseException {
-    if (s.indexOf('.') >= 0) {
-        return new java.sql.Timestamp(parseDateTime(s, ParserUtil.PrecisionTimestampFormatStr));
-    } else {
-        return new java.sql.Timestamp(parseDateTime(s, ParserUtil.TimestampFormatStr));
+    if (ParserUtil.TimeFormatStr.equals(dfString)) {
+        Calendar calendar = parseDateTime(timeStr, dfString, millis);
+        return SqlLiteral.createTime(calendar,precision);
     }
 
+    if (ParserUtil.TimestampFormatStr.equals(dfString)) {
+        Calendar calendar = parseDateTime(timeStr, dfString, millis);
+        return SqlLiteral.createTimestamp(calendar,precision);
+    } else {
+        throw new ParseException("Internal parse error: Unrecognized format string " + dfString);
+    }
+    
+
 
 }
 
-JAVACODE long parseDateTime(String s, String dfString) throws ParseException {
+JAVACODE Calendar parseDateTime(String s, String dfString, int millis) throws ParseException {
     // note that SimpleDateFormat is not thread safe, so we cons a new one
+
     java.text.SimpleDateFormat df = new java.text.SimpleDateFormat(dfString);
+	df.setLenient(false);
+    Calendar cal = Calendar.getInstance(/* need locale? */);
     try {
-        return df.parse(s).getTime();
+        cal.setTime(df.parse(s));
+        cal.add(Calendar.MILLISECOND,millis);
     } catch (java.text.ParseException e) {
         throw new ParseException(e.getMessage());
     }
+    return cal;
 }
 
 /*****************************************
@@ -358,7 +403,7 @@ SqlNode SqlExplain() :
             return new SqlExplain(
                 opTab.explainOperator,
                 stmt,
-                SqlLiteral.create(withImplementation));
+                SqlLiteral.createBoolean(withImplementation));
         }
 }
 
@@ -582,25 +627,25 @@ SqlNode FromClause() :
         (
             <ON> condition = Expression(EXPR_ACCEPT_SUBQUERY) {
                 e = opTab.joinOperator.createCall(e,
-                        SqlLiteral.create(isNatural),
-                        SqlLiteral.create(joinType), e2,
-                        SqlLiteral.create(SqlJoinOperator.ConditionType.On),
+                        SqlLiteral.createBoolean(isNatural),
+                        SqlLiteral.createFlag(joinType), e2,
+                        SqlLiteral.createFlag(SqlJoinOperator.ConditionType.On),
                         condition);
             }
         |
             <USING> <LPAREN> list = SimpleIdentifierCommaList() <RPAREN> {
                 e = opTab.joinOperator.createCall(e,
-                        SqlLiteral.create(isNatural),
-                        SqlLiteral.create(joinType), e2,
-                        SqlLiteral.create(SqlJoinOperator.ConditionType.Using),
+                        SqlLiteral.createBoolean(isNatural),
+                        SqlLiteral.createFlag(joinType), e2,
+                        SqlLiteral.createFlag(SqlJoinOperator.ConditionType.Using),
                         new SqlNodeList(list));
             }
         |
             {
                 e = opTab.joinOperator.createCall(e,
-                        SqlLiteral.create(isNatural),
-                        SqlLiteral.create(joinType), e2,
-                        SqlLiteral.create(SqlJoinOperator.ConditionType.On),
+                        SqlLiteral.createBoolean(isNatural),
+                        SqlLiteral.createFlag(joinType), e2,
+                        SqlLiteral.createFlag(SqlJoinOperator.ConditionType.On),
                         null);
             }
         )
@@ -611,8 +656,8 @@ SqlNode FromClause() :
         // me even more uneasy.
         LOOKAHEAD({true}) <COMMA> e2 = TableRef() {
             e = opTab.joinOperator.createCall(e, SqlLiteral.False,
-                    SqlLiteral.create(SqlJoinOperator.JoinType.Comma), e2,
-                    SqlLiteral.create(SqlJoinOperator.ConditionType.On), null);
+                    SqlLiteral.createFlag(SqlJoinOperator.JoinType.Comma), e2,
+                    SqlLiteral.createFlag(SqlJoinOperator.ConditionType.On), null);
         }
     )*
     {return e;}
@@ -1139,6 +1184,7 @@ SqlNode AtomicRowExpression() :
 SqlLiteral Literal() :
 {
     String          p;
+    BitString bitString;
 }
 {
     <UNSIGNED_INTEGER_LITERAL> {
@@ -1158,17 +1204,14 @@ SqlLiteral Literal() :
 |
     <BIT_STRING_LITERAL> {
         p = ParserUtil.trim(getToken(0).image, "bB'");
-        return new SqlLiteral(SqlLiteral.BitString.createFromBitString(p));
+        bitString = BitString.createFromBitString(p);
+        return SqlLiteral.createBitString(p);
     }
 |
     <BINARY_STRING_LITERAL> {
         p = ParserUtil.trim(getToken(0).image, "xX'");
-        return new SqlLiteral(ParserUtil.parseBinaryString(p));
-    }
-|
-    <HEX_STRING_LITERAL> {
-        p = ParserUtil.trim(getToken(0).image, "xX'");
-        return new SqlLiteral(SqlLiteral.BitString.createFromHexString(p));
+        bitString = BitString.createFromHexString(p);
+        return SqlLiteral.createBinaryString(bitString);
     }
 |
     { SqlCollation collation=null; }
@@ -1176,7 +1219,7 @@ SqlLiteral Literal() :
         p = getToken(0).image;
     }
     [collation = CollateClause()]
-    { return SqlLiteral.StringLiteral.create(p, collation); }
+    { return SqlLiteral.createString(p, collation); }
 
 |
     <TRUE> { return SqlLiteral.True; }
@@ -1187,31 +1230,28 @@ SqlLiteral Literal() :
 |
     <NULL> { return SqlLiteral.createNull(); }
 |
-    <LBRACE_D> <QUOTED_DATE_STRING> { p = getToken(0).image; } <RBRACE> {
-        return SqlLiteral.create(
-            ParserUtil.parseDate(ParserUtil.strip(p, "'")));
+    <LBRACE_D> <STRING_LITERAL> { p = getToken(0).image; } <RBRACE> {
+        return parseDateLiteral(ParserUtil.strip(p, "'"));
     }
 |
-    <LBRACE_T> <QUOTED_TIME_STRING> { p = getToken(0).image; } <RBRACE> {
-        return SqlLiteral.create(
-            ParserUtil.parseTime(ParserUtil.strip(p, "'")));
+    <LBRACE_T> <STRING_LITERAL> { p = getToken(0).image; } <RBRACE> {
+        return parsePrecisionTimeLiteral(ParserUtil.strip(p, "'"), ParserUtil.TimeFormatStr);
     }
 |
-    <LBRACE_TS> <QUOTED_TIMESTAMP_STRING> { p = getToken(0).image; } <RBRACE> {
-        return SqlLiteral.create(
-            ParserUtil.parseTimestamp(ParserUtil.strip(p, "'")));
+    <LBRACE_TS> <STRING_LITERAL> { p = getToken(0).image; } <RBRACE> {
+        return parsePrecisionTimeLiteral(ParserUtil.strip(p, "'"), ParserUtil.TimestampFormatStr);
     }
 |
-    <DATE> <QUOTED_DATE_STRING> {
-        return SqlLiteral.create(parseDateLiteral(ParserUtil.strip(getToken(0).image,"'")));                
+    <DATE> <STRING_LITERAL> {
+        return parseDateLiteral(ParserUtil.strip(getToken(0).image,"'"));                
     }
 |
-    <TIME> <QUOTED_TIME_STRING> {
-        return SqlLiteral.create(parseTimeLiteral(ParserUtil.strip(getToken(0).image,"'")));                
+    <TIME> <STRING_LITERAL> {
+        return parsePrecisionTimeLiteral(ParserUtil.strip(getToken(0).image,"'"), ParserUtil.TimeFormatStr);                
     }
 |
-    <TIMESTAMP> <QUOTED_TIMESTAMP_STRING> {
-        return SqlLiteral.create(parseTimestampLiteral(ParserUtil.strip(getToken(0).image,"'")));                
+    <TIMESTAMP> <STRING_LITERAL> {
+        return parsePrecisionTimeLiteral(ParserUtil.strip(getToken(0).image,"'"), ParserUtil.TimestampFormatStr);                
     }
 }
 
@@ -1288,6 +1328,100 @@ SqlIdentifier CompoundIdentifier() :
     {return new SqlIdentifier(ParserUtil.toStringArray(list),collation);}
 }
 
+//TODO: real parse errors.
+int IntLiteral() :
+{
+    Token t;
+}
+{
+    t = <UNSIGNED_INTEGER_LITERAL>
+        {
+            try {
+                return Integer.parseInt(t.image);
+            } catch (NumberFormatException ex) {
+                 throw generateParseException();
+            }
+        }
+}
+
+
+
+// Type name with optional scale and precision
+SqlDataType DataType() : 
+{
+	SqlIdentifier typeName;
+	int scale = 0;
+	int precision = 0;
+	String charSetName = null;
+}
+{
+	(
+		typeName = TypeName()
+		(
+			<LPAREN>
+			precision = IntLiteral()
+			(
+				<COMMA>
+				scale = IntLiteral()
+			)? <RPAREN>
+		)?
+		(
+			<CHARACTER> <SET>
+			charSetName = Identifier()
+		)?
+	)
+	{
+		
+		return new SqlDataType(typeName, precision, scale, charSetName);
+	}
+}
+
+// Some SQL type names need special handling due to the fact that they have
+// spaces in them but are not quoted (what a brilliant idea!).  Note that
+// whenever a typename is also a keyword (like CHARACTER), it has to be added
+// here.
+SqlIdentifier TypeName() :
+{
+    SqlIdentifier typeName;
+    boolean varchar = false;
+}
+{
+    (
+        typeName = SimpleIdentifier()
+        {
+        }
+        | (<CHARACTER> | <CHAR>) [ <VARYING> { varchar = true; } ]
+        {
+            if (varchar) {
+                typeName = new SqlIdentifier("VARCHAR");
+            } else {
+                typeName = new SqlIdentifier("CHARACTER");
+            }
+        }
+		| <VARCHAR> { typeName = new SqlIdentifier("VARCHAR"); }
+        | <DOUBLE> [ <PRECISION> ]
+        {
+            typeName = new SqlIdentifier("DOUBLE");
+        }
+        | <DATE> 
+        {
+            typeName = new SqlIdentifier("DATE");
+        }
+        | <TIME> 
+        {
+            typeName = new SqlIdentifier("TIME");
+        }
+        | <TIMESTAMP> 
+        {
+            typeName = new SqlIdentifier("TIMESTAMP");
+        }
+    )
+    {
+        return typeName;
+    }
+}
+
+
 /**
  * Parses a function call expression.
  */
@@ -1296,14 +1430,25 @@ SqlNode FunctionCall() :
     String name;
     List args;
     SqlNode e;
+	ParserPosition parserPosition = null;
+	SqlDataType dt;
 }
 {
     //~ FUNCTIONS WITH SPECIAL SYNTAX ---------------------------------------
 
+	(   "CAST"	   <LPAREN> e = Expression(EXPR_ACCEPT_SUBQUERY) { args = startList(e); }
+				   <AS>	dt = DataType() { args.add(dt); }
+                   <RPAREN>  {
+						return opTab.castFunc.createCall(
+                            ParserUtil.toNodeArray(args));
+					}
+
+	)
+|
     (   "POSITION" <LPAREN> e = AtomicRowExpression() { args = startList(e); }
                    <IN>    e = Expression(EXPR_ACCEPT_SUBQUERY) { args.add(e);}
                    <RPAREN> {
-                        return funcTab.positionFunc.createCall(
+                        return opTab.positionFunc.createCall(
                             ParserUtil.toNodeArray(args));
                    }
     )
@@ -1313,7 +1458,7 @@ SqlNode FunctionCall() :
                    <USING>  name = Identifier()
                             { args.add(new SqlIdentifier(name)); }
                    <RPAREN> {
-                        return funcTab.convertFunc.createCall(
+                        return opTab.convertFunc.createCall(
                             ParserUtil.toNodeArray(args));
                    }
     )
@@ -1323,7 +1468,7 @@ SqlNode FunctionCall() :
                    <USING>  name = Identifier()
                             { args.add(new SqlIdentifier(name)); }
                    <RPAREN> {
-                        return funcTab.translateFunc.createCall(
+                        return opTab.translateFunc.createCall(
                             ParserUtil.toNodeArray(args));
                    }
     )
@@ -1338,7 +1483,7 @@ SqlNode FunctionCall() :
                              { args.add(e); }
                    ]
                    <RPAREN> {
-                        return funcTab.overlayFunc.createCall(
+                        return opTab.overlayFunc.createCall(
                             ParserUtil.toNodeArray(args));
                    }
     )
@@ -1351,7 +1496,7 @@ SqlNode FunctionCall() :
                                           { args.add(e); }
                     ]
                     <RPAREN> {
-                        return funcTab.substringFunc.createCall(
+                        return opTab.substringFunc.createCall(
                             ParserUtil.toNodeArray(args));
                     }
     )
@@ -1362,9 +1507,9 @@ SqlNode FunctionCall() :
     }
     (   "TRIM"     <LPAREN>
                    [    LOOKAHEAD(2)
-                        [   (<BOTH>     { flag=funcTab.flagBoth;})
-                          | (<TRAILING> { flag=funcTab.flagTrailing;})
-                          | (<LEADING>  { flag=funcTab.flagLeading;})
+                        [   (<BOTH>     { flag = net.sf.saffron.sql.fun.SqlTrimFunction.Flag.Both; })
+                          | (<TRAILING> { flag = net.sf.saffron.sql.fun.SqlTrimFunction.Flag.Trailing; })
+                          | (<LEADING>  { flag = net.sf.saffron.sql.fun.SqlTrimFunction.Flag.Leading; })
                         ]
                         [ trimChars = AtomicRowExpression() ]
                         (
@@ -1385,7 +1530,7 @@ SqlNode FunctionCall() :
                       args.add(e);
                    }
                    <RPAREN> {
-                        return funcTab.trimFunc.createCall(
+                        return opTab.trimFunc.createCall(
                             ParserUtil.toNodeArray(args));
                    }
     )
@@ -1393,6 +1538,9 @@ SqlNode FunctionCall() :
     //~ "NORMAL" FUNCTIONS WITHOUT SPECIAL SYNTAX -----------------------------
     (
         name = Identifier()
+		{
+			parserPosition = getCurrentParserPosition();
+		}
         (
             LOOKAHEAD(2) <LPAREN> <STAR> <RPAREN>
             { args = startList(new SqlIdentifier("*")); }
@@ -1402,7 +1550,12 @@ SqlNode FunctionCall() :
 
         )
 
-        { return funcTab.createCall(name, ParserUtil.toNodeArray(args)); }
+        { 
+			
+			SqlCall call= opTab.createCall(name, ParserUtil.toNodeArray(args)); 
+			call.setParserPosition(parserPosition);
+			return call;
+		}
     )
 }
 
@@ -1498,6 +1651,8 @@ TOKEN :
 | < BOTH: "both" >
 | < BY: "by" >
 | < CASE: "case" >
+| < CHAR: "char" >
+| < CHARACTER: "character" >
 | < COLLATE: "collate" >
 | < CROSS: "cross" >
 | < DATE: "date" >
@@ -1505,6 +1660,7 @@ TOKEN :
 | < DESC: "desc" >
 | < DESCENDING: "descending" >
 | < DISTINCT: "distinct" >
+| < DOUBLE: "double" >
 | < ELSE: "else" >
 | < END: "end" >
 | < ESCAPE: "escape" >
@@ -1537,6 +1693,7 @@ TOKEN :
 | < OVERLAPS: "overlaps" >
 | < PLACING: "placing" >
 | < PLAN: "plan" >
+| < PRECISION: "precision" >
 | < RIGHT: "right" >
 | < ROW: "row" >
 | < SECOND: "second" >
@@ -1556,6 +1713,8 @@ TOKEN :
 | < UPDATE: "update" >
 | < USING: "using" >
 | < VALUES: "values" >
+| < VARCHAR: "varchar" >
+| < VARYING: "varying" >
 | < WHEN: "when" >
 | < WHERE: "where" >
 | < WITH: "with" >
@@ -1609,41 +1768,12 @@ TOKEN :
     < BIT_STRING_LITERAL: ["b","B"] <QUOTE> (["0","1"])* <QUOTE> >
 |
     < BINARY_STRING_LITERAL:
-        ["x","X"] <QUOTE> (<HEXDIGIT><HEXDIGIT>)* <QUOTE>
-        ((<WHITESPACE>)* <QUOTE>  (<HEXDIGIT><HEXDIGIT>)* <QUOTE>)*
-    >
-|
-    < HEX_STRING_LITERAL:
         ["x","X"] <QUOTE> (<HEXDIGIT>)* <QUOTE>
         ((<WHITESPACE>)* <QUOTE>  (<HEXDIGIT>)* <QUOTE>)*
     >
 |
     < #CHARSETNAME: (["a"-"z","A"-"Z","0"-"9"])
                     (["a"-"z","A"-"Z","0"-"9",":",".","-","_"])*
-    >
-|
-    < QUOTED_DATE_STRING:
-        <QUOTE> <UNQUOTED_DATE_STRING> <QUOTE>
-    >
-|
-    < UNQUOTED_DATE_STRING:
-        (<UNSIGNED_INTEGER_LITERAL>)+ ["-"] (<UNSIGNED_INTEGER_LITERAL>)+ ["-"] (<UNSIGNED_INTEGER_LITERAL>)+
-    >
-|
-    < QUOTED_TIME_STRING:
-        <QUOTE> <UNQUOTED_TIME_STRING> <QUOTE>
-    >
-|
-    < UNQUOTED_TIME_STRING:
-        (<UNSIGNED_INTEGER_LITERAL>)+ [":"] (<UNSIGNED_INTEGER_LITERAL>)+ [":"] (<UNSIGNED_INTEGER_LITERAL>)+ (["."] <UNSIGNED_INTEGER_LITERAL>)?
-    >
-|
-    < QUOTED_TIMESTAMP_STRING:
-        <QUOTE> <UNQUOTED_TIMESTAMP_STRING> <QUOTE>
-    >
-|
-    < UNQUOTED_TIMESTAMP_STRING:
-        <UNQUOTED_DATE_STRING> [" "] <UNQUOTED_TIME_STRING>
     >
 |
     < STRING_LITERAL:

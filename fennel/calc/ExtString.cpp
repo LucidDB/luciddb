@@ -22,7 +22,7 @@
 */
 
 #include "fennel/common/CommonPreamble.h"
-#include "fennel/calc/SqlStringAscii.h"
+#include "fennel/calc/SqlString.h"
 #include "fennel/calc/ExtendedInstructionTable.h"
 
 FENNEL_BEGIN_NAMESPACE
@@ -32,17 +32,17 @@ void
 strCatA2(RegisterRef<char*>* result,
          RegisterRef<char*>* str1)
 {
-    assert(str1->type() == STANDARD_TYPE_CHAR || str1->type() == STANDARD_TYPE_VARCHAR);
+    assert(StandardTypeDescriptor::isTextArray(str1->type()));
 
     if (str1->isNull()) {
         result->toNull();
         result->length(0);
     } else {
-        result->length(SqlStrCat_Ascii(result->pointer(),
-                                       result->storage(),
-                                       result->length(),
-                                       str1->pointer(),
-                                       str1->stringLength()));
+        result->length(SqlStrCat(result->pointer(),
+                                 result->storage(),
+                                 result->length(),
+                                 str1->pointer(),
+                                 str1->stringLength()));
     }
 }
 
@@ -51,18 +51,18 @@ strCatA3(RegisterRef<char*>* result,
          RegisterRef<char*>* str1,
          RegisterRef<char*>* str2)
 {
-    assert(str1->type() == STANDARD_TYPE_CHAR || str1->type() == STANDARD_TYPE_VARCHAR);
+    assert(StandardTypeDescriptor::isTextArray(str1->type()));
 
     if (str1->isNull() || str2->isNull()) {
         result->toNull();
         result->length(0);
     } else {
-        result->length(SqlStrCat_Ascii(result->pointer(),
-                                       result->storage(),
-                                       str1->pointer(),
-                                       str1->stringLength(),
-                                       str2->pointer(),
-                                       str2->stringLength()));
+        result->length(SqlStrCat(result->pointer(),
+                                 result->storage(),
+                                 str1->pointer(),
+                                 str1->stringLength(),
+                                 str2->pointer(),
+                                 str2->stringLength()));
     }
 }
 
@@ -72,22 +72,24 @@ strCmpA(RegisterRef<int32_t>* result,
         RegisterRef<char*>* str2)
 {
     assert(str1->type() == str2->type());
-    assert(str1->type() == STANDARD_TYPE_CHAR || str1->type() == STANDARD_TYPE_VARCHAR);
+    assert(StandardTypeDescriptor::isTextArray(str1->type()));
 
     if (str1->isNull() || str2->isNull()) {
         result->toNull();
     } else {
         if (str1->type() == STANDARD_TYPE_CHAR) {
-            result->value(SqlStrCmp_Ascii_Fix(str1->pointer(),
-                                              str1->storage(),
-                                              str2->pointer(),
-                                              str2->storage()));
+            result->value(SqlStrCmp_Fix<1,1>
+                          (str1->pointer(),
+                           str1->storage(),
+                           str2->pointer(),
+                           str2->storage()));
         } else {
             assert(str1->type()== STANDARD_TYPE_VARCHAR);
-            result->value(SqlStrCmp_Ascii_Var(str1->pointer(),
-                                              str1->length(),
-                                              str2->pointer(),
-                                              str2->length()));
+            result->value(SqlStrCmp_Var<1,1>
+                          (str1->pointer(),
+                           str1->length(),
+                           str2->pointer(),
+                           str2->length()));
         }
     }
 }
@@ -96,28 +98,24 @@ void
 strCpyA(RegisterRef<char*>* result,
         RegisterRef<char*>* str)
 {
-    assert(str->type() == STANDARD_TYPE_CHAR || str->type() == STANDARD_TYPE_VARCHAR);
+    assert(result->type() == str->type());
+    assert(StandardTypeDescriptor::isTextArray(str->type()));
 
     if (str->isNull()) {
         result->toNull();
         result->length(0);
     } else {
-        // TODO: Enable this when switching over to templated string library
-#if 0
         if (str->type() == STANDARD_TYPE_CHAR) {
-            result->length(SqlStrCpy_Fix(result->pointer(),
-                                         result->storage(),
-                                         str->pointer(),
-                                         str->stringLength()));
+            result->length(SqlStrCpy_Fix<1,1>(result->pointer(),
+                                              result->storage(),
+                                              str->pointer(),
+                                              str->stringLength()));
         } else {
             result->length(SqlStrCpy_Var(result->pointer(),
                                          result->storage(),
                                          str->pointer(),
                                          str->stringLength()));
         }
-#else
-        assert(0);
-#endif
     }
 }
 
@@ -126,13 +124,12 @@ void
 strLenBitA(RegisterRef<int32_t>* result,
            RegisterRef<char*>* str)
 {
-    assert(str->type() == STANDARD_TYPE_CHAR || str->type() == STANDARD_TYPE_VARCHAR);
+    assert(StandardTypeDescriptor::isTextArray(str->type()));
 
     if (str->isNull()) {
         result->toNull();
     } else {
-        result->value(SqlStrLenBit_Ascii(str->pointer(),
-                                         str->stringLength()));
+        result->value(SqlStrLenBit(str->stringLength()));
     }
 }
     
@@ -140,13 +137,14 @@ void
 strLenCharA(RegisterRef<int32_t>* result,
             RegisterRef<char*>* str)
 {
-    assert(str->type() == STANDARD_TYPE_CHAR || str->type() == STANDARD_TYPE_VARCHAR);
+    assert(StandardTypeDescriptor::isTextArray(str->type()));
 
     if (str->isNull()) {
         result->toNull();
     } else {
-        result->value(SqlStrLenChar_Ascii(str->pointer(),
-                                          str->stringLength()));
+        result->value(SqlStrLenChar<1,1>
+                      (str->pointer(),
+                       str->stringLength()));
     }
 }
 
@@ -154,13 +152,12 @@ void
 strLenOctA(RegisterRef<int32_t>* result,
            RegisterRef<char*>* str)
 {
-    assert(str->type() == STANDARD_TYPE_CHAR || str->type() == STANDARD_TYPE_VARCHAR);
+    assert(StandardTypeDescriptor::isTextArray(str->type()));
 
     if (str->isNull()) {
         result->toNull();
     } else {
-        result->value(SqlStrLenOct_Ascii(str->pointer(),
-                                         str->stringLength()));
+        result->value(SqlStrLenOct(str->stringLength()));
     }
 }
 
@@ -172,21 +169,22 @@ strOverlayA4(RegisterRef<char*>* result,
 {
     assert(result->type() == STANDARD_TYPE_VARCHAR);
     assert(str->type() == overlay->type());
-    assert(str->type() == STANDARD_TYPE_CHAR || str->type() == STANDARD_TYPE_VARCHAR);
+    assert(StandardTypeDescriptor::isTextArray(str->type()));
 
     if (str->isNull() || overlay->isNull() || start->isNull()) {
         result->toNull();
         result->length(0);
     } else {
-        result->length(SqlStrOverlay_Ascii(result->pointer(),
-                                           result->storage(),
-                                           str->pointer(),
-                                           str->stringLength(),
-                                           overlay->pointer(),
-                                           overlay->stringLength(),
-                                           start->value(),
-                                           0,
-                                           false));
+        result->length(SqlStrOverlay<1,1>
+                       (result->pointer(),
+                        result->storage(),
+                        str->pointer(),
+                        str->stringLength(),
+                        overlay->pointer(),
+                        overlay->stringLength(),
+                        start->value(),
+                        0,
+                        false));
     }
 }
 
@@ -199,21 +197,21 @@ strOverlayA5(RegisterRef<char*>* result,
 {
     assert(result->type() == STANDARD_TYPE_VARCHAR);
     assert(str->type() == overlay->type());
-    assert(str->type() == STANDARD_TYPE_CHAR || str->type() == STANDARD_TYPE_VARCHAR);
+    assert(StandardTypeDescriptor::isTextArray(str->type()));
 
     if (str->isNull() || overlay->isNull() || start->isNull() || len->isNull()) {
         result->toNull();
         result->length(0);
     } else {
-        result->length(SqlStrOverlay_Ascii(result->pointer(),
-                                           result->storage(),
-                                           str->pointer(),
-                                           str->stringLength(),
-                                           overlay->pointer(),
-                                           overlay->stringLength(),
-                                           start->value(),
-                                           len->value(),
-                                           true));
+        result->length(SqlStrOverlay<1,1>(result->pointer(),
+                                          result->storage(),
+                                          str->pointer(),
+                                          str->stringLength(),
+                                          overlay->pointer(),
+                                          overlay->stringLength(),
+                                          start->value(),
+                                          len->value(),
+                                          true));
     }
 }
 
@@ -223,15 +221,15 @@ strPosA(RegisterRef<int32_t>* result,
         RegisterRef<char*>* find)
 {
     assert(str->type() == find->type());
-    assert(str->type() == STANDARD_TYPE_CHAR || str->type() == STANDARD_TYPE_VARCHAR);
+    assert(StandardTypeDescriptor::isTextArray(str->type()));
 
     if (str->isNull() || find->isNull()) {
         result->toNull();
     } else {
-        result->value(SqlStrPos_Ascii(str->pointer(),
-                                      str->stringLength(),
-                                      find->pointer(),
-                                      find->stringLength()));
+        result->value(SqlStrPos<1,1>(str->pointer(),
+                                     str->stringLength(),
+                                     find->pointer(),
+                                     find->stringLength()));
     }
 }
 
@@ -240,8 +238,8 @@ strSubStringA3(RegisterRef<char*>* result,
                RegisterRef<char*>* str,
                RegisterRef<int32_t>* start)
 {
-    assert(str->type() == STANDARD_TYPE_CHAR || str->type() == STANDARD_TYPE_VARCHAR);
     assert(result->type() == STANDARD_TYPE_VARCHAR);
+    assert(StandardTypeDescriptor::isTextArray(str->type()));
 
     if (str->isNull() || start->isNull()) {
         result->toNull();
@@ -250,13 +248,13 @@ strSubStringA3(RegisterRef<char*>* result,
         // Don't try anything fancy with RegisterRef accessors. KISS.
         char * ptr = result->pointer(); // preserve old value if possible
         // TODO: Not sure why cast from char* to char const * is required below.
-        int32_t newLen = SqlStrSubStr_Ascii(const_cast<char const **>(&ptr),
-                                            result->storage(),
-                                            str->pointer(),
-                                            str->stringLength(),
-                                            start->value(),
-                                            0,
-                                            false);
+        int32_t newLen = SqlStrSubStr<1,1>(const_cast<char const **>(&ptr),
+                                           result->storage(),
+                                           str->pointer(),
+                                           str->stringLength(),
+                                           start->value(),
+                                           0,
+                                           false);
         result->pointer(ptr, newLen);
     }
 }
@@ -267,8 +265,8 @@ strSubStringA4(RegisterRef<char*>* result,
                RegisterRef<int32_t>* start,
                RegisterRef<int32_t>* len)
 {
-    assert(str->type() == STANDARD_TYPE_CHAR || str->type() == STANDARD_TYPE_VARCHAR);
     assert(result->type() == STANDARD_TYPE_VARCHAR);
+    assert(StandardTypeDescriptor::isTextArray(str->type()));
 
     if (str->isNull() || start->isNull() || len->isNull()) {
         result->toNull();
@@ -277,13 +275,13 @@ strSubStringA4(RegisterRef<char*>* result,
         // Don't try anything fancy with RegisterRef accessors. KISS.
         char * ptr = result->pointer(); // preserve old value if possible
         // TODO: Not sure why cast from char* to char const * is required below.
-        int32_t newLen = SqlStrSubStr_Ascii(const_cast<char const **>(&ptr),
-                                            result->storage(),
-                                            str->pointer(),
-                                            str->stringLength(),
-                                            start->value(),
-                                            len->value(),
-                                            true);
+        int32_t newLen = SqlStrSubStr<1,1>(const_cast<char const **>(&ptr),
+                                           result->storage(),
+                                           str->pointer(),
+                                           str->stringLength(),
+                                           start->value(),
+                                           len->value(),
+                                           true);
         result->pointer(ptr, newLen);
     }
 }
@@ -292,7 +290,7 @@ void
 strToLowerA(RegisterRef<char*>* result,
             RegisterRef<char*>* str)
 {
-    assert(str->type() == STANDARD_TYPE_CHAR || str->type() == STANDARD_TYPE_VARCHAR);
+    assert(StandardTypeDescriptor::isTextArray(str->type()));
     assert(str->type() == result->type());
     assert(str->type() == STANDARD_TYPE_CHAR ? (result->storage() == str->storage()) : true);
 
@@ -301,10 +299,12 @@ strToLowerA(RegisterRef<char*>* result,
         result->length(0);
     } else {
         // fixed width case: length should be harmlessly reset to same value
-        result->length(SqlStrToLower_Ascii(result->pointer(),
-                                           result->storage(),
-                                           str->pointer(),
-                                           str->stringLength()));
+        result->length(SqlStrAlterCase
+                       <1,1,AlterCaseLower>
+                       (result->pointer(),
+                        result->storage(),
+                        str->pointer(),
+                        str->stringLength()));
     }
 }
 
@@ -312,7 +312,7 @@ void
 strToUpperA(RegisterRef<char*>* result,
             RegisterRef<char*>* str)
 {
-    assert(str->type() == STANDARD_TYPE_CHAR || str->type() == STANDARD_TYPE_VARCHAR);
+    assert(StandardTypeDescriptor::isTextArray(str->type()));
     assert(str->type() == result->type());
     assert(str->type() == STANDARD_TYPE_CHAR ? (result->storage() == str->storage()) : true);
 
@@ -321,10 +321,12 @@ strToUpperA(RegisterRef<char*>* result,
         result->length(0);
     } else {
         // fixed width case: length should be harmlessly reset to same value
-        result->length(SqlStrToUpper_Ascii(result->pointer(),
-                                           result->storage(),
-                                           str->pointer(),
-                                           str->stringLength()));
+        result->length(SqlStrAlterCase
+                       <1,1,AlterCaseUpper>
+                       (result->pointer(),
+                        result->storage(),
+                        str->pointer(),
+                        str->stringLength()));
     }
 }
 
@@ -335,7 +337,7 @@ strTrimA(RegisterRef<char*>* result,
          RegisterRef<int32_t>* trimLeft,
          RegisterRef<int32_t>* trimRight)
 {
-    assert(str->type() == STANDARD_TYPE_CHAR || str->type() == STANDARD_TYPE_VARCHAR);
+    assert(StandardTypeDescriptor::isTextArray(str->type()));
     assert(result->type() == STANDARD_TYPE_VARCHAR);
 
     if (str->isNull() || trimLeft->isNull() || trimRight->isNull()) {
@@ -345,11 +347,12 @@ strTrimA(RegisterRef<char*>* result,
         // Don't try anything fancy with RegisterRef accessors. KISS.
         char * ptr = result->pointer(); // preserve old value if possible
         // TODO: Not sure why cast from char* to char const * is required below.
-        int32_t newLen = SqlStrTrim_Ascii(const_cast<char const **>(&ptr),
-                                          str->pointer(),
-                                          str->stringLength(),
-                                          trimLeft->value(),
-                                          trimRight->value());
+        // use trim by reference function
+        int32_t newLen = SqlStrTrim<1,1>(const_cast<char const **>(&ptr),
+                                         str->pointer(),
+                                         str->stringLength(),
+                                         trimLeft->value(),
+                                         trimRight->value());
         result->pointer(ptr, newLen);
     }
 }
@@ -411,6 +414,14 @@ ExtStringRegister(ExtendedInstructionTable* eit)
     eit->add("strCmpA", params_1N_2V,
              (ExtendedInstruction3<int32_t, char*, char*>*) NULL,
              &strCmpA);
+
+    eit->add("strCpyA", params_2V,
+             (ExtendedInstruction2<char*, char*>*) NULL,
+             &strCpyA);
+
+    eit->add("strCpyA", params_2F,
+             (ExtendedInstruction2<char*, char*>*) NULL,
+             &strCpyA);
 
     vector<StandardTypeDescriptorOrdinal> params_1N_1F;
     params_1N_1F.push_back(STANDARD_TYPE_INT_32);

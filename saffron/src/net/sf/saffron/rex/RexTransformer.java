@@ -22,6 +22,7 @@ package net.sf.saffron.rex;
 
 import net.sf.saffron.rex.*;
 import net.sf.saffron.sql.SqlOperatorTable;
+import net.sf.saffron.sql.fun.SqlStdOperatorTable;
 import net.sf.saffron.sql.type.SqlTypeName;
 import net.sf.saffron.core.SaffronType;
 import java.util.HashSet;
@@ -42,7 +43,7 @@ public class RexTransformer
     private RexBuilder m_rexBuilder;
     private SaffronType m_boolType;
     private int m_nbrOfIsParents;
-    final SqlOperatorTable m_opTab = SqlOperatorTable.instance();
+    final SqlStdOperatorTable m_opTab = SqlOperatorTable.std();
     private final HashSet m_transformableOperators = new HashSet();
 
     //~ Constructors ------------------------------------------------
@@ -50,7 +51,8 @@ public class RexTransformer
     {
         m_root = root;
         m_rexBuilder = rexBuilder;
-        m_boolType = rexBuilder.getTypeFactory().createSqlType(SqlTypeName.Boolean);
+        m_boolType = rexBuilder.getTypeFactory().createSqlType(
+                SqlTypeName.Boolean);
         m_nbrOfIsParents = 0;
 
         m_transformableOperators.add(m_opTab.andOperator);
@@ -73,11 +75,6 @@ public class RexTransformer
 
     private boolean isNullable(RexNode node)
     {
-        if (node instanceof RexLiteral) {
-            RexLiteral literal = (RexLiteral) node;
-            return literal.getValue()==null;
-        }
-
         return node.getType().isNullable();
     }
 
@@ -89,7 +86,8 @@ public class RexTransformer
 
         if (node instanceof RexCall) {
             RexCall call = (RexCall) node;
-            return !m_transformableOperators.contains(call.op) && isNullable(node);
+            return !m_transformableOperators.contains(call.op) &&
+                    isNullable(node);
         }
         return isNullable(node);
     }
@@ -118,25 +116,31 @@ public class RexTransformer
 
         //special case when we have a Literal, Parameter or Identifer
         //directly as an operand to IS TRUE or IS FALSE
-        if (null!=directlyUnderIs) {
+        if (null != directlyUnderIs) {
             RexCall call = (RexCall) node;
-            assert(m_nbrOfIsParents>0) : "Stack should not be empty";
-            assert(1==call.operands.length);
+            assert m_nbrOfIsParents > 0 : "Stack should not be empty";
+            assert 1 == call.operands.length;
             RexNode operand = call.operands[0];
             if ((   operand instanceof RexLiteral
                  || operand instanceof RexInputRef
                  || operand instanceof RexDynamicParam))
             {
                 if (isNullable(node)) {
-                    RexNode notNullNode = m_rexBuilder.makeCall(SqlOperatorTable.instance().isNotNullOperator, operand);
-                    RexNode boolNode = m_rexBuilder.makeLiteral(directlyUnderIs.booleanValue());
-                    RexNode eqNode = m_rexBuilder.makeCall(SqlOperatorTable.instance().equalsOperator, operand, boolNode);
-                    RexNode andBoolNode = m_rexBuilder.makeCall(SqlOperatorTable.instance().andOperator, notNullNode, eqNode);
+                    RexNode notNullNode = m_rexBuilder.makeCall(
+                            m_opTab.isNotNullOperator, operand);
+                    RexNode boolNode = m_rexBuilder.makeLiteral(
+                            directlyUnderIs.booleanValue());
+                    RexNode eqNode = m_rexBuilder.makeCall(
+                            m_opTab.equalsOperator, operand, boolNode);
+                    RexNode andBoolNode = m_rexBuilder.makeCall(
+                            m_opTab.andOperator, notNullNode, eqNode);
 
                     return andBoolNode;
                 } else {
-                    RexNode boolNode = m_rexBuilder.makeLiteral(directlyUnderIs.booleanValue());
-                    RexNode andBoolNode = m_rexBuilder.makeCall(SqlOperatorTable.instance().equalsOperator, node, boolNode);
+                    RexNode boolNode = m_rexBuilder.makeLiteral(
+                            directlyUnderIs.booleanValue());
+                    RexNode andBoolNode = m_rexBuilder.makeCall(
+                            m_opTab.equalsOperator, node, boolNode);
                     return andBoolNode;
                 }
             }
@@ -167,18 +171,18 @@ public class RexTransformer
 
                 if (isTransformable(call.operands[0])) {
                     isNotNullOne = m_rexBuilder.makeCall(
-                                    SqlOperatorTable.instance().isNotNullOperator, call.operands[0]);
+                            m_opTab.isNotNullOperator, call.operands[0]);
                 }
 
                 if (isTransformable(call.operands[1])) {
                     isNotNullTwo = m_rexBuilder.makeCall(
-                                    SqlOperatorTable.instance().isNotNullOperator, call.operands[1]);
+                            m_opTab.isNotNullOperator, call.operands[1]);
                 }
 
                 RexNode intoFinalAnd = null;
                 if (null!=isNotNullOne && null!=isNotNullTwo) {
                     intoFinalAnd = m_rexBuilder.makeCall(
-                                    SqlOperatorTable.instance().andOperator, isNotNullOne, isNotNullTwo);
+                            m_opTab.andOperator, isNotNullOne, isNotNullTwo);
                 } else if (null!=isNotNullOne) {
                     intoFinalAnd = isNotNullOne;
                 } else if (null!=isNotNullTwo) {
@@ -187,7 +191,7 @@ public class RexTransformer
 
                 if (null!=intoFinalAnd) {
                     RexNode andNullAndCheckNode = m_rexBuilder.makeCall(
-                                    SqlOperatorTable.instance().andOperator, intoFinalAnd, call);
+                            m_opTab.andOperator, intoFinalAnd, call);
                     return andNullAndCheckNode;
                 }
 

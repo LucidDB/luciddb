@@ -22,25 +22,23 @@
 
 package net.sf.saffron.core;
 
-import net.sf.saffron.sql.type.SqlTypeName;
-import net.sf.saffron.sql.SqlLiteral;
 import net.sf.saffron.sql.SqlCollation;
-import net.sf.saffron.sql.SqlFunctionTable;
+import net.sf.saffron.sql.type.SqlTypeName;
 import net.sf.saffron.util.Util;
 import openjava.ptree.util.SyntheticClass;
 
 import java.io.PrintWriter;
-import java.lang.reflect.Field;
 import java.lang.reflect.Array;
+import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.nio.charset.Charset;
+import java.sql.Date;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.math.BigInteger;
-import java.nio.charset.Charset;
-import java.sql.Date;
-import java.sql.Timestamp;
-import java.sql.Time;
+
 
 
 /**
@@ -151,10 +149,10 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
                     continue;
                 }
 
-                if (type.isAssignableFrom(type0)) {
+                if (type.isAssignableFrom(type0, false)) {
                     type0 = type;
                 } else {
-                    if (!type0.isAssignableFrom(type)) {
+                    if (!type0.isAssignableFrom(type, false)) {
                         return null;
                     }
                 }
@@ -403,7 +401,11 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
             }
         }
 
-        public boolean isAssignableFrom(SaffronType t) {
+        public boolean isAssignableFrom(SaffronType t, boolean coerce) {
+            return false;
+        }
+
+        public boolean isSameType(SaffronType t) {
             return false;
         }
 
@@ -430,6 +432,15 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
         public boolean isCharType() {
             return false;
         }
+
+        public int getMaxBytesStorage() {
+            return -1;
+        }
+
+        public SqlTypeName getSqlTypeName() {
+            return null;
+        }
+
     }
 
     /**
@@ -650,8 +661,10 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
 
     /**
      * Type which is based upon a Java class.
+     *
+     * <p>TODO: Make protected. (jhyde, 2004/5/26)
      */
-    protected class JavaType extends TypeImpl
+    public class JavaType extends TypeImpl
     {
         public final Class clazz;
         private boolean isNullable;
@@ -690,11 +703,11 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
             this.isNullable = isNullable;
         }
 
-        public boolean isAssignableFrom(SaffronType t) {
+        public boolean isAssignableFrom(SaffronType t, boolean coerce) {
             if (!(t instanceof JavaType) && !(t instanceof SqlType)) {
                 return false;
             }
-            SqlTypeName thisSqlTypeName = JavaToSqlTypeConversionRules.instance().lookup(this);
+            SqlTypeName thisSqlTypeName = getSqlTypeName();
             if (null==thisSqlTypeName) {
                 return false;
             }
@@ -712,12 +725,17 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
             SaffronTypeFactory  fac = getFactory();
             SaffronType thisType = createSqlTypeIgnorePrecOrScale(fac, thisSqlTypeName);
             SaffronType thatType = createSqlTypeIgnorePrecOrScale(fac, thatSqlTypeName);
-            return thisType.isAssignableFrom(thatType);
+            return thisType.isAssignableFrom(thatType, false);
         }
 
 
-        public boolean isSameTypeFamily(SaffronType t) {
+        public boolean isSameType(SaffronType t) {
             return t instanceof JavaType && clazz.equals(((JavaType) t).clazz);
+        }
+
+        public boolean isSameTypeFamily(SaffronType t) {
+            //TODO implement real rules
+            return isSameType(t);
         }
 
         protected String computeDigest()
@@ -777,6 +795,10 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
             this.collation=collation;
         }
 
+        public SqlTypeName getSqlTypeName() {
+            return JavaToSqlTypeConversionRules.instance().lookup(this);
+        }
+
         public boolean isCharType() {
             return clazz.equals(String.class);
         }
@@ -814,9 +836,31 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
     }
 
     /**
-     * SQL scalar type.
+     * Returns the maximum number of bytes storage required by each character
+     * in a given character set. Currently always returns 1.
+     *
+     * @param charsetName Name of the character set
+     * @return
      */
-    protected class SqlType implements SaffronType {
+    public static int getMaxBytesPerChar(String charsetName) {
+        assert charsetName.equals("ISO-8859-1") : charsetName;
+        return 1;
+    }
+
+    public boolean assignableFrom(SqlTypeName to, SqlTypeName from, boolean coerce) {
+        if (to == null || from == null) {
+            return false;
+        }
+        AssignableFromRules assignableFromRules = AssignableFromRules.instance();
+        return assignableFromRules.isAssignableFrom(to, from, coerce);
+    }
+
+    /**
+     * SQL scalar type.
+     *
+     * <p>TODO: Make protected. (jhyde, 2004/5/26)
+     */
+    public class SqlType implements SaffronType {
         private final SqlTypeName typeName;
         private boolean isNullable=true;
         private final int precision;
@@ -893,7 +937,7 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
                     ((SqlType) obj).digest.equals(digest);
         }
 
-        public boolean isSameTypeFamily(SaffronType t) {
+        public boolean isSameType(SaffronType t) {
             if (t instanceof JavaType) {
                 SqlTypeName thatSqlTypeName= JavaToSqlTypeConversionRules.instance().lookup(t);
                 if (null==thatSqlTypeName) {
@@ -903,7 +947,12 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
                 return this.isSameTypeFamily(that);
             }
             return t instanceof SqlType &&
-                    ((SqlType) t).typeName.ordinal_==this.typeName.ordinal_;
+                ((SqlType) t).typeName.getOrdinal()==this.typeName.getOrdinal();
+        }
+
+        public boolean isSameTypeFamily(SaffronType t) {
+            //TODO implement real rules
+            return isSameType(t);
         }
 
         public SaffronTypeFactory getFactory() {
@@ -955,60 +1004,19 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
             return isNullable;
         }
 
-        public void format(Object value, PrintWriter pw) {
-            switch (this.typeName.ordinal_) {
-            case SqlTypeName.Varchar_ordinal:
-                if (value instanceof SqlLiteral.StringLiteral) {
-                    value = ((SqlLiteral.StringLiteral) value).getValue();
-                } else {
-                    assert value instanceof String;
-                }
-                Util.printJavaString(pw, (String) value, true);
-                break;
-            case SqlTypeName.Boolean_ordinal:
-                assert value instanceof Boolean;
-                pw.print(((Boolean) value).booleanValue() ? "true" : "false");
-                break;
-            case SqlTypeName.Integer_ordinal:
-                assert value instanceof BigInteger;
-                pw.print(value.toString());
-                break;
-            case SqlTypeName.Varbinary_ordinal:
-                assert value instanceof byte[];
-                pw.print(Util.toStringFromByteArray((byte[]) value,16));
-                break;
-            case SqlTypeName.Bit_ordinal:
-                assert value instanceof SqlLiteral.BitString;
-                pw.print(value.toString());
-                break;
-            case SqlTypeName.Null_ordinal:
-                assert value == null;
-                pw.print("null");
-                break;
-            case SqlTypeName.Flag_ordinal:
-                assert value instanceof SqlFunctionTable.FunctionFlagType;
-                pw.print("FLAG(");
-                pw.print(((SqlFunctionTable.FunctionFlagType) value).name_);
-                pw.print(")");
-                break;
-
-
-            default:
-                throw Util.needToImplement(this);
-            }
-        }
-
-        public boolean isAssignableFrom(SaffronType t) {
+        public boolean isAssignableFrom(SaffronType t, boolean coerce) {
             SqlTypeName thatSqlTypeName;
+
+            AssignableFromRules assignableFromRules = AssignableFromRules.instance();
             if (t instanceof JavaType) {
                 thatSqlTypeName= JavaToSqlTypeConversionRules.instance().lookup(t);
                 if (null==thatSqlTypeName) {
                     return false;
                 }
-                return AssignableFromRules.instance().isAssignableFrom(this.typeName,thatSqlTypeName);
+                return assignableFromRules.isAssignableFrom(this.typeName,thatSqlTypeName, coerce);
             } else {
                 return t instanceof SqlType
-                    && AssignableFromRules.instance().isAssignableFrom(this.typeName,((SqlType) t).typeName);
+                    && assignableFromRules.isAssignableFrom(this.typeName,((SqlType) t).typeName, coerce);
             }
         }
 
@@ -1041,17 +1049,55 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
         }
 
         public boolean isCharType() {
-            return typeName.equals(SqlTypeName.Char) || typeName.equals(SqlTypeName.Varchar);
+            switch (typeName.getOrdinal()) {
+            case SqlTypeName.Char_ordinal:
+            case SqlTypeName.Varchar_ordinal:
+                return true;
+            default:
+                return false;
+            }
+        }
+
+        public int getMaxBytesStorage() {
+            switch (typeName.getOrdinal()) {
+            case SqlTypeName.Char_ordinal:
+            case SqlTypeName.Varchar_ordinal:
+                // FIXME (jhyde, 2004/5/26): Assumes UCS-2 encoding, 2 bytes
+                // per character.
+                return precision * 2;
+            case SqlTypeName.Binary_ordinal:
+            case SqlTypeName.Varbinary_ordinal:
+                return precision;
+            case SqlTypeName.Bit_ordinal:
+                // One byte for each 8 bits.
+                return (precision + 7) / 8;
+            case SqlTypeName.Null_ordinal:
+                // Null is tricky. By the time null values are used in actual
+                // programs they have generally been converted to another type,
+                // with an implicit cast. So CAST(NULL AS VARCHAR(3)) should
+                // have a type VARCHAR(0) and require 0 bytes; but
+                // CAST(NULL AS INTEGER) should require -1 bytes, because
+                // INTEGER is a fixed-size type.
+                return 0;
+            default:
+                return -1;
+            }
+        }
+
+        /**
+         * get the SqlTypeName for this SaffronType.
+         */
+        public SqlTypeName getSqlTypeName() {
+            return this.typeName;
         }
     }
 
     public static class JavaToSqlTypeConversionRules {
-        private static JavaToSqlTypeConversionRules instance = null;
-        private static HashMap rules = null;
+        private static final JavaToSqlTypeConversionRules instance =
+                new JavaToSqlTypeConversionRules();
+        private final HashMap rules = new HashMap();
 
         private JavaToSqlTypeConversionRules(){
-            HashSet rule;
-
             rules.put(Integer.class, SqlTypeName.Integer);
             rules.put(int.class, SqlTypeName.Integer);
             rules.put(Long.class, SqlTypeName.Bigint);
@@ -1072,10 +1118,6 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
         }
 
         public static JavaToSqlTypeConversionRules instance() {
-            if (null==instance){
-                 rules = new HashMap();
-                instance = new JavaToSqlTypeConversionRules();
-            }
             return instance;
         }
 
@@ -1093,6 +1135,7 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
     public static class AssignableFromRules {
         private static AssignableFromRules instance = null;
         private static HashMap rules = null;
+        private static HashMap coerceRules = null;
 
         private AssignableFromRules(){
             HashSet rule;
@@ -1172,9 +1215,48 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
             rule.add(SqlTypeName.Binary);
             rules.put(SqlTypeName.Binary, rule);
 
-        }
+            // Date is assignable from ...
+            rule = new HashSet();
+            rule.add(SqlTypeName.Date);
+            rule.add(SqlTypeName.Timestamp);
+            rules.put(SqlTypeName.Date, rule);
 
-        public static AssignableFromRules instance() {
+             // Time is assignable from ...
+            rule = new HashSet();
+            rule.add(SqlTypeName.Time);
+            rule.add(SqlTypeName.Timestamp);
+            rules.put(SqlTypeName.Time, rule);
+
+            // Timestamp is assignable from ...
+            rule = new HashSet();
+            rule.add(SqlTypeName.Timestamp);
+            rules.put(SqlTypeName.Timestamp, rule);
+
+            // we use coerceRules when we're casting
+            coerceRules = (HashMap) rules.clone();
+
+            // varchar is castable from Date
+            rule = (HashSet) coerceRules.get(SqlTypeName.Varchar);
+            rule.add(SqlTypeName.Date);
+            rule.add(SqlTypeName.Time);
+            rule.add(SqlTypeName.Timestamp);
+
+            rule = (HashSet) coerceRules.get(SqlTypeName.Date);
+            rule.add(SqlTypeName.Char);
+            rule.add(SqlTypeName.Varchar);
+
+            rule = (HashSet) coerceRules.get(SqlTypeName.Time);
+            rule.add(SqlTypeName.Char);
+            rule.add(SqlTypeName.Varchar);
+
+            rule = (HashSet) coerceRules.get(SqlTypeName.Timestamp);
+            rule.add(SqlTypeName.Char);
+            rule.add(SqlTypeName.Varchar);
+
+        }
+        // REVIEW: LES is thread safety an issue here?  Adding a synch, just
+        // for sanity ...
+        public static synchronized AssignableFromRules instance() {
             if (null==instance){
                  rules = new HashMap();
                 instance = new AssignableFromRules();
@@ -1182,7 +1264,19 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
             return instance;
         }
 
-        public boolean isAssignableFrom(SqlTypeName to, SqlTypeName from)
+        public boolean isAssignableFrom(SqlTypeName to, SqlTypeName from,
+                boolean coerce)
+        {
+            HashMap ruleset = coerce ? coerceRules : rules;
+            return isAssignableFrom(to,from,ruleset);
+        }
+
+         public boolean isAssignableFrom(SqlTypeName to, SqlTypeName from) {
+             return isAssignableFrom(to, from, false);
+         }
+
+        public boolean isAssignableFrom(SqlTypeName to, SqlTypeName from,
+                HashMap ruleset)
         {
             assert(null!=to);
             assert(null!=from);
@@ -1193,7 +1287,7 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
                 return true;
             }
 
-            HashSet rule = (HashSet) rules.get(to);
+            HashSet rule = (HashSet) ruleset.get(to);
             if (null==rule){
                 //if you hit this assert, see the constructor of this class on how to add new rule
                 throw Util.newInternal("No assign rules for "+to+" defined");
@@ -1207,3 +1301,4 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
 
 
 // End SaffronTypeFactoryImpl.java
+

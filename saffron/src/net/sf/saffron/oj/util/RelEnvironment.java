@@ -26,6 +26,7 @@ import net.sf.saffron.core.SaffronType;
 import net.sf.saffron.opt.OptUtil;
 import net.sf.saffron.opt.VolcanoQuery;
 import net.sf.saffron.rel.SaffronRel;
+import net.sf.saffron.rel.SaffronRel;
 import openjava.mop.Environment;
 import openjava.mop.OJClass;
 

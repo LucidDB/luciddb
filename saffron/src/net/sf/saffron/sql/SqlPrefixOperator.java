@@ -25,11 +25,11 @@ package net.sf.saffron.sql;
 /**
  * A unary operator.
  */
-public class SqlPrefixOperator extends SqlOperator
+public abstract class SqlPrefixOperator extends SqlOperator
 {
     //~ Constructors ----------------------------------------------------------
 
-    SqlPrefixOperator(
+    public SqlPrefixOperator(
         String name,SqlKind kind,int precedence,
         TypeInference typeInference,
         ParamTypeInference paramTypeInference,
@@ -49,7 +49,7 @@ public class SqlPrefixOperator extends SqlOperator
         return "{0}{1}";
     }
 
-    void unparse(
+    public void unparse(
         SqlWriter writer,
         SqlNode [] operands,
         int leftPrec,

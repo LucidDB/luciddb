@@ -25,7 +25,6 @@ import net.sf.farrago.type.*;
 
 import net.sf.saffron.opt.*;
 import net.sf.saffron.rel.*;
-import net.sf.saffron.core.SaffronConnection;
 
 
 /**
@@ -64,19 +63,12 @@ public abstract class FennelSingleRel extends SingleRel implements FennelRel
         return (FarragoTypeFactory) cluster.typeFactory;
     }
 
-    // implement SaffronRel
-    public Object implement(RelImplementor implementor,int ordinal)
-    {
-        assert (ordinal == -1);
-        return implementor.implementChild(this,0,child);
-    }
-
     /**
      * .
      *
      * @return catalog for object definitions
      */
-    FarragoCatalog getCatalog()
+    public FarragoCatalog getCatalog()
     {
         return getPreparingStmt().getCatalog();
     }
@@ -97,6 +89,11 @@ public abstract class FennelSingleRel extends SingleRel implements FennelRel
     public RelFieldCollation [] getCollations()
     {
         return RelFieldCollation.emptyCollationArray;
+    }
+
+    // implement FennelRel
+    public Object implementFennelChild(FennelRelImplementor implementor) {
+        return implementor.visitChild(this, 0, child);
     }
 }
 

@@ -25,7 +25,6 @@
 #include "fennel/tuple/TupleAccessor.h"
 #include "fennel/tuple/TuplePrinter.h"
 
-
 #include <stdio.h>
 #include <assert.h>
 
@@ -45,13 +44,14 @@ FENNEL_END_NAMESPACE
 
 #include "fennel/calc/CalcMessage.h"
 #include "fennel/calc/RegisterReference.h"
+#include "fennel/common/TraceSource.h"
 
 FENNEL_BEGIN_NAMESPACE
 
 using namespace std;
 
 
-class Calculator
+class Calculator : virtual public TraceSource
 {
 public:
     //! Constructor for XOs that will use assemble().
@@ -77,6 +77,10 @@ public:
     //
     // Pre-Execution Configuration
     //
+
+    //! Pre-execution: Output register by reference only?
+    //! Must be set before appending instructions.
+    void outputRegisterByReference(bool flag);
 
     //! Pre-execution: Append an Instruction to the Calculator
     void appendInstruction(Instruction* newInst) 
@@ -225,6 +229,11 @@ protected:
     const bool mIsUsingAssembler;
     //! Assembler is actively assembling
     bool mIsAssembling;
+    //! Output register does not have memory associated with it, is
+    //! passed in a don't-care state, and output should refer to
+    //! other register sets by reference. Typical XO execution mode.
+    //! Must be set before appending instructions.
+    bool mOutputRegisterByReference;
     
     //! Actual storage used by the CalcAssembler for the literal, local
     //! and status registers

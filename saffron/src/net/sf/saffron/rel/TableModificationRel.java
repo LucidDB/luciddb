@@ -120,7 +120,7 @@ public class TableModificationRel extends SingleRel
     public SaffronType getExpectedInputRowType(int ordinalInParent)
     {
         assert(ordinalInParent == 0);
-        
+
         if (inputRowType != null) {
             return inputRowType;
         }
@@ -156,7 +156,7 @@ public class TableModificationRel extends SingleRel
     /**
      * Enumeration of supported modification operations.
      */
-    public static class Operation extends EnumeratedValues.BasicValue 
+    public static class Operation extends EnumeratedValues.BasicValue
     {
         public static final int INSERT_ORDINAL = 1;
         public static final Operation INSERT = new Operation("INSERT",INSERT_ORDINAL);

@@ -44,7 +44,7 @@ import java.util.Set;
  * <pre>exp.{@link RexNode#isA isA}({@link RexKind#Comparison RexKind.Comparison})</pre>
  *
  * </blockquote>To quickly choose between a number of options, use the
- * {@link #ordinal_ ordinal} property:<blockquote>
+ * {@link #getOrdinal() ordinal} property:<blockquote>
  *
  * <pre>switch (exp.getKind().getOrdinal()) {
  * case {@link RexKind#EqualsORDINAL RexKind.Equals_ORDINAL}:
@@ -216,8 +216,15 @@ public class RexKind extends EnumeratedValues.BasicValue {
     public static final int DynamicParamORDINAL = 40;
     /** A dynamic parameter. */
     public static final RexKind DynamicParam =
-    new RexKind("DynamicParam", DynamicParamORDINAL);
-    
+        new RexKind("DynamicParam", DynamicParamORDINAL);
+
+    public static final int CastOrdinal = 41;
+    public static final RexKind Cast =
+        new RexKind("Cast", CastOrdinal);
+
+    public static final int TrimOrdinal = 42;
+    public static final RexKind Trim =
+        new RexKind("Trim", TrimOrdinal);
     /**
      * Set of all {@link RexKind} instances.
      */
@@ -228,7 +235,8 @@ public class RexKind extends EnumeratedValues.BasicValue {
                 And, Or, Not, Logical, // logical
                 Divide, Minus, Plus, MinusPrefix, Times, Arithmetic, // arithmetic
                 FieldAccess, Concat, Substr, Row, IsNull,
-                Identifier,Literal,Values,IsTrue,IsFalse,DynamicParam
+                Identifier,Literal,Values,IsTrue,IsFalse,DynamicParam,
+                Cast, Trim
             }
     );
     /**

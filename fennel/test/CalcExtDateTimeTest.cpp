@@ -38,10 +38,12 @@ using namespace std;
 
 class CalcExtDateTimeTest : virtual public TestBase, public TraceSource
 {
-    void checkWarnings(Calculator& calc, string expected);
-
     void testCalcExtConvertDateToString();
 
+    void checkWarnings(Calculator& calc, string expected);
+    void printOutput(TupleData const & tup,
+                     Calculator const & calc);
+    
 public:
     explicit CalcExtDateTimeTest()
         : TraceSource(this,"CalcExtDateTimeTest")
@@ -63,18 +65,32 @@ public:
     }
 };
 
+// for nitty-gritty debugging. sadly, doesn't use BOOST_MESSAGE.
+void
+CalcExtDateTimeTest::printOutput(TupleData const & tup,
+                                 Calculator const & calc)
+{
+#if 1
+    TuplePrinter tuplePrinter;
+    tuplePrinter.print(cout, calc.getOutputRegisterDescriptor(), tup);
+    cout << endl;
+#endif
+}
+
+
 void
 CalcExtDateTimeTest::testCalcExtConvertDateToString()
 {
     ostringstream pg("");
 
     pg << "O vc,10;" << endl;
+    pg << "L vc,10;" << endl;
     pg << "C s8;" << endl;
     pg << "V 86500000;" << endl;
     pg << "T;" << endl;
-    pg << "CALL 'ConvertDateToString(O0, C0);" << endl;
+    pg << "CALL 'ConvertDateToString(L0, C0);" << endl;
+    pg << "REF O0, L0;" << endl;
 
-    CalcInit::instance();
     Calculator calc;
 
     try {
@@ -89,12 +105,7 @@ CalcExtDateTimeTest::testCalcExtConvertDateToString()
 
     calc.bind(&inTuple, &outTuple);
     calc.exec();
-
-#if 1
-    TuplePrinter tuplePrinter;
-    tuplePrinter.print(cout, calc.getOutputRegisterDescriptor(), outTuple);
-    cout << endl;
-#endif
+    printOutput(outTuple, calc);
 
     BOOST_CHECK(equals(outTuple[0], "1970-01-02"));
 }

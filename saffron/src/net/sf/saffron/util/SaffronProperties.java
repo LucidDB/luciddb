@@ -203,11 +203,20 @@ public class SaffronProperties extends Properties
      * The string property "saffron.default.charset" is the name of the
      * default character set.
      * The default is "ISO-8859-1".
-     * It is used in {@link net.sf.saffron.sql.SqlLiteral#SqlLiteral}
-     * and {@link net.sf.saffron.sql.SqlValidator}.
+     * It is used in {@link net.sf.saffron.sql.SqlValidator}.
      */
     public final StringProperty defaultCharset = new StringProperty(this,
             "saffron.default.charset", "ISO-8859-1");
+
+    /**
+     * The string property "saffron.default.nationalcharset" is the name of the
+     * default national character set which is used with the N'string' construct
+     * which may or may not be different from the {@link #defaultCharset}.
+     * The default is "ISO-8859-1".
+     * It is used in {@link net.sf.saffron.sql.SqlLiteral#SqlLiteral}
+     */
+    public final StringProperty defaultNationalCharset = new StringProperty(this,
+            "saffron.default.nationalcharset", "ISO-8859-1");
 
     /**
      * The string property "saffron.default.collation.name" is the name of the
@@ -265,18 +274,33 @@ public class SaffronProperties extends Properties
             }
 
             // copy in all system properties which start with "saffron."
-            for (Enumeration keys = System.getProperties().keys();
-                    keys.hasMoreElements();) {
-                String key = (String) keys.nextElement();
-                String value = System.getProperty(key);
-                if (key.startsWith("saffron.") ||
-                        key.startsWith("net.sf.saffron.")) {
-                    properties.setProperty(key,value);
-                }
-            }
+            properties.loadSaffronProperties(System.getProperties());
         }
         return properties;
     }
+
+
+
+
+    /**
+     * Adds all saffron-related properties found in the source list.
+     * This means all properties whose names start with "saffron." or "net.sf.saffron."
+     * The added properties can replace existing properties.
+     * @param source a Properties list
+     */
+    public void loadSaffronProperties (Properties source)
+    {
+        for (Enumeration keys = source.keys();
+             keys.hasMoreElements();) {
+            String key = (String) keys.nextElement();
+            String value = source.getProperty(key);
+            if (key.startsWith("saffron.") ||
+                key.startsWith("net.sf.saffron.")) {
+                properties.setProperty(key,value);
+            }
+        }
+    }
+
 
     /**
      * Retrieves a boolean property. Returns <code>true</code> if the property

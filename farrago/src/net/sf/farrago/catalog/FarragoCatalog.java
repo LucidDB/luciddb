@@ -35,6 +35,7 @@ import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.util.*;
+import net.sf.farrago.trace.*;
 
 import org.netbeans.api.mdr.*;
 import org.netbeans.mdr.*;
@@ -61,8 +62,7 @@ public class FarragoCatalog
 {
     //~ Static fields/initializers --------------------------------------------
 
-    private static Logger tracer =
-        TraceUtil.getClassTrace(FarragoCatalog.class);
+    private static final Logger tracer = FarragoTrace.getCatalogTracer();
 
     /** TODO:  look this up from repository */
     private static final int maxNameLength = 128;
@@ -71,12 +71,12 @@ public class FarragoCatalog
      * Reserved name for the system boot catalog.
      */
     public static final String SYSBOOT_CATALOG_NAME = "SYS_BOOT";
-    
+
     /**
      * Reserved name for the local catalog.
      */
     public static final String LOCALDB_CATALOG_NAME = "LOCALDB";
-    
+
     //~ Instance fields -------------------------------------------------------
 
     /** Farrago config package in repository. */
@@ -126,6 +126,7 @@ public class FarragoCatalog
     /** MofId for current instance of FemFarragoConfig. */
     private final String currentConfigMofId;
 
+
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -135,11 +136,9 @@ public class FarragoCatalog
     {
         owner.addAllocation(this);
         tracer.fine("Loading catalog");
-        if (System.getProperties().getProperty(
-                FarragoModelLoader.HOME_PROPERTY) == null)
-        {
+        if (FarragoProperties.instance().homeDir.get() == null) {
             throw FarragoResource.instance().newMissingHomeProperty(
-                FarragoModelLoader.HOME_PROPERTY);
+                FarragoProperties.instance().homeDir.getPath());
         }
         modelLoader = new FarragoModelLoader();
 
@@ -155,7 +154,7 @@ public class FarragoCatalog
                     catalogFile.toString(),ex);
             }
         }
-        
+
         farragoPackage = modelLoader.loadModel("FarragoCatalog",userCatalog);
         if (farragoPackage == null) {
             throw FarragoResource.instance().newCatalogUninitialized();
@@ -193,7 +192,7 @@ public class FarragoCatalog
         }
 
         // TODO jvs 5-May-2004:  do the above for model extensions also
-        
+
         Collection configs =
             configPackage.getFemFarragoConfig().refAllOfClass();
 
@@ -260,7 +259,7 @@ public class FarragoCatalog
         return (FemFarragoConfig)
             mdrRepository.getByMofId(currentConfigMofId);
     }
-    
+
     /**
      * Determine whether an index is clustered.
      *
@@ -603,7 +602,7 @@ public class FarragoCatalog
         Collection catalogs = relationalPackage.getCwmCatalog().refAllOfType();
         return (CwmCatalog) getModelElement(catalogs,catalogName);
     }
-    
+
     /**
      * Look up a schema by name in a catalog.
      *
@@ -622,7 +621,7 @@ public class FarragoCatalog
             schemaName,
             CwmSchema.class);
     }
-    
+
     /**
      * Look up a table by name in a schema.
      *
@@ -843,7 +842,7 @@ public class FarragoCatalog
         type = newCwmSqlsimpleType();
         type.setName("BOOLEAN");
         type.setTypeNumber(new Integer(Types.BOOLEAN));
-        
+
         type = newCwmSqlsimpleType();
         type.setName("TINYINT");
         type.setTypeNumber(new Integer(Types.TINYINT));
@@ -894,7 +893,7 @@ public class FarragoCatalog
         // size (imposed during table creation)
         type.setCharacterMaximumLength(new Integer(65535));
         defineTypeAlias("CHARACTER VARYING",type);
-        
+
         type = newCwmSqlsimpleType();
         type.setName("VARBINARY");
         type.setTypeNumber(new Integer(Types.VARBINARY));
@@ -905,12 +904,12 @@ public class FarragoCatalog
         type.setTypeNumber(new Integer(Types.CHAR));
         type.setCharacterMaximumLength(new Integer(65535));
         defineTypeAlias("CHARACTER",type);
-        
+
         type = newCwmSqlsimpleType();
         type.setName("BINARY");
         type.setTypeNumber(new Integer(Types.BINARY));
         type.setCharacterMaximumLength(new Integer(65535));
-        
+
         // do we need to set date/time precision=0 explictly here?
         type = newCwmSqlsimpleType();
         type.setName("DATE");
@@ -980,15 +979,16 @@ public class FarragoCatalog
         return accessor;
     }
 
+
     /**
      * Data structure for return value of resolveSchemaObjectName().
      */
-    public static class ResolvedSchemaObject 
+    public static class ResolvedSchemaObject
     {
         public CwmCatalog catalog;
 
         public CwmSchema schema;
-        
+
         public CwmModelElement object;
 
         public String catalogName;
@@ -999,7 +999,7 @@ public class FarragoCatalog
 
         public String [] getQualifiedName()
         {
-            return new String [] 
+            return new String []
                 {
                     catalogName,schemaName,objectName
                 };

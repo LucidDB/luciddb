@@ -51,7 +51,7 @@ further.
 
 Currently, the only way to build Farrago is to get the source from
 Perforce.  (If you just want to take a look-see through the codebase,
-you can use <a href="http://perforce.eigenbase.org:8080/open/dev/farrago/">
+you can use <a href="http://p4web.eigenbase.org/open/dev/farrago/">
 p4web</a>.)  If you're new to Perforce, you might want to read the
 official <a
 href="http://www.perforce.com/perforce/doc.022/manuals/boilerplates/quickstart.html">
@@ -99,6 +99,13 @@ All of these should be mapped to a common root corresponding to
 <code>//open/dev</code> (you can call it whatever you like on your
 local filesystem, but we'll refer to it as <code>dev</code> in this
 and other developer docs).
+
+<p>
+
+While editing your client, you should also set the
+<code>LineEnd</code> attribute to <code>share</code>, especially if
+you are developing on Windows.  This prevents DOS CRLF's from getting
+checked in.
 
 <p>
 
@@ -337,7 +344,8 @@ jswat.server</code>.
 
 Please read the incredibly brief <a href="codeStyle.html">code
 style</a> doc.  The <a href="bestiary.html">bestiary</a> may also be
-helpful.
+helpful.  Before starting development projects, consider using
+<a href="privateBranch.html">private branching</a>.
 
 <a name="Feedback">
 <h2>Feedback</h2>

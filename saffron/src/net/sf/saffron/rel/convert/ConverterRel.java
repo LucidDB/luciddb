@@ -25,7 +25,6 @@ package net.sf.saffron.rel.convert;
 import net.sf.saffron.core.SaffronPlanner;
 import net.sf.saffron.opt.CallingConvention;
 import net.sf.saffron.opt.PlanCost;
-import net.sf.saffron.opt.RelImplementor;
 import net.sf.saffron.opt.VolcanoCluster;
 import net.sf.saffron.rel.SaffronRel;
 import net.sf.saffron.rel.SingleRel;
@@ -49,14 +48,14 @@ public abstract class ConverterRel extends SingleRel
 {
     //~ Instance fields -------------------------------------------------------
 
-    protected CallingConvention inConvention;
+    protected CallingConvention _inConvention;
 
     //~ Constructors ----------------------------------------------------------
 
     protected ConverterRel(VolcanoCluster cluster,SaffronRel child)
     {
         super(cluster,child);
-        this.inConvention = child.getConvention();
+        this._inConvention = child.getConvention();
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -70,11 +69,16 @@ public abstract class ConverterRel extends SingleRel
         return planner.makeCost(dRows,dCpu,dIo);
     }
 
-    public Object implement(RelImplementor implementor,int ordinal)
+    protected Error cannotImplement()
     {
-        throw Util.newInternal(
-            getClass() + " cannot convert from " + inConvention
+        return Util.newInternal(
+            getClass() + " cannot convert from " + _inConvention
             + " calling convention");
+    }
+
+    protected CallingConvention getInputConvention()
+    {
+        return _inConvention;
     }
 }
 

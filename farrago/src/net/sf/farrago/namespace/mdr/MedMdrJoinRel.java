@@ -51,7 +51,7 @@ import java.util.List;
  * @author John V. Sichi
  * @version $Id$
  */
-class MedMdrJoinRel extends JoinRel
+class MedMdrJoinRel extends JoinRel implements JavaRel
 {
     private int leftOrdinal;
     
@@ -120,9 +120,8 @@ class MedMdrJoinRel extends JoinRel
     }
 
     // implement SaffronRel
-    public Object implement(RelImplementor implementor,int ordinal)
+    public ParseTree implement(JavaRelImplementor implementor)
     {
-        assert (ordinal == -1);
         MedMdrJoinRelImplementor joinImplementor =
             new MedMdrJoinRelImplementor(this);
         return joinImplementor.implement(implementor);

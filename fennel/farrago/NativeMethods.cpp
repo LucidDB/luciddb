@@ -94,12 +94,11 @@ Java_net_sf_farrago_fennel_FennelStorage_executeJavaCmd(
 
 extern "C" JNIEXPORT jint JNICALL
 Java_net_sf_farrago_fennel_FennelStorage_tupleStreamFetch(
-    JNIEnv *pEnvInit, jclass, jobject hStream, jbyteArray byteArray)
+    JNIEnv *pEnvInit, jclass, jlong hStream, jbyteArray byteArray)
 {
     JniEnvRef pEnv(pEnvInit);
     try {
-        ExecutionStream &stream = CmdInterpreter::getStreamFromObj(
-            pEnv,hStream);
+        ExecutionStream &stream = CmdInterpreter::getStreamFromLong(hStream);
         uint cbActual;
         ByteInputStream &inputResultStream = stream.getProducerResultStream();
         PConstBuffer pBuffer = inputResultStream.getReadPointer(
@@ -121,18 +120,18 @@ Java_net_sf_farrago_fennel_FennelStorage_tupleStreamFetch(
 
 extern "C" JNIEXPORT void JNICALL
 Java_net_sf_farrago_fennel_FennelStorage_tupleStreamGraphOpen(
-    JNIEnv *pEnvInit, jclass, jobject hStreamGraph, jobject hTxn,
+    JNIEnv *pEnvInit, jclass, jlong hStreamGraph, jlong hTxn,
     jobject hJavaStreamMap)
 {
     JniEnvRef pEnv(pEnvInit);
     try {
         CmdInterpreter::StreamGraphHandle &streamGraphHandle =
-            CmdInterpreter::getStreamGraphHandleFromObj(pEnv,hStreamGraph);
+            CmdInterpreter::getStreamGraphHandleFromLong(hStreamGraph);
         CmdInterpreter::TxnHandle &txnHandle =
-            CmdInterpreter::getTxnHandleFromObj(pEnv,hTxn);
+            CmdInterpreter::getTxnHandleFromLong(hTxn);
         streamGraphHandle.javaRuntimeContext = hJavaStreamMap;
-        streamGraphHandle.pTupleStreamGraph->setTxn(txnHandle.pTxn);
-        streamGraphHandle.pTupleStreamGraph->open();
+        streamGraphHandle.getGraph()->setTxn(txnHandle.pTxn);
+        streamGraphHandle.getGraph()->open();
         // TODO:  finally?
         streamGraphHandle.javaRuntimeContext = NULL;
     } catch (std::exception &ex) {
@@ -142,18 +141,18 @@ Java_net_sf_farrago_fennel_FennelStorage_tupleStreamGraphOpen(
 
 extern "C" JNIEXPORT void JNICALL
 Java_net_sf_farrago_fennel_FennelStorage_tupleStreamGraphClose(
-    JNIEnv *pEnvInit, jclass, jobject hStreamGraph, jboolean deallocate)
+    JNIEnv *pEnvInit, jclass, jlong hStreamGraph, jboolean deallocate)
 {
     JniEnvRef pEnv(pEnvInit);
     try {
         CmdInterpreter::StreamGraphHandle &streamGraphHandle =
-            CmdInterpreter::getStreamGraphHandleFromObj(pEnv,hStreamGraph);
+            CmdInterpreter::getStreamGraphHandleFromLong(hStreamGraph);
         if (deallocate) {
             delete &streamGraphHandle;
             --JniUtil::handleCount;
         } else {
-            if (streamGraphHandle.pTupleStreamGraph) {
-                streamGraphHandle.pTupleStreamGraph->close();
+            if (streamGraphHandle.getGraph()) {
+                streamGraphHandle.getGraph()->close();
             }
         }
     } catch (std::exception &ex) {

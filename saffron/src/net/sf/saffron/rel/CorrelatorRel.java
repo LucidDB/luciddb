@@ -22,9 +22,9 @@
 
 package net.sf.saffron.rel;
 
+import net.sf.saffron.opt.OptUtil;
 import net.sf.saffron.opt.VolcanoCluster;
 import net.sf.saffron.util.Util;
-import net.sf.saffron.rex.RexLiteral;
 import openjava.ptree.Expression;
 
 import java.util.Collections;
@@ -83,8 +83,8 @@ public class CorrelatorRel extends JoinRel
     {
         return new CorrelatorRel(
             cluster,
-            (SaffronRel) left.clone(),
-            (SaffronRel) right.clone(),
+            OptUtil.clone(left),
+            OptUtil.clone(right),
             joinType,
             Util.clone(correlations));
     }

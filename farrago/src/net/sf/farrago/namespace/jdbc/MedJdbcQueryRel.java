@@ -27,6 +27,7 @@ import net.sf.saffron.sql.*;
 import net.sf.saffron.util.*;
 import net.sf.saffron.rel.jdbc.*;
 import net.sf.saffron.oj.stmt.*;
+import net.sf.saffron.oj.rel.JavaRelImplementor;
 
 import openjava.ptree.*;
 import openjava.mop.*;
@@ -56,10 +57,8 @@ class MedJdbcQueryRel extends JdbcQuery
     }
 
     // override JdbcQuery
-    public Object implement(RelImplementor implementor,int ordinal)
+    public ParseTree implement(JavaRelImplementor implementor)
     {
-        assert(ordinal == -1);
-
         Variable connectionVariable =
             new Variable(OJStatement.connectionVariable);
 

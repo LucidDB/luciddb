@@ -21,27 +21,7 @@
 
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/farrago/TupleStreamBuilder.h"
-#include "fennel/farrago/JavaTupleStream.h"
-#include "fennel/farrago/CmdInterpreter.h"
-#include "fennel/farrago/ExecutionStreamFactory.h"
-#include "fennel/xo/BTreeScan.h"
-#include "fennel/xo/BTreeSearch.h"
-#include "fennel/xo/BTreeSearchUnique.h"
-#include "fennel/xo/TableWriterStream.h"
-#include "fennel/xo/BTreeLoader.h"
-#include "fennel/xo/SortingStream.h"
-#include "fennel/xo/BufferingTupleStream.h"
-#include "fennel/xo/TracingTupleStream.h"
-#include "fennel/xo/ProducerToConsumerProvisionAdapter.h"
-#include "fennel/xo/ConsumerToProducerProvisionAdapter.h"
-#include "fennel/xo/TableWriterFactory.h"
-#include "fennel/xo/CartesianProductStream.h"
-#include "fennel/xo/ExecutionStreamGraphImpl.h"
 #include "fennel/db/Database.h"
-#include "fennel/db/CheckpointThread.h"
-#include "fennel/tuple/TupleDescriptor.h"
-#include "fennel/tuple/TupleAccessor.h"
-#include "fennel/cache/QuotaCacheAccessor.h"
 #include "fennel/segment/SegmentFactory.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
@@ -49,7 +29,7 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 TupleStreamBuilder::TupleStreamBuilder(
     SharedDatabase pDatabaseInit,
     ExecutionStreamFactory &streamFactoryInit,
-    SharedTupleStreamGraph pGraphInit)
+    SharedExecutionStreamGraph pGraphInit)
     : streamFactory(streamFactoryInit)
 {
     pDatabase = pDatabaseInit;
@@ -64,7 +44,6 @@ void TupleStreamBuilder::buildStreamGraph(
             pDatabase->getCache());
     streamFactory.setScratchAccessor(scratchAccessor);
     pGraph->setScratchSegment(scratchAccessor.pSegment);
-    //pSortingGraph = ExecutionStreamGraphImpl::newSortingGraph();
 
     // PASS 1: add streams to graph
     SharedProxyExecutionStreamDef pNext = cmd.getStreamDefs();
@@ -86,7 +65,6 @@ void TupleStreamBuilder::buildStreamGraph(
     }
 
     // PASS 3: sort and prepare streams
-    //pSortingGraph->prepare();
     pGraph->prepare();
     std::vector<SharedExecutionStream> sortedStreams = 
         pGraph->getSortedStreams();
@@ -94,8 +72,17 @@ void TupleStreamBuilder::buildStreamGraph(
     for (pos = sortedStreams.begin(); pos != sortedStreams.end(); pos++) {
         std::string name = (*pos)->getName();
         ExecutionStreamFactors factors = lookupStream(name);
+        std::string traceName = getTraceName(name);
+        factors.getStream()->initTraceSource(
+            &(pDatabase->getTraceTarget()),
+            traceName);
         factors.prepareStream();
     }
+}
+
+std::string TupleStreamBuilder::getTraceName(std::string streamName)
+{
+    return "xo." + streamName;
 }
 
 void TupleStreamBuilder::visitStream(
@@ -104,13 +91,12 @@ void TupleStreamBuilder::visitStream(
     ExecutionStreamFactors factors = streamFactory.visitStream(streamDef);
     registerStream(factors);
     TraceTarget &traceTarget = pDatabase->getTraceTarget();
-    // TODO: shouldn't we decide whether to trace based on stream type?
     std::string name = streamDef.getName();
     // add the XO prefix
-    std::string traceName = "xo." + name;
+    std::string traceName = getTraceName(name);
     if (traceTarget.getSourceTraceLevel(traceName) <= TRACE_FINE) {
         // interpose a tracing stream
-        addTracingStream(name, traceName);
+        addTracingStream(name);
     }
 }
 
@@ -132,13 +118,12 @@ void TupleStreamBuilder::buildStreamInputs(
 }
 
 void TupleStreamBuilder::addTracingStream(
-    std::string &name,
-    std::string &traceName)
+    std::string &name)
 {
-    TraceTarget &traceTarget = pDatabase->getTraceTarget();
     ExecutionStreamParams &params = lookupStream(name).getParams();
+    std::string tracerName = name + ".tracer";
     ExecutionStreamFactors factors =
-        streamFactory.newTracingStream(traceTarget,traceName,params);
+        streamFactory.newTracingStream(tracerName,params);
     registerStream(factors);
 
     // TracingStream may have different buffer provisioning requirements from
@@ -201,10 +186,6 @@ void TupleStreamBuilder::registerStream(ExecutionStreamFactors &factors)
     std::string name = pNewStream->getName();
     streams[name] = factors;
     SharedExecutionStream pStream(pNewStream);
-    // adding a stream to the graph sets a reference to the graph...
-    // so make sure the stream has a reference to the permanent graph, not 
-    // our temporary sorting graph
-    //pSortingGraph->addStream(pStream);
     pGraph->addStream(pStream);
 }
 
@@ -229,9 +210,6 @@ void TupleStreamBuilder::addDataflow(
     pGraph->addDataflow(
         pInput->getStreamId(),
         pStream->getStreamId());
-    /*pSortingGraph->addDataflow(
-        pInput->getStreamId(),
-        pStream->getStreamId());*/
 }
     
 void TupleStreamBuilder::interposeStream(
@@ -241,9 +219,6 @@ void TupleStreamBuilder::interposeStream(
     pGraph->interposeStream(
         name,
         interposedId);
-    /*pSortingGraph->interposeStream(
-        name,
-        interposedId);*/
 }
 
 FENNEL_END_CPPFILE("$Id$");

@@ -52,7 +52,9 @@ TupleDescriptor const &BTreeReadTupleStream::getOutputDesc() const
 
 void BTreeReadTupleStream::closeImpl()
 {
-    pReader->endSearch();
+    if (pReader) {
+        pReader->endSearch();
+    }
     BTreeTupleStream::closeImpl();
 }
 

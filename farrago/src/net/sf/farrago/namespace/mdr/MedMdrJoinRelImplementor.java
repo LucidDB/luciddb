@@ -42,8 +42,6 @@ import java.util.*;
 import javax.jmi.model.*;
 import javax.jmi.reflect.*;
 
-import java.util.List;
-
 /**
  * MedMdrJoinRelImplementor keeps track of lots of transient state
  * needed for the MedMdrJoinRel.implement() call.
@@ -53,7 +51,7 @@ import java.util.List;
  */
 class MedMdrJoinRelImplementor
 {
-    private RelImplementor implementor;
+    private JavaRelImplementor implementor;
 
     private StatementList stmtList;
     
@@ -103,7 +101,7 @@ class MedMdrJoinRelImplementor
         this.joinRel = joinRel;
     }
 
-    Object implement(RelImplementor implementor)
+    Expression implement(JavaRelImplementor implementor)
     {
         // NOTE:  if you actually want to understand this monster,
         // the best approach is to look at the code it generates
@@ -114,8 +112,7 @@ class MedMdrJoinRelImplementor
         leftRel = joinRel.getLeft();
         rightRel = (MedMdrClassExtentRel) joinRel.getRight();
         
-        leftChildExp = (Expression)
-            implementor.implementChild(joinRel,0,leftRel);
+        leftChildExp = implementor.visitJavaChild(joinRel, 0, (JavaRel) leftRel);
 
         outputRowType = joinRel.getRowType();
         outputRowClass = OJUtil.typeToOJClass(outputRowType);

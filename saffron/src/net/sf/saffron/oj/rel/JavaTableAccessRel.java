@@ -25,15 +25,15 @@ package net.sf.saffron.oj.rel;
 import net.sf.saffron.core.ImplementableTable;
 import net.sf.saffron.core.SaffronConnection;
 import net.sf.saffron.opt.CallingConvention;
-import net.sf.saffron.opt.RelImplementor;
 import net.sf.saffron.opt.VolcanoCluster;
 import net.sf.saffron.rel.TableAccessRel;
 import net.sf.saffron.util.Util;
+import openjava.ptree.ParseTree;
 
 /**
  * Implements the {@link TableAccessRel} relational expression in Java code.
  */
-public class JavaTableAccessRel extends TableAccessRel
+public class JavaTableAccessRel extends TableAccessRel implements JavaLoopRel
 {
     //~ Constructors ----------------------------------------------------------
 
@@ -58,16 +58,16 @@ public class JavaTableAccessRel extends TableAccessRel
     }
 
     // implement SaffronRel
-    public Object implement(RelImplementor implementor,int ordinal)
+    public ParseTree implement(JavaRelImplementor implementor)
     {
-        switch (ordinal) {
-        case -1: // called from parent
-            ImplementableTable implementableTable = (ImplementableTable) table;
-            implementableTable.implement(this,implementor);
-            return null;
-        default:
-            throw Util.newInternal("implement: ordinal=" + ordinal);
-        }
+        ImplementableTable implementableTable = (ImplementableTable) table;
+        implementableTable.implement(this,implementor);
+        return null;
+    }
+
+    public void implementJavaParent(JavaRelImplementor implementor,
+            int ordinal) {
+        throw Util.newInternal("should never be called");
     }
 }
 

@@ -74,7 +74,13 @@ public:
     virtual void addDataflow(
         ExecutionStreamId producerId,
         ExecutionStreamId consumerId) = 0;
-    
+
+    virtual void removeStream(
+        SharedExecutionStream pStream) 
+    {
+        assert(false);
+    }
+        
     /**
      * Find a stream by name
      */

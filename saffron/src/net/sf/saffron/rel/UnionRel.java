@@ -22,10 +22,10 @@
 
 package net.sf.saffron.rel;
 
-import net.sf.saffron.core.*;
+import net.sf.saffron.core.PlanWriter;
+import net.sf.saffron.core.SaffronType;
 import net.sf.saffron.opt.OptUtil;
 import net.sf.saffron.opt.VolcanoCluster;
-import net.sf.saffron.util.Util;
 
 
 // TODO jvs 25-Sept-2003: Factor out base class SetOpRel and make IntersectRel
@@ -40,16 +40,16 @@ import net.sf.saffron.util.Util;
  *
  * @since 23 September, 2001
  */
-public class UnionRel extends SaffronRel
+public class UnionRel extends SaffronBaseRel
 {
     //~ Instance fields -------------------------------------------------------
 
-    protected SaffronRel [] inputs;
+    protected SaffronRel[] inputs;
     protected boolean all;
 
     //~ Constructors ----------------------------------------------------------
 
-    public UnionRel(VolcanoCluster cluster,SaffronRel [] inputs,boolean all)
+    public UnionRel(VolcanoCluster cluster,SaffronRel[] inputs,boolean all)
     {
         super(cluster);
         this.inputs = inputs;

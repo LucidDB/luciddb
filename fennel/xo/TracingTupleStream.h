@@ -32,15 +32,9 @@ FENNEL_BEGIN_NAMESPACE
 
 /**
  * TracingTupleStream traces the tuples produced by an underlying input stream.
- *
- *<p>
- *
- * NOTE:  TracingTupleStream violates the usual convention that TupleStream
- * classes have only default constructors.  That's because it is generally
- * instrumented into a dataflow rather than requested explicitly.
  */
 class TracingTupleStream :
-    public SingleInputTupleStream, public TraceSource, private ByteInputStream
+    public SingleInputTupleStream, private ByteInputStream
 {
     TupleAccessor tupleAccessor;
     TupleData tupleData;
@@ -50,11 +44,11 @@ class TracingTupleStream :
     virtual void readNextBuffer();
     
 public:
-    explicit TracingTupleStream(TraceTarget &traceTarget,std::string name);
     virtual void prepare(TupleStreamParams const &params);
     virtual ByteInputStream &getProducerResultStream();
     virtual BufferProvision getResultBufferProvision() const;
     virtual BufferProvision getInputBufferRequirement() const;
+    virtual void *getImpl();
 };
 
 FENNEL_END_NAMESPACE

@@ -15,21 +15,6 @@ SqlIdentifier CompoundIdentifier2() :
     {return new SqlIdentifier(ParserUtil.toStringArray(list),null);}
 }
 
-int IntLiteral() :
-{
-    Token t;
-}
-{
-    t = <UNSIGNED_INTEGER_LITERAL>
-        {
-            try {
-                return Integer.parseInt(t.image);
-            } catch (NumberFormatException ex) {
-                throw Util.newInternal(ex);
-            }
-        }
-}
-
 String StringLiteral() :
 {
     Token t;
@@ -341,7 +326,7 @@ CwmView ViewDefinition(CwmSchema schema) :
         // decide what to do with it
         FarragoSession session =
             farragoParser.getDdlValidator().getInvokingSession();
-        String unparseSql = query.toString(
+        String unparseSql = query.toSqlString(
             new SqlDialect(session.getDatabaseMetaData()));
 		CwmQueryExpression queryExp = getCatalog().newCwmQueryExpression();
 		queryExp.setLanguage("SQL");
@@ -550,7 +535,7 @@ CwmColumn ColumnDefinition(CwmTable table) :
         {
             CwmExpression defaultExpression =
             getCatalog().newCwmExpression();
-            defaultExpression.setBody(defaultClause.toString(null));
+            defaultExpression.setBody(defaultClause.toSqlString(null));
             defaultExpression.setLanguage("SQL");
             column.setInitialValue(defaultExpression);
         }
@@ -654,37 +639,6 @@ CwmUniqueConstraint UniqueConstraint() :
 }
 
 
-// Some SQL type names need special handling due to the fact that they have
-// spaces in them but are not quoted (what a brilliant idea!).  Note that
-// whenever a typename is also a keyword (like CHARACTER), it has to be added
-// here.
-SqlIdentifier TypeName() :
-{
-    SqlIdentifier typeName;
-    boolean varchar = false;
-}
-{
-    (
-        typeName = SimpleIdentifier()
-        {
-        }
-        | <CHARACTER> [ <VARYING> { varchar = true; } ]
-        {
-            if (varchar) {
-                typeName = new SqlIdentifier("VARCHAR");
-            } else {
-                typeName = new SqlIdentifier("CHARACTER");
-            }
-        }
-        | <DOUBLE> [ <PRECISION> ]
-        {
-            typeName = new SqlIdentifier("DOUBLE");
-        }
-    )
-    {
-        return typeName;
-    }
-}
 
 void ColumnConstraint(CwmNamedColumnSet table,CwmColumn column) :
 {
@@ -825,13 +779,38 @@ DdlStmt SystemParamAssignment() :
     <EQ>
         {
         }
-    paramValue = Literal()
+    paramValue = SystemParamValue()
         {
         }
     {
         return new DdlSetSystemParamStmt(
             paramName.names[0],paramValue);
     }
+}
+
+SqlLiteral SystemParamValue() :
+{
+    SqlLiteral paramValue;
+}
+{
+    (
+        paramValue = Literal()
+        {
+        }
+        | <MAX>
+        {
+            // TODO jvs 22-May-2004:  for MIN and MAX here, use metadata
+            // to determine the correct min and max values
+            paramValue = SqlLiteral.Numeric.createExact("-1");
+        }
+        | <MIN>
+        {
+            paramValue = SqlLiteral.Numeric.createExact("0");
+        }
+    )
+        {
+            return paramValue;
+        }
 }
 
 DdlStmt Rollback() :
@@ -1164,7 +1143,6 @@ TOKEN :
 | < AUTHORIZATION: "authorization" >
 | < CASCADE: "cascade" >
 | < CATALOG: "catalog" >
-| < CHARACTER: "character" >
 | < CHECKPOINT: "checkpoint" >
 | < CLUSTERED: "clustered" >
 | < COMMIT: "commit" >
@@ -1172,18 +1150,18 @@ TOKEN :
 | < CREATE: "create" >
 | < DATA: "data" >
 | < DEFAULT_KW: "default" >
-| < DOUBLE: "double" >
 | < DROP: "drop" >
 | < FOREIGN: "foreign" >
 | < GLOBAL: "global" >
 | < INDEX: "index" >
 | < JAVA: "java" >
+| < MAX: "max" >
+| < MIN: "min" >
 | < KEY: "key" >
 | < LANGUAGE: "language" >
 | < LIBRARY: "library" >
 | < LOCAL: "local" >
 | < OPTIONS: "options" >
-| < PRECISION: "precision" >
 | < PRESERVE: "preserve" >
 | < PRIMARY: "primary" >
 | < ROLLBACK: "rollback" >
@@ -1200,7 +1178,6 @@ TOKEN :
 | < TYPE: "type" >
 | < VERSION: "version" >
 | < VIEW: "view" >
-| < VARYING: "varying" >
 | < WRAPPER: "wrapper" >
 }
 

@@ -23,7 +23,7 @@
 package net.sf.saffron.sql;
 
 import net.sf.saffron.util.BarfingInvocationHandler;
-import net.sf.saffron.sql.type.SqlTypeName;
+import net.sf.saffron.sql.parser.ParserPosition;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -43,8 +43,7 @@ import java.sql.SQLException;
  */
 public abstract class SqlNode
 {
-    private SqlTypeName type = null;
-
+    private ParserPosition parserPosition;
     //~ Constructors ----------------------------------------------------------
 
     SqlNode()
@@ -91,26 +90,23 @@ public abstract class SqlNode
         return clones;
     }
 
-    public void setType(SqlTypeName type)
-    {
-        this.type = type;
-    }
-
-    public SqlTypeName getType()
-    {
-        return type;
-    }
-
     public String toString()
     {
-        return toString(null);
+        return toSqlString(null);
     }
 
     /**
-     * Returns the text of the tree of which this <code>SqlNode</code> is the
-     * root.
+     * Returns the SQL text of the tree of which this <code>SqlNode</code> is
+     * the root.
+     *
+     * <p>Typical return values are:<ul>
+     * <li>'It''s a bird!'</li>
+     * <li>NULL</li>
+     * <li>12.3</li>
+     * <li>DATE '1969-04-29'</li>
+     * </ul>
      */
-    public String toString(SqlDialect dialect)
+    public String toSqlString(SqlDialect dialect)
     {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
@@ -154,6 +150,16 @@ public abstract class SqlNode
             null,
             new Class [] { DatabaseMetaData.class },
             new DatabaseMetaDataInvocationHandler());
+    }
+
+    public ParserPosition getParserPosition()
+    {
+        return parserPosition;
+    }
+
+    public void setParserPosition(ParserPosition parserPosition)
+    {
+        this.parserPosition = parserPosition;
     }
 
     //~ Inner Classes ---------------------------------------------------------

@@ -33,7 +33,7 @@ import openjava.mop.Environment;
 /**
  * A <code>VolcanoCluster</code> is a collection of {@link SaffronRel}ational
  * expressions which have the same environment.
- * 
+ *
  * <p>
  * See the comment against <code>net.sf.saffron.oj.xlat.QueryInfo</code> on
  * why you should put fields in that class, not this one.

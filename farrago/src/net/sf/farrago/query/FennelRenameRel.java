@@ -127,11 +127,11 @@ public class FennelRenameRel extends FennelSingleRel
     }
 
     // implement FennelRel
-    public FemExecutionStreamDef toStreamDef(FarragoRelImplementor implementor)
+    public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
         // no implementation needed for the rename itself, since that is done
         // implicitly by the returned row type
-        return implementor.implementFennelRel(child);
+        return implementor.visitFennelChild((FennelRel) child);
     }
 }
 

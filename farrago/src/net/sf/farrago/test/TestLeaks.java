@@ -55,6 +55,7 @@ public class TestLeaks extends FarragoTestCase
     private void go(boolean jmp) throws Exception
     {
         stmt.execute("alter system set \"codeCacheMaxBytes\" = 0");
+        stmt.execute("alter system set \"javaInterpreterEnabled\" = false");
         String sql = "select * from sales.emps where deptno = 20";
         int nFennelHandles = 0;
         for (int i = 0; i < 50000; ++i) {
@@ -73,6 +74,16 @@ public class TestLeaks extends FarragoTestCase
                 "used = " + (rt.totalMemory() - rt.freeMemory()));
             if (i == 1) {
                 nFennelHandles = FennelStorage.getHandleCount();
+                if (jmp) {
+                    System.out.println("PAUSE");
+                    try {
+                        synchronized(this) {
+                            wait(30000);
+                        }
+                    } catch (InterruptedException ex) {
+                    }
+                    System.out.println("RESUME");
+                }
             } else if (i > 1) {
                 int nFennelHandlesNow = FennelStorage.getHandleCount();
                 assert(nFennelHandles == nFennelHandlesNow);

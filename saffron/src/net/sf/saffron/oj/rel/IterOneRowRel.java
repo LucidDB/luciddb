@@ -22,23 +22,21 @@
 
 package net.sf.saffron.oj.rel;
 
-import net.sf.saffron.oj.util.*;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.util.*;
-import net.sf.saffron.runtime.*;
-import net.sf.saffron.core.*;
-
-import java.util.*;
-
+import net.sf.saffron.core.SaffronType;
+import net.sf.saffron.oj.util.OJUtil;
+import net.sf.saffron.opt.CallingConvention;
+import net.sf.saffron.opt.VolcanoCluster;
+import net.sf.saffron.rel.OneRowRel;
+import openjava.mop.OJClass;
 import openjava.ptree.*;
-import openjava.mop.*;
+
+import java.util.Collections;
 
 /**
  * <code>IterOneRowRel</code> is an iterator implementation of 
  * {@link OneRowRel}.
  */
-public class IterOneRowRel extends OneRowRel
+public class IterOneRowRel extends OneRowRel implements JavaRel
 {
     //~ Constructors ----------------------------------------------------------
 
@@ -62,16 +60,11 @@ public class IterOneRowRel extends OneRowRel
     }
 
     // implement SaffronRel
-    public Object implement(RelImplementor implementor,int ordinal)
+    public ParseTree implement(JavaRelImplementor implementor)
     {
-        if (ordinal != -1) {
-            throw Util.newInternal("implement: ordinal=" + ordinal);
-        }
-
         final SaffronType outputRowType = getRowType();
         OJClass outputRowClass = OJUtil.typeToOJClass(outputRowType);
 
-        // REVIEW:  could we just use null instead?
         Expression newRowExp = new AllocationExpression(
             TypeName.forOJClass(outputRowClass),
             new ExpressionList());

@@ -26,18 +26,16 @@ import net.sf.saffron.core.SaffronConnection;
 import net.sf.saffron.core.SaffronPlanner;
 import net.sf.saffron.core.SaffronType;
 import net.sf.saffron.oj.OJConnectionRegistry;
+import net.sf.saffron.oj.rel.JavaRelImplementor;
+import net.sf.saffron.oj.rel.ResultSetRel;
 import net.sf.saffron.opt.CallingConvention;
 import net.sf.saffron.opt.PlanCost;
-import net.sf.saffron.opt.RelImplementor;
 import net.sf.saffron.opt.VolcanoCluster;
-import net.sf.saffron.rel.SaffronRel;
+import net.sf.saffron.rel.SaffronBaseRel;
 import net.sf.saffron.sql.*;
 import net.sf.saffron.util.JdbcDataSource;
 import net.sf.saffron.util.Util;
-import openjava.ptree.ExpressionList;
-import openjava.ptree.Literal;
-import openjava.ptree.MethodCall;
-import openjava.ptree.TypeName;
+import openjava.ptree.*;
 
 import javax.sql.DataSource;
 
@@ -52,7 +50,7 @@ import javax.sql.DataSource;
  *
  * @since 2 August, 2002
  */
-public class JdbcQuery extends SaffronRel
+public class JdbcQuery extends SaffronBaseRel implements ResultSetRel
 {
     public final DataSource dataSource;
     //~ Instance fields -------------------------------------------------------
@@ -108,12 +106,12 @@ public class JdbcQuery extends SaffronRel
         this.rowType = rowType;
         this.connection = connection;
         this.dialect = dialect;
-        if (sql != null) {
+        if (sql == null) {
+            sql = SqlOperatorTable.std().selectOperator.createCall(false, null,
+                    null, null, null, null, null);
+        } else {
             Util.pre(sql.isA(SqlKind.Select),
                     "sql == null || sql.isA(SqlNode.Kind.Select)");
-        } else {
-            sql = (SqlSelect) SqlOperatorTable.instance().selectOperator
-                    .createCall(new SqlNode[SqlSelect.OPERAND_COUNT]);
         }
         this.sql = sql;
         this.dataSource = dataSource;
@@ -129,7 +127,7 @@ public class JdbcQuery extends SaffronRel
     public String getQualifier()
     {
         if (queryString == null) {
-            queryString = sql.toString(dialect);
+            queryString = sql.toSqlString(dialect);
         }
         return "[" + queryString + "]";
     }
@@ -183,7 +181,7 @@ public class JdbcQuery extends SaffronRel
         planner.addRule(new AddProjectToQueryRule());
     }
 
-    public Object implement(RelImplementor implementor,int ordinal)
+    public ParseTree implement(JavaRelImplementor implementor)
     {
         // Generate
         //   ((javax.sql.DataSource) connection).getConnection().
@@ -211,36 +209,25 @@ public class JdbcQuery extends SaffronRel
         //    }
         // }
         //
-        // but I don't know how.
-        switch (ordinal) {
-        case -1: // called from parent
-            // This is all a horrible hack. Need away to 'freeze' a DataSource
-            // into a Java expression which can be 'thawed' into a DataSource
-            // at run-time. We should use the OJConnectionRegistry somehow.
-            assert dataSource instanceof JdbcDataSource; // hack
-            // DriverManager.getConnection("jdbc...", "scott", "tiger");
-            final String url = ((JdbcDataSource) dataSource)._url;
-            final MethodCall connectionExpr = new MethodCall(
-                    TypeName.forClass(java.sql.DriverManager.class),
-                    "getConnection",
-                    new ExpressionList(Literal.makeLiteral(url),
-                            Literal.makeLiteral("SA"),
-                            Literal.makeLiteral("")));
-            return new MethodCall(
-                    new MethodCall(
-                            connectionExpr,
-                            "createStatement",
-                            null),
-                    "executeQuery",
-                    new ExpressionList(Literal.makeLiteral(queryString)));
-        default:
-            throw Util.newInternal("implement: ordinal=" + ordinal);
-        }
-    }
-
-    protected SaffronType deriveRowType()
-    {
-        return rowType;
+        // This is all a horrible hack. Need away to 'freeze' a DataSource
+        // into a Java expression which can be 'thawed' into a DataSource
+        // at run-time. We should use the OJConnectionRegistry somehow.
+        assert dataSource instanceof JdbcDataSource; // hack
+        // DriverManager.getConnection("jdbc...", "scott", "tiger");
+        final String url = ((JdbcDataSource) dataSource)._url;
+        final MethodCall connectionExpr = new MethodCall(
+                TypeName.forClass(java.sql.DriverManager.class),
+                "getConnection",
+                new ExpressionList(Literal.makeLiteral(url),
+                        Literal.makeLiteral("SA"),
+                        Literal.makeLiteral("")));
+        return new MethodCall(
+                new MethodCall(
+                        connectionExpr,
+                        "createStatement",
+                        null),
+                "executeQuery",
+                new ExpressionList(Literal.makeLiteral(queryString)));
     }
 }
 

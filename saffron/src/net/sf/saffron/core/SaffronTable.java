@@ -24,6 +24,7 @@ package net.sf.saffron.core;
 
 import net.sf.saffron.opt.VolcanoCluster;
 import net.sf.saffron.rel.SaffronRel;
+import net.sf.saffron.rel.SaffronRel;
 
 
 /**

@@ -7,12 +7,12 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
@@ -22,6 +22,7 @@ package net.sf.farrago.db;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.util.*;
+import net.sf.farrago.trace.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.config.*;
 import net.sf.farrago.fem.fennel.*;
@@ -55,9 +56,8 @@ import java.util.logging.*;
 public class FarragoDatabase
     extends FarragoCompoundAllocation
 {
-    private static Logger tracer =
-        TraceUtil.getClassTrace(FarragoDatabase.class);
-    
+    private static final Logger tracer = FarragoTrace.getDatabaseTracer();
+
     /**
      * Reference count.
      */
@@ -102,7 +102,7 @@ public class FarragoDatabase
         FarragoSessionFactory sessionFactory)
     {
         tracer.info("connect");
-        
+
         // Do this first for reentrancy.
         ++nReferences;
         if (nReferences == 1) {
@@ -136,13 +136,13 @@ public class FarragoDatabase
         tracer.info("disconnect");
 
         FarragoDatabase db = session.getDatabase();
-        
-        assert(db.nReferences > 0);
+
+        assert(nReferences > 0);
         assert(db == instance);
 
         db.forgetAllocation(session);
-        
-        db.nReferences--;
+
+        nReferences--;
     }
 
     /**
@@ -159,8 +159,8 @@ public class FarragoDatabase
     {
         assert(instance != null);
         tracer.fine("ground reference count = " + groundReferences);
-        tracer.fine("actual reference count = " + instance.nReferences);
-        if (instance.nReferences <= groundReferences) {
+        tracer.fine("actual reference count = " + nReferences);
+        if (nReferences <= groundReferences) {
             shutdown();
             return true;
         } else {
@@ -180,6 +180,17 @@ public class FarragoDatabase
         } finally {
             instance = null;
             nReferences = 0;
+        }
+    }
+
+    public static boolean isReferenced()
+    {
+        if (nReferences > 0) {
+            assert(instance != null);
+            return true;
+        } else {
+            assert(instance == null);
+            return false;
         }
     }
 
@@ -223,7 +234,7 @@ public class FarragoDatabase
             traceConfigFile = new File(loggingConfigFile);
 
             dumpTraceConfig();
-            
+
             systemCatalog = sessionFactory.newCatalog(this,false);
             userCatalog = systemCatalog;
             if (init) {
@@ -251,7 +262,7 @@ public class FarragoDatabase
             } else {
                 tracer.config("Fennel support disabled");
             }
-            
+
             integrateSaffronTracing();
 
             long codeCacheMaxBytes = currentConfig.getCodeCacheMaxBytes();
@@ -276,14 +287,14 @@ public class FarragoDatabase
                 // care of this before userCatalog gets closed.
                 addAllocation(new CatalogSwitcher());
             }
-            
+
             // Start up timer.  This comes last so that the first thing we do
             // in close is to cancel it, avoiding races with other shutdown
             // activity.
             Timer timer = new Timer();
             new FarragoTimerAllocation(this,timer);
             timer.schedule(new WatchdogTask(),1000,1000);
-            
+
             if (currentConfig.getCheckpointInterval() > 0) {
                 long checkpointIntervalMillis =
                     currentConfig.getCheckpointInterval();
@@ -310,7 +321,7 @@ public class FarragoDatabase
         } catch (Throwable ex) {
             warnOnClose(ex,suppressExcns);
         }
-        
+
         fennelDbHandle = null;
         systemCatalog = null;
         userCatalog = null;
@@ -341,6 +352,8 @@ public class FarragoDatabase
         }
     }
 
+    // TODO jvs 4-June-2004:  eliminate this once all Saffron tracing
+    // has been rewritten to use java.util.logging
     private void integrateSaffronTracing()
     {
         Logger saffronTrace = Logger.getLogger("net.sf.farrago.saffron");
@@ -356,6 +369,8 @@ public class FarragoDatabase
 
     private void assertNoFennelHandles()
     {
+        assert systemCatalog != null : "FarragoDatabase.systemCatalog is " +
+                "null: server has probably already been started";
         if (!systemCatalog.isFennelEnabled()) {
             return;
         }
@@ -396,9 +411,10 @@ public class FarragoDatabase
         cmd.setJavaTraceHandle(hNativeTrace.getLongHandle());
         fennelDbHandle = new FennelDbHandle(
             systemCatalog,systemCatalog,this,cmdExecutor,cmd);
+
         tracer.config("Fennel successfully loaded");
     }
-    
+
     /**
      * .
      *
@@ -474,8 +490,8 @@ public class FarragoDatabase
             stmt.closeAllocation();
         }
     }
-    
-        
+
+
     private FarragoExecutableStmt prepareStmtImpl(
         FarragoSession session,
         final FarragoPreparingStmt stmt,
@@ -494,19 +510,19 @@ public class FarragoDatabase
 
         // Use unparsed validated SQL as cache key.  This eliminates trivial
         // differences such as whitespace and implicit qualifiers.
-        
+
         final SqlNode validatedSqlNode = stmt.validate(sqlNode);
-        
+
         SqlDialect sqlDialect = new SqlDialect(session.getDatabaseMetaData());
-        final String sql = validatedSqlNode.toString(sqlDialect);
-        
+        final String sql = validatedSqlNode.toSqlString(sqlDialect);
+
         if (viewInfo != null) {
             SqlSelect select = (SqlSelect) validatedSqlNode;
             if (select.getOrderList() != null) {
                 throw
                     FarragoResource.instance().newValidatorInvalidViewOrderBy();
             }
-            
+
             // Need to force preparation so we can dig out required info, so
             // don't use cache.  Also, don't need to go all the way with
             // stmt implementation either; can stop after translation, which
@@ -534,7 +550,7 @@ public class FarragoDatabase
                     entry.initialize(executableStmt,memUsage);
                 }
             };
-        
+
         FarragoObjectCache.Entry cacheEntry =
             codeCache.pin(sql,stmtFactory,false);
         owner.addAllocation(cacheEntry);
@@ -594,7 +610,7 @@ public class FarragoDatabase
         {
             prevTraceConfigTimestamp = traceConfigFile.lastModified();
         }
-        
+
         // implement Runnable
         public void run()
         {

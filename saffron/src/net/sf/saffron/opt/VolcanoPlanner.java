@@ -29,9 +29,10 @@ import net.sf.saffron.rel.convert.ConverterRel;
 import net.sf.saffron.rel.convert.ConverterRule;
 import net.sf.saffron.util.*;
 
-import openjava.tools.DebugOut;
-
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.*;
+import java.util.logging.Level;
 
 
 /**
@@ -299,8 +300,12 @@ public class VolcanoPlanner implements SaffronPlanner
             // root subset.
             root = canonize(root);
         }
-        if (DebugOut.getDebugLevel() > 2) {
-            dump();
+        if (tracer.isLoggable(Level.FINE)) {
+            StringWriter sw = new StringWriter();
+            final PrintWriter pw = new PrintWriter(sw);
+            dump(pw);
+            pw.flush();
+            tracer.fine(sw.toString());
         }
         return root.buildCheapestPlan(this);
     }
@@ -519,10 +524,10 @@ public class VolcanoPlanner implements SaffronPlanner
         }
     }
 
-    void dump()
+    void dump(PrintWriter pw)
     {
-        DebugOut.println("Root: " + root);
-        DebugOut.println("Sets:");
+        pw.println("Root: " + root);
+        pw.println("Sets:");
         RelSet [] sets =
             (RelSet []) allSets.toArray(new RelSet[allSets.size()]);
         Arrays.sort(
@@ -535,10 +540,10 @@ public class VolcanoPlanner implements SaffronPlanner
             });
         for (int i = 0; i < sets.length; i++) {
             RelSet set = sets[i];
-            DebugOut.println("Set#" + set.id);
+            pw.println("Set#" + set.id);
             for (int j = 0; j < set.subsets.size(); j++) {
                 RelSubset subset = (RelSubset) set.subsets.get(j);
-                DebugOut.println(
+                pw.println(
                     "\t" + subset.toString() + ", rel#" + subset.getId()
                     + ", best="
                     + ((subset.best == null) ? "null"
@@ -554,7 +559,7 @@ public class VolcanoPlanner implements SaffronPlanner
                     SaffronRel rel = (SaffronRel) subset.rels.get(k);
 
                     // "\t\trel#34:JavaProject(Rel#32:JavaFilter(...), ...)"
-                    DebugOut.print(
+                    pw.print(
                         "\t\t#" + rel.getId() + " " + rel.toString());
                     SaffronRel [] inputs = rel.getInputs();
                     for (int m = 0; m < inputs.length; m++) {
@@ -573,11 +578,11 @@ public class VolcanoPlanner implements SaffronPlanner
                                 inputSet.subsets.contains(inputSubset));
                         }
                     }
-                    DebugOut.println(", cost=" + getCost(rel));
+                    pw.println(", cost=" + getCost(rel));
                 }
             }
         }
-        DebugOut.println();
+        pw.println();
     }
 
     void rename(SaffronRel rel)
@@ -586,17 +591,15 @@ public class VolcanoPlanner implements SaffronPlanner
         if (fixupInputs(rel)) {
             assert(mapDigestToRel.remove(oldDigest) == rel);
             final String newDigest = rel.recomputeDigest();
-            DebugOut.println(
-                "Rename #" + rel.getId() + " from '" + oldDigest + "' to '"
-                + newDigest + "'");
+            tracer.fine( "Rename #" + rel.getId() + " from '" + oldDigest +
+                    "' to '" + newDigest + "'");
             final SaffronRel equivRel =
                 (SaffronRel) mapDigestToRel.put(newDigest,rel);
             if (equivRel != null) {
                 assert equivRel != rel;
                 // There's already an equivalent with the same name, and we
                 // just knocked it out. Put it back, and forget about 'rel'.
-                DebugOut.println(
-                        "After renaming #" + rel.getId() +
+                tracer.fine("After renaming #" + rel.getId() +
                         ", it is now equivalent to rel #" + equivRel.getId());
                 mapDigestToRel.put(equivRel.toString(),equivRel);
                 if (ruleQueue.remove(rel) && !ruleQueue.contains(equivRel)) {
@@ -614,7 +617,9 @@ public class VolcanoPlanner implements SaffronPlanner
                 final RelSubset subset = (RelSubset) mapRel2Subset.remove(rel);
                 assert subset != null;
                 boolean existed = subset.rels.remove(rel);
-                assert existed;
+                assert existed : "rel was not known to its subset";
+                existed = subset.set.rels.remove(rel);
+                assert existed : "rel was not known to its set";
                 final RelSubset equivSubset = getSubset(equivRel);
                 if (equivSubset != subset) {
                     // The equivalent relational expression is in a different
@@ -629,6 +634,9 @@ public class VolcanoPlanner implements SaffronPlanner
 
     void reregister(RelSet set,SaffronRel rel)
     {
+        // Is there an equivalent relational expression? (This might have
+        // just occurred because the relational expression's child was just
+        // found to be equivalent to another set.)
         SaffronRel equivRel = (SaffronRel) mapDigestToRel.get(rel.toString());
         if ((equivRel != null) && (equivRel != rel)) {
             assert(equivRel.getClass() == rel.getClass());
@@ -639,10 +647,12 @@ public class VolcanoPlanner implements SaffronPlanner
                 }
                 ruleQueue.remove(rel);
             }
-        } else {
-            RelSubset subset2 = set.add(rel);
-            mapRel2Subset.put(rel,subset2);
+            return;
         }
+
+        // Add the relational expression into the correct set and subset.
+        RelSubset subset2 = set.add(rel);
+        mapRel2Subset.put(rel, subset2);
     }
 
     private RelSubset canonize(final RelSubset subset)
@@ -757,7 +767,7 @@ public class VolcanoPlanner implements SaffronPlanner
      * @param deferred If true, each time a rule matches, just add an entry to
      *        the queue.
      */
-    private void fireRules(SaffronRel rel,boolean deferred)
+    void fireRules(SaffronRel rel,boolean deferred)
     {
         for (int i = 0; i < allOperands.size(); i++) {
             RuleOperand operand = (RuleOperand) allOperands.get(i);
@@ -844,7 +854,7 @@ loop:
                 if (registerCount > beforeCount) {
                     continue loop;
                 }
-                DebugOut.println(
+                tracer.fine(
                     "Optimize: cannot implement [" + rel.toString()
                     + "] in less than [" + targetCost + "]");
                 return makeInfiniteCost(); // no can do
@@ -872,7 +882,7 @@ loop:
                     if (registerCount > beforeCount) {
                         continue loop;
                     }
-                    DebugOut.println(
+                    tracer.fine(
                         "Optimize: cannot implement2 " + rel.toString()
                         + ", cost=" + childSubset.bestCost);
                     return makeInfiniteCost(); // no can do
@@ -880,7 +890,7 @@ loop:
                 usedCost = usedCost.plus(childSubset.bestCost);
             }
 
-            DebugOut.println(
+            tracer.fine(
                 "Optimize: rel=" + rel.getId() + ", cost=" + usedCost);
             return usedCost;
         }
@@ -903,6 +913,17 @@ loop:
             return registerSubset(set,(RelSubset) rel);
         }
 
+        // Now is a good time to ensure that the relational expression
+        // implements the interface required by its calling convention.
+        final CallingConvention convention = rel.getConvention();
+        if (!convention._interface.isInstance(rel) &&
+                !(rel instanceof ConverterRel)) {
+            throw Util.newInternal("Relational expression " + rel +
+                    " has calling-convention " + convention +
+                    " but does not implement the required interface '" +
+                    convention._interface + "' of that convention");
+        }
+
         // Ensure that its sub-expressions are registered.
         rel.onRegister(this);
 
@@ -916,11 +937,11 @@ loop:
             return getSubset(rel);
         } else {
             assert(
-                (equivExp.getConvention() == rel.getConvention())
+                (equivExp.getConvention() == convention)
                     && (equivExp.getClass() == rel.getClass()));
             RelSet equivSet = getSet(equivExp);
             if (equivSet != null) {
-                DebugOut.println("Register: rel #" + rel.getId() +
+                tracer.fine("Register: rel #" + rel.getId() +
                         " is equivalent to rel #" + equivExp);
                 return registerSubset(set,getSubset(equivExp));
             }
@@ -934,7 +955,7 @@ loop:
                 (set != null)
                     && (set != childSet)
                     && (set.equivalentSet == null)) {
-                DebugOut.println(
+                tracer.fine(
                     "Register #" + rel.getId() + " " + digest
                     + " (and merge sets, because it is a conversion)");
                 merge(set,childSet);
@@ -981,7 +1002,7 @@ loop:
         mapRel2Subset.put(rel,subset);
         final Object xx = mapDigestToRel.put(digest,rel);
         assert((xx == null) || (xx == rel));
-        DebugOut.println(
+        tracer.fine(
             "Register #" + rel.getId() + " " + digest + " in " + subset);
 
         // This relational expression may have been registered while we
@@ -1031,7 +1052,7 @@ loop:
             (set != subset.set)
                 && (set != null)
                 && (set.equivalentSet == null)) {
-            DebugOut.println(
+            tracer.fine(
                 "Register #" + subset.getId() + " " + subset
                 + ", and merge sets");
             merge(set,subset.set);

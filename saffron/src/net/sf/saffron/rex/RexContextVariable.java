@@ -41,6 +41,10 @@ public class RexContextVariable extends RexVariable
     {
         return new RexContextVariable(name,type);
     }
+
+    public void accept(RexVisitor visitor) {
+        visitor.visitConVar(this);
+    }
 }
 
 // End RexContextVariable.java

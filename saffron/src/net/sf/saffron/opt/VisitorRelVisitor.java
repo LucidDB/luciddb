@@ -24,6 +24,7 @@ package net.sf.saffron.opt;
 
 import net.sf.saffron.rel.RelVisitor;
 import net.sf.saffron.rel.SaffronRel;
+import net.sf.saffron.rel.SaffronRel;
 import net.sf.saffron.rex.RexNode;
 import net.sf.saffron.rex.RexShuttle;
 

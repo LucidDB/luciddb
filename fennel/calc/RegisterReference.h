@@ -115,7 +115,9 @@ public:
                                 //! Enforced only through assert()
         EPropCachePointer = 2,  //!< Keep a pointer to data instead of
                                 //! just in time indexing.
-        EPropPtrReset     = 4   //!< Journal pointer changes to allow resetting.
+        EPropPtrReset     = 4,  //!< Journal pointer changes to allow resetting.
+        EPropByRefOnly    = 8   //!< No memory associated. Can only be
+                                //! repointed to other registers.
     };
 
     // TODO: Replace with array indexed by ERegisterSet
@@ -164,7 +166,7 @@ public:
     }
 
     //! Returns a string describing the register set
-    static inline string getSetName(ERegisterSet set)
+    static inline string getSetName(ERegisterSet set) 
     {
         switch (set) {
         case ELiteral:
@@ -181,6 +183,7 @@ public:
             throw std::invalid_argument("fennel/calc/RegisterReference::getSetName"); 
         }
     }
+    
 
     //! Provide a nicely formatted string describing the register for the
     //! specifed set and index
@@ -245,28 +248,7 @@ protected:
     TRegisterRefProp mProp; 
 
     //! Define default properties for registers based on register set.
-    void setDefaultProperties()
-    {
-        switch(mSetIndex) {
-        case ELiteral:
-            mProp = KLiteralSetDefault;
-            break;
-        case EInput:
-            mProp = KInputSetDefault;
-            break;
-        case EOutput:
-            mProp = KOutputSetDefault;
-            break;
-        case ELocal:
-            mProp = KLocalSetDefault;
-            break;
-        case EStatus:
-            mProp = KStatusSetDefault;
-            break;
-        default:
-            mProp = EPropNone;
-        }
-    }
+    void setDefaultProperties();
 };
 
 //! A typed group of accessor functions to a register
@@ -416,8 +398,40 @@ public:
             TupleDatum* datumP = &((*tupleDataP)[mIndex]);
             reinterpret_cast<TMPLT>(const_cast<PBuffer>(datumP->pData)) = newP;
             datumP->cbData = len; 
-            
         }
+    }
+    //! Get reference by pointer for non-pointer types
+    TMPLT*
+    refer() const {
+        if (mProp & (EPropCachePointer|EPropPtrReset)) {
+            return reinterpret_cast<TMPLT*>(const_cast<PBuffer>(mPData));
+        } else {
+            assert(mRegisterSetP);
+            assert(mSetIndex < ELastSet);
+            assert(mRegisterSetP[mSetIndex]);
+            TupleData* tupleDataP = mRegisterSetP[mSetIndex];
+            TupleDatum* datumP = &((*tupleDataP)[mIndex]);
+            return reinterpret_cast<TMPLT*>(const_cast<PBuffer>(datumP->pData));
+        }
+    }
+    //! Refer to other RegisterRef for non-pointer types
+    //!
+    //! Convienence function, replaces:
+    //! to->pointer(from->pointer(), from->length())
+    //! Currently does not support cachepointer or reset as
+    //! ByRefOnly implies a do-not-care register set.
+    void
+    refer(RegisterRef<TMPLT>* from)
+    {
+        assert(!(mProp & (EPropCachePointer | EPropPtrReset)));
+        assert(mRegisterSetP);
+        assert(mSetIndex < ELastSet);
+        assert(mRegisterSetP[mSetIndex]);
+
+        TupleData* tupleDataP = mRegisterSetP[mSetIndex];
+        TupleDatum* datumP = &((*tupleDataP)[mIndex]);
+        reinterpret_cast<TMPLT*>(const_cast<PBuffer>(datumP->pData)) = from->refer();
+        datumP->cbData = from->length();
     }
 
     //! Get length, in bytes, of data buffer

@@ -62,8 +62,8 @@ public class CalcProgramBuilderTest extends TestCase {
 
     /** */
     public void testReturnConstant() {
-        CalcProgramBuilder.Register litReg = builder.newLongLiteral(100);
-        CalcProgramBuilder.Register outReg = builder.newOutput(CalcProgramBuilder.OpType.Int);
+        CalcProgramBuilder.Register litReg = builder.newInt4Literal(100);
+        CalcProgramBuilder.Register outReg = builder.newOutput(CalcProgramBuilder.OpType.Int4, -1);
         builder.addMove(outReg, litReg);
         final String program = builder.getProgram();
         final String expected =
@@ -75,18 +75,56 @@ public class CalcProgramBuilderTest extends TestCase {
         assertEquals(expected, program);
     }
 
-    public void testUseSameConstantTwice() {
-        CalcProgramBuilder.Register longConst0 = builder.newLongLiteral(100);
-        CalcProgramBuilder.Register longConst1 = builder.newLongLiteral(100);
-        CalcProgramBuilder.Register strConst0 = builder.newStringLiteral("Hello world");
-        CalcProgramBuilder.Register strConst1 = builder.newStringLiteral("Hello world");
-        CalcProgramBuilder.Register strConst2 = builder.newStringLiteral("Hello worlds");
+    public void testRef() {
+        CalcProgramBuilder.Register litIntReg = builder.newInt4Literal(100);
+        CalcProgramBuilder.Register outIntReg = builder.newOutput(CalcProgramBuilder.OpType.Int4, -1);
 
-        CalcProgramBuilder.Register outReg = builder.newOutput(CalcProgramBuilder.OpType.Int);
+        builder.addRef(outIntReg, litIntReg);
+        final String program = builder.getProgram();
+        final String expected =
+                "O s4;" +
+                "C s4;" +
+                "V 100;" +
+                "T;" +
+                "REF O0, C0;";
+        assertEquals(expected, program);
+    }
+
+    public void testRefFails() {
+        CalcProgramBuilder.Register litIntReg0 = builder.newInt4Literal(100);
+        CalcProgramBuilder.Register litIntReg1 = builder.newInt4Literal(100);
+        CalcProgramBuilder.Register outIntReg = builder.newOutput(CalcProgramBuilder.OpType.Int4, -1);
+        CalcProgramBuilder.Register litStrReg = builder.newVarcharLiteral("Hello world");
+
+        try {
+            builder.addRef(outIntReg, litStrReg);
+        } catch(Throwable e) {
+            assertTrue(e.getMessage().matches(
+                    ("(?s)(?i).*Type Mismatch. Tried to MOVE.*")));
+            //Expecting another exception
+            try {
+                builder.addRef(litIntReg0, litIntReg1);
+            } catch(Throwable ee) {
+                assertTrue(ee.getMessage().matches(
+                    ("(?s)(?i).*Only output register allowed to reference " +
+                     "other registers.*")));
+                return;
+            }
+        }
+    }
+
+    public void testUseSameConstantTwice() {
+        CalcProgramBuilder.Register longConst0 = builder.newInt4Literal(100);
+        CalcProgramBuilder.Register longConst1 = builder.newInt4Literal(100);
+        CalcProgramBuilder.Register strConst0 = builder.newVarcharLiteral("Hello world");
+        CalcProgramBuilder.Register strConst1 = builder.newVarcharLiteral("Hello world");
+        CalcProgramBuilder.Register strConst2 = builder.newVarcharLiteral("Hello worlds");
+
+        CalcProgramBuilder.Register outReg = builder.newOutput(CalcProgramBuilder.OpType.Int4, -1);
         builder.addMove(outReg, longConst1);
         final String program = builder.getProgram();
         final String expected = "O s4;" +
-                "C s4, vc,30, vc,30;" +
+                "C s4, vc,22, vc,24;" +
                 "V 100, 0x48656C6C6F20776F726C64, 0x48656C6C6F20776F726C6473;" +
                 "T;" +
                 "MOVE O0, C0;";
@@ -99,14 +137,15 @@ public class CalcProgramBuilderTest extends TestCase {
     }
 
     public void testCallSubstr() {
-        CalcProgramBuilder.Register out0 = builder.newOutput(CalcProgramBuilder.OpType.VarCharPointer);
-        CalcProgramBuilder.Register const0 = builder.newStringLiteral("Hello world");
-        CalcProgramBuilder.Register const1 = builder.newLongLiteral(3);
-        CalcProgramBuilder.Register const2 = builder.newLongLiteral(5);
-        builder.addExtendedInstructionCall(out0, "SUBSTR", new CalcProgramBuilder.Register[] {const0, const1, const2});
+        CalcProgramBuilder.Register out0 = builder.newOutput(CalcProgramBuilder.OpType.Varchar, 10);
+        CalcProgramBuilder.Register const0 = builder.newVarcharLiteral("Hello world");
+        CalcProgramBuilder.Register const1 = builder.newInt4Literal(3);
+        CalcProgramBuilder.Register const2 = builder.newInt4Literal(5);
+        new CalcProgramBuilder.ExtInstrDef("SUBSTR",4).add(builder,
+                new CalcProgramBuilder.Register[] {out0, const0, const1, const2});
         final String program = builder.getProgram();
-        final String expected = "O vc,30;" +
-                "C vc,30, s4, s4;" +
+        final String expected = "O vc,10;" +
+                "C vc,22, s4, s4;" +
                 "V 0x48656C6C6F20776F726C64, 3, 5;" +
                 "T;" +
                 "CALL 'SUBSTR(O0, C0, C1, C2);";
@@ -124,7 +163,7 @@ public class CalcProgramBuilderTest extends TestCase {
      * If there is a need to have loops in the future. Remove the assert check in the builder
      */
     public void testJumpingBack() {
-        CalcProgramBuilder.Register out0 = builder.newOutput(CalcProgramBuilder.OpType.Boolean);
+        CalcProgramBuilder.Register out0 = builder.newOutput(CalcProgramBuilder.OpType.Bool, -1);
         CalcProgramBuilder.Register const0 = builder.newBoolLiteral(true);
         CalcProgramBuilder.Register const1 = builder.newBoolLiteral(true);
         builder.addBoolAnd(out0,const0,const1);
@@ -135,7 +174,7 @@ public class CalcProgramBuilderTest extends TestCase {
     }
 
     public void testJumpingToItSelf() {
-        CalcProgramBuilder.Register out0 = builder.newOutput(CalcProgramBuilder.OpType.Boolean);
+        CalcProgramBuilder.Register out0 = builder.newOutput(CalcProgramBuilder.OpType.Bool, -1);
         CalcProgramBuilder.Register const0 = builder.newBoolLiteral(true);
         CalcProgramBuilder.Register const1 = builder.newBoolLiteral(true);
         builder.addBoolAnd(out0,const0,const1);
@@ -144,7 +183,7 @@ public class CalcProgramBuilderTest extends TestCase {
     }
 
     public void testLabelJump() {
-        CalcProgramBuilder.Register out0 = builder.newOutput(CalcProgramBuilder.OpType.Boolean);
+        CalcProgramBuilder.Register out0 = builder.newOutput(CalcProgramBuilder.OpType.Bool, -1);
         CalcProgramBuilder.Register const0 = builder.newBoolLiteral(true);
         CalcProgramBuilder.Register const1 = builder.newBoolLiteral(false);
         builder.addBoolAnd(out0,const0,const1);
@@ -173,7 +212,7 @@ public class CalcProgramBuilderTest extends TestCase {
     }
 
     public void testLabelJumpFails() {
-        CalcProgramBuilder.Register out0 = builder.newOutput(CalcProgramBuilder.OpType.Boolean);
+        CalcProgramBuilder.Register out0 = builder.newOutput(CalcProgramBuilder.OpType.Bool, -1);
         CalcProgramBuilder.Register const0 = builder.newBoolLiteral(true);
         CalcProgramBuilder.Register const1 = builder.newBoolLiteral(true);
         builder.addBoolAnd(out0,const0,const1);
@@ -183,7 +222,7 @@ public class CalcProgramBuilderTest extends TestCase {
     }
 
     public void testLabelJumpToItself() {
-        CalcProgramBuilder.Register out0 = builder.newOutput(CalcProgramBuilder.OpType.Boolean);
+        CalcProgramBuilder.Register out0 = builder.newOutput(CalcProgramBuilder.OpType.Bool, -1);
         CalcProgramBuilder.Register const0 = builder.newBoolLiteral(true);
         CalcProgramBuilder.Register const1 = builder.newBoolLiteral(true);
         builder.addLabel("label$0");
@@ -200,7 +239,7 @@ public class CalcProgramBuilderTest extends TestCase {
             assertTrue(e.getMessage().matches(("(?s)(?i).*label 'again' already defined.*")));
             return;
         }
-        fail();
+        fail("Exception was not thrown as expected");
     }
 
     public void testJumpBooleanFails() throws Exception {
@@ -208,7 +247,7 @@ public class CalcProgramBuilderTest extends TestCase {
         Object[] args;
         Iterator it;
         //Testing the jumpBooleans with register type != Boolean, expecting asserts
-        CalcProgramBuilder.Register const0 = builder.newLongLiteral(3);
+        CalcProgramBuilder.Register const0 = builder.newInt4Literal(3);
         args = new Object[] {new Integer(2),const0};
         it = getMethods("(?i)addJump\\w+");
         while (it.hasNext()) {
@@ -226,7 +265,7 @@ public class CalcProgramBuilderTest extends TestCase {
         }
 
         //Testing jumps with negative line nbr
-        CalcProgramBuilder.Register input0 = builder.newInput(CalcProgramBuilder.OpType.Boolean);
+        CalcProgramBuilder.Register input0 = builder.newInput(CalcProgramBuilder.OpType.Bool, -1);
         Object[] args1 = new Object[] {new Integer(-2)};
         Object[] args2 = new Object[] {new Integer(-2),input0};
         args = args1;
@@ -246,12 +285,12 @@ public class CalcProgramBuilderTest extends TestCase {
 
     public void testAddBoolInstructionFails() throws Exception{
         CalcProgramBuilder.Register const0 = builder.newBoolLiteral(true);
-        CalcProgramBuilder.Register in0 = builder.newInput(CalcProgramBuilder.OpType.Boolean);
-        CalcProgramBuilder.Register in1 = builder.newInput(CalcProgramBuilder.OpType.Boolean);
-        CalcProgramBuilder.Register out0 = builder.newOutput(CalcProgramBuilder.OpType.Boolean);
-        CalcProgramBuilder.Register out1 = builder.newOutput(CalcProgramBuilder.OpType.Int);
-        CalcProgramBuilder.Register in2 = builder.newInput(CalcProgramBuilder.OpType.Int);
-        CalcProgramBuilder.Register in3 = builder.newInput(CalcProgramBuilder.OpType.UInt);
+        CalcProgramBuilder.Register in0 = builder.newInput(CalcProgramBuilder.OpType.Bool, -1);
+        CalcProgramBuilder.Register in1 = builder.newInput(CalcProgramBuilder.OpType.Bool, -1);
+        CalcProgramBuilder.Register out0 = builder.newOutput(CalcProgramBuilder.OpType.Bool, -1);
+        CalcProgramBuilder.Register out1 = builder.newOutput(CalcProgramBuilder.OpType.Int4, -1);
+        CalcProgramBuilder.Register in2 = builder.newInput(CalcProgramBuilder.OpType.Int4, -1);
+        CalcProgramBuilder.Register in3 = builder.newInput(CalcProgramBuilder.OpType.Uint4, -1);
         Object[] args;
         Object[] cb_ib = new Object[] {const0,in0};
         Object[] cb_ib_ib = new Object[] {const0,in0,in1};
@@ -264,7 +303,7 @@ public class CalcProgramBuilderTest extends TestCase {
         Object[] ib_cb_cb = new Object[] {in0,const0,const0};
         Iterator it;
 
-//         Attempting to store result in literal register
+        // Attempting to store result in literal register
         it = getMethods("addBool\\w*");
         while (it.hasNext()) {
             Method method = (Method) it.next();
@@ -310,9 +349,9 @@ public class CalcProgramBuilderTest extends TestCase {
     }
 
     public void testAddDivideByZeroFail() throws Exception {
-        CalcProgramBuilder.Register in0 = builder.newInput(CalcProgramBuilder.OpType.Int);
-        CalcProgramBuilder.Register in1 = builder.newInput(CalcProgramBuilder.OpType.Int);
-        CalcProgramBuilder.Register in2 = builder.newLongLiteral(0);
+        CalcProgramBuilder.Register in0 = builder.newInput(CalcProgramBuilder.OpType.Int4, -1);
+        CalcProgramBuilder.Register in1 = builder.newInput(CalcProgramBuilder.OpType.Int4, -1);
+        CalcProgramBuilder.Register in2 = builder.newInt4Literal(0);
         assertExceptionIsThrown("addNativeDiv",
                                 new Object[] {in0,in1,in2},
                                 "(?s).*A literal register of Integer type and value=0 was found.*");
@@ -322,9 +361,9 @@ public class CalcProgramBuilderTest extends TestCase {
     }
 
     public void testAddNativeInstructionsFail() throws Exception {
-        CalcProgramBuilder.Register out0 = builder.newOutput(CalcProgramBuilder.OpType.Boolean);
-        CalcProgramBuilder.Register out1 = builder.newOutput(CalcProgramBuilder.OpType.Int);
-        CalcProgramBuilder.Register out2 = builder.newOutput(CalcProgramBuilder.OpType.Int);
+        CalcProgramBuilder.Register out0 = builder.newOutput(CalcProgramBuilder.OpType.Bool, -1);
+        CalcProgramBuilder.Register out1 = builder.newOutput(CalcProgramBuilder.OpType.Int4, -1);
+        CalcProgramBuilder.Register out2 = builder.newOutput(CalcProgramBuilder.OpType.Int4, -1);
         Object[] args;
         Object[] args2 = new Object[] {out0,out1};
         Object[] args3 = new Object[] {out0,out1,out2};
@@ -363,11 +402,11 @@ public class CalcProgramBuilderTest extends TestCase {
     }
 
     public void testIntegralNativeInstructionsFail() throws Exception {
-        CalcProgramBuilder.Register const0 = builder.newLongLiteral(2);
-        CalcProgramBuilder.Register in0 = builder.newInput(CalcProgramBuilder.OpType.Int);
-        CalcProgramBuilder.Register in1 = builder.newInput(CalcProgramBuilder.OpType.Int);
-        CalcProgramBuilder.Register in2 = builder.newInput(CalcProgramBuilder.OpType.Real);
-        CalcProgramBuilder.Register out0 = builder.newOutput(CalcProgramBuilder.OpType.Int);
+        CalcProgramBuilder.Register const0 = builder.newInt4Literal(2);
+        CalcProgramBuilder.Register in0 = builder.newInput(CalcProgramBuilder.OpType.Int4, -1);
+        CalcProgramBuilder.Register in1 = builder.newInput(CalcProgramBuilder.OpType.Int4, -1);
+        CalcProgramBuilder.Register in2 = builder.newInput(CalcProgramBuilder.OpType.Real, -1);
+        CalcProgramBuilder.Register out0 = builder.newOutput(CalcProgramBuilder.OpType.Int4, -1);
         Object[] args;
         Object[] args2 = new Object[] {const0,in0};
         Object[] args3 = new Object[] {const0,in0,in1};
@@ -406,7 +445,7 @@ public class CalcProgramBuilderTest extends TestCase {
             assertExceptionIsThrown(method, args, "(?s).*Expected a register of Integer type.*");
         }
 
-        CalcProgramBuilder.Register const1 = builder.newLongLiteral(-1);
+        CalcProgramBuilder.Register const1 = builder.newInt4Literal(-1);
         args = new Object[] {out0,in1,const1};
         assertExceptionIsThrown("addIntegralNativeShiftLeft",
                                 args,
@@ -419,13 +458,13 @@ public class CalcProgramBuilderTest extends TestCase {
 
     public void testPointerBoolInstructionsFail() throws Exception {
         CalcProgramBuilder.Register const0 = builder.newBoolLiteral(true);
-        CalcProgramBuilder.Register const1 = builder.newStringLiteral("hey");
-        CalcProgramBuilder.Register in0 = builder.newInput(CalcProgramBuilder.OpType.VoidPointer);
-        CalcProgramBuilder.Register in1 = builder.newInput(CalcProgramBuilder.OpType.VarCharPointer);
-        CalcProgramBuilder.Register out0 = builder.newInput(CalcProgramBuilder.OpType.VarCharPointer);
-        CalcProgramBuilder.Register out1 = builder.newOutput(CalcProgramBuilder.OpType.VoidPointer);
-        CalcProgramBuilder.Register in2 = builder.newInput(CalcProgramBuilder.OpType.Real);
-        CalcProgramBuilder.Register in3 = builder.newInput(CalcProgramBuilder.OpType.Boolean);
+        CalcProgramBuilder.Register const1 = builder.newVarcharLiteral("hey");
+        CalcProgramBuilder.Register in0 = builder.newInput(CalcProgramBuilder.OpType.Varbinary, 5);
+        CalcProgramBuilder.Register in1 = builder.newInput(CalcProgramBuilder.OpType.Varchar, 8);
+        CalcProgramBuilder.Register out0 = builder.newInput(CalcProgramBuilder.OpType.Varchar, 10);
+        CalcProgramBuilder.Register out1 = builder.newOutput(CalcProgramBuilder.OpType.Varbinary, 6);
+        CalcProgramBuilder.Register in2 = builder.newInput(CalcProgramBuilder.OpType.Real, -1);
+        CalcProgramBuilder.Register in3 = builder.newInput(CalcProgramBuilder.OpType.Bool, -1);
 
         Object[] args;
         Object[] args2 = new Object[] {const0,in0};

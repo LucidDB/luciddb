@@ -61,9 +61,7 @@ public class WaldenApplet extends Applet
         super.init();
         SaffronProperties properties = SaffronProperties.instance();
         properties.classDir.set("d:/saffron/classes");
-        properties.setProperty(
-            SaffronProperties.javaDir,
-            "d:/saffron/src/examples");
+        properties.javaDir.set("d:/saffron/src/examples");
         properties.javaCompilerClass.set("openjava.ojc.DynamicJavaCompiler");
         final PipedWriter inWriter = startInterpreter();
         setBackground(Color.white);

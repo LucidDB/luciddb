@@ -29,6 +29,7 @@ import net.sf.saffron.core.SaffronType;
 import net.sf.saffron.rex.RexTransformer;
 import net.sf.saffron.sql.type.SqlTypeName;
 import net.sf.saffron.sql.SqlOperatorTable;
+import net.sf.saffron.sql.fun.SqlStdOperatorTable;
 
 /**
  * Validates that rex expressions gets correctly translated to a correct calculator program
@@ -40,7 +41,7 @@ import net.sf.saffron.sql.SqlOperatorTable;
 public class RexTransformerTest extends TestCase
 {
     RexBuilder rexBuilder = null;
-    SqlOperatorTable opTab = SqlOperatorTable.instance();
+    SqlStdOperatorTable opTab = SqlOperatorTable.std();
     RexNode x;
     RexNode y;
     RexNode z;
@@ -53,7 +54,7 @@ public class RexTransformerTest extends TestCase
 //        typeFactory = new SaffronTypeFactoryImpl();
         typeFactory = new OJTypeFactoryImpl();
         rexBuilder = new JavaRexBuilder(typeFactory);
-        boolSaffronType =typeFactory.createSqlType(SqlTypeName.Boolean);
+        boolSaffronType = typeFactory.createSqlType(SqlTypeName.Boolean);
 
         x = new RexInputRef(0, typeFactory.createTypeWithNullability(
                                boolSaffronType, true));

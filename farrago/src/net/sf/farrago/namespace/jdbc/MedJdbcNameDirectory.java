@@ -20,21 +20,17 @@
 package net.sf.farrago.namespace.jdbc;
 
 import net.sf.saffron.sql.*;
+import net.sf.saffron.sql.fun.SqlStdOperatorTable;
 import net.sf.saffron.core.*;
 import net.sf.saffron.util.*;
-import net.sf.saffron.ext.*;
 
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
-import net.sf.farrago.FarragoMetadataFactory;
 
 import java.sql.*;
 import java.util.*;
-
-import javax.jmi.model.*;
-import javax.jmi.reflect.*;
 
 /**
  * MedJdbcNameDirectory implements the FarragoMedNameDirectory
@@ -72,7 +68,7 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
         throws SQLException
     {
         SqlDialect dialect = new SqlDialect(server.databaseMetaData);
-        SqlOperatorTable opTab = SqlOperatorTable.instance();
+        SqlStdOperatorTable opTab = SqlOperatorTable.std();
         if (server.schemaName != null) {
             assert(foreignName.length == 2);
             assert(foreignName[0].equals(server.schemaName));
@@ -93,7 +89,7 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
             null);
 
         if (rowType == null) {
-            String sql = select.toString(dialect);
+            String sql = select.toSqlString(dialect);
         
             PreparedStatement ps =
                 server.connection.prepareStatement(sql);

@@ -21,6 +21,7 @@
 package net.sf.saffron.oj.util;
 
 import net.sf.saffron.rex.RexNode;
+import net.sf.saffron.rex.RexVisitor;
 import net.sf.saffron.core.SaffronType;
 import openjava.ptree.Expression;
 import openjava.ptree.Literal;
@@ -53,6 +54,10 @@ public class JavaRowExpression extends RexNode {
 
     public boolean isAlwaysTrue() {
         return expression == Literal.constantTrue();
+    }
+
+    public void accept(RexVisitor visitor) {
+        throw new UnsupportedOperationException();
     }
 
     public SaffronType getType() {

@@ -67,6 +67,10 @@ public class RexRangeRef extends RexNode {
     public Object clone() {
         return new RexRangeRef(type, offset);
     }
+
+    public void accept(RexVisitor visitor) {
+        visitor.visitRangeRef(this);
+    }
 }
 
 // End RexRangeRef.java

@@ -7,12 +7,12 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
@@ -36,11 +36,11 @@ import openjava.ptree.*;
  * @author John V. Sichi
  * @version $Id$
  */
-abstract class FennelDoubleRel extends SaffronRel implements FennelRel
+abstract class FennelDoubleRel extends SaffronBaseRel implements FennelRel
 {
     SaffronRel left;
     SaffronRel right;
-    
+
     /**
      * Creates a new FennelDoubleRel object.
      *
@@ -92,13 +92,12 @@ abstract class FennelDoubleRel extends SaffronRel implements FennelRel
     }
 
     // implement SaffronRel
-    public Object implement(RelImplementor implementor,int ordinal)
+    public Object implementFennelChild(FennelRelImplementor implementor)
     {
-        assert (ordinal == -1);
-        Expression expr1 =
-            (Expression) implementor.implementChild(this,0,left);
-        Expression expr2 =
-            (Expression) implementor.implementChild(this,1,right);
+        Expression expr1 = (Expression)
+                implementor.visitChild(this, 0, left);
+        Expression expr2 = (Expression)
+                implementor.visitChild(this, 1, right);
         return new MethodCall(
             getPreparingStmt().getConnectionVariable(),
             "dummyPair",
@@ -113,7 +112,7 @@ abstract class FennelDoubleRel extends SaffronRel implements FennelRel
         return cluster.typeFactory.createJoinType(
             new SaffronType [] { leftType,rightType });
     }
-    
+
     /**
      * .
      *

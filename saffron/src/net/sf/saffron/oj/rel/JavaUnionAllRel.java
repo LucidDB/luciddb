@@ -25,24 +25,24 @@ package net.sf.saffron.oj.rel;
 import net.sf.saffron.core.SaffronPlanner;
 import net.sf.saffron.opt.CallingConvention;
 import net.sf.saffron.opt.PlanCost;
-import net.sf.saffron.opt.RelImplementor;
 import net.sf.saffron.opt.VolcanoCluster;
 import net.sf.saffron.rel.SaffronRel;
 import net.sf.saffron.rel.UnionRel;
 import net.sf.saffron.util.Util;
-
+import openjava.ptree.ParseTree;
 import openjava.ptree.StatementList;
+import openjava.ptree.Expression;
 
 
 /**
  * <code>JavaUnionAllRel</code> implements a {@link UnionRel} inline, without
  * eliminating duplicates.
  */
-public class JavaUnionAllRel extends UnionRel
+public class JavaUnionAllRel extends UnionRel implements JavaLoopRel
 {
     //~ Constructors ----------------------------------------------------------
 
-    public JavaUnionAllRel(VolcanoCluster cluster,SaffronRel [] inputs)
+    public JavaUnionAllRel(VolcanoCluster cluster,SaffronRel[] inputs)
     {
         super(cluster,inputs,true);
     }
@@ -78,30 +78,31 @@ public class JavaUnionAllRel extends UnionRel
     //      stuff
     //   }
     //
-    public Object implement(RelImplementor implementor,int ordinal)
+    public ParseTree implement(JavaRelImplementor implementor)
     {
-        switch (ordinal) {
-        case -1:
-            for (int i = 0; i < inputs.length; i++) {
-                Util.discard(implementor.implementChild(this,i,inputs[i]));
-            }
-            return null;
-        default:
-            if (ordinal >= inputs.length) {
-                throw Util.newInternal("implement: ordinal=" + ordinal);
-            }
-
-            // Generate
-            //   <<child loop>> {
-            //     Type var = <<child row>>
-            //     <<parent-handler>>
-            //   }
-            //   <<next child>>
-            StatementList stmtList = implementor.getStatementList();
-            implementor.bind(this,inputs[ordinal]);
-            implementor.generateParentBody(this,stmtList);
-            return null;
+        for (int i = 0; i < inputs.length; i++) {
+            Expression expr = implementor.visitJavaChild(this, i, (JavaRel)
+                    inputs[i]);
+            assert expr == null;
         }
+        return null;
+    }
+
+    public void implementJavaParent(JavaRelImplementor implementor,
+            int ordinal) {
+        if (ordinal < 0 || ordinal >= inputs.length) {
+            throw Util.newInternal("ordinal '" + ordinal + "' out of bounds");
+        }
+
+        // Generate
+        //   <<child loop>> {
+        //     Type var = <<child row>>
+        //     <<parent-handler>>
+        //   }
+        //   <<next child>>
+        StatementList stmtList = implementor.getStatementList();
+        implementor.bind(this,inputs[ordinal]);
+        implementor.generateParentBody(this,stmtList);
     }
 }
 

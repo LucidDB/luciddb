@@ -23,8 +23,8 @@
 package net.sf.saffron.core;
 
 import net.sf.saffron.sql.SqlCollation;
+import net.sf.saffron.sql.type.SqlTypeName;
 
-import java.io.PrintWriter;
 import java.nio.charset.Charset;
 
 /**
@@ -84,18 +84,13 @@ public interface SaffronType
     boolean isNullable();
 
     /**
-     * Prints a value of this type.
-     */
-    void format(Object value, PrintWriter pw);
-
-    /**
      * Returns the component type if type is a collection, otherwise null.
      */
     SaffronType getComponentType();
 
     /**
      * Returns an array type with this type as the component.
-     */ 
+     */
     SaffronType getArrayType();
 
     // REVIEW jvs 1-Mar-2004:  The implementations for this method
@@ -108,12 +103,19 @@ public interface SaffronType
      * Returns whether a value of this type can be assigned from a value of
      * a given other type.
      */
-    boolean isAssignableFrom(SaffronType t);
+    boolean isAssignableFrom(SaffronType t, boolean coerce);
+
+    /**
+     * Returns whether two values are of the same type. E.g.
+     *  varchar(5) and varchar(0), are of the same type
+     *  double and float, don't
+     */
+    boolean isSameType(SaffronType t);
 
     /**
      * Returns whether two values are of the same type family. E.g.
-     *  varchar(5) and varchar(0), belong to the same type family
-     *  double and float, don't
+     *  varchar(5) and varchar(0), are of the same type family
+     *  double, float, int, bigint, are of the same type family
      */
     boolean isSameTypeFamily(SaffronType t);
 
@@ -128,32 +130,49 @@ public interface SaffronType
     boolean isCharType();
 
     /**
-     * If type represent a string, char, varchar or any other type that can carry a character set
-     * this function will return the charset or null if not defined.
-     * If type can not carry a charset an runtime exception MUST be thrown.
+     * Returns this type's character set, or null if this type can carry a
+     * character set but no character set is defined.
+     *
+     * @throws RuntimeException if this type is not of a kind (string, char,
+     *   varchar, and so forth) that can carry a character set.
      */
     Charset getCharset();
 
     /**
-     * If type represent a string, char, varchar or any other type that can carry a character set
-     * this function will set the charset
-     * If type can not carry a charset an runtime exception MUST be thrown.
+     * Sets this type's character set.
+     *
+     * @throws RuntimeException if this type is not of a kind (string, char,
+     *   varchar, and so forth) that can carry a character set.
      */
      void setCharset(Charset charset);
 
     /**
-     * If type represent a string, char, varchar or any other type that can carry a collation this function will return
-     * the collation or null if not defined.
-     * If type can not carry a collation an runtime exception MUST be thrown.
+     * Returns this type's collation, or null if this type can carry a
+     * collation but no collation is defined.
+     *
+     * @throws RuntimeException if this type is not of a kind (string, char,
+     *   varchar, and so forth) that can carry a collation.
      */
     SqlCollation getCollation() throws RuntimeException;
 
     /**
-     * If type represent a string, char, varchar or any other type that can carry a collation this function will set
-     * the collation.
-     * If type can not carry a collation an runtime exception MUST be thrown.
+     * Sets the collation.
+     *
+     * @throws RuntimeException if this type is not of a kind (string, char,
+     *   varchar, and so forth) that can carry a collation.
      */
     void setCollation(SqlCollation collation) throws RuntimeException;
+
+    /**
+     * Returns the maximum number of bytes storage required to store a value
+     * of this type. If the type is fixed-length, returns -1.
+     */
+    int getMaxBytesStorage();
+
+    /**
+     * get the SqlTypeName for this SaffronType.
+     */
+    public SqlTypeName getSqlTypeName();
 }
 
 

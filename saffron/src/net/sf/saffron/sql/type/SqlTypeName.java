@@ -100,9 +100,8 @@ public class SqlTypeName extends EnumeratedValues.BasicValue {
     public static final int Bit_ordinal = 17;
     public static final SqlTypeName Bit = new SqlTypeName("BIT", Bit_ordinal, PrecYesScaleNo);
 
-    public static final int Flag_ordinal = 18;
-    public static final SqlTypeName Flag = new SqlTypeName("FLAG", Flag_ordinal, PrecNoScaleNo);
-
+    public static final int Symbol_ordinal = 18;
+    public static final SqlTypeName Symbol = new SqlTypeName("SYMBOL", Symbol_ordinal, PrecNoScaleNo);
 
     public static final int IntervalYearToMonth_ordinal = 19;
     public static final SqlTypeName IntervalYearToMonth = new SqlTypeName("IntervalYearToMonth", IntervalYearToMonth_ordinal, PrecNoScaleNo);
@@ -117,7 +116,8 @@ public class SqlTypeName extends EnumeratedValues.BasicValue {
             new SqlTypeName[] {
                 Boolean, Integer, Varchar, Date, Time, Timestamp, Null,
                 Decimal, Any, Char, Binary, Varbinary, Tinyint,
-                Smallint, Bigint, Real, Double, Bit, IntervalYearToMonth, IntervalDayTime
+                Smallint, Bigint, Real, Double, Bit, Symbol,
+                IntervalYearToMonth, IntervalDayTime
             }
     );
     /**

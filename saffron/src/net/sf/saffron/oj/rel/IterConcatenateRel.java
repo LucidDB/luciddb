@@ -25,14 +25,11 @@ package net.sf.saffron.oj.rel;
 import net.sf.saffron.core.SaffronPlanner;
 import net.sf.saffron.opt.CallingConvention;
 import net.sf.saffron.opt.PlanCost;
-import net.sf.saffron.opt.RelImplementor;
 import net.sf.saffron.opt.VolcanoCluster;
 import net.sf.saffron.rel.SaffronRel;
 import net.sf.saffron.rel.UnionRel;
 import net.sf.saffron.util.Util;
-
 import openjava.mop.OJClass;
-
 import openjava.ptree.*;
 
 
@@ -40,7 +37,7 @@ import openjava.ptree.*;
  * <code>IterConcatenateRel</code> concatenates several iterators. It is an
  * iterator implementation of {@link UnionRel}.
  */
-public class IterConcatenateRel extends UnionRel
+public class IterConcatenateRel extends UnionRel implements JavaRel
 {
     //~ Constructors ----------------------------------------------------------
 
@@ -69,31 +66,25 @@ public class IterConcatenateRel extends UnionRel
         return planner.makeCost(dRows,dCpu,dIo);
     }
 
-    public Object implement(RelImplementor implementor,int ordinal)
+    public ParseTree implement(JavaRelImplementor implementor)
     {
-        switch (ordinal) {
-        case -1:
-
-            // Generate
-            //   new CompoundIterator(
-            //     new Iterator[] {<<input0>>, ...})
-            ExpressionList exps = new ExpressionList();
-            for (int i = 0; i < inputs.length; i++) {
-                Expression exp =
-                    (Expression) implementor.implementChild(this,i,inputs[i]);
-                exps.add(exp);
-            }
-            return new AllocationExpression(
-                OJClass.forClass(
-                    net.sf.saffron.runtime.CompoundIterator.class),
-                new ExpressionList(
-                    new ArrayAllocationExpression(
-                        Util.clazzIterator,
-                        new ExpressionList(null),
-                        new ArrayInitializer(exps))));
-        default:
-            throw Util.newInternal("implement: ordinal=" + ordinal);
+        // Generate
+        //   new CompoundIterator(
+        //     new Iterator[] {<<input0>>, ...})
+        ExpressionList exps = new ExpressionList();
+        for (int i = 0; i < inputs.length; i++) {
+            Expression exp =
+                    implementor.visitJavaChild(this, i, (JavaRel) inputs[i]);
+            exps.add(exp);
         }
+        return new AllocationExpression(
+            OJClass.forClass(
+                net.sf.saffron.runtime.CompoundIterator.class),
+            new ExpressionList(
+                new ArrayAllocationExpression(
+                    Util.clazzIterator,
+                    new ExpressionList(null),
+                    new ArrayInitializer(exps))));
     }
 }
 

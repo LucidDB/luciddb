@@ -34,6 +34,7 @@ FENNEL_BEGIN_NAMESPACE
 class TupleStreamGraph : virtual public ExecutionStreamGraph
 {
  public:
+    virtual ~TupleStreamGraph();
     static SharedTupleStreamGraph newTupleStreamGraph();
 };
 

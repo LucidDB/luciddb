@@ -22,7 +22,7 @@
 
 package net.sf.saffron.core;
 
-import net.sf.saffron.opt.RelImplementor;
+import net.sf.saffron.oj.rel.JavaRelImplementor;
 import net.sf.saffron.rel.SaffronRel;
 
 
@@ -42,7 +42,7 @@ public interface ImplementableTable extends SaffronTable
 {
     //~ Methods ---------------------------------------------------------------
 
-    void implement(SaffronRel rel,RelImplementor implementor);
+    void implement(SaffronRel rel,JavaRelImplementor implementor);
 }
 
 

@@ -27,6 +27,7 @@ import net.sf.farrago.resource.*;
 import net.sf.saffron.core.*;
 import net.sf.saffron.util.Util;
 import net.sf.saffron.sql.SqlCollation;
+import net.sf.saffron.sql.type.SqlTypeName;
 
 import java.sql.*;
 import java.io.PrintWriter;
@@ -141,11 +142,7 @@ public abstract class FarragoAtomicType extends FarragoType
         return isNullable;
     }
 
-    public boolean isAssignableFrom(SaffronType t)
-    {
-        // TODO jvs 22-Jan-2004:  implement real SQL rules
-        return isSameTypeFamily(t);
-    }
+
 
     /**
      * .
@@ -281,7 +278,7 @@ public abstract class FarragoAtomicType extends FarragoType
         }
         return false;
     }
-    
+
     public boolean isApproximateNumeric()
     {
         switch (simpleType.getTypeNumber().intValue()) {
@@ -292,7 +289,18 @@ public abstract class FarragoAtomicType extends FarragoType
         }
         return false;
     }
-    
+
+    // implement SaffronType
+    public boolean isSameType(SaffronType other)
+    {
+        if (!(other instanceof FarragoAtomicType)) {
+            return false;
+        }
+        FarragoAtomicType that = (FarragoAtomicType) other;
+        return  this.simpleType.getTypeNumber().intValue() ==
+                that.simpleType.getTypeNumber().intValue();
+    }
+
     // implement SaffronType
     public boolean isSameTypeFamily(SaffronType other)
     {
@@ -334,6 +342,35 @@ public abstract class FarragoAtomicType extends FarragoType
     {
         throw new AssertionError();
     }
+
+    /**
+     * @return true when value field access is required at runtime
+     */
+    public abstract boolean requiresValueAccess();
+
+    /**
+     *  To be overriden by classes with a Primitive rep.
+     */
+    public boolean hasClassForPrimitive()
+    {
+        return false;
+    }
+
+    /**
+     *
+     * @return class for primitive rep.
+     */
+    public Class getClassForPrimitive()
+    {
+        assert(hasClassForPrimitive())
+            : "Atomic Type does not have primitive representation";
+        return null;
+    }
+
+    public SqlTypeName getSqlTypeName() {
+        return SqlTypeName.get(this.simpleType.getName());
+    }
+
 }
 
 

@@ -31,6 +31,7 @@ import net.sf.farrago.fennel.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
+import net.sf.farrago.trace.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.namespace.*;
@@ -70,7 +71,7 @@ public class DdlValidator extends FarragoCompoundAllocation
 {
     //~ Static fields/initializers --------------------------------------------
 
-    private static Logger tracer = TraceUtil.getClassTrace(DdlValidator.class);
+    private static final Logger tracer = FarragoTrace.getDdlValidatorTracer();
 
     /** Symbolic constant used to mark an element being created */
     private static final Integer VALIDATE_CREATION = new Integer(1);
@@ -172,7 +173,6 @@ public class DdlValidator extends FarragoCompoundAllocation
      * @param catalog the catalog storing object definitions being validated
      * @param fennelDbHandle the FennelDbHandle for the database storing
      * objects being validated
-     * @param parser the parser parsing the DDL
      * @param indexMap FarragoIndexMap to use for index access
      * @param sharedDataWrapperCache shared cache for loading
      * FarragoMedDataWrappers

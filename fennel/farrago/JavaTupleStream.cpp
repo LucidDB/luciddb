@@ -35,7 +35,7 @@ void JavaTupleStream::prepare(JavaTupleStreamParams const &params)
     assert(!pGraph->getInputCount(getStreamId()));
     pStreamGraphHandle = params.pStreamGraphHandle;
     javaTupleStreamId = params.javaTupleStreamId;
-    outputTupleDesc = params.tupleDesc;
+    outputTupleDesc = params.outputTupleDesc;
     scratchAccessor = params.scratchAccessor;
     bufferLock.accessSegment(scratchAccessor);
 }
@@ -59,7 +59,7 @@ void JavaTupleStream::open(bool restart)
     jlong hJavaTupleStream = pEnv->CallLongMethod(
         pStreamGraphHandle->javaRuntimeContext,JniUtil::methGetJavaStreamHandle,
         javaTupleStreamId);
-    javaTupleStream = CmdInterpreter::getObjectFromHandle(hJavaTupleStream);
+    javaTupleStream = CmdInterpreter::getObjectFromLong(hJavaTupleStream);
     assert(javaTupleStream);
     javaByteBuffer = pEnv->NewDirectByteBuffer(
         bufferLock.getPage().getWritableData(),

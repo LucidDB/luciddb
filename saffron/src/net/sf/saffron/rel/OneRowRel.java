@@ -28,14 +28,15 @@ import net.sf.saffron.opt.VolcanoCluster;
 
 
 /**
- * <code>OneRowRel</code> always returns one row, zero columns.
+ * <code>OneRowRel</code> always returns one row, one column (containing
+ * the value 0).
  *
  * @author jhyde
  * @version $Id$
  *
  * @since 23 September, 2001
  */
-public class OneRowRel extends SaffronRel
+public class OneRowRel extends SaffronBaseRel
 {
     //~ Constructors ----------------------------------------------------------
 
@@ -65,8 +66,8 @@ public class OneRowRel extends SaffronRel
     protected SaffronType deriveRowType()
     {
         return cluster.typeFactory.createProjectType(
-            new SaffronType[0],
-            new String[0]);
+            new SaffronType[]{cluster.typeFactory.createJavaType(Integer.TYPE)},
+            new String[]{"ZERO"});
     }
 }
 

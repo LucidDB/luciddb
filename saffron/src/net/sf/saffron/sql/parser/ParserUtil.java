@@ -47,9 +47,9 @@ public final class ParserUtil {
 
     public static final String DateFormatStr = "yyyy-MM-dd";
     public static final String TimeFormatStr = "HH:mm:ss";
-    public static final String PrecisionTimeFormatStr = TimeFormatStr + ".SSSSSS";
+    public static final String PrecisionTimeFormatStr = TimeFormatStr + ".S";
     public static final String TimestampFormatStr = DateFormatStr + " " + TimeFormatStr;
-    public static final String PrecisionTimestampFormatStr = TimestampFormatStr + ".SSSSSS";
+    public static final String PrecisionTimestampFormatStr = TimestampFormatStr + ".S";
 
 
     private ParserUtil() {}
@@ -58,12 +58,12 @@ public final class ParserUtil {
         return s.replaceAll("''", "'");
     }
 
-    public static Number parseDecimal(String s) {
+    public static BigDecimal parseDecimal(String s) {
         return new BigDecimal(s);
     }
 
-    public static Number parseInteger(String s) {
-        return new BigInteger(s);
+    public static BigDecimal parseInteger(String s) {
+        return new BigDecimal(s);
     }
 
     public static java.sql.Date parseDate(String s) {
@@ -194,6 +194,19 @@ public final class ParserUtil {
 
     public static SqlNode[] toNodeArray(List list) {
         return (SqlNode[]) list.toArray(emptySqlNodeArray);
+    }
+
+    public static String rightTrim(String s, char c) {
+        int stop;
+        for (stop=s.length();stop>0;stop--) {
+            if (s.charAt(stop-1) != c){
+                break;
+            }
+        }
+        if (stop > 0) {
+            return s.substring(0,stop);
+        }
+        return "";
     }
 }
 

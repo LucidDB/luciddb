@@ -1,0 +1,278 @@
+
+<html>
+
+<head>
+<title>Using a Private Branch</title>
+<link rel="stylesheet" type="text/css" href="stylesheet.css" />
+
+</head>
+
+<body>
+
+<h1>Using a Private Branch</h1>
+
+This document explains how to use a Perforce private branch for
+Farrago development.  A private branch allows you to check in code
+whenever you want without worrying about breaking someone else's
+build.  Only when you integrate to a shared tree do your changes
+become visible to anyone else.  This means you can save changes
+frequently (reducing the amount of code lost should your machine
+crash) and test experimental changes across multiple machines without
+having to copy files around.
+
+<h2>Creating Your Branch</h2>
+
+Before creating a private branch, you need to decide on the shared
+tree from which your private branch will sprout.  The correct shared
+tree is wherever you have been checking out code already.  The most
+common case would be <code>//open/dev/...</code>, which we'll use in
+the examples below.
+
+<p>
+
+Next, you need to decide where your branched files will live in the
+Perforce depot.  Standard policy is to create your branch under 
+<code>//open/users/...</code>.  Never create your branch under a
+shared tree, otherwise everyone who maps that shared tree will
+accidentally map your private branch as well.  So, if your Perforce
+user name is pmarlowe, you might use
+<code>//open/users/pmarlowe/dev/...</code> to branch from
+<code>//open/dev/...</code>.
+
+<p>
+
+Your new branch also needs a name.  A good name in this case would be
+<code>dev_to_pmarlowe</code>, which specifies the branch origin
+(<code>dev</code>), branched location (<code>pmarlowe</code>), and
+branching direction (later on it will become apparent why this naming
+convention is important).
+
+<p>
+
+To actually create the branch, issue a command like:
+
+<pre><code>
+p4 branch dev_to_pmarlowe
+</code></pre>
+
+Edit the <code>Description</code> field to give more details on the
+purpose of your branch, and define the branch view mapping:
+
+<pre><code>
+View:
+        //open/dev/thirdparty/... //open/users/pmarlowe/dev/thirdparty/...
+        //open/dev/saffron/... //open/users/pmarlowe/dev/saffron/...
+        //open/dev/fennel/... //open/users/pmarlowe/dev/fennel/...
+        //open/dev/farrago/... //open/users/pmarlowe/dev/farrago/...
+</code></pre>
+
+Defining the branch view is pretty much like defining a client view,
+except that the right hand side references the depot rather than the
+client.  It's a good idea to include everything you think you're going
+to need, because changing the branch definition later can lead to
+trouble.  For example, don't try to economize on disk space by leaving
+out thirdparty and trying to share the local copy from another branch;
+getting this right and keeping it working as things change is more
+trouble than it's worth.
+
+<h2>Request Access Rights</h2>
+
+Unfortunately, you won't be able to use the branch you just created
+unless you have access rights to the branched location, which you
+probably don't.  Send mail to the <a
+href="mailto:perfecthash@users.sf.net">Farrago administrator</a>,
+providing the name of the branch, and wait for a reply.
+
+<h2>Perform Initial Integration</h2>
+
+Once you have the required access rights, the next step is to edit
+your client view to add your branched location.  So, you might end up with
+something like:
+
+<pre><code>
+View:
+        //open/dev/thirdparty/... //pmarlowe.pi/dev/thirdparty/...
+        //open/dev/saffron/... //pmarlowe.pi/dev/saffron/...
+        //open/dev/fennel/... //pmarlowe.pi/dev/fennel/...
+        //open/dev/farrago/... //pmarlowe.pi/dev/farrago/...
+        //open/users/pmarlowe/dev/thirdparty/... //pmarlowe.pi/pmarlowe/thirdparty
+        //open/users/pmarlowe/dev/saffron/... //pmarlowe.pi/pmarlowe/saffron
+        //open/users/pmarlowe/dev/fennel/... //pmarlowe.pi/pmarlowe/fennel
+        //open/users/pmarlowe/dev/farrago/... //pmarlowe.pi/pmarlowe/farrago
+</code></pre>
+
+This would place your local <code>pmarlowe</code> directory as a
+sibling to your local <code>dev</code> directory.  This structure is
+up to you to decide; something deeper becomes necessary when you have
+multiple private branches corresponding to multiple shared trees.
+
+<p>
+
+Now, before performing the initial integration (populating the private
+branch in the depot), sync all files which are to be branched so that
+you are branching from the latest version.  In this example:
+
+<pre><code>
+p4 sync //open/dev/...
+</code></pre>
+
+will do the trick.
+
+<p>
+
+Now, tell Perforce to do the integration:
+
+<pre><code>
+p4 integrate -t -b dev_to_pmarlowe
+</code></pre>
+
+The <code>-t</code> is redundant here but becomes important later, so
+get in the habit of including it whenever you invoke <code>p4
+integrate</code>; otherwise you'll have nasty problems when file types
+change.
+
+<p>
+
+The <code>p4 integrate</code> command doesn't really do all of the
+work; it just tells Perforce what you're planning to do.  To complete
+the branching in your client workspace:
+
+<pre><code>
+p4 resolve -am
+</code></pre>
+
+At this point, you should be able to build, run, and test under the
+local <code>pmarlowe</code> directory just created by <code>p4
+resolve</code>.  Once that looks good, check in (this won't affect
+anyone else):
+
+<pre><code>
+p4 submit
+</code></pre>
+
+The checkin comment should indicate 
+
+<ul>
+
+<li>the branch creation
+
+<li>the trees involved
+
+<li>the change number you branched from
+
+</ul>
+
+Your private branch is now open for business.
+
+<h2>Propagating Other Developers' Changes from the Shared Tree</h2>
+
+Without a private branch, the first thing you would probably do before
+starting a new task would be to execute <code>p4 sync</code> to start
+from the latest code.  With a private branch in place, there are a few
+extra steps:
+
+<ol>
+
+<li><code>p4 sync</code> as usual.  Make sure you sync both the shared
+tree and your private branch location, otherwise you'll experience
+unpleasant anomalies later.
+
+<li><code>p4 integrate -t -b dev_to_pmarlowe</code>
+
+<li>Run the above integrate command again to make sure it says nothing
+needs to be done.  Sometimes during a big integrate real warnings will
+be buried in all the success messages.  If you get a warning, use the
+warning text and <code>p4 help resolve</code> to try to figure out
+what you need to do.
+
+<li><code>p4 resolve -am</code>.  If you have made changes in your
+private branch, they may conflict with changes coming in from the
+shared tree.  In that case, use the normal conflict resolution process.
+
+<li>Run resolve again to make sure it says nothing needs to be done.
+
+<li>At this point, you may want to build and run tests in your private
+branch to make sure you aren't polluting your private branch with
+someone else's breakage.  Make sure you are working in the correct
+local tree (a good idea is to set up multiple shell launchers in your
+desktop, one for each branch, and arrange for the shell window title
+to display the branch location).  If tests fail, use <code>p4
+revert</code> to undo the integration.  If you trust the shared tree,
+you can skip this step.
+
+<li><code>p4 submit</code> to update your private branch with the
+integration before starting on your own changes or integrating
+subsequent changes from the shared tree (it's not a good idea to mix).
+This submit does not affect anyone else, so you should always do it
+sooner rather than later.  A good convention for the checkin comment
+is <code>integrate dev_to_pmarlowe@XXX</code> where <code>XXX</code>
+is the change number you synced and integrated from.
+
+</ol>
+
+<h2>Propagating Your Changes Back to the Shared Tree</h2>
+
+OK, now you've done some development, submitted changes to your
+private branch, and are ready to publish those changes to the shared
+tree for everyone else to see.  Before doing anything else, it's a
+good idea to do another propagate in the forward direction and merge
+the latest changes into your private branch (just as it's a good idea
+to sync and resolve before submit when working without a private
+branch).  After that, the steps for the real checkin are almost the
+same as above:
+
+<ol>
+
+<li><code>p4 sync</code>.
+
+<li><code>p4 integrate -t -r -b dev_to_pmarlowe</code>.  The
+<code>-r</code> tells Perforce to go in the reverse direction.  Since
+the branch name was chosen to describe the forward direction,
+reverse integration will be from <code>pmarlowe</code> to
+<code>dev</code>, which is what we want.
+
+<li>Run the above integrate command again to make sure it says nothing
+needs to be done.
+
+<li><code>p4 resolve -am</code> and resolve any conflicts.  If you
+followed the advice above about doing another forward integration,
+there shouldn't be any unless some other doofus just checked in during
+this window.
+
+<li>Run resolve again to make sure it says nothing needs to be done.
+
+<li>At this point, you definitely want to build and run tests in the
+shared tree to make sure your changes have been properly merged (even
+if you didn't get any merge conflicts).  If tests fail, the best
+approach is to debug and then <code>p4 revert</code> to back out of
+the integration before fixing the problem (in your private branch).
+
+<li>Once all is well, <code>p4 submit</code>; this is the only real
+checkin from the perspective of other developers, so your checkin
+comment should probably summarize all of the changes made in your
+private branch (and maybe list the relevant change numbers).
+
+</ol>
+
+<h2>More to Explore</h2>
+
+Did all of the notes above scare you a bit?  Good.  Branching should
+never be undertaken lightly, even in a source-control system with
+excellent support for it such as Perforce.  If you carefully adhere to
+the above procedures, you should have very few problems.  However, if
+things get sticky, it's a good idea to make sure you understand the
+underlying concepts well before seeking a resolution.  A good resource
+is the <a
+href="http://www.perforce.com/perforce/doc.032/manuals/p4guide/09_branching.html">
+branching chapter</a> from the official Perforce User's Guide.  The
+links at the end have some more info on general branching theory.
+Also, if an integration should go haywire, remember that nothing is
+made permanent until <code>p4 submit</code>.  So if you want to back
+out and restart the whole procedure, just use <code>p4 revert</code>
+and then <code>p4 opened</code> to make sure that all files have been
+successfully reverted.
+
+</body>
+
+</html>
+

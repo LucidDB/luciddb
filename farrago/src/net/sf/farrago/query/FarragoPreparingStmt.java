@@ -30,6 +30,7 @@ import net.sf.farrago.resource.*;
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
+import net.sf.farrago.trace.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.util.*;
@@ -37,11 +38,11 @@ import net.sf.farrago.namespace.util.*;
 import net.sf.saffron.core.*;
 import net.sf.saffron.oj.stmt.*;
 import net.sf.saffron.oj.util.*;
+import net.sf.saffron.oj.rel.JavaRelImplementor;
 import net.sf.saffron.sql.parser.*;
 import net.sf.saffron.opt.*;
 import net.sf.saffron.rex.*;
 import net.sf.saffron.rel.*;
-import net.sf.saffron.rel.convert.*;
 import net.sf.saffron.sql.*;
 import net.sf.saffron.sql2rel.*;
 import net.sf.saffron.util.*;
@@ -59,8 +60,6 @@ import java.util.*;
 import java.util.logging.*;
 import javax.jmi.model.*;
 import javax.jmi.reflect.*;
-
-import java.util.List;
 
 /**
  * FarragoPreparingStmt subclasses OJStatement to manage Farrago-specific
@@ -85,11 +84,12 @@ public class FarragoPreparingStmt extends OJStatement
         SqlValidator.CatalogReader,
         FarragoAllocation
 {
-    private static Logger dynamicTracer =
-    Logger.getLogger("net.sf.farrago.dynamic");
+    // NOTE jvs 8-June-2004: this tracer is special in that it controls
+    // preservation of dynamically generated Java code
+    private static final Logger dynamicTracer = FarragoTrace.getDynamicTracer();
 
-    private static Logger compilerTracer =
-    Logger.getLogger("net.sf.farrago.compiler");
+    private static final Logger streamGraphTracer =
+        FarragoTrace.getPreparedStreamGraphTracer();
 
     //~ Instance fields -------------------------------------------------------
 
@@ -98,7 +98,7 @@ public class FarragoPreparingStmt extends OJStatement
     private FarragoConnectionDefaults connectionDefaults;
 
     private FarragoCatalog catalog;
-    
+
     private FarragoTypeFactory farragoTypeFactory;
 
     private FennelDbHandle fennelDbHandle;
@@ -112,13 +112,13 @@ public class FarragoPreparingStmt extends OJStatement
     private FarragoIndexMap indexMap;
 
     private SaffronTypeFactory savedTypeFactory;
-    
+
     private VolcanoPlannerFactory savedPlannerFactory;
-    
+
     private ClassMap savedClassMap;
-    
+
     private Object savedDeclarer;
-    
+
     private FarragoAllocation javaCodeDir;
 
     private FarragoSqlValidator validator;
@@ -136,7 +136,7 @@ public class FarragoPreparingStmt extends OJStatement
      * Directory containing code generated for this statement.
      */
     private File packageDir;
-    
+
     /**
      * Root directory for all generated Java.
      */
@@ -156,7 +156,7 @@ public class FarragoPreparingStmt extends OJStatement
      * Creates a new FarragoPreparingStmt object.
      *
      * @param catalog catalog to use for object definitions
-     * @param fennelDbHandle handle to Fennel database to access 
+     * @param fennelDbHandle handle to Fennel database to access
      * @param session invoking session
      * @param codeCache FarragoObjectCache to use for caching code snippets
      * needed during preparation
@@ -186,15 +186,14 @@ public class FarragoPreparingStmt extends OJStatement
         this.dataWrapperCache = new FarragoDataWrapperCache(
             allocations,dataWrapperCache,catalog,fennelDbHandle);
         loadedServerClassNameSet = new HashSet();
-            
+
         super.setResultCallingConvention(CallingConvention.ITERATOR);
 
         directDependencies = new HashSet();
         rememberDependencies = true;
 
         classesRoot = new File(
-            System.getProperty(
-                FarragoModelLoader.HOME_PROPERTY));
+            FarragoProperties.instance().homeDir.get(true));
         classesRoot = new File(classesRoot,"classes");
 
         // Save some global state for reentrancy
@@ -221,6 +220,11 @@ public class FarragoPreparingStmt extends OJStatement
     }
 
     //~ Methods ---------------------------------------------------------------
+
+    public SqlOperatorTable getSqlOperatorTable()
+    {
+        return session.getSqlOperatorTable();
+    }
 
     /**
      * Perform validation.
@@ -249,7 +253,7 @@ public class FarragoPreparingStmt extends OJStatement
             validator = new FarragoSqlValidator(this);
             needValidation = true;
         }
-        
+
         // TODO:  once and only once
         packageDir = classesRoot;
         packageDir = new File(packageDir,"net");
@@ -263,7 +267,7 @@ public class FarragoPreparingStmt extends OJStatement
             throw Util.newInternal(ex);
         }
         packageName = "net.sf.farrago.dynamic." + packageDir.getName();
-        
+
         // Normally, we want to make sure all generated code gets cleaned up.
         // To disable this for debugging, you can explicitly set
         // net.sf.farrago.dynamic.level=FINE.  (This is not inherited via
@@ -275,7 +279,7 @@ public class FarragoPreparingStmt extends OJStatement
         // createTempFile created a normal file; we want a directory
         packageDir.delete();
         packageDir.mkdir();
-        
+
         PreparedResult preparedResult = super.prepareSql(
             sqlNode,
             session.getRuntimeContextClass(),
@@ -310,11 +314,12 @@ public class FarragoPreparingStmt extends OJStatement
                     catalog.newFemCmdPrepareExecutionStreamGraph();
                 Collection streamDefs = cmdPrepareStream.getStreamDefs();
                 streamDefs.addAll(streamDefSet);
-                xmiFennelPlan = 
+                xmiFennelPlan =
                     JmiUtil.exportToXmiString(
                         Collections.singleton(cmdPrepareStream));
+                streamGraphTracer.fine(xmiFennelPlan);
             }
-                
+
             executableStmt = new FarragoExecutableJavaStmt(
                 packageDir,
                 rowClass,
@@ -337,7 +342,7 @@ public class FarragoPreparingStmt extends OJStatement
             executableStmt.addAllocation(javaCodeDir);
             javaCodeDir = null;
         }
-            
+
         return executableStmt;
     }
 
@@ -409,7 +414,7 @@ public class FarragoPreparingStmt extends OJStatement
         // dependencies, since we're only interested in direct
         // references
         rememberDependencies = false;
-        
+
         SqlParser parser = new SqlParser(queryString);
         final SqlNode sqlQuery;
         try {
@@ -428,7 +433,7 @@ public class FarragoPreparingStmt extends OJStatement
     {
         // REVIEW:  recycling may be dangerous since SqlToRelConverter is
         // stateful
-        
+
         // NOTE:  keep around sqlToRelConverterInstance for use during
         // activities like loading default values
         sqlToRelConverter = new SqlToRelConverter(
@@ -442,7 +447,7 @@ public class FarragoPreparingStmt extends OJStatement
         return sqlToRelConverter;
     }
 
-    protected RelImplementor getRelImplementor(RexBuilder rexBuilder)
+    protected JavaRelImplementor getRelImplementor(RexBuilder rexBuilder)
     {
         if (relImplementor == null) {
             relImplementor = new FarragoRelImplementor(this,rexBuilder);
@@ -519,7 +524,7 @@ public class FarragoPreparingStmt extends OJStatement
 
         if (columnSet instanceof FemLocalTable) {
             FemLocalTable table = (FemLocalTable) columnSet;
-            
+
             // REVIEW:  maybe defer this until physical implementation?
             if (table.isTemporary()) {
                 indexMap.instantiateTemporaryTable(table);
@@ -576,9 +581,9 @@ public class FarragoPreparingStmt extends OJStatement
         // remember the dependency on the server, so that if the server
         // gets dropped, dependent views will cascade.
         addDependency(femServer);
-        
+
         FarragoMedDataServer server = loadDataServerFromCache(femServer);
-        
+
         String [] namesWithoutCatalog = new String [] {
             resolved.schemaName,
             resolved.objectName
@@ -649,13 +654,13 @@ public class FarragoPreparingStmt extends OJStatement
         if (resolved.object == null) {
             return getForeignTableFromNamespace(resolved);
         }
-        
+
         if (!(resolved.object instanceof CwmNamedColumnSet)) {
             // TODO:  give a more helpful error
             // in case a non-relational object is referenced
             return null;
         }
-        
+
         CwmNamedColumnSet table = (CwmNamedColumnSet) resolved.object;
 
         addDependency(table);
@@ -689,28 +694,27 @@ public class FarragoPreparingStmt extends OJStatement
     // override OJStatement
     protected String getCompilerClassName()
     {
-        // TODO: For now default to DynamicJava interpretation.  Eventually, we
-        // want the optimizer to be able to tell us when we should definitely
-        // compile before the first execution, and also let caching decide
-        // based on usage patterns.
+        // TODO: For now rely on a system parameter to control DynamicJava
+        // interpretation.  Eventually, we want the optimizer to be able to
+        // tell us when we should definitely compile before the first
+        // execution, and also let caching decide based on usage patterns.
 
-        Level compilerLevel = compilerTracer.getLevel();
-        if ((compilerLevel == null) || !compilerTracer.isLoggable(Level.FINE)) {
+        if (catalog.getCurrentConfig().isJavaInterpreterEnabled()) {
+            // use the DynamicJava interpreter
             return "openjava.ojc.DynamicJavaCompiler";
         } else {
-            // if trace property net.sf.farrago.compiler is set to FINE,
-            // then use the Sun Java compiler, since it produces better
+            // use the Sun Java compiler; it produces better
             // error messages
             return super.getCompilerClassName();
         }
     }
-    
+
     // override OJStatement
     protected boolean shouldSetConnectionInfo()
     {
         return false;
     }
-    
+
     // override OJStatement
     protected boolean shouldAlwaysWriteJavaFile()
     {
@@ -721,7 +725,7 @@ public class FarragoPreparingStmt extends OJStatement
             return true;
         }
     }
-    
+
     // override OJStatement
     protected boolean shouldReloadTrace()
     {
@@ -733,13 +737,13 @@ public class FarragoPreparingStmt extends OJStatement
     {
         return classesRoot.getPath();
     }
-    
+
     // override OJStatement
     protected String getJavaRoot()
     {
         return classesRoot.getPath();
     }
-    
+
     // override OJStatement
     protected String getTempPackageName()
     {
@@ -766,7 +770,7 @@ public class FarragoPreparingStmt extends OJStatement
     private static class ValidatorTable implements SqlValidator.Table
     {
         private final String [] qualifiedName;
-        
+
         private final SaffronType rowType;
 
         /**

@@ -24,7 +24,6 @@ package net.sf.saffron.oj.rel;
 
 import net.sf.saffron.opt.CallingConvention;
 import net.sf.saffron.opt.OptUtil;
-import net.sf.saffron.opt.RelImplementor;
 import net.sf.saffron.opt.VolcanoCluster;
 import net.sf.saffron.rel.FilterRel;
 import net.sf.saffron.rel.SaffronRel;
@@ -33,13 +32,14 @@ import net.sf.saffron.rex.RexUtil;
 import net.sf.saffron.util.Util;
 import openjava.ptree.Expression;
 import openjava.ptree.IfStatement;
+import openjava.ptree.ParseTree;
 import openjava.ptree.StatementList;
 
 
 /**
  * Implements the {@link FilterRel} relational expression in Java code.
  */
-public class JavaFilterRel extends FilterRel
+public class JavaFilterRel extends FilterRel implements JavaLoopRel
 {
     //~ Constructors ----------------------------------------------------------
 
@@ -67,22 +67,20 @@ public class JavaFilterRel extends FilterRel
     }
 
     // implement SaffronRel
-    public Object implement(RelImplementor implementor,int ordinal)
+    public ParseTree implement(JavaRelImplementor implementor)
     {
-        switch (ordinal) {
-        case -1: // called from parent
-            return implementor.implementChild(this,0,child);
-        case 0: // called from child
-            StatementList stmtList = implementor.getStatementList();
-            StatementList ifBody = new StatementList();
-            Expression condition2 = implementor.translate(this,condition);
-            stmtList.add(new IfStatement(condition2,ifBody));
-            implementor.bind(this,child);
-            implementor.generateParentBody(this,ifBody);
-            return null;
-        default:
-            throw Util.newInternal("implement: ordinal=" + ordinal);
-        }
+        return implementor.visitJavaChild(this, 0, (JavaRel) child);
+    }
+
+    public void implementJavaParent(JavaRelImplementor implementor,
+            int ordinal) {
+        assert ordinal == 0;
+        StatementList stmtList = implementor.getStatementList();
+        StatementList ifBody = new StatementList();
+        Expression condition2 = implementor.translate(this,condition);
+        stmtList.add(new IfStatement(condition2,ifBody));
+        implementor.bind(this,child);
+        implementor.generateParentBody(this,ifBody);
     }
 }
 

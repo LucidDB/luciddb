@@ -19,12 +19,14 @@
 
 package net.sf.farrago.session;
 
-import net.sf.farrago.util.*;
-import net.sf.farrago.catalog.*;
-import net.sf.farrago.runtime.*;
+import net.sf.farrago.catalog.FarragoCatalog;
+import net.sf.farrago.catalog.FarragoConnectionDefaults;
+import net.sf.farrago.runtime.FarragoRuntimeContext;
+import net.sf.farrago.runtime.FarragoRuntimeContextParams;
+import net.sf.farrago.util.FarragoAllocation;
+import net.sf.saffron.sql.SqlOperatorTable;
 
-import java.sql.*;
-import java.util.*;
+import java.sql.DatabaseMetaData;
 
 /**
  * FarragoSession represents an internal API to the Farrago database.  It is
@@ -36,6 +38,11 @@ import java.util.*;
  */
 public interface FarragoSession extends FarragoAllocation
 {
+    /**
+     * @return Sql Function Table
+     */
+    public SqlOperatorTable getSqlOperatorTable();
+
     /**
      * @return JDBC URL used to establish this session
      */

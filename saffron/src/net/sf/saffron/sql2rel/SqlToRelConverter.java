@@ -30,11 +30,16 @@ import net.sf.saffron.opt.VolcanoQuery;
 import net.sf.saffron.rel.*;
 import net.sf.saffron.rex.*;
 import net.sf.saffron.sql.*;
-import net.sf.saffron.sql.type.*;
+import net.sf.saffron.sql.fun.SqlStdOperatorTable;
+import net.sf.saffron.sql.fun.SqlRowOperator;
+import net.sf.saffron.sql.fun.SqlCastFunction;
+import net.sf.saffron.sql.type.SqlTypeName;
 import net.sf.saffron.util.Util;
+import net.sf.saffron.util.BitString;
+import net.sf.saffron.util.NlsString;
 import openjava.mop.Environment;
 
-import java.math.BigInteger;
+import java.math.BigDecimal;
 import java.util.*;
 
 /**
@@ -70,8 +75,6 @@ public class SqlToRelConverter {
     //~ Instance fields -------------------------------------------------------
 
     private final SqlValidator validator;
-    private final SqlOperatorTable opTab;
-    private final SqlFunctionTable funTab;
     private RexBuilder rexBuilder;
     private SaffronConnection connection;
     private SaffronSchema schema;
@@ -81,6 +84,7 @@ public class SqlToRelConverter {
     final ArrayList leaves = new ArrayList();
 
     private List dynamicParamSqlNodes;
+    private final SqlStdOperatorTable opTab = SqlOperatorTable.std();
 
     //~ Constructors ----------------------------------------------------------
 
@@ -103,8 +107,6 @@ public class SqlToRelConverter {
     {
         Util.pre(connection != null, "connection != null");
         this.validator = validator;
-        opTab = SqlOperatorTable.instance();
-        funTab = SqlFunctionTable.instance();
         this.schema = schema;
         this.connection = connection;
         this.defaultValueFactory = new NullDefaultValueFactory();
@@ -228,7 +230,7 @@ public class SqlToRelConverter {
             final RexNode expr = (RexNode) bb.mapSubqueryToExpr.get(node);
             if (expr == null) {
                 SaffronRel converted;
-                switch (node.getKind().ordinal_) {
+                switch (node.getKind().getOrdinal()) {
                 case SqlKind.InORDINAL: {
                     // "select from emp where emp.deptno in (Q)"
                     //
@@ -309,13 +311,13 @@ public class SqlToRelConverter {
                 SqlNodeList conditionList = (SqlNodeList) condition;
                 for (int i = 0; i < conditionList.size(); i++) {
                     SqlNode conditionNode = conditionList.get(i);
-                    RexNode e = rexBuilder.makeCall(rexBuilder.operatorTable.equalsOperator,
+                    RexNode e = rexBuilder.makeCall(rexBuilder._opTab.equalsOperator,
                             convertExpression(bb, conditionNode),
                             rexBuilder.makeFieldAccess(ref, i));
                     if (i == 0) {
                         conditionExp = e;
                     } else {
-                        conditionExp = rexBuilder.makeCall(rexBuilder.operatorTable.andOperator, conditionExp,
+                        conditionExp = rexBuilder.makeCall(rexBuilder._opTab.andOperator, conditionExp,
                                 e);
                     }
                 }
@@ -323,7 +325,7 @@ public class SqlToRelConverter {
                 // If "seek" is "emp", generate the condition "emp = Q.c1". The
                 // query must have precisely one column.
                 assert converted.getRowType().getFieldCount() == 1;
-                conditionExp = rexBuilder.makeCall(rexBuilder.operatorTable.equalsOperator,
+                conditionExp = rexBuilder.makeCall(rexBuilder._opTab.equalsOperator,
                         convertExpression(bb, condition),
                         rexBuilder.makeFieldAccess(ref, 0));
             }
@@ -366,7 +368,7 @@ public class SqlToRelConverter {
                     call = (SqlCall) node;
                 } else {
                     // convert "1" to "row(1)"
-                    call = validator.opTab.rowConstructor.createCall(
+                    call = SqlOperatorTable.std().rowConstructor.createCall(
                             new SqlNode[] {node});
                 }
                 inputs[i] = convertRowConstructor(bb, call);
@@ -427,7 +429,7 @@ public class SqlToRelConverter {
      * inside SQL parse tree. Does not traverse inside queries.
      */
     private void findSubqueries(Blackboard bb, SqlNode node) {
-        switch (node.getKind().ordinal_) {
+        switch (node.getKind().getOrdinal()) {
         case SqlKind.InORDINAL:
         case SqlKind.ExistsORDINAL:
         case SqlKind.SelectORDINAL:
@@ -467,7 +469,7 @@ public class SqlToRelConverter {
     public RexNode convertExpression(Blackboard bb, SqlNode node)
     {
         final SqlNode [] operands;
-        switch (node.getKind().ordinal_) {
+        switch (node.getKind().getOrdinal()) {
         case SqlKind.AsORDINAL:
             operands = ((SqlCall) node).getOperands();
             return convertExpression(bb,operands[0]);
@@ -501,11 +503,17 @@ public class SqlToRelConverter {
                     return rexBuilder.makeCall(
                             op, convertExpression(bb,operands[0]),
                             convertExpression(bb,operands[1]));
-                } else if (call.operator instanceof SqlFunction) {
-                    if (call.operator.equals(funTab.characterLengthFunc)) {
+                } else if ((call.operator instanceof SqlFunction)
+                           || (call.operator instanceof SqlRowOperator))
+                {
+                    if (call.operator.equals(
+                            SqlOperatorTable.std().characterLengthFunc)) {
                         //todo: solve aliases in a more elegent way.
-                        call.operator = funTab.charLengthFunc;
+                        call.operator = opTab.charLengthFunc;
+                    } else if (call.operator.equals(SqlOperatorTable.std().castFunc)) {
+                        return convertCast(bb,call);
                     }
+
                     return rexBuilder.makeCall(call.operator, convertExpressionList(bb,operands));
                 } else if (call.operator instanceof SqlPrefixOperator ||
                         call.operator instanceof SqlPostfixOperator) {
@@ -529,6 +537,19 @@ public class SqlToRelConverter {
                 throw Util.needToImplement(node);
             }
         }
+    }
+    /**
+     * convert a cast function node.
+     * @param bb
+     * @param call
+     * @return
+     */
+    private RexNode convertCast(Blackboard bb, SqlCall call) {
+        assert SqlKind.Cast.equals(call.operator.kind);
+        SqlCastFunction fun = (SqlCastFunction) call.operator;
+        RexNode arg = convertExpression(bb, call.operands[0]);
+        SqlDataType dataType = (SqlDataType)call.operands[1];
+        return rexBuilder.makeCast(dataType.getType(), arg);
     }
 
     private RexNode convertCase(Blackboard bb, SqlCase call) {
@@ -574,7 +595,7 @@ public class SqlToRelConverter {
      */
     private void convertFrom(Blackboard bb,SqlNode from)
     {
-        switch (from.getKind().ordinal_) {
+        switch (from.getKind().getOrdinal()) {
         case SqlKind.AsORDINAL:
             final SqlNode [] operands = ((SqlCall) from).getOperands();
             convertFrom(bb,operands[0]);
@@ -760,9 +781,17 @@ public class SqlToRelConverter {
                 aggCalls));
     }
 
+    /**
+     * Converts a {@link SqlLiteral SQL literal} to
+     * a {@link RexLiteral REX literal}.
+     *
+     * <p>The result is {@link RexNode}, not {@link RexLiteral} because if the
+     * literal is NULL (or the boolean Unknown value), we make a
+     * <code>CAST(NULL AS type)</code> expression.
+     */
     private RexNode convertLiteral(final SqlLiteral literal)
     {
-        if (literal.value == null) {
+        if (literal.getValue() == null) {
             SaffronType type = validator.getValidatedNodeType(literal);
             return rexBuilder.makeCast(type,rexBuilder.constantNull());
         } else {
@@ -770,45 +799,60 @@ public class SqlToRelConverter {
         }
     }
 
+    /**
+     * Converts a {@link SqlLiteral SQL literal} which we know not to be NULL
+     * into a {@link RexLiteral REX literal}.
+     * @param literal
+     * @return
+     */
     private RexLiteral convertNonNullLiteral(final SqlLiteral literal)
     {
-        final Object value = literal.value;
-        if (value instanceof Number) {
-            final Number number = (Number) value;
-
-            // Convert to integer if possible.
-            if (number instanceof BigInteger) {
-                long i = number.longValue();
-
-                // NOTE:  Number.equals is insane because it requires the
-                // comparands to be of the same exact type.  Be careful.
-                if (number.equals(BigInteger.valueOf(i))) {
-                    return rexBuilder.makeLiteral(i);
-                }
-            }
-
+        if (literal instanceof SqlSymbol) {
+            return rexBuilder.makeSymbolLiteral((SqlSymbol) literal);
+        }
+        final Object value = literal.getValue();
+        BitString bitString;
+        switch (literal._typeName.ordinal_) {
+        case SqlTypeName.Decimal_ordinal:
+            // exact number
+            BigDecimal bd = (BigDecimal) value;
+            return rexBuilder.makeExactLiteral(bd);
+        case SqlTypeName.Double_ordinal:
+            // approximate type
             // TODO:  preserve fixed-point precision and large integers
-            return rexBuilder.makeLiteral(number.doubleValue());
-        } else if (value instanceof String) {
-            return rexBuilder.makeLiteral((String) value);
-        } else if (value instanceof Boolean) {
+            return rexBuilder.makeApproxLiteral((BigDecimal) value);
+        case SqlTypeName.Char_ordinal:
+            return rexBuilder.makeCharLiteral((NlsString) value);
+        case SqlTypeName.Boolean_ordinal:
             return rexBuilder.makeLiteral(((Boolean) value).booleanValue());
-        } else if (value instanceof byte[]) {
-            return rexBuilder.makeLiteral((byte[]) value);
-        } else if (value instanceof SqlLiteral.BitString) {
-            return rexBuilder.makeLiteral((SqlLiteral.BitString) value);
-        } else if (value instanceof SqlLiteral.StringLiteral) {
-            return rexBuilder.makeLiteral((SqlLiteral.StringLiteral) value);
-        } else if (value instanceof SqlFunctionTable.FunctionFlagType) {
-            return rexBuilder.makeLiteral((SqlFunctionTable.FunctionFlagType) value);
-        } else if (value instanceof java.sql.Date) {
-            return rexBuilder.makeLiteral((java.sql.Date) value);
-        } else if (value instanceof java.sql.Time) {
-            return rexBuilder.makeLiteral((java.sql.Time) value);
-        } else if (value instanceof java.sql.Timestamp) {
-            return rexBuilder.makeLiteral((java.sql.Timestamp) value);
-        } else {
-            throw Util.needToImplement(literal);
+        case SqlTypeName.Binary_ordinal:
+            bitString = (BitString) value;
+            if (bitString.getBitCount() % 8 == 0) {
+                // An even number of hexits (e.g. X'ABCD') makes whole number
+                // of bytes.
+                byte[] bytes = bitString.getAsByteArray();
+                return rexBuilder.makeBinaryLiteral(bytes);
+            } else {
+                // An odd number of hexits (e.g. X'ABC') leaves an unfinished
+                // byte, so the whole thing is treated as a bit string.
+                // (Yes, this is really what the standard asks for.)
+                return rexBuilder.makeBitLiteral(bitString);
+            }
+        case SqlTypeName.Bit_ordinal:
+            bitString = (BitString) value;
+            return rexBuilder.makeBitLiteral(bitString);
+        case SqlTypeName.Symbol_ordinal:
+            return rexBuilder.makeSymbolLiteral((SqlSymbol) value);
+        case SqlTypeName.Timestamp_ordinal:
+            return rexBuilder.makeTimestampLiteral((Calendar) value,
+                    ((SqlLiteral.TimestampLiteral) literal)._precision);
+        case SqlTypeName.Time_ordinal:
+            return rexBuilder.makeTimeLiteral((Calendar) value,
+                    ((SqlLiteral.TimeLiteral) literal)._precision);
+        case SqlTypeName.Date_ordinal:
+            return rexBuilder.makeDateLiteral((Calendar) value);
+        default:
+            throw literal._typeName.unexpected();
         }
     }
 
@@ -852,11 +896,11 @@ public class SqlToRelConverter {
             if (orderItem.isA(SqlKind.Literal)) {
                 SqlLiteral sqlLiteral = (SqlLiteral) orderItem;
                 RexLiteral ordinalExp = convertNonNullLiteral(sqlLiteral);
-                if (!(ordinalExp.getValue() instanceof Number)) {
+                if (ordinalExp._typeName != SqlTypeName.Decimal) {
                     throw Util.needToImplement(ordinalExp);
                 }
                 // SQL ordinals are 1-based, but SortRel's are 0-based
-                iOrdinal = ((Number) sqlLiteral.getValue()).intValue() - 1;
+                iOrdinal = sqlLiteral.intValue() - 1;
             } else if (orderItem.isA(SqlKind.Identifier)) {
                 SqlIdentifier id = (SqlIdentifier) orderItem;
                 iOrdinal =
@@ -875,7 +919,7 @@ public class SqlToRelConverter {
 
     private SaffronRel convertQueryRecursive(SqlNode query)
     {
-        final int kind = query.getKind().ordinal_;
+        final int kind = query.getKind().getOrdinal();
         if (query instanceof SqlSelect) {
             return convertSelect((SqlSelect) query);
         } else if (query.isA(SqlKind.Insert)) {

@@ -63,6 +63,8 @@ Calculator::init(int codeSize, int literalSize, int inputSize,
         // explicitly clear descriptors. allows cleaner destructor
         mRegisterSetDescriptor[i] = NULL;
     }
+    // Default is to use output register set by reference.
+    mOutputRegisterByReference = true;
 }
 
 Calculator::~Calculator()
@@ -75,12 +77,10 @@ Calculator::~Calculator()
         }
     }
 
-    if (mIsUsingAssembler)
-    {
+    if (mIsUsingAssembler) {
         // Assembler created all these register references, let's delete them
         for (i = RegisterReference::EFirstSet; i < RegisterReference::ELastSet; i++) {
-            for (uint reg=0; reg < mRegisterRef[i].size(); reg++)
-            {
+            for (uint reg=0; reg < mRegisterRef[i].size(); reg++) {
                 if (mRegisterRef[i][reg])
                     delete mRegisterRef[i][reg];
             }
@@ -89,32 +89,47 @@ Calculator::~Calculator()
         }
 
         // Assembler created all these instructions so it's up to us to delete them
-        for (i = 0; i < mCode.size(); i++)
+        for (i = 0; i < mCode.size(); i++) {
             delete mCode[i];
+        }
         mCode.clear();
 
         // Assembler also created TupleData for status, literal, and local registers
 
-        if (mRegisterTuple[RegisterReference::ELiteral])
+        if (mRegisterTuple[RegisterReference::ELiteral]) {
             delete mRegisterTuple[RegisterReference::ELiteral];
-
-        if (mRegisterTuple[RegisterReference::ELocal])
+        }
+        
+        if (mRegisterTuple[RegisterReference::ELocal]) {
             delete mRegisterTuple[RegisterReference::ELocal];
+        }
 
-        if (mRegisterTuple[RegisterReference::EStatus])
+        if (mRegisterTuple[RegisterReference::EStatus]) {
             delete mRegisterTuple[RegisterReference::EStatus];
+        }
 
         // Assembler also allocated space for tuple data
-        for (i=0; i<mBuffers.size(); i++)
+        for (i=0; i < mBuffers.size(); i++) {
             delete[] mBuffers[i];
+        }
         mBuffers.clear();
     }
+}
+
+void
+Calculator::outputRegisterByReference(bool flag)
+{
+    mOutputRegisterByReference = flag;
 }
 
 void
 Calculator::assemble(const char *program)
 {
     assert(mIsUsingAssembler);
+    FENNEL_TRACE(
+        TRACE_FINE,
+        "Calculator assembly = |" << endl
+        << program << "|" << endl);
     mIsAssembling = true;
     CalcAssembler assembler(this);
     assembler.assemble(program);
@@ -196,14 +211,43 @@ Calculator::exec()
              mem_fun(&RegisterReference::cachePointer));
     mRegisterReset.clear();    // does not change capacity
 
+#ifdef DEBUG
+    ostringstream oss;
+    TuplePrinter p;
+    oss << "Pre-Exec" << endl << "Output Register: " << endl;
+    p.print(oss, getOutputRegisterDescriptor(),
+            *(mRegisterTuple[RegisterReference::EOutput]));
+    oss << endl << "Input Register: " << endl;
+    p.print(oss, getInputRegisterDescriptor(), 
+            *(mRegisterTuple[RegisterReference::EInput]));
+    oss << endl;
+    string forsomereasonthisisneeded = oss.str();
+    FENNEL_TRACE(TRACE_FINER, forsomereasonthisisneeded);
+#endif
+                 
 
     TProgramCounter pc = 0, endOfProgram;
     endOfProgram = mCode.size();
 
     while (pc >= 0 && pc < endOfProgram) {
         try {
+#ifdef DEBUG
+            int oldpc = pc;
+            string out;
+            mCode[oldpc]->describe(out, true);
+            FENNEL_TRACE(TRACE_FINER,
+                         "BF [" << oldpc << "] " <<  out.c_str());
+#endif 
+            
             mCode[pc]->exec(pc);
+
+#ifdef DEBUG
+            mCode[oldpc]->describe(out, true);
+            FENNEL_TRACE(TRACE_FINER,
+                         "AF [" << oldpc << "] " <<  out.c_str());
+#endif
         }
+
         catch(CalcMessage m) {
             // each instruction sets pc assuming continued execution
             mWarnings.push_back(m);
@@ -212,6 +256,21 @@ Calculator::exec()
             break;
         }
     }
+#ifdef DEBUG
+    oss.clear();
+    oss << "Post-Exec" << endl << "Output Register: " << endl;
+    p.print(oss, getOutputRegisterDescriptor(),
+            *(mRegisterTuple[RegisterReference::EOutput]));
+    oss << endl << "Input Register: " << endl;
+    p.print(oss, getInputRegisterDescriptor(), 
+            *(mRegisterTuple[RegisterReference::EInput]));
+    oss << endl << "Status Register: " << endl;
+    p.print(oss, getStatusRegisterDescriptor(), 
+            *(mRegisterTuple[RegisterReference::EStatus]));
+    oss << endl;
+    forsomereasonthisisneeded = oss.str();
+    FENNEL_TRACE(TRACE_FINER, forsomereasonthisisneeded);
+#endif
 }
 
 string

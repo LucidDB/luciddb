@@ -25,6 +25,7 @@ package net.sf.saffron.sql;
 import net.sf.saffron.util.Util;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 
 /**
@@ -59,13 +60,20 @@ public abstract class SqlUtil
     {
         if (node1 == null) {
             return node2;
-        } else if (node1.isA(SqlKind.And)) {
-            ((SqlCall) node1).addOperand(node2);
-            return node1;
-        } else {
-            return SqlOperatorTable.instance().andOperator.createCall(
-                new SqlNode [] { node1,node2 });
         }
+        ArrayList list = new ArrayList();
+        if (node1.isA(SqlKind.And)) {
+            list.addAll(Arrays.asList(((SqlCall) node1).operands));
+        } else {
+            list.add(node1);
+        }
+        if (node2.isA(SqlKind.And)) {
+            list.addAll(Arrays.asList(((SqlCall) node2).operands));
+        } else {
+            list.add(node2);
+        }
+        return SqlOperatorTable.std().andOperator.createCall(
+                (SqlNode []) list.toArray(new SqlNode[list.size()]));
     }
 
     static ArrayList flatten(SqlNode node)

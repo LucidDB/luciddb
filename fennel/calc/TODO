@@ -63,49 +63,33 @@ non-pointer types, and getP/getV and putP/putV should be merged together?
 Consider supporting assert level checking of Input TupleDescriptor derived
 from assemble() vs. what the XO receives from upstream.
 
-Update ExtendedInstruction to check datatypes against the
-RegisterReference type. Should allow extra assert() level testing
-of type-correctness.
-
-If JS's assertion that binds() are not required between exec() calls is true,
-then Input and Output tuples could have a CachePtrToPtr property defined
-on them. Cache a ptr to pData and the various length fields.
+If JS's assertion that binds() are not required between exec() calls is
+true, then Input and Output tuples could have a CachePtrToPtr property
+defined on them. Cache a ptr to pData and the various length fields. Note
+that this may not be true if Output tuple is by reference only. Needs
+some investigation post-0.5 integration.
 
 Update spec to reflect PointerSizeT and PointerOperandT being a unit32_t
 for the moment.
 
-Verify that all SqlString fuctions can take the same string as both input and
-output. Or, for those like, perhaps, ToUpper, document the exceptions
-
 Rename PointerPutSize to PointerPutLength
-
-Add SqlString "identity" functions: create a zero length string.
 
 Add ; after T in BNF: T <terminator> in spec.
 
 Consider templating RegisterReference accessor functions on mProp flags
 to avoid the big if in each of them.
 
-Appears that ExtendedInstruction0 does not work -- not possible to have an
-extended instruction with no arguments. Probably OK, as the application
-would be what, exactly?
 
-SqlString throws exceptions, but ExtString.cpp doesn't set the result to NULL.
-ExtString must catch the exceptions and do the right thing.
-
-String instruction area needs some thought on how padding character will
-be defined or defaulted.
-
-Endian issues are handled crudely, at best, in SqlSTring.* and the ICU 
-interface in general. There may be issues when we start importing strings
-over the network that have different endianness. No attempts are made to
-deal with byte-order marks at this point.
-
-Need to finish unit test for UCS2 string trim.
+Update spec to new outputRegisterByReference mode. Add REF
+instruction. Update programming conventions.
 
 ====================================================
 Extended Instructions & Conversions Major Todo Items
 ====================================================
+
+Update ExtendedInstruction to check datatypes against the
+RegisterReference type. Should allow extra assert() level testing
+of type-correctness.
 
 Consider wrapping all EIs in NULL semantic code. (if op1 or op2 is null,
 result tonull, etc.) in ExtendedInstruction.h, so that each EI doesn't
@@ -115,4 +99,31 @@ have to do the rote work.
 Extended Instructions & Conversions Cleanup Items
 =================================================
 
+Appears that ExtendedInstruction0 does not work -- not possible to have an
+extended instruction with no arguments. Probably OK, as the application
+would be what, exactly?
+
+Endian issues are handled crudely, at best, in SqlString.* and the ICU 
+interface in general. There may be issues when we start importing strings
+over the network that have different endianness. No attempts are made to
+deal with byte-order marks at this point.
+
+The non-ICU UCS2 code in SqlString.h assumed potentially unaligned
+strings. Strings will now be aligned by the underlying tuple. Therefore
+places where two chars are used to manipulate strings (e.g. search for
+LITTLEENDIAN or byte1, could instead be switched over to use a short
+instead -- or just tossed in favor of a direct C-api call to ICU.
+
+Tuples need to be updated to force strings to be short-aligned.
+
+String instruction area needs some thought on how padding character will
+be defined or defaulted.
+
+SqlString throws exceptions, but ExtString.cpp doesn't set the result to NULL.
+ExtString must catch the exceptions and do the right thing.
+
+Add SqlString "identity" functions: create a zero length string.
+
+Verify that all SqlString fuctions can take the same string as both input and
+output. Or, for those like, perhaps, ToUpper, document the exceptions
 

@@ -20,25 +20,19 @@
 
 package net.sf.farrago.query;
 
-import net.sf.farrago.catalog.*;
-import net.sf.farrago.fem.fennel.*;
-
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.core.*;
-
-import openjava.ptree.*;
-
+import net.sf.farrago.fem.fennel.FemExecutionStreamDef;
+import net.sf.saffron.rel.RelFieldCollation;
+import net.sf.saffron.rel.SaffronRel;
 
 /**
- * FennelRel defines the interface which must be implemented by any SaffronRel
- * corresponding to a C++ physical implementation conforming to
- * the fennel::ExecutionStream interface.
+ * FennelRel defines the interface which must be implemented by any
+ * {@link SaffronRel} corresponding to a C++ physical implementation conforming
+ * to the fennel::ExecutionStream interface.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public interface FennelRel
+public interface FennelRel extends SaffronRel
 {
     //~ Methods ---------------------------------------------------------------
 
@@ -53,14 +47,24 @@ public interface FennelRel
     public FarragoPreparingStmt getPreparingStmt();
 
     /**
-     * Convert this relational expression to FemExecutionStreamDef form.
+     * Converts this relational expression to {@link FemExecutionStreamDef}
+     * form. In the process, the relational expression will almost certainly
+     * call {@link FennelRelImplementor#visitFennelChild} on each of its
+     * children.
      *
      * @param implementor for generating Java code
      *
      * @return generated FemExecutionStreamDef
      */
     public FemExecutionStreamDef toStreamDef(
-        FarragoRelImplementor implementor);
+        FennelRelImplementor implementor);
+
+    /**
+     * Visits this relational expression as part of the implementation
+     * process. Fennel relational expressions are implemented in a two-phase
+     * process: first call this method, then call {@link #toStreamDef}.
+     */
+    Object implementFennelChild(FennelRelImplementor implementor);
 
     /**
      * .
@@ -69,6 +73,7 @@ public interface FennelRel
      * the output is not guaranteed to be in any particular order
      */
     public RelFieldCollation [] getCollations();
+
 }
 
 

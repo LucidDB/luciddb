@@ -198,6 +198,12 @@ public class SqlKind extends EnumeratedValues.BasicValue
     /** ROW function */
     public static final int RowORDINAL = 50;
     public static final SqlKind Row = new SqlKind("Row", RowORDINAL);
+    /** CAST  */
+    public static final int CastORDINAL = 51;
+    public static final SqlKind Cast = new SqlKind("CAST", CastORDINAL);
+    /** TRIM */
+    public static final int TrimORDINAL = 52;
+    public static final SqlKind Trim = new SqlKind("TRIM", TrimORDINAL);
 
     // aggregates of other kinds
 
@@ -245,9 +251,10 @@ public class SqlKind extends EnumeratedValues.BasicValue
             new SqlKind[] {
                 Other,Select,Join,Identifier,Literal,Times,Divide,Plus,
                 Minus,In,LessThan,GreaterThan,LessThanOrEqual,
-                GreaterThanOrEqual,Equals,NotEquals,Or,And,Dot,Union,
+                GreaterThanOrEqual,Equals,NotEquals,Between,NotBetween,Case,
+                Or,And,Dot,Union,
                 Except,Intersect,As,Not,PlusPrefix,MinusPrefix,Exists,
-                Values,ExplicitTable,Descending,IsTrue,IsFalse,IsNull,Row,
+                Values,ExplicitTable,Descending,IsTrue,IsFalse,IsNull,Row,Cast,
                 Explain,Insert,Update,Delete,
             });
 
@@ -270,9 +277,11 @@ public class SqlKind extends EnumeratedValues.BasicValue
             return this == Insert || this == Delete || this == Update;
         case ExpressionORDINAL:
             return !(this == As || this == Descending || this == Select
-                    || this == Join || this == Function);
+                    || this == Join || this == Function || this == Cast
+                    ||  this == Trim);
         case FunctionORDINAL:
-            return this == Function || this == Row;
+            return this == Function || this == Row || this == Trim ||
+                    this == Cast;
         default:
             return this == kind;
         }

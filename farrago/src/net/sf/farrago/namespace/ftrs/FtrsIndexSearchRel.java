@@ -139,7 +139,7 @@ class FtrsIndexSearchRel extends FennelPullSingleRel
                         int i = inputJoinProj[index].intValue();
                         return childFields[i].getName();
                     }
-                        
+
                     public SaffronType getFieldType(int index)
                     {
                         int i = inputJoinProj[index].intValue();
@@ -148,13 +148,13 @@ class FtrsIndexSearchRel extends FennelPullSingleRel
                 });
 
             SaffronType rightType = scanRel.getRowType();
-            
+
             // for outer join, have to make left side nullable
             if (isOuter) {
                 rightType = getFarragoTypeFactory().createTypeWithNullability(
                     rightType,true);
             }
-            
+
             return getCluster().typeFactory.createJoinType(
                 new SaffronType[] { leftType, rightType });
         } else {
@@ -167,19 +167,19 @@ class FtrsIndexSearchRel extends FennelPullSingleRel
     public void explain(PlanWriter pw)
     {
         Object projection,inputKeyProjObj,inputJoinProjObj;
-        
+
         if (scanRel.projectedColumns == null) {
             projection = "*";
         } else {
             projection = Arrays.asList(scanRel.projectedColumns);
         }
-        
+
         if (inputKeyProj == null) {
             inputKeyProjObj = "*";
         } else {
             inputKeyProjObj = Arrays.asList(inputKeyProj);
         }
-        
+
         if (inputJoinProj == null) {
             inputJoinProjObj = Collections.EMPTY_LIST;
         } else {
@@ -203,7 +203,7 @@ class FtrsIndexSearchRel extends FennelPullSingleRel
     }
 
     // implement FennelRel
-    public FemExecutionStreamDef toStreamDef(FarragoRelImplementor implementor)
+    public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
         FarragoCatalog catalog = getPreparingStmt().getCatalog();
 
@@ -222,7 +222,7 @@ class FtrsIndexSearchRel extends FennelPullSingleRel
                 FennelRelUtil.createTupleProjection(catalog,inputJoinProj));
         }
         searchStream.getInput().add(
-            implementor.implementFennelRel(child));
+            implementor.visitFennelChild((FennelRel) child));
 
         return searchStream;
     }

@@ -22,18 +22,118 @@
 package net.sf.saffron.rex;
 
 import net.sf.saffron.core.SaffronType;
-import net.sf.saffron.sql.SqlLiteral;
-import net.sf.saffron.sql.SqlFunctionTable;
+import net.sf.saffron.sql.SqlSymbol;
+import net.sf.saffron.sql.type.SqlTypeName;
+import net.sf.saffron.util.BitString;
+import net.sf.saffron.util.EnumeratedValues;
+import net.sf.saffron.util.NlsString;
+import net.sf.saffron.util.Util;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.math.BigInteger;
+import java.math.BigDecimal;
+import java.util.Calendar;
 
 /**
  * Constant value in a row-expression.
  *
  * <p>There are several methods for creating literals in {@link RexBuilder}:
  * {@link RexBuilder#makeLiteral(boolean)} and so forth.</p>
+ *
+ *
+ * <p>How is the value stored? In that respect, the class is somewhat of a
+ * black box. There is a {@link #getValue} method which returns the value as
+ * an object, but the type of that value is implementation detail, and it is
+ * best that your code does not depend upon that knowledge. It is better to
+ * use task-oriented methods such as {@link #getValue2} and
+ * {@link #toJavaString}.</p>
+ *
+ * <p>The allowable types and combinations are:
+ * <table>
+ * <tr>
+ *   <th>TypeName</th>
+ *   <th>Meaing</th>
+ *   <th>Value type</th>
+ * </tr>
+ * <tr>
+ *   <td>{@link SqlTypeName#Null}</td>
+ *   <td>The null value. It has its own special type.</td>
+ *   <td>null</td>
+ * </tr>
+ * <tr>
+ *   <td>{@link SqlTypeName#Boolean}</td>
+ *   <td>Boolean, namely <code>TRUE</code>,
+ *       <code>FALSE</code> or
+ *       <code>UNKNOWN</code>.</td>
+ *   <td>{@link Boolean}, or null represents the UNKNOWN value</td>
+ * </tr>
+ * <tr>
+ *   <td>{@link SqlTypeName#Decimal}</td>
+ *   <td>Exact number, for example <code>0</code>,
+ *       <code>-.5</code>,
+ *       <code>12345</code>.</td>
+ *   <td>{@link BigDecimal}</td>
+ * </tr>
+ * <tr>
+ *   <td>{@link SqlTypeName#Double}</td>
+ *   <td>Approximate number, for example <code>6.023E-23</code>.</td>
+ *   <td>{@link BigDecimal}</td>
+ * </tr>
+ * <tr>
+ *   <td>{@link SqlTypeName#Date}</td>
+ *   <td>Date, for example <code>DATE '1969-04'29'</code></td>
+ *   <td>{@link Calendar}</td>
+ * </tr>
+ * <tr>
+ *   <td>{@link SqlTypeName#Time}</td>
+ *   <td>Time, for example <code>TIME '18:37:42.567'</code></td>
+ *   <td>{@link Calendar}</td>
+ * </tr>
+ * <tr>
+ *   <td>{@link SqlTypeName#Timestamp}</td>
+ *   <td>Timestamp, for example
+ *       <code>TIMESTAMP '1969-04-29 18:37:42.567'</code></td>
+ *   <td>{@link Calendar}</td>
+ * </tr>
+ * <tr>
+ *   <td>{@link SqlTypeName#Char}</td>
+ *   <td>Character constant, for example
+ *       <code>'Hello, world!'</code>,
+ *       <code>''</code>,
+ *       <code>_N'Bonjour'</code>,
+ *       <code>_ISO-8859-1'It''s superman!' COLLATE SHIFT_JIS$ja_JP$2</code>.
+ *       These are always CHAR, never VARCHAR.</td>
+ *   <td>{@link NlsString}</td>
+ * </tr>
+ * <tr>
+ *   <td>{@link SqlTypeName#Bit}</td>
+ *   <td>Bit string, for example <code>B'101011'</code>,
+ *       or a hex string of odd length, for example <code>X'ABC'</code>.
+ *       <b>Note that this differs from {@link net.sf.saffron.sql.SqlLiteral},
+ *       where a hex string of odd length is stored as a
+ *       {@link SqlTypeName#Binary}.</b></td>
+ *   <td>{@link BitString}</td>
+ * </tr>
+ * <tr>
+ *   <td>{@link SqlTypeName#Binary}</td>
+ *   <td>Binary constant, for example <code>X'7F34'</code>. (The number of
+ *       hexits must be even; see above.)
+ *       These constants are always BINARY, never VARBINARY.</td>
+ *   <td><code>byte[]</code> or {@link BitString}</td>
+ * </tr>
+ * <tr>
+ *   <td>{@link SqlTypeName#Symbol}</td>
+ *   <td>A symbol is a special type used to make parsing easier; it is not
+ *       part of the SQL standard, and is not exposed to end-users.
+ *       It is used to hold a flag, such as the LEADING flag in a call to the
+ *       function <code>TRIM([LEADING|TRAILING|BOTH] chars FROM string)</code>.
+ *   </td>
+ *   <td><{@link SqlSymbol} (which conveniently both extends
+ *       {@link net.sf.saffron.sql.SqlLiteral}
+ *       and also implements {@link EnumeratedValues}), or a class derived from
+ *       it.</td>
+ * </tr>
+ * </table>
  *
  * @author jhyde
  * @since Nov 24, 2003
@@ -45,78 +145,180 @@ public class RexLiteral extends RexNode
 
     //~ Instance fields -------------------------------------------------------
 
-    public final Object value;
-    private final SaffronType type;
+    /**
+     * The value of this literal. Must be consistent with its type, as per
+     * {@link #valueMatchesType}. For example, you can't store an
+     * {@link Integer} value here just because you feel like it -- all numbers
+     * are represented by a {@link BigDecimal}. But since this field is
+     * private, it doesn't really matter how the values are stored.
+     */
+    private final Object _value;
+    /**
+     * The real type of this literal, as reported by {@link #getType}.
+     */
+    private final SaffronType _type;
+    /**
+     * An indication of the broad type of this literal -- even if its type
+     * isn't a SQL type. Sometimes this will be different than the SQL type;
+     * for example, all exact numbers, including integers have typeName
+     * {@link SqlTypeName#Decimal}. See {@link #valueMatchesType} for the
+     * definitive story.
+     */
+    public final SqlTypeName _typeName;
 
     //~ Constructors ----------------------------------------------------------
 
     /**
      * Creates a <code>RexLiteral</code>.
      *
-     * @pre value instanceof String ||
-     *   value instanceof BigInteger ||
-     *   value instanceof Boolean ||
-     *   value instanceof Double ||
-     *   value instanceof byte[] ||
-     *   value instanceof SqlLiteral.BitString ||
-     *   value instanceof SqlLiteral.StringLiteral ||
-     *   value instanceof SqlFunctionTable.FunctionFlagType ||
-     *   value == null
+     * @pre type != null
+     * @pre valueMatchesType(value,typeName)
+     * @pre (value == null) == type.isNullable()
      */
-    RexLiteral(Object value,SaffronType type)
+    RexLiteral(Object value, SaffronType type, SqlTypeName typeName)
     {
-        assert supportedType(value) :
-                value;
-        assert type != null;
-        this.value = value;
-        this.type = type;
-        this.digest = format(value, type);
+        Util.pre(type != null, "_type != null");
+        Util.pre(valueMatchesType(value,typeName),
+                "valueMatchesType(value,typeName)");
+        Util.pre((value == null) == type.isNullable(),
+                "(value == null) == type.isNullable()");
+        this._value = value;
+        this._type = type;
+        this._typeName = typeName;
+        this.digest = toJavaString(value, typeName);
     }
 
     /**
-     * Returns true if this literal is a supported type.
-     *
-     * @post return true if value is
-     *   instanceof String ||
-     *    instanceof BigInteger ||
-     *    instanceof Boolean ||
-     *    value instanceof Double ||
-     *    value instanceof byte[] ||
-     *    value instanceof SqlLiteral.BitString ||
-     *    value instanceof SqlLiteral.StringLiteral ||
-     *    value instanceof SqlFunctionTable.FunctionFlagType ||
-     *    value instanceof java.sql.Date ||
-     *    value instanceof java.sql.Time ||
-     *    value instanceof java.sql.Timestamp ||
-     *    value == null
+     * Whether value is appropriate for its type. (We have rules about these
+     * things.)
      */
-    private boolean supportedType(Object value) {
-        return value instanceof String ||
-                value instanceof BigInteger ||
-                value instanceof Boolean ||
-                value instanceof Double ||
-                value instanceof byte[] ||
-                value instanceof SqlLiteral.BitString ||
-                value instanceof SqlLiteral.StringLiteral ||
-                value instanceof SqlFunctionTable.FunctionFlagType ||
-                value instanceof java.sql.Date ||
-                value instanceof java.sql.Time ||
-                value instanceof java.sql.Timestamp ||
-                value == null;
+    public static boolean valueMatchesType(Object value,
+            SqlTypeName typeName) {
+        switch (typeName.ordinal_) {
+        case SqlTypeName.Boolean_ordinal:
+            // Unlike SqlLiteral, we do not allow boolean null.
+            return value instanceof Boolean;
+
+        case SqlTypeName.Null_ordinal:
+            return value == null;
+
+        case SqlTypeName.Decimal_ordinal:
+        case SqlTypeName.Double_ordinal:
+            return value instanceof BigDecimal;
+
+        case SqlTypeName.Date_ordinal:
+        case SqlTypeName.Time_ordinal:
+        case SqlTypeName.Timestamp_ordinal:
+            return value instanceof Calendar;
+
+        case SqlTypeName.Binary_ordinal:
+            return value instanceof byte[];
+
+        case SqlTypeName.Bit_ordinal:
+            return value instanceof BitString;
+
+        case SqlTypeName.Char_ordinal:
+            return value instanceof NlsString;
+
+        case SqlTypeName.Symbol_ordinal:
+            // Unlike SqlLiteral, we DO allow a String value.
+            return value instanceof EnumeratedValues.Value ||
+                    value instanceof String;
+
+        case SqlTypeName.Integer_ordinal: // not allowed -- use Decimal
+        case SqlTypeName.Varchar_ordinal: // not allowed -- use Char
+        case SqlTypeName.Varbinary_ordinal: // not allowed -- use Binary
+        default:
+            throw typeName.unexpected();
+        }
     }
 
-    private static String format(Object value,SaffronType type) {
+    private static String toJavaString(Object value, SqlTypeName typeName) {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
-        type.format(value, pw);
+        printAsJava(value, pw, typeName, false);
         pw.flush();
         return sw.toString();
+    }
+
+    /**
+     * Prints the value this literal as a Java string constant.
+     */
+    public void printAsJava(PrintWriter pw) {
+        printAsJava(_value, pw, _typeName, true);
+    }
+
+    /**
+     * Prints a value as a Java string. The value must be consistent with
+     * the type, as per {@link #valueMatchesType}.
+     *
+     * <p>Typical return values:<ul>
+     * <li>true</li>
+     * <li>null</li>
+     * <li>"Hello, world!"</li>
+     * <li>1.25</li>
+     * <li>1234ABCD</li>
+     * </ul>
+     *
+     * @param value Value
+     * @param pw Writer to write to
+     * @param typeName Type family
+     */
+    private static void printAsJava(Object value, PrintWriter pw,
+            SqlTypeName typeName, boolean java) {
+        switch (typeName.ordinal_) {
+        case SqlTypeName.Char_ordinal:
+            NlsString nlsString = (NlsString) value;
+            if (java) {
+                Util.printJavaString(pw, nlsString.getValue(), true);
+            } else {
+                pw.print(nlsString.toString());
+            }
+            break;
+        case SqlTypeName.Boolean_ordinal:
+            assert value instanceof Boolean;
+            pw.print(((Boolean) value).booleanValue() ? "true" : "false");
+            break;
+        case SqlTypeName.Decimal_ordinal:
+        case SqlTypeName.Double_ordinal:
+            assert value instanceof BigDecimal;
+            pw.print(value.toString());
+            break;
+        case SqlTypeName.Binary_ordinal:
+            assert value instanceof byte[];
+            pw.print(Util.toStringFromByteArray((byte[]) value, 16));
+            break;
+        case SqlTypeName.Bit_ordinal:
+            assert value instanceof BitString;
+            pw.print(value.toString());
+            break;
+        case SqlTypeName.Null_ordinal:
+            assert value == null;
+            pw.print("null");
+            break;
+        case SqlTypeName.Symbol_ordinal:
+            assert value instanceof SqlSymbol;
+            pw.print("FLAG(");
+            pw.print(value);
+            pw.print(")");
+            break;
+        case SqlTypeName.Date_ordinal:
+        case SqlTypeName.Time_ordinal:
+        case SqlTypeName.Timestamp_ordinal:
+            assert value instanceof Calendar;
+            pw.print(value.toString());
+            break;
+        default:
+            Util.pre(valueMatchesType(value, typeName),
+                    "valueMatchesType(value, typeName)");
+            throw Util.needToImplement(typeName);
+        }
     }
 
     //~ Methods ---------------------------------------------------------------
 
     public SaffronType getType() {
-        return type;
+        return _type;
     }
 
     public RexKind getKind() {
@@ -124,58 +326,75 @@ public class RexLiteral extends RexNode
     }
 
     /**
-     * Returns the value of this literal if its a supported type.
+     * Returns the value of this literal.
      *
-     * @post return instanceof String ||
-     *   return instanceof BigInteger ||
-     *   return instanceof Boolean ||
-     *   return value instanceof Double ||
-     *   return value instanceof byte[] ||
-     *   return value instanceof SqlLiteral.BitString ||
-     *   return value instanceof SqlLiteral.StringLiteral ||
-     *   return value instanceof SqlFunctionTable.FunctionFlagType ||
-     *   return value instance
-     *   return == null
+     * @post valueMatchesType(return, _typeName)
      */
     public Object getValue()
     {
-        assert supportedType(value) : value;
-        return value;
+        assert valueMatchesType(_value, _typeName) : _value;
+        return _value;
+    }
+
+    /**
+     * Returns the value of this literal, in the form that the calculator
+     * program builder wants it.
+     */
+    public Object getValue2()
+    {
+        switch (_typeName.ordinal_) {
+        case SqlTypeName.Bit_ordinal:
+            return ((BitString) _value).getAsByteArray();
+        case SqlTypeName.Char_ordinal:
+            return ((NlsString) _value).getValue();
+        default:
+            return _value;
+        }
     }
 
     public static boolean booleanValue(RexNode node)
     {
-        return ((Boolean) ((RexLiteral) node).value).booleanValue();
+        return ((Boolean) ((RexLiteral) node)._value).booleanValue();
     }
 
     public boolean equals(Object obj)
     {
         return (obj instanceof RexLiteral)
-            && equals(((RexLiteral) obj).value,value);
+            && equals(((RexLiteral) obj)._value,_value);
     }
 
     public int hashCode()
     {
-        return (value == null) ? 0 : value.hashCode();
+        return (_value == null) ? 0 : _value.hashCode();
     }
 
     public static int intValue(RexNode node)
     {
-        return ((Integer) ((RexLiteral) node).value).intValue();
+        return ((Number) ((RexLiteral) node)._value).intValue();
+    }
+
+    public static String stringValue(RexNode node)
+    {
+        return ((NlsString) ((RexLiteral) node)._value).getValue();
     }
 
     public static boolean isNullLiteral(RexNode node) {
-        return node instanceof RexLiteral && ((RexLiteral) node).getValue()==null;
+        return node instanceof RexLiteral &&
+                ((RexLiteral) node)._value == null;
     }
 
     public Object clone()
     {
-        return new RexLiteral(value,type);
+        return new RexLiteral(_value, _type, _typeName);
     }
 
     private static boolean equals(Object o1,Object o2)
     {
         return (o1 == null) ? (o2 == null) : o1.equals(o2);
+    }
+
+    public void accept(RexVisitor visitor) {
+        visitor.visitLiteral(this);
     }
 }
 

@@ -105,6 +105,7 @@ public class FarragoPlanner extends VolcanoPlanner
         if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_FENNEL)) {
             // use only Fennel for calculating expressions
             addRule(FennelCalcRule.instance);
+
         } else if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_JAVA)) {
             // use only Java code generation for calculating expressions
             addRule(OJPlannerFactory.IterCalcRule.instance);

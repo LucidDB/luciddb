@@ -87,6 +87,11 @@ void ConsumerToProducerProvisionAdapter::closeImpl()
     SingleInputTupleStream::closeImpl();
 }
 
+void *ConsumerToProducerProvisionAdapter::getImpl()
+{
+    return pInputStream->getImpl();
+}
+
 FENNEL_END_CPPFILE("$Id$");
 
 // End ConsumerToProducerProvisionAdapter.cpp

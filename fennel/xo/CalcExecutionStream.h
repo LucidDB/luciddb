@@ -51,7 +51,7 @@ struct CalcExecutionStreamParams
  * boolean filter expression, an output tuple is computed based on projection
  * expressions.
  */
-class CalcExecutionStream
+class CalcExecutionStream : virtual public TraceSource
 {
 protected:
     /**
@@ -119,7 +119,9 @@ protected:
     
     void prepare(
         CalcExecutionStreamParams const &params,
-        TupleDescriptor const &inputDesc);
+        TupleDescriptor const &inputDesc,
+        TupleDescriptor const &paramOutputDesc);
+    
     TupleDescriptor const &getOutputDesc() const;
     void closeImpl();
 };

@@ -74,6 +74,27 @@ public class OJTypeFactoryImpl extends SaffronTypeFactoryImpl
         return toType(OJClass.forClass(clazz));
     }
 
+    protected OJClass createOJClassForRecordType(
+        OJClass declarer,RecordType recordType)
+    {
+        // convert to synthetic project type
+        final SaffronField [] fields = recordType.getFields();
+        final String [] fieldNames = new String[fields.length];
+        final OJClass [] fieldClasses = new OJClass[fields.length];
+        for (int i = 0; i < fields.length; i++) {
+            SaffronField field = fields[i];
+            // TODO jvs 26-May-2004: mangle names to match Java rules; but need
+            // to match this wherever FieldAccess objects are constructed
+            fieldNames[i] = field.getName();
+            final SaffronType fieldType = field.getType();
+            fieldClasses[i] = OJUtil.typeToOJClass(declarer,fieldType);
+        }
+        return ClassMap.instance().createProject(
+            declarer,
+            fieldClasses,
+            fieldNames);
+    }
+
     public OJClass toOJClass(OJClass declarer,SaffronType type)
     {
         if (type instanceof OJScalarType) {
@@ -82,23 +103,9 @@ public class OJTypeFactoryImpl extends SaffronTypeFactoryImpl
             JavaType scalarType = (JavaType) type;
             return OJClass.forClass(scalarType.clazz);
         } else if (type instanceof RecordType) {
-            // convert to synthetic project type
-            RecordType recordType = (SaffronTypeFactoryImpl.RecordType) type;
-            final SaffronField [] fields = recordType.getFields();
-            final String [] fieldNames = new String[fields.length];
-            final OJClass [] fieldClasses = new OJClass[fields.length];
-            for (int i = 0; i < fields.length; i++) {
-                SaffronField field = fields[i];
-                fieldNames[i] = field.getName();
-                final SaffronType fieldType = field.getType();
-                fieldClasses[i] = OJUtil.typeToOJClass(declarer,fieldType);
-            }
-            final OJClass projectClass =
-                ClassMap.instance().createProject(
-                    declarer,
-                    fieldClasses,
-                    fieldNames);
-
+            RecordType recordType = (RecordType) type;
+            OJClass projectClass = createOJClassForRecordType(
+                declarer,recordType);
             // store reverse mapping, so we will be able to convert
             // "projectClass" back to "type"
             mapOJClassToType.put(projectClass,type);
@@ -148,10 +155,10 @@ public class OJTypeFactoryImpl extends SaffronTypeFactoryImpl
 
     /**
      * Type based upon an {@link OJClass}.
-     * 
+     *
      * <p>
      * Use this class only if the class is a 'pure' OJClass:
-     * 
+     *
      * <ul>
      * <li>
      * If the {@link OJClass} is based upon a Java class, call

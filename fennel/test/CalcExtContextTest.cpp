@@ -44,6 +44,9 @@ class CalcExtContextTest : virtual public TestBase, public TraceSource
     void setupExtendedTestInstructions();
     void testCalcExtContext();
     void testCalcExtContextPost();
+
+    void printOutput(TupleData const & tup,
+                     Calculator const & calc);
     
 public:
     explicit CalcExtContextTest()
@@ -58,6 +61,18 @@ public:
     {
     }
 };
+
+// for nitty-gritty debugging. sadly, doesn't use BOOST_MESSAGE.
+void
+CalcExtContextTest::printOutput(TupleData const & tup,
+                                Calculator const & calc)
+{
+#if 0
+    TuplePrinter tuplePrinter;
+    tuplePrinter.print(cout, calc.getOutputRegisterDescriptor(), tup);
+    cout << endl;
+#endif
+}
 
 // Simple context class for testing purposes. Not thread safe.
 class EICtx : public ExtendedInstructionContext
@@ -215,21 +230,34 @@ CalcExtContextTest::setupExtendedTestInstructions()
 void
 CalcExtContextTest::testCalcExtContext()
 {
-    CalcInit::instance();
     // add in some extended instructions after init
     setupExtendedTestInstructions();
 
     ostringstream pg("");
 
     pg << "O bo,bo,bo,bo,bo,bo;" << endl;
+    pg << "L bo,bo,bo,bo,bo,bo;" << endl;
+    pg << "C bo;" << endl;
+    pg << "V 0;" << endl;
     pg << "T;" << endl;
-    pg << "CALL 'ctxInst1(O1);" << endl;
-    pg << "CALL 'ctxInst2(O2,O0);" << endl;
-    pg << "CALL 'ctxInst3(O3,O0,O0);" << endl;
-    pg << "CALL 'ctxInst4(O4,O0,O0,O0);" << endl;
-    pg << "CALL 'ctxInst5(O5,O0,O0,O0,O0);" << endl;
+    pg << "MOVE L1, C0;" << endl;
+    pg << "MOVE L2, C0;" << endl;
+    pg << "MOVE L3, C0;" << endl;
+    pg << "MOVE L4, C0;" << endl;
+    pg << "MOVE L5, C0;" << endl;
+    pg << "CALL 'ctxInst1(L1);" << endl;
+    pg << "CALL 'ctxInst2(L2,L0);" << endl;
+    pg << "CALL 'ctxInst3(L3,L0,L0);" << endl;
+    pg << "CALL 'ctxInst4(L4,L0,L0,L0);" << endl;
+    pg << "CALL 'ctxInst5(L5,L0,L0,L0,L0);" << endl;
+    pg << "REF O0, L0;" << endl;
+    pg << "REF O1, L1;" << endl;
+    pg << "REF O2, L2;" << endl;
+    pg << "REF O3, L3;" << endl;
+    pg << "REF O4, L4;" << endl;
+    pg << "REF O5, L5;" << endl;
 
-    BOOST_MESSAGE(pg.str());
+    //    BOOST_MESSAGE(pg.str());
     
     Calculator calc;
     
@@ -247,12 +275,7 @@ CalcExtContextTest::testCalcExtContext()
 
     calc.bind(&inTuple, &outTuple);
     calc.exec();
-
-#if 0
-    TuplePrinter tuplePrinter;
-    tuplePrinter.print(cout, calc.getOutputRegisterDescriptor(), outTuple);
-    cout << endl;
-#endif
+    printOutput(outTuple, calc);
 
     int i;
     for (i=1; i <=5; i++) {

@@ -44,6 +44,7 @@ public:
         ByteOutputStream &resultOutputStream);
     virtual BufferProvision getResultBufferProvision() const;
     virtual BufferProvision getInputBufferRequirement() const;
+    virtual void *getImpl();
 };
 
 FENNEL_END_NAMESPACE

@@ -14,6 +14,12 @@ select name from emps where lower(name) = 'wilma';
 explain plan for
 select lower(name), empid + 1, empid / 1, empid - 1, empid from sales.emps;
 
+-- dtbug#32
+explain plan for
+select 1 + 2 from values (3);
+
+select 1 + 2 from values (3);
+
 -- revert to system default calculator
 alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
 

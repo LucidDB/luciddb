@@ -167,6 +167,12 @@ public interface SaffronTypeFactory
 
         SaffronType getFieldType(int index);
     }
+    /**
+     * coerce=true implies that explicit rather than implicit cast is being
+     * done.
+     **/
+    public boolean assignableFrom(SqlTypeName to, SqlTypeName from,
+            boolean coerce);
 }
 
 

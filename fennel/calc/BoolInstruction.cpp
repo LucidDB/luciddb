@@ -88,6 +88,22 @@ BoolMove::describe(string &out, bool values) const {
 }
 
 
+const char * 
+BoolRef::longName() const
+{
+    return "BoolRef";
+}
+const char * 
+BoolRef::shortName() const
+{
+    return "REF";
+}
+void
+BoolRef::describe(string &out, bool values) const {
+    describeHelper(out, values, longName(), shortName(), mResult, mOp1, mOp2);
+}
+
+
 const char *
 BoolIs::longName() const
 {

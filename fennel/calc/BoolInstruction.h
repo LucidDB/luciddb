@@ -201,6 +201,27 @@ public:
     }
 };
 
+class BoolRef : public BoolInstruction
+{
+public:
+    explicit
+    BoolRef(RegisterRef<bool>* result,
+             RegisterRef<bool>* op1)
+        : BoolInstruction(result, op1)
+    { }
+
+    ~BoolRef() { }
+
+    const char* longName() const;
+    const char* shortName() const;
+    void describe(string& out, bool values) const;
+
+    virtual void exec(TProgramCounter& pc) const {
+        pc++;
+        mResult->refer(mOp1);
+    }
+};
+
 class BoolIs : public BoolInstruction
 {
 public:

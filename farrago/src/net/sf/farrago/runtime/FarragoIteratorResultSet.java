@@ -20,6 +20,7 @@
 package net.sf.farrago.runtime;
 
 import net.sf.farrago.util.*;
+import net.sf.farrago.trace.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.type.runtime.*;
 
@@ -40,9 +41,8 @@ import java.util.logging.*;
  */
 public class FarragoIteratorResultSet extends IteratorResultSet
 {
-    // REVIEW:  should probably trace as part of JDBC
-    private static Logger tracer =
-        TraceUtil.getClassTrace(FarragoIteratorResultSet.class);
+    private static final Logger tracer =
+        FarragoTrace.getFarragoIteratorResultSetTracer();
 
     //~ Instance fields -------------------------------------------------------
 

@@ -94,18 +94,11 @@ public class DdlSetSystemParamStmt extends DdlStmt
             }
         }
 
-        Object newValue;
-        String newValueAsString;
-        // REVIEW jvs 29-April-2004:  ugh, SqlLiteral needs a cleanup!
-        if (paramValue.getValue() instanceof SqlLiteral.StringLiteral) {
-            newValueAsString =
-                ((SqlLiteral.StringLiteral) paramValue.getValue()).getValue();
-        } else {
-            newValueAsString = paramValue.getValue().toString();
-        }
+        String newValueAsString = paramValue.toValue();
 
         // TODO:  use a generic type conversion facility.  Also, this assumes
         // parameters are never optional.
+        Object newValue;
         try {
             if (oldValue instanceof RefEnum) {
                 Method method = oldValue.getClass().getMethod(

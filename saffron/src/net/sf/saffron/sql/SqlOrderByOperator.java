@@ -22,6 +22,8 @@
 
 package net.sf.saffron.sql;
 
+import net.sf.saffron.sql.test.SqlTester;
+
 /**
  * SqlOrderByOperator is used to represent an ORDER BY on a query
  * other than a SELECT (e.g. VALUES or UNION).  It is a purely syntactic
@@ -37,7 +39,7 @@ public class SqlOrderByOperator extends SqlSpecialOperator
     public static final int QUERY_OPERAND = 0;
     public static final int ORDER_OPERAND = 1;
     
-    SqlOrderByOperator()
+    public SqlOrderByOperator()
     {
         // NOTE:  make precedence lower then SELECT to avoid extra parens
         super("ORDER BY",SqlKind.OrderBy,0);
@@ -48,7 +50,7 @@ public class SqlOrderByOperator extends SqlSpecialOperator
         return Syntax.Postfix;
     }
 
-    void unparse(
+    public void unparse(
         SqlWriter writer,
         SqlNode [] operands,
         int leftPrec,
@@ -60,6 +62,10 @@ public class SqlOrderByOperator extends SqlSpecialOperator
         writer.print(name);
         writer.print(' ');
         operands[ORDER_OPERAND].unparse(writer,0,0);
+    }
+
+    public void test(SqlTester tester) {
+        /* empty implementation */
     }
 }
 

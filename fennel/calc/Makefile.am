@@ -17,8 +17,10 @@ CalcLexer.lpp \
 CalcAssembler.cpp \
 CalcInit.cpp \
 SqlString.cpp \
+SqlRegExp.cpp \
 SqlStringAscii.cpp \
 ExtString.cpp \
+ExtRegExp.cpp \
 StringToHex.cpp \
 ExtMath.cpp
 

@@ -22,7 +22,6 @@ package net.sf.farrago.query;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
-import net.sf.farrago.fennel.*;
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.type.runtime.*;
@@ -30,6 +29,8 @@ import net.sf.farrago.util.*;
 
 import net.sf.saffron.core.*;
 import net.sf.saffron.oj.util.*;
+import net.sf.saffron.oj.rel.JavaRelImplementor;
+import net.sf.saffron.oj.rel.JavaRel;
 import net.sf.saffron.opt.*;
 import net.sf.saffron.rel.*;
 import net.sf.saffron.rel.convert.*;
@@ -99,7 +100,7 @@ public class IteratorToFennelConverter
 
     public static Expression generateTupleWriter(
         FarragoPreparingStmt stmt,
-        RelImplementor implementor,
+        JavaRelImplementor implementor,
         SaffronType rowType)
     {
         OJClass ojClass = OJUtil.typeToOJClass(rowType);
@@ -156,15 +157,15 @@ public class IteratorToFennelConverter
             SaffronField field = fields[i];
             FarragoAtomicType type = (FarragoAtomicType) field.getType();
             Expression fieldExp = new FieldAccess(varTuple,field.getName());
-            if (type instanceof FarragoPrimitiveType) {
+            if (type.hasClassForPrimitive()) {
                 Class primitiveClass =
-                    ((FarragoPrimitiveType) type).getClassForPrimitive();
+                    type.getClassForPrimitive();
                 Method method =
                     ReflectUtil.getByteBufferWriteMethod(primitiveClass);
                 String byteBufferAccessorName = method.getName();
                 // this field is marshalled to a fixed offset relative
                 // to the sliceBuffer start
-                if (attrAccessor.getNullBitIndex() != -1) {
+                if (type.requiresValueAccess()) {
                     // extra dereference for NullablePrimitives
                     fieldExp = new FieldAccess(
                         fieldExp,NullablePrimitive.VALUE_FIELD_NAME);
@@ -278,12 +279,13 @@ public class IteratorToFennelConverter
             new MemberDeclarationList(methodDecl));
     }
 
-    // implement SaffronRel
-    public Object implement(RelImplementor implementor,int ordinal)
+    // implement FennelRel
+    public Object implementFennelChild(FennelRelImplementor implementor)
     {
-        assert (ordinal == -1);
-        if (inConvention.ordinal_ != CallingConvention.ITERATOR_ORDINAL) {
-            return super.implement(implementor,ordinal);
+        if (getInputConvention().getOrdinal()
+            != CallingConvention.ITERATOR_ORDINAL)
+        {
+            throw cannotImplement();
         }
 
         if (!getPreparingStmt().getCatalog().isFennelEnabled()) {
@@ -291,15 +293,17 @@ public class IteratorToFennelConverter
         }
 
         SaffronType rowType = child.getRowType();
-        
+
+        // Cheeky! We happen to know it's a FarragoRelImplementor (for now).
+        JavaRelImplementor javaRelImplementor = (JavaRelImplementor) implementor;
         // Generate code for children, producing the iterator expression
         // whose results are to be converted.
-        Expression childExp = (Expression)
-            implementor.implementChild(this,0,child);
+        Expression childExp =
+                javaRelImplementor.visitJavaChild(this, 0, (JavaRel) child);
 
         Expression newTupleWriterExp = generateTupleWriter(
             stmt,
-            implementor,
+            javaRelImplementor,
             rowType);
 
         // and pass this to FarragoRuntimeContext.newJavaTupleStream to produce
@@ -316,16 +320,12 @@ public class IteratorToFennelConverter
     }
 
     // implement FennelRel
-    public FemExecutionStreamDef toStreamDef(FarragoRelImplementor implementor)
+    public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
         FarragoCatalog catalog = getPreparingStmt().getCatalog();
 
         FemJavaTupleStreamDef streamDef =
             catalog.newFemJavaTupleStreamDef();
-        streamDef.setTupleDesc(
-            FennelRelUtil.createTupleDescriptorFromRowType(
-                catalog,
-                child.getRowType()));
         streamDef.setStreamId(getId());
 
         // 1 scratch page needed for buffering
@@ -343,7 +343,7 @@ public class IteratorToFennelConverter
 
     /**
      * Registers this relational expression and rule(s) with the planner, as
-     * per {@link SaffronRel#register}.
+     * per {@link SaffronBaseRel#register}.
      *
      * @param planner Planner
      * @param farragoPreparingStmt Context for the preparation process

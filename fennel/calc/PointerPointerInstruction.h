@@ -197,6 +197,30 @@ public:
     }
 };
 
+template <typename PTR_TYPE>
+class PointerRef : public PointerPointerInstruction<PTR_TYPE, PTR_TYPE>
+{
+public: 
+    explicit
+    PointerRef(RegisterRef<PTR_TYPE>* result,
+                RegisterRef<PTR_TYPE>* op1,
+                StandardTypeDescriptorOrdinal pointerType)
+        : PointerPointerInstruction<PTR_TYPE, PTR_TYPE>(result, op1, pointerType)
+    { }
+    virtual 
+    ~PointerRef() { }
+
+    virtual void exec(TProgramCounter& pc) const { 
+        pc++;
+        mResult->refer(mOp1);
+    }
+    const char* longName() const { return "PointerRef"; }
+    const char* shortName() const { return "REF"; }
+    void describe(string& out, bool values) const {
+        describeHelper(out, values, longName(), shortName(), mResult, mOp1, mOp2);
+    }
+};
+
 
 template <typename PTR_TYPE>
 class PointerToNull : public PointerPointerInstruction<PTR_TYPE, PTR_TYPE>

@@ -17,6 +17,7 @@
       serverRmiRegistryPort='5433'
       serverSingleListenerPort='-1'
       calcVirtualMachine='CALCVM_JAVA'
+      javaInterpreterEnabled='true'
       >
       <FEMConfig:FarragoConfig.fennelConfig>
         <FEMConfig:FennelConfig

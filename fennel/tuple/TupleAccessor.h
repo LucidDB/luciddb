@@ -24,6 +24,7 @@
 #include "fennel/tuple/TupleFormat.h"
 
 #include <boost/dynamic_bitset.hpp>
+#include <boost/utility.hpp>
 #include <vector>
 
 FENNEL_BEGIN_NAMESPACE
@@ -41,7 +42,7 @@ class AttributeAccessor;
  * formats.  See <a href="structTupleDesign.html#TupleAccessor">the design
  * docs</a> for more details.
  */
-class TupleAccessor
+class TupleAccessor : public boost::noncopyable
 {
     /**
      * Precomputed accessors for attributes, in logical tuple order.
@@ -106,7 +107,7 @@ class TupleAccessor
     // private helpers
     void initFixedAccessors(TupleDescriptor const &,std::vector<uint> &);
     void clear();
-    
+
 public:
     typedef uint16_t StoredValueOffset;
 
@@ -203,7 +204,17 @@ public:
      *
      * @return byte count
      */
-    uint getCurrentByteCount() const;
+    inline uint getCurrentByteCount() const;
+
+    /**
+     * Determine the number of bytes stored in a tuple buffer without
+     * preparing to unmarshal it.
+     *
+     * @param pBuf tuple buffer
+     *
+     * @return byte count
+     */
+    uint getBufferByteCount(PConstBuffer pBuf) const;
 
     /**
      * Determine the number of bytes required to store a tuple without actually
@@ -310,6 +321,12 @@ public:
             pTupleBuf+iIndirectOffset);
     }
 };
+
+inline uint TupleAccessor::getCurrentByteCount() const
+{
+    assert(pTupleBuf);
+    return getBufferByteCount(pTupleBuf);
+}
 
 FENNEL_END_NAMESPACE
 

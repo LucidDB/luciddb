@@ -64,6 +64,10 @@ public class RexInputRef extends RexVariable {
     public Object clone() {
         return new RexInputRef(index,type);
     }
+
+    public void accept(RexVisitor visitor) {
+        visitor.visitInputRef(this);
+    }
 }
 
 // End RexInputRef.java

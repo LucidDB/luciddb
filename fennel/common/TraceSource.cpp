@@ -24,19 +24,36 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-TraceSource::TraceSource(TraceTarget *pTraceTargetInit,std::string nameInit)
-    : pTraceTarget(pTraceTargetInit), name(nameInit)
+TraceSource::TraceSource()
 {
-    if (isTracing()) {
-        minimumLevel = pTraceTarget->getSourceTraceLevel(name);
-    } else {
-        minimumLevel = TRACE_OFF;
-    }
+    pTraceTarget = NULL;
+}
+
+TraceSource::TraceSource(TraceTarget *pTraceTargetInit,std::string nameInit)
+{
+    pTraceTarget = NULL;
+    initTraceSource(pTraceTargetInit,nameInit);
 }
 
 TraceSource::~TraceSource()
 {
     pTraceTarget = NULL;
+}
+
+void TraceSource::initTraceSource(
+    TraceTarget *pTraceTargetInit,
+    std::string nameInit)
+{
+    assert(!pTraceTarget);
+    assert(name == "");
+    
+    pTraceTarget = pTraceTargetInit;
+    name = nameInit;
+    if (isTracing()) {
+        minimumLevel = pTraceTarget->getSourceTraceLevel(name);
+    } else {
+        minimumLevel = TRACE_OFF;
+    }
 }
 
 void TraceSource::trace(TraceLevel level,std::string message) const

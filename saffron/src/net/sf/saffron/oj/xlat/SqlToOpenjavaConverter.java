@@ -33,10 +33,12 @@ import net.sf.saffron.rel.JoinRel;
 import net.sf.saffron.sql.*;
 import net.sf.saffron.sql.parser.ParseException;
 import net.sf.saffron.sql.parser.SqlParser;
+import net.sf.saffron.sql.type.SqlTypeName;
+import net.sf.saffron.util.NlsString;
 import net.sf.saffron.util.Util;
 import openjava.ptree.*;
 
-import java.math.BigInteger;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -312,31 +314,31 @@ public class SqlToOpenjavaConverter
 
     private Expression convertLiteral(final SqlLiteral literal)
     {
-        final Object value = literal.value;
-        if (value instanceof Number) {
-            final Number number = (Number) value;
-
+        final Object value = literal.getValue();
+        switch (literal._typeName.ordinal_) {
+        case SqlTypeName.Decimal_ordinal:
+        case SqlTypeName.Double_ordinal:
+            BigDecimal bd = (BigDecimal) value;
             // Convert to integer if possible.
-            if (number instanceof BigInteger) {
-                int i = number.intValue();
-
-                // NOTE:  Number.equals is insane because it requires the
-                // comparands to be of the same exact type.  Be careful.
-                if (number.equals(BigInteger.valueOf(i))) {
-                    return Literal.makeLiteral(i);
-                }
+            if (bd.scale() == 0) {
+                int i = bd.intValue();
+                return Literal.makeLiteral(i);
+            } else {
+                // TODO:  preserve fixed-point precision and large integers
+                return Literal.makeLiteral(bd.doubleValue());
             }
-
-            // TODO:  preserve fixed-point precision and large integers
-            return Literal.makeLiteral(number.doubleValue());
-        } else if (value instanceof String) {
-            return Literal.makeLiteral((String) value);
-        } else if (value instanceof Boolean) {
-            return Literal.makeLiteral((Boolean) value);
-        } else if (value == null) {
+        case SqlTypeName.Char_ordinal:
+            NlsString nlsStr = (NlsString) value;
+            return Literal.makeLiteral(nlsStr.getValue());
+        case SqlTypeName.Boolean_ordinal:
+            if (value != null) {
+                return Literal.makeLiteral((Boolean) value);
+            }
+            // fall through to handle UNKNOWN (the boolean NULL value)
+        case SqlTypeName.Null_ordinal:
             return Literal.constantNull();
-        } else {
-            throw new UnsupportedOperationException("todo:" + literal);
+        default:
+            throw literal._typeName.unexpected();
         }
     }
 
@@ -363,7 +365,7 @@ public class SqlToOpenjavaConverter
             final SqlCall call = (SqlCall) query;
             int op;
             final SqlKind kind = call.getKind();
-            switch (kind.ordinal_) {
+            switch (kind.getOrdinal()) {
             case SqlKind.UnionORDINAL:
                 op = BinaryExpression.UNION;
                 break;
@@ -540,9 +542,9 @@ public class SqlToOpenjavaConverter
                 throw new AssertionFailedError(e.toString());
             }
             final SqlValidator validator =
-                new SqlValidator(
-                    SqlOperatorTable.instance(),
-                    testContext.seeker, testContext.schema.getTypeFactory());
+                    new SqlValidator(SqlOperatorTable.instance(),
+                            testContext.seeker,
+                            testContext.schema.getTypeFactory());
             final SqlToOpenjavaConverter converter =
                 new SqlToOpenjavaConverter(validator);
             final Expression expression = converter.convertQuery(sqlQuery);

@@ -40,7 +40,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
 import java.util.regex.Pattern;
-import java.math.BigInteger;
 
 /**
  * Miscellaneous utility functions.
@@ -63,10 +62,16 @@ public class Util extends Toolbox
 
     public static final void discard(Object o)
     {
+        if (false) {
+            discard(o);
+        }
     }
 
     public static final void discard(int i)
     {
+        if (false) {
+            discard(i);
+        }
     }
 
     /**
@@ -347,10 +352,15 @@ public class Util extends Toolbox
 
     /**
      * Converts a byte array into a bit string or a hex string.
+     *
+     * <p>For example,
+     * <code>toStringFromByteArray(new byte[] {0xAB, 0xCD}, 16)</code> returns
+     * <code>ABCD</code>.
      */
     public static String toStringFromByteArray(byte[] value, int radix) {
-        assert(2==radix || 16==radix) : "Make sure that the algorithm below works for your radix";
-        if (0==value.length){
+        assert 2 == radix || 16 == radix :
+                "Make sure that the algorithm below works for your radix";
+        if (0 == value.length){
             return "";
         }
 
@@ -362,23 +372,6 @@ public class Util extends Toolbox
 
         return ret.toString().toUpperCase();
     }
-
-    /**
-     * Converts a bitstring to an array of bytes.
-     */
-    public static byte[] toByteArrayFromBitString(String bits)
-    {
-        final int lengthToBe = (bits.length()+7)/8;
-        String s="11110000"+bits;
-        BigInteger bigInt = new BigInteger(s,2);
-        byte[] ret = new byte[lengthToBe];
-        System.arraycopy(bigInt.toByteArray(),1,ret,0,ret.length);
-        return ret;
-    }
-
-    /**
-     * Convert a string in a
-     */
 
     /**
      * Replaces every occurrence of <code>find</code> in <code>s</code> with

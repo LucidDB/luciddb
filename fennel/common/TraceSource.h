@@ -50,17 +50,34 @@ protected:
     void trace(TraceLevel level,std::string message) const;
 
     /**
+     * Construct a new uninitialized TraceSource.
+     */
+    explicit TraceSource();
+
+    /**
      * Construct a new TraceSource.
      *
      * @param pTraceTarget the TraceTarget to which messages will be sent,
      * or NULL to disable tracing entirely
      *
-     * @param name the name of this source
+     * @param name the name of this source (can be empty string for
+     * deferred init)
      */
-    explicit TraceSource(TraceTarget *pTraceTarget,std::string name);
-    
+    explicit TraceSource(
+        TraceTarget *pTraceTarget,
+        std::string name);
+
 public:
     virtual ~TraceSource();
+    
+    /**
+     * For use when initialization has to be deferred until after construction.
+     *
+     * @param pTraceTarget the TraceTarget to which messages will be sent
+     *
+     * @param name the name of this source
+     */
+    void initTraceSource(TraceTarget *pTraceTarget,std::string name);
     
     /**
      * @return true iff tracing is enabled for this source

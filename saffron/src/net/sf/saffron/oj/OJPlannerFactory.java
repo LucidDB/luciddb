@@ -23,13 +23,14 @@
 package net.sf.saffron.oj;
 
 import net.sf.saffron.core.ImplementableTable;
+import net.sf.saffron.core.SaffronPlanner;
 import net.sf.saffron.core.SaffronType;
 import net.sf.saffron.oj.convert.*;
 import net.sf.saffron.oj.rel.*;
 import net.sf.saffron.opt.*;
 import net.sf.saffron.rel.*;
 import net.sf.saffron.rel.convert.ConverterRule;
-import net.sf.saffron.rel.convert.NoneConverterRel;
+import net.sf.saffron.rel.convert.FactoryConverterRule;
 import net.sf.saffron.rel.jdbc.JdbcQuery;
 import net.sf.saffron.rex.RexNode;
 import net.sf.saffron.rex.RexUtil;
@@ -55,16 +56,36 @@ public class OJPlannerFactory extends VolcanoPlannerFactory
         }
 
         // Create converter rules for all of the standard calling conventions.
-        ArrayConverterRel.init(planner);
-        CollectionConverterRel.init(planner);
-        EnumerationConverterRel.init(planner);
-        IterableConverterRel.init(planner);
-        IterConverterRel.init(planner);
-        JavaConverterRel.init(planner);
-        NoneConverterRel.init(planner);
-        ResultSetConverterRel.init(planner);
-        VectorConverterRel.init(planner);
-        ExistsConverterRel.init(planner);
+        add(planner, new CollectionToArrayConvertlet());
+        add(planner, new VectorToArrayConvertlet());
+        add(planner, new ArrayToJavaConvertlet());
+        add(planner, new IteratorToJavaConvertlet());
+        add(planner, new EnumerationToJavaConvertlet());
+        add(planner, new VectorToJavaConvertlet());
+        add(planner, new MapToJavaConvertlet());
+        add(planner, new HashtableToJavaConvertlet());
+        add(planner, new IterableToJavaConvertlet());
+        add(planner, new ResultSetToJavaConvertlet());
+        add(planner, new JavaToCollectionConvertlet());
+        add(planner, new VectorToEnumerationConvertlet());
+        add(planner, new JavaToExistsConvertlet());
+        add(planner, new ArrayToExistsConvertlet());
+        add(planner, new IteratorToExistsConvertlet());
+        add(planner, new MapToExistsConvertlet());
+        add(planner, new HashtableToExistsConvertlet());
+        add(planner, new EnumerationToExistsConvertlet());
+        add(planner, new CollectionToExistsConvertlet());
+        add(planner, new JavaToIterableConvertlet());
+        add(planner, new IteratorToIterableConvertlet());
+        add(planner, new CollectionToIterableConvertlet());
+        add(planner, new VectorToIterableConvertlet());
+        add(planner, new IterableToIteratorConvertlet());
+        add(planner, new CollectionToIteratorConvertlet());
+        add(planner, new VectorToIteratorConvertlet());
+        add(planner, new EnumerationToIteratorConvertlet());
+        add(planner, new ResultSetToIteratorConvertlet());
+        add(planner, new IteratorToResultSetConvertlet());
+        add(planner, new JavaToVectorConvertlet());
 
         planner.registerAbstractRelationalRules();
 
@@ -112,6 +133,15 @@ public class OJPlannerFactory extends VolcanoPlannerFactory
     {
         planner.addRule(new UnionToIteratorRule());
         planner.addRule(new OneRowToIteratorRule());
+    }
+
+    /**
+     * Wraps a convertlet in a {@link ConverterRule}, then registers it with a
+     * planner.
+     */
+    private static void add(SaffronPlanner planner,
+            JavaConvertlet convertlet) {
+        planner.addRule(new FactoryConverterRule(convertlet));
     }
 
     //~ Inner Classes ---------------------------------------------------------
@@ -360,12 +390,12 @@ public class OJPlannerFactory extends VolcanoPlannerFactory
             final RexNode [] exps = project.getChildExps();
             final RexNode condition = null;
             // FIXME jvs 11-May-2004: This should be calling something
-            // (cluster?) to get an existing RelImplementor, not making one up
+            // (cluster?) to get an existing JavaRelImplementor, not making one up
             // out of thin air, since query processing may be using a custom
             // implementation.
-            final RelImplementor relImplementor =
-                    new RelImplementor(project.getCluster().rexBuilder);
-            if (!relImplementor.canTranslate(project, condition, exps)) {
+            final JavaRelImplementor relImplementor =
+                    new JavaRelImplementor(project.getCluster().rexBuilder);
+            if (!relImplementor.canTranslate(iterChild, condition, exps)) {
                 // some of the expressions cannot be translated into Java
                 return null;
             }
@@ -418,9 +448,9 @@ public class OJPlannerFactory extends VolcanoPlannerFactory
             }
             
             final RexNode[] exps = project.getChildExps();
-            final RelImplementor relImplementor =
-                    new RelImplementor(project.getCluster().rexBuilder);
-            if (!relImplementor.canTranslate(project, condition, exps)) {
+            final JavaRelImplementor relImplementor =
+                    new JavaRelImplementor(project.getCluster().rexBuilder);
+            if (!relImplementor.canTranslate(iterChild, condition, exps)) {
                 // some of the expressions cannot be translated into Java
                 return;
             }

@@ -30,6 +30,7 @@ import net.sf.farrago.parser.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.util.*;
+import net.sf.farrago.trace.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.runtime.*;
 
@@ -56,8 +57,8 @@ public class FarragoDbSession
 {
     //~ Static fields/initializers --------------------------------------------
 
-    private static Logger tracer =
-        TraceUtil.getClassTrace(FarragoDbSession.class);
+    private static final Logger tracer =
+        FarragoTrace.getDatabaseSessionTracer();
 
     public static final String MDR_USER_NAME = "MDR";
 
@@ -177,6 +178,11 @@ public class FarragoDbSession
     public DatabaseMetaData getDatabaseMetaData()
     {
         return dbMetaData;
+    }
+
+    // implement FarragoSession
+    public SqlOperatorTable getSqlOperatorTable() {
+        return SqlOperatorTable.instance();
     }
     
     // implement FarragoSession
@@ -430,14 +436,14 @@ public class FarragoDbSession
             throw
                 FarragoResource.instance().newSessionNoSavepointInAutocommit();
         }
-        FemSvptHandle femSvptHandle;
+        FennelSvptHandle fennelSvptHandle;
         if (catalog.isFennelEnabled()) {
-            femSvptHandle = fennelTxnContext.newSavepoint();
+            fennelSvptHandle = fennelTxnContext.newSavepoint();
         } else {
-            femSvptHandle = null;
+            fennelSvptHandle = null;
         }
         FarragoDbSavepoint newSavepoint = new FarragoDbSavepoint(
-            nextSavepointId++,name,femSvptHandle,this);
+            nextSavepointId++,name,fennelSvptHandle,this);
         savepointList.add(newSavepoint);
         return newSavepoint;
     }
@@ -503,7 +509,7 @@ public class FarragoDbSession
             (FarragoDbSavepoint) savepointList.get(iSavepoint);
         if (catalog.isFennelEnabled()) {
             fennelTxnContext.rollbackToSavepoint(
-                savepoint.getFemSvptHandle());
+                savepoint.getFennelSvptHandle());
         }
 
         // TODO:  list truncation util

@@ -22,6 +22,7 @@
 #ifndef Fennel_ExecutionStream_Included
 #define Fennel_ExecutionStream_Included
 
+#include "fennel/common/TraceSource.h"
 #include "fennel/tuple/TupleDescriptor.h"
 #include "fennel/tuple/TupleFormat.h"
 #include "fennel/xo/ExecutionStreamGraph.h"
@@ -49,6 +50,12 @@ struct ExecutionStreamParams
      * be singular if the stream should not use any scratch buffers.
      */
     SegmentAccessor scratchAccessor;
+
+    // TODO jvs 27-May-2004:  use this for sanity checking in all relevant XO's
+    /**
+     * Descriptor for tuples in this stream's output.
+     */
+    TupleDescriptor outputTupleDesc;
 };
 
 /**
@@ -56,10 +63,10 @@ struct ExecutionStreamParams
  * (also known as XO's).  An ExecutionStream produces tuples according to a
  * fixed tuple descriptor.  Dataflow takes place in batches of tuples.
  */
-class ExecutionStream : virtual public ClosableObject
+class ExecutionStream
+    : virtual public ClosableObject, virtual public TraceSource
 {
     friend class ExecutionStreamGraphImpl;
-    friend class ExecutionStreamFactory;
 protected:
 
     /**
@@ -172,6 +179,13 @@ public:
     virtual ExecutionStreamId getStreamId() const;
     
     /**
+     * Set unique name of this stream for testing
+     *
+     * TODO: factor this out into testing harness
+     */
+    virtual void setName(std::string const &);
+        
+    /**
      * @return the name of this stream, as known by the optimizer
      */
     virtual std::string const &getName() const;
@@ -254,6 +268,18 @@ public:
      * @return required model
      */
     virtual BufferProvision getInputBufferRequirement() const;
+
+    /**
+     * Get a pointer which can be static_cast to the ExecutionStream subclass
+     * known to implement this stream (said class must override this method).
+     * This is like an extremely unsafe version of dynamic_cast, except that it
+     * also takes care of digging through adapters.  Don't use this unless
+     * you're absolutely sure you know what you're doing.
+     *
+     * @return the implementation object, or NULL if this stream doesn't
+     * like your prying
+     */
+    virtual void *getImpl();
 };
 
 FENNEL_END_NAMESPACE

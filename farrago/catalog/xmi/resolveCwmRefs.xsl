@@ -25,7 +25,7 @@
   </xsl:template>
 
   <xsl:template match="Model:Package[@name='FEME']">
-      <xsl:apply-templates select="Model:Namespace.contents/Model:Package" />
+      <xsl:apply-templates select="Model:Namespace.contents/*" />
   </xsl:template>
 
   <!-- When we see an idref which refers to a class in package

@@ -280,8 +280,7 @@
       depends="generateResources,parser,sqlParser,
                compile.jsp.maybe,compile.java,compile.test"/>
 
-  <target name="compile.java" depends="sniff">
-    <mkdir dir="${classes.dir}"/>
+  <target name="compile.java" depends="sniff,mkClassesDir">
     <javac
         srcdir="${java.dir}"
         destdir="${classes.dir}"
@@ -354,8 +353,19 @@
       targetfile="${java.dir}/net/sf/saffron/resource/SaffronResource.java"/>
   </target>
 
-  <target name="generateResources" depends="checkResourceUptodate"
+  <target name="mkClassesDir">
+    <mkdir dir="${classes.dir}"/>
+  </target>
+
+  <target name="generateResources" depends="mkClassesDir,checkResourceUptodate"
     unless="resource.uptodate">
+    <!-- SaffronException.class needs to exist for reflection -->
+    <javac
+      srcdir="${src.dir}"
+      destdir="${classes.dir}"
+      classpathref="saffron.build.classpath">
+      <include name="**/SaffronException.java" />
+    </javac>
     <taskdef name="resgen" classname="mondrian.resource.ResourceGenTask">
       <classpath refid="saffron.run.classpath"/>
     </taskdef>
@@ -363,7 +373,6 @@
       <include name="net/sf/saffron/resource/SaffronResource.xml"/>
     </resgen>
     <!-- Move the generated property files into the class folder -->
-    <mkdir dir="${classes.dir}"/>
     <move todir="${classes.dir}">
         <fileset dir="${src.dir}" includes="**/SaffronResource*.properties"/>
     </move>

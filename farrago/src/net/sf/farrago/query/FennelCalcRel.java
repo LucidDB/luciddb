@@ -20,17 +20,16 @@
 
 package net.sf.farrago.query;
 
-import net.sf.farrago.fem.fennel.FemCalcTupleStreamDef;
-import net.sf.farrago.fem.fennel.FemExecutionStreamDef;
 import net.sf.saffron.core.PlanWriter;
 import net.sf.saffron.core.SaffronPlanner;
 import net.sf.saffron.core.SaffronType;
-import net.sf.saffron.opt.*;
+import net.sf.saffron.opt.PlanCost;
+import net.sf.saffron.opt.VolcanoCluster;
+import net.sf.saffron.opt.RelImplementor;
 import net.sf.saffron.rel.CalcRel;
 import net.sf.saffron.rel.RelFieldCollation;
 import net.sf.saffron.rel.SaffronRel;
 import net.sf.saffron.rex.RexNode;
-import net.sf.saffron.rex.RexUtil;
 import net.sf.saffron.util.Util;
 
 import java.util.ArrayList;
@@ -49,7 +48,7 @@ import java.util.Arrays;
  * @since Apr 8, 2004
  * @version $Id$
  */
-public class FennelCalcRel extends FennelSingleRel {
+public abstract class FennelCalcRel extends FennelSingleRel {
     //~ Instance fields -------------------------------------------------------
     private final RexNode[] _projectExprs;
     private final RexNode _conditionExpr;
@@ -65,7 +64,7 @@ public class FennelCalcRel extends FennelSingleRel {
      * @param projectExprs Expressions returned by the calculator
      * @param conditionExpr Filter condition, may be null
      */
-    public FennelCalcRel(
+    protected FennelCalcRel(
             VolcanoCluster cluster,
             SaffronRel child,
             SaffronType rowType, RexNode[] projectExprs,
@@ -80,18 +79,18 @@ public class FennelCalcRel extends FennelSingleRel {
 
     //~ Methods ---------------------------------------------------------------
 
-    public Object clone() {
-        return new FennelCalcRel(
-                cluster, OptUtil.clone(child), rowType,
-                RexUtil.clone(_projectExprs), RexUtil.clone(_conditionExpr));
+    /**
+     * @return expressions computed by this calculator
+     */
+    public RexNode [] getProjectExprs() {
+        return _projectExprs;
     }
 
-    public CallingConvention getConvention() {
-        return FennelPullRel.FENNEL_PULL_CONVENTION;
-    }
-
-    protected SaffronType deriveRowType() {
-        return rowType;
+    /**
+     * @return filter expression for this calculator, or null if unconditional
+     */
+    public RexNode getConditionExpr() {
+        return _conditionExpr;
     }
 
     public RexNode[] getChildExps() {
@@ -115,27 +114,6 @@ public class FennelCalcRel extends FennelSingleRel {
                 rowCount,
                 rowCount,
                 rowCount * bytesPerRow);
-    }
-
-    // implement FennelRel
-    public FemExecutionStreamDef toStreamDef(FarragoRelImplementor implementor) {
-        FemCalcTupleStreamDef calcStream =
-                getCatalog().newFemCalcTupleStreamDef();
-
-        // TODO jvs 8-May-2004: account for scratch page in provisioning, not
-        // here
-        calcStream.setCachePageMin(1);
-        calcStream.setCachePageMax(1);
-
-        calcStream.getInput().add(
-                implementor.implementFennelRel(child));
-        calcStream.setFilter(_conditionExpr != null);
-        final CalcRelImplementor.Rex2CalcTranslator translator =
-                new CalcRelImplementor(cluster.rexBuilder)
-                .newTranslator(_projectExprs, _conditionExpr);
-        final String program = translator.getProgram(child.getRowType());
-        calcStream.setProgram(program);
-        return calcStream;
     }
 
     public boolean isDistinct() {

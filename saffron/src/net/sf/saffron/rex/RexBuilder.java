@@ -25,11 +25,15 @@ package net.sf.saffron.rex;
 import net.sf.saffron.core.SaffronField;
 import net.sf.saffron.core.SaffronType;
 import net.sf.saffron.core.SaffronTypeFactory;
-import net.sf.saffron.sql.type.SqlTypeName;
 import net.sf.saffron.sql.*;
+import net.sf.saffron.sql.fun.SqlStdOperatorTable;
+import net.sf.saffron.sql.type.SqlTypeName;
+import net.sf.saffron.util.BitString;
+import net.sf.saffron.util.NlsString;
 import net.sf.saffron.util.Util;
 
-import java.math.BigInteger;
+import java.math.BigDecimal;
+import java.util.Calendar;
 
 /**
  * Factory for row expressions.
@@ -41,35 +45,42 @@ import java.math.BigInteger;
  * @version $Id$
  **/
 public class RexBuilder {
-    protected final SaffronTypeFactory typeFactory;
-    private final RexLiteral booleanTrue;
-    private final RexLiteral booleanFalse;
-    private final RexLiteral integerZero;
-    private final RexLiteral integerOne;
-    private final RexLiteral varcharEmpty;
-    private final RexLiteral constantNull;
-    public final SqlOperatorTable operatorTable = SqlOperatorTable.instance();
-    public final SqlFunctionTable funcTab = SqlFunctionTable.instance();
+    protected final SaffronTypeFactory _typeFactory;
+    private final RexLiteral _booleanTrue;
+    private final RexLiteral _booleanFalse;
+    private final RexLiteral _integerZero;
+    private final RexLiteral _integerOne;
+    private final RexLiteral _varcharEmpty;
+    private final RexLiteral _constantNull;
+    public final SqlStdOperatorTable _opTab = SqlOperatorTable.std();
 
     // REVIEW jvs 22-Jan-2004: I changed this constructor from protected to
     // public so that unit tests needn't depend on oj.  If RexBuilder
     // isn't supposed to be instantiated, then it should be declared abstrct.
     public RexBuilder(SaffronTypeFactory typeFactory) {
-        this.typeFactory = typeFactory;
-        this.booleanTrue = new RexLiteral(Boolean.TRUE, typeFactory.createSqlType(SqlTypeName.Boolean));
-        this.booleanFalse = new RexLiteral(Boolean.FALSE, typeFactory.createSqlType(SqlTypeName.Boolean));
-        this.integerZero = new RexLiteral(BigInteger.ZERO,
-                    typeFactory.createSqlType(SqlTypeName.Integer));
-        this.integerOne = new RexLiteral(BigInteger.ONE,
-                    typeFactory.createSqlType(SqlTypeName.Integer));
-        this.varcharEmpty = new RexLiteral("",
-                    typeFactory.createSqlType(SqlTypeName.Varchar, 0));
-        this.constantNull = new RexLiteral(null,
-                typeFactory.createSqlType(SqlTypeName.Null));
+        this._typeFactory = typeFactory;
+        this._booleanTrue = makeLiteral(Boolean.TRUE,
+                typeFactory.createSqlType(SqlTypeName.Boolean),
+                SqlTypeName.Boolean);
+        this._booleanFalse = makeLiteral(Boolean.FALSE,
+                typeFactory.createSqlType(SqlTypeName.Boolean),
+                SqlTypeName.Boolean);
+        this._integerZero = makeLiteral(new BigDecimal(0),
+                typeFactory.createSqlType(SqlTypeName.Integer),
+                SqlTypeName.Decimal);
+        this._integerOne = makeLiteral(new BigDecimal(1),
+                typeFactory.createSqlType(SqlTypeName.Integer),
+                SqlTypeName.Decimal);
+        this._varcharEmpty = makeLiteral(new NlsString("",null,null),
+                typeFactory.createSqlType(SqlTypeName.Varchar, 0),
+                SqlTypeName.Char);
+        this._constantNull = makeLiteral(null,
+                typeFactory.createSqlType(SqlTypeName.Null),
+                SqlTypeName.Null);
     }
 
     public SaffronTypeFactory getTypeFactory() {
-        return typeFactory;
+        return _typeFactory;
     }
 
     public RexNode makeFieldAccess(RexNode expr, String fieldName) {
@@ -157,7 +168,7 @@ public class RexBuilder {
      * {@link RexBuilder}, this is the only method you need to override.</p>
      */
     public RexNode makeCall(SqlOperator op, RexNode[] exprs) {
-        final SaffronType type = op.getType(typeFactory, getTypes(exprs));
+        final SaffronType type = op.getType(_typeFactory, exprs);
         return new RexCall(type, op, exprs);
     }
 
@@ -174,7 +185,8 @@ public class RexBuilder {
      * a specific number and types of arguments.
      */
     public SqlOperator getFunctionOp(RexKind kind, RexNode[] args) {
-        SqlFunction function = funcTab.lookup(kind.getName(), getTypes(args));
+        SqlFunction function = _opTab.lookupFunction(kind.getName(),
+                getTypes(args));
         if(function == null) {
             throw Util.newInternal("No operator for " + kind);
         }
@@ -185,7 +197,7 @@ public class RexBuilder {
      * Creates a constant for the SQL <code>NULL</code> value.
      */
     public RexLiteral constantNull() {
-        return constantNull;
+        return _constantNull;
     }
 
     public RexNode makeCorrel(SaffronType type, String name) {
@@ -197,7 +209,7 @@ public class RexBuilder {
     }
 
     public RexNode makeAbstractCast(SaffronType type, RexNode exp) {
-        return new RexCall(type, funcTab.cast, new RexNode[] {exp});
+        return new RexCall(type, _opTab.castFunc, new RexNode[] {exp});
     }
 
     /**
@@ -227,46 +239,60 @@ public class RexBuilder {
         return new RexInputRef(i,type);
     }
 
-    protected RexLiteral makeLiteral(Object o, SaffronType type) {
-        return new RexLiteral(o, type);
+    protected RexLiteral makeLiteral(Object o, SaffronType type,
+            SqlTypeName typeName) {
+        // All literals except NULL have NOT NULL types.
+        type = _typeFactory.createTypeWithNullability(type, o == null);
+        return new RexLiteral(o, type, typeName);
     }
     /**
      * Creates a boolean literal.
      */
     public RexLiteral makeLiteral(boolean b)
     {
-        return b ? booleanTrue : booleanFalse;
+        return b ? _booleanTrue : _booleanFalse;
     }
 
     /**
      * Creates an integer literal.
      */
-    public RexLiteral makeLiteral(long i)
+    public RexLiteral makeExactLiteral(BigDecimal bd)
     {
-        if (i == 0) {
-            return integerZero;
-        } else if (i == 1) {
-            return integerOne;
+        SqlTypeName result;
+        if (bd.scale() > 0) {
+            result = SqlTypeName.Double;
         } else {
-            return new RexLiteral(BigInteger.valueOf(i),
-                    typeFactory.createSqlType(SqlTypeName.Integer));
+            long l = bd.longValue();
+            if (l >= Integer.MIN_VALUE && l <= Integer.MAX_VALUE) {
+                result = SqlTypeName.Integer;
+            } else {
+                result = SqlTypeName.Bigint;
+            }
         }
+
+        return makeLiteral(bd,
+                _typeFactory.createSqlType(result),
+                SqlTypeName.Decimal);
     }
 
     /**
      * Creates a byte array literal.
      */
-    public RexLiteral makeLiteral(byte[] byteArray)
+    public RexLiteral makeBinaryLiteral(byte[] byteArray)
     {
-        return new RexLiteral(byteArray,
-                    typeFactory.createSqlType(SqlTypeName.Varbinary, byteArray.length));
+        return makeLiteral(byteArray,
+                _typeFactory.createSqlType(SqlTypeName.Varbinary,
+                        byteArray.length),
+                SqlTypeName.Binary);
     }
 
     /**
      * Creates a double-precision literal.
      */
-    public RexLiteral makeLiteral(double d) {
-        throw Util.needToImplement(this);
+    public RexLiteral makeApproxLiteral(BigDecimal bd) {
+        return makeLiteral(bd,
+                _typeFactory.createSqlType(SqlTypeName.Double),
+                SqlTypeName.Double);
     }
 
     /**
@@ -282,10 +308,12 @@ public class RexBuilder {
     {
         Util.pre(s != null, "s != null");
         if (s.equals("")) {
-            return varcharEmpty;
+            return _varcharEmpty;
         } else {
-            return new RexLiteral(s,
-                    typeFactory.createSqlType(SqlTypeName.Varchar, s.length()));
+            return makeLiteral(new NlsString(s, null, null),
+                    _typeFactory.createSqlType(SqlTypeName.Varchar,
+                            s.length()),
+                    SqlTypeName.Char);
         }
     }
 
@@ -293,55 +321,61 @@ public class RexBuilder {
      * Creates a Bit String literal
      * @pre bitString != null
      */
-    public RexLiteral makeLiteral(SqlLiteral.BitString bitString) {
+    public RexLiteral makeBitLiteral(BitString bitString) {
         Util.pre(bitString != null, "bitString != null");
-        return new RexLiteral(bitString,
-                    typeFactory.createSqlType(SqlTypeName.Bit, bitString.getBitCount()));
+        return makeLiteral(bitString,
+                _typeFactory.createSqlType(SqlTypeName.Bit,
+                        bitString.getBitCount()),
+                SqlTypeName.Bit);
     }
 
     /**
      * Creates a String literal
      * @pre str != null
      */
-    public RexLiteral makeLiteral(SqlLiteral.StringLiteral str) {
+    public RexLiteral makeCharLiteral(NlsString str) {
         Util.pre(str != null, "str != null");
-        SaffronType type = typeFactory.createSqlType(SqlTypeName.Varchar, str.getValue().length());
+        SaffronType type = _typeFactory.createSqlType(SqlTypeName.Varchar,
+                str.getValue().length());
         type.setCollation(str.getCollation());
         type.setCharset(str.getCharset());
-        return new RexLiteral(str,type);
+        return makeLiteral(str, type, SqlTypeName.Char);
     }
 
     /**
      * Creates a Date literal.
      * @pre date != null
      */
-    public RexLiteral makeLiteral(java.sql.Date date)
+    public RexLiteral makeDateLiteral(Calendar date)
     {
         Util.pre(date != null, "date != null");
-        return new RexLiteral(date,
-                    typeFactory.createSqlType(SqlTypeName.Date));
+        return makeLiteral(date,
+                _typeFactory.createSqlType(SqlTypeName.Date),
+                SqlTypeName.Date);
     }
 
     /**
      * Creates a Time literal.
      * @pre time != null
      */
-    public RexLiteral makeLiteral(java.sql.Time time)
+    public RexLiteral makeTimeLiteral(Calendar time, int precision)
     {
         Util.pre(time != null, "time != null");
-        return new RexLiteral(time,
-                    typeFactory.createSqlType(SqlTypeName.Time));
+        return makeLiteral(time,
+                _typeFactory.createSqlType(SqlTypeName.Time, precision),
+                SqlTypeName.Time);
     }
 
     /**
      * Creates a Timestamp literal.
      * @pre timestamp != null
      */
-    public RexLiteral makeLiteral(java.sql.Timestamp timestamp)
+    public RexLiteral makeTimestampLiteral(Calendar timestamp, int precision)
     {
         Util.pre(timestamp != null, "timestamp != null");
-        return new RexLiteral(timestamp,
-                    typeFactory.createSqlType(SqlTypeName.Timestamp));
+        return makeLiteral(timestamp,
+                _typeFactory.createSqlType(SqlTypeName.Timestamp, precision),
+                SqlTypeName.Timestamp);
     }
 
     public RexDynamicParam makeDynamicParam(SaffronType type,int index)
@@ -355,12 +389,14 @@ public class RexBuilder {
     }
 
     public SqlOperator getOperator(String name, int syntax) {
-        return operatorTable.lookup(name, syntax);
+        return _opTab.lookup(name, syntax);
     }
 
-    public RexLiteral makeLiteral(SqlFunctionTable.FunctionFlagType flag) {
-        Util.pre(flag != null, "time != null");
-        return new RexLiteral(flag, typeFactory.createSqlType(SqlTypeName.Flag));
+    public RexLiteral makeSymbolLiteral(SqlSymbol flag) {
+        Util.pre(flag != null, "flag != null");
+        return makeLiteral(flag,
+                _typeFactory.createSqlType(SqlTypeName.Symbol),
+                SqlTypeName.Symbol);
     }
 }
 

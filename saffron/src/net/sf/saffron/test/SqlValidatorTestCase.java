@@ -51,36 +51,37 @@ public abstract class SqlValidatorTestCase extends TestCase {
 	abstract public SqlParser getParser(String sql) throws ParseException;
 
     private static final String NL = System.getProperty("line.separator");
+    private final String UNKNOWN_FUNC = "(?s).*Reference to unknown function.*encountered near line 1, column 8.*";
 
-    void check(String sql)
+    public void check(String sql)
     {
         assertExceptionIsThrown(sql, null);
     }
 
-    void checkExp(String sql)
+    public void checkExp(String sql)
     {
         sql = "select "+sql+" from values(true)";
         assertExceptionIsThrown(sql, null);
     }
 
-    void checkExpFails(String sql, String expected)
+    public void checkExpFails(String sql, String expected)
     {
         sql = "select "+sql+" from values(true)";
         assertExceptionIsThrown(sql, expected);
     }
 
-    void checkType(String sql,String expected){
+    public void checkType(String sql,String expected){
         sql="select "+sql+" from values(true)";
         SaffronType actualType = getResultType(sql);
         String actual = actualType.toString();
         if (!expected.equals(actual)) {
-            String msg = NL+"Excpected="+expected+NL+"   actual="+actual;
+            String msg = NL+"Expected="+expected+NL+"   actual="+actual;
             fail(msg);
         }
     }
 
-    void checkCollation(String sql,String expectedCollationName,
-                        SqlCollation.Coercibility expectedCoercibility){
+    public void checkCollation(String sql,String expectedCollationName,
+                               SqlCollation.Coercibility expectedCoercibility){
         sql="select "+sql+" from values(true)";
         SaffronType actualType = getResultType(sql);
         SqlCollation collation = actualType.getCollation();
@@ -92,7 +93,7 @@ public abstract class SqlValidatorTestCase extends TestCase {
         assertEquals(expectedCoercibilityOrd,actualCoercibility);
     }
 
-    void checkCharset(String sql,Charset expectedCharset){
+    public void checkCharset(String sql,Charset expectedCharset){
         sql="select "+sql+" from values(true)";
         SaffronType actualType = getResultType(sql);
         Charset actualCharset = actualType.getCharset();
@@ -170,9 +171,10 @@ public abstract class SqlValidatorTestCase extends TestCase {
             if (null == exceptionHappended) {
                 fail("SqlValidationTest: Validator didn't throw exception as expected while executing query='"+sql+"'");
             }
-            else if (!exceptionHappended.getMessage().matches(expectedMsgPattern)) {
+            else if ((exceptionHappended.getMessage() == null) ||
+                (!exceptionHappended.getMessage().matches(expectedMsgPattern))) {
                 exceptionHappended.printStackTrace();
-                String actual =exceptionHappended.getMessage();
+                String actual = exceptionHappended.getMessage();
                 fail("SqlValidationTest: The thrown exception was unexpected"
                     +" Expected='"+expectedMsgPattern
                     +"' Actual='"+actual
@@ -279,7 +281,7 @@ public abstract class SqlValidatorTestCase extends TestCase {
                                 "(?s).*");
 
         assertExceptionIsThrown("select 1.1e1 IS NOT FALSE FROM values(true)",
-                                "(?s).*'<DOUBLE> IS FALSE'.*"); //todo doesnt map to NOT
+                "(?s).*Can not apply 'IS NOT FALSE' to arguments of type '<DOUBLE> IS NOT FALSE'.*");
 
         assertExceptionIsThrown("select 'abc' IS NOT TRUE FROM values(true)",
                                 "(?s).*");
@@ -411,10 +413,10 @@ public abstract class SqlValidatorTestCase extends TestCase {
     }
 
     public void testHexBitBinaryStringFails(){
-        assertExceptionIsThrown("select x'f'='abc' from values(true)","(?s).*Parameters must be of same type.*");
-        assertExceptionIsThrown("select x'ff'=88 from values(true)","(?s).*Parameters must be of same type.*");
-        assertExceptionIsThrown("select x''<>1.1e-1 from values(true)","(?s).*Parameters must be of same type.*");
-        assertExceptionIsThrown("select b''<>1.1 from values(true)","(?s).*Parameters must be of same type.*");
+        assertExceptionIsThrown("select x'f'='abc' from values(true)","(?s).*Can not apply '=' to arguments of type '<BIT.4.> = <VARCHAR.3.>'.*");
+        assertExceptionIsThrown("select x'ff'=88 from values(true)","(?s).*Can not apply '=' to arguments of type '<VARBINARY.1.> = <INTEGER>'.*");
+        assertExceptionIsThrown("select x''<>1.1e-1 from values(true)","(?s).*Can not apply '<>' to arguments of type '<VARBINARY.0.> <> <DOUBLE>'.*");
+        assertExceptionIsThrown("select b''<>1.1 from values(true)","(?s).*Can not apply '<>' to arguments of type '<BIT.0.> <> <DECIMAL.2, 1.>'.*");
     }
 
     public void testStringLiteral() {
@@ -431,7 +433,7 @@ public abstract class SqlValidatorTestCase extends TestCase {
     }
 
     public void testArthimeticOperatorsTypes() {
-        checkType("pow(2,3)","INTEGER");
+        checkType("pow(2,3)","DOUBLE");
         checkType("aBs(-2.3e-2)","DOUBLE");
         checkType("MOD(5,2)","INTEGER");
         checkType("ln(5.43  )","DOUBLE");
@@ -650,7 +652,7 @@ public abstract class SqlValidatorTestCase extends TestCase {
         checkExp("LOCALTIME(3)");
         checkExp("LOCALTIME");                     //    fix sqlcontext later.
         checkExpFails("LOCALTIME(1+2)","Argument to function 'LOCALTIME' must be a literal") ;
-        checkExpFails("LOCALTIME()","Function 'LOCALTIME' does not exist");
+        checkExpFails("LOCALTIME()",UNKNOWN_FUNC);
         checkType("LOCALTIME","TIME"); //  NOT NULL, with TZ ?
         checkExpFails("LOCALTIME(-1)", "Argument to function 'LOCALTIME' must be a literal"); // i guess -s1 is an expression?
 // this next one fails because i can't get the error string to match.  dunno why.
@@ -660,19 +662,19 @@ public abstract class SqlValidatorTestCase extends TestCase {
         checkExp("LOCALTIMESTAMP(3)");
         checkExp("LOCALTIMESTAMP");                     //    fix sqlcontext later.
         checkExpFails("LOCALTIMESTAMP(1+2)","Argument to function 'LOCALTIMESTAMP' must be a literal") ;
-        checkExpFails("LOCALTIMESTAMP()","Function 'LOCALTIMESTAMP' does not exist");
+        checkExpFails("LOCALTIMESTAMP()",UNKNOWN_FUNC);
         checkType("LOCALTIMESTAMP","TIMESTAMP"); //  NOT NULL, with TZ ?
         checkExpFails("LOCALTIMESTAMP(-1)", "Argument to function 'LOCALTIMESTAMP' must be a literal"); // i guess -s1 is an expression?
 //        checkExpFails("LOCALTIMESTAMP('foo')","Validation Error: Can not apply 'LOCALTIMESTAMP' to arguments of type 'LOCALTIMESTAMP(<VARCHAR(3)>)'. " +
     //            "Supported form(s): 'LOCALTIMESTAMP(<INTEGER>)'");
 
         // CURRENT_DATE
-        checkExpFails("CURRENT_DATE(3)","Function 'CURRENT_DATE' does not exist");
+        checkExpFails("CURRENT_DATE(3)",UNKNOWN_FUNC);
         checkExp("CURRENT_DATE");                     //    fix sqlcontext later.
-        checkExpFails("CURRENT_DATE(1+2)","Function 'CURRENT_DATE' does not exist") ;
+        checkExpFails("CURRENT_DATE(1+2)",UNKNOWN_FUNC) ;
         checkExp("CURRENT_DATE()"); // FIXME: works, but shouldn't
         checkType("CURRENT_DATE","DATE"); //  NOT NULL, with TZ?
-        checkExpFails("CURRENT_DATE(-1)", "Function 'CURRENT_DATE' does not exist"); // i guess -s1 is an expression?
+        checkExpFails("CURRENT_DATE(-1)", UNKNOWN_FUNC); // i guess -s1 is an expression?
  //       checkExpFails("CURRENT_DATE('foo')","Validation Error: Can not apply 'CURRENT_DATE' to arguments of type 'CURRENT_DATE(<VARCHAR(3)>)'. " +
  //               "Supported form(s): 'CURRENT_DATE(<INTEGER>)'");
 
@@ -680,7 +682,7 @@ public abstract class SqlValidatorTestCase extends TestCase {
         checkExp("current_time(3)");
         checkExp("current_time");                     //    fix sqlcontext later.
         checkExpFails("current_time(1+2)","Argument to function 'CURRENT_TIME' must be a literal") ;
-        checkExpFails("current_time()","Function 'CURRENT_TIME' does not exist");
+        checkExpFails("current_time()", UNKNOWN_FUNC);
         checkType("current_time","TIME"); //  NOT NULL, with TZ ?
         checkExpFails("current_time(-1)", "Argument to function 'CURRENT_TIME' must be a literal"); // i guess -s1 is an expression?
   //      checkExpFails("current_time('foo')","Validation Error: Can not apply 'CURRENT_TIME' to arguments of type 'CURRENT_TIME(<VARCHAR(3)>)'. " +
@@ -690,7 +692,7 @@ public abstract class SqlValidatorTestCase extends TestCase {
         checkExp("CURRENT_TIMESTAMP(3)");
         checkExp("CURRENT_TIMESTAMP");                     //    fix sqlcontext later.
         checkExpFails("CURRENT_TIMESTAMP(1+2)","Argument to function 'CURRENT_TIMESTAMP' must be a literal") ;
-        checkExpFails("CURRENT_TIMESTAMP()","Function 'CURRENT_TIMESTAMP' does not exist");
+        checkExpFails("CURRENT_TIMESTAMP()",UNKNOWN_FUNC);
         checkType("CURRENT_TIMESTAMP","TIMESTAMP"); //  NOT NULL, with TZ ?
         checkExpFails("CURRENT_TIMESTAMP(-1)", "Argument to function 'CURRENT_TIMESTAMP' must be a literal"); // i guess -s1 is an expression?
   //      checkExpFails("CURRENT_TIMESTAMP('foo')","Validation Error: Can not apply 'CURRENT_TIMESTAMP' to arguments of type 'CURRENT_TIMESTAMP(<VARCHAR(3)>)'. " +
@@ -700,13 +702,24 @@ public abstract class SqlValidatorTestCase extends TestCase {
         checkExp("DATE '2004-12-01'");
         checkExp("TIME '12:01:01'");
         checkExp("TIMESTAMP '2004-12-01 12:01:01'");
+        checkExp("TIME '12:01:01.001'");
+        checkExp("TIMESTAMP '2004-12-01 12:01:01.001'");
+
 
         // REVIEW: Can't think of any date/time/ts literals that will parse, but not validate.
 
     }
-
+    /**
+     * Testing for casting to/from date/time types.
+     */
+    public void testDateTimeCast() {
+        checkExpFails("CAST('foo' as bar)","Unknown type name: BAR");
+        checkExpFails("CAST(1 as DATE)","Cast function cannot convert value of type INTEGER to type DATE");
+        checkExp("CAST(DATE '2001-12-21' AS VARCHAR(10))");
+        checkExp("CAST( '2001-12-21' AS DATE)");
+    }
     public void testInvalidFunction() {
-        checkExpFails("foo()", ".*Function 'FOO' does not exist.*");
+        checkExpFails("foo()", UNKNOWN_FUNC);
     }
 
 }

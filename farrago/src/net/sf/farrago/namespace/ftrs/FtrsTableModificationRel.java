@@ -20,14 +20,12 @@
 package net.sf.farrago.namespace.ftrs;
 
 import net.sf.farrago.catalog.*;
-import net.sf.farrago.cwm.keysindexes.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 import net.sf.farrago.query.*;
 
-import net.sf.saffron.sql.*;
 import net.sf.saffron.core.*;
 import net.sf.saffron.opt.*;
 import net.sf.saffron.rel.*;
@@ -118,11 +116,10 @@ class FtrsTableModificationRel extends TableModificationRel
         return planner.makeTinyCost();
     }
 
-    // implement SaffronRel
-    public Object implement(RelImplementor implementor,int ordinal)
+    // implement FennelRel
+    public Object implementFennelChild(FennelRelImplementor implementor)
     {
-        assert (ordinal == -1);
-        return implementor.implementChild(this,0,child);
+        return implementor.visitChild(this, 0, child);
     }
 
     private List getUpdateCwmColumnList()
@@ -140,9 +137,10 @@ class FtrsTableModificationRel extends TableModificationRel
     }
 
     // implement FennelRel
-    public FemExecutionStreamDef toStreamDef(FarragoRelImplementor implementor)
+    public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
-        FemExecutionStreamDef input = implementor.implementFennelRel(child);
+        FemExecutionStreamDef input =
+            implementor.visitFennelChild((FennelRel) child);
         FarragoTypeFactory typeFactory = getFarragoTypeFactory();
         if (!(ftrsTable.getCwmColumnSet() instanceof CwmTable)) {
             // e.g. view update
@@ -152,9 +150,9 @@ class FtrsTableModificationRel extends TableModificationRel
         FarragoCatalog catalog = getCatalog();
 
         List updateCwmColumnList = null;
-        
+
         FemTableWriterDef tableWriterDef;
-        switch (getOperation().ordinal_) {
+        switch (getOperation().getOrdinal()) {
         case TableModificationRel.Operation.INSERT_ORDINAL:
             tableWriterDef = catalog.newFemTableInserterDef();
             break;
@@ -197,7 +195,7 @@ class FtrsTableModificationRel extends TableModificationRel
         // they must come last (after any possible constraint violations).
 
         // REVIEW:  update/delete resources
-        
+
         CwmSqlindex clusteredIndex = catalog.getClusteredIndex(table);
         boolean clusteredFirst = clusteredIndex.isUnique();
 
@@ -231,7 +229,7 @@ class FtrsTableModificationRel extends TableModificationRel
                     updateInPlace = true;
                 }
             }
-            
+
             FemIndexWriterDef indexWriter =
                 catalog.fennelPackage.getFemIndexWriterDef()
                                          .createFemIndexWriterDef();

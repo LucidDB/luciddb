@@ -19,10 +19,7 @@
 
 package net.sf.farrago.namespace.impl;
 
-import net.sf.farrago.resource.*;
-
-import java.util.*;
-import java.sql.*;
+import net.sf.farrago.plugin.*;
 
 /**
  * MedAbstractBase is an abstract base for classes used to build data wrappers.
@@ -30,73 +27,11 @@ import java.sql.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class MedAbstractBase
+public class MedAbstractBase extends FarragoAbstractPluginBase
 {
-    /**
-     * A zero-length array of DriverPropertyInfo.
-     */
-    public static final DriverPropertyInfo [] EMPTY_DRIVER_PROPERTIES
-        = new DriverPropertyInfo[0];
-
-    /**
-     * Gets the value of a long integer property.
-     *
-     * @param props property set
-     *
-     * @param propName name of property
-     *
-     * @param defaultValue value to return if property is not set
-     *
-     * @return property value
-     *
-     * @exception SQLException if property is set with non-integer value
-     */
-    public static long getLongProperty(
-        Properties props,String propName,long defaultValue)
-        throws SQLException
-    {
-        String s = props.getProperty(propName);
-        if (s == null) {
-            return defaultValue;
-        } else {
-            try {
-                return Long.parseLong(s);
-            } catch (NumberFormatException ex) {
-                throw FarragoResource.instance().newDataWrapperInvalidIntProp(
-                    s,propName);
-            }
-        }
-    }
-    
-    /**
-     * Gets the value of an integer property.
-     *
-     * @param props property set
-     *
-     * @param propName name of property
-     *
-     * @param defaultValue value to return if property is not set
-     *
-     * @return property value
-     *
-     * @exception SQLException if property is set with non-integer value
-     */
-    public static int getIntProperty(
-        Properties props,String propName,int defaultValue)
-        throws SQLException
-    {
-        String s = props.getProperty(propName);
-        if (s == null) {
-            return defaultValue;
-        } else {
-            try {
-                return Integer.parseInt(s);
-            } catch (NumberFormatException ex) {
-                throw FarragoResource.instance().newDataWrapperInvalidIntProp(
-                    s,propName);
-            }
-        }
-    }
+    // NOTE jvs 17-May-2004: At the moment there's nothing MED-specific here,
+    // but it's staying around as a placeholder in case there is something in
+    // the future.  Put any generic plugin stuff in FarragoAbstractPluginBase.
 }
 
 // End MedAbstractBase.java

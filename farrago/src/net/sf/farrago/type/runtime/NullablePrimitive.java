@@ -213,13 +213,6 @@ public abstract class NullablePrimitive
      */
     public static class NullableLong extends NullablePrimitive
     {
-        // overriden for date subtypes.
- /*       public static Class getPrimitiveClassMethod(Class np)
-        {
-            Util.discard(np);
-            return Long.TYPE;
-        }
-*/
         /** Wrapped primitive */
         public long value;
 
@@ -230,35 +223,7 @@ public abstract class NullablePrimitive
         }
     }
 
-    public static final class NullableDate extends NullableLong
-    {
 
-        public Object getNullableData()
-        {
-            return new java.sql.Date(value);
-        }
-
-    }
-
-    public static final class NullableTime extends NullableLong
-    {
-
-        public Object getNullableData()
-        {
-            return new java.sql.Time(value);
-        }
-
-    }
-
-    public static final class NullableTimestamp extends NullableLong
-    {
-
-        public Object getNullableData()
-        {
-            return new java.sql.Timestamp(value);
-        }
-
-    }
     /**
      * Nullable wrapper for short.
      */

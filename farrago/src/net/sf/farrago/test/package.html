@@ -123,7 +123,7 @@ And the expected output:
 
 The standard test schema SALES is created and populated by all
 developer builds.  See script
-//open/farrago/initsql/createSalesSchema.sql for its definition.  This
+//open/dev/farrago/initsql/createSalesSchema.sql for its definition.  This
 schema can be read (but not written) by any test case as a global
 fixture.
 
@@ -151,7 +151,7 @@ non-determinism), so they are executed but the results are ignored.
 The "ant test" target rebuilds the catalog and runs all unit tests.
 Use "ant junit" to skip the catalog rebuild (but building the catalog
 is actually an important test by itself).  You can also run a single
-unit test via the junitSingle script located in //open/farrago.  This
+unit test via the junitSingle script located in //open/dev/farrago.  This
 script takes a single argument.  If the argument is the name of an
 existing file, the file is assumed to be an SQL script and is executed
 as a diff-based test.  Otherwise, the argument is assumed to be the
@@ -166,7 +166,7 @@ up the JSwat debugger as well.
 
 Besides test log output, test execution also produces trace
 information in the normal location,
-//open/farrago/trace/FarragoTrace.log.  (This trace log is truncated
+//open/dev/farrago/trace/FarragoTrace.log.  (This trace log is truncated
 automatically at the beginning of a test run.)  FarragoTestCase
 inserts trace messages for the beginning and ending of each test case,
 making it easier to find a problem in the middle of a long run.

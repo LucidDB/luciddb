@@ -248,6 +248,30 @@ public:
 };
 
 template <typename TMPLT>
+class NativeRef : public NativeNativeInstruction<TMPLT>
+{
+public: 
+    explicit
+    NativeRef(RegisterRef<TMPLT>* result,
+              RegisterRef<TMPLT>* op1,
+              StandardTypeDescriptorOrdinal nativeType)
+        : NativeNativeInstruction<TMPLT>(result, op1, nativeType)
+    { }
+    virtual
+    ~NativeRef() { }
+
+    virtual void exec(TProgramCounter& pc) const { 
+        pc++;
+        mResult->refer(mOp1);
+    }
+    const char* longName() const { return "NativeRef"; }
+    const char* shortName() const { return "REF"; }
+    void describe(string& out, bool values) const {
+        describeHelper(out, values, longName(), shortName(), mResult, mOp1, mOp2);
+    }
+};
+
+template <typename TMPLT>
 class NativeToNull : public NativeNativeInstruction<TMPLT>
 {
 public: 

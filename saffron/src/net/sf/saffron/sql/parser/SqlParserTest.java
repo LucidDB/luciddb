@@ -62,7 +62,7 @@ public class SqlParserTest extends TestCase
         } catch (ParseException e) {
             throw Util.newInternal(e,"Error while parsing SQL '" + sql + "'");
         }
-        final String actual = sqlNode.toString(null);
+        final String actual = sqlNode.toSqlString(null);
         assertEqualsUnabridged(expected,actual);
     }
 
@@ -76,8 +76,13 @@ public class SqlParserTest extends TestCase
                 e,
                 "Error while parsing SQL expression '" + sql + "'");
         }
-        final String actual = sqlNode.toString(null);
+        final String actual = sqlNode.toSqlString(null);
         assertEqualsUnabridged(expected,actual);
+    }
+
+    private void checkExpSame(String sql)
+    {
+        checkExp(sql,sql);
     }
 
     private void assertEqualsUnabridged(String expected,String actual)
@@ -171,23 +176,23 @@ public class SqlParserTest extends TestCase
 
     public void testEmbeddedDate()
     {
-        checkExp("{d '1998-10-22'}","1998-10-22");
+        checkExp("{d '1998-10-22'}","DATE '1998-10-22'");
     }
 
     public void testEmbeddedTime()
     {
-        checkExp("{t '16:22:34'}","16:22:34");
+        checkExp("{t '16:22:34'}","TIME '16:22:34'");
     }
 
     public void testEmbeddedTimestamp()
     {
-        checkExp("{ts '1998-10-22 16:22:34'}","1998-10-22 16:22:34.0");
+        checkExp("{ts '1998-10-22 16:22:34'}","TIMESTAMP '1998-10-22 16:22:34'");
     }
 
     public void testNot()
     {
         check("select not true, not false, not null, not unknown from t",
-              "SELECT (NOT TRUE), (NOT FALSE), (NOT NULL), (NOT NULL)"+NL+
+              "SELECT (NOT TRUE), (NOT FALSE), (NOT NULL), (NOT UNKNOWN)"+NL+
               "FROM `T`");
     }
 
@@ -201,7 +206,7 @@ public class SqlParserTest extends TestCase
         check("select * from t where null or unknown and unknown",
               "SELECT *"+NL+
               "FROM `T`"+NL+
-              "WHERE (NULL OR (NULL AND NULL))");
+              "WHERE (NULL OR (UNKNOWN AND UNKNOWN))");
 
         check("select * from t where true and (true or true) or false",
               "SELECT *"+NL+
@@ -228,7 +233,7 @@ public class SqlParserTest extends TestCase
             check("select * from t where c1=1.1 IS NOT "+in[i],
                   "SELECT *"+NL+
                   "FROM `T`"+NL+
-                  "WHERE (NOT ((`C1` = 1.1) IS "+out[i]+"))");
+                  "WHERE ((`C1` = 1.1) IS NOT "+out[i]+")");
         }
     }
 
@@ -237,7 +242,7 @@ public class SqlParserTest extends TestCase
         check("select * from t where x is unknown is not unknown",
               "SELECT *"+NL+
               "FROM `T`"+NL+
-              "WHERE (NOT ((`X` IS NULL) IS NULL))");
+              "WHERE ((`X` IS NULL) IS NOT NULL)");
 
         check("select 1 from t where not true is unknown",
               "SELECT 1"+NL+
@@ -248,15 +253,13 @@ public class SqlParserTest extends TestCase
                 " is true is not true is null is not null",
               "SELECT *"+NL+
               "FROM `T`"+NL+
-              "WHERE (NOT (((NOT (((NOT (((NOT ((`X` IS NULL) IS NULL)) IS FALSE) IS FALSE)) "+
-                 "IS TRUE) IS TRUE)) IS NULL) IS NULL))");
+              "WHERE ((((((((`X` IS NULL) IS NOT NULL) IS FALSE) IS NOT FALSE) IS TRUE) IS NOT TRUE) IS NULL) IS NOT NULL)");
 
         // combine IS postfix operators with infix (AND) and prefix (NOT) ops
         check("select * from t where x is unknown is false and x is unknown is true or not y is unknown is not null",
                 "SELECT *" + NL +
                 "FROM `T`" + NL +
-                "WHERE ((((`X` IS NULL) IS FALSE) AND ((`X` IS NULL) IS TRUE)) OR (NOT (((NOT `Y`) IS NULL)"+
-                  " IS NULL)))");
+                "WHERE ((((`X` IS NULL) IS FALSE) AND ((`X` IS NULL) IS TRUE)) OR (((NOT `Y`) IS NULL) IS NOT NULL))");
     }
 
     public void testEqualNotEqual() {
@@ -312,7 +315,7 @@ public class SqlParserTest extends TestCase
         check("select * from t where x is distinct from y",
                 "SELECT *" + NL + "FROM `T`" + NL + "WHERE (`X` IS DISTINCT FROM `Y`)");
 
-       check("select * from t where x is distinct from (4,5,6)",
+        check("select * from t where x is distinct from (4,5,6)",
                 "SELECT *" + NL + "FROM `T`" + NL + "WHERE (`X` IS DISTINCT FROM (ROW(4, 5, 6)))");
 
         check("select * from t where true is distinct from true",
@@ -320,6 +323,11 @@ public class SqlParserTest extends TestCase
 
         check("select * from t where true is distinct from true is true",
                 "SELECT *" + NL + "FROM `T`" + NL + "WHERE ((TRUE IS DISTINCT FROM TRUE) IS TRUE)");
+    }
+
+    public void _testCast(){
+        check("select cast(1.0 as integer) from values(true)",
+              "SELECT *" + NL + "FROM `T`"+ NL + "FROM VALUES(TRUE)");
     }
 
     public void testLikeAndSimilar()
@@ -391,8 +399,8 @@ public class SqlParserTest extends TestCase
         checkExp("substring('a' FROM 'reg' FOR '\\')","SUBSTRING('a' FROM 'reg' FOR '\\')") ;
 
         checkExp("substring('a', 'reg', '\\')","SUBSTRING('a' FROM 'reg' FOR '\\')") ;
-        checkExp("substring('a' FROM 1 FOR 2)","SUBSTRING('a' FROM 1 FOR 2)") ;
-        checkExp("substring('a' FROM 1)","SUBSTRING('a' FROM 1)") ;
+        checkExp("substring('a', 1, 2)","SUBSTRING('a' FROM 1 FOR 2)") ;
+        checkExp("substring('a' , 1)","SUBSTRING('a' FROM 1)") ;
     }
 
     public void testFunction()
@@ -583,9 +591,18 @@ public class SqlParserTest extends TestCase
 
     public void testLiteral()
     {
+        checkExpSame("'foo'");
+        checkExpSame("100");
         check(
             "select 1 as one, 'x' as x, null as n from emp",
             "SELECT 1 AS `ONE`, 'x' AS `X`, NULL AS `N`" + NL + "FROM `EMP`");
+
+        // Even though it looks like a date, it's just a string.
+        checkExp("'2004-06-01'", "'2004-06-01'");
+        checkExp("-.25", "(- 0.25)"); // toString is aggressive about parens.
+        checkExpSame("TIMESTAMP '2004-06-01 15:55:55'");
+        checkExpSame("NULL");
+
     }
 
     public void testMixedFrom()
@@ -951,12 +968,14 @@ public class SqlParserTest extends TestCase
     }
 
     public void testHexAndBinaryString(){
-        checkExp("x''=X'2'","(X'' = B'0010')");
-        checkExp("x'fffff'=X''","(B'11111111111111111111' = X'')");
+        checkExp("x''=X'2'","(X'' = X'2')");
+        checkExp("x'fffff'=X''","(X'FFFFF' = X'')");
 //todo        checkExp("x'1' \t\t\f\r "+NL+"'2'--hi this is a comment'FF'\r\r\t\f "+NL+"'34'","X'1234'");
 //todo        checkExp("x'1' \t\t\f\r "+NL+"'000'--"+NL+"'01'","B'100001'");
         checkExp("x'1234567890abcdef'=X'fFeEdDcCbBaA'","(X'1234567890ABCDEF' = X'FFEEDDCCBBAA')");
-        checkExp("x'001'=X'000102'","(B'000000000001' = X'000102')"); //check so inital zeros dont get trimmed somehow
+        checkExp("x'001'=X'000102'","(X'001' = X'000102')"); //check so inital zeros dont get trimmed somehow
+        if (false) checkFails("select b'1a00' from t", "blah");
+        if (false) checkFails("select x'FeedGoats' from t", "blah");
     }
 
     public void testHexAndBinaryStringFails(){
@@ -967,8 +986,8 @@ public class SqlParserTest extends TestCase
 
     public void testStringLiteral(){
         checkExp("_latin1'hi'","_LATIN1'hi'");
-        checkExp("N'is it a plane? no it''s superman!'","_LATIN1'is it a plane? no it''s superman!'");
-        checkExp("n'lowercase n'","_LATIN1'lowercase n'");
+        checkExp("N'is it a plane? no it''s superman!'","_ISO-8859-1'is it a plane? no it''s superman!'");
+        checkExp("n'lowercase n'","_ISO-8859-1'lowercase n'");
         checkExp("'boring string'","'boring string'");
         checkExp("_iSo_8859-1'bye'","_ISO_8859-1'bye'");
 //        checkExp("N'bye' \t\r\f\f\n' bye'","_LATIN1'bye bye'"); todo
@@ -1063,17 +1082,30 @@ public class SqlParserTest extends TestCase
 		checkExp("CURRENT_TIMESTAMP(x+y)", "CURRENT_TIMESTAMP((`X` + `Y`))");
 
         // Date literals
-        checkExp("DATE '2004-12-01'", "2004-12-01");
-        checkExp("TIME '12:01:01'", "12:01:01");
-        checkExp("TIMESTAMP '2004-12-01 12:01:01'", "2004-12-01 12:01:01.0");
+        checkExp("DATE '2004-12-01'", "DATE '2004-12-01'");
+        checkExp("TIME '12:01:01'", "TIME '12:01:01'");
+        checkExp("TIMESTAMP '2004-12-01 12:01:01'", "TIMESTAMP '2004-12-01 12:01:01'");
+        checkExp("TIME '12:01:01.001'", "TIME '12:01:01.001'");
+        checkExp("TIMESTAMP '2004-12-01 12:01:01.1'", "TIMESTAMP '2004-12-01 12:01:01.1'");
 
         // Failures.
-        checkFails("DATE '12/21/99'", ".*" + NL + ".*Was expecting:" + NL +
-                ".*<QUOTED_DATE_STRING>.*" + NL + ".*");
-        checkFails("TIME '1230:33'",".*" + NL + ".*Was expecting:" + NL + ".*<QUOTED_TIME_STRING>.*" + NL + ".*");
-        checkFails("TIMESTAMP '12-21-99, 12:30:00",".*" + NL + ".*Was expecting:" + NL + ".*<QUOTED_TIMESTAMP_STRING>.*" + NL + ".*");
+        checkFails("DATE '12/21/99'", "(?s).*net.sf.saffron.sql.parser.ParseException: Unparseable date: \"12/21/99\"");
+        checkFails("TIME '1230:33'","net.sf.saffron.sql.parser.ParseException: Unparseable date: \"1230:33\"");
+        checkFails("TIMESTAMP '12-21-99, 12:30:00'", "net.sf.saffron.sql.parser.ParseException: Unparseable date: \"12-21-99, 12:30:00\"");
 
 	}
+
+    /**
+     * Testing for casting to/from date/time types.
+     */
+    public void testDateTimeCast() {
+     //   checkExp("CAST(DATE '2001-12-21' AS CHARACTER VARYING)", "CAST(2001-12-21)");
+        checkExp("CAST('2001-12-21' AS DATE)","CAST('2001-12-21' AS `DATE`)");
+        checkExp("CAST(12 AS DATE)","CAST(12 AS `DATE`)");
+        checkFails("CAST('2000-12-21' AS DATE NOT NULL)", "(?s).*Encountered \"NOT\" at line 1, column 27.*");
+        checkFails("CAST('foo' as 1)","(?s).*Encountered \"1\" at line 1, column 15.*");
+    }
+
     public void testTrim() {
         checkExp("trim('mustache' FROM 'beard')","TRIM(BOTH 'mustache' FROM 'beard')");
         checkExp("trim('mustache')","TRIM(BOTH ' ' FROM 'mustache')");

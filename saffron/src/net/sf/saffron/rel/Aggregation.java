@@ -22,11 +22,10 @@
 
 package net.sf.saffron.rel;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.opt.RelImplementor;
-
-import openjava.mop.OJClass;
-
+import net.sf.saffron.core.SaffronType;
+import net.sf.saffron.core.SaffronTypeFactory;
+import net.sf.saffron.oj.rel.JavaRel;
+import net.sf.saffron.oj.rel.JavaRelImplementor;
 import openjava.ptree.Expression;
 
 
@@ -74,7 +73,7 @@ public interface Aggregation
     /**
      * Generates (into the current statement list, gleaned by calling
      * <code>implementor</code>'s {@link
-     * net.sf.saffron.opt.RelImplementor#getStatementList} method) code to
+     * net.sf.saffron.oj.rel.JavaRelImplementor#getStatementList} method) code to
      * merge two accumulators. For <code>sum(x)</code>, this looks like
      * <code>((saffron.runtime.Holder.int_Holder) accumulator).value +=
      * ((saffron.runtime.Holder.int_Holder) other).value</code>.
@@ -90,7 +89,7 @@ public interface Aggregation
      * @param otherAccumulator accumulator to merge in
      */
     void implementMerge(
-        RelImplementor implementor,
+        JavaRelImplementor implementor,
         SaffronRel rel,
         Expression accumulator,
         Expression otherAccumulator);
@@ -98,7 +97,7 @@ public interface Aggregation
     /**
      * Generates (into the current statement list, gleaned by calling
      * <code>implementor</code>'s {@link
-     * net.sf.saffron.opt.RelImplementor#getStatementList} method) the piece of code
+     * net.sf.saffron.oj.rel.JavaRelImplementor#getStatementList} method) the piece of code
      * which gets called each time an extra row is seen. For
      * <code>sum(x)</code>, this looks like
      * <code>((net.sf.saffron.runtime.Holder.int_Holder) accumulator).value +=
@@ -111,8 +110,8 @@ public interface Aggregation
      *        arguments to this aggregation
      */
     void implementNext(
-        RelImplementor implementor,
-        SaffronRel rel,
+        JavaRelImplementor implementor,
+        JavaRel rel,
         Expression accumulator,
         int [] args);
 
@@ -129,8 +128,8 @@ public interface Aggregation
      * saffron.runtime.Holder.int_Holder(0)</code>.
      */
     Expression implementStart(
-        RelImplementor implementor,
-        SaffronRel rel,
+        JavaRelImplementor implementor,
+        JavaRel rel,
         int [] args);
 
     /**
@@ -139,8 +138,8 @@ public interface Aggregation
      * saffron.runtime.Holder.int_Holder(x)</code>.
      */
     Expression implementStartAndNext(
-        RelImplementor implementor,
-        SaffronRel rel,
+        JavaRelImplementor implementor,
+        JavaRel rel,
         int [] args);
 }
 

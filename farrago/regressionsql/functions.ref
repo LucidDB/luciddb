@@ -1,0 +1,110 @@
+0: jdbc:farrago:> -- $Id: //open/farrago/regressionsql/selectSimple.sql#5 $
+0: jdbc:farrago:> -- Full vertical system testing of non function statements
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel
+0: jdbc:farrago:> -- and another time to use java. The caller of this script is setting the flag so no need
+0: jdbc:farrago:> -- to do it directly unless you need to do acrobatics.
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select pow(2.0,2.0) as exp from sales.emps where empno=100 ;
++------+
+| EXP  |
++------+
+| 4.0  |
++------+
+0: jdbc:farrago:> select -pow(2.0,2.0) as exp from sales.emps where empno=100 ;
++-------+
+|  EXP  |
++-------+
+| -4.0  |
++-------+
+0: jdbc:farrago:> select abs(-pow(2.0,-2.0)) as res from sales.emps where empno=100 ;
++-------+
+|  RES  |
++-------+
+| 0.25  |
++-------+
+0: jdbc:farrago:> select ln(2.71828) as res from sales.emps where empno=100;
++--------------------+
+|        RES         |
++--------------------+
+| 0.999999327347282  |
++--------------------+
+0: jdbc:farrago:> select (-empno) as res from sales.emps;
++-------+
+|  RES  |
++-------+
+| -100  |
+| -110  |
+| -120  |
+| -110  |
++-------+
+0: jdbc:farrago:> select (-empno)*2 as res from sales.emps;
++-------+
+|  RES  |
++-------+
+| -200  |
+| -220  |
+| -240  |
+| -220  |
++-------+
+0: jdbc:farrago:> select slacker and true from sales.emps;
++---------+
+| EXPR$0  |
++---------+
+| true    |
+|         |
+|         |
+| false   |
++---------+
+0: jdbc:farrago:> select slacker and false from sales.emps;
++---------+
+| EXPR$0  |
++---------+
+| false   |
+| false   |
+| false   |
+| false   |
++---------+
+0: jdbc:farrago:> select slacker and unknown from sales.emps;
++---------+
+| EXPR$0  |
++---------+
+|         |
+|         |
+|         |
+| false   |
++---------+
+0: jdbc:farrago:> select slacker or true from sales.emps;
++---------+
+| EXPR$0  |
++---------+
+| true    |
+| true    |
+| true    |
+| true    |
++---------+
+0: jdbc:farrago:> select slacker or false from sales.emps;
++---------+
+| EXPR$0  |
++---------+
+| true    |
+|         |
+|         |
+| false   |
++---------+
+0: jdbc:farrago:> select slacker or unknown from sales.emps;
++---------+
+| EXPR$0  |
++---------+
+| true    |
+|         |
+|         |
+|         |
++---------+
+0: jdbc:farrago:> --select *  from sales.emps where age between 40 and 60;
+0: jdbc:farrago:> --select abs((-empno)*2) as res from sales.emps;
+0: jdbc:farrago:> --select abs(2) as res from sales.emps;
+0: jdbc:farrago:> --select abs(-2) as res from sales.emps;
+0: jdbc:farrago:> --select abs((-empno)*2.0) as res from sales.emps;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !quit

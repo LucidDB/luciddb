@@ -19,14 +19,15 @@
 
 package net.sf.farrago.query;
 
-import net.sf.farrago.util.*;
+import net.sf.saffron.opt.CallingConvention;
+import net.sf.saffron.opt.RuleOperand;
+import net.sf.saffron.opt.VolcanoRule;
+import net.sf.saffron.opt.VolcanoRuleCall;
+import net.sf.saffron.rel.RelFieldCollation;
+import net.sf.saffron.rel.SaffronRel;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.util.*;
-
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * FennelRemoveRedundantSortRule removes instances of SortRel which are
@@ -65,8 +66,7 @@ public class FennelRemoveRedundantSortRule extends VolcanoRule
 
         if (inputRel instanceof FennelSortRel) {
             SaffronRel newRel =
-                convert(planner,(SaffronRel) inputRel,
-                        FennelPullRel.FENNEL_PULL_CONVENTION);
+                convert(planner,inputRel,FennelPullRel.FENNEL_PULL_CONVENTION);
             if (newRel == null) {
                 return;
             }

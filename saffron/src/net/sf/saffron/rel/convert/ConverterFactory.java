@@ -38,8 +38,21 @@ public interface ConverterFactory
 {
     //~ Methods ---------------------------------------------------------------
 
+    /**
+     * Returns the calling convention this converter converts to.
+     */
     CallingConvention getConvention();
 
+    /**
+     * Returns the calling convention this converter converts from.
+     */
+    CallingConvention getInConvention();
+
+    /**
+     * Converts a relational expression, which must have
+     * {@link #getInConvention} calling convention, to a relational expression
+     * of {@link #getConvention} calling convention.
+     */
     ConverterRel convert(SaffronRel rel);
 }
 

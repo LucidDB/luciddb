@@ -25,6 +25,7 @@ package net.sf.saffron.oj.xlat;
 import net.sf.saffron.core.SaffronType;
 import net.sf.saffron.core.SaffronTypeFactory;
 import net.sf.saffron.core.SaffronTypeFactoryImpl;
+import net.sf.saffron.trace.SaffronTrace;
 import net.sf.saffron.oj.rel.ExpressionReaderRel;
 import net.sf.saffron.oj.util.JavaRexBuilder;
 import net.sf.saffron.oj.util.OJUtil;
@@ -39,20 +40,20 @@ import openjava.mop.OJClass;
 import openjava.mop.QueryEnvironment;
 import openjava.mop.Toolbox;
 import openjava.ptree.*;
-import openjava.tools.DebugOut;
 import openjava.tools.parser.ParserConstants;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Vector;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 /**
  * A <code>QueryInfo</code> holds all the information about a {@link
  * QueryExpression} while it is being translated into a collection of {@link
  * net.sf.saffron.rel.SaffronRel}s.
- * 
+ *
  * <p>
  * Those <code>SaffronRel</code>s will all belong to the same {@link
  * VolcanoCluster}, but <code>VolcanoCluster</code> is much simpler.  Please
@@ -71,6 +72,8 @@ class QueryInfo
     VolcanoCluster cluster;
     private SaffronRel root;
     final JavaRexBuilder rexBuilder;
+
+    private static final Logger tracer = SaffronTrace.getQueryExpanderTracer();
 
     //~ Constructors ----------------------------------------------------------
 
@@ -137,7 +140,7 @@ class QueryInfo
         Expression exp,
         Expression [] groups,
         ArrayList aggInputList,
-        Vector aggCallVector)
+        ArrayList aggCallVector)
     {
         AggInternalTranslator translator =
             new AggInternalTranslator(
@@ -301,7 +304,7 @@ class QueryInfo
      */
     SaffronRel convertQueryToRel(QueryExpression queryExp)
     {
-        DebugOut.println(
+        tracer.log(Level.FINE,
             "convertQueryToRel: queryExp=[" + queryExp + "] recurse [");
 
         Expression fromList = queryExp.getFrom();
@@ -332,7 +335,7 @@ class QueryInfo
 
             // "aggCallVector" is the aggregate expressions, for example
             // {sum(#1), min(#2)}.
-            Vector aggCallVector = new Vector();
+            ArrayList aggCallVector = new ArrayList();
             RexNode rexWhereClause = null;
             if (whereClause != null) {
                 rexWhereClause =
@@ -355,10 +358,9 @@ class QueryInfo
                         aggInputList,
                         aggCallVector);
             }
-            AggregateRel.Call [] aggCalls =
-                (AggregateRel.Call []) Util.toArray(
-                    aggCallVector,
-                    new AggregateRel.Call[0]);
+            AggregateRel.Call [] aggCalls = (AggregateRel.Call [])
+                    aggCallVector.toArray(
+                            new AggregateRel.Call[aggCallVector.size()]);
             RexNode [] aggInputs = (RexNode [])
                     aggInputList.toArray(new RexNode[aggInputList.size()]);
             setRoot(
@@ -390,7 +392,7 @@ class QueryInfo
             OJClass queryRowClass = queryExp.getRowType(env);
             final SaffronType queryRowType =
                 OJUtil.ojToType(relRowType.getFactory(),queryRowClass);
-            DebugOut.println(
+            tracer.log(Level.FINE,
                 "] return [" + getRoot() + "] rowType=[" + relRowType + "]");
             assert(relRowType == queryRowType);
             return getRoot();
@@ -434,7 +436,7 @@ class QueryInfo
             //              rel = new Sort(env, rel, sorts, parameter);
         }
         SaffronType relRowType = getRoot().getRowType();
-        DebugOut.println(
+        tracer.log(Level.FINE,
             "] return [" + getRoot() + "] rowType=[" + relRowType + "]");
         SaffronType fieldType = relRowType;
         /*
@@ -505,7 +507,7 @@ class QueryInfo
      * Goes through an expression looking for sub-queries (<code>in</code> or
      * <code>exists</code>). If it finds one, it joins the query to the from
      * clause, replaces the condition, and returns true. Examples:
-     * 
+     *
      * <ul>
      * <li>
      * <code>exists</code> becomes a reference to a indicator query:
@@ -522,7 +524,7 @@ class QueryInfo
      *   where emp.deptno == dept.deptno && emp.gender.equals("F"))
      * where dept.location.equals("SF") && indicator != null</pre>
      * </blockquote>
-     * 
+     *
      * <p>
      * The reference to 'dept' from within a join query is illegal -- but we
      * haven't de-correlated yet.
@@ -555,7 +557,7 @@ class QueryInfo
      * </blockquote>
      * </li>
      * </ul>
-     * 
+     *
      *
      * @param exp Expression
      *
@@ -574,46 +576,6 @@ class QueryInfo
         }
     }
 
-    /**
-     * Returns the <code>count</code>th leaf ({@link SaffronRel} which
-     * implements a from-list item) below this one.
-     *
-     * @param rel relation to start from
-     * @param count leaf number we want
-     * @param seen <code>seen[0]</code> contains the number of leaves we have
-     *        seen so far
-     * @param path List containing the rel at each depth
-     * @param depth Current depth
-     */
-    private SaffronRel findLeaf(
-        SaffronRel rel,
-        int count,
-        int [] seen,
-        ArrayList path,
-        int depth)
-    {
-        if (leaves.contains(rel)) {
-            if (seen[0] == count) {
-                path.add(rel);
-                return rel;
-            } else {
-                seen[0]++;
-                return null;
-            }
-        } else {
-            SaffronRel [] inputs = rel.getInputs();
-            path.add(rel);
-            for (int i = 0; i < inputs.length; i++) {
-                SaffronRel result =
-                    findLeaf(inputs[i],count,seen,path,depth + 1);
-                if (result != null) {
-                    return result;
-                }
-            }
-            path.remove(path.size() - 1);
-            return null;
-        }
-    }
 
     private ArrayList flatten(SaffronRel[] rels) {
         ArrayList list = new ArrayList();

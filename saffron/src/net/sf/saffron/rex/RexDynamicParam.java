@@ -50,9 +50,13 @@ public class RexDynamicParam extends RexVariable
     {
         return new RexDynamicParam(type,index);
     }
-    
+
     public RexKind getKind() {
         return RexKind.DynamicParam;
+    }
+
+    public void accept(RexVisitor visitor) {
+        visitor.visitParam(this);
     }
 }
 

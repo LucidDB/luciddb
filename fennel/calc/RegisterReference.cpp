@@ -34,6 +34,9 @@ RegisterReference::setCalc(Calculator* calcP) {
     mRegisterSetP = calcP->mRegisterTuple;
     mRegisterSetDescP = calcP->mRegisterSetDescriptor;
     mResetP = &(calcP->mRegisterReset);
+    if (mSetIndex == EOutput && calcP->mOutputRegisterByReference) {
+        mProp |= (EPropByRefOnly | EPropReadOnly);
+    }
 }
 
 void 
@@ -58,11 +61,39 @@ RegisterReference::cachePointer() {
     }
 }
 
+void
+RegisterReference::setDefaultProperties()
+{
+    switch(mSetIndex) {
+    case ELiteral:
+        mProp = KLiteralSetDefault;
+        break;
+    case EInput:
+        mProp = KInputSetDefault;
+        break;
+    case EOutput:
+        mProp = KOutputSetDefault;
+        break;
+    case ELocal:
+        mProp = KLocalSetDefault;
+        break;
+    case EStatus:
+        mProp = KStatusSetDefault;
+        break;
+    default:
+        mProp = EPropNone;
+    }
+}
+
+
+
 string
 RegisterReference::toString() const
 {
     return boost::io::str( format("[S%d I%lu]") % mSetIndex % mIndex);
 }
+
+
 
 FENNEL_END_CPPFILE("$Id$");
 

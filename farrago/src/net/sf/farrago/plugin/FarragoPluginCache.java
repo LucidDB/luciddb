@@ -1,0 +1,195 @@
+/*
+// Farrago is a relational database management system.
+// Copyright (C) 2003-2004 John V. Sichi.
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public License
+// as published by the Free Software Foundation; either version 2.1
+// of the License, or (at your option) any later version.
+// 
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+// 
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+*/
+
+package net.sf.farrago.plugin;
+
+import net.sf.farrago.resource.*;
+import net.sf.farrago.util.*;
+import net.sf.farrago.catalog.*;
+
+import java.net.*;
+import java.util.*;
+import java.util.jar.*;
+
+/**
+ * FarragoPluginCache is an abstract private cache for loading instances of
+ * {@link FarragoPlugin} (and their component sub-objects).  It requires an
+ * underlying shared {@link FarragoObjectCache}.
+ *
+ *<p>
+ *
+ * This class is only a partial implementation.  For an example of how to build
+ * a full implementation, see {@link
+ * net.sf.farrago.namespace.util.FarragoDataWrapperCache}.
+ *
+ * @author John V. Sichi
+ * @version $Id$
+ */
+public abstract class FarragoPluginCache extends FarragoCompoundAllocation
+{
+    /**
+     * Prefix used to indicate that a wrapper library is loaded directly from
+     * a class rather than a JAR.
+     */
+    public static final String LIBRARY_CLASS_PREFIX = "class ";
+    
+    private Map mapMofIdToPlugin;
+
+    private FarragoObjectCache sharedCache;
+
+    private FarragoCatalog catalog;
+
+    /**
+     * Creates an empty cache.
+     *
+     * @param owner FarragoAllocationOwner for this cache, to make sure
+     * everything gets discarded eventually
+     *
+     * @param sharedCache underlying shared cache
+     *
+     * @param catalog FarragoCatalog for wrapper initialization
+     */
+    public FarragoPluginCache(
+        FarragoAllocationOwner owner,
+        FarragoObjectCache sharedCache,
+        FarragoCatalog catalog)
+    {
+        owner.addAllocation(this);
+        this.sharedCache = sharedCache;
+        this.catalog = catalog;
+        mapMofIdToPlugin = new HashMap();
+    }
+
+    /**
+     * @return the underlying catalog
+     */
+    public FarragoCatalog getCatalog()
+    {
+        return catalog;
+    }
+
+    /**
+     * @return the underlying shared cache
+     */
+    public FarragoObjectCache getSharedCache()
+    {
+        return sharedCache;
+    }
+
+    /**
+     * Searches this cache for a plugin object identified by its catalog MofId.
+     *
+     * @param mofId MofId of plugin object being loaded
+     *
+     * @return cached instance or null if not yet cached
+     */
+    protected Object searchPrivateCache(String mofId)
+    {
+        return mapMofIdToPlugin.get(mofId);
+    }
+
+    /**
+     * Adds a plugin object to this cache.
+     *
+     * @param entry pinned entry from underlying shared cache;
+     * key must be plugin object's catalog MofId
+     *
+     * @return cached plugin object
+     */
+    protected Object addToPrivateCache(
+        FarragoObjectCache.Entry entry)
+    {
+        // take ownership of the pinned cache entry
+        addAllocation(entry);
+
+        Object obj = entry.getValue();
+        mapMofIdToPlugin.put(entry.getKey(),obj);
+        return obj;
+    }
+
+    /**
+     * Loads the Java class implementing a plugin.
+     *
+     * @param libraryName name of library containing plugin implementation
+     *
+     * @param jarAttributeName name of JAR attribute to use to determine
+     * class name
+     *
+     * @return loaded class
+     */
+    protected Class loadPluginClass(
+        String libraryName,
+        String jarAttributeName)
+    {
+        try {
+            if (libraryName.startsWith(LIBRARY_CLASS_PREFIX)) {
+                String className = libraryName.substring(
+                    LIBRARY_CLASS_PREFIX.length());
+                return Class.forName(className);
+            } else {
+                JarFile jar = new JarFile(libraryName);
+                Manifest manifest = jar.getManifest();
+                String className =
+                    manifest.getMainAttributes().getValue(
+                        jarAttributeName);
+                URLClassLoader classLoader = new URLClassLoader(
+                    new URL [] {new URL("file:" + libraryName)});
+                return classLoader.loadClass(className);
+            }
+        } catch (Throwable ex) {
+            throw FarragoResource.instance().newPluginJarLoadFailed(
+                libraryName,
+                ex);
+        }
+    }
+
+    /**
+     * Initializes a plugin instance.
+     *
+     * @param libraryName name of library containing plugin implementation
+     *
+     * @param jarAttributeName name of JAR attribute to use to determine
+     * class name
+     *
+     * @param options options with which to initialize plugin
+     *
+     * @return initialized plugin
+     */
+    protected FarragoPlugin initializePlugin(
+        String libraryName,
+        String jarAttributeName,
+        Properties options)
+    {
+        Class pluginClass = loadPluginClass(
+            libraryName,jarAttributeName);
+            
+        FarragoPlugin plugin;
+        try {
+            plugin = (FarragoPlugin) pluginClass.newInstance();
+            plugin.initialize(catalog,options);
+        } catch (Throwable ex) {
+            throw FarragoResource.instance().newPluginInitFailed(
+                libraryName,
+                ex);
+        }
+        return plugin;
+    }
+}
+
+// End FarragoPluginCache.java

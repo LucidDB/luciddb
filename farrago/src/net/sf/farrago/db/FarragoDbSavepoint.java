@@ -21,6 +21,7 @@ package net.sf.farrago.db;
 
 import net.sf.farrago.session.*;
 import net.sf.farrago.fem.fennel.*;
+import net.sf.farrago.fennel.*;
 
 /**
  * FarragoDbSavepoint implements the {@link
@@ -50,14 +51,17 @@ class FarragoDbSavepoint implements FarragoSessionSavepoint
     /**
      * Handle to underlying Fennel savepoint.
      */
-    private FemSvptHandle femSvptHandle;
+    private FennelSvptHandle fennelSvptHandle;
 
     FarragoDbSavepoint(
-        int id,String name,FemSvptHandle femSvptHandle,FarragoDbSession session)
+        int id,
+        String name,
+        FennelSvptHandle fennelSvptHandle,
+        FarragoDbSession session)
     {
         this.id = id;
         this.name = name;
-        this.femSvptHandle = femSvptHandle;
+        this.fennelSvptHandle = fennelSvptHandle;
         this.session = session;
     }
     
@@ -89,9 +93,9 @@ class FarragoDbSavepoint implements FarragoSessionSavepoint
         return id;
     }
 
-    FemSvptHandle getFemSvptHandle()
+    FennelSvptHandle getFennelSvptHandle()
     {
-        return femSvptHandle;
+        return fennelSvptHandle;
     }
 }
 

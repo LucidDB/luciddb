@@ -20,47 +20,43 @@
 */
 package net.sf.saffron.oj.rel;
 
-import openjava.ptree.Expression;
 import net.sf.saffron.rel.SaffronRel;
-import net.sf.saffron.opt.RelImplementor;
+import net.sf.saffron.opt.CallingConvention;
+import openjava.ptree.ParseTree;
 
 /**
- * A relational expression of the Java calling convention.
+ * A relational expression of one of the the Java-based calling conventions.
  *
- * <p>Objects which implement this interface must
- * (a) extend {@link SaffronRel}, and
- * (b) return {@link net.sf.saffron.opt.CallingConvention#JAVA} from their
- *     {@link SaffronRel#getConvention} method</p>
+ * <p>Objects which implement this interface must:<ul>
  *
- * @author jhyde$
- * @since Nov 22, 2003$
+ * <li>extend {@link net.sf.saffron.rel.SaffronBaseRel}, and</li>
+ *
+ * <li>return one of the following calling-conventions from their
+ * {@link #getConvention} method:
+ * {@link CallingConvention#ARRAY ARRAY},
+ * {@link CallingConvention#ITERABLE ITERABLE},
+ * {@link CallingConvention#ITERATOR ITERATOR},
+ * {@link CallingConvention#COLLECTION COLLECTION},
+ * {@link CallingConvention#MAP MAP},
+ * {@link CallingConvention#VECTOR VECTOR},
+ * {@link CallingConvention#HASHTABLE HASHTABLE},
+ * {@link CallingConvention#JAVA JAVA}.</li></ul>
+ *
+ * <p>For {@link CallingConvention#JAVA JAVA calling-convention}, see
+ * the sub-interface {@link JavaLoopRel}, and the auxilliary interface
+ * {@link JavaSelfRel}.
+ *
+ * @author jhyde
+ * @since Nov 22, 2003
  * @version $Id$
  **/
-public interface JavaRel {
+public interface JavaRel extends SaffronRel {
     /**
-     * Returns a Java expression which yields the current row of this
-     * relational expression. This method is called by the {@link
-     * RelImplementor} the first time a piece of Java code wants to refer to
-     * this relation. The implementor then uses this expression to initialize
-     * a variable.
+     * Creates a plan for this expression according to a calling convention.
      *
-     * <p>
-     * If no code needs to refer to this relation, then the expression is
-     * never generated. This prevents generating useless code like
-     * <blockquote>
-     * <pre>Dummy_12f614.Ojp_1 oj_var8 = new Dummy_12f614.Ojp_1();</pre>
-     * </blockquote>
-     * .
-     * </p>
-     *
-     * <p>
-     * If a relational expression has one input relational expression
-     * which has the same row type, you may be able to share its variable.
-     * Call Implementor#bind(Rel,Rel) to do this.
-     *
-     * @see net.sf.saffron.opt.RelImplementor#bind(SaffronRel,SaffronRel)
+     * @param implementor implementor
      */
-    Expression implementSelf(RelImplementor implementor);
+    ParseTree implement(JavaRelImplementor implementor);
 }
 
 // End JavaRel.java

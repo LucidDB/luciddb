@@ -1,0 +1,187 @@
+0: jdbc:farrago:> -- $Id: //open/farrago/regressionsql/selectSimple.sql#5 $
+0: jdbc:farrago:> -- Full vertical system testing of non advanced select statements
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel
+0: jdbc:farrago:> -- and another time to use java. The caller of this script is setting the flag so no need
+0: jdbc:farrago:> -- to do it directly unless you need to do acrobatics.
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select empno from sales.emps order by empno asc;
++--------+
+| EMPNO  |
++--------+
+| 100    |
+| 110    |
+| 110    |
+| 120    |
++--------+
+0: jdbc:farrago:> select empno+1 from sales.emps order by 1;
++---------+
+| EXPR$0  |
++---------+
+| 101     |
+| 111     |
+| 111     |
+| 121     |
++---------+
+0: jdbc:farrago:> select empno-1 from sales.emps order by 1;
++---------+
+| EXPR$0  |
++---------+
+| 99      |
+| 109     |
+| 109     |
+| 119     |
++---------+
+0: jdbc:farrago:> select empno*2 from sales.emps order by 1;
++---------+
+| EXPR$0  |
++---------+
+| 200     |
+| 220     |
+| 220     |
+| 240     |
++---------+
+0: jdbc:farrago:> select empno/2 from sales.emps order by 1;
++---------+
+| EXPR$0  |
++---------+
+| 50      |
+| 55      |
+| 55      |
+| 60      |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select empno from sales.emps where empno=110;
++--------+
+| EMPNO  |
++--------+
+| 110    |
+| 110    |
++--------+
+0: jdbc:farrago:> select empno from sales.emps where empno>=110 order by 1;
++--------+
+| EMPNO  |
++--------+
+| 110    |
+| 110    |
+| 120    |
++--------+
+0: jdbc:farrago:> select empno from sales.emps where empno>110;
++--------+
+| EMPNO  |
++--------+
+| 120    |
++--------+
+0: jdbc:farrago:> select empno from sales.emps where empno<=110 order by 1;
++--------+
+| EMPNO  |
++--------+
+| 100    |
+| 110    |
+| 110    |
++--------+
+0: jdbc:farrago:> select empno from sales.emps where empno<110;
++--------+
+| EMPNO  |
++--------+
+| 100    |
++--------+
+0: jdbc:farrago:> select empno from sales.emps where empno<>110 order by 1;
++--------+
+| EMPNO  |
++--------+
+| 100    |
+| 120    |
++--------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select empno from sales.emps where empno=99999;
++--------+
+| EMPNO  |
++--------+
++--------+
+0: jdbc:farrago:> select empno from sales.emps where empno>=99999;
++--------+
+| EMPNO  |
++--------+
++--------+
+0: jdbc:farrago:> select empno from sales.emps where empno<1;
++--------+
+| EMPNO  |
++--------+
++--------+
+0: jdbc:farrago:> select empno from sales.emps where empno<=1;
++--------+
+| EMPNO  |
++--------+
++--------+
+0: jdbc:farrago:> select empno from sales.emps where empno>99999;
++--------+
+| EMPNO  |
++--------+
++--------+
+0: jdbc:farrago:> select empno from sales.emps where empno<>99999 order by 1;
++--------+
+| EMPNO  |
++--------+
+| 100    |
+| 110    |
+| 110    |
+| 120    |
++--------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select empno+1 from sales.emps where empno=110;
++---------+
+| EXPR$0  |
++---------+
+| 111     |
+| 111     |
++---------+
+0: jdbc:farrago:> select empno+1 from sales.emps where empno>=110 order by 1;
++---------+
+| EXPR$0  |
++---------+
+| 111     |
+| 111     |
+| 121     |
++---------+
+0: jdbc:farrago:> select empno+1 from sales.emps where empno>110;
++---------+
+| EXPR$0  |
++---------+
+| 121     |
++---------+
+0: jdbc:farrago:> select empno+1 from sales.emps where empno<110;
++---------+
+| EXPR$0  |
++---------+
+| 101     |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select empno+1, empno/2 from sales.emps;
++---------+---------+
+| EXPR$0  | EXPR$1  |
++---------+---------+
+| 101     | 50      |
+| 111     | 55      |
+| 121     | 60      |
+| 111     | 55      |
++---------+---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> --select empno, empno from sales.emps;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select empno*2 from sales.emps where empno+1>111 order by 1;
++---------+
+| EXPR$0  |
++---------+
+| 240     |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select empno+99900 as res from sales.emps where empno=100;
++---------+
+|   RES   |
++---------+
+| 100000  |
++---------+
+0: jdbc:farrago:> -- select 1 from values(2);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !quit

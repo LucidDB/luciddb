@@ -25,7 +25,6 @@ package net.sf.saffron.sql;
 import net.sf.saffron.core.SaffronType;
 
 import java.util.ArrayList;
-import java.text.MessageFormat;
 
 /**
  * A <code>SqlCall</code> is a call to an {@link SqlOperator operator}.
@@ -38,7 +37,7 @@ public class SqlCall extends SqlNode
     //~ Instance fields -------------------------------------------------------
 
     public SqlOperator operator;
-    SqlNode [] operands;
+    public final SqlNode [] operands;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -70,14 +69,6 @@ public class SqlCall extends SqlNode
     public SqlNode [] getOperands()
     {
         return operands;
-    }
-
-    public void addOperand(SqlNode operand)
-    {
-        SqlNode [] oldOperands = operands;
-        operands = new SqlNode[operands.length + 1];
-        System.arraycopy(oldOperands,0,operands,0,oldOperands.length);
-        operands[operands.length - 1] = operand;
     }
 
     public Object clone()
@@ -123,11 +114,18 @@ public class SqlCall extends SqlNode
     }
 
 
-    protected RuntimeException newValidationSignatureError(SqlValidator validator, SqlValidator.Scope scope) {
-        return validator.newValidationError("Can not apply '"+operator.name+"' to arguments of type " +
-                                           getCallSignature(validator, scope)+
-                                           ". Supported form(s): "
-                                           +operator.getAllowedSignatures());
+    public RuntimeException newValidationSignatureError(
+            SqlValidator validator, SqlValidator.Scope scope) {
+        return validator.newValidationError(
+                getValidationSignatureErrorString(validator, scope));
+    }
+
+    String getValidationSignatureErrorString(SqlValidator validator,
+                                             SqlValidator.Scope scope) {
+        return "Can not apply '"+operator.name+"' to arguments of type " +
+               getCallSignature(validator, scope)+
+               ". Supported form(s): "
+               +operator.getAllowedSignatures();
     }
 }
 

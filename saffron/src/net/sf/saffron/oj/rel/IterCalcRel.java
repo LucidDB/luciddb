@@ -28,12 +28,8 @@ import net.sf.saffron.core.SaffronType;
 import net.sf.saffron.oj.util.OJUtil;
 import net.sf.saffron.opt.CallingConvention;
 import net.sf.saffron.opt.OptUtil;
-import net.sf.saffron.opt.RelImplementor;
 import net.sf.saffron.opt.VolcanoCluster;
-import net.sf.saffron.rel.FilterRel;
-import net.sf.saffron.rel.ProjectRel;
-import net.sf.saffron.rel.ProjectRelBase;
-import net.sf.saffron.rel.SaffronRel;
+import net.sf.saffron.rel.*;
 import net.sf.saffron.rex.RexNode;
 import net.sf.saffron.rex.RexUtil;
 import net.sf.saffron.runtime.CalcIterator;
@@ -55,12 +51,12 @@ import openjava.ptree.*;
  *     IterCalcRel from a {@link net.sf.saffron.rel.CalcRel}</li>
  * </ul>
  */
-public class IterCalcRel extends ProjectRelBase
+public class IterCalcRel extends ProjectRelBase implements JavaRel
 {
     public final RexNode condition;
 
     private RexNode [] childExps;
-    
+
     //~ Constructors ----------------------------------------------------------
 
     public IterCalcRel(
@@ -121,9 +117,9 @@ public class IterCalcRel extends ProjectRelBase
             getFlags());
     }
 
-    public static Object implementAbstract(
-        RelImplementor implementor,
-        SaffronRel rel,
+    public static Expression implementAbstract(
+        JavaRelImplementor implementor,
+        JavaRel rel,
         Expression childExp,
         Variable varInputRow,
         final SaffronType inputRowType,
@@ -135,7 +131,7 @@ public class IterCalcRel extends ProjectRelBase
         OJClass inputRowClass = OJUtil.typeToOJClass(inputRowType);
 
         Variable varOutputRow = implementor.newVariable();
-        
+
         FieldDeclaration rowVarDecl = new FieldDeclaration(
             new ModifierList(ModifierList.PRIVATE),
             TypeName.forOJClass(outputRowClass),
@@ -143,7 +139,7 @@ public class IterCalcRel extends ProjectRelBase
             new AllocationExpression(
                 outputRowClass,
                 new ExpressionList()));
-        
+
         StatementList whileBody = new StatementList();
 
         whileBody.add(
@@ -158,12 +154,12 @@ public class IterCalcRel extends ProjectRelBase
                         new ExpressionList()))));
 
         MemberDeclarationList memberList = new MemberDeclarationList();
-        
+
         StatementList condBody;
         if (condition != null) {
             condBody = new StatementList();
             RexNode rexIsTrue = rel.getCluster().rexBuilder.makeCall(
-                SqlOperatorTable.instance().isTrueOperator,
+                SqlOperatorTable.std().isTrueOperator,
                 new RexNode[]{condition});
             Expression conditionExp = implementor.translateViaStatements(
                 rel,rexIsTrue,whileBody,memberList);
@@ -190,7 +186,7 @@ public class IterCalcRel extends ProjectRelBase
                 condBody,
                 memberList);
         }
-        
+
         condBody.add(
             new ReturnStatement(varOutputRow));
 
@@ -200,12 +196,12 @@ public class IterCalcRel extends ProjectRelBase
                 "hasNext",
                 new ExpressionList()),
             whileBody);
-        
+
         StatementList nextMethodBody = new StatementList();
         nextMethodBody.add(whileStmt);
         nextMethodBody.add(
             new ReturnStatement(Literal.constantNull()));
-        
+
         MemberDeclaration nextMethodDecl =
             new MethodDeclaration(
                 new ModifierList(ModifierList.PROTECTED),
@@ -225,19 +221,16 @@ public class IterCalcRel extends ProjectRelBase
         return newIteratorExp;
     }
 
-    public Object implement(RelImplementor implementor,int ordinal)
+    public ParseTree implement(JavaRelImplementor implementor)
     {
-        if (ordinal != -1) {
-            throw Util.newInternal("implement: ordinal=" + ordinal);
-        }
         Expression childExp =
-            (Expression) implementor.implementChild(this,0,child);
+                implementor.visitJavaChild(this, 0, (JavaRel) child);
         SaffronType outputRowType = getRowType();
         SaffronType inputRowType = child.getRowType();
 
         Variable varInputRow = implementor.newVariable();
         implementor.bind(child,varInputRow);
-        
+
         return implementAbstract(
             implementor,
             this,

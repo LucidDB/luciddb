@@ -24,7 +24,8 @@ package net.sf.saffron.oj.xlat;
 
 import net.sf.saffron.core.*;
 import net.sf.saffron.oj.util.*;
-import net.sf.saffron.opt.RelImplementor;
+import net.sf.saffron.oj.rel.JavaRelImplementor;
+import net.sf.saffron.oj.rel.JavaRel;
 import net.sf.saffron.rel.*;
 import net.sf.saffron.util.Util;
 
@@ -167,7 +168,7 @@ class ExtenderAggregation implements Aggregation
 
     // implement Aggregation
     public void implementMerge(
-        RelImplementor implementor,
+        JavaRelImplementor implementor,
         SaffronRel rel,
         Expression accumulator,
         Expression otherAccumulator)
@@ -210,8 +211,8 @@ class ExtenderAggregation implements Aggregation
 
     // implement Aggregation
     public void implementNext(
-        RelImplementor implementor,
-        SaffronRel rel,
+        JavaRelImplementor implementor,
+        JavaRel rel,
         Expression accumulator,
         int [] args)
     {
@@ -273,8 +274,8 @@ class ExtenderAggregation implements Aggregation
 
     // implement Aggregation
     public Expression implementStart(
-        RelImplementor implementor,
-        SaffronRel rel,
+        JavaRelImplementor implementor,
+        JavaRel rel,
         int [] args)
     {
         Variable var = implementor.newVariable();
@@ -307,8 +308,8 @@ class ExtenderAggregation implements Aggregation
 
     // implement Aggregation
     public Expression implementStartAndNext(
-        RelImplementor implementor,
-        SaffronRel rel,
+        JavaRelImplementor implementor,
+        JavaRel rel,
         int [] args)
     {
         Variable var_agg = implementor.newVariable();

@@ -44,10 +44,11 @@ CalcInit::instance()
 
     InstructionFactory::registerInstructions();
 
-    // TODO: May be able to remove this call. Assembler might do this someday.
+    // TODO: May be able to remove these calls. Assembler might do this someday.
     ExtStringRegister(InstructionFactory::getExtendedInstructionTable());
     ExtMathRegister(InstructionFactory::getExtendedInstructionTable());
     ExtDateTimeRegister(InstructionFactory::getExtendedInstructionTable());
+    ExtRegExpRegister(InstructionFactory::getExtendedInstructionTable());
 
     // Add new init calls here
 

@@ -61,7 +61,7 @@ public abstract class MedAbstractDataWrapper
     }
 
     // implement FarragoMedDataWrapper
-    public DriverPropertyInfo [] getWrapperPropertyInfo(
+    public DriverPropertyInfo [] getPluginPropertyInfo(
         Locale locale,
         Properties props)
     {

@@ -26,18 +26,16 @@ import net.sf.saffron.core.AggregationExtender;
 import net.sf.saffron.core.SaffronType;
 import net.sf.saffron.oj.rel.BuiltinAggregation;
 import net.sf.saffron.oj.util.JavaRexBuilder;
-import net.sf.saffron.rel.*;
+import net.sf.saffron.rel.AggregateRel;
+import net.sf.saffron.rel.Aggregation;
+import net.sf.saffron.rel.SaffronRel;
+import net.sf.saffron.rex.*;
 import net.sf.saffron.util.Util;
-import net.sf.saffron.rex.RexNode;
-import net.sf.saffron.rex.RexVariable;
-import net.sf.saffron.rex.RexCall;
-import net.sf.saffron.rex.RexInputRef;
-
-import openjava.mop.*;
-
+import openjava.mop.OJClass;
+import openjava.mop.OJMethod;
+import openjava.mop.Toolbox;
 import openjava.ptree.*;
 
-import java.util.Vector;
 import java.util.ArrayList;
 
 
@@ -65,7 +63,7 @@ class AggInternalTranslator extends InternalTranslator
 
     ArrayList aggInputList;
     InternalTranslator nonAggTranslator;
-    Vector aggCallVector;
+    ArrayList aggCallVector;
     Expression [] groups;
 
     //~ Constructors ----------------------------------------------------------
@@ -75,7 +73,7 @@ class AggInternalTranslator extends InternalTranslator
         SaffronRel [] inputs,
         Expression [] groups,
         ArrayList aggInputList,
-        Vector aggCallVector, JavaRexBuilder javaRexBuilder)
+        ArrayList aggCallVector, JavaRexBuilder javaRexBuilder)
     {
         super(queryInfo,inputs,javaRexBuilder);
         this.groups = groups;
@@ -212,7 +210,7 @@ outer:
         int k = aggCallVector.indexOf(aggCall);
         if (k < 0) {
             k = aggCallVector.size();
-            aggCallVector.addElement(aggCall);
+            aggCallVector.add(aggCall);
         }
         return new RexAggVariable(k);
     }
@@ -282,6 +280,10 @@ outer:
         public Object clone() {
             return new RexGroupVariable(group);
         }
+
+        public void accept(RexVisitor visitor) {
+            throw new UnsupportedOperationException();
+        }
     }
 
     /**
@@ -299,6 +301,10 @@ outer:
 
         public Object clone() {
             return new RexAggVariable(agg);
+        }
+
+        public void accept(RexVisitor visitor) {
+            throw new UnsupportedOperationException();
         }
     }
 }

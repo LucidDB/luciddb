@@ -22,33 +22,18 @@
 
 package net.sf.saffron.sql;
 
-import net.sf.saffron.opt.CalcRelImplementor;
+import net.sf.saffron.calc.RexToCalcTranslator;
+import net.sf.saffron.calc.CalcRexImplementor;
 import net.sf.saffron.rex.RexCall;
-import net.sf.saffron.rex.RexNode;
 
 /**
  * <code>SqlBinaryOperator</code> is a binary operator.
  */
-public class SqlBinaryOperator extends SqlOperator
+public abstract class SqlBinaryOperator extends SqlOperator
 {
-    /**
-     * Implementation of {@link SqlOperator.CalcRexImplementor}, shared by all
-     * {@link SqlBinaryOperator} objects that want to use it, which delegates
-     * to the {@link CalcRelImplementor.Rex2CalcTranslator#translateBinary}
-     * method.
-     */
-    private static final SqlOperator.CalcRexImplementor calcRexImplementor =
-            new SqlOperator.CalcRexImplementor() {
-                public void translateToCalc(RexNode rex,
-                        CalcRelImplementor.Rex2CalcTranslator translator) {
-                    RexCall call = (RexCall) rex;
-                    translator.translateBinary(null, call);
-                }
-            };
-    
     //~ Constructors ----------------------------------------------------------
 
-    SqlBinaryOperator(
+    public SqlBinaryOperator(
         String name,SqlKind kind,int prec,boolean isLeftAssoc,
         SqlOperator.TypeInference typeInference,
         SqlOperator.ParamTypeInference paramTypeInference,
@@ -81,7 +66,7 @@ public class SqlBinaryOperator extends SqlOperator
         return !name.equals(".");
     }
 
-    void unparse(
+    public void unparse(
         SqlWriter writer,
         SqlNode [] operands,
         int leftPrec,
@@ -97,10 +82,6 @@ public class SqlBinaryOperator extends SqlOperator
             writer.print(name);
         }
         operands[1].unparse(writer,this.rightPrec,rightPrec);
-    }
-
-    public SqlOperator.CalcRexImplementor getCalcImplementor() {
-        return calcRexImplementor;
     }
 }
 

@@ -30,6 +30,10 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
+TupleStreamGraph::~TupleStreamGraph()
+{
+}
+
 TupleStreamGraphImpl::TupleStreamGraphImpl()
 {
 }

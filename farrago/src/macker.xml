@@ -17,10 +17,12 @@
       <include class="net.sf.farrago.FarragoPackage" />
       <include class="net.sf.farrago.FarragoMetadataFactory" />
     </pattern>
+    <pattern name="trace" class="net.sf.farrago.trace.*" />
     <pattern name="util" class="net.sf.farrago.util.*" />
     <pattern name="resource" class="net.sf.farrago.resource.*" />
     <pattern name="catalog.codegen" class="net.sf.farrago.catalog.codegen.*" />
     <pattern name="catalog" class="net.sf.farrago.catalog.*" />
+    <pattern name="plugin" class="net.sf.farrago.plugin.*" />
     <pattern name="type" class="net.sf.farrago.type.*" />
     <pattern name="type.runtime" class="net.sf.farrago.type.runtime.*" />
     <pattern name="namespace" class="net.sf.farrago.namespace.*" />
@@ -45,16 +47,19 @@
     <pattern name="namespace.jdbc" class="net.sf.farrago.namespace.jdbc.*" />
     <pattern name="namespace.ftrs" class="net.sf.farrago.namespace.ftrs.*" />
     <pattern name="test" class="net.sf.farrago.test.*" />
+    <pattern name="test.regression" class="net.sf.farrago.test.regression.*" />
 
     <!-- explicit list of all farrago components above -->
     <pattern name="farrago.explicit">
       <include pattern="cwm"/>
       <include pattern="fem"/>
       <include pattern="FarragoPackage"/>
+      <include pattern="trace"/>
       <include pattern="util"/>
       <include pattern="resource"/>
       <include pattern="catalog.codegen"/>
       <include pattern="catalog"/>
+      <include pattern="plugin"/>
       <include pattern="type"/>
       <include pattern="type.runtime"/>
       <include pattern="namespace"/>
@@ -76,6 +81,7 @@
       <include pattern="namespace.jdbc"/>
       <include pattern="namespace.ftrs"/>
       <include pattern="test"/>
+      <include pattern="test.regression"/>
     </pattern>
 
     <!-- Below are the actual rules. -->
@@ -94,8 +100,12 @@
          FarragoPackage can depend on; this is to allow extensions. -->
 
     <pattern name="util.deps">
+      <include pattern="trace" />
       <include pattern="util" />
     </pattern>
+
+    <!-- NOTE:  trace is a special case, allowing for a circular dependency
+         with just about anything, but not transitively -->
 
     <access-rule>
       <message>util dependency violation</message>
@@ -168,6 +178,22 @@
       </deny>
     </access-rule>
 
+    <pattern name="plugin.deps">
+      <include pattern="catalog.deps" />
+      <include pattern="plugin" />
+    </pattern>
+
+    <access-rule>
+      <message>plugin dependency violation</message>
+      <deny>
+        <from pattern="plugin" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="plugin.deps" />
+        </allow>
+      </deny>
+    </access-rule>
+
     <pattern name="type.runtime.deps">
       <include pattern="util.deps" />
       <include pattern="type.runtime" />
@@ -221,6 +247,7 @@
     <pattern name="namespace.deps">
       <include pattern="type.deps" />
       <include pattern="fennel.deps" />
+      <include pattern="plugin.deps" />
       <include pattern="namespace" />
     </pattern>
 

@@ -22,18 +22,21 @@
 
 package net.sf.saffron.opt;
 
-import net.sf.saffron.core.*;
+import net.sf.saffron.core.PlanWriter;
 import net.sf.saffron.core.SaffronPlanner;
+import net.sf.saffron.core.SaffronType;
+import net.sf.saffron.trace.SaffronTrace;
 import net.sf.saffron.rel.RelVisitor;
 import net.sf.saffron.rel.SaffronRel;
+import net.sf.saffron.rel.SaffronRel;
+import net.sf.saffron.rel.SaffronBaseRel;
 import net.sf.saffron.util.Util;
-
-import openjava.tools.DebugOut;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.logging.Logger;
 
 
 /**
@@ -46,7 +49,7 @@ import java.util.Set;
  *
  * @since 16 December, 2001
  */
-public class RelSubset extends SaffronRel
+public class RelSubset extends SaffronBaseRel
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -64,6 +67,7 @@ public class RelSubset extends SaffronRel
 
     /** whether findBestPlan is being called */
     boolean active;
+    private static final Logger tracer = SaffronTrace.getPlannerTracer();
 
     //~ Constructors ----------------------------------------------------------
 
@@ -199,11 +203,8 @@ public class RelSubset extends SaffronRel
     {
         final PlanCost cost = planner.getCost(rel);
         if (cost.isLt(bestCost)) {
-            if (DebugOut.getDebugLevel() > 2) {
-                DebugOut.println(
-                    "Subset cost improved: subset [" + this + "] cost was "
+            tracer.fine("Subset cost improved: subset [" + this + "] cost was "
                     + bestCost + " now " + cost);
-            }
             bestCost = cost;
             best = rel;
 

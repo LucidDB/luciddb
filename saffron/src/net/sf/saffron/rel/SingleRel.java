@@ -36,7 +36,7 @@ import net.sf.saffron.util.Util;
  *
  * @since 23 September, 2001
  */
-public abstract class SingleRel extends SaffronRel
+public abstract class SingleRel extends SaffronBaseRel
 {
     //~ Instance fields -------------------------------------------------------
 

@@ -1082,6 +1082,7 @@ public:
         registerBoolBoolInstruction<BoolIs,3>("IS");
         registerBoolBoolInstruction<BoolIsNot,3>("ISNOT");
         registerBoolBoolInstruction<BoolMove,2>("MOVE");
+        registerBoolBoolInstruction<BoolRef,2>("REF");
         registerBoolBoolInstruction<BoolToNull,1>("TONULL");
 
         registerBoolBoolInstruction<BoolEqual,3>("EQ");
@@ -1116,6 +1117,7 @@ public:
         registerNativeNativeInstruction<NativeMul,3>("MUL");
         registerNativeNativeInstruction<NativeNeg,2>("NEG");
         registerNativeNativeInstruction<NativeMove,2>("MOVE");
+        registerNativeNativeInstruction<NativeRef,2>("REF");
         registerNativeNativeInstruction<NativeToNull,1>("TONULL");
 
         registerIntegralNativeInstruction<IntegralNativeMod,3>("MOD");
@@ -1134,6 +1136,7 @@ public:
         registerPointerPointerOperandTInstruction<PointerSub, 3>("SUB");
 
         registerPointerPointerInstruction<PointerMove,2>("MOVE");
+        registerPointerPointerInstruction<PointerRef,2>("REF");
         registerPointerPointerInstruction<PointerToNull,1>("TONULL");
 
         // Register jump instructions

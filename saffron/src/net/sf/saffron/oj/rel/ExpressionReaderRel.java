@@ -25,14 +25,13 @@ package net.sf.saffron.oj.rel;
 import net.sf.saffron.core.PlanWriter;
 import net.sf.saffron.core.SaffronPlanner;
 import net.sf.saffron.core.SaffronType;
+import net.sf.saffron.oj.OJTypeFactory;
 import net.sf.saffron.oj.util.JavaRowExpression;
 import net.sf.saffron.oj.util.OJUtil;
-import net.sf.saffron.oj.OJTypeFactory;
 import net.sf.saffron.opt.CallingConvention;
 import net.sf.saffron.opt.PlanCost;
-import net.sf.saffron.opt.RelImplementor;
 import net.sf.saffron.opt.VolcanoCluster;
-import net.sf.saffron.rel.SaffronRel;
+import net.sf.saffron.rel.SaffronBaseRel;
 import net.sf.saffron.rex.RexNode;
 import net.sf.saffron.rex.RexUtil;
 import net.sf.saffron.util.Util;
@@ -45,7 +44,7 @@ import java.util.HashSet;
 /**
  * An <code>ExpressionReaderRel</code> is a relational expression node which
  * evaluates an expression and returns the results as a relation. Cases:
- * 
+ *
  * <ol>
  * <li>
  * If the expression is an array <code>T[]</code>, the each result row is of
@@ -61,14 +60,14 @@ import java.util.HashSet;
  * {@link java.util.Enumeration}, each result row is an {@link Object}.
  * </li>
  * </ol>
- * 
+ *
  * <p>
  * NOTE: We support {@link java.util.Hashtable}, {@link java.util.Enumeration}
  * and {@link java.util.Vector} explicitly because {@link java.util.Map},
  * {@link java.util.Iterator} and {@link java.util.Map} does not exist until
  * JDK 1.2.
  * </p>
- * 
+ *
  * <p>
  * Example accessing an array:
  * <blockquote>
@@ -76,7 +75,7 @@ import java.util.HashSet;
  * Emp[] males = (select from emps as emp where emp.gender.equals("M"));</pre>
  * </blockquote>
  * </p>
- * 
+ *
  * <p>
  * The following example shows how you can cast the values returned from a
  * {@link java.util.Hashtable}:
@@ -91,7 +90,7 @@ import java.util.HashSet;
  * }</pre>
  * </blockquote>
  * </p>
- * 
+ *
  * <p>
  * Here we access a value in a {@link java.util.Hashtable} by key:
  * <blockquote>
@@ -107,7 +106,7 @@ import java.util.HashSet;
  *
  * @since 8 December, 2001
  */
-public class ExpressionReaderRel extends SaffronRel
+public class ExpressionReaderRel extends SaffronBaseRel implements JavaRel
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -132,7 +131,7 @@ public class ExpressionReaderRel extends SaffronRel
      *        always a record type with a single field. For example, if you
      *        supply an expression of type "java.util.Iterator" and specify that
      *        the row type is "java.lang.String" then the row type will be
-     *        "Record{$f0:String}". 
+     *        "Record{$f0:String}".
      */
     public ExpressionReaderRel(VolcanoCluster cluster, RexNode exp, SaffronType rowType)
     {
@@ -187,15 +186,9 @@ public class ExpressionReaderRel extends SaffronRel
         pw.explain(this,new String [] { "expression" });
     }
 
-    public Object implement(RelImplementor implementor,int ordinal)
+    public ParseTree implement(JavaRelImplementor implementor)
     {
-        switch (ordinal) {
-        case -1: // called from parent
-            Expression exp2 = implementor.translate(this,exp);
-            return exp2;
-        default:
-            throw Util.newInternal("implement: ordinal=" + ordinal);
-        }
+        return implementor.translate(this,exp);
     }
 
     protected SaffronType deriveRowType()

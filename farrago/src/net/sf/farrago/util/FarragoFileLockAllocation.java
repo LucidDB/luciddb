@@ -31,6 +31,8 @@ import java.nio.channels.*;
  */
 public class FarragoFileLockAllocation implements FarragoAllocation
 {
+    private RandomAccessFile randomAccessFile;
+    
     private FileChannel channel;
     
     private FileLock lock;
@@ -59,7 +61,8 @@ public class FarragoFileLockAllocation implements FarragoAllocation
                 // a proper excn.  Is this OK?
                 throw new IOException();
             }
-            channel = new RandomAccessFile(file,"rw").getChannel();
+            randomAccessFile = new RandomAccessFile(file,"rw");
+            channel = randomAccessFile.getChannel();
             if (tryLock) {
                 // NOTE:  we lock a bogus byte way beyond any real data
                 // to make sure the lock doesn't interfere with I/O
@@ -89,6 +92,8 @@ public class FarragoFileLockAllocation implements FarragoAllocation
             }
         } catch (IOException ex) {
             // TODO:  trace?
+        } finally {
+            lock = null;
         }
         try {
             if (channel != null) {
@@ -96,6 +101,17 @@ public class FarragoFileLockAllocation implements FarragoAllocation
             }
         } catch (IOException ex) {
             // TODO:  trace?
+        } finally {
+            channel = null;
+        }
+        try {
+            if (randomAccessFile != null) {
+                randomAccessFile.close();
+            }
+        } catch (IOException ex) {
+            // TODO:  trace?
+        } finally {
+            randomAccessFile = null;
         }
     }
 }

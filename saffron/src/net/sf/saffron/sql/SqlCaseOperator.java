@@ -24,6 +24,7 @@ package net.sf.saffron.sql;
 import net.sf.saffron.core.SaffronType;
 import net.sf.saffron.core.SaffronTypeFactory;
 import net.sf.saffron.util.Util;
+import net.sf.saffron.sql.fun.SqlStdOperatorTable;
 
 import java.util.List;
 
@@ -102,16 +103,17 @@ import java.util.List;
  *
  * @author wael
  * @since Mar 14, 2004
- * @version $Id: //open/dev/saffron/src/net/sf/saffron/sql/SqlCaseOperator.java#1 $
+ * @version $Id: //open/dev/saffron/src/net/sf/saffron/sql/SqlCaseOperator.java#2 $
  **/
 
-public class SqlCaseOperator extends SqlOperator
+public abstract class SqlCaseOperator extends SqlOperator
 {
     //~ Constructors ----------------------------------------------------------
 
-    SqlCaseOperator()
+    public SqlCaseOperator()
     {
-        super("CASE",SqlKind.Case,1,true, SqlOperatorTable.useBiggest,SqlOperatorTable.useReturnForParam, null);
+        super("CASE",SqlKind.Case,1,true, SqlOperatorTable.useBiggest,
+                SqlOperatorTable.useReturnForParam, null);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -189,11 +191,12 @@ public class SqlCaseOperator extends SqlOperator
         SqlNodeList thenList,
         SqlNode elseClause)
     {
+        SqlStdOperatorTable stdOps = SqlOperatorTable.std();
         if (null != caseIdentifier) {
             List list = whenList.getList();
             for (int i = 0; i < list.size(); i++) {
                 SqlNode e = (SqlNode) list.get(i);
-                list.set(i, SqlOperatorTable.instance().equalsOperator.createCall(caseIdentifier, e));
+                list.set(i, stdOps.equalsOperator.createCall(caseIdentifier, e));
             }
         }
 
@@ -207,7 +210,7 @@ public class SqlCaseOperator extends SqlOperator
             });
     }
 
-    void unparse(
+    public void unparse(
         SqlWriter writer,
         SqlNode [] operands,
         int leftPrec,

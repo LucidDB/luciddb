@@ -26,6 +26,7 @@ import net.sf.saffron.opt.VolcanoRule;
 import net.sf.saffron.opt.VolcanoRuleCall;
 import net.sf.saffron.rel.CalcRel;
 import net.sf.saffron.rel.SaffronRel;
+import net.sf.saffron.rel.SaffronRel;
 
 // REVIEW jvs 11-May-2004:  shouldn't FennelCalcRule extend ConverterRule
 // (just like IterCalcRule)?
@@ -49,10 +50,10 @@ class FennelCalcRule extends VolcanoRule {
      */
     private FennelCalcRule() {
         super(
-                new RuleOperand(
-                        CalcRel.class,
-                        new RuleOperand[] {
-                            new RuleOperand(SaffronRel.class, null)}));
+            new RuleOperand(
+                CalcRel.class,
+                new RuleOperand[] {
+                    new RuleOperand(SaffronRel.class, null)}));
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -72,8 +73,8 @@ class FennelCalcRule extends VolcanoRule {
             return;
         }
 
-        FennelCalcRel fennelCalcRel =
-                new FennelCalcRel(
+        FennelPullCalcRel fennelCalcRel =
+                new FennelPullCalcRel(
                         calc.getCluster(),
                         fennelInput,
                         calc.getRowType(),

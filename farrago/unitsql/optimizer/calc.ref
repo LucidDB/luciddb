@@ -13,7 +13,7 @@
 |                                                                     column0                                                                     |
 +-------------------------------------------------------------------------------------------------------------------------------------------------+
 | FennelToIteratorConverter                                                                                                                       |
-|   FennelCalcRel(NAME=[$1], condition=[=(LOWER($1), _ISO-8859-1'wilma' COLLATE ISO-8859-1$en_US$primary)])                                       |
+|   FennelPullCalcRel(NAME=[$1], condition=[=(LOWER($1), _ISO-8859-1'wilma' COLLATE ISO-8859-1$en_US$primary)])                                   |
 |     FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])  |
 +-------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
@@ -24,9 +24,28 @@
 |                                                                     column0                                                                     |
 +-------------------------------------------------------------------------------------------------------------------------------------------------+
 | FennelToIteratorConverter                                                                                                                       |
-|   FennelCalcRel(EXPR$0=[LOWER($1)], EXPR$1=[+($5, 1)], EXPR$2=[/($5, 1)], EXPR$3=[-($5, 1)], EMPID=[$5])                                        |
+|   FennelPullCalcRel(EXPR$0=[LOWER($1)], EXPR$1=[+($5, 1)], EXPR$2=[/($5, 1)], EXPR$3=[-($5, 1)], EMPID=[$5])                                    |
 |     FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])  |
 +-------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- dtbug#32
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select 1 + 2 from values (3);
++----------------------------------------+
+|                column0                 |
++----------------------------------------+
+| FennelToIteratorConverter              |
+|   FennelPullCalcRel(EXPR$0=[+(1, 2)])  |
+|     IteratorToFennelConverter          |
+|       IterOneRowRel                    |
++----------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select 1 + 2 from values (3);
++---------+
+| EXPR$0  |
++---------+
+| 3       |
++---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- revert to system default calculator
 0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'CALCVM_JAVA';

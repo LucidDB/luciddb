@@ -113,8 +113,8 @@ public class FennelStorage
      * @param javaStreamMap optional FennelJavaStreamMap
      */
     static native void tupleStreamGraphOpen(
-        FemStreamGraphHandle hStreamGraph,
-        FemTxnHandle hTxn,
+        long hStreamGraph,
+        long hTxn,
         FennelJavaStreamMap javaStreamMap) throws SQLException;
     
     /**
@@ -128,7 +128,7 @@ public class FennelStorage
      *         fetched, so 0 indicates end of stream)
      */
     static native int tupleStreamFetch(
-        FemStreamHandle hStream,
+        long hStream,
         byte [] byteArray) throws SQLException;
     
     /**
@@ -138,7 +138,7 @@ public class FennelStorage
      * @param deallocate if true, close and deallocate; if false, just close
      */
     static native void tupleStreamGraphClose(
-        FemStreamGraphHandle hStreamGraph,
+        long hStreamGraph,
         boolean deallocate) throws SQLException;
 }
 

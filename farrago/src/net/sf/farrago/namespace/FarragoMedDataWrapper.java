@@ -21,6 +21,7 @@ package net.sf.farrago.namespace;
 
 import net.sf.saffron.core.*;
 
+import net.sf.farrago.plugin.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
@@ -31,10 +32,7 @@ import java.util.*;
 /**
  * FarragoMedDataWrapper defines an interface for accessing foreign or local
  * data.  It is a non-standard replacement for the standard SQL/MED internal
- * interface.  Some JDBC infrastructure is borrowed ({@link
- * java.sql.SQLException} and {@link java.sql.DriverPropertyInfo}).  The
- * property info calls are designed to work in the same iterative fashion as
- * {@link java.sql.Driver#getPropertyInfo}.
+ * interface.
  *
  *<p>
  *
@@ -47,39 +45,8 @@ import java.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public interface FarragoMedDataWrapper extends FarragoAllocation
+public interface FarragoMedDataWrapper extends FarragoPlugin
 {
-    /**
-     * Obtains a suggested name for this wrapper in the SQL catalog.
-     *
-     * @return suggested name
-     */
-    public String getSuggestedName();
-    
-    /**
-     * Obtains a description of this wrapper.
-     *
-     * @param locale Locale for formatting description
-     *
-     * @return localized description
-     */
-    public String getDescription(Locale locale);
-    
-    /**
-     * Obtains information about the properties applicable to wrapper
-     * initialization (the props parameter to the initialize method).
-     *
-     * @param locale Locale for formatting property info
-     *
-     * @param props proposed list of property name/value
-     * pairs which will be sent to initialize()
-     *
-     * @return 0 or more property info descriptors
-     */
-    public DriverPropertyInfo [] getWrapperPropertyInfo(
-        Locale locale,
-        Properties props);
-
     /**
      * Obtains information about the properties applicable to server
      * initialization (the props parameter to the newServer method).
@@ -151,23 +118,6 @@ public interface FarragoMedDataWrapper extends FarragoAllocation
         Properties serverProps,
         Properties tableProps,
         Properties columnProps);
-
-    /**
-     * Initializes this wrapper with a given set of properties.  This is called
-     * after an uninitialized instance has been created via Class.forName.  As
-     * much validation as possible should be performed, including establishing
-     * connections if appropriate.
-     *
-     * @param catalog FarragoCatalog which can be used for metadata access
-     *
-     * @param props wrapper properties
-     *
-     * @exception SQLException if wrapper initialization is unsuccessful
-     */
-    public void initialize(
-        FarragoCatalog catalog,
-        Properties props)
-        throws SQLException;
 
     /**
      * Creates an instance of this wrapper for a particular server.

@@ -20,11 +20,11 @@
 */
 package net.sf.saffron.test;
 
-import net.sf.saffron.sql.SqlValidator;
+import net.sf.saffron.core.SaffronTypeFactoryImpl;
 import net.sf.saffron.sql.SqlOperatorTable;
+import net.sf.saffron.sql.SqlValidator;
 import net.sf.saffron.sql.parser.ParseException;
 import net.sf.saffron.sql.parser.SqlParser;
-import net.sf.saffron.core.SaffronTypeFactoryImpl;
 
 /**
  * ...
@@ -45,9 +45,9 @@ public class SaffronSqlValidationTest extends SqlValidatorTestCase{
 		return new SqlParser(sql);
 	}
 	public SqlValidator getValidator() {
-		return new SqlValidator(SqlOperatorTable.instance(),
-		                        new SaffronTestCatalogReader(),
-		                        new SaffronTypeFactoryImpl());
+        return new SqlValidator(SqlOperatorTable.instance(),
+                new SaffronTestCatalogReader(),
+                new SaffronTypeFactoryImpl());
 	}
 }
 

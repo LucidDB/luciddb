@@ -22,7 +22,7 @@
 
 package net.sf.saffron.rel.convert;
 
-import net.sf.saffron.opt.CallingConvention;
+import net.sf.saffron.rel.SaffronRel;
 import net.sf.saffron.rel.SaffronRel;
 
 
@@ -43,11 +43,9 @@ public class FactoryConverterRule extends ConverterRule
 
     //~ Constructors ----------------------------------------------------------
 
-    public FactoryConverterRule(
-        ConverterFactory factory,
-        CallingConvention inConvention)
+    public FactoryConverterRule(ConverterFactory factory)
     {
-        super(SaffronRel.class,inConvention,factory.getConvention(),null);
+        super(SaffronRel.class,factory.getInConvention(), factory.getConvention(),null);
         this.factory = factory;
     }
 

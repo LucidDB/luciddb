@@ -22,18 +22,17 @@
 
 package net.sf.saffron.sql;
 
-import net.sf.saffron.util.MultiMap;
-import net.sf.saffron.util.Util;
 import net.sf.saffron.core.SaffronType;
 import net.sf.saffron.core.SaffronTypeFactory;
-import net.sf.saffron.sql.type.SqlTypeName;
 import net.sf.saffron.resource.SaffronResource;
+import net.sf.saffron.sql.test.SqlTester;
+import net.sf.saffron.sql.type.SqlTypeName;
+import net.sf.saffron.sql.fun.SqlStdOperatorTable;
+import net.sf.saffron.util.MultiMap;
+import net.sf.saffron.util.Util;
 
 import java.lang.reflect.Field;
-
-import java.util.List;
-import java.util.HashMap;
-import java.util.ArrayList;
+import java.util.*;
 
 
 /**
@@ -45,7 +44,7 @@ public class SqlOperatorTable
 
     //~ Static fields/initializers --------------------------------------------
 
-    private static SqlOperatorTable instance;
+    private static SqlStdOperatorTable instance;
 
     public static final SqlTypeName[] stringTypes =
       {SqlTypeName.Varchar,SqlTypeName.Bit,SqlTypeName.Binary,SqlTypeName.Varbinary};
@@ -70,6 +69,8 @@ public class SqlOperatorTable
             {SqlTypeName.Varchar};
     public static final SqlTypeName[] varcharNullableTypes =
             {SqlTypeName.Null,SqlTypeName.Varchar};
+    public static final SqlTypeName[] timeIntervalNullableTypes =
+            {SqlTypeName.Null,SqlTypeName.IntervalDayTime, SqlTypeName.IntervalYearToMonth};
 
     /**
      * Type-inference strategy whereby the result type of a call is the type of
@@ -337,43 +338,54 @@ public class SqlOperatorTable
         new SqlOperator.AllowedArgInference
                 (new SqlTypeName[][]{{SqlTypeName.Integer,SqlTypeName.Bigint,SqlTypeName.Decimal,
                                         SqlTypeName.Real,SqlTypeName.Double}}) {
-            public void check(SqlValidator validator, SqlValidator.Scope scope, SqlCall call) {
-                // check that we have a single numeric argument
-                super.check(validator, scope, call);
-                if (call.getOperands()[0] instanceof SqlLiteral) {
-                    final SqlLiteral arg = ((SqlLiteral) call.getOperands()[0]);
-                    final int value = ((Number) arg.getValue()).intValue(); // todo: handle cast exception?
-                    if (value < 0) {
-                        throw SaffronResource.instance().newArgumentMustBePositiveInteger(call.operator.name);
+            public boolean check(SqlCall call, SqlValidator validator,
+                                 SqlValidator.Scope scope,
+                                 SqlNode node, int operandNbr)
+            {
+                boolean res = super.check(call, validator, scope, node, operandNbr);
+                if (!res) return res;
+                if (operandNbr == 0) {
+                    if (node instanceof SqlLiteral) {
+                    } else {
+                        throw SaffronResource.instance().newArgumentMustBeLiteral(
+                            call.operator.name);
                     }
-                } else {
-                    throw SaffronResource.instance().newArgumentMustBeLiteral(call.operator.name);
                 }
+                return res;
             }
         };
 
     /**
      * Parameter type-checking strategy
-     * type must be a numeric literal.
+     * type must be a positive integer literal.
      */
     public static final SqlOperator.AllowedArgInference typePositiveIntegerLiteral =
         new SqlOperator.AllowedArgInference
                 (new SqlTypeName[][]{{SqlTypeName.Integer}}) {
-            public void check(SqlValidator validator, SqlValidator.Scope scope, SqlCall call) {
-                // check that we have a single numeric argument
-                super.check(validator, scope, call);
-                if (call.getOperands()[0] instanceof SqlLiteral) {
-                    final SqlLiteral arg = ((SqlLiteral) call.getOperands()[0]);
-                    final int value = ((Number) arg.getValue()).intValue(); // todo: handle cast exception?
-                    if (value < 0) {
-                        throw SaffronResource.instance().newArgumentMustBePositiveInteger(call.operator.name);
+
+            public boolean check(SqlCall call, SqlValidator validator,
+                                 SqlValidator.Scope scope,
+                                 SqlNode node, int operandNbr)
+            {
+                boolean res = super.check(call, validator, scope, node, operandNbr);
+                if (!res) return res;
+                if (operandNbr == 0) {
+                    if (node instanceof SqlLiteral) {
+                        final SqlLiteral arg = ((SqlLiteral) node);
+                        final int value = arg.intValue();
+                        if (value < 0) {
+                            throw SaffronResource.instance().newArgumentMustBePositiveInteger(
+                                call.operator.name);
+                        }
+                    } else {
+                        throw SaffronResource.instance().newArgumentMustBeLiteral(
+                            call.operator.name);
                     }
-                } else {
-                    throw SaffronResource.instance().newArgumentMustBeLiteral(call.operator.name);
                 }
+                return res;
             }
         };
-    
+
         /**
          * Parameter type-checking strategy
          * type must be numeric, numeric.
@@ -394,17 +406,23 @@ public class SqlOperatorTable
                     SqlValidator.Scope scope,
                     SqlCall call)
             {
+                if (!check(call,validator,scope)){
+                    throw validator.newValidationError("Parameters must be of same type");
+                }
+            }
+
+
+            public boolean check(SqlCall call, SqlValidator validator,
+                                 SqlValidator.Scope scope) {
                 assert(2==call.operands.length);
                 SaffronType type1 = validator.deriveType(scope,call.operands[0]);
                 SaffronType type2 = validator.deriveType(scope,call.operands[1]);
                 SaffronType nullType = validator.typeFactory.createSqlType(SqlTypeName.Null);
                 if (type1.equals(nullType) || type2.equals(nullType)) {
-                    return; //null is ok;
+                    return true; //null is ok;
                 }
 
-                if (!type1.isSameTypeFamily(type2) && !type2.isSameTypeFamily(type1)){
-                    throw validator.newValidationError("Parameters must be of same type");
-                }
+                return type1.isSameTypeFamily(type2) || type2.isSameTypeFamily(type1);
             }
 
         };
@@ -416,6 +434,16 @@ public class SqlOperatorTable
     public static final SqlOperator.AllowedArgInference typeNullableNumericNumeric =
         new SqlOperator.AllowedArgInference(
             new SqlTypeName[][]{numericNullableTypes, numericNullableTypes} );
+
+    /**
+     * Parameter type-checking strategy
+     * type must be nullable numeric, nullable numeric, nullabl numeric.
+     */
+    public static final SqlOperator.AllowedArgInference typeNullableNumericNumericNumeric =
+        new SqlOperator.AllowedArgInference(
+            new SqlTypeName[][]{
+                numericNullableTypes, numericNullableTypes, numericNullableTypes} );
+
     /**
      * Parameter type-checking strategy
      * type must be nullable numeric, nullable numeric.
@@ -439,6 +467,50 @@ public class SqlOperatorTable
     public static final SqlOperator.AllowedArgInference typeNullableStringString =
         new SqlOperator.AllowedArgInference(
             new SqlTypeName[][]{stringNullableTypes,stringNullableTypes});
+
+    /**
+      * Parameter type-checking strategy
+      * type must be a varchar literal.
+      */
+     public static final SqlOperator.AllowedArgInference typeVarcharLiteral =
+         new SqlOperator.AllowedArgInference
+                 (new SqlTypeName[][]{SqlOperatorTable.varcharTypes}) {
+
+             public boolean check(SqlCall call, SqlValidator validator,
+                                  SqlValidator.Scope scope,
+                                  SqlNode node, int operandNbr)
+             {
+                 boolean res = super.check(call, validator, scope, node, operandNbr);
+                 if (!res) return res;
+                 if (operandNbr == 0) {
+                     if (node instanceof SqlLiteral) {
+                     } else {
+                         throw SaffronResource.instance().newArgumentMustBeLiteral(
+                             call.operator.name);
+                     }
+                 }
+                 return res;
+             }
+         };
+
+    /**
+      * Parameter type-checking strategy
+      * type must be nullable varchar, varchar literal.
+      */
+     public static final SqlOperator.AllowedArgInference typeNullableVarcharVarcharLiteral =
+         new SqlOperator.AllowedArgInference
+                 (new SqlTypeName[][]{SqlOperatorTable.varcharNullableTypes, SqlOperatorTable.varcharTypes}) {
+
+             public void check(SqlValidator validator, SqlValidator.Scope scope, SqlCall call) {
+                 // check that the 2nd argument is a varchar literal
+                 super.check(validator, scope, call);
+                 if (call.getOperands()[1] instanceof SqlLiteral) {
+                 } else {
+                     throw SaffronResource.instance().newArgumentMustBeLiteral(
+                         call.operator.name);
+                 }
+             }
+         };
 
      /**
      * Parameter type-checking strategy
@@ -478,7 +550,7 @@ public class SqlOperatorTable
                 assert(null!=t0) : "should not be null";
                 assert(null!=t1) : "should not be null";
                 SaffronType nullType = validator.typeFactory.createSqlType(SqlTypeName.Null);
-                if (!nullType.isAssignableFrom(t0) && !nullType.isAssignableFrom(t1)) {
+                if (!nullType.isAssignableFrom(t0, false) && !nullType.isAssignableFrom(t1, false)) {
                     if (!t0.isSameTypeFamily(t1)) {
                         throw call.newValidationSignatureError(validator,scope);
                     }
@@ -602,7 +674,6 @@ public class SqlOperatorTable
     public static final SqlOperator.AllowedArgInference typeAny =
         new SqlOperator.AllowedArgInference(new SqlTypeName[][]{{SqlTypeName.Any}} );
 
-
     /**
      * Parameter type-checking strategy
      * types must be varchar,varchar
@@ -656,290 +727,72 @@ public class SqlOperatorTable
                 new SqlOperator.AllowedArgInference[]{typeNullableString,
                                                      typeNullableNumeric} );
 
-    //~ Instance fields -------------------------------------------------------
-
-    // infix
-    public final SqlBinaryOperator andOperator =
-        new SqlBinaryOperator("AND",SqlKind.And,14,true,
-                                  useNullableBoolean,booleanParam, typeNullableBoolBool);
-
-    public final SqlBinaryOperator asOperator =
-        new SqlBinaryOperator("AS",SqlKind.As,10,true,
-                              useFirstArgType,useReturnForParam, typeAnyAny) {
-            protected void checkArgTypes(
-                    SqlCall call, SqlValidator validator, SqlValidator.Scope scope) {
-                /* empty implementation */
-            }
-        };
-
-    // FIXME jvs 23-Dec-2003:  useFirstKnownParam is incorrect here;
-    // have to promote CHAR to VARCHAR
-    public final SqlBinaryOperator concatOperator =
-        new SqlBinaryOperator("||",SqlKind.Other,30,true,
-                              useFirstArgType,null,typeNullableStringStringOfSameType ) {
-            protected SaffronType _inferType(SqlValidator validator,
-                    SqlValidator.Scope scope, SqlCall call) {
-                //todo: make return a string with the correct precision.
-                return useBiggest.getType(validator,scope,call);
-            }
-
-
-            protected void checkArgTypes(SqlCall call, SqlValidator validator,
-                                         SqlValidator.Scope scope) {
-                SqlNode op0 = call.operands[0];
-                SqlNode op1 = call.operands[1];
-                typeNullableString.checkThrows(validator,scope,call,op0,0);
-                typeNullableString.checkThrows(validator,scope,call,op1,0);
-                SaffronType t0 = validator.deriveType(scope,op0);
-                SaffronType t1 = validator.deriveType(scope,op1);
-                if (!t0.isSameTypeFamily(t1)) {
-                    throw call.newValidationSignatureError(validator, scope);
-                }
-            }
-        };
-
-    public final SqlBinaryOperator divideOperator =
-        new SqlBinaryOperator("/",SqlKind.Divide,30,true,
-                              useBiggest,useFirstKnownParam, typeNumericNumeric);
-
-    public final SqlBinaryOperator dotOperator =
-        new SqlBinaryOperator(".",SqlKind.Dot,40,true, null, null, typeAnyAny);
-
-    public final SqlBinaryOperator equalsOperator =
-        new SqlBinaryOperator("=",SqlKind.Equals,15,true,
-                              useNullableBoolean,useFirstKnownParam,
-                              typeNullabeSameSame_or_NullableNumericNumeric_or_NullableBinariesBinaries);
-
-    public final SqlSetOperator exceptOperator =
-        new SqlSetOperator("EXCEPT",SqlKind.Except,9,false);
-
-    public final SqlSetOperator exceptAllOperator =
-        new SqlSetOperator("EXCEPT ALL",SqlKind.Except,9,true);
-
-    public final SqlBinaryOperator greaterThanOperator =
-        new SqlBinaryOperator(">",SqlKind.GreaterThan,15,true,
-                              useNullableBoolean,useFirstKnownParam,
-                              typeNullabeSameSame_or_NullableNumericNumeric_or_NullableBinariesBinaries);
-
-    public final SqlBinaryOperator greaterThanOrEqualOperator =
-        new SqlBinaryOperator(">=",SqlKind.GreaterThanOrEqual,15,true,
-                              useNullableBoolean,useFirstKnownParam,
-                              typeNullabeSameSame_or_NullableNumericNumeric_or_NullableBinariesBinaries);
-
-    public final SqlBinaryOperator inOperator =
-        new SqlBinaryOperator("IN",SqlKind.In,15,true,
-              useNullableBoolean,useFirstKnownParam, null);
-
-
-    public final SqlBinaryOperator overlapsOperator =
-            //TODO: wael, check types
-        new SqlBinaryOperator("OVERLAPS",SqlKind.Overlaps,15,true,useNullableBoolean,useFirstKnownParam, null);
-
-    public final SqlSetOperator intersectOperator =
-        new SqlSetOperator("INTERSECT",SqlKind.Intersect,9,false);
-
-    public final SqlSetOperator intersectAllOperator =
-        new SqlSetOperator("INTERSECT ALL",SqlKind.Intersect,9,true);
-
-    public final SqlBinaryOperator lessThanOperator =
-        new SqlBinaryOperator("<",SqlKind.LessThan,15,true,
-                              useNullableBoolean,useFirstKnownParam,
-                              typeNullabeSameSame_or_NullableNumericNumeric_or_NullableBinariesBinaries);
-
-    public final SqlBinaryOperator lessThanOrEqualOperator =
-        new SqlBinaryOperator("<=",SqlKind.LessThanOrEqual,15,true,
-                              useNullableBoolean,useFirstKnownParam,
-                              typeNullabeSameSame_or_NullableNumericNumeric_or_NullableBinariesBinaries);
-
-    public final SqlBinaryOperator minusOperator =
-        new SqlBinaryOperator("-",SqlKind.Minus,20,true,
-                              useBiggest,useFirstKnownParam, typeNullableNumericNumeric);
-
-    public final SqlBinaryOperator multiplyOperator =
-        new SqlBinaryOperator("*",SqlKind.Times,30,true,
-                              useBiggest,useFirstKnownParam, typeNullableNumericNumeric);
-
-    public final SqlBinaryOperator notEqualsOperator =
-        new SqlBinaryOperator("<>",SqlKind.NotEquals,15,true,
-                              useNullableBoolean,useFirstKnownParam,
-                              typeNullabeSameSame_or_NullableNumericNumeric_or_NullableBinariesBinaries);
-
-    public final SqlBinaryOperator orOperator =
-        new SqlBinaryOperator("OR",SqlKind.Or,13,true,
-                              useNullableBoolean,booleanParam, typeNullableBoolBool);
-
-    // todo: useFirstArgType isn't correct in general
-    public final SqlBinaryOperator plusOperator =
-        new SqlBinaryOperator("+",SqlKind.Plus,20,true,
-                              useBiggest,useFirstKnownParam, typeNullableNumericNumeric);
-
-    public final SqlSetOperator unionOperator =
-        new SqlSetOperator("UNION",SqlKind.Union,7,false);
-
-    public final SqlSetOperator unionAllOperator =
-        new SqlSetOperator("UNION ALL",SqlKind.Union,7,true);
-
-    public final SqlBinaryOperator isDistinctFromOperator =
-        new SqlBinaryOperator("IS DISTINCT FROM",SqlKind.Other,15,true,useNullableBoolean,useFirstKnownParam, null);
-
-    // function
-//    public final SqlFunction substringFunction =
-//    new SqlFunction("substring",null,null, null);
-
-    public final SqlFunction rowConstructor =
-            new SqlFunction("ROW",SqlKind.Row,null,useReturnForParam, null) {
-
-                protected void checkNumberOfArg(AllowedArgInference[] parameterTypes, SqlCall call) {
-                    // ang number of argument is fine
-                }
-
-                protected void checkArgTypes(SqlCall call, SqlValidator validator, SqlValidator.Scope scope) {
-                    // any arg types are fine
-                }
-
-                protected SaffronType inferType(SqlValidator validator,
-                                                SqlValidator.Scope scope, SqlCall call) {
-                    // The type of a ROW(e1,e2) expression is a record with the
-                    // types {e1type,e2type}.
-                    final String [] fieldNames = new String[call.operands.length];
-                    final SaffronType [] types = new SaffronType[call.operands.length];
-                    for (int i = 0; i < call.operands.length; i++) {
-                        SqlNode operand = call.operands[i];
-                        fieldNames[i] = validator.deriveAlias(operand, i);
-                        types[i] = validator.deriveType(scope,operand);
-                    }
-                    return validator.typeFactory.createProjectType(types, fieldNames);
-                }
-            };
+     /**
+     * Parameter type-checking strategy
+     * type must a time interval
+     */
+    public static final SqlOperator.AllowedArgInference
+            typeNullableInterval =
+        new SqlOperator.AllowedArgInference(
+                new SqlTypeName[][]{timeIntervalNullableTypes} );
 
     /**
-     * The SQL <code>CAST</code> operator.
-     *
-     * <p/>The target type is simply stored as
-     * the return type, not an explicit operand. For example, the expression
-     * <code>CAST(1 + 2 AS DOUBLE)</code> will become a call to
-     * <code>CAST</code> with the expression <code>1 + 2</code> as its only
-     * operand.
+     * Parameter type-checking strategy
+     * type must a time interval
      */
-    public final SqlFunction cast = new SqlFunction(
-        "CAST",null,useReturnForParam, null, SqlFunction.System
-    );
-
-    // postfix
-    public final SqlPostfixOperator descendingOperator =
-        new SqlPostfixOperator("DESC",SqlKind.Descending,10,
-                               null,useReturnForParam,typeAny);
-
-    public final SqlPostfixOperator isNotNullOperator =
-        new SqlPostfixOperator("IS NOT NULL",SqlKind.Other,15,
-                               useBoolean,booleanParam,typeAny);
-
-    public final SqlPostfixOperator isNullOperator =
-        new SqlPostfixOperator("IS NULL",SqlKind.IsNull,15,
-                               useBoolean,booleanParam,typeAny);
+    public static final SqlOperator.AllowedArgInference
+            typeNullableIntervalInterval =
+        new SqlOperator.AllowedArgInference(
+                new SqlTypeName[][]{timeIntervalNullableTypes,timeIntervalNullableTypes} );
 
 
-	public final SqlPostfixOperator isNotTrueOperator =
-	        new SqlPostfixOperator("IS NOT TRUE",SqlKind.Other,15,
-	                               useBoolean,booleanParam,typeNullableBool);
+    //~ Instance fields -------------------------------------------------------
 
-	public final SqlPostfixOperator isTrueOperator =
-	        new SqlPostfixOperator("IS TRUE",SqlKind.IsTrue,15,
-	                               useBoolean,booleanParam,typeNullableBool);
 
-	public final SqlPostfixOperator isNotFalseOperator =
-	        new SqlPostfixOperator("IS NOT FALSE",SqlKind.Other,15,
-	                               useBoolean,booleanParam,typeNullableBool);
-
-	public final SqlPostfixOperator isFalseOperator =
-	        new SqlPostfixOperator("IS FALSE",SqlKind.IsFalse,15,
-	                               useBoolean,booleanParam,typeNullableBool);
-
-    // prefix
-    public final SqlPrefixOperator existsOperator =
-        new SqlPrefixOperator("EXISTS",SqlKind.Exists,20,
-                              useBoolean,null, typeNullableBool);
-
-    public final SqlPrefixOperator notOperator =
-        new SqlPrefixOperator("NOT",SqlKind.Not,15,
-                              useNullableBoolean,booleanParam, typeNullableBool);
-
-    public final SqlPrefixOperator prefixMinusOperator =
-        new SqlPrefixOperator("-",SqlKind.MinusPrefix,20,
-                              useFirstArgType,useReturnForParam, typeNullableNumeric);
-
-    public final SqlPrefixOperator prefixPlusOperator =
-        new SqlPrefixOperator("+",SqlKind.PlusPrefix,20,
-                              useFirstArgType,useReturnForParam, typeNullableNumeric);
-
-    public final SqlPrefixOperator explicitTableOperator =
-        new SqlPrefixOperator("TABLE",SqlKind.ExplicitTable,1,null,null,null);
-
-    // special
-    public final SqlSpecialOperator valuesOperator =
-        new SqlSpecialOperator("VALUES",SqlKind.Values) {
-            void unparse(
-                    SqlWriter writer,
-                    SqlNode[] operands,
-                    int leftPrec,
-                    int rightPrec) {
-                writer.print("VALUES ");
-                for (int i = 0; i < operands.length; i++) {
-                    if (i > 0) {
-                        writer.print(", ");
-                    }
-                    SqlNode operand = operands[i];
-                    operand.unparse(writer, 0, 0);
-                }
-            }
-        };
-
-    public final SqlSpecialOperator betweenOperator =
-        new SqlSpecialOperator("BETWEEN",SqlKind.Between,15) {
-            void unparse(
-                    SqlWriter writer,
-                    SqlNode[] operands,
-                    int leftPrec,
-                    int rightPrec) {
-                operands[0].unparse(writer, this.leftPrec, this.rightPrec );
-                writer.print(" BETWEEN ");
-                operands[1].unparse(writer, this.leftPrec, this.rightPrec );
-                writer.print(" AND ");
-                operands[2].unparse(writer, this.leftPrec, this.rightPrec );
-            }
-        };
-
-    public final SqlSpecialOperator notBetweenOperator =
-        new SqlSpecialOperator("NOT BETWEEN",SqlKind.NotBetween,15);
-
-    public final SqlSpecialOperator likeOperator = new SqlLikeOperator("LIKE",SqlKind.Like);
-    public final SqlSpecialOperator similarOperator = new SqlLikeOperator("SIMILAR",SqlKind.Similar);
-    public final SqlSelectOperator selectOperator = new SqlSelectOperator();
-    public final SqlCaseOperator caseOperator = new SqlCaseOperator();
-    public final SqlJoinOperator joinOperator = new SqlJoinOperator();
-    public final SqlSpecialOperator insertOperator =
-    new SqlSpecialOperator("INSERT",SqlKind.Insert);
-    public final SqlSpecialOperator deleteOperator =
-    new SqlSpecialOperator("DELETE",SqlKind.Delete);
-    public final SqlSpecialOperator updateOperator =
-    new SqlSpecialOperator("UPDATE",SqlKind.Update);
-    public final SqlSpecialOperator explainOperator =
-    new SqlSpecialOperator("EXPLAIN",SqlKind.Explain);
-    public final SqlOrderByOperator orderByOperator = new SqlOrderByOperator();
-
+    //~ - ~ - ~ - ~ - ~ - ~ - ~ - ~ - ~ - ~ - ~ - ~ -
     private final MultiMap operators = new MultiMap();
     private final HashMap mapNameToOp = new HashMap();
+    //~ Instance fields -------------------------------------------------------
+    public final Set stringFuncNames = new LinkedHashSet();
+    public final Set numericFuncNames = new LinkedHashSet();
+    public final Set timeDateFuncNames = new LinkedHashSet();
+    public final Set systemFuncNames = new LinkedHashSet();
+    /**
+     * Multi-map from function name to a list of functions with that name.
+     */
+    private final MultiMap mapNameToFunc = new MultiMap();
 
 
     //~ Constructors ----------------------------------------------------------
 
     protected SqlOperatorTable()
     {
+    }
+
+    /**
+     * Call this method after constructing an operator table. It can't be
+     * part of the constructor, because the sub-class' constructor needs to
+     * complete first. 
+     */
+    public void init() {
         // Use reflection to register the expressions stored in public fields.
         Field [] fields = getClass().getFields();
         for (int i = 0; i < fields.length; i++) {
             Field field = fields[i];
-            if (SqlOperator.class.isAssignableFrom(field.getType())) {
+            if (SqlFunction.class.isAssignableFrom(field.getType())) {
+                try {
+                    SqlFunction op = (SqlFunction) field.get(this);
+                    if (op != null) {
+                        register(op);
+                    }
+                } catch (IllegalArgumentException e) {
+                    throw Util.newInternal(e,
+                            "Error while initializing operator table");
+                } catch (IllegalAccessException e) {
+                    throw Util.newInternal(e,
+                            "Error while initializing operator table");
+                }
+            } else if (SqlOperator.class.isAssignableFrom(field.getType())) {
                 try {
                     SqlOperator op = (SqlOperator) field.get(this);
                     register(op);
@@ -960,13 +813,25 @@ public class SqlOperatorTable
 
     /**
      * Retrieves the singleton, creating it if necessary.
+     *
+     * @see #std
      */
     public static SqlOperatorTable instance()
     {
         if (instance == null) {
-            instance = new SqlOperatorTable();
+            // Use two-phase construction, because we can't intialize the
+            // tables until the constructor of the sub-class has completed.
+            instance = new SqlStdOperatorTable();
+            instance.init();
         }
         return instance;
+    }
+
+    /**
+     * Returns the singleton instance of the table of standard operators.
+     */
+    public static SqlStdOperatorTable std() {
+        return (SqlStdOperatorTable) instance();
     }
 
     /**
@@ -989,7 +854,7 @@ public class SqlOperatorTable
         case SqlOperator.Syntax.Postfix:
             return (SqlPostfixOperator) mapNameToOp.get(opName + ":POSTFIX");
         case SqlOperator.Syntax.Function:
-            throw Util.newInternal("Use SqlFunctionTable to lookup function");
+            throw Util.newInternal("Use lookupFunction to lookup function");
         default:
             throw SqlOperator.Syntax.instance.badValue(syntax);
         }
@@ -1094,16 +959,7 @@ public class SqlOperatorTable
                         // irrelevant.
                         SqlNode leftExp = (SqlNode) list.get(i - 1);
 
-                        final SqlCall newExp;
-                        if (current.equals(isNotNullOperator)) {
-                            newExp = notOperator.createCall(isNullOperator.createCall(leftExp));
-                        } else if (current.equals(isNotTrueOperator)) {
-                            newExp = notOperator.createCall(isTrueOperator.createCall(leftExp));
-                        } else if (current.equals(isNotFalseOperator)) {
-                            newExp = notOperator.createCall(isFalseOperator.createCall(leftExp));
-                        } else {
-                            newExp = current.createCall(leftExp);
-                        }
+                        final SqlCall newExp = current.createCall(leftExp);
 
                         // Replace elements {i - 1, i} with the new expression.
                         list.remove(i);
@@ -1149,10 +1005,11 @@ public class SqlOperatorTable
                     secondAnd = toTree(suicideList); // 2nd BETWEEN AND's operand
 
                     SqlNode leftExp = (SqlNode) list.get(i - 1);
-                    SqlCall newExp = betweenOperator.createCall(leftExp, firstAnd, secondAnd);
+                    SqlCall newExp = std().betweenOperator.createCall(
+                            leftExp, firstAnd, secondAnd);
                     if (current.kind.isA(SqlKind.NotBetween))
                     {
-                        newExp = notOperator.createCall(newExp);
+                        newExp = std().notOperator.createCall(newExp);
                     }
 
                     list.set(i - 1,newExp);
@@ -1180,6 +1037,143 @@ public class SqlOperatorTable
     public SqlOperator lookup(SqlKind kind)
     {
         return null;
+    }
+
+    //~ Methods ---------------------------------------------------------------
+    public static SqlCall createCall(String funName, SqlNode[] operands) {
+        List funs = instance().lookupFunctionsByName(funName);
+        if (!funs.isEmpty()){
+            return ((SqlFunction) funs.get(0)).createCall(operands);
+        }
+
+        return  new SqlFunction(funName, null, null,null){
+                    public void test(SqlTester tester) {
+                        /* empty implementation */
+                    }
+                }.createCall(operands);
+     }
+
+    /**
+     * Retrieves a list of overloading function by a given name.
+     * @return If no function exists, null is returned,
+     *         else retrieves a list of overloading function by a given name.
+     */
+    public List lookupFunctionsByName(String funcName) {
+        return mapNameToFunc.getMulti(funcName);
+    }
+
+    /**
+     * Register function to the table.
+     * @param function
+     */
+    public void register(SqlFunction function) {
+        mapNameToFunc.putMulti(function.name, function);
+        SqlFunction.SqlFuncTypeName funcType = function.getFunctionType();
+        assert (funcType != null) :
+                "Function type for "+function.name+" not set";
+        switch (funcType.getOrdinal()) {
+        case SqlFunction.SqlFuncTypeName.String_ordinal:
+            stringFuncNames.add(function.name);
+            break;
+        case SqlFunction.SqlFuncTypeName.Numeric_ordinal:
+            numericFuncNames.add(function.name);
+            break;
+        case SqlFunction.SqlFuncTypeName.TimeDate_ordinal:
+            timeDateFuncNames.add(function.name);
+            break;
+        case SqlFunction.SqlFuncTypeName.System_ordinal:
+            systemFuncNames.add(function.name);
+            break;
+        }
+    }
+
+    private SqlFunction[] lookupFunctionsByNameAndArgCount(String name,
+            int numberOfParams) {
+        List funcList = mapNameToFunc.getMulti(name);
+        if (funcList.isEmpty()) {
+            return null;
+        }
+
+        List candidateList = new LinkedList();
+        for (int i = 0; i < funcList.size(); i++) {
+            SqlFunction function = (SqlFunction) funcList.get(i);
+            List possibleNums = function.getPossibleNumOfOperands();
+            if (possibleNums.contains(new Integer(numberOfParams))) {
+                candidateList.add(function);
+            }
+        }
+        return (SqlFunction[]) candidateList.toArray(
+                new SqlFunction[candidateList.size()]);
+    }
+
+    /**
+     * Chose the best fit function
+     * @param funcName
+     * @param argTypes
+     * @return
+     */
+    public SqlFunction lookupFunction(String funcName, SaffronType[] argTypes) {
+        // The number of defined parameters need to match the invocation
+        SqlFunction[] functions = lookupFunctionsByNameAndArgCount(funcName,
+                argTypes.length);
+        if ((null == functions) || (0==functions.length)) {
+            return null;
+        } else if (functions.length == 1) {
+            return functions[0];
+        }
+
+        ArrayList candidates = new ArrayList();
+        for (int i = 0; i < functions.length; i++) {
+            SqlFunction function = functions[i];
+            if (function.isMatchParamType(argTypes)) {
+                candidates.add(function);
+            }
+        }
+
+        if (candidates.size() == 0) {
+            return null;
+        } else if (candidates.size() == 1) {
+            return (SqlFunction) candidates.get(1);
+        }
+
+        // Next, consider each argument of the function invocation, from left to right. For each argument,
+        // eliminate all functions that are not the best match for that argument. The best match for a given
+        // argument is the first data type appearing in the precedence list corresponding to the argument data
+        // type in Table 3 for which there exists a function with a parameter of that data type. Lengths,
+        // precisions, scales and the "FOR BIT DATA" attribute are not considered in this comparison.
+        // For example, a DECIMAL(9,1) argument is considered an exact match for a DECIMAL(6,5) parameter,
+        // and a VARCHAR(19) argument is an exact match for a VARCHAR(6) parameter.
+        // Reference: http://www.pdc.kth.se/doc/SP/manuals/db2-5.0/html/db2s0/db2s067.htm#HDRUDFSEL
+        //
+        for (int i = 0; i < argTypes.length; i++) {
+            SaffronType argType = argTypes[i];
+            throw Util.needToImplement("Function resolution with different types is not implemented yet.");
+        }
+        return null;
+    }
+
+    /**
+     * Returns a list of all functions and operators in this table.
+     * Used for automated testing.
+     */
+    public ArrayList getOperatorList() {
+        ArrayList list = new ArrayList();
+
+        Iterator it = operators.entryIterMulti();
+        while (it.hasNext()) {
+            Map.Entry mapEntry = (Map.Entry) it.next();
+            SqlOperator operator = (SqlOperator) mapEntry.getValue();
+            list.add(operator);
+        }
+
+        it = mapNameToFunc.entryIterMulti();
+        while (it.hasNext()) {
+            Map.Entry mapEntry = (Map.Entry) it.next();
+            SqlFunction function   = (SqlFunction) mapEntry.getValue();
+            list.add(function);
+        }
+
+        return list;
     }
 
 }

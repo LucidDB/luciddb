@@ -56,6 +56,14 @@ public abstract class Property {
     }
 
     /**
+     * @return this property's name (typically a dotted path)
+     */
+    public String getPath()
+    {
+        return _path;
+    }
+
+    /**
      * Returns the default value of this property. Derived classes (for example
      * those with special rules) can override.
      */

@@ -196,7 +196,8 @@ public abstract class FennelRelUtil
     
     private static int getByteLength(FarragoAtomicType type)
     {
-        if (type instanceof FarragoPrimitiveType) {
+        if (type instanceof FarragoPrimitiveType ||
+                type  instanceof FarragoDateTimeType) {
             // for primitives, length is implied by datatype
             return 0;
         }
@@ -240,6 +241,9 @@ public abstract class FennelRelUtil
             return 3; // STANDARD_TYPE_INT_16
         case Types.INTEGER:
             return 5; // STANDARD_TYPE_INT_32
+        case Types.DATE:
+        case Types.TIME:
+        case Types.TIMESTAMP:    
         case Types.BIGINT:
             return 7; // STANDARD_TYPE_INT_64
         case Types.VARCHAR:

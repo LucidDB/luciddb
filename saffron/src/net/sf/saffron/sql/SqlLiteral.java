@@ -1,7 +1,7 @@
 /*
 // $Id$
 // Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
+// (C) Copyright 2002-2004 Disruptive Tech
 // (C) Copyright 2003-2004 John V. Sichi
 // You must accept the terms in LICENSE.html to use this software.
 //
@@ -22,14 +22,119 @@
 
 package net.sf.saffron.sql;
 
+import net.sf.saffron.core.SaffronType;
+import net.sf.saffron.core.SaffronTypeFactory;
 import net.sf.saffron.sql.parser.ParserUtil;
-import net.sf.saffron.util.Util;
+import net.sf.saffron.sql.type.SqlTypeName;
+import net.sf.saffron.util.*;
 
-import java.math.BigInteger;
-import java.nio.charset.Charset;
+import java.math.BigDecimal;
+import java.sql.Date;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.TimeZone;
 
 /**
  * A <code>SqlLiteral</code> is a constant. It is, appropriately, immutable.
+ *
+ * <p>How is the value stored? In that respect, the class is somewhat of a
+ * black box. There is a {@link #getValue} method which returns the value as
+ * an object, but the type of that value is implementation detail, and it is
+ * best that your code does not depend upon that knowledge. It is better to
+ * use task-oriented methods such as {@link #toSqlString(SqlDialect)} and
+ * {@link #toValue}.</p>
+ *
+ * <p>If you really need to access the value directly, you should switch on
+ * the value of the {@link #_typeName} field, rather than making assumptions
+ * about the runtime type of the {@link #_value}.</p>
+ *
+ * <p>The allowable types and combinations are:
+ * <table>
+ * <tr>
+ *   <th>TypeName</th>
+ *   <th>Meaing</th>
+ *   <th>Value type</th>
+ * </tr>
+ * <tr>
+ *   <td>{@link SqlTypeName#Null}</td>
+ *   <td>The null value. It has its own special type.</td>
+ *   <td>null</td>
+ * </tr>
+ * <tr>
+ *   <td>{@link SqlTypeName#Boolean}</td>
+ *   <td>Boolean, namely <code>TRUE</code>,
+ *       <code>FALSE</code> or
+ *       <code>UNKNOWN</code>.</td>
+ *   <td>{@link Boolean}, or null represents the UNKNOWN value</td>
+ * </tr>
+ * <tr>
+ *   <td>{@link SqlTypeName#Decimal}</td>
+ *   <td>Exact number, for example <code>0</code>,
+ *       <code>-.5</code>,
+ *       <code>12345</code>.</td>
+ *   <td>{@link BigDecimal}</td>
+ * </tr>
+ * <tr>
+ *   <td>{@link SqlTypeName#Double}</td>
+ *   <td>Approximate number, for example <code>6.023E-23</code>.</td>
+ *   <td>{@link BigDecimal}</td>
+ * </tr>
+ * <tr>
+ *   <td>{@link SqlTypeName#Date}</td>
+ *   <td>Date, for example <code>DATE '1969-04'29'</code></td>
+ *   <td>{@link Calendar}</td>
+ * </tr>
+ * <tr>
+ *   <td>{@link SqlTypeName#Time}</td>
+ *   <td>Time, for example <code>TIME '18:37:42.567'</code></td>
+ *   <td>{@link Calendar}</td>
+ * </tr>
+ * <tr>
+ *   <td>{@link SqlTypeName#Timestamp}</td>
+ *   <td>Timestamp, for example
+ *       <code>TIMESTAMP '1969-04-29 18:37:42.567'</code></td>
+ *   <td>{@link Calendar}</td>
+ * </tr>
+ * <tr>
+ *   <td>{@link SqlTypeName#Char}</td>
+ *   <td>Character constant, for example
+ *       <code>'Hello, world!'</code>,
+ *       <code>''</code>,
+ *       <code>_N'Bonjour'</code>,
+ *       <code>_ISO-8859-1'It''s superman!' COLLATE SHIFT_JIS$ja_JP$2</code>.
+ *       These are always CHAR, never VARCHAR.</td>
+ *   <td>{@link NlsString}</td>
+ * </tr>
+ * <tr>
+ *   <td>{@link SqlTypeName#Bit}</td>
+ *   <td>Bit string, for example <code>B'101011'</code>.</td>
+ *   <td>{@link BitString}</td>
+ * </tr>
+ * <tr>
+ *   <td>{@link SqlTypeName#Binary}</td>
+ *   <td>Binary constant, for example <code>X'ABC'</code>, <code>X'7F'</code>.
+ *       Note that strings with an odd number of hexits will later become
+ *       values of the BIT datatype, because they have an incomplete number
+ *       of bytes. But here, they are all binary constants, because that's
+ *       how they were written.
+ *       These constants are always BINARY, never VARBINARY.</td>
+ *   <td><code>byte[]</code> or {@link BitString}</td>
+ * </tr>
+ * <tr>
+ *   <td>{@link SqlTypeName#Symbol}</td>
+ *   <td>A symbol is a special type used to make parsing easier; it is not
+ *       part of the SQL standard, and is not exposed to end-users.
+ *       It is used to hold a flag, such as the LEADING flag in a call to the
+ *       function <code>TRIM([LEADING|TRAILING|BOTH] chars FROM string)</code>.
+ *   </td>
+ *   <td><{@link SqlSymbol} (which conveniently both extends {@link SqlLiteral}
+ *       and also implements {@link EnumeratedValues}), or a class derived from
+ *       it.</td>
+ * </tr>
+ * </table>
  */
 public class SqlLiteral extends SqlNode
 {
@@ -40,25 +145,170 @@ public class SqlLiteral extends SqlNode
     // different instances have different context-dependent types.
 
     /** Constant for {@link Boolean#TRUE}. */
-    public static final SqlLiteral True = new SqlLiteral(Boolean.TRUE);
+    public static final SqlLiteral True =
+            new SqlLiteral(Boolean.TRUE, SqlTypeName.Boolean);
 
     /** Constant for {@link Boolean#FALSE}. */
-    public static final SqlLiteral False = new SqlLiteral(Boolean.FALSE);
+    public static final SqlLiteral False =
+            new SqlLiteral(Boolean.FALSE, SqlTypeName.Boolean);
 
     /** Constant for the unknown value in 3 valued logic. */
-    public static final SqlLiteral Unknown = new BooleanUnknown();
+    public static final SqlLiteral Unknown =
+            new SqlLiteral(null, SqlTypeName.Boolean);
 
     /** Constant for the {@link Integer} value 0. */
-    public static final SqlLiteral Zero = new SqlLiteral(new Integer(0));
+    public static final SqlLiteral Zero =
+            new SqlLiteral(new BigDecimal(0), SqlTypeName.Decimal);
 
     /** Constant for the {@link Integer} value 1. */
-    public static final SqlLiteral One = new SqlLiteral(new Integer(1));
-
+    public static final SqlLiteral One =
+            new SqlLiteral(new BigDecimal(1), SqlTypeName.Decimal);
 
     //~ Inner Classes   -------------------------------------------------------
-    public static class BooleanUnknown extends SqlLiteral{
-        public BooleanUnknown() {
-            super(null);
+
+
+    /**
+     * DateLiteral for wrapping java date/time types.
+     * This is sort of an odd thing to do - a static nested class that extends
+     * its super class.
+     */
+    public static class DateLiteral extends SqlLiteral {
+        protected boolean _hasTimeZone;
+        protected String _formatString = ParserUtil.DateFormatStr;
+
+        /**
+         *  Construct a new dateformat object for the given string.
+         *  DateFormat objects aren't thread safe
+         * @param dfString
+         * @return date format object
+         */
+        public static DateFormat getDateFormat(String dfString) {
+            SimpleDateFormat df = new SimpleDateFormat(dfString);
+            df.setLenient(false);
+            return df;
+        }
+
+
+        public DateLiteral(Calendar d)
+        {
+            this(d,false, SqlTypeName.Date);
+        }
+
+        public DateLiteral(Calendar d, boolean tz) {
+            this(d, tz, SqlTypeName.Date);
+        }
+
+        protected DateLiteral(Calendar d, boolean tz, SqlTypeName typeName) {
+            super(d, typeName);
+            _hasTimeZone = tz;
+        }
+
+        public String toValue() {
+            return Long.toString(getCal().getTimeInMillis());
+        }
+
+        public Date getDate() {
+            return new java.sql.Date(getCal().getTimeInMillis());
+        }
+
+        public Calendar getCal() {
+            return (Calendar) _value;
+        }
+        /**
+         * technically, a sql date doesn't come with a tz, but time and ts
+         * inherit this, and the calendar object has one, so it seems harmless.
+         * @return timezone
+         */
+        public TimeZone getTimeZone() {
+            assert(_hasTimeZone) : "Attempt to get timezone on Literal date: " + getCal() + ", which has no timezone";
+            return getCal().getTimeZone();
+        }
+
+        public String toString() {
+            return "DATE '" +
+                    getDateFormat(_formatString).format(getCal().getTime()) +
+                    "'";
+        }
+
+        public SaffronType createSqlType(SaffronTypeFactory typeFactory) {
+            return typeFactory.createSqlType(SqlTypeName.Date);
+        }
+
+        public void unparse(SqlWriter writer,int leftPrec,int rightPrec) {
+            writer.print(this.toString());
+        }
+
+    }
+
+    public static class TimeLiteral extends DateLiteral {
+        public final int _precision;
+
+        protected TimeLiteral(Calendar t, int p, boolean hasTZ,
+                SqlTypeName typeName) {
+            super(t,hasTZ,typeName);
+            _precision = p;
+            _formatString = ParserUtil.TimeFormatStr;
+       }
+
+        /**
+         * Constructor is private; use {@link #createTime}.
+         */
+        private TimeLiteral(Calendar t, int p) {
+           this(t,p,false,SqlTypeName.Time);
+        }
+
+        public Time getTime() {
+            return new java.sql.Time(getCal().getTimeInMillis());
+        }
+
+        public int getPrec() {
+            return _precision;
+        }
+
+        public String toString() {
+            return "TIME '" + toFormattedString() + "'";
+        }
+
+        public String toFormattedString() {
+            String result =
+                    new SimpleDateFormat(_formatString).
+                                format(getCal().getTime()) ;
+            if (_precision > 0) {
+                // get the millisecond count.  millisecond => at most 3 digits.
+                String digits = Long.toString(getCal().getTimeInMillis());
+                result = result + "." +
+                        digits.substring(digits.length() - 3, digits.length() - 3 + _precision);
+            }
+            return result;
+        }
+
+        public SaffronType createSqlType(SaffronTypeFactory typeFactory) {
+            return typeFactory.createSqlType(_typeName, _precision);
+        }
+    }
+
+
+    /**
+     * This is largely a place holder, the type allows to determine what this object is,
+     *  but most of its functionality comes from above.
+     */
+    public static class TimestampLiteral extends TimeLiteral {
+
+        public TimestampLiteral(Calendar cal, int p, boolean hasTZ) {
+            super(cal, p, hasTZ, SqlTypeName.Timestamp);
+            _formatString = ParserUtil.TimestampFormatStr;
+        }
+
+        public TimestampLiteral(Calendar cal, int p) {
+            this(cal, p, false);
+        }
+
+        public Timestamp getTimestamp() {
+            return new java.sql.Timestamp(getCal().getTimeInMillis());
+        }
+
+        public String toString() {
+            return "TIMESTAMP '" + toFormattedString() + "'";
         }
     }
 
@@ -78,7 +328,7 @@ public class SqlLiteral extends SqlNode
 
         //~ Methods -----------
         public static Numeric createExact(String s){
-            Object value;
+            BigDecimal value;
             int prec;
             int scale;
 
@@ -86,7 +336,7 @@ public class SqlLiteral extends SqlNode
             if (i>=0 && (s.length()-1!=i)) {
                 value = ParserUtil.parseDecimal(s);
                 scale = s.length()-i-1;
-                assert(scale == ((java.math.BigDecimal) value).scale());
+                assert scale == value.scale() : s;
                 prec = s.length()-1;
             }
             else if (i>=0 && (s.length()-1==i)) {
@@ -103,12 +353,12 @@ public class SqlLiteral extends SqlNode
         }
 
         public static Numeric createApprox(String s){
-            Object value = ParserUtil.parseDecimal(s);
+            BigDecimal value = ParserUtil.parseDecimal(s);
             return new Numeric(value,null,null, false);
         }
 
-        protected Numeric(Object value, Integer prec, Integer scale, boolean isExact) {
-            super(value);
+        protected Numeric(BigDecimal value, Integer prec, Integer scale, boolean isExact) {
+            super(value, isExact ? SqlTypeName.Decimal : SqlTypeName.Double);
             this.m_prec = prec;
             this.m_scale = scale;
             this.m_isExact = isExact;
@@ -118,170 +368,112 @@ public class SqlLiteral extends SqlNode
             return m_isExact;
         }
 
-    }
-
-    public static class BitString {
-        //~ Member variables -----------
-        private String m_bits;
-
-        //~ Methods -----------
-        /**
-         * Creates a BitString representation out of a Hex String. Initial zeros will be preserved.
-         * Hex String is defined in the sqlstandard to be a string with odd nbr of hex digits.
-         * An even nbr of hex digits is in the standard a Binary String.
-         */
-        public static BitString createFromHexString(String s){
-            int lengthToBe = s.length()*4;
-
-            //trick,add an additional non-zero bits hex digit in case hex string starts with 0,is there a smart(er) way?
-            //DONT FORGET TO REMOVE IT AT THE END!!
-            s="f"+s;
-            String bits = new BigInteger(s,16).toString(2).substring(4,lengthToBe+4);
-            assert(bits.length()==lengthToBe);
-            return new BitString(bits);
-        }
-
-        /**
-         * Creates a BitString representation out of a Bit String.  Initial zeros will be preserved.
-         */
-        public static BitString createFromBitString(String s){
-            return new BitString(s);
-        }
-
-        protected BitString(String bits) {
-            assert(bits.replaceAll("1","").replaceAll("0","").length()==0);//make sure we only have ones and zeros
-            m_bits=bits;
-        }
-
-        public String toString() {
-            return m_bits;
-        }
-
-        public int getBitCount() {
-            return m_bits.length();
-        }
-
-        public byte[] getAsByteArray() {
-            return Util.toByteArrayFromBitString(m_bits);
-        }
-
-
-    }
-
-    public static class StringLiteral {
-        private static String m_defaultCollationName = "iso-8859-1$en_US";
-
-        private String m_charSetName;
-        private String m_value;
-        private Charset m_charset;
-        private SqlCollation m_collation;
-        //~ Member variables -----------
-
-        //~ Methods -----------
-        /**
-         * Creates a string in a specfied characher set.
-         * @throws java.nio.charset.IllegalCharsetNameException -
-         *         If the given charset name is illegal
-         * @throws java.nio.charset.UnsupportedCharsetException -
-         *         If no support for the named charset is available in this instance of the Java virtual machine
-         */
-        protected StringLiteral(String charSetName, String theString, SqlCollation collation) {
-            m_charSetName=charSetName;
-            if (null!=m_charSetName){
-                m_charSetName = charSetName.toUpperCase();
-                m_charset = Charset.forName(m_charSetName);
+        public void unparse(SqlWriter writer, int leftPrec, int rightPrec) {
+            BigDecimal bd = (BigDecimal) _value;
+            if (m_isExact && bd.scale() == 0) {
+                writer.print(bd.intValue());
             } else {
-                m_charset = null;
+                writer.print(_value.toString());
             }
-            m_collation=collation;
-            m_value=theString;
         }
 
-        public String getCharsetName() {
-            return m_charSetName;
-        }
-
-        public Charset getCharset() {
-            return m_charset;
-        }
-
-        public SqlCollation getCollation() {
-            return m_collation;
-        }
-
-        public static SqlLiteral create(String s, SqlCollation collation){
-
-            if (s.charAt(0) == '\'') {
-                //we have a "regular" string
-                s = ParserUtil.strip(s, "'");
-                s = ParserUtil.parseString(s);
-                return new SqlLiteral(new StringLiteral(null,s,collation));
+        public SaffronType createSqlType(SaffronTypeFactory typeFactory) {
+            if (m_isExact){
+                int scale = m_scale.intValue();
+                if (0 == scale) {
+                    return typeFactory.createSqlType(SqlTypeName.Integer);
+                }
+                //else we have a decimal
+                return typeFactory.createSqlType(
+                        SqlTypeName.Decimal,
+                        m_prec.intValue(),
+                        m_scale.intValue());
             }
-
-            //else we have a National string or a string with a charset
-            String charSet;
-            if (Character.toUpperCase(s.charAt(0)) == 'N') {
-                s= s.substring(1);
-                charSet = "latin1"; //todo make this value configurable from the outside
-            }
-            else
-            {
-                int i = s.indexOf("'");
-                charSet = s.substring(1,i);
-                s = s.substring(i);
-            }
-            s = ParserUtil.strip(s, "'");
-            s = ParserUtil.parseString(s);
-            return new SqlLiteral(new StringLiteral(charSet,s,collation));
+            // else we have a a float, real or double.  make them all double for now.
+            return typeFactory.createSqlType(SqlTypeName.Double);
         }
 
-        public String toString() {
-            StringBuffer ret = new StringBuffer();
-            if (null!=m_charSetName) {
-                ret.append("_");
-                ret.append(m_charSetName);
-            }
-            ret.append("'");
-            ret.append(Util.replace(m_value,"'","''"));
-            ret.append("'");
-            if (null!=m_collation) {
-                ret.append(" ");
-                ret.append(m_collation.toString());
-            }
-
-            return ret.toString();
-        }
-
-        public String getValue(){
-            return m_value;
-        }
-
-        public void setCollation(SqlCollation collation) {
-//            assert(null!=collation);
-//            assert(null==m_collation);
-            m_collation=collation;
-        }
-
-        public void setCharset(Charset charset) {
-//            assert(null!=charset);
-//            assert(null==m_charset);
-            m_charset=charset;
-            m_charSetName=m_charset.name();
-        }
     }
 
     //~ Instance fields -------------------------------------------------------
 
-    public final Object value;
+    /**
+     * The type with which this literal was declared. This type is very
+     * approximate: the literal may have a differnt type once validated. For
+     * example, all numeric literals have a type name of
+     * {@link SqlTypeName#Decimal}, but on validation may become
+     * {@link SqlTypeName#Integer}.
+     */
+    public final SqlTypeName _typeName;
+    /**
+     * The value of this literal. The type of the value must be appropriate
+     * for the typeName, as defined by the {@link #valueMatchesType} method.
+     */
+    protected final Object _value;
 
     //~ Constructors ----------------------------------------------------------
 
     /**
      * Creates a <code>SqlLiteral</code>.
+     *
+     * @pre typeName != null
+     * @pre valueMatchesType(value,typeName)
      */
-    public SqlLiteral(Object value)
+    protected SqlLiteral(Object value, SqlTypeName typeName)
     {
-        this.value = value;
+        this._value = value;
+        this._typeName = typeName;
+        Util.pre(typeName != null, "typeName != null");
+        Util.pre(valueMatchesType(value, typeName),
+                "valueMatchesType(value,typeName)");
+    }
+
+    /**
+     * Whether value is appropriate for its type. (We have rules about these
+     * things.)
+     */
+    public static boolean valueMatchesType(Object value,
+            SqlTypeName typeName) {
+        switch (typeName.ordinal_) {
+        case SqlTypeName.Boolean_ordinal:
+            return value == null || value instanceof Boolean;
+
+        case SqlTypeName.Null_ordinal:
+            return value == null;
+
+        case SqlTypeName.Decimal_ordinal:
+        case SqlTypeName.Double_ordinal:
+            return value instanceof BigDecimal;
+
+        case SqlTypeName.Date_ordinal:
+        case SqlTypeName.Time_ordinal:
+        case SqlTypeName.Timestamp_ordinal:
+            return value instanceof Calendar;
+
+        case SqlTypeName.Binary_ordinal:
+            // created from X'ABC' (odd length) or X'AB' (even length)
+            return value instanceof BitString; // created from B'0101'
+
+        case SqlTypeName.Bit_ordinal:
+            return value instanceof BitString; // created from B'0101'
+
+        case SqlTypeName.Char_ordinal:
+            return value instanceof NlsString;
+
+        case SqlTypeName.Symbol_ordinal:
+            // We grudgingly allow the value to be a String, because
+            // SqlSymbol extends SqlLiteral and implements
+            // EnumeratedValues.Value, and it would be silly if it were its
+            // own value!
+            return value instanceof EnumeratedValues.Value ||
+                    value instanceof String;
+
+        case SqlTypeName.Integer_ordinal: // not allowed -- use Decimal
+        case SqlTypeName.Varchar_ordinal: // not allowed -- use Char
+        case SqlTypeName.Varbinary_ordinal: // not allowed -- use Binary
+        default:
+            throw typeName.unexpected();
+        }
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -293,36 +485,66 @@ public class SqlLiteral extends SqlNode
 
     /**
      * Returns the value of this literal.
+     *
+     * <p>Try not to use this method! There are so many different kinds of
+     * values, it's better to to let SqlLiteral do whatever it is you want to
+     * do.
      */
     public Object getValue()
     {
-        return value;
+        return _value;
     }
 
     public static boolean booleanValue(SqlNode node)
     {
-        return ((Boolean) ((SqlLiteral) node).value).booleanValue();
+        return ((Boolean) ((SqlLiteral) node)._value).booleanValue();
     }
-
+    /**
+     * For calc program builder - value may be different than {@link #unparse}
+     * Typical values:<ul>
+     * <li>Hello, world!</li>
+     * <li>12.34</li>
+     * <li>{null}</li>
+     * <li>1969-04-29</li>
+     * </ul>
+     *
+     * @return string representation of the value
+     */
+    public String toValue() {
+        if (_value == null) {
+            return null;
+        }
+        switch (_typeName.ordinal_) {
+        case SqlTypeName.Char_ordinal:
+            // We want 'It''s superman!', not _ISO-8859-1'It''s superman!'
+            return ((NlsString) _value).getValue();
+        default:
+            return _value.toString();
+        }
+    }
     /**
      * Creates a NULL literal.
      */
     public static SqlLiteral createNull()
     {
-        return new SqlLiteral(null);
+        return new SqlLiteral(null, SqlTypeName.Null);
     }
 
+    /**
+     * Returns whether a node represents the NULL value.
+     * isNullLiteral({@link #Unknown}) returns false.
+     */
     public static boolean isNullLiteral(SqlNode node)
     {
+        // We don't regard UNKNOWN -- SqlLiteral(null,Boolean) -- as NULL.
         return (node instanceof SqlLiteral) &&
-                !(node instanceof SqlLiteral.BooleanUnknown)
-                && (((SqlLiteral) node).getValue() == null);
+                ((SqlLiteral) node)._typeName == SqlTypeName.Null;
     }
 
     /**
      * Creates a boolean literal.
      */
-    public static SqlLiteral create(boolean b)
+    public static SqlLiteral createBoolean(boolean b)
     {
         return b ? True : False;
     }
@@ -335,85 +557,227 @@ public class SqlLiteral extends SqlNode
         case 1:
             return One;
         default:
-            return new SqlLiteral(new Integer(i));
+            return new SqlLiteral(new BigDecimal(i), SqlTypeName.Decimal);
         }
     }
 
-    public static SqlLiteral create(java.sql.Date date)
-    {
-        return new SqlLiteral(date);
-    }
 
-    public static SqlLiteral create(java.sql.Time time)
+    /**
+     * Creates a literal which represents a parser symbol, for example the
+     * TRAILING keyword in the call Trim(TRAILING 'x' FROM 'Hello world!').
+     *
+     * @see SqlSymbol
+     */
+    public static SqlLiteral createFlag(EnumeratedValues.Value o)
     {
-        return new SqlLiteral(time);
-    }
-
-    public static SqlLiteral create(java.sql.Timestamp timestamp)
-    {
-        return new SqlLiteral(timestamp);
-    }
-
-    public static SqlLiteral create(Object o)
-    {
-        return new SqlLiteral(o);
+        return new SqlLiteral(o, SqlTypeName.Symbol);
     }
 
     public boolean equals(Object obj)
     {
         return (obj instanceof SqlLiteral)
-            && equals(((SqlLiteral) obj).value,value);
+            && equals(((SqlLiteral) obj)._value,_value);
     }
 
     public int hashCode()
     {
-        return (value == null) ? 0 : value.hashCode();
+        return (_value == null) ? 0 : _value.hashCode();
     }
 
-    public static int intValue(SqlNode node)
+    public int intValue()
     {
-        return ((Integer) ((SqlLiteral) node).value).intValue();
+        switch (_typeName.ordinal_) {
+        case SqlTypeName.Decimal_ordinal:
+        case SqlTypeName.Double_ordinal:
+            BigDecimal bd = (BigDecimal) _value;
+            return bd.intValue();
+        default:
+            throw _typeName.unexpected();
+        }
     }
 
     public String getStringValue()
     {
-        return (String) value;
+        return ((NlsString) _value).getValue();
     }
 
     public Object clone()
     {
-        return new SqlLiteral(value);
+        return new SqlLiteral(_value, _typeName);
     }
 
     public void unparse(SqlWriter writer,int leftPrec,int rightPrec)
     {
-        if (value instanceof String) {
-            writer.print(writer.dialect.quoteStringLiteral(getStringValue()));
-        } else if (value instanceof Boolean) {
-            writer.print(((Boolean) value).booleanValue() ? "TRUE" : "FALSE");
-        } else if (value instanceof byte[]) {
-            byte[] byteArray = (byte[]) value;
+        switch (_typeName.ordinal_) {
+        case SqlTypeName.Boolean_ordinal:
+            writer.print(_value == null ? "UNKNOWN" :
+                    ((Boolean) _value).booleanValue() ? "TRUE" :
+                    "FALSE");
+            break;
+        case SqlTypeName.Binary_ordinal:
             writer.print("X'");
-            writer.print(Util.toStringFromByteArray((byte[]) value,16));
+            writer.print(((BitString) _value).toHexString());
             writer.print("'");
-        } else if (value instanceof BitString) {
+            break;
+        case SqlTypeName.Bit_ordinal:
             writer.print("B'");
-            writer.print(value.toString());
+            writer.print(_value.toString());
             writer.print("'");
-        } else if (value == null) {
+            break;
+        case SqlTypeName.Null_ordinal:
             writer.print("NULL");
-        } else {
-            writer.print(value.toString());
-        }
-
-        if (null!=value){
-//            writer.print(" NOT NULL");
+            break;
+        case SqlTypeName.Char_ordinal:
+            if (false) {
+                String stringValue = ((NlsString) _value).getValue();
+                writer.print(writer.dialect.quoteStringLiteral(stringValue));
+            }
+            assert _value instanceof NlsString;
+            writer.print(_value.toString());
+            break;
+        case SqlTypeName.Decimal_ordinal:
+        case SqlTypeName.Double_ordinal:
+            // should be handled in subtype
+            throw _typeName.unexpected();
+        default:
+            writer.print(_value.toString());
         }
     }
 
     private static boolean equals(Object o1,Object o2)
     {
         return (o1 == null) ? (o2 == null) : o1.equals(o2);
+    }
+
+    public SaffronType createSqlType(SaffronTypeFactory typeFactory) {
+        BitString bitString;
+        switch (_typeName.ordinal_) {
+        case SqlTypeName.Null_ordinal:
+        case SqlTypeName.Boolean_ordinal:
+            return typeFactory.createSqlType(_typeName);
+        case SqlTypeName.Binary_ordinal:
+            // REVIEW: should this be Binary, not Varbinary?
+            bitString = (BitString) _value;
+            int bitCount = bitString.getBitCount();
+            if (bitCount % 8 == 0) {
+                return typeFactory.createSqlType(SqlTypeName.Varbinary,
+                        bitCount / 8);
+            } else {
+                return typeFactory.createSqlType(SqlTypeName.Bit,
+                        bitCount);
+            }
+        case SqlTypeName.Bit_ordinal:
+            assert _value instanceof BitString;
+            bitString = (BitString) _value;
+            return typeFactory.createSqlType(SqlTypeName.Bit,
+                    bitString.getBitCount());
+        case SqlTypeName.Char_ordinal:
+            NlsString string = (NlsString) _value;
+            SaffronType type = typeFactory.createSqlType(SqlTypeName.Varchar,
+                    string.getValue().length());
+            // REVIEW remove dependencies on validator
+            SqlValidator.setCharsetIfCharType(type, string.getCharset());
+            type.setCollation(string.getCollation());
+            SqlValidator.setCollationIfCharType(type, null, SqlCollation.Coercibility.Coercible);
+            SqlValidator.checkCharsetAndCollateConsistentIfCharType(type);
+            if (null==string.getCharset()) {
+                string.setCharset(type.getCharset());
+            }
+            if (null==string.getCollation()) {
+                string.setCollation(type.getCollation());
+            }
+            return type;
+
+        case SqlTypeName.Symbol_ordinal:
+            // Existing code expects symbols to have a null type.
+            if (true) {
+                return null;
+            }
+            throw Util.newInternal("symbol does not have a SQL type: " +
+                    _value);
+
+        case SqlTypeName.Integer_ordinal: // handled in derived class
+        case SqlTypeName.Time_ordinal: // handled in derived class
+        case SqlTypeName.Varchar_ordinal: // should never happen
+        case SqlTypeName.Varbinary_ordinal: // should never happen
+
+//        } else if (value instanceof String) {
+//            return typeFactory.createSqlType(SqlTypeName.Varchar, ((String) value).length());
+//        } else if (value instanceof BigInteger) {
+            //REVIEW 29-feb-2004 wael: can this else if clause safely be removed?
+//            return typeFactory.createSqlType(SqlTypeName.Integer);
+//        } else if (value instanceof java.math.BigDecimal) {
+            //REVIEW 29-feb-2004 wael: can this else if clause safely be removed?
+//            return typeFactory.createSqlType(SqlTypeName.Double);
+        default:
+            throw Util.needToImplement(toString() + ", operand=" + _value);
+        }
+    }
+
+    public static DateLiteral createDate(Calendar calendar) {
+        return new DateLiteral(calendar);
+    }
+
+    public static TimestampLiteral createTimestamp(Calendar calendar,
+            int precision) {
+        return new TimestampLiteral(calendar,precision);
+    }
+
+    public static TimeLiteral createTime(Calendar calendar, int precision) {
+        return new TimeLiteral(calendar,precision);
+    }
+
+    /**
+     * Creates a literal like B'0101'.
+     */
+    public static SqlLiteral createBitString(String s) {
+        BitString bitString = BitString.createFromBitString(s);
+        return new SqlLiteral(bitString,SqlTypeName.Bit);
+    }
+
+    /**
+     * Creates a literal like X'ABAB'. Although it matters when we derive a
+     * type for this beastie, we don't care at this point whether the number of
+     * hexits is odd or even.
+     */
+    public static SqlLiteral createBinaryString(BitString b) {
+        return new SqlLiteral(b, SqlTypeName.Binary);
+    }
+
+    /**
+     * Creates a string literal, with optional collation.
+     *
+     * REVIEW (jhyde, 2004/5/28): There is parsing stuff going on in here --
+     *   need to move that stuff into ParserUtil.
+     *
+     * @param s  String
+     * @param collation Collation, may be null
+     * @return A string literal
+     */
+    public static SqlLiteral createString(String s, SqlCollation collation) {
+
+        if (s.charAt(0) == '\'') {
+            //we have a "regular" string
+            s = ParserUtil.strip(s, "'");
+            s = ParserUtil.parseString(s);
+            NlsString slit = new NlsString(s, null, collation);
+            return new SqlLiteral(slit, SqlTypeName.Char);
+        }
+
+        //else we have a National string or a string with a charset
+        String charSet;
+        if (Character.toUpperCase(s.charAt(0)) == 'N') {
+            s = s.substring(1);
+            charSet = SaffronProperties.instance().defaultNationalCharset.get();
+        } else {
+            int i = s.indexOf("'");
+            charSet = s.substring(1,i);
+            s = s.substring(i);
+        }
+        s = ParserUtil.strip(s, "'");
+        s = ParserUtil.parseString(s);
+        NlsString nlsStr = new NlsString(s, charSet, collation);
+        return new SqlLiteral(nlsStr, SqlTypeName.Char);
     }
 }
 

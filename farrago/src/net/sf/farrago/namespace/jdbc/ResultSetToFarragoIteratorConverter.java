@@ -6,12 +6,12 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
@@ -27,6 +27,9 @@ import net.sf.farrago.query.*;
 import net.sf.saffron.runtime.*;
 import net.sf.saffron.core.*;
 import net.sf.saffron.oj.util.*;
+import net.sf.saffron.oj.rel.JavaRelImplementor;
+import net.sf.saffron.oj.rel.ResultSetRel;
+import net.sf.saffron.oj.rel.JavaRel;
 import net.sf.saffron.opt.*;
 import net.sf.saffron.rel.*;
 import net.sf.saffron.rel.convert.*;
@@ -49,13 +52,14 @@ import java.util.*;
  * @version $Id$
  */
 class ResultSetToFarragoIteratorConverter extends ConverterRel
+        implements JavaRel
 {
     /**
      * Creates a new ResultSetToFarragoIteratorConverter object.
      *
      * @param cluster VolcanoCluster for this rel
      * @param child input rel producing rows in ResultSet
-     * representation 
+     * representation
      */
     public ResultSetToFarragoIteratorConverter(
         VolcanoCluster cluster,SaffronRel child)
@@ -74,22 +78,21 @@ class ResultSetToFarragoIteratorConverter extends ConverterRel
     {
         return new ResultSetToFarragoIteratorConverter(cluster,child);
     }
-    
-    // implement SaffronRel
-    public Object implement(RelImplementor implementor,int ordinal)
-    {
-        assert (ordinal == -1);
 
+    // implement SaffronRel
+    public ParseTree implement(JavaRelImplementor implementor)
+    {
         FarragoRelImplementor farragoImplementor =
             (FarragoRelImplementor) implementor;
-        
-        Object childObj = implementor.implementChild(this,0,child);
-        
+
+        Expression childObj = implementor.visitJavaChild(this,
+                0, (ResultSetRel) child);
+
         StatementList methodBody = new StatementList();
 
         // variable for synthetic object instance
         Variable varTuple = implementor.newVariable();
-        
+
         // variable for source ResultSet
         Variable varResultSet = new Variable("resultSet");
 
@@ -98,13 +101,13 @@ class ResultSetToFarragoIteratorConverter extends ConverterRel
         // fails to find variable reference).
         Expression castResultSet = new CastExpression(
             TypeName.forOJClass(Util.clazzResultSet),varResultSet);
-        
+
         SaffronType rowType = getRowType();
         OJClass rowClass = OJUtil.typeToOJClass(rowType);
 
         JavaRexBuilder javaRexBuilder =
             (JavaRexBuilder) getCluster().rexBuilder;
-        
+
         MemberDeclarationList memberList = new MemberDeclarationList();
 
         SaffronField [] fields = rowType.getFields();
@@ -145,7 +148,7 @@ class ResultSetToFarragoIteratorConverter extends ConverterRel
         }
 
         methodBody.add(new ReturnStatement(varTuple));
-        
+
         // allocate synthetic object as class data member
         memberList.add(
             new FieldDeclaration(
@@ -167,13 +170,13 @@ class ResultSetToFarragoIteratorConverter extends ConverterRel
                     TypeName.forOJClass(Util.clazzSQLException)
                 },
                 methodBody));
-        
+
         return new AllocationExpression(
             TypeName.forOJClass(OJClass.forClass(ResultSetIterator.class)),
             new ExpressionList(
                 new CastExpression(
                     TypeName.forOJClass(Util.clazzResultSet),
-                    (Expression) childObj)),
+                        childObj)),
             memberList);
     }
 }

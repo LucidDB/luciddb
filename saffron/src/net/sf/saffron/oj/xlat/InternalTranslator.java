@@ -29,6 +29,7 @@ import net.sf.saffron.oj.util.OJUtil;
 import net.sf.saffron.rel.SaffronRel;
 import net.sf.saffron.rex.RexKind;
 import net.sf.saffron.rex.RexNode;
+import net.sf.saffron.rex.RexVisitor;
 import net.sf.saffron.sql.SqlOperator;
 import net.sf.saffron.util.Util;
 import openjava.mop.OJClass;
@@ -36,6 +37,7 @@ import openjava.mop.QueryEnvironment;
 import openjava.ptree.*;
 
 import java.util.HashMap;
+import java.math.BigDecimal;
 
 
 /**
@@ -170,8 +172,10 @@ class InternalTranslator
             rex = rexBuilder.makeLiteral(((Boolean) o).booleanValue());
         } else if (o instanceof String) {
             rex = rexBuilder.makeLiteral(((String) o));
+        } else if (o instanceof BigDecimal) {
+            rex = rexBuilder.makeExactLiteral((BigDecimal) o);
         } else if (o instanceof Number) {
-            rex = rexBuilder.makeLiteral(((Number) o).longValue());
+            rex = rexBuilder.makeExactLiteral(new BigDecimal(o.toString()));
         } else {
             throw Util.needToImplement(this);
         }
@@ -214,7 +218,7 @@ class InternalTranslator
         if (sqlName == null) {
             return null;
         }
-        return rexBuilder.operatorTable.lookup(sqlName,
+        return rexBuilder._opTab.lookup(sqlName,
                 SqlOperator.Syntax.Binary);
     }
 
@@ -257,7 +261,7 @@ class InternalTranslator
 
     private SqlOperator translateFun(String name) {
         if (name.equals("equals")) {
-            return rexBuilder.operatorTable.equalsOperator;
+            return rexBuilder._opTab.equalsOperator;
         }
         throw Util.needToImplement(this);
     }
@@ -366,6 +370,10 @@ class InternalTranslator
         }
 
         public Object clone() {
+            throw new UnsupportedOperationException();
+        }
+
+        public void accept(RexVisitor visitor) {
             throw new UnsupportedOperationException();
         }
     }

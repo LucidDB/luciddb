@@ -84,8 +84,7 @@ public final class FarragoPrimitiveType extends FarragoAtomicType
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * .
-     *
+     * override FarragoAtomicType
      * @return class representing corresponding Java primitive
      */
     public Class getClassForPrimitive()
@@ -120,6 +119,19 @@ public final class FarragoPrimitiveType extends FarragoAtomicType
             digest = digest + "_NULLABLE";
         }
     }
+
+    // implement FarragoAtomicType
+    public boolean hasClassForPrimitive()
+    {
+        return true;
+    }
+
+    // implement FarragoAtomicType
+    public boolean requiresValueAccess()
+    {
+        return isNullable();
+    }
+
 }
 
 

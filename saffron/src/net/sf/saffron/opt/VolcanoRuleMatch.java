@@ -23,6 +23,7 @@
 package net.sf.saffron.opt;
 
 import net.sf.saffron.rel.SaffronRel;
+import net.sf.saffron.rel.SaffronRel;
 
 /**
  * A match of a rule to a particular set of target relational expressions,

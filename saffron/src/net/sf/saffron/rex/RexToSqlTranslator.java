@@ -21,7 +21,6 @@
 */
 package net.sf.saffron.rex;
 
-import net.sf.saffron.sql.SqlLiteral;
 import net.sf.saffron.sql.SqlDynamicParam;
 import net.sf.saffron.sql.SqlNode;
 import net.sf.saffron.sql.SqlWriter;
@@ -136,7 +135,8 @@ public class RexToSqlTranslator {
     }
 
     private SqlNode translateLiteral(RexLiteral literal) {
-        return new SqlLiteral(literal.getValue());
+        throw Util.needToImplement(this);
+        //return new SqlLiteral(literal.getValue(), null);
     }
 }
 

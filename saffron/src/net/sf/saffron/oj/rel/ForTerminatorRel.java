@@ -22,22 +22,26 @@
 
 package net.sf.saffron.oj.rel;
 
-import net.sf.saffron.oj.util.*;
+import net.sf.saffron.core.SaffronPlanner;
+import net.sf.saffron.core.SaffronType;
+import net.sf.saffron.oj.util.OJUtil;
 import net.sf.saffron.opt.CallingConvention;
 import net.sf.saffron.opt.OptUtil;
-import net.sf.saffron.opt.RelImplementor;
+import net.sf.saffron.opt.PlanCost;
 import net.sf.saffron.opt.VolcanoCluster;
 import net.sf.saffron.rel.SaffronRel;
+import net.sf.saffron.rel.SingleRel;
 import net.sf.saffron.util.Util;
-
 import openjava.ptree.*;
 
 
 /**
- * Converts a {@link SaffronRel} of {@link CallingConvention#JAVA} into a Java
- * <code>for</code>-loop.
+ * Converts a {@link SaffronRel} of
+ * {@link CallingConvention#JAVA java calling-convention}
+ * into a Java <code>for</code>-loop.
  */
-public class ForTerminatorRel extends SingleTerminatorRel
+public class ForTerminatorRel extends SingleRel
+        implements TerminatorRel, JavaLoopRel
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -74,37 +78,40 @@ public class ForTerminatorRel extends SingleTerminatorRel
             label);
     }
 
-    public Object implement(RelImplementor implementor,int ordinal)
+    public CallingConvention getConvention()
     {
-        switch (ordinal) {
-        case -1: // called from parent
-         {
-            implementor.setExitStatement(new BreakStatement(label));
-            StatementList stmtList = new StatementList();
-            implementor.pushStatementList(stmtList);
-            Object o = implementor.implementChild(this,0,child);
-            assert(o == null);
-            implementor.popStatementList(stmtList);
-            return stmtList;
-        }
-        case 0: // called from child
-         {
-            // Generate
-            //   Rowtype variable = <<child variable>>;
-            //   <<parent body (references variable)>>
-            StatementList stmtList = implementor.getStatementList();
-            Expression exp = implementor.translateInput(this,0);
-            stmtList.add(
-                new VariableDeclaration(
-                    OJUtil.toTypeName(child.getRowType()),
-                    variable.toString(),
-                    exp));
-            stmtList.addAll(body);
-            return null;
-        }
-        default:
-            throw Util.newInternal("implement: ordinal=" + ordinal);
-        }
+        return CallingConvention.JAVA;
+    }
+
+    public PlanCost computeSelfCost(SaffronPlanner planner)
+    {
+        return planner.makeTinyCost();
+    }
+
+    public ParseTree implement(JavaRelImplementor implementor)
+    {
+        implementor.setExitStatement(new BreakStatement(label));
+        StatementList stmtList = new StatementList();
+        implementor.pushStatementList(stmtList);
+        Object o = implementor.visitJavaChild(this, 0, (JavaRel) child);
+        assert(o == null);
+        implementor.popStatementList(stmtList);
+        return stmtList;
+    }
+
+    public void implementJavaParent(JavaRelImplementor implementor, int ordinal) {
+        assert ordinal == 0;
+        // Generate
+        //   Rowtype variable = <<child variable>>;
+        //   <<parent body (references variable)>>
+        StatementList stmtList = implementor.getStatementList();
+        Expression exp = implementor.translateInput(this,0);
+        stmtList.add(
+            new VariableDeclaration(
+                OJUtil.toTypeName(child.getRowType()),
+                variable.toString(),
+                exp));
+        stmtList.addAll(body);
     }
 }
 

@@ -22,8 +22,8 @@
 
 package net.sf.saffron.sql.parser;
 
-import net.sf.saffron.sql.SqlFunctionTable;
 import net.sf.saffron.sql.SqlOperatorTable;
+import net.sf.saffron.sql.fun.SqlStdOperatorTable;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -36,8 +36,7 @@ import java.util.Set;
  */
 public abstract class CommonParserBase
 {
-    protected final SqlOperatorTable opTab = SqlOperatorTable.instance();
-    protected final SqlFunctionTable funcTab = SqlFunctionTable.instance();
+    protected final SqlStdOperatorTable opTab = SqlOperatorTable.std();
 
     /**
      * Accept any kind of expression in this context.
@@ -310,7 +309,7 @@ public abstract class CommonParserBase
      */
     public Set getStringFunctionNames()
     {
-        return funcTab.stringFuncNames;
+        return opTab.stringFuncNames;
     }
 
     /**
@@ -319,7 +318,7 @@ public abstract class CommonParserBase
      */
     public Set getNumericFunctionNames()
     {
-        return funcTab.numericFuncNames;
+        return opTab.numericFuncNames;
     }
 
     /**
@@ -328,7 +327,7 @@ public abstract class CommonParserBase
      */
     public Set getTimeDateFunctionNames()
     {
-        return funcTab.timeDateFuncNames;
+        return opTab.timeDateFuncNames;
     }
 
     /**
@@ -337,8 +336,9 @@ public abstract class CommonParserBase
      */
     public Set getSystemFunctionNames()
     {
-        return funcTab.systemFuncNames;
+        return opTab.systemFuncNames;
     }
+
 }
 
 // End CommonParserBase.java

@@ -19,6 +19,8 @@
 
 package net.sf.farrago.util;
 
+import net.sf.farrago.trace.*;
+
 import java.util.*;
 import java.util.logging.*;
 
@@ -39,8 +41,7 @@ import net.sf.saffron.util.*;
  */
 public class FarragoObjectCache implements FarragoAllocation
 {
-    private static Logger tracer =
-        TraceUtil.getClassTrace(FarragoObjectCache.class);
+    private static final Logger tracer = FarragoTrace.getObjectCacheTracer();
 
     /**
      * Map from cache key to EntryImpl.  To avoid deadlock, synchronization

@@ -93,13 +93,13 @@ public class ConverterTest extends TestCase
 
     public void testStringLiteral() {
         check("select 'foo' from \"emps\"",
-                "ProjectRel(EXPR$0=[\"foo\"])" + NL +
+                "ProjectRel(EXPR$0=[_ISO-8859-1'foo' COLLATE ISO-8859-1$en_US$primary])" + NL +
                 "  ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])" + NL);
     }
 
     public void testSelectListAlias() {
         check("select 1 as one, 'foo' foo, 1 bar from \"emps\"",
-                "ProjectRel(ONE=[1], FOO=[\"foo\"], BAR=[1])" + NL +
+                "ProjectRel(ONE=[1], FOO=[_ISO-8859-1'foo' COLLATE ISO-8859-1$en_US$primary], BAR=[1])" + NL +
                 "  ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])" + NL);
     }
 
@@ -156,7 +156,7 @@ public class ConverterTest extends TestCase
                 "      ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])" + NL +
                 "      ExpressionReaderRel(expression=[Java((sales.Dept[]) {sales}.depts)])" + NL +
                 "    ProjectRel(empno=[$0], name=[$1], deptno=[$2], gender=[$3], city=[$4])" + NL +
-                "      FilterRel(condition=[=($3, \"F\")])" + NL +
+                "      FilterRel(condition=[=($3, _ISO-8859-1'F' COLLATE ISO-8859-1$en_US$primary)])" + NL +
                 "        ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])" + NL);
     }
     // todo: Enable when validator can handle NATURAL JOIN
@@ -168,14 +168,14 @@ public class ConverterTest extends TestCase
     public void testWhereSimple() {
         check("select 1 from \"emps\" where \"gender\" = 'F'",
                 "ProjectRel(EXPR$0=[1])" + NL +
-                "  FilterRel(condition=[=($3, \"F\")])" + NL +
+                "  FilterRel(condition=[=($3, _ISO-8859-1'F' COLLATE ISO-8859-1$en_US$primary)])" + NL +
                 "    ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])" + NL);
     }
 
     public void testWhereAnd() {
         check("select 1 from \"emps\" where \"gender\" = 'F' and \"deptno\" = 10",
                 "ProjectRel(EXPR$0=[1])" + NL +
-                "  FilterRel(condition=[AND(=($3, \"F\"), =($2, 10))])" + NL +
+                "  FilterRel(condition=[AND(=($3, _ISO-8859-1'F' COLLATE ISO-8859-1$en_US$primary), =($2, 10))])" + NL +
                 "    ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])" + NL);
     }
 
@@ -239,8 +239,8 @@ public class ConverterTest extends TestCase
                 "            FilterRel(condition=[>($0, 10)])" + NL +
                 "              ExpressionReaderRel(expression=[Java((sales.Dept[]) {sales}.depts)])" + NL +
                 "      ProjectRel(EXPR$0=[$0], $indicator=[true])" + NL +
-                "        ProjectRel(EXPR$0=[\"foo\"])" + NL +
-                "          FilterRel(condition=[=($3, \"Pig\")])" + NL +
+                "        ProjectRel(EXPR$0=[_ISO-8859-1'foo' COLLATE ISO-8859-1$en_US$primary])" + NL +
+                "          FilterRel(condition=[=($3, _ISO-8859-1'Pig' COLLATE ISO-8859-1$en_US$primary)])" + NL +
                 "            ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])" + NL);
     }
 
@@ -367,8 +367,7 @@ public class ConverterTest extends TestCase
         } catch (ParseException e) {
             throw new AssertionFailedError(e.toString());
         }
-        final SqlValidator validator =
-            new SqlValidator(
+        final SqlValidator validator = new SqlValidator(
                 SqlOperatorTable.instance(),
                 testContext.seeker,
                 testContext.connection.getSaffronSchema().getTypeFactory());

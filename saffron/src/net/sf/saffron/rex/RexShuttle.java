@@ -40,6 +40,8 @@ public class RexShuttle {
             return visit((RexCorrelVariable) rex);
         } else if (rex instanceof RexInputRef) {
             return visit((RexInputRef) rex);
+        } else if (rex instanceof RexFieldAccess) {
+            return visit((RexFieldAccess) rex);
         } else if (rex instanceof RexLiteral) {
             return visit((RexLiteral) rex);
         } else if (rex instanceof RexDynamicParam) {
@@ -60,6 +62,17 @@ public class RexShuttle {
 
     public RexNode visit(RexCorrelVariable variable) {
         return variable;
+    }
+
+    public RexNode visit(RexFieldAccess fieldAccess) {
+        RexNode before = fieldAccess.getReferenceExpr();
+        RexNode after = visit(before);
+
+        if (before == after) {
+            return fieldAccess;
+        } else {
+            return new RexFieldAccess(after,fieldAccess.getField());
+        }
     }
 
     public RexNode visit(RexInputRef input) {

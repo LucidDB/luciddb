@@ -305,6 +305,7 @@ unitTestStrings()
 
     // Set up the Calculator
     Calculator c(0,0,0,0,0,0);
+    c.outputRegisterByReference(false);
 
     // set up register references to symbolically point to 
     // their corresponding storage locations -- makes for easy test case

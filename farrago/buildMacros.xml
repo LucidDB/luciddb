@@ -108,26 +108,26 @@
     <attribute name="outputfilename" default="unspecified" />
 	<attribute name="umlsansdiagrams" default="unspecified" />
     <sequential>
-    <xslt style="${xmi.dir}/deleteUmlDiagrams.xsl"
-      in="@{umlmodelname}"
-      out="@{umlsansdiagrams}">
-    </xslt>
-    <java classname="org.netbeans.lib.jmi.uml2mof.Main" 
+      <xslt style="${xmi.dir}/deleteUmlDiagrams.xsl"
+        in="@{umlmodelname}"
+        out="@{umlsansdiagrams}">
+      </xslt>
+      <java classname="org.netbeans.lib.jmi.uml2mof.Main" 
         fork="true" failonerror="true">
-      <sysproperty key="org.netbeans.mdr.Logger" value="256"/>
-      <classpath>
-        <pathelement location="${mdrlibs.dir}/openide-util.jar"/>
-        <!-- TODO jvs 12-Feb-2004:  get rid of openide-lookup.jar in a while -->
-        <pathelement location="${mdrlibs.dir}/openide-lookup.jar"/>
-        <pathelement location="${mdrlibs.dir}/uml-1.4.jar"/>
-        <pathelement location="${mdrlibs.dir}/uml2mof.jar"/>
-      </classpath>
-      <arg value="@{umlsansdiagrams}"/>
-      <arg value="@{outputfilename}"/>
-    </java>
-    <delete>
-      <fileset dir="." includes="mdr.bt*"/>
-    </delete>
+        <sysproperty key="org.netbeans.mdr.Logger" value="256"/>
+        <classpath>
+          <pathelement location="${mdrlibs.dir}/openide-util.jar"/>
+          <!-- TODO jvs 12-Feb-2004:  get rid of openide-lookup.jar -->
+          <pathelement location="${mdrlibs.dir}/openide-lookup.jar"/>
+          <pathelement location="${mdrlibs.dir}/uml-1.4.jar"/>
+          <pathelement location="${mdrlibs.dir}/uml2mof.jar"/>
+        </classpath>
+        <arg value="@{umlsansdiagrams}"/>
+        <arg value="@{outputfilename}"/>
+      </java>
+      <delete>
+        <fileset dir="." includes="mdr.bt*"/>
+      </delete>
     </sequential>
   </macrodef>
 
@@ -135,11 +135,25 @@
     <attribute name="classpath" default="unspecified"/>
     <attribute name="propertieshome" default="unspecified"/>
     <sequential>
-    <javaExec
-      classname="org.isqlviewer.core.Launcher"
-      classpathref="@{classpath}">
-      <sysproperty key="isql.home" value="@{propertieshome}" />
-    </javaExec>
+      <javaExec
+        classname="org.isqlviewer.core.Launcher"
+        classpathref="@{classpath}">
+        <sysproperty key="isql.home" value="@{propertieshome}" />
+      </javaExec>
+    </sequential>
+  </macrodef>
+
+  <macrodef name="generateParser">
+    <attribute name="combined" default="unspecified"/>
+    <element name="components"/>
+    <sequential>
+      <delete file="@{combined}" quiet="true"/>
+      <concat destfile="@{combined}" append="false">
+        <components/>
+      </concat>
+      <chmod file="@{combined}" perm="a-w"/>
+      <javacc 
+        target="@{combined}" javacchome="${javacc.dir}"/>
     </sequential>
   </macrodef>
 

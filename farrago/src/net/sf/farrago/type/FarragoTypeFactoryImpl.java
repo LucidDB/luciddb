@@ -82,6 +82,8 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     //~ Constructors ----------------------------------------------------------
 
     // TODO: avoid reinitializing static information for each new factory
+    // REVIEW: LES 6-7-2004 - note that date/time prototypes hold a ref to this
+    // factory, making the above TODO problematic.
     // instance
     public FarragoTypeFactoryImpl(FarragoCatalog catalog)
     {
@@ -174,37 +176,16 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             new FarragoPrecisionType(
                 getSimpleType("DECIMAL"),false,0,0,null));
 
-        // Date types
-        addPrimitivePrototype(
-                new FarragoPrimitiveType(
-                        getSimpleType("DATE"),
-                        true,
-                        NullablePrimitive.NullableDate.class));
-        addPrimitivePrototype(
-                new FarragoPrimitiveType(
-                        getSimpleType("DATE"),
-                        false,
-                        NullablePrimitive.NullableDate.class));
-        addPrimitivePrototype(
-                new FarragoPrimitiveType(
-                        getSimpleType("TIME"),
-                        true,
-                        NullablePrimitive.NullableTime.class));
-        addPrimitivePrototype(
-                new FarragoPrimitiveType(
-                        getSimpleType("TIME"),
-                        false,
-                        NullablePrimitive.NullableTime.class));
-        addPrimitivePrototype(
-                new FarragoPrimitiveType(
-                        getSimpleType("TIMESTAMP"),
-                        true,
-                        NullablePrimitive.NullableTimestamp.class));
-        addPrimitivePrototype(
-                new FarragoPrimitiveType(
-                        getSimpleType("TIMESTAMP"),
-                        false,
-                        NullablePrimitive.NullableTimestamp.class));
+        // Date/time types
+        addPrecisionPrototype(
+                new FarragoDateTimeType(getSimpleType("DATE"),
+                        false,false, 0, this));
+        addPrecisionPrototype(
+                new FarragoDateTimeType(getSimpleType("TIME"),
+                        false,false,0, this));
+        addPrecisionPrototype(
+                new FarragoDateTimeType(getSimpleType("TIMESTAMP"),
+                        false,false,0, this));
     }
 
 
@@ -247,18 +228,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     // override SaffronTypeFactoryImpl
     public SaffronType createSqlType(SqlTypeName typeName, int length)
     {
-        SaffronType type = createSqlType(typeName);
-        assert(type instanceof FarragoPrecisionType) : type.getClass().toString();
-        FarragoPrecisionType precisionType =
-            (FarragoPrecisionType) type;
-        precisionType = new FarragoPrecisionType(
-            precisionType.getSimpleType(),
-            false,
-            length,
-            precisionType.getScale(),
-            catalog.getDefaultCharsetName());
-        precisionType.factory = this;
-        return canonize(precisionType);
+        return createSqlType(typeName, length, 0);
     }
 
     // override SaffronTypeFactoryImpl
@@ -269,12 +239,25 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         assert(type instanceof FarragoPrecisionType);
         FarragoPrecisionType precisionType =
             (FarragoPrecisionType) type;
-        precisionType = new FarragoPrecisionType(
-            precisionType.getSimpleType(),
-            false,
-            length,
-            scale,
-            catalog.getDefaultCharsetName());
+        switch (precisionType.getSimpleType().getTypeNumber().intValue()) {
+        case Types.DATE:
+        case Types.TIME:
+        case Types.TIMESTAMP:
+            assert (scale == 0) : "Non-zero scale for date/time type " + typeName;
+            precisionType = new FarragoDateTimeType(
+                    precisionType.getSimpleType(),
+                    false,
+                    false,
+                    length, null);
+            break;
+        default:
+            precisionType = new FarragoPrecisionType(
+                    precisionType.getSimpleType(),
+                    false,
+                    length,
+                    scale,
+                    catalog.getDefaultCharsetName());
+        }
         precisionType.factory = this;
         return canonize(precisionType);
     }
@@ -293,9 +276,18 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         }
         Integer pPrecision = column.getLength();
         if (pPrecision == null) {
-            pPrecision = column.getPrecision();
+            pPrecision = new Integer(0);
         }
-        assert (pPrecision != null);
+        if (prototype instanceof FarragoDateTimeType) {
+            FarragoType dateTimeType =
+                    new FarragoDateTimeType(prototype.getSimpleType(),
+                            getCatalog().isNullable(column),
+                            false /* fixme - Timezone */,
+                            pPrecision.intValue(), this);
+            return (FarragoType) canonize(dateTimeType);
+        }
+
+        // assert (pPrecision != null);
         Integer pScale = column.getScale();
         String charsetName = column.getCharacterSetName();
         if (charsetName.equals("")) {
@@ -384,6 +376,13 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
                             // would be redundant
                             return prototype;
                         }
+                        if (prototype instanceof FarragoDateTimeType) {
+                            FarragoType dateTimeType =
+                                    new FarragoDateTimeType(prototype.getSimpleType(),
+                                            isNullable,
+                                            false /* fixme - chech TZ*/, metaData.getPrecision(iOneBased), factory);
+                            return (FarragoType) canonize(dateTimeType);
+                        }
                         int precision = metaData.getPrecision(iOneBased);
                         if (precision == 0) {
                             // REVIEW jvs 4-Mar-2004:  Need a good way to
@@ -450,8 +449,18 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         if (atomicType.isNullable() == nullable) {
             return atomicType;
         }
+        if (atomicType instanceof FarragoDateTimeType) {
+            FarragoDateTimeType dtType = (FarragoDateTimeType) type;
+            dtType = new FarragoDateTimeType(
+                    dtType.getSimpleType(),
+                    nullable,
+                    dtType.hasTimeZone(),
+                    dtType.getPrecision(), this);
+            return canonize(dtType);
+        }
         if (atomicType instanceof FarragoPrecisionType) {
-            FarragoPrecisionType precisionType = (FarragoPrecisionType) type;
+            FarragoPrecisionType precisionType;
+            precisionType = (FarragoPrecisionType) type;
             precisionType = new FarragoPrecisionType(
                 precisionType.getSimpleType(),
                 nullable,
@@ -524,6 +533,43 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         }
     }
 
+    // REVIEW jvs 27-May-2004:  no longer using the code below for Java row
+    // manipulation.  But perhaps it will be useful for flattening before going
+    // into Fennel?
+    
+    // disabled override OJTypeFactoryImpl
+    protected OJClass disabled_createOJClassForRecordType(
+        OJClass declarer,RecordType recordType)
+    {
+        List fieldList = new ArrayList();
+        if (flattenFields(recordType.getFields(),fieldList)) {
+            SaffronType [] types = new SaffronType[fieldList.size()];
+            String [] fieldNames = new String[types.length];
+            for (int i = 0; i < types.length; ++i) {
+                SaffronField field = (SaffronField) fieldList.get(i);
+                types[i] = field.getType();
+                // FIXME jvs 27-May-2004:  uniquify
+                fieldNames[i] = field.getName();
+            }
+            recordType = (RecordType) createProjectType(types,fieldNames);
+        }
+        return super.createOJClassForRecordType(declarer,recordType);
+    }
+
+    private boolean flattenFields(SaffronField [] fields,List list)
+    {
+        boolean nested = false;
+        for (int i = 0; i < fields.length; ++i) {
+            if (fields[i].getType().isProject()) {
+                nested = true;
+                flattenFields(fields[i].getType().getFields(),list);
+            } else {
+                list.add(fields[i]);
+            }
+        }
+        return nested;
+    }
+    
     // override SaffronTypeFactoryImpl
     public SaffronType leastRestrictive(SaffronType [] types)
     {
@@ -728,15 +774,11 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
                     prototype.getClassForPrimitive())),
             prototype.getSimpleType());
     }
-/*
-    private void addDateTimePrototype(CwmSqlsimpleType simpleType) {
-        FarragoDatetimeType prototype = new FarragoDatetimeType (simpleType);
-        addAtomicPrototype(prototype, false);
-    }
-*/
+
     private void addPrototype(FarragoType prototype)
     {
         prototype.factory = this;
+        canonize(prototype);
     }
 
     //~ Inner Classes ---------------------------------------------------------
@@ -756,6 +798,19 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         {
             super(name,index,type);
         }
+    }
+
+    /**
+     * Registers a type, or returns the existing type if it is already
+     * registered.
+     * Protect against bogus factory values.
+     */
+    protected synchronized SaffronType canonize(SaffronType type) {
+        SaffronType saffronType = super.canonize(type);
+        if (saffronType instanceof FarragoType) {
+            assert ((FarragoType)saffronType).factory == this;
+        }
+        return saffronType;
     }
 }
 

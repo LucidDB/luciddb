@@ -58,7 +58,8 @@ implemented.
 <li>CREATE TABLE: every table must have a primary key.  Supported
 column datatypes are BOOLEAN, TINYINT, SMALLINT, INTEGER, BIGINT,
 REAL, DOUBLE (alias DOUBLE PRECISION), VARCHAR (alias CHARACTER
-VARYING), VARBINARY, CHAR (alias CHARACTER), and BINARY.
+VARYING), VARBINARY, CHAR (alias CHARACTER), BINARY, DATE, TIME, and
+TIMESTAMP.  (TBD: details of timezone and time precision).
 
 <li>NOT NULL:  can be specified explicitly on any column; is also implied
 for columns which participate in the table's primary key or clustered index.
@@ -140,11 +141,11 @@ the catalog contents via SQL).
 LEFT/RIGHT/INNER/CROSS JOIN, old-style comma list, nested queries,
 and explicit TABLE references.
 
-<li>EXPLAIN PLAN [{WITH|WITHOUT} IMPLEMENTATION] FOR <statement>; shows
-optimizer plan.  WITHOUT IMPLEMENTATION yields unoptimized abstract
-relational plan.  Default is WITH IMPLEMENTATION, which yields
-optimized plan with all physical operators.  Statement to be explained
-can be query or DML (but not DDL).
+<li>EXPLAIN PLAN [{WITH|WITHOUT} IMPLEMENTATION] FOR
+<em>query-or-DML-statement</em>; shows optimizer plan.  WITHOUT
+IMPLEMENTATION yields unoptimized abstract relational plan.  Default
+is WITH IMPLEMENTATION, which yields optimized plan with all physical
+operators.
 
 <li>Row expression support is currently very limited (basic
 equality/inequality comparisons, AND, +, a few others).  

@@ -29,7 +29,7 @@
 FENNEL_BEGIN_NAMESPACE
 
 //! A abstract base class for Extended Instructions that wish to store context
-//! between exec() calls. Typicallly used to store results of pre-compilation
+//! between exec() calls. Typically used to store results of pre-compilation
 //! or cache instantiations of library classes, and so forth.
 //! An alternate implementation could store context pointers in local variables.
 class ExtendedInstructionContext

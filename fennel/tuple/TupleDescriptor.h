@@ -95,7 +95,16 @@ public:
         bool visitLengths) const;
 
     bool containsNullable() const;
+
+    /** Perform a comparison only of type & size, not nullability */
+    bool storageEqual(
+        TupleDescriptor const &other) const;
+
 };
+
+std::ostream &operator<<(std::ostream &str,TupleDescriptor const &);
+
+std::ostream &operator<<(std::ostream &str,TupleAttributeDescriptor const &);
 
 FENNEL_END_NAMESPACE
 

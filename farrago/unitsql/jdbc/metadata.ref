@@ -38,6 +38,7 @@
 +------------+--------------+-------------+-------------+----------+-----------+-------------+------------+----------------------------+-----------------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | TABLE_TYPE  | REMARKS  | TYPE_CAT  | TYPE_SCHEM  | TYPE_NAME  | SELF_REFERENCING_COL_NAME  | REF_GENERATION  |
 +------------+--------------+-------------+-------------+----------+-----------+-------------+------------+----------------------------+-----------------+
+| LOCALDB    | SALES        | DATETIME1   | LocalTable  |          |           |             |            |                            |                 |
 | LOCALDB    | SALES        | DEPTS       | LocalTable  |          |           |             |            |                            |                 |
 | LOCALDB    | SALES        | EMPS        | LocalTable  |          |           |             |            |                            |                 |
 | LOCALDB    | SALES        | TEMPS       | LocalTable  |          |           |             |            |                            |                 |
@@ -122,7 +123,7 @@ getNumericFunctions                               POSITION,CHAR_LENGTH,CHARACTER
 getProcedureTerm                                  
 getSchemaTerm                                     schema
 getSearchStringEscape                             null
-getSQLKeywords                                    checkpoint,clustered,release,savepoint,system,truncate,type,POSITION,CONVERT,TRANSLATE,OVERLAY,SUBSTRING,TRIM,descending,explain,placing,row,similar,without
+getSQLKeywords                                    checkpoint,clustered,release,savepoint,system,truncate,type,CAST,POSITION,CONVERT,TRANSLATE,OVERLAY,SUBSTRING,TRIM,descending,explain,placing,row,similar,without
 getStringFunctions                                SUBSTRING,CONVERT,TRANSLATE,OVERLAY,TRIM,UPPER,LOWER,INITCAP
 getSystemFunctions                                NULLIF,COALESCE,CAST
 getTimeDateFunctions                              LOCALTIME,LOCALTIMESTAMP,CURRENT_TIME,CURRENT_TIMESTAMP,CURRENT_DATE

@@ -20,10 +20,11 @@
 package net.sf.farrago.query;
 
 import net.sf.saffron.opt.*;
+import net.sf.saffron.rel.SaffronRel;
 
 /**
  * FennelPullRel defines the interface which must be implemented by any
- * SaffronRel subclass with FENNEL_PULL_CONVENTION.
+ * {@link SaffronRel} subclass with {@link #FENNEL_PULL_CONVENTION}.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -38,7 +39,7 @@ public interface FennelPullRel extends FennelRel
     public static final CallingConvention FENNEL_PULL_CONVENTION =
         new CallingConvention(
             "FENNEL_PULL",
-            CallingConvention.enumeration.getMax() + 1);
+            CallingConvention.enumeration.getMax() + 1, SaffronRel.class);
 
 }
 

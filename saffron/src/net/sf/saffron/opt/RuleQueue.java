@@ -23,12 +23,15 @@
 package net.sf.saffron.opt;
 
 import net.sf.saffron.rel.SaffronRel;
+import net.sf.saffron.rel.SaffronRel;
 import net.sf.saffron.util.BinaryHeap;
-import net.sf.saffron.util.Util;
+import net.sf.saffron.trace.SaffronTrace;
 
-import openjava.tools.DebugOut;
-
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 /**
@@ -51,6 +54,8 @@ class RuleQueue
     private Comparator relImportanceComparator = new RelImportanceComparator();
     private BinaryHeap relQueue = new BinaryHeap(true,relImportanceComparator);
     private HashSet rels = new HashSet();
+
+    private static final Logger tracer = SaffronTrace.getPlannerTracer();
 
     //~ Constructors ----------------------------------------------------------
 
@@ -115,7 +120,7 @@ class RuleQueue
      * Returns the importance of an equivalence class of relational
      * expressions. Subset importances are held in a lookup table, and
      * importance changes gradually propagate through that table.
-     * 
+     *
      * <p>
      * If a subset in the same set but with a different calling convention is
      * deemed to be important, then this subset has at least half of its
@@ -182,16 +187,14 @@ class RuleQueue
             // Identical match has already been added.
             return;
         }
-        if (DebugOut.getDebugLevel() > 2) {
-            DebugOut.println("Rule-match queued: " + matchName);
-        }
+        tracer.fine("Rule-match queued: " + matchName);
         matchList.add(match);
     }
 
     /**
      * Computes the <dfn>importance</dfn> of a node. Importance is defined as
      * follows:
-     * 
+     *
      * <ul>
      * <li>
      * the root {@link RelSubset} has an importance of 1
@@ -209,7 +212,7 @@ class RuleQueue
      * be done on the node's algorithm.
      * </li>
      * </ul>
-     * 
+     *
      * The formula for the importance I of node n is:
      * <blockquote>
      * I<sub>n</sub> = Sum<sub>parents p of n</sub>{I<sub>p</sub> . W<sub>n,
@@ -240,27 +243,34 @@ class RuleQueue
                 importance = Math.max(importance,childImportance);
             }
         }
-        if (DebugOut.getDebugLevel() > 3) {
-            DebugOut.println(
-                "Importance of [" + subset + "] is " + importance);
-        }
+        tracer.finer("Importance of [" + subset + "] is " + importance);
         return importance;
     }
 
-    void dump()
+    private void dump() {
+        if (tracer.isLoggable(Level.FINE)) {
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            dump(pw);
+            pw.flush();
+            tracer.fine(sw.toString());
+        }
+    }
+
+    private void dump(PrintWriter pw)
     {
-        planner.dump();
-        DebugOut.print("Importances: {");
+        planner.dump(pw);
+        pw.print("Importances: {");
         final RelSubset [] subsets =
             (RelSubset []) subsetImportances.keySet().toArray(
                 new RelSubset[0]);
         Arrays.sort(subsets,relImportanceComparator);
         for (int i = 0; i < subsets.length; i++) {
             RelSubset subset = subsets[i];
-            DebugOut.print(
+            pw.print(
                 " " + subset.toString() + "=" + subsetImportances.get(subset));
         }
-        DebugOut.println("}");
+        pw.println("}");
     }
 
     SaffronRel findCheapestMember(RelSubset childSubset)
@@ -329,21 +339,19 @@ class RuleQueue
      */
     VolcanoRuleMatch popMatch()
     {
-        if (DebugOut.getDebugLevel() > 2) {
-            planner.ruleQueue.dump();
-        }
+        dump();
         assert(hasNextMatch());
         final Object [] matches = matchList.toArray();
         for (int i = 0; i < matches.length; i++) {
             assert matches[i] != null : i;
         }
         Arrays.sort(matches,ruleMatchImportanceComparator);
-        if (DebugOut.getDebugLevel() > 2) {
-            DebugOut.println("Sorted rule queue:");
+        if (tracer.isLoggable(Level.FINE)) {
+            tracer.fine("Sorted rule queue:");
             for (int i = 0; i < matches.length; i++) {
                 VolcanoRuleMatch match = (VolcanoRuleMatch) matches[i];
                 final double importance = match.computeImportance();
-                DebugOut.println(match + " importance " + importance);
+                tracer.fine(match + " importance " + importance);
             }
         }
         final VolcanoRuleMatch match = (VolcanoRuleMatch) matches[0];
@@ -395,8 +403,8 @@ class RuleQueue
             alpha = 0.99;
         }
         final double importance = parentImportance * alpha;
-        if (DebugOut.getDebugLevel() > 3) {
-            DebugOut.println(
+        if (tracer.isLoggable(Level.FINER)) {
+            tracer.finer(
                 "Importance of [" + child + "] to its parent [" + parent
                 + "] is " + importance + " (parent importance="
                 + parentImportance + ", child cost=" + childCost

@@ -22,6 +22,7 @@
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/tuple/TupleDescriptor.h"
 #include "fennel/tuple/TupleData.h"
+#include "fennel/tuple/StandardTypeDescriptor.h"
 #include "fennel/tuple/StoredTypeDescriptor.h"
 #include "fennel/tuple/StoredTypeDescriptorFactory.h"
 #include "fennel/common/DataVisitor.h"
@@ -89,7 +90,7 @@ int TupleDescriptor::compareTuples(
         // TODO:  parameterize NULL-value collation
         if (!datum1.pData) {
             if (!datum2.pData) {
-                return 0;
+                continue;
             }
             return -1;
         } else if (!datum2.pData) {
@@ -208,6 +209,55 @@ bool TupleDescriptor::containsNullable() const
         }
     }
     return false;
+}
+
+bool TupleDescriptor::storageEqual(
+    TupleDescriptor const &other) const
+{
+    uint sz = size();
+    TupleAttributeDescriptor const * us;
+    TupleAttributeDescriptor const * them;
+    
+    for (uint i = 0; i < sz; ++i) {
+        us = &(*this)[i];
+        them = &other[i];
+        if ((us->pTypeDescriptor->getOrdinal() != 
+             them->pTypeDescriptor->getOrdinal()) ||
+            us->cbStorage != them->cbStorage) {
+            return false;
+        }
+    }
+    return true;
+}
+
+std::ostream &operator<<(std::ostream &str,TupleDescriptor const &tupleDesc)
+{
+    str << "{" << std::endl;
+    for (uint i = 0; i < tupleDesc.size(); ++i) {
+        str << "\t" << i << ":  ";
+        str << tupleDesc[i];
+        str << std::endl;
+    }
+    str << "}" << std::endl;
+    return str;
+}
+
+std::ostream &operator<<(
+    std::ostream &str,
+    TupleAttributeDescriptor const &attrDesc)
+{
+    StoredTypeDescriptor::Ordinal ordinal =
+        attrDesc.pTypeDescriptor->getOrdinal();
+    
+    if (ordinal < STANDARD_TYPE_END) {
+        str << "type = " << StandardTypeDescriptor::toString(
+            StandardTypeDescriptorOrdinal(ordinal));
+    } else {
+        str << "type ordinal = " << ordinal;
+    }
+    str << ", isNullable = " << attrDesc.isNullable;
+    str << ", cbStorage = " << attrDesc.cbStorage;
+    return str;
 }
 
 FENNEL_END_CPPFILE("$Id$");

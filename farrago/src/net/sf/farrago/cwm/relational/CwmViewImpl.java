@@ -22,6 +22,7 @@ package net.sf.farrago.cwm.relational;
 
 import net.sf.farrago.ddl.*;
 import net.sf.farrago.util.*;
+import net.sf.farrago.trace.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.session.*;
@@ -48,8 +49,7 @@ import javax.jmi.reflect.*;
 public abstract class CwmViewImpl
     extends InstanceHandler implements CwmView, DdlValidatedElement
 {
-    private static Logger tracer =
-            TraceUtil.getClassTrace(CwmViewImpl.class);
+    private static final Logger tracer = FarragoTrace.getCwmViewTracer();
 
     //~ Constructors ----------------------------------------------------------
 

@@ -19,18 +19,14 @@
 
 package net.sf.farrago.namespace.mdr;
 
-import net.sf.saffron.core.*;
+import net.sf.farrago.util.JmiUtil;
 import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.rel.convert.*;
-import net.sf.saffron.util.*;
-import net.sf.saffron.rex.*;
+import net.sf.saffron.rel.JoinRel;
+import net.sf.saffron.rel.SaffronRel;
 
-import net.sf.farrago.util.*;
-
-import java.util.*;
-import javax.jmi.model.*;
-import javax.jmi.reflect.*;
+import javax.jmi.model.Reference;
+import javax.jmi.model.StructuralFeature;
+import java.util.List;
 
 /**
  * MedMdrJoinRule is a rule for converting a JoinRel into a

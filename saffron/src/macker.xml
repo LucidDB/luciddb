@@ -212,6 +212,15 @@
             </deny>
         </access-rule>
 
+        <!-- net.sf.saffron.util.SaffronException -->
+        <access-rule>
+            <message>SaffronException depends upon nothing</message>
+            <deny>
+                <from class="net.sf.saffron.util.SaffronException"/>
+                <allow> <from class="net.sf.saffron.util.SaffronException"</allow>
+            </deny>
+        </access-rule>
+
         <!-- net.sf.saffron.util -->
         <access-rule>
             <message>saffron.util depends upon nothing</message>

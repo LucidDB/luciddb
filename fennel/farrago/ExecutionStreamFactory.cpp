@@ -72,6 +72,16 @@ ExecutionStreamFactory::ExecutionStreamFactory(
     pStreamGraphHandle = pStreamGraphHandleInit;
 }
 
+void *ExecutionStreamFactory::getLeafPtr() 
+{
+    return static_cast<FemVisitor *>(this);
+}
+
+const char *ExecutionStreamFactory::getLeafTypeName()
+{
+    return "FemVisitor";
+}
+
 void ExecutionStreamFactory::setScratchAccessor(
     SegmentAccessor &scratchAccessorInit)
 {
@@ -82,24 +92,22 @@ const ExecutionStreamFactors &ExecutionStreamFactory::visitStream(
     ProxyExecutionStreamDef &streamDef)
 {
     // dispatch based on polymorphic stream type
-    FemVisitor::visitTbl.visit(*this,streamDef);
-    factors.getStream()->name = streamDef.getName();
+    FemVisitor::visitTbl.accept(*this,streamDef);
+    factors.getStream()->setName(streamDef.getName());
     return factors;
 }
 
 const ExecutionStreamFactors &
 ExecutionStreamFactory::newTracingStream(
-    TraceTarget &traceTarget,
     std::string &name,
     ExecutionStreamParams &params)
 {
-    TracingTupleStream *pTracingStream =
-        new TracingTupleStream(traceTarget,name);
+    TracingTupleStream *pTracingStream = new TracingTupleStream();
     TupleStreamParams *pParams = new TupleStreamParams();
     pParams->pCacheAccessor = params.pCacheAccessor;
     pParams->scratchAccessor = params.scratchAccessor;
     factors.setFactors(pTracingStream,pParams);
-    factors.getStream()->name = name;
+    factors.getStream()->setName(name);
     return factors;
 }
 
@@ -114,7 +122,7 @@ ExecutionStreamFactory::newConsumerToProducerProvisionAdapter(
     pParams->pCacheAccessor = params.pCacheAccessor;
     pParams->scratchAccessor = params.scratchAccessor;
     factors.setFactors(pAdapter,pParams);
-    factors.getStream()->name = name;
+    factors.getStream()->setName(name);
     return factors;
 }
 
@@ -129,7 +137,7 @@ ExecutionStreamFactory::newProducerToConsumerProvisionAdapter(
     pParams->pCacheAccessor = params.pCacheAccessor;
     pParams->scratchAccessor = params.scratchAccessor;
     factors.setFactors(pAdapter,pParams);
-    factors.getStream()->name = name;
+    factors.getStream()->setName(name);
     return factors;
 }
 
@@ -182,10 +190,6 @@ void ExecutionStreamFactory::visit(ProxyJavaTupleStreamDef &streamDef)
     readTupleStreamParams(*pParams,streamDef);
     pParams->pStreamGraphHandle = pStreamGraphHandle;
     pParams->javaTupleStreamId = streamDef.getStreamId();
-    readTupleDescriptor(
-        pParams->tupleDesc,
-        *(streamDef.getTupleDesc()),
-        pDatabase->getTypeFactory());
 
     factors.setFactors(pStream,pParams);
 }
@@ -296,10 +300,23 @@ void ExecutionStreamFactory::visit(ProxyBufferingTupleStreamDef &streamDef)
     factors.setFactors(pStream,pParams);
 }
 
+void ExecutionStreamFactory::readExecutionStreamParams(
+    ExecutionStreamParams &params,
+    ProxyExecutionStreamDef &streamDef)
+{
+    assert(streamDef.getOutputDesc());
+    readTupleDescriptor(
+        params.outputTupleDesc,
+        *(streamDef.getOutputDesc()),
+        pDatabase->getTypeFactory());
+}
+
 void ExecutionStreamFactory::readTupleStreamParams(
     TupleStreamParams &params,
     ProxyTupleStreamDef &streamDef)
 {
+    readExecutionStreamParams(params,streamDef);
+    
     assert(streamDef.getCachePageQuota() >= streamDef.getCachePageMin());
     assert(streamDef.getCachePageQuota() <= streamDef.getCachePageMax());
     if (streamDef.getCachePageQuota()) {

@@ -22,16 +22,17 @@
 
 package net.sf.saffron.ext;
 
-import net.sf.saffron.core.*;
+import net.sf.saffron.core.PlanWriter;
+import net.sf.saffron.core.SaffronTable;
+import net.sf.saffron.core.SaffronType;
 import net.sf.saffron.opt.VolcanoCluster;
-import net.sf.saffron.rel.SaffronRel;
-import net.sf.saffron.util.Util;
+import net.sf.saffron.rel.SaffronBaseRel;
 
 
 /**
  * <code>ExtentRel</code> represents all of the instances of a particular
  * class (including subtypes).
- * 
+ *
  * <p>
  * It cannot be implemented as such, but can often be transformed into an
  * expression which can. For example, in
@@ -46,14 +47,14 @@ import net.sf.saffron.util.Util;
  * the <code>field</code> and <code>clazz</code> are constrained by join and
  * filter conditions so that we can enumerate the required fields.
  * </p>
- * 
+ *
  * <p>
  * todo: Why is this not just a TableAccess?
  * </p>
  *
  * @see ExtentTable
  */
-public class ExtentRel extends SaffronRel
+public class ExtentRel extends SaffronBaseRel
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -103,11 +104,6 @@ public class ExtentRel extends SaffronRel
     public SaffronTable getTable()
     {
         return table;
-    }
-
-    protected SaffronType deriveRowType()
-    {
-        return rowType;
     }
 }
 

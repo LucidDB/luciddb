@@ -19,20 +19,11 @@
 
 package net.sf.farrago.fennel;
 
-import mondrian.resource.*;
-
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.util.*;
+import net.sf.farrago.trace.*;
 import net.sf.farrago.*;
-
-import net.sf.saffron.util.*;
-
-import org.w3c.dom.*;
-
-import java.io.*;
-
-import java.lang.reflect.*;
 
 import java.sql.*;
 
@@ -51,8 +42,8 @@ import javax.jmi.reflect.*;
  */
 public class FennelDbHandle implements FarragoAllocation
 {
-    private static Logger tracer =
-        TraceUtil.getClassTrace(FennelDbHandle.class);
+    private static final Logger tracer =
+        FarragoTrace.getFennelDbHandleTracer();
 
     //~ Instance fields -------------------------------------------------------
 
@@ -64,14 +55,14 @@ public class FennelDbHandle implements FarragoAllocation
     
     private Map handleAssociationsMap;
 
-    private FemDbHandle dbHandle;
+    private long dbHandle;
 
     /**
-     * Open a Fennel database.
+     * Opens a Fennel database.
      *
      * @param metadataFactory FarragoMetadataFactory for creating Fem instances
      *
-     * @param txnContext context for transient metadata transactions
+     * @param transientTxnContext context for transient metadata transactions
      *
      * @param owner the object which will be made responsible for this
      * database's allocation
@@ -95,8 +86,13 @@ public class FennelDbHandle implements FarragoAllocation
         handleAssociationsMap = new HashMap();
 
         executeCmd(cmd);
-        dbHandle = cmd.getResultHandle();
+        dbHandle = cmd.getResultHandle().getLongHandle();
         owner.addAllocation(this);
+    }
+
+    FarragoMetadataFactory getMetadataFactory()
+    {
+        return metadataFactory;
     }
 
     FarragoTransientTxnContext getTransientTxnContext()
@@ -147,7 +143,7 @@ public class FennelDbHandle implements FarragoAllocation
         // NOTE:  this stupidity is necessary since user and system catalogs
         // have different metamodels instances.
         FemDbHandle newHandle = callerFactory.newFemDbHandle();
-        newHandle.setLongHandle(dbHandle.getLongHandle());
+        newHandle.setLongHandle(dbHandle);
         return newHandle;
     }
 
@@ -297,14 +293,14 @@ public class FennelDbHandle implements FarragoAllocation
     // implement FarragoAllocation
     public void closeAllocation()
     {
-        if (dbHandle == null) {
+        if (dbHandle == 0) {
             return;
         }
         transientTxnContext.beginTransientTxn();
         try {
             FemCmdCloseDatabase cmd = metadataFactory.newFemCmdCloseDatabase();
-            cmd.setDbHandle(dbHandle);
-            dbHandle = null;
+            cmd.setDbHandle(getFemDbHandle(metadataFactory));
+            dbHandle = 0;
             executeCmd(cmd);
         } finally {
             transientTxnContext.endTransientTxn();

@@ -60,6 +60,10 @@ public class RexFieldAccess extends RexNode {
         this.digest = expr + "." + field.getName();
     }
 
+    public SaffronField getField() {
+        return field;
+    }
+    
     public SaffronType getType() {
         return field.getType();
     }
@@ -70,6 +74,10 @@ public class RexFieldAccess extends RexNode {
 
     public RexKind getKind() {
         return RexKind.FieldAccess;
+    }
+
+    public void accept(RexVisitor visitor) {
+        visitor.visitFieldAccess(this);
     }
 
     /**

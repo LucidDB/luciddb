@@ -22,11 +22,14 @@
 
 package net.sf.saffron.oj.rel;
 
+import net.sf.saffron.core.SaffronField;
 import net.sf.saffron.core.SaffronPlanner;
 import net.sf.saffron.core.SaffronType;
-import net.sf.saffron.core.SaffronField;
 import net.sf.saffron.oj.util.OJUtil;
-import net.sf.saffron.opt.*;
+import net.sf.saffron.opt.CallingConvention;
+import net.sf.saffron.opt.OptUtil;
+import net.sf.saffron.opt.PlanCost;
+import net.sf.saffron.opt.VolcanoCluster;
 import net.sf.saffron.rel.JoinRel;
 import net.sf.saffron.rel.SaffronRel;
 import net.sf.saffron.rex.RexNode;
@@ -41,7 +44,8 @@ import java.util.Set;
  * Implements the {@link JoinRel} relational expression using the
  * nested-loop algorithm, with output as Java code.
  */
-public class JavaNestedLoopJoinRel extends JoinRel implements JavaRel
+public class JavaNestedLoopJoinRel extends JoinRel
+        implements JavaLoopRel, JavaSelfRel
 {
     //~ Constructors ----------------------------------------------------------
 
@@ -83,17 +87,19 @@ public class JavaNestedLoopJoinRel extends JoinRel implements JavaRel
         return planner.makeCost(dRows,dCpu,dIo);
     }
 
-    public Object implement(RelImplementor implementor,int ordinal)
+    public ParseTree implement(JavaRelImplementor implementor)
     {
+        Object o = implementor.visitJavaChild(this, 0, (JavaRel) left);
+        assert(o == null);
+        return null;
+    }
+
+    public void implementJavaParent(JavaRelImplementor implementor,
+            int ordinal) {
+        StatementList stmtList = implementor.getStatementList();
         switch (ordinal) {
-        case -1: // called from parent
-            Object o = implementor.implementChild(this,0,left);
-            assert(o == null);
-            return null;
         case 0: // called from left
-         {
             // Which variables are set by left and used by right
-            StatementList stmtList = implementor.getStatementList();
             String [] variables = OptUtil.getVariablesSetAndUsed(left,right);
             for (int i = 0; i < variables.length; i++) {
                 String variable = variables[i]; // e.g. "$cor2"
@@ -108,12 +114,11 @@ public class JavaNestedLoopJoinRel extends JoinRel implements JavaRel
                         exp));
                 implementor.bindCorrel(variable,variableCorrel);
             }
-            Object o2 = implementor.implementChild(this,1,right);
+            Object o2 = implementor.visitJavaChild(this, 1, (JavaRel) right);
             assert(o2 == null);
-            return null;
-        }
+            return;
+
         case 1: // called from right
-            StatementList stmtList = implementor.getStatementList();
             if (!condition.isAlwaysTrue()) {
                 StatementList ifBody = new StatementList();
                 Expression condition2 = implementor.translate(this,condition);
@@ -121,7 +126,7 @@ public class JavaNestedLoopJoinRel extends JoinRel implements JavaRel
                 stmtList = ifBody;
             }
             implementor.generateParentBody(this,stmtList);
-            return null;
+            return;
         default:
             throw Util.newInternal("implement: ordinal=" + ordinal);
         }
@@ -131,7 +136,7 @@ public class JavaNestedLoopJoinRel extends JoinRel implements JavaRel
      * Returns a Java expression which yields the current row of this
      * relational expression.
      */
-    public Expression implementSelf(RelImplementor implementor)
+    public Expression implementSelf(JavaRelImplementor implementor)
     {
         ExpressionList args = new ExpressionList();
         final SaffronField [] fields = rowType.getFields();

@@ -24,6 +24,7 @@ package net.sf.saffron.opt;
 
 import net.sf.saffron.core.SaffronTypeFactory;
 import net.sf.saffron.rel.SaffronRel;
+import net.sf.saffron.rel.SaffronRel;
 import net.sf.saffron.rex.RexBuilder;
 import openjava.mop.Environment;
 

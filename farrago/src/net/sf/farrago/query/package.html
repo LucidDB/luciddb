@@ -259,7 +259,7 @@ IterCalcRel then implements the original abstract ProjectRel.
 
 Once the optimizer has decided on the best implementation, it's time
 to generate corresponding executable code.  This is the job of {@link
-net.sf.saffron.opt.RelImplementor}, which walks the optimized
+net.sf.saffron.oj.rel.JavaRelImplementor}, which walks the optimized
 SaffronRel tree calling implement on each expression, producing the
 parse tree representation of a Java class.  From this, the query
 processor generates the Java class definition as text, saves it to a

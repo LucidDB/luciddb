@@ -24,14 +24,11 @@ import net.sf.farrago.resource.*;
 import net.sf.farrago.util.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fennel.*;
+import net.sf.farrago.plugin.*;
 
 import net.sf.saffron.util.*;
 
-import java.net.*;
 import java.util.*;
-import java.util.jar.*;
-
-// TODO:  generalize to support any kind of plugin cache
 
 /**
  * FarragoDataWrapperCache serves as a private cache of
@@ -41,20 +38,8 @@ import java.util.jar.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoDataWrapperCache extends FarragoCompoundAllocation
+public class FarragoDataWrapperCache extends FarragoPluginCache
 {
-    /**
-     * Prefix used to indicate that a wrapper library is loaded directly from
-     * a class rather than a JAR.
-     */
-    public static final String LIBRARY_CLASS_PREFIX = "class ";
-    
-    private FarragoObjectCache sharedCache;
-
-    private Map mapMofIdToWrapper;
-
-    private FarragoCatalog catalog;
-
     private FennelDbHandle fennelDbHandle;
     
     /**
@@ -75,27 +60,8 @@ public class FarragoDataWrapperCache extends FarragoCompoundAllocation
         FarragoCatalog catalog,
         FennelDbHandle fennelDbHandle)
     {
-        owner.addAllocation(this);
-        this.sharedCache = sharedCache;
-        this.catalog = catalog;
+        super(owner,sharedCache,catalog);
         this.fennelDbHandle = fennelDbHandle;
-        mapMofIdToWrapper = new HashMap();
-    }
-
-    private Object searchPrivateCache(String mofId)
-    {
-        return mapMofIdToWrapper.get(mofId);
-    }
-
-    private Object addToPrivateCache(
-        FarragoObjectCache.Entry entry)
-    {
-        // take ownership of the pinned cache entry
-        addAllocation(entry);
-
-        Object obj = entry.getValue();
-        mapMofIdToWrapper.put(entry.getKey(),obj);
-        return obj;
     }
 
     /**
@@ -104,7 +70,7 @@ public class FarragoDataWrapperCache extends FarragoCompoundAllocation
      * can be used directly.  Otherwise, the wrapper is loaded, initialized,
      * and cached at both levels.
      *
-     * @param mofId key by which the wrapper can uniquely identified
+     * @param mofId key by which the wrapper can be uniquely identified
      * (Farrago uses the MofId of the catalog object representing the wrapper)
      *
      * @param libraryName name of the library containing the wrapper
@@ -132,7 +98,7 @@ public class FarragoDataWrapperCache extends FarragoCompoundAllocation
         // otherwise, try shared cache (pin exclusive since wrappers
         // may only be usable by one thread at a time)
         WrapperFactory factory = new WrapperFactory(mofId,libraryName,options);
-        FarragoObjectCache.Entry entry = sharedCache.pin(
+        FarragoObjectCache.Entry entry = getSharedCache().pin(
             mofId,
             factory,
             true);
@@ -171,7 +137,7 @@ public class FarragoDataWrapperCache extends FarragoCompoundAllocation
         
         // otherwise, try shared cache
         ServerFactory factory = new ServerFactory(mofId,dataWrapper,options);
-        FarragoObjectCache.Entry entry = sharedCache.pin(
+        FarragoObjectCache.Entry entry = getSharedCache().pin(
             mofId,
             factory,
             true);
@@ -180,29 +146,6 @@ public class FarragoDataWrapperCache extends FarragoCompoundAllocation
         return server;
     }
 
-    private Class loadPluginClass(String libraryName)
-    {
-        try {
-            if (libraryName.startsWith(LIBRARY_CLASS_PREFIX)) {
-                String className = libraryName.substring(
-                    LIBRARY_CLASS_PREFIX.length());
-                return Class.forName(className);
-            } else {
-                JarFile jar = new JarFile(libraryName);
-                Manifest manifest = jar.getManifest();
-                String className = manifest.getMainAttributes().getValue(
-                    "DataWrapperClassName");
-                URLClassLoader classLoader = new URLClassLoader(
-                    new URL [] {new URL("file:" + libraryName)});
-                return classLoader.loadClass(className);
-            }
-        } catch (Throwable ex) {
-            throw FarragoResource.instance().newDataWrapperJarLoadFailed(
-                libraryName,
-                ex);
-        }
-    }
-    
     private class WrapperFactory
         implements FarragoObjectCache.CachedObjectFactory 
     {
@@ -225,19 +168,10 @@ public class FarragoDataWrapperCache extends FarragoCompoundAllocation
             Object key,FarragoObjectCache.UninitializedEntry entry)
         {
             assert(mofId == key);
-
-            Class pluginClass = loadPluginClass(libraryName);
             
-            FarragoMedDataWrapper wrapper;
-            try {
-                wrapper = (FarragoMedDataWrapper)
-                    pluginClass.newInstance();
-                wrapper.initialize(catalog,options);
-            } catch (Throwable ex) {
-                throw FarragoResource.instance().newDataWrapperInitFailed(
-                    libraryName,
-                    ex);
-            }
+            FarragoMedDataWrapper wrapper = (FarragoMedDataWrapper)
+                initializePlugin(
+                    libraryName,"DataWrapperClassName",options);
             
             // TODO:  some kind of resource usage estimations for wrappers
             entry.initialize(wrapper,1);

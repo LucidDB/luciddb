@@ -25,18 +25,27 @@ package net.sf.saffron.sql;
 /**
  * Generic operator for nodes with special syntax.
  */
-public class SqlSpecialOperator extends SqlOperator
+public abstract class SqlSpecialOperator extends SqlOperator
 {
     //~ Constructors ----------------------------------------------------------
 
-    SqlSpecialOperator(String name,SqlKind kind)
+    public SqlSpecialOperator(String name,SqlKind kind)
     {
         super(name,kind,1,true, null,null, null);
     }
 
-    SqlSpecialOperator(String name,SqlKind kind, int pred)
+    public SqlSpecialOperator(String name,SqlKind kind, int pred)
     {
         super(name,kind,pred,true, null,null, null);
+    }
+
+    public SqlSpecialOperator(String name, SqlKind kind, int pred,
+            boolean isLeftAssoc, TypeInference typeInference,
+            ParamTypeInference paramTypeInference,
+            AllowedArgInference argTypeInference)
+    {
+        super(name,kind,pred,isLeftAssoc,
+              typeInference,paramTypeInference, argTypeInference);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -46,7 +55,7 @@ public class SqlSpecialOperator extends SqlOperator
         return Syntax.Special;
     }
 
-    void unparse(
+    public void unparse(
         SqlWriter writer,
         SqlNode [] operands,
         int leftPrec,

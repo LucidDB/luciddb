@@ -22,6 +22,8 @@
 
 package net.sf.saffron.sql;
 
+import net.sf.saffron.sql.test.SqlTester;
+
 /**
  * SqlSetOperator represents a relational set theory operator
  * (UNION, INTERSECT, MINUS).  These are binary operators, but with
@@ -37,11 +39,17 @@ public class SqlSetOperator extends SqlBinaryOperator
     
     //~ Constructors ----------------------------------------------------------
 
-    SqlSetOperator(String name,SqlKind kind,int prec,boolean all)
+    public SqlSetOperator(String name,SqlKind kind,int prec,boolean all)
     {
         super(name,kind,prec,true,null,null,null);
         this.all = all;
     }
+
+    public void test(SqlTester tester) {
+        /* empty implementation */
+    }
+
+
 }
 
 // End SqlSetOperator.java

@@ -27,6 +27,7 @@ import net.sf.saffron.opt.RuleOperand;
 import net.sf.saffron.opt.VolcanoRule;
 import net.sf.saffron.opt.VolcanoRuleCall;
 import net.sf.saffron.rel.SaffronRel;
+import net.sf.saffron.rel.SaffronRel;
 import net.sf.saffron.util.Util;
 
 
@@ -94,7 +95,7 @@ public abstract class ConverterRule extends VolcanoRule
     /**
      * Returns true if this rule can convert <em>any</em> relational
      * expression of the input convention.
-     * 
+     *
      * <p>
      * The union-to-java converter, for example, is not guaranteed, because it
      * only works on unions.

@@ -1,0 +1,17 @@
+0: jdbc:farrago:> -- $Id:$
+0: jdbc:farrago:> -- test datetime ddl.
+0: jdbc:farrago:> set schema sales;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> insert into datetime1(col1,datecol,timecol,timestampcol) values(0, DATE '2004-12-21', TIME '12:22:33', TIMESTAMP '2004-12-21 12:22:33');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from datetime1;
++-------+-------------+-----------+------------------------+
+| COL1  |   DATECOL   |  TIMECOL  |      TIMESTAMPCOL      |
++-------+-------------+-----------+------------------------+
+| 0     | 2004-12-21  | 12:22:33  | 2004-12-21 12:22:33.0  |
++-------+-------------+-----------+------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> delete from datetime1;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !quit

@@ -19,6 +19,8 @@
 
 package net.sf.farrago.util;
 
+import net.sf.farrago.trace.*;
+
 import java.io.*;
 import java.util.logging.*;
 
@@ -32,8 +34,8 @@ import java.util.logging.*;
  */
 public class FarragoFileAllocation implements FarragoAllocation
 {
-    private static Logger tracer =
-        TraceUtil.getClassTrace(FarragoFileAllocation.class);
+    private static final Logger tracer =
+        FarragoTrace.getFileAllocationTracer();
 
     private File file;
 

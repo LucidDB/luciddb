@@ -90,7 +90,7 @@ class FtrsScanToSearchRule extends VolcanoRule
             filterExp = andExpression.operands[0];
             extraFilter = andExpression.operands[1];
         }
-        
+
         if (!filterExp.isA(RexKind.Equals)) {
             return;
         }
@@ -173,7 +173,7 @@ class FtrsScanToSearchRule extends VolcanoRule
         // Add a filter to remove nulls, since they can never match the
         // equals condition.
         SaffronRel nullFilterRel = OptUtil.createNullFilter(keyRel,null);
-        
+
         // Generate code to cast the literal to the index column type.
         FarragoTypeFactory typeFactory =
             origScan.getPreparingStmt().getFarragoTypeFactory();
@@ -198,7 +198,7 @@ class FtrsScanToSearchRule extends VolcanoRule
                 // scan ordering, so we can't do that.
                 return;
             }
-            
+
             Integer [] clusteredKeyColumns =
                 FtrsUtil.getClusteredDistinctKeyArray(
                     catalog,

@@ -27,10 +27,11 @@ import org.netbeans.mdr.persistence.btreeimpl.btreestorage.*;
 import org.netbeans.mdr.persistence.jdbcimpl.*;
 import net.sf.farrago.FarragoPackage;
 import net.sf.farrago.util.MdrUtil;
+import net.sf.farrago.util.FarragoProperties;
 
 // NOTE:  This class gets compiled independently of everything else since
 // it is used by build-time utilities such as ProxyGen.  That means it must
-// have no dependencies on other non-model-generated Farrago code.
+// have minimal dependencies on other non-model-generated Farrago code.
 // It probably needs to be moved somewhere else.
 
 /**
@@ -41,8 +42,6 @@ import net.sf.farrago.util.MdrUtil;
  */
 public class FarragoModelLoader
 {
-    public static final String HOME_PROPERTY = "net.sf.farrago.home";
-
     private MDRepository repository;
 
     private String storageFactoryClassName;
@@ -77,9 +76,7 @@ public class FarragoModelLoader
 
     private File getSystemCatalogFileSansExt()
     {
-        String homeDir = System.getProperties().getProperty(HOME_PROPERTY);
-        assert(homeDir != null);
-        File catalogDir = new File(homeDir,"catalog");
+        File catalogDir = FarragoProperties.instance().getCatalogDir();
         return new File(catalogDir,"FarragoCatalog");
     }
 

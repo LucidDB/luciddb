@@ -30,6 +30,8 @@ import net.sf.farrago.util.*;
 
 import net.sf.saffron.core.*;
 import net.sf.saffron.oj.util.*;
+import net.sf.saffron.oj.rel.JavaRelImplementor;
+import net.sf.saffron.oj.rel.JavaRel;
 import net.sf.saffron.opt.*;
 import net.sf.saffron.rel.*;
 import net.sf.saffron.rel.convert.*;
@@ -55,7 +57,7 @@ import java.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FennelToIteratorConverter extends ConverterRel
+public class FennelToIteratorConverter extends ConverterRel implements JavaRel
 {
     //~ Constructors ----------------------------------------------------------
 
@@ -86,17 +88,16 @@ public class FennelToIteratorConverter extends ConverterRel
     }
 
     // implement SaffronRel
-    public Object implement(RelImplementor implementor,int ordinal)
+    public ParseTree implement(JavaRelImplementor implementor)
     {
-        assert (ordinal == -1);
         assert (child.getConvention().equals(
                     FennelPullRel.FENNEL_PULL_CONVENTION))
             : child.getClass().getName();
 
         // Give children a chance to generate code.  Most FennelRels don't
         // require this, but IteratorToFennelConverter does.
-        Expression childrenExp =
-            (Expression) implementor.implementChild(this,0,child);
+        Expression childrenExp = (Expression)
+                implementor.visitChild(this, 0, child);
 
         FennelRel fennelRel = (FennelRel) child;
         FarragoCatalog catalog = fennelRel.getPreparingStmt().getCatalog();
@@ -118,10 +119,10 @@ public class FennelToIteratorConverter extends ConverterRel
                 argList);
         }
 
-        FarragoRelImplementor farragoRelImplementor =
-            (FarragoRelImplementor) implementor;
+        FennelRelImplementor farragoRelImplementor =
+            (FennelRelImplementor) implementor;
         FemExecutionStreamDef rootStream =
-            farragoRelImplementor.implementFennelRel(child);
+            farragoRelImplementor.visitFennelChild((FennelRel) child);
         String rootStreamName = rootStream.getName();
 
         FemTupleDescriptor tupleDesc =
@@ -194,9 +195,9 @@ public class FennelToIteratorConverter extends ConverterRel
             }
             SaffronField field = fields[i];
             FarragoAtomicType type = (FarragoAtomicType) field.getType();
-            if (type instanceof FarragoPrimitiveType) {
+            if (type.hasClassForPrimitive()) {
                 Class primitiveClass =
-                    ((FarragoPrimitiveType) type).getClassForPrimitive();
+                        type.getClassForPrimitive();
                 Method method =
                     ReflectUtil.getByteBufferReadMethod(primitiveClass);
                 String byteBufferAccessorName = method.getName();
@@ -204,7 +205,7 @@ public class FennelToIteratorConverter extends ConverterRel
                 // this field is unmarshalled from a fixed offset relative
                 // to the sliceBuffer start
                 Expression lhs = new FieldAccess(varTuple,field.getName());
-                if (attrAccessor.getNullBitIndex() != -1) {
+                if (type.requiresValueAccess()) {
                     // extra dereference for NullablePrimitives
                     lhs = new FieldAccess(
                         lhs,NullablePrimitive.VALUE_FIELD_NAME);
@@ -221,7 +222,7 @@ public class FennelToIteratorConverter extends ConverterRel
                                     Literal.makeLiteral(
                                         attrAccessor.getFixedOffset()))))));
             } else if (type.isBoundedVariableWidth()) {
-                // Variable-length fields are trickier.  The first one starts
+                 // Variable-length fields are trickier.  The first one starts
                 // at a fixed offset.  To determine the end, dereference the
                 // indirect offset located at a fixed offset relative to the
                 // sliceBuffer start.  Note that all offsets are
@@ -283,7 +284,7 @@ public class FennelToIteratorConverter extends ConverterRel
                     BinaryExpression.PLUS,
                     Literal.makeLiteral(
                         attrAccessor.getFixedOffset()
-                        + precisionType.getPrecision()));
+                        + precisionType.getOctetLength()));
                 methodBody.add(
                     new ExpressionStatement(
                         new MethodCall(
@@ -383,7 +384,7 @@ public class FennelToIteratorConverter extends ConverterRel
 
     /**
      * Registers this relational expression and rule(s) with the planner, as
-     * per {@link SaffronRel#register}.
+     * per {@link SaffronBaseRel#register}.
      * @param planner Planner
      */
     public static void register(FarragoPlanner planner) {

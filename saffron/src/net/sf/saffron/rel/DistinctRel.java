@@ -26,7 +26,6 @@ import net.sf.saffron.core.SaffronPlanner;
 import net.sf.saffron.opt.OptUtil;
 import net.sf.saffron.opt.PlanCost;
 import net.sf.saffron.opt.VolcanoCluster;
-import net.sf.saffron.util.Util;
 
 // REVIEW jvs 15-Nov-2003:  Is there a good reason for this to exist?  It's
 // redundant with an AggregateRel with no aggCalls.

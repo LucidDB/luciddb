@@ -24,8 +24,8 @@ package net.sf.saffron.ext;
 
 import net.sf.saffron.core.*;
 import net.sf.saffron.oj.OJConnectionRegistry;
+import net.sf.saffron.oj.rel.JavaRelImplementor;
 import net.sf.saffron.oj.util.OJUtil;
-import net.sf.saffron.opt.RelImplementor;
 import net.sf.saffron.opt.VolcanoCluster;
 import net.sf.saffron.rel.SaffronRel;
 import net.sf.saffron.rel.TableAccessRel;
@@ -85,7 +85,7 @@ public class JdbcTable extends AbstractTable implements ImplementableTable
     }
 
     // implement ImplementableTable
-    public void implement(SaffronRel rel,RelImplementor implementor)
+    public void implement(SaffronRel rel,JavaRelImplementor implementor)
     {
         // Generate
         //

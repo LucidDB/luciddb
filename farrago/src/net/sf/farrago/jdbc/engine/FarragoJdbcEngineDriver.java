@@ -21,9 +21,11 @@ package net.sf.farrago.jdbc.engine;
 
 import net.sf.farrago.jdbc.*;
 import net.sf.farrago.util.*;
+import net.sf.farrago.trace.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.db.*;
 import net.sf.farrago.resource.*;
+import net.sf.saffron.util.SaffronException;
 
 import java.sql.*;
 
@@ -43,8 +45,8 @@ public class FarragoJdbcEngineDriver
     extends FarragoAbstractJdbcDriver
     implements FarragoJdbcServerDriver
 {
-    private static Logger tracer =
-        TraceUtil.getClassTrace(FarragoJdbcEngineDriver.class);
+    private static final Logger tracer =
+        FarragoTrace.getFarragoJdbcEngineDriverTracer();
 
     static {
         new FarragoJdbcEngineDriver().register();
@@ -111,7 +113,7 @@ public class FarragoJdbcEngineDriver
         }
         
         SQLException sqlExcn;
-        if (ex instanceof FarragoException) {
+        if (ex instanceof FarragoException || ex instanceof SaffronException) {
             // TODO:  map for SQLState
             sqlExcn = new SQLException(ex.getMessage());
         } else if (ex instanceof SQLException) {

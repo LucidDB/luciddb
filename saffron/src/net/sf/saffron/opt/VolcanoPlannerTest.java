@@ -45,7 +45,7 @@ public class VolcanoPlannerTest extends TestCase
     private static final CallingConvention PHYS_CALLING_CONVENTION =
         new CallingConvention(
             "PHYS",
-            CallingConvention.enumeration.getMax() + 1);
+            CallingConvention.enumeration.getMax() + 1, SaffronRel.class);
 
     public VolcanoPlannerTest(String name)
     {
@@ -92,7 +92,7 @@ public class VolcanoPlannerTest extends TestCase
 
         planner.addRule(new PhysLeafRule());
         planner.addRule(new GoodSingleRule());
-        
+
         NoneLeafRel leafRel = new NoneLeafRel(newCluster(planner),"a");
         NoneSingleRel singleRel = new NoneSingleRel(
             leafRel.getCluster(),leafRel);
@@ -136,7 +136,7 @@ public class VolcanoPlannerTest extends TestCase
         if (useRule) {
             planner.addRule(new RemoveTrivialProjectRule());
         }
-        
+
         planner.addRule(new PhysLeafRule());
         planner.addRule(new GoodSingleRule());
         planner.addRule(new PhysProjectRule());
@@ -203,10 +203,10 @@ public class VolcanoPlannerTest extends TestCase
         }
     }
 
-    private static abstract class TestLeafRel extends SaffronRel
+    private static abstract class TestLeafRel extends SaffronBaseRel
     {
         private String label;
-        
+
         protected TestLeafRel(VolcanoCluster cluster,String label)
         {
             super(cluster);
@@ -217,19 +217,19 @@ public class VolcanoPlannerTest extends TestCase
         {
             return label;
         }
-        
+
         // implement SaffronRel
         public Object clone()
         {
             return this;
         }
-        
+
         // implement SaffronRel
         public PlanCost computeSelfCost(SaffronPlanner planner)
         {
             return planner.makeInfiniteCost();
         }
-        
+
         // implement SaffronRel
         protected SaffronType deriveRowType()
         {
@@ -253,20 +253,20 @@ public class VolcanoPlannerTest extends TestCase
                 });
         }
     }
-    
+
     private static abstract class TestSingleRel extends SingleRel
     {
         protected TestSingleRel(VolcanoCluster cluster,SaffronRel child)
         {
             super(cluster,child);
         }
-        
+
         // implement SaffronRel
         public PlanCost computeSelfCost(SaffronPlanner planner)
         {
             return planner.makeInfiniteCost();
         }
-        
+
         // implement SaffronRel
         protected SaffronType deriveRowType()
         {
@@ -280,14 +280,14 @@ public class VolcanoPlannerTest extends TestCase
         {
             super(cluster,child);
         }
-        
+
         // implement SaffronRel
         public Object clone()
         {
             return new NoneSingleRel(cluster,child);
         }
     }
-    
+
     private static class NoneLeafRel extends TestLeafRel
     {
         protected NoneLeafRel(VolcanoCluster cluster,String label)
@@ -295,20 +295,20 @@ public class VolcanoPlannerTest extends TestCase
             super(cluster,label);
         }
     }
-    
+
     private static class PhysLeafRel extends TestLeafRel
     {
         PhysLeafRel(VolcanoCluster cluster,String label)
         {
             super(cluster,label);
         }
-        
+
         // implement SaffronRel
         public PlanCost computeSelfCost(SaffronPlanner planner)
         {
             return planner.makeTinyCost();
         }
-        
+
         // implement SaffronRel
         public CallingConvention getConvention()
         {
@@ -322,19 +322,19 @@ public class VolcanoPlannerTest extends TestCase
         {
             super(cluster,child);
         }
-        
+
         // implement SaffronRel
         public PlanCost computeSelfCost(SaffronPlanner planner)
         {
             return planner.makeTinyCost();
         }
-        
+
         // implement SaffronRel
         public CallingConvention getConvention()
         {
             return PHYS_CALLING_CONVENTION;
         }
-        
+
         // implement SaffronRel
         public Object clone()
         {
@@ -348,7 +348,7 @@ public class VolcanoPlannerTest extends TestCase
         {
             super(cluster,child);
         }
-        
+
         // implement SaffronRel
         public CallingConvention getConvention()
         {
@@ -386,7 +386,7 @@ public class VolcanoPlannerTest extends TestCase
                 new PhysLeafRel(leafRel.getCluster(),leafRel.getLabel()));
         }
     }
-    
+
     private static class GoodSingleRule extends VolcanoRule
     {
         GoodSingleRule()

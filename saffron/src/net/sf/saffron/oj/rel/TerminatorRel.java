@@ -26,14 +26,14 @@ package net.sf.saffron.oj.rel;
  * A <code>TerminatorRel</code> is a relational expression which cannot be
  * fetched from, but which is the root node in the tree of {@link
  * net.sf.saffron.rel.SaffronRel}s implemented by an {@link
- * net.sf.saffron.opt.RelImplementor}.
+ * net.sf.saffron.oj.rel.JavaRelImplementor}.
  *
  * @author jhyde
  * @version $Id$
  *
  * @since 11 February, 2002
  */
-public interface TerminatorRel
+public interface TerminatorRel extends JavaRel
 {
 }
 

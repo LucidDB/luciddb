@@ -20,10 +20,16 @@ then
 fi
 
 # Next, generate (but do not exec) a script to build Boost
+# bjam seems to only run on the last target. hack around
+# this by splitting into two invocations
 cd ${BOOST_DIR}
-${BJAM} -n -obuildBoost2.sh "-sTOOLS=${BOOST_TOOLSET}" "-sBUILD=${BUILD_OPTS}" \
+${BJAM} -n -obuildBoost2-thread.sh "-sTOOLS=${BOOST_TOOLSET}" "-sBUILD=${BUILD_OPTS}" \
     "-sSTLPORT_ROOT=${STLPORT_LOCATION}" \
     boost_thread
+${BJAM} -n -obuildBoost2-regex.sh "-sTOOLS=${BOOST_TOOLSET}" "-sBUILD=${BUILD_OPTS}" \
+    "-sSTLPORT_ROOT=${STLPORT_LOCATION}" \
+    boost_regex
+cat buildBoost2-thread.sh buildBoost2-regex.sh > buildBoost2.sh
 
 # Transform the script to keep path lengths under control for Cygwin
 sed -e 's:stlport-anachronisms-off/stlport-cstd-namespace-std/stlport-debug-alloc-off/stlport-iostream-on/stlport-version-[0-9\.]*:stlport-opts:g' \

@@ -24,21 +24,18 @@ package net.sf.saffron.oj.rel;
 
 import net.sf.saffron.oj.util.*;
 import net.sf.saffron.opt.CallingConvention;
-import net.sf.saffron.opt.RelImplementor;
 import net.sf.saffron.opt.VolcanoCluster;
 import net.sf.saffron.rel.OneRowRel;
 import net.sf.saffron.util.Util;
 
-import openjava.ptree.AllocationExpression;
-import openjava.ptree.Expression;
-import openjava.ptree.ExpressionList;
-import openjava.ptree.StatementList;
+import openjava.ptree.*;
 
 
 /**
  * <code>JavaOneRowRel</code> implements {@link OneRowRel} inline.
  */
-public class JavaOneRowRel extends OneRowRel implements JavaRel
+public class JavaOneRowRel extends OneRowRel
+        implements JavaLoopRel, JavaSelfRel
 {
     //~ Constructors ----------------------------------------------------------
 
@@ -60,22 +57,21 @@ public class JavaOneRowRel extends OneRowRel implements JavaRel
         return new JavaOneRowRel(cluster);
     }
 
-    public Object implement(RelImplementor implementor,int ordinal)
+    public ParseTree implement(JavaRelImplementor implementor)
     {
-        switch (ordinal) {
-        case -1:
-
-            // Generate
-            //	   <<parent>>
-            StatementList stmtList = implementor.getStatementList();
-            implementor.generateParentBody(this,stmtList);
-            return null;
-        default:
-            throw Util.newInternal("implement: ordinal=" + ordinal);
-        }
+        // Generate
+        //	   <<parent>>
+        StatementList stmtList = implementor.getStatementList();
+        implementor.generateParentBody(this,stmtList);
+        return null;
     }
 
-    public Expression implementSelf(RelImplementor implementor)
+    public void implementJavaParent(JavaRelImplementor implementor,
+            int ordinal) {
+        throw Util.newInternal("should never be called");
+    }
+
+    public Expression implementSelf(JavaRelImplementor implementor)
     {
         return new AllocationExpression(
             OJUtil.typeToOJClass(getRowType()),

@@ -30,7 +30,7 @@ import net.sf.saffron.util.Util;
  * A <code>SqlFunction</code> is a type of operator which has conventional
  * function-call syntax.
  */
-public class SqlFunction extends SqlOperator
+public abstract class SqlFunction extends SqlOperator
 {
     //~ Instance fields -------------------------------------------------------
     private SqlFuncTypeName functionType=null;
@@ -38,7 +38,7 @@ public class SqlFunction extends SqlOperator
 
     //~ Constructors ----------------------------------------------------------
 
-    SqlFunction(
+    public SqlFunction(
         String name, TypeInference typeInference,
         ParamTypeInference paramTypeInference,
         AllowedArgInference paramTypes)
@@ -47,17 +47,17 @@ public class SqlFunction extends SqlOperator
                 paramTypes);
     }
 
-    SqlFunction(
-        String name, TypeInference typeInference,
+    public SqlFunction(
+        String name, SqlKind kind, TypeInference typeInference,
         ParamTypeInference paramTypeInference,
         AllowedArgInference paramTypes, SqlFuncTypeName funcType)
     {
-        super(name,SqlKind.Function,100,100,typeInference,paramTypeInference,
+        super(name, kind, 100, 100, typeInference, paramTypeInference,
                 paramTypes);
         this.functionType = funcType;
     }
 
-    SqlFunction(
+    public SqlFunction(
         String name, SqlKind kind, TypeInference typeInference,
         ParamTypeInference paramTypeInference,
         AllowedArgInference paramTypes)
@@ -73,13 +73,21 @@ public class SqlFunction extends SqlOperator
         return Syntax.Function;
     }
 
-    void unparse(
+    public void unparse(
         SqlWriter writer,
         SqlNode [] operands,
         int leftPrec,
         int rightPrec)
     {
-        writer.print(name);
+        unparseFunctionSyntax(this,writer,operands);
+    }
+
+    public static void unparseFunctionSyntax(
+        SqlOperator operator,
+        SqlWriter writer,
+        SqlNode [] operands)
+    {
+        writer.print(operator.name);
         writer.print('(');
         for (int i = 0; i < operands.length; i++) {
             SqlNode operand = operands[i];
@@ -111,24 +119,43 @@ public class SqlFunction extends SqlOperator
         private SqlFuncTypeName(String name, int ordinal, String description) {
             super(name, ordinal, description);
         }
+        public static final int String_ordinal = 0;
+        /** String function type **/
+        public static final SqlFuncTypeName String = new SqlFuncTypeName("STRING", String_ordinal, "String function");
+
+        public static final int Numeric_ordinal = 1;
+        /** Numeric function type **/
+        public static final SqlFuncTypeName Numeric = new SqlFuncTypeName("NUMERIC", Numeric_ordinal, "Numeric function");
+
+        public static final int TimeDate_ordinal = 2;
+        /** Time and date function type **/
+        public static final SqlFuncTypeName TimeDate = new SqlFuncTypeName("TIMEDATE", TimeDate_ordinal, "Time and date function");
+
+        public static final int System_ordinal = 3;
+        /** System function type **/
+        public static final SqlFuncTypeName System = new SqlFuncTypeName("SYSTEM", System_ordinal, "System function");
     }
 
-    public static final int String_ordinal = 0;
-    /** String function type **/
-    public static final SqlFuncTypeName String = new SqlFuncTypeName("STRING", String_ordinal, "String function");
+    public static final EnumeratedValues enumeration = new EnumeratedValues(
+            new SqlFuncTypeName[] {
+                SqlFuncTypeName.String,
+                SqlFuncTypeName.Numeric,
+                SqlFuncTypeName.TimeDate,
+                SqlFuncTypeName.System,
+            });
 
-    public static final int Numeric_ordinal = 1;
-    /** Numeric function type **/
-    public static final SqlFuncTypeName Numeric = new SqlFuncTypeName("NUMERIC", Numeric_ordinal, "Numeric function");
-
-    public static final int TimeDate_ordinal = 2;
-    /** Time and date function type **/
-    public static final SqlFuncTypeName TimeDate = new SqlFuncTypeName("TIMEDATE", TimeDate_ordinal, "Time and date function");
-
-    public static final int System_ordinal = 3;
-    /** System function type **/
-    public static final SqlFuncTypeName System = new SqlFuncTypeName("SYSTEM", System_ordinal, "System function");
-
+    /**
+     * Looks up a kind from its ordinal.
+     */
+    public static SqlFuncTypeName get(int ordinal) {
+        return (SqlFuncTypeName) enumeration.getValue(ordinal);
+    }
+    /**
+     * Looks up a kind from its name.
+     */
+    public static SqlFuncTypeName get(String name) {
+        return (SqlFuncTypeName) enumeration.getValue(name);
+    }
 
 }
 

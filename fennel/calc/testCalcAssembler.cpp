@@ -353,6 +353,7 @@ public:
         assert(!mFailed && !mAssembled);
         assert(mProgram != NULL);
         try {
+            mCalc.outputRegisterByReference(false);
             mCalc.assemble(mProgram);
 
             TupleDescriptor inputTupleDesc = mCalc.getInputRegisterDescriptor();
@@ -680,6 +681,7 @@ protected:
     void testInvalidPrograms();
 
     void testStandardTypes();
+    void testComments();
 
     void testBoolInstructions(StandardTypeDescriptorOrdinal type);
 
@@ -1981,6 +1983,63 @@ void CalcAssemblerTest::testInvalidPrograms()
     // TODO: Test extremely long programs and stuff
 }
 
+void CalcAssemblerTest::testComments()
+{
+    CalcAssemblerTestCase testCase1(__LINE__, "COMMENTS (ONE LINE)", 
+                                    "I u2;\nO /* comments */ u2;\n"
+                                    "T;\n"
+                                    "MOVE O0, I0;\n"
+                                    "RETURN;\n"
+                                    "ADD O0, I0, I0;\n");
+    if (testCase1.assemble()) {
+        testCase1.setInput<uint16_t>(0, 100);
+        testCase1.setExpectedOutput<uint16_t>(0, 100);
+        testCase1.test();
+    }
+
+    CalcAssemblerTestCase testCase2(__LINE__, "COMMENTS (MULTILINE)", 
+                                    "I u2;\nO u2; /* *****\n*****/\n"
+                                    "T;\n"
+                                    "MOVE O0, I0;\n"
+                                    "RETURN;\n"
+                                    "ADD O0, I0, I0;\n");
+    if (testCase2.assemble()) {
+        testCase2.setInput<uint16_t>(0, 100);
+        testCase2.setExpectedOutput<uint16_t>(0, 100);
+        testCase2.test();
+    }
+
+    CalcAssemblerTestCase testCase3(__LINE__, "COMMENTS (MULTIPLE)", 
+                                    "I u2;\nO u2;\n"
+                                    "T;\n"
+                                    "MOVE O0, /* /* MOVE\n****\nO0 */ I0;\n"
+                                    "RETURN;\n"
+                                    "ADD /* FOR '0x' */ O0, I0, I0;\n");
+    if (testCase3.assemble()) {
+        testCase3.setInput<uint16_t>(0, 100);
+        testCase3.setExpectedOutput<uint16_t>(0, 100);
+        testCase3.test();
+    }
+
+    CalcAssemblerTestCase testCase4(__LINE__, "UNCLOSED COMMENT", 
+                                    "I u2;\nO u2;\n"
+                                    "T;\n"
+                                    "MOVE O0, /* I0;\n"
+                                    "RETURN;\n"
+                                    "ADD O0, I0, I0;\n");
+    testCase4.expectAssemblerError("Unterminated comment");
+    testCase4.assemble();
+
+    CalcAssemblerTestCase testCase5(__LINE__, "CLOSE COMMENT ONLY", 
+                                    "I u2;\nO u2;\n"
+                                    "T;\n"
+                                    "MOVE O0, */ I0;\n"
+                                    "RETURN;\n"
+                                    "ADD O0, I0, I0;\n");
+    testCase5.expectAssemblerError("parse error");
+    testCase5.assemble();
+}
+
 void CalcAssemblerTest::testAssembler()
 {
     testLiteralBinding();
@@ -1992,6 +2051,7 @@ void CalcAssemblerTest::testAssembler()
     testJump();
     testExtended();
     testStandardTypes();
+    testComments();
 }
 
 int main (int argc, char **argv)

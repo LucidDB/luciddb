@@ -25,14 +25,11 @@ package net.sf.saffron.oj.rel;
 import net.sf.saffron.core.SaffronPlanner;
 import net.sf.saffron.opt.CallingConvention;
 import net.sf.saffron.opt.PlanCost;
-import net.sf.saffron.opt.RelImplementor;
 import net.sf.saffron.opt.VolcanoCluster;
 import net.sf.saffron.rel.DistinctRel;
 import net.sf.saffron.rel.SaffronRel;
 import net.sf.saffron.util.Util;
-
-import openjava.mop.Toolbox;
-
+import openjava.ptree.ParseTree;
 import openjava.ptree.StatementList;
 
 
@@ -40,14 +37,14 @@ import openjava.ptree.StatementList;
  * <code>JavaExistsRel</code> implements {@link DistinctRel} inline for the
  * special case that the input relation has zero columns.
  */
-public class JavaExistsRel extends DistinctRel
+public class JavaExistsRel extends DistinctRel implements JavaLoopRel
 {
     //~ Constructors ----------------------------------------------------------
 
     public JavaExistsRel(VolcanoCluster cluster,SaffronRel child)
     {
         super(cluster,child);
-        assert(child.getRowType().getFieldCount() == 0);
+        assert child.getRowType().getFieldCount() == 0;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -76,25 +73,21 @@ public class JavaExistsRel extends DistinctRel
         return planner.makeCost(dRows,dCpu,dIo);
     }
 
-    public Object implement(RelImplementor implementor,int ordinal)
+    public ParseTree implement(JavaRelImplementor implementor)
     {
-        switch (ordinal) {
-        case -1:// Generate
-            //     <<parent>>
-            return implementor.implementChild(this,0,child);
-        case 0: // called from child
-         {
-            // Generate
-            //   <<parent-handler>>
-            //   break;
-            StatementList stmtList = implementor.getStatementList();
-            implementor.generateParentBody(this,stmtList);
-            stmtList.add(implementor.getExitStatement());
-            return null;
-        }
-        default:
-            throw Util.newInternal("implement: ordinal=" + ordinal);
-        }
+        // Generate
+        //     <<parent>>
+        return implementor.visitJavaChild(this, 0, (JavaRel) child);
+    }
+
+    public void implementJavaParent(JavaRelImplementor implementor, int ordinal) {
+        assert ordinal == 0;
+        // Generate
+        //   <<parent-handler>>
+        //   break;
+        StatementList stmtList = implementor.getStatementList();
+        implementor.generateParentBody(this,stmtList);
+        stmtList.add(implementor.getExitStatement());
     }
 }
 

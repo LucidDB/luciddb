@@ -23,12 +23,6 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-TracingTupleStream::TracingTupleStream(
-    TraceTarget &traceTarget,std::string name)
-    : TraceSource(&traceTarget,name)
-{
-}
-
 void TracingTupleStream::prepare(TupleStreamParams const &params)
 {
     SingleInputTupleStream::prepare(params);
@@ -81,6 +75,11 @@ TupleStream::BufferProvision
 TracingTupleStream::getInputBufferRequirement() const
 {
     return PRODUCER_PROVISION;
+}
+
+void *TracingTupleStream::getImpl()
+{
+    return pInputStream->getImpl();
 }
 
 FENNEL_END_CPPFILE("$Id$");

@@ -29,11 +29,7 @@ import net.sf.saffron.opt.*;
 import net.sf.saffron.rel.*;
 import net.sf.saffron.util.*;
 
-import openjava.ptree.*;
-
 import java.util.*;
-
-import java.util.List;
 
 /**
  * FennelSortRel is the relational expression corresponding to a sort
@@ -123,7 +119,7 @@ public class FennelSortRel extends FennelPullSingleRel
     }
 
     // implement FennelRel
-    public FemExecutionStreamDef toStreamDef(FarragoRelImplementor implementor)
+    public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
         FemSortingStreamDef sortingStream =
             getCatalog().newFemSortingStreamDef();
@@ -139,7 +135,7 @@ public class FennelSortRel extends FennelPullSingleRel
         sortingStream.setKeyProj(
             FennelRelUtil.createTupleProjection(getCatalog(),keyProjection));
         sortingStream.getInput().add(
-            implementor.implementFennelRel(child));
+            implementor.visitFennelChild((FennelRel) child));
         return sortingStream;
     }
 

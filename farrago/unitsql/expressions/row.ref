@@ -1,0 +1,66 @@
+0: jdbc:farrago:> -- $Id: //open/farrago/unitsql/expressions/orderby.sql#4 $
+0: jdbc:farrago:> -- Test ROW constructor
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- NOTE:  sales.depts is used because optimizer fails
+0: jdbc:farrago:> -- when onerow is replaced with values().  
+0: jdbc:farrago:> -- Should change once optimizer is fixed.
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- NOTE:  field names of ROW constructors are implementation-defined.
+0: jdbc:farrago:> -- These tests rely on Farrago implementation specifics.  Once
+0: jdbc:farrago:> -- supported, should use ROW CAST in most cases to assign names.
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test row single field access
+0: jdbc:farrago:> select t.r."EXPR$0"
+. . . . . . . . > from (select row(1,2) r from sales.depts) t;
++---------+
+| EXPR$0  |
++---------+
+| 1       |
+| 1       |
+| 1       |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test row multiple field access
+0: jdbc:farrago:> select t.r."EXPR$1", t.r."EXPR$0"
+. . . . . . . . > from (select row(1,2) r from sales.depts) t;
++---------+---------+
+| EXPR$1  | EXPR$0  |
++---------+---------+
+| 2       | 1       |
+| 2       | 1       |
+| 2       | 1       |
++---------+---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test without ROW noiseword
+0: jdbc:farrago:> select t.r."EXPR$1", t.r."EXPR$0"
+. . . . . . . . > from (select (1,2) r from sales.depts) t;
++---------+---------+
+| EXPR$1  | EXPR$0  |
++---------+---------+
+| 2       | 1       |
+| 2       | 1       |
+| 2       | 1       |
++---------+---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- something deeper
+0: jdbc:farrago:> select t.r."EXPR$1"."EXPR$2"
+. . . . . . . . > from (select ((1,2),(3,4,5)) r from sales.depts) t;
++---------+
+| EXPR$2  |
++---------+
+| 5       |
+| 5       |
+| 5       |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test whether optimizer expands expressions redundantly
+0: jdbc:farrago:> !set outputformat csv
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select t.r."EXPR$1", t.r."EXPR$0"
+. . . . . . . . > from (select row(1,2) r from sales.depts) t;
+'column0'
+'IterCalcRel(EXPR$1=[ROW(1, 2).EXPR$1], EXPR$0=[ROW(1, 2).EXPR$0])'
+'  FennelToIteratorConverter'
+'    FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !quit

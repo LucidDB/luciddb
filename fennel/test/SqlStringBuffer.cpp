@@ -29,6 +29,8 @@ using namespace std;
 #endif
 
 const uint SqlStringBuffer::mBumperChar = '@';
+// use unaligned bumperlen for 1-byte-per-character strings
+// to ensure generality
 const int SqlStringBuffer::mBumperLen = 3;
 
 SqlStringBuffer::
@@ -110,16 +112,19 @@ SqlStringBuffer::patternfill(uint start,
 
 
 const uint SqlStringBufferUCS2::mBumperChar = '@';
-const int SqlStringBufferUCS2::mBumperLen = 3;
+// multi-byte strings will be aligned by tuple mechanism to
+// at least short-word (2-byte) alignment.
+const int SqlStringBufferUCS2::mBumperLen = 2;
 
 SqlStringBufferUCS2::SqlStringBufferUCS2(SqlStringBuffer const &src) :
     mStorage(src.mStorage *2),
     mSize(src.mSize * 2),
     mLeftPad(src.mLeftPad * 2),
     mRightPad(src.mRightPad * 2),
-    mLeftBump(src.mLeftBump),
-    mRightBump(src.mRightBump),
-    mTotal(src.mStorage * 2 + src.mLeftBump + src.mRightBump)
+    // force alignment when copying from potentially unaligned
+    mLeftBump(src.mLeftBump & 1 ? src.mLeftBump + 1 : src.mLeftBump),
+    mRightBump(src.mRightBump & 1 ? src.mRightBump + 1 : src.mRightBump),
+    mTotal(src.mStorage * 2 + mLeftBump + mRightBump)
 {
     mS.assign(mTotal, mBumperChar);
 
@@ -151,6 +156,10 @@ SqlStringBufferUCS2::SqlStringBufferUCS2(SqlStringBuffer const &src,
     mRightBump(rightBumper),
     mTotal(src.mStorage * 2 + leftBumper + rightBumper)
 {
+    // force alignment
+    assert(!(mLeftBump & 1));
+    assert(!(mRightBump & 1));
+
     mS.assign(mTotal, mBumperChar);
 
     init();

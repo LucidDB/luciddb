@@ -39,7 +39,7 @@ import java.util.ArrayList;
  * A JoinRel represents two relational expressions joined according to some
  * condition.
  */
-public class JoinRel extends SaffronRel
+public class JoinRel extends SaffronBaseRel
 {
     //~ Instance fields -------------------------------------------------------
 

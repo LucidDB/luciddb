@@ -40,7 +40,7 @@ class FarragoTransientStorage extends StorageImpl
     
     private final HashMap maps = new HashMap();
     
-    private PrimaryIndexImpl primaryIndex;
+    private PVIndex primaryIndex;
     
     private Set newIndexes = new HashSet ();
     private HashMap removedIndexes = new HashMap ();
@@ -127,8 +127,10 @@ class FarragoTransientStorage extends StorageImpl
             TxnIndex index = (TxnIndex) ((Map.Entry)iter.next()).getValue();
             index.rollBackChangesPublic();
         }
-
-        truncate();
+        
+        if (primaryIndex != null) {
+            primaryIndex.rollBackChangesPublic();
+        }
     }
 
     // implement Storage
@@ -154,20 +156,11 @@ class FarragoTransientStorage extends StorageImpl
             TxnIndex index = (TxnIndex) ((Map.Entry)iter.next()).getValue();
             index.commitChangesPublic();
         }
-        truncate();
+        if (primaryIndex != null) {
+            primaryIndex.commitChangesPublic();
+        }
     }
 
-    private void truncate() throws StorageException
-    {
-        /*
-        Iterator iter = maps.values().iterator();
-        while (iter.hasNext()) {
-            Index index = (Index) iter.next();
-            index.keySet().clear();
-        }
-        */
-    }
-    
     // implement Storage
     public synchronized SinglevaluedIndex getSinglevaluedIndex(String name)
         throws StorageException

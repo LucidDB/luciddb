@@ -73,8 +73,22 @@ DIGIT       [0-9]
 HEX         [A-Fa-f0-9]
 NAME        [a-zA-Z_][a-zA-Z_0-9]*
 %s          expect_name
+%s          comment
 
 %%
+
+"/*"                 BEGIN(comment);
+
+<comment><<EOF>>     LexerError("Unterminated comment");
+<comment>"*"+"/"     BEGIN(INITIAL);
+<comment>[\n]+       {
+                       /* eat up new lines.  Reset column to 1. */
+                       yycolno=1;
+                       yylineno+=yyleng;
+                     }
+<comment>[^*\n]*       /* eat anything that's not a '*' */
+<comment>"*"+[^*/\n]*  /* eat up '*'s not followed by '/'s */
+
 
 "0x"{HEX}* { 
                 yylval.v_string = hex2string(yytext+2, yyleng-2); 
@@ -150,8 +164,6 @@ NAME        [a-zA-Z_][a-zA-Z_0-9]*
 [ \t\r]+    /* eat up whitespace */
 [\n]+       {
                /* eat up new lines.  Reset column to 1. */
-               /* Don't need to worry about row number 
-                  (that's taken care of automatically) */
                yycolno=1;
                yylineno+=yyleng;
             }

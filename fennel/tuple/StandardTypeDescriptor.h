@@ -244,6 +244,26 @@ public:
         return false;
     }
     
+    static inline bool
+    isTextArray(StandardTypeDescriptorOrdinal st)
+    {
+        if (st == STANDARD_TYPE_CHAR ||
+            st == STANDARD_TYPE_VARCHAR) {
+            return true;
+        }
+        return false;
+    }
+
+    static inline bool
+    isBinaryArray(StandardTypeDescriptorOrdinal st)
+    {
+        if (st == STANDARD_TYPE_VARBINARY ||
+            st == STANDARD_TYPE_BINARY) {
+            return true;
+        }
+        return false;
+    }
+    
 private:
     explicit
     StandardTypeDescriptor();

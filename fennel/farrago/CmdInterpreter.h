@@ -39,7 +39,7 @@ class BTreeDescriptor;
  * implements FemVisitor in order to process commands; a visit on a command
  * results in its execution.
  */
-class CmdInterpreter : public boost::noncopyable, public FemVisitor
+class CmdInterpreter : public boost::noncopyable, virtual public FemVisitor
 {
 public:
     /**
@@ -72,13 +72,18 @@ public:
 
     struct StreamGraphHandle : public BTreeRootMap
     {
-        TxnHandle *pTxnHandle;
+    private:
         SharedTupleStreamGraph pTupleStreamGraph;
+    public:
+        TxnHandle *pTxnHandle;
         jobject javaRuntimeContext;
         virtual PageId getRoot(PageOwnerId pageOwnerId);
+        virtual void setTupleStreamGraph(
+            SharedTupleStreamGraph pGraph);
+        virtual SharedExecutionStreamGraph getGraph();
     };
     
-private:
+protected:
     /**
      * Handle to be returned by current command, or 0 if none.  Have to do it
      * this way since visit returns void; note that this makes this class
@@ -126,17 +131,38 @@ public:
      */
     virtual int64_t executeCommand(ProxyCmd &cmd);
 
-    static StreamGraphHandle &getStreamGraphHandleFromObj(JniEnvRef,jobject);
-    static ExecutionStream &getStreamFromObj(JniEnvRef,jobject);
+    static inline StreamGraphHandle &getStreamGraphHandleFromLong(jlong);
+    static inline ExecutionStream &getStreamFromLong(jlong);
+    static inline TxnHandle &getTxnHandleFromLong(jlong);
+    static inline jobject getObjectFromLong(jlong jHandle);
 
-    static TxnHandle &getTxnHandleFromObj(JniEnvRef,jobject);
-
-    static jobject getObjectFromHandle(jlong jHandle)
-    {
-        jobject *pGlobalRef = reinterpret_cast<jobject *>(jHandle);
-        return *pGlobalRef;
-    }
+    // override JniProxyVisitor
+    void *getLeafPtr();
+    const char *getLeafTypeName();
 };
+
+inline jobject CmdInterpreter::getObjectFromLong(jlong jHandle)
+{
+    jobject *pGlobalRef = reinterpret_cast<jobject *>(jHandle);
+    return *pGlobalRef;
+}
+
+inline CmdInterpreter::StreamGraphHandle &
+CmdInterpreter::getStreamGraphHandleFromLong(jlong jHandle)
+{
+    return *reinterpret_cast<StreamGraphHandle *>(jHandle);
+}
+
+inline ExecutionStream &CmdInterpreter::getStreamFromLong(jlong jHandle)
+{
+    return *reinterpret_cast<ExecutionStream *>(jHandle);
+}
+
+inline CmdInterpreter::TxnHandle &CmdInterpreter::getTxnHandleFromLong(
+    jlong jHandle)
+{
+    return *reinterpret_cast<TxnHandle *>(jHandle);
+}
 
 FENNEL_END_NAMESPACE
 

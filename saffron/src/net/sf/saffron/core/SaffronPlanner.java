@@ -26,6 +26,9 @@ import net.sf.saffron.opt.CallingConvention;
 import net.sf.saffron.opt.PlanCost;
 import net.sf.saffron.opt.VolcanoRule;
 import net.sf.saffron.rel.SaffronRel;
+import net.sf.saffron.trace.SaffronTrace;
+
+import java.util.logging.Logger;
 
 
 /**
@@ -35,6 +38,8 @@ import net.sf.saffron.rel.SaffronRel;
  */
 public interface SaffronPlanner
 {
+    static final Logger tracer = SaffronTrace.getPlannerTracer();
+
     //~ Methods ---------------------------------------------------------------
 
     void setRoot(SaffronRel rel);

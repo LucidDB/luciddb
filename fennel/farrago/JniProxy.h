@@ -64,6 +64,7 @@ public:
     jobject jObject;
     
     explicit JniProxy();
+    
     virtual ~JniProxy();
 
     /**
@@ -74,7 +75,6 @@ public:
      * @param jObject the Java object to be proxied
      */
     void init(JniEnvRef pEnv,jobject jObject);
-
 
     /**
      * @return name of the Java class instantiated by this proxy
@@ -139,6 +139,24 @@ public:
      * an assertion failure; subclasses may override to ignore or whatever.
      */
     virtual void unhandledVisit();
+    
+    /**
+     * Gets a pointer to the leaf object. You can apply static_cast to
+     * convert this to the real object.
+     *
+     *<p>
+     *
+     * If multiple inheritance is not involved, this method just returns
+     * 'this'. If multiple inheritance is involved, why not use dynamic_cast?
+     * Because it doesn't work in combination with JNI.
+     */
+    virtual void *getLeafPtr() = 0;
+    
+    /**
+     * Returns the name of the visitor type, for example "FemVisitor". A sanity
+     * check.
+     */
+    virtual const char *getLeafTypeName() = 0;
 };
 
 class JniProxyVisitTableBase
@@ -153,7 +171,7 @@ public:
         {
         }
         
-        virtual void visit(JniProxyVisitor &visitor,JniProxy &) = 0;
+        virtual void execute(JniProxyVisitor &visitor,JniProxy &) = 0;
     };
     
     /**
@@ -184,26 +202,32 @@ public:
         // TODO:  make this less MDR-dependent.  ProxyGen passes in a
         // JMI interface, but at runtime we're going to see the name of the
         // real implementation class, so use the class name in the map.
+        assert(pMethod);
         methodMap[JniUtil::getClassName(jClass)+"$Impl"] = pMethod;
     }
 
 
     /**
-     * Tell a Visitor to visit a proxy object.
+     * Accepts a visitor to a proxy object, redirecting it to the correct
+     * visit method.
      *
      * @param visitor the visitor to call
      *
      * @param proxy the proxy object to visit; the type of this object
      * determines the visit overload to call
      */
-    void visit(JniProxyVisitor &visitor,JniProxy &proxy)
+    void accept(JniProxyVisitor &visitor,JniProxy &proxy)
     {
         // NOTE:  it's OK to use operator [] here since it's an error to call
         // with the wrong proxy type, so in the non-error case we should always
         // find something
-        SharedVisitorMethod pMethod = methodMap[proxy.getClassName()];
-        assert(pMethod);
-        pMethod->visit(visitor,proxy);
+        std::string className = proxy.getClassName();
+        SharedVisitorMethod pMethod = methodMap[className];
+        if (!pMethod) {
+            throw std::string("error: unknown method for proxy class '") +
+                className + "'";
+        }
+        pMethod->execute(visitor,proxy);
     }
 };
 
@@ -229,7 +253,7 @@ public:
     template<class ProxyImpl>
     struct VisitorMethodImpl : public VisitorMethod
     {
-        virtual void visit(JniProxyVisitor &visitor,JniProxy &proxy)
+        virtual void execute(JniProxyVisitor &visitor,JniProxy &proxy)
         {
             // This accomplishes an effective downcast by reinstantiating proxy
             // as the correct type.  The abstract proxy and the specific proxy
@@ -238,8 +262,17 @@ public:
             // identity.
             ProxyImpl proxyImpl;
             proxyImpl.init(proxy.pEnv,proxy.jObject);
+            // Sanity check: should be "FemVisitor" or "AemVisitor".
+            const char *visitorType = visitor.getLeafTypeName();
+            (void) visitorType;
             // This binds to the correct visit overload.
-            Visitor &visitorImpl = static_cast<Visitor &>(visitor);
+            // Can't use static_cast with multiple inheritance:
+            //  Visitor visitorImpl = static_cast<Visitor &>(visitor);
+            // Dynamic_cast doesn't work in combination with JNI.
+            //  Visitor visitorImpl = dynamic_cast<Visitor &>(visitor);
+            // So:
+            Visitor& visitorImpl = *static_cast<Visitor *>(
+                visitor.getLeafPtr());
             visitorImpl.visit(proxyImpl);
         }
     };

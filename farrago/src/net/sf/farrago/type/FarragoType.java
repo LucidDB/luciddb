@@ -20,11 +20,9 @@
 
 package net.sf.farrago.type;
 
-import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.resource.*;
-
 import net.sf.saffron.core.*;
 import net.sf.saffron.util.*;
+import net.sf.saffron.sql.type.SqlTypeName;
 
 import openjava.mop.*;
 
@@ -95,6 +93,12 @@ public abstract class FarragoType implements SaffronType
         return digest;
     }
 
+    public int getMaxBytesStorage()
+    {
+        // by default, assume type requires fixed storage
+        return -1;
+    }
+
     /**
      * Get the OJClass representing this FarragoType.
      *
@@ -117,6 +121,19 @@ public abstract class FarragoType implements SaffronType
     {
         factory = null;
         digest = null;
+    }
+
+         /**
+      *
+      * @param t
+      * @param coerce - true when using cast rules, rather than implicit
+      * @return
+      */
+    public boolean isAssignableFrom(SaffronType t, boolean coerce)
+    {
+        // TODO jvs 22-Jan-2004:  implement real SQL rules
+       return this.getFactory().assignableFrom(this.getSqlTypeName(),
+               t.getSqlTypeName(), coerce);
     }
 }
 

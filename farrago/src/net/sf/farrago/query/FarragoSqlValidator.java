@@ -34,14 +34,13 @@ class FarragoSqlValidator extends SqlValidator
 {
     FarragoSqlValidator(FarragoPreparingStmt preparingStmt)
     {
-        super(
-            SqlOperatorTable.instance(),
-            preparingStmt,
-            preparingStmt.getFarragoTypeFactory());
+        super(preparingStmt.getSqlOperatorTable(),
+                preparingStmt,
+                preparingStmt.getFarragoTypeFactory());
     }
 
     // override SqlValidator
-    protected RuntimeException newValidationError(String s)
+    public RuntimeException newValidationError(String s)
     {
         // TODO:  need to integrate i18n with Saffron
         return FarragoResource.instance().newValidatorUntranslated(s);

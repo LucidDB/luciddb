@@ -291,9 +291,8 @@ void TupleAccessor::initFixedAccessors(
     }
 }
 
-uint TupleAccessor::getCurrentByteCount() const
+uint TupleAccessor::getBufferByteCount(PConstBuffer pBuf) const
 {
-    assert(pTupleBuf);
     if (isMAXU(iLastVarEndIndirectOffset)) {
         // fixed-width tuple
         return cbMaxStorage;
@@ -301,7 +300,9 @@ uint TupleAccessor::getCurrentByteCount() const
         // variable-width tuple:  use the end of the last variable-width
         // attribute
         StoredValueOffset cb =
-            *referenceIndirectOffset(iLastVarEndIndirectOffset);
+            *referenceIndirectOffset(
+                const_cast<PBuffer>(pBuf),
+                iLastVarEndIndirectOffset);
         if (format == TUPLE_FORMAT_NETWORK) {
             cb = ntohs(cb);
         }

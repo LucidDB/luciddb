@@ -98,11 +98,11 @@ public class FarragoJdbcTest extends FarragoTestCase
     public void testUncachedQuery() throws Exception
     {
         // disable caching
-        stmt.execute("alter system set \"codeCacheMaxBytes\" = 0");
+        stmt.execute("alter system set \"codeCacheMaxBytes\" = min");
         repeatQuery();
 
         // re-enable caching
-        stmt.execute("alter system set \"codeCacheMaxBytes\" = 10000000");
+        stmt.execute("alter system set \"codeCacheMaxBytes\" = max");
     }
 
     private void repeatQuery() throws Exception

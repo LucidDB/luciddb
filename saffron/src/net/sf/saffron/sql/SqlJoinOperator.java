@@ -23,6 +23,8 @@
 package net.sf.saffron.sql;
 
 import net.sf.saffron.util.EnumeratedValues;
+import net.sf.saffron.sql.test.SqlTester;
+import net.sf.saffron.sql.type.SqlTypeName;
 
 
 /**
@@ -65,7 +67,7 @@ public class SqlJoinOperator extends SqlOperator
 
     public SqlJoinOperator()
     {
-        super(null,SqlKind.Join,8,true, null,null, null);
+        super("JOIN",SqlKind.Join,8,true, null,null, null);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -79,7 +81,7 @@ public class SqlJoinOperator extends SqlOperator
     {
         assert(operands[IS_NATURAL_OPERAND] instanceof SqlLiteral);
         final SqlLiteral isNatural = (SqlLiteral) operands[IS_NATURAL_OPERAND];
-        assert(isNatural.value instanceof Boolean);
+        assert(isNatural._typeName == SqlTypeName.Boolean);
         assert operands[CONDITION_TYPE_OPERAND] != null :
                 "precondition: operands[CONDITION_TYPE_OPERAND] != null";
         assert operands[CONDITION_TYPE_OPERAND] instanceof SqlLiteral &&
@@ -91,6 +93,10 @@ public class SqlJoinOperator extends SqlOperator
                 ((SqlLiteral) operands[TYPE_OPERAND]).getValue()
                 instanceof JoinType;
         return new SqlJoin(this,operands);
+    }
+
+    public void test(SqlTester tester) {
+        /* empty implementaion */
     }
 
     public SqlCall createCall(
@@ -107,7 +113,7 @@ public class SqlJoinOperator extends SqlOperator
             });
     }
 
-    void unparse(
+    public void unparse(
         SqlWriter writer,
         SqlNode [] operands,
         int leftPrec,

@@ -51,7 +51,10 @@ import java.lang.reflect.*;
 class FarragoExecutableJavaStmt extends FarragoExecutableStmtImpl
 {
     private final File packageDir;
-    
+
+    // TODO jvs 4-June-2004:  don't pin a Class object; instead, remember
+    // just the class name, and dynamically load it per-execution.  This
+    // will keep cache memory usage down.
     private final Class rowClass;
     
     private final SaffronType rowType;
@@ -100,8 +103,8 @@ class FarragoExecutableJavaStmt extends FarragoExecutableStmtImpl
             // (which calls the generated execute method to obtain an
             // iterator).  This means that the generated execute must NOT try
             // to prefetch any data, since the Fennel streams aren't open yet.
-            // This implies that Java iterator implementations must not
-            // do prefetch in the constructor (always wait for hasNext/next).
+            // In particular, Java iterator implementations must not do
+            // prefetch in the constructor (always wait for hasNext/next).
             
             Iterator iter = (Iterator) method.invoke(
                 null,
@@ -116,8 +119,8 @@ class FarragoExecutableJavaStmt extends FarragoExecutableStmtImpl
                 runtimeContext);
             
             if (xmiFennelPlan != null) {
-                // Finally, it's safe to open Fennel streams.
-                runtimeContext.openFennelStreams();
+                // Finally, it's safe to open all streams.
+                runtimeContext.openStreams();
             }
             
             runtimeContext = null;

@@ -28,14 +28,15 @@ import net.sf.farrago.util.*;
 
 import net.sf.saffron.rel.*;
 import net.sf.saffron.util.*;
-import net.sf.saffron.core.SaffronType;
 import net.sf.saffron.sql.SqlCollation;
+import net.sf.saffron.core.SaffronTypeFactoryImpl;
 
 import openjava.mop.*;
 
 import openjava.ptree.*;
 
 import java.nio.charset.Charset;
+import java.sql.Types;
 
 
 /**
@@ -45,7 +46,7 @@ import java.nio.charset.Charset;
  * @author John V. Sichi
  * @version $Id$
  */
-public final class FarragoPrecisionType extends FarragoAtomicType
+public class FarragoPrecisionType extends FarragoAtomicType
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -56,8 +57,8 @@ public final class FarragoPrecisionType extends FarragoAtomicType
     private final int precision;
 
     private final int scale;
-    
-    private OJClass ojClass;
+
+    protected OJClass ojClass;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -135,18 +136,59 @@ public final class FarragoPrecisionType extends FarragoAtomicType
         this.collation=collation;
     }
 
+    // implement FarragoAtomicType
+    public boolean requiresValueAccess()
+    {
+        return false;
+    }
+    
     // override FarragoAtomicType
     public int getPrecision()
     {
         return precision;
     }
-    
+
     // override FarragoAtomicType
     public int getScale()
     {
         return scale;
     }
-    
+
+    public int getOctetLength() {
+        switch (getSimpleType().getTypeNumber().intValue()) {
+        case Types.BIT:
+            // 8 bits per byte.
+            return (precision + 7) / 8;
+        case Types.CHAR:
+        case Types.VARCHAR:
+            return precision *
+                    SaffronTypeFactoryImpl.getMaxBytesPerChar(charsetName);
+        default:
+            return precision;
+        }
+    }
+
+    public int getMaxBytesStorage() {
+        switch (getSimpleType().getTypeNumber().intValue()) {
+        case Types.BIT:
+        case Types.CHAR:
+        case Types.BINARY:
+        case Types.VARBINARY:
+        case Types.VARCHAR:
+            return getOctetLength();
+        case Types.CLOB:
+        case Types.BLOB:
+        case Types.LONGVARBINARY:
+        case Types.LONGVARCHAR:
+            // Long types are not implemented yet.
+            throw Util.needToImplement(this);
+        default:
+            // This is a fixed-width type.
+            return -1;
+        }
+    }
+
+
     // implement FarragoType
     protected OJClass getOjClass(OJClass declarer)
     {

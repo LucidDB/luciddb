@@ -31,9 +31,14 @@ CalcExecutionStream::~CalcExecutionStream()
 
 void CalcExecutionStream::prepare(
     CalcExecutionStreamParams const &params,
-    TupleDescriptor const &inputDesc)
+    TupleDescriptor const &inputDesc,
+    TupleDescriptor const &paramOutputDesc)
 {
     pCalc.reset(new Calculator());
+    if (isTracing()) {
+        pCalc->initTraceSource(&(getTraceTarget()), "calc");
+    }
+
     pCalc->assemble(params.program.c_str());
 
     if (params.isFilter) {
@@ -41,18 +46,41 @@ void CalcExecutionStream::prepare(
     } else {
         pFilterDatum = NULL;
     }
-    
-    if (false) {
-        // This assert is not currently valid. For example, in "select deptno +
-        // 1 from emps", the XO inputs will be all the columns of "emps", while
-        // the calculator inputs will be just "emps.deptno".
-        assert(pCalc->getInputRegisterDescriptor() == inputDesc);
+
+    FENNEL_TRACE(
+        TRACE_FINER,
+        "calc input TupleDescriptor = "
+        << pCalc->getInputRegisterDescriptor());
+
+    FENNEL_TRACE(
+        TRACE_FINER,
+        "xo input TupleDescriptor = "
+        << inputDesc);
+
+    FENNEL_TRACE(
+        TRACE_FINER,
+        "calc output TupleDescriptor = "
+        << pCalc->getOutputRegisterDescriptor());
+
+    FENNEL_TRACE(
+        TRACE_FINER,
+        "xo output TupleDescriptor = "
+        << paramOutputDesc);
+
+    assert(inputDesc.storageEqual(pCalc->getInputRegisterDescriptor()));
+
+    outputDesc = pCalc->getOutputRegisterDescriptor();
+
+    if (!paramOutputDesc.empty()) {
+        assert(outputDesc.storageEqual(paramOutputDesc));
+
+        // if the plan specifies an output descriptor with different
+        // nullability, use that instead
+        outputDesc = paramOutputDesc;
     }
 
     inputAccessor.compute(inputDesc);
     inputData.compute(inputDesc);
-
-    outputDesc = pCalc->getOutputRegisterDescriptor();
 
     outputAccessor.compute(outputDesc);
     outputData.compute(outputDesc);
@@ -68,7 +96,6 @@ TupleDescriptor const &CalcExecutionStream::getOutputDesc() const
 
 void CalcExecutionStream::closeImpl()
 {
-    pCalc.reset();
     inputAccessor.resetCurrentTupleBuf();
 }
 
@@ -80,9 +107,10 @@ PBuffer CalcExecutionStream::execute(
     PConstBuffer pInputBufferEnd;
     PConstBuffer pInputBuffer = readNextBuffer(inputStream,pInputBufferEnd);
     if (!pInputBuffer) {
-        return false;
+        return pNextOutputTuple;
     }
     PConstBuffer pNextInputTuple = pInputBuffer;
+    PBuffer pFirstOutputTuple = pNextOutputTuple;
 
     for (;;) {
         while (!inputAccessor.getCurrentTupleBuf()) {
@@ -97,10 +125,11 @@ PBuffer CalcExecutionStream::execute(
             inputAccessor.setCurrentTupleBuf(pNextInputTuple);
             inputAccessor.unmarshal(inputData);
             pCalc->exec();
+            
             if (pFilterDatum) {
-                bool filterPassed = *reinterpret_cast<bool const *>(
+                bool filterDiscard = *reinterpret_cast<bool const *>(
                     pFilterDatum->pData);
-                if (!filterPassed) {
+                if (filterDiscard) {
                     pNextInputTuple += inputAccessor.getCurrentByteCount();
                     inputAccessor.resetCurrentTupleBuf();
                 }
@@ -108,6 +137,8 @@ PBuffer CalcExecutionStream::execute(
         }
         if (!outputAccessor.isBufferSufficient(
                 outputData,pOutputBufferEnd - pNextOutputTuple)) {
+            // buffer should have fit at least one tuple
+            assert (pNextOutputTuple > pFirstOutputTuple);
             inputStream.consumeReadPointer(pNextInputTuple - pInputBuffer);
             return pNextOutputTuple;
         }
@@ -135,3 +166,4 @@ PConstBuffer CalcExecutionStream::readNextBuffer(
 FENNEL_END_CPPFILE("$Id$");
 
 // End CalcExecutionStream.cpp
+

@@ -23,17 +23,17 @@
 package net.sf.saffron.oj.xlat;
 
 import net.sf.saffron.core.*;
+import net.sf.saffron.trace.*;
 import net.sf.saffron.oj.rel.ExpressionReaderRel;
 import net.sf.saffron.oj.rel.ForTerminatorRel;
 import net.sf.saffron.oj.util.JavaRexBuilder;
 import net.sf.saffron.oj.util.OJUtil;
 import net.sf.saffron.opt.CallingConvention;
-import net.sf.saffron.opt.RelImplementor;
+import net.sf.saffron.oj.rel.JavaRelImplementor;
+import net.sf.saffron.oj.rel.JavaRel;
 import net.sf.saffron.opt.VolcanoCluster;
 import net.sf.saffron.rel.*;
-import net.sf.saffron.rex.RexBuilder;
 import net.sf.saffron.rex.RexNode;
-import net.sf.saffron.rex.RexUtil;
 import net.sf.saffron.util.Util;
 import openjava.mop.Environment;
 import openjava.mop.OJClass;
@@ -41,10 +41,11 @@ import openjava.mop.QueryEnvironment;
 import openjava.mop.Toolbox;
 import openjava.ptree.*;
 import openjava.ptree.util.QueryExpander;
-import openjava.tools.DebugOut;
 
 import java.io.PrintWriter;
-
+import java.io.StringWriter;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * <code>OJQueryExpander</code> passes over a parse tree, and converts
@@ -57,6 +58,8 @@ import java.io.PrintWriter;
  */
 public class OJQueryExpander extends QueryExpander
 {
+    private static final Logger tracer = SaffronTrace.getQueryExpanderTracer();
+
     //~ Instance fields -------------------------------------------------------
 
     private SaffronType rootRowType;
@@ -95,7 +98,7 @@ public class OJQueryExpander extends QueryExpander
      *
      * @return the optimal relational expression
      */
-    public SaffronRel convertExpToOptimizedRel(
+    public JavaRel convertExpToOptimizedRel(
         Expression exp,
         boolean eager,
         CallingConvention convention,
@@ -142,16 +145,16 @@ public class OJQueryExpander extends QueryExpander
                         body,
                         label);
             }
-            DebugOut.println(
-                "change convention: " + "rel#" + previous.getId() + ":"
-                + previous.getConvention() + " to " + "rel#" + rel.getId()
+            tracer.log(Level.FINE,
+                "Change convention: rel#" + previous.getId() + ":"
+                + previous.getConvention() + " to rel#" + rel.getId()
                 + ":" + rel.getConvention());
             assert(rel.getConvention() == convention);
         }
         planner = planner.chooseDelegate();
         SaffronRel bestExp = planner.findBestExp();
         assert(bestExp != null) : "could not implement exp";
-        return bestExp;
+        return (JavaRel) bestExp;
     }
 
     // implement QueryExpander
@@ -181,11 +184,11 @@ public class OJQueryExpander extends QueryExpander
     {
         boolean eager = true;
         CallingConvention convention = CallingConvention.JAVA;
-        SaffronRel best = convertExpToOptimizedRel(
+        JavaRel best = convertExpToOptimizedRel(
             exp,eager,convention,variable,body);
 
         // spit out java statement block
-        RelImplementor implementor = new RelImplementor(best.getCluster().rexBuilder);
+        JavaRelImplementor implementor = new JavaRelImplementor(best.getCluster().rexBuilder);
         Object o = implementor.implementRoot(best);
         return new Block((StatementList) o);
     }
@@ -268,7 +271,7 @@ public class OJQueryExpander extends QueryExpander
         if (!eager) {
             return null;
         }
-tryit: 
+tryit:
         if (exp instanceof MethodCall) {
             MethodCall call = (MethodCall) exp;
             String name = call.getName();
@@ -363,10 +366,11 @@ tryit:
         throw Toolbox.newInternal("exp is not relational: " + exp);
     }
 
-    private Expression convertRelToExp(SaffronRel rel)
+    private Expression convertRelToExp(JavaRel rel)
     {
         // spit out java statement block
-        RelImplementor implementor = new RelImplementor(rel.getCluster().rexBuilder);
+        JavaRelImplementor implementor =
+                new JavaRelImplementor(rel.getCluster().rexBuilder);
         Object o = implementor.implementRoot(rel);
         return (Expression) o;
     }
@@ -375,7 +379,7 @@ tryit:
     {
         boolean eager = true;
         CallingConvention convention = CallingConvention.EXISTS;
-        SaffronRel rel = convertExpToOptimizedRel(
+        JavaRel rel = convertExpToOptimizedRel(
             exp,eager,convention,null,null);
         return convertRelToExp(rel);
     }
@@ -383,7 +387,7 @@ tryit:
     /**
      * Converts an {@link Expression} into a java expression which returns an
      * array.  Examples:
-     * 
+     *
      * <ol>
      * <li>
      * Query as expression
@@ -408,7 +412,7 @@ tryit:
      * </blockquote>
      * </li>
      * </ol>
-     * 
+     *
      *
      * @param desiredRowType row type required; if this is null, leave the
      *        results as they are
@@ -470,21 +474,21 @@ tryit:
         }
 
         boolean eager = false;
-        SaffronRel rel = convertExpToOptimizedRel(
+        JavaRel rel = convertExpToOptimizedRel(
             exp,eager,convention,null,null);
         if (exp instanceof QueryExpression) {
             assert(rel != null);
         }
         if (rel != null) {
-            if (DebugOut.getDebugLevel() > 2) {
-                DebugOut.println(
-                    "Converted expression [" + exp
-                    + "] into relational expression [");
+            if (tracer.isLoggable(Level.FINE)) {
+                final StringWriter sw = new StringWriter();
                 final PlanWriter pw =
-                    new PlanWriter(new PrintWriter(DebugOut.getStream()));
+                    new PlanWriter(new PrintWriter(sw));
                 rel.explain(pw);
                 pw.flush();
-                DebugOut.println("]");
+                tracer.log(Level.FINE,
+                        "Converted expression {0} into rel expression {1}",
+                        new Object[] {exp, sw.toString()});
             }
             rootRowType = rel.getRowType();
             return convertRelToExp(rel);

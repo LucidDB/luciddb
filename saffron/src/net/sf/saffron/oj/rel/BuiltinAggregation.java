@@ -22,15 +22,13 @@
 
 package net.sf.saffron.oj.rel;
 
-import net.sf.saffron.core.*;
-import net.sf.saffron.oj.util.*;
-import net.sf.saffron.opt.RelImplementor;
+import net.sf.saffron.core.SaffronType;
+import net.sf.saffron.core.SaffronTypeFactory;
+import net.sf.saffron.oj.util.OJUtil;
 import net.sf.saffron.rel.Aggregation;
 import net.sf.saffron.rel.SaffronRel;
 import net.sf.saffron.util.Util;
-
 import openjava.mop.*;
-
 import openjava.ptree.*;
 
 
@@ -113,7 +111,7 @@ public abstract class BuiltinAggregation implements Aggregation
 
     // implement Aggregation
     public void implementMerge(
-        RelImplementor implementor,
+        JavaRelImplementor implementor,
         SaffronRel rel,
         Expression accumulator,
         Expression otherAccumulator)
@@ -129,8 +127,8 @@ public abstract class BuiltinAggregation implements Aggregation
      * better.
      */
     public Expression implementStartAndNext(
-        RelImplementor implementor,
-        SaffronRel rel,
+        JavaRelImplementor implementor,
+        JavaRel rel,
         int [] args)
     {
         StatementList stmtList = implementor.getStatementList();
@@ -223,16 +221,14 @@ public abstract class BuiltinAggregation implements Aggregation
     {
         // REVIEW jvs 26-Sept-2003:  Shouldn't this be OJSystem.LONG?
         static final OJClass type = OJSystem.INT;
-        OJClass [] argTypes;
 
         Count()
         {
-            this.argTypes = argTypes;
         }
 
         public OJClass [] getParameterTypes()
         {
-            return argTypes;
+            return new OJClass[0];
         }
 
         public OJClass getReturnType()
@@ -251,8 +247,8 @@ public abstract class BuiltinAggregation implements Aggregation
         }
 
         public void implementNext(
-            RelImplementor implementor,
-            SaffronRel rel,
+            JavaRelImplementor implementor,
+            JavaRel rel,
             Expression accumulator,
             int [] args)
         {
@@ -308,8 +304,8 @@ public abstract class BuiltinAggregation implements Aggregation
         }
 
         public Expression implementStart(
-            RelImplementor implementor,
-            SaffronRel rel,
+            JavaRelImplementor implementor,
+            JavaRel rel,
             int [] args)
         {
             // e.g. "new saffron.runtime.Holder.int_Holder(0)"
@@ -328,7 +324,7 @@ public abstract class BuiltinAggregation implements Aggregation
      * <code>MinMax</code> implements the "min" and "max" aggregator
      * functions, returning the returns the smallest/largest of the values
      * which go into it. There are 3 forms:
-     * 
+     *
      * <dl>
      * <dt>
      * sum(<em>primitive type</em>)
@@ -415,8 +411,8 @@ public abstract class BuiltinAggregation implements Aggregation
         }
 
         public void implementNext(
-            RelImplementor implementor,
-            SaffronRel rel,
+            JavaRelImplementor implementor,
+            JavaRel rel,
             Expression accumulator,
             int [] args)
         {
@@ -536,8 +532,8 @@ public abstract class BuiltinAggregation implements Aggregation
         }
 
         public Expression implementStart(
-            RelImplementor implementor,
-            SaffronRel rel,
+            JavaRelImplementor implementor,
+            JavaRel rel,
             int [] args)
         {
             switch (kind) {
@@ -630,8 +626,8 @@ public abstract class BuiltinAggregation implements Aggregation
         }
 
         public void implementNext(
-            RelImplementor implementor,
-            SaffronRel rel,
+            JavaRelImplementor implementor,
+            JavaRel rel,
             Expression accumulator,
             int [] args)
         {
@@ -665,8 +661,8 @@ public abstract class BuiltinAggregation implements Aggregation
         }
 
         public Expression implementStart(
-            RelImplementor implementor,
-            SaffronRel rel,
+            JavaRelImplementor implementor,
+            JavaRel rel,
             int [] args)
         {
             // e.g. "new saffron.runtime.Holder.int_Holder(0)"

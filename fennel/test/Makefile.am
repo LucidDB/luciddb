@@ -24,6 +24,12 @@ ResourceTest \
 LocalConditionTest \
 TupleTest \
 StandardTypeTest \
+CalcMiscTest \
+CalcExtRegExpTest \
+CalcExtStringTest \
+CalcExtContextTest \
+CalcExtDateTimeTest \
+CalcExtMathTest \
 DatabaseTest \
 LogicalTxnTest \
 SegStreamTest \
@@ -35,11 +41,7 @@ LinearViewSegmentTest \
 VersionedSegmentTest \
 BTreeTxnTest \
 BTreeTest \
-CalcStatusRegTest \
-CalcExtStringTest \
-CalcExtContextTest \
-CalcExtDateTimeTest \
-CalcExtMathTest \
+SqlRegExpTest \
 SqlStringTest \
 SqlStringAsciiTest
 
@@ -73,7 +75,9 @@ TupleTest_SOURCES=TupleTest.cpp
 
 StandardTypeTest_SOURCES=StandardTypeTest.cpp
 
-CalcStatusRegTest_SOURCES=CalcStatusRegTest.cpp
+CalcMiscTest_SOURCES=CalcMiscTest.cpp
+
+CalcExtRegExpTest_SOURCES=CalcExtRegExpTest.cpp
 
 CalcExtStringTest_SOURCES=CalcExtStringTest.cpp
 
@@ -82,6 +86,8 @@ CalcExtContextTest_SOURCES=CalcExtContextTest.cpp
 CalcExtDateTimeTest_SOURCES=CalcExtDateTimeTest.cpp
 
 CalcExtMathTest_SOURCES=CalcExtMathTest.cpp
+
+SqlRegExpTest_SOURCES=SqlStringBuffer.cpp SqlRegExpTest.cpp 
 
 SqlStringTest_SOURCES=SqlStringBuffer.cpp SqlStringTest.cpp 
 

@@ -42,7 +42,7 @@ public class FennelIterator implements Iterator
 
     private ByteBuffer byteBuffer;
     private FennelStreamGraph streamGraph;
-    private FemStreamHandle streamHandle;
+    private FennelStreamHandle streamHandle;
     private FennelTupleReader tupleReader;
     private byte [] bufferAsArray;
 
@@ -59,7 +59,7 @@ public class FennelIterator implements Iterator
     public FennelIterator(
         FennelTupleReader tupleReader,
         FennelStreamGraph streamGraph,
-        FemStreamHandle streamHandle,
+        FennelStreamHandle streamHandle,
         int bufferSize)
     {
         this.tupleReader = tupleReader;

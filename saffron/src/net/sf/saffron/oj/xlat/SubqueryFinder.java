@@ -28,22 +28,32 @@ import net.sf.saffron.rel.JoinRel;
 import net.sf.saffron.rel.ProjectRel;
 import net.sf.saffron.rel.SaffronRel;
 import net.sf.saffron.rex.RexNode;
+import net.sf.saffron.trace.SaffronTrace;
 import openjava.mop.Environment;
 import openjava.mop.OJClass;
 import openjava.mop.Toolbox;
 import openjava.ptree.*;
 import openjava.ptree.util.ScopeHandler;
 import openjava.ptree.util.SyntheticClass;
-import openjava.tools.DebugOut;
 
 import java.util.Collections;
+import java.util.logging.Logger;
+import java.util.logging.Level;
 
 
+/**
+ * Visitor which walks over an {@link ParseTree OpenJava parse tree} looking
+ * for sub-queries. When it finds one, it throws a
+ * {@link Toolbox.StopIterationException}.
+ *
+ * $Id$
+ */
 class SubqueryFinder extends ScopeHandler
 {
     //~ Instance fields -------------------------------------------------------
 
     QueryInfo queryInfo;
+    private static final Logger tracer = SaffronTrace.getQueryExpanderTracer();
 
     //~ Constructors ----------------------------------------------------------
 
@@ -60,7 +70,7 @@ class SubqueryFinder extends ScopeHandler
         if (p.getOperator() == BinaryExpression.IN) {
             Expression left = p.getLeft();
             Expression right = p.getRight();
-            DebugOut.println(
+            tracer.log(Level.FINE,
                 "SubqueryFinder: found IN: left=[" + left + "], right=["
                 + right + "]");
             SaffronRel oldFrom = queryInfo.getRoot();
@@ -166,7 +176,7 @@ class SubqueryFinder extends ScopeHandler
     {
         if (p.getOperator() == UnaryExpression.EXISTS) {
             Expression right = p.getExpression();
-            DebugOut.println(
+            tracer.log(Level.FINE,
                 "SubqueryFinder: found EXISTS: expr=[" + right + "]");
             SaffronRel oldFrom = queryInfo.getRoot();
             SaffronRel rightRel = queryInfo.convertFromExpToRel(right);

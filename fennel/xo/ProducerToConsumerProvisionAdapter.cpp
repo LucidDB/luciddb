@@ -50,11 +50,7 @@ bool ProducerToConsumerProvisionAdapter::writeResultToConsumerBuffer(
         PConstBuffer pTupleSafe = pTuple;
         PConstBuffer pEnd = pSrc + cbAvailableOut;
         for (;;) {
-            // TODO:  this could be optimized a little if we had
-            // a tuple accessor method which could tell us the
-            // length without even messing with the null indicators
-            tupleAccessor.setCurrentTupleBuf(pTuple);
-            uint cbTuple = tupleAccessor.getCurrentByteCount();
+            uint cbTuple = tupleAccessor.getBufferByteCount(pTuple);
             pTuple += cbTuple;
             if (pTuple > pEnd) {
                 // this tuple would put us over the limit
@@ -86,6 +82,11 @@ TupleStream::BufferProvision
 ProducerToConsumerProvisionAdapter::getInputBufferRequirement() const
 {
     return PRODUCER_PROVISION;
+}
+
+void *ProducerToConsumerProvisionAdapter::getImpl()
+{
+    return pInputStream->getImpl();
 }
 
 FENNEL_END_CPPFILE("$Id$");

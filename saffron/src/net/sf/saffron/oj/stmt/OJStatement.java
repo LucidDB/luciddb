@@ -23,21 +23,28 @@
 package net.sf.saffron.oj.stmt;
 
 import net.sf.saffron.core.*;
-import net.sf.saffron.oj.*;
-import net.sf.saffron.oj.util.*;
+import net.sf.saffron.oj.OJConnectionRegistry;
+import net.sf.saffron.oj.OJPlannerFactory;
+import net.sf.saffron.oj.OJTypeFactoryImpl;
+import net.sf.saffron.oj.OJValidator;
+import net.sf.saffron.oj.rel.JavaRel;
+import net.sf.saffron.oj.rel.JavaRelImplementor;
+import net.sf.saffron.oj.util.ClassCollector;
+import net.sf.saffron.oj.util.JavaRexBuilder;
+import net.sf.saffron.oj.util.OJUtil;
 import net.sf.saffron.oj.xlat.OJQueryExpander;
 import net.sf.saffron.oj.xlat.OJSchemaExpander;
 import net.sf.saffron.oj.xlat.SqlToOpenjavaConverter;
 import net.sf.saffron.opt.CallingConvention;
-import net.sf.saffron.opt.RelImplementor;
 import net.sf.saffron.opt.VolcanoPlannerFactory;
 import net.sf.saffron.rel.SaffronRel;
+import net.sf.saffron.rex.RexBuilder;
 import net.sf.saffron.runtime.*;
 import net.sf.saffron.sql.*;
 import net.sf.saffron.sql.parser.ParseException;
 import net.sf.saffron.sql.parser.SqlParser;
 import net.sf.saffron.sql2rel.SqlToRelConverter;
-import net.sf.saffron.rex.*;
+import net.sf.saffron.trace.SaffronTrace;
 import net.sf.saffron.util.SaffronProperties;
 import net.sf.saffron.util.Util;
 import openjava.mop.*;
@@ -45,17 +52,19 @@ import openjava.ojc.JavaCompiler;
 import openjava.ojc.JavaCompilerArgs;
 import openjava.ptree.*;
 import openjava.ptree.util.*;
-import openjava.tools.DebugOut;
 
 import java.io.File;
 import java.io.FileWriter;
-import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.sql.ResultSet;
 import java.util.Enumeration;
 import java.util.Iterator;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 /**
@@ -67,6 +76,8 @@ public class OJStatement
     //~ Static fields/initializers --------------------------------------------
 
     public static final String connectionVariable = "connection";
+
+    private static final Logger tracer = SaffronTrace.getStatementTracer();
 
     //~ Instance fields -------------------------------------------------------
 
@@ -329,7 +340,8 @@ public class OJStatement
         }
         setupFactories();
         final SqlValidator validator =
-                new SqlValidator(SqlOperatorTable.instance(), catalogReader,
+                new SqlValidator(SqlOperatorTable.instance(),
+                        catalogReader,
                         schema.getTypeFactory());
         return prepareSql(sqlQuery,null,validator,true);
     }
@@ -401,9 +413,9 @@ public class OJStatement
             return new PreparedExplanation(rootRel);
         }
 
-        RelImplementor relImplementor = getRelImplementor(
+        JavaRelImplementor relImplementor = getRelImplementor(
             rootRel.getCluster().rexBuilder);
-        Expression expr = (Expression) relImplementor.implementRoot(rootRel);
+        Expression expr = relImplementor.implementRoot((JavaRel) rootRel);
 
         boolean isDml = sqlQuery.isA(SqlKind.Dml);
         ParseTree parseTree = expr;
@@ -437,11 +449,11 @@ public class OJStatement
 
     /**
      * Protected method to allow subclasses to override construction of
-     * RelImplementor.
+     * JavaRelImplementor.
      */
-    protected RelImplementor getRelImplementor(RexBuilder rexBuilder)
+    protected JavaRelImplementor getRelImplementor(RexBuilder rexBuilder)
     {
-        return new RelImplementor(rexBuilder);
+        return new JavaRelImplementor(rexBuilder);
     }
 
     /**
@@ -596,13 +608,9 @@ public class OJStatement
         ParseTree parseTree,
         Argument [] arguments)
     {
-        final boolean print =
-            SaffronProperties.instance().printBeforeCompile.get();
-        if (print) {
-            PrintStream ps = DebugOut.getStream();
-            ps.print("Before compile [");
-            ps.print(parseTree);
-            ps.println("]");
+        if (tracer.isLoggable(Level.FINE)) {
+            tracer.log(Level.FINE, "Before compile, parse tree", new Object[] {
+                parseTree});
         }
         ClassCollector classCollector = new ClassCollector(env);
         Util.discard(Util.go(classCollector,parseTree));
@@ -689,10 +697,44 @@ public class OJStatement
                 packageName,
                 new String[0],
                 new ClassDeclarationList(decl));
-        String s = compUnit.toString();
+
+        String s;
+
+        // hack because DynamicJava cannot resolve fully-qualified inner
+        // class names such as "saffron.runtime.Dummy_389838.Ojp_0",
+        // and needs dollar signs to help it, but the real Java compiler
+        // is strict and does not accept the dollar signs
+        if (getCompilerClassName().equals("openjava.ojc.DynamicJavaCompiler")) {
+            s = generateDynamicJavaCode(compUnit);
+        } else {
+            s = compUnit.toString();
+        }
         String className = decl.getName();
         packageName = compUnit.getPackage(); // e.g. "abc.def", or null
         return compile(packageName,className,s,parameterTypes,parameterNames);
+    }
+
+    private String generateDynamicJavaCode(CompilationUnit compUnit)
+    {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        SourceCodeWriter writer = new SourceCodeWriter(pw)
+            {
+                public void visit(TypeName p)
+                    throws ParseTreeException
+                {
+                    out.print(p.getName());
+                    int dims = p.getDimension();
+                    out.print(TypeName.stringFromDimension(dims));
+                }
+            };
+        try {
+            compUnit.accept(writer);
+        } catch (ParseTreeException e) {
+            throw Util.newInternal(e);
+        }
+        pw.close();
+        return sw.toString();
     }
 
     private BoundMethod compile(
@@ -719,13 +761,6 @@ public class OJStatement
             Util.replace(fullClassName,".",Util.fileSeparator) + ".java";
         File javaRoot = new File(getJavaRoot());
         File javaFile = new File(javaRoot,javaFileName);
-
-        // hack because DynamicJava cannot resolve fully-qualified inner
-        // class names such as "saffron.runtime.Dummy_389838.Ojp_0"
-        if (getCompilerClassName().equals("openjava.ojc.DynamicJavaCompiler")) {
-            s = Util.replace(s,fullClassName + ".Oj",fullClassName + "$Oj");
-            s = Util.replace(s,"NullablePrimitive.","NullablePrimitive$");
-        }
 
         boolean writeJavaFile = shouldAlwaysWriteJavaFile();
 

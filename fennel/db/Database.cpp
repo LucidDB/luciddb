@@ -117,6 +117,9 @@ Database::Database(
         FileSystem::remove(tempDeviceName.c_str());
     }
     
+    // Force instantiation of the calculator's instruction tables.
+    (void) CalcInit::instance();
+
     if (!openMode.create) {
         // TODO:  real excn
         assert(FileSystem::doesFileExist(dataDeviceName.c_str()));
@@ -127,9 +130,6 @@ Database::Database(
     }
 
     openSegments();
-
-    // Force instantiation of the calculator's instruction tables.
-    (void) CalcInit::instance();
 }
 
 void Database::prepareForRecovery()

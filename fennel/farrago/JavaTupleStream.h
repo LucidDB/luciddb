@@ -39,8 +39,6 @@ struct JavaTupleStreamParams : public TupleStreamParams
     CmdInterpreter::StreamGraphHandle *pStreamGraphHandle;
     
     int javaTupleStreamId;
-
-    TupleDescriptor tupleDesc;
 };
 
 /**

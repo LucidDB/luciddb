@@ -2653,12 +2653,24 @@ class OJClassSourceCode extends OJClassImp
 	this.declarer = parent;
     }
 
+    private boolean isUniqueName(String name) {
+
+        Enumeration elemnts = classes.elements();
+        while (elemnts.hasMoreElements()) {
+            if (((OJClass)elemnts.nextElement()).getName().equals(name)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     OJClass addClass( OJClass clazz ) throws CannotAlterException {
 	if (! clazz.isAlterable()) {
 	    throw new CannotAlterException( "cannot add by addClass()" );
 	}
 	OJClass result = clazz;
 	/*ClassDeclaration result = clazz.makeCopy();*/
+    assert (isUniqueName(result.getName())) : "Cannot add duplicate class name " + result.getName() ;
 	this.classes.addElement( result );
 	ClassDeclaration cdecl = result.getSourceCode();
 	MemberDeclarationList memdecls = getSourceCode().getBody();

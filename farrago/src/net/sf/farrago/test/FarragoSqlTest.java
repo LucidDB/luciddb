@@ -19,6 +19,8 @@
 
 package net.sf.farrago.test;
 
+import net.sf.farrago.util.*;
+
 import junit.framework.*;
 
 import java.io.*;
@@ -33,6 +35,10 @@ import java.io.*;
  */
 public class FarragoSqlTest extends FarragoTestCase
 {
+    public interface FarragoSqlTestFactory {
+        public FarragoTestCase createSqlTest(String testName) throws Exception;
+    }
+
     public FarragoSqlTest(String testName) throws Exception
     {
         super(testName);
@@ -40,7 +46,20 @@ public class FarragoSqlTest extends FarragoTestCase
 
     public static Test suite() throws Exception
     {
-        String fileSet = System.getProperty("net.sf.farrago.fileset.unitsql");
+        return gatherSuite(
+            FarragoProperties.instance().testFilesetUnitsql.get(true),
+            new FarragoSqlTestFactory() {
+                public FarragoTestCase createSqlTest(String testName)
+                    throws Exception
+                {
+                    return new FarragoSqlTest(testName);
+                }
+            });
+    }
+
+    protected static Test gatherSuite(
+        String fileSet, FarragoSqlTestFactory fac) throws Exception
+    {
         StringReader stringReader = new StringReader(fileSet);
         LineNumberReader lineReader = new LineNumberReader(stringReader);
         TestSuite suite = new TestSuite();
@@ -49,7 +68,7 @@ public class FarragoSqlTest extends FarragoTestCase
             if (file == null) {
                 break;
             }
-            suite.addTest(new FarragoSqlTest(file));
+            suite.addTest(fac.createSqlTest(file));
         }
         return wrappedSuite(suite);
     }

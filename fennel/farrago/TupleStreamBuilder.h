@@ -25,30 +25,19 @@
 #include "fennel/farrago/Fem.h"
 #include "fennel/common/ClosableObject.h"
 #include "fennel/xo/TupleStream.h"
-#include "fennel/farrago/CmdInterpreter.h"
 #include "fennel/farrago/ExecutionStreamFactory.h"
 
 #include <boost/utility.hpp>
 
 FENNEL_BEGIN_NAMESPACE
 
-class BTreeStreamParams;
-class BTreeReadTupleStreamParams;
-class BTreeScanParams;
-class BTreeSearchParams;
-class TableIndexWriterParams;
-class TableWriterStreamParams;
-class JavaTupleStreamParams;
-class TupleDescriptor;
-class TupleProjection;
-class StoredTypeDescriptorFactory;
+// TODO jvs 8-June-2004:  rename this class to ExecutionStreamBuilder
 
 /**
- * TupleStreamBuilder builds a TupleStreamGraph from its Java representation.
- * It implements FemVisitor by converting each subclass of ProxyTupleStreamDef
- * into the appropriate TupleStream implementation.
+ * TupleStreamBuilder builds an ExecutionStreamGraph from its Java
+ * representation.
  */
-class TupleStreamBuilder : public boost::noncopyable, public FemVisitor
+class TupleStreamBuilder : public boost::noncopyable
 {
     /**
      * Database to be accessed by stream.
@@ -63,7 +52,7 @@ class TupleStreamBuilder : public boost::noncopyable, public FemVisitor
     /**
      * Graph of stream nodes being built up.
      */
-    SharedTupleStreamGraph pGraph;
+    SharedExecutionStreamGraph pGraph;
 
     /**
      * Private graph, for sorting streams
@@ -99,12 +88,19 @@ class TupleStreamBuilder : public boost::noncopyable, public FemVisitor
      * Monitor a stream's output by appending a tracing stream. 
      *
      * @param name name of stream to add tracing for
-     *
-     * @param traceName name of tracing stream
      */
     void addTracingStream(
-        std::string &name,
-        std::string &traceName);
+        std::string &name);
+
+    /**
+     * Get the name of the trace source to use based on a stream name.
+     *
+     * @param streamName name of stream being traced
+     *
+     * @return corresponding trace source name
+     */
+    std::string getTraceName(
+        std::string streamName);
 
     /**
      * Modify a stream's dataflow, as required, to meet the provisioning
@@ -176,7 +172,7 @@ public:
     explicit TupleStreamBuilder(
         SharedDatabase pDatabase,
         ExecutionStreamFactory &streamFactory,
-        SharedTupleStreamGraph pGraph);
+        SharedExecutionStreamGraph pGraph);
 
     /**
      * Main builder entry point.

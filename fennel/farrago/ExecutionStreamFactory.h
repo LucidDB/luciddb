@@ -124,8 +124,10 @@ public:
  *
  * REVIEW: should this library be thread safe?
  */
-class ExecutionStreamFactory : public boost::noncopyable, public FemVisitor
+class ExecutionStreamFactory : public boost::noncopyable,
+                               virtual public FemVisitor
 {
+protected:
     /**
      * Database to be accessed by stream.
      */
@@ -166,6 +168,10 @@ class ExecutionStreamFactory : public boost::noncopyable, public FemVisitor
 
     // helpers for above visitors
 
+    void readExecutionStreamParams(
+        ExecutionStreamParams &,
+        ProxyExecutionStreamDef &);
+    
     void readTupleStreamParams(
         TupleStreamParams &,
         ProxyTupleStreamDef &);
@@ -199,16 +205,22 @@ public:
         SharedTableWriterFactory pTableWriterFactory,
         CmdInterpreter::StreamGraphHandle *pStreamGraphHandle);
 
+    virtual ~ExecutionStreamFactory()
+        {}
+
     void setScratchAccessor(SegmentAccessor &scratchAccessor);
+
+    // override JniProxyVisitor
+    virtual void *getLeafPtr();
+    const char *getLeafTypeName();
 
     /**
      * Read the Java representation of an ExecutionStream
      */
-    const ExecutionStreamFactors &visitStream(
+    virtual const ExecutionStreamFactors &visitStream(
         ProxyExecutionStreamDef &);
 
     const ExecutionStreamFactors &newTracingStream(
-        TraceTarget &traceTarget,
         std::string &name,
         ExecutionStreamParams &params);
 
@@ -248,6 +260,7 @@ public:
         TupleProjection &tupleProj,
         SharedProxyTupleProjection pJavaTupleProj);
 };
+
 
 FENNEL_END_NAMESPACE
 

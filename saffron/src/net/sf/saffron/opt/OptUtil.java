@@ -25,11 +25,7 @@ package net.sf.saffron.opt;
 import net.sf.saffron.core.SaffronType;
 import net.sf.saffron.core.SaffronTypeFactory;
 import net.sf.saffron.core.SaffronField;
-import net.sf.saffron.rel.RelVisitor;
-import net.sf.saffron.rel.SaffronRel;
-import net.sf.saffron.rel.ProjectRel;
-import net.sf.saffron.rel.FilterRel;
-import net.sf.saffron.rel.JoinRel;
+import net.sf.saffron.rel.*;
 import net.sf.saffron.rex.RexCorrelVariable;
 import net.sf.saffron.rex.RexNode;
 import net.sf.saffron.rex.RexShuttle;
@@ -159,14 +155,14 @@ public abstract class OptUtil
 
     public static SaffronRel clone(SaffronRel rel)
     {
-        return (SaffronRel) rel.clone();
+        return (SaffronRel) ((SaffronBaseRel) rel).clone();
     }
 
-    public static SaffronRel [] clone(SaffronRel [] rels)
+    public static SaffronRel[] clone(SaffronRel[] rels)
     {
-        rels = (SaffronRel []) rels.clone();
+        rels = (SaffronRel[]) rels.clone();
         for (int i = 0; i < rels.length; i++) {
-            rels[i] = (SaffronRel) rels[i].clone();
+            rels[i] = clone(rels[i]);
         }
         return rels;
     }
@@ -206,13 +202,6 @@ public abstract class OptUtil
         return new FieldAccess(
             expr,
             SyntheticClass.makeField(field));
-    }
-
-    /**
-     * Constructs a reference to a named field of an expression.
-     */
-    public static Expression makeFieldAccess(Expression expr, String fieldName) {
-        return new FieldAccess(expr, fieldName);
     }
 
     /**
@@ -274,13 +263,13 @@ public abstract class OptUtil
         final SaffronType type,final List columnNameList)
     {
         return type.getFactory().createProjectType(
-            new SaffronTypeFactory.FieldInfo() 
+            new SaffronTypeFactory.FieldInfo()
             {
                 public int getFieldCount()
                 {
                     return columnNameList.size();
                 }
-                
+
                 public String getFieldName(int index)
                 {
                     return (String) columnNameList.get(index);
@@ -346,14 +335,14 @@ public abstract class OptUtil
                 inputFields[i].getType(),
                 inputFields[i].getIndex());
         }
-            
+
         ProjectRel renameRel = new ProjectRel(
             rel.getCluster(),
             rel,
             renameExps,
             renameNames,
             ProjectRel.Flags.Boxed);
-        
+
         return renameRel;
     }
 
@@ -393,13 +382,13 @@ public abstract class OptUtil
                 continue;
             }
             RexNode newCondition = rexBuilder.makeCall(
-                rexBuilder.operatorTable.isNotNullOperator,
+                rexBuilder._opTab.isNotNullOperator,
                 rexBuilder.makeInputRef(type,iField));
             if (condition == null) {
                 condition = newCondition;
             } else {
                 condition = rexBuilder.makeCall(
-                    rexBuilder.operatorTable.andOperator,
+                    rexBuilder._opTab.andOperator,
                     condition,
                     newCondition);
             }
@@ -469,7 +458,7 @@ public abstract class OptUtil
             // left field must access left side of join
             return false;
         }
-        
+
         RexInputRef rightFieldAccess = (RexInputRef) rightComparand;
         if (!(rightFieldAccess.index >= leftFieldCount)) {
             // right field must access right side of join
@@ -483,7 +472,7 @@ public abstract class OptUtil
 
     //~ Inner Classes ---------------------------------------------------------
 
-    private static class RelHolder extends SaffronRel
+    private static class RelHolder extends SaffronBaseRel
     {
         SaffronRel p;
 
@@ -504,11 +493,6 @@ public abstract class OptUtil
         }
 
         public Object clone()
-        {
-            throw new UnsupportedOperationException();
-        }
-
-        public SaffronType deriveRowType()
         {
             throw new UnsupportedOperationException();
         }

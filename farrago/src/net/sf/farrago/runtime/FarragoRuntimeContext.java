@@ -308,13 +308,14 @@ public class FarragoRuntimeContext
     }
 
     /**
-     * Open the Fennel portion of the execution plan.  This should only
-     * be called after all Java TupleStreams have been created.
+     * Open all streams, including the Fennel portion of the execution plan.
+     * This should only be called after all Java TupleStreams have been
+     * created.
      */
-    public void openFennelStreams()
+    public void openStreams()
     {
         assert(streamGraph != null);
-        streamGraph.open(fennelTxnContext.getTxnHandle(),this);
+        streamGraph.open(fennelTxnContext,this);
     }
 
     /**
@@ -341,7 +342,7 @@ public class FarragoRuntimeContext
         assert (dummies == null);
         assert(streamGraph != null);
 
-        FemStreamHandle streamHandle = getStreamHandle(streamName);
+        FennelStreamHandle streamHandle = getStreamHandle(streamName);
         
         return new FennelIterator(
             tupleReader,
@@ -350,7 +351,7 @@ public class FarragoRuntimeContext
             catalog.getCurrentConfig().getFennelConfig().getCachePageSize());
     }
 
-    protected FemStreamHandle getStreamHandle(
+    protected FennelStreamHandle getStreamHandle(
         String globalStreamName)
     {
         catalog.getRepository().beginTrans(true);
@@ -374,7 +375,7 @@ public class FarragoRuntimeContext
 
             Iterator streamIter = cmd.getStreamDefs().iterator();
             while (streamIter.hasNext()) {
-                setCacheQuotas((FemTupleStreamDef) streamIter.next());
+                setCacheQuotas((FemExecutionStreamDef) streamIter.next());
             }
             // REVIEW:  here's a potential window for leaks;
             // if an excn is thrown before this stream gets cached,
@@ -439,7 +440,7 @@ public class FarragoRuntimeContext
         }
     }
 
-    private void setCacheQuotas(FemTupleStreamDef streamDef)
+    private void setCacheQuotas(FemExecutionStreamDef streamDef)
     {
         assert (streamDef.getCachePageMin() <= streamDef.getCachePageMax());
 

@@ -23,7 +23,8 @@
 package net.sf.saffron.rel;
 
 /**
- * A <code>RelVisitor</code> is a Visitor role in the Visitor pattern and
+ * A <code>RelVisitor</code> is a Visitor role in the
+ * {@link net.sf.saffron.util.Glossary#VisitorPattern visitor pattern} and
  * visits {@link SaffronRel} objects as the role of Element.  Other
  * components in the pattern: {@link SaffronRel#childrenAccept(RelVisitor)}.
  *

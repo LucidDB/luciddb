@@ -21,6 +21,7 @@
 package net.sf.saffron.rex;
 
 import net.sf.saffron.core.SaffronType;
+import net.sf.saffron.calc.RexToCalcTranslator;
 
 /**
  * Row expression.
@@ -72,6 +73,12 @@ public abstract class RexNode {
     public String toString() {
         return digest;
     }
+
+    /**
+     * Accepts a visitor, dispatching to the right overloaded
+     * {@link RexVisitor#visitInputRef} method.
+     */
+    public abstract void accept(RexVisitor visitor);
 }
 
 // End RexNode.java

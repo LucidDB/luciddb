@@ -19,14 +19,13 @@
 //
 // SqlString
 //
-// An ascii string library that adheres to the SQL99 standard definitions
+// An ASCII & UCS2 string library that adheres to the SQL99 standard definitions
 */
 #ifndef Fennel_SqlString_Included
 #define Fennel_SqlString_Included
 
 #ifdef HAVE_ICU
 #include <unicode/ustring.h>
-#include <boost/scoped_array.hpp>
 #endif
 
 FENNEL_BEGIN_NAMESPACE
@@ -34,58 +33,6 @@ FENNEL_BEGIN_NAMESPACE
 #if !(defined LITTLEENDIAN || defined BIGENDIAN)
 #error "endian not defined"
 #endif
-
-
-#ifdef HAVE_ICU
-// TODO: XXXXXXXXXXXXXXXXXXXXXX MOVE THESE ELSEWHERE
-// TODO: XXXXXXXXXXXXXXXXXXXXXX MOVE THESE ELSEWHERE
-// TODO: XXXXXXXXXXXXXXXXXXXXXX MOVE THESE ELSEWHERE
-void
-SqlStringUnalignedToUCharArray(boost::scoped_array<UChar>& dest,
-                               char const * const src,
-                               int srcLenUChar)
-{
-    int i;
-    char const * ptrC = src;
- 
-    for (i = 0; i < srcLenUChar; i++, ptrC+=2) {
-#ifdef LITTLEENDIAN
-        dest[i] = *ptrC | (*(ptrC+1) << 8);
-#else
-        dest[i] = (*ptrC << 8) | *(ptrC+1);
-#endif
-    }
-}
-
-// TODO: XXXXXXXXXXXXXXXXXXXXXX MOVE THESE ELSEWHERE
-// TODO: XXXXXXXXXXXXXXXXXXXXXX MOVE THESE ELSEWHERE
-// TODO: XXXXXXXXXXXXXXXXXXXXXX MOVE THESE ELSEWHERE
-// TODO: XXXXXXXXXXXXXXXXXXXXXX MOVE THESE ELSEWHERE
-void
-SqlStringUCharArrayToUnaligned(char* dest,
-                               const boost::scoped_array<UChar>& src,
-                               int srcLenUChar)
-{
-    int i;
-    char* ptr = dest;
-
-    for (i = 0; i < srcLenUChar; i++) {
-#ifdef LITTLEENDIAN
-        *ptr++ = (src[i]) & 0xff;
-        *ptr++ = (src[i] >> 8) & 0xff;
-#else
-        *ptr++ = (src[i] >> 8) & 0xff;
-        *ptr++ = (src[i]) & 0xff;
-#endif                    
-    }
-}
-// TODO: XXXXXXXXXXXXXXXXXXXXXX MOVE THESE ELSEWHERE
-// TODO: XXXXXXXXXXXXXXXXXXXXXX MOVE THESE ELSEWHERE
-// TODO: XXXXXXXXXXXXXXXXXXXXXX MOVE THESE ELSEWHERE
-// TODO: XXXXXXXXXXXXXXXXXXXXXX MOVE THESE ELSEWHERE
-
-#endif
-
 
 /** \file SqlString.h 
  *
@@ -96,8 +43,10 @@ SqlStringUCharArrayToUnaligned(char* dest,
  * 
  * This library supports 8-bit characters, labeled somewhat
  * misleadingly as Ascii, and fixed width 2-byte UCS2 characters. No
- * assumptions are made about alignment -- UCS2 characters are not
- * treated as shorts, but rather a sequence of two bytes.
+ * assumptions are made about alignment of ASCII strings. UCS2 strings
+ * are assumed to be aligned, in order to work efficently with the ICU
+ * library. Currently there are non-ICU UCS2 routines that make no
+ * assumptions about alignment that could probably be made faster.
  *
  * Some functions work for either Ascii or UCS2 encodings. Other
  * functions are templated in order to work for either type. The
@@ -131,7 +80,8 @@ SqlStringUCharArrayToUnaligned(char* dest,
  */
 
 
-//! Strcat. SQL VARCHAR & CHAR. dest = dest || str. Returns new length in bytes.
+//! Strcat. SQL VARCHAR & CHAR. Ascii & UCS2.  
+//! dest = dest || str. Returns new length in bytes.
 //!
 //! If either string is variable width, the result is variable
 //! width: per SQL99 6.27 Syntax Rule 3, Case A, item i.
@@ -159,10 +109,8 @@ SqlStrCat(char* dest,
           char const * const str,
           int strLenBytes);
 
-//! StrCat. SQL VARCHAR & CHAR. dest = str1 || str2.
-//! dest = str1 || str2
-//!
-//! Returns new length in bytes.
+//! StrCat. SQL VARCHAR & CHAR. Ascii & UCS2.
+//! dest = str1 || str2. Returns new length in bytes.
 //!
 //! This is an optimization for creating a concatenated string from
 //! two other strings, eliminating a seperate string copy. The
@@ -189,7 +137,7 @@ SqlStrCat(char* dest,
           char const * const str2,
           int str2LenBytes);
 
-//! StrCmp. Fixed Width / SQL CHAR.
+//! StrCmp. Fixed Width / SQL CHAR. Ascii, no UCS2 yet.
 //!
 //! Returns -1, 0, 1.
 //!
@@ -274,7 +222,7 @@ SqlStrCmp_Fix(char const * const str1,
 }
 
 
-//! StrCmp. Variable Width / VARCHAR.
+//! StrCmp. Variable Width / VARCHAR. Ascii only. No UCS2 yet.
 //!
 //! Returns -1, 0, 1
 template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
@@ -321,14 +269,14 @@ SqlStrCmp_Var(char const * const str1,
 }
 
 
-//! StrCpy. String Copy. Fixed Width / SQL CHAR
+//! StrCpy. String Copy. Fixed Width / SQL CHAR. Ascii and UCS2.
 //!
 //! This routine may not be compliant with the SQL99 standard.
 //!
 //! Pad character code points that require more than one code unit are
 //! currently unsupported.
 template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
-void
+int
 SqlStrCpy_Fix(char* dest,
               int destStorageBytes,
               char const * const str,
@@ -372,10 +320,12 @@ SqlStrCpy_Fix(char* dest,
     } else {
         throw std::logic_error("no UTF8/16/32");
     }
+    return destStorageBytes;
 }
 
 
-//! StrCpy. String Copy. Variable Width / VARCHAR. Returns strLenBytes.
+//! StrCpy. String Copy. Variable Width / VARCHAR. Ascii & UCS2.
+//! Returns strLenBytes.
 //!
 //! This routine may not be compliant with the SQL99 standard.
 //!
@@ -388,14 +338,14 @@ SqlStrCpy_Var(char* dest,
               int strLenBytes);
 
 
-//! StrLen in bits. CHAR/VARCHAR.
+//! StrLen in bits. CHAR/VARCHAR. Ascii & UCS2.
 //!
 //! Parameter str is ignored for ascii strings.
 int
 SqlStrLenBit(int strLenBytes);
 
 
-//! StrLen in characters. CHAR/VARCHAR.
+//! StrLen in characters. CHAR/VARCHAR. Ascii & UCS2.
 //!
 //! Parameter str is ignored for ascii strings.
 template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
@@ -415,13 +365,13 @@ SqlStrLenChar(char const * const str,
     }
 }
 
-//! StrLen in octets. CHAR/VARCHAR.
+//! StrLen in octets. CHAR/VARCHAR. Ascii & UCS2.
 //!
 //! Parameter str is ignored for ascii strings.
 int
 SqlStrLenOct(int strLenBytes);
 
-//! Overlay. CHAR/VARCHAR. Returns new length in bytes
+//! Overlay. CHAR/VARCHAR. Returns new length in bytes. Ascii. No UCS2 yet.
 //!
 //! See SQL99 6.18 Syntax Rule 10. Overlay is defined in terms of
 //! Substring an concatenation. If start is < 1 or length < 0, a substring error
@@ -493,7 +443,7 @@ SqlStrOverlay(char* dest,
     return 0; // TODO: Fix this
 }
 
-//! Position. CHAR/VARHCAR. Returns 1-index string position.
+//! Position. CHAR/VARHCAR. Returns 1-index string position. Ascii. No UCS2.
 //!
 //! Returns 0 if not found. Returns 1 if find is zero length. See SQL99 6.17
 //! General Rule 2.
@@ -544,7 +494,8 @@ SqlStrPos(char const * const str,
 }
 
 //! Substring by reference. Returns VARCHAR. Accepts CHAR/VARCHAR. 
-//! Sets dest to start of of substring. Returns length of substring.
+//! Ascii, no UCS2. Sets dest to start of of substring.
+//! Returns length of substring.
 //! 
 //! Note that subStart is 1-indexed, as per SQL99 spec.
 //! All substring parameters are handled as signed, as spec implies that they 
@@ -624,10 +575,7 @@ enum SqlStrAlterCaseAction {
     AlterCaseLower
 };
 
-//! toLower and toUpper. CHAR/VARCHAR. Returns new length.
-//!
-//! AlterCase contains an example of how ICU integration might
-//! be made more efficient in the face of unaligned strings. 
+//! toLower and toUpper. CHAR/VARCHAR. Returns new length. ASCII & UCS2.
 template <int CodeUnitBytes,
           int MaxCodeUnitsPerCodePoint,
           SqlStrAlterCaseAction Action>
@@ -669,6 +617,10 @@ SqlStrAlterCase(char* dest,
             // UCS2
 #ifdef HAVE_ICU
             assert(!(destStorageBytes & srcLenBytes & 1));
+            // strings must be short aligned
+            // TODO: Change tuples to force strings to be short aligned.
+            assert(!(reinterpret_cast<int>(src) & 1));
+            assert(!(reinterpret_cast<int>(dest) & 1));
             assert(sizeof(UChar) == 2);
             assert(locale);   // Don't allow locale defaulting
 
@@ -677,107 +629,39 @@ SqlStrAlterCase(char* dest,
             int32_t newLenUChar;
             UErrorCode errorCode = U_ZERO_ERROR;
 
-            // See comment above about unaligned strings.
-            if (reinterpret_cast<int>(src) & 1 ||
-                reinterpret_cast<int>(dest) & 1) {
-                // One or both unaligned.
-                // Copy one or both & take performance hit.
-                UChar const * srcP;
-                UChar* destP;
-                boost::scoped_array<UChar> destCopy;
-                boost::scoped_array<UChar> srcCopy;
-                if (reinterpret_cast<int>(src) & 1) {
-                    srcCopy.reset(new UChar[srcLenUChar]);
-                    SqlStringUnalignedToUCharArray(srcCopy,
-                                                   src,
-                                                   srcLenUChar);
-                    srcP = srcCopy.get();
-                } else {
-                    srcP = reinterpret_cast<UChar const *>(src);
-                }
-                if (reinterpret_cast<int>(dest) & 1) {
-                    destCopy.reset(new UChar[destStorageUChar]);
-                    destP = destCopy.get();
-                } else {
-                    destP = reinterpret_cast<UChar*>(dest);
-                }
-                
-                switch(Action) {
-                case AlterCaseUpper:
-                    newLenUChar = u_strToUpper(destP,
-                                               destStorageUChar,
-                                               srcP,
-                                               srcLenUChar,
-                                               locale,
-                                               &errorCode);
-                    break;
-                case AlterCaseLower:
-                    newLenUChar = u_strToLower(destP,
-                                               destStorageUChar,
-                                               srcP,
-                                               srcLenUChar,
-                                               locale,
-                                               &errorCode);
-                    break;
-                default:
-                    throw std::logic_error("AlterCase Action");
-                    break;
-                }
+            switch(Action) {
+            case AlterCaseUpper:
+                newLenUChar = u_strToUpper(reinterpret_cast<UChar*>(dest), 
+                                           destStorageUChar,
+                                           reinterpret_cast<UChar const *>(src),
+                                           srcLenUChar,
+                                           locale,
+                                           &errorCode);
 
-                if (newLenUChar > destStorageBytes) {
-                    // SQL99 22.1 22-001 "String Data Right truncation"
-                    throw "22001";
-                }
-
-                if (U_FAILURE(errorCode)) {
-                    // TODO: Clean up ICU error handling.
-                    // Other ICU error. Unlikely to occur?
-                    throw u_errorName(errorCode);
-                }
-
-                if (reinterpret_cast<int>(dest) & 1) {
-                    SqlStringUCharArrayToUnaligned(dest,
-                                                   destCopy,
-                                                   newLenUChar);
-                }
-                
-                retVal = newLenUChar << 1;
-            } else {
-                // Both Aligned. Work in place, no performance hit.
-                switch(Action) {
-                case AlterCaseUpper:
-                    newLenUChar = u_strToUpper(reinterpret_cast<UChar*>(dest), 
-                                               destStorageUChar,
-                                               reinterpret_cast<UChar const *>(src),
-                                               srcLenUChar,
-                                               locale,
-                                               &errorCode);
-
-                    break;
-                case AlterCaseLower:
-                    newLenUChar = u_strToLower(reinterpret_cast<UChar*>(dest), 
-                                               destStorageUChar,
-                                               reinterpret_cast<UChar const *>(src),
-                                               srcLenUChar,
-                                               locale,
-                                               &errorCode);
-                    break;
-                default:
-                    throw std::logic_error("AlterCase Action");
-                    break;
-                }
-
-                if (newLenUChar > destStorageUChar) {
-                    // SQL99 22.1 22-001 "String Data Right truncation"
-                    throw "22001";
-                }
-                if (U_FAILURE(errorCode)) {
-                    // TODO: Clean up ICU error handling.
-                    // Other ICU error. Unlikely to occur?
-                    throw u_errorName(errorCode);
-                }
-                retVal = newLenUChar << 1;
+                break;
+            case AlterCaseLower:
+                newLenUChar = u_strToLower(reinterpret_cast<UChar*>(dest), 
+                                           destStorageUChar,
+                                           reinterpret_cast<UChar const *>(src),
+                                           srcLenUChar,
+                                           locale,
+                                           &errorCode);
+                break;
+            default:
+                throw std::logic_error("AlterCase Action");
+                break;
             }
+
+            if (newLenUChar > destStorageUChar) {
+                // SQL99 22.1 22-001 "String Data Right truncation"
+                throw "22001";
+            }
+            if (U_FAILURE(errorCode)) {
+                // TODO: Clean up ICU error handling.
+                // Other ICU error. Unlikely to occur?
+                throw u_errorName(errorCode);
+            }
+            retVal = newLenUChar << 1;
 #else
             throw std::logic_error("no UCS2");
 #endif
@@ -828,7 +712,6 @@ SqlStrTrim(char* dest,
             newLenBytes = end - start;
         } else if (CodeUnitBytes == 2) {
             // UCS2
-            throw std::logic_error("no UCS2"); // TODO: Finish unit test first
             assert(!(strLenBytes & 1));
             char byte1, byte2;
 #ifdef LITTLEENDIAN
@@ -906,7 +789,6 @@ SqlStrTrim(char const ** result,
             }
         } else if (CodeUnitBytes == 2) {
             // UCS2
-            throw std::logic_error("no UCS2"); // TODO: Finish unit testing first
             assert(!(strLenBytes & 1));
             char byte1, byte2;
 #ifdef LITTLEENDIAN

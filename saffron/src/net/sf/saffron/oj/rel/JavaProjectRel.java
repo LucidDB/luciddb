@@ -22,25 +22,27 @@
 
 package net.sf.saffron.oj.rel;
 
-import net.sf.saffron.oj.util.*;
+import net.sf.saffron.oj.util.OJUtil;
 import net.sf.saffron.opt.CallingConvention;
 import net.sf.saffron.opt.OptUtil;
-import net.sf.saffron.opt.RelImplementor;
 import net.sf.saffron.opt.VolcanoCluster;
 import net.sf.saffron.rel.ProjectRel;
 import net.sf.saffron.rel.SaffronRel;
-import net.sf.saffron.util.Util;
 import net.sf.saffron.rex.RexNode;
 import net.sf.saffron.rex.RexUtil;
-
-import openjava.ptree.*;
+import net.sf.saffron.util.Util;
+import openjava.ptree.AllocationExpression;
+import openjava.ptree.Expression;
+import openjava.ptree.ExpressionList;
+import openjava.ptree.ParseTree;
 
 
 /**
  * Implements the {@link ProjectRel} relational
  * expression as Java code.
  */
-public class JavaProjectRel extends ProjectRel implements JavaRel
+public class JavaProjectRel extends ProjectRel
+        implements JavaLoopRel, JavaSelfRel
 {
     //~ Constructors ----------------------------------------------------------
 
@@ -74,17 +76,15 @@ public class JavaProjectRel extends ProjectRel implements JavaRel
     }
 
     // implement SaffronRel
-    public Object implement(RelImplementor implementor,int ordinal)
+    public ParseTree implement(JavaRelImplementor implementor)
     {
-        switch (ordinal) {
-        case -1: // called from parent
-            return implementor.implementChild(this,0,child);
-        case 0: // called from child
-            implementor.generateParentBody(this,null);
-            return null;
-        default:
-            throw Util.newInternal("implement: ordinal=" + ordinal);
-        }
+        return implementor.visitJavaChild(this, 0, (JavaRel) child);
+    }
+
+    public void implementJavaParent(JavaRelImplementor implementor,
+            int ordinal) {
+        assert ordinal == 0;
+        implementor.generateParentBody(this,null);
     }
 
     /**
@@ -117,7 +117,7 @@ public class JavaProjectRel extends ProjectRel implements JavaRel
      *  }
      *  </code></pre>
      */
-    public Expression implementSelf(RelImplementor implementor)
+    public Expression implementSelf(JavaRelImplementor implementor)
     {
         if (!isBoxed()) {
             // simple row-type, hence "V v = exp;"

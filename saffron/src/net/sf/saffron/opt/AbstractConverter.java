@@ -30,7 +30,7 @@ import net.sf.saffron.rel.convert.ConverterRel;
 
 /**
  * Converts a relational expression to any given output convention.
- * 
+ *
  * <p>
  * Unlike most {@link ConverterRel}s, and abstract converter is always
  * abstract. You would typically create an <code>AbstractConverter</code>
@@ -38,7 +38,7 @@ import net.sf.saffron.rel.convert.ConverterRel;
  * later, rules will transform it into relational expressions which can be
  * implemented.
  * </p>
- * 
+ *
  * <p>
  * If an abstract converter cannot be satisfied immediately (because the
  * source subset is abstract), the set is flagged, so this converter will be
@@ -92,12 +92,12 @@ public class AbstractConverter extends ConverterRel
     /**
      * Rule which converts an {@link AbstractConverter} into a chain of
      * converters from the source relation to the target calling convention.
-     * 
+     *
      * <p>
      * The chain produced is mimimal: we have previously built the transitive
      * closure of the graph of conversions, so we choose the shortest chain.
      * </p>
-     * 
+     *
      * <p>
      * Unlike the {@link AbstractConverter} they are replacing, these
      * converters are guaranteed to be able to convert any relation of their
@@ -105,7 +105,7 @@ public class AbstractConverter extends ConverterRel
      * other calling conventions along the way, these subsets may spawn more
      * efficient conversions which are not generally applicable.
      * </p>
-     * 
+     *
      * <p>
      * AbstractConverters can be messy, so they restrain themselves: they
      * don't fire if the target subset already has an implementation (with

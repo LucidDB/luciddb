@@ -22,22 +22,22 @@
 
 package net.sf.saffron.opt;
 
+import net.sf.saffron.core.SaffronType;
+import net.sf.saffron.trace.SaffronTrace;
+import net.sf.saffron.rel.SaffronRel;
 import net.sf.saffron.rel.SaffronRel;
 import net.sf.saffron.util.Util;
-import net.sf.saffron.core.SaffronType;
-
-import openjava.tools.DebugOut;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Set;
-
+import java.util.logging.Logger;
 
 /**
  * A <code>RelSet</code> is an equivalence-set of expressions; that is, a set
  * of expressions which have identical semantics.  We are generally
  * interested in using the expression which has the lowest cost.
- * 
+ *
  * <p>
  * All of the expressions in an <code>RelSet</code> have the same calling
  * convention.
@@ -80,6 +80,7 @@ class RelSet
      */
     Set variablesUsed;
     int id;
+    private static final Logger tracer = SaffronTrace.getPlannerTracer();
 
     //~ Constructors ----------------------------------------------------------
 
@@ -177,7 +178,7 @@ class RelSet
         assert(this != otherSet);
         assert(this.equivalentSet == null);
         assert(otherSet.equivalentSet == null);
-        DebugOut.println("Merge set#" + otherSet.id + " into set#" + id);
+        tracer.fine("Merge set#" + otherSet.id + " into set#" + id);
         otherSet.equivalentSet = this;
 
         // remove from table
@@ -199,10 +200,21 @@ class RelSet
                 planner.reregister(this,(SaffronRel) otherSubset.rels.get(j));
             }
         }
+        // Update all rels which have a child in the other set, to reflect the
+        // fact that the child has been renamed.
         for (
             Iterator parentRels = otherSet.getParentRels().iterator();
                 parentRels.hasNext();) {
             planner.rename((SaffronRel) parentRels.next());
+        }
+        // Each of the relations in the old set now has new parents, so
+        // potentially new rules can fire. Check for rule matches, just as if
+        // it were newly registered.  (This may cause rules which have fired
+        // once to fire again.)
+        for (int i = 0; i < rels.size(); i++) {
+            SaffronRel rel = (SaffronRel) rels.get(i);
+            assert planner.getSet(rel) == this;
+            planner.fireRules(rel, true);
         }
     }
 

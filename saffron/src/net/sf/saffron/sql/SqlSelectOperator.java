@@ -22,6 +22,9 @@
 
 package net.sf.saffron.sql;
 
+import net.sf.saffron.sql.test.SqlTester;
+import net.sf.saffron.sql.type.SqlTypeName;
+
 /**
  * An operator describing a query. (Not a query itself.)
  * 
@@ -57,9 +60,9 @@ public class SqlSelectOperator extends SqlOperator
 {
     //~ Constructors ----------------------------------------------------------
 
-    SqlSelectOperator()
+    public SqlSelectOperator()
     {
-        super(null,SqlKind.Select,1,true, SqlOperatorTable.useScope,null, null);
+        super("SELECT",SqlKind.Select,1,true, SqlOperatorTable.useScope,null, null);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -85,12 +88,12 @@ public class SqlSelectOperator extends SqlOperator
     {
         return (SqlSelect) createCall(
             new SqlNode [] {
-                SqlLiteral.create(isDistinct),selectList,fromClause,
+                SqlLiteral.createBoolean(isDistinct),selectList,fromClause,
                 whereClause,groupBy,having,orderBy
             });
     }
 
-    void unparse(
+    public void unparse(
         SqlWriter writer,
         SqlNode [] operands,
         int leftPrec,
@@ -113,8 +116,8 @@ public class SqlSelectOperator extends SqlOperator
         // parenthesized
         fromClause.unparse(
             writer,
-            SqlOperatorTable.instance().joinOperator.leftPrec - 1,
-            SqlOperatorTable.instance().joinOperator.rightPrec - 1);
+            SqlOperatorTable.std().joinOperator.leftPrec - 1,
+            SqlOperatorTable.std().joinOperator.rightPrec - 1);
         SqlNode whereClause = operands[SqlSelect.WHERE_OPERAND];
         if (whereClause != null) {
             writer.println();
@@ -139,6 +142,10 @@ public class SqlSelectOperator extends SqlOperator
             writer.print("ORDER BY ");
             orderClause.unparse(writer,0,0);
         }
+    }
+
+    public void test(SqlTester tester) {
+        tester.check("select * from values(1)","1",SqlTypeName.Integer);
     }
 }
 

@@ -22,15 +22,15 @@
 
 package net.sf.saffron.rel;
 
-import net.sf.saffron.core.*;
+import net.sf.saffron.core.SaffronPlanner;
+import net.sf.saffron.core.SaffronType;
+import net.sf.saffron.core.SaffronTypeFactory;
+import net.sf.saffron.oj.rel.JavaRelImplementor;
+import net.sf.saffron.oj.rel.JavaRel;
 import net.sf.saffron.opt.OptUtil;
 import net.sf.saffron.opt.PlanCost;
-import net.sf.saffron.opt.RelImplementor;
 import net.sf.saffron.opt.VolcanoCluster;
 import net.sf.saffron.util.Util;
-
-import openjava.mop.OJClass;
-
 import openjava.ptree.Expression;
 
 
@@ -165,8 +165,8 @@ public class AggregateRel extends SingleRel
         }
 
         public void implementNext(
-            RelImplementor implementor,
-            SaffronRel rel,
+            JavaRelImplementor implementor,
+            JavaRel rel,
             Expression accumulator)
         {
             aggregation.implementNext(implementor,rel,accumulator,args);
@@ -182,15 +182,15 @@ public class AggregateRel extends SingleRel
         }
 
         public Expression implementStart(
-            RelImplementor implementor,
-            SaffronRel rel)
+            JavaRelImplementor implementor,
+            JavaRel rel)
         {
             return aggregation.implementStart(implementor,rel,args);
         }
 
         public Expression implementStartAndNext(
-            RelImplementor implementor,
-            SaffronRel rel)
+            JavaRelImplementor implementor,
+            JavaRel rel)
         {
             return aggregation.implementStartAndNext(implementor,rel,args);
         }

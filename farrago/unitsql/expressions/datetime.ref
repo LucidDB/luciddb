@@ -1,0 +1,59 @@
+0: jdbc:farrago:> -- $Id: //open/farrago/unitsql/expressions/datetime.sql#1 $
+0: jdbc:farrago:> -- test datetime comparisons.
+0: jdbc:farrago:> set schema sales;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> delete from datetime1;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> insert into datetime1(col1,datecol,timecol,timestampcol) values(0, DATE '2004-12-21', TIME '12:22:33', TIMESTAMP '2004-12-21 12:22:33');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> alter system set "calcVirtualMachine"  = 'CALCVM_JAVA';
+0: jdbc:farrago:> select * from datetime1 where datecol > DATE '2003-12-21';
++-------+-------------+-----------+------------------------+
+| COL1  |   DATECOL   |  TIMECOL  |      TIMESTAMPCOL      |
++-------+-------------+-----------+------------------------+
+| 0     | 2004-12-21  | 12:22:33  | 2004-12-21 12:22:33.0  |
++-------+-------------+-----------+------------------------+
+0: jdbc:farrago:> select * from datetime1 where datecol > DATE '2005-12-21';
++-------+----------+----------+---------------+
+| COL1  | DATECOL  | TIMECOL  | TIMESTAMPCOL  |
++-------+----------+----------+---------------+
++-------+----------+----------+---------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from datetime1 where timecol > TIME '23:00:00';
++-------+----------+----------+---------------+
+| COL1  | DATECOL  | TIMECOL  | TIMESTAMPCOL  |
++-------+----------+----------+---------------+
++-------+----------+----------+---------------+
+0: jdbc:farrago:> select * from datetime1 where timecol < TIME '23:00:00';
++-------+-------------+-----------+------------------------+
+| COL1  |   DATECOL   |  TIMECOL  |      TIMESTAMPCOL      |
++-------+-------------+-----------+------------------------+
+| 0     | 2004-12-21  | 12:22:33  | 2004-12-21 12:22:33.0  |
++-------+-------------+-----------+------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from datetime1 where timestampcol  > TIMESTAMP '2004-12-21 23:00:00';
++-------+----------+----------+---------------+
+| COL1  | DATECOL  | TIMECOL  | TIMESTAMPCOL  |
++-------+----------+----------+---------------+
++-------+----------+----------+---------------+
+0: jdbc:farrago:> select * from datetime1 where timestampcol < TIMESTAMP  '2004-12-21 23:00:00';
++-------+-------------+-----------+------------------------+
+| COL1  |   DATECOL   |  TIMECOL  |      TIMESTAMPCOL      |
++-------+-------------+-----------+------------------------+
+| 0     | 2004-12-21  | 12:22:33  | 2004-12-21 12:22:33.0  |
++-------+-------------+-----------+------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- fennel calc still crashes.
+0: jdbc:farrago:> -- clear cache.
+0: jdbc:farrago:> -- alter system set "codeCacheMaxBytes" = 0; 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- alter system set "calcVirtualMachine"  = 'CALCVM_FENNEL';
+0: jdbc:farrago:> -- select * from datetime1 where datecol > DATE '2003-12-21';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> delete from datetime1;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !quit

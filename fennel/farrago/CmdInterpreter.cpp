@@ -39,12 +39,22 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
+void *CmdInterpreter::getLeafPtr()
+{
+    return static_cast<FemVisitor *>(this);
+}
+
+const char *CmdInterpreter::getLeafTypeName()
+{
+    return "FemVisitor";
+}
+
 int64_t CmdInterpreter::executeCommand(
     ProxyCmd &cmd)
 {
     resultHandle = 0;
     // dispatch based on polymorphic command type
-    FemVisitor::visitTbl.visit(*this,cmd);
+    FemVisitor::visitTbl.accept(*this,cmd);
     return resultHandle;
 }
 
@@ -101,32 +111,6 @@ void CmdInterpreter::setSvptHandle(
     resultHandle = opaqueToInt(svptId);
 }
 
-CmdInterpreter::StreamGraphHandle &CmdInterpreter::getStreamGraphHandleFromObj(
-    JniEnvRef pEnv,jobject jHandle)
-{
-    ProxyStreamGraphHandle streamGraphHandle;
-    streamGraphHandle.init(pEnv,jHandle);
-    return *reinterpret_cast<StreamGraphHandle *>(
-        streamGraphHandle.getLongHandle());
-}
-
-ExecutionStream &CmdInterpreter::getStreamFromObj(
-    JniEnvRef pEnv,jobject jHandle)
-{
-    ProxyStreamHandle streamHandle;
-    streamHandle.init(pEnv,jHandle);
-    return *reinterpret_cast<ExecutionStream *>(
-        streamHandle.getLongHandle());
-}
-
-CmdInterpreter::TxnHandle &CmdInterpreter::getTxnHandleFromObj(
-    JniEnvRef pEnv,jobject jHandle)
-{
-    ProxyTxnHandle txnHandle;
-    txnHandle.init(pEnv,jHandle);
-    return *reinterpret_cast<TxnHandle *>(txnHandle.getLongHandle());
-}
-
 void CmdInterpreter::visit(ProxyCmdOpenDatabase &cmd)
 {
     ConfigMap configMap;
@@ -144,7 +128,7 @@ void CmdInterpreter::visit(ProxyCmdOpenDatabase &cmd)
         ? DeviceMode::createNew
         : DeviceMode::load;
     
-    jobject javaTrace = getObjectFromHandle(cmd.getJavaTraceHandle());
+    jobject javaTrace = getObjectFromLong(cmd.getJavaTraceHandle());
 
     DbHandle *pDbHandle = new DbHandle();
     ++JniUtil::handleCount;
@@ -339,7 +323,7 @@ void CmdInterpreter::visit(ProxyCmdCreateExecutionStreamGraph &cmd)
     StreamGraphHandle *pStreamGraphHandle = new StreamGraphHandle();
     ++JniUtil::handleCount;
     pStreamGraphHandle->pTxnHandle = pTxnHandle;
-    pStreamGraphHandle->pTupleStreamGraph = pGraph;
+    pStreamGraphHandle->setTupleStreamGraph(pGraph);
     setStreamGraphHandle(cmd.getResultHandle(),pStreamGraphHandle);
 }
 
@@ -356,7 +340,7 @@ void CmdInterpreter::visit(ProxyCmdPrepareExecutionStreamGraph &cmd)
     TupleStreamBuilder streamBuilder(
         pTxnHandle->pDb,
         streamFactory,
-        pStreamGraphHandle->pTupleStreamGraph);
+        pStreamGraphHandle->getGraph());
     streamBuilder.buildStreamGraph(cmd);
 }
 
@@ -365,7 +349,7 @@ void CmdInterpreter::visit(ProxyCmdCreateStreamHandle &cmd)
     StreamGraphHandle *pStreamGraphHandle = getStreamGraphHandle(
         cmd.getStreamGraphHandle());
     SharedExecutionStream pStream =
-        pStreamGraphHandle->pTupleStreamGraph->findLastStream(
+        pStreamGraphHandle->getGraph()->findLastStream(
             cmd.getStreamName());
     setStreamHandle(
         cmd.getResultHandle(),
@@ -379,6 +363,17 @@ PageId CmdInterpreter::StreamGraphHandle::getRoot(PageOwnerId pageOwnerId)
     x = pEnv->CallLongMethod(
         javaRuntimeContext,JniUtil::methGetIndexRoot,x);
     return PageId(x);
+}
+
+SharedExecutionStreamGraph CmdInterpreter::StreamGraphHandle::getGraph()
+{
+    return pTupleStreamGraph;
+}
+
+void CmdInterpreter::StreamGraphHandle::setTupleStreamGraph(
+    SharedTupleStreamGraph pGraph)
+{
+    pTupleStreamGraph = pGraph;
 }
 
 FENNEL_END_CPPFILE("$Id$");

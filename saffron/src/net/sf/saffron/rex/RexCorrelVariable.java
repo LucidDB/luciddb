@@ -43,6 +43,10 @@ public class RexCorrelVariable extends RexVariable {
     public Object clone() {
         return new RexCorrelVariable(name,type);
     }
+
+    public void accept(RexVisitor visitor) {
+        visitor.visitCorrel(this);
+    }
 }
 
 // End RexCorrelVariable.java

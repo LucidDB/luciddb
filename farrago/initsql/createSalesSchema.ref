@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/farrago/initsql/createSalesSchema.sql#8 $
+0: jdbc:farrago:> -- $Id: //open/farrago/initsql/createSalesSchema.sql#11 $
 0: jdbc:farrago:> -- This script creates a simple schema used by some of the unit tests.
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !set verbose true
@@ -62,6 +62,13 @@
 . . . . . . . . >     (110,'John',40,'M','Vancouver',2,null,x'58797A',false,true),
 . . . . . . . . >     (120,'Wilma',20,'F',null,1,50,null,null,true);
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- table for testing date/time col values.
+0: jdbc:farrago:> create table datetime1(
+. . . . . . . . >     col1 int not null primary key,
+. . . . . . . . >     datecol date,
+. . . . . . . . >     timecol time(0),
+. . . . . . . . >     timestampcol timestamp(0));
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- define foreign server for hsqldb sample data
 0: jdbc:farrago:> -- TODO:  location independence
 0: jdbc:farrago:> create server hsqldb_demo
@@ -71,6 +78,8 @@
 . . . . . . . . >     url 'jdbc:hsqldb:../saffron/demo/hsqldb/scott',
 . . . . . . . . >     user_name 'SA',
 . . . . . . . . >     schema_name 'SALES');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> commit;
 0: jdbc:farrago:> 

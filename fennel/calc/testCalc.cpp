@@ -182,6 +182,7 @@ unitTestBool()
 
     // Set up the Calculator
     Calculator c(0,0,0,0,0,0);
+    c.outputRegisterByReference(false);
 
     // set up register references to symbolically point to 
     // their corresponding storage locations -- makes for easy test case
@@ -654,6 +655,7 @@ unitTestLong()
 
     // Set up the Calculator
     Calculator c(0,0,0,0,0,0);
+    c.outputRegisterByReference(false);
 
     // set up register references to symbolically point to 
     // their corresponding storage locations -- makes for easy test case
@@ -1362,6 +1364,7 @@ unitTestFloat()
 
     // Set up the Calculator
     Calculator c(0,0,0,0,0,0);
+    c.outputRegisterByReference(false);
 
     // set up register references to symbolically point to 
     // their corresponding storage locations -- makes for easy test case
@@ -2053,6 +2056,7 @@ unitTestPointer()
 
     // Set up the Calculator
     Calculator c(0,0,0,0,0,0);
+    c.outputRegisterByReference(false);
 
     // set up register references to symbolically point to 
     // their corresponding storage locations -- makes for easy test case
@@ -2578,6 +2582,7 @@ unitTestWarnings()
 
     // Set up the Calculator
     Calculator c(0,0,0,0,0,0);
+    c.outputRegisterByReference(false);
 
     // set up register references to symbolically point to 
     // their corresponding storage locations -- makes for easy test case
@@ -2822,6 +2827,7 @@ unitTestPointerCache()
 
     // Set up the Calculator
     Calculator c(0,0,0,0,0,0);
+    c.outputRegisterByReference(false);
 
     // set up register references to symbolically point to 
     // their corresponding storage locations -- makes for easy test case
@@ -3133,6 +3139,7 @@ unitTestNullableLocal()
 
     // Set up the Calculator
     Calculator c(0,0,0,0,0,0);
+    c.outputRegisterByReference(false);
 
     // set up register references to symbolically point to 
     // their corresponding storage locations -- makes for easy test case
@@ -3452,6 +3459,7 @@ unitTestStatusRegister()
 
     // Set up the Calculator
     Calculator c(0,0,0,0,0,0);
+    c.outputRegisterByReference(false);
 
     // set up register references to symbolically point to 
     // their corresponding storage locations -- makes for easy test case

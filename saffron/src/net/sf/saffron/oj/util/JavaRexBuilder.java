@@ -22,15 +22,20 @@ package net.sf.saffron.oj.util;
 
 import net.sf.saffron.core.SaffronType;
 import net.sf.saffron.core.SaffronTypeFactory;
-import net.sf.saffron.rex.*;
-import net.sf.saffron.util.Util;
+import net.sf.saffron.rex.RexBuilder;
+import net.sf.saffron.rex.RexKind;
+import net.sf.saffron.rex.RexLiteral;
+import net.sf.saffron.rex.RexNode;
 import net.sf.saffron.sql.SqlOperator;
+import net.sf.saffron.sql.type.SqlTypeName;
+import net.sf.saffron.util.NlsString;
+import net.sf.saffron.util.Util;
 import openjava.mop.Environment;
 import openjava.mop.OJClass;
 import openjava.ptree.*;
 
+import java.math.BigDecimal;
 import java.util.List;
-import java.math.BigInteger;
 
 /**
  * Extends {@link RexBuilder} to builds row-expressions including those
@@ -82,33 +87,13 @@ public class JavaRexBuilder extends RexBuilder {
             throw Util.newInternal(e, "Error deriving type of expression " +
                     expr);
         }
-        SaffronType type = OJUtil.ojToType(this.typeFactory, ojClass);
+        SaffronType type = OJUtil.ojToType(this._typeFactory, ojClass);
         return new JavaRowExpression(env, type, expr);
     }
 
-    public RexLiteral makeLiteral(boolean b) {
-        return makeLiteral(b ? Boolean.TRUE : Boolean.FALSE,
-                typeFactory.createJavaType(boolean.class));
-    }
 
-    public RexLiteral makeLiteral(long i) {
-        return makeLiteral(BigInteger.valueOf(i),
-                typeFactory.createJavaType(long.class));
-    }
-
-    public RexLiteral makeLiteral(double d) {
-        return makeLiteral(new Double(d), typeFactory.createJavaType(double.class));
-    }
-
-    public RexLiteral makeLiteral(String s) {
-        return makeLiteral(s, typeFactory.createJavaType(String.class));
-    }
-
-    public RexNode makeCase(RexNode rexCond, RexNode rexTrueCase, RexNode rexFalseCase) {
-        throw Util.needToImplement(this);
-    }
-
-    public SqlOperator getOperator(RexKind kind) {
+    public RexNode makeCase(RexNode rexCond, RexNode rexTrueCase,
+                            RexNode rexFalseCase) {
         throw Util.needToImplement(this);
     }
 

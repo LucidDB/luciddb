@@ -75,6 +75,11 @@ ExecutionStreamId ExecutionStream::getStreamId() const
     return id;
 }
 
+void ExecutionStream::setName(std::string const &nameIn)
+{
+    name = nameIn;
+}
+
 std::string const &ExecutionStream::getName() const
 {
     return name;
@@ -102,6 +107,13 @@ ExecutionStream::BufferProvision
 ExecutionStream::getInputBufferRequirement() const
 {
     return NO_PROVISION;
+}
+
+void *ExecutionStream::getImpl()
+{
+    // TODO jvs 8-June-2004:  if we ever get a fix for the JNI+dynamic_cast
+    // problem, change this to return this
+    return NULL;
 }
 
 FENNEL_END_CPPFILE("$Id$");

@@ -22,23 +22,23 @@
 
 package net.sf.saffron.sql;
 
-import net.sf.saffron.util.EnumeratedValues;
-import net.sf.saffron.util.Util;
+import net.sf.saffron.calc.RexToCalcTranslator;
 import net.sf.saffron.core.SaffronType;
 import net.sf.saffron.core.SaffronTypeFactory;
 import net.sf.saffron.core.SaffronTypeFactoryImpl;
-import net.sf.saffron.sql.type.SqlTypeName;
+import net.sf.saffron.oj.rel.RexToJavaTranslator;
 import net.sf.saffron.resource.SaffronResource;
+import net.sf.saffron.rex.RexCall;
 import net.sf.saffron.rex.RexNode;
-import net.sf.saffron.calc.CalcProgramBuilder;
-import net.sf.saffron.opt.CalcRelImplementor;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.text.MessageFormat;
-
+import net.sf.saffron.sql.test.SqlTester;
+import net.sf.saffron.sql.type.SqlTypeName;
+import net.sf.saffron.util.EnumeratedValues;
+import net.sf.saffron.util.Util;
 import openjava.ptree.Expression;
 
+import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A <code>SqlOperator</code> is a type of node in a SQL parse tree (it is NOT
@@ -57,14 +57,14 @@ public abstract class SqlOperator
      * left. This is less than the right precedence if the operator is
      * left-associative.
      */
-    final int leftPrec;
+    public final int leftPrec;
 
     /**
      * The precedence with which this operator binds to the expression to the
      * right. This is more than the right precedence if the operator is
      * left-associative.
      */
-    final int rightPrec;
+    public final int rightPrec;
 
     /** used to get the return type of operator/function */
     private final TypeInference typeInference;
@@ -119,6 +119,10 @@ public abstract class SqlOperator
 
     //~ Methods ---------------------------------------------------------------
 
+    public AllowedArgInference getAllowedArgInference() {
+        return this.argTypeInference;
+    }
+
     public List getPossibleNumOfOperands() {
         if (null!=argTypeInference) {
             List ret = new ArrayList(argTypeInference.getArgCount());
@@ -127,7 +131,8 @@ public abstract class SqlOperator
         }
 
         throw Util.needToImplement(
-                "if you see this you must either give argTypeInference a value or override this method");
+                "if you see this you must either give argTypeInference a value " +
+                "or override this method for Operator "+name);
     }
 
     /**
@@ -176,6 +181,21 @@ public abstract class SqlOperator
     public abstract int getSyntax();
 
     /**
+     * An abstract method where its implementations call the
+     * {@link net.sf.saffron.sql.test.SqlTester}'s
+     * different <code>checkXXX</code> methods.
+     * An example test function for the sin operator
+     * <blockqoute><pre><code>
+     * void test(SqlTester tester) {<br>
+     *     tester.checkScalar("sin(0)", "0");<br>
+     *     tester.checkScalar("sin(1.5707)", "1");<br>
+     * }<br>
+     * </code></pre></blockqoute>
+     * @param tester The tester to use.
+     */
+    public abstract void test(SqlTester tester);
+
+    /**
      * Creates a call to this operand with an array of operands.
      */
     public SqlCall createCall(SqlNode [] operands)
@@ -221,7 +241,7 @@ public abstract class SqlOperator
      * including parentheses if the operators on either side are of greater
      * precedence.
      */
-    abstract void unparse(
+    public abstract void unparse(
         SqlWriter writer,
         SqlNode [] operands,
         int leftPrec,
@@ -243,6 +263,16 @@ public abstract class SqlOperator
         return kind.getOrdinal()*31 + name.hashCode();
     }
 
+    /**
+     * Deduces the type of a call to this operator, assuming that the types of
+     * the arguments are already known.
+     *
+     * <p>Particular operators can affect the behavior of this method in two
+     * ways. If they have a {@link TypeInference}, it is used; otherwise, they
+     * must override this method. (Operators with unusual type inference schemes
+     * should override this method; others should generally use a type-inference
+     * strategy to share code.)
+     */
     public SaffronType getType(SaffronTypeFactory typeFactory, SaffronType[] argTypes) {
         if (typeInference != null) {
             return typeInference.getType(typeFactory, argTypes);
@@ -250,7 +280,40 @@ public abstract class SqlOperator
         throw Util.needToImplement(this);
     }
 
-    public SaffronType getType(SqlValidator validator, SqlValidator.Scope scope, SqlCall call) {
+    /**
+     * Deduces the type of a call to this operator, using information from the
+     * operands.
+     *
+     * Normally (as in the default implementation), only the types of the operands
+     * are needed  to determine the type of the call.  If the call type depends
+     * on the values of the operands, then override this method.
+     */
+    public SaffronType getType(SaffronTypeFactory typeFactory, RexNode[] exprs) {
+        return getType(typeFactory, getTypes(exprs));
+    }
+
+    private SaffronType[] getTypes(RexNode[] exprs) {
+        SaffronType[] types = new SaffronType[exprs.length];
+        for (int i = 0; i < types.length; i++) {
+            types[i] = exprs[i].getType();
+        }
+
+        return types;
+    }
+
+    /**
+     * Deduces the type of a call to this operator. To do this, the method
+     * first needs to recursively deduce the types of its arguments, using
+     * the validator and scope provided.
+     *
+     * <p>Particular operators can affect the behavior of this method in two
+     * ways. If they have a {@link TypeInference}, it is used; otherwise, they
+     * must override this method. (Operators with unusual type inference schemes
+     * should override this method; others should generally use a type-inference
+     * strategy to share code.)
+     */
+    public SaffronType getType(SqlValidator validator, SqlValidator.Scope scope,
+                               SqlCall call) {
         // Check that there's the right number of arguments.
         checkNumberOfArg(call);
 
@@ -470,17 +533,6 @@ public abstract class SqlOperator
         return null;
     }
 
-    /**
-     * Returns an object which can convert a call to this operator into an
-     * instruction in calculator program, or null if this operator cannot be
-     * converted.
-     *
-     * <p>The base implementation returns null; derived classes can override.
-     */
-    public CalcRexImplementor getCalcImplementor() {
-        return null;
-    }
-
     //~ Inner Classes ---------------------------------------------------------
 
     /**
@@ -512,6 +564,9 @@ public abstract class SqlOperator
      * strategies, such as to take the type of the first operand.</p>
      */
     public interface TypeInference {
+        // REVIEW jvs 26-May-2004:  I think we should try to eliminate one
+        // of these methods; they are redundant.
+
         SaffronType getType(SqlValidator validator, SqlValidator.Scope scope,
                 SqlCall call);
         SaffronType getType(SaffronTypeFactory typeFactory,
@@ -585,7 +640,7 @@ public abstract class SqlOperator
         }
 
         /**
-         * Calls {@link #check(SqlValidator,SqlValidator.Scope,SqlNode,int)}
+         * Calls {@link #check(SqlCall, SqlValidator,SqlValidator.Scope,SqlNode,int)}
          * with {@param node}
          * @param node one of the operands of {@param call}
          * @param operandNbr
@@ -594,7 +649,7 @@ public abstract class SqlOperator
         public void checkThrows(SqlValidator validator, SqlValidator.Scope scope,
                                 SqlCall call, SqlNode node, int operandNbr) {
             Util.pre(null!=call,"null!=call");
-            if (!check(validator,scope,node,operandNbr)){
+            if (!check(call,validator,scope,node,operandNbr)){
                 throw call.newValidationSignatureError(validator, scope);
             }
         }
@@ -602,6 +657,7 @@ public abstract class SqlOperator
 
         /**
          * Checks if a node is of correct type
+         * @param call
          * @param validator
          * @param scope
          * @param node
@@ -611,7 +667,7 @@ public abstract class SqlOperator
          * a check can be made to see if a <code>node</code> is of type int by calling
          * <code>typeStringInt.check(validator,scope,node,1);</code>
          */
-        public boolean check(SqlValidator validator, SqlValidator.Scope scope,
+        public boolean check(SqlCall call, SqlValidator validator, SqlValidator.Scope scope,
                 SqlNode node, int operandNbr)
         {
             int foundAllowed=0;
@@ -630,7 +686,7 @@ public abstract class SqlOperator
                     foundAllowed++;
                     continue;
                 }
-                else if (expectedType.isAssignableFrom(actualType)){
+                else if (expectedType.isAssignableFrom(actualType, false)){
                     foundAllowed++;
                     break;
                 }
@@ -640,26 +696,31 @@ public abstract class SqlOperator
 
         public void check(SqlValidator validator, SqlValidator.Scope scope, SqlCall call)
         {
-            assert(getArgCount()==call.operands.length);
-
-            //iterating over the operands...
-            for(int i=0;i<call.operands.length;i++)
-            {
-                SqlNode operand = call.operands[i];
-                //finished checking all allowed types for this operand
-                if (!check(validator,scope,operand,i))
-                {
-                    throw call.newValidationSignatureError(validator, scope);
-                }
-
+            if (!check(call, validator, scope)) {
+                throw call.newValidationSignatureError(validator, scope);
             }
         }
 
-        int getArgCount() {
+        public boolean check(SqlCall call, SqlValidator validator,
+                             SqlValidator.Scope scope) {
+            assert(getArgCount()==call.operands.length);
+
+            for(int i=0;i<call.operands.length;i++)
+            {
+                SqlNode operand = call.operands[i];
+                if (!check(call,validator,scope,operand,i))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        public int getArgCount() {
             return m_types.length;
         }
 
-        SqlTypeName[][] getTypes(){
+        public SqlTypeName[][] getTypes(){
             return m_types;
         }
 
@@ -742,23 +803,24 @@ public abstract class SqlOperator
             return ret.toString();
         }
 
-        SqlTypeName[][] getTypes()
+        public SqlTypeName[][] getTypes()
         {
             Util.newInternal("Should not be called");
             return null;
         }
 
-        int getArgCount() {
+        public int getArgCount() {
             //check made in constructor to verify that all rules have the same nbrOfArgs
             //take and return the first one
             return m_allowedRules[0].getArgCount();
         }
 
-        public boolean check(SqlValidator validator, SqlValidator.Scope scope, SqlNode node, int operandNbr) {
+        public boolean check(SqlCall call, SqlValidator validator,
+                             SqlValidator.Scope scope, SqlNode node, int operandNbr) {
             Util.pre(m_allowedRules.length>=1,"m_allowedRules.length>=1");
             for (int i = 0; i < m_allowedRules.length; i++) {
                 AllowedArgInference rule = m_allowedRules[i];
-                if(rule.check(validator,scope, node,operandNbr)) {
+                if(rule.check(call, validator,scope, node,operandNbr)) {
                     return true;
                 }
             }
@@ -769,52 +831,34 @@ public abstract class SqlOperator
                 SqlValidator validator,
                 SqlValidator.Scope scope,
                 SqlCall call) {
-            String[] typeErrors = new String[m_allowedRules.length];
             int nbrOfTypeErrors = 0;
 
             for (int i = 0; i < m_allowedRules.length; i++) {
                 AllowedArgInference rule = m_allowedRules[i];
-                try {
-                    typeErrors[i] = null;
-                    rule.check(validator,scope,call);
-                } catch (RuntimeException e) {
-                    typeErrors[i] = e.getMessage();
+
+                if (!rule.check(call,validator,scope))
+                {
                     nbrOfTypeErrors++;
                 }
             }
 
             if (nbrOfTypeErrors==m_allowedRules.length) {
-                StringBuffer msg = new StringBuffer();
-                for (int i = 0; i < typeErrors.length; i++) {
-                    String typeError = typeErrors[i];
-                    if (null==typeError) {
-                        continue;
-                    }
-                    if (msg.length()!=0){
-                        msg.append(" or ");
-                    }
-                    msg.append(typeError);
-                }
-
-                throw validator.newValidationError(msg.toString());
+                throw validator.newValidationError(call.getValidationSignatureErrorString(validator, scope));
             }
         }
     }
 
     /**
      * Translates an expression to a Java parse tree.
+     *
+     * <p>TODO: Remove this interface. SqlOperator should not depend upon
+     * {@link net.sf.saffron.oj.rel.JavaRelImplementor} or {@link RexNode}.
      */
-    interface JavaRexImplementor {
-        Expression translateToJava(RexNode rex);
+    public interface JavaRexImplementor {
+        Expression translateToJava(RexCall rex, Expression[] operands,
+                RexToJavaTranslator translator);
     }
 
-    /**
-     * Translates an expression to a calculator program.
-     */
-    interface CalcRexImplementor {
-        void translateToCalc(RexNode rex,
-                CalcRelImplementor.Rex2CalcTranslator translator);
-    }
 }
 
 
