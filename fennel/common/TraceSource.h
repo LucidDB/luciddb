@@ -110,6 +110,17 @@ public:
         return *pTraceTarget;
     }
 
+    /**
+     * Gets the name of this source. Useful to construct nested names for
+     * subcomponents that are also TraceSources. 
+     * @return the name
+     */
+    const std::string& getTraceSourceName() const 
+    {
+        return name;
+    }
+
+
     TraceLevel getMinimumTraceLevel() const
     {
         return minimumLevel;
