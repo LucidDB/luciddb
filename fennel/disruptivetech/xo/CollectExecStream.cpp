@@ -72,10 +72,10 @@ ExecStreamResult CollectExecStream::execute(ExecStreamQuantum const &quantum)
     if (!alreadyWrittenToOutput && (EXECBUF_EOS == pInAccessor->getState())) {
         outputTupleData[0].pData = pOutputBuffer.get();
         outputTupleData[0].cbData = bytesWritten;
-        alreadyWrittenToOutput = true;
         if (!pOutAccessor->produceTuple(outputTupleData)) {
             return EXECRC_BUF_OVERFLOW;
         } 
+        alreadyWrittenToOutput = true;
     } 
 
     ExecStreamResult rc = precheckConduitBuffers();
@@ -102,15 +102,12 @@ ExecStreamResult CollectExecStream::execute(ExecStreamQuantum const &quantum)
         memcpy(pOutputBuffer.get() + bytesWritten, 
                pInAccessor->getConsumptionStart(),
                pInAccessor->getConsumptionTupleAccessor().getCurrentByteCount());
-        // NOTE. bytesWritten is updated with the tuple max size, 
-        // not the actual size
-        // in order to be able to safely and easily uncollect it later
-        bytesWritten += pInAccessor->getConsumptionTupleAccessor().getMaxByteCount();
+        bytesWritten += pInAccessor->getConsumptionTupleAccessor().getCurrentByteCount();
         pInAccessor->consumeTuple();
     }
     return EXECRC_QUANTUM_EXPIRED;
 }
 
-FENNEL_END_CPPFILE("$Id: //open/dt/dev/fennel/disruptivetech/xo/CollectExecStream.cpp#2 $");
+FENNEL_END_CPPFILE("$Id$");
 
 // End CollectExecStream.cpp
