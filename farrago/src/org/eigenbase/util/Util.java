@@ -317,16 +317,16 @@ public class Util extends Toolbox
             pw.print("}");
         } else if (o instanceof Enumeration) {
             pw.print(clazz.getName());
-            Enumeration enum = (Enumeration) o;
+            Enumeration e = (Enumeration) o;
             pw.print(" {");
             int i = 0;
-            while (enum.hasMoreElements()) {
+            while (e.hasMoreElements()) {
                 if (i++ > 0) {
                     pw.println(",");
                 }
                 print(
                     pw,
-                    enum.nextElement(),
+                    e.nextElement(),
                     indent + 1);
             }
             pw.print("}");
@@ -457,6 +457,17 @@ public class Util extends Toolbox
                 0,
                 Math.min(truncateAt, len));
         ret.append(unscaled.charAt(0));
+        if (scale == 0) {
+            // trim trailing zeroes since they aren't significant
+            int i = unscaled.length();
+            while (i > 1) {
+                if (unscaled.charAt(i - 1) != '0') {
+                    break;
+                }
+                --i;
+            }
+            unscaled = unscaled.substring(0, i);
+        }
         if (unscaled.length() > 1) {
             ret.append(".");
             ret.append(unscaled.substring(1));

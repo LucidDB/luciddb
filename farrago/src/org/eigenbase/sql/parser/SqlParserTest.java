@@ -882,18 +882,18 @@ public class SqlParserTest extends TestCase
         checkExp("5000000000", "5000000000");
 
         //Approxs
-        checkExp("1e1", "1.0E1");
-        checkExp("+1e1", "(+ 1.0E1)");
+        checkExp("1e1", "1E1");
+        checkExp("+1e1", "(+ 1E1)");
         checkExp("1.1e1", "1.1E1");
         checkExp("1.1e+1", "1.1E1");
         checkExp("1.1e-1", "1.1E-1");
         checkExp("+1.1e-1", "(+ 1.1E-1)");
-        checkExp("1.E3", "1.000E3");
+        checkExp("1.E3", "1E3");
         checkExp("1.e-3", "1E-3");
-        checkExp("1.e+3", "1.000E3");
-        checkExp(".5E3", "5.00E2");
-        checkExp("+.5e3", "(+ 5.00E2)");
-        checkExp("-.5E3", "(- 5.00E2)");
+        checkExp("1.e+3", "1E3");
+        checkExp(".5E3", "5E2");
+        checkExp("+.5e3", "(+ 5E2)");
+        checkExp("-.5E3", "(- 5E2)");
         checkExp(".5e-32", "5E-33");
 
         //Mix integer/decimals/approx

@@ -23,6 +23,7 @@ package org.eigenbase.sql;
 
 import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.sql.util.SqlVisitor;
+import org.eigenbase.util.*;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -37,7 +38,7 @@ import java.io.StringWriter;
  * @version $Id$
  * @since Dec 12, 2003
  */
-public abstract class SqlNode
+public abstract class SqlNode implements Cloneable
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -54,7 +55,15 @@ public abstract class SqlNode
 
     //~ Methods ---------------------------------------------------------------
 
-    public abstract Object clone();
+    // NOTE:  mutable subclasses must override clone()
+    public Object clone()
+    {
+        try {
+            return super.clone();
+        } catch (CloneNotSupportedException ex) {
+            throw Util.newInternal(ex);
+        }
+    }
 
     /**
      * Returns whether this node is a particular kind.

@@ -57,6 +57,7 @@ import org.eigenbase.trace.EigenbaseTrace;
 import org.eigenbase.util.SaffronProperties;
 import org.eigenbase.util.Util;
 
+import org.eigenbase.runtime.Iterable;
 
 /**
  * <code>OJPreparingStmt</code> is an abstract base for classes which

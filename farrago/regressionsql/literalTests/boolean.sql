@@ -18,7 +18,7 @@ insert into t_boolean values('false',null);
 insert into t_boolean values('FALSE',null);
 insert into t_boolean values(1234,null);
 insert into t_boolean values(-1234.03,null);
-insert into t_boolean values(10e400,null);
+insert into t_boolean values(1e400,null);
 insert into t_boolean values(-1.2345678901234e-200,null);
 insert into t_boolean values(x'ff',null);
 insert into t_boolean values(b'10',null);

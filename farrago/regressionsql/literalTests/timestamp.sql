@@ -94,7 +94,7 @@ create table t_timestamp(timestamp_col timestamp(0) not null primary key, timest
 insert into t_timestamp values('string value',null);
 insert into t_timestamp values(true,null);
 insert into t_timestamp values(1234,null);
-insert into t_timestamp values(10e400,null);
+insert into t_timestamp values(1e400,null);
 insert into t_timestamp values(-1.2345678901234e-200,null);
 insert into t_timestamp values(-1234.03,null);
 insert into t_timestamp values(x'ff',null);

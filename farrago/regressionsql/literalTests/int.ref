@@ -107,8 +107,8 @@ Messages:
 [0]:PC=0 Code=22018 (state=,code=0)
 0: jdbc:farrago:> insert into t_int values(TRUE,null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'BOOLEAN' to 'INTEGER' (state=,code=0)
-0: jdbc:farrago:> insert into t_int values(10e400,null);
-Error: At line 1, column 25: Numeric literal '1.0000000000000000000E401' out of range (state=,code=0)
+0: jdbc:farrago:> insert into t_int values(1e400,null);
+Error: At line 1, column 25: Numeric literal '1E400' out of range (state=,code=0)
 0: jdbc:farrago:> insert into t_int values(x'ff',null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'VARBINARY(1)' to 'INTEGER' (state=,code=0)
 0: jdbc:farrago:> insert into t_int values(b'10',null);

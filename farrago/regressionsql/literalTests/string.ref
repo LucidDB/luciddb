@@ -20,8 +20,8 @@ Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
 [0]:PC=1 Code=22001 (state=,code=0)
-0: jdbc:farrago:> insert into t_char values(10e400,null);
-Error: At line 1, column 26: Numeric literal '1.0000000000000000000E401' out of range (state=,code=0)
+0: jdbc:farrago:> insert into t_char values(1e400,null);
+Error: At line 1, column 26: Numeric literal '1E400' out of range (state=,code=0)
 0: jdbc:farrago:> insert into t_char values(-1.2345678901234e-200,null);
 Error: could not calculate results for the following row:
 [ 0 ]
@@ -106,8 +106,8 @@ duplicate name encountered near line 1, column 15 (state=,code=0)
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'BOOLEAN' to 'VARCHAR(30)' (state=,code=0)
 0: jdbc:farrago:> insert into t_varchar values(false,null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'BOOLEAN' to 'VARCHAR(30)' (state=,code=0)
-0: jdbc:farrago:> insert into t_varchar values(10e400,null);
-Error: At line 1, column 29: Numeric literal '1.0000000000000000000E401' out of range (state=,code=0)
+0: jdbc:farrago:> insert into t_varchar values(1e400,null);
+Error: At line 1, column 29: Numeric literal '1E400' out of range (state=,code=0)
 0: jdbc:farrago:> insert into t_varchar values(x'ff',null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'VARBINARY(1)' to 'VARCHAR(30)' (state=,code=0)
 0: jdbc:farrago:> insert into t_varchar values(b'10',null);

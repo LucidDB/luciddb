@@ -34,7 +34,7 @@ create table t_time(time_col time(0) not null primary key, time_col2 time(0));
 insert into t_time values('string value',null);
 insert into t_time values(true,null);
 insert into t_time values(1234,null);
-insert into t_time values(10e400,null);
+insert into t_time values(1e400,null);
 insert into t_time values(-1.2345678901234e-200,null);
 insert into t_time values(-1234.03,null);
 insert into t_time values(x'ff',null);

@@ -398,14 +398,6 @@ public class SqlLiteral extends SqlNode
         return ((NlsString) value).getValue();
     }
 
-    public Object clone()
-    {
-        return new SqlLiteral(
-            value,
-            typeName,
-            getParserPosition());
-    }
-
     public void unparse(
         SqlWriter writer,
         int leftPrec,

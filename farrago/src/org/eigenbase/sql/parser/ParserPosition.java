@@ -73,29 +73,11 @@ public class ParserPosition
 
     /**
      *
-     * @param beginLine line position of token beginning
-     */
-    public void setBeginLine(int beginLine)
-    {
-        this.beginLine = beginLine;
-    }
-
-    /**
-     *
      * @return column position of token beginning
      */
     public int getBeginColumn()
     {
         return beginColumn;
-    }
-
-    /**
-     *
-     * @param beginColumn column position of token beginning
-     */
-    public void setBeginColumn(int beginColumn)
-    {
-        this.beginColumn = beginColumn;
     }
 
     // implements Object

@@ -97,13 +97,10 @@ public class SqlIdentifier extends SqlNode
 
     public Object clone()
     {
-        if (null != collation) {
-            return new SqlIdentifier(
-                (String []) names.clone(),
-                (SqlCollation) collation.clone(),
-                getParserPosition());
-        }
-        return new SqlIdentifier((String []) names.clone(), null);
+        return new SqlIdentifier(
+            Util.clone(names), 
+            collation,
+            getParserPosition());
     }
 
     public String toString()

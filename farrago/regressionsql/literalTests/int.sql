@@ -32,7 +32,7 @@ create table t_int(int_col int not null primary key,
 -- negative test
 insert into t_int values('true',null);
 insert into t_int values(TRUE,null);
-insert into t_int values(10e400,null);
+insert into t_int values(1e400,null);
 insert into t_int values(x'ff',null);
 insert into t_int values(b'10',null);
 insert into t_int values(date '1999-01-08',null);

@@ -44,8 +44,8 @@ Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast fro
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'INTEGER' to 'BOOLEAN' (state=,code=0)
 0: jdbc:farrago:> insert into t_boolean values(-1234.03,null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'DOUBLE' to 'BOOLEAN' (state=,code=0)
-0: jdbc:farrago:> insert into t_boolean values(10e400,null);
-Error: At line 1, column 29: Numeric literal '1.0000000000000000000E401' out of range (state=,code=0)
+0: jdbc:farrago:> insert into t_boolean values(1e400,null);
+Error: At line 1, column 29: Numeric literal '1E400' out of range (state=,code=0)
 0: jdbc:farrago:> insert into t_boolean values(-1.2345678901234e-200,null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'DOUBLE' to 'BOOLEAN' (state=,code=0)
 0: jdbc:farrago:> insert into t_boolean values(x'ff',null);

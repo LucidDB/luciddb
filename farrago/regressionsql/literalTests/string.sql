@@ -10,7 +10,7 @@ create table t_char(char_col char(1) not null primary key, char_col2 char(1));
 -- negative test
 insert into t_char values(true,null);
 insert into t_char values(1234,null);
-insert into t_char values(10e400,null);
+insert into t_char values(1e400,null);
 insert into t_char values(-1.2345678901234e-200,null);
 insert into t_char values(-1234.03,null);
 insert into t_char values(x'ff',null);
@@ -52,7 +52,7 @@ create table t_varchar(varchar_col varchar(30) not null primary key, varchar_col
 -- negative test
 insert into t_varchar values(true,null);
 insert into t_varchar values(false,null);
-insert into t_varchar values(10e400,null);
+insert into t_varchar values(1e400,null);
 insert into t_varchar values(x'ff',null);
 insert into t_varchar values(b'10',null);
 select * from t_varchar;

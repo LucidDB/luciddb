@@ -226,11 +226,6 @@ public class SqlCollation
         throw Util.newInternal("Should never come here");
     }
 
-    public Object clone()
-    {
-        return new SqlCollation(collationName, coercibility);
-    }
-
     public String toString()
     {
         return "COLLATE " + collationName;

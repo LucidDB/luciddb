@@ -153,7 +153,7 @@ create table t_date(date_col date not null primary key, date_col2 date);
 insert into t_date values('string value',null);
 insert into t_date values(true,null);
 insert into t_date values(1234,null);
-insert into t_date values(10e400,null);
+insert into t_date values(1e400,null);
 insert into t_date values(-1.2345678901234e-200,null);
 insert into t_date values(-1234.03,null);
 insert into t_date values(x'ff',null);

@@ -164,16 +164,6 @@ public class SqlDataType extends SqlNode
         validator.validateDataType(this);
     }
 
-    public Object clone()
-    {
-        return new SqlDataType(
-            typeName,
-            precision,
-            scale,
-            charSetName,
-            getParserPosition());
-    }
-
     public void accept(SqlVisitor visitor)
     {
         visitor.visit(this);

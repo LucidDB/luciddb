@@ -293,9 +293,12 @@ public class RexLiteral extends RexNode
             pw.print(((Boolean) value).booleanValue() ? "true" : "false");
             break;
         case SqlTypeName.Decimal_ordinal:
-        case SqlTypeName.Double_ordinal:
             assert value instanceof BigDecimal;
             pw.print(value.toString());
+            break;
+        case SqlTypeName.Double_ordinal:
+            assert value instanceof BigDecimal;
+            pw.print(Util.toScientificNotation((BigDecimal) value));
             break;
         case SqlTypeName.Binary_ordinal:
             assert value instanceof byte [];

@@ -64,12 +64,12 @@ import org.eigenbase.sql.util.SqlVisitor;
  * @since Oct 31, 2004
  * @version $Id$
  */
-public class SqlIntervalQualifier extends SqlNode implements Cloneable {
-
-    private int         startPrecision;
-    private TimeUnit    startUnit;
-    private TimeUnit    endUnit;
-    private int         fractionalSecondPrecision;
+public class SqlIntervalQualifier extends SqlNode
+{
+    private final int         startPrecision;
+    private final TimeUnit    startUnit;
+    private final TimeUnit    endUnit;
+    private final int         fractionalSecondPrecision;
 
     public SqlIntervalQualifier(
         TimeUnit startUnit,
@@ -96,10 +96,6 @@ public class SqlIntervalQualifier extends SqlNode implements Cloneable {
 
     public boolean equalsDeep(SqlNode node) {
         return this.toString().equals(node.toString());
-    }
-
-    public Object clone() {
-        return this.clone();
     }
 
     public int getStartPrecision() {

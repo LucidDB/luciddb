@@ -17,10 +17,10 @@
  select -34.84 as t1 from values ('true');
  select 1.2345678901234e+200 as t1 from values ('true');
  select 1.2345678901234e-200 as t1 from values ('true');
- select 10e400 as t1 from values ('true');
- select -10e400 as t1 from values ('true');
- select 10e-400 as t1 from values ('true');
- select -10e-400 as t1 from values ('true');
+ select 1e400 as t1 from values ('true');
+ select -1e400 as t1 from values ('true');
+ select 1e-400 as t1 from values ('true');
+ select -1e-400 as t1 from values ('true');
  select -34.84 as t1 from values ('true');
  select -1004.30 as t1 from values ('true');
  select -1.2345678901234e+200 as t1 from values ('true');
@@ -40,7 +40,7 @@ insert into t_real values(b'10',null);
 insert into t_real values(date '1999-01-08',null);
 insert into t_real values(time '12:01:01',null);
 insert into t_real values(timestamp '2004-12-01 12:01:01',null);
-insert into t_real values(10e400,null);
+insert into t_real values(1e400,null);
 
 -- insert the right value
 insert into t_real values(1234.999,null);
