@@ -348,6 +348,24 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         SqlNode sqlNode,
         final FarragoSessionAnalyzedSql analyzedSql)
     {
+        // Round up all the dependencies on UDF's.  We can't do this
+        // during function lookup because overloads need to be resolved
+        // first.  And we can't do this any later because we stop
+        // collecting direct dependencies during SqlToRelConverter.
+        SqlVisitor udfInvocationFinder = new SqlBasicVisitor() 
+            {
+                public void visit(SqlCall call)
+                {
+                    if (call.operator instanceof FarragoUserDefinedRoutine) {
+                        FarragoUserDefinedRoutine function =
+                            (FarragoUserDefinedRoutine) call.operator;
+                        addDependency(function.getFemRoutine());
+                    }
+                    super.visit(call);
+                }
+            };
+        sqlNode.accept(udfInvocationFinder);
+        
         getSqlToRelConverter();
         if (analyzedSql.paramRowType == null) {
             // query expression
@@ -368,6 +386,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
                 public void visit(SqlDynamicParam param)
                 {
                     analyzedSql.hasDynamicParams = true;
+                    super.visit(param);
                 }
             };
         sqlNode.accept(dynamicParamFinder);

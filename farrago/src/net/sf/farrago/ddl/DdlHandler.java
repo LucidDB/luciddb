@@ -866,11 +866,8 @@ public class DdlHandler
                 declaredReturnType.toString());
         }
 
-        // TODO jvs 27-Dec-2004
-        /*
-          validator.createDependency(
-          routine, analyzedSql.dependencies, "RoutineUsage");
-        */
+        validator.createDependency(
+            routine, analyzedSql.dependencies, "RoutineUsage");
         
         routine.getBody().setBody(analyzedSql.canonicalString);
     }

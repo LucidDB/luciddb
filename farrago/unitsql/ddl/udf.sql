@@ -116,3 +116,38 @@ return i + j;
 
 drop function add_integers;
 
+create schema udftest3;
+
+-- test dependencies and cascade/restrict
+
+create function to_upper(in v varchar(128))
+returns varchar(128)
+contains sql
+return upper(v);
+
+create view upper_crust as
+select to_upper(name)
+from sales.depts;
+
+create function to_upper2(in v varchar(128))
+returns varchar(128)
+contains sql
+return upper(v);
+
+create function to_uppertrim(in v varchar(128))
+returns varchar(128)
+contains sql
+return trim(trailing ' ' from to_upper2(v));
+
+-- should fail:  restrict
+drop function to_upper;
+
+drop function to_upper cascade;
+
+-- should fail:  restrict
+drop function to_upper2;
+
+drop function to_uppertrim;
+
+-- should succeed now that to_uppertrim is gone
+drop function to_upper2;
