@@ -91,7 +91,7 @@ public abstract class ReflectUtil
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * Use reflection to find the correct java.nio.ByteBuffer "absolute get"
+     * Uses reflection to find the correct java.nio.ByteBuffer "absolute get"
      * method for a given primitive type.
      *
      * @param clazz the Class object representing the primitive type
@@ -105,7 +105,7 @@ public abstract class ReflectUtil
     }
 
     /**
-     * Use reflection to find the correct java.nio.ByteBuffer "absolute put"
+     * Uses reflection to find the correct java.nio.ByteBuffer "absolute put"
      * method for a given primitive type.
      *
      * @param clazz the Class object representing the primitive type
@@ -119,7 +119,7 @@ public abstract class ReflectUtil
     }
 
     /**
-     * Get the Java boxing class for a primitive class.
+     * Gets the Java boxing class for a primitive class.
      *
      * @param primitiveClass representative class for primitive
      * (e.g. java.lang.Integer.TYPE)
@@ -133,7 +133,7 @@ public abstract class ReflectUtil
     }
 
     /**
-     * Get the name of a class with no package qualifiers; if it's an
+     * Gets the name of a class with no package qualifiers; if it's an
      * inner class, it will still be qualified by the containing class (X$Y).
      *
      * @param c the class of interest
@@ -147,6 +147,55 @@ public abstract class ReflectUtil
             return className;
         }
         return className.substring(lastDot + 1);
+    }
+
+    /**
+     * Composes a string representing a human-readable method name
+     * (with neither exception nor return type information).
+     *
+     * @param declaringClass class on which method is defined
+     *
+     * @param methodName simple name of method without signature
+     *
+     * @param paramTypes method parameter types
+     *
+     * @return unmangled method name
+     */
+    public static String getUnmangledMethodName(
+        Class declaringClass,
+        String methodName,
+        Class [] paramTypes)
+    {
+        StringBuffer sb = new StringBuffer();
+        sb.append(declaringClass.getName());
+        sb.append(".");
+        sb.append(methodName);
+        sb.append("(");
+        for (int i = 0; i < paramTypes.length; ++i) {
+            if (i > 0) {
+                sb.append(", ");
+            }
+            sb.append(paramTypes[i].getName());
+        }
+        sb.append(")");
+        return sb.toString();
+    }
+
+    /**
+     * Composes a string representing a human-readable method name
+     * (with neither exception nor return type information).
+     *
+     * @param method method whose name is to be generated
+     *
+     * @return unmangled method name
+     */
+    public static String getUnmangledMethodName(
+        Method method)
+    {
+        return getUnmangledMethodName(
+            method.getDeclaringClass(),
+            method.getName(),
+            method.getParameterTypes());
     }
 
     /**

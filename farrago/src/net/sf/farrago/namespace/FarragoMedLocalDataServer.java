@@ -20,7 +20,7 @@ package net.sf.farrago.namespace;
 
 import java.sql.*;
 
-import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fennel.*;
 
 
@@ -51,7 +51,7 @@ public interface FarragoMedLocalDataServer extends FarragoMedDataServer
      *
      * @return root PageId of index
      */
-    public long createIndex(CwmSqlindex index)
+    public long createIndex(FemLocalIndex index)
         throws SQLException;
 
     /**
@@ -65,7 +65,7 @@ public interface FarragoMedLocalDataServer extends FarragoMedDataServer
      * entirely
      */
     public void dropIndex(
-        CwmSqlindex index,
+        FemLocalIndex index,
         long rootPageId,
         boolean truncate)
         throws SQLException;

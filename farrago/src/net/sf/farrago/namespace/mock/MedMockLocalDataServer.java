@@ -23,6 +23,7 @@ import java.sql.*;
 import java.util.*;
 
 import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.type.*;
@@ -55,7 +56,7 @@ class MedMockLocalDataServer
     }
 
     // implement FarragoMedLocalDataServer
-    public long createIndex(CwmSqlindex index)
+    public long createIndex(FemLocalIndex index)
         throws SQLException
     {
         // mock roots are meaningless
@@ -64,7 +65,7 @@ class MedMockLocalDataServer
 
     // implement FarragoMedLocalDataServer
     public void dropIndex(
-        CwmSqlindex index,
+        FemLocalIndex index,
         long rootPageId,
         boolean truncate)
         throws SQLException

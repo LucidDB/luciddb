@@ -50,6 +50,22 @@ return i + j;
 drop function celsius_to_fahrenheit;
 drop function celsius_to_fahrenheit_real;
 
+-- test redundant language specification
+create function celsius_to_fahrenheit(in c real)
+returns real
+language sql
+contains sql
+return c*1.8 + 32;
+drop function celsius_to_fahrenheit;
+
+-- test redundant parameter style specification
+create function celsius_to_fahrenheit(in c real)
+returns real
+parameter style sql
+contains sql
+return c*1.8 + 32;
+drop function celsius_to_fahrenheit;
+
 -- should fail:  can't declare OUT parameter to function
 create function add_integers(out i int,in j int)
 returns int
@@ -157,16 +173,115 @@ returns int
 contains sql
 return i + j;
 
--- should fail:  bad path
+-- should fail
 create schema badpath
 create function double_integer(in i int)
 returns int
 contains sql
 return add_integers(i,i);
 
+-- should succeed
 create schema goodpath
 path udftest
 create function double_integer(in i int)
 returns int
 contains sql
 return add_integers(i,i);
+
+-- begin tests for mismatched Java/SQL
+
+-- should fail:  cannot specify both SQL body and external name
+create function get_java_property(in name varchar(128))
+returns varchar(128)
+contains sql
+external name 'class java.lang.System.getProperty'
+return 'undefined';
+
+-- should fail:  cannot specify language SQL with external name
+create function get_java_property(in name varchar(128))
+returns varchar(128)
+language sql
+contains sql
+external name 'class java.lang.System.getProperty';
+
+-- should fail:  cannot specify parameter style SQL with external name
+create function get_java_property(in name varchar(128))
+returns varchar(128)
+parameter style sql
+contains sql
+external name 'class java.lang.System.getProperty';
+
+-- should fail:  cannot specify parameter style SQL with external name
+create function get_java_property(in name varchar(128))
+returns varchar(128)
+contains sql
+external name 'class java.lang.System.getProperty'
+parameter style sql;
+
+-- should fail:  cannot specify language JAVA with SQL body
+create function celsius_to_fahrenheit(in c double)
+returns double
+language java
+contains sql
+return c*1.8 + 32;
+
+-- should fail:  cannot specify parameter style JAVA with SQL body
+create function celsius_to_fahrenheit(in c double)
+returns double
+parameter style java
+contains sql
+return c*1.8 + 32;
+
+-- begin tests for external Java routines
+
+create function get_java_property(in name varchar(128))
+returns varchar(128)
+no sql
+external name 'class java.lang.System.getProperty';
+drop function get_java_property;
+
+-- test redundant language specification
+create function get_java_property(in name varchar(128))
+returns varchar(128)
+language java
+no sql
+external name 'class java.lang.System.getProperty';
+drop function get_java_property;
+
+-- test redundant parameter style specification
+create function get_java_property(in name varchar(128))
+returns varchar(128)
+parameter style java
+no sql
+external name 'class java.lang.System.getProperty';
+drop function get_java_property;
+
+-- should fail:  missing method spec
+create function get_java_property(in name varchar(128))
+returns varchar(128)
+no sql
+external name 'class foobar';
+
+-- should fail:  unknown class
+create function get_java_property(in name varchar(128))
+returns varchar(128)
+no sql
+external name 'class java.lang.Rodent.getProperty';
+
+-- should fail:  unknown method 
+create function get_java_property(in name varchar(128))
+returns varchar(128)
+no sql
+external name 'class java.lang.System.getHotels';
+
+-- should fail:  parameter type mismatch
+create function get_java_property(in name int)
+returns varchar(128)
+no sql
+external name 'class java.lang.System.getProperty';
+
+-- should fail:  return type mismatch
+create function get_java_property(in name varchar(128))
+returns int
+no sql
+external name 'class java.lang.System.getProperty';

@@ -23,6 +23,7 @@ import java.util.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
+import net.sf.farrago.fem.med.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
@@ -130,7 +131,8 @@ class FtrsTableModificationRel extends TableModificationRel
         for (int i = 0; i < n; i++) {
             String columnName = (String) getUpdateColumnList().get(i);
             CwmColumn column =
-                (CwmColumn) getRepos().getModelElement(columns, columnName);
+                (CwmColumn) FarragoCatalogUtil.getModelElementByName(
+                    columns, columnName);
             list.add(column);
         }
         return list;
@@ -184,15 +186,17 @@ class FtrsTableModificationRel extends TableModificationRel
         // also.  For updates, there is another consideration:  indexes which
         // are updated in place cannot be rolled back individually, so
         // they must come last (after any possible constraint violations).
-        CwmSqlindex clusteredIndex = repos.getClusteredIndex(table);
+        FemLocalIndex clusteredIndex =
+            FarragoCatalogUtil.getClusteredIndex(repos, table);
         boolean clusteredFirst = clusteredIndex.isUnique();
 
         List firstList = new ArrayList();
         List secondList = new ArrayList();
 
-        Iterator indexIter = repos.getIndexes(table).iterator();
+        Iterator indexIter = FarragoCatalogUtil.getTableIndexes(
+            repos, table).iterator();
         while (indexIter.hasNext()) {
-            CwmSqlindex index = (CwmSqlindex) indexIter.next();
+            FemLocalIndex index = (FemLocalIndex) indexIter.next();
 
             boolean updateInPlace = false;
 
@@ -217,9 +221,9 @@ class FtrsTableModificationRel extends TableModificationRel
             }
 
             FemIndexWriterDef indexWriter =
-                repos.fennelPackage.getFemIndexWriterDef()
+                repos.getFennelPackage().getFemIndexWriterDef()
                     .createFemIndexWriterDef();
-            if (!repos.isTemporary(index)) {
+            if (!FarragoCatalogUtil.isIndexTemporary(index)) {
                 indexWriter.setRootPageId(
                     getPreparingStmt().getIndexMap().getIndexRoot(index));
             } else {
@@ -246,7 +250,7 @@ class FtrsTableModificationRel extends TableModificationRel
                     prepend = true;
                 }
             } else {
-                if (repos.isPrimary(index)) {
+                if (FarragoCatalogUtil.isIndexPrimaryKey(index)) {
                     prepend = true;
                 }
             }

@@ -294,6 +294,46 @@ encountered near {1}</text>
     <text>Unable to evaluate expression in SET statement</text>
 </exception>
 
+<exception id="420560" name="ValidatorRoutineBodySqlOnly">
+    <text>Routine {0} with SQL definition cannot specify non-SQL language;
+encountered near {1}</text>
+</exception>
+
+<exception id="420570" name="ValidatorRoutineExternalJavaOnly">
+    <text>External routine {0} cannot specify non-JAVA language;
+encountered near {1}</text>
+</exception>
+
+<exception id="420580" name="ValidatorRoutineJavaParamStyleOnly">
+    <text>External JAVA routine {0} cannot specify non-JAVA parameter style;
+encountered near {1}</text>
+</exception>
+
+<exception id="420590" name="ValidatorRoutineSqlParamStyleOnly">
+    <text>Routine {0} with SQL definition cannot specify non-SQL parameter style;
+encountered near {1}</text>
+</exception>
+
+<exception id="420600" name="ValidatorRoutineInvalidJavaMethod">
+    <text>Routine {0} has invalid external Java method specification ''{1}'';
+encountered near {2}</text>
+</exception>
+
+<exception id="420610" name="ValidatorRoutineJavaMethodNotFound">
+    <text>Routine {0} references unknown external Java method ''{1}'';
+encountered near {2}</text>
+</exception>
+
+<exception id="420620" name="ValidatorRoutineJavaReturnMismatch">
+    <text>Routine {0} returns {1} but references external Java method which returns {2};
+encountered near {3}</text>
+</exception>
+
+<exception id="420630" name="ValidatorRoutineJavaMethodNotPublicStatic">
+    <text>Routine {0} references external Java method {1} which is not both public and static;
+encountered near {2}</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Fennel resources 440,000 - 450,000 -->
 <!-- Actual resources are defined separately in Fennel -->
@@ -341,7 +381,7 @@ encountered near {1}</text>
 </exception>
 
 <exception id="460050" name="JdbcDriverTypeInfoFailed">
-    <text>Could not obtain type information from  JDBC driver</text>
+    <text>Could not obtain type information from JDBC driver</text>
 </exception>
 
 <exception id="460060" name="DataServerRuntimeFailed">

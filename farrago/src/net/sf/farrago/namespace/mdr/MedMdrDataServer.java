@@ -155,7 +155,7 @@ class MedMdrDataServer extends MedAbstractDataServer
     {
         foreignRepository = false;
         repository = repos.getMdrRepos();
-        extentPackage = repos.farragoPackage;
+        extentPackage = repos.getFarragoPackage();
         rootPackage = extentPackage;
     }
 

@@ -468,7 +468,7 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
         FennelStreamGraph newStreamGraph = null;
         try {
             Collection collection =
-                JmiUtil.importFromXmiString(repos.transientFarragoPackage,
+                JmiUtil.importFromXmiString(repos.getTransientFarragoPackage(),
                     xmiFennelPlan);
             assert (collection.size() == 1);
             FemCmdPrepareExecutionStreamGraph cmd =
@@ -499,7 +499,7 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
     // implement FennelJavaStreamMap
     public long getIndexRoot(long pageOwnerId)
     {
-        CwmSqlindex index = indexMap.getIndexById(pageOwnerId);
+        FemLocalIndex index = indexMap.getIndexById(pageOwnerId);
         return indexMap.getIndexRoot(index);
     }
 

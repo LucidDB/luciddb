@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/udf.sql#3 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/udf.sql#4 $
 0: jdbc:farrago:> -- Test DDL for user-defined functions
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema udftest;
@@ -55,6 +55,22 @@ encountered near line 1, column 8 (state=,code=0)
 0: jdbc:farrago:> -- drop by specific name
 0: jdbc:farrago:> drop function celsius_to_fahrenheit;
 0: jdbc:farrago:> drop function celsius_to_fahrenheit_real;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test redundant language specification
+0: jdbc:farrago:> create function celsius_to_fahrenheit(in c real)
+. . . . . . . . > returns real
+. . . . . . . . > language sql
+. . . . . . . . > contains sql
+. . . . . . . . > return c*1.8 + 32;
+0: jdbc:farrago:> drop function celsius_to_fahrenheit;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test redundant parameter style specification
+0: jdbc:farrago:> create function celsius_to_fahrenheit(in c real)
+. . . . . . . . > returns real
+. . . . . . . . > parameter style sql
+. . . . . . . . > contains sql
+. . . . . . . . > return c*1.8 + 32;
+0: jdbc:farrago:> drop function celsius_to_fahrenheit;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  can't declare OUT parameter to function
 0: jdbc:farrago:> create function add_integers(out i int,in j int)
@@ -171,7 +187,7 @@ Error: Routine UDFTEST.TO_UPPER2 can only be dropped with CASCADE because other 
 . . . . . . . . > contains sql
 . . . . . . . . > return i + j;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail:  bad path
+0: jdbc:farrago:> -- should fail
 0: jdbc:farrago:> create schema badpath
 . . . . . . . . > create function double_integer(in i int)
 . . . . . . . . > returns int
@@ -179,11 +195,134 @@ Error: Routine UDFTEST.TO_UPPER2 can only be dropped with CASCADE because other 
 . . . . . . . . > return add_integers(i,i);
 Error: At line 1, column 1: Reference to unknown function 'ADD_INTEGERS' (state=,code=0)
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should succeed
 0: jdbc:farrago:> create schema goodpath
 . . . . . . . . > path udftest
 . . . . . . . . > create function double_integer(in i int)
 . . . . . . . . > returns int
 . . . . . . . . > contains sql
 . . . . . . . . > return add_integers(i,i);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- begin tests for mismatched Java/SQL
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  cannot specify both SQL body and external name
+0: jdbc:farrago:> create function get_java_property(in name varchar(128))
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > contains sql
+. . . . . . . . > external name 'class java.lang.System.getProperty'
+. . . . . . . . > return 'undefined';
+Error: net.sf.farrago.parser.ParseException: Encountered "return" at line 1, column 142.
+Was expecting one of:
+    <EOF> 
+    "external" ...
+    "parameter" ... (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  cannot specify language SQL with external name
+0: jdbc:farrago:> create function get_java_property(in name varchar(128))
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > language sql
+. . . . . . . . > contains sql
+. . . . . . . . > external name 'class java.lang.System.getProperty';
+Error: External routine UDFTEST.GET_JAVA_PROPERTY cannot specify non-JAVA language;
+encountered near line 1, column 8 (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  cannot specify parameter style SQL with external name
+0: jdbc:farrago:> create function get_java_property(in name varchar(128))
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > parameter style sql
+. . . . . . . . > contains sql
+. . . . . . . . > external name 'class java.lang.System.getProperty';
+Error: External JAVA routine UDFTEST.GET_JAVA_PROPERTY cannot specify non-JAVA parameter style;
+encountered near line 1, column 8 (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  cannot specify parameter style SQL with external name
+0: jdbc:farrago:> create function get_java_property(in name varchar(128))
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > contains sql
+. . . . . . . . > external name 'class java.lang.System.getProperty'
+. . . . . . . . > parameter style sql;
+Error: External JAVA routine UDFTEST.GET_JAVA_PROPERTY cannot specify non-JAVA parameter style;
+encountered near line 1, column 8 (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  cannot specify language JAVA with SQL body
+0: jdbc:farrago:> create function celsius_to_fahrenheit(in c double)
+. . . . . . . . > returns double
+. . . . . . . . > language java
+. . . . . . . . > contains sql
+. . . . . . . . > return c*1.8 + 32;
+Error: Routine UDFTEST.CELSIUS_TO_FAHRENHEIT with SQL definition cannot specify non-SQL language;
+encountered near line 1, column 8 (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  cannot specify parameter style JAVA with SQL body
+0: jdbc:farrago:> create function celsius_to_fahrenheit(in c double)
+. . . . . . . . > returns double
+. . . . . . . . > parameter style java
+. . . . . . . . > contains sql
+. . . . . . . . > return c*1.8 + 32;
+Error: Routine UDFTEST.CELSIUS_TO_FAHRENHEIT with SQL definition cannot specify non-SQL parameter style;
+encountered near line 1, column 8 (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- begin tests for external Java routines
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create function get_java_property(in name varchar(128))
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class java.lang.System.getProperty';
+0: jdbc:farrago:> drop function get_java_property;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test redundant language specification
+0: jdbc:farrago:> create function get_java_property(in name varchar(128))
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > language java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class java.lang.System.getProperty';
+0: jdbc:farrago:> drop function get_java_property;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test redundant parameter style specification
+0: jdbc:farrago:> create function get_java_property(in name varchar(128))
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > parameter style java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class java.lang.System.getProperty';
+0: jdbc:farrago:> drop function get_java_property;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  missing method spec
+0: jdbc:farrago:> create function get_java_property(in name varchar(128))
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class foobar';
+Error: Routine UDFTEST.GET_JAVA_PROPERTY has invalid external Java method specification 'class foobar';
+encountered near line 1, column 8 (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  unknown class
+0: jdbc:farrago:> create function get_java_property(in name varchar(128))
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class java.lang.Rodent.getProperty';
+Error: java.lang.ClassNotFoundException: java.lang.Rodent (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  unknown method 
+0: jdbc:farrago:> create function get_java_property(in name varchar(128))
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class java.lang.System.getHotels';
+Error: Routine UDFTEST.GET_JAVA_PROPERTY references unknown external Java method 'java.lang.System.getHotels(java.lang.String)';
+encountered near line 1, column 8 (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  parameter type mismatch
+0: jdbc:farrago:> create function get_java_property(in name int)
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class java.lang.System.getProperty';
+Error: Routine UDFTEST.GET_JAVA_PROPERTY references unknown external Java method 'java.lang.System.getProperty(int)';
+encountered near line 1, column 8 (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  return type mismatch
+0: jdbc:farrago:> create function get_java_property(in name varchar(128))
+. . . . . . . . > returns int
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class java.lang.System.getProperty';
+Error: Routine UDFTEST.GET_JAVA_PROPERTY returns int but references external Java method which returns class java.lang.String;
+encountered near line 1, column 8 (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

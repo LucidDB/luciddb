@@ -79,40 +79,11 @@ public class FarragoRepos extends FarragoMetadataFactory
 
     //~ Instance fields -------------------------------------------------------
 
-    /** Farrago config package in repository. */
-    public final ConfigPackage configPackage;
-
-    /** CWM Core package in repository. */
-    public final CorePackage corePackage;
-
-    /** CWM package in repository. */
-    public final CwmPackage cwmPackage;
-
-    /** CWM DataTypes package in repository. */
-    public final DataTypesPackage datatypesPackage;
-
-    /** Root package in repository. */
-    public final FarragoPackage farragoPackage;
-
     /** Root package in transient repository. */
-    public final FarragoPackage transientFarragoPackage;
-
-    /** FEM package in repository. */
-    public final FemPackage femPackage;
+    private final FarragoPackage transientFarragoPackage;
 
     /** Fennel package in repository. */
-    public final FennelPackage fennelPackage;
-
-    /**
-     * FEM SQL/MED package in repository.
-     */
-    public final MedPackage medPackage;
-
-    /** CWM KeysIndexes package in repository. */
-    public final KeysIndexesPackage indexPackage;
-
-    /** CWM Relational package in repository. */
-    public final RelationalPackage relationalPackage;
+    private final FennelPackage fennelPackage;
 
     /** The loader for the underlying MDR repository. */
     private FarragoModelLoader modelLoader;
@@ -160,20 +131,13 @@ public class FarragoRepos extends FarragoMetadataFactory
             }
         }
 
-        farragoPackage = modelLoader.loadModel("FarragoCatalog", userRepos);
+        FarragoPackage farragoPackage =
+            modelLoader.loadModel("FarragoCatalog", userRepos);
         if (farragoPackage == null) {
             throw FarragoResource.instance().newCatalogUninitialized();
         }
 
         super.setRootPackage(farragoPackage);
-        cwmPackage = farragoPackage.getCwm();
-        corePackage = cwmPackage.getCore();
-        relationalPackage = cwmPackage.getRelational();
-        indexPackage = cwmPackage.getKeysIndexes();
-        datatypesPackage = cwmPackage.getDataTypes();
-        femPackage = farragoPackage.getFem();
-        medPackage = femPackage.getMed();
-        configPackage = femPackage.getConfig();
 
         mdrRepository = modelLoader.getMdrRepos();
         
@@ -191,7 +155,7 @@ public class FarragoRepos extends FarragoMetadataFactory
                 RefPackage memExtent =
                     nbRepos.createExtent(
                         "TransientCatalog",
-                        farragoPackage.refMetaObject(),
+                        getFarragoPackage().refMetaObject(),
                         null,
                         memStorageId);
                 transientFarragoPackage = (FarragoPackage) memExtent;
@@ -207,7 +171,7 @@ public class FarragoRepos extends FarragoMetadataFactory
 
         // Load configuration
         Collection configs =
-            configPackage.getFemFarragoConfig().refAllOfClass();
+            getConfigPackage().getFemFarragoConfig().refAllOfClass();
 
         // TODO: multiple named configurations.  For now, build should have
         // imported exactly one configuration named Current.
@@ -253,8 +217,6 @@ public class FarragoRepos extends FarragoMetadataFactory
     }
     
     /**
-     * .
-     *
      * @return MDRepository storing this Farrago repository
      */
     public MDRepository getMdrRepos()
@@ -262,7 +224,10 @@ public class FarragoRepos extends FarragoMetadataFactory
         return mdrRepository;
     }
 
-    protected FarragoPackage getTransientFarragoPackage()
+    /**
+     * @return root package for transient metadata
+     */
+    public FarragoPackage getTransientFarragoPackage()
     {
         return transientFarragoPackage;
     }
@@ -278,10 +243,10 @@ public class FarragoRepos extends FarragoMetadataFactory
     /**
      * @return CwmCatalog representing this FarragoRepos
      */
-    public CwmCatalog getSelfAsCwmCatalog()
+    public CwmCatalog getSelfAsCatalog()
     {
         // TODO:  variable
-        return getCwmCatalog(LOCALDB_CATALOG_NAME);
+        return getCatalog(LOCALDB_CATALOG_NAME);
     }
 
     /**
@@ -296,49 +261,6 @@ public class FarragoRepos extends FarragoMetadataFactory
     {
         // TODO:  prevent updates
         return (FemFarragoConfig) mdrRepository.getByMofId(currentConfigMofId);
-    }
-
-    /**
-     * Determine whether an index is clustered.
-     *
-     * @param index the index in question
-     *
-     * @return true if clustered
-     */
-    public boolean isClustered(CwmSqlindex index)
-    {
-        return getTag(index, "clusteredIndex") != null;
-    }
-
-    /**
-     * Determine whether an index is temporary
-     *
-     * @param index the index in question
-     *
-     * @return true if temporary
-     */
-    public static boolean isTemporary(CwmSqlindex index)
-    {
-        return ((CwmTable) index.getSpannedClass()).isTemporary();
-    }
-
-    /**
-     * Find the clustered index storing a table's data.
-     *
-     * @param table the table to access
-     *
-     * @return clustered index or null if none
-     */
-    public CwmSqlindex getClusteredIndex(CwmClass table)
-    {
-        Iterator iter = getIndexes(table).iterator();
-        while (iter.hasNext()) {
-            CwmSqlindex index = (CwmSqlindex) iter.next();
-            if (isClustered(index)) {
-                return index;
-            }
-        }
-        return null;
     }
 
     /**
@@ -363,23 +285,6 @@ public class FarragoRepos extends FarragoMetadataFactory
     public boolean isFennelEnabled()
     {
         return isFennelEnabled;
-    }
-
-    /**
-     * Get the collection of indexes spanning a table.
-     *
-     * @param table the table of interest
-     *
-     * @return index collection
-     */
-    public Collection getIndexes(CwmClass table)
-    {
-        return indexPackage.getIndexSpansClass().getIndex(table);
-    }
-
-    public static CwmTable getIndexTable(CwmSqlindex index)
-    {
-        return (CwmTable) index.getSpannedClass();
     }
 
     /**
@@ -448,217 +353,18 @@ public class FarragoRepos extends FarragoMetadataFactory
     }
 
     /**
-     * Search a collection for a CwmModelElement by name.
-     *
-     * @param collection the collection to search
-     * @param name name of element to find
-     *
-     * @return CwmModelElement found, or null if not found
-     */
-    public CwmModelElement getModelElement(
-        Collection collection,
-        String name)
-    {
-        Iterator iter = collection.iterator();
-        while (iter.hasNext()) {
-            CwmModelElement element = (CwmModelElement) iter.next();
-            if (element.getName().equals(name)) {
-                return element;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Search a collection for a FemSqlcollectionType by name.
-     *
-     * @param collection the collection to search
-     * @param name name of element to find
-     *
-     * @return FemSqlcollectionType found, or null if not found
-     */
-    public FemSqlcollectionType getCollectionModelElement(
-        Collection collection,
-        String name)
-    {
-        Iterator iter = collection.iterator();
-        while (iter.hasNext()) {
-            FemSqlcollectionType element = (FemSqlcollectionType) iter.next();
-            if (element.getName().equals(name)) {
-                return element;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Search a collection for a CwmModelElement by name and type.
-     *
-     * @param collection the collection to search
-     * @param name name of element to find
-     * @param type class which sought object must instantiate
-     *
-     * @return CwmModelElement found, or null if not found
-     */
-    public CwmModelElement getTypedModelElement(
-        Collection collection,
-        String name,
-        Class type)
-    {
-        Iterator iter = collection.iterator();
-        while (iter.hasNext()) {
-            CwmModelElement element = (CwmModelElement) iter.next();
-            if (!element.getName().equals(name)) {
-                continue;
-            }
-            if (type.isInstance(element)) {
-                return element;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Filter a collection fo all CwmModelElements of a given type.
-     *
-     * @param inCollection the collection to search
-     * @param outCollection receives matching objects
-     * @param type class which sought objects must instantiate
-     */
-    public void filterTypedModelElements(
-        Collection inCollection,
-        Collection outCollection,
-        Class type)
-    {
-        Iterator iter = inCollection.iterator();
-        while (iter.hasNext()) {
-            CwmModelElement element = (CwmModelElement) iter.next();
-            if (type.isInstance(element)) {
-                outCollection.add(element);
-            }
-        }
-    }
-
-    /**
-     * Determine whether a column may contain null values.  This must be used
-     * rather than directly calling CwmColumn.getIsNullable, because a column
-     * which is part of a primary key or clustered index may not contain
-     * nulls even when its definition says it can.
-     *
-     * @param column the column of interest
-     *
-     * @return whether nulls are allowed
-     */
-    public boolean isNullable(CwmColumn column)
-    {
-        if (column.getIsNullable().equals(NullableTypeEnum.COLUMN_NO_NULLS)) {
-            return false;
-        }
-
-        CwmClassifier owner = column.getOwner();
-        if (!(owner instanceof CwmTable)) {
-            return true;
-        }
-
-        CwmPrimaryKey primaryKey = getPrimaryKey(owner);
-        if (primaryKey != null) {
-            if (primaryKey.getFeature().contains(column)) {
-                return false;
-            }
-        }
-        CwmSqlindex clusteredIndex = getClusteredIndex((CwmTable) owner);
-        if (clusteredIndex != null) {
-            Iterator iter = clusteredIndex.getIndexedFeature().iterator();
-            while (iter.hasNext()) {
-                CwmIndexedFeature indexedFeature =
-                    (CwmIndexedFeature) iter.next();
-                if (indexedFeature.getFeature().equals(column)) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    /**
-     * Determine whether an index implements its table's primary key.
-     *
-     * @param index the index in question
-     *
-     * @return true if is the primary key index
-     */
-    public boolean isPrimary(CwmSqlindex index)
-    {
-        return index.getName().startsWith("SYS$PRIMARY_KEY");
-    }
-
-    /**
-     * Find the primary key for a table.
-     *
-     * @param table the table of interest
-     *
-     * @return the PrimaryKey constraint, or null if none is defined
-     */
-    public CwmPrimaryKey getPrimaryKey(CwmClassifier table)
-    {
-        Iterator iter = table.getOwnedElement().iterator();
-        while (iter.hasNext()) {
-            Object obj = iter.next();
-            if (obj instanceof CwmPrimaryKey) {
-                return (CwmPrimaryKey) obj;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Look up a CwmCatalog by name.
+     * Look up a catalog by name.
      *
      * @param catalogName name of catalog to find
      *
      * @return catalog definition, or null if not found
      */
-    public CwmCatalog getCwmCatalog(String catalogName)
+    public CwmCatalog getCatalog(String catalogName)
     {
-        Collection catalogs = relationalPackage.getCwmCatalog().refAllOfType();
-        return (CwmCatalog) getModelElement(catalogs, catalogName);
-    }
-
-    /**
-     * Look up a schema by name in a catalog.
-     *
-     * @param catalog CwmCatalog to search
-     *
-     * @param schemaName name of schema to find
-     *
-     * @return schema definition, or null if not found
-     */
-    public FemLocalSchema getSchema(
-        CwmCatalog catalog,
-        String schemaName)
-    {
-        return (FemLocalSchema) getTypedModelElement(
-            catalog.getOwnedElement(),
-            schemaName,
-            FemLocalSchema.class);
-    }
-
-    /**
-     * Look up a table by name in a schema.
-     *
-     * @param schema the schema in which to look
-     * @param tableName name of table to find
-     *
-     * @return table definition, or null if not found
-     */
-    public CwmTable getTable(
-        CwmNamespace schema,
-        String tableName)
-    {
-        return (CwmTable) getTypedModelElement(
-            schema.getOwnedElement(),
-            tableName,
-            CwmTable.class);
+        Collection catalogs =
+            getRelationalPackage().getCwmCatalog().refAllOfType();
+        return (CwmCatalog) FarragoCatalogUtil.getModelElementByName(
+            catalogs, catalogName);
     }
 
     /**
@@ -674,7 +380,7 @@ public class FarragoRepos extends FarragoMetadataFactory
         String tagName)
     {
         Collection tags =
-            corePackage.getTaggedElement().getTaggedValue(element);
+            getCorePackage().getTaggedElement().getTaggedValue(element);
         Iterator iter = tags.iterator();
         while (iter.hasNext()) {
             CwmTaggedValue tag = (CwmTaggedValue) iter.next();
@@ -702,7 +408,7 @@ public class FarragoRepos extends FarragoMetadataFactory
         if (tag == null) {
             tag = newCwmTaggedValue();
             tag.setTag(tagName);
-            corePackage.getTaggedElement().add(element, tag);
+            getCorePackage().getTaggedElement().add(element, tag);
         }
         tag.setValue(tagValue);
     }
@@ -750,39 +456,6 @@ public class FarragoRepos extends FarragoMetadataFactory
         tracer.info("Catalog successfully closed");
     }
 
-    /**
-     * Set the generated name for an index used to implement a constraint.
-     *
-     * @param constraint the constraint being implemented
-     * @param index the index implementing the constraint
-     */
-    public void generateConstraintIndexName(
-        CwmUniqueConstraint constraint,
-        CwmSqlindex index)
-    {
-        String name =
-            "SYS$CONSTRAINT_INDEX$" + constraint.getNamespace().getName()
-            + "$" + constraint.getName();
-        index.setName(uniquifyGeneratedName(constraint, name));
-    }
-
-    /**
-     * Set the generated name for an anonymous constraint.
-     *
-     * @param constraint the anonymous constraint
-     */
-    public void generateConstraintName(CwmUniqueConstraint constraint)
-    {
-        if (constraint instanceof CwmPrimaryKey) {
-            constraint.setName("SYS$PRIMARY_KEY");
-        } else {
-            String name =
-                "SYS$UNIQUE_KEY$"
-                + generateUniqueConstraintColumnList(constraint);
-            constraint.setName(uniquifyGeneratedName(constraint, name));
-        }
-    }
-
     private void defineTypeAlias(
         String aliasName,
         CwmSqlsimpleType type)
@@ -790,23 +463,6 @@ public class FarragoRepos extends FarragoMetadataFactory
         CwmTypeAlias typeAlias = newCwmTypeAlias();
         typeAlias.setName(aliasName);
         typeAlias.setType(type);
-    }
-
-    private String generateUniqueConstraintColumnList(
-        CwmUniqueConstraint constraint)
-    {
-        StringBuffer sb = new StringBuffer();
-        Iterator iter = constraint.getFeature().iterator();
-        while (iter.hasNext()) {
-            CwmColumn column = (CwmColumn) iter.next();
-
-            // TODO:  deal with funny chars
-            sb.append(column.getName());
-            if (iter.hasNext()) {
-                sb.append("_");
-            }
-        }
-        return sb.toString();
     }
 
     /**
@@ -884,14 +540,14 @@ public class FarragoRepos extends FarragoMetadataFactory
 
         catalog = newCwmCatalog();
         catalog.setName(SYSBOOT_CATALOG_NAME);
-        initializeCwmCatalog(catalog);
+        initializeCatalog(catalog);
 
         catalog = newCwmCatalog();
         catalog.setName(LOCALDB_CATALOG_NAME);
-        initializeCwmCatalog(catalog);
+        initializeCatalog(catalog);
     }
 
-    public void initializeCwmCatalog(CwmCatalog catalog)
+    public void initializeCatalog(CwmCatalog catalog)
     {
         catalog.setDefaultCharacterSetName(getDefaultCharsetName());
         catalog.setDefaultCollationName(getDefaultCollationName());
@@ -1021,28 +677,6 @@ public class FarragoRepos extends FarragoMetadataFactory
         collectType.setName("MULTISET");
         // a multiset has the same type# as an array for now
         collectType.setTypeNumber(new Integer(Types.ARRAY));
-    }
-
-    /**
-     * Generated names are normally unique by construction.  However, if they
-     * exceed the name length limit, truncation could cause collisions.  In
-     * that case, we use repository object ID's to distinguish them.
-     *
-     * @param refObj object for which to construct name
-     * @param name generated name
-     *
-     * @return uniquified name
-     */
-    private String uniquifyGeneratedName(
-        RefObject refObj,
-        String name)
-    {
-        if (name.length() <= maxNameLength) {
-            return name;
-        }
-        String mofId = refObj.refMofId();
-        return name.substring(0, maxNameLength - (mofId.length() + 1)) + "_"
-        + mofId;
     }
 
     /**

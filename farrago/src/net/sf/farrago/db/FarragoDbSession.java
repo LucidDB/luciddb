@@ -152,7 +152,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
                 database.getFennelDbHandle());
 
         // TODO:  look up from user profile
-        sessionVariables.catalogName = repos.getSelfAsCwmCatalog().getName();
+        sessionVariables.catalogName = repos.getSelfAsCatalog().getName();
 
         this.url = url;
 

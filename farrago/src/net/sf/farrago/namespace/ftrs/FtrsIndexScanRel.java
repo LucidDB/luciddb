@@ -26,6 +26,7 @@ import net.sf.farrago.cwm.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.fem.med.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
@@ -50,7 +51,7 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
     //~ Instance fields -------------------------------------------------------
 
     /** Index to use for access. */
-    final CwmSqlindex index;
+    final FemLocalIndex index;
 
     /** Refinement for super.table. */
     final FtrsTable ftrsTable;
@@ -80,7 +81,7 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
     public FtrsIndexScanRel(
         RelOptCluster cluster,
         FtrsTable ftrsTable,
-        CwmSqlindex index,
+        FemLocalIndex index,
         RelOptConnection connection,
         Integer [] projectedColumns,
         boolean isOrderPreserving)
@@ -206,7 +207,7 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
 
         FarragoRepos repos = getPreparingStmt().getRepos();
         int nIndexCols =
-            repos.isClustered(index)
+            index.isClustered()
             ? ftrsTable.getCwmColumnSet().getFeature().size()
             : FtrsUtil.getUnclusteredCoverageColList(repos, index).size();
 
@@ -224,7 +225,7 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
     {
         FarragoRepos repos = getPreparingStmt().getRepos();
 
-        if (!repos.isTemporary(index)) {
+        if (!FarragoCatalogUtil.isIndexTemporary(index)) {
             scanStream.setRootPageId(
                 getPreparingStmt().getIndexMap().getIndexRoot(index));
         } else {
@@ -245,7 +246,7 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
         Integer [] projection = computeProjectedColumns();
         Integer [] indexProjection;
 
-        if (repos.isClustered(index)) {
+        if (index.isClustered()) {
             indexProjection = projection;
         } else {
             // transform from table-relative to index-relative ordinals

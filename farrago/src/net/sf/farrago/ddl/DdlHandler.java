@@ -32,6 +32,7 @@ import net.sf.farrago.session.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
+import net.sf.farrago.plugin.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.util.*;
 
@@ -47,6 +48,7 @@ import java.nio.charset.*;
 import java.sql.*;
 import java.util.*;
 import java.util.logging.*;
+import java.lang.reflect.*;
 
 /**
  * DdlHandler provides implementations for the actions taken by
@@ -83,9 +85,9 @@ public class DdlHandler
             true);
     }
     
-    public void validateDefinition(CwmSqlindex index)
+    public void validateDefinition(FemLocalIndex index)
     {
-        CwmTable table = validator.getRepos().getIndexTable(index);
+        CwmTable table = FarragoCatalogUtil.getIndexTable(index);
         if (table.isTemporary()) {
             if (!validator.isCreatedObject(table)) {
                 // REVIEW: support this?  What to do about instances of the
@@ -112,7 +114,7 @@ public class DdlHandler
         index.setFilterCondition("TRUE");
     }
     
-    public void validateModification(CwmSqlindex index)
+    public void validateModification(FemLocalIndex index)
     {
         // indexes are never modified after creation
         throw new AssertionError();
@@ -194,7 +196,8 @@ public class DdlHandler
             table.getFeature(),
             false);
 
-        Collection indexes = validator.getRepos().getIndexes(table);
+        Collection indexes = FarragoCatalogUtil.getTableIndexes(
+            validator.getRepos(), table);
 
         // NOTE:  don't need to validate index name uniqueness since indexes
         // live in same schema as table, so enforcement will take place at
@@ -202,8 +205,8 @@ public class DdlHandler
         Iterator indexIter = indexes.iterator();
         int nClustered = 0;
         while (indexIter.hasNext()) {
-            CwmSqlindex index = (CwmSqlindex) indexIter.next();
-            if (validator.getRepos().isClustered(index)) {
+            FemLocalIndex index = (FemLocalIndex) indexIter.next();
+            if (index.isClustered()) {
                 nClustered++;
             }
         }
@@ -229,15 +232,12 @@ public class DdlHandler
             }
             if (creation) {
                 // Implement constraints via system-owned indexes.
-                CwmSqlindex index =
+                FemLocalIndex index =
                     createUniqueConstraintIndex(table, constraint);
                 if ((constraint == primaryKey) && (nClustered == 0)) {
                     // If no clustered index was specified, make the primary
                     // key's index clustered.
-                    validator.getRepos().setTagValue(
-                        index,
-                        "clusteredIndex",
-                        "");
+                    index.setClustered(true);
                 }
             }
         }
@@ -663,8 +663,8 @@ public class DdlHandler
         // since servers are in the same namespace with CWM catalogs,
         // need a special name uniquness check here
         validator.validateUniqueNames(
-            repos.getCwmCatalog(FarragoRepos.SYSBOOT_CATALOG_NAME),
-            repos.relationalPackage.getCwmCatalog().refAllOfType(),
+            repos.getCatalog(FarragoRepos.SYSBOOT_CATALOG_NAME),
+            repos.getRelationalPackage().getCwmCatalog().refAllOfType(),
             false);
 
         try {
@@ -679,7 +679,7 @@ public class DdlHandler
         // REVIEW jvs 18-April-2004:  This uses default charset/collation
         // info from local catalog, but should really allow foreign
         // servers to override.
-        repos.initializeCwmCatalog(femServer);
+        repos.initializeCatalog(femServer);
 
         // REVIEW jvs 18-April-2004:  Query the plugin for these?
         if (femServer.getType() == null) {
@@ -784,29 +784,178 @@ public class DdlHandler
         }
 
         if (routine.getBody() != null) {
-            if (routine.getDataAccess() == RoutineDataAccessEnum.RDA_NO_SQL) {
-                throw validator.res.newValidatorRoutineNoSql(
+            validateSqlRoutine(routine, returnParam);
+        } else {
+            validateJavaRoutine(routine, returnParam);
+        }
+    }
+
+    private void validateSqlRoutine(
+        FemRoutine routine,
+        FemRoutineParameter returnParam)
+    {
+        if (routine.getLanguage() == null) {
+            routine.setLanguage("SQL");
+        }
+        // TODO jvs 11-Jan-2005:  enum for supported languages
+        if (!routine.getLanguage().equals("SQL")) {
+            throw validator.res.newValidatorRoutineBodySqlOnly(
+                validator.getRepos().getLocalizedObjectName(routine, null),
+                validator.getParserPosString(routine));
+        }
+        if (routine.getDataAccess() == RoutineDataAccessEnum.RDA_NO_SQL) {
+            throw validator.res.newValidatorRoutineNoSql(
+                validator.getRepos().getLocalizedObjectName(routine, null),
+                validator.getParserPosString(routine));
+        }
+        if (routine.getParameterStyle() == null) {
+            routine.setParameterStyle(RoutineParameterStyleEnum.RPS_SQL);
+        }
+        if (routine.getParameterStyle() !=
+            RoutineParameterStyleEnum.RPS_SQL)
+        {
+            throw validator.res.newValidatorRoutineSqlParamStyleOnly(
+                validator.getRepos().getLocalizedObjectName(routine, null),
+                validator.getParserPosString(routine));
+        }
+        FarragoSession session = validator.newReentrantSession();
+        try {
+            validateRoutineBody(session, routine, returnParam);
+        } catch (FarragoUnvalidatedDependencyException ex) {
+            // pass this one through
+            throw ex;
+        } catch (Throwable ex) {
+            // TODO: if ex has parser position information in it, need to
+            // either delete it or adjust it
+            throw validator.res.newValidatorInvalidObjectDefinition(
+                validator.getRepos().getLocalizedObjectName(
+                    routine,
+                    validator.getRepos().
+                    getSql2003Package().getFemRoutine()), 
+                ex);
+        } finally {
+            validator.releaseReentrantSession(session);
+        }
+    }
+
+    private void validateJavaRoutine(
+        FemRoutine routine, 
+        FemRoutineParameter returnParam)
+    {
+        CwmProcedureExpression dummyBody =
+            validator.getRepos().newCwmProcedureExpression();
+        dummyBody.setLanguage("JAVA");
+        dummyBody.setBody(";");
+        routine.setBody(dummyBody);
+        
+        if (routine.getLanguage() == null) {
+            routine.setLanguage("JAVA");
+        }
+        if (!routine.getLanguage().equals("JAVA")) {
+            throw validator.res.newValidatorRoutineExternalJavaOnly(
+                validator.getRepos().getLocalizedObjectName(routine, null),
+                validator.getParserPosString(routine));
+        }
+        if (routine.getParameterStyle() == null) {
+            routine.setParameterStyle(RoutineParameterStyleEnum.RPS_JAVA);
+        }
+        if (routine.getParameterStyle() !=
+            RoutineParameterStyleEnum.RPS_JAVA)
+        {
+            throw validator.res.newValidatorRoutineJavaParamStyleOnly(
+                validator.getRepos().getLocalizedObjectName(routine, null),
+                validator.getParserPosString(routine));
+        }
+        String externalName = routine.getExternalName();
+        // TODO jvs 11-Jan-2005:  JAR support, and move some of this
+        // code to FarragoPluginCache
+        String classPlusMethodName;
+        if (!externalName.startsWith(FarragoPluginCache.LIBRARY_CLASS_PREFIX)) {
+            // force error below
+            classPlusMethodName = "";
+        } else {
+            classPlusMethodName = externalName.substring(
+                FarragoPluginCache.LIBRARY_CLASS_PREFIX.length());
+        }
+        int iLeftParen = classPlusMethodName.indexOf('(');
+        String javaClassName;
+        String javaMethodName;
+        int nParams = FarragoCatalogUtil.getRoutineParamCount(routine);
+        Class [] javaParamTypes = new Class[nParams];
+        if (iLeftParen == -1) {
+            int iLastDot = classPlusMethodName.lastIndexOf('.');
+            if (iLastDot == -1) {
+                throw validator.res.newValidatorRoutineInvalidJavaMethod(
                     validator.getRepos().getLocalizedObjectName(routine, null),
+                    externalName,
                     validator.getParserPosString(routine));
             }
-            FarragoSession session = validator.newReentrantSession();
-            try {
-                validateRoutineBody(session, routine, returnParam);
-            } catch (FarragoUnvalidatedDependencyException ex) {
-                // pass this one through
-                throw ex;
-            } catch (Throwable ex) {
-                // TODO: if ex has parser position information in it, need to
-                // either delete it or adjust it
-                throw validator.res.newValidatorInvalidObjectDefinition(
-                    validator.getRepos().getLocalizedObjectName(
-                        routine,
-                        validator.getRepos().
-                        getSql2003Package().getFemRoutine()), 
-                    ex);
-            } finally {
-                validator.releaseReentrantSession(session);
+            javaClassName = classPlusMethodName.substring(0, iLastDot);
+            javaMethodName = classPlusMethodName.substring(iLastDot + 1);
+            List params = routine.getParameter();
+            for (int i = 0; i < nParams; ++i) {
+                FemRoutineParameter param = (FemRoutineParameter) params.get(i);
+                RelDataType type =
+                    validator.getTypeFactory().createCwmElementType(param);
+                javaParamTypes[i] =
+                    validator.getTypeFactory().getClassForJavaParamStyle(type);
+                if (javaParamTypes[i] == null) {
+                    throw Util.needToImplement(type);
+                }
             }
+        } else {
+            // TODO jvs 11-Jan-2005:  convert Java method typenames to
+            // Class objects and check compatibility with SQL parameter types
+            javaClassName = classPlusMethodName.substring(0, iLeftParen);
+            throw Util.needToImplement(externalName);
+        }
+        
+        Class javaClass;
+        try {
+            javaClass = Class.forName(javaClassName);
+        } catch (Exception ex) {
+            throw validator.res.newPluginInitFailed(
+                javaClassName, ex);
+        }
+        
+        String javaUnmangledMethodName = ReflectUtil.getUnmangledMethodName(
+            javaClass,
+            javaMethodName,
+            javaParamTypes);
+        
+        Method javaMethod;
+        try {
+            javaMethod = javaClass.getMethod(javaMethodName, javaParamTypes);
+        } catch (NoSuchMethodException ex) {
+            throw validator.res.newValidatorRoutineJavaMethodNotFound(
+                validator.getRepos().getLocalizedObjectName(routine, null),
+                javaUnmangledMethodName,
+                validator.getParserPosString(routine));
+        } catch (Exception ex) {
+            throw validator.res.newPluginInitFailed(
+                javaClassName, ex);
+        }
+
+        int modifiers = javaMethod.getModifiers();
+        if (!Modifier.isStatic(modifiers) || !Modifier.isPublic(modifiers)) {
+            throw validator.res.newValidatorRoutineJavaMethodNotPublicStatic(
+                validator.getRepos().getLocalizedObjectName(routine, null),
+                javaUnmangledMethodName,
+                validator.getParserPosString(routine));
+        }
+
+        Class javaActualReturnType = javaMethod.getReturnType();
+        RelDataType returnType =
+            validator.getTypeFactory().createCwmElementType(returnParam);
+        Class javaExpectedReturnType =
+            validator.getTypeFactory().getClassForJavaParamStyle(returnType);
+        if (javaExpectedReturnType != javaActualReturnType) {
+            // TODO jvs 11-Jan-2005:  permit compatible types
+            throw validator.res.newValidatorRoutineJavaReturnMismatch(
+                validator.getRepos().getLocalizedObjectName(routine, null),
+                javaExpectedReturnType.toString(),
+                javaActualReturnType.toString(),
+                validator.getParserPosString(routine));
         }
     }
 
@@ -892,43 +1041,46 @@ public class DdlHandler
             column.getType().refClass());
     }
     
-    protected CwmSqlindex createUniqueConstraintIndex(
+    protected FemLocalIndex createUniqueConstraintIndex(
         FemLocalTable table, 
         CwmUniqueConstraint constraint)
     {
         // TODO:  make index SYSTEM-owned so that it can't be
         // dropped explicitly
         FarragoRepos repos = validator.getRepos();
-        CwmSqlindex index = repos.newCwmSqlindex();
-        repos.generateConstraintIndexName(constraint, index);
-        repos.indexPackage.getIndexSpansClass().add(table, index);
+        FemLocalIndex index = repos.newFemLocalIndex();
+        FarragoCatalogUtil.generateConstraintIndexName(
+            repos, constraint, index);
+        repos.getKeysIndexesPackage().getIndexSpansClass().add(table, index);
 
         // REVIEW:  same as DDL; why is this necessary?
         index.setSpannedClass(table);
         index.setUnique(true);
 
+        int iOrdinal = 0;
         Iterator columnIter = constraint.getFeature().iterator();
         while (columnIter.hasNext()) {
             CwmColumn column = (CwmColumn) columnIter.next();
-            CwmSqlindexColumn indexColumn = repos.newCwmSqlindexColumn();
+            FemLocalIndexColumn indexColumn = repos.newFemLocalIndexColumn();
             indexColumn.setName(column.getName());
             indexColumn.setAscending(Boolean.TRUE);
             indexColumn.setFeature(column);
             indexColumn.setIndex(index);
+            indexColumn.setOrdinal(iOrdinal++);
         }
         return index;
     }
     
-    public void validateDrop(CwmSqlindex index)
+    public void validateDrop(FemLocalIndex index)
     {
-        CwmTable table = validator.getRepos().getIndexTable(index);
+        CwmTable table = FarragoCatalogUtil.getIndexTable(index);
         if (validator.isDeletedObject(table)) {
             // This index is being deleted together with its containing table,
             // which is always OK.
             return;
         }
 
-        if (validator.getRepos().isClustered(index)) {
+        if (index.isClustered()) {
             throw validator.res.newValidatorDropClusteredIndex(
                 validator.getRepos().getLocalizedObjectName(index, null),
                 validator.getParserPosString(index));
@@ -947,17 +1099,18 @@ public class DdlHandler
     
     public void validateTruncation(FemLocalTable table)
     {
-        Collection indexes = validator.getRepos().getIndexes(table);
+        Collection indexes = FarragoCatalogUtil.getTableIndexes(
+            validator.getRepos(), table);
         Iterator indexIter = indexes.iterator();
         while (indexIter.hasNext()) {
-            CwmSqlindex index = (CwmSqlindex) indexIter.next();
+            FemLocalIndex index = (FemLocalIndex) indexIter.next();
             validator.scheduleTruncation(index);
         }
     }
     
-    public void executeCreation(CwmSqlindex index)
+    public void executeCreation(FemLocalIndex index)
     {
-        if (validator.getRepos().getIndexTable(index).isTemporary()) {
+        if (FarragoCatalogUtil.isIndexTemporary(index)) {
             // definition of a temporary table should't create any real storage
             return;
         }
@@ -969,7 +1122,7 @@ public class DdlHandler
         // non-empty table will leave the index (incorrectly) empty
     }
     
-    public void executeDrop(CwmSqlindex index)
+    public void executeDrop(FemLocalIndex index)
     {
         // TODO: For a temporary table, need to drop storage for ALL sessions.
         // For now, storage from other sessions becomes garbage which will be
@@ -979,7 +1132,7 @@ public class DdlHandler
             validator.getDataWrapperCache(), index, false);
     }
     
-    public void executeTruncation(CwmSqlindex index)
+    public void executeTruncation(FemLocalIndex index)
     {
         validator.getIndexMap().dropIndexStorage(
             validator.getDataWrapperCache(), index, true);
