@@ -35,7 +35,7 @@ import net.sf.farrago.cwm.keysindexes.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.fem.*;
-import net.sf.farrago.fem.sql2003.FemSqlcollectionType;
+import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.fem.config.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
@@ -428,7 +428,15 @@ public class FarragoRepos extends FarragoMetadataFactory
 
         // TODO:  actual localization, quoting, etc.
         if (refClass != null) {
-            sb.append(refClass.refMetaObject().refGetValue("name"));
+            String className =
+                refClass.refMetaObject().refGetValue("name").toString();
+            if (className.equals("LocalSchema")) {
+                // TODO jvs 8-Jan-2005:  temporary hack to avoid
+                // breaking logs multiple times; remove as part of
+                // fixing localization and quoting
+                className = "Schema";
+            }
+            sb.append(className);
             sb.append(" ");
         }
         if (qualifierName != null) {
@@ -508,6 +516,27 @@ public class FarragoRepos extends FarragoMetadataFactory
             }
         }
         return null;
+    }
+
+    /**
+     * Filter a collection fo all CwmModelElements of a given type.
+     *
+     * @param inCollection the collection to search
+     * @param outCollection receives matching objects
+     * @param type class which sought objects must instantiate
+     */
+    public void filterTypedModelElements(
+        Collection inCollection,
+        Collection outCollection,
+        Class type)
+    {
+        Iterator iter = inCollection.iterator();
+        while (iter.hasNext()) {
+            CwmModelElement element = (CwmModelElement) iter.next();
+            if (type.isInstance(element)) {
+                outCollection.add(element);
+            }
+        }
     }
 
     /**
@@ -604,14 +633,14 @@ public class FarragoRepos extends FarragoMetadataFactory
      *
      * @return schema definition, or null if not found
      */
-    public CwmSchema getSchema(
+    public FemLocalSchema getSchema(
         CwmCatalog catalog,
         String schemaName)
     {
-        return (CwmSchema) getTypedModelElement(
+        return (FemLocalSchema) getTypedModelElement(
             catalog.getOwnedElement(),
             schemaName,
-            CwmSchema.class);
+            FemLocalSchema.class);
     }
 
     /**

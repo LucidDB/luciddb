@@ -270,6 +270,10 @@ encountered near {1}</text>
     <text>Result expression type {0} from {1} does not match declared return type {2}</text>
 </exception>
 
+<exception id="420500" name="ValidatorPathBadCatalog">
+    <text>Search path catalog {0} does not match catalog {1} of schema being defined</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Fennel resources 440,000 - 450,000 -->
 <!-- Actual resources are defined separately in Fennel -->

@@ -138,7 +138,7 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
      *
      * @return schema found
      */
-    public CwmSchema findSchema(SqlIdentifier schemaName);
+    public FemLocalSchema findSchema(SqlIdentifier schemaName);
 
     /**
      * Looks up a data wrapper by name, throwing a validation error if not
@@ -174,8 +174,6 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
      * Looks up a schema object by name, throwing a validation error if not
      * found.
      *
-     * @param schema containing schema or null if none
-     *
      * @param qualifiedName name of object to look up
      *
      * @param refClass expected class of object; if the object exists with a
@@ -184,7 +182,6 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
      * @return schema object found
      */
     public CwmModelElement findSchemaObject(
-        CwmSchema schema,
         SqlIdentifier qualifiedName,
         RefClass refClass);
 
@@ -201,7 +198,7 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
      * @return list of matching FemRoutine objects (empty if no matches)
      */
     public List findRoutineOverloads(
-        CwmSchema schema,
+        FemLocalSchema schema,
         String invocationName,
         ProcedureType routineType);
 

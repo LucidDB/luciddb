@@ -75,7 +75,7 @@ public class DdlHandler
             true);
     }
     
-    public void validateDefinition(CwmSchema schema)
+    public void validateDefinition(FemLocalSchema schema)
     {
         validator.validateUniqueNames(
             schema,

@@ -5,6 +5,8 @@ create schema udftest;
 
 set schema udftest;
 
+set path udftest;
+
 -- test basic function
 create function celsius_to_fahrenheit(in c double)
 returns double
@@ -91,10 +93,47 @@ values good_atoi('451');
 -- this should fail
 values good_atoi('nineoneone');
 
+values stirfry('Alley');
+
+values stirfry('LaRa');
+
+set path crypto2;
+
 values alice(12);
 
 values bob(19);
 
-values stirfry('Alley');
+-- verify path selection
 
-values stirfry('LaRa');
+create schema v1
+create function important_constant()
+returns integer
+contains sql
+return 5;
+
+create schema v2
+create function important_constant()
+returns integer
+contains sql
+return 17;
+
+set path v1;
+values important_constant();
+
+-- TODO:  remove once specific name expansion is implemented correctly
+alter system set "codeCacheMaxBytes" = min;
+
+set path v2;
+values important_constant();
+
+alter system set "codeCacheMaxBytes" = min;
+
+-- TODO:  test with set path v1,v2;
+
+alter system set "codeCacheMaxBytes" = min;
+
+set path udftest;
+-- should fail
+values important_constant();
+
+alter system set "codeCacheMaxBytes" = max;

@@ -6,6 +6,8 @@ create schema udftest2;
 
 set schema udftest;
 
+set path udftest;
+
 create function celsius_to_fahrenheit(in c double)
 returns double
 contains sql
@@ -116,8 +118,6 @@ return i + j;
 
 drop function add_integers;
 
-create schema udftest3;
-
 -- test dependencies and cascade/restrict
 
 create function to_upper(in v varchar(128))
@@ -151,3 +151,22 @@ drop function to_uppertrim;
 
 -- should succeed now that to_uppertrim is gone
 drop function to_upper2;
+
+create function add_integers(in i int,in j int)
+returns int
+contains sql
+return i + j;
+
+-- should fail:  bad path
+create schema badpath
+create function double_integer(in i int)
+returns int
+contains sql
+return add_integers(i,i);
+
+create schema goodpath
+path udftest
+create function double_integer(in i int)
+returns int
+contains sql
+return add_integers(i,i);

@@ -1,9 +1,11 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/expressions/udfInvocation.sql#1 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/expressions/udfInvocation.sql#2 $
 0: jdbc:farrago:> -- Test queries with UDF invocations
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema udftest;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set schema udftest;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> set path udftest;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test basic function
 0: jdbc:farrago:> create function celsius_to_fahrenheit(in c double)
@@ -139,6 +141,22 @@ Error: could not calculate results for the following row:
 Messages:
 [0]:PC=1 Code=22018 (state=,code=0)
 0: jdbc:farrago:> 
+0: jdbc:farrago:> values stirfry('Alley');
++-------------+
+|   EXPR$0    |
++-------------+
+| ALLEYgator  |
++-------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values stirfry('LaRa');
++---------+
+| EXPR$0  |
++---------+
+| lara    |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> set path crypto2;
+0: jdbc:farrago:> 
 0: jdbc:farrago:> values alice(12);
 +--------------------+
 |       EXPR$0       |
@@ -153,18 +171,50 @@ Messages:
 | 1.1176470588235294  |
 +---------------------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> values stirfry('Alley');
-+-------------+
-|   EXPR$0    |
-+-------------+
-| ALLEYgator  |
-+-------------+
+0: jdbc:farrago:> -- verify path selection
 0: jdbc:farrago:> 
-0: jdbc:farrago:> values stirfry('LaRa');
+0: jdbc:farrago:> create schema v1
+. . . . . . . . > create function important_constant()
+. . . . . . . . > returns integer
+. . . . . . . . > contains sql
+. . . . . . . . > return 5;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create schema v2
+. . . . . . . . > create function important_constant()
+. . . . . . . . > returns integer
+. . . . . . . . > contains sql
+. . . . . . . . > return 17;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> set path v1;
+0: jdbc:farrago:> values important_constant();
 +---------+
 | EXPR$0  |
 +---------+
-| lara    |
+| 5       |
 +---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- TODO:  remove once specific name expansion is implemented correctly
+0: jdbc:farrago:> alter system set "codeCacheMaxBytes" = min;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> set path v2;
+0: jdbc:farrago:> values important_constant();
++---------+
+| EXPR$0  |
++---------+
+| 17      |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> alter system set "codeCacheMaxBytes" = min;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- TODO:  test with set path v1,v2;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> alter system set "codeCacheMaxBytes" = min;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> set path udftest;
+0: jdbc:farrago:> -- should fail
+0: jdbc:farrago:> values important_constant();
+Error: At line 1, column 8: Reference to unknown function 'IMPORTANT_CONSTANT' (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> alter system set "codeCacheMaxBytes" = max;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

@@ -85,19 +85,19 @@ PARSER_END(FarragoParserImpl)
 /*****************************************
  * Syntactical Descriptions              *
  *****************************************/
-CwmModelElement SchemaObjectDefinition(CwmSchema schema) :
+CwmModelElement SchemaObjectDefinition() :
 {
     CwmModelElement modelElement;
 }
 {
     (
-        modelElement = TableDefinition(schema)
+        modelElement = TableDefinition()
 		|
-		modelElement = ViewDefinition(schema)
+		modelElement = ViewDefinition()
 		|
-		modelElement = ForeignTableDefinition(schema)
+		modelElement = ForeignTableDefinition()
                 |
-                modelElement = FunctionDefinition(schema)
+                modelElement = FunctionDefinition()
     )
         {
             return modelElement;

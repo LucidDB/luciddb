@@ -165,9 +165,13 @@ public interface FarragoSession extends FarragoAllocation
     /**
      * Clones this session.  TODO:  document what this entails.
      *
+     * @param inheritedVariables session variables to use for context
+     * in new session, or null to inherit those of session being cloned
+     *
      * @return cloned session.
      */
-    public FarragoSession cloneSession();
+    public FarragoSession cloneSession(
+        FarragoSessionVariables inheritedVariables);
 
     /**
      * Changes the autocommit mode for this session.

@@ -97,7 +97,9 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
         this.sharedDataWrapperCache = sharedDataWrapperCache;
 
         parser = session.newParser();
-        sessionVariables = session.getSessionVariables();
+        // clone session variables so that any context changes we make during
+        // validation are transient
+        sessionVariables = session.getSessionVariables().cloneVariables();
         typeFactory = new FarragoTypeFactoryImpl(repos);
         dataWrapperCache =
             new FarragoDataWrapperCache(this, sharedDataWrapperCache, repos,
@@ -207,7 +209,14 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
     }
 
     // implement FarragoSessionStmtValidator
-    public CwmSchema findSchema(SqlIdentifier schemaName)
+    public FemLocalSchema findSchema(SqlIdentifier schemaName)
+    {
+        return lookupSchema(schemaName, true);
+    }
+
+    private FemLocalSchema lookupSchema(
+        SqlIdentifier schemaName,
+        boolean throwIfNotFound)
     {
         CwmCatalog catalog;
         String simpleName;
@@ -218,10 +227,12 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
             catalog = getDefaultCatalog();
             simpleName = schemaName.getSimple();
         }
-        CwmSchema schema = getRepos().getSchema(catalog, simpleName);
-
+        FemLocalSchema schema = getRepos().getSchema(catalog, simpleName);
         // REVIEW:  parser context may be past schema name already
         if (schema == null) {
+            if (!throwIfNotFound) {
+                return null;
+            }
             throw FarragoResource.instance().newValidatorUnknownObject(
                 getRepos().getLocalizedObjectName(
                     catalog.getName(),
@@ -284,18 +295,9 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
 
     // implement FarragoSessionStmtValidator
     public CwmModelElement findSchemaObject(
-        CwmSchema schema,
         SqlIdentifier qualifiedName,
         RefClass refClass)
     {
-        FarragoSessionVariables sessionVariables = getSessionVariables();
-        if (schema != null) {
-            sessionVariables = sessionVariables.cloneVariables();
-            sessionVariables.schemaCatalogName =
-                schema.getNamespace().getName();
-            sessionVariables.schemaName = schema.getName();
-        }
-
         FarragoSessionResolvedObject resolved =
             resolveSchemaObjectName(qualifiedName.names);
 
@@ -316,9 +318,6 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
         }
 
         if (element == null) {
-            if ((schemaName == null) && (schema != null)) {
-                schemaName = schema.getName();
-            }
             throw FarragoResource.instance().newValidatorUnknownObject(
                 getRepos().getLocalizedObjectName(schemaName,
                     qualifiedName.names[qualifiedName.names.length - 1],
@@ -331,7 +330,7 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
 
     // implement FarragoSessionStmtValidator
     public List findRoutineOverloads(
-        CwmSchema schema,
+        FemLocalSchema schema,
         String invocationName,
         ProcedureType routineType)
     {
@@ -340,10 +339,20 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
         if (schema != null) {
             routines = schema.getOwnedElement();
         } else {
-            // TODO jvs 1-Jan-2005: filter to only schemas on
-            // SQL-path
-            routines =
-                getRepos().getSql2003Package().getFemRoutine().refAllOfType();
+            // filter to only schemas on SQL-path
+            routines = new ArrayList();
+            Iterator iter = sessionVariables.schemaSearchPath.iterator();
+            while (iter.hasNext()) {
+                SqlIdentifier id = (SqlIdentifier) iter.next();
+                CwmSchema searchedSchema = lookupSchema(id, false);
+                if (searchedSchema == null) {
+                    continue;
+                }
+                getRepos().filterTypedModelElements(
+                    searchedSchema.getOwnedElement(),
+                    routines,
+                    FemRoutine.class);
+            }
         }
         List overloads = new ArrayList();
         Iterator iter = routines.iterator();

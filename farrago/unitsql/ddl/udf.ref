@@ -1,10 +1,12 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/udf.sql#1 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/udf.sql#2 $
 0: jdbc:farrago:> -- Test DDL for user-defined functions
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema udftest;
 0: jdbc:farrago:> create schema udftest2;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set schema udftest;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> set path udftest;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create function celsius_to_fahrenheit(in c double)
 . . . . . . . . > returns double
@@ -128,8 +130,6 @@ encountered near line 1, column 8 (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> drop function add_integers;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create schema udftest3;
-0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test dependencies and cascade/restrict
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create function to_upper(in v varchar(128))
@@ -153,17 +153,37 @@ encountered near line 1, column 8 (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  restrict
 0: jdbc:farrago:> drop function to_upper;
-Error: Routine UDFTEST3.TO_UPPER can only be dropped with CASCADE because other objects still reference it (state=,code=0)
+Error: Routine UDFTEST.TO_UPPER can only be dropped with CASCADE because other objects still reference it (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> drop function to_upper cascade;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  restrict
 0: jdbc:farrago:> drop function to_upper2;
-Error: Routine UDFTEST3.TO_UPPER2 can only be dropped with CASCADE because other objects still reference it (state=,code=0)
+Error: Routine UDFTEST.TO_UPPER2 can only be dropped with CASCADE because other objects still reference it (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> drop function to_uppertrim;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should succeed now that to_uppertrim is gone
 0: jdbc:farrago:> drop function to_upper2;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create function add_integers(in i int,in j int)
+. . . . . . . . > returns int
+. . . . . . . . > contains sql
+. . . . . . . . > return i + j;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  bad path
+0: jdbc:farrago:> create schema badpath
+. . . . . . . . > create function double_integer(in i int)
+. . . . . . . . > returns int
+. . . . . . . . > contains sql
+. . . . . . . . > return add_integers(i,i);
+Error: At line 1, column 1: Reference to unknown function 'ADD_INTEGERS' (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create schema goodpath
+. . . . . . . . > path udftest
+. . . . . . . . > create function double_integer(in i int)
+. . . . . . . . > returns int
+. . . . . . . . > contains sql
+. . . . . . . . > return add_integers(i,i);
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

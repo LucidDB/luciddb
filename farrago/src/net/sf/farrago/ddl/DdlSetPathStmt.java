@@ -1,59 +1,66 @@
 /*
+// $Id$
 // Farrago is a relational database management system.
-// Copyright (C) 2003-2004 John V. Sichi.
+// Copyright (C) 2004-2004 John V. Sichi.
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-//
+// 
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-//
+// 
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 package net.sf.farrago.ddl;
 
-import net.sf.farrago.cwm.core.*;
-import net.sf.farrago.fem.sql2003.*;
-import net.sf.farrago.session.*;
-
 import java.util.*;
 
-import org.eigenbase.sql.*;
-
 /**
- * DdlCreateStmt represents a DDL CREATE statement of any kind.
+ * DdlSetPathStmt represents a statement (SET PATH) that establishes a default
+ * SQL-path.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class DdlCreateStmt extends DdlStmt
+public class DdlSetPathStmt extends DdlStmt
 {
-    //~ Constructors ----------------------------------------------------------
-
+    private List pathList;
+    
     /**
-     * Construct a new DdlCreateStmt.
+     * Construct a new DdlSetPathStmt.
      *
-     * @param createdElement top-level element created by this stmt
+     * @param pathList List of CwmSchemas making up the search path
      */
-    public DdlCreateStmt(CwmModelElement createdElement)
+    public DdlSetPathStmt(List pathList)
     {
-        super(createdElement);
+        super(null);
+        this.pathList = pathList;
     }
 
     //~ Methods ---------------------------------------------------------------
+
+    // override DdlStmt
+    public boolean requiresCommit()
+    {
+        return false;
+    }
 
     // implement DdlStmt
     public void visit(DdlVisitor visitor)
     {
         visitor.visit(this);
     }
+
+    public List getPathList()
+    {
+        return pathList;
+    }
 }
 
-
-// End DdlCreateStmt.java
+// End DdlSetPathStmt.java

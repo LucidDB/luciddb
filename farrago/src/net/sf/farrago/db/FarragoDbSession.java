@@ -135,6 +135,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         sessionVariables.sessionUserName = info.getProperty("user");
         sessionVariables.currentUserName = sessionVariables.sessionUserName;
         sessionVariables.systemUserName = System.getProperty("user.name");
+        sessionVariables.schemaSearchPath = Collections.EMPTY_LIST;
 
         // TODO:  authenticate sessionUserName with password
         if (MDR_USER_NAME.equals(sessionVariables.sessionUserName)) {
@@ -248,7 +249,8 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     }
     
     // implement FarragoSession
-    public FarragoSession cloneSession()
+    public FarragoSession cloneSession(
+        FarragoSessionVariables inheritedVariables)
     {
         // TODO:  keep track of clones and make sure they aren't left hanging
         // around by the time stmt finishes executing
@@ -257,7 +259,10 @@ public class FarragoDbSession extends FarragoCompoundAllocation
             clone.isClone = true;
             clone.allocations = new LinkedList();
             clone.savepointList = new ArrayList();
-            clone.sessionVariables = sessionVariables.cloneVariables();
+            if (inheritedVariables == null) {
+                inheritedVariables = sessionVariables;
+            }
+            clone.sessionVariables = inheritedVariables.cloneVariables();
             return clone;
         } catch (CloneNotSupportedException ex) {
             throw Util.newInternal(ex);
@@ -757,6 +762,29 @@ public class FarragoDbSession extends FarragoCompoundAllocation
             }
         }
 
+        // implement DdlVisitor
+        public void visit(DdlSetPathStmt stmt)
+        {
+            List pathList = stmt.getPathList();
+            List mutablePath = new ArrayList();
+
+            // convert from list of CwmSchema to list of SqlIdentifier
+            Iterator iter = pathList.iterator();
+            while (iter.hasNext()) {
+                CwmSchema schema = (CwmSchema) iter.next();
+                SqlIdentifier id = new SqlIdentifier(
+                    new String [] {
+                        schema.getNamespace().getName(),
+                        schema.getName()
+                    },
+                    null);
+                mutablePath.add(id);
+            }
+            
+            sessionVariables.schemaSearchPath =
+                Collections.unmodifiableList(mutablePath);
+        }
+        
         // implement DdlVisitor
         public void visit(DdlSetSystemParamStmt stmt)
         {

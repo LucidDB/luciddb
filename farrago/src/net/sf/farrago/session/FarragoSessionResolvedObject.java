@@ -20,6 +20,7 @@ package net.sf.farrago.session;
 
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.fem.sql2003.*;
 
 
 /**
@@ -34,7 +35,7 @@ public class FarragoSessionResolvedObject
     //~ Instance fields -------------------------------------------------------
 
     public CwmCatalog catalog;
-    public CwmSchema schema;
+    public FemLocalSchema schema;
     public CwmModelElement object;
     public String catalogName;
     public String schemaName;
