@@ -46,7 +46,7 @@ public class FarragoModelLoader
 {
     //~ Instance fields -------------------------------------------------------
 
-    private MDRepository mdrRepos;
+    protected MDRepository mdrRepos;
     private String storageFactoryClassName;
     private Properties storageProps = new Properties();
 

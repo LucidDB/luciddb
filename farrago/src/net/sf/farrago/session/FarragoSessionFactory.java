@@ -83,6 +83,16 @@ public interface FarragoSessionFactory
         FarragoRepos repos,
         FennelDbHandle fennelDbHandle);
 
+
+    /**
+     * Allows extensions of Farrago to perform their own
+     * initialization tasks.
+     *
+     * @param owner the object that should own any allocated objects
+     */
+    public void specializedInitialization(FarragoAllocationOwner owner);
+
+
     /**
      * Gives this factory a chance to clean up after a session has been closed.
      */

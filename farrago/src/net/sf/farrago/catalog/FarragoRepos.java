@@ -132,6 +132,7 @@ public class FarragoRepos extends FarragoMetadataFactory
      */
     public FarragoRepos(
         FarragoAllocationOwner owner,
+        FarragoModelLoader modelLoader,
         boolean userRepos)
     {
         owner.addAllocation(this);
@@ -140,7 +141,7 @@ public class FarragoRepos extends FarragoMetadataFactory
             throw FarragoResource.instance().newMissingHomeProperty(
                 FarragoProperties.instance().homeDir.getPath());
         }
-        modelLoader = new FarragoModelLoader();
+        this.modelLoader = modelLoader;
 
         if (!userRepos) {
             File reposFile = modelLoader.getSystemReposFile();

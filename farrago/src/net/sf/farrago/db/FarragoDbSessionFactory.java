@@ -58,7 +58,7 @@ public class FarragoDbSessionFactory implements FarragoSessionFactory
         FarragoAllocationOwner owner,
         boolean userRepos)
     {
-        return new FarragoRepos(owner, userRepos);
+        return new FarragoRepos(owner, new FarragoModelLoader(), userRepos);
     }
 
     // implement FarragoSessionFactory
@@ -67,6 +67,11 @@ public class FarragoDbSessionFactory implements FarragoSessionFactory
         FennelDbHandle fennelDbHandle)
     {
         return new FennelTxnContext(repos, fennelDbHandle);
+    }
+
+    // implement FarragoSessionFactory
+    public void specializedInitialization(FarragoAllocationOwner owner)
+    {
     }
 
     // implement FarragoSessionFactory

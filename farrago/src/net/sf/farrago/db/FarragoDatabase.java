@@ -161,7 +161,7 @@ public class FarragoDatabase extends FarragoCompoundAllocation
 
             // REVIEW:  sequencing from this point on
             if (currentConfig.isUserCatalogEnabled()) {
-                userRepos = new FarragoRepos(this, true);
+                userRepos = sessionFactory.newRepos(this, true);
                 if (userRepos.getSelfAsCwmCatalog() == null) {
                     // REVIEW:  request this explicitly?
                     userRepos.createSystemObjects();
@@ -192,6 +192,8 @@ public class FarragoDatabase extends FarragoCompoundAllocation
                     checkpointIntervalMillis,
                     checkpointIntervalMillis);
             }
+
+            sessionFactory.specializedInitialization(this);
         } catch (Throwable ex) {
             tracer.throwing("FarragoDatabase", "<init>", ex);
             close(true);
