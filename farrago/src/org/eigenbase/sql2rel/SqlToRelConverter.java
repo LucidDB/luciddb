@@ -53,7 +53,7 @@ import java.util.*;
  * {@link #convertValidatedQuery},
  * {@link #convertExpression(SqlNode)}.
  *
- * @testcase {@link net.sf.saffron.sql2rel.ConverterTest}
+ * @testcase {@link org.eigenbase.test.ConverterTest}
  * @author jhyde
  * @since Oct 10, 2003
  * @version $Id$
