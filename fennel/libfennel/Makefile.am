@@ -1,3 +1,7 @@
+# $Id: //depot/aspen/cpp/aspen/Makefile.am#7 $
+# Fennel is a relational database kernel.
+# (C) Copyright 2004-2005 Disruptive Tech
+
 include $(top_srcdir)/am_include.mk
 
 lib_LTLIBRARIES=\
@@ -12,8 +16,7 @@ libfennel_exec.la \
 libfennel_btree.la \
 libfennel_db.la \
 libfennel_xo.la \
-libfennel_ftrs.la \
-libfennel_test.la
+libfennel_ftrs.la
 
 SYNCH_DEPS = libfennel_common.la
 
@@ -86,10 +89,6 @@ libfennel_xo_la_LIBADD=\
 libfennel_ftrs_la_SOURCES=
 libfennel_ftrs_la_LIBADD=\
 	$(top_builddir)/ftrs/libftrs.la $(FTRS_DEPS)
-
-libfennel_test_la_SOURCES=
-libfennel_test_la_LIBADD=\
-	$(top_builddir)/test/libfenneltest.la $(TEST_DEPS)
 
 # Make sure that dependencies are strictly satisfied by failing on
 # undefined references.
