@@ -321,7 +321,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         RelDataType type)
     {
         if (type.getSqlTypeName() == SqlTypeName.Null) {
-            return OJSystem.NULLTYPE;
+            return OJSystem.OBJECT;
         } else if (type instanceof AbstractSqlType) {
             OJClass ojClass = (OJClass) mapTypeToOJClass.get(type);
             if (ojClass != null) {

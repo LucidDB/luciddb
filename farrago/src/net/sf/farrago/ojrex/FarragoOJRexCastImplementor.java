@@ -259,13 +259,21 @@ public class FarragoOJRexCastImplementor extends FarragoOJRexImplementor
         OJClass rhsClass = OJUtil.typeToOJClass(
             rhsType,
             translator.getFarragoTypeFactory());
-        if (rhsClass == OJSystem.NULLTYPE) {
+        if (rhsType.getSqlTypeName() == SqlTypeName.Null) {
             if (lhsType.isNullable()) {
                 return convertCastNull(translator, lhsType, rhsType, lhsExp,
                     rhsExp);
             } else {
-                // null check code generated previously means we never
-                // have to worry about this case
+                // NOTE jvs 27-Jan-2005:  this code will never actually
+                // be executed do to previous checkNotNull test, but
+                // it still has to compile!
+                if (SqlTypeUtil.isJavaPrimitive(lhsType)) {
+                    if (lhsType.getSqlTypeName() == SqlTypeName.Boolean) {
+                        rhsExp = Literal.constantFalse();
+                    } else {
+                        rhsExp = Literal.constantZero();
+                    }
+                }
                 return rhsExp;
             }
         }
