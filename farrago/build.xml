@@ -461,7 +461,6 @@ require version '${required.ant.version}'."/>
 
   <!-- compile only packages needed by Saffron -->
   <target name="compile.saffron.deps" depends="generateResources,sqlParser">
-    <mkdir dir="${classes.dir}"/>
     <javaCompile
       deprecation="off"
       srcdir="${src.dir}"
@@ -471,6 +470,11 @@ require version '${required.ant.version}'."/>
       <include name="org/eigenbase/**/*.java" />
       <include name="com/disruptivetech/farrago/volcano/**/*.java" />
     </javaCompile>
+  </target>
+
+  <!-- create classes directory -->
+  <target name="mkdir.classes">
+    <mkdir dir="${classes.dir}"/>
   </target>
 
   <!-- test only packages needed by Saffron -->
@@ -579,7 +583,7 @@ require version '${required.ant.version}'."/>
   </target>
 
   <!-- creates catalog and populates with initial metadata -->
-  <target name="createCatalog">
+  <target name="createCatalog" depends ="mkdir.classes">
     <mkdir dir="${classes.dir}"/>
     <mkdir dir="${plugin.dir}"/>
     <mkdir dir="${plugin.classes.dir}"/>
@@ -888,7 +892,7 @@ require version '${required.ant.version}'."/>
       targetfile="${eigenbase.resource.dir}/EigenbaseResource.java"/>
   </target>
 
-  <target name="generateResources" depends="checkResourceUptodate"
+  <target name="generateResources" depends="mkdir.classes,checkResourceUptodate"
     unless="resource.uptodate">
     <!-- FarragoException.class needs to exist for reflection -->
     <javaCompile
