@@ -7,5 +7,5 @@ set -e
 set -v
 
 cd ../web
-rm -rf doxygen/html
+rm -rf doc/doxygen/html
 doxygen fennel.doxycfg
