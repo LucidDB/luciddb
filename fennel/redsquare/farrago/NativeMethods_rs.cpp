@@ -20,7 +20,6 @@
 */
 
 #include "fennel/common/CommonPreamble.h"
-#include "fennel/farrago/NativeMethods.h"
 #include "fennel/farrago/ExecutionStreamFactory.h"
 #include "fennel/redsquare/sorter/ExternalSortStream.h"
 #include "fennel/db/Database.h"

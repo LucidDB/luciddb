@@ -19,9 +19,12 @@
 */
 
 #include "fennel/common/CommonPreamble.h"
-#include "fennel/farrago/NativeMethods.h"
 #include "fennel/farrago/ExecutionStreamFactory.h"
 #include "fennel/disruptivetech/xo/CalcTupleStream.h"
+
+#ifdef __MINGW32__
+#include <windows.h>
+#endif
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
