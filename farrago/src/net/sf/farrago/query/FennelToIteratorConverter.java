@@ -317,7 +317,7 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
         paramList.add(
             new Parameter(
                 new ModifierList(0),
-                TypeName.forClass(ByteBuffer.class),
+                OJUtil.typeNameForClass(ByteBuffer.class),
                 "byteBuffer"));
         paramList.add(
             new Parameter(
@@ -327,13 +327,14 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
         paramList.add(
             new Parameter(
                 new ModifierList(0),
-                TypeName.forClass(ByteBuffer.class),
+                OJUtil.typeNameForClass(ByteBuffer.class),
                 "sliceBuffer"));
 
         // put it all together
         MemberDeclaration methodDecl =
             new MethodDeclaration(new ModifierList(ModifierList.PUBLIC),
-                TypeName.forClass(Object.class), "unmarshalTuple", paramList,
+                OJUtil.typeNameForClass(Object.class),
+                "unmarshalTuple", paramList,
                 null, methodBody);
 
         // allocate synthetic object as class data member
@@ -348,7 +349,7 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
         // generate code to allocate instance of anonymous class defined above
         Expression newTupleReaderExp =
             new AllocationExpression(
-                TypeName.forClass(FennelTupleReader.class),
+                OJUtil.typeNameForClass(FennelTupleReader.class),
                 new ExpressionList(),
                 new MemberDeclarationList(rowVarDecl, methodDecl));
 

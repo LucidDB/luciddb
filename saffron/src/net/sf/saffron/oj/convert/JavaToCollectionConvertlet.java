@@ -73,9 +73,9 @@ public class JavaToCollectionConvertlet extends JavaConvertlet
             new StatementList(
             // "ArrayList v = new ArrayList();"
             new VariableDeclaration(null, // no modifiers
-                    TypeName.forClass(ArrayList.class),
+                    OJUtil.typeNameForClass(ArrayList.class),
                     new VariableDeclarator(var_v.toString(),
-                        new AllocationExpression(TypeName.forClass(
+                        new AllocationExpression(OJUtil.typeNameForClass(
                                 ArrayList.class),
                             null))));
 
@@ -93,7 +93,7 @@ public class JavaToCollectionConvertlet extends JavaConvertlet
         // "public void asArrayList(C0 v0, ...) { ... }"
         MethodDeclaration asArrayList =
             new MethodDeclaration(new ModifierList(ModifierList.PUBLIC),
-                TypeName.forClass(ArrayList.class), "asArrayList",
+                OJUtil.typeNameForClass(ArrayList.class), "asArrayList",
                 unboundVars.getParameterList(), // "(C0 v0, ...)"
                 new TypeName [] { TypeName.forOJClass(Util.clazzSQLException) },
                 stmtList);
@@ -103,7 +103,7 @@ public class JavaToCollectionConvertlet extends JavaConvertlet
 
         return new MethodCall(
             new AllocationExpression(
-                TypeName.forClass(Object.class), // "Object"
+                OJUtil.typeNameForClass(Object.class), // "Object"
                 null, // "()"
                 new MemberDeclarationList(asArrayList)),
             "asArrayList",

@@ -26,8 +26,6 @@ import java.security.AccessControlException;
 import java.util.Enumeration;
 import java.util.Properties;
 
-import openjava.tools.DebugOut;
-
 import org.eigenbase.util.property.BooleanProperty;
 import org.eigenbase.util.property.IntegerProperty;
 import org.eigenbase.util.property.StringProperty;
@@ -350,37 +348,6 @@ public class SaffronProperties extends Properties
         }
         int i = Integer.valueOf(value).intValue();
         return i;
-    }
-
-    /**
-     * Applies properties to the right locations.
-     */
-    public void apply()
-    {
-        int debugLevel = this.debugLevel.get();
-        String debugOut = this.debugOut.get();
-        if (debugLevel >= 0) {
-            DebugOut.setDebugLevel(debugLevel);
-            if ((debugOut == null) || debugOut.equals("")) {
-                debugOut = "out";
-            }
-        }
-        if ((debugOut != null) && !debugOut.equals("")) {
-            if (debugOut.equals("err")) {
-                DebugOut.setDebugOut(System.err);
-            } else if (debugOut.equals("out")) {
-                DebugOut.setDebugOut(System.out);
-            } else {
-                try {
-                    File file = new File(debugOut);
-                    PrintStream ps =
-                        new PrintStream(new FileOutputStream(file), true);
-                    DebugOut.setDebugOut(ps);
-                } catch (FileNotFoundException e) {
-                    throw Util.newInternal(e, "while setting debug output");
-                }
-            }
-        }
     }
 }
 

@@ -40,8 +40,6 @@ import net.sf.farrago.session.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
 
-import openjava.tools.DebugOut;
-
 import org.eigenbase.oj.rex.*;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.sql.*;
@@ -151,8 +149,6 @@ public class FarragoDatabase extends FarragoCompoundAllocation
             } else {
                 tracer.config("Fennel support disabled");
             }
-
-            integrateSaffronTracing();
 
             long codeCacheMaxBytes = getCodeCacheMaxBytes(currentConfig);
             codeCache = new FarragoObjectCache(this, codeCacheMaxBytes);
@@ -368,21 +364,6 @@ public class FarragoDatabase extends FarragoCompoundAllocation
             tracer.severe(
                 "Caught IOException while dumping trace configuration:  "
                 + ex.getMessage());
-        }
-    }
-
-    // TODO jvs 4-June-2004:  eliminate this once all Saffron tracing
-    // has been rewritten to use java.util.logging
-    private void integrateSaffronTracing()
-    {
-        Logger saffronTrace = Logger.getLogger("net.sf.farrago.saffron");
-        if (saffronTrace.isLoggable(Level.FINE)) {
-            DebugOut.setDebugLevel(3);
-            DebugOut.setDebugOut(
-                new LoggingPrintStream(saffronTrace, Level.FINE));
-        } else {
-            DebugOut.setDebugOut(
-                new LoggingPrintStream(saffronTrace, Level.OFF));
         }
     }
 

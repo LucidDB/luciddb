@@ -379,7 +379,7 @@ tryit:
             return rel;
         }
 
-        throw Toolbox.newInternal("exp is not relational: " + exp);
+        throw Util.newInternal("exp is not relational: " + exp);
     }
 
     private Expression convertRelToExp(JavaRel rel)

@@ -94,9 +94,9 @@ public class JavaToVectorConvertlet extends JavaConvertlet
             new StatementList(
             // "Vector v = new Vector();"
             new VariableDeclaration(null, // no modifiers
-                    TypeName.forClass(Vector.class),
+                    OJUtil.typeNameForClass(Vector.class),
                     new VariableDeclarator(var_v.toString(),
-                        new AllocationExpression(TypeName.forClass(
+                        new AllocationExpression(OJUtil.typeNameForClass(
                                 Vector.class),
                             null))));
 
@@ -114,7 +114,7 @@ public class JavaToVectorConvertlet extends JavaConvertlet
         // "public void asVector(C0 v0, ...) { ... }"
         MethodDeclaration asVector =
             new MethodDeclaration(new ModifierList(ModifierList.PUBLIC),
-                TypeName.forClass(Vector.class), "asVector",
+                OJUtil.typeNameForClass(Vector.class), "asVector",
                 unboundVars.getParameterList(), // "(C0 v0, ...)"
                 null, // throws nothing
                 stmtList);
@@ -124,7 +124,7 @@ public class JavaToVectorConvertlet extends JavaConvertlet
 
         return new MethodCall(
             new AllocationExpression(
-                TypeName.forClass(Object.class), // "Object"
+                OJUtil.typeNameForClass(Object.class), // "Object"
                 null, // "()"
                 new MemberDeclarationList(asVector)),
             "asVector",

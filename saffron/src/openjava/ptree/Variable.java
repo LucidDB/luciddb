@@ -21,6 +21,7 @@ import openjava.mop.OJClass;
 import openjava.mop.Toolbox;
 import openjava.ptree.util.ParseTreeVisitor;
 
+import org.eigenbase.util.Util;
 
 /**
  * The <code>Variable</code> class represents a type specifier
@@ -61,7 +62,7 @@ public class Variable extends Leaf implements Expression
 	}
 		final Environment.VariableInfo info = env.lookupBind( toString() );
 		if (info == null) {
-            throw Toolbox.newInternal("cannot find variable '" + name + "' in scope");
+            throw Util.newInternal("cannot find variable '" + name + "' in scope");
         }
         return info.getType();
     }

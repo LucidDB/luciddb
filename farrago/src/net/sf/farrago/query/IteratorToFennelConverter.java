@@ -260,7 +260,7 @@ public class IteratorToFennelConverter extends ConverterRel
         paramList.add(
             new Parameter(
                 new ModifierList(0),
-                TypeName.forClass(ByteBuffer.class),
+                OJUtil.typeNameForClass(ByteBuffer.class),
                 "sliceBuffer"));
         paramList.add(
             new Parameter(
@@ -276,7 +276,7 @@ public class IteratorToFennelConverter extends ConverterRel
 
         // generate code to allocate instance of anonymous class defined above
         return new AllocationExpression(
-            TypeName.forClass(FennelTupleWriter.class),
+            OJUtil.typeNameForClass(FennelTupleWriter.class),
             new ExpressionList(),
             new MemberDeclarationList(methodDecl));
     }

@@ -129,6 +129,11 @@ public abstract class OJUtil
                 + literal.getLiteralType());
         }
     }
+
+    public static TypeName typeNameForClass(Class clazz)
+    {
+        return TypeName.forOJClass(OJClass.forClass(clazz));
+    }
 }
 
 

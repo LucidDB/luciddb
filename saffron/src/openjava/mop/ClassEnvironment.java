@@ -13,6 +13,7 @@ import java.util.Hashtable;
 import java.util.Enumeration;
 import openjava.mop.OJClass;
 
+import org.eigenbase.util.Util;
 
 public final class ClassEnvironment
         extends ClosedEnvironment
@@ -123,7 +124,7 @@ public final class ClassEnvironment
 			return new BasicVariableInfo(field.getType());
 		}
 	} catch ( Exception e ) {
-        throw Toolbox.newInternal(
+        throw Util.newInternal(
             e,
             "unexpected exception looking up " + name + " in "
             + currentClassName());

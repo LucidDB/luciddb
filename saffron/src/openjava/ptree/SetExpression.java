@@ -9,6 +9,8 @@ package openjava.ptree;
 import openjava.mop.*;
 import java.util.Vector;
 
+import org.eigenbase.util.Util;
+
 /**
  * A <code>SetExpression</code> is an expression which consists of a set of
  * rows.  (Other expressions, such as variable references, may have set types
@@ -26,7 +28,7 @@ public abstract class SetExpression extends NonLeaf
 	    try {
 		rowType = deriveRowType(env);
 	    } catch (Exception e) {
-            throw Toolbox.newInternal(
+            throw Util.newInternal(
                 e,
                 "unexpected exception getting row type for SetExpression");
 	    }

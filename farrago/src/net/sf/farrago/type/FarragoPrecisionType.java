@@ -32,6 +32,7 @@ import net.sf.farrago.util.*;
 import openjava.mop.*;
 import openjava.ptree.*;
 
+import org.eigenbase.oj.util.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.reltype.RelDataTypeFactoryImpl;
 import org.eigenbase.sql.SqlCollation;
@@ -201,21 +202,24 @@ public class FarragoPrecisionType extends FarragoAtomicType
             memberDecls.add(
                 new MethodDeclaration(
                     new ModifierList(ModifierList.PROTECTED),
-                    TypeName.forClass(String.class),
+                    OJUtil.typeNameForClass(String.class),
                     "getCharsetName",
                     new ParameterList(),
                     new TypeName[0],
                     new StatementList(
-                        new ReturnStatement(Literal.makeLiteral(charsetName)))));
+                        new ReturnStatement(
+                            Literal.makeLiteral(charsetName)))));
         }
 
         TypeName [] superDecl =
-            new TypeName [] { TypeName.forClass(superclass) };
+            new TypeName [] { OJUtil.typeNameForClass(superclass) };
 
         TypeName [] interfaceDecls = null;
         if (isNullable()) {
             interfaceDecls =
-                new TypeName [] { TypeName.forClass(NullableValue.class) };
+                new TypeName [] {
+                    OJUtil.typeNameForClass(NullableValue.class)
+                };
         }
         ClassDeclaration decl =
             new ClassDeclaration(new ModifierList(ModifierList.PUBLIC

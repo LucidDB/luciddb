@@ -117,7 +117,7 @@ class MedMdrJoinRelImplementor
         // put it all together in an anonymous class definition
         Expression newIteratorExp =
             new AllocationExpression(
-                TypeName.forClass(NestedLoopCalcIterator.class),
+                OJUtil.typeNameForClass(NestedLoopCalcIterator.class),
                 new ExpressionList(
                     leftChildExp,
                     Literal.makeLiteral(
@@ -154,7 +154,7 @@ class MedMdrJoinRelImplementor
         varRepository = implementor.newVariable();
         FieldDeclaration declRepository =
             new FieldDeclaration(new ModifierList(ModifierList.PRIVATE),
-                TypeName.forClass(MDRepository.class),
+                OJUtil.typeNameForClass(MDRepository.class),
                 varRepository.toString(), null);
         memberList.add(declRepository);
     }
@@ -164,7 +164,7 @@ class MedMdrJoinRelImplementor
         stmtList = new StatementList();
         MemberDeclaration getNextRightIteratorMethodDecl =
             new MethodDeclaration(new ModifierList(ModifierList.PROTECTED),
-                TypeName.forClass(Object.class), "getNextRightIterator",
+                OJUtil.typeNameForClass(Object.class), "getNextRightIterator",
                 new ParameterList(), null, stmtList);
         memberList.add(getNextRightIteratorMethodDecl);
 
@@ -192,7 +192,7 @@ class MedMdrJoinRelImplementor
         stmtList = new StatementList();
         MemberDeclaration calcJoinRowMethodDecl =
             new MethodDeclaration(new ModifierList(ModifierList.PROTECTED),
-                TypeName.forClass(Object.class), "calcJoinRow",
+                OJUtil.typeNameForClass(Object.class), "calcJoinRow",
                 new ParameterList(), null, stmtList);
         memberList.add(calcJoinRowMethodDecl);
 
@@ -207,7 +207,7 @@ class MedMdrJoinRelImplementor
                 varRightClassifier = implementor.newVariable();
                 FieldDeclaration declRightClassifier =
                     new FieldDeclaration(new ModifierList(ModifierList.PRIVATE),
-                        TypeName.forClass(RefObject.class),
+                        OJUtil.typeNameForClass(RefObject.class),
                         varRightClassifier.toString(),
                         null);
                 memberList.add(declRightClassifier);
@@ -225,7 +225,7 @@ class MedMdrJoinRelImplementor
                 instanceofExpr =
                     new InstanceofExpression(
                         new FieldAccess("rightObj"),
-                        TypeName.forClass(rightRel.rowClass));
+                        OJUtil.typeNameForClass(rightRel.rowClass));
             }
             stmtList.add(
                 new IfStatement(
@@ -256,7 +256,7 @@ class MedMdrJoinRelImplementor
                     varRepository,
                     AssignmentExpression.EQUALS,
                     new CastExpression(
-                        TypeName.forClass(MDRepository.class),
+                        OJUtil.typeNameForClass(MDRepository.class),
                         server.generateRuntimeSupportCall(
                             Literal.constantNull())))));
         if (varRefAssociation != null) {
@@ -290,7 +290,7 @@ class MedMdrJoinRelImplementor
             stmtList = new StatementList();
             MemberDeclaration calcRightNullRowMethodDecl =
                 new MethodDeclaration(new ModifierList(ModifierList.PROTECTED),
-                    TypeName.forClass(Object.class),
+                    OJUtil.typeNameForClass(Object.class),
                     "calcRightNullRow",
                     new ParameterList(),
                     null,
@@ -368,10 +368,10 @@ class MedMdrJoinRelImplementor
         Variable varLeftObj = implementor.newVariable();
         stmtList.add(
             new VariableDeclaration(
-                TypeName.forClass(leftKeyClass),
+                OJUtil.typeNameForClass(leftKeyClass),
                 varLeftObj.toString(),
                 new CastExpression(
-                    TypeName.forClass(leftKeyClass),
+                    OJUtil.typeNameForClass(leftKeyClass),
                     new MethodCall(
                         varRepository,
                         "getByMofId",
@@ -416,7 +416,7 @@ class MedMdrJoinRelImplementor
             varRefAssociation = implementor.newVariable();
             FieldDeclaration declRefAssociation =
                 new FieldDeclaration(new ModifierList(ModifierList.PRIVATE),
-                    TypeName.forClass(RefAssociation.class),
+                    OJUtil.typeNameForClass(RefAssociation.class),
                     varRefAssociation.toString(), null);
             memberList.add(declRefAssociation);
 
@@ -442,7 +442,7 @@ class MedMdrJoinRelImplementor
         Variable varLeftObj = implementor.newVariable();
         stmtList.add(
             new VariableDeclaration(
-                TypeName.forClass(String.class),
+                OJUtil.typeNameForClass(String.class),
                 varLeftObj.toString(),
                 new MethodCall(
                     new FieldAccess(

@@ -131,7 +131,7 @@ public class OJClassMap
             try {
                 declarer.addClass(clazz);
             } catch (openjava.mop.CannotAlterException e) {
-                throw Toolbox.newInternal(
+                throw Util.newInternal(
                     e, "holder class must be OJClassSourceCode");
             }
             env.recordMemberClass(declarer.getName(), decl.getName());
@@ -161,7 +161,7 @@ public class OJClassMap
         ClassDeclaration classDecl = new ClassDeclaration(
             modifierList, className,
             new TypeName[]{
-                TypeName.forClass(syntheticSuperClass)},
+                OJUtil.typeNameForClass(syntheticSuperClass)},
             null, fieldList);
         return classDecl;
     }

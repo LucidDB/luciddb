@@ -26,6 +26,7 @@ import java.util.Collections;
 import openjava.mop.OJClass;
 import openjava.ptree.*;
 
+import org.eigenbase.util.Util;
 import org.eigenbase.oj.util.OJUtil;
 import org.eigenbase.rel.OneRowRel;
 import org.eigenbase.relopt.CallingConvention;
@@ -72,7 +73,7 @@ public class IterOneRowRel extends OneRowRel implements JavaRel
 
         Expression iterExp =
             new MethodCall(new MethodCall(
-                    TypeName.forClass(Collections.class),
+                    OJUtil.typeNameForClass(Collections.class),
                     "singletonList",
                     new ExpressionList(newRowExp)),
                 "iterator",

@@ -379,7 +379,7 @@ class QueryInfo
             ExpressionList sortList = queryExp.getSort();
             Expression [] sorts = Util.toArray(sortList);
             if ((sorts != null) && (sorts.length > 0)) {
-                throw Toolbox.newInternal("sort not implemented");
+                throw Util.newInternal("sort not implemented");
             }
             RelDataType relRowType = getRoot().getRowType();
             OJClass queryRowClass = queryExp.getRowType(env);
@@ -421,7 +421,7 @@ class QueryInfo
         ExpressionList sortList = queryExp.getSort();
         Expression [] sorts = Util.toArray(sortList);
         if ((sorts != null) && (sorts.length > 0)) {
-            throw Toolbox.newInternal("sort not implemented");
+            throw Util.newInternal("sort not implemented");
 
             //          Parameter parameter = new Parameter("p", rel.getRowType(), null);
             //              ExpReplacer replacer = new OrdinalRef.Replacer(0, parameter);

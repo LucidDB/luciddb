@@ -107,7 +107,7 @@ public class OJConnectionRegistry
                             Expression jdbcConStrExpr)
                         {
                             return new CastExpression(
-                                TypeName.forClass(DataSource.class),
+                                OJUtil.typeNameForClass(DataSource.class),
                                 conExpr);
                         }
                     };
@@ -170,10 +170,10 @@ public class OJConnectionRegistry
             final String token = Integer.toString(counter++);
             final CastExpression expr =
                 new CastExpression(
-                    TypeName.forClass(connection.getClass()),
+                    OJUtil.typeNameForClass(connection.getClass()),
                     new MethodCall(
                         new FieldAccess(
-                            TypeName.forClass(getClass()),
+                            OJUtil.typeNameForClass(getClass()),
                             "instance"),
                         "get",
                         new ExpressionList(Literal.makeLiteral(token))));
@@ -214,7 +214,7 @@ public class OJConnectionRegistry
             if (call.getName().equals("get")
                     && call.getReferenceExpr().equals(
                         new FieldAccess(
-                            TypeName.forClass(getClass()),
+                            OJUtil.typeNameForClass(getClass()),
                             "instance")) && (call.getArguments().size() == 1)
                     && call.getArguments().get(0) instanceof Literal) {
                 final Literal literal = (Literal) call.getArguments().get(0);

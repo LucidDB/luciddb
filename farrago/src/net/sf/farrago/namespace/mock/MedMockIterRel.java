@@ -79,7 +79,7 @@ class MedMockIterRel extends TableAccessRel implements JavaRel
 
         Expression iterExp =
             new AllocationExpression(
-                TypeName.forClass(MedMockIterator.class),
+                OJUtil.typeNameForClass(MedMockIterator.class),
                 new ExpressionList(
                     newRowExp,
                     Literal.makeLiteral(columnSet.nRows)));

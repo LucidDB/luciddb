@@ -19,10 +19,7 @@
 
 package net.sf.saffron.oj.stmt;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -43,6 +40,7 @@ import net.sf.saffron.trace.SaffronTrace;
 import openjava.mop.*;
 import openjava.ptree.*;
 import openjava.ptree.util.*;
+import openjava.tools.*;
 
 import org.eigenbase.javac.*;
 import org.eigenbase.oj.OJTypeFactoryImpl;
@@ -101,9 +99,9 @@ public class OJStatement extends OJPreparingStmt
         try {
             return thunk.call();
         } catch (IllegalAccessException e) {
-            throw Toolbox.newInternal(e);
+            throw Util.newInternal(e);
         } catch (InvocationTargetException e) {
-            throw Toolbox.newInternal(e);
+            throw Util.newInternal(e);
         }
     }
 
@@ -139,15 +137,41 @@ public class OJStatement extends OJPreparingStmt
         String queryString,
         Argument [] arguments)
     {
-        // (re)load trace level etc. from saffron.properties
-        if (shouldReloadTrace()) {
-            SaffronProperties.instance().apply();
-        }
+        reloadTrace();
         ClassDeclaration decl = init(arguments);
         ParseTree parseTree = parse(queryString);
         OJQueryExpander queryExpander = new OJQueryExpander(env, connection);
         parseTree = validate(parseTree, queryExpander);
         return evaluate(decl, parseTree, arguments);
+    }
+
+    private void reloadTrace()
+    {
+        SaffronProperties props = SaffronProperties.instance();
+        int debugLevel = props.debugLevel.get();
+        String debugOut = props.debugOut.get();
+        if (debugLevel >= 0) {
+            DebugOut.setDebugLevel(debugLevel);
+            if ((debugOut == null) || debugOut.equals("")) {
+                debugOut = "out";
+            }
+        }
+        if ((debugOut != null) && !debugOut.equals("")) {
+            if (debugOut.equals("err")) {
+                DebugOut.setDebugOut(System.err);
+            } else if (debugOut.equals("out")) {
+                DebugOut.setDebugOut(System.out);
+            } else {
+                try {
+                    File file = new File(debugOut);
+                    PrintStream ps =
+                        new PrintStream(new FileOutputStream(file), true);
+                    DebugOut.setDebugOut(ps);
+                } catch (FileNotFoundException e) {
+                    throw Util.newInternal(e, "while setting debug output");
+                }
+            }
+        }
     }
 
     public ResultSet executeSql(String queryString)
@@ -323,11 +347,18 @@ public class OJStatement extends OJPreparingStmt
         return false;
     }
 
-    // implement OJPreparingStmt
-    protected boolean shouldReloadTrace()
+    // override OJPreparingStmt
+    public PreparedResult prepareSql(
+        SqlNode sqlQuery,
+        Class runtimeContextClass,
+        SqlValidator validator,
+        boolean needValidation)
     {
-        return true;
+        reloadTrace();
+        return super.prepareSql(
+            sqlQuery,runtimeContextClass,validator,needValidation);
     }
+    
 }
 
 

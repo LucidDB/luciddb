@@ -719,12 +719,6 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     }
 
     // override OJPreparingStmt
-    protected boolean shouldReloadTrace()
-    {
-        return false;
-    }
-
-    // override OJPreparingStmt
     protected String getClassRoot()
     {
         return classesRoot.getPath();

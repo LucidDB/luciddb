@@ -23,7 +23,7 @@ import openjava.ptree.*;
 
 import org.eigenbase.oj.rel.JavaRel;
 import org.eigenbase.oj.rel.JavaRelImplementor;
-import org.eigenbase.oj.util.UnboundVariableCollector;
+import org.eigenbase.oj.util.*;
 import org.eigenbase.rel.convert.ConverterRel;
 import org.eigenbase.relopt.CallingConvention;
 
@@ -80,14 +80,14 @@ public class JavaToExistsConvertlet extends JavaConvertlet
         stmtList.add(new ReturnStatement(Literal.constantFalse()));
         return new MethodCall(
             new AllocationExpression(
-                TypeName.forClass(Object.class), // "Object"
+                OJUtil.typeNameForClass(Object.class), // "Object"
                 null, // "()"
                 
         // "public boolean anyRows(C0 v0, ...) { ... }"
         new MemberDeclarationList(
                     new MethodDeclaration(
                         new ModifierList(ModifierList.PUBLIC),
-                        TypeName.forClass(boolean.class), // "boolean"
+                        OJUtil.typeNameForClass(boolean.class), // "boolean"
                         "anyRows",
                         unboundVars.getParameterList(), // "(C0 v0, ...)"
                         null, // throws nothing

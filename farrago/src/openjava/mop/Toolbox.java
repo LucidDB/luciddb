@@ -18,6 +18,7 @@ import org.eigenbase.relopt.RelOptSchema;
 import org.eigenbase.relopt.RelOptTable;
 import org.eigenbase.relopt.RelOptConnection;
 import org.eigenbase.runtime.SyntheticObject;
+import org.eigenbase.util.Util;
 
 import java.lang.reflect.InvocationTargetException;
 import java.sql.ResultSet;
@@ -905,7 +906,7 @@ public abstract class Toolbox {
         try {
             return OJClass.forName(name);
         } catch (OJClassNotFoundException e) {
-            throw newInternal(
+            throw Util.newInternal(
                 e,
                 "OJClass.forNameAnyway() failed for : " + name);
         }
@@ -999,35 +1000,13 @@ public abstract class Toolbox {
         }
     }
 
-    /**
-     * Gets or derives the alias of an expression.  Saffron expressions are
-     * allowed to have explicit <code>AS <i>alias</i></code> clauses; variables
-     * and field accesses are their own alias.
-     */
-    // FIXME jvs 28-Aug-2004:  disabled during move to Farrago
-    /*
-    public static String getAlias(Expression expression) {
-        if (expression instanceof AliasedExpression) {
-            return ((AliasedExpression) expression).getAlias();
-        } else if (expression instanceof Variable) {
-            return expression.toString();
-        } else if (expression instanceof FieldAccess) {
-            return ((FieldAccess) expression).getName();
-        } else if (expression instanceof CastExpression) {
-            return getAlias(((CastExpression) expression).getExpression());
-        } else {
-            return null;
-        }
-    }
-    */
-
     public static OJClass getType(Environment env, Expression exp) {
         try {
             OJClass clazz = exp.getType(env);
             assert(clazz != null);
             return clazz;
         } catch (Exception e) {
-            throw newInternal(e, "while deriving type for '" + exp + "'");
+            throw Util.newInternal(e, "while deriving type for '" + exp + "'");
         }
     }
 
@@ -1063,7 +1042,7 @@ public abstract class Toolbox {
             String qname = env.toQualifiedName(refType.toString());
             OJClass clazz = env.lookupClass(qname);
             if (clazz == null) {
-                throw newInternal(
+                throw Util.newInternal(
                         "unknown type '" + refType + "'");
             }
             return clazz;
@@ -1073,16 +1052,16 @@ public abstract class Toolbox {
             try {
                 clazz = exp.getType(env);
             } catch (Exception e) {
-                throw newInternal(
+                throw Util.newInternal(
                         e, "cannot derive type for expression '" + exp + "'");
             }
             if (clazz == null) {
-                throw newInternal(
+                throw Util.newInternal(
                         "cannot derive type for expression '" + exp + "'");
             }
             return clazz;
         } else {
-            throw newInternal(
+            throw Util.newInternal(
                     "cannot derive type for " + ref.getClass() + ": " + ref);
         }
     }
@@ -1106,64 +1085,6 @@ public abstract class Toolbox {
         return list;
     }
 
-    public static Error newInternal() {
-        return newInternal("(unknown cause)");
-    }
-
-    public static Error newInternal(String s) {
-        if (false) {
-            // TODO re-enable this code when we're no longer throwing spurious
-            //   internal errors (which should be parse errors, for example)
-            System.err.println("Internal error: " + s);
-        }
-        return new AssertionError("Internal error: " + s);
-    }
-
-    public static Error newInternal(Throwable e) {
-        return newInternal(e, "(unknown cause)");
-    }
-
-    public static Error newInternal(Throwable e, String s) {
-        String message = "Internal error: " + s;
-        if (false) {
-            // TODO re-enable this code when we're no longer throwing spurious
-            //   internal errors (which should be parse errors, for example)
-            System.err.println(message);
-            e.printStackTrace(System.err);
-        }
-        AssertionError ae = new AssertionError(message);
-        ae.initCause(e);
-        return ae;
-    }
-
-    public static void pre(boolean b, String description) {
-        if (!b) {
-            throw newInternal("pre-condition failed: " + description);
-        }
-    }
-    /**
-     * Returns a {@link java.lang.RuntimeException} indicating that a
-     * particular feature has not been implemented, but should be.
-     *
-     * <p>If every 'hole' in our functionality uses this method, it will be
-     * easier for us to identity the holes. Throwing a
-     * {@link java.lang.UnsupportedOperationException} isn't as good, because
-     * sometimes we actually want to partially implement an API.
-     *
-     * @param o The object which was the target of the call, or null.
-     *   Passing the object gives crucial information if a method needs to be
-     *   overridden and a subclass forgot to do so.
-     *
-     * @return an {@link UnsupportedOperationException}.
-     */
-    public static RuntimeException needToImplement(Object o) {
-        String description = null;
-        if (o != null) {
-            description = o.getClass().toString() + ": " + o.toString();
-        }
-        throw new UnsupportedOperationException(description);
-    }
-
     /**
      * Sets a {@link ParseTreeVisitor} going on a parse tree, and returns the
      * result.
@@ -1175,7 +1096,7 @@ public abstract class Toolbox {
         } catch (StopIterationException e) {
             // ignore the exception -- it was just a way to abort the traversal
         } catch (ParseTreeException e) {
-            throw Toolbox.newInternal(
+            throw Util.newInternal(
                     e, "while visiting expression " + p);
         }
         return (ParseTree) holder.get(0);
@@ -1223,7 +1144,7 @@ public abstract class Toolbox {
                 try {
                     declarer.addClass(anonClass);
                 } catch (CannotAlterException e) {
-                    throw Toolbox.newInternal(
+                    throw Util.newInternal(
                             e, "declarer of anonymous class must be source code");
                 }
             }
@@ -1307,7 +1228,7 @@ public abstract class Toolbox {
         }
         if (toClazz == clazzObject) {
             if (!clazzObject.isAssignableFrom(fromClazz)) {
-                throw newInternal(
+                throw Util.newInternal(
                         "cannot cast non-object " + fromClazz +
                         " to java.lang.Object");
             }
@@ -1341,40 +1262,6 @@ public abstract class Toolbox {
     }
 
     /**
-     * Generates an equality condition appropriate for the types of the
-     * operands.
-     *
-     * <p>It generates:<ul>
-     * <li><code>left == right</code> if they are primitives,
-     * <li><code>{@link SaffronUtil#equals}(left, right)</code> if they are
-     *     objects which may be null,
-     * <li><code>left.{@link Object#equals equals}(right)</code> if they are
-     *     objects which may not be null.
-     * </ul>
-     */
-    // FIXME jvs 29-Aug-2004
-    /*
-    public static Expression makeEquals(
-            Expression left, Expression right, OJClass type, boolean nullable) {
-        if (type.isPrimitive() ||
-                left == Literal.constantNull() ||
-                right == Literal.constantNull()) {
-            return new BinaryExpression(left, BinaryExpression.EQUAL, right);
-        } else if (nullable) {
-            return new MethodCall(
-                    OJClass.forClass(SaffronUtil.class),
-                    "equals",
-                    new ExpressionList(left, right));
-        } else {
-            return new MethodCall(
-                    left,
-                    "equals",
-                    new ExpressionList(right));
-        }
-    }
-    */
-
-    /**
      * Converts a field access into a table.
      **/
     public static RelOptTable getTable(
@@ -1396,13 +1283,6 @@ public abstract class Toolbox {
                 return schema;
             }
         }
-        // FIXME jvs 30-Aug-2004
-        /*
-        final RelOptConnection relOptConnection = OJConnectionRegistry.instance.get(expr);
-        if (relOptConnection != null) {
-            return relOptConnection.getRelOptSchema();
-        }
-        */
         OJClass exprType = getType(env, expr);
         if (clazzConnection.isAssignableFrom(exprType)) {
             // Call the "getRelOptSchemaStatic()" method, if it exists.
@@ -1412,7 +1292,7 @@ public abstract class Toolbox {
                 try {
                     Object o = method.invoke(null, new Object[0]);
                     if (!(o instanceof RelOptSchema)) {
-                        throw newInternal(method + " must return a RelOptSchema");
+                        throw Util.newInternal(method + " must return a RelOptSchema");
                     }
                     return (RelOptSchema) o;
                 } catch (IllegalAccessException e) {

@@ -380,7 +380,7 @@ public abstract class BuiltinAggregation implements Aggregation
             case MINMAX_COMPARATOR:
                 return new OJClass [] { argTypes[1] };
             default:
-                throw Toolbox.newInternal("bad kind: " + kind);
+                throw Util.newInternal("bad kind: " + kind);
             }
         }
 
@@ -393,7 +393,7 @@ public abstract class BuiltinAggregation implements Aggregation
             case MINMAX_COMPARATOR:
                 return argTypes[1];
             default:
-                throw Toolbox.newInternal("bad kind: " + kind);
+                throw Util.newInternal("bad kind: " + kind);
             }
         }
 
@@ -406,7 +406,7 @@ public abstract class BuiltinAggregation implements Aggregation
             case MINMAX_COMPARATOR:
                 return new OJClass [] { Toolbox.clazzComparator };
             default:
-                throw Toolbox.newInternal("bad kind: " + kind);
+                throw Util.newInternal("bad kind: " + kind);
             }
         }
 
@@ -493,7 +493,7 @@ public abstract class BuiltinAggregation implements Aggregation
                             new ExpressionList(arg))));
                 return;
             default:
-                throw Toolbox.newInternal("bad kind: " + kind);
+                throw Util.newInternal("bad kind: " + kind);
             }
         }
 
@@ -527,7 +527,7 @@ public abstract class BuiltinAggregation implements Aggregation
                             accumulator),
                         "value"));
             default:
-                throw Toolbox.newInternal("bad kind: " + kind);
+                throw Util.newInternal("bad kind: " + kind);
             }
         }
 
@@ -564,7 +564,7 @@ public abstract class BuiltinAggregation implements Aggregation
                         arg,
                         Literal.constantNull()));
             default:
-                throw Toolbox.newInternal("bad kind: " + kind);
+                throw Util.newInternal("bad kind: " + kind);
             }
         }
 

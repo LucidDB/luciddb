@@ -204,14 +204,14 @@ public class IterCalcRel extends ProjectRelBase implements JavaRel
 
         MemberDeclaration nextMethodDecl =
             new MethodDeclaration(new ModifierList(ModifierList.PROTECTED),
-                TypeName.forClass(Object.class), "calcNext",
+                OJUtil.typeNameForClass(Object.class), "calcNext",
                 new ParameterList(), null, nextMethodBody);
 
         memberList.add(rowVarDecl);
         memberList.add(nextMethodDecl);
         Expression newIteratorExp =
             new AllocationExpression(
-                TypeName.forClass(CalcIterator.class),
+                OJUtil.typeNameForClass(CalcIterator.class),
                 new ExpressionList(childExp),
                 memberList);
 

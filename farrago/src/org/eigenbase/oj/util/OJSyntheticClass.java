@@ -155,7 +155,7 @@ outer:
     {
         ParameterList parameterList = new ParameterList();
         if (parameterNames.length != parameterTypes.length) {
-            throw Toolbox.newInternal(
+            throw Util.newInternal(
                 "must have same number & type of parameters");
         }
         ModifierList modifierList;
@@ -214,7 +214,7 @@ outer:
             }
         }
         if (fail) {
-            throw Toolbox.newInternal(
+            throw Util.newInternal(
                 "bad field in synthetic class [" + fieldName + "]");
         } else {
             return -1;

@@ -25,6 +25,7 @@ import javax.sql.DataSource;
 
 import openjava.ptree.*;
 
+import org.eigenbase.oj.util.*;
 import org.eigenbase.oj.rel.JavaRelImplementor;
 import org.eigenbase.oj.rel.ResultSetRel;
 import org.eigenbase.rel.AbstractRelNode;
@@ -208,7 +209,7 @@ public class JdbcQuery extends AbstractRelNode implements ResultSetRel
         //    }
         // }
         //
-        // This is all a horrible hack. Need away to 'freeze' a DataSource
+        // This is all a horrible hack. Need a way to 'freeze' a DataSource
         // into a Java expression which can be 'thawed' into a DataSource
         // at run-time. We should use the OJConnectionRegistry somehow.
         assert dataSource instanceof JdbcDataSource; // hack
@@ -217,7 +218,7 @@ public class JdbcQuery extends AbstractRelNode implements ResultSetRel
         final String url = ((JdbcDataSource) dataSource).url;
         final MethodCall connectionExpr =
             new MethodCall(
-                TypeName.forClass(java.sql.DriverManager.class),
+                OJUtil.typeNameForClass(java.sql.DriverManager.class),
                 "getConnection",
                 new ExpressionList(
                     Literal.makeLiteral(url),

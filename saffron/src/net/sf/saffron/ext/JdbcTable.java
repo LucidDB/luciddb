@@ -139,12 +139,12 @@ public class JdbcTable extends RelOptAbstractTable
         // java.sql.Statement stmt = null;
         stmtList.add(
             new VariableDeclaration(
-                TypeName.forClass(java.sql.Connection.class),
+                OJUtil.typeNameForClass(java.sql.Connection.class),
                 varJdbcCon.toString(),
                 Literal.constantNull()));
         stmtList.add(
             new VariableDeclaration(
-                TypeName.forClass(java.sql.Statement.class),
+                OJUtil.typeNameForClass(java.sql.Statement.class),
                 varStmt.toString(),
                 Literal.constantNull()));
 
@@ -166,7 +166,7 @@ public class JdbcTable extends RelOptAbstractTable
                             AssignmentExpression.EQUALS,
                             new MethodCall(
                                 new CastExpression(
-                                    TypeName.forClass(
+                                    OJUtil.typeNameForClass(
                                         javax.sql.DataSource.class),
                                     connectionInfo.expr),
                                 "getConnection",
@@ -208,7 +208,7 @@ public class JdbcTable extends RelOptAbstractTable
                         new StatementList(
                             new ThrowStatement(
                                 new AllocationExpression(
-                                    TypeName.forClass(
+                                    OJUtil.typeNameForClass(
                                         net.sf.saffron.runtime.SaffronError.class),
                                     new ExpressionList(varEx)))))),
                 

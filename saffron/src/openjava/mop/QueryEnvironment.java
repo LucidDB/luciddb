@@ -10,6 +10,8 @@ import openjava.ptree.Expression;
 import openjava.ptree.QueryExpression;
 import openjava.ptree.SetExpression;
 
+import org.eigenbase.util.Util;
+
 /**
  * <code>QueryEnvironment</code> is the environment seen inside a {@link
  * QueryExpression}.  The 'variables' are the tables in the from list; it
@@ -34,7 +36,7 @@ public class QueryEnvironment extends ClosedEnvironment {
 		try {
 			return new BasicVariableInfo(expressions[i].getRowType(parent));
 		} catch (Exception e) {
-            throw Toolbox.newInternal(
+            throw Util.newInternal(
                 e,
                 "unexpected exception looking up " + name
                 + " in QueryEnvironment");

@@ -787,6 +787,65 @@ public class Util extends Toolbox
         }
         return o0.equals(o1);
     }
+
+    public static Error newInternal()
+    {
+        return newInternal("(unknown cause)");
+    }
+
+    public static Error newInternal(String s)
+    {
+        return new AssertionError("Internal error: " + s);
+    }
+
+    public static Error newInternal(Throwable e)
+    {
+        return newInternal(e, "(unknown cause)");
+    }
+
+    public static Error newInternal(Throwable e, String s)
+    {
+        String message = "Internal error: " + s;
+        if (false) {
+            // TODO re-enable this code when we're no longer throwing spurious
+            //   internal errors (which should be parse errors, for example)
+            System.err.println(message);
+            e.printStackTrace(System.err);
+        }
+        AssertionError ae = new AssertionError(message);
+        ae.initCause(e);
+        return ae;
+    }
+
+    public static void pre(boolean b, String description)
+    {
+        if (!b) {
+            throw newInternal("pre-condition failed: " + description);
+        }
+    }
+    /**
+     * Returns a {@link java.lang.RuntimeException} indicating that a
+     * particular feature has not been implemented, but should be.
+     *
+     * <p>If every 'hole' in our functionality uses this method, it will be
+     * easier for us to identity the holes. Throwing a
+     * {@link java.lang.UnsupportedOperationException} isn't as good, because
+     * sometimes we actually want to partially implement an API.
+     *
+     * @param o The object which was the target of the call, or null.
+     *   Passing the object gives crucial information if a method needs to be
+     *   overridden and a subclass forgot to do so.
+     *
+     * @return an {@link UnsupportedOperationException}.
+     */
+    public static RuntimeException needToImplement(Object o)
+    {
+        String description = null;
+        if (o != null) {
+            description = o.getClass().toString() + ": " + o.toString();
+        }
+        throw new UnsupportedOperationException(description);
+    }
 }
 
 

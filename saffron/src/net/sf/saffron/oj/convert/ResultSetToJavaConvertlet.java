@@ -167,7 +167,7 @@ public class ResultSetToJavaConvertlet extends JavaConvertlet
                         new StatementList(
                             new ThrowStatement(
                                 new AllocationExpression(
-                                    TypeName.forClass(SaffronError.class),
+                                    OJUtil.typeNameForClass(SaffronError.class),
                                     new ExpressionList(varEx)))))),
                 
         // finally {

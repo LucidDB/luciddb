@@ -29,6 +29,7 @@ import openjava.mop.Environment;
 import openjava.mop.OJClass;
 import openjava.ptree.*;
 
+import org.eigenbase.oj.util.*;
 import org.eigenbase.util.Util;
 
 
@@ -129,12 +130,14 @@ public class FarragoDateTimeType extends FarragoPrecisionType
         }
 
         TypeName [] superDecl =
-            new TypeName [] { TypeName.forClass(superclass) };
+            new TypeName [] { OJUtil.typeNameForClass(superclass) };
 
         TypeName [] interfaceDecls = null;
         if (isNullable()) {
             interfaceDecls =
-                new TypeName [] { TypeName.forClass(NullableValue.class) };
+                new TypeName [] {
+                    OJUtil.typeNameForClass(NullableValue.class)
+                };
         }
         ClassDeclaration decl =
             new ClassDeclaration(new ModifierList(ModifierList.PUBLIC

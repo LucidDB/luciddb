@@ -131,7 +131,7 @@ public abstract class OJPreparingStmt
                 }
             }
             if (argument == null) {
-                throw Toolbox.newInternal("variable '" + parameterName
+                throw Util.newInternal("variable '" + parameterName
                     + "' not found");
             }
             args[i] = argument.value;
@@ -206,11 +206,6 @@ public abstract class OJPreparingStmt
         boolean needValidation)
     {
         queryString = sqlQuery.toString();
-
-        // (re)load trace level etc. from saffron.properties
-        if (shouldReloadTrace()) {
-            SaffronProperties.instance().apply();
-        }
 
         if (runtimeContextClass == null) {
             runtimeContextClass = connection.getClass();
@@ -355,8 +350,6 @@ public abstract class OJPreparingStmt
     protected abstract boolean shouldAlwaysWriteJavaFile();
 
     protected abstract boolean shouldSetConnectionInfo();
-
-    protected abstract boolean shouldReloadTrace();
 
     private JavaCompiler createCompiler()
     {
@@ -613,13 +606,13 @@ public abstract class OJPreparingStmt
                     parameterTypes);
             return new BoundMethod(o, method, parameterNames);
         } catch (ClassNotFoundException e) {
-            throw Toolbox.newInternal(e);
+            throw Util.newInternal(e);
         } catch (InstantiationException e) {
-            throw Toolbox.newInternal(e);
+            throw Util.newInternal(e);
         } catch (IllegalAccessException e) {
-            throw Toolbox.newInternal(e);
+            throw Util.newInternal(e);
         } catch (NoSuchMethodException e) {
-            throw Toolbox.newInternal(e);
+            throw Util.newInternal(e);
         }
     }
 
