@@ -64,7 +64,21 @@ public class JoinRel extends AbstractRelNode
         int joinType,
         Set variablesStopped)
     {
-        super(cluster);
+        this(
+            cluster, new RelTraitSet(CallingConvention.NONE), left, right,
+            condition, joinType, variablesStopped);
+    }
+
+    protected JoinRel(
+        RelOptCluster cluster,
+        RelTraitSet traits,
+        RelNode left,
+        RelNode right,
+        RexNode condition,
+        int joinType,
+        Set variablesStopped)
+    {
+        super(cluster, traits);
         this.left = left;
         this.right = right;
         this.condition = condition;
@@ -126,6 +140,7 @@ public class JoinRel extends AbstractRelNode
     {
         return new JoinRel(
             cluster,
+            cloneTraits(),
             RelOptUtil.clone(left),
             RelOptUtil.clone(right),
             RexUtil.clone(condition),

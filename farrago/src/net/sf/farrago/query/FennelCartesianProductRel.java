@@ -65,11 +65,13 @@ class FennelCartesianProductRel extends FennelPullDoubleRel
     // implement Cloneable
     public Object clone()
     {
-        return new FennelCartesianProductRel(
+        FennelCartesianProductRel clone = new FennelCartesianProductRel(
             cluster,
             RelOptUtil.clone(left),
             RelOptUtil.clone(right),
             joinType);
+        clone.traits = cloneTraits();
+        return clone;
     }
 
     // implement RelNode

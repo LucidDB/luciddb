@@ -29,6 +29,7 @@ import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanWriter;
 import org.eigenbase.relopt.RelOptPlanner;
+import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.rex.RexNode;
@@ -59,6 +60,7 @@ public abstract class ProjectRelBase extends SingleRel
      *
      * @param cluster {@link RelOptCluster} this relational expression
      *        belongs to
+     * @param traits traits of this rel
      * @param child input relational expression
      * @param exps set of expressions for the input columns
      * @param fieldNames aliases of the expressions
@@ -66,12 +68,13 @@ public abstract class ProjectRelBase extends SingleRel
      */
     protected ProjectRelBase(
         RelOptCluster cluster,
+        RelTraitSet traits,
         RelNode child,
         RexNode [] exps,
         String [] fieldNames,
         int flags)
     {
-        super(cluster, child);
+        super(cluster, traits, child);
         this.exps = exps;
         if (fieldNames == null) {
             fieldNames = new String[exps.length];

@@ -74,7 +74,9 @@ class MedMdrClassExtentRel extends TableAccessRel implements JavaRel
         MedMdrClassExtent mdrClassExtent,
         RelOptConnection connection)
     {
-        super(cluster, mdrClassExtent, connection);
+        super(
+            cluster, new RelTraitSet(CallingConvention.ITERATOR),
+            mdrClassExtent, connection);
         this.mdrClassExtent = mdrClassExtent;
 
         rowClass = JmiUtil.getClassForRefClass(mdrClassExtent.refClass);
@@ -84,9 +86,12 @@ class MedMdrClassExtentRel extends TableAccessRel implements JavaRel
     //~ Methods ---------------------------------------------------------------
 
     // implement RelNode
-    public CallingConvention getConvention()
+    public Object clone()
     {
-        return CallingConvention.ITERATOR;
+        MedMdrClassExtentRel clone =
+            new MedMdrClassExtentRel(cluster, mdrClassExtent, connection);
+        clone.traits = cloneTraits();
+        return clone;
     }
 
     private String [] getRuntimeName(RefBaseObject refObject)

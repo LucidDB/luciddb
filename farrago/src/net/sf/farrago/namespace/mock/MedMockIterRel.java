@@ -60,16 +60,13 @@ class MedMockIterRel extends TableAccessRel implements JavaRel
         RelOptCluster cluster,
         RelOptConnection connection)
     {
-        super(cluster, columnSet, connection);
+        super(
+            cluster, new RelTraitSet(CallingConvention.ITERATOR), columnSet,
+            connection);
         this.columnSet = columnSet;
     }
 
     //~ Methods ---------------------------------------------------------------
-
-    public CallingConvention getConvention()
-    {
-        return CallingConvention.ITERATOR;
-    }
 
     public ParseTree implement(JavaRelImplementor implementor)
     {
@@ -91,6 +88,15 @@ class MedMockIterRel extends TableAccessRel implements JavaRel
                     Literal.makeLiteral(columnSet.nRows)));
 
         return iterExp;
+    }
+
+    // implement RelNode
+    public Object clone()
+    {
+        MedMockIterRel clone =
+            new MedMockIterRel(columnSet, cluster, connection);
+        clone.traits = cloneTraits();
+        return clone;
     }
 }
 

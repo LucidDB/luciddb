@@ -51,12 +51,8 @@ public class FennelPullCollectRel extends FennelSingleRel
 
     public FennelPullCollectRel(
         RelOptCluster cluster, RelNode child, String name) {
-        super(cluster, child);
+        super(cluster, new RelTraitSet(FENNEL_PULL_CONVENTION), child);
         this.name = name;
-    }
-
-    public CallingConvention getConvention() {
-        return FENNEL_PULL_CONVENTION;
     }
 
     protected RelDataType deriveRowType()
@@ -86,6 +82,9 @@ public class FennelPullCollectRel extends FennelSingleRel
 
     // override Object (public, does not throw CloneNotSupportedException)
     public Object clone() {
-        return new FennelPullCollectRel(cluster, RelOptUtil.clone(child),name);
+        FennelPullCollectRel clone =
+            new FennelPullCollectRel(cluster, RelOptUtil.clone(child),name);
+        clone.traits = cloneTraits();
+        return clone;
     }
 }

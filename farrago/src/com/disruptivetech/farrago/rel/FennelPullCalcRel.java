@@ -60,7 +60,8 @@ public class FennelPullCalcRel extends FennelCalcRel implements FennelPullRel
         RexNode [] projectExprs,
         RexNode conditionExpr)
     {
-        super(cluster, child, rowType, projectExprs, conditionExpr);
+        super(cluster, new RelTraitSet(FENNEL_PULL_CONVENTION), child, rowType,
+            projectExprs, conditionExpr);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -73,18 +74,14 @@ public class FennelPullCalcRel extends FennelCalcRel implements FennelPullRel
             ? RexUtil.clone(getConditionExpr())
             : null;
 
-        return new FennelPullCalcRel(
+        FennelPullCalcRel clone = new FennelPullCalcRel(
             cluster,
             RelOptUtil.clone(child),
             rowType,
             RexUtil.clone(getProjectExprs()),
             clonedConditionExpr);
-    }
-
-    // implement RelNode
-    public CallingConvention getConvention()
-    {
-        return FennelPullRel.FENNEL_PULL_CONVENTION;
+        clone.traits = cloneTraits();
+        return clone;
     }
 
     // implement FennelRel

@@ -46,7 +46,6 @@ public class FennelRenameRel extends FennelSingleRel
     //~ Instance fields -------------------------------------------------------
 
     private String [] fieldNames;
-    private CallingConvention convention;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -61,20 +60,13 @@ public class FennelRenameRel extends FennelSingleRel
         RelOptCluster cluster,
         RelNode child,
         String [] fieldNames,
-        CallingConvention convention)
+        RelTraitSet traits)
     {
-        super(cluster, child);
+        super(cluster, traits, child);
         this.fieldNames = fieldNames;
-        this.convention = convention;
     }
 
     //~ Methods ---------------------------------------------------------------
-
-    // implement RelNode
-    public CallingConvention getConvention()
-    {
-        return convention;
-    }
 
     // implement RelNode
     public boolean isDistinct()
@@ -89,7 +81,7 @@ public class FennelRenameRel extends FennelSingleRel
             cluster,
             RelOptUtil.clone(child),
             fieldNames,
-            convention);
+            cloneTraits());
     }
 
     // implement RelNode

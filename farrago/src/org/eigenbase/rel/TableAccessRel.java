@@ -74,7 +74,18 @@ public class TableAccessRel extends AbstractRelNode
         RelOptTable table,
         RelOptConnection connection)
     {
-        super(cluster);
+        this(
+            cluster, new RelTraitSet(CallingConvention.NONE), table,
+            connection);
+    }
+
+    protected TableAccessRel(
+        RelOptCluster cluster,
+        RelTraitSet traits,
+        RelOptTable table,
+        RelOptConnection connection)
+    {
+        super(cluster, traits);
         this.table = table;
         this.connection = connection;
         if (table.getRelOptSchema() != null) {

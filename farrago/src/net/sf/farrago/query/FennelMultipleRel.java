@@ -31,6 +31,7 @@ import org.eigenbase.rel.RelFieldCollation;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.CallingConvention;
+import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.reltype.RelDataType;
 
 import java.util.ArrayList;
@@ -62,7 +63,7 @@ public abstract class FennelMultipleRel
         RelOptCluster cluster,
         RelNode[] inputs)
     {
-        super(cluster);
+        super(cluster, new RelTraitSet(FennelPullRel.FENNEL_PULL_CONVENTION));
         this.inputs = inputs;
         assert inputs != null;
         for (int i = 0; i < inputs.length; i++) {
@@ -73,11 +74,6 @@ public abstract class FennelMultipleRel
     }
 
     //~ Methods ---------------------------------------------------------------
-
-    public CallingConvention getConvention()
-    {
-        return FennelPullRel.FENNEL_PULL_CONVENTION;
-    }
 
     // implement RelNode
     public RelNode [] getInputs()

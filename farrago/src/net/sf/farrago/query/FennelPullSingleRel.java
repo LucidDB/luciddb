@@ -48,15 +48,7 @@ public abstract class FennelPullSingleRel extends FennelSingleRel
         RelOptCluster cluster,
         RelNode child)
     {
-        super(cluster, child);
-    }
-
-    //~ Methods ---------------------------------------------------------------
-
-    // implement RelNode
-    public CallingConvention getConvention()
-    {
-        return FennelPullRel.FENNEL_PULL_CONVENTION;
+        super(cluster, new RelTraitSet(FENNEL_PULL_CONVENTION), child);
     }
 }
 

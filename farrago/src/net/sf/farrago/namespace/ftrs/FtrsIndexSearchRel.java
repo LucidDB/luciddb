@@ -105,13 +105,15 @@ class FtrsIndexSearchRel extends FennelPullSingleRel
     // implement Cloneable
     public Object clone()
     {
-        return new FtrsIndexSearchRel(
+        FtrsIndexSearchRel clone = new FtrsIndexSearchRel(
             scanRel,
             RelOptUtil.clone(child),
             isUniqueKey,
             isOuter,
             inputKeyProj,
             inputJoinProj);
+        clone.traits = cloneTraits();
+        return clone;
     }
 
     // implement RelNode

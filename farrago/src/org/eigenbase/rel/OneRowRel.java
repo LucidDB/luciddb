@@ -49,7 +49,19 @@ public class OneRowRel extends AbstractRelNode
      */
     public OneRowRel(RelOptCluster cluster)
     {
-        super(cluster);
+        super(cluster, new RelTraitSet(CallingConvention.NONE));
+    }
+
+    /**
+     * Creates an <code>OneRow</code> with specific traits.
+     *
+     * @param cluster {@link RelOptCluster} this relational expression
+     *        belongs to
+     * @param traits for this rel
+     */
+    protected OneRowRel(RelOptCluster cluster, RelTraitSet traits)
+    {
+        super(cluster, traits);
     }
 
     //~ Methods ---------------------------------------------------------------

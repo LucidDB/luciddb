@@ -51,17 +51,20 @@ public interface RelOptPlanner
     RelNode getRoot();
 
     /**
-     * Registers a calling convention. If the calling convention has already
+     * Registers a rel trait definition. If the {@link RelTraitDef} has already
      * been registered, does nothing.
      *
-     * @return whether the calling convention was added, as per
+     * @return whether the RelTraitDef was added, as per
      *   {@link java.util.Collection#add}
      */
-    boolean addCallingConvention(CallingConvention convention);
+    boolean addRelTraitDef(RelTraitDef relTraitDef);
 
     /**
-     * Registers a rule. If the calling convention has already
-     * been registered, does nothing.
+     * Registers a rule. If the rule has already been registered, does nothing.
+     * This method should determine if the given rule is a
+     * {@link org.eigenbase.rel.convert.ConverterRule} and pass the
+     * ConverterRule to all {@link #addRelTraitDef(RelTraitDef) registered}
+     * RelTraitDef instances.
      *
      * @return whether the rule was added, as per
      *   {@link java.util.Collection#add}
@@ -71,6 +74,8 @@ public interface RelOptPlanner
     /**
      * Changes a relational expression to an equivalent one of a different
      * calling convention. The return is never null, but may be abstract.
+     * This method will eventually be removed in favor of
+     * {@link #changeTraits(RelNode, RelTraitSet)}
      *
      * @pre rel.getConvention() != toConvention
      * @post return != null
@@ -78,6 +83,15 @@ public interface RelOptPlanner
     RelNode changeConvention(
         RelNode rel,
         CallingConvention toConvention);
+
+    /**
+     * Changes a relational expression to an equivalent one with a different
+     * set of traits.  The return is never null, but may be abstract.
+     *
+     * @pre rel.getTraits() != toTraits
+     * @post return != null
+     */
+    RelNode changeTraits(RelNode rel, RelTraitSet toTraits);
 
     /**
      * Negotiates an appropriate planner to deal with distributed queries.
@@ -118,6 +132,11 @@ public interface RelOptPlanner
      * Create a cost object representing zero cost.
      */
     RelOptCost makeZeroCost();
+
+    /**
+     * Compute the cost of a RelNode.
+     */
+    RelOptCost getCost(RelNode rel);
 
     /**
      * Registers a relational expression in the expression bank. After it has

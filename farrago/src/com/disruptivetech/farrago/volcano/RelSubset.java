@@ -59,7 +59,6 @@ public class RelSubset extends AbstractRelNode
     /** List of the relational expressions for which this subset is an input. */
     ArrayList parents;
     ArrayList rels;
-    CallingConvention convention;
 
     /** cost of best known plan (it may have improved since) */
     RelOptCost bestCost;
@@ -76,11 +75,10 @@ public class RelSubset extends AbstractRelNode
     RelSubset(
         RelOptCluster cluster,
         RelSet set,
-        CallingConvention convention)
+        RelTraitSet traits)
     {
-        super(cluster);
+        super(cluster, traits);
         this.set = set;
-        this.convention = convention;
         this.rels = new ArrayList();
         this.parents = new ArrayList();
         this.bestCost = VolcanoCost.INFINITY;
@@ -88,12 +86,6 @@ public class RelSubset extends AbstractRelNode
     }
 
     //~ Methods ---------------------------------------------------------------
-
-    // implement RelNode
-    public CallingConvention getConvention()
-    {
-        return convention;
-    }
 
     /**
      * There are no children, as such.  We throw an exception because you
@@ -131,13 +123,28 @@ public class RelSubset extends AbstractRelNode
     // implement RelNode
     public void explain(RelOptPlanWriter pw)
     {
-        pw.explainSubset(id + ": RelSubset(" + convention + ")",
+        StringBuffer s = new StringBuffer();
+        s.append(id).append(": RelSubset(");
+        for(int i = 0; i < traits.size(); i++) {
+            if (i > 0) {
+                s.append(", ");
+            }
+            s.append(traits.getTrait(i));
+        }
+        s.append(')');
+
+        pw.explainSubset(s.toString(),
             (RelNode) rels.get(0));
     }
 
     protected String computeDigest()
     {
-        return "Subset#" + set.id + "." + convention;
+        StringBuffer digest = new StringBuffer("Subset#");
+        digest.append(set.id);
+        for(int i = 0; i < traits.size(); i++) {
+            digest.append('.').append(traits.getTrait(i));
+        }
+        return digest.toString();
     }
 
     // implement RelNode

@@ -54,9 +54,10 @@ public abstract class SingleRel extends AbstractRelNode
      */
     protected SingleRel(
         RelOptCluster cluster,
+        RelTraitSet traits,
         RelNode child)
     {
-        super(cluster);
+        super(cluster, traits);
         this.child = child;
     }
 

@@ -206,9 +206,7 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
         // mess with system parameters.
         FarragoSessionPlanner planner =
             stmt.getSession().newPlanner(stmt,false);
-        planner.addCallingConvention(CallingConvention.NONE);
-        planner.addCallingConvention(CallingConvention.ITERATOR);
-        planner.addCallingConvention(FennelPullRel.FENNEL_PULL_CONVENTION);
+        planner.addRelTraitDef(CallingConventionTraitDef.instance);
         RelOptUtil.registerAbstractRels(planner);
         planner.addRule(new AbstractConverter.ExpandConversionRule());
         planner.addRule(IterRules.IterCalcRule.instance);

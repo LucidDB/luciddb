@@ -32,6 +32,7 @@ import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanner;
+import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.oj.util.OJUtil;
 import org.eigenbase.util.Util;
 
@@ -48,19 +49,18 @@ public class IterConcatenateRel extends UnionRel implements JavaRel
         RelOptCluster cluster,
         RelNode [] inputs)
     {
-        super(cluster, inputs, true /*all*/);
+        super(
+            cluster, new RelTraitSet(CallingConvention.ITERATOR), inputs,
+            true /*all*/);
     }
 
     //~ Methods ---------------------------------------------------------------
 
-    public CallingConvention getConvention()
-    {
-        return CallingConvention.ITERATOR;
-    }
-
     public Object clone()
     {
-        return new IterConcatenateRel(cluster, inputs);
+        IterConcatenateRel clone = new IterConcatenateRel(cluster, inputs);
+        clone.traits = cloneTraits();
+        return clone;
     }
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)

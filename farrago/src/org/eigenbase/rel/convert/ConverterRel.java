@@ -29,6 +29,11 @@ import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanner;
+import org.eigenbase.relopt.RelTraitSet;
+import org.eigenbase.relopt.CallingConventionTraitDef;
+import org.eigenbase.relopt.RelTraitDef;
+import org.eigenbase.relopt.RelTrait;
+import org.eigenbase.relopt.RelOptUtil;
 import org.eigenbase.util.Util;
 
 
@@ -50,16 +55,26 @@ public abstract class ConverterRel extends SingleRel
 {
     //~ Instance fields -------------------------------------------------------
 
-    protected CallingConvention inConvention;
+    protected RelTraitSet inTraits;
+    public final RelTraitDef traitDef;
 
     //~ Constructors ----------------------------------------------------------
 
+    /**
+     * @param cluster planner's cluster
+     * @param traitDef the RelTraitDef this converter converts
+     * @param traits the output traits of this converter
+     * @param child child rel (provides input traits)
+     */
     protected ConverterRel(
         RelOptCluster cluster,
+        RelTraitDef traitDef,
+        RelTraitSet traits,
         RelNode child)
     {
-        super(cluster, child);
-        this.inConvention = child.getConvention();
+        super(cluster, traits, child);
+        this.inTraits = child.getTraits();
+        this.traitDef = traitDef;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -76,13 +91,41 @@ public abstract class ConverterRel extends SingleRel
     protected Error cannotImplement()
     {
         return Util.newInternal(getClass() + " cannot convert from "
-            + inConvention + " calling convention");
+            + inTraits + " traits");
     }
 
     protected CallingConvention getInputConvention()
     {
-        return inConvention;
+        return
+            (CallingConvention)inTraits.getTrait(
+                CallingConventionTraitDef.instance);
     }
+
+    protected RelTraitSet getInputTraits()
+    {
+        return inTraits;
+    }
+
+    /**
+     * Return a new trait set based on <code>traits</code>, with a different
+     * trait for a given type of trait.  Clones <code>traits</code>, and then
+     * replaces the existing trait matching <code>trait.getTraitDef()</code>
+     * with <code>trait</code>.
+     *
+     * @param traits the set of traits to convert
+     * @param trait the converted trait
+     * @return a new RelTraitSet
+     */
+    protected static RelTraitSet convertTraits(
+        RelTraitSet traits, RelTrait trait)
+    {
+        RelTraitSet converted = RelOptUtil.clone(traits);
+
+        converted.setTrait(trait.getTraitDef(), trait);
+
+        return converted;
+    }
+
 }
 
 

@@ -54,6 +54,8 @@ public abstract class RelOptRule
     /** Flattened list of operands. */
     public RelOptRuleOperand [] operands;
 
+    private RelTraitSet traits;
+
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -126,6 +128,28 @@ public abstract class RelOptRule
         return null;
     }
 
+    /**
+     * Returns the set of traits of the result of firing this rule.  An empty
+     * RelTraitSet is returned if the results are not known.
+     */
+    public RelTraitSet getOutTraits()
+    {
+        // REVIEW: SZ: 2/17/05: Lazy initialization here.  Some RelOptRule
+        // implementations accept their "OutConvention" as a parameter to
+        // their constructor.  If we did this in the constructor, we'd get the
+        // wrong CallingConvention.  In the future, we could require that
+        // the CallingConvention be passed to RelOptRule's constructor.
+        if (traits == null) {
+            traits = new RelTraitSet(new RelTrait[] { getOutConvention() });
+        }
+
+        // Changing the CallingConvention RelTrait via RelTraitSet.setTrait
+        // is not supported!
+        assert(getOutConvention() == traits.getTrait(0));
+
+        return traits;       
+    }
+
     public String toString()
     {
         return description;
@@ -135,14 +159,6 @@ public abstract class RelOptRule
      * Converts a relational expression to a given calling convention, if it
      * is not already of that convention. If the conversion is not possible,
      * returns null.
-     *
-     * <p>
-     * The <code>stubborn</code> parameter controls how hard we try. Using
-     * <code>true</code> causes an expression explosion. If the expression
-     * you are converting appears as an operand of the rule, it is safe to
-     * use <code>stubborn</code> = <code>false</code>: if the operand is
-     * transformed to another type, the rule will be invoked again.
-     * </p>
      *
      * @param rel Relexp to convert
      * @param toConvention Desired calling convention
@@ -156,11 +172,37 @@ public abstract class RelOptRule
         RelNode rel,
         CallingConvention toConvention)
     {
-        if (rel.getConvention() == toConvention) {
+        return convert(rel, new RelTraitSet(toConvention));
+    }
+
+    /**
+     * Converts a relation expression to a give set of traits, if it does not
+     * already have those traits.  If the conversion is not possible, returns
+     * null.
+     *
+     * @param rel Relexp to convert
+     * @param toTraits desired traits
+     * @return a relational expression with the desired traits, or null if no
+     *         conversion is possible
+     *
+     * @post return == null || return.getTraits().matches(toTraits)
+     */
+    protected static RelNode convert(RelNode rel, RelTraitSet toTraits)
+    {
+        RelTraitSet outTraits = RelOptUtil.clone(rel.getTraits());
+        for(int i = 0; i < toTraits.size(); i++) {
+            RelTrait toTrait = toTraits.getTrait(i);
+            if (toTrait != null) {
+                outTraits.setTrait(i, toTrait);
+            }
+        }
+
+        if (rel.getTraits().matches(outTraits)) {
             return rel;
         }
+
         RelOptPlanner planner = rel.getCluster().planner;
-        return planner.changeConvention(rel, toConvention);
+        return planner.changeTraits(rel, outTraits);
     }
 
     private static String guessDescription(String className)

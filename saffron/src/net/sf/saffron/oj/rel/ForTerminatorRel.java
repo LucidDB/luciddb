@@ -30,6 +30,7 @@ import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelOptUtil;
+import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.util.Util;
 
@@ -53,7 +54,7 @@ public class ForTerminatorRel extends SingleRel implements TerminatorRel,
         StatementList body,
         String label)
     {
-        super(cluster, child);
+        super(cluster, new RelTraitSet(CallingConvention.JAVA), child);
         assert (child.getConvention() == CallingConvention.JAVA);
         this.variable = variable;
         this.body = body;
@@ -63,17 +64,14 @@ public class ForTerminatorRel extends SingleRel implements TerminatorRel,
     // implement RelNode
     public Object clone()
     {
-        return new ForTerminatorRel(
+        ForTerminatorRel clone = new ForTerminatorRel(
             cluster,
             RelOptUtil.clone(child),
             (Variable) Util.clone(variable),
             Util.clone(body),
             label);
-    }
-
-    public CallingConvention getConvention()
-    {
-        return CallingConvention.JAVA;
+        clone.traits = cloneTraits();
+        return clone;
     }
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)

@@ -30,6 +30,8 @@ import org.eigenbase.relopt.RelOptConnection;
 import org.eigenbase.relopt.RelOptPlanWriter;
 import org.eigenbase.relopt.RelOptTable;
 import org.eigenbase.relopt.RelOptUtil;
+import org.eigenbase.relopt.RelTraitSet;
+import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.EnumeratedValues;
@@ -68,7 +70,22 @@ public class TableModificationRel extends SingleRel
         List updateColumnList,
         boolean flattened)
     {
-        super(cluster, child);
+        this(
+            cluster, new RelTraitSet(CallingConvention.NONE), table,
+            connection, child, operation, updateColumnList, flattened);
+    }
+
+    protected TableModificationRel(
+        RelOptCluster cluster,
+        RelTraitSet traits,
+        RelOptTable table,
+        RelOptConnection connection,
+        RelNode child,
+        Operation operation,
+        List updateColumnList,
+        boolean flattened)
+    {
+        super(cluster, traits, child);
         this.table = table;
         this.connection = connection;
         this.operation = operation;
@@ -106,6 +123,7 @@ public class TableModificationRel extends SingleRel
     {
         return new TableModificationRel(
             cluster,
+            cloneTraits(),
             table,
             connection,
             RelOptUtil.clone(child),

@@ -178,6 +178,11 @@ public abstract class RelOptUtil
         return rels;
     }
 
+    public static RelTraitSet clone(RelTraitSet traits)
+    {
+        return (RelTraitSet)traits.clone();
+    }
+
     /**
      * Sets a {@link RelVisitor} going on a given relational expression, and
      * returns the result.
@@ -515,7 +520,7 @@ public abstract class RelOptUtil
 
         RelHolder(RelNode p)
         {
-            super(p.getCluster());
+            super(p.getCluster(), p.getTraits());
             this.p = p;
         }
 

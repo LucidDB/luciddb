@@ -64,11 +64,6 @@ public class OJPlannerFactory
     {
         VolcanoPlanner planner = new VolcanoPlanner();
 
-        // Registers the standard calling conventions.
-        for (int i = 0; i < CallingConvention.values.length; i++) {
-            planner.addCallingConvention(CallingConvention.values[i]);
-        }
-
         // Create converter rules for all of the standard calling conventions.
         add(
             planner,

@@ -85,8 +85,9 @@ public class VolcanoPlanner implements RelOptPlanner
 
     /** Holds rule calls waiting to be fired. */
     RuleQueue ruleQueue = new RuleQueue(this);
-    private final ArrayList callingConventions = new ArrayList();
-    private final Graph conversionGraph = new Graph();
+
+    /** Holds the currently registered RelTraitDefs. */
+    private final HashSet traitDefs = new HashSet();
 
     /**
      * Set of all registered rules.
@@ -99,12 +100,6 @@ public class VolcanoPlanner implements RelOptPlanner
      */
     private final HashMap mapDescToRule = new HashMap();
 
-    /**
-     * For a given source/target convention, there may be several possible
-     * conversion rules. Maps {@link Graph.Arc} to a collection of
-     * {@link ConverterRule} objects.
-     */
-    private final MultiMap mapArcToConverterRule = new MultiMap();
     private int nextSetId = 0;
 
     /**
@@ -131,6 +126,7 @@ public class VolcanoPlanner implements RelOptPlanner
 
     //~ Methods ---------------------------------------------------------------
 
+    // REVIEW: SWZ: 3/1/2005: No one calls this.  Remove?
     // todo: pre-compute
     public RelOptRuleOperand [] getConversionOperands(
         CallingConvention toConvention)
@@ -178,13 +174,9 @@ public class VolcanoPlanner implements RelOptPlanner
         return null;
     }
 
-    public boolean addCallingConvention(CallingConvention convention)
+    public boolean addRelTraitDef(RelTraitDef relTraitDef)
     {
-        if (callingConventions.contains(convention)) {
-            return false;
-        }
-        callingConventions.add(convention);
-        return true;
+        return traitDefs.add(relTraitDef);
     }
 
     public boolean addRule(RelOptRule rule)
@@ -259,25 +251,46 @@ public class VolcanoPlanner implements RelOptPlanner
             assert (m == rule.operands.length);
         }
 
-        // If this is a converter rule, add it to the conversion graph.
+        // If this is a converter rule, check if the registered RelTraitDefs
+        // which notification of its addition.
         if (rule instanceof ConverterRule) {
             ConverterRule converterRule = (ConverterRule) rule;
-            if (converterRule.isGuaranteed()) {
-                final Graph.Arc arc =
-                    conversionGraph.createArc(converterRule.inConvention,
-                        converterRule.outConvention);
-                mapArcToConverterRule.putMulti(arc, rule);
+
+            final RelTraitSet ruleTraits = converterRule.getInTraits();
+
+            for(Iterator iter = traitDefs.iterator(); iter.hasNext(); ) {
+                RelTraitDef traitDef = (RelTraitDef)iter.next();
+
+                if (ruleTraits.getTrait(traitDef) == null) {
+                    // Rule does not operate on this RelTraitDef.
+                    continue;
+                }
+
+                traitDef.registerConverterRule(this, converterRule);
             }
         }
 
         return true;
     }
 
-    public boolean canConvert(
-        CallingConvention fromConvention,
-        CallingConvention toConvention)
+    public boolean canConvert(RelTraitSet fromTraits, RelTraitSet toTraits)
     {
-        return conversionGraph.getShortestPath(fromConvention, toConvention) != null;
+        assert(fromTraits.size() >= toTraits.size());
+
+        boolean canConvert = true;
+        for(int i = 0; i < toTraits.size() && canConvert; i++) {
+            RelTrait fromTrait = fromTraits.getTrait(i);
+            RelTrait toTrait = toTraits.getTrait(i);
+
+            assert(fromTrait.getTraitDef()  == toTrait.getTraitDef());
+            assert(traitDefs.contains(fromTrait.getTraitDef()));
+            assert(traitDefs.contains(toTrait.getTraitDef()));
+
+            canConvert =
+                fromTrait.getTraitDef().canConvert(this, fromTrait, toTrait);
+        }
+
+        return canConvert;
     }
 
     public RelNode changeConvention(
@@ -286,7 +299,7 @@ public class VolcanoPlanner implements RelOptPlanner
     {
         assert (rel.getConvention() != toConvention);
         RelSubset rel2 = registerImpl(rel, null);
-        if (rel2.convention == toConvention) {
+        if (rel2.getConvention() == toConvention) {
             return rel2;
         }
         RelNode rel3 = changeConventionUsingConverters(rel2, toConvention);
@@ -298,6 +311,52 @@ public class VolcanoPlanner implements RelOptPlanner
                 rel.getCluster(),
                 rel,
                 toConvention);
+        return register(converter, rel);
+    }
+
+    public RelNode changeTraits(final RelNode rel, RelTraitSet toTraits)
+    {
+        assert(!rel.getTraits().equals(toTraits));
+
+        RelSubset rel2 = registerImpl(rel, null);
+        if (rel2.getTraits().equals(toTraits)) {
+            return rel2;
+        }
+
+        RelNode rel3 = changeTraitsUsingConverters(rel2, toTraits);
+        if (rel3 != null) {
+            return rel3;
+        }
+
+        RelNode converter = rel;
+        for(int i = 0; i < toTraits.size(); i++) {
+            RelTraitSet fromTraits = converter.getTraits();
+
+            RelTrait fromTrait = fromTraits.getTrait(i);
+            RelTrait toTrait = toTraits.getTrait(i);
+
+            if (toTrait == null) {
+               continue;
+            }
+
+            assert(fromTrait.getTraitDef() == toTrait.getTraitDef());
+
+            if (fromTrait == toTrait) {
+                // No need to convert, it's already correct.
+                continue;
+            }
+
+            RelTraitSet stepTraits = RelOptUtil.clone(fromTraits);
+            stepTraits.setTrait(toTrait.getTraitDef(), toTrait);
+
+            converter =
+                new AbstractConverter(
+                    converter.getCluster(),
+                    converter,
+                    toTrait.getTraitDef(),
+                    stepTraits);
+        }
+
         return register(converter, rel);
     }
 
@@ -460,12 +519,12 @@ public class VolcanoPlanner implements RelOptPlanner
      * Finds the cost of a node. Similar to {@link #optimize}, but does not
      * create any expressions.
      */
-    RelOptCost getCost(RelNode rel)
+    public RelOptCost getCost(RelNode rel)
     {
         if (rel instanceof RelSubset) {
             return ((RelSubset) rel).bestCost;
         }
-        if (rel.getConvention() == CallingConvention.NONE) {
+        if (rel.getTraits().getTrait(0) == CallingConvention.NONE) {
             return makeInfiniteCost();
         }
         RelOptCost cost = rel.computeSelfCost(this);
@@ -491,49 +550,63 @@ public class VolcanoPlanner implements RelOptPlanner
 
     RelSubset getSubset(
         RelNode rel,
-        CallingConvention convention)
+        RelTraitSet traits)
     {
         if (rel instanceof RelSubset
-                && (((RelSubset) rel).convention == convention)) {
+                && (((RelSubset) rel).getTraits().equals(traits))) {
             return (RelSubset) rel;
         }
         RelSet set = getSet(rel);
         if (set == null) {
             return null;
         }
-        return set.getSubset(convention);
+        return set.getSubset(traits);
     }
 
     RelNode changeConventionUsingConverters(
         RelNode rel,
         CallingConvention toConvention)
     {
-        final CallingConvention fromConvention = rel.getConvention();
-        Iterator conversionPaths =
-            conversionGraph.getPaths(fromConvention, toConvention);
-        boolean allowInfiniteCostConverters =
+        return changeTraitsUsingConverters(rel, new RelTraitSet(toConvention));
+    }
+
+    RelNode changeTraitsUsingConverters(
+        RelNode rel,
+        RelTraitSet toTraits)
+    {
+        final RelTraitSet fromTraits = rel.getTraits();
+
+        assert(fromTraits.size() >= toTraits.size());
+
+        final boolean allowInfiniteCostConverters =
             SaffronProperties.instance().allowInfiniteCostConverters.get();
-loop: 
-        while (conversionPaths.hasNext()) {
-            Graph.Arc [] arcs = (Graph.Arc []) conversionPaths.next();
-            assert (arcs[0].from == fromConvention);
-            assert (arcs[arcs.length - 1].to == toConvention);
-            RelNode converted = rel;
-            for (int i = 0; i < arcs.length; i++) {
-                if (getCost(converted).isInfinite()
-                        && !allowInfiniteCostConverters) {
-                    continue loop;
-                }
-                converted = changeConvention(converted, arcs[i]);
-                if (converted == null) {
-                    throw Util.newInternal("Converter from " + arcs[i].from
-                        + " to " + arcs[i].to
-                        + " guaranteed that it could convert any relexp");
-                }
+
+        // Naive algorithm: assumes that conversion from Tx1.Ty1 to Tx2.Ty2
+        // can happen in order (e.g. the traits are completely orthogonal).
+        // Also, toTraits may have fewer traits than fromTraits, excess traits
+        // will be left as is.  Finally, any null entries in toTraits are
+        // ignored.
+        RelNode converted = rel;
+        for(int i = 0; converted != null && i < toTraits.size(); i++) {
+            RelTrait fromTrait = fromTraits.getTrait(i);
+            RelTrait toTrait = toTraits.getTrait(i);
+
+            if (toTrait == null) {
+               continue;
             }
-            return converted;
+
+            assert(fromTrait.getTraitDef() == toTrait.getTraitDef());
+
+            if (fromTrait == toTrait) {
+                // No need to convert, it's already correct.
+                continue;
+            }
+
+            converted = fromTrait.getTraitDef().convert(
+                this, converted, toTrait, i, allowInfiniteCostConverters);
         }
-        return null;
+
+        return converted;
     }
 
     void checkForSatisfiedConverters(
@@ -546,8 +619,8 @@ loop:
                 AbstractConverter converter =
                     (AbstractConverter) set.abstractConverters.get(i);
                 RelNode converted =
-                    changeConventionUsingConverters(rel,
-                        converter.outConvention);
+                    changeTraitsUsingConverters(rel,
+                        converter.getTraits());
                 if (converted == null) {
                     i++; // couldn't convert this; move on to the next
                 } else {
@@ -586,8 +659,8 @@ loop:
                     + ruleQueue.getImportance(subset));
                 assert (subset.set == set);
                 for (int k = 0; k < j; k++) {
-                    assert (((RelSubset) set.subsets.get(k)).getConvention() != subset
-                        .getConvention());
+                    assert (!((RelSubset) set.subsets.get(k)).getTraits()
+                                .equals(subset.getTraits()));
                 }
                 for (int k = 0; k < subset.rels.size(); k++) {
                     RelNode rel = (RelNode) subset.rels.get(k);
@@ -600,13 +673,13 @@ loop:
                         RelSubset inputSubset =
                             getSubset(
                                 input,
-                                input.getConvention());
+                                input.getTraits());
                         RelSet inputSet = inputSubset.set;
                         if (input instanceof RelSubset) {
                             assert (inputSubset.rels.size() > 0);
                             input = (RelNode) inputSubset.rels.get(0);
-                            assert (inputSubset.getConvention() == input
-                                .getConvention());
+                            assert (inputSubset.getTraits().equals(input
+                                .getTraits()));
                             assert (inputSet.rels.contains(input));
                             assert (inputSet.subsets.contains(inputSubset));
                         }
@@ -662,7 +735,7 @@ loop:
                 if (equivSubset != subset) {
                     // The equivalent relational expression is in a different
                     // subset, therefore the sets are equivalent.
-                    assert equivSubset.convention == subset.convention;
+                    assert equivSubset.getTraits().equals(subset.getTraits());
                     assert equivSubset.set != subset.set;
                     merge(equivSubset.set, subset.set);
                 }
@@ -680,7 +753,7 @@ loop:
         RelNode equivRel = (RelNode) mapDigestToRel.get(rel.toString());
         if ((equivRel != null) && (equivRel != rel)) {
             assert (equivRel.getClass() == rel.getClass());
-            assert (equivRel.getConvention() == rel.getConvention());
+            assert (equivRel.getTraits().equals(rel.getTraits()));
             if (ruleQueue.contains(rel)) {
                 if (!ruleQueue.contains(equivRel)) {
                     ruleQueue.add(equivRel);
@@ -706,34 +779,7 @@ loop:
         } while (set.equivalentSet != null);
         return set.getOrCreateSubset(
             subset.getCluster(),
-            subset.convention);
-    }
-
-    /**
-     * Tries to convert a relational expression to the target convention of an
-     * arc.
-     */
-    private RelNode changeConvention(
-        RelNode rel,
-        Graph.Arc arc)
-    {
-        assert (arc.from == rel.getConvention());
-
-        // Try to apply each converter rule for this arc's source/target calling
-        // conventions.
-        for (Iterator converterRuleIter =
-                mapArcToConverterRule.getMulti(arc).iterator();
-                converterRuleIter.hasNext();) {
-            ConverterRule converterRule =
-                (ConverterRule) converterRuleIter.next();
-            assert (converterRule.inConvention == arc.from);
-            assert (converterRule.outConvention == arc.to);
-            RelNode converted = converterRule.convert(rel);
-            if (converted != null) {
-                return converted;
-            }
-        }
-        return null;
+            subset.getTraits());
     }
 
     private RelSubset findBestPlan_old(
@@ -743,13 +789,13 @@ loop:
         if (subset.active) {
             return subset; // prevent cycles
         }
-        if (subset.convention == CallingConvention.NONE) {
+        if (subset.getTraits().getTrait(0) == CallingConvention.NONE) {
             return subset; // don't even bother
         }
         subset.active = true;
         for (int i = 0; i < subset.rels.size(); i++) {
             RelNode rel = (RelNode) subset.rels.get(i);
-            assert (rel.getConvention() == subset.convention);
+            assert (rel.getTraits().equals(subset.getTraits()));
             RelOptCost minCost = targetCost;
             if (subset.bestCost.isLt(minCost)) {
                 // not enough to do better than our target -- we have to do better than
@@ -882,7 +928,7 @@ loop:
             root =
                 set.getOrCreateSubset(
                     root.getCluster(),
-                    root.getConvention());
+                    root.getTraits());
         }
     }
 
@@ -968,7 +1014,9 @@ loop:
 
         // Now is a good time to ensure that the relational expression
         // implements the interface required by its calling convention.
-        final CallingConvention convention = rel.getConvention();
+        final RelTraitSet traits = rel.getTraits();
+        final CallingConvention convention =
+            (CallingConvention)traits.getTrait(0);
         if (!convention.interfaze.isInstance(rel)
                 && !(rel instanceof ConverterRel)) {
             throw Util.newInternal("Relational expression " + rel
@@ -989,7 +1037,7 @@ loop:
         } else if (equivExp == rel) {
             return getSubset(rel);
         } else {
-            assert ((equivExp.getConvention() == convention)
+            assert (equivExp.getTraits().equals(traits)
                 && (equivExp.getClass() == rel.getClass()));
             RelSet equivSet = getSet(equivExp);
             if (equivSet != null) {

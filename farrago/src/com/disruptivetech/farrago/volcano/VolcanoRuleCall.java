@@ -70,6 +70,23 @@ public class VolcanoRuleCall extends RelOptRuleCall
             if (rel == rels[0]) {
                 return;
             }
+
+            // Make sure traits that the new rel doesn't know about are
+            // propagated.
+            RelTraitSet relTraits = rel.getTraits();
+            RelTraitSet rels0Traits = rels[0].getTraits();
+            for(int i = 0; i < rels0Traits.size(); i++) {
+                if (i >= relTraits.size()) {
+                    // Copy traits that the new rel doesn't know about.
+                    relTraits.addTrait(rels0Traits.getTrait(i));
+                } else {
+                    // Verify that the traits are from the same RelTraitDef
+                    assert(
+                        relTraits.getTrait(i).getTraitDef() ==
+                        rels0Traits.getTrait(i).getTraitDef());
+                }
+            }
+
             if (rel instanceof RelSubset || planner.isRegistered(rel)) {
                 return;
             }

@@ -30,6 +30,7 @@ import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanWriter;
 import org.eigenbase.relopt.RelOptPlanner;
+import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.rex.RexNode;
@@ -72,12 +73,13 @@ public class CalcRel extends SingleRel
 
     public CalcRel(
         RelOptCluster cluster,
+        RelTraitSet traits,
         RelNode child,
         RelDataType rowType,
         RexNode [] projectExprs,
         RexNode conditionExpr)
     {
-        super(cluster, child);
+        super(cluster, traits, child);
         this.rowType = rowType;
         this.projectExprs = projectExprs;
         this.conditionExpr = conditionExpr;
@@ -87,8 +89,8 @@ public class CalcRel extends SingleRel
 
     public Object clone()
     {
-        return new CalcRel(cluster, child, rowType, projectExprs,
-            conditionExpr);
+        return new CalcRel(cluster, cloneTraits(), child, rowType,
+            projectExprs, conditionExpr);
     }
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)

@@ -72,21 +72,20 @@ class ResultSetToFarragoIteratorConverter extends ConverterRel
         RelOptCluster cluster,
         RelNode child)
     {
-        super(cluster, child);
+        super(
+            cluster, CallingConventionTraitDef.instance,
+            new RelTraitSet(CallingConvention.ITERATOR), child);
     }
 
     //~ Methods ---------------------------------------------------------------
 
     // implement RelNode
-    public CallingConvention getConvention()
-    {
-        return CallingConvention.ITERATOR;
-    }
-
-    // implement RelNode
     public Object clone()
     {
-        return new ResultSetToFarragoIteratorConverter(cluster, child);
+        ResultSetToFarragoIteratorConverter clone =
+            new ResultSetToFarragoIteratorConverter(cluster, child);
+        clone.traits = cloneTraits();
+        return clone;
     }
 
     // implement RelNode

@@ -28,6 +28,8 @@ import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanWriter;
 import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelOptUtil;
+import org.eigenbase.relopt.RelTraitSet;
+import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.rex.RexUtil;
 
@@ -59,7 +61,28 @@ public class FilterRel extends SingleRel
         RelNode child,
         RexNode condition)
     {
-        super(cluster, child);
+        this(
+            cluster, new RelTraitSet(CallingConvention.NONE), child,
+            condition);
+    }
+
+    /**
+     * Creates a filter.
+     *
+     * @param cluster {@link RelOptCluster} this relational expression
+     *        belongs to
+     * @param traits the traits of this rel
+     * @param child input relational expression
+     * @param condition boolean expression which determines whether a row is
+     *        allowed to pass
+     */
+    protected FilterRel(
+        RelOptCluster cluster,
+        RelTraitSet traits,
+        RelNode child,
+        RexNode condition)
+    {
+        super(cluster, traits, child);
         this.condition = condition;
     }
 
@@ -74,6 +97,7 @@ public class FilterRel extends SingleRel
     {
         return new FilterRel(
             cluster,
+            cloneTraits(),
             RelOptUtil.clone(child),
             RexUtil.clone(condition));
     }

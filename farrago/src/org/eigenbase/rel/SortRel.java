@@ -26,6 +26,8 @@ package org.eigenbase.rel;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptPlanWriter;
 import org.eigenbase.relopt.RelOptUtil;
+import org.eigenbase.relopt.RelTraitSet;
+import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.rex.RexNode;
 
@@ -56,7 +58,7 @@ public class SortRel extends SingleRel
         RelNode child,
         RelFieldCollation [] collations)
     {
-        super(cluster, child);
+        super(cluster, new RelTraitSet(CallingConvention.NONE), child);
         this.collations = collations;
 
         fieldExps = new RexNode[collations.length];
@@ -74,10 +76,12 @@ public class SortRel extends SingleRel
 
     public Object clone()
     {
-        return new SortRel(
+        SortRel clone = new SortRel(
             cluster,
             RelOptUtil.clone(child),
             collations);
+        clone.traits = cloneTraits();
+        return clone;
     }
 
     public RexNode [] getChildExps()

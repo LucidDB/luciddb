@@ -71,21 +71,20 @@ public class IteratorToFennelConverter extends ConverterRel
     public IteratorToFennelConverter(RelOptCluster cluster,
         RelNode child)
     {
-        super(cluster, child);
+        super(
+            cluster, CallingConventionTraitDef.instance,
+            new RelTraitSet(FENNEL_PULL_CONVENTION), child);
     }
 
     //~ Methods ---------------------------------------------------------------
 
     // implement RelNode
-    public CallingConvention getConvention()
-    {
-        return FennelPullRel.FENNEL_PULL_CONVENTION;
-    }
-
-    // implement RelNode
     public Object clone()
     {
-        return new IteratorToFennelConverter(cluster, child);
+        IteratorToFennelConverter clone =
+            new IteratorToFennelConverter(cluster, child);
+        clone.traits = cloneTraits();
+        return clone;
     }
 
     public static Expression generateTupleWriter(

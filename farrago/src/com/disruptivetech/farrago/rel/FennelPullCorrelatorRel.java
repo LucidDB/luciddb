@@ -74,11 +74,13 @@ public class FennelPullCorrelatorRel extends FennelPullDoubleRel
     // implement Cloneable
     public Object clone()
     {
-        return new FennelPullCorrelatorRel(
+        FennelPullCorrelatorRel clone = new FennelPullCorrelatorRel(
             cluster,
             RelOptUtil.clone(left),
             RelOptUtil.clone(right),
             (ArrayList) correlations.clone());
+        clone.traits = cloneTraits();
+        return clone;
     }
 
     // override RelNode

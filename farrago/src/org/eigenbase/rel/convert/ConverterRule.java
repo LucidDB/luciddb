@@ -28,6 +28,9 @@ import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.relopt.RelOptRule;
 import org.eigenbase.relopt.RelOptRuleCall;
 import org.eigenbase.relopt.RelOptRuleOperand;
+import org.eigenbase.relopt.RelTraitSet;
+import org.eigenbase.relopt.RelTrait;
+import org.eigenbase.relopt.RelTraitDef;
 import org.eigenbase.util.Util;
 
 
@@ -44,13 +47,18 @@ public abstract class ConverterRule extends RelOptRule
 {
     //~ Instance fields -------------------------------------------------------
 
-    public final CallingConvention inConvention;
-    public final CallingConvention outConvention;
+    public final RelTraitSet inTraits;
+    public final RelTraitSet outTraits;
+
+    /** The RelTraitDef of traits that this ConverterRule applies to. */
+    public final RelTraitDef traitDef;
 
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Creates a <code>ConverterRule</code>
+     * Creates a <code>ConverterRule</code>.  It is preferable to use
+     * the {@link #ConverterRule(Class, RelTraitSet, RelTraitSet, String)}
+     * constructor instead.
      *
      * @pre in != null
      * @pre out != null
@@ -61,32 +69,77 @@ public abstract class ConverterRule extends RelOptRule
         CallingConvention out,
         String description)
     {
-        super(new RelOptRuleOperand(clazz, in, null) {
-                public boolean matches(RelNode rel)
-                {
-                    // Don't apply converters to converters -- otherwise we get
-                    // an n^2 effect.
-                    if (rel instanceof ConverterRel) {
-                        return false;
-                    }
-                    return super.matches(rel);
-                }
-            });
+        this(clazz, new RelTraitSet(in), new RelTraitSet(out), description);
+    }
+
+    /**
+     * Creates a <code>ConverterRule</code>
+     *
+     * @pre in != null
+     * @pre out != null
+     */
+    public ConverterRule(
+        Class clazz,
+        RelTraitSet in,
+        RelTraitSet out,
+        String description)
+    {
+        super(new ConverterRelOptRuleOperand(clazz, in));
         assert (in != null);
         assert (out != null);
-        this.inConvention = in;
-        this.outConvention = out;
+
+        // RelTraitSets must match in size
+        assert (in.size() == out.size());
+
+        // RelTraitSets must match in which trait is being converted.
+        int traitCount = 0;
+        RelTraitDef traitDef = null;
+        for(int i = 0; i < in.size(); i++) {
+            RelTrait inTrait = in.getTrait(i);
+            RelTrait outTrait = out.getTrait(i);
+
+            if (inTrait != null && outTrait != null) {
+                traitCount++;
+                traitDef = inTrait.getTraitDef();
+            } else {
+                Util.permAssert(
+                    inTrait == null && outTrait == null,
+                    "ConverterRule cannot convert one trait type to another");
+            }
+        }
+        Util.permAssert(
+            traitCount == 1,
+            "ConverterRule must convert exactly one type of trait");
+
+        this.inTraits = in;
+        this.outTraits = out;
         if (description == null) {
             description = "ConverterRule<in=" + in + ",out=" + out + ">";
         }
         this.description = description;
+        this.traitDef = traitDef;
     }
 
     //~ Methods ---------------------------------------------------------------
 
     public CallingConvention getOutConvention()
     {
-        return outConvention;
+        return (CallingConvention)outTraits.getTrait(0);
+    }
+
+    public RelTraitSet getOutTraits()
+    {
+        return outTraits;
+    }
+
+    public RelTraitSet getInTraits()
+    {
+        return inTraits;
+    }
+
+    public RelTraitDef getTraitDef()
+    {
+        return traitDef;
     }
 
     public abstract RelNode convert(RelNode rel);
@@ -108,11 +161,33 @@ public abstract class ConverterRule extends RelOptRule
     public void onMatch(RelOptRuleCall call)
     {
         RelNode rel = call.rels[0];
-        if (rel.getConvention() == inConvention) {
+        if (rel.getTraits().matches(inTraits)) {
             final RelNode converted = convert(rel);
             if (converted != null) {
                 call.transformTo(converted);
             }
+        }
+    }
+
+    private static class ConverterRelOptRuleOperand extends RelOptRuleOperand
+    {
+        public ConverterRelOptRuleOperand(Class clazz, RelTraitSet in)
+        {
+            super(clazz, in, null);
+        }
+
+        public boolean matches(RelNode rel)
+        {
+            // Don't apply converters to converters that operate
+            // on the same RelTraitDef -- otherwise we get
+            // an n^2 effect.
+            if (rel instanceof ConverterRel) {
+                if (((ConverterRule)rule).getTraitDef() ==
+                    ((ConverterRel)rel).traitDef) {
+                    return false;
+                }
+            }
+            return super.matches(rel);
         }
     }
 }

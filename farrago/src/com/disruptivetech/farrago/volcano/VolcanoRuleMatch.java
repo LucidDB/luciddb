@@ -115,9 +115,9 @@ class VolcanoRuleMatch extends VolcanoRuleCall
         if (targetSubset != null) {
             return targetSubset;
         }
-        final CallingConvention targetConvention = rule.getOutConvention();
-        if ((targetSet != null) && (targetConvention != null)) {
-            targetSubset = targetSet.getSubset(targetConvention);
+        final RelTraitSet targetTraits = rule.getOutTraits();
+        if ((targetSet != null) && (targetTraits.size() > 0)) {
+            targetSubset = targetSet.getSubset(targetTraits);
             if (targetSubset != null) {
                 return targetSubset;
             }

@@ -28,6 +28,7 @@ import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptRule;
 import org.eigenbase.relopt.RelOptRuleCall;
 import org.eigenbase.relopt.RelOptRuleOperand;
+import org.eigenbase.relopt.RelOptUtil;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.rex.RexBuilder;
@@ -86,7 +87,9 @@ public class FilterToCalcRule extends RelOptRule
                     i);
         }
         final CalcRel calc =
-            new CalcRel(filter.cluster, rel, rowType, exprs, filter.condition);
+            new CalcRel(
+                filter.cluster, RelOptUtil.clone(filter.traits), rel, rowType,
+                exprs, filter.condition);
         call.transformTo(calc);
     }
 }

@@ -72,8 +72,8 @@ class FtrsTableModificationRel extends TableModificationRel
         Operation operation,
         List updateColumnList)
     {
-        super(cluster, ftrsTable, connection, child, operation,
-            updateColumnList, true);
+        super(cluster, new RelTraitSet(FennelPullRel.FENNEL_PULL_CONVENTION),
+            ftrsTable, connection, child, operation, updateColumnList, true);
         this.ftrsTable = ftrsTable;
         assert ftrsTable.getPreparingStmt() ==
             FennelRelUtil.getPreparingStmt(this);
@@ -87,12 +87,6 @@ class FtrsTableModificationRel extends TableModificationRel
         return connection;
     }
 
-    // implement RelNode
-    public CallingConvention getConvention()
-    {
-        return FennelPullRel.FENNEL_PULL_CONVENTION;
-    }
-
     // implement FennelRel
     public FarragoTypeFactory getFarragoTypeFactory()
     {
@@ -102,13 +96,15 @@ class FtrsTableModificationRel extends TableModificationRel
     // implement Cloneable
     public Object clone()
     {
-        return new FtrsTableModificationRel(
+        FtrsTableModificationRel clone = new FtrsTableModificationRel(
             cluster,
             ftrsTable,
             getConnection(),
             RelOptUtil.clone(child),
             getOperation(),
             getUpdateColumnList());
+        clone.traits = cloneTraits();
+        return clone;
     }
 
     // implement RelNode

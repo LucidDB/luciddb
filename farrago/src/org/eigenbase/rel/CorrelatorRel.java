@@ -32,6 +32,8 @@ import openjava.ptree.Expression;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptUtil;
 import org.eigenbase.relopt.RelOptPlanWriter;
+import org.eigenbase.relopt.RelTraitSet;
+import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.util.Util;
 import org.eigenbase.reltype.RelDataType;
 
@@ -87,7 +89,7 @@ public class CorrelatorRel extends JoinRel
         RelNode right,
         ArrayList correlations)
     {
-        super(cluster, left, right,
+        super(cluster, new RelTraitSet(CallingConvention.NONE), left, right,
             cluster.rexBuilder.makeLiteral(true), JoinType.LEFT,
             Collections.EMPTY_SET);
         this.correlations = correlations;
@@ -97,11 +99,13 @@ public class CorrelatorRel extends JoinRel
 
     public Object clone()
     {
-        return new CorrelatorRel(
+        CorrelatorRel clone = new CorrelatorRel(
             cluster,
             RelOptUtil.clone(left),
             RelOptUtil.clone(right),
             (ArrayList) correlations.clone());
+        clone.traits = cloneTraits();
+        return clone;
     }
 
     protected RelDataType deriveRowType()

@@ -30,6 +30,7 @@ import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanner;
+import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.util.Util;
 
 
@@ -45,18 +46,15 @@ public class JavaDistinctRel extends DistinctRel implements JavaLoopRel
         RelOptCluster cluster,
         RelNode child)
     {
-        super(cluster, child);
-    }
-
-    public CallingConvention getConvention()
-    {
-        return CallingConvention.JAVA;
+        super(cluster, new RelTraitSet(CallingConvention.JAVA), child);
     }
 
     // implement RelNode
     public Object clone()
     {
-        return new JavaDistinctRel(cluster, child);
+        JavaDistinctRel clone = new JavaDistinctRel(cluster, child);
+        clone.traits = cloneTraits();
+        return clone;
     }
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)

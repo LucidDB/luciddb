@@ -90,11 +90,13 @@ public class FennelSortRel extends FennelPullSingleRel
     // implement Cloneable
     public Object clone()
     {
-        return new FennelSortRel(
+        FennelSortRel clone = new FennelSortRel(
             cluster,
             RelOptUtil.clone(child),
             keyProjection,
             discardDuplicates);
+        clone.traits = cloneTraits();
+        return clone;
     }
 
     // implement RelNode

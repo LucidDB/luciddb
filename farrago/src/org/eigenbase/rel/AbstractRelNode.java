@@ -76,6 +76,11 @@ public abstract class AbstractRelNode implements RelNode
      */
     private String correlVariable;
 
+    /**
+     * The RelTraitSet that describes the traits of this RelNode.
+     */
+    protected RelTraitSet traits;
+
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -83,11 +88,12 @@ public abstract class AbstractRelNode implements RelNode
      *
      * @pre cluster != null
      */
-    public AbstractRelNode(RelOptCluster cluster)
+    public AbstractRelNode(RelOptCluster cluster, RelTraitSet traits)
     {
         super();
         assert (cluster != null);
         this.cluster = cluster;
+        this.traits = traits;
         this.id = nextId++;
         this.digest = getRelTypeName() + "#" + id;
         tracer.finest("new " + digest);
@@ -113,9 +119,21 @@ public abstract class AbstractRelNode implements RelNode
         return cluster;
     }
 
-    public CallingConvention getConvention()
+    public final CallingConvention getConvention()
     {
-        return CallingConvention.NONE;
+        return
+            (CallingConvention)traits.getTrait(
+                CallingConventionTraitDef.instance);
+    }
+
+    public RelTraitSet getTraits()
+    {
+        return traits;
+    }
+
+    protected RelTraitSet cloneTraits()
+    {
+        return (RelTraitSet)traits.clone();
     }
 
     public void setCorrelVariable(String correlVariable)

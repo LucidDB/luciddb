@@ -44,10 +44,6 @@ import org.eigenbase.relopt.*;
  */
 public class AbstractConverter extends ConverterRel
 {
-    //~ Instance fields -------------------------------------------------------
-
-    final CallingConvention outConvention;
-
     //~ Constructors ----------------------------------------------------------
 
     public AbstractConverter(
@@ -55,20 +51,25 @@ public class AbstractConverter extends ConverterRel
         RelNode rel,
         CallingConvention outConvention)
     {
-        super(cluster, rel);
-        this.outConvention = outConvention;
+        this(
+            cluster, rel, outConvention.getTraitDef(),
+            new RelTraitSet(outConvention));
+    }
+
+    public AbstractConverter(
+        RelOptCluster cluster,
+        RelNode rel,
+        RelTraitDef traitDef,
+        RelTraitSet traits)
+    {
+        super(cluster, traitDef, traits, rel);
     }
 
     //~ Methods ---------------------------------------------------------------
 
-    public CallingConvention getConvention()
-    {
-        return outConvention;
-    }
-
     public Object clone()
     {
-        return new AbstractConverter(cluster, child, outConvention);
+        return new AbstractConverter(cluster, child, traitDef, cloneTraits());
     }
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)
@@ -78,17 +79,22 @@ public class AbstractConverter extends ConverterRel
 
     public void explain(RelOptPlanWriter pw)
     {
-        pw.explain(
-            this,
-            new String [] { "child", "convention" },
-            new Object [] { outConvention });
+        String[] terms = new String[traits.size() + 1];
+        Object[] values = new Object[traits.size()];
+        terms[0] = "child";
+        for(int i = 0; i < traits.size(); i++) {
+            terms[i + 1] = traits.getTrait(i).getTraitDef().getSimpleName();
+            values[i] = traits.getTrait(i);
+        }
+
+        pw.explain(this, terms, values);
     }
 
     //~ Inner Classes ---------------------------------------------------------
 
     /**
      * Rule which converts an {@link AbstractConverter} into a chain of
-     * converters from the source relation to the target calling convention.
+     * converters from the source relation to the target traits.
      *
      * <p>
      * The chain produced is mimimal: we have previously built the transitive
@@ -130,8 +136,8 @@ public class AbstractConverter extends ConverterRel
             }
             final RelNode child = converter.child;
             RelNode converted =
-                planner.changeConventionUsingConverters(child,
-                    converter.outConvention);
+                planner.changeTraitsUsingConverters(child,
+                    converter.traits);
             if (converted != null) {
                 call.transformTo(converted);
                 return;
@@ -146,15 +152,16 @@ public class AbstractConverter extends ConverterRel
             final RelSet set = planner.getSet(child);
             for (int i = 0; i < set.subsets.size(); i++) {
                 RelSubset subset = (RelSubset) set.subsets.get(i);
-                if ((subset.getConvention() == child.getConvention())
-                        || (subset.getConvention() == converter.outConvention)) {
+                if (subset.getTraits().equals(child.getTraits())
+                        || subset.getTraits().equals(converter.traits)) {
                     continue;
                 }
                 final AbstractConverter newConverter =
                     new AbstractConverter(
                         child.getCluster(),
                         subset,
-                        converter.outConvention);
+                        converter.traitDef,
+                        converter.traits);
                 call.transformTo(newConverter);
             }
         }

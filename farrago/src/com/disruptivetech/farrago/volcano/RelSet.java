@@ -106,11 +106,11 @@ class RelSet
         return parents;
     }
 
-    public RelSubset getSubset(CallingConvention convention)
+    public RelSubset getSubset(RelTraitSet traits)
     {
         for (int i = 0; i < subsets.size(); i++) {
             RelSubset subset = (RelSubset) subsets.get(i);
-            if (subset.convention == convention) {
+            if (subset.getTraits().equals(traits)) {
                 return subset;
             }
         }
@@ -129,18 +129,18 @@ class RelSet
         RelSubset subset =
             getOrCreateSubset(
                 rel.getCluster(),
-                rel.getConvention());
+                rel.getTraits());
         subset.add(rel);
         return subset;
     }
 
     RelSubset getOrCreateSubset(
         RelOptCluster cluster,
-        CallingConvention convention)
+        RelTraitSet traits)
     {
-        RelSubset subset = getSubset(convention);
+        RelSubset subset = getSubset(traits);
         if (subset == null) {
-            subset = new RelSubset(cluster, this, convention);
+            subset = new RelSubset(cluster, this, traits);
             subsets.add(subset);
 
             VolcanoPlanner planner = (VolcanoPlanner) cluster.planner;
@@ -218,7 +218,7 @@ class RelSet
             RelSubset subset =
                 getOrCreateSubset(
                     otherSubset.getCluster(),
-                    otherSubset.getConvention());
+                    otherSubset.getTraits());
             if (otherSubset.bestCost.isLt(subset.bestCost)) {
                 subset.bestCost = otherSubset.bestCost;
                 subset.best = otherSubset.best;

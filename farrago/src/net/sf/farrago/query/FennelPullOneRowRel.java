@@ -28,6 +28,7 @@ import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanner;
+import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.oj.util.OJUtil;
 import org.eigenbase.oj.rel.IterOneRowRel;
@@ -52,23 +53,20 @@ public class FennelPullOneRowRel extends AbstractRelNode implements FennelPullRe
 {
     public FennelPullOneRowRel(RelOptCluster cluster)
     {
-        super(cluster);
+        super(cluster, new RelTraitSet(FENNEL_PULL_CONVENTION));
     }
 
     // override Object (public, does not throw CloneNotSupportedException)
     public Object clone()
     {
-        return new FennelPullOneRowRel(cluster);
+        FennelPullOneRowRel clone = new FennelPullOneRowRel(cluster);
+        clone.traits = cloneTraits();
+        return clone;
     }
 
     protected RelDataType deriveRowType()
     {
         return OneRowRel.deriveOneRowType(cluster.typeFactory);
-    }
-
-    public CallingConvention getConvention()
-    {
-        return FENNEL_PULL_CONVENTION;
     }
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)

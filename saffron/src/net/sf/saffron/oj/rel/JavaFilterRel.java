@@ -30,6 +30,7 @@ import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptUtil;
+import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.rex.RexUtil;
 import org.eigenbase.util.Util;
@@ -45,20 +46,19 @@ public class JavaFilterRel extends FilterRel implements JavaLoopRel
         RelNode child,
         RexNode condition)
     {
-        super(cluster, child, condition);
-    }
-
-    public CallingConvention getConvention()
-    {
-        return CallingConvention.JAVA;
+        super(
+            cluster, new RelTraitSet(CallingConvention.JAVA), child,
+            condition);
     }
 
     public Object clone()
     {
-        return new JavaFilterRel(
+        JavaFilterRel clone = new JavaFilterRel(
             cluster,
             RelOptUtil.clone(child),
             RexUtil.clone(condition));
+        clone.traits = cloneTraits();
+        return clone;
     }
 
     // implement RelNode

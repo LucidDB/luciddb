@@ -33,6 +33,7 @@ import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptPlanWriter;
 import org.eigenbase.relopt.RelOptPlanner;
+import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.util.Util;
 
 
@@ -60,7 +61,9 @@ public class JavaConverterRel extends ConverterRel implements JavaRel,
         RelNode child,
         JavaConvertlet convertlet)
     {
-        super(cluster, child);
+        super(
+            cluster, convertlet.getConvention().getTraitDef(),
+            new RelTraitSet(convertlet.getConvention()), child);
         this.convertlet = convertlet;
     }
 
@@ -74,15 +77,13 @@ public class JavaConverterRel extends ConverterRel implements JavaRel,
             new Object [] { getConvention().getName() });
     }
 
-    public CallingConvention getConvention()
-    {
-        return convertlet.getConvention();
-    }
-
     // implement RelNode
     public Object clone()
     {
-        return new JavaConverterRel(cluster, child, convertlet);
+        JavaConverterRel clone =
+            new JavaConverterRel(cluster, child, convertlet);
+        clone.traits = cloneTraits();
+        return clone;
     }
 
     public ParseTree implement(JavaRelImplementor implementor)
