@@ -51,6 +51,9 @@ typedef JniProxyIter<ProxyCmdSavepoint> SharedProxyCmdSavepoint;
 class ProxyCmdTruncateIndex;
 typedef JniProxyIter<ProxyCmdTruncateIndex> SharedProxyCmdTruncateIndex;
 
+class ProxyCollectTupleStreamDef;
+typedef JniProxyIter<ProxyCollectTupleStreamDef> SharedProxyCollectTupleStreamDef;
+
 class ProxyDatabaseCmd;
 typedef JniProxyIter<ProxyDatabaseCmd> SharedProxyDatabaseCmd;
 
@@ -152,6 +155,18 @@ typedef JniProxyIter<ProxyTxnCmd> SharedProxyTxnCmd;
 
 class ProxyTxnHandle;
 typedef JniProxyIter<ProxyTxnHandle> SharedProxyTxnHandle;
+
+class ProxyUncollectTupleStreamDef;
+typedef JniProxyIter<ProxyUncollectTupleStreamDef> SharedProxyUncollectTupleStreamDef;
+
+class ProxyWindowDef;
+typedef JniProxyIter<ProxyWindowDef> SharedProxyWindowDef;
+
+class ProxyWindowPartitionDef;
+typedef JniProxyIter<ProxyWindowPartitionDef> SharedProxyWindowPartitionDef;
+
+class ProxyWindowStreamDef;
+typedef JniProxyIter<ProxyWindowStreamDef> SharedProxyWindowStreamDef;
 
 class ProxyExecutionStreamDef
 : virtual public JniProxy
@@ -355,6 +370,12 @@ class ProxyCmdTruncateIndex
 public:
 };
 
+class ProxyCollectTupleStreamDef
+: virtual public JniProxy, virtual public ProxyTupleStreamDef
+{
+public:
+};
+
 class ProxyDatabaseParam
 : virtual public JniProxy
 {
@@ -427,10 +448,10 @@ class ProxyIndexSearchDef
 : virtual public JniProxy, virtual public ProxyIndexScanDef
 {
 public:
-bool isUniqueKey();
-static jmethodID meth_isUniqueKey;
 bool isOuterJoin();
 static jmethodID meth_isOuterJoin;
+bool isUniqueKey();
+static jmethodID meth_isUniqueKey;
 SharedProxyTupleProjection getInputKeyProj();
 static jmethodID meth_getInputKeyProj;
 SharedProxyTupleProjection getInputJoinProj();
@@ -447,6 +468,8 @@ Distinctness getDistinctness();
 static jmethodID meth_getDistinctness;
 bool isUpdateInPlace();
 static jmethodID meth_isUpdateInPlace;
+SharedProxyTableWriterDef getTableWriter();
+static jmethodID meth_getTableWriter;
 };
 
 class ProxyJavaTupleStreamDef
@@ -549,10 +572,10 @@ class ProxyTupleAttrDescriptor
 : virtual public JniProxy
 {
 public:
-int32_t getTypeOrdinal();
-static jmethodID meth_getTypeOrdinal;
 bool isNullable();
 static jmethodID meth_isNullable;
+int32_t getTypeOrdinal();
+static jmethodID meth_getTypeOrdinal;
 int32_t getByteLength();
 static jmethodID meth_getByteLength;
 };
@@ -585,6 +608,60 @@ class ProxyTxnHandle
 : virtual public JniProxy, virtual public ProxyHandle
 {
 public:
+};
+
+class ProxyUncollectTupleStreamDef
+: virtual public JniProxy, virtual public ProxyTupleStreamDef
+{
+public:
+};
+
+class ProxyWindowDef
+: virtual public JniProxy
+{
+public:
+SharedProxyTupleProjection getOrderKeyList();
+static jmethodID meth_getOrderKeyList;
+bool isPhysical();
+static jmethodID meth_isPhysical;
+std::string getRange();
+static jmethodID meth_getRange;
+SharedProxyWindowPartitionDef getPartition();
+static jmethodID meth_getPartition;
+SharedProxyWindowStreamDef getWindowStream();
+static jmethodID meth_getWindowStream;
+};
+
+class ProxyWindowPartitionDef
+: virtual public JniProxy
+{
+public:
+SharedProxyWindowDef getWindow();
+static jmethodID meth_getWindow;
+SharedProxyTupleProjection getPartitionKeyList();
+static jmethodID meth_getPartitionKeyList;
+std::string getInitializeProgram();
+static jmethodID meth_getInitializeProgram;
+std::string getAddProgram();
+static jmethodID meth_getAddProgram;
+std::string getDropProgram();
+static jmethodID meth_getDropProgram;
+SharedProxyTupleDescriptor getBucketDesc();
+static jmethodID meth_getBucketDesc;
+};
+
+class ProxyWindowStreamDef
+: virtual public JniProxy, virtual public ProxyTupleStreamDef
+{
+public:
+bool isFilter();
+static jmethodID meth_isFilter;
+std::string getOutputProgram();
+static jmethodID meth_getOutputProgram;
+SharedProxyTupleProjection getInputOrderKeyList();
+static jmethodID meth_getInputOrderKeyList;
+SharedProxyWindowDef getWindow();
+static jmethodID meth_getWindow;
 };
 
 class FemVisitor : virtual public JniProxyVisitor
@@ -624,6 +701,8 @@ virtual void visit(ProxyCmdRollback &)
 virtual void visit(ProxyCmdSavepoint &)
 { unhandledVisit(); }
 virtual void visit(ProxyCmdTruncateIndex &)
+{ unhandledVisit(); }
+virtual void visit(ProxyCollectTupleStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyDatabaseCmd &)
 { unhandledVisit(); }
@@ -692,6 +771,14 @@ virtual void visit(ProxyTupleStreamGraphCmd &)
 virtual void visit(ProxyTxnCmd &)
 { unhandledVisit(); }
 virtual void visit(ProxyTxnHandle &)
+{ unhandledVisit(); }
+virtual void visit(ProxyUncollectTupleStreamDef &)
+{ unhandledVisit(); }
+virtual void visit(ProxyWindowDef &)
+{ unhandledVisit(); }
+virtual void visit(ProxyWindowPartitionDef &)
+{ unhandledVisit(); }
+virtual void visit(ProxyWindowStreamDef &)
 { unhandledVisit(); }
 };
 
