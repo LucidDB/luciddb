@@ -49,12 +49,12 @@ public class RexBuilder
 {
     //~ Instance fields -------------------------------------------------------
 
-    protected final RelDataTypeFactory _typeFactory;
-    private final RexLiteral _booleanTrue;
-    private final RexLiteral _booleanFalse;
-    private final RexLiteral _varcharEmpty;
-    private final RexLiteral _constantNull;
-    public final SqlStdOperatorTable _opTab = SqlOperatorTable.std();
+    protected final RelDataTypeFactory typeFactory;
+    private final RexLiteral booleanTrue;
+    private final RexLiteral booleanFalse;
+    private final RexLiteral varcharEmpty;
+    private final RexLiteral constantNull;
+    public final SqlStdOperatorTable opTab = SqlOperatorTable.std();
 
     //~ Constructors ----------------------------------------------------------
 
@@ -63,23 +63,23 @@ public class RexBuilder
     // isn't supposed to be instantiated, then it should be declared abstrct.
     public RexBuilder(RelDataTypeFactory typeFactory)
     {
-        this._typeFactory = typeFactory;
-        this._booleanTrue =
+        this.typeFactory = typeFactory;
+        this.booleanTrue =
             makeLiteral(
                 Boolean.TRUE,
                 typeFactory.createSqlType(SqlTypeName.Boolean),
                 SqlTypeName.Boolean);
-        this._booleanFalse =
+        this.booleanFalse =
             makeLiteral(
                 Boolean.FALSE,
                 typeFactory.createSqlType(SqlTypeName.Boolean),
                 SqlTypeName.Boolean);
-        this._varcharEmpty =
+        this.varcharEmpty =
             makeLiteral(
                 new NlsString("", null, null),
                 typeFactory.createSqlType(SqlTypeName.Varchar, 0),
                 SqlTypeName.Char);
-        this._constantNull =
+        this.constantNull =
             makeLiteral(
                 null,
                 typeFactory.createSqlType(SqlTypeName.Null),
@@ -90,7 +90,7 @@ public class RexBuilder
 
     public RelDataTypeFactory getTypeFactory()
     {
-        return _typeFactory;
+        return typeFactory;
     }
 
     public RexNode makeFieldAccess(
@@ -212,7 +212,7 @@ public class RexBuilder
         SqlOperator op,
         RexNode [] exprs)
     {
-        final RelDataType type = op.getType(_typeFactory, exprs);
+        final RelDataType type = op.getType(typeFactory, exprs);
         return new RexCall(type, op, exprs);
     }
 
@@ -234,7 +234,7 @@ public class RexBuilder
         RexNode [] args)
     {
         SqlFunction function =
-            _opTab.lookupFunction(
+            opTab.lookupFunction(
                 kind.getName(),
                 getTypes(args));
         if (function == null) {
@@ -248,7 +248,7 @@ public class RexBuilder
      */
     public RexLiteral constantNull()
     {
-        return _constantNull;
+        return constantNull;
     }
 
     public RexNode makeCorrel(
@@ -271,7 +271,7 @@ public class RexBuilder
     {
         return new RexCall(
             type,
-            _opTab.castFunc,
+            opTab.castFunc,
             new RexNode [] { exp });
     }
 
@@ -317,7 +317,7 @@ public class RexBuilder
 
             //todo: should get the implicit collation from repository instead of null
             type =
-                _typeFactory.createTypeWithCharsetAndCollation(type, charset,
+                typeFactory.createTypeWithCharsetAndCollation(type, charset,
                     collation);
         }
 
@@ -330,7 +330,7 @@ public class RexBuilder
         SqlTypeName typeName)
     {
         // All literals except NULL have NOT NULL types.
-        type = _typeFactory.createTypeWithNullability(type, o == null);
+        type = typeFactory.createTypeWithNullability(type, o == null);
         return new RexLiteral(o, type, typeName);
     }
 
@@ -339,7 +339,7 @@ public class RexBuilder
      */
     public RexLiteral makeLiteral(boolean b)
     {
-        return b ? _booleanTrue : _booleanFalse;
+        return b ? booleanTrue : booleanFalse;
     }
 
     /**
@@ -361,7 +361,7 @@ public class RexBuilder
 
         return makeLiteral(
             bd,
-            _typeFactory.createSqlType(result),
+            typeFactory.createSqlType(result),
             SqlTypeName.Decimal);
     }
 
@@ -372,7 +372,7 @@ public class RexBuilder
     {
         return makeLiteral(
             byteArray,
-            _typeFactory.createSqlType(SqlTypeName.Varbinary, byteArray.length),
+            typeFactory.createSqlType(SqlTypeName.Varbinary, byteArray.length),
             SqlTypeName.Binary);
     }
 
@@ -383,7 +383,7 @@ public class RexBuilder
     {
         return makeLiteral(
             bd,
-            _typeFactory.createSqlType(SqlTypeName.Double),
+            typeFactory.createSqlType(SqlTypeName.Double),
             SqlTypeName.Double);
     }
 
@@ -400,11 +400,11 @@ public class RexBuilder
     {
         Util.pre(s != null, "s != null");
         if (s.equals("")) {
-            return _varcharEmpty;
+            return varcharEmpty;
         } else {
             return makeLiteral(
                 new NlsString(s, null, null),
-                _typeFactory.createSqlType(
+                typeFactory.createSqlType(
                     SqlTypeName.Varchar,
                     s.length()),
                 SqlTypeName.Char);
@@ -420,7 +420,7 @@ public class RexBuilder
         Util.pre(bitString != null, "bitString != null");
         return makeLiteral(
             bitString,
-            _typeFactory.createSqlType(
+            typeFactory.createSqlType(
                 SqlTypeName.Bit,
                 bitString.getBitCount()),
             SqlTypeName.Bit);
@@ -441,11 +441,11 @@ public class RexBuilder
                 new SqlCollation(SqlCollation.Coercibility.Coercible));
         }
         RelDataType type =
-            _typeFactory.createSqlType(
+            typeFactory.createSqlType(
                 SqlTypeName.Varchar,
                 str.getValue().length());
         type =
-            _typeFactory.createTypeWithCharsetAndCollation(
+            typeFactory.createTypeWithCharsetAndCollation(
                 type,
                 str.getCharset(),
                 str.getCollation());
@@ -461,7 +461,7 @@ public class RexBuilder
         Util.pre(date != null, "date != null");
         return makeLiteral(
             date,
-            _typeFactory.createSqlType(SqlTypeName.Date),
+            typeFactory.createSqlType(SqlTypeName.Date),
             SqlTypeName.Date);
     }
 
@@ -476,7 +476,7 @@ public class RexBuilder
         Util.pre(time != null, "time != null");
         return makeLiteral(
             time,
-            _typeFactory.createSqlType(SqlTypeName.Time, precision),
+            typeFactory.createSqlType(SqlTypeName.Time, precision),
             SqlTypeName.Time);
     }
 
@@ -491,7 +491,7 @@ public class RexBuilder
         Util.pre(timestamp != null, "timestamp != null");
         return makeLiteral(
             timestamp,
-            _typeFactory.createSqlType(SqlTypeName.Timestamp, precision),
+            typeFactory.createSqlType(SqlTypeName.Timestamp, precision),
             SqlTypeName.Timestamp);
     }
 
@@ -514,7 +514,7 @@ public class RexBuilder
         Util.pre(flag != null, "flag != null");
         return makeLiteral(
             flag,
-            _typeFactory.createSqlType(SqlTypeName.Symbol),
+            typeFactory.createSqlType(SqlTypeName.Symbol),
             SqlTypeName.Symbol);
     }
 }

@@ -147,7 +147,7 @@ public class SqlBetweenOperator extends SqlInfixOperator
                 SqlOperatorTable.typeNullableBinariesBinaries,
                 SqlOperatorTable.typeNullableVarchar
             };
-        int nbrOfFails = 0;
+        int failCount = 0;
         for (int i = 0; i < rules.length; i++) {
             SqlOperator.AllowedArgInference rule = rules[i];
             boolean ok;
@@ -155,11 +155,11 @@ public class SqlBetweenOperator extends SqlInfixOperator
             ok = ok && rule.check(call, validator, scope, call.operands[2], 0);
             ok = ok && rule.check(call, validator, scope, call.operands[3], 0);
             if (!ok) {
-                nbrOfFails++;
+                failCount++;
             }
         }
 
-        if (nbrOfFails >= 3) {
+        if (failCount >= 3) {
             throw call.newValidationSignatureError(validator, scope);
         }
     }

@@ -14,8 +14,6 @@ package openjava.ptree;
 
 
 import openjava.ptree.util.*;
-import openjava.mop.*;
-import java.io.OutputStream;
 import java.util.Hashtable;
 
 
@@ -31,16 +29,16 @@ public class ClassDeclaration extends NonLeaf
 {
     private String[] metaclazz = null;
     private Hashtable suffixes = null;
-    private boolean _isInterface = false;
+    private boolean isInterface = false;
 
     /**
      * Constructs ClassDeclaration from its elements.
      *
      * @param modiflist modifier list
      * @param name class name
-     * @param zuper arg zuper is null means class decl has no super class
-     * @param interfacelist if class decl has no implemants,
-     *                      arg interfacelist should be set an empty list
+     * @param baseclasses Array of base classes; if null, means class decl has
+     *     no super class
+     * @param ifaces interfaces implemented (empty if class has no implements)
      * @param fieldlist field declaration list (body of new class)
      */
     public ClassDeclaration(
@@ -65,7 +63,7 @@ public class ClassDeclaration extends NonLeaf
 	baseclasses = (baseclasses == null) ? new TypeName[0] : baseclasses;
 	ifaces = (ifaces == null) ? new TypeName[0] : ifaces;
 	set( modiflist, name, baseclasses, ifaces, fieldlist );
-	this._isInterface = (! is_class);
+	this.isInterface = (! is_class);
     }
 
     /**
@@ -153,7 +151,7 @@ public class ClassDeclaration extends NonLeaf
     }
 
     public boolean isInterface() {
-	return this._isInterface;
+	return this.isInterface;
     }
   
     /**
@@ -264,7 +262,7 @@ public class ClassDeclaration extends NonLeaf
     /**
      * Sets class body
      *
-     * @param  body  member declaration list to set as this class body.
+     * @param  mdlist member declaration list to set as this class body.
      */
     public void setBody( MemberDeclarationList mdlist ) {
 	setElementAt( mdlist, 4 );

@@ -47,20 +47,20 @@ import org.eigenbase.util.Util;
  **/
 public abstract class JavaConvertlet implements ConverterFactory
 {
-    private final CallingConvention _inConvention;
-    private final CallingConvention _convention;
+    private final CallingConvention inConvention;
+    private final CallingConvention convention;
 
     JavaConvertlet(
         CallingConvention inConvention,
         CallingConvention convention)
     {
-        _inConvention = inConvention;
-        _convention = convention;
+        this.inConvention = inConvention;
+        this.convention = convention;
     }
 
     public CallingConvention getInConvention()
     {
-        return _inConvention;
+        return inConvention;
     }
 
     public ConverterRel convert(RelNode rel)
@@ -73,7 +73,7 @@ public abstract class JavaConvertlet implements ConverterFactory
 
     public CallingConvention getConvention()
     {
-        return _convention;
+        return convention;
     }
 
     public abstract ParseTree implement(
@@ -85,7 +85,7 @@ public abstract class JavaConvertlet implements ConverterFactory
         ConverterRel converter)
     {
         throw Util.newInternal(getClass() + " cannot convert from "
-            + _inConvention + " calling convention");
+            + inConvention + " calling convention");
     }
 }
 

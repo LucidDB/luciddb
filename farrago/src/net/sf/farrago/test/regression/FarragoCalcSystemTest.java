@@ -161,15 +161,15 @@ public class FarragoCalcSystemTest extends FarragoTestCase
         // iterating over all operators
         while (operatorIt.hasNext()) {
             SqlOperator op = (SqlOperator) operatorIt.next();
-            assert (null != op.name) : "Opertor name must not be null";
+            assert (null != op.name) : "Operator name must not be null";
             if (exclude.contains(op)) {
                 continue;
             }
 
-            List nbrOfArgsList =
+            List argCountList =
                 op.getOperandsCountDescriptor().getPossibleNumOfOperands();
-            assert (nbrOfArgsList.size() > 0);
-            Iterator it = nbrOfArgsList.iterator();
+            assert (argCountList.size() > 0);
+            Iterator it = argCountList.iterator();
 
             // iterating over possible call signatures
             while (it.hasNext()) {
@@ -197,7 +197,7 @@ public class FarragoCalcSystemTest extends FarragoTestCase
                     }
 
                     SqlDataType dt =
-                        new SqlDataType(new SqlIdentifier(typeName.name_, null),
+                        new SqlDataType(new SqlIdentifier(typeName.name, null),
                             0,
                             0,
                             null,

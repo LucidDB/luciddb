@@ -110,7 +110,8 @@ public class DdlValidator extends FarragoCompoundAllocation
     /**
      * Map containing scheduled validation actions.  The key is the MofId of
      * the object scheduled for validation; the value is the action type (one
-     * of the VALIDATE_ symbols).
+     * of the symbols {@link #VALIDATE_CREATION}, {@link #VALIDATE_DELETION},
+     * {@link #VALIDATE_MODIFICATION}, {@link #VALIDATE_TRUNCATION}).
      */
     private Map schedulingMap;
 

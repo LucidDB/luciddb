@@ -56,7 +56,7 @@ public abstract class SqlValidatorTestCase extends TestCase
 
     private final String UNKNOWN_FUNC =
         "(?s).*Reference to unknown function.*encountered near line 1, column 8.*";
-    private final String INVALID_NBR_OF_ARGS =
+    private final String INVALID_NUMBER_OF_ARGS =
         "(?s).*Invalid number of arguments to function '.*'; encountered near line 1, column 8. Was expecting . arguments.*";
 
     //~ Methods ---------------------------------------------------------------
@@ -935,7 +935,7 @@ public abstract class SqlValidatorTestCase extends TestCase
         checkExp("LOCALTIME"); //    fix sqlcontext later.
         checkExpFails("LOCALTIME(1+2)",
             "Argument to function 'LOCALTIME' must be a literal");
-        checkExpFails("LOCALTIME()", INVALID_NBR_OF_ARGS);
+        checkExpFails("LOCALTIME()", INVALID_NUMBER_OF_ARGS);
         checkExpType("LOCALTIME", "TIME"); //  NOT NULL, with TZ ?
         checkExpFails("LOCALTIME(-1)",
             "Argument to function 'LOCALTIME' must be a literal"); // i guess -s1 is an expression?
@@ -947,7 +947,7 @@ public abstract class SqlValidatorTestCase extends TestCase
         checkExp("LOCALTIMESTAMP"); //    fix sqlcontext later.
         checkExpFails("LOCALTIMESTAMP(1+2)",
             "Argument to function 'LOCALTIMESTAMP' must be a literal");
-        checkExpFails("LOCALTIMESTAMP()", INVALID_NBR_OF_ARGS);
+        checkExpFails("LOCALTIMESTAMP()", INVALID_NUMBER_OF_ARGS);
         checkExpType("LOCALTIMESTAMP", "TIMESTAMP"); //  NOT NULL, with TZ ?
         checkExpFails("LOCALTIMESTAMP(-1)",
             "Argument to function 'LOCALTIMESTAMP' must be a literal"); // i guess -s1 is an expression?
@@ -956,12 +956,12 @@ public abstract class SqlValidatorTestCase extends TestCase
             + "Supported form.s.: .LOCALTIMESTAMP.<INTEGER>.*");
 
         // CURRENT_DATE
-        checkExpFails("CURRENT_DATE(3)", INVALID_NBR_OF_ARGS);
+        checkExpFails("CURRENT_DATE(3)", INVALID_NUMBER_OF_ARGS);
         checkExp("CURRENT_DATE"); //    fix sqlcontext later.
-        checkExpFails("CURRENT_DATE(1+2)", INVALID_NBR_OF_ARGS);
+        checkExpFails("CURRENT_DATE(1+2)", INVALID_NUMBER_OF_ARGS);
         checkExp("CURRENT_DATE()"); // FIXME: works, but shouldn't
         checkExpType("CURRENT_DATE", "DATE"); //  NOT NULL, with TZ?
-        checkExpFails("CURRENT_DATE(-1)", INVALID_NBR_OF_ARGS); // i guess -s1 is an expression?
+        checkExpFails("CURRENT_DATE(-1)", INVALID_NUMBER_OF_ARGS); // i guess -s1 is an expression?
         checkExpFails("CURRENT_DATE('foo')", "(?s).*");
 
         // current_time
@@ -969,7 +969,7 @@ public abstract class SqlValidatorTestCase extends TestCase
         checkExp("current_time"); //    fix sqlcontext later.
         checkExpFails("current_time(1+2)",
             "Argument to function 'CURRENT_TIME' must be a literal");
-        checkExpFails("current_time()", INVALID_NBR_OF_ARGS);
+        checkExpFails("current_time()", INVALID_NUMBER_OF_ARGS);
         checkExpType("current_time", "TIME"); //  NOT NULL, with TZ ?
         checkExpFails("current_time(-1)",
             "Argument to function 'CURRENT_TIME' must be a literal"); // i guess -s1 is an expression?
@@ -981,7 +981,7 @@ public abstract class SqlValidatorTestCase extends TestCase
         checkExp("CURRENT_TIMESTAMP"); //    fix sqlcontext later.
         checkExpFails("CURRENT_TIMESTAMP(1+2)",
             "Argument to function 'CURRENT_TIMESTAMP' must be a literal");
-        checkExpFails("CURRENT_TIMESTAMP()", INVALID_NBR_OF_ARGS);
+        checkExpFails("CURRENT_TIMESTAMP()", INVALID_NUMBER_OF_ARGS);
         checkExpType("CURRENT_TIMESTAMP", "TIMESTAMP"); //  NOT NULL, with TZ ?
         checkExpFails("CURRENT_TIMESTAMP(-1)",
             "Argument to function 'CURRENT_TIMESTAMP' must be a literal"); // i guess -s1 is an expression?

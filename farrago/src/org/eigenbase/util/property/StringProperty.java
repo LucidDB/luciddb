@@ -87,7 +87,7 @@ public class StringProperty extends Property
      */
     public void set(String value)
     {
-        _properties.setProperty(_path, value);
+        properties.setProperty(path, value);
     }
 }
 

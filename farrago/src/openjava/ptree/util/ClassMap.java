@@ -52,8 +52,8 @@ public class ClassMap {
         this.syntheticSuperClass = syntheticSuperClass;
 	}
 
-	public static void setInstance(ClassMap _instance) {
-		instance = _instance;
+	public static void setInstance(ClassMap instance) {
+		ClassMap.instance = instance;
 	}
 	public static ClassMap instance() {
 		return instance;
@@ -76,7 +76,7 @@ public class ClassMap {
 		if (fieldNames == null) {
 			fieldNames = new String[classes.length];
 		}
-		assert(classes.length == fieldNames.length) :
+		assert classes.length == fieldNames.length :
             "SyntheticClass.create: mismatch between classes and field names";
 		for (int i = 0; i < fieldNames.length; i++) {
 			if (fieldNames[i] == null) {
@@ -93,7 +93,7 @@ public class ClassMap {
 			sb.append(classes[i].toString().replace('$', '.'));
 
 			if (isJoin) {
-				assert(!SyntheticClass.isJoinClass(classes[i])) :
+				assert !SyntheticClass.isJoinClass(classes[i]) :
                     "join classes cannot contain join classes";
 			}
 		}

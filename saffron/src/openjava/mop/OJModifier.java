@@ -47,7 +47,7 @@ public class OJModifier
     private int javaModifier = 0;
     private String userModifiers[] = null;
 
-    private static OJModifier _constantEmpty = null;
+    private static OJModifier constantEmpty = null;
 
     OJModifier( int mod ) {
 	javaModifier = mod;
@@ -60,8 +60,8 @@ public class OJModifier
     }
 
     public static final OJModifier constantEmpty() {
-	if (_constantEmpty == null)  _constantEmpty = new OJModifier( 0 );
-	return _constantEmpty;
+	if (constantEmpty == null)  constantEmpty = new OJModifier( 0 );
+	return constantEmpty;
     }
 
     /**

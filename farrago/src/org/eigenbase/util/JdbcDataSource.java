@@ -41,9 +41,9 @@ public class JdbcDataSource implements DataSource
 {
     //~ Instance fields -------------------------------------------------------
 
-    public final String _url;
-    private PrintWriter _logWriter;
-    private int _loginTimeout;
+    public final String url;
+    private PrintWriter logWriter;
+    private int loginTimeout;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -57,7 +57,7 @@ public class JdbcDataSource implements DataSource
     public JdbcDataSource(String url)
     {
         assert (url != null);
-        this._url = url;
+        this.url = url;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -65,12 +65,12 @@ public class JdbcDataSource implements DataSource
     public Connection getConnection()
         throws SQLException
     {
-        if (_url.startsWith("jdbc:hsqldb:")) {
+        if (url.startsWith("jdbc:hsqldb:")) {
             // Hsqldb requires a username, but doesn't support username as part
             // of the URL, durn it. Assume that the username is "sa".
-            return DriverManager.getConnection(_url, "sa", "");
+            return DriverManager.getConnection(url, "sa", "");
         } else {
-            return DriverManager.getConnection(_url);
+            return DriverManager.getConnection(url);
         }
     }
 
@@ -79,31 +79,31 @@ public class JdbcDataSource implements DataSource
         String password)
         throws SQLException
     {
-        return DriverManager.getConnection(_url, username, password);
+        return DriverManager.getConnection(url, username, password);
     }
 
     public void setLogWriter(PrintWriter out)
         throws SQLException
     {
-        _logWriter = out;
+        logWriter = out;
     }
 
     public PrintWriter getLogWriter()
         throws SQLException
     {
-        return _logWriter;
+        return logWriter;
     }
 
     public void setLoginTimeout(int seconds)
         throws SQLException
     {
-        _loginTimeout = seconds;
+        loginTimeout = seconds;
     }
 
     public int getLoginTimeout()
         throws SQLException
     {
-        return _loginTimeout;
+        return loginTimeout;
     }
 }
 

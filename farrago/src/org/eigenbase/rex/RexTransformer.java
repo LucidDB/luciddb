@@ -43,12 +43,12 @@ public class RexTransformer
 {
     //~ Instance fields -------------------------------------------------------
 
-    private RexNode m_root;
-    private RexBuilder m_rexBuilder;
-    private RelDataType m_boolType;
-    private int m_nbrOfIsParents;
-    final SqlStdOperatorTable m_opTab = SqlOperatorTable.std();
-    private final HashSet m_transformableOperators = new HashSet();
+    private RexNode root;
+    private final RexBuilder rexBuilder;
+    private final RelDataType boolType;
+    private int isParentsCount;
+    private final SqlStdOperatorTable opTab = SqlOperatorTable.std();
+    private final HashSet transformableOperators = new HashSet();
 
     //~ Constructors ----------------------------------------------------------
 
@@ -56,22 +56,22 @@ public class RexTransformer
         RexNode root,
         RexBuilder rexBuilder)
     {
-        m_root = root;
-        m_rexBuilder = rexBuilder;
-        m_boolType =
+        this.root = root;
+        this.rexBuilder = rexBuilder;
+        boolType =
             rexBuilder.getTypeFactory().createSqlType(SqlTypeName.Boolean);
-        m_nbrOfIsParents = 0;
+        isParentsCount = 0;
 
-        m_transformableOperators.add(m_opTab.andOperator);
+        transformableOperators.add(opTab.andOperator);
 
         /** NOTE the OR operator is NOT missing.
          * see {@link org.eigenbase.test.RexTransformerTest */
-        m_transformableOperators.add(m_opTab.equalsOperator);
-        m_transformableOperators.add(m_opTab.notEqualsOperator);
-        m_transformableOperators.add(m_opTab.greaterThanOperator);
-        m_transformableOperators.add(m_opTab.greaterThanOrEqualOperator);
-        m_transformableOperators.add(m_opTab.lessThanOperator);
-        m_transformableOperators.add(m_opTab.lessThanOrEqualOperator);
+        transformableOperators.add(opTab.equalsOperator);
+        transformableOperators.add(opTab.notEqualsOperator);
+        transformableOperators.add(opTab.greaterThanOperator);
+        transformableOperators.add(opTab.greaterThanOrEqualOperator);
+        transformableOperators.add(opTab.lessThanOperator);
+        transformableOperators.add(opTab.lessThanOrEqualOperator);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -79,7 +79,7 @@ public class RexTransformer
     private boolean isBoolean(RexNode node)
     {
         RelDataType type = node.getType();
-        return m_boolType.isSameType(type);
+        return boolType.isSameType(type);
     }
 
     private boolean isNullable(RexNode node)
@@ -89,13 +89,13 @@ public class RexTransformer
 
     private boolean isTransformable(RexNode node)
     {
-        if (0 == m_nbrOfIsParents) {
+        if (0 == isParentsCount) {
             return false;
         }
 
         if (node instanceof RexCall) {
             RexCall call = (RexCall) node;
-            return !m_transformableOperators.contains(call.op)
+            return !transformableOperators.contains(call.op)
                 && isNullable(node);
         }
         return isNullable(node);
@@ -103,13 +103,13 @@ public class RexTransformer
 
     public RexNode tranformNullSemantics()
     {
-        m_root = tranformNullSemantics(m_root);
-        return m_root;
+        root = tranformNullSemantics(root);
+        return root;
     }
 
     private RexNode tranformNullSemantics(RexNode node)
     {
-        assert (m_nbrOfIsParents >= 0) : "Cannot be negative";
+        assert (isParentsCount >= 0) : "Cannot be negative";
         if (!isBoolean(node)) {
             return node;
         }
@@ -117,17 +117,17 @@ public class RexTransformer
         Boolean directlyUnderIs = null;
         if (node.isA(RexKind.IsTrue)) {
             directlyUnderIs = Boolean.TRUE;
-            m_nbrOfIsParents++;
+            isParentsCount++;
         } else if (node.isA(RexKind.IsFalse)) {
             directlyUnderIs = Boolean.FALSE;
-            m_nbrOfIsParents++;
+            isParentsCount++;
         }
 
         //special case when we have a Literal, Parameter or Identifer
         //directly as an operand to IS TRUE or IS FALSE
         if (null != directlyUnderIs) {
             RexCall call = (RexCall) node;
-            assert m_nbrOfIsParents > 0 : "Stack should not be empty";
+            assert isParentsCount > 0 : "Stack should not be empty";
             assert 1 == call.operands.length;
             RexNode operand = call.operands[0];
             if ((operand instanceof RexLiteral
@@ -135,25 +135,25 @@ public class RexTransformer
                     || operand instanceof RexDynamicParam)) {
                 if (isNullable(node)) {
                     RexNode notNullNode =
-                        m_rexBuilder.makeCall(m_opTab.isNotNullOperator,
+                        rexBuilder.makeCall(opTab.isNotNullOperator,
                             operand);
                     RexNode boolNode =
-                        m_rexBuilder.makeLiteral(
+                        rexBuilder.makeLiteral(
                             directlyUnderIs.booleanValue());
                     RexNode eqNode =
-                        m_rexBuilder.makeCall(m_opTab.equalsOperator, operand,
+                        rexBuilder.makeCall(opTab.equalsOperator, operand,
                             boolNode);
                     RexNode andBoolNode =
-                        m_rexBuilder.makeCall(m_opTab.andOperator,
+                        rexBuilder.makeCall(opTab.andOperator,
                             notNullNode, eqNode);
 
                     return andBoolNode;
                 } else {
                     RexNode boolNode =
-                        m_rexBuilder.makeLiteral(
+                        rexBuilder.makeLiteral(
                             directlyUnderIs.booleanValue());
                     RexNode andBoolNode =
-                        m_rexBuilder.makeCall(m_opTab.equalsOperator, node,
+                        rexBuilder.makeCall(opTab.equalsOperator, node,
                             boolNode);
                     return andBoolNode;
                 }
@@ -172,32 +172,32 @@ public class RexTransformer
             }
 
             if (null != directlyUnderIs) {
-                m_nbrOfIsParents--;
+                isParentsCount--;
                 directlyUnderIs = null;
                 return call.operands[0];
             }
 
-            if (m_transformableOperators.contains(call.op)) {
+            if (transformableOperators.contains(call.op)) {
                 assert (2 == call.operands.length);
                 RexNode isNotNullOne = null;
                 RexNode isNotNullTwo = null;
 
                 if (isTransformable(call.operands[0])) {
                     isNotNullOne =
-                        m_rexBuilder.makeCall(m_opTab.isNotNullOperator,
+                        rexBuilder.makeCall(opTab.isNotNullOperator,
                             call.operands[0]);
                 }
 
                 if (isTransformable(call.operands[1])) {
                     isNotNullTwo =
-                        m_rexBuilder.makeCall(m_opTab.isNotNullOperator,
+                        rexBuilder.makeCall(opTab.isNotNullOperator,
                             call.operands[1]);
                 }
 
                 RexNode intoFinalAnd = null;
                 if ((null != isNotNullOne) && (null != isNotNullTwo)) {
                     intoFinalAnd =
-                        m_rexBuilder.makeCall(m_opTab.andOperator,
+                        rexBuilder.makeCall(opTab.andOperator,
                             isNotNullOne, isNotNullTwo);
                 } else if (null != isNotNullOne) {
                     intoFinalAnd = isNotNullOne;
@@ -207,7 +207,7 @@ public class RexTransformer
 
                 if (null != intoFinalAnd) {
                     RexNode andNullAndCheckNode =
-                        m_rexBuilder.makeCall(m_opTab.andOperator,
+                        rexBuilder.makeCall(opTab.andOperator,
                             intoFinalAnd, call);
                     return andNullAndCheckNode;
                 }

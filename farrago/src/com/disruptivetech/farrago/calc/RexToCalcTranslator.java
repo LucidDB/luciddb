@@ -19,7 +19,6 @@
 */
 package com.disruptivetech.farrago.calc;
 
-import java.math.BigDecimal;
 import java.util.HashMap;
 
 import net.sf.farrago.resource.*;
@@ -50,13 +49,12 @@ public class RexToCalcTranslator implements RexVisitor
 {
     //~ Instance fields -------------------------------------------------------
 
-    protected final RexNode [] _projectExps;
-    protected final RexNode _conditionExp;
-    final CalcProgramBuilder _builder = new CalcProgramBuilder();
-    final CalcProgramBuilder.Register _trueReg = _builder.newBoolLiteral(true);
-    final CalcProgramBuilder.Register _falseReg =
-        _builder.newBoolLiteral(false);
-    final SqlStdOperatorTable _opTab = SqlOperatorTable.std();
+    protected final RexNode [] projectExps;
+    protected final RexNode conditionExp;
+    final CalcProgramBuilder builder = new CalcProgramBuilder();
+    final CalcProgramBuilder.Register trueReg = builder.newBoolLiteral(true);
+    final CalcProgramBuilder.Register falseReg = builder.newBoolLiteral(false);
+    final SqlStdOperatorTable opTab = SqlOperatorTable.std();
     final CalcRexImplementorTable implementorTable =
         CalcRexImplementorTableImpl.threadInstance();
 
@@ -67,17 +65,17 @@ public class RexToCalcTranslator implements RexVisitor
      * value: {@link CalcProgramBuilder.Register}.
      * See {@link #getKey} for computing the key
      **/
-    private HashMap _results = new HashMap();
-    protected final RexBuilder _rexBuilder;
-    protected boolean _generateShortCircuit = false;
-    protected int _labelNbr = 0;
+    private HashMap results = new HashMap();
+    protected final RexBuilder rexBuilder;
+    protected boolean generateShortCircuit = false;
+    protected int labelOrdinal = 0;
 
     /**
      * Ordered mapping from Saffron types (representing a family of types)
      * to the corresponding calculator type. The ordering ensures
      * determinacy.
      */
-    private final TypePair [] _knownTypes;
+    private final TypePair [] knownTypes;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -86,14 +84,14 @@ public class RexToCalcTranslator implements RexVisitor
         RexNode [] projectExps,
         RexNode conditionExp)
     {
-        _projectExps = projectExps;
-        _conditionExp = conditionExp;
-        _rexBuilder = rexBuilder;
+        this.projectExps = projectExps;
+        this.conditionExp = conditionExp;
+        this.rexBuilder = rexBuilder;
 
         setGenerateComments(
             SaffronProperties.instance().generateCalcProgramComments.get());
-        RelDataTypeFactory fac = _rexBuilder.getTypeFactory();
-        _knownTypes =
+        RelDataTypeFactory fac = this.rexBuilder.getTypeFactory();
+        knownTypes =
             new TypePair [] {
                 new TypePair(
                     fac.createSqlType(SqlTypeName.Tinyint),
@@ -190,7 +188,7 @@ public class RexToCalcTranslator implements RexVisitor
 
     public String newLabel()
     {
-        return "label$" + (_labelNbr++);
+        return "label$" + (labelOrdinal++);
     }
 
     /**
@@ -236,15 +234,15 @@ public class RexToCalcTranslator implements RexVisitor
             calcType = CalcProgramBuilder.OpType.Binary;
         }
         RelDataType lookupThis = getSimilarSqlType(relDataType);
-        for (int i = 0; i < _knownTypes.length; i++) {
-            TypePair knownType = _knownTypes[i];
-            if (relDataType.isSameType(knownType._relDataType)) {
-                calcType = knownType._opType;
+        for (int i = 0; i < knownTypes.length; i++) {
+            TypePair knownType = knownTypes[i];
+            if (relDataType.isSameType(knownType.relDataType)) {
+                calcType = knownType.opType;
             }
 
             if ((lookupThis != null)
-                    && lookupThis.isSameType(knownType._relDataType)) {
-                calcType = knownType._opType;
+                    && lookupThis.isSameType(knownType.relDataType)) {
+                calcType = knownType.opType;
             }
         }
 
@@ -283,7 +281,7 @@ public class RexToCalcTranslator implements RexVisitor
             RelDataTypeFactoryImpl.JavaToSqlTypeConversionRules.instance()
                 .lookup(type);
         return RelDataTypeFactoryImpl.createSqlTypeIgnorePrecOrScale(
-            _rexBuilder.getTypeFactory(),
+            rexBuilder.getTypeFactory(),
             typeName);
     }
 
@@ -299,7 +297,7 @@ public class RexToCalcTranslator implements RexVisitor
         RexNode node,
         CalcProgramBuilder.Register register)
     {
-        _results.put(
+        results.put(
             getKey(node),
             register);
     }
@@ -314,14 +312,14 @@ public class RexToCalcTranslator implements RexVisitor
     CalcProgramBuilder.Register getResult(RexNode node)
     {
         CalcProgramBuilder.Register found =
-            (CalcProgramBuilder.Register) _results.get(getKey(node));
+            (CalcProgramBuilder.Register) results.get(getKey(node));
         assert (null != found);
         return found;
     }
 
     boolean containsResult(RexNode node)
     {
-        return _results.get(getKey(node)) != null;
+        return results.get(getKey(node)) != null;
     }
 
     /**
@@ -350,30 +348,30 @@ public class RexToCalcTranslator implements RexVisitor
         }
 
         //step 1: implement all the filtering logic
-        if (_conditionExp != null) {
+        if (conditionExp != null) {
             CalcProgramBuilder.Register filterResult =
-                implementNode(_conditionExp);
+                implementNode(conditionExp);
             assert CalcProgramBuilder.OpType.Bool == filterResult.getOpType() : "Condition must be boolean: "
-            + _conditionExp;
+            + conditionExp;
 
             //step 2: report the status of the filtering
             CalcProgramBuilder.Register statusReg =
-                _builder.newStatus(CalcProgramBuilder.OpType.Bool, -1);
+                builder.newStatus(CalcProgramBuilder.OpType.Bool, -1);
 
             //step 2-1: figure out the status
             String prepareOutput = newLabel();
-            _builder.addLabelJumpTrue(prepareOutput, filterResult);
+            builder.addLabelJumpTrue(prepareOutput, filterResult);
 
             // row didnt match
-            CalcProgramBuilder.move.add(_builder, statusReg, _trueReg);
-            _builder.addReturn();
-            _builder.addLabel(prepareOutput);
-            CalcProgramBuilder.move.add(_builder, statusReg, _falseReg);
+            CalcProgramBuilder.move.add(builder, statusReg, trueReg);
+            builder.addReturn();
+            builder.addLabel(prepareOutput);
+            CalcProgramBuilder.move.add(builder, statusReg, falseReg);
         }
 
         // row matched. Now calculate all the outputs
-        for (int i = 0; i < _projectExps.length; i++) {
-            RexNode node = _projectExps[i];
+        for (int i = 0; i < projectExps.length; i++) {
+            RexNode node = projectExps[i];
 
             // This could probably be optimized by writing to the outputs
             // directly instead of temp registers but harder to (java)
@@ -383,8 +381,8 @@ public class RexToCalcTranslator implements RexVisitor
 
         // all outputs calculated, now assign results to outputs by reference
         CalcProgramBuilder.Register isNullRes = null;
-        for (int i = 0; i < _projectExps.length; i++) {
-            RexNode node = _projectExps[i];
+        for (int i = 0; i < projectExps.length; i++) {
+            RexNode node = projectExps[i];
             CalcProgramBuilder.RegisterDescriptor desc =
                 getCalcRegisterDescriptor(node);
             CalcProgramBuilder.Register res = getResult(node);
@@ -395,25 +393,25 @@ public class RexToCalcTranslator implements RexVisitor
                 String wasNotNull = newLabel();
                 if (isNullRes == null) {
                     isNullRes =
-                        _builder.newLocal(CalcProgramBuilder.OpType.Bool, -1);
+                        builder.newLocal(CalcProgramBuilder.OpType.Bool, -1);
                 }
-                CalcProgramBuilder.boolNativeIsNull.add(_builder, isNullRes,
+                CalcProgramBuilder.boolNativeIsNull.add(builder, isNullRes,
                     res);
-                _builder.addLabelJumpFalse(wasNotNull, isNullRes);
+                builder.addLabelJumpFalse(wasNotNull, isNullRes);
                 CalcProgramBuilder.Raise.add(
-                    _builder,
-                    _builder.newVarcharLiteral("22004", 5));
-                _builder.addReturn();
-                _builder.addLabel(wasNotNull);
+                    builder,
+                    builder.newVarcharLiteral("22004", 5));
+                builder.addReturn();
+                builder.addLabel(wasNotNull);
             }
 
             //if ok, assign result to output by reference
-            CalcProgramBuilder.Register outReg = _builder.newOutput(desc);
-            _builder.addRef(outReg, res);
+            CalcProgramBuilder.Register outReg = builder.newOutput(desc);
+            builder.addRef(outReg, res);
         }
 
-        _builder.addReturn();
-        return _builder.getProgram();
+        builder.addReturn();
+        return builder.getProgram();
     }
 
     /**
@@ -450,12 +448,12 @@ public class RexToCalcTranslator implements RexVisitor
 
     public void visitCall(RexCall call)
     {
-        int before = _builder.getCurrentLineNumber();
+        int before = builder.getCurrentLineNumber();
         implementNode(call);
-        int after = _builder.getCurrentLineNumber();
+        int after = builder.getCurrentLineNumber();
         assert (after >= before);
         if (0 != (after - before)) {
-            _builder.addComment(call.toString());
+            builder.addComment(call.toString());
         }
     }
 
@@ -504,34 +502,34 @@ public class RexToCalcTranslator implements RexVisitor
 
             //Check if we can make a short cut
             if (op.kind.isA(SqlKind.And)) {
-                _builder.addLabelJumpFalse(shortCut, reg0);
+                builder.addLabelJumpFalse(shortCut, reg0);
             } else {
-                _builder.addLabelJumpTrue(shortCut, reg0);
+                builder.addLabelJumpTrue(shortCut, reg0);
             }
 
             //second operand
             CalcProgramBuilder.Register reg1 = implementNode(call.operands[1]);
             CalcProgramBuilder.Register result =
-                _builder.newLocal(CalcProgramBuilder.OpType.Bool, -1);
+                builder.newLocal(CalcProgramBuilder.OpType.Bool, -1);
             assert result.getOpType().getOrdinal() == getCalcRegisterDescriptor(call)
                 .getType().getOrdinal();
-            CalcProgramBuilder.move.add(_builder, result, reg1);
+            CalcProgramBuilder.move.add(builder, result, reg1);
 
             String restOfInstructions = newLabel();
-            _builder.addLabelJump(restOfInstructions);
-            _builder.addLabel(shortCut);
+            builder.addLabelJump(restOfInstructions);
+            builder.addLabel(shortCut);
 
             if (op.kind.isA(SqlKind.And)) {
-                CalcProgramBuilder.move.add(_builder, result, _falseReg);
+                CalcProgramBuilder.move.add(builder, result, falseReg);
             } else {
-                CalcProgramBuilder.move.add(_builder, result, _trueReg);
+                CalcProgramBuilder.move.add(builder, result, trueReg);
             }
 
             setResult(call, result);
 
             //WARNING this assumes that more instructions will follow.
             //Return is currently always at the end.
-            _builder.addLabel(restOfInstructions);
+            builder.addLabel(restOfInstructions);
         } else {
             throw FarragoResource.instance().newProgramImplementationError(
                 op.toString());
@@ -548,7 +546,7 @@ public class RexToCalcTranslator implements RexVisitor
         SqlOperator op = call.op;
 
         //check if and/or/xor should short circuit
-        if (_generateShortCircuit
+        if (generateShortCircuit
                 && (op.kind.isA(SqlKind.And) || op.kind.isA(SqlKind.Or)) /* ||
             op.kind.isA(SqlKind.Xor) */) {
             implementShortCircuit(call);
@@ -577,46 +575,46 @@ public class RexToCalcTranslator implements RexVisitor
             reg1 = convRegs[0];
             reg2 = convRegs[1];
 
-            resultOfCall = _builder.newLocal(resultDesc);
+            resultOfCall = builder.newLocal(resultDesc);
 
             assert resultDesc.getType() == CalcProgramBuilder.OpType.Bool;
             CalcProgramBuilder.Register strCmpResult =
-                _builder.newLocal(CalcProgramBuilder.OpType.Int4, -1);
+                builder.newLocal(CalcProgramBuilder.OpType.Int4, -1);
             if (call.operands[0].getType().isCharType()) {
                 String collationToUse =
                     SqlCollation.getCoercibilityDyadicComparison(
                         call.operands[0].getType().getCollation(),
                         call.operands[1].getType().getCollation());
                 CalcProgramBuilder.Register colReg =
-                    _builder.newVarcharLiteral(collationToUse);
+                    builder.newVarcharLiteral(collationToUse);
 
                 //TODO this is only for ascci cmp. Need to pump in colReg when a
                 //fennel function that can take it is born
                 ExtInstructionDefTable.strCmpA.add(
-                    _builder,
+                    builder,
                     new CalcProgramBuilder.Register [] { strCmpResult, reg1, reg2 });
             } else {
                 ExtInstructionDefTable.strCmpOct.add(
-                    _builder,
+                    builder,
                     new CalcProgramBuilder.Register [] { strCmpResult, reg1, reg2 });
             }
 
-            CalcProgramBuilder.Register zero = _builder.newInt4Literal(0);
+            CalcProgramBuilder.Register zero = builder.newInt4Literal(0);
             CalcProgramBuilder.Register [] regs =
             { resultOfCall, strCmpResult, zero };
             if (op.kind.isA(SqlKind.Equals)) {
-                CalcProgramBuilder.boolNativeEqual.add(_builder, regs);
+                CalcProgramBuilder.boolNativeEqual.add(builder, regs);
             } else if (op.kind.isA(SqlKind.NotEquals)) {
-                CalcProgramBuilder.boolNativeNotEqual.add(_builder, regs);
+                CalcProgramBuilder.boolNativeNotEqual.add(builder, regs);
             } else if (op.kind.isA(SqlKind.GreaterThan)) {
-                CalcProgramBuilder.boolNativeGreaterThan.add(_builder, regs);
+                CalcProgramBuilder.boolNativeGreaterThan.add(builder, regs);
             } else if (op.kind.isA(SqlKind.LessThan)) {
-                CalcProgramBuilder.boolNativeLessThan.add(_builder, regs);
+                CalcProgramBuilder.boolNativeLessThan.add(builder, regs);
             } else if (op.kind.isA(SqlKind.GreaterThanOrEqual)) {
-                CalcProgramBuilder.boolNativeGreaterOrEqualThan.add(_builder,
+                CalcProgramBuilder.boolNativeGreaterOrEqualThan.add(builder,
                     regs);
             } else if (op.kind.isA(SqlKind.LessThanOrEqual)) {
-                CalcProgramBuilder.boolNativeLessOrEqualThan.add(_builder, regs);
+                CalcProgramBuilder.boolNativeLessOrEqualThan.add(builder, regs);
             } else {
                 throw Util.newInternal("Unknown op " + op);
             }
@@ -666,7 +664,7 @@ public class RexToCalcTranslator implements RexVisitor
 
     private static boolean isOctetString(RelDataType t)
     {
-        switch (t.getSqlTypeName().ordinal_) {
+        switch (t.getSqlTypeName().ordinal) {
         case SqlTypeName.Bit_ordinal:
         case SqlTypeName.Varbinary_ordinal:
         case SqlTypeName.Binary_ordinal:
@@ -694,22 +692,22 @@ public class RexToCalcTranslator implements RexVisitor
             if (op1.getType().getSqlTypeName() == SqlTypeName.Varchar) {
                 // cast op1 to op2's type
                 newReg =
-                    _builder.newLocal(
+                    builder.newLocal(
                         getCalcRegisterDescriptor(op2.getType()));
 
                 ExtInstructionDefTable.castA.add(
-                    _builder,
+                    builder,
                     new CalcProgramBuilder.Register [] { newReg, regs[0] });
 
                 regs[0] = newReg;
             } else {
                 // cast op2 to op1's type
                 newReg =
-                    _builder.newLocal(
+                    builder.newLocal(
                         getCalcRegisterDescriptor(op1.getType()));
 
                 ExtInstructionDefTable.castA.add(
-                    _builder,
+                    builder,
                     new CalcProgramBuilder.Register [] { newReg, regs[1] });
 
                 regs[1] = newReg;
@@ -732,7 +730,7 @@ public class RexToCalcTranslator implements RexVisitor
             getCalcRegisterDescriptor(node);
         setResult(
             node,
-            _builder.newLiteral(desc, value));
+            builder.newLiteral(desc, value));
     }
 
     private void implementNode(RexInputRef node)
@@ -743,7 +741,7 @@ public class RexToCalcTranslator implements RexVisitor
         }
         setResult(
             node,
-            _builder.newInput(getCalcRegisterDescriptor(node)));
+            builder.newInput(getCalcRegisterDescriptor(node)));
     }
 
     private void implementNode(RexContextVariable node)
@@ -759,27 +757,27 @@ public class RexToCalcTranslator implements RexVisitor
 
     public void setGenerateShortCircuit(boolean generateShortCircuit)
     {
-        this._generateShortCircuit = generateShortCircuit;
+        this.generateShortCircuit = generateShortCircuit;
     }
 
     public void setGenerateComments(boolean outputComments)
     {
-        _builder.setOutputComments(outputComments);
+        builder.setOutputComments(outputComments);
     }
 
     //~ Inner Classes ---------------------------------------------------------
 
     private static class TypePair
     {
-        private final RelDataType _relDataType;
-        private final CalcProgramBuilder.OpType _opType;
+        private final RelDataType relDataType;
+        private final CalcProgramBuilder.OpType opType;
 
         TypePair(
             RelDataType saffron,
             CalcProgramBuilder.OpType op)
         {
-            _relDataType = saffron;
-            _opType = op;
+            relDataType = saffron;
+            opType = op;
         }
     }
 

@@ -262,7 +262,7 @@ class InternalTranslator
         if (sqlName == null) {
             return null;
         }
-        return rexBuilder._opTab.lookup(sqlName, SqlSyntax.Binary);
+        return rexBuilder.opTab.lookup(sqlName, SqlSyntax.Binary);
     }
 
     public RexNode evaluateDown(BinaryExpression p)
@@ -308,7 +308,7 @@ class InternalTranslator
     private SqlOperator translateFun(String name)
     {
         if (name.equals("equals")) {
-            return rexBuilder._opTab.equalsOperator;
+            return rexBuilder.opTab.equalsOperator;
         }
         throw Util.needToImplement(this);
     }

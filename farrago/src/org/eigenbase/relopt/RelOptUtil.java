@@ -400,13 +400,13 @@ public abstract class RelOptUtil
             }
             RexNode newCondition =
                 rexBuilder.makeCall(
-                    rexBuilder._opTab.isNotNullOperator,
+                    rexBuilder.opTab.isNotNullOperator,
                     rexBuilder.makeInputRef(type, iField));
             if (condition == null) {
                 condition = newCondition;
             } else {
                 condition =
-                    rexBuilder.makeCall(rexBuilder._opTab.andOperator,
+                    rexBuilder.makeCall(rexBuilder.opTab.andOperator,
                         condition, newCondition);
             }
         }

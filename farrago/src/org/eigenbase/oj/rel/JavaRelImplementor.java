@@ -76,28 +76,28 @@ public class JavaRelImplementor implements RelImplementor
     /** Maps a {@link String} to the {@link Frame} whose
      * {@link Frame#rel}.correlVariable == correlName.
      */
-    final HashMap _mapCorrel2Frame = new HashMap();
-    final HashMap _mapCorrelNameToVariable = new HashMap();
+    final HashMap mapCorrel2Frame = new HashMap();
+    final HashMap mapCorrelNameToVariable = new HashMap();
 
     /**
      * Maps a {@link RelNode} to the unique frame whose {@link Frame#rel}
      * is that relational expression.
      */
-    final HashMap _mapRel2Frame = new HashMap();
+    final HashMap mapRel2Frame = new HashMap();
 
     /**
      * Stack of {@link StatementList} objects.
      */
-    final Stack _stmtListStack = new Stack();
-    Statement _exitStatement;
-    public final RexBuilder _rexBuilder;
+    final Stack stmtListStack = new Stack();
+    Statement exitStatement;
+    private final RexBuilder rexBuilder;
     private int nextVariableId;
 
     //~ Constructors ----------------------------------------------------------
 
     public JavaRelImplementor(RexBuilder rexBuilder)
     {
-        _rexBuilder = rexBuilder;
+        this.rexBuilder = rexBuilder;
         nextVariableId = 0;
     }
 
@@ -105,22 +105,22 @@ public class JavaRelImplementor implements RelImplementor
 
     public void setExitStatement(openjava.ptree.Statement stmt)
     {
-        this._exitStatement = stmt;
+        this.exitStatement = stmt;
     }
 
     public Statement getExitStatement()
     {
-        return _exitStatement;
+        return exitStatement;
     }
 
     public StatementList getStatementList()
     {
-        return (StatementList) _stmtListStack.peek();
+        return (StatementList) stmtListStack.peek();
     }
 
     public RexBuilder getRexBuilder()
     {
-        return _rexBuilder;
+        return rexBuilder;
     }
 
     /**
@@ -185,7 +185,7 @@ public class JavaRelImplementor implements RelImplementor
         String correlName,
         Variable variable)
     {
-        _mapCorrelNameToVariable.put(correlName, variable);
+        mapCorrelNameToVariable.put(correlName, variable);
     }
 
     public JavaRel findRel(
@@ -268,7 +268,7 @@ public class JavaRelImplementor implements RelImplementor
         if (stmtList != null) {
             pushStatementList(stmtList);
         }
-        Frame frame = (Frame) _mapRel2Frame.get(rel);
+        Frame frame = (Frame) mapRel2Frame.get(rel);
         bindDeferred(frame, rel);
         ((JavaLoopRel) frame.parent).implementJavaParent(this, frame.ordinal);
         if (stmtList != null) {
@@ -336,15 +336,15 @@ public class JavaRelImplementor implements RelImplementor
         frame.rel = child;
         frame.parent = parent;
         frame.ordinal = ordinal;
-        _mapRel2Frame.put(child, frame);
+        mapRel2Frame.put(child, frame);
         String correl = child.getCorrelVariable();
         if (correl != null) {
             // Record that this frame is responsible for setting this
             // variable. But if another frame is already doing the job --
             // this frame's parent, which belongs to the same set -- don't
             // override it.
-            if (_mapCorrel2Frame.get(correl) == null) {
-                _mapCorrel2Frame.put(correl, frame);
+            if (mapCorrel2Frame.get(correl) == null) {
+                mapCorrel2Frame.put(correl, frame);
             }
         }
         return visitChildInternal(child);
@@ -391,7 +391,7 @@ public class JavaRelImplementor implements RelImplementor
         String correlName,
         RelNode rel)
     {
-        Frame frame = (Frame) _mapCorrel2Frame.get(correlName);
+        Frame frame = (Frame) mapCorrel2Frame.get(correlName);
         assert (frame != null);
         assert (Util.equal(
             frame.rel.getCorrelVariable(),
@@ -418,12 +418,12 @@ public class JavaRelImplementor implements RelImplementor
     public void popStatementList(StatementList stmtList)
     {
         assert (stmtList == getStatementList());
-        _stmtListStack.pop();
+        stmtListStack.pop();
     }
 
     public void pushStatementList(StatementList stmtList)
     {
-        _stmtListStack.push(stmtList);
+        stmtListStack.push(stmtList);
     }
 
     /**
@@ -477,8 +477,8 @@ public class JavaRelImplementor implements RelImplementor
      * Determines whether it is possible to implement an expression in
      * Java.
      *
-     * @param condition Condition, may be null
-     * @param exps Expression list
+     * @param rel Relational expression
+     * @param expression Expression
      * @param deep if true, operands of the given expression are
      *             tested for translatability as well; if false only
      *             the top level expression is tested
@@ -593,7 +593,7 @@ public class JavaRelImplementor implements RelImplementor
         int fieldOffset = computeFieldOffset(rel, ordinal);
         return translate(
             rel,
-            _rexBuilder.makeRangeReference(rowType, fieldOffset));
+            rexBuilder.makeRangeReference(rowType, fieldOffset));
     }
 
     /**
@@ -645,7 +645,7 @@ public class JavaRelImplementor implements RelImplementor
         assert fieldIndex >= 0;
         assert fieldIndex < fields.length;
         final RexNode expr =
-            _rexBuilder.makeInputRef(
+            rexBuilder.makeInputRef(
                 fields[fieldIndex].getType(),
                 fieldIndex);
         return translate(rel, expr);
@@ -660,7 +660,7 @@ public class JavaRelImplementor implements RelImplementor
         Bind bind)
     {
         tracer.log(Level.FINE, "Bind " + rel.toString() + " to " + bind);
-        Frame frame = (Frame) _mapRel2Frame.get(rel);
+        Frame frame = (Frame) mapRel2Frame.get(rel);
         frame.bind = bind;
         boolean stupid = SaffronProperties.instance().stupid.get();
         if (stupid) {
@@ -712,7 +712,7 @@ public class JavaRelImplementor implements RelImplementor
     public Variable findInputVariable(RelNode rel)
     {
         while (true) {
-            Frame frame = (Frame) _mapRel2Frame.get(rel);
+            Frame frame = (Frame) mapRel2Frame.get(rel);
             if ((frame != null) && frame.hasVariable()) {
                 return frame.getVariable();
             }
@@ -793,7 +793,7 @@ public class JavaRelImplementor implements RelImplementor
         {
             RelNode previous = rel;
             while (true) {
-                Frame frame = (Frame) _mapRel2Frame.get(previous);
+                Frame frame = (Frame) mapRel2Frame.get(previous);
                 if (frame.bind != null) {
                     tracer.log(Level.FINE,
                         "Bind " + rel.toString() + " to "

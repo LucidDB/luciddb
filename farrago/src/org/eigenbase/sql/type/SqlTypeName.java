@@ -220,7 +220,7 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
      */
     public boolean isSpecial()
     {
-        switch (ordinal_) {
+        switch (ordinal) {
         case Any_ordinal:
         case Null_ordinal:
         case Symbol_ordinal:

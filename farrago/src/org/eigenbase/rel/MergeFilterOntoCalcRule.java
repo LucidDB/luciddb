@@ -82,18 +82,18 @@ public class MergeFilterOntoCalcRule extends RelOptRule
             new RexShuttle() {
                 public RexNode visit(RexInputRef input)
                 {
-                    return calc._projectExprs[input.index];
+                    return calc.projectExprs[input.index];
                 }
             };
         RexNode newCondition = shuttle.visit(condition);
-        if (calc._conditionExpr != null) {
+        if (calc.conditionExpr != null) {
             newCondition =
                 calc.cluster.rexBuilder.makeCall(RexKind.And,
-                    calc._conditionExpr, newCondition);
+                    calc.conditionExpr, newCondition);
         }
         final CalcRel newCalc =
             new CalcRel(calc.cluster, calc.child,
-                calc.getRowType(), calc._projectExprs, newCondition);
+                calc.getRowType(), calc.projectExprs, newCondition);
         call.transformTo(newCalc);
     }
 }

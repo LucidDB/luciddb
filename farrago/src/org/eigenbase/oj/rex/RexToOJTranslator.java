@@ -133,7 +133,7 @@ public class RexToOJTranslator implements RexVisitor
         final Object value = literal.getValue();
         Calendar calendar;
         long timeInMillis;
-        switch (literal._typeName.ordinal_) {
+        switch (literal.typeName.ordinal) {
         case SqlTypeName.Null_ordinal:
             setTranslation(Literal.constantNull());
             break;

@@ -122,7 +122,7 @@ public class TableAccessMap
      *
      * @param table the table of interest
      *
-     * @return one of the _ACCESS constants
+     * @return one of the xxx_ACCESS constants
      */
     public String getTableAccessMode(RelOptTable table)
     {

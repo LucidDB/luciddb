@@ -133,11 +133,6 @@ public class RelOptPlanWriter extends java.io.PrintWriter
         level--;
     }
 
-    //  	public void explainTree(Plan plan)
-    //  	{
-    //  		this.level = 0;
-    //  		plan.explain(this);
-    //  	}
     public void explainTree(RelNode exp)
     {
         this.level = 0;

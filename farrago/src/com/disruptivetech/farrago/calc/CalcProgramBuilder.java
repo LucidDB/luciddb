@@ -238,12 +238,12 @@ public class CalcProgramBuilder
     //~ Instance fields -------------------------------------------------------
 
     /* Member variables */
-    protected String m_separator = SEPARATOR_SEMICOLON_NEWLINE;
-    protected final ArrayList m_instructions = new ArrayList();
-    protected RegisterSets m_registerSets = new RegisterSets();
-    protected final HashMap m_literals = new HashMap();
-    protected final HashMap m_labels = new HashMap();
-    private boolean m_outputComments = false;
+    protected String separator = SEPARATOR_SEMICOLON_NEWLINE;
+    protected final ArrayList instructions = new ArrayList();
+    protected RegisterSets registerSets = new RegisterSets();
+    protected final HashMap literals = new HashMap();
+    protected final HashMap labels = new HashMap();
+    private boolean outputComments = false;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -270,12 +270,12 @@ public class CalcProgramBuilder
                 && !separator.equals(SEPARATOR_SEMICOLON_NEWLINE)) {
             throw FarragoResource.instance().newProgramCompilationError("Separator must be ';'[\\n] or '\\n'");
         }
-        this.m_separator = separator;
+        this.separator = separator;
     }
 
     public void setOutputComments(boolean outputComments)
     {
-        this.m_outputComments = outputComments;
+        this.outputComments = outputComments;
     }
 
     protected void compilationAssert(
@@ -311,7 +311,7 @@ public class CalcProgramBuilder
         PrintWriter writer = new PrintWriter(sw);
         getRegisterSetsLayout(writer);
         writer.print("T");
-        writer.print(m_separator);
+        writer.print(separator);
         getInstructions(writer);
         final String program = sw.toString().trim();
         if (tracer.isLoggable(Level.FINE)) {
@@ -327,8 +327,8 @@ public class CalcProgramBuilder
      */
     private String prettyPrint(String program)
     {
-        if (!m_separator.equals(SEPARATOR_SEMICOLON_NEWLINE)) {
-            return program.replaceAll(m_separator, SEPARATOR_SEMICOLON_NEWLINE);
+        if (!separator.equals(SEPARATOR_SEMICOLON_NEWLINE)) {
+            return program.replaceAll(separator, SEPARATOR_SEMICOLON_NEWLINE);
         }
         return program;
     }
@@ -338,7 +338,7 @@ public class CalcProgramBuilder
      */
     private void bindReferences()
     {
-        Iterator it = m_instructions.iterator();
+        Iterator it = instructions.iterator();
         for (int i = 0; it.hasNext(); i++) {
             //Look for instructions that have Line as operands
             Instruction instruction = (Instruction) it.next();
@@ -349,18 +349,18 @@ public class CalcProgramBuilder
                 Operand operand = operands[j];
                 if (operand instanceof Line) {
                     Line line = (Line) operand;
-                    if (line.getLabel() != null) //we have a label, update the line number with whats in the m_labels map
+                    if (line.getLabel() != null) //we have a label, update the line number with whats in the labels map
                      {
                         compilationAssert(null == line.getLine(),
                             "Line has already been bind.");
-                        java.lang.Integer lineNbrFromLabel =
-                            (java.lang.Integer) m_labels.get(line.getLabel());
-                        if (null == lineNbrFromLabel) {
+                        java.lang.Integer lineNumberFromLabel =
+                            (java.lang.Integer) labels.get(line.getLabel());
+                        if (null == lineNumberFromLabel) {
                             throw FarragoResource.instance()
                                 .newProgramCompilationError("Label '"
                                     + line.getLabel() + "' not defined");
                         }
-                        line.setLine(lineNbrFromLabel.intValue());
+                        line.setLine(lineNumberFromLabel.intValue());
                     }
                 }
             }
@@ -373,7 +373,7 @@ public class CalcProgramBuilder
      */
     public int getCurrentLineNumber()
     {
-        return m_instructions.size() - 1;
+        return instructions.size() - 1;
     }
 
     /**
@@ -403,11 +403,11 @@ public class CalcProgramBuilder
         PrintWriter writer,
         RegisterSetType registerSetType)
     {
-        ArrayList list = m_registerSets.getSet(registerSetType.getOrdinal());
+        ArrayList list = registerSets.getSet(registerSetType.getOrdinal());
         if (null == list) {
             return;
         }
-        writer.print(registerSetType.m_prefix);
+        writer.print(registerSetType.prefix);
         writer.print(" ");
 
         // Iterate over every register in the current set
@@ -423,11 +423,11 @@ public class CalcProgramBuilder
             case OpType.Char_ordinal:
             case OpType.Varbinary_ordinal:
             case OpType.Varchar_ordinal:
-                assert reg.m_storageBytes >= 0;
-                writer.print("," + reg.m_storageBytes);
+                assert reg.storageBytes >= 0;
+                writer.print("," + reg.storageBytes);
                 break;
             default:
-                assert reg.m_storageBytes == -1;
+                assert reg.storageBytes == -1;
             }
             if (false) {
                 // Assembler doesn't support this.
@@ -441,12 +441,12 @@ public class CalcProgramBuilder
                     "Only literals have values");
             }
         }
-        writer.print(m_separator);
+        writer.print(separator);
     }
 
     private void generateRegValues(PrintWriter writer)
     {
-        ArrayList list = m_registerSets.getSet(RegisterSetType.LiteralORDINAL);
+        ArrayList list = registerSets.getSet(RegisterSetType.LiteralORDINAL);
         if (null == list) {
             return;
         }
@@ -461,7 +461,7 @@ public class CalcProgramBuilder
             //assert value != null;
             reg.printValue(writer);
         }
-        writer.print(m_separator);
+        writer.print(separator);
     }
 
     /**
@@ -470,7 +470,7 @@ public class CalcProgramBuilder
      */
     protected void getInstructions(PrintWriter writer)
     {
-        Iterator it = m_instructions.iterator();
+        Iterator it = instructions.iterator();
         while (it.hasNext()) {
             ((Instruction) it.next()).print(writer);
         }
@@ -495,7 +495,7 @@ public class CalcProgramBuilder
      */
     private void validate()
     {
-        Iterator it = m_instructions.iterator();
+        Iterator it = instructions.iterator();
         for (int i = 0; it.hasNext(); i++) {
             Instruction inst = (Instruction) it.next();
             String op = inst.getOpCode();
@@ -506,7 +506,7 @@ public class CalcProgramBuilder
                 //-----------Check if any jump instructions are jumping off the cliff
                 if (op.startsWith(jumpInstruction)) {
                     Line line = (Line) inst.getOperands()[0];
-                    if (line.getLine().intValue() >= m_instructions.size()) {
+                    if (line.getLine().intValue() >= instructions.size()) {
                         throw FarragoResource.instance()
                             .newProgramCompilationError("Line "
                                 + line.getLine() + " doesn't exist");
@@ -572,7 +572,7 @@ public class CalcProgramBuilder
         OpType type,
         int storageBytes)
     {
-        return m_registerSets.newRegister(type, null, RegisterSetType.Output,
+        return registerSets.newRegister(type, null, RegisterSetType.Output,
             storageBytes);
     }
 
@@ -640,12 +640,12 @@ public class CalcProgramBuilder
                     LiteralPair that = (LiteralPair) o;
 
                     if ((null == this.value) && (null == that.value)) {
-                        return this.type.ordinal_ == that.type.ordinal_;
+                        return this.type.ordinal == that.type.ordinal;
                     }
 
                     if (null != this.value) {
                         return this.value.equals(that.value)
-                            && (this.type.ordinal_ == that.type.ordinal_);
+                            && (this.type.ordinal == that.type.ordinal);
                     }
                 }
                 return false;
@@ -654,12 +654,12 @@ public class CalcProgramBuilder
 
         Register ret;
         LiteralPair key = new LiteralPair(type, value);
-        if (m_literals.containsKey(key)) {
-            ret = (Register) m_literals.get(key);
+        if (literals.containsKey(key)) {
+            ret = (Register) literals.get(key);
         } else {
-            ret = m_registerSets.newRegister(type, value,
+            ret = registerSets.newRegister(type, value,
                     RegisterSetType.Literal, storageBytes);
-            m_literals.put(key, ret);
+            literals.put(key, ret);
         }
         return ret;
     }
@@ -795,7 +795,7 @@ public class CalcProgramBuilder
         OpType type,
         int storageBytes)
     {
-        return m_registerSets.newRegister(type, null, RegisterSetType.Input,
+        return registerSets.newRegister(type, null, RegisterSetType.Input,
             storageBytes);
     }
 
@@ -813,7 +813,7 @@ public class CalcProgramBuilder
         OpType type,
         int storageBytes)
     {
-        return m_registerSets.newRegister(type, null, RegisterSetType.Local,
+        return registerSets.newRegister(type, null, RegisterSetType.Local,
             storageBytes);
     }
 
@@ -834,7 +834,7 @@ public class CalcProgramBuilder
         OpType type,
         int storageBytes)
     {
-        return m_registerSets.newRegister(type, null, RegisterSetType.Status,
+        return registerSets.newRegister(type, null, RegisterSetType.Status,
             storageBytes);
     }
 
@@ -885,7 +885,7 @@ public class CalcProgramBuilder
 
     protected void addInstruction(Instruction inst)
     {
-        m_instructions.add(inst);
+        instructions.add(inst);
     }
 
     /**
@@ -897,12 +897,12 @@ public class CalcProgramBuilder
      */
     protected void addComment(String comment)
     {
-        if (0 == m_instructions.size()) {
+        if (0 == instructions.size()) {
             throw Util.needToImplement(
                 "TODO need to handle case when  instruction list is empty");
         }
         Instruction inst =
-            (Instruction) m_instructions.toArray()[m_instructions.size() - 1];
+            (Instruction) instructions.toArray()[instructions.size() - 1];
         inst.setComment((inst.getComment() + " " + comment).trim());
     }
 
@@ -964,7 +964,7 @@ public class CalcProgramBuilder
     {
         compilationAssert(reg.getOpType().getOrdinal() == OpType.Bool_ordinal,
             "Expected a register of Boolean type. " + "Found "
-            + reg.getOpType().name_);
+            + reg.getOpType().name);
     }
 
     /**
@@ -1213,10 +1213,10 @@ public class CalcProgramBuilder
 
     public void addLabel(String label)
     {
-        compilationAssert(!m_labels.containsKey(label),
+        compilationAssert(!labels.containsKey(label),
             "Label '" + label + "' already defined");
-        int line = m_instructions.size();
-        m_labels.put(
+        int line = instructions.size();
+        labels.put(
             label,
             new java.lang.Integer(line));
     }
@@ -1674,9 +1674,9 @@ public class CalcProgramBuilder
      */
     public static class FunctionCall implements Operand
     {
-        private String m_functionName;
-        private Register [] m_registers;
-        private Register m_result;
+        private String functionName;
+        private Register [] registers;
+        private Register result;
 
         /**
          * @param functionName e.g. <code>SUBSTR</code>
@@ -1688,9 +1688,9 @@ public class CalcProgramBuilder
             Register [] registers)
         {
             assert registers != null;
-            m_result = result;
-            m_functionName = functionName;
-            m_registers = registers;
+            this.result = result;
+            this.functionName = functionName;
+            this.registers = registers;
         }
 
         /**
@@ -1704,12 +1704,12 @@ public class CalcProgramBuilder
         public void print(PrintWriter writer)
         {
             writer.print("'");
-            writer.print(m_functionName);
+            writer.print(functionName);
             writer.print('(');
-            m_result.print(writer);
-            for (int i = 0; i < m_registers.length; i++) {
+            result.print(writer);
+            for (int i = 0; i < registers.length; i++) {
                 writer.print(", ");
-                m_registers[i].print(writer);
+                registers[i].print(writer);
             }
             writer.print(')');
         }
@@ -1722,13 +1722,13 @@ public class CalcProgramBuilder
      */
     public class Register implements Operand
     {
-        OpType m_opType;
-        Object m_value;
-        RegisterSetType m_registerType;
+        final OpType opType;
+        final Object value;
+        RegisterSetType registerType;
 
         /** Number of bytes storage to allocate for this value. */
-        int m_storageBytes;
-        int m_index;
+        int storageBytes;
+        int index;
 
         Register(
             OpType opType,
@@ -1737,46 +1737,46 @@ public class CalcProgramBuilder
             int storageBytes,
             int index)
         {
-            m_opType = opType;
-            m_value = value;
-            m_registerType = registerType;
-            m_storageBytes = storageBytes;
-            m_index = index;
+            this.opType = opType;
+            this.value = value;
+            this.registerType = registerType;
+            this.storageBytes = storageBytes;
+            this.index = index;
         }
 
         final public OpType getOpType()
         {
-            return m_opType;
+            return opType;
         }
 
         final RegisterSetType getRegisterType()
         {
-            return m_registerType;
+            return registerType;
         }
 
         final int getIndex()
         {
-            return m_index;
+            return index;
         }
 
         final Object getValue()
         {
-            return m_value;
+            return value;
         }
 
         /**
-         * Serializes the {@link #m_value} in the virtual register if not null<br>
+         * Serializes the {@link #value} in the virtual register if not null<br>
          * <b>NOTE</b> See also {@link #print} which serializes the "identity" of the register
          * @param writer
          */
         void printValue(PrintWriter writer)
         {
-            if (null == m_value) {
+            if (null == value) {
                 // do nothing
-            } else if (m_value instanceof String) {
+            } else if (value instanceof String) {
                 // Convert the string to an array of bytes assuming (TODO:
                 // don's assume!) latin1 encoding, then hex-encode.
-                final String s = (String) m_value;
+                final String s = (String) value;
                 final Charset charset = Charset.forName("ISO-8859-1");
                 assert charset != null;
                 final ByteBuffer buf = charset.encode(s);
@@ -1784,26 +1784,26 @@ public class CalcProgramBuilder
                 writer.print(Util.toStringFromByteArray(
                         buf.array(),
                         16));
-                if (m_outputComments) {
+                if (outputComments) {
                     writer.print(formatComment(s));
                 }
-            } else if (m_value instanceof byte []) {
+            } else if (value instanceof byte []) {
                 writer.print("0x");
                 writer.print(
-                    Util.toStringFromByteArray((byte []) m_value, 16));
-            } else if (m_value instanceof Boolean) {
-                writer.print(((Boolean) m_value).booleanValue() ? "1" : "0");
-            } else if (m_value instanceof SqlLiteral) {
-                writer.print(((SqlLiteral) m_value).toValue());
-            } else if (m_value instanceof BigDecimal) {
-                if (m_opType.isExact()) {
-                    writer.print(m_value.toString());
+                    Util.toStringFromByteArray((byte []) value, 16));
+            } else if (value instanceof Boolean) {
+                writer.print(((Boolean) value).booleanValue() ? "1" : "0");
+            } else if (value instanceof SqlLiteral) {
+                writer.print(((SqlLiteral) value).toValue());
+            } else if (value instanceof BigDecimal) {
+                if (opType.isExact()) {
+                    writer.print(value.toString());
                 } else {
                     writer.print(
-                        Util.toScientificNotation((BigDecimal) m_value));
+                        Util.toScientificNotation((BigDecimal) value));
                 }
             } else {
-                writer.print(m_value.toString());
+                writer.print(value.toString());
             }
         }
 
@@ -1814,10 +1814,10 @@ public class CalcProgramBuilder
          */
         final public void print(PrintWriter writer)
         {
-            writer.print(m_registerType.m_prefix);
+            writer.print(registerType.prefix);
 
-            //writer.print(m_type.getTypeCode());
-            writer.print(m_index);
+            //writer.print(type.getTypeCode());
+            writer.print(index);
         }
     }
 
@@ -1826,39 +1826,39 @@ public class CalcProgramBuilder
      */
     public class Line implements Operand
     {
-        java.lang.Integer m_line = null;
-        String m_label = null;
+        java.lang.Integer line = null;
+        String label = null;
 
         Line(int line)
         {
-            m_line = new java.lang.Integer(line);
+            this.line = new java.lang.Integer(line);
         }
 
         Line(String label)
         {
-            m_label = label;
+            this.label = label;
         }
 
         final public String getLabel()
         {
-            return m_label;
+            return label;
         }
 
         final public void setLine(int line)
         {
-            compilationAssert(null == m_line);
-            m_line = new java.lang.Integer(line);
+            compilationAssert(null == this.line);
+            this.line = new java.lang.Integer(line);
         }
 
         final public java.lang.Integer getLine()
         {
-            return m_line;
+            return line;
         }
 
         final public void print(PrintWriter writer)
         {
             writer.print("@");
-            writer.print(m_line.intValue());
+            writer.print(line.intValue());
         }
     }
 
@@ -1916,7 +1916,7 @@ public class CalcProgramBuilder
 
         public boolean isExact()
         {
-            switch (ordinal_) {
+            switch (ordinal) {
             case Int1_ordinal:
             case Uint1_ordinal:
             case Int2_ordinal:
@@ -1932,7 +1932,7 @@ public class CalcProgramBuilder
 
         public boolean isApprox()
         {
-            switch (ordinal_) {
+            switch (ordinal) {
             case Real_ordinal:
             case Double_ordinal:
                 return true;
@@ -1973,66 +1973,66 @@ public class CalcProgramBuilder
     /* Represents an instruction and its operands */
     class Instruction
     {
-        private String m_opCode;
-        private Operand [] m_operands;
-        private String m_comment;
-        private Integer m_lineNumber;
+        private String opCode;
+        private Operand [] operands;
+        private String comment;
+        private Integer lineNumber;
 
         public Instruction(
             String opCode,
             Operand [] operands)
         {
-            m_opCode = opCode;
-            m_operands = operands;
-            m_comment = null;
-            m_lineNumber = null;
+            this.opCode = opCode;
+            this.operands = operands;
+            comment = null;
+            lineNumber = null;
         }
 
         final void print(PrintWriter writer)
         {
-            writer.print(m_opCode);
-            if (null != m_operands) {
+            writer.print(opCode);
+            if (null != operands) {
                 writer.print(' ');
-                printOperands(writer, m_operands);
+                printOperands(writer, operands);
             }
 
-            if (m_outputComments) {
-                assert (null != m_lineNumber);
-                String comment = m_lineNumber + ":";
-                if (null != m_comment) {
-                    comment += (" " + m_comment);
+            if (outputComments) {
+                assert (null != lineNumber);
+                String comment = lineNumber + ":";
+                if (null != this.comment) {
+                    comment += (" " + this.comment);
                 }
                 writer.print(formatComment(comment));
             }
-            writer.print(m_separator);
+            writer.print(separator);
         }
 
         final public String getOpCode()
         {
-            return m_opCode;
+            return opCode;
         }
 
         final public Operand [] getOperands()
         {
-            return m_operands;
+            return operands;
         }
 
         public String getComment()
         {
-            if (null == m_comment) {
+            if (null == comment) {
                 return "";
             }
-            return m_comment;
+            return comment;
         }
 
         public void setComment(String comment)
         {
-            m_comment = comment;
+            this.comment = comment;
         }
 
         public void setLineNumber(int line)
         {
-            m_lineNumber = new Integer(line);
+            lineNumber = new Integer(line);
         }
     }
 
@@ -2060,7 +2060,7 @@ public class CalcProgramBuilder
             new EnumeratedValues(new RegisterSetType [] {
                     Output, Input, Literal, Local, Status
                 });
-        final char m_prefix;
+        final char prefix;
 
         private RegisterSetType(
             String name,
@@ -2068,7 +2068,7 @@ public class CalcProgramBuilder
             char prefix)
         {
             super(name, ordinal, null);
-            m_prefix = prefix;
+            this.prefix = prefix;
         }
 
         public static RegisterSetType get(int ordinal)
@@ -2083,13 +2083,13 @@ public class CalcProgramBuilder
     protected class RegisterSets
     {
         //Members variables -----------------
-        private ArrayList [] m_sets =
+        private ArrayList [] sets =
             new ArrayList[RegisterSetType.enumeration.getSize()];
 
         //Methods ---------------------------
         final public ArrayList getSet(int set)
         {
-            return m_sets[set];
+            return sets[set];
         }
 
         /**
@@ -2110,14 +2110,14 @@ public class CalcProgramBuilder
                 "null is an invalid RegisterSetType");
 
             int set = registerType.getOrdinal();
-            if (null == m_sets[set]) {
-                m_sets[set] = new ArrayList();
+            if (null == sets[set]) {
+                sets[set] = new ArrayList();
             }
 
             Register newReg =
                 new Register(opType, initValue, registerType, storageBytes,
-                    m_sets[set].size());
-            m_sets[set].add(newReg);
+                    sets[set].size());
+            sets[set].add(newReg);
             return newReg;
         }
     }
@@ -2191,8 +2191,8 @@ public class CalcProgramBuilder
             CalcProgramBuilder builder,
             Register [] regs)
         {
-            assert regs.length == regCount : "Wrong nbr of params for instruction "
-            + name;
+            assert regs.length == regCount :
+                "Wrong number of params for instruction " + name;
             builder.assertOperandsNotNull(regs);
             builder.addInstruction(name, regs);
         }
@@ -2353,8 +2353,9 @@ public class CalcProgramBuilder
             CalcProgramBuilder builder,
             Register [] regs)
         {
-            assert (this.regCount == regs.length) : "Wrong nbr of params for instruction "
-            + name + " Expected=" + this.regCount + " but was=" + regs.length;
+            assert this.regCount == regs.length
+                : "Wrong number of params for instruction " + name
+                + "; expected=" + this.regCount + " but was=" + regs.length;
             add(builder, regs, name);
         }
 

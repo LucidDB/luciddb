@@ -1634,23 +1634,23 @@ SqlIdentifier TypeName() :
 }
 {
     (
-        ( <CHARACTER> | <CHAR> { typeName = new SqlIdentifier(SqlTypeName.Char.name_, pos); })
-        [ <VARYING> { typeName = new SqlIdentifier(SqlTypeName.Varchar.name_, pos); } ]
-    |   <VARCHAR> { typeName = new SqlIdentifier(SqlTypeName.Varchar.name_, pos); }
-    |   <DATE> { typeName = new SqlIdentifier(SqlTypeName.Date.name_,pos); }
-    |   <TIME> { typeName = new SqlIdentifier(SqlTypeName.Time.name_,pos); }
-    |   <TIMESTAMP> { typeName = new SqlIdentifier(SqlTypeName.Timestamp.name_,pos); }
-    |   <DECIMAL> { typeName = new SqlIdentifier(SqlTypeName.Decimal.name_,pos); }
-    |   <BOOLEAN> { typeName = new SqlIdentifier(SqlTypeName.Boolean.name_,pos); }
-    |   <INTEGER> { typeName = new SqlIdentifier(SqlTypeName.Integer.name_,pos); }
-    |   <BINARY> { typeName = new SqlIdentifier(SqlTypeName.Binary.name_,pos); }
-    |   <VARBINARY> { typeName = new SqlIdentifier(SqlTypeName.Varbinary.name_,pos); }
-    |   <TINYINT> { typeName = new SqlIdentifier(SqlTypeName.Tinyint.name_,pos); }
-    |   <SMALLINT> { typeName = new SqlIdentifier(SqlTypeName.Smallint.name_,pos); }
-    |   <BIGINT> { typeName = new SqlIdentifier(SqlTypeName.Bigint.name_,pos); }
-    |   <REAL> [ <PRECISION> ] { typeName = new SqlIdentifier(SqlTypeName.Real.name_,pos); }
-    |   <DOUBLE> [ <PRECISION> ] { typeName = new SqlIdentifier(SqlTypeName.Double.name_,pos); }
-    |   <BIT> { typeName = new SqlIdentifier(SqlTypeName.Bit.name_,pos); }
+        ( <CHARACTER> | <CHAR> { typeName = new SqlIdentifier(SqlTypeName.Char.name, pos); })
+        [ <VARYING> { typeName = new SqlIdentifier(SqlTypeName.Varchar.name, pos); } ]
+    |   <VARCHAR> { typeName = new SqlIdentifier(SqlTypeName.Varchar.name, pos); }
+    |   <DATE> { typeName = new SqlIdentifier(SqlTypeName.Date.name,pos); }
+    |   <TIME> { typeName = new SqlIdentifier(SqlTypeName.Time.name,pos); }
+    |   <TIMESTAMP> { typeName = new SqlIdentifier(SqlTypeName.Timestamp.name,pos); }
+    |   <DECIMAL> { typeName = new SqlIdentifier(SqlTypeName.Decimal.name,pos); }
+    |   <BOOLEAN> { typeName = new SqlIdentifier(SqlTypeName.Boolean.name,pos); }
+    |   <INTEGER> { typeName = new SqlIdentifier(SqlTypeName.Integer.name,pos); }
+    |   <BINARY> { typeName = new SqlIdentifier(SqlTypeName.Binary.name,pos); }
+    |   <VARBINARY> { typeName = new SqlIdentifier(SqlTypeName.Varbinary.name,pos); }
+    |   <TINYINT> { typeName = new SqlIdentifier(SqlTypeName.Tinyint.name,pos); }
+    |   <SMALLINT> { typeName = new SqlIdentifier(SqlTypeName.Smallint.name,pos); }
+    |   <BIGINT> { typeName = new SqlIdentifier(SqlTypeName.Bigint.name,pos); }
+    |   <REAL> [ <PRECISION> ] { typeName = new SqlIdentifier(SqlTypeName.Real.name,pos); }
+    |   <DOUBLE> [ <PRECISION> ] { typeName = new SqlIdentifier(SqlTypeName.Double.name,pos); }
+    |   <BIT> { typeName = new SqlIdentifier(SqlTypeName.Bit.name,pos); }
 
     |   typeName = SimpleIdentifier()
 

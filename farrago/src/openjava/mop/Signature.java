@@ -35,69 +35,69 @@ public final class Signature
     public static final int METHOD = 2;
     public static final int CONSTRUCTOR = 3;
 
-    private int _kind;
+    private int kind;
 
-    private OJClass    _returnType;
-    private String     _name;
-    private OJClass[]  _parameters;
+    private OJClass    returnType;
+    private String     name;
+    private OJClass[]  parameters;
 
     public Signature( String name ) {
-      	      _kind = FIELD;
-	/*_returnType = null;*/
-	      _name = name;
-	_parameters = null;
+      	      kind = FIELD;
+	/*returnType = null;*/
+	      this.name = name;
+	parameters = null;
     }
 
     public Signature( String name, OJClass[] paramtypes ) {
 	if (paramtypes == null) paramtypes = new OJClass[0];
-      	      _kind = METHOD;
-	_returnType = null;
-	      _name = name;
-	_parameters = (OJClass[]) paramtypes.clone();
+      	      kind = METHOD;
+	returnType = null;
+	      this.name = name;
+	parameters = (OJClass[]) paramtypes.clone();
     }
 
     public Signature( OJClass[] paramtypes ) {
 	if (paramtypes == null) paramtypes = new OJClass[0];
-      	      _kind = CONSTRUCTOR;
-	_returnType = null;
-	      _name = null;
-	_parameters = (OJClass[]) paramtypes.clone();
+      	      kind = CONSTRUCTOR;
+	returnType = null;
+	      name = null;
+	parameters = (OJClass[]) paramtypes.clone();
     }
 
     public Signature( OJClass clazz ) {
-	      _kind = CLASS;
-	/*_returnType = null;*/
-	      _name = clazz.getName();
-	_parameters = null;
+	      kind = CLASS;
+	/*returnType = null;*/
+	      name = clazz.getName();
+	parameters = null;
     }
 
     public Signature( OJField field ) {
-	      _kind = FIELD;
-	/*_returnType = field.getType();*/
-	      _name = field.getName();
-	_parameters = null;
+	      kind = FIELD;
+	/*returnType = field.getType();*/
+	      name = field.getName();
+	parameters = null;
     }
 
     public Signature( OJMethod method ) {
-      	      _kind = METHOD;
-	/*_returnType = method.getReturnType();*/
-	      _name = method.getName();
-	_parameters = (OJClass[]) method.getParameterTypes().clone();
+      	      kind = METHOD;
+	/*returnType = method.getReturnType();*/
+	      name = method.getName();
+	parameters = (OJClass[]) method.getParameterTypes().clone();
     }
 
     public Signature( OJConstructor constructor ) {
-	      _kind = CONSTRUCTOR;
-	/*_returnType = null;*/
-	      _name = null;
-	_parameters = (OJClass[]) constructor.getParameterTypes().clone();
+	      kind = CONSTRUCTOR;
+	/*returnType = null;*/
+	      name = null;
+	parameters = (OJClass[]) constructor.getParameterTypes().clone();
     }
 
     protected OJClass[] parameterTypes() {
-	return _parameters;
+	return parameters;
     }
 
     public int kind() {
-        return _kind;
+        return kind;
     }
 
     /**
@@ -166,12 +166,12 @@ public final class Signature
     }
 	  
 
-    private OJClass getReturnType() {
-	return _returnType;
+    public OJClass getReturnType() {
+	return returnType;
     }
 
     public String getName() {
-	return _name;
+	return name;
     }
 
     public OJClass[] getParameterTypes() {

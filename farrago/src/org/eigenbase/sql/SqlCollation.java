@@ -42,11 +42,11 @@ public class SqlCollation
 {
     //~ Instance fields -------------------------------------------------------
 
-    protected String m_collationName;
-    protected Charset m_charset;
-    protected Locale m_locale;
-    protected String m_strength = "";
-    private Coercibility m_coercibility;
+    protected final String collationName;
+    protected final Charset charset;
+    protected final Locale locale;
+    protected final String strength;
+    private final Coercibility coercibility;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -59,16 +59,17 @@ public class SqlCollation
         String collation,
         Coercibility coercibility)
     {
-        m_coercibility = coercibility;
+        this.coercibility = coercibility;
         Object [] parseValues = ParserUtil.parseCollation(collation);
-        m_charset = (Charset) parseValues[0];
-        m_locale = (Locale) parseValues[1];
-        m_strength = (String) parseValues[2];
-        m_collationName =
-            m_charset.name().toUpperCase() + "$" + m_locale.toString();
-        if ((m_strength != null) && (m_strength.length() > 0)) {
-            m_collationName += ("$" + m_strength);
+        charset = (Charset) parseValues[0];
+        locale = (Locale) parseValues[1];
+        strength = (String) parseValues[2];
+        String c =
+            charset.name().toUpperCase() + "$" + locale.toString();
+        if ((strength != null) && (strength.length() > 0)) {
+            c += ("$" + strength);
         }
+        collationName = c;
     }
 
     /**
@@ -119,9 +120,9 @@ public class SqlCollation
     {
         SqlCollation ret = getCoercibilityDyadic(col1, col2);
         if (null == ret) {
-            throw EigenbaseResource.instance().newInvalidCompare(col1.m_collationName,
-                "" + col1.m_coercibility, col2.m_collationName,
-                "" + col2.m_coercibility);
+            throw EigenbaseResource.instance().newInvalidCompare(col1.collationName,
+                "" + col1.coercibility, col2.collationName,
+                "" + col2.coercibility);
         }
         return ret;
     }
@@ -138,7 +139,7 @@ public class SqlCollation
         SqlCollation col1,
         SqlCollation col2)
     {
-        return getCoercibilityDyadicOperatorThrows(col1, col2).m_collationName;
+        return getCoercibilityDyadicOperatorThrows(col1, col2).collationName;
     }
 
     /**
@@ -153,15 +154,15 @@ public class SqlCollation
         if (col1.getCoercibility().equals(Coercibility.Coercible)) {
             switch (col2.getCoercibility().getOrdinal()) {
             case Coercibility.Coercible_ordinal:
-                return new SqlCollation(col2.m_collationName,
+                return new SqlCollation(col2.collationName,
                     Coercibility.Coercible);
             case Coercibility.Implicit_ordinal:
-                return new SqlCollation(col2.m_collationName,
+                return new SqlCollation(col2.collationName,
                     Coercibility.Implicit);
             case Coercibility.None_ordinal:
                 return null;
             case Coercibility.Explicit_ordinal:
-                return new SqlCollation(col2.m_collationName,
+                return new SqlCollation(col2.collationName,
                     Coercibility.Explicit);
             default:
                 throw new AssertionError("Should never come here");
@@ -171,18 +172,18 @@ public class SqlCollation
         if (col1.getCoercibility().equals(Coercibility.Implicit)) {
             switch (col2.getCoercibility().getOrdinal()) {
             case Coercibility.Coercible_ordinal:
-                return new SqlCollation(col1.m_collationName,
+                return new SqlCollation(col1.collationName,
                     Coercibility.Implicit);
             case Coercibility.Implicit_ordinal:
-                if (col1.m_collationName.equals(col2.m_collationName)) {
-                    return new SqlCollation(col2.m_collationName,
+                if (col1.collationName.equals(col2.collationName)) {
+                    return new SqlCollation(col2.collationName,
                         Coercibility.Implicit);
                 }
                 return null;
             case Coercibility.None_ordinal:
                 return null;
             case Coercibility.Explicit_ordinal:
-                return new SqlCollation(col2.m_collationName,
+                return new SqlCollation(col2.collationName,
                     Coercibility.Explicit);
             default:
                 throw new AssertionError("Should never come here");
@@ -196,7 +197,7 @@ public class SqlCollation
             case Coercibility.None_ordinal:
                 return null;
             case Coercibility.Explicit_ordinal:
-                return new SqlCollation(col2.m_collationName,
+                return new SqlCollation(col2.collationName,
                     Coercibility.Explicit);
             default:
                 throw new AssertionError("Should never come here");
@@ -208,15 +209,15 @@ public class SqlCollation
             case Coercibility.Coercible_ordinal:
             case Coercibility.Implicit_ordinal:
             case Coercibility.None_ordinal:
-                return new SqlCollation(col1.m_collationName,
+                return new SqlCollation(col1.collationName,
                     Coercibility.Explicit);
             case Coercibility.Explicit_ordinal:
-                if (col1.m_collationName.equals(col2.m_collationName)) {
-                    return new SqlCollation(col2.m_collationName,
+                if (col1.collationName.equals(col2.collationName)) {
+                    return new SqlCollation(col2.collationName,
                         Coercibility.Explicit);
                 }
-                throw EigenbaseResource.instance().newDifferentCollations(col1.m_collationName,
-                    col2.m_collationName);
+                throw EigenbaseResource.instance().newDifferentCollations(col1.collationName,
+                    col2.collationName);
             }
         }
 
@@ -225,12 +226,12 @@ public class SqlCollation
 
     public Object clone()
     {
-        return new SqlCollation(m_collationName, m_coercibility);
+        return new SqlCollation(collationName, coercibility);
     }
 
     public String toString()
     {
-        return "COLLATE " + m_collationName;
+        return "COLLATE " + collationName;
     }
 
     public void unparse(
@@ -243,17 +244,17 @@ public class SqlCollation
 
     public Charset getCharset()
     {
-        return m_charset;
+        return charset;
     }
 
     public final String getCollationName()
     {
-        return m_collationName;
+        return collationName;
     }
 
     public final SqlCollation.Coercibility getCoercibility()
     {
-        return m_coercibility;
+        return coercibility;
     }
 
     //~ Inner Classes ---------------------------------------------------------

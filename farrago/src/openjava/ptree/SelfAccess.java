@@ -30,8 +30,8 @@ public class SelfAccess extends Leaf
     public static final int THIS = 0;
     public static final int SUPER = 1;
 
-    private static SelfAccess _constantSuper = null;
-    private static SelfAccess _constantThis = null;
+    private static SelfAccess constantSuper = null;
+    private static SelfAccess constantThis = null;
 
     protected String qualifier = null;
 
@@ -80,17 +80,17 @@ public class SelfAccess extends Leaf
     }
 
     public static SelfAccess constantSuper() {
-        if (_constantSuper == null) {
-            _constantSuper = new SelfAccess( SUPER );
+        if (constantSuper == null) {
+            constantSuper = new SelfAccess( SUPER );
         }
-        return _constantSuper;
+        return constantSuper;
     }
 
     public static SelfAccess constantThis() {
-        if (_constantThis == null) {
-            _constantThis = new SelfAccess();
+        if (constantThis == null) {
+            constantThis = new SelfAccess();
         }
-        return _constantThis;
+        return constantThis;
     }
 
     public void accept(ParseTreeVisitor v) throws ParseTreeException {

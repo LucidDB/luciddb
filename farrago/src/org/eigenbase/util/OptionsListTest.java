@@ -327,14 +327,14 @@ public class OptionsListTest extends TestCase
     public static class StringBufferOptionsHandler
         implements OptionsList.OptionHandler
     {
-        private StringWriter buf_ = new StringWriter();
+        private StringWriter buf = new StringWriter();
 
         public void set(
             OptionsList.Option option,
             Object value,
             boolean isExplicit)
         {
-            buf_.write(option.getName() + "=" + value
+            buf.write(option.getName() + "=" + value
                 + (isExplicit ? "" : " (default)") + NL);
         }
 
@@ -342,12 +342,12 @@ public class OptionsListTest extends TestCase
             OptionsList.Option option,
             String value)
         {
-            buf_.write(value + " is not valid for " + option.getName() + NL);
+            buf.write(value + " is not valid for " + option.getName() + NL);
         }
 
         public String toString()
         {
-            return buf_.toString();
+            return buf.toString();
         }
     }
 }

@@ -42,7 +42,7 @@ public class QueueIterator implements Iterator
 {
     //~ Instance fields -------------------------------------------------------
 
-    protected Object next_;
+    protected Object next;
 
     /**
      * The producer notifies <code>empty</code> every time it produces an
@@ -55,11 +55,11 @@ public class QueueIterator implements Iterator
      * the next object. The producer waits for it, then starts work.
      */
     protected Semaphore full;
-    protected Throwable throwable_;
-    protected boolean hasNext_;
+    protected Throwable throwable;
+    protected boolean hasNext;
 
-    /** Protects the <code>avail_</code> semaphore. */
-    protected boolean waitingForProducer_;
+    /** Protects the {@link #full} semaphore. */
+    protected boolean waitingForProducer;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -67,8 +67,8 @@ public class QueueIterator implements Iterator
     {
         empty = new Semaphore(0);
         full = new Semaphore(1);
-        waitingForProducer_ = true;
-        hasNext_ = true;
+        waitingForProducer = true;
+        hasNext = true;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -83,23 +83,23 @@ public class QueueIterator implements Iterator
         // the waiting consumer thread. The consumer thread has called
         // consumed.release(), and that is sufficient.
         full.acquire(); // wait for consumer thread to use previous
-        hasNext_ = false;
-        next_ = null;
-        throwable_ = throwable;
+        hasNext = false;
+        next = null;
+        this.throwable = throwable;
         empty.release(); // wake up consumer thread
     }
 
     // implement Iterator
     public synchronized boolean hasNext()
     {
-        if (waitingForProducer_) {
+        if (waitingForProducer) {
             empty.acquire(); // wait for producer to produce one
-            waitingForProducer_ = false;
+            waitingForProducer = false;
         }
-        if (!hasNext_) {
+        if (!hasNext) {
             checkError();
         }
-        return hasNext_;
+        return hasNext;
     }
 
     /**
@@ -112,7 +112,7 @@ public class QueueIterator implements Iterator
     public synchronized boolean hasNext(long timeoutMillis)
         throws TimeoutException
     {
-        if (waitingForProducer_) {
+        if (waitingForProducer) {
             // wait for producer to produce one
             boolean isLocked = empty.tryAcquire(timeoutMillis);
             if (!isLocked) {
@@ -121,29 +121,29 @@ public class QueueIterator implements Iterator
                 // to call this method again.
                 throw new TimeoutException();
             }
-            waitingForProducer_ = false;
+            waitingForProducer = false;
         }
-        if (!hasNext_) {
+        if (!hasNext) {
             checkError();
         }
-        return hasNext_;
+        return hasNext;
     }
 
     // implement Iterator
     public synchronized Object next()
     {
-        if (waitingForProducer_) {
+        if (waitingForProducer) {
             empty.acquire(); // wait for producer to produce one
-            waitingForProducer_ = false;
+            waitingForProducer = false;
         }
-        if (!hasNext_) {
+        if (!hasNext) {
             checkError();
 
             // It is illegal to call next when there are no more objects.
             throw new NoSuchElementException();
         }
-        Object o = next_;
-        waitingForProducer_ = true;
+        Object o = next;
+        waitingForProducer = true;
         full.release();
         return o;
     }
@@ -158,7 +158,7 @@ public class QueueIterator implements Iterator
     public synchronized Object next(long timeoutMillis)
         throws TimeoutException
     {
-        if (waitingForProducer_) {
+        if (waitingForProducer) {
             // wait for producer to produce one
             boolean isLocked = empty.tryAcquire(timeoutMillis);
             if (!isLocked) {
@@ -167,16 +167,16 @@ public class QueueIterator implements Iterator
                 // to call this method again.
                 throw new TimeoutException();
             }
-            waitingForProducer_ = false;
+            waitingForProducer = false;
         }
-        if (!hasNext_) {
+        if (!hasNext) {
             checkError();
 
             // It is illegal to call next when there are no more objects.
             throw new NoSuchElementException();
         }
-        Object o = next_;
-        waitingForProducer_ = true;
+        Object o = next;
+        waitingForProducer = true;
         full.release();
         return o;
     }
@@ -194,11 +194,11 @@ public class QueueIterator implements Iterator
         // the waiting consumer thread. The consumer thread has called
         // full.release(), and that is sufficient.
         full.acquire(); // wait for consumer thread to use previous
-        if (!hasNext_) {
+        if (!hasNext) {
             // It is illegal to add a new object after done() has been called.
             throw new IllegalStateException();
         }
-        next_ = o;
+        next = o;
         empty.release(); // wake up consumer thread
     }
 
@@ -213,14 +213,14 @@ public class QueueIterator implements Iterator
      */
     protected void checkError()
     {
-        if (throwable_ == null) {
+        if (throwable == null) {
             ;
-        } else if (throwable_ instanceof RuntimeException) {
-            throw (RuntimeException) throwable_;
-        } else if (throwable_ instanceof Error) {
-            throw (Error) throwable_;
+        } else if (throwable instanceof RuntimeException) {
+            throw (RuntimeException) throwable;
+        } else if (throwable instanceof Error) {
+            throw (Error) throwable;
         } else {
-            throw new Error("error: " + throwable_);
+            throw new Error("error: " + throwable);
         }
     }
 

@@ -54,8 +54,8 @@ public class BitString
 {
     //~ Instance fields -------------------------------------------------------
 
-    private String _bits;
-    private int _bitCount;
+    private String bits;
+    private int bitCount;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -65,8 +65,8 @@ public class BitString
     {
         assert bits.replaceAll("1", "").replaceAll("0", "").length() == 0 : "bit string '"
         + bits + "' contains digits other than {0, 1}";
-        _bits = bits;
-        _bitCount = bitCount;
+        this.bits = bits;
+        this.bitCount = bitCount;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -108,12 +108,12 @@ public class BitString
 
     public int getBitCount()
     {
-        return _bitCount;
+        return bitCount;
     }
 
     public byte [] getAsByteArray()
     {
-        return toByteArrayFromBitString(_bits, _bitCount);
+        return toByteArrayFromBitString(bits, bitCount);
     }
 
     /**
@@ -121,7 +121,7 @@ public class BitString
      */
     public String toBitString()
     {
-        return _bits;
+        return bits;
     }
 
     /**
@@ -131,7 +131,7 @@ public class BitString
     {
         byte [] bytes = getAsByteArray();
         String s = Util.toStringFromByteArray(bytes, 16);
-        switch (_bitCount % 8) {
+        switch (bitCount % 8) {
         case 1: // B'1' -> X'1'
         case 2: // B'10' -> X'2'
         case 3: // B'100' -> X'4'
@@ -143,7 +143,7 @@ public class BitString
         case 0: // B'10000000' -> X'80', and B'' -> X''
             return s;
         }
-        if ((_bitCount % 8) == 4) {
+        if ((bitCount % 8) == 4) {
             return s.substring(1);
         } else {
             return s;
@@ -192,11 +192,11 @@ public class BitString
         }
         int length = 0;
         for (int i = 0; i < args.length; i++) {
-            length += args[i]._bitCount;
+            length += args[i].bitCount;
         }
         StringBuffer sb = new StringBuffer(length);
         for (int i = 0; i < args.length; i++) {
-            sb.append(args[i]._bits);
+            sb.append(args[i].bits);
         }
         return new BitString(
             sb.toString(),

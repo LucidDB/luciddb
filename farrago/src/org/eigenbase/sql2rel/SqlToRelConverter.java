@@ -340,7 +340,7 @@ public class SqlToRelConverter
                     SqlNode conditionNode = conditionList.get(i);
                     RexNode e =
                         rexBuilder.makeCall(
-                            rexBuilder._opTab.equalsOperator,
+                            rexBuilder.opTab.equalsOperator,
                             convertExpression(bb, conditionNode),
                             rexBuilder.makeFieldAccess(ref, i));
                     if (i == 0) {
@@ -357,7 +357,7 @@ public class SqlToRelConverter
                 assert converted.getRowType().getFieldCount() == 1;
                 conditionExp =
                     rexBuilder.makeCall(
-                        rexBuilder._opTab.equalsOperator,
+                        rexBuilder.opTab.equalsOperator,
                         convertExpression(bb, condition),
                         rexBuilder.makeFieldAccess(ref, 0));
             }
@@ -593,7 +593,7 @@ public class SqlToRelConverter
                         || call.operator instanceof SqlPostfixOperator) {
                     final RexNode exp = convertExpression(bb, operands[0]);
                     SqlOperator op = call.operator;
-                    if (op.equals(rexBuilder._opTab.prefixPlusOperator)) {
+                    if (op.equals(rexBuilder.opTab.prefixPlusOperator)) {
                         // Unary "+" has no effect. There is no
                         // corresponding Rex operator.
                         return exp;
@@ -606,7 +606,7 @@ public class SqlToRelConverter
                 } else if (call.operator instanceof SqlBetweenOperator) {
                     return convertBetween(bb, call);
                 } else if (call.operator.equals(
-                            rexBuilder._opTab.litChainOperator)) {
+                            rexBuilder.opTab.litChainOperator)) {
                     return convertLitChain(bb, call);
                 } else {
                     throw Util.needToImplement(node);
@@ -971,7 +971,7 @@ public class SqlToRelConverter
 
             //Since there is no eq. RexLiteral of SqlLiteral.Unknown we
             //treat it as a cast(null as boolean)
-            if (literal._typeName == SqlTypeName.Boolean) {
+            if (literal.typeName == SqlTypeName.Boolean) {
                 type =
                     validator.typeFactory.createSqlType(SqlTypeName.Boolean);
                 type =
@@ -1000,7 +1000,7 @@ public class SqlToRelConverter
         }
         final Object value = literal.getValue();
         BitString bitString;
-        switch (literal._typeName.ordinal_) {
+        switch (literal.typeName.ordinal) {
         case SqlTypeName.Decimal_ordinal:
 
             // exact number
@@ -1035,14 +1035,14 @@ public class SqlToRelConverter
             return rexBuilder.makeSymbolLiteral((SqlSymbol) value);
         case SqlTypeName.Timestamp_ordinal:
             return rexBuilder.makeTimestampLiteral((Calendar) value,
-                ((SqlLiteral.TimestampLiteral) literal)._precision);
+                ((SqlLiteral.TimestampLiteral) literal).precision);
         case SqlTypeName.Time_ordinal:
             return rexBuilder.makeTimeLiteral((Calendar) value,
-                ((SqlLiteral.TimeLiteral) literal)._precision);
+                ((SqlLiteral.TimeLiteral) literal).precision);
         case SqlTypeName.Date_ordinal:
             return rexBuilder.makeDateLiteral((Calendar) value);
         default:
-            throw literal._typeName.unexpected();
+            throw literal.typeName.unexpected();
         }
     }
 
@@ -1087,7 +1087,7 @@ public class SqlToRelConverter
             if (orderItem.isA(SqlKind.Literal)) {
                 SqlLiteral sqlLiteral = (SqlLiteral) orderItem;
                 RexLiteral ordinalExp = convertNonNullLiteral(sqlLiteral);
-                if (ordinalExp._typeName != SqlTypeName.Decimal) {
+                if (ordinalExp.typeName != SqlTypeName.Decimal) {
                     throw Util.needToImplement(ordinalExp);
                 }
 

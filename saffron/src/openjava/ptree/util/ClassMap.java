@@ -52,8 +52,8 @@ public class ClassMap {
         this.syntheticSuperClass = syntheticSuperClass;
 	}
 
-	public static void setInstance(ClassMap _instance) {
-		instance = _instance;
+	public static void setInstance(ClassMap instance) {
+		ClassMap.instance = instance;
 	}
 	public static ClassMap instance() {
 		return instance;

@@ -163,7 +163,7 @@ public class CallingConvention extends EnumeratedValues.BasicValue
      * Interface that a relational expression of this calling convention
      * must implement. Must be a sub-interface of {@link RelNode}.
      */
-    public final Class _interface;
+    public final Class interfaze;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -173,7 +173,7 @@ public class CallingConvention extends EnumeratedValues.BasicValue
         Class interfaze)
     {
         super(name, ordinal, null);
-        this._interface = interfaze;
+        this.interfaze = interfaze;
         Util.pre(
             RelNode.class.isAssignableFrom(interfaze),
             "RelNode.class.isAssignableFrom(interfaze)");

@@ -13,9 +13,6 @@ package openjava.ptree;
 
 
 import openjava.ptree.util.*;
-import openjava.mop.*;
-import java.io.OutputStream;
-
 
 /**
  * The InstanceInitilizer class represents instance initializer block
@@ -28,11 +25,11 @@ import java.io.OutputStream;
 public class MemberInitializer extends NonLeaf
     implements MemberDeclaration
 {
-    private boolean _isStatic = false;
+    private boolean isStatic = false;
     /**
      * Allocates a new object.
      *
-     * @param  stmts  the statement list of this instance initializer block
+     * @param  block  the statement list of this instance initializer block
      */
     public MemberInitializer( StatementList block ) {
 	this( block, false );
@@ -40,7 +37,7 @@ public class MemberInitializer extends NonLeaf
   
     public MemberInitializer( StatementList block, boolean is_static ) {
 	super();
-	this._isStatic = is_static;
+	this.isStatic = is_static;
 	set( block );
     }
   
@@ -65,7 +62,7 @@ public class MemberInitializer extends NonLeaf
     }
 
     public boolean isStatic() {
-	return _isStatic;
+	return isStatic;
     }
 
     /**

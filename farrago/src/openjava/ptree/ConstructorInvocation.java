@@ -30,7 +30,7 @@ import java.io.OutputStream;
 public class ConstructorInvocation extends NonLeaf
 {
     
-    private boolean _isSelfInvocation = true;
+    private boolean isSelfInvocation = true;
 
     /**
      * Constructs a new constructor invocation.
@@ -40,7 +40,7 @@ public class ConstructorInvocation extends NonLeaf
      */
     public ConstructorInvocation( ExpressionList exprs ) {
 	super();
-	this._isSelfInvocation = true;
+	this.isSelfInvocation = true;
 	if (exprs == null)  exprs = new ExpressionList();
 	set( exprs );
     }
@@ -57,7 +57,7 @@ public class ConstructorInvocation extends NonLeaf
 	Expression		enclosing )
     {
 	super();
-	this._isSelfInvocation = false;
+	this.isSelfInvocation = false;
 	if (exprs == null)  exprs = new ExpressionList();
 	set( exprs, enclosing );
     }
@@ -94,7 +94,7 @@ public class ConstructorInvocation extends NonLeaf
     /*********need modification for copy******/
 
     public boolean isSelfInvocation() {
-	return _isSelfInvocation;
+	return isSelfInvocation;
     }
 
     /**

@@ -64,13 +64,6 @@ public class ProjectRel extends ProjectRelBase
 
     //~ Methods ---------------------------------------------------------------
 
-    //  	Project(Cluster cluster, Rel child, Expression[] exps)
-    //  	{
-    //  		this(cluster, child, exps, new String[exps.length]);
-    //  		for (int i = 0; i < exps.length; i++) {
-    //  			fieldNames[i] = Util.getAlias(exps[i]);
-    //  		}
-    //  	}
     public Object clone()
     {
         return new ProjectRel(

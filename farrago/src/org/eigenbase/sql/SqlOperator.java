@@ -149,7 +149,7 @@ public abstract class SqlOperator
     /**
      * Returns a template describing how the operator signature is to be built.
      * E.g for the binary + operator the template looks like "{1} {0} {2}"
-     * {0} is the operator, subsequent nbrs are operands.
+     * {0} is the operator, subsequent numbers are operands.
      * If null is returned, the default template will be used which
      * is opname(operand0, operand1, ...)
      *
@@ -875,7 +875,7 @@ public abstract class SqlOperator
      */
     public static class AllowedArgInference
     {
-        protected SqlTypeName [][] m_types;
+        protected SqlTypeName [][] types;
 
         public AllowedArgInference()
         { //empty constructor
@@ -903,25 +903,25 @@ public abstract class SqlOperator
                 }
             }
 
-            this.m_types = types;
+            this.types = types;
         }
 
         /**
          * Calls {@link #check(SqlCall, SqlValidator,SqlValidator.Scope,SqlNode,int)}
          * with {@param node}
          * @param node one of the operands of {@param call}
-         * @param operandNbr
-         * @pre call!=null
+         * @param operandOrdinal
+         * @pre call != null
          */
         public void checkThrows(
             SqlValidator validator,
             SqlValidator.Scope scope,
             SqlCall call,
             SqlNode node,
-            int operandNbr)
+            int operandOrdinal)
         {
-            Util.pre(null != call, "null!=call");
-            if (!check(call, validator, scope, node, operandNbr)) {
+            Util.pre(null != call, "null != call");
+            if (!check(call, validator, scope, node, operandOrdinal)) {
                 throw call.newValidationSignatureError(validator, scope);
             }
         }
@@ -932,10 +932,14 @@ public abstract class SqlOperator
          * @param validator
          * @param scope
          * @param node
-         * @param operandNbr Note this is <i>not</i> an index in any call.operands[] array.
-         *        Its rather used to specify which signature the node should correspond too.
-         * <p>Example. if we have typeStringInt<br>
-         * a check can be made to see if a <code>node</code> is of type int by calling
+         * @param operandOrdinal
+         *
+         * Note that <code>operandOrdinal</code> is <i>not</i> an index in any
+         * call.operands[] array. It's rather used to specify which
+         * signature the node should correspond too.
+         *
+         * <p>For example, if we have typeStringInt, a check can be made to see
+         * if a <code>node</code> is of type int by calling
          * <code>typeStringInt.check(validator,scope,node,1);</code>
          */
         public boolean check(
@@ -943,15 +947,15 @@ public abstract class SqlOperator
             SqlValidator validator,
             SqlValidator.Scope scope,
             SqlNode node,
-            int operandNbr)
+            int operandOrdinal)
         {
             RelDataType anyType =
                 validator.typeFactory.createSqlType(SqlTypeName.Any);
             RelDataType actualType = validator.deriveType(scope, node);
 
             //for each operand, iterater over its allowed types...
-            for (int j = 0; j < m_types[operandNbr].length; j++) {
-                SqlTypeName typeName = m_types[operandNbr][j];
+            for (int j = 0; j < types[operandOrdinal].length; j++) {
+                SqlTypeName typeName = types[operandOrdinal][j];
                 RelDataType expectedType =
                     RelDataTypeFactoryImpl.createSqlTypeIgnorePrecOrScale(validator.typeFactory,
                         typeName);
@@ -994,12 +998,12 @@ public abstract class SqlOperator
 
         public int getArgCount()
         {
-            return m_types.length;
+            return types.length;
         }
 
         public SqlTypeName [][] getTypes()
         {
-            return m_types;
+            return types;
         }
 
         /**
@@ -1023,17 +1027,17 @@ public abstract class SqlOperator
             StringBuffer buf,
             SqlOperator op)
         {
-            assert (null != m_types[depth]);
-            assert (m_types[depth].length > 0);
+            assert (null != types[depth]);
+            assert (types[depth].length > 0);
 
-            for (int i = 0; i < m_types[depth].length; i++) {
-                SqlTypeName type = m_types[depth][i];
+            for (int i = 0; i < types[depth].length; i++) {
+                SqlTypeName type = types[depth][i];
                 if (type.equals(SqlTypeName.Null)) {
                     continue;
                 }
 
                 list.add(type);
-                if ((depth + 1) < m_types.length) {
+                if ((depth + 1) < types.length) {
                     getAllowedSignatures(depth + 1, list, buf, op);
                 } else {
                     buf.append(op.getAnonymousSignature(list));
@@ -1060,31 +1064,31 @@ public abstract class SqlOperator
     public static class CompositeAllowedArgInference
         extends AllowedArgInference
     {
-        private AllowedArgInference [] m_allowedRules;
+        private AllowedArgInference [] allowedRules;
 
         public CompositeAllowedArgInference(
             AllowedArgInference [] allowedRules)
         {
-            Util.pre(null != allowedRules, "null!=allowedRules");
+            Util.pre(null != allowedRules, "null != allowedRules");
             Util.pre(allowedRules.length > 1, "Not a composite type");
             int firstArgsLength = allowedRules[0].getArgCount();
             for (int i = 1; i < allowedRules.length; i++) {
                 Util.pre(allowedRules[i].getArgCount() == firstArgsLength,
                     "All must have the same operand length");
             }
-            m_allowedRules = allowedRules;
+            this.allowedRules = allowedRules;
         }
 
         public AllowedArgInference [] getRules()
         {
-            return m_allowedRules;
+            return allowedRules;
         }
 
         public String getAllowedSignatures(SqlOperator op)
         {
             StringBuffer ret = new StringBuffer();
-            for (int i = 0; i < m_allowedRules.length; i++) {
-                AllowedArgInference rule = m_allowedRules[i];
+            for (int i = 0; i < allowedRules.length; i++) {
+                AllowedArgInference rule = allowedRules[i];
                 if (i > 0) {
                     ret.append(NL);
                 }
@@ -1100,9 +1104,9 @@ public abstract class SqlOperator
 
         public int getArgCount()
         {
-            //check made in constructor to verify that all rules have the same nbrOfArgs
-            //take and return the first one
-            return m_allowedRules[0].getArgCount();
+            // Check made in constructor to verify that all rules have the same
+            // number of arguments. Take and return the first one.
+            return allowedRules[0].getArgCount();
         }
 
         public boolean check(
@@ -1110,12 +1114,12 @@ public abstract class SqlOperator
             SqlValidator validator,
             SqlValidator.Scope scope,
             SqlNode node,
-            int operandNbr)
+            int operandOrdinal)
         {
-            Util.pre(m_allowedRules.length >= 1, "m_allowedRules.length>=1");
-            for (int i = 0; i < m_allowedRules.length; i++) {
-                AllowedArgInference rule = m_allowedRules[i];
-                if (rule.check(call, validator, scope, node, operandNbr)) {
+            Util.pre(allowedRules.length >= 1, "allowedRules.length>=1");
+            for (int i = 0; i < allowedRules.length; i++) {
+                AllowedArgInference rule = allowedRules[i];
+                if (rule.check(call, validator, scope, node, operandOrdinal)) {
                     return true;
                 }
             }
@@ -1127,17 +1131,17 @@ public abstract class SqlOperator
             SqlValidator.Scope scope,
             SqlCall call)
         {
-            int nbrOfTypeErrors = 0;
+            int typeErrorCount = 0;
 
-            for (int i = 0; i < m_allowedRules.length; i++) {
-                AllowedArgInference rule = m_allowedRules[i];
+            for (int i = 0; i < allowedRules.length; i++) {
+                AllowedArgInference rule = allowedRules[i];
 
                 if (!rule.checkNoThrowing(call, validator, scope)) {
-                    nbrOfTypeErrors++;
+                    typeErrorCount++;
                 }
             }
 
-            if (nbrOfTypeErrors == m_allowedRules.length) {
+            if (typeErrorCount == allowedRules.length) {
                 throw call.newValidationSignatureError(validator, scope);
             }
         }

@@ -39,9 +39,9 @@ public abstract class Property
 {
     //~ Instance fields -------------------------------------------------------
 
-    protected final Properties _properties;
-    public final String _path;
-    private final String _defaultValue;
+    protected final Properties properties;
+    public final String path;
+    private final String defaultValue;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -60,9 +60,9 @@ public abstract class Property
         String path,
         String defaultValue)
     {
-        _properties = properties;
-        _path = path;
-        _defaultValue = defaultValue;
+        this.properties = properties;
+        this.path = path;
+        this.defaultValue = defaultValue;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -72,7 +72,7 @@ public abstract class Property
      */
     public String getPath()
     {
-        return _path;
+        return path;
     }
 
     /**
@@ -81,7 +81,7 @@ public abstract class Property
      */
     protected String getDefaultValue()
     {
-        return _defaultValue;
+        return defaultValue;
     }
 
     /**
@@ -92,7 +92,7 @@ public abstract class Property
         String defaultValue,
         boolean required)
     {
-        String value = _properties.getProperty(_path, defaultValue);
+        String value = properties.getProperty(path, defaultValue);
         if (value != null) {
             return value;
         }
@@ -103,7 +103,7 @@ public abstract class Property
             }
         }
         if (required) {
-            throw Util.newInternal("Property " + _path + " must be set");
+            throw Util.newInternal("Property " + path + " must be set");
         }
         return value;
     }

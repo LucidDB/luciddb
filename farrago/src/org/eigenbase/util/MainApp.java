@@ -48,16 +48,16 @@ public abstract class MainApp
 {
     //~ Instance fields -------------------------------------------------------
 
-    protected final String [] args_;
-    private OptionsList options_ = new OptionsList();
-    private int exitCode_;
+    protected final String [] args;
+    private OptionsList options = new OptionsList();
+    private int exitCode;
 
     //~ Constructors ----------------------------------------------------------
 
     protected MainApp(String [] args)
     {
-        args_ = args;
-        exitCode_ = 0;
+        this.args = args;
+        exitCode = 0;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -82,7 +82,7 @@ public abstract class MainApp
         } catch (Throwable e) {
             handle(e);
         }
-        System.exit(exitCode_);
+        System.exit(exitCode);
     }
 
     /**
@@ -94,7 +94,7 @@ public abstract class MainApp
      */
     public void setExitCode(int exitCode)
     {
-        exitCode_ = exitCode;
+        this.exitCode = exitCode;
     }
 
     /**
@@ -110,7 +110,7 @@ public abstract class MainApp
 
     public void parseOptions(OptionsList.OptionHandler values)
     {
-        options_.parse(args_);
+        options.parse(args);
     }
 
     /**
@@ -118,7 +118,7 @@ public abstract class MainApp
      */
     protected void initializeOptions()
     {
-        options_.add(
+        options.add(
             new OptionsList.BooleanOption("-h", "help",
                 "Prints command-line parameters", false, false, false, null));
     }

@@ -34,13 +34,13 @@ import org.eigenbase.util.Util;
  * Iterator} interface. For example,
  * <blockquote>
  * <pre>class ArrayIterator extends ThreadIterator {
- *   Object[] a_;
+ *   Object[] a;
  *   ArrayIterator(Object[] a) {
- *     this.a_ = a;
+ *     this.a = a;
  *     start();
  *   }
  *   protected void doWork() {
- *     for (int i = 0; i < a_.length; i++) {
+ *     for (int i = 0; i < a.length; i++) {
  *       put(a[i]);
  *     }
  *   }
@@ -215,13 +215,13 @@ class ArrayIterator extends ThreadIterator
 {
     //~ Instance fields -------------------------------------------------------
 
-    Object [] a_;
+    Object [] a;
 
     //~ Constructors ----------------------------------------------------------
 
     ArrayIterator(Object [] a)
     {
-        this.a_ = a;
+        this.a = a;
         start();
     }
 
@@ -229,8 +229,8 @@ class ArrayIterator extends ThreadIterator
 
     protected void doWork()
     {
-        for (int i = 0; i < a_.length; i++) {
-            this.put(a_[i]);
+        for (int i = 0; i < a.length; i++) {
+            this.put(a[i]);
         }
     }
 }

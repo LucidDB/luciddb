@@ -145,7 +145,7 @@ public abstract class IterRules
             final JavaRelImplementor relImplementor =
                 rel.getCluster().getPlanner().getJavaRelImplementor(rel);
             if (!relImplementor.canTranslate(convertedChild,
-                        calc._conditionExpr, calc._projectExprs)) {
+                        calc.conditionExpr, calc.projectExprs)) {
                 // Some of the expressions cannot be translated into Java
                 return null;
             }
@@ -153,8 +153,8 @@ public abstract class IterRules
             return new IterCalcRel(
                 rel.getCluster(),
                 convertedChild,
-                calc._projectExprs,
-                calc._conditionExpr,
+                calc.projectExprs,
+                calc.conditionExpr,
                 RelOptUtil.getFieldNames(calc.getRowType()),
                 IterCalcRel.Flags.Boxed);
         }

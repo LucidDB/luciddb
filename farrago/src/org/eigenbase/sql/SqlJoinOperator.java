@@ -83,7 +83,7 @@ public class SqlJoinOperator extends SqlOperator
     {
         assert (operands[IS_NATURAL_OPERAND] instanceof SqlLiteral);
         final SqlLiteral isNatural = (SqlLiteral) operands[IS_NATURAL_OPERAND];
-        assert (isNatural._typeName == SqlTypeName.Boolean);
+        assert (isNatural.typeName == SqlTypeName.Boolean);
         assert operands[CONDITION_TYPE_OPERAND] != null : "precondition: operands[CONDITION_TYPE_OPERAND] != null";
         assert operands[CONDITION_TYPE_OPERAND] instanceof SqlLiteral
             && ((SqlLiteral) operands[CONDITION_TYPE_OPERAND]).getValue() instanceof ConditionType;

@@ -49,8 +49,8 @@ import org.eigenbase.util.*;
  * {@link #toValue}.</p>
  *
  * <p>If you really need to access the value directly, you should switch on
- * the value of the {@link #_typeName} field, rather than making assumptions
- * about the runtime type of the {@link #_value}.</p>
+ * the value of the {@link #typeName} field, rather than making assumptions
+ * about the runtime type of the {@link #value}.</p>
  *
  * <p>The allowable types and combinations are:
  * <table>
@@ -148,13 +148,13 @@ public class SqlLiteral extends SqlNode
      * {@link SqlTypeName#Decimal}, but on validation may become
      * {@link SqlTypeName#Integer}.
      */
-    public final SqlTypeName _typeName;
+    public final SqlTypeName typeName;
 
     /**
      * The value of this literal. The type of the value must be appropriate
      * for the typeName, as defined by the {@link #valueMatchesType} method.
      */
-    protected final Object _value;
+    protected final Object value;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -170,8 +170,8 @@ public class SqlLiteral extends SqlNode
         ParserPosition parserPosition)
     {
         super(parserPosition);
-        this._value = value;
-        this._typeName = typeName;
+        this.value = value;
+        this.typeName = typeName;
         Util.pre(typeName != null, "typeName != null");
         Util.pre(
             valueMatchesType(value, typeName),
@@ -181,11 +181,11 @@ public class SqlLiteral extends SqlNode
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * @return value of {@link #_typeName}
+     * @return value of {@link #typeName}
      */
     public SqlTypeName getTypeName()
     {
-        return _typeName;
+        return typeName;
     }
 
     /**
@@ -196,7 +196,7 @@ public class SqlLiteral extends SqlNode
         Object value,
         SqlTypeName typeName)
     {
-        switch (typeName.ordinal_) {
+        switch (typeName.ordinal) {
         case SqlTypeName.Boolean_ordinal:
             return (value == null) || value instanceof Boolean;
         case SqlTypeName.Null_ordinal:
@@ -246,12 +246,12 @@ public class SqlLiteral extends SqlNode
      */
     public Object getValue()
     {
-        return _value;
+        return value;
     }
 
     public static boolean booleanValue(SqlNode node)
     {
-        return ((Boolean) ((SqlLiteral) node)._value).booleanValue();
+        return ((Boolean) ((SqlLiteral) node).value).booleanValue();
     }
 
     /**
@@ -267,16 +267,16 @@ public class SqlLiteral extends SqlNode
      */
     public String toValue()
     {
-        if (_value == null) {
+        if (value == null) {
             return null;
         }
-        switch (_typeName.ordinal_) {
+        switch (typeName.ordinal) {
         case SqlTypeName.Char_ordinal:
 
             // We want 'It''s superman!', not _ISO-8859-1'It''s superman!'
-            return ((NlsString) _value).getValue();
+            return ((NlsString) value).getValue();
         default:
-            return _value.toString();
+            return value.toString();
         }
     }
 
@@ -344,36 +344,36 @@ public class SqlLiteral extends SqlNode
     public boolean equals(Object obj)
     {
         return (obj instanceof SqlLiteral)
-            && equals(((SqlLiteral) obj)._value, _value);
+            && equals(((SqlLiteral) obj).value, value);
     }
 
     public int hashCode()
     {
-        return (_value == null) ? 0 : _value.hashCode();
+        return (value == null) ? 0 : value.hashCode();
     }
 
     public int intValue()
     {
-        switch (_typeName.ordinal_) {
+        switch (typeName.ordinal) {
         case SqlTypeName.Decimal_ordinal:
         case SqlTypeName.Double_ordinal:
-            BigDecimal bd = (BigDecimal) _value;
+            BigDecimal bd = (BigDecimal) value;
             return bd.intValue();
         default:
-            throw _typeName.unexpected();
+            throw typeName.unexpected();
         }
     }
 
     public String getStringValue()
     {
-        return ((NlsString) _value).getValue();
+        return ((NlsString) value).getValue();
     }
 
     public Object clone()
     {
         return new SqlLiteral(
-            _value,
-            _typeName,
+            value,
+            typeName,
             getParserPosition());
     }
 
@@ -382,10 +382,10 @@ public class SqlLiteral extends SqlNode
         int leftPrec,
         int rightPrec)
     {
-        switch (_typeName.ordinal_) {
+        switch (typeName.ordinal) {
         case SqlTypeName.Boolean_ordinal:
-            writer.print((_value == null) ? "UNKNOWN"
-                : (((Boolean) _value).booleanValue() ? "TRUE" : "FALSE"));
+            writer.print((value == null) ? "UNKNOWN"
+                : (((Boolean) value).booleanValue() ? "TRUE" : "FALSE"));
             break;
         case SqlTypeName.Null_ordinal:
             writer.print("NULL");
@@ -397,9 +397,9 @@ public class SqlLiteral extends SqlNode
         case SqlTypeName.Bit_ordinal:
 
             // should be handled in subtype
-            throw _typeName.unexpected();
+            throw typeName.unexpected();
         default:
-            writer.print(_value.toString());
+            writer.print(value.toString());
         }
     }
 
@@ -413,16 +413,16 @@ public class SqlLiteral extends SqlNode
     public RelDataType createSqlType(RelDataTypeFactory typeFactory)
     {
         BitString bitString;
-        switch (_typeName.ordinal_) {
+        switch (typeName.ordinal) {
         case SqlTypeName.Null_ordinal:
         case SqlTypeName.Boolean_ordinal:
-            RelDataType ret = typeFactory.createSqlType(_typeName);
-            ret = typeFactory.createTypeWithNullability(ret, null == _value);
+            RelDataType ret = typeFactory.createSqlType(typeName);
+            ret = typeFactory.createTypeWithNullability(ret, null == value);
             return ret;
         case SqlTypeName.Binary_ordinal:
 
             // REVIEW: should this be Binary, not Varbinary?
-            bitString = (BitString) _value;
+            bitString = (BitString) value;
             int bitCount = bitString.getBitCount();
             if ((bitCount % 8) == 0) {
                 return typeFactory.createSqlType(SqlTypeName.Varbinary,
@@ -431,13 +431,13 @@ public class SqlLiteral extends SqlNode
                 return typeFactory.createSqlType(SqlTypeName.Bit, bitCount);
             }
         case SqlTypeName.Bit_ordinal:
-            assert _value instanceof BitString;
-            bitString = (BitString) _value;
+            assert value instanceof BitString;
+            bitString = (BitString) value;
             return typeFactory.createSqlType(
                 SqlTypeName.Bit,
                 bitString.getBitCount());
         case SqlTypeName.Char_ordinal:
-            NlsString string = (NlsString) _value;
+            NlsString string = (NlsString) value;
             if (null == string.getCharset()) {
                 string.setCharset(Util.getDefaultCharset());
             }
@@ -462,14 +462,14 @@ public class SqlLiteral extends SqlNode
                 return null;
             }
             throw Util.newInternal("symbol does not have a SQL type: "
-                + _value);
+                + value);
         case SqlTypeName.Integer_ordinal: // handled in derived class
         case SqlTypeName.Time_ordinal: // handled in derived class
         case SqlTypeName.Varchar_ordinal: // should never happen
         case SqlTypeName.Varbinary_ordinal: // should never happen
 
         default:
-            throw Util.needToImplement(toString() + ", operand=" + _value);
+            throw Util.needToImplement(toString() + ", operand=" + value);
         }
     }
 
@@ -509,8 +509,8 @@ public class SqlLiteral extends SqlNode
      */
     public static class DateLiteral extends SqlLiteral
     {
-        protected boolean _hasTimeZone;
-        protected String _formatString = ParserUtil.DateFormatStr;
+        protected boolean hasTimeZone;
+        protected String formatString = ParserUtil.DateFormatStr;
 
         public DateLiteral(
             Calendar d,
@@ -534,7 +534,7 @@ public class SqlLiteral extends SqlNode
             ParserPosition parserPosition)
         {
             super(d, typeName, parserPosition);
-            _hasTimeZone = tz;
+            hasTimeZone = tz;
         }
 
         /**
@@ -563,7 +563,7 @@ public class SqlLiteral extends SqlNode
 
         public Calendar getCal()
         {
-            return (Calendar) _value;
+            return (Calendar) value;
         }
 
         /**
@@ -573,14 +573,14 @@ public class SqlLiteral extends SqlNode
          */
         public TimeZone getTimeZone()
         {
-            assert _hasTimeZone : "Attempt to get timezone on Literal date: "
+            assert hasTimeZone : "Attempt to get timezone on Literal date: "
             + getCal() + ", which has no timezone";
             return getCal().getTimeZone();
         }
 
         public String toString()
         {
-            return "DATE '" + getDateFormat(_formatString).format(getDate())
+            return "DATE '" + getDateFormat(formatString).format(getDate())
             + "'";
         }
 
@@ -600,7 +600,7 @@ public class SqlLiteral extends SqlNode
 
     public static class TimeLiteral extends DateLiteral
     {
-        public final int _precision;
+        public final int precision;
 
         protected TimeLiteral(
             Calendar t,
@@ -610,8 +610,8 @@ public class SqlLiteral extends SqlNode
             ParserPosition parserPosition)
         {
             super(t, hasTZ, typeName, parserPosition);
-            _precision = p;
-            _formatString = ParserUtil.TimeFormatStr;
+            precision = p;
+            formatString = ParserUtil.TimeFormatStr;
         }
 
         /**
@@ -635,7 +635,7 @@ public class SqlLiteral extends SqlNode
 
         public int getPrec()
         {
-            return _precision;
+            return precision;
         }
 
         public String toString()
@@ -646,16 +646,16 @@ public class SqlLiteral extends SqlNode
         public String toFormattedString()
         {
             String result =
-                new SimpleDateFormat(_formatString).format(getTime());
-            if (_precision > 0) {
-                assert (_precision <= 3);
+                new SimpleDateFormat(formatString).format(getTime());
+            if (precision > 0) {
+                assert (precision <= 3);
 
                 // get the millisecond count.  millisecond => at most 3 digits.
                 String digits = Long.toString(getCal().getTimeInMillis());
                 result =
                     result + "."
                     + digits.substring(digits.length() - 3,
-                        digits.length() - 3 + _precision);
+                        digits.length() - 3 + precision);
             } else {
                 assert (0 == getCal().get(Calendar.MILLISECOND));
             }
@@ -664,7 +664,7 @@ public class SqlLiteral extends SqlNode
 
         public RelDataType createSqlType(RelDataTypeFactory typeFactory)
         {
-            return typeFactory.createSqlType(_typeName, _precision);
+            return typeFactory.createSqlType(typeName, precision);
         }
     }
 
@@ -681,7 +681,7 @@ public class SqlLiteral extends SqlNode
             ParserPosition parserPosition)
         {
             super(cal, p, hasTZ, SqlTypeName.Timestamp, parserPosition);
-            _formatString = ParserUtil.TimestampFormatStr;
+            formatString = ParserUtil.TimestampFormatStr;
         }
 
         public TimestampLiteral(
@@ -705,9 +705,9 @@ public class SqlLiteral extends SqlNode
 
     public static class Numeric extends SqlLiteral
     {
-        private Integer m_prec;
-        private Integer m_scale;
-        private boolean m_isExact;
+        private Integer prec;
+        private Integer scale;
+        private boolean isExact;
 
         protected Numeric(
             BigDecimal value,
@@ -718,19 +718,19 @@ public class SqlLiteral extends SqlNode
         {
             super(value, isExact ? SqlTypeName.Decimal : SqlTypeName.Double,
                 parserPosition);
-            this.m_prec = prec;
-            this.m_scale = scale;
-            this.m_isExact = isExact;
+            this.prec = prec;
+            this.scale = scale;
+            this.isExact = isExact;
         }
 
         public Integer getPrec()
         {
-            return m_prec;
+            return prec;
         }
 
         public Integer getScale()
         {
-            return m_scale;
+            return scale;
         }
 
         public static Numeric createExact(
@@ -774,7 +774,7 @@ public class SqlLiteral extends SqlNode
 
         public boolean isExact()
         {
-            return m_isExact;
+            return isExact;
         }
 
         public void unparse(
@@ -787,19 +787,19 @@ public class SqlLiteral extends SqlNode
 
         public String toValue()
         {
-            BigDecimal bd = (BigDecimal) _value;
-            if (m_isExact) {
-                return _value.toString();
+            BigDecimal bd = (BigDecimal) value;
+            if (isExact) {
+                return value.toString();
             }
             return Util.toScientificNotation(bd);
         }
 
         public RelDataType createSqlType(RelDataTypeFactory typeFactory)
         {
-            if (m_isExact) {
-                int scale = m_scale.intValue();
-                if (0 == scale) {
-                    BigDecimal bd = (BigDecimal) _value;
+            if (isExact) {
+                int scaleValue = scale.intValue();
+                if (0 == scaleValue) {
+                    BigDecimal bd = (BigDecimal) value;
                     SqlTypeName result;
                     long l = bd.longValue();
                     if ((l >= Integer.MIN_VALUE) && (l <= Integer.MAX_VALUE)) {
@@ -813,8 +813,8 @@ public class SqlLiteral extends SqlNode
                 //else we have a decimal
                 return typeFactory.createSqlType(
                     SqlTypeName.Decimal,
-                    m_prec.intValue(),
-                    scale);
+                    prec.intValue(),
+                    scaleValue);
             }
 
             // else we have a a float, real or double.  make them all double for now.
@@ -849,7 +849,8 @@ public class SqlLiteral extends SqlNode
             return lits[0].concat1(lits);
         }
 
-        /** helper routine for {@link concat}.
+        /**
+         * Helper routine for {@link #concat}.
          * @param lits homogeneous StringLiteral[] args.
          * @return StringLiteral with concatenated value.
          * this == lits[0], used only for method dispatch.
@@ -857,7 +858,10 @@ public class SqlLiteral extends SqlNode
         protected abstract StringLiteral concat1(StringLiteral [] lits);
     }
 
-    /** a character string literal. _value is an NlsString and _typeName is SqlTypeName.Char */
+    /**
+     * A character string literal. {@link #value} is an {@link NlsString} and 
+     * {@link #typeName} is {@link SqlTypeName#Char}.
+     */
     public static class CharString extends StringLiteral
     {
         protected CharString(
@@ -870,7 +874,7 @@ public class SqlLiteral extends SqlNode
         /** @return the underlying NlsString */
         public NlsString getNlsString()
         {
-            return (NlsString) _value;
+            return (NlsString) value;
         }
 
         /** @return the collation */
@@ -919,11 +923,11 @@ public class SqlLiteral extends SqlNode
             int rightPrec)
         {
             if (false) {
-                String stringValue = ((NlsString) _value).getValue();
+                String stringValue = ((NlsString) value).getValue();
                 writer.print(writer.dialect.quoteStringLiteral(stringValue));
             }
-            assert _value instanceof NlsString;
-            writer.print(_value.toString());
+            assert value instanceof NlsString;
+            writer.print(value.toString());
         }
 
         protected StringLiteral concat1(StringLiteral [] lits)
@@ -938,8 +942,10 @@ public class SqlLiteral extends SqlNode
         }
     }
 
-    /** a bit string literal:
-     * _value is a BitString and _typename is SqlTypeName.Bit
+    /**
+     * A bit string literal.
+     * {@link #value} is a {@link BitString} and {@link #typeName} is
+     * {@link SqlTypeName#Bit}.
      */
     public static class BitStringLiteral extends StringLiteral
     {
@@ -953,7 +959,7 @@ public class SqlLiteral extends SqlNode
         /** @return the underlying BitString */
         public BitString getBitString()
         {
-            return (BitString) _value;
+            return (BitString) value;
         }
 
         /* Creates a literal like B'0101' */
@@ -970,9 +976,9 @@ public class SqlLiteral extends SqlNode
             int leftPrec,
             int rightPrec)
         {
-            assert _value instanceof BitString;
+            assert value instanceof BitString;
             writer.print("B'");
-            writer.print(_value.toString());
+            writer.print(value.toString());
             writer.print("'");
         }
 
@@ -988,8 +994,10 @@ public class SqlLiteral extends SqlNode
         }
     }
 
-    /** a binary (or hex) string literal.
-     * _value is again a BitString and _typename is SqlTypeName.Binary
+    /**
+     * A binary (or hex) string literal.
+     * {@link #value} is again a {@link BitString} and
+     * {@link #typeName} is {@link SqlTypeName#Binary}.
      */
     public static class BinaryStringLiteral extends StringLiteral
     {
@@ -1003,7 +1011,7 @@ public class SqlLiteral extends SqlNode
         /** @return the underlying BitString */
         public BitString getBitString()
         {
-            return (BitString) _value;
+            return (BitString) value;
         }
 
         /* Creates a literal like X'ABAB'. Although it matters when we derive a
@@ -1023,9 +1031,9 @@ public class SqlLiteral extends SqlNode
             int leftPrec,
             int rightPrec)
         {
-            assert _value instanceof BitString;
+            assert value instanceof BitString;
             writer.print("X'");
-            writer.print(((BitString) _value).toHexString());
+            writer.print(((BitString) value).toHexString());
             writer.print("'");
         }
 

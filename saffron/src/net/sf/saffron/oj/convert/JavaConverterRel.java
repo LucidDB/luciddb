@@ -47,7 +47,7 @@ public class JavaConverterRel extends ConverterRel implements JavaRel,
     /**
      * The convertlet actually does the work.
      */
-    private final JavaConvertlet _convertlet;
+    private final JavaConvertlet convertlet;
 
     /** Scratch storage for some of the converlet implementations. Convertlets
      * can be used several times in the same plan, so they have to store temp
@@ -61,7 +61,7 @@ public class JavaConverterRel extends ConverterRel implements JavaRel,
         JavaConvertlet convertlet)
     {
         super(cluster, child);
-        _convertlet = convertlet;
+        this.convertlet = convertlet;
     }
 
     private static final String [] terms = { "child", "convention" };
@@ -76,18 +76,18 @@ public class JavaConverterRel extends ConverterRel implements JavaRel,
 
     public CallingConvention getConvention()
     {
-        return _convertlet.getConvention();
+        return convertlet.getConvention();
     }
 
     // implement RelNode
     public Object clone()
     {
-        return new JavaConverterRel(cluster, child, _convertlet);
+        return new JavaConverterRel(cluster, child, convertlet);
     }
 
     public ParseTree implement(JavaRelImplementor implementor)
     {
-        return _convertlet.implement(implementor, this);
+        return convertlet.implement(implementor, this);
     }
 
     public void implementJavaParent(
@@ -95,7 +95,7 @@ public class JavaConverterRel extends ConverterRel implements JavaRel,
         int ordinal)
     {
         assert ordinal == 0; // converters have exactly 1 child
-        _convertlet.implementJavaParent(implementor, this);
+        convertlet.implementJavaParent(implementor, this);
     }
 }
 

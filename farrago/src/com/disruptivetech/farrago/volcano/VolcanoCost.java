@@ -100,17 +100,17 @@ class VolcanoCost implements RelOptCost
         return dIo;
     }
 
-    public boolean isLe(RelOptCost _that)
+    public boolean isLe(RelOptCost other)
     {
-        VolcanoCost that = (VolcanoCost) _that;
+        VolcanoCost that = (VolcanoCost) other;
         return (this == that)
             || ((this.dRows <= that.dRows) && (this.dCpu <= that.dCpu)
             && (this.dIo <= that.dIo));
     }
 
-    public boolean isLt(RelOptCost _that)
+    public boolean isLt(RelOptCost other)
     {
-        return isLe(_that) && !equals(_that);
+        return isLe(other) && !equals(other);
     }
 
     public double getRows()
@@ -118,23 +118,23 @@ class VolcanoCost implements RelOptCost
         return dRows;
     }
 
-    public boolean equals(RelOptCost _that)
+    public boolean equals(RelOptCost other)
     {
-        if (!(_that instanceof VolcanoCost)) {
+        if (!(other instanceof VolcanoCost)) {
             return false;
         }
-        VolcanoCost that = (VolcanoCost) _that;
+        VolcanoCost that = (VolcanoCost) other;
         return (this == that)
             || ((this.dRows == that.dRows) && (this.dCpu == that.dCpu)
             && (this.dIo == that.dIo));
     }
 
-    public RelOptCost minus(RelOptCost _that)
+    public RelOptCost minus(RelOptCost other)
     {
         if (this == INFINITY) {
             return this;
         }
-        VolcanoCost that = (VolcanoCost) _that;
+        VolcanoCost that = (VolcanoCost) other;
         return new VolcanoCost(this.dRows - that.dRows, this.dCpu - that.dCpu,
             this.dIo - that.dIo);
     }
@@ -147,9 +147,9 @@ class VolcanoCost implements RelOptCost
         return new VolcanoCost(dRows * factor, dCpu * factor, dIo * factor);
     }
 
-    public RelOptCost plus(RelOptCost _that)
+    public RelOptCost plus(RelOptCost other)
     {
-        VolcanoCost that = (VolcanoCost) _that;
+        VolcanoCost that = (VolcanoCost) other;
         if ((this == INFINITY) || (that == INFINITY)) {
             return INFINITY;
         }

@@ -303,7 +303,7 @@ public class SqlToOpenjavaConverter
     private Expression convertLiteral(final SqlLiteral literal)
     {
         final Object value = literal.getValue();
-        switch (literal._typeName.ordinal_) {
+        switch (literal.typeName.ordinal) {
         case SqlTypeName.Decimal_ordinal:
         case SqlTypeName.Double_ordinal:
             BigDecimal bd = (BigDecimal) value;
@@ -328,7 +328,7 @@ public class SqlToOpenjavaConverter
         case SqlTypeName.Null_ordinal:
             return Literal.constantNull();
         default:
-            throw literal._typeName.unexpected();
+            throw literal.typeName.unexpected();
         }
     }
 

@@ -151,12 +151,12 @@ public class RexLiteral extends RexNode
      * are represented by a {@link BigDecimal}. But since this field is
      * private, it doesn't really matter how the values are stored.
      */
-    private final Object _value;
+    private final Object value;
 
     /**
      * The real type of this literal, as reported by {@link #getType}.
      */
-    private final RelDataType _type;
+    private final RelDataType type;
 
     /**
      * An indication of the broad type of this literal -- even if its type
@@ -165,7 +165,7 @@ public class RexLiteral extends RexNode
      * {@link SqlTypeName#Decimal}. See {@link #valueMatchesType} for the
      * definitive story.
      */
-    public final SqlTypeName _typeName;
+    public final SqlTypeName typeName;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -181,15 +181,15 @@ public class RexLiteral extends RexNode
         RelDataType type,
         SqlTypeName typeName)
     {
-        Util.pre(type != null, "_type != null");
+        Util.pre(type != null, "type != null");
         Util.pre(
             valueMatchesType(value, typeName),
             "valueMatchesType(value,typeName)");
         Util.pre((value == null) == type.isNullable(),
             "(value == null) == type.isNullable()");
-        this._value = value;
-        this._type = type;
-        this._typeName = typeName;
+        this.value = value;
+        this.type = type;
+        this.typeName = typeName;
         this.digest = toJavaString(value, typeName);
     }
 
@@ -203,7 +203,7 @@ public class RexLiteral extends RexNode
         Object value,
         SqlTypeName typeName)
     {
-        switch (typeName.ordinal_) {
+        switch (typeName.ordinal) {
         case SqlTypeName.Boolean_ordinal:
 
             // Unlike SqlLiteral, we do not allow boolean null.
@@ -251,7 +251,7 @@ public class RexLiteral extends RexNode
      */
     public void printAsJava(PrintWriter pw)
     {
-        printAsJava(_value, pw, _typeName, true);
+        printAsJava(value, pw, typeName, true);
     }
 
     /**
@@ -276,7 +276,7 @@ public class RexLiteral extends RexNode
         SqlTypeName typeName,
         boolean java)
     {
-        switch (typeName.ordinal_) {
+        switch (typeName.ordinal) {
         case SqlTypeName.Char_ordinal:
             NlsString nlsString = (NlsString) value;
             if (java) {
@@ -331,7 +331,7 @@ public class RexLiteral extends RexNode
 
     public RelDataType getType()
     {
-        return _type;
+        return type;
     }
 
     public RexKind getKind()
@@ -342,12 +342,12 @@ public class RexLiteral extends RexNode
     /**
      * Returns the value of this literal.
      *
-     * @post valueMatchesType(return, _typeName)
+     * @post valueMatchesType(return, typeName)
      */
     public Object getValue()
     {
-        assert valueMatchesType(_value, _typeName) : _value;
-        return _value;
+        assert valueMatchesType(value, typeName) : value;
+        return value;
     }
 
     /**
@@ -356,55 +356,55 @@ public class RexLiteral extends RexNode
      */
     public Object getValue2()
     {
-        switch (_typeName.ordinal_) {
+        switch (typeName.ordinal) {
         case SqlTypeName.Bit_ordinal:
-            return ((BitString) _value).getAsByteArray();
+            return ((BitString) value).getAsByteArray();
         case SqlTypeName.Char_ordinal:
-            return ((NlsString) _value).getValue();
+            return ((NlsString) value).getValue();
         case SqlTypeName.Date_ordinal:
         case SqlTypeName.Time_ordinal:
         case SqlTypeName.Timestamp_ordinal:
-            return new Long(((Calendar) _value).getTimeInMillis());
+            return new Long(((Calendar) value).getTimeInMillis());
         default:
-            return _value;
+            return value;
         }
     }
 
     public static boolean booleanValue(RexNode node)
     {
-        return ((Boolean) ((RexLiteral) node)._value).booleanValue();
+        return ((Boolean) ((RexLiteral) node).value).booleanValue();
     }
 
     public boolean equals(Object obj)
     {
         return (obj instanceof RexLiteral)
-            && equals(((RexLiteral) obj)._value, _value);
+            && equals(((RexLiteral) obj).value, value);
     }
 
     public int hashCode()
     {
-        return (_value == null) ? 0 : _value.hashCode();
+        return (value == null) ? 0 : value.hashCode();
     }
 
     public static int intValue(RexNode node)
     {
-        return ((Number) ((RexLiteral) node)._value).intValue();
+        return ((Number) ((RexLiteral) node).value).intValue();
     }
 
     public static String stringValue(RexNode node)
     {
-        return ((NlsString) ((RexLiteral) node)._value).getValue();
+        return ((NlsString) ((RexLiteral) node).value).getValue();
     }
 
     public static boolean isNullLiteral(RexNode node)
     {
         return node instanceof RexLiteral
-            && (((RexLiteral) node)._value == null);
+            && (((RexLiteral) node).value == null);
     }
 
     public Object clone()
     {
-        return new RexLiteral(_value, _type, _typeName);
+        return new RexLiteral(value, type, typeName);
     }
 
     private static boolean equals(

@@ -375,9 +375,9 @@ public class EnumeratedValues implements Cloneable
      */
     public static class BasicValue implements Value
     {
-        public final String description_;
-        public final String name_;
-        public final int ordinal_;
+        public final String description;
+        public final String name;
+        public final int ordinal;
 
         /**
          * @pre name != null
@@ -387,32 +387,32 @@ public class EnumeratedValues implements Cloneable
             int ordinal,
             String description)
         {
-            assert (name != null);
-            this.name_ = name;
-            this.ordinal_ = ordinal;
-            this.description_ = description;
+            Util.pre(name != null, "name != null");
+            this.name = name;
+            this.ordinal = ordinal;
+            this.description = description;
         }
 
         public String getDescription()
         {
-            return description_;
+            return description;
         }
 
         public String getName()
         {
-            return name_;
+            return name;
         }
 
         public int getOrdinal()
         {
-            return ordinal_;
+            return ordinal;
         }
 
         /**
          * Returns whether this value is equal to a given string.
          *
          * @deprecated I bet you meant to write
-         *             <code>value.name_.equals(s)</code> rather than
+         *             <code>value.name.equals(s)</code> rather than
          *             <code>value.equals(s)</code>, didn't you?
          */
         public boolean equals(String s)
@@ -431,12 +431,12 @@ public class EnumeratedValues implements Cloneable
          */
         public String toString()
         {
-            return name_;
+            return name;
         }
 
         public Error unexpected()
         {
-            return Util.newInternal("Value " + name_ + " of class "
+            return Util.newInternal("Value " + name + " of class "
                 + getClass() + " unexpected here");
         }
     }

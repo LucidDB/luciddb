@@ -63,8 +63,8 @@ public class CalcRel extends SingleRel
 {
     //~ Instance fields -------------------------------------------------------
 
-    public final RexNode [] _projectExprs;
-    public final RexNode _conditionExpr;
+    public final RexNode [] projectExprs;
+    public final RexNode conditionExpr;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -77,23 +77,23 @@ public class CalcRel extends SingleRel
     {
         super(cluster, child);
         this.rowType = rowType;
-        _projectExprs = projectExprs;
-        _conditionExpr = conditionExpr;
+        this.projectExprs = projectExprs;
+        this.conditionExpr = conditionExpr;
     }
 
     //~ Methods ---------------------------------------------------------------
 
     public Object clone()
     {
-        return new CalcRel(cluster, child, rowType, _projectExprs,
-            _conditionExpr);
+        return new CalcRel(cluster, child, rowType, projectExprs,
+            conditionExpr);
     }
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
         double dRows = child.getRows();
-        int nExprs = _projectExprs.length;
-        if (_conditionExpr != null) {
+        int nExprs = projectExprs.length;
+        if (conditionExpr != null) {
             ++nExprs;
         }
         double dCpu = child.getRows() * nExprs;
@@ -134,16 +134,16 @@ public class CalcRel extends SingleRel
 
     public RexNode [] getChildExps()
     {
-        final ArrayList list = new ArrayList(Arrays.asList(_projectExprs));
-        if (_conditionExpr != null) {
-            list.add(_conditionExpr);
+        final ArrayList list = new ArrayList(Arrays.asList(projectExprs));
+        if (conditionExpr != null) {
+            list.add(conditionExpr);
         }
         return (RexNode []) list.toArray(new RexNode[list.size()]);
     }
 
     public void explain(RelOptPlanWriter pw)
     {
-        explainCalc(this, pw, _conditionExpr, _projectExprs);
+        explainCalc(this, pw, conditionExpr, projectExprs);
     }
 }
 

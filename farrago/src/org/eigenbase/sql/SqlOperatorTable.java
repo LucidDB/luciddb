@@ -122,7 +122,7 @@ public class SqlOperatorTable
                 RelDataType [] argTypes,
                 RelDataType type)
             {
-                switch (type.getSqlTypeName().ordinal_) {
+                switch (type.getSqlTypeName().ordinal) {
                 case SqlTypeName.Varchar_ordinal:
                 case SqlTypeName.Varbinary_ordinal:
                 case SqlTypeName.Varbit_ordinal:
@@ -149,7 +149,7 @@ public class SqlOperatorTable
             private SqlTypeName toVar(RelDataType type)
             {
                 final SqlTypeName sqlTypeName = type.getSqlTypeName();
-                switch (sqlTypeName.ordinal_) {
+                switch (sqlTypeName.ordinal) {
                 case SqlTypeName.Char_ordinal:
                     return SqlTypeName.Varchar;
                 case SqlTypeName.Binary_ordinal:
@@ -589,14 +589,14 @@ public class SqlOperatorTable
                 SqlValidator validator,
                 SqlValidator.Scope scope,
                 SqlNode node,
-                int operandNbr)
+                int operandOrdinal)
             {
                 boolean res =
-                    super.check(call, validator, scope, node, operandNbr);
+                    super.check(call, validator, scope, node, operandOrdinal);
                 if (!res) {
                     return res;
                 }
-                if (operandNbr == 0) {
+                if (operandOrdinal == 0) {
                     if (!SqlUtil.isLiteral(node)) {
                         throw EigenbaseResource.instance()
                             .newArgumentMustBeLiteral(call.operator.name);
@@ -619,23 +619,23 @@ public class SqlOperatorTable
                 SqlValidator validator,
                 SqlValidator.Scope scope,
                 SqlNode node,
-                int operandNbr)
+                int operandOrdinal)
             {
                 boolean res =
-                    super.check(call, validator, scope, node, operandNbr);
+                    super.check(call, validator, scope, node, operandOrdinal);
                 if (!res) {
                     return res;
                 }
 
                 // REVIEW (jhyde, 2004/7/23) why is the isNullLiteral check
-                //   outside the 'if (operandNbr == 0)' check, and the
-                //   isLiteral check inside? In fact, why the 'operandNbr == 0'
+                //   outside the 'if (operandOrdinal == 0)' check, and the
+                //   isLiteral check inside? In fact, why the 'operandOrdinal == 0'
                 //   check at all?
                 if (SqlUtil.isNullLiteral(node, true)) {
                     throw EigenbaseResource.instance()
                         .newArgumentMustNotBeNull(call.operator.name);
                 }
-                if (operandNbr == 0) {
+                if (operandOrdinal == 0) {
                     if (!SqlUtil.isLiteral(node)) {
                         throw EigenbaseResource.instance()
                             .newArgumentMustBeLiteral(call.operator.name);
@@ -832,10 +832,10 @@ public class SqlOperatorTable
                 SqlValidator validator,
                 SqlValidator.Scope scope,
                 SqlNode node,
-                int operandNbr)
+                int operandOrdinal)
             {
                 boolean res =
-                    super.check(call, validator, scope, node, operandNbr);
+                    super.check(call, validator, scope, node, operandOrdinal);
                 if (!res) {
                     return res;
                 }
@@ -843,7 +843,7 @@ public class SqlOperatorTable
                     throw EigenbaseResource.instance()
                         .newArgumentMustNotBeNull(call.operator.name);
                 }
-                if (operandNbr == 0) {
+                if (operandOrdinal == 0) {
                     if (node instanceof SqlLiteral) {
                     } else {
                         throw EigenbaseResource.instance()
@@ -867,14 +867,14 @@ public class SqlOperatorTable
                 SqlValidator validator,
                 SqlValidator.Scope scope,
                 SqlNode node,
-                int operandNbr)
+                int operandOrdinal)
             {
                 boolean res =
-                    super.check(call, validator, scope, node, operandNbr);
+                    super.check(call, validator, scope, node, operandOrdinal);
                 if (!res) {
                     return res;
                 }
-                if (operandNbr == 0) {
+                if (operandOrdinal == 0) {
                     if (SqlUtil.isNullLiteral(node, true)) {
                         return res;
                     } else if (SqlUtil.isLiteral(node)) {
@@ -927,17 +927,17 @@ public class SqlOperatorTable
             public String getAllowedSignatures(SqlOperator op)
             {
                 StringBuffer ret = new StringBuffer();
-                for (int i = 0; i < m_types[0].length; i++) {
-                    if (m_types[0][i].getOrdinal() == SqlTypeName.Null_ordinal) {
+                for (int i = 0; i < types[0].length; i++) {
+                    if (types[0][i].getOrdinal() == SqlTypeName.Null_ordinal) {
                         continue;
                     }
 
                     ArrayList list = new ArrayList(2);
-                    list.add(m_types[0][i]); //adding same twice
-                    list.add(m_types[0][i]); //adding same twice
+                    list.add(types[0][i]); //adding same twice
+                    list.add(types[0][i]); //adding same twice
                     ret.append(op.getSignature(list));
 
-                    if ((i + 1) < m_types[0].length) {
+                    if ((i + 1) < types[0].length) {
                         ret.append(op.NL);
                     }
                 }
@@ -987,18 +987,18 @@ public class SqlOperatorTable
             public String getAllowedSignatures(SqlOperator op)
             {
                 StringBuffer ret = new StringBuffer();
-                for (int i = 0; i < m_types[0].length; i++) {
-                    if (m_types[0][i].getOrdinal() == SqlTypeName.Null_ordinal) {
+                for (int i = 0; i < types[0].length; i++) {
+                    if (types[0][i].getOrdinal() == SqlTypeName.Null_ordinal) {
                         continue;
                     }
 
                     ArrayList list = new ArrayList(2);
-                    list.add(m_types[0][i]); //adding same trice
-                    list.add(m_types[0][i]); //adding same trice
-                    list.add(m_types[0][i]); //adding same trice
+                    list.add(types[0][i]); //adding same trice
+                    list.add(types[0][i]); //adding same trice
+                    list.add(types[0][i]); //adding same trice
                     ret.append(op.getSignature(list));
 
-                    if ((i + 1) < m_types[0].length) {
+                    if ((i + 1) < types[0].length) {
                         ret.append(op.NL);
                     }
                 }
@@ -1368,7 +1368,7 @@ public class SqlOperatorTable
                 return op;
             }
         }
-        switch (syntax.ordinal_) {
+        switch (syntax.ordinal) {
         case SqlSyntax.Binary_ordinal:
             return (SqlBinaryOperator) mapNameToOp.get(opName + ":BINARY");
         case SqlSyntax.Prefix_ordinal:

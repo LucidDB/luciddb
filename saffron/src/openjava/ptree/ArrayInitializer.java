@@ -25,12 +25,10 @@ public class ArrayInitializer extends List
     implements VariableInitializer
 {
 
-    private boolean _isRemainderOmitted = false;
+    private boolean isRemainderOmitted = false;
 
     /**
      * Allocates a new ArrayInitializer.
-     *
-     * @param arrayinit prototype object
      */
     public ArrayInitializer() {
 	super( ", " );
@@ -61,13 +59,13 @@ public class ArrayInitializer extends List
     }
 
     public void omitRemainder( boolean is_omitted ) {
-	this._isRemainderOmitted = is_omitted;
+	this.isRemainderOmitted = is_omitted;
     }
     public void omitRemainder() {
-	this._isRemainderOmitted = true;
+	this.isRemainderOmitted = true;
     }
     public boolean isRemainderOmitted() {
-	return this._isRemainderOmitted;
+	return this.isRemainderOmitted;
     }
 
     /**
@@ -146,8 +144,8 @@ public class ArrayInitializer extends List
      * List, but changes in the returned List are not reflected in this List.
      * <p>
      *
-     * @param fromIndex low endpoint (inclusive) of the subList.
-     * @param toKey high endpoint (exclusive) of the subList.
+     * @param from_index low endpoint (inclusive) of the subList.
+     * @param to_index high endpoint (exclusive) of the subList.
      * @return a view of the specified range within this List.
      * @exception IndexOutOfBoundsException Illegal endpoint index value
      *     (fromIndex &lt; 0 || toIndex &gt; size || fromIndex &gt; toIndex).

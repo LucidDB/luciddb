@@ -161,7 +161,7 @@ public abstract class SqlUtil
     {
         if (node instanceof SqlLiteral) {
             SqlLiteral literal = (SqlLiteral) node;
-            if (literal._typeName == SqlTypeName.Null) {
+            if (literal.typeName == SqlTypeName.Null) {
                 assert (null == literal.getValue());
                 return true;
             } else {

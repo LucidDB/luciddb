@@ -24,7 +24,6 @@ package org.eigenbase.sql;
 import org.eigenbase.sql.SqlLiteral;
 import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.util.EnumeratedValues;
 import org.eigenbase.util.Util;
 
 
@@ -52,7 +51,7 @@ public class SqlSymbol extends SqlLiteral
 {
     //~ Instance fields -------------------------------------------------------
 
-    public final String _name;
+    public final String name;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -61,7 +60,7 @@ public class SqlSymbol extends SqlLiteral
         ParserPosition parserPosition)
     {
         super(name, SqlTypeName.Symbol, parserPosition);
-        this._name = name;
+        this.name = name;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -73,7 +72,7 @@ public class SqlSymbol extends SqlLiteral
 
     public String getName()
     {
-        return _name;
+        return name;
     }
 
     /**
@@ -81,12 +80,12 @@ public class SqlSymbol extends SqlLiteral
      */
     public String toString()
     {
-        return _name;
+        return name;
     }
 
     public Error unexpected()
     {
-        return Util.newInternal("Value " + _name + " of class " + getClass()
+        return Util.newInternal("Value " + name + " of class " + getClass()
             + " unexpected here");
     }
 
@@ -95,7 +94,7 @@ public class SqlSymbol extends SqlLiteral
         int leftPrec,
         int rightPrec)
     {
-        writer.print(_name.toUpperCase());
+        writer.print(name.toUpperCase());
     }
 }
 

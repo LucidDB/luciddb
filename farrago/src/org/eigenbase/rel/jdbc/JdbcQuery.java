@@ -214,7 +214,7 @@ public class JdbcQuery extends AbstractRelNode implements ResultSetRel
         assert dataSource instanceof JdbcDataSource; // hack
 
         // DriverManager.getConnection("jdbc...", "scott", "tiger");
-        final String url = ((JdbcDataSource) dataSource)._url;
+        final String url = ((JdbcDataSource) dataSource).url;
         final MethodCall connectionExpr =
             new MethodCall(
                 TypeName.forClass(java.sql.DriverManager.class),

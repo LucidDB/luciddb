@@ -110,7 +110,7 @@ public class JavaRexBuilder extends RexBuilder
             throw Util.newInternal(e,
                 "Error deriving type of expression " + expr);
         }
-        RelDataType type = OJUtil.ojToType(this._typeFactory, ojClass);
+        RelDataType type = OJUtil.ojToType(this.typeFactory, ojClass);
         return new JavaRowExpression(env, type, expr);
     }
 

@@ -25,7 +25,7 @@ public class ArrayInitializer extends List
     implements VariableInitializer
 {
 
-    private boolean _isRemainderOmitted = false;
+    private boolean isRemainderOmitted = false;
 
     /**
      * Allocates a new ArrayInitializer.
@@ -61,13 +61,13 @@ public class ArrayInitializer extends List
     }
 
     public void omitRemainder( boolean is_omitted ) {
-	this._isRemainderOmitted = is_omitted;
+	this.isRemainderOmitted = is_omitted;
     }
     public void omitRemainder() {
-	this._isRemainderOmitted = true;
+	this.isRemainderOmitted = true;
     }
     public boolean isRemainderOmitted() {
-	return this._isRemainderOmitted;
+	return this.isRemainderOmitted;
     }
 
     /**

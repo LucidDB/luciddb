@@ -21,16 +21,11 @@
 
 package org.eigenbase.sql.fun;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.sql.test.SqlTester;
-import org.eigenbase.util.EnumeratedValues;
-import org.eigenbase.util.Util;
 
 
 /**
@@ -159,8 +154,8 @@ public class SqlTrimFunction extends SqlFunction
      */
     public static class Flag extends SqlSymbol
     {
-        public final int _left;
-        public final int _right;
+        public final int left;
+        public final int right;
 
         private Flag(
             String name,
@@ -169,8 +164,8 @@ public class SqlTrimFunction extends SqlFunction
             ParserPosition parserPosition)
         {
             super(name, parserPosition);
-            _left = left;
-            _right = right;
+            this.left = left;
+            this.right = right;
         }
 
         public static final SqlSymbol createBoth(

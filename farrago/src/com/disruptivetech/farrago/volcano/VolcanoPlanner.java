@@ -970,12 +970,12 @@ loop:
         // Now is a good time to ensure that the relational expression
         // implements the interface required by its calling convention.
         final CallingConvention convention = rel.getConvention();
-        if (!convention._interface.isInstance(rel)
+        if (!convention.interfaze.isInstance(rel)
                 && !(rel instanceof ConverterRel)) {
             throw Util.newInternal("Relational expression " + rel
                 + " has calling-convention " + convention
                 + " but does not implement the required interface '"
-                + convention._interface + "' of that convention");
+                + convention.interfaze + "' of that convention");
         }
 
         // Ensure that its sub-expressions are registered.

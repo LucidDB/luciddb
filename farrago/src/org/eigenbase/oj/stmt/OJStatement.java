@@ -76,7 +76,7 @@ public class OJStatement
 
     //~ Instance fields -------------------------------------------------------
 
-    private String queryString_ = null;
+    private String queryString = null;
     protected Environment env;
     int executionCount = 0;
 
@@ -369,7 +369,7 @@ public class OJStatement
         SqlValidator validator,
         boolean needValidation)
     {
-        queryString_ = sqlQuery.toString();
+        queryString = sqlQuery.toString();
 
         // (re)load trace level etc. from saffron.properties
         if (shouldReloadTrace()) {
@@ -770,9 +770,9 @@ public class OJStatement
             new CompilationUnit(packageName, new String[0],
                 new ClassDeclarationList(decl));
 
-        if (queryString_ != null) {
+        if (queryString != null) {
             compUnit.setComment("/** "
-                + queryString_.replaceAll("\n", "\n// ") + "\n */");
+                + queryString.replaceAll("\n", "\n// ") + "\n */");
         }
         String s;
 

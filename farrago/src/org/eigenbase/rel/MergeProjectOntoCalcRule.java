@@ -81,7 +81,7 @@ public class MergeProjectOntoCalcRule extends RelOptRule
             new RexShuttle() {
                 public RexNode visit(RexInputRef input)
                 {
-                    return calc._projectExprs[input.index];
+                    return calc.projectExprs[input.index];
                 }
             };
         for (int i = 0; i < projectExprs.length; i++) {
@@ -89,7 +89,7 @@ public class MergeProjectOntoCalcRule extends RelOptRule
         }
         final CalcRel newCalc =
             new CalcRel(calc.cluster, calc.child,
-                project.getRowType(), projectExprs, calc._conditionExpr);
+                project.getRowType(), projectExprs, calc.conditionExpr);
         call.transformTo(newCalc);
     }
 }

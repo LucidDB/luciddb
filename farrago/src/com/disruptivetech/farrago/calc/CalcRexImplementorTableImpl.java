@@ -194,7 +194,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
         CalcProgramBuilder.RegisterDescriptor resultDesc =
             translator.getCalcRegisterDescriptor(call);
         CalcProgramBuilder.Register resultOfCall =
-            translator._builder.newLocal(resultDesc);
+            translator.builder.newLocal(resultDesc);
         return resultOfCall;
     }
 
@@ -257,7 +257,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
 
         regs[0] = createResultRegister(translator, call);
 
-        instr.add(translator._builder, regs);
+        instr.add(translator.builder, regs);
         return regs[0];
     }
 
@@ -281,17 +281,17 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
         if (rd.getType().isExact()
                 && !rd.getType().equals(CalcProgramBuilder.OpType.Int8)) {
             RelDataType oldType = typeNode.getType();
-            RelDataTypeFactory fac = translator._rexBuilder.getTypeFactory();
+            RelDataTypeFactory fac = translator.rexBuilder.getTypeFactory();
 
             //todo do a reverse lookup on OpType.Int8 instead
             RelDataType int8 = fac.createSqlType(SqlTypeName.Bigint);
             RexNode castCall1 =
-                translator._rexBuilder.makeCast(int8, call.operands[i]);
+                translator.rexBuilder.makeCast(int8, call.operands[i]);
 
             RexNode newCall;
             if (opTab.castFunc.equals(call.op)) {
                 newCall =
-                    translator._rexBuilder.makeCast(
+                    translator.rexBuilder.makeCast(
                         call.getType(),
                         castCall1);
             } else {
@@ -299,11 +299,11 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                 System.arraycopy(call.operands, 0, args, 0,
                     call.operands.length);
                 args[i] = castCall1;
-                newCall = translator._rexBuilder.makeCall(call.op, args);
+                newCall = translator.rexBuilder.makeCall(call.op, args);
             }
 
             if (castBack) {
-                newCall = translator._rexBuilder.makeCast(oldType, newCall);
+                newCall = translator.rexBuilder.makeCast(oldType, newCall);
             }
             return (RexCall) newCall;
         }
@@ -330,17 +330,17 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
         if (rd.getType().isApprox()
                 && !rd.getType().equals(CalcProgramBuilder.OpType.Double)) {
             RelDataType oldType = typeNode.getType();
-            RelDataTypeFactory fac = translator._rexBuilder.getTypeFactory();
+            RelDataTypeFactory fac = translator.rexBuilder.getTypeFactory();
 
             //todo do a reverse lookup on OpType.Double instead
             RelDataType db = fac.createSqlType(SqlTypeName.Double);
             RexNode castCall1 =
-                translator._rexBuilder.makeCast(db, call.operands[i]);
+                translator.rexBuilder.makeCast(db, call.operands[i]);
 
             RexNode newCall;
             if (opTab.castFunc.equals(call.op)) {
                 newCall =
-                    translator._rexBuilder.makeCast(
+                    translator.rexBuilder.makeCast(
                         call.getType(),
                         castCall1);
             } else {
@@ -348,11 +348,11 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                 System.arraycopy(call.operands, 0, args, 0,
                     call.operands.length);
                 args[i] = castCall1;
-                newCall = translator._rexBuilder.makeCall(call.op, args);
+                newCall = translator.rexBuilder.makeCall(call.op, args);
             }
 
             if (castBack) {
-                newCall = translator._rexBuilder.makeCast(oldType, newCall);
+                newCall = translator.rexBuilder.makeCast(oldType, newCall);
             }
             return (RexCall) newCall;
         }
@@ -602,7 +602,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
             ArrayList regList = makeRegList(translator, call);
             CalcProgramBuilder.Register [] regs = regListToRegArray(regList);
 
-            instr.add(translator._builder, regs);
+            instr.add(translator.builder, regs);
             return regs[0];
         }
 
@@ -655,20 +655,20 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
 
             if (operand.getType().isNullable()) {
                 RexNode notNullCall =
-                    translator._rexBuilder.makeCall(opTab.isNotNullOperator,
+                    translator.rexBuilder.makeCall(opTab.isNotNullOperator,
                         operand);
                 RexNode eqCall =
-                    translator._rexBuilder.makeCall(
+                    translator.rexBuilder.makeCall(
                         opTab.equalsOperator,
                         operand,
-                        translator._rexBuilder.makeLiteral(boolType));
-                res = translator._rexBuilder.makeCall(opTab.andOperator,
+                        translator.rexBuilder.makeLiteral(boolType));
+                res = translator.rexBuilder.makeCall(opTab.andOperator,
                         notNullCall, eqCall);
             } else {
-                res = translator._rexBuilder.makeCall(
+                res = translator.rexBuilder.makeCall(
                         opTab.equalsOperator,
                         operand,
-                        translator._rexBuilder.makeLiteral(boolType));
+                        translator.rexBuilder.makeLiteral(boolType));
             }
             return translator.implementNode(res);
         }
@@ -689,7 +689,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
             RexToCalcTranslator translator)
         {
             super.implement(call, translator);
-            res = translator._rexBuilder.makeCall(opTab.notOperator, res);
+            res = translator.rexBuilder.makeCall(opTab.notOperator, res);
             return translator.implementNode(res);
         }
     }
@@ -727,7 +727,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
 
             ArrayList regList = super.makeRegList(translator, call);
             CalcProgramBuilder.Register charSetName =
-                translator._builder.newVarcharLiteral(
+                translator.builder.newVarcharLiteral(
                     call.operands[operand].getType().getCharset().name());
             regList.add(charSetName);
             return regList;
@@ -781,7 +781,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                 if (!operand.getType().getSqlTypeName().equals(SqlTypeName.Double)) {
                     RelDataType oldType = operand.getType();
                     RelDataTypeFactory fac =
-                        translator._rexBuilder.getTypeFactory();
+                        translator.rexBuilder.getTypeFactory();
 
                     //todo do a reverse lookup on OpType.Double instead
                     RelDataType doubleType =
@@ -791,7 +791,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                             doubleType,
                             oldType.isNullable());
                     RexNode castCall =
-                        translator._rexBuilder.makeCast(doubleType,
+                        translator.rexBuilder.makeCast(doubleType,
                             call.operands[i]);
                     call.operands[i] = castCall;
                 }
@@ -889,16 +889,16 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                         CalcProgramBuilder.RegisterDescriptor regDesc =
                             translator.getCalcRegisterDescriptor(call.operands[0]);
                         CalcProgramBuilder.Register afterRound =
-                            translator._builder.newLocal(regDesc);
+                            translator.builder.newLocal(regDesc);
                         CalcProgramBuilder.Round.add(
-                            translator._builder,
+                            translator.builder,
                             new CalcProgramBuilder.Register [] {
                                 afterRound, beforeRound
                             });
                         CalcProgramBuilder.Register res =
                             createResultRegister(translator, call);
                         CalcProgramBuilder.Cast.add(
-                            translator._builder,
+                            translator.builder,
                             new CalcProgramBuilder.Register [] { res, afterRound });
                         return res;
                     }
@@ -996,7 +996,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                             0);
                 }
 
-                return translator._builder.newLiteral(resultDesc, null);
+                return translator.builder.newLiteral(resultDesc, null);
             }
 
             // Figure out the source and destination types.
@@ -1048,7 +1048,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
         private int getRestrictiveness(
             CalcProgramBuilder.RegisterDescriptor rd)
         {
-            switch (rd.getType().ordinal_) {
+            switch (rd.getType().ordinal) {
             case CalcProgramBuilder.OpType.Uint1_ordinal:
                 return 10;
             case CalcProgramBuilder.OpType.Int1_ordinal:
@@ -1100,7 +1100,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                 }
 
                 RexNode castCall =
-                    translator._rexBuilder.makeCast(
+                    translator.rexBuilder.makeCast(
                         call.operands[(small + 1) % 2].getType(),
                         call.operands[small]);
                 CalcProgramBuilder.Register newOp =
@@ -1112,7 +1112,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                 createResultRegister(translator, call);
             regs.add(0, res);
 
-            instr.add(translator._builder, regs);
+            instr.add(translator.builder, regs);
             return res;
         }
     }
@@ -1140,29 +1140,29 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                     translator.implementNode(call.operands[i]);
                 assert (compareResult.getOpType().equals(CalcProgramBuilder.OpType.Bool));
                 if (!compareResult.getRegisterType().equals(CalcProgramBuilder.RegisterSetType.Literal)) {
-                    translator._builder.addLabelJumpFalse(next, compareResult);
+                    translator.builder.addLabelJumpFalse(next, compareResult);
 
                     // todo optimize away null check if type known to be non null
                     // same applies the other way (if we have a null literal or a cast(null as xxx))
-                    translator._builder.addLabelJumpNull(next, compareResult);
+                    translator.builder.addLabelJumpNull(next, compareResult);
                     CalcProgramBuilder.move.add(
-                        translator._builder,
+                        translator.builder,
                         resultOfCall,
                         translator.implementNode(call.operands[i + 1]));
-                    translator._builder.addLabelJump(endOfCase);
-                    translator._builder.addLabel(next);
+                    translator.builder.addLabelJump(endOfCase);
+                    translator.builder.addLabel(next);
                 } else {
                     // we can do some optimizations
                     Boolean val = (Boolean) compareResult.getValue();
                     if (val.booleanValue()) {
                         CalcProgramBuilder.move.add(
-                            translator._builder,
+                            translator.builder,
                             resultOfCall,
                             translator.implementNode(call.operands[i + 1]));
                         if (i != 0) {
-                            translator._builder.addLabelJump(endOfCase);
+                            translator.builder.addLabelJump(endOfCase);
                         }
-                        translator._builder.addLabel(next);
+                        translator.builder.addLabel(next);
                         elseClauseOptimizedAway = true;
                         break;
                     }
@@ -1174,11 +1174,11 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
             if (!elseClauseOptimizedAway) {
                 int elseIndex = call.operands.length - 1;
                 CalcProgramBuilder.move.add(
-                    translator._builder,
+                    translator.builder,
                     resultOfCall,
                     translator.implementNode(call.operands[elseIndex]));
             }
-            translator._builder.addLabel(endOfCase); //this assumes that more instructions will follow
+            translator.builder.addLabel(endOfCase); //this assumes that more instructions will follow
             return resultOfCall;
         }
     }
@@ -1230,8 +1230,8 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
             regList.add(resultOfCall);
             regList.add(translator.implementNode(call.operands[2])); //str to trim from
             regList.add(translator.implementNode(call.operands[1])); //trim char
-            regList.add(translator._builder.newInt4Literal(flag._left));
-            regList.add(translator._builder.newInt4Literal(flag._right));
+            regList.add(translator.builder.newInt4Literal(flag.left));
+            regList.add(translator.builder.newInt4Literal(flag.right));
 
             return regList;
         }
@@ -1267,7 +1267,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
             }
 
             regList.add(translator.implementNode(call.operands[1]));
-            ExtInstructionDefTable.concat.add(translator._builder, regList);
+            ExtInstructionDefTable.concat.add(translator.builder, regList);
             return resultRegister;
         }
     }

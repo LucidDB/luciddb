@@ -48,7 +48,7 @@ public abstract class ConverterRel extends SingleRel
 {
     //~ Instance fields -------------------------------------------------------
 
-    protected CallingConvention _inConvention;
+    protected CallingConvention inConvention;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -57,7 +57,7 @@ public abstract class ConverterRel extends SingleRel
         RelNode child)
     {
         super(cluster, child);
-        this._inConvention = child.getConvention();
+        this.inConvention = child.getConvention();
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -74,12 +74,12 @@ public abstract class ConverterRel extends SingleRel
     protected Error cannotImplement()
     {
         return Util.newInternal(getClass() + " cannot convert from "
-            + _inConvention + " calling convention");
+            + inConvention + " calling convention");
     }
 
     protected CallingConvention getInputConvention()
     {
-        return _inConvention;
+        return inConvention;
     }
 }
 

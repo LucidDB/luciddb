@@ -192,18 +192,18 @@ public class FarragoAutoCalcRule extends RelOptRule
 
         final RexToCalcTranslator translator =
             new RexToCalcTranslator(calc.getCluster().rexBuilder,
-                calc._projectExprs, calc._conditionExpr);
+                calc.projectExprs, calc.conditionExpr);
 
         if (fennelInput != null) {
             boolean canTranslate = true;
-            for (int i = 0; i < calc._projectExprs.length; i++) {
-                if (!translator.canTranslate(calc._projectExprs[i], true)) {
+            for (int i = 0; i < calc.projectExprs.length; i++) {
+                if (!translator.canTranslate(calc.projectExprs[i], true)) {
                     canTranslate = false;
                     break;
                 }
             }
-            if ((calc._conditionExpr != null)
-                    && !translator.canTranslate(calc._conditionExpr, true)) {
+            if ((calc.conditionExpr != null)
+                    && !translator.canTranslate(calc.conditionExpr, true)) {
                 canTranslate = false;
             }
 
@@ -222,7 +222,7 @@ public class FarragoAutoCalcRule extends RelOptRule
 
         if (convertedChild != null) {
             if (relImplementor.canTranslate(convertedChild,
-                        calc._conditionExpr, calc._projectExprs)) {
+                        calc.conditionExpr, calc.projectExprs)) {
                 // yes: do nothing, let IterCalcRule handle this CalcRel
                 return;
             }
@@ -820,17 +820,17 @@ public class FarragoAutoCalcRule extends RelOptRule
     {
         ArrayList baseNodes = new ArrayList();
         ArrayList baseRelData = new ArrayList();
-        if ((calc._projectExprs != null) && (calc._projectExprs.length > 0)) {
-            for (int i = 0; i < calc._projectExprs.length; i++) {
-                RexNode projectExpr = calc._projectExprs[i];
+        if ((calc.projectExprs != null) && (calc.projectExprs.length > 0)) {
+            for (int i = 0; i < calc.projectExprs.length; i++) {
+                RexNode projectExpr = calc.projectExprs[i];
                 baseNodes.add(projectExpr);
 
                 baseRelData.add(new RelData(projectExpr, false, null));
             }
         }
-        if (calc._conditionExpr != null) {
-            baseNodes.add(calc._conditionExpr);
-            baseRelData.add(new RelData(calc._conditionExpr, true, null));
+        if (calc.conditionExpr != null) {
+            baseNodes.add(calc.conditionExpr);
+            baseRelData.add(new RelData(calc.conditionExpr, true, null));
         }
 
         buildRelDataTree(baseRelData, baseNodes);

@@ -86,14 +86,14 @@ public class FennelCalcRule extends RelOptRule
 
         final RexToCalcTranslator translator =
             new RexToCalcTranslator(calc.getCluster().rexBuilder,
-                calc._projectExprs, calc._conditionExpr);
-        for (int i = 0; i < calc._projectExprs.length; i++) {
-            if (!translator.canTranslate(calc._projectExprs[i], true)) {
+                calc.projectExprs, calc.conditionExpr);
+        for (int i = 0; i < calc.projectExprs.length; i++) {
+            if (!translator.canTranslate(calc.projectExprs[i], true)) {
                 return;
             }
         }
-        if ((calc._conditionExpr != null)
-                && !translator.canTranslate(calc._conditionExpr, true)) {
+        if ((calc.conditionExpr != null)
+                && !translator.canTranslate(calc.conditionExpr, true)) {
             return;
         }
 
@@ -102,8 +102,8 @@ public class FennelCalcRule extends RelOptRule
                 calc.getCluster(),
                 fennelInput,
                 calc.getRowType(),
-                calc._projectExprs,
-                calc._conditionExpr);
+                calc.projectExprs,
+                calc.conditionExpr);
         call.transformTo(fennelCalcRel);
     }
 }

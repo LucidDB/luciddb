@@ -398,7 +398,7 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
             RelDataType type)
         {
             final SqlTypeName sqlTypeName = type.getSqlTypeName();
-            switch (sqlTypeName.ordinal_) {
+            switch (sqlTypeName.ordinal) {
             case SqlTypeName.Char_ordinal:
             case SqlTypeName.Varchar_ordinal:
                 return new StringParamDef(paramName, type);

@@ -1026,11 +1026,11 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
             Util.pre(
                 typeName.allowsPrecScale(false, false),
                 "typeName.allowsPrecScale(false,false), typeName="
-                + typeName.name_);
+                + typeName.name);
             this.typeName = typeName;
             this.precision = PRECISION_NOT_SPECIFIED;
             this.scale = SCALE_NOT_SPECIFIED;
-            this.digest = typeName.name_;
+            this.digest = typeName.name;
         }
 
         /**
@@ -1048,7 +1048,7 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
             this.typeName = typeName;
             this.precision = precision;
             this.scale = SCALE_NOT_SPECIFIED;
-            this.digest = typeName.name_ + "(" + precision + ")";
+            this.digest = typeName.name + "(" + precision + ")";
         }
 
         /**
@@ -1068,7 +1068,7 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
             this.precision = precision;
             this.scale = scale;
             this.digest =
-                typeName.name_ + "(" + precision + ", " + scale + ")";
+                typeName.name + "(" + precision + ", " + scale + ")";
         }
 
         /**

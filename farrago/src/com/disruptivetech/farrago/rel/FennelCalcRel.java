@@ -28,7 +28,6 @@ import net.sf.farrago.query.*;
 import org.eigenbase.rel.CalcRel;
 import org.eigenbase.rel.RelFieldCollation;
 import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.RelImplementor;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanWriter;
@@ -55,8 +54,8 @@ public abstract class FennelCalcRel extends FennelSingleRel
 {
     //~ Instance fields -------------------------------------------------------
 
-    private final RexNode [] _projectExprs;
-    private final RexNode _conditionExpr;
+    private final RexNode [] projectExprs;
+    private final RexNode conditionExpr;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -79,8 +78,8 @@ public abstract class FennelCalcRel extends FennelSingleRel
         super(cluster, child);
         Util.pre(rowType != null, "rowType != null");
         Util.pre(projectExprs != null, "projectExprs != null");
-        _projectExprs = projectExprs;
-        _conditionExpr = conditionExpr;
+        this.projectExprs = projectExprs;
+        this.conditionExpr = conditionExpr;
         this.rowType = rowType;
     }
 
@@ -91,7 +90,7 @@ public abstract class FennelCalcRel extends FennelSingleRel
      */
     public RexNode [] getProjectExprs()
     {
-        return _projectExprs;
+        return projectExprs;
     }
 
     /**
@@ -99,21 +98,21 @@ public abstract class FennelCalcRel extends FennelSingleRel
      */
     public RexNode getConditionExpr()
     {
-        return _conditionExpr;
+        return conditionExpr;
     }
 
     public RexNode [] getChildExps()
     {
-        final ArrayList list = new ArrayList(Arrays.asList(_projectExprs));
-        if (_conditionExpr != null) {
-            list.add(_conditionExpr);
+        final ArrayList list = new ArrayList(Arrays.asList(projectExprs));
+        if (conditionExpr != null) {
+            list.add(conditionExpr);
         }
         return (RexNode []) list.toArray(new RexNode[list.size()]);
     }
 
     public void explain(RelOptPlanWriter pw)
     {
-        CalcRel.explainCalc(this, pw, _conditionExpr, _projectExprs);
+        CalcRel.explainCalc(this, pw, conditionExpr, projectExprs);
     }
 
     // implement RelNode
@@ -126,7 +125,7 @@ public abstract class FennelCalcRel extends FennelSingleRel
         // out higher than IterCalcRel (making it at least deterministic until
         // we have proper costing, and giving preference to Java since it's
         // currently more reliable)
-        return planner.makeCost(rowCount, rowCount * _projectExprs.length * 2,
+        return planner.makeCost(rowCount, rowCount * projectExprs.length * 2,
             0);
     }
 
