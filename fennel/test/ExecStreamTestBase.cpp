@@ -177,21 +177,31 @@ void ExecStreamTestBase::verifyOutput(
             break;
         }
         BOOST_REQUIRE(bufAccessor.isConsumptionPossible());
+        const uint nCol = 
+            bufAccessor.getConsumptionTupleAccessor().size();
+        BOOST_REQUIRE(nCol == bufAccessor.getTupleDesc().size());
+        BOOST_REQUIRE(nCol >= 1);
+        TupleData inputTuple;
+        inputTuple.compute(bufAccessor.getTupleDesc());
         for (;;) {
             if (!bufAccessor.demandData()) {
                 break;
             }
             BOOST_REQUIRE(nRows < nRowsExpected);
-            int64_t actualValue = *reinterpret_cast<int64_t const *>(
-                bufAccessor.getConsumptionStart());
-            bufAccessor.consumeData(
-                bufAccessor.getConsumptionStart() + sizeof(actualValue));
-            int64_t expectedValue = generator.generateValue(nRows);
-            ++nRows;
-            if (expectedValue != actualValue) {
-                BOOST_CHECK_EQUAL(expectedValue,actualValue);
-                return;
+            bufAccessor.unmarshalTuple(inputTuple);
+            for (int col=0;col<nCol;++col) {
+                int64_t actualValue = 
+                    *reinterpret_cast<int64_t const *>(inputTuple[col].pData);
+                int64_t expectedValue = generator.generateValue(nRows, col);
+                if (actualValue != expectedValue) {
+                    std::cout << "(Row, Col) = (" << nRows << ", " << col <<")"
+                              << std::endl;
+                    BOOST_CHECK_EQUAL(expectedValue,actualValue);
+                    return;
+                }
             }
+            bufAccessor.consumeTuple();
+            ++nRows;
         }
     }
     BOOST_CHECK_EQUAL(nRowsExpected,nRows);

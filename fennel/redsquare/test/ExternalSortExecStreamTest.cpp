@@ -28,8 +28,6 @@
 #include "fennel/cache/Cache.h"
 
 #include <boost/test/test_tools.hpp>
-#include <algorithm>
-#include <numeric>
 
 using namespace fennel;
 
@@ -53,24 +51,6 @@ public:
     void testPresortedExternal();
     void testRandomInMem();
     void testRandomExternal();
-};
-
-class PermutationGenerator : public MockProducerExecStreamGenerator
-{
-    std::vector<int64_t> values;
-    
-public:
-    explicit PermutationGenerator(uint nRows)
-    {
-        values.resize(nRows);
-        std::iota(values.begin(), values.end(), 0);
-        std::random_shuffle(values.begin(), values.end());
-    }
-    
-    virtual int64_t generateValue(uint iRow)
-    {
-        return values[iRow];
-    }
 };
 
 void ExternalSortExecStreamTest::testRandomInMem()

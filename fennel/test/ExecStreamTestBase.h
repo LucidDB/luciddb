@@ -23,6 +23,7 @@
 
 #include "fennel/test/SegStorageTestBase.h"
 #include "fennel/exec/MockProducerExecStream.h"
+#include "fennel/test/ExecStreamGenerator.h"
 
 FENNEL_BEGIN_NAMESPACE
 
@@ -140,27 +141,7 @@ public:
     virtual void testCaseTearDown();
 };
 
-/**
- * Data generator for a 45-degree ramp (output value equals input row number).
- */
-class RampExecStreamGenerator : public MockProducerExecStreamGenerator
-{
-protected:
-    int offset;
-public:
-    RampExecStreamGenerator(int offset_) {
-        offset = offset_;
-    }
 
-    RampExecStreamGenerator() {
-        offset = 0;
-    }
-
-    virtual int64_t generateValue(uint iRow)
-    {
-        return iRow + offset;
-    }
-};
 
 FENNEL_END_NAMESPACE
 

@@ -25,7 +25,6 @@
 #include "fennel/tuple/TuplePrinter.h"
 #include "fennel/tuple/StandardTypeDescriptor.h"
 
-using namespace std;
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 

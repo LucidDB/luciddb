@@ -7,4 +7,5 @@ CalcExecStream.cpp \
 CalcExecutionStream.cpp \
 CalcTupleStream.cpp \
 CollectExecStream.cpp \
-UncollectExecStream.cpp
+UncollectExecStream.cpp \
+CorrelationJoinExecStream.cpp

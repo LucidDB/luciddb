@@ -39,8 +39,9 @@ public:
      * Generates one data value.
      *
      * @param iRow 0-based row number to generate
+     * @param iCol 0-based col number to generate
      */
-    virtual int64_t generateValue(uint iRow) = 0;
+    virtual int64_t generateValue(uint iRow, uint iCol) = 0;
 };
 
 typedef boost::shared_ptr<MockProducerExecStreamGenerator>

@@ -15,7 +15,8 @@ MockProducerExecStream.cpp \
 ScratchBufferExecStream.cpp \
 SegBufferExecStream.cpp \
 SingleInputExecStream.cpp \
-SingleOutputExecStream.cpp
+SingleOutputExecStream.cpp \
+DynamicParam.cpp
 
 DESIGN_DOCS=SchedulerDesign.cpp ExecStreamHowTo.cpp ExecStreamDesign.cpp
 EXTRA_DIST=$(DESIGN_DOCS)

@@ -23,6 +23,7 @@
 #include "fennel/tuple/TupleAccessor.h"
 #include "fennel/tuple/StandardTypeDescriptor.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
+#include <boost/scoped_array.hpp>
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
@@ -38,7 +39,6 @@ void MockProducerExecStream::prepare(MockProducerExecStreamParams const &params)
         assert(StandardTypeDescriptor::isIntegralNative(ordinal));
         if (pGenerator) {
             assert(ordinal == STANDARD_TYPE_INT_64);
-            assert(i == 0);
         }
     }
     outputData.compute(params.outputTupleDesc);
@@ -59,13 +59,19 @@ ExecStreamResult MockProducerExecStream::execute(
 {
     if (pGenerator) {
         uint nTuples = 0;
-        int64_t value;
-        outputData[0].pData = reinterpret_cast<PConstBuffer>(&value);
+        boost::scoped_array<int64_t> values(new int64_t[outputData.size()]);
+        for(int col=0;col<outputData.size();++col) {
+            outputData[col].pData = reinterpret_cast<PConstBuffer>(&(values.get()[col]));
+        }
         while (nRowsProduced < nRowsMax) {
             if (pOutAccessor->getProductionAvailable() < cbTuple) {
                 return EXECRC_BUF_OVERFLOW;
             }
-            value = pGenerator->generateValue(nRowsProduced);
+            
+            for (int col=0;col<outputData.size();++col) {
+                values.get()[col] = pGenerator->generateValue(nRowsProduced, col);
+            }
+            
             bool rc = pOutAccessor->produceTuple(outputData);
             assert(rc);
             ++nTuples;

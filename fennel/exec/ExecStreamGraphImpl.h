@@ -80,7 +80,7 @@ protected:
     
     typedef std::map<std::string,ExecStreamId> StreamMap;
     typedef StreamMap::const_iterator StreamMapConstIter;
-    
+
     /**
      * Map of name to stream
      */

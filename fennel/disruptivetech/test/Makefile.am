@@ -23,7 +23,8 @@ CalcExtCastTest \
 SqlDateTest \
 SqlRegExpTest \
 SqlStringTest \
-SqlStringAsciiTest
+SqlStringAsciiTest \
+CorrelationJoinExecStreamTest
 
 TESTS = $(noinst_PROGRAMS)
 
@@ -58,6 +59,8 @@ SqlStringTest_SOURCES=SqlStringBuffer.cpp SqlStringTest.cpp
 SqlDateTest_SOURCES=SqlStringBuffer.cpp SqlDateTest.cpp 
 
 SqlStringAsciiTest_SOURCES=SqlStringBuffer.cpp SqlStringAsciiTest.cpp 
+
+CorrelationJoinExecStreamTest_SOURCES=CorrelationJoinExecStreamTest.cpp
 
 # NOTE:  have to repeat $(EXTRA_LDFLAGS) on mingw due to stupid linker.
 
