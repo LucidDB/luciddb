@@ -20,10 +20,10 @@
 */
 package org.eigenbase.test;
 
+import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.SqlValidator;
 import org.eigenbase.sql.SqlCollation;
 import org.eigenbase.sql.parser.SqlParser;
-import org.eigenbase.sql.parser.ParseException;
 import org.eigenbase.util.Util;
 
 import java.io.File;
@@ -33,8 +33,8 @@ import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.nio.charset.Charset;
 
 /**
  * Utility to generate SQL a script from validator test.
@@ -70,6 +70,7 @@ public class SqlTestGen {
         } catch (IllegalArgumentException e) {
             throw Util.newInternal(e);
         } catch (InvocationTargetException e) {
+            e.printStackTrace();
             throw Util.newInternal(e);
         } finally {
             if (pw != null) {
@@ -109,7 +110,7 @@ public class SqlTestGen {
      * running tests. It is not a valid JUnit test because it does not have
      * a public constructor.
      */
-    private static class SqlValidatorSpooler extends SqlValidatorTestCase {
+    private static class SqlValidatorSpooler extends SqlValidatorTest {
         private final String testName;
         private final PrintWriter pw;
 
@@ -118,56 +119,66 @@ public class SqlTestGen {
             this.pw = pw;
         }
 
-        public SqlValidator getValidator() {
-            throw new UnsupportedOperationException();
+        public SqlValidatorTestCase.Tester getTester() {
+            return new TesterImpl() {
+                public SqlValidator getValidator() {
+                    throw new UnsupportedOperationException();
+                }
+
+                public SqlParser getParser(String sql) {
+                    throw new UnsupportedOperationException();
+                }
+
+                public void assertExceptionIsThrown(
+                    String sql,
+                    String expectedMsgPattern,
+                    int expectedLine,
+                    int expectedColumn) {
+                    if (expectedMsgPattern == null) {
+                        // This SQL statement is supposed to succeed. Generate
+                        // it to the file, so we can see what output it
+                        // produces.
+                        pw.println("-- " + testName);
+                        pw.println(sql);
+                        pw.println(";");
+                    } else {
+                        // Do nothing. We know that this fails the validator
+                        // test, so we don't learn anything by having it fail
+                        // from SQL.
+                    }
+                }
+
+                public RelDataType getResultType(String sql) {
+                    return null;
+                }
+
+                public void checkType(
+                    String sql,
+                    String expected)
+                {
+                    // We could generate the SQL -- or maybe describe -- but
+                    // ignore it for now.
+                }
+
+                public void checkCollation(
+                    String sql,
+                    String expectedCollationName,
+                    SqlCollation.Coercibility expectedCoercibility)
+                {
+                    // We could generate the SQL -- or maybe describe -- but
+                    // ignore it for now.
+                }
+
+                public void checkCharset(
+                    String sql,
+                    Charset expectedCharset)
+                {
+                    // We could generate the SQL -- or maybe describe -- but
+                    // ignore it for now.
+                }
+            };
         }
 
-        public SqlParser getParser(String sql) throws ParseException {
-            throw new UnsupportedOperationException();
-        }
-
-        public void checkType(
-            String sql,
-            String expected)
-        {
-            // We could generate the SQL -- or maybe describe but ignore it for
-            // now.
-        }
-
-        public void checkCharset(
-            String sql,
-            Charset expectedCharset)
-        {
-            // We could generate the SQL -- or maybe describe but ignore it for
-            // now.
-        }
-
-        public void checkCollation(
-            String sql,
-            String expectedCollationName,
-            SqlCollation.Coercibility expectedCoercibility)
-        {
-            // We could generate the SQL -- or maybe describe but ignore it for
-            // now.
-        }
-
-        protected void assertExceptionIsThrown(
-            String sql,
-            String expectedMsgPattern,
-            int expectedLine,
-            int expectedColumn)
-        {
-            if (expectedMsgPattern == null) {
-                // This SQL statement is supposed to succeed. Generate it to
-                // the file, so we can see what output it produces.
-                pw.println("-- " + testName);
-                pw.println(sql);
-                pw.println(";");
-            } else {
-                // Do nothing. We know that this fails the validator test,
-                // so we don't learn anything by having it fail from SQL.
-            }
-        }
     }
 }
 
