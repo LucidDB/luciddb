@@ -46,6 +46,8 @@ SAVE_PWD="$PWD"
 # Check automake/libtool/autoconf versions
 AUTOMAKE_VERSION=$(automake --version | awk '{print $4; exit}')
 case $AUTOMAKE_VERSION in
+1.7.8*) ;;
+1.7.9*) ;;
 1.8*) ;;
 *)
     echo "Invalid automake version '$AUTOMAKE_VERSION'."
