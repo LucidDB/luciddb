@@ -367,9 +367,11 @@ public class VolcanoPlanner implements RelOptPlanner
     {
         final RelSet set = getSet(equivRel);
         final RelSubset subset = registerImpl(rel, set);
-        if (true) {
+
+        if (tracer.isLoggable(Level.FINE)) {
             validate();
         }
+        
         return subset;
     }
 
@@ -406,6 +408,13 @@ public class VolcanoPlanner implements RelOptPlanner
                                 + "] is a parent of [" + inputRel
                                 + "] but is not registered as such");
                         }
+                    }
+                    RelOptCost relCost = getCost(rel);
+                    if (relCost.isLt(subset.bestCost)) {
+                        throw new AssertionError("rel [" + rel
+                            + "] has lower cost " + relCost
+                            + " than best cost " + subset.bestCost
+                            + " of subset [" + subset + "]");
                     }
                 }
             }
@@ -932,10 +941,11 @@ loop:
     }
 
     /**
-     * Register a new expression <code>exp</code>.  If <code>set</code> is not
-     * null, make the expression part of that equivalence set.  If an
-     * identical expression is already registered, we don't need to register
-     * this one.
+     * Registers a new expression <code>exp</code> and queues up rule matches.
+     * If <code>set</code> is not null, make the expression part of that
+     * equivalence set.  If an identical expression is already registered,
+     * we don't need to register this one and nor should we queue up rule
+     * matches.
      *
      * @param rel relational expression to register
      * @param set set that rel belongs to, or <code>null</code>

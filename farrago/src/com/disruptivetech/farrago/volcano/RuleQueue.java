@@ -193,7 +193,7 @@ class RuleQueue
             // Identical match has already been added.
             return;
         }
-        tracer.finer("Rule-match queued: " + matchName);
+        tracer.finest("Rule-match queued: " + matchName);
         matchList.add(match);
     }
 
@@ -354,12 +354,12 @@ class RuleQueue
             assert matches[i] != null : i;
         }
         Arrays.sort(matches, ruleMatchImportanceComparator);
-        if (tracer.isLoggable(Level.FINER)) {
-            tracer.finer("Sorted rule queue:");
+        if (tracer.isLoggable(Level.FINEST)) {
+            tracer.finest("Sorted rule queue:");
             for (int i = 0; i < matches.length; i++) {
                 VolcanoRuleMatch match = (VolcanoRuleMatch) matches[i];
                 final double importance = match.computeImportance();
-                tracer.finer(match + " importance " + importance);
+                tracer.finest(match + " importance " + importance);
             }
         }
         final VolcanoRuleMatch match = (VolcanoRuleMatch) matches[0];

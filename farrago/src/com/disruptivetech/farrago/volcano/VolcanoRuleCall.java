@@ -72,8 +72,12 @@ public class VolcanoRuleCall extends RelOptRuleCall
             if (rel instanceof RelSubset || planner.isRegistered(rel)) {
                 return;
             }
-            tracer.fine("Rule " + rule + " arguments "
-                + RelOptUtil.toString(rels) + " created " + rel);
+
+            if (tracer.isLoggable(Level.FINEST)) {
+                tracer.finest("Rule " + rule + " arguments "
+                    + RelOptUtil.toString(rels) + " created " + rel);
+            }
+
             Util.discard(planner.register(rel, rels[0]));
         } catch (Throwable e) {
             throw Util.newInternal(e,
@@ -87,8 +91,8 @@ public class VolcanoRuleCall extends RelOptRuleCall
     protected void onMatch()
     {
         try {
-            if (tracer.isLoggable(Level.FINE)) {
-                tracer.fine("Apply rule [" + rule + "] to ["
+            if (tracer.isLoggable(Level.FINEST)) {
+                tracer.finest("Apply rule [" + rule + "] to ["
                     + RelOptUtil.toString(rels) + "]");
             }
             rule.onMatch(this);
