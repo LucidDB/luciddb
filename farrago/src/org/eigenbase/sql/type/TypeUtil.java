@@ -103,12 +103,26 @@ public class TypeUtil
     public static boolean isCharTypeComparable(
         SqlValidator validator,
         SqlValidator.Scope scope,
-        SqlNode [] operands)
+        SqlNode [] operands,
+        boolean throwOnFailure)
     {
         Util.pre(null != operands, "null!=operands");
         Util.pre(2 <= operands.length, "2<=operands.length");
 
-        return isCharTypeComparable(collectTypes(validator, scope, operands));
+        if (!isCharTypeComparable(collectTypes(validator, scope, operands))) {
+            if (throwOnFailure) {
+                String msg = "";
+                for (int i = 0; i < operands.length; i++) {
+                    if (i > 0) {
+                        msg += ", ";
+                    }
+                    msg += operands[i].toString();
+                }
+                throw EigenbaseResource.instance().newOperandNotComparable(msg);
+            }
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -193,23 +207,6 @@ public class TypeUtil
                 msg += argType.toString();
             }
             throw EigenbaseResource.instance().newTypeNotComparableEachOther(msg);
-        }
-    }
-
-    public static void isCharTypeComparableThrows(
-        SqlValidator validator,
-        SqlValidator.Scope scope,
-        SqlNode [] operands)
-    {
-        if (!isCharTypeComparable(validator, scope, operands)) {
-            String msg = "";
-            for (int i = 0; i < operands.length; i++) {
-                if (i > 0) {
-                    msg += ", ";
-                }
-                msg += operands[i].toString();
-            }
-            throw EigenbaseResource.instance().newOperandNotComparable(msg);
         }
     }
 

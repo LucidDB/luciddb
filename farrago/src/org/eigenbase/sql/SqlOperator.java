@@ -407,7 +407,8 @@ public abstract class SqlOperator
      * the validator and scope provided.
      *
      * <p>Particular operators can affect the behavior of this method in two
-     * ways. If they have a {@link org.eigenbase.sql.type.ReturnTypeInference}, it is used; otherwise, they
+     * ways. If they have a {@link org.eigenbase.sql.type.ReturnTypeInference},
+     * it is used; otherwise, they
      * must override this method. (Operators with unusual type inference schemes
      * should override this method; others should generally use a type-inference
      * strategy to share code.)
@@ -420,7 +421,7 @@ public abstract class SqlOperator
         // Check that there's the right number of arguments.
         checkNumberOfArg(validator, operandsCheckingRule, call);
 
-        checkArgTypes(call, validator, scope);
+        checkArgTypes(call, validator, scope, true);
 
         // Now infer the result type.
         return inferType(validator, scope, call);
@@ -431,10 +432,10 @@ public abstract class SqlOperator
      * Operators (such as "ROW" and "AS") which do not check their arguments
      * can override this method.
      */
-    protected void checkArgTypes(
+    protected boolean checkArgTypes(
         SqlCall call,
         SqlValidator validator,
-        SqlValidator.Scope scope)
+        SqlValidator.Scope scope, boolean throwOnFailure)
     {
         // Check that all of the arguments are of the right type, or are at
         // least assignable to the right type.
@@ -444,26 +445,7 @@ public abstract class SqlOperator
             throw Util.needToImplement(this);
         }
 
-        operandsCheckingRule.check(validator, scope, call, true);
-    }
-
-    protected boolean checkArgTypesNoThrow(
-        SqlCall call,
-        SqlValidator validator,
-        SqlValidator.Scope scope)
-    {
-        // Check that all of the arguments are of the right type, or are at
-        // least assignable to the right type.
-        try {
-            checkArgTypes(call, validator, scope);
-        } catch (RuntimeException e) {
-            // todo, hack for now. Should not rely on catching exception, instead
-            // refactor so that checkAryTypes and overriding methods returns a
-            // boolean instead.
-            Util.swallow(e, null);
-            return false;
-        }
-        return true;
+        return operandsCheckingRule.check(validator, scope, call, throwOnFailure);
     }
 
     protected void checkNumberOfArg(

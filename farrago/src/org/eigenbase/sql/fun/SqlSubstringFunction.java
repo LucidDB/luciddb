@@ -79,18 +79,23 @@ public class SqlSubstringFunction extends SqlFunction {
             name);
     }
 
-    protected void checkArgTypes(
+    protected boolean checkArgTypes(
         SqlCall call,
         SqlValidator validator,
-        SqlValidator.Scope scope)
+        SqlValidator.Scope scope,
+        boolean throwOnFailure)
     {
         int n = call.operands.length;
         assert ((3 == n) || (2 == n));
-        OperandsTypeChecking.typeNullableString.check(call, validator,
-            scope, call.operands[0], 0, true);
+        if (!OperandsTypeChecking.typeNullableString.check(call, validator,
+            scope, call.operands[0], 0, throwOnFailure)) {
+            return false;
+        }
         if (2 == n) {
-            OperandsTypeChecking.typeNullableNumeric.check(call, validator,
-                scope, call.operands[1], 0, true);
+            if (!OperandsTypeChecking.typeNullableNumeric.check(call, validator,
+                scope, call.operands[1], 0, throwOnFailure)) {
+                return false;
+            }
         } else {
             RelDataType t1 =
                 validator.deriveType(scope, call.operands[1]);
@@ -98,24 +103,38 @@ public class SqlSubstringFunction extends SqlFunction {
                 validator.deriveType(scope, call.operands[2]);
 
             if (t1.isCharType()) {
-                OperandsTypeChecking.typeNullableString.check(call, validator,
-                    scope, call.operands[1], 0, true);
-                OperandsTypeChecking.typeNullableString.check(call, validator,
-                    scope, call.operands[2], 0, true);
+                if (!OperandsTypeChecking.typeNullableString.check(call, validator,
+                    scope, call.operands[1], 0, throwOnFailure)) {
+                    return false;
+                }
+                if (!OperandsTypeChecking.typeNullableString.check(call, validator,
+                    scope, call.operands[2], 0, throwOnFailure)) {
+                    return false;
+                }
 
-                TypeUtil.isCharTypeComparableThrows(validator, scope,
-                    call.operands);
+                if (!TypeUtil.isCharTypeComparable(
+                    validator, scope, call.operands, throwOnFailure)) {
+                    return false;
+                }
             } else {
-                OperandsTypeChecking.typeNullableNumeric.check(call, validator,
-                    scope, call.operands[1], 0, true);
-                OperandsTypeChecking.typeNullableNumeric.check(call, validator,
-                    scope, call.operands[2], 0, true);
+                if (!OperandsTypeChecking.typeNullableNumeric.check(call, validator,
+                    scope, call.operands[1], 0, throwOnFailure)) {
+                    return false;
+                }
+                if (!OperandsTypeChecking.typeNullableNumeric.check(call, validator,
+                    scope, call.operands[2], 0, throwOnFailure)) {
+                    return false;
+                }
             }
 
             if (!t1.isSameTypeFamily(t2)) {
-                throw call.newValidationSignatureError(validator, scope);
+                if (throwOnFailure) {
+                    throw call.newValidationSignatureError(validator, scope);
+                }
+                return false;
             }
         }
+        return true;
     }
 
     public SqlOperator.OperandsCountDescriptor getOperandsCountDescriptor()

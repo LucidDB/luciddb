@@ -83,14 +83,19 @@ public class SqlLiteralChainOperator extends SqlInternalOperator {
         return true;
     }
 
-    protected void checkArgTypes(
+    protected boolean checkArgTypes(
         SqlCall call,
         SqlValidator validator,
-        SqlValidator.Scope scope)
+        SqlValidator.Scope scope,
+        boolean throwOnFailure)
     {
         if (!argTypesValid(call, validator, scope)) {
-            throw call.newValidationSignatureError(validator, scope);
+            if (throwOnFailure) {
+                throw call.newValidationSignatureError(validator, scope);
+            }
+            return false;
         }
+        return true;
     }
 
     // Result type is the same as all the args, but its size is the

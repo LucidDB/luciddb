@@ -44,12 +44,13 @@ import org.eigenbase.util.Util;
  */
 public abstract class ReturnTypeInference
 {
-    // REVIEW jvs 26-May-2004:  I think we should try to eliminate one
-    // of these methods; they are redundant.
-    public abstract RelDataType getType(
+
+    public RelDataType getType(
         SqlValidator validator,
         SqlValidator.Scope scope,
-        SqlCall call);
+        SqlCall call) {
+        return collectTypesFromCall(validator, scope, call);
+    }
 
     public abstract RelDataType getType(
         RelDataTypeFactory typeFactory,
@@ -162,14 +163,6 @@ public abstract class ReturnTypeInference
         }
 
         public RelDataType getType(
-            SqlValidator validator,
-            SqlValidator.Scope scope,
-            SqlCall call)
-        {
-            return collectTypesFromCall(validator, scope, call);
-        }
-
-        public RelDataType getType(
             RelDataTypeFactory typeFactory,
             RelDataType [] argTypes)
         {
@@ -219,14 +212,6 @@ public abstract class ReturnTypeInference
             ReturnTypeInference rule2)
         {
             this(new ReturnTypeInference[] { rule1, rule2 });
-        }
-
-        public RelDataType getType(
-            SqlValidator validator,
-            SqlValidator.Scope scope,
-            SqlCall call)
-        {
-            return collectTypesFromCall(validator, scope, call);
         }
 
         public RelDataType getType(
@@ -285,14 +270,6 @@ public abstract class ReturnTypeInference
             this.typeNames = typeNames;
         }
 
-
-        public RelDataType getType(
-            SqlValidator validator,
-            SqlValidator.Scope scope,
-            SqlCall call) {
-            return collectTypesFromCall(validator, scope, call);
-        }
-
         public RelDataType getType(
             RelDataTypeFactory typeFactory,
             RelDataType[] argTypes) {
@@ -309,7 +286,7 @@ public abstract class ReturnTypeInference
     /**
      * Returns the type of position ordinal (zero based)
      */
-    private static class OrdinalReturnTypeInference extends ReturnTypeInference {
+    public static class OrdinalReturnTypeInference extends ReturnTypeInference {
         int ordinal;
 
         public OrdinalReturnTypeInference(int ordinal) {
@@ -553,6 +530,15 @@ public abstract class ReturnTypeInference
         new OrdinalReturnTypeInference(1);
 
     /**
+     * Type-inference strategy whereby the result type of a call is the type of
+     * the third operand.
+     */
+    public static final ReturnTypeInference useThirdArgType =
+        new OrdinalReturnTypeInference(2);
+
+
+
+    /**
      * Type-inference strategy whereby the result type of a call is Boolean.
      */
     public static final ReturnTypeInference useBoolean =
@@ -627,14 +613,6 @@ public abstract class ReturnTypeInference
     private static final ReturnTypeInference useLeastRestrictive =
         new ReturnTypeInference() {
             public RelDataType getType(
-                SqlValidator validator,
-                SqlValidator.Scope scope,
-                SqlCall call)
-            {
-                return collectTypesFromCall(validator, scope, call);
-            }
-
-            public RelDataType getType(
                 RelDataTypeFactory typeFactory,
                 RelDataType [] argTypes)
             {
@@ -680,14 +658,6 @@ public abstract class ReturnTypeInference
      */
     public static final ReturnTypeInference useDyadicStringSumPrecision =
         new ReturnTypeInference() {
-            public RelDataType getType(
-                SqlValidator validator,
-                SqlValidator.Scope scope,
-                SqlCall call)
-            {
-                return collectTypesFromCall(validator, scope, call);
-            }
-
             /**
              * @pre argTypes[0].isSameType(argTypes[1])
              */
@@ -786,15 +756,6 @@ public abstract class ReturnTypeInference
      */
     public static final ReturnTypeInference useMultiset =
         new ReturnTypeInference() {
-            public RelDataType getType(
-                SqlValidator validator,
-                SqlValidator.Scope scope,
-                SqlCall call)
-            {
-                return getType(validator.typeFactory,
-                    TypeUtil.collectTypes(validator, scope, call.operands));
-            }
-
             public RelDataType getType(
                 RelDataTypeFactory typeFactory,
                 RelDataType [] argTypes)

@@ -69,20 +69,27 @@ public class SqlMultisetOperator extends SqlSpecialOperator
         RelDataType type =
             ReturnTypeInference.useNullableBiggest.getType(validator, scope, call);
         if (null == type) {
-            throw validator.newValidationError(call,
-                EigenbaseResource.instance().newNeedSameTypeParameter());
+            return null;
         }
         RelDataType ret = validator.typeFactory.createMultisetType(type);
         ret = validator.typeFactory.createTypeWithNullability(ret, type.isNullable());
         return ret;
     }
 
-    protected void checkArgTypes(
+    protected boolean checkArgTypes(
         SqlCall call,
         SqlValidator validator,
-        SqlValidator.Scope scope)
+        SqlValidator.Scope scope,
+        boolean throwOnFailure)
     {
-        inferType(validator, scope, call);
+        if (null==inferType(validator, scope, call)) {
+            if (throwOnFailure) {
+                throw validator.newValidationError(call,
+                    EigenbaseResource.instance().newNeedSameTypeParameter());
+            }
+            return false;
+        }
+        return true;
     }
 
 

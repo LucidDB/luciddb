@@ -27,6 +27,7 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.type.UnknownParamInference;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -100,12 +101,18 @@ public class SqlRowOperator extends SqlSpecialOperator
         return getTypeInternal(validator.typeFactory, types);
     }
 
-    protected void checkArgTypes(
+    protected boolean checkArgTypes(
         SqlCall call,
         SqlValidator validator,
-        SqlValidator.Scope scope)
+        SqlValidator.Scope scope,
+        boolean throwOnFailure)
     {
         // any arguments are fine
+        Util.discard(call);
+        Util.discard(validator);
+        Util.discard(scope);
+        Util.discard(throwOnFailure);
+        return true;
     }
 
     protected void checkNumberOfArg(SqlCall call)

@@ -100,22 +100,27 @@ public class SqlCastFunction extends SqlFunction
      * Operators (such as "ROW" and "AS") which do not check their arguments
      * can override this method.
      */
-    protected void checkArgTypes(
+    protected boolean checkArgTypes(
         SqlCall call,
         SqlValidator validator,
-        SqlValidator.Scope scope)
+        SqlValidator.Scope scope,
+        boolean throwOnFailure)
     {
         if (SqlUtil.isNullLiteral(call.operands[0], false)) {
-            return;
+            return true;
         }
         RelDataType validatedNodeType =
             validator.getValidatedNodeType(call.operands[0]);
         RelDataType returnType = ((SqlDataType) call.operands[1]).getType();
         if (!returnType.isAssignableFrom(validatedNodeType, true)) {
-            throw EigenbaseResource.instance().newCannotCastValue(
-                validatedNodeType.toString(),
-                returnType.toString());
+            if (throwOnFailure) {
+                throw EigenbaseResource.instance().newCannotCastValue(
+                    validatedNodeType.toString(),
+                    returnType.toString());
+            }
+            return false;
         }
+        return true;
     }
 
     /**

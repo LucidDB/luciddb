@@ -326,10 +326,11 @@ public class SqlJdbcFunctionCall extends SqlFunction
                     getArgCountMismatchMsg()));
         }
 
-        if (!lookupMakeCallObj.operator.checkArgTypesNoThrow(
+        if (!lookupMakeCallObj.operator.checkArgTypes(
                     getLookupCall(),
                     validator,
-                    scope)) {
+                    scope,
+                    false)) {
             throw call.newValidationSignatureError(validator, scope);
         }
         return lookupMakeCallObj.operator.getType(

@@ -143,18 +143,11 @@ public class SqlBetweenOperator extends SqlInfixOperator
             name);
     }
 
-    protected boolean checkArgTypesNoThrow(
+    protected boolean checkArgTypes(
         SqlCall call,
         SqlValidator validator,
-        SqlValidator.Scope scope)
-    {
-        return super.checkArgTypesNoThrow(call, validator, scope);
-    }
-
-    protected void checkArgTypes(
-        SqlCall call,
-        SqlValidator validator,
-        SqlValidator.Scope scope)
+        SqlValidator.Scope scope,
+        boolean throwOnFailure)
     {
         OperandsTypeChecking [] rules =
             new OperandsTypeChecking [] {
@@ -166,17 +159,24 @@ public class SqlBetweenOperator extends SqlInfixOperator
         for (int i = 0; i < rules.length; i++) {
             OperandsTypeChecking rule = rules[i];
             boolean ok;
-            ok = rule.check(call, validator, scope, call.operands[VALUE_OPERAND], 0, false);
-            ok = ok && rule.check(call, validator, scope, call.operands[LOWER_OPERAND], 0, false);
-            ok = ok && rule.check(call, validator, scope, call.operands[UPPER_OPERAND], 0, false);
+            ok = rule.check(call, validator, scope,
+                call.operands[VALUE_OPERAND], 0, false);
+            ok = ok && rule.check(call, validator, scope,
+                call.operands[LOWER_OPERAND], 0, false);
+            ok = ok && rule.check(call, validator, scope,
+                call.operands[UPPER_OPERAND], 0, false);
             if (!ok) {
                 failCount++;
             }
         }
 
         if (failCount >= 3) {
-            throw call.newValidationSignatureError(validator, scope);
+            if (throwOnFailure){
+                throw call.newValidationSignatureError(validator, scope);
+            }
+            return false;
         }
+        return true;
     }
 
     public SqlOperator.OperandsCountDescriptor getOperandsCountDescriptor()

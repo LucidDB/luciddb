@@ -132,18 +132,11 @@ public class SqlStdOperatorTable extends SqlOperatorTable
 
         public OperandsCountDescriptor getOperandsCountDescriptor()
         {
-            return new OperandsCountDescriptor(0);
+            return OperandsCountDescriptor.niladicCountDescriptor;
         }
 
         public SqlSyntax getSyntax() {
             return SqlSyntax.FunctionId;
-        }
-
-        protected void checkArgTypes(SqlCall call, SqlValidator validator,
-                SqlValidator.Scope scope) {
-            if (call.operands.length != 0) {
-                throw call.newValidationSignatureError(validator, scope);
-            }
         }
     }
 
@@ -469,13 +462,17 @@ public class SqlStdOperatorTable extends SqlOperatorTable
                     SqlOperatorTests.testMemberOfOperator(tester);
                 }
 
-                protected void checkArgTypes(
+                protected boolean checkArgTypes(
                     SqlCall call,
                     SqlValidator validator,
-                    SqlValidator.Scope scope) {
+                    SqlValidator.Scope scope,
+                    boolean throwOnFailure) {
 
-                    OperandsTypeChecking.typeNullableMultiset.
-                        check(call, validator, scope, call.operands[1], 0, true);
+                    if (!OperandsTypeChecking.typeNullableMultiset.check(
+                        call, validator, scope,
+                        call.operands[1], 0, throwOnFailure)) {
+                        return false;
+                    }
 
                     RelDataTypeFactoryImpl.MultisetSqlType mt =
                         (RelDataTypeFactoryImpl.MultisetSqlType)
@@ -486,11 +483,15 @@ public class SqlStdOperatorTable extends SqlOperatorTable
 
                     if (!t0.isAssignableFrom(t1, false) &&
                         !t1.isAssignableFrom(t0, false)) {
-                        throw validator.newValidationError(call,
-                            EigenbaseResource.instance().
-                            newTypeNotComparableNear(
-                                t0.toString(), t1.toString()));
+                        if (throwOnFailure) {
+                            throw validator.newValidationError(call,
+                                EigenbaseResource.instance().
+                                newTypeNotComparableNear(
+                                    t0.toString(), t1.toString()));
+                        }
+                        return false;
                     }
+                    return true;
                 }
 
                 public SqlOperator.OperandsCountDescriptor getOperandsCountDescriptor() {
@@ -788,14 +789,19 @@ public class SqlStdOperatorTable extends SqlOperatorTable
                     return replaceAnonymous(ret.toString(), name);
                 }
 
-                protected void checkArgTypes(
+                protected boolean checkArgTypes(
                     SqlCall call,
                     SqlValidator validator,
-                    SqlValidator.Scope scope) {
-                    OperandsTypeChecking.typeNullableDatetime.check(
-                        call, validator, scope, call.operands[0], 0, true);
-                    OperandsTypeChecking.typeNullableDatetime.check(
-                        call, validator, scope, call.operands[2], 0, true);
+                    SqlValidator.Scope scope,
+                    boolean throwOnFailure) {
+                    if (!OperandsTypeChecking.typeNullableDatetime.check(
+                        call, validator, scope, call.operands[0], 0, throwOnFailure)) {
+                        return false;
+                    }
+                    if (!OperandsTypeChecking.typeNullableDatetime.check(
+                        call, validator, scope, call.operands[2], 0, throwOnFailure)) {
+                        return false;
+                    }
 
                     RelDataType t0 = validator.deriveType(scope, call.operands[0]);
                     RelDataType t1 = validator.deriveType(scope, call.operands[1]);
@@ -804,28 +810,44 @@ public class SqlStdOperatorTable extends SqlOperatorTable
 
                     // t0 must be comparable with t2
                     if (!t0.isSameType(t2)) {
-                        throw call.newValidationSignatureError(validator, scope);
+                        if (throwOnFailure) {
+                            throw call.newValidationSignatureError(validator, scope);
+                        }
+                        return false;
                     }
 
                     if (TypeUtil.isDatetime(t1)) {
                         // if t1 is of DATETIME,
                         // then t1 must be comparable with t0
                         if (!t0.isSameType(t1)) {
-                            throw call.newValidationSignatureError(validator, scope);
+                            if (throwOnFailure) {
+                                throw call.newValidationSignatureError(validator, scope);
+                            }
+                            return false;
                         }
                     } else if (!TypeUtil.isInterval(t1)) {
-                        throw call.newValidationSignatureError(validator, scope);
+                        if (throwOnFailure) {
+                            throw call.newValidationSignatureError(validator, scope);
+                        }
+                        return false;
                     }
 
                     if (TypeUtil.isDatetime(t3)) {
                         // if t3 is of DATETIME,
                         // then t3 must be comparable with t2
                         if (!t2.isSameType(t3)) {
-                            throw call.newValidationSignatureError(validator, scope);
+                            if (throwOnFailure) {
+                                throw call.newValidationSignatureError(validator, scope);
+                            }
+                            return false;
                         }
                     } else if (!TypeUtil.isInterval(t3)) {
-                        throw call.newValidationSignatureError(validator, scope);
+                        if (throwOnFailure) {
+                            throw call.newValidationSignatureError(validator, scope);
+                        }
+                        return false;
                     }
+                    return true;
                 }
             };
 
@@ -1030,20 +1052,19 @@ public class SqlStdOperatorTable extends SqlOperatorTable
                 return new OperandsCountDescriptor(3, 4);
             }
 
-            protected void checkArgTypes(
+            protected boolean checkArgTypes(
                 SqlCall call,
                 SqlValidator validator,
-                SqlValidator.Scope scope)
+                SqlValidator.Scope scope,
+                boolean throwOnFailure)
             {
                 switch (call.operands.length) {
                 case 3:
-                    OperandsTypeChecking.typeNullableStringStringNotNullableInt
-                        .check(validator, scope, call, true);
-                    break;
+                    return OperandsTypeChecking.typeNullableStringStringNotNullableInt
+                        .check(validator, scope, call, throwOnFailure);
                 case 4:
-                    OperandsTypeChecking.typeNullableStringStringNotNullableIntInt
-                        .check(validator, scope, call, true);
-                    break;
+                    return OperandsTypeChecking.typeNullableStringStringNotNullableIntInt
+                        .check(validator, scope, call, throwOnFailure);
                 default:
                     throw Util.needToImplement(this);
                 }
@@ -1146,10 +1167,11 @@ public class SqlStdOperatorTable extends SqlOperatorTable
                 return null;
             }
 
-            protected void checkArgTypes(
+            protected boolean checkArgTypes(
                 SqlCall call,
                 SqlValidator validator,
-                SqlValidator.Scope scope)
+                SqlValidator.Scope scope,
+                boolean throwOnFailure)
             {
                 //check that the two operands are of same type.
                 RelDataType type0 =
@@ -1158,10 +1180,13 @@ public class SqlStdOperatorTable extends SqlOperatorTable
                     validator.getValidatedNodeType(call.operands[1]);
                 if (!type0.isSameTypeFamily(type1)
                         && !type1.isSameTypeFamily(type0)) {
-                    throw call.newValidationSignatureError(validator, scope);
+                    if (throwOnFailure) {
+                        throw call.newValidationSignatureError(validator, scope);
+                    }
+                    return false;
                 }
 
-                operandsCheckingRule.check(validator, scope, call, true);
+                return operandsCheckingRule.check(validator, scope, call, throwOnFailure);
             }
 
             public void test(SqlTester tester)
@@ -1470,16 +1495,16 @@ public class SqlStdOperatorTable extends SqlOperatorTable
             return SqlSyntax.FunctionId;
         }
 
-        protected void checkArgTypes(SqlCall call, SqlValidator validator,
-                SqlValidator.Scope scope)
+        protected boolean checkArgTypes(SqlCall call, SqlValidator validator,
+                SqlValidator.Scope scope, boolean throwOnFailure)
         {
-            if (call.operands.length != 0) {
-                throw call.newValidationSignatureError(validator, scope);
-            }
+            Util.discard(call);
+            Util.discard(validator);
+            Util.discard(scope);
+            Util.discard(throwOnFailure);
+            return true;
         }
 
-        // no argTypeInference, so must override these methods.
-        // Probably need a niladic version of that.
         public OperandsCountDescriptor getOperandsCountDescriptor()
         {
             return OperandsCountDescriptor.niladicCountDescriptor;

@@ -29,6 +29,7 @@ import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.type.OperandsTypeChecking;
 import org.eigenbase.sql.type.TypeUtil;
+import org.eigenbase.sql.type.ReturnTypeInference;
 
 /**
  * Definition of the "TRIM" builtin SQL function.
@@ -43,7 +44,12 @@ public class SqlTrimFunction extends SqlFunction
 
     public SqlTrimFunction()
     {
-        super("TRIM", SqlKind.Trim, null, null,
+        super("TRIM", SqlKind.Trim,
+            new ReturnTypeInference.TransformCascade(
+                ReturnTypeInference.useThirdArgType,
+                ReturnTypeInference.toNullable
+            ),
+            null,
             OperandsTypeChecking.typeNullableStringStringOfSameType,
             SqlFunction.SqlFuncTypeName.String);
     }
@@ -99,44 +105,31 @@ public class SqlTrimFunction extends SqlFunction
         return super.createCall(operands, pos);
     }
 
-    protected void checkArgTypes(
+    protected boolean checkArgTypes(
         SqlCall call,
         SqlValidator validator,
-        SqlValidator.Scope scope)
+        SqlValidator.Scope scope,
+        boolean throwOnFailure)
     {
         for (int i = 1; i < 3; i++) {
             if (!OperandsTypeChecking.typeNullableString.check(call, validator,
-                        scope, call.operands[i], 0, true)) {
-                throw call.newValidationSignatureError(validator, scope);
+                        scope, call.operands[i], 0, throwOnFailure)) {
+                if (throwOnFailure) {
+                    throw call.newValidationSignatureError(validator, scope);
+                }
+                return false;
             }
         }
-    }
-
-    public RelDataType getType(
-        RelDataTypeFactory typeFactory,
-        RelDataType [] argTypes)
-    {
-        assert (3 == argTypes.length);
-        return TypeUtil.makeNullableIfOperandsAre(typeFactory,
-            argTypes, argTypes[2]);
-    }
-
-    public RelDataType getType(
-        SqlValidator validator,
-        SqlValidator.Scope scope,
-        SqlCall call)
-    {
-        checkArgTypes(call, validator, scope);
 
         SqlNode [] ops = new SqlNode[2];
         for (int i = 1; i < call.operands.length; i++) {
             ops[i - 1] = call.operands[i];
         }
 
-        TypeUtil.isCharTypeComparableThrows(validator, scope, ops);
-        RelDataType type = validator.deriveType(scope, call.operands[2]);
-        return TypeUtil.makeNullableIfOperandsAre(validator, scope,
-            call, type);
+        if (!TypeUtil.isCharTypeComparable(validator, scope, ops, throwOnFailure)) {
+            return false;
+        }
+        return true;
     }
 
     public void test(SqlTester tester)

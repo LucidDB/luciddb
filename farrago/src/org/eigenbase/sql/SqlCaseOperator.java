@@ -126,10 +126,11 @@ public class SqlCaseOperator extends SqlOperator
 
     //~ Methods ---------------------------------------------------------------
 
-    protected void checkArgTypes(
+    protected boolean checkArgTypes(
         SqlCall call,
         SqlValidator validator,
-        SqlValidator.Scope scope)
+        SqlValidator.Scope scope,
+        boolean throwOnFailure)
     {
         SqlCase caseCall = (SqlCase) call;
         List whenList = caseCall.getWhenOperands();
@@ -145,8 +146,11 @@ public class SqlCaseOperator extends SqlOperator
             //should throw validation error if something wrong...
             RelDataType type = validator.deriveType(scope, node);
             if (!boolType.isSameType(type)) {
-                throw validator.newValidationError(node,
-                    EigenbaseResource.instance().newExpectedBoolean());
+                if (throwOnFailure) {
+                    throw validator.newValidationError(node,
+                        EigenbaseResource.instance().newExpectedBoolean());
+                }
+                return false;
             }
         }
 
@@ -158,17 +162,19 @@ public class SqlCaseOperator extends SqlOperator
             }
         }
 
-        if (!SqlUtil.isNullLiteral(
-                    caseCall.getElseOperand(),
-                    false)) {
+        if (!SqlUtil.isNullLiteral(caseCall.getElseOperand(), false)) {
             foundNotNull = true;
         }
 
         if (!foundNotNull) {
             // according to the sql standard we can not have all of the THEN
             // statements and the ELSE returning null
-            throw EigenbaseResource.instance().newMustNotNullInElse();
+            if (throwOnFailure) {
+                throw EigenbaseResource.instance().newMustNotNullInElse();
+            }
+            return false;
         }
+        return true;
     }
 
     protected RelDataType inferType(

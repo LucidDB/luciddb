@@ -83,19 +83,24 @@ public class SqlLikeOperator extends SqlSpecialOperator
         return new OperandsCountDescriptor(2, 3);
     }
 
-    protected void checkArgTypes(
+    protected boolean checkArgTypes(
         SqlCall call,
         SqlValidator validator,
-        SqlValidator.Scope scope)
+        SqlValidator.Scope scope,
+        boolean throwOnFailure)
     {
         switch (call.operands.length) {
         case 2:
-            OperandsTypeChecking.typeNullableStringStringOfSameType.check(validator,
-                scope, call, true);
+            if (!OperandsTypeChecking.typeNullableStringStringOfSameType.
+                check(validator, scope, call, throwOnFailure)) {
+                return false;
+            }
             break;
         case 3:
-            OperandsTypeChecking.typeNullableStringStringStringOfSameType.check(validator,
-                scope, call, true);
+            if (!OperandsTypeChecking.typeNullableStringStringStringOfSameType.
+                check(validator, scope, call, throwOnFailure)) {
+                return false;
+            }
 
             //calc implementation should
             //enforce the escape character length to be 1
@@ -104,7 +109,11 @@ public class SqlLikeOperator extends SqlSpecialOperator
             throw Util.newInternal("unexpected number of args to " + call);
         }
 
-        TypeUtil.isCharTypeComparableThrows(validator, scope, call.operands);
+        if (!TypeUtil.isCharTypeComparable(
+            validator, scope, call.operands, throwOnFailure)) {
+            return false;
+        }
+        return true;
     }
 
     public void unparse(
