@@ -42,7 +42,11 @@
     <text>Illegal {0} literal {1} at {2}: {3}</text>
 </message>
 
-<message id="100011" name="BadFormat">
+<message id="100020" name="InvalidBitLiteral">
+    <text>Invalid bit string {0} near {1}</text>
+</message>
+
+<message id="100030" name="BadFormat">
     <text>not in format ''{0}''</text>
 </message>
 
@@ -67,7 +71,7 @@
 </exception>
 
 <exception id="120011" name="UnknownDatatypeName">
-    <text>Unknown datatype name: {0}</text>
+    <text>Unknown datatype name: {0} near {1}</text>
 </exception>
 
 <exception id="120020" name="IncompatibleValueType">
@@ -126,6 +130,10 @@
     <text>Expected a boolean type near : {0}</text>
 </exception>
 
+<exception id="120145" name="ExpectedMultiset">
+    <text>Expected MULTISET type near : {0}</text>
+</exception>
+
 <exception id="120150" name="MustNotNullInElse">
     <text>ELSE clause or at least one THEN clause must be non-NULL</text>
 </exception>
@@ -157,6 +165,11 @@
 <exception id="120220" name="TypeNotComparable">
     <text>{0} is not comparable to {1}</text>
 </exception>
+
+<exception id="120225" name="TypeNotComparableNear">
+    <text>{0} is not comparable to {1} near: {2}</text>
+</exception>
+
 
 <exception id="120230" name="WrongNumOfArguments">
     <text>Wrong number of arguments to {0} near: {1}</text>

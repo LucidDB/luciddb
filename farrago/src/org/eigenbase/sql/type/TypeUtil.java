@@ -31,7 +31,6 @@ import org.eigenbase.rex.RexNode;
 import org.eigenbase.resource.EigenbaseResource;
 
 /**
- * TODO: move this file into package type
  * Contains utility methods used during validation or type derivation
  *
  * @author Wael Chatila
@@ -40,7 +39,6 @@ import org.eigenbase.resource.EigenbaseResource;
  */
 public class TypeUtil
 {
-
     /**
      * Checks if two types or more are char comparable.
      * @pre argTypes != null

@@ -1497,11 +1497,7 @@ public class SqlValidator
         RelDataType targetRowType)
     {
         assert node.isA(SqlKind.Values);
-        // TODO: validate that all rows have the same number of columns
-        //   and that expressions in each column are union-compatible.
-        // jhyde: Having the same number of columns is a pre-requisite for
-        //   being union-compatible. So just check that they're
-        //   union-compatible.
+
         final SqlNode [] operands = node.getOperands();
         for (int i = 0; i < operands.length; i++) {
             SqlNode operand = operands[i];
@@ -1525,8 +1521,10 @@ public class SqlValidator
                 rowConstructor);
         }
 
-        // validate that all rows have the same number of columns
+        // validate that all row types have the same number of columns
         //  and that expressions in each column are compatible.
+        // A values expression is turned into something that looks like
+        // ROW(type00, type01,...), ROW(type11,...),...
         final int numOfRows = operands.length;
         if (numOfRows >= 2) {
             SqlCall firstRow = (SqlCall) operands[0];

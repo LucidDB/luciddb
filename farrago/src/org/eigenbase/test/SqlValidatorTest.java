@@ -29,9 +29,9 @@ import org.eigenbase.sql.parser.SqlParser;
 
 
 /**
- * ...
+ * Concrete child class of {@link SqlValidatorTestCase}.
  *
- * @author wael
+ * @author Wael Chatila
  * @since Jan 14, 2004
  * @version $Id$
  **/

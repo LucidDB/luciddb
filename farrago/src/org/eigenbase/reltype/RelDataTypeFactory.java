@@ -186,6 +186,13 @@ public interface RelDataTypeFactory
         int length,
         int scale);
 
+
+    /**
+     * Creates a SQL multiset where each item has a type of type
+     * @param type the type each item in the MULTISET has
+     */
+    RelDataType createMultisetType(RelDataType type);
+
     /**
      * coerce=true implies that explicit rather than implicit cast is being
      * done.

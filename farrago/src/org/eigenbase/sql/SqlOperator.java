@@ -557,7 +557,7 @@ public abstract class SqlOperator
 
         /**
          * This constructor should only be called internally from this class
-         * only when creating a variadic count descriptor
+         * and only when creating a variadic count descriptor
          */
         private OperandsCountDescriptor()
         {

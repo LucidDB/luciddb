@@ -1068,6 +1068,62 @@ public abstract class SqlValidatorTestCase extends TestCase
 
         //        checkType("values (1),(2.0),(3)","ROWTYPE(DOUBLE)");
     }
+
+    public void testMultiset() {
+        checkExp("multiset[1]");
+        checkExp("multiset[1,2.3]");
+        checkExpFails("multiset[1, '2']","Parameters must be of the same type near: line 1, column 23");
+        checkExp("multiset[ROW(1,2)]");
+        checkExp("multiset[ROW(1,2),ROW(2,5)]");
+        checkExp("multiset[ROW(1,2),ROW(3.4,5.4)]");
+    }
+
+    public void testMultisetSetOperators() {
+        checkExp("multiset[1] multiset union multiset[1,2.3]");
+        checkExpType("multiset[1] multiset union multiset[1,2.3]","DECIMAL(2, 1) MULTISET");
+        checkExp("multiset[1] multiset union all multiset[1,2.3]");
+        checkExp("multiset[1] multiset except multiset[1,2.3]");
+        checkExp("multiset[1] multiset except all multiset[1,2.3]");
+        checkExp("multiset[1] multiset intersect multiset[1,2.3]");
+        checkExp("multiset[1] multiset intersect all multiset[1,2.3]");
+
+        checkExpFails("multiset[1, '2'] multiset union multiset[1]","Parameters must be of the same type near: line 1, column 23");
+        checkExp("multiset[ROW(1,2)] multiset intersect multiset[row(3,4)]");
+//TODO        checkExpFails("multiset[ROW(1,'2')] multiset union multiset[ROW(1,2)]","Parameters must be of the same type near: line 1, column 23");
+    }
+
+    public void testSubMultisetOf() {
+        checkExpType("multiset[1] submultiset of multiset[1,2.3]","BOOLEAN");
+        checkExpType("multiset[1] submultiset of multiset[1]","BOOLEAN");
+
+        checkExpFails("multiset[1, '2'] submultiset of multiset[1]","Parameters must be of the same type near: line 1, column 23");
+        checkExp("multiset[ROW(1,2)] submultiset of multiset[row(3,4)]");
+    }
+
+    public void testElement() {
+        checkExpType("element(multiset[1])", "INTEGER");
+        checkExpType("1.0+element(multiset[1])", "DECIMAL(2, 1)");
+        checkExpType("element(multiset['1'])", "VARCHAR(1)");
+        checkExpType("element(multiset[1e-2])", "DOUBLE");
+        checkExpType("element(multiset[multiset[cast(null as tinyint)]])", "TINYINT MULTISET");
+    }
+
+    public void testMemberOf() {
+        checkExpType("1 member of multiset[1]","BOOLEAN");
+        checkExpFails("1 member of multiset['1']","INTEGER is not comparable to VARCHAR.1. near: line 1, column 32");
+    }
+
+    public void testIsASet() {
+        checkExp("multiset[1] is a set");
+        checkExp("multiset['1'] is a set");
+        checkExpFails("'a' is a set","Expected MULTISET type near : line 1, column 1");
+    }
+
+    public void testCardinality() {
+        checkExpType("cardinality(multiset[1])","INTEGER");
+        checkExpType("cardinality(multiset['1'])","INTEGER");
+        checkExpFails("cardinality('a')","Expected MULTISET type near : line 1, column 19");
+    }
 }
 
 

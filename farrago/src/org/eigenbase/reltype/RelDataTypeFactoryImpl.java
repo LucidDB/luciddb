@@ -160,6 +160,12 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
         }
     }
 
+    private RelDataType copyMultisetType(RelDataType type, boolean nullable) {
+        MultisetSqlType mt = (MultisetSqlType) type;
+        RelDataType elementType = copyType(mt.getElementType());
+        return new MultisetSqlType(elementType, nullable);
+    }
+
     // copy a non-record type, setting nullability
     private RelDataType copySimpleType(
         RelDataType type,
@@ -240,6 +246,8 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
     {
         if (type instanceof RecordType) {
             return copyRecordTypeWithNullability((RecordType) type, nullable);
+        } else if (type instanceof MultisetSqlType) {
+            return copyMultisetType(type, nullable);
         } else {
             return copySimpleType(type, nullable);
         }
@@ -250,6 +258,8 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
     {
         if (type instanceof RecordType) {
             return copyRecordType((RecordType) type);
+        } else if (type instanceof MultisetSqlType) {
+            return copyMultisetType(type, type.isNullable());
         } else {
             return copySimpleType(
                 type,
@@ -406,6 +416,8 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
     public RelDataType createSqlType(SqlTypeName typeName)
     {
         Util.pre(typeName != null, "typeName != null");
+        assert(!SqlTypeName.Multiset.equals(typeName)) :
+            "use createMultisetType() instead";
         return new SqlType(typeName);
     }
 
@@ -415,6 +427,8 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
     {
         Util.pre(typeName != null, "typeName != null");
         Util.pre(length >= 0, "length >= 0");
+        assert(!SqlTypeName.Multiset.equals(typeName)) :
+            "use createMultisetType() instead";
         return new SqlType(typeName, length);
     }
 
@@ -425,7 +439,13 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
     {
         Util.pre(typeName != null, "typeName != null");
         Util.pre(length >= 0, "length >= 0");
+        assert(!SqlTypeName.Multiset.equals(typeName)) :
+            "use createMultisetType() instead";
         return new SqlType(typeName, length, scale);
+    }
+
+    public RelDataType createMultisetType(RelDataType type) {
+        return new MultisetSqlType(type, true);
     }
 
     /**
@@ -830,6 +850,27 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
             sb.append(")");
             return sb.toString();
         }
+
+        public boolean isSameType(RelDataType t) {
+            if (t instanceof RecordType) {
+                RecordType that = (RecordType) t;
+                if (that.fields.length!=this.fields.length) {
+                    return false;
+                }
+
+                boolean ret = true;
+                for (int i = 0; i < this.fields.length; i++) {
+                    ret = ret && this.fields[i].getType().isSameType(
+                        that.fields[i].getType());
+                }
+                return ret;
+            }
+            return false;
+        }
+
+        public boolean isSameTypeFamily(RelDataType t) {
+            return isSameType(t);
+        }
     }
 
     /**
@@ -1148,13 +1189,13 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
                 return this.getSqlTypeName().equals(thatSqlTypeName);
             }
             return t instanceof SqlType
-                && (((SqlType) t).typeName.getOrdinal() == this.typeName
-                .getOrdinal());
+                && (((SqlType) t).typeName.getOrdinal() ==
+                    this.typeName.getOrdinal());
         }
 
         public boolean isSameTypeFamily(RelDataType t)
         {
-            //TODO implement real rules
+            //TODO Implement real rules
             return isSameType(t);
         }
 
@@ -1311,6 +1352,158 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
         }
     }
 
+
+    /**
+     * MultisetSqlType is used to reperesent the type of the SQL builtin
+     * MULTISET construct.
+     */
+    public class MultisetSqlType implements RelDataType, Cloneable {
+
+        private RelDataType elementType;
+        private boolean isNullable;
+        private String digest;
+
+        /**
+         * @pre null!=elementType
+         */
+        public MultisetSqlType(RelDataType elementType, boolean isNullable) {
+            Util.pre(null!=elementType,"null!=elementType");
+            this.elementType = elementType;
+            this.isNullable = isNullable;
+            digest = elementType.toString() + " MULTISET";
+        }
+
+        public RelDataTypeFactory getFactory() {
+            return RelDataTypeFactoryImpl.this;
+        }
+
+        public RelDataType getElementType() {
+            return elementType;
+        }
+
+        public String toString() {
+            return getFullTypeString();
+        }
+
+        public String getFullTypeString() {
+            return digest;
+        }
+
+        public int hashCode()
+        {
+            return digest.hashCode();
+        }
+
+        public boolean equals(Object obj)
+        {
+            // if obj is a multiset then elementType!=null for sure since its
+            //enforced in ctor.
+            return (obj instanceof MultisetSqlType) &&
+               ((MultisetSqlType) obj).elementType.isSameType(this.elementType);
+        }
+
+        public boolean isSameType(RelDataType t)
+        {
+            return equals(t);
+        }
+
+        public boolean isSameTypeFamily(RelDataType t)
+        {
+            return isSameType(t);
+        }
+
+        public RelDataTypeField getField(String fieldName)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        public int getFieldCount()
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        public int getFieldOrdinal(String fieldName)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        public RelDataTypeField [] getFields()
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        public RelDataType getComponentType() {
+//            throw Util.needToImplement(this);
+            return null;
+        }
+
+        public boolean isJoin()
+        {
+            return false;
+        }
+
+        public RelDataType [] getJoinTypes()
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        public RelDataType getArrayType()
+        {
+            throw Util.needToImplement(this);
+        }
+
+        public boolean isProject()
+        {
+            return elementType.isProject();
+        }
+
+        public boolean equalsSansNullability(RelDataType type)
+        {
+            return equals(type);
+        }
+
+        public boolean isNullable()
+        {
+            return isNullable;
+        }
+
+        public boolean isAssignableFrom(
+            RelDataType t,
+            boolean coerce) {
+            return (t instanceof MultisetSqlType) &&
+                ((MultisetSqlType) t).elementType.isAssignableFrom(
+                    elementType, coerce);
+        }
+
+        public boolean isCharType() {
+            return false;
+        }
+
+        public Charset getCharset() {
+            throw new UnsupportedOperationException();
+        }
+
+        public SqlCollation getCollation() throws RuntimeException {
+            throw new UnsupportedOperationException();
+        }
+
+        public int getMaxBytesStorage() {
+            throw new UnsupportedOperationException();
+        }
+
+        public SqlTypeName getSqlTypeName() {
+            return SqlTypeName.Multiset;
+        }
+
+        public int getPrecision() {
+            throw new UnsupportedOperationException();
+        }
+
+    }
+
+    /**
+     * Class to hold conversion rules from JavaType to SqlType
+     */
     public static class JavaToSqlTypeConversionRules
     {
         private static final JavaToSqlTypeConversionRules instance =
@@ -1361,8 +1554,13 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
         }
     }
 
-    // REVIEW 7/05/04 Wael: We should split this up in
-    // Cast rules, symmetric and asymmetric assignable rules
+    /**
+     * REVIEW 7/05/04 Wael: We should split this up in
+     * Cast rules, symmetric and asymmetric assignable rules
+     *
+     * Class to hold rules to determine if a type is assignalbe from another
+     * type.
+     */
     public static class AssignableFromRules
     {
         private static AssignableFromRules instance = null;
@@ -1374,6 +1572,11 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
             rules = new HashMap();
 
             HashSet rule;
+
+            //Multiset is assignable from...
+            rule = new HashSet();
+            rule.add(SqlTypeName.Multiset);
+            rules.put(SqlTypeName.Multiset, rule);
 
             // Tinyint is assignable from...
             rule = new HashSet();

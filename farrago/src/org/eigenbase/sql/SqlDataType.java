@@ -169,10 +169,7 @@ public class SqlDataType extends SqlNode
         //for now we only support builtin datatypes
         if (!SqlTypeName.containsName(name)) {
             ParserPosition pos = getParserPosition();
-
-            //assert(pos==null) : "need to add pos data now when pos!=null";
-            //todo: klo 7/26/2004 modify the unknowdatatypename message to include parser position
-            throw EigenbaseResource.instance().newUnknownDatatypeName(name);
+            throw EigenbaseResource.instance().newUnknownDatatypeName(name,pos.toString());
         }
 
         SqlTypeName sqlTypeName = SqlTypeName.get(name);

@@ -21,6 +21,16 @@
 
 package org.eigenbase.sql;
 
+import java.math.BigDecimal;
+import java.sql.Date;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.TimeZone;
+import java.util.List;
+
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.sql.parser.ParserPosition;
@@ -34,6 +44,9 @@ import org.eigenbase.util.Util;
 import java.math.BigDecimal;
 import java.util.Calendar;
 
+import org.eigenbase.sql.fun.SqlStdOperatorTable;
+import org.eigenbase.sql.fun.SqlRowOperator;
+import org.eigenbase.util.*;
 
 /**
  * A <code>SqlLiteral</code> is a constant. It is, appropriately, immutable.
@@ -231,6 +244,8 @@ public class SqlLiteral extends SqlNode
             // own value!
             return value instanceof EnumeratedValues.Value
                 || value instanceof String;
+        case SqlTypeName.Multiset_ordinal:
+            return true;
         case SqlTypeName.Integer_ordinal: // not allowed -- use Decimal
         case SqlTypeName.Varchar_ordinal: // not allowed -- use Char
         case SqlTypeName.Varbinary_ordinal: // not allowed -- use Binary
@@ -462,6 +477,23 @@ public class SqlLiteral extends SqlNode
                     string.getCharset(),
                     string.getCollation());
             return type;
+        case SqlTypeName.Multiset_ordinal:
+            List l = (List) value;
+            SqlNode e = (SqlNode) l.get(0);
+            if (e.isA(SqlKind.Row)) {
+                SqlCall rowCall = (SqlCall) e;
+                RelDataType[] args = new RelDataType[rowCall.operands.length];
+                for (int i = 0; i < rowCall.operands.length; i++) {
+                    SqlLiteral operand = (SqlLiteral) rowCall.operands[i];
+                    args[i] = operand.createSqlType(typeFactory);
+                }
+                return rowCall.operator.getType(typeFactory, args);
+            } else {
+
+            }
+
+
+
         case SqlTypeName.Symbol_ordinal:
 
             // Existing code expects symbols to have a null type.
@@ -872,3 +904,4 @@ public class SqlLiteral extends SqlNode
 
 
 // End SqlLiteral.java
+

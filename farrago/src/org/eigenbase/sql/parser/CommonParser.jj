@@ -69,7 +69,7 @@ JAVACODE ParserPosition getPos()
 JAVACODE String getPositionString()
 {
     return EigenbaseResource.instance().
-        getParserContext(new Integer(token.beginLine), 
+        getParserContext(new Integer(token.beginLine),
                          new Integer(token.beginColumn));
 }
 
@@ -442,7 +442,7 @@ SqlNode SqlInsert() :
         {
             pos = getPos();
         }
-    ( 
+    (
         LOOKAHEAD(2)
         <LPAREN>
         columnList = SimpleIdentifierCommaList()
@@ -829,7 +829,7 @@ SqlNode RowConstructor() :
     |
         LOOKAHEAD(3)
         { pos = getPos(); }
-        [ 
+        [
             <ROW>
         ] valueList = ParenthesizedQueryOrCommaList(EXPR_ACCEPT_ALL)
     |
@@ -1240,7 +1240,7 @@ List Expression2(ExprContext exprContext) :
                     }
                     [
                         <SYMMETRIC> { op = opTab.symmetricNotBetweenOperator; }
-                    |  
+                    |
                         <ASYMMETRIC>
                     ]
                 |
@@ -1251,7 +1251,7 @@ List Expression2(ExprContext exprContext) :
                     }
                     [
                         <SYMMETRIC> { op = opTab.symmetricBetweenOperator; }
-                    |  
+                    |
                         <ASYMMETRIC>
                     ]
                 )
@@ -1266,7 +1266,7 @@ List Expression2(ExprContext exprContext) :
                     pos = getPos();
                 }
                 (
-                    <NOT> 
+                    <NOT>
                     (
                         <LIKE> { op = opTab.notLikeOperator; }
                     |
@@ -1288,7 +1288,7 @@ List Expression2(ExprContext exprContext) :
                     {
                         pos = getPos();
                         list.add(new ParserUtil.ToTreeListItem(opTab.escapeOperator, pos));
-                        list.add(e); 
+                        list.add(e);
                     }
                 ]
             |
@@ -1394,6 +1394,8 @@ SqlNode AtomicRowExpression() :
     e = DynamicParam() { return e; }
 |
     LOOKAHEAD(2) e = FunctionCall() { return e; }
+|
+    e = MultisetConstructor() { return e; }
 |
     e = CompoundIdentifier() { return e; }
 |
@@ -1520,12 +1522,12 @@ SqlNode StringLiteral(ParserPosition pos, boolean strict) :
     // or comments may not occur between the prefix and the first quote, the
     // head fragment, with any prefix, is one token.
 
-    <BIT_STRING_LITERAL> 
+    <BIT_STRING_LITERAL>
         {
             p = ParserUtil.trim(token.image, "bB'");
             frags = startList(SqlLiteral.BitStringLiteral.create(p, pos));
             nfrags++;
-        } 
+        }
     (
         <QUOTED_STRING>
         {
@@ -1535,7 +1537,9 @@ SqlNode StringLiteral(ParserPosition pos, boolean strict) :
                 nfrags++;
             } catch (NumberFormatException ex) {
                 throw new ParseException(
-                    "Invalid bit string "+token.image+" near "+getPositionString());
+                    EigenbaseResource.instance().getInvalidBitLiteral(
+                        token.image,
+                        getPositionString()));
             }
         }
     )*
@@ -1576,7 +1580,7 @@ SqlNode StringLiteral(ParserPosition pos, boolean strict) :
                 SqlNode[] rands = (SqlNode[]) frags.toArray(new SqlNode[nfrags]);
                 return opTab.litChainOperator.createCall(rands, pos);
             }
-        }  
+        }
 
 |
     {
@@ -1617,7 +1621,7 @@ SqlNode StringLiteral(ParserPosition pos, boolean strict) :
 }
 
 
-/** 
+/**
  * Parses a date/time literal.
  */
 SqlLiteral DateTimeLiteral(ParserPosition pos) :
@@ -1648,6 +1652,25 @@ SqlLiteral DateTimeLiteral(ParserPosition pos) :
     <TIMESTAMP> <QUOTED_STRING> {
         return parseTimestampLiteral(token.image, pos);
     }
+}
+
+/** Parse a MULTISET constructor */
+SqlNode MultisetConstructor() :
+{
+    List args;
+    SqlNode e;
+}
+{
+    <MULTISET>
+    //by enumeration "MULTISET[e0, e1, ..., eN]"
+    <LBRACKET> //todo do trigraph aswell ??( ??)
+    e = Expression(EXPR_ACCEPT_NONQUERY) { args = startList(e); }
+    (
+        <COMMA> e = Expression(EXPR_ACCEPT_NONQUERY) { args.add(e); }
+    )*
+    <RBRACKET>
+    {return opTab.multisetOperator.createCall(
+                ParserUtil.toNodeArray(args), getPos());}
 }
 
 /**
@@ -1704,7 +1727,7 @@ String Identifier() :
     String kw;
 }
 {
-    <IDENTIFIER> {return getToken(0).image.toUpperCase();}
+    (<A> | <IDENTIFIER>) {return getToken(0).image.toUpperCase();}
 |
     <QUOTED_IDENTIFIER> { return ParserUtil.strip(getToken(0).image, "\""); }
 |
@@ -1810,7 +1833,7 @@ SqlDataType DataType() :
 }
 
 // Some SQL type names need special handling due to the fact that they have
-// spaces in them but are not quoted (what a brilliant idea!).  Note that
+// spaces in them but are not quoted.  Note that
 // whenever a typename is also a keyword (like CHARACTER), it has to be added
 // here.
 SqlIdentifier TypeName() :
@@ -1837,6 +1860,7 @@ SqlIdentifier TypeName() :
     |   <REAL> [ <PRECISION> ] { typeName = new SqlIdentifier(SqlTypeName.Real.name,pos); }
     |   <DOUBLE> [ <PRECISION> ] { typeName = new SqlIdentifier(SqlTypeName.Double.name,pos); }
     |   <BIT> { typeName = new SqlIdentifier(SqlTypeName.Bit.name,pos); }
+    |   <MULTISET> { typeName = new SqlIdentifier(SqlTypeName.Multiset.name,pos); }
 
     |   typeName = SimpleIdentifier()
 
@@ -2053,14 +2077,58 @@ SqlNode FunctionCall() :
  */
 SqlBinaryOperator BinaryQueryOperator() :
 {
+    SqlBinaryOperator op;
 }
 {
-    LOOKAHEAD(2) <UNION> <ALL> { return opTab.unionAllOperator; }
-    | <UNION> { return opTab.unionOperator; }
-    | LOOKAHEAD(2) <INTERSECT> <ALL> { return opTab.intersectAllOperator; }
-    | <INTERSECT> { return opTab.intersectOperator; }
-    | LOOKAHEAD(2) <EXCEPT> <ALL> { return opTab.exceptAllOperator; }
-    | <EXCEPT> { return opTab.exceptOperator; }
+    /* If both the ALL or DISTINCT keywords are missing, DISTINCT is implicit */
+    (
+    <UNION> { op = opTab.unionOperator; }
+        [   <ALL> { op = opTab.unionAllOperator; } |
+            <DISTINCT> { op = opTab.unionOperator; }
+        ]
+    |
+    <INTERSECT> { op = opTab.intersectOperator; }
+        [   <ALL> { op = opTab.intersectAllOperator; } |
+            <DISTINCT> { op = opTab.intersectOperator; }
+        ]
+    |
+    <EXCEPT> { op = opTab.exceptOperator; }
+        [   <ALL> { op = opTab.exceptAllOperator; }
+         |  <DISTINCT> { op = opTab.exceptOperator; }
+        ]
+    )
+    { return op; }
+}
+
+/**
+ * Parses a binary multiset operator.
+ */
+SqlBinaryOperator BinaryMultisetOperator() :
+{
+    SqlBinaryOperator op;
+}
+{
+    /* If both the ALL or DISTINCT keywords are missing, DISTINCT is implicit */
+    (
+    <MULTISET>
+        (
+        <UNION> { op = opTab.multiSetUnionOperator; }
+            [   <ALL> { op = opTab.multiSetUnionAllOperator; } |
+                <DISTINCT> { op = opTab.multiSetUnionOperator; }
+            ]
+        |
+        <INTERSECT> { op = opTab.multiSetIntersectOperator; }
+            [   <ALL> { op = opTab.multiSetIntersectAllOperator; } |
+                <DISTINCT> { op = opTab.multiSetIntersectOperator; }
+            ]
+        |
+        <EXCEPT> { op = opTab.multiSetExceptOperator; }
+            [   <ALL> { op = opTab.multiSetExceptAllOperator; }
+             |  <DISTINCT> { op = opTab.multiSetExceptOperator; }
+            ]
+        )
+    )
+    { return op; }
 }
 
 /**
@@ -2086,6 +2154,9 @@ SqlBinaryOperator BinaryRowOperator() :
 | <OVERLAPS> { return opTab.overlapsOperator; }
 | <IS> <DISTINCT> <FROM> { return opTab.isDistinctFromOperator; }
 // <IN> is handled as a special case
+| <MEMBER> <OF> { return opTab.memberOfOperator; }
+| <SUBMULTISET> <OF> { return opTab.subMultisetOfOperator; }
+| { SqlBinaryOperator op;} op = BinaryMultisetOperator() { return op; }
 }
 
 /**
@@ -2106,8 +2177,11 @@ SqlPrefixOperator PrefixRowOperator() :
 SqlPostfixOperator PostfixRowOperator() :
 {}
 {
+
     <IS>
     (
+        <A> <SET> { return opTab.isASetOperator; }
+    |
         <NOT>
         (
             <NULL> { return opTab.isNotNullOperator; }
@@ -2131,7 +2205,8 @@ SqlPostfixOperator PostfixRowOperator() :
 
 TOKEN :
 {
-  < ALL: "all" >
+  < A: "a" >
+| < ALL: "all" >
 | < AND: "and" >
 | < AS: "as" >
 | < ASC: "asc" >
@@ -2148,6 +2223,7 @@ TOKEN :
 | < CHAR: "char" >
 | < CHARACTER: "character" >
 | < COLLATE: "collate" >
+| < COLLECT: "collect" >
 | < CROSS: "cross" >
 | < CURRENT: "current" >
 | < DATE: "date" >
@@ -2185,9 +2261,12 @@ TOKEN :
 | < LEADING: "leading" >
 | < LEFT: "left" >
 | < LIKE: "like" >
+| < MEMBER: "member" >
 | < MINUTE: "minute" >
 | < MONTH: "month" >
+| < MULTISET: "multiset" >
 | < NATURAL: "natural" >
+| < OF: "of" >
 | < OR: "or" >
 | < ORDER: "order" >
 | < OUTER: "outer" >
@@ -2208,6 +2287,7 @@ TOKEN :
 | < SET: "set" >
 | < SIMILAR: "similar" >
 | < SMALLINT: "smallint" >
+| < SUBMULTISET: "submultiset" >
 | < SYMMETRIC: "symmetric" >
 | < TABLE: "table" >
 | < THEN: "then" >
@@ -2459,3 +2539,4 @@ TOKEN :
       ]
   >
 }
+

@@ -75,9 +75,9 @@ public abstract class OperandsTypeChecking
     public abstract int getArgCount();
 
     /**
-         * Returns a string describing the expected argument types of a call, e.g.
-         * "SUBSTR(VARCHAR, INTEGER, INTEGER)".
-         */
+     * Returns a string describing the expected argument types of a call, e.g.
+     * "SUBSTR(VARCHAR, INTEGER, INTEGER)".
+     */
     public abstract String getAllowedSignatures(SqlOperator op);
 
     /**
@@ -173,7 +173,7 @@ public abstract class OperandsTypeChecking
             SqlCall call,
             boolean throwOnFailure)
         {
-           assert (getArgCount() == call.operands.length);
+            assert (getArgCount() == call.operands.length);
 
             for (int i = 0; i < call.operands.length; i++) {
                 SqlNode operand = call.operands[i];
@@ -574,12 +574,12 @@ public abstract class OperandsTypeChecking
                 int ruleOrdinal, boolean throwOnFailure)
             {
                 if (!typeNotNullLiteral.check(call, validator, scope, node,
-                                        ruleOrdinal, throwOnFailure)) {
+                    ruleOrdinal, throwOnFailure)) {
                     return false;
                 }
 
                 if (!super.check(call, validator, scope, node,
-                                  ruleOrdinal, throwOnFailure)) {
+                    ruleOrdinal, throwOnFailure)) {
                     return false;
                 }
 
@@ -659,8 +659,8 @@ public abstract class OperandsTypeChecking
                 if (!(type1.isSameType(type2) || type2.isSameType(type1))) {
                     if (throwOnFailure) {
                         throw EigenbaseResource.instance()
-                        .newNeedSameTypeParameter(
-                            call.getParserPosition().toString());
+                            .newNeedSameTypeParameter(
+                                call.getParserPosition().toString());
                     }
                     return false;
                 }
@@ -776,11 +776,11 @@ public abstract class OperandsTypeChecking
      */
     public static final OperandsTypeChecking typeVarcharLiteral =
         new CompositeAndOperandsTypeChecking(
-        new OperandsTypeChecking[] {
-        new SimpleOperandsTypeChecking(
-            new SqlTypeName[][]{SqlTypeName.charTypes})
-        , typeNotNullLiteral
-        });
+            new OperandsTypeChecking[] {
+                new SimpleOperandsTypeChecking(
+                    new SqlTypeName[][]{SqlTypeName.charTypes})
+                , typeNotNullLiteral
+            });
 
     /**
      * Parameter type-checking strategy
@@ -788,11 +788,11 @@ public abstract class OperandsTypeChecking
      */
     public static final OperandsTypeChecking typeNullableVarcharLiteral =
         new CompositeAndOperandsTypeChecking(
-        new OperandsTypeChecking[] {
-        new SimpleOperandsTypeChecking(
-            new SqlTypeName[][]{SqlTypeName.charNullableTypes})
-        , typeNullableLiteral
-        });
+            new OperandsTypeChecking[] {
+                new SimpleOperandsTypeChecking(
+                    new SqlTypeName[][]{SqlTypeName.charNullableTypes})
+                , typeNullableLiteral
+            });
 
     /**
      * Parameter type-checking strategy
@@ -1120,7 +1120,7 @@ public abstract class OperandsTypeChecking
 
     /**
      * Parameter type-checking strategy
-     * type must be
+     * types can be
      * nullable aType, nullable aType
      * and must be comparable to eachother
      */
@@ -1132,7 +1132,7 @@ public abstract class OperandsTypeChecking
 
     /**
      * Parameter type-checking strategy
-     * type must be
+     * types can be
      * nullable string, nullable string, nulalble string
      * OR nullable string, nullable numeric, nullable numeric.
      */
@@ -1171,6 +1171,117 @@ public abstract class OperandsTypeChecking
             SqlTypeName.timeIntervalNullableTypes,
             SqlTypeName.timeIntervalNullableTypes
         });
+
+
+    /**
+     * Parameter type-checking strategy
+     * type must a nullable time interval
+     */
+    public static final OperandsTypeChecking typeNullableMultiset =
+        new OperandsTypeChecking() {
+            public boolean check(
+                SqlCall call,
+                SqlValidator validator,
+                SqlValidator.Scope scope,
+                SqlNode node,
+                int ruleOrdinal,
+                boolean throwOnFailure) {
+                RelDataType type = validator.deriveType(scope, node);
+                if (!SqlTypeName.Multiset.equals(type.getSqlTypeName()) &&
+                    !SqlTypeName.Null.equals(type.getSqlTypeName())) {
+                    if (throwOnFailure) {
+                        throw EigenbaseResource.instance().newExpectedMultiset(
+                            node.getParserPosition().toString());
+                    }
+                    return false;
+                }
+                return true;
+            }
+
+            public boolean check(
+                SqlValidator validator,
+                SqlValidator.Scope scope,
+                SqlCall call,
+                boolean throwOnFailure) {
+                return check(call,
+                    validator, scope, call.operands[0], 0, throwOnFailure);
+            }
+
+            public int getArgCount() {
+                return 1;
+            }
+
+            public String getAllowedSignatures(SqlOperator op) {
+                return "MULTISET";
+            }
+        };
+
+    /**
+     * Parameter type-checking strategy
+     * types must be
+     * [nullable] Multiset, [nullable] mutliset
+     * and the two types must have the same element type
+     * @see {@link RelDataTypeFactoryImpl.MultisetSqlType#getElementType}
+     */
+    public static final OperandsTypeChecking typeNullableMultisetMultiset =
+        new OperandsTypeChecking() {
+            public boolean check(
+                SqlCall call,
+                SqlValidator validator,
+                SqlValidator.Scope scope,
+                SqlNode node,
+                int ruleOrdinal,
+                boolean throwOnFailure) {
+                throw Util.needToImplement(this);
+            }
+
+            public boolean check(
+                SqlValidator validator,
+                SqlValidator.Scope scope,
+                SqlCall call,
+                boolean throwOnFailure) {
+
+                SqlNode op0 = call.operands[0];
+                if(!typeNullableMultiset.check(call, validator, scope,
+                    op0, 0, throwOnFailure)) {
+                    return false;
+                }
+
+                SqlNode op1 = call.operands[1];
+                if (!typeNullableMultiset.check(call, validator, scope,
+                    op1, 0, throwOnFailure)) {
+                    return false;
+                }
+
+                RelDataType[] argTypes = new RelDataType[2];
+                argTypes[0] = ((RelDataTypeFactoryImpl.MultisetSqlType)
+                    validator.deriveType(scope, op0)).getElementType();
+                argTypes[1] = ((RelDataTypeFactoryImpl.MultisetSqlType)
+                    validator.deriveType(scope, op1)).getElementType();
+                //TODO this wont work if element types are of ROW types and there is a
+                //mismatch.
+                RelDataType biggest = ReturnTypeInference.useBiggest.
+                    getType(validator.typeFactory, argTypes);
+                if (null==biggest) {
+                    if (throwOnFailure) {
+                        throw EigenbaseResource.instance().newTypeNotComparable(
+                            call.operands[0].getParserPosition().toString(),
+                            call.operands[1].getParserPosition().toString());
+                    }
+
+                    return false;
+                }
+                return true;
+            }
+
+            public int getArgCount() {
+                return 2;
+            }
+
+            public String getAllowedSignatures(SqlOperator op) {
+                return "<MULTISET> "+op.name+" <MULTISET>";
+            }
+        };
 
 }
 

@@ -615,11 +615,43 @@ public class SqlParserTest extends TestCase
             + "FROM `DEPT`))) AND FALSE)");
     }
 
-    public void testUnionAll()
+    public void testUnion()
     {
-        check("select * from emp union all select * from emp",
-            "((SELECT *" + NL + "FROM `EMP`) UNION ALL (SELECT *" + NL
-            + "FROM `EMP`))");
+        check("select * from a union select * from a",
+            "((SELECT *" + NL + "FROM `A`) UNION (SELECT *" + NL
+            + "FROM `A`))");
+        check("select * from a union all select * from a",
+            "((SELECT *" + NL + "FROM `A`) UNION ALL (SELECT *" + NL
+            + "FROM `A`))");
+        check("select * from a union distinct select * from a",
+            "((SELECT *" + NL + "FROM `A`) UNION (SELECT *" + NL
+            + "FROM `A`))");
+    }
+
+    public void testExcept()
+    {
+        check("select * from a except select * from a",
+            "((SELECT *" + NL + "FROM `A`) EXCEPT (SELECT *" + NL
+            + "FROM `A`))");
+        check("select * from a except all select * from a",
+            "((SELECT *" + NL + "FROM `A`) EXCEPT ALL (SELECT *" + NL
+            + "FROM `A`))");
+        check("select * from a except distinct select * from a",
+            "((SELECT *" + NL + "FROM `A`) EXCEPT (SELECT *" + NL
+            + "FROM `A`))");
+    }
+
+    public void testIntersect()
+    {
+        check("select * from a intersect select * from a",
+            "((SELECT *" + NL + "FROM `A`) INTERSECT (SELECT *" + NL
+            + "FROM `A`))");
+        check("select * from a intersect all select * from a",
+            "((SELECT *" + NL + "FROM `A`) INTERSECT ALL (SELECT *" + NL
+            + "FROM `A`))");
+        check("select * from a intersect distinct select * from a",
+            "((SELECT *" + NL + "FROM `A`) INTERSECT (SELECT *" + NL
+            + "FROM `A`))");
     }
 
     public void testJoinCross()
@@ -856,7 +888,7 @@ public class SqlParserTest extends TestCase
 
     public void testPrecedence2()
     {
-        checkExp("- - 1", "(- (- 1))"); // two prefix
+        checkExp("- - 1", "(- (- 1))"); // two prefices
     }
 
     public void testPrecedence3()
@@ -866,13 +898,13 @@ public class SqlParserTest extends TestCase
 
     public void testPrecedence4()
     {
-        checkExp("1 - -2", "(1 - (- 2))"); // potential confusion between infix, prefix '-'
+        checkExp("1 - -2", "(1 - (- 2))"); // infix, prefix '-'
     }
 
     public void testPrecedence5()
     {
-        checkExp("1++2", "(1 + (+ 2))"); // potential confusion between infix, prefix '+'
-        checkExp("1+ +2", "(1 + (+ 2))"); // potential confusion between infix, prefix '+'
+        checkExp("1++2", "(1 + (+ 2))"); // infix, prefix '+'
+        checkExp("1+ +2", "(1 + (+ 2))"); // infix, prefix '+'
     }
 
     public void testPrecedenceSetOps()
@@ -881,12 +913,14 @@ public class SqlParserTest extends TestCase
             + "select * from c intersect " + "select * from d except "
             + "select * from e except " + "select * from f union "
             + "select * from g",
-            "(((SELECT *" + NL + "FROM `A`) UNION (((((SELECT *" + NL
+              "(((((SELECT *" + NL
+            + "FROM `A`) UNION (((SELECT *" + NL
             + "FROM `B`) INTERSECT (SELECT *" + NL
             + "FROM `C`)) INTERSECT (SELECT *" + NL
-            + "FROM `D`)) EXCEPT (SELECT *" + NL
+            + "FROM `D`))) EXCEPT (SELECT *" + NL
             + "FROM `E`)) EXCEPT (SELECT *" + NL
-            + "FROM `F`))) UNION (SELECT *" + NL + "FROM `G`))");
+            + "FROM `F`)) UNION (SELECT *" + NL
+            + "FROM `G`))");
     }
 
     public void testQueryInFrom()
@@ -1373,7 +1407,66 @@ public class SqlParserTest extends TestCase
         checkExp("sum(sal) over (range between interval '1' second following and interval '5' day following)",
             "sum(sal) over (`emp` over (range between (interval '1' second following) and (interval '5' day following)))");
     }
+
+    public void testElementFunc() {
+        checkExp("element(a)", "ELEMENT(`A`)");
+    }
+
+    public void testCardinalityFunc() {
+        checkExp("cardinality(a)", "CARDINALITY(`A`)");
+    }
+
+    public void testMemberOf() {
+        checkExp("a member of b", "(`A` MEMBER OF `B`)");
+        checkExp("a member of multiset[b]", "(`A` MEMBER OF (MULTISET[`B`]))");
+    }
+
+    public void testSubMultisetrOf() {
+        checkExp("a submultiset of b", "(`A` SUBMULTISET OF `B`)");
+    }
+
+    public void testIsASet() {
+        checkExp("b is a set", "(`B` IS A SET)");
+        checkExp("a is a set", "(`A` IS A SET)");
+    }
+
+    public void testMultiset() {
+        checkExp("multiset[1]", "(MULTISET[1])");
+        checkExp("multiset[1,2.3]", "(MULTISET[1, 2.3])");
+        checkExp("multiset[1,    '2']", "(MULTISET[1, '2'])");
+        checkExp("multiset[ROW(1,2)]", "(MULTISET[(ROW(1, 2))])");
+        checkExp("multiset[ROW(1,2),ROW(3,4)]", "(MULTISET[(ROW(1, 2)), (ROW(3, 4))])");
+    }
+
+    public void testMultisetUnion()
+    {
+        checkExp("a multiset union b","(`A` MULTISET UNION `B`)");
+        checkExp("a multiset union all b","(`A` MULTISET UNION ALL `B`)");
+        checkExp("a multiset union distinct b","(`A` MULTISET UNION `B`)");
+    }
+
+    public void testMultisetExcept()
+    {
+        checkExp("a multiset EXCEPT b","(`A` MULTISET EXCEPT `B`)");
+        checkExp("a multiset EXCEPT all b","(`A` MULTISET EXCEPT ALL `B`)");
+        checkExp("a multiset EXCEPT distinct b","(`A` MULTISET EXCEPT `B`)");
+    }
+
+    public void testMultisetIntersect()
+    {
+        checkExp("a multiset INTERSECT b","(`A` MULTISET INTERSECT `B`)");
+        checkExp("a multiset INTERSECT all b","(`A` MULTISET INTERSECT ALL `B`)");
+        checkExp("a multiset INTERSECT distinct b","(`A` MULTISET INTERSECT `B`)");
+    }
+
+    public void testMulisetMixed() {
+        checkExp("multiset[1] MULTISET union b", "((MULTISET[1]) MULTISET UNION `B`)");
+        checkExp("a MULTISET union b multiset intersect c multiset except d multiset union e",
+            "(((`A` MULTISET UNION (`B` MULTISET INTERSECT `C`)) MULTISET EXCEPT `D`) MULTISET UNION `E`)");
+    }
+
 }
 
 
 // End SqlParserTest.java
+

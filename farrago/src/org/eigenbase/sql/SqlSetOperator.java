@@ -21,6 +21,10 @@
 
 package org.eigenbase.sql;
 
+import org.eigenbase.sql.type.ReturnTypeInference;
+import org.eigenbase.sql.type.UnknownParamInference;
+import org.eigenbase.sql.type.OperandsTypeChecking;
+
 /**
  * SqlSetOperator represents a relational set theory operator
  * (UNION, INTERSECT, MINUS).  These are binary operators, but with
@@ -45,6 +49,19 @@ public class SqlSetOperator extends SqlBinaryOperator
         boolean all)
     {
         super(name, kind, prec, true, null, null, null);
+        this.all = all;
+    }
+
+    public SqlSetOperator(
+        String name,
+        SqlKind kind,
+        int prec,
+        boolean all,
+        ReturnTypeInference typeInference,
+        UnknownParamInference paramTypeInference,
+        OperandsTypeChecking argTypes)
+    {
+        super(name, kind, prec, true, typeInference, paramTypeInference, argTypes);
         this.all = all;
     }
 }

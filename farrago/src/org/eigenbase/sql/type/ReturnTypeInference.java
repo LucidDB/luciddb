@@ -22,6 +22,7 @@ package org.eigenbase.sql.type;
 
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.reltype.RelDataTypeFactoryImpl;
 import org.eigenbase.sql.SqlValidator;
 import org.eigenbase.sql.SqlCall;
 import org.eigenbase.sql.SqlCollation;
@@ -69,7 +70,180 @@ public abstract class ReturnTypeInference
             TypeUtil.collectTypes(validator, scope, call.operands));
     }
 
+    //~ INNER CLASSES --------------------------------------------
+    /**
+     * Strategy to transform one type to another. The transformation is dependent on
+     * the implemented strategy object and in the general case is a function of
+     * the type and the other operands
+     *
+     * Can not be used by itself. Must be used in an object of type
+     * {@link TransformCascade}
 
+     * <p>This class is an example of the
+     * {@link org.eigenbase.util.Glossary#StrategyPattern strategy pattern}.
+     * This makes sense because many operators have similar, straightforward
+     * strategies, such as to take the type of the first operand.</p>
+     */
+    public interface Transform
+    {
+        /**
+         * @param typeToTransform The type subject of transformation. The return
+         * type is (in the general case) a function of
+         * <ul><li>The typeToTransform</li><li>The other operand types</li></ul>
+         * {@link ReturnTypeInference}  object.
+         * @return A new type depending on
+         * {@param typeToTransform} and {@param argTypes}
+         */
+        RelDataType getType(
+            RelDataTypeFactory typeFactory,
+            RelDataType [] argTypes,
+            RelDataType typeToTransform);
+    }
+
+    /**
+     * Strategy to infer the type of an operator call from the type of the
+     * operands by using one {@link ReturnTypeInference} rule and a combination of
+     * {@link Transform}s
+     */
+    public static class TransformCascade extends ReturnTypeInference
+    {
+        final ReturnTypeInference rule;
+        final Transform [] transforms;
+
+        /**
+         * Creates a TransformCascade from a rule and an array of one or
+         * more transforms.
+         *
+         * @pre null!=rule
+         * @pre null!=transforms
+         * @pre transforms.length > 0
+         * @pre transforms[i] != null
+         */
+        public TransformCascade(
+            ReturnTypeInference rule,
+            Transform [] transforms)
+        {
+            Util.pre(null != rule, "null!=rule");
+            Util.pre(null != transforms, "null!=transforms");
+            Util.pre(transforms.length > 0, "transforms.length>0");
+            for (int i = 0; i < transforms.length; i++) {
+                Util.pre(transforms[i] != null, "transforms[i] != null");
+            }
+            this.rule = rule;
+            this.transforms = transforms;
+        }
+
+        /**
+         * Creates a TransformCascade from a rule and a single transform.
+         *
+         * @pre null!=rule
+         * @pre null!=transform
+         */
+        public TransformCascade(
+            ReturnTypeInference rule,
+            Transform transform)
+        {
+            this(rule, new Transform [] { transform });
+        }
+
+        /**
+         * Creates a TransformCascade from a rule and two transforms.
+         *
+         * @pre null!=rule
+         * @pre null!=transform0
+         * @pre null!=transform1
+         */
+        public TransformCascade(
+            ReturnTypeInference rule,
+            Transform transform0,
+            Transform transform1)
+        {
+            this(rule, new Transform [] { transform0, transform1 });
+        }
+
+        public RelDataType getType(
+            SqlValidator validator,
+            SqlValidator.Scope scope,
+            SqlCall call)
+        {
+            return collectTypesFromCall(validator, scope, call);
+        }
+
+        public RelDataType getType(
+            RelDataTypeFactory typeFactory,
+            RelDataType [] argTypes)
+        {
+            RelDataType ret = rule.getType(typeFactory, argTypes);
+            for (int i = 0; i < transforms.length; i++) {
+                Transform transform = transforms[i];
+                ret = transform.getType(typeFactory, argTypes, ret);
+            }
+            return ret;
+        }
+    }
+
+    /**
+     * A {@link ReturnTypeInference} which always returns the same SQL type.
+     */
+    private static class FixedReturnTypeInference extends ReturnTypeInference
+    {
+        private final int argCount;
+        private final SqlTypeName typeName;
+        private final int length;
+        private final int scale;
+
+        FixedReturnTypeInference(SqlTypeName typeName)
+        {
+            this.argCount = 1;
+            this.typeName = typeName;
+            this.length = -1;
+            this.scale = -1;
+        }
+
+        FixedReturnTypeInference(SqlTypeName typeName, int length)
+        {
+            this.argCount = 2;
+            this.typeName = typeName;
+            this.length = length;
+            this.scale = -1;
+        }
+
+        FixedReturnTypeInference(SqlTypeName typeName, int length, int scale)
+        {
+            this.argCount = 3;
+            this.typeName = typeName;
+            this.length = length;
+            this.scale = scale;
+        }
+
+        public RelDataType getType(
+            SqlValidator validator,
+            SqlValidator.Scope scope,
+            SqlCall call)
+        {
+            return createType(validator.typeFactory);
+        }
+
+        public RelDataType getType(
+            RelDataTypeFactory typeFactory,
+            RelDataType[] argTypes)
+        {
+            return createType(typeFactory);
+        }
+
+        private RelDataType createType(RelDataTypeFactory typeFactory) {
+            switch (argCount) {
+            case 1:
+                return typeFactory.createSqlType(typeName);
+            case 2:
+                return typeFactory.createSqlType(typeName, length);
+            case 3:
+                return typeFactory.createSqlType(typeName, length, scale);
+            default:
+                throw Util.newInternal("unexpected argCount " + argCount);
+            }
+        }
+    }
 
     //~  IMPLEMENTATIONS -----------------------------------------
 
@@ -143,6 +317,25 @@ public abstract class ReturnTypeInference
                 }
             }
         };
+     /**
+     * Parameter type-inference transform strategy where a derived type is
+     * must be a multiset type and the returned type is the multiset's
+     * element type.
+     * @see {@link RelDataTypeFactoryImpl.MultisetSqlType#getElementType}
+     */
+    public static final Transform toMultisetElementType =
+        new Transform() {
+            public RelDataType getType(
+                RelDataTypeFactory typeFactory,
+                RelDataType [] argTypes,
+                RelDataType typeToTransform)
+            {
+                RelDataTypeFactoryImpl.MultisetSqlType mt =
+                    (RelDataTypeFactoryImpl.MultisetSqlType) typeToTransform;
+                return mt.getElementType();
+            }
+        };
+
     /**
      * Type-inference strategy whereby the result type of a call is the type of
      * the first operand.
@@ -428,178 +621,50 @@ public abstract class ReturnTypeInference
         };
 
     /**
-     * Strategy to transform one type to another. The transformation is dependent on
-     * the implemented strategy object and in the general case is a function of
-     * the type and the other operands
-     *
-     * Can not be used by itself. Must be used in an object of type
-     * {@link TransformCascade}
-
-     * <p>This class is an example of the
-     * {@link org.eigenbase.util.Glossary#StrategyPattern strategy pattern}.
-     * This makes sense because many operators have similar, straightforward
-     * strategies, such as to take the type of the first operand.</p>
+     * Returns the same type as the multiset carries. The multiset type returned
+     * is the least restrictive of the call's multiset operands
      */
-    public interface Transform
-    {
-        /**
-         * @param typeToTransform The type subject of transformation. The return
-         * type is (in the general case) a function of
-         * <ul><li>The typeToTransform</li><li>The other operand types</li></ul>
-         * {@link ReturnTypeInference}  object.
-         * @return A new type depending on
-         * {@param typeToTransform} and {@param argTypes}
-         */
-        RelDataType getType(
-            RelDataTypeFactory typeFactory,
-            RelDataType [] argTypes,
-            RelDataType typeToTransform);
-    }
+    public static final ReturnTypeInference useMultiset =
+        new ReturnTypeInference() {
+            public RelDataType getType(
+                SqlValidator validator,
+                SqlValidator.Scope scope,
+                SqlCall call)
+            {
+                return getType(validator.typeFactory,
+                    TypeUtil.collectTypes(validator, scope, call.operands));
+            }
+
+            public RelDataType getType(
+                RelDataTypeFactory typeFactory,
+                RelDataType [] argTypes)
+            {
+                RelDataType[] argElementTypes = new RelDataType[argTypes.length];
+                for (int i = 0; i < argTypes.length; i++) {
+                    argElementTypes[i] =
+                        ((RelDataTypeFactoryImpl.MultisetSqlType) argTypes[i]).
+                        getElementType();
+                }
+
+                RelDataType biggestElementType = ReturnTypeInference.useBiggest.
+                    getType(typeFactory, argElementTypes);
+                return  typeFactory.createMultisetType(biggestElementType);
+            }
+        };
 
     /**
-     * Strategy to infer the type of an operator call from the type of the
-     * operands by using one {@link ReturnTypeInference} rule and a combination of
-     * {@link Transform}s
+     * Same as {@link #useMultiset} but returns with nullablity
+     * if any of the operands is nullable
      */
-    public static class TransformCascade extends ReturnTypeInference
-    {
-        final ReturnTypeInference rule;
-        final Transform [] transforms;
-
-        /**
-         * Creates a TransformCascade from a rule and an array of one or
-         * more transforms.
-         *
-         * @pre null!=rule
-         * @pre null!=transforms
-         * @pre transforms.length > 0
-         * @pre transforms[i] != null
-         */
-        public TransformCascade(
-            ReturnTypeInference rule,
-            Transform [] transforms)
-        {
-            Util.pre(null != rule, "null!=rule");
-            Util.pre(null != transforms, "null!=transforms");
-            Util.pre(transforms.length > 0, "transforms.length>0");
-            for (int i = 0; i < transforms.length; i++) {
-                Util.pre(transforms[i] != null, "transforms[i] != null");
-            }
-            this.rule = rule;
-            this.transforms = transforms;
-        }
-
-        /**
-         * Creates a TransformCascade from a rule and a single transform.
-         *
-         * @pre null!=rule
-         * @pre null!=transform
-         */
-        public TransformCascade(
-            ReturnTypeInference rule,
-            Transform transform)
-        {
-            this(rule, new Transform [] { transform });
-        }
-
-        /**
-         * Creates a TransformCascade from a rule and two transforms.
-         *
-         * @pre null!=rule
-         * @pre null!=transform0
-         * @pre null!=transform1
-         */
-        public TransformCascade(
-            ReturnTypeInference rule,
-            Transform transform0,
-            Transform transform1)
-        {
-            this(rule, new Transform [] { transform0, transform1 });
-        }
-
-        public RelDataType getType(
-            SqlValidator validator,
-            SqlValidator.Scope scope,
-            SqlCall call)
-        {
-            return collectTypesFromCall(validator, scope, call);
-        }
-
-        public RelDataType getType(
-            RelDataTypeFactory typeFactory,
-            RelDataType [] argTypes)
-        {
-            RelDataType ret = rule.getType(typeFactory, argTypes);
-            for (int i = 0; i < transforms.length; i++) {
-                Transform transform = transforms[i];
-                ret = transform.getType(typeFactory, argTypes, ret);
-            }
-            return ret;
-        }
-    }
+    public static final ReturnTypeInference useNullableMultiset =
+        new TransformCascade(useMultiset, toNullable);
 
     /**
-     * A {@link ReturnTypeInference} which always returns the same SQL type.
+     * Returns the element type of a multiset
      */
-    private static class FixedReturnTypeInference extends ReturnTypeInference
-    {
-        private final int argCount;
-        private final SqlTypeName typeName;
-        private final int length;
-        private final int scale;
+    public static final ReturnTypeInference useNullableMultisetElementType =
+        new TransformCascade(useMultiset, toMultisetElementType);
 
-        FixedReturnTypeInference(SqlTypeName typeName)
-        {
-            this.argCount = 1;
-            this.typeName = typeName;
-            this.length = -1;
-            this.scale = -1;
-        }
-
-        FixedReturnTypeInference(SqlTypeName typeName, int length)
-        {
-            this.argCount = 2;
-            this.typeName = typeName;
-            this.length = length;
-            this.scale = -1;
-        }
-
-        FixedReturnTypeInference(SqlTypeName typeName, int length, int scale)
-        {
-            this.argCount = 3;
-            this.typeName = typeName;
-            this.length = length;
-            this.scale = scale;
-        }
-
-        public RelDataType getType(
-            SqlValidator validator,
-            SqlValidator.Scope scope,
-            SqlCall call)
-        {
-            return createType(validator.typeFactory);
-        }
-
-        public RelDataType getType(
-            RelDataTypeFactory typeFactory,
-            RelDataType[] argTypes)
-        {
-            return createType(typeFactory);
-        }
-
-        private RelDataType createType(RelDataTypeFactory typeFactory) {
-            switch (argCount) {
-            case 1:
-                return typeFactory.createSqlType(typeName);
-            case 2:
-                return typeFactory.createSqlType(typeName, length);
-            case 3:
-                return typeFactory.createSqlType(typeName, length, scale);
-            default:
-                throw Util.newInternal("unexpected argCount " + argCount);
-            }
-        }
-    }
 }
 
 // End ReturnTypeInference.java

@@ -23,6 +23,7 @@ package org.eigenbase.sql.fun;
 
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.reltype.RelDataTypeFactoryImpl;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.ParserPosition;
@@ -151,18 +152,57 @@ public class SqlStdOperatorTable extends SqlOperatorTable
     //-------------------------------------------------------------
     //                   SET OPERATORS
     //-------------------------------------------------------------
-    public final SqlSetOperator exceptOperator =
-        new SqlSetOperator("EXCEPT", SqlKind.Except, 9, false);
-    public final SqlSetOperator exceptAllOperator =
-        new SqlSetOperator("EXCEPT ALL", SqlKind.Except, 9, true);
-    public final SqlSetOperator intersectOperator =
-        new SqlSetOperator("INTERSECT", SqlKind.Intersect, 9, false);
-    public final SqlSetOperator intersectAllOperator =
-        new SqlSetOperator("INTERSECT ALL", SqlKind.Intersect, 9, true);
+    // The set operators can be compared to the arthimetic operators
+    // UNION -> +
+    // EXCEPT -> -
+    // INTERSECT -> *
+    // which explains the different precedence values
     public final SqlSetOperator unionOperator =
         new SqlSetOperator("UNION", SqlKind.Union, 7, false);
     public final SqlSetOperator unionAllOperator =
         new SqlSetOperator("UNION ALL", SqlKind.Union, 7, true);
+    public final SqlSetOperator exceptOperator =
+        new SqlSetOperator("EXCEPT", SqlKind.Except, 7, false);
+    public final SqlSetOperator exceptAllOperator =
+        new SqlSetOperator("EXCEPT ALL", SqlKind.Except, 7, true);
+    public final SqlSetOperator intersectOperator =
+        new SqlSetOperator("INTERSECT", SqlKind.Intersect, 9, false);
+    public final SqlSetOperator intersectAllOperator =
+        new SqlSetOperator("INTERSECT ALL", SqlKind.Intersect, 9, true);
+
+    public final SqlSetOperator multiSetUnionOperator =
+        new SqlSetOperator("MULTISET UNION", SqlKind.Other, 7, false,
+            ReturnTypeInference.useNullableMultiset,
+            UnknownParamInference.useFirstKnown,
+            OperandsTypeChecking.typeNullableMultisetMultiset);
+    public final SqlSetOperator multiSetUnionAllOperator =
+        new SqlSetOperator("MULTISET UNION ALL", SqlKind.Other, 7, true,
+            ReturnTypeInference.useNullableMultiset,
+            UnknownParamInference.useFirstKnown,
+            OperandsTypeChecking.typeNullableMultisetMultiset);
+    public final SqlSetOperator multiSetExceptOperator =
+        new SqlSetOperator("MULTISET EXCEPT", SqlKind.Other, 7, false,
+            ReturnTypeInference.useNullableMultiset,
+            UnknownParamInference.useFirstKnown,
+            OperandsTypeChecking.typeNullableMultisetMultiset);
+    public final SqlSetOperator multiSetExceptAllOperator =
+        new SqlSetOperator("MULTISET EXCEPT ALL", SqlKind.Other, 7, true,
+            ReturnTypeInference.useNullableMultiset,
+            UnknownParamInference.useFirstKnown,
+            OperandsTypeChecking.typeNullableMultisetMultiset);
+    public final SqlSetOperator multiSetIntersectOperator =
+        new SqlSetOperator("MULTISET INTERSECT", SqlKind.Other, 9, false,
+            ReturnTypeInference.useNullableMultiset,
+            UnknownParamInference.useFirstKnown,
+            OperandsTypeChecking.typeNullableMultisetMultiset);
+    public final SqlSetOperator multiSetIntersectAllOperator =
+        new SqlSetOperator("MULTISET INTERSECT ALL", SqlKind.Other, 9, true,
+            ReturnTypeInference.useNullableMultiset,
+            UnknownParamInference.useFirstKnown,
+            OperandsTypeChecking.typeNullableMultisetMultiset);
+
+
+
 
     //-------------------------------------------------------------
     //                   BINARY OPERATORS
@@ -334,6 +374,59 @@ public class SqlStdOperatorTable extends SqlOperatorTable
             }
         };
 
+    public final SqlBinaryOperator memberOfOperator =
+            //TODO check precedence is correct
+            new SqlBinaryOperator("MEMBER OF", SqlKind.Other, 15, true,
+                ReturnTypeInference.useNullableBoolean,
+                null, null) {
+                public void test(SqlTester tester)
+                {
+                    SqlOperatorTests.testMemberOfOperator(tester);
+                }
+
+                protected void checkArgTypes(
+                    SqlCall call,
+                    SqlValidator validator,
+                    SqlValidator.Scope scope) {
+
+                    OperandsTypeChecking.typeNullableMultiset.
+                        check(call, validator, scope, call.operands[1], 0, true);
+
+                    RelDataTypeFactoryImpl.MultisetSqlType mt =
+                        (RelDataTypeFactoryImpl.MultisetSqlType)
+                        validator.deriveType(scope, call.operands[1]);
+
+                    RelDataType t0 = validator.deriveType(scope, call.operands[0]);
+                    RelDataType t1 = mt.getElementType();
+
+                    if (!t0.isAssignableFrom(t1, false) &&
+                        !t1.isAssignableFrom(t0, false)) {
+                        throw EigenbaseResource.instance().
+                            newTypeNotComparableNear(
+                                t0.toString(), t1.toString(),
+                                call.getParserPosition().toString());
+                    }
+                }
+
+                public SqlOperator.OperandsCountDescriptor getOperandsCountDescriptor() {
+                    return new SqlOperator.OperandsCountDescriptor(2);
+                }
+
+            };
+
+    public final SqlBinaryOperator subMultisetOfOperator =
+            //TODO check if precedence is correct
+            new SqlBinaryOperator("SUBMULTISET OF", SqlKind.Other, 15, true,
+                ReturnTypeInference.useNullableBoolean,
+                null,
+                OperandsTypeChecking.typeNullableMultisetMultiset) {
+                public void test(SqlTester tester)
+                {
+                    //todo
+                }
+            };
+
+
     //-------------------------------------------------------------
     //                   POSTFIX OPERATORS
     //-------------------------------------------------------------
@@ -418,6 +511,17 @@ public class SqlStdOperatorTable extends SqlOperatorTable
             }
         };
 
+    public final SqlPostfixOperator isASetOperator =
+        new SqlPostfixOperator("IS A SET", SqlKind.Other, 15,
+            ReturnTypeInference.useBoolean,
+            null,
+            OperandsTypeChecking.typeNullableMultiset) {
+            public void test(SqlTester tester)
+            {
+                //todo
+            }
+        };
+
     //-------------------------------------------------------------
     //                   PREFIX OPERATORS
     //-------------------------------------------------------------
@@ -472,10 +576,15 @@ public class SqlStdOperatorTable extends SqlOperatorTable
             }
         };
 
+
+
     //-------------------------------------------------------------
     //                   SPECIAL OPERATORS
     //-------------------------------------------------------------
     public final SqlRowOperator rowConstructor = new SqlRowOperator();
+
+    public final SqlMultisetOperator multisetOperator =
+        new SqlMultisetOperator();
 
     public final SqlSpecialOperator valuesOperator =
         new SqlSpecialOperator("VALUES", SqlKind.Values) {
@@ -1134,6 +1243,36 @@ public class SqlStdOperatorTable extends SqlOperatorTable
      * operand.
      */
     public final SqlFunction castFunc = new SqlCastFunction();
+
+    /**
+     * The ELEMENT SQL operator, used to convert a multiset with only one item
+     * to a "regular" type. Example
+     * ... log(ELEMENT(MULTISET[1])) ...
+     */
+     public final SqlFunction elementFunc =
+        new SqlFunction("ELEMENT", SqlKind.Function,
+            ReturnTypeInference.useNullableMultisetElementType, null,
+            OperandsTypeChecking.typeNullableMultiset,
+            SqlFunction.SqlFuncTypeName.System) {
+            public void test(SqlTester tester)
+            {
+                SqlOperatorTests.testElementFunc(tester);
+            }
+        };
+
+    /**
+     * The CARDINALITY SQL operator, used to retreive the nbr of elements in
+     * the MULTISET
+     */
+     public final SqlFunction cardinalityFunc =
+        new SqlFunction("CARDINALITY", SqlKind.Function,
+            ReturnTypeInference.useNullableInteger, null,
+            OperandsTypeChecking.typeNullableMultiset, SqlFunction.SqlFuncTypeName.System) {
+            public void test(SqlTester tester)
+            {
+                SqlOperatorTests.testCardinalityFunc(tester);
+            }
+        };
 
 }
 

@@ -23,7 +23,6 @@ package org.eigenbase.sql;
 
 import org.eigenbase.util.EnumeratedValues;
 
-
 /**
  * Enumerates the possible types of {@link SqlNode}.
  *
@@ -93,6 +92,7 @@ public class SqlKind extends EnumeratedValues.BasicValue
     public static final int DynamicParamORDINAL = 10;
     public static final SqlKind DynamicParam =
         new SqlKind("DynamicParam", DynamicParamORDINAL);
+
     public static final int OrderByORDINAL = 11;
     public static final SqlKind OrderBy =
         new SqlKind("OrderBy", OrderByORDINAL);
@@ -283,9 +283,14 @@ public class SqlKind extends EnumeratedValues.BasicValue
     public static final int TrimORDINAL = 162;
     public static final SqlKind Trim = new SqlKind("TRIM", TrimORDINAL);
 
-    public static final int JdbcFnORDINAL = 163;
     /** Call to a function using JDBC function syntax. */
+    public static final int JdbcFnORDINAL = 163;
     public static final SqlKind JdbcFn = new SqlKind("JdbcFn", JdbcFnORDINAL);
+
+    /** Multiset */
+    public static final int MultisetORDINAL = 164;
+    public static final SqlKind Multiset = new SqlKind("MULTISET", MultisetORDINAL);
+
 
     // internal operators (evaluated in validator) 200-299
 
@@ -327,7 +332,6 @@ public class SqlKind extends EnumeratedValues.BasicValue
      */
     public static final int DmlORDINAL = 302;
     public static final SqlKind Dml = new SqlKind("Dml", DmlORDINAL);
-    public static final int QueryORDINAL = 303;
 
     /**
      * <code>Query</code> is an aggregate of query node types.
@@ -335,14 +339,16 @@ public class SqlKind extends EnumeratedValues.BasicValue
      * <code>true</code> if it <code>node</code> is a {@link #Except},
      * {@link #Intersect}, {@link #Select} or {@link #Union}.
      */
+    public static final int QueryORDINAL = 303;
     public static final SqlKind Query = new SqlKind("Query", QueryORDINAL);
-    public static final int TopLevelORDINAL = 304;
 
     /**
      * Aggregate of SQL statement types {@link #Query}, {@link #Dml}.
      */
+    public static final int TopLevelORDINAL = 304;
     public static final SqlKind TopLevel =
         new SqlKind("TopLevel", TopLevelORDINAL);
+
     public static final EnumeratedValues enumeration =
         new EnumeratedValues(new SqlKind [] {
 
@@ -367,7 +373,7 @@ public class SqlKind extends EnumeratedValues.BasicValue
             // row
             Row, Cast, Trim,
             // special
-            LitChain,
+            Multiset, LitChain,
             });
 
     //~ Constructors ----------------------------------------------------------
