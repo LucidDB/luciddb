@@ -1,0 +1,48 @@
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/optimizer/cartesian.sql#1 $
+0: jdbc:farrago:> -- Test multiset related queries
+0: jdbc:farrago:> 
+0: jdbc:farrago:> set schema sales;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- force usage of Fennel calculator
+0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for select*from unnest(multiset[1,2]);
++----------------------------------------------+
+|                   column0                    |
++----------------------------------------------+
+| FennelToIteratorConverter                    |
+|   FennelPullCalcRel(EXPR$0=[$0])             |
+|     FennelPullUncollectRel                   |
+|       FennelPullCollectRel                   |
+|         IteratorToFennelConverter            |
+|           IterConcatenateRel(all=[true])     |
+|             FennelToIteratorConverter        |
+|               FennelPullCalcRel(EXPR$0=[1])  |
+|                 IteratorToFennelConverter    |
+|                   IterOneRowRel              |
+|             FennelToIteratorConverter        |
+|               FennelPullCalcRel(EXPR$0=[2])  |
+|                 IteratorToFennelConverter    |
+|                   IterOneRowRel              |
++----------------------------------------------+
+0: jdbc:farrago:> explain plan for select*from unnest(multiset[1+2,3*4/5]);
++----------------------------------------------------------+
+|                         column0                          |
++----------------------------------------------------------+
+| FennelToIteratorConverter                                |
+|   FennelPullCalcRel(EXPR$0=[$0])                         |
+|     FennelPullUncollectRel                               |
+|       FennelPullCollectRel                               |
+|         IteratorToFennelConverter                        |
+|           IterConcatenateRel(all=[true])                 |
+|             FennelToIteratorConverter                    |
+|               FennelPullCalcRel(EXPR$0=[+(1, 2)])        |
+|                 IteratorToFennelConverter                |
+|                   IterOneRowRel                          |
+|             FennelToIteratorConverter                    |
+|               FennelPullCalcRel(EXPR$0=[/(*(3, 4), 5)])  |
+|                 IteratorToFennelConverter                |
+|                   IterOneRowRel                          |
++----------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !quit

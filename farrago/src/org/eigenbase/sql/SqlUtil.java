@@ -22,6 +22,7 @@
 package org.eigenbase.sql;
 
 import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.util.BarfingInvocationHandler;
 import org.eigenbase.util.Util;
 
@@ -115,6 +116,18 @@ public abstract class SqlUtil
             list.add(node);
             return;
         }
+    }
+
+    /**
+     * Convenience method to convert an SqlNode array to a SqlNodeList
+     */
+    public static SqlNodeList toNodeList(SqlNode[] operands) {
+        SqlNodeList ret = new SqlNodeList(ParserPosition.ZERO);
+        for (int i = 0; i < operands.length; i++) {
+            SqlNode node = operands[i];
+            ret.add(node);
+        }
+        return ret;
     }
 
     /**

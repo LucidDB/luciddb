@@ -225,17 +225,22 @@ public class RexKind extends EnumeratedValues.BasicValue
     public static final RexKind Similar =
         new RexKind("SIMILAR TO", SimilarOrdinal);
 
+    /** The MULTISET operator */
+    public static final int MultisetOrdinal = 45;
+    public static final RexKind Multiset =
+        new RexKind("MULTISET", MultisetOrdinal);
+
     /**
      * Set of all {@link RexKind} instances.
      */
     public static final EnumeratedValues enumeration =
         new EnumeratedValues(new RexKind [] {
                 Equals, NotEquals, GreaterThan, GreaterThanOrEqual, LessThan,
-                LessThanOrEqual, Comparison, // comparisons
+                LessThanOrEqual, Comparison, IsNull, IsTrue, IsFalse, // comparisons
             And, Or, Not, Logical, // logical
             Divide, Minus, Plus, MinusPrefix, Times, Arithmetic, // arithmetic
-            FieldAccess, Concat, Substr, Row, IsNull, Identifier, Literal,
-                Values, IsTrue, IsFalse, DynamicParam, Cast, Trim
+            FieldAccess, Concat, Substr, Row, Identifier, Literal,
+                Values, DynamicParam, Cast, Trim, Multiset
             });
 
     //~ Instance fields -------------------------------------------------------

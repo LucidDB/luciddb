@@ -33,8 +33,11 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.SqlLikeOperator;
 import org.eigenbase.sql.fun.SqlRowOperator;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
+import org.eigenbase.sql.fun.SqlMultisetOperator;
 import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.parser.ParserUtil;
 import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.sql.type.SqlTypeUtil;
 import org.eigenbase.util.BitString;
 import org.eigenbase.util.NlsString;
 import org.eigenbase.util.Util;
@@ -593,21 +596,7 @@ public class SqlToRelConverter
                 return bb.agg.convertCall(call);
             }
             operands = call.getOperands();
-            if (call.operator instanceof SqlBinaryOperator) {
-                final SqlBinaryOperator op =
-                    (SqlBinaryOperator) call.operator;
-
-                // final RexKind opCode = (RexKind) binaryMap.get(op.name);
-                // if (opCode == null) {
-                //     assert !call.isA(SqlNode.Kind.In) :
-                //             "IN should have been handled already";
-                //     throw Util.needToImplement(
-                //         "binary operator " + op.name);
-                // }
-                final RexNode[] exprs =
-                    convertExpressionList(bb, operands);
-                return rexBuilder.makeCall(op, exprs);
-            } else if (call.operator instanceof SqlJdbcFunctionCall) {
+            if (call.operator instanceof SqlJdbcFunctionCall) {
                 SqlJdbcFunctionCall jdbcCall =
                     (SqlJdbcFunctionCall) call.operator;
                 return convertExpression(
@@ -652,7 +641,14 @@ public class SqlToRelConverter
             } else if (call.operator.equals(
                 rexBuilder.opTab.litChainOperator)) {
                 return convertLitChain(bb, call);
-            } else {
+            } else if ((call.operator instanceof SqlBinaryOperator) ||
+                       (call.operator instanceof SqlMultisetOperator)) {
+                final RexNode[] exprs =
+                    convertExpressionList(bb, operands);
+                return rexBuilder.makeCall(call.operator, exprs);
+            }
+
+            else {
                 throw Util.needToImplement(node);
             }
         } else {
@@ -663,7 +659,7 @@ public class SqlToRelConverter
     private RexNode convertOver(Blackboard bb, SqlNode node) {
         SqlCall call = (SqlCall) node;
         SqlCall aggCall = (SqlCall) call.operands[0];
-        assert aggCall.operator.isAggregator();
+        assert(aggCall.operator.isAggregator());
         SqlNode windowOrRef = call.operands[1];
         SqlWindow window = validator.resolveWindow(windowOrRef, bb.scope);
         final RexNode[] exprs =
@@ -723,6 +719,7 @@ public class SqlToRelConverter
         Blackboard bb,
         SqlCall call)
     {
+        Util.discard(bb);
         // REVIEW mb: this code really belongs inside the LitChain operator
         assert call.operands.length > 0;
         assert call.operands[0] instanceof SqlLiteral :
@@ -871,6 +868,20 @@ public class SqlToRelConverter
             return;
         case SqlKind.ValuesORDINAL:
             convertValues(bb, (SqlCall) from);
+            return;
+        case SqlKind.UnnestORDINAL:
+            SqlCall call = (SqlCall) ((SqlCall) from).operands[0];
+            final RelNode childRel;
+            if (call.isA(SqlKind.Multiset)) {
+                final SqlNodeList list = SqlUtil.toNodeList(call.operands);
+                childRel =
+                    new CollectRel(cluster, convertQueryOrInList(bb,list));
+            } else {
+                childRel = convertValidatedQuery(call.operands[0]);
+            }
+
+            UncollectRel uncollectRel = new UncollectRel(cluster, childRel);
+            bb.setRoot(uncollectRel);
             return;
         default:
             throw Util.newInternal("not a join operator " + from);

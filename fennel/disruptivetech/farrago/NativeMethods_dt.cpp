@@ -21,11 +21,14 @@
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/farrago/ExecStreamFactory.h"
 #include "fennel/disruptivetech/xo/CalcExecStream.h"
+#include "fennel/disruptivetech/xo/CollectExecStream.h"
+#include "fennel/disruptivetech/xo/UncollectExecStream.h"
 #include "fennel/exec/ExecStreamEmbryo.h"
 
 // DEPRECATED
 #include "fennel/farrago/ExecutionStreamFactory.h"
 #include "fennel/disruptivetech/xo/CalcTupleStream.h"
+
 
 #ifdef __MINGW32__
 #include <windows.h>
@@ -67,6 +70,21 @@ class ExecStreamSubFactory_dt
                 params);
         }
     }
+
+    virtual void visit(ProxyCollectTupleStreamDef &streamDef) 
+    {
+        CollectExecStreamParams params;
+        pExecStreamFactory->readTupleStreamParams(params, streamDef);
+        pEmbryo->init(new CollectExecStream(), params);
+    }
+
+    virtual void visit(ProxyUncollectTupleStreamDef &streamDef) 
+    {
+        UncollectExecStreamParams params;
+        pExecStreamFactory->readTupleStreamParams(params, streamDef);
+        pEmbryo->init(new UncollectExecStream(), params);
+    }
+
 
     // implement JniProxyVisitor
     virtual void unhandledVisit()

@@ -85,6 +85,141 @@ public class ConverterTest extends TestCase
         }
     }
 
+    private void check(
+        String sql,
+        String plan)
+    {
+        TestContext testContext = getTestContext();
+        final SqlNode sqlQuery;
+        try {
+            sqlQuery = new SqlParser(sql).parseQuery();
+        } catch (ParseException e) {
+            throw new AssertionFailedError(e.toString());
+        }
+        final SqlValidator validator =
+            new SqlValidator(
+                SqlOperatorTable.instance(),
+                testContext.seeker,
+                testContext.connection.getRelOptSchema().getTypeFactory());
+        final SqlToRelConverter converter =
+            new SqlToRelConverter(validator,
+                testContext.connection.getRelOptSchema(), testContext.env,
+                OJPlannerFactory.threadInstance().newPlanner(),
+                testContext.connection,
+                new JavaRexBuilder(testContext.connection.getRelOptSchema()
+                        .getTypeFactory()));
+        final RelNode rel = converter.convertQuery(sqlQuery);
+        assertTrue(rel != null);
+        final StringWriter sw = new StringWriter();
+        final RelOptPlanWriter planWriter =
+            new RelOptPlanWriter(new PrintWriter(sw));
+        planWriter.withIdPrefix = false;
+        rel.explain(planWriter);
+        planWriter.flush();
+        String actual = sw.toString();
+        String actual2 = pattern.matcher(actual).replaceAll("{con}");
+        String actual3 = pattern2.matcher(actual2).replaceAll("{sales}");
+        Util.assertEqualsVerbose(plan, actual3);
+    }
+
+    static TestContext getTestContext()
+    {
+        if (testContext == null) {
+            testContext = new TestContext();
+        }
+        return testContext;
+    }
+
+    /**
+     * Contains context shared between unit tests.
+     *
+     * <p>Lots of nasty stuff to set up the Openjava environment, should be
+     * removed when we're not dependent upon Openjava.</p>
+     */
+    static class TestContext
+    {
+        private final SqlValidator.CatalogReader seeker;
+        private final Connection jdbcConnection;
+        private final RelOptConnection connection;
+        Environment env;
+        private int executionCount;
+
+        TestContext()
+        {
+            try {
+                Class.forName("net.sf.saffron.jdbc.SaffronJdbcDriver");
+            } catch (ClassNotFoundException e) {
+                throw Util.newInternal(e, "Error loading JDBC driver");
+            }
+            try {
+                jdbcConnection =
+                    DriverManager.getConnection(
+                        "jdbc:saffron:schema=sales.SalesInMemory");
+            } catch (SQLException e) {
+                throw Util.newInternal(e);
+            }
+            connection =
+                ((SaffronJdbcConnection) jdbcConnection).saffronConnection;
+            seeker =
+                new SqlToRelConverter.SchemaCatalogReader(
+                    connection.getRelOptSchema(),
+                    false);
+
+            // Nasty OJ stuff
+            env = OJSystem.env;
+
+            String packageName = getTempPackageName();
+            String className = getTempClassName();
+            env = new FileEnvironment(env, packageName, className);
+            ClassDeclaration decl =
+                new ClassDeclaration(new ModifierList(ModifierList.PUBLIC),
+                    className, null, null, new MemberDeclarationList());
+            OJClass clazz = new OJClass(env, null, decl);
+            env.record(
+                clazz.getName(),
+                clazz);
+            env = new ClosedEnvironment(clazz.getEnvironment());
+
+            // Ensure that the thread has factories for types and planners. (We'd
+            // rather that the client sets these.)
+            OJTypeFactory typeFactory =
+                OJUtil.threadTypeFactory();
+            if (typeFactory == null) {
+                typeFactory = new OJTypeFactoryImpl();
+                OJUtil.setThreadTypeFactory(typeFactory);
+            }
+            if (OJPlannerFactory.threadInstance() == null) {
+                OJPlannerFactory.setThreadInstance(
+                    new OJPlannerFactory());
+            }
+
+            OJUtil.threadDeclarers.set(clazz);
+        }
+
+        protected static String getClassRoot()
+        {
+            return SaffronProperties.instance().classDir.get(true);
+        }
+
+        protected String getTempClassName()
+        {
+            return "Dummy_"
+            + Integer.toHexString(this.hashCode() + executionCount++);
+        }
+
+        protected static String getJavaRoot()
+        {
+            return SaffronProperties.instance().javaDir.get();
+        }
+
+        protected String getTempPackageName()
+        {
+            return SaffronProperties.instance().packageName.get();
+        }
+    }
+
+    //~ TESTS  -------------------------------------
+
     public void testIntegerLiteral()
     {
         check("select 1 from \"emps\"",
@@ -404,137 +539,16 @@ public class ConverterTest extends TestCase
         check("select * from \"depts\" where deptno in (10) in (true)", "");
     }
 
-    private void check(
-        String sql,
-        String plan)
-    {
-        TestContext testContext = getTestContext();
-        final SqlNode sqlQuery;
-        try {
-            sqlQuery = new SqlParser(sql).parseQuery();
-        } catch (ParseException e) {
-            throw new AssertionFailedError(e.toString());
-        }
-        final SqlValidator validator =
-            new SqlValidator(
-                SqlOperatorTable.instance(),
-                testContext.seeker,
-                testContext.connection.getRelOptSchema().getTypeFactory());
-        final SqlToRelConverter converter =
-            new SqlToRelConverter(validator,
-                testContext.connection.getRelOptSchema(), testContext.env,
-                OJPlannerFactory.threadInstance().newPlanner(),
-                testContext.connection,
-                new JavaRexBuilder(testContext.connection.getRelOptSchema()
-                        .getTypeFactory()));
-        final RelNode rel = converter.convertQuery(sqlQuery);
-        assertTrue(rel != null);
-        final StringWriter sw = new StringWriter();
-        final RelOptPlanWriter planWriter =
-            new RelOptPlanWriter(new PrintWriter(sw));
-        planWriter.withIdPrefix = false;
-        rel.explain(planWriter);
-        planWriter.flush();
-        String actual = sw.toString();
-        String actual2 = pattern.matcher(actual).replaceAll("{con}");
-        String actual3 = pattern2.matcher(actual2).replaceAll("{sales}");
-        Util.assertEqualsVerbose(plan, actual3);
-    }
-
-    static TestContext getTestContext()
-    {
-        if (testContext == null) {
-            testContext = new TestContext();
-        }
-        return testContext;
-    }
-
-    /**
-     * Contains context shared between unit tests.
-     *
-     * <p>Lots of nasty stuff to set up the Openjava environment, should be
-     * removed when we're not dependent upon Openjava.</p>
-     */
-    static class TestContext
-    {
-        private final SqlValidator.CatalogReader seeker;
-        private final Connection jdbcConnection;
-        private final RelOptConnection connection;
-        Environment env;
-        private int executionCount;
-
-        TestContext()
-        {
-            try {
-                Class.forName("net.sf.saffron.jdbc.SaffronJdbcDriver");
-            } catch (ClassNotFoundException e) {
-                throw Util.newInternal(e, "Error loading JDBC driver");
-            }
-            try {
-                jdbcConnection =
-                    DriverManager.getConnection(
-                        "jdbc:saffron:schema=sales.SalesInMemory");
-            } catch (SQLException e) {
-                throw Util.newInternal(e);
-            }
-            connection =
-                ((SaffronJdbcConnection) jdbcConnection).saffronConnection;
-            seeker =
-                new SqlToRelConverter.SchemaCatalogReader(
-                    connection.getRelOptSchema(),
-                    false);
-
-            // Nasty OJ stuff
-            env = OJSystem.env;
-
-            String packageName = getTempPackageName();
-            String className = getTempClassName();
-            env = new FileEnvironment(env, packageName, className);
-            ClassDeclaration decl =
-                new ClassDeclaration(new ModifierList(ModifierList.PUBLIC),
-                    className, null, null, new MemberDeclarationList());
-            OJClass clazz = new OJClass(env, null, decl);
-            env.record(
-                clazz.getName(),
-                clazz);
-            env = new ClosedEnvironment(clazz.getEnvironment());
-
-            // Ensure that the thread has factories for types and planners. (We'd
-            // rather that the client sets these.)
-            OJTypeFactory typeFactory =
-                OJUtil.threadTypeFactory();
-            if (typeFactory == null) {
-                typeFactory = new OJTypeFactoryImpl();
-                OJUtil.setThreadTypeFactory(typeFactory);
-            }
-            if (OJPlannerFactory.threadInstance() == null) {
-                OJPlannerFactory.setThreadInstance(
-                    new OJPlannerFactory());
-            }
-
-            OJUtil.threadDeclarers.set(clazz);
-        }
-
-        protected static String getClassRoot()
-        {
-            return SaffronProperties.instance().classDir.get(true);
-        }
-
-        protected String getTempClassName()
-        {
-            return "Dummy_"
-            + Integer.toHexString(this.hashCode() + executionCount++);
-        }
-
-        protected static String getJavaRoot()
-        {
-            return SaffronProperties.instance().javaDir.get();
-        }
-
-        protected String getTempPackageName()
-        {
-            return SaffronProperties.instance().packageName.get();
-        }
+    public void testUnnest() {
+        check("select*from unnest(multiset[1,2])",
+            "ProjectRel(EXPR$0=[$0])" + NL +
+            "  UncollectRel" + NL +
+            "    CollectRel" + NL +
+            "      UnionRel(all=[true])" + NL +
+            "        ProjectRel(EXPR$0=[1])" + NL +
+            "          OneRowRel" + NL +
+            "        ProjectRel(EXPR$0=[2])" + NL +
+            "          OneRowRel" + NL);
     }
 }
 

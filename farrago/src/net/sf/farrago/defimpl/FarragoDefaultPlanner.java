@@ -98,6 +98,8 @@ public class FarragoDefaultPlanner extends VolcanoPlanner
 
         if (fennelEnabled) {
             addRule(new FennelSortRule());
+            addRule(new FennelCollectRule());
+            addRule(new FennelUncollectRule());
             addRule(new FennelDistinctSortRule());
             addRule(
                 new FennelRenameRule(FennelPullRel.FENNEL_PULL_CONVENTION,
