@@ -73,7 +73,8 @@ public abstract class CwmSqlindexImpl extends InstanceHandler
             return;
         }
 
-        validator.getIndexMap().createIndexStorage(this);
+        validator.getIndexMap().createIndexStorage(
+            validator.getDataWrapperCache(), this);
 
         // TODO:  index existing rows; for now, creating an index on a
         // non-empty table will leave the index (incorrectly) empty
@@ -86,13 +87,15 @@ public abstract class CwmSqlindexImpl extends InstanceHandler
         // For now, storage from other sessions becomes garbage which will be
         // collected as those sessions close (or on recovery in case of a
         // crash).
-        validator.getIndexMap().dropIndexStorage(this, false);
+        validator.getIndexMap().dropIndexStorage(
+            validator.getDataWrapperCache(), this, false);
     }
 
     // implement DdlStoredElement
     public void truncateStorage(DdlValidator validator)
     {
-        validator.getIndexMap().dropIndexStorage(this, true);
+        validator.getIndexMap().dropIndexStorage(
+            validator.getDataWrapperCache(), this, true);
     }
 
     // implement DdlValidatedElement

@@ -237,7 +237,7 @@ public class DdlValidator extends FarragoCompoundAllocation
     }
 
     // implement FarragoSessionDdlValidator
-    public FarragoIndexMap getIndexMap()
+    public FarragoSessionIndexMap getIndexMap()
     {
         return stmtValidator.getIndexMap();
     }

@@ -147,9 +147,9 @@ public interface FarragoSessionPreparingStmt extends FarragoAllocation
     public FarragoTypeFactory getFarragoTypeFactory();
 
     /**
-     * @return FarragoIndexMap to use for accessing index storage
+     * @return FarragoSessionIndexMap to use for accessing index storage
      */
-    public FarragoIndexMap getIndexMap();
+    public FarragoSessionIndexMap getIndexMap();
 
     /**
      * @return session which invoked statement preparation

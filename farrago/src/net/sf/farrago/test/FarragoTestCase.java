@@ -460,10 +460,7 @@ public abstract class FarragoTestCase extends DiffTestCase
 
     protected boolean shouldDiff()
     {
-        if (repos.isFennelEnabled()) {
-            return true;
-        }
-        return FarragoProperties.instance().testDiff.get();
+        return true;
     }
 
     //~ Inner Classes ---------------------------------------------------------
@@ -525,12 +522,14 @@ public abstract class FarragoTestCase extends DiffTestCase
                 if (wrapper.getName().startsWith("SYS_")) {
                     continue;
                 }
+                list.add(wrapper.isForeign() ? "foreign" : "local");
                 list.add(wrapper.getName());
             }
             iter = list.iterator();
             while (iter.hasNext()) {
+                String wrapperType = (String) iter.next();
                 String name = (String) iter.next();
-                stmt.execute("drop foreign data wrapper \"" + name
+                stmt.execute("drop " + wrapperType + " data wrapper \"" + name
                     + "\" cascade");
             }
         }

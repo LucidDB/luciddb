@@ -78,6 +78,13 @@ else
 fi
 
 # Build Farrago catalog and everything else, then run tests
+# (but don't run tests when Fennel is disabled, since most fail without it)
 cd ../farrago
 ant clean
-ant test
+
+if $fennel_disabled ; then
+    ant createCatalog
+else
+    ant test
+fi
+

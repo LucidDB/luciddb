@@ -16,7 +16,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-package net.sf.farrago.namespace.ftrs;
+package net.sf.farrago.namespace.mock;
 
 import net.sf.farrago.query.*;
 
@@ -26,20 +26,21 @@ import org.eigenbase.util.*;
 
 
 /**
- * FtrsTableModificationRule is a rule for converting an abstract {@link
- * TableModificationRel} into a corresponding {@link FtrsTableModificationRel}.
+ * MockTableModificationRule is a rule for converting an abstract {@link
+ * TableModificationRel} into a corresponding local mock table update (always
+ * returning rowcount 0, since local mock tables never store any data).
  *
  * @author John V. Sichi
  * @version $Id$
  */
-class FtrsTableModificationRule extends RelOptRule
+class MedMockTableModificationRule extends RelOptRule
 {
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Creates a new FtrsTableModificationRule object.
+     * Creates a new MockTableModificationRule object.
      */
-    public FtrsTableModificationRule()
+    public MedMockTableModificationRule()
     {
         super(new RelOptRuleOperand(
                 TableModificationRel.class,
@@ -53,7 +54,7 @@ class FtrsTableModificationRule extends RelOptRule
     // implement RelOptRule
     public CallingConvention getOutConvention()
     {
-        return FennelPullRel.FENNEL_PULL_CONVENTION;
+        return CallingConvention.ITERATOR;
     }
 
     // implement RelOptRule
@@ -62,38 +63,29 @@ class FtrsTableModificationRule extends RelOptRule
         TableModificationRel tableModification =
             (TableModificationRel) call.rels[0];
 
-        if (!(tableModification.getTable() instanceof FtrsTable)) {
+        // TODO jvs 13-Sept-2004:  disallow updates to mock foreign tables
+        if (!(tableModification.getTable() instanceof MedMockColumnSet)) {
             return;
         }
 
-        RelNode inputRel = call.rels[1];
+        MedMockColumnSet targetColumnSet = (MedMockColumnSet)
+            tableModification.getTable();
 
-        // Require input types to match expected types exactly.  This
-        // is accomplished by the usage of CoerceInputsRule.
-        if (!RelOptUtil.areRowTypesEqual(
-                    inputRel.getRowType(),
-                    tableModification.getExpectedInputRowType(0))) {
-            return;
-        }
-
-        RelNode fennelInput =
-            convert(inputRel, FennelPullRel.FENNEL_PULL_CONVENTION);
-        if (fennelInput == null) {
-            return;
-        }
-
-        FtrsTableModificationRel fennelModificationRel =
-            new FtrsTableModificationRel(
+        // create a 1-row column set with the correct type for rowcount;
+        // single value returned will be 0, which is what we want
+        MedMockColumnSet rowCountColumnSet =
+            new MedMockColumnSet(
+                targetColumnSet.getLocalName(),
+                tableModification.getRowType(),
+                1,
+                targetColumnSet.executorImpl);
+        
+        call.transformTo(
+            rowCountColumnSet.toRel(
                 tableModification.getCluster(),
-                (FtrsTable) tableModification.getTable(),
-                tableModification.getConnection(),
-                fennelInput,
-                tableModification.getOperation(),
-                tableModification.getUpdateColumnList());
-
-        call.transformTo(fennelModificationRel);
+                tableModification.getConnection()));
     }
 }
 
 
-// End FtrsTableModificationRule.java
+// End MedMockTableModificationRule.java

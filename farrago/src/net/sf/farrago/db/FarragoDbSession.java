@@ -95,7 +95,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     /**
      * Map of temporary indexes created by this session.
      */
-    private SessionIndexMap sessionIndexMap;
+    private FarragoDbSessionIndexMap sessionIndexMap;
 
     /**
      * Private cache of executable code pinned by the current txn.
@@ -158,7 +158,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
 
         savepointList = new ArrayList();
 
-        sessionIndexMap = new SessionIndexMap(this, database, repos);
+        sessionIndexMap = new FarragoDbSessionIndexMap(this, database, repos);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -354,7 +354,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         return database;
     }
 
-    public SessionIndexMap getSessionIndexMap()
+    public FarragoDbSessionIndexMap getSessionIndexMap()
     {
         return sessionIndexMap;
     }

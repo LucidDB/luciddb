@@ -68,9 +68,6 @@ public class FarragoQueryTest extends FarragoTestCase
             + " from sales.emps order by deptno";
         preparedStmt = connection.prepareStatement(sql);
         resultSet = preparedStmt.executeQuery();
-        if (!repos.isFennelEnabled()) {
-            return;
-        }
         List refList = new ArrayList();
         refList.add("10");
         refList.add("20");
@@ -90,9 +87,6 @@ public class FarragoQueryTest extends FarragoTestCase
         final byte [] bytes = { 0x41, 0x62, 0x63 };
         preparedStmt.setBytes(1, bytes);
         resultSet = preparedStmt.executeQuery();
-        if (!repos.isFennelEnabled()) {
-            return;
-        }
         Set refSet = new HashSet();
         refSet.add("Eric");
         compareResultSet(refSet);
@@ -107,9 +101,6 @@ public class FarragoQueryTest extends FarragoTestCase
         String sql =
             "select name,public_key from sales.emps" + " order by public_key";
         resultSet = stmt.executeQuery(sql);
-        if (!repos.isFennelEnabled()) {
-            return;
-        }
         List refList = new ArrayList();
         refList.add("Wilma");
         refList.add("Eric");

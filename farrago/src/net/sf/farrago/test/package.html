@@ -146,12 +146,8 @@ pre-test state at the end of each test.
 
 <h3>Fennel Tests</h3>
 
-Tests must run successfully whether or not Fennel storage is
-available.  Java-based tests can alter their behavior by checking
-FarragoRepos.isFennelEnabled().  SQL-based tests are unlikely to
-work without Fennel (since most tests require ORDER BY for
-non-determinism), so they are executed but the results are ignored
-when Fennel is disabled.
+Tests must run successfully when Fennel storage is
+available.  Without Fennel storage, many tests are expected to fail.
 
 <h3>Test Utilities</h3>
 

@@ -102,22 +102,6 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
         final RelDataType rowType = getRowType();
         OJClass rowClass = OJUtil.typeToOJClass(rowType);
 
-        if (!repos.isFennelEnabled()) {
-            // use dummies to insert a reference to our row class, just so
-            // that it will get generated
-            ExpressionList argList = new ExpressionList();
-            argList.add(Literal.constantNull());
-            argList.add(Literal.constantNull());
-            argList.add(
-                new AllocationExpression(
-                    rowClass,
-                    new ExpressionList()));
-            return new MethodCall(
-                fennelRel.getPreparingStmt().getConnectionVariable(),
-                "newFennelIterator",
-                argList);
-        }
-
         FennelRelImplementor farragoRelImplementor =
             (FennelRelImplementor) implementor;
         FemExecutionStreamDef rootStream =

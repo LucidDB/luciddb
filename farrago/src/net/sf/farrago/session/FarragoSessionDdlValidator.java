@@ -71,9 +71,9 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
     public FarragoTypeFactory getTypeFactory();
 
     /**
-     * @return the FarragoIndexMap to use for managing index storage
+     * @return the FarragoSessionIndexMap to use for managing index storage
      */
-    public FarragoIndexMap getIndexMap();
+    public FarragoSessionIndexMap getIndexMap();
 
     /**
      * @return cache for loaded data wrappers

@@ -262,17 +262,11 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
         if (isDml) {
             success = false;
             try {
-                if (session.getRepos().isFennelEnabled()) {
-                    boolean found = resultSet.next();
-                    assert (found);
-                    updateCount = resultSet.getInt(1);
-
-                    // REVIEW: jvp 20-Jun-2004 workaround limitations of
-                    // other libraries
-                    while (resultSet.next()) {
-                    }
-                } else {
-                    updateCount = 0;
+                boolean found = resultSet.next();
+                assert (found);
+                updateCount = resultSet.getInt(1);
+                // REVIEW jvs 13-Sept-2004:  johnp, is this still needed?
+                while (resultSet.next()) {
                 }
                 if (tracer.isLoggable(Level.FINE)) {
                     tracer.fine("Update count = " + updateCount);

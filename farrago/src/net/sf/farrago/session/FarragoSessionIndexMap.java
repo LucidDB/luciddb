@@ -16,19 +16,20 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-package net.sf.farrago.catalog;
+package net.sf.farrago.session;
 
 import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.namespace.util.*;
 
 
 /**
- * FarragoIndexMap defines a means for mapping CWM index definitions to
+ * FarragoSessionIndexMap defines a means for mapping CWM index definitions to
  * corresponding physical storage.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public interface FarragoIndexMap
+public interface FarragoSessionIndexMap
 {
     //~ Methods ---------------------------------------------------------------
 
@@ -54,19 +55,29 @@ public interface FarragoIndexMap
      * Called on every reference to a temporary table.  Some implementations
      * may use this to create empty temporary indexes on first reference.
      *
+     * @param wrapperCache cache for looking up data wrappers
+     *
      * @param table the temporary table
      */
-    public void instantiateTemporaryTable(CwmTable table);
+    public void instantiateTemporaryTable(
+        FarragoDataWrapperCache wrapperCache,
+        CwmTable table);
 
     /**
      * Create an index and record its root in this map.
      *
+     * @param wrapperCache cache for looking up data wrappers
+     *
      * @param index the index to create
      */
-    public void createIndexStorage(CwmSqlindex index);
+    public void createIndexStorage(
+        FarragoDataWrapperCache wrapperCache,
+        CwmSqlindex index);
 
     /**
      * Drop an index and remove its root from this map.
+     *
+     * @param wrapperCache cache for looking up data wrappers
      *
      * @param index the index to drop
      *
@@ -74,9 +85,10 @@ public interface FarragoIndexMap
      * entirely
      */
     public void dropIndexStorage(
+        FarragoDataWrapperCache wrapperCache,
         CwmSqlindex index,
         boolean truncate);
 }
 
 
-// End FarragoIndexMap.java
+// End FarragoSessionIndexMap.java

@@ -61,7 +61,7 @@ public class FarragoSessionRuntimeParams
     /**
      * Map of indexes which might be accessed.
      */
-    public FarragoIndexMap indexMap;
+    public FarragoSessionIndexMap indexMap;
 
     /**
      * Array of values bound to dynamic parameters by position.

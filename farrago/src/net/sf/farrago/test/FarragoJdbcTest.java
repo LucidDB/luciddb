@@ -1395,15 +1395,9 @@ public class FarragoJdbcTest extends FarragoTestCase
         for (int i = 10; i >= -2; i--) {
             preparedStmt.setQueryTimeout(i);
             resultSet = preparedStmt.executeQuery();
-            if (repos.isFennelEnabled()) {
-                assertEquals(
-                    4,
-                    getResultSetCount());
-            } else {
-                assertEquals(
-                    0,
-                    getResultSetCount());
-            }
+            assertEquals(
+                4,
+                getResultSetCount());
             resultSet.close();
         }
 
@@ -1426,15 +1420,11 @@ public class FarragoJdbcTest extends FarragoTestCase
         preparedStmt.setString(1, "Wilma");
         preparedStmt.setQueryTimeout(5);
         resultSet = preparedStmt.executeQuery();
-        if (repos.isFennelEnabled()) {
-            compareResultSet(Collections.singleton("1"));
-        }
+        compareResultSet(Collections.singleton("1"));
         preparedStmt.setString(1, "Eric");
         preparedStmt.setQueryTimeout(3);
         resultSet = preparedStmt.executeQuery();
-        if (repos.isFennelEnabled()) {
-            compareResultSet(Collections.singleton("3"));
-        }
+        compareResultSet(Collections.singleton("3"));
     }
 
     /**
@@ -1762,15 +1752,9 @@ public class FarragoJdbcTest extends FarragoTestCase
         preparedStmt = connection.prepareStatement(sql);
         for (int i = 0; i < 5; ++i) {
             resultSet = preparedStmt.executeQuery();
-            if (repos.isFennelEnabled()) {
-                assertEquals(
-                    4,
-                    getResultSetCount());
-            } else {
-                assertEquals(
-                    0,
-                    getResultSetCount());
-            }
+            assertEquals(
+                4,
+                getResultSetCount());
             resultSet.close();
             resultSet = null;
         }
@@ -1812,15 +1796,9 @@ public class FarragoJdbcTest extends FarragoTestCase
         String sql = "select * from sales.emps";
         for (int i = 0; i < 3; ++i) {
             resultSet = stmt.executeQuery(sql);
-            if (repos.isFennelEnabled()) {
-                assertEquals(
-                    4,
-                    getResultSetCount());
-            } else {
-                assertEquals(
-                    0,
-                    getResultSetCount());
-            }
+            assertEquals(
+                4,
+                getResultSetCount());
             resultSet.close();
             resultSet = null;
         }
@@ -1883,14 +1861,10 @@ public class FarragoJdbcTest extends FarragoTestCase
 
         preparedStmt.setString(1, "Wilma");
         resultSet = preparedStmt.executeQuery();
-        if (repos.isFennelEnabled()) {
-            compareResultSet(Collections.singleton("1"));
-        }
+        compareResultSet(Collections.singleton("1"));
         preparedStmt.setString(1, "Eric");
         resultSet = preparedStmt.executeQuery();
-        if (repos.isFennelEnabled()) {
-            compareResultSet(Collections.singleton("3"));
-        }
+        compareResultSet(Collections.singleton("3"));
         preparedStmt.setString(1, "George");
         resultSet = preparedStmt.executeQuery();
         assertEquals(

@@ -488,7 +488,7 @@ public class FarragoPreparingStmt extends OJStatement
     }
 
     // implement FarragoSessionPreparingStmt
-    public FarragoIndexMap getIndexMap()
+    public FarragoSessionIndexMap getIndexMap()
     {
         return stmtValidator.getIndexMap();
     }
@@ -533,7 +533,8 @@ public class FarragoPreparingStmt extends OJStatement
 
             // REVIEW:  maybe defer this until physical implementation?
             if (table.isTemporary()) {
-                getIndexMap().instantiateTemporaryTable(table);
+                getIndexMap().instantiateTemporaryTable(
+                    stmtValidator.getDataWrapperCache(), table);
             }
         }
 

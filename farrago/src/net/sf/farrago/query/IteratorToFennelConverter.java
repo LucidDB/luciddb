@@ -288,10 +288,6 @@ public class IteratorToFennelConverter extends ConverterRel
             throw cannotImplement();
         }
 
-        if (!getPreparingStmt().getRepos().isFennelEnabled()) {
-            return Literal.constantNull();
-        }
-
         RelDataType rowType = child.getRowType();
 
         // Cheeky! We happen to know it's a FarragoRelImplementor (for now).

@@ -91,7 +91,7 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
     /**
      * @return index map to use for validation
      */
-    public FarragoIndexMap getIndexMap();
+    public FarragoSessionIndexMap getIndexMap();
 
     /**
      * @return shared cache to use for validating references to

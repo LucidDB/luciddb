@@ -91,15 +91,9 @@ public class FarragoTypeTest extends FarragoTestCase
     {
         String sql = "select 1+1.0 from values(1)";
         resultSet = stmt.executeQuery(sql);
-        if (repos.isFennelEnabled()) {
-            assertEquals(
-                4,
-                getResultSetCount());
-        } else {
-            assertEquals(
-                1,
-                getResultSetCount());
-        }
+        assertEquals(
+            4,
+            getResultSetCount());
     }
 
     public void _testSubstringFunc()

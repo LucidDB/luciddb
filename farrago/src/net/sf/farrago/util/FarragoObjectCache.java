@@ -341,7 +341,7 @@ public class FarragoObjectCache implements FarragoAllocation
                 tracer.fine("Discarding key " + entry.key.toString());
             }
 
-            assert (entry.pinCount == 0);
+            assert (entry.pinCount == 0) : entry.pinCount;
             assert (entry.constructionThread == null);
 
             if (entry.value instanceof FarragoAllocation) {

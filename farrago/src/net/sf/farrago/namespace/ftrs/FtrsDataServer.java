@@ -108,10 +108,6 @@ class FtrsDataServer extends MedAbstractLocalDataServer
         repos.beginTransientTxn();
         try {
             FemCmdCreateIndex cmd = repos.newFemCmdCreateIndex();
-            if (!repos.isFennelEnabled()) {
-                return 0;
-            }
-
             initIndexCmd(cmd, index);
             return getFennelDbHandle().executeCmd(cmd);
         } finally {
@@ -132,9 +128,6 @@ class FtrsDataServer extends MedAbstractLocalDataServer
                 cmd = repos.newFemCmdTruncateIndex();
             } else {
                 cmd = repos.newFemCmdDropIndex();
-            }
-            if (!repos.isFennelEnabled()) {
-                return;
             }
             initIndexCmd(cmd, index);
             cmd.setRootPageId(rootPageId);

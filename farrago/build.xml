@@ -232,6 +232,9 @@ require version '${required.ant.version}'."/>
 
   <!-- NOTE:  this has to use true/false (not 1/0) for MDR import -->
   <property name="fennel.disabled" value="false"/>
+  <condition property="fennel.disabled.istrue">
+    <istrue value="${fennel.disabled}"/>
+  </condition>
 
   <property name="assertions.jvmarg" value="-ea -esa"/>
 
@@ -271,13 +274,6 @@ require version '${required.ant.version}'."/>
     <include name="**/*.sql"/>
   </fileset>
   <pathconvert property="fileset.regressionsql" refid="fileset.regressionsql"
-    pathsep="${line.separator}" dirsep="${file.separator}" />
-
-  <!-- a fileset of all SQL scripts to run during catalog init -->
-  <filelist dir="${initsql.dir}" id="fileset.initsql"
-    files=
-    "createStorageWrappers.sql,createJdbcViews.sql,createSalesSchema.sql"/>
-  <pathconvert property="fileset.initsql" refid="fileset.initsql"
     pathsep="${line.separator}" dirsep="${file.separator}" />
 
   <!-- name for a temp file used during tags generation -->
@@ -756,7 +752,24 @@ require version '${required.ant.version}'."/>
   <!-- write sample schema to catalog -->
   <target name="populateTestData" depends="populateCatalog,populateTestSchema"/>
 
-  <target name="populateTestSchema">
+  <!-- determine list of all SQL scripts to run during catalog init -->
+  <target name="determineInitSql" 
+    depends="initSqlWithFennel,initSqlWithoutFennel">
+    <pathconvert property="filelist.initsql" refid="filelist.initsql"
+      pathsep="${line.separator}" dirsep="${file.separator}" />
+  </target>
+
+  <target name="initSqlWithFennel" unless="fennel.disabled.istrue">
+    <filelist dir="${initsql.dir}" id="filelist.initsql"
+      files="createStorageWrappers.sql,createJdbcViews.sql,createSalesSchema.sql"/>
+  </target>
+
+  <target name="initSqlWithoutFennel" if="fennel.disabled.istrue">
+    <filelist dir="${initsql.dir}" id="filelist.initsql"
+      files="createStorageWrappers.sql,disableFennelStorage.sql,createJdbcViews.sql,createSalesSchema.sql"/>
+  </target>
+
+  <target name="populateTestSchema" depends="determineInitSql">
     <junit printsummary="yes" fork="yes" haltonerror="yes" haltonfailure="yes"
       tempdir="${testlog.dir}">
       <classpath refid="sqlline.classpath"/>
@@ -764,8 +777,7 @@ require version '${required.ant.version}'."/>
       <jvmarg line="&FarragoProps;"/>
       <sysproperty key="java.ext.dirs" value="${sqlline.dir}"/>
       <sysproperty key="net.sf.farrago.fileset.unitsql"
-        value="${fileset.initsql}"/>
-      <sysproperty key="net.sf.farrago.test.diff" value="true"/>
+        value="${filelist.initsql}"/>
       <formatter type="plain"/>
       <formatter type="xml"/> <!-- for integration builds -->
       <test todir="${testlog.dir}" name="net.sf.farrago.test.FarragoSqlTest" />

@@ -97,12 +97,14 @@ public class FarragoPlanner extends VolcanoPlanner
         addRule(new IterRules.HomogeneousUnionToIteratorRule());
         addRule(new IterRules.OneRowToIteratorRule());
 
-        addRule(new FennelSortRule());
-        addRule(new FennelDistinctSortRule());
-        addRule(
-            new FennelRenameRule(FennelPullRel.FENNEL_PULL_CONVENTION,
-                "FennelPullRenameRule"));
-        addRule(new FennelCartesianJoinRule());
+        if (fennelEnabled) {
+            addRule(new FennelSortRule());
+            addRule(new FennelDistinctSortRule());
+            addRule(
+                new FennelRenameRule(FennelPullRel.FENNEL_PULL_CONVENTION,
+                    "FennelPullRenameRule"));
+            addRule(new FennelCartesianJoinRule());
+        }
 
         // Add the rule to introduce FennelCalcRel's only if the fennel
         // calculator is enabled.
@@ -132,8 +134,10 @@ public class FarragoPlanner extends VolcanoPlanner
             addRule(FarragoAutoCalcRule.instance);
         }
 
-        FennelToIteratorConverter.register(this);
-        IteratorToFennelConverter.register(this, this.stmt);
+        if (fennelEnabled) {
+            FennelToIteratorConverter.register(this);
+            IteratorToFennelConverter.register(this, this.stmt);
+        }
     }
 
     /**

@@ -1,17 +1,18 @@
 /*
+// $Id$
 // Farrago is a relational database management system.
-// Copyright (C) 2003-2004 John V. Sichi.
+// Copyright (C) 2004-2004 John V. Sichi.
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-//
+// 
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-//
+// 
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
@@ -26,57 +27,49 @@ import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.resource.*;
 
-
 /**
- * MedMockForeignDataWrapper provides a mock implementation of the
- * {@link FarragoMedDataWrapper} interface.
+ * MedMockLocalDataWrapper implements the {@link FarragoMedDataWrapper}
+ * interface for local mock tables (which always contain zero rows).
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class MedMockForeignDataWrapper extends MedAbstractDataWrapper
+public class MedMockLocalDataWrapper extends MedAbstractDataWrapper
 {
-    //~ Constructors ----------------------------------------------------------
-
     /**
      * Creates a new data wrapper instance.
      */
-    public MedMockForeignDataWrapper()
+    public MedMockLocalDataWrapper()
     {
     }
-
-    //~ Methods ---------------------------------------------------------------
-
+    
     // implement FarragoMedDataWrapper
     public String getSuggestedName()
     {
-        return "MOCK_FOREIGN_DATA_WRAPPER";
+        return "MOCK_LOCAL_DATA_WRAPPER";
     }
 
     // implement FarragoMedDataWrapper
     public String getDescription(Locale locale)
     {
         // TODO: localize
-        return "Foreign data wrapper for mock tables";
+        return "Local data wrapper for mock tables";
     }
 
-    // TODO:  DriverPropertyInfo calls
     // implement FarragoMedDataWrapper
-    public void initialize(
-        FarragoRepos repos,
-        Properties props)
-        throws SQLException
+    public boolean isForeign()
     {
-        super.initialize(repos, props);
+        return false;
     }
-
+    
     // implement FarragoMedDataWrapper
     public FarragoMedDataServer newServer(
         String serverMofId,
         Properties props)
         throws SQLException
     {
-        MedMockDataServer server = new MedMockDataServer(serverMofId, props);
+        MedMockLocalDataServer server = new MedMockLocalDataServer(
+            serverMofId, props);
         boolean success = false;
         try {
             server.initialize();
@@ -90,5 +83,4 @@ public class MedMockForeignDataWrapper extends MedAbstractDataWrapper
     }
 }
 
-
-// End MedMockForeignDataWrapper.java
+// End MedMockLocalDataWrapper.java

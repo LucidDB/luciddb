@@ -68,13 +68,11 @@ public class FennelDmlTest extends FarragoTestCase
         String sql = "insert into temps select * from emps";
         try {
             int rowCount = stmt.executeUpdate(sql);
-            if (repos.isFennelEnabled()) {
-                assertEquals(4, rowCount);
-                resultSet = stmt.executeQuery("select * from temps");
-                assertEquals(
-                    4,
-                    getResultSetCount());
-            }
+            assertEquals(4, rowCount);
+            resultSet = stmt.executeQuery("select * from temps");
+            assertEquals(
+                4,
+                getResultSetCount());
         } finally {
             connection.rollback();
         }
@@ -91,16 +89,14 @@ public class FennelDmlTest extends FarragoTestCase
         String sql = "insert into depts values(70,'Obfuscation')";
         try {
             int rowCount = stmt.executeUpdate(sql);
-            if (repos.isFennelEnabled()) {
-                assertEquals(1, rowCount);
-                resultSet = stmt.executeQuery("select name from depts");
-                Set refSet = new HashSet();
-                refSet.add("Sales");
-                refSet.add("Marketing");
-                refSet.add("Accounts");
-                refSet.add("Obfuscation");
-                compareResultSet(refSet);
-            }
+            assertEquals(1, rowCount);
+            resultSet = stmt.executeQuery("select name from depts");
+            Set refSet = new HashSet();
+            refSet.add("Sales");
+            refSet.add("Marketing");
+            refSet.add("Accounts");
+            refSet.add("Obfuscation");
+            compareResultSet(refSet);
         } finally {
             connection.rollback();
         }
@@ -119,17 +115,15 @@ public class FennelDmlTest extends FarragoTestCase
             + "values('M','Flubber',130,5,40,false)";
         try {
             int rowCount = stmt.executeUpdate(sql);
-            if (repos.isFennelEnabled()) {
-                assertEquals(1, rowCount);
-                resultSet = stmt.executeQuery("select name from emps");
-                Set refSet = new HashSet();
-                refSet.add("Fred");
-                refSet.add("Eric");
-                refSet.add("John");
-                refSet.add("Wilma");
-                refSet.add("Flubber");
-                compareResultSet(refSet);
-            }
+            assertEquals(1, rowCount);
+            resultSet = stmt.executeQuery("select name from emps");
+            Set refSet = new HashSet();
+            refSet.add("Fred");
+            refSet.add("Eric");
+            refSet.add("John");
+            refSet.add("Wilma");
+            refSet.add("Flubber");
+            compareResultSet(refSet);
         } finally {
             connection.rollback();
         }
@@ -147,17 +141,15 @@ public class FennelDmlTest extends FarragoTestCase
             "insert into depts values(70,'Obfuscation'), (80,'Eradication')";
         try {
             int rowCount = stmt.executeUpdate(sql);
-            if (repos.isFennelEnabled()) {
-                assertEquals(2, rowCount);
-                resultSet = stmt.executeQuery("select name from depts");
-                Set refSet = new HashSet();
-                refSet.add("Sales");
-                refSet.add("Marketing");
-                refSet.add("Accounts");
-                refSet.add("Obfuscation");
-                refSet.add("Eradication");
-                compareResultSet(refSet);
-            }
+            assertEquals(2, rowCount);
+            resultSet = stmt.executeQuery("select name from depts");
+            Set refSet = new HashSet();
+            refSet.add("Sales");
+            refSet.add("Marketing");
+            refSet.add("Accounts");
+            refSet.add("Obfuscation");
+            refSet.add("Eradication");
+            compareResultSet(refSet);
         } finally {
             connection.rollback();
         }
@@ -176,13 +168,11 @@ public class FennelDmlTest extends FarragoTestCase
             + "values(130,'Flubber',40,'M','Miami',false)";
         try {
             int rowCount = stmt.executeUpdate(sql);
-            if (repos.isFennelEnabled()) {
-                assertEquals(1, rowCount);
-                resultSet = stmt.executeQuery("select empid from temps");
-                Set refSet = new HashSet();
-                refSet.add("999");
-                compareResultSet(refSet);
-            }
+            assertEquals(1, rowCount);
+            resultSet = stmt.executeQuery("select empid from temps");
+            Set refSet = new HashSet();
+            refSet.add("999");
+            compareResultSet(refSet);
         } finally {
             connection.rollback();
         }
@@ -199,13 +189,11 @@ public class FennelDmlTest extends FarragoTestCase
         String sql = "insert into temps select * from emps where empno = 120";
         try {
             int rowCount = stmt.executeUpdate(sql);
-            if (repos.isFennelEnabled()) {
-                assertEquals(1, rowCount);
-                resultSet = stmt.executeQuery("select name from temps");
-                Set refSet = new HashSet();
-                refSet.add("Wilma");
-                compareResultSet(refSet);
-            }
+            assertEquals(1, rowCount);
+            resultSet = stmt.executeQuery("select name from temps");
+            Set refSet = new HashSet();
+            refSet.add("Wilma");
+            compareResultSet(refSet);
         } finally {
             connection.rollback();
         }
@@ -224,16 +212,14 @@ public class FennelDmlTest extends FarragoTestCase
             + "where deptno = 10";
         try {
             int rowCount = stmt.executeUpdate(sql);
-            if (repos.isFennelEnabled()) {
-                assertEquals(1, rowCount);
-                resultSet = stmt.executeQuery("select name from depts");
-                Set refSet = new HashSet();
-                refSet.add("Sales");
-                refSet.add("Marketing");
-                refSet.add("Accounts");
-                refSet.add("Antisales");
-                compareResultSet(refSet);
-            }
+            assertEquals(1, rowCount);
+            resultSet = stmt.executeQuery("select name from depts");
+            Set refSet = new HashSet();
+            refSet.add("Sales");
+            refSet.add("Marketing");
+            refSet.add("Accounts");
+            refSet.add("Antisales");
+            compareResultSet(refSet);
         } finally {
             connection.rollback();
         }
@@ -259,17 +245,15 @@ public class FennelDmlTest extends FarragoTestCase
             preparedStmt.setString(2, "Defenestration");
             rowCount += preparedStmt.executeUpdate();
 
-            if (repos.isFennelEnabled()) {
-                assertEquals(2, rowCount);
-                resultSet = stmt.executeQuery("select name from depts");
-                Set refSet = new HashSet();
-                refSet.add("Sales");
-                refSet.add("Marketing");
-                refSet.add("Accounts");
-                refSet.add("Excoriation");
-                refSet.add("Defenestration");
-                compareResultSet(refSet);
-            }
+            assertEquals(2, rowCount);
+            resultSet = stmt.executeQuery("select name from depts");
+            Set refSet = new HashSet();
+            refSet.add("Sales");
+            refSet.add("Marketing");
+            refSet.add("Accounts");
+            refSet.add("Excoriation");
+            refSet.add("Defenestration");
+            compareResultSet(refSet);
         } finally {
             connection.rollback();
         }
@@ -286,13 +270,11 @@ public class FennelDmlTest extends FarragoTestCase
         String sql = "delete from depts";
         try {
             int rowCount = stmt.executeUpdate(sql);
-            if (repos.isFennelEnabled()) {
-                assertEquals(3, rowCount);
-                resultSet = stmt.executeQuery("select * from depts");
-                assertEquals(
-                    0,
-                    getResultSetCount());
-            }
+            assertEquals(3, rowCount);
+            resultSet = stmt.executeQuery("select * from depts");
+            assertEquals(
+                0,
+                getResultSetCount());
         } finally {
             connection.rollback();
         }
@@ -309,14 +291,12 @@ public class FennelDmlTest extends FarragoTestCase
         String sql = "delete from depts where deptno=20";
         try {
             int rowCount = stmt.executeUpdate(sql);
-            if (repos.isFennelEnabled()) {
-                assertEquals(1, rowCount);
-                resultSet = stmt.executeQuery("select name from depts");
-                Set refSet = new HashSet();
-                refSet.add("Sales");
-                refSet.add("Accounts");
-                compareResultSet(refSet);
-            }
+            assertEquals(1, rowCount);
+            resultSet = stmt.executeQuery("select name from depts");
+            Set refSet = new HashSet();
+            refSet.add("Sales");
+            refSet.add("Accounts");
+            compareResultSet(refSet);
         } finally {
             connection.rollback();
         }
@@ -334,16 +314,14 @@ public class FennelDmlTest extends FarragoTestCase
         String sql = "update emps set age=99 where empid=3";
         try {
             int rowCount = stmt.executeUpdate(sql);
-            if (repos.isFennelEnabled()) {
-                assertEquals(1, rowCount);
-                resultSet = stmt.executeQuery("select age from emps");
-                Set refSet = new HashSet();
-                refSet.add(null);
-                refSet.add("25");
-                refSet.add("99");
-                refSet.add("50");
-                compareResultSet(refSet);
-            }
+            assertEquals(1, rowCount);
+            resultSet = stmt.executeQuery("select age from emps");
+            Set refSet = new HashSet();
+            refSet.add(null);
+            refSet.add("25");
+            refSet.add("99");
+            refSet.add("50");
+            compareResultSet(refSet);
         } finally {
             connection.rollback();
         }
@@ -360,16 +338,14 @@ public class FennelDmlTest extends FarragoTestCase
         String sql = "update depts set name='Slacking' where deptno=30";
         try {
             int rowCount = stmt.executeUpdate(sql);
-            if (repos.isFennelEnabled()) {
-                assertEquals(1, rowCount);
-                resultSet =
-                    stmt.executeQuery("select name from depts order by 1");
-                List refList = new ArrayList();
-                refList.add("Marketing");
-                refList.add("Sales");
-                refList.add("Slacking");
-                compareResultList(refList);
-            }
+            assertEquals(1, rowCount);
+            resultSet =
+                stmt.executeQuery("select name from depts order by 1");
+            List refList = new ArrayList();
+            refList.add("Marketing");
+            refList.add("Sales");
+            refList.add("Slacking");
+            compareResultList(refList);
         } finally {
             connection.rollback();
         }
@@ -413,90 +389,68 @@ public class FennelDmlTest extends FarragoTestCase
         try {
             rowCount = stmt.executeUpdate(insertA);
             refSet.add("A");
-            if (repos.isFennelEnabled()) {
-                assertEquals(1, rowCount);
-                resultSet = stmt.executeQuery("select name from depts");
-                compareResultSet(refSet);
-            }
+            assertEquals(1, rowCount);
+            resultSet = stmt.executeQuery("select name from depts");
+            compareResultSet(refSet);
             Savepoint savepointX = connection.setSavepoint("X");
 
             rowCount = stmt.executeUpdate(insertB);
             refSet.add("B");
-            if (repos.isFennelEnabled()) {
-                assertEquals(1, rowCount);
-                resultSet = stmt.executeQuery("select name from depts");
-                compareResultSet(refSet);
-            }
+            assertEquals(1, rowCount);
+            resultSet = stmt.executeQuery("select name from depts");
+            compareResultSet(refSet);
             Savepoint savepointY = connection.setSavepoint("Y");
 
             rowCount = stmt.executeUpdate(insertC);
             refSet.add("C");
-            if (repos.isFennelEnabled()) {
-                assertEquals(1, rowCount);
-                resultSet = stmt.executeQuery("select name from depts");
-                compareResultSet(refSet);
-            }
+            assertEquals(1, rowCount);
+            resultSet = stmt.executeQuery("select name from depts");
+            compareResultSet(refSet);
 
             connection.rollback(savepointY);
             refSet.remove("C");
-            if (repos.isFennelEnabled()) {
-                resultSet = stmt.executeQuery("select name from depts");
-                compareResultSet(refSet);
-            }
+            resultSet = stmt.executeQuery("select name from depts");
+            compareResultSet(refSet);
 
             connection.rollback(savepointX);
             refSet.remove("B");
-            if (repos.isFennelEnabled()) {
-                resultSet = stmt.executeQuery("select name from depts");
-                compareResultSet(refSet);
-            }
+            resultSet = stmt.executeQuery("select name from depts");
+            compareResultSet(refSet);
 
             rowCount = stmt.executeUpdate(insertB);
             refSet.add("B");
-            if (repos.isFennelEnabled()) {
-                assertEquals(1, rowCount);
-                resultSet = stmt.executeQuery("select name from depts");
-                compareResultSet(refSet);
-            }
+            assertEquals(1, rowCount);
+            resultSet = stmt.executeQuery("select name from depts");
+            compareResultSet(refSet);
             Savepoint savepointZ = connection.setSavepoint("Z");
 
             rowCount = stmt.executeUpdate(insertC);
             refSet.add("C");
-            if (repos.isFennelEnabled()) {
-                assertEquals(1, rowCount);
-                resultSet = stmt.executeQuery("select name from depts");
-                compareResultSet(refSet);
-            }
+            assertEquals(1, rowCount);
+            resultSet = stmt.executeQuery("select name from depts");
+            compareResultSet(refSet);
 
             connection.rollback(savepointZ);
             refSet.remove("C");
-            if (repos.isFennelEnabled()) {
-                resultSet = stmt.executeQuery("select name from depts");
-                compareResultSet(refSet);
-            }
+            resultSet = stmt.executeQuery("select name from depts");
+            compareResultSet(refSet);
 
             rowCount = stmt.executeUpdate(insertC);
             refSet.add("C");
-            if (repos.isFennelEnabled()) {
-                assertEquals(1, rowCount);
-                resultSet = stmt.executeQuery("select name from depts");
-                compareResultSet(refSet);
-            }
+            assertEquals(1, rowCount);
+            resultSet = stmt.executeQuery("select name from depts");
+            compareResultSet(refSet);
 
             connection.rollback(savepointX);
             refSet.remove("B");
             refSet.remove("C");
-            if (repos.isFennelEnabled()) {
-                resultSet = stmt.executeQuery("select name from depts");
-                compareResultSet(refSet);
-            }
+            resultSet = stmt.executeQuery("select name from depts");
+            compareResultSet(refSet);
 
             connection.rollback();
             refSet.remove("A");
-            if (repos.isFennelEnabled()) {
-                resultSet = stmt.executeQuery("select name from depts");
-                compareResultSet(refSet);
-            }
+            resultSet = stmt.executeQuery("select name from depts");
+            compareResultSet(refSet);
         } finally {
             connection.rollback();
         }

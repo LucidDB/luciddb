@@ -61,7 +61,7 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
     private Map streamIdToHandleMap = new HashMap();
     private Object [] dynamicParamValues;
     private FarragoCompoundAllocation streamOwner;
-    private FarragoIndexMap indexMap;
+    private FarragoSessionIndexMap indexMap;
     private FarragoSessionVariables sessionVariables;
     private FarragoDataWrapperCache dataWrapperCache;
     private FennelStreamGraph streamGraph;
@@ -232,10 +232,6 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
         FennelTupleWriter tupleWriter,
         Iterator iter)
     {
-        if (!repos.isFennelEnabled()) {
-            return null;
-        }
-
         JavaTupleStream stream = new JavaTupleStream(tupleWriter, iter);
 
         streamIdToHandleMap.put(
@@ -335,10 +331,6 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
         String streamName,
         Object dummies)
     {
-        if (!repos.isFennelEnabled()) {
-            return Collections.EMPTY_LIST.iterator();
-        }
-
         assert (dummies == null);
         assert (streamGraph != null);
 

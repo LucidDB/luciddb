@@ -56,7 +56,7 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
     private final FarragoSessionVariables sessionVariables;
     private final FarragoObjectCache codeCache;
     private final FarragoDataWrapperCache dataWrapperCache;
-    private final FarragoIndexMap indexMap;
+    private final FarragoSessionIndexMap indexMap;
     private final FarragoObjectCache sharedDataWrapperCache;
     private final FarragoSessionParser parser;
 
@@ -77,7 +77,7 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
      * @param sharedDataWrapperCache FarragoObjectCache to use for caching
      * FarragoMedDataWrapper instances
      *
-     * @param indexMap FarragoIndexMap to use for index access
+     * @param indexMap FarragoSessionIndexMap to use for index access
      */
     public FarragoStmtValidator(
         FarragoRepos repos,
@@ -85,7 +85,7 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
         FarragoSession session,
         FarragoObjectCache codeCache,
         FarragoObjectCache sharedDataWrapperCache,
-        FarragoIndexMap indexMap)
+        FarragoSessionIndexMap indexMap)
     {
         this.repos = repos;
         this.fennelDbHandle = fennelDbHandle;
@@ -153,7 +153,7 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
     }
 
     // implement FarragoSessionStmtValidator
-    public FarragoIndexMap getIndexMap()
+    public FarragoSessionIndexMap getIndexMap()
     {
         return indexMap;
     }
