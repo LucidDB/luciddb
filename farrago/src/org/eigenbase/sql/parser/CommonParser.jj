@@ -146,12 +146,21 @@ JAVACODE SqlTimestampLiteral parseTimestampLiteral(String s, ParserPosition pos)
 }
 
 JAVACODE SqlIntervalLiteral parseIntervalLiteral(
+    int sign,
     String s,
     SqlIntervalQualifier intervalQualifier) throws ParseException
 {
     ParserPosition pos = getPos();
     String intervalStr = ParserUtil.strip(s, "'");
-    return SqlLiteral.createInterval(intervalStr, intervalQualifier, pos);
+    int[] values = ParserUtil.parseIntervalValue(intervalStr, intervalQualifier);
+    if (null==values) {
+        EigenbaseResource res = EigenbaseResource.instance();
+        String msg = res.getIllegalLiteral("INTERVAL", s, pos.toString(),
+                         res.getBadFormat("'YEAR-MONTH' or 'DAYS HOURS:MINUTES:SECONDS.SECFRACTIONS'"));
+        throw new ParseException(msg);
+    }
+    values[0] = sign * values[0];
+    return SqlLiteral.createInterval(values, intervalQualifier, pos);
 }
 
 /*****************************************
@@ -1680,11 +1689,14 @@ SqlLiteral IntervalLiteral() :
 {
     String p;
     SqlIntervalQualifier intervalQualifier;
+    int sign = 1;
 }
 {
-    <INTERVAL> <QUOTED_STRING> { p = token.image; }
+    <INTERVAL>
+    [<MINUS> { sign = -1; } ]
+    <QUOTED_STRING> { p = token.image; }
     intervalQualifier = IntervalQualifer() {
-        return parseIntervalLiteral(p, intervalQualifier);
+        return parseIntervalLiteral(sign, p, intervalQualifier);
     }
 }
 

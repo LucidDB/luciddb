@@ -1250,10 +1250,10 @@ public abstract class SqlValidatorTestCase extends TestCase
         checkExpType("interval '1' day + interval '1' second", "INTERVAL DAY TO SECOND");
 
         checkExpType("interval '1:2' hour to minute + interval '1' second", "INTERVAL HOUR TO SECOND");
-        checkExpType("interval '1:3' hour to minute + interval '1 1' day to second", "INTERVAL DAY TO SECOND");
+        checkExpType("interval '1:3' hour to minute + interval '1 1:2:3.4' day to second", "INTERVAL DAY TO SECOND");
         checkExpType("interval '1:2' hour to minute + interval '1 1' day to hour", "INTERVAL DAY TO MINUTE");
         checkExpType("interval '1:2' hour to minute + interval '1 1' day to hour", "INTERVAL DAY TO MINUTE");
-        checkExpType("interval '1:2' day to hour + interval '1 1' minute to second", "INTERVAL DAY TO SECOND");
+        checkExpType("interval '1 2' day to hour + interval '1:1' minute to second", "INTERVAL DAY TO SECOND");
 
         checkExpType("interval '1' year + interval '1' month", "INTERVAL YEAR TO MONTH");
         checkExpType("interval '1' day - interval '1' hour", "INTERVAL DAY TO HOUR");

@@ -34,6 +34,8 @@ import java.text.NumberFormat;
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.logging.Logger;
 
 
@@ -226,42 +228,91 @@ public final class ParserUtil
 
     /**
      * Parses a INTERVAL value.
-     * @return If the value is defined as a year-month interval, then a
-     * {@link java.lang.Integer} object is returned holding the interval value
-     * as the number of months.
-     * <br>
-     * If the interval is a day-time interval then a {@link java.lang.Long}
-     * object is returned holding the interval value as the number of
-     * milliseconds
-     * <br>
-     * If value is in an incorrect format, a null value will be returned.
+     * @return an int array where each element in the array represents a time
+     * unit in the input string.<br>
+     * E.g<br>
+     * <code>input string: '364 23:59:59.9999' INTERVAL DAY TO SECOND'</code><br>
+     * would make this method return<br>
+     * <code>int[] { 364, 23, 59, 59, 9999 }</code><br>
+     * NOTE: that the first element in the array can have a negative value
+     * @return null if any non digit character found except
+     * an optional minus '-' at the first character in the input string.
+     * @return null if the number of time units described in
+     * intervalQualifer doesn't match the parsed number of time units.
      */
-    public static Number parseIntervalValue(String value,
+    public static int[] parseIntervalValue(String value,
         SqlIntervalQualifier intervalQualifier) {
+        value = value.trim();
         try {
             if (intervalQualifier.isYearMonth()) {
+                //~------ YEAR-MONTH INTERVAL
                 int years = 0;
                 int months = 0;
                 String[] valArray = value.split("-");
                 if (2 == valArray.length) {
                     years = Integer.parseInt(valArray[0]);
-                    int sign = (years >=0) ? 1 : -1;
-                    months = sign*parsePositiveInt(valArray[1]);
+                    months = parsePositiveInt(valArray[1]);
+                    return new int[] { years, months };
                 } else if (1 == valArray.length) {
-                    int i = Integer.parseInt(valArray[0]);
-                    if (SqlIntervalQualifier.TimeUnit.Year.equals(
-                        intervalQualifier.getStartUnit())) {
-                        years = i;
-                    } else {
-                        months = i;
-                    }
-                } else {
-                    return null;
+                    return new int[] { parsePositiveInt(valArray[0]) };
                 }
-                //todo, need to set the proper precision aswell
-                return new Integer(years*12 + months);
+                return null;
             } else {
-                //todo
+                //~------ DAY-TIME INTERVAL
+                String[] dayPs = {
+                    "(-?\\d) (\\d+):(\\d+):(\\d+)\\.(\\d+)"  //same trice
+                    ,"(-?\\d) (\\d+):(\\d+):(\\d+)\\.(\\d+)" //same trice
+                    ,"(-?\\d) (\\d+):(\\d+):(\\d+)\\.(\\d+)" //same trice
+                    ,"(-?\\d+)"
+                    ,"(-?\\d+) (\\d+)"
+                    ,"(-?\\d+) (\\d+):(\\d+)"
+                    ,"(-?\\d+) (\\d+):(\\d+):(\\d+)"
+                };
+
+                String[] nonDayPs = {
+                    "(-?\\d+):(\\d+):(\\d+)\\.(\\d+)"
+                    ,"(-?\\d+):(\\d+)\\.(\\d+)"
+                    ,"(-?\\d+)\\.(\\d+)"
+                    ,"(-?\\d+)"
+                    ,"(-?\\d+):(\\d+)"
+                    ,"(-?\\d+):(\\d+):(\\d+)"
+                };
+
+                String[] ps;
+                if (SqlIntervalQualifier.TimeUnit.Day.equals(
+                    intervalQualifier.getStartUnit())) {
+                    ps = dayPs;
+                } else {
+                    ps = nonDayPs;
+                }
+                
+                for (int iPattern = 0; iPattern < ps.length; iPattern++) {
+                    String p = ps[iPattern];
+                    Matcher m = Pattern.compile(p).matcher(value);
+                    if (m.matches()) {
+                        int timeUnitsCount = m.groupCount();
+                        int[] ret = new int[timeUnitsCount];
+                        for (int iGroup = 1; iGroup <= m.groupCount(); iGroup++) {
+                            ret[iGroup-1] = Integer.parseInt(m.group(iGroup));
+                        }
+
+                        if (iPattern < 3) {
+                            timeUnitsCount--;
+                        }
+
+                        SqlIntervalQualifier.TimeUnit start =
+                            intervalQualifier.getStartUnit();
+                        SqlIntervalQualifier.TimeUnit end =
+                            intervalQualifier.getEndUnit();
+                        if (null==end && timeUnitsCount>1) {
+                            return null;
+                        } else if ((null!=end) &&
+                            ((end.ordinal-start.ordinal+1)!=timeUnitsCount)) {
+                            return null;
+                        }
+                        return ret;
+                    }
+                }
                 return null;
             }
         } catch (NumberFormatException e) {

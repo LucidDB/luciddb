@@ -22,7 +22,6 @@
 package org.eigenbase.sql.parser;
 
 import java.util.regex.Pattern;
-
 import junit.framework.TestCase;
 import junit.framework.AssertionFailedError;
 
@@ -135,6 +134,11 @@ public class SqlParserTest extends TestCase
                     + "', but it threw " + message);
             }
         }
+    }
+
+    protected void checkExpFails(String sql)
+    {
+        checkExpFails(sql, "(?s).*");
     }
 
     protected void checkExpFails(
@@ -1488,32 +1492,41 @@ public class SqlParserTest extends TestCase
     public void testIntervalQualifier() {
         checkExpFails("interval '1'","(?s).*");
         checkExp("interval '1' year","INTERVAL '1' YEAR");
-        checkExp("interval '1' year(4)","INTERVAL '1' YEAR(4)");
+        checkExp("interval '100' year(4)","INTERVAL '100' YEAR(4)");
         checkExp("interval '1' month","INTERVAL '1' MONTH");
-        checkExp("interval '1' month(3)","INTERVAL '1' MONTH(3)");
-        checkExp("interval '1-2' year to month","INTERVAL '1-2' YEAR TO MONTH");
+        checkExp("interval '21' month(3)","INTERVAL '21' MONTH(3)");
+        checkExp("interval '11-22' year to month","INTERVAL '11-22' YEAR TO MONTH");
         checkExp("interval '1-2' year(4) to month","INTERVAL '1-2' YEAR(4) TO MONTH");
         checkExpFails("interval '1-2' month to year","(?s).*");
         checkExpFails("interval '1-2' year to day","(?s).*");
         checkExpFails("interval '1-2' year to month(3)","(?s).*");
 
         checkExp("interval '1' day","INTERVAL '1' DAY");
-        checkExp("interval '1' day to hour","INTERVAL '1' DAY TO HOUR");
-        checkExp("interval '1' day to minute","INTERVAL '1' DAY TO MINUTE");
-        checkExp("interval '1' day to second","INTERVAL '1' DAY TO SECOND");
+        checkExp("interval '111 2' day to hour","INTERVAL '111 2' DAY TO HOUR");
+        checkExp("interval '1 2:3' day to minute","INTERVAL '1 2:3' DAY TO MINUTE");
+        checkExp("interval '1 2:3:4' day to second","INTERVAL '1 2:3:4' DAY TO SECOND");
+        checkExp("interval '1 2:3:4.5' day to second","INTERVAL '1 2:3:4.5' DAY TO SECOND");
 
+        checkExpFails("interval '1' day to hour");
+        checkExpFails("interval '1 2' day to second");
+
+        checkExp("interval '123' hour","INTERVAL '123' HOUR");
+        checkExp("interval '1:2' hour to minute","INTERVAL '1:2' HOUR TO MINUTE");
+        checkExpFails("interval '1 2' hour to minute","(?s).*Illegal INTERVAL literal.*");
         checkExp("interval '1' hour","INTERVAL '1' HOUR");
-        checkExp("interval '1' hour to minute","INTERVAL '1' HOUR TO MINUTE");
-        checkExp("interval '1' hour","INTERVAL '1' HOUR");
-        checkExp("interval '1' hour(2) to second","INTERVAL '1' HOUR(2) TO SECOND");
+        checkExp("interval '1:2:3' hour(2) to second","INTERVAL '1:2:3' HOUR(2) TO SECOND");
+        checkExp("interval '1:22222:3.4567' hour(2) to second","INTERVAL '1:22222:3.4567' HOUR(2) TO SECOND");
 
         checkExp("interval '1' minute","INTERVAL '1' MINUTE");
-        checkExp("interval '1' minute to second","INTERVAL '1' MINUTE TO SECOND");
+        checkExp("interval '1:2' minute to second","INTERVAL '1:2' MINUTE TO SECOND");
+        checkExp("interval '1:2.3' minute to second","INTERVAL '1:2.3' MINUTE TO SECOND");
+        checkExpFails("interval '1:2' minute to second");
 
         checkExp("interval '1' second","INTERVAL '1' SECOND");
         checkExp("interval '1' second(3)","INTERVAL '1' SECOND(3)");
         checkExp("interval '1' second(2,3)","INTERVAL '1' SECOND(2, 3)");
-        checkExp("interval '1.234' second","INTERVAL '1.234' SECOND");
+        checkExp("interval '1.2' second","INTERVAL '1.2' SECOND");
+        checkExp("interval '-1.234' second","INTERVAL '-1.234' SECOND");
 
         checkExp("interval '1 2:3:4.567' day to second","INTERVAL '1 2:3:4.567' DAY TO SECOND");
 
@@ -1526,9 +1539,10 @@ public class SqlParserTest extends TestCase
         checkExp("interval '1' day + interval '1' day","(INTERVAL '1' DAY + INTERVAL '1' DAY)");
         checkExp("interval '1' day - interval '1:2:3' hour to second","(INTERVAL '1' DAY - INTERVAL '1:2:3' HOUR TO SECOND)");
 
-//        checkExp("interval -'1' day","INTERVAL '-1' DAY");
-//        checkExp("interval '-1' day","INTERVAL '-1' DAY");
-//        checkExpFails("interval 'wael was here'","");
+        checkExp("interval -'1' day","INTERVAL '-1' DAY");
+        checkExp("interval '-1' day","INTERVAL '-1' DAY");
+        checkExpFails("interval 'wael was here'","(?s).*Encountered ..EOF..*");
+        checkExpFails("interval 'wael was here' HOUR","(?s).*Illegal INTERVAL literal .wael was here..*");
 
     }
 

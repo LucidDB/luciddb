@@ -39,9 +39,9 @@ import org.eigenbase.util.EnumeratedValues;
 public class SqlIntervalLiteral extends SqlLiteral
 {
     protected SqlIntervalLiteral(
-            String value, SqlIntervalQualifier intervalQualifier,
+            int[] values, SqlIntervalQualifier intervalQualifier,
             SqlTypeName sqlTypeName, ParserPosition pos) {
-        super(new IntervalValue(intervalQualifier, value), sqlTypeName, pos);
+        super(new IntervalValue(intervalQualifier, values), sqlTypeName, pos);
     }
 
     public void unparse(
@@ -50,7 +50,7 @@ public class SqlIntervalLiteral extends SqlLiteral
             int rightPrec) {
         IntervalValue interval = (IntervalValue) value;
         writer.print("INTERVAL '");
-        writer.print(interval.value);
+        writer.print(value.toString());
         writer.print("' ");
         writer.print(interval.intervalQualifier.toString());
     }
@@ -60,19 +60,57 @@ public class SqlIntervalLiteral extends SqlLiteral
      */
     static class IntervalValue {
         private final SqlIntervalQualifier intervalQualifier;
-        private final String value;
+        private final int[] values;
 
-        IntervalValue(SqlIntervalQualifier intervalQualifier, String value) {
+        IntervalValue(SqlIntervalQualifier intervalQualifier, int[] values) {
             this.intervalQualifier = intervalQualifier;
-            this.value = value;
+            this.values = values;
         }
 
         public SqlIntervalQualifier getIntervalQualifier() {
             return intervalQualifier;
         }
 
-        public String getValue() {
-            return value;
+        public int[] getValues() {
+            return values;
+        }
+
+        public String toString() {
+            StringBuffer ret = new StringBuffer();
+            ret.append(String.valueOf(values[0]));
+            if (intervalQualifier.isYearMonth() && 2==values.length) {
+                ret.append("-");
+                ret.append(String.valueOf(values[1]));
+            } else if (values.length > 1) {
+                SqlIntervalQualifier.TimeUnit start =
+                    intervalQualifier.getStartUnit();
+                SqlIntervalQualifier.TimeUnit end =
+                    intervalQualifier.getEndUnit();
+
+                if (SqlIntervalQualifier.TimeUnit.Day.equals(
+                    intervalQualifier.getStartUnit())) {
+                    ret.append(" ");
+                } else if
+                    (!SqlIntervalQualifier.TimeUnit.Second.equals(start)) {
+                    ret.append(":");
+                }
+
+                if (null == end) {
+                    end = start;
+                }
+
+                for (int i = 1; i < values.length; i++) {
+                    if (SqlIntervalQualifier.TimeUnit.Second.equals(end) &&
+                        ((end.ordinal-start.ordinal)<i)) {
+                            ret.append(".");
+                    } else if (i >= 2) {
+                        ret.append(":");
+                    }
+                    ret.append(String.valueOf(values[i]));
+                }
+            }
+
+            return ret.toString();
         }
     }
 }
