@@ -31,6 +31,7 @@ import java.util.regex.Pattern;
  * <p>This class is not a JUnit test. Each of the methods is named after an
  * operator, and is called from that operator's
  * {@link org.eigenbase.sql.SqlOperator#test} method. There is a unit test
+ * ({@link net.sf.farrago.test.FarragoSqlOperatorsTest})
  * which invokes the <code>test()</code> method of every operator.
  *
  * @author Julian Hyde
@@ -508,6 +509,7 @@ public class SqlOperatorTests
         //                    tester.checkString("initcap('aA')", "'Aa'");
         //                    tester.checkString("initcap('Aa')", "'Aa'");
         //                    tester.checkString("initcap('1a')", "'1a'");
+        //                    tester.checkString("initcap('ab cd Ef 12')", "'Ab Cd Ef 12'");
         //                    tester.checkNull("initcap(cast(null as varchar))");
     }
 
@@ -548,10 +550,8 @@ public class SqlOperatorTests
     {
         tester.checkNull("nullif(1,1)");
         tester.checkString("nullif('a','b')", "a");
-
-        //todo renable when type checking for case is fixe
-        //                    tester.checkString("nullif('a',cast(null as varchar))", "a");
-        //                    tester.checkNull("nullif(cast(null as varchar),'a')");
+        tester.checkString("nullif('a',cast(null as varchar))", "a");
+        tester.checkNull("nullif(cast(null as varchar),'a')");
     }
 
     public static void testCoalesceFunc(SqlTester tester)
