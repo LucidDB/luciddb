@@ -461,6 +461,7 @@ require version '${required.ant.version}'."/>
 
   <!-- compile only packages needed by Saffron -->
   <target name="compile.saffron.deps" depends="generateResources,sqlParser">
+    <mkdir dir="${classes.dir}"/>
     <javaCompile
       deprecation="off"
       srcdir="${src.dir}"
