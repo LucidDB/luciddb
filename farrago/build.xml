@@ -1152,6 +1152,13 @@ require version '${required.ant.version}'."/>
       <arg value="FEM.Fennel"/>
       <arg value="Fem"/>
     </javaExec>
+
+
+    <!-- not strictly part of fem, but it is JNI code -->
+    <javah
+      classpathref="farrago.run.classpath"
+      class="net.sf.farrago.fennel.FennelPseudoUuid"
+      outputFile="${open.dir}/fennel/farrago/JniPseudoUuid.h"/>
   </target>
 
   <!-- Generate FarragoMetadataFactory -->

@@ -61,6 +61,8 @@ public:
     {
         return !(*this == other);
     }
+
+    unsigned char getByte(int) const;
 };
 
 FENNEL_END_NAMESPACE

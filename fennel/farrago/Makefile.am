@@ -18,6 +18,7 @@ JavaSourceExecStream.cpp \
 JavaTraceTarget.cpp \
 JavaTupleStream.cpp \
 JniProxy.cpp \
+JniPseudoUuid.cpp \
 JniUtil.cpp \
 NativeMethods.cpp
 

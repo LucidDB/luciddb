@@ -20,56 +20,46 @@
 
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/common/PseudoUuid.h"
+#include "JniPseudoUuid.h"
 
-#ifdef __MINGW32__
-#include <windows.h>
-#include <rpcdce.h>
-#endif
+#include <jni.h>
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-void PseudoUuid::generate()
+static jbyteArray makeJbyteArray(JNIEnv *jEnv, PseudoUuid cppUuid)
 {
-#ifdef FENNEL_UUID_REAL
-    
-    uuid_generate(data);
-    
-#else
+    jbyteArray uuid = jEnv->NewByteArray(16);
+    jbyte *uuidBytes = jEnv->GetByteArrayElements(uuid, NULL);
 
-    memset(&data,0,sizeof(data));
-#ifdef __MINGW32__
-    assert(sizeof(data) == sizeof(UUID));
-    UuidCreate((UUID *) data);
-#else
-    int x = rand();
-    assert(sizeof(x) <= sizeof(data));
-    memcpy(&data,&x,sizeof(x));
-#endif
-    
-#endif
+    for(int i = 0; i < 16; i++) {
+        uuidBytes[i] = cppUuid.getByte(i);
+    }
+
+    jEnv->ReleaseByteArrayElements(uuid, uuidBytes, 0);
+
+    return uuid;
 }
 
-void PseudoUuid::generateInvalid()
+extern "C" JNIEXPORT jbyteArray JNICALL
+Java_net_sf_farrago_fennel_FennelPseudoUuid_nativeGenerate(
+    JNIEnv *jEnv, jclass)
 {
-    memset(&data,0xFF,sizeof(data));
+    PseudoUuid cppUuid;
+    cppUuid.generate();
+
+    return makeJbyteArray(jEnv, cppUuid);
 }
 
-bool PseudoUuid::operator == (PseudoUuid const &other) const
+extern "C" JNIEXPORT jbyteArray JNICALL
+Java_net_sf_farrago_fennel_FennelPseudoUuid_nativeGenerateInvalid(
+    JNIEnv *jEnv, jclass)
 {
-#ifdef FENNEL_UUID_REAL
-    return uuid_compare(data,other.data) == 0;
-#else
-    return (memcmp(data,other.data,sizeof(data)) == 0);
-#endif
-}
+    PseudoUuid cppUuid;
+    cppUuid.generateInvalid();
 
-unsigned char PseudoUuid::getByte(int index) const
-{
-    assert(index < sizeof(data));
-
-    return data[index];
+    return makeJbyteArray(jEnv, cppUuid);
 }
 
 FENNEL_END_CPPFILE("$Id$");
 
-// End PseudoUuid.cpp
+// End JniPseudoUuid.cpp
