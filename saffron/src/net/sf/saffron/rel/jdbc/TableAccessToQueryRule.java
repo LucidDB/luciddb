@@ -17,17 +17,17 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-package org.eigenbase.rel.jdbc;
+package net.sf.saffron.rel.jdbc;
+
+import org.eigenbase.rel.jdbc.*;
 
 import net.sf.saffron.ext.JdbcSchema;
 import net.sf.saffron.ext.JdbcTable;
 import net.sf.saffron.oj.rel.JavaTableAccessRel;
 
-import org.eigenbase.relopt.RelOptConnection;
-import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.relopt.RelOptRuleCall;
-import org.eigenbase.relopt.RelOptRuleOperand;
-import org.eigenbase.sql.SqlIdentifier;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.relopt.*;
 
 
 /**
@@ -57,18 +57,26 @@ class TableAccessToQueryRule extends RelOptRule
         JdbcTable table = (JdbcTable) javaTableAccess.getTable();
         JdbcSchema schema = (JdbcSchema) table.getRelOptSchema();
         final RelOptConnection connection = javaTableAccess.getConnection();
+        SqlSelect sql = SqlOperatorTable.std().selectOperator.createCall(
+            null,
+            null,
+            new SqlIdentifier(
+                new String [] { table.getName() },
+                null),
+            null,
+            null,
+            null,
+            null,
+            null,
+            ParserPosition.ZERO);
         JdbcQuery query =
             new JdbcQuery(
                 javaTableAccess.getCluster(),
                 javaTableAccess.getRowType(),
                 connection,
                 schema.getSqlDialect(),
-                null,
+                sql,
                 schema.getDataSource(connection));
-        query.sql.addFrom(
-            new SqlIdentifier(
-                new String [] { table.getName() },
-                null));
         call.transformTo(query);
     }
 }
