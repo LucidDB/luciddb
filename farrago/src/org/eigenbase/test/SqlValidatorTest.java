@@ -26,6 +26,7 @@ import org.eigenbase.sql.SqlCollation;
 import org.eigenbase.sql.SqlIntervalQualifier;
 
 import java.nio.charset.Charset;
+import java.util.logging.Logger;
 
 
 /**
@@ -49,6 +50,8 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     protected static final boolean todo = false;
     private static final boolean bug269fixed = false;
     public static final boolean todoTypeInference = false;
+
+    public final Logger logger = Logger.getLogger(getClass().getName());
 
     //~ Methods ---------------------------------------------------------------
 
@@ -991,36 +994,211 @@ public class SqlValidatorTest extends SqlValidatorTestCase
 
     public void checkWinClauseExp(String sql, String expectedMsgPattern) {
         sql = "select * from emp " + sql;
+        logger.info(sql);
         assertExceptionIsThrown(sql, expectedMsgPattern);
     }
 
     public void checkWindowExpFails(String sql, String expectedMsgPattern) {
         sql = "select * from emp " + sql;
+        logger.info(sql);
         assertExceptionIsThrown(sql, expectedMsgPattern);
     }
 
-    public void _testWindowClause() {
-        checkWinClauseExp("window as w (partition by sal order by deptno rows 2 preceding)", "expectedMsgPattern");
+     // test window partition clause. See SQL 2003 specification for detail
+     public void _testWinPartClause()
+     {
 
-        // check syntax rules
-        checkWindowExpFails("window as w ()", "");
+         // Test specified collation, window clause syntax rule 4,5.
+
+         //:
+
+     }
+
+    public void _testWinFunc()
+    {
+        // Definition 6.10
+
+        // Window functions may only appear in the <select list> of a <query specification> or <select statement: single row>, or the <order by clause> of a simple table query.  See 4.15.3 for detail
+
+        // todo: test case for rule 1
+
+        // rule 3, a)
+        // todo:  window function in <order by clause> example
+
+        // scope reference
+
+        // rule 4,
+
+
+        // valid window functions
+        checkWinFuncExpWithWinClause("sum(sal)", null);
+
+        // row_number function
+        checkWinFuncExpWithWinClause("row_number()", null);
+
+        // rank function type
+        checkWinFuncExpWithWinClause("rank()", null);
+        checkWinFuncExpWithWinClause("dense_rank()", null);
+        checkWinFuncExpWithWinClause("percent_rank()", null);
+        checkWinFuncExpWithWinClause("cume_dist()", null);
+
+        // rule 6
+        // a)
+        // missing order by in window clause
+
+        assertExceptionIsThrown("select rank() over w from emps window w as (partition by dept)", null);
+        assertExceptionIsThrown("select dense_rank() over w from emps window w as (partition by dept)", null);
+
+        // missing order by in-line window definition
+        assertExceptionIsThrown("select rank() over (partition by dept) from emps", null);
+        assertExceptionIsThrown("select dense_rank() over (partition by dept) from emps ", null);
+
+        // b)
+        // window framing defined in window clause
+        assertExceptionIsThrown("select rank() over w from emps window w as (row 2 preceding )", null);
+        assertExceptionIsThrown("select dense_rank() over w from emps window w as (row 2 preceding)", null);
+        assertExceptionIsThrown("select prercent_rank() over w from emps window w as (row 2 preceding )", null);
+        assertExceptionIsThrown("select cume_dist() over w from emps window w as (row 2 preceding)", null);
+        // window framing defined in in-line window
+        assertExceptionIsThrown("select rank() over (row 2 preceding ) from emps ", null);
+        assertExceptionIsThrown("select dense_rank() over (row 2 preceding ) from emps ", null);
+        assertExceptionIsThrown("select prercent_rank() over (row 2 preceding ) from emps", null);
+        assertExceptionIsThrown("select cume_dist() over (row 2 preceding ) from emps ", null);
+
+
+
+
+        // invalid column reference
+        checkWinFuncExpWithWinClause("sum(invalidColumn)", null);
+
+
+        // invalid window functions
+        checkWinFuncExpWithWinClause("invalidFun(sal)", null);
+
+        // rule 10. no distinct allow
+        checkWinFuncExpWithWinClause("select dictinct sum(sal) over w from emps window as w (order by deptno)", null);
+    }
+
+    public void _testInlineWinDef()
+    {
+
+    }
+
+    public void testWindowClause()
+    {
+        // -----------------------------------
+        // --   positive testings           --
+        // -----------------------------------
+        // correct syntax:
+        checkWinClauseExp("window w as (partition by sal order by deptno rows 2 preceding)", null);
+        // define window on an existing window
+        checkWinClauseExp("window w as (partition by sal), w1 as (w)", null);
+
+        // -----------------------------------
+        // --   negative testings           --
+        // -----------------------------------
+        // rule 11
+        // a)
+        // missing window order clause.
+        checkWindowExpFails("window w as (range 100 preceding)", null);
+        // order by number
+        checkWindowExpFails("window w as (order by sal range 100 preceding)", null);
+        // order by date
+        checkWindowExpFails("window w as (order by hiredate range 100 preceding)", null);
+        // order by string, should fail
+        checkWindowExpFails("window w as (order by name range 100 preceding)", null);
+        // todo: interval test ???
+
+
+        // b)
+        // valid
+        //checkWindowExpFails("window w as (row 2 preceding)", null);
+        // invalid tests
+        // exact numeric for the unsigned value specification
+        // error message: invalid preceding or following size in window function
+//        checkWindowExpFails("window w as (row 2.5 preceding)", null);
+//        checkWindowExpFails("window w as (row -2.5 preceding)", null);
+//        checkWindowExpFails("window w as (row -2 preceding)", null);
+
+    }
+
+    public void _testWindowClause() {
+
+        // -----------------------------------
+        // --   negative testings           --
+        // -----------------------------------
+        // reference undefined xyz column
+        checkWinClauseExp("window w as (partition by xyz)", null);
+
+        // window defintion is empty
+        checkWindowExpFails("window w as ()", null);
+
+
         // syntax rule 2
-        checkWindowExpFails("window as w (partition by sal), window as w (partition by sal)", "");
-//        checkWindowExpFails("window as w (partition by sal),
-//        checkWindowExpFails("window as w (partition by non_exist_col order by deptno)");
-//        checkWindowExpFails("window as w (partition by sal order by non_exist_col)");
+        // REVIEW: klo 11-9-2004. What does the following rule mean?
+        //<new window name> NWN1 shall not be contained in the scope of another <new window name> NWN2
+        //such that NWN1 and NWN2 are equivalent.
+        // duplidate window name
+        checkWindowExpFails("window w as (partition by sal), window w as (partition by sal)", null);
+
+
+        // syntax rule 6
+
+        // syntax rule 7
+
+
+        // ------------------------------------
+        // ---- window frame between tests ----
+        // ------------------------------------
+        // bound 1 shall not specify UNBOUNDED FOLLOWING
+        checkWindowExpFails("window w as (between unbounded following and bound2", null);
+
+        // bound 2 shall not specify UNBOUNDED PRECEDING
+        checkWindowExpFails("window w as (between bound1 and unbounded preceding", null);
+        //
+        checkWindowExpFails("window w as (between current row and window frame preceding", null);
+        //
+        checkWindowExpFails("window w as (between bound1 and current row", null);
+        //
+        checkWindowExpFails("window w as (between bound1 and window frame preceding", null);
+
+        // todo: syntax rule 10. Do we understand this rule? Do the following test case cover this rule?
+        // c)
+        checkWindowExpFails("window w as (partition by sal order by deptno), window w as2 (w partition by sal", null);
+        // d)
+        // valid because existing window does not have a order by clause
+        checkWindowExpFails("window w as (partition by sal ), window w as2 (w order by deptno)", null);
+        // invalid
+        checkWindowExpFails("window w as (partition by sal order by deptno), window w as2 (w order by deptno)", null);
+        // e)
+        checkWindowExpFails("window w as (partition by sal order by deptno), window w as2 (w range 100 preceding)", null);
+
+
+        // rule 12, todo: test scope of window
+
+        // rule 13, todo: to understand this rule
+
+
+//        checkWindowExpFails("window w as (partition by sal),
+//        checkWindowExpFails("window w as (partition by non_exist_col order by deptno)");
+//        checkWindowExpFails("window w as (partition by sal order by non_exist_col)");
         // unambiguously reference a column in the window clause
         // select * from emp, emp window w as (partition by sal);
         // select * from emp empalias window w as (partition by sal);
     }
 
-    public void checkWinFuncExp(String sql) {
+    public void checkWinFuncExpWithWinClause(String sql, String expectedMsgPattern ) {
+        sql = "select " + sql + " from emp window w as (partition by deptno)";
+        assertExceptionIsThrown(sql, expectedMsgPattern);
+    }
+
+    public void checkWinFuncExp(String sql, String expectedMsgPattern ) {
         sql = "select " + sql + " from emp";
-        assertExceptionIsThrown(sql, null);
+        assertExceptionIsThrown(sql, expectedMsgPattern);
     }
 
     public void testOneWinFunc() {
-        checkWinFuncExp("sum(2) over (partition by sal)");
+        checkWinClauseExp("window w as (partition by sal order by deptno rows 2 preceding)", null);
     }
 
     public void testNameResolutionInValuesClause() {
