@@ -23,7 +23,6 @@
 #include "fennel/farrago/ExecutionStreamFactory.h"
 #include "fennel/farrago/JavaTupleStream.h"
 #include "fennel/farrago/CmdInterpreter.h"
-//#include "fennel/farrago/TupleStreamBuilder.h"
 #include "fennel/xo/BTreeScan.h"
 #include "fennel/xo/BTreeSearch.h"
 #include "fennel/xo/BTreeSearchUnique.h"
@@ -36,7 +35,6 @@
 #include "fennel/xo/ConsumerToProducerProvisionAdapter.h"
 #include "fennel/xo/TableWriterFactory.h"
 #include "fennel/xo/CartesianProductStream.h"
-#include "fennel/disruptivetech/xo/CalcTupleStream.h"
 #include "fennel/xo/MockTupleStream.h"
 #include "fennel/db/Database.h"
 #include "fennel/db/CheckpointThread.h"
@@ -68,17 +66,47 @@ const char *ExecutionStreamFactory::getLeafTypeName()
     return "FemVisitor";
 }
 
+SharedDatabase ExecutionStreamFactory::getDatabase()
+{
+    return pDatabase;
+}
+
 void ExecutionStreamFactory::setScratchAccessor(
     SegmentAccessor &scratchAccessorInit)
 {
     scratchAccessor = scratchAccessorInit;
 }
 
+void ExecutionStreamFactory::addSubFactory(
+    SharedExecutionStreamSubFactory pSubFactory)
+{
+    subFactories.push_back(pSubFactory);
+}
+
 const ExecutionStreamParts &ExecutionStreamFactory::visitStream(
     ProxyExecutionStreamDef &streamDef)
 {
-    // dispatch based on polymorphic stream type
-    FemVisitor::visitTbl.accept(*this,streamDef);
+    bool created = false;
+    
+    // first give sub-factories a shot
+    std::vector<SharedExecutionStreamSubFactory>::iterator ppSubFactory;
+    for (ppSubFactory = subFactories.begin();
+         ppSubFactory != subFactories.end(); ++ppSubFactory)
+    {
+        ExecutionStreamSubFactory &subFactory = **ppSubFactory;
+        created = subFactory.createStream(
+            *this,
+            streamDef,
+            parts);
+        if (created) {
+            break;
+        }
+    }
+
+    if (!created) {
+        // dispatch based on polymorphic stream type
+        FemVisitor::visitTbl.accept(*this,streamDef);
+    }
     parts.getStream()->setName(streamDef.getName());
     return parts;
 }
@@ -223,7 +251,6 @@ void ExecutionStreamFactory::visit(ProxyTableUpdaterDef &streamDef)
 void ExecutionStreamFactory::visit(ProxySortingStreamDef &streamDef)
 {
     SortingStream *pStream = new SortingStream();
-
     SortingStreamParams *pParams = new SortingStreamParams();
     readTupleStreamParams(*pParams,streamDef);
     pParams->distinctness = streamDef.getDistinctness();
@@ -235,7 +262,6 @@ void ExecutionStreamFactory::visit(ProxySortingStreamDef &streamDef)
     readTupleProjection(
         pParams->keyProj,
         streamDef.getKeyProj());
-    
     parts.setParts(pStream,pParams);
 }
 
@@ -257,18 +283,6 @@ void ExecutionStreamFactory::visit(ProxyCartesianProductStreamDef &streamDef)
 
     CartesianProductStreamParams *pParams = new CartesianProductStreamParams();
     readTupleStreamParams(*pParams,streamDef);
-
-    parts.setParts(pStream,pParams);
-}
-
-void ExecutionStreamFactory::visit(ProxyCalcTupleStreamDef &streamDef)
-{
-    CalcTupleStream *pStream = new CalcTupleStream();
-
-    CalcTupleStreamParams *pParams = new CalcTupleStreamParams();
-    readTupleStreamParams(*pParams,streamDef);
-    pParams->program = streamDef.getProgram();
-    pParams->isFilter = streamDef.isFilter();
 
     parts.setParts(pStream,pParams);
 }

@@ -32,10 +32,6 @@
 
 #include <sstream>
 
-#ifndef __MINGW32__
-#include <signal.h>
-#endif
-
 #ifdef __MINGW32__
 #include <process.h>
 #include <windows.h>
@@ -45,14 +41,6 @@
 // NativeMethods.h!
 
 FENNEL_BEGIN_CPPFILE("$Id$");
-
-#ifndef __MINGW32__
-static void debugger_signalHandler(int signum)
-{
-    // do nothing
-}
-#endif
-
 
 #ifdef __MINGW32__
 extern "C" JNIEXPORT BOOL APIENTRY DllMain(
@@ -67,46 +55,8 @@ extern "C" JNIEXPORT BOOL APIENTRY DllMain(
 extern "C" JNIEXPORT jint JNICALL
 JNI_OnLoad(JavaVM *vm,void *reserved)
 {
-    char *pDebug = getenv("FENNEL_JNI_DEBUG");
-    if (pDebug && (atoi(pDebug) >= 1)) {
-        char pidstr[32];
-        snprintf(pidstr, 32, "%d", getpid());
-        std::cout << "Waiting for debugger; pid=" << pidstr << std::endl;
-        std::cout.flush();
-#ifdef __MINGW32__
-        // A "cont" in gdb will wake this sleep up immediately, which
-        // is disturbing but useful.
-        _sleep(600000);
-#else
-        // On many versions of Linux, a "cont" in gdb will wake this
-        // sleep up immediately, which is disturbing but useful.
-        // Under Fedora Core 2 (and possibly others -- it may be
-        // related to the version of gdb) the continue command resumes
-        // the sleep().  So, if FENNEL_JNI_DEBUG > 1, wait for SIGHUP.
-        // Use the "signal 1" command to wake the pause up.
-        if (atoi(pDebug) == 1) {
-            sleep(60000);
-        } else {
-            struct sigaction act;
-            struct sigaction oldact;
-
-            act.sa_handler = debugger_signalHandler;
-            sigemptyset(&act.sa_mask);
-            act.sa_flags = 0;
-
-            if (!sigaction(SIGHUP, &act, &oldact)) {
-                // Signal handler installed properly.  Wait for signal.
-                pause();
-
-                // Restore the old signal handler.
-                sigaction(SIGHUP, &oldact, NULL);
-            } else {
-                // Fall back on sleeping.
-                sleep(60000);
-            }
-        }        
-#endif
-    }
+    JniUtil::initDebug("FENNEL_JNI_DEBUG");
+    FENNEL_JNI_ONLOAD_COMMON();
     jint version = JniUtil::init(vm);
     JniEnvAutoRef pEnv;
     staticInitFem(pEnv,FemVisitor::visitTbl);

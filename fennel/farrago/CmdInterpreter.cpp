@@ -341,6 +341,11 @@ void CmdInterpreter::visit(ProxyCmdCreateExecutionStreamGraph &cmd)
     ++JniUtil::handleCount;
     pStreamGraphHandle->pTxnHandle = pTxnHandle;
     pStreamGraphHandle->setTupleStreamGraph(pGraph);
+    pStreamGraphHandle->pStreamFactory.reset(
+        new ExecutionStreamFactory(
+            pTxnHandle->pDb,
+            pTxnHandle->pTableWriterFactory,
+            pStreamGraphHandle));
     setStreamGraphHandle(cmd.getResultHandle(),pStreamGraphHandle);
 }
 
@@ -349,16 +354,12 @@ void CmdInterpreter::visit(ProxyCmdPrepareExecutionStreamGraph &cmd)
     StreamGraphHandle *pStreamGraphHandle = getStreamGraphHandle(
         cmd.getStreamGraphHandle());
     TxnHandle *pTxnHandle = pStreamGraphHandle->pTxnHandle;
-    // TODO: Perhaps stream factory should be singleton
-    ExecutionStreamFactory streamFactory(
-        pTxnHandle->pDb,
-        pTxnHandle->pTableWriterFactory,
-        pStreamGraphHandle);
     ExecutionStreamBuilder streamBuilder(
         pTxnHandle->pDb,
-        streamFactory,
+        *(pStreamGraphHandle->pStreamFactory),
         pStreamGraphHandle->getGraph());
     streamBuilder.buildStreamGraph(cmd);
+    pStreamGraphHandle->pStreamFactory.reset();
 }
 
 void CmdInterpreter::visit(ProxyCmdCreateStreamHandle &cmd)

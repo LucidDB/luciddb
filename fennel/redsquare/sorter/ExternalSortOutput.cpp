@@ -1,0 +1,98 @@
+/*
+// $Id$
+// Fennel is a relational database kernel.
+// Copyright (C) 2004 Red Square
+// Copyright (C) 2004 John V. Sichi
+//
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+#include "fennel/common/CommonPreamble.h"
+#include "fennel/redsquare/sorter/ExternalSortOutput.h"
+#include "fennel/redsquare/sorter/ExternalSortInfo.h"
+#include "fennel/common/ByteOutputStream.h"
+
+FENNEL_BEGIN_CPPFILE("$Id$");
+
+ExternalSortOutput::ExternalSortOutput(ExternalSortInfo &sortInfoIn)
+    : sortInfo(sortInfoIn)
+{
+    pSubStream = NULL;
+    pFetchArray = NULL;
+    iCurrentTuple = 0;
+
+    tupleAccessor.compute(sortInfo.tupleDesc);
+}
+
+ExternalSortOutput::~ExternalSortOutput()
+{
+    releaseResources();
+}
+
+void ExternalSortOutput::releaseResources()
+{
+}
+
+void ExternalSortOutput::setSubStream(ExternalSortSubStream &subStream)
+{
+    iCurrentTuple = 0;
+
+    pSubStream = &subStream;
+    pFetchArray = &(subStream.bindFetchArray());
+}
+
+ExternalSortRC ExternalSortOutput::fetch(
+    ByteOutputStream &resultOutputStream)
+{
+    uint cbRemaining;
+    PBuffer pOutBuf = resultOutputStream.getWritePointer(1,&cbRemaining);
+    PBuffer pNextTuple = pOutBuf;
+
+    for (;;) {
+        if (iCurrentTuple >= pFetchArray->nTuples) {
+            ExternalSortRC rc = pSubStream->fetch(EXTSORT_FETCH_ARRAY_SIZE);
+            if (rc == EXTSORT_ENDOFDATA) {
+                goto done;
+            }
+            iCurrentTuple = 0;
+        }
+
+        while (iCurrentTuple < pFetchArray->nTuples) {
+            PConstBuffer pSrcTuple = 
+                pFetchArray->ppTupleBuffers[iCurrentTuple];
+            uint cbTuple = tupleAccessor.getBufferByteCount(pSrcTuple);
+            if (cbTuple > cbRemaining) {
+                assert(pNextTuple > pOutBuf);
+                goto done;
+            }
+            memcpy(pNextTuple,pSrcTuple,cbTuple);
+            cbRemaining -= cbTuple;
+            pNextTuple += cbTuple;
+            iCurrentTuple++;
+        }
+    }
+    
+ done:
+    if (pNextTuple == pOutBuf) {
+        return EXTSORT_ENDOFDATA;
+    } else {
+        resultOutputStream.consumeWritePointer(pNextTuple - pOutBuf);
+        return EXTSORT_SUCCESS;
+    }
+}
+
+FENNEL_END_CPPFILE("$Id$");
+
+// End ExternalSortOutput.cpp

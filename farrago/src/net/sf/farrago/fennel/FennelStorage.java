@@ -22,6 +22,7 @@ import java.sql.*;
 
 import net.sf.farrago.fem.fennel.*;
 
+import org.eigenbase.util.*;
 
 /**
  * FennelStorage is the JNI interface for calling Fennel from Farrago.  Most
@@ -36,13 +37,7 @@ public class FennelStorage
     //~ Static fields/initializers --------------------------------------------
 
     static {
-        // TODO:  get Fennel build to produce the right library name
-        if (!System.mapLibraryName("farrago").startsWith("lib")) {
-            // assume mingw
-            System.loadLibrary("cygfarrago-0");
-        } else {
-            System.loadLibrary("farrago");
-        }
+        Util.loadLibrary("farrago");
     }
 
     //~ Methods ---------------------------------------------------------------

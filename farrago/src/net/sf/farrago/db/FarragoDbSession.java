@@ -444,6 +444,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     protected FarragoSessionRuntimeParams newRuntimeContextParams()
     {
         FarragoSessionRuntimeParams params = new FarragoSessionRuntimeParams();
+        params.session = this;
         params.repos = getRepos();
         params.codeCache = getDatabase().getCodeCache();
         params.txnCodeCache = getTxnCodeCache();
@@ -549,6 +550,12 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         return new FarragoPreparingStmt(stmtValidator);
     }
 
+    // implement FarragoSession
+    public void registerStreamFactories(long hStreamGraph)
+    {
+        // default:  no extensions
+    }
+    
     FarragoSessionExecutableStmt prepare(
         String sql,
         FarragoAllocationOwner owner,

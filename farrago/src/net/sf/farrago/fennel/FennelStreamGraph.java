@@ -89,6 +89,14 @@ public class FennelStreamGraph implements FarragoAllocation
         return newHandle;
     }
 
+    /**
+     * @return native handle to underlying graph
+     */
+    public long getLongHandle()
+    {
+        return streamGraphHandle;
+    }
+
     private void traceGraphHandle(String operation)
     {
         if (tracer.isLoggable(Level.FINE)) {

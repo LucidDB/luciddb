@@ -23,6 +23,10 @@
 #include "fennel/farrago/JavaExcn.h"
 #include "fennel/common/FennelResource.h"
 
+#ifndef __MINGW32__
+#include <signal.h>
+#endif
+
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 JavaVM *JniUtil::pVm = NULL;
@@ -36,6 +40,57 @@ jmethodID JniUtil::methGetIndexRoot = 0;
 jmethodID JniUtil::methToString = 0;
 
 AtomicCounter JniUtil::handleCount;
+
+#ifndef __MINGW32__
+static void debugger_signalHandler(int signum)
+{
+    // do nothing
+}
+#endif
+
+void JniUtil::initDebug(char const *envVarName)
+{
+    char *pDebug = getenv(envVarName);
+    if (pDebug && (atoi(pDebug) >= 1)) {
+        char pidstr[32];
+        snprintf(pidstr, 32, "%d", getpid());
+        std::cout << "Waiting for debugger; pid=" << pidstr << std::endl;
+        std::cout.flush();
+#ifdef __MINGW32__
+        // A "cont" in gdb will wake this sleep up immediately, which
+        // is disturbing but useful.
+        _sleep(600000);
+#else
+        // On many versions of Linux, a "cont" in gdb will wake this
+        // sleep up immediately, which is disturbing but useful.
+        // Under Fedora Core 2 (and possibly others -- it may be
+        // related to the version of gdb) the continue command resumes
+        // the sleep().  So, if $envVarName > 1, wait for SIGHUP.
+        // Use the "signal 1" command to wake the pause up.
+        if (atoi(pDebug) == 1) {
+            sleep(60000);
+        } else {
+            struct sigaction act;
+            struct sigaction oldact;
+
+            act.sa_handler = debugger_signalHandler;
+            sigemptyset(&act.sa_mask);
+            act.sa_flags = 0;
+
+            if (!sigaction(SIGHUP, &act, &oldact)) {
+                // Signal handler installed properly.  Wait for signal.
+                pause();
+
+                // Restore the old signal handler.
+                sigaction(SIGHUP, &oldact, NULL);
+            } else {
+                // Fall back on sleeping.
+                sleep(60000);
+            }
+        }        
+#endif
+    }
+}
 
 jint JniUtil::init(JavaVM *pVmInit)
 {

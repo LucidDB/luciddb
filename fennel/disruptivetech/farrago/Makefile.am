@@ -4,22 +4,18 @@ EXTRA_INCLUDES=\
 
 include $(top_srcdir)/am_include.mk
 
-lib_LTLIBRARIES=libfarrago.la
+lib_LTLIBRARIES=libfarrago_dt.la
 
-libfarrago_la_SOURCES=\
-CmdInterpreter.cpp \
-ExecutionStreamFactory.cpp \
-Fem.cpp \
-JavaExcn.cpp \
-JavaTraceTarget.cpp \
-JavaTupleStream.cpp \
-JniProxy.cpp \
-JniUtil.cpp \
-NativeMethods.cpp \
-ExecutionStreamBuilder.cpp
+libfarrago_dt_la_SOURCES=\
+NativeMethods_dt.cpp
 
-libfarrago_la_LIBADD = \
+libfarrago_dt_la_LIBADD = \
 	-L$(top_builddir)/libfennel \
+	-L$(top_builddir)/farrago \
+	-L$(top_builddir)/disruptivetech/libfennel_dt \
+	-lfennel_dt_xo \
+	-lfennel_dt_calc \
+	-lfarrago \
 	-lfennel_xo \
 	-lfennel_db \
 	-lfennel_btree \
@@ -30,5 +26,3 @@ libfarrago_la_LIBADD = \
 	-lfennel_device \
 	-lfennel_synch \
 	-lfennel_common
-
-LDADD = -Wl,--no-undefined

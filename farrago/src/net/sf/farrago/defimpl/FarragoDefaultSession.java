@@ -19,6 +19,9 @@
 */
 package net.sf.farrago.defimpl;
 
+import com.disruptivetech.farrago.fennel.*;
+import com.redsquare.farrago.fennel.*;
+
 import java.util.*;
 
 import net.sf.farrago.db.*;
@@ -53,6 +56,13 @@ public class FarragoDefaultSession extends FarragoDbSession
             planner.init();
         }
         return planner;
+    }
+
+    // implement FarragoSession
+    public void registerStreamFactories(long hStreamGraph)
+    {
+        DisruptiveTechJni.registerStreamFactory(hStreamGraph);
+        RedSquareJni.registerStreamFactory(hStreamGraph);
     }
 }
 

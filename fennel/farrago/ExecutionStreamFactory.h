@@ -144,6 +144,10 @@ public:
     void prepareStream() { function(); }
 };
 
+class ExecutionStreamSubFactory;
+typedef boost::shared_ptr<ExecutionStreamSubFactory>
+    SharedExecutionStreamSubFactory;
+
 /**
  * ExecutionStreamFactory builds an ExecutionStreamParts from the  
  * Java representation of a stream definition. The parts are later 
@@ -151,8 +155,8 @@ public:
  *
  * NOTE: this class is not thread-safe
  */
-class ExecutionStreamFactory : public boost::noncopyable,
-                               virtual public FemVisitor
+class ExecutionStreamFactory
+    : public boost::noncopyable, virtual public FemVisitor
 {
 protected:
     /**
@@ -180,6 +184,11 @@ protected:
      */
     ExecutionStreamParts parts;
 
+    /**
+     * Subfactories for extending factory behavior.
+     */
+    std::vector<SharedExecutionStreamSubFactory> subFactories;
+
     // Per-stream overrides for FemVisitor; add new stream types here
     virtual void visit(ProxyIndexScanDef &);
     virtual void visit(ProxyIndexSearchDef &);
@@ -191,19 +200,10 @@ protected:
     virtual void visit(ProxyBufferingTupleStreamDef &);
     virtual void visit(ProxyIndexLoaderDef &);
     virtual void visit(ProxyCartesianProductStreamDef &);
-    virtual void visit(ProxyCalcTupleStreamDef &);
     virtual void visit(ProxyMockTupleStreamDef &);
 
     // helpers for above visitors
 
-    void readExecutionStreamParams(
-        ExecutionStreamParams &,
-        ProxyExecutionStreamDef &);
-    
-    void readTupleStreamParams(
-        TupleStreamParams &,
-        ProxyTupleStreamDef &);
-    
     void readBTreeStreamParams(
         BTreeStreamParams &,
         ProxyIndexAccessorDef &);
@@ -230,7 +230,7 @@ protected:
     void createQuotaAccessors(ExecutionStreamParams &params);
     
 public:
-    ExecutionStreamFactory(
+    explicit ExecutionStreamFactory(
         SharedDatabase pDatabase,
         SharedTableWriterFactory pTableWriterFactory,
         CmdInterpreter::StreamGraphHandle *pStreamGraphHandle);
@@ -239,6 +239,10 @@ public:
         {}
 
     void setScratchAccessor(SegmentAccessor &scratchAccessor);
+
+    void addSubFactory(SharedExecutionStreamSubFactory pSubFactory);
+
+    SharedDatabase getDatabase();
 
     // override JniProxyVisitor
     virtual void *getLeafPtr();
@@ -261,6 +265,16 @@ public:
     const ExecutionStreamParts &newProducerToConsumerProvisionAdapter(
         std::string &name,
         ExecutionStreamParams &params);
+
+    // helpers for subfactories
+    
+    void readExecutionStreamParams(
+        ExecutionStreamParams &,
+        ProxyExecutionStreamDef &);
+    
+    void readTupleStreamParams(
+        TupleStreamParams &,
+        ProxyTupleStreamDef &);
     
     // Some static utilities which are also used in non-stream contexts.  TODO:
     // move somewhere more appropriate.
@@ -291,6 +305,29 @@ public:
         SharedProxyTupleProjection pJavaTupleProj);
 };
 
+class ExecutionStreamSubFactory : public boost::noncopyable
+{
+public:
+    virtual ~ExecutionStreamSubFactory()
+    {
+    }
+    
+    /**
+     * Reads the Java representation of an ExecutionStream.
+     *
+     * @param factory controlling factory
+     *
+     * @param streamDef stream definition to be read
+     *
+     * @param parts receives the partially initialized stream
+     *
+     * @return whether stream was created
+     */
+    virtual bool createStream(
+        ExecutionStreamFactory &factory,
+        ProxyExecutionStreamDef &streamDef,
+        ExecutionStreamParts &parts) = 0;
+};
 
 FENNEL_END_NAMESPACE
 

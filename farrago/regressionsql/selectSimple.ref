@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/johnk/farrago/regressionsql/selectSimple.sql#6 $
+0: jdbc:farrago:> -- $Id: //open/dev/farrago/regressionsql/selectSimple.sql#4 $
 0: jdbc:farrago:> -- Full vertical system testing of non advanced select statements
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel
@@ -197,14 +197,14 @@
 | 1    | 50   | 3    | 4    |
 | 1    | 80   | 3    | 4    |
 +------+------+------+------+
-0: jdbc:farrago:> select 1+2 as empno, empno as empno, age as empno, 1+2 as empno from sales.emps order by 2;
+0: jdbc:farrago:> select 1+2 as empno, empno as empno, age as empno, 1+2 as empno from sales.emps order by 3;
 +--------+--------+--------+--------+
 | EMPNO  | EMPNO  | EMPNO  | EMPNO  |
 +--------+--------+--------+--------+
-| 3      | 100    | 25     | 3      |
 | 3      | 110    |        | 3      |
-| 3      | 110    | 80     | 3      |
+| 3      | 100    | 25     | 3      |
 | 3      | 120    | 50     | 3      |
+| 3      | 110    | 80     | 3      |
 +--------+--------+--------+--------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select age from (select emps.* from sales.emps) order by 1;

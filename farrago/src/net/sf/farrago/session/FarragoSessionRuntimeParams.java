@@ -38,6 +38,11 @@ public class FarragoSessionRuntimeParams
     //~ Instance fields -------------------------------------------------------
 
     /**
+     * Controlling session.
+     */
+    public FarragoSession session;
+    
+    /**
      * Repos storing object definitions.
      */
     public FarragoRepos repos;

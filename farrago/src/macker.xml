@@ -58,6 +58,9 @@
     <pattern name="dt.calc" class="com.disruptivetech.farrago.calc.*" />
     <pattern name="dt.volcano" class="com.disruptivetech.farrago.volcano.*" />
     <pattern name="dt.rel" class="com.disruptivetech.farrago.rel.*" />
+    <pattern name="dt.fennel" class="com.disruptivetech.farrago.fennel.*" />
+
+    <pattern name="rs.fennel" class="com.redsquare.farrago.fennel.*" />
 
     <pattern name="defimpl" class="net.sf.farrago.defimpl.*" />
 
@@ -101,6 +104,8 @@
       <include pattern="dt.calc"/>
       <include pattern="dt.volcano"/>
       <include pattern="dt.rel"/>
+      <include pattern="dt.fennel"/>
+      <include pattern="rs.fennel"/>
       <include pattern="defimpl"/>
       <include pattern="test"/>
       <include pattern="dt.test"/>
@@ -624,11 +629,43 @@
       </deny>
     </access-rule>
 
+    <pattern name="dt.fennel.deps">
+      <include pattern="dt.fennel" />
+    </pattern>
+
+    <access-rule>
+      <message>dt.fennel dependency violation</message>
+      <deny>
+        <from pattern="dt.fennel" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="dt.fennel.deps" />
+        </allow>
+      </deny>
+    </access-rule>
+
+    <pattern name="rs.fennel.deps">
+      <include pattern="rs.fennel" />
+    </pattern>
+
+    <access-rule>
+      <message>rs.fennel dependency violation</message>
+      <deny>
+        <from pattern="rs.fennel" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="rs.fennel.deps" />
+        </allow>
+      </deny>
+    </access-rule>
+
     <pattern name="defimpl.deps">
       <include pattern="db.deps" />
       <include pattern="dt.calc.deps" />
       <include pattern="dt.volcano.deps" />
       <include pattern="dt.rel.deps" />
+      <include pattern="dt.fennel.deps" />
+      <include pattern="rs.fennel.deps" />
       <include pattern="defimpl" />
     </pattern>
 

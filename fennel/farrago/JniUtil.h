@@ -24,6 +24,7 @@
 #include "fennel/common/AtomicCounter.h"
 
 #include <jni.h>
+#include <locale>
 
 FENNEL_BEGIN_NAMESPACE
 
@@ -114,11 +115,6 @@ class JniUtil
     static JavaVM *pVm;
 
     /**
-     * Required JNI version.
-     */
-    static const jint jniVersion = JNI_VERSION_1_2;
-
-    /**
      * java.lang.Class.getName()
      */
     static jmethodID methGetClassName;
@@ -153,6 +149,11 @@ class JniUtil
 
 public:
     /**
+     * Required JNI version.
+     */
+    static const jint jniVersion = JNI_VERSION_1_2;
+
+    /**
      * Java method JavaTupleStream.fillBuffer.
      */
     static jmethodID methFillBuffer;
@@ -167,6 +168,13 @@ public:
      */
     static jmethodID methGetIndexRoot;
 
+    /**
+     * Initializes JNI debugging.
+     *
+     * @param envVarName name of environment variable used to trigger debugging
+     */
+    static void initDebug(char const *envVarName);
+    
     /**
      * Initializes our JNI support.
      *
@@ -243,6 +251,22 @@ public:
      */
     static AtomicCounter handleCount;
 };
+
+// NOTE jvs 16-Oct-2004:  This crazy kludge is for problems arising on Linux
+// when using multiple JNI libs.  This has to be included in each
+// JNI_OnLoad as a workaround (and it must be a macro, not a function).
+// Code was taken from _Stl_loc_assign_ids() in stlport/src/locale_impl.cpp.
+#define FENNEL_JNI_ONLOAD_COMMON() \
+{ \
+  _STL::num_get<char, _STL::istreambuf_iterator<char, _STL::char_traits<char> > >::id._M_index                       = 12; \
+  _STL::num_get<char, const char*>::id._M_index          = 13; \
+  _STL::num_put<char, _STL::ostreambuf_iterator<char, _STL::char_traits<char> > >::id._M_index                       = 14; \
+  _STL::num_put<char, char*>::id._M_index                = 15; \
+  _STL::time_get<char, _STL::istreambuf_iterator<char, _STL::char_traits<char> > >::id._M_index                      = 16; \
+  _STL::time_get<char, const char*>::id._M_index         = 17; \
+  _STL::time_put<char, _STL::ostreambuf_iterator<char, _STL::char_traits<char> > >::id._M_index                      = 18; \
+  _STL::time_put<char, char*>::id._M_index               = 19; \
+}
 
 FENNEL_END_NAMESPACE
 

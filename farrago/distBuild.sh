@@ -22,7 +22,6 @@ set -v
 
 # set up some useful vars
 OPEN_DIR=$(cd ..; pwd)
-SAFFRON_DIR=$OPEN_DIR/saffron
 FARRAGO_DIR=$OPEN_DIR/farrago
 FENNEL_DIR=$OPEN_DIR/fennel
 THIRDPARTY_DIR=$OPEN_DIR/thirdparty
@@ -47,49 +46,48 @@ mkdir $CATALOG_DIR
 mkdir $CATALOG_DIR/fennel
 mkdir $BIN_DIR
 
-cd $SAFFRON_DIR
-ant jar
-
-# copy saffron libs
-cp dist/saffron.jar $LIB_DIR
-cp $THIRDPARTY_DIR/janino/lib/janino.jar $LIB_DIR
-cp $THIRDPARTY_DIR/janino/src/net/janino/doc-files/lgpl.txt $LIB_DIR/janino.lgpl.txt
-cp $THIRDPARTY_DIR/mondrian-resource.jar $LIB_DIR
-cp $THIRDPARTY_DIR/mondrian-xom.jar $LIB_DIR
-cp $THIRDPARTY_DIR/LICENSE.mondrian $LIB_DIR
-cp $THIRDPARTY_DIR/junit/junit.jar $LIB_DIR
-cp $THIRDPARTY_DIR/junit/cpl-v10.html $LIB_DIR/junit.license.html
+# copy thirdparty libs
+cd $THIRDPARTY_DIR
+cp janino/lib/janino.jar $LIB_DIR
+cp janino/src/net/janino/doc-files/lgpl.txt $LIB_DIR/janino.lgpl.txt
+cp mondrian-resource.jar $LIB_DIR
+cp mondrian-xom.jar $LIB_DIR
+cp LICENSE.mondrian $LIB_DIR
+cp junit/junit.jar $LIB_DIR
+cp junit/cpl-v10.html $LIB_DIR/junit.license.html
+cp mdrlibs/* $LIB_DIR/mdrlibs
+cp RmiJdbc/dist/lib/*.jar $LIB_DIR
+cp csvjdbc/csvjdbc.jar $LIB_DIR
+cp csvjdbc/license.txt $LIB_DIR/csvjdbc.license.txt
+cp sqlline.jar $LIB_DIR
+cp sqlline/LICENSE $LIB_DIR/sqlline.license
+cp jline.jar $LIB_DIR
+cp -d stlport/lib/lib*.so* $LIB_DIR/fennel
+cp -d boost/lib/lib*.so* $LIB_DIR/fennel
+cp -d icu/lib/lib*.so* $LIB_DIR/fennel
 
 # copy fennel libs
 cd $FENNEL_DIR
 cp -d libfennel/.libs/lib*.so* $LIB_DIR/fennel
 cp -d farrago/.libs/lib*.so* $LIB_DIR/fennel
-cp -d $THIRDPARTY_DIR/stlport/lib/lib*.so* $LIB_DIR/fennel
-cp -d $THIRDPARTY_DIR/boost/lib/lib*.so* $LIB_DIR/fennel
-cp -d $THIRDPARTY_DIR/icu/lib/lib*.so* $LIB_DIR/fennel
+cp -d disruptivetech/libfennel_dt/.libs/lib*.so* $LIB_DIR/fennel
+cp -d disruptivetech/farrago/.libs/lib*.so* $LIB_DIR/fennel
+cp -d redsquare/libfennel_rs/.libs/lib*.so* $LIB_DIR/fennel
+cp -d redsquare/farrago/.libs/lib*.so* $LIB_DIR/fennel
 
 # copy fennel resources
 cp common/*.properties $CATALOG_DIR/fennel
 
-
 # copy farrago libs
 cd $FARRAGO_DIR
 ant jar
-
 cp dist/farrago.jar $LIB_DIR
 cp dist/plugin/*.jar $LIB_DIR/plugin
-cp $THIRDPARTY_DIR/mdrlibs/* $LIB_DIR/mdrlibs
-cp $THIRDPARTY_DIR/RmiJdbc/dist/lib/*.jar $LIB_DIR
-cp $THIRDPARTY_DIR/csvjdbc/csvjdbc.jar $LIB_DIR
-cp $THIRDPARTY_DIR/csvjdbc/license.txt $LIB_DIR/csvjdbc.license.txt
-cp $THIRDPARTY_DIR/sqlline.jar $LIB_DIR
-cp $THIRDPARTY_DIR/sqlline/LICENSE $LIB_DIR/sqlline.license
-cp $THIRDPARTY_DIR/jline.jar $LIB_DIR
 
+# copy other farrago artifacts
 cp dist/install/* $INSTALL_DIR
 cp catalog/FarragoCatalog.bt? $CATALOG_DIR
 cp catalog/*.dat $CATALOG_DIR
-
 cp dist/bin/* $BIN_DIR
 
 # tar the whole thing up

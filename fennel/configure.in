@@ -246,6 +246,12 @@ disruptivetech/Makefile \
 disruptivetech/calc/Makefile \
 disruptivetech/xo/Makefile \
 disruptivetech/libfennel_dt/Makefile \
-disruptivetech/test/Makefile])
+disruptivetech/test/Makefile \
+disruptivetech/farrago/Makefile \
+redsquare/Makefile \
+redsquare/sorter/Makefile \
+redsquare/libfennel_rs/Makefile \
+redsquare/farrago/Makefile \
+])
 
 AC_OUTPUT

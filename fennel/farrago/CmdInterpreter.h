@@ -72,6 +72,7 @@ public:
 
     struct StreamGraphHandle : public BTreeRootMap
     {
+        SharedExecutionStreamFactory pStreamFactory;
         TxnHandle *pTxnHandle;
         jobject javaRuntimeContext;
         virtual PageId getRoot(PageOwnerId pageOwnerId);

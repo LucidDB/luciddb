@@ -51,17 +51,6 @@ TestBase::TestBase()
     if (!traceFileName.empty()) {
         traceStream.open(traceFileName.c_str());
     }
-
-    // NOTE: Sheesh.  Without this, Cygwin ostreams were failing after the
-    // first attempt to output any numeric value because the referenced facet
-    // was unintialized.  There must be a better way.  The number 14
-    // comes from _Stl_loc_init_num_put in _num_put.h.
-#ifdef __CYGWIN__
-    _STL::num_put<
-        char,
-        _STL::ostreambuf_iterator<char,_STL::char_traits<char> > >::
-        id._M_index = 14;
-#endif
 }
 
 TestBase::~TestBase()

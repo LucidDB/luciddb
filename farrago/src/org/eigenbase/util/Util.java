@@ -846,6 +846,16 @@ public class Util extends Toolbox
         }
         throw new UnsupportedOperationException(description);
     }
+
+    public static void loadLibrary(String libName)
+    {
+        if (!System.mapLibraryName(libName).startsWith("lib")) {
+            // assume mingw
+            System.loadLibrary("cyg" + libName + "-0");
+        } else {
+            System.loadLibrary(libName);
+        }
+    }
 }
 
 

@@ -56,6 +56,7 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
 {
     //~ Instance fields -------------------------------------------------------
 
+    private FarragoSession session;
     private FarragoRepos repos;
     private FarragoObjectCache codeCache;
     private Map txnCodeCache;
@@ -78,6 +79,7 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
      */
     public FarragoRuntimeContext(FarragoSessionRuntimeParams params)
     {
+        this.session = params.session;
         this.repos = params.repos;
         this.codeCache = params.codeCache;
         this.txnCodeCache = params.txnCodeCache;
@@ -451,6 +453,7 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
                 (FemCmdPrepareExecutionStreamGraph) collection.iterator().next();
 
             newStreamGraph = fennelTxnContext.newStreamGraph(streamOwner);
+            session.registerStreamFactories(newStreamGraph.getLongHandle());
             cmd.setStreamGraphHandle(newStreamGraph.getStreamGraphHandle());
             fennelTxnContext.getFennelDbHandle().executeCmd(cmd);
             success = true;

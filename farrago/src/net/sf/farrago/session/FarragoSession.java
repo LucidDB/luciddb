@@ -233,6 +233,13 @@ public interface FarragoSession extends FarragoAllocation
      */
     public FarragoSessionRuntimeContext newRuntimeContext(
         FarragoSessionRuntimeParams params);
+
+    /**
+     * Register factories for extension ExecutionStreams in Fennel.
+     *
+     * @param hStreamGraph native handle to unprepared stream graph
+     */
+    public void registerStreamFactories(long hStreamGraph);
 }
 
 
