@@ -8,6 +8,7 @@ libfennel_rs_sorter_la_LIBADD=\
 	$(top_builddir)/redsquare/sorter/libsorter.la \
 	-L$(top_builddir)/libfennel \
 	-lfennel_xo \
+	-lfennel_segment \
 	-lfennel_tuple \
 	-lfennel_synch \
 	-lfennel_common
