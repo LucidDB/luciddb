@@ -115,7 +115,7 @@ public:
      * subcomponents that are also TraceSources. 
      * @return the name
      */
-    const std::string& getTraceSourceName() const 
+    std::string getTraceSourceName() const 
     {
         return name;
     }

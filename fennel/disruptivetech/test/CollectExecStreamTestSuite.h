@@ -19,9 +19,33 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include "fennel/common/CommonPreamble.h"
-#include "fennel/disruptivetech/test/CorrelationJoinExecStreamTestSuite.h"
+#ifndef Fennel_DT_Test_CollectExecStreamTestSuite_Included
+#define Fennel_DT_Test_CollectExecStreamTestSuite_Included
+
+#include "fennel/test/ExecStreamTestBase.h"
+#include <boost/test/test_tools.hpp>
 using namespace fennel;
 
-// instantiate the test suite as a stand-alone program
-FENNEL_UNIT_TEST_SUITE(CorrelationJoinExecStreamTestSuite);
+class CollectExecStreamTestSuite : public ExecStreamTestBase
+{
+    TupleAttributeDescriptor descAttrInt64;
+    TupleDescriptor descInt64;
+    TupleAttributeDescriptor descAttrVarbinary16;
+    TupleDescriptor descVarbinary16;
+
+public:
+    explicit CollectExecStreamTestSuite(); 
+
+    /**
+     * Tests an stream input ints gets collected into an continues array
+     */
+    void testCollectInts();
+
+    /**
+     * Tests an stream going through a cascade of the collect and 
+     * the uncollect xo, expecting the same result back
+     */
+    void testCollectUncollect();
+};
+
+#endif

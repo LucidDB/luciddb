@@ -19,9 +19,24 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+#ifndef Fennel_DT_Test_CorrelationJoinExecStreamTestSuite_Included
+#define Fennel_DT_Test_CorrelationJoinExecStreamTestSuite_Included
+
 #include "fennel/common/CommonPreamble.h"
-#include "fennel/disruptivetech/test/CorrelationJoinExecStreamTestSuite.h"
+#include "fennel/test/ExecStreamTestBase.h"
+#include <boost/test/test_tools.hpp>
 using namespace fennel;
 
-// instantiate the test suite as a stand-alone program
-FENNEL_UNIT_TEST_SUITE(CorrelationJoinExecStreamTestSuite);
+class CorrelationJoinExecStreamTestSuite : public ExecStreamTestBase
+{
+    TupleAttributeDescriptor descAttrInt64;
+    TupleDescriptor descInt64;
+    TupleAttributeDescriptor descAttrVarbinary16;
+    TupleDescriptor descVarbinary16;
+    
+public:
+    explicit CorrelationJoinExecStreamTestSuite(); 
+    void testCorrelationJoin();
+};
+
+#endif

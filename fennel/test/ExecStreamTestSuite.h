@@ -22,8 +22,12 @@
 // the archive of this library for complete text of license.
 */
 
+#ifndef Fennel_Test_ExecStreamTestSuite_Included
+#define Fennel_Test_ExecStreamTestSuite_Included
+
 #include "fennel/test/ExecStreamTestBase.h"
 #include <boost/test/test_tools.hpp>
+
 using namespace fennel;
 
 /**
@@ -34,6 +38,7 @@ using namespace fennel;
  */
 class ExecStreamTestSuite : public ExecStreamTestBase
 {
+protected:
     void verifyZeroedOutput(ExecStream &stream,uint nBytesExpected);
     void testCartesianJoinExecStream(uint nRowsLeft,uint nRowsRight);
     
@@ -73,6 +78,5 @@ public:
     }
 };
 
-
-
+#endif
 // End ExecStreamTestSuite.h
