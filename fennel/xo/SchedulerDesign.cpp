@@ -40,13 +40,13 @@ The UML static structure diagram below illustrates the relevant relationships
 \image html SchedulerInterfaces.gif
 <hr>
 
-An ExecutionStreamScheduler may be dedicated per ExecutionStreamGraph, or may
+An ExecStreamScheduler may be dedicated per ExecStreamGraph, or may
 be responsible for multiple graphs, depending on the scheduling granularity
-desired.  Each graph consists of multiple vertex instances of ExecutionStream,
-with ExecutionStreamBuffer edges representing dataflow.  Each buffer is
+desired.  Each graph consists of multiple vertex instances of ExecStream,
+with ExecStreamBufAccessor edges representing dataflow.  Each buffer accessor is
 assigned a single producer/consumer stream pair.  Hence, the number of buffers
 accessible from a stream is equal to its vertex degree in the graph.
-The design goal is that the ExecutionStreamBuffer representation should
+The design goal is that the ExecStreamBufAccessor representation should
 remain very simple, with any complex buffering strategies
 (e.g. disk-based queueing) encapsulated as specialized stream 
 implementations instead.
@@ -54,10 +54,10 @@ implementations instead.
 <p>
 
 When the scheduler decides that a particular stream should run, it invokes its
-ExecutionStream::execute method, passing a reference to an instance of
-ExecutionStreamQuantum to limit the amount of data processed.  The exact
+ExecStream::execute method, passing a reference to an instance of
+ExecStreamQuantum to limit the amount of data processed.  The exact
 interpretation of the quantum is up to the stream implementation.  The stream's
-response is dependent on the states of its incident buffers, which usually
+response is dependent on the states of its adjacent buffers, which usually
 change as a side-effect of the execution.  This protocol is specified in more
 detail later on.
 
@@ -65,21 +65,22 @@ detail later on.
 
 It is up to a scheduler implementation to keep track of the <em>runnable</em>
 status of each stream.  This information is based on the result of
-each call to ExecutionStream::execute (including the return code and incident
+each call to ExecStream::execute (including the return code and incident
 buffer state changes), and can be queried via
-ExecutionStreamScheduler::isRunnable.  In addition,
-ExecutionStreamScheduler::makeRunnable can be invoked explicitly to alert the
+ExecStreamScheduler::isRunnable.  In addition,
+ExecStreamScheduler::makeRunnable can be invoked explicitly to alert the
 scheduler to an externally-driven status change (e.g. arrival of a network
 packet or completion of asynchronous disk I/O requested by a stream).  A stream
-may call ExecutionStreamScheduler::setTimer to automatically become runnable
+may call ExecStreamScheduler::setTimer to automatically become runnable
 periodically.
 
 <p>
 
 Where possible, execution streams should be implemented as non-blocking to
 ensure scheduling flexibility.  Streams that may block must return true from
-the ExecutionStream::mayBlock method; schedulers may choose to use threading to
-prevent such streams from blocking the execution of the scheduler itself.
+the ExecStream::mayBlock method; schedulers may choose to use threading to
+prevent invocation of such streams from blocking the execution of the scheduler
+itself.
 
 <h3>Scheduler Extensibility</h3>
 
@@ -87,22 +88,22 @@ Most of the interfaces involved in scheduling are polymorphic:
 
 <ul>
 
-<li>Derived classes of ExecutionStreamScheduler implement different scheduling
+<li>Derived classes of ExecStreamScheduler implement different scheduling
 policies (e.g. sequential vs. parallel, or full-result vs. top-N).
 
-<li>Derived classes of ExecutionStream implement different kinds of data
+<li>Derived classes of ExecStream implement different kinds of data
 processing (e.g. table scan, sorting, join, etc).
 
-<li>Derived classes of ExecutionStreamBuffer may contain additional attributes
+<li>Derived classes of ExecStreamBufAccessor may contain additional attributes
 representing scheduler-specific buffer state (e.g. a timestamp for implementing
-some fairness policy).  Because ExecutionStreamScheduler acts as a factory for
-buffer instances, it can guarantee that all of the buffers it manages are of
+some fairness policy).  Because ExecStreamScheduler acts as a factory for
+accessor instances, it can guarantee that all of the accessors it manages are of
 the correct type, and can also create any necessary indexing structures over
-those buffers for efficiency of the scheduling algorithm.
+those accessors for efficiency of the scheduling algorithm.
 
-<li>Derived classes of ExecutionStreamQuantum may provide scheduler-specific
+<li>Derived classes of ExecStreamQuantum may provide scheduler-specific
 quantization limits to streams that can understand it.  This requires the code
-that constructs an ExecutionStreamGraph to be aware of the kind of scheduler
+that constructs an ExecStreamGraph to be aware of the kind of scheduler
 that will be used to execute it.  Streams which only understand the generic
 quantization can be used in any graph.
 
@@ -115,86 +116,95 @@ follows:
 
 <ol>
 
-<li>The caller instantiates an ExecutionStreamGraph together with the
-ExecutionStream instances it contains.  (See ExecutionStreamBuilder and
-ExecutionStreamFactory.)
+<li>The caller instantiates an ExecStreamGraph together with the
+ExecStream instances it contains.  (See ExecStreamBuilder and
+ExecStreamFactory.)
 
-<li>The caller instantiates an ExecutionStreamScheduler and associates the
-graph with it (TODO methods for this).  Internally, the
-ExecutionStreamScheduler allocates one instance of ExecutionStreamBuffer for
-each dataflow edge in the graph (as well as one for each input or output to the
-graph) and notifies the incident streams of its existence.  Once a graph and
-its streams have been associated with a scheduler in this way, they may never
-be moved to another scheduler.  Buffers start out in state EXECBUF_IDLE, with
-pStart, pEnd, and nTuples all zero.  Buffer provision settings are recorded
-for use in sanity checking later.
+<li>The caller instantiates an ExecStreamScheduler and associates the graph
+with it (TODO methods for this).  Internally, the ExecStreamScheduler allocates
+one instance of ExecStreamBufAccessor for each dataflow edge in the graph (as
+well as one for each input or output to the graph) and notifies the adjacent
+streams of its existence.  Once a graph and its streams have been associated
+with a scheduler in this way, they may never be moved to another scheduler.
+Buffer accessors start out in state EXECBUF_IDLE.  Buffer provision settings
+are recorded for use in sanity checking later.
 
-<li>The caller invokes ExecutionStreamGraph::open().
+<li>The caller invokes ExecStreamGraph::open().
 
-<li>The caller invokes ExecutionStreamScheduler::start().
+<li>The caller invokes ExecStreamScheduler::start().
 
-<li>The caller invokes ExecutionStreamScheduler::readStreamBuffer to read query
-output data, and/or ExecutionStreamScheduler::writeStreamBuffer to write query
+<li>The caller invokes ExecStreamScheduler::readStreamBuffer() to read query
+output data, and/or ExecStreamScheduler::writeStreamBuffer() to write query
 input data.  This is repeated indefinitely.  Optionally, the caller may invoke
-ExecutionStreamScheduler::abort from another thread while a read or write is in
+ExecStreamScheduler::abort() from another thread while a read or write is in
 progress; the abort call returns immediately, but the abort request may take
 some time to be fulfilled.
 
-<li>The caller invokes ExecutionStreamScheduler::stop().  This is synchronous
+<li>The caller invokes ExecStreamScheduler::stop().  This is synchronous
 and does not return until all execution in other scheduler threads has
 completed.
 
-<li>The caller invokes ExecutionStreamGraph::close().
+<li>The caller invokes ExecStreamGraph::close().
 
 </ol>
 
-<h3>ExecutionStream::execute Protocol</h3>
+<h3>ExecStream::execute Protocol</h3>
 
-When the scheduler invokes a stream, the possible responses are enumerated by
-ExecutionStreamResult:
+When the scheduler invokes a stream, the stream attempts to perform its work,
+possibly consuming input and/or producing output:
 
 <ul>
 
-<li>EXECRC_NEED_INPUT: the invoked stream could not perform any work because it
-needed data from at least one of its inputs.  Before return, the invoked stream
-is responsible for changing the state of the corresponding input buffers to
-EXECBUF_NEED_PRODUCTION.  If the buffer's dataflow mode is CONSUMER_PROVISION,
-then the invoked stream is also responsible for setting the buffer pStart and
-pEnd pointers to the memory area which the producer should fill with tuples;
-otherwise these pointers should be zeroed.
+<li>The stream tests for the presence of input data by calling getState() on
+its input buffer accessors.
 
-<li>EXECRC_NEED_OUTPUTBUF: the invoked stream could not perform any work
+<li>The stream accesses the input data via getConsumptionStart() and
+getConsumptionEnd(), and consumes it by calling consumeData().  Consumption may
+cause the buffer state to change from EXECBUF_NEED_CONSUMPTION to EXECBUF_IDLE.
+
+<li>When the stream knows that it needs more input data to make progress but
+the input buffer is empty, it calls requestProduction() to change the state to
+EXECBUF_NEED_PRODUCTION.  If the stream is responsible for providing the input
+buffer memory, it must also call provideBufferForProduction() in this case to
+set up the memory area which the upstream producer should fill.
+
+<li>If the stream is responsible for providing an output buffer, it produces
+data by calling provideBufferForConsumption().  Otherwise, it produces data by
+calling getProductionStart() and getProductionEnd() to access the output memory
+area provided by the downstream consumer, and then calls produceData() to
+indicate how much of that area it filled.  In either case, the resulting state
+of the output buffer is EXECBUF_NEED_CONSUMPTION.
+
+<li>When the stream knows that no more data will ever be produced on a
+particular output, it should call markEOS() on the corresponding buffer
+accessor.
+
+</ul>
+
+The possible responses from the execute call are enumerated by
+ExecStreamResult:
+
+<ul>
+
+<li>EXECRC_NEED_INPUT: the invoked stream could not produce any output because
+it exhausted the data from at least one of its inputs.
+
+<li>EXECRC_NEED_OUTPUTBUF: the invoked stream could not produce any output
 because it needed space in at least one of its output buffers which has not yet
-been consumed by the corresponding downstream XO (the output buffer was
-still in state EXECBUF_NEED_CONSUMPTION).
+been consumed by the corresponding downstream XO.
 
-<li>EXECRC_EOS: end of stream has been detected; no more data
-will ever be produced by the invoked stream.  Before return, the invoked stream
-is responsible for setting the state of all of its output buffers to
-EXECBUF_EOS, and resetting their pStart/pEnd/nTuples fields to zero.
+<li>EXECRC_EOS: the invoked stream did not produce any output because its end
+has been reached; no more data will ever be produced by this stream.  In this
+case, the invoked stream is responsible for calling markEOS() on all of
+its output buffers.
 
-<li>EXECRC_SUCCESS: the stream produced at least one tuple in one of its
-output buffers.  The invoked stream is responsible for a number of state
-changes in this case:
+<li>EXECRC_NO_OUTPUT: the invoked stream did not produce any output for some
+reason other than NEED_INPUT/NEED_OUTPUTBUF/EOS.  An example would be a stream
+which periodically becomes runnable to poll a data source; when no new
+data is available, EXECRC_NO_OUTPUT is the appropriate result.
 
-    <ul>
-
-    <li>Any partially consumed input buffer should have its nTuples field
-    decremented and pStart advanced accordingly.
-
-    <li>Any fully consumed input buffer should have its nTuples field reset to
-    0.  The buffer's state field should change to either EXECBUF_IDLE (in which
-    case pStart/pEnd should be zeroed) or EXECBUF_NEED_PRODUCTION (with the
-    same rules for pStart/pEnd as for EXECRC_NEED_INPUT).
-
-    <li>An output buffer in which tuples were produced should change state to
-    EXECBUF_NEED_CONSUMPTION with a nonzero value in its nTuples field.  If the
-    buffer's dataflow mode is PRODUCER_PROVISION, then pStart/pEnd should
-    reference the area of the producer's memory filled with tuples; otherwise,
-    the pEnd pointer set by the consumer should be decremented to the end of
-    the last tuple written into the consumer's memory by the invoked stream.
-
-    </ul>
+<li>EXECRC_OUTPUT: the stream produced data in at least one of its
+output buffers.
 
 </ul>
 
@@ -227,10 +237,43 @@ adapter1 above it, which is also read by the calculator; the calculator
 writes into the memory allocated by adapter2 above it, which is also read by
 the caller via readStreamBuffer.
 
-<h3>DfsTreeExecutionStreamScheduler</h3>
+<h3>Producer Provision of Buffer Memory</h3>
 
-A reference implementation of the ExecutionStreamScheduler interface is
-provided by the DfsTreeExecutionStreamScheduler class, which is suitable as a
+When a buffer accessor's provision mode is set to PRODUCER_PROVISION,
+the producer is responsible for providing buffer memory.  The diagram
+below illustrates the call sequence between producer and
+consumer:
+
+<hr>
+\image html SchedulerProducerProvision.gif
+<hr>
+
+First, the calc stream (the consumer) requests production but does
+not provide any buffer.  Next, the adapter stream (the producer)
+provides a buffer full of data.  Finally, the consumer accesses the
+data via getConsumptionStart/End, marking how much it read via the
+consumeData call.
+
+<h3>Consumer Provision of Buffer Memory</h3>
+
+For CONSUMER_PROVISION, the call sequence is different:
+
+<hr>
+\image html SchedulerConsumerProvision.gif
+<hr>
+
+First, the adapter stream (the consumer) requests production AND provides
+an empty buffer.  Next,
+the calc stream (the producer) determines the buffer bounds with
+getProductionStart/End and
+then writes tuples into the buffer, marking the end of data with the
+produceData call.  Finally, the consumer accesses the data in the buffer via
+getConsumptionStart/End.
+
+<h3>DfsTreeExecStreamScheduler</h3>
+
+A reference implementation of the ExecStreamScheduler interface is
+provided by the DfsTreeExecStreamScheduler class, which is suitable as a
 no-frills implementation of a traditional lazy non-parallel query execution.
 
 The algorithm used by this scheduler is as follows:
@@ -241,10 +284,10 @@ The algorithm used by this scheduler is as follows:
 scheduler is a forest of trees (each stream has at most one consumer, and no
 cycles exist).
 
-<li>The readStreamBuffer method is the real entry point for synchronous
-traversal of the tree.  (writeStreamBuffer is not supported.)
+<li>The readStreamBuffer() method is the real entry point for synchronous
+traversal of the tree.  (writeStreamBuffer() is not supported.)
 
-<li>The scheduler asserts that the stream with which readStreamBuffer was
+<li>The scheduler asserts that the stream with which readStreamBuffer() was
 invoked has no consumers (i.e. it is the root of a tree) and has output buffer
 provision mode PRODUCER_PROVISION.  The scheduler also asserts that the root
 output buffer's mode is not EXECBUF_NEED_CONSUMPTION.  A <em>current
@@ -262,10 +305,10 @@ updates its current stream pointer to the corresponding producer stream, and
 loops back to label VISIT_VERTEX.
 
 <li>The scheduler invokes the current stream's execute method, and asserts that
-the return code was not EXECRC_NEED_OUTPUTBUF (impossible due to
-lazy evaluation order).
+the return code was neither EXECRC_NEED_OUTPUTBUF nor EXECRC_NO_OUTPUT
+(impossible due to lazy evaluation order).
 
-<li>If the return code was EXECRC_SUCCESS or EXECRC_EOS, then the scheduler
+<li>If the return code was EXECRC_OUTPUT or EXECRC_EOS, then the scheduler
 updates the current stream pointer to reference the current stream's parent and
 then loops back to label VISIT_VERTEX.  If the current stream has no parent,
 the traversal terminates instead.
@@ -278,73 +321,73 @@ VISIT_VERTEX.
 
 </ol>
 
-DfsTreeExecutionStreamScheduler does not support asynchronous runnability
+DfsTreeExecStreamScheduler does not support asynchronous runnability
 changes (makeRunnable and setTimer).
 
 <p>
 
 TBD:  additional assertions; re-entrancy issues for Java XO's.
 
-<h3>Example Execution</h3>
+<h3>Example Exec</h3>
 
 Putting together the example graph shown earlier with the 
-DfsTreeExecutionStreamScheduler algorithm, an example execution trace
+DfsTreeExecStreamScheduler algorithm, an example execution trace
 might read as follows for a table of five rows:
 
 <ol>
 
-<li>caller invokes readStreamBuffer on scheduler with adapter2 as argument.
+<li>caller invokes readStreamBuffer() on scheduler with adapter2 as argument.
 
-<li>scheduler calls execute on adapter2.  adapter2 sets buf3's state to 
-EXECBUF_NEED_PRODUCTION and points its pStart/pEnd to its allocated cache page.
-adapter2 returns EXECRC_NEED_INPUT.
+<li>scheduler calls execute() on adapter2.  adapter2 invokes requestProduction()
+on buf3 and calls provideBufferForProduction() with
+its allocated cache page.  adapter2 returns EXECRC_NEED_INPUT.
 
-<li>scheduler calls execute on calc.  calc sets buf2's state to 
-EXECBUF_NEED_PRODUCTION.  calc returns EXECRC_NEED_INPUT.
+<li>scheduler calls execute() on calc.  calc invokes requestProduction() on
+buf2.  calc returns EXECRC_NEED_INPUT.
 
-<li>scheduler calls execute on adapter1.  adapter1 sets buf1's state to 
-EXECBUF_NEED_PRODUCTION and points its pStart/pEnd to its
+<li>scheduler calls execute() on adapter1.  adapter1 invokes requestProduction()
+on buf1 and calls provideBufferForProduction() with its
 allocated cache page.  adapter1 returns EXECRC_NEED_INPUT.
 
-<li>scheduler calls execute on scan.  scan writes five tuples into buf1, sets
-its state to EXECBUF_NEED_CONSUMPTION, adjusts its pEnd to point after fifth
-tuple, sets its nTuples to 5, and returns EXECRC_SUCCESS.
+<li>scheduler calls execute() on scan.  scan calls produceData(), writing
+five tuples into buf1 and changing its state to EXECBUF_NEED_CONSUMPTION,
+and then returns EXECRC_OUTPUT.
 
-<li>scheduler calls execute on adapter1.  adapter1 copies pStart/pEnd/nTuples
-from buf1 to buf2, then zeroes buf1 and sets its state to EXECBUF_IDLE.
-adapter1 sets buf2's state to EXECBUF_NEED_CONSUMPTION and returns 
-EXECRC_SUCCESS.
+<li>scheduler calls execute() on adapter1.  adapter1 calls
+provideBufferForConsumption() on buf2, passing it memory references from
+buf1 and changing its state to EXECBUF_NEED_CONSUMPTION.
+adapter1 returns EXECRC_OUTPUT.
 
-<li>scheduler calls execute on calc.  calc applies filter and consumes all
-rows from buf2, zeroing it and setting its state to EXECBUF_IDLE.
-calc writes three rows into buf3, adjusting its pEnd to point after
-third tuple, and sets its state to EXECBUF_NEED_CONSUMPTION.
-calc returns EXECRC_SUCCESS.
+<li>scheduler calls execute() on calc.  calc applies filter and calls
+consumeData() to consumes all rows from buf2, changing its state to
+EXECBUF_IDLE.
+calc writes three rows into buf3, calling produceData() to 
+set its state to EXECBUF_NEED_CONSUMPTION.  calc returns EXECRC_OUTPUT.
 
-<li>scheduler calls execute on adapter2.  adapter2 copies pStart/pEnd/nTuples
-from buf3 to buf4, then zeroes buf3 and sets its state to EXECBUF_IDLE.
-adapter2 sets buf4's state to EXECBUF_NEED_CONSUMPTION.  adapter2 returns 
-EXECRC_SUCCESS.
+<li>scheduler calls execute() on adapter2.  adapter2 calls
+provideBufferForConsumption() on buf4, passing it memory references from
+buf3 and changing its state to EXECBUF_NEED_CONSUMPTION.  adapter2 returns 
+EXECRC_OUTPUT.
 
-<li>scheduler returns to caller with EXECRC_SUCCESS, giving it 
+<li>scheduler returns to caller with EXECRC_OUTPUT, giving it 
 a reference to buf4.
 
-<li>caller reads the data from buf4 and zeroes it, setting its state to
+<li>caller calls consumeData() to read the data from buf4, changing its state to
 EXECBUF_IDLE.
 
-<li>caller invokes readStreamBuffer on adapter2 again.
+<li>caller invokes readStreamBuffer() on adapter2 again.
 
-<li>scheduler calls execute on adapter2, which returns EXECRC_NEED_INPUT;
+<li>scheduler calls execute() on adapter2, which returns EXECRC_NEED_INPUT;
 same thing repeats all the way down the tree.
 
-<li>scheduler calls execute on scan, which zeroes buf1, sets its state to
-EXECBUF_EOS, and eturns EXECRC_EOS.
+<li>scheduler calls execute() on scan, which calls markEOS() on buf1,
+changing its state to EXECBUF_EOS, and returns EXECRC_EOS.
 
-<li>scheduler calls execute on adapter1, which returns EXECRC_EOS, etc.
+<li>scheduler calls execute() on adapter1, which returns EXECRC_EOS, etc.
 
-<li>scheduler calls execute on calc, which returns EXECRC_EOS, etc.
+<li>scheduler calls execute() on calc, which returns EXECRC_EOS, etc.
 
-<li>scheduler calls execute on adapter2, which returns EXECRC_EOS, etc.
+<li>scheduler calls execute() on adapter2, which returns EXECRC_EOS, etc.
 
 <li>scheduler returns to caller with EXECRC_EOS.
 
