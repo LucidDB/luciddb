@@ -60,12 +60,29 @@ public class RexShuttle
 
     public RexNode visit(final RexCall call)
     {
-        RexNode [] operands = call.operands;
-        for (int i = 0; i < operands.length; i++) {
-            RexNode operand = operands[i];
-            operands[i] = visit(operand);
+        boolean update = false;
+        RexNode[] clonedOperands = new RexNode[call.operands.length];
+        for (int i = 0; i < call.operands.length; i++) {
+            RexNode operand = call.operands[i];
+            RexNode clonedOperand = visit(operand);
+            if (clonedOperand != operand) {
+                update = true;
+            }
+            clonedOperands[i] = clonedOperand;
         }
-        return call;
+        if (update) {
+            // REVIEW jvs 8-Mar-2005:  This doesn't take into account
+            // the fact that a rewrite may have changed the result type.
+            // To do that, we would need to take a RexBuilder and
+            // watch out for special operators like CAST and NEW where
+            // the type is embedded in the original call.
+            return new RexCall(
+                call.getType(),
+                call.op,
+                clonedOperands);
+        } else {
+            return call;
+        }
     }
 
     public RexNode visit(RexCorrelVariable variable)

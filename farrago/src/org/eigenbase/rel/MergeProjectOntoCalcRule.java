@@ -79,7 +79,7 @@ public class MergeProjectOntoCalcRule extends RelOptRule
         // SELECT (a + b) + 1 AS p, (a + b) + c AS q
         // FROM t
         // WHERE c < 6
-        final RexNode [] projectExprs = RexUtil.clone(project.exps);
+        final RexNode [] projectExprs = new RexNode[project.exps.length];
         final RexShuttle shuttle =
             new RexShuttle() {
                 public RexNode visit(RexInputRef input)
@@ -88,7 +88,7 @@ public class MergeProjectOntoCalcRule extends RelOptRule
                 }
             };
         for (int i = 0; i < projectExprs.length; i++) {
-            projectExprs[i] = shuttle.visit(projectExprs[i]);
+            projectExprs[i] = shuttle.visit(project.exps[i]);
         }
         final CalcRel newCalc =
             new CalcRel(calc.cluster, RelOptUtil.clone(calc.traits),

@@ -80,7 +80,6 @@ public class MergeFilterOntoCalcRule extends RelOptRule
         // SELECT a + b AS x, c AS y
         // FROM t
         // WHERE c < 6 AND (a + b) > 5
-        final RexNode condition = RexUtil.clone(filter.condition);
         final RexShuttle shuttle =
             new RexShuttle() {
                 public RexNode visit(RexInputRef input)
@@ -88,7 +87,7 @@ public class MergeFilterOntoCalcRule extends RelOptRule
                     return calc.projectExprs[input.index];
                 }
             };
-        RexNode newCondition = shuttle.visit(condition);
+        RexNode newCondition = shuttle.visit(filter.condition);
         if (calc.conditionExpr != null) {
             newCondition =
                 calc.cluster.rexBuilder.makeCall(RexKind.And,

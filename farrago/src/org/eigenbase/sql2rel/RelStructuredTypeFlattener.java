@@ -379,7 +379,6 @@ public class RelStructuredTypeFlattener
                         flattenedFieldNames.add(null);
                     }
                 } else {
-                    // TODO UDT constructor
                     throw Util.needToImplement(exp);
                 }
             } else {

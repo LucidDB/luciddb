@@ -100,6 +100,11 @@ public class RelOptCluster
     {
         return typeFactory;
     }
+
+    public RexBuilder getRexBuilder()
+    {
+        return rexBuilder;
+    }
 }
 
 
