@@ -17,7 +17,7 @@ SegBufferExecStream.cpp \
 SingleInputExecStream.cpp \
 SingleOutputExecStream.cpp
 
-DESIGN_DOCS=SchedulerDesign.cpp ExecStreamHowTo.cpp
+DESIGN_DOCS=SchedulerDesign.cpp ExecStreamHowTo.cpp ExecStreamDesign.cpp
 EXTRA_DIST=$(DESIGN_DOCS)
 TAGS_DEPENDENCIES=$(DESIGN_DOCS)
 ETAGS_ARGS=$(DESIGN_DOCS)

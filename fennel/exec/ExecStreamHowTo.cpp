@@ -46,7 +46,8 @@ implementations in a novel fashion to achieve the desired effect
 </ul>
 
 If you have already ruled out all of those alternatives, then read on.
-As background, you may also want to read the SchedulerDesign.
+As background, you may also want to read the SchedulerDesign
+and ExecStreamDesign.
 
 <hr>
 

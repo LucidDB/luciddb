@@ -31,6 +31,10 @@ execution methods.  A more modular design would separate scheduling from
 execution, but there is currently no justification for the extra complexity
 this separation would introduce.
 
+<p>
+
+As background, please read the ExecStreamDesign first.
+
 <h3>Interfaces</h3>
 
 The UML static structure diagram below illustrates the relevant relationships
@@ -40,27 +44,26 @@ The UML static structure diagram below illustrates the relevant relationships
 \image html SchedulerInterfaces.gif
 <hr>
 
-An ExecStreamScheduler may be dedicated per ExecStreamGraph, or may
-be responsible for multiple graphs, depending on the scheduling granularity
-desired.  Each graph consists of multiple vertex instances of ExecStream,
-with ExecStreamBufAccessor edges representing dataflow.  Each buffer accessor is
-assigned a single producer/consumer stream pair.  Hence, the number of buffers
-accessible from a stream is equal to its vertex degree in the graph.
-The design goal is that the ExecStreamBufAccessor representation should
-remain very simple, with any complex buffering strategies
-(e.g. disk-based queueing) encapsulated as specialized stream 
-implementations instead.
+An ExecStreamScheduler may be dedicated per ExecStreamGraph, or may be
+responsible for multiple graphs, depending on the scheduling
+granularity desired.  Each graph consists of multiple vertex instances
+of ExecStream, with ExecStreamBufAccessor edges representing dataflow.
+Each buffer accessor is assigned a single producer/consumer stream
+pair.  Hence, the number of buffers accessible from a stream is equal
+to its vertex degree in the graph.  The design goal is that the
+ExecStreamBufAccessor representation should remain very simple, with
+any complex buffering strategies (e.g. disk-based queueing)
+encapsulated as specialized stream implementations instead.
 
 <p>
 
-When the scheduler decides that a particular stream should run, it invokes that
-stream's implementation of ExecStream::execute, passing a reference to an
-instance of
-ExecStreamQuantum to limit the amount of data processed.  The exact
-interpretation of the quantum is up to the stream implementation.  The stream's
-response is dependent on the states of its adjacent buffers, which usually
-change as a side-effect of the execution.  This protocol is specified in more
-detail later on.
+When the scheduler decides that a particular stream should run, it
+invokes that stream's implementation of ExecStream::execute, passing a
+reference to an instance of ExecStreamQuantum to limit the amount of
+data processed.  The exact interpretation of the quantum is up to the
+stream implementation.  The stream's response is dependent on the
+states of its adjacent buffers, which usually change as a side-effect
+of the execution.  This protocol is specified in more detail later on.
 
 <p>
 
@@ -95,12 +98,13 @@ policies (e.g. sequential vs. parallel, or full-result vs. top-N).
 <li>Derived classes of ExecStream implement different kinds of data
 processing (e.g. table scan, sorting, join, etc).
 
-<li>Derived classes of ExecStreamBufAccessor may contain additional attributes
-representing scheduler-specific buffer state (e.g. a timestamp for implementing
-some fairness policy).  Because ExecStreamScheduler acts as a factory for
-accessor instances, it can guarantee that all of the accessors it manages are of
-the correct type, and can also create any necessary indexing structures over
-those accessors for efficiency of the scheduling algorithm.
+<li>Derived classes of ExecStreamBufAccessor may contain additional
+attributes representing scheduler-specific buffer state (e.g. a
+timestamp for implementing some fairness policy).  Because
+ExecStreamScheduler acts as a factory for accessor instances, it can
+guarantee that all of the accessors it manages are of the correct
+type, and can also create any necessary indexing structures over those
+accessors for efficiency of the scheduling algorithm.
 
 <li>Derived classes of ExecStreamQuantum may provide scheduler-specific
 quantization limits to streams that can understand it.  This requires the code
@@ -194,10 +198,10 @@ ExecStreamResult:
 
 <ul>
 
-<li>EXECRC_BUF_UNDERFLOW: the invoked stream ceased execution because it exhausted
-the data from at least one of its inputs.  Note that this does not imply that
-no output was produced (and this is true for all result codes, including
-EXECRC_EOS).
+<li>EXECRC_BUF_UNDERFLOW: the invoked stream ceased execution because
+it exhausted the data from at least one of its inputs.  Note that this
+does not imply that no output was produced (and this is true for all
+result codes, including EXECRC_EOS).
 
 <li>EXECRC_BUF_OVERFLOW: the invoked stream ceased execution 
 because it exhausted the space in at least one of its output buffers.
@@ -208,10 +212,10 @@ reached the end of at least one of its inputs.
 <li>EXECRC_QUANTUM_EXPIRED: the invoked stream ceased execution because its
 quantum expired.
 
-<li>EXECRC_YIELD: the invoked stream ceased execution because it had no more
-work to do.  An example would be a stream
-which periodically becomes runnable to poll a data source; when no new
-data is available, EXECRC_YIELD is the appropriate result.
+<li>EXECRC_YIELD: the invoked stream ceased execution because it had
+no more work to do.  An example would be a stream which periodically
+becomes runnable to poll a data source; when no new data is available,
+EXECRC_YIELD is the appropriate result.
 
 </ul>
 
@@ -246,7 +250,7 @@ the caller via readStreamBuffer.
 
 <h3>Producer Provision of Buffer Memory</h3>
 
-When a buffer accessor's provision mode is set to PRODUCER_PROVISION,
+When a buffer accessor's provision mode is set to BUFPROV_PRODUCER,
 the producer is responsible for providing buffer memory.  The diagram
 below illustrates the call sequence between producer and
 consumer:
@@ -263,19 +267,18 @@ consumeData call.
 
 <h3>Consumer Provision of Buffer Memory</h3>
 
-For CONSUMER_PROVISION, the call sequence is different:
+For BUFPROV_CONSUMER, the call sequence is different:
 
 <hr>
 \image html SchedulerConsumerProvision.gif
 <hr>
 
-First, the adapter stream (the consumer) requests production AND provides
-an empty buffer.  Next,
-the calc stream (the producer) determines the buffer bounds with
-getProductionStart/End and
-then writes tuples into the buffer, marking the end of data with the
-produceData call.  Finally, the consumer accesses the data in the buffer via
-getConsumptionStart/End.
+First, the adapter stream (the consumer) requests production AND
+provides an empty buffer.  Next, the calc stream (the producer)
+determines the buffer bounds with getProductionStart/End and then
+writes tuples into the buffer, marking the end of data with the
+produceData call.  Finally, the consumer accesses the data in the
+buffer via getConsumptionStart/End.
 
 <h3>DfsTreeExecStreamScheduler</h3>
 
@@ -295,12 +298,11 @@ cycles exist).
 traversal of the tree.  (writeStream() is not supported.)
 
 <li>The scheduler asserts that the stream with which readStream() was
-invoked has no consumers (i.e. it is the root of a tree) and has output buffer
-provision mode PRODUCER_PROVISION.  The scheduler also asserts that the root
-output buffer's state is not EXECBUF_OVERFLOW.  A
-<em>current stream</em> pointer is
-set to reference this stream, and the output buffer's state is
-set to EXECBUF_UNDERFLOW.
+invoked has no consumers (i.e. it is the root of a tree) and has
+output buffer provision mode BUPROV_PRODUCER.  The scheduler also
+asserts that the root output buffer's state is not EXECBUF_OVERFLOW.
+A <em>current stream</em> pointer is set to reference this stream, and
+the output buffer's state is set to EXECBUF_UNDERFLOW.
 
 <li>VISIT_VERTEX:
 
@@ -316,8 +318,9 @@ not support asynchronous stream execution).
 <li>If the scheduler's <em>abort</em> flag has been set asynchronously, the
 traversal terminates.
 
-<li>If the return code was EXECRC_BUF_UNDERFLOW, then the scheduler loops back to
-label VISIT_VERTEX, which will detect the input node which needs to be executed.
+<li>If the return code was EXECRC_BUF_UNDERFLOW, then the scheduler
+loops back to label VISIT_VERTEX, which will detect the input node
+which needs to be executed.
 
 <li>If the return code was EXECRC_QUANTUM_EXPIRED, then the scheduler
 loops back to label VISIT_VERTEX, causing the current node to be re-executed
@@ -334,10 +337,6 @@ If the current stream has no parent, the traversal terminates instead.
 DfsTreeExecStreamScheduler does not support asynchronous runnability
 changes (makeRunnable and setTimer).
 
-<p>
-
-TBD:  additional assertions; re-entrancy issues for Java XO's.
-
 <h3>Example Exec</h3>
 
 Putting together the example graph shown earlier with the 
@@ -348,16 +347,16 @@ might read as follows for a table of five rows:
 
 <li>caller invokes readStream() on scheduler with adapter2 as argument.
 
-<li>scheduler calls execute() on adapter2.  adapter2 invokes requestProduction()
-on buf3 and calls provideBufferForProduction() with
-its allocated cache page.  adapter2 returns EXECRC_BUF_UNDERFLOW.
+<li>scheduler calls execute() on adapter2.  adapter2 invokes
+requestProduction() on buf3 and calls provideBufferForProduction()
+with its allocated cache page.  adapter2 returns EXECRC_BUF_UNDERFLOW.
 
 <li>scheduler calls execute() on calc.  calc invokes requestProduction() on
 buf2.  calc returns EXECRC_BUF_UNDERFLOW.
 
-<li>scheduler calls execute() on adapter1.  adapter1 invokes requestProduction()
-on buf1 and calls provideBufferForProduction() with its
-allocated cache page.  adapter1 returns EXECRC_BUF_UNDERFLOW.
+<li>scheduler calls execute() on adapter1.  adapter1 invokes
+requestProduction() on buf1 and calls provideBufferForProduction()
+with its allocated cache page.  adapter1 returns EXECRC_BUF_UNDERFLOW.
 
 <li>scheduler calls execute() on scan.  scan calls produceData(), writing
 five tuples into buf1 and changing its state to EXECBUF_NONEMPTY,
@@ -381,8 +380,8 @@ EXECRC_BUF_OVERFLOW.
 
 <li>scheduler returns to caller with a reference to buf4.
 
-<li>caller calls consumeData() to read the data from buf4, changing its state to
-EXECBUF_EMPTY.
+<li>caller calls consumeData() to read the data from buf4, changing
+its state to EXECBUF_EMPTY.
 
 <li>caller invokes readStream() on adapter2 again.
 
