@@ -1,7 +1,7 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2004-2005 Red Square
+// Copyright (C) 2004-2005 Red Square, Inc.
 // Copyright (C) 2005-2005 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify

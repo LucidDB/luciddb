@@ -1,7 +1,8 @@
 /*
 // $Id$
-// Fennel is a relational database kernel.
+// Fennel is a library of data storage and processing components.
 // Copyright (C) 2004-2004 Disruptive Tech
+// Copyright (C) 2004-2004 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -1364,8 +1365,3 @@ SqlStringTest::testSqlStringAsciiTrim()
 
 
 FENNEL_UNIT_TEST_SUITE(SqlStringTest);
-
-
-    
-    
-        
