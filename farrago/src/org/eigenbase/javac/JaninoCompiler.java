@@ -54,6 +54,9 @@ public class JaninoCompiler implements JavaCompiler
         // work when run from ant's junit task without forking.  Should
         // probably take it as a parameter, but how should we decide what to
         // use?
+
+        // TODO jvs 10-Nov-2004: provide a means to request
+        // DebuggingInformation.ALL
         
         assert(args.destdir != null);
         assert(args.fullClassName != null);
@@ -65,7 +68,7 @@ public class JaninoCompiler implements JavaCompiler
             getClass().getClassLoader(),
             new File[] { new File(args.destdir) },
             null,
-            0);
+            DebuggingInformation.NONE);
         try {
             classLoader.loadClass(args.fullClassName);
         } catch (ClassNotFoundException ex) {
