@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/udt.sql#10 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/udt.sql#11 $
 0: jdbc:farrago:> -- Test DDL for user-defined types
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema udttest;
@@ -260,8 +260,8 @@ Error: Object definition contains recursive cycle (state=,code=0)
 Error: Object definition contains recursive cycle (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  can't specify UDT for distinct type
-0: jdbc:farrago:> create type simolean_currency as ellipse final;
-Error: DDL validation error near line 1, column 34: Must define representation for distinct datatype "UDTTEST"."SIMOLEAN_CURRENCY" as a predefined type (state=,code=0)
+0: jdbc:farrago:> create type oval as ellipse final;
+Error: DDL validation error near line 1, column 21: Must define representation for distinct datatype "UDTTEST"."OVAL" as a predefined type (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test out-of-order definitions
 0: jdbc:farrago:> create schema musculoskeletal
@@ -446,9 +446,14 @@ Error: DDL validation error near line 1, column 35: Reference to unknown datatyp
 | 10.0  | 10.0  |
 +-------+-------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- FIXME:  test nested constructors
-0: jdbc:farrago:> -- select t.c.radius, t.c.center.y
-0: jdbc:farrago:> -- from (select new circle() as c from (values(0))) as t;
+0: jdbc:farrago:> -- NOTE:  center is null because circle doesn't define its default value
+0: jdbc:farrago:> select t.c.radius, t.c.center.y
+. . . . . . . . > from (select new circle() as c from (values(0))) as t;
++---------+----+
+| RADIUS  | Y  |
++---------+----+
+| 1.0     |    |
++---------+----+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test storage
 0: jdbc:farrago:> 
@@ -460,6 +465,9 @@ Error: DDL validation error near line 1, column 35: Reference to unknown datatyp
 0: jdbc:farrago:> 
 0: jdbc:farrago:> insert into stored_coord_list 
 . . . . . . . . > values(new rectilinear_coord0(), null, 3);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- FIXME: query which returns structured type doesn't always work
+0: jdbc:farrago:> -- select * from stored_coord_list order by pair_id;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail due to NOT NULL constraint
 0: jdbc:farrago:> insert into stored_coord_list 

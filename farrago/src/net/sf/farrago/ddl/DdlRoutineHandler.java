@@ -465,6 +465,7 @@ public class DdlRoutineHandler extends DdlHandler
     // implement FarragoSessionDdlHandler
     public void validateDefinition(FemSqlobjectType typeDef)
     {
+        typeDef.setTypeNumber(new Integer(Types.STRUCT));
         validateAttributeSet(typeDef);
         validateUserDefinedType(typeDef);
     }
@@ -472,6 +473,7 @@ public class DdlRoutineHandler extends DdlHandler
     // implement FarragoSessionDdlHandler
     public void validateDefinition(FemSqldistinguishedType typeDef)
     {
+        typeDef.setTypeNumber(new Integer(Types.DISTINCT));
         validateUserDefinedType(typeDef);
         validateTypedElement(typeDef, typeDef);
         if (!(typeDef.getType() instanceof CwmSqlsimpleType)) {

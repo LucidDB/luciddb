@@ -89,7 +89,7 @@ public class OJTypeFactoryImpl extends SqlTypeFactoryImpl
     
     protected OJClass createOJClassForRecordType(
         OJClass declarer,
-        RelRecordType recordType)
+        RelDataType recordType)
     {
         // convert to synthetic project type
         final RelDataTypeField [] fields = recordType.getFields();

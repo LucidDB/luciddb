@@ -4,7 +4,6 @@
 // Copyright (C) 2005-2005 The Eigenbase Project
 // Copyright (C) 2005-2005 Disruptive Tech
 // Copyright (C) 2005-2005 Red Square, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,32 +21,20 @@
 */
 package net.sf.farrago.type.runtime;
 
-
 /**
- * The AssignableValue interface represents a writable SQL value
- * of non-primitive type at runtime.
+ * DataValue is an interface representing a runtime holder for a
+ * data value.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public interface AssignableValue extends DataValue
+public interface DataValue
 {
-    //~ Static fields/initializers --------------------------------------------
-
     /**
-     * Name of method implementing assignment operator.
+     * @return an Object representation of this value's data, or null if this
+     * value is null
      */
-    public static final String ASSIGNMENT_METHOD_NAME = "assignFrom";
-
-    //~ Methods ---------------------------------------------------------------
-
-    /**
-     * Assign value from an Object.
-     *
-     * @param obj value to assign, or null to set null
-     */
-    public void assignFrom(Object obj);
+    Object getNullableData();
 }
 
-
-// End AssignableValue.java
+// End DataValue.java

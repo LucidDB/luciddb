@@ -486,6 +486,8 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         case SqlTypeName.Multiset_ordinal:
             return newStringOJClass(
                 declarer, type);
+        case SqlTypeName.Structured_ordinal:
+            return createOJClassForRecordType(declarer, type);
         default:
             throw new AssertionError();
         }

@@ -108,6 +108,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     private SqlOperatorTable sqlOperatorTable;
     private final FarragoUserDefinedRoutineLookup routineLookup;
     private int expansionDepth;
+    private RelDataType originalRowType;
 
     /**
      * Name of Java package containing code generated for this statement.
@@ -386,7 +387,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
                 new FarragoExecutableJavaStmt(
                     packageDir,
                     rowClass,
-                    rowType,
+                    (originalRowType == null) ? rowType : originalRowType,
                     dynamicParamRowType,
                     preparedExecution.getMethod(),
                     xmiFennelPlan,
@@ -493,7 +494,8 @@ public class FarragoPreparingStmt extends OJPreparingStmt
                     "Plan before flattening", 
                     rootRel));
         }
-        rootRel = flattenTypes(rootRel);
+        originalRowType = rootRel.getRowType();
+        rootRel = flattenTypes(rootRel, true);
         if (dumpPlan) {
             planDumpTracer.fine(
                 RelOptUtil.dumpPlan(
@@ -510,12 +512,12 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         return rootRel;
     }
 
-    RelNode flattenTypes(RelNode rootRel)
+    RelNode flattenTypes(RelNode rootRel, boolean restructure)
     {
         RelStructuredTypeFlattener typeFlattener =
             new RelStructuredTypeFlattener(
                 sqlToRelConverter.getRexBuilder());
-        rootRel = typeFlattener.rewrite(rootRel);
+        rootRel = typeFlattener.rewrite(rootRel, restructure);
         return rootRel;
     }
 

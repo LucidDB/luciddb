@@ -37,6 +37,7 @@ import org.eigenbase.rex.RexVisitor;
 import org.eigenbase.sql.SqlOperator;
 import org.eigenbase.sql.SqlSyntax;
 import org.eigenbase.sql.SqlIdentifier;
+import org.eigenbase.sql.fun.*;
 import org.eigenbase.util.Util;
 
 import java.util.List;
@@ -64,7 +65,7 @@ class InternalTranslator
     RelNode [] inputs;
     protected final JavaRexBuilder rexBuilder;
     protected final QueryEnvironment qenv;
-    private static final HashMap mapUnaryOpToRex = createUnaryMap();
+    private static final HashMap mapUnaryOpToSql = createUnaryMap();
 
     //private static final HashMap mapBinaryOpToRex = createBinaryMap();
     private static HashMap createUnaryMap()
@@ -78,12 +79,12 @@ class InternalTranslator
         //map.put(new Integer(UnaryExpression.BIT_NOT),RexKind.None);
         map.put(
             new Integer(UnaryExpression.NOT),
-            RexKind.Not);
+            SqlStdOperatorTable.instance().notOperator);
 
         //map.put(new Integer(UnaryExpression.PLUS),RexKind.None); // no op corresponding to prefix "+"
         map.put(
             new Integer(UnaryExpression.MINUS),
-            RexKind.MinusPrefix);
+            SqlStdOperatorTable.instance().prefixMinusOperator);
 
         //map.put(new Integer(UnaryExpression.EXISTS),RexKind.None);
         return map;
@@ -239,7 +240,7 @@ class InternalTranslator
     public RexNode evaluateDown(UnaryExpression p)
     {
         final RexNode rexNode = go(p.getExpression());
-        final RexKind opCode = unaryOpToRex(p.getOperator());
+        final SqlOperator opCode = unaryOpToSql(p.getOperator());
         return rexBuilder.makeCall(opCode, rexNode);
     }
 
@@ -247,9 +248,9 @@ class InternalTranslator
      * Translates an operator code from Openjava
      * ({@link UnaryExpression#BIT_NOT} et cetera) to row-expression.
      */
-    private RexKind unaryOpToRex(int op)
+    private SqlOperator unaryOpToSql(int op)
     {
-        return (RexKind) mapUnaryOpToRex.get(new Integer(op));
+        return (SqlOperator) mapUnaryOpToSql.get(new Integer(op));
     }
 
     /**

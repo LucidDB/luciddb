@@ -229,7 +229,7 @@ create type lung as (
 ;
 
 -- should fail:  can't specify UDT for distinct type
-create type simolean_currency as ellipse final;
+create type oval as ellipse final;
 
 -- test out-of-order definitions
 create schema musculoskeletal
@@ -362,9 +362,9 @@ from (select new rectilinear_coord_overloaded(10) as p from (values(0))) as t;
 select t.p.x, t.p.y
 from (select new rectilinear_coord_overloaded(10,10) as p from (values(0))) t;
 
--- FIXME:  test nested constructors
--- select t.c.radius, t.c.center.y
--- from (select new circle() as c from (values(0))) as t;
+-- NOTE:  center is null because circle doesn't define its default value
+select t.c.radius, t.c.center.y
+from (select new circle() as c from (values(0))) as t;
 
 -- test storage
 
@@ -376,6 +376,9 @@ values(new rectilinear_coord0(), new rectilinear_coord0(), 2);
 
 insert into stored_coord_list 
 values(new rectilinear_coord0(), null, 3);
+
+-- FIXME: query which returns structured type doesn't always work
+-- select * from stored_coord_list order by pair_id;
 
 -- should fail due to NOT NULL constraint
 insert into stored_coord_list 

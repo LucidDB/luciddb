@@ -135,50 +135,6 @@ public class RexBuilder
     }
 
     /**
-     * Creates a call with 1 argument, converting a {@link RexKind}
-     * to an appropriate {@link SqlOperator}.
-     */
-    public RexNode makeCall(
-        RexKind kind,
-        RexNode arg0)
-    {
-        final RexNode [] args = new RexNode [] { arg0 };
-        return makeCall(kind, args);
-    }
-
-    /**
-     * Creates a call with an array of arguments, converting a {@link RexKind}
-     * to an appropriate {@link SqlOperator}.
-     */
-    public RexNode makeCall(
-        RexKind kind,
-        final RexNode [] args)
-    {
-        SqlOperator op = getFunctionOp(kind, args);
-        if (op == null) {
-            throw Util.newInternal("No operator for " + kind);
-        }
-        return makeCall(op, args);
-    }
-
-    /**
-     * Creates a call with 2 arguments, converting a {@link RexKind}
-     * to an appropriate {@link SqlOperator}.
-     */
-    public RexNode makeCall(
-        RexKind kind,
-        RexNode arg0,
-        RexNode arg1)
-    {
-        final RexNode [] args = new RexNode [] { arg0, arg1 };
-        SqlOperator op = getFunctionOp(kind, args);
-        if (op == null) {
-            throw Util.newInternal("No operator for " + kind);
-        }
-        return makeCall(op, args);
-    }
-
-    /**
      * Creates a call with 1 argument.
      */
     public RexNode makeCall(
@@ -225,26 +181,6 @@ public class RexBuilder
             types[i] = exprs[i].getType();
         }
         return types;
-    }
-
-    /**
-     * Chooses an appropriate operator to implement a {@link RexKind}, given
-     * a specific number and types of arguments.
-     */
-    public SqlOperator getFunctionOp(
-        RexKind kind,
-        RexNode [] args)
-    {
-        SqlFunction function =
-            SqlUtil.lookupRoutine(
-                opTab,
-                new SqlIdentifier(kind.getName(), null),
-                getTypes(args),
-                false);
-        if (function == null) {
-            throw Util.newInternal("No operator for " + kind);
-        }
-        return function;
     }
 
     /**

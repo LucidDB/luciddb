@@ -738,6 +738,7 @@ public class FarragoRepos extends FarragoMetadataFactory
         simpleType.setName("DECIMAL");
         simpleType.setTypeNumber(new Integer(Types.DECIMAL));
         simpleType.setNumericPrecision(new Integer(39));
+        simpleType.setNumericPrecisionRadix(new Integer(10));
         defineTypeAlias("DEC", simpleType);
 
         FemSqlcollectionType collectType;
