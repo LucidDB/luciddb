@@ -43,7 +43,8 @@ public class SqlAdvisor
     // Flags indicating precision/scale combinations
     
     //~ Instance fields -------------------------------------------------------
-    final SqlValidator validator;
+    private final SqlValidator validator;
+    private final String hintToken = "$suggest$";
 
     //~ Constructors ----------------------------------------------------------
     /**
@@ -56,6 +57,29 @@ public class SqlAdvisor
     }
 
     //~ Methods ---------------------------------------------------------------
+
+    /**
+     * Get completion hints for a partially completed or syntatically incorrect      * sql statement with cursor pointing to the position where completion 
+     * hints are requested
+     * 
+     * @param sql A partial or syntatically incorrect sql statement for which
+     * to retrieve completion hints
+     *
+     * @param cursor to indicate the 0-based cursor position in the query at 
+     * which completion hints need to be retrieved.  
+     */
+    public String[] getCompletionHints(String sql, int cursor)
+        throws SqlParseException
+    {
+        String simpleSql = simplifySql(sql, cursor);
+        int idx = simpleSql.indexOf(hintToken);
+        int idxAdj = adjustTokenPosition(simpleSql, idx); 
+        if (idxAdj >=0 ) { 
+            idx = idxAdj; 
+        }
+        SqlParserPos pp = new SqlParserPos(1, idx+1);
+        return getCompletionHints(simpleSql, pp);
+    }
 
     /**
      * Get completion hints for a syntatically correct sql statement with
@@ -79,6 +103,7 @@ public class SqlAdvisor
     public String[] getCompletionHints(String sql, SqlParserPos pp)
         throws SqlParseException
     {
+        sql = prepareSqlForParser(sql);
         SqlParser parser = new SqlParser(sql);
         SqlNode sqlNode = parser.parseQuery();
         try {
@@ -105,8 +130,47 @@ public class SqlAdvisor
      */
     public String simplifySql(String sql, int cursor)
     {
-        SqlSimpleParser parser = new SqlSimpleParser();
+        SqlSimpleParser parser = new SqlSimpleParser(hintToken);
         return parser.simplifySql(sql, cursor);
+    }
+
+    /**
+     * simplifySql takes a 0-based cursor which points to exactly where
+     * completion hint is to be requested.
+     *
+     * getCompletionHints takes a 1-based SqlParserPos which points to the
+     * beginning of a SqlIdentifier.  
+     * 
+     * For example, the caret in 'where b.^' indicates the cursor position 
+     * needed for simplifySql, while getCompletionHints will require the 
+     * same clause to be represented as 'where ^b.$suggest$'
+     * 
+     */
+    private int adjustTokenPosition(String sql, int cursor)
+    {
+        if (sql.charAt(cursor-1) == '.') {
+            int idxLastSpace = sql.lastIndexOf(' ', cursor-1);
+            int idxLastEqual = sql.lastIndexOf('=', cursor-1);
+            return idxLastSpace < idxLastEqual ? 
+                idxLastEqual+1 : idxLastSpace+1;
+        } else {
+            return -1;
+        }
+    }
+
+    /**
+     * Parser does not like the '$suggest$' token used in SqlSimpleParser.
+     * Convert it to a 'dummy' token for Parser and Validator. The validator
+     * would not really try to interpret this token in context.
+     * 
+     * @param sql The sql containing '$suggest$' token
+     *
+     * @return a new sql with $suggest$ token replaced by dummy
+     *
+     */
+    private String prepareSqlForParser(String sql)
+    {
+        return sql.replaceAll("\\$suggest\\$", "dummy");
     }
 }
 

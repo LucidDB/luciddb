@@ -42,8 +42,8 @@ public class SqlSimpleParser
     // Flags indicating precision/scale combinations
 
     //~ Instance fields -------------------------------------------------------
-    final static String hintToken = "$suggest$ ";
-    final static String subqueryRegex = "\\$subquery\\$";
+    private final String hintToken;
+    private final static String subqueryRegex = "\\$subquery\\$";
     
     // patterns are made static, to amortize cost of compiling regexps
     static Pattern psq = Pattern.compile(subqueryRegex);
@@ -55,8 +55,9 @@ public class SqlSimpleParser
     /**
      * Creates a SqlSimpleParser
      */
-    public SqlSimpleParser()
+    public SqlSimpleParser(String hintToken)
     {
+        this.hintToken = hintToken;
         keywords = new LinkedHashSet();
         keywords.add("select");
         keywords.add("from");
@@ -83,11 +84,11 @@ public class SqlSimpleParser
     {
         // introduce the hint token into the sql at the cursor pos
         if (cursor >= sql.length()) {
-            sql += hintToken;
+            sql += hintToken + " ";
         } else {
             String left = sql.substring(0, cursor);
             String right = sql.substring(cursor);
-            sql = left + hintToken + right;
+            sql = left + hintToken + " " + right;
         }
 
         // if there are subqueries, extract them and push them into a stack
@@ -286,6 +287,20 @@ public class SqlSimpleParser
             String keyword = (String) i.next();
             buckets.remove(keyword);
         }
+        validate(buckets);
+    }
+
+    private void validate(HashMap buckets)
+    {
+        Iterator keywords = buckets.keySet().iterator();
+        while (keywords.hasNext()) {
+            String keyword  = (String) keywords.next();
+            ArrayList entries = (ArrayList) buckets.get(keyword);
+            if (keyword.equals("on")) {
+                SqlKwOn sqlon = new SqlKwOn(entries);
+                buckets.put(keyword, sqlon.validate());
+            }
+        }
     }
 
     // define the rules for the StreamTokenizer
@@ -307,6 +322,68 @@ public class SqlSimpleParser
         st.wordChars(46, 46);
         st.wordChars(61, 61);
     }
+
+    abstract class SqlKw {
+        protected List entries;
+
+        SqlKw(List entries) {
+            this.entries = entries;
+        }
+
+        List validate() {
+            return entries;
+        }
+    }
+    class SqlKwOn extends SqlKw {
+        
+        private String dummyOp = "dummy";
+
+        SqlKwOn(List entries) {
+            super(entries);
+        }
+
+        List validate() {
+            ArrayList validEntries = new ArrayList();
+            StringBuffer onClause = new StringBuffer();
+            for (int i = 0; i < entries.size(); i++) {
+                String entry = (String) entries.get(i);
+                onClause.append(entry);
+            }
+            //System.out.println("onClause:" + onClause.toString());
+            String [] operands = onClause.toString().split("=");
+            /* 
+            System.out.println("splitted:");
+            for (int i = 0; i < operands.length; i++) {
+                System.out.println(operands[i]);
+            }*/
+                
+            if (operands.length >= 2) {
+                //System.out.println("2 operands or more"); 
+                validEntries.add(operands[0]);
+                validEntries.add("=");
+                validEntries.add(operands[1]);
+                // if there're more operands the input SQL is invalid 
+                // anyway for having more than 1 '=' in 'on' clause
+                // in that case we'll strip off the extra operands
+                return validEntries;
+            } else if (operands.length == 1) {
+              //  System.out.println("1 operands");
+                validEntries.add(operands[0]);
+                validEntries.add("=");
+                validEntries.add(dummyOp);
+                // if there's only 1 operand, put 'dummy' as the other one
+                return validEntries;
+            } else {
+               // System.out.println("0 operands");
+                // if there's no operands, there's no '='
+                validEntries.add(onClause.toString());
+                validEntries.add("=");
+                validEntries.add(dummyOp);
+                return validEntries;
+            }
+        }
+    }
+                
 }
 
 
