@@ -30,22 +30,22 @@ import org.eigenbase.sql.util.SqlVisitor;
  * <blockquote><code><pre>
  *
  * &lt;interval qualifier&gt; ::=
- *                 &lt;start field&gt; TO &lt;end field&gt;
- *                 | &lt;single datetime field&gt;
+ *               &lt;start field&gt; TO &lt;end field&gt;
+ *               | &lt;single datetime field&gt;
  * &lt;start field&gt; ::=
- *                 &lt;non-second primary datetime field&gt;
- *                 [ &lt;left paren&gt; &lt;interval leading field precision&gt; &lt;right paren&gt; ]
+ *               &lt;non-second primary datetime field&gt;
+ *               [ &lt;left paren&gt; &lt;interval leading field precision&gt; &lt;right paren&gt; ]
  * &lt;end field&gt; ::=
- *                 &lt;non-second primary datetime field&gt;
- *                 | SECOND [ &lt;left paren&gt; &lt;interval fractional seconds precision&gt; &lt;right paren&gt; ]
+ *               &lt;non-second primary datetime field&gt;
+ *               | SECOND [ &lt;left paren&gt; &lt;interval fractional seconds precision&gt; &lt;right paren&gt; ]
  * &lt;single datetime field&gt; ::=
- *                 &lt;non-second primary datetime field&gt;
- *                 [ &lt;left paren&gt; &lt;interval leading field precision&gt; &lt;right paren&gt; ]
- *                 | SECOND [ &lt;left paren&gt; &lt;interval leading field precision&gt;
- *                 [ &lt;comma&gt; &lt;interval fractional seconds precision&gt; ] &lt;right paren&gt; ]
+ *               &lt;non-second primary datetime field&gt;
+ *               [ &lt;left paren&gt; &lt;interval leading field precision&gt; &lt;right paren&gt; ]
+ *               | SECOND [ &lt;left paren&gt; &lt;interval leading field precision&gt;
+ *               [ &lt;comma&gt; &lt;interval fractional seconds precision&gt; ] &lt;right paren&gt; ]
  * &lt;primary datetime field&gt; ::=
- *                &lt;non-second primary datetime field&gt;
- *                 | SECOND
+ *              &lt;non-second primary datetime field&gt;
+ *              | SECOND
  * &lt;non-second primary datetime field&gt; ::= YEAR | MONTH | DAY | HOUR | MINUTE
  * &lt;interval fractional seconds precision&gt; ::= &lt;unsigned integer&gt;
  * &lt;interval leading field precision&gt; ::= &lt;unsigned integer&gt;
