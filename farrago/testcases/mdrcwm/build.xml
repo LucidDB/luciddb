@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- $Id$ -->
+<!-- ant build script for testing MDR plus CWM without Farrago -->
+
+<project name="mdrcwm" basedir="." default="unspecified">
+
+  <!-- Definitions for Farrago build properties and macros -->
+  <import file="../../buildMacros.xml"/>
+
+  <property name="xmi.dir" location="catalog/xmi"/>
+  <property name="catalog.src.dir" location="catalog/java"/>
+  <property name="catalog.basename" location="catalog/mdr"/>
+  <property name="src.dir" location="src"/>
+  <property name="classes.dir" location="classes"/>
+
+  <path id="mdrcwm.classpath">
+    <pathelement path="${farrago.3p.classpath}"/>
+    <pathelement location="${catalog.src.dir}"/>
+    <pathelement location="${classes.dir}"/>
+  </path>
+  <property name="mdrcwm.classpath" refid="mdrcwm.classpath"/>
+
+  <target name="init" depends="clean,mdr_taskdef">
+    <mkdir dir="${catalog.src.dir}"/>
+    <mkdir dir="${classes.dir}"/>
+    <xslt style="${xmi.dir}/transformCWM.xsl"
+      in="${farrago.cwm.xmi}"
+      out="${xmi.dir}/01-02-03.xml">
+    </xslt>
+    <mdr storageFile="${catalog.basename}">
+      <instantiate name="CWM"/>
+      <readXMI
+        file="${xmi.dir}/01-02-03_Diff.xml"
+        extent="CWM"/>
+      <mapJava
+        dir="${catalog.src.dir}"
+        extent="CWM"/>
+      <instantiate name="Original" extent="CWM" package="Relational"/>
+      <instantiate name="Imported" extent="CWM" package="Relational"/>
+    </mdr>
+    <farrago.javaCompile
+      srcdir="${catalog.src.dir}"
+      destdir="${catalog.src.dir}"
+      classpathref="mdrcwm.classpath">
+      <include name="**/*.java"/>
+    </farrago.javaCompile>
+  </target>
+
+  <target name="clean">
+    <delete quiet="true" includeEmptyDirs="true">
+      <fileset dir="catalog" includes="mdr.*"/>
+      <fileset dir="${classes.dir}" includes="**/*.class"/>
+    </delete>
+    <delete includeEmptyDirs="true" dir="${catalog.src.dir}"/>
+  </target>
+
+  <target name="compile">
+    <farrago.javaCompile
+      srcdir="${src.dir}"
+      destdir="${classes.dir}"
+      classpathref="mdrcwm.classpath">
+      <include name="**/*.java"/>
+    </farrago.javaCompile>
+  </target>
+
+  <target name="createObjects" depends="compile">
+    <farrago.javaExec classpathref="mdrcwm.classpath"
+      classname="CreateTestData">
+        <sysproperty key="org.netbeans.mdr.persistence.Dir" 
+        value="${catalog.basename}" />
+    </farrago.javaExec>
+  </target>
+
+  <target name="export" depends="mdr_taskdef">
+    <mdr storageFile="${catalog.basename}">
+      <writeXMI
+        file="${xmi.dir}/export.xmi"
+        extent="Original"
+        xmiVersion = "1.2" />
+    </mdr>
+  </target>
+
+  <target name="import" depends="mdr_taskdef">
+    <mdr storageFile="${catalog.basename}">
+      <readXMI
+        file="${xmi.dir}/export.xmi"
+        extent="Imported"/>
+    </mdr>
+  </target>
+
+  <target name="exportAgain" depends="mdr_taskdef">
+    <mdr storageFile="${catalog.basename}">
+      <writeXMI
+        file="${xmi.dir}/exportAgain.xmi"
+        extent="Imported"
+        xmiVersion = "1.2" />
+    </mdr>
+  </target>
+
+  <target name="mdr_taskdef">
+    <taskdef name="mdr" classname="org.netbeans.mdrant.MdrTask"
+      classpathref="mdrcwm.classpath"/>
+  </target>
+
+</project>

@@ -127,6 +127,7 @@ public class FarragoExportTester extends FarragoTestCase
             modelLoader.close();
         }
     }
+    
     private void exportXmi(
         MDRepository mdrRepos,
         File file,

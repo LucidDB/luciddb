@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+                  Sun Public License Notice  
+
+  The contents of this file are subject to the Sun Public License
+  Version 1.0 (the "License"). You may not use this file except in
+  compliance with the License. A copy of the License is available at
+  http://www.sun.com/
+
+  The Original Code is NetBeans. The Initial Developer of the Original
+  Code is Sun Microsystems, Inc. Portions Copyright 1997-2001 Sun
+  Microsystems, Inc. All Rights Reserved.
+-->
+
+<!--
+  This XMI diff file adds JMI mapping related tags to CWM metamodel,
+  which is downlodable at http://www.omg.org/cgi-bin/doc?ad/01-02-03
+-->
+
+<XMI xmi.version='1.0'>  
+  <XMI.difference href='01-02-03.xml'>
+
+    <XMI.add href='01-02-03.xml|a29'>
+        <Model:Namespace.contents>
+            <Model:Tag xmi.id='tag1' name='Java Substitute Name=CwmClass' 
+                annotation='' tagId='javax.jmi.substituteName' elements='a29'>
+              <Model:Tag.values>
+                <XMI.any xmi.type='string'>CwmClass</XMI.any>
+              </Model:Tag.values>              
+            </Model:Tag>
+        </Model:Namespace.contents>    
+    </XMI.add>
+
+    <XMI.add href='01-02-03.xml|a16'>
+        <Model:Namespace.contents>
+            <Model:Tag xmi.id='tag2' name='Java Substitute Name=CwmPackage'
+                annotation='' tagId='javax.jmi.substituteName' elements='a16'>
+              <Model:Tag.values>
+                <XMI.any xmi.type='string'>CwmPackage</XMI.any>
+              </Model:Tag.values>
+            </Model:Tag>
+        </Model:Namespace.contents>
+    </XMI.add>
+
+    <XMI.add href='01-02-03.xml|a1319'>
+        <Model:Namespace.contents>
+            <Model:Tag xmi.id='tag3' name='Java Substitute Name=cwmDefault'
+                annotation='' tagId='javax.jmi.substituteName' elements='a1320'>
+              <Model:Tag.values>
+                <XMI.any xmi.type='string'>cwmDefault</XMI.any>
+              </Model:Tag.values>
+            </Model:Tag>
+        </Model:Namespace.contents>
+    </XMI.add>
+
+    <XMI.add href='01-02-03.xml|a169'>
+        <Model:Namespace.contents>
+            <Model:Tag xmi.id='tag4' name='Java Substitute Name=CwmAssociation'
+                annotation='' tagId='javax.jmi.substituteName' elements='a169'>
+              <Model:Tag.values>
+                <XMI.any xmi.type='string'>CwmAssociation</XMI.any>
+              </Model:Tag.values>
+            </Model:Tag>
+        </Model:Namespace.contents>
+    </XMI.add>
+
+    <XMI.add href='01-02-03.xml|a0'>
+        <Model:Namespace.contents>
+          <Model:Tag xmi.id = 'tag5' name = 'javax.jmi.packagePrefix=org.omg.cwm.objectmodel'
+            annotation = '' tagId = 'javax.jmi.packagePrefix'>
+            <Model:Tag.elements>
+                <Model:Package xmi.idref = 'a0'/>
+                <Model:Package xmi.idref = 'a116'/>
+                <Model:Package xmi.idref = 'a166'/>
+                <Model:Package xmi.idref = 'a185'/>
+            </Model:Tag.elements>
+            <Model:Tag.values>        
+                <XMI.any xmi.type = 'string' xmi.name = ''>org.omg.cwm.objectmodel</XMI.any>      
+            </Model:Tag.values>            
+          </Model:Tag>
+       </Model:Namespace.contents>
+    </XMI.add>
+
+    <XMI.add href='01-02-03.xml|a214'>
+        <Model:Namespace.contents>
+          <Model:Tag xmi.id = 'tag6' name = 'javax.jmi.packagePrefix=org.omg.cwm.foundation'
+            annotation = '' tagId = 'javax.jmi.packagePrefix'>
+            <Model:Tag.elements>
+                <Model:Package xmi.idref = 'a214'/>
+                <Model:Package xmi.idref = 'a280'/>
+                <Model:Package xmi.idref = 'a310'/>
+                <Model:Package xmi.idref = 'a338'/>
+                <Model:Package xmi.idref = 'a376'/>
+                <Model:Package xmi.idref = 'a401'/>
+            </Model:Tag.elements>
+            <Model:Tag.values>        
+                <XMI.any xmi.type = 'string' xmi.name = ''>org.omg.cwm.foundation</XMI.any>      
+            </Model:Tag.values>            
+          </Model:Tag>
+       </Model:Namespace.contents>
+    </XMI.add>
+
+    <XMI.add href='01-02-03.xml|a461'>
+        <Model:Namespace.contents>
+          <Model:Tag xmi.id = 'tag7' name = 'javax.jmi.packagePrefix=org.omg.cwm.resource'
+            annotation = '' tagId = 'javax.jmi.packagePrefix'>
+            <Model:Tag.elements>
+                <Model:Package xmi.idref = 'a461'/>
+                <Model:Package xmi.idref = 'a574'/>                
+                <Model:Package xmi.idref = 'a604'/>
+                <Model:Package xmi.idref = 'a642'/>
+            </Model:Tag.elements>
+            <Model:Tag.values>        
+                <XMI.any xmi.type = 'string' xmi.name = ''>org.omg.cwm.resource</XMI.any>      
+            </Model:Tag.values>            
+          </Model:Tag>
+       </Model:Namespace.contents>
+    </XMI.add>
+
+    <XMI.add href='01-02-03.xml|a697'>
+        <Model:Namespace.contents>
+          <Model:Tag xmi.id = 'tag8' name = 'javax.jmi.packagePrefix=org.omg.cwm.analysis'
+            annotation = '' tagId = 'javax.jmi.packagePrefix'>
+            <Model:Tag.elements>
+                <Model:Package xmi.idref = 'a697'/>
+                <Model:Package xmi.idref = 'a805'/>
+                <Model:Package xmi.idref = 'a951'/>
+                <Model:Package xmi.idref = 'a1073'/>
+                <Model:Package xmi.idref = 'a1127'/>
+            </Model:Tag.elements>
+            <Model:Tag.values>        
+                <XMI.any xmi.type = 'string' xmi.name = ''>org.omg.cwm.analysis</XMI.any>      
+            </Model:Tag.values>            
+          </Model:Tag>
+       </Model:Namespace.contents>
+    </XMI.add>
+
+    <XMI.add href='01-02-03.xml|a1184'>
+        <Model:Namespace.contents>
+          <Model:Tag xmi.id = 'tag9' name = 'javax.jmi.packagePrefix=org.omg.cwm.management'
+            annotation = '' tagId = 'javax.jmi.packagePrefix'>
+            <Model:Tag.elements>
+                <Model:Package xmi.idref = 'a1184'/>
+                <Model:Package xmi.idref = 'a1256'/>
+            </Model:Tag.elements>
+            <Model:Tag.values>        
+                <XMI.any xmi.type = 'string' xmi.name = ''>org.omg.cwm.management</XMI.any>      
+            </Model:Tag.values>            
+          </Model:Tag>
+       </Model:Namespace.contents>
+    </XMI.add>
+
+    <XMI.add href='01-02-03.xml|a1309'>
+        <Model:Namespace.contents>
+          <Model:Tag xmi.id = 'tag10' name = 'javax.jmi.packagePrefix=org.omg.cwmx.foundation'
+            annotation = '' tagId = 'javax.jmi.packagePrefix'>
+            <Model:Tag.elements>
+                <Model:Package xmi.idref = 'a1309'/>
+            </Model:Tag.elements>
+            <Model:Tag.values>        
+                <XMI.any xmi.type = 'string' xmi.name = ''>org.omg.cwmx.foundation</XMI.any>      
+            </Model:Tag.values>            
+          </Model:Tag>
+       </Model:Namespace.contents>
+    </XMI.add>
+
+    <XMI.add href='01-02-03.xml|a1346'>
+        <Model:Namespace.contents>
+          <Model:Tag xmi.id = 'tag11' name = 'javax.jmi.packagePrefix=org.omg.cwmx.resource'
+            annotation = '' tagId = 'javax.jmi.packagePrefix'>
+            <Model:Tag.elements>
+                <Model:Package xmi.idref = 'a1346'/>
+                <Model:Package xmi.idref = 'a1477'/>
+                <Model:Package xmi.idref = 'a1595'/>
+                <Model:Package xmi.idref = 'a1890'/>
+                <Model:Package xmi.idref = 'a1940'/>
+            </Model:Tag.elements>
+            <Model:Tag.values>        
+                <XMI.any xmi.type = 'string' xmi.name = ''>org.omg.cwmx.resource</XMI.any>      
+            </Model:Tag.values>            
+          </Model:Tag>
+       </Model:Namespace.contents>
+    </XMI.add>
+
+    <XMI.add href='01-02-03.xml|a2029'>
+        <Model:Namespace.contents>
+          <Model:Tag xmi.id = 'tag12' name = 'javax.jmi.packagePrefix=org.omg.cwmx.analysis'
+            annotation = '' tagId = 'javax.jmi.packagePrefix'>
+            <Model:Tag.elements>
+                <Model:Package xmi.idref = 'a2029'/>                
+                <Model:Package xmi.idref = 'a2075'/>
+            </Model:Tag.elements>
+            <Model:Tag.values>        
+                <XMI.any xmi.type = 'string' xmi.name = ''>org.omg.cwmx.analysis</XMI.any>      
+            </Model:Tag.values>            
+          </Model:Tag>
+       </Model:Namespace.contents>
+    </XMI.add>
+
+  </XMI.difference>
+
+</XMI>
+

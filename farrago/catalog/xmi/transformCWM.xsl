@@ -91,6 +91,9 @@
     <xsl:attribute name="visibility">public_vis</xsl:attribute>
   </xsl:template>
 
+  <!-- Delete all package clustering -->
+  <xsl:template match="@isClustered"/>
+
   <!-- Pass everything else through unchanged -->
   <xsl:template match="/ | @* | node()">
     <xsl:copy>

@@ -39,12 +39,6 @@ import junit.framework.*;
  * on {@link FarragoExportTester}, and doesn't run as a normal test because it
  * has a destructive effect on the repository.
  *
- *<p>
- *
- * NOTE jvs 31-Jan-2005:  Import is currently broken due to an apparent
- * MDR+CWM bug with the ownedElement association.
- * 
- *
  * @author John V. Sichi
  * @version $Id$
  */
