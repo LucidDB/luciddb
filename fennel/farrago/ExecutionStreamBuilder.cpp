@@ -20,13 +20,13 @@
 */
 
 #include "fennel/common/CommonPreamble.h"
-#include "fennel/farrago/TupleStreamBuilder.h"
+#include "fennel/farrago/ExecutionStreamBuilder.h"
 #include "fennel/db/Database.h"
 #include "fennel/segment/SegmentFactory.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-TupleStreamBuilder::TupleStreamBuilder(
+ExecutionStreamBuilder::ExecutionStreamBuilder(
     SharedDatabase pDatabaseInit,
     ExecutionStreamFactory &streamFactoryInit,
     SharedExecutionStreamGraph pGraphInit)
@@ -36,9 +36,10 @@ TupleStreamBuilder::TupleStreamBuilder(
     pGraph = pGraphInit;
 }
 
-void TupleStreamBuilder::buildStreamGraph(
+void ExecutionStreamBuilder::buildStreamGraph(
     ProxyCmdPrepareExecutionStreamGraph &cmd)
 {
+    // Allocate scratch segment for use by graph and streams
     SegmentAccessor scratchAccessor =
         pDatabase->getSegmentFactory()->newScratchSegment(
             pDatabase->getCache());
@@ -48,19 +49,18 @@ void TupleStreamBuilder::buildStreamGraph(
     // PASS 1: add streams to graph
     SharedProxyExecutionStreamDef pNext = cmd.getStreamDefs();
     for (; pNext; ++pNext) {
-        visitStream(*pNext);
+        buildStream(*pNext);
     }
 
     // PASS 2: add dataflows
     pNext = cmd.getStreamDefs();
     for (; pNext; ++pNext) {
         buildStreamInputs(*pNext);
-        // streams with no consumer are responsible for providing buffers
+        // Streams with no consumer are read directly by clients.  They 
+        // are expected to support producer provisioned results.
         if (! pNext->getConsumer()) {
             std::string name = pNext->getName();
-            SharedExecutionStream lastStream = pGraph->findLastStream(name);
-            std::string baseName = lastStream->getName();
-            addAdapterFor(name,baseName,TupleStream::PRODUCER_PROVISION);
+            addAdapterFor(name, ExecutionStream::PRODUCER_PROVISION);
         }
     }
 
@@ -71,100 +71,106 @@ void TupleStreamBuilder::buildStreamGraph(
     std::vector<SharedExecutionStream>::iterator pos;
     for (pos = sortedStreams.begin(); pos != sortedStreams.end(); pos++) {
         std::string name = (*pos)->getName();
-        ExecutionStreamFactors factors = lookupStream(name);
+        ExecutionStreamParts parts = getStreamParts(name);
         std::string traceName = getTraceName(name);
-        factors.getStream()->initTraceSource(
+        parts.getStream()->initTraceSource(
             &(pDatabase->getTraceTarget()),
             traceName);
-        factors.prepareStream();
+        parts.prepareStream();
     }
 }
 
-std::string TupleStreamBuilder::getTraceName(std::string streamName)
+std::string ExecutionStreamBuilder::getTraceName(
+    const std::string &streamName)
 {
+    // Give streams a source name with an XO prefix so that users can 
+    // choose to trace XOs as a group
     return "xo." + streamName;
 }
 
-void TupleStreamBuilder::visitStream(
+void ExecutionStreamBuilder::buildStream(
     ProxyExecutionStreamDef &streamDef)
 {
-    ExecutionStreamFactors factors = streamFactory.visitStream(streamDef);
-    registerStream(factors);
+    ExecutionStreamParts parts = streamFactory.visitStream(streamDef);
+    saveStreamParts(parts);
+
+    // Appends a tracing stream if the tracing level is high enough
     TraceTarget &traceTarget = pDatabase->getTraceTarget();
     std::string name = streamDef.getName();
-    // add the XO prefix
-    std::string traceName = getTraceName(name);
-    if (traceTarget.getSourceTraceLevel(traceName) <= TRACE_FINE) {
-        // interpose a tracing stream
+    if (traceTarget.getSourceTraceLevel(getTraceName(name)) <= TRACE_FINE) {
         addTracingStream(name);
     }
 }
 
-void TupleStreamBuilder::buildStreamInputs(
+void ExecutionStreamBuilder::buildStreamInputs(
     ProxyExecutionStreamDef &streamDef)
 {
     std::string name = streamDef.getName();
     SharedExecutionStream pStream = pGraph->findStream(name);
-    TupleStream::BufferProvision requiredDataflow =
+    ExecutionStream::BufferProvision requiredDataflow =
         pStream->getInputBufferRequirement();
     SharedProxyExecutionStreamDef pInput = streamDef.getInput();
     for (; pInput; ++pInput) {
         std::string inputName = pInput->getName();
-        SharedExecutionStream lastStream = pGraph->findLastStream(inputName);
-        std::string baseName = lastStream->getName();
-        addAdapterFor(inputName,baseName,requiredDataflow);
-        addDataflow(inputName,name);
+        addAdapterFor(inputName, requiredDataflow);
+        addDataflow(inputName, name);
     }
 }
 
-void TupleStreamBuilder::addTracingStream(
-    std::string &name)
+void ExecutionStreamBuilder::addTracingStream(
+    const std::string &name)
 {
-    ExecutionStreamParams &params = lookupStream(name).getParams();
-    std::string tracerName = name + ".tracer";
-    ExecutionStreamFactors factors =
-        streamFactory.newTracingStream(tracerName,params);
-    registerStream(factors);
+    ExecutionStreamParts parts = getStreamParts(name);
+    if (parts.getTraceType() == ExecutionStreamParts::TRACE_TYPE_NONE) {
+        return;
+    }
 
-    // TracingStream may have different buffer provisioning requirements from
-    // real stream, so may need adapters above and below.
-    addAdapterFor(name,factors.getStream()->getInputBufferRequirement());
-    interposeStream(name,factors.getStream()->getStreamId());
+    // Create a tracing stream based on the original stream
+    std::string tracerName = name + ".tracer";
+    ExecutionStreamParts tracerParts =
+        streamFactory.newTracingStream(tracerName, parts);
+    saveStreamParts(tracerParts);
+
+    // Ensure the original stream supports the buffer provision required 
+    // by the tracing stream and append the tracing stream
+    addAdapterFor(name, tracerParts.getStream()->getInputBufferRequirement());
+    interposeStream(name, tracerParts.getStream()->getStreamId());
 }
 
-void TupleStreamBuilder::addAdapterFor(
-    std::string &streamName,
-    std::string &baseName,
-    TupleStream::BufferProvision requiredDataflow)
+void ExecutionStreamBuilder::addAdapterFor(
+    const std::string &name,
+    ExecutionStream::BufferProvision requiredDataflow)
 {
-    SharedExecutionStream pStream = pGraph->findLastStream(streamName);
-    TupleStream::BufferProvision availableDataflow =
-        pStream->getResultBufferProvision();
-    assert(availableDataflow != TupleStream::NO_PROVISION);
+    // Get available dataflow from last stream of group
+    SharedExecutionStream pLastStream = pGraph->findLastStream(name);
+    ExecutionStream::BufferProvision availableDataflow =
+        pLastStream->getResultBufferProvision();
+    assert(availableDataflow != ExecutionStream::NO_PROVISION);
 
-    std::string adapterName = baseName + ".provisioner";
+    // If necessary, create an adapter based on the last stream
+    std::string adapterName = pLastStream->getName() + ".provisioner";
     switch (requiredDataflow) {
-    case TupleStream::CONSUMER_PROVISION:
-        if (availableDataflow == TupleStream::PRODUCER_PROVISION) {
-            ExecutionStreamFactors factors =
+    case ExecutionStream::CONSUMER_PROVISION:
+        if (availableDataflow == ExecutionStream::PRODUCER_PROVISION) {
+            ExecutionStreamParts parts =
                 streamFactory.newProducerToConsumerProvisionAdapter(
                     adapterName,
-                    lookupStream(streamName).getParams());
-            registerStream(factors);
-            interposeStream(streamName,factors.getStream()->getStreamId());
+                    getStreamParts(pLastStream->getName()).getParams());
+            saveStreamParts(parts);
+            interposeStream(name, parts.getStream()->getStreamId());
         }
         break;
-    case TupleStream::PRODUCER_PROVISION:
-        if (availableDataflow == TupleStream::CONSUMER_PROVISION) {
-            ExecutionStreamFactors factors =
+    case ExecutionStream::PRODUCER_PROVISION:
+        if (availableDataflow == ExecutionStream::CONSUMER_PROVISION) {
+            ExecutionStreamParts parts =
                 streamFactory.newConsumerToProducerProvisionAdapter(
                     adapterName,
-                    lookupStream(streamName).getParams());
-            registerStream(factors);
-            interposeStream(streamName,factors.getStream()->getStreamId());
+                    getStreamParts(pLastStream->getName()).getParams());
+            saveStreamParts(parts);
+            interposeStream(name, parts.getStream()->getStreamId());
         }
         break;
-    case TupleStream::PRODUCER_OR_CONSUMER_PROVISION:
+    case ExecutionStream::PRODUCER_OR_CONSUMER_PROVISION:
         // we can accept anything, so no adapter required
         break;
     default:
@@ -173,32 +179,24 @@ void TupleStreamBuilder::addAdapterFor(
     }
 }
 
-void TupleStreamBuilder::addAdapterFor(
-    std::string &streamName,
-    TupleStream::BufferProvision requiredDataflow)
+void ExecutionStreamBuilder::saveStreamParts(ExecutionStreamParts &parts)
 {
-    addAdapterFor(streamName,streamName,requiredDataflow);
+    ExecutionStream *pNewStream = parts.getStream();
+    allStreamParts[pNewStream->getName()] = parts;
+    pGraph->addStream(SharedExecutionStream(pNewStream));
 }
 
-void TupleStreamBuilder::registerStream(ExecutionStreamFactors &factors)
+ExecutionStreamParts ExecutionStreamBuilder::getStreamParts(
+    std::string const &name)
 {
-    ExecutionStream *pNewStream = factors.getStream();
-    std::string name = pNewStream->getName();
-    streams[name] = factors;
-    SharedExecutionStream pStream(pNewStream);
-    pGraph->addStream(pStream);
-}
-
-ExecutionStreamFactors TupleStreamBuilder::lookupStream(std::string &name)
-{
-    StreamMapConstIter pPair = streams.find(name);
-    assert(pPair != streams.end());
+    StreamMapConstIter pPair = allStreamParts.find(name);
+    assert(pPair != allStreamParts.end());
     return pPair->second;
 }
 
-void TupleStreamBuilder::addDataflow(
-    std::string &source,
-    std::string &target)
+void ExecutionStreamBuilder::addDataflow(
+    const std::string &source,
+    const std::string &target)
 {
     SharedExecutionStream pInput = 
         pGraph->findLastStream(source);
@@ -209,8 +207,8 @@ void TupleStreamBuilder::addDataflow(
         pStream->getStreamId());
 }
     
-void TupleStreamBuilder::interposeStream(
-    std::string &name,
+void ExecutionStreamBuilder::interposeStream(
+    const std::string &name,
     ExecutionStreamId interposedId)
 {
     pGraph->interposeStream(
@@ -220,4 +218,4 @@ void TupleStreamBuilder::interposeStream(
 
 FENNEL_END_CPPFILE("$Id$");
 
-// End TupleStreamBuilder.cpp
+// End ExecutionStreamBuilder.cpp

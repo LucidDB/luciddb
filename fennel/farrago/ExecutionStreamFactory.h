@@ -45,7 +45,7 @@ class TupleProjection;
 class StoredTypeDescriptorFactory;
 
 /**
- * ExecutionStreamFactors represents components required to construct and
+ * ExecutionStreamParts represents components required to construct and
  * prepare an ExecutionStream. It is designated as the "owner" of stream
  * parameters, because it needs to hold them until the stream is prepared. 
  * Accordingly, it protects the parameters with a shared_ptr. However it is
@@ -57,17 +57,17 @@ class StoredTypeDescriptorFactory;
  *
  * <code>
  * 
- * ExecutionStreamFactors factors;
+ * ExecutionStreamParts parts;
  * StreamSubClass *pStream;
  * StreamSubClassParams *pParams;
  *
- * factors.setFactors(pStream,pParams);
- * SharedExecutionStream pSharedStream(factors.getStream());
- * factors.prepareStream();
+ * parts.setParts(pStream,pParams);
+ * SharedExecutionStream pSharedStream(parts.getStream());
+ * parts.prepareStream();
  *
  * </code>
  */
-class ExecutionStreamFactors
+class ExecutionStreamParts
 {
     /**
      * Unprotected pointer to execution stream
@@ -84,45 +84,72 @@ class ExecutionStreamFactors
      */
     boost::function<void ()> function;
 
+    /**
+     * Specifies type of tracing compatible for the stream
+     */
+    int traceType;
+    
 public:
     /**
+     * Specifies that tracing is supported for stream
+     */
+    static const int TRACE_TYPE_NONE = 0;
+
+    /**
+     * Specifies that the stream supports tuple stream tracing
+     */
+    static const int TRACE_TYPE_TUPLE_STREAM = TRACE_TYPE_NONE+1;
+
+    /**
      * Saves reference to stream and parameters for preparing it.
+     * Supported trace type defaults to TRACE_TYPE_TUPLE_STREAM.
      *
      * @param pStream newly allocated ExecutionStream implementation
      *
      * @param pParams newly allocated ExecutionStreamParameters implementation
      */
     template<class S, class P>
-    void setFactors(S *pStreamInit, P *pParams) {
+    void setParts(S *pStreamInit, P *pParams) {
         pStream = pStreamInit;
         sharedParams = SharedExecutionStreamParams(pParams);
         function = boost::bind(&S::prepare, pStreamInit, *pParams);
+        traceType = TRACE_TYPE_TUPLE_STREAM;
     }
+
+    /**
+     * Sets the type of tracing supported for this stream
+     */
+    void setTraceType(int traceType) { this->traceType = traceType; }
 
     /**
      * Gets the original, unprotected stream
      */
-    ExecutionStream *getStream() const;
+    ExecutionStream *getStream() const { return pStream; }
     
     /**
      * Gets parameters.
      */
-    ExecutionStreamParams &getParams() const;
+    ExecutionStreamParams &getParams() const { return *sharedParams; }
+
+    /**
+     * Gets the type of tracing supported for this stream
+     */
+    int getTraceType() { return traceType; }
 
     /**
      * Prepares stream. Subclasses overload the prepare function with
      * specialized parameters. So calling the correct version of prepare
      * requires both the correct stream type and the correct parameter type.
      */
-    void prepareStream();
+    void prepareStream() { function(); }
 };
 
 /**
- * ExecutionStreamFactory builds an ExecutionStreamFactors from the  
- * Java representation of a stream definition. The factors are later 
+ * ExecutionStreamFactory builds an ExecutionStreamParts from the  
+ * Java representation of a stream definition. The parts are later 
  * used to connect and prepare an ExecutionStream.
  *
- * REVIEW: should this library be thread safe?
+ * NOTE: this class is not thread-safe
  */
 class ExecutionStreamFactory : public boost::noncopyable,
                                virtual public FemVisitor
@@ -151,7 +178,7 @@ protected:
     /**
      * Value set by visit functions
      */
-    ExecutionStreamFactors factors;
+    ExecutionStreamParts parts;
 
     // Per-stream overrides for FemVisitor; add new stream types here
     virtual void visit(ProxyIndexScanDef &);
@@ -200,7 +227,7 @@ protected:
      */
     bool shouldEnforceCacheQuotas();
     
-    void createQuotaAccessors(TupleStreamParams &params);
+    void createQuotaAccessors(ExecutionStreamParams &params);
     
 public:
     ExecutionStreamFactory(
@@ -220,18 +247,18 @@ public:
     /**
      * Reads the Java representation of an ExecutionStream.
      */
-    virtual const ExecutionStreamFactors &visitStream(
+    virtual const ExecutionStreamParts &visitStream(
         ProxyExecutionStreamDef &);
 
-    const ExecutionStreamFactors &newTracingStream(
+    virtual const ExecutionStreamParts &newTracingStream(
         std::string &name,
-        ExecutionStreamParams &params);
+        ExecutionStreamParts &parts);
 
-    const ExecutionStreamFactors &newConsumerToProducerProvisionAdapter(
+    const ExecutionStreamParts &newConsumerToProducerProvisionAdapter(
         std::string &name,
         ExecutionStreamParams &params);
     
-    const ExecutionStreamFactors &newProducerToConsumerProvisionAdapter(
+    const ExecutionStreamParts &newProducerToConsumerProvisionAdapter(
         std::string &name,
         ExecutionStreamParams &params);
     

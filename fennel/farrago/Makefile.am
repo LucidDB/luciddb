@@ -15,7 +15,7 @@ JavaTupleStream.cpp \
 JniProxy.cpp \
 JniUtil.cpp \
 NativeMethods.cpp \
-TupleStreamBuilder.cpp
+ExecutionStreamBuilder.cpp
 
 libfarrago_la_LIBADD = \
 	-L$(top_builddir)/libfennel \

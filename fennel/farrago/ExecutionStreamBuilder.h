@@ -19,25 +19,60 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-#ifndef Fennel_TupleStreamBuilder_Included
-#define Fennel_TupleStreamBuilder_Included
+#ifndef Fennel_ExecutionStreamBuilder_Included
+#define Fennel_ExecutionStreamBuilder_Included
 
-#include "fennel/farrago/Fem.h"
 #include "fennel/common/ClosableObject.h"
-#include "fennel/xo/TupleStream.h"
 #include "fennel/farrago/ExecutionStreamFactory.h"
+#include "fennel/farrago/Fem.h"
+#include "fennel/xo/ExecutionStream.h"
 
 #include <boost/utility.hpp>
 
 FENNEL_BEGIN_NAMESPACE
 
-// TODO jvs 8-June-2004:  rename this class to ExecutionStreamBuilder
-
 /**
- * TupleStreamBuilder builds an ExecutionStreamGraph from its Java
- * representation.
+ * ExecutionStreamBuilder builds a prepared ExecutionStreamGraph from its 
+ * Java representation.  It builds a graph in three phases:
+ *
+ * <ul>
+ *   <li>First, it builds the streams</li>
+ *   <li>Then, it builds the dataflows</li>
+ *   <li>Lastly, it prepares the graph and streams</li>
+ * </ul>
+ *
+ * <p><b>Cache.</b>
+ * A new scratch segment is allocated by the builder and is shared between 
+ * the graph and the its streams.
+ *
+ * <p><b>Tracing.</b>
+ * <ul>
+ *   <li>All streams are TraceSource objects, and are assigned a trace 
+ *     name of: <code>xo.<i>streamName</i></code>  Depending on a the 
+ *     TraceTarget, this typically corresponds to a trace property like 
+ *     <code>org.eigenbase.fennel.xo.<i>streamName</i></code>
+ *   <li>If tracing is turned on for a stream, a tracing stream is 
+ *     appended to the stream, to monitor its output.  Tracing streams are
+ *     appended during the stream building phase.  They are named: 
+ *     <code><i>streamName</i>.tracer</code>
+ *   <li>Certain types of streams may not support tracing.
+ * </ul>
+ *
+ * <p><b>Buffer Provisioning.</b>
+ * Provisioning adapters are special streams interposed between two other 
+ * streams when the producer's result provisioning does not meet the 
+ * consumer's input requirements.  They are interposed during the dataflow 
+ * phase.  They are named: <code><i>producerName</i>.provisioner</code>
+ *
+ * <p><b>Interposition.</b>
+ * When tracers or provisioning adapters are appended to a stream, they 
+ * consume the original stream's output and produce a new output.  To make 
+ * the appended streams work transparently, the chain of streams is 
+ * treated as a single unit.  Subsequent access to the stream's output is 
+ * available through the graph by finding the "last" stream registered 
+ * under the original stream's name.
  */
-class TupleStreamBuilder : public boost::noncopyable
+class ExecutionStreamBuilder : public boost::noncopyable
 {
     /**
      * Database to be accessed by stream.
@@ -54,25 +89,20 @@ class TupleStreamBuilder : public boost::noncopyable
      */
     SharedExecutionStreamGraph pGraph;
 
-    /**
-     * Private graph, for sorting streams
-     */
-    SharedExecutionStreamGraph pSortingGraph;
-
-    typedef std::map<std::string,ExecutionStreamFactors> StreamMap;
+    typedef std::map<std::string,ExecutionStreamParts> StreamMap;
     typedef StreamMap::const_iterator StreamMapConstIter;
 
     /**
      * Streams to be linked and prepared, mapped by name
      */
-    StreamMap streams;
+    StreamMap allStreamParts;
 
     /**
      * Allocate a stream based on stream definition, add the stream to a 
      * graph and remember how to prepare the stream. Interposes tracing
      * stream, if applicable, as xo.<i>stream</i>.
      */
-    void visitStream(
+    void buildStream(
         ProxyExecutionStreamDef &);
 
     /**
@@ -85,12 +115,13 @@ class TupleStreamBuilder : public boost::noncopyable
         ProxyExecutionStreamDef &streamDef);
 
     /**
-     * Monitor a stream's output by appending a tracing stream. 
+     * If tracing is supported for stream, appends a tracing stream. Also 
+     * sets up dataflows and inserts a provisioning adapter if necessary.
      *
      * @param name name of stream to add tracing for
      */
     void addTracingStream(
-        std::string &name);
+        const std::string &name);
 
     /**
      * Get the name of the trace source to use based on a stream name.
@@ -100,51 +131,45 @@ class TupleStreamBuilder : public boost::noncopyable
      * @return corresponding trace source name
      */
     std::string getTraceName(
-        std::string streamName);
+        const std::string &streamName);
 
     /**
-     * Modify a stream's dataflow, as required, to meet the provisioning
-     * requirements. An adapter stream may be added to the graph as 
-     * <i>base</i>.provisioner
+     * Ensures that a producer is capable of the specified buffer 
+     * provisioning requirements. If producer is not capable, an adapter
+     * stream is appended to supply the required buffer provisioning. 
      *
-     * @param name name of stream
+     * <p>The "producer" may be a single stream or may be a chain of 
+     * streams. In either case, the adapter is appended to the end of the 
+     * group under the name of the original stream. It is named according
+     * to the last stream: <code><i>lastName</i>.provisioner</code>
      *
-     * @param base base name to use for adapter
+     * @param name name of original stream
      *
-     * @param requiredDataFlow provisioning requirement
+     * @param requiredDataFlow buffer provisioning requirement
      */
     void addAdapterFor(
-        std::string &name,
-        std::string &base,
-        TupleStream::BufferProvision requiredDataFlow);
+        const std::string &name,
+        ExecutionStream::BufferProvision requiredDataFlow);
 
     /**
-     * Call addAdapter using stream name as base name 
+     * Registers a newly created, unprepared stream with the builder and 
+     * adds it to the graph.
      */
-    void addAdapterFor(
-        std::string &name,
-        TupleStream::BufferProvision requiredDataFlow);
-
-
-    /**
-     * Register a newly created, unprepared stream with the builder and add
-     * it to the graph. 
-     */
-    void registerStream(
-        ExecutionStreamFactors &);
+    void saveStreamParts(
+        ExecutionStreamParts &);
     
     /**
      * Lookup a registered stream. The stream *must* be registered.
      */
-    ExecutionStreamFactors lookupStream(
-        std::string &name);
+    ExecutionStreamParts getStreamParts(
+        const std::string &name);
     
     /**
      * Append an add-on stream, such as a tracing stream or adapter stream,
      * which masks the output of the original stream.
      */
     void interposeStream(
-        std::string &name,
+        const std::string &name,
         ExecutionStreamId interposedId);
 
     /**
@@ -156,12 +181,12 @@ class TupleStreamBuilder : public boost::noncopyable
      * @param target name of target stream
      */
     void addDataflow(
-        std::string &source,
-        std::string &target);
+        const std::string &source,
+        const std::string &target);
     
 public:
     /**
-     * Create a new TupleStreamBuilder.
+     * Create a new ExecutionStreamBuilder.
      *
      * @param pDatabase database to be accessed by streams
      *
@@ -169,7 +194,7 @@ public:
      *
      * @param pGraph graph to be built up with stream implementations
      */
-    explicit TupleStreamBuilder(
+    explicit ExecutionStreamBuilder(
         SharedDatabase pDatabase,
         ExecutionStreamFactory &streamFactory,
         SharedExecutionStreamGraph pGraph);
@@ -178,8 +203,7 @@ public:
      * Main builder entry point.
      *
      * @param streamDef Java representation for collection of stream
-     * definitions; the corresponding TupleStream objects will be
-     * retrievable by name from the graph passed to the constructor
+     * definitions
      */
     void buildStreamGraph(ProxyCmdPrepareExecutionStreamGraph &cmd);
 };
@@ -188,4 +212,4 @@ FENNEL_END_NAMESPACE
 
 #endif
 
-// End TupleStreamBuilder.h
+// End ExecutionStreamBuilder.h

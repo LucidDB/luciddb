@@ -23,7 +23,7 @@
 #include "fennel/farrago/ExecutionStreamFactory.h"
 #include "fennel/farrago/JavaTupleStream.h"
 #include "fennel/farrago/CmdInterpreter.h"
-#include "fennel/farrago/TupleStreamBuilder.h"
+//#include "fennel/farrago/TupleStreamBuilder.h"
 #include "fennel/xo/BTreeScan.h"
 #include "fennel/xo/BTreeSearch.h"
 #include "fennel/xo/BTreeSearchUnique.h"
@@ -47,21 +47,6 @@
 
 FENNEL_BEGIN_CPPFILE(
         "$Id$");
-
-ExecutionStream *ExecutionStreamFactors::getStream() const
-{
-    return pStream;
-}
-
-ExecutionStreamParams &ExecutionStreamFactors::getParams() const
-{
-    return *sharedParams;
-}
-
-void ExecutionStreamFactors::prepareStream()
-{
-    function();
-}
 
 ExecutionStreamFactory::ExecutionStreamFactory(
     SharedDatabase pDatabaseInit,
@@ -89,30 +74,32 @@ void ExecutionStreamFactory::setScratchAccessor(
     scratchAccessor = scratchAccessorInit;
 }
 
-const ExecutionStreamFactors &ExecutionStreamFactory::visitStream(
+const ExecutionStreamParts &ExecutionStreamFactory::visitStream(
     ProxyExecutionStreamDef &streamDef)
 {
     // dispatch based on polymorphic stream type
     FemVisitor::visitTbl.accept(*this,streamDef);
-    factors.getStream()->setName(streamDef.getName());
-    return factors;
+    parts.getStream()->setName(streamDef.getName());
+    return parts;
 }
 
-const ExecutionStreamFactors &
+const ExecutionStreamParts &
 ExecutionStreamFactory::newTracingStream(
     std::string &name,
-    ExecutionStreamParams &params)
+    ExecutionStreamParts &originalParts)
 {
+    assert(originalParts.getTraceType() 
+           == ExecutionStreamParts::TRACE_TYPE_TUPLE_STREAM);
     TracingTupleStream *pTracingStream = new TracingTupleStream();
     TupleStreamParams *pParams = new TupleStreamParams();
-    pParams->outputTupleDesc = params.outputTupleDesc;
+    pParams->outputTupleDesc = originalParts.getParams().outputTupleDesc;
     createQuotaAccessors(*pParams);
-    factors.setFactors(pTracingStream,pParams);
-    factors.getStream()->setName(name);
-    return factors;
+    parts.setParts(pTracingStream,pParams);
+    parts.getStream()->setName(name);
+    return parts;
 }
 
-const ExecutionStreamFactors &
+const ExecutionStreamParts &
 ExecutionStreamFactory::newConsumerToProducerProvisionAdapter(
     std::string &name,
     ExecutionStreamParams &params)
@@ -122,12 +109,12 @@ ExecutionStreamFactory::newConsumerToProducerProvisionAdapter(
     TupleStreamParams *pParams = new TupleStreamParams();
     pParams->outputTupleDesc = params.outputTupleDesc;
     createQuotaAccessors(*pParams);
-    factors.setFactors(pAdapter,pParams);
-    factors.getStream()->setName(name);
-    return factors;
+    parts.setParts(pAdapter,pParams);
+    parts.getStream()->setName(name);
+    return parts;
 }
 
-const ExecutionStreamFactors &
+const ExecutionStreamParts &
 ExecutionStreamFactory::newProducerToConsumerProvisionAdapter(
     std::string &name,
     ExecutionStreamParams &params)
@@ -137,9 +124,9 @@ ExecutionStreamFactory::newProducerToConsumerProvisionAdapter(
     TupleStreamParams *pParams = new TupleStreamParams();
     pParams->outputTupleDesc = params.outputTupleDesc;
     createQuotaAccessors(*pParams);
-    factors.setFactors(pAdapter,pParams);
-    factors.getStream()->setName(name);
-    return factors;
+    parts.setParts(pAdapter,pParams);
+    parts.getStream()->setName(name);
+    return parts;
 }
 
 // NOTE:  if you are adding a new stream implementation, be careful to follow
@@ -147,7 +134,7 @@ ExecutionStreamFactory::newProducerToConsumerProvisionAdapter(
 // (1) allocate new stream object
 // (2) allocate new parameters object
 // (3) read stream-specific parameters
-// (4) set factors
+// (4) set parts
 // TODO: do we have a possible memory leak here?
 // REVIEW jvs 3-April-2004:  Yes, there's a leak in case of exception.
 // Need to fix that in some uniform fashion.
@@ -158,7 +145,7 @@ void ExecutionStreamFactory::visit(ProxyIndexScanDef &streamDef)
     BTreeScanParams *pParams = new BTreeScanParams();
     readBTreeReadTupleStreamParams(*pParams,streamDef);
 
-    factors.setFactors(pStream,pParams);
+    parts.setParts(pStream,pParams);
 }
 
 void ExecutionStreamFactory::visit(ProxyIndexSearchDef &streamDef)
@@ -180,7 +167,7 @@ void ExecutionStreamFactory::visit(ProxyIndexSearchDef &streamDef)
             streamDef.getInputJoinProj());
     }
 
-    factors.setFactors(pStream,pParams);
+    parts.setParts(pStream,pParams);
 }
 
 void ExecutionStreamFactory::visit(ProxyJavaTupleStreamDef &streamDef)
@@ -192,7 +179,7 @@ void ExecutionStreamFactory::visit(ProxyJavaTupleStreamDef &streamDef)
     pParams->pStreamGraphHandle = pStreamGraphHandle;
     pParams->javaTupleStreamId = streamDef.getStreamId();
 
-    factors.setFactors(pStream,pParams);
+    parts.setParts(pStream,pParams);
 }
 
 void ExecutionStreamFactory::visit(ProxyTableInserterDef &streamDef)
@@ -203,7 +190,7 @@ void ExecutionStreamFactory::visit(ProxyTableInserterDef &streamDef)
     pParams->actionType = TableWriter::ACTION_INSERT;
     readTableWriterStreamParams(*pParams,streamDef);
 
-    factors.setFactors(pStream,pParams);
+    parts.setParts(pStream,pParams);
 }
 
 void ExecutionStreamFactory::visit(ProxyTableDeleterDef &streamDef)
@@ -214,7 +201,7 @@ void ExecutionStreamFactory::visit(ProxyTableDeleterDef &streamDef)
     pParams->actionType = TableWriter::ACTION_DELETE;
     readTableWriterStreamParams(*pParams,streamDef);
 
-    factors.setFactors(pStream,pParams);
+    parts.setParts(pStream,pParams);
 }
 
 void ExecutionStreamFactory::visit(ProxyTableUpdaterDef &streamDef)
@@ -230,7 +217,7 @@ void ExecutionStreamFactory::visit(ProxyTableUpdaterDef &streamDef)
         pUpdateProj);
     readTableWriterStreamParams(*pParams,streamDef);
 
-    factors.setFactors(pStream,pParams);
+    parts.setParts(pStream,pParams);
 }
 
 void ExecutionStreamFactory::visit(ProxySortingStreamDef &streamDef)
@@ -249,7 +236,7 @@ void ExecutionStreamFactory::visit(ProxySortingStreamDef &streamDef)
         pParams->keyProj,
         streamDef.getKeyProj());
     
-    factors.setFactors(pStream,pParams);
+    parts.setParts(pStream,pParams);
 }
 
 void ExecutionStreamFactory::visit(ProxyIndexLoaderDef &streamDef)
@@ -261,7 +248,7 @@ void ExecutionStreamFactory::visit(ProxyIndexLoaderDef &streamDef)
     pParams->distinctness = streamDef.getDistinctness();
     pParams->pTempSegment = pDatabase->getTempSegment();
 
-    factors.setFactors(pStream,pParams);
+    parts.setParts(pStream,pParams);
 }
 
 void ExecutionStreamFactory::visit(ProxyCartesianProductStreamDef &streamDef)
@@ -271,7 +258,7 @@ void ExecutionStreamFactory::visit(ProxyCartesianProductStreamDef &streamDef)
     CartesianProductStreamParams *pParams = new CartesianProductStreamParams();
     readTupleStreamParams(*pParams,streamDef);
 
-    factors.setFactors(pStream,pParams);
+    parts.setParts(pStream,pParams);
 }
 
 void ExecutionStreamFactory::visit(ProxyCalcTupleStreamDef &streamDef)
@@ -283,7 +270,7 @@ void ExecutionStreamFactory::visit(ProxyCalcTupleStreamDef &streamDef)
     pParams->program = streamDef.getProgram();
     pParams->isFilter = streamDef.isFilter();
 
-    factors.setFactors(pStream,pParams);
+    parts.setParts(pStream,pParams);
 }
 
 void ExecutionStreamFactory::visit(ProxyMockTupleStreamDef &streamDef)
@@ -294,7 +281,7 @@ void ExecutionStreamFactory::visit(ProxyMockTupleStreamDef &streamDef)
     readTupleStreamParams(*pParams,streamDef);
     pParams->nRows = streamDef.getRowCount();
 
-    factors.setFactors(pStream,pParams);
+    parts.setParts(pStream,pParams);
 }
 
 void ExecutionStreamFactory::visit(ProxyBufferingTupleStreamDef &streamDef)
@@ -309,7 +296,7 @@ void ExecutionStreamFactory::visit(ProxyBufferingTupleStreamDef &streamDef)
         pParams->scratchAccessor.pCacheAccessor = pParams->pCacheAccessor;
     }
     
-    factors.setFactors(pStream,pParams);
+    parts.setParts(pStream,pParams);
 }
 
 void ExecutionStreamFactory::readExecutionStreamParams(
@@ -331,7 +318,8 @@ void ExecutionStreamFactory::readTupleStreamParams(
     createQuotaAccessors(params);
 }
 
-void ExecutionStreamFactory::createQuotaAccessors(TupleStreamParams &params)
+void ExecutionStreamFactory::createQuotaAccessors(
+    ExecutionStreamParams &params)
 {
     params.pCacheAccessor = pDatabase->getCache();
     params.scratchAccessor = scratchAccessor;
