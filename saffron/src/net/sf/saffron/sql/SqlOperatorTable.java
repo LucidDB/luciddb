@@ -144,7 +144,14 @@ public class SqlOperatorTable
             };
 
     /**
-     * Type-inference strategy whereby the result type of a call is using its operands biggest type.
+     * Type-inference strategy whereby the result type of a call is
+     */
+
+
+    /**
+     * Type-inference strategy whereby the result type of a call is using its operands biggest type,
+     * using the rules described in ISO/IEC 9075-2:1999 section 9.3 "Data types of results of aggregations"
+     * These rules are used in union, except, intercect, case and other places
      * E.g (500000000000 + 3.0e-3) have the operands INTEGER and DOUBLE. Its biggest type is double
      */
     public static final SqlOperator.TypeInference useBiggest =
@@ -415,7 +422,6 @@ public class SqlOperatorTable
      * OR nullable binary, nullable binary.
      */
     public static final SqlOperator.CompositeAllowdArgInference
-            //todo wael: if anyone have a compact and easy to understand nomenclature, let me know
             typeNullabeSameSame_or_NullableNumericNumeric_or_NullableBinariesBinaries =
         new SqlOperator.CompositeAllowdArgInference(
                 new SqlOperator.AllowdArgInference[]{typeNullableSameSame,
@@ -653,10 +659,10 @@ public class SqlOperatorTable
     public final SqlSpecialOperator notBetweenOperator =
         new SqlSpecialOperator("NOT BETWEEN",SqlKind.NotBetween,15);
 
-
     public final SqlSpecialOperator likeOperator = new SqlLikeOperator("LIKE",SqlKind.Like);
     public final SqlSpecialOperator similarOperator = new SqlLikeOperator("SIMILAR",SqlKind.Similar);
     public final SqlSelectOperator selectOperator = new SqlSelectOperator();
+    public final SqlCaseOperator caseOperator = new SqlCaseOperator();
     public final SqlJoinOperator joinOperator = new SqlJoinOperator();
     public final SqlSpecialOperator insertOperator =
     new SqlSpecialOperator("INSERT",SqlKind.Insert);

@@ -142,6 +142,10 @@ public class RexLiteral extends RexNode
         return ((Integer) ((RexLiteral) node).value).intValue();
     }
 
+    public static boolean isNullLiteral(RexNode node) {
+        return node instanceof RexLiteral && ((RexLiteral) node).getValue()==null;
+    }
+
     public Object clone()
     {
         return new RexLiteral(value,type);

@@ -17,31 +17,37 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-package net.sf.farrago.ddl;
+package net.sf.farrago.namespace.impl;
 
-import net.sf.farrago.query.*;
+import net.sf.farrago.namespace.*;
+import net.sf.farrago.*;
 
+import java.util.*;
 import java.sql.*;
 
 /**
- * DdlConnection represents an internal JDBC Connection which supports extended
- * functionality required for implementing DDL.
+ * MedAbstractNameDirectory is an abstract base class for
+ * implementations of the {@link FarragoMedNameDirectory} interface.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public interface DdlConnection extends Connection
+public abstract class MedAbstractNameDirectory
+    implements FarragoMedNameDirectory
 {
-    /**
-     * Prepare the query defininig a view, and return internal information
-     * needed for creating the view.
-     *
-     * @param sql the query defining the view
-     *
-     * @return FarragoViewInfo derived from the query
-     */
-    public FarragoViewInfo prepareViewQuery(
-        String sql) throws SQLException;
+    // implement FarragoMedNameDirectory
+    public FarragoMedNameDirectory lookupSubdirectory(String [] foreignName)
+        throws SQLException
+    {
+        return null;
+    }
+
+    // implement FarragoMedNameDirectory
+    public Iterator getContentsAsCwm(FarragoMetadataFactory factory)
+        throws SQLException
+    {
+        return null;
+    }
 }
 
-// End DdlConnection.java
+// End MedAbstractNameDirectory.java

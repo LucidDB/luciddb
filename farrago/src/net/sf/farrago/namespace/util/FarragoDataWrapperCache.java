@@ -17,8 +17,9 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-package net.sf.farrago.namespace;
+package net.sf.farrago.namespace.util;
 
+import net.sf.farrago.namespace.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.util.*;
 import net.sf.farrago.catalog.*;
@@ -29,12 +30,12 @@ import java.net.*;
 import java.util.*;
 import java.util.jar.*;
 
-// TODO:  generic plugin support
+// TODO:  generalize to support any kind of plugin cache
 
 /**
  * FarragoDataWrapperCache serves as a private cache of
- * FarragoForeignDataWrapper instances.  It requires an underlying shared
- * FarragoObjectCache.
+ * FarragoMedDataWrapper and FarragoMedDataServer instances.  It requires an
+ * underlying shared FarragoObjectCache.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -68,22 +69,20 @@ public class FarragoDataWrapperCache extends FarragoCompoundAllocation
         mapMofIdToWrapper = new HashMap();
     }
 
-    private FarragoForeignDataWrapper searchPrivateCache(String mofId)
+    private Object searchPrivateCache(String mofId)
     {
-        return (FarragoForeignDataWrapper) mapMofIdToWrapper.get(mofId);
+        return mapMofIdToWrapper.get(mofId);
     }
 
-    private FarragoForeignDataWrapper addToPrivateCache(
+    private Object addToPrivateCache(
         FarragoObjectCache.Entry entry)
     {
         // take ownership of the pinned cache entry
         addAllocation(entry);
 
-        // and update private cache as well
-        FarragoForeignDataWrapper wrapper =
-            (FarragoForeignDataWrapper) entry.getValue();
-        mapMofIdToWrapper.put(entry.getKey(),wrapper);
-        return wrapper;
+        Object obj = entry.getValue();
+        mapMofIdToWrapper.put(entry.getKey(),obj);
+        return obj;
     }
 
     /**
@@ -102,7 +101,7 @@ public class FarragoDataWrapperCache extends FarragoCompoundAllocation
      *
      * @return loaded wrapper
      */
-    public FarragoForeignDataWrapper loadWrapper(
+    public FarragoMedDataWrapper loadWrapper(
         String mofId,
         String libraryName,
         Properties options)
@@ -110,7 +109,8 @@ public class FarragoDataWrapperCache extends FarragoCompoundAllocation
         // TODO:  for cache hits, assert that libraryName and properties match?
 
         // first try private cache
-        FarragoForeignDataWrapper wrapper = searchPrivateCache(mofId);
+        FarragoMedDataWrapper wrapper = (FarragoMedDataWrapper)
+            searchPrivateCache(mofId);
         if (wrapper != null) {
             // already privately cached
             return wrapper;
@@ -124,7 +124,7 @@ public class FarragoDataWrapperCache extends FarragoCompoundAllocation
             factory,
             true);
 
-        wrapper = addToPrivateCache(entry);
+        wrapper = (FarragoMedDataWrapper) addToPrivateCache(entry);
         return wrapper;
     }
 
@@ -134,22 +134,23 @@ public class FarragoDataWrapperCache extends FarragoCompoundAllocation
      * @param mofId key by which the server can be uniquely identified
      * (Farrago uses the MofId of the catalog object representing the server)
      *
-     * @param dataWrapper FarragoForeignDataWrapper which
+     * @param dataWrapper FarragoMedDataWrapper which
      * provides access to the server
      *
      * @param options server-specific options
      *
      * @return loaded server
      */
-    public FarragoForeignDataWrapper loadServer(
+    public FarragoMedDataServer loadServer(
         String mofId,
-        FarragoForeignDataWrapper dataWrapper,
+        FarragoMedDataWrapper dataWrapper,
         Properties options)
     {
         // TODO:  for cache hits, assert that properties match?
 
         // first try private cache
-        FarragoForeignDataWrapper server = searchPrivateCache(mofId);
+        FarragoMedDataServer server = (FarragoMedDataServer)
+            searchPrivateCache(mofId);
         if (server != null) {
             // already privately cached
             return server;
@@ -162,7 +163,7 @@ public class FarragoDataWrapperCache extends FarragoCompoundAllocation
             factory,
             true);
         
-        server = addToPrivateCache(entry);
+        server = (FarragoMedDataServer) addToPrivateCache(entry);
         return server;
     }
 
@@ -208,9 +209,9 @@ public class FarragoDataWrapperCache extends FarragoCompoundAllocation
 
             Class pluginClass = loadPluginClass(libraryName);
             
-            FarragoForeignDataWrapper wrapper;
+            FarragoMedDataWrapper wrapper;
             try {
-                wrapper = (FarragoForeignDataWrapper)
+                wrapper = (FarragoMedDataWrapper)
                     pluginClass.newInstance();
                 wrapper.initialize(catalog,options);
             } catch (Throwable ex) {
@@ -228,12 +229,12 @@ public class FarragoDataWrapperCache extends FarragoCompoundAllocation
         implements FarragoObjectCache.CachedObjectFactory 
     {
         private String mofId;
-        private FarragoForeignDataWrapper dataWrapper;
+        private FarragoMedDataWrapper dataWrapper;
         private Properties options;
 
         ServerFactory(
             String mofId,
-            FarragoForeignDataWrapper dataWrapper,
+            FarragoMedDataWrapper dataWrapper,
             Properties options)
         {
             this.mofId = mofId;
@@ -247,7 +248,7 @@ public class FarragoDataWrapperCache extends FarragoCompoundAllocation
         {
             assert(mofId == key);
 
-            FarragoForeignDataWrapper server;
+            FarragoMedDataServer server;
             try {
                 server = dataWrapper.newServer(
                     mofId,

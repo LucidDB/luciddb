@@ -19,13 +19,14 @@
 
 package net.sf.farrago.jdbc;
 
+import net.sf.farrago.session.*;
 import net.sf.farrago.query.*;
 
 import java.sql.*;
 
 /**
- * FarragoJdbcPreparedDdl implements FarragoJdbcPreparedStatement when the
- * statement is DDL.
+ * FarragoJdbcPreparedDdl implements {@link FarragoJdbcPreparedStatement} when
+ * the statement is DDL.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -37,11 +38,16 @@ public class FarragoJdbcPreparedDdl extends FarragoJdbcPreparedStatement
      *
      * @param connection the connection creating this statement
      *
+     * @param stmtContext the underyling FarragoSessionStmtContext (unprepared)
+     *
      * @param sql the text of the DDL statement
      */
-    FarragoJdbcPreparedDdl(FarragoJdbcConnection connection,String sql)
+    FarragoJdbcPreparedDdl(
+        FarragoJdbcConnection connection,
+        FarragoSessionStmtContext stmtContext,
+        String sql)
     {
-        super(connection,sql);
+        super(connection,stmtContext,sql);
     }
     
     // implement PreparedStatement
@@ -70,9 +76,12 @@ public class FarragoJdbcPreparedDdl extends FarragoJdbcPreparedStatement
         // at the time of prepare?
 
         // NOTE:  We fib and say this is direct execution.
-        FarragoExecutableStmt stmt =
-            farragoConnection.prepareImpl(sql,null,true,null);
-        assert(stmt == null);
+        try {
+            stmtContext.prepare(sql,true);
+            assert(!stmtContext.isPrepared());
+        } catch (Throwable ex) {
+            throw FarragoJdbcDriver.newSqlException(ex);
+        }
     }
 }
 

@@ -63,7 +63,6 @@ public class DdlDropStmt extends DdlStmt
 
     // implement DdlStmt
     public void visit(DdlVisitor visitor)
-        throws java.sql.SQLException
     {
         visitor.visit(this);
     }

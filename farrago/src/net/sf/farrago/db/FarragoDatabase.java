@@ -26,6 +26,7 @@ import net.sf.farrago.fem.config.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.query.*;
+import net.sf.farrago.session.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.ddl.*;
 import net.sf.farrago.namespace.*;
@@ -76,7 +77,7 @@ public class FarragoDatabase
     private FarragoObjectCache codeCache;
 
     /**
-     * Cache of FarragoForeignDataWrappers.
+     * Cache of FarragoMedDataWrappers.
      */
     private FarragoObjectCache dataWrapperCache;
 
@@ -370,7 +371,7 @@ public class FarragoDatabase
      * Prepare a query or DML statement; use a cached implementation if
      * available, otherwise cache the one generated here.
      *
-     * @param connection JDBC connection requesting preparation
+     * @param session FarragoSession requesting preparation
      *
      * @param catalog catalog to use for metadata lookup
      *
@@ -388,13 +389,13 @@ public class FarragoDatabase
      * @return statement implementation, or null when viewInfo is non-null
      */
     public FarragoExecutableStmt prepareStmt(
-        Connection connection,
+        FarragoSession session,
         FarragoCatalog catalog,
         SqlNode sqlNode,
         FarragoAllocationOwner owner,
         FarragoConnectionDefaults connectionDefaults,
         FarragoIndexMap indexMap,
-        FarragoViewInfo viewInfo)
+        FarragoSessionViewInfo viewInfo)
     {
         FarragoPreparingStmt stmt = new FarragoPreparingStmt(
             catalog,
@@ -405,7 +406,7 @@ public class FarragoDatabase
             indexMap);
         try {
             return prepareStmtImpl(
-                connection,stmt,sqlNode,owner,connectionDefaults,
+                session,stmt,sqlNode,owner,connectionDefaults,
                 viewInfo);
         } finally {
             stmt.closeAllocation();
@@ -414,12 +415,12 @@ public class FarragoDatabase
     
         
     private FarragoExecutableStmt prepareStmtImpl(
-        Connection connection,
+        FarragoSession session,
         final FarragoPreparingStmt stmt,
         SqlNode sqlNode,
         FarragoAllocationOwner owner,
         FarragoConnectionDefaults connectionDefaults,
-        FarragoViewInfo viewInfo)
+        FarragoSessionViewInfo viewInfo)
     {
         // It would be silly to cache EXPLAIN PLAN results, so deal with them
         // directly.
@@ -434,12 +435,7 @@ public class FarragoDatabase
         
         final SqlNode validatedSqlNode = stmt.validate(sqlNode);
         
-        SqlDialect sqlDialect;
-        try {
-            sqlDialect = new SqlDialect(connection.getMetaData());
-        } catch (SQLException ex) {
-            throw Util.newInternal(ex);
-        }
+        SqlDialect sqlDialect = new SqlDialect(session.getDatabaseMetaData());
         final String sql = validatedSqlNode.toString(sqlDialect);
         
         if (viewInfo != null) {

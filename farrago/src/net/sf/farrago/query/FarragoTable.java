@@ -36,7 +36,7 @@ import net.sf.saffron.rel.*;
  */
 abstract class FarragoTable
     extends AbstractTable
-    implements FarragoNamedColumnSet
+    implements FarragoMedColumnSet
 {
     //~ Instance fields -------------------------------------------------------
 

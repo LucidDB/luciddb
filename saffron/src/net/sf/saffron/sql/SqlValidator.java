@@ -630,7 +630,10 @@ public class SqlValidator
             }
             //else we have a float, real or double. Make them all double for now
             return typeFactory.createSqlType(SqlTypeName.Double);
-        } else if (operand instanceof SqlLiteral) {
+        }
+
+        if (operand instanceof SqlLiteral)
+        {
             SqlLiteral literal = (SqlLiteral) operand;
             final Object value = literal.getValue();
             if (value == null) {
@@ -670,6 +673,20 @@ public class SqlValidator
         }
         if (operand instanceof SqlCall) {
             SqlCall call = (SqlCall) operand;
+            if (call.operator instanceof SqlCaseOperator) {
+                SqlCase caseCall = (SqlCase) call;
+                List whenList = caseCall.getWhenOperands();
+                List thenList = caseCall.getThenOperands();
+                for(int i=0;i<whenList.size();i++){
+                    SaffronType nodeType = deriveType(scope, (SqlNode)whenList.get(i));
+                    setValidatedNodeType((SqlNode)whenList.get(i), nodeType);
+                    nodeType = deriveType(scope, (SqlNode)thenList.get(i));
+                    setValidatedNodeType((SqlNode)thenList.get(i), nodeType);
+                }
+                SaffronType nodeType = deriveType(scope, caseCall.getElseOperand());
+                setValidatedNodeType(caseCall.getElseOperand(), nodeType);
+                return call.operator.getType(this, scope, call);
+            }
             if(call.operator instanceof SqlFunction ||
                call.operator instanceof SqlBinaryOperator ||
                call.operator instanceof SqlPostfixOperator ||
@@ -700,22 +717,22 @@ public class SqlValidator
                 return unknownType;
             }
         }
+        if (operand instanceof SqlNodeList) {
+            SqlNodeList list = (SqlNodeList) operand;
+            for (int i = 0; i < list.size(); i++) {
+                 deriveType(scope,(SqlNode) list.get(i));
+            }
+        }
         throw Util.needToImplement(this.toString() + ", operand=" + operand);
     }
 
-    private boolean isNullLiteral(SqlNode node)
-    {
-        if (!(node instanceof SqlLiteral)) {
-            return false;
-        }
-        SqlLiteral literal = (SqlLiteral) node;
-        return literal.getValue() == null;
-    }
+
 
     private void inferUnknownTypes(
         SaffronType inferredType,Scope scope,SqlNode node)
     {
-        if ((node instanceof SqlDynamicParam) || isNullLiteral(node)) {
+        if ((node instanceof SqlDynamicParam) || SqlLiteral.
+                isNullLiteral(node)) {
             if (inferredType.equals(unknownType)) {
                 // TODO: scrape up some positional context information
                 throw newValidationError(
@@ -749,6 +766,29 @@ public class SqlValidator
                 }
                 inferUnknownTypes(type,scope,child);
             }
+        } else if (node instanceof SqlCase) {
+            SqlCase caseCall = (SqlCase) node;
+            List whenList = caseCall.getWhenOperands();
+            for (int i = 0; i < whenList.size(); i++) {
+                SqlCall sqlNode = (SqlCall) whenList.get(i);
+                inferUnknownTypes(unknownType,scope,sqlNode);
+            }
+
+            SaffronType returnType = getValidatedNodeType(node);
+            List thenList = caseCall.getThenOperands();
+            for (int i = 0; i < thenList.size(); i++) {
+                SqlCall sqlNode = (SqlCall) whenList.get(i);
+                inferUnknownTypes(returnType,scope,sqlNode);
+            }
+
+            if (!SqlLiteral.isNullLiteral(caseCall.getElseOperand())){
+                inferUnknownTypes(returnType,scope,caseCall.getElseOperand());
+            }
+            else {
+                setValidatedNodeType(caseCall.getElseOperand(), returnType);
+            }
+
+
         } else if (node instanceof SqlCall) {
             SqlCall call = (SqlCall) node;
             SqlOperator.ParamTypeInference paramTypeInference =

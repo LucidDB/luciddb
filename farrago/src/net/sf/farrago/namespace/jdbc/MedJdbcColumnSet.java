@@ -20,6 +20,7 @@
 package net.sf.farrago.namespace.jdbc;
 
 import net.sf.farrago.namespace.*;
+import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
@@ -38,26 +39,21 @@ import java.util.*;
 import javax.sql.*;
 
 /**
- * MedJdbcColumnSet implements FarragoNamedColumnSet for foreign JDBC tables.
+ * MedJdbcColumnSet implements FarragoMedColumnSet for foreign JDBC tables.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-class MedJdbcColumnSet extends AbstractTable implements FarragoNamedColumnSet
+class MedJdbcColumnSet extends MedAbstractColumnSet
 {
     final MedJdbcNameDirectory directory;
     
-    final String [] localName;
-    
-    final String [] foreignName;
-
     final SqlSelect select;
 
     final SqlDialect dialect;
     
     MedJdbcColumnSet(
         MedJdbcNameDirectory directory,
-        FarragoTypeFactory typeFactory,
         String [] foreignName,
         String [] localName,
         SqlSelect select,
@@ -65,22 +61,16 @@ class MedJdbcColumnSet extends AbstractTable implements FarragoNamedColumnSet
         SaffronType rowType)
     {
         super(
+            localName,
+            foreignName,
+            rowType,
             null,
-            localName[localName.length - 1],
-            rowType);
+            null);
         this.directory = directory;
-        this.foreignName = foreignName;
-        this.localName = localName;
         this.select = select;
         this.dialect = dialect;
     }
     
-    // implement SaffronTable
-    public String [] getQualifiedName()
-    {
-        return localName;
-    }
-
     // implement SaffronTable
     public double getRowCount()
     {

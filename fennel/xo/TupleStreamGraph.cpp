@@ -40,6 +40,20 @@ SharedTupleStreamGraph TupleStreamGraph::newTupleStreamGraph()
 
 TupleStreamGraphImpl::TupleStreamGraphImpl()
 {
+}
+
+void TupleStreamGraphImpl::addStream(
+    SharedTupleStream pStream)
+{
+    Vertex streamVertex = boost::add_vertex(graphRep);
+    pStream->id = streamVertex;
+    pStream->pGraph = this;
+    boost::put(boost::vertex_data,graphRep,streamVertex,pStream);
+}
+
+/*
+TupleStreamGraphImpl::TupleStreamGraphImpl()
+{
     isOpen = false;
 }
 
@@ -156,7 +170,7 @@ SharedTupleStream TupleStreamGraphImpl::getSinkStream()
     // the sink comes at the end of the topological sort
     return sortedStreams.back();
 }
-
+*/
 FENNEL_END_CPPFILE("$Id$");
 
 // End TupleStreamGraph.cpp

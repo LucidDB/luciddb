@@ -17,26 +17,42 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-package net.sf.farrago.ddl;
+package net.sf.farrago.session;
 
+import java.util.*;
 import java.sql.*;
 
 /**
- * CloneableJdbcConnection represents a JDBC Connection which can be cloned.
- * The cloned connection shares common state such as catalog and transaction
- * context, so the clone may not outlive its source.
+ * FarragoSessionViewInfo defines internal information needed while creating a
+ * view.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public interface CloneableJdbcConnection extends Connection, Cloneable
+public class FarragoSessionViewInfo
 {
     /**
-     * Clone this connection.
-     *
-     * @return new clone
+     * The query definition expanded after validation.  This contains no
+     * context-dependent information (e.g. all objects are fully qualified),
+     * so it can be stored in the catalog.
      */
-    public DdlConnection cloneJdbcConnection();
+    public String validatedSql;
+
+    /**
+     * Set of CwmNamedColumnSet instances on which this view directly depends
+     * (i.e. other views are not expanded).
+     */
+    public Set dependencies;
+
+    /**
+     * Metadata for result set returned when this view is queried.
+     */
+    public ResultSetMetaData resultMetaData;
+
+    /**
+     * Metadata for parameters used as input to this view.
+     */
+    public ParameterMetaData parameterMetaData;
 }
 
-// End CloneableJdbcConnection.java
+// End FarragoSessionViewInfo.java

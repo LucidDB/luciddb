@@ -19,8 +19,6 @@
 
 package net.sf.farrago.ddl;
 
-import java.sql.*;
-
 /**
  * DdlVisitor implements the visitor pattern for DDL statements.
  *
@@ -31,61 +29,51 @@ public class DdlVisitor
 {
     // visitor dispatch
     public void visit(DdlCreateStmt stmt)
-        throws SQLException
     {
     }
 
     // visitor dispatch
     public void visit(DdlDropStmt stmt)
-        throws SQLException
     {
     }
 
     // visitor dispatch
     public void visit(DdlTruncateStmt stmt)
-        throws SQLException
     {
     }
     
     // visitor dispatch
     public void visit(DdlCommitStmt stmt)
-        throws SQLException
     {
     }
 
     // visitor dispatch
     public void visit(DdlRollbackStmt stmt)
-        throws SQLException
     {
     }
 
     // visitor dispatch
     public void visit(DdlSavepointStmt stmt)
-        throws SQLException
     {
     }
 
     // visitor dispatch
     public void visit(DdlReleaseSavepointStmt stmt)
-        throws SQLException
     {
     }
 
     // visitor dispatch
     public void visit(DdlSetQualifierStmt stmt)
-        throws SQLException
     {
     }
     
     // visitor dispatch
     public void visit(DdlSetSystemParamStmt stmt)
-        throws SQLException
     {
     }
 
     // visitor dispatch
     public void visit(DdlCheckpointStmt stmt)
-        throws SQLException
     {
     }
 }

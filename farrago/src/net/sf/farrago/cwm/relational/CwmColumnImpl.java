@@ -25,10 +25,12 @@ import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.type.*;
+import net.sf.farrago.session.*;
 
 import org.netbeans.mdr.handlers.*;
 import org.netbeans.mdr.storagemodel.*;
 
+import net.sf.saffron.core.*;
 import net.sf.saffron.util.*;
 
 import java.sql.*;
@@ -83,17 +85,17 @@ public abstract class CwmColumnImpl extends InstanceHandler
 
         CwmExpression defaultExpression = getInitialValue();
         if (defaultExpression != null) {
-            DdlConnection connection = validator.newReentrantConnection();
+            FarragoSession session = validator.newReentrantSession();
             try {
-                validateDefaultClause(validator,connection,defaultExpression);
-            } catch (SQLException ex) {
+                validateDefaultClause(validator,session,defaultExpression);
+            } catch (Throwable ex) {
                 throw validator.res.newValidatorBadDefaultClause(
                     getName(),
                     validator.getParserContextString(this),
                     ex);
                 
             } finally {
-                validator.releaseReentrantConnection(connection);
+                validator.releaseReentrantSession(session);
             }
         }
     }
@@ -108,27 +110,27 @@ public abstract class CwmColumnImpl extends InstanceHandler
 
     private void validateDefaultClause(
         DdlValidator validator,
-        Connection connection,
+        FarragoSession session,
         CwmExpression defaultExpression)
-        throws SQLException
     {
         String sql = "SELECT " + defaultExpression.getBody()
             + " AS DEFAULT_VALUE FROM VALUES(0)";
-        PreparedStatement stmt = connection.prepareStatement(sql);
-        ResultSetMetaData metaData = stmt.getMetaData();
-        assert(metaData.getColumnCount() == 1);
+        FarragoSessionStmtContext stmtContext = session.newStmtContext();
+        stmtContext.prepare(sql,false);
+        SaffronType rowType = stmtContext.getPreparedRowType();
+        assert(rowType.getFieldCount() == 1);
 
-        if (stmt.getParameterMetaData().getParameterCount() > 0) {
+        if (stmtContext.getPreparedParamType().getFieldCount() > 0) {
             throw validator.res.newValidatorBadDefaultParam(
                 getName(),
                 validator.getParserContextString(this));
         }
 
         // SQL standard is very picky about what can go in a DEFAULT clause
-        
-        int sourceType = metaData.getColumnType(1);
-        FarragoTypeFamily sourceTypeFamily =
-            FarragoTypeFamily.getFamilyForJdbcType(sourceType);
+
+        FarragoAtomicType sourceType = (FarragoAtomicType)
+            rowType.getFields()[0].getType();
+        FarragoTypeFamily sourceTypeFamily = sourceType.getFamily();
         
         FarragoType targetType =
             validator.getTypeFactory().createColumnType(this,true);

@@ -160,7 +160,7 @@ public abstract class SqlValidatorTestCase extends TestCase {
         check("select 1 as c1,2 as c2 from values(true)");
 	}
 
-    public void testTypes(){
+    public void testTypesLiterals(){
         checkType("'abc'","VARCHAR(3)");
         checkType("n'abc'","VARCHAR(3)");
         checkType("_iso_8859-2'abc'","VARCHAR(3)");
@@ -392,6 +392,14 @@ public abstract class SqlValidatorTestCase extends TestCase {
         checkExp("log(- -.2  )");
     }
 
+    public void testArthimeticOperatorsTypes() {
+        checkType("pow(2,3)","INTEGER");
+        checkType("aBs(-2.3e-2)","DOUBLE");
+        checkType("MOD(5,2)","INTEGER");
+        checkType("ln(5.43  )","DOUBLE");
+        checkType("log(- -.2  )","DOUBLE");
+    }
+
     public void testArthimeticOperatorsFails() {
         checkExpFails("pow(2,'abc')","(?s).*Can not apply 'POW' to arguments of type 'POW.<INTEGER>, <VARCHAR.3.>.*");
         checkExpFails("pow(true,1)","(?s).*Can not apply 'POW' to arguments of type 'POW.<BOOLEAN>, <INTEGER>.*");
@@ -400,6 +408,42 @@ public abstract class SqlValidatorTestCase extends TestCase {
         checkExpFails("abs(x'')","(?s).*Can not apply 'ABS' to arguments of type 'ABS.<VARBINARY.0.>.*");
         checkExpFails("ln(x'f')","(?s).*Can not apply 'LN' to arguments of type 'LN.<BIT.4.>.*");
         checkExpFails("log(x'f')","(?s).*Can not apply 'LOG' to arguments of type 'LOG.<BIT.4.>.*");
+    }
+
+    public void testCaseExpression(){
+        checkExp("case 1 when 1 then 'one' end");
+        checkExp("case 1 when 1 then 'one' else null end");
+        checkExp("case 1 when 1 then 'one' else 'more' end");
+        checkExp("case 1 when 1 then 'one' when 2 then null else 'more' end");
+    }
+
+    public void testCaseExpressionTypes(){
+        checkType("case 1 when 1 then 'one' else 'more' end","VARCHAR(4)");
+        checkType("case when 2<1 then 'impossible' end","VARCHAR(10)");
+        checkType("case 'one' when 'two' then 2.00 when 'one' then 1 else 3 end","DECIMAL(3, 2)");
+        checkType("case 1 when 1 then 'one' when 2 then null else 'more' end","VARCHAR(4)");
+    }
+
+    public void testCaseExpressionFails(){
+        //varchar not comparable with bit string
+        checkExpFails("case 'string' when b'01' then 'zero one' else 'something' end",
+                      "(?s).*Can not apply '=' to arguments of type '<VARCHAR.6.> = <BIT.2.>'.*");
+        //all thens and else return null
+        checkExpFails("case 1 when 1 then null else null end",
+                      "(?s).*ELSE clause or at least one THEN clause must be non-NULL.*");
+        //all thens and else return null
+        checkExpFails("case 1 when 1 then null end",
+                      "(?s).*ELSE clause or at least one THEN clause must be non-NULL.*");
+    }
+
+    public void testNullIf(){
+        checkExp("nullif(1,2)");
+        checkType("nullif(1,2)","INTEGER");
+    }
+
+    public void testCoalesce(){
+//        checkExp("coalesce('a','b')");
+        checkType("coalesce('a','b','c')","VARCHAR(1)");
     }
 
 

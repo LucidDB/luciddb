@@ -29,6 +29,7 @@ import net.sf.saffron.ext.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 import net.sf.farrago.namespace.*;
+import net.sf.farrago.namespace.impl.*;
 
 import java.util.*;
 import javax.jmi.model.*;
@@ -43,15 +44,9 @@ import java.util.List;
  * @author John V. Sichi
  * @version $Id$
  */
-class MedMdrClassExtent
-    extends AbstractTable
-    implements FarragoNamedColumnSet
+class MedMdrClassExtent extends MedAbstractColumnSet
 {
     final MedMdrNameDirectory directory;
-    
-    final String [] localName;
-    
-    final String [] foreignName;
     
     final RefClass refClass;
 
@@ -64,19 +59,13 @@ class MedMdrClassExtent
         SaffronType rowType)
     {
         super(
+            localName,
+            foreignName,
+            rowType,
             null,
-            localName[localName.length - 1],
-            rowType);
+            null);
         this.directory = directory;
-        this.foreignName = foreignName;
-        this.localName = localName;
         this.refClass = refClass;
-    }
-
-    // implement SaffronTable
-    public String [] getQualifiedName()
-    {
-        return localName;
     }
 
     // implement SaffronTable

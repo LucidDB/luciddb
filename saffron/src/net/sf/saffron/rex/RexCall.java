@@ -90,6 +90,7 @@ public class RexCall extends RexNode {
         case SqlKind.MinusPrefixORDINAL: return RexKind.MinusPrefix;
         case SqlKind.ValuesORDINAL: return RexKind.Values;
         case SqlKind.FunctionORDINAL: return RexKind.Other;
+        case SqlKind.CaseORDINAL: return RexKind.Other;
         case SqlKind.OtherORDINAL: return RexKind.Other;
         default:
             throw kind.unexpected();

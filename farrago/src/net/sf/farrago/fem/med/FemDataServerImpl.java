@@ -24,6 +24,7 @@ import net.sf.farrago.ddl.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.namespace.*;
+import net.sf.farrago.namespace.util.*;
 
 import net.sf.saffron.util.*;
 
@@ -91,7 +92,7 @@ public abstract class FemDataServerImpl extends InstanceHandler
      *
      * @return loaded server accessor
      */
-    public FarragoForeignDataWrapper loadFromCache(
+    public FarragoMedDataServer loadFromCache(
         FarragoDataWrapperCache cache)
     {
         Properties props =
@@ -100,7 +101,7 @@ public abstract class FemDataServerImpl extends InstanceHandler
         FemDataWrapperImpl femDataWrapper =
             (FemDataWrapperImpl) getWrapper();
 
-        FarragoForeignDataWrapper dataWrapper =
+        FarragoMedDataWrapper dataWrapper =
             femDataWrapper.loadFromCache(cache);
 
         return cache.loadServer(

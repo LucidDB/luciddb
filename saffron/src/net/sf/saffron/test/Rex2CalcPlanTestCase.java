@@ -313,17 +313,16 @@ public class Rex2CalcPlanTestCase extends TestCase
                 "output: s4[0]"+T+
                 "input: s4[0]"+T+
                 "literal: u1[0]=true,u1[1]=false"+T+
-                "local: u1[0],u1[1],u1[2],u1[3],u1[4],u1[5]"+T+
+                "local: u1[0],u1[1],u1[2],u1[3],u1[4]"+T+
                 "status: u1[0]"+T+
                 //"values: 1, 0
                 "T"+T+
                 "NOT T0, L0"+T+
                 "AND T1, L0, T0"+T+
-                "NOT T2, L0"+T+
-                "AND T3, T2, L0"+T+
-                "AND T4, L1, T3"+T+
-                "OR T5, T1, T4"+T+
-                "JMPT 9, T5"+T+
+                "AND T2, T0, L0"+T+
+                "AND T3, L1, T2"+T+
+                "OR T4, T1, T3"+T+
+                "JMPT 8, T4"+T+
                 "MOVE S0, L0"+T+
                 "RETURN"+T+
                 "MOVE O0, I0"+T+
@@ -476,7 +475,7 @@ public class Rex2CalcPlanTestCase extends TestCase
                 "input: s4[0]"+T+
                 "literal: u1[0]=true,u1[1]=false,s8[2]=10,s8[3]=1,s8[4]=2"+T+
                 "local: u1[0],u1[1],u1[2],u1[3],u1[4],u1[5],u1[6],u1[7],u1[8],u1[9],u1[10]," +
-                       "u1[11],u1[12],u1[13],u1[14],u1[15],u1[16],u1[17],u1[18],u1[19],u1[20]"+T+
+                       "u1[11],u1[12],u1[13],u1[14],u1[15],u1[16],u1[17]"+T+
                 "status: u1[0]"+T+
                 "T"+T+
                 "GT T0, I0, L2"+T+      //empno > 10
@@ -502,20 +501,16 @@ public class Rex2CalcPlanTestCase extends TestCase
                 "AND T13, T11, T12"+T+
                 "NOT T14, T13"+T+
 
-                "ISNOTNULL T15, L0"+T+   //TRUE IS NOT FALSE
-                "EQ T16, L0, L1"+T+         //TODO optimize expressions like this
-                "AND T17, T15, T16"+T+
-                "NOT T18, T17"+T+
-
-                "ISNOTNULL T19, L0"+T+  //TRUE IS NOT NULL
-                "ISNOTNULL T20, L0"+T+  //TRUE IS NOT UNKNOWN
+                "EQ T15, L0, L1"+T+         //TODO optimize expressions like this
+                "AND T16, T11, T15"+T+
+                "NOT T17, T16"+T+
 
                 "MOVE O0, T1"+T+
                 "MOVE O1, T10"+T+
                 "MOVE O2, T14"+T+
-                "MOVE O3, T18"+T+
-                "MOVE O4, T19"+T+
-                "MOVE O5, T20"+T+
+                "MOVE O3, T17"+T+
+                "MOVE O4, T11"+T+
+                "MOVE O5, T11"+T+
                 "MOVE S0, L1"+T+
                 "RETURN"+T;
         check(sql, prg,false,false);
@@ -573,7 +568,74 @@ public class Rex2CalcPlanTestCase extends TestCase
         check(sql, prg,false,false);
     }
 
+    public void testCaseExpressions() {
+        String sql="SELECT case 1+1 when 1 then 'wael' when 2 then 'waels clone' end" +
+                         ",case when 1=1 then 1+1+2 else 2+10 end" +
+                " FROM \"emps\" WHERE \"empno\" > 10";
+        String prg=
+                "output: vc[0],s8[1]"+T+
+                "input: s4[0]"+T+
+                "literal: u1[0]=true,u1[1]=false,s8[2]=10,s8[3]=1,vc[4]='wael',s8[5]=2,vc[6]='waels clone',vc[7]"+T+
+                "local: u1[0],vc[1],s8[2],u1[3],u1[4],s8[5],u1[6],s8[7],s8[8]"+T+
+                "status: u1[0]"+T+
+                "T"+T+
+                "GT T0, I0, L2"+T+      //empno > 10
+                "JMPT 4, T0"+T+
+                "MOVE S0, L0"+T+
+                "RETURN"+T+
+                "ADD T2, L3, L3"+T+    //1+1
+                "EQ T3, T2, L3"+T+     //when 1+1=1
+                "JMPF 9, T3"+T+
+                "MOVE T1, L4"+T+       //then
+                "JMP 14"+T+
+                "EQ T4, T2, L5"+T+     //when 1+1=2
+                "JMPF 13, T4"+T+
+                "MOVE T1, L6"+T+       //then
+                "JMP 14"+T+
+                "MOVE T1, L7"+T+
+                "EQ T6, L3, L3"+T+     //SECOND CASE 1=1
+                "JMPF 19, T6"+T+
+                "ADD T7, T2, L5"+T+    //1+1+2
+                "MOVE T5, T7"+T+
+                "JMP 21"+T+
+                "ADD T8, L5, L2"+T+   //else 2+10
+                "MOVE T5, T8"+T+
+                "MOVE O0, T1"+T+
+                "MOVE O1, T5"+T+
+                "MOVE S0, L1"+T+
+                "RETURN"+T;
+        check(sql, prg,false,false);
+    }
 
+    public void testCoalesce() {
+        String sql="SELECT coalesce(1,2,3) FROM \"emps\" WHERE \"empno\" > 10";
+        //CASE WHEN 1 IS NOT NULL THEN 1 ELSE (CASE WHEN 2 IS NOT NULL THEN 2 ELSE 3) END
+        String prg=
+                "output: s8[0]"+T+
+                "input: s4[0]"+T+
+                "literal: u1[0]=true,u1[1]=false,s8[2]=10,s8[3]=1,s8[4]=2,s8[5]=3"+T+
+                "local: u1[0],s8[1],u1[2],s8[3],u1[4]"+T+
+                "status: u1[0]"+T+
+                "T"+T+
+                "GT T0, I0, L2"+T+
+                "JMPT 4, T0"+T+
+                "MOVE S0, L0"+T+
+                "RETURN"+T+
+                "ISNOTNULL T2, L3"+T+
+                "JMPF 8, T2"+T+
+                "MOVE T1, L3"+T+
+                "JMP 14"+T+
+                "ISNOTNULL T4, L4"+T+
+                "JMPF 12, T4"+T+
+                "MOVE T3, L4"+T+
+                "JMP 13"+T+
+                "MOVE T3, L5"+T+
+                "MOVE T1, T3"+T+
+                "MOVE O0, T1"+T+
+                "MOVE S0, L1"+T+
+                "RETURN"+T;
+        check(sql, prg,false,false);
+    }
 }
 
 // End Rex2CalcPlanTestCase.java

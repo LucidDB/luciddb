@@ -19,6 +19,8 @@
 
 package net.sf.farrago.jdbc;
 
+import net.sf.farrago.session.*;
+
 import java.sql.*;
 import java.io.*;
 import java.util.*;
@@ -29,8 +31,8 @@ import java.sql.Date;
 
 /**
  * FarragoJdbcPreparedStatement is an abstract base for Farrago implementations
- * of PreparedStatement.  Subclasses define details of preparation for DDL,
- * DML, and queries.
+ * of {@link java.sql.PreparedStatement}.  Subclasses define details of
+ * preparation for DDL, DML, and queries.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -49,12 +51,16 @@ public abstract class FarragoJdbcPreparedStatement
      *
      * @param connection the connection creating this statement
      *
+     * @param stmtContext underlying FarragoSessionStmtContext
+     *
      * @param sql the text of the SQL statement
      */
     protected FarragoJdbcPreparedStatement(
-        FarragoJdbcConnection connection,String sql)
+        FarragoJdbcConnection connection,
+        FarragoSessionStmtContext stmtContext,
+        String sql)
     {
-        super(connection);
+        super(connection,stmtContext);
         this.sql = sql;
     }
     

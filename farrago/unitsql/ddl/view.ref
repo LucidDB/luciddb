@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/farrago/unitsql/ddl/view.sql#3 $
+0: jdbc:farrago:> -- $Id: //open/farrago/unitsql/ddl/view.sql#4 $
 0: jdbc:farrago:> -- Test DDL on views
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema s;
@@ -32,11 +32,11 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- bad:  column mismatch
 0: jdbc:farrago:> create view v3(empno, name, id) as select empno, name from sales.emps;
-Error: Invalid definition for view V3:  column name count does not match query (state=,code=0)
+Error: Invalid definition for view V3:  Column name count does not match query (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- bad:  duplicate column names
 0: jdbc:farrago:> create view v4(empno,empno) as select empno, name from sales.emps;
-Error: Duplicate definition for Column EMPNO within View S.V4;
+Error: Invalid definition for view V4:  Duplicate definition for Column EMPNO within View S.V4;
 encountered near line 1, column 22;
 earlier definition was near line 1, column 22 (state=,code=0)
 0: jdbc:farrago:> 
@@ -46,7 +46,7 @@ Error: Invalid definition for view V5:  Table 'NONEXISTENT_TABLE' not found (sta
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- bad:  view with dynamic params
 0: jdbc:farrago:> create view v6 as select * from sales.emps where empno = ?;
-Error: Invalid definition for view V6:  dynamic parameters are illegal in views (state=,code=0)
+Error: Invalid definition for view V6:  Dynamic parameters are illegal in views (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- bad:  duplicate view name
 0: jdbc:farrago:> create view v1 as select * from sales.emps;

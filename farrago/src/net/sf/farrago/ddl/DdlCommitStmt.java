@@ -36,7 +36,6 @@ public class DdlCommitStmt extends DdlTxnStmt
 
     // implement DdlStmt
     public void visit(DdlVisitor visitor)
-        throws java.sql.SQLException
     {
         visitor.visit(this);
     }

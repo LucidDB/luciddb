@@ -108,15 +108,6 @@ public class CalcRelImplementor extends RelImplementor {
             m_knownTypes.put(fac.createSqlType(SqlTypeName.Varchar,0), CalcProgramBuilder.OpType.VarCharPointer);
             m_knownTypes.put(fac.createSqlType(SqlTypeName.Boolean), CalcProgramBuilder.OpType.Boolean);
 
-            m_knownTypes.put(fac.createJavaType(Integer.class), CalcProgramBuilder.OpType.Int);
-            m_knownTypes.put(fac.createJavaType(int.class), CalcProgramBuilder.OpType.Int);
-            m_knownTypes.put(fac.createJavaType(Long.class), CalcProgramBuilder.OpType.LongLong);
-            m_knownTypes.put(fac.createJavaType(long.class), CalcProgramBuilder.OpType.LongLong);
-            m_knownTypes.put(fac.createJavaType(Double.class), CalcProgramBuilder.OpType.Double);
-            m_knownTypes.put(fac.createJavaType(double.class), CalcProgramBuilder.OpType.Double);
-            m_knownTypes.put(fac.createJavaType(String.class), CalcProgramBuilder.OpType.VarCharPointer);
-            m_knownTypes.put(fac.createJavaType(Boolean.class), CalcProgramBuilder.OpType.VarCharPointer);
-            m_knownTypes.put(fac.createJavaType(boolean.class), CalcProgramBuilder.OpType.VarCharPointer);
 
         }
 
@@ -129,10 +120,19 @@ public class CalcRelImplementor extends RelImplementor {
                 if (unknownType.isSameTypeFamily(knownType)) {
                     return (CalcProgramBuilder.OpType) m_knownTypes.get(knownType);
                 }
+
+                if (SaffronTypeFactoryImpl.isJavaType(unknownType)){
+                    SqlTypeName typeName =
+                            SaffronTypeFactoryImpl.JavaToSqlTypeConversionRules.instance().lookup(unknownType);
+                    SaffronType lookupThis =
+                            SaffronTypeFactoryImpl.createSqlTypeIgnorePrecOrScale(rexBuilder.getTypeFactory(),typeName);
+                    if (lookupThis.isSameTypeFamily(knownType)) {
+                        return (CalcProgramBuilder.OpType) m_knownTypes.get(knownType);
+                    }
+                }
             }
 
-            assert(false);
-            return null;
+            throw Util.newInternal("unknown type");
         }
 
         private Object getKey(RexNode node)
@@ -140,7 +140,7 @@ public class CalcRelImplementor extends RelImplementor {
             if (node instanceof RexInputRef) {
                 return ((RexInputRef) node).getName();
             }
-            return node;
+            return node.toString()+node.getType().toString();
         }
 
         private void setResult(RexNode node, CalcProgramBuilder.Register register)
@@ -276,11 +276,8 @@ public class CalcRelImplementor extends RelImplementor {
             else{
                 throw SaffronResource.instance().newProgramImplementationError(op.toString());
             }
-
-
-
-
         }
+
 
         private void implementNode(RexCall call)
         {
@@ -366,7 +363,7 @@ public class CalcRelImplementor extends RelImplementor {
                 else if (op.equals(m_opTab.isNotNullOperator)){ //kind.isA(SqlKind.IsNotNull)) {
                     resultOfCall = m_builder.newLocal(resultType);
                     CalcProgramBuilder.Register reg=getResult(call.operands[0]);
-                    m_builder.addBoolIsNotNull(resultOfCall, reg);
+                    m_builder.addBoolNativeIsNotNull(resultOfCall, reg);
                 }
                 //~  IS NULL                --------------------------
                 else if (op.kind.isA(SqlKind.IsNull)) {
@@ -418,6 +415,10 @@ public class CalcRelImplementor extends RelImplementor {
                 }
             }
             //-- Function Calls ------------------------------------------
+            //Special case when we cast null to some value
+            else if (op.equals(m_funTab.cast) && RexLiteral.isNullLiteral(call.operands[0])){
+                resultOfCall = m_builder.newLiteral(resultType, null);
+            }
             else if (op instanceof SqlFunction)
             {
                 //sanity checking that function exists, probably already done in the validator
@@ -426,6 +427,8 @@ public class CalcRelImplementor extends RelImplementor {
                 if (null==m_funTab.lookup(fun.name)) {
                     throw SaffronResource.instance().newProgramImplementationError("Function "+fun+" unknown");
                 }
+
+
 
                 //implement the operands of the function
                 for (int i = 0; i < call.operands.length; i++) {
@@ -446,6 +449,29 @@ public class CalcRelImplementor extends RelImplementor {
                 m_builder.addExtendedInstructionCall(resultOfCall, fun.name, resultOfOperands);
 
 
+
+            }
+            //-- Special Operator Calls ------------------------------------------
+            else if (op instanceof SqlCaseOperator)
+            {
+                Util.pre(call.operands.length>1,"call.operands.length>1");
+                Util.pre((call.operands.length&1)==1,"(call.operands.length&1)==1");
+                resultOfCall=m_builder.newLocal(resultType);
+                String endOfCase = newLabel();
+                String next;
+                for(int i=0;i<call.operands.length-1;i+=2) {
+                    next = newLabel();
+                    implementNode(call.operands[i]);
+                    m_builder.addLabelJumpFalse(next, getResult(call.operands[i]));
+                    implementNode(call.operands[i+1]);
+                    m_builder.addMove(resultOfCall, getResult(call.operands[i+1]));
+                    m_builder.addLabelJump(endOfCase);
+                    m_builder.addLabel(next);
+                }
+                int elseIndex = call.operands.length-1;
+                implementNode(call.operands[elseIndex]);
+                m_builder.addMove(resultOfCall, getResult(call.operands[elseIndex]));
+                m_builder.addLabel(endOfCase); //this assumes that more instructions will follow
 
             }
             else {

@@ -25,6 +25,7 @@ import net.sf.saffron.util.*;
 import net.sf.saffron.ext.*;
 
 import net.sf.farrago.namespace.*;
+import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 import net.sf.farrago.FarragoMetadataFactory;
@@ -36,30 +37,24 @@ import javax.jmi.model.*;
 import javax.jmi.reflect.*;
 
 /**
- * MedJdbcNameDirectory implements the FarragoNameDirectory
+ * MedJdbcNameDirectory implements the FarragoMedNameDirectory
  * interface by mapping the metadata provided by any JDBC driver.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-class MedJdbcNameDirectory implements FarragoNameDirectory
+class MedJdbcNameDirectory extends MedAbstractNameDirectory
 {
-    final MedJdbcForeignDataWrapper dataWrapper;
+    final MedJdbcDataServer server;
 
-    /**
-     * Instantiate a MedJdbcNameDirectory.
-     *
-     * @param dataWrapper MedJdbcForeignDataWrapper from which
-     * this directory was opened
-     */
     MedJdbcNameDirectory(
-        MedJdbcForeignDataWrapper dataWrapper)
+        MedJdbcDataServer server)
     {
-        this.dataWrapper = dataWrapper;
+        this.server = server;
     }
 
-    // implement FarragoNameDirectory
-    public FarragoNamedColumnSet lookupColumnSet(
+    // implement FarragoMedNameDirectory
+    public FarragoMedColumnSet lookupColumnSet(
         FarragoTypeFactory typeFactory,
         String [] foreignName,
         String [] localName)
@@ -69,18 +64,18 @@ class MedJdbcNameDirectory implements FarragoNameDirectory
             typeFactory,foreignName,localName,null);
     }
     
-    FarragoNamedColumnSet lookupColumnSetAndImposeType(
+    FarragoMedColumnSet lookupColumnSetAndImposeType(
         FarragoTypeFactory typeFactory,
         String [] foreignName,
         String [] localName,
         SaffronType rowType)
         throws SQLException
     {
-        SqlDialect dialect = new SqlDialect(dataWrapper.databaseMetaData);
+        SqlDialect dialect = new SqlDialect(server.databaseMetaData);
         SqlOperatorTable opTab = SqlOperatorTable.instance();
-        if (dataWrapper.schemaName != null) {
+        if (server.schemaName != null) {
             assert(foreignName.length == 2);
-            assert(foreignName[0].equals(dataWrapper.schemaName));
+            assert(foreignName[0].equals(server.schemaName));
             foreignName = new String [] 
                 {
                     foreignName[1]
@@ -101,7 +96,7 @@ class MedJdbcNameDirectory implements FarragoNameDirectory
             String sql = select.toString(dialect);
         
             PreparedStatement ps =
-                dataWrapper.connection.prepareStatement(sql);
+                server.connection.prepareStatement(sql);
             ResultSet rs = null;
             try {
                 ResultSetMetaData md = null;
@@ -129,29 +124,14 @@ class MedJdbcNameDirectory implements FarragoNameDirectory
         
         return new MedJdbcColumnSet(
             this,
-            typeFactory,
             foreignName,
             localName,
             select,
             dialect,
             rowType);
     }
-
-    // implement FarragoNameDirectory
-    public FarragoNameDirectory lookupSubdirectory(String [] foreignName)
-        throws SQLException
-    {
-        // TODO?
-        return null;
-    }
-
-    // implement FarragoNameDirectory
-    public Iterator getContentsAsCwm(FarragoMetadataFactory factory)
-        throws SQLException
-    {
-        // TODO
-        return null;
-    }
+    
+    // TODO:  lookupSubdirectory, getContentsAsCwm
 }
 
 // End MedJdbcNameDirectory.java

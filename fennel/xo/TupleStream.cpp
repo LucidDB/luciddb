@@ -23,65 +23,14 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-TupleStream::TupleStream()
-{
-    pGraph = NULL;
-    id = MAXU;
-    isOpen = false;
-}
-
-void TupleStream::open(bool restart)
-{
-    if (restart) {
-        assert(isOpen);
-    } else {
-        // NOTE: this assertion is bad because in case of multiple inheritance,
-        // open can be called twice.  So we rely on the corresponding assertion
-        // in TupleStreamGraph instead, unless someone can come up with
-        // something better.
-#if 0
-        assert(!isOpen);
-#endif
-        isOpen = true;
-        needsClose = true;
-    }
-}
-
-void TupleStream::closeImpl()
-{
-    isOpen = false;
-}
-
-TupleFormat TupleStream::getOutputFormat() const
-{
-    return TUPLE_FORMAT_STANDARD;
-}
-
-void TupleStream::prepare(TupleStreamParams const &)
+TupleStream::TupleStream() : 
+    ExecutionStream<TupleStreamGraph, SharedTupleStream>()
 {
 }
 
-ByteInputStream &TupleStream::getProducerResultStream()
+void TupleStream::prepare(TupleStreamParams const &params)
 {
-    assert(false);
-    throw;
-}
-
-bool TupleStream::writeResultToConsumerBuffer(
-    ByteOutputStream &resultOutputStream)
-{
-    assert(false);
-    throw;
-}
-
-TupleStream::BufferProvision TupleStream::getInputBufferRequirement() const
-{
-    return NO_PROVISION;
-}
-
-SharedTupleStream TupleStream::getStreamInput(uint ordinal)
-{
-    return pGraph->getStreamInput(getStreamId(),ordinal);
+    ExecutionStream<TupleStreamGraph, SharedTupleStream>::prepare(params);
 }
 
 FENNEL_END_CPPFILE("$Id$");

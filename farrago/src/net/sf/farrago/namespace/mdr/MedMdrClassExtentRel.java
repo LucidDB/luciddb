@@ -90,7 +90,7 @@ class MedMdrClassExtentRel extends TableAccessRel
         // determine the path from the root package to refObject
         RefBaseObject refPackage = JmiUtil.getContainer(refObject);
         String rootPackageName = JmiUtil.getMetaObjectName(
-            mdrClassExtent.directory.dataWrapper.rootPackage);
+            mdrClassExtent.directory.server.rootPackage);
         for (;;) {
             String packageName = JmiUtil.getMetaObjectName(refPackage);
             if (packageName.equals(rootPackageName)) {
@@ -130,7 +130,7 @@ class MedMdrClassExtentRel extends TableAccessRel
             nameList.add(Literal.makeLiteral(runtimeName[i]));
         }
 
-        return mdrClassExtent.directory.dataWrapper.generateRuntimeSupportCall(
+        return mdrClassExtent.directory.server.generateRuntimeSupportCall(
             new ArrayAllocationExpression(
                 TypeName.forOJClass(OJSystem.STRING),
                 new ExpressionList(null),

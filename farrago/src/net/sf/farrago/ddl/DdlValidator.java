@@ -32,7 +32,9 @@ import net.sf.farrago.resource.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 import net.sf.farrago.query.*;
+import net.sf.farrago.session.*;
 import net.sf.farrago.namespace.*;
+import net.sf.farrago.namespace.util.*;
 
 import net.sf.saffron.sql.*;
 import net.sf.saffron.util.*;
@@ -93,7 +95,7 @@ public class DdlValidator extends FarragoCompoundAllocation
      */
     public final FarragoResource res;
     
-    private final CloneableJdbcConnection invokingConnection;
+    private final FarragoSession invokingSession;
     
     private final FarragoCatalog catalog;
 
@@ -166,7 +168,7 @@ public class DdlValidator extends FarragoCompoundAllocation
      * change events and schedule appropriate validation actions on the
      * affected objects.  Validation is deferred until validate() is called.
      *
-     * @param invokingConnection JDBC connection invoking DDL
+     * @param invokingSession FarragoSession invoking DDL
      * @param catalog the catalog storing object definitions being validated
      * @param fennelDbHandle the FennelDbHandle for the database storing
      * objects being validated
@@ -174,10 +176,10 @@ public class DdlValidator extends FarragoCompoundAllocation
      * @param connectionDefaults default qualifiers used for unqualified objects
      * @param indexMap FarragoIndexMap to use for index access
      * @param sharedDataWrapperCache shared cache for loading
-     * FarragoForeignDataWrappers
+     * FarragoMedDataWrappers
      */
     public DdlValidator(
-        CloneableJdbcConnection invokingConnection,
+        FarragoSession invokingSession,
         FarragoCatalog catalog,
         FennelDbHandle fennelDbHandle,
         FarragoParser parser,
@@ -185,7 +187,7 @@ public class DdlValidator extends FarragoCompoundAllocation
         FarragoIndexMap indexMap,
         FarragoObjectCache sharedDataWrapperCache)
     {
-        this.invokingConnection = invokingConnection;
+        this.invokingSession = invokingSession;
         this.catalog = catalog;
         this.fennelDbHandle = fennelDbHandle;
         this.parser = parser;
@@ -319,36 +321,32 @@ public class DdlValidator extends FarragoCompoundAllocation
      * preparation or execution of internal SQL statements.  This is referred
      * to as reentrant SQL.  
      *
-     * @return a JDBC connection to use for reentrant SQL; when done, this
-     * connection must be released by calling releaseReentrantConnection
+     * @return a FarragoSession to use for reentrant SQL; when done, this
+     * connection must be released by calling releaseReentrantSession
      */
-    public DdlConnection newReentrantConnection()
+    public FarragoSession newReentrantSession()
     {
-        return invokingConnection.cloneJdbcConnection();
+        return invokingSession.cloneSession();
     }
 
     /**
      * .
      *
-     * @return the Connection which invoked this DDL
+     * @return the FarragoSession which invoked this DDL
      */
-    public Connection getInvokingConnection()
+    public FarragoSession getInvokingSession()
     {
-        return invokingConnection;
+        return invokingSession;
     }
 
     /**
-     * Release a DdlConnection acquired with newReentrantConnection().
+     * Release a FarragoSession acquired with newReentrantSession().
      *
-     * @param connection the connection to return
+     * @param session the session to release
      */
-    public void releaseReentrantConnection(DdlConnection connection)
+    public void releaseReentrantSession(FarragoSession session)
     {
-        try {
-            connection.close();
-        } catch (SQLException ex) {
-            throw Util.newInternal(ex);
-        }
+        session.closeAllocation();
     }
 
     /**

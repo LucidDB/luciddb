@@ -181,24 +181,22 @@ require version '${required.ant.version}'."/>
   <!-- File for farrago extension model. START -->
   <!-- XMI file containing Farrago extension model -->
   <property name="ExtModel.xmi"
-    location="${xmi.dir}/${extmodelname}.xmi"/>
+    location="${xmi.dir}/ExtModel.xmi"/>
 
   <!-- XMI file containing renumbered Farrago extension model -->
   <property name="ExtModelTransformed.xmi"
-    location="${xmi.dir}/${extmodelname}Transformed.xmi"/>
+    location="${xmi.dir}/ExtModelTransformed.xmi"/>
+
+  <!-- Extension model file name without path -->
+  <basename property="ExtModelFileName" file="${extmodel.file}" suffix=".zuml"/>
 
   <!-- XMI file containing UML representation of Farrago extension model -->
   <property name="ExtModelUML.xmi"
-    location="${xmi.dir}/${extmodelname}UML.xmi"/>
+    location="${xmi.dir}/${ExtModelFileName}.xmi"/>
 
   <!-- Same as ExtModelUML, but with diagams deleted -->
   <property name="ExtModelUMLSansDiagrams.xmi"
     location="${xmi.dir}/ExtModelUMLSansDiagrams.xmi"/>
-
-  <!-- Zipfile containing Poseidon UML XMI representation of -->
-  <!-- Farrago extension model -->
-  <property name="ExtModelUML.zuml"
-    location="${xmi.dir}/${extmodelname}UML.zuml"/>
 
   <!-- File for farrago extension model. END -->
 
@@ -627,7 +625,7 @@ require version '${required.ant.version}'."/>
       out="${FarragoMetamodel.xmi}"/>
   </target>
   
-  <target name="transformExtModel"  if="extmodelname">
+  <target name="transformExtModel"  if="extmodel.file">
 	 <xslt style="${xmi.dir}/transformFEME.xsl"
 		in="${ExtModel.xmi}"
 		out="${ExtModelTransformed.xmi}" />
@@ -635,7 +633,7 @@ require version '${required.ant.version}'."/>
 		token="org.omg.xmi.namespace.Model" value="omg.org/mof.Model/1.3" />
   </target>    
 
-  <target name="combineExtModel"  if="extmodelname">
+  <target name="combineExtModel"  if="extmodel.file">
 	 <xslt style="${xmi.dir}/combineExtModel.xsl"
 		in="${FarragoMetamodelCWM.xmi}"
 		out="${FarragoMetamodelExt.xmi}">
@@ -741,6 +739,7 @@ require version '${required.ant.version}'."/>
   <target name="cleanCatalog" depends="clean,cleanCatalogData">
     <delete file="${FarragoExtMetamodel.xmi}"/>
     <delete file="${FarragoExtMetamodelUML.xmi}"/>
+    <delete file="${FarragoExtMetamodelUMLSansDiagrams.xmi}"/>
     <delete file="${FarragoExtMetamodelTransformed.xmi}"/>
     <delete file="${FarragoMetamodel.xmi}"/>
     <delete file="${FarragoMetamodelUnresolved.xmi}"/>
@@ -748,6 +747,7 @@ require version '${required.ant.version}'."/>
     <delete file="${ExtModel.xmi}"/>
     <delete file="${ExtModelTransformed.xmi}"/>
     <delete file="${ExtModelUML.xmi}"/>
+	<delete file="${ExtModelUMLSansDiagrams.xmi}"/>
 	<delete file="${xmi.dir}/UnResolvedExtModel.xmi" />
   	<delete file="${FarragoMetamodelCWM.xmi}" />
   	<delete file="${FarragoMetamodelExt.xmi}" />
@@ -791,13 +791,12 @@ require version '${required.ant.version}'."/>
   </target>
 
   <!-- unzip farrago extension model -->
-  <target name="unzipExtModel" if="extmodelname">
-    <unzip src="${xmi.dir}/${extmodelname}.zuml" dest="${xmi.dir}">
+  <target name="unzipExtModel" if="extmodel.file">
+    <unzip src="${extmodel.file}" dest="${xmi.dir}">
       <patternset>
-        <include name="${extmodelname}.xmi"/>
+        <include name="${ExtModelFileName}.xmi"/>
       </patternset>
     </unzip>
-	<move file="${xmi.dir}/${extmodelname}.xmi" tofile="${ExtModelUML.xmi}"/>
   </target>
 
   <!-- NOTE:  Logger setting squelches unwanted INFORMATIONAL messages -->
@@ -807,7 +806,7 @@ require version '${required.ant.version}'."/>
 	  umlsansdiagrams="${FarragoExtMetamodelUMLSansDiagrams.xmi}"/>
   </target>
 
-  <target name="convertExtModel" depends="unzipExtModel"  if="extmodelname">
+  <target name="convertExtModel" depends="unzipExtModel"  if="extmodel.file">
     <uml2mof umlmodelname="${ExtModelUML.xmi}"
 	  outputfilename="${ExtModel.xmi}"
 	  umlsansdiagrams="${ExtModelUMLSansDiagrams.xmi}"/>

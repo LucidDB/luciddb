@@ -152,6 +152,9 @@ public class SqlKind extends EnumeratedValues.BasicValue
     /** Not Between */
     public static final int NotBetweenORDINAL = 42;
     public static final SqlKind NotBetween = new SqlKind("Not Between", NotBetweenORDINAL);
+    /** CASE  */
+    public static final int CaseORDINAL = 47;
+    public static final SqlKind Case = new SqlKind("CASE", CaseORDINAL);
 
     // prefix operators
     /** Not */

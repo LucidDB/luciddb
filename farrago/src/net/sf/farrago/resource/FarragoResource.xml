@@ -159,7 +159,7 @@ encountered near {1}</text>
 </exception>
 
 <exception id="420310" name="ValidatorViewColumnCountMismatch">
-    <text>Invalid definition for view {0}:  column name count does not match query</text>
+    <text>Column name count does not match query</text>
 </exception>
 
 <exception id="420320" name="ValidatorInvalidViewDefinition">
@@ -167,7 +167,7 @@ encountered near {1}</text>
 </exception>
 
 <exception id="420330" name="ValidatorInvalidViewDynamicParam">
-    <text>Invalid definition for view {0}:  dynamic parameters are illegal in views</text>
+    <text>Dynamic parameters are illegal in views</text>
 </exception>
 
 <exception id="420340" name="ValidatorSchemaDependencyCycle">
@@ -257,11 +257,43 @@ encountered near {1}</text>
 </exception>
 
 <!-- ====================================================================== -->
-<!-- Database resources 470,000 - 480,000 -->
+<!-- Database/Session resources 470,000 - 480,000 -->
 <!-- ====================================================================== -->
 
 <exception id="470000" name="DatabaseLoadFailed">
     <text>Failed to load database</text>
+</exception>
+
+<exception id="470010" name="SessionNoCommitInAutocommit">
+    <text>Can't COMMIT in auto-commit mode</text>
+</exception>
+
+<exception id="470020" name="SessionNoRollbackInAutocommit">
+    <text>Can't ROLLBACK in auto-commit mode</text>
+</exception>
+
+<exception id="470030" name="SessionDupSavepointName">
+    <text>Savepoint name {0} already in use</text>
+</exception>
+
+<exception id="470040" name="SessionNoSavepointInAutocommit">
+    <text>Can't create SAVEPOINT in auto-commit mode</text>
+</exception>
+
+<exception id="470050" name="SessionWrongSavepoint">
+    <text>Savepoint {0} is from wrong session</text>
+</exception>
+
+<exception id="470060" name="SessionInvalidSavepointId">
+    <text>Invalid savepoint ID {0,number}</text>
+</exception>
+
+<exception id="470070" name="SessionInvalidSavepointName">
+    <text>Invalid savepoint name {0}</text>
+</exception>
+
+<exception id="470080" name="SessionNoExecuteImmediateParameters">
+    <text>Cannot EXECUTE IMMEDIATE a statement with dynamic parameters:  {0}</text>
 </exception>
 
 

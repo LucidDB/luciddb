@@ -180,7 +180,8 @@ class SqlStringTest : virtual public TestBase, public TraceSource
                                       SqlStringTestGen &src2,
                                       int src2_width,
                                       int src2_len);
-
+    int testSqlStringNormalizeLexicalCmp(int v);
+    
 public:
     explicit SqlStringTest()
         : TraceSource(this,"SqlStringTest")
@@ -517,6 +518,15 @@ SqlStringTest::testSqlStringAsciiCatV()
     }
 }
 
+int
+SqlStringTest::testSqlStringNormalizeLexicalCmp(int v)
+{
+    if (v < 0) return -1;
+    if (v > 0) return 1;
+    return 0;
+}
+
+
 
 void
 SqlStringTest::testSqlStringAsciiCmpFHelper(SqlStringTestGen &src1,
@@ -535,10 +545,10 @@ SqlStringTest::testSqlStringAsciiCmpFHelper(SqlStringTestGen &src1,
     s1.erase (s1.find_last_not_of ( " " ) + 1);
     s2.erase (s2.find_last_not_of ( " " ) + 1);
         
-    int expected = s1.compare(s2);
+    int expected = testSqlStringNormalizeLexicalCmp(s1.compare(s2));
     char const * const s1p = s1.c_str();
     char const * const s2p = s2.c_str();
-    int expected2 = strcmp(s1p, s2p);
+    int expected2 = testSqlStringNormalizeLexicalCmp(strcmp(s1p, s2p));
     BOOST_CHECK_EQUAL(expected, expected2);
 
     result = SqlStrAsciiCmpF(src1.mStr, src1_width,
@@ -644,17 +654,11 @@ SqlStringTest::testSqlStringAsciiCmpVHelper(SqlStringTestGen &src1,
     string s1(src1.mStr, src1_len);
     string s2(src2.mStr, src2_len);
         
-    int expected = s1.compare(s2);
+    int expected = testSqlStringNormalizeLexicalCmp(s1.compare(s2));
     char const * const s1p = s1.c_str();
     char const * const s2p = s2.c_str();
-    int expected2 = strcmp(s1p, s2p);
+    int expected2 = testSqlStringNormalizeLexicalCmp(strcmp(s1p, s2p));
     BOOST_CHECK_EQUAL(expected, expected2);
-    if (expected != expected2) {
-        BOOST_MESSAGE(" e=" << expected << " e2=" << expected2);
-        BOOST_MESSAGE(" len1=" << src1_len << " len2=" << src2_len);
-        BOOST_MESSAGE("--s1 |" << s1 << "|");
-        BOOST_MESSAGE("--s2 |" << s2 << "|");
-    }
     
 
     result = SqlStrAsciiCmpV(src1.mStr, src1_len,

@@ -143,6 +143,26 @@ public:
     }
 
     static Instruction* createInstruction(string& name,
+                                          CalcYYLocType& location)
+    {
+        Instruction* inst = NULL;
+        try {
+            inst = InstructionFactory::createInstruction(name);
+        }
+        catch (FennelExcn& ex) {
+            throw CalcAssemblerException(ex.getMessage(), location);
+        }   
+        catch (std::exception& ex) {
+            throw CalcAssemblerException(ex.what(), location);
+        }   
+        if (inst == NULL) 
+            throw CalcAssemblerException("Error instantiating instruction: " + name,
+                                          location);
+
+        return inst;
+    }
+
+    static Instruction* createInstruction(string& name,
                                           TProgramCounter pc,
                                           CalcYYLocType& location)
     {

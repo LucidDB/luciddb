@@ -23,6 +23,7 @@ import net.sf.saffron.core.*;
 import net.sf.saffron.util.*;
 
 import net.sf.farrago.namespace.*;
+import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 import net.sf.farrago.FarragoMetadataFactory;
@@ -34,22 +35,22 @@ import javax.jmi.model.*;
 import javax.jmi.reflect.*;
 
 /**
- * MedMdrNameDirectory implements the FarragoNameDirectory
+ * MedMdrNameDirectory implements the FarragoMedNameDirectory
  * interface by mapping the package structure of an MDR repository.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-class MedMdrNameDirectory implements FarragoNameDirectory
+class MedMdrNameDirectory extends MedAbstractNameDirectory
 {
-    final MedMdrForeignDataWrapper dataWrapper;
+    final MedMdrDataServer server;
     
     final RefPackage rootPackage;
 
     /**
      * Instantiate a MedMdrNameDirectory.
      *
-     * @param dataWrapper MedMdrForeignDataWrapper from which
+     * @param server MedMdrDataServer from which
      * this directory was opened
      *
      * @param rootPackage root package from which to map names in repository;
@@ -58,20 +59,20 @@ class MedMdrNameDirectory implements FarragoNameDirectory
      * which will be searched for class z
      */
     MedMdrNameDirectory(
-        MedMdrForeignDataWrapper dataWrapper,
+        MedMdrDataServer server,
         RefPackage rootPackage)
     {
-        this.dataWrapper = dataWrapper;
+        this.server = server;
         this.rootPackage = rootPackage;
     }
 
     RefPackage lookupRefPackage(
         String [] names,int prefix)
     {
-        if (dataWrapper.schemaName != null) {
+        if (server.schemaName != null) {
             if (prefix > 0) {
                 assert(prefix == 1);
-                assert(names[0].equals(dataWrapper.schemaName));
+                assert(names[0].equals(server.schemaName));
             }
             return rootPackage;
         }
@@ -121,8 +122,8 @@ class MedMdrNameDirectory implements FarragoNameDirectory
         }
     }
     
-    // implement FarragoNameDirectory
-    public FarragoNamedColumnSet lookupColumnSet(
+    // implement FarragoMedNameDirectory
+    public FarragoMedColumnSet lookupColumnSet(
         FarragoTypeFactory typeFactory,
         String [] foreignName,
         String [] localName)
@@ -132,7 +133,7 @@ class MedMdrNameDirectory implements FarragoNameDirectory
             typeFactory,foreignName,localName,null);
     }
     
-    FarragoNamedColumnSet lookupColumnSetAndImposeType(
+    FarragoMedColumnSet lookupColumnSetAndImposeType(
         FarragoTypeFactory typeFactory,
         String [] foreignName,
         String [] localName,
@@ -169,7 +170,7 @@ class MedMdrNameDirectory implements FarragoNameDirectory
             StructuralFeature feature = (StructuralFeature) features.get(i);
             fieldNames[i] = feature.getName();
             types[i] = typeFactory.createMofType(feature);
-            if (dataWrapper.foreignRepository) {
+            if (server.foreignRepository) {
                 // for foreign repositories, we don't have generated
                 // classes, so need to treat everything as nullable
                 types[i] = typeFactory.createTypeWithNullability(
@@ -196,8 +197,8 @@ class MedMdrNameDirectory implements FarragoNameDirectory
         return typeFactory.createProjectType(types,fieldNames);
     }
 
-    // implement FarragoNameDirectory
-    public FarragoNameDirectory lookupSubdirectory(String [] foreignName)
+    // implement FarragoMedNameDirectory
+    public FarragoMedNameDirectory lookupSubdirectory(String [] foreignName)
         throws SQLException
     {
         RefPackage subPackage = lookupRefPackage(
@@ -206,16 +207,10 @@ class MedMdrNameDirectory implements FarragoNameDirectory
             return null;
         }
         return new MedMdrNameDirectory(
-            dataWrapper,subPackage);
+            server,subPackage);
     }
 
-    // implement FarragoNameDirectory
-    public Iterator getContentsAsCwm(FarragoMetadataFactory factory)
-        throws SQLException
-    {
-        // TODO
-        return null;
-    }
+    // TODO:  getContentsAsCwm
 }
 
 // End MedMdrNameDirectory.java

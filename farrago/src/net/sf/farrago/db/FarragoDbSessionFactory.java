@@ -17,24 +17,36 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-package net.sf.farrago.namespace;
+package net.sf.farrago.db;
 
-import net.sf.saffron.ext.*;
-import net.sf.saffron.core.*;
-import net.sf.saffron.sql.*;
+import net.sf.farrago.session.*;
+import net.sf.farrago.parser.*;
+import net.sf.farrago.catalog.*;
+
+import java.util.*;
 
 /**
- * FarragoNamedColumnSet defines an interface for all relation-like objects
- * accessible by Farrago.  Instances of FarragoNamedColumnSet are not
- * necessarily described in Farrago's catalog.  However, when they are, they
- * are described by instances of CwmNamedColumnSet.
+ * FarragoDbSessionFactory is a default implementation for the
+ * {@link net.sf.farrago.session.FarragoSessionFactory} interface.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public interface FarragoNamedColumnSet
-    extends SaffronTable, SqlValidator.Table
+public class FarragoDbSessionFactory implements FarragoSessionFactory
 {
+    // implement FarragoSessionFactory
+    public FarragoSession newFarragoSession(String url,Properties info)
+    {
+        return new FarragoDbSession(url,info,this);
+    }
+    
+    // implement FarragoSessionFactory
+    public FarragoParser newFarragoParser(
+        FarragoCatalog catalog,
+        String sql)
+    {
+        return new FarragoParser(catalog,sql);
+    }
 }
 
-// End FarragoNamedColumnSet.java
+// End FarragoDbSessionFactory.java

@@ -29,6 +29,7 @@ import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.namespace.*;
+import net.sf.farrago.namespace.util.*;
 
 import net.sf.saffron.util.*;
 
@@ -86,7 +87,7 @@ public class FarragoRuntimeContext
      * @param connectionDefaults context-dependent settings
      *
      * @param sharedDataWrapperCache FarragoObjectCache to use for
-     * caching FarragoForeignDataWrapper instances
+     * caching FarragoMedDataWrapper instances
      */
     public FarragoRuntimeContext(
         FarragoCatalog catalog,
@@ -150,13 +151,13 @@ public class FarragoRuntimeContext
         String serverMofId,
         Object param)
     {
-        FemDataServerImpl server = (FemDataServerImpl)
+        FemDataServerImpl femServer = (FemDataServerImpl)
             catalog.getRepository().getByMofId(serverMofId);
 
-        FarragoForeignDataWrapper wrapper = 
-            server.loadFromCache(dataWrapperCache);
+        FarragoMedDataServer server = 
+            femServer.loadFromCache(dataWrapperCache);
         try {
-            Object obj = wrapper.getRuntimeSupport(param);
+            Object obj = server.getRuntimeSupport(param);
             if (obj instanceof FarragoAllocation) {
                 addAllocation((FarragoAllocation) obj);
             }

@@ -265,6 +265,14 @@ have custom logger naming schemes:
 
 <ul>
 
+<li>add net.sf.farrago.jdbc.level=FINER to trace exceptions which
+are returned via the JDBC driver (this is very useful
+since it traces underlying exceptions as well; these may
+not be visible in a front end such as sqlline)</li>
+
+<li>add net.sf.farrago.db.level=FINE to see all SQL statements
+executed (use FINER to see dynamic parameter values as well)</li>
+
 <li>add net.sf.farrago.saffron.level=FINE to turn on all Saffron tracing (no
 further discrimination is available)
 

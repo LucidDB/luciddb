@@ -23,6 +23,7 @@ import net.sf.farrago.ddl.*;
 import net.sf.farrago.util.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.query.*;
+import net.sf.farrago.session.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.cwm.core.*;
 
@@ -70,29 +71,33 @@ public abstract class CwmViewImpl
             return;
         }
         
-        DdlConnection connection = validator.newReentrantConnection();
+        FarragoSession session = validator.newReentrantSession();
 
         try {
-            validateImpl(validator, connection);
-        } catch (SQLException e) {
+            validateImpl(validator, session);
+        } catch (FarragoUnvalidatedDependencyException ex) {
+            // pass this one through
+            throw ex;
+        } catch (Throwable ex) {
             // TODO:  if e has parser position information in it, need to either
             // delete it or adjust it
             throw validator.res.newValidatorInvalidViewDefinition(
                 getName(),
-                e.getMessage());
+                ex.getMessage(),
+                ex);
         } finally {
-            validator.releaseReentrantConnection(connection);
+            validator.releaseReentrantSession(session);
         }
     }
 
     private void validateImpl(
         DdlValidator validator,
-        DdlConnection connection) throws SQLException
+        FarragoSession session) throws SQLException
     {
         String sql = getQueryExpression().getBody();
 
         tracer.fine(sql);
-        FarragoViewInfo viewInfo = connection.prepareViewQuery(sql);
+        FarragoSessionViewInfo viewInfo = session.analyzeViewQuery(sql);
         ResultSetMetaData metaData = viewInfo.resultMetaData;
 
         List columnList = getFeature();
@@ -103,14 +108,12 @@ public abstract class CwmViewImpl
             // number of explicitly specified columns needs to match the number
             // of columns produced by the query
             if (metaData.getColumnCount() != columnList.size()) {
-                throw validator.res.newValidatorViewColumnCountMismatch(
-                    getName());
+                throw validator.res.newValidatorViewColumnCountMismatch();
             }
         }
 
         if (viewInfo.parameterMetaData.getParameterCount() != 0) {
-            throw validator.res.newValidatorInvalidViewDynamicParam(
-                getName());
+            throw validator.res.newValidatorInvalidViewDynamicParam();
         }
 
         // Derive column information from result set metadata

@@ -55,9 +55,18 @@ public class FarragoCompoundAllocation
         ListIterator iter = allocations.listIterator(allocations.size());
         while (iter.hasPrevious()) {
             FarragoAllocation allocation = (FarragoAllocation) iter.previous();
+            // NOTE:  nullify the entry just retrieved so that if allocation
+            // calls back to forgetAllocation, it won't find itself
+            // (this prevents a ConcurrentModificationException)
+            iter.set(null);
             allocation.closeAllocation();
         }
         allocations.clear();
+    }
+
+    public void forgetAllocation(FarragoAllocation allocation)
+    {
+        allocations.remove(allocation);
     }
 }
 

@@ -26,16 +26,16 @@ import java.sql.*;
 import java.util.*;
 
 /**
- * FarragoNameDirectory defines a virtual hierarchical namespace interface in
+ * FarragoMedNameDirectory defines a virtual hierarchical namespace interface in
  * which to look up tables, routines, other namespaces, etc.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public interface FarragoNameDirectory
+public interface FarragoMedNameDirectory
 {
     /**
-     * Look up a FarragoNamedColumnSet by name.  This method supports Farrago's
+     * Looks up a FarragoMedColumnSet by name.  This method supports Farrago's
      * capability to reference a foreign table directly without having to
      * create local metadata about it.
      *
@@ -45,20 +45,20 @@ public interface FarragoNameDirectory
      * @param foreignName foreign compound identifier to lookup 
      *
      * @param localName compound identifier by which
-     * FarragoNamedColumnSet will be referenced locally
+     * FarragoMedColumnSet will be referenced locally
      *
-     * @return FarragoNamedColumnSet, or null if none found
+     * @return FarragoMedColumnSet, or null if none found
      *
      * @exception SQLException if metadata access is unsuccessful
      */
-    public FarragoNamedColumnSet lookupColumnSet(
+    public FarragoMedColumnSet lookupColumnSet(
         FarragoTypeFactory typeFactory,
         String [] foreignName,
         String [] localName)
         throws SQLException;
 
     /**
-     * Look up a subdirectory by name.
+     * Looks up a subdirectory by name.
      *
      * @param foreignName compound identifier for subdirectory
      *
@@ -66,11 +66,11 @@ public interface FarragoNameDirectory
      *
      * @exception SQLException if metadata access is unsuccessful
      */
-    public FarragoNameDirectory lookupSubdirectory(String [] foreignName)
+    public FarragoMedNameDirectory lookupSubdirectory(String [] foreignName)
         throws SQLException;
 
     /**
-     * Retrieve the contents of this directory as CWM elements.  The
+     * Retrieves the contents of this directory as CWM elements.  The
      * implementation should construct new instances of CWM elements and return
      * them.  There is no need to start a transaction; the caller will take
      * care of that as well as commit/rollback.  This method supports the
@@ -92,4 +92,4 @@ public interface FarragoNameDirectory
         throws SQLException;
 }
 
-// End FarragoNameDirectory.java
+// End FarragoMedNameDirectory.java

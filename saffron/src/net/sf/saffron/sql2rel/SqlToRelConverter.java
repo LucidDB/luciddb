@@ -485,8 +485,7 @@ public class SqlToRelConverter {
                 SqlCall call = (SqlCall) node;
                 operands = call.getOperands();
                 if (call.operator instanceof SqlBinaryOperator) {
-                    final SqlBinaryOperator op =
-                        (SqlBinaryOperator) call.operator;
+                    final SqlBinaryOperator op = (SqlBinaryOperator) call.operator;
 //                    final RexKind opCode = (RexKind) binaryMap.get(op.name);
 //                    if (opCode == null) {
 //                        assert !call.isA(SqlNode.Kind.In) :
@@ -511,13 +510,33 @@ public class SqlToRelConverter {
                         return exp;
                     }
                     return rexBuilder.makeCall(op, new RexNode[]{exp});
-                } else {
+                } else if (call.operator instanceof SqlCaseOperator) {
+                    return convertCase(bb, (SqlCase) call);
+                }
+
+                else {
                     throw Util.needToImplement(node);
                 }
             } else {
                 throw Util.needToImplement(node);
             }
         }
+    }
+
+    private RexNode convertCase(Blackboard bb, SqlCase call) {
+        List whenList = call.getWhenOperands();
+        List thenList = call.getThenOperands();
+        RexNode[] whenThenElseRex = new RexNode[whenList.size()*2+1];
+        assert(whenList.size()==thenList.size());
+
+
+
+        for (int i = 0; i < whenList.size(); i++) {
+            whenThenElseRex[i*2] = convertExpression(bb, (SqlNode) whenList.get(i));
+            whenThenElseRex[i*2+1] = convertExpression(bb, (SqlNode) thenList.get(i));
+        }
+        whenThenElseRex[whenThenElseRex.length-1] = convertExpression(bb, call.getElseOperand());
+        return rexBuilder.makeCall(call.operator, whenThenElseRex); //REVIEW 16-March-2004 wael: is there a better way?
     }
 
 

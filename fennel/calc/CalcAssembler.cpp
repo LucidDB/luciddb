@@ -32,6 +32,7 @@ using namespace boost;
 InstructionFactory::StringFactoryMap InstructionFactory::nativeInstructionMap;
 InstructionFactory::StringFactoryMap InstructionFactory::boolInstructionMap;
 InstructionFactory::StringFactoryMap InstructionFactory::pointerInstructionMap;
+BasicInstructionFactoryMap InstructionFactory::basicInstructionMap;
 JumpInstructionFactoryMap InstructionFactory::jumpInstructionMap;
 ExtendedInstructionFactoryMap InstructionFactory::extendedInstructionMap;
 

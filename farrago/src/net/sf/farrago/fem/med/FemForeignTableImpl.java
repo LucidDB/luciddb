@@ -25,6 +25,7 @@ import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.namespace.*;
+import net.sf.farrago.namespace.util.*;
 import net.sf.farrago.type.*;
 
 import net.sf.saffron.core.*;
@@ -71,7 +72,7 @@ public abstract class FemForeignTableImpl extends InstanceHandler
             }
         }
             
-        FarragoNamedColumnSet columnSet;
+        FarragoMedColumnSet columnSet;
         try {
             // validate that we can successfully initialize the table
             columnSet = loadFromCache(
@@ -123,13 +124,13 @@ public abstract class FemForeignTableImpl extends InstanceHandler
     }
 
     /**
-     * Creates a FarragoNamedColumnSet representation for this foreign table.
+     * Creates a FarragoMedColumnSet representation for this foreign table.
      *
      * @param cache cache for loading server
      *
      * @return loaded table
      */
-    public FarragoNamedColumnSet loadFromCache(
+    public FarragoMedColumnSet loadFromCache(
         FarragoDataWrapperCache cache,
         FarragoCatalog catalog,
         FarragoTypeFactory typeFactory)
@@ -156,13 +157,13 @@ public abstract class FemForeignTableImpl extends InstanceHandler
                 FemDataWrapperImpl.getStorageOptionsAsProperties(column));
         }
         
-        FemDataServerImpl server = getDataServer(catalog);
+        FemDataServerImpl femServer = getDataServer(catalog);
 
-        FarragoForeignDataWrapper wrapper = server.loadFromCache(cache);
+        FarragoMedDataServer server = femServer.loadFromCache(cache);
 
-        FarragoNamedColumnSet columnSet;
+        FarragoMedColumnSet columnSet;
         try {
-            columnSet = wrapper.newColumnSet(
+            columnSet = server.newColumnSet(
                 qualifiedName,
                 props,
                 typeFactory,

@@ -17,41 +17,24 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-package net.sf.farrago.query;
+package net.sf.farrago.namespace;
 
-import java.util.*;
-import java.sql.*;
+import net.sf.saffron.ext.*;
+import net.sf.saffron.core.*;
+import net.sf.saffron.sql.*;
 
 /**
- * FarragoViewInfo defines internal information needed while creating a view.
+ * FarragoMedColumnSet defines an interface for all relation-like objects
+ * accessible by Farrago.  Instances of FarragoMedColumnSet are not
+ * necessarily described in Farrago's catalog.  However, when they are, they
+ * are described by instances of CwmNamedColumnSet.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoViewInfo
+public interface FarragoMedColumnSet
+    extends SaffronTable, SqlValidator.Table
 {
-    /**
-     * The query definition expanded after validation.  This contains no
-     * context-dependent information (e.g. all objects are fully qualified),
-     * so it can be stored in the catalog.
-     */
-    public String validatedSql;
-
-    /**
-     * Set of CwmNamedColumnSet instances on which this view directly depends
-     * (i.e. other views are not expanded).
-     */
-    public Set dependencies;
-
-    /**
-     * Metadata for result set returned when this view is queried.
-     */
-    public ResultSetMetaData resultMetaData;
-
-    /**
-     * Metadata for parameters used as input to this view.
-     */
-    public ParameterMetaData parameterMetaData;
 }
 
-// End FarragoViewInfo.java
+// End FarragoMedColumnSet.java

@@ -29,7 +29,9 @@ import net.sf.farrago.resource.*;
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
+import net.sf.farrago.session.*;
 import net.sf.farrago.namespace.*;
+import net.sf.farrago.namespace.util.*;
 
 import net.sf.saffron.core.*;
 import net.sf.saffron.oj.stmt.*;
@@ -142,7 +144,7 @@ public class FarragoPreparingStmt extends OJStatement
 
     private boolean rememberDependencies;
 
-    private Set initializedWrapperClassNameSet;
+    private Set loadedServerClassNameSet;
 
     private FarragoPlanner planner;
 
@@ -158,7 +160,7 @@ public class FarragoPreparingStmt extends OJStatement
      * @param codeCache FarragoObjectCache to use for caching code snippets
      * needed during preparation
      * @param dataWrapperCache FarragoObjectCache to use for caching
-     * FarragoForeignDataWrapper instances
+     * FarragoMedDataWrapper instances
      * @param indexMap FarragoIndexMap to use for index access
      */
     public FarragoPreparingStmt(
@@ -180,7 +182,7 @@ public class FarragoPreparingStmt extends OJStatement
         farragoTypeFactory = new FarragoTypeFactoryImpl(catalog);
         this.dataWrapperCache = new FarragoDataWrapperCache(
             allocations,dataWrapperCache,catalog);
-        initializedWrapperClassNameSet = new HashSet();
+        loadedServerClassNameSet = new HashSet();
             
         super.setResultCallingConvention(CallingConvention.ITERATOR);
 
@@ -328,7 +330,7 @@ public class FarragoPreparingStmt extends OJStatement
      *
      * @param info receives view info
      */
-    public void prepareViewInfo(SqlNode sqlNode,FarragoViewInfo info)
+    public void prepareViewInfo(SqlNode sqlNode,FarragoSessionViewInfo info)
     {
         getSqlToRelConverter(validator,this);
         SaffronRel rootRel = sqlToRelConverter.convertValidatedQuery(sqlNode);
@@ -524,14 +526,14 @@ public class FarragoPreparingStmt extends OJStatement
         }
     }
 
-    private FarragoNamedColumnSet getForeignTableFromNamespace(
+    private FarragoMedColumnSet getForeignTableFromNamespace(
         FarragoCatalog.ResolvedSchemaObject resolved)
     {
-        FemDataServerImpl server = (FemDataServerImpl)
+        FemDataServerImpl femServer = (FemDataServerImpl)
             catalog.getModelElement(
                 catalog.medPackage.getFemDataServer().refAllOfType(),
                 resolved.catalogName);
-        if (server == null) {
+        if (femServer == null) {
             return null;
         }
 
@@ -539,16 +541,16 @@ public class FarragoPreparingStmt extends OJStatement
         // nothing to hang a direct dependency on.  Instead, we
         // remember the dependency on the server, so that if the server
         // gets dropped, dependent views will cascade.
-        addDependency(server);
+        addDependency(femServer);
         
-        FarragoForeignDataWrapper wrapper = loadDataServerFromCache(server);
+        FarragoMedDataServer server = loadDataServerFromCache(femServer);
         
         String [] namesWithoutCatalog = new String [] {
             resolved.schemaName,
             resolved.objectName
         };
         try {
-            FarragoNameDirectory directory = wrapper.getNameDirectory();
+            FarragoMedNameDirectory directory = server.getNameDirectory();
             if (directory == null) {
                 return null;
             }
@@ -564,20 +566,20 @@ public class FarragoPreparingStmt extends OJStatement
         }
     }
 
-    private FarragoForeignDataWrapper loadDataServerFromCache(
-        FemDataServerImpl server)
+    private FarragoMedDataServer loadDataServerFromCache(
+        FemDataServerImpl femServer)
     {
-        FarragoForeignDataWrapper wrapper =
-            server.loadFromCache(dataWrapperCache);
-        if (initializedWrapperClassNameSet.add(wrapper.getClass().getName())) {
-            // This is the first time we've seen this wrapper, so give it
+        FarragoMedDataServer server =
+            femServer.loadFromCache(dataWrapperCache);
+        if (loadedServerClassNameSet.add(server.getClass().getName())) {
+            // This is the first time we've seen this server class, so give it
             // a chance to register any planner info such as calling
-            // conventions and rules.  REVIEW:  the discrimination is
-            // based on class name, on the assumption that it should
-            // unique regardless of classloader, JAR, etc.  Is that correct?
-            wrapper.registerRules(planner);
+            // conventions and rules.  REVIEW: the discrimination is based on
+            // class name, on the assumption that it should unique regardless
+            // of classloader, JAR, etc.  Is that correct?
+            server.registerRules(planner);
         }
-        return wrapper;
+        return server;
     }
 
     // implement SaffronSchema

@@ -512,6 +512,22 @@ void testJump()
     }    
 }
 
+void testReturn()
+{
+    // Test the return instruction
+    CalcAssemblerTestCase testCase1(__LINE__, "RETURN", 
+                                    "I u2;\nO u2;\n"
+                                    "T;\n"
+                                    "MOVE O0, I0;\n"
+                                    "RETURN;\n"
+                                    "ADD O0, I0, I0;\n");
+    if (testCase1.assemble()) {
+        testCase1.setInput<uint16_t>(0, 100);
+        testCase1.setExpectedOutput<uint16_t>(0, 100);
+        testCase1.test();
+    }
+}
+
 void convertFloatToInt(Calculator *pCalc,
                        RegisterRef<int>* regOut,
                        RegisterRef<float>* regIn)
@@ -577,7 +593,7 @@ void testInvalidPrograms()
     testCase4.assemble();
 
     CalcAssemblerTestCase testCase5(__LINE__, "BAD INST", "I u2, u4;\nO u4;\nT;\nklkdfw;");
-    testCase5.expectAssemblerError("Invalid instruction");
+    testCase5.expectAssemblerError("parse error");
     testCase5.assemble();
 
     // Test invalid register index
@@ -601,6 +617,7 @@ void testAssembler()
     testAdd();
     testBool();
     testPointer();
+    testReturn();
     testJump();
     testExtended();
 }

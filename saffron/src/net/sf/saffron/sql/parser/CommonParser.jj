@@ -1053,6 +1053,29 @@ SqlNode AtomicRowExpression() :
     LOOKAHEAD(2) e = FunctionCall() { return e; }
 |
     e = CompoundIdentifier() { return e; }
+|
+    {
+        SqlNode caseIdentifier=null;
+        SqlNode elseClause = null;
+        List whenList = new ArrayList();
+        List thenList = new ArrayList();
+        //sorry there is no wishlist
+    }
+    <CASE>
+        [caseIdentifier = Expression(EXPR_ACCEPT_NONQUERY)]
+        (
+            <WHEN> e = Expression(EXPR_ACCEPT_NONQUERY)
+            { whenList.add(e); }
+            <THEN> e = Expression(EXPR_ACCEPT_NONQUERY)
+            { thenList.add(e); }
+        )+
+        [<ELSE> elseClause = Expression(EXPR_ACCEPT_NONQUERY)]
+    <END>
+    {
+        return opTab.caseOperator.createCall(caseIdentifier,
+                                             new SqlNodeList(whenList), new SqlNodeList(thenList),
+                                             elseClause);
+    }
 }
 
 /**
@@ -1302,12 +1325,15 @@ TOKEN :
 | < ASCENDING: "ascending" >
 | < BETWEEN: "between" >
 | < BY: "by" >
+| < CASE: "case" >
 | < COLLATE: "collate" >
 | < CROSS: "cross" >
 | < DELETE: "delete" >
 | < DESC: "desc" >
 | < DESCENDING: "descending" >
 | < DISTINCT: "distinct" >
+| < ELSE: "else" >
+| < END: "end" >
 | < ESCAPE: "escape" >
 | < EXCEPT: "except" >
 | < EXISTS: "exists" >
@@ -1340,12 +1366,14 @@ TOKEN :
 | < SET: "set" >
 | < SIMILAR: "similar" >
 | < TABLE: "table" >
+| < THEN: "then" >
 | < TRUE: "true" >
 | < UNION: "union" >
 | < UNKNOWN: "unknown" >
 | < UPDATE: "update" >
 | < USING: "using" >
 | < VALUES: "values" >
+| < WHEN: "when" >
 | < WHERE: "where" >
 | < WITH: "with" >
 | < WITHOUT: "without" >

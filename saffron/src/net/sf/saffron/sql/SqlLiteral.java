@@ -120,7 +120,6 @@ public class SqlLiteral extends SqlNode
          * An even nbr of hex digits is in the standard a Binary String.
          */
         public static BitString createFromHexString(String s){
-            assert((s.length() & 1) !=0); //must be odd nbr of bits
             int lengthToBe = s.length()*4;
 
             //trick,add an additional non-zero bits hex digit in case hex string starts with 0,is there a smart(er) way?
@@ -266,6 +265,11 @@ public class SqlLiteral extends SqlNode
         return new SqlLiteral(null);
     }
 
+    public static boolean isNullLiteral(SqlNode node)
+    {
+        return (node instanceof SqlLiteral) && (((SqlLiteral) node).getValue() == null);
+    }
+
     /**
      * Creates a boolean literal.
      */
@@ -351,6 +355,10 @@ public class SqlLiteral extends SqlNode
             writer.print("NULL");
         } else {
             writer.print(value.toString());
+        }
+
+        if (null!=value){
+//            writer.print(" NOT NULL");
         }
     }
 

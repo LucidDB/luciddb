@@ -19,14 +19,10 @@
 
 package net.sf.farrago.jdbc;
 
-import net.sf.farrago.catalog.*;
-import net.sf.farrago.query.*;
+import net.sf.farrago.session.*;
 import net.sf.farrago.util.*;
-import net.sf.farrago.runtime.*;
 
-import net.sf.saffron.jdbc.*;
 import net.sf.saffron.util.*;
-import net.sf.saffron.oj.stmt.*;
 
 import java.sql.*;
 
@@ -35,20 +31,16 @@ import java.util.logging.*;
 
 
 /**
- * FarragoJdbcStatement subclasses SaffronJdbcStatement to implement
- * Farrago-specific details of statement execution.
+ * FarragoJdbcStatement implements the {@link java.sql.Statement} interface
+ * for the Farrago JDBC driver.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public class FarragoJdbcStatement
-    extends SaffronJdbcStatement
-    implements FarragoAllocation
+    implements Statement
 {
     //~ Static fields/initializers --------------------------------------------
-
-    private static Logger tracer =
-        TraceUtil.getClassTrace(FarragoJdbcStatement.class);
 
     protected static final String ERRMSG_NOT_A_QUERY =
     "Not a query:  ";
@@ -59,22 +51,14 @@ public class FarragoJdbcStatement
     //~ Instance fields -------------------------------------------------------
 
     /**
-     * Number of rows affected by last update, or -1 if last statement was not
-     * DML or its update count was already returned.
-     */
-    protected int updateCount;
-
-    /**
      * Connection through which this stmt was created.
      */
-    protected FarragoJdbcConnection farragoConnection;
+    protected FarragoJdbcConnection connection;
 
     /**
-     * Values to bind to dynamic parameters.
+     * Underlying statement context.
      */
-    protected Object [] dynamicParamValues;
-
-    private boolean daemon;
+    protected FarragoSessionStmtContext stmtContext;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -82,35 +66,19 @@ public class FarragoJdbcStatement
      * Creates a new FarragoJdbcStatement object.
      *
      * @param connection the connection creating this statement
+     *
+     * @param stmtContext underlying FarragoSessionStmtContext
      */
-    FarragoJdbcStatement(FarragoJdbcConnection connection)
+    FarragoJdbcStatement(
+        FarragoJdbcConnection connection,
+        FarragoSessionStmtContext stmtContext)
     {
-        super(connection);
-        this.farragoConnection = connection;
-        updateCount = -1;
-        this.daemon = daemon;
+        this.connection = connection;
+        this.stmtContext = stmtContext;
     }
 
     //~ Methods ---------------------------------------------------------------
 
-    /**
-     * Turn this statement into a daemon.
-     */
-    public void daemonize()
-    {
-        daemon = true;
-    }
-    
-    // implement FarragoAllocation
-    public void closeAllocation()
-    {
-        try {
-            close();
-        } catch (SQLException ex) {
-            throw Util.newInternal(ex);
-        }
-    }
-    
     // implement Statement
     public void setEscapeProcessing(boolean enable) throws SQLException
     {
@@ -120,134 +88,295 @@ public class FarragoJdbcStatement
     // implement Statement
     public boolean getMoreResults() throws SQLException
     {
-        if (resultSet != null) {
-            resultSet.close();
-            resultSet = null;
-        }
+        stmtContext.closeResultSet();
         return false;
     }
 
     // implement Statement
     public int getUpdateCount() throws SQLException
     {
-        int count = updateCount;
-        updateCount = -1;
-        return count;
+        return stmtContext.getUpdateCount();
     }
 
     // implement Statement
     public boolean execute(String sql) throws SQLException
     {
-        FarragoCompoundAllocation allocations = new FarragoCompoundAllocation();
-        FarragoExecutableStmt stmt = farragoConnection.prepareImpl(
-            sql,allocations,true,null);
-        if (stmt != null) {
-            executeImpl(stmt,allocations);
+        boolean unprepare = true;
+        try {
+            stmtContext.prepare(sql,true);
+            if (stmtContext.isPrepared()) {
+                stmtContext.execute();
+                if (stmtContext.getResultSet() != null) {
+                    unprepare = false;
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        } catch (Throwable ex) {
+            throw FarragoJdbcDriver.newSqlException(ex);
+        } finally {
+            if (unprepare) {
+                stmtContext.unprepare();
+            } else {
+                // REVIEW:  make sure everything is going to get
+                // deallocated correctly when result set is closed
+            }
         }
-        return (resultSet != null);
     }
 
     // implement Statement
     public int executeUpdate(String sql) throws SQLException
     {
-        FarragoCompoundAllocation allocations = new FarragoCompoundAllocation();
-        FarragoExecutableStmt stmt = farragoConnection.prepareImpl(
-            sql,allocations,true,null);
-        if (stmt != null) {
-            if (!stmt.isDml()) {
-                allocations.closeAllocation();
-                throw new SQLException(ERRMSG_IS_A_QUERY + sql);
+        try {
+            stmtContext.prepare(sql,true);
+            if (stmtContext.isPrepared()) {
+                if (!stmtContext.isPreparedDml()) {
+                    throw new SQLException(ERRMSG_IS_A_QUERY + sql);
+                }
+                stmtContext.execute();
+                assert(stmtContext.getResultSet() == null);
+                int count = stmtContext.getUpdateCount();
+                if (count == -1) {
+                    count = 0;
+                }
+                return count;
+            } else {
+                return 0;
             }
-            executeImpl(stmt,allocations);
+        } catch (SQLException ex) {
+            throw ex;
+        } catch (Throwable ex) {
+            throw FarragoJdbcDriver.newSqlException(ex);
+        } finally {
+            stmtContext.unprepare();
         }
-        assert(resultSet == null);
-        int count = getUpdateCount();
-        if (count == -1) {
-            count = 0;
-        }
-        return count;
     }
     
     // implement Statement
     public ResultSet executeQuery(String sql) throws SQLException
     {
-        FarragoCompoundAllocation allocations = new FarragoCompoundAllocation();
-        FarragoExecutableStmt stmt = farragoConnection.prepareImpl(
-            sql,allocations,true,null);
-        if (stmt == null || stmt.isDml()) {
-            allocations.closeAllocation();
-            throw new SQLException(ERRMSG_NOT_A_QUERY + sql);
+        boolean unprepare = true;
+        try {
+            stmtContext.prepare(sql,true);
+            if (!stmtContext.isPrepared() || stmtContext.isPreparedDml()) {
+                throw new SQLException(ERRMSG_NOT_A_QUERY + sql);
+            }
+            stmtContext.execute();
+            assert(stmtContext.getResultSet() != null);
+            unprepare = false;
+            return stmtContext.getResultSet();
+        } catch (SQLException ex) {
+            throw ex;
+        } catch (Throwable ex) {
+            throw FarragoJdbcDriver.newSqlException(ex);
+        } finally {
+            if (unprepare) {
+                stmtContext.unprepare();
+            } else {
+                // REVIEW:  make sure everything is going to get
+                // deallocated correctly when result set is closed
+            }
         }
-        executeImpl(stmt,allocations);
-        assert(resultSet != null);
-        return resultSet;
     }
 
-    /**
-     * Execute a previously prepared FarragoExecutableStmt.
-     *
-     * @param stmt the prepared FarragoExecutableStmt to execute
-     *
-     * @param allocation allocation to close when result set is closed,
-     * or null if none
-     */
-    protected void executeImpl(
-        FarragoExecutableStmt stmt,
-        FarragoAllocation allocation)
+    // implement Statement
+    public Connection getConnection() throws SQLException
+    {
+        return connection;
+    }
+
+    // implement Statement
+    public void setCursorName(String name) throws SQLException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    // implement Statement
+    public void setFetchDirection(int direction) throws SQLException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    // implement Statement
+    public int getFetchDirection() throws SQLException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    // implement Statement
+    public void setFetchSize(int rows) throws SQLException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    // implement Statement
+    public int getFetchSize() throws SQLException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    // implement Statement
+    public ResultSet getGeneratedKeys() throws SQLException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    // implement Statement
+    public void setMaxFieldSize(int max) throws SQLException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    // implement Statement
+    public int getMaxFieldSize() throws SQLException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    // implement Statement
+    public void setMaxRows(int max) throws SQLException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    // implement Statement
+    public int getMaxRows() throws SQLException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    // implement Statement
+    public boolean getMoreResults(int current) throws SQLException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    // implement Statement
+    public void setQueryTimeout(int seconds) throws SQLException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    // implement Statement
+    public int getQueryTimeout() throws SQLException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    // implement Statement
+    public ResultSet getResultSet() throws SQLException
+    {
+        return stmtContext.getResultSet();
+    }
+
+    // implement Statement
+    public int getResultSetConcurrency() throws SQLException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    // implement Statement
+    public int getResultSetHoldability() throws SQLException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    // implement Statement
+    public int getResultSetType() throws SQLException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    // implement Statement
+    public SQLWarning getWarnings() throws SQLException
+    {
+        return null;
+    }
+
+    // implement Statement
+    public void addBatch(String sql) throws SQLException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    // implement Statement
+    public void cancel() throws SQLException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    // implement Statement
+    public void clearBatch() throws SQLException
+    {
+    }
+
+    // implement Statement
+    public void clearWarnings() throws SQLException
+    {
+    }
+
+    // implement Statement
+    public void close() throws SQLException
+    {
+        try {
+            stmtContext.closeAllocation();
+        } finally {
+            stmtContext = null;
+        }
+    }
+
+    // implement Statement
+    public boolean execute(String sql,int autoGeneratedKeys)
         throws SQLException
     {
-        boolean isDml = stmt.isDml();
-        try {
-            Map txnCodeCache = null;
-            if (isDml) {
-                txnCodeCache = farragoConnection.txnCodeCache;
-            }
-            FarragoRuntimeContext context = new FarragoRuntimeContext(
-                farragoConnection.getFarragoCatalog(),
-                farragoConnection.getDatabase().getCodeCache(),
-                txnCodeCache,
-                farragoConnection.getFennelTxnContext(),
-                farragoConnection.sessionIndexMap,
-                dynamicParamValues,
-                farragoConnection.connectionDefaults.cloneDefaults(),
-                farragoConnection.getDatabase().getDataWrapperCache());
-            if (allocation != null) {
-                context.addAllocation(allocation);
-            }
-            if (daemon) {
-                context.addAllocation(this);
-            }
-            resultSet = stmt.execute(context);
-        } catch (Throwable ex) {
-            farragoConnection.endTransactionIfAuto(false);
-            throw FarragoJdbcDriver.newSqlException(ex);
+        if (autoGeneratedKeys != NO_GENERATED_KEYS) {
+            throw new UnsupportedOperationException();
         }
-        if (isDml) {
-            try {
-                if (farragoConnection.getFarragoCatalog().isFennelEnabled()) {
-                    boolean found = resultSet.next();
-                    assert (found);
-                    updateCount = resultSet.getInt(1);
-                } else {
-                    updateCount = 0;
-                }
-            } catch (Throwable ex) {
-                farragoConnection.endTransactionIfAuto(false);
-                throw FarragoJdbcDriver.newSqlException(ex);
-            } finally {
-                try {
-                    resultSet.close();
-                } finally {
-                    resultSet = null;
-                }
-            }
-        }
+        return execute(sql);
+    }
 
-        // NOTE:  for now, we only auto-commit after DML.  Queries aren't an
-        // issue until locking gets implemented.
-        if (resultSet == null) {
-            farragoConnection.endTransactionIfAuto(true);
-        }
+    // implement Statement
+    public boolean execute(String sql,int [] columnIndexes)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    // implement Statement
+    public boolean execute(String sql,String [] columnNames)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    // implement Statement
+    public int [] executeBatch() throws SQLException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    // implement Statement
+    public int executeUpdate(String sql,int autoGeneratedKeys)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    // implement Statement
+    public int executeUpdate(String sql,int [] columnIndexes)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    // implement Statement
+    public int executeUpdate(String sql,String [] columnNames)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException();
     }
 }
 

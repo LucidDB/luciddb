@@ -1,0 +1,148 @@
+/*
+// Farrago is a relational database management system.
+// Copyright (C) 2003-2004 John V. Sichi.
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public License
+// as published by the Free Software Foundation; either version 2.1
+// of the License, or (at your option) any later version.
+// 
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+// 
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+*/
+
+package net.sf.farrago.session;
+
+import net.sf.farrago.util.*;
+import net.sf.farrago.catalog.*;
+
+import java.sql.*;
+
+/**
+ * FarragoSession represents an internal API to the Farrago database.  It is
+ * designed to server as a basis for the implementation of standard API's such
+ * as JDBC.
+ *
+ * @author John V. Sichi
+ * @version $Id$
+ */
+public interface FarragoSession extends FarragoAllocation
+{
+    /**
+     * @return JDBC URL used to establish this session
+     */
+    public String getUrl();
+    
+    /**
+     * @return catalog accessed by this session
+     */
+    public FarragoCatalog getCatalog();
+
+    /**
+     * @return whether this session is an internal session cloned
+     * from another session
+     */
+    public boolean isClone();
+
+    /**
+     * @return whether this session has already been closed
+     */
+    public boolean isClosed();
+
+    /**
+     * @return whether this session currently has a transaction in progress
+     */
+    public boolean isTxnInProgress();
+
+    /**
+     * @return whether this session is in autocommit mode
+     */
+    public boolean isAutoCommit();
+
+    /**
+     * @return current connection defaults for this session
+     */
+    public FarragoConnectionDefaults getConnectionDefaults();
+
+    /**
+     * @return JDBC database metadata for this session
+     */
+    public DatabaseMetaData getDatabaseMetaData();
+
+    /**
+     * Initializes the database metadata associated with this session.
+     *
+     * @param dbMetaData metadata to set
+     */
+    public void setDatabaseMetaData(DatabaseMetaData dbMetaData);
+
+    /**
+     * Creates a new statement context within this session.
+     *
+     * @return new statement context
+     */
+    public FarragoSessionStmtContext newStmtContext();
+
+    /**
+     * Clones this session.  TODO:  document what this entails.
+     *
+     * @return cloned session.
+     */
+    public FarragoSession cloneSession();
+
+    /**
+     * Changes the autocommit mode for this session.
+     *
+     * @param autoCommit true to request autocommit; false to
+     * request manual commit
+     */
+    public void setAutoCommit(boolean autoCommit);
+
+    /**
+     * Commits current transaction if any.
+     */
+    public void commit();
+    
+    /**
+     * Rolls back current transaction if any.
+     *
+     * @param savepoint savepoint to roll back to, or null to rollback
+     * entire transaction
+     */
+    public void rollback(FarragoSessionSavepoint savepoint);
+
+    /**
+     * Creates a new savepoint based on the current session state.
+     *
+     * @param name name to give new savepoint, or null
+     * for anonymous savepoint
+     *
+     * @return new savepoint
+     */
+    public FarragoSessionSavepoint newSavepoint(String name);
+
+    /**
+     * Releases an existing savepoint.
+     *
+     * @param savepoint savepoint to release
+     */
+    public void releaseSavepoint(FarragoSessionSavepoint savepoint);
+
+    /**
+     * Analyzes the query defining a view, and returns internal information
+     * needed for creating the view.
+     *
+     * @param sql the query defining the view
+     *
+     * @return FarragoSessionViewInfo derived from the query
+     */
+    public FarragoSessionViewInfo analyzeViewQuery(String sql);
+}
+
+// End FarragoSession.java

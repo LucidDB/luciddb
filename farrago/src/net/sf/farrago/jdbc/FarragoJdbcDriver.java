@@ -20,8 +20,8 @@
 package net.sf.farrago.jdbc;
 
 import net.sf.farrago.util.*;
-
-import net.sf.saffron.jdbc.*;
+import net.sf.farrago.session.*;
+import net.sf.farrago.db.*;
 
 import java.sql.*;
 
@@ -31,13 +31,13 @@ import java.util.logging.*;
 import koala.dynamicjava.interpreter.error.*;
 
 /**
- * FarragoJdbcDriver subclasses SaffronJdbcDriver to implement
- * Farrago-specific details.
+ * FarragoJdbcDriver implements the {@link java.sql.Driver} interface as
+ * the Farrago JDBC driver.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoJdbcDriver extends SaffronJdbcDriver
+public class FarragoJdbcDriver implements Driver
 {
     //~ Static fields/initializers --------------------------------------------
 
@@ -66,24 +66,78 @@ public class FarragoJdbcDriver extends SaffronJdbcDriver
         return false;
     }
     
-    // implement SaffronJdbcDriver
-    protected String getConnectionClassName()
-    {
-        return "net.sf.farrago.jdbc.FarragoJdbcConnection";
-    }
-
-    // implement SaffronJdbcDriver
-    protected String getUrlPrefix()
-    {
-        return getUrlPrefixStatic();
-    }
-
-    // implement SaffronJdbcDriver
-    static String getUrlPrefixStatic()
+    private String getUrlPrefix()
     {
         return "jdbc:farrago:";
     }
 
+    // implement Driver
+    public int getMajorVersion()
+    {
+        return 0;
+    }
+
+    // implement Driver
+    public int getMinorVersion()
+    {
+        return 0;
+    }
+
+    // implement Driver
+    public DriverPropertyInfo [] getPropertyInfo(String url,Properties info)
+        throws SQLException
+    {
+        // TODO
+        return new DriverPropertyInfo[0];
+    }
+
+    // implement Driver
+    public boolean acceptsURL(String url) throws SQLException
+    {
+        return url.startsWith(getUrlPrefix());
+    }
+
+    // implement Driver
+    public Connection connect(String url,Properties info)
+        throws SQLException
+    {
+        if (!acceptsURL(url)) {
+            return null;
+        }
+
+        try {
+            return new FarragoJdbcConnection(
+                url,
+                info,
+                newSessionFactory());
+        } catch (Throwable ex) {
+            throw newSqlException(ex);
+        }
+    }
+
+    /**
+     * Creates a new FarragoSessionFactory which will govern the behavior
+     * of connections established through this driver.  Subclassing
+     * drivers can override this to customize Farrago behavior.
+     *
+     * @return new factory (FarragoDbSessionFactory by default)
+     */
+    protected FarragoSessionFactory newSessionFactory()
+    {
+        return new FarragoDbSessionFactory();
+    }
+    
+    private void register()
+    {
+        try {
+            DriverManager.registerDriver(this);
+        } catch (SQLException e) {
+            System.out.println(
+                "Error occurred while registering JDBC driver " + this + ": "
+                + e.toString());
+        }
+    }
+    
     /**
      * Converter from any Exception to SQLException.
      *

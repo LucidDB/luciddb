@@ -20,65 +20,24 @@
 package net.sf.farrago.namespace.jdbc;
 
 import net.sf.farrago.namespace.*;
-import net.sf.farrago.util.*;
-import net.sf.farrago.type.*;
+import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.resource.*;
-
-import net.sf.saffron.core.*;
-import net.sf.saffron.util.*;
-import net.sf.saffron.rel.*;
-import net.sf.saffron.opt.*;
-import net.sf.saffron.rel.convert.*;
-import net.sf.saffron.rel.jdbc.*;
 
 import java.sql.*;
 import java.util.*;
 
-import javax.sql.*;
-import javax.jmi.model.*;
-import javax.jmi.reflect.*;
-
-// TODO:  change most asserts into proper exceptions
-
-// TODO:  throw exception on unknown option?
-
 /**
- * MedJdbcForeignDataWrapper implements the FarragoForeignDataWrapper
+ * MedJdbcForeignDataWrapper implements the FarragoMedDataWrapper
  * interface by accessing foreign tables provided by any JDBC driver.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public class MedJdbcForeignDataWrapper
-    implements FarragoForeignDataWrapper
+    extends MedAbstractDataWrapper
 {
     public static final String PROP_DRIVER_CLASS_NAME = "DRIVER_CLASS";
-    
-    public static final String PROP_URL = "URL";
-    
-    public static final String PROP_USER_NAME = "USER_NAME";
-    
-    public static final String PROP_PASSWORD = "PASSWORD";
-    
-    public static final String PROP_SCHEMA_NAME = "SCHEMA_NAME";
-    
-    public static final String PROP_TABLE_NAME = "TABLE_NAME";
-    
-    // TODO:  add a parameter for JNDI lookup of a DataSource so we can support
-    // app servers and distributed txns
-
-    Connection connection;
-    
-    FarragoCatalog catalog;
-
-    String serverMofId;
-
-    String url;
-
-    String schemaName;
-
-    DatabaseMetaData databaseMetaData;
     
     /**
      * Creates a new data wrapper instance.
@@ -87,78 +46,27 @@ public class MedJdbcForeignDataWrapper
     {
     }
 
-    /**
-     * Creates a new server instance.
-     *
-     * @param serverMofId MOFID of server definition in repository
-     *
-     * @param url URL used to create connection
-     *
-     * @param connection JDBC connection to server
-     *
-     * @param schemaName if JDBC driver does not support schemas,
-     * schema name to use as fake qualifier for all tables
-     */
-    MedJdbcForeignDataWrapper(
-        String serverMofId,
-        String url,
-        Connection connection,
-        String schemaName) throws SQLException
-    {
-        this.serverMofId = serverMofId;
-        this.connection = connection;
-        this.schemaName = schemaName;
-        this.url = url;
-        databaseMetaData = connection.getMetaData();
-    }
-
-    // implement FarragoForeignDataWrapper
+    // implement FarragoMedDataWrapper
     public String getSuggestedName()
     {
-        return "JDBC";
+        return "JDBC_DATA_WRAPPER";
     }
     
-    // implement FarragoForeignDataWrapper
+    // implement FarragoMedDataWrapper
     public String getDescription(Locale locale)
     {
         // TODO: localize
         return "Foreign data wrapper for JDBC data";
     }
     
-    // implement FarragoForeignDataWrapper
-    public DriverPropertyInfo [] getWrapperPropertyInfo(Locale locale)
-    {
-        // TODO
-        return new DriverPropertyInfo[0];
-    }
+    // TODO:  DriverPropertyInfo calls
     
-    // implement FarragoForeignDataWrapper
-    public DriverPropertyInfo [] getServerPropertyInfo(Locale locale)
-    {
-        // TODO
-        return new DriverPropertyInfo[0];
-    }
-    
-    // implement FarragoForeignDataWrapper
-    public DriverPropertyInfo [] getColumnSetPropertyInfo(Locale locale)
-    {
-        // TODO
-        return new DriverPropertyInfo[0];
-    }
-    
-    // implement FarragoForeignDataWrapper
-    public DriverPropertyInfo [] getColumnPropertyInfo(Locale locale)
-    {
-        // TODO
-        return new DriverPropertyInfo[0];
-    }
-    
-    // implement FarragoForeignDataWrapper
+    // implement FarragoMedDataWrapper
     public void initialize(
         FarragoCatalog catalog,
         Properties props) throws SQLException
     {
-        this.catalog = catalog;
+        super.initialize(catalog,props);
 
         String driverClassName = props.getProperty(PROP_DRIVER_CLASS_NAME);
         if (driverClassName == null) {
@@ -182,8 +90,8 @@ public class MedJdbcForeignDataWrapper
         }
     }
     
-    // implement FarragoForeignDataWrapper
-    public FarragoForeignDataWrapper newServer(
+    // implement FarragoMedDataWrapper
+    public FarragoMedDataServer newServer(
         String serverMofId,
         Properties props) throws SQLException
     {
@@ -191,112 +99,16 @@ public class MedJdbcForeignDataWrapper
         if (driverClassName != null) {
             loadDriverClass(driverClassName);
         }
-        String url = props.getProperty(PROP_URL);
-        assert(url != null);
-        String userName = props.getProperty(PROP_USER_NAME);
-        String password = props.getProperty(PROP_PASSWORD);
-        String schemaName = props.getProperty(PROP_SCHEMA_NAME);
-            
-        if (userName == null) {
-            connection = DriverManager.getConnection(url);
-        } else {
-            connection = DriverManager.getConnection(url,userName,password);
-        }
-        
-        return new MedJdbcForeignDataWrapper(
-            serverMofId,url,connection,schemaName);
-    }
-
-    // implement FarragoForeignDataWrapper
-    public FarragoNameDirectory getNameDirectory()
-        throws SQLException
-    {
-        return getJdbcNameDirectory();
-    }
-
-    private MedJdbcNameDirectory getJdbcNameDirectory()
-    {
-        return new MedJdbcNameDirectory(this);
-    }
-    
-    // implement FarragoForeignDataWrapper
-    public FarragoNamedColumnSet newColumnSet(
-        String [] localName,
-        Properties tableProps,
-        FarragoTypeFactory typeFactory,
-        SaffronType rowType,
-        Map columnPropMap)
-        throws SQLException
-    {
-        assert(connection != null);
-        String tableSchemaName = tableProps.getProperty(PROP_SCHEMA_NAME);
-        if (tableSchemaName == null) {
-            tableSchemaName = schemaName;
-        }
-        assert(tableSchemaName != null);
-        String tableName = tableProps.getProperty(PROP_TABLE_NAME);
-        String [] foreignName = new String [] 
-            {
-                tableSchemaName,
-                tableName
-            };
-        return getJdbcNameDirectory().lookupColumnSetAndImposeType(
-            typeFactory,
-            foreignName,
-            localName,
-            rowType);
-    }
-
-    // implement FarragoForeignDataWrapper
-    public Object getRuntimeSupport(Object param) throws SQLException
-    {
-        assert(connection != null);
-        
-        String sql = (String) param;
-        Statement stmt = connection.createStatement();
-        FarragoStatementAllocation stmtAlloc =
-            new FarragoStatementAllocation(stmt);
+        MedJdbcDataServer server =
+            new MedJdbcDataServer(serverMofId,props);
+        boolean success = false;
         try {
-            stmtAlloc.setResultSet(stmt.executeQuery(sql));
-            stmt = null;
-            return stmtAlloc;
+            server.initialize();
+            success = true;
+            return server;
         } finally {
-            if (stmt != null) {
-                stmtAlloc.closeAllocation();
-            }
-        }
-    }
-
-    // implement FarragoForeignDataWrapper
-    public void registerRules(SaffronPlanner planner)
-    {
-        JdbcQuery.register(planner);
-        
-        // tell optimizer how to convert data from JDBC into Farrago
-        planner.addRule(
-            new ConverterRule(
-                SaffronRel.class,
-                CallingConvention.RESULT_SET,
-                CallingConvention.ITERATOR,
-                "ResultSetToFarragoIteratorRule")
-            {
-                public SaffronRel convert(SaffronRel rel)
-                {
-                    return new ResultSetToFarragoIteratorConverter(
-                        rel.getCluster(),
-                        rel);
-                }
-            });
-    }
-    
-    // implement FarragoAllocation
-    public void closeAllocation()
-    {
-        if (connection != null) {
-            try {
-                connection.close();
-            } catch (SQLException ex) {
-                // TODO:  trace?
+            if (!success) {
+                server.closeAllocation();
             }
         }
     }

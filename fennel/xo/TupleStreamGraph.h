@@ -21,58 +21,22 @@
 #ifndef Fennel_TupleStreamGraph_Included
 #define Fennel_TupleStreamGraph_Included
 
-#include "fennel/common/ClosableObject.h"
-
-#include <boost/utility.hpp>
+#include "fennel/xo/ExecutionStreamGraph.h"
 
 FENNEL_BEGIN_NAMESPACE
-
-/**
- * Identifier for a TupleStream relative to an instance of TupleStreamGraph.
- */
-typedef uint TupleStreamId;
 
 /**
  * A TupleStreamGraph is a connected, directed graph representing dataflow
  * among TupleStreams.  Currently, only trees are supported, so each vertex
  * except the sink has exactly one target and zero or more sources.
  */
-class TupleStreamGraph : public boost::noncopyable, public ClosableObject
+class TupleStreamGraph : virtual public ExecutionStreamGraph<SharedTupleStream>
 {
 public:
     virtual ~TupleStreamGraph();
 
-    virtual void setTxn(
-        SharedLogicalTxn pTxn) = 0;
-
-    virtual void setScratchSegment(
-        SharedSegment pScratchSegment) = 0;
-
-    virtual SharedLogicalTxn getTxn() = 0;
-    
     virtual void addStream(
         SharedTupleStream pStream) = 0;
-
-    virtual void addDataflow(
-        TupleStreamId producerId,
-        TupleStreamId consumerId) = 0;
-    
-    virtual void prepare() = 0;
-    
-    virtual void open() = 0;
-
-    virtual uint getInputCount(
-        TupleStreamId streamId) = 0;
-    
-    virtual SharedTupleStream getStreamInput(
-        TupleStreamId streamId,
-        uint iInput) = 0;
-
-    /**
-     * Get the sink of this graph; that is, the one stream which is not
-     * consumed by any other stream.
-     */
-    virtual SharedTupleStream getSinkStream() = 0;
 
     static SharedTupleStreamGraph newTupleStreamGraph();
 };

@@ -22,6 +22,7 @@ package net.sf.farrago.jdbc;
 import net.sf.farrago.query.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
+import net.sf.farrago.session.*;
 
 import java.sql.*;
 import java.math.*;
@@ -31,131 +32,107 @@ import java.util.logging.*;
 import java.sql.Date;
 
 /**
- * FarragoJdbcPreparedNonDdl implements FarragoJdbcPreparedStatement when the
- * statement is a query or DML.
+ * FarragoJdbcPreparedNonDdl implements {@link FarragoJdbcPreparedStatement}
+ * when the statement is a query or DML.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public class FarragoJdbcPreparedNonDdl extends FarragoJdbcPreparedStatement
 {
-    private static Logger tracer =
-        TraceUtil.getClassTrace(FarragoJdbcPreparedNonDdl.class);
-
-    private FarragoExecutableStmt executableStmt;
-
-    private FarragoCompoundAllocation allocations;
-    
     /**
      * Creates a new FarragoJdbcPreparedNonDdl object.
      *
      * @param connection the connection creating this statement
      *
-     * @param sql the text of the SQL statement
+     * @param stmtContext the underyling prepared FarragoSessionStmtContext
      *
-     * @param executableStmt the prepared FarragoExecutableStmt
+     * @param sql the text of the SQL statement
      */
     FarragoJdbcPreparedNonDdl(
         FarragoJdbcConnection connection,
-        String sql,
-        FarragoExecutableStmt executableStmt,
-        FarragoCompoundAllocation allocations)
+        FarragoSessionStmtContext stmtContext,
+        String sql)
     {
-        super(connection,sql);
-        this.executableStmt = executableStmt;
-        this.allocations = allocations;
-
-        dynamicParamValues = new Object[
-            executableStmt.getDynamicParamRowType().getFieldCount()];
+        super(connection,stmtContext,sql);
     }
 
-    private void traceExecute()
-    {
-        if (!tracer.isLoggable(Level.FINE)) {
-            return;
-        }
-        tracer.fine(sql);
-        if (!tracer.isLoggable(Level.FINER)) {
-            return;
-        }
-        for (int i = 0; i < dynamicParamValues.length; ++i) {
-            tracer.finer("?" + (i + 1) + " = [" + dynamicParamValues[i] + "]");
-        }
-    }
-    
     // implement PreparedStatement
     public boolean execute() throws SQLException
     {
-        traceExecute();
-        executeImpl(executableStmt,null);
-        return (resultSet != null);
+        stmtContext.execute();
+        return (stmtContext.getResultSet() != null);
     }
 
     // implement PreparedStatement
     public ResultSet executeQuery() throws SQLException
     {
-        if (executableStmt.isDml()) {
+        if (stmtContext.isPreparedDml()) {
             throw new SQLException(ERRMSG_NOT_A_QUERY + sql);
         }
-        traceExecute();
-        executeImpl(executableStmt,null);
-        assert(resultSet != null);
-        return resultSet;
+        stmtContext.execute();
+        assert(stmtContext.getResultSet() != null);
+        return stmtContext.getResultSet();
     }
 
     // implement PreparedStatement
     public int executeUpdate() throws SQLException
     {
-        if (!executableStmt.isDml()) {
+        if (!stmtContext.isPreparedDml()) {
             throw new SQLException(ERRMSG_IS_A_QUERY + sql);
         }
-        traceExecute();
-        executeImpl(executableStmt,null);
-        assert(resultSet == null);
+        stmtContext.execute();
+        assert(stmtContext.getResultSet() == null);
         int count = getUpdateCount();
         if (count == -1) {
             count = 0;
         }
-        if (tracer.isLoggable(Level.FINE)) {
-            tracer.fine("Update count = " + count);
-        }
         return count;
     }
 
-    // implement Statement
-    public void close() throws SQLException
-    {
-        allocations.closeAllocation();
-        executableStmt = null;
-        super.close();
-    }
-    
     // implement PreparedStatement
     public ResultSetMetaData getMetaData() throws SQLException
     {
-        if (executableStmt.isDml()) {
+        if (stmtContext.isPreparedDml()) {
             throw new SQLException(ERRMSG_NOT_A_QUERY + sql);
         }
-        return new FarragoResultSetMetaData(executableStmt.getRowType());
+        try {
+            return new FarragoResultSetMetaData(
+                stmtContext.getPreparedRowType());
+        } catch (Throwable ex) {
+            throw FarragoJdbcDriver.newSqlException(ex);
+        }
     }
 
     // implement PreparedStatement
     public ParameterMetaData getParameterMetaData() throws SQLException
     {
-        return new FarragoParameterMetaData(
-            executableStmt.getDynamicParamRowType());
+        try {
+            return new FarragoParameterMetaData(
+                stmtContext.getPreparedParamType());
+        } catch (Throwable ex) {
+            throw FarragoJdbcDriver.newSqlException(ex);
+        }
     }
 
     // implement PreparedStatement
     public void clearParameters() throws SQLException
     {
-        Arrays.fill(dynamicParamValues,null);
+        try {
+            stmtContext.clearParameters();
+        } catch (Throwable ex) {
+            throw FarragoJdbcDriver.newSqlException(ex);
+        }
     }
 
-    private void setDynamicParam(int parameterIndex,Object x)
+    private void setDynamicParam(int parameterIndex,Object obj)
+        throws SQLException
     {
-        // TODO:  type/null checking
-        dynamicParamValues[parameterIndex - 1] = x;
+        try {
+            stmtContext.setDynamicParam(parameterIndex - 1,obj);
+        } catch (Throwable ex) {
+            throw FarragoJdbcDriver.newSqlException(ex);
+        }
     }
 
     // implement PreparedStatement

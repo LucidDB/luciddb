@@ -154,8 +154,8 @@ class MedMdrJoinRel extends JoinRel
             null);
         memberList.add(declLeftRow);
 
-        MedMdrForeignDataWrapper dataWrapper =
-            rightRel.mdrClassExtent.directory.dataWrapper;
+        MedMdrDataServer server =
+            rightRel.mdrClassExtent.directory.server;
         
         Variable varRepository = implementor.newVariable();
         FieldDeclaration declRepository = new FieldDeclaration(
@@ -381,7 +381,7 @@ class MedMdrJoinRel extends JoinRel
                     AssignmentExpression.EQUALS,
                     new CastExpression(
                         TypeName.forClass(MDRepository.class),
-                        dataWrapper.generateRuntimeSupportCall(
+                        server.generateRuntimeSupportCall(
                             Literal.constantNull())))));
         if (varRefAssociation != null) {
             stmtList.add(

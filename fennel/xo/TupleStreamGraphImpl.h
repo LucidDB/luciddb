@@ -22,18 +22,7 @@
 #define Fennel_TupleStreamGraphImpl_Included
 
 #include "fennel/xo/TupleStreamGraph.h"
-
-#include <vector>
-#include <boost/property_map.hpp>
-#include <boost/graph/adjacency_list.hpp>
-#include <boost/graph/properties.hpp>
-
-// REVIEW:  can this be pulled into fennel namespace somehow?
-namespace boost 
-{
-enum vertex_data_t { vertex_data };
-BOOST_INSTALL_PROPERTY(vertex,data);
-}
+#include "fennel/xo/ExecutionStreamGraphImpl.h"
 
 FENNEL_BEGIN_NAMESPACE
 
@@ -42,69 +31,15 @@ FENNEL_BEGIN_NAMESPACE
  * among TupleStreams.  Currently, only trees are supported, so each vertex
  * except the root has exactly one target and zero or more sources.
  */
-class TupleStreamGraphImpl : public TupleStreamGraph
+class TupleStreamGraphImpl : public TupleStreamGraph,
+    public ExecutionStreamGraphImpl<SharedTupleStream>
 {
     friend class TupleStreamGraph;
-    
-    typedef boost::adjacency_list<
-        boost::vecS,
-        boost::vecS,
-        boost::bidirectionalS,
-        boost::property<boost::vertex_data_t,SharedTupleStream> >
-    GraphRep;
-
-    typedef boost::graph_traits<GraphRep>::vertex_descriptor Vertex;
-
-    typedef boost::graph_traits<GraphRep>::edge_descriptor Edge;
-
-    GraphRep graphRep;
-    
-    /**
-     * Result of topologically sorting graph (producers before consumers).
-     */
-    std::vector<SharedTupleStream> sortedStreams;
-
-    /**
-     * Transaction being executed.
-     */
-    SharedLogicalTxn pTxn;
-
-    /**
-     * Source for scratch buffers.
-     */
-    SharedSegment pScratchSegment;
-
-    /**
-     * Whether this graph is currently open.  Note that this is not quite the
-     * opposite of the inherited ClosableObject.needsClose, since a graph
-     * needs to be closed before destruction if it has been prepared but never
-     * opened.
-     */
-    bool isOpen;
-    
     explicit TupleStreamGraphImpl();
-    SharedTupleStream getStreamFromVertex(Vertex);
-    void closeImpl();
-    void sortStreams();
     
 public:
-    virtual void setTxn(SharedLogicalTxn);
-    virtual void setScratchSegment(
-        SharedSegment pScratchSegment);
-    virtual SharedLogicalTxn getTxn();
-    virtual void prepare();
-    virtual void open();
     virtual void addStream(
         SharedTupleStream pStream);
-    virtual void addDataflow(
-        TupleStreamId producerId,
-        TupleStreamId consumerId);
-    virtual uint getInputCount(
-        TupleStreamId streamId);
-    virtual SharedTupleStream getStreamInput(
-        TupleStreamId streamId,
-        uint iInput);
-    virtual SharedTupleStream getSinkStream();
 };
 
 FENNEL_END_NAMESPACE

@@ -53,7 +53,7 @@ public class SaffronJdbcStatement implements Statement
 
     public Connection getConnection() throws SQLException
     {
-        throw new UnsupportedOperationException();
+        return connection;
     }
 
     public void setCursorName(String name) throws SQLException

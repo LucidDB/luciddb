@@ -71,7 +71,7 @@ class MedJdbcQueryRel extends JdbcQuery
                     "getDataServerRuntimeSupport",
                     new ExpressionList(
                         Literal.makeLiteral(
-                            columnSet.directory.dataWrapper.serverMofId),
+                            columnSet.directory.server.getServerMofId()),
                         Literal.makeLiteral(queryString))));
         return new MethodCall(
             allocExpression,

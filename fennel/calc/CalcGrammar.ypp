@@ -114,7 +114,6 @@ literal_values: VALUES literal_defs { ((CalcAssembler*) parm)->bindLiteralDone()
 literal_defs: literal_def | literal_defs COMMA literal_def
 ;
 
-/* TODO: Add support for byte array */
 literal_def:  UNSIGNED_INTEGER  { ((CalcAssembler*) parm)->bindNextLiteral<uint64_t>($1); }
             | NEGATIVE_INTEGER  { ((CalcAssembler*) parm)->bindNextLiteral<int64_t>($1);  }
             | REAL              { ((CalcAssembler*) parm)->bindNextLiteral<double>($1);   }
@@ -141,7 +140,6 @@ instructions: instruction { ((CalcAssembler*) parm)->addInstruction($1); }
                 instruction { ((CalcAssembler*) parm)->addInstruction($2); } 
 ;
 
-/* TODO: Flesh out support for instructions */
 instruction:  OPCODE result COMMA operand COMMA operand TERM 
             {
               $$ = ((CalcAssembler*) parm)->createInstruction($1, $2, $4, $6, @$);
@@ -160,7 +158,7 @@ instruction:  OPCODE result COMMA operand COMMA operand TERM
               OPCODE location TERM 
             { 
               $$ = ((CalcAssembler*) parm)->createInstruction($1, $2, @$);
-            }
+            } 
             |
               OPCODE location COMMA operand TERM 
             { 
@@ -171,7 +169,11 @@ instruction:  OPCODE result COMMA operand COMMA operand TERM
             {
               $$ = ((CalcAssembler*) parm)->createInstruction($1, $2, $4, @$);
             }
-            | { throw CalcAssemblerException("Invalid instruction", @$); }
+            | 
+              OPCODE TERM 
+            { 
+              $$ = ((CalcAssembler*) parm)->createInstruction($1, @$);
+            }
 ;
 
 index: UNSIGNED_INTEGER

@@ -24,6 +24,7 @@ import net.sf.farrago.ddl.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.namespace.*;
+import net.sf.farrago.namespace.util.*;
 
 import net.sf.saffron.util.*;
 
@@ -80,7 +81,7 @@ public abstract class FemDataWrapperImpl extends InstanceHandler
      *
      * @return loaded wrapper accessor
      */
-    public FarragoForeignDataWrapper loadFromCache(
+    public FarragoMedDataWrapper loadFromCache(
         FarragoDataWrapperCache cache)
     {
         Properties props = getStorageOptionsAsProperties(this);

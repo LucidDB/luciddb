@@ -33,7 +33,10 @@
     <pattern name="type" class="net.sf.farrago.type.*" />
     <pattern name="util" class="net.sf.farrago.util.*" />
     <pattern name="db" class="net.sf.farrago.db.*" />
+    <pattern name="session" class="net.sf.farrago.session.*" />
     <pattern name="namespace" class="net.sf.farrago.namespace.*" />
+    <pattern name="namespace.util" class="net.sf.farrago.namespace.util.*" />
+    <pattern name="namespace.impl" class="net.sf.farrago.namespace.impl.*" />
     <pattern name="namespace.mdr" class="net.sf.farrago.namespace.mdr.*" />
     <pattern name="namespace.jdbc" class="net.sf.farrago.namespace.jdbc.*" />
     <pattern name="catalog.codegen" class="net.sf.farrago.catalog.codegen.*" />
@@ -56,11 +59,17 @@
       <include pattern="type"/>
       <include pattern="util"/>
       <include pattern="db"/>
+      <include pattern="session"/>
       <include pattern="namespace"/>
+      <include pattern="namespace.util"/>
+      <include pattern="namespace.impl"/>
       <include pattern="namespace.mdr"/>
       <include pattern="namespace.jdbc"/>
       <include pattern="catalog.codegen"/>
     </pattern>
+
+    <!-- TODO:  factor out patterns from access rules below -->
+    <!-- (way too much explicit transitive closure at the moment) -->
 
     <!-- FarragoPackage -->
     <access-rule>
@@ -147,7 +156,13 @@
           <to pattern="fennel" />
         </allow>
         <allow>
+          <to pattern="session" />
+        </allow>
+        <allow>
           <to pattern="namespace" />
+        </allow>
+        <allow>
+          <to pattern="namespace.util" />
         </allow>
       </deny>
     </access-rule>
@@ -218,6 +233,9 @@
         <allow>
           <to pattern="db" />
         </allow>
+        <allow>
+          <to pattern="session" />
+        </allow>
       </deny>
     </access-rule>
 
@@ -266,6 +284,9 @@
         <allow>
           <to pattern="db" />
         </allow>
+        <allow>
+          <to pattern="session" />
+        </allow>
       </deny>
     </access-rule>
 
@@ -295,6 +316,9 @@
         </allow>
         <allow>
           <to pattern="ddl" />
+        </allow>
+        <allow>
+          <to pattern="session" />
         </allow>
       </deny>
     </access-rule>
@@ -333,7 +357,13 @@
           <to pattern="util" />
         </allow>
         <allow>
+          <to pattern="session" />
+        </allow>
+        <allow>
           <to pattern="namespace" />
+        </allow>
+        <allow>
+          <to pattern="namespace.util" />
         </allow>
       </deny>
     </access-rule>
@@ -385,6 +415,9 @@
         </allow>
         <allow>
           <to pattern="namespace" />
+        </allow>
+        <allow>
+          <to pattern="namespace.util" />
         </allow>
       </deny>
     </access-rule>
@@ -511,6 +544,30 @@
           <to pattern="type" />
         </allow>
         <allow>
+          <to pattern="util" />
+        </allow>
+        <allow>
+          <to pattern="FarragoPackage" />
+        </allow>
+      </deny>
+    </access-rule>
+
+    <!-- namespace.util -->
+    <access-rule>
+      <message>namespace.util dependency violation</message>
+      <deny>
+        <from pattern="namespace" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="namespace" />
+        </allow>
+        <allow>
+          <to pattern="catalog" />
+        </allow>
+        <allow>
+          <to pattern="type" />
+        </allow>
+        <allow>
           <to pattern="cwm" />
         </allow>
         <allow>
@@ -525,6 +582,42 @@
       </deny>
     </access-rule>
 
+    <!-- namespace.impl -->
+    <access-rule>
+      <message>namespace.impl dependency violation</message>
+      <deny>
+        <from pattern="namespace.impl" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="namespace" />
+        </allow>
+        <allow>
+          <to pattern="namespace.impl" />
+        </allow>
+        <allow>
+          <to pattern="cwm" />
+        </allow>
+        <allow>
+          <to pattern="catalog" />
+        </allow>
+        <allow>
+          <to pattern="FarragoPackage" />
+        </allow>
+        <allow>
+          <to pattern="type" />
+        </allow>
+        <allow>
+          <to pattern="util" />
+        </allow>
+        <allow>
+          <to pattern="resource" />
+        </allow>
+        <allow>
+          <to pattern="query" />
+        </allow>
+      </deny>
+    </access-rule>
+
     <!-- namespace.mdr -->
     <access-rule>
       <message>namespace.mdr dependency violation</message>
@@ -533,6 +626,9 @@
         <to pattern="farrago" />
         <allow>
           <to pattern="namespace" />
+        </allow>
+        <allow>
+          <to pattern="namespace.impl" />
         </allow>
         <allow>
           <to pattern="namespace.mdr" />
@@ -571,6 +667,9 @@
           <to pattern="namespace" />
         </allow>
         <allow>
+          <to pattern="namespace.impl" />
+        </allow>
+        <allow>
           <to pattern="namespace.jdbc" />
         </allow>
         <allow>
@@ -593,6 +692,30 @@
         </allow>
         <allow>
           <to pattern="query" />
+        </allow>
+      </deny>
+    </access-rule>
+
+    <!-- session -->
+    <access-rule>
+      <message>session dependency violation</message>
+      <deny>
+        <from pattern="session" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="catalog" />
+        </allow>
+        <allow>
+          <to pattern="type" />
+        </allow>
+        <allow>
+          <to pattern="util" />
+        </allow>
+        <allow>
+          <to pattern="session" />
+        </allow>
+        <allow>
+          <to pattern="parser" />
         </allow>
       </deny>
     </access-rule>

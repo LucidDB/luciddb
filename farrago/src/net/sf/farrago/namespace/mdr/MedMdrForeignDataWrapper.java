@@ -20,32 +20,14 @@
 package net.sf.farrago.namespace.mdr;
 
 import net.sf.farrago.namespace.*;
-import net.sf.farrago.util.*;
-import net.sf.farrago.type.*;
+import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.catalog.*;
-import net.sf.farrago.query.*;
-
-import net.sf.saffron.core.*;
-import net.sf.saffron.util.*;
-import net.sf.saffron.oj.stmt.*;
-
-import org.netbeans.api.mdr.*;
-
-import openjava.mop.*;
-import openjava.ptree.*;
 
 import java.sql.*;
 import java.util.*;
 
-import javax.jmi.model.*;
-import javax.jmi.reflect.*;
-
-// TODO:  change most asserts into proper exceptions
-
-// TODO:  throw exception on unknown option?
-
 /**
- * MedMdrForeignDataWrapper implements the FarragoForeignDataWrapper
+ * MedMdrForeignDataWrapper implements the FarragoMedDataWrapper
  * interface by representing classes in an MDR repository as tables
  * (mapping the class extent to a corresponding set of rows).
  *
@@ -53,31 +35,8 @@ import javax.jmi.reflect.*;
  * @version $Id$
  */
 public class MedMdrForeignDataWrapper
-    implements FarragoForeignDataWrapper
+    extends MedAbstractDataWrapper
 {
-    public static final String PROP_STORAGE_FACTORY_CLASS =
-    "STORAGE_FACTORY_CLASS";
-    
-    public static final String PROP_EXTENT_NAME = "EXTENT_NAME";
-    
-    public static final String PROP_CLASS_NAME = "CLASS_NAME";
-    
-    public static final String PROP_ROOT_PACKAGE_NAME = "ROOT_PACKAGE_NAME";
-    
-    public static final String PROP_SCHEMA_NAME = "SCHEMA_NAME";
-    
-    MDRepository repository;
-
-    FarragoCatalog catalog;
-
-    RefPackage rootPackage;
-
-    boolean foreignRepository;
-
-    String serverMofId;
-
-    String schemaName;
-    
     /**
      * Default constructor for access to external repositories.
      */
@@ -85,96 +44,40 @@ public class MedMdrForeignDataWrapper
     {
     }
 
-    // implement FarragoForeignDataWrapper
+    // implement FarragoMedDataWrapper
     public String getSuggestedName()
     {
-        return "MDR";
+        return "MDR_DATA_WRAPPER";
     }
     
-    // implement FarragoForeignDataWrapper
+    // implement FarragoMedDataWrapper
     public String getDescription(Locale locale)
     {
         // TODO: localize
         return "Foreign data wrapper for MDR repository extents";
     }
     
-    // implement FarragoForeignDataWrapper
-    public DriverPropertyInfo [] getWrapperPropertyInfo(Locale locale)
-    {
-        // TODO
-        return new DriverPropertyInfo[0];
-    }
+    // TODO:  DriverPropertyInfo calls
     
-    // implement FarragoForeignDataWrapper
-    public DriverPropertyInfo [] getServerPropertyInfo(Locale locale)
-    {
-        // TODO
-        return new DriverPropertyInfo[0];
-    }
-    
-    // implement FarragoForeignDataWrapper
-    public DriverPropertyInfo [] getColumnSetPropertyInfo(Locale locale)
-    {
-        // TODO
-        return new DriverPropertyInfo[0];
-    }
-    
-    // implement FarragoForeignDataWrapper
-    public DriverPropertyInfo [] getColumnPropertyInfo(Locale locale)
-    {
-        // TODO
-        return new DriverPropertyInfo[0];
-    }
-    
-    // implement FarragoForeignDataWrapper
+    // implement FarragoMedDataWrapper
     public void initialize(
         FarragoCatalog catalog,
         Properties props) throws SQLException
     {
-        this.catalog = catalog;
-        
-        // nothing to do
+        super.initialize(catalog,props);
         assert(props.isEmpty());
     }
     
-    // implement FarragoForeignDataWrapper
-    public FarragoForeignDataWrapper newServer(
+    // implement FarragoMedDataWrapper
+    public FarragoMedDataServer newServer(
         String serverMofId,
         Properties props) throws SQLException
     {
-        Properties storageProps = new Properties();
-        storageProps.putAll(props);
-        
-        String storageFactoryClassName = getNonStorageProperty(
-            props,PROP_STORAGE_FACTORY_CLASS);
-        String extentName = getNonStorageProperty(
-            props,PROP_EXTENT_NAME);
-        String rootPackageName = getNonStorageProperty(
-            props,PROP_ROOT_PACKAGE_NAME);
-
-        MedMdrForeignDataWrapper server =
-            new MedMdrForeignDataWrapper();
+        MedMdrDataServer server =
+            new MedMdrDataServer(serverMofId,props,getCatalog());
         boolean success = false;
         try {
-            server.serverMofId = serverMofId;
-            server.catalog = catalog;
-
-            server.schemaName = getNonStorageProperty(
-                props,PROP_SCHEMA_NAME);
-            
-            if (extentName != null) {
-                server.initAsForeignServer(
-                    storageFactoryClassName,
-                    extentName,
-                    storageProps);
-            } else {
-                server.initAsCatalogServer();
-            }
-
-            if (rootPackageName != null) {
-                server.findRootPackage(rootPackageName);
-            }
-            
+            server.initialize();
             success = true;
             return server;
         } finally {
@@ -182,125 +85,6 @@ public class MedMdrForeignDataWrapper
                 server.closeAllocation();
             }
         }
-    }
-
-    private void initAsForeignServer(
-        String storageFactoryClassName,
-        String extentName,
-        Properties storageProps)
-    {
-        foreignRepository = true;
-        repository = MdrUtil.loadRepository(
-            storageFactoryClassName,
-            storageProps);
-        rootPackage = repository.getExtent(extentName);
-    }
-
-    /**
-     * @return the root package, or null if this is not a server
-     */
-    public RefPackage getRootPackage()
-    {
-        return rootPackage;
-    }
-
-    private void findRootPackage(String rootPackageName)
-    {
-        if (rootPackageName.equals("..")) {
-            rootPackage = rootPackage.refImmediatePackage();
-            return;
-        }
-        MedMdrNameDirectory directory = getMdrNameDirectory();
-        String [] names = rootPackageName.split("\\.");
-        rootPackage = directory.lookupRefPackage(names,names.length);
-        assert(rootPackage != null);
-    }
-
-    private void initAsCatalogServer()
-    {
-        foreignRepository = false;
-        repository = catalog.getRepository();
-        rootPackage = catalog.farragoPackage;
-    }
-
-    private String getNonStorageProperty(Properties props,String propName)
-    {
-        String value = props.getProperty(propName);
-        props.remove(propName);
-        return value;
-    }
-
-    private MedMdrNameDirectory getMdrNameDirectory()
-    {
-        assert(repository != null);
-        return new MedMdrNameDirectory(this,rootPackage);
-    }
-    
-    // implement FarragoForeignDataWrapper
-    public FarragoNameDirectory getNameDirectory()
-        throws SQLException
-    {
-        return getMdrNameDirectory();
-    }
-    
-    // implement FarragoForeignDataWrapper
-    public FarragoNamedColumnSet newColumnSet(
-        String [] localName,
-        Properties tableProps,
-        FarragoTypeFactory typeFactory,
-        SaffronType rowType,
-        Map columnPropMap)
-        throws SQLException
-    {
-        assert(repository != null);
-        String className = tableProps.getProperty(PROP_CLASS_NAME);
-        assert(className != null);
-
-        MedMdrNameDirectory directory = getMdrNameDirectory();
-        return directory.lookupColumnSetAndImposeType(
-            typeFactory,
-            className.split("\\."),
-            localName,
-            rowType);
-    }
-
-    // implement FarragoForeignDataWrapper
-    public Object getRuntimeSupport(Object param) throws SQLException
-    {
-        if (param == null) {
-            return repository;
-        }
-        String [] qualifiedName = (String []) param;
-        return getMdrNameDirectory().lookupRefBaseObject(qualifiedName);
-    }
-    
-    // implement FarragoForeignDataWrapper
-    public void registerRules(SaffronPlanner planner)
-    {
-        planner.addRule(new MedMdrJoinRule());
-    }
-    
-    // implement FarragoAllocation
-    public void closeAllocation()
-    {
-        if (repository != null) {
-            if (foreignRepository) {
-                repository.shutdown();
-            }
-            repository = null;
-        }
-    }
-
-    Expression generateRuntimeSupportCall(Expression arg)
-    {
-        Variable connectionVariable =
-            new Variable(OJStatement.connectionVariable);
-        return new MethodCall(
-            connectionVariable,
-            "getDataServerRuntimeSupport",
-            new ExpressionList(
-                Literal.makeLiteral(serverMofId),
-                arg));
     }
 }
 

@@ -111,7 +111,9 @@ public abstract class FarragoTestCase extends DiffTestCase
     {
         Class.forName("net.sf.farrago.jdbc.FarragoJdbcDriver");
         connection = DriverManager.getConnection("jdbc:farrago:");
-        catalog = ((FarragoJdbcConnection) connection).getFarragoCatalog();
+        FarragoJdbcConnection farragoConnection =
+            (FarragoJdbcConnection) connection;
+        catalog = farragoConnection.getSession().getCatalog();
         connection.setAutoCommit(false);
         runCleanup();
     }

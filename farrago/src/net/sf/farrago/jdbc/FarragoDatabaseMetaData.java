@@ -41,7 +41,7 @@ public class FarragoDatabaseMetaData implements DatabaseMetaData
     FarragoDatabaseMetaData(FarragoJdbcConnection connection)
     {
         this.connection = connection;
-        catalog = connection.getFarragoCatalog();
+        catalog = connection.getSession().getCatalog();
     }
     
     // implement DatabaseMetaData
@@ -59,7 +59,7 @@ public class FarragoDatabaseMetaData implements DatabaseMetaData
     // implement DatabaseMetaData
     public String getURL() throws SQLException
     {
-        return connection.url;
+        return connection.getSession().getUrl();
     }
 
     // implement DatabaseMetaData
@@ -821,7 +821,7 @@ public class FarragoDatabaseMetaData implements DatabaseMetaData
     private void daemonize(Statement stmt)
     {
         FarragoJdbcStatement farragoStmt = (FarragoJdbcStatement) stmt;
-        farragoStmt.daemonize();
+        farragoStmt.stmtContext.daemonize();
     }
 
     // implement DatabaseMetaData

@@ -80,8 +80,7 @@ public abstract class DdlStmt
      *
      * @param visitor DdlVisitor to invoke
      */
-    public abstract void visit(DdlVisitor visitor)
-        throws java.sql.SQLException;
+    public abstract void visit(DdlVisitor visitor);
 }
 
 // End DdlStmt.java

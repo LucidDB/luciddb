@@ -94,10 +94,43 @@ public class SqlFunctionTable {
             new SqlFunction("ABS", SqlOperatorTable.useBiggest, null, SqlOperatorTable.typeNumeric);
 
 
+    public final SqlFunction nullIfFunc =
+            new SqlFunction("NULLIF", null, null, null){
+                public SqlCall createCall(SqlNode[] operands) {
+                    SqlNodeList whenList = new SqlNodeList();
+                    SqlNodeList thenList = new SqlNodeList();
+                    whenList.add(operands[1]);
+                    thenList.add(SqlLiteral.createNull());
+                    return SqlOperatorTable.instance().caseOperator.createCall(operands[0],whenList,thenList,operands[0]);
+                }
 
-    // todo: when we support function overloading, we will use MultiMap
-    private final HashMap mapNameToFunc = new HashMap();
+                public int getNumOfOperands() {
+                    return 2;
+                }
+            };
 
+    public final SqlFunction coalesceFunc =
+            new SqlFunction("COALESCE", null, null, null){
+                public SqlCall createCall(SqlNode[] operands) {
+                    Util.pre(operands.length>=2,"operands.length>=2");
+                    return createCall(operands, 0);
+                }
+
+                private SqlCall createCall(SqlNode[] operands, int start) {
+                    SqlNodeList whenList = new SqlNodeList();
+                    SqlNodeList thenList = new SqlNodeList();
+                    whenList.add(SqlOperatorTable.instance().isNotNullOperator.createCall(operands[start]));
+                    thenList.add(operands[start]);
+                    if (2==(operands.length-start)){
+                        return SqlOperatorTable.instance().caseOperator.createCall(null,whenList,thenList,operands[start+1]);
+                    }
+                    return SqlOperatorTable.instance().caseOperator.createCall(null,whenList,thenList,this.createCall(operands, start+1));
+                }
+
+                public int getNumOfOperands() {
+                    return 2;
+                }
+            };
 
     /**
      * The SQL <code>CAST</code> operator.
@@ -109,7 +142,16 @@ public class SqlFunctionTable {
      * operand.
      */
     public final SqlFunction cast = new SqlFunction(
-        "CAST",null,SqlOperatorTable.useReturnForParam, null);
+        "CAST",null,SqlOperatorTable.useReturnForParam, null) {
+
+        public int getNumOfOperands() {
+            return 1;
+        }
+    };
+
+
+    // todo: when we support function overloading, we will use MultiMap
+    private final HashMap mapNameToFunc = new HashMap();
 
     //~ Constructors ----------------------------------------------------------
 
@@ -138,8 +180,13 @@ public class SqlFunctionTable {
 
     //~ Methods ---------------------------------------------------------------
     public static SqlCall createCall(String funName, SqlNode[] operands) {
+        List funs = instance().lookup(funName);
+        if ((null!=funs)&&(funs.size()>0)){
+            return ((SqlFunction) funs.get(0)).createCall(operands);
+        }
+
         return new SqlFunction(funName, null, null,null).createCall(operands);
-    }
+     }
 
     /**
      * Retrieves the singleton, creating it if necessary.

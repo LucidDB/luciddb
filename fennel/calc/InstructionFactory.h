@@ -304,6 +304,9 @@ public:
     BaseInstructionFactory() {}
     virtual ~BaseInstructionFactory() {}
 
+    virtual Instruction* createInstruction()
+    { return NULL; }
+
     virtual Instruction* createInstruction(RegisterReference* result) 
     { return NULL; }
 
@@ -353,10 +356,8 @@ template < template <typename T> class TInstruction, typename TIFactory, int arg
 class SingleTypedInstructionFactory: public BaseInstructionFactory
 {
 public:
-    SingleTypedInstructionFactory() {}
+    SingleTypedInstructionFactory()          { assert(0); }
     virtual ~SingleTypedInstructionFactory() {}
-
-    // TODO: Add something so this can not be instantianted if args not 1,2, or 3
 };
 
 template < template <typename T> class TInstruction, typename TIFactory>
@@ -407,15 +408,27 @@ class SingleTypedInstructionFactory<TInstruction, TIFactory, 3>:
 // Factory that knows how to create one instruction of one type
 // TInstruction: instruction to create
 // TIFactory:    factory for creating instructions of particular type
-// args:         number of arguments the instruction takes (1,2, or 3)
+// args:         number of arguments the instruction takes (0,1,2, or 3)
 template < typename TInstruction, typename TIFactory, int args>
 class SingleInstructionFactory: public BaseInstructionFactory
+{
+public:
+    SingleInstructionFactory() { assert(0); }
+    virtual ~SingleInstructionFactory() {}
+};
+
+template < typename TInstruction, typename TIFactory>
+class SingleInstructionFactory<TInstruction, TIFactory, 0>: 
+      public BaseInstructionFactory
 {
 public:
     SingleInstructionFactory() {}
     virtual ~SingleInstructionFactory() {}
 
-    // TODO: Add something so this can not be instantianted if args not 1,2, or 3
+    virtual Instruction* createInstruction()
+    {  
+        return TIFactory::template createInstruction<TInstruction>();
+    }
 };
 
 template < typename TInstruction, typename TIFactory>
@@ -463,6 +476,17 @@ class SingleInstructionFactory<TInstruction, TIFactory, 3>:
     }
 };
 
+class BasicInstructionFactory
+{
+public:
+    template < typename TInstruction >
+    static Instruction* createInstruction()
+    {
+        return new TInstruction();
+    }
+};
+
+// Instruction factory for Jump instructions
 class JumpInstructionFactory
 {
 public:
@@ -534,6 +558,31 @@ public:
         factoryMap[name] = 
             FactoryPtr(static_cast<BaseInstructionFactory*>
                        (new SingleInstructionFactory<TInstruction, JumpInstructionFactory, args>()));
+    }
+
+protected:
+    NameFactoryMap factoryMap;
+};
+
+class BasicInstructionFactoryMap: public BaseInstructionFactoryMap
+{
+public:
+    BasicInstructionFactoryMap() 
+    {
+    }
+    virtual ~BasicInstructionFactoryMap() {}
+
+    virtual BaseInstructionFactory* getInstructionFactory(string& name)
+    {
+        return factoryMap[name].get();
+    }
+
+    template < typename TInstruction, int args >
+    void registerInstruction(string name)
+    {
+        factoryMap[name] = 
+            FactoryPtr(static_cast<BaseInstructionFactory*>
+                       (new SingleInstructionFactory<TInstruction, BasicInstructionFactory, args>()));
     }
 
 protected:
@@ -829,6 +878,15 @@ public:
         return factory->createInstruction(result);
     }
 
+    static Instruction* createInstruction(string& name)
+    {
+        BaseInstructionFactory* factory = basicInstructionMap.getInstructionFactory(name);
+        if (factory == NULL)
+            throw FennelExcn(name + " is not a registered instrunction");
+        
+        return factory->createInstruction();
+    }
+
     static Instruction* createInstruction(string& name, TProgramCounter pc, 
                                           RegisterReference* operand = NULL)
     {
@@ -944,7 +1002,6 @@ public:
         pSIFMap->template registerNativeOperands<TInstruction, args>();
     }
 
-
     template < template <typename T> class TInstruction, int args >
     static void registerBoolPointerInstruction(string name)
     {
@@ -1023,7 +1080,7 @@ public:
         registerBoolBoolInstruction<BoolAnd,3>("AND");
         registerBoolBoolInstruction<BoolNot,2>("NOT");
         registerBoolBoolInstruction<BoolIs,3>("IS");
-        registerBoolBoolInstruction<BoolIs,3>("ISNOT");
+        registerBoolBoolInstruction<BoolIsNot,3>("ISNOT");
         registerBoolBoolInstruction<BoolEqual,3>("EQ");
         registerBoolBoolInstruction<BoolNotEqual,3>("NE");
         registerBoolBoolInstruction<BoolGreater,3>("GT");
@@ -1084,7 +1141,8 @@ public:
         jumpInstructionMap.registerInstruction<JumpNull,2>("JMPN");
         jumpInstructionMap.registerInstruction<JumpNotNull,2>("JMPNN");
 
-        // TODO: Register return instruction
+        // Register return instruction
+        basicInstructionMap.registerInstruction<ReturnInstruction, 0>("RETURN");
 
         // Register Extended instruction table
         registerExtendedInstructionTable();
@@ -1094,6 +1152,7 @@ protected:
     static StringFactoryMap nativeInstructionMap;
     static StringFactoryMap boolInstructionMap;
     static StringFactoryMap pointerInstructionMap;
+    static BasicInstructionFactoryMap basicInstructionMap;
     static JumpInstructionFactoryMap jumpInstructionMap;
     static ExtendedInstructionFactoryMap extendedInstructionMap;
 };

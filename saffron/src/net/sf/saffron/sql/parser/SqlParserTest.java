@@ -51,6 +51,76 @@ public class SqlParserTest extends TestCase
         super(name);
     }
 
+    //Helper functions-------------------------------------------------------------------
+
+    private void check(String sql,String expected)
+    {
+        final SqlNode sqlNode;
+        try {
+            sqlNode = new SqlParser(sql).parseStmt();
+        } catch (ParseException e) {
+            throw Util.newInternal(e,"Error while parsing SQL '" + sql + "'");
+        }
+        final String actual = sqlNode.toString(null);
+        assertEqualsUnabridged(expected,actual);
+    }
+
+    private void checkExp(String sql,String expected)
+    {
+        final SqlNode sqlNode;
+        try {
+            sqlNode = new SqlParser(sql).parseExpression();
+        } catch (ParseException e) {
+            throw Util.newInternal(
+                e,
+                "Error while parsing SQL expression '" + sql + "'");
+        }
+        final String actual = sqlNode.toString(null);
+        assertEqualsUnabridged(expected,actual);
+    }
+
+    private void assertEqualsUnabridged(String expected,String actual)
+    {
+        if (!expected.equals(actual)) {
+            // REVIEW jvs 2-Feb-2004:  I put this here because assertEquals
+            // uses ellipses in its expected/actual reports, which makes
+            // it very hard to find the problem with something like
+            // a newline instead of a space.  Use diff-based testing instead;
+            // it would also make updating the expected value much easier.
+            String message = NL+"expected:<" + expected + ">" + NL + "but was:<"
+                + actual + ">";
+            fail(message);
+        }
+    }
+
+    private void checkFails(String sql,String exceptionPattern)
+    {
+        try {
+            final SqlNode sqlNode = new SqlParser(sql).parseStmt();
+            Util.discard(sqlNode);
+            throw Util.newInternal(
+                "Expected query '" + sql + "' to throw exception matching '"
+                + exceptionPattern + "'");
+        } catch (ParseException e) {
+            final String message = e.toString();
+            if (!Pattern.matches(exceptionPattern,message)) {
+                throw Util.newInternal(
+                    "Expected query '" + sql
+                    + "' to throw exception matching '" + exceptionPattern
+                    + "', but it threw " + message);
+            }
+        }
+        catch(java.nio.charset.UnsupportedCharsetException e){
+            final String message = e.toString();
+            if (!Pattern.matches(exceptionPattern,message)) {
+                throw Util.newInternal(
+                    "Expected query '" + sql
+                    + "' to throw exception matching '" + exceptionPattern
+                    + "', but it threw " + message);
+            }
+        }
+    }
+
     //~ Methods ---------------------------------------------------------------
 
     public void _testDerivedColumnList()
@@ -890,79 +960,38 @@ public class SqlParserTest extends TestCase
         checkFails("select N 'space'","(?s).*Encountered .*space.* at line 1, column ...*");
         checkFails("select _latin1 \n'newline'","(?s).*Encountered.*newline.* at line 2, column ...*");
         checkFails("select _unknown-charset'' from values(true)","(?s).*UnsupportedCharsetException.*.*UNKNOWN-CHARSET.*");
-
-//todo  checkFails("select N'1' '2' from t",?);
+//todo  checkFails("select N'1' '2' from t",?); //need a newline in separtor
     }
 
-    //Helper functions-------------------------------------------------------------------
-
-    private void check(String sql,String expected)
-    {
-        final SqlNode sqlNode;
-        try {
-            sqlNode = new SqlParser(sql).parseStmt();
-        } catch (ParseException e) {
-            throw Util.newInternal(e,"Error while parsing SQL '" + sql + "'");
-        }
-        final String actual = sqlNode.toString(null);
-        assertEqualsUnabridged(expected,actual);
+    public void testCaseExpression() {
+        //implicit simple else null case
+        checkExp("case \t col1 when 1 then 'one' end","(CASE WHEN (`COL1` = 1) THEN 'one' ELSE NULL END)");
+        //implicit searched elee null case
+        checkExp("case when nbr is false then 'one' end","(CASE WHEN (`NBR` IS FALSE) THEN 'one' ELSE NULL END)");
+        //multiple whens
+        checkExp("case col1 when \n1.2 then 'one' when 2 then 'two' else 'three' end",
+                 "(CASE WHEN (`COL1` = 1.2) THEN 'one' WHEN (`COL1` = 2) THEN 'two' ELSE 'three' END)");
     }
 
-    private void checkExp(String sql,String expected)
-    {
-        final SqlNode sqlNode;
-        try {
-            sqlNode = new SqlParser(sql).parseExpression();
-        } catch (ParseException e) {
-            throw Util.newInternal(
-                e,
-                "Error while parsing SQL expression '" + sql + "'");
-        }
-        final String actual = sqlNode.toString(null);
-        assertEqualsUnabridged(expected,actual);
+    public void testCaseExpressionFails() {
+        //forget end
+        checkFails("select case col1 when 1 then 'one' from t","(?s).*from.*");
+        //wrong when
+        checkFails("select case col1 when1 then 'one' end from t","(?s).*when1.*");
     }
 
-    private void assertEqualsUnabridged(String expected,String actual)
-    {
-        if (!expected.equals(actual)) {
-            // REVIEW jvs 2-Feb-2004:  I put this here because assertEquals
-            // uses ellipses in its expected/actual reports, which makes
-            // it very hard to find the problem with something like
-            // a newline instead of a space.  Use diff-based testing instead;
-            // it would also make updating the expected value much easier.
-            String message = "expected:<" + expected + ">" + NL + "but was:<"
-                + actual + ">";
-            fail(message);
-        }
+    public void testNullIf(){
+        checkExp("nullif(v1,v2)","(CASE WHEN (`V1` = `V2`) THEN NULL ELSE `V1` END)");
     }
 
-    private void checkFails(String sql,String exceptionPattern)
-    {
-        try {
-            final SqlNode sqlNode = new SqlParser(sql).parseStmt();
-            Util.discard(sqlNode);
-            throw Util.newInternal(
-                "Expected query '" + sql + "' to throw exception matching '"
-                + exceptionPattern + "'");
-        } catch (ParseException e) {
-            final String message = e.toString();
-            if (!Pattern.matches(exceptionPattern,message)) {
-                throw Util.newInternal(
-                    "Expected query '" + sql
-                    + "' to throw exception matching '" + exceptionPattern
-                    + "', but it threw " + message);
-            }
-        }
-        catch(java.nio.charset.UnsupportedCharsetException e){
-            final String message = e.toString();
-            if (!Pattern.matches(exceptionPattern,message)) {
-                throw Util.newInternal(
-                    "Expected query '" + sql
-                    + "' to throw exception matching '" + exceptionPattern
-                    + "', but it threw " + message);
-            }
-        }
+    public void testCoalesce(){
+        checkExp("coalesce(v1,v2)","(CASE WHEN (`V1` IS NOT NULL) THEN `V1` ELSE `V2` END)");
+        checkExp("coalesce(v1,v2,v3)","(CASE WHEN (`V1` IS NOT NULL) THEN `V1` ELSE "+
+                                            "(CASE WHEN (`V2` IS NOT NULL) THEN `V2` ELSE `V3` END) "+
+                                      "END)");
     }
+
+
 }
 
 

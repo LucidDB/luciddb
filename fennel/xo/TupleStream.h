@@ -23,6 +23,7 @@
 
 #include "fennel/tuple/TupleDescriptor.h"
 #include "fennel/tuple/TupleFormat.h"
+#include "fennel/xo/ExecutionStream.h"
 #include "fennel/xo/TupleStreamGraph.h"
 #include "fennel/segment/SegmentAccessor.h"
 
@@ -31,20 +32,8 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * Common parameters for instantiating any TupleStream.
  */
-struct TupleStreamParams 
-{
-    /**
-     * CacheAccessor to use for any data access.  This will be singular if the
-     * stream should not perform data access.
-     */
-    SharedCacheAccessor pCacheAccessor;
-
-    /**
-     * Accessor for segment to use for allocating scratch buffers.  This will
-     * be singular if the stream should not use any scratch buffers.
-     */
-    SegmentAccessor scratchAccessor;
-};
+struct TupleStreamParams : public ExecutionStreamParams
+{};
 
 /**
  * TupleStream is an abstract base class for all tuple stream execution objects
@@ -53,30 +42,12 @@ struct TupleStreamParams
  * transform to produce its output.  Dataflow is always initiated by the
  * consumer, and takes place in batches of tuples.  
  */
-class TupleStream : virtual public ClosableObject
+class TupleStream : public ExecutionStream<
+        TupleStreamGraph, SharedTupleStream>
+    
 {
     friend class TupleStreamGraphImpl;
 protected:
-
-    /**
-     * Whether this stream is currently open.  Note that this is not quite the
-     * opposite of the inherited ClosableObject.needsClose, since a stream
-     * needs to be closed before destruction if it has been prepared but never
-     * opened.
-     */
-    bool isOpen;
-
-    // REVIEW:  make this a weak_ptr?
-    /**
-     * Dataflow graph containing this stream.
-     */
-    TupleStreamGraph *pGraph;
-    
-    /**
-     * Identifier for this stream.
-     */
-    TupleStreamId id;
-
     /**
      * Constructor.  Note that derived class constructors must never take any
      * parameters in order to support deserialization.  See notes on method
@@ -84,166 +55,9 @@ protected:
      */
     explicit TupleStream();
 
-    // interface methods below are protected because they should only be called
-    // indirectly via TupleStreamGraph interface
-    
-    /**
-     * Inherited from ClosableObject.  TupleStream implementations must
-     * override this to release any resources acquired while open.
-     */
-    virtual void closeImpl();
-
-    /**
-     * Utility method for accessing a child input stream.
-     *
-     * @param ordinal 0-based ordinal of child
-     *
-     * @return reference to child
-     */
-    SharedTupleStream getStreamInput(uint ordinal);
-    
 public:
-    /**
-     * Enumeration of supported dataflow buffer provision
-     * capabilities/requirements.
-     */
-    enum BufferProvision {
-        /**
-         * The dataflow in question is not defined.
-         */
-        NO_PROVISION,
-
-        /**
-         * The consumer provides a ByteOutputStream into which the producer
-         * writes tuples via writeResultToConsumerBuffer.
-         */
-        CONSUMER_PROVISION,
-
-        /**
-         * The producer returns a ByteInputStream from which the consumer reads
-         * tuples.
-         */
-        PRODUCER_PROVISION,
-
-        /**
-         * Either model is supported for the dataflow in question.
-         */
-        PRODUCER_OR_CONSUMER_PROVISION
-    };
-    
-    /**
-     * Prepare this stream for execution.  A precondition is that input streams
-     * must already be defined and prepared.  As an effect of this call, the
-     * output tuple descriptor should be defined and remain unchanged for the
-     * lifetime of the stream.  Prepare is only ever called once, before the
-     * first open.  Although this method is virtual, derived classes may choose
-     * to define an overloaded version of this instead with a specialized
-     * covariant parameter class.
-     *
-     * @param params instance of stream parameterization class which should be
-     * used to prepare this stream
-     */
     virtual void prepare(TupleStreamParams const &params);
-    
-    /**
-     * Open this stream, acquiring any resources needed in order to be able to
-     * fetch data.  A precondition is that input streams
-     * must already be opened.  A stream can be closed and reopened.
-     *
-     * @param restart if true, the stream must be already open, and should
-     * reset itself to start from the beginning of its result set
-     */
-    virtual void open(bool restart) = 0;
-
-    /**
-     * @return the identifier for this stream within its graph
-     */
-    TupleStreamId getStreamId() const;
-    
-    /**
-     * @return TupleDescriptor for tuples produced by this stream.
-     */
-    virtual TupleDescriptor const &getOutputDesc() const = 0;
-
-    /**
-     * @return the format of the tuples produced by this stream; default is
-     * TUPLE_FORMAT_STANDARD
-     */
-    virtual TupleFormat getOutputFormat() const;
-
-    // TODO: throttling interface to limit how many tuples are produced?
-    
-    /**
-     * Obtain a ByteInputStream which can produce result tuple data.  This can
-     * only be called while the stream is open.  The caller will fetch data by
-     * reading bytes from the result stream, which produces them on demand.
-     * The returned byte data consists of contiguously marshalled tuples.
-     * Marshalled tuples are aligned and never straddle buffer boundaries, so
-     * it is safe for the caller to use getReadPointer/consumeReadPointer.
-     *
-     *<p>
-     *
-     * Once the returned stream's end is reached, there are no more results
-     * (calling getProducerResultStream again will not change this).  But
-     * REVIEW: maybe it would be useful to be able to switch streams and
-     * continue?
-     *
-     *<p>
-     *
-     * It is illegal to call this method on a stream which returns
-     * CONSUMER_PROVISION for getResultBufferProvision().  See
-     * ConsumerToProducerProvisionAdapter.
-     *
-     * @return result stream
-     */
-    virtual ByteInputStream &getProducerResultStream();
-
-    /**
-     * Request that a stream produce results and write as many of them as will
-     * fit into the current buffer of a ByteOutputStream.  This can only be
-     * called while the stream is open, and its usage is mutually exclusive
-     * with usage of getProducerResultStream (but the data representation is
-     * the same).
-     *
-     *<p>
-     *
-     * It is illegal to call this method on a stream which returns
-     * PRODUCER_PROVISION for getResultBufferProvision().  See
-     * ProducerToConsumerProvisionAdapter.
-     *
-     * @return true if at least one tuple was written; false if no more results
-     */
-    virtual bool writeResultToConsumerBuffer(
-        ByteOutputStream &resultOutputStream);
-
-    /**
-     * Query the BufferProvision which this stream is capable of when producing
-     * tuples.  If CONSUMER_PROVISION, getProducerResultStream is not
-     * supported.  If PRODUCER_PROVISION, writeResultToConsumerBuffer is not
-     * supported.  If PRODUCER_OR_CONSUMER_PROVISION, consumers can call
-     * either.  NO_PROVISION is an illegal return value in this context.
-     *
-     * @return supported model
-     */
-    virtual BufferProvision getResultBufferProvision() const = 0;
-
-    // REVIEW:  need to discriminate by input ordinal?
-    /**
-     * Query the BufferProvision which this stream requires of its inputs when
-     * consuming their tuples.  If CONSUMER_PROVISION or PRODUCER_PROVISION,
-     * inputs must support the corresponding model.  If
-     * PRODUCER_OR_CONSUMER_PROVISION, inputs can be of either model.  If
-     * NO_PROVISION, stream takes no inputs (this is the default).
-     *
-     * @return required model
-     */
-    virtual BufferProvision getInputBufferRequirement() const;
 };
-
-inline TupleStreamId TupleStream::getStreamId() const
-{
-    return id;
-}
 
 FENNEL_END_NAMESPACE
 

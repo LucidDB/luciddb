@@ -36,7 +36,7 @@ import java.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class SessionIndexMap implements FarragoIndexMap, FarragoAllocation
+class SessionIndexMap implements FarragoIndexMap, FarragoAllocation
 {
     private FarragoDatabase database;
     
