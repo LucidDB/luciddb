@@ -35,7 +35,9 @@ public class FarragoTransientStorageFactory implements StorageFactory
 {
     //~ Static fields/initializers --------------------------------------------
 
-    static final String NULL_STORAGE_ID = ".";
+    // distinguish this from normal memory storage
+    static final String NULL_STORAGE_ID = "#";
+    
     private static final MOFID NULL_MOFID = new MOFID(0, NULL_STORAGE_ID);
     private static FarragoTransientStorage singletonStorage;
 

@@ -26,6 +26,14 @@
     <text>Failed to initialize transient portion of catalog</text>
 </exception>
 
+<exception id="400040" name="CatalogExternalLoadFailed">
+    <text>Failed to access external repository</text>
+</exception>
+
+<exception id="400050" name="CatalogExternalInitFailed">
+    <text>Failed to initialize external repository</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- JDBC resources 410,000 - 420,000 -->
 <!-- ====================================================================== -->

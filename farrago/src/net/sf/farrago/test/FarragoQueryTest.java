@@ -119,10 +119,10 @@ public class FarragoQueryTest extends FarragoTestCase
         stmt.execute(sql);
         sql = "select \"name\" from \"Relational\".\"Schema\"";
         resultSet = stmt.executeQuery(sql);
-        List refList = new ArrayList();
-        refList.add("SALES");
-        refList.add("JDBC_METADATA");
-        compareResultList(refList);
+        Set refSet = new HashSet();
+        refSet.add("SALES");
+        refSet.add("JDBC_METADATA");
+        compareResultSet(refSet);
 
         // restore default catalog
         sql = "set catalog localdb";

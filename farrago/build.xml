@@ -830,6 +830,7 @@ require version '${required.ant.version}'."/>
     <mkdir dir="${catalog.backup.dir}"/>
     <copy todir="${catalog.backup.dir}">
       <fileset dir="${catalog.dir}" includes="FarragoCatalog.bt?"/>
+      <fileset dir="${catalog.dir}" includes="FarragoExternalCatalog.*"/>
       <fileset dir="${catalog.dir}" includes="db.dat"/>
     </copy>
   </target>
@@ -875,6 +876,7 @@ require version '${required.ant.version}'."/>
   <target name="cleanCatalogData">
     <delete>
       <fileset dir="${catalog.dir}" includes="*.dat"/>
+      <fileset dir="${catalog.dir}" includes="FarragoExternalCatalog.*"/>
       <fileset dir="${catalog.dir}" includes="FarragoCatalog.bt?"/>
     </delete>
   </target>

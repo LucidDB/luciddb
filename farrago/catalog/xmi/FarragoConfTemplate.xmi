@@ -18,6 +18,7 @@
       serverSingleListenerPort='-1'
       calcVirtualMachine='CALCVM_AUTO'
       javaCompilerClassName='org.eigenbase.javac.JaninoCompiler'
+      externalReposProps=''
       >
       <FEMConfig:FarragoConfig.fennelConfig>
         <FEMConfig:FennelConfig

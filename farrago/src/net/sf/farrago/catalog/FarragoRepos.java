@@ -46,7 +46,10 @@ import net.sf.farrago.util.*;
 import org.eigenbase.util.SaffronProperties;
 import org.netbeans.api.mdr.*;
 import org.netbeans.mdr.*;
+import org.netbeans.mdr.util.*;
+import org.netbeans.mdr.persistence.jdbcimpl.*;
 
+import java.util.logging.Logger;
 
 /**
  * FarragoRepos represents a loaded instance of an MDR repository containing
@@ -155,21 +158,15 @@ public class FarragoRepos extends FarragoMetadataFactory
             }
         }
 
-        farragoPackage = modelLoader.loadModel("FarragoCatalog", userRepos);
-        if (farragoPackage == null) {
+        FarragoPackage bootPackage =
+            modelLoader.loadModel("FarragoCatalog", userRepos);
+        if (bootPackage == null) {
             throw FarragoResource.instance().newCatalogUninitialized();
         }
-        super.setRootPackage(farragoPackage);
-        mdrRepository = modelLoader.getMdrRepos();
-        cwmPackage = farragoPackage.getCwm();
-        corePackage = cwmPackage.getCore();
-        relationalPackage = cwmPackage.getRelational();
-        indexPackage = cwmPackage.getKeysIndexes();
-        datatypesPackage = cwmPackage.getDataTypes();
-        femPackage = farragoPackage.getFem();
-        configPackage = femPackage.getConfig();
-        medPackage = femPackage.getMed();
 
+        mdrRepository = modelLoader.getMdrRepos();
+        boolean needCreate = false;
+        
         // Create special in-memory storage for transient objects
         try {
             NBMDRepositoryImpl nbRepos = (NBMDRepositoryImpl) mdrRepository;
@@ -179,21 +176,27 @@ public class FarragoRepos extends FarragoMetadataFactory
                     FarragoTransientStorageFactory.class.getName(),
                     props);
             beginReposTxn(true);
-            RefPackage memExtent =
-                nbRepos.createExtent(
-                    "TransientCatalog",
-                    farragoPackage.refMetaObject(),
-                    null,
-                    memStorageId);
-            endReposTxn(false);
+            boolean rollback = true;
+            try {
+                RefPackage memExtent =
+                    nbRepos.createExtent(
+                        "TransientCatalog",
+                        bootPackage.refMetaObject(),
+                        null,
+                        memStorageId);
+                transientFarragoPackage = (FarragoPackage) memExtent;
+                rollback = false;
+            } finally {
+                endReposTxn(rollback);
+            }
             FarragoTransientStorage.ignoreCommit = true;
-            transientFarragoPackage = (FarragoPackage) memExtent;
             fennelPackage = transientFarragoPackage.getFem().getFennel();
         } catch (Throwable ex) {
             throw FarragoResource.instance().newCatalogInitTransientFailed(ex);
         }
 
-        // TODO jvs 5-May-2004:  do the above for model extensions also
+        // Load configuration
+        configPackage = bootPackage.getFem().getConfig();
         Collection configs =
             configPackage.getFemFarragoConfig().refAllOfClass();
 
@@ -204,11 +207,103 @@ public class FarragoRepos extends FarragoMetadataFactory
         assert (immutableConfig.getName().equals("Current"));
         currentConfigMofId = immutableConfig.refMofId();
 
+        // Load external repository if so configured
+        String externalReposPropsString =
+            immutableConfig.getExternalReposProps();
+        if (externalReposPropsString.length() == 0) {
+            farragoPackage = bootPackage;
+        } else {
+            tracer.info("Loading external repository");
+            // REVIEW jvs 24-Nov-2004:  what if this fails?  Should
+            // probably just warn and revert to local catalog?
+            Map props = stringToMap(externalReposPropsString);
+            tracer.config("External repository properties:  " + props);
+            NBMDRepositoryImpl nbRepos = (NBMDRepositoryImpl) mdrRepository;
+            String externalStorageId;
+            try {
+                externalStorageId = nbRepos.mountStorage(
+                    JdbcStorageFactory.class.getName(), 
+                    props);
+            } catch (MountFailedException ex) {
+                throw FarragoResource.instance().newCatalogExternalLoadFailed(
+                    ex.getRootCase());
+            }
+            beginReposTxn(true);
+            boolean rollback = true;
+            try {
+                RefPackage externalExtent = nbRepos.getExtent("ExternalRepos");
+                if (externalExtent == null) {
+                    // doesn't exist yet; try to create it
+                    tracer.info("Initializing external repository");
+                    // REVIEW jvs 24-Nov-2004:  It seems wrong to be using
+                    // transientFarragoPackage.refMetaObject() here.  But when
+                    // I use bootPackage.refMetaObject() instead,
+                    // externalExtent comes back as an instance of CwmPackage.
+                    externalExtent =
+                        nbRepos.createExtent(
+                            "ExternalRepos",
+                            transientFarragoPackage.refMetaObject(),
+                            null,
+                            externalStorageId);
+                    needCreate = true;
+                }
+                farragoPackage = (FarragoPackage) externalExtent;
+                rollback = false;
+            } catch (CreationFailedException ex) {
+                throw FarragoResource.instance().newCatalogExternalInitFailed(
+                    ex);
+            } finally {
+                endReposTxn(rollback);
+            }
+        }
+
+        super.setRootPackage(farragoPackage);
+        cwmPackage = farragoPackage.getCwm();
+        corePackage = cwmPackage.getCore();
+        relationalPackage = cwmPackage.getRelational();
+        indexPackage = cwmPackage.getKeysIndexes();
+        datatypesPackage = cwmPackage.getDataTypes();
+        femPackage = farragoPackage.getFem();
+        medPackage = femPackage.getMed();
+
+        if (needCreate) {
+            createSystemObjects();
+        }
+        
         tracer.info("Catalog successfully loaded");
     }
 
     //~ Methods ---------------------------------------------------------------
 
+    private Map stringToMap(String propString)
+    {
+        // TODO:  find something industrial strength
+        StringTokenizer st = new StringTokenizer(propString, "=;", true);
+        Map map = new HashMap();
+        while (st.hasMoreTokens()) {
+            String name = st.nextToken();
+            if (name.equals(";")) {
+                continue;
+            }
+            if (name.equals("=")) {
+                throw new IllegalArgumentException(propString);
+            }
+            String eq = st.nextToken();
+            if (!eq.equals("=")) {
+                throw new IllegalArgumentException(propString);
+            }
+            String value = st.nextToken();
+            if (value.equals(";")) {
+                value = "";
+            }
+            map.put(
+                "org.netbeans.mdr.persistence.jdbcimpl."
+                + name,
+                value);
+        }
+        return map;
+    }
+    
     /**
      * .
      *
@@ -230,6 +325,15 @@ public class FarragoRepos extends FarragoMetadataFactory
         // NOTE jvs 5-May-2004:  return the package corresponding to
         // in-memory storage
         return fennelPackage;
+    }
+
+    // override FarragoMetadataFactory
+    public ConfigPackage getConfigPackage()
+    {
+        // NOTE jvs 24-Nov-2004:  return the bootstrap config package;
+        // default inherited from FarragoMetadataFactory could
+        // be config package from external repository
+        return configPackage;
     }
 
     /**
@@ -652,8 +756,6 @@ public class FarragoRepos extends FarragoMetadataFactory
                 transientFarragoPackage.refDelete();
             }
             mdrRepository.endTrans();
-            NBMDRepositoryImpl nbRepos = (NBMDRepositoryImpl) mdrRepository;
-            nbRepos.unmountStorage(memStorageId);
             memStorageId = null;
         }
         modelLoader.close();
