@@ -1,16 +1,6 @@
 
 net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
 
-if (ID$8$SLACKER.isNull()) {
-    if (ID$9$MANAGER) {
-        oj_var0.setNull( true );
-    } else {
-        oj_var0.setNull( false );
-        oj_var0.value = false;
-    }
-} else {
-    oj_var0.setNull( false );
-    oj_var0.value = ID$8$SLACKER.value && ID$9$MANAGER;
-}
+oj_var0.assignFromAnd3VL( ID$8$SLACKER.isNull(), ID$8$SLACKER.value, false, ID$9$MANAGER );
 
 return oj_var0;

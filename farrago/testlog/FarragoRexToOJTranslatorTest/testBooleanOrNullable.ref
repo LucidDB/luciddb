@@ -19,25 +19,6 @@ if (ID$4$CITY.isNull()) {
     oj_var1.setNull( false );
     oj_var1.value = net.sf.farrago.type.runtime.CharStringComparator.compareCharStrings( ID$1$NAME, ID$4$CITY ) == 0;
 }
-if (oj_var0.isNull()) {
-    if (oj_var1.isNull() || !oj_var1.value) {
-        oj_var2.setNull( true );
-    } else {
-        oj_var2.setNull( false );
-        oj_var2.value = true;
-    }
-} else {
-    if (oj_var1.isNull()) {
-        if (oj_var0.value) {
-            oj_var2.setNull( false );
-            oj_var2.value = true;
-        } else {
-            oj_var2.setNull( true );
-        }
-    } else {
-        oj_var2.setNull( false );
-        oj_var2.value = oj_var0.value || oj_var1.value;
-    }
-}
+oj_var2.assignFromOr3VL( oj_var0.isNull(), oj_var0.value, oj_var1.isNull(), oj_var1.value );
 
 return oj_var2;

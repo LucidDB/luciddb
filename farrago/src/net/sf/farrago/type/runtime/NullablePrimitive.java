@@ -163,6 +163,92 @@ public abstract class NullablePrimitive implements NullableValue,
         {
             return value;
         }
+
+        /**
+         * Implements the three-valued-logic version of the AND operator.
+         * Invoked by generated code.
+         *
+         * @param n0 null indictator for arg0
+         *
+         * @param v0 truth value of arg0 when !n0
+         *
+         * @param n1 null indicator for arg1
+         *
+         * @param v1 truth value of arg1 when !n1
+         */
+        public final void assignFromAnd3VL(
+            boolean n0, boolean v0, boolean n1, boolean v1)
+        {
+            if (n0 && n1) {
+                // (UNKNOWN AND UNKNOWN) == UNKNOWN
+                isNull = true;
+            } else if (n0) {
+                if (v1) {
+                    // (UNKNOWN AND TRUE) == UNKNOWN
+                    isNull = true;
+                } else {
+                    // (UNKNOWN AND FALSE) == FALSE
+                    isNull = false;
+                    value = false;
+                }
+            } else if (n1) {
+                if (v0) {
+                    // (TRUE AND UNKNOWN) == UNKNOWN
+                    isNull = true;
+                } else {
+                    // (FALSE AND UNKOWN) == FALSE
+                    isNull = false;
+                    value = false;
+                }
+            } else {
+                // (KNOWN AND KNOWN) == KNOWN
+                isNull = false;
+                value = v0 && v1;
+            }
+        }
+
+        /**
+         * Implements the three-valued-logic version of the OR operator.
+         * Invoked by generated code.
+         *
+         * @param n0 null indictator for arg0
+         *
+         * @param v0 truth value of arg0 when !n0
+         *
+         * @param n1 null indicator for arg1
+         *
+         * @param v1 truth value of arg1 when !n1
+         */
+        public final void assignFromOr3VL(
+            boolean n0, boolean v0, boolean n1, boolean v1)
+        {
+            if (n0 && n1) {
+                // (UNKNOWN OR UNKNOWN) == UNKNOWN
+                isNull = true;
+            } else if (n0) {
+                if (v1) {
+                    // (UNKNOWN OR TRUE) == TRUE
+                    isNull = false;
+                    value = true;
+                } else {
+                    // (UNKNOWN OR FALSE) == UKNOWN
+                    isNull = true;
+                }
+            } else if (n1) {
+                if (v0) {
+                    // (TRUE OR UNKNOWN) == TRUE
+                    isNull = false;
+                    value = true;
+                } else {
+                    // (FALSE OR UNKOWN) == UNKNOWN
+                    isNull = true;
+                }
+            } else {
+                // (KNOWN OR KNOWN) == KNOWN
+                isNull = false;
+                value = v0 || v1;
+            }
+        }
     }
 
     /**
