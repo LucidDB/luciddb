@@ -199,7 +199,8 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             SqlIdentifier id = FarragoCatalogUtil.getQualifiedName(type);
             return canonize(
                 new ObjectSqlType(
-                    id, false, new RelDataTypeField [] {field}));
+                    SqlTypeName.Distinct, id, false,
+                    new RelDataTypeField [] {field}));
         } else if (classifier instanceof FemSqlobjectType) {
             FemSqlobjectType objectType =
                 (FemSqlobjectType) classifier;
@@ -210,7 +211,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             SqlIdentifier id = FarragoCatalogUtil.getQualifiedName(objectType);
             return canonize(
                 new ObjectSqlType(
-                    id, false, structType.getFields()));
+                    SqlTypeName.Structured, id, false, structType.getFields()));
         } else {
             throw Util.needToImplement(classifier);
         }

@@ -131,6 +131,12 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
     public static final int Multiset_ordinal = 21;
     public static final SqlTypeName Multiset =
         new SqlTypeName("MULTISET", Multiset_ordinal, PrecNoScaleNo);
+    public static final int Distinct_ordinal = 22;
+    public static final SqlTypeName Distinct =
+        new SqlTypeName("DISTINCT", Distinct_ordinal, PrecNoScaleNo);
+    public static final int Structured_ordinal = 23;
+    public static final SqlTypeName Structured =
+        new SqlTypeName("STRUCTURED", Structured_ordinal, PrecNoScaleNo);
 
     /**
      * List of all allowable {@link SqlTypeName} values.
@@ -140,7 +146,7 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
             Boolean, Integer, Varchar, Date, Time, Timestamp, Null, Decimal,
             Any, Char, Binary, Varbinary, Tinyint, Smallint, Bigint, Real,
             Double, Symbol, IntervalYearMonth, IntervalDayTime,
-            Float, Multiset
+            Float, Multiset, Distinct, Structured
         });
 
     static
@@ -176,6 +182,8 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
         setNameForJdbcType(Types.TIME, Time);
         setNameForJdbcType(Types.TIMESTAMP, Timestamp);
         setNameForJdbcType(Types.BOOLEAN, Boolean);
+        setNameForJdbcType(Types.DISTINCT, Distinct);
+        setNameForJdbcType(Types.STRUCT, Structured);
     }
 
     //~ Instance fields -------------------------------------------------------
@@ -399,6 +407,10 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
             return Types.NULL;
         case Multiset_ordinal:
             return Types.ARRAY;
+        case Distinct_ordinal:
+            return Types.DISTINCT;
+        case Structured_ordinal:
+            return Types.STRUCT;
         default:
             return Types.OTHER;
         }

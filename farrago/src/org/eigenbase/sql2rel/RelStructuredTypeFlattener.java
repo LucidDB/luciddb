@@ -381,7 +381,9 @@ public class RelStructuredTypeFlattener
             } else {
                 exp = flattenFieldAccesses(exp);
                 flattenedExps.add(exp);
-                flattenedFieldNames.add(fieldNames[i]);
+                if (fieldNames != null) {
+                    flattenedFieldNames.add(fieldNames[i]);
+                }
             }
         }
     }
@@ -445,12 +447,18 @@ public class RelStructuredTypeFlattener
         public RexNode visit(RexInputRef input)
         {
             RexInputRef newInput = new RexInputRef(
-                getNewForOldInput(input.index), input.getType());
+                getNewForOldInput(input.index),
+                removeDistinct(input.getType()));
             return newInput;
         }
 
-        // TODO jvs 10-Feb-2005:  rewrite operations like comparisons
-        // on row values into conjunctions of comparisons on individual fields
+        private RelDataType removeDistinct(RelDataType type)
+        {
+            if (type.getSqlTypeName() != SqlTypeName.Distinct) {
+                return type;
+            }
+            return type.getFields()[0].getType();
+        }
 
         // override RexShuttle
         public RexNode visit(RexFieldAccess fieldAccess)
@@ -458,7 +466,7 @@ public class RelStructuredTypeFlattener
             // walk down the field access path expression, calculating
             // the desired input number
             int iInput = 0;
-            RelDataType fieldType = fieldAccess.getType();
+            RelDataType fieldType = removeDistinct(fieldAccess.getType());
             
             for (;;) {
                 RexNode refExp = fieldAccess.getReferenceExpr();
@@ -478,6 +486,52 @@ public class RelStructuredTypeFlattener
                 fieldAccess = (RexFieldAccess) refExp;
             }
 
+        }
+
+        // override RexShuttle
+        public RexNode visit(RexCall rexCall)
+        {
+            if (rexCall.isA(RexKind.Cast)) {
+                RexNode input = visit(rexCall.getOperands()[0]);
+                RelDataType targetType = removeDistinct(rexCall.getType());
+                return rexBuilder.makeCast(
+                    targetType,
+                    input);
+            }
+            if (!rexCall.isA(RexKind.Comparison)) {
+                return super.visit(rexCall);
+            }
+            RexNode lhs = rexCall.getOperands()[0];
+            if (!lhs.getType().isStruct()) {
+                return super.visit(rexCall);
+            }
+            List flattenedExps = new ArrayList();
+            flattenProjections(
+                rexCall.getOperands(),
+                null,
+                flattenedExps,
+                new ArrayList());
+            int n = flattenedExps.size() / 2;
+            if ((n > 1) && !rexCall.isA(RexKind.Equals)) {
+                throw Util.needToImplement(
+                    "inequality comparison for row types");
+            }
+            RexNode conjunction = null;
+            for (int i = 0; i < n; ++i) {
+                RexNode comparison = rexBuilder.makeCall(
+                    rexCall.getOperator(),
+                    (RexNode) flattenedExps.get(i), 
+                    (RexNode) flattenedExps.get(i + n));
+                if (conjunction == null) {
+                    conjunction = comparison;
+                } else {
+                    conjunction = rexBuilder.makeCall(
+                        RexKind.And,
+                        conjunction,
+                        comparison);
+                }
+            }
+            return conjunction;
         }
     }
 }

@@ -61,6 +61,7 @@ public class MockCatalogReader implements SqlValidator.CatalogReader
         // TODO jvs 12-Feb-2005: register this canonical instance with type
         // factory
         addressType = new ObjectSqlType(
+            SqlTypeName.Structured,
             new SqlIdentifier("ADDRESS", null),
             false,
             new RelDataTypeField [] {

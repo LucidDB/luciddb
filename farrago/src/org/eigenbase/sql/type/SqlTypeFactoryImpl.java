@@ -293,6 +293,7 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
     private RelDataType copyObjectType(RelDataType type, boolean nullable)
     {
         return new ObjectSqlType(
+            type.getSqlTypeName(),
             type.getSqlIdentifier(),
             nullable,
             type.getFields());

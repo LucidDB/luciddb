@@ -537,11 +537,6 @@ public abstract class SqlTypeUtil
      *
      *<p>
      *
-     * NOTE jvs 17-Dec-2004: despite the name, these are NOT the SQL rules used
-     * for deciding whether the assignment (SET X=Y) is legal.
-     *
-     *<p>
-     *
      * REVIEW jvs 17-Dec-2004:  the coerce param below shouldn't really be
      * necessary.  We're using it as a hack because
      * SqlTypeFactoryImpl.leastRestrictiveSqlType isn't complete enough
@@ -553,7 +548,7 @@ public abstract class SqlTypeUtil
      * @param fromType source of assignment
      *
      * @param coerce if true, the SQL rules for CAST are used; if
-     * false, the rules are similar to Java (e.g. you can't assign
+     * false, the rules are similar to Java; e.g. you can't assign
      * short x = (int) y, and you can't assign int x = (String) z.
      *
      * @return true iff cast is legal
@@ -563,9 +558,27 @@ public abstract class SqlTypeUtil
         RelDataType fromType,
         boolean coerce)
     {
+        if (toType == fromType) {
+            return true;
+        }
         if (toType.isStruct() || fromType.isStruct()) {
-            // could handle this, but there's no point
-            return false;
+            if (toType.getSqlTypeName() == SqlTypeName.Distinct) {
+                if (fromType.getSqlTypeName() == SqlTypeName.Distinct) {
+                    // can't cast between different distinct types
+                    return false;
+                }
+                return canCastFrom(
+                    toType.getFields()[0].getType(),
+                    fromType,
+                    coerce);
+            } else if (fromType.getSqlTypeName() == SqlTypeName.Distinct) {
+                return canCastFrom(
+                    toType,
+                    fromType.getFields()[0].getType(),
+                    coerce);
+            } else {
+                return false;
+            }
         }
         RelDataType c1 = toType.getComponentType();
         if (c1 != null) {

@@ -37,6 +37,8 @@ public class ObjectSqlType extends AbstractSqlType
      * Constructs an object type.
      * This should only be called from a factory method.
      *
+     * @param typeName SqlTypeName for this type (either Distinct or Structured)
+     *
      * @param sqlIdentifier identifier for this type
      *
      * @param nullable whether type accepts nulls
@@ -44,11 +46,12 @@ public class ObjectSqlType extends AbstractSqlType
      * @param fields object attribute definitions
      */
     public ObjectSqlType(
+        SqlTypeName typeName,
         SqlIdentifier sqlIdentifier,
         boolean nullable,
         RelDataTypeField [] fields)
     {
-        super(null, nullable, fields);
+        super(typeName, nullable, fields);
         this.sqlIdentifier = sqlIdentifier;
         computeDigest();
     }
