@@ -16,7 +16,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-package net.sf.farrago.test.regression;
+package net.sf.farrago.test.concurrent;
 
 import java.util.regex.Pattern;
 
@@ -24,14 +24,14 @@ import junit.framework.Test;
 
 
 /**
- * FarragoConcurrencyTest executes a variety of SQL DML and DDL
+ * FarragoTestConcurrentTest executes a variety of SQL DML and DDL
  * commands via a multi-threaded test harness in an effort to detect
  * errors in concurrent execution.
  *
  * @author Stephan Zuercher
  * @version $Id$
  */
-public class FarragoConcurrencyTest extends FarragoConcurrencyTestCase
+public class FarragoTestConcurrentTest extends FarragoTestConcurrentTestCase
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -40,7 +40,7 @@ public class FarragoConcurrencyTest extends FarragoConcurrencyTestCase
 
     //~ Constructors ----------------------------------------------------------
 
-    public FarragoConcurrencyTest(String name)
+    public FarragoTestConcurrentTest(String name)
         throws Exception
     {
         super(name);
@@ -50,7 +50,7 @@ public class FarragoConcurrencyTest extends FarragoConcurrencyTestCase
 
     public static Test suite()
     {
-        return wrappedSuite(FarragoConcurrencyTest.class);
+        return wrappedSuite(FarragoTestConcurrentTest.class);
     }
 
     /**
@@ -59,7 +59,7 @@ public class FarragoConcurrencyTest extends FarragoConcurrencyTestCase
     public void testConcurrentExplain()
         throws Exception
     {
-        FarragoTestCommandGenerator cmdGen = newCommandGenerator();
+        FarragoTestConcurrentCommandGenerator cmdGen = newCommandGenerator();
 
         String sql = "explain plan for select * from sales.depts";
 
@@ -79,8 +79,8 @@ public class FarragoConcurrencyTest extends FarragoConcurrencyTestCase
     public void testConcurrentExplainNoLockstep()
         throws Exception
     {
-        FarragoTestTimedCommandGenerator cmdGen =
-            new FarragoTestTimedCommandGenerator(30);
+        FarragoTestConcurrentTimedCommandGenerator cmdGen =
+            new FarragoTestConcurrentTimedCommandGenerator(30);
 
         String sql = "explain plan for select * from sales.depts";
 
@@ -94,7 +94,7 @@ public class FarragoConcurrencyTest extends FarragoConcurrencyTestCase
     public void testBadCommand()
         throws Exception
     {
-        FarragoTestCommandGenerator cmdGen = newCommandGenerator();
+        FarragoTestConcurrentCommandGenerator cmdGen = newCommandGenerator();
         int step = 1;
 
         // expect parse error: java.sql.SQLException: net.sf.farrago.parser.ParseException
@@ -115,7 +115,7 @@ public class FarragoConcurrencyTest extends FarragoConcurrencyTestCase
     public void testConcurrentSelect()
         throws Exception
     {
-        FarragoTestCommandGenerator cmdGen = newCommandGenerator();
+        FarragoTestConcurrentCommandGenerator cmdGen = newCommandGenerator();
 
         String sql = "select * from sales.depts order by deptno";
         String expected =
@@ -149,8 +149,8 @@ public class FarragoConcurrencyTest extends FarragoConcurrencyTestCase
     public void testConcurrentSelectNoLockStep()
         throws Exception
     {
-        FarragoTestTimedCommandGenerator cmdGen =
-            new FarragoTestTimedCommandGenerator(30);
+        FarragoTestConcurrentTimedCommandGenerator cmdGen =
+            new FarragoTestConcurrentTimedCommandGenerator(30);
 
         String sql = "select * from sales.depts order by deptno";
         String expected =
@@ -177,7 +177,7 @@ public class FarragoConcurrencyTest extends FarragoConcurrencyTestCase
     public void testConcurrentJoin()
         throws Exception
     {
-        FarragoTestCommandGenerator cmdGen = newCommandGenerator();
+        FarragoTestConcurrentCommandGenerator cmdGen = newCommandGenerator();
 
         String sql =
             "select emps.empno, emps.name, emps.gender, depts.* from sales.depts, sales.emps where emps.deptno = depts.deptno";
@@ -212,8 +212,8 @@ public class FarragoConcurrencyTest extends FarragoConcurrencyTestCase
     public void _testConcurrentJoinNoLockStep()
         throws Exception
     {
-        FarragoTestTimedCommandGenerator cmdGen =
-            new FarragoTestTimedCommandGenerator(30);
+        FarragoTestConcurrentTimedCommandGenerator cmdGen =
+            new FarragoTestConcurrentTimedCommandGenerator(30);
 
         String sql =
             "select emps.empno, emps.name, emps.gender, depts.* from sales.depts, sales.emps where emps.deptno = depts.deptno";
@@ -242,7 +242,7 @@ public class FarragoConcurrencyTest extends FarragoConcurrencyTestCase
     {
         // REVIEW: SZ 6/18/2004: Fennel storage currently has no
         // table-level concurrency-control, so this test should fail.
-        FarragoTestCommandGenerator cmdGen = newCommandGenerator();
+        FarragoTestConcurrentCommandGenerator cmdGen = newCommandGenerator();
 
         String createSchema = "create schema concurrency";
 

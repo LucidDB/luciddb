@@ -16,7 +16,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-package net.sf.farrago.test.regression;
+package net.sf.farrago.test.concurrent;
 
 import java.io.PrintStream;
 import java.util.Collection;
@@ -25,8 +25,8 @@ import java.util.NoSuchElementException;
 
 
 /**
- * FarragoTestTimedCommandGenerator extends
- * {@link FarragoTestCommandGenerator} and repeats the configured
+ * FarragoTestConcurrentTimedCommandGenerator extends
+ * {@link FarragoTestConcurrentCommandGenerator} and repeats the configured
  * command sequence until a certain amount of time has elapsed.
  *
  * <p>The command sequence is always completed in full, even if the
@@ -37,8 +37,8 @@ import java.util.NoSuchElementException;
  * @author Stephan Zuercher
  * @version $Id$
  */
-public class FarragoTestTimedCommandGenerator
-    extends FarragoTestCommandGenerator
+public class FarragoTestConcurrentTimedCommandGenerator
+    extends FarragoTestConcurrentCommandGenerator
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -48,14 +48,14 @@ public class FarragoTestTimedCommandGenerator
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Construct a new FarragoTestTimedCommandGenerator that will run
-     * for at least the given amount of time.  See
-     * {@link FarragoTestTimedCommandGenerator} for more information
-     * on the semantics of run-time length.
+     * Construct a new FarragoTestConcurrentTimedCommandGenerator that
+     * will run for at least the given amount of time.  See
+     * {@link FarragoTestConcurrentTimedCommandGenerator} for more
+     * information on the semantics of run-time length.
      *
      * @param runTimeSeconds minimum run-time length, in seconds
      */
-    public FarragoTestTimedCommandGenerator(int runTimeSeconds)
+    public FarragoTestConcurrentTimedCommandGenerator(int runTimeSeconds)
     {
         super();
 

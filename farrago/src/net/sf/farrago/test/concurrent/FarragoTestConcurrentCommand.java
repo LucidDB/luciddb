@@ -16,53 +16,58 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-package net.sf.farrago.test.regression;
+package net.sf.farrago.test.concurrent;
 
 
 /**
- * FarragoTestCommand represents a command, sequentially executed by
- * {@link FarragoTestCommandExecutor}, during a concurrency test
- * ({@link FarragoConcurrencyTestCase}.
+ * FarragoTestConcurrentCommand represents a command, sequentially executed by
+ * {@link FarragoTestConcurrentCommandExecutor}, during a concurrency test
+ * ({@link FarragoConcurrentTestCase}.
  *
- * <p>FarragoTestCommand instances are normally instantiated by the
- * {@link FarragoTestCommandGenerator} class.
+ * <p>FarragoTestConcurrentCommand instances are normally instantiated by the
+ * {@link FarragoTestConcurrentCommandGenerator} class.
  *
  * @author Stephan Zuercher
  * @version $Id$
  */
-public interface FarragoTestCommand
+public interface FarragoTestConcurrentCommand
 {
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * Executes this command.  The FarragoTestCommandExecutor provides
-     * access to a JDBC connection and previously prepared statements.
+     * Executes this command.  The
+     * FarragoTestConcurrentCommandExecutor provides access to a JDBC
+     * connection and previously prepared statements.
      *
-     * @param exec the FarragoTestCommandExecutor firing this command.
-     * @see FarragoTestCommandExecutor#getStatement()
-     * @see FarragoTestCommandExecutor#setStatement(java.sql.Statement)
+     * @param exec the FarragoTestConcurrentCommandExecutor firing
+     *             this command.
+     * @see FarragoTestConcurrentCommandExecutor#getStatement()
+     * @see FarragoTestConcurrentCommandExecutor#setStatement(java.sql.Statement)
      * @throws Exception to indicate a test failure
      */
-    void execute(FarragoTestCommandExecutor exec)
+    void execute(FarragoTestConcurrentCommandExecutor exec)
         throws Exception;
 
     /**
      * Mark a command to show that it is expected to fail, and indicate how.
      * Used for negative tests.  Normally when a command fails the embracing
-     * test fails ({@see FarragoConcurrencyTestCase#executeTest}).  But when a
-     * marked command fails, the error is caught and inspected: if it matches
-     * the expected error, the test continues.  However if it does not match, if
-     * another kind of exception is thrown, or if no exception is caught, then
-     * the test fails.
+     * test fails ({@see FarragoTestConcurrentTestCase#executeTest}).
+     * But when a marked command fails, the error is caught and
+     * inspected: if it matches the expected error, the test
+     * continues.  However if it does not match, if another kind of
+     * exception is thrown, or if no exception is caught, then the
+     * test fails.
      *
-     * Assumes the error is indicated by a java.sql.SQLException.  Optionally checks
-     * for the expected error condition by matching the error message against a
-     * regular expression. (Scans the list of chained SQLExceptions).
+     * Assumes the error is indicated by a java.sql.SQLException.
+     * Optionally checks for the expected error condition by matching
+     * the error message against a regular expression. (Scans the list
+     * of chained SQLExceptions).
      *
      * @param comment a brief description of the expected error
-     * @param pattern null, or a regular expression that matches the expected error message.
+     * @param pattern null, or a regular expression that matches the
+     *                expected error message.
      */
-    FarragoTestCommand markToFail(
+    FarragoTestConcurrentCommand markToFail(
         String comment,
         String pattern);
 
