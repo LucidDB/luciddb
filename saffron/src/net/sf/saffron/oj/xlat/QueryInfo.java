@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import net.sf.saffron.oj.OJPlannerFactory;
 import net.sf.saffron.oj.rel.ExpressionReaderRel;
 import net.sf.saffron.trace.SaffronTrace;
 
@@ -46,7 +47,6 @@ import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.reltype.RelDataTypeFactoryImpl;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.util.Util;
-
 
 /**
  * A <code>QueryInfo</code> holds all the information about a {@link
@@ -158,7 +158,8 @@ class QueryInfo
     {
         RelOptQuery query;
         if (queryInfo == null) {
-            query = new RelOptQuery();
+            query = new RelOptQuery(
+                OJPlannerFactory.threadInstance().newPlanner());
         } else {
             query = queryInfo.cluster.query;
         }

@@ -92,7 +92,6 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     private boolean needRestore;
     private SqlToRelConverter sqlToRelConverter;
     private RelDataTypeFactory savedTypeFactory;
-    private VolcanoPlannerFactory savedPlannerFactory;
     private ClassMap savedClassMap;
     private Object savedDeclarer;
     private FarragoAllocation javaCodeDir;
@@ -151,19 +150,11 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         // Save some global state for reentrancy
         needRestore = true;
         savedTypeFactory = RelDataTypeFactoryImpl.threadInstance();
-        savedPlannerFactory = VolcanoPlannerFactory.threadInstance();
         savedClassMap = ClassMap.instance();
         savedDeclarer = OJUtil.threadDeclarers.get();
 
         RelDataTypeFactoryImpl.setThreadInstance(getFarragoTypeFactory());
         ClassMap.setInstance(new ClassMap(FarragoSyntheticObject.class));
-        VolcanoPlannerFactory.setThreadInstance(
-            new VolcanoPlannerFactory() {
-                public VolcanoPlanner newPlanner()
-                {
-                    return planner;
-                }
-            });
         planner = new FarragoPlanner(this);
         planner.init();
     }
@@ -179,6 +170,11 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     public void setPlanner(FarragoPlanner planner)
     {
         this.planner = planner;
+    }
+
+    public RelOptPlanner getPlanner()
+    {
+        return planner;
     }
 
     // implement FarragoSessionPreparingStmt
@@ -411,7 +407,6 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             return;
         }
         RelDataTypeFactoryImpl.setThreadInstance(savedTypeFactory);
-        VolcanoPlannerFactory.setThreadInstance(savedPlannerFactory);
         ClassMap.setInstance(savedClassMap);
         OJUtil.threadDeclarers.set(savedDeclarer);
 
@@ -453,6 +448,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
                     validator,
                     connection.getRelOptSchema(),
                     getEnvironment(),
+                    planner,
                     connection,
                     new FarragoRexBuilder(getFarragoTypeFactory()));
             sqlToRelConverter.setDefaultValueFactory(

@@ -58,6 +58,7 @@ public class SqlToRelConverter
 
     private final SqlValidator validator;
     private RexBuilder rexBuilder;
+    private RelOptPlanner planner;
     private RelOptConnection connection;
     private RelOptSchema schema;
     private RelOptCluster cluster;
@@ -83,12 +84,14 @@ public class SqlToRelConverter
         SqlValidator validator,
         RelOptSchema schema,
         Environment env,
+        RelOptPlanner planner,
         RelOptConnection connection,
         RexBuilder rexBuilder)
     {
         Util.pre(connection != null, "connection != null");
         this.validator = validator;
         this.schema = schema;
+        this.planner = planner;
         this.connection = connection;
         this.defaultValueFactory = new NullDefaultValueFactory();
         this.rexBuilder = rexBuilder;
@@ -1376,7 +1379,7 @@ public class SqlToRelConverter
     {
         RelOptQuery query;
         if (cluster == null) {
-            query = new RelOptQuery();
+            query = new RelOptQuery(planner);
         } else {
             query = cluster.query;
         }

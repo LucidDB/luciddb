@@ -20,7 +20,6 @@
 package com.disruptivetech.farrago.test;
 
 import com.disruptivetech.farrago.calc.RexToCalcTranslator;
-import com.disruptivetech.farrago.volcano.VolcanoPlannerFactory;
 
 import java.io.*;
 import java.sql.Connection;
@@ -142,6 +141,7 @@ public class Rex2CalcPlanTest extends FarragoTestCase
         final SqlToRelConverter converter =
             new SqlToRelConverter(validator,
                 testContext.stmt.getRelOptSchema(), testContext.env,
+                testContext.stmt.getPlanner(),
                 testContext.stmt, rexBuilder);
         RelNode rootRel = converter.convertQuery(sqlQuery);
         assertTrue(rootRel != null);

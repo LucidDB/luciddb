@@ -19,8 +19,6 @@
 
 package net.sf.saffron.oj.stmt;
 
-import com.disruptivetech.farrago.volcano.VolcanoPlannerFactory;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
@@ -186,8 +184,8 @@ public class OJStatement extends OJPreparingStmt
             typeFactory = new OJTypeFactoryImpl();
             RelDataTypeFactoryImpl.setThreadInstance(typeFactory);
         }
-        if (VolcanoPlannerFactory.threadInstance() == null) {
-            VolcanoPlannerFactory.setThreadInstance(new OJPlannerFactory());
+        if (OJPlannerFactory.threadInstance() == null) {
+            OJPlannerFactory.setThreadInstance(new OJPlannerFactory());
         }
     }
 
@@ -240,6 +238,7 @@ public class OJStatement extends OJPreparingStmt
             validator,
             connection.getRelOptSchema(),
             env,
+            OJPlannerFactory.threadInstance().newPlanner(),
             connection,
             new JavaRexBuilder(connection.getRelOptSchema().getTypeFactory()));
     }

@@ -19,8 +19,6 @@
 
 package net.sf.saffron.sql2rel;
 
-import com.disruptivetech.farrago.volcano.VolcanoPlannerFactory;
-
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.Connection;
@@ -87,8 +85,8 @@ public class ConverterTest extends TestCase
         }
 
         // And a planner factory.
-        if (VolcanoPlannerFactory.threadInstance() == null) {
-            VolcanoPlannerFactory.setThreadInstance(new OJPlannerFactory());
+        if (OJPlannerFactory.threadInstance() == null) {
+            OJPlannerFactory.setThreadInstance(new OJPlannerFactory());
         }
     }
 
@@ -437,6 +435,7 @@ public class ConverterTest extends TestCase
         final SqlToRelConverter converter =
             new SqlToRelConverter(validator,
                 testContext.connection.getRelOptSchema(), testContext.env,
+                OJPlannerFactory.threadInstance().newPlanner(),
                 testContext.connection,
                 new JavaRexBuilder(testContext.connection.getRelOptSchema()
                         .getTypeFactory()));
@@ -526,8 +525,8 @@ public class ConverterTest extends TestCase
                 typeFactory = new OJTypeFactoryImpl();
                 RelDataTypeFactoryImpl.setThreadInstance(typeFactory);
             }
-            if (VolcanoPlannerFactory.threadInstance() == null) {
-                VolcanoPlannerFactory.setThreadInstance(
+            if (OJPlannerFactory.threadInstance() == null) {
+                OJPlannerFactory.setThreadInstance(
                     new OJPlannerFactory());
             }
 

@@ -38,15 +38,29 @@ import org.eigenbase.rex.RexUtil;
 
 
 /**
- * OJPlannerFactory implements VolcanoPlannerFactory by constructing planners
- * initialized to handle all calling conventions, rules, and relational
- * expressions needed to preprocess Saffron extended Java.
+ * OJPlannerFactory constructs planners initialized to handle all calling
+ * conventions, rules, and relational expressions needed to preprocess Saffron
+ * extended Java.
  *
  * @version $Id$
  */
-public class OJPlannerFactory extends VolcanoPlannerFactory
+public class OJPlannerFactory
 {
-    public VolcanoPlanner newPlanner()
+    private static ThreadLocal threadInstances = new ThreadLocal();
+
+    //~ Methods ---------------------------------------------------------------
+
+    public static void setThreadInstance(OJPlannerFactory plannerFactory)
+    {
+        threadInstances.set(plannerFactory);
+    }
+
+    public static OJPlannerFactory threadInstance()
+    {
+        return (OJPlannerFactory) threadInstances.get();
+    }
+    
+    public RelOptPlanner newPlanner()
     {
         VolcanoPlanner planner = new VolcanoPlanner();
 

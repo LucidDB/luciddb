@@ -21,8 +21,6 @@
 
 package org.eigenbase.oj.stmt;
 
-import com.disruptivetech.farrago.volcano.VolcanoPlannerFactory;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;

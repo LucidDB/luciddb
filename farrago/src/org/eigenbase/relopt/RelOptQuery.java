@@ -22,9 +22,6 @@
 package org.eigenbase.relopt;
 
 
-// FIXME jvs 29-Aug-2004
-import com.disruptivetech.farrago.volcano.VolcanoPlannerFactory;
-
 import java.util.HashMap;
 
 import openjava.mop.Environment;
@@ -66,13 +63,6 @@ public class RelOptQuery
     private int nextCorrel = 0;
 
     //~ Constructors ----------------------------------------------------------
-
-    public RelOptQuery()
-    {
-        // TODO:  get rid of threadInstances and pass planner down here
-        // instead
-        this(VolcanoPlannerFactory.threadInstance().newPlanner());
-    }
 
     public RelOptQuery(RelOptPlanner planner)
     {
