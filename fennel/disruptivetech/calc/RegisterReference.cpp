@@ -35,6 +35,7 @@ RegisterReference::setCalc(Calculator* calcP) {
     mRegisterSetDescP = calcP->mRegisterSetDescriptor;
     mResetP = &(calcP->mRegisterReset);
     if (mSetIndex == EOutput && calcP->mOutputRegisterByReference) {
+        //! See Calculator#outputRegisterByReference()
         mProp |= (EPropByRefOnly | EPropReadOnly);
     }
 }

@@ -77,7 +77,28 @@ public:
     // Pre-Execution Configuration
     //
 
-    //! Pre-execution: Output register by reference only?
+    //! Pre-execution: Configure output register to be set by reference 
+    //! (default), or by value.
+    //!
+    //! <p>
+    //! Default: True.
+    //!
+    //! <p>
+    //! If flag is true, output register can only be set by reference
+    //! using the reference "REF" instructions, PointerRef and
+    //! NativeRef. Copy by value into the output register is disallowed,
+    //! as the registers may point to another read-only register set.
+    //! Reading from the output register in this mode is possible,
+    //! but should only occur after the appropriate REF instruction.
+    //! Output register may be passed to the Calculator in a don't
+    //! care state. 
+    //!
+    //! <p>
+    //! If flag is false, output register is assumed to point to 
+    //! appropriately allocated memory and is set using copy by value 
+    //! instructions.
+    //!
+    //! <p>
     //! Must be set before appending instructions.
     void outputRegisterByReference(bool flag);
 
@@ -231,10 +252,7 @@ protected:
     const bool mIsUsingAssembler;
     //! Assembler is actively assembling
     bool mIsAssembling;
-    //! Output register does not have memory associated with it, is
-    //! passed in a don't-care state, and output should refer to
-    //! other register sets by reference. Typical XO execution mode.
-    //! Must be set before appending instructions.
+    //! If set, output register can only be set by reference.
     bool mOutputRegisterByReference;
     //! Exceptions cause calculator to return immediately, or do they
     //! allow execution to conitnue?

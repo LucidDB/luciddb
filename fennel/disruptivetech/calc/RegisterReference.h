@@ -117,7 +117,8 @@ public:
                                 //! just in time indexing.
         EPropPtrReset     = 4,  //!< Journal pointer changes to allow resetting.
         EPropByRefOnly    = 8   //!< No memory associated. Can only be
-                                //! repointed to other registers.
+                                //! repointed to other registers. See
+                                //! Calculator#outputRegisterByReference().
     };
 
     // TODO: Replace with array indexed by ERegisterSet
@@ -136,7 +137,8 @@ public:
     //! Provides a pointer to encapsulating Calculator
     //! 
     //! Must be in .cpp file for recursive include requirement reasons.
-    //! Refers to Calculator and RegisterReference objects.
+    //! Refers to Calculator and RegisterReference objects. See
+    //! also Calculator#outputRegisterByReference().
     void setCalc(Calculator* calcP);
 
     //! Performs pre-execution optimizations
