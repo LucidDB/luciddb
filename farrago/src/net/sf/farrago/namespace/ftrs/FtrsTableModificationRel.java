@@ -165,6 +165,8 @@ class FtrsTableModificationRel extends TableModificationRel
             FemTableUpdaterDef tableUpdaterDef = repos.newFemTableUpdaterDef();
             tableWriterDef = tableUpdaterDef;
             updateCwmColumnList = getUpdateCwmColumnList();
+            // REVIEW jvs 6-Feb-2005:  I think this needs to account
+            // for flattening.
             tableUpdaterDef.setUpdateProj(
                 FennelRelUtil.createTupleProjectionFromColumnList(repos,
                     updateCwmColumnList));

@@ -83,7 +83,7 @@ public abstract class FennelRelUtil
      * Create a FemTupleDescriptor for a RelDataType which is a row.
      *
      * @param repos repos storing object definitions
-     * @param rowType row of FarragoTypes
+     * @param rowType row type descriptor
      *
      * @return generated tuple descriptor
      */

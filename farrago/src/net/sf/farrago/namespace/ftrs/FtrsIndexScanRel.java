@@ -57,9 +57,9 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
     final FtrsTable ftrsTable;
 
     /**
-     * Array of 0-based column ordinals to project; if null, project all
-     * columns.  Note that these ordinals are relative to the table, not the
-     * index.
+     * Array of 0-based flattened column ordinals to project; if null, project
+     * all columns.  Note that these ordinals are relative to the table, not
+     * the index.
      */
     final Integer [] projectedColumns;
     final boolean isOrderPreserving;
@@ -134,10 +134,12 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
     // implement RelNode
     public RelDataType deriveRowType()
     {
+        RelDataType flattenedRowType =
+            ftrsTable.getIndexGuide().getFlattenedRowType();
         if (projectedColumns == null) {
-            return super.deriveRowType();
+            return flattenedRowType;
         } else {
-            final RelDataTypeField [] fields = table.getRowType().getFields();
+            final RelDataTypeField [] fields = flattenedRowType.getFields();
             return cluster.typeFactory.createStructType(
                 new RelDataTypeFactory.FieldInfo() {
                     public int getFieldCount()
@@ -209,7 +211,8 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
         FtrsIndexGuide indexGuide = ftrsTable.getIndexGuide();
         int nIndexCols =
             index.isClustered()
-            ? ftrsTable.getCwmColumnSet().getFeature().size()
+            ? ftrsTable.getIndexGuide().getFlattenedRowType().getFieldList()
+            .size()
             : indexGuide.getUnclusteredCoverageColList(index).size();
 
         double dIo = dRows * nIndexCols;
@@ -274,7 +277,8 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
         if (projectedColumns != null) {
             return projectedColumns;
         }
-        int n = table.getRowType().getFieldList().size();
+        int n = ftrsTable.getIndexGuide().getFlattenedRowType().getFieldList()
+            .size();
         return FennelRelUtil.newIotaProjection(n);
     }
 

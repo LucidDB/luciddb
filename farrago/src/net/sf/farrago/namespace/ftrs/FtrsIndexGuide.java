@@ -54,6 +54,10 @@ class FtrsIndexGuide
     
     private CwmColumnSet table;
     
+    private RelDataType unflattenedRowType;
+    
+    private RelDataType flattenedRowType;
+
     FtrsIndexGuide(
         FarragoTypeFactory typeFactory,
         CwmColumnSet table)
@@ -61,8 +65,21 @@ class FtrsIndexGuide
         this.typeFactory = typeFactory;
         this.table = table;
         repos = typeFactory.getRepos();
+        
+        unflattenedRowType =
+            typeFactory.createStructTypeFromFeatureList(table.getFeature());
+        
+        flattenedRowType =
+            SqlTypeUtil.flattenRecordType(typeFactory, unflattenedRowType);
     }
 
+    /**
+     * @return the flattened row type for the indexed table
+     */
+    public RelDataType getFlattenedRowType()
+    {
+        return flattenedRowType;
+    }
 
     /**
      * Gets a list of columns covered by an unclustered index.
@@ -88,7 +105,7 @@ class FtrsIndexGuide
     }
 
     /**
-     * Same as getUnclusteredCoverageColList, but returns table-relative column
+     * Same as getUnclusteredCoverageColList, but returns flattened column
      * ordinals instead.
      *
      *<p>
@@ -98,7 +115,7 @@ class FtrsIndexGuide
      *
      * @param index index for which to compute projection
      *
-     * @return projection as array of 0-based table-relative column ordinals
+     * @return projection as array of 0-based flattened column ordinals
      */
     Integer [] getUnclusteredCoverageArray(
         FemLocalIndex index)
@@ -109,7 +126,9 @@ class FtrsIndexGuide
         int i = 0;
         for (; iter.hasNext(); ++i) {
             FemAbstractColumn column = (FemAbstractColumn) iter.next();
-            projection[i] = new Integer(column.getOrdinal());
+            projection[i] = new Integer(
+                flattenOrdinal(
+                    column.getOrdinal()));
         }
         return projection;
     }
@@ -126,7 +145,7 @@ class FtrsIndexGuide
      *
      * @param index the FemLocalIndex for which the key is to be projected
      *
-     * @return array of 0-based column ordinals
+     * @return array of 0-based flattened column ordinals
      */
     Integer [] getClusteredDistinctKeyArray(
         FemLocalIndex index)
@@ -138,7 +157,9 @@ class FtrsIndexGuide
         for (int i = 0; i < array.length; ++i) {
             FemAbstractColumn column =
                 (FemAbstractColumn) indexColumnList.get(i);
-            array[i] = new Integer(column.getOrdinal());
+            array[i] = new Integer(
+                flattenOrdinal(
+                    column.getOrdinal()));
         }
         return array;
     }
@@ -169,7 +190,7 @@ class FtrsIndexGuide
      *
      * @param index index for which to compute projection
      *
-     * @return projection as array of 0-based table-relative column ordinals
+     * @return projection as array of 0-based flattened column ordinals
      */
     Integer [] getCollationKeyArray(
         FemLocalIndex index)
@@ -235,7 +256,7 @@ class FtrsIndexGuide
         FemLocalIndex index)
     {
         if (index.isClustered()) {
-            return getClusteredCoverageTupleDescriptor(index);
+            return getClusteredCoverageTupleDescriptor();
         } else {
             return getUnclusteredCoverageTupleDescriptor(index);
         }
@@ -260,16 +281,27 @@ class FtrsIndexGuide
     {
         if (index.isClustered()) {
             // clustered index tuple is full table tuple
-            int n = index.getSpannedClass().getFeature().size();
             return FennelRelUtil.createTupleProjection(
                 repos,
-                FennelRelUtil.newIotaProjection(n));
+                FennelRelUtil.newIotaProjection(
+                    flattenedRowType.getFieldList().size()));
         }
 
         List indexColumnList = getUnclusteredCoverageColList(index);
 
-        return FennelRelUtil.createTupleProjectionFromColumnList(repos,
-            indexColumnList);
+        FemTupleProjection proj =
+            FennelRelUtil.createTupleProjectionFromColumnList(
+                repos,indexColumnList);
+
+        // have to adjust for flattening
+        for (int i = 0; i < proj.getAttrProjection().size(); ++i) {
+            FemTupleAttrProjection attr =
+                (FemTupleAttrProjection) proj.getAttrProjection().get(i);
+            attr.setAttributeIndex(
+                flattenOrdinal(
+                    attr.getAttributeIndex()));
+        }
+        return proj;
     }
 
     private void appendConstraintColumns(
@@ -315,22 +347,11 @@ class FtrsIndexGuide
         }
     }
 
-    // TODO jvs 4-Feb-2005:  flattening code below means we need to
-    // adjust ordinals everywhere else
-
-    private FemTupleDescriptor getClusteredCoverageTupleDescriptor(
-        FemLocalIndex index)
+    private FemTupleDescriptor getClusteredCoverageTupleDescriptor()
     {
-        RelDataType logicalRowType =
-            typeFactory.createStructTypeFromFeatureList(
-                index.getSpannedClass().getFeature());
-
-        RelDataType physicalRowType =
-            SqlTypeUtil.flattenRecordType(typeFactory, logicalRowType);
-        
         FemTupleDescriptor tupleDesc = repos.newFemTupleDescriptor();
 
-        Iterator fieldIter = physicalRowType.getFieldList().iterator();
+        Iterator fieldIter = flattenedRowType.getFieldList().iterator();
         while (fieldIter.hasNext()) {
             RelDataTypeField field = (RelDataTypeField) fieldIter.next();
             FennelRelUtil.addTupleAttrDescriptor(
@@ -355,6 +376,46 @@ class FtrsIndexGuide
                 typeFactory.createCwmElementType(column));
         }
         return tupleDesc;
+    }
+
+    /**
+     * Converts from unflattened 0-based logical column ordinal to 0-based
+     * flattened tuple ordinal (as known by Fennel).  These differ in the
+     * presence of user-defined types.  For example, consider DDL like
+     *
+     *<pre><code>
+     *
+     * create type pencil (
+     *     outer_radius_mm double,
+     *     lead_radius_mm double,
+     *     length_mm double,
+     *     has_eraser boolean
+     * );
+     *
+     * create table pencil_case(
+     *     id int not null primary key,
+     *     p pencil int not null,
+     *     crayon_count int);
+     *
+     *</code></pre>
+     *
+     * The corresponding flattened ordinals would be 0 for <code>id</code>, 1
+     * for <code>p</code>, 5 for <code>crayon_count</code>. The gap corresponds
+     * to the fact that the <code>pencil</code> column has four fields, after
+     * which comes <code>crayon_count</code>.
+     *
+     * @param columnOrdinal logical column ordinal; e.g. 0 for <code>id</code>,
+     * 1 for <code>p</code>, 2 for <code>crayon_count</code>
+     *
+     * @return flattened column ordinal
+     */
+    private int flattenOrdinal(int columnOrdinal)
+    {
+        Object field = 
+            unflattenedRowType.getFieldList().get(columnOrdinal);
+        int i = flattenedRowType.getFieldList().indexOf(field);
+        assert(i != -1);
+        return i;
     }
 }
 
