@@ -168,6 +168,14 @@ public class FarragoTrace {
     }
 
     /**
+     * The tracer "net.sf.farrago.query.rule" traces Farrago's custom
+     * optimizer rules.
+     */
+    public static Logger getOptimizerRuleTracer() {
+        return Logger.getLogger("net.sf.farrago.query.rule");
+    }
+
+    /**
      * Gets the logger to be used for tracing a particular class.
      *
      * @param clazz the class to trace

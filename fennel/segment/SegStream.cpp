@@ -42,6 +42,18 @@ SharedSegment SegStream::getSegment() const
     return segmentAccessor.pSegment;
 }
 
+SegStreamMarker::SegStreamMarker(SegStream const &segStream)
+    : ByteStreamMarker(segStream)
+{
+    segPos.segByteId = SegByteId(MAXU);
+    segPos.cbOffset = MAXU;
+}
+
+FileSize SegStreamMarker::getOffset() const
+{
+    return segPos.cbOffset;
+}
+
 FENNEL_END_CPPFILE("$Id$");
 
 // End SegStream.cpp

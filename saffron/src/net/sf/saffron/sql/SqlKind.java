@@ -190,6 +190,10 @@ public class SqlKind extends EnumeratedValues.BasicValue
     public static final int IsFalseORDINAL = 44;
     public static final SqlKind IsFalse= new SqlKind("IsFalse", IsFalseORDINAL);
 
+    /** IS UNKNOWN */
+    public static final int IsUnknownORDINAL = 48;
+    public static final SqlKind IsUnknown= new SqlKind("IsUnknown", IsUnknownORDINAL);
+
     /** IS NULL */
     public static final int IsNullORDINAL = 46;
     public static final SqlKind IsNull= new SqlKind("IsNull", IsNullORDINAL);

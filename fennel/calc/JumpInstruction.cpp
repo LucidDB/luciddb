@@ -56,77 +56,102 @@ JumpInstruction::describeHelper(string &out,
 
 
 const char *
-Jump::longName() const
+Jump::longName()
 {
     return "Jump";
 }
 const char *
-Jump::shortName() const
+Jump::shortName()
 {
-    return "Jmp";
+    return "JMP";
+}
+int
+Jump::numArgs()
+{
+    return 0;  // PC is not counted
 }
 void
-Jump::describe(string &out, bool values) const {
+Jump::describe(string& out, bool values) const {
     describeHelper(out, values, longName(), shortName());
 }
 
 const char *
-JumpTrue::longName() const
+JumpTrue::longName()
 {
     return "JumpTrue";
 }
 const char *
-JumpTrue::shortName() const
+JumpTrue::shortName()
 {
-    return "JmpT";
+    return "JMPT";
+}
+int
+JumpTrue::numArgs()
+{
+    return 1;  // PC is not counted
 }
 void
-JumpTrue::describe(string &out, bool values) const {
+JumpTrue::describe(string& out, bool values) const {
     describeHelper(out, values, longName(), shortName());
 }
 
 const char *
-JumpFalse::longName() const
+JumpFalse::longName()
 {
     return "JumpFalse";
 }
 const char *
-JumpFalse::shortName() const
+JumpFalse::shortName()
 {
-    return "JmpF";
+    return "JMPF";
+}
+int
+JumpFalse::numArgs()
+{
+    return 1;  // PC is not counted
 }
 void
-JumpFalse::describe(string &out, bool values) const {
+JumpFalse::describe(string& out, bool values) const {
     describeHelper(out, values, longName(), shortName());
 }
 
 const char *
-JumpNull::longName() const
+JumpNull::longName()
 {
     return "JumpNull";
 }
 const char *
-JumpNull::shortName() const
+JumpNull::shortName()
 {
-    return "JmpN";
+    return "JMPN";
+}
+int
+JumpNull::numArgs()
+{
+    return 1;  // PC is not counted
 }
 void
-JumpNull::describe(string &out, bool values) const {
+JumpNull::describe(string& out, bool values) const {
     describeHelper(out, values, longName(), shortName());
 }
 
 const char *
-JumpNotNull::longName() const
+JumpNotNull::longName()
 {
     return "JumpNotNull";
 }
 const char *
-JumpNotNull::shortName() const
+JumpNotNull::shortName()
 {
-    return "JmpNN";
+    return "JMPNN";
+}
+int
+JumpNotNull::numArgs()
+{
+    return 1;  // PC is not counted
 }
 void
-JumpNotNull::describe(string &out, bool values) const {
+JumpNotNull::describe(string& out, bool values) const {
     describeHelper(out, values, longName(), shortName());
 }
 

@@ -76,13 +76,7 @@ public class FarragoJdbcMetaDataImpl
     protected int getFieldPrecision(int fieldOrdinal)
     {
         FarragoAtomicType type = getFarragoType(fieldOrdinal);
-        if (type instanceof FarragoPrecisionType) {
-            FarragoPrecisionType precisionType = (FarragoPrecisionType) type;
-            return precisionType.getPrecision();
-        } else {
-            // TODO:  fixed precisions?
-            return 0;
-        }
+        return type.getPrecision();
     }
 
     protected int getFieldScale(int fieldOrdinal)

@@ -44,12 +44,39 @@ public:
         throw ret;
     }
 
-    const char * longName() const { return "Return"; }
-    const char * shortName() const { return "RET"; }
-    void describe(string &out, bool values) const {
+    static const char * longName() { return "Return"; }
+    static const char * shortName() { return "RETURN"; }
+    static int numArgs() { return 0; }
+    void describe(string& out, bool values) const {
         out = longName();
     }
+
+    static InstructionSignature
+    signature() {
+        return InstructionSignature(shortName());
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        return new ReturnInstruction();
+    }
 };
+
+class ReturnInstructionRegister : InstructionRegister {
+public:
+    static void
+    registerInstructions()
+    {
+        // Shortcut registration system, as there are neither args nor types.
+        StringToCreateFn* instMap = InstructionFactory::getInstructionTable();
+        (*instMap)[ReturnInstruction::signature().compute()] =
+            &ReturnInstruction::create;
+    }
+};
+
+
 
 FENNEL_END_NAMESPACE
 

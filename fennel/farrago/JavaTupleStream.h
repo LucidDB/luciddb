@@ -79,6 +79,9 @@ class JavaTupleStream : public TupleStream, private ByteInputStream
 public:
     explicit JavaTupleStream();
     void prepare(JavaTupleStreamParams const &params);
+    virtual void getResourceRequirements(
+        ExecutionStreamResourceQuantity &minQuantity,
+        ExecutionStreamResourceQuantity &optQuantity);
     virtual void open(bool restart);
     virtual void closeImpl();
     virtual ByteInputStream &getProducerResultStream();

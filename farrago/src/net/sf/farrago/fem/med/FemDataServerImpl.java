@@ -113,6 +113,13 @@ public abstract class FemDataServerImpl extends InstanceHandler
     {
         Properties props =
             FemDataWrapperImpl.getStorageOptionsAsProperties(this);
+        {
+            String val;
+            if ((val = getType()) != null)
+                props.setProperty(FarragoMedDataServer.PROP_SERVER_TYPE, val);
+            if ((val = getVersion()) != null)
+                props.setProperty(FarragoMedDataServer.PROP_SERVER_VERSION, val);
+        }
 
         FemDataWrapperImpl femDataWrapper =
             (FemDataWrapperImpl) getWrapper();

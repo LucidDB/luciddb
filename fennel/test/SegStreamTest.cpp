@@ -119,6 +119,7 @@ public:
         
         FENNEL_UNIT_TEST_CASE(SegStreamTest,testWriteSeg);
         FENNEL_UNIT_TEST_CASE(SegStreamTest,testReadSeg);
+        FENNEL_UNIT_TEST_CASE(SegStreamTest,testMarkReset);
         FENNEL_UNIT_TEST_CASE(SegStreamTest,testWriteSpillAndRead);
     }
 
@@ -141,6 +142,23 @@ public:
         SharedSegInputStream pInputStream =
             SegInputStream::newSegInputStream(segmentAccessor);
         pInputStream->startPrefetch();
+        testRead(pInputStream,3);
+        pInputStream.reset();
+        segmentAccessor.reset();
+        closeStorage();
+    }
+
+    void testMarkReset()
+    {
+        openStorage(DeviceMode::load);
+        SegmentAccessor segmentAccessor(pLinearSegment,pCache);
+        SharedSegInputStream pInputStream =
+            SegInputStream::newSegInputStream(segmentAccessor);
+        SharedByteStreamMarker pMarker = pInputStream->newMarker();
+        pInputStream->mark(*pMarker);
+        pInputStream->startPrefetch();
+        testRead(pInputStream,3);
+        pInputStream->reset(*pMarker);
         testRead(pInputStream,3);
         pInputStream.reset();
         segmentAccessor.reset();

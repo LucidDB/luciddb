@@ -1,7 +1,10 @@
-0: jdbc:farrago:> -- $Id: //open/farrago/unitsql/optimizer/cartesian.sql#1 $
+0: jdbc:farrago:> -- $Id: //open/farrago/unitsql/optimizer/cartesian.sql#2 $
 0: jdbc:farrago:> -- Test queries which require Cartesian products
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set schema sales;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- force usage of Fennel calculator
+0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- simple cross product
 0: jdbc:farrago:> select emps.name as ename,depts.name as dname 
@@ -51,8 +54,8 @@
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select emps.name as ename,depts.name as dname from emps,depts;
 'column0'
-'IterCalcRel(ENAME=[$1], DNAME=[$11])'
-'  FennelToIteratorConverter'
+'FennelToIteratorConverter'
+'  FennelPullCalcRel(ENAME=[$1], DNAME=[$11])'
 '    FennelCartesianProductRel'
 '      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 '      FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
@@ -63,24 +66,20 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
-'    IteratorToFennelConverter'
-'      IterCalcRel(ENAME=[$1], DNAME=[$11])'
-'        FennelToIteratorConverter'
-'          FennelCartesianProductRel'
-'            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-'            FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'    FennelPullCalcRel(ENAME=[$1], DNAME=[$11])'
+'      FennelCartesianProductRel'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select emps.name as ename,d.dnoplus 
 . . . . . . . . > from emps,(select deptno+1 as dnoplus from depts) d;
 'column0'
-'IterCalcRel(ENAME=[$1], DNOPLUS=[$10])'
-'  FennelToIteratorConverter'
+'FennelToIteratorConverter'
+'  FennelPullCalcRel(ENAME=[$1], DNOPLUS=[$10])'
 '    FennelCartesianProductRel'
 '      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-'      IteratorToFennelConverter'
-'        IterCalcRel(DNOPLUS=[+($0, 1)])'
-'          FennelToIteratorConverter'
-'            FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'      FennelPullCalcRel(DNOPLUS=[+($0, 1)])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

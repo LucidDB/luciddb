@@ -20,6 +20,7 @@
 */
 
 #include "fennel/common/CommonPreamble.h"
+#include "fennel/xo/CalcExcn.h"
 #include "fennel/xo/CalcExecutionStream.h"
 #include "fennel/common/ByteInputStream.h"
 
@@ -46,6 +47,11 @@ void CalcExecutionStream::prepare(
     } else {
         pFilterDatum = NULL;
     }
+
+    FENNEL_TRACE(
+        TRACE_FINER,
+        "calc program = "
+        << std::endl << params.program);
 
     FENNEL_TRACE(
         TRACE_FINER,
@@ -79,6 +85,7 @@ void CalcExecutionStream::prepare(
         outputDesc = paramOutputDesc;
     }
 
+    this->inputDesc = inputDesc;
     inputAccessor.compute(inputDesc);
     inputData.compute(inputDesc);
 
@@ -124,7 +131,18 @@ PBuffer CalcExecutionStream::execute(
             }
             inputAccessor.setCurrentTupleBuf(pNextInputTuple);
             inputAccessor.unmarshal(inputData);
+            // FIXME: is any cleanup necessary?
             pCalc->exec();
+
+            // REVIEW: JK 2004/7/16. Note that the calculator provides
+            // two interfaces to the list of warnings. One is a
+            // pre-parsed representation in the mWarnings deque --
+            // this list may be easier for an upper level to digest --
+            // instead of trying to pick apart the somewhat 'human
+            // readable' serialized version in the warnings() string.
+            if (pCalc->mWarnings.begin() != pCalc->mWarnings.end()) {
+                throw CalcExcn(pCalc->warnings(), inputDesc, inputData);
+            }
             
             if (pFilterDatum) {
                 bool filterDiscard = *reinterpret_cast<bool const *>(

@@ -343,7 +343,8 @@ class MedMdrJoinRelImplementor
         int nLeft = leftRowType.getFieldCount();
         int n = outputRowType.getFieldCount();
         for (int i = 0; i < n; i++) {
-            Expression lhs = new FieldAccess(varOutputRow,fields[i].getName());
+            Expression lhs = new FieldAccess(varOutputRow,
+                                          Util.toJavaId(fields[i].getName(),i));
             if (i < nLeft) {
                 // REVIEW:  is this assignment-by-reference for object types
                 // OK?  If it is, we should be generating it in such
@@ -355,7 +356,7 @@ class MedMdrJoinRelImplementor
                             AssignmentExpression.EQUALS,
                             new FieldAccess(
                                 varLeftRow,
-                                leftFields[i].getName()))));
+                                Util.toJavaId(leftFields[i].getName(),i)))));
             } else {
                 RexNode rhs;
                 if (rightExps == null) {
@@ -408,11 +409,12 @@ class MedMdrJoinRelImplementor
                             new MethodCall(
                                 new FieldAccess(
                                     varLeftRow,
-                                    leftFields[
-                                        joinRel.getLeftOrdinal()].getName()),
+                                    Util.toJavaId(leftFields[
+                                        joinRel.getLeftOrdinal()].getName(),
+                                        joinRel.getLeftOrdinal())),
                                 "toString",
                                 new ExpressionList()))))));
-        
+
         Expression collectionExpr = null;
         if (!useAssocReflection) {
             String accessorName = JmiUtil.getAccessorName(
@@ -472,7 +474,9 @@ class MedMdrJoinRelImplementor
                 new MethodCall(
                     new FieldAccess(
                         varLeftRow,
-                        leftFields[joinRel.getLeftOrdinal()].getName()),
+                        Util.toJavaId(
+                            leftFields[joinRel.getLeftOrdinal()].getName(),
+                            joinRel.getLeftOrdinal())),
                     "toString",
                     new ExpressionList())));
         Expression lookupExpr =

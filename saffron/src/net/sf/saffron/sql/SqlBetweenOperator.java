@@ -20,6 +20,8 @@
 */package net.sf.saffron.sql;
 
 import net.sf.saffron.sql.test.SqlTester;
+import net.sf.saffron.sql.type.SqlTypeName;
+import net.sf.saffron.sql.parser.ParserPosition;
 import net.sf.saffron.core.SaffronType;
 import net.sf.saffron.core.SaffronTypeFactory;
 import net.sf.saffron.util.EnumeratedValues;
@@ -33,23 +35,76 @@ import java.util.ArrayList;
  * <code>X [NOT] BETWEEN [ASSYMETRIC | SYMMETRIC] Y AND Z</code><br>
  * if the assymetric/symmeteric keywords are left out ASSYMETRIC is default
  *
- * @author Wael Chatila 
+ * @author Wael Chatila
  * @since Jun 9, 2004
  * @version $Id$
  */
 public abstract class SqlBetweenOperator extends SqlSpecialOperator {
     public SqlBetweenOperator(String name, SqlKind kind) {
         super(name, kind, 15, true,
-                SqlOperatorTable.useNullableBoolean,
+                null,
                 null,
                 null);
     }
 
+    private SaffronType[] getTypeArray(SqlValidator validator,
+            SqlValidator.Scope scope, SqlCall call) {
+        SaffronType[] argTypes = collectTypes(validator, scope, call.operands);
+        SaffronType[] newArgTypes =
+                new SaffronType[]{argTypes[0], argTypes[2], argTypes[3]};
+         return newArgTypes;
+    }
+
+    protected SaffronType inferType(SqlValidator validator,
+            SqlValidator.Scope scope, SqlCall call) {
+         return SqlOperatorTable.useNullableBoolean.getType(
+                validator.typeFactory, getTypeArray(validator, scope, call));
+    }
+
+    protected String getSignatureTemplate() {
+        return "{1} {0} {2} AND {3}";
+    }
+
+    public String getAllowedSignatures(String name) {
+        StringBuffer ret = new StringBuffer();
+        ret.append(SqlOperatorTable.typeNullableNumericNumericNumeric.
+                getAllowedSignatures(this));
+        ret.append(NL);
+        ret.append(SqlOperatorTable.typeNullableBinariesBinariesBinaries.
+                getAllowedSignatures(this));
+        ret.append(NL);
+        ret.append(SqlOperatorTable.typeNullableVarcharVarcharVarchar.
+                getAllowedSignatures(this));
+        return replaceAnonymous(ret.toString(), name);
+    }
+
+    protected boolean checkArgTypesNoThrow(SqlCall call, SqlValidator validator, SqlValidator.Scope scope) {
+        return super.checkArgTypesNoThrow(call, validator, scope);
+    }
+
     protected void checkArgTypes(SqlCall call, SqlValidator validator,
             SqlValidator.Scope scope) {
-        SqlOperatorTable.typeNullableNumeric.check(call,validator,scope,call.operands[0],0);
-        SqlOperatorTable.typeNullableNumeric.check(call,validator,scope,call.operands[2],0);
-        SqlOperatorTable.typeNullableNumeric.check(call,validator,scope,call.operands[3],0);
+        SqlOperator.AllowedArgInference[] rules =
+                new SqlOperator.AllowedArgInference[]{
+                    SqlOperatorTable.typeNullableNumeric,
+                    SqlOperatorTable.typeNullableBinariesBinaries,
+                    SqlOperatorTable.typeNullableVarchar
+                };
+        int nbrOfFails=0;
+        for (int i = 0; i < rules.length; i++) {
+            SqlOperator.AllowedArgInference rule = rules[i];
+            boolean ok;
+            ok = rule.check(call,validator,scope,call.operands[0],0);
+            ok = ok && rule.check(call,validator,scope,call.operands[2],0);
+            ok = ok && rule.check(call,validator,scope,call.operands[3],0);
+            if (!ok) {
+                nbrOfFails++;
+            }
+        }
+
+        if (nbrOfFails>=3) {
+            throw validator.newValidationError(call.getValidationSignatureErrorString(validator, scope));
+        }
     }
 
     public int getNumOfOperands(int desiredCount) {
@@ -76,36 +131,20 @@ public abstract class SqlBetweenOperator extends SqlSpecialOperator {
     public static class Flag extends SqlSymbol {
         public final boolean isAsymmetric;
 
-        private Flag(String name, int ordinal, boolean isAsymmetric) {
-            super(name, ordinal);
+        private Flag(String name, boolean isAsymmetric, ParserPosition parserPosition) {
+            super(name,parserPosition);
             this.isAsymmetric = isAsymmetric;
         }
 
-        public static final int Asymmetric_ordinal = 0;
-        public static final SqlSymbol Asymmetric =
-                new Flag("Assymetric", Asymmetric_ordinal, true);
-
-        public static final int Symmetric_ordinal = 1;
-        public static final SqlSymbol Symmetric =
-                new Flag("Symmetric", Symmetric_ordinal, false);
-
-        /**
-         * List of all allowable {@link net.sf.saffron.sql.fun.SqlTrimFunction.Flag} values.
-         */
-        public static final EnumeratedValues enumeration = new EnumeratedValues(
-                new SqlSymbol[]{Asymmetric, Symmetric});
-        /**
-         * Looks up a flag from its ordinal.
-         */
-        public static Flag get(int ordinal) {
-            return (Flag) enumeration.getValue(ordinal);
+        public static final SqlSymbol createAsymmetric(ParserPosition parserPosition)
+        {
+             return  new Flag("Assymetric", true, parserPosition);
         }
-        /**
-         * Looks up a flag from its name.
-         */
-        public static Flag get(String name) {
-            return (Flag) enumeration.getValue(name);
+        public static final SqlSymbol createSymmetric(ParserPosition parserPosition)
+        {
+             return  new Flag("Symmetric",  false, parserPosition);
         }
+
     }
 }
 

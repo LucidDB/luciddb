@@ -4,12 +4,15 @@
 0: jdbc:farrago:> -- should work
 0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should work
+0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  bad enum value
 0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'turing';
 Error: Type mismatch in value 'turing' for system parameter calcVirtualMachine (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should work
-0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
+0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'CALCVM_AUTO';
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  immutable
 0: jdbc:farrago:> alter system set "fennelDisabled" = true;

@@ -1,7 +1,7 @@
 /*
 // $Id$
 // Saffron preprocessor and data engine
-// (C) Copyright 2003-2003 Disruptive Technologies, Inc.
+// (C) Copyright 2003-2004 Disruptive Tech
 // (C) Copyright 2003-2004 John V. Sichi
 // You must accept the terms in LICENSE.html to use this software.
 //
@@ -103,6 +103,14 @@ public class SqlToRelConverter {
     }
 
     //~ Methods ---------------------------------------------------------------
+
+    /**
+     * @return the VolcanoCluster in use.
+     */
+    public VolcanoCluster getCluster()
+    {
+        return cluster;
+    }
 
     /**
      * Returns the row-expression builder.
@@ -354,7 +362,7 @@ public class SqlToRelConverter {
                 } else {
                     // convert "1" to "row(1)"
                     call = opTab.rowConstructor.createCall(
-                            new SqlNode[] {node});
+                            new SqlNode[] {node},null);
                 }
                 inputs[i] = convertRowConstructor(bb, call);
             }
@@ -475,6 +483,20 @@ public class SqlToRelConverter {
         default:
             if (node instanceof SqlCall) {
                 SqlCall call = (SqlCall) node;
+                if (call.operator.equals(
+                        opTab.characterLengthFunc)) {
+                    //todo: solve aliases in a more elegent way.
+                    call.operator = opTab.charLengthFunc;
+                } else  if (call.operator.equals(
+                        opTab.isUnknownOperator)) {
+                    //todo: solve in a more elegent way.
+                    call.operator = opTab.isNullOperator;
+                } else  if (call.operator.equals(
+                        opTab.isNotUnknownOperator)) {
+                    //todo: solve in a more elegent way.
+                    call.operator = opTab.isNotNullOperator;
+                }
+
                 operands = call.getOperands();
                 if (call.operator instanceof SqlBinaryOperator) {
                     final SqlBinaryOperator op = (SqlBinaryOperator) call.operator;
@@ -498,11 +520,7 @@ public class SqlToRelConverter {
                            || (call.operator.equals(opTab.likeOperator))
                            || (call.operator.equals(opTab.similarOperator)))
                 {
-                    if (call.operator.equals(
-                            opTab.characterLengthFunc)) {
-                        //todo: solve aliases in a more elegent way.
-                        call.operator = opTab.charLengthFunc;
-                    } else if (call.operator.equals(opTab.castFunc)) {
+                    if (call.operator.equals(opTab.castFunc)) {
                         return convertCast(bb,call);
                     }
 
@@ -569,7 +587,7 @@ public class SqlToRelConverter {
     private RexNode convertCast(Blackboard bb, SqlCall call) {
         assert SqlKind.Cast.equals(call.operator.kind);
         SqlDataType dataType = (SqlDataType)call.operands[1];
-        if (SqlLiteral.isNullLiteral(call.operands[0])) {
+        if (SqlUtil.isNullLiteral(call.operands[0], false)) {
             return  convertExpression(bb, call.operands[0]);
         }
         RexNode arg = convertExpression(bb, call.operands[0]);
@@ -1222,46 +1240,6 @@ public class SqlToRelConverter {
         final SaffronTypeFactory typeFactory =
             SaffronTypeFactoryImpl.threadInstance();
         return query.createCluster(env, typeFactory, rexBuilder);
-    }
-
-    public static HashMap createBinaryMap()
-    {
-        HashMap map = new HashMap();
-        map.put("/",RexKind.Divide);
-        map.put("=",RexKind.Equals);
-        map.put(">",RexKind.GreaterThan);
-        map.put(">=",RexKind.GreaterThanOrEqual);
-        map.put("<",RexKind.LessThan);
-        map.put("<=",RexKind.LessThanOrEqual);
-        map.put("AND",RexKind.And);
-        map.put("OR",RexKind.Or);
-        map.put("-",RexKind.Minus);
-        // REVIEW jvs 22-Jan-2004:  shouldn't this be "<>"?
-        map.put("*",RexKind.NotEquals);
-        map.put("+",RexKind.Plus);
-        map.put("*",RexKind.Times);
-        return map;
-    }
-
-    public static HashMap createPrefixMap()
-    {
-        HashMap map = new HashMap();
-        map.put("NOT",RexKind.Not);
-        map.put("-",RexKind.MinusPrefix);
-        return map;
-    }
-
-    public static HashMap createPostfixMap()
-    {
-        HashMap map = new HashMap();
-        return map;
-    }
-
-    public static HashMap createFunctionMap()
-    {
-        HashMap map = new HashMap();
-        map.put(RexKind.Substr.getName(), RexKind.Substr);
-        return map;
     }
 
     /**

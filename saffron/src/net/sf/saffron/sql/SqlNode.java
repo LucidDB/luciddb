@@ -46,8 +46,9 @@ public abstract class SqlNode
     private ParserPosition parserPosition;
     //~ Constructors ----------------------------------------------------------
 
-    SqlNode()
+    SqlNode(ParserPosition parserPosition)
     {
+        this.parserPosition = parserPosition;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -111,7 +112,7 @@ public abstract class SqlNode
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
         if (dialect == null) {
-            dialect = new SqlDialect(dummyDatabaseMetaData());
+            dialect = SqlUtil.dummyDialect;
         }
         SqlWriter writer = new SqlWriter(dialect,pw);
         unparse(writer,0,0);
@@ -144,14 +145,6 @@ public abstract class SqlNode
      */
     public abstract void unparse(SqlWriter writer,int leftPrec,int rightPrec);
 
-    private static DatabaseMetaData dummyDatabaseMetaData()
-    {
-        return (DatabaseMetaData) Proxy.newProxyInstance(
-            null,
-            new Class [] { DatabaseMetaData.class },
-            new DatabaseMetaDataInvocationHandler());
-    }
-
     public ParserPosition getParserPosition()
     {
         return parserPosition;
@@ -161,28 +154,6 @@ public abstract class SqlNode
     {
         this.parserPosition = parserPosition;
     }
-
-    //~ Inner Classes ---------------------------------------------------------
-
-    /**
-     * Handles particular {@link DatabaseMetaData} methods; invocations of
-     * other methods will fall through to the base class, {@link
-     * BarfingInvocationHandler}, which will throw an error.
-     */
-    public static class DatabaseMetaDataInvocationHandler
-        extends BarfingInvocationHandler
-    {
-        public String getDatabaseProductName() throws SQLException
-        {
-            return "fooBar";
-        }
-
-        public String getIdentifierQuoteString() throws SQLException
-        {
-            return "`";
-        }
-    }
-
 
 }
 

@@ -74,16 +74,82 @@ public:
         }
     }
 
-    const char * longName() const { return "PointerPutSize"; }
-    const char * shortName() const { return "PutS"; }
-    void describe(string &out, bool values) const {
+    static const char * longName() { return "PointerPutSize"; }
+    static const char * shortName() { return "PUTS"; }
+    static int numArgs() { return 2; }
+    void describe(string& out, bool values) const {
         RegisterRef<PTR_TYPE> mOp2; // create invalid regref
-        describeHelper(out, values, longName(), shortName(), mResult, mOp1, &mOp2);
+        describeHelper(out, values, longName(), shortName(),
+                       mResult, mOp1, &mOp2);
+    }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v;
+        v.push_back(type);
+        v.push_back(POINTERSIZET_STANDARD_TYPE);
+        return InstructionSignature(shortName(), v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        assert((sig[1])->type() == POINTERSIZET_STANDARD_TYPE);
+        return new
+            PointerPutSize(static_cast<RegisterRef<PTR_TYPE>*> (sig[0]),
+                           static_cast<RegisterRef<PointerSizeT>*> (sig[1]),
+                           (sig[0])->type());
     }
 };
 
 //! Note: There cannot be a PointerIntegralPutStorage() as cbStorage,
 //! the maximum size, is always read-only.
+
+class PointerIntegralInstructionRegister : InstructionRegister {
+
+    // TODO: Refactor registerTypes to class InstructionRegister
+    template < template <typename> class INSTCLASS2 >
+    static void
+    registerTypes(vector<StandardTypeDescriptorOrdinal> const &t) {
+
+        for (uint i = 0; i < t.size(); i++) {
+            StandardTypeDescriptorOrdinal type = t[i];
+            // Type <char> below is a placeholder and is ignored.
+            InstructionSignature sig = INSTCLASS2<char>::signature(type);
+            switch(type) {
+                // Array_Text, below, does not allow assembly programs
+                // of to have say, pointer to int16s, but the language
+                // does not have pointers defined other than
+                // c,vc,b,vb, so this is OK for now.
+#define Fennel_InstructionRegisterSwitch_Array 1
+#include "fennel/calc/InstructionRegisterSwitch.h"
+            default:
+                throw std::logic_error("Default InstructionRegister");
+            }
+        }
+    }
+
+public:
+    static void
+    registerInstructions() {
+
+        vector<StandardTypeDescriptorOrdinal> t;
+        // isArray, below, does not allow assembly programs of to
+        // have say, pointer to int16s, but the language does not have
+        // pointers defined other than c,vc,b,vb, so this is OK for now.
+        t = InstructionSignature::typeVector(StandardTypeDescriptor::isArray);
+
+        // Have to do full fennel:: qualification of template
+        // arguments below to prevent template argument 'TMPLT', of
+        // this encapsulating class, from perverting NativeAdd into
+        // NativeAdd<TMPLT> or something like
+        // that. Anyway. Fennel::NativeAdd works just fine.
+        registerTypes<fennel::PointerPutSize>(t);
+        // Note: Cannot have PointerPutSizeMax. See comment above
+    }
+};
+
 
 FENNEL_END_NAMESPACE
 

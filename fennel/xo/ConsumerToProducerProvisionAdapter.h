@@ -59,6 +59,9 @@ protected:
 public:
     // implement TupleStream
     virtual void prepare(TupleStreamParams const &params);
+    virtual void getResourceRequirements(
+        ExecutionStreamResourceQuantity &minQuantity,
+        ExecutionStreamResourceQuantity &optQuantity);
     virtual void open(bool restart);
     virtual ByteInputStream &getProducerResultStream();
     virtual BufferProvision getResultBufferProvision() const;

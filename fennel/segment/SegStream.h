@@ -117,6 +117,25 @@ public:
     SharedSegment getSegment() const;
 };
 
+/**
+ * SegStreamMarker refines ByteStreamMarker with a physical stream
+ * position, allowing for random-access mark/reset.
+ */
+class SegStreamMarker : public ByteStreamMarker
+{
+    friend class SegInputStream;
+    
+    /**
+     * Position for random-access mark/reset.
+     */
+    SegStreamPosition segPos;
+
+    explicit SegStreamMarker(SegStream const &segStream);
+    
+    // implement ByteStreamMarker
+    virtual FileSize getOffset() const;
+};
+
 FENNEL_END_NAMESPACE
 
 #endif

@@ -22,6 +22,8 @@
 
 package net.sf.saffron.sql;
 
+import net.sf.saffron.sql.parser.ParserPosition;
+
 /**
  * A <code>SqlDelete</code> is a node of a parse tree which represents
  * a DELETE statement.
@@ -33,15 +35,16 @@ public class SqlDelete extends SqlCall
     public static final int CONDITION_OPERAND = 1;
     public static final int SOURCE_SELECT_OPERAND = 2;
     public static final int OPERAND_COUNT = 3;
-    
+
     //~ Constructors ----------------------------------------------------------
 
     public SqlDelete(
         SqlSpecialOperator operator,
         SqlIdentifier targetTable,
-        SqlNode condition)
+        SqlNode condition,
+        ParserPosition parserPosition)
     {
-        super(operator,new SqlNode[OPERAND_COUNT]);
+        super(operator,new SqlNode[OPERAND_COUNT], parserPosition);
         operands[TARGET_TABLE_OPERAND] = targetTable;
         operands[CONDITION_OPERAND] = condition;
     }

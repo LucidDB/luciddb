@@ -89,8 +89,11 @@ public class OJStatement
     private CallingConvention resultCallingConvention;
 
     /**
-     * Share the same compiler between multiple statements because DynamicJava
-     * has a class loader which caches class definitions.
+     * Share the same compiler between multiple statements.
+     *
+     * <p>When we used DynamicJava this was important, because DynamicJava
+     * has a class loader which caches class definitions. This may no longer
+     * be the case.
      */
     protected JavaCompiler javaCompiler;
 
@@ -425,7 +428,7 @@ public class OJStatement
     }
 
 
-    /** implement a physical query plan. 
+    /** implement a physical query plan.
      * @param rootRel root of the relational expression.
      * @param sqlKind SqlKind of the original statement.
      * @param decl ClassDeclaration of the generated result.
@@ -434,14 +437,14 @@ public class OJStatement
      */
     private PreparedExecution implement(
         SaffronRel rootRel, SqlKind sqlKind,
-        ClassDeclaration decl, Argument[] arguments)
+        ClassDeclaration decl, Argument[] args)
     {
         JavaRelImplementor relImplementor =
             getRelImplementor(rootRel.getCluster().rexBuilder);
         Expression expr = relImplementor.implementRoot((JavaRel) rootRel);
         boolean isDml = sqlKind.isA(SqlKind.Dml);
         ParseTree parseTree = expr;
-        BoundMethod boundMethod = compileAndBind(decl,parseTree,arguments);
+        BoundMethod boundMethod = compileAndBind(decl,parseTree,args);
         final PreparedExecution plan =
             new PreparedExecution(
                 parseTree,
@@ -460,31 +463,20 @@ public class OJStatement
      *   SqlKind.Explain and SqlKind.Dml are special cases.
      * @param needOpt true for a logical query plan (still needs to be
      *   optimized), false for a physical plan.
-     * @param runtimeContextClass run-time context for execution.
+     * @param decl openjava ClassDeclaration for the code generated to implement the
+     *   statement.
+     * @param args openjava argument list for the generated code.
      */
     public PreparedResult prepareSql(
         SaffronRel rootRel, SqlKind sqlKind, boolean needOpt,
-        Class runtimeContextClass)
+        ClassDeclaration decl, Argument[] args)
     {
-        if (runtimeContextClass == null) {
-            runtimeContextClass = connection.getClass();
-        }
-
-        final Argument [] arguments =
-            new Argument [] {
-                new Argument(
-                    connectionVariable,
-                    runtimeContextClass,
-                    connection)
-            };
-        ClassDeclaration decl = init(arguments);
-
         if (needOpt)
             rootRel = optimize(rootRel);
-        return implement(rootRel, sqlKind, decl, arguments);
+        return implement(rootRel, sqlKind, decl, args);
     }
 
-    
+
     /**
      * Protected method to allow subclasses to override construction of
      * SqlToRelConverter.
@@ -827,12 +819,11 @@ public class OJStatement
         File javaFile = new File(javaRoot,javaFileName);
 
         boolean writeJavaFile = shouldAlwaysWriteJavaFile();
-
         javaCompiler.getArgs().setDestdir(javaRoot.getAbsolutePath());
         javaCompiler.getArgs().setFullClassName(fullClassName);
-        try {
-            javaCompiler.getArgs().setSource(s,javaFile.toString());
-        } catch (UnsupportedOperationException e) {
+        if (javaCompiler.getArgs().supportsSetSource()) {
+            javaCompiler.getArgs().setSource(s, javaFile.toString());
+        } else {
             writeJavaFile = true;
             args.addFile(javaFile.toString());
         }

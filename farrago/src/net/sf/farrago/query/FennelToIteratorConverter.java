@@ -205,7 +205,11 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
 
                 // this field is unmarshalled from a fixed offset relative
                 // to the sliceBuffer start
-                Expression lhs = new FieldAccess(varTuple,field.getName());
+                Expression lhs = new FieldAccess(varTuple,
+                                                 Util.toJavaId(
+                                                         field.getName(),
+                                                         i
+                                                 ));
                 if (type.requiresValueAccess()) {
                     // extra dereference for NullablePrimitives
                     lhs = new FieldAccess(
@@ -264,7 +268,7 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
                     new ExpressionStatement(
                         new MethodCall(
                             new FieldAccess(varTuple,
-                                Util.toJavaId(field.getName())),
+                                Util.toJavaId(field.getName(),i)),
                             BytePointer.SET_POINTER_METHOD_NAME,
                             new ExpressionList(
                                 new FieldAccess("byteArray"),
@@ -273,8 +277,6 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
                 varPrevEndOffset = varEndOffset;
             } else {
                 // fixed-width CHARACTER or BINARY
-                // FIXME:  should not be using getPrecision() below;
-                // need a getOctetLength() instead
                 FarragoPrecisionType precisionType =
                     (FarragoPrecisionType) type;
                 Expression expStartOffset = new BinaryExpression(
@@ -291,7 +293,7 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
                     new ExpressionStatement(
                         new MethodCall(
                             new FieldAccess(varTuple,
-                                Util.toJavaId(field.getName())),
+                                Util.toJavaId(field.getName(),i)),
                             BytePointer.SET_POINTER_METHOD_NAME,
                             new ExpressionList(
                                 new FieldAccess("byteArray"),

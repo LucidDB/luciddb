@@ -150,7 +150,19 @@ void ExecutionStreamGraphImpl::open()
     std::for_each(
         sortedStreams.begin(),
         sortedStreams.end(),
-        boost::bind(&ExecutionStream::open,_1,false));
+        boost::bind(&ExecutionStreamGraphImpl::openStream,this,_1));
+}
+
+void ExecutionStreamGraphImpl::openStream(SharedExecutionStream pStream)
+{
+    // TODO jvs 19-July-2004:  move resource allocation to scheduler,
+    // and set quotas based on current cache state; for now just set to
+    // minimum for testing
+    ExecutionStreamResourceQuantity minQuantity,optQuantity;
+    pStream->getResourceRequirements(minQuantity,optQuantity);
+    pStream->setResourceAllocation(minQuantity);
+    
+    pStream->open(false);
 }
 
 void ExecutionStreamGraphImpl::closeImpl()

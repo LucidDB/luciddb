@@ -380,6 +380,10 @@ public class Glossary {
     /**
      * Ensure a class only has one instance, and provide a global point of access to it.
      * (See <a href="http://c2.com/cgi/wiki?SingletonPattern">GoF</a>.)
+     *
+     * <p>Note that a common way of implementing a singleton, the so-called
+     * <a href="http://www.cs.umd.edu/~pugh/java/memoryModel/DoubleCheckedLocking.html">double-checked
+     * locking pattern</a>, is fatally flawed in Java. Don't use it!</p>
      */
      public static final Glossary SingletonPattern = null;
     /**

@@ -28,9 +28,9 @@
     <pattern name="namespace" class="net.sf.farrago.namespace.*" />
     <pattern name="namespace.util" class="net.sf.farrago.namespace.util.*" />
     <pattern name="fennel" class="net.sf.farrago.fennel.*" />
+    <pattern name="session" class="net.sf.farrago.session.*" />
     <pattern name="runtime" class="net.sf.farrago.runtime.*" />
     <pattern name="dynamic" class="net.sf.farrago.dynamic.*" />
-    <pattern name="session" class="net.sf.farrago.session.*" />
     <pattern name="ojrex" class="net.sf.farrago.ojrex.*" />
     <pattern name="query" class="net.sf.farrago.query.*" />
     <pattern name="ddl">
@@ -66,9 +66,9 @@
       <include pattern="namespace"/>
       <include pattern="namespace.util"/>
       <include pattern="fennel"/>
+      <include pattern="session"/>
       <include pattern="runtime"/>
       <include pattern="dynamic"/>
-      <include pattern="session"/>
       <include pattern="ojrex"/>
       <include pattern="query"/>
       <include pattern="ddl"/>
@@ -280,9 +280,25 @@
       </deny>
     </access-rule>
 
-    <pattern name="runtime.deps">
+    <pattern name="session.deps">
       <include pattern="namespace.util.deps" />
       <include pattern="fennel.deps" />
+      <include pattern="session" />
+    </pattern>
+
+    <access-rule>
+      <message>session dependency violation</message>
+      <deny>
+        <from pattern="session" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="session.deps" />
+        </allow>
+      </deny>
+    </access-rule>
+
+    <pattern name="runtime.deps">
+      <include pattern="session.deps" />
       <include pattern="runtime" />
     </pattern>
 
@@ -310,22 +326,6 @@
         <to pattern="farrago" />
         <allow>
           <to pattern="dynamic.deps" />
-        </allow>
-      </deny>
-    </access-rule>
-
-    <pattern name="session.deps">
-      <include pattern="runtime.deps" />
-      <include pattern="session" />
-    </pattern>
-
-    <access-rule>
-      <message>session dependency violation</message>
-      <deny>
-        <from pattern="session" />
-        <to pattern="farrago" />
-        <allow>
-          <to pattern="session.deps" />
         </allow>
       </deny>
     </access-rule>

@@ -71,6 +71,7 @@ public class FarragoAbstractPluginBase
         }
     }
     
+
     /**
      * Gets the value of an integer property.
      *
@@ -99,6 +100,31 @@ public class FarragoAbstractPluginBase
                     s,propName);
             }
         }
+    }
+
+    /**
+     * Gets the value of a boolean property, or a default value if the property
+     * does not exist. Returns <code>true</code> if the property exists, and its
+     * value is <code>1</code>, <code>t</code>, <code>true</code> or <code>yes</code>; the
+     * default value if it does not exist; <code>false</code> otherwise.
+
+     * @param props property set
+     * @param propName name of property
+     * @param defaultValue value to return if property is not set
+     * @return property value
+     */
+    public static boolean getBooleanProperty(
+        Properties props,String propName,boolean defaultValue)
+    {
+        String s = props.getProperty(propName);
+        if (s == null) {
+            return defaultValue;
+        } 
+        return s.equalsIgnoreCase("1") 
+            || s.equalsIgnoreCase("t")
+            || s.equalsIgnoreCase("true")
+            || s.equalsIgnoreCase("yes")
+            || s.equalsIgnoreCase("on");
     }
 }
 

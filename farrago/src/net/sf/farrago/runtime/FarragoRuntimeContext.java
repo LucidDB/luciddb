@@ -30,6 +30,7 @@ import net.sf.farrago.type.*;
 import net.sf.farrago.type.runtime.*;
 import net.sf.farrago.util.*;
 import net.sf.farrago.resource.*;
+import net.sf.farrago.session.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.util.*;
 
@@ -47,7 +48,9 @@ import javax.jmi.reflect.*;
  */
 public class FarragoRuntimeContext
     extends FarragoCompoundAllocation
-    implements SaffronConnection, FennelJavaStreamMap
+    implements FarragoSessionRuntimeContext,
+        SaffronConnection,
+        FennelJavaStreamMap
 {
     private FarragoCatalog catalog;
 
@@ -77,7 +80,7 @@ public class FarragoRuntimeContext
      * @param params constructor params
      */
     public FarragoRuntimeContext(
-        FarragoRuntimeContextParams params)
+        FarragoSessionRuntimeParams params)
     {
         this.catalog = params.catalog;
         this.codeCache = params.codeCache;
@@ -259,12 +262,7 @@ public class FarragoRuntimeContext
         return null;
     }
 
-    /**
-     * Load the Fennel portion of an execution plan (either creating
-     * a new XO graph or reusing a cached instance).
-     *
-     * @param xmiFennelPlan XMI representation of plan definition
-     */
+    // implement FarragoSessionRuntimeContext
     public void loadFennelPlan(final String xmiFennelPlan)
     {
         assert(streamGraph == null);
@@ -291,8 +289,16 @@ public class FarragoRuntimeContext
                 txnCodeCache.get(xmiFennelPlan);
         }
         if (cacheEntry == null) {
-            cacheEntry =
-                codeCache.pin(xmiFennelPlan,streamFactory,true);
+            // NOTE jvs 15-July-2004:  to avoid deadlock, grab the catalog
+            // lock BEFORE we pin the cache entry (this matches the
+            // order used by statement preparation)
+            catalog.beginTransientTxn();
+            try {
+                cacheEntry =
+                    codeCache.pin(xmiFennelPlan,streamFactory,true);
+            } finally {
+                catalog.endTransientTxn();
+            }
         }
 
         if (txnCodeCache == null) {
@@ -307,11 +313,7 @@ public class FarragoRuntimeContext
         }
     }
 
-    /**
-     * Open all streams, including the Fennel portion of the execution plan.
-     * This should only be called after all Java TupleStreams have been
-     * created.
-     */
+    // implement FarragoSessionRuntimeContext
     public void openStreams()
     {
         assert(streamGraph != null);
@@ -354,39 +356,35 @@ public class FarragoRuntimeContext
     protected FennelStreamHandle getStreamHandle(
         String globalStreamName)
     {
-        catalog.getRepository().beginTrans(true);
+        catalog.beginReposTxn(true);
         try {
             return streamGraph.findStream(catalog,globalStreamName);
         } finally {
-            catalog.getRepository().endTrans(false);
+            catalog.endReposTxn(false);
         }
     }
 
     private FennelStreamGraph prepareStreamGraph(String xmiFennelPlan)
     {
-        catalog.beginTransientTxn();
+        boolean success = false;
+        FennelStreamGraph newStreamGraph = null;
         try {
             Collection collection = JmiUtil.importFromXmiString(
-                catalog.farragoPackage,xmiFennelPlan);
+                catalog.transientFarragoPackage,xmiFennelPlan);
             assert (collection.size() == 1);
             FemCmdPrepareExecutionStreamGraph cmd =
                 (FemCmdPrepareExecutionStreamGraph)
                 collection.iterator().next();
 
-            Iterator streamIter = cmd.getStreamDefs().iterator();
-            while (streamIter.hasNext()) {
-                setCacheQuotas((FemExecutionStreamDef) streamIter.next());
-            }
-            // REVIEW:  here's a potential window for leaks;
-            // if an excn is thrown before this stream gets cached,
-            // the stream will be closed but not deallocated
-            FennelStreamGraph newStreamGraph = fennelTxnContext.newStreamGraph(
-                streamOwner);
+            newStreamGraph = fennelTxnContext.newStreamGraph(streamOwner);
             cmd.setStreamGraphHandle(newStreamGraph.getStreamGraphHandle());
             fennelTxnContext.getFennelDbHandle().executeCmd(cmd);
+            success = true;
             return newStreamGraph;
         } finally {
-            catalog.endTransientTxn();
+            if (!success) {
+                newStreamGraph.closeAllocation();
+            }
         }
     }
 
@@ -438,15 +436,6 @@ public class FarragoRuntimeContext
         if (null == obj) {
             throw FarragoResource.instance().newNullNotAllowed();
         }
-    }
-
-    private void setCacheQuotas(FemExecutionStreamDef streamDef)
-    {
-        assert (streamDef.getCachePageMin() <= streamDef.getCachePageMax());
-
-        // TODO:  set quotas based on current cache state; for now just set to
-        // minimum for testing
-        streamDef.setCachePageQuota(streamDef.getCachePageMin());
     }
 
     /**

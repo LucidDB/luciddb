@@ -104,6 +104,9 @@ public class OJRexImplementorTableImpl implements OJRexImplementorTable
         registerBinaryOperator(
             opTab.andOperator,BinaryExpression.LOGICAL_AND);
 
+        registerBinaryOperator(
+            opTab.orOperator,BinaryExpression.LOGICAL_OR);
+
         registerOperator(
             opTab.isTrueOperator,new OJRexIgnoredCallImplementor());
         

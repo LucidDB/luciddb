@@ -4,11 +4,14 @@
 -- should work
 alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
 
+-- should work
+alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
+
 -- should fail:  bad enum value
 alter system set "calcVirtualMachine" = 'turing';
 
 -- should work
-alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
+alter system set "calcVirtualMachine" = 'CALCVM_AUTO';
 
 -- should fail:  immutable
 alter system set "fennelDisabled" = true;

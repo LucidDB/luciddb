@@ -180,6 +180,14 @@ public:
     virtual uint getMaxLockedPages() = 0;
 
     /**
+     * Set the page lock quota on this accessor.  Ignored
+     * for accessor implementations that don't support quotas.
+     *
+     * @param nPages new quota
+     */
+    virtual void setMaxLockedPages(uint nPages) = 0;
+
+    /**
      * @return the underlying Cache accessed by this CacheAccessor
      */
     virtual SharedCache getCache() = 0;

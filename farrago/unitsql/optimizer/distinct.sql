@@ -3,6 +3,9 @@
 
 set schema sales;
 
+-- force usage of Fennel calculator
+alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
+
 -- simple key
 select distinct gender from emps order by 1;
 

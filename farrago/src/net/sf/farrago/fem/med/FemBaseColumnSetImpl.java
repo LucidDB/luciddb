@@ -78,16 +78,7 @@ public abstract class FemBaseColumnSetImpl extends InstanceHandler
                         catalog.getLocalizedObjectName(dataWrapper, null));
             }
 
-            validator.validateUniqueNames(this, getFeature(), false);
-
-            if (!getFeature().isEmpty()) {
-                // columns were specified; we are to validate them
-                Iterator iter = getFeature().iterator();
-                while (iter.hasNext()) {
-                    FemStoredColumn column = (FemStoredColumn) iter.next();
-                    CwmColumnImpl.validateCommon(validator, column);
-                }
-            }
+            validateCommon(validator);
 
             FarragoMedColumnSet columnSet =
                     dataServer.validateColumnSet(validator, this);
@@ -107,16 +98,46 @@ public abstract class FemBaseColumnSetImpl extends InstanceHandler
             }
 
         } else {
-            // Local table
-            // need to validate columns first
-            Iterator columnIter = getFeature().iterator();
-            while (columnIter.hasNext()) {
-                CwmColumnImpl column = (CwmColumnImpl) columnIter.next();
-                column.validateDefinitionImpl(validator);
-            }
-
+            validateCommon(validator);
         }
     }
+
+
+    private void validateCommon(DdlValidator validator)
+    {
+        validator.validateUniqueNames(this, getFeature(), false);
+
+        if (!getFeature().isEmpty()) {
+            // columns were specified; we are to validate them
+            Iterator iter = getFeature().iterator();
+            while (iter.hasNext()) {
+                FemStoredColumn column = (FemStoredColumn) iter.next();
+                CwmColumnImpl.validateCommon(validator, column);
+            }
+        }
+
+        //Foreign tables should not support constraint definitions.  Eventually we
+        //may want to allow this as a hint to the optimizer, but it's not standard
+        //so for now we should prevent it.
+        Iterator constraintIter = getOwnedElement().iterator();
+        while (constraintIter.hasNext()) {
+            Object obj = constraintIter.next();
+            if (!(obj instanceof CwmUniqueConstraint)) {
+                continue;
+            }
+            throw validator.res.newValidatorNoConstrainAllow(
+                    getLocalizedName(validator, this));
+        }
+    }
+
+    private String getLocalizedName(DdlValidator validator, FemBaseColumnSetImpl femBaseColumnSet)
+    {
+        return validator.getCatalog().getLocalizedObjectName(
+                null,
+                femBaseColumnSet.getName(),
+                femBaseColumnSet.refClass());
+    }
+
 
     // implement DdlValidatedElement
     public void validateDeletion(DdlValidator validator,boolean truncation)

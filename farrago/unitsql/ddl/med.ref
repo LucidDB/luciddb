@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/farrago/unitsql/ddl/med.sql#3 $
+0: jdbc:farrago:> -- $Id: //open/farrago/unitsql/ddl/med.sql#4 $
 0: jdbc:farrago:> -- Test SQL/MED DDL
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- create a private wrapper for mdr (don't use the standard mdr wrapper)
@@ -78,6 +78,16 @@ duplicate name encountered near line 1, column 15 (state=,code=0)
 . . . . . . . . >     "mofClassName" varchar(128))
 . . . . . . . . > server mof_server
 . . . . . . . . > options(class_name 'Exception');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- foreign does not allow constraint: should fail
+0: jdbc:farrago:> create foreign table mof_schema.test (name char(20) not null primary key)
+. . . . . . . . > server mof_server
+. . . . . . . . > options(class_name 'Exception');
+Error: ForeignTable TEST does not accept a constraint definition (state=,code=0)
+0: jdbc:farrago:> create foreign table mof_schema.test (name char(20) not null constraint n_unique_name unique)
+. . . . . . . . > server mof_server
+. . . . . . . . > options(class_name 'Exception');
+Error: ForeignTable TEST does not accept a constraint definition (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test same query as above, but against foreign table
 0: jdbc:farrago:> select name from mof_schema.mof_exception order by 1;

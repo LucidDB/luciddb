@@ -73,11 +73,30 @@ public:
         }
     }
 
-    const char * longName() const { return "PointerGetSize"; }
-    const char * shortName() const { return "GetS"; }
-    void describe(string &out, bool values) const {
+    static const char * longName() { return "PointerGetSize"; }
+    static const char * shortName() { return "GETS"; }
+    static int numArgs() { return 2; }
+    void describe(string& out, bool values) const {
         RegisterRef<PTR_TYPE> mOp2; // create invalid regref
-        describeHelper(out, values, longName(), shortName(), mResult, mOp1, &mOp2);
+        describeHelper(out, values, longName(), shortName(),
+                       mResult, mOp1, &mOp2);
+    }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        return InstructionSignature(shortName(),
+                                    regDesc(1, numArgs() - 1, type, 0));
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        assert((sig[0])->type() == POINTERSIZET_STANDARD_TYPE);
+        return new
+            PointerGetSize(static_cast<RegisterRef<PointerSizeT>*> (sig[0]),
+                           static_cast<RegisterRef<PTR_TYPE>*> (sig[1]),
+                           (sig[1])->type());
     }
 };
 
@@ -104,14 +123,77 @@ public:
         }
     }
 
-    const char * longName() const { return "PointerGetMaxSize"; }
-    const char * shortName() const { return "GetMS"; }
-    void describe(string &out, bool values) const {
+    static const char * longName() { return "PointerGetMaxSize"; }
+    static const char * shortName() { return "GETMS"; }
+    static int numArgs() { return 2; }
+    void describe(string& out, bool values) const {
         RegisterRef<PTR_TYPE> mOp2; // create invalid regref
-        describeHelper(out, values, longName(), shortName(), mResult, mOp1, &mOp2);
+        describeHelper(out, values, longName(), shortName(),
+                       mResult, mOp1, &mOp2);
+    }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        return InstructionSignature(shortName(),
+                                    regDesc(1, numArgs() - 1, type, 0));
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        assert((sig[0])->type() == POINTERSIZET_STANDARD_TYPE);
+        return new
+            PointerGetMaxSize(static_cast<RegisterRef<PointerSizeT>*> (sig[0]),
+                              static_cast<RegisterRef<PTR_TYPE>*> (sig[1]),
+                              (sig[1])->type());
     }
 };
 
+
+class IntegralPointerInstructionRegister : InstructionRegister {
+
+    // TODO: Refactor registerTypes to class InstructionRegister
+    template < template <typename> class INSTCLASS2 >
+    static void
+    registerTypes(vector<StandardTypeDescriptorOrdinal> const &t) {
+
+        for (uint i = 0; i < t.size(); i++) {
+            StandardTypeDescriptorOrdinal type = t[i];
+            // Type <char> below is a placeholder and is ignored.
+            InstructionSignature sig = INSTCLASS2<char>::signature(type);
+            switch(type) {
+                // Array_Text, below, does not allow assembly programs
+                // of to have say, pointer to int16s, but the language
+                // does not have pointers defined other than
+                // c,vc,b,vb, so this is OK for now.
+#define Fennel_InstructionRegisterSwitch_Array 1
+#include "fennel/calc/InstructionRegisterSwitch.h"
+            default:
+                throw std::logic_error("Default InstructionRegister");
+            }
+        }
+    }
+
+public:
+    static void
+    registerInstructions() {
+
+        vector<StandardTypeDescriptorOrdinal> t;
+        // isArray, below, does not allow assembly programs of to
+        // have say, pointer to int16s, but the language does not have
+        // pointers defined other than c,vc,b,vb, so this is OK for now.
+        t = InstructionSignature::typeVector(StandardTypeDescriptor::isArray);
+
+        // Have to do full fennel:: qualification of template
+        // arguments below to prevent template argument 'TMPLT', of
+        // this encapsulating class, from perverting NativeAdd into
+        // NativeAdd<TMPLT> or something like
+        // that. Anyway. Fennel::NativeAdd works just fine.
+        registerTypes<fennel::PointerGetSize>(t);
+        registerTypes<fennel::PointerGetMaxSize>(t);
+    }
+};
 
 FENNEL_END_NAMESPACE
 

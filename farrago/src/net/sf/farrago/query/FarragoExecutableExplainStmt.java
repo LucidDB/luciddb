@@ -21,6 +21,7 @@ package net.sf.farrago.query;
 
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.util.*;
+import net.sf.farrago.session.*;
 
 import net.sf.saffron.oj.stmt.*;
 import net.sf.saffron.core.*;
@@ -29,7 +30,7 @@ import java.sql.*;
 import java.util.*;
 
 /**
- * FarragoExecutableExplainStmt implements FarragoExecutableStmt for
+ * FarragoExecutableExplainStmt implements FarragoSessionExecutableStmt for
  * an EXPLAIN PLAN statement.
  *
  *<p>
@@ -53,16 +54,16 @@ class FarragoExecutableExplainStmt extends FarragoExecutableStmtImpl
         this.explanation = explanation;
     }
 
-    // implement FarragoExecutableStmt
+    // implement FarragoSessionExecutableStmt
     public SaffronType getRowType()
     {
         // TODO:  make a proper type descriptor (and use it for execute also)
         throw new UnsupportedOperationException();
     }
 
-    // implement FarragoExecutableStmt
+    // implement FarragoSessionExecutableStmt
     public ResultSet execute(
-        FarragoRuntimeContext runtimeContext)
+        FarragoSessionRuntimeContext runtimeContext)
     {
         // don't need a context
         runtimeContext.closeAllocation();
@@ -70,7 +71,7 @@ class FarragoExecutableExplainStmt extends FarragoExecutableStmtImpl
         return PreparedExplanation.executeStatic(explanation);
     }
 
-    // implement FarragoExecutableStmt
+    // implement FarragoSessionExecutableStmt
     public long getMemoryUsage()
     {
         return FarragoUtil.getStringMemoryUsage(explanation);

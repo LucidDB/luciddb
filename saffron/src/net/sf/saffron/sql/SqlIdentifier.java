@@ -22,6 +22,8 @@
 
 package net.sf.saffron.sql;
 
+import net.sf.saffron.sql.parser.ParserPosition;
+
 /**
  * A <code>SqlIdentifier</code> is an identifier, possibly compound.
  */
@@ -44,14 +46,16 @@ public class SqlIdentifier extends SqlNode
      *
      * @param names Parts of the identifier, length &gt;= 1
      */
-    public SqlIdentifier(String [] names, SqlCollation collation)
+    public SqlIdentifier(String [] names, SqlCollation collation, ParserPosition parserPosition)
     {
+        super(parserPosition);
         this.names = names;
         this.collation=collation;
     }
 
-    public SqlIdentifier(String [] names)
+    public SqlIdentifier(String [] names, ParserPosition parserPosition)
     {
+        super(parserPosition);
         this.names = names;
         this.collation=null;
     }
@@ -60,17 +64,17 @@ public class SqlIdentifier extends SqlNode
     /**
      * Creates a simple identifier, for example <code>foo</code>.
      */
-    public SqlIdentifier(String name, SqlCollation collation)
+    public SqlIdentifier(String name, SqlCollation collation, ParserPosition parserPosition)
     {
-        this(new String [] { name }, collation);
+        this(new String [] { name }, collation, parserPosition);
     }
 
     /**
      * Creates a simple identifier, for example <code>foo</code>.
      */
-    public SqlIdentifier(String name)
+    public SqlIdentifier(String name, ParserPosition parserPosition)
     {
-        this(new String [] { name }, null);
+        this(new String [] { name }, null, parserPosition);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -83,7 +87,7 @@ public class SqlIdentifier extends SqlNode
     public Object clone()
     {
         if (null!=collation) {
-            return new SqlIdentifier((String []) names.clone(),(SqlCollation)collation.clone());
+            return new SqlIdentifier((String []) names.clone(),(SqlCollation)collation.clone(), getParserPosition());
         }
         return new SqlIdentifier((String []) names.clone(),null);
     }

@@ -33,6 +33,7 @@ import net.sf.saffron.util.*;
 import net.sf.saffron.opt.*;
 import net.sf.saffron.rex.RexNode;
 import net.sf.saffron.rex.RexBuilder;
+import net.sf.saffron.sql.type.SqlTypeName;
 
 import java.nio.charset.*;
 
@@ -208,6 +209,9 @@ public abstract class FennelRelUtil
         try {
 
             if (!precisionType.isCharType()) {
+                if (precisionType.getSqlTypeName().equals(SqlTypeName.Bit)) {
+                    return (precisionType.getPrecision()+7) / 8;
+                }
                 return precisionType.getPrecision();
             } else {
                 assert(null!=precisionType.getCharsetName());
@@ -249,6 +253,7 @@ public abstract class FennelRelUtil
             return 7; // STANDARD_TYPE_INT_64
         case Types.VARCHAR:
             return 13; // STANDARD_TYPE_VARCHAR
+        case Types.BIT:
         case Types.VARBINARY:
             return 15; // STANDARD_TYPE_VARBINARY
         case Types.CHAR:

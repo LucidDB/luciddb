@@ -3,6 +3,9 @@
 
 !autocommit off
 
+-- force usage of Fennel calculator
+alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
+
 set schema sales;
 
 -- select from view on permanent table

@@ -158,7 +158,7 @@ public class IteratorToFennelConverter
             SaffronField field = fields[i];
             FarragoAtomicType type = (FarragoAtomicType) field.getType();
             Expression fieldExp = new FieldAccess(varTuple,
-                Util.toJavaId(field.getName()));
+                Util.toJavaId(field.getName(),i));
             if (type.hasClassForPrimitive()) {
                 Class primitiveClass =
                     type.getClassForPrimitive();
@@ -330,9 +330,6 @@ public class IteratorToFennelConverter
             catalog.newFemJavaTupleStreamDef();
         streamDef.setStreamId(getId());
 
-        // 1 scratch page needed for buffering
-        streamDef.setCachePageMin(1);
-        streamDef.setCachePageMax(1);
         return streamDef;
     }
 

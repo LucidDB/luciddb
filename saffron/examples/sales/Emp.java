@@ -33,16 +33,19 @@ public class Emp
     public int deptno;
     public String gender;
     public String city;
+    public boolean slacker;
 
     //~ Constructors ----------------------------------------------------------
 
-    public Emp(int empno,String name,int deptno,String gender,String city)
+    public Emp(int empno,String name,int deptno,String
+            gender,String city, boolean slacker)
     {
         this.empno = empno;
         this.name = name;
         this.deptno = deptno;
         this.gender = gender;
         this.city = city;
+        this.slacker = slacker;
     }
 
     public Emp(java.sql.ResultSet resultSet) throws java.sql.SQLException
@@ -52,6 +55,7 @@ public class Emp
         this.deptno = resultSet.getInt(3);
         this.gender = resultSet.getString(4);
         this.city = resultSet.getString(5);
+        this.slacker = resultSet.getBoolean(6);
     }
 }
 

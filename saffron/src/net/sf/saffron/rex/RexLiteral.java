@@ -222,7 +222,7 @@ public class RexLiteral extends RexNode
 
         case SqlTypeName.Symbol_ordinal:
             // Unlike SqlLiteral, we DO allow a String value.
-            return value instanceof EnumeratedValues.Value ||
+            return value instanceof SqlSymbol ||
                     value instanceof String;
 
         case SqlTypeName.Integer_ordinal: // not allowed -- use Decimal

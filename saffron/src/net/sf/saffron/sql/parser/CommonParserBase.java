@@ -36,7 +36,15 @@ import java.util.Set;
  */
 public abstract class CommonParserBase
 {
-    public SqlStdOperatorTable opTab = SqlOperatorTable.std();
+    /**
+     * Operator table containing the standard SQL operators and functions.
+     */
+    public final SqlStdOperatorTable opTab = SqlOperatorTable.std();
+
+    /**
+     * Operator table containing any session-specific operators and functions.
+     */
+    public SqlOperatorTable extOpTab;
 
     /**
      * Accept any kind of expression in this context.

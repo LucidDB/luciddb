@@ -23,6 +23,7 @@
 
 #include "fennel/calc/CalcCommon.h"
 #include "fennel/calc/InstructionCommon.h"
+#include "fennel/calc/CalcTypedefs.h"
 
 #ifdef DONOT_INCLUDE_FLEX_HEADER
 class CalcYYFlexLexer;
@@ -76,19 +77,7 @@ typedef struct
     std::vector<RegisterReference*> v_register_list;
 } CalcTokenValue;
 
-/**
- * CalcYYLocType provides the location of the token or expression being
- * parsed.
- */
-typedef struct 
-{
-  int first_line;
-  int first_column;
-  int last_line;
-  int last_column;
-  int first_pos;
-  int last_pos;
-} CalcYYLocType;
+//! CalcYYLocType is now in CalcYYLocType.h
 
 /**
  * CalcLexer is the scanner class used by the assembler to tokenize a

@@ -236,7 +236,8 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
 
     public FieldAccess convertFieldAccess(Variable variable, SaffronField field)
     {
-        final String javaFieldName = Util.toJavaId(field.getName());
+        final String javaFieldName =
+                Util.toJavaId(field.getName(), field.getIndex());
         return new FieldAccess(variable, javaFieldName);
     }
 

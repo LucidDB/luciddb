@@ -25,7 +25,7 @@ import java.util.StringTokenizer;
  * @author jhyde
  * @since Jun 2, 2002
  * @version $Id$
- **/
+ */
 public class JavaCompilerArgs {
     ArrayList argsList = new ArrayList();
     ArrayList fileNameList = new ArrayList();
@@ -107,8 +107,24 @@ public class JavaCompilerArgs {
             argsList.add("-g=" + i);
         }
     }
+    /**
+     * Sets the source code (that is, the full java program, generally starting
+     * with something like "package com.foo.bar;") and the file name.
+     *
+     * <p>This method is optional. It only works if the compiler supports
+     * in-memory compilation. If this compiler does not return in-memory
+     * compilation (which the base class does not), {@link #supportsSetSource}
+     * returns false, and this method throws
+     * {@link UnsupportedOperationException}.
+     */
     public void setSource(String source, String fileName) {
         throw new UnsupportedOperationException();
+    }
+    /**
+     * Returns whether {@link #setSource} will work.
+     */
+    public boolean supportsSetSource() {
+        return false;
     }
     public void setFullClassName(String fullClassName) {
         // NOTE jvs 28-June-2004: I added this in order to support Janino's

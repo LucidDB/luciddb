@@ -1,4 +1,4 @@
-/*
+
 // Farrago is a relational database management system.
 // (C) Copyright 2004-2004, Disruptive Tech
 //
@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-*/
+
 package net.sf.farrago.test.regression;
 
 import java.math.BigDecimal;
@@ -29,6 +29,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -38,6 +40,12 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import junit.framework.TestCase;
+
+import net.sf.farrago.trace.FarragoTrace;
+
+import net.sf.saffron.runtime.IteratorResultSet;
+
+import net.sf.saffron.util.Util;
 
 /**
  * FarragoTestCommandGenerator creates instances of {@link FarragoTestCommand}
@@ -89,7 +97,7 @@ public class FarragoTestCommandGenerator
 
     /**
      * Adds a synchronization commands.  When a thread reaches a
-     * synchronziation command it stops and waits for all other
+     * synchronization command it stops and waits for all other
      * threads to reach their synchronization commands.  When all
      * threads have reached their synchronization commands, they are
      * all released simultaneously (or as close as one can get with
@@ -98,10 +106,11 @@ public class FarragoTestCommandGenerator
      *
      * @param threadId the thread that should execute this command
      * @param order the execution order
+     * @return the newly-added command
      */
-    public void addSynchronizationCommand(int threadId, int order)
+    public FarragoTestCommand addSynchronizationCommand(int threadId, int order)
     {
-        addCommand(threadId, order, new SynchronizationCommand());
+        return addCommand(threadId, order, new SynchronizationCommand());
     }
 
     /**
@@ -112,10 +121,11 @@ public class FarragoTestCommandGenerator
      * @param order the execution order
      * @param timeout the length of time to sleep in milliseconds
      *                (must not be negative)
+     * @return the newly-added command
      */
-    public void addSleepCommand(int threadId, int order, long millis)
+    public FarragoTestCommand addSleepCommand(int threadId, int order, long millis)
     {
-        addCommand(threadId, order, new SleepCommand(millis));
+        return addCommand(threadId, order, new SleepCommand(millis));
     }
 
     /**
@@ -125,14 +135,15 @@ public class FarragoTestCommandGenerator
      * @param order the execution order
      * @param sql the explain plan SQL (e.g. <code>"explain plan for
      *            select * from t"</code>)
+     * @return the newly-added command
      */
-    public void addExplainCommand(int threadId, int order, String sql)
+    public FarragoTestCommand addExplainCommand(int threadId, int order, String sql)
     {
         assert(sql != null);
 
         FarragoTestCommand command = new ExplainCommand(sql);
 
-        addCommand(threadId, order, command);
+        return addCommand(threadId, order, command);
     }
 
     /**
@@ -145,14 +156,15 @@ public class FarragoTestCommandGenerator
      * @param order the execution order
      * @param sql the SQL to prepare (e.g. <code>"select * from t"</code>)
      * @see #addFetchAndCompareCommand(int, int, int, String)
+     * @return the newly-added command
      */
-    public void addPrepareCommand(int threadId, int order, String sql)
+    public FarragoTestCommand addPrepareCommand(int threadId, int order, String sql)
     {
         assert(sql != null);
 
         FarragoTestCommand command = new PrepareCommand(sql);
 
-        addCommand(threadId, order, command);
+        return addCommand(threadId, order, command);
     }
 
 
@@ -183,8 +195,9 @@ public class FarragoTestCommandGenerator
      * @param order the execution order
      * @param timeout the query timeout, in seconds (see above)
      * @param expected the expected results (see above)
+     * @return the newly-added command
      */
-    public void addFetchAndCompareCommand(int threadId,
+    public FarragoTestCommand addFetchAndCompareCommand(int threadId,
                                           int order,
                                           int timeout,
                                           String expected)
@@ -192,7 +205,7 @@ public class FarragoTestCommandGenerator
         FarragoTestCommand command = new FetchAndCompareCommand(timeout,
                                                                 expected);
 
-        addCommand(threadId, order, command);
+        return addCommand(threadId, order, command);
     }
 
     
@@ -202,10 +215,11 @@ public class FarragoTestCommandGenerator
      *
      * @param threadId the thread that should execute this command
      * @param order the execution order
+     * @return the newly-added command
      */
-    public void addCloseCommand(int threadId, int order)
+    public FarragoTestCommand addCloseCommand(int threadId, int order)
     {
-        addCommand(threadId, order, new CloseCommand());
+        return addCommand(threadId, order, new CloseCommand());
     }
 
 
@@ -222,15 +236,16 @@ public class FarragoTestCommandGenerator
      * @param order the execution order
      * @param timeout the query timeout, in seconds (see above)
      * @param sql the insert/update/delete SQL
+     * @return the newly-added command
      */
-    public void addInsertCommand(int threadId,
+    public FarragoTestCommand addInsertCommand(int threadId,
                                  int order,
                                  int timeout,
                                  String sql)
     {
         FarragoTestCommand command = new InsertCommand(timeout, sql);
 
-        addCommand(threadId, order, command);
+        return addCommand(threadId, order, command);
     }
 
 
@@ -239,10 +254,11 @@ public class FarragoTestCommandGenerator
      *
      * @param threadId the thread that should execute this command
      * @param order the execution order
+     * @return the newly-added command
      */
-    public void addCommitCommand(int threadId, int order)
+    public FarragoTestCommand addCommitCommand(int threadId, int order)
     {
-        addCommand(threadId, order, new CommitCommand());
+        return addCommand(threadId, order, new CommitCommand());
     }
 
 
@@ -251,26 +267,29 @@ public class FarragoTestCommandGenerator
      *
      * @param threadId the thread that should execute this command
      * @param order the execution order
+     * @return the newly-added command
      */
-    public void addRollbackCommand(int threadId, int order)
+    public FarragoTestCommand addRollbackCommand(int threadId, int order)
     {
-        addCommand(threadId, order, new RollbackCommand());
+        return addCommand(threadId, order, new RollbackCommand());
     }
 
 
     /**
      * Executes a DDL statement immediately.  Assumes the statement
      * returns no information.
+     * @return the newly-added command
      */
-    public void addDdlCommand(int threadId, int order, String ddl)
+    public FarragoTestCommand addDdlCommand(int threadId, int order, String ddl)
     {
-        addCommand(threadId, order, new DdlCommand(ddl));
+        return addCommand(threadId, order, new DdlCommand(ddl));
     }
 
     /**
      * Handle adding a command to {@link #threadMap}.
+     * @return the newly-added command
      */
-    public void addCommand(int threadId, int order, FarragoTestCommand command)
+    public FarragoTestCommand addCommand(int threadId, int order, FarragoTestCommand command)
     {
         assert(threadId > 0);
         assert(order > 0);
@@ -288,6 +307,7 @@ public class FarragoTestCommandGenerator
         assert(!commandMap.containsKey(orderKey));
 
         commandMap.put(orderKey, command);
+        return command;
     }
 
     
@@ -432,18 +452,79 @@ public class FarragoTestCommandGenerator
     }
 
 
+    /** abstract base to handle SQLExceptions */
+    static abstract class AbstractCommand implements FarragoTestCommand
+    {
+        private boolean shouldFail = false;
+        private String failComment = null;    // describes an expected error
+        private Pattern failPattern = null;   // an expected error message
+        
+        // implement FarragoTestCommand
+        public FarragoTestCommand markToFail(String comment, String pattern)
+        {
+            shouldFail = true;
+            failComment = comment;
+            failPattern = Pattern.compile(pattern);
+            return this;
+        }
+
+        // subclasses define this to execute themselves
+        protected abstract void doExecute(FarragoTestCommandExecutor exec)
+            throws Exception;
+
+        // implement FarragoTestCommand
+        public void execute(FarragoTestCommandExecutor exec) throws Exception
+        {
+            try {
+                doExecute(exec);
+                if (shouldFail) {
+                    throw new FarragoTestCommand.ShouldHaveFailedException(
+                        failComment);
+                }
+            } catch (SQLException err) {
+                if (!shouldFail) {
+                    throw err;
+                }
+                boolean matches = false;
+                if (failPattern == null) {
+                    matches = true;     // by default
+                } else {
+                    for (SQLException err2 = err; 
+                         err2 != null;
+                         err2 = err2.getNextException()) {
+                        String msg = err2.getMessage();
+                        if (msg != null) {
+                            matches = failPattern.matcher(msg).find();
+                        }
+                        if (matches) {
+                            break;
+                        }
+                    }
+                }
+                if (!matches) {
+                    // an unexpected error
+                    throw err;
+                } else {
+                    // else swallow it
+                    Util.swallow(err, FarragoTrace.getTestTracer());
+                }
+            }
+        }
+    }
+
+
     /**
      * SynchronizationCommand causes the execution thread to wait for all
      * other threads in the test before continuing.
      */
     static class SynchronizationCommand
-        implements FarragoTestCommand
+        extends AbstractCommand
     {
         private SynchronizationCommand()
         {
         }
 
-        public void execute(FarragoTestCommandExecutor executor)
+        protected void doExecute(FarragoTestCommandExecutor executor)
             throws Exception
         {
             executor.getSynchronizer().waitForOthers();
@@ -472,7 +553,7 @@ public class FarragoTestCommandGenerator
      * other threads in the test before continuing.
      */
     private static class SleepCommand
-        implements FarragoTestCommand
+        extends AbstractCommand
     {
         private long millis;
 
@@ -481,7 +562,7 @@ public class FarragoTestCommandGenerator
             this.millis = millis;
         }
 
-        public void execute(FarragoTestCommandExecutor executor)
+        protected void doExecute(FarragoTestCommandExecutor executor)
             throws Exception
         {
             Thread.sleep(millis);
@@ -495,7 +576,7 @@ public class FarragoTestCommandGenerator
      * {@link #execute(FarragoTestCommandExecutor)}.
      */
     private static class ExplainCommand
-        implements FarragoTestCommand
+        extends AbstractCommand
     {
         private String sql;
 
@@ -504,7 +585,7 @@ public class FarragoTestCommandGenerator
             this.sql = sql;
         }
 
-        public void execute(FarragoTestCommandExecutor executor)
+        protected void doExecute(FarragoTestCommandExecutor executor)
             throws SQLException
         {
             Statement stmt = executor.getConnection().createStatement();
@@ -536,7 +617,7 @@ public class FarragoTestCommandGenerator
      * prepared statement in the FarragoTestCommandExecutor.
      */
     private static class PrepareCommand
-        implements FarragoTestCommand
+        extends AbstractCommand
     {
         private String sql;
 
@@ -545,7 +626,7 @@ public class FarragoTestCommandGenerator
             this.sql = sql;
         }
 
-        public void execute(FarragoTestCommandExecutor executor)
+        protected void doExecute(FarragoTestCommandExecutor executor)
             throws SQLException
         {
             PreparedStatement stmt = 
@@ -561,9 +642,9 @@ public class FarragoTestCommandGenerator
      * nothing.
      */
     private static class CloseCommand
-        implements FarragoTestCommand
+        extends AbstractCommand
     {
-        public void execute(FarragoTestCommandExecutor executor)
+        protected void doExecute(FarragoTestCommandExecutor executor)
             throws SQLException
         {
             Statement stmt = executor.getStatement();
@@ -578,7 +659,7 @@ public class FarragoTestCommandGenerator
 
 
     private static abstract class CommandWithTimeout
-        implements FarragoTestCommand
+        extends AbstractCommand
     {
         private int timeout;
 
@@ -587,12 +668,17 @@ public class FarragoTestCommandGenerator
             this.timeout = timeout;
         }
 
-        protected void setTimeout(Statement stmt)
+        protected boolean setTimeout(Statement stmt)
             throws SQLException
         {
-            // REVIEW: SZ 6/17/2004: We'll need support for this
-            // before long.
-//            stmt.setQueryTimeout(timeout);
+            assert(timeout >= 0);
+
+            if (timeout > 0) {
+                stmt.setQueryTimeout(timeout);
+                return true;
+            }
+
+            return false;
         }
     }
 
@@ -616,20 +702,20 @@ public class FarragoTestCommandGenerator
         }
 
 
-        public void execute(FarragoTestCommandExecutor executor)
+        protected void doExecute(FarragoTestCommandExecutor executor)
             throws SQLException
         {
             PreparedStatement stmt = 
                 (PreparedStatement)executor.getStatement();
 
-            setTimeout(stmt);
+            boolean timeoutSet = setTimeout(stmt);
 
             ResultSet rset = stmt.executeQuery();
 
+            ArrayList rows = new ArrayList();
             try {
                 int rsetColumnCount = rset.getMetaData().getColumnCount();
 
-                ArrayList rows = new ArrayList();
                 while(rset.next()) {
                       ArrayList row = new ArrayList();
 
@@ -644,13 +730,19 @@ public class FarragoTestCommandGenerator
 
                       rows.add(row);
                 }
+            } catch(IteratorResultSet.SqlTimeoutException e) {
+                if (!timeoutSet) {
+                    throw e;
+                }
 
-                result = rows;
-
-                testValues();
+                Util.swallow(e, FarragoTrace.getTestTracer());
             } finally {
                 rset.close();
             }
+
+            result = rows;
+
+            testValues();
         }
 
 
@@ -1056,7 +1148,7 @@ public class FarragoTestCommandGenerator
             this.sql = sql;
         }
 
-        public void execute(FarragoTestCommandExecutor executor)
+        protected void doExecute(FarragoTestCommandExecutor executor)
             throws SQLException
         {
             Statement stmt = executor.getConnection().createStatement();
@@ -1073,9 +1165,9 @@ public class FarragoTestCommandGenerator
      * {@link Connection#commit()}.
      */
     private static class CommitCommand
-        implements FarragoTestCommand
+        extends AbstractCommand
     {
-        public void execute(FarragoTestCommandExecutor executor)
+        protected void doExecute(FarragoTestCommandExecutor executor)
             throws SQLException
         {
             executor.getConnection().commit();
@@ -1088,9 +1180,9 @@ public class FarragoTestCommandGenerator
      * {@link Connection#rollback()}.
      */
     private static class RollbackCommand
-        implements FarragoTestCommand
+        extends AbstractCommand
     {
-        public void execute(FarragoTestCommandExecutor executor)
+        protected void doExecute(FarragoTestCommandExecutor executor)
             throws SQLException
         {
             executor.getConnection().rollback();
@@ -1100,10 +1192,10 @@ public class FarragoTestCommandGenerator
     /**
      * DdlCommand executes DDL commands.  Automatically closes the
      * {@link Statement} before returning from
-     * {@link #execute(FarragoTestCommandExecutor)}.
+     * {@link #doExecute(FarragoTestCommandExecutor)}.
      */
     private static class DdlCommand
-        implements FarragoTestCommand
+        extends AbstractCommand
     {
         private String sql;
 
@@ -1112,7 +1204,7 @@ public class FarragoTestCommandGenerator
             this.sql = sql;
         }
 
-        public void execute(FarragoTestCommandExecutor executor)
+        protected void doExecute(FarragoTestCommandExecutor executor)
             throws SQLException
         {
             Statement stmt = executor.getConnection().createStatement();

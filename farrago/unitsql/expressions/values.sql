@@ -33,3 +33,6 @@ values (user);
 
 -- test SYSTEM_USER (but don't actually execute since it's context-dependent)
 explain plan for values (system_user);
+
+-- Janino had problems with this one (fixed in their 2.0.5 release)
+values true and true;

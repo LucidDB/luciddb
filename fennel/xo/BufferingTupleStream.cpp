@@ -38,6 +38,18 @@ void BufferingTupleStream::prepare(BufferingTupleStreamParams const &params)
     firstPageId = NULL_PAGE_ID;
 }
 
+void BufferingTupleStream::getResourceRequirements(
+    ExecutionStreamResourceQuantity &minQuantity,
+    ExecutionStreamResourceQuantity &optQuantity)
+{
+    ExecutionStream::getResourceRequirements(minQuantity,optQuantity);
+
+    // one page for I/O
+    minQuantity.nCachePages += 1;
+    
+    optQuantity = minQuantity;
+}
+
 void BufferingTupleStream::open(bool restart)
 {
     if (restart) {

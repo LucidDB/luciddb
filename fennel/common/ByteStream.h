@@ -46,32 +46,58 @@ public:
 };
 
 /**
- * ByteStreamMarker is a position within a ByteStream.
- * It is created by ByteInputStream.mark
- * and consumed by ByteInputStream.reset.
- * To other classes it is opaque.
+ * ByteStreamMarker is an opaque position within a ByteStream.  Stream
+ * implementations define derived marker classes containing hidden state.
+ * ByteInputStream::newMarker() serves as a factory method for creating new
+ * marker instances.
  */
 class ByteStreamMarker
 {
+    friend class ByteStream;
+
+    /**
+     * Marked stream.
+     */
+    ByteStream const &stream;
+    
+protected:
+    explicit ByteStreamMarker(ByteStream const &stream);
+
+public:
+    /**
+     * @return marked stream
+     */
+    ByteStream const &getStream() const;
+    
+    /**
+     * @return byte offset of marked position within stream
+     */
+    virtual FileSize getOffset() const = 0;
+};
+
+/**
+ * SequentialByteStreamMarker is a default implementation of
+ * ByteStreamMarker based on sequential byte position.
+ */
+class SequentialByteStreamMarker : public ByteStreamMarker
+{
     friend class ByteInputStream;
+    
     /**
      * Byte position in stream.
      */
     FileSize cbOffset;
-    /**
-     * Create a ByteStreamMarker (called by ByteInputStream.mark).
-     */
-    explicit inline ByteStreamMarker(FileSize cbOffset);            
+    
+protected:
+    explicit SequentialByteStreamMarker(ByteStream const &stream);
+
+    // implement ByteStreamMarker
+    virtual FileSize getOffset() const;
 };
 
 inline FileSize ByteStream::getOffset() const
 {
     return cbOffset;
-}
-
-inline ByteStreamMarker::ByteStreamMarker(FileSize cbOffset)
-{
-    this->cbOffset = cbOffset;
 }
 
 FENNEL_END_NAMESPACE

@@ -13,11 +13,11 @@ ExecutableStmt.Ojp_0 oj_var3 = new ExecutableStmt.Ojp_0();
 oj_var0.assignFrom( 1096934400000l );
 oj_var1.assignFrom( 61200000l );
 oj_var2.assignFrom( 1096995600000l );
-oj_var3.EXPR$0 = (int) 5;
-oj_var3.EXPR$1.assignFrom( "a las cinco de la tarde" );
-oj_var3.EXPR$2.assignFrom( new byte[]{ 88, 121, 122 } );
-oj_var3.EXPR$3.assignFrom( oj_var0 );
-oj_var3.EXPR$4.assignFrom( oj_var1 );
-oj_var3.EXPR$5.assignFrom( oj_var2 );
+oj_var3.ID$0$EXPR$0 = (int) 5;
+oj_var3.ID$1$EXPR$1.assignFrom( "a las cinco de la tarde" );
+oj_var3.ID$2$EXPR$2.assignFrom( new byte[]{ 88, 121, 122 } );
+oj_var3.ID$3$EXPR$3.assignFrom( oj_var0 );
+oj_var3.ID$4$EXPR$4.assignFrom( oj_var1 );
+oj_var3.ID$5$EXPR$5.assignFrom( oj_var2 );
 
 return oj_var3;

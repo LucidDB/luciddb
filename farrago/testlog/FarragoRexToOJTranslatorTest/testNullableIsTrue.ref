@@ -1,1 +1,1 @@
-return !SLACKER.isNull() && SLACKER.value;
+return !ID$8$SLACKER.isNull() && ID$8$SLACKER.value;

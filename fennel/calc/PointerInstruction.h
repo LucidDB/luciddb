@@ -30,15 +30,6 @@
 
 FENNEL_BEGIN_NAMESPACE
 
-class PointerInstruction : public Instruction
-{
-public:
-    explicit
-    PointerInstruction() { }
-    ~PointerInstruction() { }
-
-protected:
-};
 
 //! PointerSizeT is the "size" and "maxsize" for array lengths
 //!
@@ -47,6 +38,7 @@ protected:
 //! type is defined with an explicit length so that one program can be written
 //! for both architectures.
 typedef uint32_t PointerSizeT;
+#define POINTERSIZET_STANDARD_TYPE STANDARD_TYPE_UINT_32
 
 //! Only integral type that can be used in pointer algebra.
 //!
@@ -61,6 +53,33 @@ typedef uint32_t PointerSizeT;
 //! type is defined with an explicit length so that one program can be written
 //! for both architectures.
 typedef uint32_t PointerOperandT;
+#define POINTEROPERANDT_STANDARD_TYPE STANDARD_TYPE_UINT_32
+
+class PointerInstruction : public Instruction
+{
+public:
+    explicit
+    PointerInstruction() { }
+    ~PointerInstruction() { }
+
+protected:
+    static vector<StandardTypeDescriptorOrdinal>
+    regDesc(uint sizetArgs1,
+            uint ptrArgs,
+            StandardTypeDescriptorOrdinal type,
+            uint operandArgs2) {
+        vector<StandardTypeDescriptorOrdinal>v(sizetArgs1,
+                                               POINTERSIZET_STANDARD_TYPE);
+        uint i;
+        for (i = 0; i < ptrArgs; i++) {
+            v.push_back(type);
+        }
+        for (i = 0; i < operandArgs2; i++) {
+            v.push_back(POINTEROPERANDT_STANDARD_TYPE);
+        }
+        return v;
+    }
+};
 
 
 //
@@ -85,7 +104,7 @@ class PointerInstruction_NotAPointerType<unsigned short *> {} ;
 class PointerInstruction_NotAPointerType<unsigned int *> {} ;
 class PointerInstruction_NotAPointerType<unsigned long *> {} ;
 class PointerInstruction_NotAPointerType<unsigned long long *> {} ;
-class PointerInstruction_NotAPointerType<signed char * > {} ;
+class PointerInstruction_NotAPointerType<signed char *> {} ;
 class PointerInstruction_NotAPointerType<float *> {} ;
 class PointerInstruction_NotAPointerType<double *> {} ;
 

@@ -285,7 +285,7 @@ public class CalcProgramBuilderTest extends TestCase {
         it = getMethods("addJump\\w+");
         while (it.hasNext()) {
             Method method = (Method) it.next();
-            assertExceptionIsThrown(method, args, "(?s).*Expected a non constant register.*");
+            assertExceptionIsThrown(method, args, "(?s).*Expected a non literal register.*");
         }
 
         //Testing jumps with negative line nbr

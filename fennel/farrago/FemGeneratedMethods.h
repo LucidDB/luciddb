@@ -25,9 +25,6 @@ jmethodID ProxyDatabaseParam::meth_getValue = 0;
 jmethodID ProxyEndTxnCmd::meth_getSvptHandle = 0;
 jmethodID ProxyExecutionStreamDef::meth_getName = 0;
 jmethodID ProxyExecutionStreamDef::meth_getInput = 0;
-jmethodID ProxyExecutionStreamDef::meth_getCachePageQuota = 0;
-jmethodID ProxyExecutionStreamDef::meth_getCachePageMin = 0;
-jmethodID ProxyExecutionStreamDef::meth_getCachePageMax = 0;
 jmethodID ProxyExecutionStreamDef::meth_getOutputDesc = 0;
 jmethodID ProxyExecutionStreamDef::meth_getConsumer = 0;
 jmethodID ProxyHandle::meth_getLongHandle = 0;
@@ -159,9 +156,6 @@ jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemExecutionStreamDef");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyExecutionStreamDef>));
 ProxyExecutionStreamDef::meth_getName = pEnv->GetMethodID(jClass,"getName","()Ljava/lang/String;");
 ProxyExecutionStreamDef::meth_getInput = pEnv->GetMethodID(jClass,"getInput","()Ljava/util/List;");
-ProxyExecutionStreamDef::meth_getCachePageQuota = pEnv->GetMethodID(jClass,"getCachePageQuota","()I");
-ProxyExecutionStreamDef::meth_getCachePageMin = pEnv->GetMethodID(jClass,"getCachePageMin","()I");
-ProxyExecutionStreamDef::meth_getCachePageMax = pEnv->GetMethodID(jClass,"getCachePageMax","()I");
 ProxyExecutionStreamDef::meth_getOutputDesc = pEnv->GetMethodID(jClass,"getOutputDesc","()Lnet/sf/farrago/fem/fennel/FemTupleDescriptor;");
 ProxyExecutionStreamDef::meth_getConsumer = pEnv->GetMethodID(jClass,"getConsumer","()Ljava/util/Collection;");
 
@@ -445,21 +439,6 @@ p->jObject = pEnv->CallObjectMethod(jObject,meth_getInput);
 p.jIter = JniUtil::getIter(p->pEnv,p->jObject);
 ++p;
 return p;
-}
-
-int32_t ProxyExecutionStreamDef::getCachePageQuota()
-{
-return pEnv->CallIntMethod(jObject,meth_getCachePageQuota);
-}
-
-int32_t ProxyExecutionStreamDef::getCachePageMin()
-{
-return pEnv->CallIntMethod(jObject,meth_getCachePageMin);
-}
-
-int32_t ProxyExecutionStreamDef::getCachePageMax()
-{
-return pEnv->CallIntMethod(jObject,meth_getCachePageMax);
 }
 
 SharedProxyTupleDescriptor ProxyExecutionStreamDef::getOutputDesc()

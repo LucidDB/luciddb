@@ -47,7 +47,6 @@
   <fail unless="junit.dir"/>
   <fail unless="macker.dir"/>
   <fail unless="jalopy.dir"/>
-  <fail unless="dynamicjava.dir"/>
   <fail unless="janino.dir"/>
 
   <!--
@@ -117,7 +116,6 @@
     <pathelement location="${junit.dir}/junit.jar"/>
     <pathelement location="${tomcat.home}/common/lib/servlet.jar"/>
     <pathelement location="${weblogic.home}/lib/weblogic.jar"/>
-    <pathelement location="${dynamicjava.dir}/lib/dynamicjava.jar"/>
     <pathelement location="${janino.dir}/lib/janino.jar"/>
     <pathelement location="${ant.home}/lib/ant.jar"/>
     <pathelement location="${ant.home}/lib/optional.jar"/>
@@ -157,12 +155,6 @@
     <available property="tomcat.available"
         classname="org.apache.jasper.JspC"
         classpathref="saffron.build.classpath"/>
-    <available property="djava.available" file="${dynamicjava.dir}"/>
-    <condition property="djava.unavailable" value="">
-      <not>
-        <available file="${dynamicjava.dir}"/>
-      </not>
-    </condition>
     <available property="janino.available" file="${janino.dir}"/>
     <condition property="janino.unavailable" value="">
       <not>
@@ -341,8 +333,6 @@
               saffron/web/**/*.java are excluded
         -->
       <exclude name="${servlet.unavailable}net/sf/saffron/web/**/*.java"/>
-      <!-- exclude DynamicJavaCompiler if djava is not available -->
-      <exclude name="${djava.unavailable}openjava/ojc/DynamicJavaCompiler.java"/>
       <!-- exclude JaninoCompiler if janino is not available -->
       <exclude name="${janino.unavailable}openjava/ojc/JaninoCompiler.java"/>
     </javac>
@@ -609,9 +599,10 @@
     <zip
         zipfile="${dist.jar.file}"
         update="true">
-      <zipfileset
-          dir="${classes.dir}"
-          includes="**/*.class"/>
+      <zipfileset dir="${classes.dir}">
+        <include name="**/*.class"/>
+        <include name="**/*.properties"/>
+      </zipfileset>
       <zipfileset dir=".">
         <include name="LICENSE.html"/>
         <include name="README.txt"/>
@@ -745,9 +736,6 @@ You should set pscp.user, pscp.password and pscp.path in build.properties">
   <target name="walden" depends="compile.java,applet.jar">
     <signjar jar="${applet.jar.file}"
              alias="duke" storepass="password" keypass="dukekeypassword" />
-    <signjar jar="${dynamicjava.dir}/lib/dynamicjava.jar"
-             signedjar="${dist.dir}/dynamicjavaSigned.jar"
-             alias="duke" storepass="password" keypass="dukekeypassword"/>
     <signjar jar="${junit.dir}/junit.jar"
              signedjar="${dist.dir}/junitSigned.jar"
              alias="duke" storepass="password" keypass="dukekeypassword"/>
@@ -757,7 +745,7 @@ You should set pscp.user, pscp.password and pscp.path in build.properties">
       <fileset dir="${walden.dir}" excludes="${walden.dir}/WEB-INF/web.xml"/>
 	  <lib dir="${junit.dir}" includes="junit.jar"/>
       <classes dir="${classes.dir}"/>
-      <fileset dir="${dist.dir}" includes="waldenapplet.jar,junitSigned.jar,dynamicjavaSigned.jar"/>
+      <fileset dir="${dist.dir}" includes="waldenapplet.jar,junitSigned.jar"/>
     </war>
   </target>
 
@@ -768,7 +756,7 @@ You should set pscp.user, pscp.password and pscp.path in build.properties">
       <fileset dir="${walden.dir}" excludes="${walden.dir}/WEB-INF/web.xml"/>
 	  <lib dir="${junit.dir}" includes="junit.jar"/>
       <classes dir="${classes.dir}"/>
-      <fileset dir="${dist.dir}" includes="waldenapplet.jar,junitSigned.jar,dynamicjavaSigned.jar"/>
+      <fileset dir="${dist.dir}" includes="waldenapplet.jar,junitSigned.jar"/>
     </war>
   </target>
 

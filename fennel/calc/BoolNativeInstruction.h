@@ -80,10 +80,30 @@ public:
         }
     }
 
-    const char * longName() const { return "BoolNativeEqual"; }
-    const char * shortName() const { return "=="; }
-    void describe(string &out, bool values) const {
-        describeHelper(out, values, longName(), shortName(), mResult, mOp1, mOp2);
+    static const char * longName() { return "BoolNativeEqual"; }
+    static const char * shortName() { return "EQ"; }
+    static int numArgs() { return 3; }
+    void describe(string& out, bool values) const {
+        describeHelper(out, values, longName(), shortName(),
+                       mResult, mOp1, mOp2);
+    }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        v[0] = STANDARD_TYPE_BOOL;
+        return InstructionSignature(shortName(), v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        return new
+            BoolNativeEqual(static_cast<RegisterRef<bool>*> (sig[0]),
+                            static_cast<RegisterRef<TMPLT>*> (sig[1]),
+                            static_cast<RegisterRef<TMPLT>*> (sig[2]),
+                            (sig[1])->type());
     }
 };
 
@@ -112,10 +132,30 @@ public:
         }
     }
 
-    const char * longName() const { return "BoolNativeNotEqual"; }
-    const char * shortName() const { return "!="; }
-    void describe(string &out, bool values) const {
-        describeHelper(out, values, longName(), shortName(), mResult, mOp1, mOp2);
+    static const char * longName() { return "BoolNativeNotEqual"; }
+    static const char * shortName() { return "NE"; }
+    static int numArgs() { return 3; }
+    void describe(string& out, bool values) const {
+        describeHelper(out, values, longName(), shortName(),
+                       mResult, mOp1, mOp2);
+    }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        v[0] = STANDARD_TYPE_BOOL;
+        return InstructionSignature(shortName(), v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        return new
+            BoolNativeNotEqual(static_cast<RegisterRef<bool>*> (sig[0]),
+                               static_cast<RegisterRef<TMPLT>*> (sig[1]),
+                               static_cast<RegisterRef<TMPLT>*> (sig[2]),
+                               (sig[1])->type());
     }
 };
 
@@ -144,10 +184,30 @@ public:
         }
     }
 
-    const char * longName() const { return "BoolNativeGreater"; }
-    const char * shortName() const { return ">"; }
-    void describe(string &out, bool values) const {
-        describeHelper(out, values, longName(), shortName(), mResult, mOp1, mOp2);
+    static const char * longName() { return "BoolNativeGreater"; }
+    static const char * shortName() { return "GT"; }
+    static int numArgs() { return 3; }
+    void describe(string& out, bool values) const {
+        describeHelper(out, values, longName(), shortName(),
+                       mResult, mOp1, mOp2);
+    }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        v[0] = STANDARD_TYPE_BOOL;
+        return InstructionSignature(shortName(), v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        return new
+            BoolNativeGreater(static_cast<RegisterRef<bool>*> (sig[0]),
+                              static_cast<RegisterRef<TMPLT>*> (sig[1]),
+                              static_cast<RegisterRef<TMPLT>*> (sig[2]),
+                              (sig[1])->type());
     }
 };
 
@@ -176,10 +236,30 @@ public:
         }
     }
 
-    const char * longName() const { return "BoolNativeGreaterEqual"; }
-    const char * shortName() const { return ">="; }
-    void describe(string &out, bool values) const {
-        describeHelper(out, values, longName(), shortName(), mResult, mOp1, mOp2);
+    static const char * longName() { return "BoolNativeGreaterEqual"; }
+    static const char * shortName() { return "GE"; }
+    static int numArgs() { return 3; }
+    void describe(string& out, bool values) const {
+        describeHelper(out, values, longName(), shortName(),
+                       mResult, mOp1, mOp2);
+    }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        v[0] = STANDARD_TYPE_BOOL;
+        return InstructionSignature(shortName(), v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        return new
+            BoolNativeGreaterEqual(static_cast<RegisterRef<bool>*> (sig[0]),
+                                   static_cast<RegisterRef<TMPLT>*> (sig[1]),
+                                   static_cast<RegisterRef<TMPLT>*> (sig[2]),
+                                   (sig[1])->type());
     }
 };
 
@@ -207,10 +287,30 @@ public:
             mResult->value(false);
         }
     }
-    const char * longName() const { return "BoolNativeLess"; }
-    const char * shortName() const { return "<"; }
-    void describe(string &out, bool values) const {
-        describeHelper(out, values, longName(), shortName(), mResult, mOp1, mOp2);
+    static const char * longName() { return "BoolNativeLess"; }
+    static const char * shortName() { return "LT"; }
+    static int numArgs() { return 3; }
+    void describe(string& out, bool values) const {
+        describeHelper(out, values, longName(), shortName(),
+                       mResult, mOp1, mOp2);
+    }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        v[0] = STANDARD_TYPE_BOOL;
+        return InstructionSignature(shortName(), v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        return new
+            BoolNativeLess(static_cast<RegisterRef<bool>*> (sig[0]),
+                           static_cast<RegisterRef<TMPLT>*> (sig[1]),
+                           static_cast<RegisterRef<TMPLT>*> (sig[2]),
+                           (sig[1])->type());
     }
 };
 
@@ -239,10 +339,30 @@ public:
         }
     }
 
-    const char * longName() const { return "BoolNativeLessEqual"; }
-    const char * shortName() const { return "<="; }
-    void describe(string &out, bool values) const {
-        describeHelper(out, values, longName(), shortName(), mResult, mOp1, mOp2);
+    static const char * longName() { return "BoolNativeLessEqual"; }
+    static const char * shortName() { return "LE"; }
+    static int numArgs() { return 3; }
+    void describe(string& out, bool values) const {
+        describeHelper(out, values, longName(), shortName(),
+                       mResult, mOp1, mOp2);
+    }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        v[0] = STANDARD_TYPE_BOOL;
+        return InstructionSignature(shortName(), v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        return new
+            BoolNativeLessEqual(static_cast<RegisterRef<bool>*> (sig[0]),
+                                static_cast<RegisterRef<TMPLT>*> (sig[1]),
+                                static_cast<RegisterRef<TMPLT>*> (sig[2]),
+                                (sig[1])->type());
     }
 };
 
@@ -268,10 +388,28 @@ public:
         }
     }
 
-    const char * longName() const { return "BoolNativeIsNull"; }
-    const char * shortName() const { return "NULL"; }
-    void describe(string &out, bool values) const {
-        describeHelper(out, values, longName(), shortName(), mResult, mOp1, mOp2);
+    static const char * longName() { return "BoolNativeIsNull"; }
+    static const char * shortName() { return "ISNULL"; }
+    static int numArgs() { return 2; }
+    void describe(string& out, bool values) const {
+        describeHelper(out, values, longName(), shortName(),
+                       mResult, mOp1, mOp2);
+    }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        v[0] = STANDARD_TYPE_BOOL;
+        return InstructionSignature(shortName(), v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        return new BoolNativeIsNull(static_cast<RegisterRef<bool>*> (sig[0]),
+                                    static_cast<RegisterRef<TMPLT>*> (sig[1]),
+                                    (sig[1])->type());
     }
 };
 
@@ -297,13 +435,75 @@ public:
         }
     }
 
-    const char * longName() const { return "BoolNativeIsNotNull"; }
-    const char * shortName() const { return "NOTNULL"; }
-    void describe(string &out, bool values) const {
-        describeHelper(out, values, longName(), shortName(), mResult, mOp1, mOp2);
+    static const char * longName() { return "BoolNativeIsNotNull"; }
+    static const char * shortName() { return "ISNOTNULL"; }
+    static int numArgs() { return 2; }
+    void describe(string& out, bool values) const {
+        describeHelper(out, values, longName(), shortName(),
+                       mResult, mOp1, mOp2);
+    }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        v[0] = STANDARD_TYPE_BOOL;
+        return InstructionSignature(shortName(), v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        return new
+            BoolNativeIsNotNull(static_cast<RegisterRef<bool>*> (sig[0]),
+                                static_cast<RegisterRef<TMPLT>*> (sig[1]),
+                                (sig[1])->type());
     }
 };
 
+class BoolNativeInstructionRegister : InstructionRegister {
+
+    // TODO: Refactor registerTypes to class InstructionRegister
+    template < template <typename> class INSTCLASS2 >
+    static void
+    registerTypes(vector<StandardTypeDescriptorOrdinal> const &t)
+    {
+        for (uint i = 0; i < t.size(); i++) {
+            StandardTypeDescriptorOrdinal type = t[i];
+            // Type <char> below is a placeholder and is ignored.
+            InstructionSignature sig = INSTCLASS2<char>::signature(type);
+            switch(type) {
+#define Fennel_InstructionRegisterSwitch_NativeNotBool 1
+#include "fennel/calc/InstructionRegisterSwitch.h"
+            default:
+                throw std::logic_error("Default InstructionRegister");
+            }
+        }
+    }
+
+public:
+    static void
+    registerInstructions()
+    {
+        vector<StandardTypeDescriptorOrdinal> t;
+        t = InstructionSignature::typeVector
+            (StandardTypeDescriptor::isNativeNotBool);
+
+        // Have to do full fennel:: qualification of template
+        // arguments below to prevent template argument 'TMPLT', of
+        // this encapsulating class, from perverting NativeAdd into
+        // NativeAdd<TMPLT> or something like
+        // that. Anyway. Fennel::NativeAdd works just fine.
+        registerTypes<fennel::BoolNativeEqual>(t);
+        registerTypes<fennel::BoolNativeNotEqual>(t);
+        registerTypes<fennel::BoolNativeGreater>(t);
+        registerTypes<fennel::BoolNativeGreaterEqual>(t);
+        registerTypes<fennel::BoolNativeLess>(t);
+        registerTypes<fennel::BoolNativeLessEqual>(t);
+        registerTypes<fennel::BoolNativeIsNull>(t);
+        registerTypes<fennel::BoolNativeIsNotNull>(t);
+    }
+};
 
 FENNEL_END_NAMESPACE
 

@@ -3,6 +3,9 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set schema sales;
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- force usage of Fennel calculator
+0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- simple key
 0: jdbc:farrago:> select distinct gender from emps order by 1;
 +---------+

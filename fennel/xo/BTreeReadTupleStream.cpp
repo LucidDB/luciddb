@@ -39,6 +39,19 @@ void BTreeReadTupleStream::prepare(BTreeReadTupleStreamParams const &params)
     tupleData.compute(outputDesc);
 }
 
+void BTreeReadTupleStream::getResourceRequirements(
+    ExecutionStreamResourceQuantity &minQuantity,
+    ExecutionStreamResourceQuantity &optQuantity)
+{
+    ExecutionStream::getResourceRequirements(minQuantity,optQuantity);
+    
+    // one page for BTreeReader
+    minQuantity.nCachePages += 1;
+    
+    // TODO:  use opt to govern prefetch and come up with a good formula
+    optQuantity = minQuantity;
+}
+
 TupleDescriptor const &BTreeReadTupleStream::getOutputDesc() const
 {
     return outputDesc;

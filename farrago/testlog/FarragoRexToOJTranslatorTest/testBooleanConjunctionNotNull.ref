@@ -1,1 +1,1 @@
-return EMPNO == EMPID && EMPNO == DEPTNO;
+return ID$0$EMPNO == ID$5$EMPID && ID$0$EMPNO == ID$2$DEPTNO;

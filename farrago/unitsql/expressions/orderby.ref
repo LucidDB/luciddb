@@ -29,14 +29,13 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- ORDER BY an MDR table
 0: jdbc:farrago:> select "name" from sys_cwm."Relational"."Table" order by 1;
-+------------+
-|    name    |
-+------------+
-| DATETIME1  |
-| DEPTS      |
-| EMPS       |
-| TEMPS      |
-+------------+
++--------+
+|  name  |
++--------+
+| DEPTS  |
+| EMPS   |
+| TEMPS  |
++--------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- make sure UNION takes precedence over ORDER BY
 0: jdbc:farrago:> select name from sales.depts 

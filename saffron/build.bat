@@ -13,7 +13,6 @@
 
 @rem The following 3 components are optional; uncomment them if you have them.
 @rem set TOMCAT_HOME=%HOME%jakarta-tomcat-4.1.24
-@rem set DYNAMICJAVA_HOME=%HOME%DynamicJava-1.1.4
 @rem set WEBLOGIC_HOME=%HOME%bea/wlserver6.1
 
 @set CLASSPATH=%JAVACC_HOME%\bin\lib\javacc.jar;%SRCROOT%\classes;%SRCROOT%\lib\boot.jar

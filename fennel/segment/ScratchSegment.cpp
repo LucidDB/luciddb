@@ -181,6 +181,13 @@ uint ScratchSegment::getMaxLockedPages()
     }
 }
 
+void ScratchSegment::setMaxLockedPages(uint nPages)
+{
+    StrictMutexGuard mutexGuard(mutex);
+    assert(nPages >= pages.size());
+    nPagesMax = nPages;
+}
+
 FENNEL_END_CPPFILE("$Id$");
 
 // End ScratchSegment.cpp

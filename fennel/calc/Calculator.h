@@ -38,10 +38,9 @@ FENNEL_BEGIN_NAMESPACE
 class Instruction;
 class TupleData;
 
-typedef long TProgramCounter;
-
 FENNEL_END_NAMESPACE
 
+#include "fennel/calc/CalcTypedefs.h"
 #include "fennel/calc/CalcMessage.h"
 #include "fennel/calc/RegisterReference.h"
 #include "fennel/common/TraceSource.h"
@@ -243,7 +242,6 @@ private:
     void init(int codeSize, int literalSize, int inputSize,
               int outputSize, int localSize, int statusSize);
 };
-
 
 FENNEL_END_NAMESPACE
 

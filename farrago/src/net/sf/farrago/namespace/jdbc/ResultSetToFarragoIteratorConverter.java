@@ -146,7 +146,7 @@ class ResultSetToFarragoIteratorConverter extends ConverterRel
             farragoImplementor.translateAssignment(
                 this,
                 field.getType(),
-                new FieldAccess(varTuple,field.getName()),
+                new FieldAccess(varTuple, Util.toJavaId(field.getName(), i)),
                 rhs,
                 methodBody,
                 memberList);

@@ -83,8 +83,35 @@ public class FarragoResultSetMetaData extends FarragoJdbcMetaDataImpl
     // implement ResultSetMetaData
     public int getColumnDisplaySize(int column) throws SQLException
     {
-        // TODO:  adjust for numeric/date formatting, etc.
-        return getPrecision(column);
+        int precision = getPrecision(column);
+        int type = getColumnType(column);
+        switch(type) {
+        case Types.BOOLEAN:
+            // 5 for max(strlen("true"),strlen("false"))
+            return 5;
+        case Types.DATE:
+            // 10 for strlen("yyyy-mm-dd")
+            return 10;
+        case Types.TIME:
+            if (precision == 0) {
+                // 8 for strlen("hh:mm:ss")
+                return 8;
+            } else {
+                // 1 extra for decimal point
+                return 9 + precision;
+            }
+        case Types.TIMESTAMP:
+            if (precision == 0) {
+                // 19 for strlen("yyyy-mm-dd hh:mm:ss")
+                return 19;
+            } else {
+                // 1 extra for decimal point
+                return 20 + precision;
+            }
+        default:
+            // TODO:  adjust for numeric formatting, etc.
+            return precision;
+        }
     }
 
     // implement ResultSetMetaData

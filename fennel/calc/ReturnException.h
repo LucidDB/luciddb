@@ -24,9 +24,9 @@
 #ifndef Fennel_ReturnException_Included
 #define Fennel_ReturnException_Included
 
-FENNEL_BEGIN_NAMESPACE
+#include "fennel/calc/CalcTypedefs.h"
 
-#include "fennel/calc/Calculator.h"
+FENNEL_BEGIN_NAMESPACE
 
 class ReturnException 
 {

@@ -74,7 +74,7 @@ class AddProjectToQueryRule extends VolcanoRule
                 oldQuery.dataSource);
         SqlWriter writer = new SqlWriter(query.dialect,null);
         writer.pushQuery(query.sql);
-        SqlNodeList list = new SqlNodeList();
+        SqlNodeList list = new SqlNodeList(null);
         for (int i = 0; i < project.getChildExps().length; i++) {
             RexNode exp = project.getChildExps()[i];
             list.add(project.getCluster().rexToSqlTranslator.translate(writer,exp));

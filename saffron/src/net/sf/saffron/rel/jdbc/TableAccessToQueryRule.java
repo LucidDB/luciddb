@@ -70,7 +70,7 @@ class TableAccessToQueryRule extends VolcanoRule
                 schema.getSqlDialect(),
                 null,
                 schema.getDataSource(connection));
-        query.sql.addFrom(new SqlIdentifier(new String [] { table.getName() }));
+        query.sql.addFrom(new SqlIdentifier(new String [] { table.getName() }, null));
         call.transformTo(query);
     }
 }

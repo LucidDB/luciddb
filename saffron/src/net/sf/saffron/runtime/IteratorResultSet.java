@@ -43,7 +43,7 @@ import java.util.*;
 /**
  * A <code>IteratorResultSet</code> is an adapter which converts a {@link
  * java.util.Iterator} into a {@link java.sql.ResultSet}.
- * 
+ *
  * <p>
  * See also its converse adapter, {@link ResultSetIterator}
  * </p>
@@ -52,31 +52,57 @@ public class IteratorResultSet implements ResultSet
 {
     //~ Instance fields -------------------------------------------------------
 
-    private ColumnGetter columnGetter;
-    private Iterator iterator;
+    private final ColumnGetter columnGetter;
+    private final Iterator iterator;
     private Object current;
-    private String [] columnNames;
+    private final String [] columnNames;
     private int row; // 0-based
+    private TimeoutQueueIterator timeoutIter;
 
     protected boolean wasNull;
-    
+    private long timeoutMillis;
+
     //~ Constructors ----------------------------------------------------------
 
     /**
      * Creates a result set based upon an iterator. The column-getter accesses
      * columns based upon their ordinal.
+     *
+     * @pre iterator != null
      */
     public IteratorResultSet(Iterator iterator,ColumnGetter columnGetter)
     {
+        Util.pre(iterator != null, "iterator != null");
         this.iterator = iterator;
-        if (columnNames == null) {
-            columnNames = new String[0];
-        }
-        this.columnNames = columnGetter.getColumnNames();
+        String [] columnNames = columnGetter.getColumnNames();
+        this.columnNames = columnNames == null ? Util.emptyStringArray :
+                columnNames;
         this.columnGetter = columnGetter;
     }
 
     //~ Methods ---------------------------------------------------------------
+
+    /**
+     * Sets the timeout that this IteratorResultSet will wait for a row from
+     * the underlying iterator.
+     *
+     * @param timeoutMillis Timeout in milliseconds. Must be greater than zero.
+     * @pre timeoutMillis > 0
+     * @pre this.timeoutMillis == 0
+     */
+    public void setTimeout(long timeoutMillis)
+    {
+        Util.pre(timeoutMillis > 0, "timeoutMillis > 0");
+        Util.pre(this.timeoutMillis == 0, "this.timeoutMillis == 0");
+        assert timeoutIter == null;
+
+        // we create a new semaphore for each executeQuery call
+        // and then pass ownership to the result set returned
+        // the query timeout used is the last set via JDBC.
+        this.timeoutMillis = timeoutMillis;
+        timeoutIter = new TimeoutQueueIterator(iterator);
+        timeoutIter.start();
+    }
 
     public boolean isAfterLast() throws SQLException
     {
@@ -474,6 +500,11 @@ public class IteratorResultSet implements ResultSet
 
     public void close() throws SQLException
     {
+        if (timeoutIter != null) {
+            final long noTimeout = 0;
+            timeoutIter.close(noTimeout);
+            timeoutIter = null;
+        }
     }
 
     public void deleteRow() throws SQLException
@@ -516,16 +547,40 @@ public class IteratorResultSet implements ResultSet
     // the remaining methods implement ResultSet
     public boolean next() throws SQLException
     {
-        try {
-            if (iterator.hasNext()) {
-                this.current = iterator.next();
-                this.row++;
-                return true;
-            } else {
-                return false;
+        if (timeoutIter != null) {
+            try {
+                long endTime = System.currentTimeMillis() + timeoutMillis;
+                if (timeoutIter.hasNext(timeoutMillis)) {
+                    long remainingTimeout = endTime -
+                            System.currentTimeMillis();
+                    if (remainingTimeout <= 0) {
+                        // The call to hasNext() took longer than we
+                        // expected -- we're out of time.
+                        throw new SqlTimeoutException();
+                    }
+                    this.current = timeoutIter.next(remainingTimeout);
+                    this.row++;
+                    return true;
+                } else {
+                    return false;
+                }
+            } catch (QueueIterator.TimeoutException e) {
+                throw new SqlTimeoutException();
+            } catch (Throwable e) {
+                throw newFetchError(e);
             }
-        } catch (Throwable e) {
-            throw newFetchError(e);
+        } else {
+            try {
+                if (iterator.hasNext()) {
+                    this.current = iterator.next();
+                    this.row++;
+                    return true;
+                } else {
+                    return false;
+                }
+            } catch (Throwable e) {
+                throw newFetchError(e);
+            }
         }
     }
 
@@ -968,6 +1023,9 @@ public class IteratorResultSet implements ResultSet
         if (o == null) {
             wasNull = true;
             return null;
+        } else if (o instanceof byte []) {
+            // convert to hex string
+            return Util.toStringFromByteArray((byte []) o,16);
         } else {
             wasNull = false;
             return o.toString();
@@ -1243,6 +1301,12 @@ public class IteratorResultSet implements ResultSet
             }
         }
     }
+
+    /**
+     * Indicates that an operation timed out. This is not an error; you can
+     * retry the operation.
+     */
+    public static class SqlTimeoutException extends SQLException{};
 }
 
 

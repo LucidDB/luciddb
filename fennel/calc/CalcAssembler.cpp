@@ -29,13 +29,6 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 using namespace std;
 using namespace boost;
 
-InstructionFactory::StringFactoryMap InstructionFactory::nativeInstructionMap;
-InstructionFactory::StringFactoryMap InstructionFactory::boolInstructionMap;
-InstructionFactory::StringFactoryMap InstructionFactory::pointerInstructionMap;
-BasicInstructionFactoryMap InstructionFactory::basicInstructionMap;
-JumpInstructionFactoryMap InstructionFactory::jumpInstructionMap;
-ExtendedInstructionFactoryMap InstructionFactory::extendedInstructionMap;
-
 CalcAssembler::~CalcAssembler()
 {
     for (uint i = RegisterReference::EFirstSet; i < RegisterReference::ELastSet; i++) {

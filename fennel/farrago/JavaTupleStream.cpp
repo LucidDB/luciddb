@@ -45,6 +45,18 @@ TupleDescriptor const &JavaTupleStream::getOutputDesc() const
     return outputTupleDesc;
 }
 
+void JavaTupleStream::getResourceRequirements(
+    ExecutionStreamResourceQuantity &minQuantity,
+    ExecutionStreamResourceQuantity &optQuantity)
+{
+    ExecutionStream::getResourceRequirements(minQuantity,optQuantity);
+
+    // one page for scratch buffer
+    minQuantity.nCachePages += 1;
+    
+    optQuantity = minQuantity;
+}
+
 void JavaTupleStream::open(bool restart)
 {
     // TODO: pass restart request on to Java!  Requires support up in Farrago

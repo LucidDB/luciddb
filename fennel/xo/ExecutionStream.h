@@ -26,6 +26,7 @@
 #include "fennel/tuple/TupleDescriptor.h"
 #include "fennel/tuple/TupleFormat.h"
 #include "fennel/xo/ExecutionStreamGraph.h"
+#include "fennel/xo/ExecutionStreamResourceQuantity.h"
 #include "fennel/segment/SegmentAccessor.h"
 
 FENNEL_BEGIN_NAMESPACE
@@ -92,6 +93,21 @@ protected:
      * Name of stream, as known by optimizer
      */
     std::string name;
+
+    /**
+     * Resource quantities currently allocated to this stream.
+     */
+    ExecutionStreamResourceQuantity resourceAllocation;
+
+    /**
+     * CacheAccessor used for quota tracking.
+     */
+    SharedCacheAccessor pQuotaAccessor;
+
+    /**
+     * CacheAccessor used for scratch page quota tracking.
+     */
+    SharedCacheAccessor pScratchQuotaAccessor;
     
     /**
      * Constructor.  Note that derived class constructors must never take any
@@ -162,6 +178,28 @@ public:
      * used to prepare this stream
      */
     virtual void prepare(ExecutionStreamParams const &params);
+
+    /**
+     * Determine resource requirements for this stream.  Default implementation
+     * declares zero resource requirements.
+     *
+     * @param minQuantity receives the minimum resource quantity
+     * needed by this stream in order to execute
+     *
+     * @param optQuantity receives the resource quantity
+     * needed by this stream in order to execute optimally
+     */
+    virtual void getResourceRequirements(
+        ExecutionStreamResourceQuantity &minQuantity,
+        ExecutionStreamResourceQuantity &optQuantity);
+
+    /**
+     * Set current resource allocation for this stream.
+     *
+     * @param quantity allocated resource quantity
+     */
+    virtual void setResourceAllocation(
+        ExecutionStreamResourceQuantity const &quantity);
         
     /**
      * Open this stream, acquiring any resources needed in order to be able to

@@ -20,9 +20,9 @@
 #ifndef Fennel_IntegralNativeInstruction_Included
 #define Fennel_IntegralNativeInstruction_Included
 
-FENNEL_BEGIN_NAMESPACE
-
 #include "fennel/calc/NativeInstruction.h"
+
+FENNEL_BEGIN_NAMESPACE
 
 /**
  * Template for native integral (int, long, enum, etc.) types only
@@ -116,10 +116,28 @@ public:
         }
     }
 
-    const char * longName() const { return "IntegralNativeMod"; }
-    const char * shortName() const { return "MOD"; }
-    void describe(string &out, bool values) const {
-        describeHelper(out, values, longName(), shortName(), mResult, mOp1, mOp2);
+    static const char * longName() { return "IntegralNativeMod"; }
+    static const char * shortName() { return "MOD"; }
+    static int numArgs() { return 3; }
+    void describe(string& out, bool values) const {
+        describeHelper(out, values, longName(), shortName(),
+                       mResult, mOp1, mOp2);
+    }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        return InstructionSignature(shortName(), v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        return new IntegralNativeMod(static_cast<RegisterRef<TMPLT>*> (sig[0]),
+                                     static_cast<RegisterRef<TMPLT>*> (sig[1]),
+                                     static_cast<RegisterRef<TMPLT>*> (sig[2]),
+                                     (sig[0])->type());
     }
 };
 
@@ -147,10 +165,28 @@ public:
         pc++;
     }
 
-    const char * longName() const { return "IntegralNativeAnd"; }
-    const char * shortName() const { return "&&"; }
-    void describe(string &out, bool values) const {
-        describeHelper(out, values, longName(), shortName(), mResult, mOp1, mOp2);
+    static const char * longName() { return "IntegralNativeAnd"; }
+    static const char * shortName() { return "AND"; }
+    static int numArgs() { return 3; }
+    void describe(string& out, bool values) const {
+        describeHelper(out, values, longName(), shortName(),
+                       mResult, mOp1, mOp2);
+    }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        return InstructionSignature(shortName(), v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        return new IntegralNativeAnd(static_cast<RegisterRef<TMPLT>*> (sig[0]),
+                                     static_cast<RegisterRef<TMPLT>*> (sig[1]),
+                                     static_cast<RegisterRef<TMPLT>*> (sig[2]),
+                                     (sig[0])->type());
     }
 };
 
@@ -178,10 +214,28 @@ public:
         }
     }
 
-    const char * longName() const { return "IntegralNativeOr"; }
-    const char * shortName() const { return "||"; }
-    void describe(string &out, bool values) const {
-        describeHelper(out, values, longName(), shortName(), mResult, mOp1, mOp2);
+    static const char * longName() { return "IntegralNativeOr"; }
+    static const char * shortName() { return "OR"; }
+    static int numArgs() { return 3; }
+    void describe(string& out, bool values) const {
+        describeHelper(out, values, longName(), shortName(),
+                       mResult, mOp1, mOp2);
+    }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        return InstructionSignature(shortName(), v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        return new IntegralNativeOr(static_cast<RegisterRef<TMPLT>*> (sig[0]),
+                                     static_cast<RegisterRef<TMPLT>*> (sig[1]),
+                                     static_cast<RegisterRef<TMPLT>*> (sig[2]),
+                                     (sig[0])->type());
     }
 };
 
@@ -209,10 +263,29 @@ public:
         }
     }
 
-    const char * longName() const { return "IntegralNativeShiftLeft"; }
-    const char * shortName() const { return "<<"; }
-    void describe(string &out, bool values) const {
-        describeHelper(out, values, longName(), shortName(), mResult, mOp1, mOp2);
+    static const char * longName() { return "IntegralNativeShiftLeft"; }
+    static const char * shortName() { return "SHFL"; }
+    static int numArgs() { return 3; }
+    void describe(string& out, bool values) const {
+        describeHelper(out, values, longName(), shortName(),
+                       mResult, mOp1, mOp2);
+    }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        return InstructionSignature(shortName(), v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        return new 
+            IntegralNativeShiftLeft(static_cast<RegisterRef<TMPLT>*> (sig[0]),
+                                    static_cast<RegisterRef<TMPLT>*> (sig[1]),
+                                    static_cast<RegisterRef<TMPLT>*> (sig[2]),
+                                    (sig[0])->type());
     }
 };
 
@@ -240,12 +313,72 @@ public:
         }
     }
 
-    const char * longName() const { return "IntegralNativeShiftRight"; }
-    const char * shortName() const { return ">>"; }
-    void describe(string &out, bool values) const {
-        describeHelper(out, values, longName(), shortName(), mResult, mOp1, mOp2);
+    static const char * longName() { return "IntegralNativeShiftRight"; }
+    static const char * shortName() { return "SHFR"; }
+    static int numArgs() { return 3; }
+    void describe(string& out, bool values) const {
+        describeHelper(out, values, longName(), shortName(),
+                       mResult, mOp1, mOp2);
+    }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        return InstructionSignature(shortName(), v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        return new
+            IntegralNativeShiftRight(static_cast<RegisterRef<TMPLT>*> (sig[0]),
+                                     static_cast<RegisterRef<TMPLT>*> (sig[1]),
+                                     static_cast<RegisterRef<TMPLT>*> (sig[2]),
+                                     (sig[0])->type());
     }
 };
+
+class IntegralNativeInstructionRegister : InstructionRegister {
+
+    // TODO: Refactor registerTypes to class InstructionRegister
+    template < template <typename> class INSTCLASS2 >
+    static void
+    registerTypes(vector<StandardTypeDescriptorOrdinal> const &t) {
+
+        for (uint i = 0; i < t.size(); i++) {
+            StandardTypeDescriptorOrdinal type = t[i];
+            // Type <char> below is a placeholder and is ignored.
+            InstructionSignature sig = INSTCLASS2<char>::signature(type);
+            switch(type) {
+#define Fennel_InstructionRegisterSwitch_Integral 1
+#include "fennel/calc/InstructionRegisterSwitch.h"
+            default:
+                throw std::logic_error("Default InstructionRegister");
+            }
+        }
+    }
+
+public:
+    static void
+    registerInstructions()
+    {
+        vector<StandardTypeDescriptorOrdinal> t;
+        t = InstructionSignature::typeVector(StandardTypeDescriptor::isExact);
+
+        // Have to do full fennel:: qualification of template
+        // arguments below to prevent template argument 'TMPLT', of
+        // this encapsulating class, from perverting NativeAdd into
+        // NativeAdd<TMPLT> or something like
+        // that. Anyway. Fennel::NativeAdd works just fine.
+        registerTypes<fennel::IntegralNativeMod>(t);
+        registerTypes<fennel::IntegralNativeAnd>(t);
+        registerTypes<fennel::IntegralNativeOr>(t);
+        registerTypes<fennel::IntegralNativeShiftLeft>(t);
+        registerTypes<fennel::IntegralNativeShiftRight>(t);
+    }
+};
+
 
 FENNEL_END_NAMESPACE
 

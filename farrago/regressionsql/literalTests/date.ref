@@ -1,0 +1,432 @@
+0: jdbc:farrago:> -- $Id: //open/farrago/regressionsql/literalTests/date.sql#3 $ 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test date literal
+0: jdbc:farrago:> 
+0: jdbc:farrago:> SELECT date 'January 8, 1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal 'January 8, 1999' (state=,code=0)
+0: jdbc:farrago:> SELECT date '1999-01-08' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 1999-01-08  |
++-------------+
+0: jdbc:farrago:> SELECT date '1999-01-18' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 1999-01-18  |
++-------------+
+0: jdbc:farrago:> SELECT date '1/8/1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '1/8/1999' (state=,code=0)
+0: jdbc:farrago:> SELECT date '1/18/1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '1/18/1999' (state=,code=0)
+0: jdbc:farrago:> SELECT date '18/1/1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '18/1/1999' (state=,code=0)
+0: jdbc:farrago:> SELECT date '01/02/03' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '01/02/03' (state=,code=0)
+0: jdbc:farrago:> SELECT date '19990108' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '19990108' (state=,code=0)
+0: jdbc:farrago:> SELECT date '990108' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '990108' (state=,code=0)
+0: jdbc:farrago:> SELECT date '1999.008' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '1999.008' (state=,code=0)
+0: jdbc:farrago:> SELECT date 'J2451187' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal 'J2451187' (state=,code=0)
+0: jdbc:farrago:> SELECT date 'January 8, 99 BC' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal 'January 8, 99 BC' (state=,code=0)
+0: jdbc:farrago:> SELECT date '99-Jan-08' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '99-Jan-08' (state=,code=0)
+0: jdbc:farrago:> SELECT date '1999-Jan-08' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '1999-Jan-08' (state=,code=0)
+0: jdbc:farrago:> SELECT date '08-Jan-99' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '08-Jan-99' (state=,code=0)
+0: jdbc:farrago:> SELECT date '08-Jan-1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '08-Jan-1999' (state=,code=0)
+0: jdbc:farrago:> SELECT date 'Jan-08-99' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal 'Jan-08-99' (state=,code=0)
+0: jdbc:farrago:> SELECT date 'Jan-08-1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal 'Jan-08-1999' (state=,code=0)
+0: jdbc:farrago:> SELECT date '99-08-Jan' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '99-08-Jan' (state=,code=0)
+0: jdbc:farrago:> SELECT date '1999-08-Jan' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '1999-08-Jan' (state=,code=0)
+0: jdbc:farrago:> SELECT date '99 Jan 08' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '99 Jan 08' (state=,code=0)
+0: jdbc:farrago:> SELECT date '1999 Jan 08' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '1999 Jan 08' (state=,code=0)
+0: jdbc:farrago:> SELECT date '08 Jan 99' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '08 Jan 99' (state=,code=0)
+0: jdbc:farrago:> SELECT date '08 Jan 1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '08 Jan 1999' (state=,code=0)
+0: jdbc:farrago:> SELECT date 'Jan 08 99' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal 'Jan 08 99' (state=,code=0)
+0: jdbc:farrago:> SELECT date 'Jan 08 1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal 'Jan 08 1999' (state=,code=0)
+0: jdbc:farrago:> SELECT date '99 08 Jan' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '99 08 Jan' (state=,code=0)
+0: jdbc:farrago:> SELECT date '1999 08 Jan' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '1999 08 Jan' (state=,code=0)
+0: jdbc:farrago:> SELECT date '99-01-08' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 0099-01-08  |
++-------------+
+0: jdbc:farrago:> SELECT date '1999-01-08' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 1999-01-08  |
++-------------+
+0: jdbc:farrago:> SELECT date '08-01-99' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 0008-04-08  |
++-------------+
+0: jdbc:farrago:> SELECT date '08-01-1999' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 0013-06-21  |
++-------------+
+0: jdbc:farrago:> SELECT date '01-08-99' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 0001-11-07  |
++-------------+
+0: jdbc:farrago:> SELECT date '01-08-1999' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 0007-01-20  |
++-------------+
+0: jdbc:farrago:> SELECT date '99-08-01' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 0099-08-01  |
++-------------+
+0: jdbc:farrago:> SELECT date '1999-08-01' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 1999-08-01  |
++-------------+
+0: jdbc:farrago:> SELECT date '99 01 08' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '99 01 08' (state=,code=0)
+0: jdbc:farrago:> SELECT date '1999 01 08' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '1999 01 08' (state=,code=0)
+0: jdbc:farrago:> SELECT date '08 01 99' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '08 01 99' (state=,code=0)
+0: jdbc:farrago:> SELECT date '08 01 1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '08 01 1999' (state=,code=0)
+0: jdbc:farrago:> SELECT date '01 08 99' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '01 08 99' (state=,code=0)
+0: jdbc:farrago:> SELECT date '01 08 1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '01 08 1999' (state=,code=0)
+0: jdbc:farrago:> SELECT date '99 08 01' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '99 08 01' (state=,code=0)
+0: jdbc:farrago:> SELECT date '1999 08 01' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '1999 08 01' (state=,code=0)
+0: jdbc:farrago:> SELECT date 'January 8, 1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal 'January 8, 1999' (state=,code=0)
+0: jdbc:farrago:> SELECT date '1999-01-08' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 1999-01-08  |
++-------------+
+0: jdbc:farrago:> SELECT date '1999-01-18' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 1999-01-18  |
++-------------+
+0: jdbc:farrago:> SELECT date '1/8/1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '1/8/1999' (state=,code=0)
+0: jdbc:farrago:> SELECT date '1/18/1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '1/18/1999' (state=,code=0)
+0: jdbc:farrago:> SELECT date '18/1/1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '18/1/1999' (state=,code=0)
+0: jdbc:farrago:> SELECT date '01/02/03' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '01/02/03' (state=,code=0)
+0: jdbc:farrago:> SELECT date '19990108' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '19990108' (state=,code=0)
+0: jdbc:farrago:> SELECT date '990108' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '990108' (state=,code=0)
+0: jdbc:farrago:> SELECT date '1999.008' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '1999.008' (state=,code=0)
+0: jdbc:farrago:> SELECT date 'J2451187' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal 'J2451187' (state=,code=0)
+0: jdbc:farrago:> SELECT date 'January 8, 99 BC' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal 'January 8, 99 BC' (state=,code=0)
+0: jdbc:farrago:> SELECT date '99-Jan-08' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '99-Jan-08' (state=,code=0)
+0: jdbc:farrago:> SELECT date '1999-Jan-08' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '1999-Jan-08' (state=,code=0)
+0: jdbc:farrago:> SELECT date '08-Jan-99' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '08-Jan-99' (state=,code=0)
+0: jdbc:farrago:> SELECT date '08-Jan-1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '08-Jan-1999' (state=,code=0)
+0: jdbc:farrago:> SELECT date 'Jan-08-99' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal 'Jan-08-99' (state=,code=0)
+0: jdbc:farrago:> SELECT date 'Jan-08-1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal 'Jan-08-1999' (state=,code=0)
+0: jdbc:farrago:> SELECT date '99-08-Jan' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '99-08-Jan' (state=,code=0)
+0: jdbc:farrago:> SELECT date '1999-08-Jan' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '1999-08-Jan' (state=,code=0)
+0: jdbc:farrago:> SELECT date '99 Jan 08' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '99 Jan 08' (state=,code=0)
+0: jdbc:farrago:> SELECT date '1999 Jan 08' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '1999 Jan 08' (state=,code=0)
+0: jdbc:farrago:> SELECT date '08 Jan 99' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '08 Jan 99' (state=,code=0)
+0: jdbc:farrago:> SELECT date '08 Jan 1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '08 Jan 1999' (state=,code=0)
+0: jdbc:farrago:> SELECT date 'Jan 08 99' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal 'Jan 08 99' (state=,code=0)
+0: jdbc:farrago:> SELECT date 'Jan 08 1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal 'Jan 08 1999' (state=,code=0)
+0: jdbc:farrago:> SELECT date '99 08 Jan' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '99 08 Jan' (state=,code=0)
+0: jdbc:farrago:> SELECT date '1999 08 Jan' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '1999 08 Jan' (state=,code=0)
+0: jdbc:farrago:> SELECT date '99-01-08' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 0099-01-08  |
++-------------+
+0: jdbc:farrago:> SELECT date '1999-01-08' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 1999-01-08  |
++-------------+
+0: jdbc:farrago:> SELECT date '08-01-99' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 0008-04-08  |
++-------------+
+0: jdbc:farrago:> SELECT date '08-01-1999' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 0013-06-21  |
++-------------+
+0: jdbc:farrago:> SELECT date '01-08-99' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 0001-11-07  |
++-------------+
+0: jdbc:farrago:> SELECT date '01-08-1999' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 0007-01-20  |
++-------------+
+0: jdbc:farrago:> SELECT date '99-08-01' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 0099-08-01  |
++-------------+
+0: jdbc:farrago:> SELECT date '1999-08-01' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 1999-08-01  |
++-------------+
+0: jdbc:farrago:> SELECT date '99 01 08' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '99 01 08' (state=,code=0)
+0: jdbc:farrago:> SELECT date '1999 01 08' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '1999 01 08' (state=,code=0)
+0: jdbc:farrago:> SELECT date '08 01 99' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '08 01 99' (state=,code=0)
+0: jdbc:farrago:> SELECT date '08 01 1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '08 01 1999' (state=,code=0)
+0: jdbc:farrago:> SELECT date '01 08 99' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '01 08 99' (state=,code=0)
+0: jdbc:farrago:> SELECT date '01 08 1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '01 08 1999' (state=,code=0)
+0: jdbc:farrago:> SELECT date '99 08 01' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '99 08 01' (state=,code=0)
+0: jdbc:farrago:> SELECT date '1999 08 01' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '1999 08 01' (state=,code=0)
+0: jdbc:farrago:> SELECT date 'January 8, 1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal 'January 8, 1999' (state=,code=0)
+0: jdbc:farrago:> SELECT date '1999-01-08' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 1999-01-08  |
++-------------+
+0: jdbc:farrago:> SELECT date '1999-01-18' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 1999-01-18  |
++-------------+
+0: jdbc:farrago:> SELECT date '1/8/1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '1/8/1999' (state=,code=0)
+0: jdbc:farrago:> SELECT date '1/18/1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '1/18/1999' (state=,code=0)
+0: jdbc:farrago:> SELECT date '18/1/1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '18/1/1999' (state=,code=0)
+0: jdbc:farrago:> SELECT date '01/02/03' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '01/02/03' (state=,code=0)
+0: jdbc:farrago:> SELECT date '19990108' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '19990108' (state=,code=0)
+0: jdbc:farrago:> SELECT date '990108' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '990108' (state=,code=0)
+0: jdbc:farrago:> SELECT date '1999.008' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '1999.008' (state=,code=0)
+0: jdbc:farrago:> SELECT date 'J2451187' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal 'J2451187' (state=,code=0)
+0: jdbc:farrago:> SELECT date 'January 8, 99 BC' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal 'January 8, 99 BC' (state=,code=0)
+0: jdbc:farrago:> SELECT date '99-Jan-08' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '99-Jan-08' (state=,code=0)
+0: jdbc:farrago:> SELECT date '1999-Jan-08' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '1999-Jan-08' (state=,code=0)
+0: jdbc:farrago:> SELECT date '08-Jan-99' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '08-Jan-99' (state=,code=0)
+0: jdbc:farrago:> SELECT date '08-Jan-1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '08-Jan-1999' (state=,code=0)
+0: jdbc:farrago:> SELECT date 'Jan-08-99' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal 'Jan-08-99' (state=,code=0)
+0: jdbc:farrago:> SELECT date 'Jan-08-1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal 'Jan-08-1999' (state=,code=0)
+0: jdbc:farrago:> SELECT date '99-08-Jan' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '99-08-Jan' (state=,code=0)
+0: jdbc:farrago:> SELECT date '1999-08-Jan' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '1999-08-Jan' (state=,code=0)
+0: jdbc:farrago:> SELECT date '99 Jan 08' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '99 Jan 08' (state=,code=0)
+0: jdbc:farrago:> SELECT date '1999 Jan 08' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '1999 Jan 08' (state=,code=0)
+0: jdbc:farrago:> SELECT date '08 Jan 99' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '08 Jan 99' (state=,code=0)
+0: jdbc:farrago:> SELECT date '08 Jan 1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '08 Jan 1999' (state=,code=0)
+0: jdbc:farrago:> SELECT date 'Jan 08 99' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal 'Jan 08 99' (state=,code=0)
+0: jdbc:farrago:> SELECT date 'Jan 08 1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal 'Jan 08 1999' (state=,code=0)
+0: jdbc:farrago:> SELECT date '99 08 Jan' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '99 08 Jan' (state=,code=0)
+0: jdbc:farrago:> SELECT date '1999 08 Jan' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '1999 08 Jan' (state=,code=0)
+0: jdbc:farrago:> SELECT date '99-01-08' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 0099-01-08  |
++-------------+
+0: jdbc:farrago:> SELECT date '1999-01-08' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 1999-01-08  |
++-------------+
+0: jdbc:farrago:> SELECT date '08-01-99' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 0008-04-08  |
++-------------+
+0: jdbc:farrago:> SELECT date '08-01-1999' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 0013-06-21  |
++-------------+
+0: jdbc:farrago:> SELECT date '01-08-99' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 0001-11-07  |
++-------------+
+0: jdbc:farrago:> SELECT date '01-08-1999' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 0007-01-20  |
++-------------+
+0: jdbc:farrago:> SELECT date '99-08-01' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 0099-08-01  |
++-------------+
+0: jdbc:farrago:> SELECT date '1999-08-01' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 1999-08-01  |
++-------------+
+0: jdbc:farrago:> SELECT date '99 01 08' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '99 01 08' (state=,code=0)
+0: jdbc:farrago:> SELECT date '1999 01 08' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '1999 01 08' (state=,code=0)
+0: jdbc:farrago:> SELECT date '08 01 99' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '08 01 99' (state=,code=0)
+0: jdbc:farrago:> SELECT date '08 01 1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '08 01 1999' (state=,code=0)
+0: jdbc:farrago:> SELECT date '01 08 99' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '01 08 99' (state=,code=0)
+0: jdbc:farrago:> SELECT date '01 08 1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '01 08 1999' (state=,code=0)
+0: jdbc:farrago:> SELECT date '99 08 01' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '99 08 01' (state=,code=0)
+0: jdbc:farrago:> SELECT date '1999 08 01' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal DATE literal '1999 08 01' (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test datatype
+0: jdbc:farrago:> create schema test;
+0: jdbc:farrago:> set schema test;
+0: jdbc:farrago:> create table t_date(date_col date not null primary key, date_col2 date);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- negative test
+0: jdbc:farrago:> insert into t_date values('string value',null);
+Error: Storage manager internal errror:  bad lexical cast: source type value could not be interpreted as target (state=,code=0)
+0: jdbc:farrago:> insert into t_date values(true,null);
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'BOOLEAN' to 'DATE_0' (state=,code=0)
+0: jdbc:farrago:> insert into t_date values(1234,null);
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'INTEGER' to 'DATE_0' (state=,code=0)
+0: jdbc:farrago:> insert into t_date values(10e400,null);
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'DOUBLE' to 'DATE_0' (state=,code=0)
+0: jdbc:farrago:> insert into t_date values(-1.2345678901234e-200,null);
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'DOUBLE' to 'DATE_0' (state=,code=0)
+0: jdbc:farrago:> insert into t_date values(-1234.03,null);
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'DOUBLE' to 'DATE_0' (state=,code=0)
+0: jdbc:farrago:> insert into t_date values(x'ff',null);
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'VARBINARY_1' to 'DATE_0' (state=,code=0)
+0: jdbc:farrago:> insert into t_date values(b'10',null);
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'BIT_2' to 'DATE_0' (state=,code=0)
+0: jdbc:farrago:> insert into t_date values(time '12:01:01',null);
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'TIME_0' to 'DATE_0' (state=,code=0)
+0: jdbc:farrago:> insert into t_date values(timestamp '2004-12-01 12:01:01',null);
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'TIMESTAMP_0' to 'DATE_0' (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- insert the right values
+0: jdbc:farrago:> insert into t_date values(date '1999-01-08',null);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- null value test
+0: jdbc:farrago:> --insert into t_date values(null, null); 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from t_date;
++-----------+-------------+
+| DATE_COL  |  DATE_COL2  |
++-----------+-------------+
+|           | 1970-01-01  |
++-----------+-------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> drop table t_date;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !quit

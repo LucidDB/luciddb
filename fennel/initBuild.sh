@@ -63,6 +63,7 @@ fi
 
 # Configure Fennel
 cd "$SAVE_PWD"
+rm -rf autom4te.cache
 autoreconf --force --install
 ./configure --with-boost=`pwd`/../thirdparty/boost \
     --with-stlport=`pwd`/../thirdparty/stlport \
@@ -83,4 +84,5 @@ fi
 
 # Build Fennel itself
 cd ..
+make clean
 make

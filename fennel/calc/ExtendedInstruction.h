@@ -28,6 +28,7 @@
 #define Fennel_ExtendedInstruction_Included
 
 #include "fennel/calc/Instruction.h"
+#include "fennel/calc/Calculator.h"
 #include "fennel/calc/ExtendedInstructionContext.h"
 
 #include <boost/scoped_ptr.hpp>
@@ -217,7 +218,7 @@ public:
     }
 
     // implement Instruction
-    void describe(string &out, bool values) const {
+    void describe(string& out, bool values) const {
         out = "CALL '";
         out += _def.getSignature();
         out += "'";
@@ -278,7 +279,7 @@ public:
     }
 
     // implement Instruction
-    void describe(string &out, bool values) const {
+    void describe(string& out, bool values) const {
         out = "CALL '";
         out += _def.getSignature();
         out += "'";
@@ -346,7 +347,7 @@ public:
     }
 
     // implement Instruction
-    void describe(string &out, bool values) const {
+    void describe(string& out, bool values) const {
         out = "CALL '";
         out += _def.getSignature();
         out += "' ";
@@ -415,7 +416,7 @@ public:
     }
 
     // implement Instruction
-    void describe(string &out, bool values) const {
+    void describe(string& out, bool values) const {
         out = "CALL '";
         out += _def.getSignature();
         out += "' ";
@@ -492,7 +493,7 @@ public:
     }
 
     // implement Instruction
-    void describe(string &out, bool values) const {
+    void describe(string& out, bool values) const {
         out = "CALL '";
         out += _def.getSignature();
         out += "' ";
@@ -570,7 +571,7 @@ public:
     }
 
     // implement Instruction
-    void describe(string &out, bool values) const {
+    void describe(string& out, bool values) const {
         out = "CALL '";
         out += _def.getSignature();
         out += "' ";
@@ -655,7 +656,7 @@ public:
     }
 
     // implement Instruction
-    void describe(string &out, bool values) const {
+    void describe(string& out, bool values) const {
         out = "CALL '";
         out += _def.getSignature();
         out += "' ";
@@ -742,7 +743,7 @@ public:
     }
 
     // implement Instruction
-    void describe(string &out, bool values) const {
+    void describe(string& out, bool values) const {
         out = "CALL '";
         out += _def.getSignature();
         out += "' ";
@@ -834,7 +835,7 @@ public:
     }
 
     // implement Instruction
-    void describe(string &out, bool values) const {
+    void describe(string& out, bool values) const {
         out = "CALL '";
         out += _def.getSignature();
         out += "' ";
@@ -927,7 +928,7 @@ public:
     }
 
     // implement Instruction
-    void describe(string &out, bool values) const {
+    void describe(string& out, bool values) const {
         out = "CALL '";
         out += _def.getSignature();
         out += "' ";
@@ -1025,7 +1026,7 @@ public:
     }
 
     // implement Instruction
-    void describe(string &out, bool values) const {
+    void describe(string& out, bool values) const {
         out = "CALL '";
         out += _def.getSignature();
         out += "' ";
@@ -1125,7 +1126,7 @@ public:
     }
 
     // implement Instruction
-    void describe(string &out, bool values) const {
+    void describe(string& out, bool values) const {
         out = "CALL '";
         out += _def.getSignature();
         out += "' ";

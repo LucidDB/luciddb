@@ -84,4 +84,12 @@ Error: Unknown identifier 'X' (state=,code=0)
 |   IterOneRowRel                         |
 +-----------------------------------------+
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- Janino had problems with this one (fixed in their 2.0.5 release)
+0: jdbc:farrago:> values true and true;
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

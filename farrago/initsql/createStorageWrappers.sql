@@ -33,7 +33,7 @@ local data wrapper sys_ftrs;
 
 -- create wrapper for access to JDBC data
 create foreign data wrapper sys_jdbc
-library 'plugin/FarragoMedJdbc.jar'
+library '${FARRAGO_HOME}/plugin/FarragoMedJdbc.jar'
 language java;
 
 commit;

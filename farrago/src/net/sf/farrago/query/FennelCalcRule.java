@@ -20,6 +20,7 @@
 
 package net.sf.farrago.query;
 
+import net.sf.saffron.calc.RexToCalcTranslator;
 import net.sf.saffron.opt.CallingConvention;
 import net.sf.saffron.opt.RuleOperand;
 import net.sf.saffron.opt.VolcanoRule;
@@ -70,6 +71,20 @@ class FennelCalcRule extends VolcanoRule {
         SaffronRel fennelInput = convert(relInput,
                 FennelPullRel.FENNEL_PULL_CONVENTION);
         if (fennelInput == null) {
+            return;
+        }
+
+        final RexToCalcTranslator translator = new RexToCalcTranslator(
+                calc.getCluster().rexBuilder,
+                calc._projectExprs,
+                calc._conditionExpr);
+        for(int i = 0; i < calc._projectExprs.length; i++) {
+            if (!translator.canTranslate(calc._projectExprs[i], true)) {
+                return;
+            }
+        }
+        if (calc._conditionExpr != null && 
+            !translator.canTranslate(calc._conditionExpr, true)) {
             return;
         }
 

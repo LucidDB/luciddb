@@ -18,7 +18,7 @@ according to the SQL standard, so if something doesn't, that's either
 a bug or an incomplete feature.  Which standard?  Normal procedure is
 to consult the draft SQL200n standard and cross-check it with SQL-92
 or SQL-99 to see if there are any incompatibilities.  There's
-a very nice <a href="http://developer.mimer.se/validator">online validator</a>
+a very nice <a href="http://developer.mimer.se/validator">online parser</a>
 which distinguishes the three versions of the standard.
 
 <h2>DDL</h2>
@@ -59,7 +59,10 @@ implemented.
 column datatypes are BOOLEAN, TINYINT, SMALLINT, INTEGER, BIGINT,
 REAL, DOUBLE (alias DOUBLE PRECISION), VARCHAR (alias CHARACTER
 VARYING), VARBINARY, CHAR (alias CHARACTER), BINARY, DATE, TIME, and
-TIMESTAMP.  (TBD: details of timezone and time precision).
+TIMESTAMP.  Time precision is currently limited to seconds, but will
+eventually be enhanced to microseconds (which should be the default
+for TIMESTAMP according to the SQL standard).  Timezones are not yet
+supported.
 
 <li>NOT NULL:  can be specified explicitly on any column; is also implied
 for columns which participate in the table's primary key or clustered index.
@@ -204,18 +207,23 @@ at a time
 
 <ul>
 
-<li>All row expressions currently implemented via Java code generation.
+<li>Row expressions are implemented via a mix of Java code generation
+and Fennel calculator programs.  In cases where both implementations
+are available for the same row expression, the optimizer decides
+(currently always in favor of Fennel; eventually this should be
+properly costed).  System parameter "calcVirtualMachine" governs this
+behavior (default setting CALCVM_AUTO uses mixed mode; CALCVM_FENNEL
+forces Fennel only; CALCVM_JAVA forces Java only, used implicitly when
+Fennel support is not available).
 
 <li>Generated Java code is compiled by the Janino compiler (and then
 possibly to native code JIT).  Alternate compilers such as Sun's can
 be selected via the <code>javaCompilerClassName</code> system
 parameter.
 
-<li>Fennel calculator for row expressions is currently under development
-but not yet operational.
-
 <li>All other execution objects are implemented by Fennel, except for
-union (concatenation of Java iterators) and MDR table access.
+union (concatenation of Java iterators) and foreign table access (such
+as MDR or JDBC).
 
 <li>Each DML statement runs in its own implicit subtransaction as required
 by the standard.
@@ -253,10 +261,6 @@ mentioning some serious limitations in the features listed above:
 <li>The validator is still under development, so when you make an invalid
 request, you'll very likely get ugly internal errors, data corruption,
 printer spontaneous combustion, etc.
-
-<li>Quoted identifiers cause problems because they get used directly as
-Java identifiers in generated code, causing problems with illegal
-characters.  Need to mangle them.
 
 <li>ORDER BY descending is not supported (nor is the non-standard
 ORDER BY a+b).

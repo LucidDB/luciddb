@@ -1,0 +1,128 @@
+0: jdbc:farrago:> -- $Id: //open/farrago/regressionsql/literalTests/timestamp.sql#4 $ 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test timestamp literal
+0: jdbc:farrago:> -- we don'tsupport time w/ timezone in this release.
+0: jdbc:farrago:> -- it happens to parse, but the results are potentially wrong.
+0: jdbc:farrago:> select TIMESTAMP '2004-12-01 12:01:01' as t1 from values('TRUE');
++------------------------+
+|           T1           |
++------------------------+
+| 2004-12-01 12:01:01.0  |
++------------------------+
+0: jdbc:farrago:> --select timestamp 'invalid' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp 'Mon Feb 10 17:32:01 1997 PST' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp 'Invalid Abstime' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp 'Undefined Abstime' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp 'Mon Feb 10 17:32:01.000001 1997 PST' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp 'Mon Feb 10 17:32:01.999999 1997 PST' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp 'Mon Feb 10 17:32:01.4 1997 PST' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp 'Mon Feb 10 17:32:01.5 1997 PST' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp 'Mon Feb 10 17:32:01.6 1997 PST' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp '1997-01-02' as t1 from values ('true');
+0: jdbc:farrago:>  select timestamp '1997-01-02 03:04:05' as t1 from values ('true');
++------------------------+
+|           T1           |
++------------------------+
+| 1997-01-02 03:04:05.0  |
++------------------------+
+0: jdbc:farrago:> --  select timestamp '1997-02-10 17:32:01-08' as t1 from values ('true');
+0: jdbc:farrago:> --  select timestamp '1997-02-10 17:32:01-0800' as t1 from values ('true');
+0: jdbc:farrago:> --  select timestamp '1997-02-10 17:32:01 -08:00' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp '19970210 173201 -0800' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp '1997-06-10 17:32:01 -07:00' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp '2001-09-22T18:19:20' as t1 from values ('true');
+0: jdbc:farrago:> -- select timestamp '2000-03-15 08:14:01 GMT+8' as t1 from values ('true');
+0: jdbc:farrago:> --  select timestamp '2000-03-15 13:14:02 GMT-1' as t1 from values ('true');
+0: jdbc:farrago:> -- select timestamp '2000-03-15 12:14:03 GMT -2' as t1 from values ('true');
+0: jdbc:farrago:> -- select timestamp '2000-03-15 03:14:04 EST+3' as t1 from values ('true');
+0: jdbc:farrago:> -- select timestamp '2000-03-15 02:14:05 EST +2:00' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp 'Feb 10 17:32:01 1997 -0800' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp 'Feb 10 17:32:01 1997' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp 'Feb 10 5:32PM 1997' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp '1997/02/10 17:32:01-0800' as t1 from values ('true');
+0: jdbc:farrago:> -- select timestamp '1997-02-10 17:32:01 PST' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp 'Feb-10-1997 17:32:01 PST' as t1 from values ('true');
+0: jdbc:farrago:> -- select timestamp '02-10-1997 17:32:01 PST' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp '19970210 173201 PST' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp '97FEB10 5:32:01PM UTC' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp '97/02/10 17:32:01 UTC' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp '1997.041 17:32:01 UTC' as t1 from values ('true');
+0: jdbc:farrago:> -- select timestamp '1997-06-10 18:32:01 PDT' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp 'Feb 10 17:32:01 1997' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp 'Feb 11 17:32:01 1997' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp 'Feb 12 17:32:01 1997' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp 'Feb 13 17:32:01 1997' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp 'Feb 14 17:32:01 1997' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp 'Feb 15 17:32:01 1997' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp 'Feb 16 17:32:01 1997' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp 'Feb 16 17:32:01 0097 BC' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp 'Feb 16 17:32:01 0097' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp 'Feb 16 17:32:01 0597' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp 'Feb 16 17:32:01 1097' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp 'Feb 16 17:32:01 1697' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp 'Feb 16 17:32:01 1797' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp 'Feb 16 17:32:01 1897' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp 'Feb 16 17:32:01 1997' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp 'Feb 16 17:32:01 2097' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp 'Feb 28 17:32:01 1996' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp 'Feb 29 17:32:01 1996' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp 'Mar 01 17:32:01 1996' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp 'Dec 30 17:32:01 1996' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp 'Dec 31 17:32:01 1996' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp 'Jan 01 17:32:01 1997' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp 'Feb 28 17:32:01 1997' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp 'Feb 29 17:32:01 1997' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp 'Mar 01 17:32:01 1997' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp 'Dec 30 17:32:01 1997' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp 'Dec 31 17:32:01 1997' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp 'Dec 31 17:32:01 1999' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp 'Jan 01 17:32:01 2000' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp 'Dec 31 17:32:01 2000' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp 'Jan 01 17:32:01 2001' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp 'Feb 16 17:32:01 -0097' as t1 from values ('true');
+0: jdbc:farrago:> --select timestamp 'Feb 16 17:32:01 5097 BC' as t1 from values ('true');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test datatype
+0: jdbc:farrago:> create schema test;
+0: jdbc:farrago:> set schema test;
+0: jdbc:farrago:> create table t_timestamp(timestamp_col timestamp(0) not null primary key, timestamp_col2 timestamp(0));
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- negative test
+0: jdbc:farrago:> insert into t_timestamp values('string value',null);
+Error: Storage manager internal errror:  bad lexical cast: source type value could not be interpreted as target (state=,code=0)
+0: jdbc:farrago:> insert into t_timestamp values(true,null);
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'BOOLEAN' to 'TIMESTAMP_0' (state=,code=0)
+0: jdbc:farrago:> insert into t_timestamp values(1234,null);
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'INTEGER' to 'TIMESTAMP_0' (state=,code=0)
+0: jdbc:farrago:> insert into t_timestamp values(10e400,null);
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'DOUBLE' to 'TIMESTAMP_0' (state=,code=0)
+0: jdbc:farrago:> insert into t_timestamp values(-1.2345678901234e-200,null);
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'DOUBLE' to 'TIMESTAMP_0' (state=,code=0)
+0: jdbc:farrago:> insert into t_timestamp values(-1234.03,null);
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'DOUBLE' to 'TIMESTAMP_0' (state=,code=0)
+0: jdbc:farrago:> insert into t_timestamp values(x'ff',null);
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'VARBINARY_1' to 'TIMESTAMP_0' (state=,code=0)
+0: jdbc:farrago:> insert into t_timestamp values(b'10',null);
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'BIT_2' to 'TIMESTAMP_0' (state=,code=0)
+0: jdbc:farrago:> insert into t_timestamp values(time '12:01:01',null);
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'TIME_0' to 'TIMESTAMP_0' (state=,code=0)
+0: jdbc:farrago:> insert into t_timestamp values(date '1999-01-08',null);
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'DATE_0' to 'TIMESTAMP_0' (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- insert the right values
+0: jdbc:farrago:> insert into t_timestamp values(TIMESTAMP '2004-12-01 12:01:01',null);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- null value test
+0: jdbc:farrago:> --insert into t_timestamp values(null, null); 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from t_timestamp;
++----------------+------------------------+
+| TIMESTAMP_COL  |     TIMESTAMP_COL2     |
++----------------+------------------------+
+|                | 1970-01-01 00:00:00.0  |
++----------------+------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> drop table t_timestamp;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !quit

@@ -86,6 +86,37 @@ void ByteInputStream::seekBackward(uint cb)
     }
 }
 
+SharedByteStreamMarker ByteInputStream::newMarker()
+{
+    return SharedByteStreamMarker(new SequentialByteStreamMarker(*this));
+}
+
+void ByteInputStream::mark(ByteStreamMarker &marker)
+{
+    assert(&(marker.getStream()) == this);
+
+    SequentialByteStreamMarker &seqMarker =
+        static_cast<SequentialByteStreamMarker &>(marker);
+    seqMarker.cbOffset = getOffset();
+}
+
+void ByteInputStream::reset(ByteStreamMarker const &marker)
+{
+    assert(&(marker.getStream()) == this);
+
+    SequentialByteStreamMarker const &seqMarker =
+        static_cast<SequentialByteStreamMarker const &>(marker);
+    assert(!isMAXU(seqMarker.cbOffset));
+    if (cbOffset == seqMarker.cbOffset) {
+        // expedite common case where stream has not moved since mark
+        return;
+    } else if (cbOffset > seqMarker.cbOffset) {
+        seekBackward(cbOffset - seqMarker.cbOffset);
+    } else {
+        seekForward(seqMarker.cbOffset - cbOffset);
+    }
+}
+
 FENNEL_END_CPPFILE("$Id$");
 
 // End ByteInputStream.cpp

@@ -267,7 +267,7 @@ Calculator::exec()
     oss << endl << "Status Register: " << endl;
     p.print(oss, getStatusRegisterDescriptor(), 
             *(mRegisterTuple[RegisterReference::EStatus]));
-    oss << endl;
+    oss << endl << "Warnings: |" << warnings() << "|"<< endl;
     forsomereasonthisisneeded = oss.str();
     FENNEL_TRACE(TRACE_FINER, forsomereasonthisisneeded);
 #endif

@@ -54,6 +54,14 @@ void ByteArrayInputStream::closeImpl()
     // nothing to do
 }
 
+void ByteArrayInputStream::resetArray(
+    PConstBuffer pBuffer,
+    uint cbBuffer)
+{
+    setBuffer(pBuffer,cbBuffer);
+    cbOffset = 0;
+}
+
 FENNEL_END_CPPFILE("$Id$");
 
 // End ByteArrayInputStream.cpp

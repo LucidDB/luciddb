@@ -62,13 +62,6 @@ insert into emps values
     (110,'John',40,'M','Vancouver',2,null,x'58797A',false,true),
     (120,'Wilma',20,'F',null,1,50,null,null,true);
 
--- table for testing date/time col values.
-create table datetime1(
-    col1 int not null primary key,
-    datecol date,
-    timecol time(0),
-    timestampcol timestamp(0));
-
 -- define foreign server for hsqldb sample data
 -- TODO:  location independence
 create server hsqldb_demo

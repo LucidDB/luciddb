@@ -142,8 +142,6 @@ public abstract class FarragoAtomicType extends FarragoType
         return isNullable;
     }
 
-
-
     /**
      * .
      *
@@ -174,6 +172,25 @@ public abstract class FarragoAtomicType extends FarragoType
             return true;
         }
         return false;
+    }
+
+    /**
+     * @return default precision for this type if supported, otherwise
+     * null if precision is either unsupported or must be
+     * specified explicitly
+     */
+    public Integer getDefaultPrecision()
+    {
+        switch (simpleType.getTypeNumber().intValue()) {
+        case Types.TIME:
+            return new Integer(0);
+        case Types.TIMESTAMP:
+            // TODO jvs 26-July-2004:  should be 6 for microseconds,
+            // but we can't support that yet
+            return new Integer(0);
+        default:
+            return null;
+        }
     }
 
     /**
@@ -228,7 +245,6 @@ public abstract class FarragoAtomicType extends FarragoType
 
     /** implement SaffronType */
     public Charset getCharset() {
-//        return null;
         throw Util.newInternal(digest+" is not defined to carry a charset");
     }
 
@@ -239,7 +255,6 @@ public abstract class FarragoAtomicType extends FarragoType
 
     /** implement SaffronType */
     public SqlCollation getCollation() throws RuntimeException {
-//        return null;
         throw Util.newInternal(digest+" is not defined to carry a collation");
     }
 
@@ -319,6 +334,7 @@ public abstract class FarragoAtomicType extends FarragoType
     public int getPrecision()
     {
         switch (simpleType.getTypeNumber().intValue()) {
+        case Types.BOOLEAN:
         case Types.BIT:
             return 1;
         case Types.TINYINT:

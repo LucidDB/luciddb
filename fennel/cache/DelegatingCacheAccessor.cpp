@@ -81,6 +81,16 @@ SharedCache DelegatingCacheAccessor::getCache()
     return pDelegate->getCache();
 }
 
+uint DelegatingCacheAccessor::getMaxLockedPages()
+{
+    return pDelegate->getMaxLockedPages();
+}
+
+void DelegatingCacheAccessor::setMaxLockedPages(uint nPages)
+{
+    pDelegate->setMaxLockedPages(nPages);
+}
+
 FENNEL_END_CPPFILE("$Id$");
 
 // End DelegatingCacheAccessor.cpp

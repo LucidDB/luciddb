@@ -1,7 +1,7 @@
 /*
 // $Id$
 // Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
+// (C) Copyright 2002-2004 Disruptive Tech
 // (C) Copyright 2003-2004 John V. Sichi
 // You must accept the terms in LICENSE.html to use this software.
 //
@@ -29,7 +29,6 @@ import net.sf.saffron.core.SaffronTypeFactory;
 import net.sf.saffron.resource.SaffronResource;
 import net.sf.saffron.sql.type.SqlTypeName;
 import net.sf.saffron.sql.fun.SqlRowOperator;
-import net.sf.saffron.util.SaffronProperties;
 import net.sf.saffron.util.Util;
 
 import java.nio.charset.Charset;
@@ -124,9 +123,8 @@ public class SqlValidator
         for (int i = 0; i < selectList.size(); i++) {
             final SqlNode selectItem = selectList.get(i);
             expandSelectItem(selectItem, query, list, aliases, types);
-            continue;
         }
-        return new SqlNodeList(list);
+        return new SqlNodeList(list,null);
     }
 
     /**
@@ -161,9 +159,8 @@ public class SqlValidator
                 (identifier.names.length == 1)
                     && identifier.names[0].equals("*")) {
                 List tableNames = scope.childrenNames;
-                for (
-                    Iterator tableIter = tableNames.iterator();
-                        tableIter.hasNext();) {
+                for (Iterator tableIter = tableNames.iterator();
+                      tableIter.hasNext(); /* empty */) {
                     String tableName = (String) tableIter.next();
                     final SqlNode from = getChild(select,tableName);
                     final Scope fromScope = getScope(from);
@@ -174,7 +171,7 @@ public class SqlValidator
                         SaffronField field = fields[i];
                         String columnName = field.getName();
                         //todo: do real implicit collation here
-                        final SqlNode exp = new SqlIdentifier(new String [] { tableName,columnName });
+                        final SqlNode exp = new SqlIdentifier(new String [] { tableName,columnName },null);
                         addToSelectList(selectItems,aliases, types, exp, scope);
                     }
                 }
@@ -192,7 +189,7 @@ public class SqlValidator
                     SaffronField field = fields[i];
                     String columnName = field.getName();
                     //todo: do real implicit collation here
-                    final SqlIdentifier exp = new SqlIdentifier(new String [] { tableName,columnName });
+                    final SqlIdentifier exp = new SqlIdentifier(new String [] { tableName,columnName },null);
                     addToSelectList(selectItems,aliases, types, exp, scope);
                 }
                 return true;
@@ -399,8 +396,8 @@ public class SqlValidator
 
         // now transform node itself
         if (node.isA(SqlKind.SetQuery) || node.isA(SqlKind.Values)) {
-            final SqlNodeList selectList = new SqlNodeList();
-            selectList.add(new SqlIdentifier("*"));
+            final SqlNodeList selectList = new SqlNodeList(null);
+            selectList.add(new SqlIdentifier("*",null));
             SqlSelect wrapperNode =
                 SqlOperatorTable.std().selectOperator.createCall(
                     false,
@@ -409,7 +406,7 @@ public class SqlValidator
                     null,
                     null,
                     null,
-                    null);
+                    null, null);
             return wrapperNode;
         } else if (node.isA(SqlKind.OrderBy)) {
             SqlCall orderBy = (SqlCall) node;
@@ -427,8 +424,8 @@ public class SqlValidator
                     return select;
                 }
             }
-            final SqlNodeList selectList = new SqlNodeList();
-            selectList.add(new SqlIdentifier("*"));
+            final SqlNodeList selectList = new SqlNodeList(null);
+            selectList.add(new SqlIdentifier("*",null));
             SqlSelect wrapperNode =
                 SqlOperatorTable.std().selectOperator.createCall(
                     false,
@@ -437,13 +434,13 @@ public class SqlValidator
                     null,
                     null,
                     null,
-                    orderList);
+                    orderList,null);
             return wrapperNode;
         } else if (node.isA(SqlKind.ExplicitTable)) {
             // (TABLE t) is equivalent to (SELECT * FROM t)
             SqlCall call = (SqlCall) node;
-            final SqlNodeList selectList = new SqlNodeList();
-            selectList.add(new SqlIdentifier("*"));
+            final SqlNodeList selectList = new SqlNodeList(null);
+            selectList.add(new SqlIdentifier("*",null));
             SqlSelect wrapperNode =
                 SqlOperatorTable.std().selectOperator.createCall(
                     false,
@@ -452,15 +449,15 @@ public class SqlValidator
                     null,
                     null,
                     null,
-                    null);
+                    null,null);
             return wrapperNode;
         } else if (node.isA(SqlKind.Insert)) {
             SqlInsert call = (SqlInsert) node;
             call.setOperand(SqlInsert.SOURCE_SELECT_OPERAND,call.getSource());
         } else if (node.isA(SqlKind.Delete)) {
             SqlDelete call = (SqlDelete) node;
-            final SqlNodeList selectList = new SqlNodeList();
-            selectList.add(new SqlIdentifier("*"));
+            final SqlNodeList selectList = new SqlNodeList(null);
+            selectList.add(new SqlIdentifier("*",null));
             SqlSelect select =
                 SqlOperatorTable.std().selectOperator.createCall(
                     false,
@@ -469,12 +466,12 @@ public class SqlValidator
                     call.getCondition(),
                     null,
                     null,
-                    null);
+                    null,null);
             call.setOperand(SqlDelete.SOURCE_SELECT_OPERAND,select);
         } else if (node.isA(SqlKind.Update)) {
             SqlUpdate call = (SqlUpdate) node;
-            final SqlNodeList selectList = new SqlNodeList();
-            selectList.add(new SqlIdentifier("*"));
+            final SqlNodeList selectList = new SqlNodeList(null);
+            selectList.add(new SqlIdentifier("*",null));
             Iterator iter = call.getSourceExpressionList().getList().iterator();
             int ordinal = 0;
             while (iter.hasNext()) {
@@ -484,7 +481,7 @@ public class SqlValidator
                 String alias = deriveAliasFromOrdinal(ordinal);
                 selectList.add(
                     SqlOperatorTable.std().asOperator.createCall(
-                        exp,new SqlIdentifier(alias)));
+                        exp,new SqlIdentifier(alias,null),null));
                 ++ordinal;
             }
             SqlSelect select =
@@ -495,7 +492,7 @@ public class SqlValidator
                     call.getCondition(),
                     null,
                     null,
-                    null);
+                    null,null);
             call.setOperand(SqlUpdate.SOURCE_SELECT_OPERAND,select);
         }
         return node;
@@ -541,8 +538,8 @@ public class SqlValidator
         return type;
     }
 
-    //REVIEW wael 06/22/04: changed from private to package access
-    void setValidatedNodeType(SqlNode node,SaffronType type)
+    //REVIEW wael 07/27/04: changed from private to public access
+    public void setValidatedNodeType(SqlNode node,SaffronType type)
     {
         if (type.equals(unknownType)) {
             // don't set anything until we know what it is, and don't overwrite
@@ -674,6 +671,7 @@ public class SqlValidator
         //~ SqlCall -----------------------------------------------------------
         if (operand instanceof SqlCall) {
             SqlCall call = (SqlCall) operand;
+            checkForIllegalNull(call);
             //~ SqlCaseOperator ---------
             if (call.operator instanceof SqlCaseOperator) {
                 SqlCase caseCall = (SqlCase) call;
@@ -722,7 +720,7 @@ public class SqlValidator
                 return call.operator.getType(this, scope, call);
             }
             //~ Unary and Binary Operators ---------
-            if(call.operator instanceof SqlBinaryOperator ||
+            if (call.operator instanceof SqlBinaryOperator ||
                call.operator instanceof SqlPostfixOperator ||
                call.operator instanceof SqlPrefixOperator ) {
                 // REVIEW: do we need to get the type for special operator?
@@ -798,24 +796,25 @@ public class SqlValidator
                 checkCharsetAndCollateConsistentIfCharType(type);
                 return type;
             } else {
-                // TODO: if function can take record type (select statement) as parameter,
-                // we need to derive type of SqlSelectOperator, SqlJoinOperator etc here.
+                // TODO: if function can take record type (select statement) as
+                // parameter, we need to derive type of SqlSelectOperator,
+                // SqlJoinOperator etc here.
                 return unknownType;
             }
         }
-        throw Util.needToImplement(this.toString() + ", operand=" + operand);
+        throw Util.needToImplement(operand);
     }
-
-
 
     private void inferUnknownTypes(
         SaffronType inferredType,Scope scope,SqlNode node)
     {
-        if ((node instanceof SqlDynamicParam) || SqlLiteral.isNullLiteral(node)) {
-            if (inferredType.equals(unknownType)) {
+
+        if ((node instanceof SqlDynamicParam) ||
+            SqlUtil.isNullLiteral(node, false)) {
+            if (inferredType.equals(unknownType)
+                ) {
                 // TODO: scrape up some positional context information
-                throw newValidationError(
-                    "Unable to infer type for " + node);
+                throw SaffronResource.instance().newNullIllegal();
             }
             // REVIEW:  should dynamic parameter types always be nullable?
             SaffronType newInferredType= typeFactory.createTypeWithNullability(inferredType,true);
@@ -851,27 +850,25 @@ public class SqlValidator
             }
         } else if (node instanceof SqlCase) {
             SqlCase caseCall = (SqlCase) node;
+            SaffronType returnType = deriveType(scope,node);
+
             List whenList = caseCall.getWhenOperands();
             for (int i = 0; i < whenList.size(); i++) {
-                SqlCall sqlNode = (SqlCall) whenList.get(i);
+                SqlNode sqlNode = (SqlNode) whenList.get(i);
                 inferUnknownTypes(unknownType,scope,sqlNode);
             }
-
-            SaffronType returnType = getValidatedNodeType(node);
             List thenList = caseCall.getThenOperands();
             for (int i = 0; i < thenList.size(); i++) {
-                SqlCall sqlNode = (SqlCall) whenList.get(i);
+                SqlNode sqlNode = (SqlNode) thenList.get(i);
                 inferUnknownTypes(returnType,scope,sqlNode);
             }
 
-            if (!SqlLiteral.isNullLiteral(caseCall.getElseOperand())){
+            if (!SqlUtil.isNullLiteral(caseCall.getElseOperand(), false)){
                 inferUnknownTypes(returnType,scope,caseCall.getElseOperand());
             }
             else {
                 setValidatedNodeType(caseCall.getElseOperand(), returnType);
             }
-
-
         } else if (node instanceof SqlCall) {
             SqlCall call = (SqlCall) node;
             SqlOperator.ParamTypeInference paramTypeInference =
@@ -894,7 +891,25 @@ public class SqlValidator
                 inferUnknownTypes(operandTypes[i],scope,operands[i]);
             }
 
+            checkForIllegalNull(call);
         }
+
+
+    }
+
+    private void checkForIllegalNull(SqlCall call) {
+        if (!(call.isA(SqlKind.Case) ||
+            call.isA(SqlKind.Cast) ||
+            call.isA(SqlKind.Row) ||
+            call.isA(SqlKind.Select))) {
+            for (int i = 0; i < call.operands.length; i++) {
+                //todo use pp when not null
+                if (SqlUtil.isNullLiteral(call.operands[i],false)) {
+//                    assert(null==node.getParserPosition()) : "todo use pp";
+                    throw SaffronResource.instance().newNullIllegal();
+                }
+            }
+       }
     }
 
     /**
@@ -914,7 +929,7 @@ public class SqlValidator
                 if (!aliases.contains(alias)) {
                     exp = SqlOperatorTable.std().asOperator.createCall(
                             exp,
-                            new SqlIdentifier(alias));
+                            new SqlIdentifier(alias,null),null);
                     break;
                 }
             }
@@ -1212,7 +1227,6 @@ public class SqlValidator
 
         // First pass, ensure that aliases are unique. "*" and "TABLE.*" items
         // are ignored.
-        checkForDuplicateAliases(selectItems);
 
         final ArrayList aliases = new ArrayList();
         // Validate SELECT list. Expand terms of the form "*" or "TABLE.*".
@@ -1226,7 +1240,7 @@ public class SqlValidator
         }
 
 
-        SqlNodeList newSelectList = new SqlNodeList(expandedSelectItems);
+        SqlNodeList newSelectList = new SqlNodeList(expandedSelectItems,null);
         if (shouldExpandIdentifiers()) {
             select.setOperand(SqlSelect.SELECT_OPERAND,newSelectList);
         }
@@ -1266,24 +1280,6 @@ public class SqlValidator
                 }
             }
             validateExpression(orderList);
-        }
-    }
-
-    private void checkForDuplicateAliases(final SqlNodeList selectItems)
-    {
-        final ArrayList aliases = new ArrayList();
-        for (int i = 0; i < selectItems.size(); i++)
-        {
-            SqlNode selectItem = selectItems.get(i);
-            if (isStar(selectItem)) {
-                continue;
-            }
-            final String alias = deriveAlias(selectItem, i);
-            if (aliases.contains(alias)) {
-                throw newValidationError("More than one column has alias '" +
-                        alias + "'");
-            }
-            aliases.add(alias);
         }
     }
 
@@ -1402,7 +1398,22 @@ public class SqlValidator
             {
                 return;
             }
+
             inferUnknownTypes(targetRowType,getScope(node),rowConstructor);
+        }
+
+        if (operands.length >= 2) {
+            // values (1,2), (1, 'eee') is invalid statement
+            for (int i = 0; i < operands.length; i++) {
+                SqlCall firstRow = (SqlCall) operands[0];
+                int numOfColumn = firstRow.getOperands().length;
+                for (int j = 1; i < operands.length; i++) {
+                    SqlCall operand = (SqlCall) operands[j];
+                    if (operand.getOperands().length != numOfColumn) {
+                        throw SaffronResource.instance().newIncompatibleValueType();
+                    }
+                }
+            }
         }
     }
 
@@ -1490,7 +1501,7 @@ public class SqlValidator
                 final String columnName = identifier.names[0];
                 final String tableName = findQualifyingTableName(columnName);
                 //todo: do implicit collation here
-                return new SqlIdentifier(new String [] { tableName,columnName });
+                return new SqlIdentifier(new String [] { tableName,columnName },null);
             }
             case 2: {
                 final String tableName = identifier.names[0];

@@ -594,7 +594,8 @@ improvements:
 <li>
 When the optimizer estimates that query execution will be very brief,
 we won't bother compiling the generated Java code.  Instead, we'll
-interpret it using DynamicJava.  (For now, we always use DynamicJava.)
+interpret it using <a href="http://www.janino.net">Janino</a>.
+(For now, we always use Janino.)
 
 <li>
 Efficiency of generated Java code will continue improving as the code

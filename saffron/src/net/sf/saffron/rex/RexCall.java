@@ -87,6 +87,7 @@ public class RexCall extends RexNode {
         case SqlKind.IsTrueORDINAL: return RexKind.IsTrue;
         case SqlKind.IsFalseORDINAL: return RexKind.IsFalse;
         case SqlKind.IsNullORDINAL: return RexKind.IsNull;
+        case SqlKind.IsUnknownORDINAL: return RexKind.IsNull;
         case SqlKind.PlusPrefixORDINAL: return RexKind.Plus;
         case SqlKind.MinusPrefixORDINAL: return RexKind.MinusPrefix;
         case SqlKind.ValuesORDINAL: return RexKind.Values;

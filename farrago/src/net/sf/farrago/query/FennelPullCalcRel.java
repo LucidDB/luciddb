@@ -77,11 +77,6 @@ public class FennelPullCalcRel
         FemCalcTupleStreamDef calcStream =
             getCatalog().newFemCalcTupleStreamDef();
 
-        // TODO jvs 8-May-2004: account for scratch page in provisioning, not
-        // here
-        calcStream.setCachePageMin(1);
-        calcStream.setCachePageMax(1);
-
         calcStream.getInput().add(
             implementor.visitFennelChild((FennelRel) child));
         calcStream.setFilter(getConditionExpr() != null);

@@ -82,7 +82,6 @@
         <arg value=";"/>
         <arg value="run"/>
         <arg line="${assertions.jvmarg}"/>
-        <arg line="&FarragoProps;"/>
         <jvmargs/>
         <arg value="@{classname}"/>
         <programargs/>

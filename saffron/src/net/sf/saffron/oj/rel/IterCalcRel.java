@@ -176,7 +176,7 @@ public class IterCalcRel extends ProjectRelBase implements JavaRel
 
         SaffronField [] fields = outputRowType.getFields();
         for (int i = 0; i < exps.length; i++) {
-            String javaFieldName = Util.toJavaId(fields[i].getName());
+            String javaFieldName = Util.toJavaId(fields[i].getName(),i);
             Expression lhs = new FieldAccess(varOutputRow,javaFieldName);
             RexNode rhs = exps[i];
             implementor.translateAssignment(

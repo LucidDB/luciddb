@@ -68,33 +68,59 @@ public:
     int   assemble();
 
     // Functions for creating objects for the calculator
-    static TupleData*         createTupleData(TupleDescriptor const& tupleDes, FixedBuffer** buf);
-    static RegisterReference* createRegisterReference(RegisterReference::ERegisterSet setIndex,
-                                                      TRegisterIndex                  regIndex,
-                                                      StandardTypeDescriptorOrdinal   regType);
+    static TupleData*
+    createTupleData(TupleDescriptor const& tupleDes,
+                    FixedBuffer** buf);
+
+    static RegisterReference* 
+    createRegisterReference(RegisterReference::ERegisterSet setIndex,
+                            TRegisterIndex                  regIndex,
+                            StandardTypeDescriptorOrdinal   regType);
+
+    static Instruction*
+    createInstruction(string& name,
+                      vector<RegisterReference*>& operands,
+                      CalcYYLocType& location)
+    {
+        Instruction* inst = NULL;
+        try {
+            inst = InstructionFactory::createInstruction(name, operands);
+        }
+        catch (FennelExcn& ex) {
+            throw CalcAssemblerException(ex.getMessage(), location);
+        }   
+        catch (std::exception& ex) {
+            throw CalcAssemblerException(ex.what(), location);
+        }   
+        if (inst == NULL) {
+            string error;
+            error = "Error instantiating instruction: " + name;
+            if (operands.size() > 0) {
+                error += " ";
+                int i;
+                for (i = 0; i < operands.size(); i++) {
+                    error += operands[i]->toString();
+                    if (i + 1 < operands.size()) {
+                        error += ", ";
+                    }
+                }
+            }
+            throw CalcAssemblerException(error, location);
+        }
+        return inst;
+    }
 
     static Instruction* createInstruction(string& name,
                                           RegisterReference* result,
                                           RegisterReference* operand1,
                                           RegisterReference* operand2,
-                                          CalcYYLocType& location )
+                                          CalcYYLocType& location)
     {
-        Instruction* inst = NULL;
-        try {
-            inst = InstructionFactory::createInstruction(name, result, operand1, operand2);
-        }
-        catch (FennelExcn& ex) {
-            throw CalcAssemblerException(ex.getMessage(), location);
-        }   
-        catch (std::exception& ex) {
-            throw CalcAssemblerException(ex.what(), location);
-        }   
-        if (inst == NULL) 
-            throw CalcAssemblerException("Error instantiating instruction: " + name + " "
-                                         + result->toString() + ", " + operand1->toString() + ", "
-                                         + operand2->toString(), location);
-
-        return inst;
+        vector<RegisterReference*> operands;
+        operands.push_back(result);
+        operands.push_back(operand1);
+        operands.push_back(operand2);
+        return createInstruction(name, operands, location);
     }
 
 
@@ -103,87 +129,33 @@ public:
                                           RegisterReference* operand1,
                                           CalcYYLocType& location )
     {
-        Instruction* inst = NULL;
-        try {
-            inst = InstructionFactory::createInstruction(name, result, operand1);
-        }
-        catch (FennelExcn& ex) {
-            throw CalcAssemblerException(ex.getMessage(), location);
-        }   
-        catch (std::exception& ex) {
-            throw CalcAssemblerException(ex.what(), location);
-        }   
-        if (inst == NULL) 
-            throw CalcAssemblerException("Error instantiating instruction: " + name + " "
-                                         + result->toString() + ", " + operand1->toString(),
-                                         location);
-
-        return inst;
+        vector<RegisterReference*> operands;
+        operands.push_back(result);
+        operands.push_back(operand1);
+        return createInstruction(name, operands, location);
     }
 
     static Instruction* createInstruction(string& name,
                                           RegisterReference* result,
                                           CalcYYLocType& location)
     {
-        Instruction* inst = NULL;
-        try {
-            inst = InstructionFactory::createInstruction(name, result);
-        }
-        catch (FennelExcn& ex) {
-            throw CalcAssemblerException(ex.getMessage(), location);
-        }   
-        catch (std::exception& ex) {
-            throw CalcAssemblerException(ex.what(), location);
-        }   
-        if (inst == NULL) 
-            throw CalcAssemblerException("Error instantiating instruction: " + name + " "
-                                         + result->toString(), location);
-
-        return inst;
+        vector<RegisterReference*> operands;
+        operands.push_back(result);
+        return createInstruction(name, operands, location);
     }
 
     static Instruction* createInstruction(string& name,
                                           CalcYYLocType& location)
     {
-        Instruction* inst = NULL;
-        try {
-            inst = InstructionFactory::createInstruction(name);
-        }
-        catch (FennelExcn& ex) {
-            throw CalcAssemblerException(ex.getMessage(), location);
-        }   
-        catch (std::exception& ex) {
-            throw CalcAssemblerException(ex.what(), location);
-        }   
-        if (inst == NULL) 
-            throw CalcAssemblerException("Error instantiating instruction: " + name,
-                                          location);
-
-        return inst;
+        vector<RegisterReference*> operands;
+        return createInstruction(name, operands, location);
     }
 
     static Instruction* createInstruction(string& name,
                                           TProgramCounter pc,
                                           CalcYYLocType& location)
     {
-        Instruction* inst = NULL;
-        try {
-            inst = InstructionFactory::createInstruction(name, pc);
-        }
-        catch (FennelExcn& ex) {
-            throw CalcAssemblerException(ex.getMessage(), location);
-        }   
-        catch (std::exception& ex) {
-            throw CalcAssemblerException(ex.what(), location);
-        }   
-
-        if (inst == NULL) {
-            stringstream errorStr("Error instantiating instruction: ");
-            errorStr << name << " " << pc;
-            throw CalcAssemblerException(errorStr.str(), location);
-        }
-
-        return inst;
+        return createInstruction(name, pc, NULL, location);
     }
 
 
@@ -206,10 +178,12 @@ public:
 
         if (inst == NULL) {
             stringstream errorStr("Error instantiating instruction: ");
-            errorStr << name << " " << pc << ", " << operand->toString();
+            errorStr << name << " " << pc << ", ";
+            if (operand) {
+                errorStr << operand->toString();
+            }
             throw CalcAssemblerException(errorStr.str(), location);
         }
-
         return inst;
     }
 
@@ -231,9 +205,11 @@ public:
         }   
 
         if (inst == NULL) {
+            InstructionSignature sig(function, operands);
             stringstream errorStr("Error instantiating instruction: ");
-            errorStr << name << " " << InstructionFactory::computeSignature(function, operands)
-                     << " not registered ";
+            errorStr << name << " ";
+            errorStr << sig.compute();
+            errorStr << " not registered ";
             throw CalcAssemblerException(errorStr.str(), location);
         }
 
@@ -483,7 +459,7 @@ protected:
 
     //! Pointers to the tuple data
     //! Once they have been bound to the calculator, it is the calculator's
-    //! responsibility to destroty the tuple data and the buffers.
+    //! responsibility to destroy the tuple data and the buffers.
     TupleData* mRegisterTupleData[RegisterReference::ELastSet];
     //! Actual storage used by the CalcAssembler for the literal, local
     //! and status registers

@@ -24,13 +24,14 @@ package net.sf.saffron.sql;
 
 import net.sf.saffron.sql.test.SqlTester;
 import net.sf.saffron.sql.type.SqlTypeName;
+import net.sf.saffron.sql.parser.ParserPosition;
 
 /**
  * An operator describing a query. (Not a query itself.)
- * 
+ *
  * <p>
  * Operands are:
- * 
+ *
  * <ul>
  * <li>
  * 0: distinct ({@link SqlLiteral})
@@ -72,9 +73,9 @@ public class SqlSelectOperator extends SqlOperator
         return SqlSyntax.Special;
     }
 
-    public SqlCall createCall(SqlNode [] operands)
+    public SqlCall createCall(SqlNode [] operands, ParserPosition parserPosition)
     {
-        return new SqlSelect(this,operands);
+        return new SqlSelect(this,operands, parserPosition);
     }
 
     public SqlSelect createCall(
@@ -84,13 +85,14 @@ public class SqlSelectOperator extends SqlOperator
         SqlNode whereClause,
         SqlNode groupBy,
         SqlNode having,
-        SqlNode orderBy)
+        SqlNode orderBy,
+        ParserPosition parserPosition)
     {
         return (SqlSelect) createCall(
             new SqlNode [] {
-                SqlLiteral.createBoolean(isDistinct),selectList,fromClause,
+                SqlLiteral.createBoolean(isDistinct, parserPosition),selectList,fromClause,
                 whereClause,groupBy,having,orderBy
-            });
+            }, parserPosition);
     }
 
     public void unparse(
@@ -105,7 +107,7 @@ public class SqlSelectOperator extends SqlOperator
         }
         SqlNode selectClause = operands[SqlSelect.SELECT_OPERAND];
         if (selectClause == null) {
-            selectClause = new SqlIdentifier("*");
+            selectClause = new SqlIdentifier("*", selectClause.getParserPosition());
         }
         selectClause.unparse(writer,0,0);
         writer.println();

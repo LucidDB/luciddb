@@ -21,8 +21,6 @@ package net.sf.farrago.session;
 
 import net.sf.farrago.catalog.FarragoCatalog;
 import net.sf.farrago.catalog.FarragoConnectionDefaults;
-import net.sf.farrago.runtime.FarragoRuntimeContext;
-import net.sf.farrago.runtime.FarragoRuntimeContextParams;
 import net.sf.farrago.util.FarragoAllocation;
 import net.sf.saffron.sql.SqlOperatorTable;
 import net.sf.saffron.oj.rex.OJRexImplementorTable;
@@ -111,11 +109,21 @@ public interface FarragoSession extends FarragoAllocation
     public FarragoSessionParser newParser();
 
     /**
-     * Creates a new validator for DDL commands.
+     * Creates a new SQL statement validator.
      *
      * @return new validator
      */
-    public FarragoSessionDdlValidator newDdlValidator();
+    public FarragoSessionStmtValidator newStmtValidator();
+    
+    /**
+     * Creates a new validator for DDL commands.
+     *
+     * @param stmtValidator generic stmt validator
+     *
+     * @return new validator
+     */
+    public FarragoSessionDdlValidator newDdlValidator(
+        FarragoSessionStmtValidator stmtValidator);
     
     /**
      * Clones this session.  TODO:  document what this entails.
@@ -175,8 +183,8 @@ public interface FarragoSession extends FarragoAllocation
     /**
      * Determines the class to use for runtime context.
      *
-     * @return runtime context class, which must be a subclass of
-     * {@link FarragoRuntimeContext}
+     * @return runtime context class, which must implement
+     * {@link FarragoSessionRuntimeContext}
      */
     public Class getRuntimeContextClass();
 
@@ -188,8 +196,8 @@ public interface FarragoSession extends FarragoAllocation
      *
      * @return new context
      */
-    public FarragoRuntimeContext newRuntimeContext(
-        FarragoRuntimeContextParams params);
+    public FarragoSessionRuntimeContext newRuntimeContext(
+        FarragoSessionRuntimeParams params);
 }
 
 // End FarragoSession.java

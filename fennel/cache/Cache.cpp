@@ -68,6 +68,10 @@ uint Cache::getMaxLockedPages()
     return getAllocatedPageCount();
 }
 
+void Cache::setMaxLockedPages(uint)
+{
+}
+
 void Cache::writeStats(StatsTarget &target)
 {
     CacheStats stats;

@@ -180,7 +180,9 @@ public abstract class CwmColumnImpl extends InstanceHandler
         // TODO:  break this method up
         // first, validate presence of modifiers
         if (type.takesPrecision()) {
-            // assume precision is always mandatory
+            if (precision == null) {
+                precision = type.getDefaultPrecision();
+            }
             if (precision == null) {
                 throw validator.res.newValidatorPrecRequired(
                     getLocalizedTypeName(validator,column),

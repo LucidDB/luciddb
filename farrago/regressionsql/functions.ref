@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/farrago/regressionsql/functions.sql#7 $
+0: jdbc:farrago:> -- $Id: //open/farrago/regressionsql/functions.sql#12 $
 0: jdbc:farrago:> -- Full vertical system testing of non function statements
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel
@@ -26,6 +26,7 @@
 | 7       |
 | 8       |
 +---------+
+0: jdbc:farrago:> --values abs(-5000000000);
 0: jdbc:farrago:> select abs(-pow(2.0,-2.0)) as res from sales.emps where empno=100 ;
 +-------+
 |  RES  |
@@ -47,7 +48,21 @@
 | 1.0     |
 | 1.0     |
 +---------+
-0: jdbc:farrago:> --select log(10) from sales.emps;
+0: jdbc:farrago:> select log(10) from sales.emps;
++---------+
+| EXPR$0  |
++---------+
+| 1.0     |
+| 1.0     |
+| 1.0     |
+| 1.0     |
++---------+
+0: jdbc:farrago:> values log(10*10.0);
++---------+
+| EXPR$0  |
++---------+
+| 2.0     |
++---------+
 0: jdbc:farrago:> select (-empno) as res from sales.emps;
 +-------+
 |  RES  |
@@ -148,6 +163,12 @@
 | null    |
 | yes     |
 +---------+
+0: jdbc:farrago:> values CASE WHEN TRUE THEN 9 ELSE 1 END;
++---------+
+| EXPR$0  |
++---------+
+| 9       |
++---------+
 0: jdbc:farrago:> select nullif(name,'Wilma') from sales.emps order by 1;
 +---------+
 | EXPR$0  |
@@ -193,97 +214,102 @@
 | 25      |
 | 80      |
 +---------+
+0: jdbc:farrago:> select nullif(age,cast(null as integer)) from sales.emps order by 1;
++---------+
+| EXPR$0  |
++---------+
+|         |
+| 25      |
+| 50      |
+| 80      |
++---------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> select cast(null as tinyint) from values(1);
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
-0: jdbc:farrago:> select cast(null as smallint) from values(1);
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
-0: jdbc:farrago:> select cast(null as integer) from values(1);
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
-0: jdbc:farrago:> select cast(null as bigint) from values(1);
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
-0: jdbc:farrago:> select cast(null as real) from values(1);
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
-0: jdbc:farrago:> select cast(null as double) from values(1);
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
-0: jdbc:farrago:> --select cast(null as bit) from values(1);
-0: jdbc:farrago:> select cast(null as boolean) from values(1);
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
-0: jdbc:farrago:> select cast(null as char) from values(1);
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
-0: jdbc:farrago:> select cast(null as varchar) from values(1);
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
-0: jdbc:farrago:> select cast(null as binary) from values(1);
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
-0: jdbc:farrago:> select cast(null as date) from values(1);
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
-0: jdbc:farrago:> select cast(null as time) from values(1);
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
-0: jdbc:farrago:> select cast(null as timestamp) from values(1);
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
-0: jdbc:farrago:> select cast(null as varbinary) from values(1);
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
-0: jdbc:farrago:> --select cast(null as decimal) from values(1);
+0: jdbc:farrago:> select abs((-empno)*2) as res from sales.emps;
++------+
+| RES  |
++------+
+| 200  |
+| 220  |
+| 240  |
+| 220  |
++------+
+0: jdbc:farrago:> select abs(2) as res from sales.emps;
++------+
+| RES  |
++------+
+| 2    |
+| 2    |
+| 2    |
+| 2    |
++------+
+0: jdbc:farrago:> select abs(-2) as res from sales.emps;
++------+
+| RES  |
++------+
+| 2    |
+| 2    |
+| 2    |
+| 2    |
++------+
+0: jdbc:farrago:> select abs((-empno)*2.0) as res from sales.emps;
++--------+
+|  RES   |
++--------+
+| 200.0  |
+| 220.0  |
+| 240.0  |
+| 220.0  |
++--------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> --select abs((-empno)*2) as res from sales.emps;
-0: jdbc:farrago:> --select abs(2) as res from sales.emps;
-0: jdbc:farrago:> --select abs(-2) as res from sales.emps;
-0: jdbc:farrago:> --select abs((-empno)*2.0) as res from sales.emps;
+0: jdbc:farrago:> values 1+1.0;
++---------+
+| EXPR$0  |
++---------+
+| 2.0     |
++---------+
+0: jdbc:farrago:> values 1.0-1;
++---------+
+| EXPR$0  |
++---------+
+| 0.0     |
++---------+
+0: jdbc:farrago:> --values 10<=10.0;
+0: jdbc:farrago:> --values 10<10.001;
+0: jdbc:farrago:> --values 10>9.999;
+0: jdbc:farrago:> --values 10.0>=10;
+0: jdbc:farrago:> --values 5000000000<>1e10;
+0: jdbc:farrago:> --values 5000000000<-1.3;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values trim(' ' from '  abc');
++---------+
+| EXPR$0  |
++---------+
+| abc     |
++---------+
+0: jdbc:farrago:> values trim('a' from 'Aa');
++---------+
+| EXPR$0  |
++---------+
+| A       |
++---------+
+0: jdbc:farrago:> values trim(leading 'a' from 'Aa');
++---------+
+| EXPR$0  |
++---------+
+| Aa      |
++---------+
+0: jdbc:farrago:> values trim('a' from 'aAa');
++---------+
+| EXPR$0  |
++---------+
+| A       |
++---------+
+0: jdbc:farrago:> values trim(trailing 'a' from 'Aa');
++---------+
+| EXPR$0  |
++---------+
+| A       |
++---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

@@ -1,7 +1,7 @@
 /*
 // $Id$
 // Saffron preprocessor and data engine
-// (C) Copyright 2002-2004 Disruptive Technologies, Inc.
+// (C) Copyright 2002-2004 Disruptive Tech
 // You must accept the terms in LICENSE.html to use this software.
 //
 // This program is free software; you can redistribute it and/or
@@ -25,6 +25,9 @@ import net.sf.saffron.core.SaffronType;
 import net.sf.saffron.core.SaffronTypeFactory;
 import net.sf.saffron.util.Util;
 import net.sf.saffron.sql.fun.SqlStdOperatorTable;
+import net.sf.saffron.sql.fun.SqlCastFunction;
+import net.sf.saffron.sql.type.SqlTypeName;
+import net.sf.saffron.sql.parser.ParserPosition;
 import net.sf.saffron.resource.SaffronResource;
 
 import java.util.List;
@@ -114,62 +117,96 @@ public abstract class SqlCaseOperator extends SqlOperator
 
     public SqlCaseOperator()
     {
-        super("CASE",SqlKind.Case,1,true, SqlOperatorTable.useNullableBiggest,
+        super("CASE",SqlKind.Case,1,true, null,
                 SqlOperatorTable.useReturnForParam, null);
     }
 
     //~ Methods ---------------------------------------------------------------
 
-    public SaffronType getType(SqlValidator validator,
-            SqlValidator.Scope scope, SqlCall call) {
+
+    protected void checkArgTypes(SqlCall call, SqlValidator validator,
+            SqlValidator.Scope scope) {
+
         SqlCase caseCall = (SqlCase) call;
         List whenList = caseCall.getWhenOperands();
         List thenList = caseCall.getThenOperands();
-        List nullList = new ArrayList();
-        SaffronType[] argTypes = new SaffronType[whenList.size()*2+1];
         assert(whenList.size()==thenList.size());
 
         //checking that search conditions are ok...
+        SaffronType boolType = validator.typeFactory.
+                createSqlType(SqlTypeName.Boolean);
         for (int i = 0; i < whenList.size(); i++) {
             SqlNode node = (SqlNode) whenList.get(i);
-            Util.pre(node instanceof SqlCall,"node!=SqlCall");
-            SqlCall searchCall = (SqlCall) node;
             //should throw validation error if something wrong...
-            argTypes[i*2]= searchCall.operator.getType(validator,scope,searchCall);
+            SaffronType type = validator.deriveType(scope,node);
+            if (!boolType.isSameType(type)) {
+                //todo add postition data
+                throw validator.newValidationError("Expected a boolean type");
+            }
         }
 
         boolean foundNotNull = false;
         for (int i = 0; i < thenList.size(); i++) {
             SqlNode node = (SqlNode) thenList.get(i);
-            if (!SqlLiteral.isNullLiteral(node)) {
+            if (!isNullNode(node)) {
                 foundNotNull = true;
-            } else {
-                nullList.add(node);
             }
-            argTypes[i*2+1]= validator.deriveType(scope, node);
         }
 
-        SqlNode elseClause = caseCall.getElseOperand();
-        if (!SqlLiteral.isNullLiteral(elseClause)) {
+        if (!isNullNode(caseCall.getElseOperand())) {
             foundNotNull=true;
-        } else {
-            nullList.add(elseClause);
         }
 
         if (!foundNotNull) {
             // according to the sql standard we can not have all of the THEN
             // statements and the ELSE returning null
-            throw validator.newValidationError("ELSE clause or at least one THEN clause must be non-NULL");
+            throw validator.newValidationError(
+                    "ELSE clause or at least one THEN clause must be non-NULL");
         }
+    }
 
-
-        argTypes[argTypes.length-1] = validator.deriveType(scope, elseClause);
-        SaffronType ret = this.getType(validator.typeFactory,argTypes);
+    protected SaffronType inferType(SqlValidator validator,
+            SqlValidator.Scope scope, SqlCall call) {
+        SqlCase caseCall = (SqlCase) call;
+        List thenList = caseCall.getThenOperands();
+        ArrayList nullList = new ArrayList();
+        SaffronType[] argTypes = new SaffronType[thenList.size()+1];
+        for (int i = 0; i < thenList.size(); i++) {
+            SqlNode node = (SqlNode) thenList.get(i);
+            argTypes[i] =
+                    validator.deriveType(scope,node);
+            if (isNullNode(node)) {
+                nullList.add(node);
+            }
+        }
+        SqlNode elseOp = caseCall.getElseOperand();
+        argTypes[argTypes.length-1] =
+                validator.deriveType(scope, caseCall.getElseOperand());
+        if (isNullNode(elseOp)) {
+                nullList.add(elseOp);
+        }
+        SaffronType ret = SqlOperatorTable.useNullableBiggest.getType(
+                validator.typeFactory, argTypes);
+        if (null == ret) {
+            //todo use position data when available
+            throw SaffronResource.instance().newValidationError(
+                    "Illegal mixing of types");
+        }
         for (int i = 0; i < nullList.size(); i++) {
             SqlNode node = (SqlNode) nullList.get(i);
             validator.setValidatedNodeType(node, ret);
         }
         return ret;
+    }
+
+    private boolean isNullNode(SqlNode node) {
+        if (node instanceof SqlCall) {
+            SqlCall call = (SqlCall) node;
+            if (call.operator instanceof SqlCastFunction) {
+                return isNullNode(call.operands[0]);
+            }
+        }
+        return SqlUtil.isNullLiteral(node, false);
     }
 
     public SaffronType getType(SaffronTypeFactory typeFactory,
@@ -183,12 +220,13 @@ public abstract class SqlCaseOperator extends SqlOperator
         }
 
         thenTypes[thenTypes.length-1] = argTypes[argTypes.length-1];
-        SaffronType ret = super.getType(typeFactory, thenTypes);
-        if (null == ret) {
-            throw SaffronResource.instance().newValidationError(
-                    "Illegal mixing of types");
-        }
+        SaffronType ret = SqlOperatorTable.useNullableBiggest.getType(
+                typeFactory, thenTypes);
         return ret;
+    }
+
+    public int getNumOfOperands(int desiredCount) {
+        return desiredCount;
     }
 
     public SqlSyntax getSyntax()
@@ -196,34 +234,35 @@ public abstract class SqlCaseOperator extends SqlOperator
         return SqlSyntax.Special;
     }
 
-    public SqlCall createCall(SqlNode [] operands)
+    public SqlCall createCall(SqlNode [] operands, ParserPosition parserPosition)
     {
-        return new SqlCase(this,operands);
+        return new SqlCase(this,operands, parserPosition);
     }
 
     public SqlCase createCall(
         SqlNode caseIdentifier,
         SqlNodeList whenList,
         SqlNodeList thenList,
-        SqlNode elseClause)
+        SqlNode elseClause,
+        ParserPosition parserPosition)
     {
         SqlStdOperatorTable stdOps = SqlOperatorTable.std();
         if (null != caseIdentifier) {
             List list = whenList.getList();
             for (int i = 0; i < list.size(); i++) {
                 SqlNode e = (SqlNode) list.get(i);
-                list.set(i, stdOps.equalsOperator.createCall(caseIdentifier, e));
+                list.set(i, stdOps.equalsOperator.createCall(caseIdentifier, e, parserPosition));
             }
         }
 
         if (null==elseClause) {
-            elseClause = SqlLiteral.createNull();
+            elseClause = SqlLiteral.createNull(parserPosition);
         }
 
         return (SqlCase) createCall(
             new SqlNode [] {
                 whenList,thenList,elseClause
-            });
+            }, parserPosition);
     }
 
     public void unparse(
@@ -233,11 +272,6 @@ public abstract class SqlCaseOperator extends SqlOperator
         int rightPrec)
     {
         throw Util.needToImplement("need to implement");
-    }
-
-    protected SaffronType inferType(SqlValidator validator,
-            SqlValidator.Scope scope, SqlCall call) {
-        return super.inferType(validator, scope, call);
     }
 }
 

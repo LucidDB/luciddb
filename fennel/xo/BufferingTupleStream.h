@@ -68,6 +68,9 @@ class BufferingTupleStream : public SingleInputTupleStream
     
 public:
     void prepare(BufferingTupleStreamParams const &params);
+    virtual void getResourceRequirements(
+        ExecutionStreamResourceQuantity &minQuantity,
+        ExecutionStreamResourceQuantity &optQuantity);
     virtual void open(bool restart);
     virtual TupleDescriptor const &getOutputDesc() const;
     virtual ByteInputStream &getProducerResultStream();

@@ -81,6 +81,9 @@ public:
     
     // implement TupleStream
     void prepare(TableWriterStreamParams const &params);
+    virtual void getResourceRequirements(
+        ExecutionStreamResourceQuantity &minQuantity,
+        ExecutionStreamResourceQuantity &optQuantity);
     virtual void open(bool restart);
     virtual void closeImpl();
     virtual TupleDescriptor const &getOutputDesc() const;

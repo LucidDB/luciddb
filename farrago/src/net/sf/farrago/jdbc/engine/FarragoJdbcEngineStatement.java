@@ -19,15 +19,10 @@
 
 package net.sf.farrago.jdbc.engine;
 
-import net.sf.farrago.session.*;
-import net.sf.farrago.util.*;
-
-import net.sf.saffron.util.*;
+import net.sf.farrago.session.FarragoSessionStmtContext;
 
 import java.sql.*;
 
-import java.util.*;
-import java.util.logging.*;
 
 
 /**
@@ -106,6 +101,7 @@ public class FarragoJdbcEngineStatement
             stmtContext.prepare(sql,true);
             if (stmtContext.isPrepared()) {
                 stmtContext.execute();
+
                 if (stmtContext.getResultSet() != null) {
                     unprepare = false;
                     return true;
@@ -257,13 +253,18 @@ public class FarragoJdbcEngineStatement
     // implement Statement
     public void setQueryTimeout(int seconds) throws SQLException
     {
-        throw new UnsupportedOperationException();
+        stmtContext.setQueryTimeout(seconds * 1000);
     }
 
     // implement Statement
     public int getQueryTimeout() throws SQLException
     {
-        throw new UnsupportedOperationException();
+        int timeoutMillis = stmtContext.getQueryTimeout();
+        if (timeoutMillis > 0 && timeoutMillis < 1000) {
+            // Don't let 1ms become 0s (because that means no timeout).
+            timeoutMillis = 1000;
+        }
+        return timeoutMillis / 1000;
     }
 
     // implement Statement
@@ -379,6 +380,5 @@ public class FarragoJdbcEngineStatement
         throw new UnsupportedOperationException();
     }
 }
-
 
 // End FarragoJdbcEngineStatement.java

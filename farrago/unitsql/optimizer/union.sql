@@ -3,6 +3,9 @@
 
 set schema sales;
 
+-- force usage of Java calculator
+alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
+
 -- test UNION without duplicates
 select * from 
 (select name from emps union select name from depts)

@@ -61,7 +61,7 @@ public class CalcRel extends SingleRel {
     public final RexNode[] _projectExprs;
     public final RexNode _conditionExpr;
 
-    protected CalcRel(VolcanoCluster cluster, SaffronRel child,
+    public CalcRel(VolcanoCluster cluster, SaffronRel child,
             SaffronType rowType, RexNode[] projectExprs,
             RexNode conditionExpr) {
         super(cluster, child);

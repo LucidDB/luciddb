@@ -21,6 +21,8 @@
 
 package net.sf.saffron.sql;
 
+import net.sf.saffron.sql.parser.ParserPosition;
+
 import java.util.List;
 
 /**
@@ -55,9 +57,9 @@ public class SqlCase extends SqlCall
      * operands[2] is a SqlNode representing the implicit or explicit ELSE expression
      * see {@link #WHEN_OPERANDS}, {@link #THEN_OPERANDS}, {@link #ELSE_OPERAND}
      */
-    SqlCase(SqlCaseOperator operator,SqlNode [] operands)
+    SqlCase(SqlCaseOperator operator,SqlNode [] operands, ParserPosition parserPosition)
     {
-        super(operator,operands);
+        super(operator,operands, parserPosition);
     }
 
     //~ Methods ---------------------------------------------------------------

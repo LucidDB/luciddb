@@ -217,6 +217,7 @@ public:
     // partial implementation of CacheAccessor
     virtual SharedCache getCache();
     virtual uint getMaxLockedPages();
+    virtual void setMaxLockedPages(uint nPages);
 
     // implementation of StatsSource
     virtual void writeStats(StatsTarget &target);

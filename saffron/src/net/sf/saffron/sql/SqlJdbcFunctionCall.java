@@ -24,6 +24,7 @@ package net.sf.saffron.sql;
 import net.sf.saffron.sql.test.SqlTester;
 import net.sf.saffron.sql.fun.SqlStdOperatorTable;
 import net.sf.saffron.sql.fun.SqlTrimFunction;
+import net.sf.saffron.sql.parser.ParserPosition;
 import net.sf.saffron.core.SaffronType;
 import net.sf.saffron.core.SaffronTypeFactory;
 import net.sf.saffron.util.Util;
@@ -46,9 +47,9 @@ public class SqlJdbcFunctionCall extends SqlFunction
 //    private SqlCall thisCall;
     SqlNode[] thisOperands;
 
-    public SqlCall createCall(SqlNode[] operands) {
+    public SqlCall createCall(SqlNode[] operands, ParserPosition parserPosition) {
         thisOperands = operands;
-        return super.createCall(operands);
+        return super.createCall(operands, parserPosition);
     }
 
     public SqlJdbcFunctionCall(String name) {
@@ -64,7 +65,7 @@ public class SqlJdbcFunctionCall extends SqlFunction
 
     public SqlCall getLookupCall() {
         if (null==lookupCall) {
-            lookupCall = lookupMakeCallObj.createCall(thisOperands);
+            lookupCall = lookupMakeCallObj.createCall(thisOperands, null);
         }
         return lookupCall;
     }
@@ -167,7 +168,7 @@ public class SqlJdbcFunctionCall extends SqlFunction
          * @pre order[i] < order.length
          * @pre order.length > 0
          * @pre numOfArgs==order.length (currently operation overloading when
-         *                               reording is necessaryis NOT implemented)
+         *                               reording is necessary is NOT implemented)
          * @param operator
          * @param order
          */
@@ -208,11 +209,11 @@ public class SqlJdbcFunctionCall extends SqlFunction
          * the operands reordered, otherwise no change of ordering is applied
          * @param operands
          */
-        SqlCall createCall(SqlNode[] operands) {
+        SqlCall createCall(SqlNode[] operands, ParserPosition parserPosition) {
             if (null==order) {
-                return operator.createCall(operands);
+                return operator.createCall(operands, parserPosition);
             }
-            return operator.createCall(reorder(operands));
+            return operator.createCall(reorder(operands), parserPosition);
         }
 
         /**
@@ -259,11 +260,11 @@ public class SqlJdbcFunctionCall extends SqlFunction
                     assert(null!=operands);
                     assert(1==operands.length);
                     SqlNode[] newOperands = new SqlNode[3];
-                    newOperands[0] = SqlTrimFunction.Flag.Leading;
-                    newOperands[1] = SqlLiteral.createString("'\\t\\r\\n\\f '", null);
+                    newOperands[0] = SqlTrimFunction.Flag.createLeading(null);
+                    newOperands[1] = SqlLiteral.createString("'\\t\\r\\n\\f '", null, null);
                     newOperands[2] = operands[0];
 
-                    return super.createCall(newOperands);
+                    return super.createCall(newOperands, null);
                 }
             });
             map.put("RTRIM", new MakeCall(opTab.trimFunc,1) {
@@ -271,11 +272,11 @@ public class SqlJdbcFunctionCall extends SqlFunction
                     assert(null!=operands);
                     assert(1==operands.length);
                     SqlNode[] newOperands = new SqlNode[3];
-                    newOperands[0] = SqlTrimFunction.Flag.Trailing;
-                    newOperands[1] = SqlLiteral.createString("'\\t\\r\\n\\f '", null);
+                    newOperands[0] = SqlTrimFunction.Flag.createTrailing(null);
+                    newOperands[1] = SqlLiteral.createString("'\\t\\r\\n\\f '", null,null);
                     newOperands[2] = operands[0];
 
-                    return super.createCall(newOperands);
+                    return super.createCall(newOperands,null);
                 }
             });
             map.put("SUBSTRING", new MakeCall(opTab.substringFunc,3));

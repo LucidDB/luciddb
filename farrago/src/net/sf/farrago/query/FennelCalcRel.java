@@ -109,11 +109,16 @@ public abstract class FennelCalcRel extends FennelSingleRel {
     public PlanCost computeSelfCost(SaffronPlanner planner) {
         // TODO:  the real thing
         double rowCount = getRows();
-        double bytesPerRow = 1;
+
+        // NOTE jvs 26-July-2004: factor of 2 is to make sure cost always comes
+        // out higher than IterCalcRel (making it at least deterministic until
+        // we have proper costing, and giving preference to Java since it's
+        // currently more reliable)
+        
         return planner.makeCost(
-                rowCount,
-                rowCount,
-                rowCount * bytesPerRow);
+            rowCount,
+            rowCount * _projectExprs.length * 2,
+            0);
     }
 
     public boolean isDistinct() {

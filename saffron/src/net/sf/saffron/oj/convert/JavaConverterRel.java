@@ -23,6 +23,7 @@
 package net.sf.saffron.oj.convert;
 
 import net.sf.saffron.core.SaffronPlanner;
+import net.sf.saffron.core.PlanWriter;
 import net.sf.saffron.oj.rel.JavaRel;
 import net.sf.saffron.oj.rel.JavaRelImplementor;
 import net.sf.saffron.oj.rel.JavaLoopRel;
@@ -32,6 +33,7 @@ import net.sf.saffron.rel.SaffronRel;
 import net.sf.saffron.rel.convert.ConverterRel;
 import net.sf.saffron.rel.convert.ConverterRule;
 import net.sf.saffron.rel.convert.FactoryConverterRule;
+import net.sf.saffron.util.Util;
 import openjava.ptree.ParseTree;
 import openjava.ptree.Variable;
 
@@ -66,6 +68,12 @@ public class JavaConverterRel extends ConverterRel
     }
 
     //~ Methods ---------------------------------------------------------------
+
+    private static final String[] terms = {"child", "convention"};
+
+    public void explain(PlanWriter pw) {
+        pw.explain(this, terms, new Object[] {getConvention().getName()});
+    }
 
     public CallingConvention getConvention()
     {

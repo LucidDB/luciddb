@@ -65,6 +65,8 @@ public class FarragoPlanner extends VolcanoPlanner
      */
     public void init()
     {
+        boolean fennelEnabled = stmt.getCatalog().isFennelEnabled();
+        
         // Only register calling conventions we're interested in.  Eventually
         // we probably want to expand this set once the various converters are
         // accurately costed.  For now, this guarantees determinism in unit
@@ -101,22 +103,32 @@ public class FarragoPlanner extends VolcanoPlanner
         // Add the rule to introduce FennelCalcRel's only if the fennel
         // calculator is enabled.
         final CalcVirtualMachine calcVM =
-                stmt.getCatalog().getCurrentConfig().getCalcVirtualMachine();
+            stmt.getCatalog().getCurrentConfig().getCalcVirtualMachine();
         if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_FENNEL)) {
-            // use only Fennel for calculating expressions
+            // use Fennel for calculating expressions
+            assert(fennelEnabled);
             addRule(FennelCalcRule.instance);
+        }
 
-        } else if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_JAVA)) {
-            // use only Java code generation for calculating expressions
+        if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_JAVA) ||
+            calcVM.equals(CalcVirtualMachineEnum.CALCVM_AUTO))
+        {
+            // use Java code generation for calculating expressions
             addRule(OJPlannerFactory.IterCalcRule.instance);
             
             // TODO jvs 6-May-2004:  these should be redundant now, but when
             // I remove them, some queries fail.  Find out why.
             addRule(OJPlannerFactory.ProjectToIteratorRule.instance);
             addRule(OJPlannerFactory.ProjectedFilterToIteratorRule.instance);
-        } else {
-            assert(calcVM.equals(CalcVirtualMachineEnum.CALCVM_AUTO));
-            throw Util.needToImplement(calcVM);
+        }
+
+        if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_AUTO)
+            && fennelEnabled)
+        {
+            // add rule for pure calculator usage plus rule for
+            // decomposing rels into mixed Java/Fennel impl
+            addRule(FennelCalcRule.instance);
+            addRule(FarragoAutoCalcRule.instance);
         }
 
         FennelToIteratorConverter.register(this);
@@ -130,6 +142,12 @@ public class FarragoPlanner extends VolcanoPlanner
     public FarragoPreparingStmt getPreparingStmt()
     {
         return stmt;
+    }
+
+    // override VolcanoPlanner
+    public JavaRelImplementor getJavaRelImplementor(SaffronRel rel)
+    {
+        return stmt.getRelImplementor(rel.getCluster().rexBuilder);
     }
 }
 

@@ -22,6 +22,7 @@ package net.sf.farrago.query;
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
+import net.sf.farrago.session.*;
 
 import net.sf.saffron.util.*;
 import net.sf.saffron.core.*;
@@ -32,8 +33,8 @@ import java.util.*;
 import java.lang.reflect.*;
 
 /**
- * FarragoExecutableJavaStmt implements FarragoExecutableStmt via a compiled
- * Java class.
+ * FarragoExecutableJavaStmt implements FarragoSessionExecutableStmt via a
+ * compiled Java class.
  *
  *<p>
  *
@@ -63,6 +64,8 @@ class FarragoExecutableJavaStmt extends FarragoExecutableStmtImpl
 
     private final String xmiFennelPlan;
 
+    private final Set referencedObjectIds;
+
     FarragoExecutableJavaStmt(
         File packageDir,
         Class rowClass,
@@ -70,7 +73,8 @@ class FarragoExecutableJavaStmt extends FarragoExecutableStmtImpl
         SaffronType dynamicParamRowType,
         Method method,
         String xmiFennelPlan,
-        boolean isDml)
+        boolean isDml,
+        Set referencedObjectIds)
     {
         super(dynamicParamRowType,isDml);
 
@@ -78,19 +82,26 @@ class FarragoExecutableJavaStmt extends FarragoExecutableStmtImpl
         this.rowClass = rowClass;
         this.method = method;
         this.xmiFennelPlan = xmiFennelPlan;
+        this.referencedObjectIds = referencedObjectIds;
 
         rowType = forgetTypeFactory(preparedRowType);
     }
 
-    // implement FarragoExecutableStmt
+    // implement FarragoSessionExecutableStmt
     public SaffronType getRowType()
     {
         return rowType;
     }
     
-    // implement FarragoExecutableStmt
+    // implement FarragoSessionExecutableStmt
+    public Set getReferencedObjectIds()
+    {
+        return referencedObjectIds;
+    }
+    
+    // implement FarragoSessionExecutableStmt
     public ResultSet execute(
-        FarragoRuntimeContext runtimeContext)
+        FarragoSessionRuntimeContext runtimeContext)
     {
         try {
             if (xmiFennelPlan != null) {
@@ -136,7 +147,7 @@ class FarragoExecutableJavaStmt extends FarragoExecutableStmtImpl
         }
     }
     
-    // implement FarragoExecutableStmt
+    // implement FarragoSessionExecutableStmt
     public long getMemoryUsage()
     {
 
@@ -144,7 +155,7 @@ class FarragoExecutableJavaStmt extends FarragoExecutableStmtImpl
         // the compiled classes.  Other allocations to estimate are loaded
         // class overhead (e.g. constants and reflection info), type
         // descriptor, JIT code size, and "this" object and fields such as
-        // packageDir.
+        // packageDir/referencedObjectIds.
         
         long nBytes = 0;
         File [] files = packageDir.listFiles();
@@ -158,7 +169,7 @@ class FarragoExecutableJavaStmt extends FarragoExecutableStmtImpl
         if (xmiFennelPlan != null) {
             nBytes += FarragoUtil.getStringMemoryUsage(xmiFennelPlan);
         }
-        
+
         return nBytes;
     }
 }

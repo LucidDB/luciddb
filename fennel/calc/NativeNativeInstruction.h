@@ -26,9 +26,10 @@
 #ifndef Fennel_NativeNativeInstruction_Included
 #define Fennel_NativeNativeInstruction_Included
 
-FENNEL_BEGIN_NAMESPACE
-
 #include "fennel/calc/NativeInstruction.h"
+#include <math.h>
+
+FENNEL_BEGIN_NAMESPACE
 
 template<typename TMPLT>
 class NativeNativeInstruction : public NativeInstruction<TMPLT>
@@ -79,16 +80,35 @@ public:
     virtual void exec(TProgramCounter& pc) const { 
         pc++;
         if (mOp1->isNull() || mOp2->isNull()) {
+            // SQL99 6.26 General Rule 1
             mResult->toNull();
         } else {
             mResult->value(mOp1->value() + mOp2->value());
         }
     }
 
-    const char* longName() const { return "NativeAdd"; }
-    const char* shortName() const { return "ADD"; } 
+    static const char * longName() { return "NativeAdd"; }
+    static const char * shortName() { return "ADD"; } 
+    static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
-        describeHelper(out, values, longName(), shortName(), mResult, mOp1, mOp2);
+        describeHelper(out, values, longName(), shortName(),
+                       mResult, mOp1, mOp2);
+    }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        return InstructionSignature(shortName(), v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        return new NativeAdd(static_cast<RegisterRef<TMPLT>*> (sig[0]),
+                             static_cast<RegisterRef<TMPLT>*> (sig[1]),
+                             static_cast<RegisterRef<TMPLT>*> (sig[2]),
+                             (sig[0])->type());
     }
 };
 
@@ -109,16 +129,35 @@ public:
     virtual void exec(TProgramCounter& pc) const { 
         pc++;
         if (mOp1->isNull() || mOp2->isNull()) {
+            // SQL99 6.26 General Rule 1
             mResult->toNull();
         } else {
             mResult->value(mOp1->value() - mOp2->value());
         }
     }
 
-    const char* longName() const { return "NativeSub"; }
-    const char* shortName() const { return "SUB"; }
+    static char const * const longName() { return "NativeSub"; }
+    static char const * const shortName() { return "SUB"; }
+    static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
-        describeHelper(out, values, longName(), shortName(), mResult, mOp1, mOp2);
+        describeHelper(out, values, longName(), shortName(),
+                       mResult, mOp1, mOp2);
+    }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        return InstructionSignature(shortName(), v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        return new NativeSub(static_cast<RegisterRef<TMPLT>*> (sig[0]),
+                             static_cast<RegisterRef<TMPLT>*> (sig[1]),
+                             static_cast<RegisterRef<TMPLT>*> (sig[2]),
+                             (sig[0])->type());
     }
 };
 
@@ -139,16 +178,35 @@ public:
     virtual void exec(TProgramCounter& pc) const { 
         pc++;
         if (mOp1->isNull() || mOp2->isNull()) {
+            // SQL99 6.26 General Rule 1
             mResult->toNull();
         } else {
             mResult->value(mOp1->value() * mOp2->value());
         }
     }
 
-    const char* longName() const { return "NativeMul"; }
-    const char* shortName() const { return "MUL"; }
+    static char const * const longName() { return "NativeMul"; }
+    static char const * const shortName() { return "MUL"; }
+    static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
-        describeHelper(out, values, longName(), shortName(), mResult, mOp1, mOp2);
+        describeHelper(out, values, longName(), shortName(),
+                       mResult, mOp1, mOp2);
+    }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        return InstructionSignature(shortName(), v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        return new NativeMul(static_cast<RegisterRef<TMPLT>*> (sig[0]),
+                             static_cast<RegisterRef<TMPLT>*> (sig[1]),
+                             static_cast<RegisterRef<TMPLT>*> (sig[2]),
+                             (sig[0])->type());
     }
 };
 
@@ -169,28 +227,49 @@ public:
 
     virtual void exec(TProgramCounter& pc) const { 
         pc++;
-        // Nulls propagate as per custom: Joe Celko's SQL For Smarties pg55
-        // Could not find in SQL99 spec.
         if (mOp1->isNull() || mOp2->isNull()) {
+            // SQL99 6.26 General Rule 1
             mResult->toNull();
         } else {
             TMPLT o2 = mOp2->value(); // encourage into register
             if (o2 == 0) {
+                // SQL99 6.26 General Rule 4
                 mResult->toNull();
-                // SQL99 22.1 SQLState dataexception class 22, division by zero subclass 012
+                // SQL99 22.1 SQLState dataexception class 22,
+                // division by zero subclass 012
                 throw CalcMessage("22012", pc - 1); 
             }
             mResult->value(mOp1->value() / o2);
         }
     }
 
-    const char* longName() const { return "NativeDiv"; } 
-    const char* shortName() const { return "DIV"; } 
+    static char const * const longName() { return "NativeDiv"; } 
+    static char const * const shortName() { return "DIV"; } 
+    static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
-        describeHelper(out, values, longName(), shortName(), mResult, mOp1, mOp2);
+        describeHelper(out, values, longName(), shortName(), 
+                       mResult, mOp1, mOp2);
+    }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        return InstructionSignature(shortName(), v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        return new NativeDiv(static_cast<RegisterRef<TMPLT>*> (sig[0]),
+                             static_cast<RegisterRef<TMPLT>*> (sig[1]),
+                             static_cast<RegisterRef<TMPLT>*> (sig[2]),
+                             (sig[0])->type());
     }
 };
 
+// NativeNeg implements monadic arithmetic operator '-' (unary minus)
+// See SQL99 6.26, General Rule 3.
 template <typename TMPLT>
 class NativeNeg : public NativeNativeInstruction<TMPLT>
 {
@@ -207,15 +286,110 @@ public:
     virtual void exec(TProgramCounter& pc) const { 
         pc++;
         if (mOp1->isNull()) {
+            // SQL99 6.26 General Rule 1
             mResult->toNull();
         } else {
             mResult->value(mOp1->value() * -1);
         }
     }
-    const char* longName() const { return "NativeNeg"; }
-    const char* shortName() const { return "NEG"; }
+    static char const * const longName() { return "NativeNeg"; }
+    static char const * const shortName() { return "NEG"; }
+    static int numArgs() { return 2; }
     void describe(string& out, bool values) const {
-        describeHelper(out, values, longName(), shortName(), mResult, mOp1, mOp2);
+        describeHelper(out, values, longName(), shortName(),
+                       mResult, mOp1, mOp2);
+    }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        return InstructionSignature(shortName(), v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        return new NativeNeg(static_cast<RegisterRef<TMPLT>*> (sig[0]),
+                             static_cast<RegisterRef<TMPLT>*> (sig[1]),
+                             (sig[0])->type());
+    }
+};
+
+template <class TMPLT>
+class NativeRoundHelp {
+public:
+    static void r(TMPLT& result, TMPLT op1) {
+        // no-op
+        result = op1;
+    }
+};
+
+template<>
+class NativeRoundHelp<double> {
+public:
+    static void r(double& result, double op1) {
+        // implements round away from zero
+        result = round(op1);
+    }
+};
+
+template<>
+class NativeRoundHelp<float> {
+public:
+    static void r(float& result, float op1) {
+        // implements round away from zero
+        result = roundf(op1);
+    }
+};
+
+// See SQL99 4.5 Numbers, paragraph 4, for a discussion on
+// rounding away from zero.
+// NativeRound does a round "away from zero" (e.g. -0.5 -> -1.0)
+template <typename TMPLT>
+class NativeRound : public NativeNativeInstruction<TMPLT>
+{
+public: 
+    explicit
+    NativeRound(RegisterRef<TMPLT>* result,
+                RegisterRef<TMPLT>* op1,
+                StandardTypeDescriptorOrdinal nativeType)
+        : NativeNativeInstruction<TMPLT>(result, op1, nativeType)
+    { }
+    virtual
+    ~NativeRound() { }
+
+    virtual void exec(TProgramCounter& pc) const { 
+        pc++;
+        if (mOp1->isNull()) {
+            mResult->toNull();
+        } else {
+            TMPLT tmp;
+            NativeRoundHelp<TMPLT>::r(tmp, mOp1->value());
+            mResult->value(tmp);
+        }
+    }
+    static char const * const longName() { return "NativeRound"; }
+    static char const * const shortName() { return "ROUND"; }
+    static int numArgs() { return 2; }
+    void describe(string& out, bool values) const {
+        describeHelper(out, values, longName(), shortName(),
+                       mResult, mOp1, mOp2);
+    }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        return InstructionSignature(shortName(), v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        return new NativeRound(static_cast<RegisterRef<TMPLT>*> (sig[0]),
+                               static_cast<RegisterRef<TMPLT>*> (sig[1]),
+                               (sig[0])->type());
     }
 };
 
@@ -240,10 +414,27 @@ public:
             mResult->value(mOp1->value());
         }
     }
-    const char* longName() const { return "NativeMove"; }
-    const char* shortName() const { return "MOVE"; }
+    static char const * const longName() { return "NativeMove"; }
+    static char const * const shortName() { return "MOVE"; }
+    static int numArgs() { return 2; }
     void describe(string& out, bool values) const {
-        describeHelper(out, values, longName(), shortName(), mResult, mOp1, mOp2);
+        describeHelper(out, values, longName(), shortName(), 
+                       mResult, mOp1, mOp2);
+    }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        return InstructionSignature(shortName(), v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        return new NativeMove(static_cast<RegisterRef<TMPLT>*> (sig[0]),
+                              static_cast<RegisterRef<TMPLT>*> (sig[1]),
+                              (sig[0])->type());
     }
 };
 
@@ -264,10 +455,27 @@ public:
         pc++;
         mResult->refer(mOp1);
     }
-    const char* longName() const { return "NativeRef"; }
-    const char* shortName() const { return "REF"; }
+    static char const * const longName() { return "NativeRef"; }
+    static char const * const shortName() { return "REF"; }
+    static int numArgs() { return 2; }
     void describe(string& out, bool values) const {
-        describeHelper(out, values, longName(), shortName(), mResult, mOp1, mOp2);
+        describeHelper(out, values, longName(), shortName(),
+                       mResult, mOp1, mOp2);
+    }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        return InstructionSignature(shortName(), v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        return new NativeRef(static_cast<RegisterRef<TMPLT>*> (sig[0]),
+                             static_cast<RegisterRef<TMPLT>*> (sig[1]),
+                             (sig[0])->type());
     }
 };
 
@@ -287,16 +495,77 @@ public:
         pc++;
         mResult->toNull();
     }
-    const char* longName() const { return "NativeToNull"; }
-    const char* shortName() const { return "TONULL"; }
+    static char const * const longName() { return "NativeToNull"; }
+    static char const * const shortName() { return "TONULL"; }
+    static int numArgs() { return 1; }
     void describe(string& out, bool values) const {
-        describeHelper(out, values, longName(), shortName(), mResult, mOp1, mOp2);
+        describeHelper(out, values, longName(), shortName(),
+                       mResult, mOp1, mOp2);
+    }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        return InstructionSignature(shortName(), v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        return new NativeToNull(static_cast<RegisterRef<TMPLT>*> (sig[0]),
+                                (sig[0])->type());
     }
 };
+
+class NativeNativeInstructionRegister : InstructionRegister {
+
+    // TODO: Refactor registerTypes to class InstructionRegister
+    template < template <typename> class INSTCLASS2 >
+    static void
+    registerTypes(vector<StandardTypeDescriptorOrdinal> const & t) {
+
+        for (uint i = 0; i < t.size(); i++) {
+            StandardTypeDescriptorOrdinal type = t[i];
+            // Type <char> below is a placeholder and is ignored.
+            InstructionSignature sig = INSTCLASS2<char>::signature(type);
+            switch(type) {
+#define Fennel_InstructionRegisterSwitch_NativeNotBool 1
+#include "fennel/calc/InstructionRegisterSwitch.h"
+            default:
+                throw std::logic_error("Default InstructionRegister");
+            }
+        }
+    }
+
+public:
+    static void
+    registerInstructions() {
+
+        vector<StandardTypeDescriptorOrdinal> t;
+        t = InstructionSignature::typeVector
+            (StandardTypeDescriptor::isNativeNotBool);
+
+        // Have to do full fennel:: qualification of template
+        // arguments below to prevent template argument 'TMPLT', of
+        // this encapsulating class, from perverting NativeAdd into
+        // NativeAdd<TMPLT> or something like
+        // that. Anyway. Fennel::NativeAdd works just fine.
+        registerTypes<fennel::NativeAdd>(t);
+        registerTypes<fennel::NativeSub>(t);
+        registerTypes<fennel::NativeMul>(t);
+        registerTypes<fennel::NativeDiv>(t);
+        registerTypes<fennel::NativeNeg>(t);
+        registerTypes<fennel::NativeRound>(t);
+        registerTypes<fennel::NativeMove>(t);
+        registerTypes<fennel::NativeRef>(t);
+        registerTypes<fennel::NativeToNull>(t);
+    }
+};
+
 
 FENNEL_END_NAMESPACE
 
 #endif
 
 // End NativeNativeInstruction.h
-

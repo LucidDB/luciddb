@@ -25,6 +25,7 @@ import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.util.*;
+import net.sf.farrago.util.FarragoProperties;
 
 import net.sf.saffron.util.*;
 
@@ -64,9 +65,36 @@ public abstract class FemDataWrapperImpl extends InstanceHandler
             if (!getLibraryFile().startsWith(
                     FarragoDataWrapperCache.LIBRARY_CLASS_PREFIX))
             {
-                // convert library filename to absolute path
-                File file = new File(getLibraryFile());
-                setLibraryFile(file.getAbsolutePath());
+                // convert library filename to absolute path, if necessary
+                String libraryFile = getLibraryFile();
+
+                String expandedLibraryFile = 
+                    FarragoProperties.instance().expandProperties(libraryFile);
+
+                // REVIEW: SZ: 7/20/2004: Maybe the library should
+                // always be an absolute path?  (e.g. Always report an
+                // error if the path given by the user is relative.)
+                // If a user installs a thirdparty Data Wrapper we
+                // probably don't want them using relative paths to
+                // call out its location.
+
+                if (libraryFile.equals(expandedLibraryFile)) {
+                    // No properties were expanded, so make the path
+                    // absolute if it isn't already absolute.
+                    File file = new File(libraryFile);
+                    setLibraryFile(file.getAbsolutePath());
+                } else {
+                    // Test that the expanded library file is an
+                    // aboslute path.  We don't set the absolute path
+                    // because we want to keep the property in the
+                    // library name.
+                    File file = new File(expandedLibraryFile);
+                    if (!file.isAbsolute()) {
+                        throw new IOException(
+                            libraryFile
+                            + " does not evaluate to an absolute path");
+                    }
+                }
             }
             
             // validate that we can successfully initialize the wrapper

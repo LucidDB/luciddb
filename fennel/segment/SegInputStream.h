@@ -106,6 +106,15 @@ public:
      * @param pos the new position, previously returned by getSegPos
      */
     void seekSegPos(SegStreamPosition const &pos);
+
+    // override ByteInputStream
+    virtual SharedByteStreamMarker newMarker();
+    
+    // override ByteInputStream
+    virtual void mark(ByteStreamMarker &marker);
+
+    // override ByteInputStream
+    virtual void reset(ByteStreamMarker const &marker);
 };
 
 FENNEL_END_NAMESPACE

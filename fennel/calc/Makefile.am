@@ -15,25 +15,27 @@ RegisterReference.cpp \
 CalcGrammar.ypp \
 CalcLexer.lpp \
 CalcAssembler.cpp \
+InstructionFactory.cpp \
+InstructionSignature.cpp \
 CalcInit.cpp \
 SqlDate.cpp \
 SqlString.cpp \
 SqlRegExp.cpp \
 SqlStringAscii.cpp \
 ExtString.cpp \
+ExtCast.cpp \
 ExtRegExp.cpp \
 StringToHex.cpp \
 ExtMath.cpp
 
-# noinst_PROGRAMS =    \
-# testCalc tuple testCalcAssembler testCalcExtString
+#noinst_PROGRAMS =    \
+#testCalc tuple testCalcAssembler
 
-# TESTS = $(noinst_PROGRAMS)
+#TESTS = $(noinst_PROGRAMS)
 
-# testCalc_SOURCES=testCalc.cpp 
-# tuple_SOURCES= tuple.cpp
-# testCalcAssembler_SOURCES=testCalcAssembler.cpp
-# testCalcExtString_SOURCES=testCalcExtString.cpp
+#testCalc_SOURCES=testCalc.cpp 
+#tuple_SOURCES= tuple.cpp
+#testCalcAssembler_SOURCES=testCalcAssembler.cpp
 
 LDADD = -L$(top_builddir)/calc      \
 		-l$(CALC_LIB)       \

@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/farrago/regressionsql/selectSimple.sql#7 $
+0: jdbc:farrago:> -- $Id: //open/johnk/farrago/regressionsql/selectSimple.sql#6 $
 0: jdbc:farrago:> -- Full vertical system testing of non advanced select statements
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel
@@ -178,10 +178,339 @@
 | EMPNO  | NAME  | DEPTNO  | GENDER  | CITY  | EMPID  | AGE  | PUBLIC_KEY  | SLACKER  | MANAGER  |
 +--------+-------+---------+---------+-------+--------+------+-------------+----------+----------+
 +--------+-------+---------+---------+-------+--------+------+-------------+----------+----------+
-0: jdbc:farrago:> --select empno, empno from sales.emps;
+0: jdbc:farrago:> select empno, empno from sales.emps;
++--------+--------+
+| EMPNO  | EMPNO  |
++--------+--------+
+| 120    | 120    |
+| 110    | 110    |
+| 110    | 110    |
+| 100    | 100    |
++--------+--------+
 0: jdbc:farrago:> --select empno,*,empno from sales.emps;
-0: jdbc:farrago:> --select 1+2 as empno, empno as empno, age as empno, 1+2 as empno from sales.emps
+0: jdbc:farrago:> select 1 as apa, age as apa, 3 as APA, 4 as "APA" from sales.emps order by 2;
++------+------+------+------+
+| APA  | APA  | APA  | APA  |
++------+------+------+------+
+| 1    |      | 3    | 4    |
+| 1    | 25   | 3    | 4    |
+| 1    | 50   | 3    | 4    |
+| 1    | 80   | 3    | 4    |
++------+------+------+------+
+0: jdbc:farrago:> select 1+2 as empno, empno as empno, age as empno, 1+2 as empno from sales.emps order by 2;
++--------+--------+--------+--------+
+| EMPNO  | EMPNO  | EMPNO  | EMPNO  |
++--------+--------+--------+--------+
+| 3      | 100    | 25     | 3      |
+| 3      | 110    |        | 3      |
+| 3      | 110    | 80     | 3      |
+| 3      | 120    | 50     | 3      |
++--------+--------+--------+--------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- select 1 from values(2);
+0: jdbc:farrago:> select age from (select emps.* from sales.emps) order by 1;
++------+
+| AGE  |
++------+
+|      |
+| 25   |
+| 50   |
+| 80   |
++------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> --Fails
+0: jdbc:farrago:> SELECT 0.5e1.1 from sales.emps;
+Error: net.sf.farrago.parser.ParseException: Encountered ".1" at line 1, column 13.
+Was expecting one of:
+    "cascade" ...
+    "catalog" ...
+    "data" ...
+    "index" ...
+    "java" ...
+    "key" ...
+    "library" ...
+    "options" ...
+    "preserve" ...
+    "restrict" ...
+    "schema" ...
+    "server" ...
+    "temporary" ...
+    "version" ...
+    "view" ...
+    "wrapper" ...
+    "and" ...
+    "as" ...
+    "asc" ...
+    "ascending" ...
+    "between" ...
+    "from" ...
+    "implementation" ...
+    "in" ...
+    "is" ...
+    "like" ...
+    "or" ...
+    "overlaps" ...
+    "plan" ...
+    "similar" ...
+    "," ...
+    "=" ...
+    ">" ...
+    "<" ...
+    "<=" ...
+    ">=" ...
+    "<>" ...
+    "+" ...
+    "-" ...
+    "*" ...
+    "/" ...
+    "||" ...
+    "not" ...
+    <IDENTIFIER> ...
+    <QUOTED_IDENTIFIER> ... (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> --OK 
+0: jdbc:farrago:> --select 0.5e-3*1e3 from values(1);
+0: jdbc:farrago:> --select 0.5e-3*1.1e3 from values(1);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values true>=true;
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> values true>=false;
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> values true>=unknown;
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> values false>=true;
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:farrago:> values false>=false;
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> values false>=unknown;
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> values unknown>=true;
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> values unknown>=false;
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> values unknown>=unknown;
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> values true<=true;
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> values true<=false;
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:farrago:> values true<=unknown;
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> values false<=true;
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> values false<=false;
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> values false<=unknown;
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> values unknown<=true;
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> values unknown<=false;
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> values unknown<=unknown;
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select x'ff'=x'ff' from values(1);
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> select X'f2'<>x'ff' from values(1);
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> select x'11'>x'01' from values(1);
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> select x'11'<x'aa' from values(1);
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> select x'0a'<=x'0a' from values(1);
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> select x'0a'<=x'10' from values(1);
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> select x'20'<=x'10' from values(1);
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:farrago:> select x'0001'>=x'100000' from values(1);
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select x'f'=x'f' from values(1);
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> select X'2'<>x'f' from values(1);
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> --select x'1'>x'01' from values(1);
+0: jdbc:farrago:> select x'1'<x'a' from values(1);
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> select x'a'<=x'a' from values(1);
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> select x'a'<=x'1' from values(1);
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:farrago:> select x'0'<=x'1' from values(1);
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> select x'001'>=x'10000' from values(1);
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> --select b'10'=b'010' from values(1);
+0: jdbc:farrago:> select b'1001'=b'1001' from values(1);
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> --select b'1'<>b'001' from values(1);
+0: jdbc:farrago:> --select b'111'>b'01' from values(1);
+0: jdbc:farrago:> select b'11'<b'11' from values(1);
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:farrago:> select b'01'<=b'01' from values(1);
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> select b'01'<=b'10' from values(1);
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> select b'10'<=b'100' from values(1);
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> select B'0001'>=b'100000' from values(1);
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

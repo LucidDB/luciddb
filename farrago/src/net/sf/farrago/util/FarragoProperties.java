@@ -24,6 +24,7 @@ import net.sf.saffron.util.property.*;
 
 import java.io.*;
 import java.util.*;
+import java.util.regex.*;
 
 /**
  * Provides the properties which control limited aspects of Farrago behavior.
@@ -43,6 +44,8 @@ import java.util.*;
 public class FarragoProperties extends Properties
 {
     private static FarragoProperties instance;
+
+    private static final String PROPERTY_EXPANSION_PATTERN = "\\$\\{\\w+\\}";
 
     /**
      * The string property "net.sf.farrago.home" is the path to the Farrago
@@ -91,8 +94,9 @@ public class FarragoProperties extends Properties
         this,"net.sf.farrago.fileset.regressionsql",null);
 
     /**
-     * @return the singleton properties object, constructed from
-     * {@link System#getProperties}.
+     * @return the {@link net.sf.saffron.util.Glossary#SingletonPattern
+     * singleton} properties object, constructed from {@link
+     * System#getProperties}.
      */
     public static synchronized FarragoProperties instance()
     {
@@ -121,6 +125,66 @@ public class FarragoProperties extends Properties
             String homeDir = instance().homeDir.get(true);
             return new File(homeDir,"catalog");
         }
+    }
+
+    
+    // REVIEW: SZ: 7/20/2004: Add support for expanding any of the
+    // above properties?  Maybe just come up with a well-defined set
+    // of FarragoProperties fields that should be expandable: homeDir,
+    // catalogDir, etc.  Also, the definition of a property name
+    // should probably be expanded to include more punctuation and/or
+    // non-ASCII letters.
+
+    /**
+     * Expands properties embedded in the given String.  Property
+     * names are encoded as in Ant: <code>${propertyName}</code>.
+     * Property names must match the {@link Pattern} \w character
+     * class (<code>[a-zA-z_0-9]</code>).  References to unknown
+     * properties are not modified (e.g., the expansion of
+     * <code>"${UNKNOWN}"</code> is <code>"${UNKNOWN}"</code>).
+     *
+     * <p>Currently, the only supported property is
+     * <code>${FARRAGO_HOME}</code>, which is replaced with the value
+     * of {@link #homeDir}.
+     *
+     * @param value a value that may or may not contain property names
+     *              to be expanded.
+     * @return the <code>value</code> parameter with its property
+     *         references expanded -- returns <code>value</code> if no
+     *         known property references are found
+     */
+    public String expandProperties(String value)
+    {
+        Pattern patt = Pattern.compile(PROPERTY_EXPANSION_PATTERN);
+
+        Matcher matcher = patt.matcher(value);
+
+        StringBuffer result = null;
+        int offset = 0;
+        while(matcher.find()) {
+            int start = matcher.start();
+            int end = matcher.end();
+
+            String propertyName = value.substring(start + 2, end - 1);
+
+            if (propertyName.equals("FARRAGO_HOME")) {
+                if (result == null) {
+                    result = new StringBuffer(value);
+                }
+
+                String homeDirValue = homeDir.get();
+
+                result.replace(start + offset, end + offset, homeDirValue);
+
+                offset += homeDirValue.length() - (end - start);
+            }
+        }
+
+        if (result != null) {
+            return result.toString();
+        }
+
+        return value;
     }
 }
 

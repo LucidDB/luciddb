@@ -1,6 +1,9 @@
 -- $Id$
 -- Test queries which make use of foreign namespaces
 
+-- force usage of Java calculator
+alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
+
 -- create a private wrapper for mdr (don't use the standard mdr wrapper)
 create foreign data wrapper test_mdr
 library 'class net.sf.farrago.namespace.mdr.MedMdrForeignDataWrapper'

@@ -39,6 +39,20 @@ void BTreeInserter::prepare(BTreeInserterParams const &params)
     // count
 }
 
+void BTreeInserter::getResourceRequirements(
+    ExecutionStreamResourceQuantity &minQuantity,
+    ExecutionStreamResourceQuantity &optQuantity)
+{
+    ExecutionStream::getResourceRequirements(minQuantity,optQuantity);
+    
+    // max number of pages locked during tree update (REVIEW),
+    // including BTreeWriter's private scratch page
+    minQuantity.nCachePages += 5;
+    
+    // TODO:  use opt to govern prefetch and come up with a good formula
+    optQuantity = minQuantity;
+}
+
 TupleDescriptor const &BTreeInserter::getOutputDesc() const
 {
     return zeroTupleDesc;

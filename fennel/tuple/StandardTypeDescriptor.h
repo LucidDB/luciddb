@@ -176,6 +176,16 @@ public:
         }
         return false;
     }
+    
+    // Useful for instructions like +, -, etc.
+    static inline bool
+    isNativeNotBool(StandardTypeDescriptorOrdinal st)
+    {
+        if (st <= STANDARD_TYPE_DOUBLE && st != STANDARD_TYPE_BOOL) {
+            return true;
+        }
+        return false;
+    }
 
     /**
      * Note: Boolean considered integral native.

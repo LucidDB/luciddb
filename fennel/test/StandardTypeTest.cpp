@@ -35,6 +35,7 @@ class StandardTypeTest : virtual public TestBase, public TraceSource
 {
     void testStandardTypeToString();
     void testStandardTypeIsNative();
+    void testStandardTypeIsNativeNotBool();
     void testStandardTypeIsIntegralNative();
     void testStandardTypeIsExact();
     void testStandardTypeIsApprox();
@@ -50,6 +51,7 @@ public:
     {
         FENNEL_UNIT_TEST_CASE(StandardTypeTest, testStandardTypeToString);
         FENNEL_UNIT_TEST_CASE(StandardTypeTest, testStandardTypeIsNative);
+        FENNEL_UNIT_TEST_CASE(StandardTypeTest, testStandardTypeIsNativeNotBool);
         FENNEL_UNIT_TEST_CASE(StandardTypeTest, testStandardTypeIsIntegralNative);
         FENNEL_UNIT_TEST_CASE(StandardTypeTest, testStandardTypeIsExact);
         FENNEL_UNIT_TEST_CASE(StandardTypeTest, testStandardTypeIsApprox);
@@ -114,6 +116,32 @@ void StandardTypeTest::testStandardTypeIsNative()
             BOOST_CHECK_EQUAL(StandardTypeDescriptor::isNative(v), false);
         } else {
             BOOST_CHECK_EQUAL(StandardTypeDescriptor::isNative(v), true);
+        }
+    }
+}
+
+void StandardTypeTest::testStandardTypeIsNativeNotBool()
+{
+    BOOST_REQUIRE(STANDARD_TYPE_MIN < STANDARD_TYPE_END);
+    BOOST_REQUIRE(STANDARD_TYPE_MIN <= STANDARD_TYPE_INT_8);
+    BOOST_REQUIRE(STANDARD_TYPE_END > STANDARD_TYPE_VARBINARY);
+
+    int i;
+    StandardTypeDescriptorOrdinal v;
+
+    for (i = STANDARD_TYPE_MIN; i < STANDARD_TYPE_END; i++) {
+        BOOST_MESSAGE("isNativeNotBool " << i);
+        v = *(reinterpret_cast<StandardTypeDescriptorOrdinal *>(&i));
+        if (v == STANDARD_TYPE_BOOL ||
+            v == STANDARD_TYPE_CHAR ||
+            v == STANDARD_TYPE_VARCHAR ||
+            v == STANDARD_TYPE_BINARY ||
+            v == STANDARD_TYPE_VARBINARY) {
+            BOOST_CHECK_EQUAL(StandardTypeDescriptor::isNativeNotBool(v),
+                              false);
+        } else {
+            BOOST_CHECK_EQUAL(StandardTypeDescriptor::isNativeNotBool(v),
+                              true);
         }
     }
 }

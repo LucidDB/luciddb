@@ -145,6 +145,41 @@ void SegInputStream::setDeallocate(
     shouldDeallocate = shouldDeallocateInit;
 }
 
+SharedByteStreamMarker SegInputStream::newMarker()
+{
+    return SharedByteStreamMarker(new SegStreamMarker(*this));
+}
+
+void SegInputStream::mark(ByteStreamMarker &marker)
+{
+    assert(&(marker.getStream()) == this);
+    
+    // memorize SegStream-specific info
+    SegStreamMarker &segMarker =
+        static_cast<SegStreamMarker &>(marker);
+    getSegPos(segMarker.segPos);
+}
+
+void SegInputStream::reset(ByteStreamMarker const &marker)
+{
+    assert(&(marker.getStream()) == this);
+
+    // use SegStream-specific info
+    SegStreamMarker const &segMarker =
+        static_cast<SegStreamMarker const &>(marker);
+
+    // disable prefetch during seek
+    bool prefetch = !pageIter.isSingular();
+    endPrefetch();
+    
+    seekSegPos(segMarker.segPos);
+
+    // restore prefetch preference
+    if (prefetch) {
+        startPrefetch();
+    }
+}
+
 FENNEL_END_CPPFILE("$Id$");
 
 // End SegInputStream.cpp

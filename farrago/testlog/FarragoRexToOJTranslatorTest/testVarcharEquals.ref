@@ -1,11 +1,11 @@
 
 net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
 
-if (CITY.isNull()) {
+if (ID$4$CITY.isNull()) {
     oj_var0.setNull( true );
 } else {
     oj_var0.setNull( false );
-    oj_var0.value = net.sf.farrago.type.runtime.CharStringComparator.compareCharStrings( NAME, CITY ) == 0;
+    oj_var0.value = net.sf.farrago.type.runtime.CharStringComparator.compareCharStrings( ID$1$NAME, ID$4$CITY ) == 0;
 }
 
 return oj_var0;

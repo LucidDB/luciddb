@@ -173,13 +173,6 @@ class FtrsTableModificationRel extends TableModificationRel
             throw getOperation().unexpected();
         }
 
-        // This is to account for total number of pages needed to perform an
-        // update on a single index.  Pages are only locked for the duration of
-        // one index update, so they don't need to be charged per index (unless
-        // we start parallelizing index updates).  TODO: determine the correct
-        // number; 4 is just a guess.
-        int nPagesMin = 4;
-
         // We need to be careful about the order in which we write to indexes.
         // This is required because secondary indexes rely on the clustering
         // key's uniqueness for discriminating entries, e.g. during rollback.
@@ -193,8 +186,6 @@ class FtrsTableModificationRel extends TableModificationRel
         // also.  For updates, there is another consideration:  indexes which
         // are updated in place cannot be rolled back individually, so
         // they must come last (after any possible constraint violations).
-
-        // REVIEW:  update/delete resources
 
         CwmSqlindex clusteredIndex = catalog.getClusteredIndex(table);
         boolean clusteredFirst = clusteredIndex.isUnique();
@@ -278,9 +269,6 @@ class FtrsTableModificationRel extends TableModificationRel
                     firstList.add(indexWriter);
                 }
             }
-
-            // each BTreeWriter currently needs a private scratch page
-            nPagesMin += 1;
         }
 
         // NOTE:  can't use addAll because MDR list impl doesn't support it;
@@ -293,9 +281,6 @@ class FtrsTableModificationRel extends TableModificationRel
         while (iter.hasNext()) {
             tableWriterDef.getIndexWriter().add(iter.next());
         }
-
-        tableWriterDef.setCachePageMin(nPagesMin);
-        tableWriterDef.setCachePageMax(nPagesMin);
 
         // We only need a buffer if the target table is
         // also a source.
@@ -316,9 +301,6 @@ class FtrsTableModificationRel extends TableModificationRel
             buffer.setInMemory(false);
             buffer.setMultipass(false);
 
-            // only need one page for buffered stream access
-            buffer.setCachePageMin(1);
-            buffer.setCachePageMax(1);
             buffer.getInput().add(input);
 
             tableWriterDef.getInput().add(buffer);

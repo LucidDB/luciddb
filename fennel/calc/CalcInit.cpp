@@ -44,7 +44,6 @@ CalcInit::instance()
 
     InstructionFactory::registerInstructions();
 
-    // TODO: May be able to remove these calls. Assembler might do this someday.
     ExtStringRegister(InstructionFactory::getExtendedInstructionTable());
     ExtMathRegister(InstructionFactory::getExtendedInstructionTable());
     ExtDateTimeRegister(InstructionFactory::getExtendedInstructionTable());

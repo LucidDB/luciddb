@@ -34,7 +34,8 @@ import java.io.*;
 
 
 /**
- * A <code>WaldenApplet</code> is ...
+ * Applet which allows you to interactively enter Saffron commands, execute
+ * them, and display the results.
  *
  * @author jhyde
  * @version $Id$
@@ -62,7 +63,7 @@ public class WaldenApplet extends Applet
         SaffronProperties properties = SaffronProperties.instance();
         properties.classDir.set("d:/saffron/classes");
         properties.javaDir.set("d:/saffron/src/examples");
-        properties.javaCompilerClass.set("openjava.ojc.DynamicJavaCompiler");
+        properties.javaCompilerClass.set("openjava.ojc.JaninoCompiler");
         final PipedWriter inWriter = startInterpreter();
         setBackground(Color.white);
         setLayout(null);

@@ -3,6 +3,9 @@
 
 set schema sales;
 
+-- force usage of Fennel calculator
+alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
+
 -- filter which returns one row
 select name from emps where empno = 120;
 

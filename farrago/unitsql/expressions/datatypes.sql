@@ -11,6 +11,10 @@ insert into t values (1,'goober','goober');
 insert into t values (2,'endoplasmic reticulum','endoplasmic reticulum');
 !set outputformat csv
 select * from t;
+!set outputformat table
+
+-- Binary as hexstring
+select public_key from sales.emps order by 1;
 
 -- Date/time/timestamp literals
 

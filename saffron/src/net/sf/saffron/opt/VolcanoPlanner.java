@@ -24,6 +24,7 @@ package net.sf.saffron.opt;
 
 import net.sf.saffron.core.SaffronPlanner;
 import net.sf.saffron.core.SaffronSchema;
+import net.sf.saffron.oj.rel.JavaRelImplementor;
 import net.sf.saffron.rel.*;
 import net.sf.saffron.rel.convert.ConverterRel;
 import net.sf.saffron.rel.convert.ConverterRule;
@@ -444,6 +445,13 @@ public class VolcanoPlanner implements SaffronPlanner
             }
         }
     }
+
+
+    public JavaRelImplementor getJavaRelImplementor(SaffronRel rel)
+    {
+        return new JavaRelImplementor(rel.getCluster().rexBuilder);
+    }
+
 
     /**
      * Finds the cost of a node. Similar to {@link #optimize}, but does not

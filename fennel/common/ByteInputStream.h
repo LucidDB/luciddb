@@ -162,25 +162,35 @@ public:
      */
     void seekBackward(uint cb);
 
-    // REVIEW jvs 12-June-2004: Subclasses may need more information in their
-    // markers (e.g. a physical file position).  One way to deal with this
-    // would be to introduce a factory method newMarker() which would return a
-    // shared_ptr; this would be passed to both mark and reset (which
-    // could downcast to the appropriate type).  This gives the benefits
-    // of polymorphism without excessive allocation cost.
+    
     /**
-     * Create a marker which can later be used to reset this steam to its
-     * current position.
+     * Create a new uninitialized marker for this stream.  The returned marker
+     * must be passed to mark() in order to initialize it.
      *
-     * How long this marker remains valid depends upon the implementation of
-     * the ByteInputStream.
+     * @return shared pointer to new marker
      */
-    inline ByteStreamMarker mark();
+    virtual SharedByteStreamMarker newMarker();
+    
+    /**
+     * Mark the current stream position in preparation for a future call to
+     * reset().  How long this marker remains valid depends upon the
+     * implementation of the ByteInputStream.
+     *
+     * @param marker memento object created with newMarker() on the same
+     * stream; receives the marked position (forgetting any previously
+     * marked position)
+     */
+    virtual void mark(ByteStreamMarker &marker);
 
     /**
-     * Reset stream to the position it was at when the marker was created.
+     * Reset stream to a previously marked position.  The base implementation
+     * uses seekForward/seekBackward (i.e. sequential access), making
+     * it inefficient for large streams.  Derived classes may override
+     * with more efficient implementations such as random access.
+     *
+     * @param marker memento previously memorized with mark()
      */
-    inline void reset(ByteStreamMarker const &marker);
+    virtual void reset(ByteStreamMarker const &marker);
 };
 
 inline uint ByteInputStream::getBytesAvailable() const
@@ -237,23 +247,6 @@ inline void ByteInputStream::setBuffer(
 inline void ByteInputStream::nullifyBuffer()
 {
     setBuffer(NULL,0);
-}
-
-inline ByteStreamMarker ByteInputStream::mark()
-{
-    return ByteStreamMarker(cbOffset);
-}
-
-inline void ByteInputStream::reset(ByteStreamMarker const &marker)
-{
-    // you can only use a marker to move backwards
-    assert(marker.cbOffset <= cbOffset);
-    uint cb = cbOffset - marker.cbOffset;
-    if (cb == 0) {
-        // expedite common case where stream has not moved since marker
-        return;
-    }
-    seekBackward(cb);
 }
 
 FENNEL_END_NAMESPACE

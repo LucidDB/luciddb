@@ -46,11 +46,11 @@ public:
 
 
 void
-strLikeA(boost::scoped_ptr<ExtendedInstructionContext>& context,
-         RegisterRef<bool>* result,   
-         RegisterRef<char*>* matchValue,
-         RegisterRef<char*>* pattern,
-         RegisterRef<char*>* escape)
+strLikeEscapeA(boost::scoped_ptr<ExtendedInstructionContext>& context,
+               RegisterRef<bool>* result,   
+               RegisterRef<char*>* matchValue,
+               RegisterRef<char*>* pattern,
+               RegisterRef<char*>* escape) // may be NULL if called by strLikeA
 {
     assert(StandardTypeDescriptor::isTextArray(matchValue->type()));
     assert(StandardTypeDescriptor::isTextArray(pattern->type()));
@@ -58,7 +58,7 @@ strLikeA(boost::scoped_ptr<ExtendedInstructionContext>& context,
     // SQL99 8.5 General Rule 3a, case i & ii
     if (matchValue->isNull() ||
         pattern->isNull() ||
-        escape->isNull()) {
+        (escape ? escape->isNull() : false)) {
         result->toNull();
         result->length(0);
     } else {
@@ -71,8 +71,8 @@ strLikeA(boost::scoped_ptr<ExtendedInstructionContext>& context,
             string pat;
             SqlLikePrep<1,1>(pattern->pointer(),
                              pattern->length(),
-                             escape->pointer(),
-                             escape->length(),
+                             (escape ? escape->pointer() : 0),
+                             (escape ? escape->length() : 0),
                              pat);
             try {
                 boost::regex regex(pat);
@@ -98,11 +98,22 @@ strLikeA(boost::scoped_ptr<ExtendedInstructionContext>& context,
 }
 
 void
-strSimilarA(boost::scoped_ptr<ExtendedInstructionContext>& context,
-            RegisterRef<bool>* result,   
-            RegisterRef<char*>* matchValue,
-            RegisterRef<char*>* pattern,
-            RegisterRef<char*>* escape)
+strLikeA(boost::scoped_ptr<ExtendedInstructionContext>& context,
+         RegisterRef<bool>* result,   
+         RegisterRef<char*>* matchValue,
+         RegisterRef<char*>* pattern)
+{
+    strLikeEscapeA(context, result, matchValue, pattern, 0);
+}
+
+
+// escape may be NULL if called by strSimilarA
+void
+strSimilarEscapeA(boost::scoped_ptr<ExtendedInstructionContext>& context,
+                  RegisterRef<bool>* result,   
+                  RegisterRef<char*>* matchValue,
+                  RegisterRef<char*>* pattern,
+                  RegisterRef<char*>* escape) 
 {
     assert(StandardTypeDescriptor::isTextArray(matchValue->type()));
     assert(StandardTypeDescriptor::isTextArray(pattern->type()));
@@ -110,7 +121,7 @@ strSimilarA(boost::scoped_ptr<ExtendedInstructionContext>& context,
     // SQL2003 8.5 General Rule 4, case a & b
     if (matchValue->isNull() ||
         pattern->isNull() ||
-        escape->isNull()) {
+        (escape ? escape->isNull() : false)) {
         result->toNull();
         result->length(0);
     } else {
@@ -123,8 +134,8 @@ strSimilarA(boost::scoped_ptr<ExtendedInstructionContext>& context,
             string pat;
             SqlSimilarPrep<1,1>(pattern->pointer(),
                                 pattern->length(),
-                                escape->pointer(),
-                                escape->length(),
+                                (escape ? escape->pointer() : 0),
+                                (escape ? escape->length() : 0),
                                 pat);
             try {
                 boost::regex regex(pat);
@@ -149,6 +160,15 @@ strSimilarA(boost::scoped_ptr<ExtendedInstructionContext>& context,
 }
 
 void
+strSimilarA(boost::scoped_ptr<ExtendedInstructionContext>& context,
+            RegisterRef<bool>* result,   
+            RegisterRef<char*>* matchValue,
+            RegisterRef<char*>* pattern) 
+{
+    strSimilarEscapeA(context, result, matchValue, pattern, 0);
+}
+
+void
 ExtRegExpRegister(ExtendedInstructionTable* eit)
 {
     assert(eit != NULL);
@@ -170,17 +190,28 @@ ExtRegExpRegister(ExtendedInstructionTable* eit)
         } else {
             params.push_back(STANDARD_TYPE_VARCHAR);
         }
+
+        eit->add("strLikeA3", params,
+                 (ExtendedInstruction3Context<bool, char*, char*>*) NULL,
+                 &strLikeA);
+        eit->add("strSimilarA3", params,
+                 (ExtendedInstruction3Context<bool, char*, char*>*) NULL,
+                 &strSimilarA);
+
+        // tack on escape parameter
         if (i & 0x04) {
             params.push_back(STANDARD_TYPE_CHAR);
         } else {
             params.push_back(STANDARD_TYPE_VARCHAR);
         }
-        eit->add("strLikeA", params,
+
+        eit->add("strLikeA4", params,
                  (ExtendedInstruction4Context<bool, char*, char*, char*>*) NULL,
-                 &strLikeA);
-        eit->add("strSimilarA", params,
+                 &strLikeEscapeA);
+        eit->add("strSimilarA4", params,
                  (ExtendedInstruction4Context<bool, char*, char*, char*>*) NULL,
-                 &strSimilarA);
+                 &strSimilarEscapeA);
+
     }
 }
 

@@ -54,6 +54,9 @@ protected:
     
 public:
     void prepare(BTreeInserterParams const &params);
+    virtual void getResourceRequirements(
+        ExecutionStreamResourceQuantity &minQuantity,
+        ExecutionStreamResourceQuantity &optQuantity);
     virtual void open(bool restart);
     virtual bool writeResultToConsumerBuffer(
         ByteOutputStream &resultOutputStream);

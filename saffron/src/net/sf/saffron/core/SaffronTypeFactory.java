@@ -84,8 +84,16 @@ public interface SaffronTypeFactory
     SaffronType createProjectType(FieldInfo fieldInfo);
 
     /**
+     * Duplicates a type; makes a deep copy of a record type.
+     * @param type input type
+     * @return output type, a new object equivalent to input type.
+     */
+    SaffronType copyType(SaffronType type);
+
+    /**
      * Creates a Type which is the same as another type but with possibily
-     * different nullability.  For type systems without a concept of
+     * different nullability. The output type may be identical to the input type.
+     * For type systems without a concept of
      * nullability, the return value is always the same as the input.
      *
      * @param type input type

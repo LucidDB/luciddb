@@ -30,7 +30,7 @@ import net.sf.saffron.sql.SqlOperator;
  * @since June 2nd, 2004
  * @version $Id$
  */
-interface CalcRexImplementorTable {
+public interface CalcRexImplementorTable {
     /**
      * Retrieves the implementor of an operator, or null if there is no
      * implementor registered.

@@ -36,6 +36,13 @@ import java.util.*;
  */
 public interface FarragoMedDataServer extends FarragoAllocation
 {
+    /** keyword for TYPE in server properties list */
+    public static final String PROP_SERVER_TYPE = "TYPE";
+
+    /** keyword for VERSION in server properties list */
+    public static final String PROP_SERVER_VERSION = "VERSION";
+
+
     /**
      * Gets a FarragoMedNameDirectory corresponding to this server.
      *

@@ -63,6 +63,39 @@ public abstract class JmiUtil
     }
 
     /**
+     * Sets values for attributes of a RefObject.
+     *
+     * @param dst object to modify
+     *
+     * @param map see return of getAttributeValues
+     */
+    public static void setAttributeValues(
+        RefObject dst,
+        SortedMap map)
+    {
+        RefClass refClass = dst.refClass();
+        MofClass mofClass = (MofClass) refClass.refMetaObject();
+        Iterator iter = mofClass.getContents().iterator();
+        while (iter.hasNext()) {
+            Object obj = iter.next();
+            if (!(obj instanceof Attribute)) {
+                continue;
+            }
+            Attribute attr = (Attribute) obj;
+            if (!(attr.getScope().equals(ScopeKindEnum.INSTANCE_LEVEL))) {
+                continue;
+            }
+            if (!(attr.isChangeable())) {
+                continue;
+            }
+            if (!map.containsKey(attr.getName())) {
+                continue;
+            }
+            dst.refSetValue(attr,map.get(attr.getName()));
+        }
+    }
+
+    /**
      * Gets a List of instance-level StructuralFeatures for a RefClass.
      *
      * @param refClass class of interest
@@ -124,20 +157,8 @@ public abstract class JmiUtil
      */
     public static void copyAttributes(RefObject dst,RefObject src)
     {
-        RefClass refClass = src.refClass();
-        MofClass mofClass = (MofClass) refClass.refMetaObject();
-        Iterator iter = mofClass.getContents().iterator();
-        while (iter.hasNext()) {
-            Object obj = iter.next();
-            if (!(obj instanceof Attribute)) {
-                continue;
-            }
-            Attribute attr = (Attribute) obj;
-            if (!(attr.getScope().equals(ScopeKindEnum.INSTANCE_LEVEL))) {
-                continue;
-            }
-            dst.refSetValue(attr,src.refGetValue(attr));
-        }
+        SortedMap map = getAttributeValues(src);
+        setAttributeValues(dst,map);
     }
 
     /**

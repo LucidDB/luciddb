@@ -1,5 +1,5 @@
-0: jdbc:farrago:> -- $Id: //open/farrago/regressionsql/selectSimple.sql#6 $
-0: jdbc:farrago:> -- Full vertical system testing of non advanced select statements
+0: jdbc:farrago:> -- $Id: //open/farrago/regressionsql/selectAdvanced.sql#7 $
+0: jdbc:farrago:> -- Full vertical system testing of advanced select statements
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel
 0: jdbc:farrago:> -- and another time to use java. The caller of this script is setting the flag so no need
@@ -58,5 +58,266 @@
 | 26      |
 | 81      |
 +---------+
+0: jdbc:farrago:> select name,name between 'WILMA' AND 'wilma' from sales.emps order by 1;
++--------+---------+
+|  NAME  | EXPR$1  |
++--------+---------+
+| Eric   | false   |
+| Fred   | false   |
+| John   | false   |
+| Wilma  | true    |
++--------+---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> --These tests are failing but shouldnt
+0: jdbc:farrago:> --select age from sales.emps having age>30;
+0: jdbc:farrago:> --select * from sales.emps where deptno in (10, 20);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select name from sales.emps order by 1;
++--------+
+|  NAME  |
++--------+
+| Eric   |
+| Fred   |
+| John   |
+| Wilma  |
++--------+
+0: jdbc:farrago:> (select name from sales.emps) union all (select name from sales.emps) order by 1;
++--------+
+|  NAME  |
++--------+
+| Eric   |
+| Eric   |
+| Fred   |
+| Fred   |
+| John   |
+| John   |
+| Wilma  |
+| Wilma  |
++--------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- function in function
+0: jdbc:farrago:> select pow(pow(2.0+1.0,pow(2.0,2.0)-1.0)+3.0,2.0) from values(1);
++---------+
+| EXPR$0  |
++---------+
+| 900.0   |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select -(1+2) from values(1);
++---------+
+| EXPR$0  |
++---------+
+| -3      |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- multiple line spanning using the neg operator
+0: jdbc:farrago:> ------------------------------------------------
+0: jdbc:farrago:> select - -1,-      -2,
+. . . . . . . . > -
+. . . . . . . . > -
+. . . . . . . . > 3
+. . . . . . . . > from values(1);
++---------+---------+---------+
+| EXPR$0  | EXPR$1  | EXPR$2  |
++---------+---------+---------+
+| 1       | 2       | 3       |
++---------+---------+---------+
+0: jdbc:farrago:> -- This one is failing but shouldnt. Its basically the same query as above but with a comment in the middle
+0: jdbc:farrago:> --select - -1,-      -2,
+0: jdbc:farrago:> ---- this is a comment in the middle of a statement
+0: jdbc:farrago:> ---
+0: jdbc:farrago:> ---
+0: jdbc:farrago:> --3
+0: jdbc:farrago:> --from values(1);
+0: jdbc:farrago:> ------------------------------------------------
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select cast(null as boolean), cast(null as integer) from values(1);
++---------+---------+
+| EXPR$0  | EXPR$1  |
++---------+---------+
+|         |         |
++---------+---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- fails
+0: jdbc:farrago:> select cast(null as boolean) + cast(null as integer) from values(1);
+Error: Can not apply '+' to arguments of type '<BOOLEAN_NULLABLE> + <INTEGER_NULLABLE>'. Supported form(s): '<TINYINT> + <TINYINT>'
+'<TINYINT> + <SMALLINT>'
+'<TINYINT> + <INTEGER>'
+'<TINYINT> + <BIGINT>'
+'<TINYINT> + <DECIMAL>'
+'<TINYINT> + <FLOAT>'
+'<TINYINT> + <REAL>'
+'<TINYINT> + <DOUBLE>'
+'<SMALLINT> + <TINYINT>'
+'<SMALLINT> + <SMALLINT>'
+'<SMALLINT> + <INTEGER>'
+'<SMALLINT> + <BIGINT>'
+'<SMALLINT> + <DECIMAL>'
+'<SMALLINT> + <FLOAT>'
+'<SMALLINT> + <REAL>'
+'<SMALLINT> + <DOUBLE>'
+'<INTEGER> + <TINYINT>'
+'<INTEGER> + <SMALLINT>'
+'<INTEGER> + <INTEGER>'
+'<INTEGER> + <BIGINT>'
+'<INTEGER> + <DECIMAL>'
+'<INTEGER> + <FLOAT>'
+'<INTEGER> + <REAL>'
+'<INTEGER> + <DOUBLE>'
+'<BIGINT> + <TINYINT>'
+'<BIGINT> + <SMALLINT>'
+'<BIGINT> + <INTEGER>'
+'<BIGINT> + <BIGINT>'
+'<BIGINT> + <DECIMAL>'
+'<BIGINT> + <FLOAT>'
+'<BIGINT> + <REAL>'
+'<BIGINT> + <DOUBLE>'
+'<DECIMAL> + <TINYINT>'
+'<DECIMAL> + <SMALLINT>'
+'<DECIMAL> + <INTEGER>'
+'<DECIMAL> + <BIGINT>'
+'<DECIMAL> + <DECIMAL>'
+'<DECIMAL> + <FLOAT>'
+'<DECIMAL> + <REAL>'
+'<DECIMAL> + <DOUBLE>'
+'<FLOAT> + <TINYINT>'
+'<FLOAT> + <SMALLINT>'
+'<FLOAT> + <INTEGER>'
+'<FLOAT> + <BIGINT>'
+'<FLOAT> + <DECIMAL>'
+'<FLOAT> + <FLOAT>'
+'<FLOAT> + <REAL>'
+'<FLOAT> + <DOUBLE>'
+'<REAL> + <TINYINT>'
+'<REAL> + <SMALLINT>'
+'<REAL> + <INTEGER>'
+'<REAL> + <BIGINT>'
+'<REAL> + <DECIMAL>'
+'<REAL> + <FLOAT>'
+'<REAL> + <REAL>'
+'<REAL> + <DOUBLE>'
+'<DOUBLE> + <TINYINT>'
+'<DOUBLE> + <SMALLINT>'
+'<DOUBLE> + <INTEGER>'
+'<DOUBLE> + <BIGINT>'
+'<DOUBLE> + <DECIMAL>'
+'<DOUBLE> + <FLOAT>'
+'<DOUBLE> + <REAL>'
+'<DOUBLE> + <DOUBLE>' (state=,code=0)
+0: jdbc:farrago:> -- fails
+0: jdbc:farrago:> select cast(null as boolean) and 1 from values(1);
+Error: Can not apply 'AND' to arguments of type '<BOOLEAN_NULLABLE> AND <INTEGER>'. Supported form(s): '<BOOLEAN> AND <BOOLEAN>' (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- OK - some of these test fail due to cast issues but shouldnt
+0: jdbc:farrago:> --select cast(null as tinyint)+1 from values(1);
+0: jdbc:farrago:> --select cast(null as smallint)=1 from values(1);
+0: jdbc:farrago:> --select cast(null as bigint)<>1 from values(1);
+0: jdbc:farrago:> select cast(null as float)>1.0 from values(1);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> --select cast(null as float)>1 from values(1);
+0: jdbc:farrago:> select cast(null as integer)<=1 from values(1);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> --select cast(null as real)>=1 from values(1);
+0: jdbc:farrago:> --select cast(null as double)/1 from values(1);
+0: jdbc:farrago:> --select cast(null as tinyint)*1 from values(1);
+0: jdbc:farrago:> --select cast(null as tinyint)-1 from values(1);
+0: jdbc:farrago:> --select cast(null as char)='yo wasup?' from values(1);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select 3*+-2 from values(1);
++---------+
+| EXPR$0  |
++---------+
+| -6      |
++---------+
+0: jdbc:farrago:> select cast(1 as varbinary)+x'ff' from values(1);
+Error: Cast function cannot convert value of type INTEGER to type VARBINARY_0 (state=,code=0)
+0: jdbc:farrago:> select x'ff'=x'ff' from values(1);
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> select x'f'=x'f' from values(1);
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> --select x'ff'=cast(255 as varbinary) from values(1);
+0: jdbc:farrago:> select b'1010'=X'A' from values(1);
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> -- not equal
+0: jdbc:farrago:> --select b'01010'<>b'1010' from values(1);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> --select * from sales.emps group by empno order by 1;
+0: jdbc:farrago:> --select *from sales.emps group by empno having empno>22 order by 1;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select manager from sales.emps union select manager from sales.emps order by 1;
++----------+
+| MANAGER  |
++----------+
+| false    |
+| true     |
++----------+
+0: jdbc:farrago:> select manager from sales.emps union all select manager from sales.emps order by 1;
++----------+
+| MANAGER  |
++----------+
+| false    |
+| false    |
+| false    |
+| false    |
+| true     |
+| true     |
+| true     |
+| true     |
++----------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> --select*from sales.emps where deptno in (select* from sales.depts);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> --join tests
+0: jdbc:farrago:> select emps.name,depts.name from sales.emps,sales.depts where depts.deptno=emps.deptno order by 1;
++--------+------------+
+|  NAME  |    NAME    |
++--------+------------+
+| Eric   | Marketing  |
+| Fred   | Sales      |
+| Wilma  | Marketing  |
++--------+------------+
+0: jdbc:farrago:> select emps.name,depts.name from sales.emps,sales.depts where depts.deptno=emps.deptno and age=80;
++-------+------------+
+| NAME  |    NAME    |
++-------+------------+
+| Eric  | Marketing  |
++-------+------------+
+0: jdbc:farrago:> select emps.name,depts.name from sales.emps INNER JOIN sales.depts ON depts.deptno=emps.deptno order by 1;
++--------+------------+
+|  NAME  |    NAME    |
++--------+------------+
+| Eric   | Marketing  |
+| Fred   | Sales      |
+| Wilma  | Marketing  |
++--------+------------+
+0: jdbc:farrago:> --select emps.name,depts.name from sales.emps LEFT JOIN sales.depts ON depts.deptno=emps.deptno order by 1;
+0: jdbc:farrago:> --select emps.name,depts.name from sales.emps RIGHT JOIN sales.depts ON depts.deptno=emps.deptno order by 1;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> --select emps.name,depts.name from sales.emps RIGHT OUTER JOIN sales.depts ON depts.deptno=emps.deptno order by 1;
+0: jdbc:farrago:> --select emps.name,depts.name from sales.emps LEFT OUTER JOIN sales.depts ON depts.deptno=emps.deptno order by 1;
+0: jdbc:farrago:> --select emps.name,depts.name from sales.emps FULL OUTER JOIN sales.depts ON depts.deptno=emps.deptno order by 1;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

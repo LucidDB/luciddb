@@ -44,6 +44,27 @@ void TableWriterStream::prepare(TableWriterStreamParams const &params)
     countTupleDesc.push_back(countDesc);
 }
 
+void TableWriterStream::getResourceRequirements(
+    ExecutionStreamResourceQuantity &minQuantity,
+    ExecutionStreamResourceQuantity &optQuantity)
+{
+    ExecutionStream::getResourceRequirements(minQuantity,optQuantity);
+    
+    // REVIEW:  update/delete resources
+
+    // This is to account for total number of pages needed to perform an
+    // update on a single index.  Pages are only locked for the duration of
+    // one index update, so they don't need to be charged per index (unless
+    // we start parallelizing index updates).  REVIEW: determine the correct
+    // number; 4 is just a guess.
+    minQuantity.nCachePages += 4;
+
+    // each BTreeWriter currently needs a private scratch page
+    minQuantity.nCachePages += pTableWriter->getIndexCount();
+    
+    optQuantity = minQuantity;
+}
+
 TupleDescriptor const &TableWriterStream::getOutputDesc() const
 {
     return countTupleDesc;

@@ -29,6 +29,6 @@
 
 FENNEL_BEGIN_NAMESPACE
 
-ExtendedInstructionTable* ExtendedInstructionTable::_instance = NULL;
+// TODO: Deprecate this file
 
 FENNEL_END_NAMESPACE

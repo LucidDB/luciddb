@@ -22,6 +22,8 @@
 
 package net.sf.saffron.sql;
 
+import net.sf.saffron.sql.parser.ParserPosition;
+
 /**
  * A <code>SqlSelect</code> is a node of a parse tree which represents a
  * select statement. It warrants its own node type just because we have a lot
@@ -43,9 +45,9 @@ public class SqlSelect extends SqlCall
 
     //~ Constructors ----------------------------------------------------------
 
-    SqlSelect(SqlSelectOperator operator,SqlNode [] operands)
+    SqlSelect(SqlSelectOperator operator,SqlNode [] operands, ParserPosition parserPosition)
     {
-        super(operator,operands);
+        super(operator,operands, parserPosition);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -93,7 +95,7 @@ public class SqlSelect extends SqlCall
         } else {
             fromClause = SqlOperatorTable.std().joinOperator.createCall(
                     fromClause,
-                    tableId);
+                    tableId, null);
         }
         operands[FROM_OPERAND] = fromClause;
     }

@@ -19,6 +19,7 @@
 
 package net.sf.farrago.test;
 
+import net.sf.farrago.session.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.ojrex.*;
 import net.sf.farrago.db.*;
@@ -116,15 +117,16 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
             FarragoObjectCache objCache = new FarragoObjectCache(allocations,0);
 
             // FarragoPreparingStmt does most of the work for us
-            FarragoPreparingStmt stmt = new FarragoPreparingStmt(
-                catalog,
-                session.getDatabase().getFennelDbHandle(),
-                session,
-                objCache,
-                objCache,
-                session.getSessionIndexMap());
-
-            allocations.addAllocation(stmt);
+            FarragoSessionStmtValidator stmtValidator =
+                new FarragoStmtValidator(
+                    catalog,
+                    session.getDatabase().getFennelDbHandle(),
+                    session,
+                    objCache,
+                    objCache,
+                    session.getSessionIndexMap());
+            allocations.addAllocation(stmtValidator);
+            FarragoPreparingStmt stmt = new FarragoPreparingStmt(stmtValidator);
 
             initPlanner(stmt);
 

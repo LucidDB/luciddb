@@ -18,6 +18,8 @@
 */
 package net.sf.farrago.test.regression;
 
+import java.io.PrintStream;
+
 import java.util.Iterator;
 
 import java.sql.Connection;
@@ -57,6 +59,9 @@ public class FarragoTestCommandExecutor
     /** Location of {@link #error}. */
     private String when;
 
+    /** Debugging print stream.  May be null. */
+    private final PrintStream debugPrintStream;
+
 
     /**
      * Constructs a FarragoTestCommandExecutor with the given thread
@@ -67,15 +72,20 @@ public class FarragoTestCommandExecutor
      * @param commands the sequence of commands to execute -- null
      *                 elements indicate no-ops
      * @param synchronizer synchronization object (may not be null);
+     * @param debugPrintStream if non-null a PrintStream to use for
+     *                         debugging output (may help debugging
+     *                         thread synchronization issues)
      */
     FarragoTestCommandExecutor(int threadId,
                                String jdbcURL,
                                Iterator commands,
-                               Sync synchronizer)
+                               Sync synchronizer,
+                               PrintStream debugPrintStream)
     {
         this.jdbcURL = jdbcURL;
         this.commands = commands;
         this.synchronizer = synchronizer;
+        this.debugPrintStream = debugPrintStream;
 
         this.setName("Command Executor " + threadId);
     }
@@ -90,8 +100,7 @@ public class FarragoTestCommandExecutor
             connection = DriverManager.getConnection(jdbcURL);
             connection.setAutoCommit(false);
         } catch(Throwable t) {
-            error = t;
-            when = "during connect";
+            handleError(t, "during connect");
         }
 
         // stepNumber is used to reconstitute the original step
@@ -105,6 +114,14 @@ public class FarragoTestCommandExecutor
                 stepNumber++;
             }
 
+//            if (debugPrintStream != null) {
+//                debugPrintStream.println(Thread.currentThread().getName()
+//                                         + ": Step "
+//                                         + stepNumber
+//                                         + ": "
+//                                         + System.currentTimeMillis());
+//            }
+
             // synchronization commands are always executed, lest we deadlock
             boolean isSync = command instanceof FarragoTestCommandGenerator.SynchronizationCommand;
 
@@ -113,8 +130,7 @@ public class FarragoTestCommandExecutor
                 try {
                     command.execute(this);
                 } catch(Throwable t) {
-                    error = t;
-                    when = "during step " + stepNumber;
+                    handleError(t, "during step " + stepNumber);
                 }
             }
         }
@@ -125,8 +141,24 @@ public class FarragoTestCommandExecutor
                 connection.close();
             }
         } catch(Throwable t) {
-            error = t;
-            when = "during connection close";
+            handleError(t, "during connection close");
+        }
+    }
+
+
+    /**
+     * Handle details of an exception during execution.
+     */
+    private void handleError(Throwable error, String when)
+    {
+        this.error = error;
+        this.when = when;
+
+        if (debugPrintStream != null) {
+            debugPrintStream.println(Thread.currentThread().getName()
+                                     + ": "
+                                     + when);
+            error.printStackTrace(debugPrintStream);
         }
     }
 
@@ -236,4 +268,5 @@ public class FarragoTestCommandExecutor
             }
         }
     }
+
 }

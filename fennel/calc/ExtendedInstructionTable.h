@@ -39,16 +39,6 @@ using std::string;
 class ExtendedInstructionTable
 {
 public:
-    static ExtendedInstructionTable* instance() 
-    {
-        // Warning: Not thread safe
-        if (!_instance) {
-            _instance = new ExtendedInstructionTable;
-        }
-
-        return _instance;
-    }
-
     //! Register an extended instruction and the functor which implements it.
     template <typename T>
     void add(const string &name,
@@ -64,14 +54,11 @@ public:
     //! Look up an extended instruction by signature (name + argument types)
     //!
     //! Returns null if instruction not found.
-    ExtendedInstructionDef* lookupBySignature(string const &signature) 
-    {
+    ExtendedInstructionDef* operator[] (string const &signature) {
         return _defsByName[signature];
     }
     
-
 private:
-    static ExtendedInstructionTable* _instance;
     map<string, ExtendedInstructionDef *> _defsByName;
 };
 

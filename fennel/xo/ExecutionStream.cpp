@@ -21,6 +21,7 @@
 
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/xo/ExecutionStream.h"
+#include "fennel/cache/CacheAccessor.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
@@ -38,6 +39,19 @@ ExecutionStream::ExecutionStream()
 void ExecutionStream::closeImpl()
 {
     isOpen = false;
+
+    // REVIEW jvs 19-July-2004:  It would be nice to be able to do this, making
+    // sure no cache access is attempted while stream is closed.  However,
+    // it currently causes trouble with TableWriters, which need
+    // cache access for txn replay.
+    /*
+    if (pQuotaAccessor) {
+        pQuotaAccessor->setMaxLockedPages(0);
+    }
+    if (pScratchQuotaAccessor) {
+        pScratchQuotaAccessor->setMaxLockedPages(0);
+    }
+    */
 }
 
 SharedExecutionStream ExecutionStream::getStreamInput(uint ordinal)
@@ -51,8 +65,31 @@ ExecutionStream::~ExecutionStream()
 
 void ExecutionStream::prepare(ExecutionStreamParams const &params)
 {
+    pQuotaAccessor = params.pCacheAccessor;
+    pScratchQuotaAccessor = params.scratchAccessor.pCacheAccessor;
 }
     
+void ExecutionStream::getResourceRequirements(
+    ExecutionStreamResourceQuantity &minQuantity,
+    ExecutionStreamResourceQuantity &optQuantity)
+{
+    minQuantity.nThreads = 0;
+    minQuantity.nCachePages = 0;
+    optQuantity = minQuantity;
+}
+
+void ExecutionStream::setResourceAllocation(
+    ExecutionStreamResourceQuantity const &quantity)
+{
+    resourceAllocation = quantity;
+    if (pQuotaAccessor) {
+        pQuotaAccessor->setMaxLockedPages(quantity.nCachePages);
+    }
+    if (pScratchQuotaAccessor) {
+        pScratchQuotaAccessor->setMaxLockedPages(quantity.nCachePages);
+    }
+}
+
 void ExecutionStream::open(bool restart)
 {
     if (restart) {
@@ -116,6 +153,6 @@ void *ExecutionStream::getImpl()
     return NULL;
 }
 
-FENNEL_END_CPPFILE("$Id$");
+FENNEL_END_CPPFILE("$Id: //open/dev/fennel/xo/ExecutionStream.cpp#4 $");
 
 // End ExecutionStream.h

@@ -29,7 +29,6 @@ import net.sf.saffron.util.Util;
 
 import java.util.regex.Pattern;
 
-
 /**
  * A <code>SqlParserTest</code> is a unit-test for {@link SqlParser the SQL
  * parser}.
@@ -221,19 +220,18 @@ public class SqlParserTest extends TestCase
 
     public void testIsBooleans()
     {
-        String[] in = {"NULL","TRUE","FALSE", "UNKNOWN"};
-        String[] out = {"NULL","TRUE","FALSE", "NULL"};
+        String[] inOut = {"NULL","TRUE","FALSE", "UNKNOWN"};
 
-        for (int i=0;i<in.length;i++) {
-            check("select * from t where nOt fAlSe Is "+in[i],
+        for (int i=0;i<inOut.length;i++) {
+            check("select * from t where nOt fAlSe Is "+inOut[i],
                   "SELECT *"+NL+
                   "FROM `T`"+NL+
-                  "WHERE ((NOT FALSE) IS "+out[i]+")");
+                  "WHERE ((NOT FALSE) IS "+inOut[i]+")");
 
-            check("select * from t where c1=1.1 IS NOT "+in[i],
+            check("select * from t where c1=1.1 IS NOT "+inOut[i],
                   "SELECT *"+NL+
                   "FROM `T`"+NL+
-                  "WHERE ((`C1` = 1.1) IS NOT "+out[i]+")");
+                  "WHERE ((`C1` = 1.1) IS NOT "+inOut[i]+")");
         }
     }
 
@@ -242,24 +240,24 @@ public class SqlParserTest extends TestCase
         check("select * from t where x is unknown is not unknown",
               "SELECT *"+NL+
               "FROM `T`"+NL+
-              "WHERE ((`X` IS NULL) IS NOT NULL)");
+              "WHERE ((`X` IS UNKNOWN) IS NOT UNKNOWN)");
 
         check("select 1 from t where not true is unknown",
               "SELECT 1"+NL+
               "FROM `T`"+NL+
-              "WHERE ((NOT TRUE) IS NULL)");
+              "WHERE ((NOT TRUE) IS UNKNOWN)");
 
         check("select * from t where x is unknown is not unknown is false is not false"+
                 " is true is not true is null is not null",
               "SELECT *"+NL+
               "FROM `T`"+NL+
-              "WHERE ((((((((`X` IS NULL) IS NOT NULL) IS FALSE) IS NOT FALSE) IS TRUE) IS NOT TRUE) IS NULL) IS NOT NULL)");
+              "WHERE ((((((((`X` IS UNKNOWN) IS NOT UNKNOWN) IS FALSE) IS NOT FALSE) IS TRUE) IS NOT TRUE) IS NULL) IS NOT NULL)");
 
         // combine IS postfix operators with infix (AND) and prefix (NOT) ops
         check("select * from t where x is unknown is false and x is unknown is true or not y is unknown is not null",
                 "SELECT *" + NL +
                 "FROM `T`" + NL +
-                "WHERE ((((`X` IS NULL) IS FALSE) AND ((`X` IS NULL) IS TRUE)) OR (((NOT `Y`) IS NULL) IS NOT NULL))");
+                "WHERE ((((`X` IS UNKNOWN) IS FALSE) AND ((`X` IS UNKNOWN) IS TRUE)) OR (((NOT `Y`) IS UNKNOWN) IS NOT NULL))");
     }
 
     public void testEqualNotEqual() {
@@ -366,9 +364,9 @@ public class SqlParserTest extends TestCase
 
         check(
             "select * from t where x+1 not siMilaR to '%abc%' ESCAPE 'e'",
-            "SELECT *" + NL + "FROM `T`" + NL + "WHERE (NOT ((`X` + 1) SIMILAR '%abc%' ESCAPE 'e'))");
+            "SELECT *" + NL + "FROM `T`" + NL + "WHERE (NOT ((`X` + 1) SIMILAR TO '%abc%' ESCAPE 'e'))");
 
-        //TODO which has higher precedence, LIKE or AND?
+        //TODO LIKE has higher precedence than AND
 //        check("select * from t where price > 5 and x+2*2 like y*3+2 escape (select*from t)",
 //              "SELECT *"+NL+
 //              "FROM `T`"+NL+
@@ -627,8 +625,12 @@ public class SqlParserTest extends TestCase
 
         // Even though it looks like a date, it's just a string.
         checkExp("'2004-06-01'", "'2004-06-01'");
-        checkExp("-.25", "(- 0.25)"); // toString is aggressive about parens.
+        checkExp("-.25", "(- 0.25)");
         checkExpSame("TIMESTAMP '2004-06-01 15:55:55'");
+        checkExpSame("TIMESTAMP '2004-06-01 15:55:55.900'");
+        checkExp("TIMESTAMP '2004-06-01 15:55:55.1234'", "TIMESTAMP '2004-06-01 15:55:55.123'");
+        checkExp("TIMESTAMP '2004-06-01 15:55:55.1236'", "TIMESTAMP '2004-06-01 15:55:55.124'");
+        checkExp("TIMESTAMP '2004-06-01 15:55:55.9999'", "TIMESTAMP '2004-06-01 15:55:56.000'");
         checkExpSame("NULL");
 
     }
@@ -692,6 +694,8 @@ public class SqlParserTest extends TestCase
         checkExp("-3.2","(- 3.2)");
         checkExp("1.","1");
         checkExp(".1","0.1");
+        checkExp("2500000000","2500000000");
+        checkExp("5000000000","5000000000");
         //Approxs
         checkExp("1e1","10");
         checkExp("+1e1","(+ 10)");
@@ -1078,7 +1082,6 @@ public class SqlParserTest extends TestCase
     }
 	// check date/time functions.
 	public void testTimeDate() {
-
         // CURRENT_TIME - returns time w/ timezone
 		checkExp("CURRENT_TIME(3)", "CURRENT_TIME(3)");
 		// checkFails("SELECT CURRENT_TIME() FROM foo", "SELECT CURRENT_TIME() FROM `FOO`");
@@ -1112,14 +1115,19 @@ public class SqlParserTest extends TestCase
         // Date literals
         checkExp("DATE '2004-12-01'", "DATE '2004-12-01'");
         checkExp("TIME '12:01:01'", "TIME '12:01:01'");
-        checkExp("TIMESTAMP '2004-12-01 12:01:01'", "TIMESTAMP '2004-12-01 12:01:01'");
+        checkExp("TIME '12:01:01.'", "TIME '12:01:01'");
+        checkExp("TIME '12:01:01.000'", "TIME '12:01:01.000'");
         checkExp("TIME '12:01:01.001'", "TIME '12:01:01.001'");
+        checkExp("TIMESTAMP '2004-12-01 12:01:01'", "TIMESTAMP '2004-12-01 12:01:01'");
         checkExp("TIMESTAMP '2004-12-01 12:01:01.1'", "TIMESTAMP '2004-12-01 12:01:01.1'");
+        checkExp("TIMESTAMP '2004-12-01 12:01:01.'", "TIMESTAMP '2004-12-01 12:01:01'");
+        checkExpSame("TIMESTAMP '2004-12-01 12:01:01.1'");
 
         // Failures.
-        checkFails("DATE '12/21/99'", "(?s).*net.sf.saffron.sql.parser.ParseException: Unparseable date: \"12/21/99\"");
-        checkFails("TIME '1230:33'","net.sf.saffron.sql.parser.ParseException: Unparseable date: \"1230:33\"");
-        checkFails("TIMESTAMP '12-21-99, 12:30:00'", "net.sf.saffron.sql.parser.ParseException: Unparseable date: \"12-21-99, 12:30:00\"");
+        checkFails("DATE '12/21/99'", "(?s).*Illegal DATE literal.*");
+        checkFails("TIME '1230:33'","(?s).*Illegal TIME literal.*");
+        checkFails("TIME '12:00:00 PM'","(?s).*Illegal TIME literal.*");
+        checkFails("TIMESTAMP '12-21-99, 12:30:00'", "(?s).*Illegal TIMESTAMP literal.*");
 
 	}
 
@@ -1163,6 +1171,7 @@ public class SqlParserTest extends TestCase
         checkExp("{ Fn apa(log(ln(1))+2)}","{fn APA((LOG(LN(1)) + 2)) }");
         checkExp("{fN apa(*)}","{fn APA(*) }");
         checkExp("{   FN\t\r\n apa()}","{fn APA() }");
+        checkExp("{fn insert()}","{fn INSERT() }");
     }
 }
 

@@ -113,6 +113,8 @@ public class CalcProgramBuilder
             boolAnd = new BoolInstructionDef(andInstruction,3);
     public static final InstructionDef
             integralNativeAnd = new IntegralNativeInstructionDef(andInstruction,3);
+    //~ CAST ---------------
+    public static final InstructionDef Cast = new NativeInstructionDef("CAST",2);
     //~ DIV ----------------
     public static final InstructionDef
             nativeDiv = new NativeInstructionDef("DIV",3) {
@@ -229,6 +231,9 @@ public class CalcProgramBuilder
     //~ PREFIX MINUS --------
     public static final InstructionDef
             nativeNeg = new NativeInstructionDef("NEG",2);
+    //~ ROUND ---------------
+    /** Rounds approximate types to nearest integer but remains same type */
+    public static final InstructionDef Round = new NativeInstructionDef("ROUND",2);
     //~ SHIFT LEFT --------
     public static final InstructionDef
             integralNativeShiftLeft = new IntegralNativeShift("SHFL");
@@ -327,9 +332,7 @@ public class CalcProgramBuilder
         {
             if (null == m_value) {
                 // do nothing
-            }
-            else if (m_value instanceof String)
-            {
+            } else if (m_value instanceof String) {
                 // Convert the string to an array of bytes assuming (TODO:
                 // don's assume!) latin1 encoding, then hex-encode.
                 final String s = (String) m_value;
@@ -341,21 +344,14 @@ public class CalcProgramBuilder
                 if (m_outputComments) {
                     writer.print(formatComment(s));
                 }
-            }
-            else if (m_value instanceof byte[])
-            {
-                writer.print("'");
+            } else if (m_value instanceof byte[]) {
+                writer.print("0x");
                 writer.print(Util.toStringFromByteArray((byte[]) m_value,16));
-                writer.print("'");
-            }
-            else if (m_value instanceof Boolean)
-            {
+            } else if (m_value instanceof Boolean) {
                 writer.print(((Boolean) m_value).booleanValue() ? "1" : "0");
-            }
-            else if (m_value instanceof SqlLiteral) {
+            } else if (m_value instanceof SqlLiteral) {
                 writer.print(((SqlLiteral)m_value).toValue());
-            } else
-            {
+            } else {
                 writer.print(m_value.toString());
             }
         }
@@ -436,48 +432,79 @@ public class CalcProgramBuilder
             super(name, ordinal, null);
         }
 
+        public boolean isExact() {
+            switch (ordinal_) {
+            case Int1_ordinal:
+            case Uint1_ordinal:
+            case Int2_ordinal:
+            case Uint2_ordinal:
+            case Int4_ordinal:
+            case Uint4_ordinal:
+            case Int8_ordinal:
+            case Uint8_ordinal:
+                return true;
+            }
+            return false;
+        }
+
+        public boolean isApprox() {
+            switch (ordinal_) {
+            case Real_ordinal:
+            case Double_ordinal:
+                return true;
+            }
+            return false;
+        }
+
         public static final int Bool_ordinal = 0;
         public static final OpType Bool = new OpType("bo", Bool_ordinal);
 
         public static final int Int1_ordinal = 1;
         public static final OpType Int1 = new OpType("s1", Int1_ordinal);
 
-        public static final int Int2_ordinal = 2;
+        public static final int Uint1_ordinal = 2;
+        public static final OpType Uint1 = new OpType("u1", Uint1_ordinal);
+
+        public static final int Int2_ordinal = 3;
         public static final OpType Int2 = new OpType("s2", Int2_ordinal);
 
-        public static final int Int4_ordinal = 3;
+        public static final int Uint2_ordinal = 4;
+        public static final OpType Uint2 = new OpType("u2", Uint2_ordinal);
+
+        public static final int Int4_ordinal = 5;
         public static final OpType Int4 = new OpType("s4", Int4_ordinal);
 
-        public static final int Uint4_ordinal = 4;
+        public static final int Uint4_ordinal = 6;
         public static final OpType Uint4 = new OpType("u4", Uint4_ordinal);
 
-        public static final int Real_ordinal = 5;
+        public static final int Real_ordinal = 7;
         public static final OpType Real = new OpType("r", Real_ordinal);
 
-        public static final int Int8_ordinal = 6;
+        public static final int Int8_ordinal = 8;
         public static final OpType Int8 = new OpType("s8", Int8_ordinal);
 
-        public static final int Uint8_ordinal = 7;
+        public static final int Uint8_ordinal = 9;
         public static final OpType Uint8 = new OpType("u8", Uint8_ordinal);
 
-        public static final int Double_ordinal = 8;
+        public static final int Double_ordinal = 10;
         public static final OpType Double = new OpType("d", Double_ordinal);
 
-        public static final int Varbinary_ordinal = 9;
+        public static final int Varbinary_ordinal = 11;
         public static final OpType Varbinary = new OpType("vb", Varbinary_ordinal);
 
-        public static final int Varchar_ordinal = 10;
+        public static final int Varchar_ordinal = 12;
         public static final OpType Varchar = new OpType("vc", Varchar_ordinal);
 
-        public static final int Binary_ordinal = 11;
+        public static final int Binary_ordinal = 13;
         public static final OpType Binary = new OpType("b", Binary_ordinal);
 
-        public static final int Char_ordinal = 12;
+        public static final int Char_ordinal = 14;
         public static final OpType Char = new OpType("c", Char_ordinal);
 
         public static final EnumeratedValues enumeration =
                 new EnumeratedValues(new OpType[] {
-                    Bool, Int4, Uint4, Real, Int8, Uint8, Double, Varbinary,
+                    Int1,  Uint1, Int2, Uint2, Bool, Int4, Uint4, Real,
+                    Int8, Uint8, Double, Varbinary,
                     Varchar, Binary, Char,
                 });
     }
@@ -500,8 +527,6 @@ public class CalcProgramBuilder
         }
 
     }
-
-
 
     /* Represents an instruction and its operands */
     class Instruction {
@@ -1185,17 +1210,65 @@ public class CalcProgramBuilder
      */
     public Register newLiteral(OpType type, Object value, int storageBytes)
     {
+        /**
+         * A key-value pair class to hold<br>
+         * 1) Value of a literal and<br>
+         * 2) Type of a literal<br>
+         * For use in a hashtable
+         */
+        class LiteralPair{
+            OpType type;
+            Object value;
+
+            /**
+             * @pre type!=null
+             */
+            LiteralPair(OpType type, Object value){
+                Util.pre(type != null,"type!=null");
+                this.type = type;
+                this.value = value;
+            }
+
+            public int hashCode() {
+                int valueHash;
+                if (null == value){
+                    valueHash = 0;
+                } else {
+                    valueHash = value.hashCode();
+                }
+                return valueHash * (OpType.enumeration.getMax() + 2) +
+                        type.getOrdinal();
+            }
+
+            public boolean equals(Object o) {
+                if (o instanceof LiteralPair) {
+                    LiteralPair that = (LiteralPair) o;
+
+                    if ((null == this.value) && (null == that.value)) {
+                        return this.type.ordinal_ == that.type.ordinal_;
+                    }
+
+                    if (null != this.value) {
+                        return this.value.equals(that.value) &&
+                            this.type.ordinal_ == that.type.ordinal_;
+                    }
+                }
+                return false;
+            }
+        }
+
         Register ret;
-        if (m_literals.containsKey(value))
+        LiteralPair key = new LiteralPair(type, value);
+        if (m_literals.containsKey(key))
         {
-            ret = (Register) m_literals.get(value);
+            ret = (Register) m_literals.get(key);
         }
         else
         {
             ret = m_registerSets.newRegister(type,value,
                                              RegisterSetType.Literal,
                                              storageBytes);
-            m_literals.put(value,ret);
+            m_literals.put(key,ret);
         }
         return ret;
     }
@@ -1393,6 +1466,16 @@ public class CalcProgramBuilder
     }
 
     /**
+     * Asserts that the register is not declared as {@link RegisterSetType#Literal}
+     * @param result
+     */
+    protected void assertRegisterNotLiteral(Register result)
+    {
+        compilationAssert( (result.getRegisterType().getOrdinal()!=RegisterSetType.LiteralORDINAL),
+                "Expected a non literal register.");
+    }
+
+    /**
      * Asserts that the register is declared as {@link OpType#Bool}
      * @param reg
      */
@@ -1452,12 +1535,19 @@ public class CalcProgramBuilder
      * @param register
      */
     protected void assertIsNativeType(Register register) {
-        compilationAssert( register.getOpType().getOrdinal()==OpType.Int4_ordinal||
+        compilationAssert(
+                register.getOpType().getOrdinal()==OpType.Int1_ordinal||
+                register.getOpType().getOrdinal()==OpType.Uint1_ordinal||
+                register.getOpType().getOrdinal()==OpType.Int2_ordinal||
+                register.getOpType().getOrdinal()==OpType.Uint2_ordinal||
+                register.getOpType().getOrdinal()==OpType.Int4_ordinal||
                 register.getOpType().getOrdinal()==OpType.Int8_ordinal ||
                 register.getOpType().getOrdinal()==OpType.Uint4_ordinal||
                 register.getOpType().getOrdinal()==OpType.Uint8_ordinal||
                 register.getOpType().getOrdinal()==OpType.Real_ordinal||
-                register.getOpType().getOrdinal()==OpType.Double_ordinal,"Register is not of native OpType");
+                register.getOpType().getOrdinal()==OpType.Double_ordinal
+
+                ,"Register is not of native OpType");
     }
 
     /**
@@ -1516,7 +1606,7 @@ public class CalcProgramBuilder
     protected void addJumpBooleanWithCondition(String op, Line line, Register reg)
     {
         assertRegisterBool(reg);
-        assertRegisterNotConstant(reg);
+        assertRegisterNotLiteral(reg);
         //reg != null is checked for in addInstuction
         addInstruction(op, line, reg);
     }

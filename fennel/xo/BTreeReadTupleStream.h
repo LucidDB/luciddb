@@ -56,6 +56,9 @@ protected:
     
 public:
     void prepare(BTreeReadTupleStreamParams const &params);
+    virtual void getResourceRequirements(
+        ExecutionStreamResourceQuantity &minQuantity,
+        ExecutionStreamResourceQuantity &optQuantity);
     virtual void closeImpl();
     virtual TupleDescriptor const &getOutputDesc() const;
 };

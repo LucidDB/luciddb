@@ -25,6 +25,7 @@ package net.sf.saffron.sql;
 import net.sf.saffron.util.EnumeratedValues;
 import net.sf.saffron.sql.test.SqlTester;
 import net.sf.saffron.sql.type.SqlTypeName;
+import net.sf.saffron.sql.parser.ParserPosition;
 
 
 /**
@@ -77,7 +78,7 @@ public class SqlJoinOperator extends SqlOperator
         return SqlSyntax.Special;
     }
 
-    public SqlCall createCall(SqlNode [] operands)
+    public SqlCall createCall(SqlNode [] operands, ParserPosition parserPosition)
     {
         assert(operands[IS_NATURAL_OPERAND] instanceof SqlLiteral);
         final SqlLiteral isNatural = (SqlLiteral) operands[IS_NATURAL_OPERAND];
@@ -92,7 +93,7 @@ public class SqlJoinOperator extends SqlOperator
         assert operands[TYPE_OPERAND] instanceof SqlLiteral &&
                 ((SqlLiteral) operands[TYPE_OPERAND]).getValue()
                 instanceof JoinType;
-        return new SqlJoin(this,operands);
+        return new SqlJoin(this,operands, parserPosition);
     }
 
     public void test(SqlTester tester) {
@@ -105,12 +106,13 @@ public class SqlJoinOperator extends SqlOperator
         SqlLiteral joinType,
         SqlNode right,
         SqlLiteral conditionType,
-        SqlNode condition)
+        SqlNode condition,
+        ParserPosition parserPosition)
     {
         return createCall(
             new SqlNode [] {
                 left,isNatural,joinType,right,conditionType,condition
-            });
+            },parserPosition);
     }
 
     public void unparse(

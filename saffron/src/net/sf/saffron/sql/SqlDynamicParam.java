@@ -22,6 +22,8 @@
 
 package net.sf.saffron.sql;
 
+import net.sf.saffron.sql.parser.ParserPosition;
+
 /**
  * A <code>SqlDynamicParam</code> represents a dynamic parameter marker in an
  * SQL statement.  The textual order in which dynamic parameters appear
@@ -35,14 +37,15 @@ public class SqlDynamicParam extends SqlNode
 {
     public final int index;
     
-    public SqlDynamicParam(int index)
+    public SqlDynamicParam(int index, ParserPosition parserPosition)
     {
+        super(parserPosition);
         this.index = index;
     }
 
     public Object clone()
     {
-        return new SqlDynamicParam(index);
+        return new SqlDynamicParam(index,getParserPosition());
     }
 
     public SqlKind getKind()

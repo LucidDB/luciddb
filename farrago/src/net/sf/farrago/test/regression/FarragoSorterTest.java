@@ -117,7 +117,7 @@ public class FarragoSorterTest extends FarragoTestCase
     {
         stmt.executeUpdate(
             "create foreign table sortertest.\"" + getName() + "\"("
-            + "pk bigint not null primary key,"
+            + "pk bigint not null,"
             + "val bigint not null) "
             + "server csv_server "
             + "options (table_name '" + getName() + "')");

@@ -70,7 +70,7 @@ public class RexTransformer
     private boolean isBoolean(RexNode node)
     {
         SaffronType type=node.getType();
-        return m_boolType.isSameTypeFamily(type);
+        return m_boolType.isSameType(type);
     }
 
     private boolean isNullable(RexNode node)

@@ -416,7 +416,7 @@ public class JavaRelImplementor implements RelImplementor
     public boolean canTranslate(SaffronRel rel, RexNode condition,
             RexNode[] exps) {
         RexToOJTranslator translator = newTranslator(rel);
-        TranslationTester tester = new TranslationTester(translator);
+        TranslationTester tester = new TranslationTester(translator, true);
         if (condition != null && !tester.canTranslate(condition)) {
             return false;
         }
@@ -427,6 +427,24 @@ public class JavaRelImplementor implements RelImplementor
             }
         }
         return true;
+    }
+
+    /**
+     * Determines whether it is possible to implement an expression in
+     * Java.
+     *
+     * @param condition Condition, may be null
+     * @param exps Expression list
+     * @param deep if true, operands of the given expression are
+     *             tested for translatability as well; if false only
+     *             the top level expression is tested
+     * @return whether the expression can be implemented
+     */
+    public boolean canTranslate(SaffronRel rel, RexNode expression,
+			boolean deep) {
+        RexToOJTranslator translator = newTranslator(rel);
+        TranslationTester tester = new TranslationTester(translator, deep);
+        return tester.canTranslate(expression);
     }
 
     /**
@@ -821,9 +839,11 @@ public class JavaRelImplementor implements RelImplementor
      */
     public static class TranslationTester {
         private final RexToOJTranslator translator;
+        private final boolean deep;
 
-        public TranslationTester(RexToOJTranslator translator) {
+        public TranslationTester(RexToOJTranslator translator, boolean deep) {
             this.translator = translator;
+            this.deep = deep;
         }
         /**
          * Thrown when we encounter an expression which cannot be translated.
@@ -859,6 +879,9 @@ public class JavaRelImplementor implements RelImplementor
                 final RexCall call = (RexCall) rex;
                 if (!translator.canConvertCall(call)) {
                     throw new CannotTranslate();
+                }
+                if (!deep) {
+                    return;
                 }
                 RexNode[] operands = call.operands;
                 for (int i = 0; i < operands.length; i++) {

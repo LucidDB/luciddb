@@ -55,7 +55,7 @@ FENNEL_BEGIN_NAMESPACE
 //!
 //! See SQL99 8.5
 //!
-//! Set escapeLenBytes to 0 if escape character is not defined.
+//! Set escape and escapeLenBytes to 0 if escape character is not defined.
 //!
 //! May throw "22019" or "22025".
 //!
@@ -63,7 +63,7 @@ template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
 void
 SqlLikePrep(char const * const pattern,
             int patternLenBytes,
-            char const * const escape,
+            char const * const escape,  // may be null
             int escapeLenBytes,
             std::string& expPat)
 {
@@ -80,24 +80,33 @@ SqlLikePrep(char const * const pattern,
                 return;
             }
 
+            bool escapeIsRegexpSpecial = false;
             std::string special("_%.|*?+(){}[]^$\\");
             char escapeChar;
-            if (escapeLenBytes > 1) {
-                // SQL99 8.5 General Rule 3b, case i1
-                // Invalid Escape Character
-                throw "22019";
-            } else if (escapeLenBytes == 1) {
+            if (escapeLenBytes == 1) {
                 escapeChar = *escape;
+                if (special.find(escapeChar) != std::string::npos &&
+                    escapeChar != '_' &&
+                    escapeChar != '%') {
+                    // escape char is a special char to regex (not
+                    // sql, just regex) and must be escaped if it
+                    // makes it through to the pattern. (e.g.: escape
+                    // = '*', pattern = '**' then regex should be fed
+                    // '\*'
+                    escapeIsRegexpSpecial = true;
+                }
                 special.append(1, escapeChar);
-            } else if (escapeLenBytes == 0) {
-                // Default is no escape character
-                escapeChar = 0; // should not match anything
             } else {
-                // escapeLenBytes is negative
-                throw std::logic_error("SqlLikePrep:escapeLenBytes");
+                if (!escape & !escapeLenBytes) {
+                    // Default to no escape character
+                    escapeChar = 0; // should not match anything
+                } else {
+                    // SQL99 8.5 General Rule 3b, case i1
+                    // Invalid Escape Character
+                    throw "22019";
+                }
             }
             
-
             expPat.assign(pattern, patternLenBytes);
             
             // Escape all of ".", "|", "*", "?", "+",
@@ -111,13 +120,20 @@ SqlLikePrep(char const * const pattern,
                    std::string::npos) {
                 if (expPat[pos] == escapeChar) {
                     if (pos + 1 >= expPat.size() ||
-                        (expPat[pos+1] != '_' && expPat[pos+1] != '%')) {
+                        (expPat[pos+1] != '_' && expPat[pos+1] != '%' &&
+                         expPat[pos+1] != escapeChar)) {
                         // SQL99 8.5 General Rule 3d, Case ii, I think.
                         // Invalid Escape Sequence
                         throw "22025";
                     }
-                    expPat.erase(pos, 1); // remove escape char
-                    pos++;             // move past subsequent '_' or '%'
+                    if (escapeIsRegexpSpecial && 
+                        expPat[pos+1] == escapeChar) {
+                        expPat[pos] = '\\'; // replace escape char 
+                        pos+=2;             // move past subsequent escape char
+                    } else {
+                        expPat.erase(pos, 1); // remove escape char
+                        pos++;               // move past subsequent '_' or '%'
+                    }
                 } else {
                     switch(expPat[pos]) {
                     case '_':   // SQL '_' -> regex '.'
@@ -174,11 +190,7 @@ SqlSimilarPrepEscapeProcessing(char const * const escape,
         CodeUnitBytes == 1) {
         // ASCII
 
-        if (escapeLenBytes > 1) {
-            // SQL2003 8.6 General Rule 3,
-            // Invalid Escape Character
-            throw "22019";
-        } else if (escapeLenBytes == 1) {
+        if (escapeLenBytes == 1) {
             escapeChar = *escape;
             sqlSpecial.append(1, escapeChar);
         
@@ -206,7 +218,7 @@ SqlSimilarPrepEscapeProcessing(char const * const escape,
                         // Data Exception - Invalid Use of Escape Character
                         throw "2200C";
                     }
-                    pos += 2; // skip by <escape><escape>
+                    pos += 2; // skip by <escape><special char>
                 }
             }
             if (escapeChar == ':' &&
@@ -216,12 +228,15 @@ SqlSimilarPrepEscapeProcessing(char const * const escape,
                 // Data Exception -- Escape Character Conflict
                 throw "2200B";
             }
-        } else if (escapeLenBytes == 0) {
-            // No escape character
-            escapeChar = 0; // should not match anything
         } else {
-            // escapeLenBytes is negative
-            throw std::logic_error("SqlSimilarPrep:escapeLenBytes");
+            if (!escape & ! escapeLenBytes) {
+                // Default to no escape character
+                escapeChar = 0; // should not match anything
+            } else {
+                // SQL2003 8.6 General Rule 3,
+                // Invalid Escape Character
+                throw "22019";
+            }
         }
     }
 }
@@ -267,8 +282,8 @@ SqlSimilarPrepRewriteCharEnumeration(std::string& expPat,
             syntaxRule6ForCharEnum.append(escapeChar, 1);
 
             size_t pos2 = pos;
-            while ((pos2 = expPat.find_first_of(syntaxRule6ForCharEnum, pos2)) !=
-                   std::string::npos) {
+            while ((pos2 = expPat.find_first_of(syntaxRule6ForCharEnum, pos2))
+                   != std::string::npos) {
                 if (expPat[pos2] == escapeChar) {
                     // skip over next char, assume that it is special
                     pos2 += 2;
@@ -393,8 +408,15 @@ SqlSimilarPrepReWrite(char escapeChar,
                     // Replace user defined escape char with regex escape char.
                     expPat.replace(pos, 1, BoostRegExEscapeChar);
                     // Move past subsequent special character.
-                    pos += 2; 
-                } else {  
+                    pos += 2;
+                } else if (expPat[pos + 1] == escapeChar) {
+                    // By inference, escapeChar is not a special char.
+                    // Can let the escape char fall through w/o an regex esc.
+                    // Delete one of the two <escape><escape> chars:
+                    expPat.erase(pos, 1);
+                    // Move past the sole remaining <escape> char:
+                    pos++; 
+                } else {
                     // Malformed <escaped char>. Attempt to escape a
                     // non special character.  SQL2003 8.6 Syntax
                     // Rules 5 & 6, combined with General Rule 2 imply
@@ -485,7 +507,7 @@ SqlSimilarPrepReWrite(char escapeChar,
 //! StrSimilarPrep. Prepares a pattern string to feed to regex
 //! and perhaps also ICU's regex.
 //!
-//! Set escapeLenBytes to 0 if escape character is not defined.
+//! Set escape and escapeLenBytes to 0 if escape character is not defined.
 //!
 //! May throw "2200B" "22019", "2201B", or "2200C"
 //!
@@ -504,7 +526,7 @@ template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
 void
 SqlSimilarPrep(char const * const pattern,
                int patternLenBytes,
-               char const * const escape,
+               char const * const escape,  // may be null
                int escapeLenBytes,
                std::string& expPat)
 {

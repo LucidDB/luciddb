@@ -29,6 +29,7 @@ import net.sf.farrago.util.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fem.config.*;
 
 import net.sf.saffron.test.*;
 
@@ -62,6 +63,22 @@ public abstract class FarragoTestCase extends DiffTestCase
     /** Catalog for test object definitions. */
     protected static FarragoCatalog catalog;
 
+    /**
+     * Flag used to allow individual test methods to be called from
+     * IntelliJ.
+     */
+    private static boolean individualTest;
+
+    /**
+     * Saved copy of Farrago configuration parameters.
+     */
+    private static SortedMap savedFarragoConfig;
+
+    /**
+     * Saved copy of Fennel configuration parameters.
+     */
+    private static SortedMap savedFennelConfig;
+    
     //~ Instance fields -------------------------------------------------------
 
     /** ResultSet for processing queries. */
@@ -117,6 +134,16 @@ public abstract class FarragoTestCase extends DiffTestCase
             (FarragoJdbcEngineConnection) connection;
         catalog = farragoConnection.getSession().getCatalog();
         connection.setAutoCommit(false);
+
+        FarragoReposTxnContext reposTxn = new FarragoReposTxnContext(catalog);
+        reposTxn.beginReadTxn();
+        savedFarragoConfig =
+            JmiUtil.getAttributeValues(catalog.getCurrentConfig());
+        savedFennelConfig =
+            JmiUtil.getAttributeValues(
+                catalog.getCurrentConfig().getFennelConfig());
+        reposTxn.commit();
+        
         runCleanup();
     }
 
@@ -127,7 +154,8 @@ public abstract class FarragoTestCase extends DiffTestCase
             cleanup.setUp();
             cleanup.execute();
         } finally {
-            cleanup.tearDown();
+            // NOTE:  bypass staticTearDown
+            cleanup.tearDownImpl();
         }
     }
 
@@ -138,6 +166,9 @@ public abstract class FarragoTestCase extends DiffTestCase
      */
     public static void staticTearDown() throws Exception
     {
+        if (catalog != null) {
+            restoreParameters();
+        }
         catalog = null;
         if (connection != null) {
             connection.rollback();
@@ -146,6 +177,23 @@ public abstract class FarragoTestCase extends DiffTestCase
         }
     }
 
+    /**
+     * Restore system parameters to state saved by staticSetUp().
+     */
+    static void restoreParameters()
+    {
+        FarragoReposTxnContext reposTxn =
+            new FarragoReposTxnContext(catalog);
+        reposTxn.beginWriteTxn();
+        JmiUtil.setAttributeValues(
+            catalog.getCurrentConfig(),
+            savedFarragoConfig);
+        JmiUtil.setAttributeValues(
+            catalog.getCurrentConfig().getFennelConfig(),
+            savedFennelConfig);
+        reposTxn.commit();
+    }
+        
     // NOTE: Catalog open/close is slow and causes sporadic problems when done
     // in quick succession, so only do it once for the entire test suite
     // instead of the Junit-recommended once per test case.
@@ -210,15 +258,33 @@ public abstract class FarragoTestCase extends DiffTestCase
     // implement TestCase
     protected void setUp() throws Exception
     {
-        super.setUp();
+        if (connection == null) {
+            assert(!individualTest) : "You forgot to implement suite()";
+            individualTest = true;
+            staticSetUp();
+        }
+        
         tracer.info("Entering test case " + getName());
-        assert (connection != null) : "You forgot to implement suite()";
+        super.setUp();
         stmt = connection.createStatement();
+        
+        // discard any cached query plans
+        stmt.executeUpdate("alter system set \"codeCacheMaxBytes\" = min");
+        stmt.executeUpdate("alter system set \"codeCacheMaxBytes\" = max");
+        
         resultSet = null;
     }
 
     // implement TestCase
     protected void tearDown() throws Exception
+    {
+        tearDownImpl();
+        if (individualTest) {
+            staticTearDown();
+        }
+    }
+    
+    protected void tearDownImpl() throws Exception
     {
         try {
             if (resultSet != null) {
@@ -236,6 +302,13 @@ public abstract class FarragoTestCase extends DiffTestCase
             connection.rollback();
         } finally {
             tracer.info("Leaving test case " + getName());
+            if (tracer.isLoggable(Level.FINE)) {
+                Runtime rt = Runtime.getRuntime();
+                rt.gc();
+                rt.gc();
+                long heapSize = rt.totalMemory() - rt.freeMemory();
+                tracer.fine("JVM heap size = " + heapSize);
+            }
             super.tearDown();
         }
     }
@@ -382,10 +455,11 @@ public abstract class FarragoTestCase extends DiffTestCase
         
         public void execute() throws Exception
         {
+            restoreParameters();
             dropSchemas();
             dropDataWrappers();
         }
-        
+
         private void dropSchemas() throws Exception
         {
             List list = new ArrayList();

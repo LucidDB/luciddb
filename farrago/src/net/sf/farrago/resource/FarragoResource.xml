@@ -222,6 +222,14 @@ encountered near {1}</text>
     <text>Cannot create local data wrapper {0} because its library implements foreign storage</text>
 </exception>
 
+<exception id="420420" name="ValidatorCalcUnavailable">
+    <text>Requested calculator implementation is unavailable</text>
+</exception>
+
+<exception id="420430" name="ValidatorNoConstrainAllow">
+    <text>{0} does not accept a constraint definition</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Parser resources 430,000 - 440,000 -->
 <!-- ====================================================================== -->

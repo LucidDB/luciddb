@@ -133,7 +133,7 @@ SqlRegExpTest::testSqlRegExpLikeAsciiTrue()
         try {
             SqlLikePrep<1,1>(test[i][0],
                              strlen(test[i][0]),
-                             "", 0,
+                             0, 0,    // no escape
                              expPat);
             boost::regex exp(expPat);
             result = SqlRegExp<1,1>(test[i][1],
@@ -224,7 +224,7 @@ SqlRegExpTest::testSqlRegExpLikeAsciiFalse()
         try {
             SqlLikePrep<1,1>(test[i][0],
                              strlen(test[i][0]),
-                             "", 0,
+                             0, 0,   // no escape
                              expPat);
             boost::regex exp(expPat);
             result = SqlRegExp<1,1>(test[i][1],
@@ -272,6 +272,7 @@ SqlRegExpTest::testSqlRegExpLikeAsciiEscapeTrue()
         // define new escape
         { "_",      "a",  "#" },
         { "#_",    "_",   "#" },
+        { "##",    "#",   "#" },
         { "#_bc",  "_bc", "#" },
         { "a#_c",  "a_c", "#" },
         { "ab#_",  "ab_", "#" },
@@ -286,6 +287,7 @@ SqlRegExpTest::testSqlRegExpLikeAsciiEscapeTrue()
         // define new escape that is special regexp char
         { "_",     "a",   "|" },
         { "|_",    "_",   "|" },
+        { "||",    "|",   "|" },
         { "|_bc",  "_bc", "|" },
         { "a|_c",  "a_c", "|" },
         { "ab|_",  "ab_", "|" },
@@ -300,6 +302,7 @@ SqlRegExpTest::testSqlRegExpLikeAsciiEscapeTrue()
         // define new escape that is special regexp char
         { "_",     "a",   ")" },
         { ")_",    "_",   ")" },
+        { "))",    ")",   ")" },
         { ")_bc",  "_bc", ")" },
         { "a)_c",  "a_c", ")" },
         { "ab)_",  "ab_", ")" },
@@ -371,6 +374,7 @@ SqlRegExpTest::testSqlRegExpLikeAsciiEscapeFalse()
         { "#_",   "a",   "#" },
         { "#_",   "__",  "#" },
         { "#_",   "a",   "#" },
+        { "##",   "a",   "#" },
         { "#_#_", "a",   "#" },
         { "#_#_", "_",   "#" },
         { "#_#_", "_a",  "#" },
@@ -391,6 +395,7 @@ SqlRegExpTest::testSqlRegExpLikeAsciiEscapeFalse()
         { "|_",   "_a",  "|" },
         { "|_",   "a_",  "|" },
         { "|_",   "a",   "|" },
+        { "||",   "a",   "|" },
         { "|%",   "a",   "|" },
         { "|%",   "ab",  "|" },
 
@@ -399,6 +404,7 @@ SqlRegExpTest::testSqlRegExpLikeAsciiEscapeFalse()
         { ")_",   "_a",  ")" },
         { ")_",   "a_",  ")" },
         { ")_",   "a",   ")" },
+        { "))",   "a",   ")" },
         { ")%",   "a",   ")" },
         { ")%",   "ab",  ")" },
 
@@ -458,10 +464,10 @@ SqlRegExpTest::testSqlRegExpLikeAsciiException()
     char* test[][4] = { 
         // pattern, matchValue, escape, exception
         { "=",       "a",       "=",       "22025" },
-        { "=a",       "a",       "=",       "22025" },
+        { "=a",       "a",       "=",      "22025" },
 
-        { "a",       "a",       "ab",       "22019" },
-        { "a",       "a",       "\\\\",       "22019" },
+        { "a",       "a",       "ab",      "22019" },
+        { "a",       "a",       "\\\\",    "22019" },
 
         { "X",       "X",       "X",       "X" }  // end sentinal
         
@@ -1033,7 +1039,7 @@ SqlRegExpTest::testSqlRegExpSimilarAscii()
         try {
             SqlSimilarPrep<1,1>(test[i][0],
                                 strlen(test[i][0]),
-                                "", 0,
+                                0, 0,   // no escape
                                 expPat);
 
             boost::regex exp(expPat);
@@ -1100,13 +1106,16 @@ SqlRegExpTest::testSqlRegExpSimilarAsciiEscape()
         { "ab#%",    "ab%",     "#", "t" },
         { "%",       "a",       "#", "t" },
         { "#%",      "%",       "#", "t" },
+        { "##",      "#",       "#", "t" },
         // try all special chars (both to SIMILAR & regex)
         { "#[#]#(#)#|#^#-#+#*#_#%#?#{#}$.\\",
           "[]()|^-+*_%?{}$.\\",  "#", "t" },
         { "#[#{#(#|#?#^#*#%#+#-#_#)#}#]$.\\",
           "[{(|?^*%+-_)}]$.\\",  "#", "t" },
 
+
         { "#%",      "a",       "#", "f" },
+        { "##",      "a",       "#", "f" },
         { "#%",      "ab",      "#", "f" },
         { "#%",      "a",       "#", "f" },
         { "#%bc",    "abc",     "#", "f" },
@@ -1133,6 +1142,8 @@ SqlRegExpTest::testSqlRegExpSimilarAsciiEscape()
         { "|_bc",    "_bc",     "|", "t" },
         { "a|_c",    "a_c",     "|", "t" },
         { "ab|_",    "ab_",     "|", "t" },
+        { "||",      "|",       "|", "t" },
+        { "((",      "(",       "(", "t" },
 
         { "|%",      "%",       "|", "t" },
         { "|%bc",    "%bc",     "|", "t" },
@@ -1163,6 +1174,8 @@ SqlRegExpTest::testSqlRegExpSimilarAsciiEscape()
         { "|_",      "a",       "|", "f" },
         { "|%",      "a",       "|", "f" },
         { "|%",      "ab",      "|", "f" },
+        { "||",      "a",       "|", "f" },
+        { "((",      "a",       "(", "f" },
 
         { "X",       "X",       "X", "X" }  // end sentinal
         

@@ -22,15 +22,14 @@ package net.sf.saffron.sql.parser;
 
 import net.sf.saffron.resource.SaffronResource;
 import net.sf.saffron.sql.SqlNode;
+import net.sf.saffron.sql.SqlLiteral;
 import net.sf.saffron.util.SaffronProperties;
+import net.sf.saffron.util.Util;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
-import java.util.StringTokenizer;
+import java.util.*;
 
 
 /**
@@ -51,6 +50,13 @@ public final class ParserUtil {
     public static final String TimestampFormatStr = DateFormatStr + " " + TimeFormatStr;
     public static final String PrecisionTimestampFormatStr = TimestampFormatStr + ".S";
 
+    /**
+     * Helper class for {@link #parsePrecisionDateTimeLiteral}
+     */
+    public static class PrecisionTime {
+        public Calendar cal;
+        public int precision;
+    }
 
     private ParserUtil() {}
 
@@ -70,6 +76,9 @@ public final class ParserUtil {
         return java.sql.Date.valueOf(s);
     }
 
+    /**
+     * @deprecated Does not parse SQL:99 milliseconds
+     */
     public static java.sql.Time parseTime(String s) {
         return java.sql.Time.valueOf(s);
     }
@@ -78,7 +87,74 @@ public final class ParserUtil {
         return java.sql.Timestamp.valueOf(s);
     }
 
+    /**
+     * Parses a string using {@link java.text.SimpleDateFormat} and a given pattern
+     * @param s string to be parsed
+     * @param pattern {@link java.text.SimpleDateFormat} pattern
+     * @param pp position to start parsing from
+     * @return Null if parsing failed.
+     * @pre pattern!=null
+     */
+    public static Calendar parseDateFormat(
+            String s, String pattern, java.text.ParsePosition pp) {
+        Util.pre(null!=pattern,"null!=pattern");
+        java.text.SimpleDateFormat df = new java.text.SimpleDateFormat(pattern);
+        df.setLenient(false);
+        java.util.TimeZone tz = new java.util.SimpleTimeZone(0, "GMT+00:00");
+        Calendar ret = Calendar.getInstance(tz);
+        df.setCalendar(ret);
 
+        java.util.Date d = df.parse(s, pp);
+        if (null==d) {
+            return null;
+        }
+        ret.setTime(d);
+        return ret;
+    }
+
+
+
+    public static PrecisionTime parsePrecisionDateTimeLiteral(String s,
+                        String pattern) {
+        s = strip(s,"'");
+        java.text.ParsePosition pp = new java.text.ParsePosition(0);
+        Calendar cal = parseDateFormat(s, pattern+".S", pp);
+        int p=0;
+        if (null!=cal) {
+            if (pp.getIndex()!=s.length()) {
+                return null;
+            } else {
+                //seconds fraction has to be parsed by us since .S means milliseconds
+                pp.setIndex(0);
+                //todo make this faster if too slow since we are
+                //extracting the first part again to avoid having milliseconds
+                //spill onto min.
+                cal = parseDateFormat(s, pattern+".", pp);
+                p =  Math.min(3,s.length() - pp.getIndex()); //only support precision 3 or lower
+                String secFraction = s.substring(pp.getIndex());
+                int ms = (int)Math.round(Float.parseFloat(secFraction) *
+                    Math.pow(10,3 - secFraction.length()));
+                cal.add(Calendar.MILLISECOND, ms);
+            }
+        } else {
+            cal = parseDateFormat(s, pattern, pp);
+            if (null==cal) {
+                return null;
+            } else if (pp.getIndex()!=s.length()) {
+                if (s.length()-pp.getIndex()>2) {
+                    return null;
+                } else if (s.charAt(pp.getIndex())!='.') {
+                    return null;
+                }
+            }
+        }
+
+        assert(null!=cal);
+        PrecisionTime ret = new PrecisionTime();
+        ret.cal = cal;
+        ret.precision = p;
+        return ret;
+    }
 
     /**
      * Parses a Binary string. SQL:99 defines a binary string as a hexstring with EVEN nbr of hex digits.

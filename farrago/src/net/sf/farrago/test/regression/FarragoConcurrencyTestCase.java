@@ -18,6 +18,8 @@
 */
 package net.sf.farrago.test.regression;
 
+import java.io.PrintStream;
+
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
@@ -63,6 +65,7 @@ public abstract class FarragoConcurrencyTestCase
     extends FarragoTestCase
 {
     private boolean debug = false;
+    private PrintStream printStream = System.out;
 
     protected FarragoConcurrencyTestCase(String testName)
         throws Exception
@@ -136,15 +139,16 @@ public abstract class FarragoConcurrencyTestCase
             Iterator commands = commandGenerator.getCommandIterator(threadId);
 
             if (debug) {
-                System.out.println("Thread ID: " + threadId);
-                commandGenerator.printCommands(System.out, threadId);
+                printStream.println("Thread ID: " + threadId);
+                commandGenerator.printCommands(printStream, threadId);
             }
 
             threads[threadIndex++] = 
                 new FarragoTestCommandExecutor(threadId.intValue(),
                                                jdbcURL,
                                                commands,
-                                               sync);
+                                               sync,
+                                               debug ? printStream : null);
         }
 
         // start all the threads
@@ -187,6 +191,12 @@ public abstract class FarragoConcurrencyTestCase
     protected void setDebug(boolean enabled)
     {
         debug = enabled;
+    }
+
+    protected void setDebug(boolean enabled, PrintStream alternatePrintStream)
+    {
+        debug = enabled;
+        printStream = alternatePrintStream;
     }
 }
 

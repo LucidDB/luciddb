@@ -10,6 +10,7 @@ BTreeSearch.cpp \
 BTreeSearchUnique.cpp \
 BTreeTupleStream.cpp \
 BufferingTupleStream.cpp \
+CalcExcn.cpp \
 CalcExecutionStream.cpp \
 CalcTupleStream.cpp \
 CartesianProductStream.cpp \

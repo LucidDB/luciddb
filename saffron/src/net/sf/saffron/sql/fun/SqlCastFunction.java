@@ -1,7 +1,7 @@
 /*
 // $Id$
 // Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
+// (C) Copyright 2002-2004 Disruptive Tech
 // (C) Copyright 2003-2004 John V. Sichi
 // You must accept the terms in LICENSE.html to use this software.
 //
@@ -21,17 +21,15 @@
 */
 package net.sf.saffron.sql.fun;
 
-import net.sf.saffron.sql.*;
-import net.sf.saffron.sql.type.SqlTypeName;
-import net.sf.saffron.sql.test.SqlTester;
 import net.sf.saffron.core.SaffronType;
 import net.sf.saffron.core.SaffronTypeFactory;
-import net.sf.saffron.util.Util;
 import net.sf.saffron.resource.SaffronResource;
-import net.sf.saffron.rex.RexNode;
+import net.sf.saffron.sql.*;
+import net.sf.saffron.sql.test.SqlTester;
+import net.sf.saffron.util.Util;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * SqlCastFunction.  Note that the std functions are really singleton objects,
@@ -88,7 +86,7 @@ public class SqlCastFunction extends SqlFunction {
      * can override this method.
      */
     protected void checkArgTypes(SqlCall call, SqlValidator validator, SqlValidator.Scope scope) {
-        if (SqlLiteral.isNullLiteral(call.operands[0])) {
+        if (SqlUtil.isNullLiteral(call.operands[0], false)) {
             return;
         }
         SaffronType validatedNodeType = validator.getValidatedNodeType(call.operands[0]);
@@ -105,7 +103,17 @@ public class SqlCastFunction extends SqlFunction {
      */
     protected SaffronType inferType(SqlValidator validator,
             SqlValidator.Scope scope, SqlCall call) {
-        return ((SqlDataType) call.getOperands()[1]).getType();
+        SaffronType ret = ((SqlDataType) call.getOperands()[1]).getType();
+        boolean isNullable;
+        if (SqlUtil.isNullLiteral(call.operands[0], false)) {
+            isNullable = true;
+        } else {
+            SaffronType firstType = validator.getValidatedNodeType(call.operands[0]);
+            isNullable = firstType.isNullable();
+        }
+        ret = validator.typeFactory.createTypeWithNullability(ret, isNullable);
+        validator.setValidatedNodeType(call.operands[0], ret);
+        return ret;
     }
 
     public void unparse(
@@ -144,7 +152,7 @@ public class SqlCastFunction extends SqlFunction {
         tester.checkScalarApprox("cast(1 as double)","1.0");
         tester.checkScalarApprox("cast(1.0 as double)","1.0");
         tester.checkNull("cast(null as double)");
-        tester.checkString("cast(1 as string, 'foo')", "fail");
+        tester.checkNull("cast(null as date)");
     }
 
 }

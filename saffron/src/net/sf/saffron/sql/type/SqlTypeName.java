@@ -49,65 +49,71 @@ public class SqlTypeName extends EnumeratedValues.BasicValue {
     public static final int Boolean_ordinal = 0;
     public static final SqlTypeName Boolean = new SqlTypeName("BOOLEAN", Boolean_ordinal, PrecNoScaleNo);
 
-    public static final int Integer_ordinal = 1;
-    public static final SqlTypeName Integer = new SqlTypeName("INTEGER", Integer_ordinal, PrecNoScaleNo);
-
-    public static final int Varchar_ordinal = 2;
-    public static final SqlTypeName Varchar = new SqlTypeName("VARCHAR", Varchar_ordinal, PrecYesScaleNo);
-
-    public static final int Date_ordinal = 3;
-    public static final SqlTypeName Date = new SqlTypeName("DATE", Date_ordinal, PrecNoScaleNo);
-
-    public static final int Time_ordinal = 4;
-    public static final SqlTypeName Time = new SqlTypeName("TIME", Time_ordinal, PrecNoScaleNo|PrecYesScaleNo);
-
-    public static final int Timestamp_ordinal = 5;
-    public static final SqlTypeName Timestamp = new SqlTypeName("TIMESTAMP", Timestamp_ordinal, PrecNoScaleNo|PrecYesScaleNo);
-
-    public static final int Null_ordinal = 6;
-    public static final SqlTypeName Null = new SqlTypeName("NULL", Null_ordinal, PrecNoScaleNo);
-
-    public static final int Decimal_ordinal = 7;
-    public static final SqlTypeName Decimal = new SqlTypeName("DECIMAL", Decimal_ordinal,PrecNoScaleNo|PrecYesScaleYes);
-
-    public static final int Any_ordinal = 8;
-    public static final SqlTypeName Any = new SqlTypeName("ANY", Any_ordinal, PrecNoScaleNo);
-
-    public static final int Char_ordinal = 9;
-    public static final SqlTypeName Char = new SqlTypeName("CHAR", Char_ordinal, PrecYesScaleNo);
-
-    public static final int Binary_ordinal = 10;
-    public static final SqlTypeName Binary = new SqlTypeName("BINARY", Binary_ordinal, PrecYesScaleNo);
-
-    public static final int Varbinary_ordinal = 11;
-    public static final SqlTypeName Varbinary = new SqlTypeName("VARBINARY", Varbinary_ordinal, PrecYesScaleNo);
-
-    public static final int Tinyint_ordinal = 12;
+    public static final int Tinyint_ordinal = 1;
     public static final SqlTypeName Tinyint = new SqlTypeName("TINYINT", Tinyint_ordinal, PrecNoScaleNo);
 
-    public static final int Smallint_ordinal = 13;
+    public static final int Smallint_ordinal = 2;
     public static final SqlTypeName Smallint = new SqlTypeName("SMALLINT", Smallint_ordinal, PrecNoScaleNo);
 
-    public static final int Bigint_ordinal = 14;
+    public static final int Integer_ordinal = 3;
+    public static final SqlTypeName Integer = new SqlTypeName("INTEGER", Integer_ordinal, PrecNoScaleNo);
+
+    public static final int Bigint_ordinal = 4;
     public static final SqlTypeName Bigint = new SqlTypeName("BIGINT", Bigint_ordinal, PrecNoScaleNo);
 
-    public static final int Real_ordinal = 15;
+    public static final int Decimal_ordinal = 5;
+    public static final SqlTypeName Decimal = new SqlTypeName("DECIMAL", Decimal_ordinal,PrecNoScaleNo|PrecYesScaleYes);
+
+    public static final int Float_ordinal = 6;
+    public static final SqlTypeName Float = new SqlTypeName("FLOAT", Float_ordinal, PrecNoScaleNo);
+
+    public static final int Real_ordinal = 7;
     public static final SqlTypeName Real = new SqlTypeName("REAL", Real_ordinal, PrecNoScaleNo);
 
-    public static final int Double_ordinal = 16;
+    public static final int Double_ordinal = 8;
     public static final SqlTypeName Double = new SqlTypeName("DOUBLE", Double_ordinal, PrecNoScaleNo);
 
-    public static final int Bit_ordinal = 17;
-    public static final SqlTypeName Bit = new SqlTypeName("BIT", Bit_ordinal, PrecYesScaleNo);
+    public static final int Date_ordinal = 9;
+    public static final SqlTypeName Date = new SqlTypeName("DATE", Date_ordinal, PrecNoScaleNo);
 
-    public static final int Symbol_ordinal = 18;
-    public static final SqlTypeName Symbol = new SqlTypeName("SYMBOL", Symbol_ordinal, PrecNoScaleNo);
+    public static final int Time_ordinal = 10;
+    public static final SqlTypeName Time = new SqlTypeName("TIME", Time_ordinal, PrecNoScaleNo|PrecYesScaleNo);
 
-    public static final int IntervalYearToMonth_ordinal = 19;
+    public static final int Timestamp_ordinal = 11;
+    public static final SqlTypeName Timestamp = new SqlTypeName("TIMESTAMP", Timestamp_ordinal, PrecNoScaleNo|PrecYesScaleNo);
+
+    public static final int IntervalYearToMonth_ordinal = 12;
     public static final SqlTypeName IntervalYearToMonth = new SqlTypeName("IntervalYearToMonth", IntervalYearToMonth_ordinal, PrecNoScaleNo);
 
-    public static final int IntervalDayTime_ordinal = 20;
+    public static final int IntervalDayTime_ordinal = 13;
     public static final SqlTypeName IntervalDayTime = new SqlTypeName("IntervalDayTime", IntervalDayTime_ordinal, PrecYesScaleNo);
+
+    public static final int Char_ordinal = 14;
+    public static final SqlTypeName Char = new SqlTypeName("CHAR", Char_ordinal, PrecYesScaleNo);
+
+    public static final int Varchar_ordinal = 15;
+    public static final SqlTypeName Varchar = new SqlTypeName("VARCHAR", Varchar_ordinal, PrecYesScaleNo);
+
+    public static final int Bit_ordinal = 16;
+    public static final SqlTypeName Bit = new SqlTypeName("BIT", Bit_ordinal, PrecYesScaleNo);
+
+    public static final int Varbit_ordinal = 17;
+    public static final SqlTypeName Varbit = new SqlTypeName("VARBIT", Varbit_ordinal, PrecYesScaleNo);
+
+    public static final int Binary_ordinal = 18;
+    public static final SqlTypeName Binary = new SqlTypeName("BINARY", Binary_ordinal, PrecYesScaleNo);
+
+    public static final int Varbinary_ordinal = 19;
+    public static final SqlTypeName Varbinary = new SqlTypeName("VARBINARY", Varbinary_ordinal, PrecYesScaleNo);
+
+    public static final int Null_ordinal = 20;
+    public static final SqlTypeName Null = new SqlTypeName("NULL", Null_ordinal, PrecNoScaleNo);
+
+    public static final int Any_ordinal = 21;
+    public static final SqlTypeName Any = new SqlTypeName("ANY", Any_ordinal, PrecNoScaleNo);
+
+    public static final int Symbol_ordinal = 22;
+    public static final SqlTypeName Symbol = new SqlTypeName("SYMBOL", Symbol_ordinal, PrecNoScaleNo);
 
     /**
      * List of all allowable {@link SqlTypeName} values.
@@ -117,7 +123,7 @@ public class SqlTypeName extends EnumeratedValues.BasicValue {
                 Boolean, Integer, Varchar, Date, Time, Timestamp, Null,
                 Decimal, Any, Char, Binary, Varbinary, Tinyint,
                 Smallint, Bigint, Real, Double, Bit, Symbol,
-                IntervalYearToMonth, IntervalDayTime
+                IntervalYearToMonth, IntervalDayTime, Float
             }
     );
     /**

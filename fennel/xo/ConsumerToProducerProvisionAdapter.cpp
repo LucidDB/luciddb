@@ -32,6 +32,18 @@ void ConsumerToProducerProvisionAdapter::prepare(
     bufferLock.accessSegment(scratchAccessor);
 }
 
+void ConsumerToProducerProvisionAdapter::getResourceRequirements(
+    ExecutionStreamResourceQuantity &minQuantity,
+    ExecutionStreamResourceQuantity &optQuantity)
+{
+    ExecutionStream::getResourceRequirements(minQuantity,optQuantity);
+
+    // one scratch page
+    minQuantity.nCachePages += 1;
+
+    optQuantity = minQuantity;
+}
+
 void ConsumerToProducerProvisionAdapter::open(bool restart)
 {
     SingleInputTupleStream::open(restart);

@@ -55,6 +55,11 @@ class CalcExecutionStream : virtual public TraceSource
 {
 protected:
     /**
+     * TupleDescriptor for input tuples.
+     */
+    TupleDescriptor inputDesc;
+    
+    /**
      * TupleDescriptor for output tuples.
      */
     TupleDescriptor outputDesc;

@@ -824,6 +824,188 @@ SqlStrTrim(char const ** result,
 }
 
 
+//! SqlStrCastToExact. Char & VarChar. Ascii only.
+//!
+//! This routine may not be compliant with the SQL99 standard.
+template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
+uint64_t
+SqlStrCastToExact(char const * const str,
+                  int strLenBytes)
+{
+    uint64_t rv;
+    if (MaxCodeUnitsPerCodePoint == 1) {
+        if (CodeUnitBytes == 1) {
+            // ASCII
+
+            // TODO: Replace with a real implementation
+            // TODO: Following assumes any reasonable number fits in
+            // TODO: First 1020 bytes of a string and can be parsed by
+            // TODO: scanf. No attempt to make this SQL compliant
+            int min = 1020;
+            if (strLenBytes < min) min = strLenBytes;
+            char tmp[1024];
+            memcpy(tmp, str, min);
+            tmp[min] = 0;
+            sscanf(tmp, "%lld", &rv);
+
+        } else if (CodeUnitBytes == 2) {
+            // TODO: Add UCS2 here
+            throw std::logic_error("no UCS2");
+        } else {
+            throw std::logic_error("no such encoding");
+        }
+    } else {
+        throw std::logic_error("no UTF8/16/32");
+    }
+
+    return rv;
+}
+
+//! SqlStrCastToApprox. Char & VarChar. Ascii only.
+//!
+//! This routine may not be compliant with the SQL99 standard.
+template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
+double
+SqlStrCastToApprox(char const * const str,
+                   int strLenBytes)
+{
+    double rv;
+    if (MaxCodeUnitsPerCodePoint == 1) {
+        if (CodeUnitBytes == 1) {
+            // ASCII
+
+            // TODO: Replace with a real implementation
+            // TODO: Following assumes any reasonable number fits in
+            // TODO: First 1020 bytes of a string and can be parsed by
+            // TODO: scanf. No attempt to make this SQL compliant
+            int min = 1020;
+            if (strLenBytes < min) min = strLenBytes;
+            char tmp[1024];
+            memcpy(tmp, str, min);
+            tmp[min] = 0;
+            sscanf(tmp, "%lf", &rv);
+
+        } else if (CodeUnitBytes == 2) {
+            // TODO: Add UCS2 here
+            throw std::logic_error("no UCS2");
+        } else {
+            throw std::logic_error("no such encoding");
+        }
+    } else {
+        throw std::logic_error("no UTF8/16/32");
+    }
+
+    return rv;
+}
+
+//! SqlStrCastFromExact. Char & VarChar. Ascii only.
+//!
+//! This routine may not be compliant with the SQL99 standard.
+//!
+//! Pad character code points that require more than one code unit are
+//! currently unsupported.
+template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
+int
+SqlStrCastFromExact(char* dest,
+                    int destStorageBytes,
+                    int64_t src,
+                    bool fixed,  // e.g. char, else variable (varchar)
+                    int padchar = ' ')
+{
+    int rv;
+
+    if (MaxCodeUnitsPerCodePoint == 1) {
+        if (CodeUnitBytes == 1) {
+            // ASCII
+
+            // TODO: This bad, hackish, incorrect implementation
+            // TODO: 'wastes' the last byte of dest.
+            // TODO:  If the output takes, say, 6 bytes, and
+            // TODO: destStorageBytes is 6 bytes, the printf will
+            // TODO: fail because there isn't enough room to do the
+            // TODO: unneeded NULL termination.
+            int len = snprintf(dest, destStorageBytes, "%lld", src);
+            if (len >= destStorageBytes) {
+                // everything didn't fit
+                // may be able to make this work if just off by one --
+                // which means null didn't fit, but everything of value did...
+                throw "TooLong"; // TODO: replace this
+            }
+            if (fixed) {
+                memset(dest + len, padchar, destStorageBytes - len);
+                rv = destStorageBytes;
+            } else {
+                rv = len;
+            }
+
+        } else if (CodeUnitBytes == 2) {
+            // TODO: Add UCS2 here
+            throw std::logic_error("no UCS2");
+        } else {
+            throw std::logic_error("no such encoding");
+        }
+    } else {
+        throw std::logic_error("no UTF8/16/32");
+    }
+
+    return rv;
+}
+
+//! SqlStrCastFromApprox. Char & VarChar. Ascii only.
+//!
+//! This routine may not be compliant with the SQL99 standard.
+//!
+//! Pad character code points that require more than one code unit are
+//! currently unsupported.
+template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
+int
+SqlStrCastFromApprox(char* dest,
+                     int destStorageBytes,
+                     double src,
+                     bool fixed,  // e.g. char, else variable (varchar)
+                     int padchar = ' ')
+{
+    int rv;
+
+    if (MaxCodeUnitsPerCodePoint == 1) {
+        if (CodeUnitBytes == 1) {
+            // ASCII
+
+            // TODO: This bad, hackish, incorrect implementation
+            // TODO: 'wastes' the last byte of dest.
+            // TODO:  If the output takes, say, 6 bytes, and
+            // TODO: destStorageBytes is 6 bytes, the printf will
+            // TODO: fail because there isn't enough room to do the
+            // TODO: unneeded NULL termination.
+            int len = snprintf(dest, destStorageBytes, "%f", src);
+            if (len >= destStorageBytes) {
+                // everything didn't fit
+                // may be able to make this work if just off by one --
+                // which means null didn't fit, but everything of value did...
+                throw "TooLong"; // TODO: replace this
+            }
+            if (fixed) {
+                memset(dest + len, padchar, destStorageBytes - len);
+                rv = destStorageBytes;
+            } else {
+                rv = len;
+            }
+
+        } else if (CodeUnitBytes == 2) {
+            // TODO: Add UCS2 here
+            throw std::logic_error("no UCS2");
+        } else {
+            throw std::logic_error("no such encoding");
+        }
+    } else {
+        throw std::logic_error("no UTF8/16/32");
+    }
+
+    return rv;
+}
+
+
+
 FENNEL_END_NAMESPACE
 
 #endif

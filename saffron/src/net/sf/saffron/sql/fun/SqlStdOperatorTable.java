@@ -30,6 +30,7 @@ import net.sf.saffron.sql.test.SqlTester;
 import net.sf.saffron.sql.type.SqlTypeName;
 import net.sf.saffron.sql.fun.SqlTrimFunction;
 import net.sf.saffron.sql.*;
+import net.sf.saffron.sql.parser.ParserPosition;
 import net.sf.saffron.util.Util;
 import openjava.ptree.Expression;
 import openjava.ptree.ExpressionList;
@@ -55,8 +56,8 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
                 public void test(SqlTester tester) {
                     tester.checkBoolean("true and false",Boolean.FALSE);
                     tester.checkBoolean("true and true",Boolean.TRUE);
-                    tester.checkBoolean("null and false",Boolean.FALSE);
-                    tester.checkBoolean("false and null",Boolean.FALSE);
+                    tester.checkBoolean("cast(null as boolean) and false",Boolean.FALSE);
+                    tester.checkBoolean("false and cast(null as boolean)",Boolean.FALSE);
                     tester.checkNull("cast(null as boolean) and true");
                 }
 
@@ -75,38 +76,17 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
                 }
             };
 
-    // FIXME jvs 23-Dec-2003:  useFirstKnownParam is incorrect here;
-    // have to promote CHAR to VARCHAR
     public final SqlBinaryOperator concatOperator =
             new SqlBinaryOperator("||", SqlKind.Other, 30, true,
-                    useNullableFirstArgType, null, typeNullableStringStringOfSameType) {
-                protected SaffronType _inferType(SqlValidator validator,
-                        SqlValidator.Scope scope, SqlCall call) {
-                    //todo: make return a string with the correct precision.
-                    return useNullableBiggest.getType(validator, scope, call);
-                }
-
+                    useNullableVaryingDyadicStringSumPrecision, null,
+                    typeNullableStringStringOfSameType) {
 
                 public void test(SqlTester tester) {
                     tester.checkString(" 'a'||'b' ", "ab");
-                    tester.checkString(" 'a'||'b' ", "a");
                     tester.checkString(" x'f'||x'f' ", "X'FF");
                     tester.checkString(" b'1'||b'0' ", "B'10'");
                     tester.checkString(" b'1'||b'' ", "B'1'");
                     tester.checkNull("x'ff' || cast(null as varbinary)");
-                }
-
-                protected void checkArgTypes(SqlCall call, SqlValidator validator,
-                        SqlValidator.Scope scope) {
-                    SqlNode op0 = call.operands[0];
-                    SqlNode op1 = call.operands[1];
-                    typeNullableString.checkThrows(validator, scope, call, op0, 0);
-                    typeNullableString.checkThrows(validator, scope, call, op1, 0);
-                    SaffronType t0 = validator.deriveType(scope, op0);
-                    SaffronType t1 = validator.deriveType(scope, op1);
-                    if (!t0.isSameTypeFamily(t1)) {
-                        throw call.newValidationSignatureError(validator, scope);
-                    }
                 }
             };
 
@@ -130,12 +110,12 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
     public final SqlBinaryOperator equalsOperator =
             new SqlBinaryOperator("=", SqlKind.Equals, 15, true,
                     useNullableBoolean, useFirstKnownParam,
-                    typeNullabeSameSame_or_NullableNumericNumeric_or_NullableBinariesBinaries) {
+                    typeNullabeSameSame_or_NullableNumericNumeric_or_NullableBinariesBinaries_or_NullableCharsChars) {
                 public void test(SqlTester tester) {
                     tester.checkBoolean("1=1",Boolean.TRUE);
                     tester.checkBoolean("'a'='b'",Boolean.FALSE);
                     tester.checkNull("cast(null as boolean)=cast(null as boolean)");
-                    tester.checkNull("cast(null as smallint)=1");
+                    tester.checkNull("cast(null as integer)=1");
                 }
             };
 
@@ -148,7 +128,7 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
     public final SqlBinaryOperator greaterThanOperator =
             new SqlBinaryOperator(">", SqlKind.GreaterThan, 15, true,
                     useNullableBoolean, useFirstKnownParam,
-                    typeNullabeSameSame_or_NullableNumericNumeric_or_NullableBinariesBinaries) {
+                    typeNullabeSameSame_or_NullableNumericNumeric_or_NullableBinariesBinaries_or_NullableCharsChars) {
                 public void test(SqlTester tester) {
                     tester.checkBoolean("1>2",Boolean.FALSE);
                     tester.checkBoolean("1>1",Boolean.FALSE);
@@ -160,7 +140,7 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
     public final SqlBinaryOperator greaterThanOrEqualOperator =
             new SqlBinaryOperator(">=", SqlKind.GreaterThanOrEqual, 15, true,
                     useNullableBoolean, useFirstKnownParam,
-                    typeNullabeSameSame_or_NullableNumericNumeric_or_NullableBinariesBinaries) {
+                    typeNullabeSameSame_or_NullableNumericNumeric_or_NullableBinariesBinaries_or_NullableCharsChars) {
                 public void test(SqlTester tester) {
                     tester.checkBoolean("1>=2",Boolean.FALSE);
                     tester.checkBoolean("1>=1",Boolean.TRUE);
@@ -196,24 +176,24 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
     public final SqlBinaryOperator lessThanOperator =
             new SqlBinaryOperator("<", SqlKind.LessThan, 15, true,
                     useNullableBoolean, useFirstKnownParam,
-                    typeNullabeSameSame_or_NullableNumericNumeric_or_NullableBinariesBinaries) {
+                    typeNullabeSameSame_or_NullableNumericNumeric_or_NullableBinariesBinaries_or_NullableCharsChars) {
                 public void test(SqlTester tester) {
                     tester.checkBoolean("1<2",Boolean.TRUE);
                     tester.checkBoolean("1<1",Boolean.FALSE);
                     tester.checkBoolean("2<1",Boolean.FALSE);
-                    tester.checkNull("123<cast(null as long)");
+                    tester.checkNull("123<cast(null as bigint)");
                 }
             };
 
     public final SqlBinaryOperator lessThanOrEqualOperator =
             new SqlBinaryOperator("<=", SqlKind.LessThanOrEqual, 15, true,
                     useNullableBoolean, useFirstKnownParam,
-                    typeNullabeSameSame_or_NullableNumericNumeric_or_NullableBinariesBinaries) {
+                    typeNullabeSameSame_or_NullableNumericNumeric_or_NullableBinariesBinaries_or_NullableCharsChars) {
                 public void test(SqlTester tester) {
                     tester.checkBoolean("1<=2",Boolean.TRUE);
                     tester.checkBoolean("1<=1",Boolean.TRUE);
                     tester.checkBoolean("2<=1",Boolean.FALSE);
-                    tester.checkNull("cast(null as tinyint)<=3");
+                    tester.checkNull("cast(null as integer)<=3");
                 }
             };
 
@@ -243,7 +223,7 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
     public final SqlBinaryOperator notEqualsOperator =
             new SqlBinaryOperator("<>", SqlKind.NotEquals, 15, true,
                     useNullableBoolean, useFirstKnownParam,
-                    typeNullabeSameSame_or_NullableNumericNumeric_or_NullableBinariesBinaries) {
+                    typeNullabeSameSame_or_NullableNumericNumeric_or_NullableBinariesBinaries_or_NullableCharsChars) {
                 public void test(SqlTester tester) {
                     tester.checkBoolean("1<>1",Boolean.FALSE);
                     tester.checkBoolean("'a'<>'A'",Boolean.TRUE);
@@ -257,7 +237,7 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
                 public void test(SqlTester tester) {
                     tester.checkBoolean("true or false",Boolean.TRUE);
                     tester.checkBoolean("false or false",Boolean.FALSE);
-                    tester.checkBoolean("true or null",Boolean.TRUE);
+                    tester.checkBoolean("true or cast(null as boolean)",Boolean.TRUE);
                     tester.checkNull("false or cast(null as boolean)");
                 }
             };
@@ -358,10 +338,34 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
                 }
             };
 
+    public final SqlPostfixOperator isNotUnknownOperator =
+            new SqlPostfixOperator("IS NOT UNKNOWN", SqlKind.Other, 15,
+                    useBoolean, booleanParam, typeNullableBool) {
+                public void test(SqlTester tester) {
+                    tester.checkBoolean("false is not unknown",Boolean.TRUE);
+                    tester.checkBoolean("true is not unknown",Boolean.TRUE);
+                    tester.checkBoolean("null is not unknown",Boolean.FALSE);
+                    tester.checkBoolean("unknown is not unknown",Boolean.FALSE);
+                }
+            };
+
+    public final SqlPostfixOperator isUnknownOperator =
+            new SqlPostfixOperator("IS UNKNOWN", SqlKind.IsNull, 15,
+                    useBoolean, booleanParam, typeNullableBool) {
+                public void test(SqlTester tester) {
+                    tester.checkBoolean("false is unknown",Boolean.FALSE);
+                    tester.checkBoolean("true is unknown",Boolean.FALSE);
+                    tester.checkBoolean("null is unknown",Boolean.TRUE);
+                    tester.checkBoolean("unknown is unknown",Boolean.TRUE);
+                }
+            };
+
+
+
     // prefix
     public final SqlPrefixOperator existsOperator =
             new SqlPrefixOperator("EXISTS", SqlKind.Exists, 20,
-                    useBoolean, null, typeNullableBool) {
+                    useBoolean, null, typeAny) {
                 public void test(SqlTester tester) {
                     /* empty implementation */
                 }
@@ -441,6 +445,7 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
                     tester.checkBoolean("1 between -1 and -3",Boolean.FALSE);
                     tester.checkBoolean("1 between -1 and 3",Boolean.TRUE);
                     tester.checkBoolean("1 between 1 and 1",Boolean.TRUE);
+                    tester.checkBoolean("x'' between x'' and x''",Boolean.TRUE);
                     tester.checkNull("cast(null as integer) between -1 and 2");
                     tester.checkNull("1 between -1 and cast(null as integer)");
                     tester.checkNull("1 between cast(null as integer) and cast(null as integer)");
@@ -473,7 +478,7 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
             };
 
     public final SqlSpecialOperator similarOperator =
-            new SqlLikeOperator("SIMILAR", SqlKind.Similar) {
+            new SqlLikeOperator("SIMILAR TO", SqlKind.Similar) {
                 public void test(SqlTester tester) {
                     tester.checkBoolean("'a' SIMILAR TO 'a'",Boolean.TRUE);
                     tester.checkBoolean("'a' SIMILAR TO 'b'",Boolean.FALSE);
@@ -493,7 +498,8 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
         public void test(SqlTester tester) {
             tester.checkScalarExact("case when 'a'='a' then 1 end", "1");
             tester.checkString("case 2 when 1 then 'a' when 2 then 'b' end", "b");
-            tester.checkNull("case 'a'='b' then 1 end");
+            tester.checkScalarExact("case 'a' when 'a' then 1 end","1");
+            tester.checkNull("case 'a' when 'b' then 1 end");
             tester.checkScalarExact("case when 'a'=cast(null as varchar) then 1 else 2 end", "2");
         }
     };
@@ -539,25 +545,27 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
      * and that length. Otherwise it is the length of the input.<p>
      */
     public final SqlFunction substringFunc =
-            new SqlFunction("SUBSTRING", SqlKind.Function, SqlOperatorTable.useNullableFirstArgType, null,
+            new SqlFunction("SUBSTRING", SqlKind.Function,
+                    SqlOperatorTable.useNullableVaryingFirstArgType, null,
                     null, SqlFunction.SqlFuncTypeName.String) {
 
-                public String getAllowedSignatures() {
+                public String getAllowedSignatures(String name) {
                     StringBuffer ret = new StringBuffer();
                     for (int i = 0; i < SqlOperatorTable.stringTypes.length; i++) {
 
                         if (i > 0) {
                             ret.append(NL);
+
                         }
                         ArrayList list = new ArrayList();
                         list.add(SqlOperatorTable.stringTypes[i]);
                         list.add(SqlTypeName.Integer);
-                        ret.append(this.getSignature(list));
+                        ret.append(this.getAnonymousSignature(list));
                         ret.append(NL);
                         list.add(SqlTypeName.Integer);
-                        ret.append(this.getSignature(list));
+                        ret.append(this.getAnonymousSignature(list));
                     }
-                    return ret.toString();
+                    return replaceAnonymous(ret.toString(), name);
                 }
 
                 protected void checkArgTypes(SqlCall call, SqlValidator validator,
@@ -580,8 +588,6 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
                                     checkThrows(validator, scope, call, call.operands[2], 0);
 
                             isCharTypeComparableThrows(validator, scope, call.operands);
-
-                            //todo length of escape must be 1, can check here or must do in calc?
                         } else {
                             SqlOperatorTable.typeNullableNumeric.
                                     checkThrows(validator, scope, call, call.operands[1], 0);
@@ -613,8 +619,7 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
                     int n = call.operands.length;
                     if (n > 3 || n < 2) {
                         throw Util.newInternal("todo: Wrong number of arguments to " + call);
-                    }
-                    ;
+                    };
                 }
 
                 public void unparse(
@@ -637,9 +642,9 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
                 }
 
                 public void test(SqlTester tester) {
-                    tester.checkString("substring('abc' from 1 for 2)", "'ab'");
-                    tester.checkString("substring('abc' from 2)", "'bc'");
-                    tester.checkString("substring('foobar' from '%#\"o_b#\"%' for '#')", "'oob'");
+                    tester.checkString("substring('abc' from 1 for 2)", "ab");
+                    tester.checkString("substring('abc' from 2)", "bc");
+                    tester.checkString("substring('foobar' from '%#\"o_b#\"%' for '#')", "oob");
                     tester.checkNull("substring(cast(null as varchar),1,2)");
                 }
 
@@ -682,62 +687,9 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
             };
     //~ OVERLAY ---------------
     public final SqlFunction overlayFunc =
-            new SqlFunction("OVERLAY", SqlKind.Function, null, null, null, SqlFunction.SqlFuncTypeName.String) {
-
-                public SaffronType getType(SaffronTypeFactory typeFactory,
-                        SaffronType[] argTypes) {
-                    int n = argTypes.length;
-                    assert(3 == n || 4 == n);
-
-                    SaffronType ret;
-                    if (argTypes[0].isCharType()) {
-                        if (!isCharTypeComparable(argTypes, 0, 1)) {
-                            throw SaffronResource.instance().newValidationError(
-                                    argTypes[0].toString() +
-                                    " is not comparable to " +
-                                    argTypes[1].toString());
-                        }
-
-
-                        SqlCollation picked =
-                                SqlCollation.getCoercibilityDyadicOperator(
-                                        argTypes[0].getCollation(),
-                                        argTypes[1].getCollation());
-                        if (argTypes[0].getCollation().equals(picked)) {
-                            //todo this is not correct.
-                            //must return the right precision also
-                            ret = argTypes[0];
-                        } else if (argTypes[1].getCollation().equals(picked)) {
-                            //todo this is not correct.
-                            //must return the right precision also
-                            ret = argTypes[1];
-                        } else {
-                            throw Util.newInternal("should never come here");
-                        }
-                    } else {
-                        //todo this is not correct.
-                        //must return the right precision also
-                        ret = argTypes[0];
-                    }
-                    ret = makeNullableIfOperandsAre(typeFactory,argTypes,ret);
-                    return ret;
-                }
-
-                public SaffronType getType(SqlValidator validator,
-                        SqlValidator.Scope scope, SqlCall call) {
-                    checkArgTypes(call, validator, scope);
-
-                    int n = call.operands.length;
-                    assert(3 == n || 4 == n);
-
-                    SaffronType[] argTypes = new SaffronType[n];
-
-                    for (int i = 0; i < n; i++) {
-                        argTypes[i] = validator.deriveType(scope, call.operands[i]);
-                    }
-
-                    return getType(validator.typeFactory, argTypes);
-                }
+            new SqlFunction("OVERLAY", SqlKind.Function,
+                    SqlOperatorTable.useNullableDyadicStringSumPrecision, null,
+                    null, SqlFunction.SqlFuncTypeName.String) {
 
                 public int getNumOfOperands(int disiredCount) {
                     switch (disiredCount) {
@@ -773,6 +725,25 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
                     }
                 }
 
+                public String getAllowedSignatures(String name) {
+                    StringBuffer ret = new StringBuffer();
+                    for (int i = 0; i < SqlOperatorTable.stringTypes.length; i++) {
+
+                        if (i > 0) {
+                            ret.append(NL);
+                        }
+                        ArrayList list = new ArrayList();
+                        list.add(SqlOperatorTable.stringTypes[i]);
+                        list.add(SqlOperatorTable.stringTypes[i]); //adding same twice
+                        list.add(SqlTypeName.Integer);
+                        ret.append(this.getAnonymousSignature(list));
+                        ret.append(NL);
+                        list.add(SqlTypeName.Integer);
+                        ret.append(this.getAnonymousSignature(list));
+                    }
+                    return replaceAnonymous(ret.toString(),name);
+                }
+
                 public void unparse(SqlWriter writer, SqlNode[] operands,
                         int leftPrec, int rightPrec) {
                     writer.print(name);
@@ -790,8 +761,8 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
                 }
 
                 public void test(SqlTester tester) {
-                    tester.checkString("overlay('ABCdef' placing 'abc' from 1)", "'abcdef'");
-                    tester.checkString("overlay('ABCdef' placing 'abc' from 1 for 2)", "'abcCdef'");
+                    tester.checkString("overlay('ABCdef' placing 'abc' from 1)", "abcdef");
+                    tester.checkString("overlay('ABCdef' placing 'abc' from 1 for 2)", "abcCdef");
                     tester.checkNull("overlay('ABCdef' placing 'abc' from 1 for cast(null as integer))");
                     tester.checkNull("overlay(cast(null as varchar) placing 'abc' from 1)");
                     tester.checkNull("overlay(x'abc' placing x'abc' from cast(null as integer))");
@@ -838,9 +809,9 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
                 }
 
                 public void test(SqlTester tester) {
-                    tester.checkScalarExact("position('b' in 'abc'", "2");
-                    tester.checkScalarExact("position('' in 'abc'", "1");
-                    tester.checkScalarExact("position(b'10' in b'0010'", "3");
+                    tester.checkScalarExact("position('b' in 'abc')", "2");
+                    tester.checkScalarExact("position('' in 'abc')", "1");
+                    tester.checkScalarExact("position(b'10' in b'0010')", "3");
                     tester.checkNull("position(cast(null as bit) in b'0010')");
                     tester.checkNull("position('a' in cast(null as char))");
                 }
@@ -874,9 +845,9 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
                     SqlFunction.SqlFuncTypeName.String)
             {
                 public void test(SqlTester tester) {
-                    tester.checkString("upper('a')", "'A'");
-                    tester.checkString("upper('A')", "'A'");
-                    tester.checkString("upper('1')", "'1'");
+                    tester.checkString("upper('a')", "A");
+                    tester.checkString("upper('A')", "A");
+                    tester.checkString("upper('1')", "1");
                     tester.checkNull("upper(cast(null as varchar))");
                 }
             };
@@ -887,9 +858,9 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
                     SqlOperatorTable.typeNullableVarchar,
                     SqlFunction.SqlFuncTypeName.String) {
                 public void test(SqlTester tester) {
-                    tester.checkString("lower('A')", "'a'");
-                    tester.checkString("lower('a')", "'a'");
-                    tester.checkString("lower('1')", "'1'");
+                    tester.checkString("lower('A')", "a");
+                    tester.checkString("lower('a')", "a");
+                    tester.checkString("lower('1')", "1");
                     tester.checkNull("lower(cast(null as varchar))");
                 }
             };
@@ -919,9 +890,9 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
                     SqlOperatorTable.typeNumericNumeric,
                     SqlFunction.SqlFuncTypeName.Numeric) {
                 public void test(SqlTester tester) {
-                    tester.checkScalarApprox("power(2,-2)", "0.5");
-                    tester.checkNull("power(cast(null as integer),2)");
-                    tester.checkNull("power(2,cast(null as double))");
+                    tester.checkScalarApprox("pow(2,-2)", "0.5");
+                    tester.checkNull("pow(cast(null as integer),2)");
+                    tester.checkNull("pow(2,cast(null as double))");
                 }
             };
     //~ MOD ---------------
@@ -972,18 +943,18 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
     public final SqlFunction nullIfFunc =
             new SqlFunction("NULLIF", SqlKind.Function, null, null, null,
                     SqlFunction.SqlFuncTypeName.System) {
-                public SqlCall createCall(SqlNode[] operands) {
+                public SqlCall createCall(SqlNode[] operands, ParserPosition parserPosition) {
                     if (2 != operands.length) {
                         //todo put this in the validator
                         throw SaffronResource.instance().
                                 newInvalidNbrOfArgument(name,new Integer(2));
                     }
-                    SqlNodeList whenList = new SqlNodeList();
-                    SqlNodeList thenList = new SqlNodeList();
+                    SqlNodeList whenList = new SqlNodeList(parserPosition);
+                    SqlNodeList thenList = new SqlNodeList(parserPosition);
                     whenList.add(operands[1]);
-                    thenList.add(SqlLiteral.createNull());
+                    thenList.add(SqlLiteral.createNull(null));
                     return caseOperator.createCall(
-                            operands[0], whenList, thenList, operands[0]);
+                            operands[0], whenList, thenList, operands[0],parserPosition);
                 }
 
                 public int getNumOfOperands(int disiredCount) {
@@ -992,8 +963,8 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
 
                 public void test(SqlTester tester) {
                     tester.checkNull("nullif(1,1)");
-                    tester.checkString("nullif('a','b')", "'a'");
-                    tester.checkString("nullif('a',cast(null as varchar))", "'a'");
+                    tester.checkString("nullif('a','b')", "a");
+                    tester.checkString("nullif('a',cast(null as varchar))", "a");
                     tester.checkNull("nullif(cast(null as varchar),'a')");
                 }
             };
@@ -1001,25 +972,25 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
     public final SqlFunction coalesceFunc =
             new SqlFunction("COALESCE", SqlKind.Function, null, null, null,
                     SqlFunction.SqlFuncTypeName.System) {
-                public SqlCall createCall(SqlNode[] operands) {
+                public SqlCall createCall(SqlNode[] operands, ParserPosition parserPosition) {
                     Util.pre(operands.length >= 2, "operands.length>=2");
-                    return createCall(operands, 0);
+                    return createCall(operands, 0, parserPosition);
                 }
 
-                private SqlCall createCall(SqlNode[] operands, int start) {
-                    SqlNodeList whenList = new SqlNodeList();
-                    SqlNodeList thenList = new SqlNodeList();
+                private SqlCall createCall(SqlNode[] operands, int start, ParserPosition parserPosition) {
+                    SqlNodeList whenList = new SqlNodeList(parserPosition);
+                    SqlNodeList thenList = new SqlNodeList(parserPosition);
                     //todo optimize when know operand is not null.
                     whenList.add(
-                            isNotNullOperator.createCall(operands[start]));
+                            isNotNullOperator.createCall(operands[start], parserPosition));
                     thenList.add(operands[start]);
                     if (2 == (operands.length - start)) {
                         return caseOperator.createCall(
-                                null, whenList, thenList, operands[start + 1]);
+                                null, whenList, thenList, operands[start + 1],parserPosition);
                     }
                     return caseOperator.createCall(
                             null, whenList, thenList,
-                            this.createCall(operands, start + 1));
+                            this.createCall(operands, start + 1, parserPosition),parserPosition);
                 }
 
                 public int getNumOfOperands(int disiredCount) {
@@ -1027,7 +998,7 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
                 }
 
                 public void test(SqlTester tester) {
-                    tester.checkString("coalesce('a','b')", "'a'");
+                        tester.checkString("coalesce('a','b')", "a");
                     tester.checkScalarExact("coalesce(null,null,3)", "3");
                 }
             };
@@ -1082,8 +1053,6 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
                 public SaffronType getType(SaffronTypeFactory typeFactory,
                         SaffronType[] argTypes) {
                     int precision = 0; // todo: access the value of the literal parmaeter
-                    //REVIEW wael 06/23/2004: is there a reason why SqlTypeName.Time
-                    //is used here and SqlTypeName.TimeDate above?
                     return typeFactory.createSqlType(
                             SqlTypeName.Timestamp, precision);
                 }

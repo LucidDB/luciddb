@@ -423,6 +423,11 @@ PageOwnerId TableWriter::getTableId()
     return pClusteredIndexWriter->pWriter->getPageOwnerId();
 }
 
+uint TableWriter::getIndexCount() const
+{
+    return indexWriters.size();
+}
+
 void TableWriter::openIndexWriters()
 {
     for (uint i = 0; i < indexWriters.size(); ++i) {

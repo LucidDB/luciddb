@@ -24,6 +24,8 @@ ResourceTest \
 LocalConditionTest \
 TupleTest \
 StandardTypeTest \
+CalcInstFactoryTest \
+CalcCastTest \
 CalcMiscTest \
 CalcExtRegExpTest \
 CalcExtStringTest \
@@ -75,6 +77,10 @@ BTreeTxnTest_SOURCES=BTreeTxnTest.cpp
 TupleTest_SOURCES=TupleTest.cpp
 
 StandardTypeTest_SOURCES=StandardTypeTest.cpp
+
+CalcInstFactoryTest_SOURCES=CalcInstFactoryTest.cpp
+
+CalcCastTest_SOURCES=CalcCastTest.cpp
 
 CalcMiscTest_SOURCES=CalcMiscTest.cpp
 

@@ -140,7 +140,9 @@ any other schema name, and do not have to worry about dropping test
 objects on exit.  Tests should not create new objects in the SALES
 schema.  For SQL-based tests, each script is its own test suite.  For
 Java-based tests, each test class is normally a single suite, while
-each method is a test case.
+each method is a test case.  Besides dropping objects at the beginning
+of each suite, FarragoTestCase also restores system parameters to their
+pre-test state at the end of each test.
 
 <h3>Fennel Tests</h3>
 

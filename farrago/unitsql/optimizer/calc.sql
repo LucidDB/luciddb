@@ -3,7 +3,7 @@
 
 set schema sales;
 
--- enable fennel calculator
+-- force usage of Fennel calculator
 alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
 
 -- filter which returns one row
@@ -19,7 +19,3 @@ explain plan for
 select 1 + 2 from values (3);
 
 select 1 + 2 from values (3);
-
--- revert to system default calculator
-alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
-

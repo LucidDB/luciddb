@@ -60,6 +60,8 @@ public:
     virtual void flushPage(CachePage &page,bool async);
     virtual void nicePage(CachePage &page);
     virtual SharedCache getCache();
+    virtual uint getMaxLockedPages();
+    virtual void setMaxLockedPages(uint nPages);
 };
 
 FENNEL_END_NAMESPACE

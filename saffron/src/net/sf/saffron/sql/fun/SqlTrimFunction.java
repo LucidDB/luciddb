@@ -23,6 +23,7 @@ package net.sf.saffron.sql.fun;
 import net.sf.saffron.core.SaffronType;
 import net.sf.saffron.core.SaffronTypeFactory;
 import net.sf.saffron.sql.*;
+import net.sf.saffron.sql.parser.ParserPosition;
 import net.sf.saffron.sql.test.SqlTester;
 import net.sf.saffron.util.EnumeratedValues;
 
@@ -66,16 +67,16 @@ public class SqlTrimFunction extends SqlFunction {
         writer.print(")");
     }
 
-    public SqlCall createCall(SqlNode[] operands) {
+    public SqlCall createCall(SqlNode[] operands, ParserPosition parserPosition) {
         assert(3 == operands.length);
         if (null == operands[0]) {
-            operands[0] = Flag.Both;
+            operands[0] = Flag.createBoth(parserPosition);
         }
 
         if (null == operands[1]) {
-            operands[1] = SqlLiteral.createString("' '", null);
+            operands[1] = SqlLiteral.createString("' '", null, parserPosition);
         }
-        return super.createCall(operands);
+        return super.createCall(operands, parserPosition);
     }
 
     protected void checkArgTypes(SqlCall call, SqlValidator validator,
@@ -113,11 +114,11 @@ public class SqlTrimFunction extends SqlFunction {
     }
 
     public void test(SqlTester tester) {
-        tester.checkString("trim('a' from 'aAa'", "'A'");
-        tester.checkString("trim(both 'a' from 'aAa'", "'A'");
-        tester.checkString("trim(leading 'a' from 'aAa'", "'Aa'");
-        tester.checkString("trim(trailing 'a' from 'aAa'", "'aA'");
-        tester.checkNull("trim(cast(null as varchar) from 'a'");
+        tester.checkString("trim('a' from 'aAa')", "A");
+        tester.checkString("trim(both 'a' from 'aAa')", "A");
+        tester.checkString("trim(leading 'a' from 'aAa')", "Aa");
+        tester.checkString("trim(trailing 'a' from 'aAa')", "aA");
+        tester.checkNull("trim(cast(null as varchar) from 'a')");
         tester.checkNull("trim('a' from cast(null as varchar))");
     }
 
@@ -128,39 +129,19 @@ public class SqlTrimFunction extends SqlFunction {
         public final int _left;
         public final int _right;
 
-        private Flag(String name, int ordinal, int left, int right) {
-            super(name, ordinal);
+        private Flag(String name, int left, int right, ParserPosition parserPosition) {
+            super(name, parserPosition);
             _left = left;
             _right = right;
         }
 
-        public static final int Both_ordinal = 0;
-        public static final SqlSymbol Both =
-                new Flag("Both", Both_ordinal, 1, 1);
-        public static final int Leading_ordinal = 1;
-        public static final SqlSymbol Leading =
-                new Flag("Leading", Leading_ordinal, 1, 0);
-        public static final int Trailing_ordinal = 2;
-        public static final SqlSymbol Trailing =
-                new Flag("Trailing", Trailing_ordinal, 0, 1);
+        public static final SqlSymbol createBoth(ParserPosition parserPosition)
+                { return new Flag("Both", 1, 1,parserPosition);}
+        public static final SqlSymbol createLeading(ParserPosition parserPosition)
+                { return new Flag("Leading", 1, 0,parserPosition);}
+        public static final SqlSymbol createTrailing(ParserPosition parserPosition)
+                { return new Flag("Trailing", 0, 1,parserPosition);}
 
-        /**
-         * List of all allowable {@link Flag} values.
-         */
-        public static final EnumeratedValues enumeration = new EnumeratedValues(
-                new SqlSymbol[]{Both, Leading, Trailing});
-        /**
-         * Looks up a flag from its ordinal.
-         */
-        public static Flag get(int ordinal) {
-            return (Flag) enumeration.getValue(ordinal);
-        }
-        /**
-         * Looks up a flag from its name.
-         */
-        public static Flag get(String name) {
-            return (Flag) enumeration.getValue(name);
-        }
     }
 }
 

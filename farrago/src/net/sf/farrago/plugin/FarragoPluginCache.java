@@ -138,6 +138,9 @@ public abstract class FarragoPluginCache extends FarragoCompoundAllocation
         String jarAttributeName)
     {
         try {
+            libraryName = FarragoProperties.instance().expandProperties(
+                libraryName);
+
             if (libraryName.startsWith(LIBRARY_CLASS_PREFIX)) {
                 String className = libraryName.substring(
                     LIBRARY_CLASS_PREFIX.length());

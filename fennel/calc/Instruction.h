@@ -26,30 +26,37 @@
 #define Fennel_Instruction_Included
 
 #include <string>
-#include "fennel/calc/Calculator.h"
+#include "fennel/calc/InstructionSignature.h"
 #include "fennel/calc/RegisterReference.h"
 #include "fennel/tuple/StandardTypeDescriptor.h"
+#include "fennel/calc/InstructionFactory.h"
+#include "fennel/calc/CalcMessage.h"
 
 FENNEL_BEGIN_NAMESPACE
 
 using namespace std;
 
+
 // Instruction
-// not a pure abstract base class. should it be?
+// Not a pure abstract base class, but nearly so.
 class Instruction
 {
 public:
-    // setup functions -- can be convenient
     explicit
     Instruction () { }
 
     virtual
     ~Instruction() { }
 
-    // trace functions -- should be fast
-    virtual const char * longName() const = 0;
-    virtual const char * shortName() const = 0;
-    virtual void describe(string &out, bool values) const = 0;
+    virtual void describe(string& out, bool values) const = 0;
+
+    // Subclasses must also implement a create() call described by
+    // typedef InstructionCreateFunction. Since this member function
+    // must be static (as the object doesn't exist to create it) it
+    // cannot also be virtual, due to a limitations of C++ that
+    // prevents a "static virtual". Consider this a virtual func() =
+    // 0; in the sense that it requires this function to be
+    // implemented by each derived concrete class.
 
 protected:
     friend class fennel::Calculator;
@@ -114,6 +121,45 @@ protected:
 };
 
 
+//! Provide a method to register Instruction objects into the
+//! Instruction Factory
+//!
+//! Each leaf in the object tree subclasses InstructionRegister
+//! and calls ::types for each Instruction.
+
+class InstructionRegister {
+protected:
+    template < typename TYPE1,
+               template <typename> class INSTCLASS >
+    static void
+    registerInstance(StandardTypeDescriptorOrdinal type)
+    {
+        StringToCreateFn* instMap = InstructionFactory::getInstructionTable();
+        (*instMap)[INSTCLASS<TYPE1>::signature(type).compute()] = 
+            &INSTCLASS<TYPE1>::create;
+    }
+
+    template < typename TYPE1,
+               typename TYPE2,
+               template <typename, typename> class INSTCLASS >
+    static void
+    registerInstance2(StandardTypeDescriptorOrdinal type1, 
+                      StandardTypeDescriptorOrdinal type2)
+    {
+        StringToCreateFn* instMap = InstructionFactory::getInstructionTable();
+        (*instMap)[INSTCLASS<TYPE1,TYPE2>::signature(type1, type2).compute()] =
+            &INSTCLASS<TYPE1,TYPE2>::create;
+    }
+
+    template < typename IGNOREDDATATYPE, class INSTCLASS >
+    static void
+    registerInstance(StandardTypeDescriptorOrdinal type)
+    {
+        StringToCreateFn* instMap = InstructionFactory::getInstructionTable();
+        (*instMap)[INSTCLASS::signature(type).compute()] = 
+            &INSTCLASS::create;
+    }
+};
 
 
 FENNEL_END_NAMESPACE

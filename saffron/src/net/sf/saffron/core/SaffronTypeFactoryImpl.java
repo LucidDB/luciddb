@@ -161,38 +161,17 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
         }
     }
 
-    public SaffronType createTypeWithNullability(
-        final SaffronType type,final boolean nullable)
+    // copy a non-record type, setting nullability
+    private SaffronType copySimpleType(SaffronType type, boolean nullable)
     {
-        if (type instanceof RecordType) {
-            return createProjectType(
-                new FieldInfo()
-                {
-                    public int getFieldCount()
-                    {
-                        return type.getFieldCount();
-                    }
-
-                    public String getFieldName(int index)
-                    {
-                        return type.getFields()[index].getName();
-                    }
-
-                    public SaffronType getFieldType(int index)
-                    {
-                        SaffronType fieldType =
-                            type.getFields()[index].getType();
-                        return createTypeWithNullability(fieldType,nullable);
-                    }
-                });
-        } else if (type instanceof SqlType) {
+        if (type instanceof SqlType) {
             SqlType sqlType = (SqlType) type;
             return sqlType.createWithNullability(nullable);
         } else if (type instanceof JavaType) {
             JavaType javaType = (JavaType) type;
             if (javaType.isCharType()) {
                 return new JavaType(javaType.clazz, nullable,
-                        javaType.charset, javaType.collation);
+                                    javaType.charset, javaType.collation);
             } else {
                 return new JavaType(javaType.clazz, nullable);
             }
@@ -202,6 +181,81 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
             // comment
             return type;
         }
+    }
+
+
+    // Recursively copy a record type.
+    // This is distinct from copyRecordTypeWithNullability() below simply
+    // because the recurrence is different.
+    private SaffronType copyRecordType(final RecordType type)
+    {
+        return createProjectType(
+            new FieldInfo()
+            {
+                public int getFieldCount()
+                {
+                    return type.getFieldCount();
+                }
+
+                public String getFieldName(int index)
+                {
+                    return type.getFields()[index].getName();
+                }
+
+                public SaffronType getFieldType(int index)
+                {
+                    SaffronType fieldType =
+                        type.getFields()[index].getType();
+                    return copyType(fieldType);  // recur
+                }
+            });
+    }
+
+    // recursively copy a record type, setting nullability
+    private SaffronType copyRecordTypeWithNullability(
+        final RecordType type, final boolean nullable)
+    {
+        return createProjectType(
+            new FieldInfo()
+            {
+                public int getFieldCount()
+                {
+                    return type.getFieldCount();
+                }
+
+                public String getFieldName(int index)
+                {
+                    return type.getFields()[index].getName();
+                }
+
+                public SaffronType getFieldType(int index)
+                {
+                    SaffronType fieldType =
+                        type.getFields()[index].getType();
+                    return createTypeWithNullability(fieldType,nullable); // recur
+                }
+            });
+    }
+
+
+    // implement SaffronType
+    public SaffronType createTypeWithNullability(
+        final SaffronType type,final boolean nullable)
+    {
+        if (type instanceof RecordType) {
+            return copyRecordTypeWithNullability((RecordType) type, nullable);
+        } else
+            return copySimpleType(type, nullable);
+    }
+
+
+    // implement SaffronType
+    public SaffronType copyType(SaffronType type)
+    {
+        if (type instanceof RecordType) {
+            return copyRecordType((RecordType) type);
+        } else
+            return copySimpleType(type, type.isNullable());
     }
 
     public SaffronType createTypeWithCharsetAndCollation(SaffronType type,
@@ -448,6 +502,10 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
             return -1;
         }
 
+        public int getPrecision() {
+            throw Util.needToImplement("need to implement");
+        }
+
         public SqlTypeName getSqlTypeName() {
             throw Util.needToImplement("need to implement");
         }
@@ -596,24 +654,12 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
     protected class RecordType extends TypeImpl
     {
         /**
-         * Creates a <code>RecordType</code>. Field names must be unique.
+         * Creates a <code>RecordType</code>.
+         * Field names doesnt need to be unique.
          */
         RecordType(SaffronField [] fields)
         {
             super(fields);
-            for (int i = 0; i < fields.length; i++) {
-                SaffronField field = fields[i];
-                assert(field != null);
-                for (int j = 0; j < i; j++) {
-                    SaffronField field2 = fields[j];
-                    if (field.getName().equals(field2.getName())) {
-                        throw new AssertionError(
-                            "i != j implies "
-                            + "!fields[i].getName()."
-                            + "equals(fields[j].getName())");
-                    }
-                }
-            }
             this.digest = computeDigest();
         }
 
@@ -853,10 +899,15 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
         return 1;
     }
 
+    /**
+     * @pre to!=null && from !=null
+     * @param to
+     * @param from
+     * @param coerce
+     */
     public boolean assignableFrom(SqlTypeName to, SqlTypeName from, boolean coerce) {
-        if (to == null || from == null) {
-            return false;
-        }
+        Util.pre(to!=null && from!=null,"to!=null && from !=null");
+
         AssignableFromRules assignableFromRules = AssignableFromRules.instance();
         return assignableFromRules.isAssignableFrom(to, from, coerce);
     }
@@ -953,6 +1004,7 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
             return ret;
         }
 
+        //implement SaffronType
         public int getPrecision() {
             return precision;
         }
@@ -981,8 +1033,7 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
                 if (null==thatSqlTypeName) {
                     return false;
                 }
-                SaffronType that = createSqlTypeIgnorePrecOrScale(getFactory(), thatSqlTypeName);
-                return this.isSameTypeFamily(that);
+                return this.getSqlTypeName().equals(thatSqlTypeName);
             }
             return t instanceof SqlType &&
                 ((SqlType) t).typeName.getOrdinal()==this.typeName.getOrdinal();
@@ -1143,6 +1194,10 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
             rules.put(Time.class, SqlTypeName.Time);
         }
 
+        /**
+         * Returns the {@link net.sf.saffron.util.Glossary#SingletonPattern
+         * singleton} instance.
+         */
         public static JavaToSqlTypeConversionRules instance() {
             return instance;
         }
@@ -1158,6 +1213,8 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
         }
     }
 
+    // REVIEW 7/05/04 Wael: We should split this up in
+    // Cast rules, symmetric and asymmetric assignable rules
     public static class AssignableFromRules {
         private static AssignableFromRules instance = null;
         private static HashMap rules = null;
@@ -1167,45 +1224,61 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
             rules = new HashMap();
 
             HashSet rule;
-
-            //Smallint is assignable from...
+            // Tinyint is assignable from...
             rule = new HashSet();
+            rule.add(SqlTypeName.Tinyint);
+            rules.put(SqlTypeName.Tinyint, rule);
+
+            // Smallint is assignable from...
+            rule = new HashSet();
+            rule.add(SqlTypeName.Tinyint);
             rule.add(SqlTypeName.Smallint);
             rules.put(SqlTypeName.Smallint, rule);
 
-            //Int is assignable from...
+            // Int is assignable from...
             rule = new HashSet();
             rule.add(SqlTypeName.Smallint);
             rule.add(SqlTypeName.Integer);
             rules.put(SqlTypeName.Integer, rule);
 
-            //BigInt is assignable from...
+            // BigInt is assignable from...
             rule = new HashSet();
             rule.add(SqlTypeName.Smallint);
             rule.add(SqlTypeName.Integer);
             rule.add(SqlTypeName.Bigint);
             rules.put(SqlTypeName.Bigint, rule);
 
-            //Real is assignable from...
+            // Float is assignable from...
             rule = new HashSet();
             rule.add(SqlTypeName.Smallint);
             rule.add(SqlTypeName.Integer);
             rule.add(SqlTypeName.Bigint);
             rule.add(SqlTypeName.Decimal);
+            rule.add(SqlTypeName.Float);
+            rules.put(SqlTypeName.Float, rule);
+
+            // Real is assignable from...
+            rule = new HashSet();
+            rule.add(SqlTypeName.Smallint);
+            rule.add(SqlTypeName.Integer);
+            rule.add(SqlTypeName.Bigint);
+            rule.add(SqlTypeName.Decimal);
+            rule.add(SqlTypeName.Float);
             rule.add(SqlTypeName.Real);
             rules.put(SqlTypeName.Real, rule);
 
-            //Double is assignable from...
+            // Double is assignable from...
             rule = new HashSet();
             rule.add(SqlTypeName.Smallint);
             rule.add(SqlTypeName.Integer);
             rule.add(SqlTypeName.Bigint);
             rule.add(SqlTypeName.Decimal);
+            rule.add(SqlTypeName.Float);
             rule.add(SqlTypeName.Real);
             rule.add(SqlTypeName.Double);
             rules.put(SqlTypeName.Double, rule);
 
-            //Decimal is assignable from...
+            // Decimal is assignable from...
             rule = new HashSet();
             rule.add(SqlTypeName.Smallint);
             rule.add(SqlTypeName.Integer);
@@ -1215,30 +1288,35 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
             rule.add(SqlTypeName.Decimal);
             rules.put(SqlTypeName.Decimal, rule);
 
-            //Bit is assignable from...
+            // Bit is assignable from...
             rule = new HashSet();
             rule.add(SqlTypeName.Varbinary);
             rule.add(SqlTypeName.Bit);
             rules.put(SqlTypeName.Bit, rule);
 
-            //VarBinary is assignable from...
+            // VarBinary is assignable from...
             rule = new HashSet();
             rule.add(SqlTypeName.Bit);
             rule.add(SqlTypeName.Varbinary);
             rules.put(SqlTypeName.Varbinary, rule);
 
-            //VarChar is assignable from...
+            // Char is assignable from...
+            rule = new HashSet();
+            rule.add(SqlTypeName.Char);
+            rules.put(SqlTypeName.Char, rule);
+
+            // VarChar is assignable from...
             rule = new HashSet();
             rule.add(SqlTypeName.Char);
             rule.add(SqlTypeName.Varchar);
             rules.put(SqlTypeName.Varchar, rule);
 
-            //Boolean is assignable from...
+            // Boolean is assignable from...
             rule = new HashSet();
             rule.add(SqlTypeName.Boolean);
             rules.put(SqlTypeName.Boolean, rule);
 
-            //Binary is assignable from...
+            // Binary is assignable from...
             rule = new HashSet();
             rule.add(SqlTypeName.Binary);
             rules.put(SqlTypeName.Binary, rule);
@@ -1263,7 +1341,34 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
             // we use coerceRules when we're casting
             coerceRules = (HashMap) rules.clone();
 
-            // varchar is castable from Date
+            // Make numbers symmetrical
+            rule = new HashSet();
+            rule.add(SqlTypeName.Tinyint);
+            rule.add(SqlTypeName.Smallint);
+            rule.add(SqlTypeName.Integer);
+            rule.add(SqlTypeName.Bigint);
+            rule.add(SqlTypeName.Decimal);
+            rule.add(SqlTypeName.Float);
+            rule.add(SqlTypeName.Real);
+            rule.add(SqlTypeName.Double);
+            coerceRules.put(SqlTypeName.Tinyint, rule);
+            coerceRules.put(SqlTypeName.Smallint, rule);
+            coerceRules.put(SqlTypeName.Integer, rule);
+            coerceRules.put(SqlTypeName.Bigint, rule);
+            coerceRules.put(SqlTypeName.Float, rule);
+            coerceRules.put(SqlTypeName.Real, rule);
+            coerceRules.put(SqlTypeName.Decimal, rule);
+            coerceRules.put(SqlTypeName.Double, rule);
+
+            // binary is castable from varbinary
+            rule = (HashSet) coerceRules.get(SqlTypeName.Binary);
+            rule.add(SqlTypeName.Varbinary);
+
+            // char is castable from varchar
+            rule = (HashSet) coerceRules.get(SqlTypeName.Char);
+            rule.add(SqlTypeName.Varchar);
+
+            // varchar is castable from Date, time and timestamp
             rule = (HashSet) coerceRules.get(SqlTypeName.Varchar);
             rule.add(SqlTypeName.Date);
             rule.add(SqlTypeName.Time);
@@ -1308,7 +1413,7 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
              return isAssignableFrom(to, from, false);
          }
 
-        public boolean isAssignableFrom(SqlTypeName to, SqlTypeName from,
+        private boolean isAssignableFrom(SqlTypeName to, SqlTypeName from,
                 HashMap ruleset)
         {
             assert(null!=to);

@@ -21,7 +21,7 @@
 #ifndef Fennel_CalcAssemblerException_Included
 #define Fennel_CalcAssemblerException_Included
 
-#include "fennel/calc/CalcLexer.h"
+#include "fennel/calc/CalcTypedefs.h"
 #include "fennel/common/FennelExcn.h"
 
 #include <strstream>
@@ -124,7 +124,12 @@ public:
     {
         mCode = s;
         if (mLocValid) {
-            assert(mLoc.first_pos <= mLoc.last_pos);
+            // The following assert is often not met with wierd
+            // programs: Better to get some sort of error message with
+            // the invariant violated, than to just get an assert
+            // error masking the problem.
+
+            // assert(mLoc.first_pos <= mLoc.last_pos);
             mCodeSnippet = s.substr(mLoc.first_pos, mLoc.last_pos - mLoc.first_pos+1);
         }
     }

@@ -54,7 +54,7 @@ import java.sql.DatabaseMetaData;
  */
 public class FarragoDbSession
     extends FarragoCompoundAllocation
-    implements FarragoSession, Cloneable                            
+    implements FarragoSession, Cloneable
 {
     //~ Static fields/initializers --------------------------------------------
 
@@ -73,7 +73,7 @@ public class FarragoDbSession
 
     /** Database accessed by this session */
     private FarragoDatabase database;
-    
+
     /** Catalog accessed by this session */
     private FarragoCatalog catalog;
 
@@ -126,12 +126,12 @@ public class FarragoDbSession
         FarragoSessionFactory sessionFactory)
     {
         this.sessionFactory = sessionFactory;
-        
+
         // TODO:  excn handling
         database = FarragoDatabase.pinReference(sessionFactory);
 
         FarragoDatabase.addSession(database,this);
-        
+
         connectionDefaults = new FarragoConnectionDefaults();
 
         connectionDefaults.sessionUserName = info.getProperty("user");
@@ -186,19 +186,19 @@ public class FarragoDbSession
     {
         return SqlOperatorTable.instance();
     }
-    
+
     // implement FarragoSession
     public OJRexImplementorTable getOJRexImplementorTable()
     {
         return database.getOJRexImplementorTable();
     }
-    
+
     // implement FarragoSession
     public String getUrl()
     {
         return url;
     }
-    
+
     // implement FarragoSession
     public FarragoSessionStmtContext newStmtContext()
     {
@@ -212,18 +212,26 @@ public class FarragoDbSession
     {
         return new FarragoParser();
     }
-    
+
     // implement FarragoSession
-    public FarragoSessionDdlValidator newDdlValidator()
+    public FarragoSessionStmtValidator newStmtValidator()
     {
-        return new DdlValidator(
-            this,
+        return new FarragoStmtValidator(
             getCatalog(),
             getDatabase().getFennelDbHandle(),
-            getSessionIndexMap(),
-            getDatabase().getDataWrapperCache());
+            this,
+            getDatabase().getCodeCache(),
+            getDatabase().getDataWrapperCache(),
+            getSessionIndexMap());
     }
     
+    // implement FarragoSession
+    public FarragoSessionDdlValidator newDdlValidator(
+        FarragoSessionStmtValidator stmtValidator)
+    {
+        return new DdlValidator(stmtValidator);
+    }
+
     // implement FarragoSession
     public FarragoSession cloneSession()
     {
@@ -246,7 +254,7 @@ public class FarragoDbSession
     {
         return isClone;
     }
-    
+
     // implement FarragoSession
     public boolean isClosed()
     {
@@ -277,7 +285,7 @@ public class FarragoDbSession
     {
         return connectionDefaults;
     }
-    
+
     void endTransactionIfAuto(boolean commit)
     {
         if (isAutoCommit) {
@@ -288,7 +296,7 @@ public class FarragoDbSession
             }
         }
     }
-    
+
     // implement FarragoSession
     public FarragoCatalog getCatalog()
     {
@@ -319,7 +327,7 @@ public class FarragoDbSession
         }
         commitImpl();
     }
-    
+
     // implement FarragoSession
     public FarragoSessionSavepoint newSavepoint(String name)
     {
@@ -343,7 +351,7 @@ public class FarragoDbSession
     public FarragoSessionViewInfo analyzeViewQuery(String sql)
     {
         FarragoSessionViewInfo info = new FarragoSessionViewInfo();
-        FarragoExecutableStmt stmt = prepare(
+        FarragoSessionExecutableStmt stmt = prepare(
             sql,
             null,
             false,
@@ -419,15 +427,15 @@ public class FarragoDbSession
     }
 
     // implement FarragoSession
-    public FarragoRuntimeContext newRuntimeContext(
-        FarragoRuntimeContextParams params)
+    public FarragoSessionRuntimeContext newRuntimeContext(
+        FarragoSessionRuntimeParams params)
     {
         return new FarragoRuntimeContext(params);
     }
 
-    protected FarragoRuntimeContextParams newRuntimeContextParams()
+    protected FarragoSessionRuntimeParams newRuntimeContextParams()
     {
-        FarragoRuntimeContextParams params = new FarragoRuntimeContextParams();
+        FarragoSessionRuntimeParams params = new FarragoSessionRuntimeParams();
         params.catalog = getCatalog();
         params.codeCache = getDatabase().getCodeCache();
         params.txnCodeCache = getTxnCodeCache();
@@ -526,7 +534,23 @@ public class FarragoDbSession
         }
     }
 
-    FarragoExecutableStmt prepare(
+
+    /**
+     * Makes a new preparing statement tied to this session and its underlying
+     * database.  Used to construct and implement an internal query plan.
+     *
+     * @param stmtValidator generic stmt validator
+     *
+     * @return a new {@link net.sf.farrago.query.FarragoPreparingStmt}.
+     */
+    public FarragoPreparingStmt newPreparingStmt(
+        FarragoSessionStmtValidator stmtValidator)
+    {
+        return new FarragoPreparingStmt(stmtValidator);
+    }
+
+
+    FarragoSessionExecutableStmt prepare(
         String sql,
         FarragoAllocationOwner owner,
         boolean isExecDirect,
@@ -543,18 +567,19 @@ public class FarragoDbSession
         // upgrade.  It might be possible to reorder catalog access to solve
         // this.
         reposTxnContext.beginWriteTxn();
-        
+
         boolean rollback = true;
-        FarragoSessionDdlValidator ddlValidator = null;
+        FarragoSessionStmtValidator stmtValidator = newStmtValidator();
         try {
 
             // REVIEW: For !isExecDirect, maybe should disable all DDL
             // validation: just parse, because the catalog may change by the
             // time the statement is executed.  Also probably need to disallow
             // some types of prepared DDL.
-            
-            ddlValidator = newDdlValidator();
-            FarragoSessionParser parser = ddlValidator.getParser();
+
+            FarragoSessionDdlValidator ddlValidator =
+                newDdlValidator(stmtValidator);
+            FarragoSessionParser parser = stmtValidator.getParser();
             Object parsedObj = parser.parseSqlStatement(
                 ddlValidator,
                 sql);
@@ -563,15 +588,12 @@ public class FarragoDbSession
                 rollback = false;
                 ddlValidator.closeAllocation();
                 ddlValidator = null;
-                validate(sqlNode); 
-                FarragoExecutableStmt stmt =
+                validate(sqlNode);
+                FarragoSessionExecutableStmt stmt =
                     database.prepareStmt(
-                        this,
-                        catalog,
+                        stmtValidator,
                         sqlNode,
                         owner,
-                        connectionDefaults,
-                        sessionIndexMap,
                         viewInfo);
                 if (isExecDirect
                     && (stmt.getDynamicParamRowType().getFieldCount() > 0))
@@ -590,11 +612,11 @@ public class FarragoDbSession
                 ddlValidator,
                 reposTxnContext,
                 (FarragoSessionDdlStmt) parsedObj);
-            
+
             rollback = false;
         } finally {
-            if (ddlValidator != null) {
-                ddlValidator.closeAllocation();
+            if (stmtValidator != null) {
+                stmtValidator.closeAllocation();
             }
             if (rollback) {
                 tracer.fine("rolling back DDL");
@@ -623,14 +645,14 @@ public class FarragoDbSession
             // TODO:  commit at end of DDL too in case it updated something?
             commitImpl();
         }
-        
+
         tracer.fine("validating DDL");
         ddlValidator.validate(ddlStmt);
         tracer.fine("updating storage");
         ddlValidator.executeStorage();
 
         // TODO: Some statements aren't real DDL, and should be traced
-        // differently.  
+        // differently.
 
         // handle some special cases here
         if (ddlStmt instanceof DdlStmt) {
@@ -691,7 +713,7 @@ public class FarragoDbSession
                     connectionDefaults.catalogName;
             }
         }
-    
+
         // implement DdlVisitor
         public void visit(DdlSetSystemParamStmt stmt)
         {

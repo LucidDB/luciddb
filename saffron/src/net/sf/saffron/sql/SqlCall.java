@@ -23,6 +23,7 @@
 package net.sf.saffron.sql;
 
 import net.sf.saffron.core.SaffronType;
+import net.sf.saffron.sql.parser.ParserPosition;
 
 import java.util.ArrayList;
 
@@ -41,10 +42,12 @@ public class SqlCall extends SqlNode
 
     //~ Constructors ----------------------------------------------------------
 
-    SqlCall(SqlOperator operator,SqlNode [] operands)
+    SqlCall(SqlOperator operator,SqlNode [] operands, ParserPosition parserPosition)
     {
+        super(parserPosition);
         this.operator = operator;
         this.operands = operands;
+
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -73,7 +76,7 @@ public class SqlCall extends SqlNode
 
     public Object clone()
     {
-        return operator.createCall(SqlNode.cloneArray(operands));
+        return operator.createCall(SqlNode.cloneArray(operands), getParserPosition());
     }
 
     public void unparse(SqlWriter writer,int leftPrec,int rightPrec)

@@ -55,6 +55,9 @@ typedef boost::shared_ptr<ByteOutputStream> SharedByteOutputStream;
 class ByteInputStream;
 typedef boost::shared_ptr<ByteInputStream> SharedByteInputStream;
 
+class ByteStreamMarker;
+typedef boost::shared_ptr<ByteStreamMarker> SharedByteStreamMarker;
+
 class ByteArrayOutputStream;
 typedef boost::shared_ptr<ByteArrayOutputStream> SharedByteArrayOutputStream;
 

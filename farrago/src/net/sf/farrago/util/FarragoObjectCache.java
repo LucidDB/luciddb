@@ -108,17 +108,15 @@ public class FarragoObjectCache implements FarragoAllocation
             Iterator iter = mapKeyToEntry.getMulti(key).iterator();
             while (iter.hasNext()) {
                 entry = (EntryImpl) iter.next();
-                synchronized(entry) {
-                    if (exclusive && (entry.pinCount != 0)) {
-                        // this one's already in use by someone else
-                        entry = null;
-                    } else {
-                        tracer.fine("found cache entry");
-                        // pin the entry so that it can't be discarded after map
-                        // lock is released below
-                        entry.pinCount++;
-                        break;
-                    }
+                if (exclusive && (entry.pinCount != 0)) {
+                    // this one's already in use by someone else
+                    entry = null;
+                } else {
+                    tracer.fine("found cache entry");
+                    // pin the entry so that it can't be discarded after map
+                    // lock is released below
+                    entry.pinCount++;
+                    break;
                 }
             }
             if (entry == null) {
@@ -133,65 +131,77 @@ public class FarragoObjectCache implements FarragoAllocation
             }
         }
 
-        // release map lock since block may below may be time-consuming
-        
-        synchronized(entry) {
-            for (;;) {
-                if (entry.constructionThread == currentThread) {
-                    // we're responsible for construction
-                    boolean success = false;
-                    try {
-                        factory.initializeEntry(key,entry);
-                        success = true;
-                        tracer.fine("initialized new cache entry");
-                    } finally {
-                        // FIXME: an exception can leave a failed entry lying
-                        // around.  It would be nice to get rid of it
-                        // immediately, but it's tricky since someone else may
-                        // already be waiting for it.
-                        if (!success) {
-                            tracer.fine("entry initialization failed");
-                        }
+        // TODO jvs 15-July-2004:  break up this oversized method
 
-                        // let others know that our attempt is complete (but
-                        // not necessarily successful)
-                        entry.constructionThread = null;
-                        if (!success) {
-                            entry.pinCount--;
+        // release map lock since construction work below may be time-consuming
+
+        boolean unpinEntry = false;
+        try {
+            synchronized(entry) {
+                for (;;) {
+                    if (entry.constructionThread == currentThread) {
+                        // we're responsible for construction
+                        boolean success = false;
+                        try {
+                            factory.initializeEntry(key,entry);
+                            success = true;
+                            tracer.fine("initialized new cache entry");
+                        } finally {
+                            // NOTE: an exception can leave a failed entry
+                            // lying around.  It would be nice to get rid of it
+                            // immediately, but it's tricky since someone else
+                            // may already be waiting for it.
+                            if (!success) {
+                                tracer.fine("entry initialization failed");
+                                // if unsuccessful, we're unwinding, so don't
+                                // leave failed entry pinned; can't unpin
+                                // here since we still hold entry lock
+                                unpinEntry = true;
+                            }
+                            // let others know that our attempt is complete
+                            // (though not necessarily successful)
+                            entry.constructionThread = null;
+                            entry.notifyAll();
                         }
-                        entry.notifyAll();
+                        // now we need to adjust memory usage, but can only do
+                        // that after releasing entry lock since map lock is
+                        // required
+                        break;
                     }
-                    // now we need to adjust memory usage, but can only do that
-                    // after releasing entry lock since map lock is required
-                    break;
-                }
 
-                while (entry.constructionThread != null) {
-                    tracer.fine("waiting for entry initialization");
+                    while (entry.constructionThread != null) {
+                        tracer.fine("waiting for entry initialization");
                     
-                    // someone else is supposed to construct the object
-                    try {
-                        entry.wait();
-                    } catch (InterruptedException ex) {
-                        throw new AssertionError();
+                        // someone else is supposed to construct the object
+                        try {
+                            entry.wait();
+                        } catch (InterruptedException ex) {
+                            throw new AssertionError();
+                        }
                     }
-                }
                 
-                if (entry.value != null) {
-                    if (tracer.isLoggable(Level.FINE)) {
-                        tracer.fine(
-                            "returning entry with pin count = "
-                            + entry.pinCount);
+                    if (entry.value != null) {
+                        if (tracer.isLoggable(Level.FINE)) {
+                            tracer.fine(
+                                "returning entry with pin count = "
+                                + entry.pinCount);
+                        }
+                        // got it
+                        return entry;
                     }
-                    // got it
-                    return entry;
-                }
 
-                // Someone else's attempt must have failed; we'll give it
-                // a shot ourselves.  Most likely we'll fail too, but doing it
-                // this way is easier than trying to replicate the original
-                // exception.
-                entry.constructionThread = currentThread;
+                    // Someone else's attempt must have failed; we'll give it a
+                    // shot ourselves.  Most likely we'll fail too, but doing
+                    // it this way is easier than trying to replicate the
+                    // original exception.
+                    entry.constructionThread = currentThread;
+                }
+            }
+        } finally {
+            if (unpinEntry) {
+                synchronized(mapKeyToEntry) {
+                    entry.pinCount--;
+                }
             }
         }
 
@@ -222,14 +232,12 @@ public class FarragoObjectCache implements FarragoAllocation
             while ((overdraft > 0) && mapIter.hasNext()) {
                 Map.Entry mapEntry = (Map.Entry) mapIter.next();
                 EntryImpl entry = (EntryImpl) mapEntry.getValue();
-                synchronized(entry) {
-                    if (entry.pinCount > 0) {
-                        continue;
-                    }
-                    mapIter.remove();
-                    discards.add(entry);
-                    overdraft -= entry.memoryUsage;
+                if (entry.pinCount > 0) {
+                    continue;
                 }
+                mapIter.remove();
+                discards.add(entry);
+                overdraft -= entry.memoryUsage;
             }
         }
 
@@ -268,7 +276,7 @@ public class FarragoObjectCache implements FarragoAllocation
     public void unpin(Entry pinnedEntry)
     {
         EntryImpl entry = (EntryImpl) pinnedEntry;
-        synchronized(entry) {
+        synchronized(mapKeyToEntry) {
             if (tracer.isLoggable(Level.FINE)) {
                 tracer.fine("Unpinning key " + entry.key.toString());
                 tracer.fine("pin count before unpin = " + entry.pinCount);
@@ -331,6 +339,7 @@ public class FarragoObjectCache implements FarragoAllocation
                 ((FarragoAllocation) (entry.value)).closeAllocation();
             }
         }
+
         synchronized(mapKeyToEntry) {
             bytesUsed -= entry.memoryUsage;
         }
@@ -398,6 +407,10 @@ public class FarragoObjectCache implements FarragoAllocation
     private class EntryImpl
         implements Entry, UninitializedEntry
     {
+        // NOTE jvs 15-July-2004: entry attribute synchronization is
+        // fine-grained; pinCount is protected by mapKeyToEntry's
+        // monitor, while the others are protected by the entry's monitor.
+        
         Object key;
         Object value;
         int pinCount;

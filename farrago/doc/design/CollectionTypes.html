@@ -1,0 +1,331 @@
+<html>
+
+<head>
+<title>SQL Standard Collection Types</title>
+<link rel="stylesheet" type="text/css" href="../stylesheet.css" />
+
+</head>
+
+<body>
+
+<h1>SQL Standard Collection Types</h1>
+
+This document describes standard support for collection types in SQL99
+and SQL2003.  The specifications are informal; for details, see the
+relevant portions of the standards.  None of this is implemented in
+Farrago yet.
+
+<h2>SQL99 Array Type</h2>
+
+SQL99 introduces limited support for a single collection type known as
+arrays.  Arrays are variable-sized ordered collections with a declared
+maximum cardinality.  Here's an example of how to declare a column
+with array type:
+
+<pre><code>
+CREATE TABLE genome_sequences(
+    sequence_id BIGINT NOT NULL PRIMARY KEY,
+    chromosome_number INT NOT NULL,
+    start_offset BIGINT NOT NULL,
+    codons CHAR(3) ARRAY[1000] NOT NULL);
+</code></pre>
+
+Elements of the array may be declared with almost any datatype (in
+this example, <code>CHAR(3)</code>).  However, in SQL99, nested arrays
+are illegal (whether the nesting is direct or indirect); you can't
+declare 
+
+<pre><code>
+    illegal_column1 INT ARRAY[3] ARRAY[5]
+</code></pre>
+
+nor can you declare
+
+<pre><code>
+    illegal_column2 ROW(INT,DOUBLE ARRAY[7]) ARRAY[4]
+</code></pre>
+
+<p>
+
+Array values are created with the ARRAY constructor:
+
+<pre><code>
+INSERT INTO genome_sequences VALUES(
+    10032423, 3, 432432, 
+    ARRAY['CUG', 'AAG', 'GGU', 'ACU', 'CUU', 'GGU', 'UGG', 'UAA']);
+</code></pre>
+
+The length of an array is retrieved with the CARDINALITY function:
+
+<pre><code>
+SELECT sequence_id,CARDINALITY(codons) as sequence_length
+FROM genome_sequences
+ORDER BY sequence_length;
+</code></pre>
+
+And the actual values can be selected with the usual bracket syntax:
+
+<pre><code>
+SELECT 
+    sequence_id,
+    codons[1] as first_codon,
+    codons[CARDINALITY(codons)] as last_codon
+FROM genome_sequences
+ORDER BY sequence_id;
+</code></pre>
+
+Notice that array offsets are 1-based.  Attempting to access an
+out-of-bound offset results in an exception.  <p>
+
+Arrays can be concatenated with the usual notation:
+
+<pre><code>
+CREATE VIEW spliced_sequences AS
+SELECT s1.sequence_id, s1.codons || s2.codons AS spliced_codons
+FROM genome_sequences s1, genome_sequences s2
+WHERE s1.chromosome_number = s2.chromosome_number
+AND s2.start_offset = s1.start_offset + CARDINALITY(s1.codons);
+</code></pre>
+
+Array elements can be
+set individually in the SET clause of an UPDATE statement, or the
+entire array can be set as the target of an INSERT or UPDATE:
+
+<pre><code>
+UPDATE genome_sequences
+SET codons = 
+    (SELECT codons 
+     FROM spliced_sequences 
+     WHERE spliced_sequences.sequence_id = genome_sequences.sequence_id);
+</code></pre>
+
+Array assignment in which the maximum size of the target is less than
+the actual size of a source value results in an exception.  In the
+example above, this will occur if two sequences spliced together make
+up a sequence longer than 1000 codons.
+
+<p>
+
+Arrays can be compared for exact match with = or &lt;&gt;:
+
+<pre><code>
+CREATE VIEW matching_sequences AS
+SELECT s1.sequence_id as sid1, s2.sequence_id as sid2
+FROM genome_sequences s1, genome_sequences s2
+WHERE s1.codons = s2.codons;
+</code></pre>
+
+No other inequality operator is supported, and usage of arrays in just
+about any other context (including GROUP BY) is illegal.
+
+<h2>SQL2003 Array Type</h2>
+
+SQL2003 extends array semantics in a number of ways.
+Arrays can be declared without a maximum cardinality, in which case the
+maximum is vendor-defined (possibly unbounded like a LOB).
+A new constructor is added for converting a query into an array:
+
+<pre><code>
+INSERT INTO listbox_choices VALUES(
+    'Department Names',ARRAY(SELECT name FROM sales.depts ORDER BY 1));
+</pre></code>
+
+In the other direction, the UNNEST operator converts an array into a
+query expression:
+
+<pre><code>
+-- convert a particular sequence into a table
+SELECT codon,offset
+FROM UNNEST((SELECT codons FROM genome_sequences WHERE sequence_id = 10032423))
+     WITH ORDINALITY 
+     AS codon_table(codon,offset)
+ORDER BY offset
+</code></pre>
+
+The WITH ORDINALITY clause specifies that the array ordering should be
+used to derive the offset column.  Without this clause, the codons
+would be returned without any ordering information.
+
+What if we wanted to convert all of the sequences together?  I think
+that's what the new LATERAL subquery feature is for, although I'm a little
+fuzzy on this part:
+
+<pre><code>
+SELECT 
+    g.sequence_id,
+    codon_table.codon,
+    codon_table.offset as relative_offset,
+    g.start_offset + codon_table.offset - 1 as absolute_offset
+FROM 
+    genome_sequences g,
+    LATERAL(UNNEST(g.codons) WITH ORDINALITY)
+    AS codon_table(codon,offset)
+WHERE chromosome_number = 7
+ORDER BY absolute_offset,sequence_id
+</code></pre>
+
+This should result in a table containing all of the codons from
+chromosome #7.  The first column is the sequence containing the codon.
+The second column is the codon itself.  The third column is the
+relative offset of the codon within the sequence.  The last column is
+the absolute offset of the codon within the chromosome.  Returned rows are
+ordered by absolute position.
+
+</ul>
+
+<h2>SQL2003 Multiset Type</h2>
+
+SQL2003 also introduces another collection type known as a multiset.
+A multiset is much like an array, but unordered, and has more useful
+operators.  Although multisets and arrays are both collections, they
+don't mix (e.g. you can't INSERT a multiset into an array column).
+
+<p>
+
+Unlike arays, multisets never have a declared maximum cardinality:
+
+<pre><code>
+CREATE TABLE logins(
+    session_id INT NOT NULL PRIMARY KEY,
+    successful BOOLEAN NOT NULL,
+    uid INT,
+    attempts ROW(VARCHAR(128),VARCHAR(128) MULTISET);
+</code></pre>
+
+Multisets constructors are similar to array constructors:
+
+<pre><code>
+
+INSERT INTO logins VALUES(
+    1000,true,0,
+    MULTISET(
+        ROW('root','31337'), 
+        ROW('scott','tiger'), 
+        ROW('root','beer')));
+
+INSERT INTO logins VALUES(
+    1001,false,0,MULTISET(SELECT ROW(name,password) FROM bogus_accounts));
+
+</code></pre>
+
+(Note that ORDER BY is not allowed on a multiset constructor query
+since multisets are unordered.)  As syntactic sugar, another
+constructor named TABLE is also provided which automatically converts
+a query into a multiset of rows.  The next example is equivalent to
+the previous query-based MULTISET constructor:
+
+<pre><code>
+INSERT INTO logins VALUES(
+    1001,false,0,TABLE(SELECT name,password FROM bogus_accounts));
+</code></pre>
+
+<p>
+
+CARDINALITY returns the total number of elements in a multiset (not
+the number of distinct elements).  Multisets cannot be concatenated
+(since they aren't ordered); instead, a number of set operators are
+provided for multisets:
+
+<pre><code>
+
+multiset1 MULTISET UNION [ALL|DISTINCT] multiset2
+
+multiset1 MULTISET INTERSECT [ALL|DISTINCT] multiset2
+
+multiset1 MULTISET EXCEPT [ALL|DISTINCT] multiset2
+
+</code></pre>
+
+Some multiset-specific predicates are also provided:
+
+<pre><code>
+
+-- find sessions with a particular username/password combination
+SELECT session_id
+FROM logins
+WHERE ROW('root','31337') MEMBER OF attempts;
+
+-- find sessions where no combination was retried
+SELECT session_id
+FROM logins
+WHERE attempts IS A SET;
+
+-- find sessions whose attempted combinations subsume those of other sessions
+SELECT a.session_id as sub_id,b.session_id as super_id
+FROM logins a,logins b
+WHERE a.attempts SUBMULTISET OF b.attempts;
+
+</code></pre>
+
+UNNEST can be used on a multiset (but not WITH ORDINALITY, obviously).
+The multiset-specific ELEMENT operator converts a multiset with
+cardinality 1 into a row expression:
+
+<pre><code>
+SELECT session_id,ELEMENT(attempts).name
+FROM logins
+WHERE CARDINALITY(attempts) = 1;
+</code></pre>
+
+Finally, aggregation operators are provided for collecting row values
+into multisets, and for aggregating multisets:
+
+<pre><code>
+SELECT 
+    COLLECT(session_id) AS session_ids,
+    FUSION(attempts) AS all_attempts,
+    INTERSECTION(attempts) AS common_attempts
+FROM logins
+WHERE successful
+GROUP BY uid;
+</code></pre>
+
+For each uid, the query above returns a row with three columns.  The
+first column contains a multiset of the session_id's which
+successfully logged in that uid.  The second column contains a
+multiset of all of the username/password combinations used for that
+uid.  The last column contains a multiset of any username/password
+combinations which were tried for all logins of that uid.
+
+<h2>Notes</h2>
+
+<ul>
+
+<li>
+From my reading of the standard, I haven't yet been able to figure out
+whether individual elements of a collection can be set to NULL (and if
+so, whether it is possible to declare them as NOT NULL).  If anyone
+has a definitive answer on this, please <a
+href="mailto:perfecthash@users.sf.net">let me know</a>.
+
+<li>
+For contrast, see
+<a href="http://developer.postgresql.org/docs/postgres/arrays.html">
+the PostgreSQL docs</a>, which supports both standard and non-standard
+syntax and semantics.
+
+<li>
+See also
+<a href="http://www.acm.org/sigmod/record/issues/0403/E.JimAndrew-standard.pdf">
+the official SQL:2003 announcement</a>.
+
+<li>
+I based my understanding of LATERAL on
+<a href="http://www.midrangeserver.com/fhg/fhg071404-story01.html">
+a random article</a>; I didn't actually try to decode that part of the
+standard.
+
+<li>
+This document does not cover non-SQL language bindings.  For JDBC, see
+<a href="http://java.sun.com/j2se/1.4.2/docs/api/java/sql/Array.html">
+the Javadoc</a>.
+
+<li>
+The examples in this document should not be taken as recommendations
+for good schema design.  (Many critics have suggested that adding
+collection types to SQL is a step backwards.)
+
+</ul>
+
+</body>
+</html>

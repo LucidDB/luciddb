@@ -3,6 +3,9 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set schema sales;
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- force usage of Fennel calculator
+0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- filter which returns one row
 0: jdbc:farrago:> select name from emps where empno = 120;
 +--------+
@@ -26,8 +29,8 @@
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select name from emps where empno = 120;
 'column0'
-'IterCalcRel(NAME=[$1], condition=[=($0, 120)])'
-'  FennelToIteratorConverter'
+'FennelToIteratorConverter'
+'  FennelPullCalcRel(NAME=[$1], condition=[=($0, 120)])'
 '    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

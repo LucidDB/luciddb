@@ -22,6 +22,8 @@
 
 package net.sf.saffron.sql;
 
+import net.sf.saffron.sql.parser.ParserPosition;
+
 /**
  * A <code>SqlJoin</code> is ...
  *
@@ -34,9 +36,9 @@ public class SqlJoin extends SqlCall
 {
     //~ Constructors ----------------------------------------------------------
 
-    public SqlJoin(SqlJoinOperator operator,SqlNode [] operands)
+    public SqlJoin(SqlJoinOperator operator,SqlNode [] operands, ParserPosition parserPosition)
     {
-        super(operator,operands);
+        super(operator,operands,parserPosition);
     }
 
     //~ Methods ---------------------------------------------------------------

@@ -108,6 +108,7 @@ protected:
     virtual SharedExecutionStream getStreamFromVertex(Vertex);
     virtual void closeImpl();
     virtual void sortStreams();
+    virtual void openStream(SharedExecutionStream pStream);
     
 public:
     virtual ~ExecutionStreamGraphImpl() {}

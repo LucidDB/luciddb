@@ -150,6 +150,9 @@ public class FennelStreamGraph implements FarragoAllocation
     public void close()
     {
         traceGraphHandle("close");
+        if (streamGraphHandle == 0) {
+            return;
+        }
         try {
             FennelStorage.tupleStreamGraphClose(streamGraphHandle,false);
         } catch (SQLException ex) {
@@ -160,10 +163,10 @@ public class FennelStreamGraph implements FarragoAllocation
     // implement FarragoAllocation
     public void closeAllocation()
     {
+        traceGraphHandle("deallocate");
         if (streamGraphHandle == 0) {
             return;
         }
-        traceGraphHandle("deallocate");
         try {
             FennelStorage.tupleStreamGraphClose(streamGraphHandle,true);
         } catch (SQLException ex) {

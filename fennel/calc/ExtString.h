@@ -67,6 +67,12 @@ strCmpA(RegisterRef<int32_t>* result,
         RegisterRef<char*>* str1,
         RegisterRef<char*>* str2);
 
+//! StrCmp. Binary
+void
+strCmpOct(RegisterRef<int32_t>* result,
+          RegisterRef<char*>* str1,
+          RegisterRef<char*>* str2);
+
 //! StrCpy. Ascii.
 //!
 //! May throw "22001"
@@ -156,6 +162,7 @@ strToUpperA(RegisterRef<char*>* result,
 void
 strTrimA(RegisterRef<char*>* result,
          RegisterRef<char*>* str,
+         RegisterRef<char*>* trimchar,
          RegisterRef<int32_t>* trimLeft,
          RegisterRef<int32_t>* trimRight);
 

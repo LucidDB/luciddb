@@ -24,6 +24,7 @@ package net.sf.saffron.core;
 
 import net.sf.saffron.opt.CallingConvention;
 import net.sf.saffron.opt.PlanCost;
+import net.sf.saffron.oj.rel.JavaRelImplementor;
 import net.sf.saffron.opt.VolcanoRule;
 import net.sf.saffron.rel.SaffronRel;
 import net.sf.saffron.trace.SaffronTrace;
@@ -126,6 +127,13 @@ public interface SaffronPlanner
      * tell the planner about all of the special transformation rules.
      */
     void registerSchema(SaffronSchema schema);
+
+    
+    /**
+     * Retrieve an implementor appropriate for the context in which
+     * this planner was created.
+     */
+    JavaRelImplementor getJavaRelImplementor(SaffronRel rel);
 }
 
 

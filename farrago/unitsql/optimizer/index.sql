@@ -3,6 +3,9 @@
 
 set schema sales;
 
+-- force usage of Java calculator
+alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
+
 -- search unique clustered index
 select name from depts where deptno=20;
 

@@ -20,10 +20,9 @@
 #ifndef Fennel_CalcMessage_Included
 #define Fennel_CalcMessage_Included
 
-#include "fennel/calc/Calculator.h"
+#include "fennel/calc/CalcTypedefs.h"
 
 FENNEL_BEGIN_NAMESPACE
-
 
 /**
  * Object for passing warning and error messages from the Compiler

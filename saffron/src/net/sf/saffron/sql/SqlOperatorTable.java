@@ -28,6 +28,7 @@ import net.sf.saffron.resource.SaffronResource;
 import net.sf.saffron.sql.test.SqlTester;
 import net.sf.saffron.sql.type.SqlTypeName;
 import net.sf.saffron.sql.fun.SqlStdOperatorTable;
+import net.sf.saffron.sql.parser.ParserPosition;
 import net.sf.saffron.util.MultiMap;
 import net.sf.saffron.util.Util;
 
@@ -44,67 +45,141 @@ public class SqlOperatorTable
 
     //~ Static fields/initializers --------------------------------------------
 
-    private static SqlStdOperatorTable instance;
-
     public static final SqlTypeName[] stringTypes =
       {SqlTypeName.Varchar,SqlTypeName.Bit,SqlTypeName.Binary,SqlTypeName.Varbinary};
     public static final SqlTypeName[] stringNullableTypes =
       {SqlTypeName.Null,SqlTypeName.Varchar,SqlTypeName.Bit,SqlTypeName.Binary,SqlTypeName.Varbinary};
     public static final SqlTypeName[] numericTypes =
-            {SqlTypeName.Integer,SqlTypeName.Bigint,SqlTypeName.Decimal,
-                                        SqlTypeName.Real,SqlTypeName.Double};
+            {SqlTypeName.Tinyint,SqlTypeName.Smallint,SqlTypeName.Integer,
+             SqlTypeName.Bigint,SqlTypeName.Decimal,
+             SqlTypeName.Float,SqlTypeName.Real,SqlTypeName.Double};
     public static final SqlTypeName[] numericNullableTypes =
-            {SqlTypeName.Null,SqlTypeName.Integer,SqlTypeName.Bigint,SqlTypeName.Decimal,
-                                        SqlTypeName.Real,SqlTypeName.Double};
+            {SqlTypeName.Null,
+             SqlTypeName.Tinyint,SqlTypeName.Smallint,SqlTypeName.Integer,
+             SqlTypeName.Bigint,SqlTypeName.Decimal,
+             SqlTypeName.Float,SqlTypeName.Real,SqlTypeName.Double};
     public static final SqlTypeName[] booleanTypes = {SqlTypeName.Boolean};
     public static final SqlTypeName[] booleanNullableTypes =
             {SqlTypeName.Null,SqlTypeName.Boolean};
     public static final SqlTypeName[] binaryNullableTypes =
             {SqlTypeName.Null,SqlTypeName.Bit,SqlTypeName.Varbinary};
     public static final SqlTypeName[] intTypes =
-                   {SqlTypeName.Integer,SqlTypeName.Bigint};
+            {SqlTypeName.Integer,SqlTypeName.Bigint};
     public static final SqlTypeName[] intNullableTypes =
-                   {SqlTypeName.Null,SqlTypeName.Integer,SqlTypeName.Bigint};
-    public static final SqlTypeName[] varcharTypes =
-            {SqlTypeName.Varchar};
-    public static final SqlTypeName[] varcharNullableTypes =
-            {SqlTypeName.Null,SqlTypeName.Varchar};
+            {SqlTypeName.Null,SqlTypeName.Integer,SqlTypeName.Bigint};
+    public static final SqlTypeName[] charTypes =
+            {SqlTypeName.Char, SqlTypeName.Varchar};
+    public static final SqlTypeName[] charNullableTypes =
+            {SqlTypeName.Null,SqlTypeName.Char, SqlTypeName.Varchar};
     public static final SqlTypeName[] timeIntervalNullableTypes =
             {SqlTypeName.Null,SqlTypeName.IntervalDayTime, SqlTypeName.IntervalYearToMonth};
 
     /**
-         * Type-inference strategy whereby the result type of a call is the type of
-         * the first operand.
-         */
-        public static final SqlOperator.TypeInference useFirstArgType =
-                new SqlOperator.TypeInference() {
+     * Creates and initializes the standard operator table.
+     * Uses two-phase construction, because we can't intialize the table until
+     * the constructor of the sub-class has completed.
+     */
+    private static SqlStdOperatorTable createStd() {
+        SqlStdOperatorTable table = new SqlStdOperatorTable();
+        table.init();
+        return table;
+    }
 
-                    public SaffronType getType(SqlValidator validator, SqlValidator.Scope scope, SqlCall call) {
-                        return validator.deriveType(scope, call.operands[0]);
+    /**
+     * Parameter type-inference transform strategy where a derived type is
+     * transformed into the same type but nullable if any of a calls operands
+     * is nullable
+     */
+    public static final SqlOperator.TypeInferenceTransform transformNullable =
+            new SqlOperator.TypeInferenceTransform() {
+                public SaffronType getType(SaffronTypeFactory typeFactory,
+                        SaffronType[] argTypes, SaffronType typeToTransform) {
+                    return makeNullableIfOperandsAre(
+                            typeFactory, argTypes, typeToTransform);
+                }
+            };
+
+    /**
+     * Type-inference strategy whereby the result type of a call is VARYING
+     * the type given.
+     * The precision returned is the same as precision of the
+     * first argument.
+     * Return type will have same nullablilty as input type nullablility.
+     * First Arg must be of string type.
+     */
+    public static final SqlOperator.TypeInferenceTransform transformVarying =
+            new SqlOperator.TypeInferenceTransform() {
+                public SaffronType getType(SaffronTypeFactory fac,
+                        SaffronType[] argTypes, SaffronType type) {
+                    switch(type.getSqlTypeName().ordinal_) {
+                    case SqlTypeName.Varchar_ordinal:
+                    case SqlTypeName.Varbinary_ordinal:
+                    case SqlTypeName.Varbit_ordinal:
+                        return type;
                     }
 
-                    public SaffronType getType(SaffronTypeFactory typeFactory, SaffronType[] argTypes) {
-                        return argTypes[0];
-                    }
-                };
-
-        /**
-         * Type-inference strategy whereby the result type of a call is the type of
-         * the first operand. If any of the other operans are nullable the returned
-         * type will also be nullable.
-         */
-        public static final SqlOperator.TypeInference useNullableFirstArgType =
-                new SqlOperator.TypeInference() {
-
-                    public SaffronType getType(SqlValidator validator, SqlValidator.Scope scope, SqlCall call) {
-                        SaffronType type = validator.deriveType(scope, call.operands[0]);
-                        return makeNullableIfOperandsAre(validator,scope,call,type);
+                    SqlTypeName retTypeName;
+                    switch(type.getSqlTypeName().ordinal_) {
+                    case SqlTypeName.Char_ordinal:
+                        retTypeName = SqlTypeName.Varchar;
+                        break;
+                    case SqlTypeName.Binary_ordinal:
+                        retTypeName = SqlTypeName.Varbinary;
+                        break;
+                    case SqlTypeName.Bit_ordinal:
+                        retTypeName = SqlTypeName.Varbit;
+                        break;
+                    default: throw Util.newInternal("Should never come here");
                     }
 
-                    public SaffronType getType(SaffronTypeFactory typeFactory, SaffronType[] argTypes) {
-                        return makeNullableIfOperandsAre(typeFactory,argTypes,argTypes[0]);
+                    SaffronType ret = fac.createSqlType(retTypeName,
+                            type.getPrecision());
+                    if (type.isCharType()) {
+                        ret = fac.createTypeWithCharsetAndCollation(ret,
+                                type.getCharset(), type.getCollation());
                     }
-                };
+                    return fac.createTypeWithNullability(ret, type.isNullable());
+                }
+            };
+
+
+
+    /**
+     * Type-inference strategy whereby the result type of a call is the type of
+     * the first operand.
+     */
+    public static final SqlOperator.TypeInference useFirstArgType =
+            new SqlOperator.TypeInference() {
+
+                public SaffronType getType(SqlValidator validator, SqlValidator.Scope scope, SqlCall call) {
+                    return validator.deriveType(scope, call.operands[0]);
+                }
+
+                public SaffronType getType(SaffronTypeFactory typeFactory, SaffronType[] argTypes) {
+                    return argTypes[0];
+                }
+            };
+
+    /**
+     * Type-inference strategy whereby the result type of a call is the type of
+     * the first operand. If any of the other operans are nullable the returned
+     * type will also be nullable.
+     */
+    public static final SqlOperator.CascadeTypeInference useNullableFirstArgType =
+            new SqlOperator.CascadeTypeInference(useFirstArgType, transformNullable);
+
+    /**
+     * Type-inference strategy whereby the result type of a call is VARYING
+     * the type of the first argument.
+     * The precision returned is the same as precision of the
+     * first argument.
+     * If any of the other operans are nullable the returned
+     * type will also be nullable.
+     * First Arg must be of string type.
+     */
+    public static final SqlOperator.CascadeTypeInference useNullableVaryingFirstArgType =
+            new SqlOperator.CascadeTypeInference(useFirstArgType,
+                    transformNullable, transformVarying);
 
     /**
      * Type-inference strategy whereby the result type of a call is the type of
@@ -141,24 +216,8 @@ public class SqlOperatorTable
      * Type-inference strategy whereby the result type of a call is Boolean,
      * with nulls allowed if any of the operands allow nulls.
      */
-    public static final SqlOperator.TypeInference useNullableBoolean =
-    new SqlOperator.TypeInference() {
-        public SaffronType getType(
-            SqlValidator validator,
-            SqlValidator.Scope scope,
-            SqlCall call)
-        {
-            SaffronType type = useBoolean.getType(validator,scope,call);
-            return makeNullableIfOperandsAre(validator, scope, call, type);
-        }
-        public SaffronType getType(
-            SaffronTypeFactory typeFactory,
-            SaffronType[] argTypes)
-        {
-            SaffronType type = useBoolean.getType(typeFactory,argTypes);
-            return makeNullableIfOperandsAre(typeFactory, argTypes, type);
-        }
-    };
+    public static final SqlOperator.CascadeTypeInference useNullableBoolean =
+            new SqlOperator.CascadeTypeInference(useBoolean, transformNullable);
 
     /**
      * Type-inference strategy whereby the result type of a call is Time.
@@ -196,21 +255,8 @@ public class SqlOperatorTable
      * Type-inference strategy whereby the result type of a call is Double
      * with nulls allowed if any of the operands allow nulls.
      */
-    public static final SqlOperator.TypeInference useNullableDouble =
-            new SqlOperator.TypeInference() {
-                public SaffronType getType(SqlValidator validator,
-                        SqlValidator.Scope scope, SqlCall call) {
-                    SaffronType type =
-                            validator.typeFactory.createSqlType(SqlTypeName.Double);
-                    return makeNullableIfOperandsAre(validator,scope,call, type);
-
-                }
-                public SaffronType getType(SaffronTypeFactory typeFactory,
-                        SaffronType[] argTypes) {
-                    SaffronType type = typeFactory.createSqlType(SqlTypeName.Double);
-                    return makeNullableIfOperandsAre(typeFactory,argTypes,type);
-                }
-            };
+    public static final SqlOperator.CascadeTypeInference useNullableDouble =
+            new SqlOperator.CascadeTypeInference(useDouble, transformNullable);
 
     /**
      * Type-inference strategy whereby the result type of a call is an Integer.
@@ -231,36 +277,21 @@ public class SqlOperatorTable
      * Type-inference strategy whereby the result type of a call is an Integer
      * with nulls allowed if any of the operands allow nulls.
      */
-    public static final SqlOperator.TypeInference useNullableInteger =
-            new SqlOperator.TypeInference() {
-                public SaffronType getType(SqlValidator validator,
-                        SqlValidator.Scope scope, SqlCall call) {
-                    SaffronType type = validator.typeFactory.createSqlType(SqlTypeName.Integer);
-                    return makeNullableIfOperandsAre(validator,scope,call,type);
-                }
-                public SaffronType getType(SaffronTypeFactory typeFactory,
-                        SaffronType[] argTypes) {
-                    SaffronType type = typeFactory.createSqlType(SqlTypeName.Integer);
-                    return makeNullableIfOperandsAre(typeFactory,argTypes,type);
-                }
-            };
+    public static final SqlOperator.CascadeTypeInference useNullableInteger =
+            new SqlOperator.CascadeTypeInference(useInteger, transformNullable);
 
     /**
      * Type-inference strategy whereby the result type of a call is using its operands biggest type,
      * using the rules described in ISO/IEC 9075-2:1999 section 9.3 "Data types of results of aggregations"
      * These rules are used in union, except, intercect, case and other places
      * E.g (500000000000 + 3.0e-3) have the operands INTEGER and DOUBLE. Its biggest type is double
-     * If any of the operands are nullable the result type will also be nullable
      */
-    public static final SqlOperator.TypeInference useNullableBiggest =
+    public static final SqlOperator.TypeInference useBiggest =
             new SqlOperator.TypeInference() {
 
                 public SaffronType getType(SqlValidator validator, SqlValidator.Scope scope, SqlCall call) {
-                    SaffronType[] types = new SaffronType[call.operands.length];
-                    for (int i = 0; i < call.operands.length; i++) {
-                        types[i] = validator.deriveType(scope, call.operands[i]);
-                    }
-                    return getType(validator.typeFactory,types);
+                    SaffronType[] types = SqlOperator.collectTypes(validator, scope, call.operands);
+                    return collectTypesFromCall(validator, scope, call);
                 }
 
                 public SaffronType getType(SaffronTypeFactory typeFactory, SaffronType[] argTypes) {
@@ -272,10 +303,106 @@ public class SqlOperatorTable
                     // the operator (e.g. sum precision is based on the max of
                     // the arg precisions, while product precision is based on
                     // the sum of the arg precisions).
-                    SaffronType type = typeFactory.leastRestrictive(argTypes);
-                    return makeNullableIfOperandsAre(typeFactory,argTypes,type);
+                    return typeFactory.leastRestrictive(argTypes);
                 }
             };
+
+    /**
+     * Type-inference strategy whereby the result type of a call is using its operands biggest type,
+     * using the rules described in ISO/IEC 9075-2:1999 section 9.3 "Data types of results of aggregations"
+     * These rules are used in union, except, intercect, case and other places
+     * E.g (500000000000 + 3.0e-3) have the operands INTEGER and DOUBLE. Its biggest type is double
+     * If any of the operands are nullable the result type will also be nullable
+     */
+    public static final SqlOperator.CascadeTypeInference useNullableBiggest =
+            new SqlOperator.CascadeTypeInference(useBiggest, transformNullable);
+
+    /**
+     * Type-inference strategy where by the
+     * Result type of a call is
+     * <ul>
+     * <li>the same type as the input types but with the
+     * combined precision of the two first types</li>
+     * <li>If types are of char type the type with the highest coercibility
+     * will be used</li>
+     *
+     * @pre input types must be of the same string type
+     * @pre types must be comparable without casting
+     */
+    public static final SqlOperator.TypeInference useDyadicStringSumPrecision =
+            new SqlOperator.TypeInference() {
+
+                public SaffronType getType(SqlValidator validator, SqlValidator.Scope scope, SqlCall call) {
+                    return collectTypesFromCall(validator, scope, call);
+                }
+
+                /**
+                 * @pre type0 <COMPARABLE> to type1 (without casting)
+                 */
+                public SaffronType getType(SaffronTypeFactory typeFactory,
+                        SaffronType[] argTypes) {
+                    if (!(argTypes[0].isCharType() &&
+                            argTypes[1].isCharType())) {
+                        Util.pre(argTypes[0].isSameType(argTypes[1]),
+                                "argTypes[0].isSameType(argTypes[1])");
+                    }
+                    SqlCollation pickedCollation = null;
+                    if (argTypes[0].isCharType()) {
+                        if (!SqlOperator.isCharTypeComparable(argTypes, 0, 1)) {
+                            throw SaffronResource.instance().newValidationError(
+                                    argTypes[0].toString() +
+                                    " is not comparable to " +
+                                    argTypes[1].toString());
+                        }
+
+                        pickedCollation=
+                                SqlCollation.getCoercibilityDyadicOperator(
+                                argTypes[0].getCollation(),
+                                argTypes[1].getCollation());
+                        assert(null!=pickedCollation);
+                     }
+
+                    SaffronType ret;
+                    ret = typeFactory.createSqlType(
+                            argTypes[0].getSqlTypeName(),
+                            argTypes[0].getPrecision()+
+                            argTypes[1].getPrecision());
+                    if (null!=pickedCollation) {
+                        SaffronType pickedType;
+                        if (argTypes[0].getCollation().equals(pickedCollation)){
+                            pickedType = argTypes[0];
+                        } else if (argTypes[1].getCollation().equals(
+                                pickedCollation)) {
+                            pickedType = argTypes[1];
+                        } else {
+                            throw Util.newInternal("should never come here");
+                        }
+                        ret = typeFactory.createTypeWithCharsetAndCollation(ret,
+                                pickedType.getCharset(),
+                                pickedType.getCollation());
+                    }
+                    return ret;
+                }
+            };
+
+    /**
+     * Same as {@link #useDyadicStringSumPrecision} and using
+     * {@link #transformNullable}
+     */
+    public static final SqlOperator.CascadeTypeInference
+            useNullableDyadicStringSumPrecision =
+            new SqlOperator.CascadeTypeInference(useDyadicStringSumPrecision,
+                new SqlOperator.TypeInferenceTransform[]{transformNullable});
+
+    /**
+     * Same as {@link #useDyadicStringSumPrecision} and using
+     * {@link #transformNullable}, {@link #transformVarying}
+     */
+    public static final SqlOperator.CascadeTypeInference
+            useNullableVaryingDyadicStringSumPrecision =
+            new SqlOperator.CascadeTypeInference(useDyadicStringSumPrecision,
+                new SqlOperator.TypeInferenceTransform[]
+                {transformNullable, transformVarying});
 
     /**
      * Type-inference strategy where the expression is assumed to be registered
@@ -349,6 +476,8 @@ public class SqlOperatorTable
         }
     };
 
+
+
     /**
      * Parameter type-inference strategy where an unknown operand
      * type is assumed to be boolean.
@@ -401,10 +530,9 @@ public class SqlOperatorTable
                 boolean res = super.check(call, validator, scope, node, operandNbr);
                 if (!res) return res;
                 if (operandNbr == 0) {
-                    if (node instanceof SqlLiteral) {
-                    } else {
-                        throw SaffronResource.instance().newArgumentMustBeLiteral(
-                            call.operator.name);
+                    if (!SqlUtil.isLiteral(node)) {
+                        throw SaffronResource.instance()
+                                .newArgumentMustBeLiteral(call.operator.name);
                     }
                 }
                 return res;
@@ -425,20 +553,25 @@ public class SqlOperatorTable
             {
                 boolean res = super.check(call, validator, scope, node, operandNbr);
                 if (!res) return res;
-                if (SqlLiteral.isNullLiteral(node)) {
-                    throw SaffronResource.instance().newArgumentMustNotBeNull(call.operator.name);
+                // REVIEW (jhyde, 2004/7/23) why is the isNullLiteral check
+                //   outside the 'if (operandNbr == 0)' check, and the
+                //   isLiteral check inside? In fact, why the 'operandNbr == 0'
+                //   check at all?
+                if (SqlUtil.isNullLiteral(node, true)) {
+                    throw SaffronResource.instance()
+                            .newArgumentMustNotBeNull(call.operator.name);
                 }
                 if (operandNbr == 0) {
-                    if (node instanceof SqlLiteral) {
-                        final SqlLiteral arg = ((SqlLiteral) node);
-                        final int value = arg.intValue();
-                        if (value < 0) {
-                            throw SaffronResource.instance().newArgumentMustBePositiveInteger(
-                                call.operator.name);
-                        }
-                    } else {
-                        throw SaffronResource.instance().newArgumentMustBeLiteral(
-                            call.operator.name);
+                    if (!SqlUtil.isLiteral(node)) {
+                        throw SaffronResource.instance()
+                                .newArgumentMustBeLiteral(call.operator.name);
+                    }
+                    final SqlLiteral arg = ((SqlLiteral) node);
+                    final int value = arg.intValue();
+                    if (value < 0) {
+                        throw SaffronResource.instance()
+                                .newArgumentMustBePositiveInteger(
+                                        call.operator.name);
                     }
                 }
                 return res;
@@ -459,7 +592,8 @@ public class SqlOperatorTable
      * type must be nullable aType, nullable sameType
      */
     public static final SqlOperator.AllowedArgInference typeNullableSameSame =
-        new SqlOperator.AllowedArgInference(new SqlTypeName[][]{{SqlTypeName.Any}, {SqlTypeName.Any}}) {
+        new SqlOperator.AllowedArgInference(new SqlTypeName[][]
+        {{SqlTypeName.Any}, {SqlTypeName.Any}}) {
             public void check(
                     SqlValidator validator,
                     SqlValidator.Scope scope,
@@ -481,17 +615,53 @@ public class SqlOperatorTable
                 if (type1.equals(nullType) || type2.equals(nullType)) {
                     return true; //null is ok;
                 }
+                return type1.isSameType(type2) ||type2.isSameType(type1);
+            }
+        };
 
-                return type1.isSameTypeFamily(type2) || type2.isSameTypeFamily(type1);
+    /**
+     * Parameter type-checking strategy
+     * type must be nullable aType, nullable sameType, nullable sameType
+     */
+    public static final SqlOperator.AllowedArgInference typeNullableSameSameSame =
+        new SqlOperator.AllowedArgInference(new SqlTypeName[][]
+            {{SqlTypeName.Any}, {SqlTypeName.Any}, {SqlTypeName.Any}}) {
+            public void check(
+                    SqlValidator validator,
+                    SqlValidator.Scope scope,
+                    SqlCall call)
+            {
+                if (!checkNoThrowing(call,validator,scope)){
+                    assert(null==call.getParserPosition()) : "todo, use position data in error msg";
+                    throw validator.newValidationError("Parameters must be of same type");
+                }
             }
 
+
+            public boolean checkNoThrowing(SqlCall call, SqlValidator validator,
+                                 SqlValidator.Scope scope) {
+                assert(3==call.operands.length);
+                SaffronType type1 = validator.deriveType(scope,call.operands[0]);
+                SaffronType type2 = validator.deriveType(scope,call.operands[1]);
+                SaffronType type3 = validator.deriveType(scope,call.operands[2]);
+                SaffronType nullType = validator.typeFactory.createSqlType(SqlTypeName.Null);
+                if (type1.equals(nullType)
+                    || type2.equals(nullType)
+                    || type3.equals(nullType)) {
+                    return true; //null is ok;
+                }
+                return  type1.isSameType(type2) || type1.isSameType(type3) ||
+                        type2.isSameType(type1) || type2.isSameType(type3) ||
+                        type3.isSameType(type1) || type2.isSameType(type2);
+            }
         };
 
     /**
      * Parameter type-checking strategy
      * type must be nullable numeric, nullable numeric.
      */
-    public static final SqlOperator.AllowedArgInference typeNullableNumericNumeric =
+    public static final SqlOperator.AllowedArgInference
+            typeNullableNumericNumeric =
         new SqlOperator.AllowedArgInference(
             new SqlTypeName[][]{numericNullableTypes, numericNullableTypes} );
 
@@ -499,18 +669,30 @@ public class SqlOperatorTable
      * Parameter type-checking strategy
      * type must be nullable numeric, nullable numeric, nullabl numeric.
      */
-    public static final SqlOperator.AllowedArgInference typeNullableNumericNumericNumeric =
+    public static final SqlOperator.AllowedArgInference
+            typeNullableNumericNumericNumeric =
         new SqlOperator.AllowedArgInference(
             new SqlTypeName[][]{
                 numericNullableTypes, numericNullableTypes, numericNullableTypes} );
 
     /**
      * Parameter type-checking strategy
-     * type must be nullable numeric, nullable numeric.
+     * type must be nullable binary, nullable binary.
      */
-    public static final SqlOperator.AllowedArgInference typeNullableBinariesBinaries =
+    public static final SqlOperator.AllowedArgInference
+            typeNullableBinariesBinaries =
         new SqlOperator.AllowedArgInference(
             new SqlTypeName[][]{binaryNullableTypes, binaryNullableTypes} );
+
+    /**
+     * Parameter type-checking strategy
+     * type must be nullable binary, nullable binary, nullable binary.
+     */
+    public static final SqlOperator.AllowedArgInference
+            typeNullableBinariesBinariesBinaries =
+        new SqlOperator.AllowedArgInference(
+            new SqlTypeName[][]
+            {binaryNullableTypes, binaryNullableTypes, binaryNullableTypes} );
 
     /**
      * Parameter type-checking strategy
@@ -534,7 +716,7 @@ public class SqlOperatorTable
       */
      public static final SqlOperator.AllowedArgInference typeVarcharLiteral =
          new SqlOperator.AllowedArgInference
-                 (new SqlTypeName[][]{SqlOperatorTable.varcharTypes}) {
+                 (new SqlTypeName[][]{SqlOperatorTable.charTypes}) {
 
              public boolean check(SqlCall call, SqlValidator validator,
                                   SqlValidator.Scope scope,
@@ -542,7 +724,7 @@ public class SqlOperatorTable
              {
                  boolean res = super.check(call, validator, scope, node, operandNbr);
                  if (!res) return res;
-                 if (SqlLiteral.isNullLiteral(node)) {
+                 if (SqlUtil.isNullLiteral(node, true)) {
                      throw SaffronResource.instance().newArgumentMustNotBeNull(call.operator.name);
                  }
                  if (operandNbr == 0) {
@@ -562,7 +744,7 @@ public class SqlOperatorTable
       */
      public static final SqlOperator.AllowedArgInference typeNullableVarcharLiteral =
          new SqlOperator.AllowedArgInference
-                 (new SqlTypeName[][]{SqlOperatorTable.varcharNullableTypes}) {
+                 (new SqlTypeName[][]{SqlOperatorTable.charNullableTypes}) {
 
              public boolean check(SqlCall call, SqlValidator validator,
                                   SqlValidator.Scope scope,
@@ -571,10 +753,13 @@ public class SqlOperatorTable
                  boolean res = super.check(call, validator, scope, node, operandNbr);
                  if (!res) return res;
                  if (operandNbr == 0) {
-                     if (node instanceof SqlLiteral) {
+                     if (SqlUtil.isNullLiteral(node, true)) {
+                         return res;
+                     } else if (SqlUtil.isLiteral(node)) {
+                         return res;
                      } else {
                          throw SaffronResource.instance().newArgumentMustBeLiteral(
-                             call.operator.name);
+                                 call.operator.name);
                      }
                  }
                  return res;
@@ -584,15 +769,16 @@ public class SqlOperatorTable
     /**
       * Parameter type-checking strategy
       * type must be nullable varchar, varchar literal.
+      * the expression <code>CAST(NULL AS TYPE)</code> is considered a NULL literal.
       */
      public static final SqlOperator.AllowedArgInference typeNullableVarcharVarcharLiteral =
          new SqlOperator.AllowedArgInference
-                 (new SqlTypeName[][]{SqlOperatorTable.varcharNullableTypes, SqlOperatorTable.varcharTypes}) {
+                 (new SqlTypeName[][]{SqlOperatorTable.charNullableTypes, SqlOperatorTable.charTypes}) {
 
              public void check(SqlValidator validator, SqlValidator.Scope scope, SqlCall call) {
                  // check that the 2nd argument is a varchar literal
                  super.check(validator, scope, call);
-                 if (SqlLiteral.isNullLiteral(call.getOperands()[1])) {
+                 if (SqlUtil.isNullLiteral(call.getOperands()[1], true)) {
                      throw SaffronResource.instance().newArgumentMustNotBeNull(call.operator.name);
                  }
                  if (!(call.getOperands()[1] instanceof SqlLiteral)) {
@@ -767,7 +953,7 @@ public class SqlOperatorTable
      */
     public static final SqlOperator.AllowedArgInference typeVarcharIntInt =
         new SqlOperator.AllowedArgInference(
-            new SqlTypeName[][]{varcharTypes,intTypes,intTypes} );
+            new SqlTypeName[][]{charTypes,intTypes,intTypes} );
 
     /**
      * Parameter type-checking strategy
@@ -776,7 +962,7 @@ public class SqlOperatorTable
     public static final SqlOperator.AllowedArgInference
                                                 typeNullableVarcharIntInt =
         new SqlOperator.AllowedArgInference(
-            new SqlTypeName[][]{varcharNullableTypes,
+            new SqlTypeName[][]{charNullableTypes,
                                 intNullableTypes,intNullableTypes} );
 
     /**
@@ -785,17 +971,27 @@ public class SqlOperatorTable
          */
         public static final SqlOperator.AllowedArgInference typeVarcharInt =
             new SqlOperator.AllowedArgInference
-                    (new SqlTypeName[][]{varcharTypes,intTypes} );
+                    (new SqlTypeName[][]{charTypes,intTypes} );
 
     /**
      * Parameter type-checking strategy
-     * types must be [nullable] varchar, [nullable] int, [nullable] int
+     * types must be [nullable] varchar, [nullable] varchar,
+     */
+    public static final SqlOperator.AllowedArgInference
+                                            typeNullableVarcharVarchar =
+        new SqlOperator.AllowedArgInference(
+            new SqlTypeName[][]{charNullableTypes,charNullableTypes} );
+
+    /**
+     * Parameter type-checking strategy
+     * types must be [nullable] varchar, [nullable] varchar, [nullable] varchar
      */
     public static final SqlOperator.AllowedArgInference
                                             typeNullableVarcharVarcharVarchar =
         new SqlOperator.AllowedArgInference(
-            new SqlTypeName[][]{varcharNullableTypes,varcharNullableTypes,
-                                varcharNullableTypes} );
+            new SqlTypeName[][]{charNullableTypes,charNullableTypes,
+                                charNullableTypes} );
+
 
     /**
      * Parameter type-checking strategy
@@ -823,14 +1019,14 @@ public class SqlOperatorTable
      * types must be varchar,varchar
      */
     public static final SqlOperator.AllowedArgInference typeVarcharVarchar =
-        new SqlOperator.AllowedArgInference(new SqlTypeName[][]{varcharTypes,varcharTypes} );
+        new SqlOperator.AllowedArgInference(new SqlTypeName[][]{charTypes,charTypes} );
 
     /**
      * Parameter type-checking strategy
      * types must be nullable varchar
      */
     public static final SqlOperator.AllowedArgInference typeNullableVarchar =
-        new SqlOperator.AllowedArgInference(new SqlTypeName[][]{varcharNullableTypes} );
+        new SqlOperator.AllowedArgInference(new SqlTypeName[][]{charNullableTypes} );
 
 
     /**
@@ -853,11 +1049,12 @@ public class SqlOperatorTable
      * OR nullable binary, nullable binary.
      */
     public static final SqlOperator.CompositeAllowedArgInference
-            typeNullabeSameSame_or_NullableNumericNumeric_or_NullableBinariesBinaries =
+            typeNullabeSameSame_or_NullableNumericNumeric_or_NullableBinariesBinaries_or_NullableCharsChars =
         new SqlOperator.CompositeAllowedArgInference(
                 new SqlOperator.AllowedArgInference[]{typeNullableSameSame,
                                                      typeNullableNumericNumeric,
-                                                     typeNullableBinariesBinaries} );
+                                                     typeNullableBinariesBinaries,
+                                                     typeNullableVarcharVarchar} );
 
     /**
      * Parameter type-checking strategy
@@ -900,6 +1097,13 @@ public class SqlOperatorTable
             typeNullableIntervalInterval =
         new SqlOperator.AllowedArgInference(
                 new SqlTypeName[][]{timeIntervalNullableTypes,timeIntervalNullableTypes} );
+
+    /**
+     * The standard operator table.
+     */
+    // Must be declared last, because many of the strategy objects above are
+    // required by objects in the table.
+    private static final SqlStdOperatorTable instance = createStd();
 
 
     //~ Instance fields -------------------------------------------------------
@@ -968,22 +1172,17 @@ public class SqlOperatorTable
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * Retrieves the singleton, creating it if necessary.
-     *
+     * Returns the {@link net.sf.saffron.util.Glossary#SingletonPattern
+     * singleton} instance, creating it if necessary.
      */
     public static SqlOperatorTable instance()
     {
-        if (instance == null) {
-            // Use two-phase construction, because we can't intialize the
-            // tables until the constructor of the sub-class has completed.
-            instance = new SqlStdOperatorTable();
-            instance.init();
-        }
         return instance;
     }
 
     /**
-     * Returns the singleton instance of the table of standard operators.
+     * Returns the {@link net.sf.saffron.util.Glossary#SingletonPattern
+     * singleton} instance of the table of standard operators.
      */
     public static SqlStdOperatorTable std() {
         return (SqlStdOperatorTable) instance();
@@ -1084,7 +1283,7 @@ public class SqlOperatorTable
                         // 4 >= 3, so we can reduce (b * c) to a single node.
                         SqlNode rightExp = (SqlNode) list.get(i + 1);
                         final SqlCall newExp =
-                            current.createCall(leftExp,rightExp);
+                            current.createCall(leftExp,rightExp,null);
 
                         // Replace elements {i - 1, i, i + 1} with the new
                         // expression.
@@ -1114,7 +1313,7 @@ public class SqlOperatorTable
                         // irrelevant.
                         SqlNode leftExp = (SqlNode) list.get(i - 1);
 
-                        final SqlCall newExp = current.createCall(leftExp);
+                        final SqlCall newExp = current.createCall(leftExp,null);
 
                         // Replace elements {i - 1, i} with the new expression.
                         list.remove(i);
@@ -1166,10 +1365,10 @@ public class SqlOperatorTable
                     SqlNode leftMostExp = (SqlNode) list.get(i - 1);
                     SqlNode flag = (SqlNode) list.get(i + 1);
                     SqlCall newExp = std().betweenOperator.createCall(
-                            new SqlNode[]{leftMostExp, flag, firstAnd, secondAnd});
+                            new SqlNode[]{leftMostExp, flag, firstAnd, secondAnd},null);
                     if (current.kind.isA(SqlKind.NotBetween))
                     {
-                        newExp = std().notOperator.createCall(newExp);
+                        newExp = std().notOperator.createCall(newExp,null);
                     }
 
                     list.set(i - 1,newExp);
@@ -1200,17 +1399,17 @@ public class SqlOperatorTable
     }
 
     //~ Methods ---------------------------------------------------------------
-    public SqlCall createCall(String funName, SqlNode[] operands) {
+    public SqlCall createCall(String funName, SqlNode[] operands, ParserPosition parserPosition) {
         List funs = lookupFunctionsByName(funName);
         if (!funs.isEmpty()){
-            return ((SqlFunction) funs.get(0)).createCall(operands);
+            return ((SqlFunction) funs.get(0)).createCall(operands, parserPosition);
         }
 
         return  new SqlFunction(funName, null, null,null){
                     public void test(SqlTester tester) {
                         /* empty implementation */
                     }
-                }.createCall(operands);
+                }.createCall(operands, parserPosition);
      }
 
     /**

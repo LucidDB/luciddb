@@ -33,10 +33,19 @@ using namespace fennel;
 using namespace std;
 
 
+#ifdef COMPLETE_REGRESSION_TEST_SETTINGS
+// full regression settings 
 const int MAXLEN = 8;   // Must not be less than 5. Best >=7.
 const int MAXRANDOM = 5;
+const int MAXCMPRANDOM = 65536; // Must be nearly 2^16 char set coverage
 const int MAXCMPLEN = 8;  // Must not be less than 3.
-
+#else
+// faster check-in acceptance testing settings
+const int MAXLEN = 5;   // Must not be less than 5. Best >=7.
+const int MAXRANDOM = 1;
+const int MAXCMPRANDOM = 256; // Must be nearly 2^16 char set coverage
+const int MAXCMPLEN = 3;  // Must not be less than 3.
+#endif
 
 class SqlStringAsciiTest : virtual public TestBase, public TraceSource
 {
@@ -504,7 +513,7 @@ SqlStringAsciiTest::testSqlStringCmp_Ascii_Fix_EqLen()
     src2_storage = MAXCMPLEN;
     for (src1_len = 0; src1_len < src1_storage; src1_len++) {
         src2_len = src1_len;
-        for (randX = 0; randX <= 65536; randX++) {
+        for (randX = 0; randX <= MAXCMPRANDOM; randX++) {
             SqlStringBuffer src1(src1_storage, src1_len,
                                  0, src1_storage - src1_len, 
                                  'd', ' ');
@@ -612,7 +621,7 @@ SqlStringAsciiTest::testSqlStringCmp_Ascii_Var_EqLen()
     src1_len = src1_storage;
     src2_storage = src1_storage;
     src2_len = src1_storage;
-    for (randX = 0; randX <= 65536; randX++) {
+    for (randX = 0; randX <= MAXCMPRANDOM; randX++) {
         SqlStringBuffer src1(src1_storage, src1_len,
                              0, src1_storage - src1_len, 
                              'd', ' ');

@@ -24,25 +24,27 @@ package net.sf.saffron.util;
 
 import junit.framework.ComparisonFailure;
 import junit.framework.Test;
-import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import junit.textui.TestRunner;
+import net.sf.saffron.sql.parser.ParserPosition;
+import net.sf.saffron.runtime.ThreadIterator;
+import net.sf.saffron.runtime.TimeoutQueueIterator;
+import net.sf.saffron.runtime.TimeoutIteratorTest;
 import openjava.mop.Toolbox;
 import openjava.ptree.Expression;
 import openjava.ptree.StatementList;
 
 import java.io.File;
 import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
-
-import net.sf.saffron.sql.parser.ParserPosition;
 
 /**
  * Miscellaneous utility functions.
@@ -69,6 +71,11 @@ public class Util extends Toolbox
 
     //~ Methods ---------------------------------------------------------------
 
+    /**
+     * Does nothing with its argument. Call this method when you have a value
+     * you are not interested in, but you don't want the compiler to warn
+     * that you are not using it.
+     */
     public static final void discard(Object o)
     {
         if (false) {
@@ -76,10 +83,40 @@ public class Util extends Toolbox
         }
     }
 
+    /**
+     * Does nothing with its argument. Call this method when you have a value
+     * you are not interested in, but you don't want the compiler to warn
+     * that you are not using it.
+     */
     public static final void discard(int i)
     {
         if (false) {
             discard(i);
+        }
+    }
+
+    /**
+     * Does nothing with its argument. Call this method when you have a value
+     * you are not interested in, but you don't want the compiler to warn
+     * that you are not using it.
+     */
+    public static final void discard(boolean b)
+    {
+        if (false) {
+            discard(b);
+        }
+    }
+
+    /**
+     * Records that an exception has been caught but will not be re-thrown.
+     * If the tracer is not null, logs the exception to the tracer.
+     *
+     * @param e Exception
+     * @param logger If not null, logs exception to this logger
+     */
+    public static final void swallow(Throwable e, Logger logger) {
+        if (logger != null) {
+            logger.log(Level.FINER, "Discarding exception", e);
         }
     }
 
@@ -469,26 +506,29 @@ public class Util extends Toolbox
      * <li><code>toJavaId("foo0bar")</code> returns <code>"foo0bar"</code>
      * </ul>
      *
-     * @testcase {@link UtilTestCase#testToJavaId}
+     * @testcase {@link net.sf.saffron.util.UtilTest#testToJavaId}
      */
-    public static String toJavaId(String s) {
-        if (true) {
-            return s;
-        }
+    public static String toJavaId(String s, int ordinal) {
         // If it's already a valid Java id (and doesn't contain any
         // underscores), return it unchanged.
         if (javaIdPattern.matcher(s).matches()) {
-            return s;
+            // prepend "ID$" to string so it doesn't clash with java keywords
+            return "ID$"+ ordinal +"$" + s;
         }
         // Escape underscores and other undesirables.
         StringBuffer buf = new StringBuffer(s.length() + 10);
+        buf.append("ID$");
+        buf.append(ordinal);
+        buf.append("$");
         for (int i = 0; i < s.length(); i++) {
             char c = s.charAt(i);
             if (c == '_') {
                 buf.append("__");
-            } else if (i == 0 ?
+            } else if (c < 0x7F /* Normal ascii character */
+                && !Character.isISOControl(c)
+                && (i == 0 ?
                     Character.isJavaIdentifierStart(c) :
-                    Character.isJavaIdentifierPart(c)) {
+                    Character.isJavaIdentifierPart(c))) {
                 buf.append(c);
             } else {
                 buf.append("_");
@@ -502,8 +542,10 @@ public class Util extends Toolbox
     public static Test suite() throws Exception
     {
         TestSuite suite = new TestSuite();
-        suite.addTestSuite(UtilTestCase.class);
+        suite.addTestSuite(UtilTest.class);
         suite.addTestSuite(BinaryHeap.BinaryHeapTestCase.class);
+        suite.addTestSuite(ThreadIterator.Test.class);
+        suite.addTestSuite(TimeoutIteratorTest.class);
         return suite;
     }
 
@@ -631,66 +673,6 @@ public class Util extends Toolbox
             return false;
         }
         return o0.equals(o1);
-    }
-
-    //~ Inner Classes ---------------------------------------------------------
-
-    public static class UtilTestCase extends TestCase
-    {
-        public UtilTestCase(String name)
-        {
-            super(name);
-        }
-
-        public void testPrintEquals()
-        {
-            assertPrintEquals("\"x\"","x",true);
-        }
-
-        public void testPrintEquals2()
-        {
-            assertPrintEquals("\"x\"","x",false);
-        }
-
-        public void testPrintEquals3()
-        {
-            assertPrintEquals("null",null,true);
-        }
-
-        public void testPrintEquals4()
-        {
-            assertPrintEquals("",null,false);
-        }
-
-        public void testPrintEquals5()
-        {
-            assertPrintEquals("\"\\\\\\\"\\r\\n\"","\\\"\r\n",true);
-        }
-
-        public void _testToJavaId()
-        {
-            assertEquals("foo", toJavaId("foo"));
-            assertEquals("foo_20_bar", toJavaId("foo bar"));
-            assertEquals("foo__bar", toJavaId("foo_bar"));
-            assertEquals("_30_bar", toJavaId("0bar"));
-            assertEquals("foo0bar", toJavaId("foo0bar"));
-            assertEquals(
-                    "it_27_s_20_a_20_bird_2c__20_it_27_s_20_a_20_plane_21_",
-                    toJavaId("it's a bird, it's a plane!"));
-        }
-
-        private void assertPrintEquals(
-            String expect,
-            String in,
-            boolean nullMeansNull)
-        {
-            StringWriter sw = new StringWriter();
-            PrintWriter pw = new PrintWriter(sw);
-            printJavaString(pw,in,nullMeansNull);
-            pw.flush();
-            String out = sw.toString();
-            assertEquals(expect,out);
-        }
     }
 }
 

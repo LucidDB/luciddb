@@ -91,10 +91,30 @@ public:
         }
     }
 
-    const char * longName() const { return "BoolPointerEqual"; }
-    const char * shortName() const { return "=="; }
-    void describe(string &out, bool values) const {
-        describeHelper(out, values, longName(), shortName(), mResult, mOp1, mOp2);
+    static const char * longName() { return "BoolPointerEqual"; }
+    static const char * shortName() { return "EQ"; }
+    static int numArgs() { return 3; }
+    void describe(string& out, bool values) const {
+        describeHelper(out, values, longName(), shortName(), 
+                       mResult, mOp1, mOp2);
+    }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        v[0] = STANDARD_TYPE_BOOL;
+        return InstructionSignature(shortName(), v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        return new
+            BoolPointerEqual(static_cast<RegisterRef<bool>*> (sig[0]),
+                             static_cast<RegisterRef<PTR_TYPE>*> (sig[1]),
+                             static_cast<RegisterRef<PTR_TYPE>*> (sig[2]),
+                             (sig[1])->type());
     }
 };
 
@@ -124,10 +144,30 @@ public:
         }
     }
 
-    const char * longName() const { return "BoolPointerNotEqual"; }
-    const char * shortName() const { return "!="; }
-    void describe(string &out, bool values) const {
-        describeHelper(out, values, longName(), shortName(), mResult, mOp1, mOp2);
+    static const char * longName() { return "BoolPointerNotEqual"; }
+    static const char * shortName() { return "NE"; }
+    static int numArgs() { return 3; }
+    void describe(string& out, bool values) const {
+        describeHelper(out, values, longName(), shortName(),
+                       mResult, mOp1, mOp2);
+    }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        v[0] = STANDARD_TYPE_BOOL;
+        return InstructionSignature(shortName(), v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        return new
+            BoolPointerNotEqual(static_cast<RegisterRef<bool>*> (sig[0]),
+                                static_cast<RegisterRef<PTR_TYPE>*> (sig[1]),
+                                static_cast<RegisterRef<PTR_TYPE>*> (sig[2]),
+                                (sig[1])->type());
     }
 };
 
@@ -156,10 +196,30 @@ public:
         }
     }
 
-    const char * longName() const { return "BoolPointerGreater"; }
-    const char * shortName() const { return ">"; }
-    void describe(string &out, bool values) const {
-        describeHelper(out, values, longName(), shortName(), mResult, mOp1, mOp2);
+    static const char * longName() { return "BoolPointerGreater"; }
+    static const char * shortName() { return "GT"; }
+    static int numArgs() { return 3; }
+    void describe(string& out, bool values) const {
+        describeHelper(out, values, longName(), shortName(),
+                       mResult, mOp1, mOp2);
+    }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        v[0] = STANDARD_TYPE_BOOL;
+        return InstructionSignature(shortName(), v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        return new
+            BoolPointerGreater(static_cast<RegisterRef<bool>*> (sig[0]),
+                               static_cast<RegisterRef<PTR_TYPE>*> (sig[1]),
+                               static_cast<RegisterRef<PTR_TYPE>*> (sig[2]),
+                               (sig[1])->type());
     }
 };
 
@@ -188,10 +248,30 @@ public:
         }
     }
 
-    const char * longName() const { return "BoolPointerGreaterEqual"; }
-    const char * shortName() const { return ">="; }
-    void describe(string &out, bool values) const {
-        describeHelper(out, values, longName(), shortName(), mResult, mOp1, mOp2);
+    static const char * longName() { return "BoolPointerGreaterEqual"; }
+    static const char * shortName() { return "GE"; }
+    static int numArgs() { return 3; }
+    void describe(string& out, bool values) const {
+        describeHelper(out, values, longName(), shortName(),
+                       mResult, mOp1, mOp2);
+    }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        v[0] = STANDARD_TYPE_BOOL;
+        return InstructionSignature(shortName(), v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        return new
+            BoolPointerGreaterEqual(static_cast<RegisterRef<bool>*> (sig[0]),
+                                    static_cast<RegisterRef<PTR_TYPE>*> (sig[1]),
+                                    static_cast<RegisterRef<PTR_TYPE>*> (sig[2]),
+                                    (sig[1])->type());
     }
 };
 
@@ -219,10 +299,30 @@ public:
             mResult->value(false);
         }
     }
-    const char * longName() const { return "BoolPointerLess"; }
-    const char * shortName() const { return "<"; }
-    void describe(string &out, bool values) const {
-        describeHelper(out, values, longName(), shortName(), mResult, mOp1, mOp2);
+    static const char * longName() { return "BoolPointerLess"; }
+    static const char * shortName() { return "LT"; }
+    static int numArgs() { return 3; }
+    void describe(string& out, bool values) const {
+        describeHelper(out, values, longName(), shortName(),
+                       mResult, mOp1, mOp2);
+    }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        v[0] = STANDARD_TYPE_BOOL;
+        return InstructionSignature(shortName(), v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        return new
+            BoolPointerLess(static_cast<RegisterRef<bool>*> (sig[0]),
+                            static_cast<RegisterRef<PTR_TYPE>*> (sig[1]),
+                            static_cast<RegisterRef<PTR_TYPE>*> (sig[2]),
+                            (sig[1])->type());
     }
 };
 
@@ -251,10 +351,30 @@ public:
         }
     }
 
-    const char * longName() const { return "BoolPointerLessEqual"; }
-    const char * shortName() const { return "<="; }
-    void describe(string &out, bool values) const {
-        describeHelper(out, values, longName(), shortName(), mResult, mOp1, mOp2);
+    static const char * longName() { return "BoolPointerLessEqual"; }
+    static const char * shortName() { return "LE"; }
+    static int numArgs() { return 3; }
+    void describe(string& out, bool values) const {
+        describeHelper(out, values, longName(), shortName(),
+                       mResult, mOp1, mOp2);
+    }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        v[0] = STANDARD_TYPE_BOOL;
+        return InstructionSignature(shortName(), v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        return new
+            BoolPointerLessEqual(static_cast<RegisterRef<bool>*> (sig[0]),
+                                 static_cast<RegisterRef<PTR_TYPE>*> (sig[1]),
+                                 static_cast<RegisterRef<PTR_TYPE>*> (sig[2]),
+                                 (sig[1])->type());
     }
 };
 
@@ -280,10 +400,29 @@ public:
         }
     }
 
-    const char * longName() const { return "BoolPointerIsNull"; }
-    const char * shortName() const { return "NULL"; }
-    void describe(string &out, bool values) const {
-        describeHelper(out, values, longName(), shortName(), mResult, mOp1, mOp2);
+    static const char * longName() { return "BoolPointerIsNull"; }
+    static const char * shortName() { return "ISNULL"; }
+    static int numArgs() { return 2; }
+    void describe(string& out, bool values) const {
+        describeHelper(out, values, longName(), shortName(),
+                       mResult, mOp1, mOp2);
+    }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        v[0] = STANDARD_TYPE_BOOL;
+        return InstructionSignature(shortName(), v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        return new
+            BoolPointerIsNull(static_cast<RegisterRef<bool>*> (sig[0]),
+                              static_cast<RegisterRef<PTR_TYPE>*> (sig[1]),
+                              (sig[1])->type());
     }
 };
 
@@ -309,13 +448,81 @@ public:
         }
     }
 
-    const char * longName() const { return "BoolPointerIsNotNull"; }
-    const char * shortName() const { return "NOTNULL"; }
-    void describe(string &out, bool values) const {
-        describeHelper(out, values, longName(), shortName(), mResult, mOp1, mOp2);
+    static const char * longName() { return "BoolPointerIsNotNull"; }
+    static const char * shortName() { return "ISNOTNULL"; }
+    static int numArgs() { return 2; }
+    void describe(string& out, bool values) const {
+        describeHelper(out, values, longName(), shortName(), 
+                       mResult, mOp1, mOp2);
+    }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        v[0] = STANDARD_TYPE_BOOL;
+        return InstructionSignature(shortName(), v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        return new
+            BoolPointerIsNotNull(static_cast<RegisterRef<bool>*> (sig[0]),
+                                 static_cast<RegisterRef<PTR_TYPE>*> (sig[1]),
+                                 (sig[1])->type());
     }
 };
 
+class BoolPointerInstructionRegister : InstructionRegister {
+
+    // TODO: Refactor registerTypes to class InstructionRegister
+    template < template <typename> class INSTCLASS2 >
+    static void
+    registerTypes(vector<StandardTypeDescriptorOrdinal> const &t) {
+
+        for (uint i = 0; i < t.size(); i++) {
+            StandardTypeDescriptorOrdinal type = t[i];
+            // Type <char> below is a placeholder and is ignored.
+            InstructionSignature sig = INSTCLASS2<char>::signature(type);
+            switch(type) {
+                // Array_Text, below, does not allow assembly programs
+                // of to have say, pointer to int16s, but the language
+                // does not have pointers defined other than
+                // c,vc,b,vb, so this is OK for now.
+#define Fennel_InstructionRegisterSwitch_Array 1
+#include "fennel/calc/InstructionRegisterSwitch.h"
+            default:
+                throw std::logic_error("Default InstructionRegister");
+            }
+        }
+    }
+
+public:
+    static void
+    registerInstructions() {
+
+        vector<StandardTypeDescriptorOrdinal> t;
+        // isArray, below, does not allow assembly programs of to
+        // have say, pointer to int16s, but the language does not have
+        // pointers defined other than c,vc,b,vb, so this is OK for now.
+        t = InstructionSignature::typeVector(StandardTypeDescriptor::isArray);
+
+        // Have to do full fennel:: qualification of template
+        // arguments below to prevent template argument 'TMPLT', of
+        // this encapsulating class, from perverting NativeAdd into
+        // NativeAdd<TMPLT> or something like
+        // that. Anyway. Fennel::NativeAdd works just fine.
+        registerTypes<fennel::BoolPointerEqual>(t);
+        registerTypes<fennel::BoolPointerNotEqual>(t);
+        registerTypes<fennel::BoolPointerGreater>(t);
+        registerTypes<fennel::BoolPointerGreaterEqual>(t);
+        registerTypes<fennel::BoolPointerLess>(t);
+        registerTypes<fennel::BoolPointerLessEqual>(t);
+        registerTypes<fennel::BoolPointerIsNull>(t);
+        registerTypes<fennel::BoolPointerIsNotNull>(t);
+    }
+};
 
 FENNEL_END_NAMESPACE
 

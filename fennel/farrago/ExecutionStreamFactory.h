@@ -198,7 +198,9 @@ protected:
      * trace level net.sf.farrago.fennel.xo.quota to FINE.
      */
     bool shouldEnforceCacheQuotas();
-
+    
+    void createQuotaAccessors(TupleStreamParams &params);
+    
 public:
     ExecutionStreamFactory(
         SharedDatabase pDatabase,

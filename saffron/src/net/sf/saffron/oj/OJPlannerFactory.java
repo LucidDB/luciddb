@@ -389,6 +389,16 @@ public class OJPlannerFactory extends VolcanoPlannerFactory
             }
             final RexNode [] exps = project.getChildExps();
             final RexNode condition = null;
+
+            // REVIEW: want to move canTranslate into RelImplementor
+            // and implement it for Java & C++ calcs.
+            final JavaRelImplementor relImplementor =
+                project.getCluster().getPlanner().getJavaRelImplementor(project);
+            if (!relImplementor.canTranslate(iterChild, condition, exps)) {
+                // Some of the expressions cannot be translated into Java
+                return null;
+            }
+
             return new IterCalcRel(
                 project.getCluster(),
                 iterChild,
@@ -438,8 +448,11 @@ public class OJPlannerFactory extends VolcanoPlannerFactory
             }
             
             final RexNode[] exps = project.getChildExps();
+
+            // REVIEW: want to move canTranslate into RelImplementor
+            // and implement it for Java & C++ calcs.
             final JavaRelImplementor relImplementor =
-                    new JavaRelImplementor(project.getCluster().rexBuilder);
+                call.planner.getJavaRelImplementor(project);
             if (!relImplementor.canTranslate(iterChild, condition, exps)) {
                 // some of the expressions cannot be translated into Java
                 return;
@@ -468,7 +481,6 @@ public class OJPlannerFactory extends VolcanoPlannerFactory
         public static final IterCalcRule instance = new IterCalcRule();
 
         public SaffronRel convert(SaffronRel rel) {
-            // TODO jvs 11-May-2004:  add canTranslate test
             final CalcRel calc = (CalcRel) rel;
             final SaffronRel convertedChild =
                 convert(calc.child,CallingConvention.ITERATOR);
@@ -476,10 +488,24 @@ public class OJPlannerFactory extends VolcanoPlannerFactory
                 // We can't convert the child, so we can't convert rel.
                 return null;
             }
-            return new IterCalcRel(rel.getCluster(), convertedChild,
-                    calc._projectExprs, calc._conditionExpr,
-                    OptUtil.getFieldNames(calc.getRowType()),
-                    IterCalcRel.Flags.Boxed);
+
+            // REVIEW: want to move canTranslate into RelImplementor
+            // and implement it for Java & C++ calcs.
+            final JavaRelImplementor relImplementor =
+                rel.getCluster().getPlanner().getJavaRelImplementor(rel);
+            if (!relImplementor.canTranslate(convertedChild,
+                                             calc._conditionExpr,
+                                             calc._projectExprs)) {
+                // Some of the expressions cannot be translated into Java
+                return null;
+            }
+            
+            return new IterCalcRel(rel.getCluster(),
+                                   convertedChild,
+                                   calc._projectExprs,
+                                   calc._conditionExpr,
+                                   OptUtil.getFieldNames(calc.getRowType()),
+                                   IterCalcRel.Flags.Boxed);
         }
     }
 

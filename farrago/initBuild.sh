@@ -35,13 +35,14 @@ cat >> initBuild.properties <<EOF
 fennel.disabled=$fennel_disabled
 EOF
 
+set -e
+set -v
+
 # Blow away obsolete Farrago build properties file
 rm -f farrago_build.properties
 
 . farragoenv.sh `pwd`/../thirdparty
 
-set -e
-set -v
 
 # Unpack thirdparty components
 cd ../thirdparty
@@ -59,8 +60,10 @@ fi
 
 # Build Saffron
 cd ../saffron
+ant clean
 ant
 
 # Build Farrago catalog and everything else, then run tests
 cd ../farrago
+ant clean
 ant test

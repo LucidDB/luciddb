@@ -1,0 +1,14 @@
+# $Id$
+# Define variables needed by runtime scripts such as farrago.
+# This script is meant to be sourced from other scripts, not
+# executed directly.
+
+MAIN_DIR=$(cd `dirname $0`/..; pwd)
+
+JAVA_ARGS="-ea -esa -cp `cat $MAIN_DIR/bin/classpath.gen` \
+  -Dnet.sf.farrago.home=$MAIN_DIR \
+  -Djava.util.logging.config.file=$MAIN_DIR/trace/Trace.properties"
+
+SQLLINE_JAVA_ARGS="sqlline.SqlLine"
+
+export LD_LIBRARY_PATH=$MAIN_DIR/lib/fennel

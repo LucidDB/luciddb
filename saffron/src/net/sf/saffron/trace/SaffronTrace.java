@@ -69,9 +69,9 @@ public class SaffronTrace {
      * optimization process.
      *
      * <p>Levels:<ul>
-     * <li>{@link Level#FINE} prints rules as they fire.
-     * <li>{@link Level#FINER} prints the whole expression pool and rule queue
-     *     as each rule fires.
+     * <li>{@link Level#FINE} prints rules as they fire;
+     * <li>{@link Level#FINER} prints and validates the whole expression pool
+     *     and rule queue as each rule fires;
      * <li>{@link Level#FINEST} prints finer details like rule importances.
      * </ul>
      */

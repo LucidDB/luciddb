@@ -24,6 +24,7 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
+import net.sf.farrago.cwm.datatypes.CwmTypeAlias;
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.type.runtime.*;
 import net.sf.farrago.resource.*;
@@ -180,14 +181,14 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
 
         // Date/time types
         addPrecisionPrototype(
-                new FarragoDateTimeType(getSimpleType("DATE"),
-                        false,false, 0, this));
+            new FarragoDateTimeType(getSimpleType("DATE"),
+                                    false,false, 0, this));
         addPrecisionPrototype(
-                new FarragoDateTimeType(getSimpleType("TIME"),
-                        false,false,0, this));
+            new FarragoDateTimeType(getSimpleType("TIME"),
+                                    false,false,0, this));
         addPrecisionPrototype(
-                new FarragoDateTimeType(getSimpleType("TIMESTAMP"),
-                        false,false,0, this));
+            new FarragoDateTimeType(getSimpleType("TIMESTAMP"),
+                                    false,false,0, this));
     }
 
 
@@ -211,13 +212,22 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     public SaffronType createSqlType(SqlTypeName typeName)
     {
         if (typeName.isSpecial())
-        {
-            return super.createSqlType(typeName);
-        }
+            {
+                return super.createSqlType(typeName);
+            }
         CwmSqlsimpleType simpleType = (CwmSqlsimpleType)
             catalog.getModelElement(
-                catalog.relationalPackage.getCwmSqlsimpleType().refAllOfClass(),
+                catalog.relationalPackage.getCwmSqlsimpleType().refAllOfType(),
                 typeName.getName());
+        // If type not found directly look in aliases
+        if (null == simpleType) {
+            Object typeAlias =
+                catalog.getModelElement(
+                    catalog.datatypesPackage.getCwmTypeAlias().refAllOfType(),
+                    typeName.getName());
+            simpleType = (CwmSqlsimpleType)
+                    ((CwmTypeAlias) typeAlias).getType();
+        }
         assert(simpleType != null) : "Type named " + typeName.getName() + " not found.";
         FarragoType prototype =
             (FarragoType) sqlTypeNumberToPrototype.get(
@@ -246,10 +256,10 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         case Types.TIMESTAMP:
             assert (scale == 0) : "Non-zero scale for date/time type " + typeName;
             precisionType = new FarragoDateTimeType(
-                    precisionType.getSimpleType(),
-                    false,
-                    false,
-                    length, null);
+                precisionType.getSimpleType(),
+                false,
+                false,
+                length, null);
             break;
         default:
             String charsetName;
@@ -262,12 +272,12 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
                 collation = null;
             }
             precisionType = new FarragoPrecisionType(
-                    precisionType.getSimpleType(),
-                    false,
-                    length,
-                    scale,
-                    charsetName,
-                    collation);
+                precisionType.getSimpleType(),
+                false,
+                length,
+                scale,
+                charsetName,
+                collation);
         }
         precisionType.factory = this;
         return canonize(precisionType);
@@ -287,14 +297,17 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         }
         Integer pPrecision = column.getLength();
         if (pPrecision == null) {
+            pPrecision = column.getPrecision();
+        }
+        if (pPrecision == null) {
             pPrecision = new Integer(0);
         }
         if (prototype instanceof FarragoDateTimeType) {
             FarragoType dateTimeType =
-                    new FarragoDateTimeType(prototype.getSimpleType(),
-                            getCatalog().isNullable(column),
-                            false /* fixme - Timezone */,
-                            pPrecision.intValue(), this);
+                new FarragoDateTimeType(prototype.getSimpleType(),
+                                        getCatalog().isNullable(column),
+                                        false /* fixme - Timezone */,
+                                        pPrecision.intValue(), this);
             return (FarragoType) canonize(dateTimeType);
         }
 
@@ -394,9 +407,9 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
                         }
                         if (prototype instanceof FarragoDateTimeType) {
                             FarragoType dateTimeType =
-                                    new FarragoDateTimeType(prototype.getSimpleType(),
-                                            isNullable,
-                                            false /* fixme - chech TZ*/, metaData.getPrecision(iOneBased), factory);
+                                new FarragoDateTimeType(prototype.getSimpleType(),
+                                                        isNullable,
+                                                        false /* fixme - chech TZ*/, metaData.getPrecision(iOneBased), factory);
                             return (FarragoType) canonize(dateTimeType);
                         }
                         int precision = metaData.getPrecision(iOneBased);
@@ -456,39 +469,32 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         return prototype;
     }
 
-    // override SaffronTypeFactoryImpl
-    public SaffronType createTypeWithNullability(
-        SaffronType type,boolean nullable)
+    // copy a FarragoAtomicType, setting nullability
+    private SaffronType copyFarragoAtomicType(
+        FarragoAtomicType type, boolean nullable)
     {
-        if (!(type instanceof FarragoAtomicType)) {
-            return super.createTypeWithNullability(type,nullable);
-        }
-        FarragoAtomicType atomicType = (FarragoAtomicType) type;
-        if (atomicType.isNullable() == nullable) {
-            return atomicType;
-        }
-        if (atomicType instanceof FarragoDateTimeType) {
+        if (type instanceof FarragoDateTimeType) {
             FarragoDateTimeType dtType = (FarragoDateTimeType) type;
             dtType = new FarragoDateTimeType(
-                    dtType.getSimpleType(),
-                    nullable,
-                    dtType.hasTimeZone(),
-                    dtType.getPrecision(), this);
+                dtType.getSimpleType(),
+                nullable,
+                dtType.hasTimeZone(),
+                dtType.getPrecision(), this);
             return canonize(dtType);
         }
-        if (atomicType instanceof FarragoPrecisionType) {
+        if (type instanceof FarragoPrecisionType) {
             String charsetName;
             SqlCollation collation;
             FarragoPrecisionType precisionType;
             precisionType = (FarragoPrecisionType) type;
-            if (atomicType.isCharType()) {
+            if (type.isCharType()) {
                 charsetName = precisionType.getCharsetName();
                 collation = precisionType.getCollation();
             } else {
                 charsetName = null;
                 collation = null;
             }
-             precisionType = new FarragoPrecisionType(
+            precisionType = new FarragoPrecisionType(
                 precisionType.getSimpleType(),
                 nullable,
                 precisionType.getPrecision(),
@@ -499,16 +505,39 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             return canonize(precisionType);
         } else {
             return createTypeForPrimitiveBySqlsimpleType(
-                atomicType.getSimpleType(),nullable);
+                type.getSimpleType(),nullable);
+        }
+    }
+
+    // override SaffronTypeFactoryImpl
+    public SaffronType createTypeWithNullability(SaffronType type,boolean nullable)
+    {
+        if (type instanceof FarragoAtomicType) {
+            if (type.isNullable() == nullable)
+                return type;
+            else
+                return copyFarragoAtomicType((FarragoAtomicType) type, nullable);
+        } else {
+            return super.createTypeWithNullability(type,nullable);
+        }
+    }
+
+    // override SaffronTypeFactoryImpl
+    public SaffronType copyType(SaffronType type)
+    {
+        if (type instanceof FarragoAtomicType) {
+            return copyFarragoAtomicType((FarragoAtomicType) type, type.isNullable());
+        } else {
+            return super.copyType(type);
         }
     }
 
     public SaffronType createTypeWithCharsetAndCollation(SaffronType type,
-            Charset charset, SqlCollation collation) {
+                                                         Charset charset, SqlCollation collation) {
         assert(type.isCharType()) : "type.isCharType()==true";
         if (!(type instanceof FarragoAtomicType)) {
             return super.createTypeWithCharsetAndCollation(type,
-                    charset, collation);
+                                                           charset, collation);
         }
 
         if (type instanceof FarragoPrecisionType) {
@@ -590,7 +619,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     // REVIEW jvs 27-May-2004:  no longer using the code below for Java row
     // manipulation.  But perhaps it will be useful for flattening before going
     // into Fennel?
-    
+
     // disabled override OJTypeFactoryImpl
     protected OJClass disabled_createOJClassForRecordType(
         OJClass declarer,RecordType recordType)
@@ -623,7 +652,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         }
         return nested;
     }
-    
+
     // override SaffronTypeFactoryImpl
     public SaffronType leastRestrictive(SaffronType [] types)
     {
@@ -653,68 +682,68 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
 
             if (family.equals(FarragoTypeFamily.CHARACTER)
                 || (family.equals(FarragoTypeFamily.BINARY)))
-            {
-                // TODO:  character set, collation
-                if (!resultFamily.equals(family)) {
-                    return null;
-                }
-                FarragoPrecisionType type1 =
-                    (FarragoPrecisionType) resultType;
-                FarragoPrecisionType type2 =
-                    (FarragoPrecisionType) type;
-                int precision = Math.max(
-                    type1.getPrecision(),type2.getPrecision());
-                // If either type is LOB, then result is LOB with no precision.
-                // Otherwise, if either is variable width, result is variable
-                // width.  Otherwise, result is fixed width.
-                SaffronType saffronType;
-                if (type1.isLob()) {
-                    saffronType = createSqlType(getSqlTypeName(type1));
-                } else if (type2.isLob()) {
-                    saffronType = createSqlType(getSqlTypeName(type2));
-                } else if (type1.isBoundedVariableWidth()) {
-                    saffronType = createSqlType(
-                        getSqlTypeName(type1),precision);
-                } else {
-                    // this catch-all case covers type2 variable, and both fixed
-                    saffronType = createSqlType(
-                        getSqlTypeName(type2),precision);
-                }
-                resultType = (FarragoAtomicType) saffronType;
-            } else if (type.isExactNumeric()) {
-                if (resultType.isExactNumeric()) {
-                    if (!type.equals(resultType)) {
-                        if (!type.takesPrecision() && !type.takesScale()
-                            && !resultType.takesPrecision()
-                            && !resultType.takesScale())
-                        {
-                            // use the bigger primitive
-                            if (type.getPrecision() > resultType.getPrecision())
-                            {
-                                resultType = type;
-                            }
-                        } else {
-                            // TODO:  the real thing for numerics
-                            resultType = createDoublePrecisionType();
-                        }
+                {
+                    // TODO:  character set, collation
+                    if (!resultFamily.equals(family)) {
+                        return null;
                     }
-                } else if (resultType.isApproximateNumeric()) {
-                    // already approximate; promote to double just in case
-                    // TODO:  only promote when required
-                    resultType = createDoublePrecisionType();
+                    FarragoPrecisionType type1 =
+                        (FarragoPrecisionType) resultType;
+                    FarragoPrecisionType type2 =
+                        (FarragoPrecisionType) type;
+                    int precision = Math.max(
+                        type1.getPrecision(),type2.getPrecision());
+                    // If either type is LOB, then result is LOB with no precision.
+                    // Otherwise, if either is variable width, result is variable
+                    // width.  Otherwise, result is fixed width.
+                    SaffronType saffronType;
+                    if (type1.isLob()) {
+                        saffronType = createSqlType(getSqlTypeName(type1));
+                    } else if (type2.isLob()) {
+                        saffronType = createSqlType(getSqlTypeName(type2));
+                    } else if (type1.isBoundedVariableWidth()) {
+                        saffronType = createSqlType(
+                            getSqlTypeName(type1),precision);
+                    } else {
+                        // this catch-all case covers type2 variable, and both fixed
+                        saffronType = createSqlType(
+                            getSqlTypeName(type2),precision);
+                    }
+                    resultType = (FarragoAtomicType) saffronType;
+                } else if (type.isExactNumeric()) {
+                    if (resultType.isExactNumeric()) {
+                        if (!type.equals(resultType)) {
+                            if (!type.takesPrecision() && !type.takesScale()
+                                && !resultType.takesPrecision()
+                                && !resultType.takesScale())
+                                {
+                                    // use the bigger primitive
+                                    if (type.getPrecision() > resultType.getPrecision())
+                                        {
+                                            resultType = type;
+                                        }
+                                } else {
+                                    // TODO:  the real thing for numerics
+                                    resultType = createDoublePrecisionType();
+                                }
+                        }
+                    } else if (resultType.isApproximateNumeric()) {
+                        // already approximate; promote to double just in case
+                        // TODO:  only promote when required
+                        resultType = createDoublePrecisionType();
+                    } else {
+                        return null;
+                    }
+                } else if (type.isApproximateNumeric()) {
+                    if (!(type.equals(resultType))) {
+                        resultType = createDoublePrecisionType();
+                    }
                 } else {
-                    return null;
+                    if (!family.equals(resultFamily)) {
+                        return null;
+                    }
+                    // TODO:  datetime precision details
                 }
-            } else if (type.isApproximateNumeric()) {
-                if (!(type.equals(resultType))) {
-                    resultType = createDoublePrecisionType();
-                }
-            } else {
-                if (!family.equals(resultFamily)) {
-                    return null;
-                }
-                // TODO:  datetime precision details
-            }
         }
         if (anyNullable) {
             return createTypeWithNullability(resultType,true);

@@ -109,7 +109,7 @@ class MedJdbcDataServer extends MedAbstractDataServer
     }
 
     public static class StupidDatabaseMetaData
-        extends SqlNode.DatabaseMetaDataInvocationHandler
+        extends SqlUtil.DatabaseMetaDataInvocationHandler
     {
         public String getDatabaseProductName() throws SQLException
         {

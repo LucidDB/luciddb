@@ -31,6 +31,7 @@ import net.sf.saffron.util.*;
 import net.sf.saffron.oj.stmt.*;
 import net.sf.saffron.rel.SaffronRel;
 import net.sf.saffron.sql.SqlKind;
+import net.sf.saffron.runtime.IteratorResultSet;
 
 import java.util.*;
 import java.util.logging.*;
@@ -64,11 +65,16 @@ public class FarragoDbStmtContext
 
     private ResultSet resultSet;
 
-    private FarragoExecutableStmt executableStmt;
+    private FarragoSessionExecutableStmt executableStmt;
 
     private FarragoCompoundAllocation allocations;
 
     private String sql;
+
+    /**
+     * query timeout in seconds, default to 0.
+     */
+    private int queryTimeoutMillis = 0;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -81,7 +87,6 @@ public class FarragoDbStmtContext
     {
         this.session = session;
         updateCount = -1;
-        this.daemon = daemon;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -140,10 +145,12 @@ public class FarragoDbStmtContext
     }
 
     // implement FarragoSessionStmtContext
-    public void prepare(SaffronRel plan, SqlKind kind, boolean logical)
+    public void prepare(
+        SaffronRel plan,
+        SqlKind kind,
+        boolean logical,
+        FarragoSessionPreparingStmt prep)
     {
-        // REVIEW jvs 28-June-2004:  do you mean DML or DDL?
-        assert (!kind.isA(SqlKind.Dml)) : "DDL query plan is not allowed here";
         unprepare();
         allocations = new FarragoCompoundAllocation();
         this.sql = "";                  // not available
@@ -152,8 +159,7 @@ public class FarragoDbStmtContext
         // serves to wrap a DDL stmt in a transaction.
         executableStmt =
             session.getDatabase().implementStmt(
-                session, session.getCatalog(), plan, kind, logical,
-                allocations, session.getSessionIndexMap());
+                prep, plan, kind, logical, allocations);
         postprepare();
     }
 
@@ -188,6 +194,18 @@ public class FarragoDbStmtContext
     }
 
     // implement FarragoSessionStmtContext
+    public void setQueryTimeout(int millis)
+    {
+        queryTimeoutMillis = millis;
+    }
+
+    // implement FarragoSessionStmtContext
+    public int getQueryTimeout()
+    {
+        return queryTimeoutMillis;
+    }
+
+    // implement FarragoSessionStmtContext
     public void execute()
     {
         assert(isPrepared());
@@ -195,14 +213,16 @@ public class FarragoDbStmtContext
         traceExecute();
         boolean isDml = executableStmt.isDml();
         boolean success = false;
+
         try {
-            FarragoRuntimeContextParams params =
+            FarragoSessionRuntimeParams params =
                 session.newRuntimeContextParams();
             if (!isDml) {
                 params.txnCodeCache = null;
             }
             params.dynamicParamValues = dynamicParamValues;
-            FarragoRuntimeContext context = session.newRuntimeContext(params);
+            FarragoSessionRuntimeContext context =
+                session.newRuntimeContext(params);
             if (allocations != null) {
                 context.addAllocation(allocations);
                 allocations = null;
@@ -210,7 +230,14 @@ public class FarragoDbStmtContext
             if (daemon) {
                 context.addAllocation(this);
             }
+
             resultSet = executableStmt.execute(context);
+
+            if (queryTimeoutMillis > 0)
+            {
+                IteratorResultSet iteratorRS = (IteratorResultSet) resultSet;
+                iteratorRS.setTimeout(queryTimeoutMillis);
+            }
             success = true;
         } finally {
             if (!success) {

@@ -44,7 +44,7 @@ public class RexToSqlTranslator {
             return translateLiteral((RexLiteral) expression);
         } else if (expression instanceof RexDynamicParam) {
             RexDynamicParam dynamicParam = (RexDynamicParam) expression;
-            return new SqlDynamicParam(dynamicParam.index);
+            return new SqlDynamicParam(dynamicParam.index,null);
         } else /* if (expression instanceof Variable) {
             Variable variable = (Variable) expression;
             String name = variable.toString();

@@ -49,6 +49,11 @@ import javax.jmi.reflect.*;
 public interface FarragoSessionDdlValidator extends FarragoAllocation
 {
     /**
+     * @return generic stmt validator
+     */
+    public FarragoSessionStmtValidator getStmtValidator();
+    
+    /**
      * @return catalog storing object definitions being validated
      */
     public FarragoCatalog getCatalog();
@@ -163,99 +168,6 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
      * encountered during validation.
      */
     public void executeStorage();
-    
-    /**
-     * Looks up a table's column by name, throwing a validation error if not
-     * found.
-     *
-     * @param table the table to search
-     * @param columnName name of column to find
-     *
-     * @return column found
-     */
-    public CwmColumn findColumn(CwmNamedColumnSet namedColumnSet,String columnName);
-    
-    /**
-     * Looks up a catalog by name, throwing a validation error if not found.
-     *
-     * @param catalogName name of catalog to look up
-     *
-     * @return catalog found
-     */
-    public CwmCatalog findCatalog(String catalogName);
-    
-    /**
-     * Gets the default catalog for unqualified schema names.
-     *
-     * @return default catalog
-     */
-    public CwmCatalog getDefaultCatalog();
-    
-    /**
-     * Looks up a schema by name, throwing a validation error if not found.
-     *
-     * @param schemaName name of schema to look up
-     *
-     * @return schema found
-     */
-    public CwmSchema findSchema(SqlIdentifier schemaName);
-    
-    /**
-     * Looks up a data wrapper by name, throwing a validation error if not
-     * found.
-     *
-     * @param wrapperName name of wrapper to look up (must be simple)
-     *
-     * @param isForeign true for foreign data wrapper; false for
-     * local data wrapper
-     *
-     * @return wrapper found
-     */
-    public FemDataWrapper findDataWrapper(
-        SqlIdentifier wrapperName,
-        boolean isForeign);
-    
-    /**
-     * Looks up a data server by name, throwing a validation error if not found.
-     *
-     * @param serverName name of server to look up (must be simple)
-     *
-     * @return server found
-     */
-    public FemDataServer findDataServer(SqlIdentifier serverName);
-
-    /**
-     * @return default data server to use if none specified in
-     * local table definition
-     */
-    public FemDataServer getDefaultLocalDataServer();
-    
-    /**
-     * Looks up a schema object by name, throwing a validation error if not
-     * found.
-     *
-     * @param schema containing schema or null if none
-     *
-     * @param qualifiedName name of object to look up
-     *
-     * @param refClass expected class of object; if the object exists with a
-     *        different class, it will be treated as if it did not exist
-     *
-     * @return schema object found
-     */
-    public CwmModelElement findSchemaObject(
-        CwmSchema schema,
-        SqlIdentifier qualifiedName,
-        RefClass refClass);
-    
-    /**
-     * Looks up a SQL datatype by name, throwing an exception if not found.
-     *
-     * @param typeName name of type to find
-     *
-     * @return type definition
-     */
-    public CwmSqldataType findSqldataType(String typeName);
     
     /**
      * Schedules truncation of an existing object.

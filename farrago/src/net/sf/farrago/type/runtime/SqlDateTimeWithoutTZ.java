@@ -20,8 +20,12 @@
 */
 package net.sf.farrago.type.runtime;
 
+import net.sf.farrago.util.FarragoException;
+
 import java.util.Calendar;
 import java.util.TimeZone;
+import java.text.SimpleDateFormat;
+import java.text.ParseException;
 
 
 /**
@@ -38,6 +42,10 @@ import java.util.TimeZone;
 public abstract class SqlDateTimeWithoutTZ extends NullablePrimitive
     implements NullableValue, AssignableValue
 {
+    public static final String ISODateFormat = "yyyy-MM-dd";
+    public static final String ISOTimeFormat = "HH:mm:ss";
+    public static final String ISOTimestampFormat = ISODateFormat + " " + ISOTimeFormat;
+
     private Calendar cal =  Calendar.getInstance();
     private static final TimeZone gmtZone = TimeZone.getTimeZone("GMT+0");
 
@@ -109,13 +117,14 @@ public abstract class SqlDateTimeWithoutTZ extends NullablePrimitive
         } else if (date instanceof Long) {
             value = ((Long)date).longValue()  ;
             return;
-        /*} else if (date instanceof java.util.Date) {
-            value = ((java.util.Date)date).getTime() + timeZoneOffset; // set tzOffset?
-            return; */
+        } else if (date instanceof java.util.Date) {
+            value = ((java.util.Date) date).getTime() + timeZoneOffset; // set tzOffset?
+            return;
         } else if (date instanceof SqlDateTimeWithoutTZ) {
             SqlDateTimeWithoutTZ  sqlDate = (SqlDateTimeWithoutTZ) date;
             this.timeZoneOffset = sqlDate.timeZoneOffset;
             this.value = sqlDate.value;
+            this.isNull = sqlDate.isNull;
             return;
         }
         assert false : "Unsupported object " + date;
@@ -149,13 +158,72 @@ public abstract class SqlDateTimeWithoutTZ extends NullablePrimitive
         timeZoneOffset = cal.getTimeZone().getOffset(value);
     }
 
+    // TODO jvs 26-July-2004:  In order to support fractional seconds,
+    // need to remember precision and use it in formatting.  Unfortunately,
+    // SimpleDateFormat doesn't handle this, so we'll need to use
+    // DecimalFormat for the fractional part.
+
+    /**
+     * Returns a string in the specified datetime format
+     */
+    public String toString(String format)
+    {
+        SimpleDateFormat dateFormat = new SimpleDateFormat(format);
+        return dateFormat.format(new java.util.Date(value - timeZoneOffset));
+    }
+
+    /**
+     * Pad or truncate this value according to the given precision.
+     *
+     * @param precision desired precision
+     *
+     * @param needPad true if short values should be padded
+     *
+     * @param padByte byte to pad with
+     */
+    public void enforceBytePrecision(int precision,boolean needPad,byte padByte)
+    {
+        // Function stolen from BytePointer.java, currently does nothing
+        // TODO: Properly implement for timestamps
+    }
+
+
     /**
      * sql date
      */
     public static class SqlDate extends SqlDateTimeWithoutTZ {
 
+
         public SqlDate() {
             super();
+        }
+
+        /**
+         * Assigns date from a String
+         */
+        public void assignFrom(String date) {
+            if (date == null) {
+                setNull(true);
+                return;
+            }
+
+            // Only support ISO format for now
+            SimpleDateFormat dateFormat = new SimpleDateFormat(ISODateFormat);
+            try {
+                java.util.Date parsedDate = dateFormat.parse(date);
+                assignFrom(parsedDate);
+            }
+            catch (ParseException exp) {
+                throw new FarragoException("Error converting String to Date", exp);
+            }
+        }
+
+        /**
+         * Returns a string in ISO format representing the date
+         */
+        public String toString()
+        {
+            return toString(ISODateFormat);
         }
 
         /**
@@ -175,6 +243,33 @@ public abstract class SqlDateTimeWithoutTZ extends NullablePrimitive
      * sql time
      */
     public static class SqlTime extends SqlDateTimeWithoutTZ {
+        /**
+         * Assigns time from a String
+         */
+        public void assignFrom(String date) {
+            if (date == null) {
+                setNull(true);
+                return;
+            }
+
+            // Only support ISO format for now
+            SimpleDateFormat dateFormat = new SimpleDateFormat(ISOTimeFormat);
+            try {
+                java.util.Date parsedDate = dateFormat.parse(date);
+                assignFrom(parsedDate);
+            }
+            catch (ParseException exp) {
+                throw new FarragoException("Error converting String to Time", exp);
+            }
+        }
+
+        /**
+         * Returns a string in ISO format representing the time
+         */
+        public String toString()
+        {
+            return toString(ISOTimeFormat);
+        }
 
         /**
          * use java.sql objects for jdbcs benefit.
@@ -194,6 +289,34 @@ public abstract class SqlDateTimeWithoutTZ extends NullablePrimitive
      * sql timestamp.
      */
     public static class SqlTimestamp extends SqlDateTimeWithoutTZ {
+
+        /**
+         * Assigns timestamp from a String
+         */
+        public void assignFrom(String date) {
+            if (date == null) {
+                setNull(true);
+                return;
+            }
+
+            // Only support ISO format for now
+            SimpleDateFormat dateFormat = new SimpleDateFormat(ISOTimestampFormat);
+            try {
+                java.util.Date parsedDate = dateFormat.parse(date);
+                assignFrom(parsedDate);
+            }
+            catch (ParseException exp) {
+                throw new FarragoException("Error converting String to Timestamp", exp);
+            }
+        }
+
+        /**
+         * Returns a string in ISO format representing the timestamp
+         */
+        public String toString()
+        {
+            return toString(ISOTimestampFormat);
+        }
 
         /**
          * use java.sql objects for jdbc's benefit.

@@ -25,6 +25,7 @@ package net.sf.saffron.sql;
 import net.sf.saffron.core.SaffronType;
 import net.sf.saffron.core.SaffronTypeFactory;
 import net.sf.saffron.sql.parser.ParserUtil;
+import net.sf.saffron.sql.parser.ParserPosition;
 import net.sf.saffron.sql.type.SqlTypeName;
 import net.sf.saffron.util.*;
 
@@ -144,25 +145,6 @@ public class SqlLiteral extends SqlNode
     // Instead, nulls must be instantiated via createNull(), because
     // different instances have different context-dependent types.
 
-    /** Constant for {@link Boolean#TRUE}. */
-    public static final SqlLiteral True =
-            new SqlLiteral(Boolean.TRUE, SqlTypeName.Boolean);
-
-    /** Constant for {@link Boolean#FALSE}. */
-    public static final SqlLiteral False =
-            new SqlLiteral(Boolean.FALSE, SqlTypeName.Boolean);
-
-    /** Constant for the unknown value in 3 valued logic. */
-    public static final SqlLiteral Unknown =
-            new SqlLiteral(null, SqlTypeName.Boolean);
-
-    /** Constant for the {@link Integer} value 0. */
-    public static final SqlLiteral Zero =
-            new SqlLiteral(new BigDecimal(0), SqlTypeName.Decimal);
-
-    /** Constant for the {@link Integer} value 1. */
-    public static final SqlLiteral One =
-            new SqlLiteral(new BigDecimal(1), SqlTypeName.Decimal);
 
     //~ Inner Classes   -------------------------------------------------------
 
@@ -175,7 +157,6 @@ public class SqlLiteral extends SqlNode
     public static class DateLiteral extends SqlLiteral {
         protected boolean _hasTimeZone;
         protected String _formatString = ParserUtil.DateFormatStr;
-        private static final TimeZone gmtZone = TimeZone.getTimeZone("GMT+0");
 
         /**
          *  Construct a new dateformat object for the given string.
@@ -190,17 +171,17 @@ public class SqlLiteral extends SqlNode
         }
 
 
-        public DateLiteral(Calendar d)
+        public DateLiteral(Calendar d, ParserPosition parserPosition)
         {
-            this(d,false, SqlTypeName.Date);
+            this(d,false, SqlTypeName.Date, parserPosition);
         }
 
-        public DateLiteral(Calendar d, boolean tz) {
-            this(d, tz, SqlTypeName.Date);
+        public DateLiteral(Calendar d, boolean tz, ParserPosition parserPosition) {
+            this(d, tz, SqlTypeName.Date, parserPosition);
         }
 
-        protected DateLiteral(Calendar d, boolean tz, SqlTypeName typeName) {
-            super(d, typeName);
+        protected DateLiteral(Calendar d, boolean tz, SqlTypeName typeName,  ParserPosition parserPosition) {
+            super(d, typeName, parserPosition);
             _hasTimeZone = tz;
         }
 
@@ -246,8 +227,8 @@ public class SqlLiteral extends SqlNode
         public final int _precision;
 
         protected TimeLiteral(Calendar t, int p, boolean hasTZ,
-                SqlTypeName typeName) {
-            super(t,hasTZ,typeName);
+                SqlTypeName typeName, ParserPosition parserPosition) {
+            super(t,hasTZ,typeName, parserPosition);
             _precision = p;
             _formatString = ParserUtil.TimeFormatStr;
        }
@@ -255,8 +236,8 @@ public class SqlLiteral extends SqlNode
         /**
          * Constructor is private; use {@link #createTime}.
          */
-        private TimeLiteral(Calendar t, int p) {
-           this(t,p,false,SqlTypeName.Time);
+        private TimeLiteral(Calendar t, int p, ParserPosition parserPosition) {
+           this(t,p,false,SqlTypeName.Time, parserPosition);
         }
 
         private Time getTime() {
@@ -279,10 +260,13 @@ public class SqlLiteral extends SqlNode
                     new SimpleDateFormat(_formatString).
                                 format(getTime()) ;
             if (_precision > 0) {
+                assert(_precision<=3);
                 // get the millisecond count.  millisecond => at most 3 digits.
                 String digits = Long.toString(getCal().getTimeInMillis());
                 result = result + "." +
                         digits.substring(digits.length() - 3, digits.length() - 3 + _precision);
+            } else {
+                assert(0==getCal().get(Calendar.MILLISECOND));
             }
             return result;
         }
@@ -299,13 +283,13 @@ public class SqlLiteral extends SqlNode
      */
     public static class TimestampLiteral extends TimeLiteral {
 
-        public TimestampLiteral(Calendar cal, int p, boolean hasTZ) {
-            super(cal, p, hasTZ, SqlTypeName.Timestamp);
+        public TimestampLiteral(Calendar cal, int p, boolean hasTZ, ParserPosition parserPosition) {
+            super(cal, p, hasTZ, SqlTypeName.Timestamp, parserPosition);
             _formatString = ParserUtil.TimestampFormatStr;
         }
 
-        public TimestampLiteral(Calendar cal, int p) {
-            this(cal, p, false);
+        public TimestampLiteral(Calendar cal, int p, ParserPosition parserPosition) {
+            this(cal, p, false, parserPosition);
         }
 
         public Timestamp getTimestamp() {
@@ -332,7 +316,7 @@ public class SqlLiteral extends SqlNode
         }
 
         //~ Methods -----------
-        public static Numeric createExact(String s){
+        public static Numeric createExact(String s, ParserPosition parserPosition){
             BigDecimal value;
             int prec;
             int scale;
@@ -354,16 +338,16 @@ public class SqlLiteral extends SqlNode
                 scale = 0;
                 prec = s.length();
             }
-            return new Numeric(value,new Integer(prec),new Integer(scale), true);
+            return new Numeric(value,new Integer(prec),new Integer(scale), true, parserPosition);
         }
 
-        public static Numeric createApprox(String s){
+        public static Numeric createApprox(String s, ParserPosition parserPosition){
             BigDecimal value = ParserUtil.parseDecimal(s);
-            return new Numeric(value,null,null, false);
+            return new Numeric(value,null,null, false, parserPosition);
         }
 
-        protected Numeric(BigDecimal value, Integer prec, Integer scale, boolean isExact) {
-            super(value, isExact ? SqlTypeName.Decimal : SqlTypeName.Double);
+        protected Numeric(BigDecimal value, Integer prec, Integer scale, boolean isExact, ParserPosition parserPosition) {
+            super(value, isExact ? SqlTypeName.Decimal : SqlTypeName.Double, parserPosition);
             this.m_prec = prec;
             this.m_scale = scale;
             this.m_isExact = isExact;
@@ -375,24 +359,28 @@ public class SqlLiteral extends SqlNode
 
         public void unparse(SqlWriter writer, int leftPrec, int rightPrec) {
             BigDecimal bd = (BigDecimal) _value;
-            if (m_isExact && bd.scale() == 0) {
-                writer.print(bd.intValue());
-            } else {
-                writer.print(_value.toString());
-            }
+            writer.print(_value.toString());
         }
 
         public SaffronType createSqlType(SaffronTypeFactory typeFactory) {
             if (m_isExact){
                 int scale = m_scale.intValue();
                 if (0 == scale) {
-                    return typeFactory.createSqlType(SqlTypeName.Integer);
+                    BigDecimal bd = (BigDecimal) _value;
+                    SqlTypeName result;
+                    long l = bd.longValue();
+                    if (l >= Integer.MIN_VALUE && l <= Integer.MAX_VALUE) {
+                        result = SqlTypeName.Integer;
+                    } else {
+                        result = SqlTypeName.Bigint;
+                    }
+                    return typeFactory.createSqlType(result);
                 }
                 //else we have a decimal
                 return typeFactory.createSqlType(
                         SqlTypeName.Decimal,
                         m_prec.intValue(),
-                        m_scale.intValue());
+                        scale);
             }
             // else we have a a float, real or double.  make them all double for now.
             return typeFactory.createSqlType(SqlTypeName.Double);
@@ -424,8 +412,9 @@ public class SqlLiteral extends SqlNode
      * @pre typeName != null
      * @pre valueMatchesType(value,typeName)
      */
-    protected SqlLiteral(Object value, SqlTypeName typeName)
+    protected SqlLiteral(Object value, SqlTypeName typeName, ParserPosition parserPosition)
     {
+        super(parserPosition);
         this._value = value;
         this._typeName = typeName;
         Util.pre(typeName != null, "typeName != null");
@@ -530,39 +519,34 @@ public class SqlLiteral extends SqlNode
     /**
      * Creates a NULL literal.
      */
-    public static SqlLiteral createNull()
+    public static SqlLiteral createNull(ParserPosition parserPosition)
     {
-        return new SqlLiteral(null, SqlTypeName.Null);
-    }
-
-    /**
-     * Returns whether a node represents the NULL value.
-     * isNullLiteral({@link #Unknown}) returns false.
-     */
-    public static boolean isNullLiteral(SqlNode node)
-    {
-        // We don't regard UNKNOWN -- SqlLiteral(null,Boolean) -- as NULL.
-        return (node instanceof SqlLiteral) &&
-                ((SqlLiteral) node)._typeName == SqlTypeName.Null;
+        return new SqlLiteral(null, SqlTypeName.Null, parserPosition);
     }
 
     /**
      * Creates a boolean literal.
      */
-    public static SqlLiteral createBoolean(boolean b)
+    public static SqlLiteral createBoolean(boolean b, ParserPosition parserPosition)
     {
-        return b ? True : False;
+        return b ? new SqlLiteral(Boolean.TRUE, SqlTypeName.Boolean, parserPosition)
+                :  new SqlLiteral(Boolean.FALSE, SqlTypeName.Boolean, parserPosition);
     }
 
-    public static SqlLiteral create(int i)
+    public static SqlLiteral createUnknown(ParserPosition parserPosition)
+    {
+       return new SqlLiteral(null, SqlTypeName.Boolean, parserPosition);
+    }
+
+    public static SqlLiteral create(int i, ParserPosition parserPosition)
     {
         switch (i) {
         case 0:
-            return Zero;
+            return  new SqlLiteral(new BigDecimal(0), SqlTypeName.Decimal, parserPosition);
         case 1:
-            return One;
+            return new SqlLiteral(new BigDecimal(1), SqlTypeName.Decimal, parserPosition);
         default:
-            return new SqlLiteral(new BigDecimal(i), SqlTypeName.Decimal);
+            return new SqlLiteral(new BigDecimal(i), SqlTypeName.Decimal, parserPosition);
         }
     }
 
@@ -573,9 +557,9 @@ public class SqlLiteral extends SqlNode
      *
      * @see SqlSymbol
      */
-    public static SqlLiteral createFlag(EnumeratedValues.Value o)
+    public static SqlLiteral createFlag(EnumeratedValues.Value o, ParserPosition parserPosition)
     {
-        return new SqlLiteral(o, SqlTypeName.Symbol);
+        return new SqlLiteral(o, SqlTypeName.Symbol, parserPosition );
     }
 
     public boolean equals(Object obj)
@@ -608,7 +592,7 @@ public class SqlLiteral extends SqlNode
 
     public Object clone()
     {
-        return new SqlLiteral(_value, _typeName);
+        return new SqlLiteral(_value, _typeName, getParserPosition());
     }
 
     public void unparse(SqlWriter writer,int leftPrec,int rightPrec)
@@ -659,7 +643,9 @@ public class SqlLiteral extends SqlNode
         switch (_typeName.ordinal_) {
         case SqlTypeName.Null_ordinal:
         case SqlTypeName.Boolean_ordinal:
-            return typeFactory.createSqlType(_typeName);
+            SaffronType ret = typeFactory.createSqlType(_typeName);
+            ret = typeFactory.createTypeWithNullability(ret, null==_value);
+            return ret;
         case SqlTypeName.Binary_ordinal:
             // REVIEW: should this be Binary, not Varbinary?
             bitString = (BitString) _value;
@@ -709,25 +695,25 @@ public class SqlLiteral extends SqlNode
         }
     }
 
-    public static DateLiteral createDate(Calendar calendar) {
-        return new DateLiteral(calendar);
+    public static DateLiteral createDate(Calendar calendar, ParserPosition parserPosition) {
+        return new DateLiteral(calendar, parserPosition);
     }
 
     public static TimestampLiteral createTimestamp(Calendar calendar,
-            int precision) {
-        return new TimestampLiteral(calendar,precision);
+            int precision, ParserPosition parserPosition) {
+        return new TimestampLiteral(calendar,precision, parserPosition);
     }
 
-    public static TimeLiteral createTime(Calendar calendar, int precision) {
-        return new TimeLiteral(calendar,precision);
+    public static TimeLiteral createTime(Calendar calendar, int precision, ParserPosition parserPosition) {
+        return new TimeLiteral(calendar,precision, parserPosition);
     }
 
     /**
      * Creates a literal like B'0101'.
      */
-    public static SqlLiteral createBitString(String s) {
+    public static SqlLiteral createBitString(String s, ParserPosition parserPosition) {
         BitString bitString = BitString.createFromBitString(s);
-        return new SqlLiteral(bitString,SqlTypeName.Bit);
+        return new SqlLiteral(bitString,SqlTypeName.Bit, parserPosition);
     }
 
     /**
@@ -735,8 +721,8 @@ public class SqlLiteral extends SqlNode
      * type for this beastie, we don't care at this point whether the number of
      * hexits is odd or even.
      */
-    public static SqlLiteral createBinaryString(BitString b) {
-        return new SqlLiteral(b, SqlTypeName.Binary);
+    public static SqlLiteral createBinaryString(BitString b, ParserPosition parserPosition) {
+        return new SqlLiteral(b, SqlTypeName.Binary, parserPosition);
     }
 
     /**
@@ -749,14 +735,14 @@ public class SqlLiteral extends SqlNode
      * @param collation Collation, may be null
      * @return A string literal
      */
-    public static SqlLiteral createString(String s, SqlCollation collation) {
+    public static SqlLiteral createString(String s, SqlCollation collation, ParserPosition parserPosition) {
 
         if (s.charAt(0) == '\'') {
             //we have a "regular" string
             s = ParserUtil.strip(s, "'");
             s = ParserUtil.parseString(s);
             NlsString slit = new NlsString(s, null, collation);
-            return new SqlLiteral(slit, SqlTypeName.Char);
+            return new SqlLiteral(slit, SqlTypeName.Char, parserPosition);
         }
 
         //else we have a National string or a string with a charset
@@ -772,7 +758,7 @@ public class SqlLiteral extends SqlNode
         s = ParserUtil.strip(s, "'");
         s = ParserUtil.parseString(s);
         NlsString nlsStr = new NlsString(s, charSet, collation);
-        return new SqlLiteral(nlsStr, SqlTypeName.Char);
+        return new SqlLiteral(nlsStr, SqlTypeName.Char, parserPosition);
     }
 }
 

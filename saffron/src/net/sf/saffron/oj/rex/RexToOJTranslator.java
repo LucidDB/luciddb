@@ -115,7 +115,8 @@ public class RexToOJTranslator implements RexVisitor
         final Variable v = implementor.findInputVariable(inputAndCol.input);
         SaffronType rowType = inputAndCol.input.getRowType();
         final SaffronField field = rowType.getFields()[inputAndCol.fieldIndex];
-        final String javaFieldName = Util.toJavaId(field.getName());
+        final String javaFieldName =
+                Util.toJavaId(field.getName(), inputAndCol.fieldIndex);
         setTranslation(new FieldAccess(v, javaFieldName));
     }
     
@@ -243,7 +244,7 @@ public class RexToOJTranslator implements RexVisitor
         for (int i = 0; i < rangeFields.length; i++) {
             String fieldName =
                     inputRowFields[inputAndCol.fieldIndex + i].getName();
-            final String javaFieldName = Util.toJavaId(fieldName);
+            final String javaFieldName = Util.toJavaId(fieldName,i);
             args.add(new FieldAccess(inputExpr, javaFieldName));
         }
         setTranslation(
@@ -260,7 +261,8 @@ public class RexToOJTranslator implements RexVisitor
     // implement RexVisitor
     public void visitFieldAccess(RexFieldAccess fieldAccess)
     {
-        final String javaFieldName = Util.toJavaId(fieldAccess.getName());
+        final String javaFieldName = Util.toJavaId(
+                fieldAccess.getName(),fieldAccess.getField().getIndex());
         setTranslation(
             new FieldAccess(
                 translateRexNode(fieldAccess.getReferenceExpr()),

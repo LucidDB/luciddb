@@ -62,9 +62,23 @@ public:
         pc = mJumpTo;
     }
 
-    const char * longName() const;
-    const char * shortName() const;
-    void describe(string &out, bool values) const;
+    static const char * longName();
+    static const char * shortName();
+    static int numArgs();
+    void describe(string& out, bool values) const;
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        return InstructionSignature(shortName(), 0, v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        return new Jump(sig.getPc());
+    }
 };
 
 class JumpTrue : public JumpInstruction
@@ -85,9 +99,24 @@ public:
         }
     }
 
-    const char * longName() const;
-    const char * shortName() const;
-    void describe(string &out, bool values) const;
+    static const char * longName();
+    static const char * shortName();
+    static int numArgs();
+    void describe(string& out, bool values) const;
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        return InstructionSignature(shortName(), 0, v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        return new JumpTrue(sig.getPc(),
+                            static_cast<RegisterRef<bool>*> (sig[0]));
+    }
 };
 
 class JumpFalse : public JumpInstruction
@@ -109,9 +138,26 @@ public:
         
     }
 
-    const char * longName() const;
-    const char * shortName() const;
-    void describe(string &out, bool values) const;
+    static const char * longName();
+    static const char * shortName();
+    static int numArgs();
+    void describe(string& out, bool values) const;
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        return InstructionSignature(shortName(), 0, v);
+
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        return new JumpFalse(sig.getPc(),
+                            static_cast<RegisterRef<bool>*> (sig[0]));
+    }
+
 };
 
 class JumpNull : public JumpInstruction
@@ -133,9 +179,25 @@ public:
         
     }
 
-    const char * longName() const;
-    const char * shortName() const;
-    void describe(string &out, bool values) const;
+    static const char * longName();
+    static const char * shortName();
+    static int numArgs();
+    void describe(string& out, bool values) const;
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        return InstructionSignature(shortName(), 0, v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        return new JumpNull(sig.getPc(),
+                            static_cast<RegisterRef<bool>*> (sig[0]));
+    }
+
 };
 
 class JumpNotNull : public JumpInstruction
@@ -156,10 +218,66 @@ public:
         }
     }
 
-    const char * longName() const;
-    const char * shortName() const;
-    void describe(string &out, bool values) const;
+    static const char * longName();
+    static const char * shortName();
+    static int numArgs();
+    void describe(string& out, bool values) const;
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        return InstructionSignature(shortName(), 0, v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        return new JumpNotNull(sig.getPc(),
+                            static_cast<RegisterRef<bool>*> (sig[0]));
+    }
+
 };
+
+class JumpInstructionRegister : InstructionRegister {
+
+    // TODO: Refactor registerTypes to class InstructionRegister
+    template < class INSTCLASS2 >
+    static void
+    registerTypes(vector<StandardTypeDescriptorOrdinal> const &t) {
+
+        for (uint i = 0; i < t.size(); i++) {
+            StandardTypeDescriptorOrdinal type = t[i];
+            InstructionSignature sig = INSTCLASS2::signature(type);
+            switch(type) {
+#define Fennel_InstructionRegisterSwitch_Bool 1
+#include "fennel/calc/InstructionRegisterSwitch.h"
+            default:
+                throw std::logic_error("Default InstructionRegister");
+            }
+        }
+    }
+
+public:
+    static void
+    registerInstructions() {
+
+        vector<StandardTypeDescriptorOrdinal> t;
+        t.push_back(STANDARD_TYPE_BOOL);
+
+        // Have to do full fennel:: qualification of template
+        // arguments below to prevent template argument 'TMPLT', of
+        // this encapsulating class, from perverting NativeAdd into
+        // NativeAdd<TMPLT> or something like
+        // that. Anyway. Fennel::NativeAdd works just fine.
+        registerTypes<fennel::Jump>(t);
+        registerTypes<fennel::JumpTrue>(t);
+        registerTypes<fennel::JumpFalse>(t);
+        registerTypes<fennel::JumpNull>(t);
+        registerTypes<fennel::JumpNotNull>(t);
+    }
+};
+
 
 FENNEL_END_NAMESPACE
 

@@ -178,13 +178,13 @@ public class FarragoCatalog
             String memStorageId = nbRepos.mountStorage(
                 FarragoTransientStorageFactory.class.getName(),
                 props);
-            nbRepos.beginTrans(true);
+            beginReposTxn(true);
             RefPackage memExtent = nbRepos.createExtent(
                 "TransientCatalog",
                 farragoPackage.refMetaObject(),
                 null,
                 memStorageId);
-            nbRepos.endTrans(false);
+            endReposTxn(false);
             FarragoTransientStorage.ignoreCommit = true;
             transientFarragoPackage = (FarragoPackage) memExtent;
             fennelPackage = transientFarragoPackage.getFem().getFennel();
@@ -775,11 +775,11 @@ public class FarragoCatalog
         tracer.info("Creating system-owned catalog objects");
         boolean rollback = true;
         try {
-            mdrRepository.beginTrans(true);
+            beginReposTxn(true);
             initCatalog();
             rollback = false;
         } finally {
-            mdrRepository.endTrans(rollback);
+            endReposTxn(rollback);
         }
         tracer.info("Creation of system-owned catalog objects committed");
     }
@@ -787,13 +787,49 @@ public class FarragoCatalog
     // implement FarragoTransientTxnContext
     public void beginTransientTxn()
     {
+        tracer.fine("Begin transient repository transaction");
+        tracer.throwing("FOO","BAR",new Throwable());
         mdrRepository.beginTrans(true);
     }
 
     // implement FarragoTransientTxnContext
     public void endTransientTxn()
     {
+        tracer.fine("End transient repository transaction");
+        tracer.throwing("FOO","BAR",new Throwable());
         mdrRepository.endTrans(false);
+    }
+
+    /**
+     * Begin a metadata transaction on the repository.
+     *
+     * @param writable true for read/write; false for read-only
+     */
+    public void beginReposTxn(boolean writable)
+    {
+        if (writable) {
+            tracer.fine("Begin read/write repository transaction");
+        } else {
+            tracer.fine("Begin read-only repository transaction");
+        }
+        tracer.throwing("FOO","BAR",new Throwable());
+        mdrRepository.beginTrans(writable);
+    }
+
+    /**
+     * End a metadata transaction on the repository.
+     *
+     * @param rollback true to rollback; false to commit
+     */
+    public void endReposTxn(boolean rollback)
+    {
+        if (rollback) {
+            tracer.fine("Rollback repository transaction");
+        } else {
+            tracer.fine("Commit repository transaction");
+        }
+        tracer.throwing("FOO","BAR",new Throwable());
+        mdrRepository.endTrans(rollback);
     }
 
     private void initCatalog()
@@ -836,8 +872,6 @@ public class FarragoCatalog
         // (5) since I've already done all the easy cases, you'll probably
         // need lots of extra fancy semantics elsewhere
 
-        // NOTE:  BOOLEAN is not actually working for storage yet;
-        // needs special handling in ReflectUtil.getByteBufferRead/WriteMethod
         type = newCwmSqlsimpleType();
         type.setName("BOOLEAN");
         type.setTypeNumber(new Integer(Types.BOOLEAN));
@@ -883,6 +917,7 @@ public class FarragoCatalog
         type.setNumericPrecision(new Integer(52));
         type.setNumericPrecisionRadix(new Integer(2));
         defineTypeAlias("DOUBLE PRECISION",type);
+        defineTypeAlias("FLOAT",type);
 
         type = newCwmSqlsimpleType();
         type.setName("VARCHAR");
@@ -909,11 +944,18 @@ public class FarragoCatalog
         type.setTypeNumber(new Integer(Types.BINARY));
         type.setCharacterMaximumLength(new Integer(65535));
 
-        // do we need to set date/time precision=0 explictly here?
         type = newCwmSqlsimpleType();
         type.setName("DATE");
         type.setTypeNumber(new Integer(Types.DATE));
         type.setDateTimePrecision(new Integer(0));
+
+        // TODO jvs 26-July-2004: Support fractional precision for TIME and
+        // TIMESTAMP.  Currently, most of the support is there for up to
+        // milliseconds, but JDBC getString conversion is missing (see comments
+        // in SqlDateTimeWithoutTZ).  SQL99 says default precision for
+        // TIMESTAMP is microseconds, so some more work is required to
+        // support that.  Default precision for TIME is seconds,
+        // which is already the case.
 
         type = newCwmSqlsimpleType();
         type.setName("TIME");
@@ -971,7 +1013,7 @@ public class FarragoCatalog
     {
         Collection c =
             JmiUtil.importFromXmiString(
-                farragoPackage,
+                transientFarragoPackage,
                 tupleAccessorXmiString);
         assert (c.size() == 1);
         FemTupleAccessor accessor = (FemTupleAccessor) c.iterator().next();

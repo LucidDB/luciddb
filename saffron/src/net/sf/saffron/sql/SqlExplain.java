@@ -23,6 +23,7 @@
 package net.sf.saffron.sql;
 
 import net.sf.saffron.util.Util;
+import net.sf.saffron.sql.parser.ParserPosition;
 
 
 /**
@@ -36,15 +37,16 @@ public class SqlExplain extends SqlCall
     public static final int EXPLICANDUM_OPERAND = 0;
     public static final int WITH_IMPLEMENTATION_OPERAND = 1;
     public static final int OPERAND_COUNT = 2;
-    
+
     //~ Constructors ----------------------------------------------------------
 
     public SqlExplain(
         SqlSpecialOperator operator,
         SqlNode explicandum,
-        SqlLiteral withImplementation)
+        SqlLiteral withImplementation,
+        ParserPosition parerPosition)
     {
-        super(operator,new SqlNode[OPERAND_COUNT]);
+        super(operator,new SqlNode[OPERAND_COUNT], parerPosition);
         operands[EXPLICANDUM_OPERAND] = explicandum;
         operands[WITH_IMPLEMENTATION_OPERAND] = withImplementation;
     }

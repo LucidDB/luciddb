@@ -2,6 +2,6 @@
 ExecutableStmt.Oj_VARBINARY_10 oj_var0 = new ExecutableStmt.Oj_VARBINARY_10();
 
 oj_var0.assignFrom( new byte[]{ 0, 17, 34, 51, 68, 85, 102, 119, -120, -103, -86, -69 } );
-oj_var0.enforceBytePrecision( 10, false, 0 );
+oj_var0.enforceBytePrecision( 10, false, (byte) 0 );
 
 return oj_var0;

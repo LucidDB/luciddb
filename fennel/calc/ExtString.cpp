@@ -34,7 +34,8 @@ strCatA2(RegisterRef<char*>* result,
 {
     assert(StandardTypeDescriptor::isTextArray(str1->type()));
 
-    if (str1->isNull()) {
+    // appending to a null results in null
+    if (result->isNull() || str1->isNull()) {
         result->toNull();
         result->length(0);
     } else {
@@ -53,7 +54,8 @@ strCatA3(RegisterRef<char*>* result,
 {
     assert(StandardTypeDescriptor::isTextArray(str1->type()));
 
-    if (str1->isNull() || str2->isNull()) {
+    // appending to a null results in null
+    if (result->isNull() || str1->isNull() || str2->isNull()) {
         result->toNull();
         result->length(0);
     } else {
@@ -95,13 +97,42 @@ strCmpA(RegisterRef<int32_t>* result,
 }
 
 void
+strCmpOct(RegisterRef<int32_t>* result,
+          RegisterRef<char*>* str1,
+          RegisterRef<char*>* str2)
+{
+    assert(str1->type() == str2->type());
+    assert(StandardTypeDescriptor::isBinaryArray(str1->type()));
+
+    if (str1->isNull() || str2->isNull()) {
+        result->toNull();
+    } else {
+        if (str1->type() == STANDARD_TYPE_BINARY) {
+            result->value(SqlStrCmp_Fix<1,1>
+                          (str1->pointer(),
+                           str1->storage(),
+                           str2->pointer(),
+                           str2->storage()));
+        } else {
+            assert(str1->type()== STANDARD_TYPE_VARBINARY);
+            result->value(SqlStrCmp_Var<1,1>
+                          (str1->pointer(),
+                           str1->length(),
+                           str2->pointer(),
+                           str2->length()));
+        }
+    }
+}
+
+void
 strCpyA(RegisterRef<char*>* result,
         RegisterRef<char*>* str)
 {
     assert(result->type() == str->type());
     assert(StandardTypeDescriptor::isTextArray(str->type()));
 
-    if (str->isNull()) {
+    // copy to a null results in null
+    if (result->isNull() || str->isNull()) {
         result->toNull();
         result->length(0);
     } else {
@@ -171,7 +202,9 @@ strOverlayA4(RegisterRef<char*>* result,
     assert(str->type() == overlay->type());
     assert(StandardTypeDescriptor::isTextArray(str->type()));
 
-    if (str->isNull() || overlay->isNull() || start->isNull()) {
+    // overlay to a null results in null
+    if (result->isNull() || str->isNull() ||
+        overlay->isNull() || start->isNull()) {
         result->toNull();
         result->length(0);
     } else {
@@ -199,7 +232,9 @@ strOverlayA5(RegisterRef<char*>* result,
     assert(str->type() == overlay->type());
     assert(StandardTypeDescriptor::isTextArray(str->type()));
 
-    if (str->isNull() || overlay->isNull() || start->isNull() || len->isNull()) {
+    // overlay to a null results in null
+    if (result->isNull() || str->isNull() ||
+        overlay->isNull() || start->isNull() || len->isNull()) {
         result->toNull();
         result->length(0);
     } else {
@@ -241,7 +276,8 @@ strSubStringA3(RegisterRef<char*>* result,
     assert(result->type() == STANDARD_TYPE_VARCHAR);
     assert(StandardTypeDescriptor::isTextArray(str->type()));
 
-    if (str->isNull() || start->isNull()) {
+    // substring to a null results in null
+    if (result->isNull() || str->isNull() || start->isNull()) {
         result->toNull();
         result->length(0);
     } else {
@@ -268,7 +304,9 @@ strSubStringA4(RegisterRef<char*>* result,
     assert(result->type() == STANDARD_TYPE_VARCHAR);
     assert(StandardTypeDescriptor::isTextArray(str->type()));
 
-    if (str->isNull() || start->isNull() || len->isNull()) {
+    // substring to a null results in null
+    if (result->isNull() || str->isNull() ||
+        start->isNull() || len->isNull()) {
         result->toNull();
         result->length(0);
     } else {
@@ -294,7 +332,8 @@ strToLowerA(RegisterRef<char*>* result,
     assert(str->type() == result->type());
     assert(str->type() == STANDARD_TYPE_CHAR ? (result->storage() == str->storage()) : true);
 
-    if (str->isNull()) {
+    // tolower to a null results in null
+    if (result->isNull() || str->isNull()) {
         result->toNull();
         result->length(0);
     } else {
@@ -316,7 +355,8 @@ strToUpperA(RegisterRef<char*>* result,
     assert(str->type() == result->type());
     assert(str->type() == STANDARD_TYPE_CHAR ? (result->storage() == str->storage()) : true);
 
-    if (str->isNull()) {
+    // toupper to a null results in null
+    if (result->isNull() || str->isNull()) {
         result->toNull();
         result->length(0);
     } else {
@@ -333,28 +373,40 @@ strToUpperA(RegisterRef<char*>* result,
 
 void
 strTrimA(RegisterRef<char*>* result,
-         RegisterRef<char*>* tokens,
          RegisterRef<char*>* str,
+         RegisterRef<char*>* trimchar,
          RegisterRef<int32_t>* trimLeft,
          RegisterRef<int32_t>* trimRight)
-{
+ {
     assert(StandardTypeDescriptor::isTextArray(str->type()));
     assert(result->type() == STANDARD_TYPE_VARCHAR);
+    assert(StandardTypeDescriptor::isTextArray(trimchar->type()));
 
-    if (tokens->isNull() || str->isNull() || 
+    // trim to a null results in null
+    if (result->isNull() || str->isNull() || trimchar->isNull() ||
         trimLeft->isNull() || trimRight->isNull()) {
         result->toNull();
         result->length(0);
     } else {
         // Don't try anything fancy with RegisterRef accessors. KISS.
         char * ptr = result->pointer(); // preserve old value if possible
-        // TODO: Not sure why cast from char* to char const * is required below.
-        // use trim by reference function
+
+        if (trimchar->stringLength() != 1) {
+            // SQL99 6.18 General Rule 8d) Data Exception - Trim Error
+            throw "22027";
+        }
+        // Note: This routine is for ASCII only, so the following is OK.
+        char tc = *(trimchar->pointer());
+
+        // Use trim by reference function:
+        // TODO: Not sure why cast from char* to char const * is
+        // required below.
         int32_t newLen = SqlStrTrim<1,1>(const_cast<char const **>(&ptr),
                                          str->pointer(),
                                          str->stringLength(),
                                          trimLeft->value(),
-                                         trimRight->value());
+                                         trimRight->value(),
+                                         tc);
         result->pointer(ptr, newLen);
     }
 }
@@ -424,6 +476,24 @@ ExtStringRegister(ExtendedInstructionTable* eit)
     eit->add("strCpyA", params_2F,
              (ExtendedInstruction2<char*, char*>*) NULL,
              &strCpyA);
+
+    vector<StandardTypeDescriptorOrdinal> params_1N_2B;
+    params_1N_2B.push_back(STANDARD_TYPE_INT_32);
+    params_1N_2B.push_back(STANDARD_TYPE_BINARY);
+    params_1N_2B.push_back(STANDARD_TYPE_BINARY);
+
+    vector<StandardTypeDescriptorOrdinal> params_1N_2VB;
+    params_1N_2VB.push_back(STANDARD_TYPE_INT_32);
+    params_1N_2VB.push_back(STANDARD_TYPE_VARBINARY);
+    params_1N_2VB.push_back(STANDARD_TYPE_VARBINARY);
+
+    eit->add("strCmpOct", params_1N_2B,
+             (ExtendedInstruction3<int32_t, char*, char*>*) NULL,
+             &strCmpOct);
+
+    eit->add("strCmpOct", params_1N_2VB,
+             (ExtendedInstruction3<int32_t, char*, char*>*) NULL,
+             &strCmpOct);
 
     vector<StandardTypeDescriptorOrdinal> params_1N_1F;
     params_1N_1F.push_back(STANDARD_TYPE_INT_32);
@@ -561,11 +631,7 @@ ExtStringRegister(ExtendedInstructionTable* eit)
              &strToUpperA);
 
 
-    
-    eit->add("strTrimA", params_1V_2F_2I,
-             (ExtendedInstruction5<char*, char*, char*, int32_t, int32_t>*) NULL,
-             &strTrimA);
-
+    // Result of strTrimA is always VC. Other two arg strings can be VC or C
 
     vector<StandardTypeDescriptorOrdinal> params_1V_1F_1V_2I;
     params_1V_1F_1V_2I.push_back(STANDARD_TYPE_VARCHAR);
@@ -574,32 +640,29 @@ ExtStringRegister(ExtendedInstructionTable* eit)
     params_1V_1F_1V_2I.push_back(STANDARD_TYPE_INT_32);
     params_1V_1F_1V_2I.push_back(STANDARD_TYPE_INT_32);
 
+    vector<StandardTypeDescriptorOrdinal> params_2V_1F_2I;
+    params_2V_1F_2I.push_back(STANDARD_TYPE_VARCHAR);
+    params_2V_1F_2I.push_back(STANDARD_TYPE_VARCHAR);
+    params_2V_1F_2I.push_back(STANDARD_TYPE_CHAR);
+    params_2V_1F_2I.push_back(STANDARD_TYPE_INT_32);
+    params_2V_1F_2I.push_back(STANDARD_TYPE_INT_32);
+
+    // VC, VC, VC
+    eit->add("strTrimA", params_3V_2I,
+             (ExtendedInstruction5<char*, char*, char*, int32_t, int32_t>*) NULL,
+             &strTrimA);
+    // VC, VC, C
+    eit->add("strTrimA", params_2V_1F_2I,
+             (ExtendedInstruction5<char*, char*, char*, int32_t, int32_t>*) NULL,
+             &strTrimA);
+    // VC, C, C
+    eit->add("strTrimA", params_1V_2F_2I,
+             (ExtendedInstruction5<char*, char*, char*, int32_t, int32_t>*) NULL,
+             &strTrimA);
+    // VC, C, VC
     eit->add("strTrimA", params_1V_1F_1V_2I,
              (ExtendedInstruction5<char*, char*, char*, int32_t, int32_t>*) NULL,
              &strTrimA);
-
-    vector<StandardTypeDescriptorOrdinal> params_1V_1V_1F_2I;
-    params_1V_1V_1F_2I.push_back(STANDARD_TYPE_VARCHAR);
-    params_1V_1V_1F_2I.push_back(STANDARD_TYPE_VARCHAR);
-    params_1V_1V_1F_2I.push_back(STANDARD_TYPE_CHAR);
-    params_1V_1V_1F_2I.push_back(STANDARD_TYPE_INT_32);
-    params_1V_1V_1F_2I.push_back(STANDARD_TYPE_INT_32);
-
-    eit->add("strTrimA", params_1V_1V_1F_2I,
-             (ExtendedInstruction5<char*, char*, char*, int32_t, int32_t>*) NULL,
-             &strTrimA);
-
-    vector<StandardTypeDescriptorOrdinal> params_1V_2V_2I;
-    params_1V_2V_2I.push_back(STANDARD_TYPE_VARCHAR);
-    params_1V_2V_2I.push_back(STANDARD_TYPE_VARCHAR);
-    params_1V_2V_2I.push_back(STANDARD_TYPE_VARCHAR);
-    params_1V_2V_2I.push_back(STANDARD_TYPE_INT_32);
-    params_1V_2V_2I.push_back(STANDARD_TYPE_INT_32);
-
-    eit->add("strTrimA", params_1V_2V_2I,
-             (ExtendedInstruction5<char*, char*, char*, int32_t, int32_t>*) NULL,
-             &strTrimA);
-
 }
 
 

@@ -24,6 +24,7 @@ import net.sf.saffron.rel.SaffronRel;
 import net.sf.saffron.sql.SqlKind;
 
 import net.sf.farrago.util.*;
+import net.sf.farrago.query.FarragoPreparingStmt;
 
 import java.sql.*;
 
@@ -31,9 +32,9 @@ import java.sql.*;
  * FarragoSessionStmtContext represents a context for executing SQL statements
  * within a particular {@link FarragoSession}.  Contrast with {@link
  * net.sf.farrago.jdbc.engine.FarragoJdbcEngineStatement} (a JDBC wrapper),
- * {@link net.sf.farrago.query.FarragoPreparingStmt} (which manages the
+ * {@link FarragoSessionPreparingStmt} (which manages the
  * preparation process for a single statement), and {@link
- * net.sf.farrago.query.FarragoExecutableStmt}, (which is shared by all
+ * FarragoSessionExecutableStmt}, (which is shared by all
  * sessions).
  *
  *<p>
@@ -87,9 +88,14 @@ public interface FarragoSessionStmtContext extends FarragoAllocation
      * @param kind SqlKind value that characterized the statement.
      * @param logical true when the query plan is logical (needs to be
      *  optimized), false when it is physical (already optimized).
+     * @param prep the FarragoSessionPreparingStatement that is managing the
+     * query plan.
      */
-    public void prepare(SaffronRel plan, SqlKind kind, boolean logical);
-
+    public void prepare(
+        SaffronRel plan,
+        SqlKind kind,
+        boolean logical,
+        FarragoSessionPreparingStmt prep);
 
     /**
      * @return the output row type for the currently prepared statement
@@ -146,6 +152,10 @@ public interface FarragoSessionStmtContext extends FarragoAllocation
      * this statement context.
      */
     public void unprepare();
+
+    public void setQueryTimeout(int milliseconds);
+
+    public int getQueryTimeout();
 }
 
 // End FarragoSessionStmtContext.java

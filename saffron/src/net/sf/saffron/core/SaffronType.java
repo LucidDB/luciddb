@@ -151,6 +151,11 @@ public interface SaffronType
     int getMaxBytesStorage();
 
     /**
+     * @return number of digits or characters of precision
+     */
+    public int getPrecision();
+
+    /**
      * get the SqlTypeName for this SaffronType.
      */
     public SqlTypeName getSqlTypeName();

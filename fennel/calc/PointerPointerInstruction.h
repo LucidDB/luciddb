@@ -26,10 +26,9 @@
 #ifndef Fennel_PointerPointerInstruction_Included
 #define Fennel_PointerPointerInstruction_Included
 
-FENNEL_BEGIN_NAMESPACE
-
 #include "fennel/calc/PointerInstruction.h"
 
+FENNEL_BEGIN_NAMESPACE
 
 template<typename PTR_TYPE, typename OP2T>
 class PointerPointerInstruction : public PointerInstruction
@@ -78,10 +77,10 @@ protected:
     RegisterRef<PTR_TYPE>* mOp1;
     RegisterRef<OP2T>* mOp2;
     StandardTypeDescriptorOrdinal mPointerType;
-
 };
 
-//! Decreases length by op2, which may be completely invalid. Reset with PointerPutSize.
+//! Decreases length by op2, which may be completely invalid.
+//! Reset with PointerPutSize.
 template <typename PTR_TYPE>
 class PointerAdd : public PointerPointerInstruction<PTR_TYPE, PointerOperandT>
 {
@@ -91,7 +90,10 @@ public:
                RegisterRef<PTR_TYPE>* op1, 
                RegisterRef<PointerOperandT>* op2,
                StandardTypeDescriptorOrdinal pointerType)
-        : PointerPointerInstruction<PTR_TYPE, PointerOperandT>(result, op1, op2, pointerType)
+        : PointerPointerInstruction<PTR_TYPE, PointerOperandT>(result,
+                                                               op1,
+                                                               op2,
+                                                               pointerType)
     { }
     virtual
     ~PointerAdd() { }
@@ -113,19 +115,39 @@ public:
             } else {
                 newLength = 0;
             }
-            mResult->pointer(reinterpret_cast<PTR_TYPE>(mOp1->pointer()) + mOp2->value(),
+            mResult->pointer(reinterpret_cast<PTR_TYPE>(mOp1->pointer()) +
+                             mOp2->value(),
                              newLength);
         }
     }
 
-    const char* longName() const { return "PointerAdd"; }
-    const char* shortName() const { return "ADD"; } 
+    static const char* longName() { return "PointerAdd"; }
+    static const char* shortName() { return "ADD"; } 
+    static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
-        describeHelper(out, values, longName(), shortName(), mResult, mOp1, mOp2);
+        describeHelper(out, values, longName(), shortName(),
+                       mResult, mOp1, mOp2);
+    }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        return InstructionSignature(shortName(), 
+                                    regDesc(0, numArgs()-1, type, 1));
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        return new PointerAdd(static_cast<RegisterRef<PTR_TYPE>*> (sig[0]),
+                              static_cast<RegisterRef<PTR_TYPE>*> (sig[1]),
+                              static_cast<RegisterRef<PointerOperandT>*> (sig[2]),
+                              (sig[0])->type());
     }
 };
 
-//! Increases length by op2, which may be completely invalid. Reset with PointerPutSize.
+//! Increases length by op2, which may be completely invalid.
+//! Reset with PointerPutSize.
 //!
 //! Will only increase length to at most op1->cbStorage length to avoid
 //! needless invariant breakage.
@@ -138,7 +160,10 @@ public:
                RegisterRef<PTR_TYPE>* op1, 
                RegisterRef<PointerOperandT>* op2,
                StandardTypeDescriptorOrdinal pointerType)
-        : PointerPointerInstruction<PTR_TYPE, PointerOperandT>(result, op1, op2, pointerType)
+        : PointerPointerInstruction<PTR_TYPE, PointerOperandT>(result,
+                                                               op1,
+                                                               op2,
+                                                               pointerType)
     { }
     virtual 
     ~PointerSub() { }
@@ -155,15 +180,34 @@ public:
             uint newLength = mOp1->length() + mOp2->value();
             uint maxLength = mOp1->storage();
             if (newLength > maxLength) newLength = maxLength;
-            mResult->pointer(reinterpret_cast<PTR_TYPE>(mOp1->pointer()) - mOp2->value(),
+            mResult->pointer(reinterpret_cast<PTR_TYPE>(mOp1->pointer()) -
+                             mOp2->value(),
                              newLength);
         }
     }
 
-    const char* longName() const { return "PointerSub"; }
-    const char* shortName() const { return "SUB"; }
+    static const char* longName() { return "PointerSub"; }
+    static const char* shortName() { return "SUB"; }
+    static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
-        describeHelper(out, values, longName(), shortName(), mResult, mOp1, mOp2);
+        describeHelper(out, values, longName(), shortName(),
+                       mResult, mOp1, mOp2);
+    }
+
+    static InstructionSignature 
+    signature(StandardTypeDescriptorOrdinal type) {
+        return InstructionSignature(shortName(),
+                                    regDesc(0, numArgs()-1, type, 1));
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        return new PointerSub(static_cast<RegisterRef<PTR_TYPE>*> (sig[0]),
+                              static_cast<RegisterRef<PTR_TYPE>*> (sig[1]),
+                              static_cast<RegisterRef<PointerOperandT>*> (sig[2]),
+                              (sig[0])->type());
     }
 };
 
@@ -176,7 +220,9 @@ public:
     PointerMove(RegisterRef<PTR_TYPE>* result,
                 RegisterRef<PTR_TYPE>* op1,
                 StandardTypeDescriptorOrdinal pointerType)
-        : PointerPointerInstruction<PTR_TYPE, PTR_TYPE>(result, op1, pointerType)
+        : PointerPointerInstruction<PTR_TYPE, PTR_TYPE>(result,
+                                                        op1,
+                                                        pointerType)
     { }
     virtual 
     ~PointerMove() { }
@@ -190,10 +236,27 @@ public:
             mResult->pointer(mOp1->pointer(), mOp1->length());
         }
     }
-    const char* longName() const { return "PointerMove"; }
-    const char* shortName() const { return "MOVE"; }
+    static const char* longName() { return "PointerMove"; }
+    static const char* shortName() { return "MOVE"; }
+    static int numArgs() { return 2; }
     void describe(string& out, bool values) const {
-        describeHelper(out, values, longName(), shortName(), mResult, mOp1, mOp2);
+        describeHelper(out, values, longName(), shortName(), 
+                       mResult, mOp1, mOp2);
+    }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        return InstructionSignature(shortName(), 
+                                    regDesc(0, numArgs(), type, 0));
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        return new PointerMove(static_cast<RegisterRef<PTR_TYPE>*> (sig[0]),
+                               static_cast<RegisterRef<PTR_TYPE>*> (sig[1]),
+                               (sig[0])->type());
     }
 };
 
@@ -203,9 +266,11 @@ class PointerRef : public PointerPointerInstruction<PTR_TYPE, PTR_TYPE>
 public: 
     explicit
     PointerRef(RegisterRef<PTR_TYPE>* result,
-                RegisterRef<PTR_TYPE>* op1,
-                StandardTypeDescriptorOrdinal pointerType)
-        : PointerPointerInstruction<PTR_TYPE, PTR_TYPE>(result, op1, pointerType)
+               RegisterRef<PTR_TYPE>* op1,
+               StandardTypeDescriptorOrdinal pointerType)
+        : PointerPointerInstruction<PTR_TYPE, PTR_TYPE>(result,
+                                                        op1,
+                                                        pointerType)
     { }
     virtual 
     ~PointerRef() { }
@@ -214,10 +279,27 @@ public:
         pc++;
         mResult->refer(mOp1);
     }
-    const char* longName() const { return "PointerRef"; }
-    const char* shortName() const { return "REF"; }
+    static const char* longName() { return "PointerRef"; }
+    static const char* shortName() { return "REF"; }
+    static int numArgs() { return 2; }
     void describe(string& out, bool values) const {
-        describeHelper(out, values, longName(), shortName(), mResult, mOp1, mOp2);
+        describeHelper(out, values, longName(), shortName(),
+                       mResult, mOp1, mOp2);
+    }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        return InstructionSignature(shortName(), 
+                                    regDesc(0, numArgs(), type, 0));
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        return new PointerRef(static_cast<RegisterRef<PTR_TYPE>*> (sig[0]),
+                              static_cast<RegisterRef<PTR_TYPE>*> (sig[1]),
+                              (sig[0])->type());
     }
 };
 
@@ -239,10 +321,74 @@ public:
         mResult->toNull();
         mResult->length(0);
     }
-    const char* longName() const { return "PointerToNull"; }
-    const char* shortName() const { return "TONULL"; }
+    static const char* longName() { return "PointerToNull"; }
+    static const char* shortName() { return "TONULL"; }
+    static int numArgs() { return 1; }
     void describe(string& out, bool values) const {
-        describeHelper(out, values, longName(), shortName(), mResult, mOp1, mOp2);
+        describeHelper(out, values, longName(), shortName(),
+                       mResult, mOp1, mOp2);
+    }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        return InstructionSignature(shortName(),
+                                    regDesc(0, numArgs(), type, 0));
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        return new PointerToNull(static_cast<RegisterRef<PTR_TYPE>*> (sig[0]),
+                                 (sig[0])->type());
+    }
+};
+
+
+class PointerPointerInstructionRegister : InstructionRegister {
+
+    // TODO: Refactor registerTypes to class InstructionRegister
+    template < template <typename> class INSTCLASS2 >
+    static void
+    registerTypes(vector<StandardTypeDescriptorOrdinal> const &t) {
+
+        for (uint i = 0; i < t.size(); i++) {
+            StandardTypeDescriptorOrdinal type = t[i];
+            // Type <char> below is a placeholder and is ignored.
+            InstructionSignature sig = INSTCLASS2<char>::signature(type);
+            switch(type) {
+                // Array_Text, below, does not allow assembly programs
+                // of to have say, pointer to int16s, but the language
+                // does not have pointers defined other than
+                // c,vc,b,vb, so this is OK for now.
+#define Fennel_InstructionRegisterSwitch_Array 1
+#include "fennel/calc/InstructionRegisterSwitch.h"
+            default:
+                throw std::logic_error("Default InstructionRegister");
+            }
+        }
+    }
+
+public:
+    static void
+    registerInstructions() {
+
+        vector<StandardTypeDescriptorOrdinal> t;
+        // isArray, below, does not allow assembly programs of to
+        // have say, pointer to int16s, but the language does not have
+        // pointers defined other than c,vc,b,vb, so this is OK for now.
+        t = InstructionSignature::typeVector(StandardTypeDescriptor::isArray);
+
+        // Have to do full fennel:: qualification of template
+        // arguments below to prevent template argument 'TMPLT', of
+        // this encapsulating class, from perverting NativeAdd into
+        // NativeAdd<TMPLT> or something like
+        // that. Anyway. Fennel::NativeAdd works just fine.
+        registerTypes<fennel::PointerAdd>(t);
+        registerTypes<fennel::PointerSub>(t);
+        registerTypes<fennel::PointerMove>(t);
+        registerTypes<fennel::PointerRef>(t);
+        registerTypes<fennel::PointerToNull>(t);
     }
 };
 

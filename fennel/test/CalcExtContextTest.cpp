@@ -28,6 +28,8 @@
 #include "fennel/calc/StringToHex.h"
 #include "fennel/calc/InstructionFactory.h"
 #include "fennel/common/FennelExcn.h"
+#include "fennel/calc/ExtendedInstructionTable.h"
+#include "fennel/calc/ExtendedInstruction.h"
 
 #include <boost/test/test_tools.hpp>
 #include <boost/scoped_array.hpp>
@@ -175,7 +177,7 @@ CalcExtContextTest::setupExtendedTestInstructions()
     eit->add("ctxInst1", params,
              (ExtendedInstruction1Context<bool>*) NULL,
              ctxInst1);
-    inst = eit->lookupBySignature("ctxInst1(bo)");
+    inst = (*eit)["ctxInst1(bo)"];
     BOOST_REQUIRE(inst);
     BOOST_CHECK_EQUAL(inst->getName(),string("ctxInst1"));
     BOOST_CHECK_EQUAL(inst->getParameterTypes().size(), 1);
@@ -186,7 +188,7 @@ CalcExtContextTest::setupExtendedTestInstructions()
     eit->add("ctxInst2", params,
              (ExtendedInstruction2Context<bool,bool>*) NULL,
              ctxInst2);
-    inst = eit->lookupBySignature("ctxInst2(bo,bo)");
+    inst = (*eit)["ctxInst2(bo,bo)"];
     BOOST_REQUIRE(inst);
     BOOST_CHECK_EQUAL(inst->getName(),string("ctxInst2"));
     BOOST_CHECK_EQUAL(inst->getParameterTypes().size(), 2);
@@ -197,7 +199,7 @@ CalcExtContextTest::setupExtendedTestInstructions()
     eit->add("ctxInst3", params,
              (ExtendedInstruction3Context<bool,bool,bool>*) NULL,
              ctxInst3);
-    inst = eit->lookupBySignature("ctxInst3(bo,bo,bo)");
+    inst = (*eit)["ctxInst3(bo,bo,bo)"];
     BOOST_REQUIRE(inst);
     BOOST_CHECK_EQUAL(inst->getName(),string("ctxInst3"));
     BOOST_CHECK_EQUAL(inst->getParameterTypes().size(), 3);
@@ -208,7 +210,7 @@ CalcExtContextTest::setupExtendedTestInstructions()
     eit->add("ctxInst4", params,
              (ExtendedInstruction4Context<bool,bool,bool,bool>*) NULL,
              ctxInst4);
-    inst = eit->lookupBySignature("ctxInst4(bo,bo,bo,bo)");
+    inst = (*eit)["ctxInst4(bo,bo,bo,bo)"];
     BOOST_REQUIRE(inst);
     BOOST_CHECK_EQUAL(inst->getName(),string("ctxInst4"));
     BOOST_CHECK_EQUAL(inst->getParameterTypes().size(), 4);
@@ -219,7 +221,7 @@ CalcExtContextTest::setupExtendedTestInstructions()
     eit->add("ctxInst5", params,
              (ExtendedInstruction5Context<bool,bool,bool,bool,bool>*) NULL,
              ctxInst5);
-    inst = eit->lookupBySignature("ctxInst5(bo,bo,bo,bo,bo)");
+    inst = (*eit)["ctxInst5(bo,bo,bo,bo,bo)"];
     BOOST_REQUIRE(inst);
     BOOST_CHECK_EQUAL(inst->getName(),string("ctxInst5"));
     BOOST_CHECK_EQUAL(inst->getParameterTypes().size(), 5);

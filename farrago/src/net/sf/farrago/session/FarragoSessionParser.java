@@ -53,34 +53,46 @@ public interface FarragoSessionParser
     public FarragoSessionParserPosition getCurrentPosition();
 
     /**
-     * @return a comma-separated list of all a database's SQL keywords that are NOT also SQL92 keywords.
+     * @return a comma-separated list of all a database's SQL keywords that are
+     * NOT also SQL92 keywords.
      */
     public String getSQLKeywords();
 
 
     /**
-     *
-     * @return  a comma-separated list of string functions available with this database
+     * @return a comma-separated list of string functions available with this
+     * database
      */
     public String getStringFunctions();
 
     /**
-     *
-     * @return a comma-separated list of math functions available with this database
+     * @return a comma-separated list of math functions available with this
+     * database
      */
     public String getNumericFunctions();
 
     /**
-     *
-     * @return a comma-separated list of the time and date functions available with this database
+     * @return a comma-separated list of the time and date functions available
+     * with this database
      */
     public String getTimeDateFunctions();
 
     /**
-     *
-     * @return a comma-separated list of system functions available with this database
+     * @return a comma-separated list of system functions available with this
+     * database
      */
     public String getSystemFunctions();
+
+	/**
+	 * @return validator to use for validating DDL statements as they are
+	 * parsed
+	 */
+	public FarragoSessionDdlValidator getDdlValidator();
+    
+    /**
+     * @return validator to use for validating statements as they are parse
+     */
+    public FarragoSessionStmtValidator getStmtValidator();
 }
 
 // End FarragoSessionParser.java

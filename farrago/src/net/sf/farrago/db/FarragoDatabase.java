@@ -46,6 +46,8 @@ import java.io.*;
 import java.util.*;
 import java.util.logging.*;
 
+import javax.jmi.reflect.*;
+
 /**
  * FarragoDatabase is a top-level singleton representing an instance of a
  * Farrago database engine.  It is reference-counted to allow it to be shared
@@ -258,11 +260,11 @@ public class FarragoDatabase
                 + System.getProperty("java.library.path"));
 
             if (systemCatalog.isFennelEnabled()) {
-                systemCatalog.getRepository().beginTrans(true);
+                systemCatalog.beginReposTxn(true);
                 try {
                     loadFennel(sessionFactory.newFennelCmdExecutor(),init);
                 } finally {
-                    systemCatalog.getRepository().endTrans(false);
+                    systemCatalog.endReposTxn(false);
                 }
             } else {
                 tracer.config("Fennel support disabled");
@@ -270,10 +272,7 @@ public class FarragoDatabase
 
             integrateSaffronTracing();
 
-            long codeCacheMaxBytes = currentConfig.getCodeCacheMaxBytes();
-            if (codeCacheMaxBytes == -1) {
-                codeCacheMaxBytes = Long.MAX_VALUE;
-            }
+            long codeCacheMaxBytes = getCodeCacheMaxBytes(currentConfig);
             codeCache = new FarragoObjectCache(this,codeCacheMaxBytes);
 
             // TODO:  parameter for cache size limit
@@ -399,9 +398,14 @@ public class FarragoDatabase
         Iterator iter = attributeMap.entrySet().iterator();
         while (iter.hasNext()) {
             Map.Entry entry = (Map.Entry) iter.next();
+
+            String expandedValue = 
+                FarragoProperties.instance().expandProperties(
+                    entry.getValue().toString());
+
             param = systemCatalog.newFemDatabaseParam();
             param.setName(entry.getKey().toString());
-            param.setValue(entry.getValue().toString());
+            param.setValue(expandedValue);
             cmd.getParams().add(param);
         }
 
@@ -478,93 +482,68 @@ public class FarragoDatabase
      * Prepare a query or DML statement; use a cached implementation if
      * available, otherwise cache the one generated here.
      *
-     * @param session FarragoSession requesting preparation
-     *
-     * @param catalog catalog to use for metadata lookup
+     * @param stmtValidator generic stmt validator
      *
      * @param sqlNode the parsed form of the statement
      *
      * @param owner the FarragoAllocationOwner which will be responsible for
      * the returned stmt
      *
-     * @param connectionDefaults defaults for unqualified object references
-     *
-     * @param indexMap FarragoIndexMap to use for index access
-     *
      * @param viewInfo receives information about a prepared view definition
      *
      * @return statement implementation, or null when viewInfo is non-null
      */
-    public FarragoExecutableStmt prepareStmt(
-        FarragoSession session,
-        FarragoCatalog catalog,
+    public FarragoSessionExecutableStmt prepareStmt(
+        FarragoSessionStmtValidator stmtValidator,
         SqlNode sqlNode,
         FarragoAllocationOwner owner,
-        FarragoConnectionDefaults connectionDefaults,
-        FarragoIndexMap indexMap,
         FarragoSessionViewInfo viewInfo)
     {
-        final FarragoPreparingStmt stmt = new FarragoPreparingStmt(
-            catalog,
-            fennelDbHandle,
-            session,
-            codeCache,
-            dataWrapperCache,
-            indexMap);
-        try {
-            return prepareStmtImpl(
-                session,stmt,sqlNode,owner,connectionDefaults,
-                viewInfo);
-        } finally {
-            stmt.closeAllocation();
-        }
+        final FarragoPreparingStmt stmt =
+            new FarragoPreparingStmt(stmtValidator);
+        return prepareStmtImpl(
+            stmt,sqlNode,owner,viewInfo);
     }
 
 
     /**
      * Implement a logical or physical query plan but do not execute it.
+     * @param prep the FarragoSessionPreparingStmt that is managing the query.
      * @param rootRel root of query plan (saffron relational expression)
      * @param sqlKind SqlKind for the relational expression: only
      *   SqlKind.Explain and SqlKind.Dml are special cases.
      * @param logical true for a logical query plan (still needs to be
      *   optimized), false for a physical plan.
-     * @param session FarragoSession requesting implementation
-     * @param catalog catalog to use for metadata lookup
      * @param owner the FarragoAllocationOwner which will be responsible for
      * the returned stmt
-     * @param indexMap FarragoIndexMap to use for index access
      * @return statement implementation
      */
-    public FarragoExecutableStmt implementStmt(
-        FarragoSession session, FarragoCatalog catalog,
+    public FarragoSessionExecutableStmt implementStmt(
+        FarragoSessionPreparingStmt prep,
         SaffronRel rootRel, SqlKind sqlKind, boolean logical,
-        FarragoAllocationOwner owner, FarragoIndexMap indexMap)
+        FarragoAllocationOwner owner)
     {
-        FarragoPreparingStmt stmt =
-            new FarragoPreparingStmt(catalog, fennelDbHandle, session,
-                                     codeCache, dataWrapperCache, indexMap);
         try {
-            FarragoExecutableStmt executable = stmt.implement(rootRel, sqlKind, logical);
+            FarragoSessionExecutableStmt executable =
+                prep.implement(rootRel, sqlKind, logical);
             owner.addAllocation(executable);
             return executable;
         } finally {
-            stmt.closeAllocation();
+            prep.closeAllocation();
         }
-
     }
 
-    private FarragoExecutableStmt prepareStmtImpl(
-        FarragoSession session,
+    private FarragoSessionExecutableStmt prepareStmtImpl(
         final FarragoPreparingStmt stmt,
         SqlNode sqlNode,
         FarragoAllocationOwner owner,
-        FarragoConnectionDefaults connectionDefaults,
         FarragoSessionViewInfo viewInfo)
     {
         // It would be silly to cache EXPLAIN PLAN results, so deal with them
         // directly.
         if (sqlNode.isA(SqlKind.Explain)) {
-            FarragoExecutableStmt executableStmt = stmt.implement(sqlNode);
+            FarragoSessionExecutableStmt executableStmt =
+                stmt.prepare(sqlNode);
             owner.addAllocation(executableStmt);
             return executableStmt;
         }
@@ -574,7 +553,8 @@ public class FarragoDatabase
 
         final SqlNode validatedSqlNode = stmt.validate(sqlNode);
 
-        SqlDialect sqlDialect = new SqlDialect(session.getDatabaseMetaData());
+        SqlDialect sqlDialect = new SqlDialect(
+            stmt.getSession().getDatabaseMetaData());
         final String sql = validatedSqlNode.toSqlString(sqlDialect);
 
         if (viewInfo != null) {
@@ -604,28 +584,103 @@ public class FarragoDatabase
                     FarragoObjectCache.UninitializedEntry entry)
                 {
                     assert(key.equals(sql));
-                    FarragoExecutableStmt executableStmt =
-                        stmt.implement(validatedSqlNode);
+                    FarragoSessionExecutableStmt executableStmt =
+                        stmt.prepare(validatedSqlNode);
                     long memUsage = FarragoUtil.getStringMemoryUsage(sql)
                         + executableStmt.getMemoryUsage();
                     entry.initialize(executableStmt,memUsage);
                 }
             };
 
-        FarragoObjectCache.Entry cacheEntry =
-            codeCache.pin(sql,stmtFactory,false);
+        FarragoObjectCache.Entry cacheEntry;
+        FarragoSessionExecutableStmt executableStmt;
+
+        do {
+            cacheEntry = codeCache.pin(sql,stmtFactory,false);
+            executableStmt = 
+                (FarragoSessionExecutableStmt) cacheEntry.getValue();
+
+            if (isStale(stmt.getCatalog(),executableStmt)) {
+                // TODO jvs 17-July-2004: Need DDL-vs-query concurrency control
+                // here.  FarragoRuntimeContext needs to acquire DDL-locks on
+                // referenced objects so that they cannot be modified/dropped
+                // for the duration of execution.
+                cacheEntry.closeAllocation();
+                codeCache.discard(sql);
+                cacheEntry = null;
+                executableStmt = null;
+            }
+        } while (executableStmt == null);
         owner.addAllocation(cacheEntry);
-        return (FarragoExecutableStmt) cacheEntry.getValue();
+        return executableStmt;
+    }
+
+    private boolean isStale(
+        FarragoCatalog catalog,
+        FarragoSessionExecutableStmt stmt)
+    {
+        Iterator idIter = stmt.getReferencedObjectIds().iterator();
+        while (idIter.hasNext()) {
+            String mofid = (String) idIter.next();
+            RefBaseObject obj =
+                catalog.getRepository().getByMofId(mofid);
+            if (obj == null) {
+                // TODO jvs 17-July-2004:  Once we support ALTER TABLE, this
+                // won't be good enough.  In addition to checking that the
+                // object still exists, we'll need to verify that its version
+                // number is the same as it was at the time stmt was prepared.
+                return true;
+            }
+        }
+        return false;
     }
 
     public void updateSystemParameter(DdlSetSystemParamStmt ddlStmt)
     {
         // TODO:  something cleaner
+
+        boolean setCodeCacheSize = false;
+        
         String paramName = ddlStmt.getParamName();
-        if (paramName.equals("codeCacheMaxBytes")) {
-            codeCache.setMaxBytes(
-                systemCatalog.getCurrentConfig().getCodeCacheMaxBytes());
+
+        if (paramName.equals("calcVirtualMachine")) {
+
+            // sanity check
+            if (!userCatalog.isFennelEnabled()) {
+                CalcVirtualMachine vm = 
+                    userCatalog.getCurrentConfig().getCalcVirtualMachine();
+                if (vm.equals(CalcVirtualMachineEnum.CALCVM_FENNEL)) {
+                    throw FarragoResource.instance().
+                        newValidatorCalcUnavailable();
+                }
+            }
+            
+            // when this parameter changes, we need to clear the code cache,
+            // since cached plans may be based on the old setting
+            codeCache.setMaxBytes(0);
+            
+            // this makes sure that we reset the cache to the correct size
+            // below
+            setCodeCacheSize = true;
         }
+        
+        if (paramName.equals("codeCacheMaxBytes")) {
+            setCodeCacheSize = true;
+        }
+
+        if (setCodeCacheSize) {
+            codeCache.setMaxBytes(
+                getCodeCacheMaxBytes(systemCatalog.getCurrentConfig()));
+        }
+    }
+
+    private long getCodeCacheMaxBytes(FemFarragoConfig config)
+    {
+        long codeCacheMaxBytes = config.getCodeCacheMaxBytes();
+        if (codeCacheMaxBytes == -1) {
+            codeCacheMaxBytes = Long.MAX_VALUE;
+        }
+        return codeCacheMaxBytes;
     }
 
     public void requestCheckpoint(boolean fuzzy,boolean async)

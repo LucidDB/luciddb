@@ -22,6 +22,8 @@
 
 package net.sf.saffron.sql;
 
+import net.sf.saffron.sql.parser.ParserPosition;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -42,8 +44,9 @@ public class SqlNodeList extends SqlNode
     /**
      * Creates an empty <code>SqlNodeList</code>.
      */
-    public SqlNodeList()
+    public SqlNodeList(ParserPosition parserPosition)
     {
+        super(parserPosition);
         list = new ArrayList();
     }
 
@@ -51,8 +54,9 @@ public class SqlNodeList extends SqlNode
      * Creates a <code>SqlNodeList</code> containing the nodes in
      * <code>list</code>. The list is copied, but the nodes in it are not.
      */
-    public SqlNodeList(Collection collection)
+    public SqlNodeList(Collection collection, ParserPosition parserPosition)
     {
+        super(parserPosition);
         list = new ArrayList(collection);
     }
 
@@ -70,7 +74,7 @@ public class SqlNodeList extends SqlNode
 
     public Object clone()
     {
-        return new SqlNodeList(list);
+        return new SqlNodeList(list, getParserPosition());
     }
 
     public SqlNode get(int n)

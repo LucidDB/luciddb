@@ -34,7 +34,12 @@ import net.sf.saffron.rex.RexCall;
  */
 public interface CalcRexImplementor
 {
-    void implement(RexCall call, RexToCalcTranslator translator);
+    /**
+     * Generates instructions to implement this call, and returns the register
+     * which holds the result.
+     */
+    CalcProgramBuilder.Register implement(RexCall call,
+            RexToCalcTranslator translator);
     boolean canImplement(RexCall call);
 }
 

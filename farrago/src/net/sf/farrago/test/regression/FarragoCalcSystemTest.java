@@ -21,8 +21,10 @@
 package net.sf.farrago.test.regression;
 
 import net.sf.saffron.sql.*;
+import net.sf.saffron.sql.type.SqlTypeName;
 import net.sf.saffron.sql.fun.SqlStdOperatorTable;
 import net.sf.saffron.sql.test.SqlOperatorIterator;
+import net.sf.saffron.util.Util;
 import net.sf.farrago.test.FarragoTestCase;
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -30,6 +32,7 @@ import junit.framework.TestSuite;
 import java.util.Iterator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * This class contains tests that do full vertical system testing downto the
@@ -45,6 +48,8 @@ public class FarragoCalcSystemTest extends FarragoTestCase{
             "alter system set \"calcVirtualMachine\" = 'CALCVM_FENNEL'";
     public static final String vmJava =
             "alter system set \"calcVirtualMachine\" = 'CALCVM_JAVA'";
+    public static final String vmAuto =
+            "alter system set \"calcVirtualMachine\" = 'CALCVM_AUTO'";
     String sqlToExceute;
     String vmFlag;
 
@@ -63,19 +68,23 @@ public class FarragoCalcSystemTest extends FarragoTestCase{
 
         HashSet exclude = new HashSet();
         // do not test operators added to exclude list.
-        // Functions to be excluded are typically those that return null if input is null or
+        // Functions to be excluded are typically those that return not null if
+        // input is null or
         // otherwise has some special syntax or irregularites to them,
         // making it harder to test them automatically.
         // --- NOTE ---
-        // Do not add a function to this exclude list unless you first add a test
-        // for it else where.
+        // Do not add a function to this exclude list unless you first add a
+        // null test for it elsewhere.
         // ------------
+        exclude.add(opTab.asOperator);
         exclude.add(opTab.isTrueOperator);
         exclude.add(opTab.isFalseOperator);
         exclude.add(opTab.isNullOperator);
+        exclude.add(opTab.isUnknownOperator);
         exclude.add(opTab.isNotTrueOperator);
         exclude.add(opTab.isNotFalseOperator);
         exclude.add(opTab.isNotNullOperator);
+        exclude.add(opTab.isNotUnknownOperator);
         exclude.add(opTab.explainOperator);
         exclude.add(opTab.unionAllOperator);
         exclude.add(opTab.unionOperator);
@@ -84,6 +93,7 @@ public class FarragoCalcSystemTest extends FarragoTestCase{
         exclude.add(opTab.betweenOperator);
         exclude.add(opTab.notBetweenOperator);
         exclude.add(opTab.updateOperator);
+        exclude.add(opTab.existsOperator);
         exclude.add(opTab.exceptOperator);
         exclude.add(opTab.exceptAllOperator);
         exclude.add(opTab.inOperator);
@@ -98,18 +108,35 @@ public class FarragoCalcSystemTest extends FarragoTestCase{
         exclude.add(opTab.joinOperator);
         exclude.add(opTab.rowConstructor);
         exclude.add(opTab.nullIfFunc);
-        exclude.add(opTab.convertFunc);
-        exclude.add(opTab.translateFunc);
         exclude.add(opTab.castFunc);
         exclude.add(opTab.coalesceFunc);
-        exclude.add(opTab.currentDateFunc); //TODO need to enable when ready. i.e not exclude
         exclude.add(opTab.overlayFunc);
         exclude.add(opTab.substringFunc);
         exclude.add(opTab.trimFunc);
+        exclude.add(opTab.isDistinctFromOperator);
+        exclude.add(opTab.descendingOperator);
+
+        // Eventutally need to include these when cast is working
+        exclude.add(opTab.overlapsOperator);
+        exclude.add(opTab.initcapFunc);
+        exclude.add(opTab.lnFunc);
+        exclude.add(opTab.powFunc);
+        exclude.add(opTab.logFunc);
+        exclude.add(opTab.absFunc);
+        exclude.add(opTab.localTimeFunc);
+        exclude.add(opTab.localTimestampFunc);
+        exclude.add(opTab.currentTimestampFunc);
+        exclude.add(opTab.currentTimeFunc);
+        exclude.add(opTab.currentDateFunc);
+        exclude.add(opTab.convertFunc);
+        exclude.add(opTab.translateFunc);
+
+        exclude.add(opTab.greaterThanOrEqualOperator);
+        exclude.add(opTab.lessThanOrEqualOperator);
 
         // --- NOTE ---
-        // Do not add a function to this exclude list unless you first add a test
-        // for it else where.
+        // Do not add a function to this exclude list unless you first add a
+        // test for it elsewhere.
         // ------------
 
         SqlOperatorIterator operatorIt = new SqlOperatorIterator();
@@ -131,16 +158,34 @@ public class FarragoCalcSystemTest extends FarragoTestCase{
                 SqlNode[] operands = new SqlNode[n.intValue()];
                 SqlOperator.AllowedArgInference allowedTypes =
                         op.getAllowedArgInference();
-                for (int i=0; i < n.intValue(); i++) {
-                    // TODO wael: this is bogus, just to get an idea
-                    // do casting using allowedTypes.getTypes()[i][0]
-                    operands[i] = opTab.castFunc.createCall(SqlLiteral.createNull());
+                if (allowedTypes instanceof SqlOperator.CompositeAllowedArgInference) {
+                    allowedTypes = ((SqlOperator.CompositeAllowedArgInference) allowedTypes).getRules()[0];
                 }
-                SqlCall call = op.createCall(operands);
+
+                if (null == allowedTypes) {
+                    throw Util.needToImplement("Need to add to exclude list" +
+                            " and manually add test");
+                }
+
+                for (int i=0; i < n.intValue(); i++) {
+                    SqlTypeName typeName = allowedTypes.getTypes()[i][0];
+                    if (typeName.equals(SqlTypeName.Null)) {
+                        typeName = allowedTypes.getTypes()[i][1];
+                    } else if (typeName.equals(SqlTypeName.Any)) {
+                        typeName = SqlTypeName.Boolean;
+                    }
+
+                    SqlDataType dt = new SqlDataType(
+                            new SqlIdentifier(typeName.name_,null),0,0,null,null);
+
+                    operands[i] = opTab.castFunc.createCall(
+                            SqlLiteral.createNull(null), dt,null);
+                }
+                SqlCall call = op.createCall(operands,null);
 
                 String sql = "SELECT "+call.toString()+" FROM VALUES(1)";
                 String testName = "NULL-TEST-"+op.name+"-";
-//                suite.addTest(new FarragoCalcSystemTest(vmFennel, sql, testName+"FENNEL"));
+                suite.addTest(new FarragoCalcSystemTest(vmFennel, sql, testName+"FENNEL"));
 //                suite.addTest(new FarragoCalcSystemTest(vmJava, sql, testName+"JAVA"));
             }
         }
@@ -154,16 +199,10 @@ public class FarragoCalcSystemTest extends FarragoTestCase{
         stmt.execute(vmFlag);
     }
 
-    // implement TestCase
-    protected void tearDown() throws Exception {
-        // reset to use java vm by default
-        stmt.execute(vmJava);
-        super.tearDown();
-    }
-
     protected void runTest() throws Throwable {
         resultSet = stmt.executeQuery(sqlToExceute);
-        assertEquals(0,getResultSetCount());
-        stmt.close();
+        Set refSet = new HashSet();
+        refSet.add(null);
+        compareResultSet(refSet);
     }
 }

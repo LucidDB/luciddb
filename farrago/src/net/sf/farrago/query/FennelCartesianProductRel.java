@@ -92,11 +92,6 @@ class FennelCartesianProductRel extends FennelPullDoubleRel
         FemCartesianProductStreamDef streamDef =
             getCatalog().newFemCartesianProductStreamDef();
 
-        // REVIEW: this is to get the buffer provisioning right, but it
-        // ought to be accounted for somewhere else, not here
-        streamDef.setCachePageMin(1);
-        streamDef.setCachePageMax(1);
-
         FemExecutionStreamDef leftInput =
             implementor.visitFennelChild((FennelRel) left);
         streamDef.getInput().add(leftInput);
@@ -122,16 +117,6 @@ class FennelCartesianProductRel extends FennelPullDoubleRel
             buffer.setInMemory(false);
             buffer.setMultipass(true);
 
-            // Need one page for buffered stream access.  TODO: once
-            // BufferingTupleStream supports SpillOutputStream, use it.  Here,
-            // we would set the maximum number of pages based on the estimated
-            // or known size of the buffered data.  If the optimizer can
-            // guarantee a limit, and we can actually get the requested number
-            // of pages, use a scratch segment with no backing store.
-            // Otherwise, use a SpillOutputStream with as many scratch pages as
-            // we can get.
-            buffer.setCachePageMin(1);
-            buffer.setCachePageMax(1);
             buffer.getInput().add(rightInput);
 
             streamDef.getInput().add(buffer);

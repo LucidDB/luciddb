@@ -1145,6 +1145,12 @@ public abstract class Toolbox {
      * easier for us to identity the holes. Throwing a
      * {@link java.lang.UnsupportedOperationException} isn't as good, because
      * sometimes we actually want to partially implement an API.
+     *
+     * @param o The object which was the target of the call, or null.
+     *   Passing the object gives crucial information if a method needs to be
+     *   overridden and a subclass forgot to do so.
+     *
+     * @return an {@link UnsupportedOperationException}.
      */
     public static RuntimeException needToImplement(Object o) {
         String description = null;

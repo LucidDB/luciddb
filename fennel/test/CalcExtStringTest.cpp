@@ -43,6 +43,7 @@ class CalcExtStringTest : virtual public TestBase, public TraceSource
     void testCalcExtStringCatA2();
     void testCalcExtStringCatA3();
     void testCalcExtStringCmpA();
+    void testCalcExtStringCmpOct();
     void testCalcExtStringLenBitA();
     void testCalcExtStringLenCharA();
     void testCalcExtStringLenOctA();
@@ -51,6 +52,7 @@ class CalcExtStringTest : virtual public TestBase, public TraceSource
     void testCalcExtStringPosA();
     void testCalcExtStringSubStringA3();
     void testCalcExtStringSubStringA4();
+    void testCalcExtStringToANull();
     void testCalcExtStringToLower();
     void testCalcExtStringToUpper();
     void testCalcExtStringTrim();
@@ -76,6 +78,7 @@ public:
         FENNEL_UNIT_TEST_CASE(CalcExtStringTest, testCalcExtStringCatA2);
         FENNEL_UNIT_TEST_CASE(CalcExtStringTest, testCalcExtStringCatA3);
         FENNEL_UNIT_TEST_CASE(CalcExtStringTest, testCalcExtStringCmpA);
+        FENNEL_UNIT_TEST_CASE(CalcExtStringTest, testCalcExtStringCmpOct);
         FENNEL_UNIT_TEST_CASE(CalcExtStringTest, testCalcExtStringLenBitA);
         FENNEL_UNIT_TEST_CASE(CalcExtStringTest, testCalcExtStringLenCharA);
         FENNEL_UNIT_TEST_CASE(CalcExtStringTest, testCalcExtStringLenOctA);
@@ -84,6 +87,7 @@ public:
         FENNEL_UNIT_TEST_CASE(CalcExtStringTest, testCalcExtStringPosA);
         FENNEL_UNIT_TEST_CASE(CalcExtStringTest, testCalcExtStringSubStringA3);
         FENNEL_UNIT_TEST_CASE(CalcExtStringTest, testCalcExtStringSubStringA4);
+        FENNEL_UNIT_TEST_CASE(CalcExtStringTest, testCalcExtStringToANull);
         FENNEL_UNIT_TEST_CASE(CalcExtStringTest, testCalcExtStringToLower);
         FENNEL_UNIT_TEST_CASE(CalcExtStringTest, testCalcExtStringToUpper);
         FENNEL_UNIT_TEST_CASE(CalcExtStringTest, testCalcExtStringTrim);
@@ -362,6 +366,81 @@ CalcExtStringTest::testCalcExtStringCmpA()
     // char null cases
     pg << "CALL 'strCmpA(L8, C5, C2);" << endl;
     pg << "CALL 'strCmpA(L9, C2, C5);" << endl;
+    // make output available
+    refLocalOutput(pg, 10);
+
+    Calculator calc;
+    
+    try {
+        calc.assemble(pg.str().c_str());
+    }
+    catch (FennelExcn& ex) {
+        BOOST_MESSAGE("Assemble exception " << ex.getMessage());
+        BOOST_MESSAGE(pg.str());
+        BOOST_REQUIRE(0);
+    }
+
+    TupleDataWithBuffer outTuple(calc.getOutputRegisterDescriptor());
+    TupleDataWithBuffer inTuple(calc.getInputRegisterDescriptor());
+
+    calc.bind(&inTuple, &outTuple);
+    calc.exec();
+    printOutput(outTuple, calc);
+
+    // varchar common cases
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[0], 0));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[1], 1));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[2], -1));
+    // varchar null cases
+    BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[3]));
+    BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[4]));
+    // char common case
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[5], 0));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[6], 1));
+    BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[7], -1));
+    // char null cases
+    BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[8]));
+    BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[9]));
+}
+
+void
+CalcExtStringTest::testCalcExtStringCmpOct()
+{
+    ostringstream pg(""), outloc("");
+    int i;
+
+    for (i = 0; i <= 8; i++) {
+        outloc << "s4, ";
+    }
+    outloc << "s4;" << endl;
+
+    pg << "O " << outloc.str();
+    pg << "L " << outloc.str();
+    pg << "C vb,1, vb,1, ";      // varbinary data[0-1]
+    //disabling binaries for now since they seem to be failing in the assembler
+    pg << "b,1, b,1, ";          // binary data[2-3]
+    pg << "vb,0, b,0;" << endl;  // nulls[4-5]
+    pg << "V 0xAA";
+    pg << ", 0xBB";
+    pg << ", 0xCC";
+    pg << ", 0xDD";
+    pg << ",,;" << endl;
+
+    pg << "T;" << endl;
+    // varchar common cases
+    pg << "CALL 'strCmpOct(L0, C0, C0);" << endl;
+    pg << "CALL 'strCmpOct(L1, C1, C0);" << endl;
+    pg << "CALL 'strCmpOct(L2, C0, C1);" << endl;
+    // varchar null cases
+    pg << "CALL 'strCmpOct(L3, C4, C0);" << endl;
+    pg << "CALL 'strCmpOct(L4, C0, C4);" << endl;
+    // char common cases
+    pg << "CALL 'strCmpOct(L5, C2, C2);" << endl;
+    pg << "CALL 'strCmpOct(L6, C3, C2);" << endl;
+    pg << "CALL 'strCmpOct(L7, C2, C3);" << endl;
+    // char null cases
+    pg << "CALL 'strCmpOct(L8, C5, C2);" << endl;
+    pg << "CALL 'strCmpOct(L9, C2, C5);" << endl;
     // make output available
     refLocalOutput(pg, 10);
 
@@ -1040,6 +1119,86 @@ CalcExtStringTest::testCalcExtStringSubStringA4()
     BOOST_CHECK(iter == calc.mWarnings.end());
 }
 
+
+// Test that string operatings attempting to write into
+// a null string result in a null, and not some other error/problem.
+void
+CalcExtStringTest::testCalcExtStringToANull()
+{
+    ostringstream pg(""), outloc(""), outlocchar("");
+    int i;
+
+    for (i = 0; i <= 4; i++) {  // [0-4] char
+        outlocchar << "c,5, ";
+    }
+
+    for (i = 5; i <= 13; i++) { // [5-14] varchar
+        outloc << "vc,5, ";
+    }
+    outloc << "vc,5;" << endl;
+
+    pg << "O " << outlocchar.str() << outloc.str();
+    pg << "L " << outlocchar.str() << outloc.str();
+    pg << "C vc,5, c,5, s4, vc,5, c,5;" << endl;    // data[0-2], null [3-4]
+    pg << "V 0x" << stringToHex(" abc ");   // vc const
+    pg << ", 0x" << stringToHex(" hij ");   // char const
+    pg << ", 1,,;" << endl;
+    pg << "T;" << endl;
+
+    for (i = 0; i <= 14; i++) {
+        pg << "TONULL L" << i << ";" << endl;
+    }
+
+    // char cases
+    pg << "CALL 'strCatA2(L0, C1);" << endl;
+    pg << "CALL 'strCatA3(L1, C1, C1);" << endl;
+    pg << "CALL 'strCpyA(L2, C1);" << endl;
+    pg << "CALL 'strToLowerA(L3, C1);" << endl;
+    pg << "CALL 'strToUpperA(L4, C1);" << endl;
+
+    // varchar cases
+    pg << "CALL 'strCatA2(L5, C0);" << endl;
+    pg << "CALL 'strCatA3(L6, C0, C0);" << endl;
+    pg << "CALL 'strCpyA(L7, C0);" << endl;
+    pg << "CALL 'strOverlayA4(L8, C0, C0, C2);" << endl;
+    pg << "CALL 'strOverlayA5(L9, C0, C0, C2, C2);" << endl;
+    pg << "CALL 'strSubStringA3(L10, C0, C2);" << endl;
+    pg << "CALL 'strSubStringA4(L11, C0, C2, C2);" << endl;
+    pg << "CALL 'strToLowerA(L12, C0);" << endl;
+    pg << "CALL 'strToUpperA(L13, C0);" << endl;
+    pg << "CALL 'strTrimA(L14, C0, C0, C2, C2);" << endl; // trim both
+
+    // make output available
+    refLocalOutput(pg, 15);
+    Calculator calc;
+    
+    try {
+        calc.assemble(pg.str().c_str());
+    }
+    catch (FennelExcn& ex) {
+        BOOST_MESSAGE("Assemble exception " << ex.getMessage());
+        BOOST_MESSAGE(pg.str());
+        BOOST_REQUIRE(0);
+    }
+
+    TupleDataWithBuffer outTuple(calc.getOutputRegisterDescriptor());
+    TupleDataWithBuffer inTuple(calc.getInputRegisterDescriptor());
+
+    calc.bind(&inTuple, &outTuple);
+    calc.exec();
+    printOutput(outTuple, calc);
+
+    for (i = 0; i <= 14 ;i++) {
+        BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[i]));
+    }
+
+    deque<CalcMessage>::iterator iter = calc.mWarnings.begin();
+    deque<CalcMessage>::iterator end = calc.mWarnings.end();
+
+    BOOST_CHECK(iter == end);
+}
+
+
 void
 CalcExtStringTest::testCalcExtStringToLower()
 {
@@ -1188,45 +1347,77 @@ CalcExtStringTest::testCalcExtStringTrim()
     ostringstream pg(""), outloc("");
     int i;
 
-    for (i = 0; i <= 14; i++) {
-        outloc << "vc,5, ";
+    for (i = 0; i <= 28; i++) {
+        outloc << "vc,10, ";
     }
-    outloc << "vc,5;" << endl;
+    outloc << "vc,10;" << endl;
 
     pg << "O " << outloc.str();
     pg << "L " << outloc.str();
-    pg << "C vc,5, c,5, s4, s4, ";  // data[0-3]
-    pg << "vc,5, c,5, s4, "; // nulls[4-6]
-    pg << "c,1, vc,1;" << endl; //tokens[7-8]
+    pg << "C vc,5, c,5, s4, s4, ";         // data[0-3]
+    pg << "vc,5, c,5, s4, ";               // nulls[4-6]
+    pg << "c,1, vc,1, vc,1, vc,2, vc,1, "; // trimchar[7-11]
+    pg << "vc,10;" << endl;                // data[12]
     pg << "V 0x" << stringToHex(" abc ");   // vc const
     pg << ", 0x" << stringToHex(" hij ");   // char const
     pg << ", 1, 0,,,";
-    pg << ", 0x" << stringToHex(" "); //space token
-    pg << ", 0x" << stringToHex(" ") << ";" << endl;
+    pg << ", 0x" << stringToHex(" ");  // space trimchar char
+    pg << ", 0x" << stringToHex(" ");  // space trimchar varchar
+    pg << ", 0x" << stringToHex("");   // invalid zero length trimchar
+    pg << ", 0x" << stringToHex(" a"); // invalid two char length trimchar
+    pg << ", 0x" << stringToHex("x");  // x as trimchar
+    pg << ", 0x" << stringToHex("xx pqr xx"); // data[12]
+    pg << ";" << endl;
     pg << "T;" << endl;
 
-    // varchar common cases
-    pg << "CALL 'strTrimA(L0, C8, C0, C2, C2);" << endl; // trim both
-    pg << "CALL 'strTrimA(L1, C8, C0, C2, C3);" << endl; // trim left
-    pg << "CALL 'strTrimA(L2, C8, C0, C3, C2);" << endl; // trim right
-    pg << "CALL 'strTrimA(L3, C8, C0, C3, C3);" << endl; // trim none
-    // varchar null cases
-    pg << "CALL 'strTrimA(L4, C4, C0, C2, C2);" << endl;
-    pg << "CALL 'strTrimA(L5, C7, C4, C2, C2);" << endl;
-    pg << "CALL 'strTrimA(L6, C7, C0, C6, C2);" << endl;
-    pg << "CALL 'strTrimA(L7, C7, C0, C2, C6);" << endl;
-    // char common cases
-    pg << "CALL 'strTrimA(L8, C7, C1, C2, C2);" << endl; // trim both
-    pg << "CALL 'strTrimA(L9, C7, C1, C2, C3);" << endl; // trim left
-    pg << "CALL 'strTrimA(L10, C7, C1, C3, C2);" << endl; // trim right
-    pg << "CALL 'strTrimA(L11, C7, C1, C3, C3);" << endl; // trim none
-    // char null cases
-    pg << "CALL 'strTrimA(L12, C7, C5, C2, C2);" << endl;    
-    pg << "CALL 'strTrimA(L13, C7, C5, C2, C2);" << endl;
-    pg << "CALL 'strTrimA(L14, C7, C1, C6, C2);" << endl;
-    pg << "CALL 'strTrimA(L15, C7, C1, C2, C6);" << endl;
+    // all varchar common cases
+    pg << "CALL 'strTrimA(L0, C0, C8, C2, C2);" << endl; // trim both
+    pg << "CALL 'strTrimA(L1, C0, C8, C2, C3);" << endl; // trim left
+    pg << "CALL 'strTrimA(L2, C0, C8, C3, C2);" << endl; // trim right
+    pg << "CALL 'strTrimA(L3, C0, C8, C3, C3);" << endl; // trim none
+    // all varchar null cases
+    pg << "CALL 'strTrimA(L4, C0, C4, C2, C2);" << endl;
+    pg << "CALL 'strTrimA(L5, C4, C8, C2, C2);" << endl;
+    pg << "CALL 'strTrimA(L6, C0, C8, C6, C2);" << endl;
+    pg << "CALL 'strTrimA(L7, C0, C8, C2, C6);" << endl;
+    // all char common cases
+    pg << "CALL 'strTrimA(L8, C1, C7, C2, C2);" << endl; // trim both
+    pg << "CALL 'strTrimA(L9, C1, C7, C2, C3);" << endl; // trim left
+    pg << "CALL 'strTrimA(L10, C1, C7, C3, C2);" << endl; // trim right
+    pg << "CALL 'strTrimA(L11, C1, C7, C3, C3);" << endl; // trim none
+    // all char null cases
+    pg << "CALL 'strTrimA(L12, C5, C7, C2, C2);" << endl;    
+    pg << "CALL 'strTrimA(L13, C1, C5, C2, C2);" << endl;
+    pg << "CALL 'strTrimA(L14, C1, C7, C6, C2);" << endl;
+    pg << "CALL 'strTrimA(L15, C1, C7, C2, C6);" << endl;
+    // mixed varchar/char common cases
+    pg << "CALL 'strTrimA(L16, C0, C7, C2, C2);" << endl; // trim both
+    pg << "CALL 'strTrimA(L17, C1, C7, C2, C2);" << endl; 
+    pg << "CALL 'strTrimA(L18, C0, C8, C2, C2);" << endl; 
+    pg << "CALL 'strTrimA(L19, C1, C8, C2, C2);" << endl; 
+    // mixed varchar/char null cases
+    pg << "CALL 'strTrimA(L20, C4, C7, C2, C2);" << endl; // vc,vcN,c
+    pg << "CALL 'strTrimA(L21, C0, C5, C2, C2);" << endl; // vc,vc,cN
+    pg << "CALL 'strTrimA(L22, C1, C4, C6, C2);" << endl; // vc,c,vcN
+    pg << "CALL 'strTrimA(L23, C5, C8, C2, C6);" << endl; // vc,cN,vc
+
+    // An error is thrown in the extended instruction (as opposed to
+    // in the string library), so it needs to be tested
+    // here. (Exceptions thrown in the string library are tested in
+    // the string library unit test>)
+
+    // invalid trim characters
+    pg << "CALL 'strTrimA(L24, C0, C9, C2, C2);" << endl; // zero char length trimchar
+    pg << "CALL 'strTrimA(L25, C0, C10, C2, C2);" << endl; // two char length trimchar
+
+    // all varchar common cases with other trim char
+    pg << "CALL 'strTrimA(L26, C12, C11, C2, C2);" << endl; // trim both
+    pg << "CALL 'strTrimA(L27, C12, C11, C2, C3);" << endl; // trim left
+    pg << "CALL 'strTrimA(L28, C12, C11, C3, C2);" << endl; // trim right
+    pg << "CALL 'strTrimA(L29, C12, C11, C3, C3);" << endl; // trim none
+
     // make output available
-    refLocalOutput(pg, 16);
+    refLocalOutput(pg, 30);
 
     Calculator calc;
     
@@ -1245,6 +1436,7 @@ CalcExtStringTest::testCalcExtStringTrim()
     calc.bind(&inTuple, &outTuple);
     calc.exec();
     printOutput(outTuple, calc);
+    BOOST_MESSAGE("Calculator Warnings: |" << calc.warnings() << "|");
 
     // varchar common cases
     BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[0], "abc"));
@@ -1267,6 +1459,37 @@ CalcExtStringTest::testCalcExtStringTrim()
     BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[13]));
     BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[14]));
     BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[15]));
+
+    // mixed varchar/char common cases
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[16], "abc"));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[17], "hij"));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[18], "abc"));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[19], "hij"));
+    // mixed varchar/char null cases
+    BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[20]));
+    BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[21]));
+    BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[22]));
+    BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[23]));
+
+    // check warning from invalid trim character
+    deque<CalcMessage>::iterator iter = calc.mWarnings.begin();
+    deque<CalcMessage>::iterator end = calc.mWarnings.end();
+
+    BOOST_CHECK(iter != end);
+    BOOST_CHECK_EQUAL(iter->mPc, 24);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->mStr, "22027"));
+    iter++;
+    BOOST_CHECK_EQUAL(iter->mPc, 25);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->mStr, "22027"));
+    iter++;
+    BOOST_CHECK(iter == end);
+
+    // varchar common cases with other trim char
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[26], " pqr "));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[27], " pqr xx"));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[28], "xx pqr "));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[29], "xx pqr xx"));
+
 }
 
 

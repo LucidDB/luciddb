@@ -19,6 +19,7 @@
 package net.sf.farrago.test.regression;
 
 import junit.framework.Test;
+import java.util.regex.Pattern;
 
 /**
  * FarragoConcurrencyTest executes a variety of SQL DML and DDL
@@ -31,6 +32,9 @@ import junit.framework.Test;
 public class FarragoConcurrencyTest
     extends FarragoConcurrencyTestCase
 {
+    // bug 200: set to 5 to reproduce
+    private final int TIMEOUT = 0;
+
     public FarragoConcurrencyTest(String name)
         throws Exception
     {
@@ -81,6 +85,21 @@ public class FarragoConcurrencyTest
     }
 
 
+    /** Test the negative test mechanism */
+    public void testBadCommand() throws Exception
+    {
+        FarragoTestCommandGenerator cmdGen = newCommandGenerator();
+        int step = 1;
+        // expect parse error: java.sql.SQLException: net.sf.farrago.parser.ParseException
+        cmdGen.addPrepareCommand(1, step++, "select * frooom sales.depts order by deptno").
+            markToFail("expected a parse error", "ParseException");
+        // expect validator error: "Unknown identifier"
+        cmdGen.addPrepareCommand(1, step++, "select bean from sales.depts").
+            markToFail("expected validator error", "Unknown identifier");
+        executeTest(cmdGen, true);
+    }
+
+
     /**
      * Test concurrent <code>select * from sales.depts</code> statements.
      */
@@ -99,15 +118,15 @@ public class FarragoConcurrencyTest
             int tick = (i * 3) + 2;
 
             cmdGen.addPrepareCommand(1, tick, sql);
-            cmdGen.addFetchAndCompareCommand(1, tick + 1, 5, expected);
+            cmdGen.addFetchAndCompareCommand(1, tick + 1, TIMEOUT, expected);
             cmdGen.addCloseCommand(1, tick + 2);
 
             cmdGen.addPrepareCommand(2, tick, sql);
-            cmdGen.addFetchAndCompareCommand(2, tick + 1, 5, expected);
+            cmdGen.addFetchAndCompareCommand(2, tick + 1, TIMEOUT, expected);
             cmdGen.addCloseCommand(2, tick + 2);
 
             cmdGen.addPrepareCommand(3, tick, sql);
-            cmdGen.addFetchAndCompareCommand(3, tick + 1, 5, expected);
+            cmdGen.addFetchAndCompareCommand(3, tick + 1, TIMEOUT, expected);
             cmdGen.addCloseCommand(3, tick + 2);
         }
 
@@ -130,15 +149,15 @@ public class FarragoConcurrencyTest
             "{ 10, 'Sales' }, { 20, 'Marketing' }, { 30, 'Accounts' }";
 
         cmdGen.addPrepareCommand(1, 1, sql);
-        cmdGen.addFetchAndCompareCommand(1, 2, 5, expected);
+        cmdGen.addFetchAndCompareCommand(1, 2, TIMEOUT, expected);
         cmdGen.addCloseCommand(1, 3);
 
         cmdGen.addPrepareCommand(2, 1, sql);
-        cmdGen.addFetchAndCompareCommand(2, 2, 5, expected);
+        cmdGen.addFetchAndCompareCommand(2, 2, TIMEOUT, expected);
         cmdGen.addCloseCommand(2, 3);
 
         cmdGen.addPrepareCommand(3, 1, sql);
-        cmdGen.addFetchAndCompareCommand(3, 2, 5, expected);
+        cmdGen.addFetchAndCompareCommand(3, 2, TIMEOUT, expected);
         cmdGen.addCloseCommand(3, 3);
 
         executeTest(cmdGen, false);
@@ -166,11 +185,11 @@ public class FarragoConcurrencyTest
             int tick = (i * 3) + 2;
 
             cmdGen.addPrepareCommand(1, tick, sql);
-            cmdGen.addFetchAndCompareCommand(1, tick + 1, 5, expected);
+            cmdGen.addFetchAndCompareCommand(1, tick + 1, TIMEOUT, expected);
             cmdGen.addCloseCommand(1, tick + 2);
 
             cmdGen.addPrepareCommand(2, tick, sql);
-            cmdGen.addFetchAndCompareCommand(2, tick + 1, 5, expected);
+            cmdGen.addFetchAndCompareCommand(2, tick + 1, TIMEOUT, expected);
             cmdGen.addCloseCommand(2, tick + 2);
         }
 
@@ -195,11 +214,11 @@ public class FarragoConcurrencyTest
             "{ 120, 'Wilma', 'F',  20, 'Marketing' }";
 
         cmdGen.addPrepareCommand(1, 1, sql);
-        cmdGen.addFetchAndCompareCommand(1, 2, 5, expected);
+        cmdGen.addFetchAndCompareCommand(1, 2, TIMEOUT, expected);
         cmdGen.addCloseCommand(1, 3);
         
         cmdGen.addPrepareCommand(2, 1, sql);
-        cmdGen.addFetchAndCompareCommand(2, 2, 5, expected);
+        cmdGen.addFetchAndCompareCommand(2, 2, TIMEOUT, expected);
         cmdGen.addCloseCommand(2, 3);
 
         executeTest(cmdGen, false);        

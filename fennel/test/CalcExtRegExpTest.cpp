@@ -166,14 +166,14 @@ CalcExtRegExpTest::likeHelper(TupleDataWithBuffer const & outTuple,
     
     for (i = 0; i < validoutputs; i++) {
         if (cmpTupBool(outTuple[i], exp[i])) {
-            BOOST_MESSAGE("error on output [" << i << "]");
+            BOOST_MESSAGE("error on valid output [" << i << "]");
         }
         BOOST_CHECK_EQUAL(0, cmpTupBool(outTuple[i], exp[i]));
     }
 
     for (i = validoutputs; i < nulloutputs; i++) {
         if (!cmpTupNull(outTuple[i])) {
-            BOOST_MESSAGE("error on output [" << i << "]");
+            BOOST_MESSAGE("error on null output [" << i << "]");
         }
         BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[i]));
     }
@@ -183,7 +183,13 @@ CalcExtRegExpTest::likeHelper(TupleDataWithBuffer const & outTuple,
     iter++;
     BOOST_CHECK(iter != end);
 
+    BOOST_CHECK(iter != end);
     BOOST_CHECK_EQUAL(iter->mPc, nulloutputs + 1);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->mStr, "22019"));
+    iter++;
+    BOOST_CHECK(iter != end);
+
+    BOOST_CHECK_EQUAL(iter->mPc, nulloutputs + 2);
     BOOST_CHECK_EQUAL(0, strcmp(iter->mStr, "22025"));
     iter++;
     BOOST_CHECK(iter == end);
@@ -197,7 +203,7 @@ CalcExtRegExpTest::testCalcExtRegExpLikeAVarChar()
 {
     ostringstream pg(""), outloc(""), constants("");
     int i;
-    int outputs = 20;
+    int outputs = 23;
 
     bool exp[40];
     BOOST_REQUIRE((sizeof(exp) / sizeof(bool)) >= outputs);
@@ -234,36 +240,42 @@ CalcExtRegExpTest::testCalcExtRegExpLikeAVarChar()
 
     // (result, matchValue, pattern, escape)
     // no escape
-    pg << "CALL 'strLikeA(L0, C5, C1, C9);" << endl; exp[0] = true;
-    pg << "CALL 'strLikeA(L1, C5, C0, C9);" << endl; exp[1] = false;
-    pg << "CALL 'strLikeA(L2, C5, C7, C9);" << endl; exp[2] = true;
-    pg << "CALL 'strLikeA(L3, C6, C7, C9);" << endl; exp[3] = false;
-    pg << "CALL 'strLikeA(L4, C5, C8, C9);" << endl; exp[4] = true;
-    pg << "CALL 'strLikeA(L5, C6, C8, C9);" << endl; exp[5] = false;
-    pg << "CALL 'strLikeA(L6, C0, C0, C9);" << endl; exp[6] = true;
-    pg << "CALL 'strLikeA(L7, C0, C1, C9);" << endl; exp[7] = true;
+    pg << "CALL 'strLikeA3(L0, C5, C1);" << endl; exp[0] = true;
+    pg << "CALL 'strLikeA3(L1, C5, C0);" << endl; exp[1] = false;
+    pg << "CALL 'strLikeA3(L2, C5, C7);" << endl; exp[2] = true;
+    pg << "CALL 'strLikeA3(L3, C6, C7);" << endl; exp[3] = false;
+    pg << "CALL 'strLikeA3(L4, C5, C8);" << endl; exp[4] = true;
+    pg << "CALL 'strLikeA3(L5, C6, C8);" << endl; exp[5] = false;
+    pg << "CALL 'strLikeA3(L6, C0, C0);" << endl; exp[6] = true;
+    pg << "CALL 'strLikeA3(L7, C0, C1);" << endl; exp[7] = true;
 
     // escape
-    pg << "CALL 'strLikeA(L8, C5, C0, C2);" << endl; exp[8] = false;
-    pg << "CALL 'strLikeA(L9, C5, C1, C2);" << endl; exp[9] = true;
-    pg << "CALL 'strLikeA(L10, C5, C3, C2);" << endl; exp[10] = false;
-    pg << "CALL 'strLikeA(L11, C0, C3, C2);" << endl; exp[11] = true;
-    pg << "CALL 'strLikeA(L12, C5, C4, C2);" << endl; exp[12] = false;
-    pg << "CALL 'strLikeA(L13, C0, C4, C2);" << endl; exp[13] = false;
-    pg << "CALL 'strLikeA(L14, C1, C4, C2);" << endl; exp[14] = true;
+    pg << "CALL 'strLikeA4(L8, C5, C0, C2);" << endl; exp[8] = false;
+    pg << "CALL 'strLikeA4(L9, C5, C1, C2);" << endl; exp[9] = true;
+    pg << "CALL 'strLikeA4(L10, C5, C3, C2);" << endl; exp[10] = false;
+    pg << "CALL 'strLikeA4(L11, C0, C3, C2);" << endl; exp[11] = true;
+    pg << "CALL 'strLikeA4(L12, C5, C4, C2);" << endl; exp[12] = false;
+    pg << "CALL 'strLikeA4(L13, C0, C4, C2);" << endl; exp[13] = false;
+    pg << "CALL 'strLikeA4(L14, C1, C4, C2);" << endl; exp[14] = true;
     int validoutputs = 15;
 
-    // null cases
-    pg << "CALL 'strLikeA(L15, C10, C1, C9);" << endl; 
-    pg << "CALL 'strLikeA(L16, C5, C10, C9);" << endl;
-    pg << "CALL 'strLikeA(L17, C5, C1, C10);" << endl;
-    int nulloutputs = 18;
+    // null cases no escape
+    pg << "CALL 'strLikeA3(L15, C10, C1);" << endl; 
+    pg << "CALL 'strLikeA3(L16, C5, C10);" << endl;
+
+    // null cases escape
+    pg << "CALL 'strLikeA4(L17, C10, C1, C2);" << endl; 
+    pg << "CALL 'strLikeA4(L18, C5, C10, C2);" << endl;
+    pg << "CALL 'strLikeA4(L19, C5, C1, C10);" << endl;
+    int nulloutputs = 20;
     
     // exception cases
     // 22019 -- invalid escape character, >1 char in escape
-    pg << "CALL 'strLikeA(L18, C5, C1, C4);" << endl;
+    pg << "CALL 'strLikeA4(L20, C5, C1, C4);" << endl;
+    // 22019 -- invalid escape character, 0 char in escape
+    pg << "CALL 'strLikeA4(L21, C5, C1, C9);" << endl;
     // 22025 -- invalid escape sequence, end pattern w/escape
-    pg << "CALL 'strLikeA(L19, C5, C2, C2);" << endl;
+    pg << "CALL 'strLikeA4(L22, C5, C2, C2);" << endl;
 
 
     refLocalOutput(pg, outputs);
@@ -302,20 +314,35 @@ CalcExtRegExpTest::testCalcExtRegExpLikeAChar()
 {
     ostringstream pg("");
 
-    pg << "O bo, bo;" << endl;
-    pg << "L bo, bo;" << endl;
-    pg << "C c,1, c,2, c,0;" << endl;
+    pg << "O bo, bo, bo, bo, bo, bo, bo, bo;" << endl;
+    pg << "L bo, bo, bo, bo, bo, bo, bo, bo;" << endl;
+    pg << "C c,1, c,2, c,1, vc,1, vc,2, vc,1;" << endl;
     pg << "V 0x" << stringToHex("%");  // 0
     pg << ", 0x" << stringToHex("ab"); // 1 
-    pg << ", 0x" << stringToHex("");   // 2
+    pg << ", 0x" << stringToHex("=");  // 2
+    pg << ", 0x" << stringToHex("%");  // 3
+    pg << ", 0x" << stringToHex("ab"); // 4 
+    pg << ", 0x" << stringToHex("=");  // 5
     pg << ";" << endl;
     pg << "T;" << endl;
 
-    // (result, matchValue, pattern, escape)
-    pg << "CALL 'strLikeA(L0, C1, C0, C2);" << endl;
-    pg << "CALL 'strLikeA(L1, C0, C1, C2);" << endl;
+    // all char case: (result, matchValue, pattern, escape)
+    pg << "CALL 'strLikeA4(L0, C1, C0, C2);" << endl;  // true
+    pg << "CALL 'strLikeA4(L1, C0, C1, C2);" << endl;  // false
 
-    refLocalOutput(pg, 2);
+    // all char case: (result, matchValue, pattern)
+    pg << "CALL 'strLikeA3(L2, C1, C0);" << endl;  // true
+    pg << "CALL 'strLikeA3(L3, C0, C1);" << endl;  // false
+
+    // mixed char/var cases: (result, matchValue, pattern, escape)
+    pg << "CALL 'strLikeA4(L4, C1, C3, C2);" << endl;  // true
+    pg << "CALL 'strLikeA4(L5, C4, C0, C2);" << endl;  // true
+
+    // all char case: (result, matchValue, pattern)
+    pg << "CALL 'strLikeA3(L6, C1, C3);" << endl;  // true
+    pg << "CALL 'strLikeA3(L7, C4, C0);" << endl;  // true
+
+    refLocalOutput(pg, 8);
 
     Calculator calc;
     
@@ -335,18 +362,27 @@ CalcExtRegExpTest::testCalcExtRegExpLikeAChar()
     calc.exec();
     printOutput(outTuple, calc);
 
+    int i;
     BOOST_CHECK(calc.mWarnings.begin() == calc.mWarnings.end());
-    BOOST_CHECK_EQUAL(0, cmpTupBool(outTuple[0], true));
-    BOOST_CHECK_EQUAL(0, cmpTupBool(outTuple[1], false));
+    for (i = 0; i < 8; i++) {
+        if (i == 1 || i == 3) {
+            BOOST_CHECK_EQUAL(0, cmpTupBool(outTuple[i], false));
+        } else {
+            BOOST_CHECK_EQUAL(0, cmpTupBool(outTuple[i], true));
+        }
+    }
     
     // run twice to check that cached regex is, at least at first
     // glance, working correctly.
     calc.exec();
     BOOST_CHECK(calc.mWarnings.begin() == calc.mWarnings.end());
-    BOOST_CHECK_EQUAL(0, cmpTupBool(outTuple[0], true));
-    BOOST_CHECK_EQUAL(0, cmpTupBool(outTuple[1], false));
-
-    
+    for (i = 0; i < 8; i++) {
+        if (i == 1 || i == 3) {
+            BOOST_CHECK_EQUAL(0, cmpTupBool(outTuple[i], false));
+        } else {
+            BOOST_CHECK_EQUAL(0, cmpTupBool(outTuple[i], true));
+        }
+    }
 }
 
 void
@@ -362,14 +398,14 @@ CalcExtRegExpTest::similarHelper(TupleDataWithBuffer const & outTuple,
     
     for (i = 0; i < validoutputs; i++) {
         if (cmpTupBool(outTuple[i], exp[i])) {
-            BOOST_MESSAGE("error on output [" << i << "]");
+            BOOST_MESSAGE("error on valid output [" << i << "]");
         }
         BOOST_CHECK_EQUAL(0, cmpTupBool(outTuple[i], exp[i]));
     }
 
     for (i = validoutputs; i < nulloutputs; i++) {
         if (!cmpTupNull(outTuple[i])) {
-            BOOST_MESSAGE("error on output [" << i << "]");
+            BOOST_MESSAGE("error on null output [" << i << "]");
         }
         BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[i]));
     }
@@ -378,6 +414,11 @@ CalcExtRegExpTest::similarHelper(TupleDataWithBuffer const & outTuple,
     BOOST_CHECK(iter != end);
     BOOST_CHECK_EQUAL(iter->mPc, exceptionPc++);
     BOOST_CHECK_EQUAL(0, strcmp(iter->mStr, "2200B"));
+    iter++;
+    BOOST_CHECK(iter != end);
+
+    BOOST_CHECK_EQUAL(iter->mPc, exceptionPc++);
+    BOOST_CHECK_EQUAL(0, strcmp(iter->mStr, "22019"));
     iter++;
     BOOST_CHECK(iter != end);
 
@@ -399,7 +440,6 @@ CalcExtRegExpTest::similarHelper(TupleDataWithBuffer const & outTuple,
     BOOST_CHECK_EQUAL(0, strcmp(iter->mStr, "2201B"));
     iter++;
     BOOST_CHECK(iter == end);
-                      
 }
 
 
@@ -408,7 +448,7 @@ CalcExtRegExpTest::testCalcExtRegExpSimilarAVarChar()
 {
     ostringstream pg(""), outloc(""), constants("");
     int i;
-    int outputs = 23;
+    int outputs = 26;
 
     bool exp[40];
     BOOST_REQUIRE((sizeof(exp) / sizeof(bool)) >= outputs);
@@ -450,42 +490,47 @@ CalcExtRegExpTest::testCalcExtRegExpSimilarAVarChar()
 
     // (result, matchValue, pattern, escape)
     // no escape
-    pg << "CALL 'strSimilarA(L0, C5, C1, C9);" << endl; exp[0] = true;
-    pg << "CALL 'strSimilarA(L1, C5, C0, C9);" << endl; exp[1] = false;
-    pg << "CALL 'strSimilarA(L2, C5, C7, C9);" << endl; exp[2] = true;
-    pg << "CALL 'strSimilarA(L3, C6, C7, C9);" << endl; exp[3] = false;
-    pg << "CALL 'strSimilarA(L4, C5, C8, C9);" << endl; exp[4] = true;
-    pg << "CALL 'strSimilarA(L5, C6, C8, C9);" << endl; exp[5] = false;
-    pg << "CALL 'strSimilarA(L6, C0, C0, C9);" << endl; exp[6] = true;
-    pg << "CALL 'strSimilarA(L7, C0, C1, C9);" << endl; exp[7] = true;
+    pg << "CALL 'strSimilarA3(L0, C5, C1);" << endl; exp[0] = true;
+    pg << "CALL 'strSimilarA3(L1, C5, C0);" << endl; exp[1] = false;
+    pg << "CALL 'strSimilarA3(L2, C5, C7);" << endl; exp[2] = true;
+    pg << "CALL 'strSimilarA3(L3, C6, C7);" << endl; exp[3] = false;
+    pg << "CALL 'strSimilarA3(L4, C5, C8);" << endl; exp[4] = true;
+    pg << "CALL 'strSimilarA3(L5, C6, C8);" << endl; exp[5] = false;
+    pg << "CALL 'strSimilarA3(L6, C0, C0);" << endl; exp[6] = true;
+    pg << "CALL 'strSimilarA3(L7, C0, C1);" << endl; exp[7] = true;
 
     // escape
-    pg << "CALL 'strSimilarA(L8, C5, C0, C2);" << endl; exp[8] = false;
-    pg << "CALL 'strSimilarA(L9, C5, C1, C2);" << endl; exp[9] = true;
-    pg << "CALL 'strSimilarA(L10, C5, C3, C2);" << endl; exp[10] = false;
-    pg << "CALL 'strSimilarA(L11, C0, C3, C2);" << endl; exp[11] = true;
-    pg << "CALL 'strSimilarA(L12, C5, C4, C2);" << endl; exp[12] = false;
-    pg << "CALL 'strSimilarA(L13, C0, C4, C2);" << endl; exp[13] = false;
-    pg << "CALL 'strSimilarA(L14, C1, C4, C2);" << endl; exp[14] = true;
+    pg << "CALL 'strSimilarA4(L8, C5, C0, C2);" << endl; exp[8] = false;
+    pg << "CALL 'strSimilarA4(L9, C5, C1, C2);" << endl; exp[9] = true;
+    pg << "CALL 'strSimilarA4(L10, C5, C3, C2);" << endl; exp[10] = false;
+    pg << "CALL 'strSimilarA4(L11, C0, C3, C2);" << endl; exp[11] = true;
+    pg << "CALL 'strSimilarA4(L12, C5, C4, C2);" << endl; exp[12] = false;
+    pg << "CALL 'strSimilarA4(L13, C0, C4, C2);" << endl; exp[13] = false;
+    pg << "CALL 'strSimilarA4(L14, C1, C4, C2);" << endl; exp[14] = true;
     int validoutputs = 15;
 
     // null cases
-    pg << "CALL 'strSimilarA(L15, C15, C1, C9);" << endl; 
-    pg << "CALL 'strSimilarA(L16, C5, C15, C9);" << endl;
-    pg << "CALL 'strSimilarA(L17, C5, C1, C15);" << endl;
-    int nulloutputs = 18;
+    pg << "CALL 'strSimilarA3(L15, C15, C1);" << endl; 
+    pg << "CALL 'strSimilarA3(L16, C5, C15);" << endl;
+
+    pg << "CALL 'strSimilarA4(L17, C15, C1, C9);" << endl; 
+    pg << "CALL 'strSimilarA4(L18, C5, C15, C9);" << endl;
+    pg << "CALL 'strSimilarA4(L19, C5, C1, C15);" << endl;
+    int nulloutputs = 20;
     
     // exception cases
     // 2200B -- escape character conflict (: as escape)
-    pg << "CALL 'strSimilarA(L18, C5, C11, C10);" << endl;
+    pg << "CALL 'strSimilarA4(L20, C5, C11, C10);" << endl;
     // 22019 -- invalid escape character, >1 char in escape
-    pg << "CALL 'strSimilarA(L19, C5, C1, C4);" << endl;
+    pg << "CALL 'strSimilarA4(L21, C5, C1, C4);" << endl;
+    // 22019 -- invalid escape character, 0 char in escape
+    pg << "CALL 'strSimilarA4(L22, C5, C1, C9);" << endl;
     // 2201B -- invalid regular expression, end pattern w/escape
-    pg << "CALL 'strSimilarA(L20, C5, C2, C2);" << endl;
+    pg << "CALL 'strSimilarA4(L23, C5, C2, C2);" << endl;
     // 2201C -- invalid use of escape character, special char is escape & used
-    pg << "CALL 'strSimilarA(L21, C5, C13, C1);" << endl;
+    pg << "CALL 'strSimilarA4(L24, C5, C13, C1);" << endl;
     // 2201B -- invalid regular expression, caught by regex, not SqlSimilarPrep
-    pg << "CALL 'strSimilarA(L22, C5, C14, C1);" << endl;
+    pg << "CALL 'strSimilarA4(L25, C5, C14, C1);" << endl;
 
 
     refLocalOutput(pg, outputs);
@@ -524,20 +569,35 @@ CalcExtRegExpTest::testCalcExtRegExpSimilarAChar()
 {
     ostringstream pg("");
 
-    pg << "O bo, bo;" << endl;
-    pg << "L bo, bo;" << endl;
-    pg << "C c,1, c,2, c,0;" << endl;
+    pg << "O bo, bo, bo, bo, bo, bo, bo, bo;" << endl;
+    pg << "L bo, bo, bo, bo, bo, bo, bo, bo;" << endl;
+    pg << "C c,1, c,2, c,1, vc,1, vc,2, vc,1 ;" << endl;
     pg << "V 0x" << stringToHex("%");  // 0
     pg << ", 0x" << stringToHex("ab"); // 1 
-    pg << ", 0x" << stringToHex("");   // 2
+    pg << ", 0x" << stringToHex("=");  // 2
+    pg << ", 0x" << stringToHex("%");  // 3
+    pg << ", 0x" << stringToHex("ab"); // 4 
+    pg << ", 0x" << stringToHex("=");  // 5
     pg << ";" << endl;
     pg << "T;" << endl;
 
-    // (result, matchValue, pattern, escape)
-    pg << "CALL 'strSimilarA(L0, C1, C0, C2);" << endl;
-    pg << "CALL 'strSimilarA(L1, C0, C1, C2);" << endl;
+    // all char case: (result, matchValue, pattern, escape)
+    pg << "CALL 'strSimilarA4(L0, C1, C0, C2);" << endl;
+    pg << "CALL 'strSimilarA4(L1, C0, C1, C2);" << endl;
 
-    refLocalOutput(pg, 2);
+    // all char case: (result, matchValue, pattern)
+    pg << "CALL 'strSimilarA3(L2, C1, C0);" << endl;
+    pg << "CALL 'strSimilarA3(L3, C0, C1);" << endl;
+
+    // mixed char/var cases: (result, matchValue, pattern, escape)
+    pg << "CALL 'strSimilarA4(L4, C1, C3, C2);" << endl;  // true
+    pg << "CALL 'strSimilarA4(L5, C4, C0, C2);" << endl;  // true
+
+    // all char case: (result, matchValue, pattern)
+    pg << "CALL 'strSimilarA3(L6, C1, C3);" << endl;  // true
+    pg << "CALL 'strSimilarA3(L7, C4, C0);" << endl;  // true
+
+    refLocalOutput(pg, 8);
 
     Calculator calc;
     
@@ -557,18 +617,27 @@ CalcExtRegExpTest::testCalcExtRegExpSimilarAChar()
     calc.exec();
     printOutput(outTuple, calc);
 
+    int i;
     BOOST_CHECK(calc.mWarnings.begin() == calc.mWarnings.end());
-    BOOST_CHECK_EQUAL(0, cmpTupBool(outTuple[0], true));
-    BOOST_CHECK_EQUAL(0, cmpTupBool(outTuple[1], false));
+    for (i = 0; i < 8; i++) {
+        if (i == 1 || i == 3) {
+            BOOST_CHECK_EQUAL(0, cmpTupBool(outTuple[i], false));
+        } else {
+            BOOST_CHECK_EQUAL(0, cmpTupBool(outTuple[i], true));
+        }
+    }
     
     // run twice to check that cached regex is, at least at first
     // glance, working correctly.
     calc.exec();
     BOOST_CHECK(calc.mWarnings.begin() == calc.mWarnings.end());
-    BOOST_CHECK_EQUAL(0, cmpTupBool(outTuple[0], true));
-    BOOST_CHECK_EQUAL(0, cmpTupBool(outTuple[1], false));
-
-    
+    for (i = 0; i < 8; i++) {
+        if (i == 1 || i == 3) {
+            BOOST_CHECK_EQUAL(0, cmpTupBool(outTuple[i], false));
+        } else {
+            BOOST_CHECK_EQUAL(0, cmpTupBool(outTuple[i], true));
+        }
+    }
 }
 
 

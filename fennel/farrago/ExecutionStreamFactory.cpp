@@ -104,8 +104,8 @@ ExecutionStreamFactory::newTracingStream(
 {
     TracingTupleStream *pTracingStream = new TracingTupleStream();
     TupleStreamParams *pParams = new TupleStreamParams();
-    pParams->pCacheAccessor = params.pCacheAccessor;
-    pParams->scratchAccessor = params.scratchAccessor;
+    pParams->outputTupleDesc = params.outputTupleDesc;
+    createQuotaAccessors(*pParams);
     factors.setFactors(pTracingStream,pParams);
     factors.getStream()->setName(name);
     return factors;
@@ -119,8 +119,8 @@ ExecutionStreamFactory::newConsumerToProducerProvisionAdapter(
     ConsumerToProducerProvisionAdapter *pAdapter = 
         new ConsumerToProducerProvisionAdapter();
     TupleStreamParams *pParams = new TupleStreamParams();
-    pParams->pCacheAccessor = params.pCacheAccessor;
-    pParams->scratchAccessor = params.scratchAccessor;
+    pParams->outputTupleDesc = params.outputTupleDesc;
+    createQuotaAccessors(*pParams);
     factors.setFactors(pAdapter,pParams);
     factors.getStream()->setName(name);
     return factors;
@@ -134,8 +134,8 @@ ExecutionStreamFactory::newProducerToConsumerProvisionAdapter(
     ProducerToConsumerProvisionAdapter *pAdapter = 
         new ProducerToConsumerProvisionAdapter();
     TupleStreamParams *pParams = new TupleStreamParams();
-    pParams->pCacheAccessor = params.pCacheAccessor;
-    pParams->scratchAccessor = params.scratchAccessor;
+    pParams->outputTupleDesc = params.outputTupleDesc;
+    createQuotaAccessors(*pParams);
     factors.setFactors(pAdapter,pParams);
     factors.getStream()->setName(name);
     return factors;
@@ -316,30 +316,31 @@ void ExecutionStreamFactory::readTupleStreamParams(
     ProxyTupleStreamDef &streamDef)
 {
     readExecutionStreamParams(params,streamDef);
-    
-    assert(streamDef.getCachePageQuota() >= streamDef.getCachePageMin());
-    assert(streamDef.getCachePageQuota() <= streamDef.getCachePageMax());
-    if (streamDef.getCachePageQuota()) {
-        params.pCacheAccessor = pDatabase->getCache();
-        params.scratchAccessor = scratchAccessor;
-        if (shouldEnforceCacheQuotas()) {
-            // all cache access should be wrapped by quota checks
-            uint quota = streamDef.getCachePageQuota();
-            SharedQuotaCacheAccessor pQuotaAccessor(
-                new QuotaCacheAccessor(
-                    SharedQuotaCacheAccessor(),
-                    params.pCacheAccessor,
-                    quota));
-            params.pCacheAccessor = pQuotaAccessor;
+    createQuotaAccessors(params);
+}
 
-            // scratch access has to go through a separate CacheAccessor, but
-            // delegates quota checking to pQuotaAccessor
-            params.scratchAccessor.pCacheAccessor.reset(
-                new QuotaCacheAccessor(
-                    pQuotaAccessor,
-                    params.scratchAccessor.pCacheAccessor,
-                    quota));
-        }
+void ExecutionStreamFactory::createQuotaAccessors(TupleStreamParams &params)
+{
+    params.pCacheAccessor = pDatabase->getCache();
+    params.scratchAccessor = scratchAccessor;
+    if (shouldEnforceCacheQuotas()) {
+        // All cache access should be wrapped by quota checks.  Actual
+        // quotas will be set per-execution.
+        uint quota = 0;
+        SharedQuotaCacheAccessor pQuotaAccessor(
+            new QuotaCacheAccessor(
+                SharedQuotaCacheAccessor(),
+                params.pCacheAccessor,
+                quota));
+        params.pCacheAccessor = pQuotaAccessor;
+
+        // scratch access has to go through a separate CacheAccessor, but
+        // delegates quota checking to pQuotaAccessor
+        params.scratchAccessor.pCacheAccessor.reset(
+            new QuotaCacheAccessor(
+                pQuotaAccessor,
+                params.scratchAccessor.pCacheAccessor,
+                quota));
     }
 }
 

@@ -211,7 +211,9 @@ public class FarragoOJRexCastImplementor extends FarragoOJRexImplementor
             // pad character is 0 for binary, space for character
             Expression padByteExp;
             if (!lhsPrecisionType.isCharType()) {
-                padByteExp = Literal.makeLiteral(0);
+                padByteExp = new CastExpression(
+                    OJSystem.BYTE,
+                    Literal.makeLiteral(0));
             } else {
                 padByteExp = new CastExpression(
                     OJSystem.BYTE,

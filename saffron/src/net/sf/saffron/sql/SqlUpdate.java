@@ -23,6 +23,7 @@
 package net.sf.saffron.sql;
 
 import net.sf.saffron.util.Util;
+import net.sf.saffron.sql.parser.ParserPosition;
 
 import java.util.*;
 
@@ -40,7 +41,7 @@ public class SqlUpdate extends SqlCall
     public static final int CONDITION_OPERAND = 3;
     public static final int SOURCE_SELECT_OPERAND = 4;
     public static final int OPERAND_COUNT = 5;
-    
+
     //~ Constructors ----------------------------------------------------------
 
     public SqlUpdate(
@@ -48,9 +49,10 @@ public class SqlUpdate extends SqlCall
         SqlIdentifier targetTable,
         SqlNodeList targetColumnList,
         SqlNodeList sourceExpressionList,
-        SqlNode condition)
+        SqlNode condition,
+        ParserPosition parserPosition)
     {
-        super(operator,new SqlNode[OPERAND_COUNT]);
+        super(operator,new SqlNode[OPERAND_COUNT], parserPosition);
         operands[TARGET_TABLE_OPERAND] = targetTable;
         operands[SOURCE_EXPRESSION_LIST_OPERAND] = sourceExpressionList;
         operands[TARGET_COLUMN_LIST_OPERAND] = targetColumnList;

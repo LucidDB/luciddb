@@ -59,7 +59,8 @@ public class SqlDataType extends SqlNode {
     }
     
     public SqlDataType(final SqlIdentifier typeName, int precision , int scale,
-            String charSetName) {
+            String charSetName, ParserPosition parserPosition) {
+        super(parserPosition);
         this.typeName = typeName;
         this.scale = scale;
         this.precision = precision;
@@ -129,7 +130,7 @@ public class SqlDataType extends SqlNode {
     }
 
     public Object clone() {
-        return new SqlDataType(typeName, precision, scale, charSetName);
+        return new SqlDataType(typeName, precision, scale, charSetName, getParserPosition());
     }
 
     /**
@@ -142,7 +143,8 @@ public class SqlDataType extends SqlNode {
         //for now we only support builtin datatypes
         if (!SqlTypeName.containsName(name)) {
             ParserPosition pos = getParserPosition();
-            assert(pos==null) : "need to add pos data now when pos!=null";
+            //assert(pos==null) : "need to add pos data now when pos!=null";
+            //todo: klo 7/26/2004 modify the unknowdatatypename message to include parser position
             throw SaffronResource.instance().newUnknownDatatypeName(name);
         }
 

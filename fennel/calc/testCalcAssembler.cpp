@@ -263,10 +263,10 @@ public:
                      << calc.mWarnings[i].mPc << endl;
                 return false;
             }
-            if (calc.mWarnings[i].mStr != mWarnings[i].mStr)
+            if (strcmp(calc.mWarnings[i].mStr, mWarnings[i].mStr))
             {
-                cout << "Message should be " << mWarnings[i].mStr 
-                     << " not " << calc.mWarnings[i].mStr << " at PC="
+                cout << "Message should be |" << mWarnings[i].mStr 
+                     << "| not |" << calc.mWarnings[i].mStr << "| at PC="
                      << mWarnings[i].mPc << endl;
                 return false;
             }
@@ -1782,14 +1782,14 @@ void CalcAssemblerTest::testAdd()
         testCase1.test();
     }
 
-    CalcAssemblerTestCase testCase2(__LINE__, "ADD BAD TYPE", 
+    CalcAssemblerTestCase testCase2(__LINE__, "ADD UNKNOWN INST", 
                                     "I u2, u4;\nO u4;\nT;\nADD O0, I0, I1;");
-    testCase2.expectAssemblerError("Invalid type");
+    testCase2.expectAssemblerError("not a registered instruction");
     testCase2.assemble();
 
     CalcAssemblerTestCase testCase3(__LINE__, "ADD O0 I0", 
                                     "I u2, u4;\nO u4;\nT;\nADD O0, I0;");
-    testCase3.expectAssemblerError("Error instantiating instruction");
+    testCase3.expectAssemblerError("not a registered instruction");
     testCase3.assemble();
 
     CalcAssemblerTestCase testCase4(__LINE__, "ADD FLOAT", "I r, r;\nO r, r;\n"
@@ -1952,7 +1952,7 @@ void CalcAssemblerTest::testInvalidPrograms()
 
     // Test unregistered instruction
     CalcAssemblerTestCase testCase2(__LINE__, "UNKNOWN INST", "I u2, u4;\nO u4;\nT;\nBAD O0, I0;");
-    testCase2.expectAssemblerError("not a registered native instruction");
+    testCase2.expectAssemblerError("not a registered instruction");
     testCase2.assemble();
 
     // Test known instruction - but not registered for that type
@@ -1985,6 +1985,8 @@ void CalcAssemblerTest::testInvalidPrograms()
 
 void CalcAssemblerTest::testComments()
 {
+    const char* parse_error = "error";
+
     CalcAssemblerTestCase testCase1(__LINE__, "COMMENTS (ONE LINE)", 
                                     "I u2;\nO /* comments */ u2;\n"
                                     "T;\n"
@@ -2036,7 +2038,9 @@ void CalcAssemblerTest::testComments()
                                     "MOVE O0, */ I0;\n"
                                     "RETURN;\n"
                                     "ADD O0, I0, I0;\n");
-    testCase5.expectAssemblerError("parse error");
+    // TODO: On RH9, the following works. On FC1, the result is:
+    // "syntax error, unexpected UNKNOWN_TOKEN (at line:col 4:10 to 4:10, characters 24 to 24)"
+    testCase5.expectAssemblerError(parse_error);
     testCase5.assemble();
 }
 

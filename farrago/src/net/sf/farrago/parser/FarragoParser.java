@@ -39,7 +39,7 @@ import javax.jmi.reflect.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoParser implements FarragoSessionParser, FarragoParserWrapper
+public class FarragoParser implements FarragoSessionParser
 {
     //~ Static fields/initializers --------------------------------------------
 
@@ -145,9 +145,14 @@ public class FarragoParser implements FarragoSessionParser, FarragoParserWrapper
         return FarragoParser.SYS_FUNC_NAMES;
     }
 
-    // implement FarragoParserWrapper
+    // implement FarragoSessionWrapper
     public FarragoSessionDdlValidator getDdlValidator() {
         return ddlValidator;
+    }
+
+    // implement FarragoSessionParser
+    public FarragoSessionStmtValidator getStmtValidator() {
+        return ddlValidator.getStmtValidator();
     }
 
     private String getTokenVal(String token) {

@@ -1,0 +1,175 @@
+0: jdbc:farrago:> -- $Id: //open/farrago/regressionsql/str.sql#11 $
+0: jdbc:farrago:> -- Full vertical system testing of the cast function
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel
+0: jdbc:farrago:> -- and another time to use java. The caller of this script is setting the flag so no need
+0: jdbc:farrago:> -- to do it directly unless you need to do acrobatics.
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select cast(null as tinyint) from values(1);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> select cast(null as smallint) from values(1);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> select cast(null as integer) from values(1);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> select cast(null as bigint) from values(1);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> select cast(null as real) from values(1);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> select cast(null as double) from values(1);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> --select cast(null as bit) from values(1);
+0: jdbc:farrago:> select cast(null as boolean) from values(1);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> select cast(null as char) from values(1);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> select cast(null as varchar) from values(1);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> select cast(null as binary) from values(1);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> select cast(null as date) from values(1);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> select cast(null as time) from values(1);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> select cast(null as timestamp) from values(1);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> select cast(null as varbinary) from values(1);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> select cast(null as float) from values(1);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> --select cast(null as decimal) from values(1);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values cast(1.8 as integer);
++---------+
+| EXPR$0  |
++---------+
+| 2       |
++---------+
+0: jdbc:farrago:> values cast(-1.8 as tinyint);
++---------+
+| EXPR$0  |
++---------+
+| -2      |
++---------+
+0: jdbc:farrago:> values cast(-1.1 as smallint);
++---------+
+| EXPR$0  |
++---------+
+| -1      |
++---------+
+0: jdbc:farrago:> values cast(1e-4 as integer);
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values cast(1 as double);
++---------+
+| EXPR$0  |
++---------+
+| 1.0     |
++---------+
+0: jdbc:farrago:> values cast(cast(1 as real) as double);
++---------+
+| EXPR$0  |
++---------+
+| 1.0     |
++---------+
+0: jdbc:farrago:> values cast(1.1 as double);
++---------+
+| EXPR$0  |
++---------+
+| 1.1     |
++---------+
+0: jdbc:farrago:> values cast(cast(1.0 as double) as real);
++---------+
+| EXPR$0  |
++---------+
+| 1.0     |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values cast(127 as tinyint);
++---------+
+| EXPR$0  |
++---------+
+| 127     |
++---------+
+0: jdbc:farrago:> values cast(128 as tinyint);
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=0 Code=22003 (state=,code=0)
+0: jdbc:farrago:> values cast(255 as tinyint);
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=0 Code=22003 (state=,code=0)
+0: jdbc:farrago:> values cast(256 as tinyint);
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=0 Code=22003 (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !quit

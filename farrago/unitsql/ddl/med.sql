@@ -61,6 +61,14 @@ create foreign table mof_schema.mof_exception(
 server mof_server
 options(class_name 'Exception');
 
+-- foreign does not allow constraint: should fail
+create foreign table mof_schema.test (name char(20) not null primary key)
+server mof_server
+options(class_name 'Exception');
+create foreign table mof_schema.test (name char(20) not null constraint n_unique_name unique)
+server mof_server
+options(class_name 'Exception');
+
 -- test same query as above, but against foreign table
 select name from mof_schema.mof_exception order by 1;
 

@@ -23,10 +23,16 @@ package net.sf.saffron.calc;
 import net.sf.saffron.sql.fun.SqlStdOperatorTable;
 import net.sf.saffron.sql.fun.SqlTrimFunction;
 import net.sf.saffron.sql.*;
+import net.sf.saffron.sql.type.SqlTypeName;
 import net.sf.saffron.rex.RexCall;
 import net.sf.saffron.rex.RexNode;
 import net.sf.saffron.rex.RexLiteral;
+import net.sf.saffron.rex.RexKind;
 import net.sf.saffron.util.Util;
+import net.sf.saffron.util.MultiMap;
+import net.sf.saffron.util.DoubleKeyMap;
+import net.sf.saffron.core.SaffronType;
+import net.sf.saffron.core.SaffronTypeFactory;
 
 import java.util.HashMap;
 import java.util.ArrayList;
@@ -39,38 +45,63 @@ import java.util.ArrayList;
  * @since June 2nd, 2004
  * @version $Id$
  */
-class CalcRexImplementorTableImpl implements CalcRexImplementorTable
+public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
 {
+    /**
+     * Parent implementor table, may be null.
+     */
+    private final CalcRexImplementorTable parent;
+    /**
+     * Maps {@link SqlOperator} to {@link CalcRexImplementor}.
+     */
     private final HashMap operatorImplementationMap = new HashMap();
 
+    protected static final SqlStdOperatorTable opTab =
+            SqlStdOperatorTable.std();
+    private static final CalcRexImplementorTableImpl std =
+            new CalcRexImplementorTableImpl(null).initStandard();
     /**
-     * Creates an empty table.
-     *
-     * You probably want to call the public method {@link #std}.
+     * Collection of per-thread instances of {@link CalcRexImplementorTable}.
+     * If a thread does not call {@link #setThreadInstance}, the default is
+     * {@link #std}.
      */
-    protected CalcRexImplementorTableImpl() {
+    // REVIEW jhyde, 2004/4/12 The implementor table, like the operator table,
+    //   should be a property of the session
+    private static final ThreadLocal threadLocal = new ThreadLocal() {
+        protected Object initialValue() {
+            return std;
+        }
+    };
+
+    /**
+     * Creates an empty table which delegates to another table.
+     *
+     * @see {@link #std}
+     */
+    public CalcRexImplementorTableImpl(CalcRexImplementorTable parent) {
+        this.parent = parent;
     }
 
     /**
-     * Creates a table and initializes it with implementations of all of the
+     * Returns the table of implementations of all of the
      * standard SQL functions and operators.
      */
-    public static CalcRexImplementorTable std(SqlStdOperatorTable opTab) {
-
-        final CalcRexImplementorTableImpl
-                table = new CalcRexImplementorTableImpl();
-        table.initStandard(opTab);
-        return table;
+    public static CalcRexImplementorTable std() {
+        return std;
     }
 
     /**
      * Registers an operator and its implementor.
      *
+     * <p>It is an error if the operator already has an implementor.
+     * But if the operator has an implementor in a parent table, it is
+     * simply overridden.
+     *
      * @pre op != null
      * @pre impl != null
      * @pre !operatorImplementationMap.containsKey(op)
      */
-    void register(SqlOperator op, CalcRexImplementor impl) {
+    public void register(SqlOperator op, CalcRexImplementor impl) {
 
         Util.pre(op != null, "op != null");
         Util.pre(impl != null, "impl != null");
@@ -90,7 +121,7 @@ class CalcRexImplementorTableImpl implements CalcRexImplementorTable
             CalcProgramBuilder.InstructionDef instrDef) {
 
         Util.pre(instrDef != null, "instrDef != null");
-        register(op, new InstrImplementor(instrDef));
+        register(op, new InstrDefImplementor(instrDef));
     }
 
     // NOTE jvs 16-June-2004:  There's a reason I use the convention
@@ -100,52 +131,60 @@ class CalcRexImplementorTableImpl implements CalcRexImplementorTable
     // the comment from super
     /** implement interface CalcRexImplementorTable */
     public CalcRexImplementor get(SqlOperator op) {
-        return (CalcRexImplementor) operatorImplementationMap.get(op);
+        CalcRexImplementor implementor = (CalcRexImplementor)
+                operatorImplementationMap.get(op);
+        if (implementor == null && parent != null) {
+            implementor = parent.get(op);
+        }
+        return implementor;
     }
 
     /**
-     * Generic implementor, which implements an operator by generating a call
+     * Abstract base class for classes which implement
+     * {@link CalcRexImplementor}.
+     */
+    public abstract static class AbstractCalcRexImplementor
+            implements CalcRexImplementor
+    {
+        public boolean canImplement(RexCall call) {
+            return true;
+        }
+    }
+
+    /**
+     * Generic implementor that takes a {@link CalcProgramBuilder.InstructionDef}
+     * which implements an operator by generating a call
      * to a given instruction.
      *
      * <p>If you need to tweak the arguments to the instruction, you can
      * override {@link #makeRegList}.
      */
-    public static class InstrImplementor implements CalcRexImplementor
+    public static class InstrDefImplementor extends AbstractCalcRexImplementor
     {
         /**
          * The instruction with which to implement this operator.
          */
-        private final CalcProgramBuilder.InstructionDef instr;
+        protected final CalcProgramBuilder.InstructionDef instr;
         /**
          * Creates an instruction implementor
-         *
-         * @param instr The instruction with which to implement this operator
+         * @pre null != instr
+         * @param instr The instruction with which to implement this operator,
+         *   must not be null
+         * @pre instr != null
          */
-        InstrImplementor(CalcProgramBuilder.InstructionDef instr) {
+        InstrDefImplementor(CalcProgramBuilder.InstructionDef instr) {
+            Util.pre(null != instr, "null != instr");
             this.instr = instr;
         }
 
-        public boolean canImplement(RexCall call) {
-            return true;
-        }
-
-        public void implement(RexCall call,
+        public CalcProgramBuilder.Register implement(RexCall call,
                 RexToCalcTranslator translator) {
 
             ArrayList regList = makeRegList(translator, call);
             CalcProgramBuilder.Register[] regs = regListToRegArray(regList);
 
             instr.add(translator._builder, regs);
-            final CalcProgramBuilder.Register resultReg = regs[0];
-            translator.setResult(call, resultReg);
-        }
-
-        protected CalcProgramBuilder.Register[] regListToRegArray(ArrayList regList) {
-            CalcProgramBuilder.Register[] regs =
-                    (CalcProgramBuilder.Register[]) regList.toArray(
-                            new CalcProgramBuilder.Register[
-                                    regList.size()]);
-            return regs;
+            return regs[0];
         }
 
         /**
@@ -165,42 +204,17 @@ class CalcRexImplementorTableImpl implements CalcRexImplementorTable
 
             return regList;
         }
-
-        protected CalcProgramBuilder.Register createResultRegister(
-                RexToCalcTranslator translator, RexCall call) {
-            CalcProgramBuilder.RegisterDescriptor resultDesc =
-                    translator.getCalcRegisterDescriptor(call);
-            CalcProgramBuilder.Register resultOfCall =
-                     translator._builder.newLocal(resultDesc);
-            return resultOfCall;
-        }
-
-        protected ArrayList implementOperands(RexCall call, RexToCalcTranslator translator) {
-            return implementOperands(call, 0, call.operands.length, translator);
-        }
-
-        protected ArrayList implementOperands(RexCall call, int start, int stop,
-                RexToCalcTranslator translator) {
-            ArrayList regList = new ArrayList();
-            for (int i = start; i < stop; i++) {
-                RexNode operand = call.operands[i];
-                translator.implementNode(operand);
-                regList.add(translator.getResult(operand));
-            }
-            return regList;
-        }
     }
 
     /**
-     * A Class that implements IS TRUE and IS FALSE
+     * Implements "IS TRUE" and "IS FALSE" operators.
      */
-    private static class IsBoolInstrImplementor implements CalcRexImplementor
+    private static class IsBoolImplementor implements CalcRexImplementor
     {
         private boolean boolType;
-        protected final static SqlStdOperatorTable opTab = SqlStdOperatorTable.std();
         protected RexNode res;
 
-        IsBoolInstrImplementor(boolean boolType) {
+        IsBoolImplementor(boolean boolType) {
             this.boolType = boolType;
         }
 
@@ -208,10 +222,11 @@ class CalcRexImplementorTableImpl implements CalcRexImplementorTable
             return true;
         }
 
-        public void implement(RexCall call, RexToCalcTranslator translator) {
-            translator.implementNode(call.operands[0]);
-
+        public CalcProgramBuilder.Register implement(RexCall call,
+                RexToCalcTranslator translator) {
             RexNode operand = call.operands[0];
+            translator.implementNode(operand);
+
 
             if (operand.getType().isNullable()) {
                 RexNode notNullCall = translator._rexBuilder.makeCall(
@@ -229,35 +244,33 @@ class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                         operand,
                         translator._rexBuilder.makeLiteral(boolType));
             }
-            translator.implementNode(res);
-            translator.setResult(call, translator.getResult(res));
+            return translator.implementNode(res);
         }
     }
 
     /**
-     * A Class that implements IS NOT TRUE and IS NOT FALSE
+     * Implements "IS NOT TRUE" and "IS NOT FALSE" operators.
      */
-    private static class IsNotBoolInstrImplementor extends IsBoolInstrImplementor
+    private static class IsNotBoolImplementor extends IsBoolImplementor
     {
-        IsNotBoolInstrImplementor(boolean boolType) {
+        IsNotBoolImplementor(boolean boolType) {
             super(boolType);
         }
 
-        public void implement(RexCall call, RexToCalcTranslator translator) {
+        public CalcProgramBuilder.Register implement(RexCall call, RexToCalcTranslator translator) {
             super.implement(call,translator);
             res = translator._rexBuilder.makeCall(opTab.notOperator,res);
-            translator.implementNode(res);
-            translator.setResult(call, translator.getResult(res));
+            return translator.implementNode(res);
         }
     }
 
     /**
      * A Class that gets a specified operand of a call and
-     * retrives its charset name and add it as a vc literal to the program.
-     * This of course asumes the operand is a chartype. If this is not the case
-     * an assert is fired.
+     * retrieves its charset name and add it as a vc literal to the program.
+     * This of course assumes the operand is a chartype.
+     * If this is not the case an assert is fired.
      */
-    private static class AddCharSetNameInstrImplementor extends InstrImplementor
+    private static class AddCharSetNameInstrImplementor extends InstrDefImplementor
     {
         int operand;
 
@@ -267,13 +280,13 @@ class CalcRexImplementorTableImpl implements CalcRexImplementorTable
         }
 
         /**
-         * @pre call.operands[operand].getType().isCharType()==true
+         * @pre call.operands[operand].getType().isCharType()
          */
         protected ArrayList makeRegList(RexToCalcTranslator translator,
                 RexCall call) {
 
             Util.pre(call.operands[operand].getType().isCharType(),
-                    "call.operands[operand].getType().isCharType()==true");
+                    "call.operands[operand].getType().isCharType()");
 
             ArrayList regList = super.makeRegList(translator, call);
             CalcProgramBuilder.Register charSetName =
@@ -284,92 +297,574 @@ class CalcRexImplementorTableImpl implements CalcRexImplementorTable
         }
     }
 
+
+    /**
+     * Implements a call by invoking a given instruction.
+     */
+    private static class UsingInstrImplementor extends AbstractCalcRexImplementor
+    {
+        CalcProgramBuilder.InstructionDef instr;
+
+        /**
+         * @pre null != instr
+         */
+        UsingInstrImplementor(CalcProgramBuilder.InstructionDef instr) {
+            Util.pre(null != instr,"null != instr");
+            this.instr = instr;
+        }
+
+
+        public CalcProgramBuilder.Register implement(RexCall call,
+            RexToCalcTranslator translator) {
+            return implementUsingInstr(instr, translator, call);
+        }
+    }
+
+    // helper methods
+
+    /**
+     * Converts a list of registers to an array.
+     *
+     * @pre regList != null
+     * @post return != null
+     */
+    protected static CalcProgramBuilder.Register[] regListToRegArray(
+            ArrayList regList) {
+        Util.pre(regList != null, "regList != null");
+        CalcProgramBuilder.Register[] regs =
+                (CalcProgramBuilder.Register[]) regList.toArray(
+                        new CalcProgramBuilder.Register[
+                                regList.size()]);
+        return regs;
+    }
+
+    /**
+     * Creates a register to hold the result of a call.
+     *
+     * @param translator Translator
+     * @param call Call
+     * @return A register
+     */
+    protected static CalcProgramBuilder.Register createResultRegister(
+            RexToCalcTranslator translator, RexCall call) {
+        CalcProgramBuilder.RegisterDescriptor resultDesc =
+                translator.getCalcRegisterDescriptor(call);
+        CalcProgramBuilder.Register resultOfCall =
+                 translator._builder.newLocal(resultDesc);
+        return resultOfCall;
+    }
+
+    /**
+     * Implements all operands to a call, and returns a list of the registers
+     * which hold the results.
+     *
+     * @post return != null
+     */
+    protected static ArrayList implementOperands(RexCall call,
+            RexToCalcTranslator translator) {
+        return implementOperands(call, 0, call.operands.length, translator);
+    }
+
+    /**
+     * Implements all operands to a call between start (inclusive) and
+     * stop (exclusive), and returns a list of the registers which hold the
+     * results.
+     *
+     * @post return != null
+     */
+    protected static ArrayList implementOperands(RexCall call,
+            int start, int stop, RexToCalcTranslator translator) {
+        ArrayList regList = new ArrayList();
+        for (int i = start; i < stop; i++) {
+            RexNode operand = call.operands[i];
+            CalcProgramBuilder.Register reg =
+                    translator.implementNode(operand);
+            regList.add(reg);
+        }
+        return regList;
+    }
+
+    /**
+     * Implements a call by invoking a given instruction.
+     *
+     * @param instr Instruction
+     * @param translator Translator
+     * @param call Call to translate
+     * @return Register which contains result, never null
+     */
+    private static CalcProgramBuilder.Register implementUsingInstr(
+            CalcProgramBuilder.InstructionDef instr,
+            RexToCalcTranslator translator,
+            RexCall call) {
+        CalcProgramBuilder.Register[] regs =
+                new CalcProgramBuilder.Register[call.operands.length + 1];
+
+        for (int i = 0; i < call.operands.length; i++) {
+            RexNode operand = call.operands[i];
+            regs[i + 1] = translator.implementNode(operand);
+        }
+
+        regs[0] = createResultRegister(translator, call);
+
+        instr.add(translator._builder, regs);
+        return regs[0];
+    }
+
+    public static CalcRexImplementorTable threadInstance() {
+        return (CalcRexImplementorTable) threadLocal.get();
+    }
+
+    public static void setThreadInstance(CalcRexImplementorTable table) {
+        threadLocal.set(table);
+    }
+
+    /**
+     * Implementor that will convert a {@link RexCall}'s operands to
+     * approx DOUBLE if needed
+     */
+    private static class MakeOperandsDoubleImplementor extends InstrDefImplementor {
+
+        MakeOperandsDoubleImplementor(CalcProgramBuilder.InstructionDef instr) {
+            super(instr);
+        }
+
+        public CalcProgramBuilder.Register implement(RexCall call,
+            RexToCalcTranslator translator) {
+            call = (RexCall) call.clone();
+            for (int i = 0; i < call.operands.length; i++) {
+                RexNode operand = call.operands[i];
+                if (!operand.getType().getSqlTypeName().equals(SqlTypeName.Double)) {
+                    SaffronType oldType = operand.getType();
+                    SaffronTypeFactory fac =
+                        translator._rexBuilder.getTypeFactory();
+                    //todo do a reverse lookup on OpType.Double instead
+                    SaffronType doubleType = fac.createSqlType(SqlTypeName.Double);
+                    doubleType = fac.createTypeWithNullability(
+                        doubleType, oldType.isNullable());
+                    RexNode castCall =
+                        translator._rexBuilder.makeCast(
+                            doubleType, call.operands[i]);
+                    call.operands[i] = castCall;
+                }
+            }
+            assert(0 != call.operands.length);
+            return super.implement(call, translator);
+        }
+    }
+
+    /**
+     * Implementor for CAST operator.
+     */
+    private static class CastImplementor extends AbstractCalcRexImplementor {
+        private static DoubleKeyMap dm;
+
+
+        static {
+            dm = new DoubleKeyMap();
+            dm.setEnforceUniqueness(true);
+
+            Object[] exactTypes = { SqlTypeName.Tinyint, SqlTypeName.Smallint,
+                                    SqlTypeName.Integer, SqlTypeName.Bigint};
+            Object[] approxTypes = { SqlTypeName.Float,
+                                     SqlTypeName.Real,
+                                     SqlTypeName.Double};
+            Object[] timeTypes = { SqlTypeName.Date,
+                                   SqlTypeName.Time,
+                                   SqlTypeName.Timestamp};
+            Object[] charTypes = { SqlTypeName.Char,
+                                   SqlTypeName.Varchar};
+            dm.put(exactTypes, exactTypes,
+                new UsingInstrImplementor(CalcProgramBuilder.Cast));
+            dm.put(approxTypes, approxTypes,
+                new UsingInstrImplementor(CalcProgramBuilder.Cast));
+            dm.put(exactTypes, approxTypes,
+                new UsingInstrImplementor(CalcProgramBuilder.Cast));
+            dm.put(approxTypes, exactTypes,
+                new AbstractCalcRexImplementor() {
+                public CalcProgramBuilder.Register implement(RexCall call,
+                    RexToCalcTranslator translator) {
+                    assert(call.isA(RexKind.Cast));
+                    CalcProgramBuilder.Register beforeRound =
+                        translator.implementNode(call.operands[0]);
+                    CalcProgramBuilder.RegisterDescriptor regDesc =
+                        translator.getCalcRegisterDescriptor(call.operands[0]);
+                    CalcProgramBuilder.Register afterRound =
+                        translator._builder.newLocal(regDesc);
+                    CalcProgramBuilder.Round.add(translator._builder,
+                        new CalcProgramBuilder.Register[]{afterRound, beforeRound});
+                    CalcProgramBuilder.Register res =
+                        createResultRegister(translator, call);
+                    CalcProgramBuilder.Cast.add(translator._builder,
+                        new CalcProgramBuilder.Register[]{res, afterRound});
+                    return res;
+                }
+            });
+            dm.put(timeTypes, SqlTypeName.Bigint,
+                new UsingInstrImplementor(ExtInstructionDefTable.castDateToMillis));
+
+            dm.put(charTypes, SqlTypeName.Date,
+                new UsingInstrImplementor(ExtInstructionDefTable.castStrAToDate));
+            dm.put(charTypes, SqlTypeName.Time,
+                new UsingInstrImplementor(ExtInstructionDefTable.castStrAToTime));
+            dm.put(charTypes, SqlTypeName.Timestamp,
+                new UsingInstrImplementor(ExtInstructionDefTable.castStrAToTimestamp));
+            dm.put(SqlTypeName.Date, charTypes,
+                new UsingInstrImplementor(ExtInstructionDefTable.castDateToStr));
+            dm.put(SqlTypeName.Time, charTypes,
+                new UsingInstrImplementor(ExtInstructionDefTable.castTimeToStr));
+            dm.put(SqlTypeName.Timestamp, charTypes,
+                new UsingInstrImplementor(ExtInstructionDefTable.castTimestampToStr));
+
+            dm.put(charTypes, charTypes, new AbstractCalcRexImplementor(){
+                //REVIEW wael: Kinkoi is working on a char<->char cast instr in the calculator
+                //this code below was just a quick ramen soup meal to get some basic queries working
+                public CalcProgramBuilder.Register implement(RexCall call,
+                    RexToCalcTranslator translator) {
+                    CalcProgramBuilder.RegisterDescriptor resultDesc =
+                    translator.getCalcRegisterDescriptor(call);
+
+                    RexNode op = call.operands[0];
+                    CalcProgramBuilder.Register opReg = translator.implementNode(op);
+                    CalcProgramBuilder.RegisterDescriptor argDesc =
+                        translator.getCalcRegisterDescriptor(op);
+
+                    CalcProgramBuilder.Register resReg =
+                        translator._builder.newLocal(resultDesc);
+
+                    if (resultDesc.getBytes() < argDesc.getBytes()) {
+                        CalcProgramBuilder.Register oneReg =
+                            translator._builder.newInt4Literal(1);
+                        CalcProgramBuilder.Register nReg =
+                            translator._builder.
+                            newInt4Literal(resultDesc.getBytes());
+                        CalcProgramBuilder.Register[] regs =
+                            new CalcProgramBuilder.Register[]
+                            {resReg, opReg, oneReg, nReg};
+                        ExtInstructionDefTable.substring.
+                            add(translator._builder, regs);
+                    } else {
+                        CalcProgramBuilder.move.
+                            add(translator._builder, resReg, opReg);
+                    }
+                    return resReg;
+                }
+            });
+        }
+
+        public CalcProgramBuilder.Register implement(RexCall call,
+                RexToCalcTranslator translator) {
+
+            Util.pre(call.operands.length == 1, "call.operands.length == 1");
+
+            if (RexLiteral.isNullLiteral(call.operands[0])) {
+                CalcProgramBuilder.RegisterDescriptor resultDesc =
+                    translator.getCalcRegisterDescriptor(call);
+                // If the type is one which requires an explicit storage
+                // specification, tell it we need 0 bytes;
+                // otherwise keep it at -1.
+                if (resultDesc.getBytes() >= 0) {
+                    resultDesc = new CalcProgramBuilder.RegisterDescriptor(
+                            resultDesc.getType(), 0);
+                }
+
+                return translator._builder.newLiteral(resultDesc, null);
+            }
+
+            // Figure out the source and destination types.
+            SaffronType fromType = call.operands[0].getType();
+            SqlTypeName fromTypeName = fromType.getSqlTypeName();
+            SaffronType toType = call.getType();
+            SqlTypeName toTypeName = toType.getSqlTypeName();
+
+            CalcRexImplementor implentor =
+                (CalcRexImplementor) dm.get(fromTypeName, toTypeName);
+            if (null != implentor) {
+                return implentor.implement(call, translator);
+            }
+
+            if (translator.lhsTypeIsNullableRHSType(toType, fromType)) {
+                RexNode op = call.operands[0];
+                return translator.implementNode(op);
+            }
+
+            throw Util.needToImplement("Cast from '"
+                    + fromType.toString() + "' to '"+toType.toString() + "'");
+        }
+    }
+
+    /**
+     * Makes all types the same before calling a given
+     * {@link CalcProgramBuilder.InstructionDef instruction}. The way to make the
+     * types the same is by inserting appropiate call to various cast functions
+     * depending on the types. The type "biggest" (least restrictive) type will
+     * always win and other types will be conveted into that bigger type.
+     * For example.
+     * In the expression <code>1.0+2</code> the '+' instruction is potentially called
+     * with types <code>(DOUBLE) + (INTEGER)</code> which is illegal.
+     * Therefore the expression's implementation will logically end looking something like
+     * <code>1.0 + CAST(2 AS DOUBLE)</code>
+     * LIMITATION: For now only Binary operators are suppored with numeric types
+     */
+    private static class BinaryNumericMakeSametypeImplementor extends InstrDefImplementor {
+
+        public BinaryNumericMakeSametypeImplementor(CalcProgramBuilder.InstructionDef instr) {
+            super(instr);
+        }
+
+        private int getRestrictiveness(CalcProgramBuilder.RegisterDescriptor rd) {
+            switch (rd.getType().ordinal_) {
+            case CalcProgramBuilder.OpType.Uint1_ordinal: return 10;
+            case CalcProgramBuilder.OpType.Int1_ordinal:  return 20;
+            case CalcProgramBuilder.OpType.Uint2_ordinal: return 30;
+            case CalcProgramBuilder.OpType.Int2_ordinal:  return 40;
+            case CalcProgramBuilder.OpType.Uint4_ordinal: return 50;
+            case CalcProgramBuilder.OpType.Int4_ordinal:  return 60;
+            case CalcProgramBuilder.OpType.Uint8_ordinal: return 70;
+            case CalcProgramBuilder.OpType.Int8_ordinal:  return 80;
+
+            case CalcProgramBuilder.OpType.Real_ordinal:  return 1000;
+            case CalcProgramBuilder.OpType.Double_ordinal:return 1010;
+            }
+
+            assert(false);
+            return -1;
+        }
+
+        public CalcProgramBuilder.Register implement(RexCall call,
+            RexToCalcTranslator translator) {
+            assert(2 == call.operands.length);
+            ArrayList regs = implementOperands(call, translator);
+            CalcProgramBuilder.RegisterDescriptor rd0 =
+                translator.getCalcRegisterDescriptor(call.operands[0]);
+            CalcProgramBuilder.RegisterDescriptor rd1 =
+                translator.getCalcRegisterDescriptor(call.operands[1]);
+
+            assert(!call.operands[0].getType().isCharType()) : "need to implement for chars";
+            assert(!call.operands[1].getType().isCharType()) : "need to implement for chars";
+
+            int d = getRestrictiveness(rd0) - getRestrictiveness(rd1);
+            if (d != 0) {
+                int small;
+                if (d > 0) {
+                    small = 1;
+                } else {
+                    small = 0;
+                }
+
+                RexNode castCall = translator._rexBuilder.makeCast(
+                    call.operands[(small+1)%2].getType(), call.operands[small]);
+                CalcProgramBuilder.Register newOp =
+                    translator.implementNode(castCall);
+                regs.set(small, newOp);
+            }
+
+            CalcProgramBuilder.Register res =
+                createResultRegister(translator, call);
+            regs.add(0, res);
+
+            instr.add(translator._builder, regs);
+            return res;
+        }
+    }
+
+    /**
+     * Implementor for CASE operator.
+     */
+    private static class CaseImplementor extends AbstractCalcRexImplementor {
+        public CalcProgramBuilder.Register implement(RexCall call,
+                RexToCalcTranslator translator) {
+            Util.pre(call.operands.length>1,"call.operands.length>1");
+            Util.pre((call.operands.length&1)==1,"(call.operands.length&1)==1");
+            CalcProgramBuilder.Register resultOfCall =
+                    createResultRegister(translator,call);
+            String endOfCase = translator.newLabel();
+            String next;
+            boolean elseClauseOptimizedAway=false;
+            for (int i = 0;i < call.operands.length - 1; i += 2) {
+                next = translator.newLabel();
+                CalcProgramBuilder.Register compareResult =
+                        translator.implementNode(call.operands[i]);
+                assert(compareResult.getOpType().equals(CalcProgramBuilder.OpType.Bool));
+                if (!compareResult.getRegisterType().equals(CalcProgramBuilder.RegisterSetType.Literal)) {
+                    translator._builder.addLabelJumpFalse(next, compareResult);
+                    // todo optimize away null check if type known to be non null
+                    // same applies the other way (if we have a null literal or a cast(null as xxx))
+                    translator._builder.addLabelJumpNull(next, compareResult);
+                    CalcProgramBuilder.move.add(
+                        translator._builder,
+                        resultOfCall,
+                            translator.implementNode(call.operands[i + 1]));
+                    translator._builder.addLabelJump(endOfCase);
+                    translator._builder.addLabel(next);
+                } else {
+                    // we can do some optimizations
+                    Boolean val = (Boolean) compareResult.getValue();
+                    if (val.booleanValue()) {
+                        CalcProgramBuilder.move.add(
+                                translator._builder,
+                                resultOfCall,
+                                translator.implementNode(call.operands[i + 1]));
+                        if (i!=0) {
+                            translator._builder.addLabelJump(endOfCase);
+                        }
+                        translator._builder.addLabel(next);
+                        elseClauseOptimizedAway=true;
+                        break;
+                    }
+                    // else we dont need to do anything
+                }
+
+            }
+
+            if (!elseClauseOptimizedAway) {
+                int elseIndex = call.operands.length - 1;
+                CalcProgramBuilder.move.add(
+                        translator._builder,resultOfCall,
+                        translator.implementNode(call.operands[elseIndex]));
+            }
+            translator._builder.addLabel(endOfCase); //this assumes that more instructions will follow
+            return resultOfCall;
+        }
+    }
+
+    /**
+     * Implements the identity operator.
+     *
+     * <p>The prefix plus operator uses this implementor, because "+ x" is
+     * always the same as "x".
+     */
+    private static class IdentityImplementor implements CalcRexImplementor {
+        public CalcProgramBuilder.Register implement(RexCall call,
+                RexToCalcTranslator translator) {
+            return translator.implementNode(call.operands[0]);
+        }
+
+        public boolean canImplement(RexCall call) {
+            return true;
+        }
+    }
+
+    /**
+     * Implements the TRIM function.
+     */
+    private static class TrimImplementor extends InstrDefImplementor {
+        public TrimImplementor() {
+            super(ExtInstructionDefTable.trim);
+        }
+
+        protected ArrayList makeRegList(RexToCalcTranslator translator,
+                RexCall call) {
+            ArrayList regList = new ArrayList();
+            
+            CalcProgramBuilder.Register resultOfCall =
+                    createResultRegister(translator, call);
+            assert call.operands[0] instanceof RexLiteral :
+                    call.operands[0];
+            final RexLiteral literal = (RexLiteral)call.operands[0];
+            SqlTrimFunction.Flag flag = (SqlTrimFunction.Flag)
+                    literal.getValue();
+            
+            regList.add(resultOfCall);
+            regList.add(translator.implementNode(call.operands[2])); //str to trim from
+            regList.add(translator.implementNode(call.operands[1])); //trim char
+            regList.add(translator._builder.newInt4Literal(flag._left));
+            regList.add(translator._builder.newInt4Literal(flag._right)); 
+
+            return regList;
+        }
+    }
+
+    private static class ConcatImplementor extends AbstractCalcRexImplementor {
+
+        public CalcProgramBuilder.Register implement(RexCall call,
+                RexToCalcTranslator translator) {
+            assert(!translator.containsResult(call)); //avoid reentrancy
+            CalcProgramBuilder.Register resultReg =
+                    createResultRegister(translator,call);
+            return implement(call, translator, resultReg);
+        }
+
+        private CalcProgramBuilder.Register implement(RexCall call,
+                RexToCalcTranslator translator,
+                CalcProgramBuilder.Register resultRegister) {
+
+            assert(2==call.operands.length);
+            ArrayList regList = new ArrayList();
+            regList.add(resultRegister);
+            if ((!(call.operands[0] instanceof RexCall) ||
+                    !((RexCall)call.operands[0]).op.equals(opTab.concatOperator)))
+            {
+                regList.add(translator.implementNode(call.operands[0]));
+            } else {
+                implement((RexCall)call.operands[0], translator, resultRegister);
+            }
+
+            regList.add(translator.implementNode(call.operands[1]));
+            ExtInstructionDefTable.concat.add(translator._builder,regList);
+            return resultRegister;
+        }
+    }
+
     /**
      * Registers the standard set of functions.
-     * @param opTab
      */
-    private void initStandard(final SqlStdOperatorTable opTab) {
+    private CalcRexImplementorTableImpl initStandard() {
 
+        //~ ABS ---------------
+        register(opTab.absFunc, new InstrDefImplementor(ExtInstructionDefTable.abs) {
+
+            public CalcProgramBuilder.Register implement(RexCall call,
+                RexToCalcTranslator translator) {
+                CalcProgramBuilder.RegisterDescriptor rd =
+                    translator.getCalcRegisterDescriptor(call);
+                if (rd.getType().isExact() &&
+                    !rd.getType().equals(CalcProgramBuilder.OpType.Int8)) {
+
+                    SaffronType oldType = call.operands[0].getType();
+                    SaffronTypeFactory fac =
+                        translator._rexBuilder.getTypeFactory();
+                    //todo do a reverse lookup on OpType.Int8 instead
+                    SaffronType int8 = fac.createSqlType(SqlTypeName.Bigint);
+                    RexNode castCall1 =
+                        translator._rexBuilder.makeCast(int8, call.operands[0]);
+                    RexNode absCall  = translator._rexBuilder.makeCall(
+                        SqlOperatorTable.std().absFunc,castCall1);
+                    return translator.implementNode(
+                        translator._rexBuilder.makeCast(oldType, absCall));
+                }
+                //else
+                return super.implement(call, translator);
+            }
+        });
         //~ ADD ---------------
-        registerInstr(opTab.plusOperator, CalcProgramBuilder.nativeAdd);
+        register(opTab.plusOperator,
+            new BinaryNumericMakeSametypeImplementor(CalcProgramBuilder.nativeAdd));
         //~ AND ---------------
         registerInstr(opTab.andOperator, CalcProgramBuilder.integralNativeAnd);
         //~ DIV ---------------
-        registerInstr(opTab.divideOperator, CalcProgramBuilder.nativeDiv);
+        register(opTab.divideOperator,
+            new BinaryNumericMakeSametypeImplementor(CalcProgramBuilder.nativeDiv));
         //~ CASE ---------------
-        register(opTab.caseOperator,
-                new InstrImplementor(null) {
-                    protected ArrayList makeRegList(RexToCalcTranslator translator,
-                            RexCall call) {
-                        translator.implementNode(call.operands[0]);
-                        ArrayList regList = new ArrayList(1);
-                        regList.add(translator.getResult(call.operands[0]));
-                        return regList;
-                    }
-
-                    public void implement(RexCall call,
-                            RexToCalcTranslator translator) {
-                        Util.pre(call.operands.length>1,"call.operands.length>1");
-                        Util.pre((call.operands.length&1)==1,"(call.operands.length&1)==1");
-                        CalcProgramBuilder.Register resultOfCall=
-                                createResultRegister(translator,call);
-                        String endOfCase = translator.newLabel();
-                        String next;
-                        for(int i=0;i<call.operands.length-1;i+=2) {
-                            next = translator.newLabel();
-                            translator.implementNode(call.operands[i]);
-                            CalcProgramBuilder.Register compareResult =
-                                    translator.getResult(call.operands[i]);
-                            translator._builder.addLabelJumpFalse(next,
-                                    compareResult);
-                            translator._builder.addLabelJumpNull(next,
-                                    compareResult);
-                            translator.implementNode(call.operands[i+1]);
-                            CalcProgramBuilder.move.add(
-                                    translator._builder,
-                                    resultOfCall,
-                                    translator.getResult(call.operands[i+1]));
-                            translator._builder.addLabelJump(endOfCase);
-                            translator._builder.addLabel(next);
-                        }
-                        int elseIndex = call.operands.length-1;
-                        translator.implementNode(call.operands[elseIndex]);
-                        CalcProgramBuilder.move.add(
-                                translator._builder,resultOfCall,
-                                translator.getResult(call.operands[elseIndex]));
-                        translator._builder.addLabel(endOfCase); //this assumes that more instructions will follow
-                        translator.setResult(call,resultOfCall);
-                    }
-                });
+        register(opTab.caseOperator, new CaseImplementor());
+        //~ CAST  ---------
+        register(opTab.castFunc, new CastImplementor());
         //~ CHARACTER_LENGTH ---------
-        // TODO eventually need an extra argument for charset.
-        // use AddCharSetNameInstrImplementor("CHAR_LENGTH", 3) instead of ExtInstrDef
-        registerInstr(opTab.characterLengthFunc,
-                ExtInstructionDefTable.charLength);
+        if (false) {
+            // TODO eventually need an extra argument for charset, in which
+            // case we will use the following code
+            register(opTab.characterLengthFunc,
+                    new AddCharSetNameInstrImplementor("CHAR_LENGTH", -1, 3));
+        } else {
+            registerInstr(opTab.characterLengthFunc,
+                    ExtInstructionDefTable.charLength);
+        }
         // CHAR_LENGTH shares CHARACTER_LENGTH's implementation.
         // TODO: Combine the CHAR_LENGTH and CHARACTER_LENGTH at the
         //   RexNode level (they should remain separate functions at the
         //   SqlNode level).
         register(opTab.charLengthFunc, get(opTab.characterLengthFunc));
         //~ CONCAT ---------------
-        register(opTab.concatOperator,
-                new InstrImplementor(null) {
-                    public void implement(RexCall call,
-                            RexToCalcTranslator translator) {
-                        ArrayList regList = implementOperands(call,translator);
-                        //optimization, if the first operand to this concat is
-                        //another concat use strCatA2
-                        if ((!(call.operands[0] instanceof RexCall) ||
-                            !((RexCall)call.operands[0]).op.equals(opTab.concatOperator)))
-                        {
-                            regList.add(0,createResultRegister(translator,call));
-                        }
-                        ExtInstructionDefTable.concat.
-                                add(translator._builder,regList);
-                        translator.setResult(call,
-                                (CalcProgramBuilder.Register) regList.get(0));
-                    }
-                });
+        register(opTab.concatOperator, new ConcatImplementor());
         //~ EQUAL ---------------
         registerInstr(opTab.equalsOperator, CalcProgramBuilder.boolNativeEqual);
         //~ GREATER THAN ---------------
@@ -383,44 +878,34 @@ class CalcRexImplementorTableImpl implements CalcRexImplementorTable
         //~ IS NOT NULL---------------
         registerInstr(opTab.isNotNullOperator, CalcProgramBuilder.boolNativeIsNotNull);
         //~ IS TRUE ---------------
-        register(opTab.isTrueOperator, new IsBoolInstrImplementor(true));
+        register(opTab.isTrueOperator, new IsBoolImplementor(true));
         //~ IS NOT TRUE ---------------
-        register(opTab.isNotTrueOperator, new IsNotBoolInstrImplementor(true));
+        register(opTab.isNotTrueOperator, new IsNotBoolImplementor(true));
         //~ IS FALSE`---------------
-        register(opTab.isFalseOperator, new IsBoolInstrImplementor(false));
+        register(opTab.isFalseOperator, new IsBoolImplementor(false));
         //~ IS NOT FALSE ---------------
-        register(opTab.isNotFalseOperator, new IsNotBoolInstrImplementor(false));
+        register(opTab.isNotFalseOperator, new IsNotBoolImplementor(false));
         //~ LESS THAN ---------------
         registerInstr(opTab.lessThanOperator, CalcProgramBuilder.boolNativeLessThan);
         //~ LESS THAN OR EQUAL ---------------
         registerInstr(opTab.lessThanOrEqualOperator,
                 CalcProgramBuilder.boolNativeLessOrEqualThan);
         //~ LIKE ---------------
-        register(opTab.likeOperator,
-                new InstrImplementor(ExtInstructionDefTable.like) {
-                    protected ArrayList makeRegList(RexToCalcTranslator translator,
-                            RexCall call) {
-                        ArrayList regList = super.makeRegList(translator, call);
-                        if (2 == call.operands.length) {
-                            CalcProgramBuilder.Register emptyStringReg =
-                                    translator._builder.newVarcharLiteral("");
-                            regList.add(emptyStringReg);
-                        }
-                        return regList;
-                    }
-                });
+        registerInstr(opTab.likeOperator, ExtInstructionDefTable.like);
         //~ LOG ---------------
-        registerInstr(opTab.logFunc, ExtInstructionDefTable.log10);
+        register(opTab.lnFunc, new MakeOperandsDoubleImplementor(ExtInstructionDefTable.log));
+        register(opTab.logFunc, new MakeOperandsDoubleImplementor(ExtInstructionDefTable.log10));
         //~ UPPER ---------
         // TODO: need to know charset aswell. When ready,
         // use same construct as with CHAR_LENGTH above
         registerInstr(opTab.lowerFunc, ExtInstructionDefTable.lower);
         //~ MINUS ---------------
-        registerInstr(opTab.minusOperator, CalcProgramBuilder.nativeMinus);
+        register(opTab.minusOperator, new BinaryNumericMakeSametypeImplementor(CalcProgramBuilder.nativeMinus));
         //~ MOD maps directly to a built in instruction---------------
         registerInstr(opTab.modFunc, CalcProgramBuilder.integralNativeMod);
         //~ MUL ---------------
-        registerInstr(opTab.multiplyOperator, CalcProgramBuilder.integralNativeMul);
+        register(opTab.multiplyOperator,
+            new BinaryNumericMakeSametypeImplementor(CalcProgramBuilder.integralNativeMul));
         //~ NOT EQUAL ---------------
         registerInstr(opTab.notEqualsOperator, CalcProgramBuilder.boolNativeNotEqual);
         //~ NOT  ---------------
@@ -433,60 +918,18 @@ class CalcRexImplementorTableImpl implements CalcRexImplementorTable
         registerInstr(opTab.overlayFunc, ExtInstructionDefTable.overlay);
         //~ POSITION ---------------
         registerInstr(opTab.positionFunc, ExtInstructionDefTable.position);
+        //~ POWER ---------------
+        register(opTab.powFunc, new MakeOperandsDoubleImplementor(ExtInstructionDefTable.pow));
         //~ PREFIX MINUS ---------------
         registerInstr(opTab.prefixMinusOperator, CalcProgramBuilder.nativeNeg);
         //~ PREFIX PLUS---------------
-        register(opTab.prefixPlusOperator,
-                new InstrImplementor(new CalcProgramBuilder.InstructionDef(null, -1) {
-                    void add(CalcProgramBuilder builder,
-                            CalcProgramBuilder.Register[] regs) {
-                        /* empty implementation */
-                    }
-                }) {
-                    protected ArrayList makeRegList(RexToCalcTranslator translator,
-                            RexCall call) {
-                        translator.implementNode(call.operands[0]);
-                        ArrayList regList = new ArrayList(1);
-                        regList.add(translator.getResult(call.operands[0]));
-                        return regList;
-                    }
-                });
+        register(opTab.prefixPlusOperator, new IdentityImplementor());
         //~ SIMILAR ---------------
-        register(opTab.similarOperator,
-                new InstrImplementor(ExtInstructionDefTable.similar) {
-                    protected ArrayList makeRegList(RexToCalcTranslator translator,
-                            RexCall call) {
-                        ArrayList regList = super.makeRegList(translator, call);
-                        if (2 == call.operands.length) {
-                            CalcProgramBuilder.Register emptyStringReg =
-                                    translator._builder.newVarcharLiteral("");
-                            regList.add(emptyStringReg);
-                        }
-                        return regList;
-                    }
-                });
+        registerInstr(opTab.similarOperator, ExtInstructionDefTable.similar);
         //~ SUBSTRING ---------------
         registerInstr(opTab.substringFunc,ExtInstructionDefTable.substring);
         //~ TRIM ---------------
-        register(opTab.trimFunc,
-                new InstrImplementor(ExtInstructionDefTable.trim) {
-                    protected ArrayList makeRegList(RexToCalcTranslator translator,
-                            RexCall call) {
-                        ArrayList regList =
-                                implementOperands(call,1,
-                                        call.operands.length,translator);
-                        CalcProgramBuilder.Register resultOfCall =
-                                createResultRegister(translator, call);
-                        assert call.operands[0] instanceof RexLiteral;
-                        final RexLiteral literal = (RexLiteral)call.operands[0];
-                        SqlTrimFunction.Flag flag = (SqlTrimFunction.Flag)
-                                literal.getValue();
-                        regList.add(translator._builder.newInt4Literal(flag._left));
-                        regList.add(translator._builder.newInt4Literal(flag._right));
-                        regList.add(0, resultOfCall);
-                        return regList;
-                    }
-                });
+        register(opTab.trimFunc, new TrimImplementor());
         //~ UPPER ---------
         // TODO: need to know charset aswell. When ready,
         // use same construct as with CHAR_LENGTH above
@@ -496,8 +939,9 @@ class CalcRexImplementorTableImpl implements CalcRexImplementorTable
         registerInstr(opTab.localTimestampFunc,
                     ExtInstructionDefTable.localTimestamp);
 
-
+        return this;
     }
 }
 
 // End CalcRexImplementorTableImpl.java
+

@@ -134,6 +134,15 @@ caching by executing the SQL statement <code>alter system set
 operation will be much slower).
 
 <hr>
+<h2>Why is it taking so long to run the tests?  It used to be faster!</h2>
+
+There's a good chance you forgot to turn off an unnecessary trace
+after a debugging session.  Detailed tracing (such as Fennel) slows
+down the system significantly because each trace entry is flushed to
+disk individually (guaranteeing that it will be visible after a
+crash).
+
+<hr>
 <h2>JSwat is complaining about UnknownHostException or Socket transport error, What do I do?</h2>
 
 To solve the UnknownHostException, add the hostname of your computer to /etc/hosts. E.g<br>

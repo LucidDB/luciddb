@@ -62,27 +62,18 @@ import javax.jmi.model.*;
 import javax.jmi.reflect.*;
 
 /**
- * FarragoPreparingStmt subclasses OJStatement to manage Farrago-specific
- * preparation of a single SQL statement (it's not a context for executing a
- * series of statements; for that, see {@link
- * net.sf.farrago.session.FarragoSessionStmtContext}).  The result is a
- * {@link FarragoExecutableStmt}.
- *
- *<p>
- *
- * FarragoPreparingStmt has a fleeting lifetime, which is why its name is in
- * the progressive tense.  Once its job is done, it should be discarded (and
- * can't be reused).
+ * FarragoPreparingStmt subclasses OJStatement to implement the
+ * {@link FarragoSessionPreparingStmt} interface.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public class FarragoPreparingStmt extends OJStatement
     implements
+        FarragoSessionPreparingStmt,
         SaffronConnection,
         SaffronSchema,
-        SqlValidator.CatalogReader,
-        FarragoAllocation
+        SqlValidator.CatalogReader
 {
     // NOTE jvs 8-June-2004: this tracer is special in that it controls
     // preservation of dynamically generated Java code
@@ -93,23 +84,11 @@ public class FarragoPreparingStmt extends OJStatement
 
     //~ Instance fields -------------------------------------------------------
 
-    private FarragoSession session;
+    private final FarragoSessionStmtValidator stmtValidator;
 
-    private FarragoConnectionDefaults connectionDefaults;
-
-    private FarragoCatalog catalog;
-
-    private FarragoTypeFactory farragoTypeFactory;
-
-    private FennelDbHandle fennelDbHandle;
-
-    private FarragoObjectCache codeCache;
-
-    private FarragoDataWrapperCache dataWrapperCache;
-
+    private boolean needRestore;
+    
     private SqlToRelConverter sqlToRelConverter;
-
-    private FarragoIndexMap indexMap;
 
     private SaffronTypeFactory savedTypeFactory;
 
@@ -121,11 +100,11 @@ public class FarragoPreparingStmt extends OJStatement
 
     private FarragoAllocation javaCodeDir;
 
-    private FarragoSqlValidator validator;
+    private FarragoSqlValidator sqlValidator;
 
     private Set directDependencies;
 
-    private FarragoCompoundAllocation allocations;
+    private Set allDependencies;
 
     /**
      * Name of Java package containing code generated for this statement.
@@ -142,7 +121,11 @@ public class FarragoPreparingStmt extends OJStatement
      */
     private File classesRoot;
 
-    private boolean rememberDependencies;
+    // attributes of the openjava code generated to implement the statement:
+    private ClassDeclaration implementingClassDecl;
+    private Argument[] implementingArgs;
+
+    private boolean processingDirectDependencies;
 
     private Set loadedServerClassNameSet;
 
@@ -155,54 +138,36 @@ public class FarragoPreparingStmt extends OJStatement
     /**
      * Creates a new FarragoPreparingStmt object.
      *
-     * @param catalog catalog to use for object definitions
-     * @param fennelDbHandle handle to Fennel database to access
-     * @param session invoking session
-     * @param codeCache FarragoObjectCache to use for caching code snippets
-     * needed during preparation
-     * @param dataWrapperCache FarragoObjectCache to use for caching
-     * FarragoMedDataWrapper instances
-     * @param indexMap FarragoIndexMap to use for index access
+     * @param stmtValidator generic stmt validator
      */
     public FarragoPreparingStmt(
-        FarragoCatalog catalog,
-        FennelDbHandle fennelDbHandle,
-        FarragoSession session,
-        FarragoObjectCache codeCache,
-        FarragoObjectCache dataWrapperCache,
-        FarragoIndexMap indexMap)
+        FarragoSessionStmtValidator stmtValidator)
     {
         super(null);
-        this.catalog = catalog;
-        this.fennelDbHandle = fennelDbHandle;
-        this.codeCache = codeCache;
-        this.indexMap = indexMap;
 
-        this.session = session;
-        connectionDefaults = session.getConnectionDefaults();
+        this.stmtValidator = stmtValidator;
+        stmtValidator.addAllocation(this);
 
-        allocations = new FarragoCompoundAllocation();
-        farragoTypeFactory = new FarragoTypeFactoryImpl(catalog);
-        this.dataWrapperCache = new FarragoDataWrapperCache(
-            allocations,dataWrapperCache,catalog,fennelDbHandle);
         loadedServerClassNameSet = new HashSet();
 
         super.setResultCallingConvention(CallingConvention.ITERATOR);
 
         directDependencies = new HashSet();
-        rememberDependencies = true;
+        allDependencies = new HashSet();
+        processingDirectDependencies = true;
 
         classesRoot = new File(
             FarragoProperties.instance().homeDir.get(true));
         classesRoot = new File(classesRoot,"classes");
 
         // Save some global state for reentrancy
+        needRestore = true;
         savedTypeFactory = SaffronTypeFactoryImpl.threadInstance();
         savedPlannerFactory = VolcanoPlannerFactory.threadInstance();
         savedClassMap = ClassMap.instance();
         savedDeclarer = OJUtil.threadDeclarers.get();
 
-        SaffronTypeFactoryImpl.setThreadInstance(farragoTypeFactory);
+        SaffronTypeFactoryImpl.setThreadInstance(getFarragoTypeFactory());
         ClassMap.setInstance(new ClassMap(FarragoSyntheticObject.class));
         VolcanoPlannerFactory.setThreadInstance(
             new VolcanoPlannerFactory() {
@@ -217,51 +182,43 @@ public class FarragoPreparingStmt extends OJStatement
 
     //~ Methods ---------------------------------------------------------------
 
+    // implement FarragoSessionPreparingStmt
+    public FarragoSessionStmtValidator getStmtValidator()
+    {
+        return stmtValidator;
+    }
+    
     public void setPlanner(FarragoPlanner planner)
     {
         this.planner = planner;
     }
 
+    // implement FarragoSessionPreparingStmt
     public SqlOperatorTable getSqlOperatorTable()
     {
-        return session.getSqlOperatorTable();
+        return getSession().getSqlOperatorTable();
     }
 
-    /**
-     * Perform validation on an SQL statement.
-     *
-     * @param sqlNode unvalidated SQL statement
-     *
-     * @return validated SQL statement
-     */
+    // implement FarragoSessionPreparingStmt
     public SqlNode validate(SqlNode sqlNode)
     {
         return getSqlValidator().validate(sqlNode);
     }
 
-    /**
-     * @return the SqlValidator for this statement (creating it if
-     * it does not yet exist)
-     */
+    // implement FarragoSessionPreparingStmt
     public SqlValidator getSqlValidator()
     {
-        if (validator == null) {
-            validator = new FarragoSqlValidator(this);
+        if (sqlValidator == null) {
+            sqlValidator = new FarragoSqlValidator(this);
         }
-        return validator;
+        return sqlValidator;
     }
 
-    /**
-     * Implement a parsed query or DML statement but do not execute it.
-     *
-     * @param sqlNode top-level node of parsed statement
-     *
-     * @return prepared FarragoExecutableStmt
-     */
-    public FarragoExecutableStmt implement(SqlNode sqlNode)
+    // implement FarragoSessionPreparingStmt
+    public FarragoSessionExecutableStmt prepare(SqlNode sqlNode)
     {
         boolean needValidation = false;
-        if (validator == null) {
+        if (sqlValidator == null) {
             getSqlValidator();
             needValidation = true;
         }
@@ -269,27 +226,32 @@ public class FarragoPreparingStmt extends OJStatement
         definePackageName();
         PreparedResult preparedResult = super.prepareSql(
             sqlNode,
-            session.getRuntimeContextClass(),
-            validator,
+            getSession().getRuntimeContextClass(),
+            sqlValidator,
             needValidation);
         return implement(preparedResult);
     }
 
-    /**
-     * Implement a logical or physical query plan but do not execute it.
-     * @param rootRel root of query plan (saffron relational expression)
-     * @param sqlKind SqlKind for the relational expression: only
-     *   SqlKind.Explain and SqlKind.Dml are special cases.
-     * @param logical true for a logical query plan (still needs to be
-     *   optimized), false for a physical plan.
-     * @return prepared FarragoExecutableStmt
-     */
-    public FarragoExecutableStmt implement(SaffronRel rootRel, SqlKind sqlKind, boolean logical)
+    // implement FarragoSessionPreparingStmt
+    public void preImplement()
     {
         definePackageName();
+        implementingArgs = new Argument [] {
+            new Argument(
+                connectionVariable,
+                getSession().getRuntimeContextClass(),
+                this)
+        };
+        implementingClassDecl = super.init(implementingArgs);
+    }
+
+    // implement FarragoSessionPreparingStmt
+    public FarragoSessionExecutableStmt implement(
+        SaffronRel rootRel, SqlKind sqlKind, boolean logical)
+    {
         PreparedResult preparedResult =
-            super.prepareSql(
-                rootRel, sqlKind, logical, session.getRuntimeContextClass());
+            super.prepareSql(rootRel, sqlKind, logical,
+                             implementingClassDecl, implementingArgs);
         return implement(preparedResult);
     }
 
@@ -322,9 +284,10 @@ public class FarragoPreparingStmt extends OJStatement
         packageDir.mkdir();
     }
 
-    private FarragoExecutableStmt implement(PreparedResult preparedResult)
+    private FarragoSessionExecutableStmt implement(
+        PreparedResult preparedResult)
     {
-        FarragoExecutableStmt executableStmt;
+        FarragoSessionExecutableStmt executableStmt;
         if (preparedResult instanceof PreparedExecution) {
             PreparedExecution preparedExecution =
                 (PreparedExecution) preparedResult;
@@ -350,7 +313,7 @@ public class FarragoPreparingStmt extends OJStatement
             Set streamDefSet = relImplementor.getStreamDefSet();
             if (!streamDefSet.isEmpty()) {
                 FemCmdPrepareExecutionStreamGraph cmdPrepareStream =
-                    catalog.newFemCmdPrepareExecutionStreamGraph();
+                    getCatalog().newFemCmdPrepareExecutionStreamGraph();
                 Collection streamDefs = cmdPrepareStream.getStreamDefs();
                 streamDefs.addAll(streamDefSet);
                 xmiFennelPlan =
@@ -366,11 +329,12 @@ public class FarragoPreparingStmt extends OJStatement
                 dynamicParamRowType,
                 preparedExecution.getMethod(),
                 xmiFennelPlan,
-                preparedResult.isDml());
+                preparedResult.isDml(),
+                getReferencedObjectIds());
         } else {
             assert(preparedResult instanceof PreparedExplanation);
             executableStmt = new FarragoExecutableExplainStmt(
-                farragoTypeFactory.createProjectType(
+                getFarragoTypeFactory().createProjectType(
                     new SaffronType[0],
                     new String[0]),
                 preparedResult.getCode());
@@ -385,11 +349,7 @@ public class FarragoPreparingStmt extends OJStatement
         return executableStmt;
     }
 
-    /**
-     * Partially prepare this statement for use as a view definition.
-     *
-     * @param info receives view info
-     */
+    // implement FarragoSessionPreparingStmt
     public void prepareViewInfo(SqlNode sqlNode,FarragoSessionViewInfo info)
     {
         getSqlToRelConverter();
@@ -401,18 +361,32 @@ public class FarragoPreparingStmt extends OJStatement
         info.dependencies = Collections.unmodifiableSet(directDependencies);
     }
 
-    /**
-     * @return the SqlToRelConverter used by this stmt (creating it
-     * if it does not yet exist)
-     */
+    private Set getReferencedObjectIds()
+    {
+        Set set = new HashSet();
+        Iterator iter = allDependencies.iterator();
+        while (iter.hasNext()) {
+            RefObject refObj = (RefObject) iter.next();
+            set.add(refObj.refMofId());
+        }
+        return set;
+    }
+
+    // implement FarragoSessionPreparingStmt
     public SqlToRelConverter getSqlToRelConverter()
     {
-        return getSqlToRelConverter(validator,this);
+        return getSqlToRelConverter(sqlValidator,this);
+    }
+
+    // implement FarragoSessionPreparingStmt
+    public VolcanoCluster getVolcanoCluster()
+    {
+        return getSqlToRelConverter().getCluster();
     }
 
     private SaffronType getParamRowType()
     {
-        return farragoTypeFactory.createProjectType(
+        return getFarragoTypeFactory().createProjectType(
             new SaffronTypeFactory.FieldInfo()
             {
                 public int getFieldCount()
@@ -436,8 +410,8 @@ public class FarragoPreparingStmt extends OJStatement
     // implement FarragoAllocation
     public void closeAllocation()
     {
-        if (catalog == null) {
-            // already closed
+        if (!needRestore) {
+            // already closed or else never opened
             return;
         }
         SaffronTypeFactoryImpl.setThreadInstance(savedTypeFactory);
@@ -450,16 +424,14 @@ public class FarragoPreparingStmt extends OJStatement
             javaCodeDir.closeAllocation();
             javaCodeDir = null;
         }
-        allocations.closeAllocation();
-        catalog = null;
+        needRestore = false;
     }
 
     SaffronRel expandView(String queryString)
     {
-        // once we start expanding views, we no longer want to keep adding
-        // dependencies, since we're only interested in direct
-        // references
-        rememberDependencies = false;
+        // once we start expanding views, all objects we encounter
+        // should be treated as indirect dependencies
+        processingDirectDependencies = false;
 
         SqlParser parser = new SqlParser(queryString);
         final SqlNode sqlQuery;
@@ -485,7 +457,7 @@ public class FarragoPreparingStmt extends OJStatement
                 connection.getSaffronSchema(),
                 getEnvironment(),
                 connection,
-                new FarragoRexBuilder(farragoTypeFactory));
+                new FarragoRexBuilder(getFarragoTypeFactory()));
             sqlToRelConverter.setDefaultValueFactory(
                 new CatalogDefaultValueFactory());
         }
@@ -500,52 +472,34 @@ public class FarragoPreparingStmt extends OJStatement
         return relImplementor;
     }
 
-    /**
-     * .
-     *
-     * @return catalog for this stmt
-     */
+    // implement FarragoSessionPreparingStmt
     public FarragoCatalog getCatalog()
     {
-        return catalog;
+        return stmtValidator.getCatalog();
     }
 
-    /**
-     * .
-     *
-     * @return handle to Fennel database accessed by this stmt
-     */
+    // implement FarragoSessionPreparingStmt
     public FennelDbHandle getFennelDbHandle()
     {
-        return fennelDbHandle;
+        return stmtValidator.getFennelDbHandle();
     }
 
-    /**
-     * .
-     *
-     * @return type factory for this stmt
-     */
+    // implement FarragoSessionPreparingStmt
     public FarragoTypeFactory getFarragoTypeFactory()
     {
-        return farragoTypeFactory;
+        return stmtValidator.getTypeFactory();
     }
 
-    /**
-     * .
-     *
-     * @return FarragoIndexMap to use for accessing index storage
-     */
+    // implement FarragoSessionPreparingStmt
     public FarragoIndexMap getIndexMap()
     {
-        return indexMap;
+        return stmtValidator.getIndexMap();
     }
 
-    /**
-     * @return session which invoked statement preparation
-     */
+    // implement FarragoSessionPreparingStmt
     public FarragoSession getSession()
     {
-        return session;
+        return stmtValidator.getSession();
     }
 
     // implement SaffronConnection
@@ -565,7 +519,8 @@ public class FarragoPreparingStmt extends OJStatement
     public SaffronTable getTableForMember(String [] names)
     {
         FarragoCatalog.ResolvedSchemaObject resolved =
-            catalog.resolveSchemaObjectName(connectionDefaults,names);
+            getCatalog().resolveSchemaObjectName(
+                stmtValidator.getConnectionDefaults(),names);
 
         if (resolved.object == null) {
             return getForeignTableFromNamespace(resolved);
@@ -580,7 +535,7 @@ public class FarragoPreparingStmt extends OJStatement
 
             // REVIEW:  maybe defer this until physical implementation?
             if (table.isTemporary()) {
-                indexMap.instantiateTemporaryTable(table);
+                getIndexMap().instantiateTemporaryTable(table);
             }
         }
 
@@ -591,7 +546,10 @@ public class FarragoPreparingStmt extends OJStatement
                 table.getServer();
             loadDataServerFromCache(femServer);
             saffronTable = femServer.loadColumnSetFromCache(
-                dataWrapperCache,catalog,farragoTypeFactory,table);
+                stmtValidator.getDataWrapperCache(),
+                getCatalog(),
+                getFarragoTypeFactory(),
+                table);
         } else if (columnSet instanceof CwmView) {
             SaffronType rowType =
                 getFarragoTypeFactory().createColumnSetType(columnSet);
@@ -622,8 +580,8 @@ public class FarragoPreparingStmt extends OJStatement
         FarragoCatalog.ResolvedSchemaObject resolved)
     {
         FemDataServerImpl femServer = (FemDataServerImpl)
-            catalog.getModelElement(
-                catalog.medPackage.getFemDataServer().refAllOfType(),
+            getCatalog().getModelElement(
+                getCatalog().medPackage.getFemDataServer().refAllOfType(),
                 resolved.catalogName);
         if (femServer == null) {
             return null;
@@ -647,7 +605,7 @@ public class FarragoPreparingStmt extends OJStatement
                 return null;
             }
             FarragoMedColumnSet medColumnSet = directory.lookupColumnSet(
-                farragoTypeFactory,
+                getFarragoTypeFactory(),
                 namesWithoutCatalog,
                 resolved.getQualifiedName());
             initializeQueryColumnSet(medColumnSet,null);
@@ -664,7 +622,7 @@ public class FarragoPreparingStmt extends OJStatement
         FemDataServerImpl femServer)
     {
         FarragoMedDataServer server =
-            femServer.loadFromCache(dataWrapperCache);
+            femServer.loadFromCache(stmtValidator.getDataWrapperCache());
         if (loadedServerClassNameSet.add(server.getClass().getName())) {
             // This is the first time we've seen this server class, so give it
             // a chance to register any planner info such as calling
@@ -698,7 +656,8 @@ public class FarragoPreparingStmt extends OJStatement
     public SqlValidator.Table getTable(String [] names)
     {
         FarragoCatalog.ResolvedSchemaObject resolved =
-            catalog.resolveSchemaObjectName(connectionDefaults,names);
+            getCatalog().resolveSchemaObjectName(
+                stmtValidator.getConnectionDefaults(),names);
 
         if (resolved == null) {
             return null;
@@ -734,9 +693,10 @@ public class FarragoPreparingStmt extends OJStatement
 
     private void addDependency(Object supplier)
     {
-        if (rememberDependencies) {
+        if (processingDirectDependencies) {
             directDependencies.add(supplier);
         }
+        allDependencies.add(supplier);
     }
 
     public Variable getConnectionVariable()
@@ -747,7 +707,7 @@ public class FarragoPreparingStmt extends OJStatement
     // override OJStatement
     protected String getCompilerClassName()
     {
-        return catalog.getCurrentConfig().getJavaCompilerClassName();
+        return getCatalog().getCurrentConfig().getJavaCompilerClassName();
     }
 
     // override OJStatement
@@ -862,10 +822,11 @@ public class FarragoPreparingStmt extends OJStatement
                 return sqlToRelConverter.getRexBuilder().constantNull();
             }
 
-            FarragoObjectCache.Entry cacheEntry = codeCache.pin(
-                cwmExp.refMofId(),this,false);
+            FarragoObjectCache.Entry cacheEntry =
+                stmtValidator.getCodeCache().pin(
+                    cwmExp.refMofId(),this,false);
             RexNode parsedExp = (RexNode) cacheEntry.getValue();
-            codeCache.unpin(cacheEntry);
+            stmtValidator.getCodeCache().unpin(cacheEntry);
             return parsedExp;
         }
 
@@ -876,7 +837,7 @@ public class FarragoPreparingStmt extends OJStatement
         {
             String mofId = (String) key;
             CwmExpression cwmExp =
-                (CwmExpression) catalog.getRepository().getByMofId(mofId);
+                (CwmExpression) getCatalog().getRepository().getByMofId(mofId);
             String defaultString = cwmExp.getBody();
             SqlParser sqlParser = new SqlParser(defaultString);
             SqlNode sqlNode;

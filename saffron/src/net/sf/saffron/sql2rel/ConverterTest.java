@@ -127,7 +127,7 @@ public class ConverterTest extends TestCase
     public void testFromJoin() {
         check("select 1 from \"emps\" join \"depts\" on \"emps\".\"deptno\" = \"depts\".\"deptno\"",
                 "ProjectRel(EXPR$0=[1])" + NL +
-                "  JoinRel(condition=[=($2, $5)], joinType=[inner])" + NL +
+                "  JoinRel(condition=[=($2, $6)], joinType=[inner])" + NL +
                 "    ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])" + NL +
                 "    ExpressionReaderRel(expression=[Java((sales.Dept[]) {sales}.depts)])" + NL);
     }
@@ -141,7 +141,7 @@ public class ConverterTest extends TestCase
     public void testFromFullJoin() {
         check("select 1 from \"emps\" full join \"depts\" on \"emps\".\"deptno\" = \"depts\".\"deptno\"",
                 "ProjectRel(EXPR$0=[1])" + NL +
-                "  JoinRel(condition=[=($2, $5)], joinType=[full])" + NL +
+                "  JoinRel(condition=[=($2, $6)], joinType=[full])" + NL +
                 "    ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])" + NL +
                 "    ExpressionReaderRel(expression=[Java((sales.Dept[]) {sales}.depts)])" + NL);
     }
@@ -151,11 +151,11 @@ public class ConverterTest extends TestCase
                 "join \"depts\" on \"emps\".\"deptno\" = \"depts\".\"deptno\" " +
                 "join (select * from \"emps\" where \"gender\" = 'F') as \"femaleEmps\" on \"femaleEmps\".\"empno\" = \"emps\".\"empno\"",
                 "ProjectRel(EXPR$0=[1])" + NL +
-                "  JoinRel(condition=[=($7, $0)], joinType=[inner])" + NL +
+                "  JoinRel(condition=[=($8, $0)], joinType=[inner])" + NL +
                 "    JoinRel(condition=[=($2, $2)], joinType=[inner])" + NL +
                 "      ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])" + NL +
                 "      ExpressionReaderRel(expression=[Java((sales.Dept[]) {sales}.depts)])" + NL +
-                "    ProjectRel(empno=[$0], name=[$1], deptno=[$2], gender=[$3], city=[$4])" + NL +
+                "    ProjectRel(empno=[$0], name=[$1], deptno=[$2], gender=[$3], city=[$4], slacker=[$5])" + NL +
                 "      FilterRel(condition=[=($3, _ISO-8859-1'F' COLLATE ISO-8859-1$en_US$primary)])" + NL +
                 "        ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])" + NL);
     }
@@ -200,7 +200,7 @@ public class ConverterTest extends TestCase
 
     public void testQueryInSelect() {
         check("select \"gender\", (select \"name\" from \"depts\" where \"deptno\" = \"e\".\"deptno\") from \"emps\" as \"e\"",
-                "ProjectRel(gender=[$3], EXPR$1=[$5])" + NL +
+                "ProjectRel(gender=[$3], EXPR$1=[$6])" + NL +
                 "  JoinRel(condition=[true], joinType=[left])" + NL +
                 "    ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])" + NL +
                 "    ProjectRel(name=[$1])" + NL +
@@ -210,8 +210,8 @@ public class ConverterTest extends TestCase
 
     public void testExistsUncorrelated() {
         check("select * from \"emps\" where exists (select 1 from \"depts\")",
-                "ProjectRel(empno=[$0], name=[$1], deptno=[$2], gender=[$3], city=[$4])" + NL +
-                "  FilterRel(condition=[$6])" + NL +
+                "ProjectRel(empno=[$0], name=[$1], deptno=[$2], gender=[$3], city=[$4], slacker=[$5])" + NL +
+                "  FilterRel(condition=[$7])" + NL +
                 "    JoinRel(condition=[true], joinType=[left])" + NL +
                 "      ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])" + NL +
                 "      ProjectRel(EXPR$0=[$0], $indicator=[true])" + NL +
@@ -229,8 +229,8 @@ public class ConverterTest extends TestCase
         check("select * from \"emps\" " +
                 "where exists (select 1 + 2 from \"depts\" where \"deptno\" > 10) " +
                 "or exists (select 'foo' from \"emps\" where \"gender\" = 'Pig')",
-                "ProjectRel(empno=[$0], name=[$1], deptno=[$2], gender=[$3], city=[$4])" + NL +
-                "  FilterRel(condition=[OR($6, $8)])" + NL +
+                "ProjectRel(empno=[$0], name=[$1], deptno=[$2], gender=[$3], city=[$4], slacker=[$5])" + NL +
+                "  FilterRel(condition=[OR($7, $9)])" + NL +
                 "    JoinRel(condition=[true], joinType=[left])" + NL +
                 "      JoinRel(condition=[true], joinType=[left])" + NL +
                 "        ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])" + NL +
@@ -432,8 +432,9 @@ public class ConverterTest extends TestCase
             // Nasty OJ stuff
             env = OJSystem.env;
 
-            // compiler and class map must have same life-cycle, because
-            // DynamicJava's compiler contains a class loader
+            // DynamicJava's compiler contains a class loader, so it was
+            // important that compiler and class map had same life-cycle. We no
+            // longer use DynamicJava, so it may not matter anymore.
             if (ClassMap.instance() == null) {
                 ClassMap.setInstance(new ClassMap(SyntheticObject.class));
             }

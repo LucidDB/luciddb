@@ -147,13 +147,6 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
                     public String getFieldName(int index)
                     {
                         final int i = projectedColumns[index].intValue();
-                        // TODO:  something better?
-                        for (int j = 0; j < index; ++j) {
-                            if (projectedColumns[j].intValue() == i) {
-                                // we're a duplicate
-                                return fields[i].getName() + "_" + index;
-                            }
-                        }
                         return fields[i].getName();
                     }
 
@@ -231,12 +224,6 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
     void defineScanStream(FemIndexScanDef scanStream)
     {
         FarragoCatalog catalog = getPreparingStmt().getCatalog();
-
-        // one page for BTreeReader and one for output scratch page
-        scanStream.setCachePageMin(2);
-
-        // TODO:  use this to govern prefetch and come up with a good formula
-        scanStream.setCachePageMax(2);
 
         if (!catalog.isTemporary(index)) {
             scanStream.setRootPageId(

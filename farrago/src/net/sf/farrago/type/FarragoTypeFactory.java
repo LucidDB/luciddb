@@ -48,6 +48,7 @@ public interface FarragoTypeFactory extends OJTypeFactory
      */
     public FarragoCatalog getCatalog();
 
+
     /**
      * Creates a FarragoType which represents the datatype of a CWM column.
      *

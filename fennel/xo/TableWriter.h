@@ -147,6 +147,7 @@ public:
         LogicalActionType actionType,
         SXMutex &actionMutex);
 
+    uint getIndexCount() const;
     void openIndexWriters();
     void closeIndexWriters();
     

@@ -70,6 +70,9 @@ public:
     // implement CacheAccessor
     virtual uint getMaxLockedPages();
 
+    // implement CacheAccessor
+    virtual void setMaxLockedPages(uint nPages);
+
     /**
      * @return the current number of pages locked
      */

@@ -21,19 +21,22 @@ package net.sf.farrago.query;
 
 import net.sf.farrago.util.*;
 import net.sf.farrago.type.*;
+import net.sf.farrago.session.*;
 
 import net.sf.saffron.core.*;
 
+import java.util.*;
+
 /**
  * FarragoExecutableStmtImpl is an abstract base for implementations of
- * FarragoExecutableStmt.
+ * FarragoSessionExecutableStmt.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 abstract class FarragoExecutableStmtImpl
     extends FarragoCompoundAllocation
-    implements FarragoExecutableStmt
+    implements FarragoSessionExecutableStmt
 {
     private final boolean isDml;
 
@@ -47,18 +50,24 @@ abstract class FarragoExecutableStmtImpl
         this.dynamicParamRowType = forgetTypeFactory(dynamicParamRowType);
     }
 
-    // implement FarragoExecutableStmt
+    // implement FarragoSessionExecutableStmt
     public boolean isDml()
     {
         return isDml;
     }
 
-    // implement FarragoExecutableStmt
+    // implement FarragoSessionExecutableStmt
     public SaffronType getDynamicParamRowType()
     {
         return dynamicParamRowType;
     }
 
+    // implement FarragoSessionExecutableStmt
+    public Set getReferencedObjectIds()
+    {
+        return Collections.EMPTY_SET;
+    }
+    
     protected static SaffronType forgetTypeFactory(
         SaffronType rowType)
     {

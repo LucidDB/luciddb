@@ -60,6 +60,16 @@ protected:
     RegisterRef<bool>* mResult;
     RegisterRef<bool>* mOp1;
     RegisterRef<bool>* mOp2;
+
+    static vector<StandardTypeDescriptorOrdinal>
+    regDesc(uint args) {
+        vector<StandardTypeDescriptorOrdinal>v;
+        uint i;
+        for (i = 0; i < args; i++) {
+            v.push_back(STANDARD_TYPE_BOOL);
+        }
+        return v;
+    }
 };
 
 class BoolOr : public BoolInstruction
@@ -75,8 +85,9 @@ public:
     virtual 
     ~BoolOr() { }
 
-    const char* longName() const;
-    const char* shortName() const;
+    static const char* longName();
+    static const char* shortName();
+    static int numArgs();
     void describe(string& out, bool values) const;
 
     virtual void exec(TProgramCounter& pc) const { 
@@ -105,6 +116,24 @@ public:
             }
         }
     }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        return InstructionSignature(shortName(), v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        assert((sig[0])->type() == STANDARD_TYPE_BOOL);
+        assert((sig[1])->type() == STANDARD_TYPE_BOOL);
+        assert((sig[2])->type() == STANDARD_TYPE_BOOL);
+        return new BoolOr(static_cast<RegisterRef<bool>*> (sig[0]),
+                          static_cast<RegisterRef<bool>*> (sig[1]),
+                          static_cast<RegisterRef<bool>*> (sig[2]));
+    }
 };
 
 class BoolAnd : public BoolInstruction
@@ -119,8 +148,9 @@ public:
 
     ~BoolAnd() { }
 
-    const char* longName() const;
-    const char* shortName() const;
+    static const char* longName();
+    static const char* shortName();
+    static int numArgs();
     void describe(string& out, bool values) const;
 
     virtual void exec(TProgramCounter& pc) const {
@@ -146,6 +176,24 @@ public:
             }
         }
     }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        return InstructionSignature(shortName(), v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        assert((sig[0])->type() == STANDARD_TYPE_BOOL);
+        assert((sig[1])->type() == STANDARD_TYPE_BOOL);
+        assert((sig[2])->type() == STANDARD_TYPE_BOOL);
+        return new BoolAnd(static_cast<RegisterRef<bool>*> (sig[0]),
+                           static_cast<RegisterRef<bool>*> (sig[1]),
+                           static_cast<RegisterRef<bool>*> (sig[2]));
+    }
 };
 
 class BoolNot : public BoolInstruction
@@ -159,8 +207,9 @@ public:
 
     ~BoolNot() { }
 
-    const char* longName() const;
-    const char* shortName() const;
+    static const char* longName();
+    static const char* shortName();
+    static int numArgs();
     void describe(string& out, bool values) const;
 
     virtual void exec(TProgramCounter& pc) const {
@@ -173,6 +222,22 @@ public:
         } else {
             mResult->value(true);
         }
+    }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        return InstructionSignature(shortName(), v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        assert((sig[0])->type() == STANDARD_TYPE_BOOL);
+        assert((sig[1])->type() == STANDARD_TYPE_BOOL);
+        return new BoolNot(static_cast<RegisterRef<bool>*> (sig[0]),
+                           static_cast<RegisterRef<bool>*> (sig[1]));
     }
 };
 
@@ -187,8 +252,9 @@ public:
 
     ~BoolMove() { }
 
-    const char* longName() const;
-    const char* shortName() const;
+    static const char* longName();
+    static const char* shortName();
+    static int numArgs();
     void describe(string& out, bool values) const;
 
     virtual void exec(TProgramCounter& pc) const {
@@ -199,6 +265,22 @@ public:
             mResult->value(mOp1->value());
         }
     }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        return InstructionSignature(shortName(), v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        assert((sig[0])->type() == STANDARD_TYPE_BOOL);
+        assert((sig[1])->type() == STANDARD_TYPE_BOOL);
+        return new BoolMove(static_cast<RegisterRef<bool>*> (sig[0]),
+                            static_cast<RegisterRef<bool>*> (sig[1]));
+    }
 };
 
 class BoolRef : public BoolInstruction
@@ -206,19 +288,36 @@ class BoolRef : public BoolInstruction
 public:
     explicit
     BoolRef(RegisterRef<bool>* result,
-             RegisterRef<bool>* op1)
+            RegisterRef<bool>* op1)
         : BoolInstruction(result, op1)
     { }
 
     ~BoolRef() { }
 
-    const char* longName() const;
-    const char* shortName() const;
+    static const char* longName();
+    static const char* shortName();
+    static int numArgs();
     void describe(string& out, bool values) const;
 
     virtual void exec(TProgramCounter& pc) const {
         pc++;
         mResult->refer(mOp1);
+    }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        return InstructionSignature(shortName(), v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        assert((sig[0])->type() == STANDARD_TYPE_BOOL);
+        assert((sig[1])->type() == STANDARD_TYPE_BOOL);
+        return new BoolRef(static_cast<RegisterRef<bool>*> (sig[0]),
+                           static_cast<RegisterRef<bool>*> (sig[1]));
     }
 };
 
@@ -234,8 +333,9 @@ public:
 
     ~BoolIs() { }
 
-    const char* longName() const;
-    const char* shortName() const;
+    static const char* longName();
+    static const char* shortName();
+    static int numArgs();
     void describe(string& out, bool values) const;
 
     virtual void exec(TProgramCounter& pc) const {
@@ -255,6 +355,24 @@ public:
             mResult->value(false);
         }
     }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        return InstructionSignature(shortName(), v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        assert((sig[0])->type() == STANDARD_TYPE_BOOL);
+        assert((sig[1])->type() == STANDARD_TYPE_BOOL);
+        assert((sig[2])->type() == STANDARD_TYPE_BOOL);
+        return new BoolIs(static_cast<RegisterRef<bool>*> (sig[0]),
+                          static_cast<RegisterRef<bool>*> (sig[1]),
+                          static_cast<RegisterRef<bool>*> (sig[2]));
+    }
 };
 
 class BoolIsNot : public BoolInstruction
@@ -269,8 +387,9 @@ public:
 
     ~BoolIsNot() { }
 
-    const char* longName() const;
-    const char* shortName() const;
+    static const char* longName();
+    static const char* shortName();
+    static int numArgs();
     void describe(string& out, bool values) const;
 
     virtual void exec(TProgramCounter& pc) const {
@@ -289,6 +408,24 @@ public:
         } else {
             mResult->value(true);
         }
+    }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        return InstructionSignature(shortName(), v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        assert((sig[0])->type() == STANDARD_TYPE_BOOL);
+        assert((sig[1])->type() == STANDARD_TYPE_BOOL);
+        assert((sig[2])->type() == STANDARD_TYPE_BOOL);
+        return new BoolIsNot(static_cast<RegisterRef<bool>*> (sig[0]),
+                             static_cast<RegisterRef<bool>*> (sig[1]),
+                             static_cast<RegisterRef<bool>*> (sig[2]));
     }
 };
 
@@ -306,8 +443,9 @@ public:
 
     ~BoolEqual() { }
 
-    const char* longName() const;
-    const char* shortName() const;
+    static const char* longName();
+    static const char* shortName();
+    static int numArgs();
     void describe(string& out, bool values) const;
 
     virtual void exec(TProgramCounter& pc) const {
@@ -322,6 +460,24 @@ public:
                 mResult->value(false);
             }
         }
+    }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        return InstructionSignature(shortName(), v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        assert((sig[0])->type() == STANDARD_TYPE_BOOL);
+        assert((sig[1])->type() == STANDARD_TYPE_BOOL);
+        assert((sig[2])->type() == STANDARD_TYPE_BOOL);
+        return new BoolEqual(static_cast<RegisterRef<bool>*> (sig[0]),
+                             static_cast<RegisterRef<bool>*> (sig[1]),
+                             static_cast<RegisterRef<bool>*> (sig[2]));
     }
 };
 
@@ -337,8 +493,9 @@ public:
 
     ~BoolNotEqual() { }
 
-    const char* longName() const;
-    const char* shortName() const;
+    static const char* longName();
+    static const char* shortName();
+    static int numArgs();
     void describe(string& out, bool values) const;
 
     virtual void exec(TProgramCounter& pc) const {
@@ -354,6 +511,24 @@ public:
             }
         }
     }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        return InstructionSignature(shortName(), v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        assert((sig[0])->type() == STANDARD_TYPE_BOOL);
+        assert((sig[1])->type() == STANDARD_TYPE_BOOL);
+        assert((sig[2])->type() == STANDARD_TYPE_BOOL);
+        return new BoolNotEqual(static_cast<RegisterRef<bool>*> (sig[0]),
+                                static_cast<RegisterRef<bool>*> (sig[1]),
+                                static_cast<RegisterRef<bool>*> (sig[2]));
+    }
 };
 
 class BoolGreater : public BoolInstruction
@@ -368,8 +543,9 @@ public:
 
     ~BoolGreater() { }
 
-    const char* longName() const;
-    const char* shortName() const;
+    static const char* longName();
+    static const char* shortName();
+    static int numArgs();
     void describe(string& out, bool values) const;
 
     virtual void exec(TProgramCounter& pc) const {
@@ -385,6 +561,77 @@ public:
             }
         }
     }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        return InstructionSignature(shortName(), v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        assert((sig[0])->type() == STANDARD_TYPE_BOOL);
+        assert((sig[1])->type() == STANDARD_TYPE_BOOL);
+        assert((sig[2])->type() == STANDARD_TYPE_BOOL);
+        return new BoolGreater(static_cast<RegisterRef<bool>*> (sig[0]),
+                               static_cast<RegisterRef<bool>*> (sig[1]),
+                               static_cast<RegisterRef<bool>*> (sig[2]));
+    }
+};
+
+class BoolGreaterEqual : public BoolInstruction
+{
+public:
+    explicit
+    BoolGreaterEqual(RegisterRef<bool>* result,
+                     RegisterRef<bool>* op1,
+                     RegisterRef<bool>* op2)
+        : BoolInstruction(result, op1, op2)
+    { }
+
+    ~BoolGreaterEqual() { }
+
+    static const char* longName();
+    static const char* shortName();
+    static int numArgs();
+    void describe(string& out, bool values) const;
+
+    virtual void exec(TProgramCounter& pc) const {
+        // SQL99, 4.6.1 Comparison and Assignment of Booleans
+        pc++;
+        if (mOp1->isNull() || mOp2->isNull()) {
+            mResult->toNull();
+        } else {
+            bool op1 = mOp1->value();
+            bool op2 = mOp2->value();
+            if ((op1 == true && op2 == false) ||
+                op1 == op2) {
+                mResult->value(true);
+            } else {
+                mResult->value(false);
+            }
+        }
+    }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        return InstructionSignature(shortName(), v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        assert((sig[0])->type() == STANDARD_TYPE_BOOL);
+        assert((sig[1])->type() == STANDARD_TYPE_BOOL);
+        assert((sig[2])->type() == STANDARD_TYPE_BOOL);
+        return new BoolGreaterEqual(static_cast<RegisterRef<bool>*> (sig[0]),
+                                    static_cast<RegisterRef<bool>*> (sig[1]),
+                                    static_cast<RegisterRef<bool>*> (sig[2]));
+    }
 };
 
 class BoolLess : public BoolInstruction
@@ -399,8 +646,9 @@ public:
 
     ~BoolLess() { }
 
-    const char* longName() const;
-    const char* shortName() const;
+    static const char* longName();
+    static const char* shortName();
+    static int numArgs();
     void describe(string& out, bool values) const;
 
     virtual void exec(TProgramCounter& pc) const {
@@ -416,6 +664,77 @@ public:
             }
         }
     }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        return InstructionSignature(shortName(), v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        assert((sig[0])->type() == STANDARD_TYPE_BOOL);
+        assert((sig[1])->type() == STANDARD_TYPE_BOOL);
+        assert((sig[2])->type() == STANDARD_TYPE_BOOL);
+        return new BoolLess(static_cast<RegisterRef<bool>*> (sig[0]),
+                            static_cast<RegisterRef<bool>*> (sig[1]),
+                            static_cast<RegisterRef<bool>*> (sig[2]));
+    }
+};
+
+class BoolLessEqual : public BoolInstruction
+{
+public:
+    explicit
+    BoolLessEqual(RegisterRef<bool>* result,
+                  RegisterRef<bool>* op1,
+                  RegisterRef<bool>* op2)
+        : BoolInstruction(result, op1, op2)
+    { }
+
+    ~BoolLessEqual() { }
+
+    static const char* longName();
+    static const char* shortName();
+    static int numArgs();
+    void describe(string& out, bool values) const;
+
+    virtual void exec(TProgramCounter& pc) const {
+        // SQL99, 4.6.1 Comparison and Assignment of Booleans
+        pc++;
+        if (mOp1->isNull() || mOp2->isNull()) {
+            mResult->toNull();
+        } else {
+            bool op1 = mOp1->value();
+            bool op2 = mOp2->value();
+            if ((op1 == false && op2 == true) ||
+                op1 == op2) {
+                mResult->value(true);
+            } else {
+                mResult->value(false);
+            }
+        }
+    }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        return InstructionSignature(shortName(), v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        assert((sig[0])->type() == STANDARD_TYPE_BOOL);
+        assert((sig[1])->type() == STANDARD_TYPE_BOOL);
+        assert((sig[2])->type() == STANDARD_TYPE_BOOL);
+        return new BoolLessEqual(static_cast<RegisterRef<bool>*> (sig[0]),
+                                 static_cast<RegisterRef<bool>*> (sig[1]),
+                                 static_cast<RegisterRef<bool>*> (sig[2]));
+    }
 };
 
 class BoolIsNull : public BoolInstruction
@@ -429,8 +748,9 @@ public:
 
     ~BoolIsNull() { }
 
-    const char* longName() const;
-    const char* shortName() const;
+    static const char* longName();
+    static const char* shortName();
+    static int numArgs();
     void describe(string& out, bool values) const;
 
     virtual void exec(TProgramCounter& pc) const {
@@ -440,6 +760,22 @@ public:
         } else {
             mResult->value(false);
         }
+    }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        return InstructionSignature(shortName(), v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        assert((sig[0])->type() == STANDARD_TYPE_BOOL);
+        assert((sig[1])->type() == STANDARD_TYPE_BOOL);
+        return new BoolIsNull(static_cast<RegisterRef<bool>*> (sig[0]),
+                              static_cast<RegisterRef<bool>*> (sig[1]));
     }
 };
 
@@ -454,8 +790,9 @@ public:
 
     ~BoolIsNotNull() { }
 
-    const char* longName() const;
-    const char* shortName() const;
+    static const char* longName();
+    static const char* shortName();
+    static int numArgs();
     void describe(string& out, bool values) const;
 
     virtual void exec(TProgramCounter& pc) const {
@@ -466,6 +803,22 @@ public:
         } else {
             mResult->value(true);
         }
+    }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        return InstructionSignature(shortName(), v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        assert((sig[0])->type() == STANDARD_TYPE_BOOL);
+        assert((sig[1])->type() == STANDARD_TYPE_BOOL);
+        return new BoolIsNotNull(static_cast<RegisterRef<bool>*> (sig[0]),
+                                 static_cast<RegisterRef<bool>*> (sig[1]));
     }
 };
 
@@ -479,8 +832,9 @@ public:
 
     ~BoolToNull() { }
 
-    const char* longName() const;
-    const char* shortName() const;
+    static const char* longName();
+    static const char* shortName();
+    static int numArgs();
     void describe(string& out, bool values) const;
 
     virtual void exec(TProgramCounter& pc) const {
@@ -488,7 +842,72 @@ public:
         pc++;
         mResult->toNull();
     }
+
+    static InstructionSignature
+    signature(StandardTypeDescriptorOrdinal type) {
+        vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
+        return InstructionSignature(shortName(), v);
+    }
+
+    static Instruction*
+    create(InstructionSignature const & sig)
+    {
+        assert(sig.size() == numArgs());
+        assert((sig[0])->type() == STANDARD_TYPE_BOOL);
+        return new BoolToNull(static_cast<RegisterRef<bool>*> (sig[0]));
+    }
 };
+
+class BoolInstructionRegister : InstructionRegister {
+
+    // TODO: Refactor registerTypes to class InstructionRegister
+    template < class INSTCLASS2 >
+    static void
+    registerTypes(vector<StandardTypeDescriptorOrdinal> const & t)
+    {
+        for (uint i = 0; i < t.size(); i++) {
+            StandardTypeDescriptorOrdinal type = t[i];
+            InstructionSignature sig = INSTCLASS2::signature(type);
+            switch(type) {
+#define Fennel_InstructionRegisterSwitch_Bool 1
+#include "fennel/calc/InstructionRegisterSwitch.h"
+            default:
+                throw std::logic_error("Default InstructionRegister");
+            }
+        }
+    }
+
+public:
+    static void
+    registerInstructions()
+    {
+        vector<StandardTypeDescriptorOrdinal> t;
+        t.push_back(STANDARD_TYPE_BOOL);
+
+        // Have to do full fennel:: qualification of template
+        // arguments below to prevent template argument 'TMPLT', of
+        // this encapsulating class, from perverting NativeAdd into
+        // NativeAdd<TMPLT> or something like
+        // that. Anyway. Fennel::NativeAdd works just fine.
+        registerTypes<fennel::BoolOr>(t);
+        registerTypes<fennel::BoolAnd>(t);
+        registerTypes<fennel::BoolNot>(t);
+        registerTypes<fennel::BoolMove>(t);
+        registerTypes<fennel::BoolRef>(t);
+        registerTypes<fennel::BoolIs>(t);
+        registerTypes<fennel::BoolIsNot>(t);
+        registerTypes<fennel::BoolEqual>(t);
+        registerTypes<fennel::BoolNotEqual>(t);
+        registerTypes<fennel::BoolGreater>(t);
+        registerTypes<fennel::BoolGreaterEqual>(t);
+        registerTypes<fennel::BoolLess>(t);
+        registerTypes<fennel::BoolLessEqual>(t);
+        registerTypes<fennel::BoolIsNull>(t);
+        registerTypes<fennel::BoolIsNotNull>(t);
+        registerTypes<fennel::BoolToNull>(t);
+    }
+};
+
 
 FENNEL_END_NAMESPACE
 

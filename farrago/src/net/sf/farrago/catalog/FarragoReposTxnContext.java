@@ -57,7 +57,7 @@ public class FarragoReposTxnContext
     public void beginReadTxn()
     {
         assert(!isTxnInProgress);
-        catalog.getRepository().beginTrans(false);
+        catalog.beginReposTxn(false);
         isTxnInProgress = true;
     }
 
@@ -67,7 +67,7 @@ public class FarragoReposTxnContext
     public void beginWriteTxn()
     {
         assert(!isTxnInProgress);
-        catalog.getRepository().beginTrans(true);
+        catalog.beginReposTxn(true);
         isTxnInProgress = true;
     }
 
@@ -79,7 +79,7 @@ public class FarragoReposTxnContext
         if (!isTxnInProgress) {
             return;
         }
-        catalog.getRepository().endTrans();
+        catalog.endReposTxn(false);
         isTxnInProgress = false;
     }
 
@@ -91,7 +91,7 @@ public class FarragoReposTxnContext
         if (!isTxnInProgress) {
             return;
         }
-        catalog.getRepository().endTrans(true);
+        catalog.endReposTxn(true);
         isTxnInProgress = false;
     }
 }

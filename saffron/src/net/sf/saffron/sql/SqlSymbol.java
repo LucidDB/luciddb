@@ -23,6 +23,7 @@ package net.sf.saffron.sql;
 import net.sf.saffron.util.EnumeratedValues;
 import net.sf.saffron.util.Util;
 import net.sf.saffron.sql.SqlLiteral;
+import net.sf.saffron.sql.parser.ParserPosition;
 import net.sf.saffron.sql.type.SqlTypeName;
 
 /**
@@ -45,14 +46,13 @@ import net.sf.saffron.sql.type.SqlTypeName;
  * @since May 28, 2004
  * @version $Id$
  **/
-public class SqlSymbol extends SqlLiteral implements EnumeratedValues.Value {
+public class SqlSymbol extends SqlLiteral
+{
     public final String _name;
-    public final int _ordinal;
 
-    public SqlSymbol(String name, int ordinal) {
-        super(name, SqlTypeName.Symbol);
+    public SqlSymbol(String name, ParserPosition parserPosition) {
+        super(name, SqlTypeName.Symbol, parserPosition);
         this._name = name;
-        this._ordinal = ordinal;
     }
 
     public String getDescription() {
@@ -63,9 +63,6 @@ public class SqlSymbol extends SqlLiteral implements EnumeratedValues.Value {
         return _name;
     }
 
-    public int getOrdinal() {
-        return _ordinal;
-    }
 
     /**
      * Returns the value's name.

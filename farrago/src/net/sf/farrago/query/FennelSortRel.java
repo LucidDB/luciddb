@@ -124,10 +124,6 @@ public class FennelSortRel extends FennelPullSingleRel
         FemSortingStreamDef sortingStream =
             getCatalog().newFemSortingStreamDef();
 
-        // TODO:  the real thing
-        sortingStream.setCachePageMin(10);
-        sortingStream.setCachePageMax(Integer.MAX_VALUE);
-
         sortingStream.setDistinctness(
             discardDuplicates
             ? DistinctnessEnum.DUP_DISCARD

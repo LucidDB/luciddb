@@ -28,6 +28,28 @@ ByteStream::ByteStream()
     cbOffset = 0;
 }
 
+ByteStreamMarker::ByteStreamMarker(ByteStream const &streamInit)
+    : stream(streamInit)
+{
+}
+
+ByteStream const &ByteStreamMarker::getStream() const
+{
+    return stream;
+}
+
+SequentialByteStreamMarker::SequentialByteStreamMarker(
+    ByteStream const &streamInit)
+    : ByteStreamMarker(streamInit)
+{
+    cbOffset = MAXU;
+}
+
+FileSize SequentialByteStreamMarker::getOffset() const
+{
+    return cbOffset;
+}
+
 FENNEL_END_CPPFILE("$Id$");
 
 // End ByteStream.cpp

@@ -1,0 +1,70 @@
+0: jdbc:farrago:> -- $Id: //open/farrago/regressionsql/literalTests/time.sql#4 $ 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test time literal
+0: jdbc:farrago:>  select TIME '12:01:01' as T1 from values('TRUE');
++-----------+
+|    T1     |
++-----------+
+| 12:01:01  |
++-----------+
+0: jdbc:farrago:>  select TIME '00:00' as t1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal TIME literal ''00:00'' (state=,code=0)
+0: jdbc:farrago:>  select TIME '01:00' as t1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal TIME literal ''01:00'' (state=,code=0)
+0: jdbc:farrago:>  select TIME '02:03 PST' as t1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal TIME literal ''02:03 PST'' (state=,code=0)
+0: jdbc:farrago:>  select TIME '11:59 EDT' as t1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal TIME literal ''11:59 EDT'' (state=,code=0)
+0: jdbc:farrago:>  select TIME '12:00' as t1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal TIME literal ''12:00'' (state=,code=0)
+0: jdbc:farrago:>  select TIME '12:01' as t1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal TIME literal ''12:01'' (state=,code=0)
+0: jdbc:farrago:>  select TIME '23:59' as t1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal TIME literal ''23:59'' (state=,code=0)
+0: jdbc:farrago:>  select TIME '11:59:59.99 PM' as t1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Illegal TIME literal ''11:59:59.99 PM'' (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test datatype
+0: jdbc:farrago:> create schema test;
+0: jdbc:farrago:> set schema test;
+0: jdbc:farrago:> create table t_time(time_col time(0) not null primary key, time_col2 time(0));
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- negative test
+0: jdbc:farrago:> insert into t_time values('string value',null);
+Error: Storage manager internal errror:  bad lexical cast: source type value could not be interpreted as target (state=,code=0)
+0: jdbc:farrago:> insert into t_time values(true,null);
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'BOOLEAN' to 'TIME_0' (state=,code=0)
+0: jdbc:farrago:> insert into t_time values(1234,null);
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'INTEGER' to 'TIME_0' (state=,code=0)
+0: jdbc:farrago:> insert into t_time values(10e400,null);
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'DOUBLE' to 'TIME_0' (state=,code=0)
+0: jdbc:farrago:> insert into t_time values(-1.2345678901234e-200,null);
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'DOUBLE' to 'TIME_0' (state=,code=0)
+0: jdbc:farrago:> insert into t_time values(-1234.03,null);
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'DOUBLE' to 'TIME_0' (state=,code=0)
+0: jdbc:farrago:> insert into t_time values(x'ff',null);
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'VARBINARY_1' to 'TIME_0' (state=,code=0)
+0: jdbc:farrago:> insert into t_time values(b'10',null);
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'BIT_2' to 'TIME_0' (state=,code=0)
+0: jdbc:farrago:> insert into t_date values(date '1999-01-08',null);
+Error: Table 'T_DATE' not found (state=,code=0)
+0: jdbc:farrago:> insert into t_time values(timestamp '2004-12-01 12:01:01',null);
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'TIMESTAMP_0' to 'TIME_0' (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- insert the right values
+0: jdbc:farrago:> insert into t_time values(time '12:01:01',null);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- null value test
+0: jdbc:farrago:> --insert into t_time values(null, null); 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from t_time;
++-----------+------------+
+| TIME_COL  | TIME_COL2  |
++-----------+------------+
+|           | 00:00:00   |
++-----------+------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> drop table t_time;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !quit

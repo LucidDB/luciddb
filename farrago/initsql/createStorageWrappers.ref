@@ -33,7 +33,7 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- create wrapper for access to JDBC data
 0: jdbc:farrago:> create foreign data wrapper sys_jdbc
-. . . . . . . . > library 'plugin/FarragoMedJdbc.jar'
+. . . . . . . . > library '${FARRAGO_HOME}/plugin/FarragoMedJdbc.jar'
 . . . . . . . . > language java;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> commit;

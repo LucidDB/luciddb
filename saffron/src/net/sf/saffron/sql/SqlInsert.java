@@ -23,6 +23,7 @@
 package net.sf.saffron.sql;
 
 import net.sf.saffron.util.Util;
+import net.sf.saffron.sql.parser.ParserPosition;
 
 
 /**
@@ -38,16 +39,17 @@ public class SqlInsert extends SqlCall
     public static final int TARGET_COLUMN_LIST_OPERAND = 2;
     public static final int SOURCE_SELECT_OPERAND = 3;
     public static final int OPERAND_COUNT = 4;
-    
+
     //~ Constructors ----------------------------------------------------------
 
     public SqlInsert(
         SqlSpecialOperator operator,
         SqlIdentifier targetTable,
         SqlNode source,
-        SqlNodeList columnList)
+        SqlNodeList columnList,
+        ParserPosition parserPosition)
     {
-        super(operator,new SqlNode[OPERAND_COUNT]);
+        super(operator,new SqlNode[OPERAND_COUNT], parserPosition);
         operands[TARGET_TABLE_OPERAND] = targetTable;
         operands[SOURCE_OPERAND] = source;
         operands[TARGET_COLUMN_LIST_OPERAND] = columnList;

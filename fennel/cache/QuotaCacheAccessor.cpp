@@ -84,6 +84,12 @@ uint QuotaCacheAccessor::getMaxLockedPages()
     return maxLockedPages;
 }
 
+void QuotaCacheAccessor::setMaxLockedPages(uint nPages)
+{
+    assert(nPages >= nPagesLocked);
+    maxLockedPages = nPages;
+}
+
 FENNEL_END_CPPFILE("$Id$");
 
 // End QuotaCacheAccessor.cpp

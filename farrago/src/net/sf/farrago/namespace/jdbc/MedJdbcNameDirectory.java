@@ -83,12 +83,12 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
             false,
             new SqlNodeList(
                 Collections.singletonList(
-                    new SqlIdentifier("*"))),
+                    new SqlIdentifier("*",null)), null),
             new SqlIdentifier(foreignName,null),
             null,
             null,
             null,
-            null);
+            null,null);
 
         if (rowType == null) {
             String sql = select.toSqlString(dialect);

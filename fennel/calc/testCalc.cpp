@@ -63,7 +63,7 @@ unitTestBool()
     printf("=========================================================\n");
     printf("=========================================================\n");
     bool isNullable = true;    // Can tuple contain nulls?
-    int i, registersize = 100;
+    int i, registersize = 125;
 
     TupleDescriptor tupleDesc;
     tupleDesc.clear();
@@ -309,6 +309,18 @@ unitTestBool()
     instP[pc++] = new BoolGreater(bOutP[outC++], bLiP[1], bLiP[nullidx]);
     instP[pc++] = new BoolGreater(bOutP[outC++], bLiP[nullidx], bLiP[nullidx]);
 
+    // greaterequal
+    instP[pc++] = new BoolGreaterEqual(bOutP[outC++], bLiP[0], bLiP[0]);
+    instP[pc++] = new BoolGreaterEqual(bOutP[outC++], bLiP[1], bLiP[1]);
+    instP[pc++] = new BoolGreaterEqual(bOutP[outC++], bLiP[0], bLiP[1]);
+    instP[pc++] = new BoolGreaterEqual(bOutP[outC++], bLiP[1], bLiP[0]);
+
+    instP[pc++] = new BoolGreaterEqual(bOutP[outC++], bLiP[nullidx], bLiP[0]);
+    instP[pc++] = new BoolGreaterEqual(bOutP[outC++], bLiP[nullidx], bLiP[1]);
+    instP[pc++] = new BoolGreaterEqual(bOutP[outC++], bLiP[0], bLiP[nullidx]);
+    instP[pc++] = new BoolGreaterEqual(bOutP[outC++], bLiP[1], bLiP[nullidx]);
+    instP[pc++] = new BoolGreaterEqual(bOutP[outC++], bLiP[nullidx], bLiP[nullidx]);
+
     // less
     instP[pc++] = new BoolLess(bOutP[outC++], bLiP[0], bLiP[0]);
     instP[pc++] = new BoolLess(bOutP[outC++], bLiP[1], bLiP[1]);
@@ -320,6 +332,18 @@ unitTestBool()
     instP[pc++] = new BoolLess(bOutP[outC++], bLiP[0], bLiP[nullidx]);
     instP[pc++] = new BoolLess(bOutP[outC++], bLiP[1], bLiP[nullidx]);
     instP[pc++] = new BoolLess(bOutP[outC++], bLiP[nullidx], bLiP[nullidx]);
+
+    // lessequal
+    instP[pc++] = new BoolLessEqual(bOutP[outC++], bLiP[0], bLiP[0]);
+    instP[pc++] = new BoolLessEqual(bOutP[outC++], bLiP[1], bLiP[1]);
+    instP[pc++] = new BoolLessEqual(bOutP[outC++], bLiP[0], bLiP[1]);
+    instP[pc++] = new BoolLessEqual(bOutP[outC++], bLiP[1], bLiP[0]);
+
+    instP[pc++] = new BoolLessEqual(bOutP[outC++], bLiP[nullidx], bLiP[0]);
+    instP[pc++] = new BoolLessEqual(bOutP[outC++], bLiP[nullidx], bLiP[1]);
+    instP[pc++] = new BoolLessEqual(bOutP[outC++], bLiP[0], bLiP[nullidx]);
+    instP[pc++] = new BoolLessEqual(bOutP[outC++], bLiP[1], bLiP[nullidx]);
+    instP[pc++] = new BoolLessEqual(bOutP[outC++], bLiP[nullidx], bLiP[nullidx]);
 
     // isnull
     instP[pc++] = new BoolIsNull(bOutP[outC++], bLiP[1]);
@@ -356,7 +380,7 @@ unitTestBool()
     string out;
     for (i = 0; i < pc; i++) {
         instP[i]->describe(out, true);
-        printf("[%2ld] %s\n", i, out.c_str());
+        printf("[%2d] %s\n", i, out.c_str());
     }
     if (!c.mWarnings.empty()) fail("boolwarnings", __LINE__);
 
@@ -459,6 +483,18 @@ unitTestBool()
     if (output[outC++].pData != NULL) fail("boolgreater8", __LINE__);
     if (output[outC++].pData != NULL) fail("boolgreater9", __LINE__);
 
+    // greaterequal
+    if (*(output[outC++].pData) != true) fail("boolgreaterequal1", __LINE__);
+    if (*(output[outC++].pData) != true) fail("boolgreaterequal2", __LINE__);
+    if (*(output[outC++].pData) != false) fail("boolgreaterequal3", __LINE__);
+    if (*(output[outC++].pData) != true) fail("boolgreaterequal4", __LINE__);
+
+    if (output[outC++].pData != NULL) fail("boolgreaterequal5", __LINE__);
+    if (output[outC++].pData != NULL) fail("boolgreaterequal6", __LINE__);
+    if (output[outC++].pData != NULL) fail("boolgreaterequal7", __LINE__);
+    if (output[outC++].pData != NULL) fail("boolgreaterequal8", __LINE__);
+    if (output[outC++].pData != NULL) fail("boolgreaterequal9", __LINE__);
+
     // less
     if (*(output[outC++].pData) != false) fail("boolless1", __LINE__);
     if (*(output[outC++].pData) != false) fail("boolless2", __LINE__);
@@ -470,6 +506,18 @@ unitTestBool()
     if (output[outC++].pData != NULL) fail("boolless7", __LINE__);
     if (output[outC++].pData != NULL) fail("boolless8", __LINE__);
     if (output[outC++].pData != NULL) fail("boolless9", __LINE__);
+
+    // lessequal
+    if (*(output[outC++].pData) != true) fail("boollessequal1", __LINE__);
+    if (*(output[outC++].pData) != true) fail("boollessequal2", __LINE__);
+    if (*(output[outC++].pData) != true) fail("boollessequal3", __LINE__);
+    if (*(output[outC++].pData) != false) fail("boollessequal4", __LINE__);
+
+    if (output[outC++].pData != NULL) fail("boollessequal5", __LINE__);
+    if (output[outC++].pData != NULL) fail("boollessequal6", __LINE__);
+    if (output[outC++].pData != NULL) fail("boollessequal7", __LINE__);
+    if (output[outC++].pData != NULL) fail("boollessequal8", __LINE__);
+    if (output[outC++].pData != NULL) fail("boollessequal9", __LINE__);
 
     // isnull
     if (*(output[outC++].pData) != false) fail("boolisnull1", __LINE__);
@@ -956,7 +1004,7 @@ unitTestLong()
     string out;
     for (i = 0; i < pc; i++) {
         instP[i]->describe(out, true);
-        printf("[%2ld] %s\n", i, out.c_str());
+        printf("[%2d] %s\n", i, out.c_str());
     }
 
     // Print out the output tuple
@@ -1600,7 +1648,7 @@ unitTestFloat()
     string out;
     for (i = 0; i < pc; i++) {
         instP[i]->describe(out, true);
-        printf("[%2ld] %s\n", i, out.c_str());
+        printf("[%2d] %s\n", i, out.c_str());
     }
 
     // Print out the output tuple
@@ -2280,7 +2328,7 @@ unitTestPointer()
     string out;
     for (i = 0; i < pc; i++) {
         instP[i]->describe(out, true);
-        printf("[%2ld] %s\n", i, out.c_str());
+        printf("[%2d] %s\n", i, out.c_str());
     }
 
     // Print out the output tuple
@@ -2647,7 +2695,7 @@ unitTestWarnings()
     string out;
     for (i = 0; i < pc; i++) {
         instP[i]->describe(out, true);
-        printf("[%2ld] %s\n", i, out.c_str());
+        printf("[%2d] %s\n", i, out.c_str());
     }
 
     // Print out the output tuple
@@ -2899,7 +2947,7 @@ unitTestPointerCache()
     string out;
     for (i = 0; i < pc; i++) {
         instP[i]->describe(out, true);
-        printf("[%2ld] %s\n", i, out.c_str());
+        printf("[%2d] %s\n", i, out.c_str());
     }
 
     // Print out the output tuple
@@ -3263,7 +3311,7 @@ unitTestNullableLocal()
     string out;
     for (i = 0; i < pc; i++) {
         instP[i]->describe(out, true);
-        printf("[%2ld] %s\n", i, out.c_str());
+        printf("[%2d] %s\n", i, out.c_str());
     }
 
     // Print out the output tuple
@@ -3531,7 +3579,7 @@ unitTestStatusRegister()
     string out;
     for (i = 0; i < pc; i++) {
         instP[i]->describe(out, true);
-        printf("[%2ld] %s\n", i, out.c_str());
+        printf("[%2d] %s\n", i, out.c_str());
     }
 
     // Print out the output tuple

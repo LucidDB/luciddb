@@ -108,7 +108,7 @@ public class JdbcQuery extends SaffronBaseRel implements ResultSetRel
         this.dialect = dialect;
         if (sql == null) {
             sql = SqlOperatorTable.std().selectOperator.createCall(false, null,
-                    null, null, null, null, null);
+                    null, null, null, null, null,null);
         } else {
             Util.pre(sql.isA(SqlKind.Select),
                     "sql == null || sql.isA(SqlNode.Kind.Select)");

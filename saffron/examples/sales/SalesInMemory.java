@@ -36,10 +36,10 @@ public class SalesInMemory
         };
     public Emp [] emps =
         new Emp [] {
-            new Emp(100,"Fred",10,"M","San Francisco"),
-            new Emp(110,"Eric",20,"M","San Francisco"),
-            new Emp(110,"John",40,"M","Vancouver"),
-            new Emp(120,"Wilma",20,"F","Los Angeles")
+            new Emp(100,"Fred",10,"M","San Francisco",true),
+            new Emp(110,"Eric",20,"M","San Francisco",true),
+            new Emp(110,"John",40,"M","Vancouver",true),
+            new Emp(120,"Wilma",20,"F","Los Angeles",false)
         };
 }
 

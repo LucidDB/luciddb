@@ -80,7 +80,7 @@ public class OJTypeFactoryImpl extends SaffronTypeFactoryImpl
         final OJClass [] fieldClasses = new OJClass[fields.length];
         for (int i = 0; i < fields.length; i++) {
             SaffronField field = fields[i];
-            fieldNames[i] = Util.toJavaId(field.getName());
+            fieldNames[i] = Util.toJavaId(field.getName(),i);
             final SaffronType fieldType = field.getType();
             fieldClasses[i] = OJUtil.typeToOJClass(declarer,fieldType);
         }

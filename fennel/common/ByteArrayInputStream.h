@@ -53,6 +53,17 @@ public:
     static SharedByteArrayInputStream newByteArrayInputStream(
         PConstBuffer pBuffer,
         uint cbBuffer);
+
+    /**
+     * Reset stream to read from a new array.
+     *
+     * @param pBuffer bytes to read
+     *
+     * @param cbBuffer number of bytes to read
+     */
+    void resetArray(
+        PConstBuffer pBuffer,
+        uint cbBuffer);
 };
 
 FENNEL_END_NAMESPACE
