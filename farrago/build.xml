@@ -427,6 +427,10 @@ require version '${required.ant.version}'."/>
       <fileset dir="${regressionsql.dir}" includes="**/*.log"/>
     </delete>
     <delete quiet="true" file="${FarragoTrace.log}"/>
+    <!-- Some IDEs create duplicate copies of Resource.properties files under
+         classes/. These override the uptodate properties files under src/
+         and cause test exceptions.  Remove the duplicates. -->
+    <delete quiet="true" dir="${classes.dir}" includes="**/*Resource*.properties"/>
   </target>
 
   <!-- creates catalog and populates with initial metadata -->
