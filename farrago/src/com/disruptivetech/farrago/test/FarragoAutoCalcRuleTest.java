@@ -43,6 +43,8 @@ import net.sf.farrago.ojrex.FarragoOJRexImplementorTable;
 import net.sf.farrago.ojrex.FarragoRexToOJTranslator;
 import net.sf.farrago.session.FarragoSession;
 import net.sf.farrago.session.FarragoSessionFactory;
+import net.sf.farrago.test.FarragoTestCase;
+import net.sf.farrago.util.FarragoProperties;
 
 import openjava.ptree.*;
 
@@ -72,11 +74,10 @@ import org.eigenbase.sql.test.SqlTester;
  * @author Stephan Zuercher
  * @version $Id$
  */
-public class FarragoAutoCalcRuleTest extends TestCase
+public class FarragoAutoCalcRuleTest extends FarragoTestCase
 {
     //~ Static fields/initializers --------------------------------------------
 
-    private static FarragoJdbcEngineConnection farragoConnection;
     private static TestOJRexImplementorTable testOjRexImplementor;
 
     //~ Constructors ----------------------------------------------------------
@@ -87,6 +88,7 @@ public class FarragoAutoCalcRuleTest extends TestCase
      * @param testName .
      */
     public FarragoAutoCalcRuleTest(String testName)
+        throws Exception
     {
         super(testName);
     }
@@ -103,26 +105,34 @@ public class FarragoAutoCalcRuleTest extends TestCase
     {
         TestSetup wrapper =
             new TestSetup(suite) {
+                private String originalDriverClass;
+
                 protected void setUp()
                     throws Exception
                 {
-                    staticSetUp();
+                    originalDriverClass = staticAutoCalcSetUp();
                 }
 
                 protected void tearDown()
                     throws Exception
                 {
-                    staticTearDown();
+                    staticAutoCalcTearDown(originalDriverClass);
                 }
             };
         return wrapper;
     }
 
-    public static void staticSetUp()
+    public static String staticAutoCalcSetUp()
         throws Exception
     {
         SqlStdOperatorTable opTab = SqlOperatorTable.std();
         testOjRexImplementor = new TestOJRexImplementorTable(opTab);
+
+        String originalDriverClass = 
+            FarragoProperties.instance().testJdbcDriverClass.get();
+
+        FarragoProperties.instance().testJdbcDriverClass.set(
+            TestJdbcEngineDriver.class.getName());
 
         SqlFunction cppFunc =
             new SqlFunction("CPLUS", SqlKind.Function,
@@ -145,136 +155,58 @@ public class FarragoAutoCalcRuleTest extends TestCase
             cImplTab.get(opTab.plusOperator));
 
         FarragoJdbcEngineDriver driver = newJdbcEngineDriver();
-        Connection connection =
+        connection =
             DriverManager.getConnection(driver.getUrlPrefix());
-        farragoConnection = (FarragoJdbcEngineConnection) connection;
+        repos = 
+            ((FarragoJdbcEngineConnection)connection).getSession().getRepos();
         connection.setAutoCommit(false);
+
+        FarragoTestCase.saveParameters();
+        FarragoTestCase.runCleanup();
+        
+        return originalDriverClass;
     }
 
-    protected static FarragoJdbcEngineDriver newJdbcEngineDriver()
+    public static void staticAutoCalcTearDown(String originalDriverClass)
         throws Exception
     {
-        return new TestJdbcEngineDriver();
-    }
+        FarragoTestCase.staticTearDown();
 
-    public static void staticTearDown()
-        throws Exception
-    {
-        if (farragoConnection != null) {
-            farragoConnection.rollback();
-            farragoConnection.close();
-            farragoConnection = null;
+        if (originalDriverClass != null) {
+            FarragoProperties.instance().testJdbcDriverClass.set(
+                originalDriverClass);
+        } else {
+            FarragoProperties.instance().remove(
+                FarragoProperties.instance().testJdbcDriverClass.getPath());
         }
     }
 
-    public void testJavaPlus()
-        throws SQLException
+    public void testFarragoAutoCalcRuleByDiff()
+        throws Exception
     {
-        testExplain("select jplus(1, 1) from values(true)");
+        // mask out source control Id
+        addDiffMask("\\$Id.*\\$");
+        runSqlLineTest("testcases/autoCalcRule.sql");
     }
 
-    public void testCppPlus()
-        throws SQLException
-    {
-        testExplain("select cplus(1, 1) from values(true)");
-    }
-
-    public void testAutoPlus()
-        throws SQLException
-    {
-        testExplain("select cplus(1, 1), jplus(2, 2) from values(true)");
-    }
-
-    public void testAutoPlusReverse()
-        throws SQLException
-    {
-        testExplain("select jplus(2, 2), cplus(1, 1) from values(true)");
-    }
-
-    public void testAutoPlusNested()
-        throws SQLException
-    {
-        testExplain("select cplus(jplus(1, 1), 2) from values(true)");
-    }
-
-    public void testAutoPlusNestedReverse()
-        throws SQLException
-    {
-        testExplain("select jplus(cplus(1, 1), 2) from values(true)");
-    }
-
-    public void testEmps()
-        throws SQLException
-    {
-        testExplain(
-            "select empno, cplus(jplus(deptno, empid), age), jplus(cplus(deptno, empid), age), age from sales.emps");
-    }
-
-    public void testAutoPlusTable()
-        throws SQLException
-    {
-        testExplain("select * from sales.emps where jplus(deptno, 1) = 100");
-    }
-
-    public void testAutoPlusTableNested()
-        throws SQLException
-    {
-        testExplain(
-            "select * from sales.emps where jplus(cplus(deptno, 1), 2) = 100");
-    }
-
-    public void testAutoPlusTableNestedReverse()
-        throws SQLException
-    {
-        testExplain(
-            "select * from sales.emps where cplus(jplus(deptno, 1), 2) = 100");
-    }
-
-    public void testAutoPlusFull()
-        throws SQLException
-    {
-        testExplain(
-            "select cplus(jplus(deptno, 1), 2), jplus(cplus(deptno, 1), 2) from sales.emps where cplus(jplus(deptno, 1), 2) = 100 or jplus(cplus(deptno, 1), 2) = 100");
-    }
-
-    public void testAutoPlusFullJavaFirst()
-        throws SQLException
-    {
-        testExplain(
-            "select jplus(cplus(deptno, 1), 2), cplus(jplus(deptno, 1), 2) from sales.emps where cplus(jplus(deptno, 1), 2) = 100 or jplus(cplus(deptno, 1), 2) = 100");
-    }
-
-    public void testNonCallWhere()
-        throws SQLException
-    {
-        testExplain(
-            "select jplus(cplus(deptno, 1), 2), cplus(jplus(deptno, 1), 2) from sales.emps where slacker");
-    }
-
-    public void testTrailingReference()
-        throws SQLException
-    {
-        // Test top-most level can be implemented in any calc and last
-        // expression isn't a RexCall.  dtbug 210
-        testExplain(
-            "select deptno + jplus(cplus(deptno, 1), 2), empno from sales.emps");
-    }
 
     public void testDynamicParameterInConditional()
         throws SQLException
     {
-        PreparedStatement stmt =
-            farragoConnection.prepareStatement(
-                "select name, cplus(1, jplus(2, cplus(3, 4))) from sales.emps where name like ?");
+        PreparedStatement stmt = connection.prepareStatement(
+            "select name, cplus(1, jplus(2, cplus(3, 4))) from sales.emps where name like ?");
         try {
             stmt.setString(1, "F%");
-
+             
             ResultSet rset = stmt.executeQuery();
             try {
                 assertTrue(rset.next());
                 assertEquals(
                     "Fred",
                     rset.getString(1));
+                assertEquals(
+                    1 + (2 + (3 + 4)),
+                    rset.getInt(2));
                 assertFalse(rset.next());
             } finally {
                 rset.close();
@@ -284,40 +216,22 @@ public class FarragoAutoCalcRuleTest extends TestCase
         }
     }
 
-    public void testFieldAccess()
+
+    public void testDynamicParameterInCall()
         throws SQLException
     {
-        // Equivalent to dtbug 210
-        testExplain(
-            "select cplus(t.r.\"second\", 1) from (select jrow(deptno, empno) as r from sales.emps) as t");
-    }
-
-    public void testFieldAccess2()
-        throws SQLException
-    {
-        // Found a bug related to this expression while debugging dtbug 210.
-        testExplain(
-            "select t.r.\"second\" from (select jrow(deptno, cplus(empno, 1)) as r from sales.emps) as t");
-    }
-
-    // REVIEW: SZ: 7/14/2004: We should probably compare the results
-    // to expected values, rather than just assuming that no
-    // exceptions means it worked.  One idea would be to use the
-    // .sql/.ref/.log mechanism of FarragoTestCase -- the only trick
-    // is that we need to register JPLUS and CPLUS only for this test.
-    private void testExplain(String query)
-        throws SQLException
-    {
-        query = "explain plan for " + query;
-
-        System.out.println(query + ":");
-        Statement stmt = farragoConnection.createStatement();
+        PreparedStatement stmt = connection.prepareStatement(
+            "select cplus(1, jplus(100, cplus(50, ?))) from values(true)");
         try {
-            ResultSet rset = stmt.executeQuery(query);
+            stmt.setInt(1, 13);
+             
+            ResultSet rset = stmt.executeQuery();
             try {
-                while (rset.next()) {
-                    System.out.println(rset.getString(1));
-                }
+                assertTrue(rset.next());
+                assertEquals(
+                    1 + (100 + (50 + 13)),
+                    rset.getInt(1));
+                assertFalse(rset.next());
             } finally {
                 rset.close();
             }
@@ -325,6 +239,7 @@ public class FarragoAutoCalcRuleTest extends TestCase
             stmt.close();
         }
     }
+
 
     //~ Inner Classes ---------------------------------------------------------
 
@@ -497,7 +412,7 @@ public class FarragoAutoCalcRuleTest extends TestCase
      * provides our custom TestDbSessionFactory in place of Farrago's
      * normal implementation.
      */
-    private static class TestJdbcEngineDriver extends FarragoJdbcEngineDriver
+    public static class TestJdbcEngineDriver extends FarragoJdbcEngineDriver
     {
         static {
             new TestJdbcEngineDriver().register();

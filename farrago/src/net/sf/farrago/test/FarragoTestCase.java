@@ -137,14 +137,7 @@ public abstract class FarragoTestCase extends DiffTestCase
         repos = farragoConnection.getSession().getRepos();
         connection.setAutoCommit(false);
 
-        FarragoReposTxnContext reposTxn = new FarragoReposTxnContext(repos);
-        reposTxn.beginReadTxn();
-        savedFarragoConfig =
-            JmiUtil.getAttributeValues(repos.getCurrentConfig());
-        savedFennelConfig =
-            JmiUtil.getAttributeValues(
-                repos.getCurrentConfig().getFennelConfig());
-        reposTxn.commit();
+        saveParameters();
 
         runCleanup();
     }
@@ -182,9 +175,24 @@ public abstract class FarragoTestCase extends DiffTestCase
     }
 
     /**
-     * Restore system parameters to state saved by staticSetUp().
+     * Save system parameters.
      */
-    static void restoreParameters()
+    protected static void saveParameters()
+    {
+        FarragoReposTxnContext reposTxn = new FarragoReposTxnContext(repos);
+        reposTxn.beginReadTxn();
+        savedFarragoConfig =
+            JmiUtil.getAttributeValues(repos.getCurrentConfig());
+        savedFennelConfig =
+            JmiUtil.getAttributeValues(
+                repos.getCurrentConfig().getFennelConfig());
+        reposTxn.commit();
+    }
+
+    /**
+     * Restore system parameters to state saved by saveParameters().
+     */
+    protected static void restoreParameters()
     {
         FarragoReposTxnContext reposTxn = new FarragoReposTxnContext(repos);
         reposTxn.beginWriteTxn();
