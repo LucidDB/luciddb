@@ -85,7 +85,7 @@ public abstract class EigenbaseTrace
     }
 
     /**
-     * The "org.eigenbase.oj.OJPreparingStmt" tracer prints the generated
+     * The "org.eigenbase.oj.stmt.OJPreparingStmt" tracer prints the generated
      * program at level {@link java.util.logging.Level#FINE} or higher.
      */
     public static Logger getStatementTracer()
