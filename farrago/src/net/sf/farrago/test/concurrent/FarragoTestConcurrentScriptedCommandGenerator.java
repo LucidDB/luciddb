@@ -727,22 +727,20 @@ public class FarragoTestConcurrentScriptedCommandGenerator
 
                 rowCount++;
             }
-
-            printSeparator(out, widths);
-            try {
-                out.newLine();
-            } catch(IOException e) {
-                assert(false): "IOException via a StringWriter";
-            }
         } catch (IteratorResultSet.SqlTimeoutException e) {
             if (!timeoutSet) {
                 throw e;
             }
 
             Util.swallow(e, FarragoTrace.getTestTracer());
-
-            printSeparator(out, widths);
         } finally {
+            printSeparator(out, widths);
+            try {
+                out.newLine();
+            } catch(IOException e) {
+                assert(false): "IOException via a StringWriter";
+            }
+
             rset.close();
         }
     }
