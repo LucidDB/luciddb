@@ -26,7 +26,8 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 
 This document describes the components making up the ExecStream library,
 which is Fennel's infrastructure for execution of queries and 
-data manipulation.
+data manipulation.  The focus is on theory; for practice, see
+ExecStreamHowTo.
 
 <h3>ExecStreamGraph Structure</h3>
 
