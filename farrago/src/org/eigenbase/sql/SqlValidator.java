@@ -151,7 +151,7 @@ public class SqlValidator
     {
         return catalogReader;
     }
-    
+
     /**
      * Returns a list of expressions, with every occurrence of "&#42;" or
      * "TABLE.&#42;" expanded.
@@ -187,16 +187,18 @@ public class SqlValidator
         List aliases,
         List types)
     {
-        final Scope scope = getScope(select, SqlSelect.WHERE_OPERAND);
+        final SelectScope scope =
+            (SelectScope) getScope(select, SqlSelect.WHERE_OPERAND);
         if (selectItem instanceof SqlIdentifier) {
             SqlIdentifier identifier = (SqlIdentifier) selectItem;
             if ((identifier.names.length == 1)
                     && identifier.names[0].equals("*")) {
 
-                ArrayList tableNames = ((ListScope) scope).childrenNames;
+                ArrayList tableNames = scope.childrenNames;
                 for (int i = 0; i < tableNames.size(); i++) {
                     String tableName = (String) tableNames.get(i);
-                    final SqlNode from = getChild(select, tableName);
+                    final Namespace childScope = scope.getChild(tableName);
+                    final SqlNode from = childScope.getNode();
                     final Namespace fromNs = getNamespace(from);
                     assert fromNs != null;
                     final RelDataType rowType = fromNs.getRowType();
@@ -207,9 +209,8 @@ public class SqlValidator
 
                         //todo: do real implicit collation here
                         final SqlNode exp =
-                            new SqlIdentifier(new String [] {
-                                    tableName, columnName
-                                },
+                            new SqlIdentifier(
+                                new String [] {tableName, columnName},
                                 SqlParserPos.ZERO);
                         addToSelectList(selectItems, aliases, types, exp,
                             scope);
@@ -219,7 +220,14 @@ public class SqlValidator
             } else if ((identifier.names.length == 2)
                     && identifier.names[1].equals("*")) {
                 final String tableName = identifier.names[0];
-                final SqlNode from = getChild(select, tableName);
+                final Namespace childScope = scope.getChild(tableName);
+                if (childScope == null) {
+                    // e.g. "select r.* from e"
+                    throw newValidationError(identifier,
+                        EigenbaseResource.instance().newUnknownIdentifier(
+                            tableName));
+                }
+                final SqlNode from = childScope.getNode();
                 final Namespace fromNs = getNamespace(from);
                 assert fromNs != null;
                 final RelDataType rowType = fromNs.getRowType();
@@ -230,8 +238,9 @@ public class SqlValidator
 
                     //todo: do real implicit collation here
                     final SqlIdentifier exp =
-                        new SqlIdentifier(new String [] { tableName, columnName },
-                            null);
+                        new SqlIdentifier(
+                            new String [] { tableName, columnName },
+                            SqlParserPos.ZERO);
                     addToSelectList(selectItems, aliases, types, exp, scope);
                 }
                 return true;
@@ -550,15 +559,6 @@ public class SqlValidator
         default:
             return (Namespace) namespaces.get(node);
         }
-    }
-
-    private SqlNode getChild(
-        SqlSelect select,
-        String alias)
-    {
-        ListScope selectScope = getWhereScope(select);
-        final Namespace childScope = selectScope.getChild(alias);
-        return childScope.getNode();
     }
 
     /**
@@ -986,7 +986,7 @@ public class SqlValidator
                         // SqlIdentifier.)
                         function = null;
                     } else {
-                        if (unresolvedFunction.getFunctionType() == 
+                        if (unresolvedFunction.getFunctionType() ==
                             SqlFunction.SqlFuncTypeName.UserDefinedConstructor)
                         {
                             // TODO jvs 12-Feb-2005:  support real constructor
@@ -1624,6 +1624,7 @@ public class SqlValidator
                 insertCall.getSourceSelect(),
                 null);
             break;
+
         case SqlKind.DeleteORDINAL:
             SqlDelete deleteCall = (SqlDelete) node;
             registerQuery(
@@ -1632,6 +1633,7 @@ public class SqlValidator
                 deleteCall.getSourceSelect(),
                 null);
             break;
+
         case SqlKind.UpdateORDINAL:
             SqlUpdate updateCall = (SqlUpdate) node;
             registerQuery(
@@ -1639,6 +1641,7 @@ public class SqlValidator
                 usingScope, updateCall.getSourceSelect(),
                 null);
             break;
+
         case SqlKind.UnnestORDINAL:
             call = (SqlCall) node;
             final UnnestNamespace unnestNamespace =
@@ -1646,6 +1649,7 @@ public class SqlValidator
             registerNamespace(usingScope, alias, unnestNamespace);
             registerSubqueries(usingScope, call.operands[0]);
             break;
+
         case SqlKind.MultisetValueConstructorORDINAL:
         case SqlKind.MultisetQueryConstructorORDINAL:
             call = (SqlCall) node;
@@ -1653,14 +1657,15 @@ public class SqlValidator
                 new CollectScope(parentScope, usingScope, call);
              final CollectNamespace ttableConstructorNamespace =
                 new CollectNamespace(node, cs);
-            registerNamespace(cs,  deriveAlias(node, nextGeneratedId++), ttableConstructorNamespace);
+            final String alias2 = deriveAlias(node, nextGeneratedId++);
+            registerNamespace(cs,  alias2, ttableConstructorNamespace);
             operands = call.getOperands();
             for (int i = 0; i < operands.length; i++) {
                 SqlNode operand = operands[i];
                 registerSubqueries(cs, operand);
             }
-
             break;
+
         default:
             throw node.getKind().unexpected();
         }

@@ -1309,6 +1309,20 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             "Unknown identifier 'E'", 2, 13);
     }
 
+    public void testExpandStar() {
+        // dtbug 282
+        // "select r.* from sales.depts" gives NPE.
+        checkFails("select r.* from dept",
+            "Unknown identifier 'R'", 1, 10);
+
+        check("select e.* from emp as e");
+        check("select emp.* from emp");
+
+        // Error message could be better (EMPNO does exist, but it's a column).
+        checkFails("select empno.* from emp",
+            "Unknown identifier 'EMPNO'", 1, 14);
+    }
+
     // todo: implement IN
     public void _testAmbiguousColumnInIn() {
         // ok: cyclic reference
