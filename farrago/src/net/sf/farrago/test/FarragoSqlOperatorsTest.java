@@ -101,7 +101,6 @@ public class FarragoSqlOperatorsTest extends FarragoTestCase
             }
             if (!bug260fixed) {
                 if (
-                    op == opTab.multiplyOperator ||
                     op == opTab.localTimeFunc ||
                     op == opTab.localTimestampFunc) {
                     continue;

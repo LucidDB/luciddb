@@ -135,6 +135,7 @@ public class SqlOperatorTests
         tester.checkBoolean("cast(null as boolean) and false", Boolean.FALSE);
         tester.checkBoolean("false and cast(null as boolean)", Boolean.FALSE);
         tester.checkNull("cast(null as boolean) and true");
+        tester.checkBoolean("true and (not false)", Boolean.TRUE);
     }
 
     public static void testConcatOperator(SqlTester tester)
@@ -153,6 +154,7 @@ public class SqlOperatorTests
     public static void testDivideOperator(SqlTester tester)
     {
         tester.checkScalarExact("10 / 5", "2");
+        tester.checkScalarExact("-10 / 5", "-2");
         tester.checkScalarApprox("10.0 / 5", "2.0");
         tester.checkNull("1e1 / cast(null as float)");
     }
@@ -168,6 +170,7 @@ public class SqlOperatorTests
     public static void testGreaterThanOperator(SqlTester tester)
     {
         tester.checkBoolean("1>2", Boolean.FALSE);
+        tester.checkBoolean("-1>1", Boolean.FALSE);
         tester.checkBoolean("1>1", Boolean.FALSE);
         tester.checkBoolean("2>1", Boolean.TRUE);
         tester.checkNull("3.0>cast(null as double)");
@@ -181,6 +184,7 @@ public class SqlOperatorTests
     public static void testGreaterThanOrEqualOperator(SqlTester tester)
     {
         tester.checkBoolean("1>=2", Boolean.FALSE);
+        tester.checkBoolean("-1>=1", Boolean.FALSE);
         tester.checkBoolean("1>=1", Boolean.TRUE);
         tester.checkBoolean("2>=1", Boolean.TRUE);
         tester.checkNull("cast(null as real)>=999");
@@ -201,6 +205,7 @@ public class SqlOperatorTests
     public static void testLessThanOperator(SqlTester tester)
     {
         tester.checkBoolean("1<2", Boolean.TRUE);
+        tester.checkBoolean("-1<1", Boolean.TRUE);
         tester.checkBoolean("1<1", Boolean.FALSE);
         tester.checkBoolean("2<1", Boolean.FALSE);
         tester.checkNull("123<cast(null as bigint)");
@@ -210,12 +215,14 @@ public class SqlOperatorTests
     {
         tester.checkBoolean("1<=2", Boolean.TRUE);
         tester.checkBoolean("1<=1", Boolean.TRUE);
+        tester.checkBoolean("-1<=1", Boolean.TRUE);
         tester.checkBoolean("2<=1", Boolean.FALSE);
         tester.checkNull("cast(null as integer)<=3");
     }
 
     public static void testMinusOperator(SqlTester tester)
     {
+        tester.checkScalarExact("-2-1", "-3");
         tester.checkScalarExact("2-1", "1");
         tester.checkScalarApprox("2.0-1", "1.0");
         tester.checkScalarExact("1-2", "-1");
@@ -231,6 +238,7 @@ public class SqlOperatorTests
     {
         tester.checkScalarExact("2*3", "6");
         tester.checkScalarExact("2*-3", "-6");
+        tester.checkScalarExact("+2*3", "6");
         tester.checkScalarExact("2*0", "0");
         tester.checkScalarApprox("2.0*3", "6.0");
         tester.checkNull("2e-3*cast(null as integer)");
@@ -254,6 +262,7 @@ public class SqlOperatorTests
     public static void testPlusOperator(SqlTester tester)
     {
         tester.checkScalarExact("1+2", "3");
+        tester.checkScalarExact("-1+2", "1");
         tester.checkScalarApprox("1+2.0", "3.0");
         tester.checkNull("cast(null as tinyint)+1");
         tester.checkNull("1e-2+cast(null as double)");

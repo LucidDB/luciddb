@@ -31,6 +31,7 @@ import org.eigenbase.rel.RelNode;
 import org.eigenbase.sql.SqlBinaryOperator;
 import org.eigenbase.sql.SqlOperator;
 import org.eigenbase.sql.SqlOperatorTable;
+import org.eigenbase.sql.SqlPrefixOperator;
 import org.eigenbase.sql.fun.SqlMinMaxAggFunction;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.util.Util;
@@ -123,6 +124,10 @@ public class OJRexImplementorTableImpl implements OJRexImplementorTable
 
         registerBinaryOperator(opTab.orOperator, BinaryExpression.LOGICAL_OR);
 
+        registerUnaryOperator(opTab.prefixMinusOperator, UnaryExpression.MINUS);
+
+        registerUnaryOperator(opTab.notOperator, UnaryExpression.NOT);
+
         registerOperator(
             opTab.isTrueOperator,
             new OJRexIgnoredCallImplementor());
@@ -151,6 +156,15 @@ public class OJRexImplementorTableImpl implements OJRexImplementorTable
         registerOperator(
             op,
             new OJRexBinaryExpressionImplementor(ojBinaryExpressionOrdinal));
+    }
+
+    protected void registerUnaryOperator(
+        SqlPrefixOperator op,
+        int ojUnaryExpressionOrdinal)
+    {
+        registerOperator(
+            op,
+            new OJRexUnaryExpressionImplementor(ojUnaryExpressionOrdinal));
     }
 
     public abstract static class OJBasicAggImplementor

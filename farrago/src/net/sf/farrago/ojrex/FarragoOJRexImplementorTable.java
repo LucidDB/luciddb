@@ -22,6 +22,7 @@ import org.eigenbase.oj.rex.OJRexImplementorTable;
 import org.eigenbase.oj.rex.OJRexImplementorTableImpl;
 import org.eigenbase.sql.SqlBinaryOperator;
 import org.eigenbase.sql.SqlFunction;
+import org.eigenbase.sql.SqlPrefixOperator;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 
 
@@ -110,6 +111,17 @@ public class FarragoOJRexImplementorTable extends OJRexImplementorTableImpl
             new FarragoOJRexBinaryExpressionImplementor(
                 ojBinaryExpressionOrdinal));
     }
+
+    protected void registerUnaryOperator(
+        SqlPrefixOperator op,
+        int ojUnaryExpressionOrdinal)
+    {
+        registerOperator(
+            op,
+            new FarragoOJRexUnaryExpressionImplementor(
+                ojUnaryExpressionOrdinal));
+    }
+
 }
 
 

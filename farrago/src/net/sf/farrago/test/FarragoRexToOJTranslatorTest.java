@@ -281,6 +281,13 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
         testTranslation("empno / age");
     }
 
+    public void testPrimitivePrefixMinus()
+        throws Exception
+    {
+        // NOTE:  choose nullable
+        testTranslation("-age");
+    }
+
     public void testVarcharEquals()
         throws Exception
     {
@@ -293,6 +300,13 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
     {
         // NOTE:  choose one nullable and one not null
         testTranslation("name < city");
+    }
+
+    public void testBooleanNot()
+        throws Exception
+    {
+        // NOTE: choose nullable
+        testTranslation("not slacker");
     }
 
     public void testBooleanOr()
