@@ -17,7 +17,7 @@
 <!ENTITY reportsuccess    "fixes">
 <!ENTITY returnname       "Build Monkey">
 <!ENTITY returnaddress    "buildmonkey@fishtaco.org">
-<!ENTITY skipusers        "false">
+<!ENTITY skipusers        "true">
 <!ENTITY spamwhilebroken  "true">
 <!ENTITY subjectprefix    "Continuous Integration: ">
 <!ENTITY failureaddress   "the.team@disruptivetech.com">
