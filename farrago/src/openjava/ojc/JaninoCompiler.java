@@ -1,7 +1,7 @@
 /*
 // $Id$
 // Saffron preprocessor and data engine
-// Copyright (C) 2002-2004 Disruptive Technologies, Inc.
+// Copyright (C) 2002-2004 Disruptive Tech
 // Copyright (C) 2002-2004 John V. Sichi
 // You must accept the terms in LICENSE.html to use this software.
 //

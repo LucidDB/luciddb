@@ -31,7 +31,8 @@ public class MemberDeclarationList extends List
     }
 
     public MemberDeclarationList( MemberDeclaration e0, MemberDeclaration e1 ) {
-	this( e0 );	add( e1 );
+	this( e0 );
+	add( e1 );
     }
 
     /**

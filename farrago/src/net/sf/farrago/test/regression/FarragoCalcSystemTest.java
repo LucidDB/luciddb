@@ -1,6 +1,6 @@
 /*
 // Farrago is a relational database management system.
-// (C) Copyright 2004-2004 Disruptive Technologies, Inc.
+// (C) Copyright 2004-2004 Disruptive Tech
 // You must accept the terms in LICENSE.html to use this software.
 //
 // This program is free software; you can redistribute it and/or
