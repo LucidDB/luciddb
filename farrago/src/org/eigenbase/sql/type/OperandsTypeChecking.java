@@ -642,7 +642,6 @@ public abstract class OperandsTypeChecking
                 SqlValidator.Scope scope,
                 SqlCall call, boolean throwOnFailure)
             {
-                assert (2 == call.operands.length);
                 RelDataType type1 =
                     validator.deriveType(scope, call.operands[0]);
                 RelDataType type2 =
@@ -1246,6 +1245,27 @@ public abstract class OperandsTypeChecking
                 , typeNullableIntervalInterval
 //todo                , typeNullableDatetimeInterval
             });
+
+    public static final OperandsTypeChecking typeMinusDateOperator =
+        new SimpleOperandsTypeChecking(new SqlTypeName [][] {
+            SqlTypeName.datetimeNullableTypes
+            , SqlTypeName.datetimeNullableTypes
+            , SqlTypeName.timeIntervalNullableTypes
+        }) {
+            public boolean check(
+                SqlValidator validator,
+                SqlValidator.Scope scope,
+                SqlCall call,
+                boolean throwOnFailure) {
+                if (!super.check(validator, scope, call, throwOnFailure)) {
+                    return false;
+                }
+                if (!typeNullableSameSame.check(validator, scope, call, throwOnFailure)) {
+                    return false;
+                }
+                return true;
+            }
+        };
 
     public static final OperandsTypeChecking typeNullableNumericOrInterval =
         new CompositeOrOperandsTypeChecking(

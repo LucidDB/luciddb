@@ -1537,6 +1537,12 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExpFails("cast(interval '1:1' year as interval second)", "Cast function cannot convert value of type INTERVAL YEAR to type INTERVAL SECOND");
     }
 
+    public void testMinusDateOperator() {
+        checkExpType("(CURRENT_DATE - CURRENT_DATE) HOUR", "INTERVAL HOUR");
+        checkExpType("(CURRENT_DATE - CURRENT_DATE) YEAR TO MONTH", "INTERVAL YEAR TO MONTH");
+        checkExpFails("(CURRENT_DATE - LOCALTIME) YEAR TO MONTH", "(?s).*Parameters must be of the same type.*");
+    }
+
     public void testNew() {
         // (To debug invidual statements, paste them into this method.)
     }

@@ -685,15 +685,15 @@ public class SqlStdOperatorTable extends SqlOperatorTable
     /**
      * A special operator for the substraction of two DATETIMEs.
      * The format of DATETIME substraction is: <br>
-     * <code>"(" &lt;datetime&gt; "-" &lt;datetime&gt; ")" "INTERVAL" <interval qualifier></code>
+     * <code>"(" &lt;datetime&gt; "-" &lt;datetime&gt; ")" <interval qualifier></code>
      * This special operator is special since it needs to hold the additional
      * interval qualifier specification.
      */
     public final SqlOperator minusDateOperator =
             new SqlSpecialOperator("-", SqlKind.Minus, 20, true,
-                ReturnTypeInference.useNullableBiggest,
+                ReturnTypeInference.useThirdArgType,
                 UnknownParamInference.useFirstKnown,
-                OperandsTypeChecking.typeMinusOperator) {
+                OperandsTypeChecking.typeMinusDateOperator) {
                 public void test(SqlTester tester)
                 {
                     SqlOperatorTests.testMinusDateOperator(tester);
@@ -712,7 +712,7 @@ public class SqlStdOperatorTable extends SqlOperatorTable
                     operands[0].unparse(writer, leftPrec, rightPrec);
                     writer.print(" - ");
                     operands[1].unparse(writer, leftPrec, rightPrec);
-                    writer.print(") INTERVAL ");
+                    writer.print(") ");
                     operands[2].unparse(writer, leftPrec, rightPrec);
                 }
             };

@@ -363,11 +363,11 @@ public class SqlParserTest extends TestCase
             "FROM (SELECT (ROW((ROW(1, 2)), (ROW(3, 4, 5)))) AS `R`" + NL +
             "FROM `SALES`.`DEPTS`) AS `T`");
 
-//        check("select t.r.\"EXPR$1\".\"EXPR$2\" " +
-//              "from (select ((1,2),(3,4,5,6)) r from sales.depts) t",
-//            "SELECT `T`.`R`.`EXPR$1`.`EXPR$2`" + NL +
-//            "FROM (SELECT (ROW((ROW(1, 2)), (ROW(3, 4, 5, 6)))) AS `R`" + NL +
-//            "FROM `SALES`.`DEPTS`) AS `T`");
+        check("select t.r.\"EXPR$1\".\"EXPR$2\" " +
+              "from (select ((1,2),(3,4,5,6)) r from sales.depts) t",
+            "SELECT `T`.`R`.`EXPR$1`.`EXPR$2`" + NL +
+            "FROM (SELECT (ROW((ROW(1, 2)), (ROW(3, 4, 5, 6)))) AS `R`" + NL +
+            "FROM `SALES`.`DEPTS`) AS `T`");
     }
 
     public void testOverlaps()
@@ -380,6 +380,15 @@ public class SqlParserTest extends TestCase
 
         checkExp("true and not (x,xx) overlaps (y,yy) or false",
             "((TRUE AND (NOT ((`X`, `XX`) OVERLAPS (`Y`, `YY`)))) OR FALSE)");
+
+        checkExpFails("(x,xx,xxx) overlaps (y,yy) or false",
+            "(?s).*Illegal overlaps expression.*");
+
+        checkExpFails("(x,xx,xxx) overlaps (y,yy,yyy) or false",
+            "(?s).*Illegal overlaps expression.*");
+
+        checkExpFails("(x,xx) overlaps (y,yy,yyy) or false",
+            "(?s).*Illegal overlaps expression.*");
     }
 
     public void testIsDistinctFrom()
@@ -1578,10 +1587,14 @@ public class SqlParserTest extends TestCase
     }
 
     public void testDateMinusDate() {
-        checkExp("(date1 - date2) INTERVAL HOUR", "((`DATE1` - `DATE2`) INTERVAL HOUR)");
-        checkExp("(date1 - date2) INTERVAL YEAR TO MONTH", "((`DATE1` - `DATE2`) INTERVAL YEAR TO MONTH)");
-        checkExp("(date1 - date2) INTERVAL HOUR > interval '1' HOUR",
-                   "(((`DATE1` - `DATE2`) INTERVAL HOUR) > (INTERVAL '1' HOUR))");
+        checkExp("(date1 - date2) HOUR", "((`DATE1` - `DATE2`) HOUR)");
+        checkExp("(date1 - date2) YEAR TO MONTH", "((`DATE1` - `DATE2`) YEAR TO MONTH)");
+        checkExp("(date1 - date2) HOUR > interval '1' HOUR",
+                   "(((`DATE1` - `DATE2`) HOUR) > (INTERVAL '1' HOUR))");
+        checkExpFails("(date1 + date2) second",
+            "(?s).*Illegal expression; at line 1, column 17. Was expecting ..DATETIME - DATETIME. INTERVALQUALIFIER.*");
+        checkExpFails("(date1,date2,date2) second",
+            "(?s).*Illegal expression; at line 1, column 21. Was expecting ..DATETIME - DATETIME. INTERVALQUALIFIER.*");
     }
 
     public void testExtract() {
