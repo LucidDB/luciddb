@@ -29,6 +29,10 @@ explain plan for values multiset[1] multiset except multiset[2];
 explain plan for values multiset[1] multiset except all multiset[2];
 explain plan for values multiset[1] multiset except distinct multiset[2];
 
+-- test cast from multiset to multiset
+explain plan for select * from unnest(cast(multiset['1'] as double multiset));
+
+
 -- explain plan for select fusion(multiset[3]) from emps;
 -- explain plan for select collect(deptno) from emps;
 -- explain plan for select collect(deptno), fusion(multiset[3]) from emps;

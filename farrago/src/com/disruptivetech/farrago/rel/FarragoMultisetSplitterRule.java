@@ -28,6 +28,7 @@ import org.eigenbase.sql.SqlOperator;
 import org.eigenbase.sql.SqlStateCodes;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.util.Util;
+import org.eigenbase.reltype.RelDataType;
 
 import java.util.Set;
 import java.util.Iterator;
@@ -79,23 +80,6 @@ public class FarragoMultisetSplitterRule extends RelOptRule
     private static final CalcRelSplitter.RelType REL_TYPE_NOT_NESTED =
         new CalcRelSplitter.RelType("REL_TYPE_NOT_NESTED");
 
-    /** A set defining all implementable multiset calls */
-    private static final Set multisetOperators = new java.util.HashSet();
-    private static final SqlStdOperatorTable opTab = SqlStdOperatorTable.instance();
-
-    static {
-        final SqlStdOperatorTable opTab = SqlStdOperatorTable.instance();
-
-        multisetOperators.add(opTab.cardinalityFunc);
-        multisetOperators.add(opTab.elementFunc);
-        multisetOperators.add(opTab.multisetExceptAllOperator);
-        multisetOperators.add(opTab.multisetExceptOperator);
-        multisetOperators.add(opTab.multisetIntersectAllOperator);
-        multisetOperators.add(opTab.multisetIntersectOperator);
-        multisetOperators.add(opTab.multisetUnionAllOperator);
-        multisetOperators.add(opTab.multisetUnionOperator);
-    }
-
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -119,13 +103,13 @@ public class FarragoMultisetSplitterRule extends RelOptRule
         boolean doSplit = false;
         // Check if we need multiset/non-multiset splitting ...
         for (int i = 0; i < calc.projectExprs.length; i++) {
-            if (containsMixing(calc.projectExprs[i])) {
+            if (RexMultisetUtil.containsMixing(calc.projectExprs[i])) {
                 doSplit = true;
                 break;
             }
         }
         if (calc.conditionExpr != null) {
-            if (containsMixing(calc.conditionExpr)) {
+            if (RexMultisetUtil.containsMixing(calc.conditionExpr)) {
                 doSplit = true;
             }
         }
@@ -165,7 +149,7 @@ public class FarragoMultisetSplitterRule extends RelOptRule
         // no nested multisets e.g. CARDINALITY(MS1 FUSION MS2)
 
         for (int i = 0; i < calc.projectExprs.length; i++) {
-            if (containsMultiset(calc.projectExprs[i], false)) {
+            if (RexMultisetUtil.containsMultiset(calc.projectExprs[i], false)) {
                 assert(calc.projectExprs[i] instanceof RexCall ||
                        calc.projectExprs[i] instanceof RexFieldAccess);
                 insertRels(call, calc, new Integer(i));
@@ -174,7 +158,7 @@ public class FarragoMultisetSplitterRule extends RelOptRule
             }
         }
         if ((calc.conditionExpr != null)
-            && containsMultiset(calc.conditionExpr, false)) {
+            && RexMultisetUtil.containsMultiset(calc.conditionExpr, false)) {
             assert(calc.conditionExpr instanceof RexCall ||
                    calc.conditionExpr instanceof RexFieldAccess );
             insertRels(call, calc, null);
@@ -186,10 +170,10 @@ public class FarragoMultisetSplitterRule extends RelOptRule
         // (funny to say) all set, nothing to do.
         // Let other rules handle things from here on.
         for (int i = 0; i < calc.projectExprs.length; i++) {
-            assert(!containsMultiset(calc.projectExprs[i], true));
+            assert(!RexMultisetUtil.containsMultiset(calc.projectExprs[i], true));
         }
         if (calc.conditionExpr != null) {
-            assert(!containsMultiset(calc.conditionExpr, true));
+            assert(!RexMultisetUtil.containsMultiset(calc.conditionExpr, true));
         }
         return;
     }
@@ -242,7 +226,7 @@ public class FarragoMultisetSplitterRule extends RelOptRule
             new String[]{"output"+corRef.toString()},
             ProjectRel.Flags.Boxed);
 
-        if (opTab.cardinalityFunc == rexCall.op) {
+        if (RexMultisetUtil.opTab.cardinalityFunc == rexCall.op) {
             // A call to
             // CalcRel=[...,CARDINALITY($in_i),...]
             //   CalcInput
@@ -265,7 +249,37 @@ public class FarragoMultisetSplitterRule extends RelOptRule
             stoppedVariableSet.add(corRef);
             correlatorRel.setVariablesStopped(stoppedVariableSet);
 //            correlatorRel.registerCorrelVariable(dyn_inIdStr);
-        } else if (opTab.elementFunc == rexCall.op) {
+        } else if (RexMultisetUtil.opTab.castFunc == rexCall.op) {
+            // A call to
+            // CalcRel=[...,CAST($in_i AS XYZ MULTISET),...]
+            //   CalcInput
+            //is eq. to
+            // CalcRel=[...,$in_N,...]
+            //   CorrelRel=[$cor0=$in_i]
+            //     CalcInput
+            //     Collect
+            //       ProjectRel=[CAST($in) AS XYZ]
+            //         Uncollect
+            //           ProjectRel=[output=$cor0]
+            //             OneRowRel
+            UncollectRel uncollect = new UncollectRel(cluster, projectRel);
+            RelDataType type = rexCall.getType().getComponentType();
+            assert(null != type);
+            assert(type.isStruct());
+            type = type.getFields()[0].getType();
+            RexNode newCastCall =
+                cluster.rexBuilder.makeCast(
+                    type,
+                    cluster.rexBuilder.makeInputRef(uncollect.getRowType().getFields()[0].getType(), 0));
+            ProjectRel castRel = new ProjectRel(
+                cluster,
+                uncollect,
+                new RexNode[]{newCastCall},
+                new String[]{uncollect.getRowType().getFields()[0].getName()},
+                ProjectRel.Flags.Boxed);
+            correlatorRel =
+                new CorrelatorRel(cluster, input, castRel, correlations);
+        } else if (RexMultisetUtil.opTab.elementFunc == rexCall.op) {
             // A call to
             // CalcRel=[...,ELEMENT($in_i),...]
             //   CalcInput
@@ -292,7 +306,7 @@ public class FarragoMultisetSplitterRule extends RelOptRule
                     cluster, uncollect, 1, new AggregateRel.Call[]{});
             RexNode[] whenThenElse = new RexNode[] {
                 // when
-                cluster.rexBuilder.makeCall(opTab.equalsOperator
+                cluster.rexBuilder.makeCall(RexMultisetUtil.opTab.equalsOperator
                     ,cluster.rexBuilder.makeInputRef(
                         cluster.typeFactory.createSqlType(
                             SqlTypeName.Integer), 0)
@@ -300,11 +314,11 @@ public class FarragoMultisetSplitterRule extends RelOptRule
                 // then
                 ,cluster.rexBuilder.makeLiteral(true)
                 // else
-                ,cluster.rexBuilder.makeCall(opTab.throwOperator,
+                ,cluster.rexBuilder.makeCall(RexMultisetUtil.opTab.throwOperator,
                     cluster.rexBuilder.makeLiteral(
                         SqlStateCodes.CardinalityViolation.getState()))};
             RexNode condition =
-                cluster.rexBuilder.makeCall(opTab.caseOperator, whenThenElse);
+                cluster.rexBuilder.makeCall(RexMultisetUtil.opTab.caseOperator, whenThenElse);
             FilterRel filterRel =
                 new FilterRel(cluster, aggregateRel, condition);
             ProjectRel limitRel =
@@ -356,22 +370,22 @@ public class FarragoMultisetSplitterRule extends RelOptRule
 
             RelNode[] inputs = new RelNode[]{ uncollectRel, uncollectRel2};
             final RelNode setRel;
-            if (opTab.multisetExceptAllOperator == rexCall.op) {
+            if (RexMultisetUtil.opTab.multisetExceptAllOperator == rexCall.op) {
                 setRel =
                     new MinusRel(cluster, uncollectRel, uncollectRel2, true);
-            } else if (opTab.multisetExceptOperator == rexCall.op) {
+            } else if (RexMultisetUtil.opTab.multisetExceptOperator == rexCall.op) {
                 setRel =
                     new MinusRel(cluster, uncollectRel, uncollectRel2, false);
-            } else if (opTab.multisetIntersectAllOperator == rexCall.op) {
+            } else if (RexMultisetUtil.opTab.multisetIntersectAllOperator == rexCall.op) {
                 setRel =
                     new IntersectRel(cluster, uncollectRel, uncollectRel2,true);
-            } else if (opTab.multisetIntersectOperator == rexCall.op) {
+            } else if (RexMultisetUtil.opTab.multisetIntersectOperator == rexCall.op) {
                 setRel =
                     new IntersectRel(cluster, uncollectRel,uncollectRel2,false);
-            } else if (opTab.multisetUnionAllOperator == rexCall.op) {
+            } else if (RexMultisetUtil.opTab.multisetUnionAllOperator == rexCall.op) {
                 setRel =
                     new UnionRel(cluster, inputs, true);
-            } else if (opTab.multisetUnionOperator == rexCall.op) {
+            } else if (RexMultisetUtil.opTab.multisetUnionOperator == rexCall.op) {
                 setRel =
                     new UnionRel(cluster, inputs, false);
             } else {
@@ -406,74 +420,8 @@ public class FarragoMultisetSplitterRule extends RelOptRule
         }
 
         calc.replaceInput(0, correlatorRel);
-        call.transformTo(calc);
+        call.transformTo(RelOptUtil.clone(calc));
         return;
-    }
-
-    /**
-     * Returns true if a node contains a mixing between multiset and
-     * non-multiset calls.
-     */
-    public static boolean containsMixing(RexNode node)
-    {
-        RexCallOperatorCounter countShuttle = new RexCallOperatorCounter();
-        countShuttle.visit(node);
-        if (countShuttle.totalCount == countShuttle.multisetCount) {
-            return false;
-        }
-
-        if (0 == countShuttle.multisetCount) {
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * Returns true if node contains a multiset operator, otherwise false
-     * Use it with deep=false when checking if a RexCall is a multiset call.
-     */
-    public static boolean containsMultiset(final RexNode node, boolean deep)
-    {
-        return null != findFirstMultiset(node, deep);
-    }
-
-    /**
-     * Convenicence methods equivalent to {@link #containsMultiset} with deep=false
-     */
-    public static boolean isMultiset(final RexNode node)
-    {
-        return containsMultiset(node, false);
-    }
-
-    /**
-     * Returns a reference to the first found multiset call.
-     */
-    private static RexCall findFirstMultiset(final RexNode node, boolean deep)
-    {
-        if (node instanceof RexFieldAccess) {
-            return findFirstMultiset(((RexFieldAccess) node).expr, deep);
-        }
-
-        if (!(node instanceof RexCall)) {
-            return null;
-        }
-        final RexCall call = (RexCall) node;
-        assert(null != call);
-        RexCall firstOne = null;
-        Iterator it = multisetOperators.iterator();
-        while (it.hasNext()) {
-            SqlOperator op = (SqlOperator) it.next();
-            firstOne = RexUtil.findOperatorCall(op, call);
-            if (null != firstOne) {
-                break;
-            }
-        }
-
-        if (!deep && (firstOne != call)) {
-            return null;
-        }
-        return firstOne;
     }
 
     /**
@@ -482,14 +430,14 @@ public class FarragoMultisetSplitterRule extends RelOptRule
      */
     private boolean containsNestedMultiset(RexNode node, boolean deep)
     {
-        RexCall multisetCall = findFirstMultiset(node,deep);
+        RexCall multisetCall = RexMultisetUtil.findFirstMultiset(node,deep);
         if (null == multisetCall) {
             return false;
         }
         boolean ret = true;
         for (int i = 0; i < multisetCall.operands.length; i++) {
             if (multisetCall.operands[i] instanceof RexCall &&
-                containsMultiset(multisetCall.operands[i], false)) {
+                RexMultisetUtil.containsMultiset(multisetCall.operands[i], false)) {
 
                 ret = false;
                 break;
@@ -500,24 +448,7 @@ public class FarragoMultisetSplitterRule extends RelOptRule
 
     //~ Inner Classes ---------------------------------------------------------
 
-    /**
-     * A RexShuttle that traverse all RexNode and counts total number of RexCalls
-     * traversed and number of multiset calls traversed.<p>
-     * totalCount >= multisetCount always holds true.
-     */
-    private static class RexCallOperatorCounter extends RexShuttle {
-        public int totalCount = 0;
-        public int multisetCount = 0;
-
-        public RexNode visit(RexCall call)
-        {
-            totalCount++;
-            if (multisetOperators.contains(call.op)) {
-                multisetCount++;
-            }
-            return super.visit(call);
-        }
-    };
+    ;
 
     /**
      * Unmix mixing between multisets and non-multisets
@@ -535,9 +466,9 @@ public class FarragoMultisetSplitterRule extends RelOptRule
             RexCall call, CalcRelSplitter.RelType relType)
         {
             if (relType == REL_TYPE_NOT_MULTISET) {
-                return !isMultiset(call);
+                return !RexMultisetUtil.isMultiset(call);
             } else if (relType == REL_TYPE_MULTISET) {
-                return isMultiset(call);
+                return RexMultisetUtil.isMultiset(call);
             } else {
                 assert(false): "Unknown rel type: " + relType;
                 return false;

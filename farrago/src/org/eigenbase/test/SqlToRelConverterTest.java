@@ -260,21 +260,23 @@ public class SqlToRelConverterTest extends TestCase
 
     public void testUnnest() {
         check("select*from unnest(multiset[1,2])",
-            "ProjectRel(EXPR$0=[$0])" + NL +
-            "  UncollectRel" + NL +
-            "    CollectRel" + NL +
-            "      UnionRel(all=[true])" + NL +
-            "        ProjectRel(EXPR$0=[1])" + NL +
-            "          OneRowRel" + NL +
-            "        ProjectRel(EXPR$0=[2])" + NL +
-            "          OneRowRel" + NL);
+                "ProjectRel(EXPR$0=[$0])" + NL +
+                "  UncollectRel" + NL +
+                "    ProjectRel(EXPR$0=[$0])" + NL +
+                "      CollectRel" + NL +
+                "        UnionRel(all=[true])" + NL +
+                "          ProjectRel(EXPR$0=[1])" + NL +
+                "            OneRowRel" + NL +
+                "          ProjectRel(EXPR$0=[2])" + NL +
+                "            OneRowRel" + NL);
 
         check("select*from unnest(multiset(select*from dept))",
-            "ProjectRel(DEPTNO=[$0], NAME=[$1])" + NL +
-            "  UncollectRel" + NL +
-            "    CollectRel" + NL +
-            "      ProjectRel(DEPTNO=[$0], NAME=[$1])" + NL +
-            "        TableAccessRel(table=[[DEPT]])" + NL);
+                "ProjectRel(DEPTNO=[$0], NAME=[$1])" + NL +
+                "  UncollectRel" + NL +
+                "    ProjectRel(EXPR$0=[$0])" + NL +
+                "      CollectRel" + NL +
+                "        ProjectRel(DEPTNO=[$0], NAME=[$1])" + NL +
+                "          TableAccessRel(table=[[DEPT]])" + NL);
 
     }
 
@@ -329,13 +331,14 @@ public class SqlToRelConverterTest extends TestCase
         check("select*from unnest(select multiset[deptno] from dept)",
             "ProjectRel(EXPR$0=[$0])" + NL +
             "  UncollectRel" + NL +
-            "    ProjectRel(EXPR$0=[$2])" + NL +
-            "      CorrelatorRel(condition=[true], joinType=[left])" + NL +
-            "        TableAccessRel(table=[[DEPT]])" + NL +
-            "        CollectRel" + NL +
-            "          UnionRel(all=[true])" + NL +
-            "            ProjectRel(DEPTNO=[$cor0.DEPTNO])" + NL +
-            "              OneRowRel" + NL);
+            "    ProjectRel(EXPR$0=[$0])" + NL +
+            "      ProjectRel(EXPR$0=[$2])" + NL +
+            "        CorrelatorRel(condition=[true], joinType=[left])" + NL +
+            "          TableAccessRel(table=[[DEPT]])" + NL +
+            "          CollectRel" + NL +
+            "            UnionRel(all=[true])" + NL +
+            "              ProjectRel(DEPTNO=[$cor0.DEPTNO])" + NL +
+            "                OneRowRel" + NL);
     }
 
     public void testLateral() {

@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/optimizer/multiset.sql#3 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/optimizer/multiset.sql#4 $
 0: jdbc:farrago:> -- Test multiset related queries
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set schema 'sales';
@@ -172,6 +172,25 @@ Error: java.lang.AssertionError: Internal error: node could not be implemented: 
 Error: java.lang.AssertionError: Internal error: node could not be implemented: Subset#8.ITERATOR (state=,code=0)
 0: jdbc:farrago:> explain plan for values multiset[1] multiset except distinct multiset[2];
 Error: java.lang.AssertionError: Internal error: node could not be implemented: Subset#8.ITERATOR (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test cast from multiset to multiset
+0: jdbc:farrago:> explain plan for select * from unnest(cast(multiset['1'] as double multiset));
++---------------------------------------------------------------+
+|                            column0                            |
++---------------------------------------------------------------+
+| FennelToIteratorConverter                                     |
+|   FennelPullUncollectRel                                      |
+|     FennelPullCalcRel(EXPR$0=[$2])                            |
+|       FennelPullCorrelatorRel                                 |
+|         FennelPullCollectRel                                  |
+|           FennelPullCalcRel(EXPR$0=[_ISO-8859-1'1'])          |
+|             FennelPullOneRowRel                               |
+|         FennelPullCalcRel(EXPR$0=[CAST($0):DOUBLE NOT NULL])  |
+|           FennelPullUncollectRel                              |
+|             FennelPullCalcRel(output$cor0=[$cor0])            |
+|               FennelPullOneRowRel                             |
++---------------------------------------------------------------+
+0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- explain plan for select fusion(multiset[3]) from emps;
 0: jdbc:farrago:> -- explain plan for select collect(deptno) from emps;

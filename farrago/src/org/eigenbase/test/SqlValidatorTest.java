@@ -695,11 +695,15 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExpType("cast('abc' as varchar(1))", "VARCHAR(1)");
         checkExpType("cast('abc' as char(1))", "CHAR(1)");
         checkExpType("cast(x'ff' as binary(1))", "BINARY(1)");
+        checkExpType("cast(multiset[1] as double multiset)", "DOUBLE MULTISET");
+        checkExpType("cast(multiset['abc'] as integer multiset)", "INTEGER MULTISET");
     }
 
     public void testCastFails() {
         checkExpFails("cast('foo' as bar)",
             "(?s).*Unknown datatype name 'BAR'");
+        checkExpFails("cast(multiset[1] as integer)",
+            "(?s).*Cast function cannot convert value of type INTEGER MULTISET to type INTEGER");
     }
 
     public void testDateTime() {

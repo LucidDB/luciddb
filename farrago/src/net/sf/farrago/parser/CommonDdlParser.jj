@@ -476,7 +476,7 @@ CwmView ViewDefinition() :
     query = OrderedQueryOrExpr(EXPR_ACCEPT_QUERY)
         {
             defEnd = getEndPos();
-            
+
             // NOTE:  we accept ORDER BY on the view definition, even though
             // that's not standard SQL, and leave it up to the validator to
             // decide what to do with it
@@ -727,9 +727,8 @@ void TypedElement(FemAbstractTypedElement element) :
 }
 {
     dataType = DataType()
-    [
-        <MULTISET>
-        {
+    {
+        if (null != dataType.getCollectionsTypeName()) {
             FemSqlmultisetType colType = getRepos().newFemSqlmultisetType();
             colType.setName("MULTISET");
             FemSqltypeAttribute componentType =
@@ -738,14 +737,13 @@ void TypedElement(FemAbstractTypedElement element) :
             colType.getFeature().add(componentType);
             farragoParser.getDdlValidator().setSqlDefinition(
                 componentType,
-                dataType);
+                dataType.getComponentTypeSpec());
             FemSqltypedElement typedElement =
                 FarragoCatalogUtil.toFemSqltypedElement(element);
             typedElement.setType(colType);
             return;
         }
-    ]
-    {
+
         farragoParser.getDdlValidator().setSqlDefinition(
             element,
             dataType);
@@ -1120,7 +1118,7 @@ DdlStmt SystemParamAssignment() :
 SqlLiteral SystemParamValue() :
 {
     SqlLiteral paramValue;
-    SqlParserPos pos = null;  
+    SqlParserPos pos = null;
 }
 {
     (
@@ -1488,14 +1486,14 @@ void SqlFunctionBody(FemRoutine routine) :
         {
             defStart = getEndPos();
             farragoParser.getDdlValidator().setParserOffset(routine, defStart);
-            
+
             // TODO jvs 24-Dec-2004: eventually allow subqueries and
             // non-functional routine bodies.
         }
     expr = Expression(EXPR_ACCEPT_NONQUERY)
         {
             defEnd = getEndPos();
-        
+
             String bodyText = farragoParser.getSubstring(defStart, defEnd);
             CwmProcedureExpression procedureExpr =
             getRepos().newCwmProcedureExpression();
@@ -1944,7 +1942,7 @@ FemSqlobjectType ObjectTypeDefinition() :
          AttributeDefinition(typeDef)
          (<COMMA> AttributeDefinition(typeDef))* <RPAREN>
         {
-        }    
+        }
     {
         // NOTE jvs 13-Feb-2005:  for now, this is to trigger an error
         // in case they forget to specify FINAL

@@ -220,6 +220,13 @@ ExtDynamicVariableRegister(ExtendedInstructionTable* eit)
              (ExtendedInstruction2<char*, int32_t>*) NULL,
              &dynamicVariable);
 
+    vector<StandardTypeDescriptorOrdinal> params_varbinary;
+    params_varbinary.push_back(STANDARD_TYPE_VARBINARY);
+    params_varbinary.push_back(STANDARD_TYPE_INT_32);
+    eit->add("dynamicVariable", params_varbinary,
+             (ExtendedInstruction2<char*, int32_t>*) NULL,
+             &dynamicVariable);
+
 }
 
 

@@ -2016,6 +2016,7 @@ int IntLiteral() :
 SqlDataTypeSpec DataType() :
 {
     SqlIdentifier typeName;
+    SqlIdentifier collectionTypeName = null;
     int scale = 0;
     int precision = 0;
     String charSetName = null;
@@ -2039,10 +2040,26 @@ SqlDataTypeSpec DataType() :
             <CHARACTER> <SET>
             charSetName = Identifier()
         )?
+        (
+            collectionTypeName = CollectionsTypeName()
+        )?
     )
     {
+        if (null != collectionTypeName) {
+            return new SqlDataTypeSpec(
+                collectionTypeName,
+                typeName,
+                precision,
+                scale,
+                charSetName,
+                pos);
+        }
         return new SqlDataTypeSpec(
-            typeName, precision, scale, charSetName, pos);
+            typeName,
+            precision,
+            scale,
+            charSetName,
+            pos);
     }
 }
 
@@ -2076,8 +2093,7 @@ SqlIdentifier TypeName() :
     |   <REAL> { typeName = new SqlIdentifier(SqlTypeName.Real.name,pos); }
     |   <DOUBLE> [ <PRECISION> ] { typeName = new SqlIdentifier(SqlTypeName.Double.name,pos); }
     |   <FLOAT> { typeName = new SqlIdentifier(SqlTypeName.Float.name,pos); }
-    |   <MULTISET> { typeName = new SqlIdentifier(SqlTypeName.Multiset.name,pos); }
-
+    |   typeName = CollectionsTypeName()
     |   typeName = CompoundIdentifier()
 
     )
@@ -2086,6 +2102,17 @@ SqlIdentifier TypeName() :
     }
 }
 
+SqlIdentifier CollectionsTypeName() :
+{
+    SqlIdentifier typeName = null;
+    SqlParserPos pos = getPos();
+}
+{
+    <MULTISET> { typeName = new SqlIdentifier(SqlTypeName.Multiset.name,pos); }
+    {
+        return typeName;
+    }
+}
 
 /**
  * Parses a call to a builtin function with special syntax.
@@ -2110,6 +2137,7 @@ SqlNode BuiltinFunctionCall() :
                (
                      dt = DataType() { args.add(dt); }
                   |  <INTERVAL> e = IntervalQualifier() { args.add(e); }
+
                )
                <RPAREN>  {
                     return opTab.castFunc.createCall(

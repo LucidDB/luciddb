@@ -35,6 +35,7 @@ import org.eigenbase.relopt.RelOptRuleOperand;
 import org.eigenbase.rex.RexCall;
 import org.eigenbase.rex.RexDynamicParam;
 import org.eigenbase.rex.RexFieldAccess;
+import org.eigenbase.rex.RexMultisetUtil;
 
 
 /**
@@ -156,13 +157,13 @@ public class FarragoAutoCalcRule extends RelOptRule
         RelNode relInput = call.rels[1];
 
         for (int i = 0; i < calc.projectExprs.length; i++) {
-            if (FarragoMultisetSplitterRule.containsMultiset(
+            if (RexMultisetUtil.containsMultiset(
                 calc.projectExprs[i], true)) {
                 return; // Let FarragoMultisetSplitter work on it first.
             }
         }
         if (calc.conditionExpr != null) {
-            if (FarragoMultisetSplitterRule.containsMultiset(
+            if (RexMultisetUtil.containsMultiset(
                 calc.conditionExpr, true)) {
                 return; // Let FarragoMultisetSplitter work on it first.
             }

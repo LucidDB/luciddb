@@ -850,9 +850,21 @@ public class SqlToRelConverter
             return convertExpression(bb, call.operands[0]);
         }
         RexNode arg = convertExpression(bb, call.operands[0]);
-        return rexBuilder.makeCast(
-            dataType.getType(),
-            arg);
+        RelDataType type = dataType.getType();
+        if (null != dataType.getCollectionsTypeName()) {
+            if (arg.getType().getComponentType().isStruct() &&
+                !type.getComponentType().isStruct()) {
+                RelDataType tt;
+                tt = typeFactory.createStructType(
+                    new RelDataType[]{type.getComponentType()},
+                    new String[]{arg.getType().getComponentType().getFields()[0].getName()});
+                tt = typeFactory.createTypeWithNullability(tt, type.getComponentType().isNullable());
+                boolean isn = type.isNullable();
+                type = typeFactory.createMultisetType(tt, -1);
+                type = typeFactory.createTypeWithNullability(type, isn);
+            }
+        }
+        return rexBuilder.makeCast(type,arg);
     }
 
     private RexNode convertCase(
@@ -979,17 +991,14 @@ public class SqlToRelConverter
             return;
         case SqlKind.UnnestORDINAL:
             SqlCall call = (SqlCall) ((SqlCall) from).operands[0];
-            final RelNode childRel;
-            if (call.isA(SqlKind.MultisetValueConstructor)) {
-                final SqlNodeList list = SqlUtil.toNodeList(call.operands);
-                childRel =
-                    new CollectRel(cluster, convertQueryOrInList(bb,list),"multiset");
-            } else if (call.isA(SqlKind.MultisetQueryConstructor)) {
-                childRel = new CollectRel(
-                    cluster, convertValidatedQuery(call.operands[0]),"multiset");
-            } else {
-                childRel = convertValidatedQuery(call);
-            }
+            replaceSubqueries(bb, call);
+            RexNode[] exprs =new RexNode[]{convertExpression(bb,call)};
+            final RelNode childRel = new ProjectRel(
+                cluster,
+                null != bb.root  ? bb.root : new OneRowRel(cluster),
+                exprs,
+                new String[]{validator.deriveAlias(call, 0)},
+                ProjectRel.Flags.Boxed);
 
             UncollectRel uncollectRel = new UncollectRel(cluster, childRel);
             bb.setRoot(uncollectRel);
