@@ -37,10 +37,17 @@ class ThreadPoolBase : protected SynchMonitoredObject
 {
     friend class PooledThread;
     void runPooledThread();
-    
+
 protected:
+    enum State {
+        STATE_STARTED,
+        STATE_STOPPING,
+        STATE_STOPPED
+    };
+    
     std::vector<PooledThread *> threads;
-    bool bStop;
+    State state;
+    LocalCondition stoppingCondition;
     
     ThreadPoolBase();
     virtual ~ThreadPoolBase();
@@ -57,6 +64,8 @@ public:
     
     /**
      * Shut down the pool, waiting for any pending tasks to complete.
+     * The start/stop calls should never be called from more than one thread
+     * simultaneously.
      */
     void stop();
 };
@@ -112,8 +121,8 @@ public:
      */
     void submitTask(Task &task)
     {
-        assert(!bStop);
         StrictMutexGuard guard(mutex);
+        assert(state == STATE_STARTED);
         queue.push_back(task);
         condition.notify_one();
     }

@@ -45,19 +45,20 @@ public:
 
 ThreadPoolBase::ThreadPoolBase()
 {
-    bStop = true;
+    state = STATE_STOPPED;
 }
 
 ThreadPoolBase::~ThreadPoolBase()
 {
-    assert(bStop);
+    assert(state == STATE_STOPPED);
 }
 
 void ThreadPoolBase::start(uint nThreads)
 {
     StrictMutexGuard guard(mutex);
-    bStop = false;
+    assert(state == STATE_STOPPED);
     assert(nThreads > 0);
+    state = STATE_STARTED;
     for (uint i = 0; i < nThreads; ++i) {
         PooledThread *pThread = new PooledThread(*this);
         pThread->start();
@@ -68,29 +69,43 @@ void ThreadPoolBase::start(uint nThreads)
 void ThreadPoolBase::stop()
 {
     StrictMutexGuard guard(mutex);
-    if (bStop) {
+    assert(state != STATE_STOPPING);
+    if (state == STATE_STOPPED) {
         return;
     }
-    bStop = true;
+    state = STATE_STOPPING;
+
+    while (!isQueueEmpty()) {
+        stoppingCondition.wait(guard);
+    }
+
+    state = STATE_STOPPED;
     condition.notify_all();
     guard.unlock();
+    
     for (uint i = 0; i < threads.size(); ++i) {
         threads[i]->join();
+    }
+
+    guard.lock();
+    for (uint i = 0; i < threads.size(); ++i) {
         deleteAndNullify(threads[i]);
     }
+    threads.clear();
 }
 
 void ThreadPoolBase::runPooledThread()
 {
     StrictMutexGuard guard(mutex);
     for (;;) {
-        while (!bStop && isQueueEmpty()) {
+        while ((state != STATE_STOPPED) && isQueueEmpty()) {
             condition.wait(guard);
         }
-        if (bStop) {
+        if (state == STATE_STOPPED) {
             return;
         }
         runOneTask(guard);
+        stoppingCondition.notify_one();
     }
 }
 
