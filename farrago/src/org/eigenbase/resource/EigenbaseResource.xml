@@ -54,6 +54,10 @@
     <text>BETWEEN operator has no terminating AND; at line {0,number,#}, column {1,number,#}</text>
 </exception>
 
+<exception id="100050" name="IllegalIntervalLiteral">
+    <text>Illegal INTERVAL literal {0}; at {1}</text>
+</exception>
+
 
 <!-- ====================================================================== -->
 <!-- Eigenbase Validator resources 121,000 - 130,000 -->

@@ -77,11 +77,14 @@ public class SqlIntervalLiteral extends SqlLiteral
 
         public String toString() {
             StringBuffer ret = new StringBuffer();
-            ret.append(String.valueOf(values[0]));
-            if (intervalQualifier.isYearMonth() && 2==values.length) {
+            if (-1 == values[0]) {
+                ret.append('-');
+            }
+            ret.append(String.valueOf(values[1]));
+            if (intervalQualifier.isYearMonth() && 3==values.length) {
                 ret.append("-");
-                ret.append(String.valueOf(values[1]));
-            } else if (values.length > 1) {
+                ret.append(String.valueOf(values[2]));
+            } else if (values.length > 2) {
                 SqlIntervalQualifier.TimeUnit start =
                     intervalQualifier.getStartUnit();
                 SqlIntervalQualifier.TimeUnit end =
@@ -99,11 +102,11 @@ public class SqlIntervalLiteral extends SqlLiteral
                     end = start;
                 }
 
-                for (int i = 1; i < values.length; i++) {
+                for (int i = 2; i < values.length; i++) {
                     if (SqlIntervalQualifier.TimeUnit.Second.equals(end) &&
-                        ((end.ordinal-start.ordinal)<i)) {
+                        ((end.ordinal-start.ordinal)<(i-1))) {
                             ret.append(".");
-                    } else if (i >= 2) {
+                    } else if (i >= 3) {
                         ret.append(":");
                     }
                     ret.append(String.valueOf(values[i]));

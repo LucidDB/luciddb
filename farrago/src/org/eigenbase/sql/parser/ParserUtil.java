@@ -231,19 +231,42 @@ public final class ParserUtil
      * Parses a INTERVAL value.
      * @return an int array where each element in the array represents a time
      * unit in the input string.<br>
+     * NOTE: that the first element in the array indicates the sign of the value
      * E.g<br>
-     * <code>input string: '364 23:59:59.9999' INTERVAL DAY TO SECOND'</code><br>
+     * An input string of: <code>'364 23:59:59.9999' INTERVAL DAY TO SECOND'</code><br>
      * would make this method return<br>
-     * <code>int[] { 364, 23, 59, 59, 9999 }</code><br>
-     * NOTE: that the first element in the array can have a negative value
-     * @return null if any non digit character found except
-     * an optional minus '-' at the first character in the input string.
-     * @return null if the number of time units described in
-     * intervalQualifer doesn't match the parsed number of time units.
+     * <code>int[] {1, 364, 23, 59, 59, 9999 }</code><br>
+     * An negative interval value: <code>'-364 23:59:59.9999' INTERVAL DAY TO SECOND'</code><br>
+     * would make this method return<br>
+     * <code>int[] {-1, 364, 23, 59, 59, 9999 }</code><br>
+     * @return null if the interval value is illegal.
+     * Illegal values are:
+     * <ul>
+     *  <li>non digit character (except optional minus '-'
+     *                          at the first character in the input string.)
+     *  </li>
+     *  <li>the number of time units described in
+     *      intervalQualifer doesn't match the parsed number of time units.
+     *  </li>
+     * </ul>
      */
     public static int[] parseIntervalValue(String value,
         SqlIntervalQualifier intervalQualifier) {
         value = value.trim();
+        if (Util.isNullOrEmpty(value)) {
+            return null;
+        }
+
+        int sign = 1;
+        if ('-' == value.charAt(0)) {
+            sign = -1;
+            if (value.length()==1) {
+                // handles the case when we have a single input value of '-'
+                return null;
+            }
+            value = value.substring(1);
+        }
+
         try {
             if (intervalQualifier.isYearMonth()) {
                 //~------ YEAR-MONTH INTERVAL
@@ -251,40 +274,40 @@ public final class ParserUtil
                 int months = 0;
                 String[] valArray = value.split("-");
                 if (2 == valArray.length) {
-                    years = Integer.parseInt(valArray[0]);
+                    years = parsePositiveInt(valArray[0]);
                     months = parsePositiveInt(valArray[1]);
-                    return new int[] { years, months };
+                    return new int[] { sign, years, months };
                 } else if (1 == valArray.length) {
-                    return new int[] { parsePositiveInt(valArray[0]) };
+                    return new int[] { sign, parsePositiveInt(valArray[0]) };
                 }
                 return null;
             } else {
                 //~------ DAY-TIME INTERVAL
-                String[] dayPs = {
-                    "(-?\\d) (\\d+):(\\d+):(\\d+)\\.(\\d+)"  //same trice
-                    ,"(-?\\d) (\\d+):(\\d+):(\\d+)\\.(\\d+)" //same trice
-                    ,"(-?\\d) (\\d+):(\\d+):(\\d+)\\.(\\d+)" //same trice
-                    ,"(-?\\d+)"
-                    ,"(-?\\d+) (\\d+)"
-                    ,"(-?\\d+) (\\d+):(\\d+)"
-                    ,"(-?\\d+) (\\d+):(\\d+):(\\d+)"
+                String[] withDayPattern = {
+                    "(\\d) (\\d+):(\\d+):(\\d+)\\.(\\d+)"  //same trice
+                    ,"(\\d) (\\d+):(\\d+):(\\d+)\\.(\\d+)" //same trice
+                    ,"(\\d) (\\d+):(\\d+):(\\d+)\\.(\\d+)" //same trice
+                    ,"(\\d+)"
+                    ,"(\\d+) (\\d+)"
+                    ,"(\\d+) (\\d+):(\\d+)"
+                    ,"(\\d+) (\\d+):(\\d+):(\\d+)"
                 };
 
-                String[] nonDayPs = {
-                    "(-?\\d+):(\\d+):(\\d+)\\.(\\d+)"
-                    ,"(-?\\d+):(\\d+)\\.(\\d+)"
-                    ,"(-?\\d+)\\.(\\d+)"
-                    ,"(-?\\d+)"
-                    ,"(-?\\d+):(\\d+)"
-                    ,"(-?\\d+):(\\d+):(\\d+)"
+                String[] withoutDayPattern = {
+                    "(\\d+):(\\d+):(\\d+)\\.(\\d+)"
+                    ,"(\\d+):(\\d+)\\.(\\d+)"
+                    ,"(\\d+)\\.(\\d+)"
+                    ,"(\\d+)"
+                    ,"(\\d+):(\\d+)"
+                    ,"(\\d+):(\\d+):(\\d+)"
                 };
 
                 String[] ps;
                 if (SqlIntervalQualifier.TimeUnit.Day.equals(
                     intervalQualifier.getStartUnit())) {
-                    ps = dayPs;
+                    ps = withDayPattern;
                 } else {
-                    ps = nonDayPs;
+                    ps = withoutDayPattern;
                 }
                 
                 for (int iPattern = 0; iPattern < ps.length; iPattern++) {
@@ -292,9 +315,10 @@ public final class ParserUtil
                     Matcher m = Pattern.compile(p).matcher(value);
                     if (m.matches()) {
                         int timeUnitsCount = m.groupCount();
-                        int[] ret = new int[timeUnitsCount];
+                        int[] ret = new int[timeUnitsCount+1];
+                        ret[0] = sign;
                         for (int iGroup = 1; iGroup <= m.groupCount(); iGroup++) {
-                            ret[iGroup-1] = Integer.parseInt(m.group(iGroup));
+                            ret[iGroup] = Integer.parseInt(m.group(iGroup));
                         }
 
                         if (iPattern < 3) {

@@ -1494,11 +1494,16 @@ public class SqlParserTest extends TestCase
     public void testIntervalQualifier() {
         checkExpFails("interval '1'","(?s).*");
         checkExp("interval '1' year","INTERVAL '1' YEAR");
+        checkExp("interval '-1' year","INTERVAL '-1' YEAR");
+        checkExp("interval -'0' year","INTERVAL '-0' YEAR");
         checkExp("interval '100' year(4)","INTERVAL '100' YEAR(4)");
         checkExp("interval '1' month","INTERVAL '1' MONTH");
+        checkExp("interval -'0' month","INTERVAL '-0' MONTH");
         checkExp("interval '21' month(3)","INTERVAL '21' MONTH(3)");
         checkExp("interval '11-22' year to month","INTERVAL '11-22' YEAR TO MONTH");
         checkExp("interval '1-2' year(4) to month","INTERVAL '1-2' YEAR(4) TO MONTH");
+        checkExp("interval '-1-2' year(4) to month","INTERVAL '-1-2' YEAR(4) TO MONTH");
+        checkExp("interval -'1-2' year(4) to month","INTERVAL '-1-2' YEAR(4) TO MONTH");
         checkExpFails("interval '1-2' month to year","(?s).*");
         checkExpFails("interval '1-2' year to day","(?s).*");
         checkExpFails("interval '1-2' year to month(3)","(?s).*");
@@ -1529,9 +1534,13 @@ public class SqlParserTest extends TestCase
         checkExp("interval '1' second(2,3)","INTERVAL '1' SECOND(2, 3)");
         checkExp("interval '1.2' second","INTERVAL '1.2' SECOND");
         checkExp("interval '-1.234' second","INTERVAL '-1.234' SECOND");
+        checkExp("interval '-0.234' second","INTERVAL '-0.234' SECOND");
+        checkExp("interval -'-0.234' second","INTERVAL '0.234' SECOND");
+        checkExp("interval -'-1.234' second","INTERVAL '1.234' SECOND");
 
         checkExp("interval '1 2:3:4.567' day to second","INTERVAL '1 2:3:4.567' DAY TO SECOND");
 
+        checkExpFails("interval '-' day","(?s).*");
         checkExpFails("interval '1 2:3:4.567' day to hour to second","(?s).*");
         checkExpFails("interval '1:2' minute to second(2, 2)","(?s).*");
     }

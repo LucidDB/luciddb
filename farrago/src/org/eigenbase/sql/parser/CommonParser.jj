@@ -155,11 +155,11 @@ JAVACODE SqlIntervalLiteral parseIntervalLiteral(
     int[] values = ParserUtil.parseIntervalValue(intervalStr, intervalQualifier);
     if (null==values) {
         EigenbaseResource res = EigenbaseResource.instance();
-        String msg = res.getIllegalLiteral("INTERVAL", s, pos.toString(),
-                         res.getBadFormat("'YEAR-MONTH' or 'DAYS HOURS:MINUTES:SECONDS.SECFRACTIONS'"));
+        String msg = res.getIllegalIntervalLiteral(
+            s+" "+intervalQualifier.toString(), pos.toString());
         throw new ParseException(msg);
     }
-    values[0] = sign * values[0];
+    values[0] = sign * values[0]; // first item in array is sign
     return SqlLiteral.createInterval(values, intervalQualifier, pos);
 }
 

@@ -684,6 +684,13 @@ public class Util extends Toolbox
     }
 
     /**
+     * @return true if s==null or if s.length()==0
+     */
+    public static boolean isNullOrEmpty(String s) {
+        return (null==s) || (s.length()==0);
+    }
+
+    /**
      * Returns the connect string with which to connect to the 'Sales'
      * test database. In the process, it loads the necessary drivers.
      */
