@@ -26,8 +26,6 @@ import java.util.*;
 
 import junit.framework.*;
 
-import net.sf.farrago.util.FarragoProperties;
-
 import org.eigenbase.util.*;
 
 
@@ -96,11 +94,11 @@ public abstract class DiffTestCase extends TestCase
     /**
      * Initialize a diff-based test.  Any existing .log and .dif files
      * corresponding to this test case are deleted, and a new, empty .log
-     * file is created.  The log file location will be in the same
-     * directory as the .java file defining the test case, where the
-     * path prefix is based on the result of method getSourceRoot().
-     * See method shouldIncludeClassInLogFileName() for the naming
-     * convention of the log file within its directory.
+     * file is created.  The default log file location is a subdirectory
+     * under the result getTestlogRoot(), where the subdirectory
+     * name is based on the unqualified name of the test class.
+     * The generated log file name will be testMethodName.log,
+     * and the expected reference file will be testMethodName.ref.
      *
      * @return Writer for log file, which caller should use as a destination
      *         for test output to be diffed
@@ -108,71 +106,21 @@ public abstract class DiffTestCase extends TestCase
     protected Writer openTestLog()
         throws Exception
     {
-        File testLogDir = getTestlogRoot();
-
-        // walk down the package tree
-        String className = getClass().getName();
-        for (;;) {
-            int iDot = className.indexOf('.');
-            if (iDot == -1) {
-                break;
-            }
-            testLogDir = new File(
-                    testLogDir,
-                    className.substring(0, iDot));
-            assert (testLogDir.exists());
-            className = className.substring(iDot + 1);
-        }
-
-        File testLogFile;
-        if (shouldIncludeClassInLogFileName()) {
-            testLogFile = new File(testLogDir, className + "." + getName());
-        } else {
-            testLogFile = new File(
-                    testLogDir,
-                    getName());
-        }
-
+        File testClassDir =
+            new File(
+                getTestlogRoot(),
+                ReflectUtil.getUnqualifiedClassName(getClass()));
+        testClassDir.mkdirs();
+        File testLogFile = new File(testClassDir,
+                getName());
         return new OutputStreamWriter(openTestLogOutputStream(testLogFile));
-    }
-
-    /**
-     * Get the root of the Java source tree.  The default is to use
-     * ${net.sf.farrago.home}/src, but subclasses may override.
-     *
-     * @return src root as File
-     */
-    protected File getSourceRoot()
-        throws Exception
-    {
-        return new File(
-            FarragoProperties.instance().homeDir.get(),
-            "src");
     }
 
     /**
      * @return the root under which testlogs should be written
      */
-    protected File getTestlogRoot()
-        throws Exception
-    {
-        return getSourceRoot();
-    }
-
-    /**
-     * Control log file base naming convention.  If this returns true
-     * (the default), the base log filename will be
-     * TestClassName.testCaseName.log.  This is overkill when an entire
-     * subdirectory is devoted to a single test class; in that case,
-     * the subclass should override this method to return false,
-     * and the base log filename will be testCaseName.log.
-     *
-     * @return true if the class name should be included in the log filename
-     */
-    protected boolean shouldIncludeClassInLogFileName()
-    {
-        return true;
-    }
+    protected abstract File getTestlogRoot()
+        throws Exception;
 
     /**
      * Initialize a diff-based test, overriding the default

@@ -65,6 +65,18 @@ public class FarragoProperties extends Properties
         new StringProperty(this, "net.sf.farrago.catalog", null);
 
     /**
+     * The optional string property
+     * "net.sf.farrago.defaultSessionFactoryLibraryName" is the name
+     * of the plugin library to use for the default session factory.
+     * Defaults to {@link net.sf.farrago.defimpl.FarragoDefaultSessionFactory}.
+     */
+    public final StringProperty defaultSessionFactoryLibraryName =
+        new StringProperty(
+            this,
+            "net.sf.farrago.defaultSessionFactoryLibraryName",
+            "class net.sf.farrago.defimpl.FarragoDefaultSessionFactory");
+
+    /**
      * The string property "net.sf.farrago.test.jdbcDriverClass" specifies the
      * fully qualified name of the JDBC driver to use during testing.  If not
      * specified, {@link net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver} is

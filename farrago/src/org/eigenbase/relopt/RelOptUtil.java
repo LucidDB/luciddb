@@ -487,6 +487,23 @@ public abstract class RelOptUtil
         return true;
     }
 
+    public static void registerAbstractRels(RelOptPlanner planner)
+    {
+        AggregateRel.register(planner);
+        DistinctRel.register(planner);
+        FilterRel.register(planner);
+        JoinRel.register(planner);
+        OneRowRel.register(planner);
+        ProjectRel.register(planner);
+        TableAccessRel.register(planner);
+        UnionRel.register(planner);
+        CalcRel.register(planner);
+        planner.addRule(FilterToCalcRule.instance);
+        planner.addRule(ProjectToCalcRule.instance);
+        planner.addRule(MergeFilterOntoCalcRule.instance);
+        planner.addRule(MergeProjectOntoCalcRule.instance);
+    }
+
     //~ Inner Classes ---------------------------------------------------------
 
     private static class RelHolder extends AbstractRelNode

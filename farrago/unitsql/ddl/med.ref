@@ -163,14 +163,15 @@ Error: Table 'MOF_SCHEMA.FOREIGN_EXCEPTION_NAMES' not found near: line 1, column
 +-----------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select "name" from sys_fem.med."DataServer" order by 1;
-+---------------+
-|     name      |
-+---------------+
-| HSQLDB_DEMO   |
-| SYS_CWM       |
-| SYS_FEM       |
-| SYS_ROWSTORE  |
-+---------------+
++-----------------------+
+|         name          |
++-----------------------+
+| HSQLDB_DEMO           |
+| SYS_CWM               |
+| SYS_FEM               |
+| SYS_FTRS_DATA_SERVER  |
+| SYS_MOCK_DATA_SERVER  |
++-----------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test JDBC wrapper

@@ -20,9 +20,6 @@
 package net.sf.farrago.query;
 
 
-// FIXME jvs 29-Aug-2004
-import com.disruptivetech.farrago.volcano.*;
-
 import java.io.*;
 import java.sql.*;
 import java.util.*;
@@ -119,7 +116,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     private Argument [] implementingArgs;
     private boolean processingDirectDependencies;
     private Set loadedServerClassNameSet;
-    private FarragoPlanner planner;
+    private RelOptPlanner planner;
     private FarragoRelImplementor relImplementor;
 
     //~ Constructors ----------------------------------------------------------
@@ -155,8 +152,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
 
         RelDataTypeFactoryImpl.setThreadInstance(getFarragoTypeFactory());
         ClassMap.setInstance(new ClassMap(FarragoSyntheticObject.class));
-        planner = new FarragoPlanner(this);
-        planner.init();
+        planner = getSession().newPlanner(this,true);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -167,7 +163,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         return stmtValidator;
     }
 
-    public void setPlanner(FarragoPlanner planner)
+    public void setPlanner(RelOptPlanner planner)
     {
         this.planner = planner;
     }
@@ -457,7 +453,8 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         return sqlToRelConverter;
     }
 
-    protected JavaRelImplementor getRelImplementor(RexBuilder rexBuilder)
+    // implement FarragoSessionPreparingStmt
+    public JavaRelImplementor getRelImplementor(RexBuilder rexBuilder)
     {
         if (relImplementor == null) {
             relImplementor = new FarragoRelImplementor(this, rexBuilder);
@@ -646,7 +643,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     // implement RelOptSchema
     public void registerRules(RelOptPlanner planner)
     {
-        // nothing to do; FarragoPlanner does it for us
+        // nothing to do
     }
 
     // implement SqlValidator.CatalogReader

@@ -27,6 +27,8 @@ import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql2rel.*;
+import org.eigenbase.rex.*;
+import org.eigenbase.oj.rel.*;
 
 
 /**
@@ -155,6 +157,15 @@ public interface FarragoSessionPreparingStmt extends FarragoAllocation
      * @return session which invoked statement preparation
      */
     public FarragoSession getSession();
+
+    /**
+     * Obtains an implementor for relational expressions.
+     *
+     * @param rexBuilder RexBuilder to use for constructing row expressions
+     *
+     * @return new expression implementor
+     */
+    public JavaRelImplementor getRelImplementor(RexBuilder rexBuilder);
 }
 
 

@@ -140,7 +140,7 @@ public abstract class FarragoPluginCache extends FarragoCompoundAllocation
      *
      * @return loaded class
      */
-    protected Class loadPluginClass(
+    public static Class loadPluginClass(
         String libraryName,
         String jarAttributeName)
     {

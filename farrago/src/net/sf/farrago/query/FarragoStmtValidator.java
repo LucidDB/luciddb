@@ -276,8 +276,8 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
     // implement FarragoSessionStmtValidator
     public FemDataServer getDefaultLocalDataServer()
     {
-        // TODO:  make this configurable
-        return findDataServer(new SqlIdentifier("SYS_ROWSTORE", null));
+        String dataServerName = session.getDefaultLocalDataServerName();
+        return findDataServer(new SqlIdentifier(dataServerName, null));
     }
 
     // implement FarragoSessionStmtValidator

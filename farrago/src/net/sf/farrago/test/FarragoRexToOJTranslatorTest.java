@@ -200,11 +200,11 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
         // carefully constructed expressions.  This also guarantees
         // that the Java calculator is used without having to
         // mess with system parameters.
-        FarragoPlanner planner = new FarragoPlanner(stmt);
+        RelOptPlanner planner = stmt.getSession().newPlanner(stmt,false);
         planner.addCallingConvention(CallingConvention.NONE);
         planner.addCallingConvention(CallingConvention.ITERATOR);
         planner.addCallingConvention(FennelPullRel.FENNEL_PULL_CONVENTION);
-        planner.registerAbstractRels();
+        RelOptUtil.registerAbstractRels(planner);
         planner.addRule(new AbstractConverter.ExpandConversionRule());
         planner.addRule(IterRules.IterCalcRule.instance);
         FennelToIteratorConverter.register(planner);

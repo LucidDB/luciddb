@@ -40,7 +40,7 @@ import org.eigenbase.rel.*;
 import org.eigenbase.rel.convert.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
-import org.eigenbase.util.Util;
+import org.eigenbase.util.*;
 
 
 /**
@@ -341,7 +341,7 @@ public class IteratorToFennelConverter extends ConverterRel
      * @param farragoPreparingStmt Context for the preparation process
      */
     public static void register(
-        FarragoPlanner planner,
+        RelOptPlanner planner,
         final FarragoPreparingStmt farragoPreparingStmt)
     {
         planner.addRule(

@@ -29,6 +29,7 @@ import net.sf.farrago.FarragoPackage;
 import net.sf.farrago.catalog.FarragoModelLoader;
 import net.sf.farrago.util.*;
 
+import org.eigenbase.util.*;
 
 /**
  * ProxyGen generates read-only C++ JNI proxies for MDR-generated Java

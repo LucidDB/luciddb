@@ -42,7 +42,7 @@ import org.eigenbase.rel.*;
 import org.eigenbase.rel.convert.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
-import org.eigenbase.util.Util;
+import org.eigenbase.util.*;
 
 
 /**
@@ -370,7 +370,7 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
      * per {@link AbstractRelNode#register}.
      * @param planner Planner
      */
-    public static void register(FarragoPlanner planner)
+    public static void register(RelOptPlanner planner)
     {
         planner.addRule(
             new ConverterRule(RelNode.class,

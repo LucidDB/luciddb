@@ -107,21 +107,24 @@ public abstract class FarragoTestCase extends DiffTestCase
     //~ Methods ---------------------------------------------------------------
 
     // override DiffTestCase
-    protected File getSourceRoot()
-        throws Exception
-    {
-        String homeDir = FarragoProperties.instance().homeDir.get(true);
-        return new File(homeDir, "src");
-    }
-
-    // override DiffTestCase
     protected File getTestlogRoot()
         throws Exception
+    {
+        return getTestlogRootStatic();
+    }
+
+    /**
+     * Implementation for { @link DiffTestCase#getTestlogRoot } which
+     * uses 'testlog' directory under Farrago home.
+     *
+     * @return the root under which testlogs should be written
+     */
+    public static File getTestlogRootStatic()
     {
         String homeDir = FarragoProperties.instance().homeDir.get(true);
         return new File(homeDir, "testlog");
     }
-
+    
     /**
      * One-time setup routine.
      *
@@ -450,20 +453,6 @@ public abstract class FarragoTestCase extends DiffTestCase
             System.setErr(savedErr);
             inputStream.close();
         }
-    }
-
-    // override DiffTestCase
-    protected Writer openTestLog()
-        throws Exception
-    {
-        File testClassDir =
-            new File(
-                getTestlogRoot(),
-                ReflectUtil.getUnqualifiedClassName(getClass()));
-        testClassDir.mkdirs();
-        File testLogFile = new File(testClassDir,
-                getName());
-        return new OutputStreamWriter(openTestLogOutputStream(testLogFile));
     }
 
     protected boolean shouldDiff()

@@ -87,4 +87,3 @@ if $fennel_disabled ; then
 else
     ant test
 fi
-

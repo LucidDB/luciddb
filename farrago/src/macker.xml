@@ -6,6 +6,11 @@
 <macker>
   <ruleset name="Layering rules">
     <!-- libraries -->
+
+    <pattern name="eigenbase">
+      <include class="org.eigenbase.****" />
+    </pattern>
+
     <pattern name="farrago">
       <include class="net.sf.farrago.****" />
       <include class="com.disruptivetech.farrago.****" />
@@ -49,12 +54,15 @@
     <pattern name="namespace.mock" class="net.sf.farrago.namespace.mock.*" />
     <pattern name="namespace.jdbc" class="net.sf.farrago.namespace.jdbc.*" />
     <pattern name="namespace.ftrs" class="net.sf.farrago.namespace.ftrs.*" />
-    <pattern name="test" class="net.sf.farrago.test.*" />
-    <pattern name="test.regression" class="net.sf.farrago.test.regression.*" />
 
     <pattern name="dt.calc" class="com.disruptivetech.farrago.calc.*" />
     <pattern name="dt.volcano" class="com.disruptivetech.farrago.volcano.*" />
     <pattern name="dt.rel" class="com.disruptivetech.farrago.rel.*" />
+
+    <pattern name="defimpl" class="net.sf.farrago.defimpl.*" />
+
+    <pattern name="test" class="net.sf.farrago.test.**" />
+
     <pattern name="dt.test" class="com.disruptivetech.farrago.test.*" />
 
     <!-- explicit list of all farrago components above -->
@@ -90,11 +98,11 @@
       <include pattern="namespace.mock"/>
       <include pattern="namespace.jdbc"/>
       <include pattern="namespace.ftrs"/>
-      <include pattern="test"/>
-      <include pattern="test.regression"/>
       <include pattern="dt.calc"/>
       <include pattern="dt.volcano"/>
       <include pattern="dt.rel"/>
+      <include pattern="defimpl"/>
+      <include pattern="test"/>
       <include pattern="dt.test"/>
     </pattern>
 
@@ -361,9 +369,6 @@
     <pattern name="query.deps">
       <include pattern="dynamic.deps" />
       <include pattern="ojrex.deps" />
-      <!-- FIXME 25-Aug-2004:  eliminate dt.* via session plugins  -->
-      <include pattern="dt.rel" />
-      <include pattern="dt.volcano" />
       <include pattern="query" />
     </pattern>
 
@@ -570,23 +575,6 @@
       </deny>
     </access-rule>
 
-    <pattern name="test.deps">
-      <include pattern="server.deps" />
-      <include pattern="jdbc.client.deps" />
-      <include pattern="test" />
-    </pattern>
-
-    <access-rule>
-      <message>test dependency violation</message>
-      <deny>
-        <from pattern="test" />
-        <to pattern="farrago" />
-        <allow>
-          <to pattern="test.deps" />
-        </allow>
-      </deny>
-    </access-rule>
-
     <pattern name="dt.calc.deps">
       <include pattern="resource.deps" />
       <include pattern="dt.calc" />
@@ -636,12 +624,50 @@
       </deny>
     </access-rule>
 
+    <pattern name="defimpl.deps">
+      <include pattern="db.deps" />
+      <include pattern="dt.calc.deps" />
+      <include pattern="dt.volcano.deps" />
+      <include pattern="dt.rel.deps" />
+      <include pattern="defimpl" />
+    </pattern>
+
+    <access-rule>
+      <message>defimpl dependency violation</message>
+      <deny>
+        <from pattern="defimpl" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="defimpl.deps" />
+        </allow>
+      </deny>
+    </access-rule>
+
+    <pattern name="test.deps">
+      <include pattern="server.deps" />
+      <include pattern="jdbc.client.deps" />
+      <include pattern="defimpl.deps" />
+      <include pattern="test" />
+    </pattern>
+
+    <access-rule>
+      <message>test dependency violation</message>
+      <deny>
+        <from pattern="test" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="test.deps" />
+        </allow>
+      </deny>
+    </access-rule>
+
     <pattern name="dt.test.deps">
       <include pattern="test.deps" />
+      <include pattern="dt.calc.deps" />
+      <include pattern="dt.volcano.deps" />
+      <include pattern="dt.rel.deps" />
       <include pattern="dt.test" />
-      <include pattern="dt.calc" />
-      <include pattern="dt.volcano" />
-      <include pattern="dt.rel" />
+      <include pattern="defimpl.deps" />
     </pattern>
 
     <access-rule>
@@ -663,6 +689,19 @@
           <exclude pattern="farrago.explicit"/>
         </from>
         <to pattern="farrago" />
+      </deny>
+    </access-rule>
+
+    <!-- org.eigenbase must be standalone -->
+    <access-rule>
+      <message>org.eigenbase dependency violation</message>
+      <deny>
+        <from pattern="eigenbase"/>
+        <to pattern="farrago">
+          <!-- TODO jvs 21-Sept-2004:  eliminate these exceptions -->
+          <exclude pattern="dt.volcano"/>
+          <exclude pattern="util"/>
+        </to>
       </deny>
     </access-rule>
 

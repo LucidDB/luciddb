@@ -177,7 +177,7 @@ expression described above into an equivalent expression consisting
 only of operators for which physical implementations are available.
 For an overview of the process, see {@link com.disruptivetech.farrago.volcano the
 Volcano optimizer docs}.  To tailor the optimization process for our
-requirements, {@link net.sf.farrago.query.FarragoPlanner} subclasses
+requirements, {@link net.sf.farrago.defimpl.FarragoDefaultPlanner} subclasses
 {@link com.disruptivetech.farrago.volcano.VolcanoPlanner} to define Farrago-specific
 rules, relational expressions, and calling conventions.
 
@@ -233,7 +233,7 @@ which corresponds to the following relational expression tree:
 Wow, what happened?  The optimizer found that the table's clustered
 index could satisfy the WHERE clause, and accordingly transformed the
 query using a {@link net.sf.farrago.query.FtrsIndexSearchRel} for
-the table access.  (It knew how to do this because FarragoPlanner told
+the table access.  (It knew how to do this because FarragoDefaultPlanner told
 it about {@link net.sf.farrago.query.FtrsScanToSearchRule}.)  What's
 interesting is that this search is sandwiched between Java iterators.
 The lowest level ({@link org.eigenbase.oj.rel.IterOneRowRel})

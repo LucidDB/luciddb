@@ -34,7 +34,7 @@ import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
-import net.sf.farrago.db.FarragoDbSession;
+import net.sf.farrago.defimpl.FarragoDefaultSession;
 import net.sf.farrago.db.FarragoDbSessionFactory;
 import net.sf.farrago.jdbc.engine.FarragoJdbcEngineConnection;
 import net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver;
@@ -83,7 +83,7 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Creates a new FarragoRexToOJTranslatorTest object.
+     * Creates a new FarragoAutoCalcRuleTest object.
      *
      * @param testName .
      */
@@ -361,10 +361,11 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
     }
 
     /**
-     * TestDbSessionFactory extends FarragoDbSessionFactory and
+     * TestDbSessionFactory extends FarragoDefaultSessionFactory and
      * returns a custom TestDbSession instance.
      */
-    private static class TestDbSessionFactory extends FarragoDbSessionFactory
+    private static class TestDbSessionFactory
+        extends FarragoDbSessionFactory
     {
         private OJRexImplementorTable ojRexImplementor;
 
@@ -382,11 +383,11 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
     }
 
     /**
-     * TestDbSession extends FarragoDbSession to provide our custom
+     * TestDbSession extends FarragoDefaultSession to provide our custom
      * OJRexImplementor table in place of Farrago's normal
      * implementation.
      */
-    private static class TestDbSession extends FarragoDbSession
+    private static class TestDbSession extends FarragoDefaultSession
     {
         private OJRexImplementorTable ojRexImplementor;
 

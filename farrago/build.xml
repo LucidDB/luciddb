@@ -778,20 +778,11 @@ require version '${required.ant.version}'."/>
   <target name="populateTestData" depends="populateCatalog,populateTestSchema"/>
 
   <!-- determine list of all SQL scripts to run during catalog init -->
-  <target name="determineInitSql" 
-    depends="initSqlWithFennel,initSqlWithoutFennel">
-    <pathconvert property="filelist.initsql" refid="filelist.initsql"
-      pathsep="${line.separator}" dirsep="${file.separator}" />
-  </target>
-
-  <target name="initSqlWithFennel" unless="fennel.disabled.istrue">
+  <target name="determineInitSql" >
     <filelist dir="${initsql.dir}" id="filelist.initsql"
       files="createStorageWrappers.sql,createJdbcViews.sql,createSalesSchema.sql"/>
-  </target>
-
-  <target name="initSqlWithoutFennel" if="fennel.disabled.istrue">
-    <filelist dir="${initsql.dir}" id="filelist.initsql"
-      files="createStorageWrappers.sql,disableFennelStorage.sql,createJdbcViews.sql,createSalesSchema.sql"/>
+    <pathconvert property="filelist.initsql" refid="filelist.initsql"
+      pathsep="${line.separator}" dirsep="${file.separator}" />
   </target>
 
   <target name="populateTestSchema" depends="determineInitSql">
@@ -1023,6 +1014,7 @@ require version '${required.ant.version}'."/>
     <antcall target="createCatalog"/>
     <antcall target="junit"/>
     <antcall target="regressionWithoutBuild"/>
+    <antcall target="macker"/>
   </target>
 
   <!-- run all regression test cases -->

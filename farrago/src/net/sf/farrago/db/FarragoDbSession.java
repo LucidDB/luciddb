@@ -40,6 +40,7 @@ import net.sf.farrago.util.*;
 import org.eigenbase.oj.rex.*;
 import org.eigenbase.oj.stmt.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.relopt.*;
 import org.eigenbase.util.*;
 
 
@@ -176,6 +177,16 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     }
 
     // implement FarragoSession
+    public String getDefaultLocalDataServerName()
+    {
+        if (repos.isFennelEnabled()) {
+            return "SYS_FTRS_DATA_SERVER";
+        } else {
+            return "SYS_MOCK_DATA_SERVER";
+        }
+    }
+    
+    // implement FarragoSession
     public SqlOperatorTable getSqlOperatorTable()
     {
         return SqlOperatorTable.instance();
@@ -226,6 +237,14 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         return new DdlValidator(stmtValidator);
     }
 
+    // implement FarragoSession
+    public RelOptPlanner newPlanner(
+        FarragoSessionPreparingStmt stmt,
+        boolean init)
+    {
+        throw new AssertionError("no default implementation available");
+    }
+    
     // implement FarragoSession
     public FarragoSession cloneSession()
     {

@@ -28,6 +28,7 @@ import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
+import net.sf.farrago.plugin.*;
 
 
 /**
@@ -96,7 +97,16 @@ public class FarragoJdbcEngineDriver extends FarragoAbstractJdbcDriver
     // implement FarragoJdbcServerDriver
     public FarragoSessionFactory newSessionFactory()
     {
-        return new FarragoDbSessionFactory();
+        String libraryName = 
+            FarragoProperties.instance().defaultSessionFactoryLibraryName.get();
+        try {
+            Class c = FarragoPluginCache.loadPluginClass(
+                libraryName,"SessionFactoryClassName");
+            return (FarragoSessionFactory) c.newInstance();
+        } catch (Throwable ex) {
+            throw FarragoResource.instance().newPluginInitFailed(
+                libraryName,ex);
+        }
     }
 
     /**

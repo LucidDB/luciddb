@@ -35,7 +35,7 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class FennelCartesianJoinRule extends RelOptRule
+public class FennelCartesianJoinRule extends RelOptRule
 {
     //~ Constructors ----------------------------------------------------------
 

@@ -17,16 +17,15 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-package net.sf.farrago.query;
+package net.sf.farrago.defimpl;
 
 import com.disruptivetech.farrago.rel.*;
 
-// FIXME jvs 25-Aug-2004:  This is just a temporary circular dependency
-// until the required session plugin infrastructure is available.
 import com.disruptivetech.farrago.volcano.*;
 
-import net.sf.farrago.fem.config.CalcVirtualMachine;
-import net.sf.farrago.fem.config.CalcVirtualMachineEnum;
+import net.sf.farrago.query.*;
+import net.sf.farrago.session.*;
+import net.sf.farrago.fem.config.*;
 
 import org.eigenbase.oj.*;
 import org.eigenbase.oj.rel.*;
@@ -37,13 +36,13 @@ import org.eigenbase.util.*;
 
 
 /**
- * FarragoPlanner extends {@link VolcanoPlanner} to request Farrago-specific
- * optimizations.
+ * FarragoDefaultPlanner extends {@link VolcanoPlanner} to request
+ * Farrago-specific optimizations.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoPlanner extends VolcanoPlanner
+public class FarragoDefaultPlanner extends VolcanoPlanner
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -52,13 +51,13 @@ public class FarragoPlanner extends VolcanoPlanner
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Creates a new FarragoPlanner object.
+     * Creates a new FarragoDefaultPlanner object.
      *
      * @param stmt statement on whose behalf this planner operates
      */
-    public FarragoPlanner(FarragoPreparingStmt stmt)
+    protected FarragoDefaultPlanner(FarragoSessionPreparingStmt stmt)
     {
-        this.stmt = stmt;
+        this.stmt = (FarragoPreparingStmt) stmt;
 
         // Yon Cassius has a lean and hungry look.
         ambitious = true;
@@ -67,7 +66,7 @@ public class FarragoPlanner extends VolcanoPlanner
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * Initialize Farrago-specific rules for this planner.
+     * Initializes Farrago-specific rules for this planner.
      */
     public void init()
     {
@@ -85,7 +84,7 @@ public class FarragoPlanner extends VolcanoPlanner
         // NOTE: don't call IterConverterRel.init and friends; their presence
         // just confuses the optimizer, and we explicitly supply all the
         // conversion rules we need
-        registerAbstractRels();
+        RelOptUtil.registerAbstractRels(this);
 
         addRule(new AbstractConverter.ExpandConversionRule());
         addRule(new RemoveDistinctRule());
@@ -136,14 +135,10 @@ public class FarragoPlanner extends VolcanoPlanner
 
         if (fennelEnabled) {
             FennelToIteratorConverter.register(this);
-            IteratorToFennelConverter.register(this, this.stmt);
+            IteratorToFennelConverter.register(this,stmt);
         }
     }
 
-    /**
-     * @return the FarragoPreparingStmt on whose behalf planning
-     * is being performed
-     */
     public FarragoPreparingStmt getPreparingStmt()
     {
         return stmt;
@@ -157,4 +152,4 @@ public class FarragoPlanner extends VolcanoPlanner
 }
 
 
-// End FarragoPlanner.java
+// End FarragoDefaultPlanner.java

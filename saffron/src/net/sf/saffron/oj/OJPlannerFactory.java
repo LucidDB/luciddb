@@ -174,7 +174,7 @@ public class OJPlannerFactory
           addRule(new In.InSemiJoinRule()); // todo: enable
           addRule(new RelWrapper.RemoveWrapperRule()); // todo: enable
         */
-        planner.registerAbstractRels();
+        RelOptUtil.registerAbstractRels(planner);
         registerJavaRels(planner);
         registerIterRels(planner);
 

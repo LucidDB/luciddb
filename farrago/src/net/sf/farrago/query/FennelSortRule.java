@@ -36,7 +36,7 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class FennelSortRule extends RelOptRule
+public class FennelSortRule extends RelOptRule
 {
     //~ Constructors ----------------------------------------------------------
 

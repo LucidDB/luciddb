@@ -25,6 +25,7 @@ import net.sf.farrago.util.FarragoAllocation;
 
 import org.eigenbase.oj.rex.OJRexImplementorTable;
 import org.eigenbase.sql.SqlOperatorTable;
+import org.eigenbase.relopt.*;
 
 
 /**
@@ -92,6 +93,12 @@ public interface FarragoSession extends FarragoAllocation
     public DatabaseMetaData getDatabaseMetaData();
 
     /**
+     * @return name of local data server to use for tables when none
+     * is specified by CREATE TABLE
+     */
+    public String getDefaultLocalDataServerName();
+    
+    /**
      * Initializes the database metadata associated with this session.
      *
      * @param dbMetaData metadata to set
@@ -107,6 +114,8 @@ public interface FarragoSession extends FarragoAllocation
 
     /**
      * Creates a new SQL parser.
+     *
+     * @return new parser
      */
     public FarragoSessionParser newParser();
 
@@ -137,6 +146,19 @@ public interface FarragoSession extends FarragoAllocation
      */
     public FarragoSessionDdlValidator newDdlValidator(
         FarragoSessionStmtValidator stmtValidator);
+
+    /**
+     * Creates a new planner.
+     *
+     * @param stmt stmt on whose behalf planner will operate
+     *
+     * @param init whether to initialize default rules in new planner
+     *
+     * @return new planner
+     */
+    public RelOptPlanner newPlanner(
+        FarragoSessionPreparingStmt stmt,
+        boolean init);
 
     /**
      * Clones this session.  TODO:  document what this entails.

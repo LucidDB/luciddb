@@ -424,23 +424,6 @@ public class VolcanoPlanner implements RelOptPlanner
         // todo: rule which makes Project({OrdinalRef}) disappear
     }
 
-    public void registerAbstractRels()
-    {
-        AggregateRel.register(this);
-        DistinctRel.register(this);
-        FilterRel.register(this);
-        JoinRel.register(this);
-        OneRowRel.register(this);
-        ProjectRel.register(this);
-        TableAccessRel.register(this);
-        UnionRel.register(this);
-        CalcRel.register(this);
-        addRule(FilterToCalcRule.instance);
-        addRule(ProjectToCalcRule.instance);
-        addRule(MergeFilterOntoCalcRule.instance);
-        addRule(MergeProjectOntoCalcRule.instance);
-    }
-
     public void registerSchema(RelOptSchema schema)
     {
         if (registeredSchemas.add(schema)) {

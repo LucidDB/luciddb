@@ -29,6 +29,8 @@ import net.sf.farrago.FarragoPackage;
 import net.sf.farrago.catalog.FarragoModelLoader;
 import net.sf.farrago.util.*;
 
+import org.eigenbase.util.*;
+
 import org.netbeans.api.mdr.*;
 import org.netbeans.lib.jmi.util.*;
 
