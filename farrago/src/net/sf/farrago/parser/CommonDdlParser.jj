@@ -808,7 +808,7 @@ SqlNode DefaultClause() :
 CwmModelElement TableConstraint(CwmTable table) :
 {
     String constraintName = null;
-    CwmUniqueConstraint constraint;
+    FemAbstractUniqueConstraint constraint;
 }
 {
     [ <CONSTRAINT> constraintName = Identifier() ]
@@ -829,9 +829,9 @@ CwmModelElement TableConstraint(CwmTable table) :
     }
 }
 
-CwmUniqueConstraint TableUniqueConstraint(CwmTable table) :
+FemAbstractUniqueConstraint TableUniqueConstraint(CwmTable table) :
 {
-    CwmUniqueConstraint constraint;
+    FemAbstractUniqueConstraint constraint;
     List columnNameList;
 }
 {
@@ -856,20 +856,20 @@ CwmUniqueConstraint TableUniqueConstraint(CwmTable table) :
     }
 }
 
-CwmUniqueConstraint UniqueConstraint() :
+FemAbstractUniqueConstraint UniqueConstraint() :
 {
-    CwmUniqueConstraint constraint;
+    FemAbstractUniqueConstraint constraint;
 }
 {
     (
         <UNIQUE>
     {
-        constraint = getRepos().newCwmUniqueConstraint();
+        constraint = getRepos().newFemUniqueKeyConstraint();
     }
         |
         <PRIMARY> <KEY>
     {
-        constraint = getRepos().newCwmPrimaryKey();
+        constraint = getRepos().newFemPrimaryKeyConstraint();
     }
     )
         {
@@ -882,7 +882,7 @@ CwmUniqueConstraint UniqueConstraint() :
 
 void ColumnConstraint(CwmNamedColumnSet table,CwmColumn column) :
 {
-    CwmUniqueConstraint constraint;
+    FemAbstractUniqueConstraint constraint;
     String constraintName = null;
 }
 {

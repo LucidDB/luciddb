@@ -180,20 +180,21 @@ public class DdlRelationalHandler extends DdlHandler
                 repos.getLocalizedObjectName(table));
         }
 
-        CwmPrimaryKey primaryKey = null;
+        FemPrimaryKeyConstraint primaryKey = null;
         Iterator constraintIter = table.getOwnedElement().iterator();
         while (constraintIter.hasNext()) {
             Object obj = constraintIter.next();
-            if (!(obj instanceof CwmUniqueConstraint)) {
+            if (!(obj instanceof FemAbstractUniqueConstraint)) {
                 continue;
             }
-            CwmUniqueConstraint constraint = (CwmUniqueConstraint) obj;
-            if (constraint instanceof CwmPrimaryKey) {
+            FemAbstractUniqueConstraint constraint =
+                (FemAbstractUniqueConstraint) obj;
+            if (constraint instanceof FemPrimaryKeyConstraint) {
                 if (primaryKey != null) {
                     throw validator.res.newValidatorMultiplePrimaryKeys(
                         repos.getLocalizedObjectName(table));
                 }
-                primaryKey = (CwmPrimaryKey) constraint;
+                primaryKey = (FemPrimaryKeyConstraint) constraint;
             }
             if (creation) {
                 // Implement constraints via system-owned indexes.
@@ -204,6 +205,8 @@ public class DdlRelationalHandler extends DdlHandler
                     // key's index clustered.
                     index.setClustered(true);
                 }
+                // Create redundant metadata used by JDBC views
+                createConstraintColumnMetadata(constraint);
             }
         }
 
@@ -311,7 +314,7 @@ public class DdlRelationalHandler extends DdlHandler
 
     public FemLocalIndex createUniqueConstraintIndex(
         FemLocalTable table, 
-        CwmUniqueConstraint constraint)
+        FemAbstractUniqueConstraint constraint)
     {
         // TODO:  make index SYSTEM-owned so that it can't be
         // dropped explicitly
@@ -336,6 +339,22 @@ public class DdlRelationalHandler extends DdlHandler
             indexColumn.setOrdinal(iOrdinal++);
         }
         return index;
+    }
+    
+    private void createConstraintColumnMetadata(
+        FemAbstractUniqueConstraint constraint)
+    {
+        int iOrdinal = 0;
+        Iterator columnIter = constraint.getFeature().iterator();
+        while (columnIter.hasNext()) {
+            FemAbstractAttribute column =
+                (FemAbstractAttribute) columnIter.next();
+            FemKeyComponent component = repos.newFemKeyComponent();
+            component.setName(column.getName());
+            component.setAttribute(column);
+            constraint.getComponent().add(component);
+            component.setOrdinal(iOrdinal++);
+        }        
     }
     
     // implement FarragoSessionDdlHandler

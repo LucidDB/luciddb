@@ -103,13 +103,13 @@ public abstract class FarragoCatalogUtil
      *
      * @return the PrimaryKey constraint, or null if none is defined
      */
-    public static CwmPrimaryKey getPrimaryKey(CwmClassifier table)
+    public static FemPrimaryKeyConstraint getPrimaryKey(CwmClassifier table)
     {
         Iterator iter = table.getOwnedElement().iterator();
         while (iter.hasNext()) {
             Object obj = iter.next();
-            if (obj instanceof CwmPrimaryKey) {
-                return (CwmPrimaryKey) obj;
+            if (obj instanceof FemPrimaryKeyConstraint) {
+                return (FemPrimaryKeyConstraint) obj;
             }
         }
         return null;
@@ -162,7 +162,7 @@ public abstract class FarragoCatalogUtil
      */
     public static void generateConstraintIndexName(
         FarragoRepos repos, 
-        CwmUniqueConstraint constraint,
+        FemAbstractUniqueConstraint constraint,
         CwmSqlindex index)
     {
         String name =
@@ -179,9 +179,9 @@ public abstract class FarragoCatalogUtil
      */
     public static void generateConstraintName(
         FarragoRepos repos, 
-        CwmUniqueConstraint constraint)
+        FemAbstractUniqueConstraint constraint)
     {
-        if (constraint instanceof CwmPrimaryKey) {
+        if (constraint instanceof FemPrimaryKeyConstraint) {
             constraint.setName("SYS$PRIMARY_KEY");
         } else {
             String name =
@@ -218,7 +218,7 @@ public abstract class FarragoCatalogUtil
     }
 
     private static String generateUniqueConstraintColumnList(
-        CwmUniqueConstraint constraint)
+        FemAbstractUniqueConstraint constraint)
     {
         StringBuffer sb = new StringBuffer();
         Iterator iter = constraint.getFeature().iterator();
@@ -351,7 +351,8 @@ public abstract class FarragoCatalogUtil
             return true;
         }
 
-        CwmPrimaryKey primaryKey = FarragoCatalogUtil.getPrimaryKey(owner);
+        FemPrimaryKeyConstraint primaryKey =
+            FarragoCatalogUtil.getPrimaryKey(owner);
         if (primaryKey != null) {
             if (primaryKey.getFeature().contains(column)) {
                 return false;

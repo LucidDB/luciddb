@@ -730,11 +730,6 @@ public class FarragoRepos extends FarragoMetadataFactory
         simpleType.setDateTimePrecision(new Integer(0));
 
         simpleType = newCwmSqlsimpleType();
-        simpleType.setName("BIT");
-        simpleType.setTypeNumber(new Integer(Types.BIT));
-        simpleType.setCharacterMaximumLength(new Integer(65535));
-
-        simpleType = newCwmSqlsimpleType();
         simpleType.setName("DECIMAL");
         simpleType.setTypeNumber(new Integer(Types.DECIMAL));
         simpleType.setNumericPrecision(new Integer(39));

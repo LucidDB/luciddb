@@ -142,6 +142,9 @@ public class FarragoJdbcEngineConnection
     public void close()
         throws SQLException
     {
+        if (session == null) {
+            return;
+        }
         try {
             try {
                 session.closeAllocation();

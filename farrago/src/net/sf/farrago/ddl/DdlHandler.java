@@ -105,7 +105,7 @@ public abstract class DdlHandler
         Iterator constraintIter = columnSet.getOwnedElement().iterator();
         while (constraintIter.hasNext()) {
             Object obj = constraintIter.next();
-            if (!(obj instanceof CwmUniqueConstraint)) {
+            if (!(obj instanceof FemAbstractKeyConstraint)) {
                 continue;
             }
             throw validator.res.newValidatorNoConstraintAllowed(
