@@ -19,6 +19,7 @@
 
 package net.sf.farrago.ddl;
 
+import net.sf.farrago.session.*;
 import net.sf.farrago.cwm.core.*;
 
 /**
@@ -52,7 +53,7 @@ public class DdlDropStmt extends DdlStmt
     }
     
     // override DdlStmt
-    public void preValidate(DdlValidator ddlValidator)
+    public void preValidate(FarragoSessionDdlValidator ddlValidator)
     {
         super.preValidate(ddlValidator);
         

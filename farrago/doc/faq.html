@@ -75,6 +75,13 @@ automatically compiled further into native code by JIT.  This should
 be a big win for commonly re-executed transactional statements as well
 as long-running complex queries.
 
+<li>
+Less security risk.  Java is not perfect in this respect, but it
+reduces the chance of common exploits such as buffer overruns in
+non-performance-critical code.  And the C++ portions use modern memory
+management techniques (string, vector, shared_ptr, etc), with STLport
+bounds-checking turned on for all debug builds.
+
 </ul>
 
 <hr>

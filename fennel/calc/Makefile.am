@@ -8,12 +8,14 @@ libcalc_la_SOURCES=  \
 BoolInstruction.cpp  \
 Calculator.cpp       \
 ExtendedInstruction.cpp \
+ExtendedInstructionTable.cpp \
 JumpInstruction.cpp  \
 RegisterReference.cpp \
 CalcGrammar.ypp \
 CalcLexer.lpp \
 CalcAssembler.cpp \
-SqlString.cpp
+SqlString.cpp \
+ExtString.cpp
 
 # noinst_PROGRAMS =    \
 # testCalc tuple testCalcAssembler

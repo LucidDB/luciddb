@@ -20,6 +20,7 @@
 
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/farrago/CmdInterpreter.h"
+#include "fennel/farrago/ExecutionStreamFactory.h"
 #include "fennel/farrago/JavaTraceTarget.h"
 
 #include "fennel/xo/TupleStreamGraph.h"
@@ -182,11 +183,11 @@ void CmdInterpreter::getBTreeForIndexCmd(
 {
     SharedDatabase pDatabase = getDbHandle(cmd.getDbHandle())->pDb;
     
-    TupleStreamBuilder::readTupleDescriptor(
+    ExecutionStreamFactory::readTupleDescriptor(
         treeDescriptor.tupleDescriptor,
         *(cmd.getTupleDesc()),pDatabase->getTypeFactory());
     
-    TupleStreamBuilder::readTupleProjection(
+    ExecutionStreamFactory::readTupleProjection(
         treeDescriptor.keyProjection,cmd.getKeyProj());
 
     treeDescriptor.pageOwnerId = PageOwnerId(cmd.getIndexId());
@@ -249,7 +250,7 @@ void CmdInterpreter::visit(ProxyCmdBeginTxn &cmd)
     pTxnHandle->pDb = pDb;
     // TODO:  CacheAccessor factory
     pTxnHandle->pTxn = pDb->getTxnLog()->newLogicalTxn(pDb->getCache());
-
+    
     // NOTE:  use a null scratchAccessor; individual TupleStreamGraphs
     // will have their own
     SegmentAccessor scratchAccessor;
@@ -321,11 +322,15 @@ void CmdInterpreter::visit(ProxyCmdPrepareExecutionStreamGraph &cmd)
     // TODO:  fix leak if excn thrown
     StreamHandle *pStreamHandle = new StreamHandle();
     ++JniUtil::handleCount;
-    TupleStreamBuilder streamBuilder(
+    // TODO: Perhaps stream factory should be singleton
+    ExecutionStreamFactory streamFactory(
         pTxnHandle->pDb,
         pTxnHandle->pTableWriterFactory,
-        pGraph,
         pStreamHandle);
+    TupleStreamBuilder streamBuilder(
+        pTxnHandle->pDb,
+        streamFactory,
+        pGraph);
     // TODO jvs 12-Feb-2004: Temporarily, we assume the first stream is the
     // root of a tree.  This assumption will go away once TupleStreamBuilder
     // can handle an arbitrary topology (and then it will take the

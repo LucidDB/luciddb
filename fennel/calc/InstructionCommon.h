@@ -40,7 +40,10 @@
 #include "fennel/calc/IntegralPointerInstruction.h"
 #include "fennel/calc/PointerIntegralInstruction.h"
 #include "fennel/calc/ReturnInstruction.h"
+
 #include "fennel/calc/ExtendedInstruction.h"
+#include "fennel/calc/ExtendedInstructionTable.h"
+#include "fennel/calc/ExtString.h"
 
 #endif
 

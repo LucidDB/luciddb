@@ -27,7 +27,6 @@ import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fennel.*;
-import net.sf.farrago.parser.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
@@ -66,7 +65,7 @@ import javax.jmi.reflect.*;
  * @version $Id$
  */
 public class DdlValidator extends FarragoCompoundAllocation
-    implements MDRPreChangeListener
+    implements FarragoSessionDdlValidator, MDRPreChangeListener
 {
     //~ Static fields/initializers --------------------------------------------
 
@@ -103,7 +102,7 @@ public class DdlValidator extends FarragoCompoundAllocation
 
     private final FarragoTypeFactory typeFactory;
 
-    final FarragoConnectionDefaults connectionDefaults;
+    private final FarragoConnectionDefaults connectionDefaults;
 
     private final FarragoIndexMap indexMap;
 
@@ -115,7 +114,7 @@ public class DdlValidator extends FarragoCompoundAllocation
     private DeferredException enqueuedValidationExcn;
 
     /** Parser producing object definitions to be validated. */
-    private final FarragoParser parser;
+    private final FarragoSessionParser parser;
 
     /**
      * Map (from RefAssociation.Class to DropRule) of associations for which
@@ -159,7 +158,7 @@ public class DdlValidator extends FarragoCompoundAllocation
     /**
      * DDL statement being validated.
      */
-    private DdlStmt ddlStmt;
+    private FarragoSessionDdlStmt ddlStmt;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -182,7 +181,7 @@ public class DdlValidator extends FarragoCompoundAllocation
         FarragoSession invokingSession,
         FarragoCatalog catalog,
         FennelDbHandle fennelDbHandle,
-        FarragoParser parser,
+        FarragoSessionParser parser,
         FarragoConnectionDefaults connectionDefaults,
         FarragoIndexMap indexMap,
         FarragoObjectCache sharedDataWrapperCache)
@@ -265,121 +264,73 @@ public class DdlValidator extends FarragoCompoundAllocation
 
     //~ Methods ---------------------------------------------------------------
 
-    /**
-     * .
-     *
-     * @return catalog storing object definitions being validated
-     */
+    // implement FarragoSessionDdlValidator
     public FarragoCatalog getCatalog()
     {
         return catalog;
     }
 
-    /**
-     * .
-     *
-     * @return Handle to Fennel database accessed by this stmt
-     */
+    // implement FarragoSessionDdlValidator
     public FennelDbHandle getFennelDbHandle()
     {
         return fennelDbHandle;
     }
 
-    /**
-     * .
-     *
-     * @return type factory to be used for any type-checking during
-     * validation
-     */
+    // implement FarragoSessionDdlValidator
     public FarragoTypeFactory getTypeFactory()
     {
         return typeFactory;
     }
 
-    /**
-     * .
-     *
-     * @return the FarragoIndexMap to use for managing index storage
-     */
+    // implement FarragoSessionDdlValidator
     public FarragoIndexMap getIndexMap()
     {
         return indexMap;
     }
 
-    /**
-     * .
-     *
-     * @return cache for loaded data wrappers
-     */
+    // implement FarragoSessionDdlValidator
     public FarragoDataWrapperCache getDataWrapperCache()
     {
         return dataWrapperCache;
     }
     
-    /**
-     * Validation of some DDL commands (e.g. view creation) may require
-     * preparation or execution of internal SQL statements.  This is referred
-     * to as reentrant SQL.  
-     *
-     * @return a FarragoSession to use for reentrant SQL; when done, this
-     * connection must be released by calling releaseReentrantSession
-     */
+    // implement FarragoSessionDdlValidator
     public FarragoSession newReentrantSession()
     {
         return invokingSession.cloneSession();
     }
 
-    /**
-     * .
-     *
-     * @return the FarragoSession which invoked this DDL
-     */
+    // implement FarragoSessionDdlValidator
     public FarragoSession getInvokingSession()
     {
         return invokingSession;
     }
 
-    /**
-     * Release a FarragoSession acquired with newReentrantSession().
-     *
-     * @param session the session to release
-     */
+    // implement FarragoSessionDdlValidator
     public void releaseReentrantSession(FarragoSession session)
     {
         session.closeAllocation();
     }
 
-    /**
-     * .
-     *
-     * @return the parser whose statement is being validated
-     */
-    public FarragoParser getParser()
+    // implement FarragoSessionDdlValidator
+    public FarragoSessionParser getParser()
     {
         return parser;
     }
 
-    /**
-     * Determine whether a catalog object is being deleted by this DDL
-     * statement.
-     *
-     * @param refObject object in question
-     *
-     * @return true if refObject is being deleted
-     */
+    // implement FarragoSessionDdlValidator
+    public FarragoConnectionDefaults getConnectionDefaults()
+    {
+        return connectionDefaults;
+    }
+    
+    // implement FarragoSessionDdlValidator
     public boolean isDeletedObject(RefObject refObject)
     {
         return testObjectStatus(refObject,VALIDATE_DELETION);
     }
 
-    /**
-     * Determine whether a catalog object is being created by this DDL
-     * statement.
-     *
-     * @param refObject object in question
-     *
-     * @return true if refObject is being created
-     */
+    // implement FarragoSessionDdlValidator
     public boolean isCreatedObject(RefObject refObject)
     {
         return testObjectStatus(refObject,VALIDATE_CREATION);
@@ -393,11 +344,7 @@ public class DdlValidator extends FarragoCompoundAllocation
                 && (transitMap.get(refObject.refMofId()) == status));
     }
 
-    /**
-     * .
-     *
-     * @return is a DROP RESTRICT being executed?
-     */
+    // implement FarragoSessionDdlValidator
     public boolean isDropRestrict()
     {
         return ddlStmt.isDropRestricted();
@@ -417,33 +364,18 @@ public class DdlValidator extends FarragoCompoundAllocation
         return modelElement.getVisibility() != VisibilityKindEnum.VK_PUBLIC;
     }
 
-    /**
-     * Find a ParserContext for an object affected by DDL.  Not all objects
-     * have ParserContexts (e.g. when a table is dropped, referencing views
-     * are implicitly afffected).
-     *
-     * @param obj the affected object
-     *
-     * @return the ParserContext string associated with the given object, or
-     *         null if the object was not encountered by parsing
-     */
-    public String getParserContextString(RefObject obj)
+    // implement FarragoSessionDdlValidator
+    public String getParserPosString(RefObject obj)
     {
-        ParserContext parserContext = (ParserContext) parserContextMap.get(obj);
+        FarragoSessionParserPosition parserContext =
+            (FarragoSessionParserPosition) parserContextMap.get(obj);
         if (parserContext == null) {
             return null;
         }
         return parserContext.toString();
     }
 
-    /**
-     * Called during parsing to set the name of a new object being defined,
-     * and to add the object to the correct schema.
-     *
-     * @param schema containing schema or null for none
-     * @param schemaElement the object being named
-     * @param qualifiedName the (possibly) qualified name of the object
-     */
+    // implement FarragoSessionDdlValidator
     public void setSchemaObjectName(
         CwmSchema schema,
         CwmModelElement schemaElement,
@@ -490,10 +422,7 @@ public class DdlValidator extends FarragoCompoundAllocation
         super.closeAllocation();
     }
 
-    /**
-     * Execute storage management commands for any DdlStoredElements
-     * encountered during validation.
-     */
+    // implement FarragoSessionDdlValidator
     public void executeStorage()
     {
         // catalog updates which occur during execution should not result in
@@ -561,15 +490,7 @@ public class DdlValidator extends FarragoCompoundAllocation
         }
     }
 
-    /**
-     * Look up a table's column by name, throwing a validation error if not
-     * found.
-     *
-     * @param table the table to search
-     * @param columnName name of column to find
-     *
-     * @return column found
-     */
+    // implement FarragoSessionDdlValidator
     public CwmColumn findColumn(CwmTable table,String columnName)
     {
         CwmColumn column =
@@ -578,18 +499,12 @@ public class DdlValidator extends FarragoCompoundAllocation
             throw res.newValidatorUnknownColumn(
                 columnName,
                 table.getName(),
-                parser.getCurrentContext().toString());
+                parser.getCurrentPosition().toString());
         }
         return column;
     }
 
-    /**
-     * Look up a catalog by name, throwing a validation error if not found.
-     *
-     * @param catalogName name of catalog to look up
-     *
-     * @return catalog found
-     */
+    // implement FarragoSessionDdlValidator
     public CwmCatalog findCatalog(String catalogName)
     {
         CwmCatalog cwmCatalog = catalog.getCwmCatalog(catalogName);
@@ -600,28 +515,18 @@ public class DdlValidator extends FarragoCompoundAllocation
                     null,
                     catalogName,
                     catalog.relationalPackage.getCwmCatalog()),
-                parser.getCurrentContext().toString());
+                parser.getCurrentPosition().toString());
         }
         return cwmCatalog;
     }
 
-    /**
-     * Get the default catalog for unqualified schema names.
-     *
-     * @return default catalog
-     */
+    // implement FarragoSessionDdlValidator
     public CwmCatalog getDefaultCatalog()
     {
         return findCatalog(connectionDefaults.catalogName);
     }
 
-    /**
-     * Look up a schema by name, throwing a validation error if not found.
-     *
-     * @param schemaName name of schema to look up
-     *
-     * @return schema found
-     */
+    // implement FarragoSessionDdlValidator
     public CwmSchema findSchema(SqlIdentifier schemaName)
     {
         CwmCatalog cwmCatalog;
@@ -641,18 +546,12 @@ public class DdlValidator extends FarragoCompoundAllocation
                     cwmCatalog.getName(),
                     simpleName,
                     catalog.relationalPackage.getCwmSchema()),
-                parser.getCurrentContext().toString());
+                parser.getCurrentPosition().toString());
         }
         return schema;
     }
 
-    /**
-     * Look up a data wrapper by name, throwing a validation error if not found.
-     *
-     * @param wrapperName name of wrapper to look up (must be simple)
-     *
-     * @return wrapper found
-     */
+    // implement FarragoSessionDdlValidator
     public FemDataWrapper findDataWrapper(SqlIdentifier wrapperName)
     {
         FemDataWrapper wrapper = (FemDataWrapper)
@@ -665,18 +564,12 @@ public class DdlValidator extends FarragoCompoundAllocation
                     null,
                     wrapperName.getSimple(),
                     catalog.medPackage.getFemDataWrapper()),
-                parser.getCurrentContext().toString());
+                parser.getCurrentPosition().toString());
         }
         return wrapper;
     }
 
-    /**
-     * Look up a data server by name, throwing a validation error if not found.
-     *
-     * @param serverName name of server to look up (must be simple)
-     *
-     * @return server found
-     */
+    // implement FarragoSessionDdlValidator
     public FemDataServer findDataServer(SqlIdentifier serverName)
     {
         FemDataServer server = (FemDataServer)
@@ -689,22 +582,12 @@ public class DdlValidator extends FarragoCompoundAllocation
                     null,
                     serverName.getSimple(),
                     catalog.medPackage.getFemDataServer()),
-                parser.getCurrentContext().toString());
+                parser.getCurrentPosition().toString());
         }
         return server;
     }
 
-    /**
-     * Look up a schema object by name, throwing a validation error if not
-     * found.
-     *
-     * @param schema containing schema or null if none
-     * @param qualifiedName name of object to look up
-     * @param refClass expected class of object; if the object exists with a
-     *        different class, it will be treated as if it did not exist
-     *
-     * @return schema object found
-     */
+    // implement FarragoSessionDdlValidator
     public CwmModelElement findSchemaObject(
         CwmSchema schema,
         SqlIdentifier qualifiedName,
@@ -745,19 +628,13 @@ public class DdlValidator extends FarragoCompoundAllocation
                     schemaName,
                     qualifiedName.names[qualifiedName.names.length - 1],
                     refClass),
-                parser.getCurrentContext().toString());
+                parser.getCurrentPosition().toString());
         }
         
         return element;
     }
 
-    /**
-     * Look up a SQL datatype by name, and throw an exception if not found.
-     *
-     * @param typeName name of type to find
-     *
-     * @return type definition
-     */
+    // implement FarragoSessionDdlValidator
     public CwmSqldataType findSqldataType(String typeName)
     {
         Collection types =
@@ -779,7 +656,7 @@ public class DdlValidator extends FarragoCompoundAllocation
                 null,
                 typeName,
                 catalog.relationalPackage.getCwmSqldataType()),
-            parser.getCurrentContext().toString());
+            parser.getCurrentPosition().toString());
     }
 
     // implement MDRPreChangeListener
@@ -848,30 +725,19 @@ public class DdlValidator extends FarragoCompoundAllocation
         }
     }
 
-    /**
-     * Truncation is cascaded explicitly, so provide a public scheduling
-     * method.
-     *
-     * @param modelElement to be truncated
-     */
+    // implement FarragoSessionDdlValidator
     public void scheduleTruncation(CwmModelElement modelElement)
     {
         assert (!validatedMap.containsKey(modelElement));
         assert (!schedulingMap.containsKey(modelElement.refMofId()));
         schedulingMap.put(modelElement.refMofId(),VALIDATE_TRUNCATION);
-        mapParserContext(modelElement);
+        mapParserPosition(modelElement);
     }
 
-    /**
-     * Validate all scheduled operations.  Validation may cause other objects
-     * to be changed, so the process continues until a fixpoint is reached.
-     *
-     * @param ddlStmt DDL statement to be validated
-     */
-    public void validate(DdlStmt ddlStmt)
+    // implement FarragoSessionDdlValidator
+    public void validate(FarragoSessionDdlStmt ddlStmt)
     {
         this.ddlStmt = ddlStmt;
-
         ddlStmt.preValidate(this);
         checkValidationExcnQueue();
         
@@ -973,16 +839,7 @@ public class DdlValidator extends FarragoCompoundAllocation
         }
     }
 
-    /**
-     * Determine whether all of the objects in a collection have distinct
-     * names, and throw an appropriate exception if not.
-     *
-     * @param container namespace object for use in error message
-     * @param collection Collection of CwmModelElements representing namespace
-     *        contents
-     * @param includeType if true, include type in name; if false, ignore
-     *        types in deciding uniqueness
-     */
+    // implement FarragoSessionDdlValidator
     public void validateUniqueNames(
         CwmModelElement container,
         Collection collection,
@@ -1013,8 +870,8 @@ public class DdlValidator extends FarragoCompoundAllocation
                         catalog.getLocalizedObjectName(
                             container,
                             container.refClass()),
-                        getParserContextString(element),
-                        getParserContextString(other));
+                        getParserPosString(element),
+                        getParserPosString(other));
                 } else {
                     CwmModelElement newElement;
                     CwmModelElement oldElement;
@@ -1037,23 +894,14 @@ public class DdlValidator extends FarragoCompoundAllocation
                         catalog.getLocalizedObjectName(
                             container,
                             container.refClass()),
-                        getParserContextString(newElement));
+                        getParserPosString(newElement));
                 }
             }
             nameMap.put(name,element);
         }
     }
 
-    /**
-     * Create a new dependency.
-     *
-     * @param client element which depends on others
-     * (FIXME:  this should be a CwmModelElement, not a CwmNamespace)
-     *
-     * @param suppliers collection of elements on which client depends
-     *
-     * @param kind name for dependency type
-     */
+    // implement FarragoSessionDdlValidator
     public CwmDependency createDependency(
         CwmNamespace client,
         Collection suppliers,
@@ -1077,12 +925,7 @@ public class DdlValidator extends FarragoCompoundAllocation
         return dependency;
     }
 
-    /**
-     * Discard a data wrapper or server from the shared cache
-     * (called when it is dropped).
-     *
-     * @param wrapper definition of wrapper to discard
-     */
+    // implement FarragoSessionDdlValidator
     public void discardDataWrapper(CwmModelElement wrapper)
     {
         sharedDataWrapperCache.discard(wrapper.refMofId());
@@ -1159,9 +1002,9 @@ public class DdlValidator extends FarragoCompoundAllocation
             });
     }
 
-    private void mapParserContext(Object obj)
+    private void mapParserPosition(Object obj)
     {
-        ParserContext context = parser.getCurrentContext();
+        FarragoSessionParserPosition context = parser.getCurrentPosition();
         if (context == null) {
             return;
         }
@@ -1187,7 +1030,7 @@ public class DdlValidator extends FarragoCompoundAllocation
 
         // delete overrides anything else
         schedulingMap.put(obj.refMofId(),VALIDATE_DELETION);
-        mapParserContext(obj);
+        mapParserPosition(obj);
     }
 
     private void scheduleModification(RefObject obj)
@@ -1207,7 +1050,7 @@ public class DdlValidator extends FarragoCompoundAllocation
         } else {
             schedulingMap.put(obj.refMofId(),VALIDATE_MODIFICATION);
         }
-        mapParserContext(obj);
+        mapParserPosition(obj);
     }
 
     private void stopListening()

@@ -31,15 +31,12 @@ FENNEL_BEGIN_NAMESPACE
  * among TupleStreams.  Currently, only trees are supported, so each vertex
  * except the root has exactly one target and zero or more sources.
  */
-class TupleStreamGraphImpl : public TupleStreamGraph,
-    public ExecutionStreamGraphImpl<SharedTupleStream>
+class TupleStreamGraphImpl : 
+        public TupleStreamGraph,
+        public ExecutionStreamGraphImpl
 {
     friend class TupleStreamGraph;
     explicit TupleStreamGraphImpl();
-    
-public:
-    virtual void addStream(
-        SharedTupleStream pStream);
 };
 
 FENNEL_END_NAMESPACE

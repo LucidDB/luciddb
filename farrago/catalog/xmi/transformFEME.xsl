@@ -11,6 +11,9 @@
   >
   <xsl:output method="xml" indent="yes" />
 
+  <!-- Farrago extension model prefix -->
+  <xsl:param name="modelPrefix"/>
+
   <!-- Rename the PrimitiveTypes package to PrimitiveTypeRef -->
   <xsl:template match="Model:Package[@name='PrimitiveTypes']/@name" >
     <xsl:attribute name="name">PrimitiveTypesRef</xsl:attribute>
@@ -47,28 +50,13 @@
             <xsl:value-of select="concat('feme',@xmi.id)"/>
           </xsl:attribute>
           <Model:Tag.values>
-            <xsl:value-of select="concat('Feme',@name)"/>
+            <xsl:value-of select="concat($modelPrefix,@name)"/>
           </Model:Tag.values>
         </Model:Tag>
       </Model:Namespace.contents>
     </xsl:copy>
   </xsl:template>
 
-  <!-- Mark everything in the Fennel package as transient -->
-  <xsl:template
-    match="Model:Package[@name='FEME']/Model:Namespace.contents">
-    <xsl:copy>
-      <xsl:apply-templates select="@* | node()" />
-      <xsl:for-each select=
-        "Model:Package[@name='Fennel']/Model:Namespace.contents/Model:Class">
-        <Model:Tag tagId='org.netbeans.mdr.transient' values='true'>
-          <xsl:attribute name="elements">
-            <xsl:value-of select="concat('feme',@xmi.id)"/>
-          </xsl:attribute>
-        </Model:Tag>
-      </xsl:for-each>
-    </xsl:copy>
-  </xsl:template>
 
   <!-- Pass everything else through unchanged -->
   <xsl:template match="/ | @* | node()">

@@ -41,27 +41,26 @@ FENNEL_BEGIN_NAMESPACE
  * A ExecutionStreamGraphImpl is a connected, directed graph representing
  * dataflow among ExecutionStreams.
  */
-template<class S>
-class ExecutionStreamGraphImpl : virtual public ExecutionStreamGraph<S>
+class ExecutionStreamGraphImpl : virtual public ExecutionStreamGraph
 {
 protected:
     typedef boost::adjacency_list<
         boost::vecS,
         boost::vecS,
         boost::bidirectionalS,
-        boost::property<boost::vertex_data_t,S> >
+        boost::property<boost::vertex_data_t,SharedExecutionStream> >
     GraphRep;
 
-    typedef typename boost::graph_traits<GraphRep>::vertex_descriptor Vertex;
+    typedef boost::graph_traits<GraphRep>::vertex_descriptor Vertex;
 
-    typedef typename boost::graph_traits<GraphRep>::edge_descriptor Edge;
+    typedef boost::graph_traits<GraphRep>::edge_descriptor Edge;
 
     GraphRep graphRep;
     
     /**
      * Result of topologically sorting graph (producers before consumers).
      */
-    std::vector<S> sortedStreams;
+    std::vector<SharedExecutionStream> sortedStreams;
 
     /**
      * Transaction being executed.
@@ -81,121 +80,31 @@ protected:
      */
     bool isOpen;
     
-    explicit ExecutionStreamGraphImpl()
-    {
-        isOpen = false;
-    }
-
-    S getStreamFromVertex(Vertex vertex)
-    {
-        return boost::get(boost::vertex_data,graphRep)[vertex];
-    }
-
-    void closeImpl()
-    {
-        isOpen = false;
-        if (sortedStreams.empty()) {
-            // in case prepare was never called
-            sortStreams();
-        }
-        // proceed in reverse dataflow order (from consumers to producers)
-        std::for_each(
-                sortedStreams.rbegin(),
-                sortedStreams.rend(),
-                boost::bind(&ClosableObject::close,_1));
-        pTxn.reset();
-
-        // release any scratch memory
-        if (pScratchSegment) {
-            pScratchSegment->deallocatePageRange(NULL_PAGE_ID,NULL_PAGE_ID);
-        }
-    }
-
-    void sortStreams()
-    {
-        std::vector<Vertex> sortedVertices;
-        boost::topological_sort(
-                graphRep,std::back_inserter(sortedVertices));
-        sortedStreams.resize(sortedVertices.size());
-        // boost::topological_sort produces an ordering from consumers to
-        // producers, but we want the oppposite ordering, hence
-        // sortedStreams.rbegin() below
-        std::transform(
-                sortedVertices.begin(),
-                sortedVertices.end(),
-                sortedStreams.rbegin(),
-                boost::bind(&ExecutionStreamGraphImpl<S>::getStreamFromVertex,
-                            this,_1));
-    }
+    explicit ExecutionStreamGraphImpl();
+    SharedExecutionStream getStreamFromVertex(Vertex);
+    void closeImpl();
+    void sortStreams();
     
 public:
-    virtual ~ExecutionStreamGraphImpl()
-    {
-    }
-
-    virtual void setTxn(SharedLogicalTxn pTxnInit)
-    {
-        pTxn = pTxnInit;
-    }
-
-    virtual void setScratchSegment(
-            SharedSegment pScratchSegmentInit)
-    {
-        pScratchSegment = pScratchSegmentInit;
-    }
-
-    virtual SharedLogicalTxn getTxn()
-    {
-        return pTxn;
-    }
-
-    virtual void prepare()
-    {
-        sortStreams();
-    }
-
-    virtual void open()
-    {
-        assert(!isOpen);
-        isOpen = true;
-        needsClose = true;
+    virtual ~ExecutionStreamGraphImpl() {}
     
-        // proceed in dataflow order (from producers to consumers)
-        std::for_each(
-                sortedStreams.begin(),
-                sortedStreams.end(),
-                boost::bind(&TupleStream::open,_1,false));
-    }
-
+    virtual void setTxn(SharedLogicalTxn);
+    virtual void setScratchSegment(
+        SharedSegment pScratchSegment);
+    virtual SharedLogicalTxn getTxn();
+    virtual void prepare();
+    virtual void open();
+    virtual void addStream(
+        SharedExecutionStream pStream);
     virtual void addDataflow(
-            ExecutionStreamId producerId,
-            ExecutionStreamId consumerId)
-    {
-        boost::add_edge(producerId,consumerId,graphRep);
-    }
-
+        ExecutionStreamId producerId,
+        ExecutionStreamId consumerId);
     virtual uint getInputCount(
-            ExecutionStreamId streamId)
-    {
-        Vertex streamVertex = boost::vertices(graphRep).first[streamId];
-        return boost::in_degree(streamVertex,graphRep);
-    }
-
-    virtual S getStreamInput(
-            ExecutionStreamId streamId,
-            uint iInput)
-    {
-        Vertex streamVertex = boost::vertices(graphRep).first[streamId];
-        Edge inputEdge = boost::in_edges(streamVertex,graphRep).first[iInput];
-        Vertex inputVertex = boost::source(inputEdge,graphRep);
-        return getStreamFromVertex(inputVertex);
-    }
-
-    virtual S getSinkStream()
-    {
-        // the sink comes at the end of the topological sort
-        return sortedStreams.back();
-    }
+        ExecutionStreamId streamId);
+    virtual SharedExecutionStream getStreamInput(
+        ExecutionStreamId streamId,
+        uint iInput);
+    virtual SharedExecutionStream getSinkStream();
 };
 
 FENNEL_END_NAMESPACE

@@ -22,6 +22,7 @@ package net.sf.farrago.ddl;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.fem.config.*;
 import net.sf.farrago.catalog.*;
+import net.sf.farrago.session.*;
 import net.sf.farrago.resource.*;
 
 import net.sf.saffron.sql.*;
@@ -68,7 +69,7 @@ public class DdlSetSystemParamStmt extends DdlStmt
     }
     
     // override DdlStmt
-    public void preValidate(DdlValidator ddlValidator)
+    public void preValidate(FarragoSessionDdlValidator ddlValidator)
     {
         super.preValidate(ddlValidator);
 
@@ -88,7 +89,7 @@ public class DdlSetSystemParamStmt extends DdlStmt
                 // if we get here, it's a Fennel parameter
                 config = farragoConfig.getFennelConfig();
             } catch (InvalidNameException ex2) {
-                throw ddlValidator.res.newValidatorUnknownSysParam(
+                throw FarragoResource.instance().newValidatorUnknownSysParam(
                     paramName);
             }
         }
@@ -103,7 +104,7 @@ public class DdlSetSystemParamStmt extends DdlStmt
             newValue = constructor.newInstance(
                 new Object [] { newValue.toString() });
         } catch (Exception ex) {
-            throw ddlValidator.res.newValidatorSysParamTypeMismatch(
+            throw FarragoResource.instance().newValidatorSysParamTypeMismatch(
                 paramValue.toString(),paramName);
         }
         
@@ -112,10 +113,10 @@ public class DdlSetSystemParamStmt extends DdlStmt
         } catch (InvalidNameException ex) {
             // We know the parameter exists, so InvalidNameException in this
             // context implies that it's immutable.
-            throw ddlValidator.res.newValidatorImmutableSysParam(
+            throw FarragoResource.instance().newValidatorImmutableSysParam(
                 paramName);
         } catch (TypeMismatchException ex) {
-            throw ddlValidator.res.newValidatorSysParamTypeMismatch(
+            throw FarragoResource.instance().newValidatorSysParamTypeMismatch(
                 paramValue.toString(),paramName);
         }
     }

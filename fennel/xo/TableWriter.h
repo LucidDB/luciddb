@@ -142,7 +142,7 @@ public:
      * @return number of tuples processed
      */
     RecordNum execute(
-        SharedTupleStream pInputStream,
+        SharedExecutionStream pInputStream,
         LogicalActionType actionType,
         SXMutex &actionMutex);
 

@@ -628,7 +628,10 @@ require version '${required.ant.version}'."/>
   <target name="transformExtModel"  if="extmodel.file">
 	 <xslt style="${xmi.dir}/transformFEME.xsl"
 		in="${ExtModel.xmi}"
-		out="${ExtModelTransformed.xmi}" />
+		out="${ExtModelTransformed.xmi}" >
+     <param name="modelPrefix" 
+        expression="${ext.model.prefix}"/>
+     </xslt>
 	 <replace file="${ExtModelTransformed.xmi}"
 		token="org.omg.xmi.namespace.Model" value="omg.org/mof.Model/1.3" />
   </target>    

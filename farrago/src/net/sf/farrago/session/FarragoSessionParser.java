@@ -19,40 +19,42 @@
 
 package net.sf.farrago.session;
 
-import net.sf.farrago.parser.*;
 import net.sf.farrago.catalog.*;
-import net.sf.farrago.fennel.*;
-
-import java.util.*;
+import net.sf.farrago.resource.*;
 
 /**
- * FarragoSessionFactory defines an interface with factory methods used
- * to create new sessions and related objects.
+ * FarragoSessionParser represents an object capable of parsing Farrago
+ * SQL statements.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public interface FarragoSessionFactory
+public interface FarragoSessionParser
 {
     /**
-     * Creates a new session.
+     * Parses an SQL statement.  If it is a DDL statement, this may implicitly
+     * performs uncommitted catalog updates.
      *
-     * @param url (same as for JDBC connect)
+     * @param ddlValidator the validator to use for lookup during parsing
+     * if this turns out to be a DDL statement
      *
-     * @param info (same as for JDBC connect)
+     * @param txnContext transaction context to use for initiating
+     * repository transactions
      *
-     * @return new session
+     * @param sql the SQL text to be parsed
+     *
+     * @return for DDL, a FarragoSessionDdlStmt; for DML or query, top-level
+     * SqlNode
      */
-    public FarragoSession newSession(
-        String url,
-        Properties info);
+    public Object parseSqlStatement(
+        FarragoSessionDdlValidator ddlValidator,
+        FarragoReposTxnContext txnContext,
+        String sql);
 
     /**
-     * Creates a new intrepreter for Fennel commands.
-     *
-     * @return new interpeter
+     * @return the current position, or null if done parsing
      */
-    public FennelCmdExecutor newFennelCmdExecutor();
+    public FarragoSessionParserPosition getCurrentPosition();
 }
 
-// End FarragoSessionFactory.java
+// End FarragoSessionParser.java

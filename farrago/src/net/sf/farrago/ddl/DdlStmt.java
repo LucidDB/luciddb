@@ -19,6 +19,7 @@
 
 package net.sf.farrago.ddl;
 
+import net.sf.farrago.session.*;
 import net.sf.farrago.cwm.core.*;
 
 /**
@@ -29,7 +30,7 @@ import net.sf.farrago.cwm.core.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class DdlStmt
+public abstract class DdlStmt implements FarragoSessionDdlStmt
 {
     private final CwmModelElement modelElement;
 
@@ -38,38 +39,25 @@ public abstract class DdlStmt
         this.modelElement = modelElement;
     }
 
-    /**
-     * @return the top-level CwmModelElement affected by this stmt, or null if
-     * none 
-     */
+    // implement FarragoSessionDdlStmt
     public CwmModelElement getModelElement()
     {
         return modelElement;
     }
 
-    /**
-     * @return whether DROP RESTRICT is in effect
-     */
+    // implement FarragoSessionDdlStmt
     public boolean isDropRestricted()
     {
         return false;
     }
 
-    /**
-     * preValidate is called at the beginning of DdlValidator.validate.
-     *
-     * @param ddlValidator the DdlValidator validating this stmt
-     */
-    public void preValidate(DdlValidator ddlValidator)
+    // implement FarragoSessionDdlStmt
+    public void preValidate(FarragoSessionDdlValidator ddlValidator)
     {
         // by default, assume everything has already been done during parsing
     }
 
-    /**
-     * .
-     *
-     * @return true if this statement implies an auto-commit before and after
-     */
+    // implement FarragoSessionDdlStmt
     public boolean requiresCommit()
     {
         return true;

@@ -33,14 +33,16 @@ import java.sql.*;
  * @version $Id$
  */
 public abstract class MedAbstractDataWrapper
+    extends MedAbstractBase
     implements FarragoMedDataWrapper
 {
     private FarragoCatalog catalog;
 
     private Properties props;
 
-    private static final DriverPropertyInfo [] EMPTY_DRIVER_PROPERTIES
-        = new DriverPropertyInfo[0];
+    protected MedAbstractDataWrapper()
+    {
+    }
 
     /**
      * @return the catalog with which this wrapper was initialized
@@ -57,27 +59,41 @@ public abstract class MedAbstractDataWrapper
     {
         return props;
     }
-    
+
     // implement FarragoMedDataWrapper
-    public DriverPropertyInfo [] getWrapperPropertyInfo(Locale locale)
+    public DriverPropertyInfo [] getWrapperPropertyInfo(
+        Locale locale,
+        Properties props)
     {
         return EMPTY_DRIVER_PROPERTIES;
     }
 
     // implement FarragoMedDataWrapper
-    public DriverPropertyInfo [] getServerPropertyInfo(Locale locale)
+    public DriverPropertyInfo [] getServerPropertyInfo(
+        Locale locale,
+        Properties wrapperProps,
+        Properties serverProps)
     {
         return EMPTY_DRIVER_PROPERTIES;
     }
 
     // implement FarragoMedDataWrapper
-    public DriverPropertyInfo [] getColumnSetPropertyInfo(Locale locale)
+    public DriverPropertyInfo [] getColumnSetPropertyInfo(
+        Locale locale,
+        Properties wrapperProps,
+        Properties serverProps,
+        Properties tableProps)
     {
         return EMPTY_DRIVER_PROPERTIES;
     }
 
     // implement FarragoMedDataWrapper
-    public DriverPropertyInfo [] getColumnPropertyInfo(Locale locale)
+    public DriverPropertyInfo [] getColumnPropertyInfo(
+        Locale locale,
+        Properties wrapperProps,
+        Properties serverProps,
+        Properties tableProps,
+        Properties columnProps)
     {
         return EMPTY_DRIVER_PROPERTIES;
     }

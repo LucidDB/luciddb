@@ -30,14 +30,9 @@ FENNEL_BEGIN_NAMESPACE
  * among TupleStreams.  Currently, only trees are supported, so each vertex
  * except the sink has exactly one target and zero or more sources.
  */
-class TupleStreamGraph : virtual public ExecutionStreamGraph<SharedTupleStream>
+class TupleStreamGraph : virtual public ExecutionStreamGraph
 {
-public:
-    virtual ~TupleStreamGraph();
-
-    virtual void addStream(
-        SharedTupleStream pStream) = 0;
-
+ public:
     static SharedTupleStreamGraph newTupleStreamGraph();
 };
 

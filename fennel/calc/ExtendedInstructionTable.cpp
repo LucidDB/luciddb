@@ -25,29 +25,10 @@
 */
 
 #include "fennel/common/CommonPreamble.h"
-#include "fennel/calc/ExtendedInstruction.h"
+#include "fennel/calc/ExtendedInstructionTable.h"
 
-FENNEL_BEGIN_CPPFILE("$Id$");
+FENNEL_BEGIN_NAMESPACE
 
-// helpers
+ExtendedInstructionTable* ExtendedInstructionTable::_instance = NULL;
 
-// -- ExtendedInstructionDef methods ------------------------------------------
-
-string ExtendedInstructionDef::computeSignature() 
-{
-    string sig = _name;
-    sig += "(";
-    for (uint i = 0; i < _parameterTypes.size(); i++) {
-        if (i > 0) {
-            sig += ",";
-        }
-
-        sig += StandardTypeDescriptor::toString(_parameterTypes[i]);
-    }
-    sig += ")";
-    return sig;
-}
-
-FENNEL_END_CPPFILE("$Id$");
-
-// End ExtendedInstruction.cpp
+FENNEL_END_NAMESPACE

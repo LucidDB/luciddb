@@ -20,9 +20,9 @@
 package net.sf.farrago.parser;
 
 import net.sf.farrago.catalog.*;
-import net.sf.farrago.ddl.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.resource.*;
+import net.sf.farrago.session.*;
 
 import java.io.*;
 
@@ -38,90 +38,60 @@ import javax.jmi.reflect.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoParser
+public class FarragoParser implements FarragoSessionParser
 {
     //~ Instance fields -------------------------------------------------------
 
     /** Validator to use for validating DDL statements as they are parsed. */
-    public DdlValidator ddlValidator;
+    FarragoSessionDdlValidator ddlValidator;
 
     /** Underlying parser implementation which does the work. */
-    private final FarragoParserImpl parserImpl;
+    private FarragoParserImpl parserImpl;
     private boolean doneParsing;
-    private boolean txn;
+
+    private FarragoReposTxnContext txnContext;
 
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Creates a new parser which reads input from a string.
-     *
-     * @param catalog catalog containing metadata affected by parsing
-     * @param sql string to be parsed
+     * Creates a new parser.
      */
-    public FarragoParser(FarragoCatalog catalog,String sql)
+    public FarragoParser()
     {
-        parserImpl = new FarragoParserImpl(new StringReader(sql));
-        parserImpl.farragoParser = this;
     }
 
     //~ Methods ---------------------------------------------------------------
 
-    /**
-     * .
-     *
-     * @return the ParserContext for the current position, or null if done
-     *         parsing
-     */
-    public ParserContext getCurrentContext()
+    // implement FarragoSessionParser
+    public FarragoSessionParserPosition getCurrentPosition()
     {
         if (doneParsing) {
             return null;
         } else {
-            return parserImpl.getCurrentContext();
+            return parserImpl.getCurrentPosition();
         }
     }
 
-    /**
-     * Parse the SQL statement whose text was specified at construction.  If it
-     * is a DDL statement, this may implicitly performs uncommitted catalog
-     * updates.
-     *
-     * @return for DDL, a DdlStmt; for DML or query, top-level SqlNode
-     */
-    public Object parseSqlStatement()
+    // implement FarragoSessionParser
+    public Object parseSqlStatement(
+        FarragoSessionDdlValidator ddlValidator,
+        FarragoReposTxnContext txnContext,
+        String sql)
     {
-        assert (ddlValidator != null);
+        this.ddlValidator = ddlValidator;
+        this.txnContext = txnContext;
+        
+        parserImpl = new FarragoParserImpl(new StringReader(sql));
+        parserImpl.farragoParser = this;
 
         try {
             return parserImpl.FarragoSqlStmtEof();
         } catch (ParseException ex) {
-            throw ddlValidator.res.newParserError(
+            throw FarragoResource.instance().newParserError(
                 ex.getMessage(),
                 ex);
         } finally {
             doneParsing = true;
-        }
-    }
-
-    /**
-     * Rollback any repository transaction initiated by this parser.
-     */
-    public void rollbackReposTxn()
-    {
-        if (txn) {
-            txn = false;
-            ddlValidator.getCatalog().getRepository().endTrans(true);
-        }
-    }
-
-    /**
-     * Commmit any repository transaction initiated by this parser.
-     */
-    public void commitReposTxn()
-    {
-        if (txn) {
-            txn = false;
-            ddlValidator.getCatalog().getRepository().endTrans();
         }
     }
 
@@ -132,8 +102,7 @@ public class FarragoParser
      */
     void startReposWriteTxn()
     {
-        ddlValidator.getCatalog().getRepository().beginTrans(true);
-        txn = true;
+        txnContext.beginWriteTxn();
     }
 }
 

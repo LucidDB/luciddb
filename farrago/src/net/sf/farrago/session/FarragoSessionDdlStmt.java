@@ -17,36 +17,40 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-package net.sf.farrago.db;
+package net.sf.farrago.session;
 
-import net.sf.farrago.session.*;
-import net.sf.farrago.parser.*;
-import net.sf.farrago.catalog.*;
-import net.sf.farrago.ddl.*;
-import net.sf.farrago.fennel.*;
-
-import java.util.*;
+import net.sf.farrago.cwm.core.*;
 
 /**
- * FarragoDbSessionFactory is a default implementation for the
- * {@link net.sf.farrago.session.FarragoSessionFactory} interface.
+ * FarragoSessionDdlStmt represents the output of DDL statement parsing.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoDbSessionFactory implements FarragoSessionFactory
+public interface FarragoSessionDdlStmt
 {
-    // implement FarragoSessionFactory
-    public FarragoSession newSession(String url,Properties info)
-    {
-        return new FarragoDbSession(url,info,this);
-    }
+    /**
+     * @return the top-level CwmModelElement affected by this stmt, or null if
+     * none 
+     */
+    public CwmModelElement getModelElement();
     
-    // implement FarragoSessionFactory
-    public FennelCmdExecutor newFennelCmdExecutor()
-    {
-        return new FennelCmdExecutorImpl();
-    }
+    /**
+     * @return whether DROP RESTRICT is in effect
+     */
+    public boolean isDropRestricted();
+    
+    /**
+     * Called before generic validation.
+     *
+     * @param ddlValidator the object validating this stmt
+     */
+    public void preValidate(FarragoSessionDdlValidator ddlValidator);
+    
+    /**
+     * @return true if this statement implies an auto-commit before and after
+     */
+    public boolean requiresCommit();
 }
 
-// End FarragoDbSessionFactory.java
+// End FarragoSessionDdlStmt.java

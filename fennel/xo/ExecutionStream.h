@@ -33,6 +33,8 @@ FENNEL_BEGIN_NAMESPACE
  */
 struct ExecutionStreamParams 
 {
+    virtual ~ExecutionStreamParams() {}
+    
     /**
      * CacheAccessor to use for any data access.  This will be singular if the
      * stream should not perform data access.
@@ -53,9 +55,9 @@ struct ExecutionStreamParams
  * which it may transform to produce its output.  Dataflow takes place in
  * batches of tuples.
  */
-template<class G, class S>
 class ExecutionStream : virtual public ClosableObject
 {
+    friend class ExecutionStreamGraphImpl;
 protected:
 
     /**
@@ -70,7 +72,7 @@ protected:
     /**
      * Dataflow graph containing this stream.
      */
-    G *pGraph;
+    ExecutionStreamGraph *pGraph;
     
     /**
      * Identifier for this stream.
@@ -108,12 +110,16 @@ protected:
      *
      * @return reference to child
      */
-    S getStreamInput(uint ordinal)
+    SharedExecutionStream getStreamInput(uint ordinal)
     {
         return pGraph->getStreamInput(getStreamId(),ordinal);
     }
     
 public:
+    virtual ~ExecutionStream()
+    {
+    }
+
     /**
      * Enumeration of supported dataflow buffer provision
      * capabilities/requirements.

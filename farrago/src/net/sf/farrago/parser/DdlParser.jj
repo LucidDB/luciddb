@@ -60,9 +60,9 @@ class FarragoParserImpl extends CommonParserBase {
 
     private boolean dropRestrict;
 
-    ParserContext getCurrentContext()
+    FarragoSessionParserPosition getCurrentPosition()
     {
-        return new ParserContext(
+        return new FarragoSessionParserPosition(
             token.beginLine,
             token.beginColumn);
     }
@@ -473,9 +473,8 @@ CwmSqlindex IndexDefinition(CwmSchema schema,CwmTable table) :
             } else {
                 // TODO:  move rule down into validator
                 if (table != specifiedTable) {
-                    DdlValidator validator = farragoParser.ddlValidator;
-                    throw validator.res.newValidatorIndexBadTable(
-                        validator.getParserContextString(
+                    throw FarragoResource.instance().newValidatorIndexBadTable(
+                        farragoParser.ddlValidator.getParserPosString(
                             index));
                 }
             }
@@ -969,7 +968,6 @@ FemDataWrapper ForeignDataWrapperDefinition() :
     FemDataWrapper wrapper;
     SqlIdentifier wrapperName;
     String libraryFile;
-    DdlValidator ddlValidator = farragoParser.ddlValidator;
 }
 {
     <FOREIGN> <DATA> <WRAPPER> wrapperName = SimpleIdentifier()
@@ -1014,7 +1012,6 @@ FemDataServer DataServerDefinition() :
     SqlIdentifier serverName;
     String serverType;
     String serverVersion;
-    DdlValidator ddlValidator = farragoParser.ddlValidator;
 }
 {
     <SERVER> serverName = SimpleIdentifier()
@@ -1067,7 +1064,6 @@ FemForeignTable ForeignTableDefinition(CwmSchema schema) :
     FemForeignTable table;
     FemDataServer server;
     SqlIdentifier qualifiedTableName;
-    DdlValidator ddlValidator = farragoParser.ddlValidator;
 }
 {
     <FOREIGN> <TABLE>

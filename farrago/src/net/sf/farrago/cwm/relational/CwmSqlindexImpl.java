@@ -141,7 +141,7 @@ public abstract class CwmSqlindexImpl extends InstanceHandler
         if (validator.getCatalog().isClustered(this)) {
             throw validator.res.newValidatorDropClusteredIndex(
                 validator.getCatalog().getLocalizedObjectName(this,null),
-                validator.getParserContextString(this));
+                validator.getParserPosString(this));
         }
 
         if (getTable().isTemporary()) {

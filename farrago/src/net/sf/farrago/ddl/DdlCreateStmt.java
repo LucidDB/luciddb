@@ -19,6 +19,7 @@
 
 package net.sf.farrago.ddl;
 
+import net.sf.farrago.session.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
 
@@ -47,14 +48,14 @@ public class DdlCreateStmt extends DdlStmt
     }
 
     // implement DdlStmt
-    public void preValidate(DdlValidator ddlValidator)
+    public void preValidate(FarragoSessionDdlValidator ddlValidator)
     {
         if (getModelElement() instanceof CwmSchema) {
             // for CREATE SCHEMA, override the default qualifier
             // with the new schema
-            ddlValidator.connectionDefaults.schemaCatalogName =
+            ddlValidator.getConnectionDefaults().schemaCatalogName =
                 getModelElement().getNamespace().getName();
-            ddlValidator.connectionDefaults.schemaName =
+            ddlValidator.getConnectionDefaults().schemaName =
                 getModelElement().getName();
         }
     }

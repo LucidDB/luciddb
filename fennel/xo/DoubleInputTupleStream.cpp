@@ -28,8 +28,8 @@ void DoubleInputTupleStream::prepare(TupleStreamParams const &params)
     TupleStream::prepare(params);
     assert(pGraph->getInputCount(getStreamId()) == 2);
     assert(getInputBufferRequirement() != NO_PROVISION);
-    pFirstInputStream = getStreamInput(0);
-    pSecondInputStream = getStreamInput(1);
+    pFirstInputStream = getTupleStreamInput(0);
+    pSecondInputStream = getTupleStreamInput(1);
 }
 
 void DoubleInputTupleStream::open(bool restart)
@@ -39,8 +39,8 @@ void DoubleInputTupleStream::open(bool restart)
         pFirstInputStream->open(true);
         pSecondInputStream->open(true);
     } else {
-        pFirstInputStream = getStreamInput(0);
-        pSecondInputStream = getStreamInput(1);
+        pFirstInputStream = getTupleStreamInput(0);
+        pSecondInputStream = getTupleStreamInput(1);
     }
 }
 

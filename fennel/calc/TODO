@@ -79,11 +79,18 @@ that returns a non-const. The non-const version should check for the Read-Only
 property. For some reason, putting a const around the TMPLT does not work
 as expected.
 
-Consider making unit length in tupledata and tupledescriptor a typedef
-and propigating said typedef into calculator.
-
 Update spec to reflect PointerSizeT and PointerOperandT being a unit,
 for the moment.
+
+Consider removing pointer to Calc from all extended instructions. Seems to 
+have no purpose.
+
+Rationalize length/width getS/putS getSMax/putSMax naming to be consistant
+and call out byte-length nature. Include ExtString.cpp, SqlString.cpp and
+RegisterReference (and all Instructions) in a grand-renaming.
+
+Verify that all SqlString fuctions can take the same string as both input and
+output. Or, for those like, perhaps, ToUpper, document the exceptions
 
 
 ====================================================

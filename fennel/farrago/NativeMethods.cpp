@@ -22,6 +22,7 @@
 #include "fennel/farrago/NativeMethods.h"
 #include "fennel/farrago/CmdInterpreter.h"
 #include "fennel/farrago/TupleStreamBuilder.h"
+#include "fennel/farrago/ExecutionStreamFactory.h"
 #include "fennel/farrago/JniUtil.h"
 #include "fennel/xo/TupleStreamGraph.h"
 #include "fennel/xo/TupleStream.h"
@@ -100,7 +101,7 @@ Java_net_sf_farrago_fennel_FennelStorage_tupleStreamFetch(
             CmdInterpreter::getStreamHandleFromObj(
                 pEnv,hStream).pTupleStreamGraph;
         uint cbActual;
-        SharedTupleStream pStream = pGraph->getSinkStream();
+        SharedExecutionStream pStream = pGraph->getSinkStream();
         ByteInputStream &inputResultStream = pStream->getProducerResultStream();
         PConstBuffer pBuffer = inputResultStream.getReadPointer(
             1,&cbActual);
@@ -179,7 +180,7 @@ Java_net_sf_farrago_fennel_FennelStorage_getAccessorXmiForTupleDescriptor(
     // TODO:  should take database handle and use its factory instead
     StandardTypeDescriptorFactory typeFactory;
     TupleDescriptor tupleDescriptor;
-    TupleStreamBuilder::readTupleDescriptor(
+    ExecutionStreamFactory::readTupleDescriptor(
         tupleDescriptor,
         proxyTupleDesc,
         typeFactory);
@@ -306,7 +307,6 @@ extern "C" JNIEXPORT jint JNICALL
 Java_net_sf_farrago_fennel_FennelStorage_getHandleCount(
     JNIEnv *pEnvInit, jclass)
 {
-    JniEnvRef pEnv(pEnvInit);
     return JniUtil::handleCount;
 }
 

@@ -373,7 +373,7 @@ public:
     //! is not a pointer.
     TMPLT
     getP() const {
-        assert(StandardTypeDescriptor::isArray(mType));
+        assert(StandardTypeDescriptor::StandardTypeDescriptor::isArray(mType));
         if (mProp & (EPropCachePointer|EPropPtrReset)) {
             assert(mPData);  // useful or harmful?
             return reinterpret_cast<TMPLT>(mPData);
@@ -398,7 +398,7 @@ public:
     {
         assert(!(mProp & EPropReadOnly));
         assert(newP);  // use toNull()
-        assert(StandardTypeDescriptor::isArray(mType));
+        assert(StandardTypeDescriptor::StandardTypeDescriptor::isArray(mType));
         if (mProp & (EPropCachePointer|EPropPtrReset)) {
             if ((mProp & EPropPtrReset) && !mCachePtrModified) {
                 mCachePtrModified = true;
@@ -459,7 +459,21 @@ public:
             return ((*(mRegisterSetDescP[mSetIndex]))[mIndex]).cbStorage;
         }
     }
-    //! Get size of data buffer
+    //! Get size of string, in bytes, based on type. 
+    //!
+    //! Fixed width, CHAR, BINARY:  Returns getSMax()
+    //! Variable width, VARCHAR, VARBINARY: Returns getS()
+    TupleStorageByteLength
+    getSStr() const
+    {
+        assert(StandardTypeDescriptor::isArray(mType));
+        if (StandardTypeDescriptor::isVariableLenArray(mType)) {
+            return getS();
+        } else {
+            return getSMax();
+        }
+    }
+    //! Set size, in bytes, of data buffer
     //!
     //! This is the actual size of the object pointed to, not
     //! the amount of memory allocated for the object. For example,
@@ -481,6 +495,18 @@ public:
             pDatum->cbData = newsize;
         }
     }
+    //! Set size of string, in bytes, based on type.
+    //!
+    //! Fixed width, CHAR/BINARY: has no effect. 
+    //! Variable width, VARCHAR/VARBINARY: acts as a putS() wrapper.
+    void
+    putSStr(TupleStorageByteLength newsize)
+    {
+        assert(StandardTypeDescriptor::isArray(mType));
+        if (StandardTypeDescriptor::isVariableLenArray(mType)) {
+            putS(newsize);
+        }
+    }
 
     //! Return a nicely formatted string representing register's
     //! current value
@@ -491,7 +517,7 @@ public:
         if (this->isNull()) { // does assert checking for us
             return "NULL";
         }
-        if (StandardTypeDescriptor::isArray(mType)) {
+        if (StandardTypeDescriptor::StandardTypeDescriptor::isArray(mType)) {
 #if 0
             // Does not compile due to ptr/non-ptr compile issue
             // TODO: Make this work with VARBINARY and I18N

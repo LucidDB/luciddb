@@ -28,7 +28,7 @@ void SingleInputTupleStream::prepare(TupleStreamParams const &params)
     TupleStream::prepare(params);
     assert(pGraph->getInputCount(getStreamId()) == 1);
     assert(getInputBufferRequirement() != NO_PROVISION);
-    pInputStream = getStreamInput(0);
+    pInputStream = getTupleStreamInput(0);
 }
 
 TupleDescriptor const &SingleInputTupleStream::getOutputDesc() const
@@ -42,7 +42,7 @@ void SingleInputTupleStream::open(bool restart)
     if (restart) {
         pInputStream->open(true);
     } else {
-        pInputStream = getStreamInput(0);
+        pInputStream = getTupleStreamInput(0);
     }
 }
 

@@ -20,7 +20,6 @@
 package net.sf.farrago.jdbc;
 
 import net.sf.farrago.session.*;
-import net.sf.farrago.query.*;
 
 import java.sql.*;
 

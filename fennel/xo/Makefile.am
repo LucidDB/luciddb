@@ -13,6 +13,7 @@ BufferingTupleStream.cpp \
 CartesianProductStream.cpp \
 ConsumerToProducerProvisionAdapter.cpp \
 DoubleInputTupleStream.cpp \
+ExecutionStreamGraph.cpp \
 ProducerToConsumerProvisionAdapter.cpp \
 SingleInputTupleStream.cpp \
 SortingStream.cpp \

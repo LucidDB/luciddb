@@ -91,7 +91,7 @@ public abstract class CwmColumnImpl extends InstanceHandler
             } catch (Throwable ex) {
                 throw validator.res.newValidatorBadDefaultClause(
                     getName(),
-                    validator.getParserContextString(this),
+                    validator.getParserPosString(this),
                     ex);
                 
             } finally {
@@ -123,7 +123,7 @@ public abstract class CwmColumnImpl extends InstanceHandler
         if (stmtContext.getPreparedParamType().getFieldCount() > 0) {
             throw validator.res.newValidatorBadDefaultParam(
                 getName(),
-                validator.getParserContextString(this));
+                validator.getParserPosString(this));
         }
 
         // SQL standard is very picky about what can go in a DEFAULT clause
@@ -142,7 +142,7 @@ public abstract class CwmColumnImpl extends InstanceHandler
                 getName(),
                 targetTypeFamily.getName(),
                 sourceTypeFamily.getName(),
-                validator.getParserContextString(this));
+                validator.getParserPosString(this));
         }
 
         // TODO:  additional rules from standard, like no truncation allowed.
@@ -178,14 +178,14 @@ public abstract class CwmColumnImpl extends InstanceHandler
                 throw validator.res.newValidatorPrecRequired(
                     getLocalizedTypeName(validator,column),
                     getLocalizedName(validator,column),
-                    validator.getParserContextString(column));
+                    validator.getParserPosString(column));
             }
         } else {
             if (precision != null) {
                 throw validator.res.newValidatorPrecUnexpected(
                     getLocalizedTypeName(validator,column),
                     getLocalizedName(validator,column),
-                    validator.getParserContextString(column));
+                    validator.getParserPosString(column));
             }
         }
         if (type.takesScale()) {
@@ -195,7 +195,7 @@ public abstract class CwmColumnImpl extends InstanceHandler
                 throw validator.res.newValidatorScaleUnexpected(
                     getLocalizedTypeName(validator,column),
                     getLocalizedName(validator,column),
-                    validator.getParserContextString(column));
+                    validator.getParserPosString(column));
             }
         }
         if (type.isString()) {
@@ -216,7 +216,7 @@ public abstract class CwmColumnImpl extends InstanceHandler
                     throw validator.res.newValidatorCharsetUnsupported(
                         column.getCharacterSetName(),
                         getLocalizedName(validator,column),
-                        validator.getParserContextString(column));
+                        validator.getParserPosString(column));
                 }
             }
             Charset charSet = Charset.forName(column.getCharacterSetName());
@@ -229,7 +229,7 @@ public abstract class CwmColumnImpl extends InstanceHandler
                 throw validator.res.newValidatorCharsetUnexpected(
                     getLocalizedTypeName(validator,column),
                     getLocalizedName(validator,column),
-                    validator.getParserContextString(column));
+                    validator.getParserPosString(column));
             }
         }
 
@@ -243,7 +243,7 @@ public abstract class CwmColumnImpl extends InstanceHandler
                     column.getLength(),
                     maximum,
                     getLocalizedName(validator,column),
-                    validator.getParserContextString(column));
+                    validator.getParserPosString(column));
             }
         }
         if (column.getPrecision() != null) {
@@ -257,7 +257,7 @@ public abstract class CwmColumnImpl extends InstanceHandler
                     column.getPrecision(),
                     maximum,
                     getLocalizedName(validator,column),
-                    validator.getParserContextString(column));
+                    validator.getParserPosString(column));
             }
         }
         if (column.getScale() != null) {
@@ -268,7 +268,7 @@ public abstract class CwmColumnImpl extends InstanceHandler
                     column.getScale(),
                     maximum,
                     getLocalizedName(validator,column),
-                    validator.getParserContextString(column));
+                    validator.getParserPosString(column));
             }
         }
     }

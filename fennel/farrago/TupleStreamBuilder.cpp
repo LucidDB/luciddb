@@ -22,6 +22,7 @@
 #include "fennel/farrago/TupleStreamBuilder.h"
 #include "fennel/farrago/JavaTupleStream.h"
 #include "fennel/farrago/CmdInterpreter.h"
+#include "fennel/farrago/ExecutionStreamFactory.h"
 #include "fennel/xo/BTreeScan.h"
 #include "fennel/xo/BTreeSearch.h"
 #include "fennel/xo/BTreeSearchUnique.h"
@@ -45,23 +46,21 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 
 TupleStreamBuilder::TupleStreamBuilder(
     SharedDatabase pDatabaseInit,
-    SharedTableWriterFactory pTableWriterFactoryInit,
-    SharedTupleStreamGraph pGraphInit,
-    CmdInterpreter::StreamHandle *pStreamHandleInit)
+    ExecutionStreamFactory &streamFactoryInit,
+    SharedTupleStreamGraph pGraphInit)
+    : streamFactory(streamFactoryInit)
 {
     pDatabase = pDatabaseInit;
-    pTableWriterFactory = pTableWriterFactoryInit;
     pGraph = pGraphInit;
-    pStreamHandle = pStreamHandleInit;
 }
 
 void TupleStreamBuilder::buildStreamGraph(ProxyExecutionStreamDef &streamDef)
 {
-    scratchAccessor =
+    SegmentAccessor scratchAccessor =
         pDatabase->getSegmentFactory()->newScratchSegment(
             pDatabase->getCache());
+    streamFactory.setScratchAccessor(scratchAccessor);
     pGraph->setScratchSegment(scratchAccessor.pSegment);
-
     // perform a recursive traversal, requesting that the topmost stream
     // provide a buffer (since it has no consumer)
     visitStream(streamDef,TupleStream::PRODUCER_PROVISION);
@@ -83,8 +82,10 @@ void TupleStreamBuilder::visitStream(
     // add the XO prefix
     name = "xo." + name;
 
-    // dispatch based on polymorphic stream type
-    FemVisitor::visitTbl.visit(*this,streamDef);
+    ExecutionStreamFactors factors = streamFactory.visitStream(streamDef);
+    buildStreamInputs(factors.getStream(),streamDef);
+    factors.prepareStream();
+    childParams = static_cast<TupleStreamParams &>(factors.getParams());
     
     if (traceTarget.getSourceTraceLevel(name) <= TRACE_FINE) {
         // interpose a tracing stream
@@ -95,11 +96,12 @@ void TupleStreamBuilder::visitStream(
 }
 
 void TupleStreamBuilder::buildStreamInputs(
-    TupleStream *pNewStream,ProxyExecutionStreamDef &streamDef)
+    ExecutionStream *pNewStream,ProxyExecutionStreamDef &streamDef)
 {
     // One of the visit methods is in the middle of building a new stream.
     // First, add a reference to it to the graph.
-    SharedTupleStream pStream(pNewStream);
+    TupleStream *pTupleStream = static_cast<TupleStream*>(pNewStream);
+    SharedTupleStream pStream(pTupleStream);
     pGraph->addStream(pStream);
 
     // Next, recursively visit each input, building depth-first
@@ -176,321 +178,6 @@ void TupleStreamBuilder::addTracingStream(std::string name)
         pSharedTracingStream->getStreamId());
     pChildStream = pSharedTracingStream;
     pTracingStream->prepare(childParams);
-}
-
-// NOTE:  if you are adding a new stream implementation, be careful to follow
-// the pattern set by the existing methods:
-// (1) allocate new stream object
-// (2) immediately call buildStreamInputs
-// (3) read stream-specific parameters
-// (4) call prepare on the stream
-
-void TupleStreamBuilder::visit(ProxyIndexScanDef &streamDef)
-{
-    BTreeScan *pStream = new BTreeScan();
-    buildStreamInputs(pStream,streamDef);
-
-    BTreeScanParams params;
-    readBTreeReadTupleStreamParams(params,streamDef);
-    pStream->prepare(params);
-}
-
-void TupleStreamBuilder::visit(ProxyIndexSearchDef &streamDef)
-{
-    BTreeSearch *pStream =
-        streamDef.isUniqueKey() ? new BTreeSearchUnique() : new BTreeSearch();
-    buildStreamInputs(pStream,streamDef);
-
-    BTreeSearchParams params;
-    readBTreeReadTupleStreamParams(params,streamDef);
-    params.outerJoin = streamDef.isOuterJoin();
-    if (streamDef.getInputKeyProj()) {
-        readTupleProjection(
-            params.inputKeyProj,
-            streamDef.getInputKeyProj());
-    }
-    if (streamDef.getInputJoinProj()) {
-        readTupleProjection(
-            params.inputJoinProj,
-            streamDef.getInputJoinProj());
-    }
-    pStream->prepare(params);
-}
-
-void TupleStreamBuilder::visit(ProxyJavaTupleStreamDef &streamDef)
-{
-    JavaTupleStream *pStream = new JavaTupleStream();
-    buildStreamInputs(pStream,streamDef);
-    
-    JavaTupleStreamParams params;
-    readTupleStreamParams(params,streamDef);
-    params.pStreamHandle = pStreamHandle;
-    params.javaTupleStreamId = streamDef.getStreamId();
-    readTupleDescriptor(
-        params.tupleDesc,
-        *(streamDef.getTupleDesc()),
-        pDatabase->getTypeFactory());
-    pStream->prepare(params);
-}
-
-void TupleStreamBuilder::visit(ProxyTableInserterDef &streamDef)
-{
-    TableWriterStream *pStream = new TableWriterStream();
-    buildStreamInputs(pStream,streamDef);
-
-    TableWriterStreamParams params;
-    params.actionType = TableWriter::ACTION_INSERT;
-    readTableWriterStreamParams(params,streamDef);
-    pStream->prepare(params);
-}
-
-void TupleStreamBuilder::visit(ProxyTableDeleterDef &streamDef)
-{
-    TableWriterStream *pStream = new TableWriterStream();
-    buildStreamInputs(pStream,streamDef);
-
-    TableWriterStreamParams params;
-    params.actionType = TableWriter::ACTION_DELETE;
-    readTableWriterStreamParams(params,streamDef);
-    pStream->prepare(params);
-}
-
-void TupleStreamBuilder::visit(ProxyTableUpdaterDef &streamDef)
-{
-    TableWriterStream *pStream = new TableWriterStream();
-    buildStreamInputs(pStream,streamDef);
-
-    TableWriterStreamParams params;
-    params.actionType = TableWriter::ACTION_UPDATE;
-    SharedProxyTupleProjection pUpdateProj =
-        streamDef.getUpdateProj();
-    readTupleProjection(
-        params.updateProj,
-        pUpdateProj);
-    readTableWriterStreamParams(params,streamDef);
-    pStream->prepare(params);
-}
-
-void TupleStreamBuilder::visit(ProxySortingStreamDef &streamDef)
-{
-    SortingStream *pStream = new SortingStream();
-    buildStreamInputs(pStream,streamDef);
-
-    SortingStreamParams params;
-    readTupleStreamParams(params,streamDef);
-    params.distinctness = parseDistinctness(streamDef.getDistinctness());
-    params.pSegment = pDatabase->getTempSegment();
-    params.rootPageId = NULL_PAGE_ID;
-    params.segmentId = Database::TEMP_SEGMENT_ID;
-    params.pageOwnerId = ANON_PAGE_OWNER_ID;
-    params.pRootMap = NULL;
-    readTupleProjection(
-        params.keyProj,
-        streamDef.getKeyProj());
-    
-    pStream->prepare(params);
-}
-
-void TupleStreamBuilder::visit(ProxyIndexLoaderDef &streamDef)
-{
-    BTreeLoader *pStream = new BTreeLoader();
-    buildStreamInputs(pStream,streamDef);
-
-    BTreeLoaderParams params;
-    readBTreeStreamParams(params,streamDef);
-    params.distinctness = parseDistinctness(streamDef.getDistinctness());
-    params.pTempSegment = pDatabase->getTempSegment();
-    pStream->prepare(params);
-}
-
-void TupleStreamBuilder::visit(ProxyCartesianProductStreamDef &streamDef)
-{
-    CartesianProductStream *pStream = new CartesianProductStream();
-    buildStreamInputs(pStream,streamDef);
-
-    CartesianProductStreamParams params;
-    readTupleStreamParams(params,streamDef);
-    pStream->prepare(params);
-}
-
-void TupleStreamBuilder::visit(ProxyBufferingTupleStreamDef &streamDef)
-{
-    BufferingTupleStream *pStream = new BufferingTupleStream();
-    buildStreamInputs(pStream,streamDef);
-
-    BufferingTupleStreamParams params;
-    readTupleStreamParams(params,streamDef);
-    params.multipass = streamDef.isMultipass();
-    if (!streamDef.isInMemory()) {
-        params.scratchAccessor.pSegment = pDatabase->getTempSegment();
-        params.scratchAccessor.pCacheAccessor = params.pCacheAccessor;
-    }
-    
-    pStream->prepare(params);
-}
-
-void TupleStreamBuilder::readTupleStreamParams(
-    TupleStreamParams &params,
-    ProxyTupleStreamDef &streamDef)
-{
-    assert(streamDef.getCachePageQuota() >= streamDef.getCachePageMin());
-    assert(streamDef.getCachePageQuota() <= streamDef.getCachePageMax());
-    if (streamDef.getCachePageQuota()) {
-        params.pCacheAccessor = pDatabase->getCache();
-        params.scratchAccessor = scratchAccessor;
-        if (shouldEnforceCacheQuotas()) {
-            // all cache access should be wrapped by quota checks
-            uint quota = streamDef.getCachePageQuota();
-            SharedQuotaCacheAccessor pQuotaAccessor(
-                new QuotaCacheAccessor(
-                    SharedQuotaCacheAccessor(),
-                    params.pCacheAccessor,
-                    quota));
-            params.pCacheAccessor = pQuotaAccessor;
-
-            // scratch access has to go through a separate CacheAccessor, but
-            // delegates quota checking to pQuotaAccessor
-            params.scratchAccessor.pCacheAccessor.reset(
-                new QuotaCacheAccessor(
-                    pQuotaAccessor,
-                    params.scratchAccessor.pCacheAccessor,
-                    quota));
-        }
-    }
-    childParams = params;
-}
-
-void TupleStreamBuilder::readTableWriterStreamParams(
-    TableWriterStreamParams &params,
-    ProxyTableWriterDef &streamDef)
-{
-    readTupleStreamParams(params,streamDef);
-    params.pTableWriterFactory = pTableWriterFactory;
-    params.tableId = ANON_PAGE_OWNER_ID;
-    params.pActionMutex = &(pDatabase->getCheckpointThread()->getActionMutex());
-    
-    SharedProxyIndexWriterDef pIndexWriterDef =
-        streamDef.getIndexWriter();
-    for (; pIndexWriterDef; ++pIndexWriterDef) {
-        TableIndexWriterParams indexParams;
-        // all index writers share some common attributes
-        indexParams.pCacheAccessor = params.pCacheAccessor;
-        indexParams.scratchAccessor = params.scratchAccessor;
-        readIndexWriterParams(indexParams,*pIndexWriterDef);
-        SharedProxyTupleProjection pInputProj =
-            pIndexWriterDef->getInputProj();
-        if (pInputProj) {
-            readTupleProjection(
-                indexParams.inputProj,
-                pInputProj);
-        } else {
-            // this is the clustered index; use it as a table ID
-            params.tableId = indexParams.pageOwnerId;
-        }
-        params.indexParams.push_back(indexParams);
-    }
-    assert(params.tableId != ANON_PAGE_OWNER_ID);
-}
-
-void TupleStreamBuilder::readBTreeStreamParams(
-    BTreeStreamParams &params,
-    ProxyIndexAccessorDef &streamDef)
-{
-    assert(params.pCacheAccessor);
-    
-    params.segmentId = SegmentId(streamDef.getSegmentId());
-    params.pageOwnerId = PageOwnerId(streamDef.getIndexId());
-    params.pSegment = pDatabase->getSegmentById(params.segmentId);
-    
-    readTupleDescriptor(
-        params.tupleDesc,
-        *(streamDef.getTupleDesc()),
-        pDatabase->getTypeFactory());
-    
-    readTupleProjection(
-        params.keyProj,
-        streamDef.getKeyProj());
-
-    if (streamDef.getRootPageId() != -1) {
-        params.rootPageId = PageId(streamDef.getRootPageId());
-        params.pRootMap = NULL;
-    } else {
-        params.rootPageId = NULL_PAGE_ID;
-        params.pRootMap = pStreamHandle;
-    }
-}
-
-void TupleStreamBuilder::readBTreeReadTupleStreamParams(
-    BTreeReadTupleStreamParams &params,
-    ProxyIndexScanDef &streamDef)
-{
-    readTupleStreamParams(params,streamDef);
-    readBTreeStreamParams(params,streamDef);
-    readTupleProjection(
-        params.outputProj,
-        streamDef.getOutputProj());
-}
-
-void TupleStreamBuilder::readIndexWriterParams(
-    TableIndexWriterParams &params,
-    ProxyIndexWriterDef &indexWriterDef)
-{
-    readBTreeStreamParams(params,indexWriterDef);
-    params.distinctness = parseDistinctness(
-        indexWriterDef.getDistinctness());
-    params.updateInPlace = indexWriterDef.isUpdateInPlace();
-}
-
-void TupleStreamBuilder::readTupleDescriptor(
-    TupleDescriptor &tupleDesc,
-    ProxyTupleDescriptor &javaTupleDesc,
-    StoredTypeDescriptorFactory const &typeFactory)
-{
-    tupleDesc.clear();
-    SharedProxyTupleAttrDescriptor pAttr = javaTupleDesc.getAttrDescriptor();
-    for (; pAttr; ++pAttr) {
-        StoredTypeDescriptor const &typeDescriptor = 
-            typeFactory.newDataType(pAttr->getTypeOrdinal());
-        tupleDesc.push_back(
-            TupleAttributeDescriptor(
-                typeDescriptor,pAttr->isNullable(),pAttr->getByteLength()));
-    }
-}
-
-void TupleStreamBuilder::readTupleProjection(
-    TupleProjection &tupleProj,
-    SharedProxyTupleProjection pJavaTupleProj)
-{
-    tupleProj.clear();
-    SharedProxyTupleAttrProjection pAttr = pJavaTupleProj->getAttrProjection();
-    for (; pAttr; ++pAttr) {
-        tupleProj.push_back(pAttr->getAttributeIndex());
-    }
-}
-
-// TODO:  support enumerations in ProxyGen so this isn't required
-Distinctness TupleStreamBuilder::parseDistinctness(std::string s)
-{
-    if (s == "DUP_ALLOW") {
-        return DUP_ALLOW;
-    } else if (s == "DUP_DISCARD") {
-        return DUP_DISCARD;
-    } else if (s == "DUP_FAIL") {
-        return DUP_FAIL;
-    }
-    assert(false);
-    throw;
-}
-
-bool TupleStreamBuilder::shouldEnforceCacheQuotas()
-{
-    TraceLevel traceLevel =
-        pDatabase->getTraceTarget().getSourceTraceLevel("xo.quota");
-#ifdef DEBUG
-    return traceLevel <= TRACE_OFF;
-#else
-    return traceLevel <= TRACE_FINE;
-#endif
 }
 
 FENNEL_END_CPPFILE("$Id$");

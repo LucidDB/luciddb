@@ -92,7 +92,7 @@ in the repository
 <code>schema_name</code> is bit of a hack.  Normally, in a repository
 with a nested package structure, the <code>root_package_name</code>
 option would be specified instead, and all child packages of the root
-package would appear as schema.  However, the MOF repository has no
+package would appear as schemas.  However, the MOF repository has no
 nested packages at all, so in such cases the schema_name option should
 be specified to make the namespace conform to the standard catalog.schema.table
 convention.  Choosing an upper-case name will allow you to avoid quoting
@@ -102,7 +102,7 @@ it later.
 
 Once the server definition above is created, you can directly query
 the repository extent if you know the available class names from the model.
-Let's get a list of all of the metaclasses define by MOF:
+Let's get a list of all of the metaclasses defined by MOF:
 
 <pre><code>
 select * from mof_repository.model."Class";

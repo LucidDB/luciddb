@@ -88,6 +88,13 @@ public class FactoryGen
             pw.println("        this.rootPackage = p;");
             pw.println("    }");
             pw.println();
+            pw.print("    public ");
+            pw.print(sourcePackageJavaMetaclassName);
+            pw.println(" getRootPackage()");
+            pw.println("    {");
+            pw.println("        return rootPackage;");
+            pw.println("    }");
+            pw.println();
 
             modelLoader = new FarragoModelLoader();
             FarragoPackage farragoPackage =

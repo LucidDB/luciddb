@@ -278,7 +278,7 @@ inline void TableWriter::executeTuple(LogicalActionType actionType)
 }
 
 RecordNum TableWriter::execute(
-    SharedTupleStream pInputStream,
+    SharedExecutionStream pInputStream,
     LogicalActionType actionType,
     SXMutex &actionMutex)
 {

@@ -222,6 +222,26 @@ public:
         }
         return false;
     }
+
+    static inline bool
+    isVariableLenArray(StandardTypeDescriptorOrdinal st)
+    {
+        if (st == STANDARD_TYPE_VARCHAR ||
+            st == STANDARD_TYPE_VARBINARY) {
+            return true;
+        }
+        return false;
+    }
+
+    static inline bool
+    isFixedLenArray(StandardTypeDescriptorOrdinal st)
+    {
+        if (st == STANDARD_TYPE_CHAR ||
+            st == STANDARD_TYPE_BINARY) {
+            return true;
+        }
+        return false;
+    }
     
 private:
     explicit

@@ -21,11 +21,8 @@
 #ifndef Fennel_TupleStream_Included
 #define Fennel_TupleStream_Included
 
-#include "fennel/tuple/TupleDescriptor.h"
-#include "fennel/tuple/TupleFormat.h"
 #include "fennel/xo/ExecutionStream.h"
 #include "fennel/xo/TupleStreamGraph.h"
-#include "fennel/segment/SegmentAccessor.h"
 
 FENNEL_BEGIN_NAMESPACE
 
@@ -42,9 +39,7 @@ struct TupleStreamParams : public ExecutionStreamParams
  * transform to produce its output.  Dataflow is always initiated by the
  * consumer, and takes place in batches of tuples.  
  */
-class TupleStream : public ExecutionStream<
-        TupleStreamGraph, SharedTupleStream>
-    
+class TupleStream : public ExecutionStream
 {
     friend class TupleStreamGraphImpl;
 protected:
@@ -56,6 +51,16 @@ protected:
     explicit TupleStream();
 
 public:
+    /**
+     * Utility method for accessing a child input stream.
+     *
+     * @param ordinal 0-based ordinal of child
+     *
+     * @return reference to child
+     */
+    virtual SharedTupleStream getTupleStreamInput(uint ordinal);
+
+    // refine ExecutionStream
     virtual void prepare(TupleStreamParams const &params);
 };
 

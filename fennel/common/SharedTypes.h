@@ -114,6 +114,15 @@ typedef boost::shared_ptr<Database> SharedDatabase;
 class CheckpointThread;
 typedef boost::shared_ptr<CheckpointThread> SharedCheckpointThread;
 
+class ExecutionStream;
+typedef boost::shared_ptr<ExecutionStream> SharedExecutionStream;
+
+class ExecutionStreamParams;
+typedef boost::shared_ptr<ExecutionStreamParams> SharedExecutionStreamParams;
+
+class ExecutionStreamGraph;
+typedef boost::shared_ptr<ExecutionStreamGraph> SharedExecutionStreamGraph;
+
 class TupleStream;
 typedef boost::shared_ptr<TupleStream> SharedTupleStream;
 
@@ -125,6 +134,9 @@ typedef boost::shared_ptr<TableWriter> SharedTableWriter;
 
 class TableWriterFactory;
 typedef boost::shared_ptr<TableWriterFactory> SharedTableWriterFactory;
+
+class ExecutionStreamFactory;
+typedef boost::shared_ptr<ExecutionStreamFactory> SharedExecutionStreamFactory;
 
 FENNEL_END_NAMESPACE
 

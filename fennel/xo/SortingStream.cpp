@@ -34,7 +34,7 @@ void SortingStream::prepare(SortingStreamParams const &params)
     assert(params.tupleDesc.empty());
     
     BTreeInserterParams inserterParams(params);
-    pInputStream = getStreamInput(0);
+    pInputStream = getTupleStreamInput(0);
     inserterParams.tupleDesc = pInputStream->getOutputDesc();
     
     BTreeInserter::prepare(inserterParams);

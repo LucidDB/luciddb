@@ -11,449 +11,97 @@
     </pattern>
 
     <!-- farrago components -->
-    <pattern name="catalog" class="net.sf.farrago.catalog.*" />
-    <pattern name="ddl">
-      <include class="net.sf.farrago.ddl.*" />
-      <include class="net.sf.farrago.cwm.relational.*Impl" />
-    </pattern>
+    <pattern name="cwm" class="net.sf.farrago.cwm.***" />
+    <pattern name="fem" class="net.sf.farrago.fem.***" />
     <pattern name="FarragoPackage">
       <include class="net.sf.farrago.FarragoPackage" />
       <include class="net.sf.farrago.FarragoMetadataFactory" />
     </pattern>
-    <pattern name="cwm" class="net.sf.farrago.cwm.***" />
-    <pattern name="fem" class="net.sf.farrago.fem.***" />
-    <pattern name="fennel" class="net.sf.farrago.fennel.*" />
-    <pattern name="jdbc" class="net.sf.farrago.jdbc.*" />
-    <pattern name="parser" class="net.sf.farrago.parser.*" />
-    <pattern name="query" class="net.sf.farrago.query.*" />
-    <pattern name="resource" class="net.sf.farrago.resource.*" />
-    <pattern name="dynamic" class="net.sf.farrago.dynamic.*" />
-    <pattern name="runtime" class="net.sf.farrago.runtime.*" />
-    <pattern name="test" class="net.sf.farrago.test.*" />
-    <pattern name="type" class="net.sf.farrago.type.*" />
     <pattern name="util" class="net.sf.farrago.util.*" />
-    <pattern name="db" class="net.sf.farrago.db.*" />
-    <pattern name="session" class="net.sf.farrago.session.*" />
+    <pattern name="resource" class="net.sf.farrago.resource.*" />
+    <pattern name="catalog.codegen" class="net.sf.farrago.catalog.codegen.*" />
+    <pattern name="catalog" class="net.sf.farrago.catalog.*" />
+    <pattern name="type" class="net.sf.farrago.type.*" />
     <pattern name="namespace" class="net.sf.farrago.namespace.*" />
     <pattern name="namespace.util" class="net.sf.farrago.namespace.util.*" />
+    <pattern name="fennel" class="net.sf.farrago.fennel.*" />
+    <pattern name="runtime" class="net.sf.farrago.runtime.*" />
+    <pattern name="dynamic" class="net.sf.farrago.dynamic.*" />
+    <pattern name="session" class="net.sf.farrago.session.*" />
+    <pattern name="query" class="net.sf.farrago.query.*" />
+    <pattern name="ddl">
+      <include class="net.sf.farrago.ddl.*" />
+      <include class="net.sf.farrago.cwm.relational.*Impl" />
+    </pattern>
+    <pattern name="parser" class="net.sf.farrago.parser.*" />
+    <pattern name="db" class="net.sf.farrago.db.*" />
+    <pattern name="jdbc" class="net.sf.farrago.jdbc.*" />
     <pattern name="namespace.impl" class="net.sf.farrago.namespace.impl.*" />
     <pattern name="namespace.mdr" class="net.sf.farrago.namespace.mdr.*" />
     <pattern name="namespace.jdbc" class="net.sf.farrago.namespace.jdbc.*" />
-    <pattern name="catalog.codegen" class="net.sf.farrago.catalog.codegen.*" />
+    <pattern name="test" class="net.sf.farrago.test.*" />
 
     <!-- explicit list of all farrago components above -->
     <pattern name="farrago.explicit">
-      <include pattern="catalog"/>
-      <include pattern="ddl"/>
-      <include pattern="FarragoPackage"/>
       <include pattern="cwm"/>
       <include pattern="fem"/>
-      <include pattern="fennel"/>
-      <include pattern="jdbc"/>
-      <include pattern="parser"/>
-      <include pattern="query"/>
-      <include pattern="resource"/>
-      <include pattern="dynamic"/>
-      <include pattern="runtime"/>
-      <include pattern="test"/>
-      <include pattern="type"/>
+      <include pattern="FarragoPackage"/>
       <include pattern="util"/>
-      <include pattern="db"/>
-      <include pattern="session"/>
+      <include pattern="resource"/>
+      <include pattern="catalog.codegen"/>
+      <include pattern="catalog"/>
+      <include pattern="type"/>
       <include pattern="namespace"/>
       <include pattern="namespace.util"/>
+      <include pattern="fennel"/>
+      <include pattern="runtime"/>
+      <include pattern="dynamic"/>
+      <include pattern="session"/>
+      <include pattern="query"/>
+      <include pattern="ddl"/>
+      <include pattern="parser"/>
+      <include pattern="db"/>
+      <include pattern="jdbc"/>
       <include pattern="namespace.impl"/>
       <include pattern="namespace.mdr"/>
       <include pattern="namespace.jdbc"/>
-      <include pattern="catalog.codegen"/>
+      <include pattern="test"/>
     </pattern>
 
-    <!-- TODO:  factor out patterns from access rules below -->
-    <!-- (way too much explicit transitive closure at the moment) -->
+    <!-- Below are the actual rules. -->
+    <!-- We define a COMPONENT.deps pattern for each component; -->
+    <!-- these can be reused in other patterns, avoiding explict -->
+    <!-- transitive closure.  The components are topologically -->
+    <!-- sorted, starting from those which depend on nothing. -->
 
-    <!-- FarragoPackage -->
+    <pattern name="FarragoPackage.deps">
+      <include pattern="FarragoPackage" />
+      <include pattern="cwm" />
+      <include pattern="fem" />
+    </pattern>
+
     <access-rule>
-      <message>farrago dependency violation</message>
+      <message>FarragoPackage dependency violation</message>
       <deny>
         <from pattern="FarragoPackage" />
         <to pattern="farrago" />
         <allow>
-          <to pattern="FarragoPackage" />
-        </allow>
-        <allow>
-          <to pattern="cwm" />
-        </allow>
-        <allow>
-          <to pattern="fem" />
+          <to pattern="FarragoPackage.deps" />
         </allow>
       </deny>
     </access-rule>
 
-    <!-- catalog -->
-    <access-rule>
-      <message>catalog dependency violation</message>
-      <deny>
-        <from pattern="catalog" />
-        <to pattern="farrago" />
-        <allow>
-          <to pattern="util" />
-        </allow>
-        <allow>
-          <to pattern="cwm" />
-        </allow>
-        <allow>
-          <to pattern="FarragoPackage" />
-        </allow>
-        <allow>
-          <to pattern="fem" />
-        </allow>
-        <allow>
-          <to pattern="catalog" />
-        </allow>
-        <allow>
-          <to pattern="resource" />
-        </allow>
-      </deny>
-    </access-rule>
+    <pattern name="util.deps">
+      <include pattern="util" />
+    </pattern>
 
-    <!-- ddl -->
-    <access-rule>
-      <message>ddl dependency violation</message>
-      <deny>
-        <from pattern="ddl" />
-        <to pattern="farrago" />
-        <allow>
-          <to pattern="util" />
-        </allow>
-        <allow>
-          <to pattern="cwm" />
-        </allow>
-        <allow>
-          <to pattern="FarragoPackage" />
-        </allow>
-        <allow>
-          <to pattern="fem" />
-        </allow>
-        <allow>
-          <to pattern="catalog" />
-        </allow>
-        <allow>
-          <to pattern="type" />
-        </allow>
-        <allow>
-          <to pattern="resource" />
-        </allow>
-        <allow>
-          <to pattern="parser" />
-        </allow>
-        <allow>
-          <to pattern="ddl" />
-        </allow>
-        <allow>
-          <to pattern="query" />
-        </allow>
-        <allow>
-          <to pattern="fennel" />
-        </allow>
-        <allow>
-          <to pattern="session" />
-        </allow>
-        <allow>
-          <to pattern="namespace" />
-        </allow>
-        <allow>
-          <to pattern="namespace.util" />
-        </allow>
-      </deny>
-    </access-rule>
-
-    <!-- fennel -->
-    <access-rule>
-      <message>fennel dependency violation</message>
-      <deny>
-        <from pattern="fennel" />
-        <to pattern="farrago" />
-        <allow>
-          <to pattern="util" />
-        </allow>
-        <allow>
-          <to pattern="fem" />
-        </allow>
-        <allow>
-          <to pattern="fennel" />
-        </allow>
-        <allow>
-          <to pattern="resource" />
-        </allow>
-        <allow>
-          <to pattern="FarragoPackage" />
-        </allow>
-      </deny>
-    </access-rule>
-
-    <!-- db -->
-    <access-rule>
-      <message>db dependency violation</message>
-      <deny>
-        <from pattern="db" />
-        <to pattern="farrago" />
-        <allow>
-          <to pattern="catalog" />
-        </allow>
-        <allow>
-          <to pattern="ddl" />
-        </allow>
-        <allow>
-          <to pattern="cwm" />
-        </allow>
-        <allow>
-          <to pattern="fem" />
-        </allow>
-        <allow>
-          <to pattern="fennel" />
-        </allow>
-        <allow>
-          <to pattern="parser" />
-        </allow>
-        <allow>
-          <to pattern="query" />
-        </allow>
-        <allow>
-          <to pattern="resource" />
-        </allow>
-        <allow>
-          <to pattern="runtime" />
-        </allow>
-        <allow>
-          <to pattern="type" />
-        </allow>
-        <allow>
-          <to pattern="util" />
-        </allow>
-        <allow>
-          <to pattern="db" />
-        </allow>
-        <allow>
-          <to pattern="session" />
-        </allow>
-      </deny>
-    </access-rule>
-
-    <!-- jdbc -->
-    <access-rule>
-      <message>jdbc dependency violation</message>
-      <deny>
-        <from pattern="jdbc" />
-        <to pattern="farrago" />
-        <allow>
-          <to pattern="catalog" />
-        </allow>
-        <allow>
-          <to pattern="ddl" />
-        </allow>
-        <allow>
-          <to pattern="cwm" />
-        </allow>
-        <allow>
-          <to pattern="fem" />
-        </allow>
-        <allow>
-          <to pattern="fennel" />
-        </allow>
-        <allow>
-          <to pattern="jdbc" />
-        </allow>
-        <allow>
-          <to pattern="parser" />
-        </allow>
-        <allow>
-          <to pattern="query" />
-        </allow>
-        <allow>
-          <to pattern="resource" />
-        </allow>
-        <allow>
-          <to pattern="runtime" />
-        </allow>
-        <allow>
-          <to pattern="type" />
-        </allow>
-        <allow>
-          <to pattern="util" />
-        </allow>
-        <allow>
-          <to pattern="db" />
-        </allow>
-        <allow>
-          <to pattern="session" />
-        </allow>
-      </deny>
-    </access-rule>
-
-    <!-- parser -->
-    <access-rule>
-      <message>parser dependency violation</message>
-      <deny>
-        <from pattern="parser" />
-        <to pattern="farrago" />
-        <allow>
-          <to pattern="util" />
-        </allow>
-        <allow>
-          <to pattern="cwm" />
-        </allow>
-        <allow>
-          <to pattern="fem" />
-        </allow>
-        <allow>
-          <to pattern="catalog" />
-        </allow>
-        <allow>
-          <to pattern="parser" />
-        </allow>
-        <allow>
-          <to pattern="resource" />
-        </allow>
-        <allow>
-          <to pattern="ddl" />
-        </allow>
-        <allow>
-          <to pattern="session" />
-        </allow>
-      </deny>
-    </access-rule>
-
-    <!-- query -->
-    <access-rule>
-      <message>query dependency violation</message>
-      <deny>
-        <from pattern="query" />
-        <to pattern="farrago" />
-        <allow>
-          <to pattern="catalog" />
-        </allow>
-        <allow>
-          <to pattern="cwm" />
-        </allow>
-        <allow>
-          <to pattern="fem" />
-        </allow>
-        <allow>
-          <to pattern="fennel" />
-        </allow>
-        <allow>
-          <to pattern="query" />
-        </allow>
-        <allow>
-          <to pattern="resource" />
-        </allow>
-        <allow>
-          <to pattern="runtime" />
-        </allow>
-        <allow>
-          <to pattern="type" />
-        </allow>
-        <allow>
-          <to pattern="util" />
-        </allow>
-        <allow>
-          <to pattern="session" />
-        </allow>
-        <allow>
-          <to pattern="namespace" />
-        </allow>
-        <allow>
-          <to pattern="namespace.util" />
-        </allow>
-      </deny>
-    </access-rule>
-
-    <!-- resource -->
-    <access-rule>
-      <message>resource dependency violation</message>
-      <deny>
-        <from pattern="resource" />
-        <to pattern="farrago" />
-        <allow>
-          <to pattern="util" />
-        </allow>
-        <allow>
-          <to pattern="resource" />
-        </allow>
-      </deny>
-    </access-rule>
-
-    <!-- runtime -->
-    <access-rule>
-      <message>runtime dependency violation</message>
-      <deny>
-        <from pattern="runtime" />
-        <to pattern="farrago" />
-        <allow>
-          <to pattern="runtime" />
-        </allow>
-        <allow>
-          <to pattern="resource" />
-        </allow>
-        <allow>
-          <to pattern="type" />
-        </allow>
-        <allow>
-          <to pattern="fem" />
-        </allow>
-        <allow>
-          <to pattern="cwm" />
-        </allow>
-        <allow>
-          <to pattern="fennel" />
-        </allow>
-        <allow>
-          <to pattern="util" />
-        </allow>
-        <allow>
-          <to pattern="catalog" />
-        </allow>
-        <allow>
-          <to pattern="namespace" />
-        </allow>
-        <allow>
-          <to pattern="namespace.util" />
-        </allow>
-      </deny>
-    </access-rule>
-
-    <!-- type -->
-    <access-rule>
-      <message>type dependency violation</message>
-      <deny>
-        <from pattern="type" />
-        <to pattern="farrago" />
-        <allow>
-          <to pattern="type" />
-        </allow>
-        <allow>
-          <to pattern="catalog" />
-        </allow>
-        <allow>
-          <to pattern="cwm" />
-        </allow>
-        <allow>
-          <to pattern="resource" />
-        </allow>
-        <allow>
-          <to pattern="util" />
-        </allow>
-      </deny>
-    </access-rule>
-
-    <!-- util -->
     <access-rule>
       <message>util dependency violation</message>
       <deny>
         <from pattern="util" />
         <to pattern="farrago" />
         <allow>
-          <to pattern="util" />
+          <to pattern="util.deps" />
         </allow>
       </deny>
     </access-rule>
@@ -467,34 +115,144 @@
       </deny>
     </access-rule>
 
-    <!-- catalog.codegen -->
+    <pattern name="resource.deps">
+      <include pattern="util.deps" />
+      <include pattern="resource" />
+    </pattern>
+
     <access-rule>
-      <message>codegen dependency violation</message>
+      <message>resource dependency violation</message>
       <deny>
-        <from pattern="catalog.codegen" />
+        <from pattern="resource" />
         <to pattern="farrago" />
         <allow>
-          <to pattern="util" />
-        </allow>
-        <allow>
-          <to pattern="catalog.codegen" />
-        </allow>
-        <allow>
-          <to pattern="fem" />
-        </allow>
-        <allow>
-          <to pattern="cwm" />
-        </allow>
-        <allow>
-          <to pattern="FarragoPackage" />
-        </allow>
-        <allow>
-          <to class="net.sf.farrago.catalog.FarragoModelLoader" />
+          <to pattern="resource.deps" />
         </allow>
       </deny>
     </access-rule>
 
-    <!-- dynamic -->
+    <pattern name="catalog.codegen.deps">
+      <include pattern="FarragoPackage.deps" />
+      <include pattern="util.deps" />
+      <include pattern="catalog.codegen" />
+      <include class="net.sf.farrago.catalog.FarragoModelLoader" />
+    </pattern>
+
+    <access-rule>
+      <message>catalog.codegen dependency violation</message>
+      <deny>
+        <from pattern="catalog.codegen" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="catalog.codegen.deps" />
+        </allow>
+      </deny>
+    </access-rule>
+
+    <pattern name="catalog.deps">
+      <include pattern="FarragoPackage.deps" />
+      <include pattern="resource.deps" />
+      <include pattern="catalog" />
+    </pattern>
+
+    <access-rule>
+      <message>catalog dependency violation</message>
+      <deny>
+        <from pattern="catalog" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="catalog.deps" />
+        </allow>
+      </deny>
+    </access-rule>
+
+    <pattern name="type.deps">
+      <include pattern="catalog.deps" />
+      <include pattern="type" />
+    </pattern>
+
+    <access-rule>
+      <message>type dependency violation</message>
+      <deny>
+        <from pattern="type" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="type.deps" />
+        </allow>
+      </deny>
+    </access-rule>
+
+    <pattern name="namespace.deps">
+      <include pattern="type.deps" />
+      <include pattern="namespace" />
+    </pattern>
+
+    <access-rule>
+      <message>namespace dependency violation</message>
+      <deny>
+        <from pattern="namespace" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="namespace.deps" />
+        </allow>
+      </deny>
+    </access-rule>
+
+    <pattern name="namespace.util.deps">
+      <include pattern="namespace.deps" />
+      <include pattern="namespace.util" />
+    </pattern>
+
+    <access-rule>
+      <message>namespace.util dependency violation</message>
+      <deny>
+        <from pattern="namespace" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="namespace.util.deps" />
+        </allow>
+      </deny>
+    </access-rule>
+
+    <pattern name="fennel.deps">
+      <include pattern="resource.deps" />
+      <include pattern="FarragoPackage.deps" />
+      <include pattern="fennel" />
+    </pattern>
+
+    <access-rule>
+      <message>fennel dependency violation</message>
+      <deny>
+        <from pattern="fennel" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="fennel.deps" />
+        </allow>
+      </deny>
+    </access-rule>
+
+    <pattern name="runtime.deps">
+      <include pattern="namespace.util.deps" />
+      <include pattern="fennel.deps" />
+      <include pattern="runtime" />
+    </pattern>
+
+    <access-rule>
+      <message>runtime dependency violation</message>
+      <deny>
+        <from pattern="runtime" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="runtime.deps" />
+        </allow>
+      </deny>
+    </access-rule>
+
+    <pattern name="dynamic.deps">
+      <include pattern="runtime.deps" />
+      <include pattern="dynamic" />
+    </pattern>
+
     <!-- NOTE:  this is an unenforced guideline for generated code -->
     <access-rule>
       <message>dynamic dependency violation</message>
@@ -502,223 +260,153 @@
         <from pattern="dynamic" />
         <to pattern="farrago" />
         <allow>
-          <to pattern="dynamic" />
-        </allow>
-        <allow>
-          <to pattern="runtime" />
-        </allow>
-        <allow>
-          <to pattern="resource" />
-        </allow>
-        <allow>
-          <to pattern="type" />
-        </allow>
-        <allow>
-          <to pattern="fem" />
-        </allow>
-        <allow>
-          <to pattern="fennel" />
-        </allow>
-        <allow>
-          <to pattern="util" />
-        </allow>
-        <allow>
-          <to pattern="catalog" />
+          <to pattern="dynamic.deps" />
         </allow>
       </deny>
     </access-rule>
 
-    <!-- namespace -->
-    <access-rule>
-      <message>namespace dependency violation</message>
-      <deny>
-        <from pattern="namespace" />
-        <to pattern="farrago" />
-        <allow>
-          <to pattern="namespace" />
-        </allow>
-        <allow>
-          <to pattern="catalog" />
-        </allow>
-        <allow>
-          <to pattern="type" />
-        </allow>
-        <allow>
-          <to pattern="util" />
-        </allow>
-        <allow>
-          <to pattern="FarragoPackage" />
-        </allow>
-      </deny>
-    </access-rule>
+    <pattern name="session.deps">
+      <include pattern="fennel.deps" />
+      <include pattern="namespace.util.deps" />
+      <include pattern="session" />
+    </pattern>
 
-    <!-- namespace.util -->
-    <access-rule>
-      <message>namespace.util dependency violation</message>
-      <deny>
-        <from pattern="namespace" />
-        <to pattern="farrago" />
-        <allow>
-          <to pattern="namespace" />
-        </allow>
-        <allow>
-          <to pattern="catalog" />
-        </allow>
-        <allow>
-          <to pattern="type" />
-        </allow>
-        <allow>
-          <to pattern="cwm" />
-        </allow>
-        <allow>
-          <to pattern="util" />
-        </allow>
-        <allow>
-          <to pattern="resource" />
-        </allow>
-        <allow>
-          <to pattern="FarragoPackage" />
-        </allow>
-      </deny>
-    </access-rule>
-
-    <!-- namespace.impl -->
-    <access-rule>
-      <message>namespace.impl dependency violation</message>
-      <deny>
-        <from pattern="namespace.impl" />
-        <to pattern="farrago" />
-        <allow>
-          <to pattern="namespace" />
-        </allow>
-        <allow>
-          <to pattern="namespace.impl" />
-        </allow>
-        <allow>
-          <to pattern="cwm" />
-        </allow>
-        <allow>
-          <to pattern="catalog" />
-        </allow>
-        <allow>
-          <to pattern="FarragoPackage" />
-        </allow>
-        <allow>
-          <to pattern="type" />
-        </allow>
-        <allow>
-          <to pattern="util" />
-        </allow>
-        <allow>
-          <to pattern="resource" />
-        </allow>
-        <allow>
-          <to pattern="query" />
-        </allow>
-      </deny>
-    </access-rule>
-
-    <!-- namespace.mdr -->
-    <access-rule>
-      <message>namespace.mdr dependency violation</message>
-      <deny>
-        <from pattern="namespace.mdr" />
-        <to pattern="farrago" />
-        <allow>
-          <to pattern="namespace" />
-        </allow>
-        <allow>
-          <to pattern="namespace.impl" />
-        </allow>
-        <allow>
-          <to pattern="namespace.mdr" />
-        </allow>
-        <allow>
-          <to pattern="cwm" />
-        </allow>
-        <allow>
-          <to pattern="catalog" />
-        </allow>
-        <allow>
-          <to pattern="FarragoPackage" />
-        </allow>
-        <allow>
-          <to pattern="type" />
-        </allow>
-        <allow>
-          <to pattern="util" />
-        </allow>
-        <allow>
-          <to pattern="resource" />
-        </allow>
-        <allow>
-          <to pattern="query" />
-        </allow>
-      </deny>
-    </access-rule>
-
-    <!-- namespace.jdbc -->
-    <access-rule>
-      <message>namespace.jdbc dependency violation</message>
-      <deny>
-        <from pattern="namespace.jdbc" />
-        <to pattern="farrago" />
-        <allow>
-          <to pattern="namespace" />
-        </allow>
-        <allow>
-          <to pattern="namespace.impl" />
-        </allow>
-        <allow>
-          <to pattern="namespace.jdbc" />
-        </allow>
-        <allow>
-          <to pattern="cwm" />
-        </allow>
-        <allow>
-          <to pattern="catalog" />
-        </allow>
-        <allow>
-          <to pattern="FarragoPackage" />
-        </allow>
-        <allow>
-          <to pattern="type" />
-        </allow>
-        <allow>
-          <to pattern="util" />
-        </allow>
-        <allow>
-          <to pattern="resource" />
-        </allow>
-        <allow>
-          <to pattern="query" />
-        </allow>
-      </deny>
-    </access-rule>
-
-    <!-- session -->
     <access-rule>
       <message>session dependency violation</message>
       <deny>
         <from pattern="session" />
         <to pattern="farrago" />
         <allow>
-          <to pattern="catalog" />
+          <to pattern="session.deps" />
         </allow>
+      </deny>
+    </access-rule>
+
+    <pattern name="query.deps">
+      <include pattern="dynamic.deps" />
+      <include pattern="session.deps" />
+      <include pattern="query" />
+    </pattern>
+
+    <access-rule>
+      <message>query dependency violation</message>
+      <deny>
+        <from pattern="query" />
+        <to pattern="farrago" />
         <allow>
-          <to pattern="type" />
+          <to pattern="query.deps" />
         </allow>
+      </deny>
+    </access-rule>
+
+    <pattern name="ddl.deps">
+      <include pattern="query.deps" />
+      <include pattern="ddl" />
+    </pattern>
+
+    <access-rule>
+      <message>ddl dependency violation</message>
+      <deny>
+        <from pattern="ddl" />
+        <to pattern="farrago" />
         <allow>
-          <to pattern="util" />
+          <to pattern="ddl.deps" />
         </allow>
+      </deny>
+    </access-rule>
+
+    <pattern name="parser.deps">
+      <include pattern="ddl.deps" />
+      <include pattern="parser" />
+    </pattern>
+
+    <access-rule>
+      <message>parser dependency violation</message>
+      <deny>
+        <from pattern="parser" />
+        <to pattern="farrago" />
         <allow>
-          <to pattern="session" />
+          <to pattern="parser.deps" />
         </allow>
+      </deny>
+    </access-rule>
+
+    <pattern name="db.deps">
+      <include pattern="parser.deps" />
+      <include pattern="db" />
+    </pattern>
+
+    <access-rule>
+      <message>db dependency violation</message>
+      <deny>
+        <from pattern="db" />
+        <to pattern="farrago" />
         <allow>
-          <to pattern="parser" />
+          <to pattern="db.deps" />
         </allow>
+      </deny>
+    </access-rule>
+
+    <pattern name="jdbc.deps">
+      <include pattern="db.deps" />
+      <include pattern="jdbc" />
+    </pattern>
+
+    <access-rule>
+      <message>jdbc dependency violation</message>
+      <deny>
+        <from pattern="jdbc" />
+        <to pattern="farrago" />
         <allow>
-          <to pattern="fennel" />
+          <to pattern="jdbc.deps" />
+        </allow>
+      </deny>
+    </access-rule>
+
+    <pattern name="namespace.impl.deps">
+      <include pattern="query.deps" />
+      <include pattern="namespace.impl" />
+    </pattern>
+
+    <access-rule>
+      <message>namespace.impl dependency violation</message>
+      <deny>
+        <from pattern="namespace.impl" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="namespace.impl.deps" />
+        </allow>
+      </deny>
+    </access-rule>
+
+    <pattern name="namespace.jdbc.deps">
+      <include pattern="namespace.impl.deps" />
+      <include pattern="namespace.jdbc" />
+    </pattern>
+
+    <access-rule>
+      <message>namespace.jdbc dependency violation</message>
+      <deny>
+        <from pattern="namespace.jdbc" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="namespace.jdbc.deps" />
+        </allow>
+      </deny>
+    </access-rule>
+
+    <pattern name="namespace.mdr.deps">
+      <include pattern="namespace.impl.deps" />
+      <include pattern="namespace.mdr" />
+    </pattern>
+
+    <access-rule>
+      <message>namespace.mdr dependency violation</message>
+      <deny>
+        <from pattern="namespace.mdr" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="namespace.mdr.deps" />
         </allow>
       </deny>
     </access-rule>

@@ -38,6 +38,8 @@ class StandardTypeTest : virtual public TestBase, public TraceSource
     void testStandardTypeIsExact();
     void testStandardTypeIsApprox();
     void testStandardTypeIsArray();
+    void testStandardTypeIsVariableLenArray();
+    void testStandardTypeIsFixedLenArray();
     
 public:
     explicit StandardTypeTest()
@@ -49,6 +51,8 @@ public:
         FENNEL_UNIT_TEST_CASE(StandardTypeTest, testStandardTypeIsExact);
         FENNEL_UNIT_TEST_CASE(StandardTypeTest, testStandardTypeIsApprox);
         FENNEL_UNIT_TEST_CASE(StandardTypeTest, testStandardTypeIsArray);
+        FENNEL_UNIT_TEST_CASE(StandardTypeTest, testStandardTypeIsVariableLenArray);
+        FENNEL_UNIT_TEST_CASE(StandardTypeTest, testStandardTypeIsFixedLenArray);
     }
     
     virtual ~StandardTypeTest()
@@ -201,6 +205,45 @@ void StandardTypeTest::testStandardTypeIsArray()
             BOOST_CHECK_EQUAL(StandardTypeDescriptor::isArray(v), true);
         } else {
             BOOST_CHECK_EQUAL(StandardTypeDescriptor::isArray(v), false);
+        }
+    }
+}
+
+void StandardTypeTest::testStandardTypeIsVariableLenArray()
+{
+    BOOST_REQUIRE(STANDARD_TYPE_MIN < STANDARD_TYPE_END);
+
+    int i;
+    StandardTypeDescriptorOrdinal v;
+
+    for (i = STANDARD_TYPE_MIN; i < STANDARD_TYPE_END; i++) {
+        BOOST_MESSAGE("isVariableLenArray " << i);
+        v = *(reinterpret_cast<StandardTypeDescriptorOrdinal *>(&i));
+        if (v == STANDARD_TYPE_VARCHAR ||
+            v == STANDARD_TYPE_VARBINARY) {
+            BOOST_CHECK_EQUAL(StandardTypeDescriptor::isVariableLenArray(v), true);
+        } else {
+            BOOST_CHECK_EQUAL(StandardTypeDescriptor::isVariableLenArray(v), false);
+        }
+    }
+}
+
+
+void StandardTypeTest::testStandardTypeIsFixedLenArray()
+{
+    BOOST_REQUIRE(STANDARD_TYPE_MIN < STANDARD_TYPE_END);
+
+    int i;
+    StandardTypeDescriptorOrdinal v;
+
+    for (i = STANDARD_TYPE_MIN; i < STANDARD_TYPE_END; i++) {
+        BOOST_MESSAGE("isFixedLenArray " << i);
+        v = *(reinterpret_cast<StandardTypeDescriptorOrdinal *>(&i));
+        if (v == STANDARD_TYPE_CHAR ||
+            v == STANDARD_TYPE_BINARY) {
+            BOOST_CHECK_EQUAL(StandardTypeDescriptor::isFixedLenArray(v), true);
+        } else {
+            BOOST_CHECK_EQUAL(StandardTypeDescriptor::isFixedLenArray(v), false);
         }
     }
 }

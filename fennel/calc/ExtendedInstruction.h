@@ -23,11 +23,11 @@
 //
 // jhyde 17 January, 2004
 */
+
 #ifndef Fennel_ExtendedInstruction_Included
 #define Fennel_ExtendedInstruction_Included
 
 #include "fennel/calc/Instruction.h"
-#include "map"
 
 FENNEL_BEGIN_NAMESPACE
 
@@ -72,7 +72,9 @@ public:
     /**
      * Returns the parameter types of this instruction.
      */
-    const vector<StandardTypeDescriptorOrdinal> &getParameterTypes() { return _parameterTypes; }
+    const vector<StandardTypeDescriptorOrdinal> &getParameterTypes() { 
+        return _parameterTypes;
+    }
     /**
      * Returns the signature of this instruction. The signature is always of
      * the form "<name>(<type0>,<type1>,...)", for example
@@ -131,37 +133,6 @@ public:
 };
 
 
-/**
- * List of extended instructions.
- */
-class ExtendedInstructionTable
-{
-private:
-    map<string,ExtendedInstructionDef *> _defsByName;
-
-public:
-    /**
-     * Registers an extended instruction and the functor which implements it.
-     */
-    template <typename T>
-    void add(
-            const string &name,
-            const vector<StandardTypeDescriptorOrdinal> &parameterTypes,
-            T *dummy,
-            typename T::Functor functor)
-    {
-         FunctorExtendedInstructionDef<T> *pDef = 
-             new FunctorExtendedInstructionDef<T>(name, parameterTypes,
-                                                  functor);
-         _defsByName[pDef->getSignature()] = pDef;
-    }
-
-    /**
-     * Looks for an extended instruction by signature (name + argument
-     * types). Returns null if there is no such instruction.
-     */
-    ExtendedInstructionDef *lookupBySignature(string const &signature);
-};
 
 /**
  * Base class for all extended instructions. Derived classes are typically
@@ -259,8 +230,12 @@ public:
         out += "'";
     }
     void exec(TProgramCounter &pc) const {
-        (*_def._functor)(_pCalc);
-        ++pc;
+        pc++;
+        try {
+            (*_def._functor)(_pCalc);
+        } catch (char const * str) {
+            throw CalcMessage(str, pc - 1);
+        }
     }
 };
 
@@ -336,8 +311,12 @@ public:
         describeArg(out, values, _reg0);
     }
     void exec(TProgramCounter &pc) const {
-        (*_def._functor)(_reg0);
-        ++pc;
+        pc++;
+        try {
+            (*_def._functor)(_reg0);
+        } catch (char const * str) {
+            throw CalcMessage(str, pc - 1);
+        }
     }
 };
 
@@ -420,8 +399,12 @@ public:
         describeArg(out, values, _reg1);
     }
     void exec(TProgramCounter &pc) const {
-        (*_def._functor)(_pCalc,_reg0,_reg1);
-        ++pc;
+        pc++;
+        try {
+            (*_def._functor)(_pCalc,_reg0,_reg1);
+        } catch (char const * str) {
+            throw CalcMessage(str, pc - 1);
+        }
     }
 };
 
@@ -513,10 +496,233 @@ public:
         describeArg(out, values, _reg2);
     }
     void exec(TProgramCounter &pc) const {
-        (*_def._functor)(_pCalc,_reg0,_reg1,_reg2);
-        ++pc;
+        pc++;
+        try {
+            (*_def._functor)(_pCalc,_reg0,_reg1,_reg2);
+        } catch (char const * str) {
+            throw CalcMessage(str, pc - 1);
+        }
     }
 };
+
+/**
+ * Extended instruction which takes 4 parameters and is implemented using a
+ * functor.
+ */
+template <typename T0, typename T1, typename T2, typename T3>
+class ExtendedInstruction4 : public ExtendedInstruction
+{
+public:
+    /**
+     * The type of functor used to implement this extended instruction. For
+     * example, if T0 is 'int' and T1 is 'double' and T2 is 'int'
+     * then we will require a function such as<blockquote>
+     *
+     * <pre>void execute(
+     *     Calc *pCalc,
+     *     RegisterRef<int> &reg0,
+     *     RegisterRef<double> &reg1,
+     *     RegisterRef<int> &reg2)</pre>
+     *
+     * </blockquote>
+     */
+    typedef void (*Functor)(
+            Calculator *pCalc,
+            RegisterRef<T0>* const reg0,
+            RegisterRef<T1>* const reg1,
+            RegisterRef<T2>* const reg2,
+            RegisterRef<T3>* const reg3);
+    /**
+     * The specific type of the definition of this instruction.
+     */
+    typedef FunctorExtendedInstructionDef<ExtendedInstruction4<T0,T1,T2,T3> > DefT;
+
+private:
+    DefT _def;
+    RegisterRef<T0>* _reg0;
+    RegisterRef<T1>* _reg1;
+    RegisterRef<T2>* _reg2;
+    RegisterRef<T3>* _reg3;
+
+protected:
+    // implement ExtendedInstruction
+    ExtendedInstructionDef const &getDef() const {
+        return _def;
+    }
+    void setCalc(Calculator* calcP) {
+      _reg0->setCalc(calcP);
+      _reg1->setCalc(calcP);
+      _reg2->setCalc(calcP);
+      _reg3->setCalc(calcP);
+    }
+
+public:
+    explicit
+    ExtendedInstruction4(
+            DefT &def,
+            Calculator *pCalc,
+            RegisterRef<T0>* const reg0,
+            RegisterRef<T1>* const reg1,
+            RegisterRef<T2>* const reg2,
+            RegisterRef<T3>* const reg3)
+        : ExtendedInstruction(pCalc),
+          _def(def),
+          _reg0(reg0),
+          _reg1(reg1),
+          _reg2(reg2),
+          _reg3(reg3) {
+    }
+
+    static ExtendedInstruction4<T0,T1,T2,T3> *create(
+            DefT &def,
+            Calculator *pCalc,
+            vector<RegisterReference *> regRefs) {
+        assert(regRefs.size() == 4);
+        return new ExtendedInstruction4<T0,T1,T2,T3>(
+                def,
+                pCalc,
+                static_cast<RegisterRef<T0> *>(regRefs[0]),
+                static_cast<RegisterRef<T1> *>(regRefs[1]),
+                static_cast<RegisterRef<T2> *>(regRefs[2]),
+                static_cast<RegisterRef<T3> *>(regRefs[3]));
+    }
+
+    // implement Instruction
+    void describe(string &out, bool values) const {
+        out = "CALL '";
+        out += _def.getSignature();
+        out += "' ";
+        describeArg(out, values, _reg0);
+        out += ", ";
+        describeArg(out, values, _reg1);
+        out += ", ";
+        describeArg(out, values, _reg2);
+        out += ", ";
+        describeArg(out, values, _reg3);
+    }
+    void exec(TProgramCounter &pc) const {
+        pc++;
+        try {
+            (*_def._functor)(_pCalc,_reg0,_reg1,_reg2,_reg3);
+        } catch (char const * str) {
+            throw CalcMessage(str, pc - 1);
+        }
+    }
+};
+
+/**
+ * Extended instruction which takes 5 parameters and is implemented using a
+ * functor.
+ */
+template <typename T0, typename T1, typename T2, typename T3, typename T4>
+class ExtendedInstruction5 : public ExtendedInstruction
+{
+public:
+    /**
+     * The type of functor used to implement this extended instruction. For
+     * example, if T0 is 'int' and T1 is 'double' and T2 is 'int'
+     * then we will require a function such as<blockquote>
+     *
+     * <pre>void execute(
+     *     Calc *pCalc,
+     *     RegisterRef<int> &reg0,
+     *     RegisterRef<double> &reg1,
+     *     RegisterRef<int> &reg2)</pre>
+     *
+     * </blockquote>
+     */
+    typedef void (*Functor)(
+            Calculator *pCalc,
+            RegisterRef<T0>* const reg0,
+            RegisterRef<T1>* const reg1,
+            RegisterRef<T2>* const reg2,
+            RegisterRef<T3>* const reg3,
+            RegisterRef<T4>* const reg4);
+    /**
+     * The specific type of the definition of this instruction.
+     */
+    typedef FunctorExtendedInstructionDef<ExtendedInstruction5<T0,T1,T2,T3,T4> > DefT;
+
+private:
+    DefT _def;
+    RegisterRef<T0>* _reg0;
+    RegisterRef<T1>* _reg1;
+    RegisterRef<T2>* _reg2;
+    RegisterRef<T3>* _reg3;
+    RegisterRef<T4>* _reg4;
+
+protected:
+    // implement ExtendedInstruction
+    ExtendedInstructionDef const &getDef() const {
+        return _def;
+    }
+    void setCalc(Calculator* calcP) {
+      _reg0->setCalc(calcP);
+      _reg1->setCalc(calcP);
+      _reg2->setCalc(calcP);
+      _reg3->setCalc(calcP);
+      _reg4->setCalc(calcP);
+    }
+
+public:
+    explicit
+    ExtendedInstruction5(
+            DefT &def,
+            Calculator *pCalc,
+            RegisterRef<T0>* const reg0,
+            RegisterRef<T1>* const reg1,
+            RegisterRef<T2>* const reg2,
+            RegisterRef<T3>* const reg3,
+            RegisterRef<T4>* const reg4)
+        : ExtendedInstruction(pCalc),
+          _def(def),
+          _reg0(reg0),
+          _reg1(reg1),
+          _reg2(reg2),
+          _reg3(reg3),
+          _reg4(reg4) {
+    }
+
+    static ExtendedInstruction5<T0,T1,T2,T3,T4> *create(
+            DefT &def,
+            Calculator *pCalc,
+            vector<RegisterReference *> regRefs) {
+        assert(regRefs.size() == 5);
+        return new ExtendedInstruction5<T0,T1,T2,T3,T4>(
+                def,
+                pCalc,
+                static_cast<RegisterRef<T0> *>(regRefs[0]),
+                static_cast<RegisterRef<T1> *>(regRefs[1]),
+                static_cast<RegisterRef<T2> *>(regRefs[2]),
+                static_cast<RegisterRef<T3> *>(regRefs[3]),
+                static_cast<RegisterRef<T4> *>(regRefs[4]));
+    }
+
+    // implement Instruction
+    void describe(string &out, bool values) const {
+        out = "CALL '";
+        out += _def.getSignature();
+        out += "' ";
+        describeArg(out, values, _reg0);
+        out += ", ";
+        describeArg(out, values, _reg1);
+        out += ", ";
+        describeArg(out, values, _reg2);
+        out += ", ";
+        describeArg(out, values, _reg3);
+        out += ", ";
+        describeArg(out, values, _reg4);
+    }
+    void exec(TProgramCounter &pc) const {
+        pc++;
+        try {
+            (*_def._functor)(_pCalc,_reg0,_reg1,_reg2,_reg3,_reg4);
+        } catch (char const * str) {
+            throw CalcMessage(str, pc - 1);
+        }
+    }
+};
+
 
 FENNEL_END_NAMESPACE
 

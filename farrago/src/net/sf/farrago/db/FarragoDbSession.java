@@ -191,6 +191,25 @@ public class FarragoDbSession
     }
 
     // implement FarragoSession
+    public FarragoSessionParser newParser()
+    {
+        return new FarragoParser();
+    }
+    
+    // implement FarragoSession
+    public FarragoSessionDdlValidator newDdlValidator()
+    {
+        return new DdlValidator(
+            this,
+            getCatalog(),
+            getDatabase().getFennelDbHandle(),
+            new FarragoParser(),
+            getConnectionDefaults(),
+            getSessionIndexMap(),
+            getDatabase().getDataWrapperCache());
+    }
+    
+    // implement FarragoSession
     public FarragoSession cloneSession()
     {
         // TODO:  keep track of clones and make sure they aren't left hanging
@@ -473,9 +492,10 @@ public class FarragoDbSession
         FarragoSessionViewInfo viewInfo)
     {
         tracer.info(sql);
-        FarragoParser parser = sessionFactory.newFarragoParser(catalog,sql);
+        FarragoReposTxnContext reposTxnContext =
+            new FarragoReposTxnContext(catalog);
         boolean rollback = true;
-        DdlValidator ddlValidator = null;
+        FarragoSessionDdlValidator ddlValidator = null;
         try {
 
             // REVIEW: For !isExecDirect, maybe should disable all DDL
@@ -483,16 +503,12 @@ public class FarragoDbSession
             // time the statement is executed.  Also probably need to disallow
             // some types of prepared DDL.
             
-            ddlValidator = new DdlValidator(
-                this,
-                catalog,
-                database.getFennelDbHandle(),
-                parser,
-                connectionDefaults,
-                sessionIndexMap,
-                database.getDataWrapperCache());
-            parser.ddlValidator = ddlValidator;
-            Object parsedObj = parser.parseSqlStatement();
+            ddlValidator = newDdlValidator();
+            FarragoSessionParser parser = ddlValidator.getParser();
+            Object parsedObj = parser.parseSqlStatement(
+                ddlValidator,
+                reposTxnContext,
+                sql);
             if (parsedObj instanceof SqlNode) {
                 SqlNode sqlNode = (SqlNode) parsedObj;
                 rollback = false;
@@ -522,7 +538,8 @@ public class FarragoDbSession
 
             executeDdl(
                 ddlValidator,
-                (DdlStmt) parsedObj);
+                reposTxnContext,
+                (FarragoSessionDdlStmt) parsedObj);
             
             rollback = false;
         } finally {
@@ -531,14 +548,16 @@ public class FarragoDbSession
             }
             if (rollback) {
                 tracer.fine("rolling back DDL");
-                parser.rollbackReposTxn();
+                reposTxnContext.rollback();
             }
         }
         return null;
     }
 
     private void executeDdl(
-        DdlValidator ddlValidator,DdlStmt ddlStmt)
+        FarragoSessionDdlValidator ddlValidator,
+        FarragoReposTxnContext reposTxnContext,
+        FarragoSessionDdlStmt ddlStmt)
     {
         if (ddlStmt.requiresCommit()) {
             // For now, DDL causes implicit commit of any pending txn.
@@ -555,10 +574,13 @@ public class FarragoDbSession
         // differently.  
 
         // handle some special cases here
-        ddlStmt.visit(new DdlExecutionVisitor());
+        if (ddlStmt instanceof DdlStmt) {
+            // REVIEW jvs 22-Mar-2004:  can we make this truly extensible?
+            ((DdlStmt) ddlStmt).visit(new DdlExecutionVisitor());
+        }
 
         tracer.fine("committing DDL");
-        ddlValidator.getParser().commitReposTxn();
+        reposTxnContext.commit();
     }
 
     private class DdlExecutionVisitor extends DdlVisitor

@@ -19,76 +19,15 @@
 //
 // SqlString
 //
-// Instruction->SqlString
-//
-// Template for all native types
+// An ascii string library that adheres to the SQL99 standard definitions
 */
 
 #include "fennel/calc/SqlString.h"
 
 FENNEL_BEGIN_NAMESPACE
 
-void
-SqlStrAsciiCatF(char* dest,
-                int destWidth,
-                char const * const str,
-                int strWidth)
-{
-    int ss;
-    register char const * s = str + strWidth;
-
-    // If many trailing spaces are expected, consider using memrchr()
-    while (s != str && *(--s) == ' ');
-    if (strWidth && *s != ' ') s++;
-    ss = s - str;
-
-    register char* d = dest + destWidth;
-    while (d != dest && *(--d) == ' ');
-    if (destWidth && *d != ' ') d++;
-
-    if ((d - dest) + (ss) > destWidth) {
-        // SQL99 22.1 22-001 "String Data Right truncation"
-        throw "22001";
-    }
-    memcpy(d, str, ss);
-}
-
-void
-SqlStrAsciiCatF(char* dest,
-                int destWidth,
-                char const * const str1,
-                int str1Width,
-                char const * const str2,
-                int str2Width)
-{
-    int s1s;
-    register char const * s1 = str1 + str1Width;
-
-    // If many trailing spaces are expected, consider using memrchr()
-    while (s1 != str1 && *(--s1) == ' ');
-    if (str1Width && *s1 != ' ') s1++;
-    s1s = s1 - str1;
-
-    int s2s;
-    register char const * s2 = str2 + str2Width;
-
-    while (s2 != str2 && *(--s2) == ' ');
-    if (str2Width && *s2 != ' ') s2++;
-    s2s = s2 - str2;
-
-    if (s1s + s2s > destWidth) {
-        // SQL99 22.1 22-001 "String Data Right truncation"
-        throw "22001";
-    }
-    
-    
-    memcpy(dest, str1, s1s);
-    memcpy(dest + s1s, str2, s2s);
-}
-
-
 int
-SqlStrAsciiCatV(char* dest,
+SqlStrAsciiCat(char* dest,
                 int destWidth,
                 int destLen,
                 char const * const str,
@@ -105,7 +44,7 @@ SqlStrAsciiCatV(char* dest,
 
 
 int
-SqlStrAsciiCatV(char* dest,
+SqlStrAsciiCat(char* dest,
                 int destWidth,
                 char const * const str1,
                 int str1Len,

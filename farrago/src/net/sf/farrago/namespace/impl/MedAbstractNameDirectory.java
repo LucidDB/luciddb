@@ -33,6 +33,7 @@ import java.sql.*;
  * @version $Id$
  */
 public abstract class MedAbstractNameDirectory
+    extends MedAbstractBase
     implements FarragoMedNameDirectory
 {
     // implement FarragoMedNameDirectory

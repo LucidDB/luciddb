@@ -19,8 +19,6 @@
 
 package net.sf.farrago.jdbc;
 
-import net.sf.farrago.ddl.*;
-import net.sf.farrago.query.*;
 import net.sf.farrago.util.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
@@ -61,7 +59,7 @@ public class FarragoJdbcConnection implements Connection
         String url,Properties info,FarragoSessionFactory sessionFactory)
         throws SQLException
     {
-        session = sessionFactory.newFarragoSession(url,info);
+        session = sessionFactory.newSession(url,info);
         session.setDatabaseMetaData(getMetaData());
     }
 

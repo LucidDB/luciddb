@@ -6,53 +6,58 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-//
+// 
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-//
+// 
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-package net.sf.farrago.parser;
+package net.sf.farrago.session;
 
 import net.sf.farrago.resource.*;
 
-
 /**
- * ParserContext records position information from the parser for use in error
- * messages during validation.
+ * FarragoSessionParserPosition represents the position of a parsed
+ * token within SQL statement text.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class ParserContext
+public class FarragoSessionParserPosition
 {
-    //~ Instance fields -------------------------------------------------------
-
-    /** Column at which parser recorded token */
-    private final int beginColumn;
-    /** Line on which parser recorded token */
     private final int beginLine;
-
-    //~ Constructors ----------------------------------------------------------
+    
+    private final int beginColumn;
 
     /**
-     * Creates a new ParserContext object.
-     *
-     * @param beginLine .
-     * @param beginColumn .
+     * Creates a new parser position.
      */
-    ParserContext(int beginLine,int beginColumn)
+    public FarragoSessionParserPosition(int beginLine,int beginColumn)
     {
         this.beginLine = beginLine;
         this.beginColumn = beginColumn;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    /**
+     * @return line position of token beginning
+     */
+    public int getBeginLine()
+    {
+        return beginLine;
+    }
+
+    /**
+     * @return column position of token beginning
+     */
+    public int getBeginColumn()
+    {
+        return beginColumn;
+    }
 
     // implement Object
     public String toString()
@@ -63,5 +68,4 @@ public class ParserContext
     }
 }
 
-
-// End ParserContext.java
+// End FarragoSessionParserPosition.java

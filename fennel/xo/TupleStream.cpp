@@ -23,14 +23,19 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-TupleStream::TupleStream() : 
-    ExecutionStream<TupleStreamGraph, SharedTupleStream>()
+TupleStream::TupleStream() : ExecutionStream()
 {
+}
+
+SharedTupleStream TupleStream::getTupleStreamInput(uint ordinal)
+{
+    SharedExecutionStream stream = getStreamInput(ordinal);
+    return boost::static_pointer_cast<TupleStream>(stream);
 }
 
 void TupleStream::prepare(TupleStreamParams const &params)
 {
-    ExecutionStream<TupleStreamGraph, SharedTupleStream>::prepare(params);
+    ExecutionStream::prepare(params);
 }
 
 FENNEL_END_CPPFILE("$Id$");

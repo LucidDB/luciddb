@@ -29,10 +29,12 @@ import java.sql.*;
 import java.util.*;
 
 /**
- * FarragoMedDataWrapper defines an interface for accessing external data.
- * It is a non-standard replacement for the standard SQL/MED internal
- * interface.  Some JDBC infrastructure is borrowed
- * (SQLException and DriverPropertyInfo).
+ * FarragoMedDataWrapper defines an interface for accessing external data.  It
+ * is a non-standard replacement for the standard SQL/MED internal interface.
+ * Some JDBC infrastructure is borrowed ({@link java.sql.SQLException} and
+ * {@link java.sql.DriverPropertyInfo}).  The property info calls are designed
+ * to work in the same iterative fashion as {@link
+ * java.sql.Driver#getPropertyInfo}.
  *
  *<p>
  *
@@ -65,43 +67,90 @@ public interface FarragoMedDataWrapper extends FarragoAllocation
     
     /**
      * Obtains information about the properties applicable to wrapper
-     * initialization (props parameter to the initialize method).
+     * initialization (the props parameter to the initialize method).
      *
      * @param locale Locale for formatting property info
      *
+     * @param props proposed list of property name/value
+     * pairs which will be sent to initialize()
+     *
      * @return 0 or more property info descriptors
      */
-    public DriverPropertyInfo [] getWrapperPropertyInfo(Locale locale);
+    public DriverPropertyInfo [] getWrapperPropertyInfo(
+        Locale locale,
+        Properties props);
 
     /**
      * Obtains information about the properties applicable to server
-     * initialization (props parameter to the newServer method).
+     * initialization (the props parameter to the newServer method).
      *
      * @param locale Locale for formatting property info
      *
+     * @param wrapperProps proposed list of property name/value
+     * pairs which will be sent to FarragoMedDataWrapper.initialize()
+     *
+     * @param serverProps proposed list of property name/value
+     * pairs which will be sent to FarragoMedDataWrapper.newServer()
+     *
      * @return 0 or more property info descriptors
      */
-    public DriverPropertyInfo [] getServerPropertyInfo(Locale locale);
+    public DriverPropertyInfo [] getServerPropertyInfo(
+        Locale locale,
+        Properties wrapperProps,
+        Properties serverProps);
 
     /**
      * Obtains information about the properties applicable to column set
-     * initialization (tableProps parameter to the newColumnSet method).
+     * initialization (the tableProps parameter to the newColumnSet method).
      *
      * @param locale Locale for formatting property info
      *
+     * @param wrapperProps proposed list of property name/value
+     * pairs which will be sent to FarragoMedDataWrapper.initialize()
+     *
+     * @param serverProps proposed list of property name/value
+     * pairs which will be sent to FarragoMedDataWrapper.newServer()
+     *
+     * @param tableProps proposed list of property name/value pairs which will
+     * be sent to the tableProps parameter of
+     * FarragoMedDataServer.newColumnSet()
+     *
      * @return 0 or more property info descriptors
      */
-    public DriverPropertyInfo [] getColumnSetPropertyInfo(Locale locale);
+    public DriverPropertyInfo [] getColumnSetPropertyInfo(
+        Locale locale,
+        Properties wrapperProps,
+        Properties serverProps,
+        Properties tableProps);
 
     /**
      * Obtains information about the properties applicable to individual column
-     * initialization (columnPropMap parameter to the newColumnSet method).
+     * initialization (the columnPropMap parameter to the newColumnSet method).
      *
      * @param locale Locale for formatting property info
      *
+     * @param wrapperProps proposed list of property name/value
+     * pairs which will be sent to FarragoMedDataWrapper.initialize()
+     *
+     * @param serverProps proposed list of property name/value
+     * pairs which will be sent to FarragoMedDataWrapper.newServer()
+     *
+     * @param tableProps proposed list of property name/value
+     * pairs which will be sent as the tableProps parameter of
+     * FarragoMedDataServer.newColumnSet()
+     *
+     * @param columnProps proposed list of property name/value pairs which will
+     * be sent as an entry in the columnPropMap parameter of
+     * FarragoMedDataServer.newColumnSet()
+     *
      * @return 0 or more property info descriptors
      */
-    public DriverPropertyInfo [] getColumnPropertyInfo(Locale locale);
+    public DriverPropertyInfo [] getColumnPropertyInfo(
+        Locale locale,
+        Properties wrapperProps,
+        Properties serverProps,
+        Properties tableProps,
+        Properties columnProps);
 
     /**
      * Initializes this wrapper with a given set of properties.  This

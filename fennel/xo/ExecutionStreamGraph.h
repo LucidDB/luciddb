@@ -37,12 +37,10 @@ typedef uint ExecutionStreamId;
  * A ExecutionStreamGraph is a directed graph representing dataflow
  * among ExecutionStreams.
  */
-template<class S>
 class ExecutionStreamGraph : public boost::noncopyable, public ClosableObject
 {
 public:
-    virtual ~ExecutionStreamGraph()
-    {}
+    virtual ~ExecutionStreamGraph();
 
     virtual void setTxn(
         SharedLogicalTxn pTxn) = 0;
@@ -53,7 +51,7 @@ public:
     virtual SharedLogicalTxn getTxn() = 0;
     
     virtual void addStream(
-        S pStream) = 0;
+        SharedExecutionStream pStream) = 0;
 
     virtual void addDataflow(
         ExecutionStreamId producerId,
@@ -66,7 +64,7 @@ public:
     virtual uint getInputCount(
         ExecutionStreamId streamId) = 0;
     
-    virtual S getStreamInput(
+    virtual SharedExecutionStream getStreamInput(
         ExecutionStreamId streamId,
         uint iInput) = 0;
 
@@ -74,7 +72,7 @@ public:
      * Get the sink of this graph; that is, the one stream which is not
      * consumed by any other stream.
      */
-    virtual S getSinkStream() = 0;
+    virtual SharedExecutionStream getSinkStream() = 0;
 };
 
 FENNEL_END_NAMESPACE

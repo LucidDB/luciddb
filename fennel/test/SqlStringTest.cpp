@@ -153,7 +153,6 @@ class SqlStringTest : virtual public TestBase, public TraceSource
     void testSqlStringClass();
 
     void testSqlStringAsciiCatF();
-    void testSqlStringAsciiCatF2();
     void testSqlStringAsciiCatV();
     void testSqlStringAsciiCatV2();
     void testSqlStringAsciiCmpFDiffLen();
@@ -188,9 +187,8 @@ public:
     {
         srand(time(NULL));
         FENNEL_UNIT_TEST_CASE(SqlStringTest, testSqlStringClass);
-        FENNEL_UNIT_TEST_CASE(SqlStringTest, testSqlStringAsciiCatF2);
-        FENNEL_UNIT_TEST_CASE(SqlStringTest, testSqlStringAsciiCatV2);
         FENNEL_UNIT_TEST_CASE(SqlStringTest, testSqlStringAsciiCatF);
+        FENNEL_UNIT_TEST_CASE(SqlStringTest, testSqlStringAsciiCatV2);
         FENNEL_UNIT_TEST_CASE(SqlStringTest, testSqlStringAsciiCatV);
         FENNEL_UNIT_TEST_CASE(SqlStringTest, testSqlStringAsciiCmpFDiffLen);
         FENNEL_UNIT_TEST_CASE(SqlStringTest, testSqlStringAsciiCmpFEqLen);
@@ -298,61 +296,102 @@ SqlStringTest::testSqlStringClass()
 }
 
 
+// Test catting 3 fixed width strings together as proof-of-concept
 void
-SqlStringTest::testSqlStringAsciiCatF2()
+SqlStringTest::testSqlStringAsciiCatF()
 {
-    int src1_width, src2_width, dst_width, src1_len, src2_len;
+    int src1_width, src2_width, src3_width, dst_width;
+    int src1_len, src2_len, src3_len;
     bool caught;
+    int newlen;
     
     for (dst_width = 0; dst_width < MAXLEN; dst_width++) {
         for (src1_width = 0; src1_width < MAXLEN; src1_width++) {
             for (src1_len = 0; src1_len <= src1_width; src1_len++) {
                 for (src2_width = 0; src2_width < MAXLEN; src2_width++) {
                     for (src2_len = 0; src2_len <= src2_width; src2_len++) {
-                        SqlStringTestGen dst(dst_width, 0,
-                                             0, dst_width, 
-                                             'd', ' ');
-                        SqlStringTestGen src1(src1_width, src1_len,
-                                              0, src1_width-src1_len,
-                                              's', ' ');
-                        SqlStringTestGen src2(src2_width, src2_len,
-                                              0, src2_width-src2_len,
-                                              'S', ' ');
- 
-                        caught = false;
-                        try {
-                            SqlStrAsciiCatF(dst.mStr, dst_width,
-                                            src1.mStr, src1_width,
-                                            src2.mStr, src2_width);
-                        } catch(const char *str) {
-                            caught = true;
-                            BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
-                            BOOST_CHECK(src1_len + src2_len > dst_width);
-                        } catch(...) {
-                            BOOST_CHECK(false);
+                        for (src3_width = 0; src3_width < MAXLEN; src3_width++) {
+                            for (src3_len = 0; src3_len <= src3_width; src3_len++) {
+                                SqlStringTestGen dst(dst_width, 0,
+                                                     0, dst_width, 
+                                                     'd', ' ');
+                                SqlStringTestGen src1(src1_width, src1_len,
+                                                      0, src1_width-src1_len,
+                                                      '1', ' ');
+                                SqlStringTestGen src2(src2_width, src2_len,
+                                                      0, src2_width-src2_len,
+                                                      '2', ' ');
+                                SqlStringTestGen src3(src3_width, src3_len,
+                                                      0, src3_width-src3_len,
+                                                      '3', ' ');
+                                
+                                caught = false;
+                                try {
+                                    newlen = SqlStrAsciiCat(dst.mStr, dst_width,
+                                                            src1.mStr, src1_width,
+                                                            src2.mStr, src2_width);
+                                } catch(const char *str) {
+                                    caught = true;
+                                    BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
+                                    BOOST_CHECK(src1_width + src2_width > dst_width);
+                                    BOOST_CHECK(dst.verify());
+                                    BOOST_CHECK(src1.verify());
+                                    BOOST_CHECK(src2.verify());
+                                } catch(...) {
+                                    BOOST_CHECK(false);
+                                }
+                                if (!caught) {
+                                    BOOST_CHECK(src1_width + src2_width <= dst_width);
+                                    BOOST_CHECK(dst.verify());
+                                    BOOST_CHECK(src1.verify());
+                                    BOOST_CHECK(src2.verify());
+                                    
+                                    caught = false;
+                                    try {
+                                        newlen = SqlStrAsciiCat(dst.mStr,
+                                                                dst_width,
+                                                                newlen,
+                                                                src3.mStr,
+                                                                src3_width);
+                                    } catch(const char *str) {
+                                        caught = true;
+                                        BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
+                                        BOOST_CHECK((src1_width + 
+                                                     src2_width +
+                                                     src3_width) > dst_width);
+                                        BOOST_CHECK(dst.verify());
+                                        BOOST_CHECK(src1.verify());
+                                        BOOST_CHECK(src2.verify());
+                                        BOOST_CHECK(src3.verify());
+                                    } catch(...) {
+                                        BOOST_CHECK(false);
+                                    }
+                                    if (!caught) {
+                                        BOOST_CHECK(dst.verify());
+                                        BOOST_CHECK(src1.verify());
+                                        BOOST_CHECK(src2.verify());
+                                        BOOST_CHECK(src3.verify());
+                                        BOOST_CHECK_EQUAL(newlen, 
+                                                          (src1_width +
+                                                           src2_width +
+                                                           src3_width));
+
+                                        string result(dst.mStr, newlen);
+                                        string expect(src1.mStr, src1_width);
+                                        expect.append(src2.mStr, src2_width);
+                                        expect.append(src3.mStr, src3_width);
+
+                                        BOOST_CHECK(!result.compare(expect));
+                                    }
+                                }
+                            }
                         }
-                        
-                        if (!caught) {
-                            BOOST_CHECK(src1_len + src2_len <= dst_width);
-
-                            string expect;
-                            expect.append(src1_len, 's');
-                            expect.append(src2_len, 'S');
-                            expect.append(dst_width - (src1_len + src2_len), ' ');
-
-                            string result(dst.mStr, dst_width);
-
-                            BOOST_CHECK(!result.compare(expect));
-                            BOOST_CHECK(!expect.compare(result));
-                        }
-                        BOOST_CHECK(dst.verify());
-                        BOOST_CHECK(src1.verify());
-                        BOOST_CHECK(src2.verify());
                     }
                 }
             }
         }
     }
+    
 }
 
 
@@ -380,12 +419,12 @@ SqlStringTest::testSqlStringAsciiCatV2()
 
                         caught = false;
                         try {
-                            newlen = SqlStrAsciiCatV(dst.mStr,
-                                                     dst_width,
-                                                     src1.mStr,
-                                                     src1_len,
-                                                     src2.mStr,
-                                                     src2_len);
+                            newlen = SqlStrAsciiCat(dst.mStr,
+                                                    dst_width,
+                                                    src1.mStr,
+                                                    src1_len,
+                                                    src2.mStr,
+                                                    src2_len);
                         } catch(const char *str) {
                             caught = true;
                             BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
@@ -418,55 +457,6 @@ SqlStringTest::testSqlStringAsciiCatV2()
 
 
 void
-SqlStringTest::testSqlStringAsciiCatF()
-{
-    int src_width, dst_width, src_len, dst_len;
-    bool caught;
-    
-    for (dst_width = 0; dst_width < MAXLEN; dst_width++) {
-        for (dst_len = 0; dst_len <= dst_width; dst_len++) {
-            for (src_width = 0; src_width < MAXLEN; src_width++) {
-                for (src_len = 0; src_len <= src_width; src_len++) {
-                    SqlStringTestGen dst(dst_width, dst_len,
-                                         0, dst_width - dst_len, 
-                                         'd', ' ');
-                    SqlStringTestGen src(src_width, src_len,
-                                         0, src_width-src_len,
-                                         's', ' ');
-
-                    caught = false;
-                    try {
-                        SqlStrAsciiCatF(dst.mStr, dst_width, src.mStr, src_width);
-                    } catch(const char *str) {
-                        caught = true;
-                        BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
-                        BOOST_CHECK(src_len + dst_len > dst_width);
-                    } catch(...) {
-                        BOOST_CHECK(false);
-                    }
-                    if (!caught) {
-                        BOOST_CHECK(src_len + dst_len <= dst_width);
-                    
-                        string expect;
-                        expect.append(dst_len, 'd');
-                        expect.append(src_len, 's');
-                        expect.append(dst_width - (src_len + dst_len), ' ');
-
-                        string result(dst.mStr, dst_width);
-
-                        BOOST_CHECK(!result.compare(expect));
-                        BOOST_CHECK(!expect.compare(result));
-                    }
-                    BOOST_CHECK(dst.verify());
-                    BOOST_CHECK(src.verify());
-                }
-            }
-        }
-    }
-}
-
-
-void
 SqlStringTest::testSqlStringAsciiCatV()
 {
     int src_width, dst_width, src_len, dst_len;
@@ -485,11 +475,11 @@ SqlStringTest::testSqlStringAsciiCatV()
                                          's', ' ');
                     caught = false;
                     try {
-                        newlen = SqlStrAsciiCatV(dst.mStr, 
-                                                 dst_width,
-                                                 dst_len,
-                                                 src.mStr,
-                                                 src_len);
+                        newlen = SqlStrAsciiCat(dst.mStr, 
+                                                dst_width,
+                                                dst_len,
+                                                src.mStr,
+                                                src_len);
                     } catch(const char *str) {
                         caught = true;
                         BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);

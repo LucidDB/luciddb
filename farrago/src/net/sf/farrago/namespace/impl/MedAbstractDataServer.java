@@ -34,6 +34,7 @@ import java.sql.*;
  * @version $Id$
  */
 public abstract class MedAbstractDataServer
+    extends MedAbstractBase
     implements FarragoMedDataServer
 {
     private String serverMofId;

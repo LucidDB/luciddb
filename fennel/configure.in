@@ -15,7 +15,7 @@ AM_INIT_AUTOMAKE(fennel, 0.3)
 dnl Define CXXFLAGS before AC_PROG_CXX to suppress the default autoconf
 dnl compiler options
 CXXFLAGS="-pipe -ftemplate-depth-32 \
--Wall -Wno-unused-parameter -Werror \
+-Wall -Wno-unused-parameter -Wno-sign-compare -Werror \
 -D_REENTRANT -D_STLP_USE_DYNAMIC_LIB=1 -D_STLP_NO_ANACHRONISMS=1"
 
 dnl Checks for programs.
@@ -28,6 +28,14 @@ AC_PROG_LN_S
 AC_PROG_MAKE_SET
 AC_PROG_LEX
 AC_PROG_YACC
+
+if test "$LEX" != "flex"; then
+   AC_MSG_ERROR([Fennel build requires flex])
+fi
+
+if test "$YACC" != "bison -y"; then
+   AC_MSG_ERROR([Fennel build requires bison])
+fi
 
 dnl Checks for header files.
 AC_HEADER_DIRENT

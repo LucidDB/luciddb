@@ -90,6 +90,18 @@ public interface FarragoSession extends FarragoAllocation
     public FarragoSessionStmtContext newStmtContext();
 
     /**
+     * Creates a new SQL parser.
+     */
+    public FarragoSessionParser newParser();
+
+    /**
+     * Creates a new validator for DDL commands.
+     *
+     * @return new validator
+     */
+    public FarragoSessionDdlValidator newDdlValidator();
+    
+    /**
      * Clones this session.  TODO:  document what this entails.
      *
      * @return cloned session.

@@ -256,6 +256,10 @@ encountered near {1}</text>
     <text>Failed to load data wrapper jar {0}</text>
 </exception>
 
+<exception id="460070" name="DataWrapperInvalidIntProp">
+    <text>Invalid value {0} for integer property {1}</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Database/Session resources 470,000 - 480,000 -->
 <!-- ====================================================================== -->

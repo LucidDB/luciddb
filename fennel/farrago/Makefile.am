@@ -7,6 +7,7 @@ include $(top_srcdir)/am_include.mk
 lib_LTLIBRARIES=libfarrago.la
 libfarrago_la_SOURCES=\
 CmdInterpreter.cpp \
+ExecutionStreamFactory.cpp \
 Fem.cpp \
 JavaExcn.cpp \
 JavaTraceTarget.cpp \

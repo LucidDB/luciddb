@@ -19,6 +19,7 @@
 //
 // SqlString
 //
+// An ascii string library that adheres to the SQL99 standard definitions
 */
 #ifndef Fennel_SqlString_Included
 #define Fennel_SqlString_Included
@@ -27,69 +28,35 @@
 
 FENNEL_BEGIN_NAMESPACE
 
-//! Strcat. Ascii. Fixed Width / SQL CHAR. dest = dest || str.
+//! Strcat. Ascii. SQL VARCHAR & CHAR. dest = dest || str. Returns new length.
 //!
-//! destWidth and strWidth are widths of padded columns: text+padding.
+//! If either string is variable width, the result is variable
+//! width: per SQL99 6.27 Syntax Rule 3, Case A, item i.
+//! If both strings are fixed witdth, the reuslt is fixed width, 
+//! item ii.
 //!
-//! SqlStrAsciiCatF is only used when both strings are fixed width. If either
-//! string is variable width, then the result is defined in SQL99 6.27 Syntax
-//! Rule 3, Case A as variable width, and SqlStrAsciiCatV() must be used.
+//! Note that CHAR('1  ') || CHAR('2 ') = CHAR('1  2 ') and 
+//! not CHAR('12   ').
 //!
-//! If called repeatedly to cat multiple strings together (e.g. A||B||C),
-//! destWidth must be exactly equal to the final resulting width. (e.g. of A+B+C)
+//! When called repeatedly to cat multiple strings together (e.g. A || B || C),
+//! the final destWidth must be exactly equal to the resulting width.
+//! (e.g. of A+B+C) for both VARCHAR & CHAR. Take care that these length
+//! semantics are adhered to in the final result, even though intermediate
+//! results (say A || B) may not have the correct length.
 //!
-//! Performance may approach (degrade to) O(n^2) as dest is fully padded after
-//! each concatenation.
-//
-//  TODO: Add an implementation defined max length.
-void
-SqlStrAsciiCatF(char* dest,
-                int destWidth,
-                char const * const str,
-                int strWidth);
-
-//! Strcat. Ascii. Fixed Width / SQL CHAR. dest = str1 || str2.
-//!
-//! destWidth and strWidth are widths of padded columns: text+padding.
-//!
-//! This is an optimization for creating a concatenated string from
-//! two other strings, eliminating a seperate string copy. The
-//! assumption is that this is the common case with concatenation. 
-//!
-//! Subsequent concatenations may occur with the other version of
-//! SqlStrAsciiCatF.
-//!
-//! SqlStrAsciiCatF is only used when both strings are fixed width.
-//! If either string is variable width, then the result is defined
-//! in SQL99 6.27 Syntax Rule 3, Case A as variable width, and
-//! SqlStrAsciiCatV() must be used.
-//
-//  TODO: Add an implementation defined max length.
-void
-SqlStrAsciiCatF(char* dest,
-                int destWidth,
-                char const * const str1,
-                int str1Width,
-                char const * const str2,
-                int str2Width);
-
-//! Strcat. Ascii. SQL VARCHAR. dest = dest || str. Returns new length.
-//!
-//! If either string is variable width SqlStrAsciiCatV() must be
-//! used, as the result is variable width, per SQL99 6.27 Syntax Rule 3, Case A.
-//!
-//! If called repeatedly to cat multiple strings together (e.g. A||B||C),
-//! destWidth must be exactly equal to the resulting width. (e.g. of A+B+C)
+//! When used with CHARs, set strLen to strWidth. On intermediate results
+//! set destLen = return value of previous call. Final result
+//! should/must have return value == destWidth.
 //
 //  TODO: Does not implement an implementation defined max length.
 int
-SqlStrAsciiCatV(char* dest,
+SqlStrAsciiCat(char* dest,
                 int destWidth,
                 int destLen,
                 char const * const str,
                 int strLen);
 
-//! StrCat. Ascii. SQL VARCHAR. dest completely overwritten.
+//! StrCat. Ascii. SQL VARCHAR & CHAR. dest = str1 || str2.
 //! dest = str1 || str2
 //!
 //! Returns new destLen.
@@ -97,11 +64,21 @@ SqlStrAsciiCatV(char* dest,
 //! This is an optimization for creating a concatenated string from
 //! two other strings, eliminating a seperate string copy. The
 //! assumption is that this is the common case with concatenation. 
-//! Subsequent concatenations may occur with SqlStrAsciiCatV().
+//! Subsequent concatenations may occur with other form.
+//!
+//! If either string is variable width, the result is variable
+//! width: per SQL99 6.27 Syntax Rule 3, Case A, item i.
+//! If both strings are fixed witdth, the reuslt is fixed width, 
+//! item ii.
+//!
+//! Note: CHAR('1  ') || CHAR('2 ') is CHAR('1  2 ') and 
+//! is not CHAR('12   ').
+//!
+//! When used with CHARs, ignore return value, and set destLen = destWidth
 //
 //  TODO: Does not implement an implementation defined max length.
 int
-SqlStrAsciiCatV(char* dest,
+SqlStrAsciiCat(char* dest,
                 int destWidth,
                 char const * const str1,
                 int str1Len,
@@ -110,7 +87,7 @@ SqlStrAsciiCatV(char* dest,
 
 //! StrCmp. Ascii. Fixed Width / SQL CHAR.
 //!
-//! Returns -1, 0, 1, to match strcmp and std::string;
+//! Returns -1, 0, 1
 int
 SqlStrAsciiCmpF(char const * const str1,
                 int str1Width,
@@ -120,7 +97,7 @@ SqlStrAsciiCmpF(char const * const str1,
 
 //! StrCmp. Ascii. VARCHAR.
 //!
-//! Returns -1, 0, 1, to match strcmp and std::string;
+//! Returns -1, 0, 1
 int
 SqlStrAsciiCmpV(char const * const str1,
                 int str1Len,
@@ -164,7 +141,7 @@ SqlStrAsciiOverlay(char* dest,
                    int overLen,
                    int start,
                    int length,
-                   bool startSpecified);
+                   bool lenSpecified);
 
 //! Position. Ascii. CHAR/VARHCAR. Returns 1-index string position.
 //!

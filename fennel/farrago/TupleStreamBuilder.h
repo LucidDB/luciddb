@@ -55,14 +55,14 @@ class TupleStreamBuilder : public boost::noncopyable, public FemVisitor
     SharedDatabase pDatabase;
 
     /**
+     * Factory for creating ExecutionStream objects.
+     */
+    ExecutionStreamFactory &streamFactory;
+    
+    /**
      * Graph of stream nodes being built up.
      */
     SharedTupleStreamGraph pGraph;
-
-    /**
-     * Factory for creating TableWriters.
-     */
-    SharedTableWriterFactory pTableWriterFactory;
 
     /**
      * Stream returned by current invocation visit method.  Have to do it this
@@ -72,20 +72,10 @@ class TupleStreamBuilder : public boost::noncopyable, public FemVisitor
     SharedTupleStream pChildStream;
 
     /**
-     * Accessor for ScratchSegment available to all streams.
-     */
-    SegmentAccessor scratchAccessor;
-
-    /**
      * Copy of params used for building last child.  Kinda ugly.
      */
     TupleStreamParams childParams;
 
-    /**
-     * Handle to the stream being built.
-     */
-    CmdInterpreter::StreamHandle *pStreamHandle;
-    
     void visitStream(
         ProxyExecutionStreamDef &,
         TupleStream::BufferProvision requiredDataflow);
@@ -96,42 +86,6 @@ class TupleStreamBuilder : public boost::noncopyable, public FemVisitor
     void addAdapterFor(TupleStream::BufferProvision);
     void addAdapter(TupleStream &adapter);
 
-    // Per-stream overrides for FemVisitor; add new stream types here
-    virtual void visit(ProxyIndexScanDef &);
-    virtual void visit(ProxyIndexSearchDef &);
-    virtual void visit(ProxyJavaTupleStreamDef &);
-    virtual void visit(ProxyTableInserterDef &);
-    virtual void visit(ProxyTableDeleterDef &);
-    virtual void visit(ProxyTableUpdaterDef &);
-    virtual void visit(ProxySortingStreamDef &);
-    virtual void visit(ProxyBufferingTupleStreamDef &);
-    virtual void visit(ProxyIndexLoaderDef &);
-    virtual void visit(ProxyCartesianProductStreamDef &);
-
-    // helpers for above visitors
-
-    void readTupleStreamParams(
-        TupleStreamParams &,
-        ProxyTupleStreamDef &);
-    
-    void readBTreeStreamParams(
-        BTreeStreamParams &,
-        ProxyIndexAccessorDef &);
-    
-    void readBTreeReadTupleStreamParams(
-        BTreeReadTupleStreamParams &,
-        ProxyIndexScanDef &);
-    
-    void readIndexWriterParams(
-        TableIndexWriterParams &,
-        ProxyIndexWriterDef &);
-
-    void readTableWriterStreamParams(
-        TableWriterStreamParams &,
-        ProxyTableWriterDef &);
-
-    static Distinctness parseDistinctness(std::string s);
-
     /**
      * Add a new stream to the graph, recursively build its inputs, and set up
      * the corresponding dataflow edges.
@@ -141,16 +95,9 @@ class TupleStreamBuilder : public boost::noncopyable, public FemVisitor
      * @param streamDef corresponding Java stream definition being converted
      */
     void buildStreamInputs(
-        TupleStream *pStream,
+        ExecutionStream *pStream,
         ProxyExecutionStreamDef &streamDef);
 
-    /**
-     * Decide whether cache quotas should actually be enforced.  By default
-     * they are only for a DEBUG build, but this can be overridden by setting
-     * trace level net.sf.farrago.fennel.xo.quota to FINE.
-     */
-    bool shouldEnforceCacheQuotas();
-    
 public:
     /**
      * Create a new TupleStreamBuilder.
@@ -165,9 +112,8 @@ public:
      */
     explicit TupleStreamBuilder(
         SharedDatabase pDatabase,
-        SharedTableWriterFactory pTableWriterFactory,
-        SharedTupleStreamGraph pGraph,
-        CmdInterpreter::StreamHandle *pStreamHandle);
+        ExecutionStreamFactory &streamFactory,
+        SharedTupleStreamGraph pGraph);
 
     /**
      * Main builder entry point.
@@ -177,34 +123,6 @@ public:
      * stream in the graph passed to the constructor
      */
     void buildStreamGraph(ProxyExecutionStreamDef &streamDef);
-
-    // Some static utilities which are also used in non-stream contexts.  TODO:
-    // move somewhere more appropriate.
-
-    /**
-     * Read the Java representation of a TupleDescriptor.
-     *
-     * @param tupleDesc target TupleDescriptor
-     *
-     * @param javaTupleDesc Java proxy representation
-     *
-     * @param typeFactory factory for resolving type ordinals
-     */
-    static void readTupleDescriptor(
-        TupleDescriptor &tupleDesc,
-        ProxyTupleDescriptor &javaTupleDesc,
-        StoredTypeDescriptorFactory const &typeFactory);
-
-    /**
-     * Read the Java representation of a TupleProjection
-     *
-     * @param tupleProj target TupleProjection
-     *
-     * @param pJavaTupleProj Java representation
-     */
-    static void readTupleProjection(
-        TupleProjection &tupleProj,
-        SharedProxyTupleProjection pJavaTupleProj);
 };
 
 FENNEL_END_NAMESPACE
