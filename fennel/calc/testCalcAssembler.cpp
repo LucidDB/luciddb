@@ -256,18 +256,18 @@ public:
 
         for (uint i=0; i < mWarnings.size(); i++)
         {
-            if (calc.mWarnings[i].mPc != mWarnings[i].mPc)
+            if (calc.mWarnings[i].pc != mWarnings[i].pc)
             {
-                cout << "Warning expected at PC=" << mWarnings[i].mPc
+                cout << "Warning expected at PC=" << mWarnings[i].pc
                      << ". Got warning at PC="
-                     << calc.mWarnings[i].mPc << endl;
+                     << calc.mWarnings[i].pc << endl;
                 return false;
             }
-            if (strcmp(calc.mWarnings[i].mStr, mWarnings[i].mStr))
+            if (strcmp(calc.mWarnings[i].str, mWarnings[i].str))
             {
-                cout << "Message should be |" << mWarnings[i].mStr 
-                     << "| not |" << calc.mWarnings[i].mStr << "| at PC="
-                     << mWarnings[i].mPc << endl;
+                cout << "Message should be |" << mWarnings[i].str 
+                     << "| not |" << calc.mWarnings[i].str << "| at PC="
+                     << mWarnings[i].pc << endl;
                 return false;
             }
         }

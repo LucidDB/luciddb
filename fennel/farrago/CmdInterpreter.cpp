@@ -28,6 +28,7 @@
 #include "fennel/farrago/TupleStreamBuilder.h"
 #include "fennel/cache/CacheParams.h"
 #include "fennel/common/ConfigMap.h"
+#include "fennel/common/FennelExcn.h"
 #include "fennel/btree/BTreeBuilder.h"
 #include "fennel/db/Database.h"
 #include "fennel/db/CheckpointThread.h"
@@ -146,14 +147,26 @@ void CmdInterpreter::visit(ProxyCmdOpenDatabase &cmd)
     pDbHandle->statsTimer.start();
 
     if (pDb->isRecoveryRequired()) {
-        SegmentAccessor scratchAccessor =
-            pDb->getSegmentFactory()->newScratchSegment(pDb->getCache());
-        TableWriterFactory recoveryFactory(
-            pDb,
-            pDb->getCache(),
-            pDb->getTypeFactory(),
-            scratchAccessor);
-        pDb->recover(recoveryFactory);
+        // NOTE jvs 10-Aug-2004 -- the if (false) branch below is the real
+        // recovery code.  It's currently disabled because MDR recovery isn't
+        // working yet.  So for now, once we detect a crash we fail fast.
+        if (false) {
+            SegmentAccessor scratchAccessor =
+                pDb->getSegmentFactory()->newScratchSegment(pDb->getCache());
+            TableWriterFactory recoveryFactory(
+                pDb,
+                pDb->getCache(),
+                pDb->getTypeFactory(),
+                scratchAccessor);
+            pDb->recover(recoveryFactory);
+        } else {
+            deleteDbHandle(pDbHandle);
+            // NOTE jvs 10-Aug-2004 -- this message is intentionally NOT
+            // internationalized because it's supposed to be temporary.
+            throw FennelExcn(
+                "Database crash detected.  "
+                "To repair system, you must restore the catalog from backup.");
+        }
     }
     setDbHandle(cmd.getResultHandle(),pDbHandle);
 }
@@ -161,7 +174,11 @@ void CmdInterpreter::visit(ProxyCmdOpenDatabase &cmd)
 void CmdInterpreter::visit(ProxyCmdCloseDatabase &cmd)
 {
     DbHandle *pDbHandle = getDbHandle(cmd.getDbHandle());
+    deleteDbHandle(pDbHandle);
+}
 
+void CmdInterpreter::deleteDbHandle(DbHandle *pDbHandle)
+{
     pDbHandle->statsTimer.stop();
     
     // close database before trace

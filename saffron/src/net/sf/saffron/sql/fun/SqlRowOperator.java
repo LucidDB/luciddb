@@ -56,10 +56,8 @@ public class SqlRowOperator extends SqlSpecialOperator
     }
 
     // implement SqlOperator
-    public int getNumOfOperands(int desiredCount)
-    {
-        // any number of arguments is fine
-        return desiredCount;
+    public SqlOperator.OperandsCountDescriptor getOperandsCountDescriptor() {
+        return OperandsCountDescriptor.variadic;
     }
 
     // implement SqlOperator

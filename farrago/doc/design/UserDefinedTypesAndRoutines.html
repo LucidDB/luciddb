@@ -5,7 +5,7 @@
 <link rel="stylesheet" type="text/css" href="../stylesheet.css" />
 
 </head>
-
+ 
 <body>
 
 <h1>SQL Standard User Defined Types and Routines</h1>
@@ -185,7 +185,7 @@ RETURNS DOUBLE
 LANGUAGE SQL
 RETURN(x*x);
 
-SELECT sum(3.1415926*sqr(d.dot.radius)) as total_area FROM PolkaDots d;
+SELECT sum(3.1415927*sqr(d.dot.radius)) as total_area FROM PolkaDots d;
 
 </code></pre>
 
@@ -240,7 +240,7 @@ OVERRIDING INSTANCE METHOD rect_length() RETURNS DOUBLE;
 CREATE INSTANCE METHOD area()
 RETURNS DOUBLE
 FOR Circle
-RETURN 3.1415926*sqr(radius);
+RETURN 3.1415927*sqr(radius);
 
 CREATE INSTANCE METHOD area()
 RETURNS DOUBLE

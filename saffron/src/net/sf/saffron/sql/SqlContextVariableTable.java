@@ -53,12 +53,12 @@ public class SqlContextVariableTable
             SqlTypeName.Varchar,128);
 
         mapNameToType = new HashMap();
-        mapNameToType.put(createUSER(null).getSimple(),varcharType);
-        mapNameToType.put(createCURRENT_USER(null).getSimple(),varcharType);
-        mapNameToType.put(createSYSTEM_USER(null).getSimple(),varcharType);
-        mapNameToType.put(createSESSION_USER(null).getSimple(),varcharType);
-        mapNameToType.put(createCURRENT_PATH(null).getSimple(),varcharType);
-        mapNameToType.put(createCURRENT_ROLE(null).getSimple(),varcharType);
+        mapNameToType.put(createUSER(ParserPosition.ZERO).getSimple(),varcharType);
+        mapNameToType.put(createCURRENT_USER(ParserPosition.ZERO).getSimple(),varcharType);
+        mapNameToType.put(createSYSTEM_USER(ParserPosition.ZERO).getSimple(),varcharType);
+        mapNameToType.put(createSESSION_USER(ParserPosition.ZERO).getSimple(),varcharType);
+        mapNameToType.put(createCURRENT_PATH(ParserPosition.ZERO).getSimple(),varcharType);
+        mapNameToType.put(createCURRENT_ROLE(ParserPosition.ZERO).getSimple(),varcharType);
 
 
         SaffronType dateType = typeFactory.createSqlType(SqlTypeName.Date);
@@ -73,11 +73,11 @@ public class SqlContextVariableTable
         SaffronType timestampType = typeFactory.createSqlType(
             SqlTypeName.Timestamp);
 
-        mapNameToType.put(createCURRENT_DATE(null).getSimple(),dateType);
-        mapNameToType.put(createCURRENT_TIME(null).getSimple(),timeType);
-        mapNameToType.put(createCURRENT_TIMESTAMP(null).getSimple(),timestampType);
-        mapNameToType.put(createLOCALTIME(null).getSimple(),timeType);
-        mapNameToType.put(createLOCALTIMESTAMP(null).getSimple(),timestampType);
+        mapNameToType.put(createCURRENT_DATE(ParserPosition.ZERO).getSimple(),dateType);
+        mapNameToType.put(createCURRENT_TIME(ParserPosition.ZERO).getSimple(),timeType);
+        mapNameToType.put(createCURRENT_TIMESTAMP(ParserPosition.ZERO).getSimple(),timestampType);
+        mapNameToType.put(createLOCALTIME(ParserPosition.ZERO).getSimple(),timeType);
+        mapNameToType.put(createLOCALTIMESTAMP(ParserPosition.ZERO).getSimple(),timestampType);
 
     }
 
@@ -90,47 +90,47 @@ public class SqlContextVariableTable
         return (SaffronType) mapNameToType.get(name);
     }
 
-    public static SqlIdentifier createUSER(ParserPosition parserPosition)
+    public static SqlIdentifier createUSER(ParserPosition pos)
     {
-        return new SqlIdentifier("USER", parserPosition);
+        return new SqlIdentifier("USER", pos);
     }
 
-    public static SqlIdentifier createCURRENT_USER(ParserPosition parserPosition)
+    public static SqlIdentifier createCURRENT_USER(ParserPosition pos)
     {
-        return new SqlIdentifier("CURRENT_USER", parserPosition);
+        return new SqlIdentifier("CURRENT_USER", pos);
     }
 
-    public static SqlIdentifier createSESSION_USER(ParserPosition parserPosition)
+    public static SqlIdentifier createSESSION_USER(ParserPosition pos)
     {
-        return new SqlIdentifier("SESSION_USER", parserPosition);
+        return new SqlIdentifier("SESSION_USER", pos);
     }
 
-    public static final SqlIdentifier createSYSTEM_USER(ParserPosition parserPosition)
-    {    return new SqlIdentifier("SYSTEM_USER",parserPosition);}
+    public static final SqlIdentifier createSYSTEM_USER(ParserPosition pos)
+    {    return new SqlIdentifier("SYSTEM_USER",pos);}
 
-    public static final SqlIdentifier createCURRENT_PATH(ParserPosition parserPosition)
-    {    return new SqlIdentifier("CURRENT_PATH",parserPosition);}
+    public static final SqlIdentifier createCURRENT_PATH(ParserPosition pos)
+    {    return new SqlIdentifier("CURRENT_PATH",pos);}
 
-    public static final SqlIdentifier createCURRENT_ROLE(ParserPosition parserPosition)
-    {    return new SqlIdentifier("CURRENT_ROLE",parserPosition);}
+    public static final SqlIdentifier createCURRENT_ROLE(ParserPosition pos)
+    {    return new SqlIdentifier("CURRENT_ROLE",pos);}
 
-    public static final SqlIdentifier createCURRENT_DATE(ParserPosition parserPosition)
-    {    return new SqlIdentifier("CURRENT_DATE",parserPosition);}
+    public static final SqlIdentifier createCURRENT_DATE(ParserPosition pos)
+    {    return new SqlIdentifier("CURRENT_DATE",pos);}
 
     // TODO jvs 20-Feb-2004:  The expressions below should
     // also allow function syntax (with the time precision as the parameter)
 
-    public static final SqlIdentifier createCURRENT_TIME(ParserPosition parserPosition)
-    {    return new SqlIdentifier("CURRENT_TIME",parserPosition);}
+    public static final SqlIdentifier createCURRENT_TIME(ParserPosition pos)
+    {    return new SqlIdentifier("CURRENT_TIME",pos);}
 
-    public static final SqlIdentifier createCURRENT_TIMESTAMP(ParserPosition parserPosition)
-    {    return new SqlIdentifier("CURRENT_TIMESTAMP",parserPosition);}
+    public static final SqlIdentifier createCURRENT_TIMESTAMP(ParserPosition pos)
+    {    return new SqlIdentifier("CURRENT_TIMESTAMP",pos);}
 
-    public static final SqlIdentifier createLOCALTIME(ParserPosition parserPosition)
-    {    return new SqlIdentifier("LOCALTIME",parserPosition);}
+    public static final SqlIdentifier createLOCALTIME(ParserPosition pos)
+    {    return new SqlIdentifier("LOCALTIME",pos);}
 
-    public static final SqlIdentifier createLOCALTIMESTAMP(ParserPosition parserPosition)
-    {    return new SqlIdentifier("LOCALTIMESTAMP",parserPosition);}
+    public static final SqlIdentifier createLOCALTIMESTAMP(ParserPosition pos)
+    {    return new SqlIdentifier("LOCALTIMESTAMP",pos);}
 
 }
 

@@ -1,0 +1,521 @@
+0: jdbc:farrago:> -- $Id: //open/farrago/unitsql/expressions/strCasts.ref#1 $
+0: jdbc:farrago:> -- Test casts between string types
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- REVIEW: SZ: 8/5/2004: This test wants to be in regressionsql, but
+0: jdbc:farrago:> -- it only works under the Java Calc and regressionsql currently only
+0: jdbc:farrago:> -- executes tests against the Fennel Calc.  See dtbug 228.
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create schema s;
+0: jdbc:farrago:> set schema s;
+0: jdbc:farrago:> create table t (
+. . . . . . . . >         i int not null primary key,
+. . . . . . . . >         short_c char(3) not null,
+. . . . . . . . >         med_c char(10) not null,
+. . . . . . . . >         long_c char(64) not null,
+. . . . . . . . >         short_vc varchar(3) not null,
+. . . . . . . . >         med_vc varchar(10) not null,
+. . . . . . . . >         long_vc varchar(64) not null);
+0: jdbc:farrago:> insert into t values(1,
+. . . . . . . . >         'a',
+. . . . . . . . >         'a',
+. . . . . . . . >         'a',
+. . . . . . . . >         'a',
+. . . . . . . . >         'a',
+. . . . . . . . >         'a');
+0: jdbc:farrago:> insert into t values(2,
+. . . . . . . . >         'ab',
+. . . . . . . . >         'ab',
+. . . . . . . . >         'ab',
+. . . . . . . . >         'ab',
+. . . . . . . . >         'ab',
+. . . . . . . . >         'ab');
+0: jdbc:farrago:> insert into t values(3,
+. . . . . . . . >         'abc',
+. . . . . . . . >         'abc',
+. . . . . . . . >         'abc',
+. . . . . . . . >         'abc',
+. . . . . . . . >         'abc',
+. . . . . . . . >         'abc');
+0: jdbc:farrago:> insert into t values(4,
+. . . . . . . . >         'abc',
+. . . . . . . . >         'abcd',
+. . . . . . . . >         'abcd',
+. . . . . . . . >         'abcd',
+. . . . . . . . >         'abcd',
+. . . . . . . . >         'abcd');
+0: jdbc:farrago:> insert into t values(9,
+. . . . . . . . >         'abc',
+. . . . . . . . >         'abcdefghi',
+. . . . . . . . >         'abcdefghi',
+. . . . . . . . >         'abcdefghi',
+. . . . . . . . >         'abcdefghi',
+. . . . . . . . >         'abcdefghi');
+0: jdbc:farrago:> insert into t values(10,
+. . . . . . . . >         'abc',
+. . . . . . . . >         'abcdefghij',
+. . . . . . . . >         'abcdefghij',
+. . . . . . . . >         'abcdefghij',
+. . . . . . . . >         'abcdefghij',
+. . . . . . . . >         'abcdefghij');
+0: jdbc:farrago:> insert into t values(11,
+. . . . . . . . >         'abc',
+. . . . . . . . >         'abcdefghij',
+. . . . . . . . >         'abcdefghijk',
+. . . . . . . . >         'abcdefghijk',
+. . . . . . . . >         'abcdefghijk',
+. . . . . . . . >         'abcdefghijk');
+0: jdbc:farrago:> insert into t values(63,
+. . . . . . . . >         'abc!',
+. . . . . . . . >         'abcdefghij',
+. . . . . . . . >         'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!',
+. . . . . . . . >         'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!',
+. . . . . . . . >         'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!',
+. . . . . . . . >         'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!');
+0: jdbc:farrago:> insert into t values(64,
+. . . . . . . . >         'abc',
+. . . . . . . . >         'abcdefghij',
+. . . . . . . . >         'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@',
+. . . . . . . . >         'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@',
+. . . . . . . . >         'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@',
+. . . . . . . . >         'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select i, char_length(long_vc) from t;
++-----+---------+
+|  I  | EXPR$1  |
++-----+---------+
+| 1   | 1       |
+| 2   | 2       |
+| 3   | 3       |
+| 4   | 4       |
+| 9   | 9       |
+| 10  | 10      |
+| 11  | 11      |
+| 63  | 63      |
+| 64  | 64      |
++-----+---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !set outputformat csv
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- cast smaller, same type
+0: jdbc:farrago:> select cast(short_c as char(1)) from t;
+'EXPR$0'
+'a'
+'a'
+'a'
+'a'
+'a'
+'a'
+'a'
+'a'
+'a'
+0: jdbc:farrago:> select cast(med_c as char(5)) from t;
+'EXPR$0'
+'a    '
+'ab   '
+'abc  '
+'abcd '
+'abcde'
+'abcde'
+'abcde'
+'abcde'
+'abcde'
+0: jdbc:farrago:> select cast(long_c as char(32)) from t;
+'EXPR$0'
+'a                               '
+'ab                              '
+'abc                             '
+'abcd                            '
+'abcdefghi                       '
+'abcdefghij                      '
+'abcdefghijk                     '
+'abcdefghijklmnopqrstuvwxyzABCDEF'
+'abcdefghijklmnopqrstuvwxyzABCDEF'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select cast(short_vc as varchar(1)) from t;
+'EXPR$0'
+'a'
+'a'
+'a'
+'a'
+'a'
+'a'
+'a'
+'a'
+'a'
+0: jdbc:farrago:> select cast(med_vc as varchar(5)) from t;
+'EXPR$0'
+'a'
+'ab'
+'abc'
+'abcd'
+'abcde'
+'abcde'
+'abcde'
+'abcde'
+'abcde'
+0: jdbc:farrago:> select cast(long_vc as varchar(32)) from t;
+'EXPR$0'
+'a'
+'ab'
+'abc'
+'abcd'
+'abcdefghi'
+'abcdefghij'
+'abcdefghijk'
+'abcdefghijklmnopqrstuvwxyzABCDEF'
+'abcdefghijklmnopqrstuvwxyzABCDEF'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- cast larger, same type
+0: jdbc:farrago:> -- Fails in Fennel Calc (pads with NULLs)
+0: jdbc:farrago:> select cast(short_c as char(5)) from t;
+'EXPR$0'
+'a    '
+'ab   '
+'abc  '
+'abc  '
+'abc  '
+'abc  '
+'abc  '
+'abc  '
+'abc  '
+0: jdbc:farrago:> -- Fails in Fennel Calc (pads with NULLs)
+0: jdbc:farrago:> select cast(med_c as char(15)) from t;
+'EXPR$0'
+'a              '
+'ab             '
+'abc            '
+'abcd           '
+'abcdefghi      '
+'abcdefghij     '
+'abcdefghij     '
+'abcdefghij     '
+'abcdefghij     '
+0: jdbc:farrago:> -- Fails in Fennel Calc (pads with NULLs)
+0: jdbc:farrago:> select cast(long_c as char(70)) from t;
+'EXPR$0'
+'a                                                                     '
+'ab                                                                    '
+'abc                                                                   '
+'abcd                                                                  '
+'abcdefghi                                                             '
+'abcdefghij                                                            '
+'abcdefghijk                                                           '
+'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!       '
+'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@      '
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select cast(short_vc as varchar(5)) from t;
+'EXPR$0'
+'a'
+'ab'
+'abc'
+'abc'
+'abc'
+'abc'
+'abc'
+'abc'
+'abc'
+0: jdbc:farrago:> select cast(med_vc as varchar(15)) from t;
+'EXPR$0'
+'a'
+'ab'
+'abc'
+'abcd'
+'abcdefghi'
+'abcdefghij'
+'abcdefghij'
+'abcdefghij'
+'abcdefghij'
+0: jdbc:farrago:> select cast(long_vc as varchar(70)) from t;
+'EXPR$0'
+'a'
+'ab'
+'abc'
+'abcd'
+'abcdefghi'
+'abcdefghij'
+'abcdefghijk'
+'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!'
+'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- cast same size, same type
+0: jdbc:farrago:> select cast(short_c as char(3)) from t;
+'EXPR$0'
+'a  '
+'ab '
+'abc'
+'abc'
+'abc'
+'abc'
+'abc'
+'abc'
+'abc'
+0: jdbc:farrago:> select cast(med_c as char(10)) from t;
+'EXPR$0'
+'a         '
+'ab        '
+'abc       '
+'abcd      '
+'abcdefghi '
+'abcdefghij'
+'abcdefghij'
+'abcdefghij'
+'abcdefghij'
+0: jdbc:farrago:> select cast(long_c as char(64)) from t;
+'EXPR$0'
+'a                                                               '
+'ab                                                              '
+'abc                                                             '
+'abcd                                                            '
+'abcdefghi                                                       '
+'abcdefghij                                                      '
+'abcdefghijk                                                     '
+'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789! '
+'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select cast(short_vc as varchar(3)) from t;
+'EXPR$0'
+'a'
+'ab'
+'abc'
+'abc'
+'abc'
+'abc'
+'abc'
+'abc'
+'abc'
+0: jdbc:farrago:> select cast(med_vc as varchar(10)) from t;
+'EXPR$0'
+'a'
+'ab'
+'abc'
+'abcd'
+'abcdefghi'
+'abcdefghij'
+'abcdefghij'
+'abcdefghij'
+'abcdefghij'
+0: jdbc:farrago:> select cast(long_vc as varchar(64)) from t;
+'EXPR$0'
+'a'
+'ab'
+'abc'
+'abcd'
+'abcdefghi'
+'abcdefghij'
+'abcdefghijk'
+'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!'
+'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- cast smaller, other type
+0: jdbc:farrago:> select cast(short_c as varchar(1)) from t;
+'EXPR$0'
+'a'
+'a'
+'a'
+'a'
+'a'
+'a'
+'a'
+'a'
+'a'
+0: jdbc:farrago:> select cast(med_c as varchar(5)) from t;
+'EXPR$0'
+'a    '
+'ab   '
+'abc  '
+'abcd '
+'abcde'
+'abcde'
+'abcde'
+'abcde'
+'abcde'
+0: jdbc:farrago:> select cast(long_c as varchar(32)) from t;
+'EXPR$0'
+'a                               '
+'ab                              '
+'abc                             '
+'abcd                            '
+'abcdefghi                       '
+'abcdefghij                      '
+'abcdefghijk                     '
+'abcdefghijklmnopqrstuvwxyzABCDEF'
+'abcdefghijklmnopqrstuvwxyzABCDEF'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select cast(short_vc as char(1)) from t;
+'EXPR$0'
+'a'
+'a'
+'a'
+'a'
+'a'
+'a'
+'a'
+'a'
+'a'
+0: jdbc:farrago:> select cast(med_vc as char(5)) from t;
+'EXPR$0'
+'a    '
+'ab   '
+'abc  '
+'abcd '
+'abcde'
+'abcde'
+'abcde'
+'abcde'
+'abcde'
+0: jdbc:farrago:> select cast(long_vc as char(32)) from t;
+'EXPR$0'
+'a                               '
+'ab                              '
+'abc                             '
+'abcd                            '
+'abcdefghi                       '
+'abcdefghij                      '
+'abcdefghijk                     '
+'abcdefghijklmnopqrstuvwxyzABCDEF'
+'abcdefghijklmnopqrstuvwxyzABCDEF'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- cast larger, other type
+0: jdbc:farrago:> select cast(short_c as varchar(5)) from t;
+'EXPR$0'
+'a  '
+'ab '
+'abc'
+'abc'
+'abc'
+'abc'
+'abc'
+'abc'
+'abc'
+0: jdbc:farrago:> select cast(med_c as varchar(15)) from t;
+'EXPR$0'
+'a         '
+'ab        '
+'abc       '
+'abcd      '
+'abcdefghi '
+'abcdefghij'
+'abcdefghij'
+'abcdefghij'
+'abcdefghij'
+0: jdbc:farrago:> select cast(long_c as varchar(70)) from t;
+'EXPR$0'
+'a                                                               '
+'ab                                                              '
+'abc                                                             '
+'abcd                                                            '
+'abcdefghi                                                       '
+'abcdefghij                                                      '
+'abcdefghijk                                                     '
+'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789! '
+'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select cast(short_vc as char(5)) from t;
+'EXPR$0'
+'a    '
+'ab   '
+'abc  '
+'abc  '
+'abc  '
+'abc  '
+'abc  '
+'abc  '
+'abc  '
+0: jdbc:farrago:> select cast(med_vc as char(15)) from t;
+'EXPR$0'
+'a              '
+'ab             '
+'abc            '
+'abcd           '
+'abcdefghi      '
+'abcdefghij     '
+'abcdefghij     '
+'abcdefghij     '
+'abcdefghij     '
+0: jdbc:farrago:> select cast(long_vc as char(70)) from t;
+'EXPR$0'
+'a                                                                     '
+'ab                                                                    '
+'abc                                                                   '
+'abcd                                                                  '
+'abcdefghi                                                             '
+'abcdefghij                                                            '
+'abcdefghijk                                                           '
+'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!       '
+'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@      '
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- cast same size, other type
+0: jdbc:farrago:> select cast(short_c as varchar(3)) from t;
+'EXPR$0'
+'a  '
+'ab '
+'abc'
+'abc'
+'abc'
+'abc'
+'abc'
+'abc'
+'abc'
+0: jdbc:farrago:> select cast(med_c as varchar(10)) from t;
+'EXPR$0'
+'a         '
+'ab        '
+'abc       '
+'abcd      '
+'abcdefghi '
+'abcdefghij'
+'abcdefghij'
+'abcdefghij'
+'abcdefghij'
+0: jdbc:farrago:> select cast(long_c as varchar(64)) from t;
+'EXPR$0'
+'a                                                               '
+'ab                                                              '
+'abc                                                             '
+'abcd                                                            '
+'abcdefghi                                                       '
+'abcdefghij                                                      '
+'abcdefghijk                                                     '
+'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789! '
+'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select cast(short_vc as char(3)) from t;
+'EXPR$0'
+'a  '
+'ab '
+'abc'
+'abc'
+'abc'
+'abc'
+'abc'
+'abc'
+'abc'
+0: jdbc:farrago:> select cast(med_vc as char(10)) from t;
+'EXPR$0'
+'a         '
+'ab        '
+'abc       '
+'abcd      '
+'abcdefghi '
+'abcdefghij'
+'abcdefghij'
+'abcdefghij'
+'abcdefghij'
+0: jdbc:farrago:> select cast(long_vc as char(64)) from t;
+'EXPR$0'
+'a                                                               '
+'ab                                                              '
+'abc                                                             '
+'abcd                                                            '
+'abcdefghi                                                       '
+'abcdefghij                                                      '
+'abcdefghijk                                                     '
+'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789! '
+'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !quit

@@ -57,11 +57,15 @@ public class SqlSyntax extends EnumeratedValues.BasicValue
      * "CASE x WHEN 1 THEN 2 ELSE 3 END". */
     public static final SqlSyntax Special =
             new SqlSyntax("Special",Special_ordinal);
+    public static final int Internal_ordinal = 5;
+    /** syntax of an internal operator, which does not appear in the SQL */
+    public static final SqlSyntax Internal =
+            new SqlSyntax("Internal",Internal_ordinal);
 
     public static final EnumeratedValues enumeration =
             new EnumeratedValues(
                     new SqlSyntax[] {
-                        Function, Binary, Prefix, Postfix, Special});
+                        Function, Binary, Prefix, Postfix, Special, Internal});
     /**
      * Looks up a syntax from its ordinal.
      */

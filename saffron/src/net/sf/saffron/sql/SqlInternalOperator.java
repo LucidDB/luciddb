@@ -1,7 +1,7 @@
 /*
 // $Id$
 // Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
+// (C) Copyright 2002-2004 Disruptive Technologies, Inc.
 // (C) Copyright 2003-2004 John V. Sichi
 // You must accept the terms in LICENSE.html to use this software.
 //
@@ -22,28 +22,24 @@
 
 package net.sf.saffron.sql;
 
-import net.sf.saffron.util.Util;
-
-import java.util.List;
-
 /**
- * Generic operator for nodes with special syntax.
+ * Generic operator for nodes with internal syntax.
  */
-public abstract class SqlSpecialOperator extends SqlOperator
+public abstract class SqlInternalOperator extends SqlSpecialOperator
 {
     //~ Constructors ----------------------------------------------------------
 
-    public SqlSpecialOperator(String name,SqlKind kind)
+    public SqlInternalOperator(String name,SqlKind kind)
     {
         super(name,kind,1,true, null,null, null);
     }
 
-    public SqlSpecialOperator(String name,SqlKind kind, int pred)
+    public SqlInternalOperator(String name,SqlKind kind, int pred)
     {
         super(name,kind,pred,true, null,null, null);
     }
 
-    public SqlSpecialOperator(String name, SqlKind kind, int pred,
+    public SqlInternalOperator(String name, SqlKind kind, int pred,
             boolean isLeftAssoc, TypeInference typeInference,
             ParamTypeInference paramTypeInference,
             AllowedArgInference argTypeInference)
@@ -56,7 +52,7 @@ public abstract class SqlSpecialOperator extends SqlOperator
 
     public SqlSyntax getSyntax()
     {
-        return SqlSyntax.Special;
+        return SqlSyntax.Internal;
     }
 
     public void unparse(
@@ -68,20 +64,4 @@ public abstract class SqlSpecialOperator extends SqlOperator
         throw new UnsupportedOperationException(
             "unparse must be implemented by SqlCall subclass");
     }
-
-    /**
-     * Reduces a list of operators and arguments according to the rules of
-     * precedence and associativity. Returns the ordinal of the node which
-     * replaced the expression.
-     *
-     * <p>The default implementation throws
-     * {@link UnsupportedOperationException}.
-     */
-    public int reduceExpr(int ordinal, List list) {
-        throw Util.needToImplement(this);
-    }
-
 }
-
-
-// End SqlExplainOperator.java

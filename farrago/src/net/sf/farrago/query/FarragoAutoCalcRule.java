@@ -57,13 +57,71 @@ import java.io.PrintWriter;
  * FarragoAutoCalcRule is a rule for implementing {@link CalcRel} via
  * a combination of the Fennel Calculator ({@link FennelCalcRel}) and
  * the Java Calculator ({@link net.sf.saffron.oj.rel.IterCalcRel}).
- * n
- * <p>This rule does not attempt to transform matching the matching
+ * 
+ * <p>This rule does not attempt to transform the matching
  * {@link net.sf.saffron.opt.VolcanoRuleCall} if the entire CalcRel
  * can be implemented entirely via one calculator or the other.  A
  * future optimization might be to use a costing mechanism to
  * determine where expressions that can be implemented by both
  * calculators should be executed.
+ *
+ * <p><b>Strategy:</b> Each CalcRel can be considered a forest (e.g. a
+ * group of trees).  The forest is comprised of the RexNode trees
+ * contained in the project and conditional expressions in the
+ * CalcRel.  The rule's basic strategy is to stratify the forest into
+ * levels, such that each level can be implemented entirely by a
+ * single calc.  Having divided the forest into levels, the rule
+ * creates new CalcRel instances which each contain all of the
+ * RexNodes associated with a given level and then connects RexNodes
+ * across the levels by adding RexInputRef instances as needed.  The
+ * planner will then evaluate each CalcRel and should find that either
+ * IterCalcRel or FennelCalcRel is able to implement each of the
+ * CalcRels this rule creates.  The planner will then automatically
+ * place the necessary plumbing between IterCalcRel and FennelCalcRel
+ * instances to convert between the two types of calculator.  This
+ * strategy depends the rules that generate IterCalcRel and
+ * FennelCalcRel not performing their transformations if a portion of
+ * an expression cannot be implemented in the corresponding
+ * calculator.  It also depends on accurate implementability
+ * information regarding RexCalls.
+ *
+ * <p><b>Potential improvements:</b> Currently, the rule does not
+ * exploit redundancy between trees in the forest.  For example,
+ * consider a table T with columns C1 and C2 and calculator functions
+ * F1, F2 and J where F1 and F2 are Fennel-only and J is Java-only.
+ * The query <pre>
+ *     select F1(C1), F2(C1), J(C2) from T</pre>
+ * begins life as <pre>
+ *     CalcRel Project: "F1($0), F2($0), J($1)"</pre>
+ * After applying FarragoAutoCalcRule we get <pre>
+ *     CalcRel Project: "F1($0), F2($1), $2"
+ *     CalcRel Project: "$0, $0, J($1)"</pre>
+ * Notice that although the calls to F1 and F2 refer to the same base
+ * column, the rule treats them separately.  A better result
+ * would be <pre>
+ *     CalcRel Project: "F1($0), F2($0), $1"
+ *     CalcRel Project: "$0, J($1)"</pre>
+ *
+ * <p>Another improvement relates to handling conditional expressions.
+ * The current implementation of the FarragoAutoCalc rule only treats
+ * the conditional expression specially in the top-most
+ * post-transformation CalcRel.  For example, consider a table T with
+ * columns C1 and C2 and calculator functions F and J where F is
+ * Fennel-only and J is Java-only.  The query <pre>
+ *     select F(C1) from T where J(C2)</pre>
+ * begins life as <pre>
+ *     CalcRel Project: "F($0)"    Conditional: "J($1)"</pre>
+ * After applying FarragoAutoCalcRule we get <pre>
+ *     CalcRel Project: "F($0)"    Conditional: "$1"
+ *     CalcRel Project: "$0 J($1)" Conditional:     </pre>
+ * Notice that even though the conditional expression could be
+ * evaluated and used for filtering in the lower CalcRel, it's not.
+ * This means that all rows are sent to the Fennel calculator.  A
+ * better result would be <pre>
+ *     CalcRel Project: "F($0)"    Contidional:
+ *     CalcRel Project: "$0"       Conditional: "J($1)"</pre>
+ * In this case, rows that don't match the conditional expression
+ * would not reach the Fennel calculator.
  */
 class FarragoAutoCalcRule
     extends VolcanoRule
@@ -88,7 +146,18 @@ class FarragoAutoCalcRule
                               }));
     }
 
-    // implement VolcanoRule
+
+    /**
+     * Called when this rule matches a rel.  First uses
+     * {@link RexToCalcTranslator} to determine if the rel can be
+     * implemented in the Fennel calc.  If so, this method returns
+     * without performing any transformation.  Next uses
+     * {@link JavaRelImplementor} to perform the same test for the
+     * Java calc.  Also returns with no transformation if the Java
+     * calc can implement the rel.  Finally, transforms the given
+     * CalcRel into a stack of CalcRels that can each individually be
+     * implemented in the Fennel or Java calcs.
+     */
     public void onMatch(VolcanoRuleCall call)
     {
         CalcRel calc = (CalcRel) call.rels[0];
@@ -144,14 +213,14 @@ class FarragoAutoCalcRule
 
     /**
      * Traverse the forest of expressions in <code>calc</code> and
-     * assign a depth to each node.  Each depth corresponds to a set
-     * of nodes that will be implemented either in the Java or Fennel
-     * calc.  Nodes can either be pulled up to their parent node's
-     * depth (if both are implementable in the same calc) or pushed
-     * down to a lower depth.  The type of depth 0 is determined by
-     * the first node that forces a specific calc.  If no node in the
-     * first level of nodes requires a specific calc, depth 0 is
-     * arbitrarily implemented in Java.
+     * assign a depth (level) to each node.  Each depth corresponds to
+     * a set of nodes that will be implemented either in the Java or
+     * Fennel calc.  Nodes can either be pulled up to their parent
+     * node's depth (if both are implementable in the same calc) or
+     * pushed down to a lower depth.  The type of depth 0 is
+     * determined by the first node that forces a specific calc.  If
+     * no node in the first level of nodes requires a specific calc,
+     * depth 0 is arbitrarily implemented in Java.
      */
     private void transform(JavaRelImplementor javaRelImplementor,
                            RexToCalcTranslator calcTranslator,
@@ -271,7 +340,7 @@ class FarragoAutoCalcRule
     }
 
     /**
-     * Internal method that handles adjust the depth at which a
+     * Internal method that handles adjusting the depth at which a
      * particular expression will be implemented.
      *
      * <p>One of <code>isJavaRel</code> or <code>isFennelRel</code>
@@ -280,7 +349,7 @@ class FarragoAutoCalcRule
      * @param relData data about a particular RexNode
      * @param relDepth the current rel depth
      * @param tdata modifiable data about the transformation in process
-     * @param isJavaRel if this node can be implemented in Java
+     * @param isJavaRel if this node can be implemented in the Java Calc
      * @param isFennelRel if this node can be implemented in the Fennel Calc
      */
     private void adjustDepth(RelData relData,
@@ -334,7 +403,7 @@ class FarragoAutoCalcRule
     /**
      * Traverse the forest of expressions, creating new RexInputRefs
      * to pass data between levels.  When RexInputRefs are encountered
-     * that are higher than the lowest level, we insert another
+     * that at other than the lowest level, we insert another
      * RexInputRef as a child at the next level down.  For RexCall
      * nodes, if the node's depth is lower than the current depth, we
      * insert a RexInputRef at the current level to refer to the
@@ -439,6 +508,8 @@ class FarragoAutoCalcRule
             levelExpressions.add(null);
         }
 
+        // REVIEW: push this step into its own function
+
         // Figure out what the actual RexNode trees for each level and
         // projection are.
         while(!relDataQueue.isEmpty()) {
@@ -502,6 +573,7 @@ class FarragoAutoCalcRule
             relDataQueue.addAll(children);
         }
 
+        // REVIEW: consider pushing this into it's own function
         if (ruleTracer.isLoggable(Level.FINER)) {
             StringWriter traceMsg = new StringWriter();
             PrintWriter traceWriter = new PrintWriter(traceMsg);
@@ -528,6 +600,8 @@ class FarragoAutoCalcRule
             ruleTracer.finer(msg);
         }
 
+
+        // REVIEW: push this step into its own function
 
         // Generate the actual CalcRel objects that represent the
         // decomposition of the original CalcRel.
@@ -641,7 +715,7 @@ class FarragoAutoCalcRule
      * Traverse a RexCall's children and create new RexInputRef
      * objects with the correct data.  Essentially implements the
      * hierarchy created in
-     * {@link #processCallChildren(List, RelData, int, int)}.
+     * {@link #processCallChildren(List, FarragoAutoCalcRule.RelData, int, int)}.
      */
     private void transformCallChildren(RelData relData,
                                        RexCall clonedCall,
@@ -703,6 +777,9 @@ class FarragoAutoCalcRule
     /**
      * Creates a forest of trees based on the project and conditional
      * expressions of the given CalcRel.
+     *
+     * @param calc the CalcRel to convert
+     * @return an ArrayList containing the roots of the trees.
      */
     private ArrayList buildRelDataTree(CalcRel calc)
     {
@@ -798,10 +875,10 @@ class FarragoAutoCalcRule
         int position;
     }
 
-    private static class Marker
-    {
-    }
-
+    /**
+     * Per-execution data passed between and modified by multiple
+     * functions in FarragoAutoCalcRule.
+     */
     private static class TransformData
     {
         int maxRelDepth;
@@ -809,9 +886,21 @@ class FarragoAutoCalcRule
         boolean usedRelDepth;
     }
 
-    private static final Marker DEPTH_MARKER = new Marker();
+    /** Used for iterative over forests by level. */
+    private static final Object DEPTH_MARKER = new Object();
 
+    /** Represents a RexNode that can be implemented by either calculator. */
     private static final Integer REL_TYPE_EITHER = new Integer(-1);
+
+    /**
+     * Represents a RexNode that can only be implemented by the Java
+     * calculator.
+     */
     private static final Integer REL_TYPE_JAVA = new Integer(1);
+
+    /**
+     * Represents a RexNode that can only be implemented by the Fennel
+     * calculator.
+     */
     private static final Integer REL_TYPE_FENNEL = new Integer(2);
 }

@@ -1046,10 +1046,10 @@ unitTestLong()
     assert(outC == divbyzero);
     if (output[outC++].pData != NULL) fail("longdiv6", __LINE__);
     deque<CalcMessage>::iterator iter = c.mWarnings.begin();
-    if (iter->mPc != divbyzero)
+    if (iter->pc != divbyzero)
         fail("longdiv by zero failed, pc wrong\n", __LINE__);
     string expectederror("22012");
-    if (expectederror.compare(iter->mStr)) 
+    if (expectederror.compare(iter->str)) 
         fail("longdiv by zero failed string was wrong", __LINE__);
 
     // neg
@@ -1079,10 +1079,10 @@ unitTestLong()
     assert(outC == modbyzero);
     if (output[outC++].pData != NULL) fail("longmod10", __LINE__);
     iter++;
-    if (iter->mPc != modbyzero)
+    if (iter->pc != modbyzero)
         fail("longmod by zero failed, pc wrong\n", __LINE__);
     expectederror = "22012";
-    if (expectederror.compare(iter->mStr)) 
+    if (expectederror.compare(iter->str)) 
         fail("longmod by zero failed string was wrong", __LINE__);
 
     // bitwise and
@@ -1709,17 +1709,17 @@ unitTestFloat()
     assert(outC == divbyzero);
     if (output[outC++].pData != NULL) fail("floatdiv10", __LINE__);
     deque<CalcMessage>::iterator iter = c.mWarnings.begin();
-    if (iter->mPc != divbyzero)
+    if (iter->pc != divbyzero)
         fail("floatdiv by zero failed, pc wrong\n", __LINE__);
     string expectederror("22012");
-    if (expectederror.compare(iter->mStr)) 
+    if (expectederror.compare(iter->str)) 
         fail("floatdiv by zero failed string was wrong", __LINE__);
 
     if (output[outC++].pData != NULL) fail("floatdiv11", __LINE__);
     iter++;
-    if (iter->mPc != divbyzero+1)
+    if (iter->pc != divbyzero+1)
         fail("floatdiv by zero failed, pc wrong\n", __LINE__);
-    if (expectederror.compare(iter->mStr)) 
+    if (expectederror.compare(iter->str)) 
         fail("floatdiv by zero failed string was wrong", __LINE__);
 
 
@@ -2706,9 +2706,9 @@ unitTestWarnings()
     cout << "Calculator Warnings: " << c.warnings() << endl;
 
     deque<CalcMessage>::iterator iter = c.mWarnings.begin();
-    if (iter->mPc != 0) fail("warning:pc", __LINE__);
+    if (iter->pc != 0) fail("warning:pc", __LINE__);
     string expectederror("22012");
-    if (expectederror.compare(iter->mStr)) 
+    if (expectederror.compare(iter->str)) 
         fail("warning:div by zero failed string wasn't as expected", __LINE__);
     string expectedwarningstring("[0]:PC=0 Code=22012 ");
     cout << "|" << expectedwarningstring << "|" << endl;

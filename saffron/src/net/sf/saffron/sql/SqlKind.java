@@ -40,7 +40,7 @@ public class SqlKind extends EnumeratedValues.BasicValue
         super(name, ordinal, null);
     }
 
-    // REVIEW jvs 8-Feb-2004:  time for a RENUM?
+    // the basics 0 - 99
 
     /** Other */
     public static final int OtherORDINAL = 0;
@@ -82,134 +82,153 @@ public class SqlKind extends EnumeratedValues.BasicValue
 
     public static final int OrderByORDINAL = 11;
     public static final SqlKind OrderBy = new SqlKind("OrderBy", OrderByORDINAL);
-
-    // binary operators
-    /** Times */
-    public static final int TimesORDINAL = 12;
-    public static final SqlKind Times = new SqlKind("Times", TimesORDINAL);
-    /** Divide */
-    public static final int DivideORDINAL = 13;
-    public static final SqlKind Divide = new SqlKind("Divide", DivideORDINAL);
-    /** Plus */
-    public static final int PlusORDINAL = 14;
-    public static final SqlKind Plus = new SqlKind("Plus", PlusORDINAL);
-    /** Minus */
-    public static final int MinusORDINAL = 15;
-    public static final SqlKind Minus = new SqlKind("Minus", MinusORDINAL);
-    /** In */
-    public static final int InORDINAL = 29;
-    public static final SqlKind In = new SqlKind("In", InORDINAL);
-    /** LessThan */
-    public static final int LessThanORDINAL = 16;
-    public static final SqlKind LessThan = new SqlKind("LessThan", LessThanORDINAL);
-    /** GreaterThan */
-    public static final int GreaterThanORDINAL = 17;
-    public static final SqlKind GreaterThan = new SqlKind("GreaterThan", GreaterThanORDINAL);
-    /** LessThanOrEqual */
-    public static final int LessThanOrEqualORDINAL = 18;
-    public static final SqlKind LessThanOrEqual = new SqlKind("LessThanOrEqual", LessThanOrEqualORDINAL);
-    /** GreaterThanOrEqual */
-    public static final int GreaterThanOrEqualORDINAL = 19;
-    public static final SqlKind GreaterThanOrEqual = new SqlKind("GreaterThanOrEqual", GreaterThanOrEqualORDINAL);
-    /** Equals */
-    public static final int EqualsORDINAL = 20;
-    public static final SqlKind Equals = new SqlKind("Equals", EqualsORDINAL);
-    /** NotEquals */
-    public static final int NotEqualsORDINAL = 21;
-    public static final SqlKind NotEquals = new SqlKind("NotEquals", NotEqualsORDINAL);
-    /** Or */
-    public static final int OrORDINAL = 22;
-    public static final SqlKind Or = new SqlKind("Or", OrORDINAL);
-    /** And */
-    public static final int AndORDINAL = 23;
-    public static final SqlKind And = new SqlKind("And", AndORDINAL);
-    /** Dot */
-    public static final int DotORDINAL = 24;
-    public static final SqlKind Dot = new SqlKind("Dot", DotORDINAL);
     /** Union */
-    public static final int UnionORDINAL = 25;
+    public static final int UnionORDINAL = 12;
     public static final SqlKind Union = new SqlKind("Union", UnionORDINAL);
     /** Except */
-    public static final int ExceptORDINAL = 26;
+    public static final int ExceptORDINAL = 13;
     public static final SqlKind Except = new SqlKind("Except", ExceptORDINAL);
     /** Intersect */
-    public static final int IntersectORDINAL = 27;
+    public static final int IntersectORDINAL = 14;
     public static final SqlKind Intersect = new SqlKind("Intersect", IntersectORDINAL);
     /** As */
-    public static final int AsORDINAL = 28;
+    public static final int AsORDINAL = 15;
     public static final SqlKind As = new SqlKind("As", AsORDINAL);
+
+    // binary operators
+
+    // arithmetic 100 - 109
+    /** Times */
+    public static final int TimesORDINAL = 100;
+    public static final SqlKind Times = new SqlKind("Times", TimesORDINAL);
+    /** Divide */
+    public static final int DivideORDINAL = 101;
+    public static final SqlKind Divide = new SqlKind("Divide", DivideORDINAL);
+    /** Plus */
+    public static final int PlusORDINAL = 102;
+    public static final SqlKind Plus = new SqlKind("Plus", PlusORDINAL);
+    /** Minus */
+    public static final int MinusORDINAL = 103;
+    public static final SqlKind Minus = new SqlKind("Minus", MinusORDINAL);
+
+    // comparison operators 110-119
+
+    /** In */
+    public static final int InORDINAL = 110;
+    public static final SqlKind In = new SqlKind("In", InORDINAL);
+    /** LessThan */
+    public static final int LessThanORDINAL = 111;
+    public static final SqlKind LessThan = new SqlKind("LessThan", LessThanORDINAL);
+    /** GreaterThan */
+    public static final int GreaterThanORDINAL = 112;
+    public static final SqlKind GreaterThan = new SqlKind("GreaterThan", GreaterThanORDINAL);
+    /** LessThanOrEqual */
+    public static final int LessThanOrEqualORDINAL = 113;
+    public static final SqlKind LessThanOrEqual = new SqlKind("LessThanOrEqual", LessThanOrEqualORDINAL);
+    /** GreaterThanOrEqual */
+    public static final int GreaterThanOrEqualORDINAL = 114;
+    public static final SqlKind GreaterThanOrEqual = new SqlKind("GreaterThanOrEqual", GreaterThanOrEqualORDINAL);
+    /** Equals */
+    public static final int EqualsORDINAL = 115;
+    public static final SqlKind Equals = new SqlKind("Equals", EqualsORDINAL);
+    /** NotEquals */
+    public static final int NotEqualsORDINAL = 116;
+    public static final SqlKind NotEquals = new SqlKind("NotEquals", NotEqualsORDINAL);
+    /** Or */
+
+    // boolean infix 120-129
+
+    public static final int OrORDINAL = 120;
+    public static final SqlKind Or = new SqlKind("Or", OrORDINAL);
+    /** And */
+    public static final int AndORDINAL = 121;
+    public static final SqlKind And = new SqlKind("And", AndORDINAL);
+
+    // other infix 130-139
+
+    /** Dot */
+    public static final int DotORDINAL = 130;
+    public static final SqlKind Dot = new SqlKind("Dot", DotORDINAL);
     /** Overlaps */
-    public static final int OverlapsORDINAL = 37;
+    public static final int OverlapsORDINAL = 131;
     public static final SqlKind Overlaps = new SqlKind("Overlaps", OverlapsORDINAL);
     /** Like */
-    public static final int LikeORDINAL = 38;
+    public static final int LikeORDINAL = 132;
     public static final SqlKind Like = new SqlKind("Like", LikeORDINAL);
     /** Similar */
-    public static final int SimilarORDINAL = 39;
+    public static final int SimilarORDINAL = 133;
     public static final SqlKind Similar = new SqlKind("Similar", SimilarORDINAL);
     /** Between */
-    public static final int BetweenORDINAL = 41;
+    public static final int BetweenORDINAL = 134;
     public static final SqlKind Between = new SqlKind("Between", BetweenORDINAL);
-    /** Not Between */
-    public static final int NotBetweenORDINAL = 42;
-    public static final SqlKind NotBetween = new SqlKind("Not Between", NotBetweenORDINAL);
     /** CASE  */
-    public static final int CaseORDINAL = 47;
+    public static final int CaseORDINAL = 135;
     public static final SqlKind Case = new SqlKind("CASE", CaseORDINAL);
 
     // prefix operators
     /** Not */
-    public static final int NotORDINAL = 30;
+    public static final int NotORDINAL = 140;
     public static final SqlKind Not = new SqlKind("Not", NotORDINAL);
     /** PlusPrefix */
-    public static final int PlusPrefixORDINAL = 31;
+    public static final int PlusPrefixORDINAL = 141;
     public static final SqlKind PlusPrefix = new SqlKind("PlusPrefix", PlusPrefixORDINAL);
     /** MinusPrefix */
-    public static final int MinusPrefixORDINAL = 32;
+    public static final int MinusPrefixORDINAL = 142;
     public static final SqlKind MinusPrefix = new SqlKind("MinusPrefix", MinusPrefixORDINAL);
     /** Exists */
-    public static final int ExistsORDINAL = 33;
+    public static final int ExistsORDINAL = 143;
     public static final SqlKind Exists = new SqlKind("Exists", ExistsORDINAL);
     /** Values */
-    public static final int ValuesORDINAL = 36;
+    public static final int ValuesORDINAL = 144;
     public static final SqlKind Values = new SqlKind("Values", ValuesORDINAL);
     /** ExplicitTable */
-    public static final int ExplicitTableORDINAL = 45;
+    public static final int ExplicitTableORDINAL = 145;
     public static final SqlKind ExplicitTable = new SqlKind("ExplicitTable", ExplicitTableORDINAL);
 
     // postfix operators
     /** Descending */
-    public static final int DescendingORDINAL = 40;
+    public static final int DescendingORDINAL = 150;
     public static final SqlKind Descending = new SqlKind("Descending", DescendingORDINAL);
 
     /** IS TRUE */
-    public static final int IsTrueORDINAL = 43;
+    public static final int IsTrueORDINAL = 151;
     public static final SqlKind IsTrue= new SqlKind("IsTrue", IsTrueORDINAL);
 
     /** IS FALSE */
-    public static final int IsFalseORDINAL = 44;
+    public static final int IsFalseORDINAL = 152;
     public static final SqlKind IsFalse= new SqlKind("IsFalse", IsFalseORDINAL);
 
     /** IS UNKNOWN */
-    public static final int IsUnknownORDINAL = 48;
+    public static final int IsUnknownORDINAL = 153;
     public static final SqlKind IsUnknown= new SqlKind("IsUnknown", IsUnknownORDINAL);
 
     /** IS NULL */
-    public static final int IsNullORDINAL = 46;
+    public static final int IsNullORDINAL = 154;
     public static final SqlKind IsNull= new SqlKind("IsNull", IsNullORDINAL);
 
-    // functions
+    // functions 160-169
+
     /** ROW function */
-    public static final int RowORDINAL = 50;
+    public static final int RowORDINAL = 160;
     public static final SqlKind Row = new SqlKind("Row", RowORDINAL);
     /** CAST  */
-    public static final int CastORDINAL = 51;
+    public static final int CastORDINAL = 161;
     public static final SqlKind Cast = new SqlKind("CAST", CastORDINAL);
     /** TRIM */
-    public static final int TrimORDINAL = 52;
+    public static final int TrimORDINAL = 162;
     public static final SqlKind Trim = new SqlKind("TRIM", TrimORDINAL);
 
-    // aggregates of other kinds
+    // internal operators (evaluated in validator) 200-299
+
+    /** LitChain operator (for composite string literals) */
+    public static final int LitChainORDINAL = 200;
+    public static final SqlKind LitChain = new SqlKind("LitChain", LitChainORDINAL);
+
+    /** Escape operator (always part of LIKE or SIMILAR TO expression) */
+    public static final int EscapeORDINAL = 201;
+    public static final SqlKind Escape = new SqlKind("EscapeChain", EscapeORDINAL);
+
+    // aggregates of other kinds, 300-399
 
     /**
      * <code>SetQuery</code> is an aggregate of set-query node types.
@@ -217,14 +236,14 @@ public class SqlKind extends EnumeratedValues.BasicValue
      * <code>true</code> if it <code>node</code> is an {@link #Except},
      * {@link #Intersect} or {@link #Union}.
      */
-    public static final int SetQueryORDINAL = 100;
+    public static final int SetQueryORDINAL = 300;
     public static final SqlKind SetQuery = new SqlKind("SetQuery", SetQueryORDINAL);
 
     /**
      * <code>Expression</code> is an aggregate of all expression
      * operators.
      */
-    public static final int ExpressionORDINAL = 101;
+    public static final int ExpressionORDINAL = 301;
     public static final SqlKind Expression = new SqlKind("Expression", ExpressionORDINAL);
 
     /**
@@ -233,10 +252,10 @@ public class SqlKind extends EnumeratedValues.BasicValue
      * <code>true</code> if it <code>node</code> is an {@link #Insert}
      * or {@link #Delete}.
      */
-    public static final int DmlORDINAL = 102;
+    public static final int DmlORDINAL = 302;
     public static final SqlKind Dml = new SqlKind("Dml", DmlORDINAL);
 
-    public static final int QueryORDINAL = 103;
+    public static final int QueryORDINAL = 303;
     /**
      * <code>Query</code> is an aggregate of query node types.
      * <code>node.isA(Kind.SetQuery)</code> evaluates to
@@ -245,7 +264,7 @@ public class SqlKind extends EnumeratedValues.BasicValue
      */
     public static final SqlKind Query = new SqlKind("Query", QueryORDINAL);
 
-    public static final int TopLevelORDINAL = 104;
+    public static final int TopLevelORDINAL = 304;
     /**
      * Aggregate of SQL statement types {@link #Query}, {@link #Dml}.
      */
@@ -253,13 +272,26 @@ public class SqlKind extends EnumeratedValues.BasicValue
 
     public static final EnumeratedValues enumeration = new EnumeratedValues(
             new SqlKind[] {
-                Other,Select,Join,Identifier,Literal,Times,Divide,Plus,
-                Minus,In,LessThan,GreaterThan,LessThanOrEqual,
-                GreaterThanOrEqual,Equals,NotEquals,Between,NotBetween,Case,
-                Or,And,Dot,Union,
-                Except,Intersect,As,Not,PlusPrefix,MinusPrefix,Exists,
-                Values,ExplicitTable,Descending,IsTrue,IsFalse,IsNull,Row,Cast,
-                Explain,Insert,Update,Delete,
+                // the basics
+                Other, Select, Join, Identifier, Literal, Function, Explain,
+                Insert, Update, Delete, Union, Except, Intersect, As,
+                // arithmetic
+                Times,Divide,Plus,Minus,
+                // comparisons
+                In, LessThan, GreaterThan, LessThanOrEqual,
+                GreaterThanOrEqual, Equals, NotEquals,
+                // boolean
+                Or, And,
+                // other infix
+                Dot, Overlaps, Like, Similar, Between, Case,
+                // prefix
+                Not, PlusPrefix, MinusPrefix, Exists, Values, ExplicitTable,
+                // postfix
+                Descending, IsTrue, IsFalse, IsNull,
+                // row
+                Row,Cast,Trim,
+                // special
+                LitChain,
             });
 
     /**
@@ -281,11 +313,11 @@ public class SqlKind extends EnumeratedValues.BasicValue
             return this == Insert || this == Delete || this == Update;
         case ExpressionORDINAL:
             return !(this == As || this == Descending || this == Select
-                    || this == Join || this == Function || this == Cast
-                    ||  this == Trim);
+                     || this == Join || this == Function || this == Cast
+                     || this == Trim || this == LitChain);
         case FunctionORDINAL:
             return this == Function || this == Row || this == Trim ||
-                    this == Cast;
+                this == Cast;
         default:
             return this == kind;
         }

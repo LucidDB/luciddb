@@ -590,6 +590,18 @@ public class Util extends Toolbox
         return suite;
     }
 
+
+    /**
+     * Converts the elements of an array into a {@link java.util.List}
+     */
+    public static List toList(final Object[] array) {
+        List ret = new ArrayList(array.length);
+        for (int i = 0; i < array.length; i++) {
+            ret.add(array[i]);
+        }
+        return ret;
+    }
+
     /**
      * @deprecated use {@link Vector#toArray} on Java2
      */

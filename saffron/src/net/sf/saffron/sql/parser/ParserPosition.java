@@ -22,6 +22,12 @@ public class ParserPosition
     private int beginColumn;
 
     /**
+     * ParserPosition representing line one, character one. Use this if the
+     * node doesn't correspond to a position in piece of SQL text. 
+     */
+    public static final ParserPosition ZERO = new ParserPosition(0,0);
+
+    /**
     * Creates a new parser position.
     */
     public ParserPosition(int beginLine, int beginColumn)

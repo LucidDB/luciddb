@@ -32,7 +32,7 @@ if [ -e "$test" ]; then
     fileset=fileset.unitsql
 
     # if we're running regressionsql tests, use the right class and ant target
-    if [ $(basename $(dirname $test)) == "regressionsql" ]; then
+    if [ ${test/*regressionsql*/x} == "x" ]; then
 	if [ "$target" == "jswat.junit" ]; then
 	    # REVIEW: it needs a jswat.junit.regressionsql target that sets
 	    # the necessary system properties for regressionsql tests.

@@ -21,18 +21,16 @@ package net.sf.farrago.test;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
+import net.sf.farrago.test.regression.FarragoCalcSystemTest;
+import net.sf.saffron.sql.SqlOperator;
+import net.sf.saffron.sql.SqlSyntax;
+import net.sf.saffron.sql.test.SaffronSqlTester;
+import net.sf.saffron.sql.test.SqlOperatorIterator;
+import net.sf.saffron.sql.type.SqlTypeName;
 
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.HashSet;
-import java.sql.SQLException;
-
-import net.sf.saffron.sql.test.SqlOperatorIterator;
-import net.sf.saffron.sql.test.SaffronSqlTester;
-import net.sf.saffron.sql.test.SqlTester;
-import net.sf.saffron.sql.SqlOperator;
-import net.sf.saffron.sql.type.SqlTypeName;
-import net.sf.farrago.test.regression.FarragoCalcSystemTest;
 
 /**
  * FarragoSqlOperatorsTest contains an implementation of {@link SaffronSqlTester}.
@@ -70,22 +68,24 @@ public class FarragoSqlOperatorsTest extends FarragoTestCase {
 
         public void check(String query, String result, SqlTypeName resultType) {
             try {
-                // check that query really contains a call to the operator we
-                // are looking at
-                String queryCmp = query.toUpperCase();
-                String opNameCmp = operator.name.toUpperCase();
-                if (queryCmp.indexOf(opNameCmp) < 0) {
-                    fail("Not exercising operator <"+operator+"> " +
-                         "with the query <"+query+">");
+                if (operator.getSyntax() != SqlSyntax.Internal) {
+                    // check that query really contains a call to the operator we
+                    // are looking at
+                    String queryCmp = query.toUpperCase();
+                    String opNameCmp = operator.name.toUpperCase();
+                    if (queryCmp.indexOf(opNameCmp) < 0) {
+                        fail("Not exercising operator <"+operator+"> " +
+                             "with the query <"+query+">");
+                    }
                 }
+
                 resultSet = stmt.executeQuery(query);
                 Set refSet = new HashSet();
                 refSet.add(result);
                 compareResultSet(refSet);
                 stmt.close();
                 stmt = connection.createStatement();
-            }
-            catch (Throwable e) {
+            } catch (Throwable e) {
                 RuntimeException newException = new RuntimeException(
                         "Exception occured while testing "+operator+". "+
                         "Exception msg = "+e.getMessage());
@@ -99,17 +99,19 @@ public class FarragoSqlOperatorsTest extends FarragoTestCase {
     {
         TestSuite suite = new TestSuite();
         Iterator operatorsIt = new SqlOperatorIterator();
-        while(operatorsIt.hasNext()) {
+        while (operatorsIt.hasNext()) {
             SqlOperator op = (SqlOperator) operatorsIt.next();
-            String testName="SQL-TESTER-"+op.name+"-";
+            String testName = "SQL-TESTER-" + op.name + "-";
             suite.addTest(new FarragoSqlOperatorsTest(
                     FarragoCalcSystemTest.vmFennel,
                     op,
                     testName+"FENNEL"));
-//            suite.addTest(new FarragoSqlOperatorsTest(
-//                    FarragoCalcSystemTest.vmJava,
-//                    op,
-//                    testName+"JAVA"));
+            if (false) {
+                suite.addTest(new FarragoSqlOperatorsTest(
+                        FarragoCalcSystemTest.vmJava,
+                        op,
+                        testName + "JAVA"));
+            }
         }
 
         return wrappedSuite(suite);

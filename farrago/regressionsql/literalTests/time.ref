@@ -90,7 +90,7 @@ Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast fro
 0: jdbc:farrago:> insert into t_time values(b'10',null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'BIT(2)' to 'TIME(0)' (state=,code=0)
 0: jdbc:farrago:> insert into t_date values(date '1999-01-08',null);
-Error: Table 'T_DATE' not found (state=,code=0)
+Error: Table 'T_DATE' not found near: line 1, column 13 (state=,code=0)
 0: jdbc:farrago:> insert into t_time values(timestamp '2004-12-01 12:01:01',null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'TIMESTAMP(0)' to 'TIME(0)' (state=,code=0)
 0: jdbc:farrago:> 

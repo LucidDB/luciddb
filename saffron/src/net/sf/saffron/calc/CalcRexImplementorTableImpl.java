@@ -665,40 +665,8 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                     }
                 });
 
-            dm.put(charTypes, charTypes, new AbstractCalcRexImplementor(){
-                //REVIEW wael: Kinkoi is working on a char<->char cast instr in the calculator
-                //this code below was just a quick ramen soup meal to get some basic queries working
-                public CalcProgramBuilder.Register implement(RexCall call,
-                    RexToCalcTranslator translator) {
-                    CalcProgramBuilder.RegisterDescriptor resultDesc =
-                    translator.getCalcRegisterDescriptor(call);
-
-                    RexNode op = call.operands[0];
-                    CalcProgramBuilder.Register opReg = translator.implementNode(op);
-                    CalcProgramBuilder.RegisterDescriptor argDesc =
-                        translator.getCalcRegisterDescriptor(op);
-
-                    CalcProgramBuilder.Register resReg =
-                        translator._builder.newLocal(resultDesc);
-
-                    if (resultDesc.getBytes() < argDesc.getBytes()) {
-                        CalcProgramBuilder.Register oneReg =
-                            translator._builder.newInt4Literal(1);
-                        CalcProgramBuilder.Register nReg =
-                            translator._builder.
-                            newInt4Literal(resultDesc.getBytes());
-                        CalcProgramBuilder.Register[] regs =
-                            new CalcProgramBuilder.Register[]
-                            {resReg, opReg, oneReg, nReg};
-                        ExtInstructionDefTable.substring.
-                            add(translator._builder, regs);
-                    } else {
-                        CalcProgramBuilder.move.
-                            add(translator._builder, resReg, opReg);
-                    }
-                    return resReg;
-                }
-            });
+            dm.put(charTypes, charTypes,
+                   new UsingInstrImplementor(ExtInstructionDefTable.castA));
         }
 
         public CalcProgramBuilder.Register implement(RexCall call,

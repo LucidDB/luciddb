@@ -190,11 +190,13 @@ public class FarragoOJRexCastImplementor extends FarragoOJRexImplementor
                         return lhsExp;
                     }
                 } else {
-                    if (lhsPrecisionType.getPrecision()
-                        == rhsPrecisionType.getPrecision())
+                    if ((lhsPrecisionType.getPrecision()
+                         == rhsPrecisionType.getPrecision())
+                        && !rhsPrecisionType.isBoundedVariableWidth())
                     {
-                        // target is fixed-width, and precisions are the same,
-                        // so there's no adjustment needed
+                        // source and target are both fixed-width, and
+                        // precisions are the same, so there's no adjustment
+                        // needed
                         return lhsExp;
                     }
                 }
@@ -311,6 +313,35 @@ public class FarragoOJRexCastImplementor extends FarragoOJRexImplementor
             return convertCastToAssignableValue(
                 translator,lhsType,rhsType,lhsExp,rhsExp);
         }
+    }
+    
+    // implement OJRexImplementor
+    public boolean canImplement(RexCall call)
+    {
+        SaffronType lhsType = (FarragoAtomicType) call.getType();
+        SaffronType rhsType = call.operands[0].getType();
+        if ((lhsType instanceof FarragoAtomicType)
+            && (rhsType instanceof FarragoAtomicType))
+        {
+            FarragoTypeFamily lhsTypeFamily =
+                ((FarragoAtomicType) lhsType).getFamily();
+            FarragoTypeFamily rhsTypeFamily =
+                ((FarragoAtomicType) rhsType).getFamily();
+            // casting between numeric and non-numeric types is
+            // not yet implemented
+            if (lhsTypeFamily.equals(FarragoTypeFamily.NUMERIC)
+                && !rhsTypeFamily.equals(FarragoTypeFamily.NUMERIC))
+            {
+                return false;
+            }
+            if (rhsTypeFamily.equals(FarragoTypeFamily.NUMERIC)
+                && !lhsTypeFamily.equals(FarragoTypeFamily.NUMERIC))
+            {
+                return false;
+            }
+        }
+        // TODO jvs 11-Aug-2004:  think through other cases
+        return true;
     }
 }
 

@@ -39,6 +39,7 @@ typedef struct
 
 
 typedef long TProgramCounter;
+#define TPROGRAMCOUNTERMAX INT_MAX
 
 FENNEL_END_NAMESPACE
 

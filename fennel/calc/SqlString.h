@@ -466,7 +466,7 @@ SqlStrPos(char const * const str,
             register char const * s = str;
             char const * end = 1 + s + (strLenBytes - findLenBytes);
 
-            while(s < end) {
+            while (s < end) {
                 // search for first char of find
                 s = reinterpret_cast<char const *>(memchr(s, *find, end - s));
                 if (!s) {
@@ -826,32 +826,90 @@ SqlStrTrim(char const ** result,
 
 //! SqlStrCastToExact. Char & VarChar. Ascii only.
 //!
-//! This routine may not be compliant with the SQL99 standard.
+//! Cast a string to an exact numeric.
 template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
-uint64_t
+int64_t
 SqlStrCastToExact(char const * const str,
-                  int strLenBytes)
+                  int strLenBytes,
+                  int padChar = ' ')
 {
-    uint64_t rv;
+    int64_t rv = 0;
+    bool negative = false;
+
     if (MaxCodeUnitsPerCodePoint == 1) {
         if (CodeUnitBytes == 1) {
             // ASCII
+            // comparison must be unsigned to work for > 128
+            unsigned char const *ptr =
+                reinterpret_cast<unsigned char const *>(str);
+            unsigned char const *end =
+                reinterpret_cast<unsigned char const *>(str + strLenBytes);
 
-            // TOOD: Must add throw "22018" data exception - invalid
-            // character value for cast
-            // SQL99 6.22 General Rule 6, case b), case i) data
-            // exception -- invalid character value for cast
+            // STATE: parse optional sign, consume leading white space
+            while (ptr < end) {
+                if (*ptr == '-') {
+                    // move onto next state, do not allow whitespace
+                    // after -, for example '- 4' is not allowed
+                    negative = true;
+                    ptr++;
+                    break;
+                } else if (*ptr == '+') {
+                    // move onto next state, do not allow whitespace
+                    // after +, for example '+ 4' is not allowed
+                    ptr++;
+                    break;
+                } else if (*ptr == padChar) {
+                    // consume leading whitespace
+                    ptr++;
+                } else if (*ptr >= '0' &&  *ptr <= '9') {
+                    // found a number. don't advance, move onto next state
+                    break;
+                } else {
+                    // unexpected character found
+                    // SQL99 6.22 General Rule 6, case b), case i) data
+                    // exception -- invalid character value for cast
+                    throw "22018";
+                }
+            }
 
-            // TODO: Replace with a real implementation
-            // TODO: Following assumes any reasonable number fits in
-            // TODO: First 1020 bytes of a string and can be parsed by
-            // TODO: scanf. No attempt to make this SQL compliant
-            int min = 1020;
-            if (strLenBytes < min) min = strLenBytes;
-            char tmp[1024];
-            memcpy(tmp, str, min);
-            tmp[min] = 0;
-            sscanf(tmp, "%lld", &rv);
+            if (ptr >= end) {
+                // no number found
+                // SQL99 6.22 General Rule 6, case b), case i) data
+                // exception -- invalid character value for cast
+                throw "22018";
+            }
+
+            // STATE: Parse numbers until padChar, end, or illegal char
+            bool parsed = false;
+            while (ptr < end) {
+                if (*ptr >= '0' && *ptr <= '9') {
+                    // number
+                    rv = (rv * 10) + (*(ptr++) - '0');
+                    parsed = true;
+                } else if (*ptr == padChar) {
+                    // move onto next state, end of number
+                    ptr++;
+                    break;
+                } else {
+                    // illegal character
+                    parsed = false;
+                    break;
+                }
+            }
+
+            // STATE: Parse padChar until end or illegal char
+            while (ptr < end) {
+                if (*(ptr++) != padChar) {
+                    // unexpected character after end of number
+                    parsed = false;
+                    break;
+                }
+            }
+            if (!parsed) {
+                // SQL99 6.22 General Rule 6, case b), case i) data
+                // exception -- invalid character value for cast
+                throw "22018";
+            }
 
         } else if (CodeUnitBytes == 2) {
             // TODO: Add UCS2 here
@@ -863,42 +921,64 @@ SqlStrCastToExact(char const * const str,
         throw std::logic_error("no UTF8/16/32");
     }
 
-    return rv;
+    if (negative) {
+        return rv * -1;
+    } else {
+        return rv;
+    }
 }
 
 //! SqlStrCastToApprox. Char & VarChar. Ascii only.
 //!
-//! This routine may not be compliant with the SQL99 standard.
+//! Cast a string to an approximate (e.g. floating point) numeric.
 //!
 //! See SQL99 5.3 Format <approximate numeric literal> for
 //! details on the format of an approximate numeric.
-//! Basically nnn.mmmExxx.
+//! Basically nnn.mmm[Exxx].
 template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
 double
 SqlStrCastToApprox(char const * const str,
-                   int strLenBytes)
+                   int strLenBytes,
+                   int padChar = ' ')
 {
     double rv;
     if (MaxCodeUnitsPerCodePoint == 1) {
         if (CodeUnitBytes == 1) {
             // ASCII
 
-            // TOOD: Must add throw "22018" data exception - invalid
-            // character value for cast
-            // SQL99 6.22 General Rule 7, case b), case i) "22018"
-            // data exception -- invalid character value for cast
+            char const *ptr = str;
+            char const *end = str + strLenBytes;
+            char *endptr;
 
+            // Skip past any leading whitespace. Allows string with
+            // arbitrary amounts of leading whitespace to still fit
+            // within 250 bytes below.
+            while (ptr < end && *ptr == padChar) ptr++;
 
-            // TODO: Replace with a real implementation
-            // TODO: Following assumes any reasonable number fits in
-            // TODO: First 1020 bytes of a string and can be parsed by
-            // TODO: scanf. No attempt to make this SQL compliant
-            int min = 1020;
-            if (strLenBytes < min) min = strLenBytes;
-            char tmp[1024];
-            memcpy(tmp, str, min);
-            tmp[min] = 0;
-            sscanf(tmp, "%lf", &rv);
+            // assume that any double can fit in 250 bytes;
+            int max = 250;
+            if (end - ptr < max) max = end - ptr;
+            char tmp[256];
+            memcpy(tmp, ptr, max);
+            tmp[max] = 0;
+            rv = strtod(tmp, &endptr);
+
+            if (endptr == tmp) {
+                // SQL99 6.22 General Rule 7, case b), case i) "22018"
+                // data exception -- invalid character value for cast
+                throw "22018";
+            }
+
+            // verify that trailing characters are all padChar
+            ptr += endptr - tmp; // advance past parsed digits
+            while (ptr < end) {
+                if (*ptr != padChar) {
+                    // SQL99 6.22 General Rule 7, case b), case i) "22018"
+                    // data exception -- invalid character value for cast
+                    throw "22018";
+                }
+                ptr++;
+            }
 
         } else if (CodeUnitBytes == 2) {
             // TODO: Add UCS2 here
@@ -914,6 +994,8 @@ SqlStrCastToApprox(char const * const str,
 }
 
 //! SqlStrCastFromExact. Char & VarChar. Ascii only.
+//!
+//! Cast an exact numeric to a string.
 //!
 //! This routine may not be compliant with the SQL99 standard.
 //!
@@ -933,34 +1015,79 @@ SqlStrCastFromExact(char* dest,
         if (CodeUnitBytes == 1) {
             // ASCII
 
-            // TODO: Need to throw "22001" data exception - string
-            // data, right truncation
-            // SQL99 6.22 General Rule 8 (fixed length), case a), case
-            // iv) "22001" data exception -- string data, right
-            // truncation
-            // SQL99 6.22 General Rule 9 (variable length), case a), case
-            // iii) "22001" data exception -- string data, right
-            // truncation
+            // TODO: Check performance of doing snprintf and a memcpy vs
+            // TODO: a home-rolled version with % and /10, etc. Both
+            // TOOD: require a copy, or some precomputation of string length.
+            // TODO: Hard to say which would be faster w/o implementing both.
+            // TODO: Note: can't always snprintf directly into dest, due to
+            // TODO: null termination wasting a byte.
 
+            rv = snprintf(dest, destStorageBytes, "%lld", src);
+            if (rv == destStorageBytes) {
+                // Would have fit, except for the null termination. Do
+                // over into a temporary buf, copy results back.
+                // Dreary performance in this case, which may be more common
+                // than random chance would predict. If this is
+                // not acceptable, see ALTERNATIVE_IMPLEMENTATION below
 
-            // TODO: This bad, hackish, incorrect implementation
-            // TODO: 'wastes' the last byte of dest.
-            // TODO:  If the output takes, say, 6 bytes, and
-            // TODO: destStorageBytes is 6 bytes, the printf will
-            // TODO: fail because there isn't enough room to do the
-            // TODO: unneeded NULL termination.
-            int len = snprintf(dest, destStorageBytes, "%lld", src);
-            if (len >= destStorageBytes) {
-                // everything didn't fit
-                // may be able to make this work if just off by one --
-                // which means null didn't fit, but everything of value did...
-                throw "TooLong"; // TODO: replace this
+                char buf[32];      // should always fit in 21 bytes.
+                rv = snprintf(buf, 31, "%lld", src);
+                assert(rv == destStorageBytes);
+                memcpy(dest, buf, destStorageBytes);
+            } else if (rv > destStorageBytes) {
+                // SQL99 6.22 General Rule 8 (fixed length), case a),
+                // case iv) "22001" data exception -- string data,
+                // right truncation
+                // SQL99 6.22 General Rule 9 (variable length), case
+                // a), case iii) "22001" data exception -- string
+                // data, right truncation
+                throw "22001";
             }
-            if (fixed) {
-                memset(dest + len, padchar, destStorageBytes - len);
-                rv = destStorageBytes;
+
+#ifdef ALTERNATIVE_IMPLEMENTATION_UNTESTED_UNPROFILED_AND_PERHAPS_UNHOLY
+            // assume any int64_t will fit in 22 bytes:
+            // int64_t has 19 digits, plus space for a - sign and null
+            // termination is 21 bytes. Add one to round up to 22 bytes.
+
+            // if storage >= 22 bytes, snprintf directly into dest
+            // as a first-order optimization. 
+            if (destStorageBytes >= 22) {
+                rv = snprintf(dest, destStorageBytes, "%lld", src);
+                assert(rv <= destStorageBytes); // impossible?
+                if (rv > destStorageBytes) {
+                    // Just in case 22 byte assumption isn't valid
+
+                    // SQL99 6.22 General Rule 8 (fixed length), case
+                    // a), case iv) "22001" data exception -- string
+                    // data, right truncation
+                    // SQL99 6.22 General Rule 9 (variable length),
+                    // case a), case iii) "22001" data exception --
+                    // string data, right truncation
+                    throw "22001";
+                }
             } else {
-                rv = len;
+                // If src is somewhat less than max or min, it might
+                // be short enough to fit into destStorageBytes anyway.
+                // Write to buf to get around annoying null termination
+                // issue wasting one byte.
+
+                char buf[24];
+                rv = snprintf(buf, destStorageBytes, "%lld", src);
+                if (rv > destStorageBytes) {
+                    // SQL99 6.22 General Rule 8 (fixed length), case
+                    // a), case iv) "22001" data exception -- string
+                    // data, right truncation
+                    // SQL99 6.22 General Rule 9 (variable length),
+                    // case a), case iii) "22001" data exception --
+                    // string data, right truncation
+                    throw "22001";
+                }
+                memcpy(dest, buf, rv);
+            }
+#endif
+            if (fixed) {
+                memset(dest + rv, padchar, destStorageBytes - rv);
+                rv = destStorageBytes;
             }
 
         } else if (CodeUnitBytes == 2) {
@@ -978,7 +1105,13 @@ SqlStrCastFromExact(char* dest,
 
 //! SqlStrCastFromApprox. Char & VarChar. Ascii only.
 //!
-//! This routine may not be compliant with the SQL99 standard.
+//! Cast an exact numeric to a string.
+//!
+//! This routine is not fully SQL99 compliant. Deltas are
+//! in 6.22 General Rule 8 b i 2 and 9 b i 2. Currently the
+//! minimal string is not produced. Instead, the maximum precision
+//! (roughly 16 digits) is always produced. Trade brevity for
+//! precision for now as compliance is not trivial with printf.
 //!
 //! Pad character code points that require more than one code unit are
 //! currently unsupported.
@@ -986,6 +1119,10 @@ SqlStrCastFromExact(char* dest,
 //! See SQL99 5.3 Format <approximate numeric literal> for
 //! details on the format of an approximate numeric.
 //! Basically nnn.mmmExxx.
+//!
+//!
+//! See SqlStringCastFromExact for an alternative implementation that
+//! could be better/cheaper/faster.
 template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
 int
 SqlStrCastFromApprox(char* dest,
@@ -1000,32 +1137,59 @@ SqlStrCastFromApprox(char* dest,
         if (CodeUnitBytes == 1) {
             // ASCII
 
-            // TODO: Need to throw "22001" data exception - string
-            // data, right truncation
-            // SQL99 6.22 General Rule 8 (fixed length), case b), case
-            // iii) case 4) "22001" data exception - string
-            // SQL99 6.22 General Rule 9 (variable length), case b), case
-            // iii) case 3) "22001" data exception -- string data, right
-            // truncation
-
-            // TODO: This bad, hackish, incorrect implementation
-            // TODO: 'wastes' the last byte of dest.
-            // TODO:  If the output takes, say, 6 bytes, and
-            // TODO: destStorageBytes is 6 bytes, the printf will
-            // TODO: fail because there isn't enough room to do the
-            // TODO: unneeded NULL termination.
-            int len = snprintf(dest, destStorageBytes, "%f", src);
-            if (len >= destStorageBytes) {
-                // everything didn't fit
-                // may be able to make this work if just off by one --
-                // which means null didn't fit, but everything of value did...
-                throw "TooLong"; // TODO: replace this
-            }
-            if (fixed) {
-                memset(dest + len, padchar, destStorageBytes - len);
-                rv = destStorageBytes;
+            if (src == 0.0) {
+                // 6.22 General Rule 8, case b i 2 and
+                // 6.22 General Rule 9, case b i 2
+                if (destStorageBytes >= 3) {
+                    memcpy(dest, "0E0", 3);
+                    rv = 3;
+                } else {
+                    // SQL99 6.22 General Rule 8 (fixed length), case b),
+                    // case iii) case 4) "22001" data exception - string
+                    
+                    // SQL99 6.22 General Rule 9 (variable length), case
+                    // b), case iii) case 3) "22001" data exception --
+                    // string data, right truncation
+                    throw "22001";
+                }
             } else {
-                rv = len;
+
+                // Note: can't always snprintf directly into dest, due to
+                // null termination wasting a byte.
+                
+                //! %E gives [-]d.dddE[+,-]dd format
+                //! %.16 gives, roughly, maximum precision for a double on
+                //! a x86. This should be parameterized.
+                //! TODO: Parameterize precision and format of conversion.
+
+                rv = snprintf(dest, destStorageBytes, "%.16E", src);
+                if (rv == destStorageBytes) {
+                    // Would have fit, except for the null
+                    // termination. Do over into a temporary buf, copy
+                    // results back.  Dreary performance in this case,
+                    // which may be more common than random chance
+                    // would predict. If this is not acceptable, see
+                    // ALTERNATIVE_IMPLEMENTATION below
+
+                    char buf[32];      // #.16E should always fit in 22 bytes.
+
+                    rv = snprintf(buf, 31, "%.16E", src);
+                    assert(rv == destStorageBytes);
+                    memcpy(dest, buf, destStorageBytes);
+                } else if (rv > destStorageBytes) {
+                    // SQL99 6.22 General Rule 8 (fixed length), case b),
+                    // case iii) case 4) "22001" data exception - string
+                
+                    // SQL99 6.22 General Rule 9 (variable length), case
+                    // b), case iii) case 3) "22001" data exception --
+                    // string data, right truncation
+                    throw "22001";
+                }
+            }
+
+            if (fixed) {
+                memset(dest + rv, padchar, destStorageBytes - rv);
+                rv = destStorageBytes;
             }
 
         } else if (CodeUnitBytes == 2) {
@@ -1041,6 +1205,131 @@ SqlStrCastFromApprox(char* dest,
     return rv;
 }
 
+//! SqlStrCastToVarChar.  Ascii only.
+//!
+//! Pad character code points that require more than one code unit are
+//! currently unsupported.  Assumes that non-NULL rightTruncWarning
+//! points to an int initialized to zero (0).
+//!
+//! See SQL99 6.22 General Rule 8 c for rules on this cast.
+template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
+int
+SqlStrCastToVarChar(char *dest,
+                    int destStorageBytes,
+                    char *src,
+                    int srcLenBytes,
+                    int *rightTruncWarning = NULL,
+                    int padchar = ' ')
+{
+    int rv;
+
+    if (MaxCodeUnitsPerCodePoint == 1) {
+        if (CodeUnitBytes == 1) {
+            // ASCII
+            if (srcLenBytes <= destStorageBytes) {
+                memcpy(dest, src, srcLenBytes);
+                rv = srcLenBytes;
+
+                if (srcLenBytes < destStorageBytes) {
+                    memset(dest + srcLenBytes,
+                           padchar,
+                           destStorageBytes - srcLenBytes);
+
+                    // Do not alter rv.
+                }
+            } else {
+                memcpy(dest, src, destStorageBytes);
+                rv = destStorageBytes;
+
+                for(char *trunc = src + destStorageBytes,
+                        *end = src + srcLenBytes;
+                    trunc != end;
+                    trunc++) {
+                    if (*trunc != padchar) {
+                        // Spec says this is just a warning (see SQL99
+                        // 6.22 General Rule 8 c ii.  Let the caller
+                        // handle it.
+                        if (rightTruncWarning != NULL) {
+                            *rightTruncWarning = 1;
+                        }
+                    }
+                }
+            }
+        } else if (CodeUnitBytes == 2) {
+            // TODO: Add UCS2 here
+            throw std::logic_error("no UCS2");
+        } else {
+            throw std::logic_error("no such encoding");
+        }
+    } else {
+        throw std::logic_error("no UTF8/16/32");
+    }
+
+    return rv;
+}
+
+
+//! SqlStrCastToChar.  Ascii only.
+//!
+//! Pad character code points that require more than one code unit are
+//! currently unsupported.  Assumes that non-NULL rightTruncWarning
+//! points to an int initialized to zero (0).
+//!
+//! See SQL99 6.22 General Rule 9 c for rules on this cast.
+template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
+int
+SqlStrCastToChar(char *dest,
+                 int destStorageBytes,
+                 char *src,
+                 int srcLenBytes,
+                 int *rightTruncWarning = NULL,
+                 int padchar = ' ')
+{
+    int rv;
+
+    if (MaxCodeUnitsPerCodePoint == 1) {
+        if (CodeUnitBytes == 1) {
+            // ASCII
+            if (srcLenBytes <= destStorageBytes) {
+                memcpy(dest, src, srcLenBytes);
+                rv = srcLenBytes;
+
+                if (srcLenBytes < destStorageBytes) {
+                    memset(dest + srcLenBytes,
+                           padchar,
+                           destStorageBytes - srcLenBytes);
+                    rv = destStorageBytes;
+                }
+            } else {
+                memcpy(dest, src, destStorageBytes);
+                rv = destStorageBytes;
+
+                for(char *trunc = src + destStorageBytes,
+                        *end = src + srcLenBytes;
+                    trunc != end;
+                    trunc++) {
+                    if (*trunc != padchar) {
+                        // Spec says this is just a warning (see SQL99
+                        // 6.22 General Rule 9 c ii.  Let the caller
+                        // handle it.
+                        if (rightTruncWarning != NULL) {
+                            *rightTruncWarning = 1;
+                        }
+                    }
+                }
+            }
+        } else if (CodeUnitBytes == 2) {
+            // TODO: Add UCS2 here
+            throw std::logic_error("no UCS2");
+        } else {
+            throw std::logic_error("no such encoding");
+        }
+    } else {
+        throw std::logic_error("no UTF8/16/32");
+    }
+
+    return rv;
+}
 
 
 FENNEL_END_NAMESPACE

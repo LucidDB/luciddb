@@ -86,30 +86,41 @@ public class NlsString {
         return _collation;
     }
 
+    public String getValue() {
+        return _value;
+    }
+
     /**
      * Returns the string quoted for SQL, for example
      * <code>_ISO-8859-1'is it a plane? no it''s superman!'</code>.
-     */
-    public String toString() {
+     *  @param prefix if true, prefix the character set name
+     *  @param suffix if true, suffix the collation clause
+     *  @returns the quoted string
+     */ 
+    public String asSql(boolean prefix, boolean suffix) {
         StringBuffer ret = new StringBuffer();
-        if (null!=_charSetName) {
+        if (prefix && (null!=_charSetName)) {
             ret.append("_");
             ret.append(_charSetName);
         }
         ret.append("'");
         ret.append(Util.replace(_value,"'","''"));
         ret.append("'");
-        if (null != _collation) {
+        if (suffix && (null != _collation)) {
             ret.append(" ");
             ret.append(_collation.toString());
         }
-
         return ret.toString();
     }
 
-    public String getValue() {
-        return _value;
+    /**
+     * Returns the string quoted for SQL, for example
+     * <code>_ISO-8859-1'is it a plane? no it''s superman!'</code>.
+     */ 
+    public String toString() {
+        return asSql(true, true);
     }
+
 
     public void setCollation(SqlCollation collation) {
 //            assert(null!=collation);
@@ -122,6 +133,36 @@ public class NlsString {
 //            assert(null==_charset);
         _charset = charset;
         _charSetName = _charset.name();
+    }
+
+
+    /** Concatenates some NlsStrings.
+     * The result has the charset and collation of the first element.
+     * The other elements must have matching (or null) charset and collation.
+     * Concatenates all at once, not pairwise, to avoid string copies.
+     * @param args an NlString{}
+     */
+    static public NlsString concat(NlsString[] args) {
+        if (args.length < 2)
+            return args[0];
+        String charSetName = args[0]._charSetName;
+        SqlCollation collation = args[0]._collation;
+        int length = args[0]._value.length();
+        // sum string lengths and validate
+        for (int i = 1; i < args.length; i++) {
+            length += args[i]._value.length();
+            if (!(args[i]._charSetName == null ||
+                  args[i]._charSetName.equals(charSetName)))
+                throw new IllegalArgumentException("mismatched charsets");
+            if (!(args[i]._collation == null ||
+                  args[i]._collation.equals(collation)))
+                throw new IllegalArgumentException("mismatched collations");
+        }
+
+        StringBuffer sb = new StringBuffer(length);
+        for (int i = 0; i < args.length; i++)
+            sb.append(args[i]._value);
+        return new NlsString(sb.toString(), charSetName, collation);
     }
 }
 

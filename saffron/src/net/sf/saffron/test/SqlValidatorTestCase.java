@@ -76,8 +76,12 @@ public abstract class SqlValidatorTestCase extends TestCase {
         assertExceptionIsThrown(sql, expected);
     }
 
-    public void checkType(String sql,String expected){
+    public void checkExpType(String sql,String expected){
         sql="select "+sql+" from values(true)";
+        checkType(sql, expected);
+    }
+
+    public void checkType(String sql,String expected){
         SaffronType actualType = getResultType(sql);
         String actual = actualType.toString();
         if (!expected.equals(actual)) {
@@ -199,24 +203,35 @@ public abstract class SqlValidatorTestCase extends TestCase {
 	}
 
     public void testTypeOfAs() {
-        checkType("1 as c1","INTEGER");
-        checkType("'hej' as c1","VARCHAR(3)");
-        checkType("b'111' as c1","BIT(3)");
+        checkExpType("1 as c1","INTEGER");
+        checkExpType("'hej' as c1","VARCHAR(3)");
+        checkExpType("b'111' as c1","BIT(3)");
 	}
 
     public void testTypesLiterals(){
-        checkType("'abc'","VARCHAR(3)");
-        checkType("n'abc'","VARCHAR(3)");
-        checkType("_iso_8859-2'abc'","VARCHAR(3)");
-        checkType("x'abc'","BIT(12)");
-        checkType("x'abcd'","VARBINARY(2)");
-        checkType("b'1001'","BIT(4)");
-        checkType("1234567890","INTEGER");
-        checkType("123456.7890","DECIMAL(10, 4)");
-        checkType("123456.7890e3","DOUBLE");
-        checkType("true","BOOLEAN");
-        checkType("false","BOOLEAN");
-        checkType("unknown","BOOLEAN");
+        checkExpType("'abc'","VARCHAR(3)");
+        checkExpType("n'abc'","VARCHAR(3)");
+        checkExpType("_iso_8859-2'abc'","VARCHAR(3)");
+        checkExpType("'ab '"+NL+"' cd'","VARCHAR(6)");
+        checkExpType("'ab'"+NL+"'cd'"+NL+"'ef'"+NL+"'gh'"+NL+"'ij'"+NL+"'kl'","VARCHAR(12)");
+        checkExpType("n'ab '"+NL+"' cd'","VARCHAR(6)");
+        checkExpType("_iso_8859-2'ab '"+NL+"' cd'","VARCHAR(6)");
+
+        checkExpType("x'abc'","BIT(12)");
+        checkExpType("x'abcd'","VARBINARY(2)");
+        checkExpType("x'abcd'"+NL+"'ff001122aabb'","VARBINARY(8)");
+        checkExpType("x'aaaa'"+NL+"'bbbb'"+NL+"'0000'"+NL+"'1111'", "VARBINARY(8)");
+
+        checkExpType("b'1001'","BIT(4)");
+        checkExpType("b'1001'"+NL+"'0110'","BIT(8)");
+        checkExpType("B'0000'"+NL+"'0001'"+NL+"'0000'"+NL+"'1111'", "BIT(16)");
+
+        checkExpType("1234567890","INTEGER");
+        checkExpType("123456.7890","DECIMAL(10, 4)");
+        checkExpType("123456.7890e3","DOUBLE");
+        checkExpType("true","BOOLEAN");
+        checkExpType("false","BOOLEAN");
+        checkExpType("unknown","BOOLEAN");
     }
 
 	public void testBooleans() {
@@ -421,12 +436,12 @@ public abstract class SqlValidatorTestCase extends TestCase {
     }
 
     public void testArthimeticOperatorsTypes() {
-        checkType("pow(2,3)","DOUBLE");
-        checkType("aBs(-2.3e-2)","DOUBLE");
-        checkType("aBs(5000000000)","BIGINT");
-        checkType("MOD(5,2)","INTEGER");
-        checkType("ln(5.43  )","DOUBLE");
-        checkType("log(- -.2  )","DOUBLE");
+        checkExpType("pow(2,3)","DOUBLE");
+        checkExpType("aBs(-2.3e-2)","DOUBLE");
+        checkExpType("aBs(5000000000)","BIGINT");
+        checkExpType("MOD(5,2)","INTEGER");
+        checkExpType("ln(5.43  )","DOUBLE");
+        checkExpType("log(- -.2  )","DOUBLE");
     }
 
     public void testArthimeticOperatorsFails() {
@@ -454,16 +469,16 @@ public abstract class SqlValidatorTestCase extends TestCase {
     }
 
     public void testCaseExpressionTypes(){
-        checkType("case 1 when 1 then 'one' else 'not one' end","VARCHAR(7)");
-        checkType("case when 2<1 then 'impossible' end","VARCHAR(10)");
-        checkType("case 'one' when 'two' then 2.00 when 'one' then 1 else 3 end","DECIMAL(3, 2)");
-        checkType("case 'one' when 'two' then 2 when 'one' then 1.00 else 3 end","DECIMAL(3, 2)");
-        checkType("case 1 when 1 then 'one' when 2 then null else 'more' end","VARCHAR(4)");
-        checkType("case when TRUE then 'true' else 'false' end", "VARCHAR(5)");
-        checkType("CASE 1 WHEN 1 THEN cast(null as integer) END", "INTEGER");
-        checkType("CASE 1 WHEN 1 THEN NULL WHEN 2 THEN cast(cast(null as tinyint) as integer) END", "INTEGER");
-        checkType("CASE 1 WHEN 1 THEN cast(null as integer) WHEN 2 THEN cast(null as integer) END", "INTEGER");
-        checkType("CASE 1 WHEN 1 THEN cast(null as integer) WHEN 2 THEN cast(cast(null as tinyint) as integer) END", "INTEGER");;
+        checkExpType("case 1 when 1 then 'one' else 'not one' end","VARCHAR(7)");
+        checkExpType("case when 2<1 then 'impossible' end","VARCHAR(10)");
+        checkExpType("case 'one' when 'two' then 2.00 when 'one' then 1 else 3 end","DECIMAL(3, 2)");
+        checkExpType("case 'one' when 'two' then 2 when 'one' then 1.00 else 3 end","DECIMAL(3, 2)");
+        checkExpType("case 1 when 1 then 'one' when 2 then null else 'more' end","VARCHAR(4)");
+        checkExpType("case when TRUE then 'true' else 'false' end", "VARCHAR(5)");
+        checkExpType("CASE 1 WHEN 1 THEN cast(null as integer) END", "INTEGER");
+        checkExpType("CASE 1 WHEN 1 THEN NULL WHEN 2 THEN cast(cast(null as tinyint) as integer) END", "INTEGER");
+        checkExpType("CASE 1 WHEN 1 THEN cast(null as integer) WHEN 2 THEN cast(null as integer) END", "INTEGER");
+        checkExpType("CASE 1 WHEN 1 THEN cast(null as integer) WHEN 2 THEN cast(cast(null as tinyint) as integer) END", "INTEGER");;
     }
 
     public void testCaseExpressionFails(){
@@ -476,12 +491,19 @@ public abstract class SqlValidatorTestCase extends TestCase {
         //all thens and else return null
         checkExpFails("case 1 when 1 then null end",
                       "(?s).*ELSE clause or at least one THEN clause must be non-NULL.*");
+        checkExpFails("case when true and true then 1 " +
+            "when false then 2 " +
+            "when false then true " +
+            "else " +
+            "case when true then 3 end end",
+            "(?s).*Illegal mixing of types found in statement starting near: line 1, column 8.*");
+
     }
 
     public void testNullIf(){
         checkExp("nullif(1,2)");
-        checkType("nullif(1,2)","INTEGER");
-        checkType("nullif('a','b')","VARCHAR(1)");
+        checkExpType("nullif(1,2)","INTEGER");
+        checkExpType("nullif('a','b')","VARCHAR(1)");
     }
 
     public void _testNullIfFails(){
@@ -491,12 +513,12 @@ public abstract class SqlValidatorTestCase extends TestCase {
 
     public void testCoalesce(){
         checkExp("coalesce('a','b')");
-        checkType("coalesce('a','b','c')","VARCHAR(1)");
+        checkExpType("coalesce('a','b','c')","VARCHAR(1)");
     }
 
     public void testCoalesceFails(){
-        checkExpFails("coalesce('a',1)","(?s).*Illegal mixing of types");
-        checkExpFails("coalesce('a','b',1)","(?s).*Illegal mixing of types");
+        checkExpFails("coalesce('a',1)","(?s).*Illegal mixing of types found in statement starting near: line 1, column 8.*");
+        checkExpFails("coalesce('a','b',1)","(?s).*Illegal mixing of types found in statement starting near: line 1, column 8.*");
     }
 
     public void testStringCompare() {
@@ -516,22 +538,22 @@ public abstract class SqlValidatorTestCase extends TestCase {
     }
 
     public void testStringCompareType() {
-        checkType("'a' = 'b'", "BOOLEAN");
-        checkType("'a' <> 'b'", "BOOLEAN");
-        checkType("'a' > 'b'", "BOOLEAN");
-        checkType("'a' < 'b'", "BOOLEAN");
-        checkType("'a' >= 'b'", "BOOLEAN");
-        checkType("'a' <= 'b'", "BOOLEAN");
+        checkExpType("'a' = 'b'", "BOOLEAN");
+        checkExpType("'a' <> 'b'", "BOOLEAN");
+        checkExpType("'a' > 'b'", "BOOLEAN");
+        checkExpType("'a' < 'b'", "BOOLEAN");
+        checkExpType("'a' >= 'b'", "BOOLEAN");
+        checkExpType("'a' <= 'b'", "BOOLEAN");
     }
 
     public void testConcat() {
         checkExp("'a'||'b'");
         checkExp("b'1'||b'1'");
         checkExp("x'1'||x'1'");
-        checkType("'a'||'b'", "VARCHAR(2)");
-        checkType("cast('a' as char(1))||cast('b' as char(2))", "VARCHAR(3)");
-        checkType("'a'||'b'||'c'", "VARCHAR(3)");
-        checkType("'a'||'b'||'cde'||'f'", "VARCHAR(6)");
+        checkExpType("'a'||'b'", "VARCHAR(2)");
+        checkExpType("cast('a' as char(1))||cast('b' as char(2))", "VARCHAR(3)");
+        checkExpType("'a'||'b'||'c'", "VARCHAR(3)");
+        checkExpType("'a'||'b'||'cde'||'f'", "VARCHAR(6)");
         checkExp("_iso-8859-6'a'||_iso-8859-6'b'||_iso-8859-6'c'");
     }
 
@@ -554,19 +576,19 @@ public abstract class SqlValidatorTestCase extends TestCase {
     }
 
     public void testCharsetMismatch() {
-        checkExpFails("''=_shift_jis''", "(?s).*Can not apply .* to the two differnet charsets.*");
-        checkExpFails("''<>_shift_jis''", "(?s).*Can not apply .* to the two differnet charsets.*");
-        checkExpFails("''>_shift_jis''", "(?s).*Can not apply .* to the two differnet charsets.*");
-        checkExpFails("''<_shift_jis''", "(?s).*Can not apply .* to the two differnet charsets.*");
-        checkExpFails("''<=_shift_jis''", "(?s).*Can not apply .* to the two differnet charsets.*");
-        checkExpFails("''>=_shift_jis''", "(?s).*Can not apply .* to the two differnet charsets.*");
+        checkExpFails("''=_shift_jis''", "(?s).*Can not apply .* to the two different charsets.*");
+        checkExpFails("''<>_shift_jis''", "(?s).*Can not apply .* to the two different charsets.*");
+        checkExpFails("''>_shift_jis''", "(?s).*Can not apply .* to the two different charsets.*");
+        checkExpFails("''<_shift_jis''", "(?s).*Can not apply .* to the two different charsets.*");
+        checkExpFails("''<=_shift_jis''", "(?s).*Can not apply .* to the two different charsets.*");
+        checkExpFails("''>=_shift_jis''", "(?s).*Can not apply .* to the two different charsets.*");
         checkExpFails("''||_shift_jis''", "(?s).*");
         checkExpFails("'a'||'b'||_iso-8859-6'c'", "(?s).*");
     }
 
     public void testSimpleCollate(){
         checkExp("'s' collate latin1$en$1");
-        checkType("'s' collate latin1$en$1","VARCHAR(1)");
+        checkExpType("'s' collate latin1$en$1","VARCHAR(1)");
         checkCollation("'s'","ISO-8859-1$en_US$primary", SqlCollation.Coercibility.Coercible);
         checkCollation("'s' collate latin1$sv$3","ISO-8859-1$sv$3", SqlCollation.Coercibility.Explicit);
     }
@@ -602,14 +624,14 @@ public abstract class SqlValidatorTestCase extends TestCase {
         checkExp("char_length('string')");
         checkExp("char_length(_shift_jis'string')");
         checkExp("character_length('string')");
-        checkType("char_length('string')","INTEGER");
-        checkType("character_length('string')","INTEGER");
+        checkExpType("char_length('string')","INTEGER");
+        checkExpType("character_length('string')","INTEGER");
     }
 
     public void testUpperLower(){
         checkExp("upper(_shift_jis'sadf')");
         checkExp("lower(n'sadf')");
-        checkType("lower('sadf')","VARCHAR(4)");
+        checkExpType("lower('sadf')","VARCHAR(4)");
         checkExpFails("upper(123)","(?s).*Can not apply 'UPPER' to arguments of type 'UPPER.<INTEGER>.'.*");
     }
 
@@ -617,7 +639,7 @@ public abstract class SqlValidatorTestCase extends TestCase {
         checkExp("position('mouse' in 'house')");
         checkExp("position(b'1' in b'1010')");
         checkExp("position(x'1' in x'110')");
-        checkType("position('mouse' in 'house')","INTEGER");
+        checkExpType("position('mouse' in 'house')","INTEGER");
         //review wael 29 March 2004: is x'1' (hexstring) and x'1010' (bytestring) a type mismatch?
         checkExpFails("position(x'1' in x'1010')",
                       "(?s).*Can not apply 'POSITION' to arguments of type 'POSITION.<BIT.4.> IN <VARBINARY.2.>.'.*");
@@ -630,14 +652,14 @@ public abstract class SqlValidatorTestCase extends TestCase {
         checkExp("trim(both 'mustache' FROM 'beard')");
         checkExp("trim(leading 'mustache' FROM 'beard')");
         checkExp("trim(trailing 'mustache' FROM 'beard')");
-        checkType("trim('mustache' FROM 'beard')","VARCHAR(5)");
+        checkExpType("trim('mustache' FROM 'beard')","VARCHAR(5)");
         //todo checkCollation("trim('mustache' FROM 'beard')","VARCHAR(5)",...);
     }
 
     public void testTrimFails(){
         checkExpFails("trim(123 FROM 'beard')","(?s).*Can not apply 'TRIM' to arguments of type.*");
         checkExpFails("trim('a' FROM 123)","(?s).*Can not apply 'TRIM' to arguments of type.*");
-        checkExpFails("trim('a' FROM _shift_jis'b')","(?s).*not comparable to eachother.*");
+        checkExpFails("trim('a' FROM _shift_jis'b')","(?s).*not comparable to each other.*");
     }
 
     public void _testConvertAndTranslate() {
@@ -650,7 +672,7 @@ public abstract class SqlValidatorTestCase extends TestCase {
         checkExp("overlay('ABCdef' placing 'abc' from 1 for 3)");
         checkExpFails("overlay('ABCdef' placing 'abc' from '1' for 3)",
                 "(?s).*OVERLAY.<BIT> PLACING <BIT> FROM <INTEGER>..*");
-        checkType("overlay('ABCdef' placing 'abc' from 1 for 3)","VARCHAR(9)");
+        checkExpType("overlay('ABCdef' placing 'abc' from 1 for 3)","VARCHAR(9)");
         //todo checkCollation("overlay('ABCdef' placing 'abc' collate latin1$sv from 1 for 3)",
         //               "ISO-8859-1$sv", SqlCollation.COERCIBILITY_EXPLICIT);
     }
@@ -663,11 +685,11 @@ public abstract class SqlValidatorTestCase extends TestCase {
         checkExp("substring(x'f' FROM 1  FOR 2)") ; //hexstring
         checkExp("substring(x'ff' FROM 1  FOR 2)") ; //binary string
 
-        checkType("substring('10' FROM 1  FOR 2)","VARCHAR(2)");
-        checkType("substring('1000' FROM '1'  FOR 'w')","VARCHAR(4)");
-        checkType("substring(cast(' 100 ' as CHAR(99)) FROM '1'  FOR 'w')","VARCHAR(99)");
-        checkType("substring(b'10' FROM 1  FOR 2)","VARBIT(2)");
-        checkType("substring(x'10' FROM 1  FOR 2)","VARBINARY(1)");
+        checkExpType("substring('10' FROM 1  FOR 2)","VARCHAR(2)");
+        checkExpType("substring('1000' FROM '1'  FOR 'w')","VARCHAR(4)");
+        checkExpType("substring(cast(' 100 ' as CHAR(99)) FROM '1'  FOR 'w')","VARCHAR(99)");
+        checkExpType("substring(b'10' FROM 1  FOR 2)","VARBIT(2)");
+        checkExpType("substring(x'10' FROM 1  FOR 2)","VARBINARY(1)");
 
         checkCharset("substring('10' FROM 1  FOR 2)",Charset.forName("latin1"));
         checkCharset("substring(_shift_jis'10' FROM 1  FOR 2)",Charset.forName("SHIFT_JIS"));
@@ -675,9 +697,9 @@ public abstract class SqlValidatorTestCase extends TestCase {
 
     public void testSubstringFails() {
         checkExpFails("substring('a' from 1 for 'b')","(?s).*Can not apply 'SUBSTRING' to arguments of type.*");
-        checkExpFails("substring(_shift_jis'10' FROM '0' FOR '\\')","(?s).* not comparable to eachother.*");
-        checkExpFails("substring('10' FROM _shift_jis'0' FOR '\\')","(?s).* not comparable to eachother.*");
-        checkExpFails("substring('10' FROM '0' FOR _shift_jis'\\')","(?s).* not comparable to eachother.*");
+        checkExpFails("substring(_shift_jis'10' FROM '0' FOR '\\')","(?s).* not comparable to each other.*");
+        checkExpFails("substring('10' FROM _shift_jis'0' FOR '\\')","(?s).* not comparable to each other.*");
+        checkExpFails("substring('10' FROM '0' FOR _shift_jis'\\')","(?s).* not comparable to each other.*");
     }
 
     public void testLikeAndSimilar() {
@@ -699,50 +721,50 @@ public abstract class SqlValidatorTestCase extends TestCase {
     }
 
     public void testNullCast() {
-        checkType("cast(null as tinyint)","TINYINT");
-        checkType("cast(null as smallint)","SMALLINT");
-        checkType("cast(null as integer)","INTEGER");
-        checkType("cast(null as bigint)","BIGINT");
-        checkType("cast(null as float)","FLOAT");
-        checkType("cast(null as real)","REAL");
-        checkType("cast(null as double)","DOUBLE");
-        checkType("cast(null as bit)","BIT(0)");
-        checkType("cast(null as boolean)","BOOLEAN");
-        checkType("cast(null as varchar)","VARCHAR(0)");
-        checkType("cast(null as char)","CHAR(0)");
-        checkType("cast(null as binary)","BINARY(0)");
-        checkType("cast(null as date)","DATE");
-        checkType("cast(null as time)","TIME");
-        checkType("cast(null as timestamp)","TIMESTAMP");
-        checkType("cast(null as decimal)","DECIMAL");
-        checkType("cast(null as varbinary)","VARBINARY(0)");
+        checkExpType("cast(null as tinyint)","TINYINT");
+        checkExpType("cast(null as smallint)","SMALLINT");
+        checkExpType("cast(null as integer)","INTEGER");
+        checkExpType("cast(null as bigint)","BIGINT");
+        checkExpType("cast(null as float)","FLOAT");
+        checkExpType("cast(null as real)","REAL");
+        checkExpType("cast(null as double)","DOUBLE");
+        checkExpType("cast(null as bit)","BIT(0)");
+        checkExpType("cast(null as boolean)","BOOLEAN");
+        checkExpType("cast(null as varchar)","VARCHAR(0)");
+        checkExpType("cast(null as char)","CHAR(0)");
+        checkExpType("cast(null as binary)","BINARY(0)");
+        checkExpType("cast(null as date)","DATE");
+        checkExpType("cast(null as time)","TIME");
+        checkExpType("cast(null as timestamp)","TIMESTAMP");
+        checkExpType("cast(null as decimal)","DECIMAL");
+        checkExpType("cast(null as varbinary)","VARBINARY(0)");
 
         checkExp("cast(null as integer), cast(null as char)");
     }
 
     public void testCastTypeToType() {
-        checkType("cast(123 as varchar(3))","VARCHAR(3)");
-        checkType("cast(123 as char(3))","CHAR(3)");
-        checkType("cast('123' as integer)","INTEGER");
-        checkType("cast('123' as double)","DOUBLE");
-        checkType("cast('1.0' as real)","REAL");
-        checkType("cast(1.0 as tinyint)","TINYINT");
-        checkType("cast(1 as tinyint)","TINYINT");
-        checkType("cast(1.0 as smallint)","SMALLINT");
-        checkType("cast(1 as integer)","INTEGER");
-        checkType("cast(1.0 as integer)","INTEGER");
-        checkType("cast(1.0 as bigint)","BIGINT");
-        checkType("cast(1 as bigint)","BIGINT");
-        checkType("cast(1.0 as float)","FLOAT");
-        checkType("cast(1 as float)","FLOAT");
-        checkType("cast(1.0 as real)","REAL");
-        checkType("cast(1 as real)","REAL");
-        checkType("cast(1.0 as double)","DOUBLE");
-        checkType("cast(1 as double)","DOUBLE");
-        checkType("cast(null as boolean)","BOOLEAN");
-        checkType("cast('abc' as varchar)","VARCHAR(0)"); //return type precision is not correct
-        checkType("cast('abc' as char)","CHAR(0)"); //return type precision is not correct
-        checkType("cast(x'ff' as binary)","BINARY(0)");
+        checkExpType("cast(123 as varchar(3))","VARCHAR(3)");
+        checkExpType("cast(123 as char(3))","CHAR(3)");
+        checkExpType("cast('123' as integer)","INTEGER");
+        checkExpType("cast('123' as double)","DOUBLE");
+        checkExpType("cast('1.0' as real)","REAL");
+        checkExpType("cast(1.0 as tinyint)","TINYINT");
+        checkExpType("cast(1 as tinyint)","TINYINT");
+        checkExpType("cast(1.0 as smallint)","SMALLINT");
+        checkExpType("cast(1 as integer)","INTEGER");
+        checkExpType("cast(1.0 as integer)","INTEGER");
+        checkExpType("cast(1.0 as bigint)","BIGINT");
+        checkExpType("cast(1 as bigint)","BIGINT");
+        checkExpType("cast(1.0 as float)","FLOAT");
+        checkExpType("cast(1 as float)","FLOAT");
+        checkExpType("cast(1.0 as real)","REAL");
+        checkExpType("cast(1 as real)","REAL");
+        checkExpType("cast(1.0 as double)","DOUBLE");
+        checkExpType("cast(1 as double)","DOUBLE");
+        checkExpType("cast(null as boolean)","BOOLEAN");
+        checkExpType("cast('abc' as varchar)","VARCHAR(0)"); //return type precision is not correct
+        checkExpType("cast('abc' as char)","CHAR(0)"); //return type precision is not correct
+        checkExpType("cast(x'ff' as binary)","BINARY(0)");
     }
 
     public void testCastFails() {
@@ -755,7 +777,7 @@ public abstract class SqlValidatorTestCase extends TestCase {
         checkExp("LOCALTIME");                     //    fix sqlcontext later.
         checkExpFails("LOCALTIME(1+2)","Argument to function 'LOCALTIME' must be a literal") ;
         checkExpFails("LOCALTIME()",INVALID_NBR_OF_ARGS);
-        checkType("LOCALTIME","TIME"); //  NOT NULL, with TZ ?
+        checkExpType("LOCALTIME","TIME"); //  NOT NULL, with TZ ?
         checkExpFails("LOCALTIME(-1)", "Argument to function 'LOCALTIME' must be a literal"); // i guess -s1 is an expression?
         checkExpFails("LOCALTIME('foo')","(?s).*Can not apply .LOCALTIME. to arguments of type .LOCALTIME.<VARCHAR.3.>.*");
 
@@ -764,7 +786,7 @@ public abstract class SqlValidatorTestCase extends TestCase {
         checkExp("LOCALTIMESTAMP");                     //    fix sqlcontext later.
         checkExpFails("LOCALTIMESTAMP(1+2)","Argument to function 'LOCALTIMESTAMP' must be a literal") ;
         checkExpFails("LOCALTIMESTAMP()",INVALID_NBR_OF_ARGS);
-        checkType("LOCALTIMESTAMP","TIMESTAMP"); //  NOT NULL, with TZ ?
+        checkExpType("LOCALTIMESTAMP","TIMESTAMP"); //  NOT NULL, with TZ ?
         checkExpFails("LOCALTIMESTAMP(-1)", "Argument to function 'LOCALTIMESTAMP' must be a literal"); // i guess -s1 is an expression?
         checkExpFails("LOCALTIMESTAMP('foo')","(?s).*Can not apply .LOCALTIMESTAMP. to arguments of type .LOCALTIMESTAMP.<VARCHAR.3.>... " +
                 "Supported form.s.: .LOCALTIMESTAMP.<INTEGER>.*");
@@ -774,7 +796,7 @@ public abstract class SqlValidatorTestCase extends TestCase {
         checkExp("CURRENT_DATE");                     //    fix sqlcontext later.
         checkExpFails("CURRENT_DATE(1+2)",INVALID_NBR_OF_ARGS);
         checkExp("CURRENT_DATE()"); // FIXME: works, but shouldn't
-        checkType("CURRENT_DATE","DATE"); //  NOT NULL, with TZ?
+        checkExpType("CURRENT_DATE","DATE"); //  NOT NULL, with TZ?
         checkExpFails("CURRENT_DATE(-1)",INVALID_NBR_OF_ARGS); // i guess -s1 is an expression?
         checkExpFails("CURRENT_DATE('foo')","(?s).*");
 
@@ -783,7 +805,7 @@ public abstract class SqlValidatorTestCase extends TestCase {
         checkExp("current_time");                     //    fix sqlcontext later.
         checkExpFails("current_time(1+2)","Argument to function 'CURRENT_TIME' must be a literal") ;
         checkExpFails("current_time()", INVALID_NBR_OF_ARGS);
-        checkType("current_time","TIME"); //  NOT NULL, with TZ ?
+        checkExpType("current_time","TIME"); //  NOT NULL, with TZ ?
         checkExpFails("current_time(-1)", "Argument to function 'CURRENT_TIME' must be a literal"); // i guess -s1 is an expression?
         checkExpFails("current_time('foo')","(?s).*Can not apply .CURRENT_TIME. to arguments of type 'CURRENT_TIME.<VARCHAR.3.>.'.*");
 
@@ -792,7 +814,7 @@ public abstract class SqlValidatorTestCase extends TestCase {
         checkExp("CURRENT_TIMESTAMP");                     //    fix sqlcontext later.
         checkExpFails("CURRENT_TIMESTAMP(1+2)","Argument to function 'CURRENT_TIMESTAMP' must be a literal") ;
         checkExpFails("CURRENT_TIMESTAMP()",INVALID_NBR_OF_ARGS);
-        checkType("CURRENT_TIMESTAMP","TIMESTAMP"); //  NOT NULL, with TZ ?
+        checkExpType("CURRENT_TIMESTAMP","TIMESTAMP"); //  NOT NULL, with TZ ?
         checkExpFails("CURRENT_TIMESTAMP(-1)", "Argument to function 'CURRENT_TIMESTAMP' must be a literal"); // i guess -s1 is an expression?
         checkExpFails("CURRENT_TIMESTAMP('foo')","(?s).*Can not apply 'CURRENT_TIMESTAMP' to arguments of type 'CURRENT_TIMESTAMP.<VARCHAR.3.>.'.*");
 
@@ -848,6 +870,13 @@ public abstract class SqlValidatorTestCase extends TestCase {
         checkExp("\"OVERLAY\"('a' PLAcing 'b' from 1)");
         checkExp("\"SUBSTRING\"('a' from 1)");
         checkExp("\"TRIM\"('b')");
+    }
+
+    public void testRowtype() {
+        check("values (1),(2),(1)");
+        check("values (1,'1'),(2,'2')");
+        checkFails("values ('1'),(2)","(?s).*Values passed to VALUES operator near line 1, column 1 must have compatible types.*");
+//        checkType("values (1),(2.0),(3)","ROWTYPE(DOUBLE)");
     }
 }
 

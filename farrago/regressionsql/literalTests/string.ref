@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/farrago/regressionsql/literalTests/string.sql#6 $ 
+0: jdbc:farrago:> -- $Id$ 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> SELECT 'unknown' from values('TRUE');
 +----------+
@@ -13,27 +13,25 @@
 0: jdbc:farrago:> create table t_char(char_col char(1) not null primary key, char_col2 char(1));
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- negative test
-0: jdbc:farrago:> -- bug  ( fix me)
-0: jdbc:farrago:> --insert into t_char values('string value',null);
 0: jdbc:farrago:> insert into t_char values(true,null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'BOOLEAN' to 'CHAR(1)' (state=,code=0)
 0: jdbc:farrago:> insert into t_char values(1234,null);
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
-[0]:PC=1 Code=TooLo (state=,code=0)
+[0]:PC=1 Code=22001 (state=,code=0)
 0: jdbc:farrago:> insert into t_char values(10e400,null);
 Error: Number literal '1.0000000000000000000E401' out of range near: line 1, column 26 (state=,code=0)
 0: jdbc:farrago:> insert into t_char values(-1.2345678901234e-200,null);
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
-[0]:PC=1 Code=TooLo (state=,code=0)
+[0]:PC=1 Code=22001 (state=,code=0)
 0: jdbc:farrago:> insert into t_char values(-1234.03,null);
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
-[0]:PC=1 Code=TooLo (state=,code=0)
+[0]:PC=1 Code=22001 (state=,code=0)
 0: jdbc:farrago:> insert into t_char values(x'ff',null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'VARBINARY(1)' to 'CHAR(1)' (state=,code=0)
 0: jdbc:farrago:> insert into t_char values(b'10',null);
@@ -55,17 +53,26 @@ Error: could not calculate results for the following row:
 Messages:
 [0]:PC=0 Code=22001 (state=,code=0)
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- REVIEW: SZ: 8/11/2004: not strictly an error.  this should truncate and
+0: jdbc:farrago:> --  generate a warning, which we'll probably never see in sqlline.
+0: jdbc:farrago:> insert into t_char values('string value',null);
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- insert the right values
 0: jdbc:farrago:> insert into t_char values('m',null);
-Error: Assertion Error: Type Mismatch. Tried to MOVE vc into a c (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- null value test
-0: jdbc:farrago:> --insert into t_char values(null, null); 
+0: jdbc:farrago:> insert into t_char values(null, null); 
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=3 Code=22004 (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from t_char;
 +-----------+------------+
 | CHAR_COL  | CHAR_COL2  |
 +-----------+------------+
+| m         |            |
+| s         |            |
 +-----------+------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> drop table t_char;
@@ -92,50 +99,76 @@ Error: Assertion Error: Type Mismatch. Tried to MOVE vc into a c (state=,code=0)
 Error: Schema TEST already exists within Catalog LOCALDB;
 duplicate name encountered near line 1, column 15 (state=,code=0)
 0: jdbc:farrago:> set schema test;
-0: jdbc:farrago:> create table t_varchar(varchar_col varchar(20) not null primary key, varchar_col2 varchar(1));
+0: jdbc:farrago:> create table t_varchar(varchar_col varchar(30) not null primary key, varchar_col2 varchar(1));
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- negative test
-0: jdbc:farrago:> insert into t_varchar values('string value123456789abc',null);
-0: jdbc:farrago:> select * from t_varchar;
-+-----------------------+---------------+
-|      VARCHAR_COL      | VARCHAR_COL2  |
-+-----------------------+---------------+
-| string value12345678  |               |
-+-----------------------+---------------+
 0: jdbc:farrago:> insert into t_varchar values(true,null);
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'BOOLEAN' to 'VARCHAR(20)' (state=,code=0)
-0: jdbc:farrago:> insert into t_varchar values(1234,null);
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'BOOLEAN' to 'VARCHAR(30)' (state=,code=0)
+0: jdbc:farrago:> insert into t_varchar values(false,null);
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'BOOLEAN' to 'VARCHAR(30)' (state=,code=0)
 0: jdbc:farrago:> insert into t_varchar values(10e400,null);
 Error: Number literal '1.0000000000000000000E401' out of range near: line 1, column 29 (state=,code=0)
-0: jdbc:farrago:> insert into t_varchar values(-1.2345678901234e-200,null);
-0: jdbc:farrago:> insert into t_varchar values(-1234.03,null);
 0: jdbc:farrago:> insert into t_varchar values(x'ff',null);
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'VARBINARY(1)' to 'VARCHAR(20)' (state=,code=0)
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'VARBINARY(1)' to 'VARCHAR(30)' (state=,code=0)
 0: jdbc:farrago:> insert into t_varchar values(b'10',null);
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'BIT(2)' to 'VARCHAR(20)' (state=,code=0)
+Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'BIT(2)' to 'VARCHAR(30)' (state=,code=0)
+0: jdbc:farrago:> select * from t_varchar;
++--------------+---------------+
+| VARCHAR_COL  | VARCHAR_COL2  |
++--------------+---------------+
++--------------+---------------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- insert the right values
-0: jdbc:farrago:> insert into t_varchar values('1234567890',null);
+0: jdbc:farrago:> -- warning tests
+0: jdbc:farrago:> -- 31 character string truncates to 30, but should get an warning
+0: jdbc:farrago:> insert into t_varchar values('1234567890123456789012345678901',null);
+0: jdbc:farrago:> select * from t_varchar;
++---------------------------------+---------------+
+|           VARCHAR_COL           | VARCHAR_COL2  |
++---------------------------------+---------------+
+| 123456789012345678901234567890  |               |
++---------------------------------+---------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- positive tests
+0: jdbc:farrago:> insert into t_varchar values(4444,null);
+0: jdbc:farrago:> insert into t_varchar values(99999999,null);
+0: jdbc:farrago:> insert into t_varchar values(0.0,null);
+0: jdbc:farrago:> insert into t_varchar values(-1.1,null);
+0: jdbc:farrago:> insert into t_varchar values(-4444.22,null);
+0: jdbc:farrago:> insert into t_varchar values('1.23E-50',null);
+0: jdbc:farrago:> insert into t_varchar values('1.23E50',null);
+0: jdbc:farrago:> insert into t_varchar values('-1.23E50',null);
+0: jdbc:farrago:> insert into t_varchar values('-1.23E-50',null);
+0: jdbc:farrago:> insert into t_varchar values(-1.2345678901234e-200,null);
 0: jdbc:farrago:> insert into t_varchar values(time '12:01:01',null);
 0: jdbc:farrago:> insert into t_varchar values(date '1999-01-08',null);
 0: jdbc:farrago:> insert into t_varchar values(TIMESTAMP '2004-12-01 12:01:01',null);
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- null value test
-0: jdbc:farrago:> --insert into t_varchar values(null, null); 
+0: jdbc:farrago:> insert into t_varchar values(null, null); 
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=3 Code=22004 (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from t_varchar;
-+-----------------------+---------------+
-|      VARCHAR_COL      | VARCHAR_COL2  |
-+-----------------------+---------------+
-| -0.000000             |               |
-| -1234.030000          |               |
-| 1234                  |               |
-| 1234567890            |               |
-| 12:01:01              |               |
-| 1999-01-08            |               |
-| 2004-12-01 12:01:01   |               |
-| string value12345678  |               |
-+-----------------------+---------------+
++---------------------------------+---------------+
+|           VARCHAR_COL           | VARCHAR_COL2  |
++---------------------------------+---------------+
+| -1.1000000000000001E+00         |               |
+| -1.2345678901234000E-200        |               |
+| -1.23E-50                       |               |
+| -1.23E50                        |               |
+| -4.4442200000000003E+03         |               |
+| 0E0                             |               |
+| 1.23E-50                        |               |
+| 1.23E50                         |               |
+| 123456789012345678901234567890  |               |
+| 12:01:01                        |               |
+| 1999-01-08                      |               |
+| 2004-12-01 12:01:01             |               |
+| 4444                            |               |
+| 99999999                        |               |
++---------------------------------+---------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> drop table t_varchar;
 0: jdbc:farrago:> 

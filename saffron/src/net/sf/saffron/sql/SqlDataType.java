@@ -134,7 +134,7 @@ public class SqlDataType extends SqlNode {
     }
 
     /**
-     * @throws {@link SqlValidator#newValidationError} if
+     * @throws {@link SaffronResource#newUnknownDatatypeName} if
      * {@link SqlDataType#typeName#getSimple()} is not defined.
      */
 

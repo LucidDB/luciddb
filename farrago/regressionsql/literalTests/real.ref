@@ -137,11 +137,7 @@ Error: Numerical result out of range (at line:col 5:9 to 5:16, characters 47 to 
 . . . . . . . . >         real_col2 int);
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- negative test
-0: jdbc:farrago:> insert into t_real values('true',null);
-Error: could not calculate results for the following row:
-[ 0 ]
-Messages:
-[0]:PC=1 Code=22003 (state=,code=0)
+0: jdbc:farrago:> --insert into t_real values('true',null);
 0: jdbc:farrago:> insert into t_real values(TRUE,null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'BOOLEAN' to 'REAL' (state=,code=0)
 0: jdbc:farrago:> insert into t_real values(x'ff',null);

@@ -182,11 +182,14 @@ public class RexToCalcTranslator implements RexVisitor
 
     CalcProgramBuilder.RegisterDescriptor
             getCalcRegisterDescriptor(RexNode node) {
+        return getCalcRegisterDescriptor(node.getType());
+    }
 
-        SaffronType rexNodeSaffronType = node.getType();
-        String typeDigest = rexNodeSaffronType.toString();
+    CalcProgramBuilder.RegisterDescriptor
+            getCalcRegisterDescriptor(SaffronType saffronType) {
+        String typeDigest = saffronType.toString();
         // Special case for Char and Binary, because have the same
-        // respective rexNodeSaffronType families as Varchar and Varbinary, but the
+        // respective saffronType families as Varchar and Varbinary, but the
         // calc needs to treat them differently.
         CalcProgramBuilder.OpType calcType = null;
         if (typeDigest.startsWith("CHAR")) {
@@ -195,10 +198,10 @@ public class RexToCalcTranslator implements RexVisitor
         if (typeDigest.startsWith("BINARY")) {
             calcType = CalcProgramBuilder.OpType.Binary;
         }
-        SaffronType lookupThis = getSimilarSqlType(rexNodeSaffronType);
+        SaffronType lookupThis = getSimilarSqlType(saffronType);
         for (int i = 0; i < _knownTypes.length; i++) {
             TypePair knownType = _knownTypes[i];
-            if (rexNodeSaffronType.isSameType(knownType._saffronType)) {
+            if (saffronType.isSameType(knownType._saffronType)) {
                 calcType = knownType._opType;
             }
 
@@ -209,13 +212,13 @@ public class RexToCalcTranslator implements RexVisitor
         }
 
         if (null == calcType) {
-            throw Util.newInternal("unknown type " + rexNodeSaffronType);
+            throw Util.newInternal("unknown type " + saffronType);
         }
 
-        int bytes = rexNodeSaffronType.getMaxBytesStorage();
+        int bytes = saffronType.getMaxBytesStorage();
         if (bytes < 0) {
             // Adjust for types which map to char or binary,  but which
-            // don't know their maximum length. The java string rexNodeSaffronType is an
+            // don't know their maximum length. The java string saffronType is an
             // example of this.
             switch (calcType.getOrdinal()) {
             case CalcProgramBuilder.OpType.Binary_ordinal:
@@ -513,7 +516,15 @@ public class RexToCalcTranslator implements RexVisitor
         if (isStrCmp(call)) {
             CalcProgramBuilder.Register reg1 = implementNode(call.operands[0]);
             CalcProgramBuilder.Register reg2 = implementNode(call.operands[1]);
-            implementConversionIfNeeded(op, call.operands[0], call.operands[1]);
+
+            CalcProgramBuilder.Register[] convRegs = { reg1, reg2 };
+            implementConversionIfNeeded(op,
+                                        call.operands[0],
+                                        call.operands[1],
+                                        convRegs);
+            reg1 = convRegs[0];
+            reg2 = convRegs[1];
+
             resultOfCall = _builder.newLocal(resultDesc);
 
             assert resultDesc.getType() == CalcProgramBuilder.OpType.Bool;
@@ -612,10 +623,40 @@ public class RexToCalcTranslator implements RexVisitor
      * inserts a call to the calculator convert function and silently
      * updates the result register of the operands as needed
      */
-    private void implementConversionIfNeeded(SqlOperator op, RexNode op1,
-            RexNode op2)
+    private void implementConversionIfNeeded(SqlOperator op,
+                                             RexNode op1,
+                                             RexNode op2,
+                                             CalcProgramBuilder.Register[] regs)
     {
-        //TODO
+        if (op1.getType().isCharType() &&
+            op1.getType().getSqlTypeName() != op2.getType().getSqlTypeName()) {
+            // Need to perform a cast.
+            CalcProgramBuilder.Register newReg;
+            if (op1.getType().getSqlTypeName() == SqlTypeName.Varchar) {
+                // cast op1 to op2's type
+                newReg = _builder.newLocal(
+                    getCalcRegisterDescriptor(op2.getType()));
+
+                ExtInstructionDefTable.castA.add(
+                    _builder,
+                    new CalcProgramBuilder.Register[] { newReg, regs[0] });
+
+                regs[0] = newReg;
+            } else {
+                // cast op2 to op1's type
+                newReg = _builder.newLocal(
+                    getCalcRegisterDescriptor(op1.getType()));
+
+                ExtInstructionDefTable.castA.add(
+                    _builder,
+                    new CalcProgramBuilder.Register[] { newReg, regs[1] });
+
+                regs[1] = newReg;
+            }
+        }
+
+        // REVIEW: SZ: 8/11/2004: Something similar to the above
+        // probably needs to be done for BINARY vs. VARBINARY.
     }
 
     private void implementNode(RexLiteral node)

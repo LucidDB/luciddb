@@ -29,6 +29,7 @@ import net.sf.saffron.core.SaffronTypeFactory;
 import net.sf.saffron.resource.SaffronResource;
 import net.sf.saffron.sql.type.SqlTypeName;
 import net.sf.saffron.sql.fun.SqlRowOperator;
+import net.sf.saffron.sql.parser.ParserPosition;
 import net.sf.saffron.util.Util;
 
 import java.nio.charset.Charset;
@@ -124,7 +125,7 @@ public class SqlValidator
             final SqlNode selectItem = selectList.get(i);
             expandSelectItem(selectItem, query, list, aliases, types);
         }
-        return new SqlNodeList(list,null);
+        return new SqlNodeList(list, ParserPosition.ZERO);
     }
 
     /**
@@ -171,7 +172,9 @@ public class SqlValidator
                         SaffronField field = fields[i];
                         String columnName = field.getName();
                         //todo: do real implicit collation here
-                        final SqlNode exp = new SqlIdentifier(new String [] { tableName,columnName },null);
+                        final SqlNode exp = new SqlIdentifier(
+                                new String [] { tableName,columnName },
+                                ParserPosition.ZERO);
                         addToSelectList(selectItems,aliases, types, exp, scope);
                     }
                 }
@@ -396,8 +399,8 @@ public class SqlValidator
 
         // now transform node itself
         if (node.isA(SqlKind.SetQuery) || node.isA(SqlKind.Values)) {
-            final SqlNodeList selectList = new SqlNodeList(null);
-            selectList.add(new SqlIdentifier("*",null));
+            final SqlNodeList selectList = new SqlNodeList(ParserPosition.ZERO);
+            selectList.add(new SqlIdentifier("*",ParserPosition.ZERO));
             SqlSelect wrapperNode =
                 SqlOperatorTable.std().selectOperator.createCall(
                     false,
@@ -406,7 +409,8 @@ public class SqlValidator
                     null,
                     null,
                     null,
-                    null, null);
+                    null,
+                    ParserPosition.ZERO);
             return wrapperNode;
         } else if (node.isA(SqlKind.OrderBy)) {
             SqlCall orderBy = (SqlCall) node;
@@ -424,7 +428,7 @@ public class SqlValidator
                     return select;
                 }
             }
-            final SqlNodeList selectList = new SqlNodeList(null);
+            final SqlNodeList selectList = new SqlNodeList(ParserPosition.ZERO);
             selectList.add(new SqlIdentifier("*",null));
             SqlSelect wrapperNode =
                 SqlOperatorTable.std().selectOperator.createCall(
@@ -439,7 +443,7 @@ public class SqlValidator
         } else if (node.isA(SqlKind.ExplicitTable)) {
             // (TABLE t) is equivalent to (SELECT * FROM t)
             SqlCall call = (SqlCall) node;
-            final SqlNodeList selectList = new SqlNodeList(null);
+            final SqlNodeList selectList = new SqlNodeList(ParserPosition.ZERO);
             selectList.add(new SqlIdentifier("*",null));
             SqlSelect wrapperNode =
                 SqlOperatorTable.std().selectOperator.createCall(
@@ -456,7 +460,7 @@ public class SqlValidator
             call.setOperand(SqlInsert.SOURCE_SELECT_OPERAND,call.getSource());
         } else if (node.isA(SqlKind.Delete)) {
             SqlDelete call = (SqlDelete) node;
-            final SqlNodeList selectList = new SqlNodeList(null);
+            final SqlNodeList selectList = new SqlNodeList(ParserPosition.ZERO);
             selectList.add(new SqlIdentifier("*",null));
             SqlSelect select =
                 SqlOperatorTable.std().selectOperator.createCall(
@@ -470,7 +474,7 @@ public class SqlValidator
             call.setOperand(SqlDelete.SOURCE_SELECT_OPERAND,select);
         } else if (node.isA(SqlKind.Update)) {
             SqlUpdate call = (SqlUpdate) node;
-            final SqlNodeList selectList = new SqlNodeList(null);
+            final SqlNodeList selectList = new SqlNodeList(ParserPosition.ZERO);
             selectList.add(new SqlIdentifier("*",null));
             Iterator iter = call.getSourceExpressionList().getList().iterator();
             int ordinal = 0;
@@ -626,8 +630,7 @@ public class SqlValidator
                         // definitely needed.  I took off the "in scope" part
                         // because the internal information is not wanted
                         // after I made this a non-internal error.
-                        throw newValidationError(
-                            "Unknown identifier '" + name + "'");
+                        throw SaffronResource.instance().newUnknownIdentifier(name, id.getParserPosition().toString());
                     }
                 } else {
                     SaffronType fieldType = lookupField(type,name);
@@ -724,7 +727,8 @@ public class SqlValidator
                         throw SaffronResource.instance().newInvalidNbrOfArgument(
                                 call.operator.name,
                                 call.getParserPosition().toString(),
-                                (Integer) fun.getPossibleNumOfOperands().get(0));
+                                (Integer) fun.getOperandsCountDescriptor().
+                                    getPossibleNumOfOperands().get(0));
                     }
                     call.operator = function;
                 }
@@ -767,8 +771,8 @@ public class SqlValidator
                         Charset cs2 = operandType2.getCharset();
                         assert(null!=cs1 && null!=cs2) : "An implicit or explicit charset should have been set";
                         if (!cs1.equals(cs2)) {
-                            throw newValidationError("Can not apply '"+call.operator.name+
-                                                   "' to the two differnet charsets "+cs1.name()+" and "+cs2.name());
+                            throw SaffronResource.instance().newIncompatibleCharset(
+                                    call.operator.name, cs1.name(),cs2.name());
                         }
 
                         SqlCollation col1 = operandType1.getCollation();
@@ -993,11 +997,6 @@ public class SqlValidator
         return true;
     }
 
-    public RuntimeException newValidationError(String s)
-    {
-        return SaffronResource.instance().newValidationError(s);
-    }
-
     /**
      * Registers a new scope. We assume that its parent pointer has already
      * been set.
@@ -1191,6 +1190,7 @@ public class SqlValidator
                 for (int i = 0; i < operands.length; i++) {
                     validateExpression(operands[i]);
                 }
+                call.operator.validateCall(call, this);
             } else if (node instanceof SqlNodeList) {
                 SqlNodeList nodeList = (SqlNodeList) node;
                 Iterator iter = nodeList.getList().iterator();
@@ -1258,7 +1258,8 @@ public class SqlValidator
         }
 
 
-        SqlNodeList newSelectList = new SqlNodeList(expandedSelectItems,null);
+        SqlNodeList newSelectList = new SqlNodeList(expandedSelectItems,
+                ParserPosition.ZERO);
         if (shouldExpandIdentifiers()) {
             select.setOperand(SqlSelect.SELECT_OPERAND,newSelectList);
         }
@@ -1293,8 +1294,7 @@ public class SqlValidator
         if (orderList != null) {
             if (!shouldAllowIntermediateOrderBy()) {
                 if (select != outermostNode) {
-                    throw newValidationError(
-                        "ORDER BY is only allowed on top-level SELECT");
+                    throw SaffronResource.instance().newInvalidOrderByPos(select.getParserPosition().toString());
                 }
             }
             validateExpression(orderList);
@@ -1327,8 +1327,7 @@ public class SqlValidator
             SqlIdentifier id = (SqlIdentifier) iter.next();
             int iColumn = baseRowType.getFieldOrdinal(id.getSimple());
             if (iColumn == -1) {
-                throw newValidationError(
-                    "Unknown target column "+id.getSimple());
+                throw SaffronResource.instance().newUnknownTargetColumn(id.getSimple(),id.getParserPosition().toString());
             }
             fieldNames[iTarget] = targetFields[iColumn].getName();
             types[iTarget] = targetFields[iColumn].getType();
@@ -1357,11 +1356,9 @@ public class SqlValidator
         SaffronType sourceRowType = getScope(sqlSelect).getRowType();
 
         if (targetRowType.getFieldCount() != sourceRowType.getFieldCount()) {
-            throw newValidationError(
-                "Number of INSERT target columns ("
-                + targetRowType.getFieldCount()
-                + ") does not equal number of source items ("
-                + sourceRowType.getFieldCount() + ")");
+            throw SaffronResource.instance().newUnmatchInsertColumn(
+                    ""+targetRowType.getFieldCount(),
+                    ""+sourceRowType.getFieldCount());
         }
         // TODO:  validate updatability, type compatibility, etc.
     }
@@ -1395,11 +1392,7 @@ public class SqlValidator
 
     private void validateValues(SqlCall node,SaffronType targetRowType)
     {
-        // TODO: validate that all rows have the same number of columns
-        //   and that expressions in each column are union-compatible.
-        // jhyde: Having the same number of columns is a pre-requisite for
-        //   being union-compatible. So just check that they're
-        //   union-compatible.
+        assert(node.isA(SqlKind.Values));
         final SqlNode [] operands = node.getOperands();
         for (int i = 0; i < operands.length; i++) {
             SqlNode operand = operands[i];
@@ -1420,16 +1413,35 @@ public class SqlValidator
             inferUnknownTypes(targetRowType,getScope(node),rowConstructor);
         }
 
-        if (operands.length >= 2) {
-            // values (1,2), (1, 'eee') is invalid statement
-            for (int i = 0; i < operands.length; i++) {
-                SqlCall firstRow = (SqlCall) operands[0];
-                int numOfColumn = firstRow.getOperands().length;
-                for (int j = 1; i < operands.length; i++) {
-                    SqlCall operand = (SqlCall) operands[j];
-                    if (operand.getOperands().length != numOfColumn) {
-                        throw SaffronResource.instance().newIncompatibleValueType();
-                    }
+        // validate that all rows have the same number of columns
+        //  and that expressions in each column are compatible.
+        final int numOfRows = operands.length;
+        if (numOfRows >= 2) {
+            SqlCall firstRow = (SqlCall) operands[0];
+            final int numOfColumns = firstRow.getOperands().length;
+
+            // 1. check that all rows have the same cols length
+            for (int row = 0; row < numOfRows; row++) {
+                SqlCall thisRow = (SqlCall) operands[row];
+                if (numOfColumns != thisRow.operands.length) {
+                    throw SaffronResource.instance().newIncompatibleValueType(node.getParserPosition().toString());
+                }
+            }
+
+            // 2. check if types at i:th position in each row are compatible
+            for (int col = 0; col < numOfColumns; col++) {
+                SaffronType[] types = new SaffronType[numOfRows];
+                for (int row = 0; row < numOfRows; row++) {
+                    SqlCall thisRow = (SqlCall) operands[row];
+                    types[row] =deriveType(
+                        getScope(node), thisRow.operands[col]);
+                }
+
+                final SaffronType type = SqlOperatorTable.useNullableBiggest.
+                                                    getType(typeFactory, types);
+
+                if (null == type) {
+                    throw SaffronResource.instance().newIncompatibleValueType(node.getParserPosition().toString());
                 }
             }
         }
@@ -1519,28 +1531,30 @@ public class SqlValidator
                 final String columnName = identifier.names[0];
                 final String tableName = findQualifyingTableName(columnName);
                 //todo: do implicit collation here
-                return new SqlIdentifier(new String [] { tableName,columnName },null);
+                return new SqlIdentifier(
+                        new String [] { tableName,columnName },
+                        ParserPosition.ZERO);
             }
             case 2: {
                 final String tableName = identifier.names[0];
                 final Scope fromScope = resolve(tableName, null, null);
                 if (fromScope == null) {
-                    throw newValidationError(
-                        "Table '" + tableName + "' not found");
+                    throw SaffronResource.instance().newTableNameNotFound(
+                            tableName,
+                            identifier.getParserPosition().toString());
                 }
                 final String columnName = identifier.names[1];
                 if (lookupField(fromScope.getRowType(), columnName) != null) {
                     return identifier; // it was fine already
                 } else {
-                    throw newValidationError(
-                        "Column '" + columnName + "' not found in table '"
-                        + tableName + "'");
+                    throw SaffronResource.instance().newColumnNotFoundInTable(
+                            columnName, tableName);
                 }
             }
             default:
                 // NOTE jvs 26-May-2004:  lengths greater than 2 are possible
                 // for row and structured types
-                assert(identifier.names.length > 0);
+                assert identifier.names.length > 0;
                 return identifier;
             }
         }
@@ -1621,15 +1635,13 @@ public class SqlValidator
             switch (count) {
             case 0:
                 if (parent == null) {
-                    throw newValidationError(
-                        "Column '" + columnName + "' not found in any table");
+                    throw SaffronResource.instance().newColNotFound(columnName);
                 }
                 return parent.findQualifyingTableName(columnName);
             case 1:
                 return tableName;
             default:
-                throw newValidationError(
-                    "Column '" + columnName + "' is ambiguous");
+                throw SaffronResource.instance().newColumnAmbiguous(columnName);
             }
         }
 
@@ -1727,7 +1739,7 @@ public class SqlValidator
         {
             table = catalogReader.getTable(id.names);
             if (table == null) {
-                throw newValidationError("Table '" + id + "' not found");
+                throw SaffronResource.instance().newTableNameNotFound(""+id, id.getParserPosition().toString());
             }
             if (shouldExpandIdentifiers()) {
                 // TODO:  expand qualifiers for column references also
@@ -1777,7 +1789,8 @@ public class SqlValidator
                 for (int i = 0; i < call.operands.length; i++) {
                     SqlNode operand = call.operands[i];
                     if (!operand.getKind().isA(SqlKind.Query)) {
-                        throw newValidationError("Operand of UNION/INTERSECT/EXCEPT must be a query: " + operand);
+                        throw SaffronResource.instance().newNeedQueryOp(
+                                ""+operand, operand.getParserPosition().toString());
                     }
                     validateQuery(operand);
                 }

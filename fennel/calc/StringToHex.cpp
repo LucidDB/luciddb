@@ -30,13 +30,19 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 using namespace fennel;
 using namespace std;
 
-
+// returns a hex-coded string
 string 
 stringToHex(char const * const buf)
 {
     assert(buf != NULL);
     uint buflen = strlen(buf);
     return stringToHex(buf, buflen);
+}
+
+string
+stringToHex(string const & s)
+{
+    return stringToHex(s.c_str());
 }
 
 string

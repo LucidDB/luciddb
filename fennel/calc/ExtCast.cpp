@@ -97,6 +97,60 @@ castStrToApproxA(RegisterRef<double>* result,
 }
 
 
+// TODO: cases where the result is smaller than the input could
+// probably benefit from operating by reference instead of by value
+void
+castStrToVarCharA(RegisterRef<char*>* result,
+                  RegisterRef<char*>* src)
+{
+    assert(StandardTypeDescriptor::isTextArray(result->type()));
+    assert(StandardTypeDescriptor::isTextArray(src->type()));
+    
+    if (src->isNull()) {
+        result->toNull();
+        result->length(0);
+    } else {
+        int rightTruncWarning = 0;
+        result->length(SqlStrCastToVarChar<1,1>(result->pointer(),
+                                                result->storage(),
+                                                src->pointer(),
+                                                src->stringLength(),
+                                                &rightTruncWarning));
+        if (rightTruncWarning) {
+            // TODO: throw 22001 as a warning
+//            throw "22001";
+        }
+    }
+}
+
+// TODO: cases where the result is smaller than the input could
+// probably benefit from operating by reference instead of by value
+void
+castStrToCharA(RegisterRef<char*>* result,
+               RegisterRef<char*>* src)
+{
+    assert(StandardTypeDescriptor::isTextArray(result->type()));
+    assert(StandardTypeDescriptor::isTextArray(src->type()));
+    
+    if (src->isNull()) {
+        result->toNull();
+        result->length(0);
+    } else {
+        int rightTruncWarning = 0;
+        result->length(SqlStrCastToChar<1,1>(result->pointer(),
+                                             result->storage(),
+                                             src->pointer(),
+                                             src->stringLength(),
+                                             &rightTruncWarning));
+
+        if (rightTruncWarning) {
+            // TODO: throw 22001 as a warning
+//            throw "22001";
+        }
+    }   
+}
+
+
 void
 ExtCastRegister(ExtendedInstructionTable* eit)
 {
@@ -134,6 +188,22 @@ ExtCastRegister(ExtendedInstructionTable* eit)
     params_1V_1D.push_back(STANDARD_TYPE_VARCHAR);
     params_1V_1D.push_back(STANDARD_TYPE_DOUBLE);
 
+    vector<StandardTypeDescriptorOrdinal> params_1V_1C;
+    params_1V_1C.push_back(STANDARD_TYPE_VARCHAR);
+    params_1V_1C.push_back(STANDARD_TYPE_CHAR);
+
+    vector<StandardTypeDescriptorOrdinal> params_1C_1V;
+    params_1C_1V.push_back(STANDARD_TYPE_CHAR);
+    params_1C_1V.push_back(STANDARD_TYPE_VARCHAR);
+
+    vector<StandardTypeDescriptorOrdinal> params_1V_1V;
+    params_1V_1V.push_back(STANDARD_TYPE_VARCHAR);
+    params_1V_1V.push_back(STANDARD_TYPE_VARCHAR);
+
+    vector<StandardTypeDescriptorOrdinal> params_1C_1C;
+    params_1C_1C.push_back(STANDARD_TYPE_CHAR);
+    params_1C_1C.push_back(STANDARD_TYPE_CHAR);
+
     eit->add("castA", params_1I_1C,
              (ExtendedInstruction2<int64_t, char*>*) NULL,
              &castStrToExactA);
@@ -161,6 +231,20 @@ ExtCastRegister(ExtendedInstructionTable* eit)
     eit->add("castA", params_1V_1D,
              (ExtendedInstruction2<char*, double>*) NULL,
              &castApproxToStrA);
+
+    eit->add("castA", params_1C_1V,
+             (ExtendedInstruction2<char*, char*>*) NULL,
+             &castStrToCharA);
+    eit->add("castA", params_1C_1C,
+             (ExtendedInstruction2<char*, char*>*) NULL,
+             &castStrToCharA);
+
+    eit->add("castA", params_1V_1C,
+             (ExtendedInstruction2<char*, char*>*) NULL,
+             &castStrToVarCharA);
+    eit->add("castA", params_1V_1V,
+             (ExtendedInstruction2<char*, char*>*) NULL,
+             &castStrToVarCharA);
 }
 
 

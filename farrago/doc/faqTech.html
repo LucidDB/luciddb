@@ -32,7 +32,8 @@ the exception and look at the tail of file
 
 <hr>
 
-<h2>How do I get a Fennel C++ stack trace?  How do I debug Fennel?</h2> 
+<h2>How do I get a Fennel C++ stack trace?  How do I debug Fennel
+when it's called from Java?</h2> 
 
 At the moment, there's no nice automated stack trace like in Java
 (besides a standard core dump).  However, it is possible to use gdb to
@@ -56,6 +57,44 @@ to <code>sleep()</code> to end prematurely.  In this case, set
 <code>FENNEL_JNI_DEBUG=2</code> and use the gdb command <code>signal
 SIGHUP</code> or <code>signal 1</code> to end the call to
 <code>pause()</code> in <code>JNI_OnLoad</code>.
+
+<hr>
+
+<h2>How do I trace the Fennel C++ unit tests?</h2> 
+
+In directory <code>fennel/test</code>, create a file named
+<code>trace.cfg</code> containing a single line:
+
+<pre><code>
+testTraceLevel 300
+</code></pre>
+
+When you run the test you want to trace, specify this file as an
+argument to the executable, e.g.
+
+<pre><code>
+$ TupleTest trace.cfg
+Running 4 test cases...
+
+*** No errors detected
+
+$ head TupleTest_trace.log
+[TupleTest] ENTER:  testStandardTypesNotNull
+...
+</code></pre>
+
+By default, the output goes to a file based on the test name as shown
+above.  There are other test parameters (TODO: document) besides
+<code>testTraceLevel</code>; e.g. <code>testTraceFileName</code>
+controls where the trace file is written.
+
+<p>
+
+The level 300 corresponds to FINEST in <code>java.util.logging</code>.
+To use a different level, see the <code>TraceTarget</code> enum in
+<code>fennel/common/TraceTarget.h</code>.  There is not currently a
+way to specify different trace levels for different components (as is
+possible when tracing from Java).
 
 <hr>
 
@@ -143,23 +182,35 @@ disk individually (guaranteeing that it will be visible after a
 crash).
 
 <hr>
-<h2>JSwat is complaining about UnknownHostException or Socket transport error, What do I do?</h2>
 
-To solve the UnknownHostException, add the hostname of your computer to /etc/hosts. E.g<br>
+<h2>JSwat is complaining about UnknownHostException or Socket
+transport error; what do I do?</h2>
+
+To solve the UnknownHostException, add the hostname of your computer
+to <code>/etc/hosts</code>, e.g.
+
+<br>
+
 <blockquote><code>
 127.0.0.1	localhost<br>
 192.168.0.2	myHostName
 </code></blockquote>
 
-Run (as root) <code>service network restart</code> and try running jswat again. For non redhat users the <code>service</code> command might not be available.
+On Red Hat, run (as root) <code>service network restart</code> and try running
+jswat again.  
+
 <p>
-If you get a <code>Socket transport failed to init</code> error when running jswat, make sure that the hostname you specified in /etc/hosts maps to the right ip address.
-Use <code>ifconfig</code> to get your ip address.
+
+If you get a <code>Socket transport failed to init</code> error when
+running jswat, make sure that the hostname you specified in
+<code>/etc/hosts</code> maps to the right ip address.  Use
+<code>ifconfig</code> to get your ip address.
 
 <hr>
 <h2>All the Farrago tests pass except the FarragoServerTest, what may be wrong?</h2> 
 
-Check the ip address assigned to your hostname is correct in the etc/hosts.
+Check that the IP address assigned to your hostname is correct in
+<code>etc/hosts</code>.
 
 Use <code>ifconfig</code> to get your ip address.
 <hr>

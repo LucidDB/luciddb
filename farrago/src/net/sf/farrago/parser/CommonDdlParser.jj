@@ -15,14 +15,13 @@ SqlIdentifier CompoundIdentifier2() :
     {return new SqlIdentifier(ParserUtil.toStringArray(list),null);}
 }
 
-String SimpleStringLiteral() :
+String QuotedString() :
 {
     Token t;
 }
 {
-    t = <STRING_LITERAL>
+    t = <QUOTED_STRING>
     {
-      // TODO:  combine with CommonParser.jj
       return ParserUtil.parseString(t.image);
     }
 }
@@ -870,7 +869,7 @@ FemDataWrapper DataWrapperDefinition() :
                     FarragoCatalog.SYSBOOT_CATALOG_NAME));
             wrapper.setForeign(isForeign);
         }
-    <LIBRARY> libraryFile = SimpleStringLiteral()
+    <LIBRARY> libraryFile = QuotedString()
         {
             wrapper.setLibraryFile(libraryFile);
         }
@@ -934,13 +933,13 @@ FemDataServer DataServerDefinition() :
                     FarragoCatalog.SYSBOOT_CATALOG_NAME));
         }
     [
-        <TYPE> serverType = SimpleStringLiteral() 
+        <TYPE> serverType = QuotedString() 
         {
             server.setType(serverType);
         }
     ]
     [
-        <VERSION> serverVersion = SimpleStringLiteral() 
+        <VERSION> serverVersion = QuotedString() 
         {
             server.setVersion(serverVersion);
         }
@@ -1057,7 +1056,7 @@ void StorageOption(FemElementWithStorageOptions element) :
     name = SimpleIdentifier()
         {
         }
-    value = SimpleStringLiteral()
+    value = QuotedString()
         {
         }
     {

@@ -104,7 +104,7 @@
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
-[0]:PC=1 Code=22003 (state=,code=0)
+[0]:PC=0 Code=22018 (state=,code=0)
 0: jdbc:farrago:> insert into t_int values(TRUE,null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'BOOLEAN' to 'INTEGER' (state=,code=0)
 0: jdbc:farrago:> insert into t_int values(10e400,null);

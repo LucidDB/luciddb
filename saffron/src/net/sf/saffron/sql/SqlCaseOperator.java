@@ -140,8 +140,7 @@ public abstract class SqlCaseOperator extends SqlOperator
             //should throw validation error if something wrong...
             SaffronType type = validator.deriveType(scope,node);
             if (!boolType.isSameType(type)) {
-                //todo add postition data
-                throw validator.newValidationError("Expected a boolean type");
+                throw SaffronResource.instance().newExpectedBoolean(node.getParserPosition().toString());
             }
         }
 
@@ -160,8 +159,7 @@ public abstract class SqlCaseOperator extends SqlOperator
         if (!foundNotNull) {
             // according to the sql standard we can not have all of the THEN
             // statements and the ELSE returning null
-            throw validator.newValidationError(
-                    "ELSE clause or at least one THEN clause must be non-NULL");
+            throw SaffronResource.instance().newMustNotNullInElse();
         }
     }
 
@@ -189,8 +187,8 @@ public abstract class SqlCaseOperator extends SqlOperator
                 validator.typeFactory, argTypes);
         if (null == ret) {
             //todo use position data when available
-            throw SaffronResource.instance().newValidationError(
-                    "Illegal mixing of types");
+            throw SaffronResource.instance().newIllegalMixingOfTypes(
+                    call.getParserPosition().toString());
         }
         for (int i = 0; i < nullList.size(); i++) {
             SqlNode node = (SqlNode) nullList.get(i);
@@ -215,8 +213,8 @@ public abstract class SqlCaseOperator extends SqlOperator
         return ret;
     }
 
-    public int getNumOfOperands(int desiredCount) {
-        return desiredCount;
+    public SqlOperator.OperandsCountDescriptor getOperandsCountDescriptor() {
+        return OperandsCountDescriptor.variadic;
     }
 
     public SqlSyntax getSyntax()

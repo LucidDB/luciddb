@@ -557,74 +557,97 @@ public class FarragoDbSession
         FarragoSessionViewInfo viewInfo)
     {
         tracer.info(sql);
-        FarragoReposTxnContext reposTxnContext =
-            new FarragoReposTxnContext(catalog);
 
-        // TODO jvs 21-June-2004: It would be preferable to start with a read
-        // lock and only upgrade to write once we know we're dealing with DDL.
-        // However, at the moment that doesn't work because a write txn is
-        // required for creating transient objects.  And MDR doesn't support
-        // upgrade.  It might be possible to reorder catalog access to solve
-        // this.
-        reposTxnContext.beginWriteTxn();
+        // TODO jvs 11-Aug-2004:  Get rid of this big mutex.  It needs to stay
+        // until we have proper object-level DDL-locking.  For now the
+        // contention is the same as that due to the TODO below since the
+        // MDR write lock is exclusive.
+        synchronized(database.DDL_LOCK) {
+            FarragoReposTxnContext reposTxnContext =
+                new FarragoReposTxnContext(catalog);
 
-        boolean rollback = true;
-        FarragoSessionStmtValidator stmtValidator = newStmtValidator();
-        try {
+            // TODO jvs 21-June-2004: It would be preferable to start with a
+            // read lock and only upgrade to write once we know we're dealing
+            // with DDL.  However, at the moment that doesn't work because a
+            // write txn is required for creating transient objects.  And MDR
+            // doesn't support upgrade.  It might be possible to reorder
+            // catalog access to solve this.
+            reposTxnContext.beginWriteTxn();
 
-            // REVIEW: For !isExecDirect, maybe should disable all DDL
-            // validation: just parse, because the catalog may change by the
-            // time the statement is executed.  Also probably need to disallow
-            // some types of prepared DDL.
-
-            FarragoSessionDdlValidator ddlValidator =
-                newDdlValidator(stmtValidator);
-            FarragoSessionParser parser = stmtValidator.getParser();
-            Object parsedObj = parser.parseSqlStatement(
-                ddlValidator,
-                sql);
-            if (parsedObj instanceof SqlNode) {
-                SqlNode sqlNode = (SqlNode) parsedObj;
-                rollback = false;
-                ddlValidator.closeAllocation();
-                ddlValidator = null;
-                validate(sqlNode);
-                FarragoSessionExecutableStmt stmt =
-                    database.prepareStmt(
-                        stmtValidator,
-                        sqlNode,
-                        owner,
-                        viewInfo);
-                if (isExecDirect
-                    && (stmt.getDynamicParamRowType().getFieldCount() > 0))
-                {
-                    owner.closeAllocation();
-                    throw FarragoResource.instance().
-                        newSessionNoExecuteImmediateParameters(sql);
+            boolean [] pRollback = new boolean[1];
+            pRollback[0] = true;
+            FarragoSessionStmtValidator stmtValidator = newStmtValidator();
+            FarragoSessionExecutableStmt stmt = null;
+            try {
+                stmt = prepareImpl(
+                    sql,owner,isExecDirect,viewInfo,stmtValidator,
+                    reposTxnContext,pRollback);
+            } finally {
+                if (stmtValidator != null) {
+                    stmtValidator.closeAllocation();
                 }
-                return stmt;
+                if (pRollback[0]) {
+                    tracer.fine("rolling back DDL");
+                    reposTxnContext.rollback();
+                } else {
+                    reposTxnContext.commit();
+                }
             }
-            if (!isExecDirect) {
-                return null;
-            }
-
-            executeDdl(
-                ddlValidator,
-                reposTxnContext,
-                (FarragoSessionDdlStmt) parsedObj);
-
-            rollback = false;
-        } finally {
-            if (stmtValidator != null) {
-                stmtValidator.closeAllocation();
-            }
-            if (rollback) {
-                tracer.fine("rolling back DDL");
-                reposTxnContext.rollback();
-            } else {
-                reposTxnContext.commit();
-            }
+            return stmt;
         }
+    }
+
+    private FarragoSessionExecutableStmt prepareImpl(
+        String sql,
+        FarragoAllocationOwner owner,
+        boolean isExecDirect,
+        FarragoSessionViewInfo viewInfo,
+        FarragoSessionStmtValidator stmtValidator,
+        FarragoReposTxnContext reposTxnContext,
+        boolean [] pRollback)
+    {
+        // REVIEW: For !isExecDirect, maybe should disable all DDL
+        // validation: just parse, because the catalog may change by the
+        // time the statement is executed.  Also probably need to disallow
+        // some types of prepared DDL.
+
+        FarragoSessionDdlValidator ddlValidator =
+            newDdlValidator(stmtValidator);
+        FarragoSessionParser parser = stmtValidator.getParser();
+        Object parsedObj = parser.parseSqlStatement(
+            ddlValidator,
+            sql);
+        if (parsedObj instanceof SqlNode) {
+            SqlNode sqlNode = (SqlNode) parsedObj;
+            pRollback[0] = false;
+            ddlValidator.closeAllocation();
+            ddlValidator = null;
+            validate(sqlNode);
+            FarragoSessionExecutableStmt stmt =
+                database.prepareStmt(
+                    stmtValidator,
+                    sqlNode,
+                    owner,
+                    viewInfo);
+            if (isExecDirect
+                && (stmt.getDynamicParamRowType().getFieldCount() > 0))
+            {
+                owner.closeAllocation();
+                throw FarragoResource.instance().
+                    newSessionNoExecuteImmediateParameters(sql);
+            }
+            return stmt;
+        }
+        if (!isExecDirect) {
+            return null;
+        }
+
+        executeDdl(
+            ddlValidator,
+            reposTxnContext,
+            (FarragoSessionDdlStmt) parsedObj);
+
+        pRollback[0] = false;
         return null;
     }
 

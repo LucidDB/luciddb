@@ -21,14 +21,16 @@
 package net.sf.saffron.sql.parser;
 
 import net.sf.saffron.resource.SaffronResource;
-import net.sf.saffron.sql.SqlNode;
+import net.sf.saffron.sql.*;
 import net.sf.saffron.util.SaffronProperties;
 import net.sf.saffron.util.Util;
+import net.sf.saffron.trace.SaffronTrace;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.util.*;
+import java.util.logging.Logger;
 import java.text.NumberFormat;
 
 
@@ -40,6 +42,7 @@ import java.text.NumberFormat;
  * @version $Id$
  **/
 public final class ParserUtil {
+    static final Logger tracer = SaffronTrace.getParserTracer();
     public static final String[] emptyStringArray = new String[0];
     public static final SqlNode[] emptySqlNodeArray = new SqlNode[0];
     public static final List emptyList = Collections.EMPTY_LIST;
@@ -312,6 +315,221 @@ public final class ParserUtil {
             return s.substring(0,stop);
         }
         return "";
+    }
+
+    /**
+     * Replaces a range of elements in a list with a single element.
+     * For example, if list contains <code>{A, B, C, D, E}</code> then
+     * <code>replaceSublist(list, X, 1, 4)</code> returns
+     * <code>{A, X, E}</code>.
+     */
+    public static void replaceSublist(List list, int start, int end,
+            Object o) {
+        Util.pre(list != null, "list != null");
+        Util.pre(start < end, "start < end");
+        for (int i = end - 1; i > start; --i) {
+            list.remove(i);
+        }
+        list.set(start, o);
+    }
+
+    /**
+     * Converts a list of {expression, operator, expression, ...} into a tree,
+     * taking operator precedence and associativity into account.
+     *
+     * @pre list.size() % 2 == 1
+     */
+    public static SqlNode toTree(List list)
+    {
+        tracer.finer("Attempting to reduce " + list);
+        final SqlNode node = toTreeEx(list, 0, 0, SqlKind.Other);
+        tracer.fine("Reduced " + node);
+        return node;
+    }
+
+    /**
+     * Converts a list of {expression, operator, expression, ...} into a tree,
+     * taking operator precedence and associativity into account.
+     *
+     * @param list List of operands and operators. This list is modified as
+     *     expressions are reduced.
+     * @param start Position of first operand in the list. Anything to the
+     *     left of this (besides the immediately preceding operand) is ignored.
+     *     Generally use value 1.
+     * @param minPrec Minimum precedence to consider. If the method encounters
+     *     an operator of lower precedence, it doesn't reduce any further.
+     * @param stopperKind If not {@link SqlKind#Other}, stop reading the list
+     *     if we encounter a token of this kind.
+     * @return
+     */
+    public static SqlNode toTreeEx(List list, int start, int minPrec,
+            SqlKind stopperKind) {
+        // Make several passes over the list, and each pass, coalesce the
+        // expressions with the highest precedence.
+        outer:
+        while (true) {
+            final int count = list.size();
+            if (count <= start + 1) {
+                break;
+            }
+            int i = start + 1;
+            while (i < count) {
+                SqlOperator previous;
+                SqlOperator current = ((ToTreeListItem) list.get(i)).op;
+                ParserPosition currentPos = ((ToTreeListItem) list.get(i)).pos;
+                if (stopperKind != SqlKind.Other &&
+                        current.kind == stopperKind) {
+                    break outer;
+                }
+                SqlOperator next;
+                int previousRight;
+                int left = current.leftPrec;
+                int right = current.rightPrec;
+                if (left < minPrec) {
+                    break outer;
+                }
+                int nextLeft;
+                if (current instanceof SqlBinaryOperator) {
+                    if (i == start + 1) {
+                        previous = null;
+                        previousRight = 0;
+                    } else {
+                        previous = ((ToTreeListItem) list.get(i - 2)).op;
+                        previousRight = previous.rightPrec;
+                    }
+                    if (i == (count - 2)) {
+                        next = null;
+                        nextLeft = 0;
+                    } else {
+                        next = ((ToTreeListItem) list.get(i + 2)).op;
+                        nextLeft = next.leftPrec;
+                        if (next.kind == stopperKind &&
+                                stopperKind != SqlKind.Other) {
+                            // Suppose we're looking at 'AND' in
+                            //    a BETWEEN b OR c AND d
+                            //
+                            // Because 'AND' is our stopper token, we still
+                            // want to reduce 'b OR c', even though 'AND' has
+                            // higher precedence than 'OR'.
+                            nextLeft = 0;
+                        }
+                    }
+                    if (previousRight < left && right >= nextLeft) {
+                        // For example,
+                        //    i:  0 1 2 3 4 5 6 7 8
+                        // list:  a + b * c * d + e
+                        // prec: 0 1 2 3 4 3 4 1 2 0
+                        //
+                        // At i == 3, we have the first '*' operator, and its
+                        // surrounding precedences obey the relation 2 < 3 and
+                        // 4 >= 3, so we can reduce (b * c) to a single node.
+                        SqlNode leftExp = (SqlNode) list.get(i - 1);
+
+                        // For example,
+                        //    i:  0 1 2 3 4 5 6 7 8
+                        // list:  a + b * c * d + e
+                        // prec: 0 1 2 3 4 3 4 1 2 0
+                        //
+                        // At i == 3, we have the first '*' operator, and its
+                        // surrounding precedences obey the relation 2 < 3 and
+                        // 4 >= 3, so we can reduce (b * c) to a single node.
+                        SqlNode rightExp = (SqlNode) list.get(i + 1);
+                        final SqlCall newExp =
+                            current.createCall(leftExp,rightExp,currentPos);
+                        tracer.fine("Reduced infix: " + newExp);
+                        // Replace elements {i - 1, i, i + 1} with the new
+                        // expression.
+                        replaceSublist(list, i - 1, i + 2, newExp);
+                        break;
+                    }
+                    i += 2;
+                } else if (current instanceof SqlPostfixOperator) {
+                    if (i == start + 1) {
+                        previous = null;
+                        previousRight = 0;
+                    } else {
+                        previous = ((ToTreeListItem) list.get(i - 2)).op;
+                        previousRight = previous.rightPrec;
+                    }
+                    if (previousRight < left) {
+                        // For example,
+                        //    i:  0 1 2 3 4 5 6 7 8
+                        // list:  a + b * c ! + d
+                        // prec: 0 1 2 3 4 3 0 2
+                        //
+                        // At i == 3, we have the postfix '!' operator. Its
+                        // high precedence determines that it binds with 'b *
+                        // c'. The precedence of the following '+' operator is
+                        // irrelevant.
+                        SqlNode leftExp = (SqlNode) list.get(i - 1);
+
+                        final SqlCall newExp = current.createCall(leftExp,currentPos);
+                        tracer.fine("Reduced postfix: " + newExp);
+
+                        // Replace elements {i - 1, i} with the new expression.
+                        list.remove(i);
+                        list.set(i - 1,newExp);
+                        break;
+                    }
+                    ++i;
+                    //
+                } else if (current instanceof SqlSpecialOperator) {
+                    SqlSpecialOperator specOp = (SqlSpecialOperator) current;
+                    // We decide to reduce a special operator only on the basis
+                    // of what's to the left of it. The operator then decides
+                    // how far to the right to chew off.
+                    if (i == start + 1) {
+                        previous = null;
+                        previousRight = 0;
+                    } else {
+                        previous = ((ToTreeListItem) list.get(i - 2)).op;
+                        previousRight = previous.rightPrec;
+                    }
+                    int nextOrdinal = i + 2;
+                    if (i == (count - 2)) {
+                        next = null;
+                        nextLeft = 0;
+                    } else {
+                        next = ((ToTreeListItem) list.get(nextOrdinal)).op;
+                        nextLeft = next.leftPrec;
+                        if (stopperKind != SqlKind.Other &&
+                                next.kind == stopperKind) {
+                            break outer;
+                        }
+                    }
+                    if (nextLeft < minPrec) {
+                        break outer;
+                    }
+                    if (previousRight < left && right >= nextLeft) {
+                        i = specOp.reduceExpr(i, list);
+                        tracer.fine("Reduced special op: " + list.get(i));
+                        break;
+                    }
+                    i = nextOrdinal;
+                } else {
+                    throw Util.newInternal("Unexpected operator type: " +
+                            current);
+                }
+            }
+            // Require the list shrinks each time around -- otherwise we will
+            // never terminate.
+            assert list.size() < count;
+        }
+        return (SqlNode) list.get(start);
+    }
+
+    /**
+     * Class that holds a {@link SqlOperator} and a {@link ParserPosition}.
+     * Used by {@link #toTree} and the parser to associate a parsed operator
+     * with a parser position.
+     */
+    public static class ToTreeListItem {
+        public SqlOperator op;
+        public ParserPosition pos;
+        public ToTreeListItem(SqlOperator op, ParserPosition pp) {
+            this.op = op;
+            this.pos = pp;
+        }
     }
 }
 

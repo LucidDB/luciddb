@@ -29,6 +29,7 @@
 #include <string>
 #include <limits>
 #include <iostream>
+#include <math.h>
 
 #ifdef HAVE_ICU
 #include <unicode/unistr.h>
@@ -74,6 +75,12 @@ class SqlStringTest : virtual public TestBase, public TraceSource
     void testSqlStringSubStr();
     void testSqlStringAlterCase();
     void testSqlStringTrim();
+    void testSqlStringCastToExact();
+    void testSqlStringCastToApprox();
+    void testSqlStringCastFromExact();
+    void testSqlStringCastFromApprox();
+    void testSqlStringCastToVarChar();
+    void testSqlStringCastToChar();
 
     void appendCharsToUCS2LikeString(string& str,
                                      int number,
@@ -117,6 +124,18 @@ class SqlStringTest : virtual public TestBase, public TraceSource
                                   int leftpad,
                                   int rightpad,
                                   int action);
+
+    void testSqlStringCastToExact_Helper(uint64_t value,
+                                         char const * const buf,
+                                         int src_storage,
+                                         int src_len,
+                                         bool exceptionExpected);
+
+    void testSqlStringCastToApprox_Helper(double value,
+                                          char const * const buf,
+                                          int src_storage,
+                                          int src_len,
+                                          bool exceptionExpected);
 #ifdef HAVE_ICU
     string UnicodeToPrintable(const UnicodeString &s);
 #endif
@@ -146,6 +165,12 @@ public:
         FENNEL_UNIT_TEST_CASE(SqlStringTest, testSqlStringSubStr);
         FENNEL_UNIT_TEST_CASE(SqlStringTest, testSqlStringAlterCase);
         FENNEL_UNIT_TEST_CASE(SqlStringTest, testSqlStringTrim);
+        FENNEL_UNIT_TEST_CASE(SqlStringTest, testSqlStringCastToExact);
+        FENNEL_UNIT_TEST_CASE(SqlStringTest, testSqlStringCastToApprox);
+        FENNEL_UNIT_TEST_CASE(SqlStringTest, testSqlStringCastFromExact);
+        FENNEL_UNIT_TEST_CASE(SqlStringTest, testSqlStringCastFromApprox);
+        FENNEL_UNIT_TEST_CASE(SqlStringTest, testSqlStringCastToVarChar);
+        FENNEL_UNIT_TEST_CASE(SqlStringTest, testSqlStringCastToChar);
     }
     
     virtual ~SqlStringTest()
@@ -163,7 +188,7 @@ SqlStringTest::UnicodeToPrintable(const UnicodeString &s) {
     
     // output the code units (not code points)
     length = s.length();
-    for(i=0; i<length; ++i) {
+    for (i=0; i<length; ++i) {
         tmp = s.charAt(i) & 0xff;
         o << i << "=" << tmp << " | ";
     }
@@ -219,12 +244,12 @@ SqlStringTest::testSqlStringBuffer_Ascii()
 
                 char *p = t.mLeftP;
                 // left bumper
-                for(k = 0; k < leftbump; k++) {
+                for (k = 0; k < leftbump; k++) {
                     BOOST_CHECK_EQUAL(*(p++), SqlStringBuffer::mBumperChar);
                 }
                 BOOST_CHECK(p == t.mStr);
                 // left padding
-                for(k = 0; k < leftpad; k++) {
+                for (k = 0; k < leftpad; k++) {
                     BOOST_CHECK_EQUAL(*(p++), ' ');
                 }
                 // text
@@ -232,19 +257,19 @@ SqlStringTest::testSqlStringBuffer_Ascii()
                     BOOST_CHECK_EQUAL(*(p++), 'x');
                 }
                 // right padding
-                for(k = 0; k < rightpad; k++) {
+                for (k = 0; k < rightpad; k++) {
                     BOOST_CHECK_EQUAL(*(p++), ' ');
                 }
                 BOOST_CHECK(p == t.mRightP);
                 // right bumper
-                for(k = 0; k < rightbump; k++) {
+                for (k = 0; k < rightbump; k++) {
                     BOOST_CHECK_EQUAL(*(p++), SqlStringBuffer::mBumperChar);
                 }
                 BOOST_CHECK_EQUAL(static_cast<int>(p - t.mLeftP), storage+leftbump+rightbump);
         
                 BOOST_CHECK(t.verify());
 
-                for(k = 0; k < size; k++) {
+                for (k = 0; k < size; k++) {
                     *(t.mStr+k) = '0' + (k % 10);
                 }
                 BOOST_CHECK(t.verify());
@@ -324,12 +349,12 @@ SqlStringTest::testSqlStringBuffer_UCS2()
 
                 char *p = b.mLeftP;
                 // left bumper
-                for(k = 0; k < leftbump; k++) {
+                for (k = 0; k < leftbump; k++) {
                     BOOST_CHECK_EQUAL(*(p++), SqlStringBuffer::mBumperChar);
                 }
                 BOOST_CHECK(p == b.mStr);
                 // left padding
-                for(k = 0; k < leftpad; k++) {
+                for (k = 0; k < leftpad; k++) {
                     BOOST_CHECK_EQUAL(*(p++), spaceChar1);
                     BOOST_CHECK_EQUAL(*(p++), spaceChar2);
                 }
@@ -339,13 +364,13 @@ SqlStringTest::testSqlStringBuffer_UCS2()
                     BOOST_CHECK_EQUAL(*(p++), textChar2);
                 }
                 // right padding
-                for(k = 0; k < rightpad; k++) {
+                for (k = 0; k < rightpad; k++) {
                     BOOST_CHECK_EQUAL(*(p++), spaceChar1);
                     BOOST_CHECK_EQUAL(*(p++), spaceChar2);
                 }
                 BOOST_CHECK(p == b.mRightP);
                 // right bumper
-                for(k = 0; k < rightbump; k++) {
+                for (k = 0; k < rightbump; k++) {
                     BOOST_CHECK_EQUAL(*(p++), SqlStringBuffer::mBumperChar);
                 }
                 BOOST_CHECK_EQUAL(static_cast<int>(p - b.mLeftP),
@@ -354,7 +379,7 @@ SqlStringTest::testSqlStringBuffer_UCS2()
                 BOOST_CHECK(b.verify());
 
                 p = b.mStr;
-                for(k = 0; k < size; k++) {
+                for (k = 0; k < size; k++) {
                     *(p++) = 0x00;
                     *(p++) = '0' + (k % 10);
 
@@ -367,7 +392,6 @@ SqlStringTest::testSqlStringBuffer_UCS2()
         }
     }
 }
-
 
 // Test catting 3 fixed width strings together as proof-of-concept
 void
@@ -403,14 +427,14 @@ SqlStringTest::testSqlStringCat_Fix()
                                     newlen = SqlStrCat(dst.mStr, dst_storage,
                                                        src1.mStr, src1_storage,
                                                        src2.mStr, src2_storage);
-                                } catch(const char *str) {
+                                } catch (const char *str) {
                                     caught = true;
                                     BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
                                     BOOST_CHECK(src1_storage + src2_storage > dst_storage);
                                     BOOST_CHECK(dst.verify());
                                     BOOST_CHECK(src1.verify());
                                     BOOST_CHECK(src2.verify());
-                                } catch(...) {
+                                } catch (...) {
                                     // unexpected exception
                                     BOOST_CHECK(false);
                                 }
@@ -427,7 +451,7 @@ SqlStringTest::testSqlStringCat_Fix()
                                                            newlen,
                                                            src3.mStr,
                                                            src3_storage);
-                                    } catch(const char *str) {
+                                    } catch (const char *str) {
                                         caught = true;
                                         BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
                                         BOOST_CHECK((src1_storage + 
@@ -437,7 +461,7 @@ SqlStringTest::testSqlStringCat_Fix()
                                         BOOST_CHECK(src1.verify());
                                         BOOST_CHECK(src2.verify());
                                         BOOST_CHECK(src3.verify());
-                                    } catch(...) {
+                                    } catch (...) {
                                         // unexpected exception
                                         BOOST_CHECK(false);
                                     }
@@ -500,11 +524,11 @@ SqlStringTest::testSqlStringCat_Var2()
                                                src1_len,
                                                src2.mStr,
                                                src2_len);
-                        } catch(const char *str) {
+                        } catch (const char *str) {
                             caught = true;
                             BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
                             BOOST_CHECK(src1_len + src2_len > dst_storage);
-                        } catch(...) {
+                        } catch (...) {
                             // unexpected exception
                             BOOST_CHECK(false);
                         }
@@ -556,11 +580,11 @@ SqlStringTest::testSqlStringCat_Var()
                                            dst_len,
                                            src.mStr,
                                            src_len);
-                    } catch(const char *str) {
+                    } catch (const char *str) {
                         caught = true;
                         BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
                         BOOST_CHECK(src_len + dst_len > dst_storage);
-                    } catch(...) {
+                    } catch (...) {
                         // unexpected exception
                         BOOST_CHECK(false);
                     }
@@ -607,11 +631,11 @@ SqlStringTest::testSqlStringCpy_Fix()
                                            dst_storage,
                                            src.mStr,
                                            src_len);
-                    } catch(const char *str) {
+                    } catch (const char *str) {
                         caught = true;
                         BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
                         BOOST_CHECK(src_len > dst_storage);
-                    } catch(...) {
+                    } catch (...) {
                         // unexpected exception
                         BOOST_CHECK(false);
                     }
@@ -647,11 +671,11 @@ SqlStringTest::testSqlStringCpy_Fix()
                                            dstU2.mStorage,
                                            srcU2.mStr,
                                            srcU2.mSize);
-                    } catch(const char *str) {
+                    } catch (const char *str) {
                         caught = true;
                         BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
                         BOOST_CHECK(srcU2.mSize > dstU2.mStorage);
-                    } catch(...) {
+                    } catch (...) {
                         // unexpected exception
                         BOOST_CHECK(false);
                     }
@@ -712,11 +736,11 @@ SqlStringTest::testSqlStringCpy_Var()
                                                dst_storage,
                                                src.mStr,
                                                src_len);
-                    } catch(const char *str) {
+                    } catch (const char *str) {
                         caught = true;
                         BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
                         BOOST_CHECK(src_len > dst_storage);
-                    } catch(...) {
+                    } catch (...) {
                         // unexpected exception
                         BOOST_CHECK(false);
                     }
@@ -744,11 +768,11 @@ SqlStringTest::testSqlStringCpy_Var()
                                                dstU2.mStorage,
                                                srcU2.mStr,
                                                srcU2.mSize);
-                    } catch(const char *str) {
+                    } catch (const char *str) {
                         caught = true;
                         BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
                         BOOST_CHECK(srcU2.mSize > dstU2.mStorage);
-                    } catch(...) {
+                    } catch (...) {
                         // unexpected exception
                         BOOST_CHECK(false);
                     }
@@ -1207,7 +1231,7 @@ SqlStringTest::testSqlStringOverlay()
                                                         position,
                                                         length,
                                                         lenSpecified);
-                        } catch(const char *str) {
+                        } catch (const char *str) {
                             caught = true;
                             if (!strcmp(str, "22011")) {
                                 BOOST_CHECK(position < 1 || (lenSpecified && length < 1));
@@ -1359,7 +1383,7 @@ SqlStringTest::testSqlStringSubStr()
                             newlen = SqlStrSubStr<1,1>(&resultP, dst_storage,
                                                        src.mStr, src_storage,
                                                        sub_start, sub_len, true);
-                        } catch(const char *str) {
+                        } catch (const char *str) {
                             caught = true;
                             if (!strcmp(str, "22011")) {
                                 BOOST_CHECK(sub_len < 0);
@@ -1392,7 +1416,7 @@ SqlStringTest::testSqlStringSubStr()
                                 newlen = SqlStrSubStr<1,1>(&resultP, dst_storage,
                                                            src.mStr, src_storage,
                                                            sub_start, 0, false);
-                            } catch(const char *str) {
+                            } catch (const char *str) {
                                 caught = true;
                                 if (!strcmp(str, "22011")) {
                                     BOOST_CHECK(sub_len < 0);
@@ -1455,11 +1479,11 @@ SqlStringTest::testSqlStringAlterCase_Ascii(int dst_storage,
             BOOST_REQUIRE(0);
             break;
         }        
-    } catch(const char *str) {
+    } catch (const char *str) {
         caught = true;
         BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
         BOOST_CHECK(src_len > dst_storage);
-    } catch(...) {
+    } catch (...) {
         // unexpected exception
         BOOST_CHECK(false);
     }
@@ -1524,11 +1548,11 @@ SqlStringTest::testSqlStringAlterCase_UCS2(int dst_storage,
             break;
         }
         
-    } catch(const char *str) {
+    } catch (const char *str) {
         caught = true;
         BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
         BOOST_CHECK(src_len > dst_storage);
-    } catch(...) {
+    } catch (...) {
         // unexpected exception
         BOOST_CHECK(false);
     }
@@ -1660,16 +1684,15 @@ SqlStringTest::testSqlStringTrim_Helper(int dst_storage,
 {
     int expectsize, expectsizeU2;
     string expect, expectU2;
-    // REVIEW jvs 7-Aug-2004:  are these booleans or ints?
-    int lefttrim = false, righttrim = false;
+    int lefttrim = 0, righttrim = 0;
     char padchar = ' ';
     char textchar = 's';
     bool caught;
     
     switch(action) {
     case 0:
-        lefttrim = true;
-        righttrim = true;
+        lefttrim = 1;
+        righttrim = 1;
         expect.append(src_len, textchar);
         expectsize = src_len;
         appendCharsToUCS2LikeString(expectU2,
@@ -1677,8 +1700,8 @@ SqlStringTest::testSqlStringTrim_Helper(int dst_storage,
                                     textchar);
         break;
     case 1:
-        lefttrim = true;
-        righttrim = false;
+        lefttrim = 1;
+        righttrim = 0;
         expect.append(src_len, textchar);
         appendCharsToUCS2LikeString(expectU2,
                                     src_len,
@@ -1693,8 +1716,8 @@ SqlStringTest::testSqlStringTrim_Helper(int dst_storage,
         expectsize = src_len + (src_len ? rightpad : 0);
         break;
     case 2:
-        lefttrim = false;
-        righttrim = true;
+        lefttrim = 0;
+        righttrim = 1;
         // if no text, everything is trimmed
         if (src_len) {
             expect.append(leftpad, padchar);
@@ -1709,8 +1732,8 @@ SqlStringTest::testSqlStringTrim_Helper(int dst_storage,
         expectsize = src_len + (src_len ? leftpad : 0);
         break;
     case 3:
-        lefttrim = false;
-        righttrim = false;
+        lefttrim = 0;
+        righttrim = 0;
         expect.append(leftpad, padchar);
         expect.append(src_len, textchar);
         expect.append(rightpad, padchar);
@@ -1750,11 +1773,11 @@ SqlStringTest::testSqlStringTrim_Helper(int dst_storage,
                             src_len + leftpad + rightpad,
                             lefttrim,
                             righttrim);
-    } catch(const char *str) {
+    } catch (const char *str) {
         caught = true;
         BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
         BOOST_CHECK(expectsize > dst_storage);
-    } catch(...) {
+    } catch (...) {
         // unexpected exception
         BOOST_CHECK(false);
     }
@@ -1784,11 +1807,11 @@ SqlStringTest::testSqlStringTrim_Helper(int dst_storage,
                              srcU2.mRightPad),
                             lefttrim,
                             righttrim);
-    } catch(const char *str) {
+    } catch (const char *str) {
         caught = true;
         BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
         BOOST_CHECK(expectsize > dst_storage);
-    } catch(...) {
+    } catch (...) {
         // unexpected exception
         BOOST_CHECK(false);
     }
@@ -1873,6 +1896,868 @@ SqlStringTest::testSqlStringTrim()
     }
 }
 
+void
+SqlStringTest::testSqlStringCastToExact_Helper(uint64_t value,
+                                               char const * const buf,
+                                               int src_storage,
+                                               int src_len,
+                                               bool exceptionExpected)
+{
+    bool caught = false;
+    int64_t newvalue;
+    SqlStringBuffer src(src_storage, src_len,
+                        0, src_storage-src_len,
+                        's', ' ');
+
+#if 0
+    BOOST_MESSAGE("buf = |" << buf << "|");
+#endif
+    if (strlen(buf) > src_len) {
+        // not all test cases will fit, just silently ignore them
+        return;
+    }
+
+    // copy string, minus null
+    memcpy(src.mStr, buf, strlen(buf));
+    // pad out any leftovers with spaces (say, if value is very small for 
+    // string length)
+    memset(src.mStr + strlen(buf), ' ', src_len - strlen(buf));
+#if 0
+    BOOST_MESSAGE("str = |" << src.mLeftP << "|");
+#endif
+    
+    try {
+        newvalue = SqlStrCastToExact<1,1>(src.mStr,
+                                          src_len);
+    } catch (const char *str) {
+        caught = true;
+        BOOST_CHECK_EQUAL(strcmp(str, "22018"), 0);
+    }
+    BOOST_CHECK_EQUAL(caught, exceptionExpected);
+    if (!caught) {
+        BOOST_CHECK_EQUAL(value, newvalue);
+        BOOST_CHECK(src.verify());
+    }
+}
+
+// tests varchar case, at least partially, when src_len == src_storage
+void
+SqlStringTest::testSqlStringCastToExact()
+{
+    int src_storage, src_len;
+    int rand_idx;
+    int64_t power, poweridx;
+    int64_t value, valuer1, valuer2, valuer3;
+    char buf[256];
+    
+    src_storage = MAXLEN;
+    //    strlen(2^64) = 20;
+    for (src_storage = 1; src_storage <= 20; src_storage++) {
+        for (src_len = 1; src_len <= src_storage; src_len++) {
+            power = 1;
+            for (poweridx = 0; poweridx < src_len; poweridx++) {
+                power *= 10;
+            }
+            // do a bit more than typical random to get decent coverage
+            // on positives, negatives, and various length numbers.
+            // besides, test runs very quickly anyway.
+            for (rand_idx = 0; rand_idx < 5 * MAXRANDOM; rand_idx++) {
+
+                // rand only produces a long, not a long long, so get jiggy.
+                valuer1 = rand();
+                valuer2 = rand();
+                valuer3 = rand();
+                value = (valuer1 * valuer2 * valuer3) % power;
+                // overflow will cause some negative values
+                if (value < 0) value *= -1;
+                if (src_len > 1 && rand() % 2) {
+                    // cause ~half of values to be negative, but
+                    // reduce length by one to prevent overflow of
+                    // src.
+                    value /= -10;
+                }
+
+
+#if 0
+                BOOST_MESSAGE("src_storage = " << src_storage);
+                BOOST_MESSAGE("src_len = " << src_len);
+                BOOST_MESSAGE("power = " << power);
+                BOOST_MESSAGE("value = " << value);
+#endif
+
+                // positive test, "1234   "
+                sprintf(buf, "%lld", value);
+                BOOST_REQUIRE(strlen(buf) <= src_len);
+                testSqlStringCastToExact_Helper(value,
+                                                buf,
+                                                src_storage,
+                                                src_len,
+                                                false);
+
+                // positive test, "+123   "
+                if (src_len >= 2 && value >= 0) {
+                    sprintf(buf, "+%lld", value / 10);
+                    BOOST_REQUIRE(strlen(buf) <= src_len);
+                    testSqlStringCastToExact_Helper(value / 10,
+                                                    buf,
+                                                    src_storage,
+                                                    src_len,
+                                                    false);
+                }
+
+
+                // positive test, "  123", " 1234", "12345", "123456"
+                sprintf(buf, "%5lld", value);
+                testSqlStringCastToExact_Helper(value,
+                                                buf,
+                                                src_storage,
+                                                src_len,
+                                                false);
+
+                // positive test, "            1234"
+                sprintf(buf, "%20lld", value);
+                testSqlStringCastToExact_Helper(value,
+                                                buf,
+                                                src_storage,
+                                                src_len,
+                                                false);
+
+                // positive test, "000000000000001234"
+                sprintf(buf, "%020lld", value);
+                testSqlStringCastToExact_Helper(value,
+                                                buf,
+                                                src_storage,
+                                                src_len,
+                                                false);
+
+
+                // positive test, "0001234  "
+                sprintf(buf, "%07lld", value);
+                testSqlStringCastToExact_Helper(value,
+                                                buf,
+                                                src_storage,
+                                                src_len,
+                                                false);
+
+                // negative test, "a234   "
+                sprintf(buf, "%lld", value);
+                buf[0] = 'a';
+                testSqlStringCastToExact_Helper(value,
+                                                buf,
+                                                src_storage,
+                                                src_len,
+                                                true);
+
+                // negative test, "1a34   "
+                if (src_len > 2) {
+                    sprintf(buf, "%lld", value);
+                    buf[1] = 'a';
+                    testSqlStringCastToExact_Helper(value,
+                                                    buf,
+                                                    src_storage,
+                                                    src_len,
+                                                    true);
+                }
+
+                // negative test, "1 23 "
+                if (src_len > 3 && value >= 100) {
+                    sprintf(buf, "%lld", value);
+                    buf[1] = ' ';
+                    testSqlStringCastToExact_Helper(value,
+                                                    buf,
+                                                    src_storage,
+                                                    src_len,
+                                                    true);
+                }
+
+                // negative test, "    "
+                memset(buf, ' ', src_len);
+                testSqlStringCastToExact_Helper(value,
+                                                buf,
+                                                src_storage,
+                                                src_len,
+                                                true);
+
+                // negative test, "- 3"
+                if (src_len > 3) {
+                    sprintf(buf, "%lld", value);
+                    buf[0] = '-';
+                    buf[1] = ' ';
+                    testSqlStringCastToExact_Helper(value,
+                                                    buf,
+                                                    src_storage,
+                                                    src_len,
+                                                    true);
+                }
+
+                // negative test, "+ 3"
+                if (src_len > 3) {
+                    sprintf(buf, "%lld", value);
+                    buf[0] = '-';
+                    buf[1] = ' ';
+                    testSqlStringCastToExact_Helper(value,
+                                                    buf,
+                                                    src_storage,
+                                                    src_len,
+                                                    true);
+                }
+
+                // negative test, "- "
+                memset(buf, ' ', src_len);
+                buf[0] = '-';
+                testSqlStringCastToExact_Helper(value,
+                                                buf,
+                                                src_storage,
+                                                src_len,
+                                                true);
+                // negative test, "+ "
+                memset(buf, ' ', src_len);
+                buf[0] = '+';
+                testSqlStringCastToExact_Helper(value,
+                                                buf,
+                                                src_storage,
+                                                src_len,
+                                                true);
+
+
+            }
+        }
+    }
+}
+
+
+void
+SqlStringTest::testSqlStringCastToApprox_Helper(double value,
+                                                char const * const buf,
+                                                int src_storage,
+                                                int src_len,
+                                                bool exceptionExpected)
+{
+    bool caught = false;
+    double newvalue = 0;
+    SqlStringBuffer src(src_storage, src_len,
+                        0, src_storage-src_len,
+                        's', ' ');
+
+#if 0
+    BOOST_MESSAGE("buf = |" << buf << "|");
+    {
+        
+        char foo[256];
+        sprintf(foo, "%.8lf", value);
+        BOOST_MESSAGE("expected value = " << value << " " << foo);
+    }
+#endif
+    if (strlen(buf) > src_len) {
+        // not all test cases will fit, just silently ignore them
+        return;
+    }
+
+    // copy string, minus null
+    memcpy(src.mStr, buf, strlen(buf));
+    // pad out any leftovers with spaces (say, if value is very small for 
+    // string length)
+    memset(src.mStr + strlen(buf), ' ', src_len - strlen(buf));
+#if 0
+    BOOST_MESSAGE("str = |" << src.mLeftP << "|");
+#endif
+    
+    try {
+        newvalue = SqlStrCastToApprox<1,1>(src.mStr,
+                                           src_len);
+    } catch (const char *str) {
+        caught = true;
+        BOOST_CHECK_EQUAL(strcmp(str, "22018"), 0);
+    }
+    BOOST_CHECK_EQUAL(caught, exceptionExpected);
+    if (!caught) {
+        // absolute epsilon doesn't make sense, must be relative
+        // to size of numbers being compared. (trying to emulate
+        // some sort of absolute mantissa, but have exponent adjust
+        // accordingly.)
+        double epsilon = fabs(value / 10000);
+        if (epsilon < 0.0001) {
+            // set a floor to epsilon so it doesn't get rounded out as well.
+            epsilon = 0.0001;
+        }
+        BOOST_CHECK(fabs(value - newvalue) < epsilon);
+        BOOST_CHECK(src.verify());
+    }
+}
+
+// tests varchar case, at least partially, when src_len == src_storage
+void
+SqlStringTest::testSqlStringCastToApprox()
+{
+    int src_storage, src_len;
+    char exponent_buf[256];
+    char decimal_buf[256];
+    char neg_buf[256];
+    double orig_value, dec_value, exp_value;
+    double small_idx;
+    int leading;
+    int leadingplus;
+    int leadingminus;
+    int beforedec;
+    int afterdec;
+    int src_len_left;
+    int buildlen;
+    int idx;
+    int rnd;
+    int neg_idx;
+    
+    src_storage = MAXLEN;
+    // No point in strings less than 3 bytes long (0.0, +3., -.4 or 1E0 is
+    // kinda the minimal practial representation)
+    for (src_storage = 2; src_storage <= 10; src_storage++) {
+        for (src_len = 2; src_len <= src_storage; src_len++) {
+            for (leading = 0; leading <= 2; leading++) {
+                leadingplus = leadingminus = 0;
+                if (leading == 1 && src_len > 2) {
+                    leadingplus = 1;
+                }
+                if (leading == 2 && src_len > 2) {
+                    leadingminus = 1;
+                }
+                src_len_left = src_len;
+                if (leadingplus || leadingminus) src_len_left--;
+                for (beforedec = 0; beforedec <= src_len_left; beforedec++) {
+                    afterdec = src_len_left - beforedec;
+
+#if 0
+                    BOOST_MESSAGE("src_storage = " << src_storage);
+                    BOOST_MESSAGE("src_len = " << src_len);
+                    BOOST_MESSAGE("leadingplus = " << leadingplus);
+                    BOOST_MESSAGE("leadingminus = " << leadingminus);
+                    BOOST_MESSAGE("beforedec = " << beforedec);
+                    BOOST_MESSAGE("afterdec = " << afterdec);
+#endif
+                    
+                    buildlen = leadingplus + leadingminus + beforedec + 
+                        afterdec;
+                    BOOST_REQUIRE(buildlen == src_len);
+
+                    string s;
+                    if (leadingplus) s.append("+");
+                    if (leadingminus) s.append("-");
+                    idx = beforedec;
+                    while (idx-- > 0) {
+                        rnd = rand() % 10;
+                        s.append(1, '0' + rnd);
+                    }
+                    if (afterdec) {
+                        s.append(".");
+                        idx = afterdec - 1;
+                        while (idx-- > 0) {
+                            rnd = rand() % 10;
+                            s.append(1, '0' + rnd);
+                        }
+                    }
+                    sscanf(s.c_str(), "%lf", &orig_value);
+
+                    for (small_idx = 1E+10;
+                         small_idx > 1E-10;
+                         small_idx *= 0.01) {
+                        dec_value = orig_value * small_idx;
+                        // TODO: This masks the + in string s above.
+                        sprintf(decimal_buf, "%.8lf", orig_value * small_idx);
+                        sscanf(decimal_buf, "%lf", &dec_value);
+                        sprintf(exponent_buf, "%.8E", orig_value * small_idx);
+                        sscanf(exponent_buf, "%lf", &exp_value);
+                    
+#if 0
+                        BOOST_MESSAGE("s = |" << s << "|");
+                        BOOST_MESSAGE("exponent_buf = |"<< exponent_buf<< "|");
+                        BOOST_MESSAGE("dec_value = " << dec_value);
+                        BOOST_MESSAGE("exp_value = " << exp_value);
+#endif
+
+
+                        // positive test, "12E34   "
+                        testSqlStringCastToApprox_Helper(exp_value,
+                                                         exponent_buf,
+                                                         src_storage,
+                                                         src_len,
+                                                         false);
+                        // positive test, "12.34   "
+                        testSqlStringCastToApprox_Helper(dec_value,
+                                                         decimal_buf,
+                                                         src_storage,
+                                                         src_len,
+                                                         false);
+
+                        // positive test, "   12E34   "
+                        sprintf(exponent_buf, "%10.8E",
+                                orig_value * small_idx);
+                        sscanf(exponent_buf, "%lf", &exp_value);
+                        testSqlStringCastToApprox_Helper(exp_value,
+                                                         exponent_buf,
+                                                         src_storage,
+                                                         src_len,
+                                                         false);
+
+                        // positive test, "   12.34   "
+                        sprintf(decimal_buf, "%10.8lf",
+                                orig_value * small_idx);
+                        sscanf(decimal_buf, "%lf", &dec_value);
+                        testSqlStringCastToApprox_Helper(dec_value,
+                                                         decimal_buf,
+                                                         src_storage,
+                                                         src_len,
+                                                         false);
+
+                        // positive test, "00012E34   "
+                        sprintf(exponent_buf, "%010.8E",
+                                orig_value * small_idx);
+                        sscanf(exponent_buf, "%lf", &exp_value);
+                        testSqlStringCastToApprox_Helper(exp_value,
+                                                         exponent_buf,
+                                                         src_storage,
+                                                         src_len,
+                                                         false);
+
+                        // positive test, "00012.34   "
+                        sprintf(decimal_buf, "%010.8lf",
+                                orig_value * small_idx);
+                        sscanf(decimal_buf, "%lf", &dec_value);
+                        testSqlStringCastToApprox_Helper(dec_value,
+                                                         decimal_buf,
+                                                         src_storage,
+                                                         src_len,
+                                                         false);
+
+                        // don't do negative tests every time as they
+                        // are highly highly redundant. good coverage
+                        // at small sizes, then taper way off.
+                        if (src_storage < 4 || !(rand() % 10)) {
+                            // get back to base values
+                            sprintf(decimal_buf, "%.8lf",
+                                    orig_value * small_idx);
+                            sscanf(decimal_buf, "%lf",
+                                   &dec_value);
+                            sprintf(exponent_buf, "%.8E",
+                                    orig_value * small_idx);
+                            sscanf(exponent_buf, "%lf", &exp_value);
+                            int exp_len = strlen(exponent_buf);
+                            int dec_len = strlen(decimal_buf);
+
+                            for (neg_idx = 0;
+                                 neg_idx < dec_len; 
+                                 neg_idx++) {
+
+                                strcpy(neg_buf, decimal_buf);
+                                neg_buf[neg_idx] = 'a';
+                                testSqlStringCastToApprox_Helper(dec_value,
+                                                                 neg_buf,
+                                                                 src_storage,
+                                                                 src_len,
+                                                                 true);
+                                if (neg_idx > 1 && neg_idx < dec_len - 1) {
+                                    // leading and trailing spaces are OK
+                                    neg_buf[neg_idx] = ' ';
+                                    testSqlStringCastToApprox_Helper(dec_value,
+                                                                     neg_buf,
+                                                                     src_storage,
+                                                                     src_len,
+                                                                     true);
+                                }
+                            }
+
+                            for (neg_idx = 0;
+                                 neg_idx < exp_len;
+                                 neg_idx++) {
+
+                                strcpy(neg_buf, exponent_buf);
+                                neg_buf[neg_idx] = 'a';
+                                testSqlStringCastToApprox_Helper(exp_value,
+                                                                 neg_buf,
+                                                                 src_storage,
+                                                                 src_len,
+                                                                 true);
+                                if (neg_idx > 1 && neg_idx < exp_len - 1) {
+                                    // leading and trailing spaces are OK
+                                    neg_buf[neg_idx] = ' ';
+                                    testSqlStringCastToApprox_Helper(exp_value,
+                                                                     neg_buf,
+                                                                     src_storage,
+                                                                     src_len,
+                                                                     true);
+                                }
+                            }
+
+                            // negative test, "    "
+                            memset(neg_buf, ' ', src_len);
+                            testSqlStringCastToApprox_Helper(exp_value,
+                                                             neg_buf,
+                                                             src_storage,
+                                                             src_len,
+                                                             true);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void
+SqlStringTest::testSqlStringCastFromExact()
+{
+    int src_len;
+    int dst_storage, dst_len, newlen = 0;
+    int rand_idx, power_idx;
+    int negative;
+    int64_t value, newones;
+    char expected_buf[256];
+    bool caught;
+    
+    // strlen(MAX_VAL(int64_t))=19, strlen(MIN_VAL(int64_t))=20
+    for (dst_storage = 0; dst_storage <= 22; dst_storage++) {
+        for (dst_len = 0; dst_len <= dst_storage; dst_len++) {
+            for (src_len = 0; src_len < 19; src_len++) {
+                for (rand_idx = 0; rand_idx < 1; rand_idx++) {
+                    for (negative = 0; negative <= 1; negative++) {
+
+                        value = 0;
+                        for (power_idx = 0; 
+                             power_idx < src_len - negative; // space for '-'
+                             power_idx++) {
+                            if (!value) {
+                                // no leading zeros
+                                newones = rand() % 9 + 1;
+                            } else {
+                                newones = rand() % 10;
+                            }
+                            value = value*10 + newones;
+                        }
+                        if (!(rand() % 10)) value = 0; // goose odds of 0
+                        if (negative) { 
+                            value *= -1;
+                        }
+                        
+                        sprintf(expected_buf, "%lld", value);
+                        string expect(expected_buf);
+                        string expect_fix(expect); // right padded (CHAR)
+                        if (expect_fix.length() < dst_storage) {
+                            expect_fix.append(dst_storage -
+                                              expect_fix.length(),
+                                              ' ');
+                        }
+
+                        SqlStringBuffer dst(dst_storage, dst_len,
+                                            0, dst_storage - dst_len,
+                                            's', ' ');
+
+                        caught = false;
+                        try {
+                            newlen = SqlStrCastFromExact<1,1>(dst.mStr,
+                                                              dst_storage,
+                                                              value,
+                                                              false);
+                        } catch (const char *str) {
+                            caught = true;
+                            BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
+                            BOOST_CHECK(expect.length() > dst_storage);
+                            BOOST_CHECK(dst.verify());
+                        }
+                        if (!caught) {
+                            string result(dst.mStr, newlen);
+                            BOOST_CHECK(dst.verify());
+                            BOOST_CHECK(expect.length() <= dst_storage);
+                            BOOST_CHECK(!expect.compare(result));
+                        }
+
+                        SqlStringBuffer dst_fix(dst_storage, dst_len,
+                                                0, dst_storage - dst_len,
+                                                's', ' ');
+
+                        caught = false;
+                        try {
+                            newlen = SqlStrCastFromExact<1,1>(dst_fix.mStr,
+                                                              dst_storage,
+                                                              value,
+                                                              true);
+                        } catch (const char *str) {
+                            caught = true;
+                            BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
+                            BOOST_CHECK(expect_fix.length() > dst_storage);
+                            BOOST_CHECK(dst_fix.verify());
+                        }
+                        if (!caught) {
+                            string result_fix(dst_fix.mStr, newlen);
+                            BOOST_CHECK(dst_fix.verify());
+                            BOOST_CHECK(expect_fix.length() <= dst_storage);
+                            BOOST_CHECK(!expect_fix.compare(result_fix));
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void
+SqlStringTest::testSqlStringCastFromApprox()
+{
+    int src_len;
+    int dst_storage, dst_len, newlen = 0;
+    int rand_idx, power_idx;
+    int negative;
+    double value, newones, exponent;
+    char expected_buf[256];
+    bool caught;
+    
+    // strlen(%E.16) = 22
+    for (dst_storage = 0; dst_storage <= 24; dst_storage++) {
+        for (dst_len = 0; dst_len <= dst_storage; dst_len++) {
+            // double seems to have ~16 digits of precision
+            for (src_len = 0; src_len < 16; src_len++) {
+                for (rand_idx = 0; rand_idx < 1; rand_idx++) {
+                    for (negative = 0; negative <= 1; negative++) {
+
+                        value = 0;
+                        for (power_idx = 0; 
+                             // space for (optional) '-' '.', 'E+xx'
+                             power_idx < src_len - (negative + 5);
+                             power_idx++) {
+                            if (!value) {
+                                // no leading zeros
+                                newones = rand() % 9 + 1;
+                            } else {
+                                newones = rand() % 10;
+                            }
+                            value = value*10 + newones;
+                        }
+                        if (!(rand() % 10)) value = 0; // goose odds of 0
+                        if (negative) { 
+                            value *= -1;
+                        }
+                        // get some exponent on.
+                        exponent = 1 + rand() % 30;
+                        if (!(rand() % 2)) {
+                            exponent *= -1;
+                        }
+                        value = pow(value, 1 + rand() % 80);
+
+                        if (value) {
+                            sprintf(expected_buf, "%.16E", value);
+                        } else {
+                            // per spec, 0 -> '0E0'
+                            strcpy(expected_buf, "0E0");
+                        }
+
+                        string expect(expected_buf);
+                        string expect_fix(expect); // right padded (CHAR)
+                        if (expect_fix.length() < dst_storage) {
+                            expect_fix.append(dst_storage -
+                                              expect_fix.length(),
+                                              ' ');
+                        }
+
+#if 0
+                        BOOST_MESSAGE("value = " << value);
+                        BOOST_MESSAGE("storage = " << dst_storage << 
+                                      " len = " << dst_len <<
+                                      " src_len = " << src_len);
+                        BOOST_MESSAGE("expect = |" << expect << "|");
+                        BOOST_MESSAGE("expect_fix = |" << expect_fix << "|");
+#endif
+
+                        SqlStringBuffer dst(dst_storage, dst_len,
+                                            0, dst_storage - dst_len,
+                                            's', ' ');
+
+                        caught = false;
+                        try {
+                            newlen = SqlStrCastFromApprox<1,1>(dst.mStr,
+                                                               dst_storage,
+                                                               value,
+                                                               false);
+                        } catch (const char *str) {
+                            caught = true;
+                            BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
+                            BOOST_CHECK(expect.length() > dst_storage);
+                            BOOST_CHECK(dst.verify());
+                        }
+                        if (!caught) {
+                            string result(dst.mStr, newlen);
+                            //BOOST_MESSAGE("result = |" << result << "|");
+                            BOOST_CHECK(dst.verify());
+                            BOOST_CHECK(expect.length() <= dst_storage);
+                            BOOST_CHECK(!expect.compare(result));
+                        }
+
+                        SqlStringBuffer dst_fix(dst_storage, dst_len,
+                                                0, dst_storage - dst_len,
+                                                's', ' ');
+
+                        caught = false;
+                        try {
+                            newlen = SqlStrCastFromApprox<1,1>(dst_fix.mStr,
+                                                               dst_storage,
+                                                               value,
+                                                               true);
+                        } catch (const char *str) {
+                            caught = true;
+                            BOOST_CHECK_EQUAL(strcmp(str, "22001"), 0);
+                            BOOST_CHECK(expect_fix.length() > dst_storage);
+                            BOOST_CHECK(dst_fix.verify());
+                        }
+                        if (!caught) {
+                            string result_fix(dst_fix.mStr, newlen);
+                            //BOOST_MESSAGE("result_fix = |" << result_fix << "|");
+                            BOOST_CHECK(dst_fix.verify());
+                            BOOST_CHECK(expect_fix.length() <= dst_storage);
+                            BOOST_CHECK(!expect_fix.compare(result_fix));
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+void
+SqlStringTest::testSqlStringCastToVarChar()
+{
+    int src_storage, dst_storage, src_len, dst_len;
+
+    for (dst_storage = 0; dst_storage < MAXLEN; dst_storage++) {
+        for (dst_len = 0; dst_len <= dst_storage; dst_len++) {
+            for (src_storage = 0; src_storage < MAXLEN; src_storage++) {
+                for (src_len = 0; src_len <= src_storage; src_len++) {
+                    // ASCII
+
+                    SqlStringBuffer dst(dst_storage, dst_len,
+                                        0, dst_storage - dst_len,
+                                        'd', ' ');
+
+                    SqlStringBuffer src(src_storage, src_len,
+                                        0, src_storage - src_len,
+                                        's', ' ');
+
+                    int rightTruncWarning = 0;
+                    try {
+                        SqlStrCastToVarChar<1,1>(dst.mStr,
+                                                 dst_storage,
+                                                 src.mStr,
+                                                 src_len,
+                                                 &rightTruncWarning);
+                    } catch (...) {
+                        BOOST_CHECK(false);
+                    }
+
+                    BOOST_CHECK(
+                                (src_len <= dst_storage && !rightTruncWarning) ||
+                                (src_len > dst_storage && rightTruncWarning));
+
+                    string expect;
+                    expect.append(min(src_len, dst_storage), 's');
+
+                    if (dst_storage > src_len) {
+                        expect.append(dst_storage - src_len, ' ');
+                    }
+
+                    string result(dst.mStr, dst_storage);
+
+#if 0
+                    BOOST_MESSAGE(" dst_storage=" << dst_storage <<
+                                  " dst_len=" << dst_len <<
+                                  " src_storage=" << src_storage <<
+                                  " src_len=" << src_len);
+                    BOOST_MESSAGE("src =|" << src.mLeftP << "|");
+                    BOOST_MESSAGE("expect |" << expect << "|");
+                    BOOST_MESSAGE("result |" << result << "|");
+#endif
+                    
+                    BOOST_CHECK(!result.compare(expect));
+
+                    BOOST_CHECK(dst.verify());
+                    BOOST_CHECK(src.verify());
+
+                    // REVIEW: SZ: 8/10/2004: add testing UCS2 support
+                    // once it exists.
+                }
+            }
+        }
+    }
+}
+
+
+void
+SqlStringTest::testSqlStringCastToChar()
+{
+    int src_storage, dst_storage, src_len, dst_len, new_len = 0;
+
+    // REVIEW: SZ: 8/10/2004: I believe that we should also test
+    // unpadded varchars -- e.g. where src_storage > src_len and
+    // left_padding == right_padding = 0.  The cast behaves
+    // differently in this case, but SqlStringBuffer asserts when
+    // length + padding != storage
+
+    for (dst_storage = 0; dst_storage < MAXLEN; dst_storage++) {
+        for (dst_len = 0; dst_len <= dst_storage; dst_len++) {
+            for (src_storage = 0; src_storage < MAXLEN; src_storage++) {
+                for (src_len = 0; src_len <= src_storage; src_len++) {
+                    // ASCII
+                    
+                    SqlStringBuffer dst(dst_storage, dst_len,
+                                        0, dst_storage - dst_len,
+                                        'd', ' ');
+                    
+                    SqlStringBuffer src(src_storage, src_len,
+                                        0, src_storage - src_len,
+                                        's', ' ');
+
+                    int rightTruncWarning = 0;
+
+                    try {
+                        new_len = SqlStrCastToChar<1,1>(dst.mStr,
+                                                        dst_storage,
+                                                        src.mStr,
+                                                        src_len,
+                                                        &rightTruncWarning);
+                    } catch (...) {
+                        BOOST_CHECK(false);
+                    }
+
+                    BOOST_CHECK(
+                                (src_len <= dst_storage && !rightTruncWarning) ||
+                                (src_len > dst_storage && rightTruncWarning));
+                    BOOST_CHECK_EQUAL(new_len, dst_storage);
+                        
+                    string expect;
+                    expect.append(min(src_len, dst_storage), 's');
+
+                    if (dst_storage > src_len) {
+                        expect.append(dst_storage - src_len, ' ');
+                    }
+
+                    string result(dst.mStr, dst_storage);
+
+#if 0
+                    BOOST_MESSAGE(" dst_storage=" << dst_storage <<
+                                  " dst_len=" << dst_len <<
+                                  " src_storage=" << src_storage <<
+                                  " src_len=" << src_len);
+                    BOOST_MESSAGE("src =|" << src.mLeftP << "|");
+                    BOOST_MESSAGE("expect |" << expect << "|");
+                    BOOST_MESSAGE("result |" << result << "|");
+#endif
+                        
+                    BOOST_CHECK(!result.compare(expect));
+
+                    BOOST_CHECK(dst.verify());
+                    BOOST_CHECK(src.verify());
+                
+                    // REVIEW: SZ: 8/10/2004: add testing UCS2 support
+                    // once it exists.
+                }
+            }
+        }
+    }
+}
+
 
 FENNEL_UNIT_TEST_SUITE(SqlStringTest);
-

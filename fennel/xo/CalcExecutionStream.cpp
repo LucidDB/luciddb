@@ -94,6 +94,12 @@ void CalcExecutionStream::prepare(
 
     // bind calculator to tuple data (tuple data may later change)
     pCalc->bind(&inputData,&outputData);
+
+    // Set calculator to return immediately on exception as a
+    // workaround.  Prevents indeterminate results from an instruction
+    // that throws an exception from causing non-deterministic
+    // behavior later in program execution.
+    pCalc->continueOnException(false);
 }
 
 TupleDescriptor const &CalcExecutionStream::getOutputDesc() const

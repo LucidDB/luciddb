@@ -20,7 +20,6 @@
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/calc/Calculator.h"
 #include "fennel/calc/Instruction.h"
-#include "fennel/calc/ReturnException.h"
 #include "fennel/calc/CalcAssembler.h"
 
 #include "boost/format.hpp"
@@ -68,6 +67,9 @@ Calculator::init(int codeSize, int literalSize, int inputSize,
     }
     // Default is to use output register set by reference.
     mOutputRegisterByReference = true;
+
+    // Default is to continue execution after exceptions
+    mContinueOnException = true;
 }
 
 Calculator::~Calculator()
@@ -216,6 +218,13 @@ Calculator::getStatusRegister() const
 }
 
 void
+Calculator::continueOnException(bool c)
+{
+    mContinueOnException = c;
+}
+
+
+void
 Calculator::exec()
 {
     // Clear state from previous execution
@@ -267,9 +276,9 @@ Calculator::exec()
         catch(CalcMessage m) {
             // each instruction sets pc assuming continued execution
             mWarnings.push_back(m);
-        }
-        catch(ReturnException m) {
-            break;
+            if (!mContinueOnException) {
+                break;
+            }
         }
     }
 #ifdef DEBUG

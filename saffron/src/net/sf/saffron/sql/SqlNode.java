@@ -22,14 +22,10 @@
 
 package net.sf.saffron.sql;
 
-import net.sf.saffron.util.BarfingInvocationHandler;
 import net.sf.saffron.sql.parser.ParserPosition;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.lang.reflect.Proxy;
-import java.sql.DatabaseMetaData;
-import java.sql.SQLException;
 
 
 /**
@@ -43,12 +39,12 @@ import java.sql.SQLException;
  */
 public abstract class SqlNode
 {
-    private ParserPosition parserPosition;
+    private final ParserPosition pos;
     //~ Constructors ----------------------------------------------------------
 
-    SqlNode(ParserPosition parserPosition)
+    SqlNode(ParserPosition pos)
     {
-        this.parserPosition = parserPosition;
+        this.pos = pos;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -147,14 +143,8 @@ public abstract class SqlNode
 
     public ParserPosition getParserPosition()
     {
-        return parserPosition;
+        return pos;
     }
-
-    public void setParserPosition(ParserPosition parserPosition)
-    {
-        this.parserPosition = parserPosition;
-    }
-
 }
 
 

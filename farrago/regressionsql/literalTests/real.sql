@@ -33,7 +33,7 @@ create table t_real(real_col real not null primary key,
         real_col2 int);
 
 -- negative test
-insert into t_real values('true',null);
+--insert into t_real values('true',null);
 insert into t_real values(TRUE,null);
 insert into t_real values(x'ff',null);
 insert into t_real values(b'10',null);

@@ -201,7 +201,7 @@ public class Main extends TestCase
             // Filter the suite, so that only tests whose names match
             // "testName" (in its entirety) will be run.
             Pattern testPattern = Pattern.compile(testName);
-            suite = copySuite(suite,testPattern);
+            suite = SaffronTestCase.copySuite(suite,testPattern);
         }
         return suite;
     }
@@ -258,30 +258,6 @@ public class Main extends TestCase
         }
     }
 
-    private static TestSuite copySuite(TestSuite suite,Pattern testPattern)
-    {
-        TestSuite newSuite = new TestSuite();
-        Enumeration tests = suite.tests();
-        while (tests.hasMoreElements()) {
-            Test test = (Test) tests.nextElement();
-            if (test instanceof TestCase) {
-                TestCase testCase = (TestCase) test;
-                final String testName = testCase.getName();
-                if (testPattern.matcher(testName).matches()) {
-                    newSuite.addTest(test);
-                }
-            } else if (test instanceof TestSuite) {
-                TestSuite subSuite = copySuite((TestSuite) test,testPattern);
-                if (subSuite.countTestCases() > 0) {
-                    newSuite.addTest(subSuite);
-                }
-            } else {
-                // some other kind of test
-                newSuite.addTest(test);
-            }
-        }
-        return newSuite;
-    }
 }
 
 

@@ -32,6 +32,7 @@ CalcExtStringTest \
 CalcExtContextTest \
 CalcExtDateTimeTest \
 CalcExtMathTest \
+CalcExtCastTest \
 DatabaseTest \
 LogicalTxnTest \
 SegStreamTest \
@@ -93,6 +94,8 @@ CalcExtContextTest_SOURCES=CalcExtContextTest.cpp
 CalcExtDateTimeTest_SOURCES=CalcExtDateTimeTest.cpp
 
 CalcExtMathTest_SOURCES=CalcExtMathTest.cpp
+
+CalcExtCastTest_SOURCES=CalcExtCastTest.cpp
 
 SqlRegExpTest_SOURCES=SqlStringBuffer.cpp SqlRegExpTest.cpp 
 

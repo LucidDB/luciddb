@@ -28,6 +28,7 @@ import net.sf.saffron.sql.parser.ParserPosition;
 import net.sf.saffron.core.SaffronType;
 import net.sf.saffron.core.SaffronTypeFactory;
 import net.sf.saffron.util.Util;
+import net.sf.saffron.resource.SaffronResource;
 
 import java.util.HashMap;
 
@@ -74,25 +75,24 @@ public class SqlJdbcFunctionCall extends SqlFunction
         return lookupMakeCallObj.operator.getAllowedSignatures(name);
     }
 
-    public int getNumOfOperands(int desiredCount) {
-        return thisOperands.length;
+    public SqlOperator.OperandsCountDescriptor getOperandsCountDescriptor() {
+        return OperandsCountDescriptor.variadic;
     }
 
     public SaffronType getType(SqlValidator validator, SqlValidator.Scope scope,
                                SqlCall call) {
         if (null==lookupMakeCallObj) {
-            //todo add position data
-            throw validator.newValidationError("Function "+name+" is not defined");
+            throw SaffronResource.instance().newFunctionUndefined(name, call.getParserPosition().toString());
         }
 
         if (!lookupMakeCallObj.checkNumberOfArg(call.operands.length)) {
             //todo add position data
-            throw validator.newValidationError(getNumOfArgMismatchMsg());
+            throw SaffronResource.instance().newWrongNumberOfParam(
+                    name, ""+thisOperands.length, getNumOfArgMismatchMsg(), call.getParserPosition().toString());
         }
 
         if (!lookupMakeCallObj.operator.checkArgTypesNoThrow(getLookupCall(),
                 validator, scope)){
-            //todo add position data
             throw call.newValidationSignatureError(validator, scope);
         }
         return lookupMakeCallObj.operator.getType(
@@ -105,11 +105,6 @@ public class SqlJdbcFunctionCall extends SqlFunction
 
     private String getNumOfArgMismatchMsg() {
         StringBuffer ret = new StringBuffer();
-        ret.append("Encountered ");
-        ret.append(name);
-        ret.append(" with ");
-        ret.append(thisOperands.length);
-        ret.append(" parameter(s), was expecting ");
         int[] possible = lookupMakeCallObj.getPossibleNumOfOperands();
         for (int i = 0; i < possible.length; i++) {
             if (i>0) {
@@ -261,7 +256,7 @@ public class SqlJdbcFunctionCall extends SqlFunction
                     assert(1==operands.length);
                     SqlNode[] newOperands = new SqlNode[3];
                     newOperands[0] = SqlTrimFunction.Flag.createLeading(null);
-                    newOperands[1] = SqlLiteral.createString(" ", null);
+                    newOperands[1] = SqlLiteral.CharString.create(" ", null);
                     newOperands[2] = operands[0];
 
                     return super.createCall(newOperands, null);
@@ -273,7 +268,7 @@ public class SqlJdbcFunctionCall extends SqlFunction
                     assert(1==operands.length);
                     SqlNode[] newOperands = new SqlNode[3];
                     newOperands[0] = SqlTrimFunction.Flag.createTrailing(null);
-                    newOperands[1] = SqlLiteral.createString("\\t\\r\\n\\f ", null);
+                    newOperands[1] = SqlLiteral.CharString.create(" ", null);
                     newOperands[2] = operands[0];
 
                     return super.createCall(newOperands,null);

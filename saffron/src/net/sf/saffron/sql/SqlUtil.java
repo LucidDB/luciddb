@@ -22,15 +22,15 @@
 
 package net.sf.saffron.sql;
 
-import net.sf.saffron.util.Util;
-import net.sf.saffron.util.BarfingInvocationHandler;
 import net.sf.saffron.sql.type.SqlTypeName;
+import net.sf.saffron.util.BarfingInvocationHandler;
+import net.sf.saffron.util.Util;
 
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.lang.reflect.Proxy;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
-import java.lang.reflect.Proxy;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 
 /**

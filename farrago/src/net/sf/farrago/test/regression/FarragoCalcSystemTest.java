@@ -115,6 +115,8 @@ public class FarragoCalcSystemTest extends FarragoTestCase{
         exclude.add(opTab.trimFunc);
         exclude.add(opTab.isDistinctFromOperator);
         exclude.add(opTab.descendingOperator);
+        exclude.add(opTab.litChainOperator);
+        exclude.add(opTab.escapeOperator);
 
         // Eventutally need to include these when cast is working
         exclude.add(opTab.overlapsOperator);
@@ -149,7 +151,8 @@ public class FarragoCalcSystemTest extends FarragoTestCase{
             }
 
 
-            List nbrOfArgsList = op.getPossibleNumOfOperands();
+            List nbrOfArgsList =
+                op.getOperandsCountDescriptor().getPossibleNumOfOperands();
             assert (nbrOfArgsList.size() > 0);
             Iterator it = nbrOfArgsList.iterator();
             // iterating over possible call signatures

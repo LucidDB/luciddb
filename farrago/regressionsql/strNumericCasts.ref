@@ -1,0 +1,293 @@
+0: jdbc:farrago:> -- $Id$
+0: jdbc:farrago:> -- Test casts between string types
+0: jdbc:farrago:> 
+0: jdbc:farrago:> --
+0: jdbc:farrago:> -- test basic integer conversions
+0: jdbc:farrago:> --
+0: jdbc:farrago:> select cast('1' as smallint) from values(true);
++---------+
+| EXPR$0  |
++---------+
+| 1       |
++---------+
+0: jdbc:farrago:> select cast('1' as integer) from values(true);
++---------+
+| EXPR$0  |
++---------+
+| 1       |
++---------+
+0: jdbc:farrago:> select cast('1' as bigint) from values(true);
++---------+
+| EXPR$0  |
++---------+
+| 1       |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select cast('-1' as smallint) from values(true);
++---------+
+| EXPR$0  |
++---------+
+| -1      |
++---------+
+0: jdbc:farrago:> select cast('-1' as integer) from values(true);
++---------+
+| EXPR$0  |
++---------+
+| -1      |
++---------+
+0: jdbc:farrago:> select cast('-1' as bigint) from values(true);
++---------+
+| EXPR$0  |
++---------+
+| -1      |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select cast('0' as smallint) from values(true);
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+0: jdbc:farrago:> select cast('0' as integer) from values(true);
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+0: jdbc:farrago:> select cast('0' as bigint) from values(true);
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> --
+0: jdbc:farrago:> -- test smallint limits (signed 16-bit ints: -32768 to 32767)
+0: jdbc:farrago:> --
+0: jdbc:farrago:> select cast('32767' as smallint) from values(true);
++---------+
+| EXPR$0  |
++---------+
+| 32767   |
++---------+
+0: jdbc:farrago:> select cast('-32768' as smallint) from values(true);
++---------+
+| EXPR$0  |
++---------+
+| -32768  |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- these should fail (numeric out of range)
+0: jdbc:farrago:> select cast('32768' as smallint) from values(true);
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=1 Code=22003 (state=,code=0)
+0: jdbc:farrago:> select cast('65535' as smallint) from values(true);
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=1 Code=22003 (state=,code=0)
+0: jdbc:farrago:> select cast('-32769' as smallint) from values(true);
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=1 Code=22003 (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> --
+0: jdbc:farrago:> -- test integer/int limits (signed 32-bit ints: -2147483648 to 2147483647)
+0: jdbc:farrago:> --
+0: jdbc:farrago:> select cast('2147483647' as integer) from values(true);
++-------------+
+|   EXPR$0    |
++-------------+
+| 2147483647  |
++-------------+
+0: jdbc:farrago:> select cast('-2147483648' as integer) from values(true);
++--------------+
+|    EXPR$0    |
++--------------+
+| -2147483648  |
++--------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- these should fail (numeric out of range)
+0: jdbc:farrago:> select cast('2147483648' as integer) from values(true);
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=1 Code=22003 (state=,code=0)
+0: jdbc:farrago:> select cast('4294967295' as integer) from values(true);
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=1 Code=22003 (state=,code=0)
+0: jdbc:farrago:> select cast('-2147483649' as integer) from values(true);
+Error: could not calculate results for the following row:
+[ 0 ]
+Messages:
+[0]:PC=1 Code=22003 (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> --
+0: jdbc:farrago:> -- test bigint limits (signed 64-bit int: -9223372036854775808 to 9223372036854775807)
+0: jdbc:farrago:> --
+0: jdbc:farrago:> select cast('9223372036854775807' as bigint) from values(true);
++----------------------+
+|        EXPR$0        |
++----------------------+
+| 9223372036854775807  |
++----------------------+
+0: jdbc:farrago:> select cast('-9223372036854775808' as bigint) from values(true);
++-----------------------+
+|        EXPR$0         |
++-----------------------+
+| -9223372036854775808  |
++-----------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- these should fail (numeric out of range)
+0: jdbc:farrago:> select cast('9223372036854775808' as bigint) from values(true);
++-----------------------+
+|        EXPR$0         |
++-----------------------+
+| -9223372036854775808  |
++-----------------------+
+0: jdbc:farrago:> select cast('18446744073709551615' as bigint) from values(true);
++---------+
+| EXPR$0  |
++---------+
+| -1      |
++---------+
+0: jdbc:farrago:> select cast('-9223372036854775809' as bigint) from values(true);
++----------------------+
+|        EXPR$0        |
++----------------------+
+| 9223372036854775807  |
++----------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> --
+0: jdbc:farrago:> -- test decimal(N, 0) limits (signed N-digit integers)
+0: jdbc:farrago:> --
+0: jdbc:farrago:> --select cast('99999' as decimal(5, 0)) from values(true);
+0: jdbc:farrago:> --select cast('-99999' as decimal(5, 0)) from values(true);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- these should fail (numeric out of range)
+0: jdbc:farrago:> --select cast('100000' as decimal(5, 0)) from values(true);
+0: jdbc:farrago:> --select cast('-100000' as decimal(5, 0)) from values(true);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> --
+0: jdbc:farrago:> -- test decimal(N, M) (exact numeric) conversions
+0: jdbc:farrago:> --
+0: jdbc:farrago:> --select cast('1.0' as decimal(2,1)) from values(true);
+0: jdbc:farrago:> --select cast('-1.0' as decimal(2,1)) from values(true);
+0: jdbc:farrago:> --select cast('0.0' as decimal(2,1)) from values(true);
+0: jdbc:farrago:> --select cast('12.34' as decimal(4, 2)) from values(true);
+0: jdbc:farrago:> --select cast('-43.21' as decimal(4, 2)) from values(true);
+0: jdbc:farrago:> --select cast('5.67' as decimal(4, 2)) from values(true);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> --select cast('1' as decimal(2,1)) from values(true);
+0: jdbc:farrago:> --select cast('-1' as decimal(2,1)) from values(true);
+0: jdbc:farrago:> --select cast('0' as decimal(2,1)) from values(true);
+0: jdbc:farrago:> --select cast('12' as decimal(4, 2)) from values(true);
+0: jdbc:farrago:> --select cast('-43' as decimal(4, 2)) from values(true);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- REVIEW: spec says that numeric out of range error only occurs when
+0: jdbc:farrago:> -- the most significant digits are lost: these are okay
+0: jdbc:farrago:> --select cast('12.345' as decimal(4, 2)) from values(true);
+0: jdbc:farrago:> --select cast('-12.345' as decimal(4, 2)) from values(true);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- these should fail (numeric out of range)
+0: jdbc:farrago:> --select cast('123.45' as decimal(4, 2)) from values(true);
+0: jdbc:farrago:> --select cast('-123.45' as decimal(4, 2)) from values(true);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> --
+0: jdbc:farrago:> -- test double (approximate numeric) conversions
+0: jdbc:farrago:> --
+0: jdbc:farrago:> select cast('1.0' as double) from values(true);
++---------+
+| EXPR$0  |
++---------+
+| 1.0     |
++---------+
+0: jdbc:farrago:> select cast('-1.0' as double) from values(true);
++---------+
+| EXPR$0  |
++---------+
+| -1.0    |
++---------+
+0: jdbc:farrago:> select cast('0.0' as double) from values(true);
++---------+
+| EXPR$0  |
++---------+
+| 0.0     |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- REVIEW: I presume these should work as well.
+0: jdbc:farrago:> select cast('1' as double) from values(true);
++---------+
+| EXPR$0  |
++---------+
+| 1.0     |
++---------+
+0: jdbc:farrago:> select cast('-1' as double) from values(true);
++---------+
+| EXPR$0  |
++---------+
+| -1.0    |
++---------+
+0: jdbc:farrago:> select cast('0' as double) from values(true);
++---------+
+| EXPR$0  |
++---------+
+| 0.0     |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- TODO: determine limits of DOUBLE and test them
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> --
+0: jdbc:farrago:> -- test real (approximate numeric) conversions
+0: jdbc:farrago:> --
+0: jdbc:farrago:> select cast('1.0' as real) from values(true);
++---------+
+| EXPR$0  |
++---------+
+| 1.0     |
++---------+
+0: jdbc:farrago:> select cast('-1.0' as real) from values(true);
++---------+
+| EXPR$0  |
++---------+
+| -1.0    |
++---------+
+0: jdbc:farrago:> select cast('0.0' as real) from values(true);
++---------+
+| EXPR$0  |
++---------+
+| 0.0     |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- REVIEW: I presume these should work as well.
+0: jdbc:farrago:> select cast('1' as real) from values(true);
++---------+
+| EXPR$0  |
++---------+
+| 1.0     |
++---------+
+0: jdbc:farrago:> select cast('-1' as real) from values(true);
++---------+
+| EXPR$0  |
++---------+
+| -1.0    |
++---------+
+0: jdbc:farrago:> select cast('0' as real) from values(true);
++---------+
+| EXPR$0  |
++---------+
+| 0.0     |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- TODO: determine limits of REAL and test them
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !quit

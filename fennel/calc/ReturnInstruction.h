@@ -27,7 +27,6 @@
 #define Fennel_ReturnInstruction_Included
 
 #include "fennel/calc/Instruction.h"
-#include "fennel/calc/ReturnException.h"
 
 FENNEL_BEGIN_NAMESPACE
 
@@ -40,8 +39,8 @@ public:
     ~ReturnInstruction() { }
 
     virtual void exec(TProgramCounter& pc) const { 
-        ReturnException ret(pc);
-        throw ret;
+        // Force pc past end of program
+        pc = TPROGRAMCOUNTERMAX;
     }
 
     static const char * longName() { return "Return"; }

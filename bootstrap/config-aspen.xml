@@ -42,6 +42,7 @@
 			<artifactspublisher dir="build/farrago/initsql" dest="artifacts/aspen" subdirectory="farrago_initsql"/>
 			<artifactspublisher dir="build/farrago/regressionsql" dest="artifacts/aspen" subdirectory="farrago_regressionsql"/>
 			<artifactspublisher dir="build/farrago/testlog" dest="artifacts/aspen" subdirectory="farrago_testlog"/>
+			<artifactspublisher dir="build/aspen/testlog" dest="artifacts/aspen" subdirectory="testlog"/>
 			<artifactspublisher dir="build/aspen/initsql" dest="artifacts/aspen" subdirectory="initsql"/>
 			<artifactspublisher dir="build/aspen/unitsql" dest="artifacts/aspen" subdirectory="unitsql"/>
 			<artifactspublisher dir="build/aspen/trace" dest="artifacts/aspen" subdirectory="trace"/>

@@ -212,7 +212,11 @@ void Database::closeDevices()
     pHeaderSegment.reset();
     pTempSegment->close();
     pTempSegment.reset();
-    pCache->unregisterDevice(txnLogDeviceId);
+
+    // for incomplete recovery, this device may not have been opened yet
+    if (pCache->getDevice(txnLogDeviceId)) {
+        pCache->unregisterDevice(txnLogDeviceId);
+    }
     pCache->unregisterDevice(shadowDeviceId);
     pCache->unregisterDevice(dataDeviceId);
     pCache->unregisterDevice(tempDeviceId);

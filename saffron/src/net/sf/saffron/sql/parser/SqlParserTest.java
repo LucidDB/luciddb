@@ -71,8 +71,7 @@ public class SqlParserTest extends TestCase
         try {
             sqlNode = new SqlParser(sql).parseExpression();
         } catch (ParseException e) {
-            throw Util.newInternal(
-                e,
+            throw Util.newInternal(e,
                 "Error while parsing SQL expression '" + sql + "'");
         }
         final String actual = sqlNode.toSqlString(null);
@@ -103,22 +102,13 @@ public class SqlParserTest extends TestCase
         try {
             final SqlNode sqlNode = new SqlParser(sql).parseStmt();
             Util.discard(sqlNode);
-            throw Util.newInternal(
+            fail(
                 "Expected query '" + sql + "' to throw exception matching '"
                 + exceptionPattern + "'");
-        } catch (ParseException e) {
+        } catch (Throwable e) {
             final String message = e.toString();
             if (!Pattern.matches(exceptionPattern,message)) {
-                throw Util.newInternal(
-                    "Expected query '" + sql
-                    + "' to throw exception matching '" + exceptionPattern
-                    + "', but it threw " + message);
-            }
-        }
-        catch(java.nio.charset.UnsupportedCharsetException e){
-            final String message = e.toString();
-            if (!Pattern.matches(exceptionPattern,message)) {
-                throw Util.newInternal(
+                fail(
                     "Expected query '" + sql
                     + "' to throw exception matching '" + exceptionPattern
                     + "', but it threw " + message);
@@ -266,6 +256,7 @@ public class SqlParserTest extends TestCase
         checkExp("'abc'<>123='def'<>456","((('abc' <> 123) = 'def') <> 456)");
         checkExp("'abc'<>123=('def'<>456)","(('abc' <> 123) = ('def' <> 456))");
     }
+
     public void testBetween()
     {
         check("select * from t where price between 1 and 2",
@@ -275,15 +266,15 @@ public class SqlParserTest extends TestCase
                 "SELECT *" + NL + "FROM `T`" + NL + "WHERE (`PRICE` BETWEEN SYMMETRIC 1 AND 2)");
 
         check("select * from t where price not between symmetric 1 and 2",
-                "SELECT *" + NL + "FROM `T`" + NL + "WHERE (NOT (`PRICE` BETWEEN SYMMETRIC 1 AND 2))");
+                "SELECT *" + NL + "FROM `T`" + NL + "WHERE (`PRICE` NOT BETWEEN SYMMETRIC 1 AND 2)");
 
         check("select * from t where price between ASYMMETRIC 1 and 2+2*2",
                 "SELECT *" + NL + "FROM `T`" + NL + "WHERE (`PRICE` BETWEEN ASYMMETRIC 1 AND (2 + (2 * 2)))");
 
         check("select * from t where price > 5 and price not between 1 + 2 and 3 * 4 AnD price is null",
-                  "SELECT *"+NL+
-                  "FROM `T`"+NL+
-                  "WHERE (((`PRICE` > 5) AND (NOT (`PRICE` BETWEEN ASYMMETRIC (1 + 2) AND (3 * 4)))) AND (`PRICE` IS NULL))");
+                "SELECT *" + NL +
+                "FROM `T`" + NL +
+                "WHERE (((`PRICE` > 5) AND (`PRICE` NOT BETWEEN ASYMMETRIC (1 + 2) AND (3 * 4))) AND (`PRICE` IS NULL))");
 
         check("select * from t where price > 5 and price between 1 + 2 and 3 * 4 + price is null",
                   "SELECT *"+NL+
@@ -294,6 +285,30 @@ public class SqlParserTest extends TestCase
               "SELECT *"+NL+
               "FROM `T`"+NL+
               "WHERE (((`PRICE` > 5) AND (`PRICE` BETWEEN ASYMMETRIC (1 + 2) AND (3 * 4))) OR (`PRICE` IS NULL))");
+
+        check("values a between c and d and e and f between g and h",
+                "(VALUES (ROW((((`A` BETWEEN ASYMMETRIC `C` AND `D`) AND `E`) AND (`F` BETWEEN ASYMMETRIC `G` AND `H`)))))");
+
+        checkFails("values a between b or c",
+                ".*BETWEEN operator has no terminating AND, at line 1, column 18");
+
+        checkFails("values a between",
+                "(?s).*Encountered \"between <EOF>\" at line 1, column 10.*");
+
+        checkFails("values a between symmetric 1",
+                ".*BETWEEN operator has no terminating AND, at line 1, column 18");
+
+        // precedence of BETWEEN is higher than AND and OR, but lower than '+'
+        check("values a between b and c + 2 or d and e",
+                "(VALUES (ROW(((`A` BETWEEN ASYMMETRIC `B` AND (`C` + 2)) OR (`D` AND `E`)))))");
+
+        // '=' and BETWEEN have same precedence, and are left-assoc
+        check("values x = a between b and c = d = e",
+                "(VALUES (ROW(((((`X` = `A`) BETWEEN ASYMMETRIC `B` AND `C`) = `D`) = `E`))))");
+
+        // AND doesn't match BETWEEN if it's between parentheses!
+        check("values a between b or (c and d) or e and f",
+                "(VALUES (ROW((`A` BETWEEN ASYMMETRIC ((`B` OR (`C` AND `D`)) OR `E`) AND `F`))))");
     }
 
     public void testOperateOnColumn()
@@ -358,23 +373,81 @@ public class SqlParserTest extends TestCase
 
     public void testLikeAndSimilar()
     {
-        check(
-            "select * from t where x like '%abc%'",
+        check("select * from t where x like '%abc%'",
             "SELECT *" + NL + "FROM `T`" + NL + "WHERE (`X` LIKE '%abc%')");
 
-        check(
-            "select * from t where x+1 not siMilaR to '%abc%' ESCAPE 'e'",
-            "SELECT *" + NL + "FROM `T`" + NL + "WHERE (NOT ((`X` + 1) SIMILAR TO '%abc%' ESCAPE 'e'))");
+        check("select * from t where x+1 not siMilaR to '%abc%' ESCAPE 'e'",
+            "SELECT *" + NL + "FROM `T`" + NL + "WHERE ((`X` + 1) NOT SIMILAR TO '%abc%' ESCAPE 'e')");
 
-        //TODO LIKE has higher precedence than AND
-//        check("select * from t where price > 5 and x+2*2 like y*3+2 escape (select*from t)",
-//              "SELECT *"+NL+
-//              "FROM `T`"+NL+
-//              "WHERE ((`PRICE` > 5) AND ((`X` LIKE ((`Y` * 3) + 2) ESCAPE (SELECT *"+NL+
-//              "FROM `T`)))");
+        // LIKE has higher precedence than AND
+        check("select * from t where price > 5 and x+2*2 like y*3+2 escape (select*from t)",
+              "SELECT *"+NL+
+              "FROM `T`"+NL+
+              "WHERE ((`PRICE` > 5) AND ((`X` + (2 * 2)) LIKE ((`Y` * 3) + 2) ESCAPE (SELECT *"+NL+
+              "FROM `T`)))");
+
+        check("values a and b like c",
+            "(VALUES (ROW((`A` AND (`B` LIKE `C`)))))");
+        // LIKE has higher precedence than AND
+        check("values a and b like c escape d and e",
+            "(VALUES (ROW(((`A` AND (`B` LIKE `C` ESCAPE `D`)) AND `E`))))");
+        // LIKE has same precedence as '='; LIKE is right-assoc, '=' is left
+        check("values a = b like c = d",
+            "(VALUES (ROW(((`A` = `B`) LIKE (`C` = `D`)))))");
+        // Nested LIKE
+        check("values a like b like c escape d",
+            "(VALUES (ROW((`A` LIKE (`B` LIKE `C` ESCAPE `D`)))))");
+        check("values a like b like c escape d and false",
+            "(VALUES (ROW(((`A` LIKE (`B` LIKE `C` ESCAPE `D`)) AND FALSE))))");
+        check("values a like b like c like d escape e escape f",
+                "(VALUES (ROW((`A` LIKE (`B` LIKE (`C` LIKE `D` ESCAPE `E`) ESCAPE `F`)))))");
+
+        // Mixed LIKE and SIMILAR TO
+        check("values a similar to b like c similar to d escape e escape f",
+                "(VALUES (ROW((`A` SIMILAR TO (`B` LIKE (`C` SIMILAR TO `D` ESCAPE `E`) ESCAPE `F`)))))");
 
         checkFails("select * from t where escape 'e'",
-                   "(?s).*Encountered \"escape\" at line 1, column 23.*");
+               "(?s).*Encountered \"escape\" at line 1, column 23.*");
+
+        // LIKE with +
+        check("values a like b + c escape d",
+            "(VALUES (ROW((`A` LIKE (`B` + `C`) ESCAPE `D`))))");
+        // LIKE with ||
+        check("values a like b || c escape d",
+            "(VALUES (ROW((`A` LIKE (`B` || `C`) ESCAPE `D`))))");
+        // ESCAPE with no expression
+        checkFails("values a like escape d",
+            "(?s).*Encountered \"escape\" at line 1, column 15.*");
+        // ESCAPE with no expression
+        checkFails("values a like b || c escape and false",
+            "(?s).*Encountered \"escape and\" at line 1, column 22.*");
+
+        // basic SIMILAR TO
+        check("select * from t where x similar to '%abc%'",
+                "SELECT *" + NL + "FROM `T`" + NL + "WHERE (`X` SIMILAR TO '%abc%')");
+
+        check("select * from t where x+1 not siMilaR to '%abc%' ESCAPE 'e'",
+                "SELECT *" + NL + "FROM `T`" + NL + "WHERE ((`X` + 1) NOT SIMILAR TO '%abc%' ESCAPE 'e')");
+
+        // SIMILAR TO has higher precedence than AND
+        check("select * from t where price > 5 and x+2*2 SIMILAR TO y*3+2 escape (select*from t)",
+                "SELECT *" + NL +
+                "FROM `T`" + NL +
+                "WHERE ((`PRICE` > 5) AND ((`X` + (2 * 2)) SIMILAR TO ((`Y` * 3) + 2) ESCAPE (SELECT *" + NL +
+                "FROM `T`)))");
+
+        // Mixed LIKE and SIMILAR TO
+        check("values a similar to b like c similar to d escape e escape f",
+                "(VALUES (ROW((`A` SIMILAR TO (`B` LIKE (`C` SIMILAR TO `D` ESCAPE `E`) ESCAPE `F`)))))");
+
+        // SIMILAR TO with subquery
+        check("values a similar to (select * from t where a like b escape c) escape d",
+                "(VALUES (ROW((`A` SIMILAR TO (SELECT *" + NL +
+                "FROM `T`" + NL +
+                "WHERE (`A` LIKE `B` ESCAPE `C`)) ESCAPE `D`))))");
+    }
+
+    public void testFoo() {
     }
 
     public void testArthimeticOperators() {
@@ -633,6 +706,22 @@ public class SqlParserTest extends TestCase
         checkExp("TIMESTAMP '2004-06-01 15:55:55.9999'", "TIMESTAMP '2004-06-01 15:55:56.000'");
         checkExpSame("NULL");
 
+    }
+
+    public void testContinuedLiteral()
+    {
+        checkExp("'abba'\n'abba'", "'abba' 'abba'");
+        checkExp("'abba'\n'0001'", "'abba' '0001'");
+        checkExp("N'yabba'\n'dabba'\n'doo'", "_ISO-8859-1'yabba' 'dabba' 'doo'");
+        checkExp("_iso-8859-1'yabba'\n'dabba'\n'doo'", "_ISO-8859-1'yabba' 'dabba' 'doo'");
+
+        checkExp("B'0001'\n'0001'", "B'0001' '0001'");
+        checkExp("x'01aa'\n'03ff'", "X'01AA' '03FF'");
+
+        // a bad bitstring
+        checkFails("B'0001'\n'3333'", ".*Invalid bit string '3333'.*");
+        // a bad hexstring
+        checkFails("x'01aa'\n'vvvv'", ".*Invalid binary string 'vvvv'.*");
     }
 
     public void testMixedFrom()
@@ -990,20 +1079,21 @@ public class SqlParserTest extends TestCase
     public void testBitString(){
         checkExp("b''=B'1001'","(B'' = B'1001')");
         checkExp("b'1111111111'=B'1111111'","(B'1111111111' = B'1111111')");
+        checkExp("b'0101'\n'0110'", "B'0101' '0110'");
     }
 
     public void testBitStringFails(){
         checkFails("select b''=B'10FF' from t","(?s).*Encountered .*FF.* at line 1, column ...*");
         checkFails("select B'3' from t","(?s).*Encountered .*3.* at line 1, column ...*");
         checkFails("select b'1' B'0' from t","(?s).*Encountered .B.*0.* at line 1, column 13.*");
-//todo newline required for separator        checkFails("select b'1' '0' from t",?);
+        // checkFails("select b'1' '0' from t", "?"); validator error
     }
 
     public void testHexAndBinaryString(){
         checkExp("x''=X'2'","(X'' = X'2')");
         checkExp("x'fffff'=X''","(X'FFFFF' = X'')");
-//todo        checkExp("x'1' \t\t\f\r "+NL+"'2'--hi this is a comment'FF'\r\r\t\f "+NL+"'34'","X'1234'");
-//todo        checkExp("x'1' \t\t\f\r "+NL+"'000'--"+NL+"'01'","B'100001'");
+        checkExp("x'1' \t\t\f\r "+NL+"'2'--hi this is a comment'FF'\r\r\t\f "+NL+"'34'","X'1' '2' '34'");
+        checkExp("x'1' \t\t\f\r "+NL+"'000'--"+NL+"'01'","X'1' '000' '01'");
         checkExp("x'1234567890abcdef'=X'fFeEdDcCbBaA'","(X'1234567890ABCDEF' = X'FFEEDDCCBBAA')");
         checkExp("x'001'=X'000102'","(X'001' = X'000102')"); //check so inital zeros dont get trimmed somehow
         if (false) checkFails("select b'1a00' from t", "blah");
@@ -1013,7 +1103,7 @@ public class SqlParserTest extends TestCase
     public void testHexAndBinaryStringFails(){
         checkFails("select x'abcdefG' from t","(?s).*Encountered .*G.* at line 1, column ...*");
         checkFails("select x'1' x'2' from t","(?s).*Encountered .x.*2.* at line 1, column 13.*");
-//todo newline required for separator        checkFails("select x'1' '2' from t",?);
+        //checkFails("select x'1' '2' from t",?); validator error
     }
 
     public void testStringLiteral(){
@@ -1022,15 +1112,17 @@ public class SqlParserTest extends TestCase
         checkExp("n'lowercase n'","_ISO-8859-1'lowercase n'");
         checkExp("'boring string'","'boring string'");
         checkExp("_iSo_8859-1'bye'","_ISO_8859-1'bye'");
-//        checkExp("N'bye' \t\r\f\f\n' bye'","_LATIN1'bye bye'"); todo
-//        checkExp("_iso_8859-1'bye' \n\n--\n-- this is a comment\n' bye'","_ISO_8859-1'bye bye'"); todo
+        checkExp("'three' \n ' blind'\n' mice'", "'three' ' blind' ' mice'");
+        checkExp("'three' -- comment \n ' blind'\n' mice'", "'three' ' blind' ' mice'");
+        checkExp("N'bye' \t\r\f\f\n' bye'","_ISO-8859-1'bye' ' bye'");
+        checkExp("_iso_8859-1'bye' \n\n--\n-- this is a comment\n' bye'","_ISO_8859-1'bye' ' bye'");
     }
 
     public void testStringLiteralFails(){
         checkFails("select N 'space'","(?s).*Encountered .*space.* at line 1, column ...*");
         checkFails("select _latin1 \n'newline'","(?s).*Encountered.*newline.* at line 2, column ...*");
         checkFails("select _unknown-charset'' from values(true)","(?s).*UnsupportedCharsetException.*.*UNKNOWN-CHARSET.*");
-//todo  checkFails("select N'1' '2' from t",?); //need a newline in separtor
+        // checkFails("select N'1' '2' from t", "?"); a validator error
     }
 
     public void testCaseExpression() {
@@ -1063,6 +1155,8 @@ public class SqlParserTest extends TestCase
 
     public void testLiteralCollate(){
         checkExp("'string' collate latin1$sv_SE$mega_strength","'string' COLLATE ISO-8859-1$sv_SE$mega_strength");
+        checkExp("'a long '\n'string' collate latin1$sv_SE$mega_strength",
+                 "'a long ' 'string' COLLATE ISO-8859-1$sv_SE$mega_strength");
         checkExp("x collate iso-8859-6$ar_LB$1","`X` COLLATE ISO-8859-6$ar_LB$1");
         checkExp("x.y.z collate shift_jis$ja_JP$2","`X`.`Y`.`Z` COLLATE SHIFT_JIS$ja_JP$2");
         checkExp("'str1'='str2' collate latin1$sv_SE","('str1' = 'str2' COLLATE ISO-8859-1$sv_SE$primary)");
@@ -1152,7 +1246,7 @@ public class SqlParserTest extends TestCase
         checkExp("trim( lEaDing       'mustache' FROM 'beard')","TRIM(LEADING 'mustache' FROM 'beard')");
         checkExp("trim(\r\n\ttrailing\n  'mustache' FROM 'beard')","TRIM(TRAILING 'mustache' FROM 'beard')");
 
-        checkFails("trim(from 'beard')","(?s).*'FROM' near line 1 col 6, without operands preceding it is illegal.*");
+        checkFails("trim(from 'beard')","(?s).*'FROM' near line 1, column 6, without operands preceding it is illegal.*");
         checkFails("trim('mustache' in 'beard')","(?s).*Encountered .in. at line 1, column 17.*");
     }
 

@@ -1,7 +1,7 @@
 /*
 // $Id$
 // Saffron preprocessor and data engine
-// (C) Copyright 2004-2004 Disruptive Technologies, Inc.
+// (C) Copyright 2004-2004 Disruptive Tech
 // You must accept the terms in LICENSE.html to use this software.
 //
 // This program is free software; you can redistribute it and/or
@@ -17,35 +17,51 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-*/package net.sf.saffron.sql;
+*/
 
-import net.sf.saffron.sql.test.SqlTester;
-import net.sf.saffron.sql.type.SqlTypeName;
-import net.sf.saffron.sql.parser.ParserPosition;
+package net.sf.saffron.sql;
+
 import net.sf.saffron.core.SaffronType;
-import net.sf.saffron.core.SaffronTypeFactory;
-import net.sf.saffron.util.EnumeratedValues;
+import net.sf.saffron.resource.SaffronResource;
+import net.sf.saffron.sql.parser.ParserPosition;
+import net.sf.saffron.sql.parser.ParserUtil;
+import net.sf.saffron.sql.test.SqlTester;
 import net.sf.saffron.util.Util;
 
 import java.util.List;
-import java.util.ArrayList;
 
 /**
- * Defines the between operator.<br>
- * Syntax:<br>
- * <code>X [NOT] BETWEEN [ASSYMETRIC | SYMMETRIC] Y AND Z</code><br>
- * if the assymetric/symmeteric keywords are left out ASSYMETRIC is default
+ * Defines the BETWEEN operator.
+ *
+ * <p>Syntax:
+ * <blockquote><code>X [NOT] BETWEEN [ASSYMETRIC | SYMMETRIC] Y AND
+ * Z</code></blockquote>
+ *
+ * <p>If the assymetric/symmeteric keywords are left out ASSYMETRIC is default.
+ *
+ * <p>This operator is always expanded (into something like <code>Y &lt;= X
+ * AND X &lt;= Z</code>) before being converted into Rex nodes.
  *
  * @author Wael Chatila
  * @since Jun 9, 2004
  * @version $Id$
  */
-public abstract class SqlBetweenOperator extends SqlSpecialOperator {
-    public SqlBetweenOperator(String name, SqlKind kind) {
-        super(name, kind, 15, true,
-                null,
-                null,
-                null);
+public class SqlBetweenOperator extends SqlInfixOperator {
+    /** todo: Use a wrapper 'class SqlTempCall(SqlOperator,ParserPosition)
+     * extends SqlNode' to store extra flags (neg and asymmetric) to calls to
+     * BETWEEN. Then we can obsolete flag. SqlTempCall would never have any
+     * SqlNodes as children, but it can have flags. */
+    private final Flag flag;
+    /** If true the call represents 'NOT BETWEEN'. */
+    public final boolean negated;
+    private static final String[] betweenNames = new String[] {"BETWEEN", "AND"};
+    private static final String[] notBetweenNames = new String[] {"NOT BETWEEN" ,"AND"};
+
+    public SqlBetweenOperator(Flag flag, boolean negated) {
+        super(negated ? notBetweenNames : betweenNames,
+                SqlKind.Between, 15, null, null, null);
+        this.flag = flag;
+        this.negated = negated;
     }
 
     private SaffronType[] getTypeArray(SqlValidator validator,
@@ -80,7 +96,8 @@ public abstract class SqlBetweenOperator extends SqlSpecialOperator {
         return replaceAnonymous(ret.toString(), name);
     }
 
-    protected boolean checkArgTypesNoThrow(SqlCall call, SqlValidator validator, SqlValidator.Scope scope) {
+    protected boolean checkArgTypesNoThrow(SqlCall call,
+            SqlValidator validator, SqlValidator.Scope scope) {
         return super.checkArgTypesNoThrow(call, validator, scope);
     }
 
@@ -105,12 +122,12 @@ public abstract class SqlBetweenOperator extends SqlSpecialOperator {
         }
 
         if (nbrOfFails>=3) {
-            throw validator.newValidationError(call.getValidationSignatureErrorString(validator, scope));
+            throw call.newValidationSignatureError(validator, scope);
         }
     }
 
-    public int getNumOfOperands(int desiredCount) {
-        return 4;
+    public SqlOperator.OperandsCountDescriptor getOperandsCountDescriptor() {
+        return new OperandsCountDescriptor(4);
     }
 
     public void unparse(
@@ -119,7 +136,7 @@ public abstract class SqlBetweenOperator extends SqlSpecialOperator {
             int leftPrec,
             int rightPrec) {
         operands[0].unparse(writer, this.leftPrec, this.rightPrec);
-        writer.print(" "+name);
+        writer.print(" " + name);
         if (((SqlBetweenOperator.Flag) operands[1]).isAsymmetric) {
             writer.print(" ASYMMETRIC ");
         } else {
@@ -130,21 +147,104 @@ public abstract class SqlBetweenOperator extends SqlSpecialOperator {
         operands[3].unparse(writer, this.leftPrec, this.rightPrec);
     }
 
+    public int reduceExpr(int opOrdinal, List list) {
+        final ParserUtil.ToTreeListItem betweenNode =
+                (ParserUtil.ToTreeListItem) list.get(opOrdinal);
+        SqlOperator op = betweenNode.op;
+        assert op == this;
+
+        // Break the expression up into expressions. For example, a simple
+        // expression breaks down as follows:
+        //
+        //            opOrdinal   endExp1
+        //            |           |
+        //     a + b BETWEEN c + d AND e + f
+        //    |_____|       |_____|   |_____|
+        //     exp0          exp1      exp2
+
+        // Create the expression between 'BETWEEN' and 'AND'.
+        final ParserPosition pos = ((SqlNode) list.get(opOrdinal + 1)).getParserPosition();
+        SqlNode exp1 = ParserUtil.toTreeEx(list, opOrdinal + 1, 0, SqlKind.And);
+        if (opOrdinal + 2 >= list.size() ||
+                !(list.get(opOrdinal + 2)
+                instanceof ParserUtil.ToTreeListItem) ||
+                ((ParserUtil.ToTreeListItem) list.get(opOrdinal + 2)).op.kind
+                != SqlKind.And) {
+            throw SaffronResource.instance().newBetweenWithoutAnd(
+                    pos.toString());
+        }
+
+        // Create the expression after 'AND', but stopping if we encounter an
+        // operator of lower precedence.
+        //
+        // For example,
+        //   a BETWEEN b AND c + d OR e
+        // becomes
+        //   (a BETWEEN b AND c + d) OR e
+        // because OR has lower precedence than BETWEEN.
+
+        SqlNode exp2 = ParserUtil.toTreeEx(list, opOrdinal + 3, rightPrec,
+                SqlKind.Other);
+
+        // Create the call.
+        SqlNode exp0 = (SqlNode) list.get(opOrdinal - 1);
+        SqlCall newExp = createCall(new SqlNode[]{exp0, flag, exp1, exp2},
+                betweenNode.pos);
+
+        // Replace all of the matched nodes with the single reduced node.
+        ParserUtil.replaceSublist(list, opOrdinal - 1, opOrdinal + 4, newExp);
+
+        // Return the ordinal of the new current node.
+        return opOrdinal - 1;
+    }
+
+    public void test(SqlTester tester) {
+        if (negated) {
+            // not between
+            tester.checkBoolean("2 not between 1 and 3", Boolean.FALSE);
+            tester.checkBoolean("3 not between 1 and 3", Boolean.FALSE);
+            tester.checkBoolean("4 not between 1 and 3", Boolean.TRUE);
+        } else {
+            tester.checkBoolean("2 between 1 and 3", Boolean.TRUE);
+            tester.checkBoolean("2 between 3 and 2", Boolean.FALSE);
+            tester.checkBoolean("2 between symmetric 3 and 2", Boolean.TRUE);
+            tester.checkBoolean("3 between 1 and 3", Boolean.TRUE);
+            tester.checkBoolean("4 between 1 and 3", Boolean.FALSE);
+            tester.checkBoolean("1 between 4 and -3", Boolean.FALSE);
+            tester.checkBoolean("1 between -1 and -3", Boolean.FALSE);
+            tester.checkBoolean("1 between -1 and 3", Boolean.TRUE);
+            tester.checkBoolean("1 between 1 and 1", Boolean.TRUE);
+            tester.checkBoolean("x'' between x'' and x''", Boolean.TRUE);
+            tester.checkNull("cast(null as integer) between -1 and 2");
+            tester.checkNull("1 between -1 and cast(null as integer)");
+            tester.checkNull("1 between cast(null as integer) and cast(null as integer)");
+            tester.checkNull("1 between cast(null as integer) and 1");
+        }
+    }
+
+    /**
+     * TODO javadoc
+     *
+     * REVIEW jhyde 2004/8/11 Convert this back to an enumeration.
+     *   If you need to provide a parser position, wrap it in a
+     *   {@link SqlLiteral} or better, make {@link SqlSymbol} a subtype of
+     *   SqlLiteral.
+     */
     public static class Flag extends SqlSymbol {
         public final boolean isAsymmetric;
 
-        private Flag(String name, boolean isAsymmetric, ParserPosition parserPosition) {
-            super(name,parserPosition);
+        private Flag(String name, boolean isAsymmetric, ParserPosition pos) {
+            super(name,pos);
             this.isAsymmetric = isAsymmetric;
         }
 
-        public static final SqlSymbol createAsymmetric(ParserPosition parserPosition)
+        public static final Flag createAsymmetric(ParserPosition pos)
         {
-             return  new Flag("Assymetric", true, parserPosition);
+             return new Flag("Assymetric", true, pos);
         }
-        public static final SqlSymbol createSymmetric(ParserPosition parserPosition)
+        public static final Flag createSymmetric(ParserPosition pos)
         {
-             return  new Flag("Symmetric",  false, parserPosition);
+             return new Flag("Symmetric", false, pos);
         }
 
     }

@@ -54,12 +54,14 @@ public class BitString {
     private int _bitCount;
 
     //~ Methods -----------
+
     /**
      * Creates a BitString representation out of a Hex String.
      * Initial zeros are be preserved.
-     * Hex String is defined in the SQL standard to be a string with odd number
-     * of hex digits.
-     * An even number of hex digits is in the standard a Binary String.
+     * Hex String is defined in the SQL standard to be a string with odd number of
+     * hex digits.  An even number of hex digits is in the standard a Binary String.
+     * @param s a string, in hex notation
+     * @throws NumberFormatException if <code>s</code> is invalid.
      */
     public static BitString createFromHexString(String s) {
         int bitCount = s.length() * 4;
@@ -71,9 +73,14 @@ public class BitString {
     /**
      * Creates a BitString representation out of a Bit String.
      * Initial zeros are be preserved.
+     * @param s a string of 0s and 1s.
+     * @throws NumberFormatException if <code>s</code> is invalid.
      */
     public static BitString createFromBitString(String s){
-        return new BitString(s, s.length());
+        int n = s.length();
+        if (n > 0)                      // check that S is valid
+            Util.discard(new BigInteger(s, 2)); 
+        return new BitString(s, n);
     }
 
     protected BitString(String bits, int bitCount) {
@@ -156,6 +163,21 @@ public class BitString {
     }
 
 
+    /** Concatenates some BitStrings.
+     *  Concatenates all at once, not pairwise, to avoid string copies.
+     * @param args BitString[]
+     */
+    static public  BitString concat(BitString[] args) {
+        if (args.length < 2)
+            return args[0];
+        int length = 0;
+        for (int i = 0; i < args.length; i++) 
+            length += args[i]._bitCount;
+        StringBuffer sb = new StringBuffer(length);
+        for (int i = 0; i < args.length; i++)
+            sb.append(args[i]._bits);
+        return new BitString(sb.toString(), length);
+    }
 }
 
 // End BitString.java

@@ -32,6 +32,7 @@ import net.sf.saffron.rex.*;
 import net.sf.saffron.sql.*;
 import net.sf.saffron.sql.fun.SqlRowOperator;
 import net.sf.saffron.sql.fun.SqlStdOperatorTable;
+import net.sf.saffron.sql.fun.SqlLikeOperator;
 import net.sf.saffron.sql.type.SqlTypeName;
 import net.sf.saffron.util.BitString;
 import net.sf.saffron.util.NlsString;
@@ -481,32 +482,33 @@ public class SqlToRelConverter {
             final int fieldCount = expr.getType().getFieldCount();
             return rexBuilder.makeFieldAccess(expr, fieldCount - 1);
         default:
+            // REVIEW jhyde 2004/8/11: replace all of this code with a method
+            //   SqlOperator.convertToRex or something similar.
             if (node instanceof SqlCall) {
                 SqlCall call = (SqlCall) node;
+                // aliases:
+                // TODO: handle aliases in a more elegant way
                 if (call.operator.equals(
                         opTab.characterLengthFunc)) {
-                    //todo: solve aliases in a more elegent way.
                     call.operator = opTab.charLengthFunc;
                 } else  if (call.operator.equals(
                         opTab.isUnknownOperator)) {
-                    //todo: solve in a more elegent way.
                     call.operator = opTab.isNullOperator;
                 } else  if (call.operator.equals(
                         opTab.isNotUnknownOperator)) {
-                    //todo: solve in a more elegent way.
                     call.operator = opTab.isNotNullOperator;
                 }
 
                 operands = call.getOperands();
                 if (call.operator instanceof SqlBinaryOperator) {
                     final SqlBinaryOperator op = (SqlBinaryOperator) call.operator;
-//                    final RexKind opCode = (RexKind) binaryMap.get(op.name);
-//                    if (opCode == null) {
-//                        assert !call.isA(SqlNode.Kind.In) :
-//                                "IN should have been handled already";
-//                        throw Util.needToImplement(
-//                            "binary operator " + op.name);
-//                    }
+                    // final RexKind opCode = (RexKind) binaryMap.get(op.name);
+                    // if (opCode == null) {
+                    //     assert !call.isA(SqlNode.Kind.In) :
+                    //             "IN should have been handled already";
+                    //     throw Util.needToImplement(
+                    //         "binary operator " + op.name);
+                    // }
                     return rexBuilder.makeCall(
                             op, convertExpression(bb,operands[0]),
                             convertExpression(bb,operands[1]));
@@ -514,17 +516,23 @@ public class SqlToRelConverter {
                     SqlJdbcFunctionCall jdbcCall =
                             (SqlJdbcFunctionCall) call.operator;
                     return convertExpression(bb,jdbcCall.getLookupCall());
-                }
-                else if ((call.operator instanceof SqlFunction)
-                           || (call.operator instanceof SqlRowOperator)
-                           || (call.operator.equals(opTab.likeOperator))
-                           || (call.operator.equals(opTab.similarOperator)))
-                {
-                    if (call.operator.equals(opTab.castFunc)) {
-                        return convertCast(bb,call);
-                    }
+                } else if (call.operator.equals(opTab.castFunc)) {
+                    return convertCast(bb, call);
+                } else if (call.operator instanceof SqlFunction ||
+                        call.operator instanceof SqlRowOperator) {
+                    final RexNode[] exprs = convertExpressionList(bb,operands);
+                    return rexBuilder.makeCall(call.operator, exprs);
 
-                    return rexBuilder.makeCall(call.operator, convertExpressionList(bb,operands));
+                } else if (call.operator instanceof SqlLikeOperator) {
+                    final RexNode[] exprs = convertExpressionList(bb, operands);
+                    RexNode rexCall;
+                    if (((SqlLikeOperator) call.operator).negated) {
+                        rexCall = rexBuilder.makeCall(opTab.likeOperator, exprs);
+                        rexCall = rexBuilder.makeCall(opTab.notOperator, rexCall);
+                    } else {
+                        rexCall = rexBuilder.makeCall(call.operator, exprs);
+                    }
+                    return rexCall;
                 } else if (call.operator instanceof SqlPrefixOperator ||
                         call.operator instanceof SqlPostfixOperator) {
                     final RexNode exp = convertExpression(bb, operands[0]);
@@ -537,8 +545,10 @@ public class SqlToRelConverter {
                     return rexBuilder.makeCall(op, new RexNode[]{exp});
                 } else if (call.operator instanceof SqlCaseOperator) {
                     return convertCase(bb, (SqlCase) call);
-                } else if (call.operator.equals(rexBuilder._opTab.betweenOperator)) {
+                } else if (call.operator instanceof SqlBetweenOperator) {
                     return convertBetween(bb, call);
+                } else if (call.operator.equals(rexBuilder._opTab.litChainOperator)) {
+                    return convertLitChain(bb, call);
                 }
 
                 else {
@@ -575,8 +585,27 @@ public class SqlToRelConverter {
             RexNode and2 = rexBuilder.makeCall(opTab.andOperator, ge2, le2);
             res = rexBuilder.makeCall(opTab.orOperator, and1,and2);
         }
+        final SqlBetweenOperator betweenOp = (SqlBetweenOperator) call.operator;
+        if (betweenOp.negated) {
+            res = rexBuilder.makeCall(opTab.notOperator, res);
+        }
         return res;
     }
+
+    /**
+     * converts a LitChain expression: that is, concatenates the operands immediately,
+     * to produce a single literal string.
+     */
+    private RexNode convertLitChain(Blackboard bb, SqlCall call) {
+        // REVIEW mb: this code really belongs inside the LitChain operator
+        assert (call.operands.length > 0);
+        assert (call.operands[0] instanceof SqlLiteral.StringLiteral);
+        SqlLiteral.StringLiteral[] fragments = (SqlLiteral.StringLiteral[])
+            Arrays.asList(call.operands).toArray(new SqlLiteral.StringLiteral[0]);
+        SqlLiteral sum = SqlLiteral.StringLiteral.concat(fragments);
+        return convertNonNullLiteral(sum);
+    }
+
 
     /**
      * converts a cast function node.

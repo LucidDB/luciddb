@@ -45,14 +45,8 @@ public class SqlTrimFunction extends SqlFunction {
                 SqlFunction.SqlFuncTypeName.String);
     }
 
-    public int getNumOfOperands(int disiredCount) {
-        return 3;
-    }
-
-    public List getPossibleNumOfOperands() {
-        List ret = new ArrayList(argTypeInference.getArgCount());
-        ret.add(new Integer(getNumOfOperands(0)));
-        return ret;
+    public OperandsCountDescriptor getOperandsCountDescriptor() {
+        return new OperandsCountDescriptor(3);
     }
 
     public void unparse(SqlWriter writer, SqlNode[] operands,
@@ -84,7 +78,7 @@ public class SqlTrimFunction extends SqlFunction {
         }
 
         if (null == operands[1]) {
-            operands[1] = SqlLiteral.createString(" ", parserPosition);
+            operands[1] = SqlLiteral.CharString.create(" ", parserPosition);
         }
         return super.createCall(operands, parserPosition);
     }

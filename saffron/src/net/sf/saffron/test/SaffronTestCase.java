@@ -23,14 +23,18 @@
 package net.sf.saffron.test;
 
 import junit.framework.TestCase;
+import junit.framework.TestSuite;
+import junit.framework.Test;
 
 import net.sf.saffron.oj.stmt.OJStatement;
 import net.sf.saffron.runtime.SyntheticObject;
 import net.sf.saffron.core.SaffronConnection;
+import net.sf.saffron.util.Util;
 
 import java.lang.reflect.Field;
 
 import java.util.*;
+import java.util.regex.Pattern;
 
 
 public abstract class SaffronTestCase extends TestCase
@@ -212,6 +216,7 @@ public abstract class SaffronTestCase extends TestCase
     {
         try {
             Object o = runQuery(query);
+            Util.discard(o);
             return null;
         } catch (Throwable throwable) {
             return throwable;
@@ -293,6 +298,34 @@ public abstract class SaffronTestCase extends TestCase
     protected void tearDown() throws Exception
     {
         super.tearDown();
+    }
+
+    /**
+     * Copies all of the tests in a suite whose names match a given pattern.
+     */
+    public static TestSuite copySuite(TestSuite suite,Pattern testPattern)
+    {
+        TestSuite newSuite = new TestSuite();
+        Enumeration tests = suite.tests();
+        while (tests.hasMoreElements()) {
+            Test test = (Test) tests.nextElement();
+            if (test instanceof TestCase) {
+                TestCase testCase = (TestCase) test;
+                final String testName = testCase.getName();
+                if (testPattern.matcher(testName).matches()) {
+                    newSuite.addTest(test);
+                }
+            } else if (test instanceof TestSuite) {
+                TestSuite subSuite = copySuite((TestSuite) test,testPattern);
+                if (subSuite.countTestCases() > 0) {
+                    newSuite.addTest(subSuite);
+                }
+            } else {
+                // some other kind of test
+                newSuite.addTest(test);
+            }
+        }
+        return newSuite;
     }
 }
 

@@ -122,44 +122,16 @@ public abstract class SqlOperator
         return this.argTypeInference;
     }
 
-    public List getPossibleNumOfOperands() {
+    public OperandsCountDescriptor getOperandsCountDescriptor() {
         if (null!=argTypeInference) {
-            List ret = new ArrayList(argTypeInference.getArgCount());
-            ret.add(new Integer(argTypeInference.getArgCount()));
-            return ret;
+            return new OperandsCountDescriptor(argTypeInference.getArgCount());
         }
 
         // If you see this error you need to overide this method
         // or give argTypeInference a value.
         throw Util.needToImplement(this);
     }
-
-    /**
-     * Returns how many operands this operator takes.
-     * See also {@link #getPossibleNumOfOperands}.
-     *
-     * @param desiredCount Indicates how many operands the caller would like
-     *   to have, and can be ignored depending on the operator.
-     *   This parameter can be used to return the right value in case
-     *   the operator can take a different number of operands.
-     *   See {@link #getPossibleNumOfOperands}
-     *
-     * @return the number of operands this operator can take.
-     *   Note, this value is not fixed. Depending on the operator and the input
-     *   and how it was created (i.e. how many operands it was created with)
-     *   it may return a different value.
-     *   See {@link #getPossibleNumOfOperands}
-     */
-    public int getNumOfOperands(int desiredCount) {
-        Util.discard(desiredCount);
-        if (null == argTypeInference) {
-            // If you see this error you need to overide this method
-            // or give argTypeInference a value.
-            Util.needToImplement(this);
-        }
-        return argTypeInference.getArgCount();
-    }
-
+    
     public String toString() {
         return name;
     }
@@ -203,42 +175,42 @@ public abstract class SqlOperator
     /**
      * Creates a call to this operand with an array of operands.
      */
-    public SqlCall createCall(SqlNode [] operands, ParserPosition parserPosition)
+    public SqlCall createCall(SqlNode [] operands, ParserPosition pos)
     {
-        return new SqlCall(this,operands, parserPosition);
+        return new SqlCall(this,operands, pos);
     }
 
     /**
      * Creates a call to this operand with no operands.
      */
-    public SqlCall createCall(ParserPosition parserPosition)
+    public SqlCall createCall(ParserPosition pos)
     {
-        return createCall(new SqlNode[0], parserPosition);
+        return createCall(new SqlNode[0], pos);
     }
 
     /**
      * Creates a call to this operand with a single operand.
      */
-    public SqlCall createCall(SqlNode operand, ParserPosition parserPosition)
+    public SqlCall createCall(SqlNode operand, ParserPosition pos)
     {
-        return createCall(new SqlNode [] { operand }, parserPosition);
+        return createCall(new SqlNode [] { operand }, pos);
     }
 
     /**
      * Creates a call to this operand with two operands.
      */
-    public SqlCall createCall(SqlNode operand1,SqlNode operand2, ParserPosition parserPosition)
+    public SqlCall createCall(SqlNode operand1,SqlNode operand2, ParserPosition pos)
     {
-        return createCall(new SqlNode [] { operand1,operand2 }, parserPosition);
+        return createCall(new SqlNode [] { operand1,operand2 }, pos);
     }
 
     /**
      * Creates a call to this operand with three operands.
      */
     public SqlCall createCall(
-        SqlNode operand1,SqlNode operand2,SqlNode operand3, ParserPosition parserPosition)
+        SqlNode operand1,SqlNode operand2,SqlNode operand3, ParserPosition pos)
     {
-        return createCall(new SqlNode [] { operand1,operand2,operand3 }, parserPosition);
+        return createCall(new SqlNode [] { operand1,operand2,operand3 }, pos);
     }
 
     /**
@@ -267,6 +239,18 @@ public abstract class SqlOperator
     {
         return kind.getOrdinal()*31 + name.hashCode();
     }
+
+    /**
+     * Validate a call to this operator. Called just after the operands have been
+     * validated.
+     * @param call the SqlCall node for the call.
+     * @param validator the active validator.
+     */
+    void validateCall(SqlCall call, SqlValidator validator)
+    {
+        return;                         // default is to do nothing
+    }
+
 
     /**
      * Deduces the type of a call to this operator, assuming that the types of
@@ -366,11 +350,12 @@ public abstract class SqlOperator
 
     protected void checkNumberOfArg(AllowedArgInference argType,
             SqlCall call) {
-        int expectedArgCount =
-                call.operator.getNumOfOperands(call.operands.length);
-        if (expectedArgCount != call.operands.length) {
-            throw SaffronResource.instance().newValidationError(
-                    "Wrong number of arguments to " + call);
+        OperandsCountDescriptor od = call.operator.getOperandsCountDescriptor();
+        if (!od.getNoLimit() &&
+            !od.getPossibleNumOfOperands().contains(
+                new Integer(call.operands.length))){
+            throw SaffronResource.instance().newWrongNumOfArguments(""+call,
+                    call.getParserPosition().toString());
         }
     }
 
@@ -483,16 +468,16 @@ public abstract class SqlOperator
                 return false;
             }
 
-             if (null==t0.getCharset()) {
-                 Util.newInternal(
+             if (null == t0.getCharset()) {
+                 throw Util.newInternal(
                     "SaffronType object should have been assigned a " +
                     "(default) charset when calling deriveType");
             } else if (!t0.getCharset().equals(t1.getCharset())) {
                 return false;
             }
 
-            if (null==t0.getCollation()) {
-                Util.newInternal(
+            if (null == t0.getCollation()) {
+                throw Util.newInternal(
                     "SaffronType object should have been assigned a " +
                     "(default) collation when calling deriveType");
             } else if (!t0.getCollation().getCharset().equals(
@@ -506,7 +491,7 @@ public abstract class SqlOperator
 
      public void isCharTypeComparableThrows(SaffronType[] argTypes){
         if (!isCharTypeComparable(argTypes)) {
-            String msg="Types ";
+            String msg="";
             for (int i = 0; i < argTypes.length; i++) {
                 if (i>0) {
                     msg+=", ";
@@ -514,8 +499,7 @@ public abstract class SqlOperator
                 SaffronType argType = argTypes[i];
                 msg+=argType.toString();
             }
-            msg+=" not comparable to eachother";
-            throw SaffronResource.instance().newValidationError(msg);
+            throw SaffronResource.instance().newTypeNotComparableEachOther(msg);
         }
      }
 
@@ -523,15 +507,14 @@ public abstract class SqlOperator
                                            SqlValidator.Scope scope,
                                            SqlNode[] operands) {
         if (!isCharTypeComparable(validator,scope,operands)) {
-            String msg="Operands ";
+            String msg="";
             for (int i = 0; i < operands.length; i++) {
                 if (i>0) {
                     msg+=", ";
                 }
                 msg+=operands[i].toString();
             }
-            msg+=" not comparable to eachother";
-            throw SaffronResource.instance().newValidationError(msg);
+            throw SaffronResource.instance().newOperandNotComparable(msg);
         }
     }
 
@@ -570,6 +553,58 @@ public abstract class SqlOperator
     }
 
     //~ Inner Classes ---------------------------------------------------------
+
+    /**
+     * A class that describes how many operands a operator can take
+     */
+    public static class OperandsCountDescriptor {
+        List possibleList;
+        boolean noLimit;
+
+        public static final OperandsCountDescriptor variadic =
+                                            new OperandsCountDescriptor();
+
+        private OperandsCountDescriptor() {
+            possibleList = null;
+            noLimit = true;
+        }
+
+        public OperandsCountDescriptor(int count) {
+            possibleList = Util.toList(new Object[]{ new Integer(count) });
+            noLimit = false;
+        }
+
+        public OperandsCountDescriptor(int count1, int count2) {
+            possibleList = Util.toList(new Object[]{
+                new Integer(count1),
+                new Integer(count2)
+            });
+            noLimit = false;
+        }
+
+        public OperandsCountDescriptor(int count1, int count2, int count3) {
+            possibleList = Util.toList(new Object[]{
+                new Integer(count1),
+                new Integer(count2),
+                new Integer(count3)
+            });
+            noLimit = false;
+        }
+
+        /**
+         * Returns a list with items containing how many operands a operator can
+         * accept
+         * @pre noLimit == false
+         */
+        public List getPossibleNumOfOperands() {
+            Util.pre(!noLimit,"!noLimit");
+            return possibleList;
+        }
+
+        public boolean getNoLimit() {
+            return noLimit;
+        }
+    }
 
     /**
      * Strategy to infer the type of an operator call from the type of the
@@ -977,7 +1012,7 @@ public abstract class SqlOperator
             }
 
             if (nbrOfTypeErrors==m_allowedRules.length) {
-                throw validator.newValidationError(call.getValidationSignatureErrorString(validator, scope));
+                throw call.newValidationSignatureError(validator, scope);
             }
         }
     }

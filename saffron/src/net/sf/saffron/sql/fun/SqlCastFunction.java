@@ -63,10 +63,6 @@ public class SqlCastFunction extends SqlFunction {
         return argTypes[1];
     }
 
-     public int getNumOfOperands(int desiredCount) {
-        return 2;
-    }
-
     protected String getSignatureTemplate(final int operandsCount) {
         switch (operandsCount) {
         case 2: return "{0}({1} AS {2})";
@@ -75,10 +71,8 @@ public class SqlCastFunction extends SqlFunction {
         return null;
     }
 
-    public List getPossibleNumOfOperands() {
-        List ret = new ArrayList(1);
-        ret.add(new Integer(2));
-        return ret;
+    public OperandsCountDescriptor getOperandsCountDescriptor() {
+        return new OperandsCountDescriptor(2);
     }
 
     protected void checkNumberOfArg(SqlCall call) {

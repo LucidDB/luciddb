@@ -65,6 +65,25 @@ void
 castStrToApproxA(RegisterRef<double>* result,
                  RegisterRef<char*>* src);
 
+//! castA. Ascii. String to Varchar
+//!
+//! Cast a string to a variable-length string.
+//!
+//! May throw "22001" string data, right truncation
+void
+castStrToVarCharA(RegisterRef<char*>* result,
+                  RegisterRef<char*>* src);
+
+//! castA. Ascii. String to Char
+//!
+//! Cast a string to a fixed-length string.
+//!
+//! May throw "22001" string data, right truncation
+void
+castStrToCharA(RegisterRef<char*>* result,
+               RegisterRef<char*>* src);
+
+
 class ExtendedInstructionTable;
         
 void

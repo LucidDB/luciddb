@@ -167,7 +167,10 @@ public:
         mRegisterTuple[RegisterReference::EInput] = input;
         mRegisterTuple[RegisterReference::EOutput] = output;
     }
-    
+
+    //! Configure Calculator to either exit immediately upon
+    //! exceptions or to continue execution.
+    void continueOnException(bool c);
 
     //
     // Execution
@@ -233,6 +236,9 @@ protected:
     //! other register sets by reference. Typical XO execution mode.
     //! Must be set before appending instructions.
     bool mOutputRegisterByReference;
+    //! Exceptions cause calculator to return immediately, or do they
+    //! allow execution to conitnue?
+    bool mContinueOnException;
     
     //! Actual storage used by the CalcAssembler for the literal, local
     //! and status registers

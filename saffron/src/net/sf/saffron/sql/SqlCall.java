@@ -24,6 +24,7 @@ package net.sf.saffron.sql;
 
 import net.sf.saffron.core.SaffronType;
 import net.sf.saffron.sql.parser.ParserPosition;
+import net.sf.saffron.resource.SaffronResource;
 
 import java.util.ArrayList;
 
@@ -114,18 +115,11 @@ public class SqlCall extends SqlNode
     }
 
 
-    public RuntimeException newValidationSignatureError(
-            SqlValidator validator, SqlValidator.Scope scope) {
-        return validator.newValidationError(
-                getValidationSignatureErrorString(validator, scope));
-    }
-
-    String getValidationSignatureErrorString(SqlValidator validator,
-                                             SqlValidator.Scope scope) {
-        return "Can not apply '"+operator.name+"' to arguments of type " +
-               getCallSignature(validator, scope)+
-               ". Supported form(s): "
-               +operator.getAllowedSignatures();
+    public RuntimeException newValidationSignatureError(SqlValidator validator, SqlValidator.Scope scope)
+    {
+        return SaffronResource.instance().newCanNotApplyOp2Type(
+            operator.name, getCallSignature(validator, scope),
+            operator.getAllowedSignatures(),getParserPosition().toString());
     }
 }
 

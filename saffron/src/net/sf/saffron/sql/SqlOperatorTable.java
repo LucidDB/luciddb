@@ -120,19 +120,7 @@ public class SqlOperatorTable
                         return type;
                     }
 
-                    SqlTypeName retTypeName;
-                    switch(type.getSqlTypeName().ordinal_) {
-                    case SqlTypeName.Char_ordinal:
-                        retTypeName = SqlTypeName.Varchar;
-                        break;
-                    case SqlTypeName.Binary_ordinal:
-                        retTypeName = SqlTypeName.Varbinary;
-                        break;
-                    case SqlTypeName.Bit_ordinal:
-                        retTypeName = SqlTypeName.Varbit;
-                        break;
-                    default: throw Util.newInternal("Should never come here");
-                    }
+                    SqlTypeName retTypeName = toVar(type);
 
                     SaffronType ret = fac.createSqlType(retTypeName,
                             type.getPrecision());
@@ -142,9 +130,21 @@ public class SqlOperatorTable
                     }
                     return fac.createTypeWithNullability(ret, type.isNullable());
                 }
+
+                private SqlTypeName toVar(SaffronType type) {
+                    final SqlTypeName sqlTypeName = type.getSqlTypeName();
+                    switch (sqlTypeName.ordinal_) {
+                    case SqlTypeName.Char_ordinal:
+                        return SqlTypeName.Varchar;
+                    case SqlTypeName.Binary_ordinal:
+                        return SqlTypeName.Varbinary;
+                    case SqlTypeName.Bit_ordinal:
+                        return SqlTypeName.Varbit;
+                    default:
+                        throw sqlTypeName.unexpected();
+                    }
+                }
             };
-
-
 
     /**
      * Type-inference strategy whereby the result type of a call is the type of
@@ -283,20 +283,24 @@ public class SqlOperatorTable
             new SqlOperator.CascadeTypeInference(useInteger, transformNullable);
 
     /**
-     * Type-inference strategy whereby the result type of a call is using its operands biggest type,
-     * using the rules described in ISO/IEC 9075-2:1999 section 9.3 "Data types of results of aggregations"
-     * These rules are used in union, except, intercect, case and other places
-     * E.g (500000000000 + 3.0e-3) have the operands INTEGER and DOUBLE. Its biggest type is double
+     * Type-inference strategy whereby the result type of a call is using its
+     * operands biggest type, using the rules described in ISO/IEC 9075-2:1999
+     * section 9.3 "Data types of results of aggregations".
+     * These rules are used in union, except, intercect, case and other places.
+     *
+     * <p>For example, the expression <code>(500000000000 + 3.0e-3)</code> has
+     * the operands INTEGER and DOUBLE. Its biggest type is double.
      */
     public static final SqlOperator.TypeInference useBiggest =
             new SqlOperator.TypeInference() {
 
-                public SaffronType getType(SqlValidator validator, SqlValidator.Scope scope, SqlCall call) {
-                    SaffronType[] types = SqlOperator.collectTypes(validator, scope, call.operands);
+                public SaffronType getType(SqlValidator validator,
+                        SqlValidator.Scope scope, SqlCall call) {
                     return collectTypesFromCall(validator, scope, call);
                 }
 
-                public SaffronType getType(SaffronTypeFactory typeFactory, SaffronType[] argTypes) {
+                public SaffronType getType(SaffronTypeFactory typeFactory,
+                        SaffronType[] argTypes) {
                     // REVIEW jvs 1-Mar-2004: I changed this to
                     // leastRestrictive since that's its purpose (and at least
                     // for Farrago, works better than the old getBiggest code).
@@ -310,11 +314,8 @@ public class SqlOperatorTable
             };
 
     /**
-     * Type-inference strategy whereby the result type of a call is using its operands biggest type,
-     * using the rules described in ISO/IEC 9075-2:1999 section 9.3 "Data types of results of aggregations"
-     * These rules are used in union, except, intercect, case and other places
-     * E.g (500000000000 + 3.0e-3) have the operands INTEGER and DOUBLE. Its biggest type is double
-     * If any of the operands are nullable the result type will also be nullable
+     * Type-inference strategy similar to {@link #useBiggest}, except that the
+     * result is nullable if any of the arguments is nullable.
      */
     public static final SqlOperator.CascadeTypeInference useNullableBiggest =
             new SqlOperator.CascadeTypeInference(useBiggest, transformNullable);
@@ -351,10 +352,7 @@ public class SqlOperatorTable
                     SqlCollation pickedCollation = null;
                     if (argTypes[0].isCharType()) {
                         if (!SqlOperator.isCharTypeComparable(argTypes, 0, 1)) {
-                            throw SaffronResource.instance().newValidationError(
-                                    argTypes[0].toString() +
-                                    " is not comparable to " +
-                                    argTypes[1].toString());
+                            throw SaffronResource.instance().newTypeNotComparable(argTypes[0].toString(), argTypes[1].toString());
                         }
 
                         pickedCollation=
@@ -614,9 +612,9 @@ public class SqlOperatorTable
                     SqlValidator.Scope scope,
                     SqlCall call)
             {
-                if (!checkNoThrowing(call,validator,scope)){
-                    assert(null==call.getParserPosition()) : "todo, use position data in error msg";
-                    throw validator.newValidationError("Parameters must be of same type");
+                if (!checkNoThrowing(call,validator,scope)) {
+                    throw SaffronResource.instance().newNeedSameTypeParameter(
+                            call.getParserPosition().toString());
                 }
             }
 
@@ -646,9 +644,9 @@ public class SqlOperatorTable
                     SqlValidator.Scope scope,
                     SqlCall call)
             {
-                if (!checkNoThrowing(call,validator,scope)){
-                    assert(null==call.getParserPosition()) : "todo, use position data in error msg";
-                    throw validator.newValidationError("Parameters must be of same type");
+                if (!checkNoThrowing(call,validator,scope)) {
+                    throw SaffronResource.instance().newNeedSameTypeParameter(
+                            call.getParserPosition().toString());
                 }
             }
 
@@ -1064,7 +1062,7 @@ public class SqlOperatorTable
      * OR nullable binary, nullable binary.
      */
     public static final SqlOperator.CompositeAllowedArgInference
-            typeNullabeSameSame_or_NullableNumericNumeric_or_NullableBinariesBinaries_or_NullableCharsChars =
+            typeNullableSameSame_or_NullableNumericNumeric_or_NullableBinariesBinaries_or_NullableCharsChars =
         new SqlOperator.CompositeAllowedArgInference(
                 new SqlOperator.AllowedArgInference[]{typeNullableSameSame,
                                                      typeNullableNumericNumeric,
@@ -1241,190 +1239,21 @@ public class SqlOperatorTable
         }
     }
 
-    /**
-     * Converts a list of {expression, operator, expression, ...} into a tree,
-     * taking operator precedence and associativity into account.
-     *
-     * @pre list.size() % 2 == 1
-     */
-    public SqlNode toTree(List list)
-    {
-        // Make several passes over the list, and each pass, coalesce the
-        // expressions with the highest precedence.
-        while (list.size() > 1) {
-            final int count = list.size();
-            int i = 1;
-            while (i < count) {
-                SqlOperator previous;
-                SqlOperator current = (SqlOperator) list.get(i);
-                SqlOperator next;
-                int previousRight;
-                int left = current.leftPrec;
-                int right = current.rightPrec;
-                int nextLeft;
-                if (current instanceof SqlBinaryOperator) {
-                    if (i == 1) {
-                        previous = null;
-                        previousRight = 0;
-                    } else {
-                        previous = (SqlOperator) list.get(i - 2);
-                        previousRight = previous.rightPrec;
-                    }
-                    if (i == (count - 2)) {
-                        next = null;
-                        nextLeft = 0;
-                    } else {
-                        next = (SqlOperator) list.get(i + 2);
-                        nextLeft = next.leftPrec;
-                    }
-                    if ((previousRight < left) && (right >= nextLeft)) {
-                        // For example,
-                        //    i:  0 1 2 3 4 5 6 7 8
-                        // list:  a + b * c * d + e
-                        // prec: 0 1 2 3 4 3 4 1 2 0
-                        //
-                        // At i == 3, we have the first '*' operator, and its
-                        // surrounding precedences obey the relation 2 < 3 and
-                        // 4 >= 3, so we can reduce (b * c) to a single node.
-                        SqlNode leftExp = (SqlNode) list.get(i - 1);
-
-                        // For example,
-                        //    i:  0 1 2 3 4 5 6 7 8
-                        // list:  a + b * c * d + e
-                        // prec: 0 1 2 3 4 3 4 1 2 0
-                        //
-                        // At i == 3, we have the first '*' operator, and its
-                        // surrounding precedences obey the relation 2 < 3 and
-                        // 4 >= 3, so we can reduce (b * c) to a single node.
-                        SqlNode rightExp = (SqlNode) list.get(i + 1);
-                        final SqlCall newExp =
-                            current.createCall(leftExp,rightExp,null);
-
-                        // Replace elements {i - 1, i, i + 1} with the new
-                        // expression.
-                        list.remove(i + 1);
-                        list.remove(i);
-                        list.set(i - 1,newExp);
-                        break;
-                    }
-                    i += 2;
-                } else if (current instanceof SqlPostfixOperator) {
-                    if (i == 1) {
-                        previous = null;
-                        previousRight = 0;
-                    } else {
-                        previous = (SqlOperator) list.get(i - 2);
-                        previousRight = previous.rightPrec;
-                    }
-                    if (previousRight < left) {
-                        // For example,
-                        //    i:  0 1 2 3 4 5 6 7 8
-                        // list:  a + b * c ! + d
-                        // prec: 0 1 2 3 4 3 0 2
-                        //
-                        // At i == 3, we have the postfix '!' operator. Its
-                        // high precedence determines that it binds with 'b *
-                        // c'. The precedence of the following '+' operator is
-                        // irrelevant.
-                        SqlNode leftExp = (SqlNode) list.get(i - 1);
-
-                        final SqlCall newExp = current.createCall(leftExp,null);
-
-                        // Replace elements {i - 1, i} with the new expression.
-                        list.remove(i);
-                        list.set(i - 1,newExp);
-                        break;
-                    }
-                    ++i;
-                }
-                else if ((current instanceof SqlSpecialOperator) &&
-                        (current.kind.isA(SqlKind.Between) ||
-                        current.kind.isA(SqlKind.NotBetween))) {
-                    // Since this is a special operator, we dont look at the pred for now
-                    SqlNode firstAnd=null;
-                    SqlNode secondAnd=null;
-                    // Find the first BETWEEN's AND
-
-                    int ii=i+2;
-                    for ( /* empty */; ii < list.size(); ii++) {
-                        Object o = list.get(ii);
-                        if ((o instanceof SqlOperator) &&
-                                ((SqlOperator)o).kind.isA(SqlKind.And)) {
-                            ArrayList suicideList = new ArrayList(i);
-                            suicideList.addAll(list.subList(i+2,ii));
-                            firstAnd = toTree(suicideList); // 1st BETWEEN AND's operand
-                            break;
-                        }
-                    }
-                    // ii now contains the position where first AND was found
-                    // now search for the first (if exist) operator that has lower precedence than AND
-
-                    int jj=++ii;
-                    for ( /* empty */ ; jj < list.size(); jj++) {
-                        Object o = list.get(jj);
-                        if ((o instanceof SqlOperator) &&
-                                (current.rightPrec>=((SqlOperator) o).leftPrec))     //TODO hack for now
-                        {
-                            break;
-                        }
-                    }
-
-                    ArrayList suicideList = new ArrayList(list.size()-jj);
-                    suicideList.addAll(list.subList(ii,jj));
-                    secondAnd = toTree(suicideList); // 2nd BETWEEN AND's operand
-
-                    // at position
-                    // i-1 is before SqlBetweenOperator
-                    // i is SqlBetweenOperator
-                    // i+1 is flag
-                    SqlNode leftMostExp = (SqlNode) list.get(i - 1);
-                    SqlNode flag = (SqlNode) list.get(i + 1);
-                    SqlCall newExp = std().betweenOperator.createCall(
-                            new SqlNode[]{leftMostExp, flag, firstAnd, secondAnd},null);
-                    if (current.kind.isA(SqlKind.NotBetween))
-                    {
-                        newExp = std().notOperator.createCall(newExp,null);
-                    }
-
-                    list.set(i - 1,newExp);
-
-                    for( --jj; jj>=i;--jj) {
-                        list.remove(jj);
-                    }
-                    break;
-                }
-                else {
-                    throw Util.newInternal("Unexpected operator type: " +
-                            current);
-                }
-            }
-            // Require the list shrinks each time around -- otherwise we will
-            // never terminate.
-            assert list.size() < count;
-        }
-        return (SqlNode) list.get(0);
-    }
-
-    /**
-     * Retrieves an operator by its id.
-     */
-    public SqlOperator lookup(SqlKind kind)
-    {
-        return null;
-    }
-
     //~ Methods ---------------------------------------------------------------
-    public SqlCall createCall(String funName, SqlNode[] operands, ParserPosition parserPosition) {
+    public SqlCall createCall(String funName, SqlNode[] operands,
+            ParserPosition pos) {
         List funs = lookupFunctionsByName(funName);
-        if (!funs.isEmpty()){
-            return ((SqlFunction) funs.get(0)).createCall(operands, parserPosition);
+        final SqlFunction fun;
+        if (funs.isEmpty()) {
+            fun = new SqlFunction(funName, null, null, null) {
+                public void test(SqlTester tester) {
+                    /* empty implementation */
+                }
+            };
+        } else {
+            fun = (SqlFunction) funs.get(0);
         }
-
-        return  new SqlFunction(funName, null, null,null){
-                    public void test(SqlTester tester) {
-                        /* empty implementation */
-                    }
-                }.createCall(operands, parserPosition);
+        return fun.createCall(operands, pos);
      }
 
     /**
@@ -1471,8 +1300,11 @@ public class SqlOperatorTable
         List candidateList = new LinkedList();
         for (int i = 0; i < funcList.size(); i++) {
             SqlFunction function = (SqlFunction) funcList.get(i);
-            List possibleNums = function.getPossibleNumOfOperands();
-            if (possibleNums.contains(new Integer(numberOfParams))) {
+            SqlOperator.OperandsCountDescriptor od =
+                function.getOperandsCountDescriptor();
+            if (od.getNoLimit() ||
+                od.getPossibleNumOfOperands().contains(
+                    new Integer(numberOfParams))) {
                 candidateList.add(function);
             }
         }
@@ -1520,8 +1352,8 @@ public class SqlOperatorTable
         // Reference: http://www.pdc.kth.se/doc/SP/manuals/db2-5.0/html/db2s0/db2s067.htm#HDRUDFSEL
         //
         for (int i = 0; i < argTypes.length; i++) {
-            SaffronType argType = argTypes[i];
-            throw Util.needToImplement("Function resolution with different types is not implemented yet.");
+            throw Util.needToImplement("Function resolution with different " +
+                    "types is not implemented yet.");
         }
         return null;
     }

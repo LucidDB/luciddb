@@ -102,6 +102,8 @@ protected:
         SharedProxyStreamGraphHandle);
     static SavepointId getSavepointId(SharedProxySvptHandle);
 
+    void deleteDbHandle(DbHandle *);
+    
     void setDbHandle(SharedProxyDbHandle,DbHandle *);
     void setTxnHandle(SharedProxyTxnHandle,TxnHandle *);
     void setStreamGraphHandle(SharedProxyStreamGraphHandle,StreamGraphHandle *);

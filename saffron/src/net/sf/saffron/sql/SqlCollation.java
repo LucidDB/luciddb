@@ -129,17 +129,14 @@ public class SqlCollation
      * @param col1 first operand for the dyadic operation
      * @param col2 second operand for the dyadic operation
      * @return the resulting collation sequence. If no collating sequence could
-     * be deduced a {@link SaffronResource#newValidationError} is thrown
+     * be deduced a {@link SaffronResource#newInvalidCompare} is thrown
      */
     public static SqlCollation getCoercibilityDyadicOperatorThrows(SqlCollation col1, SqlCollation col2) {
         SqlCollation ret = getCoercibilityDyadic(col1, col2);
         if (null==ret) {
-            //todo change exception type
-            //todo improve error msg
-            throw SaffronResource.instance().newValidationError(
-                    "Invalid compare. Comparing  (collation, coercibility): "+
-                    "("+col1.m_collationName+", "+col1.m_coercibility+") with "+
-                    "("+col2.m_collationName+", "+col2.m_coercibility+") is illegal");
+            throw SaffronResource.instance().newInvalidCompare(
+                    col1.m_collationName, ""+col1.m_coercibility,
+                    col2.m_collationName, ""+col2.m_coercibility);
         }
         return ret;
     }
@@ -150,7 +147,7 @@ public class SqlCollation
      * @param col1 first operand for the dyadic operation
      * @param col2 second operand for the dyadic operation
      * @return the resulting collation sequence. If no collating sequence could
-     * be deduced a {@link SaffronResource#newValidationError} is thrown
+     * be deduced a {@link SaffronResource#newInvalidCompare} is thrown
      */
     public static String getCoercibilityDyadicComparison(SqlCollation col1, SqlCollation col2) {
         return getCoercibilityDyadicOperatorThrows(col1, col2).m_collationName;
@@ -209,9 +206,8 @@ public class SqlCollation
                 if(col1.m_collationName.equals(col2.m_collationName)) {
                     return new SqlCollation(col2.m_collationName, Coercibility.Explicit);
                 }
-                throw SaffronResource.instance().newValidationError(
-                       "Invalid syntax. Two explicit different collations ("+
-                       col1.m_collationName+", "+col2.m_collationName+") are illegal");
+                throw SaffronResource.instance().newDifferentCollations(
+                       col1.m_collationName,col2.m_collationName);
             }
         }
 

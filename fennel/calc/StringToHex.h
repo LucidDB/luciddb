@@ -36,6 +36,9 @@ string
 stringToHex(char const * const buf);
 
 string
+stringToHex(string const & s);
+
+string
 stringToHex(char const * const buf, uint buflen);
 
 

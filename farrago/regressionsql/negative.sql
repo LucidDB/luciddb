@@ -102,3 +102,9 @@ values current_timestamp(-1);
 values current_time(-20);
 values current_date(2);
 values log(1,2,3);
+
+values (1),(2,3);
+values (1),('1');
+values (1,'1'),(2,3);
+
+

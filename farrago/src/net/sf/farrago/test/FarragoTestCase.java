@@ -32,12 +32,14 @@ import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.config.*;
 
 import net.sf.saffron.test.*;
+import net.sf.saffron.util.SaffronProperties;
 
 import java.io.*;
 
 import java.sql.*;
 
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.logging.*;
 
 import sqlline.SqlLine;
@@ -215,6 +217,10 @@ public abstract class FarragoTestCase extends DiffTestCase
     /**
      * Generic implementation of suite() to be called by subclasses.
      *
+     * <p>If the {@link SaffronProperties#testEverything} property is false,
+     * and the {@link SaffronProperties#testName} property is set, then returns
+     * a suite containing only the tests whose names match.
+     *
      * @param suite the suite being wrapped
      *
      * @return a JUnit test suite which will take care of initialization of
@@ -222,6 +228,16 @@ public abstract class FarragoTestCase extends DiffTestCase
      */
     public static Test wrappedSuite(TestSuite suite)
     {
+        // Filter out tests whose names match "saffron.test.Name".
+        final SaffronProperties saffronProps = SaffronProperties.instance();
+        if (!saffronProps.testEverything.get()) {
+            final String testNamePattern = saffronProps.testName.get();
+            if (testNamePattern != null) {
+                Pattern testPattern = Pattern.compile(testNamePattern);
+                suite = SaffronTestCase.copySuite(suite, testPattern);
+            }
+        }
+
         TestSetup wrapper =
             new TestSetup(suite) {
                 protected void setUp() throws Exception

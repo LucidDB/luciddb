@@ -95,7 +95,7 @@ public class FarragoConcurrencyTest
             markToFail("expected a parse error", "ParseException");
         // expect validator error: "Unknown identifier"
         cmdGen.addPrepareCommand(1, step++, "select bean from sales.depts").
-            markToFail("expected validator error", "Unknown identifier");
+            markToFail("expected validator error", "Unknown identifier 'BEAN' near: line 1, column 8");
         executeTest(cmdGen, true);
     }
 

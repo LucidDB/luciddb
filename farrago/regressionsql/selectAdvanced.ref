@@ -204,10 +204,10 @@ Error: Can not apply '+' to arguments of type '<BOOLEAN> + <INTEGER>'. Supported
 '<DOUBLE> + <DECIMAL>'
 '<DOUBLE> + <FLOAT>'
 '<DOUBLE> + <REAL>'
-'<DOUBLE> + <DOUBLE>' (state=,code=0)
+'<DOUBLE> + <DOUBLE>' near: line 1, column 52 (state=,code=0)
 0: jdbc:farrago:> -- fails
 0: jdbc:farrago:> select cast(null as boolean) and 1 from values(1);
-Error: Can not apply 'AND' to arguments of type '<BOOLEAN> AND <INTEGER>'. Supported form(s): '<BOOLEAN> AND <BOOLEAN>' (state=,code=0)
+Error: Can not apply 'AND' to arguments of type '<BOOLEAN> AND <INTEGER>'. Supported form(s): '<BOOLEAN> AND <BOOLEAN>' near: line 1, column 34 (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- OK - some of these test fail due to cast issues but shouldnt
 0: jdbc:farrago:> --select cast(null as tinyint)+1 from values(1);

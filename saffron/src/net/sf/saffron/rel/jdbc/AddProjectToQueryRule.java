@@ -30,6 +30,7 @@ import net.sf.saffron.rex.RexNode;
 import net.sf.saffron.sql.SqlNodeList;
 import net.sf.saffron.sql.SqlSelect;
 import net.sf.saffron.sql.SqlWriter;
+import net.sf.saffron.sql.parser.ParserPosition;
 
 
 /**
@@ -74,7 +75,7 @@ class AddProjectToQueryRule extends VolcanoRule
                 oldQuery.dataSource);
         SqlWriter writer = new SqlWriter(query.dialect,null);
         writer.pushQuery(query.sql);
-        SqlNodeList list = new SqlNodeList(null);
+        SqlNodeList list = new SqlNodeList(ParserPosition.ZERO);
         for (int i = 0; i < project.getChildExps().length; i++) {
             RexNode exp = project.getChildExps()[i];
             list.add(project.getCluster().rexToSqlTranslator.translate(writer,exp));

@@ -160,6 +160,9 @@ public class BytePointer extends ByteArrayInputStream implements AssignableValue
      */
     public void enforceBytePrecision(int precision,boolean needPad,byte padByte)
     {
+        if (isNull()) {
+            return;
+        }
         int len = count - pos;
         if (len > precision) {
             // truncate

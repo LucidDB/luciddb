@@ -61,6 +61,10 @@ import javax.jmi.reflect.*;
 public class FarragoDatabase
     extends FarragoCompoundAllocation
 {
+    // TODO jvs 11-Aug-2004:  Get rid of this once corresponding TODO in
+    // FarragoDbSession.prepare is resolved.
+    public static final Object DDL_LOCK = new Integer(1994);
+
     private static final Logger tracer = FarragoTrace.getDatabaseTracer();
 
     /**
