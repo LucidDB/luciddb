@@ -27,7 +27,7 @@ select time '23.54.43.1,000' from values ('true');
 
 -- test datatype
 create schema test;
-set schema test;
+set schema 'test';
 create table t_time(time_col time(0) not null primary key, time_col2 time(0));
 
 -- negative test

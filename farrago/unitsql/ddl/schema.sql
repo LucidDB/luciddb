@@ -25,11 +25,41 @@ drop schema s cascade;
 -- should fail with duplicate name
 create schema sales;
 
+-- set a nonexistent schema:  should succeed
+set schema 'erehwon';
+
+-- but all table references should fail
+select * from t;
+
+-- set a numeric constant schema name:  should fail
+set schema 1;
+
+-- set an identifier as schema name:  should fail (surprise!)
+set schema sales;
+
+-- set a schema name which evaluates to a non-identifier:  should fail
+set schema '1';
+
+-- set a schema list:  should fail
+set schema 'sales, marketing';
+
+-- set a qualifed schema name:  should succeed
+set schema 'localdb.sales';
+select * from depts where 1=0;
+
+-- set a quoted schema name:  should succeed
+set schema '"SALES"';
+select * from depts where 1=0;
+
+-- set a non-existent quoted schema name:  should succeed
+set schema '"sales"';
+-- but lookup should fail
+select * from depts where 1=0;
 
 -- see what happens when we drop the current schema
 create schema n;
 
-set schema n;
+set schema 'n';
 
 create table nt(i int not null primary key);
 

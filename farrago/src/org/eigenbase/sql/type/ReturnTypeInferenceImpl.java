@@ -569,10 +569,10 @@ public class ReturnTypeInferenceImpl
         new TransformCascade(useInteger, toNullable);
 
     /**
-     * Type-inference strategy which always returns "VARCHAR(30)".
+     * Type-inference strategy which always returns "VARCHAR(2000)".
      */
-    public static final ReturnTypeInference useVarchar30 =
-        new FixedReturnTypeInference(SqlTypeName.Varchar, 30);
+    public static final ReturnTypeInference useVarchar2000 =
+        new FixedReturnTypeInference(SqlTypeName.Varchar, 2000);
 
     /**
      * Type-inference strategy whereby the result type of a call is using its

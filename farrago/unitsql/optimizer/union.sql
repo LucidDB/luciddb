@@ -1,7 +1,7 @@
 -- $Id$
 -- Test UNION queries
 
-set schema sales;
+set schema 'sales';
 
 -- force usage of Java calculator
 alter system set "calcVirtualMachine" = 'CALCVM_JAVA';

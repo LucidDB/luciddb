@@ -70,7 +70,12 @@ public class DdlVisitor
     }
 
     // visitor dispatch
-    public void visit(DdlSetQualifierStmt stmt)
+    public void visit(DdlSetCatalogStmt stmt)
+    {
+    }
+
+    // visitor dispatch
+    public void visit(DdlSetSchemaStmt stmt)
     {
     }
 

@@ -2,7 +2,7 @@
 -- test datetime ddl.
 
 create schema tempo;
-set schema tempo;
+set schema 'tempo';
 
 create table datetime1(
     col1 int not null primary key,

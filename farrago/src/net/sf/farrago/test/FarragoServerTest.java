@@ -79,7 +79,7 @@ public class FarragoServerTest extends TestCase
                 new Properties());
         boolean stopped;
         try {
-            connection.createStatement().execute("set schema sales");
+            connection.createStatement().execute("set schema 'sales'");
             stopped = server.stopSoft();
             assertFalse(stopped);
         } finally {
@@ -101,7 +101,7 @@ public class FarragoServerTest extends TestCase
             clientDriver.connect(
                 clientDriver.getUrlPrefix() + "localhost",
                 new Properties());
-        connection.createStatement().execute("set schema sales");
+        connection.createStatement().execute("set schema 'sales'");
         killServer();
     }
 

@@ -4,9 +4,9 @@
 create schema udftest;
 create schema udftest2;
 
-set schema udftest;
+set schema 'udftest';
 
-set path udftest;
+set path 'udftest';
 
 create function celsius_to_fahrenheit(in c double)
 returns double

@@ -125,7 +125,7 @@ Error: net.sf.farrago.parser.ParseException: Illegal TIMESTAMP literal '2004-10-
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test datatype
 0: jdbc:farrago:> create schema test;
-0: jdbc:farrago:> set schema test;
+0: jdbc:farrago:> set schema 'test';
 0: jdbc:farrago:> create table t_timestamp(timestamp_col timestamp(0) not null primary key, timestamp_col2 timestamp(0));
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- negative test

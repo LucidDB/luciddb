@@ -34,16 +34,10 @@ public class FarragoSessionVariables implements Cloneable
     //~ Instance fields -------------------------------------------------------
 
     /**
-     * The name of the default CwmCatalog qualifier, changed by SET CATALOG.
+     * The name of the default catalog qualifier, changed by SET CATALOG.
      * Can never be null.
      */
     public String catalogName;
-
-    /**
-     * The name of the catalog for the default schema qualifier, changed by
-     * SET SCHEMA.  Can be null to indicate no default schema has been set yet.
-     */
-    public String schemaCatalogName;
 
     /**
      * The name of the default schema qualifier, changed by SET SCHEMA.  Can
@@ -67,9 +61,9 @@ public class FarragoSessionVariables implements Cloneable
     public String currentUserName;
 
     /**
-     * List of schemas to search for unqualified functions and types
-     * (the SQL-path).  Entries are SqlIdentifiers (catalog.schema).
-     * This list is immutable to prevent accidental aliasing.
+     * Value of SQL expression CURRENT_PATH as a list of schemas.  Entries are
+     * SqlIdentifiers (catalog.schema).  This list is immutable to prevent
+     * accidental aliasing.
      */
     public List schemaSearchPath;
 

@@ -1,7 +1,7 @@
 -- $Id$
 -- Test queries which instantiate the calculator (filter and/or project)
 
-set schema sales;
+set schema 'sales';
 
 -- force usage of Fennel calculator
 alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';

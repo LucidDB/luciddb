@@ -274,6 +274,26 @@ encountered near {1}</text>
     <text>Search path catalog {0} does not match catalog {1} of schema being defined</text>
 </exception>
 
+<exception id="420510" name="ValidatorSetStmtNonString">
+    <text>SET statement requires character string value expression</text>
+</exception>
+
+<exception id="420520" name="ValidatorSetCatalogInvalidExpr">
+    <text>Invalid catalog name ''{0}'' in SET CATALOG statement</text>
+</exception>
+
+<exception id="420530" name="ValidatorSetSchemaInvalidExpr">
+    <text>Invalid schema name ''{0}'' in SET SCHEMA statement</text>
+</exception>
+
+<exception id="420540" name="ValidatorSetPathInvalidExpr">
+    <text>Invalid schema name list specification ''{0}'' in SET PATH statement</text>
+</exception>
+
+<exception id="420550" name="ValidatorSetStmtInvalid">
+    <text>Unable to evaluate expression in SET statement</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Fennel resources 440,000 - 450,000 -->
 <!-- Actual resources are defined separately in Fennel -->

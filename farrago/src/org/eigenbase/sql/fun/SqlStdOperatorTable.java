@@ -142,11 +142,13 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
     }
 
     /**
-     * Abstract base class for user functions such as "USER", "CURRENT_ROLE".
+     * Abstract base class for functions such as "USER", "CURRENT_ROLE",
+     * and "CURRENT_PATH".
      */
-    private static abstract class SqlAbstractUserFunction extends SqlFunction {
-        public SqlAbstractUserFunction(String name) {
-            super(name, SqlKind.Function, ReturnTypeInferenceImpl.useVarchar30,
+    private static abstract class SqlStringContextVariable extends SqlFunction {
+        public SqlStringContextVariable(String name) {
+            super(
+                name, SqlKind.Function, ReturnTypeInferenceImpl.useVarchar2000,
                 null, OperandsTypeChecking.typeEmpty,
                 SqlFunction.SqlFuncTypeName.System);
         }
@@ -1337,7 +1339,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         };
 
     /** The <code>USER</code> function. */
-    public final SqlFunction userFunc = new SqlAbstractUserFunction("USER") {
+    public final SqlFunction userFunc = new SqlStringContextVariable("USER") {
         public void test(SqlTester tester)
         {
             SqlOperatorTests.testUserFunc(tester);
@@ -1345,7 +1347,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
     };
 
     /** The <code>CURRENT_USER</code> function. */
-    public final SqlFunction currentUserFunc = new SqlAbstractUserFunction(
+    public final SqlFunction currentUserFunc = new SqlStringContextVariable(
             "CURRENT_USER") {
         public void test(SqlTester tester)
         {
@@ -1354,7 +1356,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
     };
 
     /** The <code>SESSION_USER</code> function. */
-    public final SqlFunction sessionUserFunc = new SqlAbstractUserFunction(
+    public final SqlFunction sessionUserFunc = new SqlStringContextVariable(
             "SESSION_USER") {
         public void test(SqlTester tester)
         {
@@ -1363,7 +1365,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
     };
 
     /** The <code>SYSTEM_USER</code> function. */
-    public final SqlFunction systemUserFunc = new SqlAbstractUserFunction(
+    public final SqlFunction systemUserFunc = new SqlStringContextVariable(
             "SYSTEM_USER") {
         public void test(SqlTester tester)
         {
@@ -1372,7 +1374,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
     };
 
     /** The <code>CURRENT_PATH</code> function. */
-    public final SqlFunction currentPathFunc = new SqlAbstractUserFunction(
+    public final SqlFunction currentPathFunc = new SqlStringContextVariable(
             "CURRENT_PATH") {
         public void test(SqlTester tester)
         {
@@ -1381,7 +1383,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
     };
 
     /** The <code>CURRENT_ROLE</code> function. */
-    public final SqlFunction currentRoleFunc = new SqlAbstractUserFunction(
+    public final SqlFunction currentRoleFunc = new SqlStringContextVariable(
             "CURRENT_ROLE") {
         public void test(SqlTester tester)
         {

@@ -3,7 +3,7 @@
 
 create schema s;
 
-set schema s;
+set schema 's';
 
 -- test * expansion
 create view v1 as select * from sales.depts;
@@ -44,8 +44,6 @@ create view v24 as select * from v22,v23;
 drop schema s cascade;
 
 create schema s;
-
-set schema s;
 
 create table t1(i int not null primary key);
 

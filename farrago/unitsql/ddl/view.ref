@@ -3,7 +3,7 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema s;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> set schema s;
+0: jdbc:farrago:> set schema 's';
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test * expansion
 0: jdbc:farrago:> create view v1 as select * from sales.depts;
@@ -68,8 +68,6 @@ Error: ORDER BY is illegal in views (state=,code=0)
 0: jdbc:farrago:> drop schema s cascade;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema s;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> set schema s;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create table t1(i int not null primary key);
 0: jdbc:farrago:> 

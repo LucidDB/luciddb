@@ -89,7 +89,7 @@ public class Rex2CalcPlanTest extends FarragoTestCase
         throws Exception
     {
         super.setUp();
-        stmt.execute("set schema sales");
+        stmt.execute("set schema 'sales'");
         FarragoJdbcEngineConnection farragoConn =
             (FarragoJdbcEngineConnection) connection;
         TestContext testContext = getTestContext();

@@ -141,13 +141,17 @@ public abstract class FarragoTestCase extends DiffTestCase
             Runtime.getRuntime().addShutdownHook(shutdownHook);
         }
         if (connection == null) {
-            FarragoJdbcEngineDriver driver = newJdbcEngineDriver();
-            connection = DriverManager.getConnection(driver.getUrlPrefix());
+            connection = newConnection();
             FarragoJdbcEngineConnection farragoConnection =
                 (FarragoJdbcEngineConnection) connection;
             repos = farragoConnection.getSession().getRepos();
-            connection.setAutoCommit(false);
             saveParameters();
+        } else {
+            // cycle connections to discard any leftover session state; but do
+            // it crab-wise so that repos doesn't get shut down in the middle
+            Connection newConnection = newConnection();
+            connection.close();
+            connection = newConnection;
         }
 
         runCleanup();
@@ -180,6 +184,16 @@ public abstract class FarragoTestCase extends DiffTestCase
         if (connection != null) {
             connection.rollback();
         }
+    }
+
+    private static Connection newConnection()
+        throws Exception
+    {
+        FarragoJdbcEngineDriver driver = newJdbcEngineDriver();
+        Connection newConnection =
+            DriverManager.getConnection(driver.getUrlPrefix());
+        newConnection.setAutoCommit(false);
+        return newConnection;
     }
 
     public static void forceShutdown() throws Exception

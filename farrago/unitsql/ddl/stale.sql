@@ -3,7 +3,7 @@
 
 create schema overstock;
 
-set schema overstock;
+set schema 'overstock';
 
 create table tomato_sauce(sku bigint not null primary key);
 

@@ -6,7 +6,7 @@
 
 -- create views in system-owned schema sys_boot.jdbc_metadata
 create schema sys_boot.jdbc_metadata;
-set schema sys_boot.jdbc_metadata;
+set schema 'sys_boot.jdbc_metadata';
 
 -- NOTE:  don't include ORDER BY in the view definitions
 

@@ -6,7 +6,7 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- create views in system-owned schema sys_boot.jdbc_metadata
 0: jdbc:farrago:> create schema sys_boot.jdbc_metadata;
-0: jdbc:farrago:> set schema sys_boot.jdbc_metadata;
+0: jdbc:farrago:> set schema 'sys_boot.jdbc_metadata';
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- NOTE:  don't include ORDER BY in the view definitions
 0: jdbc:farrago:> 

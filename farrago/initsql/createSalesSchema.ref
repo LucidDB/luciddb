@@ -6,7 +6,7 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- create local sales schema
 0: jdbc:farrago:> create schema sales;
-0: jdbc:farrago:> set schema sales;
+0: jdbc:farrago:> set schema 'sales';
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create table depts(
 . . . . . . . . >     deptno integer not null primary key,

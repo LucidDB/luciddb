@@ -2,7 +2,7 @@
 -- Test DDL for collection types
 
 create schema collectionsTest;
-set schema collectionsTest;
+set schema 'collectionsTest';
 
 -- MULTISET 
 create table multisetTable(i integer primary key, ii integer multiset);

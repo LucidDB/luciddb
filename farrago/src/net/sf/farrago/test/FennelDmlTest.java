@@ -461,7 +461,7 @@ public class FennelDmlTest extends FarragoTestCase
         throws Exception
     {
         super.setUp();
-        stmt.execute("set schema sales");
+        stmt.execute("set schema 'sales'");
     }
 }
 

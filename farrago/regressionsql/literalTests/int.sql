@@ -25,7 +25,7 @@ select -4567890123456789 as t1 from values ('true');
 
 -- test datatype
 create schema test;
-set schema test;
+set schema 'test';
 create table t_int(int_col int not null primary key,
         int_col2 int);
 

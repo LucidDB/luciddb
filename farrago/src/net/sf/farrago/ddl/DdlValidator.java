@@ -772,7 +772,7 @@ public class DdlValidator extends FarragoCompoundAllocation
         FarragoSessionVariables sessionVariables =
             getStmtValidator().getSessionVariables();
             
-        sessionVariables.schemaCatalogName =
+        sessionVariables.catalogName =
             schema.getNamespace().getName();
         sessionVariables.schemaName =
             schema.getName();

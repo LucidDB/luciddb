@@ -115,7 +115,7 @@ public class FarragoQueryTest extends FarragoTestCase
     public void testSetCatalog()
         throws Exception
     {
-        String sql = "set catalog sys_cwm";
+        String sql = "set catalog 'sys_cwm'";
         stmt.execute(sql);
         sql = "select \"name\" from \"Relational\".\"Schema\"";
         resultSet = stmt.executeQuery(sql);
@@ -125,7 +125,7 @@ public class FarragoQueryTest extends FarragoTestCase
         compareResultSet(refSet);
 
         // restore default catalog
-        sql = "set catalog localdb";
+        sql = "set catalog 'localdb'";
         stmt.execute(sql);
     }
 }

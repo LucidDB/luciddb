@@ -14,11 +14,11 @@
 !tables
 
 -- test getTables (system catalog)
-set catalog sys_boot;
+set catalog 'sys_boot';
 !tables
 
 -- test getColumns
-set catalog localdb;
+set catalog 'localdb';
 !columns EMPS
 !describe EMPS
 

@@ -6,7 +6,7 @@
 -- force usage of Fennel calculator
 alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
 
-set schema sales;
+set schema 'sales';
 
 -- select from view on permanent table
 select * from empsview order by name;

@@ -28,7 +28,7 @@
 
 -- test datatype
 create schema test;
-set schema test;
+set schema 'test';
 create table t_real(real_col real not null primary key,
         real_col2 int);
 

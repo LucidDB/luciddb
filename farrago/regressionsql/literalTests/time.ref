@@ -69,7 +69,7 @@ Error: net.sf.farrago.parser.ParseException: Illegal TIME literal '23.54.43.1,00
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test datatype
 0: jdbc:farrago:> create schema test;
-0: jdbc:farrago:> set schema test;
+0: jdbc:farrago:> set schema 'test';
 0: jdbc:farrago:> create table t_time(time_col time(0) not null primary key, time_col2 time(0));
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- negative test

@@ -87,7 +87,7 @@ select timestamp '2004-10-8 23.54.43.' from values ('true');
 
 -- test datatype
 create schema test;
-set schema test;
+set schema 'test';
 create table t_timestamp(timestamp_col timestamp(0) not null primary key, timestamp_col2 timestamp(0));
 
 -- negative test

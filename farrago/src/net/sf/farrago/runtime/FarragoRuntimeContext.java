@@ -39,8 +39,10 @@ import net.sf.farrago.util.*;
 
 import org.eigenbase.relopt.*;
 import org.eigenbase.util.*;
+import org.eigenbase.sql.*;
 
 import java.sql.Date;
+import java.io.*;
 
 /**
  * FarragoRuntimeContext defines runtime support routines needed by generated
@@ -239,8 +241,22 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
      */
     public String getContextVariable_CURRENT_PATH()
     {
-        // TODO jvs 25-Sept-2004:  once supported
-        return "";
+        // The SQL standard is very precise about the formatting
+        // (see SQL99 2:6.3 General Rule 10)
+        SqlDialect dialect = new SqlDialect(session.getDatabaseMetaData());
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        SqlWriter sqlWriter = new SqlWriter(dialect, pw);
+        Iterator iter = sessionVariables.schemaSearchPath.iterator();
+        while (iter.hasNext()) {
+            SqlIdentifier id = (SqlIdentifier) iter.next();
+            id.unparse(sqlWriter, 0, 0);
+            if (iter.hasNext()) {
+                sqlWriter.print(',');
+            }
+        }
+        pw.close();
+        return sw.toString();
     }
 
     protected long getCurrentTime()

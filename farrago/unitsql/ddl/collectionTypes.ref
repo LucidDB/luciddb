@@ -2,7 +2,7 @@
 0: jdbc:farrago:> -- Test DDL for collection types
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema collectionsTest;
-0: jdbc:farrago:> set schema collectionsTest;
+0: jdbc:farrago:> set schema 'collectionsTest';
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- MULTISET 
 0: jdbc:farrago:> create table multisetTable(i integer primary key, ii integer multiset);

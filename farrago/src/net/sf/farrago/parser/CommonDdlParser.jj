@@ -70,7 +70,7 @@ DdlStmt DdlStmtEof() :
 {
     CwmModelElement modelElement;
     DdlStmt ddlStmt;
-    List searchPath;
+    SqlNode expr;
 }
 {
     (
@@ -134,20 +134,18 @@ DdlStmt DdlStmtEof() :
         |
         ( <SET>
             (
-                modelElement = CatalogReference()
-                {
-                    ddlStmt = new DdlSetQualifierStmt(modelElement);
-                }
-                |
-                modelElement = SchemaReference()
-                {
-                    ddlStmt = new DdlSetQualifierStmt(modelElement);
-                }
-                |
-                searchPath = SearchPath()
-                {
-                    ddlStmt = new DdlSetPathStmt(searchPath);
-                }
+                <CATALOG> expr = Expression(EXPR_ACCEPT_NONQUERY)
+            {
+                ddlStmt = new DdlSetCatalogStmt(expr);
+            }
+                | <SCHEMA> expr = Expression(EXPR_ACCEPT_NONQUERY)
+            {
+                ddlStmt = new DdlSetSchemaStmt(expr);
+            }
+                | <PATH> expr = Expression(EXPR_ACCEPT_NONQUERY)
+            {
+                ddlStmt = new DdlSetPathStmt(expr);
+            }
             )
         )
         |

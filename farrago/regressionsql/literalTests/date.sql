@@ -146,7 +146,7 @@ select date '2003-13-10' from values ('true');
 
 -- test datatype
 create schema test;
-set schema test;
+set schema 'test';
 create table t_date(date_col date not null primary key, date_col2 date);
 
 -- negative test

@@ -747,42 +747,29 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         }
 
         // implement DdlVisitor
-        public void visit(DdlSetQualifierStmt stmt)
+        public void visit(DdlSetCatalogStmt stmt)
         {
-            CwmModelElement qualifier = stmt.getModelElement();
-            if (qualifier instanceof CwmCatalog) {
-                sessionVariables.catalogName = qualifier.getName();
+            SqlIdentifier id = stmt.getCatalogName();
+            sessionVariables.catalogName = id.getSimple();
+        }
+        
+        // implement DdlVisitor
+        public void visit(DdlSetSchemaStmt stmt)
+        {
+            SqlIdentifier id = stmt.getSchemaName();
+            if (id.isSimple()) {
+                sessionVariables.schemaName = id.getSimple();
             } else {
-                assert (qualifier instanceof CwmSchema);
-                sessionVariables.schemaName = qualifier.getName();
-                sessionVariables.catalogName =
-                    qualifier.getNamespace().getName();
-                sessionVariables.schemaCatalogName =
-                    sessionVariables.catalogName;
+                sessionVariables.catalogName = id.names[0];
+                sessionVariables.schemaName = id.names[1];
             }
         }
-
+        
         // implement DdlVisitor
         public void visit(DdlSetPathStmt stmt)
         {
-            List pathList = stmt.getPathList();
-            List mutablePath = new ArrayList();
-
-            // convert from list of CwmSchema to list of SqlIdentifier
-            Iterator iter = pathList.iterator();
-            while (iter.hasNext()) {
-                CwmSchema schema = (CwmSchema) iter.next();
-                SqlIdentifier id = new SqlIdentifier(
-                    new String [] {
-                        schema.getNamespace().getName(),
-                        schema.getName()
-                    },
-                    null);
-                mutablePath.add(id);
-            }
-            
             sessionVariables.schemaSearchPath =
-                Collections.unmodifiableList(mutablePath);
+                Collections.unmodifiableList(stmt.getSchemaList());
         }
         
         // implement DdlVisitor

@@ -21,6 +21,10 @@ package net.sf.farrago.ddl;
 
 import java.util.*;
 
+import net.sf.farrago.resource.*;
+import net.sf.farrago.session.*;
+import org.eigenbase.sql.*;
+
 /**
  * DdlSetPathStmt represents a statement (SET PATH) that establishes a default
  * SQL-path.
@@ -28,38 +32,74 @@ import java.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class DdlSetPathStmt extends DdlStmt
+public class DdlSetPathStmt extends DdlSetContextStmt
 {
-    private List pathList;
+    private List schemaList;
     
     /**
-     * Construct a new DdlSetPathStmt.
+     * Constructs a new DdlSetPathStmt.
      *
-     * @param pathList List of CwmSchemas making up the search path
+     * @param valueExpr value expression for new SQL-path
      */
-    public DdlSetPathStmt(List pathList)
+    public DdlSetPathStmt(SqlNode valueExpr)
     {
-        super(null);
-        this.pathList = pathList;
+        super(valueExpr);
     }
 
     //~ Methods ---------------------------------------------------------------
-
-    // override DdlStmt
-    public boolean requiresCommit()
-    {
-        return false;
-    }
 
     // implement DdlStmt
     public void visit(DdlVisitor visitor)
     {
         visitor.visit(this);
     }
-
-    public List getPathList()
+    
+    // implement DdlStmt
+    public void preValidate(FarragoSessionDdlValidator ddlValidator)
     {
-        return pathList;
+        super.preValidate(ddlValidator);
+        if (parsedExpr instanceof SqlIdentifier) {
+            schemaList = Collections.singletonList(parsedExpr);
+        } else if (parsedExpr instanceof SqlCall) {
+            SqlCall call = (SqlCall) parsedExpr;
+            if (call.operator.name.equalsIgnoreCase("row")) {
+                schemaList = Arrays.asList(call.getOperands());
+            }
+        }
+        if (schemaList != null) {
+            Iterator iter = schemaList.iterator();
+            while (iter.hasNext()) {
+                Object obj = iter.next();
+                if (!(obj instanceof SqlIdentifier)) {
+                    schemaList = null;
+                    break;
+                }
+                SqlIdentifier id = (SqlIdentifier) obj;
+                if ((id.names.length < 1) || (id.names.length > 2)) {
+                    schemaList = null;
+                    break;
+                }
+                if (id.isSimple()) {
+                    // fully qualify schema names
+                    FarragoSessionVariables sessionVariables = 
+                        ddlValidator.getStmtValidator().getSessionVariables();
+                    id.names = new String [] 
+                        {
+                            sessionVariables.catalogName,
+                            id.getSimple()
+                        };
+                }
+            }
+        }
+        if (schemaList == null) {
+            throw FarragoResource.instance().newValidatorSetPathInvalidExpr(
+                valueString);
+        }
+    }
+
+    public List getSchemaList()
+    {
+        return schemaList;
     }
 }
 

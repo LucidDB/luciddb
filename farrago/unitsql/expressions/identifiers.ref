@@ -41,7 +41,7 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- Test identifiers with spaces
 0: jdbc:farrago:> create schema "identifier test schema?";
-0: jdbc:farrago:> set schema "identifier test schema?";
+0: jdbc:farrago:> set schema '"identifier test schema?"';
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create table "My Table" (
 . . . . . . . . >     "id" integer primary key,

@@ -24,7 +24,7 @@ drop table sales.idtest;
 
 -- Test identifiers with spaces
 create schema "identifier test schema?";
-set schema "identifier test schema?";
+set schema '"identifier test schema?"';
 
 create table "My Table" (
     "id" integer primary key,

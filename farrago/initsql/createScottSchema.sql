@@ -6,7 +6,7 @@
 
 -- create local SCOTT schema
 create schema SCOTT;
-set schema SCOTT;
+set schema 'SCOTT';
 
 CREATE TABLE DEPT (
     DEPTNO INTEGER NOT NULL PRIMARY KEY,

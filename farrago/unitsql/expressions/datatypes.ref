@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/expressions/datatypes.sql#1 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/expressions/datatypes.sql#2 $
 0: jdbc:farrago:> -- Test expressions with different datatypes
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- VARCHAR comparison
@@ -11,7 +11,7 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test CHAR pad/truncation and VARCHAR truncation
 0: jdbc:farrago:> create schema s;
-0: jdbc:farrago:> set schema s;
+0: jdbc:farrago:> set schema 's';
 0: jdbc:farrago:> create table t(i int not null primary key,c char(10),v varchar(10));
 0: jdbc:farrago:> insert into t values (1,'goober','goober');
 0: jdbc:farrago:> insert into t values (2,'endoplasmic reticulum','endoplasmic reticulum');

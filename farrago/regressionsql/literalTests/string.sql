@@ -4,7 +4,7 @@ SELECT 'unknown' from values('TRUE');
 
 -- test datatype
 create schema test;
-set schema test;
+set schema 'test';
 create table t_char(char_col char(1) not null primary key, char_col2 char(1));
 
 -- negative test
@@ -46,7 +46,7 @@ drop table t_char;
 
 -- test varchar datatype
 create schema test;
-set schema test;
+set schema 'test';
 create table t_varchar(varchar_col varchar(30) not null primary key, varchar_col2 varchar(1));
 
 -- negative test

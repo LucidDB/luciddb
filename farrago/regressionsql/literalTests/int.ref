@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/literalTests/int.sql#1 $ 
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/literalTests/int.sql#2 $ 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test int literal
 0: jdbc:farrago:> 
@@ -95,7 +95,7 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test datatype
 0: jdbc:farrago:> create schema test;
-0: jdbc:farrago:> set schema test;
+0: jdbc:farrago:> set schema 'test';
 0: jdbc:farrago:> create table t_int(int_col int not null primary key,
 . . . . . . . . >         int_col2 int);
 0: jdbc:farrago:> 

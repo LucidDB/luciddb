@@ -36,3 +36,22 @@ explain plan for values (system_user);
 
 -- Janino had problems with this one (fixed in their 2.0.5 release)
 values true and true;
+
+-- test empty CURRENT_PATH
+values current_path;
+
+-- test single-schema CURRENT_PATH
+set path 'sales';
+values current_path;
+
+-- test two-schema CURRENT_PATH
+set path 'sys_boot.jdbc_metadata, sales';
+values current_path;
+
+-- test no-op SET PATH
+set path current_path;
+values current_path;
+
+-- test complex SET PATH
+set path current_path || ', sys_cwm."Relational"';
+values current_path;

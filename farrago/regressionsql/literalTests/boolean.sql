@@ -8,7 +8,7 @@ select FALSE from values('true');
 
 -- test datatype
 create schema test;
-set schema test;
+set schema 'test';
 create table t_boolean(boolean_col boolean not null primary key,boolean_col2 boolean);
 
 -- negative test

@@ -5,7 +5,7 @@
 0: jdbc:farrago:> -- regressionsql only executes it under the Fennel Calc. See dtbug 228.
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema s;
-0: jdbc:farrago:> set schema s;
+0: jdbc:farrago:> set schema 's';
 0: jdbc:farrago:> create table t (
 . . . . . . . . >         i int not null primary key,
 . . . . . . . . >         short_c char(3) not null,

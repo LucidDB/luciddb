@@ -5,7 +5,7 @@
 -- test basic integer conversions
 --
 create schema s;
-set schema s;
+set schema 's';
 create table ints (
     x integer not null primary key,
     si smallint not null,

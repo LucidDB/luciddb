@@ -92,4 +92,48 @@ Error: At line 1, column 9: Unknown identifier 'X' (state=,code=0)
 | true    |
 +---------+
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test empty CURRENT_PATH
+0: jdbc:farrago:> values current_path;
++---------------+
+| CURRENT_PATH  |
++---------------+
+|               |
++---------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test single-schema CURRENT_PATH
+0: jdbc:farrago:> set path 'sales';
+0: jdbc:farrago:> values current_path;
++--------------------+
+|    CURRENT_PATH    |
++--------------------+
+| "LOCALDB"."SALES"  |
++--------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test two-schema CURRENT_PATH
+0: jdbc:farrago:> set path 'sys_boot.jdbc_metadata, sales';
+0: jdbc:farrago:> values current_path;
++-----------------------------------------------+
+|                 CURRENT_PATH                  |
++-----------------------------------------------+
+| "SYS_BOOT"."JDBC_METADATA","LOCALDB"."SALES"  |
++-----------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test no-op SET PATH
+0: jdbc:farrago:> set path current_path;
+0: jdbc:farrago:> values current_path;
++-----------------------------------------------+
+|                 CURRENT_PATH                  |
++-----------------------------------------------+
+| "SYS_BOOT"."JDBC_METADATA","LOCALDB"."SALES"  |
++-----------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test complex SET PATH
+0: jdbc:farrago:> set path current_path || ', sys_cwm."Relational"';
+0: jdbc:farrago:> values current_path;
++----------------------------------------------------------------------+
+|                             CURRENT_PATH                             |
++----------------------------------------------------------------------+
+| "SYS_BOOT"."JDBC_METADATA","LOCALDB"."SALES","SYS_CWM"."Relational"  |
++----------------------------------------------------------------------+
+0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

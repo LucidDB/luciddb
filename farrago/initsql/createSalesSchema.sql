@@ -6,7 +6,7 @@
 
 -- create local sales schema
 create schema sales;
-set schema sales;
+set schema 'sales';
 
 create table depts(
     deptno integer not null primary key,

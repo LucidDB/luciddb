@@ -17,7 +17,7 @@ local data wrapper mock_local_wrapper;
 
 create schema mock_schema;
 
-set schema mock_schema;
+set schema 'mock_schema';
 
 create foreign table mock_fennel_table(
     id int not null)

@@ -1,7 +1,7 @@
 -- $Id$
 -- Test queries which make use of indexes
 
-set schema sales;
+set schema 'sales';
 
 -- force usage of Java calculator
 alter system set "calcVirtualMachine" = 'CALCVM_JAVA';

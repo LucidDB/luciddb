@@ -189,9 +189,15 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
     // implement FarragoSessionStmtValidator
     public CwmCatalog findCatalog(String catalogName)
     {
+        return lookupCatalog(catalogName, true);
+    }
+
+    private CwmCatalog lookupCatalog(
+        String catalogName, boolean throwIfNotFound)
+    {
         CwmCatalog catalog = getRepos().getCwmCatalog(catalogName);
 
-        if (catalog == null) {
+        if ((catalog == null) && throwIfNotFound) {
             throw FarragoResource.instance().newValidatorUnknownObject(
                 getRepos().getLocalizedObjectName(
                     null,
@@ -201,6 +207,7 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
         }
         return catalog;
     }
+    
 
     // implement FarragoSessionStmtValidator
     public CwmCatalog getDefaultCatalog()
@@ -221,11 +228,18 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
         CwmCatalog catalog;
         String simpleName;
         if (schemaName.names.length == 2) {
-            catalog = findCatalog(schemaName.names[0]);
+            catalog = lookupCatalog(schemaName.names[0], throwIfNotFound);
+            if (catalog == null) {
+                return null;
+            }
             simpleName = schemaName.names[1];
         } else {
-            catalog = getDefaultCatalog();
+            catalog = lookupCatalog(
+                getSessionVariables().catalogName, throwIfNotFound);
             simpleName = schemaName.getSimple();
+        }
+        if (catalog == null) {
+            return null;
         }
         FemLocalSchema schema = getRepos().getSchema(catalog, simpleName);
         // REVIEW:  parser context may be past schema name already
@@ -427,7 +441,7 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
                 // TODO:  use names for context
                 throw FarragoResource.instance().newValidatorNoDefaultSchema();
             }
-            resolved.catalogName = sessionVariables.schemaCatalogName;
+            resolved.catalogName = sessionVariables.catalogName;
             resolved.schemaName = sessionVariables.schemaName;
             resolved.objectName = names[0];
         } else {

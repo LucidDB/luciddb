@@ -5,7 +5,7 @@
 -- regressionsql only executes it under the Fennel Calc. See dtbug 228.
 
 create schema s;
-set schema s;
+set schema 's';
 create table t (
         i int not null primary key,
         short_c char(3) not null,

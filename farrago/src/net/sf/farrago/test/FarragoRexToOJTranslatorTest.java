@@ -451,6 +451,12 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
         testTranslation("current_timestamp");
     }
 
+    public void testCurrentPath()
+        throws Exception
+    {
+        testTranslation("current_path");
+    }
+
     // FIXME
 
     /*
