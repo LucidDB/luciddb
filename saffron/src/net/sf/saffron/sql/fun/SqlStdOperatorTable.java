@@ -503,6 +503,7 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
                 for (int i = 1; i < call.operands.length; i++, prevPos = pos) {
                     pos = call.operands[i].getParserPosition();
                     if (pos.getBeginLine() <= prevPos.getBeginLine())
+                        // FIXME jvs 28-Aug-2004:  i18n
                         throw SaffronResource.instance().newValidationError(
                             "String literal continued on same line, at "+pos);
                 }
