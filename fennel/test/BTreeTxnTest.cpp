@@ -168,12 +168,11 @@ void BTreeTxnTest::testCaseSetUp()
     CacheParams cacheParams;
     cacheParams.readConfig(configMap);
     pCache = Cache::newCache(cacheParams);
-    pDatabase.reset(
-        new Database(
-            pCache,
-            configMap,
-            DeviceMode::createNew,
-            this));
+    pDatabase = Database::newDatabase(
+        pCache,
+        configMap,
+        DeviceMode::createNew,
+        this);
     
     statsTimer.addSource(pDatabase);
     statsTimer.start();
@@ -265,12 +264,11 @@ void BTreeTxnTest::testTxns()
 
     statsTimer.stop();
     pDatabase.reset();
-    pDatabase.reset(
-        new Database(
-            pCache,
-            configMap,
-            DeviceMode::load,
-            this));
+    pDatabase = Database::newDatabase(
+        pCache,
+        configMap,
+        DeviceMode::load,
+        this);
     BOOST_CHECK(pDatabase->isRecoveryRequired());
 
     statsTimer.addSource(pDatabase);

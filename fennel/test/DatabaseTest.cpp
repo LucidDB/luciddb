@@ -141,12 +141,11 @@ const LogicalActionType DatabaseTest::ACTION_INCREMENT = 1;
 
 void DatabaseTest::testCreateEmpty()
 {
-    pDatabase.reset(
-        new Database(
-            pCache,
-            configMap,
-            DeviceMode::createNew,
-            this));
+    pDatabase = Database::newDatabase(
+        pCache,
+        configMap,
+        DeviceMode::createNew,
+        this);
     BOOST_CHECK(!pDatabase->isRecoveryRequired());
 }
 
@@ -252,12 +251,11 @@ void DatabaseTest::testRecoverDataFromRollback()
 
 void DatabaseTest::loadDatabase()
 {
-    pDatabase.reset(
-        new Database(
-            pCache,
-            configMap,
-            DeviceMode::load,
-            this));
+    pDatabase = Database::newDatabase(
+        pCache,
+        configMap,
+        DeviceMode::load,
+        this);
 }
 
 LogicalTxnClassId DatabaseTest::getParticipantClassId() const
