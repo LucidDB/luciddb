@@ -60,11 +60,31 @@ public class FennelPseudoUuid
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * @return a clone of the byte array that backs this FennelPseudoUuid.
+     * @return a copy of the byte array that backs this FennelPseudoUuid.
      */
-    public byte[] toByteArray()
+    public byte[] getBytes()
     {
-        return (byte[])uuid.clone();
+        byte[] copy = new byte[UUID_LENGTH];
+        for(int i = 0; i < UUID_LENGTH; i++) {
+            copy[i] = uuid[i];
+        }
+        return copy;
+    }
+
+    /**
+     * Returns the byte value at a particular position within the UUID
+     * represented by this instance.
+     *
+     * @param index must be greater than or equal to 0 and less than
+     *        {@link #UUID_LENGTH}.
+     * @return the byte value at a particular possition
+     * @throws ArrayIndexOutOfBoundsException
+     *         if index is less than 0 or greater than or equal to
+     *         {@link #UUID_LENGTH}.
+     */
+    public byte getByte(int index)
+    {
+        return uuid[index];
     }
 
     /**
