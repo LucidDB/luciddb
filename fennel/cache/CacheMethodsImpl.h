@@ -131,7 +131,7 @@ void CacheImpl<PageT,VictimPolicyT>::setAllocatedPageCount(
     } else {
         // deallocate some
         for (; nMemPages > nMemPagesDesired; --nMemPages) {
-            PageT *page;
+            PageT *page = NULL;
             do {
                 page = findFreePage();
             } while (!page);
