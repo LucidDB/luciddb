@@ -189,6 +189,13 @@ protected:
      */
     std::vector<SharedExecutionStreamSubFactory> subFactories;
 
+    /**
+     * Dispatches to the correct visitor method; only called when
+     * no subfactory wants to handle the stream.
+     */
+    virtual void invokeVisit(
+        ProxyExecutionStreamDef &);
+    
     // Per-stream overrides for FemVisitor; add new stream types here
     virtual void visit(ProxyIndexScanDef &);
     virtual void visit(ProxyIndexSearchDef &);
@@ -226,8 +233,6 @@ protected:
      * trace level net.sf.fennel.xo.quota to FINE.
      */
     bool shouldEnforceCacheQuotas();
-    
-    void createQuotaAccessors(ExecutionStreamParams &params);
     
 public:
     explicit ExecutionStreamFactory(
@@ -267,6 +272,8 @@ public:
         ExecutionStreamParams &params);
 
     // helpers for subfactories
+    
+    void createQuotaAccessors(ExecutionStreamParams &params);
     
     void readExecutionStreamParams(
         ExecutionStreamParams &,

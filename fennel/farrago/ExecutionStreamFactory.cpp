@@ -105,10 +105,16 @@ const ExecutionStreamParts &ExecutionStreamFactory::visitStream(
 
     if (!created) {
         // dispatch based on polymorphic stream type
-        FemVisitor::visitTbl.accept(*this,streamDef);
+        invokeVisit(streamDef);
     }
     parts.getStream()->setName(streamDef.getName());
     return parts;
+}
+
+void ExecutionStreamFactory::invokeVisit(
+    ProxyExecutionStreamDef &streamDef)
+{
+    FemVisitor::visitTbl.accept(*this,streamDef);
 }
 
 const ExecutionStreamParts &
