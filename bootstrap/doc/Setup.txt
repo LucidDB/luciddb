@@ -91,5 +91,6 @@ http://wiki.apache.org/cocoon/EndorsedLibsProblem.
 Win32 Notes from JVS 20-Sept-2004
 ---------------------------------
 To build cruisecontrol, I had to set JAVA_HOME to a DOS path and run
-build.bat instead of build.sh.
-
+build.bat instead of build.sh.  To run, I had to add a link to p4.exe
+in the working directory (there's probably a way to fix the Windows
+path to avoid this).

@@ -28,7 +28,7 @@
 <!ENTITY rsync_cmd        "rsync -az -e ssh --delete-after">
 <!ENTITY rsync_dest       "aspen@jhyde.dyndns.org:web/artifacts">
 
-<!ENTITY ant              "./doant.sh">
+<!ENTITY ant              "doant-stilton.bat">
 
 <!ENTITY configSuffix     "-win32">
 
