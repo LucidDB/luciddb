@@ -57,7 +57,7 @@
 	</target>
 
 	<target name="integration-build"
-	        depends="integration-copy,integration-thirdparty,integration-saffron,integration-fennel">
+	        depends="integration-copy,integration-thirdparty,integration-fennel">
 		<antcall target="do-cleanbuild">
 			<param name="build.home" location="${integration.build.home}"/>
 		</antcall>
@@ -74,15 +74,6 @@
 			<arg value="./farrago/"/>
 			<arg value="${integration.build.home}/"/>
 		</exec>
-	</target>
-
-	<target name="integration-saffron">
-		<!-- just set up a clean saffron: we'll build it ourselves -->
-		<ant antfile="build-saffron.xml" target="integration-copy" inheritAll="false">
-		    <propertyset>
-		        <propertyref prefix="open_"/>
-		    </propertyset>
-		</ant>
 	</target>
 
 	<target name="integration-fennel">

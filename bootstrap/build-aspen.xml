@@ -51,7 +51,7 @@
 	</target>
 
 	<target name="integration-build"
-	        depends="integration-copy,integration-farrago,integration-fennel,integration-saffron,integration-thirdparty">
+	        depends="integration-copy,integration-farrago,integration-fennel,integration-thirdparty">
 		<antcall target="integration-configure-tests"/>
 		<antcall target="do-cleanbuild">
 			<param name="build.home" location="${integration.build.home}"/>
@@ -62,11 +62,10 @@
 		<chmod file="${integration.build.home}/aspen/aspen.properties" perm="u+w"/>
 		<replace file="${integration.build.home}/aspen/aspen.properties"
                          token="#aspen.test.scott.jdbc.url="
-		         value="aspen.test.scott.jdbc.url=jdbc:hsqldb:${integration.build.home}/saffron/demo/hsqldb/scott"/>
+		         value="aspen.test.scott.jdbc.url=jdbc:hsqldb:${integration.build.home}/farrago/testcases/hsqldb/scott"/>
 		
 		<pathconvert property="internal.classpath" dirsep="${file.separator}" pathsep="${path.separator}">
 			<path>
-				<pathelement path="${integration.build.home}/saffron/classes"/>
 				<pathelement path="${integration.build.home}/aspen/classes"/>
 			</path>
 		</pathconvert>
@@ -98,15 +97,6 @@ saffron.opt.allowInfiniteCostConverters=true
 	<target name="integration-farrago">
 		<!-- just set up a clean farrago: we'll build it ourselves -->
 		<ant antfile="build-farrago.xml" target="integration-copy" inheritAll="false">
-		    <propertyset>
-		        <propertyref prefix="open_"/>
-		    </propertyset>
-		</ant>
-	</target>
-
-	<target name="integration-saffron">
-		<!-- just set up a clean saffron: we'll build it ourselves -->
-		<ant antfile="build-saffron.xml" target="integration-copy" inheritAll="false">
 		    <propertyset>
 		        <propertyref prefix="open_"/>
 		    </propertyset>
