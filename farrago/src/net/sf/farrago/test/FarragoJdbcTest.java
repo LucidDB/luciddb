@@ -1,6 +1,6 @@
 /*
 // Farrago is a relational database management system.
-// Copyright (C) 2003-2004 John V. Sichi.
+// Copyright (C) 2003-2005 John V. Sichi.
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
@@ -157,8 +157,6 @@ public class FarragoJdbcTest extends FarragoTestCase
     // Flags indicating whether bugs have been fixed. (It's better to 'if'
     // out than to comment out code, because commented out code doesn't get
     // refactored.)
-    private static final boolean dtbug220_fixed = false;
-    private static final boolean dtbug110_199_fixed = false;
     private static final boolean dtbug119_fixed = false;
     private static final boolean todo = false;
 
@@ -718,33 +716,31 @@ public class FarragoJdbcTest extends FarragoTestCase
             id = resultSet.getInt(1);
             switch (id) {
             case 100:
-                if (dtbug220_fixed) {
-                    /* Numerics and timestamps skipped due to dtbug220 */
-                    assertEquals(
-                        stringValue,
-                        resultSet.getString(TINYINT));
-                    assertEquals(
-                        stringValue,
-                        resultSet.getString(SMALLINT));
-                    assertEquals(
-                        stringValue,
-                        resultSet.getString(INTEGER));
-                    assertEquals(
-                        stringValue,
-                        resultSet.getString(BIGINT));
-                    assertEquals(
-                        stringValue,
-                        resultSet.getString(REAL));
-                    assertEquals(
-                        stringValue,
-                        resultSet.getString(FLOAT));
-                    assertEquals(
-                        stringValue,
-                        resultSet.getString(DOUBLE));
-                    assertEquals(
-                        stringValue,
-                        resultSet.getString(BOOLEAN));
-                }
+                /* Numerics and timestamps skipped due to dtbug220 */
+                assertEquals(
+                    stringValue,
+                    resultSet.getString(TINYINT));
+                assertEquals(
+                    stringValue,
+                    resultSet.getString(SMALLINT));
+                assertEquals(
+                    stringValue,
+                    resultSet.getString(INTEGER));
+                assertEquals(
+                    stringValue,
+                    resultSet.getString(BIGINT));
+                assertEquals(
+                    stringValue,
+                    resultSet.getString(REAL));
+                assertEquals(
+                    stringValue,
+                    resultSet.getString(FLOAT));
+                assertEquals(
+                    stringValue,
+                    resultSet.getString(DOUBLE));
+                assertEquals(
+                    stringValue,
+                    resultSet.getString(BOOLEAN));
 
                 // Check CHAR - result String can be longer than the input string
                 // Just check the first part
@@ -761,17 +757,15 @@ public class FarragoJdbcTest extends FarragoTestCase
                 //assertEquals(stringValue, resultSet.getString(BINARY));
                 //assertEquals(stringValue, resultSet.getString(VARBINARY));
                 // dtbug110, 199
-                if (dtbug110_199_fixed) {
-                    assertEquals(
-                        stringValue,
-                        resultSet.getString(DATE));
-                    assertEquals(
-                        stringValue,
-                        resultSet.getString(TIME));
-                    assertEquals(
-                        stringValue,
-                        resultSet.getString(TIMESTAMP));
-                }
+                assertEquals(
+                    stringValue,
+                    resultSet.getString(DATE));
+                assertEquals(
+                    stringValue,
+                    resultSet.getString(TIME));
+                assertEquals(
+                    stringValue,
+                    resultSet.getString(TIMESTAMP));
                 break;
             case 101:
                 assertEquals(
@@ -2408,6 +2402,7 @@ public class FarragoJdbcTest extends FarragoTestCase
             new TestJavaType("Array", Array.class, true);
         private final String name;
         private final Class clazz;
+        /** whether it has a setXxxx(int,xxx) method */
         private final boolean regular;
         private final Method setMethod;
         TestJavaType [] all =
@@ -2425,7 +2420,6 @@ public class FarragoJdbcTest extends FarragoTestCase
             this.name = name;
             this.clazz = clazz;
 
-            // whether it has a setXxxx(int,xxx) method
             this.regular = regular;
 
             // e.g. PreparedStatement.setBoolean(int,boolean)
