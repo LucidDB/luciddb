@@ -27,7 +27,7 @@ import org.eigenbase.util.*;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-
+import java.util.HashMap;
 
 /**
  * A <code>SqlNode</code> is a SQL parse tree. It may be an {@link SqlOperator
@@ -176,6 +176,9 @@ public abstract class SqlNode implements Cloneable
      */
     public abstract void validate(SqlValidator validator,
         SqlValidator.Scope scope);
+
+    public HashMap lookupHints(SqlValidator validator,
+        SqlValidator.Scope scope) { return null; }
 
     /**
      * Validates this node in an expression context.

@@ -222,6 +222,31 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
      */
     public FarragoSessionResolvedObject resolveSchemaObjectName(
         String [] names);
+        
+    /**
+     * return all schema names in default catalog
+     */
+    public ArrayList getAllSchemas();
+    
+    /**
+     * return all schema names in the given catalog
+     */
+    public ArrayList getAllSchemas(String catalogName);
+   
+    /**
+     * return all table names in the current schema
+     */
+    public ArrayList getAllTables();
+   
+    /**
+     * return all table names in the given schema
+     */
+    public ArrayList getAllTables(String schemaName);
+   
+    /**
+     * return all table names in the given catalog and schema
+     */
+    public ArrayList getAllTables(String catalogName, String schemaName);
 }
 
 

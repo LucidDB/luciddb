@@ -35,7 +35,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-
+import java.util.HashMap;
 
 /**
  * A <code>SqlOperator</code> is a type of node in a SQL parse tree (it is NOT
@@ -356,6 +356,20 @@ public abstract class SqlOperator
         for (int i = 0; i < operands.length; i++) {
             operands[i].validateExpr(validator, operandScope);
         }
+    }
+
+    public HashMap lookupHints(
+        SqlCall call,
+        SqlValidator validator,
+        SqlValidator.Scope scope)
+    {
+        assert call.operator == this;
+        final SqlNode[] operands = call.getOperands();
+        HashMap hints = new HashMap();
+        for (int i = 0; i < operands.length; i++) {
+            validator.findIdentifierOptions(operands[i], scope, hints);
+        }
+        return hints;
     }
 
     /**

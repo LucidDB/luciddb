@@ -24,7 +24,7 @@ package org.eigenbase.sql;
 import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.sql.util.SqlVisitor;
 import org.eigenbase.util.Util;
-
+import java.util.ArrayList;
 
 /**
  * A <code>SqlIdentifier</code> is an identifier, possibly compound.
@@ -138,6 +138,21 @@ public class SqlIdentifier extends SqlNode
     public void validate(SqlValidator validator, SqlValidator.Scope scope)
     {
         validator.validateIdentifier(this, scope);
+    }
+
+    public ArrayList getItemChoices(SqlValidator validator, SqlValidator.Scope scope)
+    {
+        SqlCall call = validator.makeCall(this);
+        if (call != null) {
+            return new ArrayList();
+        }
+        ArrayList result = scope.findAllColumnNames(names);
+        if (result != null) {
+            return result;
+        }
+        else {
+            return new ArrayList();
+        }
     }
 
     public void validateExpr(SqlValidator validator, SqlValidator.Scope scope)

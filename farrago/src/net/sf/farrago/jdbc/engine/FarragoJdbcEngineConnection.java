@@ -34,6 +34,7 @@ import net.sf.farrago.fem.med.FemDataWrapper;
 import net.sf.farrago.catalog.*;
 
 import org.eigenbase.sql.SqlIdentifier;
+import org.eigenbase.sql.parser.ParserPosition;
 
 /**
  * FarragoJdbcEngineConnection implements the {@link java.sql.Connection}
@@ -253,6 +254,13 @@ public class FarragoJdbcEngineConnection implements FarragoConnection
         throws SQLException
     {
         return new FarragoJdbcEngineDatabaseMetaData(this);
+    }
+
+    public ArrayList getCompletionHints(String sql, ParserPosition pp)
+        throws SQLException
+    {
+        FarragoSessionStmtContext stmtContext = null;
+        return session.getCompletionHints(sql, pp);
     }
 
     // implement Connection

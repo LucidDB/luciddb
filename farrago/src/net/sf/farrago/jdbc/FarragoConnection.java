@@ -20,6 +20,8 @@ package net.sf.farrago.jdbc;
 
 import java.sql.SQLException;
 import java.util.Properties;
+import java.util.ArrayList;
+import org.eigenbase.sql.parser.ParserPosition;
 
 /**
  * JDBC connection to Farrago.
@@ -33,6 +35,9 @@ import java.util.Properties;
 public interface FarragoConnection extends java.sql.Connection
 {
     String findMofId(String wrapperName)
+        throws SQLException;
+
+    ArrayList getCompletionHints(String sql, ParserPosition pp)
         throws SQLException;
 
     FarragoMedDataWrapperInfo getWrapper(

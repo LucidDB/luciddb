@@ -596,6 +596,13 @@ public class SqlToOpenjavaConverter
             return null;
         }
 
+        public ArrayList getAllSchemaNames() { return null; }
+        public ArrayList getAllSchemaNames(String catalogName) { return null; }
+        public ArrayList getAllTableNames(String schemaName) { return null; }
+        public ArrayList getAllTableNames(String catalogName, String schemaName)
+            { return null; }
+        public ArrayList getAllTables() { return null; }
+
         private String maybeUpper(String s)
         {
             return upperCase ? s.toUpperCase() : s;

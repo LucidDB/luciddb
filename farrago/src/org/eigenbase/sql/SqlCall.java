@@ -22,6 +22,7 @@
 package org.eigenbase.sql;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.resource.EigenbaseResource;
@@ -113,6 +114,17 @@ public class SqlCall extends SqlNode
     public void validate(SqlValidator validator, SqlValidator.Scope scope)
     {
         validator.validateCall(this, scope);
+    }
+
+    /**
+      * Lookup Completion Hints in this call
+      *
+      * <p>The default implementation delegates the lookup to the operator's
+      * {@link SqlOperator#lookupHints}. Derived classes may override
+      */
+    public HashMap lookupHints(SqlValidator validator, SqlValidator.Scope scope)
+    {
+        return operator.lookupHints(this, validator, scope);
     }
 
     public void accept(SqlVisitor visitor)

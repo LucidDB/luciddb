@@ -96,6 +96,13 @@ public class MockCatalogReader implements SqlValidator.CatalogReader
         return null;
     }
 
+    public ArrayList getAllSchemaNames() { return null; }
+    public ArrayList getAllSchemaNames(String catalogName) { return null; }
+    public ArrayList getAllTableNames(String schemaName) { return null; }
+    public ArrayList getAllTableNames(String catalogName, String schemaName) 
+        { return null; }
+    public ArrayList getAllTables() { return null; }
+
     /**
      * Mock implementation of {@link SqlValidator.Table}.
      */

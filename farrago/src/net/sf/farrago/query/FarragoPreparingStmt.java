@@ -719,6 +719,31 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         // nothing to do
     }
 
+    public ArrayList getAllSchemaNames() 
+    {
+        return stmtValidator.getAllSchemas();
+    } 
+
+    public ArrayList getAllSchemaNames(String catalogName) 
+    {
+        return stmtValidator.getAllSchemas(catalogName);
+    } 
+
+    public ArrayList getAllTables()
+    {
+        return stmtValidator.getAllTables();
+    }
+
+    public ArrayList getAllTableNames(String schemaName) 
+    {
+        return stmtValidator.getAllTables(schemaName);
+    }
+
+    public ArrayList getAllTableNames(String catalogName, String schemaName) 
+    {
+        return stmtValidator.getAllTables(catalogName, schemaName);
+    }
+
     // implement SqlValidator.CatalogReader
     public SqlValidator.Table getTable(String [] names)
     {
