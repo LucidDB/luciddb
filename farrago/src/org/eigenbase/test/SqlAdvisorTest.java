@@ -21,22 +21,21 @@
 
 package org.eigenbase.test;
 
-import junit.framework.TestCase;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.sql.SqlValidator;
+import org.eigenbase.sql.advise.SqlAdvisor;
+import org.eigenbase.sql.advise.SqlAdvisorValidator;
+import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.parser.SqlParseException;
-import org.eigenbase.sql.advise.*;
-import org.eigenbase.sql.type.*;
-import org.eigenbase.sql.fun.*;
+import org.eigenbase.sql.type.SqlTypeFactoryImpl;
 
-import java.util.logging.Logger;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.HashMap;
+import java.util.List;
+import java.util.logging.Logger;
 
 /**
- * Concrete child class of {@link SqlValidatorTestCase}, containing 
+ * Concrete child class of {@link SqlValidatorTestCase}, containing
  * unit tests for SqlAdvisor.
  *
  * @author Tim Leung
@@ -50,7 +49,7 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
     private final String hintToken = "$suggest$";
 
     //~ Methods ---------------------------------------------------------------
-    public void testFrom() {
+    public void testFrom() throws Exception {
         String sql;
         sql = "select a.empno, b.deptno from dummy a, sales.dummy b";
         ArrayList expected = new ArrayList();
@@ -62,18 +61,18 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         expected.add("CUSTOMER");
         expected.add("CONTACT");
         expected.add("ACCOUNT");
-        hint(sql, new SqlParserPos(1,31), expected); // join
-        
+        assertHint(sql, new SqlParserPos(1,31), expected); // join
+
         sql = "select a.empno, b.deptno from dummy a, sales.dummy b";
         expected.clear();
         expected.add("EMP");
         expected.add("DEPT");
         expected.add("BONUS");
         expected.add("SALGRADE");
-        hint(sql, new SqlParserPos(1,40), expected); // join
+        assertHint(sql, new SqlParserPos(1,40), expected); // join
     }
 
-    public void testJoin() {
+    public void testJoin() throws Exception {
         String sql;
         sql = "select a.empno, b.deptno from dummy a join sales.dummy b "
             + "on a.deptno=b.deptno where empno=1";
@@ -86,17 +85,17 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         expected.add("CUSTOMER");
         expected.add("CONTACT");
         expected.add("ACCOUNT");
-        hint(sql, new SqlParserPos(1,31), expected); // from
+        assertHint(sql, new SqlParserPos(1,31), expected); // from
 
         expected.clear();
         expected.add("EMP");
         expected.add("DEPT");
         expected.add("BONUS");
         expected.add("SALGRADE");
-        hint(sql, new SqlParserPos(1,44), expected); // join
+        assertHint(sql, new SqlParserPos(1,44), expected); // join
     }
 
-    public void testOnCondition() {
+    public void testOnCondition() throws Exception {
         String sql;
         sql = "select a.empno, b.deptno from sales.emp a join sales.dept b "
             + "on a.deptno=b.dummy where empno=1";
@@ -109,15 +108,15 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         expected.add("SAL");
         expected.add("COMM");
         expected.add("DEPTNO");
-        hint(sql, new SqlParserPos(1,64), expected); // on left
+        assertHint(sql, new SqlParserPos(1,64), expected); // on left
 
         expected.clear();
         expected.add("DEPTNO");
         expected.add("NAME");
-        hint(sql, new SqlParserPos(1,73), expected); // on right
+        assertHint(sql, new SqlParserPos(1,73), expected); // on right
     }
 
-    public void testFromWhere() {
+    public void testFromWhere() throws Exception {
         String sql;
         sql = "select a.empno, b.deptno from sales.emp a, sales.dept b "
             + "where b.deptno=a.dummy";
@@ -130,8 +129,8 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         expected.add("SAL");
         expected.add("COMM");
         expected.add("DEPTNO");
-        hint(sql, new SqlParserPos(1,72), expected); // where list
-        
+        assertHint(sql, new SqlParserPos(1,72), expected); // where list
+
         sql = "select a.empno, b.deptno from sales.emp a, sales.dept b "
             + "where dummy=1";
         expected.clear();
@@ -146,10 +145,10 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         expected.add("COMM");
         expected.add("DEPTNO");
         expected.add("NAME");
-        hint(sql, new SqlParserPos(1,63), expected); // where list
+        assertHint(sql, new SqlParserPos(1,63), expected); // where list
     }
-    
-    public void testWhereList() {
+
+    public void testWhereList() throws Exception {
         String sql;
         sql = "select a.empno, b.deptno from sales.emp a join sales.dept b "
             + "on a.deptno=b.deptno where dummy=1";
@@ -165,8 +164,8 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         expected.add("COMM");
         expected.add("DEPTNO");
         expected.add("NAME");
-        hint(sql, new SqlParserPos(1,88), expected); // where list
-        
+        assertHint(sql, new SqlParserPos(1,88), expected); // where list
+
         sql = "select a.empno, b.deptno from sales.emp a join sales.dept b "
             + "on a.deptno=b.deptno where a.dummy=1";
         expected.clear();
@@ -178,10 +177,10 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         expected.add("SAL");
         expected.add("COMM");
         expected.add("DEPTNO");
-        hint(sql, new SqlParserPos(1,88), expected); // where list
+        assertHint(sql, new SqlParserPos(1,88), expected); // where list
     }
-        
-    public void testSelectList() {
+
+    public void testSelectList() throws Exception {
         String sql;
         sql = "select dummy, b.dummy from sales.emp a join sales.dept b "
             + "on a.deptno=b.deptno where empno=1";
@@ -197,12 +196,12 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         expected.add("COMM");
         expected.add("DEPTNO");
         expected.add("NAME");
-        hint(sql, new SqlParserPos(1,8), expected); // select list
+        assertHint(sql, new SqlParserPos(1,8), expected); // select list
         expected.clear();
         expected.add("DEPTNO");
         expected.add("NAME");
-        hint(sql, new SqlParserPos(1,15), expected); // select list
-        
+        assertHint(sql, new SqlParserPos(1,15), expected); // select list
+
         sql = "select emp.dummy from sales.emp";
         expected.clear();
         expected.add("EMPNO");
@@ -213,119 +212,120 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         expected.add("SAL");
         expected.add("COMM");
         expected.add("DEPTNO");
-        hint(sql, new SqlParserPos(1,8), expected); // select list
+        assertHint(sql, new SqlParserPos(1,8), expected); // select list
     }
 
-    public void testOrderByList() {
+    public void testOrderByList() throws Exception {
         String sql;
         sql = "select emp.empno from sales.emp where empno=1 order by dummy";
         ArrayList expected = new ArrayList();
         expected.add("SALES.EMP");
         expected.add("EMPNO");
-        hint(sql, new SqlParserPos(1,56), expected); // where list
+        assertHint(sql, new SqlParserPos(1,56), expected); // where list
     }
 
 
-    public void testSubQuery() {
+    public void testSubQuery() throws Exception {
         String sql;
         sql = "select t.dummy from (select 1 as x, 2 as y from sales.emp) as t where t.dummy=1";
         ArrayList expected = new ArrayList();
         expected.add("X");
         expected.add("Y");
-        hint(sql, new SqlParserPos(1,8), expected); // select list
-        
+        assertHint(sql, new SqlParserPos(1,8), expected); // select list
+
         sql = "select t.dummy from (select 1 as x, 2 as y from sales.emp) as t where t.dummy=1";
         expected.clear();
         expected.add("X");
         expected.add("Y");
-        hint(sql, new SqlParserPos(1,71), expected); // select list
+        assertHint(sql, new SqlParserPos(1,71), expected); // select list
 
     }
 
     public void testSimpleParser() {
         String sql;
         String expected;
-       
+
         // from
-        sql = "select * from where";
+        sql = "select * from ^where";
         expected = "select * from $suggest$";
-        simplify(sql, 14, expected);
-       
+        assertSimplify(sql, expected);
+
         // from
         sql = "select a.empno, b.deptno from ";
         expected = "select a.empno, b.deptno from $suggest$";
-        simplify(sql, 30, expected);
-       
+        assertSimplify(sql, 30, expected);
+
         // select list
         sql = "select emp. from sales.emp";
         expected = "select emp.$suggest$ from sales.emp";
-        simplify(sql, 11, expected);
-        
+        assertSimplify(sql, 11, expected);
+
         sql = "select from sales.emp";
         expected = "select $suggest$ from sales.emp";
-        simplify(sql, 7, expected);
+        assertSimplify(sql, 7, expected);
 
         sql = "select a.empno ,  from sales.emp a , sales.dept b";
         expected = "select a.empno ,$suggest$ from sales.emp a , sales.dept b";
-        simplify(sql, 16, expected);
+        assertSimplify(sql, 16, expected);
 
         // join
         sql = "select a.empno, b.deptno from dummy a join on where empno=1";
         expected="select a.empno, b.deptno from dummy a join $suggest$ "
             + "where empno=1";
-        simplify(sql, 43, expected);
+        assertSimplify(sql, 43, expected);
 
         // on
         sql = "select a.empno, b.deptno from sales.emp a join sales.dept b "
             + "on a.deptno=";
         expected="select a.empno, b.deptno from sales.emp a join sales.dept b "
             + "on a.deptno=$suggest$";
-        simplify(sql, 73, expected);
+        assertSimplify(sql, 73, expected);
 
         // where
         sql = "select a.empno, b.deptno from sales.emp a, sales.dept b "
             + "where ";
         expected = "select a.empno, b.deptno from sales.emp a, sales.dept b "
             + "where $suggest$";
-        simplify(sql, 62, expected);
-      
+        assertSimplify(sql, 62, expected);
+
         // order by
         sql = "select emp.empno from sales.emp where empno=1 order by ";
         expected = "select emp.empno from sales.emp where empno=1 order by $suggest$";
-        simplify(sql, 55, expected);
+        assertSimplify(sql, 55, expected);
 
         // subquery
         sql = "select t. from (select 1 as x, 2 as y from sales.emp) as t where t.dummy=1";
         expected = "select t.$suggest$ from (select 1 as x, 2 as y from sales.emp) as t where t.dummy=1";
-        simplify(sql, 9, expected);
+        assertSimplify(sql, 9, expected);
 
         sql = "select t. from (select 1 as x, 2 as y from (select x from sales.emp)) as t where ";
         expected = "select t. from (select 1 as x, 2 as y from (select x from sales.emp)) as t where $suggest$";
-        simplify(sql, 81, expected);
+        assertSimplify(sql, 81, expected);
 
         sql = "select from (select 1 as x, 2 as y from sales.emp), (select 2 as y from (select m from n where)) as t where t.dummy=1";
         expected = "select $suggest$ from (select 1 as x, 2 as y from sales.emp), (select 2 as y from (select m from n)) as t where t.dummy=1";
-        simplify(sql, 7, expected);
+        assertSimplify(sql, 7, expected);
     }
 
-    public void hint(String sql, SqlParserPos pp, List expectedResults) 
+    /**
+     * Checks that a given SQL statement yields the expected set of completion
+     * hints.
+     *
+     * <p>REVIEW: use caret to indicate position in statement -- just for
+     * testing purposes -- and obsolete pos parameter.
+     */
+    protected void assertHint(
+        String sql,
+        SqlParserPos pos,
+        List expectedResults)
+        throws Exception
     {
-        SqlValidator validator;
-        validator = tester.getValidator();
+        SqlValidator validator = tester.getValidator();
         SqlAdvisor advisor = new SqlAdvisor(validator);
         HashMap uniqueResults = new HashMap();
-        try {
-            String [] results = advisor.getCompletionHints(sql, pp);
-            for (int i = 0; i < results.length; i++) {
-                uniqueResults.put(results[i], results[i]);
-            }
-        } catch (SqlParseException ex) {
-            ex.printStackTrace();
-            fail("SqlAdvisorTest: Parse Error while parsing query=" + sql
-               + "\n" + ex.getMessage());
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            fail("SqlAdvisorTest: Exception caught: \n" + ex.getMessage());
+        String [] results = advisor.getCompletionHints(sql, pos);
+        for (int i = 0; i < results.length; i++) {
+            uniqueResults.put(results[i], results[i]);
         }
         if (!(expectedResults.containsAll(uniqueResults.values()) &&
             (expectedResults.size() == uniqueResults.values().size()))) {
@@ -334,33 +334,66 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         }
         return;
     }
-    
-    public String simplify(String sql, int cursor)
+
+    protected String simplify(String sql, int cursor)
     {
-        SqlValidator validator;
-        validator = tester.getValidator();
+        SqlValidator validator = tester.getValidator();
         SqlAdvisor advisor = new SqlAdvisor(validator);
-        String goodSql = advisor.simplifySql(sql, cursor); 
+        String goodSql = advisor.simplifySql(sql, cursor);
         return goodSql;
     }
 
-    public void simplify(String sql, int cursor, String expected)
+    /**
+     * Tests that a given SQL statement simplifies to the expected result.
+     *
+     * @param sql
+     * @param cursor
+     * @param expected
+     *
+     * @deprecated Use {@link #assertSimplify(String, String)}, which is
+     *   more maintainable
+     */
+    protected void assertSimplify(String sql, int cursor, String expected)
     {
         String actual = simplify(sql, cursor);
-
-        if (!(expected.equals(actual))) {
-            fail("SqlAdvisorTest: simplified SQL not as expected:\n"
-            + actual + "\nExpected:\n" + expected);
-        }
+        assertEquals(actual, expected);
     }
 
-    public void complete(String sql, int cursor, List expectedResults)
+    /**
+     * Tests that a given SQL statement simplifies to the expected result.
+     *
+     * @param sql SQL statement to simplify. The SQL statement must contain
+     *   precisely one caret '^', which marks the location where completion is
+     *   to occur.
+     * @param expected Expected result after simplification.
+     */
+    protected void assertSimplify(String sql, String expected)
+    {
+        int cursor = sql.indexOf('^');
+        if (cursor < 0) {
+            fail("Invalid test SQL: should contain '^'");
+        }
+        if (sql.indexOf('^', cursor + 1) >= 0) {
+            fail("Invalid test SQL: contains more than one '^'");
+        }
+        String sqlSansCaret = sql.substring(0, cursor) +
+            sql.substring(cursor + 1);
+        String actual = simplify(sqlSansCaret, cursor);
+        assertEquals(actual, expected);
+    }
+
+    // REVIEW not used?
+    private void assertHint(
+        String sql,
+        int cursor,
+        List expectedResults)
+        throws Exception
     {
         String simpleSql = simplify(sql, cursor);
-        
+
         int idx = simpleSql.indexOf(hintToken);
         SqlParserPos pp = new SqlParserPos(1, idx+1);
-        hint(simpleSql, pp, expectedResults);
+        assertHint(simpleSql, pp, expectedResults);
     }
 
     public Tester getTester() {
@@ -368,6 +401,7 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
     }
 
     public class AdvisorTestImpl extends TesterImpl {
+        // REVIEW this is the same as the base method
         public SqlValidator getValidator() {
             final RelDataTypeFactory typeFactory = new SqlTypeFactoryImpl();
             return new SqlAdvisorValidator(
