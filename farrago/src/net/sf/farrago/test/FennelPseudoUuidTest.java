@@ -9,7 +9,7 @@ import org.eigenbase.util.Util;
  * @author Stephan Zuercher
  * @version $Id$
  */
-public class FenndelPseudoUuidTest
+public class FennelPseudoUuidTest
     extends FarragoTestCase
 {
     static {
