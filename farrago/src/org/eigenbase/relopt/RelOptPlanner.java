@@ -72,19 +72,6 @@ public interface RelOptPlanner
     boolean addRule(RelOptRule rule);
 
     /**
-     * Changes a relational expression to an equivalent one of a different
-     * calling convention. The return is never null, but may be abstract.
-     * This method will eventually be removed in favor of
-     * {@link #changeTraits(RelNode, RelTraitSet)}
-     *
-     * @pre rel.getConvention() != toConvention
-     * @post return != null
-     */
-    RelNode changeConvention(
-        RelNode rel,
-        CallingConvention toConvention);
-
-    /**
      * Changes a relational expression to an equivalent one with a different
      * set of traits.  The return is never null, but may be abstract.
      *

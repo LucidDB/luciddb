@@ -86,7 +86,8 @@ public class VolcanoPlannerTest extends TestCase
                 newCluster(planner),
                 "a");
         RelNode convertedRel =
-            planner.changeConvention(leafRel, PHYS_CALLING_CONVENTION);
+            planner.changeTraits(
+                leafRel, new RelTraitSet(PHYS_CALLING_CONVENTION));
         planner.setRoot(convertedRel);
         RelNode result = planner.chooseDelegate().findBestExp();
         assertTrue(result instanceof PhysLeafRel);
@@ -111,7 +112,8 @@ public class VolcanoPlannerTest extends TestCase
                 leafRel.getCluster(),
                 leafRel);
         RelNode convertedRel =
-            planner.changeConvention(singleRel, PHYS_CALLING_CONVENTION);
+            planner.changeTraits(
+                singleRel, new RelTraitSet(PHYS_CALLING_CONVENTION));
         planner.setRoot(convertedRel);
         RelNode result = planner.chooseDelegate().findBestExp();
         assertTrue(result instanceof PhysSingleRel);
@@ -137,7 +139,8 @@ public class VolcanoPlannerTest extends TestCase
                 leafRel.getCluster(),
                 leafRel);
         RelNode convertedRel =
-            planner.changeConvention(singleRel, PHYS_CALLING_CONVENTION);
+            planner.changeTraits(
+                singleRel, new RelTraitSet(PHYS_CALLING_CONVENTION));
         planner.setRoot(convertedRel);
         RelNode result = planner.chooseDelegate().findBestExp();
         assertTrue(result instanceof PhysSingleRel);
@@ -185,7 +188,8 @@ public class VolcanoPlannerTest extends TestCase
                 projectRel.getCluster(),
                 projectRel);
         RelNode convertedRel =
-            planner.changeConvention(singleRel, CallingConvention.ITERATOR);
+            planner.changeTraits(
+                singleRel, new RelTraitSet(CallingConvention.ITERATOR));
         planner.setRoot(convertedRel);
         RelNode result = planner.chooseDelegate().findBestExp();
         assertTrue(result instanceof PhysToIteratorConverter);
@@ -222,7 +226,8 @@ public class VolcanoPlannerTest extends TestCase
                 newCluster(planner),
                 "a");
         RelNode convertedRel =
-            planner.changeConvention(leafRel, PHYS_CALLING_CONVENTION);
+            planner.changeTraits(
+                leafRel, new RelTraitSet(PHYS_CALLING_CONVENTION));
         planner.setRoot(convertedRel);
         RelNode result = planner.chooseDelegate().findBestExp();
         assertTrue(result instanceof PhysLeafRel);
